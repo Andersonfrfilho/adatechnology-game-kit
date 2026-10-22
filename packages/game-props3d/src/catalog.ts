@@ -1,0 +1,70 @@
+import type { PropGroup, TypeDef } from './types'
+
+const T = <I extends string>(id: I, interior: boolean, w: number, d: number, h: number, y: number, solid: boolean, group: PropGroup): TypeDef<I> => ({ id, interior, w, d, h, y, solid, group })
+
+/** id, interior, w, d, h, y (mounting height), solid (false = no collision), group. Names live in the locale table. */
+export const TYPE_DEFS = [
+  T('ceiling_light', true, 0.4, 0.4, 0.07, 0, false, 'ceiling'),
+  T('pendant', true, 0.34, 0.34, 1.0, 0, false, 'ceiling'),
+  T('track_spot', true, 1.2, 0.1, 0.2, 0, false, 'ceiling'),
+  T('chandelier', true, 0.7, 0.7, 0.7, 0, false, 'ceiling'),
+  T('wall_ac', true, 0.9, 0.2, 0.28, 2.15, false, 'wall'),
+  T('picture_small', true, 0.35, 0.03, 0.45, 1.3, false, 'wall'),
+  T('picture_large', true, 1.0, 0.04, 0.7, 1.2, false, 'wall'),
+  T('mirror', true, 0.6, 0.03, 1.2, 0.9, false, 'wall'),
+  T('curtain', true, 1.6, 0.12, 2.3, 0.1, false, 'wall'),
+  T('blinds', true, 1.2, 0.08, 1.3, 1.0, false, 'wall'),
+  T('flat_tv', true, 1.2, 0.06, 0.7, 1.0, false, 'wall'),
+  T('floor_plant', true, 0.5, 0.5, 1.1, 0, true, 'plants'),
+  T('table_plant', true, 0.2, 0.2, 0.3, 0, false, 'plants'),
+  T('hanging_plant', true, 0.5, 0.5, 1.0, 0, false, 'plants'),
+  T('tv_stand', true, 1.6, 0.42, 1.05, 0, true, 'furniture'),
+  T('breakfast_bar', true, 2.0, 1.6, 0.95, 0, true, 'furniture'),
+  T('sofa_l', true, 2.8, 1.7, 0.85, 0, true, 'furniture'),
+  T('double_bed_modern', true, 1.6, 2.1, 1.2, 0, true, 'furniture'),
+  T('home_office', true, 1.4, 0.75, 1.2, 0, true, 'furniture'),
+  T('closet', true, 2.2, 0.6, 2.3, 0, true, 'furniture'),
+  T('vanity', true, 0.6, 0.45, 1.5, 0, true, 'furniture'),
+  T('ac_condenser', false, 0.8, 0.3, 0.55, 0.5, true, 'yard'),
+  T('lawn', false, 4, 4, 0.02, 0, false, 'floor'),
+  T('tile_floor', false, 4, 3, 0.03, 0, false, 'floor'),
+  T('concrete', false, 4, 4, 0.03, 0, false, 'floor'),
+  T('deck_floor', false, 4, 3, 0.04, 0, false, 'floor'),
+  T('dirt', false, 4, 4, 0.02, 0, false, 'floor'),
+  T('gourmet_counter', false, 4.2, 3.0, 2.9, 0, true, 'yard'),
+  T('sauna', false, 2.0, 1.8, 2.1, 0, true, 'yard'),
+  T('soaking_tub', false, 1.3, 1.3, 0.8, 0, true, 'yard'),
+  T('pool', false, 4.5, 2.8, 0.1, 0, true, 'yard'),
+  T('deck', false, 3.5, 3.0, 0.22, 0, true, 'yard'),
+  T('sun_lounger', false, 0.62, 1.9, 0.5, 0, true, 'yard'),
+  T('garden_bed', false, 2.0, 1.0, 0.9, 0, true, 'yard'),
+  T('fruit_tree', false, 2.4, 2.4, 3.2, 0, true, 'yard'),
+  T('palm_tree', false, 2.0, 2.0, 4.5, 0, true, 'yard'),
+  T('pergola', false, 3.5, 3.0, 2.4, 0, true, 'yard'),
+  T('slide', false, 0.8, 2.6, 1.5, 0, true, 'yard'),
+  T('swing', false, 2.2, 1.7, 2.2, 0, true, 'yard'),
+  T('bbq_simple', false, 0.9, 0.6, 1.0, 0, true, 'yard'),
+  T('garage_car', false, 1.8, 4.2, 1.45, 0, true, 'yard'),
+  T('window_boards', true, 1.2, 0.06, 1.15, 1.0, false, 'house_state'),
+  T('barricade', true, 1.5, 0.7, 1.8, 0, true, 'house_state'),
+  T('sandbags', false, 1.6, 0.5, 0.6, 0, true, 'house_state'),
+  T('barbed_wire', false, 4.0, 0.2, 0.6, 0, false, 'house_state'),
+  T('razor_wire', false, 4.0, 0.6, 0.6, 0, false, 'house_state'),
+  T('water_bottle_crates', true, 0.9, 0.6, 0.65, 0, true, 'house_state'),
+  T('canned_food', true, 0.4, 0.3, 0.3, 0, false, 'house_state'),
+  T('water_jug', true, 0.3, 0.3, 0.5, 0, true, 'house_state'),
+  T('floor_mattress', true, 0.9, 1.9, 0.3, 0, false, 'house_state'),
+  T('lantern', true, 0.16, 0.16, 0.3, 0, false, 'house_state'),
+  T('candles', true, 0.25, 0.25, 0.2, 0, false, 'house_state'),
+  T('open_suitcases', true, 1.5, 0.7, 0.6, 0, false, 'house_state'),
+  T('clothes_on_floor', true, 1.2, 1.0, 0.05, 0, false, 'house_state'),
+  T('fallen_chair', true, 0.5, 0.5, 0.5, 0, false, 'house_state'),
+  T('blood_stains', true, 1.2, 1.2, 0.01, 0, false, 'house_state'),
+  T('open_door', true, 0.9, 0.15, 2.15, 0, false, 'house_state'),
+]
+
+export type PropType = (typeof TYPE_DEFS)[number]['id']
+
+export const DEFS = Object.fromEntries(TYPE_DEFS.map((t) => [t.id, t])) as Record<PropType, (typeof TYPE_DEFS)[number]>
+
+export const MATERIALS = ['plain', 'metal', 'wood', 'glass', 'fabric', 'plant', 'water', 'emissive', 'atlas_picture', 'atlas_floor'] as const
