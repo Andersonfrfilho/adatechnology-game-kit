@@ -1,0 +1,28 @@
+{
+  "labels": {
+    "floor_n": "Andar {n}",
+    "parking": "Vaga",
+    "garden": "Jardim",
+    "backyard": "Quintal",
+    "side_left": "Lateral esquerda",
+    "side_right": "Lateral direita"
+  },
+  "reasons": {
+    "invalid_parent": "pai inválido",
+    "invalid_side": "lado inválido",
+    "blocked_by_door": "bloqueado por porta",
+    "open_wall": "parede aberta",
+    "invalid_corner": "canto inválido",
+    "no_window": "sem janela",
+    "window_outside_room": "janela fora do cômodo",
+    "larger_than_room": "slot maior que o cômodo",
+    "unknown_anchor": "âncora desconhecida"
+  },
+  "messages": {
+    "overlap": "Sobreposição: {a} e {b}",
+    "door_blocked": "Porta bloqueada por {id}",
+    "gate_blocked": "Portão bloqueado por {id}",
+    "missing_required": "Item obrigatório ausente: {room}/{slot}",
+    "zone_violation": "Zona {zone}: {rule} é {actual}, limite {limit}"
+  }
+}
