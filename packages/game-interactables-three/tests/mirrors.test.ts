@@ -108,3 +108,24 @@ describe('cords', () => {
     expect(() => createCord(THREE, [[0, 0, 0]], 0.01, mat)).toThrow()
   })
 })
+
+describe('reflector orientation', () => {
+  it('faces the registered normal even when the display mesh +z points the other way', () => {
+    const { scene, mirrors, camera } = setup(1)
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 2), new THREE.MeshBasicMaterial())
+    mesh.position.set(0, 1, 0)
+    scene.add(mesh)
+    scene.updateMatrixWorld(true)
+    // the engine says this mirror faces -z although the plane's own +z faces +z
+    mirrors.register('o:m', mesh, [0, 0, -1])
+    camera.position.set(0, 1, -3)
+    camera.updateMatrixWorld(true)
+    expect(mirrors.update(camera, [{ id: 'o:m', center: [0, 1, 0], normal: [0, 0, -1] }])).toEqual(['o:m'])
+    const reflector = scene.children.find((c) => c instanceof FakeReflector) as FakeReflector
+    const facing = new THREE.Vector3(0, 0, 1).applyQuaternion(reflector.quaternion)
+    expect(facing.z).toBeCloseTo(-1, 6)
+    expect(reflector.position.z).toBeCloseTo(-0.001, 6)
+    expect(reflector.scale.x).toBeCloseTo(1)
+    expect(reflector.scale.y).toBeCloseTo(2)
+  })
+})

@@ -95,6 +95,8 @@ export function createMirrors(THREE: ThreeLib, options: MirrorOptions = {}): Mir
   const toEye = new THREE.Vector3()
   const box = new THREE.Box3()
   const size = new THREE.Vector3()
+  const facing = new THREE.Vector3()
+  const flip = new THREE.Quaternion(0, 1, 0, 0)
 
   return {
     envMaterial,
@@ -139,6 +141,8 @@ export function createMirrors(THREE: ThreeLib, options: MirrorOptions = {}): Mir
         worldNormal(e, n)
         s.reflector.position.copy(pos).addScaledVector(n, offset)
         s.reflector.quaternion.copy(quat)
+        // a Reflector only renders for a camera in front of its +z: when the registered normal points the other way, turn it around
+        if (facing.set(0, 0, 1).applyQuaternion(quat).dot(n) < 0) s.reflector.quaternion.multiply(flip)
         s.reflector.scale.set(Math.max(size.x * scl.x, 1e-3), Math.max(size.y * scl.y, 1e-3), 1)
         s.id = id
         s.reflector.visible = true
