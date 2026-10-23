@@ -13,7 +13,8 @@ import { parseArgs } from 'node:util'
 const TOOL_DIR = join(dirname(fileURLToPath(import.meta.url)), '..')
 const MIME_TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.css': 'text/css' }
 const CHROME_BIN = process.env.CHROME_BIN ?? 'google-chrome-stable'
-const DEBUG_PORT = 9341
+const CDP_CALL_TIMEOUT_MS = 30000
+const THREE_URL = /^https:\/\/(cdnjs\.cloudflare\.com\/ajax\/libs\/three\.js\/[^/]+|(cdn\.jsdelivr\.net\/npm|unpkg\.com)\/three@[^/]+\/build)\/three(\.min)?\.js(\?.*)?$/
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms))
 
 const { values } = parseArgs({
@@ -32,6 +33,7 @@ for (const required of ['page', 'capture', 'out']) {
   if (!values[required]) throw new Error(`missing --${required} (see the header of bin/record.mjs)`)
 }
 const seed = Number(values.seed)
+if (!Number.isInteger(seed)) throw new Error(`--seed must be an integer, got "${values.seed}"`)
 const timeoutMs = Number(values['timeout-ms'])
 const params = { seed, ...Object.fromEntries(values.param.map((entry) => [entry.split('=')[0], entry.slice(entry.indexOf('=') + 1)])) }
 
@@ -40,7 +42,12 @@ function startStaticServer(pagePath) {
   const pageDir = dirname(resolve(pagePath))
   const assetDir = join(pageDir, basename(pagePath, extname(pagePath)))
   const server = createServer((request, response) => {
-    const urlPath = decodeURIComponent(new URL(request.url, 'http://local').pathname)
+    let urlPath
+    try {
+      urlPath = decodeURIComponent(new URL(request.url, 'http://local').pathname)
+    } catch {
+      return response.writeHead(400).end()
+    }
     const relative = normalize(urlPath).replace(/^(\.\.[/\\])+/, '')
     const candidates = urlPath === '/' ? [resolve(pagePath)] : [join(assetDir, relative), join(pageDir, relative)]
     const file = candidates.find((candidate) => existsSync(candidate) && statSync(candidate).isFile())
@@ -50,10 +57,14 @@ function startStaticServer(pagePath) {
   return new Promise((done) => server.listen(0, '127.0.0.1', () => done(server)))
 }
 
-async function connect() {
-  for (let attempt = 0; attempt < 60; attempt++) {
+// Chrome picks its own debugging port (--remote-debugging-port=0) and writes it to <profile>/DevToolsActivePort; a fixed port could be
+// another Chrome that is already running.
+async function connect(profile) {
+  const portFile = join(profile, 'DevToolsActivePort')
+  for (let attempt = 0; attempt < 120; attempt++) {
     try {
-      const targets = await (await fetch(`http://127.0.0.1:${DEBUG_PORT}/json`)).json()
+      const port = readFileSync(portFile, 'utf8').split('\n')[0].trim()
+      const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json()
       const socket = new WebSocket(targets.find((target) => target.type === 'page').webSocketDebuggerUrl)
       await new Promise((done, fail) => {
         socket.addEventListener('open', done)
@@ -64,7 +75,7 @@ async function connect() {
       await sleep(250)
     }
   }
-  throw new Error(`Chrome did not answer on port ${DEBUG_PORT}`)
+  throw new Error(`Chrome did not publish a debugging port in ${portFile}`)
 }
 
 function createClient(socket, onEvent) {
@@ -75,14 +86,21 @@ function createClient(socket, onEvent) {
     if (message.id && pending.has(message.id)) pending.get(message.id)(message)
     else if (message.method) onEvent(message)
   })
-  const send = (method, params = {}) =>
-    new Promise((done) => {
+  const send = (method, params = {}, limitMs = CDP_CALL_TIMEOUT_MS) =>
+    new Promise((done, fail) => {
       const id = ++nextId
-      pending.set(id, done)
+      const timer = setTimeout(() => {
+        pending.delete(id)
+        fail(new Error(`CDP ${method} got no answer in ${limitMs} ms`))
+      }, limitMs)
+      pending.set(id, (message) => {
+        clearTimeout(timer)
+        done(message)
+      })
       socket.send(JSON.stringify({ id, method, params }))
     })
   const evaluate = async (expression) => {
-    const { result, error } = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true })
+    const { result, error } = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }, timeoutMs)
     if (error) throw new Error(error.message)
     if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? result.exceptionDetails.text)
     return result.result.value
@@ -106,7 +124,7 @@ function answerRequests(client, origin) {
     if (message.method !== 'Fetch.requestPaused') return
     const { requestId, request } = message.params
     if (request.url.startsWith(origin)) return void client.send('Fetch.continueRequest', { requestId })
-    if (threeSource && /three(\.min)?\.js/.test(request.url)) {
+    if (threeSource && THREE_URL.test(request.url)) {
       const headers = [{ name: 'content-type', value: 'text/javascript' }]
       return void client.send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: headers, body: threeSource })
     }
@@ -122,12 +140,12 @@ async function record() {
   const profile = mkdtempSync(join(tmpdir(), 'golden-tool-'))
   const chrome = spawn(
     CHROME_BIN,
-    ['--headless=new', '--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', `--remote-debugging-port=${DEBUG_PORT}`, `--user-data-dir=${profile}`, 'about:blank'],
+    ['--headless=new', '--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank'],
     { stdio: 'ignore' },
   )
   try {
     let handleEvent = () => {}
-    const client = createClient(await connect(), (message) => handleEvent(message))
+    const client = createClient(await connect(profile), (message) => handleEvent(message))
     handleEvent = answerRequests(client, origin)
     await client.send('Page.enable')
     await client.send('Fetch.enable', { patterns: [{ urlPattern: '*' }] })

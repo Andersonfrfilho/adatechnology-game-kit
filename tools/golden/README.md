@@ -39,14 +39,20 @@ node tools/golden/bin/record.mjs \
 | `--page` | an artifact page (`artefatos/*.html`; its same-name folder is served as its assets) or any HTML file |
 | `--capture` | a JS expression file evaluated after the page is ready; it must return a `GoldenRecord` (use `GoldenTool.createGoldenRecord`) |
 | `--out` | where the golden JSON is written |
-| `--seed` | seed for `Math.random` (default 1); also available to the capture as `__GOLDEN_PARAMS.seed` |
+| `--seed` | integer seed for `Math.random` (default 1); also available to the capture as `__GOLDEN_PARAMS.seed` |
 | `--param k=v` | extra values for the capture, read from `globalThis.__GOLDEN_PARAMS` |
 | `--ready` | expression that becomes truthy when the page has built what the capture needs |
 | `--three` | local three.js file served in place of the CDN URL; every other external request is refused, so recording is offline |
 
 Before any page script runs, the recorder installs the seeded environment: `Math.random` is seeded, `Date.now` and `performance.now`
 are frozen and only move through `advance`, and `requestAnimationFrame` is queued and only runs when the capture calls
-`GoldenTool.stepFrames(count, frameMs)`. A capture file may use `GoldenTool.createEventRecorder()` to log events and
+`GoldenTool.stepFrames(count, frameMs)`. 
+**Not frozen** (a capture must not depend on them, or the golden will not repeat): `new Date()` without arguments, `setTimeout` /
+`setInterval` timers, `crypto.getRandomValues` / `crypto.randomUUID`, `requestIdleCallback`, and anything the network or the GPU decides
+(the recorder refuses external requests, but a page that reacts to a failed one still differs). `Math.random`, `Date.now`,
+`performance.now` and `requestAnimationFrame` are the ones the recorder controls.
+
+A capture file may use `GoldenTool.createEventRecorder()` to log events and
 `GoldenTool.createGoldenRecord({ name, seed, events, scenes })` to return the result.
 
 ## Compare an SDK build in a package test

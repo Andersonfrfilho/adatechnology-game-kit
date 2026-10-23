@@ -1,4 +1,4 @@
-import { createSeededRandom } from './seededRandom'
+import { createSeededRandom } from './seeded-random'
 
 type FrameCallback = (timestamp: number) => void
 

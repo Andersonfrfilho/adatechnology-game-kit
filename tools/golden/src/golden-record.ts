@@ -1,5 +1,5 @@
-import { snapshotScene } from './sceneHash'
-import type { DescribeSceneOptions, SceneNodeLike } from './sceneHash'
+import { snapshotScene } from './scene-hash'
+import type { DescribeSceneOptions, SceneNodeLike } from './scene-hash'
 import type { GoldenEvent, GoldenRecord } from './types'
 
 export type CreateGoldenRecordParams = {
