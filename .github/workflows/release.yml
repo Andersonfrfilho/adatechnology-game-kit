@@ -80,7 +80,8 @@ jobs:
           check() {
             local name="$1" version="$2" url
             url="https://registry.npmjs.org/${name//\//%2f}/${version}"
-            for delay in 0 5 10 20 40 60; do
+            # the registry can take several minutes to serve a new version
+            for delay in 0 15 30 60 90 120 120 120; do
               sleep "$delay"
               if curl -fsS -o /dev/null "$url"; then return 0; fi
             done

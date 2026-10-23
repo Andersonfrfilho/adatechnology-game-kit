@@ -74,6 +74,31 @@ export const DESTRUCTION: Record<string, TypeDestruction> = {
   },
   dog_house: { body: { material: 'plywood', joint: 'nail' }, parts: [] },
   bbq: { body: { material: 'brick', joint: 'mortar' }, parts: [['counter_door', door('steel')]] },
+  bunk_bed: { body: { material: 'wood_soft', joint: 'screw' }, parts: [] },
+  wood_stove: {
+    body: { material: 'cast_iron', joint: 'bolt' },
+    parts: [['firebox_door', { material: 'cast_iron', joint: 'hinge', piece: 'door' }]],
+  },
+  fireplace: { body: { material: 'brick', joint: 'mortar' }, parts: [] },
+  outhouse: {
+    body: { material: 'wood_soft', joint: 'nail' },
+    parts: [['door', door('wood_soft', 'hinge', 'door')], ['seat_lid', door('wood_soft', 'hinge', 'lid')]],
+  },
+  well: {
+    body: { material: 'stone', joint: 'mortar' },
+    parts: [
+      ['crank', { material: 'wood_hard', joint: 'bolt', piece: 'handle' }],
+      ['bucket', { material: 'wood_soft', joint: 'tie', piece: 'bucket' }],
+      ['rope', { material: 'fabric', joint: 'tie', piece: 'cord' }],
+    ],
+  },
+  cooler: { body: { material: 'plastic', joint: 'fused' }, parts: [['lid', door('plastic', 'hinge', 'lid')]] },
+  campfire: { body: { material: 'stone', joint: 'mortar' }, parts: [] },
+  camp_stove: { body: { material: 'steel', joint: 'weld' }, parts: [['knob', knob]] },
+  gas_canister: { body: { material: 'steel', joint: 'weld' }, parts: [['valve', { material: 'copper', joint: 'screw', piece: 'valve' }]] },
+  lantern_lamp: { body: { material: 'copper', joint: 'screw' }, parts: [['wick', knob]] },
+  camp_chair: { body: { material: 'aluminium', joint: 'clip' }, parts: [] },
+  camp_table: { body: { material: 'aluminium', joint: 'clip' }, parts: [] },
   clothesline: { body: { material: 'steel', joint: 'weld' }, parts: [[/^cloth_/, { material: 'fabric', joint: 'tie', piece: 'cloth' }]] },
 }
 

@@ -37,9 +37,13 @@ export interface HouseholdItem extends PropItem {
   house?: Vec3
   /** `service_entrance`: sag of the drop wire in meters. Default 0.35. */
   sag?: number
+  /** `wood_stove`: height (item-local, meters) of the top of the flue pipe, and of the smoke emitter. Default: the item height. */
+  flueHeight?: number
+  /** `fireplace`: height of the chimney top and of the smoke emitter. Default: the item height. */
+  chimneyHeight?: number
 }
 
-export type HouseholdGroup = 'storage' | 'kitchen' | 'bathroom' | 'electrical' | 'seating' | 'window' | 'yard'
+export type HouseholdGroup = 'storage' | 'kitchen' | 'bathroom' | 'electrical' | 'seating' | 'window' | 'yard' | 'rural' | 'camp'
 
 export interface HouseholdTypeDef {
   id: string
@@ -62,6 +66,8 @@ export interface HouseholdType extends HouseholdTypeDef {
 export interface Region {
   id: string
   gas: { kind: string; capacityKg: number; diameter: number; height: number; color: string }
+  /** Small camping gas canister (`gas_canister`). */
+  canister: { kind: string; capacityKg: number; diameter: number; height: number; color: string }
   socket: { standard: string; pins: number; layout: 'br' | 'us'; voltage: number[]; hz: number }
   mailbox: { style: 'wall' | 'post'; color: string }
   clothesline: { style: string; wires: number }

@@ -157,3 +157,42 @@ export function bench(c: Ctx): void {
     c.interact(`sit_${i + 1}`, [x, seatY + 0.3, 0.1], { do: 'sit', seat: `seat_${i + 1}` }, 'prompt.sit', 1.5)
   }
 }
+
+export function bunkBed(c: Ctx): void {
+  const { hw, hd, h } = c
+  const wood = c.wood(0x8a6444)
+  const sheet = c.fabric(0x4a7a9a)
+  const post = 0.06
+  const zEnd = hd - 0.06 // the ladder takes the last 6 cm at the foot end
+  const lowDeck = 0.3
+  const highDeck = 1.08
+  const lowTop = lowDeck + 0.18
+  const highTop = highDeck + 0.18
+  // four posts (taller at the head), side rails and end panels for both bunks
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) c.b('wood', sx * (hw - post / 2) - post / 2, 0, sz < 0 ? -hd : zEnd - post, sx * (hw - post / 2) + post / 2, sz < 0 ? h : h - 0.05, sz < 0 ? -hd + post : zEnd, shade(wood, 0.85))
+  for (const deck of [lowDeck, highDeck]) {
+    c.b('wood', -hw + post, deck - 0.06, -hd + post, -hw + post + 0.03, deck + 0.14, zEnd - post, wood) // side rails
+    c.b('wood', hw - post - 0.03, deck - 0.06, -hd + post, hw - post, deck + 0.14, zEnd - post, wood)
+    c.b('wood', -hw + post, deck - 0.06, -hd + 0.0, hw - post, deck + 0.16, -hd + 0.03, shade(wood, 0.92)) // headboard
+    c.b('wood', -hw + post, deck - 0.06, zEnd - 0.03, hw - post, deck + 0.1, zEnd, shade(wood, 1.05)) // footboard
+    c.b('wood', -hw + post + 0.03, deck - 0.02, -hd + 0.03, hw - post - 0.03, deck + 0.004, zEnd - 0.03, shade(wood, 0.7)) // slat deck
+  }
+  // mattresses, pillows and blankets
+  for (const [deck, top, id] of [[lowDeck, lowTop, 'lower'], [highDeck, highTop, 'upper']] as const) {
+    c.b('fabric', -hw + post + 0.035, deck + 0.004, -hd + 0.035, hw - post - 0.035, top, zEnd - 0.035, 0xeeeae0)
+    c.b('fabric', -hw + post + 0.04, top - 0.12, -hd + 0.65, hw - post - 0.04, top + 0.035, zEnd - 0.04, id === 'upper' ? mix(sheet, 0xffffff, 0.15) : sheet)
+    c.b('fabric', -hw + post + 0.1, top, -hd + 0.07, hw - post - 0.1, top + 0.1, -hd + 0.45, 0xf6f4ee, 0, 0.08)
+  }
+  // upper guard rails with a gap at the ladder, and the ladder on the foot end
+  c.b('wood', -hw + post, highTop + 0.04, -hd + post, -hw + post + 0.03, highTop + 0.3, zEnd - post - 0.45, wood)
+  c.b('wood', hw - post - 0.03, highTop + 0.04, -hd + post, hw - post, highTop + 0.3, zEnd - post - 0.45, wood)
+  c.b('wood', -hw + post, highTop + 0.04, zEnd - post - 0.45, -hw + post + 0.03, highTop + 0.07, zEnd - post, wood)
+  c.b('wood', hw - post - 0.03, highTop + 0.04, zEnd - post - 0.45, hw - post, highTop + 0.07, zEnd - post, wood)
+  for (const x of [-0.2, 0.2]) c.b('wood', x - 0.02, 0.06, zEnd, x + 0.02, highTop + 0.3, hd, shade(wood, 1.1)) // ladder rails
+  for (let i = 0; i < 5; i++) c.b('wood', -0.2, 0.3 + i * 0.22, zEnd, 0.2, 0.34 + i * 0.22, hd - 0.01, wood) // rungs
+  // lie seats: head at -z, same convention as the beds
+  for (const [id, top, ex] of [['lie_lower', lowTop, 1], ['lie_upper', highTop, -1]] as const) {
+    c.add('seats', { id, pose: 'lie', pos: [0, round3(top + 0.06), round3(-hd + 0.95)], ry: FACE, eye: 0.2, exit: [round3(ex * (hw + 0.5)), 0, round3(-hd + 1.1)] })
+    c.interact(`lie_${id}`, [0, round3(top + 0.3), round3(-hd + 0.95)], { do: 'sit', seat: id }, 'prompt.lie', 1.8)
+  }
+}

@@ -5,7 +5,7 @@ import { drawPieces, garment, pegs, type GarmentKind } from '../garments'
 import { mix, round3, shade } from '../util'
 
 /** Brick courses between two corners: alternating relief so mortar lines read from afar. */
-function bricks(c: Ctx, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, color: number, mortar = 0xcfc7b8): void {
+export function bricks(c: Ctx, x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, color: number, mortar = 0xcfc7b8): void {
   const ch = 0.075
   c.b('plain', x0 + 0.007, y0, z0 + 0.007, x1 - 0.007, y1, z1 - 0.007, mortar) // mortar core, recessed behind the brick faces
   const n = Math.max(1, Math.round((y1 - y0) / ch))

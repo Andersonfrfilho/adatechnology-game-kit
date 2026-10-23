@@ -1,5 +1,12 @@
 # @adatechnology/game-contracts
 
+## 0.1.1
+
+### Patch Changes
+
+- 930b9ab: Add `checkSpec` to game-contracts; `loadModule` runs it for every item with a spec (given, a function, or derived) and logs ✓/✗/⚠ lines.
+- 632a45a: Add `DestructionWorld.setPartPose` (and the optional `DestructibleImpl.setPartPose`) so animated parts keep their collision and raycast shape in sync; the test room calls it for every animated part.
+
 ## 0.1.0
 
 ### Minor Changes

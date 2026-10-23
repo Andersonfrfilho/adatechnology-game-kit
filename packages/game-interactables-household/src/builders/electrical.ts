@@ -71,6 +71,22 @@ export function serviceEntrance(c: Ctx): void {
     c.cyl('plain', x, ay + 0.14, 0, 0.03, 0.03, 0x7a9aaa, 'cyl')
     ins.push([x, round3(ay + 0.17), 0])
   }
+  if (c.M.variant === 'gato') {
+    // illegal tap ("gato"): the drop wire is hooked straight onto the line, there is no meter, no breaker box and no riser
+    const gh: Vec3 = c.M.house ?? [0, 3.2, 8]
+    const g0: Vec3 = ins[1]
+    const gp: Vec3[] = []
+    for (let i = 0; i <= 14; i++) {
+      const t = i / 14
+      gp.push([round3(g0[0] + (gh[0] - g0[0]) * t), round3(g0[1] + (gh[1] - g0[1]) * t - (c.M.sag ?? 0.5) * 4 * t * (1 - t)), round3(g0[2] + (gh[2] - g0[2]) * t)])
+    }
+    c.add('wires', { id: 'drop', kind: 'drop', radius: 0.006, points: gp })
+    c.add('wires', { id: 'hook', kind: 'cable', radius: 0.004, points: [[0.22, round3(ay + 0.17), 0], [0.12, round3(ay + 0.06), 0.05], [round3(g0[0]), round3(g0[1]), 0]] })
+    c.spec.colliders = []
+    c.collider('pole', -0.15, 0, -0.15, 0.15, h, 0.15)
+    c.add('damage', { target: 'self', kind: 'masonry', hp: 600 })
+    return
+  }
   // meter box on the pole front with a door part and a window
   const mx = 0.19
   const my = 1.45

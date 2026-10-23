@@ -13,8 +13,8 @@ function fitsSize(size: number[], max: number[]): boolean {
 
 describe('catalog and data', () => {
   it('has the expected types', () => {
-    expect(TYPES.length).toBe(39)
-    for (const t of ['fridge', 'fridge_compact', 'kitchen_cabinet_base', 'kitchen_cabinet_wall', 'pantry', 'wardrobe', 'dresser', 'nightstand', 'bathroom_cabinet', 'stove', 'gas_bottle', 'sink_kitchen', 'sink_bathroom', 'shower', 'toilet', 'utility_sink', 'wall_socket', 'wall_switch', 'service_entrance', 'conduit_run', 'tv', 'microwave', 'washing_machine', 'sofa', 'armchair', 'dining_chair', 'bed_double', 'bed_single', 'bench', 'blinds', 'curtain', 'trash_bin', 'wheelie_bin', 'mailbox', 'dog_house', 'bbq', 'clothesline']) expect(TYPES).toContain(t)
+    expect(TYPES.length).toBe(51)
+    for (const t of ['fridge', 'fridge_compact', 'kitchen_cabinet_base', 'kitchen_cabinet_wall', 'pantry', 'wardrobe', 'dresser', 'nightstand', 'bathroom_cabinet', 'stove', 'gas_bottle', 'sink_kitchen', 'sink_bathroom', 'shower', 'toilet', 'utility_sink', 'wall_socket', 'wall_switch', 'service_entrance', 'conduit_run', 'tv', 'microwave', 'washing_machine', 'sofa', 'armchair', 'dining_chair', 'bed_double', 'bed_single', 'bench', 'blinds', 'curtain', 'trash_bin', 'wheelie_bin', 'mailbox', 'dog_house', 'bbq', 'clothesline', 'bunk_bed', 'wood_stove', 'fireplace', 'outhouse', 'well', 'cooler', 'campfire', 'camp_stove', 'gas_canister', 'lantern_lamp', 'camp_chair', 'camp_table']) expect(TYPES).toContain(t)
   })
 
   it('has at least 70 well-formed items with names in both locales', () => {
@@ -41,7 +41,7 @@ describe('catalog and data', () => {
   })
 
   it('has the loot tables the brief lists, all pointing at catalog items', () => {
-    for (const k of ['fridge', 'freezer', 'kitchen_cabinet', 'pantry', 'wardrobe', 'dresser', 'nightstand', 'bathroom_cabinet', 'under_sink', 'trash', 'mailbox', 'bbq_counter', 'garage_shelf']) expect(hh.loot[k], k).toBeTruthy()
+    for (const k of ['fridge', 'freezer', 'kitchen_cabinet', 'pantry', 'wardrobe', 'dresser', 'nightstand', 'bathroom_cabinet', 'under_sink', 'trash', 'mailbox', 'bbq_counter', 'garage_shelf', 'cooler']) expect(hh.loot[k], k).toBeTruthy()
     for (const [k, t] of Object.entries(hh.loot)) for (const e of t.entries) expect(hh.items[e.type], `${k}:${e.type}`).toBeTruthy()
   })
 

@@ -104,6 +104,47 @@ export function buildScenarios(locale, analysisOf) {
       expect(joints.every((j) => j.kind === 'screw'), T(`Todas as ${joints.length} juntas da cadeira são parafusos`, `All ${joints.length} joints of the chair are screws`))
     }),
 
+    sc('camp_canister_shot', T('Botijão de camping: tiros no casco furam o aço e o gás explode, uma explosão pequena ao lado do fogareiro', 'Camping canister: shots at the shell pierce the steel and the gas explodes, a small blast beside the stove'), ({ room, step, expect }) => {
+      const id = spawn(room, 'gas_canister')
+      const stove = spawn(room, 'camp_stove', [0.35, 0, -5])
+      const shell = analysisOf('gas_canister').destructible.parts.find((p) => p.explodes)
+      const c0 = room.spawned().find((q) => q.objectId === stove).root.position.clone()
+      room.setTool('pistol_9mm')
+      let shots = 0
+      for (; shots < 30 && count(room, 'explode', id) === 0; shots++) shoot(room, step, shell, 0.8)
+      let seconds = 0
+      // a pierced can leaks gas: a flame at the hole lights it and the rest goes up
+      for (; seconds < 60 && count(room, 'explode', id) === 0; seconds++) {
+        room.world.hit(id, { type: 'fire', point: world(shell), temperature: 1000, radius: 0.3, duration: 1 })
+        step(1)
+      }
+      step(1.5)
+      const moved = c0.distanceTo(room.spawned().find((q) => q.objectId === stove)?.root.position ?? c0)
+      const hurt = (room.world.state(stove)?.parts ?? []).filter((p) => p.status !== 'intact').length
+      expect(count(room, 'explode', id) > 0, T(`Botijão explodiu após ${shots} tiro(s) e ${seconds} s de chama (${shell.explodes.energy} J, raio ${shell.explodes.radius} m)`, `Canister exploded after ${shots} shot(s) and ${seconds} s of flame (${shell.explodes.energy} J, radius ${shell.explodes.radius} m)`), { shots, seconds })
+      expect(shell.explodes.energy < 12000, T(`Explosão pequena: ${shell.explodes.energy} J (um botijão de cozinha tem muito mais)`, `A small blast: ${shell.explodes.energy} J (a kitchen bottle has far more)`), { energy: shell.explodes.energy })
+      expect(moved > 0.05 || hurt > 0, T(`O fogareiro ao lado: moveu ${n1(moved)} m, ${hurt} parte(s) danificada(s)`, `The stove next to it: moved ${n1(moved)} m, ${hurt} part(s) damaged`), { moved, hurt })
+    }),
+
+    sc('camp_chair_kicked', T('Cadeira de camping: chutes soltam os clipes e a estrutura de alumínio desmonta', 'Camp chair: kicks free the clips and the aluminium frame comes apart'), ({ room, step, expect }) => {
+      const id = spawn(room, 'camp_chair')
+      const d = analysisOf('camp_chair').destructible
+      const legs = d.parts.filter((p) => p.position[1] - p.shape.size[1] / 2 < 0.05 && p.shape.size[1] > 0.2)
+      const before = room.world.state(id).parts.length
+      let kicks = 0
+      for (; kicks < 24 && room.world.state(id).parts.length === before; kicks++) {
+        const leg = legs[kicks % legs.length]
+        const c = world(leg)
+        room.world.hitPart(id, leg.id, { type: 'blunt', point: [c[0], c[1], c[2]], direction: [0.7, 0, -0.7], energy: 240, radius: 0.05, source: 'kick' })
+        step(0.3)
+      }
+      step(1)
+      const open = room.world.state(id).joints.filter((j) => j.open).length
+      const loose = before - room.world.state(id).parts.length
+      expect(loose > 0 || open > 0, T(`Chutes: ${kicks}; peças que saíram: ${loose}; juntas abertas: ${open}`, `Kicks: ${kicks}; pieces that came off: ${loose}; open joints: ${open}`), { kicks, open })
+      expect(d.joints.every((j) => j.kind === 'clip'), T(`Todas as ${d.joints.length} juntas da cadeira são clipes`, `All ${d.joints.length} joints of the chair are clips`))
+    }),
+
     sc('tv_screen_shatters', T('TV: um tiro na tela quebra o vidro em cacos', 'TV: a shot at the screen shatters the glass'), ({ room, step, expect }) => {
       const id = spawn(room, 'tv')
       const screen = specPart('tv', 'screen')

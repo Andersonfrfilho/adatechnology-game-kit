@@ -22,7 +22,7 @@ function loadPlaywright() {
 const { chromium } = loadPlaywright()
 
 /** Draw-call budget in game quality, worst view with the sun's shadow map redrawn and a mirror in sight (measured, see README). */
-const GAME_CALLS_MAX = Number(process.env.GAME_CALLS_MAX || 400)
+const GAME_CALLS_MAX = Number(process.env.GAME_CALLS_MAX || 450)
 
 const dist = join(here, 'dist/showroom.html')
 if (!existsSync(dist)) execFileSync(process.execPath, [join(here, 'build.mjs')], { stdio: 'inherit' })
@@ -147,6 +147,47 @@ const bbq = await E(() => {
 })
 check('barbecue: fire and smoke emitters while lit', bbq.lit && bbq.kinds.includes('fire') && bbq.kinds.includes('smoke'), bbq.kinds)
 check('particles are alive for the effects', bbq.alive.alive > 0, bbq.alive.byKind)
+
+// ------------------------------------------------------------------------------------------------------------------------------
+// Rural and camping corner: fireplace, wood stove and campfire burn; the well gives water; the cooler opens; the camp stove lights
+// ------------------------------------------------------------------------------------------------------------------------------
+const rural = await E(() => {
+  const s = window.__showroom
+  const w = s.world
+  const o = {}
+  for (const id of ['fireplace', 'wood_stove', 'campfire']) {
+    w.act(`${id}:ignite_fire`)
+  }
+  s.step(3)
+  const em = w.emitters()
+  for (const id of ['fireplace', 'wood_stove', 'campfire']) {
+    o[id] = { lit: w.isLit(id, 'fire'), kinds: em.filter((e) => e.object === id && e.intensity > 0).map((e) => e.kind) }
+  }
+  w.act('well:use_water_bucket')
+  s.step(1.5)
+  o.wellKinds = w.emitters().filter((e) => e.object === 'well' && e.intensity > 0).map((e) => e.kind)
+  w.act('well:use_water_bucket')
+  o.coolerClosed = w.accessible('cooler', 'cooler')
+  w.act('cooler:toggle_lid')
+  s.step(1.5)
+  o.coolerOpen = w.accessible('cooler', 'cooler')
+  const stacks = w.contents('cooler', 'cooler')
+  const slot = stacks.findIndex((x) => x)
+  o.coolerSlot = slot
+  const got = slot >= 0 ? w.take('cooler', 'cooler', slot) : null
+  o.coolerGot = got && got.type
+  w.act('gas_canister:use_gas') // open the canister valve
+  s.step(0.5)
+  w.act('camp_stove:use_burner')
+  s.step(2)
+  o.stoveLit = w.isLit('camp_stove', 'burner')
+  o.stoveFlame = w.emitters().some((e) => e.object === 'camp_stove' && e.kind === 'flame' && e.intensity > 0)
+  return o
+})
+check('fireplace, wood stove and campfire light: fire and smoke emitters', ['fireplace', 'wood_stove', 'campfire'].every((id) => rural[id].lit && rural[id].kinds.includes('fire') && rural[id].kinds.includes('smoke')), { fireplace: rural.fireplace, wood_stove: rural.wood_stove, campfire: rural.campfire })
+check('well: pulling the bucket gives water', rural.wellKinds.includes('water'), rural.wellKinds)
+check('cooler: lid opens and an item can be taken', !rural.coolerClosed && rural.coolerOpen && rural.coolerSlot >= 0 && !!rural.coolerGot, { got: rural.coolerGot })
+check('camp stove lights from its canister', rural.stoveLit && rural.stoveFlame, { lit: rural.stoveLit, flame: rural.stoveFlame })
 
 // ------------------------------------------------------------------------------------------------------------------------------
 // Power: TV powered by a socket, grid off -> unpowered; switch toggles a lamp; breaker
@@ -451,6 +492,8 @@ saved.push(
 )
 saved.push(await shot('05-yard-bbq-clothesline', `${PRE} ensure("bbq:ignite_coal", w.isLit("bbq","coal")); ensure("trash_bin:toggle_lid", w.partT("trash_bin","lid") > 0.5); s.step(3)`, { x: 6.9, z: 8.4, look: [6.6, 1.2, 12.6], fov: 94 }))
 saved.push(await shot('05b-clothesline', `s.step(1)`, { x: 4.2, z: 8.6, look: [4.2, 1.2, 11.0], fov: 62 }))
+saved.push(await shot('05c-rural-camp', `${PRE} for (const id of ['fireplace','wood_stove','campfire']) ensure(id + ':ignite_fire', w.isLit(id, 'fire')); ensure("well:use_water_bucket", st().well.fixtures.water); ensure("cooler:toggle_lid", w.partT("cooler","lid") > 0.5); s.step(3)`, { x: 8.2, z: 8.3, look: [9.0, 0.9, 11.4], fov: 80 }))
+saved.push(await shot('05d-rural-houses', `s.step(1)`, { x: 3.2, z: 8.3, look: [1.6, 1.0, 11.0], fov: 90 }))
 saved.push(await shot('06-living-night', `${PRE} s.setNight(true); ensure("switch_living:use_switch", w.power.isOn("lamp_living","lamp")); ensure("switch_kitchen:use_switch", w.power.isOn("lamp_kitchen","lamp")); ensure("tv:use_tv", w.power.isOn("tv","tv"))`, { x: 6.6, z: 6.6, look: [2.5, 1.2, 3.0] }))
 await E(() => window.__showroom.setNight(false))
 

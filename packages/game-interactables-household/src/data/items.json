@@ -1168,5 +1168,31 @@
     "stack": 1,
     "shape": "roll",
     "color": 13152384
+  },
+  "ice_pack": {
+    "id": "ice_pack",
+    "category": "drink",
+    "size": [
+      0.16,
+      0.03,
+      0.12
+    ],
+    "weight": 0.4,
+    "stack": 3,
+    "shape": "box",
+    "color": 9356776
+  },
+  "sandwich": {
+    "id": "sandwich",
+    "category": "food",
+    "size": [
+      0.12,
+      0.05,
+      0.12
+    ],
+    "weight": 0.2,
+    "stack": 2,
+    "shape": "box",
+    "color": 14268282
   }
 }

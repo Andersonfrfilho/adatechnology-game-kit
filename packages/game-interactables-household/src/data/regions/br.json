@@ -24,5 +24,12 @@
   "clothesline": {
     "style": "t_post",
     "wires": 3
+  },
+  "canister": {
+    "kind": "butane_230",
+    "capacityKg": 0.23,
+    "diameter": 0.11,
+    "height": 0.19,
+    "color": "#4f8f5a"
   }
 }

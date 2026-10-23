@@ -31,6 +31,8 @@
     seating: 'Assentos e camas',
     window: 'Janelas',
     yard: 'Quintal',
+    rural: 'Casa rural',
+    camp: 'Acampamento',
     house: 'Casa',
   }
 
@@ -852,6 +854,20 @@
     ['mailbox', 'mailbox', 5.9, 13.65, PI],
     ['dog_house', 'dog_house', 12.9, 10.6, -H],
     ['bench', 'bench', 8.4, 8.42, 0],
+    // rural and camping corner
+    ['fireplace', 'fireplace', 1.0, 8.6, 0],
+    ['wood_stove', 'wood_stove', 2.6, 9.4, 0],
+    ['bunk_bed', 'bunk_bed', 0.7, 11.4, 0],
+    ['outhouse', 'outhouse', 2.3, 12.4, 0],
+    ['well', 'well', 6.8, 10.9, 0],
+    ['campfire', 'campfire', 9.6, 11.0, 0],
+    ['camp_chair_1', 'camp_chair', 10.7, 11.0, -H],
+    ['camp_chair_2', 'camp_chair', 8.5, 11.0, H],
+    ['camp_table', 'camp_table', 9.4, 9.5, 0],
+    ['camp_stove', 'camp_stove', 9.0, 9.5, 0, { y: 0.72 }],
+    ['gas_canister', 'gas_canister', 9.4, 9.5, 0, { y: 0.72 }],
+    ['lantern', 'lantern_lamp', 9.8, 9.5, 0, { y: 0.72 }],
+    ['cooler', 'cooler', 7.6, 9.3, 0],
   ]
 
   const typeInfo = new Map(hh.types.map((t) => [t.id, t]))

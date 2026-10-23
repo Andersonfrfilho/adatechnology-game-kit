@@ -728,5 +728,66 @@
         "weight": 2
       }
     ]
+  },
+  "cooler": {
+    "fill": 0.8,
+    "entries": [
+      {
+        "type": "soda_can",
+        "weight": 6,
+        "qty": [
+          1,
+          4
+        ]
+      },
+      {
+        "type": "water_bottle",
+        "weight": 5,
+        "qty": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "juice_box",
+        "weight": 4
+      },
+      {
+        "type": "ice_pack",
+        "weight": 6,
+        "qty": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "sandwich",
+        "weight": 5,
+        "qty": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "apple",
+        "weight": 3,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "cheese",
+        "weight": 2
+      },
+      {
+        "type": "ham",
+        "weight": 2
+      },
+      {
+        "type": "yogurt",
+        "weight": 2
+      }
+    ]
   }
 }

@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verify:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,17 +23,96 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Install
-        run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm lint
+      - run: pnpm lint
 
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # workspace packages resolve each other through dist, so build first
+      - run: pnpm build
+
+      - run: pnpm typecheck
+
+  # Builds the test matrix from packages/*/package.json (packages with a "test" script).
+  # Slow packages are split with vitest --shard: add them to SHARDS as package -> shard count.
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      include: ${{ steps.set.outputs.include }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: set
+        env:
+          SHARDS: '{"@adatechnology/game-vehicles-fleet":4}'
+        run: |
+          node -e '
+            const fs = require("fs");
+            const shards = JSON.parse(process.env.SHARDS);
+            const include = [];
+            for (const dir of fs.readdirSync("packages").sort()) {
+              const file = `packages/${dir}/package.json`;
+              if (!fs.existsSync(file)) continue;
+              const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
+              if (!pkg.scripts || !pkg.scripts.test) continue;
+              const total = shards[pkg.name] || 1;
+              for (let shard = 1; shard <= total; shard++) include.push({ pkg: pkg.name, shard, total });
+            }
+            const json = JSON.stringify(include);
+            console.log(JSON.stringify(include, null, 2));
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `include=${json}\n`);
+          '
+
+  test:
+    name: test (${{ matrix.pkg }} ${{ matrix.shard }}/${{ matrix.total }})
+    needs: matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.matrix.outputs.include) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # the package and the workspace packages it depends on
       - name: Build
-        run: pnpm build
+        run: pnpm --filter "${{ matrix.pkg }}..." run build
 
       - name: Test
-        run: pnpm test
+        run: |
+          if [ "${{ matrix.total }}" -gt 1 ]; then
+            pnpm --filter "${{ matrix.pkg }}" exec vitest run --shard=${{ matrix.shard }}/${{ matrix.total }}
+          else
+            pnpm --filter "${{ matrix.pkg }}" test
+          fi
 
-      - name: Typecheck
-        run: pnpm typecheck
+  # One stable required check; Release waits on the whole "CI" workflow.
+  ci-ok:
+    if: always()
+    needs: [lint, typecheck, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" = "true" ]; then
+            echo "A required job did not succeed: ${{ join(needs.*.result, ', ') }}"
+            exit 1
+          fi

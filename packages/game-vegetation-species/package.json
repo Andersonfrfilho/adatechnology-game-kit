@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-vegetation-species",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Content pack for @adatechnology/game-vegetation: ~90 plant species as JSON (trees, palms, shrubs, flowers, cacti, succulents, grasses, vines, potted), pt-BR and en names, and regional mixes as data.",
   "keywords": [
