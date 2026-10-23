@@ -132,14 +132,14 @@ function dress(col: number): Garment {
   p.push(span('body', -0.1, TOP - 0.1, 0.1, -0.34, col)) // bodice
   p.push(span('trim', -0.105, -0.34, 0.105, -0.37, trim, { t: 0.015 })) // belt
   // skirt: steps that widen towards the hem
-  const steps = 6
+  const steps = 11
   for (let i = 0; i < steps; i++) {
-    const v0 = -0.37 - i * 0.11
-    const half = 0.12 + i * 0.045
-    p.push(span('skirt', -half, v0, half, v0 - 0.11, i % 2 ? shade(col, 0.96) : col))
+    const v0 = -0.37 - i * 0.06
+    const half = 0.115 + i * 0.024
+    p.push(span('skirt', -half, v0, half, v0 - 0.06, i % 2 ? shade(col, 0.97) : col))
   }
-  p.push(span('trim', -0.345, -1.01, 0.345, -1.03, mix(col, 0xffffff, 0.45), { t: 0.014 }))
-  return { kind: 'dress', pieces: p, width: 0.69, height: 1.03, pegs: [-0.063, 0.063] }
+  p.push(span('trim', -0.38, -1.03, 0.38, -1.05, mix(col, 0xffffff, 0.45), { t: 0.014 }))
+  return { kind: 'dress', pieces: p, width: 0.69, height: 1.05, pegs: [-0.063, 0.063] }
 }
 
 function socks(col: number): Garment {

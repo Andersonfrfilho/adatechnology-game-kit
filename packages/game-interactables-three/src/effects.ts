@@ -418,7 +418,7 @@ export function createEffects(THREE: ThreeLib, scene: ThreeNS.Object3D, options:
   const SIDES = 8
   const maxStreams = Math.max(0, Math.floor(options.maxStreams ?? 6))
   const streaksTex = makeStreaks(THREE)
-  const streamMat = new THREE.MeshBasicMaterial({ color: 0xcfe8ff, map: streaksTex, vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false, side: THREE.DoubleSide })
+  const streamMat = new THREE.MeshBasicMaterial({ color: 0x9cccff, map: streaksTex, vertexColors: true, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide })
   const streamIndex: number[] = []
   for (let i = 0; i < SEG; i++) {
     for (let m = 0; m < SIDES; m++) {
@@ -655,9 +655,9 @@ export function createEffects(THREE: ThreeLib, scene: ThreeNS.Object3D, options:
           break
         default: {
           const f = p.flags[i]
-          alpha = f === 4 ? 0.14 * (1 - u) : f === 3 ? 0.7 * (1 - u * 0.5) : f === 2 ? 0.5 * (1 - u * 0.6) : 0.75
-          ca[j] = f === 4 ? 0.85 : 0.6
-          ca[j + 1] = f === 4 ? 0.92 : 0.8
+          alpha = f === 4 ? 0.16 * (1 - u) : f === 3 ? 0.8 * (1 - u * 0.5) : f === 2 ? 0.65 * (1 - u * 0.6) : 0.8
+          ca[j] = f === 4 ? 0.85 : 0.5
+          ca[j + 1] = f === 4 ? 0.92 : 0.74
           ca[j + 2] = 1
         }
       }

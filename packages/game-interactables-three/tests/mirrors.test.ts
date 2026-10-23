@@ -163,7 +163,7 @@ describe('mirrors and renderer.info', () => {
     const renderer = fakeRenderer(autoReset)
     renderer.info.render.calls = 100 // drawn before the reflector in the main pass
     renderer.info.render.triangles = 1000
-    reflector.onBeforeRender(renderer as any, scene, camera, mesh.geometry, mesh.material, null as any)
+    ;(reflector as any).onBeforeRender(renderer, scene, camera, mesh.geometry, mesh.material, null)
     return renderer.info.render
   }
 
