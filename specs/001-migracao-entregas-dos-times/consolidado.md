@@ -6,6 +6,8 @@ pergunta vista por frentes diferentes. Aqui ficam agrupadas: primeiro as **decis
 
 Legenda: ✅ decidido (data e resposta), ⏳ aguardando o dono, 🔁 decidido pela regra do projeto (`CLAUDE.md`), sem precisar perguntar.
 
+Desde 2026-10-23 o dono delegou: **decido o resto pela recomendação e aponto as melhorias**; só pergunto escolha de negócio.
+
 ## 0. O que já está claro
 
 - 🔁 O site e os artefatos têm o mesmo código em 18 das 27 entregas. As divergências reais estão em `fontes.md`.
@@ -80,7 +82,7 @@ Legenda: ✅ decidido (data e resposta), ⏳ aguardando o dono, 🔁 decidido pe
 
 | # | Decisão | O que as fontes dizem | Recomendação | Situação |
 |---|---|---|---|---|
-| E1 | Qual explosão vale | Laboratório ("versão final"), jogo (reduzida, com teto por área e LOD), SDK (mais fraca) | — | ⏳ prévia lado a lado pronta em `comparacoes/explosoes/index.html` (Laboratório mais rico; jogo é a versão reduzida; no SDK fogo e fumaça não aparecem). Aguarda o dono escolher |
+| E1 | Qual explosão vale | Laboratório ("versão final"), jogo (reduzida, com teto por área e LOD), SDK (mais fraca); prévia em `comparacoes/explosoes/` | — | ✅ 2026-10-23 (dono): **Laboratório com o teto do jogo** (6 explosões a cada 4 s por área e menos detalhe de longe). O Laboratório, bem desenhado, é o modelo da bancada de efeitos (E5) |
 | E2 | Dados de fluido | Sangue seca marrom `3B1D14` em 10 min (time) ou `4A0506` em 20 min (SDK); gasolina 60 s sem marca ou 120 s com marca | — | ✅ 2026-10-23: **configurável por jogo**; o SDK traz os valores do time (Padrão de Fluidos F1–F12) como padrão, e entram no `game-fluids` o filme que escorre, o respingo por ângulo, a bile e o sangue antigo |
 | E3 | Dois raios de explosão (letal e ferimento) | Em tudo do time; SDK tem um | Dados em `game-weapons`, dano em `game-characters` | 🔁 |
 | E4 | Pacote | — | `game-vfx` + `game-vfx-three`; destruição, fluidos e armas passam a usá-lo | 🔁 |
@@ -91,14 +93,14 @@ Legenda: ✅ decidido (data e resposta), ⏳ aguardando o dono, 🔁 decidido pe
 
 | # | Decisão | O que as fontes dizem | Recomendação | Situação |
 |---|---|---|---|---|
-| V1 | Goldens de `seda`, `popular`, `civico` | Página de hoje = SDK; golden antigo diverge | Regenerar o golden com a versão de hoje | ⏳ |
-| V2 | Garagem do artefato (SDK separado e frotas novas: aviões, barcos, helicópteros, militares) × v4 do site | Estruturas diferentes; não comparadas a fundo | Comparar a fundo antes de decidir | ⏳ |
+| V1 | Goldens de `seda`, `popular`, `civico` | Página de hoje = SDK; golden antigo diverge | — | ✅ 2026-10-23 (decidido por mim, a pedido do dono): regenerar o golden com a versão de hoje |
+| V2 | Garagem do artefato (SDK separado e frotas novas) × v4 do site | Estruturas diferentes | — | ✅ 2026-10-23 (decidido por mim): entra tudo o que o artefato tem e o SDK não tem (frotas de aviões, barcos, helicópteros, militares); motor = SDK (igual). A comparação a fundo é a 1ª tarefa da fase de veículos |
 | V3 | Modo leve de veículos | Só na Frota Leve | Entra no `game-vehicles-three` | 🔁 |
-| V4 | Condução | Documento pede semi-simulação; o jogo é arcade | Arcade agora, semi-simulação depois | ⏳ |
+| V4 | Condução | Documento pede semi-simulação; o jogo é arcade | — | ✅ 2026-10-23 (decidido por mim): os dois como modos do SDK, arcade primeiro |
 | V5 | Módulos de teste de veículos (8 itens, 11 cenários) e vegetação (18 itens, 13 cenários) | Só nas páginas | Viram `examples/vehicles-test-area` e `vegetation-test-area` | 🔁 |
-| V6 | Jogador e sobrevivência (fôlego, ferida, infecção, agarrão) | Só no jogo | Pacote `game-player` | ⏳ |
+| V6 | Jogador e sobrevivência (fôlego, ferida, infecção, agarrão) | Só no jogo | — | ✅ 2026-10-23 (decidido por mim): pacote genérico `game-player` |
 | V7 | Câmera de ombro do jogo (amortecimento, FOV por zoom) | Melhor que `game-camera` (o `smoothing` do SDK nunca é lido) | Portar para `game-camera` | 🔁 |
-| V8 | Viveiro e Sala de destruição com diferenças entre artefato e site | 106 e 175 linhas | Comparar a fundo; vale a mais nova | ⏳ |
+| V8 | Viveiro e Sala de destruição com diferenças entre artefato e site | 106 e 175 linhas | — | ✅ 2026-10-23 (decidido por mim): juntar as duas versões mantendo o que cada uma tem a mais, depois de comparar a fundo |
 
 ## 7. Sons
 
@@ -118,7 +120,7 @@ teste e da bancada de móveis é do three.js embutido, sem uso.
 
 | # | Decisão | Recomendação | Situação |
 |---|---|---|---|
-| S1 | Pacote | `game-audio` genérico: síntese (ruído filtrado, osciladores, formantes), mixagem com compressor e reverb, atenuação por distância, limite de vozes e sons contínuos. Os sons de cada assunto ficam no pacote do assunto: armas no `game-weapons-three`, vozes no `game-characters-three`, bichos no `game-animals-three`, motor e rotor no `game-vehicles-three`, chuva no futuro clima | ⏳ |
+| S1 | Pacote | `game-audio` genérico: síntese (ruído filtrado, osciladores, formantes), mixagem com compressor e reverb, atenuação por distância, limite de vozes e sons contínuos. Os sons de cada assunto ficam no pacote do assunto: armas no `game-weapons-three`, vozes no `game-characters-three`, bichos no `game-animals-three`, motor e rotor no `game-vehicles-three`, chuva no futuro clima | ✅ 2026-10-23 (decidido por mim): `game-audio` genérico; sons de cada assunto no pacote do assunto |
 | S2 | Som de tiro | — | ✅ 2026-10-23: juntar a classe e o abafamento por distância do jogo com a energia do calibre do SDK |
 | S3 | Igual ao original | O golden do som compara os parâmetros gerados (frequência, volume, duração, filtros) para cada evento com semente fixa, já que não dá para comparar áudio por hash | 🔁 G3 |
 
@@ -130,3 +132,22 @@ teste e da bancada de móveis é do three.js embutido, sem uso.
   regra, e usar nas casas (`game-floorplan-structure`) e nos cenários.
 - **Partículas de explosão do SDK** sem aparecer na comparação (ver `comparacoes/explosoes/README.md`).
 - **Jogo publicado como "versão atual"** quebra ao carregar (`GameVegetation` ausente); a versão do site é a completa.
+
+## 9. Melhorias apontadas
+
+Além de portar, o que encontrei para melhorar (em ordem de impacto):
+
+1. **Partículas de explosão do SDK não aparecem** (`game-destruction-three`): a camada de fogo e clarão fica vazia e a fumaça não desenha na
+   comparação. Corrigir junto com a troca para a explosão do Laboratório.
+2. **Lixo de memória por quadro nas partículas do SDK** (`particles.ts` L294-295, dois arrays por partícula por quadro em `hexToRgb`):
+   trocar por cor pré-calculada.
+3. **`game-camera` ignora o `smoothing`**: a câmera de ombro do jogo tem amortecimento e FOV por zoom. Portar e ligar o parâmetro.
+4. **Goldens de `game-vehicles-fleet` velhos**: regenerar (V1) para o CI voltar a ficar verde.
+5. **Jogo publicado quebrado** (artefato "versão atual" sem `GameVegetation`): avisar o time de jogo; a versão do site é a completa.
+6. **O jogo embute SDKs sem usar** (`GameTestRoom`, `GameWeapons`, `GameDestruction*`, `GameFluids*`) e atira com tabelas próprias: quando
+   o porte de armas terminar, o jogo passa a usar o `game-weapons`.
+7. **Itens sem tamanho real** (a vitrine normaliza tudo para 1,55 de altura): o catálogo ganha dimensões em metros.
+8. **Fluido da Oficina na CPU** (sobe a textura inteira a cada quadro): no SDK, simular só perto do jogador ou passar para a GPU.
+9. **Sorteio sem semente nas entregas** (`Math.random` e estado global): todo porte troca por semente (G3), o que também deixa os
+   resultados repetíveis para teste.
+10. **Corpo com 8 versões**: depois do `game-characters`, as páginas dos times passam a montar a partir dele, para não divergirem de novo.
