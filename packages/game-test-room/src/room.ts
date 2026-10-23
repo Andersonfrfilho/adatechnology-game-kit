@@ -1586,6 +1586,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const pose = poseAt(pl.clip, id === '' ? null : id, pl.t)
       obj.position.set(rest.p[0] + pose.position[0], rest.p[1] + pose.position[1], rest.p[2] + pose.position[2])
       obj.rotation.set(rest.r[0] + pose.rotation[0], rest.r[1] + pose.rotation[1], rest.r[2] + pose.rotation[2])
+      // animations are visual only: move the part's collision/raycast shape to the same pose (spec rest + clip offset)
+      const ps = id === '' ? undefined : specs.get(pl.entry.so.objectId)?.parts.find((p) => p.id === id)
+      if (ps) {
+        const r0 = ps.rotation ?? ZERO
+        world.setPartPose(
+          pl.entry.so.objectId, id,
+          [ps.position[0] + pose.position[0], ps.position[1] + pose.position[1], ps.position[2] + pose.position[2]],
+          [r0[0] + pose.rotation[0], r0[1] + pose.rotation[1], r0[2] + pose.rotation[2]],
+        )
+      }
     }
   }
   const updateAnimations = (dt: number): void => {

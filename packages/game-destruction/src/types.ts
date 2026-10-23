@@ -184,6 +184,13 @@ export interface DestructionWorld {
   /** Move an object (the renderer or physics owns transforms; keep the world in sync so world-space hits land). */
   setTransform(id: string, position: Vec3, rotation: Quat): void
   /**
+   * Move a part's collision shape (raycast, hits, blast and joint distance) to an object-local pose; the part's spec is unchanged. Animations are
+   * visual, so a host that plays a clip calls this every frame with `rest + clip offset`. `rotation` is Euler XYZ (radians), default none. For a
+   * registered impl it forwards to the optional `DestructibleImpl.setPartPose` and otherwise only moves the world's raycast shape. Dents and holes
+   * stay in object space.
+   */
+  setPartPose(objectId: string, partId: string, position: Vec3, rotation?: Vec3): void
+  /**
    * Split a loose group into its own object (after a `detach`, when the renderer makes the piece a separate body). The parts move with their
    * state; the new object starts at the old object's transform. Returns the new id.
    */

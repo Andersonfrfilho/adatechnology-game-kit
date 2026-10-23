@@ -126,9 +126,41 @@ describe('animations', () => {
     expect(sounds).toEqual(['whoosh'])
     for (let i = 0; i < 60; i++) room.update(1 / 60)
     expect(panel.position.x).toBeCloseTo(1, 5)
+    // the collision shape moved with the mesh, so the aim has to follow the panel now
+    room.look([1, 1, -1.5], [1, 0.5, -4])
     expect(room.animations()?.playing).toBeNull()
     expect(room.log.entries().filter((e) => e.type.startsWith('animation')).map((e) => e.type)).toEqual(['animation', 'animation_event', 'animation_end'])
     expect(room.playAnimation('nope')).toBe(false)
+  })
+
+  it('the collision shape follows the animation: after the clip the shot hits the open pose, not the closed one', () => {
+    const room = makeRoom()
+    const spec = { parts: [{ id: 'door', material: 'wood_soft', shape: { kind: 'box' as const, size: [0.6, 1.6, 0.04] as [number, number, number] }, position: [0, 0.8, 0] as [number, number, number], thickness: 0.04 }] }
+    const open: AnimationClipSpec = { id: 'open', duration: 1, keys: [{ t: 0 }, { t: 1, parts: { door: { position: [2, 0, 0] } } }] }
+    room.loadModule({
+      id: 'doors', name: 'Doors', group: 'Doors',
+      items: () => [{
+        id: 'door_item', name: 'Door', spec,
+        build: (T) => {
+          const three = T as typeof THREE
+          const g = new three.Group()
+          const m = new three.Mesh(new three.BoxGeometry(0.6, 1.6, 0.04), new three.MeshStandardMaterial())
+          m.name = 'door'
+          m.position.set(0, 0.8, 0)
+          g.add(m)
+          return g
+        },
+        movable: false,
+        animations: [open],
+      }],
+    })
+    const so = room.spawn('door_item', [0, 0, -4], 0)
+    expect(room.world.raycast([0, 1, -2], [0, 0, -1])?.part).toBe('door')
+    room.look([0, 1, -1.5], [0, 0.8, -4])
+    room.playAnimation('open')
+    for (let i = 0; i < 70; i++) room.update(1 / 60)
+    expect(room.world.raycast([0, 1, -2], [0, 0, -1])?.object).not.toBe(so.objectId)
+    expect(room.world.raycast([2, 1, -2], [0, 0, -1])).toMatchObject({ object: so.objectId, part: 'door' })
   })
 
   it('an item without animations says so; nothing aimed gives null', () => {
