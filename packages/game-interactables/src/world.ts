@@ -1313,8 +1313,8 @@ export function createWorld(options: WorldOptions = {}): World {
       for (const [k, v] of Object.entries(st.parts)) {
         const p = o.parts.get(k)
         if (p) {
-          p.target = clamp(v, 0, 1)
-          p.maxT = 1
+          // keep the limit found by fitSweep: a loaded save must not let a door open through a wall again
+          p.target = clamp(v, 0, p.maxT)
           writeT(o, p, p.target)
         }
       }

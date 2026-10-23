@@ -81,3 +81,21 @@ describe('parts', () => {
     expect(w.fitSweep('c', 'door', (_x, z) => z < -0.8)).toBeLessThan(1)
   })
 })
+
+describe('load keeps the fitSweep limit', () => {
+  it('a loaded save cannot open a door past the wall found by fitSweep', () => {
+    const { w } = world()
+    w.add('c', cabinet, origin)
+    const max = w.fitSweep('c', 'door', (_x, z) => z > 0.8)
+    expect(max).toBeLessThan(1)
+    const saved = w.serialize()
+    w.load(saved)
+    w.setPart('c', 'door', 1)
+    run(w, 2)
+    expect(w.partT('c', 'door')).toBeCloseTo(max)
+    // a save made without the wall (t = 1) is clamped as well
+    saved.objects.c.parts.door = 1
+    w.load(saved)
+    expect(w.partT('c', 'door')).toBeCloseTo(max)
+  })
+})
