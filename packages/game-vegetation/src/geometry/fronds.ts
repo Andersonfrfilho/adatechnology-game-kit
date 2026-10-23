@@ -42,9 +42,24 @@ export function pinnateFrond(b: MeshBuilder, o: PinnateOptions): Vec3 {
     pts.push([o.origin[0] + horiz[0] * o.length * t * ce, o.origin[1] + o.length * (t * se - o.droop * t * t), o.origin[2] + horiz[2] * o.length * t * ce])
   }
   const sideV = norm(cross(horiz, [0, 1, 0]))
-  if (o.lod === 2) {
+  if (o.lod >= 1) {
+    // wide drooping strips (a shallow V) following the rachis; LOD1 has a lightly notched edge
     const mid = pts[Math.floor(segs / 2)]
-    leaf(b, o.origin, norm([mid[0] - o.origin[0], mid[1] - o.origin[1] + 0.001, mid[2] - o.origin[2]]), [0, 1, 0], o.length * 1.0, o.length * o.leafletLen * 1.3, o.c0, o.c1, { rows: 3, curl: o.droop * 0.9, fold: 0.5, swayBase: o.swayBase, swayTip: o.swayTip, peak: 0.35, round: 1.2, baseWidth: 0.05 })
+    const d0 = norm([mid[0] - o.origin[0], mid[1] - o.origin[1] + 0.001, mid[2] - o.origin[2]])
+    for (const sgn of [-1, 1]) {
+      const dir = norm(add(d0, add(mul(sideV, sgn * 0.22), [0, -0.06, 0])))
+      leaf(b, o.origin, dir, [0, 1, 0], o.length * 1.02, o.length * o.leafletLen * 1.15, shade(o.c0, 0.95), o.c1, {
+        rows: o.lod === 1 ? 4 : 2,
+        curl: o.droop * 1.1,
+        fold: 0.7,
+        swayBase: o.swayBase,
+        swayTip: o.swayTip,
+        peak: 0.4,
+        round: 1.1,
+        baseWidth: 0.08,
+        tear: o.lod === 1 ? (row) => (row % 2 ? 0.72 : 1) : undefined,
+      })
+    }
     return pts[segs]
   }
   // rachis ribbon
@@ -59,7 +74,7 @@ export function pinnateFrond(b: MeshBuilder, o: PinnateOptions): Vec3 {
     const rc = shade(o.c0, 0.75)
     b.flatQuad(add(a, mul(sideV, -w)), add(a, mul(sideV, w)), add(bq, mul(sideV, w * 0.8)), add(bq, mul(sideV, -w * 0.8)), rc, rc, shade(o.c0, 0.9), shade(o.c0, 0.9), s0, s0, s1, s1, [0, 1, 0])
   }
-  const pairs = o.lod === 0 ? o.pairs : Math.max(4, Math.round(o.pairs * (o.lod === 1 ? 0.33 : 0.5)))
+  const pairs = o.lod === 0 ? o.pairs : Math.max(4, Math.round(o.pairs * (o.lod === 1 ? 0.42 : 0.5)))
   const hang = o.hang ?? 0.45
   const lw = o.leafletWidth ?? 0.2
   for (let k = 0; k < pairs; k++) {
@@ -76,7 +91,7 @@ export function pinnateFrond(b: MeshBuilder, o: PinnateOptions): Vec3 {
     const cc1 = jitter(o.c1, o.rng, 0.008, 0.05, 0.03)
     for (const s of [-1, 1]) {
       const dir = norm(add(add(mul(sideV, s * 0.85), mul(d, 0.6)), [0, -hang, 0]))
-      kite(b, p, dir, [0, 1, 0], len, len * lw * (o.lod === 0 ? 1 : o.lod === 1 ? 2.1 : 1.7), mix(cc0, cc1, 0.1), cc1, sw, Math.min(1, sw + 0.1))
+      kite(b, p, dir, [0, 1, 0], len, len * lw * (o.lod === 0 ? 1 : o.lod === 1 ? 2.5 : 1.7), mix(cc0, cc1, 0.1), cc1, sw, Math.min(1, sw + 0.1))
     }
   }
   return pts[segs]

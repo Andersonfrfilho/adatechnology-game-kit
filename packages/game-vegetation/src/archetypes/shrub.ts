@@ -68,11 +68,11 @@ export function generateShrub(spec: ShrubSpec, ctx: Ctx): ArchResult {
         center: [cx, h * 0.5, 0],
         size: [secLen * 1.04, h, width],
         grid,
-        round: 0.38,
+        round: ctx.lod === 0 ? 0.4 : 0.5,
         rng: sect,
-        noise: ctx.lod === 0 ? 0.045 : 0.03,
+        noise: ctx.lod === 0 ? 0.045 : ctx.lod === 1 ? 0.07 : 0.1,
         color: (p, hh, n) => {
-          let k = lerp(0.7, 1.15, clamp(hh, 0, 1))
+          let k = lerp(0.7, 1.15, clamp(hh, 0, 1)) * (0.88 + 0.24 * ((Math.sin(p[0] * 47.3 + p[1] * 31.7 + p[2] * 53.9) + 1) / 2))
           if (n[1] > 0.5) k *= 1.08
           return mix(shade(c, k), lighten(c, 0.6), clamp((hh - 0.9) * 4, 0, 0.5))
         },
@@ -80,8 +80,8 @@ export function generateShrub(spec: ShrubSpec, ctx: Ctx): ArchResult {
       })
       {
         // leafy lumps breaking the clipped surface (small low-poly clumps instead of a plain box)
-        const nb = ctx.pick(9, 4, 3)
-        const br = width * 0.2
+        const nb = ctx.pick(9, 6, 3)
+        const br = width * (ctx.lod === 0 ? 0.2 : 0.26)
         for (let k = 0; k < nb; k++) {
           const onTop = k % 5 < 2
           const px = cx + sr.range(-secLen / 2, secLen / 2) * 0.92
@@ -89,7 +89,7 @@ export function generateShrub(spec: ShrubSpec, ctx: Ctx): ArchResult {
           const side = pz > 0 ? 1 : -1
           const pos: Vec3 = onTop ? [px, h - br * 0.5, pz] : [px, sr.range(0.25, 0.85) * h, side * (width / 2 - br * 0.35)]
           const lr = br * sr.range(0.75, 1.15)
-          clump(ctx.foliage, { center: pos, radius: lr, squash: 0.68, detail: 0, seed: sr.seed(), base: shade(c, sr.range(0.84, 0.98)), crown: [cx, h * 0.3, 0], swayK: 0.3, noise: 0.15, flatBottom: 0.2, ao: 0.6 })
+          clump(ctx.foliage, { center: pos, radius: lr, squash: 0.68, detail: 0, seed: sr.seed(), base: shade(c, sr.range(0.78, 1.05)), crown: [cx, h * 0.3, 0], swayK: 0.3, noise: 0.15, flatBottom: 0.2, ao: 0.6 })
         }
       }
       if (ctx.lod === 0) {

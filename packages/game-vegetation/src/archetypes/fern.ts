@@ -7,7 +7,7 @@ import { leaf, kite } from '../geometry/leaf'
 export function generateFern(spec: FernSpec, ctx: Ctx): ArchResult {
   const rng = ctx.rng
   const over = ctx.condition === 'overgrown'
-  const n = Math.round((spec.frondCount ?? 11) * (ctx.condition === 'dead' ? 0.6 : 1) * (over ? 1.3 : 1) * ctx.pick(1, 0.7, 0.45))
+  const n = Math.round((spec.frondCount ?? 11) * (ctx.condition === 'dead' ? 0.6 : 1) * (over ? 1.3 : 1) * ctx.pick(1, 0.7, 0.35))
   const L0 = (spec.frondLength ?? 0.7) * (over ? 1.15 : 1)
   const base = tintGreen(rgb(spec.color ?? 0x468f3c), ctx.condition)
   const c0 = shade(base, 0.62)

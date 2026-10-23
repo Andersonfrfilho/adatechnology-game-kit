@@ -133,8 +133,18 @@ function buildAnchors(style: CrownStyle, env: StyleEnv, rng: Rng): Anchor[] {
   }
   switch (style) {
     case 'sphere': {
-      const rs = Math.min(R, (H - env.clearY) * 0.5) * 1.0
-      add1([top[0], H - rs, top[2]], rs, 1, vis[0])
+      // clipped ball made of lumps (never one smooth sphere)
+      const rs = Math.min(R, (H - env.clearY) * 0.5)
+      const cy = H - rs
+      add1([top[0], cy, top[2]], rs * 0.66, 1, vis[0])
+      const ringN = 7
+      for (let i = 0; i < ringN; i++) {
+        const a = (i / ringN) * TAU + rng.range(0, 0.4)
+        const lift = i % 2 ? 0.22 : -0.1
+        add1([top[0] + Math.cos(a) * rs * 0.52, cy + rs * lift, top[2] + Math.sin(a) * rs * 0.52], rs * 0.5, 0.95, undefined, 1 - (i % 3) * 0.05)
+      }
+      add1([top[0] + rs * 0.12, cy + rs * 0.5, top[2]], rs * 0.46, 0.95, undefined, 1.05)
+      add1([top[0], cy - rs * 0.45, top[2]], rs * 0.44, 0.85, undefined, 0.92)
       break
     }
     case 'dome':
@@ -238,9 +248,10 @@ export function styledCrown(style: CrownStyle, env: StyleEnv): StyleGroup[] {
   const overgrown = ctx.condition === 'overgrown' ? 1.14 : 1
   // condition / season: drop some clumps (dry, bare), never the first
   anchors = anchors.filter((a, i) => i === 0 || a.tip.keep < env.keep)
-  if (ctx.lod === 2 && anchors.length > 4) anchors = anchors.filter((_, i) => i % 2 === 0).map((a) => ({ ...a, r: a.r * 1.25 }))
+  if (ctx.lod === 2 && anchors.length > 7) anchors = anchors.filter((_, i) => i % 2 === 0 || i === 1)
+  if (ctx.lod === 1 && anchors.length > 6 && style !== 'sphere') anchors = anchors.filter((_, i) => i % 3 !== 2)
   const groups: StyleGroup[] = []
-  const bigSphere = style === 'sphere'
+  const bigSphere = false
   for (const a of anchors) {
     const { base: b0, accent } = env.colorFor(a.tip)
     const base = shade(b0, clamp(a.tone * (0.9 + a.tip.roll * 0.2), 0.7, 1.15))
@@ -263,14 +274,14 @@ export function styledCrown(style: CrownStyle, env: StyleEnv): StyleGroup[] {
       flatBottom: style === 'umbrella' || style === 'dome' ? 0.75 : 0.5,
       ao: env.bloomOn && env.spec.bloom?.replacesLeaves ? 0.78 : style === 'dome' ? 0.45 : 0.55,
     }
-    if (ctx.lod === 1 && !bigSphere && style !== 'willow') {
+    if (ctx.lod >= 1 && style !== 'willow') {
       // mid LOD: several small low-subdivision lumps per clump instead of one big faceted icosahedron
       const sr = new Rng(a.tip.seed ^ 0x2545f491)
       const subs = 2
       for (let k = 0; k < subs; k++) {
         const ang = (k / subs) * TAU + sr.range(0, 1)
-        const off = r * 0.42
-        const sub = { ...o, radius: r * 0.74, seed: a.tip.seed + k * 977, center: [a.p[0] + Math.cos(ang) * off, a.p[1] + r * a.sq * sr.range(0, 0.35), a.p[2] + Math.sin(ang) * off] as Vec3 }
+        const off = r * (ctx.lod === 2 ? 0.42 : 0.5)
+        const sub = { ...o, radius: r * (ctx.lod === 2 ? 0.74 : 0.62), seed: a.tip.seed + k * 977, center: [a.p[0] + Math.cos(ang) * off, a.p[1] + r * a.sq * sr.range(0, 0.35), a.p[2] + Math.sin(ang) * off] as Vec3 }
         clump(ctx.foliage, sub)
       }
     } else {

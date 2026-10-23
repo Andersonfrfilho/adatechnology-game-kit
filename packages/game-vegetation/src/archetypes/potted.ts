@@ -12,7 +12,7 @@ export function generatePotted(spec: PottedSpec, ctx: Ctx): ArchResult {
   const R = pot.radius ?? 0.2
   const h = pot.height ?? R * 1.6
   const col = rgb(pot.color ?? (shape === 'cachepot' ? 0xe8e2d4 : shape === 'cylinder' ? 0x6a6e72 : 0xb5603c))
-  const sides = ctx.pick(shape === 'square' ? 4 : 12, shape === 'square' ? 4 : 8, shape === 'square' ? 4 : 6)
+  const sides = ctx.pick(shape === 'square' ? 4 : 12, shape === 'square' ? 4 : 8, shape === 'square' ? 4 : 5)
   const prof: { y: number; r: number }[] = []
   switch (shape) {
     case 'terracotta':
