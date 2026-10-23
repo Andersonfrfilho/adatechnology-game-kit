@@ -9,10 +9,12 @@ import us from './data/regions/us.json'
 import typesJson from './data/types.json'
 import { conduitRun, electricalPanel, powerMeter, serviceEntrance, tv, microwave, wallSocket, wallSwitch, washingMachine } from './builders/electrical'
 import { gasBottle, shower, sinkBathroom, sinkKitchen, stove, toilet, utilitySink } from './builders/kitchen'
-import { armchair, bedDouble, bedSingle, bench, diningChair, sofa } from './builders/seating'
+import { armchair, bedDouble, bunkBed, bedSingle, bench, diningChair, sofa } from './builders/seating'
 import { bathroomCabinet, dresser, fridge, fridgeCompact, kitchenCabinetBase, kitchenCabinetWall, nightstand, pantry, wardrobe } from './builders/storage'
 import { blinds, curtain } from './builders/windows'
 import { bbq, clothesline } from './builders/outdoor'
+import { campChair, campStove, campTable, campfire, cooler, gasCanister, lanternLamp } from './builders/camp'
+import { fireplace, outhouse, well, woodStove } from './builders/rural'
 import { dogHouse, mailbox, trashBin, wheelieBin } from './builders/yard'
 import type { BuilderFn, Household, HouseholdApi, HouseholdItem, HouseholdOptions, HouseholdType, HouseholdTypeDef, Region } from './types'
 
@@ -56,6 +58,18 @@ const BUILDERS: Record<string, BuilderFn> = {
   dog_house: dogHouse,
   bbq,
   clothesline,
+  bunk_bed: bunkBed,
+  wood_stove: woodStove,
+  fireplace,
+  outhouse,
+  well,
+  cooler,
+  campfire,
+  camp_stove: campStove,
+  gas_canister: gasCanister,
+  lantern_lamp: lanternLamp,
+  camp_chair: campChair,
+  camp_table: campTable,
 }
 
 const DEFS = typesJson as HouseholdTypeDef[]

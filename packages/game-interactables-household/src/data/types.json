@@ -349,5 +349,113 @@
     "h": 2,
     "y": 0,
     "solid": false
+  },
+  {
+    "id": "bunk_bed",
+    "group": "seating",
+    "w": 0.95,
+    "d": 2.05,
+    "h": 1.75,
+    "y": 0,
+    "solid": true
+  },
+  {
+    "id": "wood_stove",
+    "group": "rural",
+    "w": 0.5,
+    "d": 0.55,
+    "h": 2.3,
+    "y": 0,
+    "solid": true
+  },
+  {
+    "id": "fireplace",
+    "group": "rural",
+    "w": 1.6,
+    "d": 1.0,
+    "h": 2.6,
+    "y": 0,
+    "solid": true
+  },
+  {
+    "id": "outhouse",
+    "group": "rural",
+    "w": 1.1,
+    "d": 1.2,
+    "h": 2.3,
+    "y": 0,
+    "solid": true
+  },
+  {
+    "id": "well",
+    "group": "rural",
+    "w": 1.5,
+    "d": 1.6,
+    "h": 2.3,
+    "y": 0,
+    "solid": true
+  },
+  {
+    "id": "cooler",
+    "group": "camp",
+    "w": 0.62,
+    "d": 0.4,
+    "h": 0.42,
+    "y": 0,
+    "solid": true
+  },
+  {
+    "id": "campfire",
+    "group": "camp",
+    "w": 1.1,
+    "d": 1.1,
+    "h": 0.75,
+    "y": 0,
+    "solid": true
+  },
+  {
+    "id": "camp_stove",
+    "group": "camp",
+    "w": 0.36,
+    "d": 0.3,
+    "h": 0.17,
+    "y": 0,
+    "solid": true
+  },
+  {
+    "id": "gas_canister",
+    "group": "camp",
+    "w": 0.12,
+    "d": 0.12,
+    "h": 0.2,
+    "y": 0,
+    "solid": true
+  },
+  {
+    "id": "lantern_lamp",
+    "group": "camp",
+    "w": 0.22,
+    "d": 0.22,
+    "h": 0.4,
+    "y": 0,
+    "solid": true
+  },
+  {
+    "id": "camp_chair",
+    "group": "camp",
+    "w": 0.52,
+    "d": 0.5,
+    "h": 0.82,
+    "y": 0,
+    "solid": true
+  },
+  {
+    "id": "camp_table",
+    "group": "camp",
+    "w": 1.2,
+    "d": 0.6,
+    "h": 0.72,
+    "y": 0,
+    "solid": true
   }
 ]

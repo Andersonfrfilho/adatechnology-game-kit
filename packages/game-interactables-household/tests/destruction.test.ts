@@ -9,7 +9,7 @@ const MATERIALS = [
   'wax', 'soil',
 ]
 const JOINTS = ['screw', 'bolt', 'nail', 'weld', 'glue', 'hinge', 'clip', 'tie', 'mortar', 'fused', 'stem']
-const PIECES = ['door', 'drawer', 'leg', 'top', 'glass', 'shelf', 'lid', 'panel', 'handle', 'knob', 'button', 'rocker', 'breaker', 'slat', 'cord', 'curtain', 'flap', 'flag', 'cloth', 'valve']
+const PIECES = ['door', 'drawer', 'leg', 'top', 'glass', 'shelf', 'lid', 'panel', 'handle', 'knob', 'button', 'rocker', 'breaker', 'slat', 'cord', 'curtain', 'flap', 'flag', 'cloth', 'valve', 'bucket']
 const FLUIDS = ['water', 'fuel', 'oil', 'gas', 'sap', 'acid', 'blood']
 
 describe('destruction tags', () => {

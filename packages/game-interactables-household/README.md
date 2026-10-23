@@ -1,8 +1,8 @@
 # @adatechnology/game-interactables-household
 
-Household content pack for [`@adatechnology/game-interactables`](../game-interactables): 39 objects for houses and yards (fridge, cabinets, wardrobe,
+Household content pack for [`@adatechnology/game-interactables`](../game-interactables): 51 objects for houses, yards, rural homes and camping (fridge, cabinets, wardrobe,
 drawers, stove, gas bottle, sinks, shower, toilet, sockets, service entrance, TV, sofa, beds, blinds, bins, mailbox, dog house, barbecue,
-clothesline...) modeled **with real depth**: doors hinged on the front edge that never go through the wall, hollow carcasses with lighter inner
+clothesline, bunk bed, wood stove, fireplace, outhouse, well, cooler, campfire, camp stove...) modeled **with real depth**: doors hinged on the front edge that never go through the wall, hollow carcasses with lighter inner
 liners, real open-top drawers, door trays, handles, hinges and gaps between doors.
 
 Each type draws through an `api` the host passes in (the same primitives as [`@adatechnology/game-props3d`](../game-props3d), plus `part`) and
@@ -62,7 +62,7 @@ volumes (clothes, curtains, glass), `world.emitters()` for flames, smoke, steam 
 | `hh.items` | `ItemCatalog`, 90 household items with `size`, `weight`, `stack`, `shape`, `color`, category |
 | `hh.loot` | `LootTables` for `fridge`, `freezer`, `kitchen_cabinet`, `kitchen_drawer`, `pantry`, `wardrobe`, `dresser`, `nightstand`, `bathroom_cabinet`, `under_sink`, `trash`, `mailbox`, `bbq_counter`, `garage_shelf` |
 | `hh.strings` | `{ en, 'pt-BR' }`: `type.<id>`, `item.<id>`, `prompt.<x>` (with `.open` / `.closed` / `.on` / `.off` variants) and `letter.*` texts. Pass it to `createWorld({ strings })` |
-| `hh.region` | Data of the region (`regions/<id>.json`): gas bottle, socket standard and voltage, mailbox style, clothesline style |
+| `hh.region` | Data of the region (`regions/<id>.json`): gas bottle, small gas canister, socket standard and voltage, mailbox style, clothesline style |
 | `hh.build(type, item, api)` | Draws through `api` and returns the `ObjectSpec`. Deterministic for the same `item.seed` |
 | `createRecorder()` | `{ api, primitives, parts }`: records static primitives in `primitives` and the ones drawn inside a part under `parts[id]` (`{ id, pivot, ry, primitives }`), for tests and previews |
 | `cornersOf`, `motionPoint`, `sweepOf` | Geometry helpers used for sweep rects and tests |
@@ -85,8 +85,9 @@ rotated by `ry`, which is always 0 in this pack), so the host makes one movable 
 | `points` | `conduit_run`: polyline in object-local coordinates |
 | `circuits` | `electrical_panel`: `[{ id, label? }]`, one breaker per circuit (default one circuit `main`) |
 | `requires` | `gas_bottle` in a cabinet: `{ object, part }` (world-wide object id); the valve is usable only while that part is open |
+| `flueHeight`, `chimneyHeight` | `wood_stove` / `fireplace`: where the flue pipe or chimney ends and the smoke emitter sits (default: the item height; pass `h` too when it is taller) |
 | `house`, `sag` | `service_entrance`: where the drop wire ends (object-local) and how much it sags |
-| `variant` | `fridge`: `'steel'`; `pantry`: `'garage'` (open steel shelves, loot `garage_shelf`); `blinds`: `'wood'`, `'closed'` (starts with the slats closed); `dog_house`: `'no_bowl'` |
+| `variant` | `fridge`: `'steel'`; `pantry`: `'garage'` (open steel shelves, loot `garage_shelf`); `blinds`: `'wood'`, `'closed'` (starts with the slats closed); `dog_house`: `'no_bowl'`; `fireplace`: `'stone'` (default brick); `lantern_lamp`: `'hanging'` (chain, no collider); `campfire` has log seats when the footprint is at least 2 m |
 
 ## Types
 
@@ -165,6 +166,29 @@ Seats face `+z` of the object (`ry = PI`, because yaw 0 is -z in `game-interacta
 | `bbq` | 1.5 x 0.6 x 1.9 | brick masonry with courses and mortar, ash door, charcoal bed, grill grate, stepped hood, chimney and flue; `coal` burner (`needsIgnition`, fuel `charcoal`), `coal_fire` and `coal_smoke` (at the flue top) emitters, side counter with `counter_door` and container `counter` (loot `bbq_counter`) |
 | `clothesline` | 4.0 x 0.7 x 2.0 | two T posts (base plate 1 mm above the floor), three `wire_n` that start and end exactly at the tips and the center of the T arms, clothes as separate `cloth_w_i` parts each with a `soft` cloth entry (same id). Only the poles are colliders |
 
+### Rural homes
+
+| Type | Size | What it exposes |
+|---|---|---|
+| `wood_stove` | 0.5 x 0.55 x 2.3 | cast iron body on legs, `firebox_door` hinged on the front edge (glass window, handle), hollow firebox with firebrick liner and grate, cooking top with a `pot_spot` container (one slot for a pot), flue pipe up to `item.flueHeight`; `wood` fuel, `fire` burner (`needsIgnition`), `fire_flame` emitter in the firebox and `fire_smoke` at the flue top. The lit burner is the heat source for the host |
+| `fireplace` | 1.6 x 1.0 x 2.6 | brick (default) or `variant: 'stone'` surround with a firebox 45 cm deep (back wall, side faces, raised floor), stone hearth, steel lintel, wooden mantel, chimney breast and stack to `item.chimneyHeight`; grate with logs; `fire` burner (`needsIgnition`, fuel `wood`), flame in the firebox and smoke from the chimney top |
+| `outhouse` | 1.1 x 1.2 x 2.3 | hollow plank booth (back, side and front walls, floor, sloped roof), `door` hinged on the front edge with a **real crescent cut**, bench with a hole over a dark pit and a `seat_lid` part, `seat` (sit). No water. Wall colliders and a door collider that turns off while the door is open |
+| `well` | 1.5 x 1.6 x 2.3 | stone ring (two courses, real opening), post-and-beam frame with a gabled roof, `crank` (knob), `bucket` (slide up) and `rope` (scale), all in the part group `draw`; trough with a chute. Own tank `well_water` (20 000 l) and a `hose` fixture `water` driven by the bucket: it flows while the bucket is up, with a `water_stream` emitter |
+
+### Camping
+
+| Type | Size | What it exposes |
+|---|---|---|
+| `cooler` | 0.62 x 0.4 x 0.42 | hollow insulated box with a lighter liner, `lid` hinged at the back (86 degrees), side handles, drain plug; container `cooler` (loot `cooler`: drinks, ice packs, sandwiches, fruit) |
+| `campfire` | 1.1 x 1.1 x 0.75 | ring of stones, ash bed, leaning logs; `fire` burner (`needsIgnition`, fuel `wood`), fire and smoke emitters. With a footprint of 2 m or more it adds two log seats (`seat_1`, `seat_2`) |
+| `camp_stove` | 0.36 x 0.3 x 0.17 | single burner with pot supports and wind guard, `knob` part, `burner` with `fuel: 'auto'` (nearest gas canister or bottle within 2 m), flame emitter, `gas_hose` wire |
+| `gas_canister` | 0.12 x 0.12 x 0.2 | small butane canister (region data `canister`), `valve` part, `gas` fuel source; destruction: steel, `explodes` small (radius 3 m) and `contains` pressurized gas |
+| `lantern_lamp` | 0.22 x 0.22 x 0.4 | kerosene / gas lantern: font, glass globe in a wire cage, bail; `lamp` device with `electric: false` toggled by the `wick` part, `lamp_flame` emitter; `variant: 'hanging'` adds a chain and drops the collider |
+| `camp_chair` | 0.52 x 0.5 x 0.82 | folding chair: scissor legs, canvas seat and back, arm rests, cup holder; `seat` (sit) |
+| `camp_table` | 1.2 x 0.6 x 0.72 | folding table: laminate top with an aluminium rim and scissor legs; a plain surface, no container |
+
+`bunk_bed` (0.95 x 2.05 x 1.75, group seating) has `lie_lower` and `lie_upper`, guard rails and a ladder at the foot end.
+
 ## Data
 
 Everything is plain JSON in `src/data` (bundled): `types.json`, `items.json`, `loot.json`, `locales/en.json`, `locales/pt-BR.json` and
@@ -200,6 +224,17 @@ Every type has a default material and joint for its body (`spec.destruction`) an
 | dog_house | plywood, nail | none |
 | bbq | brick, mortar | counter door steel, hinge |
 | clothesline | steel, weld | clothes fabric, tie |
+| bunk_bed | wood_soft, screw | none |
+| wood_stove | cast_iron, bolt | firebox door cast_iron, hinge |
+| fireplace | brick, mortar (`stone` variant: stone, mortar) | none |
+| outhouse | wood_soft, nail | door and seat lid wood_soft, hinge |
+| well | stone, mortar | crank wood_hard, bolt; bucket wood_soft, tie; rope fabric, tie |
+| cooler | plastic, fused | lid plastic, hinge |
+| campfire | stone, mortar | none |
+| camp_stove | steel, weld | knob plastic, clip |
+| gas_canister | steel, weld, small explosion + contains gas | valve copper, screw |
+| lantern_lamp | copper, screw | wick plastic, clip |
+| camp_chair, camp_table | aluminium, clip | none |
 
 ## Guarantees (tested)
 
@@ -212,7 +247,7 @@ container that uses its table; every locale key a spec uses exists in `en` and `
 
 Pack de conteúdo de casa e quintal para o `@adatechnology/game-interactables`: geladeira, armários, guarda-roupa, gavetas, fogão, botijão de gás,
 pias, chuveiro, vaso, tomadas, poste de entrada de energia, TV, sofá, camas, persianas, lixeiras, caixa de correio, casinha de cachorro,
-churrasqueira e varal. Os objetos têm **profundidade real**: portas com dobradiça na borda da frente (nunca atravessam a parede), corpo oco com
+churrasqueira e varal, além de beliche, fogão a lenha, lareira, privada de fora, poço, caixa térmica, fogueira, fogareiro, botijão pequeno, lampião e móveis de camping. Os objetos têm **profundidade real**: portas com dobradiça na borda da frente (nunca atravessam a parede), corpo oco com
 forro interno mais claro, gavetas de verdade (fundo, laterais, fundo traseiro e frente), bandejas na porta, puxadores e frestas entre portas.
 
 ```ts
