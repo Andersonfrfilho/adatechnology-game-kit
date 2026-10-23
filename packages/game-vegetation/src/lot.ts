@@ -1,4 +1,5 @@
-import type { Condition, GenerateOptions, Lod, MeshData, Placement, PlantMesh, PlantSpec, Season } from './types'
+import type { Condition, GenerateOptions, Lod, MeshData, PartKind, PieceKind, Placement, PlantMesh, PlantSpec, Season } from './types'
+import type { MaterialKey } from './destruction'
 import { generate } from './generate'
 import { MeshBuilder } from './geometry/builder'
 import { hashMix, toSeed } from './rng'
@@ -9,6 +10,36 @@ export interface LotColliderData {
   r: number
   h: number
   damage?: 'thorns'
+}
+
+/** One separable piece of a plant inside the merged lot meshes. */
+export interface LotPiece {
+  id: string
+  kind: PieceKind
+  parent?: string
+  /** the plant part the piece comes from */
+  part: PartKind
+  /** which merged mesh holds it (spines go to 'wood', fruit to 'flowers') */
+  mesh: 'wood' | 'foliage' | 'flowers'
+  /** triangle index range in `lot.meshes[mesh].indices` (a multiple of 3) */
+  indexStart: number
+  indexCount: number
+  /** key of the destruction material table (see MaterialIds) */
+  material: MaterialKey
+}
+export interface LotPlantPieces {
+  /** index into the `placements` array given to buildLot */
+  plantIndex: number
+  species: string
+  x: number
+  z: number
+  ry: number
+  scale: number
+  lod: Lod
+  pieces: LotPiece[]
+  /** what is needed to regenerate the same plant as a separable object (see extractPlant) */
+  spec: PlantSpec
+  generateOptions: GenerateOptions
 }
 
 export interface Lot {
@@ -23,6 +54,8 @@ export interface Lot {
   lodCounts: [number, number, number]
   /** condition the lot was built with (default 'healthy') */
   condition?: Condition
+  /** one entry per plant that made it into the meshes (thinned grass is absent), see extractPlant / hideLotPlant */
+  pieceTable: LotPlantPieces[]
 }
 
 export interface BuildLotOptions {
@@ -109,15 +142,30 @@ export function buildLot(placements: Placement[], resolveSpec: (id: string) => P
     }
   }
   const lodCounts: [number, number, number] = [0, 0, 0]
-  for (const { p, plant, dropped } of entries) {
+  const kept: { plantIndex: number; e: (typeof entries)[number] }[] = []
+  for (let pi = 0; pi < entries.length; pi++) {
+    const e = entries[pi]
+    const { p, plant, dropped } = e
     if (dropped) continue
+    kept.push({ plantIndex: pi, e })
     lodCounts[plant.lod]++
     const { parts } = plant
-    if (parts.wood) wood.appendMesh(parts.wood, p.x, 0, p.z, p.ry, p.scale)
-    if (parts.spines) wood.appendMesh(parts.spines, p.x, 0, p.z, p.ry, p.scale)
-    if (parts.foliage) foliage.appendMesh(parts.foliage, p.x, 0, p.z, p.ry, p.scale)
-    if (parts.flowers) flowers.appendMesh(parts.flowers, p.x, 0, p.z, p.ry, p.scale)
-    if (parts.fruit) flowers.appendMesh(parts.fruit, p.x, 0, p.z, p.ry, p.scale)
+    // every triangle is tagged "<plantIndex>|<piece id>" so the merged builders report the piece ranges
+    const tagsOf = (part: PartKind): ((t: number) => string) | undefined => {
+      const mesh = parts[part]
+      if (!mesh) return undefined
+      const tags = new Array<string>(mesh.triangleCount).fill('')
+      for (const pc of plant.pieces) {
+        if (pc.part !== part) continue
+        for (let t = pc.indexStart / 3; t < (pc.indexStart + pc.indexCount) / 3; t++) tags[t] = `${pi}|${pc.id}`
+      }
+      return (t) => tags[t]
+    }
+    if (parts.wood) wood.appendMesh(parts.wood, p.x, 0, p.z, p.ry, p.scale, tagsOf('wood'))
+    if (parts.spines) wood.appendMesh(parts.spines, p.x, 0, p.z, p.ry, p.scale, tagsOf('spines'))
+    if (parts.foliage) foliage.appendMesh(parts.foliage, p.x, 0, p.z, p.ry, p.scale, tagsOf('foliage'))
+    if (parts.flowers) flowers.appendMesh(parts.flowers, p.x, 0, p.z, p.ry, p.scale, tagsOf('flowers'))
+    if (parts.fruit) flowers.appendMesh(parts.fruit, p.x, 0, p.z, p.ry, p.scale, tagsOf('fruit'))
     if (plant.collider) {
       const c: LotColliderData = { x: p.x, z: p.z, r: plant.collider.radius * p.scale, h: plant.collider.height * p.scale }
       if (plant.thorny) c.damage = 'thorns'
@@ -130,6 +178,67 @@ export function buildLot(placements: Placement[], resolveSpec: (id: string) => P
     flowers: flowers.build('flowers', 'foliage'),
   }
   for (const k of Object.keys(meshes) as (keyof Lot['meshes'])[]) if (!meshes[k]) delete meshes[k]
+  const rangeOf = new Map<string, { mesh: 'wood' | 'foliage' | 'flowers'; indexStart: number; indexCount: number }>()
+  for (const [mesh, b] of [['wood', wood], ['foliage', foliage], ['flowers', flowers]] as const) {
+    for (const r of b.ranges) if (r.tag) rangeOf.set(r.tag, { mesh, indexStart: r.indexStart, indexCount: r.indexCount })
+  }
+  const pieceTable: LotPlantPieces[] = kept.map(({ plantIndex, e }) => ({
+    plantIndex,
+    species: e.p.species,
+    x: e.p.x,
+    z: e.p.z,
+    ry: e.p.ry,
+    scale: e.p.scale,
+    lod: e.plant.lod,
+    spec: e.spec,
+    generateOptions: { ...e.go, lod: e.plant.lod },
+    pieces: e.plant.pieces.map((pc) => {
+      const r = rangeOf.get(`${plantIndex}|${pc.id}`)!
+      return { id: pc.id, kind: pc.kind, ...(pc.parent === undefined ? {} : { parent: pc.parent }), part: pc.part, mesh: r.mesh, indexStart: r.indexStart, indexCount: r.indexCount, material: pc.material }
+    }),
+  }))
   const triangleCount = (meshes.wood?.triangleCount ?? 0) + (meshes.foliage?.triangleCount ?? 0) + (meshes.flowers?.triangleCount ?? 0)
-  return { meshes, colliders, triangleCount, plantCount: placements.length, thinnedCount: thinned, lodCounts, condition: opts.condition ?? 'healthy' }
+  return { meshes, colliders, triangleCount, plantCount: placements.length, thinnedCount: thinned, lodCounts, condition: opts.condition ?? 'healthy', pieceTable }
+}
+
+export interface ExtractedPlant {
+  /** the plant regenerated with the exact options used in the lot (same LOD, same seed): identical geometry, plus its pieces */
+  plant: PlantMesh
+  /** where the plant stood in the lot: build the separable object with position (x, 0, z), rotation.y = ry and scale */
+  placement: { species: string; x: number; z: number; ry: number; scale: number }
+  /** the index ranges the plant occupies in the merged meshes */
+  ranges: LotPiece[]
+}
+
+function entryOf(lot: Lot, plantIndex: number): LotPlantPieces {
+  const e = lot.pieceTable.find((t) => t.plantIndex === plantIndex)
+  if (!e) throw new Error(`game-vegetation: plant ${plantIndex} is not in the lot (thinned out or out of range)`)
+  return e
+}
+
+/**
+ * Get a plant of the lot back as a stand-alone `PlantMesh` (with `pieces`) plus its placement, to spawn a separable version
+ * (`createPlantObject(THREE, plant, mats, { separable: true })`) when the merged plant gets hit. Does not touch the lot.
+ */
+export function extractPlant(lot: Lot, plantIndex: number): ExtractedPlant {
+  const e = entryOf(lot, plantIndex)
+  return {
+    plant: generate(e.spec, { ...e.generateOptions, species: e.species }),
+    placement: { species: e.species, x: e.x, z: e.z, ry: e.ry, scale: e.scale },
+    ranges: e.pieces,
+  }
+}
+
+/**
+ * Make a plant of the lot invisible by zeroing its index ranges in the merged meshes (degenerate triangles). Idempotent.
+ * The indices array is shared with the three BufferGeometry, so set `geometry.index.needsUpdate = true` afterwards
+ * (`removeLotPlant` in game-vegetation/three does that). Returns the ranges that were cleared.
+ */
+export function hideLotPlant(lot: Lot, plantIndex: number): LotPiece[] {
+  const e = entryOf(lot, plantIndex)
+  for (const r of e.pieces) {
+    const m = lot.meshes[r.mesh]
+    if (m) m.indices.fill(0, r.indexStart, r.indexStart + r.indexCount)
+  }
+  return e.pieces
 }

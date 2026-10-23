@@ -1,5 +1,6 @@
 import type { MeshData, PartKind, Vec3, Placement, PlantMesh, PlantSpec, GenerateOptions } from '../types'
 import type { Lot } from '../lot'
+import { extractPlant, hideLotPlant } from '../lot'
 import { generate } from '../generate'
 import type { ThreeNS, VegetationMaterials } from './types'
 import { createVegetationMaterials } from './materials'
@@ -130,6 +131,26 @@ export function createLotObject(THREE: ThreeNS, lot: Lot, materials?: Vegetation
   if (flowers) g.add(meshFor(THREE, flowers, mats.flowers, ids, lot.condition))
   g.userData = { colliders: lot.colliders, triangleCount: lot.triangleCount, materialIds: ids }
   return g
+}
+
+/**
+ * Swap one merged plant of a lot for its separable version: its triangles are hidden in the lot meshes (`lotObject` is the result
+ * of createLotObject for `lot`) and a Group with one child per piece is returned, already placed (position, rotation.y, scale).
+ * Add it to the scene yourself.
+ */
+export function separatePlantFromLot(THREE: ThreeNS, lot: Lot, lotObject: Obj, plantIndex: number, materials?: VegetationMaterials, options: DestructionOptions = {}): InstanceType<ThreeNS['Group']> {
+  const { plant, placement } = extractPlant(lot, plantIndex)
+  hideLotPlant(lot, plantIndex)
+  lotObject.traverse((o) => {
+    const geo = (o as InstanceType<ThreeNS['Mesh']>).geometry as Geo | undefined
+    if (geo?.index) geo.index.needsUpdate = true
+  })
+  const obj = createPlantObject(THREE, plant, materials, { ...options, separable: true })
+  obj.position.set(placement.x, 0, placement.z)
+  obj.rotation.y = placement.ry
+  obj.scale.setScalar(placement.scale)
+  obj.userData.plantIndex = plantIndex
+  return obj
 }
 
 /** InstancedMesh per part for many copies of one plant (grass, flowers, hedges). Wind phase varies per instance. */
