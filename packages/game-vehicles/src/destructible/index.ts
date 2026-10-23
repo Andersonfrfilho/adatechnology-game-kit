@@ -1,0 +1,6 @@
+export { createVehicleDestructible } from './impl'
+export type { VehicleDestructible, VehicleDestructibleOptions, VehicleStatus } from './impl'
+export { buildVehicleModel, JOINT_RULES } from './model'
+export type { JointDef, LocalBox, PartDef, PartRole, VehicleModel } from './model'
+export { buildVehicleItem } from './item'
+export type { VehicleItem, VehicleItemOptions } from './item'
