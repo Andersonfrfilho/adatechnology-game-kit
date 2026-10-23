@@ -103,3 +103,25 @@ describe('every type in the engine', () => {
     })
   }
 })
+
+describe('washing machine water', () => {
+  it('draws 12 l/min from the tank while a cycle runs, and nothing when it is off', () => {
+    const { w } = world()
+    w.add('tk', { type: 'tank', tanks: [{ id: 't', capacity: 200, level: 100 }] }, { x: 5, y: 0, z: 0, ry: 0 })
+    const spec = build('washing_machine').spec
+    expect(spec.fixtures![0]).toMatchObject({ id: 'inlet', flow: 12 })
+    expect(spec.devices![0].fixture).toBe('inlet')
+    w.add('wm', spec, { x: 0, y: 0, z: 0, ry: 0 })
+    w.add('socket', build('wall_socket').spec, { x: 0, y: 0.3, z: -0.4, ry: 0 })
+    expect(w.interactables().map((i) => i.id)).not.toContain('wm:fixture.inlet')
+    for (let i = 0; i < 300; i++) w.update(0.1)
+    expect(w.water.level('tk:t')).toBe(100)
+    w.act('wm:use_washer')
+    for (let i = 0; i < 300; i++) w.update(0.1)
+    expect(w.water.level('tk:t')).toBeCloseTo(100 - 12 * 0.5, 0) // 30 s
+    w.act('wm:use_washer')
+    const level = w.water.level('tk:t')
+    for (let i = 0; i < 100; i++) w.update(0.1)
+    expect(w.water.level('tk:t')).toBeCloseTo(level, 1)
+  })
+})

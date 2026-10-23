@@ -216,6 +216,8 @@ export function washingMachine(c: Ctx): void {
     },
     { label: 'prompt.washing_door', at: [0, cy, dz + 0.06], radius: 1.3 },
   )
-  plugged(c, 'washer', 'appliance', 500, [hw * 0.5, 0.15, -hd], { part: 'dial', on: c.M.on })
+  // water inlet at the back: the hose draws 12 l/min while a cycle runs (the device drives the fixture)
+  c.add('fixtures', { id: 'inlet', kind: 'hose', outlet: [round3(-hw * 0.6), 0.2, -hd], dir: [0, 0, -1], flow: 12 })
+  plugged(c, 'washer', 'appliance', 500, [hw * 0.5, 0.15, -hd], { part: 'dial', on: c.M.on, fixture: 'inlet' })
   c.interact('use_washer', [0.04, h - 0.07, zf + 0.03], { do: 'toggle_device', device: 'washer' }, 'prompt.washing_machine', 1.2)
 }

@@ -280,12 +280,13 @@ export function plugged(
   kind: 'lamp' | 'appliance' | 'screen' | 'pump' | 'heater',
   watts: number,
   plug: Vec3,
-  o: { on?: boolean; part?: string; channels?: number } = {},
+  o: { on?: boolean; part?: string; channels?: number; fixture?: string } = {},
 ): void {
   const dev: import('@adatechnology/game-interactables').DeviceSpec = { id, kind, watts, socket: 'auto', plug }
   if (o.on) dev.on = true
   if (o.part) dev.part = o.part
   if (o.channels) dev.channels = o.channels
+  if (o.fixture) dev.fixture = o.fixture
   c.add('devices', dev)
   const floor = c.y0 + 0.01
   c.add('wires', {
