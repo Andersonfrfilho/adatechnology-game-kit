@@ -37,6 +37,11 @@ export interface RendererOptions {
   onSound?: (key: string, point: Vec3, volume: number) => void
   /** A point light flashes on explosions (default true; costs one light). */
   explosionLight?: boolean
+  /**
+   * Particle size scale in pixels per metre at one metre from the camera, roughly `viewportHeight / (2 * tan(fov / 2))` (default 700). Set it
+   * when the viewport is much smaller or larger than about 720 px tall so smoke and fire keep their physical size.
+   */
+  pointScale?: number
 }
 
 /** Options of `bind`. */
