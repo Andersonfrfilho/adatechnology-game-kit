@@ -81,6 +81,28 @@ export interface PartSpec {
    * (blind slats, the two panels of a curtain).
    */
   group?: string
+  /**
+   * Destruction tags for the shared destruction SDK (`@adatechnology/game-destruction`). Plain ids that match the SDK's material and joint
+   * kinds; this package has no dependency on it. The host maps the tags to its destruction parts.
+   */
+  destruction?: PartDestruction
+}
+
+/** Joint kinds of the destruction SDK (`JointKind`). */
+export type DestructionJoint = 'screw' | 'bolt' | 'nail' | 'weld' | 'glue' | 'hinge' | 'clip' | 'tie' | 'mortar' | 'fused' | 'stem'
+
+/** What a part is made of and how it is attached. Field names and shapes mirror the SDK's `PartSpec`. */
+export interface PartDestruction {
+  /** SDK material id (`steel`, `wood_soft`, `mdf`, `glass`, `ceramic`, `plastic`, `fabric`...). */
+  material: string
+  /** How the part is attached to the rest of the object. */
+  joint?: DestructionJoint | (string & {})
+  /** What the part is (`door`, `drawer`, `leg`, `top`, `glass`, `shelf`, `lid`, `panel`, `handle`, `knob`...). */
+  piece?: string
+  /** The part explodes when destroyed, or when its temperature passes `atC` (energy in joules, radius in metres). */
+  explodes?: { energy: number; radius: number; atC?: number }
+  /** Fluid inside the part; `fluid` is an SDK `FluidKind` (`water`, `fuel`, `oil`, `gas`...). */
+  contains?: { fluid: string; liters: number; pressurized?: boolean }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -333,6 +355,10 @@ export interface ColliderSpec {
 
 export type DamageKind = 'glass' | 'wood' | 'water' | 'metal' | 'masonry' | 'gas' | 'fabric' | 'plastic'
 
+/**
+ * @deprecated Damage now goes through the destruction SDK (`@adatechnology/game-destruction`); tag parts with `PartSpec.destruction` and
+ * `ObjectSpec.destruction`. `DamageSpec` and `world.damage` keep working but get no new features.
+ */
 export interface DamageSpec {
   /** Part id, fuel source id, tank id or `self` for the whole object. */
   target: string
@@ -398,7 +424,13 @@ export interface ObjectSpec {
   emitters?: EmitterSpec[]
   mirrors?: MirrorSpec[]
   colliders?: ColliderSpec[]
+  /** @deprecated Use the destruction SDK; see `DamageSpec`. */
   damage?: DamageSpec[]
+  /**
+   * Default destruction tags of the static body (everything that is not a movable part). `explodes` and `contains` describe the body itself
+   * (a gas bottle has no movable part that holds the gas).
+   */
+  destruction?: Omit<PartDestruction, 'piece'>
   interactions?: InteractionSpec[]
   /** Visible wires / conduits / cords (object-local polylines) the host draws as thin tubes. */
   wires?: Array<{ id: string; kind: 'drop' | 'conduit' | 'cord' | 'cable'; points: Vec3[]; radius?: number }>
@@ -577,6 +609,7 @@ export interface World {
   colliders(): Array<{ id: string; object: string; cx: number; cz: number; hw: number; hd: number; ry: number; y0: number; y1: number }>
 
   /** Damage */
+  /** @deprecated Use the destruction SDK (`@adatechnology/game-destruction`). */
   damage(objectId: string, target: string, amount: number, kind?: string): { hp: number; destroyed: boolean } | null
   hp(objectId: string, target: string): number | null
 
