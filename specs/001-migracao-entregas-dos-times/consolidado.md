@@ -73,7 +73,7 @@ Desde 2026-10-23 o dono delegou: **decido o resto pela recomendação e aponto a
 | C2 | Pacotes | Casa3DSDK são 3 SDKs (PlantasSDK, Casa3DSDK renderizador, AdaptadorInterativos) | — | ✅ 2026-10-23: estender `game-floorplan` + `game-floorplan-structure` + `game-floorplan-rural` + `game-floorplan-three` (desenho 3D e ponte para móveis) + `examples/floorplan-test-area` |
 | C3 | Ruas, postes, bairro, relevo | Sem casa no SDK | — | ✅ 2026-10-23: no SDK, como `game-urban` (+ `-three`): ruas, calçadas, os 5 postes, padrão de bairro, quarteirão e relevo; o Vale Cinzento em si fica no repositório do jogo |
 | C4 | Massas da Galeria do Vale (sobrado, laje, colonial…) | Silhuetas sem planta | — | ✅ 2026-10-23: cada tipologia vira modelo de planta real no SDK e a silhueta da Galeria é a versão de longe (LOD) |
-| C5 | Interiores (delegacia, escola, igreja, posto, hospital…) | Só como cena na galeria | — | ✅ 2026-10-23: viram modelos de planta do SDK **com o interior completo**: estrutura, móveis e os itens (achados) de cada lugar, ligados ao catálogo único de itens. A lista de lugares vai crescer depois |
+| C5 | Interiores (delegacia, escola, igreja, posto, hospital…) | Só como cena na galeria | — | ✅ 2026-10-23: viram modelos de planta do SDK **com o interior completo**: estrutura, móveis e os itens (achados) de cada lugar, ligados ao catálogo único de itens. A lista de lugares vai crescer depois. Divisão (decidida por mim): comerciais (posto, loja de armas, metalúrgica, mercado completo) no `game-floorplan-commercial`, onde já estão mercado e farmácia; públicos (delegacia, escola, igreja, pronto-socorro, triagem) num pacote de prédios públicos |
 | C6 | Andares (AndaresSDK, no modo livre) | Sem casa no SDK | — | ✅ 2026-10-23: entra no `game-floorplan-three`; toda casa gerada pode ter andares e escada |
 | C7 | Casa de laje com 1 a 3 andares | Galeria tem 1–3 (puxadinho vertical); `budget_slab_house` tem 1 | — | ✅ 2026-10-23: o modelo sorteia de 1 a 3 andares |
 | C8 | Barraco e "gato" de luz | `service_entrance` já tem `variant: 'gato'` | — | ✅ 2026-10-23: no SDK, marcados como Brasil (região `br`), junto dos modelos rurais e populares |
@@ -151,3 +151,8 @@ Além de portar, o que encontrei para melhorar (em ordem de impacto):
 9. **Sorteio sem semente nas entregas** (`Math.random` e estado global): todo porte troca por semente (G3), o que também deixa os
    resultados repetíveis para teste.
 10. **Corpo com 8 versões**: depois do `game-characters`, as páginas dos times passam a montar a partir dele, para não divergirem de novo.
+11. **README de `game-fluids` com import errado**: o exemplo importa `DamageEvent`, que não existe; o certo é `DestructionEvent` (evento `leak`).
+12. **README de `game-weapons` diz "sem marcas"**: atualizar quando as marcas reais entrarem (G5).
+13. **README de `game-vehicles-fleet`** mostra `kit.build(...).group`; o objeto real tem `root`.
+14. **`game-vegetation-species`** diz "~90 espécies" no `package.json`; o catálogo tem 71.
+15. **Veículos e vegetação sem ambiente de teste** em `examples/` (previstos em V5).

@@ -53,6 +53,6 @@ Regra permanente: `CLAUDE.md` da raiz.
   e o histórico em `~/Downloads/zombiada-offline`. Links, cópias locais e a comparação entre versões estão em `fontes.md`. Os
   arquivos citados no portal (`itens/fonte/`, `personagens/arte/`, `implementacao/sdk/`, `mapa/*.json`) não existem localmente; o que
   eles produziam está dentro das páginas.
-- [NEEDS CLARIFICATION] **Qual versão vale onde há mais de uma**: Garagem (artefato com SDK separado e frotas novas × v4 do site),
-  jogo modo livre (3 versões), Viveiro, Sala de testes de destruição. Ver `fontes.md`.
-- [NEEDS CLARIFICATION] Casa3DSDK: pacote novo ou parte de `game-floorplan`? (decisão 🧠 da Fase 0).
+- Resolvido em 2026-10-23: qual versão vale onde há mais de uma (V2, V8 e as demais) está decidido em `consolidado.md`.
+- Resolvido em 2026-10-23: o Casa3DSDK são três SDKs; destino em C1–C2 do `consolidado.md` (estender `game-floorplan` + `-structure`, `-rural`, `-three`).
+- **Todas as decisões estão em `consolidado.md`**; desde 2026-10-23 o dono delegou o restante à recomendação, perguntando só escolha de negócio.

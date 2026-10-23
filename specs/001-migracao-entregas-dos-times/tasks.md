@@ -1,84 +1,109 @@
 # Tasks — Spec 001
 
-Ordem pedida pelo dono: armas (já em andamento), casas, itens e assim por diante.
+Decisões em `consolidado.md` (todas fechadas em 2026-10-23). Fontes em `fontes.md` e `artefatos/`. Cada fase porta o que os times fizeram,
+**igual ao original** (G3: semente fixa, sequência de eventos e hash da cena), e termina com o seu `examples/<lib>-test-area` e a área na
+página do kit. Pacotes se compõem (`CLAUDE.md` §3): antes de escrever algo, use o pacote que já faz.
 
-## Fase 0 — Fontes e arquitetura
-> 🤖 Modelo: `opus` (🧠 decisões que todas as fases herdam)
+Ordem: armas → casas → itens → personagens → efeitos → som e clima → veículos e cidade → multidão, histórias e jogador.
 
-- T0.1 Localizar os fontes originais dos times (ver pontos em aberto da spec). Sem eles, extrair o script de cada página para
-  `specs/001-migracao-entregas-dos-times/sources/<página>.js` como referência de porte.
-- T0.2 🧠 Decidir os pacotes novos e seus nomes: construção (Casa3DSDK + tipologias da Galeria do Vale), `game-items`,
-  `game-characters`, `game-animals`, `game-vfx`, horda. Registrar no `plan.md`.
-- T0.3 Definir o golden padrão: o que "igual ao original" mede por tipo de entrega (hash da cena montada, medidas, sequência de
-  animação, eventos de dano), reaproveitando o formato de `game-vehicles-fleet`.
+## Fase 0 — Base comum
+> 🤖 Modelo: `sonnet` (T0.2 é 🧠 → `opus`)
 
-## Fase 1 — Armas (Galeria 3D do Arsenal + Arsenal)
+- T0.1 Ferramenta de golden "igual ao original": carrega a página do time (de `artefatos/` ou do site), troca `Math.random` por semente,
+  grava sequência de eventos e hash da cena; o teste do pacote compara. Fica em `tools/golden/` e serve a todas as fases.
+- T0.2 🧠 Ampliar o contrato genérico de módulo de teste (E5): parâmetros, camadas ligáveis e contadores (fps, desenhos, partículas),
+  mais os eventos de arma que faltam (pane, destravar, rajada). Sem nada de domínio.
+- T0.3 Corrigir as melhorias 1 e 2 (partículas de explosão do SDK que não aparecem; lixo por quadro em `particles.ts`) e regenerar os
+  goldens de `game-vehicles-fleet` (V1).
+
+## Fase 1 — Armas (Galeria 3D do Arsenal, Arsenal, Laboratório, jogo)
+> 🤖 Modelo: `sonnet` (T1.1 é 🧠 → `opus`)
+
+- T1.1 🧠 Dados: união de todas as fontes (A1) em `game-weapons`, com marcas reais (G5), os 10 calibres que faltam (A7), dimensões reais,
+  ruído do Arsenal (A3), joules (A2) e as fases da arma com o tempo do Arsenal (A5).
+- T1.2 Contratos de animação da arma (A5) e eventos novos (T0.2) em `game-contracts`.
+- T1.3 `game-weapons-three`: trocar as caixas pelos construtores da Galeria (pistola, revólver, fuzil, bullpup, P90, basculante, M2,
+  lança-foguetes, lança-chamas), cartucho e estojo por calibre, tiro, ferrolho, rajada, pane e as 7 recargas, cumprindo o contrato.
+- T1.4 Som do tiro (S2): classe e abafamento por distância do jogo + energia do calibre.
+- T1.5 Explosivos e lançadores: regra em `game-weapons`; reação em cadeia em `game-destruction` (A11).
+- T1.6 Goldens por arma; `weapons-test-area` com os controles novos.
+
+## Fase 2 — Casas (Visor de casas 3D, Galeria do Vale, área de casas)
+> 🤖 Modelo: `sonnet` (T2.1 é 🧠 → `opus`)
+
+- T2.1 🧠 Estrutura dos pacotes (C2): estender `game-floorplan` (regras R01–R72), criar `game-floorplan-structure`, `-rural`, `-three`.
+- T2.2 Portar o PlantasSDK do VC3 (C1): estrutura, instalações, 5 modelos rurais, laje de 1 a 3 andares (C7), barraco e gato de luz (C8).
+- T2.3 **Concreto armado e tijolo** da destruição (item 8 do consolidado) aplicados na estrutura das casas e nos cenários de teste.
+- T2.4 `game-floorplan-three`: desenho 3D (Casa3DSDK), andares andáveis (C6), ponte para os móveis.
+- T2.5 Interiores com interior completo (C5): delegacia, escola, igreja, posto, pronto-socorro, metalúrgica, loja de armas, fazenda,
+  triagem, mercado completo; silhuetas da Galeria como versão de longe (C4).
+- T2.6 Goldens contra o VC3 e a área de casas; `floorplan-test-area`.
+
+## Fase 3 — Itens
 > 🤖 Modelo: `sonnet`
 
-- T1.1 Reconciliar a lista de armas da galeria (`WEAP`) e as munições (`AMMO`) com `game-weapons` (ids, calibres, capacidade,
-  comprimento, cano, peso). O que falta entra nos dados.
-- T1.2 Trocar os modelos de caixas de `game-weapons-three` pelos construtores da galeria (pistola, revólver, fuzil, bullpup, P90,
-  espingarda basculante, M2, lança-foguetes, lança-chamas), com `fitLength` pelas medidas reais.
-- T1.3 Munição: cartucho e estojo por calibre (`cartridge`, `casingMesh`, `caseType`), usados nas cápsulas ejetadas.
-- T1.4 Comportamentos da galeria: tiro, clarão, coice, ferrolho, carga, rajada, **pane** (engasgo, estojo preso, destravar) e
-  **recarga por tipo** (carregador, tubo, de cima, revólver, basculante, fita).
-- T1.5 Explosivos da galeria no pacote certo (granadas, lança-foguetes, efeitos de fogo).
-- T1.6 Goldens: cada arma monta e anima igual à galeria.
-- T1.7 Ambiente `weapons-test-area` com os comportamentos novos (botões de pane e destravar) e a página do Arsenal do site montando
-  a partir do SDK.
-
-## Fase 2 — Casas (Casa3DSDK + Galeria do Vale Cinzento)
-> 🤖 Modelo: `sonnet` (pacote decidido na T0.2)
-
-- T2.1 Portar o Casa3DSDK (peças estruturais, plantas, dano estrutural) com goldens contra `visor-casas-3d` e `area-casas`.
-- T2.2 Portar as tipologias da Galeria do Vale (sobrado, laje, colonial, chalé, vila operária, palafita, casa sede, prédios) e os
-  interiores (casa, mercado, farmácia, delegacia, escola…) como conteúdo.
-- T2.3 Mobília de cena, postes e padrão de ruas para `game-props3d` ou conteúdo.
-- T2.4 `buildings-test-area` e áreas na página do kit.
-
-## Fase 3 — Itens (Itens do Vale Cinzento)
-> 🤖 Modelo: `sonnet`
-
-- T3.1 Motor `game-items` (item, categoria, peso, uso, loot) + `-three` com os modelos da página.
-- T3.2 Catálogo do ZombiAdA como pacote de conteúdo. Goldens.
+- T3.1 `game-items`: catálogo único (A9) estendendo o `ItemDef` do SDK, com categorias, atributos, validade pela idade, achados por
+  lugar e receitas; os 257 itens, sem duplicar os 92 domésticos.
+- T3.2 Modelos: os 24 da vitrine no tamanho real; os outros 233 com forma simples até o time entregar (`itens-modelos-3d.md`).
 - T3.3 `items-test-area`.
 
-## Fase 4 — Zumbis e personagens (Bestiário, Elenco, Personagens, dano da Galeria do Arsenal)
-> 🤖 Modelo: `sonnet` (T4.1 é 🧠: modelo de corpo herdado por sobreviventes e animais)
+## Fase 4 — Personagens e animais
+> 🤖 Modelo: `sonnet` (T4.1 é 🧠 → `opus`)
 
-- T4.1 🧠 `game-characters`: corpo, juntas, andar por tipo, cortes, desmembramento, sangramento e dano por região.
-- T4.2 Conteúdo dos zumbis do Bestiário e do Elenco. Goldens de andar e de corte.
-- T4.3 `characters-test-area`.
+- T4.1 🧠 `game-characters`: corpo do jogo com a proporção do guia (P1), juntas, andar, 11 segmentos com resistência por ponto contra a
+  força da arma (P7, A4), desmembramento em 3 níveis (P8).
+- T4.2 `game-characters-undead`: os 13 tipos do Bestiário v17 (P2, P11), velocidades com multiplicadores por momento (P3), olhos (P4),
+  tipo de zumbi como propriedade na criação (P5), crianças podem virar (P6).
+- T4.3 `game-animals`: 13 espécies com os três visuais e a regra de infecção de animal (P10).
+- T4.4 `characters-test-area` e `animals-test-area`.
 
-## Fase 5 — Sobreviventes (Retratos e Os Vivos do Vale)
+## Fase 5 — Efeitos
 > 🤖 Modelo: `sonnet`
 
-- T5.1 Conteúdo de sobreviventes e fardados sobre `game-characters`; rotinas de NPC.
+- T5.1 `game-vfx` + `-three`: explosão do Laboratório com o teto e o LOD do jogo (E1); destruição, fluidos e armas passam a usá-lo.
+- T5.2 Oficina de VFX como módulo da bancada de efeitos (E5, T0.2), modelada no Laboratório.
+- T5.3 `game-fluids`: filme que escorre, respingo por ângulo, bile e sangue antigo, com os valores do time como padrão configurável (E2).
 
-## Fase 6 — Efeitos (Oficina de VFX, Laboratório de Explosões, Padrão de Fluidos)
+## Fase 6 — Som e clima
 > 🤖 Modelo: `sonnet`
 
-- T6.1 `game-vfx` (+ `-three`): fogo, fumaça, sangue, faíscas, explosão em camadas, cratera. Goldens.
-- T6.2 Conferir Padrão de Fluidos contra `game-fluids` e portar o que faltar.
+- T6.1 `game-audio` (S1): síntese, mixagem, distância, limite de vozes, sons contínuos; os sons do jogo e da Cena de Arte.
+- T6.2 `game-weather` (E6): chuva leve e forte, neblina, relâmpago, vento, ciclone, tufão, calor intenso, ligados a fluidos e som.
 
-## Fase 7 — Animais (Bichos do Vale)
+## Fase 7 — Veículos e cidade
 > 🤖 Modelo: `sonnet`
 
-- T7.1 `game-animals` (+ `-three`) com os bichos e habitats.
+- T7.1 Comparar a fundo a Garagem do artefato com a v4 e o SDK (V2); trazer as frotas novas e o modo leve (V3), a API `danificaveis`,
+  cor por semente e `DIMS`; condução arcade e semi-simulação (V4); `vehicles-test-area` (V5).
+- T7.2 Vegetação: juntar Viveiro (V8), `rulesFor`, `vegetation-test-area`.
+- T7.3 `game-urban`: ruas, calçadas, os 5 postes, bairro, quarteirão, relevo (C3).
+- T7.4 Câmera de ombro do jogo no `game-camera` (V7).
 
-## Fase 8 — Mapa e horda
-> 🤖 Modelo: `sonnet` (T8.2 🧠)
+## Fase 8 — Multidão, histórias e jogador
+> 🤖 Modelo: `sonnet` (T8.2 é 🧠 → `opus`)
 
-- T8.1 Dados de terreno e padrão urbano como conteúdo; Checklist do Mapa e Visor de plantas conferidos com o SDK.
-- T8.2 🧠 Simulação de horda (Bancada de Hordas): pacote próprio ou parte de `game-infection`.
+- T8.1 `game-crowd` (P12): horda, civis, manada, revoada, ligada ao `game-infection`.
+- T8.2 🧠 Gerador de histórias e ficha de personagem (P9, P13): papéis, nomes sorteados, histórias que se cruzam, ficha que acumula
+  decisões e histórias.
+- T8.3 `game-player` (V6): fôlego, ferida, infecção individual, agarrão.
 
 ## Gates de cada task
 
-`pnpm build`, `pnpm -r typecheck`, testes do pacote (goldens incluídos), `pnpm lint`, commit isolado por task, evidência em
-`evidence.md`. Os goldens de `game-vehicles-fleet` já falham na `main` em 2026-10-23 (10 testes): não bloqueiam esta spec, mas
-ficam registrados.
+`pnpm build`, `pnpm -r typecheck`, testes do pacote (goldens incluídos), `pnpm lint`, skill do pacote atualizada em
+`.claude/skills/<pacote>/SKILL.md`, commit isolado por task, evidência em `evidence.md`. PR por fase, aberto ao fim da fase e mostrado no
+Chrome do dono; merge só com o ok dele.
 
 ## Prompt de execução
 
-Não gerado: a spec tem `[NEEDS CLARIFICATION]` aberto (fontes originais dos times e destino do Casa3DSDK). Responder os dois
-pontos libera o prompt de autopilot.
+```text
+/oh-my-claudecode:autopilot Execute a spec specs/001-migracao-entregas-dos-times/ do repositório adatechnology-game-kit
+(leia CLAUDE.md, spec.md, consolidado.md, fontes.md e tasks.md antes de começar; os inventários em inventario/ e as fontes em
+artefatos/ e sources/ são a referência de cada porte). Uma fase por vez, na ordem do tasks.md, começando pela Fase 0 e Fase 1.
+Regra principal: portar o que os times fizeram, igual ao original (semente fixa, sequência de eventos e hash), nunca reescrever parecido.
+Modelos: tasks normais → executor model=sonnet · tasks 🧠 (T0.2, T1.1, T2.1, T4.1, T8.2) → opus, validadas por architect antes de
+implementar · revisão de cada fase → code-reviewer model=sonnet.
+Escalada: gate falhou 2x → sobe um nível (sonnet→opus) e registra em evidence.md.
+Cada task fecha com pnpm build + typecheck + testes (goldens) + lint + skill do pacote atualizada + commit isolado, evidência em evidence.md.
+Ao fim de cada fase: abrir o PR, mostrar no Chrome do dono (o do Arch) e parar até o ok.
+Pare e pergunte antes de: merge, deploy, publicar pacote no npm, qualquer escolha de negócio que o consolidado não cubra.
+```
