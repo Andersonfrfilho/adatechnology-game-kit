@@ -1,0 +1,12 @@
+{
+  "name": "@adatechnology/interactables-showroom",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Walkable 3D showroom of every household interactive object (first person, pt-BR). Builds ONE self-contained HTML file.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  }
+}

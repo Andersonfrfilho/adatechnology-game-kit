@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Bancada de móveis interativos</title>
+<style>/*STYLE*/</style>
+</head>
+<body>
+<canvas id="c" tabindex="0"></canvas>
+
+<div id="loading"><div><strong>Bancada de móveis interativos</strong><span id="loadingMsg">Montando a casa…</span></div></div>
+
+<div id="hud">
+  <div id="cross"></div>
+  <div id="prompt" hidden></div>
+  <div id="toast" hidden></div>
+  <div id="help">
+    <b>Clique</b> na cena para olhar ao redor · <b>WASD</b> andar · <b>Shift</b> correr · <b>E</b> interagir · <b>F</b> pegar item · <b>Espaço</b> levantar · <b>B</b> mochila · <b>Esc</b> soltar o mouse
+  </div>
+  <div id="stats"><span id="fps"></span> <span id="calls"></span></div>
+  <div id="topbtns">
+    <button id="packBtn" type="button">Mochila <span id="packCount">0</span></button>
+    <button id="panelBtn" type="button" aria-expanded="false">Painel</button>
+  </div>
+  <section id="pack" hidden aria-label="Mochila">
+    <header><strong>Mochila</strong><button type="button" id="packClose" aria-label="Fechar">×</button></header>
+    <ul id="packList"></ul>
+    <p id="packEmpty">Vazia. Abra uma geladeira, gaveta ou armário e aperte <b>F</b> olhando para um item.</p>
+  </section>
+  <div id="touch" hidden>
+    <div id="stick"><div id="knob"></div></div>
+    <div id="touchBtns">
+      <button type="button" id="tUp">Levantar</button>
+      <button type="button" id="tF">Pegar</button>
+      <button type="button" id="tE">Usar</button>
+    </div>
+  </div>
+</div>
+
+<aside id="panel" aria-label="Painel de controle">
+  <div class="grab" aria-hidden="true"></div>
+  <details open>
+    <summary>Ambiente</summary>
+    <div class="row">
+      <label class="chip"><input type="checkbox" id="tNight"> Noite</label>
+      <label class="chip"><input type="checkbox" id="tRain"> Chuva</label>
+      <label class="chip"><input type="checkbox" id="tWind"> Vento</label>
+    </div>
+    <div class="row seg" id="qualitySeg" role="group" aria-label="Qualidade">
+      <span>Qualidade</span>
+      <button type="button" data-q="high">Alta</button>
+      <button type="button" data-q="game">Jogo</button>
+    </div>
+  </details>
+  <details open>
+    <summary>Energia</summary>
+    <div class="row">
+      <label class="chip"><input type="checkbox" id="tGrid" checked> Rede elétrica</label>
+    </div>
+    <div class="row" id="breakers"></div>
+  </details>
+  <details open>
+    <summary>Gás</summary>
+    <div class="row">
+      <label class="chip"><input type="checkbox" id="tGas"> Registro do botijão aberto</label>
+    </div>
+    <div class="meter"><span>Botijão</span><div class="bar"><i id="gasBar"></i></div><b id="gasTxt"></b></div>
+  </details>
+  <details open>
+    <summary>Água</summary>
+    <div class="meter"><span>Caixa d'água</span><div class="bar"><i id="tankBar"></i></div><b id="tankTxt"></b></div>
+    <div class="row">
+      <button type="button" id="bFill">Encher</button>
+      <button type="button" id="bDrain">Esvaziar</button>
+      <button type="button" id="bLeak">Vazamento</button>
+    </div>
+  </details>
+  <details open>
+    <summary>Objetos <small id="objCount"></small></summary>
+    <div id="objList"></div>
+  </details>
+  <p class="foot">Dica: o painel é só para testar. Os objetos reagem como no jogo: abra portas, ligue o fogão, o chuveiro, a TV; passe pelas roupas do varal e pelas cortinas.</p>
+</aside>
+<script>/*BUNDLE*/</script>
+<script>/*APP*/</script>
+</body>
+</html>
