@@ -65,8 +65,8 @@ around `+y` like `three.js` (`+z` turns toward `+x` for a positive angle). View 
 
 ## Behaviour
 
-- **Parts** animate toward their target at `motion.speed` (default 2.5 t/s). `requires` freezes a part while another one is not open (a drawer
-  behind a door). `fitSweep(object, part, blocked)` samples the swept `sweep` rectangle (rotating the leaf for hinges, translating for slides),
+- **Parts** animate toward their target at `motion.speed` (default 2.5 t/s). `requires` keeps a part from opening while another one is not open and closes it
+  with that one (a drawer behind a door closes with the door). `fitSweep(object, part, blocked)` samples the swept `sweep` rectangle (rotating the leaf for hinges, translating for slides),
   returns the largest safe `t` and clamps the part to it for good. A part counts as open from `t >= 0.5` (or 90% of its clamped limit).
   Parts that share a `group` move together: `setPart` or a toggle on any member sets the target of all (blind slats, curtain panels).
 - **Default interactions**: when a spec has no `interactions`, the world derives them. Labelled parts give `toggle_part`; containers without an

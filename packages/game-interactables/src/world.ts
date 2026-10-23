@@ -230,6 +230,12 @@ export function createWorld(options: WorldOptions = {}): World {
 
   function setOne(o: ObjState, p: PartState, target: number, instant: boolean): void {
     setOnePart(o, p, target, instant)
+    // a part that other parts require closes them with it (the drawer behind a door closes with the door)
+    if (!targetIsOpen(p)) {
+      for (const q of o.parts.values()) {
+        if (q.spec.requires === p.spec.id && q.target > 0) setPartTarget(o, q.spec.id, 0, instant)
+      }
+    }
   }
 
   /** Frame of a part right now: rotation (axis in object-local, angle) and translation, both about its pivot. */
@@ -1190,7 +1196,7 @@ export function createWorld(options: WorldOptions = {}): World {
     for (const o of objs.values()) {
       for (const p of o.parts.values()) {
         if (p.t === p.target) continue
-        if (gated(o, p)) continue
+        if (gated(o, p) && p.target > p.t) continue // a gated part may still close
         const step = (p.spec.motion.speed ?? 2.5) * dt
         const next = p.t < p.target ? Math.min(p.target, p.t + step) : Math.max(p.target, p.t - step)
         writeT(o, p, next)

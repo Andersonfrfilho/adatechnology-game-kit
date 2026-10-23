@@ -149,3 +149,38 @@ describe('part groups', () => {
     expect(w.partT('b', 'tilt_2')).toBe(1)
   })
 })
+
+describe('requires closing', () => {
+  it('closing the required part closes the dependent part with it, even after the door passes the gate', () => {
+    const { w } = world()
+    w.add('c', cabinet, origin)
+    w.setPart('c', 'door', 1, true)
+    w.setPart('c', 'drawer', 1, true)
+    expect(w.partT('c', 'drawer')).toBe(1)
+    w.setPart('c', 'door', 0)
+    run(w, 2)
+    expect(w.partT('c', 'door')).toBe(0)
+    expect(w.partT('c', 'drawer')).toBe(0)
+    expect(w.accessible('c', 'inner')).toBe(false)
+  })
+
+  it('a pending open of the dependent is cancelled when the required part closes', () => {
+    const { w } = world()
+    w.add('c', cabinet, origin)
+    w.setPart('c', 'drawer', 1) // waits for the door
+    w.setPart('c', 'door', 1, true)
+    w.setPart('c', 'door', 0, true)
+    run(w, 2)
+    expect(w.partT('c', 'drawer')).toBe(0)
+  })
+
+  it('instant close of the door closes the drawer at once and the drawer cannot be toggled while the door is shut', () => {
+    const { w } = world()
+    w.add('c', cabinet, origin)
+    w.setPart('c', 'door', 1, true)
+    w.setPart('c', 'drawer', 1, true)
+    w.setPart('c', 'door', 0, true)
+    expect(w.partT('c', 'drawer')).toBe(0)
+    expect(w.act('c:part.drawer')).toBe(false)
+  })
+})
