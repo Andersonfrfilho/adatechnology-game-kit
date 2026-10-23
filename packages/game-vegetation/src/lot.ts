@@ -1,4 +1,4 @@
-import type { Condition, GenerateOptions, Lod, MeshData, PartKind, PieceKind, Placement, PlantMesh, PlantSpec, Season } from './types'
+import type { Condition, GenerateOptions, Lod, MeshData, PartKind, PieceKind, Placement, PlantMesh, PlantSpec, Season, Vec3 } from './types'
 import type { MaterialKey } from './destruction'
 import { generate } from './generate'
 import { MeshBuilder } from './geometry/builder'
@@ -26,6 +26,11 @@ export interface LotPiece {
   indexCount: number
   /** key of the destruction material table (see MaterialIds) */
   material: MaterialKey
+  /** wood pieces: see PieceGeometry */
+  radius?: number
+  length?: number
+  axis?: Vec3
+  base?: Vec3
 }
 export interface LotPlantPieces {
   /** index into the `placements` array given to buildLot */
@@ -194,7 +199,7 @@ export function buildLot(placements: Placement[], resolveSpec: (id: string) => P
     generateOptions: { ...e.go, lod: e.plant.lod },
     pieces: e.plant.pieces.map((pc) => {
       const r = rangeOf.get(`${plantIndex}|${pc.id}`)!
-      return { id: pc.id, kind: pc.kind, ...(pc.parent === undefined ? {} : { parent: pc.parent }), part: pc.part, mesh: r.mesh, indexStart: r.indexStart, indexCount: r.indexCount, material: pc.material }
+      return { id: pc.id, kind: pc.kind, ...(pc.parent === undefined ? {} : { parent: pc.parent }), part: pc.part, mesh: r.mesh, indexStart: r.indexStart, indexCount: r.indexCount, material: pc.material, ...(pc.radius === undefined ? {} : { radius: pc.radius, length: pc.length, axis: pc.axis, base: pc.base }) }
     }),
   }))
   const triangleCount = (meshes.wood?.triangleCount ?? 0) + (meshes.foliage?.triangleCount ?? 0) + (meshes.flowers?.triangleCount ?? 0)

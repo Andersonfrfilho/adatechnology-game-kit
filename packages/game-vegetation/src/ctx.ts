@@ -1,4 +1,4 @@
-import type { Collider, Condition, DamageMaterial, Lod, PieceKind, Season, Vec3 } from './types'
+import type { PieceGeometry, Collider, Condition, DamageMaterial, Lod, PieceKind, Season, Vec3 } from './types'
 import type { Rng } from './rng'
 import type { MeshBuilder } from './geometry/builder'
 
@@ -24,6 +24,8 @@ export interface Ctx {
    * Run `draw` as one separable fruit piece (`fruitN`, kind 'fruit'): everything it emits (the fruit itself and its wood stalk) belongs to it.
    * The parent (nearest branch / crown / pad / trunk) and the pivot are worked out by `generate()` afterwards.
    */
+  /** attach explicit geometry (unscaled) to the piece `id`, overriding what `generate()` derives from the tubes (pads) */
+  pieceGeom(id: string, geom: PieceGeometry): void
   fruitItem(draw: () => void): void
   /** pick a value by lod: lod0, lod1, lod2 */
   pick<T>(a: T, b: T, c: T): T
@@ -31,6 +33,7 @@ export interface Ctx {
 
 export interface PieceMeta {
   kind: PieceKind
+  geom?: PieceGeometry
   parent?: string
   pivot?: Vec3
 }

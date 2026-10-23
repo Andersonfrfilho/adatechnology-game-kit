@@ -72,6 +72,8 @@ const obj = createPlantObject(THREE, plant, mats, { separable: true }) // one Me
 // userData.destructionPart = { id, kind, parent, material, materialKey }, userData.destructionMaterial
 ```
 
+Wood pieces (`trunk`, `branch`, `stem`, `arm`, `pad`) also carry `radius` (mean radius of the body, without the base flare and thin tip; pads: half the thickness), `length` (arc length; pads: the pad height), `axis` (unit base to tip) and `base`, copied to the lot `pieceTable` and `userData.destructionPart`: use them instead of `bounds`, which overestimate thickness on leaning or flared trunks.
+
 Lots: `buildLot(...).pieceTable` lists, per plant, `{ plantIndex, species, x, z, pieces: [{ id, kind, part, mesh, indexStart, indexCount, material }] }` into the merged meshes. When a merged plant is hit: `const grp = separatePlantFromLot(THREE, lot, lotObject, plantIndex, mats)` zeroes its index ranges in the lot meshes (degenerate triangles, `index.needsUpdate`) and returns the separable object already placed (position, rotation.y, scale); add it to the scene and feed its pieces to the destruction SDK. Without three: `extractPlant(lot, i)` gives `{ plant, placement, ranges }`, `hideLotPlant(lot, i)` clears the ranges (set `geometry.index.needsUpdate = true`).
 
 ## Em português

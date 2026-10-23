@@ -32,7 +32,20 @@ export type PieceKind = 'trunk' | 'branch' | 'crown' | 'pot' | 'soil' | 'fruit' 
  * A separable piece of a plant: a contiguous triangle range of one part's MeshData. A logical piece that spans several
  * parts (e.g. a crown with leaves and flowers) is one entry per part; the entries after the first get the id `<id>:<part>`.
  */
-export interface PlantPiece {
+/** Geometric metadata of a wood piece (trunk, branch, stem, arm, pad), in plant space meters. */
+export interface PieceGeometry {
+  /** mean radius of the tube body, without the base flare and the thin tip (pads: half the thickness) */
+  radius: number
+  /** arc length along the axis (pads: the pad height) */
+  length: number
+  /** unit vector base to tip, the average direction */
+  axis: Vec3
+  /** where the axis starts (plant space) */
+  base: Vec3
+}
+
+/** Optional `radius`, `length`, `axis` and `base` (see PieceGeometry) are set on trunk / branch / stem / arm / pad pieces; AABB `bounds` overestimate thin leaning limbs. */
+export interface PlantPiece extends Partial<PieceGeometry> {
   /** unique within the plant */
   id: string
   kind: PieceKind
