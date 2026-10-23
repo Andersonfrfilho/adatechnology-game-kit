@@ -1,3 +1,4 @@
+import { poseOf as enginePoseOf } from '@adatechnology/game-interactables'
 import type { Motion, World } from '@adatechnology/game-interactables'
 import type { ThreeLib, Vec3 } from './types'
 
@@ -11,44 +12,21 @@ export interface Pose {
   scale: Vec3
 }
 
-const DEFAULTS = { hinge: Math.PI / 2, rocker: 0.35, knob: Math.PI * 1.5, slide: 0.3, scale: 0.2 }
-
-function normalized(axis: Vec3 | undefined): Vec3 {
-  const [x, y, z] = axis ?? [0, 1, 0]
-  const l = Math.hypot(x, y, z) || 1
-  return [x / l, y / l, z / l]
-}
-
 /**
- * Local equivalent of the pose math of the interactables package. `t` is clamped to [0, 1]:
- * hinge / rocker / knob rotate `angle` around `axis`, slide translates `distance` along `axis`,
- * scale goes from 1 to `scale` along `axis`.
+ * The engine's pose math, as a quaternion. This is the engine's own `poseOf` (same default angles and distances), so the rendered
+ * part and the engine's `slotPosition`, colliders, mirrors and `fitSweep` always agree. `t` is clamped to [0, 1].
  */
 export function poseOf(motion: Motion, t: number): Pose {
   const k = Math.min(1, Math.max(0, Number.isFinite(t) ? t : 0))
-  const axis = normalized(motion.axis)
-  const pose: Pose = { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }
-  switch (motion.kind) {
-    case 'hinge':
-    case 'rocker':
-    case 'knob': {
-      const a = (motion.angle ?? DEFAULTS[motion.kind]) * k
-      const s = Math.sin(a / 2)
-      pose.quaternion = [axis[0] * s, axis[1] * s, axis[2] * s, Math.cos(a / 2)]
-      break
-    }
-    case 'slide': {
-      const d = (motion.distance ?? DEFAULTS.slide) * k
-      pose.position = [axis[0] * d, axis[1] * d, axis[2] * d]
-      break
-    }
-    case 'scale': {
-      const f = ((motion.scale ?? DEFAULTS.scale) - 1) * k
-      pose.scale = [1 + f * Math.abs(axis[0]), 1 + f * Math.abs(axis[1]), 1 + f * Math.abs(axis[2])]
-      break
-    }
+  const pose = enginePoseOf(motion, k)
+  const [x, y, z] = pose.rotation.axis
+  const l = Math.hypot(x, y, z) || 1
+  const s = Math.sin(pose.rotation.angle / 2)
+  return {
+    position: [pose.position[0], pose.position[1], pose.position[2]],
+    quaternion: [(x / l) * s, (y / l) * s, (z / l) * s, Math.cos(pose.rotation.angle / 2)],
+    scale: [pose.scale[0], pose.scale[1], pose.scale[2]],
   }
-  return pose
 }
 
 interface Rest {
