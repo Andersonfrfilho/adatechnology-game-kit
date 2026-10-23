@@ -14,6 +14,8 @@ concatenates plain scripts can use them without a bundler.
 | [`@adatechnology/game-devtools`](packages/game-devtools) | `GameDevtools` | Free-fly mode, position HUD, notes and marks, control panel, scenarios runner and entity labels |
 | [`@adatechnology/game-infection`](packages/game-infection) | `GameInfection` | Deterministic abstract epidemic model by regions (zombies, plague, rumours) |
 | [`@adatechnology/game-props3d`](packages/game-props3d) | `GameProps3d` | Procedural low-poly props (decor, furniture, yard, house state) that only describe primitives through a host-provided api |
+| [`@adatechnology/game-vegetation`](packages/game-vegetation) | `GameVegetation` | Deterministic procedural low-poly plants (trees, palms, shrubs, flowers, cacti, grasses, vines), LODs, scatter, lot merging and an optional three.js adapter with shader wind |
+| [`@adatechnology/game-vegetation-species`](packages/game-vegetation-species) | `GameVegetationSpecies` | JSON content pack of 71 species (en / pt-BR) with regional planting tables for `game-vegetation` |
 
 Each package has its own README (English, with a short Portuguese section) and a `MIGRATION.md` mapping the old Portuguese names to the new
 English ones, so the game adapter can be updated mechanically.
