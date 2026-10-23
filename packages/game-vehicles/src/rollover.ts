@@ -28,7 +28,8 @@ export function installRollover(kit: Kit): void {
       const d = [sz.x * sc.x, sz.y * sc.y, sz.z * sc.z].sort(function (a, b) {
         return a - b
       })
-      if (ob.userData.antena || (d[1] < 0.045 && d[2] > 0.2)) {
+      /* `antena` is the original spelling of the flag */
+      if (ob.userData.antenna || ob.userData.antena || (d[1] < 0.045 && d[2] > 0.2)) {
         thin.push({ o: ob, M: M })
         return
       }

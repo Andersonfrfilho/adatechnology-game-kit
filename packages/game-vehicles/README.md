@@ -103,6 +103,9 @@ registerLocale('es', { bands: { intact: 'Intacto', torn_off: 'Arrancado' } })
 const kit = createVehicleKit({ THREE, locale: 'es' }) // everything else stays English
 ```
 
+A content pack adds its own strings under its own top-level key with `kit.registerLocale(code, table)`. The kit keeps the locale it was
+created with, so `kit.t('mypack.some.key')` reads from it, with English as the fallback.
+
 ## API
 
 ### Kit options (`createVehicleKit(options)`)

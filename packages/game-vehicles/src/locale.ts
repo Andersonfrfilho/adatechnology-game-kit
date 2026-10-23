@@ -10,7 +10,7 @@ export type PartialLocaleStrings = { [K in keyof LocaleStrings]?: Partial<Locale
 const registry: Record<string, PartialLocaleStrings> = { en, 'pt-BR': ptBR }
 
 /** Registers (or extends) a locale under a code such as `es` or `pt-BR`. Missing keys fall back to English. */
-export function registerLocale(code: string, strings: PartialLocaleStrings): void {
+export function registerLocale(code: string, strings: PartialLocaleStrings | Record<string, any>): void {
   registry[code] = merge(registry[code] || {}, strings)
 }
 
@@ -29,15 +29,27 @@ function merge(base: any, extra: any): any {
   return out
 }
 
+/** Copies `source` into `target` in place, level by level (the string table of a live kit has to stay the same object). */
+export function assignDeep(target: any, source: any): any {
+  Object.keys(source || {}).forEach(function (k) {
+    const v = source[k]
+    if (v && typeof v === 'object' && !Array.isArray(v)) target[k] = assignDeep(target[k] && typeof target[k] === 'object' ? target[k] : {}, v)
+    else if (v !== undefined) target[k] = v
+  })
+  return target
+}
+
 /**
  * Resolves a locale to a complete string table.
  * Accepts a registered code (`'pt-BR'`; `'pt'` finds `'pt-BR'`, `'en-US'` finds `'en'`), or a partial table that overrides English.
  */
 export function resolveStrings(locale?: string | PartialLocaleStrings): LocaleStrings {
-  if (locale && typeof locale === 'object') return merge(en, locale)
+  /* English is the base of every locale, including the keys content packs add to it with registerLocale */
+  const base = registry.en || en
+  if (locale && typeof locale === 'object') return merge(base, locale)
   const code = locale || 'en'
   const hit = findLocale(code)
-  return hit ? merge(en, hit) : (merge(en, {}) as LocaleStrings)
+  return hit ? merge(base, hit) : (merge(base, {}) as LocaleStrings)
 }
 
 function findLocale(code: string): PartialLocaleStrings | null {

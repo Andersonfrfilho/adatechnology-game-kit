@@ -67,3 +67,18 @@ describe('locale', () => {
     expect(kit.strings.matchers.windshield).toMatch(/brisa/)
   })
 })
+
+describe('kit.registerLocale', () => {
+  it('adds pack strings to the locale the kit was created with, with English as the fallback', () => {
+    registerLocale('pt-BR', { zz_pack: { hello: 'Olá {name}', only_pt: 'só pt' } })
+    const kit = makeKit({ locale: 'pt-BR' }, false)
+    kit.registerLocale('en', { zz_pack: { hello: 'Hello {name}', fallback: 'English only' } })
+    kit.registerLocale('pt-BR', { zz_pack: { hello: 'Olá {name}', only_pt: 'só pt' } })
+    expect(kit.t('zz_pack.hello', { name: 'Ada' })).toBe('Olá Ada')
+    expect(kit.t('zz_pack.fallback')).toBe('English only')
+    const en = makeKit({}, false)
+    en.registerLocale('en', { zz_pack: { hello: 'Hello {name}' } })
+    expect(en.t('zz_pack.hello', { name: 'Ada' })).toBe('Hello Ada')
+    expect(en.t('bands.intact')).toBe('Intact')
+  })
+})

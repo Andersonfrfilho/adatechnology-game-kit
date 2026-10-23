@@ -343,6 +343,11 @@ export interface VehicleKit {
   register(spec: VehicleSpec, build: BuildFunction): VehicleSpec
   find(key: string): VehicleSpec | null
   configure(options: KitConfiguration): VehicleKit
+  /**
+   * Registers a locale table (any top-level key, so a content pack can add its own) and refreshes the strings of this kit,
+   * which keeps the locale it was created with. English is the fallback for every locale.
+   */
+  registerLocale(code: string, strings: Record<string, any>): VehicleKit
   plugin(plugin: Plugin): VehicleKit
   scenario(def: ScenarioDefinition): ScenarioDefinition
   defineFluid(key: string, def: FluidDefinition): FluidDefinition

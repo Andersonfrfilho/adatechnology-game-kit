@@ -1,4 +1,4 @@
-import { createMatchers, createTranslate, resolveStrings } from './locale'
+import { assignDeep, createMatchers, createTranslate, registerLocale, resolveStrings } from './locale'
 import { LEGACY_STATES } from './legacy-seeds'
 import { clamp, hash, markDecal, rng, smooth, strHash } from './util'
 import type { Kit } from './types'
@@ -291,6 +291,13 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
       }
       if (o.geometry && !shared.includes(o.geometry)) o.geometry.dispose()
     })
+  }
+
+  /* a content pack adds its own strings (under its own top-level key) to the locale this kit was created with */
+  kit.registerLocale = function (code: string, table: Record<string, any>) {
+    registerLocale(code, table)
+    assignDeep(strings, resolveStrings(opts.locale))
+    return kit
   }
 
   /* options that are configuration (everything except THREE, locale and document) */
