@@ -25,7 +25,8 @@
   "tags": [
    "metal",
    "conductive"
-  ]
+  ],
+  "compressive": 2000000
  },
  {
   "id": "cast_iron",
@@ -57,7 +58,8 @@
   "tags": [
    "metal",
    "conductive"
-  ]
+  ],
+  "compressive": 1500000
  },
  {
   "id": "aluminium",
@@ -84,7 +86,8 @@
   "tags": [
    "metal",
    "conductive"
-  ]
+  ],
+  "compressive": 800000
  },
  {
   "id": "copper",
@@ -111,7 +114,8 @@
   "tags": [
    "metal",
    "conductive"
-  ]
+  ],
+  "compressive": 1000000
  },
  {
   "id": "wood_soft",
@@ -146,7 +150,8 @@
    "wood",
    "organic",
    "flammable"
-  ]
+  ],
+  "compressive": 100000
  },
  {
   "id": "wood_hard",
@@ -180,7 +185,8 @@
    "wood",
    "organic",
    "flammable"
-  ]
+  ],
+  "compressive": 150000
  },
  {
   "id": "plywood",
@@ -214,7 +220,8 @@
    "wood",
    "organic",
    "flammable"
-  ]
+  ],
+  "compressive": 60000
  },
  {
   "id": "mdf",
@@ -245,7 +252,8 @@
    "wood",
    "organic",
    "flammable"
-  ]
+  ],
+  "compressive": 30000
  },
  {
   "id": "glass",
@@ -278,7 +286,8 @@
   "tags": [
    "glass",
    "brittle"
-  ]
+  ],
+  "compressive": 100000
  },
  {
   "id": "tempered_glass",
@@ -308,7 +317,8 @@
   "tags": [
    "glass",
    "brittle"
-  ]
+  ],
+  "compressive": 200000
  },
  {
   "id": "ceramic",
@@ -334,7 +344,8 @@
   "tags": [
    "ceramic",
    "brittle"
-  ]
+  ],
+  "compressive": 150000
  },
  {
   "id": "concrete",
@@ -359,7 +370,8 @@
   "tags": [
    "masonry",
    "brittle"
-  ]
+  ],
+  "compressive": 444000
  },
  {
   "id": "brick",
@@ -381,7 +393,8 @@
   "tags": [
    "masonry",
    "brittle"
-  ]
+  ],
+  "compressive": 40000
  },
  {
   "id": "plaster",
@@ -403,7 +416,8 @@
   "tags": [
    "masonry",
    "brittle"
-  ]
+  ],
+  "compressive": 8000
  },
  {
   "id": "stone",
@@ -425,7 +439,8 @@
   "tags": [
    "masonry",
    "brittle"
-  ]
+  ],
+  "compressive": 300000
  },
  {
   "id": "plastic",
@@ -457,7 +472,8 @@
   "tags": [
    "plastic",
    "flammable"
-  ]
+  ],
+  "compressive": 40000
  },
  {
   "id": "rubber",
@@ -487,7 +503,8 @@
   "tags": [
    "rubber",
    "flammable"
-  ]
+  ],
+  "compressive": 20000
  },
  {
   "id": "fabric",
@@ -522,7 +539,8 @@
    "fabric",
    "organic",
    "flammable"
-  ]
+  ],
+  "compressive": 500
  },
  {
   "id": "foam",
@@ -556,7 +574,8 @@
   "tags": [
    "fabric",
    "flammable"
-  ]
+  ],
+  "compressive": 100
  },
  {
   "id": "leather",
@@ -590,7 +609,8 @@
    "fabric",
    "organic",
    "flammable"
-  ]
+  ],
+  "compressive": 2000
  },
  {
   "id": "paper",
@@ -624,7 +644,8 @@
    "fabric",
    "organic",
    "flammable"
-  ]
+  ],
+  "compressive": 500
  },
  {
   "id": "foliage",
@@ -658,7 +679,8 @@
    "plant",
    "organic",
    "flammable"
-  ]
+  ],
+  "compressive": 500
  },
  {
   "id": "green_wood",
@@ -693,7 +715,8 @@
    "wood",
    "organic",
    "flammable"
-  ]
+  ],
+  "compressive": 60000
  },
  {
   "id": "cactus",
@@ -727,7 +750,8 @@
    "plant",
    "organic",
    "flammable"
-  ]
+  ],
+  "compressive": 5000
  },
  {
   "id": "flesh_fruit",
@@ -752,7 +776,8 @@
   "tags": [
    "plant",
    "organic"
-  ]
+  ],
+  "compressive": 1000
  },
  {
   "id": "wax",
@@ -781,7 +806,8 @@
   "tags": [
    "wax",
    "flammable"
-  ]
+  ],
+  "compressive": 5000
  },
  {
   "id": "soil",
@@ -803,6 +829,7 @@
   "tags": [
    "soil",
    "masonry"
-  ]
+  ],
+  "compressive": 20000
  }
 ]

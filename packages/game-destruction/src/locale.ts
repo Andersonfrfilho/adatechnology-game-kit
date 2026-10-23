@@ -1,4 +1,4 @@
-import type { DamageType, DestructionEventType, FractureStyle, JointKind, PartStatus, ToolKind } from './types'
+import type { DamageType, DestructionEventType, FractureStyle, JointKind, PartStatus, StructureRole, ToolKind } from './types'
 
 /** Locales shipped with the package. Unknown locales fall back to `en`. */
 export type DestructionLocale = 'en' | 'pt-BR'
@@ -13,6 +13,7 @@ export interface DestructionStrings {
   /** Short label per event type, for logs and kill-feed style text. */
   eventLabels: Record<DestructionEventType, string>
   fractureStyles: Record<FractureStyle, string>
+  structureRoles: Record<StructureRole, string>
 }
 
 export const locales: Record<DestructionLocale, DestructionStrings> = {
@@ -26,7 +27,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
     partStatus: { intact: 'intact', damaged: 'damaged', broken: 'broken', melted: 'melted', ashes: 'ashes' },
     jointKinds: {
       screw: 'screw', bolt: 'nut and bolt', nail: 'nail', weld: 'weld', glue: 'glue', hinge: 'hinge', clip: 'clip', tie: 'tie', mortar: 'mortar',
-      fused: 'fused', stem: 'stem',
+      fused: 'fused', stem: 'stem', rebar: 'rebar', resting: 'resting',
     },
     toolKinds: {
       hand: 'hand', screwdriver: 'screwdriver', wrench: 'wrench', pry_bar: 'pry bar', saw: 'saw', cutting_torch: 'cutting torch', knife: 'knife', hammer: 'hammer',
@@ -35,9 +36,10 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
     eventLabels: {
       damage: 'damage', dent: 'dent', hole: 'hole', crack: 'crack', ricochet: 'ricochet', debris: 'debris', fracture: 'broke', detach: 'came loose',
       disassemble_progress: 'taking apart', ignite: 'caught fire', extinguish: 'put out', burnout: 'burned to ash', melt: 'melting', drip: 'dripping',
-      leak: 'leak', explode: 'exploded', destroyed: 'destroyed',
+      leak: 'leak', explode: 'exploded', stress: 'overload', collapse: 'collapsed', destroyed: 'destroyed',
     },
     fractureStyles: { shatter: 'shatter', crumble: 'crumble', splinter: 'splinter', tear: 'tear', snap: 'snap', none: 'none' },
+    structureRoles: { foundation: 'foundation', column: 'column', beam: 'beam', slab: 'slab', wall: 'wall', partition: 'partition', roof: 'roof', stair: 'stairs', none: 'none' },
   },
   'pt-BR': {
     materialNames: {
@@ -49,7 +51,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
     partStatus: { intact: 'intacto', damaged: 'danificado', broken: 'quebrado', melted: 'derretido', ashes: 'cinzas' },
     jointKinds: {
       screw: 'parafuso', bolt: 'porca e parafuso', nail: 'prego', weld: 'solda', glue: 'cola', hinge: 'dobradiça', clip: 'encaixe', tie: 'amarração',
-      mortar: 'argamassa', fused: 'fundido', stem: 'caule',
+      mortar: 'argamassa', fused: 'fundido', stem: 'caule', rebar: 'vergalhão', resting: 'apoiado',
     },
     toolKinds: {
       hand: 'mão', screwdriver: 'chave de fenda', wrench: 'chave inglesa', pry_bar: 'pé de cabra', saw: 'serra', cutting_torch: 'maçarico', knife: 'faca', hammer: 'martelo',
@@ -58,9 +60,10 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
     eventLabels: {
       damage: 'dano', dent: 'amassado', hole: 'furo', crack: 'trinca', ricochet: 'ricochete', debris: 'estilhaços', fracture: 'quebrou', detach: 'soltou',
       disassemble_progress: 'desmontando', ignite: 'pegou fogo', extinguish: 'apagou', burnout: 'virou cinza', melt: 'derretendo', drip: 'pingando',
-      leak: 'vazamento', explode: 'explodiu', destroyed: 'destruído',
+      leak: 'vazamento', explode: 'explodiu', stress: 'sobrecarga', collapse: 'desabou', destroyed: 'destruído',
     },
     fractureStyles: { shatter: 'estilhaçar', crumble: 'esfarelar', splinter: 'lascar', tear: 'rasgar', snap: 'partir', none: 'nenhuma' },
+    structureRoles: { foundation: 'fundação', column: 'pilar', beam: 'viga', slab: 'laje', wall: 'parede', partition: 'divisória', roof: 'telhado', stair: 'escada', none: 'nenhum' },
   },
 }
 

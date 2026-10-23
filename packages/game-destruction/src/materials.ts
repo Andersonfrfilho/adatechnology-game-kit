@@ -19,6 +19,8 @@ export const JOINT_DEFAULTS: Record<JointKind, { strength: number; tools: ToolKi
   mortar: { strength: 400, tools: ['hammer'], seconds: 6 },
   fused: { strength: 1000, tools: [], seconds: 0 },
   stem: { strength: 40, tools: ['knife', 'saw', 'hand'], seconds: 1.5 },
+  rebar: { strength: 1500, tools: ['cutting_torch', 'saw'], seconds: 20 },
+  resting: { strength: 30, tools: ['hand'], seconds: 1 },
 }
 
 const has = (m: MaterialDef, tag: string) => !!m.tags && m.tags.includes(tag)
@@ -94,4 +96,17 @@ export const inferJoints = (parts: PartSpec[], tolerance = 0.01, materials: Read
     }
   }
   return out
+}
+
+/**
+ * Load in kg a structural part carries before it fails: `structure.capacity`, else `material.compressive` (default 20 000 kg/m²) times the
+ * section. The section is the product of the two smallest dimensions (thickness times longest dimension for slabs; thickness times horizontal length for walls); foundations get x10.
+ */
+export const partCapacity = (part: PartSpec, material: MaterialDef): number => {
+  if (part.structure?.capacity !== undefined) return part.structure.capacity
+  const d = shapeDims(part.shape).sort((a, b) => a - b)
+  const role = part.structure?.role
+  const sh = shapeDims(part.shape)
+  const section = role === 'wall' || role === 'partition' ? Math.min(sh[0], sh[2]) * Math.max(sh[0], sh[2]) : role === 'slab' ? d[0] * d[2] : d[0] * d[1]
+  return Math.max(1, section * (material.compressive ?? 20000) * (role === 'foundation' ? 10 : 1))
 }

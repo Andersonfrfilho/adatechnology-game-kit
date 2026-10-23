@@ -99,6 +99,11 @@ export interface MaterialDef {
   }
   /** Free tags, e.g. `metal`, `organic`, `conductive`. */
   tags?: string[]
+  /**
+   * Load a structural part of this material carries per square metre of cross-section, in kg (game-tuned: concrete 444 000, brick 40 000,
+   * softwood 100 000, steel 2 000 000). Default 20 000. See `PartSpec.structure`.
+   */
+  compressive?: number
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -139,10 +144,22 @@ export interface PartSpec {
   anchored?: boolean
   /** Free tags the host can use (`door`, `wheel`, `screen`, `trunk`, `leaf`...). */
   tags?: string[]
+  /**
+   * Structural role. Structural parts (any role but `none`) carry their own mass plus the load of the parts resting on them down to the anchored
+   * parts, over the joints that `bears`. `foundation` implies `anchored`. `none` (and parts without `structure`) never carry load: a window, a door
+   * or furniture is not part of the structure. Objects without any structural part behave as before.
+   */
+  structure?: { role: StructureRole; capacity?: number }
 }
 
+/**
+ * Role of a part in the structure of a building. `partition` is a non-load-bearing wall: it is supported by other parts and carries nothing, so
+ * breaking it never drops anything.
+ */
+export type StructureRole = 'foundation' | 'column' | 'beam' | 'slab' | 'wall' | 'partition' | 'roof' | 'stair' | 'none'
+
 /** How two parts are attached. Decides the default strength and the tool that undoes it. */
-export type JointKind = 'screw' | 'bolt' | 'nail' | 'weld' | 'glue' | 'hinge' | 'clip' | 'tie' | 'mortar' | 'fused' | 'stem'
+export type JointKind = 'screw' | 'bolt' | 'nail' | 'weld' | 'glue' | 'hinge' | 'clip' | 'tie' | 'mortar' | 'fused' | 'stem' | 'rebar' | 'resting'
 
 /** A tool that can undo joints (`hand` means no tool). */
 export type ToolKind = 'hand' | 'screwdriver' | 'wrench' | 'pry_bar' | 'saw' | 'cutting_torch' | 'knife' | 'hammer'
@@ -159,6 +176,12 @@ export interface JointSpec {
   tools?: ToolKind[]
   /** Seconds of tool work to undo it (default from `JOINT_DEFAULTS[kind].seconds`). */
   seconds?: number
+  /**
+   * The joint transfers load (default true when both parts have a structure role other than `none`, false otherwise). `'a_on_b'` means part `a`
+   * rests on part `b` (load flows from `a` to `b` only), `'b_on_a'` the opposite. With `true` the load is shared with the neighbours closer to an
+   * anchored part. A part that loses every support path to an anchored part collapses, even if it is still connected sideways to other parts.
+   */
+  bears?: boolean | 'a_on_b' | 'b_on_a'
 }
 
 export interface DestructibleSpec {
@@ -274,6 +297,14 @@ export interface PartState {
   cracks: Crack[]
   /** Fluid left, when the part `contains` one. */
   liters?: number
+  /**
+   * Structural parts only. Load in kg: own mass plus what rests on the part. `stress` = `load / capacity`; above 1 the part takes damage every
+   * `update` (`(stress - 1) * maxHp * 0.5` per second), which can cascade. Capacity is `structure.capacity`, else `compressive * section` of the
+   * material, where the section is the product of the two smallest dimensions (columns, beams, roofs, stairs, foundations x10), thickness times longest dimension (slabs) or
+   * thickness times horizontal length (walls). Example: a 0.3 m concrete column carries 40 t, a 0.2 m brick wall 8 t per metre, a 0.1x0.2 m softwood beam 2 t.
+   */
+  load?: number
+  stress?: number
   /** Index into `ObjectState.groups` of the piece this part belongs to (-1 when the part is broken, melted or ash). */
   group: number
 }
@@ -353,6 +384,10 @@ export type DestructionEvent =
   | (EventBase & { type: 'drip'; part: string; point: Vec3; material: MaterialId })
   | (EventBase & { type: 'leak'; part: string; fluid: FluidKind; point: Vec3; direction: Vec3; rate: number; pressurized: boolean })
   | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number })
+  /** A structural part is overloaded (`stress` > 1); throttled to once per 0.5 s per part. Brittle parts also `crack` at stress > 0.8. */
+  | (EventBase & { type: 'stress'; part: string; stress: number; load: number })
+  /** A group with structural parts lost every anchored part (an anchored part exists in the object): it falls. Reported once per group. */
+  | (EventBase & { type: 'collapse'; parts: string[]; mass: number })
   | (EventBase & { type: 'destroyed' })
 
 export type DestructionEventType = DestructionEvent['type']
@@ -484,12 +519,16 @@ export interface PartRuntime {
   shockT: number
   /** A leaking flammable fluid is burning on this part. */
   jet: boolean
+  /** Seconds left before the next `stress` event. */
+  stressT?: number
 }
 
 /** Opaque bookkeeping of an object (see `PartRuntime`). `joints` holds the last disassembly step reported per joint id. */
 export interface ObjectRuntime {
   parts: Record<string, PartRuntime>
   joints: Record<string, number>
+  /** Parts of groups that already reported a `collapse`. */
+  collapsed?: string[]
 }
 
 export interface DestructionSnapshot {

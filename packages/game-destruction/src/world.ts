@@ -1,5 +1,5 @@
 import { planFragments } from './fracture'
-import { JOINT_DEFAULTS, inferJoints, MATERIALS, partMass, partThickness, partVolume } from './materials'
+import { JOINT_DEFAULTS, inferJoints, MATERIALS, partCapacity, partMass, partThickness, partVolume } from './materials'
 import { aabbOf, createRng, distanceToShape, quat, quatFromEuler, rayShape, rotateVec, shapeArea, shapeBound, shapeDims, surfacePoint, toLocal, toWorld, vec } from './math'
 import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
@@ -25,6 +25,10 @@ interface PartRT {
   dims: Vec3
   bound: number
   rt: PartRuntime
+  /** Structural role other than `none`. */
+  structural: boolean
+  anchored: boolean
+  cap: number
 }
 
 interface JointRT {
@@ -32,6 +36,7 @@ interface JointRT {
   st: JointState
   ia: number
   ib: number
+  bears: boolean | 'a_on_b' | 'b_on_a'
   /** Object-local position. */
   pos: Vec3
   step: number
@@ -52,11 +57,19 @@ interface ObjRT {
   br: number
   active: boolean
   tmp: number[]
+  hasStructure: boolean
+  dirty: boolean
+  maxStress: number
+  collapsed: Set<string>
+  /** Structural parts with no support path to an anchored part (they fall). */
+  unsup: boolean[]
+  anyAnchor: boolean
 }
 
 interface Carry {
   parts: Map<string, { st: PartState; rt: PartRuntime }>
   joints: Map<string, { st: JointState; step: number }>
+  collapsed?: string[]
 }
 
 interface Loc {
@@ -146,9 +159,16 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const resolveSpec = (spec: DestructibleSpec): DestructibleSpec => {
     const out = clone(spec)
     const joints = out.joints ?? inferJoints(out.parts, 0.01, materials)
+    const structural = (id: string) => {
+      const role = out.parts.find((p) => p.id === id)?.structure?.role
+      return role !== undefined && role !== 'none'
+    }
     out.joints = joints.map((j) => {
       const def = JOINT_DEFAULTS[j.kind]
-      return { id: j.id ?? `${j.a}~${j.b}`, a: j.a, b: j.b, kind: j.kind, strength: j.strength ?? def.strength, tools: j.tools ?? [...def.tools], seconds: j.seconds ?? def.seconds }
+      return {
+        id: j.id ?? `${j.a}~${j.b}`, a: j.a, b: j.b, kind: j.kind, strength: j.strength ?? def.strength, tools: j.tools ?? [...def.tools], seconds: j.seconds ?? def.seconds,
+        bears: j.bears ?? (structural(j.a) && structural(j.b)),
+      }
     })
     return out
   }
@@ -157,7 +177,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const st: ObjectState = { id, position: [pos[0], pos[1], pos[2]], rotation: [rot[0], rot[1], rot[2], rot[3]], parts: [], joints: [], groups: [], destroyed: false }
     if (spec.name !== undefined) st.name = spec.name
     const o: ObjRT = {
-      id, spec, st, parts: [], byId: new Map(), idx: new Map(), joints: [], jointMap: new Map(), byPart: new Map(), bc: [0, 0, 0], br: 0, active: false, tmp: [],
+      id, spec, st, parts: [], byId: new Map(), idx: new Map(), joints: [], jointMap: new Map(), byPart: new Map(), bc: [0, 0, 0], br: 0, active: false, tmp: [], hasStructure: false, dirty: false, maxStress: 0, collapsed: new Set(carry?.collapsed ?? []), unsup: [], anyAnchor: false,
     }
     for (const ps of spec.parts) {
       if (o.byId.has(ps.id)) throw new Error(`duplicate part id "${ps.id}"`)
@@ -175,7 +195,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const p: PartRT = {
         spec: ps, mat, st: pst, q: quatFromEuler(...(ps.rotation ?? [0, 0, 0])), mass0, fuel0, area: shapeArea(ps.shape), thickness: partThickness(ps),
         dims: shapeDims(ps.shape), bound: shapeBound(ps.shape), rt: c?.rt ?? { ...freshRuntime(), prevTemp: pst.temperature },
+        structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat) : 0,
       }
+      if (p.structural) o.hasStructure = true
       o.idx.set(ps.id, o.parts.length)
       o.parts.push(p)
       o.byId.set(ps.id, p)
@@ -192,9 +214,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const B = aabbOf(pb.spec.shape, pb.spec.position, pb.q)
       const pos: Vec3 = [0, 0, 0]
       for (let k = 0; k < 3; k++) pos[k] = (Math.max(A.min[k], B.min[k]) + Math.min(A.max[k], B.max[k])) / 2
+      const bears: JointRT['bears'] = r.bears ?? (pa.structural && pb.structural)
       const c = carry?.joints.get(r.id)
       const jst: JointState = c?.st ?? { id: r.id, a: r.a, b: r.b, kind: r.kind, hp: r.strength, maxHp: r.strength, progress: 0, open: false }
-      const j: JointRT = { spec: r, st: jst, ia, ib, pos, step: c?.step ?? 0 }
+      const j: JointRT = { spec: r, st: jst, ia, ib, bears, pos, step: c?.step ?? 0 }
       o.joints.push(j)
       o.jointMap.set(r.id, j)
       o.byPart.get(r.a)!.push(j)
@@ -210,9 +233,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       o.bc = c
       o.br = r
     }
+    o.anyAnchor = o.parts.some((p) => p.anchored)
+    o.unsup = o.parts.map(() => false)
+    solveStructure(o)
     recomputeGroups(o)
     o.st.destroyed = o.parts.length > 0 && o.parts.every(isLost)
-    o.active = o.parts.some((p) => p.st.burning || p.st.temperature > ambient + 0.5 || (p.st.liters ?? 0) > 0)
+    o.active = o.maxStress > 0.8 || o.parts.some((p) => p.st.burning || p.st.temperature > ambient + 0.5 || (p.st.liters ?? 0) > 0)
     return o
   }
 
@@ -226,10 +252,25 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
       return i
     }
-    for (const j of o.joints) {
-      if (j.st.open || isLost(o.parts[j.ia]) || isLost(o.parts[j.ib])) continue
-      parent[find(j.ia)] = find(j.ib)
+    const union = (a: number, b: number) => {
+      parent[find(a)] = find(b)
     }
+    const live = (j: JointRT) => !j.st.open && !isLost(o.parts[j.ia]) && !isLost(o.parts[j.ib])
+    if (o.unsup.some(Boolean)) {
+      // parts that lost every support fall: cut them from the supported pieces; loose non-structural parts follow the part they hang on
+      for (const j of o.joints) if (live(j) && !o.unsup[j.ia] && !o.unsup[j.ib]) union(j.ia, j.ib)
+      const supported = new Set<number>()
+      for (let i = 0; i < n; i++) if (!isLost(o.parts[i]) && !o.unsup[i] && (o.parts[i].structural || o.parts[i].anchored)) supported.add(find(i))
+      for (const j of o.joints) {
+        if (!live(j) || !(o.unsup[j.ia] || o.unsup[j.ib])) continue
+        if (o.unsup[j.ia] && o.unsup[j.ib]) union(j.ia, j.ib)
+        else {
+          const u = o.unsup[j.ia] ? j.ia : j.ib
+          const other = u === j.ia ? j.ib : j.ia
+          if (!o.parts[other].structural && !supported.has(find(other))) union(u, other)
+        }
+      }
+    } else for (const j of o.joints) if (live(j)) union(j.ia, j.ib)
     const comps = new Map<number, number[]>()
     for (let i = 0; i < n; i++) {
       if (isLost(o.parts[i])) continue
@@ -240,13 +281,88 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     const list = [...comps.values()].map((ix) => ({
       ix,
-      anchored: ix.some((i) => o.parts[i].spec.anchored),
+      anchored: ix.some((i) => o.parts[i].anchored),
       mass: ix.reduce((s, i) => s + o.parts[i].st.mass, 0),
     }))
     list.sort((a, b) => (a.anchored === b.anchored ? (b.mass - a.mass) || (a.ix[0] - b.ix[0]) : a.anchored ? -1 : 1))
     o.st.groups = list.map((g) => g.ix.map((i) => o.parts[i].spec.id))
     for (const p of o.parts) if (isLost(p)) p.st.group = -1
     list.forEach((g, gi) => g.ix.forEach((i) => (o.parts[i].st.group = gi)))
+  }
+
+  /** Which part `r` rests on over joint `j` (index), or -1 when the joint does not let `r` rest on its other end. */
+  const restsOn = (j: JointRT, r: number): number => {
+    const b = j.bears
+    if (!b) return -1
+    if (b === true) return j.ia === r ? j.ib : j.ia
+    if (b === 'a_on_b') return j.ia === r ? j.ib : -1
+    return j.ib === r ? j.ia : -1
+  }
+
+  /** Distribute own mass plus carried load down the bearing graph to the anchored parts; mark parts without any support path. */
+  const solveStructure = (o: ObjRT) => {
+    o.maxStress = 0
+    if (!o.hasStructure) return
+    const parts = o.parts
+    const n = parts.length
+    const dist = new Array<number>(n).fill(-1)
+    const queue: number[] = []
+    const ok = (i: number) => parts[i].structural && !isLost(parts[i])
+    const isPartition = (i: number) => parts[i].spec.structure?.role === 'partition'
+    for (let i = 0; i < n; i++) if (ok(i) && parts[i].anchored) {
+      dist[i] = 0
+      queue.push(i)
+    }
+    for (let h = 0; h < queue.length; h++) {
+      const s = queue[h]
+      if (isPartition(s)) continue
+      for (const j of o.byPart.get(parts[s].spec.id)!) {
+        if (j.st.open || !j.bears) continue
+        const r = j.ia === s ? j.ib : j.ia
+        if (dist[r] >= 0 || !ok(r) || restsOn(j, r) !== s) continue
+        dist[r] = dist[s] + 1
+        queue.push(r)
+      }
+    }
+    const incoming = new Array<number>(n).fill(0)
+    for (let h = queue.length - 1; h >= 0; h--) {
+      const i = queue[h]
+      const total = parts[i].st.mass + incoming[i]
+      parts[i].st.load = total
+      const lower: number[] = []
+      for (const j of o.byPart.get(parts[i].spec.id)!) {
+        if (j.st.open || !j.bears) continue
+        const k = restsOn(j, i)
+        if (k >= 0 && dist[k] >= 0 && dist[k] < dist[i] && !isPartition(k)) lower.push(k)
+      }
+      for (const k of lower) incoming[k] += total / lower.length
+    }
+    for (let i = 0; i < n; i++) {
+      const p = parts[i]
+      o.unsup[i] = false
+      if (!p.structural) continue
+      if (dist[i] < 0 || isLost(p)) {
+        p.st.load = p.st.mass
+        p.st.stress = 0
+        o.unsup[i] = o.anyAnchor && !isLost(p)
+        continue
+      }
+      p.st.stress = p.st.load! / p.cap
+      if (p.st.stress > o.maxStress) o.maxStress = p.st.stress
+    }
+    if (o.maxStress > 0.8) o.active = true
+  }
+
+  /** Report groups of structural parts that lost every anchor (once per group). */
+  const collapseCheck = (o: ObjRT, src?: string) => {
+    if (!o.hasStructure || !o.parts.some((p) => p.anchored)) return
+    for (const g of o.st.groups) {
+      const ps = g.map((id) => o.byId.get(id)!)
+      if (ps.some((p) => p.anchored) || !ps.some((p) => p.structural)) continue
+      if (g.some((id) => o.collapsed.has(id))) continue
+      for (const id of g) o.collapsed.add(id)
+      emit({ ...base(o, src), type: 'collapse', parts: [...g], mass: ps.reduce((s, p) => s + p.st.mass, 0) })
+    }
   }
 
   const getObj = (id: string): ObjRT => {
@@ -424,8 +540,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       j.st.openedBy = 'part_lost'
       opened.push(j)
     }
+    solveStructure(o)
     recomputeGroups(o)
     detachEvents(o, opened, 'part_lost', src)
+    collapseCheck(o, src)
     checkDestroyed(o, src)
   }
 
@@ -439,8 +557,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         j.st.hp = 0
         j.st.open = true
         j.st.openedBy = 'break'
+        solveStructure(o)
         recomputeGroups(o)
         detachEvents(o, [j], 'break', src)
+        collapseCheck(o, src)
       }
     }
   }
@@ -709,6 +829,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const use = Math.min((th.burnRate ?? 0.01) * p.area * dt, p.st.fuel)
     p.st.fuel -= use
     syncMass(p)
+    if (p.structural) o.dirty = true
     p.st.temperature = th.flameC ?? 800
     markDamaged(p)
     if (p.fuel0 > 0) {
@@ -739,6 +860,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const rate = (th.meltRate ?? 0.05) * ((p.st.temperature - th.meltC) / 100)
     p.st.melt = Math.min(1, p.st.melt + rate * dt)
     syncMass(p)
+    if (p.structural) o.dirty = true
     markDamaged(p)
     p.rt.dripT += dt
     if (p.rt.dripT >= 0.25) {
@@ -846,6 +968,30 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (s.burning || p.rt.jet) sources.push({ o, p, flame: p.rt.jet ? 900 : th.flameC ?? 800 })
       if (s.burning || p.rt.jet || s.temperature > ambient + 0.5) hot = true
     }
+    if (o.hasStructure) {
+      if (o.dirty) {
+        o.dirty = false
+        solveStructure(o)
+      }
+      for (const p of parts) {
+        if (!p.structural || isLost(p)) continue
+        const stress = p.st.stress ?? 0
+        p.rt.stressT = Math.max(0, (p.rt.stressT ?? 0) - dt)
+        if (stress > 1) {
+          if (p.rt.stressT <= 0) {
+            p.rt.stressT = 0.5
+            emit({ ...base(o), type: 'stress', part: p.spec.id, stress, load: p.st.load ?? 0 })
+          }
+          applyDamage(o, p, (stress - 1) * p.st.maxHp * 0.5 * dt, 'blunt', null, null, 5, 3)
+        } else if (stress > 0.8 && p.mat.ductility < 0.3 && p.rt.stressT <= 0 && p.st.cracks.length < 6) {
+          p.rt.stressT = 0.5
+          const { c, q } = partXf(o, p)
+          const sp = surfacePoint(p.spec.shape, [(rnd() - 0.5) * p.dims[0], (rnd() - 0.5) * p.dims[1], (rnd() - 0.5) * p.dims[2]])
+          addCrack(o, p, toWorld(c, q, sp.point), rotateVec(q, sp.normal), 0.1 + (stress - 0.8) * 0.5)
+        }
+      }
+      if (o.maxStress > 0.8) hot = true
+    }
     o.active = hot
   }
 
@@ -916,6 +1062,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const carryFor = (keep: (pid: string) => boolean): Carry => ({
         parts: new Map(o.parts.filter((p) => keep(p.spec.id)).map((p) => [p.spec.id, { st: p.st, rt: p.rt }])),
         joints: new Map(o.joints.filter((j) => keep(j.spec.a) && keep(j.spec.b)).map((j) => [j.spec.id, { st: j.st, step: j.step }])),
+        collapsed: [...o.collapsed].filter(keep),
       })
       const sub = (keep: (pid: string) => boolean): DestructibleSpec => {
         const s: DestructibleSpec = { parts: o.spec.parts.filter((p) => keep(p.id)), joints: (o.spec.joints ?? []).filter((j) => keep(j.a) && keep(j.b)) }
@@ -987,8 +1134,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (j.st.progress >= 1) {
           j.st.open = true
           j.st.openedBy = 'tool'
+          solveStructure(o)
           recomputeGroups(o)
           detachEvents(o, [j], 'tool')
+          collapseCheck(o)
         }
         return j.st.progress
       }).value
@@ -1061,7 +1210,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         rng: rng.state(),
         counter,
         objects: [...objects.values()].map((o) => {
-          const runtime: ObjectRuntime = { parts: {}, joints: {} }
+          const runtime: ObjectRuntime = { parts: {}, joints: {}, collapsed: [...o.collapsed] }
           for (const p of o.parts) runtime.parts[p.spec.id] = { ...p.rt }
           for (const j of o.joints) runtime.joints[j.spec.id] = j.step
           return { id: o.id, spec: clone(o.spec), state: clone(o.st), runtime }
@@ -1081,6 +1230,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
             state.parts.map((st) => [st.id, { st, rt: e.runtime?.parts[st.id] ? { ...e.runtime.parts[st.id] } : { ...freshRuntime(), prevTemp: st.temperature } }]),
           ),
           joints: new Map(state.joints.map((st) => [st.id, { st, step: e.runtime?.joints[st.id] ?? 0 }])),
+          collapsed: e.runtime?.collapsed,
         }
         objects.set(e.id, build(clone(e.spec), e.id, state.position, state.rotation, carry))
       }
