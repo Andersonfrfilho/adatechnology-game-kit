@@ -69,6 +69,31 @@ describe('separable pieces', () => {
     expect(dead.pieces.some((x) => x.kind === 'branch')).toBe(true)
   })
 
+  it('makes every fruit its own small piece hung on a non-fruit piece', () => {
+    const size = (pc: { bounds: { min: number[]; max: number[] } }) => Math.max(...[0, 1, 2].map((a) => pc.bounds.max[a] - pc.bounds.min[a]))
+    for (const key of ['broadleaf_spreading_fruit', 'broadleaf_trunk_fruit', 'palm_coconut', 'cactus_paddle']) {
+      const p = generate(SAMPLES[key], { seed: 4 })
+      const byId = new Map(p.pieces.map((x) => [x.id, x]))
+      const fruit = p.pieces.filter((x) => x.kind === 'fruit')
+      expect(fruit.length, key).toBeGreaterThan(1)
+      expect(fruit.filter((x) => x.part === 'fruit').length, key).toBeLessThanOrEqual(24)
+      for (const f of fruit) {
+        expect(f.id).toMatch(/^fruit\d+(:\w+)?$/)
+        expect(size(f), `${key} ${f.id}`).toBeLessThan(key === 'broadleaf_trunk_fruit' ? 1 : 0.5)
+        const parent = byId.get(f.parent ?? '')
+        expect(parent, `${key} ${f.id} parent`).toBeDefined()
+        expect(parent!.kind).not.toBe('fruit')
+        // the pivot is the attach point (a stalk top may sit just above the fruit mesh)
+        for (let a = 0; a < 3; a++) {
+          expect(f.pivot[a]).toBeGreaterThanOrEqual(f.bounds.min[a] - 0.6)
+          expect(f.pivot[a]).toBeLessThanOrEqual(f.bounds.max[a] + 0.6)
+        }
+      }
+    }
+    const mango = generate(SAMPLES.broadleaf_spreading_fruit, { seed: 4 })
+    expect(mango.pieces.filter((x) => x.id.startsWith('fruit') && x.part === 'wood').length).toBeGreaterThan(0)
+  })
+
   it('separates pot and soil from the plant, cactus arms and pads', () => {
     const pot = generate(SAMPLES.potted, { seed: 1 })
     expect(pot.pieces.find((x) => x.kind === 'pot')!.material).toBe('pot')
@@ -104,7 +129,7 @@ describe('separable pieces', () => {
     expect(tris).toBe(plant.triangleCount)
     expect((obj.getObjectByName('trunk')!.userData.destructionMaterial)).toBe('wood_soft')
     const healthy = createPlantObject(THREE, generate(SAMPLES.broadleaf_spreading_fruit, { seed: 2 }), mats, { separable: true })
-    expect(healthy.getObjectByName('fruit')!.userData.destructionMaterial).toBe('flesh_fruit')
+    expect(healthy.getObjectByName('fruit0')!.userData.destructionMaterial).toBe('flesh_fruit')
     expect(healthy.getObjectByName('trunk')!.userData.destructionMaterial).toBe('green_wood')
     const potted = createPlantObject(THREE, generate(SAMPLES.potted, { seed: 1 }), mats, { separable: true })
     expect(potted.getObjectByName('pot')!.userData.destructionMaterial).toBe('ceramic')

@@ -186,7 +186,6 @@ export function generateBroadleafTree(spec: BroadleafTreeSpec, ctx: Ctx): ArchRe
   }
 
   splitCrown(ctx, anchors)
-  ctx.piece('fruit', 'fruit')
 
   // fruit
   if (spec.fruit && ctx.condition !== 'dry') {
@@ -211,7 +210,7 @@ export function generateBroadleafTree(spec: BroadleafTreeSpec, ctx: Ctx): ArchRe
         const out: Vec3 = [Math.cos(ang), r2.range(-0.3, 0.5), Math.sin(ang)]
         const center = add(pos, mul(norm(out), rad + fr * 0.4))
         const rr = fr * r2.range(0.8, 1.2)
-        octa(ctx.fruit, center, [rr, rr, rr], (h) => shade(c, 0.75 + h * 0.6), 0)
+        ctx.fruitItem(() => octa(ctx.fruit, center, [rr, rr, rr], (h) => shade(c, 0.75 + h * 0.6), 0))
       }
     } else {
       for (let i = 0; i < count; i++) {
@@ -224,9 +223,11 @@ export function generateBroadleafTree(spec: BroadleafTreeSpec, ctx: Ctx): ArchRe
         const s = fr * r2.range(0.9, 1.15)
         const drop = s * 3.2
         const centre: Vec3 = [top[0], top[1] - drop - s * 0.6, top[2]]
-        tube(ctx.wood, [top, [top[0], top[1] - drop * 0.8, top[2]]], { sides: 3, radii: [0.008, 0.008], color: () => [0.3, 0.4, 0.2], sway: () => 0.5, end: 'none' })
-        if (s < 0.06) octa(ctx.fruit, centre, [s * 0.85, s * 1.2, s * 0.85], (h) => shade(c, 0.7 + h * 0.45), 0.4)
-        else icoShell(ctx.fruit, { center: centre, radii: [s * 0.85, s * 1.2, s * 0.85], detail: 0, rng: r2, noise: 0.04, color: (v) => shade(c, 0.7 + v.h * 0.45), sway: () => 0.4 })
+        ctx.fruitItem(() => {
+          tube(ctx.wood, [top, [top[0], top[1] - drop * 0.8, top[2]]], { sides: 3, radii: [0.008, 0.008], color: () => [0.3, 0.4, 0.2], sway: () => 0.5, end: 'none' })
+          if (s < 0.06) octa(ctx.fruit, centre, [s * 0.85, s * 1.2, s * 0.85], (h) => shade(c, 0.7 + h * 0.45), 0.4)
+          else icoShell(ctx.fruit, { center: centre, radii: [s * 0.85, s * 1.2, s * 0.85], detail: 0, rng: r2, noise: 0.04, color: (v) => shade(c, 0.7 + v.h * 0.45), sway: () => 0.4 })
+        })
       }
     }
   }

@@ -20,6 +20,11 @@ export interface Ctx {
    * Fruit always goes to the 'fruit' piece. Pieces need not be emitted contiguously; builders group them when building.
    */
   piece(id: string, kind: PieceKind, parent?: string, pivot?: Vec3): void
+  /**
+   * Run `draw` as one separable fruit piece (`fruitN`, kind 'fruit'): everything it emits (the fruit itself and its wood stalk) belongs to it.
+   * The parent (nearest branch / crown / pad / trunk) and the pivot are worked out by `generate()` afterwards.
+   */
+  fruitItem(draw: () => void): void
   /** pick a value by lod: lod0, lod1, lod2 */
   pick<T>(a: T, b: T, c: T): T
 }

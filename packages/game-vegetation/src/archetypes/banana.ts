@@ -89,27 +89,29 @@ export function generateBanana(spec: BananaSpec, ctx: Ctx): ArchResult {
     const green = rgb(0x86b04a)
     const yellow = rgb(0xc8c24a)
     const frng = rng.fork('bunch')
-    for (let h = 0; h < hands; h++) {
-      const t = 0.45 + (0.5 * h) / Math.max(1, hands - 1)
-      const idx = Math.min(sp.length - 1, Math.floor(t * (sp.length - 1)))
-      const base = sp[idx]
-      const ha = h * 1.9
-      for (let k = 0; k < fingers; k++) {
-        const a = ha + (k / fingers) * 2.4 - 1.2
-        const dirOut = dirFromAngles(a, -0.9)
-        const fl = 0.16
-        const center = add(base, add(mul(dirOut, fl * 0.55 + R * 0.35), [0, -0.02, 0]))
-        icoShell(ctx.fruit, {
-          center,
-          radii: [0.026, fl * 0.55, 0.026],
-          detail: 0,
-          rng: frng,
-          noise: 0.04,
-          color: (v) => mix(shade(green, 0.75), mix(green, yellow, 0.3), v.h),
-          sway: () => 0.2,
-        })
+    ctx.fruitItem(() => {
+      for (let h = 0; h < hands; h++) {
+        const t = 0.45 + (0.5 * h) / Math.max(1, hands - 1)
+        const idx = Math.min(sp.length - 1, Math.floor(t * (sp.length - 1)))
+        const base = sp[idx]
+        const ha = h * 1.9
+        for (let k = 0; k < fingers; k++) {
+          const a = ha + (k / fingers) * 2.4 - 1.2
+          const dirOut = dirFromAngles(a, -0.9)
+          const fl = 0.16
+          const center = add(base, add(mul(dirOut, fl * 0.55 + R * 0.35), [0, -0.02, 0]))
+          icoShell(ctx.fruit, {
+            center,
+            radii: [0.026, fl * 0.55, 0.026],
+            detail: 0,
+            rng: frng,
+            noise: 0.04,
+            color: (v) => mix(shade(green, 0.75), mix(green, yellow, 0.3), v.h),
+            sway: () => 0.2,
+          })
+        }
       }
-    }
+    })
     if (spec.bud) {
       const end = sp[sp.length - 1]
       const bc = rgb(0x7a2a62)

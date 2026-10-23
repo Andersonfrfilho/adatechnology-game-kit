@@ -164,7 +164,7 @@ export function generatePalm(spec: PalmSpec, ctx: Ctx): ArchResult {
         const a = (i / count) * TAU + srng.range(0, 1)
         const rr = stemR * 1.3 + fr * 0.8
         const p: Vec3 = [crownTop[0] + Math.cos(a) * rr, crownTop[1] - fr * (0.6 + srng.range(0, 1.4)) - 0.05, crownTop[2] + Math.sin(a) * rr]
-        icoShell(ctx.fruit, { center: p, radii: [fr, fr * 1.15, fr], detail: 0, rng: srng, noise: 0.04, color: (v) => mix(shade(fc, 0.6), lighten(fc, 0.3), v.h), sway: () => 0.1 })
+        ctx.fruitItem(() => icoShell(ctx.fruit, { center: p, radii: [fr, fr * 1.15, fr], detail: 0, rng: srng, noise: 0.04, color: (v) => mix(shade(fc, 0.6), lighten(fc, 0.3), v.h), sway: () => 0.1 }))
       }
     }
   }

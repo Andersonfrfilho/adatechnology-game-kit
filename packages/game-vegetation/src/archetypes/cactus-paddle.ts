@@ -114,7 +114,7 @@ export function generatePaddleCactus(spec: PaddleCactusSpec, ctx: Ctx): ArchResu
       const side = frng.sign()
       const pos = add(add(p.center, mul(p.dir, p.l * 0.5 * 0.92)), mul(p.x, side * p.w * frng.range(0, 0.28)))
       const r = padL * 0.1
-      icoShell(ctx.fruit, { center: add(pos, mul(p.z, r * 0.2)), radii: [r * 0.8, r * 1.15, r * 0.8], detail: 0, rng: frng, noise: 0.05, color: (v) => mix(shade(fc, 0.7), lighten(fc, 0.4), v.h), sway: () => 0 })
+      ctx.fruitItem(() => icoShell(ctx.fruit, { center: add(pos, mul(p.z, r * 0.2)), radii: [r * 0.8, r * 1.15, r * 0.8], detail: 0, rng: frng, noise: 0.05, color: (v) => mix(shade(fc, 0.7), lighten(fc, 0.4), v.h), sway: () => 0 }))
     }
   }
   if (spec.flowers && !dead && ctx.lod === 0) {
