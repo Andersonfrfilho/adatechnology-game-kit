@@ -1,0 +1,54 @@
+{
+  "name": "@adatechnology/game-weapons",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Engine-agnostic weapons and ammunition: real calibres as data, magazines, fire modes, spread, recoil, pellets, melee, flame, heat, throwables and tools. Produces shots (energy, calibre, direction) any damage model can consume. Knows nothing about any game.",
+  "keywords": [
+    "game",
+    "weapons",
+    "firearms",
+    "ammunition",
+    "ballistics",
+    "melee",
+    "calibers"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-weapons"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

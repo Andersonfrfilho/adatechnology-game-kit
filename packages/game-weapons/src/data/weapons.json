@@ -1,0 +1,897 @@
+[
+  {
+    "id": "hand",
+    "name": "Hand",
+    "category": "hand",
+    "action": {
+      "kind": "hand",
+      "reach": 2
+    },
+    "mass": 0,
+    "tags": [
+      "grab"
+    ]
+  },
+  {
+    "id": "kick",
+    "name": "Kick",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 250,
+      "radius": 0.08,
+      "reach": 1.1,
+      "rpm": 60,
+      "noise": 8
+    },
+    "mass": 0
+  },
+  {
+    "id": "shove",
+    "name": "Shove",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 80,
+      "radius": 0.1,
+      "reach": 1.5,
+      "rpm": 90,
+      "noise": 5
+    },
+    "mass": 0
+  },
+  {
+    "id": "pistol_9mm",
+    "name": "9 mm service pistol",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 15,
+      "reload": 2,
+      "barrel": 1,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.2,
+        0.4
+      ],
+      "range": 50,
+      "noise": 150
+    },
+    "mass": 0.9,
+    "tags": [
+      "sidearm"
+    ]
+  },
+  {
+    "id": "pistol_45",
+    "name": ".45 ACP pistol",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "45acp",
+      "rpm": 280,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 8,
+      "reload": 2.2,
+      "barrel": 1,
+      "spreadDeg": 1.1,
+      "bloomDeg": 0.8,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.8,
+        0.6
+      ],
+      "range": 50,
+      "noise": 160
+    },
+    "mass": 1.1,
+    "tags": [
+      "sidearm"
+    ]
+  },
+  {
+    "id": "pistol_22",
+    "name": ".22 LR pistol",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "22lr",
+      "rpm": 360,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 10,
+      "reload": 1.8,
+      "barrel": 1,
+      "spreadDeg": 0.9,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.5,
+        0.2
+      ],
+      "range": 40,
+      "noise": 90
+    },
+    "mass": 0.7,
+    "tags": [
+      "sidearm"
+    ]
+  },
+  {
+    "id": "revolver_357",
+    "name": ".357 Magnum revolver",
+    "category": "revolver",
+    "action": {
+      "kind": "firearm",
+      "caliber": "357mag",
+      "rpm": 150,
+      "modes": [
+        "single"
+      ],
+      "magazine": 6,
+      "reload": 4,
+      "barrel": 1.05,
+      "spreadDeg": 0.8,
+      "bloomDeg": 1,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        3,
+        0.9
+      ],
+      "range": 60,
+      "noise": 220
+    },
+    "mass": 1.2,
+    "tags": [
+      "sidearm"
+    ]
+  },
+  {
+    "id": "revolver_38",
+    "name": ".38 Special revolver",
+    "category": "revolver",
+    "action": {
+      "kind": "firearm",
+      "caliber": "38spl",
+      "rpm": 160,
+      "modes": [
+        "single"
+      ],
+      "magazine": 6,
+      "reload": 3.8,
+      "barrel": 0.95,
+      "spreadDeg": 0.9,
+      "bloomDeg": 0.7,
+      "recoveryDegPerS": 3.5,
+      "recoil": [
+        1.6,
+        0.5
+      ],
+      "range": 45,
+      "noise": 170
+    },
+    "mass": 0.9,
+    "tags": [
+      "sidearm"
+    ]
+  },
+  {
+    "id": "smg_9mm",
+    "name": "9 mm submachine gun",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 800,
+      "modes": [
+        "auto",
+        "burst",
+        "semi"
+      ],
+      "burst": 3,
+      "magazine": 30,
+      "reload": 2.4,
+      "barrel": 1.1,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.9,
+        0.5
+      ],
+      "range": 80,
+      "noise": 180
+    },
+    "mass": 2.6,
+    "tags": [
+      "automatic"
+    ]
+  },
+  {
+    "id": "carbine_22",
+    "name": ".22 LR carbine",
+    "category": "carbine",
+    "action": {
+      "kind": "firearm",
+      "caliber": "22lr",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 10,
+      "reload": 2.2,
+      "barrel": 1.4,
+      "spreadDeg": 0.5,
+      "bloomDeg": 0.15,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.4,
+        0.15
+      ],
+      "range": 80,
+      "noise": 100
+    },
+    "mass": 2.4,
+    "tags": [
+      "small_game"
+    ]
+  },
+  {
+    "id": "rifle_5_56",
+    "name": "5.56 mm assault rifle",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 750,
+      "modes": [
+        "auto",
+        "burst",
+        "semi"
+      ],
+      "burst": 3,
+      "magazine": 30,
+      "reload": 2.5,
+      "barrel": 1,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        1,
+        0.6
+      ],
+      "range": 400,
+      "noise": 300
+    },
+    "mass": 3.4,
+    "tags": [
+      "automatic"
+    ]
+  },
+  {
+    "id": "rifle_7_62x39",
+    "name": "7.62×39 mm assault rifle",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x39",
+      "rpm": 600,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.8,
+      "barrel": 1,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        1.5,
+        0.8
+      ],
+      "range": 350,
+      "noise": 320
+    },
+    "mass": 3.8,
+    "tags": [
+      "automatic"
+    ]
+  },
+  {
+    "id": "rifle_bolt_308",
+    "name": ".308 bolt-action rifle",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 40,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 5,
+      "reload": 3.5,
+      "barrel": 1.05,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        3,
+        0.5
+      ],
+      "range": 800,
+      "noise": 350
+    },
+    "mass": 4,
+    "tags": [
+      "hunting"
+    ]
+  },
+  {
+    "id": "sniper_338",
+    "name": ".338 Lapua sniper rifle",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "338lapua",
+      "rpm": 35,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 5,
+      "reload": 4,
+      "barrel": 1.05,
+      "spreadDeg": 0.1,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 2.5,
+      "recoil": [
+        4.5,
+        0.7
+      ],
+      "range": 1500,
+      "noise": 450
+    },
+    "mass": 6.5,
+    "tags": [
+      "long_range"
+    ]
+  },
+  {
+    "id": "anti_materiel_50",
+    "name": ".50 BMG anti-materiel rifle",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "50bmg",
+      "rpm": 30,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 10,
+      "reload": 4.5,
+      "barrel": 1.05,
+      "spreadDeg": 0.15,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 2,
+      "recoil": [
+        7,
+        1.2
+      ],
+      "range": 1800,
+      "noise": 600
+    },
+    "mass": 12.5,
+    "tags": [
+      "long_range",
+      "heavy"
+    ]
+  },
+  {
+    "id": "shotgun_pump_12",
+    "name": "12 gauge pump-action shotgun",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 60,
+      "modes": [
+        "pump"
+      ],
+      "magazine": 6,
+      "reload": 0.6,
+      "perRound": true,
+      "barrel": 1,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        4,
+        1
+      ],
+      "range": 40,
+      "noise": 400
+    },
+    "mass": 3.2,
+    "tags": [
+      "shotgun"
+    ]
+  },
+  {
+    "id": "shotgun_double_12",
+    "name": "12 gauge double-barrel shotgun",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 120,
+      "modes": [
+        "break"
+      ],
+      "magazine": 2,
+      "reload": 3.5,
+      "barrel": 1,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        4.5,
+        1.2
+      ],
+      "range": 35,
+      "noise": 400
+    },
+    "mass": 3,
+    "tags": [
+      "shotgun"
+    ]
+  },
+  {
+    "id": "shotgun_semi_12",
+    "name": "12 gauge semi-automatic shotgun",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 180,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 5,
+      "reload": 0.7,
+      "perRound": true,
+      "barrel": 1,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        3.4,
+        1
+      ],
+      "range": 40,
+      "noise": 400
+    },
+    "mass": 3.4,
+    "tags": [
+      "shotgun"
+    ]
+  },
+  {
+    "id": "bow_compound",
+    "name": "Compound bow",
+    "category": "bow",
+    "action": {
+      "kind": "firearm",
+      "caliber": "arrow",
+      "rpm": 20,
+      "modes": [
+        "single"
+      ],
+      "magazine": 1,
+      "reload": 1.5,
+      "barrel": 1,
+      "spreadDeg": 0.4,
+      "bloomDeg": 0.4,
+      "recoveryDegPerS": 2,
+      "recoil": [
+        0.3,
+        0.1
+      ],
+      "range": 60,
+      "noise": 20
+    },
+    "mass": 1.8,
+    "tags": [
+      "silent"
+    ]
+  },
+  {
+    "id": "crossbow",
+    "name": "Crossbow",
+    "category": "crossbow",
+    "action": {
+      "kind": "firearm",
+      "caliber": "crossbow_bolt",
+      "rpm": 8,
+      "modes": [
+        "single"
+      ],
+      "magazine": 1,
+      "reload": 4,
+      "barrel": 1,
+      "spreadDeg": 0.3,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 2,
+      "recoil": [
+        0.5,
+        0.1
+      ],
+      "range": 70,
+      "noise": 25
+    },
+    "mass": 3,
+    "tags": [
+      "silent"
+    ]
+  },
+  {
+    "id": "hammer",
+    "name": "Hammer",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 60,
+      "radius": 0.08,
+      "reach": 0.7,
+      "rpm": 70,
+      "noise": 6
+    },
+    "mass": 1
+  },
+  {
+    "id": "sledgehammer",
+    "name": "Sledgehammer",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 300,
+      "radius": 0.15,
+      "reach": 1.1,
+      "rpm": 30,
+      "noise": 8
+    },
+    "mass": 5.5,
+    "tags": [
+      "heavy"
+    ]
+  },
+  {
+    "id": "baseball_bat",
+    "name": "Baseball bat",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 150,
+      "radius": 0.1,
+      "reach": 1,
+      "rpm": 60,
+      "noise": 7
+    },
+    "mass": 0.9
+  },
+  {
+    "id": "crowbar",
+    "name": "Crowbar",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 120,
+      "radius": 0.08,
+      "reach": 0.9,
+      "rpm": 60,
+      "noise": 7
+    },
+    "mass": 2,
+    "tags": [
+      "pry"
+    ]
+  },
+  {
+    "id": "machete",
+    "name": "Machete",
+    "category": "melee_blade",
+    "action": {
+      "kind": "melee",
+      "damage": "slash",
+      "energy": 140,
+      "radius": 0.06,
+      "reach": 0.8,
+      "rpm": 80,
+      "noise": 6
+    },
+    "mass": 0.8
+  },
+  {
+    "id": "axe",
+    "name": "Axe",
+    "category": "melee_blade",
+    "action": {
+      "kind": "melee",
+      "damage": "slash",
+      "energy": 250,
+      "radius": 0.08,
+      "reach": 0.9,
+      "rpm": 45,
+      "noise": 8
+    },
+    "mass": 1.6
+  },
+  {
+    "id": "knife",
+    "name": "Knife",
+    "category": "melee_blade",
+    "action": {
+      "kind": "melee",
+      "damage": "slash",
+      "energy": 40,
+      "radius": 0.03,
+      "reach": 0.4,
+      "rpm": 100,
+      "noise": 5
+    },
+    "mass": 0.2
+  },
+  {
+    "id": "fists",
+    "name": "Fists",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 25,
+      "radius": 0.1,
+      "reach": 0.6,
+      "rpm": 120,
+      "noise": 5
+    },
+    "mass": 0
+  },
+  {
+    "id": "lighter",
+    "name": "Lighter",
+    "category": "flame",
+    "action": {
+      "kind": "flame",
+      "temperature": 400,
+      "radius": 0.03,
+      "range": 0.15,
+      "fuelPerSecond": 0.02,
+      "fuel": 60,
+      "noise": 0
+    },
+    "mass": 0.05,
+    "tags": [
+      "fire"
+    ]
+  },
+  {
+    "id": "flamethrower",
+    "name": "Flamethrower",
+    "category": "flame",
+    "action": {
+      "kind": "flame",
+      "temperature": 900,
+      "radius": 0.6,
+      "range": 6,
+      "fuelPerSecond": 1,
+      "fuel": 20,
+      "cone": true,
+      "noise": 20
+    },
+    "mass": 15,
+    "tags": [
+      "fire"
+    ]
+  },
+  {
+    "id": "molotov",
+    "name": "Molotov cocktail",
+    "category": "throwable",
+    "action": {
+      "kind": "throwable",
+      "energy": 500,
+      "radius": 1.5,
+      "fuse": 0,
+      "throwSpeed": 12,
+      "fire": {
+        "temperature": 700,
+        "radius": 1.5,
+        "seconds": 12
+      },
+      "noise": 60
+    },
+    "mass": 0.8,
+    "tags": [
+      "fire",
+      "improvised"
+    ]
+  },
+  {
+    "id": "cutting_torch",
+    "name": "Oxy-fuel cutting torch",
+    "category": "heat",
+    "action": {
+      "kind": "heat",
+      "temperature": 3000,
+      "radius": 0.02,
+      "range": 0.25,
+      "fuelPerSecond": 0.05,
+      "fuel": 30,
+      "noise": 15
+    },
+    "mass": 4,
+    "tags": [
+      "fire",
+      "cutting"
+    ]
+  },
+  {
+    "id": "blowtorch",
+    "name": "Blowtorch",
+    "category": "heat",
+    "action": {
+      "kind": "heat",
+      "temperature": 1300,
+      "radius": 0.04,
+      "range": 0.3,
+      "fuelPerSecond": 0.04,
+      "fuel": 30,
+      "noise": 10
+    },
+    "mass": 0.6,
+    "tags": [
+      "fire"
+    ]
+  },
+  {
+    "id": "frag_grenade",
+    "name": "Fragmentation grenade",
+    "category": "throwable",
+    "action": {
+      "kind": "throwable",
+      "energy": 200000,
+      "radius": 6,
+      "fuse": 4,
+      "throwSpeed": 15,
+      "noise": 400
+    },
+    "mass": 0.45,
+    "tags": [
+      "explosive"
+    ]
+  },
+  {
+    "id": "pipe_bomb",
+    "name": "Pipe bomb",
+    "category": "throwable",
+    "action": {
+      "kind": "throwable",
+      "energy": 100000,
+      "radius": 4,
+      "fuse": 3,
+      "throwSpeed": 13,
+      "noise": 350
+    },
+    "mass": 0.7,
+    "tags": [
+      "explosive",
+      "improvised"
+    ]
+  },
+  {
+    "id": "screwdriver",
+    "name": "Screwdriver",
+    "category": "tool",
+    "action": {
+      "kind": "tool",
+      "tool": "screwdriver",
+      "reach": 0.5,
+      "noise": 5
+    },
+    "mass": 0.15
+  },
+  {
+    "id": "wrench",
+    "name": "Wrench",
+    "category": "tool",
+    "action": {
+      "kind": "tool",
+      "tool": "wrench",
+      "reach": 0.6,
+      "noise": 6
+    },
+    "mass": 0.5
+  },
+  {
+    "id": "pry_bar",
+    "name": "Pry bar",
+    "category": "tool",
+    "action": {
+      "kind": "tool",
+      "tool": "pry_bar",
+      "reach": 0.8,
+      "noise": 8
+    },
+    "mass": 0.8
+  },
+  {
+    "id": "hacksaw",
+    "name": "Hacksaw",
+    "category": "tool",
+    "action": {
+      "kind": "tool",
+      "tool": "saw",
+      "reach": 0.7,
+      "noise": 10
+    },
+    "mass": 0.6
+  },
+  {
+    "id": "utility_knife",
+    "name": "Utility knife",
+    "category": "tool",
+    "action": {
+      "kind": "tool",
+      "tool": "knife",
+      "reach": 0.3,
+      "noise": 3
+    },
+    "mass": 0.1
+  },
+  {
+    "id": "claw_hammer",
+    "name": "Claw hammer",
+    "category": "tool",
+    "action": {
+      "kind": "tool",
+      "tool": "hammer",
+      "reach": 0.5,
+      "noise": 8
+    },
+    "mass": 0.7
+  },
+  {
+    "id": "extinguisher",
+    "name": "Fire extinguisher",
+    "category": "extinguisher",
+    "action": {
+      "kind": "extinguisher",
+      "range": 4,
+      "coolC": 300,
+      "charge": 12,
+      "noise": 25
+    },
+    "mass": 5,
+    "tags": [
+      "safety"
+    ]
+  }
+]

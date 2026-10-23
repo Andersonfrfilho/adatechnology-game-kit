@@ -1,0 +1,126 @@
+import { readFileSync } from 'node:fs'
+import { describe, expect, it } from 'vitest'
+import { IMPACT_CONTRACT, checkAnimation, checkDestructible, checkHit, shotToHit } from '../src'
+import type { AnimationClipSpec, DestructibleImpl, DestructionEvent, Hit, ObjectState, Shot, TestableModule } from '../src'
+
+/** A tiny module-owned destructible: one panel that dents by its own rule. */
+const panelImpl = (id = 'panel_1', material = 'steel'): DestructibleImpl => {
+  let hp = 100
+  const spec = () => ({ parts: [{ id: 'panel', material, shape: { kind: 'box' as const, size: [1, 1, 0.01] as [number, number, number] }, position: [0, 0.5, 0] as [number, number, number] }] })
+  return {
+    id,
+    describe: spec,
+    hit(hit: Hit): DestructionEvent[] {
+      hp = Math.max(0, hp - (hit.energy ?? 0) * 0.01)
+      return [{ type: 'damage', object: id, time: 0, part: 'panel', amount: 1, hp, damageType: hit.type }]
+    },
+    state(): ObjectState {
+      return { id, position: [0, 0, 0], rotation: [0, 0, 0, 1], destroyed: false, groups: [['panel']], joints: [], parts: [{ id: 'panel', material, status: 'intact', hp, maxHp: 100, mass: 5, temperature: 20, burning: false, fuel: 0, char: 0, melt: 0, dents: [], holes: [], cracks: [], group: 0 }] } as unknown as ObjectState
+    },
+  }
+}
+
+const shot = (over: Partial<Shot> = {}): Shot => ({
+  origin: [0, 1, 0],
+  direction: [0, 0, -1],
+  energy: 500,
+  caliber: 9,
+  caliberId: '9x19',
+  speed: 380,
+  energyAt: (d) => 500 * Math.max(0, 1 - d * 0.002),
+  pellet: 0,
+  weapon: 'pistol_9mm',
+  ...over,
+})
+
+describe('impact contract', () => {
+  it('lists the fields per damage type and checks hits against it', () => {
+    expect(IMPACT_CONTRACT.ballistic.required).toEqual(['type', 'point', 'direction', 'energy', 'caliber'])
+    expect(checkHit({ type: 'ballistic', point: [0, 0, 0], direction: [0, 0, 1], energy: 500, caliber: 9 })).toEqual([])
+    expect(checkHit({ type: 'ballistic', point: [0, 0, 0], energy: 500 })).toEqual(['ballistic hit needs "direction"', 'ballistic hit needs "caliber"'])
+    expect(checkHit({ type: 'fire', point: [0, 0, 0], temperature: Number.NaN, radius: 1 })).toEqual(['fire hit needs "temperature"'])
+    expect(checkHit({ type: 'nope' as Hit['type'], point: [0, 0, 0] })[0]).toMatch(/unknown damage type/)
+  })
+
+  it('checkDestructible needs no world: it hits the impl and validates the shape of everything', () => {
+    expect(checkDestructible(panelImpl())).toEqual({ ok: true, problems: [] })
+  })
+
+  it('takes the known materials as an option and rejects the others', () => {
+    expect(checkDestructible(panelImpl('p', 'unobtainium'), { materials: ['steel'] }).problems).toEqual(['part "panel" has unknown material "unobtainium"'])
+    expect(checkDestructible(panelImpl('p', 'unobtainium'), { materials: ['steel', 'unobtainium'] }).ok).toBe(true)
+  })
+
+  it('reports an impl that breaks the contract', () => {
+    const bad = panelImpl('bad')
+    bad.hit = () => [{ type: 'damage', object: 'someone_else', time: 0, part: 'ghost', amount: 1, hp: 1, damageType: 'ballistic' }]
+    const r = checkDestructible(bad)
+    expect(r.ok).toBe(false)
+    expect(r.problems.join('\n')).toMatch(/expected "bad"/)
+    expect(r.problems.join('\n')).toMatch(/unknown part "ghost"/)
+    expect(checkDestructible({ ...panelImpl(), describe: () => ({ parts: [] }) }).problems).toEqual(['describe() must return at least one part'])
+  })
+})
+
+describe('weapon contract', () => {
+  it('shotToHit makes the ballistic hit with the energy left at that distance', () => {
+    const h = shotToHit(shot({ source: 'player_1' }), [0, 1, -50])
+    expect(h).toMatchObject({ type: 'ballistic', point: [0, 1, -50], direction: [0, 0, -1], caliber: 9, source: 'player_1' })
+    expect(h.energy).toBeCloseTo(450, 5)
+    expect(checkHit(h)).toEqual([])
+    expect(shotToHit(shot(), [0, 1, 0], [0, 0, 1]).source).toBe('pistol_9mm')
+    expect(shotToHit(shot(), [0, 1, 0]).energy).toBe(500)
+  })
+})
+
+describe('animation contract', () => {
+  const pistolReload: AnimationClipSpec = {
+    id: 'reload',
+    duration: 2,
+    keys: [{ t: 0 }, { t: 0.5, rotation: [0.2, 0, 0], parts: { mag: { position: [0, -0.1, 0] } } }, { t: 2, parts: { mag: { position: [0, 0, 0] } } }],
+    events: [{ t: 0.6, type: 'sound', data: { key: 'mag_out' } }],
+  }
+
+  it('accepts a good clip and checks the part ids', () => {
+    expect(checkAnimation(pistolReload, ['body', 'mag'])).toEqual({ ok: true, problems: [] })
+    expect(checkAnimation(pistolReload, ['body']).problems).toEqual(['clip "reload" key 1 moves unknown part "mag"', 'clip "reload" key 2 moves unknown part "mag"'])
+  })
+
+  it('finds bad times, vectors and ids', () => {
+    const bad: AnimationClipSpec = {
+      id: 'Bad Id',
+      duration: 1,
+      keys: [{ t: 0.5 }, { t: 0.2 }, { t: 3 }, { t: 0.9, position: [0, Number.NaN, 0] }],
+      events: [{ t: -1, type: '' }],
+    }
+    const p = checkAnimation(bad, []).problems.join('\n')
+    expect(p).toMatch(/snake_case/)
+    expect(p).toMatch(/key 1 goes back in time/)
+    expect(p).toMatch(/key 2 has t=3 outside/)
+    expect(p).toMatch(/key 3 has an invalid position/)
+    expect(p).toMatch(/event 0 has t=-1/)
+    expect(p).toMatch(/event 0 needs a type/)
+    expect(checkAnimation({ id: 'x', duration: 0, keys: [] }, []).problems).toEqual(['clip "x" needs a positive finite duration', 'clip "x" needs at least one key'])
+  })
+})
+
+describe('testable module', () => {
+  it('is plain data a module can build without three.js or a world', () => {
+    const mod: TestableModule = {
+      id: 'toys',
+      name: 'Toys',
+      group: 'Toys',
+      items: (locale) => [{ id: 'panel', name: locale === 'pt-BR' ? 'Painel' : 'Panel', build: () => ({}), impl: (_root, id) => panelImpl(id) }],
+      scenarios: () => [{ id: 'noop', name: 'Nothing', run: () => undefined }],
+    }
+    const item = mod.items('pt-BR')[0]
+    expect(item.name).toBe('Painel')
+    expect(checkDestructible(item.impl!({}, 'panel_1')).ok).toBe(true)
+  })
+
+  it('has no runtime dependencies', () => {
+    const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as Record<string, unknown>
+    expect(pkg.dependencies).toBeUndefined()
+    expect(pkg.peerDependencies).toBeUndefined()
+  })
+})

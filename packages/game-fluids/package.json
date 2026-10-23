@@ -1,0 +1,54 @@
+{
+  "name": "@adatechnology/game-fluids",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Engine-agnostic liquids for games: containers with level, temperature and tilt (fill, pour, drink, spill, leak through holes), streams, and puddles and stains that spread, soak and dry on surfaces. Deterministic. Knows nothing about any game.",
+  "keywords": [
+    "game",
+    "fluids",
+    "liquids",
+    "containers",
+    "puddles",
+    "leaks",
+    "drinking"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-fluids"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}
