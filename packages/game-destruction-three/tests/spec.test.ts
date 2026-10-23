@@ -92,3 +92,48 @@ describe.skipIf(!hasCore)('specFromObject3D', () => {
     expect(r.spec.joints).toEqual([])
   })
 })
+
+describe.skipIf(!hasCore)('userData.destructionPart as an object', () => {
+  const tree = () => {
+    const g = new THREE.Group()
+    const mk = (name: string, size: [number, number, number], pos: [number, number, number], ud: Record<string, unknown>) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(...size), new THREE.MeshStandardMaterial())
+      m.name = name
+      m.position.set(...pos)
+      Object.assign(m.userData, ud)
+      g.add(m)
+      return m
+    }
+    const trunk = mk('mesh_a', [0.3, 3, 0.3], [0, 1.5, 0], { destructionPart: { id: 'trunk', material: 'green_wood' } })
+    const branch = mk('mesh_b', [1, 0.2, 0.2], [0.5, 2, 0], { destructionPart: { id: 'branch', material: 'green_wood', parent: 'trunk', kind: 'stem' } })
+    const leaf = mk('mesh_c', [0.3, 0.3, 0.3], [5, 1, 0], { destructionPart: 'leaves' })
+    g.updateMatrixWorld(true)
+    return { g, trunk, branch, leaf }
+  }
+
+  it('specFromObject3D accepts a string or an object with id, material, parent and kind', async () => {
+    const { specFromObject3D } = await import('../src/spec')
+    const { g, trunk, branch, leaf } = tree()
+    const { spec, parts } = specFromObject3D(THREE, g)
+    expect(spec.parts.map((p) => [p.id, p.material])).toEqual([['trunk', 'green_wood'], ['branch', 'green_wood'], ['leaves', expect.any(String)]])
+    expect(spec.joints).toEqual([{ id: 'trunk~branch', a: 'trunk', b: 'branch', kind: 'stem' }])
+    expect(parts).toEqual({ trunk: [trunk], branch: [branch], leaves: [leaf] })
+  })
+
+  it('bind finds the meshes of an object-valued destructionPart', async () => {
+    const { createDestructionRenderer } = await import('../src/renderer')
+    const { FakeWorld, partState } = await import('./fake-world')
+    const { g, trunk, branch } = tree()
+    const world = new FakeWorld()
+    world.addObject('t', [partState('trunk', 'wood'), partState('branch', 'wood')])
+    const renderer = createDestructionRenderer(THREE, { scene: new THREE.Scene(), world: world.asWorld() })
+    const trunkGeo = trunk.geometry
+    const branchGeo = branch.geometry
+    renderer.bind('t', g)
+    world.emit({ type: 'dent', object: 't', part: 'branch', worldPoint: [0.5, 2.1, 0], dent: { point: [0.5, 2.1, 0], normal: [0, 1, 0], radius: 0.1, depth: 0.02 } })
+    renderer.update(0.016)
+    // only the branch mesh was bound to the branch part and dented (its geometry was cloned); the trunk is untouched
+    expect(branch.geometry).not.toBe(branchGeo)
+    expect(trunk.geometry).toBe(trunkGeo)
+  })
+})

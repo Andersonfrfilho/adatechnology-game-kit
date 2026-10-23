@@ -20,7 +20,28 @@ export const formatTime = (t: number): string => {
   return `${pad(m)}:${s.toFixed(2).padStart(5, '0')}`
 }
 
-export function createLog(): WritableLog {
+/** Minimal shape of the `downloads` capability a claude.ai Artifact page gets from `claude.use('downloads')`. */
+interface DownloadsApi {
+  save(request: { filename: string; data: string }): Promise<unknown>
+}
+
+export interface LogOptions {
+  /** Text of the `action` line written when the viewer declines (or fails) an export from an Artifact page. */
+  exportCancelled?: () => string
+}
+
+export function createLog(options: LogOptions = {}): WritableLog {
+  // In a claude.ai Artifact the page cannot use <a download> / blob links: it asks the host for the `downloads` capability. The promise is
+  // created once, never awaited here (`use` may take up to 10 s and resolve null); `download` awaits it when somebody actually exports.
+  const host = (globalThis as { claude?: { use?: (name: string) => Promise<unknown> } }).claude
+  let downloadsP: Promise<DownloadsApi | null> | null = null
+  if (host && typeof host.use === 'function') {
+    try {
+      downloadsP = Promise.resolve(host.use('downloads')).then((d) => (d as DownloadsApi | null) ?? null, () => null)
+    } catch {
+      downloadsP = null
+    }
+  }
   let list: LogEntry[] = []
   let seq = 0
   let clock = (): number => 0
@@ -91,9 +112,21 @@ export function createLog(): WritableLog {
     toJSON: () => JSON.stringify(read(), null, 2),
     toNDJSON: () => read().map((e) => JSON.stringify(e)).join('\n') + (list.length ? '\n' : ''),
     toText: () => read().map((e) => `[${formatTime(e.t)}] ${e.channel.padEnd(6)} ${e.text}`).join('\n'),
-    download(format = 'ndjson') {
-      if (typeof document === 'undefined' || typeof Blob === 'undefined' || typeof URL === 'undefined' || !URL.createObjectURL) return
+    async download(format = 'ndjson') {
       const body = format === 'json' ? log.toJSON() : format === 'txt' ? log.toText() : log.toNDJSON()
+      const downloads = downloadsP ? await downloadsP : null
+      if (downloads) {
+        // the Artifact allowlist has no `.ndjson`: it goes out as text
+        const filename = format === 'ndjson' ? 'test-room-log.ndjson.txt' : `test-room-log.${format}`
+        try {
+          await downloads.save({ filename, data: body })
+        } catch (err) {
+          const code = (err as { code?: unknown } | null)?.code
+          log.add({ channel: 'action', type: 'export_cancelled', text: options.exportCancelled?.() ?? 'export cancelled', data: { format, ...(typeof code === 'string' ? { code } : {}) } })
+        }
+        return
+      }
+      if (typeof document === 'undefined' || typeof Blob === 'undefined' || typeof URL === 'undefined' || !URL.createObjectURL) return
       const mime = format === 'json' ? 'application/json' : 'text/plain'
       const url = URL.createObjectURL(new Blob([body], { type: mime }))
       const a = document.createElement('a')

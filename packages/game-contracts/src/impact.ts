@@ -1,4 +1,4 @@
-import type { DamageType, DestructibleSpec, DestructionEvent, Hit, JointSpec, ObjectState, ToolKind } from './destruction'
+import type { DamageType, DestructibleSpec, DestructionEvent, Hit, JointSpec, ObjectState, ToolKind, Vec3 } from './destruction'
 
 /**
  * What a game module implements for an object whose behaviour it owns (a vehicle with its own panel deformation, a creature, a machine). The
@@ -23,6 +23,8 @@ export interface DestructibleImpl {
   /** Same contract as `DestructionWorld.disassemble`: progress 0..1, or -1 when the tool cannot undo the joint. */
   disassemble?(jointId: string, tool: ToolKind, dt: number): number
   extinguish?(partId?: string): void
+  /** Optional: an animation moved a part; `position` / `rotation` (Euler XYZ, radians) are object-local. Keep raycast and hit shapes in sync. */
+  setPartPose?(partId: string, position: Vec3, rotation?: Vec3): void
   /** Plain JSON of the impl's own state, stored in `DestructionSnapshot.impls`. */
   serialize?(): unknown
   load?(data: unknown): void
