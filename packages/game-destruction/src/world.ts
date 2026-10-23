@@ -613,9 +613,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     checkDestroyed(o, src)
   }
 
-  const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string) => {
+  const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false) => {
     if (amount <= 0) return
-    for (const j of o.byPart.get(p.spec.id) ?? []) {
+    const mine = (o.byPart.get(p.spec.id) ?? []).filter((j) => !j.st.open)
+    if (split && mine.length) amount /= mine.length
+    for (const j of mine) {
       if (j.st.open) continue
       if (near && vec.distance(jointWorld(o, j), near) > radius) continue
       j.st.hp -= amount
@@ -728,7 +730,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (mat.fracture !== 'shatter') addHole(o, p, entry, n, caliber / 1000, false, undefined, src)
     } else addHole(o, p, entry, n, caliber / 1000, false, undefined, src)
     debris(o, p, mat.hitDebris, entry, n, clamp(Math.round(E / 60) + 2, 2, 14), clamp(Math.sqrt(E) / 6, 1, 8), src)
-    wearJoints(o, p, E * 0.2, entry, 0.06, src)
+    // a bullet only wears the joints of the part it hits, by the energy the part absorbed (a through-and-through shot transfers little)
+    wearJoints(o, p, (penetrated ? thr : E) * 0.02, undefined, 0, src, true)
     const dmg = applyDamage(o, p, E * DMG_PER_J * scale, 'ballistic', entry, d, E * 0.1, 12, src)
     return { penetrated, exitEnergy: penetrated ? E - thr : 0, exitPoint, damage: dmg }
   }
