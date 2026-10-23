@@ -96,3 +96,25 @@ Legenda: ✅ decidido (data e resposta), ⏳ aguardando o dono, 🔁 decidido pe
 | V6 | Jogador e sobrevivência (fôlego, ferida, infecção, agarrão) | Só no jogo | Pacote `game-player` | ⏳ |
 | V7 | Câmera de ombro do jogo (amortecimento, FOV por zoom) | Melhor que `game-camera` (o `smoothing` do SDK nunca é lido) | Portar para `game-camera` | 🔁 |
 | V8 | Viveiro e Sala de destruição com diferenças entre artefato e site | 106 e 175 linhas | Comparar a fundo; vale a mais nova | ⏳ |
+
+## 7. Sons
+
+Pedido do dono em 2026-10-23: os sons dos times entram no SDK. **Nenhuma entrega usa arquivo de áudio** (nenhum `.mp3`, `.ogg`, `.wav` ou
+`data:audio`); tudo é sintetizado com WebAudio. O `AudioContext` que aparece em todos os artefatos é do runtime do Claude, e o das salas de
+teste e da bancada de móveis é do three.js embutido, sem uso.
+
+| Onde | Sons | Como funciona |
+|---|---|---|
+| Jogo, `sfx` (`artefatos/2UG1Mhe9LqJkQKKVsJkTWR/jogo.js` L62089; igual no modo livre L66433 e no Jardim Aurora L53200) | `pistola`, `escopeta`, `fuzil`, `rifle` (escolhido pelo calibre na L68697), `impacto`, `carne`, `passo`, `vidro`, `madeira`, `recarga`, `vazio`, `explosao` | Ruído filtrado com `[frequência, volume, duração]` por som; a frequência e o volume caem com a distância |
+| Jogo, `loopSet` | `motor` (dente de serra), `chuva` (ruído passa-alta), `rotor` (ruído com LFO de 11 Hz nas pás) | Sons contínuos com volume e frequência ajustáveis |
+| Jogo, `voz`, `grito`, `groanBudget` | gemido do zumbi, corredor, grito rouco (três formantes; antes "soava como sirene") | Limite de vozes simultâneas |
+| Jogo, `bichoSom`, `ambientAudio` | bichos e ambiente | — |
+| Cena de Arte, `initAudio` (`sources/arte__cena-de-arte.js`) | gemidos e chuva | Compressor e reverb na saída |
+| SDK, `game-weapons-three/src/audio.ts` | tiro pela energia do calibre, clique vazio, carregador, bomba e ferrolho, cápsula, carregador no chão | Feito em 2026-10-23, sem base nas entregas |
+| SDK, `game-interactables` (`onSound`) | porta, gaveta, tampa, aba, botão, disjuntor | Só o gancho; o som fica com quem hospeda |
+
+| # | Decisão | Recomendação | Situação |
+|---|---|---|---|
+| S1 | Pacote | `game-audio` genérico: síntese (ruído filtrado, osciladores, formantes), mixagem com compressor e reverb, atenuação por distância, limite de vozes e sons contínuos. Os sons de cada assunto ficam no pacote do assunto: armas no `game-weapons-three`, vozes no `game-characters-three`, bichos no `game-animals-three`, motor e rotor no `game-vehicles-three`, chuva no futuro clima | ⏳ |
+| S2 | Som de tiro | Juntar: a tabela por classe e a atenuação por distância do jogo, com a energia do calibre do SDK para variar dentro da classe | ⏳ |
+| S3 | Igual ao original | O golden do som compara os parâmetros gerados (frequência, volume, duração, filtros) para cada evento com semente fixa, já que não dá para comparar áudio por hash | 🔁 G3 |
