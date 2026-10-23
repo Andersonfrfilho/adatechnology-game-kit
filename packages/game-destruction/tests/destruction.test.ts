@@ -3,7 +3,7 @@ import {
   JOINT_BY_MATERIALS, JOINT_DEFAULTS, MATERIALS, createDestruction, guessMaterial, inferJoints, partMass, partVolume, quatFromEuler, resolveStrings, rotateVec, toLocal,
   toWorld,
 } from '../src'
-import type { DestructionEvent } from '../src'
+import type { DestructibleSpec, DestructionEvent } from '../src'
 import { chair, plate } from './helpers'
 
 const types = (events: DestructionEvent[]) => events.map((e) => e.type)
