@@ -1,0 +1,42 @@
+export { createVehicleKit } from './kit'
+export { registerLocale, resolveStrings, listLocales, format, createTranslate } from './locale'
+export type { LocaleStrings, PartialLocaleStrings, Translate } from './locale'
+export { LEGACY_STATES, LEGACY_ZONE_IDS, SEED_SALTS, legacyZoneId } from './legacy-seeds'
+export { hash, clamp, smooth, rng, strHash } from './util'
+export type {
+  Band,
+  BandId,
+  BandIndex,
+  BandOverride,
+  BuildFunction,
+  BuildState,
+  DamageMapOptions,
+  DamageZone,
+  ExplodeOptions,
+  FlagEffect,
+  FluidDefinition,
+  ImpactOptions,
+  KitConfiguration,
+  KitInternals,
+  KitTexts,
+  OverallHealth,
+  PartLabel,
+  Plugin,
+  ResolvedConfiguration,
+  ScenarioContext,
+  ScenarioDefinition,
+  ScenarioResult,
+  SplatOptions,
+  ThreeObject,
+  ThreeVector,
+  UiHelpers,
+  VehicleContext,
+  VehicleKit,
+  VehicleKitOptions,
+  VehicleMeta,
+  VehiclePart,
+  VehicleSpec,
+  ZoneDamageEntry,
+  ZoneEffect,
+  ZoneState,
+} from './api'
