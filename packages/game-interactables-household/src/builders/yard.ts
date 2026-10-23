@@ -49,7 +49,7 @@ export function trashBin(c: Ctx): void {
   // lid hinged at the back
   const hy = h - 0.04
   c.part(
-    'lid', [0, hy, -hd + 0.03], { kind: 'hinge', axis: [1, 0, 0], angle: -1.7 },
+    'lid', [0, hy, -hd + 0.06], { kind: 'hinge', axis: [1, 0, 0], angle: -1.5 },
     () => {
       c.b('plain', -hw - 0.006, hy, -hd + 0.0, hw + 0.006, hy + 0.025, hd + 0.0, shade(col, 1.05))
       c.b('plain', -hw + 0.03, hy + 0.025, -hd + 0.03, hw - 0.03, hy + 0.036, hd - 0.03, shade(col, 1.18))
@@ -82,7 +82,7 @@ export function wheelieBin(c: Ctx): void {
   c.b('plain', -0.1, 0.05, hd - 0.1, 0.1, 0.1, hd, 0x1c1c1e) // front feet
   const hy = rim
   c.part(
-    'lid', [0, hy, -hd + 0.06], { kind: 'hinge', axis: [1, 0, 0], angle: -1.7 },
+    'lid', [0, hy, -hd + 0.06], { kind: 'hinge', axis: [1, 0, 0], angle: -1.5 },
     () => {
       c.b('plain', -hw, hy, -hd + 0.05, hw, hy + 0.03, hd, shade(col, 1.04))
       c.b('plain', -hw + 0.04, hy + 0.03, -hd + 0.09, hw - 0.04, hy + 0.045, hd - 0.04, shade(col, 1.2))

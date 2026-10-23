@@ -297,7 +297,7 @@ export function utilitySink(c: Ctx): void {
   c.cyl('metal', 0, tubTop - 0.276, 0, 0.035, 0.004, 0x6a6e72, 'cyl')
   // washboard at the front, slanted
   c.b('plain', x0 + 0.04, tubTop - 0.27, z1 - 0.2, x0 + 0.04 + (x1 - x0) * 0.4, tubTop - 0.1, z1 - 0.06, 0xdadddc, 0, 0.5)
-  tap(c, 0, tubTop + 0.08, -hd + 0.05, 'tap', 'tap_handle')
+  tap(c, 0, tubTop + 0.08, -hd + 0.08, 'tap', 'tap_handle')
   c.add('fixtures', { id: 'basin', kind: 'utility_sink', outlet: [0, round3(tubTop - 0.1), 0], dir: [0, -1, 0], flow: 12, tank: 'auto' })
 }
 

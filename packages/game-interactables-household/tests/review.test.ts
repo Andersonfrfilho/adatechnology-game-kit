@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createWorld } from '@adatechnology/game-interactables'
-import { build, pack } from './helpers'
+import { motionPoint } from '../src'
+import { build, pack, partPoints } from './helpers'
 
 function world() {
   const hh = pack('br', 'en')
@@ -34,4 +35,22 @@ describe('seat orientation against the engine', () => {
       for (const s of build(type).spec.seats!) expect(s.exit[2], `${type} ${s.id}`).toBeGreaterThan(s.pos[2])
     }
   })
+})
+
+describe('parts never swing into the back wall', () => {
+  // a wall flush with the back of the object: no part may pass behind z = -d/2 (clothes on a line are in the open yard)
+  const hh = pack()
+  for (const t of hh.types.filter((x) => x.id !== 'clothesline')) {
+    it(`${t.id}: every part stays in front of the back plane for t in 0..1`, () => {
+      const b = build(t.id)
+      for (const p of b.spec.parts ?? []) {
+        for (let k = 0; k <= 20; k++) {
+          for (const pt of partPoints(b, p.id)) {
+            const q = motionPoint(pt, p.pivot, p.motion, k / 20)
+            expect(q[2], `${t.id}.${p.id} t=${k / 20}`).toBeGreaterThanOrEqual(-b.dims.d / 2 - 0.006)
+          }
+        }
+      }
+    })
+  }
 })
