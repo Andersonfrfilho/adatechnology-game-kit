@@ -165,7 +165,7 @@ export function gasBottle(c: Ctx): void {
   )
   c.add('fuels', { id: 'gas', kind: 'gas', capacity: g.capacityKg, level: g.capacityKg, valve: 'valve' })
   c.add('damage', { target: 'gas', kind: 'gas', hp: 40 })
-  c.interact('use_gas', [0, H, 0], { do: 'toggle_fuel', fuel: 'gas' }, 'prompt.gas_valve', 1.0)
+  c.interact('use_gas', [0, H, 0], { do: 'toggle_fuel', fuel: 'gas' }, 'prompt.gas_valve', 1.0, c.M.requires)
   c.spec.colliders = []
   c.collider('body', -R, 0, -R, R, H, R)
 }

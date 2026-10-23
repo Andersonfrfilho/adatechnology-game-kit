@@ -125,3 +125,19 @@ describe('washing machine water', () => {
     expect(w.water.level('tk:t')).toBeCloseTo(level, 1)
   })
 })
+
+describe('gas bottle in a cabinet', () => {
+  it('the valve works only while the cabinet door in front is open', () => {
+    const { w } = world()
+    const cab = build('kitchen_cabinet_base').spec
+    const door = cab.parts!.find((p) => p.id.startsWith('door'))!.id
+    w.add('counter', cab, { x: 0, y: 0, z: 0, ry: 0 })
+    w.add('bottle', build('gas_bottle', { requires: { object: 'counter', part: door } }).spec, { x: 6, y: 0, z: 0, ry: 0 })
+    expect(w.act('bottle:use_gas')).toBe(false)
+    w.setPart('counter', door, 1, true)
+    expect(w.act('bottle:use_gas')).toBe(true)
+    w.setPart('counter', door, 0, true)
+    expect(w.act('bottle:use_gas')).toBe(false)
+    expect(build('gas_bottle').spec.interactions!.every((i) => !i.requires)).toBe(true)
+  })
+})

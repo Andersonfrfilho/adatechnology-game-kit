@@ -188,9 +188,10 @@ export class Ctx {
     this.interact(`toggle_${part}`, pos, { do: 'toggle_part', part }, label, radius)
   }
 
-  interact(id: string, pos: Vec3, action: Action, label: string, radius?: number): void {
-    const it: { id: string; pos: Vec3; action: Action; label: string; radius?: number } = { id, pos, action, label }
+  interact(id: string, pos: Vec3, action: Action, label: string, radius?: number, requires?: { object: string; part: string }): void {
+    const it: { id: string; pos: Vec3; action: Action; label: string; radius?: number; requires?: { object: string; part: string } } = { id, pos, action, label }
     if (radius) it.radius = radius
+    if (requires) it.requires = requires
     this.list('interactions').push(it)
   }
 
