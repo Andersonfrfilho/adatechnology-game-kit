@@ -15,6 +15,7 @@ concatenates plain scripts can use them without a bundler.
 | [`@adatechnology/game-infection`](packages/game-infection) | `GameInfection` | Deterministic abstract epidemic model by regions (zombies, plague, rumours) |
 | [`@adatechnology/game-props3d`](packages/game-props3d) | `GameProps3d` | Procedural low-poly props (decor, furniture, yard, house state) that only describe primitives through a host-provided api |
 | [`@adatechnology/game-vehicles`](packages/game-vehicles) | `GameVehicles` | Procedural vehicle engine for three.js: bodies, glass, lights, interiors, zone-based damage in five bands, fluids, rollover, explosions and a damage-map UI; fleets and texts come from plugins |
+| [`@adatechnology/game-vehicles-fleet`](packages/game-vehicles-fleet) | `GameVehiclesFleet` | Content pack for `game-vehicles`: 69 vehicles in ten groups (motorcycles to helicopters), fuels, group names, crash texts and five damage scenarios |
 
 Each package has its own README (English, with a short Portuguese section) and a `MIGRATION.md` mapping the old Portuguese names to the new
 English ones, so the game adapter can be updated mechanically.
