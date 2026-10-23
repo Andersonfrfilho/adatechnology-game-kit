@@ -5,13 +5,13 @@
   "params": {
    "variant": "coconut",
    "height": 7.5,
-   "trunkRadius": 0.18,
-   "frondCount": 15,
+   "trunkRadius": 0.2,
+   "frondCount": 18,
    "frondLength": 3.4,
    "fruit": {
-    "color": "#7a9a3a",
-    "count": 6,
-    "radius": 0.1
+    "color": "#6f8a2e",
+    "count": 9,
+    "radius": 0.14
    }
   },
   "tags": [
@@ -32,7 +32,9 @@
   "params": {
    "variant": "royal",
    "height": 12,
-   "trunkRadius": 0.28
+   "trunkRadius": 0.28,
+   "frondCount": 16,
+   "frondLength": 4.6
   },
   "tags": [
    "tree",
@@ -51,8 +53,10 @@
   "archetype": "palm",
   "params": {
    "variant": "fan",
-   "height": 3.4,
-   "trunkRadius": 0.22
+   "height": 3.2,
+   "trunkRadius": 0.2,
+   "frondCount": 10,
+   "frondLength": 2.3
   },
   "tags": [
    "tree",

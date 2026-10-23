@@ -190,11 +190,12 @@
   "params": {
    "variant": "fan",
    "stems": 7,
-   "height": 2,
+   "height": 2.4,
    "trunkRadius": 0.025,
-   "frondLength": 0.75,
-   "frondCount": 6,
-   "trunkColor": "#6a5a3a"
+   "frondLength": 0.9,
+   "frondCount": 3,
+   "trunkColor": "#6a5a3a",
+   "lean": 0.24
   },
   "tags": [
    "palm",
