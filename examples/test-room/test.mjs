@@ -88,6 +88,19 @@ await shot('coffee-spill', async () => {
   await r.runScenarios(r.scenarios.filter((s) => s.id === 'tilt_cup_spills'))
 })
 
+await shot('rental-car-module', async () => {
+  // the module scenario loads the rental car; the door then opens through its own `open` clip and the animations panel lists it
+  const r = window.__testRoom
+  await r.runScenarios(r.scenarios.filter((s) => s.id === 'load_rental_car_module'))
+  r.clear()
+  const car = r.spawn('rental_car', [0, 0, -5], 0.6)
+  r.look([-3.4, 1.5, -1.6], [-0.4, 0.7, -4.6])
+  r.playAnimation('open', car.objectId)
+  for (let i = 0; i < 90; i++) r.update(1 / 60)
+  r.setTool('pistol_9mm')
+  r.look([-3.4, 1.5, -1.6], [-0.4, 0.7, -4.6])
+})
+
 // the behaviour log of a full run
 await page.goto(`${url}?scenario=all`)
 await page.waitForFunction(() => window.__testRoomReport, null, { timeout: 600000 })
