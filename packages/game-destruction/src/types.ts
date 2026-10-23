@@ -212,8 +212,11 @@ export interface DestructionWorld {
   disassemble(objectId: string, jointId: string, tool: ToolKind, dt: number): number
   /** Joints of an object that `tool` can undo now (open joints excluded). */
   workableJoints(objectId: string, tool: ToolKind): JointState[]
-  /** Joint nearest to a world point (for "aim at the screw"). */
-  nearestJoint(objectId: string, point: Vec3, maxDistance?: number): JointState | null
+  /**
+   * Joint nearest to a world point (for "aim at the screw"). With `tool`, the nearest open-able joint that tool can undo within `maxDistance`
+   * wins; only when none qualifies does it fall back to the nearest joint of any kind.
+   */
+  nearestJoint(objectId: string, point: Vec3, maxDistance?: number, tool?: ToolKind): JointState | null
   /** Put out fire on a part or the whole object, and cool it by `coolC` (default 200). */
   extinguish(objectId: string, partId?: string, coolC?: number): void
   /** Advance fire, heat transfer, cooling, melting, leaks and delayed explosions. */

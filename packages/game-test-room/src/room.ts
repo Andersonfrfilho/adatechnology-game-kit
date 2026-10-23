@@ -899,7 +899,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       log.coalesce(`use:${toolId}`, { channel: 'action', type: 'tool', text: t('act.tool.none', { weapon: w }), data: { weapon: toolId } }, 1)
       return
     }
-    const j: JointState | null = world.nearestJoint(r.object, r.point, 0.45)
+    const j: JointState | null = world.nearestJoint(r.object, r.point, 0.45, u.tool as ToolKind)
     if (!j) {
       progress = null
       log.coalesce(`use:${toolId}`, { channel: 'action', type: 'tool', text: t('act.tool.nojoint', { weapon: w, where: hitWhere(r) }), objectId: r.object, part: r.part }, 1)

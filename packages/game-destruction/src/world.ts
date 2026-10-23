@@ -1324,34 +1324,38 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
       return getObj(objectId).joints.filter((j) => !j.st.open && j.spec.tools.includes(tool)).map((j) => j.st)
     },
-    nearestJoint(objectId, point, maxDistance = 0.3) {
+    nearestJoint(objectId, point, maxDistance = 0.3, tool) {
       const im = impls.get(objectId)
+      // Candidates: closed joints with their world position and whether `tool` can undo them.
+      const cands: { st: JointState; d: number; ok: boolean }[] = []
       if (im) {
-        let best: JointState | null = null
-        let bd = maxDistance
+        const spec = im.impl.describe()
         for (const js of im.impl.state().joints) {
           if (js.open) continue
           const pos = implJointPos(im, js.a, js.b)
-          const d = pos ? vec.distance(pos, point) : Infinity
-          if (d <= bd) {
-            bd = d
-            best = js
+          const j = (spec.joints ?? []).find((x) => (x.id ?? `${x.a}~${x.b}`) === js.id)
+          cands.push({ st: js, d: pos ? vec.distance(pos, point) : Infinity, ok: !!j && (j.tools ?? JOINT_DEFAULTS[j.kind].tools).includes(tool as ToolKind) })
+        }
+      } else {
+        const o = getObj(objectId)
+        for (const j of o.joints) {
+          if (j.st.open) continue
+          cands.push({ st: j.st, d: vec.distance(jointWorld(o, j), point), ok: tool ? j.spec.tools.includes(tool) : true })
+        }
+      }
+      const pick = (only: boolean): JointState | null => {
+        let best: JointState | null = null
+        let bd = maxDistance
+        for (const c of cands) {
+          if (only && !c.ok) continue
+          if (c.d <= bd) {
+            bd = c.d
+            best = c.st
           }
         }
         return best
       }
-      const o = getObj(objectId)
-      let best: JointState | null = null
-      let bd = maxDistance
-      for (const j of o.joints) {
-        if (j.st.open) continue
-        const d = vec.distance(jointWorld(o, j), point)
-        if (d <= bd) {
-          bd = d
-          best = j.st
-        }
-      }
-      return best
+      return (tool ? pick(true) : null) ?? pick(false)
     },
     extinguish(objectId, partId, coolC = 200) {
       const im = impls.get(objectId)
