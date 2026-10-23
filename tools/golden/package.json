@@ -1,0 +1,31 @@
+{
+  "name": "@adatechnology/golden-tool",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Golden tool for \"same as the original\": records events and a stable scene hash from a team page under a seeded environment, and compares an SDK build against it.",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "record": "node bin/record.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "@types/three": "0.128.0",
+    "three": "0.128.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}
