@@ -44,3 +44,28 @@ describe('createScreen', () => {
     expect(styles(1, 3)).not.toBe(styles(1, 4))
   })
 })
+
+describe('screen canvas context', () => {
+  it('asks for a willReadFrequently 2D context (no browser readback warning) and never reads pixels back', () => {
+    const calls: unknown[][] = []
+    const base = fakeDocument()
+    const doc = {
+      createElement(tag: 'canvas') {
+        const c = base.createElement(tag)
+        const get = c.getContext
+        c.getContext = (...a: unknown[]) => {
+          calls.push(a)
+          return get()
+        }
+        c.ctx.getImageData = () => {
+          throw new Error('no readback')
+        }
+        return c
+      },
+    }
+    const s = createScreen(THREE, { document: doc, w: 32, h: 18 })
+    s.setOn(true)
+    s.update(1)
+    expect(calls).toEqual([['2d', { willReadFrequently: true }]])
+  })
+})

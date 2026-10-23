@@ -50,7 +50,8 @@ export function createScreen(THREE: ThreeLib, options: ScreenOptions): Screen {
   const canvas = options.document.createElement('canvas')
   canvas.width = w
   canvas.height = h
-  const ctx = canvas.getContext('2d')
+  // the canvas is uploaded to the GPU every redraw: tell the browser so it keeps a CPU-backed canvas (no readback warning)
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
   const rand = mulberry(options.seed ?? 1)
   const period = 1 / Math.max(1, options.fps ?? 15)
   const intensity = options.intensity ?? 1

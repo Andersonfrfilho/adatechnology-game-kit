@@ -66,6 +66,11 @@ Every function also exists unbound and takes `THREE` first: `createMeshApi(THREE
   `cloth` soft volumes (clothes on a line: one mesh, a per-vertex cloth index and anchor, each cloth keeps its own swing). `parts[id]` then
   points at the merged group (`userData.merged`) and `syncObject` drives it. Parts with a mirror, a turned part (`ry`) or a lone part stay as they are.
   Measured on the household pack: blinds 38 meshes to 3, clothesline 31 to 2.
+- **Material hook.** `materialFor(key, partId)` (option of `createMeshApi`, or `finish(spec, { materialFor })` which wins) returns the material
+  of each mesh (`partId` is `null` for the static body), e.g. one carrying a per-room light mask. Merged groups clone that material for their
+  batch shader but **keep** its `onBeforeCompile`, `customProgramCacheKey`, `defines` and `userData` (the batch patch runs after yours), so a
+  merged blind or clothesline is masked and lit like everything else; meshes with different materials are never mixed into one merged mesh.
+- `createScreen` asks for a `willReadFrequently` 2D context (the canvas is re-uploaded every redraw; this avoids the browser's readback warning).
 
 ### Poses and sync
 
@@ -87,8 +92,10 @@ three on a mesh; `syncObject` drives its uniforms from `world.sway(...)`.
 ### Effects
 
 ```ts
-const effects = gfx.createEffects(scene, { maxParticles: 800, document })
-effects.update(dt, world.emitters(), camera) // the camera's fov sizes the point sprites
+// `scene` (where the particle objects go) and `camera` (its fov sizes the point sprites) are required options.
+// `camera` may also be a function returning the current camera, or `null` for a 90 degree lens.
+const effects = gfx.createEffects({ scene, camera, maxParticles: 800, document })
+effects.update(dt, world.emitters()) // reads the camera it was created with; `effects.setCamera(other)` swaps it
 effects.setViewHeight(renderer.domElement.height) // on resize
 ```
 
