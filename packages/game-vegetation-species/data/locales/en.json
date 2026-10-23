@@ -1,0 +1,286 @@
+{
+ "mango_tree": {
+  "name": "Mango tree",
+  "description": "Broad umbrella crown with hanging mangoes."
+ },
+ "yellow_ipe": {
+  "name": "Yellow ipe",
+  "description": "Green in summer, a crown of golden flowers in the dry season."
+ },
+ "pink_ipe": {
+  "name": "Pink ipe",
+  "description": "Green in summer, a crown of pink flowers in the dry season."
+ },
+ "jabuticaba_tree": {
+  "name": "Jabuticaba tree",
+  "description": "Dense small tree with dark fruit growing straight on the trunk."
+ },
+ "flamboyant": {
+  "name": "Flamboyant",
+  "description": "Umbrella crown covered in red blooms."
+ },
+ "guava_tree": {
+  "name": "Guava tree",
+  "description": "Small crooked tree with smooth reddish bark and round fruit."
+ },
+ "avocado_tree": {
+  "name": "Avocado tree",
+  "description": "Tall dark-green tree with pear-shaped fruit."
+ },
+ "lemon_tree": {
+  "name": "Lemon tree",
+  "description": "Small backyard tree with bright yellow lemons."
+ },
+ "pitanga_bush_tree": {
+  "name": "Pitanga tree",
+  "description": "Bushy small tree covered in tiny red fruit."
+ },
+ "sidewalk_ficus": {
+  "name": "Street ficus",
+  "description": "Clipped round crown typical of sidewalks."
+ },
+ "oak_like": {
+  "name": "Broadleaf tree",
+  "description": "Generic broadleaf shade tree that changes with the seasons."
+ },
+ "weeping_willow": {
+  "name": "Weeping willow",
+  "description": "Drooping curtains of pale green leaves."
+ },
+ "araucaria": {
+  "name": "Araucaria",
+  "description": "Tall bare trunk with an umbrella of upturned branches."
+ },
+ "pine": {
+  "name": "Pine",
+  "description": "Conical evergreen with drooping tiers."
+ },
+ "eucalyptus": {
+  "name": "Eucalyptus",
+  "description": "Very tall tree with pale bark and a sparse crown."
+ },
+ "dead_tree": {
+  "name": "Dead tree",
+  "description": "Bare twisted trunk with broken limbs."
+ },
+ "coconut_palm": {
+  "name": "Coconut palm",
+  "description": "Leaning curved trunk with a crown of long fronds and coconuts."
+ },
+ "royal_palm": {
+  "name": "Royal palm",
+  "description": "Straight smooth grey trunk and a green crownshaft."
+ },
+ "fan_palm": {
+  "name": "Fan palm",
+  "description": "Short thick trunk with round fan-shaped fronds."
+ },
+ "areca_palm": {
+  "name": "Areca palm",
+  "description": "Clumping palm with many thin canes and feathery fronds."
+ },
+ "date_palm": {
+  "name": "Date palm",
+  "description": "Rough trunk with stiff upright fronds and date clusters."
+ },
+ "banana_plant": {
+  "name": "Banana plant",
+  "description": "Pseudostem with huge torn paddle leaves."
+ },
+ "banana_with_bunch": {
+  "name": "Banana plant with bunch",
+  "description": "Banana plant with a hanging bunch and a purple flower bud."
+ },
+ "boxwood_hedge": {
+  "name": "Boxwood hedge",
+  "description": "Clipped dark green hedge."
+ },
+ "ixora_hedge": {
+  "name": "Ixora hedge",
+  "description": "Hedge dotted with clusters of red flowers."
+ },
+ "hibiscus_shrub": {
+  "name": "Hibiscus shrub",
+  "description": "Glossy shrub with big red and pink flowers."
+ },
+ "bougainvillea": {
+  "name": "Bougainvillea",
+  "description": "Sprawling shrub covered in magenta bracts."
+ },
+ "azalea": {
+  "name": "Azalea",
+  "description": "Low round shrub packed with pink blooms."
+ },
+ "croton": {
+  "name": "Croton",
+  "description": "Shrub with multicoloured leaves in yellow, red and green."
+ },
+ "lady_palm": {
+  "name": "Lady palm",
+  "description": "Dwarf clumping fan palm (rhapis) with slender canes."
+ },
+ "generic_round_shrub": {
+  "name": "Round shrub",
+  "description": "Plain round green shrub."
+ },
+ "overgrown_bush": {
+  "name": "Overgrown bush",
+  "description": "Shaggy untrimmed bush."
+ },
+ "rose_bush_red": {
+  "name": "Red rose bush",
+  "description": "Thorny stems with deep red roses."
+ },
+ "rose_bush_pink": {
+  "name": "Pink rose bush",
+  "description": "Thorny stems with pink roses."
+ },
+ "rose_bush_white": {
+  "name": "White rose bush",
+  "description": "Thorny stems with white roses."
+ },
+ "sunflower": {
+  "name": "Sunflower",
+  "description": "Tall stems with big golden heads."
+ },
+ "daisy": {
+  "name": "Daisy",
+  "description": "White petals around a yellow eye."
+ },
+ "tulip": {
+  "name": "Tulip",
+  "description": "Cup-shaped flowers on straight stems."
+ },
+ "lily": {
+  "name": "Lily",
+  "description": "Star-shaped white flowers."
+ },
+ "marigold": {
+  "name": "Marigold",
+  "description": "Round orange pompon flowers."
+ },
+ "periwinkle_pink": {
+  "name": "Pink periwinkle",
+  "description": "Low carpet of small pink flowers."
+ },
+ "periwinkle_white": {
+  "name": "White periwinkle",
+  "description": "Low carpet of small white flowers."
+ },
+ "hydrangea": {
+  "name": "Hydrangea",
+  "description": "Big blue balls of small flowers."
+ },
+ "bird_of_paradise": {
+  "name": "Bird of paradise",
+  "description": "Orange and blue crested flowers over big leaves."
+ },
+ "wild_flowers": {
+  "name": "Wild flowers",
+  "description": "A mix of small meadow flowers."
+ },
+ "mandacaru": {
+  "name": "Mandacaru",
+  "description": "Tall blue-green candelabra cactus with large white night flowers."
+ },
+ "saguaro": {
+  "name": "Saguaro",
+  "description": "Giant columnar cactus with upturned arms."
+ },
+ "xique_xique": {
+  "name": "Xique-xique",
+  "description": "Low sprawling columnar cactus of the dry backlands."
+ },
+ "prickly_pear": {
+  "name": "Prickly pear",
+  "description": "Chained flat pads with red fruit."
+ },
+ "crown_cactus": {
+  "name": "Turk's cap cactus",
+  "description": "Ribbed globe topped by a red cap."
+ },
+ "barrel_cactus": {
+  "name": "Barrel cactus",
+  "description": "Round ribbed barrel with golden spines."
+ },
+ "small_cactus": {
+  "name": "Small cactus",
+  "description": "Tiny round cactus."
+ },
+ "snake_plant": {
+  "name": "Snake plant",
+  "description": "Tall stiff sword leaves with banded colour."
+ },
+ "agave": {
+  "name": "Agave",
+  "description": "Big blue-green rosette of thick pointed leaves."
+ },
+ "aloe_vera": {
+  "name": "Aloe vera",
+  "description": "Fleshy toothed leaves with an orange flower spike."
+ },
+ "echeveria": {
+  "name": "Echeveria",
+  "description": "Tight rosette with pink-tipped leaves."
+ },
+ "lawn_tuft": {
+  "name": "Lawn tuft",
+  "description": "Short green grass tuft."
+ },
+ "wild_grass_tall": {
+  "name": "Tall wild grass",
+  "description": "Tall wild grass with seed heads."
+ },
+ "weeds": {
+  "name": "Weeds",
+  "description": "Untidy patch of weeds."
+ },
+ "papyrus": {
+  "name": "Papyrus",
+  "description": "Tall reeds topped with feathery heads."
+ },
+ "fern": {
+  "name": "Fern",
+  "description": "Arching fronds of small leaflets."
+ },
+ "boston_fern": {
+  "name": "Boston fern",
+  "description": "Lush fern in a pot, fronds spilling over the rim."
+ },
+ "bougainvillea_vine": {
+  "name": "Bougainvillea vine",
+  "description": "Climbing vine covered in magenta bracts."
+ },
+ "ivy": {
+  "name": "Ivy",
+  "description": "Dense dark green climber for walls."
+ },
+ "passion_fruit_vine": {
+  "name": "Passion fruit vine",
+  "description": "Vigorous climber with intricate purple and white flowers."
+ },
+ "potted_fern": {
+  "name": "Potted fern",
+  "description": "Fern in a terracotta pot."
+ },
+ "potted_snake_plant": {
+  "name": "Potted snake plant",
+  "description": "Snake plant in a grey pot."
+ },
+ "potted_areca": {
+  "name": "Potted areca palm",
+  "description": "Areca palm in a cachepot."
+ },
+ "potted_cactus": {
+  "name": "Potted cactus",
+  "description": "Small round cactus in a pot."
+ },
+ "potted_rose": {
+  "name": "Potted rose",
+  "description": "Rose bush in a pot."
+ },
+ "potted_succulents": {
+  "name": "Potted succulent",
+  "description": "Echeveria in a small cachepot."
+ }
+}

@@ -1,0 +1,256 @@
+[
+ {
+  "id": "boxwood_hedge",
+  "archetype": "shrub",
+  "params": {
+   "shape": "hedge",
+   "length": 2.4,
+   "height": 1.0,
+   "width": 0.65,
+   "leafColor": [
+    "#347a3a"
+   ]
+  },
+  "tags": [
+   "shrub",
+   "hedge"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "ixora_hedge",
+  "archetype": "shrub",
+  "params": {
+   "shape": "hedge",
+   "length": 2.4,
+   "height": 1.1,
+   "width": 0.7,
+   "leafColor": [
+    "#2e6e34"
+   ],
+   "flowers": {
+    "colors": [
+     "#d8281e",
+     "#e04a2a"
+    ],
+    "count": 20,
+    "style": "dots",
+    "size": 0.05
+   }
+  },
+  "tags": [
+   "shrub",
+   "hedge",
+   "flowering"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "hibiscus_shrub",
+  "archetype": "shrub",
+  "params": {
+   "shape": "round",
+   "radius": 0.85,
+   "height": 1.7,
+   "leafColor": [
+    "#2f7a35",
+    "#3a8a3a"
+   ],
+   "flowers": {
+    "colors": [
+     "#e0243a",
+     "#f06a8a"
+    ],
+    "count": 9,
+    "style": "hibiscus",
+    "size": 0.07
+   }
+  },
+  "tags": [
+   "shrub",
+   "flowering"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "m",
+  "solid": false
+ },
+ {
+  "id": "bougainvillea",
+  "archetype": "shrub",
+  "params": {
+   "shape": "loose",
+   "radius": 1.1,
+   "height": 1.8,
+   "leafColor": [
+    "#3f8a3a",
+    "#4a9a42"
+   ],
+   "flowers": {
+    "colors": [
+     "#c8208a",
+     "#d8409a",
+     "#e060a8"
+    ],
+    "count": 70,
+    "style": "clusters",
+    "size": 0.06
+   }
+  },
+  "tags": [
+   "shrub",
+   "flowering"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "m",
+  "solid": false
+ },
+ {
+  "id": "azalea",
+  "archetype": "shrub",
+  "params": {
+   "shape": "round",
+   "radius": 0.6,
+   "height": 0.8,
+   "leafColor": [
+    "#356e38",
+    "#3f7a3e"
+   ],
+   "flowers": {
+    "colors": [
+     "#e870a8",
+     "#f0a0c8"
+    ],
+    "count": 60,
+    "style": "dots",
+    "size": 0.05
+   }
+  },
+  "tags": [
+   "shrub",
+   "flowering"
+  ],
+  "climate": [
+   "temperate",
+   "tropical",
+   "subtropical"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "croton",
+  "archetype": "shrub",
+  "params": {
+   "shape": "round",
+   "radius": 0.55,
+   "height": 1.0,
+   "leafColor": [
+    "#2f7a35",
+    "#3a8a3a"
+   ],
+   "variegation": [
+    "#f0c020",
+    "#d84020",
+    "#2f7a35",
+    "#e88a20"
+   ],
+   "leafSize": 1.2
+  },
+  "tags": [
+   "shrub",
+   "ornamental"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "lady_palm",
+  "archetype": "palm",
+  "params": {
+   "variant": "fan",
+   "stems": 7,
+   "height": 2,
+   "trunkRadius": 0.025,
+   "frondLength": 0.75,
+   "frondCount": 6,
+   "trunkColor": "#6a5a3a"
+  },
+  "tags": [
+   "palm",
+   "shrub",
+   "indoor"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "s",
+  "solid": true
+ },
+ {
+  "id": "generic_round_shrub",
+  "archetype": "shrub",
+  "params": {
+   "shape": "round",
+   "radius": 0.7,
+   "height": 1.0
+  },
+  "tags": [
+   "shrub"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "overgrown_bush",
+  "archetype": "shrub",
+  "params": {
+   "shape": "loose",
+   "radius": 1.0,
+   "height": 1.5,
+   "density": 1.3,
+   "leafColor": [
+    "#3a7a34",
+    "#2f6a30",
+    "#4a8a3a"
+   ]
+  },
+  "tags": [
+   "shrub",
+   "neglected"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "m",
+  "solid": false
+ }
+]

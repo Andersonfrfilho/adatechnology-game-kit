@@ -1,0 +1,287 @@
+[
+ {
+  "id": "rose_bush_red",
+  "archetype": "flower_plant",
+  "params": {
+   "flowerType": "rose",
+   "petalColors": [
+    "#d0243a"
+   ],
+   "height": 0.95
+  },
+  "tags": [
+   "flower",
+   "flowering"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "rose_bush_pink",
+  "archetype": "flower_plant",
+  "params": {
+   "flowerType": "rose",
+   "petalColors": [
+    "#f08ab0"
+   ],
+   "height": 0.95
+  },
+  "tags": [
+   "flower",
+   "flowering"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "rose_bush_white",
+  "archetype": "flower_plant",
+  "params": {
+   "flowerType": "rose",
+   "petalColors": [
+    "#f6f0e6"
+   ],
+   "height": 0.95
+  },
+  "tags": [
+   "flower",
+   "flowering"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "sunflower",
+  "archetype": "flower_plant",
+  "params": {
+   "flowerType": "sunflower"
+  },
+  "tags": [
+   "flower",
+   "flowering"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "m",
+  "solid": false
+ },
+ {
+  "id": "daisy",
+  "archetype": "flower_plant",
+  "params": {
+   "flowerType": "daisy"
+  },
+  "tags": [
+   "flower",
+   "flowering"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "tulip",
+  "archetype": "flower_plant",
+  "params": {
+   "flowerType": "tulip",
+   "petalColors": [
+    "#e03a52",
+    "#e8c020",
+    "#f08ab0"
+   ]
+  },
+  "tags": [
+   "flower",
+   "flowering"
+  ],
+  "climate": [
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "lily",
+  "archetype": "flower_plant",
+  "params": {
+   "flowerType": "lily"
+  },
+  "tags": [
+   "flower",
+   "flowering"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "marigold",
+  "archetype": "flower_plant",
+  "params": {
+   "flowerType": "cluster",
+   "petalColors": [
+    "#f08a1a",
+    "#f5b020"
+   ],
+   "height": 0.42,
+   "stemCount": 7,
+   "flowerSize": 0.055
+  },
+  "tags": [
+   "flower",
+   "flowering"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "periwinkle_pink",
+  "archetype": "flower_plant",
+  "params": {
+   "flowerType": "daisy",
+   "spreading": true,
+   "petalColors": [
+    "#f0a0c8"
+   ],
+   "height": 0.15,
+   "stemCount": 10,
+   "flowerSize": 0.028
+  },
+  "tags": [
+   "flower",
+   "flowering",
+   "ground"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "periwinkle_white",
+  "archetype": "flower_plant",
+  "params": {
+   "flowerType": "daisy",
+   "spreading": true,
+   "petalColors": [
+    "#f6f2ea"
+   ],
+   "height": 0.15,
+   "stemCount": 10,
+   "flowerSize": 0.028
+  },
+  "tags": [
+   "flower",
+   "flowering",
+   "ground"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "hydrangea",
+  "archetype": "flower_plant",
+  "params": {
+   "flowerType": "cluster",
+   "petalColors": [
+    "#5a84d8",
+    "#8aa8e8"
+   ],
+   "height": 0.9,
+   "stemCount": 5
+  },
+  "tags": [
+   "flower",
+   "flowering"
+  ],
+  "climate": [
+   "temperate",
+   "subtropical"
+  ],
+  "size": "m",
+  "solid": false
+ },
+ {
+  "id": "bird_of_paradise",
+  "archetype": "flower_plant",
+  "params": {
+   "flowerType": "bird_of_paradise"
+  },
+  "tags": [
+   "flower",
+   "flowering"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "m",
+  "solid": false
+ },
+ {
+  "id": "wild_flowers",
+  "archetype": "flower_plant",
+  "params": {
+   "flowerType": "daisy",
+   "petalColors": [
+    "#f5f0e0",
+    "#f08ab0",
+    "#f2c230",
+    "#a070e0"
+   ],
+   "stemCount": 12,
+   "height": 0.45
+  },
+  "tags": [
+   "flower",
+   "flowering",
+   "ground"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ }
+]

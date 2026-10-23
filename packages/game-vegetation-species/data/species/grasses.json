@@ -1,0 +1,134 @@
+[
+ {
+  "id": "lawn_tuft",
+  "archetype": "grass_tuft",
+  "params": {
+   "count": 34,
+   "height": 0.3,
+   "color": "#6aa646"
+  },
+  "tags": [
+   "ground",
+   "grass"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "wild_grass_tall",
+  "archetype": "grass_tuft",
+  "params": {
+   "count": 30,
+   "height": 0.9,
+   "color": "#9ab05a",
+   "seedHeads": true
+  },
+  "tags": [
+   "ground",
+   "grass"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "weeds",
+  "archetype": "grass_tuft",
+  "params": {
+   "count": 22,
+   "height": 0.5,
+   "color": "#7a9a4a",
+   "radius": 0.3
+  },
+  "tags": [
+   "ground",
+   "grass",
+   "neglected"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "papyrus",
+  "archetype": "grass_tuft",
+  "params": {
+   "count": 26,
+   "height": 1.7,
+   "color": "#6a9a4a",
+   "seedHeads": true,
+   "seedColor": "#9ab060",
+   "radius": 0.6
+  },
+  "tags": [
+   "ground",
+   "grass"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "m",
+  "solid": false
+ },
+ {
+  "id": "fern",
+  "archetype": "fern",
+  "params": {},
+  "tags": [
+   "ground",
+   "fern"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "boston_fern",
+  "archetype": "potted",
+  "params": {
+   "pot": {
+    "shape": "cachepot",
+    "radius": 0.22,
+    "height": 0.3,
+    "color": "#d8d0bc"
+   },
+   "plant": {
+    "archetype": "fern",
+    "frondCount": 16,
+    "frondLength": 0.85
+   }
+  },
+  "tags": [
+   "ground",
+   "fern",
+   "potted",
+   "indoor"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "s",
+  "solid": true
+ }
+]
