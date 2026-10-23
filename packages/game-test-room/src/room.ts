@@ -9,7 +9,7 @@ import { createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidS
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFluidRenderer } from '@adatechnology/game-fluids-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkDestructible } from '@adatechnology/game-contracts'
+import { checkAnimation, checkDestructible, checkSpec } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, TestableModule } from '@adatechnology/game-contracts'
 import { createArena } from './arena'
 import type { Arena } from './arena'
@@ -1688,8 +1688,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
           partIds = probe.describe().parts.map((p) => p.id)
           moduleCheck(r.ok, r.ok ? t('mod.destructible_ok', { name: item.name, parts: partIds.length }) : t('mod.destructible_fail', { name: item.name, problems: r.problems.join('; ') }), { ...base, check: 'destructible', problems: r.problems }, item.id)
           for (const p of r.problems) fail(`${item.id}: ${p}`)
-        } else {
-          partIds = resolveSpec(item, root).spec.parts.map((p) => p.id)
+        }
+        if (!item.impl || item.spec) {
+          // the spec is resolved after the build (it may be a function of the root, or derived from the meshes)
+          const spec = resolveSpec(item, root).spec
+          if (!item.impl) partIds = spec.parts.map((p) => p.id)
+          const r = checkSpec(spec, { materials: world.materials.keys() })
+          moduleCheck(r.ok, r.ok ? t('mod.spec_ok', { name: item.name, parts: spec.parts.length }) : t('mod.spec_fail', { name: item.name, problems: r.problems.join('; ') }), { ...base, check: 'spec', problems: r.problems, warnings: r.warnings }, item.id)
+          for (const p of r.problems) fail(`${item.id}: ${p}`)
+          for (const w of r.warnings) log.add({ channel: 'check', type: 'warn', text: `⚠ ${t('mod.spec_warn', { name: item.name, warning: w })}`, itemId: item.id, data: { ok: true, ...base, check: 'spec', warning: w } })
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)

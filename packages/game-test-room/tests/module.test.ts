@@ -88,6 +88,38 @@ describe('loadModule', () => {
     expect(bad[0].text).toMatch(/^✗ Sliding panel: animation "slide" broken/)
   })
 
+  it('checks the spec of spec-only items: ✓ for a good one, ✗ with the problems for a bad one, ⚠ for a lost structural part', () => {
+    const room = makeRoom()
+    const box = (T: unknown) => {
+      const three = T as typeof THREE
+      const g = new three.Group()
+      const m = new three.Mesh(new three.BoxGeometry(1, 1, 1), new three.MeshStandardMaterial())
+      m.name = 'a'
+      g.add(m)
+      return g
+    }
+    const good = { parts: [{ id: 'a', material: 'wood_soft', shape: { kind: 'box' as const, size: [1, 1, 1] as [number, number, number] }, position: [0, 0.5, 0] as [number, number, number] }] }
+    const bad = { parts: [{ ...good.parts[0] }, { ...good.parts[0], material: 'nope' }] }
+    const lost = { parts: [{ ...good.parts[0], structure: { role: 'column' as const } }], joints: [] }
+    const rep = room.loadModule({
+      id: 'specs', name: 'Specs', group: 'Specs',
+      items: () => [
+        { id: 'good_item', name: 'Good', build: box, spec: good },
+        { id: 'bad_item', name: 'Bad', build: box, spec: () => bad },
+        { id: 'lost_item', name: 'Lost', build: box, spec: lost },
+        { id: 'derived_item', name: 'Derived', build: box },
+      ],
+    })
+    expect(rep.ok).toBe(false)
+    expect(rep.problems.join('\n')).toMatch(/bad_item: duplicate part id "a"[\s\S]*bad_item: part "a" has unknown material "nope"/)
+    const lines = room.log.entries({ channel: 'check' }).map((c) => c.text)
+    expect(lines).toContainEqual(expect.stringMatching(/^✓ Good: spec ok \(1 parts\)/))
+    expect(lines).toContainEqual(expect.stringMatching(/^✗ Bad: spec broken: duplicate part id "a"/))
+    expect(lines).toContainEqual(expect.stringMatching(/^✓ Derived: spec ok/))
+    expect(lines).toContainEqual(expect.stringMatching(/^⚠ Lost: spec warning: .*cannot reach an anchored part/))
+    expect(lines.filter((l) => l.includes('Lost')).some((l) => l.startsWith('✓ Lost: spec ok'))).toBe(true)
+  })
+
   it('hosts the impl in the world: the room gives it its id and hits reach it', () => {
     const room = makeRoom({ locale: 'pt-BR' })
     room.loadModule(mod())
