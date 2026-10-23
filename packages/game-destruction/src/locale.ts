@@ -24,7 +24,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
       stone: 'stone', plastic: 'plastic', rubber: 'rubber', fabric: 'fabric', foam: 'foam', leather: 'leather', paper: 'paper', foliage: 'foliage',
       green_wood: 'green wood', cactus: 'cactus', flesh_fruit: 'fruit', wax: 'wax', soil: 'soil',
     },
-    partStatus: { intact: 'intact', damaged: 'damaged', broken: 'broken', melted: 'melted', ashes: 'ashes' },
+    partStatus: { intact: 'intact', damaged: 'damaged', collapsed: 'collapsed', broken: 'broken', melted: 'melted', ashes: 'ashes' },
     jointKinds: {
       screw: 'screw', bolt: 'nut and bolt', nail: 'nail', weld: 'weld', glue: 'glue', hinge: 'hinge', clip: 'clip', tie: 'tie', mortar: 'mortar',
       fused: 'fused', stem: 'stem', rebar: 'rebar', resting: 'resting',
@@ -48,7 +48,7 @@ export const locales: Record<DestructionLocale, DestructionStrings> = {
       plaster: 'gesso', stone: 'pedra', plastic: 'plástico', rubber: 'borracha', fabric: 'tecido', foam: 'espuma', leather: 'couro', paper: 'papel',
       foliage: 'folhagem', green_wood: 'madeira verde', cactus: 'cacto', flesh_fruit: 'fruta', wax: 'cera', soil: 'terra',
     },
-    partStatus: { intact: 'intacto', damaged: 'danificado', broken: 'quebrado', melted: 'derretido', ashes: 'cinzas' },
+    partStatus: { intact: 'intacto', damaged: 'danificado', collapsed: 'desabado', broken: 'quebrado', melted: 'derretido', ashes: 'cinzas' },
     jointKinds: {
       screw: 'parafuso', bolt: 'porca e parafuso', nail: 'prego', weld: 'solda', glue: 'cola', hinge: 'dobradiça', clip: 'encaixe', tie: 'amarração',
       mortar: 'argamassa', fused: 'fundido', stem: 'caule', rebar: 'vergalhão', resting: 'apoiado',

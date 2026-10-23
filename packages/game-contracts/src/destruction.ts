@@ -175,6 +175,8 @@ export interface Hit {
 export type PartStatus =
   | 'intact'
   | 'damaged'
+  /** the part lost its support path to the ground and fell with its group (reported by a `collapse` event); it still exists as a piece */
+  | 'collapsed'
   /** hp reached 0; the part fractured into fragments (it no longer exists as one piece) */
   | 'broken'
   /** melted into a puddle */

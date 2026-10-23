@@ -398,7 +398,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       for (const g of o.st.groups) {
         const ps = g.map((id) => o.byId.get(id)!).filter((p) => !isLost(p) && !o.collapsed.has(p.spec.id))
         if (ps.length === 0 || g.some((id) => o.byId.get(id)!.anchored) || !ps.some((p) => p.structural)) continue
-        for (const p of ps) o.collapsed.add(p.spec.id)
+        for (const p of ps) {
+          o.collapsed.add(p.spec.id)
+          p.st.status = 'collapsed'
+        }
         emit({ ...base(o, src), type: 'collapse', parts: ps.map((p) => p.spec.id), mass: ps.reduce((sum, p) => sum + p.st.mass, 0) })
       }
     }

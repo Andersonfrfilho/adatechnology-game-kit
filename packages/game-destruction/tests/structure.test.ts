@@ -171,7 +171,8 @@ describe('structure', () => {
     const id2 = w2.add(slabSpec([], { partition: true }))
     strike(w2, id2, 'part')
     const solo = w2.part(id2, 'part')!
-    expect(solo.status === 'broken' || solo.status === 'damaged').toBe(true)
+    // a struck partition either breaks or loses its joint to the foundation and falls alone (reported as collapsed)
+    expect(['broken', 'damaged', 'collapsed']).toContain(solo.status)
     expect(types(run(w2, 5))).not.toContain('collapse')
     for (let i = 0; i < 4; i++) strike(w, id, `c${i}`)
     const st = w.state(id)!
@@ -261,5 +262,31 @@ describe('structure', () => {
     expect(resolveStrings('pt-BR').eventLabels.stress).toBe('sobrecarga')
     expect(resolveStrings('pt-BR').jointKinds.rebar).toBe('vergalhão')
     expect(resolveStrings('en').jointKinds.resting).toBe('resting')
+  })
+
+  it('parts that fall in a collapse get status collapsed; broken parts stay broken; serialize, load and reset keep or clear it', () => {
+    const w = createDestruction()
+    const id = w.add(slabSpec([0, 1], { wall: true }))
+    expect(w.part(id, 'slab')!.status).toBe('intact')
+    strike(w, id, 'c0')
+    strike(w, id, 'c1')
+    const ev = run(w, 120)
+    const col = ev.find((e) => e.type === 'collapse')!
+    expect(col.type === 'collapse' && col.parts).toEqual(expect.arrayContaining(['slab', 'wall']))
+    expect(w.part(id, 'slab')!.status).toBe('collapsed')
+    expect(w.part(id, 'wall')!.status).toBe('collapsed')
+    expect(w.part(id, 'c0')!.status).toBe('broken')
+    expect(w.part(id, 'f0')!.status).not.toBe('collapsed')
+    // a collapsed part that is damaged further stays collapsed until it is lost
+    expect(resolveStrings('pt-BR').partStatus.collapsed).toBe('desabado')
+    expect(resolveStrings('en').partStatus.collapsed).toBe('collapsed')
+    const snap = JSON.parse(JSON.stringify(w.serialize()))
+    const w2 = createDestruction()
+    w2.load(snap)
+    expect(w2.part(id, 'slab')!.status).toBe('collapsed')
+    expect(types(run(w2, 5))).not.toContain('collapse')
+    expect(w2.part(id, 'wall')!.status).toBe('collapsed')
+    w.reset(id)
+    expect(w.state(id)!.parts.every((p) => p.status === 'intact')).toBe(true)
   })
 })

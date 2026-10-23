@@ -128,7 +128,8 @@ without any `structure` behave exactly as before.
 - **Overload**: above stress 1 a part takes `(stress - 1) * maxHp * 0.5` damage per second, emits `stress` (once per 0.5 s) and cascades; brittle
   parts `crack` from stress 0.8. Metal never fractures, so overloaded steel only reports stress.
 - **Collapse**: a part with no support path to an anchored part falls: it is cut from the supported pieces into its own group (index 1 or more) and
-  one `collapse` event lists the group. Non-structural parts that hang only on collapsed parts fall with them. Make the group its own object with
+  one `collapse` event lists the group, and every part in it that is not already lost gets `PartState.status === 'collapsed'` (kept through
+  `serialize`/`load`, cleared by `reset`; a part that later breaks becomes `broken`). Non-structural parts that hang only on collapsed parts fall with them. Make the group its own object with
   `splitGroup`.
 - `buildFrame({ spanX, spanZ, columnsX, columnsZ, height, floors, walls, roof, columnCapacity, ... })` returns a test structure: columns on
   foundations (`rebar`), beams, a slab per floor, optional brick walls (`mortar`) with a door opening, and a roof that rests (`resting`) on the top beams.
