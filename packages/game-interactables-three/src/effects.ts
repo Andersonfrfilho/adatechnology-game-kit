@@ -467,7 +467,7 @@ export function createEffects(THREE: ThreeLib, scene: ThreeNS.Object3D, options:
       tz /= tl
       // binormal = tangent x up, normal = tangent x binormal
       let bx = tz
-      let by = 0
+      const by = 0
       let bz = -tx
       const bl = Math.hypot(bx, bz)
       if (bl < 1e-4) {
