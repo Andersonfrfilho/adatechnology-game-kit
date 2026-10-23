@@ -80,7 +80,7 @@ Legenda: ✅ decidido (data e resposta), ⏳ aguardando o dono, 🔁 decidido pe
 
 | # | Decisão | O que as fontes dizem | Recomendação | Situação |
 |---|---|---|---|---|
-| E1 | Qual explosão vale | Laboratório ("versão final"), jogo (reduzida, com teto por área e LOD), SDK (mais fraca) | — | ⏳ o dono pediu uma **prévia lado a lado** das três (Laboratório, jogo, SDK) antes de decidir: `comparacoes/explosoes/` |
+| E1 | Qual explosão vale | Laboratório ("versão final"), jogo (reduzida, com teto por área e LOD), SDK (mais fraca) | — | ⏳ prévia lado a lado pronta em `comparacoes/explosoes/index.html` (Laboratório mais rico; jogo é a versão reduzida; no SDK fogo e fumaça não aparecem). Aguarda o dono escolher |
 | E2 | Dados de fluido | Sangue seca marrom `3B1D14` em 10 min (time) ou `4A0506` em 20 min (SDK); gasolina 60 s sem marca ou 120 s com marca | — | ✅ 2026-10-23: **configurável por jogo**; o SDK traz os valores do time (Padrão de Fluidos F1–F12) como padrão, e entram no `game-fluids` o filme que escorre, o respingo por ângulo, a bile e o sangue antigo |
 | E3 | Dois raios de explosão (letal e ferimento) | Em tudo do time; SDK tem um | Dados em `game-weapons`, dano em `game-characters` | 🔁 |
 | E4 | Pacote | — | `game-vfx` + `game-vfx-three`; destruição, fluidos e armas passam a usá-lo | 🔁 |
@@ -121,3 +121,12 @@ teste e da bancada de móveis é do three.js embutido, sem uso.
 | S1 | Pacote | `game-audio` genérico: síntese (ruído filtrado, osciladores, formantes), mixagem com compressor e reverb, atenuação por distância, limite de vozes e sons contínuos. Os sons de cada assunto ficam no pacote do assunto: armas no `game-weapons-three`, vozes no `game-characters-three`, bichos no `game-animals-three`, motor e rotor no `game-vehicles-three`, chuva no futuro clima | ⏳ |
 | S2 | Som de tiro | — | ✅ 2026-10-23: juntar a classe e o abafamento por distância do jogo com a energia do calibre do SDK |
 | S3 | Igual ao original | O golden do som compara os parâmetros gerados (frequência, volume, duração, filtros) para cada evento com semente fixa, já que não dá para comparar áudio por hash | 🔁 G3 |
+
+## 8. Itens a verificar
+
+- **Concreto armado e tijolo na destruição** (apontado pelo dono em 2026-10-23): um dos artefatos destrói estrutura de concreto armado e
+  alvenaria de tijolo com o comportamento certo, mas isso não aparece aplicado nas casas, **nem nos cenários de teste**, onde deveria.
+  Verificar qual artefato (provável Sala de testes de destruição ou área de casas), portar para `game-destruction` como material e
+  regra, e usar nas casas (`game-floorplan-structure`) e nos cenários.
+- **Partículas de explosão do SDK** sem aparecer na comparação (ver `comparacoes/explosoes/README.md`).
+- **Jogo publicado como "versão atual"** quebra ao carregar (`GameVegetation` ausente); a versão do site é a completa.

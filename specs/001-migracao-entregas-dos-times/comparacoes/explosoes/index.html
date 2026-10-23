@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Explosões lado a lado</title>
+<style>
+  :root { color-scheme: dark; --bg: #111311; --fg: #e6e7e1; --muted: #9da297; --line: #2e322d; --accent: #e0773f; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, sans-serif; padding: 20px max(16px, env(safe-area-inset-left)); }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  p { margin: 0 0 18px; color: var(--muted); max-width: 90ch; }
+  .wrap { overflow-x: auto; }
+  table { border-collapse: separate; border-spacing: 6px; }
+  th { font-weight: 600; text-align: left; color: var(--muted); font-size: 12px; letter-spacing: .06em; }
+  th.row { color: var(--fg); font-size: 14px; letter-spacing: 0; width: 150px; vertical-align: top; padding-top: 8px; }
+  th.row small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; line-height: 1.35; margin-top: 4px; }
+  img { width: 240px; height: 150px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); display: block; }
+</style>
+</head>
+<body>
+<h1>Granada: as três explosões lado a lado</h1>
+<p>Mesma câmera nas três (a do Laboratório: 18 m da explosão, de cima e de lado), mesma granada, capturada nos mesmos instantes depois da detonação. Gerado por <code>capturar.mjs</code> nesta pasta.</p>
+<div class="wrap"><table>
+<tr><th></th><th>0,08 s</th><th>0,25 s</th><th>0,5 s</th><th>1 s</th><th>2 s</th><th>4 s</th></tr>
+<tr><th class="row">Laboratório de Explosões<small>time de efeitos, "versão final"</small></th>
+ <td><img src="quadros/laboratorio-0_08.jpg" alt=""></td><td><img src="quadros/laboratorio-0_25.jpg" alt=""></td><td><img src="quadros/laboratorio-0_5.jpg" alt=""></td><td><img src="quadros/laboratorio-1.jpg" alt=""></td><td><img src="quadros/laboratorio-2.jpg" alt=""></td><td><img src="quadros/laboratorio-4.jpg" alt=""></td></tr>
+<tr><th class="row">Jogo (modo livre do site)<small>versão reduzida do Laboratório, com teto por área e menos detalhe de longe</small></th>
+ <td><img src="quadros/jogo-0_08.jpg" alt=""></td><td><img src="quadros/jogo-0_25.jpg" alt=""></td><td><img src="quadros/jogo-0_5.jpg" alt=""></td><td><img src="quadros/jogo-1.jpg" alt=""></td><td><img src="quadros/jogo-2.jpg" alt=""></td><td><img src="quadros/jogo-4.jpg" alt=""></td></tr>
+<tr><th class="row">SDK hoje<small>game-destruction-three, onExplode</small></th>
+ <td><img src="quadros/sdk-0_08.jpg" alt=""></td><td><img src="quadros/sdk-0_25.jpg" alt=""></td><td><img src="quadros/sdk-0_5.jpg" alt=""></td><td><img src="quadros/sdk-1.jpg" alt=""></td><td><img src="quadros/sdk-2.jpg" alt=""></td><td><img src="quadros/sdk-4.jpg" alt=""></td></tr>
+</table></div>
+</body>
+</html>

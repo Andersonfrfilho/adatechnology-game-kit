@@ -31,7 +31,14 @@ Antes de construir qualquer coisa (modelo 3D, animação, comportamento, efeito,
   jogo**, que consome os SDKs do game-kit.
 - three.js fica num adaptador `<lib>-three`, como `destruction-three`, `fluids-three`, `interactables-three` e `weapons-three`.
 
-## 3. Testes: contrato genérico, módulo específico por lib
+## 3. Os SDKs se compõem; o jogo só junta
+
+A ideia do kit (dono, 2026-10-23) é **um SDK usar os outros para formar os itens e os elementos do mapa e do jogo**, e o jogo usar tudo
+isso pronto. Exemplos: a casa (`game-floorplan-*`) usa os materiais e a estrutura da destruição (concreto armado, tijolo), os móveis
+interativos, o catálogo de itens para os achados e a vegetação para o quintal; a cidade (`game-urban`) usa as casas, os veículos e a
+multidão; a arma usa a destruição, os efeitos e o som. Antes de reimplementar algo dentro de um pacote, use o pacote que já faz aquilo.
+
+## 4. Testes: contrato genérico, módulo específico por lib
 
 - `game-test-room` e `game-contracts` têm **só contratos genéricos** (`TestableModule`, `ModuleArea`, `ModuleHost`, eventos de
   ferramenta). Nada de arma, carro ou móvel neles.
