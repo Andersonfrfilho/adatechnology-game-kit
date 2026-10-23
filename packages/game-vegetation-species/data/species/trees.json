@@ -1,0 +1,542 @@
+[
+ {
+  "id": "mango_tree",
+  "archetype": "broadleaf_tree",
+  "params": {
+   "height": 8.5,
+   "trunkRadius": 0.34,
+   "crownRadius": 4.6,
+   "crownShape": "spreading",
+   "branchLevels": 3,
+   "leafColor": [
+    "#1f5a2a",
+    "#2a6a30",
+    "#2f7434"
+   ],
+   "barkColor": "#5a4030",
+   "fruit": {
+    "colors": [
+     "#e8a02a",
+     "#d9602d",
+     "#c8d04a",
+     "#e8c040"
+    ],
+    "count": 16,
+    "radius": 0.17
+   },
+   "crownStyle": "dome",
+   "trunkFraction": 0.34
+  },
+  "tags": [
+   "tree",
+   "fruit",
+   "shade"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "yellow_ipe",
+  "archetype": "broadleaf_tree",
+  "params": {
+   "height": 9.5,
+   "trunkRadius": 0.26,
+   "crownRadius": 3.5,
+   "crownShape": "round",
+   "trunkFraction": 0.3,
+   "leafColor": [
+    "#5aa045",
+    "#4a9040",
+    "#68ac4c"
+   ],
+   "barkColor": "#7a6a58",
+   "bloom": {
+    "colors": [
+     "#f4c81e",
+     "#f6d43a",
+     "#ecb818"
+    ],
+    "seasons": [
+     "winter",
+     "spring"
+    ],
+    "replacesLeaves": true,
+    "density": 1
+   },
+   "crownStyle": "dome",
+   "clumpSize": 0.95
+  },
+  "tags": [
+   "tree",
+   "flowering",
+   "shade"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "pink_ipe",
+  "archetype": "broadleaf_tree",
+  "params": {
+   "height": 9.5,
+   "trunkRadius": 0.27,
+   "crownRadius": 3.5,
+   "crownShape": "round",
+   "trunkFraction": 0.3,
+   "leafColor": [
+    "#5aa045",
+    "#4a9040",
+    "#68ac4c"
+   ],
+   "barkColor": "#7d6e5c",
+   "bloom": {
+    "colors": [
+     "#d86aa8",
+     "#e88ac0",
+     "#c2549a"
+    ],
+    "seasons": [
+     "winter",
+     "spring"
+    ],
+    "replacesLeaves": true,
+    "density": 1
+   },
+   "crownStyle": "dome",
+   "clumpSize": 0.95
+  },
+  "tags": [
+   "tree",
+   "flowering",
+   "shade"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "jabuticaba_tree",
+  "archetype": "broadleaf_tree",
+  "params": {
+   "height": 5,
+   "trunkRadius": 0.2,
+   "crownRadius": 2.4,
+   "crownShape": "round",
+   "trunkFraction": 0.34,
+   "branchLevels": 3,
+   "leafColor": [
+    "#2e6e34",
+    "#3a7a3a",
+    "#357a38"
+   ],
+   "barkColor": "#b8a68c",
+   "fruit": {
+    "colors": [
+     "#6e2c92",
+     "#7d3aa4",
+     "#5e2480"
+    ],
+    "count": 380,
+    "radius": 0.085,
+    "onTrunk": true
+   },
+   "crownStyle": "cloud",
+   "clumpSize": 0.95
+  },
+  "tags": [
+   "tree",
+   "fruit"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "m",
+  "solid": true
+ },
+ {
+  "id": "flamboyant",
+  "archetype": "broadleaf_tree",
+  "params": {
+   "height": 8,
+   "trunkRadius": 0.3,
+   "crownRadius": 5.8,
+   "crownShape": "spreading",
+   "trunkFraction": 0.44,
+   "leafColor": [
+    "#6aa84a",
+    "#7ab858",
+    "#5a9a42"
+   ],
+   "barkColor": "#7a6a58",
+   "bloom": {
+    "colors": [
+     "#e0361e",
+     "#ec5a22",
+     "#d02a1c"
+    ],
+    "seasons": [
+     "spring",
+     "summer"
+    ],
+    "replacesLeaves": true,
+    "density": 0.78
+   },
+   "crownStyle": "umbrella"
+  },
+  "tags": [
+   "tree",
+   "flowering",
+   "shade"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "guava_tree",
+  "archetype": "broadleaf_tree",
+  "params": {
+   "height": 4.8,
+   "trunkRadius": 0.15,
+   "crownRadius": 2.6,
+   "crownShape": "round",
+   "trunkFraction": 0.3,
+   "leafColor": [
+    "#74ae4c",
+    "#82ba56",
+    "#68a248"
+   ],
+   "barkColor": "#b28c6c",
+   "fruit": {
+    "colors": [
+     "#d8e070",
+     "#e8d450",
+     "#c8dc5a"
+    ],
+    "count": 10,
+    "radius": 0.075
+   },
+   "crownStyle": "cloud"
+  },
+  "tags": [
+   "tree",
+   "fruit"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "m",
+  "solid": true
+ },
+ {
+  "id": "avocado_tree",
+  "archetype": "broadleaf_tree",
+  "params": {
+   "height": 8.5,
+   "trunkRadius": 0.26,
+   "crownRadius": 3.0,
+   "crownShape": "round",
+   "trunkFraction": 0.34,
+   "leafColor": [
+    "#1c5628",
+    "#266432",
+    "#215e2c"
+   ],
+   "barkColor": "#6a5444",
+   "fruit": {
+    "colors": [
+     "#1e2e14",
+     "#2c3c1a",
+     "#3a4a22"
+    ],
+    "count": 10,
+    "radius": 0.1
+   },
+   "crownStyle": "cloud"
+  },
+  "tags": [
+   "tree",
+   "fruit",
+   "shade"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "lemon_tree",
+  "archetype": "broadleaf_tree",
+  "params": {
+   "height": 3.6,
+   "trunkRadius": 0.13,
+   "crownRadius": 2.1,
+   "crownShape": "round",
+   "trunkFraction": 0.28,
+   "leafColor": [
+    "#70bc4a",
+    "#80c856",
+    "#62ac42"
+   ],
+   "barkColor": "#7a6a52",
+   "fruit": {
+    "colors": [
+     "#f6dc2c",
+     "#f0d020",
+     "#f8e450"
+    ],
+    "count": 18,
+    "radius": 0.075
+   },
+   "crownStyle": "cloud"
+  },
+  "tags": [
+   "tree",
+   "fruit"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "s",
+  "solid": true
+ },
+ {
+  "id": "pitanga_bush_tree",
+  "archetype": "broadleaf_tree",
+  "params": {
+   "height": 3.4,
+   "trunkRadius": 0.1,
+   "crownRadius": 1.9,
+   "crownShape": "round",
+   "trunkFraction": 0.22,
+   "branchLevels": 3,
+   "leafColor": [
+    "#5eaa44",
+    "#6eb850",
+    "#80c45c"
+   ],
+   "barkColor": "#8a6a50",
+   "fruit": {
+    "colors": [
+     "#d82a1a",
+     "#e8501e",
+     "#c01a18"
+    ],
+    "count": 40,
+    "radius": 0.04
+   },
+   "crownStyle": "cloud"
+  },
+  "tags": [
+   "tree",
+   "fruit",
+   "hedge"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "s",
+  "solid": true
+ },
+ {
+  "id": "sidewalk_ficus",
+  "archetype": "broadleaf_tree",
+  "params": {
+   "height": 7,
+   "trunkRadius": 0.22,
+   "crownRadius": 2.6,
+   "crownShape": "round",
+   "trunkFraction": 0.5,
+   "clipped": true,
+   "leafColor": [
+    "#1e6428",
+    "#256c2e",
+    "#206028"
+   ],
+   "barkColor": "#9a8a78",
+   "crownStyle": "sphere"
+  },
+  "tags": [
+   "tree",
+   "street",
+   "shade"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "m",
+  "solid": true
+ },
+ {
+  "id": "oak_like",
+  "archetype": "broadleaf_tree",
+  "params": {
+   "height": 10,
+   "trunkRadius": 0.45,
+   "crownRadius": 5,
+   "crownShape": "round",
+   "trunkFraction": 0.3,
+   "deciduous": true,
+   "leafColor": [
+    "#4a8a38",
+    "#5e9c3e",
+    "#72a032",
+    "#3a7a34"
+   ],
+   "barkColor": "#5a4636",
+   "crownStyle": "lumpy"
+  },
+  "tags": [
+   "tree",
+   "shade"
+  ],
+  "climate": [
+   "temperate"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "weeping_willow",
+  "archetype": "broadleaf_tree",
+  "params": {
+   "height": 11.5,
+   "trunkRadius": 0.34,
+   "crownRadius": 4.3,
+   "crownShape": "weeping",
+   "trunkFraction": 0.28,
+   "deciduous": true,
+   "leafColor": [
+    "#8ab040",
+    "#9ac053",
+    "#7aa238"
+   ],
+   "barkColor": "#4a3c30",
+   "crownStyle": "willow"
+  },
+  "tags": [
+   "tree",
+   "shade"
+  ],
+  "climate": [
+   "temperate"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "araucaria",
+  "archetype": "conifer",
+  "params": {
+   "shape": "candelabra",
+   "height": 16,
+   "radius": 5,
+   "tiers": 6,
+   "trunkRadius": 0.3,
+   "leafColor": "#3d6e3a",
+   "barkColor": "#5a4838"
+  },
+  "tags": [
+   "tree",
+   "conifer"
+  ],
+  "climate": [
+   "subtropical",
+   "temperate"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "pine",
+  "archetype": "conifer",
+  "params": {
+   "shape": "cone",
+   "height": 12,
+   "radius": 2.8,
+   "tiers": 10,
+   "trunkRadius": 0.26,
+   "leafColor": "#37803f",
+   "barkColor": "#6b4b34"
+  },
+  "tags": [
+   "tree",
+   "conifer"
+  ],
+  "climate": [
+   "temperate"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "eucalyptus",
+  "archetype": "broadleaf_tree",
+  "params": {
+   "height": 16,
+   "trunkRadius": 0.45,
+   "crownRadius": 4.2,
+   "crownShape": "round",
+   "trunkFraction": 0.58,
+   "leafColor": [
+    "#8c9f6a",
+    "#7d9460",
+    "#9aab74"
+   ],
+   "barkColor": "#a89a82",
+   "crownStyle": "sparse_high"
+  },
+  "tags": [
+   "tree",
+   "street"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "dead_tree",
+  "archetype": "dead_tree",
+  "params": {
+   "height": 6,
+   "trunkRadius": 0.24,
+   "crownRadius": 2.4
+  },
+  "tags": [
+   "tree",
+   "dead"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate",
+   "arid"
+  ],
+  "size": "m",
+  "solid": true
+ }
+]

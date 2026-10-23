@@ -20,6 +20,8 @@ concatenates plain scripts can use them without a bundler.
 | [`@adatechnology/game-devtools`](packages/game-devtools) | `GameDevtools` | Free-fly mode, position HUD, notes and marks, control panel, scenarios runner and entity labels |
 | [`@adatechnology/game-infection`](packages/game-infection) | `GameInfection` | Deterministic abstract epidemic model by regions (zombies, plague, rumours) |
 | [`@adatechnology/game-props3d`](packages/game-props3d) | `GameProps3d` | Procedural low-poly props (decor, furniture, yard, house state) that only describe primitives through a host-provided api |
+| [`@adatechnology/game-vegetation`](packages/game-vegetation) | `GameVegetation` | Deterministic procedural low-poly plants (trees, palms, shrubs, flowers, cacti, grasses, vines), LODs, scatter, lot merging and an optional three.js adapter with shader wind |
+| [`@adatechnology/game-vegetation-species`](packages/game-vegetation-species) | `GameVegetationSpecies` | JSON content pack of 71 species (en / pt-BR) with regional planting tables for `game-vegetation` |
 | [`@adatechnology/game-floorplan`](packages/game-floorplan) | `GameFloorplan` | Seeded procedural floor plans, lots, furniture slots, colour palettes, state plugins and urban zoning (engine), plus an offline 2D viewer |
 | [`@adatechnology/game-floorplan-residential`](packages/game-floorplan-residential) | `GameFloorplanResidential` | Residential content for the floor plan engine: houses, apartments, furniture, decor, region `br` |
 | [`@adatechnology/game-floorplan-commercial`](packages/game-floorplan-commercial) | `GameFloorplanCommercial` | Commercial content for the floor plan engine: market and pharmacy, commercial and industrial zones |

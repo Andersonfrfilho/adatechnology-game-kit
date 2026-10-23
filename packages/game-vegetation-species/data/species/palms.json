@@ -1,0 +1,161 @@
+[
+ {
+  "id": "coconut_palm",
+  "archetype": "palm",
+  "params": {
+   "variant": "coconut",
+   "height": 7.5,
+   "trunkRadius": 0.2,
+   "frondCount": 18,
+   "frondLength": 3.4,
+   "fruit": {
+    "color": "#6f8a2e",
+    "count": 9,
+    "radius": 0.14
+   }
+  },
+  "tags": [
+   "tree",
+   "palm",
+   "fruit"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "royal_palm",
+  "archetype": "palm",
+  "params": {
+   "variant": "royal",
+   "height": 12,
+   "trunkRadius": 0.28,
+   "frondCount": 16,
+   "frondLength": 4.6
+  },
+  "tags": [
+   "tree",
+   "palm",
+   "street"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "fan_palm",
+  "archetype": "palm",
+  "params": {
+   "variant": "fan",
+   "height": 3.2,
+   "trunkRadius": 0.2,
+   "frondCount": 10,
+   "frondLength": 2.3
+  },
+  "tags": [
+   "tree",
+   "palm"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "arid"
+  ],
+  "size": "m",
+  "solid": true
+ },
+ {
+  "id": "areca_palm",
+  "archetype": "palm",
+  "params": {
+   "variant": "areca",
+   "height": 2.8,
+   "stems": 7,
+   "trunkRadius": 0.03
+  },
+  "tags": [
+   "palm",
+   "shrub",
+   "indoor"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "m",
+  "solid": true
+ },
+ {
+  "id": "date_palm",
+  "archetype": "palm",
+  "params": {
+   "variant": "date",
+   "height": 6.5,
+   "trunkRadius": 0.26,
+   "fruit": {
+    "color": "#e8902a",
+    "count": 22,
+    "radius": 0.03
+   }
+  },
+  "tags": [
+   "tree",
+   "palm",
+   "fruit"
+  ],
+  "climate": [
+   "arid",
+   "tropical",
+   "subtropical"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "banana_plant",
+  "archetype": "banana",
+  "params": {
+   "height": 3.8,
+   "leafCount": 8
+  },
+  "tags": [
+   "tree",
+   "palm",
+   "tropical"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "m",
+  "solid": true
+ },
+ {
+  "id": "banana_with_bunch",
+  "archetype": "banana",
+  "params": {
+   "height": 3.8,
+   "leafCount": 8,
+   "bunch": true,
+   "bud": true
+  },
+  "tags": [
+   "tree",
+   "palm",
+   "fruit",
+   "tropical"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "m",
+  "solid": true
+ }
+]
