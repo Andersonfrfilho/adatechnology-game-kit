@@ -1,0 +1,167 @@
+[
+  {
+    "id": "22lr",
+    "label": ".22 LR",
+    "diameter": 5.7,
+    "bulletGrams": 2.6,
+    "muzzleSpeed": 350,
+    "dragPer100m": 0.15,
+    "kind": "rimfire"
+  },
+  {
+    "id": "9x19",
+    "label": "9×19 mm",
+    "diameter": 9,
+    "bulletGrams": 7.5,
+    "muzzleSpeed": 365,
+    "dragPer100m": 0.2,
+    "kind": "fmj"
+  },
+  {
+    "id": "38spl",
+    "label": ".38 Special",
+    "diameter": 9.1,
+    "bulletGrams": 10.2,
+    "muzzleSpeed": 247,
+    "dragPer100m": 0.2,
+    "kind": "fmj"
+  },
+  {
+    "id": "357mag",
+    "label": ".357 Magnum",
+    "diameter": 9.1,
+    "bulletGrams": 10.2,
+    "muzzleSpeed": 396,
+    "dragPer100m": 0.18,
+    "kind": "hp"
+  },
+  {
+    "id": "40sw",
+    "label": ".40 S&W",
+    "diameter": 10.2,
+    "bulletGrams": 11.7,
+    "muzzleSpeed": 310,
+    "dragPer100m": 0.2,
+    "kind": "fmj"
+  },
+  {
+    "id": "45acp",
+    "label": ".45 ACP",
+    "diameter": 11.5,
+    "bulletGrams": 14.9,
+    "muzzleSpeed": 254,
+    "dragPer100m": 0.2,
+    "kind": "fmj"
+  },
+  {
+    "id": "380acp",
+    "label": ".380 ACP",
+    "diameter": 9,
+    "bulletGrams": 6.2,
+    "muzzleSpeed": 295,
+    "dragPer100m": 0.22,
+    "kind": "fmj"
+  },
+  {
+    "id": "5_56x45",
+    "label": "5.56×45 mm",
+    "diameter": 5.7,
+    "bulletGrams": 4,
+    "muzzleSpeed": 935,
+    "dragPer100m": 0.1,
+    "kind": "fmj"
+  },
+  {
+    "id": "7_62x39",
+    "label": "7.62×39 mm",
+    "diameter": 7.9,
+    "bulletGrams": 8,
+    "muzzleSpeed": 725,
+    "dragPer100m": 0.1,
+    "kind": "fmj"
+  },
+  {
+    "id": "7_62x51",
+    "label": "7.62×51 mm (.308)",
+    "diameter": 7.8,
+    "bulletGrams": 9.7,
+    "muzzleSpeed": 850,
+    "dragPer100m": 0.08,
+    "kind": "fmj"
+  },
+  {
+    "id": "338lapua",
+    "label": ".338 Lapua Magnum",
+    "diameter": 8.6,
+    "bulletGrams": 16.2,
+    "muzzleSpeed": 903,
+    "dragPer100m": 0.06,
+    "kind": "fmj"
+  },
+  {
+    "id": "50bmg",
+    "label": ".50 BMG",
+    "diameter": 12.7,
+    "bulletGrams": 42,
+    "muzzleSpeed": 925,
+    "dragPer100m": 0.05,
+    "kind": "ap"
+  },
+  {
+    "id": "12ga_00buck",
+    "label": "12 ga 00 buck",
+    "diameter": 8.4,
+    "bulletGrams": 3.5,
+    "muzzleSpeed": 414,
+    "pellets": 9,
+    "dragPer100m": 0.45,
+    "kind": "buck"
+  },
+  {
+    "id": "12ga_slug",
+    "label": "12 ga slug",
+    "diameter": 18.5,
+    "bulletGrams": 28,
+    "muzzleSpeed": 463,
+    "dragPer100m": 0.3,
+    "kind": "slug"
+  },
+  {
+    "id": "12ga_birdshot",
+    "label": "12 ga birdshot",
+    "diameter": 2.4,
+    "bulletGrams": 0.2,
+    "muzzleSpeed": 400,
+    "pellets": 90,
+    "dragPer100m": 0.6,
+    "kind": "birdshot"
+  },
+  {
+    "id": "20ga_buck",
+    "label": "20 ga buck",
+    "diameter": 6.9,
+    "bulletGrams": 1.3,
+    "muzzleSpeed": 400,
+    "pellets": 20,
+    "dragPer100m": 0.5,
+    "kind": "buck"
+  },
+  {
+    "id": "arrow",
+    "label": "Arrow (compound bow)",
+    "diameter": 7,
+    "bulletGrams": 25,
+    "muzzleSpeed": 90,
+    "dragPer100m": 0.12,
+    "kind": "arrow"
+  },
+  {
+    "id": "crossbow_bolt",
+    "label": "Crossbow bolt",
+    "diameter": 8,
+    "bulletGrams": 20,
+    "muzzleSpeed": 122,
+    "dragPer100m": 0.12,
+    "kind": "bolt"
+  }
+]
