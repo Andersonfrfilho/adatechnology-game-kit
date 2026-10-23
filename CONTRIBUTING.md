@@ -54,6 +54,11 @@ pnpm build && pnpm test && pnpm typecheck && pnpm lint
 - Commits are small and logical, with English messages (conventional style is welcome: `feat(game-camera): ...`, `fix(...)`, `chore: ...`, `docs: ...`).
 - A package ported from another codebase ships a `MIGRATION.md` with a complete old-name to new-name table (API names, options, fields and data ids).
 
+### CI
+
+- CI runs `lint`, `typecheck` and one `test` job per package in parallel; the `ci-ok` job aggregates them into a single required check, and Release starts only after the whole workflow succeeds.
+- If a package's tests get slow, split them: add it to the `SHARDS` map in the `matrix` job of `.github/workflows/ci.yml` (for example `{"@adatechnology/game-vehicles-fleet":4}`) and CI runs it as N `vitest --shard` jobs.
+
 ### Releasing
 
 - Every change adds a changeset with a semver bump: `patch` (fixes), `minor` (features) or `major` (breaking). While a package is 0.x, a `minor` may contain breaking changes.
