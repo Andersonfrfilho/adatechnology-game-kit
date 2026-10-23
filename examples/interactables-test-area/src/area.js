@@ -318,6 +318,25 @@ function analyse(hh, type, GT) {
     const base = dominant === 'emissive' ? 'screen' : material
     pieces.push({ id: unique(base), indices: c.indices, box: c.box, vol: c.vol, material, key: dominant, mover: false })
   }
+  // objects drawn only as wires (conduit runs) have no primitives: each wire is one piece, a box around its points
+  if (!pieces.length) {
+    for (const w of spec.wires ?? []) {
+      if (!w.points || w.points.length < 2) continue
+      const r = w.radius ?? 0.01
+      const lo = [Infinity, Infinity, Infinity]
+      const hi = [-Infinity, -Infinity, -Infinity]
+      let len = 0
+      w.points.forEach((q, i) => {
+        for (let k = 0; k < 3; k++) {
+          lo[k] = Math.min(lo[k], q[k] - r)
+          hi[k] = Math.max(hi[k], q[k] + r)
+        }
+        if (i) len += Math.hypot(q[0] - w.points[i - 1][0], q[1] - w.points[i - 1][1], q[2] - w.points[i - 1][2])
+      })
+      const material = spec.destruction?.material ?? 'plastic'
+      pieces.push({ id: unique(w.kind === 'conduit' ? 'conduit' : w.kind), indices: [], box: [...lo, ...hi], vol: Math.PI * r * r * len, material, key: 'plain', mover: false })
+    }
+  }
   const movers = []
   for (const p of spec.parts ?? []) {
     const r = rec.parts.get(p.id)

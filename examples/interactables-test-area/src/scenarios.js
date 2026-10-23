@@ -22,24 +22,49 @@ export function buildScenarios(locale, analysisOf) {
   }
   /** A part that came loose from its object (its hinge, screws or clips broke) is no longer one of the object's parts. */
   const gone = (room, id, pid) => !(room.world.state(id)?.parts ?? []).some((p) => p.id === pid)
+  /**
+   * Where a joint sits: the destruction world puts it at the middle of the overlap of its two parts' boxes, and a hit wears only the joints within
+   * 6 cm of where it lands. So hitting a hinge, screw or clip means aiming at it (not at the middle of the door). Returns a pseudo part to shoot at.
+   */
+  const jointTarget = (type, partId) => {
+    const d = analysisOf(type).destructible
+    const a = d.parts.find((p) => p.id === partId)
+    const j = (d.joints ?? []).find((q) => q.a === partId || q.b === partId)
+    const b = d.parts.find((p) => p.id === (j.a === partId ? j.b : j.a))
+    const box = (p) => p.position.map((c, k) => [c - p.shape.size[k] / 2, c + p.shape.size[k] / 2])
+    const A = box(a)
+    const B = box(b)
+    const pos = [0, 1, 2].map((k) => (Math.max(A[k][0], B[k][0]) + Math.min(A[k][1], B[k][1])) / 2)
+    return { id: `${partId}~joint`, position: pos, shape: { size: [0, 0, 0] } }
+  }
   const sc = (id, name, run) => ({ id: `furniture_${id}`, name, run })
 
   return [
-    sc('fridge_door_hinge', T('Geladeira: abre a porta e atira nela, a dobradiça quebra e a porta cai', 'Fridge: open the door and shoot it, the hinge breaks and the door falls'), ({ room, step, expect }) => {
+    sc('fridge_door_hinge', T('Geladeira: abre a porta, atira na dobradiça e acerta com uma marreta, a dobradiça quebra e a porta cai', 'Fridge: open the door, shoot the hinge and hit it with a sledge, the hinge breaks and the door falls'), ({ room, step, expect }) => {
       const id = spawn(room, 'fridge')
       const so = room.spawned().find((s) => s.objectId === id)
-      const door = specPart('fridge', 'door_fridge')
+      const hinge = jointTarget('fridge', 'door_fridge')
       expect(room.playAnimation('open_door_fridge', id), T('Clipe "open_door_fridge" tocou', 'Clip "open_door_fridge" played'))
       step(1.3)
       const turned = Math.abs(so.root.getObjectByName('door_fridge').rotation.y)
       expect(turned > 1, T(`Porta aberta pelo clipe: girou ${n1(turned)} rad (esperado: mais que 1,0)`, `Door opened by the clip: turned ${n1(turned)} rad (expected: more than 1.0)`), { turned })
+      // a bullet only wears a joint within 6 cm of where it lands and a pistol round has little left after a steel door (about 3 of the hinge's
+      // 120 points a shot): shooting the hinge marks it, it takes a heavy blow to tear the door off
       room.setTool('pistol_9mm')
-      let shots = 0
-      for (; shots < 10 && !gone(room, id, 'door_fridge'); shots++) shoot(room, step, door)
+      for (let i = 0; i < 3; i++) shoot(room, step, hinge)
+      const hinges = () => (room.world.state(id)?.joints ?? []).filter((j) => j.id.startsWith('door_fridge'))
+      const worn = hinges().some((j) => j.hp < j.maxHp)
+      expect(worn, T('Os tiros na dobradiça a desgastaram', 'The shots at the hinge wore it'), { hinges: hinges().map((j) => j.hp) })
+      const c = world(hinge)
+      let blows = 0
+      for (; blows < 6 && !gone(room, id, 'door_fridge'); blows++) {
+        room.world.hitPart(id, 'door_fridge', { type: 'blunt', point: c, direction: [0, 0, -1], energy: 260, radius: 0.08, source: 'test' })
+        step(0.3)
+      }
       step(1.5)
       const detach = room.log.entries({ type: 'detach', objectId: id }).length
       const falling = room.renderer.pieces().length
-      expect(gone(room, id, 'door_fridge') && falling >= 1, T(`Porta solta após ${shots} tiro(s): ${falling} peça(s) solta(s), ${detach} linha(s) de soltura no log (esperado: porta fora do corpo, 1 peça solta, 1 linha)`, `Door off after ${shots} shot(s): ${falling} loose piece(s), ${detach} detach line(s) in the log (expected: door out of the body, 1 loose piece, 1 line)`), { shots, falling, detach })
+      expect(gone(room, id, 'door_fridge') && falling >= 1, T(`Porta solta após 3 tiro(s) e ${blows} golpe(s): ${falling} peça(s) solta(s), ${detach} linha(s) de soltura no log (esperado: porta fora do corpo, 1 peça solta, 1 linha)`, `Door off after 3 shot(s) and ${blows} blow(s): ${falling} loose piece(s), ${detach} detach line(s) in the log (expected: door out of the body, 1 loose piece, 1 line)`), { blows, falling, detach })
     }),
 
     sc('drawer_dropped', T('Cômoda: gaveta puxada e derrubada, o trilho solta e ela cai', 'Dresser: a drawer pulled out and dropped, the slide lets go and it falls'), ({ room, step, expect }) => {
