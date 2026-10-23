@@ -1,9 +1,11 @@
+import { mergeColliders } from './colliders'
 import { fitsSlot, generateLoot } from './loot'
 import { format, resolveStrings } from './locale'
 import { clamp, dist3, localToWorld, rotateAxis, rotY, worldToLocal } from './math'
 import type {
   ActiveEmitter,
   BurnerSpec,
+  ColliderOptions,
   DeviceSpec,
   FixtureSpec,
   FuelSourceSpec,
@@ -15,9 +17,11 @@ import type {
   SeatResult,
   SoftSpec,
   TankSpec,
+  TargetOptions,
   Transform,
   Vec3,
   World,
+  WorldCollider,
   WorldEvent,
   WorldObject,
   WorldOptions,
@@ -554,6 +558,30 @@ export function createWorld(options: WorldOptions = {}): World {
     if (on && !powered) message('no_power')
   }
 
+  function setDevice(objectId: string, deviceId: string, on: boolean): boolean {
+    const f = getDevice(objectId, deviceId)
+    if (!f) return false
+    if (f.d.on !== on) setDeviceOn(f.o, f.d, on)
+    return true
+  }
+
+  function setFixture(objectId: string, fixtureId: string, on: boolean): boolean {
+    const fx = objs.get(objectId)?.fixtures.get(fixtureId)
+    if (!fx) return false
+    if (fx.on !== on) toggleFixture(objs.get(objectId) as ObjState, fixtureId)
+    return fx.on === on
+  }
+
+  function setBurner(objectId: string, burnerId: string, on: boolean): boolean {
+    const o = objs.get(objectId)
+    const b = o?.burners.get(burnerId)
+    if (!o || !b) return false
+    const isOn = b.on || b.lit
+    if (on === isOn) return true
+    if (!on) return toggleBurner(o, burnerId)
+    return b.spec.needsIgnition ? ignite(o, burnerId) : toggleBurner(o, burnerId)
+  }
+
   function resolveDevice(o: ObjState, id: string): { o: ObjState; d: DeviceState } | null {
     if (id.includes(':')) {
       const f = findGlobal(id, (oo, local) => oo.devices.get(local))
@@ -902,6 +930,8 @@ export function createWorld(options: WorldOptions = {}): World {
     for (const d of spec.devices ?? []) {
       claim(d.part)
       const pos = d.part ? partPos(d.part, [0, 1, 0]) : (d.plug ?? [0, 1, 0])
+      // a hard-wired lamp (circuit, no plug, no part to press) is driven by switches and `setDevice`: it never steals the interact key
+      if (d.kind === 'lamp' && !d.part && !d.plug && d.electric !== false) continue
       out.push({ id: `device.${d.id}`, pos, action: { do: 'toggle_device', device: d.id }, label: partLabel(d.part) })
       if (d.kind === 'screen' && (d.channels ?? 1) > 1) out.push({ id: `channel.${d.id}`, pos, action: { do: 'cycle_device', device: d.id }, label: '' })
     }
@@ -946,7 +976,7 @@ export function createWorld(options: WorldOptions = {}): World {
     return table[`type.${o.spec.type}`] ?? humanize(o.spec.type)
   }
 
-  function labelOf(o: ObjState, i: InteractionSpec): string {
+  function promptOf(o: ObjState, i: InteractionSpec): { label: string; verb: string; object: string } {
     const a = i.action
     let state: string | null = null
     let def = ''
@@ -1029,7 +1059,57 @@ export function createWorld(options: WorldOptions = {}): World {
       if (state && table[`${i.label}.${state}`] !== undefined) key = `${i.label}.${state}`
       else if (table[i.label] !== undefined) key = i.label
     }
-    return t(key, { name: typeName(o), circuit: a.do === 'toggle_breaker' ? (a.name ?? a.circuit) : '' })
+    const vars = { name: typeName(o), circuit: a.do === 'toggle_breaker' ? (a.name ?? a.circuit) : '' }
+    const label = t(key, vars)
+    // structured prompt: explicit `<key>.verb` / `<key>.object` entries win; otherwise the first word is the verb and the rest the object
+    let verb: string
+    let object: string
+    if (table[`${key}.verb`] !== undefined) {
+      verb = t(`${key}.verb`, vars)
+      object = table[`${key}.object`] ? t(`${key}.object`, vars) : vars.name
+    } else {
+      const sp = label.indexOf(' ')
+      verb = sp < 0 ? label : label.slice(0, sp)
+      object = sp < 0 ? vars.name : label.slice(sp + 1)
+    }
+    return { label, verb, object }
+  }
+
+  /** Locale key of the reason an interaction cannot be used right now, or null when it can. */
+  function unavailableReason(o: ObjState, i: InteractionSpec): string | null {
+    const a = i.action
+    if (!requirementMet(i)) return 'requires_open'
+    switch (a.do) {
+      case 'toggle_part': {
+        const p = o.parts.get(a.part)
+        return p && gated(o, p) ? 'requires_open' : null
+      }
+      case 'open_container': {
+        const c = containerOf(o, a.container)
+        const p = c?.access ? o.parts.get(c.access) : undefined
+        return p && gated(o, p) ? 'requires_open' : null
+      }
+      case 'toggle_breaker': {
+        const rocker = a.part ? o.parts.get(a.part) : undefined
+        return rocker && gated(o, rocker) ? 'requires_open' : null
+      }
+      case 'take':
+      case 'read':
+        return accessible(o.id, a.container) ? null : 'requires_open'
+      case 'ignite':
+        return o.burners.get(a.burner)?.lit ? 'already_lit' : null
+      case 'toggle_burner': {
+        const b = o.burners.get(a.burner)
+        return !b?.spec.needsIgnition || b.lit ? null : 'needs_ignition'
+      }
+      case 'cycle_device': {
+        const d = o.devices.get(a.device)
+        if (!d || !d.on) return 'turn_on_first'
+        return devicePowered(o, d) ? null : 'no_power'
+      }
+      default:
+        return null
+    }
   }
 
   function requirementMet(i: InteractionSpec): boolean {
@@ -1038,33 +1118,26 @@ export function createWorld(options: WorldOptions = {}): World {
     return !!p && targetIsOpen(p)
   }
 
-  function applicable(o: ObjState, i: InteractionSpec): boolean {
-    const a = i.action
-    if (!requirementMet(i)) return false
-    if (a.do === 'toggle_breaker' && a.part) {
-      const rocker = o.parts.get(a.part)
-      if (rocker && gated(o, rocker)) return false
-    }
-    if (a.do === 'take' || a.do === 'read') return accessible(o.id, a.container)
-    if (a.do === 'ignite') return !o.burners.get(a.burner)?.lit
-    if (a.do === 'toggle_burner') {
-      const b = o.burners.get(a.burner)
-      return !b?.spec.needsIgnition || !!b.lit
-    }
-    return true
-  }
-
   function interactablesOf(o: ObjState): Array<{ item: Interactable; spec: InteractionSpec; o: ObjState }> {
     return o.interactions.map((i) => {
       const id = gid(o, i.id)
+      const p = promptOf(o, i)
       const item: Interactable = {
         id,
         object: o.id,
         kind: i.action.do,
         pos: toWorld(o, i.pos),
         radius: i.radius ?? DEFAULT_RADIUS,
-        label: labelOf(o, i),
+        label: p.label,
+        verb: p.verb,
+        noun: p.object,
+        available: true,
         act: (actor) => act(id, actor),
+      }
+      const reason = unavailableReason(o, i) ?? (options.canInteract?.(item, DEFAULT_ACTOR) === false ? 'locked' : null)
+      if (reason) {
+        item.available = false
+        item.reason = reason
       }
       return { item, spec: i, o }
     })
@@ -1076,10 +1149,7 @@ export function createWorld(options: WorldOptions = {}): World {
     return out
   }
 
-  function target(
-    eye: { x: number; y: number; z: number; yaw: number; pitch: number },
-    opts: { reach?: number; cone?: number } = {},
-  ): Interactable | null {
+  function target(eye: { x: number; y: number; z: number; yaw: number; pitch: number }, opts: TargetOptions = {}): Interactable | null {
     const reach = opts.reach ?? 1.8
     const cone = opts.cone ?? 0.45
     const dir: Vec3 = [-Math.sin(eye.yaw) * Math.cos(eye.pitch), Math.sin(eye.pitch), -Math.cos(eye.yaw) * Math.cos(eye.pitch)]
@@ -1087,7 +1157,9 @@ export function createWorld(options: WorldOptions = {}): World {
     let bestScore = Infinity
     for (const o of objs.values()) {
       for (const e of interactablesOf(o)) {
-        if (!applicable(o, e.spec)) continue
+        if (!e.item.available && !opts.includeUnavailable) continue
+        if (opts.kinds && !opts.kinds.includes(e.item.kind)) continue
+        if (opts.filter && !opts.filter(e.item)) continue
         const v: Vec3 = [e.item.pos[0] - eye.x, e.item.pos[1] - eye.y, e.item.pos[2] - eye.z]
         const d = Math.hypot(v[0], v[1], v[2])
         if (d > reach) continue
@@ -1254,8 +1326,9 @@ export function createWorld(options: WorldOptions = {}): World {
     return out.sort((a, b) => a.distance - b.distance).slice(0, count)
   }
 
-  function colliders() {
-    const out: ReturnType<World['colliders']> = []
+  function colliders(opts: ColliderOptions = {}): WorldCollider[] {
+    const out: WorldCollider[] = []
+    const fixed: WorldCollider[] = []
     for (const o of objs.values()) {
       const tr = o.public.transform
       for (const c of o.spec.colliders ?? []) {
@@ -1266,7 +1339,7 @@ export function createWorld(options: WorldOptions = {}): World {
           if (f && f.angle !== 0 && Math.abs(f.axis[1]) >= 0.5) extra = f.angle * Math.sign(f.axis[1])
         }
         const center = toWorld(o, applyPart(o, c.part, c.center))
-        out.push({
+        ;(c.part ? out : fixed).push({
           id: gid(o, c.id),
           object: o.id,
           cx: center[0],
@@ -1279,7 +1352,8 @@ export function createWorld(options: WorldOptions = {}): World {
         })
       }
     }
-    return out
+    if (opts.merge) return [...mergeColliders(fixed, { gap: opts.gap, slack: opts.slack }), ...out]
+    return [...fixed, ...out]
   }
 
   // ------------------------------------------------------------------ update
@@ -1509,6 +1583,9 @@ export function createWorld(options: WorldOptions = {}): World {
     target,
     act,
     partT: (objectId, partId) => objs.get(objectId)?.parts.get(partId)?.t ?? 0,
+    setDevice,
+    setFixture,
+    setBurner,
     setPart: (objectId, partId, targetT, instant) => {
       const o = objs.get(objectId)
       if (o) setPartTarget(o, partId, targetT, instant)

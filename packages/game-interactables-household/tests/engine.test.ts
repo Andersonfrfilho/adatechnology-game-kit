@@ -96,7 +96,17 @@ describe('every type in the engine', () => {
       for (const it of all) {
         expect(it.label, it.id).toBeTruthy()
         expect(it.label, it.id).not.toMatch(/^prompt\./)
+        // structured prompt: a verb and a noun, never a key hint, and together they spell the label
+        expect(it.verb, it.id).toBeTruthy()
+        expect(it.noun, it.id).toBeTruthy()
+        expect(it.label, it.id).not.toMatch(/^E[:\s]/)
+        expect(it.verb, it.id).not.toMatch(/^prompt\./)
+        expect(it.noun, it.id).not.toMatch(/^prompt\./)
+        expect(it.available, it.id).toBeTypeOf('boolean')
       }
+      for (const [k, v] of Object.entries(hh.strings[locale])) expect(v, k).not.toMatch(/^E:/)
+      const fridge = all.find((i) => i.id === 'fridge:part.door')
+      if (fridge) expect(fridge.verb).toBe(locale === 'en' ? 'Open' : 'Abrir')
       for (let k = 0; k < 20; k++) w.update(0.1)
       // every container fills from loot or explicit contents without losing slots
       for (const o of w.objects()) for (const c of o.spec.containers ?? []) expect(w.contents(o.id, c.id).length, `${o.id}:${c.id}`).toBe(c.slots.length)
@@ -182,5 +192,21 @@ describe('electrical panel and power meter', () => {
     const prims = b.rec.parts.door.primitives
     expect(prims.some((p) => p.kind === 'plane' && p.material === 'glass')).toBe(true)
     expect(prims.some((p) => p.kind === 'cylinder')).toBe(true)
+  })
+})
+
+describe('structured prompts', () => {
+  it('splits "Turn the tap off" into verb "Turn off" and noun "the tap", and pt-BR by first word', () => {
+    for (const [locale, verb, noun] of [['en', 'Turn off', 'the tap'], ['pt-BR', 'Fechar', 'a torneira']] as const) {
+      const hh = pack('br', locale)
+      const w = createWorld({ locale, strings: hh.strings, items: hh.items, loot: hh.loot, seed: 's' })
+      w.add('k', build('sink_kitchen', { seed: 1 }).spec, { x: 0, y: 0, z: 0, ry: 0 })
+      const tap = w.interactables().find((i) => i.kind === 'toggle_fixture' && /tap/.test(i.id))
+      expect(tap, locale).toBeTruthy()
+      expect(w.setFixture('k', w.get('k')!.spec.fixtures![0]!.id, true)).toBe(true)
+      const on = w.interactables().find((i) => i.id === tap!.id)!
+      expect(on.verb).toBe(verb)
+      expect(on.noun).toBe(noun)
+    }
   })
 })

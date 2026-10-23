@@ -508,9 +508,54 @@ export interface Interactable {
   kind: Action['do']
   pos: Vec3
   radius: number
-  /** Current localized prompt. */
+  /** Current localized prompt as one phrase (`verb` + `object`). It never contains a key hint such as "E:"; the host adds its own. */
   label: string
+  /** Localized action word only, e.g. "Open" / "Abrir". */
+  verb: string
+  /** Localized thing the verb applies to, e.g. "the fridge" / "a geladeira" (falls back to the object type name). Named `noun` because `object` is the owning object's id. */
+  noun: string
+  /** False when the interaction cannot be used right now (see `reason`). `world.target` skips these unless `includeUnavailable`. */
+  available: boolean
+  /** Locale key explaining why it is unavailable (`requires_open`, `no_power`, `locked`, `already_lit`, `needs_ignition`, `turn_on_first`); `world.t(reason)` is the text. */
+  reason?: string
   act(actor?: string): boolean
+}
+
+/** Options of `world.target`. */
+export interface TargetOptions {
+  /** Meters from the eye (default 1.8). */
+  reach?: number
+  /** Half angle of the view cone, radians (default 0.45). */
+  cone?: number
+  /** Only candidates for which this returns true are considered. */
+  filter?: (interactable: Interactable) => boolean
+  /** Only candidates whose `kind` is in this list are considered. */
+  kinds?: Action['do'][]
+  /** Also consider interactions that are not available right now (default false). */
+  includeUnavailable?: boolean
+}
+
+/** Options of `world.colliders`. */
+export interface ColliderOptions {
+  /** Union overlapping or adjacent boxes of the same object into fewer OBBs (never loses coverage). Default false. */
+  merge?: boolean
+  /** Largest gap between two boxes, meters, that still counts as adjacent when merging (default 0.02). */
+  gap?: number
+  /** Extra volume a merge may add, as a fraction of the real union (default 0.1). */
+  slack?: number
+}
+
+/** World-space solid collider (OBB on the floor plane plus a height range). */
+export interface WorldCollider {
+  id: string
+  object: string
+  cx: number
+  cz: number
+  hw: number
+  hd: number
+  ry: number
+  y0: number
+  y1: number
 }
 
 export interface ActiveEmitter {
@@ -554,12 +599,22 @@ export interface World {
   /** Every interaction in world space, with current labels. */
   interactables(): Interactable[]
   /** Best interaction for an eye looking along yaw/pitch (radians, yaw 0 = -z), within reach. */
-  target(eye: { x: number; y: number; z: number; yaw: number; pitch: number }, options?: { reach?: number; cone?: number }): Interactable | null
+  target(eye: { x: number; y: number; z: number; yaw: number; pitch: number }, options?: TargetOptions): Interactable | null
   act(interactableId: string, actor?: string): boolean
 
   /** Parts */
   partT(objectId: string, partId: string): number
   setPart(objectId: string, partId: string, target: number, instant?: boolean): void
+
+  /**
+   * Turn a device on or off without an interaction (same effects and events as the toggle: part, `device` event, `no_power` message).
+   * Nothing happens (false) for an unknown device; setting the state it already has is a quiet `true`.
+   */
+  setDevice(objectId: string, deviceId: string, on: boolean): boolean
+  /** Same for a fixture (tap, shower, flush). */
+  setFixture(objectId: string, fixtureId: string, on: boolean): boolean
+  /** Same for a burner; turning on a burner that needs ignition lights it (needs fuel). */
+  setBurner(objectId: string, burnerId: string, on: boolean): boolean
   /**
    * Largest t in [0, 1] whose swept area stays clear. `blocked(x, z)` gets world coordinates. The world clamps the part to it.
    * Call once after adding objects next to walls.
@@ -619,7 +674,7 @@ export interface World {
   mirrors(eye: Vec3, maxDistance?: number, count?: number): Array<{ id: string; center: Vec3; normal: Vec3; w: number; h: number; distance: number }>
 
   /** Solid colliders in world space (OBB on the floor plane plus height range). Soft volumes never appear here. */
-  colliders(): Array<{ id: string; object: string; cx: number; cz: number; hw: number; hd: number; ry: number; y0: number; y1: number }>
+  colliders(options?: ColliderOptions): WorldCollider[]
 
   /** Damage */
   /** @deprecated Use the destruction SDK (`@adatechnology/game-destruction`). */

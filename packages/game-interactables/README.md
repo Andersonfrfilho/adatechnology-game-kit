@@ -75,9 +75,21 @@ around `+y` like `three.js` (`+z` turns toward `+x` for a positive angle). View 
   `switch.<id>`, `fixture.<id>`, `burner.<id>`, `ignite.<id>`, `fuel.<id>`, `seat.<id>`; world-wide `object:interactionId`.
 - **Labels**: the world looks up `<label>.open|.closed` (parts, valves, containers) or `<label>.on|.off` (devices, fixtures, burners,
   switches), then `<label>`, then an engine default (`prompt.open`, `prompt.turn_on`, ...). `{name}` is replaced by `type.<type>` or a humanized
-  type id.
-- **Targeting**: `target(eye, { reach = 1.8, cone = 0.45 })` scores by distance and angle to the view direction. `take`/`read` of closed
-  containers and the wrong half of `ignite`/charcoal toggles are skipped.
+  type id. Labels never carry a key hint such as "E:"; the host adds its own.
+- **Structured prompts**: every `Interactable` also has `verb` ("Open") and `noun` ("the fridge") so a host can style them separately
+  (`object` is the owning object's id). Entries `<key>.verb` / `<key>.object` in the locale win; otherwise the first word of the label is the verb,
+  the rest the noun, and a one-word prompt uses the object's type name as the noun.
+- **Availability**: `Interactable.available` is false with a `reason` (a locale key: `requires_open`, `no_power`, `locked` when `canInteract`
+  refuses, `already_lit`, `needs_ignition`, `turn_on_first`; `world.t(reason)` is the text) while the interaction cannot be used.
+- **Targeting**: `target(eye, { reach = 1.8, cone = 0.45, filter?, kinds?, includeUnavailable? })` scores by distance and angle to the view
+  direction. Unavailable interactions (closed container `take`/`read`, the wrong half of `ignite`, a part gated by `requires`...) are skipped
+  unless `includeUnavailable`; `kinds` limits the action kinds and `filter` is any predicate. A hard-wired lamp (device `kind: 'lamp'` with a
+  `circuit`, no `plug`, no `part`) gets **no** derived interaction: switches and `setDevice` drive it, so it never steals the interact key.
+- **Driving state from code**: `setDevice(object, device, on)`, `setFixture(object, fixture, on)` and `setBurner(object, burner, on)` do what
+  the toggles do (parts, `device`/`fixture`/`burner` events, `no_power` message) and are quiet when the state does not change.
+- **Colliders**: `colliders({ merge: true, gap = 0.02, slack = 0.1 })` unions overlapping or adjacent fixed boxes of the same object (same
+  rotation) when the merged box adds at most `slack` extra volume; door colliders stay separate. `mergeColliders(list, opts)` is exported for
+  lists you already have.
 - **Containers**: contents from `contents` or deterministic loot seeded with `seed + object id + container id`. An item fits a slot when its size
   is within the slot's `max` (width and depth may swap). `take` needs the container to be accessible and the item pickable and emits `pickup`.
 - **Power**: `grid`, a breaker per circuit (default on), sockets (optionally on a circuit) and devices plugged to a socket (`auto` = nearest free
@@ -114,15 +126,16 @@ createWorld(options?: WorldOptions): World
 |---|---|
 | Objects | `add(id, spec, transform)`, `remove(id)`, `get(id)`, `objects()` |
 | Frame | `update(dt)` |
-| Interaction | `interactables()`, `target(eye, { reach?, cone? })`, `act(id, actor?)` |
+| Interaction | `interactables()`, `target(eye, TargetOptions)`, `act(id, actor?)` |
 | Parts | `partT`, `setPart(object, part, target, instant?)`, `fitSweep(object, part, blocked)` |
+| Drive | `setDevice(object, device, on)`, `setFixture(object, fixture, on)`, `setBurner(object, burner, on)` |
 | Containers | `contents`, `accessible`, `take`, `put`, `slotPosition` |
 | Power | `power.grid`, `setGrid`, `setBreaker`, `breaker`, `isPowered`, `isOn`, `pluggedInto`, `channel` |
 | Fuel | `fuelLevel(object, fuel)`, `isLit(object, burner)` |
 | Water | `water.setDefaultTank`, `level`, `refill`, `setRain`, `isFlowing` |
 | Seats | `sit`, `stand`, `seatOf` |
 | Soft | `push`, `sway`, `setWind` |
-| Draw | `emitters()`, `mirrors(eye, maxDistance?, count?)`, `colliders()` |
+| Draw | `emitters()`, `mirrors(eye, maxDistance?, count?)`, `colliders({ merge? })` |
 | Damage | `damage(object, target, amount, kind?)`, `hp(object, target)` |
 | Text | `t(key, vars?)`, `setLocale(locale)` |
 | Save | `serialize()`, `load(state)` |

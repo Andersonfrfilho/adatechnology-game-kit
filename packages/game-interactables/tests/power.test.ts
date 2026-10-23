@@ -173,7 +173,7 @@ describe('toggle_breaker', () => {
     const { w, events } = world()
     w.add('p', panel, origin)
     w.add('l', lamp, { x: 3, y: 0, z: 0, ry: 0 })
-    w.act('l:device.bulb')
+    w.setDevice('l', 'bulb', true)
     expect(w.power.isPowered('l', 'bulb')).toBe(true)
     expect(w.act('p:br.lights')).toBe(true)
     expect(w.power.breaker('lights')).toBe(false)
