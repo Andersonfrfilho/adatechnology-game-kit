@@ -1,5 +1,23 @@
 # @adatechnology/game-test-room
 
+## 0.2.0
+
+### Minor Changes
+
+- 6022fe5: Test environments per catalogue group: `openArea(group)` (and the `area` option) clears the room and lays a group in rows, or lays a loaded
+  module by its own `area`, with resting surfaces and asleep props. The room is now a `ModuleHost`: modules get the scene, the camera and the
+  tool events (shot, reload start and end, empty) through `attach`. The catalogue has a search across every tab and the tests panel a search too.
+
+### Patch Changes
+
+- Updated dependencies [6022fe5]
+  - @adatechnology/game-contracts@0.3.0
+  - @adatechnology/game-destruction@0.3.1
+  - @adatechnology/game-destruction-three@0.2.1
+  - @adatechnology/game-fluids@0.1.3
+  - @adatechnology/game-weapons@0.1.3
+  - @adatechnology/game-fluids-three@0.1.3
+
 ## 0.1.3
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-vehicles",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
   "description": "Generic procedural 3D vehicle engine for three.js: body shells, glass, lights, interiors, hood and engine bay, zone-based damage in five bands, cracking glass, particles, fluids, rollover, explosions and a damage-map UI. Content (the fleet, fuels, scenarios, texts) comes from packs and plugins.",
   "keywords": [
