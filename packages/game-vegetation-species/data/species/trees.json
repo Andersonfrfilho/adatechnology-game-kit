@@ -3,26 +3,29 @@
   "id": "mango_tree",
   "archetype": "broadleaf_tree",
   "params": {
-   "height": 9,
+   "height": 8.5,
    "trunkRadius": 0.34,
-   "crownRadius": 4.2,
+   "crownRadius": 4.6,
    "crownShape": "spreading",
    "branchLevels": 3,
    "leafColor": [
-    "#2d7434",
-    "#3a8438",
-    "#488f3e"
+    "#1f5a2a",
+    "#2a6a30",
+    "#2f7434"
    ],
-   "barkColor": "#6a4a34",
+   "barkColor": "#5a4030",
    "fruit": {
     "colors": [
      "#e8a02a",
      "#d9602d",
-     "#9bc24a"
+     "#c8d04a",
+     "#e8c040"
     ],
-    "count": 12,
-    "radius": 0.15
-   }
+    "count": 16,
+    "radius": 0.17
+   },
+   "crownStyle": "dome",
+   "trunkFraction": 0.34
   },
   "tags": [
    "tree",
@@ -40,11 +43,11 @@
   "id": "yellow_ipe",
   "archetype": "broadleaf_tree",
   "params": {
-   "height": 9,
+   "height": 9.5,
    "trunkRadius": 0.26,
-   "crownRadius": 3.4,
+   "crownRadius": 3.5,
    "crownShape": "round",
-   "trunkFraction": 0.42,
+   "trunkFraction": 0.3,
    "leafColor": [
     "#5aa045",
     "#4a9040",
@@ -55,14 +58,17 @@
     "colors": [
      "#f4c81e",
      "#f6d43a",
-     "#e8b81a"
+     "#ecb818"
     ],
     "seasons": [
      "winter",
      "spring"
     ],
-    "replacesLeaves": true
-   }
+    "replacesLeaves": true,
+    "density": 1
+   },
+   "crownStyle": "dome",
+   "clumpSize": 0.95
   },
   "tags": [
    "tree",
@@ -82,9 +88,9 @@
   "params": {
    "height": 9.5,
    "trunkRadius": 0.27,
-   "crownRadius": 3.6,
+   "crownRadius": 3.5,
    "crownShape": "round",
-   "trunkFraction": 0.42,
+   "trunkFraction": 0.3,
    "leafColor": [
     "#5aa045",
     "#4a9040",
@@ -101,8 +107,11 @@
      "winter",
      "spring"
     ],
-    "replacesLeaves": true
-   }
+    "replacesLeaves": true,
+    "density": 1
+   },
+   "crownStyle": "dome",
+   "clumpSize": 0.95
   },
   "tags": [
    "tree",
@@ -120,28 +129,30 @@
   "id": "jabuticaba_tree",
   "archetype": "broadleaf_tree",
   "params": {
-   "height": 4.4,
-   "trunkRadius": 0.11,
-   "crownRadius": 1.9,
+   "height": 5,
+   "trunkRadius": 0.2,
+   "crownRadius": 2.4,
    "crownShape": "round",
-   "trunkFraction": 0.2,
+   "trunkFraction": 0.34,
    "branchLevels": 3,
    "leafColor": [
     "#2e6e34",
     "#3a7a3a",
     "#357a38"
    ],
-   "barkColor": "#9a8670",
+   "barkColor": "#b8a68c",
    "fruit": {
     "colors": [
-     "#2a1030",
-     "#3a1840",
-     "#241028"
+     "#6e2c92",
+     "#7d3aa4",
+     "#5e2480"
     ],
-    "count": 80,
-    "radius": 0.035,
+    "count": 380,
+    "radius": 0.085,
     "onTrunk": true
-   }
+   },
+   "crownStyle": "cloud",
+   "clumpSize": 0.95
   },
   "tags": [
    "tree",
@@ -158,11 +169,11 @@
   "id": "flamboyant",
   "archetype": "broadleaf_tree",
   "params": {
-   "height": 8.5,
+   "height": 8,
    "trunkRadius": 0.3,
-   "crownRadius": 5.2,
+   "crownRadius": 5.8,
    "crownShape": "spreading",
-   "trunkFraction": 0.34,
+   "trunkFraction": 0.44,
    "leafColor": [
     "#6aa84a",
     "#7ab858",
@@ -171,16 +182,18 @@
    "barkColor": "#7a6a58",
    "bloom": {
     "colors": [
-     "#d8281e",
-     "#e84a2a",
-     "#c81e1e"
+     "#e0361e",
+     "#ec5a22",
+     "#d02a1c"
     ],
     "seasons": [
      "spring",
      "summer"
     ],
-    "density": 0.9
-   }
+    "replacesLeaves": true,
+    "density": 0.78
+   },
+   "crownStyle": "umbrella"
   },
   "tags": [
    "tree",
@@ -198,25 +211,27 @@
   "id": "guava_tree",
   "archetype": "broadleaf_tree",
   "params": {
-   "height": 4.6,
-   "trunkRadius": 0.12,
-   "crownRadius": 2.2,
+   "height": 4.8,
+   "trunkRadius": 0.15,
+   "crownRadius": 2.6,
    "crownShape": "round",
    "trunkFraction": 0.3,
    "leafColor": [
-    "#4a8a3a",
-    "#5a9a45",
-    "#3f7f38"
+    "#74ae4c",
+    "#82ba56",
+    "#68a248"
    ],
-   "barkColor": "#a0785a",
+   "barkColor": "#b28c6c",
    "fruit": {
     "colors": [
-     "#c8d86a",
-     "#e8c84a"
+     "#d8e070",
+     "#e8d450",
+     "#c8dc5a"
     ],
-    "count": 8,
-    "radius": 0.055
-   }
+    "count": 10,
+    "radius": 0.075
+   },
+   "crownStyle": "cloud"
   },
   "tags": [
    "tree",
@@ -233,25 +248,27 @@
   "id": "avocado_tree",
   "archetype": "broadleaf_tree",
   "params": {
-   "height": 8,
+   "height": 8.5,
    "trunkRadius": 0.26,
-   "crownRadius": 3.4,
+   "crownRadius": 3.0,
    "crownShape": "round",
-   "trunkFraction": 0.36,
+   "trunkFraction": 0.34,
    "leafColor": [
-    "#2a6a34",
-    "#357a3a",
-    "#2f7238"
+    "#1c5628",
+    "#266432",
+    "#215e2c"
    ],
    "barkColor": "#6a5444",
    "fruit": {
     "colors": [
-     "#2a3a1a",
-     "#3a4a20"
+     "#1e2e14",
+     "#2c3c1a",
+     "#3a4a22"
     ],
-    "count": 9,
-    "radius": 0.085
-   }
+    "count": 10,
+    "radius": 0.1
+   },
+   "crownStyle": "cloud"
   },
   "tags": [
    "tree",
@@ -269,25 +286,27 @@
   "id": "lemon_tree",
   "archetype": "broadleaf_tree",
   "params": {
-   "height": 3.4,
-   "trunkRadius": 0.09,
-   "crownRadius": 1.7,
+   "height": 3.6,
+   "trunkRadius": 0.13,
+   "crownRadius": 2.1,
    "crownShape": "round",
    "trunkFraction": 0.28,
    "leafColor": [
-    "#4a9a40",
-    "#58a848",
-    "#3f8a3a"
+    "#70bc4a",
+    "#80c856",
+    "#62ac42"
    ],
    "barkColor": "#7a6a52",
    "fruit": {
     "colors": [
-     "#f0d830",
-     "#e8c828"
+     "#f6dc2c",
+     "#f0d020",
+     "#f8e450"
     ],
-    "count": 14,
-    "radius": 0.05
-   }
+    "count": 18,
+    "radius": 0.075
+   },
+   "crownStyle": "cloud"
   },
   "tags": [
    "tree",
@@ -304,26 +323,28 @@
   "id": "pitanga_bush_tree",
   "archetype": "broadleaf_tree",
   "params": {
-   "height": 3.2,
-   "trunkRadius": 0.07,
-   "crownRadius": 1.5,
+   "height": 3.4,
+   "trunkRadius": 0.1,
+   "crownRadius": 1.9,
    "crownShape": "round",
    "trunkFraction": 0.22,
    "branchLevels": 3,
    "leafColor": [
-    "#4a9a40",
-    "#5aa84a",
-    "#3a8a3a"
+    "#5eaa44",
+    "#6eb850",
+    "#80c45c"
    ],
    "barkColor": "#8a6a50",
    "fruit": {
     "colors": [
      "#d82a1a",
-     "#e8501e"
+     "#e8501e",
+     "#c01a18"
     ],
-    "count": 28,
-    "radius": 0.025
-   }
+    "count": 40,
+    "radius": 0.04
+   },
+   "crownStyle": "cloud"
   },
   "tags": [
    "tree",
@@ -343,17 +364,17 @@
   "params": {
    "height": 7,
    "trunkRadius": 0.22,
-   "crownRadius": 2.7,
+   "crownRadius": 2.6,
    "crownShape": "round",
-   "trunkFraction": 0.46,
+   "trunkFraction": 0.5,
    "clipped": true,
-   "density": 0.95,
    "leafColor": [
-    "#2a6a30",
-    "#357a38",
-    "#2f7234"
+    "#1e6428",
+    "#256c2e",
+    "#206028"
    ],
-   "barkColor": "#9a8a78"
+   "barkColor": "#9a8a78",
+   "crownStyle": "sphere"
   },
   "tags": [
    "tree",
@@ -372,17 +393,19 @@
   "archetype": "broadleaf_tree",
   "params": {
    "height": 10,
-   "trunkRadius": 0.4,
-   "crownRadius": 4.4,
+   "trunkRadius": 0.45,
+   "crownRadius": 5,
    "crownShape": "round",
-   "trunkFraction": 0.34,
+   "trunkFraction": 0.3,
    "deciduous": true,
    "leafColor": [
-    "#3f8a3a",
-    "#4c9a40",
-    "#357a35"
+    "#4a8a38",
+    "#5e9c3e",
+    "#72a032",
+    "#3a7a34"
    ],
-   "barkColor": "#5f4a38"
+   "barkColor": "#5a4636",
+   "crownStyle": "lumpy"
   },
   "tags": [
    "tree",
@@ -398,18 +421,19 @@
   "id": "weeping_willow",
   "archetype": "broadleaf_tree",
   "params": {
-   "height": 9,
+   "height": 11.5,
    "trunkRadius": 0.34,
-   "crownRadius": 4,
+   "crownRadius": 4.3,
    "crownShape": "weeping",
-   "trunkFraction": 0.3,
+   "trunkFraction": 0.28,
    "deciduous": true,
    "leafColor": [
     "#8ab040",
     "#9ac053",
     "#7aa238"
    ],
-   "barkColor": "#5a4a3a"
+   "barkColor": "#4a3c30",
+   "crownStyle": "willow"
   },
   "tags": [
    "tree",
@@ -427,7 +451,7 @@
   "params": {
    "shape": "candelabra",
    "height": 16,
-   "radius": 3.6,
+   "radius": 5,
    "tiers": 6,
    "trunkRadius": 0.3,
    "leafColor": "#3d6e3a",
@@ -470,19 +494,18 @@
   "id": "eucalyptus",
   "archetype": "broadleaf_tree",
   "params": {
-   "height": 15,
-   "trunkRadius": 0.34,
-   "crownRadius": 3.4,
-   "crownShape": "spreading",
-   "trunkFraction": 0.5,
-   "density": 0.9,
-   "leafShape": "sparse",
+   "height": 16,
+   "trunkRadius": 0.45,
+   "crownRadius": 4.2,
+   "crownShape": "round",
+   "trunkFraction": 0.58,
    "leafColor": [
-    "#7a9a6a",
-    "#6a8a5a",
-    "#86a874"
+    "#8c9f6a",
+    "#7d9460",
+    "#9aab74"
    ],
-   "barkColor": "#c8c0b0"
+   "barkColor": "#a89a82",
+   "crownStyle": "sparse_high"
   },
   "tags": [
    "tree",
