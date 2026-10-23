@@ -36,12 +36,12 @@ Legenda: ✅ decidido (data e resposta), ⏳ aguardando o dono, 🔁 decidido pe
 | A2 | Dano: pontos ou joules | Arsenal usa pontos (35 para 9×19); SDK usa joules | — | ✅ 2026-10-23: joules no motor; os pontos do Arsenal são a calibragem que o repositório do jogo aplica |
 | A3 | Ruído | Arsenal 150/300/600 m; SDK na mesma ordem; jogo 60/110/130 m | — | ✅ 2026-10-23: Arsenal (150 / 300 / 600 m) |
 | A4 | Dano por região | Arsenal: 5 regiões, braço 45, perna 55; Galeria: braço 60, perna 80; jogo: 11 segmentos (`zDamage`) | — | ✅ 2026-10-23: 11 segmentos do jogo com a vida do Arsenal |
-| A5 | Tempo de recarga | Arsenal tem tempo tático e vazio; Galeria só animação | A regra é do Arsenal; a animação se ajusta ao tempo da regra | ⏳ |
+| A5 | Tempo de recarga | Arsenal tem tempo tático e vazio; Galeria só animação | — | ✅ 2026-10-23: **o SDK define contratos de animação** que quem plugar usa. A regra (`game-weapons`) dá as fases da arma com o tempo de cada uma (sacar, atirar, ciclar, recarga tática e com pente vazio: tirar pente, pôr pente, alimentar, pane, destravar) e emite eventos; o `-three` traz a animação padrão (a da Galeria) cumprindo o contrato, e qualquer outro renderizador pluga a sua no lugar. O tempo da regra é o do Arsenal |
 | A6 | Calibre do .50 BMG | Galeria 13,0 mm; SDK 12,7 mm | 12,7 mm (medida real) | 🔁 |
 | A7 | Calibres que faltam no SDK (9×18, 5,7×28, .44 Mag, .50 AE, 5,45×39, .30-30, 7,62×54R, .30-06, .300 WM, .408) | Só na Galeria | Entram todos | 🔁 |
 | A8 | Carro e parede da Galeria | Duplicam `game-vehicles` e `game-destruction` | Não portar; usar o SDK | 🔁 |
-| A9 | Catálogo de itens | Itens do Vale: 257 (o jogo embute 146); SDK já tem 92 itens domésticos | Porte parte dos 257; `game-items` estende o `ItemDef` do SDK, sem duplicar | ⏳ |
-| A10 | Itens sem modelo 3D (233 de 257) | Só 24 têm forma | Ficam com a forma simples do SDK até o time entregar modelo | ⏳ |
+| A9 | Catálogo de itens | Itens do Vale: 257 (o jogo embute 146); SDK já tem 92 itens domésticos | — | ✅ 2026-10-23: **catálogo único**, organizado por categorias (as 14 do time) e atributos: peso, volume e espaço na mochila, empilhável, durabilidade, validade pela idade, usos, raridade e onde aparece (achados por lugar), receitas que ligam itens. Estende o `ItemDef` do SDK; item repetido vira um só. Item do mundo real no SDK; item só da história no repositório do jogo |
+| A10 | Itens sem modelo 3D (233 de 257) | Só 24 têm forma | — | ✅ 2026-10-23: checklist em `itens-modelos-3d.md` (24 de 257 têm modelo) para cobrar o time de itens; até o modelo chegar, forma simples no tamanho real |
 | A11 | Explosivos e lançadores | Regra no Arsenal e no jogo; efeito no Laboratório | Regra em `game-weapons`, efeito em `game-vfx`, reação em cadeia em `game-destruction` | 🔁 |
 | A12 | O jogo passa a atirar pelo SDK | Hoje embute `game-weapons` mas atira com tabelas próprias (4 armas) | Sim, depois do porte | 🔁 |
 
@@ -116,5 +116,5 @@ teste e da bancada de móveis é do three.js embutido, sem uso.
 | # | Decisão | Recomendação | Situação |
 |---|---|---|---|
 | S1 | Pacote | `game-audio` genérico: síntese (ruído filtrado, osciladores, formantes), mixagem com compressor e reverb, atenuação por distância, limite de vozes e sons contínuos. Os sons de cada assunto ficam no pacote do assunto: armas no `game-weapons-three`, vozes no `game-characters-three`, bichos no `game-animals-three`, motor e rotor no `game-vehicles-three`, chuva no futuro clima | ⏳ |
-| S2 | Som de tiro | Juntar: a tabela por classe e a atenuação por distância do jogo, com a energia do calibre do SDK para variar dentro da classe | ⏳ |
+| S2 | Som de tiro | — | ✅ 2026-10-23: juntar a classe e o abafamento por distância do jogo com a energia do calibre do SDK |
 | S3 | Igual ao original | O golden do som compara os parâmetros gerados (frequência, volume, duração, filtros) para cada evento com semente fixa, já que não dá para comparar áudio por hash | 🔁 G3 |
