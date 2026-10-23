@@ -27,8 +27,8 @@ const VERTEX_PATCH = /* glsl */ `
   float swayHang = max(swayAnchorY - position.y, 0.0);
   float swayFlutter = swayAmplitude * sin(swayTime * 1.9 + position.x * 4.0 + position.z * 3.0 + swayHang * 3.0);
   transformed.x += swayHang * (sin(swayAz) + swayFlutter);
-  transformed.z += swayHang * (sin(swayAx) + swayFlutter * 0.6);
-  transformed.y -= swayHang * (1.0 - cos(swayAz) * cos(swayAx)) * 0.5;
+  transformed.z += swayHang * (-sin(swayAx) + swayFlutter * 0.6);
+  transformed.y += swayHang * (1.0 - cos(swayAz) * cos(swayAx));
 }
 `
 

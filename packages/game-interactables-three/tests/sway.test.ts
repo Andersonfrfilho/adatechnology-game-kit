@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
-import { attachSway, createMeshApi, swayMaterial, syncObject } from '../src'
+import { attachSway, createMeshApi, patchSwayShader, swayMaterial, syncObject } from '../src'
 import type { World } from '@adatechnology/game-interactables'
 
 const shaderStub = () => ({ uniforms: {} as Record<string, any>, vertexShader: 'void main() {\n#include <begin_vertex>\n}' })
@@ -94,5 +94,49 @@ describe('syncObject', () => {
     expect(handle.uniforms.az.value).toBe(0.5)
     expect(handle.uniforms.time.value).toBe(3)
     expect(parts.cloth.quaternion.w).toBe(1) // group itself untouched
+  })
+})
+
+describe('sway shader matches the group rotation', () => {
+  // Runs the patched vertex code on the CPU for a vertex hanging `hang` below the anchor and compares it with rotating the
+  // same point by Euler(ax, 0, az), which is what syncObject does for meshes without the shader.
+  function displaced(ax: number, az: number, hang: number): number[] {
+    const shader = shaderStub()
+    patchSwayShader(shader as any, { time: { value: 0 }, ax: { value: ax }, az: { value: az }, anchorY: { value: 0 } }, 0)
+    const block = shader.vertexShader.split('#include <begin_vertex>')[1].split('}')[0] + '}'
+    const js = block
+      .replace(/\bfloat\s+/g, 'let ')
+      .replace(/\b(sin|cos|max)\(/g, 'Math.$1(')
+      .replace(/^\s*\{/, '')
+      .replace(/\}\s*$/, '')
+      .replace(/swayAnchorY/g, '0')
+      .replace(/swayAmplitude/g, '0')
+      .replace(/swayTime/g, '0')
+      .replace(/swayAx/g, String(ax))
+      .replace(/swayAz/g, String(az))
+      .replace(/position\.(x|y|z)/g, (_m, c) => String({ x: 0, y: -hang, z: 0 }[c as 'x' | 'y' | 'z']))
+    const transformed = { x: 0, y: -hang, z: 0 }
+    new Function('transformed', js)(transformed)
+    return [transformed.x, transformed.y, transformed.z]
+  }
+
+  it.each([
+    [0.3, 0, 1],
+    [-0.3, 0, 1],
+    [0, 0.4, 1],
+    [0, -0.4, 2],
+    [0.25, -0.2, 1.5],
+  ])('ax %f az %f hang %f follows the pendulum', (ax, az, hang) => {
+    const rot = new THREE.Quaternion().setFromEuler(new THREE.Euler(ax, 0, az, 'XYZ'))
+    const exact = new THREE.Vector3(0, -hang, 0).applyQuaternion(rot)
+    const got = displaced(ax, az, hang)
+    // sideways displacement in the right direction and magnitude (small-angle accurate)
+    expect(Math.sign(got[0]) || 0).toBe(Math.sign(exact.x) || 0)
+    expect(Math.sign(got[2]) || 0).toBe(Math.sign(exact.z) || 0)
+    expect(got[0]).toBeCloseTo(exact.x, 1)
+    expect(got[2]).toBeCloseTo(exact.z, 1)
+    // the bottom rises along the arc instead of stretching down
+    expect(got[1]).toBeGreaterThanOrEqual(-hang - 1e-9)
+    expect(got[1]).toBeCloseTo(exact.y, 1)
   })
 })

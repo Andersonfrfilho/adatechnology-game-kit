@@ -120,7 +120,7 @@ point is `sag` meters below the chord.
 
 ## Notes
 
-- `poseOf` is a local equivalent of the pose math of the interactables package (no runtime import from it).
+- `poseOf` converts the pose math of the interactables package (same defaults) to a quaternion, so the rendered part always matches the engine.
 - Everything is deterministic: effects and screen noise use seeded generators.
 
 ## Português
