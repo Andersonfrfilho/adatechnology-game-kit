@@ -166,6 +166,11 @@ export class Ctx {
     if (o.group) spec.group = o.group
     if (o.label) spec.label = o.label
     if (!o.noSweep && pts.length) spec.sweep = sweepOf(pts, pivot, motion)
+    if (!o.noSweep && pts.length && motion.kind !== 'scale') {
+      const lo = [0, 1, 2].map((i) => round3(Math.min(...pts.map((q) => q[i]))))
+      const hi = [0, 1, 2].map((i) => round3(Math.max(...pts.map((q) => q[i]))))
+      spec.bounds = [lo[0], lo[1], lo[2], hi[0], hi[1], hi[2]]
+    }
     this.list('parts').push(spec)
     if (o.at !== false && o.label) {
       let at = o.at
