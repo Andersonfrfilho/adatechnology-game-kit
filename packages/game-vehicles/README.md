@@ -211,6 +211,36 @@ zone ids and glass keys (shared by every kit); a glass key that contains `windsh
 
 Coming from the Portuguese `VehicleSDK`? The complete old-to-new table is in [MIGRATION.md](./MIGRATION.md).
 
+## Destruction contract
+
+`createVehicleDestructible(kit, c, options)` makes a built vehicle follow the `DestructibleImpl` of [`@adatechnology/game-contracts`](../game-contracts), so a test room (or any host) can shoot, burn, blast and unbolt it. It depends on the contracts only (types), not on the default destruction world.
+
+```ts
+import { buildVehicleItem, createVehicleDestructible } from '@adatechnology/game-vehicles'
+
+const item = buildVehicleItem(kit, 'meteor') // origin at the footprint centre, front facing +z
+const car = createVehicleDestructible(kit, item.vehicle, { id: 'meteor_1', frame: item.root })
+const events = car.hit({ type: 'ballistic', point, direction, energy: 500, caliber: 9 })
+car.status() // { canStart, lightsOn, canDrive, brakeFactor, steerPull, flatTyres, ... }
+car.animations() // open/close clips for the doors, hood and trunk
+```
+
+**Parts.** Every damage zone is a part (steel body panels, doors, hood and fenders; aluminium for aircraft and boats; glass for windows and lights; plastic for bumpers and mirrors; rubber for tyres). The engine adds the mechanical parts the zones do not cover, by vehicle kind and from the meta: `battery`, `alternator`, `gearbox`, `brakes`, `steering`, `shock_absorbers`, `oil_pan`, a separate `tyre_*` for every wheel, `mirror_left/right`, `pillar_a/c_*` on cars and an optional `tow_hitch` (option `hitch`, then the spec flag `hitch`, then a seeded choice). Names are in `locales` (`mechanics.*`).
+
+**Joints.** `hinge` for doors, hood and trunk lid; `bolt` for wheels, fenders, bumpers, mirrors, battery, lights and the mechanics; `weld` for the roof, the pillars and side panels; `glue` for glass; `clip` for the tyre on its rim. Each joint wears when the part it holds is hit, and a wrench, screwdriver or cutting torch undoes it (`disassemble`).
+
+**Detaching.** Bumpers, fenders, mirrors, lights, wheels (and tyres), doors, hood, trunk lid, battery and hitch come off as separate objects and fall (the kit's ballistic animation). Hidden mechanics are logical: `status()` says what they do (brakes: longer stop; steering: pulls to one side; battery or alternator: no start and no lights; gearbox: no drive).
+
+| Hit | Mapped to |
+|---|---|
+| `ballistic` | hole (through when the energy beats the material), dent when it holds, ricochet at a shallow angle, crack or shatter on glass, leak on a tank, flat tyre |
+| `blunt`, `slash` | `kit.impact` for hard blows, dents with depth, damage by distance, joint wear (bumpers and mirrors tear off) |
+| `explosive` | `kit.impact`, `kit.blastDamage`, damage by distance; a tank blast gives `explode` |
+| `fire`, `heat` | temperature by part, `ignite`, `melt` (tyres, plastic), `burnout`, `explode` when the tank passes its temperature |
+| wrench and others | `disassemble` with `disassemble_progress` and `detach` |
+
+Fluids: the tank, the oil pan and the radiator hold fuel, oil and coolant; a hole below the level makes a `leak` event, a puddle and a falling level.
+
 ## Português
 
 Motor genérico de veículos procedurais para three.js: carrocerias, vidros, faróis, rodas, interiores, capô e compartimento do motor, **zonas de dano
@@ -232,3 +262,7 @@ scene.add(c.root)
 - Os textos em português estão em `locales/pt-BR.json` e saem exatamente como no SDK original (`Para-choque dianteiro`, `Capô`, `Arrancado`...).
 - A API e os nomes agora são todos em inglês; a tabela completa de nomes antigos para novos está em [MIGRATION.md](./MIGRATION.md).
 - O exemplo offline (`example:build`) aceita `?lang=pt-BR`.
+
+### Contrato de destruição
+
+`createVehicleDestructible(kit, c, opções)` faz um veículo construído seguir o `DestructibleImpl` de `@adatechnology/game-contracts`: cada zona de dano vira uma peça com material, as peças mecânicas (bateria, alternador, câmbio, freios, direção, amortecedores, pneus, retrovisores, engate) são acrescentadas, as juntas (dobradiça, parafuso, solda) se desfazem por desgaste ou com a chave inglesa, e as peças saem do veículo e caem. `status()` diz o que a mecânica faz (freios, direção, bateria, câmbio). Os nomes em português estão em `locales/pt-BR.json` (`mechanics.*`).
