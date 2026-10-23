@@ -1,0 +1,30 @@
+{
+  "labels": {
+    "bathroom": "Bathroom",
+    "checkouts": "Checkouts",
+    "consulting_room": "Consulting room",
+    "counter": "Counter",
+    "ground_floor": "Ground floor",
+    "office": "Office",
+    "shop": "Shop floor",
+    "stockroom": "Stockroom"
+  },
+  "templates": {
+    "market": "Corner market",
+    "pharmacy": "Pharmacy"
+  },
+  "styles": {
+    "commercial": "Commercial"
+  },
+  "facadeColors": {
+    "white": "White",
+    "shop_red": "Shop red",
+    "shop_blue": "Shop blue",
+    "bright_yellow": "Bright yellow",
+    "pharmacy_green": "Pharmacy green"
+  },
+  "zones": {
+    "zc": "ZC – Commercial / central",
+    "zi": "ZI – Industrial"
+  }
+}

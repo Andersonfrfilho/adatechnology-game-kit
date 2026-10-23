@@ -184,6 +184,13 @@ export interface DestructionWorld {
   /** Move an object (the renderer or physics owns transforms; keep the world in sync so world-space hits land). */
   setTransform(id: string, position: Vec3, rotation: Quat): void
   /**
+   * Move a part's collision shape (raycast, hits, blast and joint distance) to an object-local pose; the part's spec is unchanged. Animations are
+   * visual, so a host that plays a clip calls this every frame with `rest + clip offset`. `rotation` is Euler XYZ (radians), default none. For a
+   * registered impl it forwards to the optional `DestructibleImpl.setPartPose` and otherwise only moves the world's raycast shape. Dents and holes
+   * stay in object space.
+   */
+  setPartPose(objectId: string, partId: string, position: Vec3, rotation?: Vec3): void
+  /**
    * Split a loose group into its own object (after a `detach`, when the renderer makes the piece a separate body). The parts move with their
    * state; the new object starts at the old object's transform. Returns the new id.
    */
@@ -205,14 +212,24 @@ export interface DestructionWorld {
   disassemble(objectId: string, jointId: string, tool: ToolKind, dt: number): number
   /** Joints of an object that `tool` can undo now (open joints excluded). */
   workableJoints(objectId: string, tool: ToolKind): JointState[]
-  /** Joint nearest to a world point (for "aim at the screw"). */
-  nearestJoint(objectId: string, point: Vec3, maxDistance?: number): JointState | null
+  /**
+   * Joint nearest to a world point (for "aim at the screw"). With `tool`, the nearest open-able joint that tool can undo within `maxDistance`
+   * wins; only when none qualifies does it fall back to the nearest joint of any kind.
+   */
+  nearestJoint(objectId: string, point: Vec3, maxDistance?: number, tool?: ToolKind): JointState | null
   /** Put out fire on a part or the whole object, and cool it by `coolC` (default 200). */
   extinguish(objectId: string, partId?: string, coolC?: number): void
   /** Advance fire, heat transfer, cooling, melting, leaks and delayed explosions. */
   update(dt: number): DestructionEvent[]
+  /**
+   * The object's LIVE state: the same object the world mutates every update (parts, joints, groups). Treat it as read-only and change the world only
+   * through the API (`hit`, `disassemble`, `setLiters`...). Do not keep it across frames to compare "before" and "after": use `snapshot`.
+   */
   state(id: string): ObjectState | null
+  /** The part's LIVE state (see `state`): read-only, mutated by the world. */
   part(id: string, partId: string): PartState | null
+  /** A deep copy of the object's state at this moment: safe to keep, compare and mutate. Null for an unknown id. */
+  snapshot(id: string): ObjectState | null
   /** Repair an object to its spec (test benches use it for "reset"). */
   reset(id: string): void
   on(type: DestructionEventType | '*', fn: (event: DestructionEvent) => void): () => void

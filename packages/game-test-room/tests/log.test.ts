@@ -132,3 +132,60 @@ describe('coalescing', () => {
     expect(log.entries()).toHaveLength(2)
   })
 })
+
+describe('download inside a claude.ai Artifact', () => {
+  const g = globalThis as { claude?: unknown }
+  const withClaude = (use: (name: string) => Promise<unknown>) => {
+    g.claude = { use }
+  }
+  const restore = () => {
+    delete g.claude
+  }
+
+  it('saves through the downloads capability (ndjson goes out as text) and does not touch the blob path', async () => {
+    const saved: Array<{ filename: string; data: string }> = []
+    const use = vi.fn(async (name: string) => (name === 'downloads' ? { save: async (r: { filename: string; data: string }) => (saved.push(r), { status: 'saved' }) } : null))
+    withClaude(use)
+    try {
+      const { log } = sample()
+      expect(use).toHaveBeenCalledTimes(1)
+      log.add({ channel: 'action', type: 'spawn', text: 'hello' })
+      const create = vi.spyOn(URL, 'createObjectURL')
+      await log.download('ndjson')
+      await log.download('json')
+      await log.download('txt')
+      expect(use).toHaveBeenCalledTimes(1)
+      expect(saved.map((s) => s.filename)).toEqual(['test-room-log.ndjson.txt', 'test-room-log.json', 'test-room-log.txt'])
+      expect(saved[0].data).toBe(log.toNDJSON())
+      expect(create).not.toHaveBeenCalled()
+      create.mockRestore()
+    } finally {
+      restore()
+    }
+  })
+
+  it('logs an export cancelled line when the viewer declines', async () => {
+    withClaude(async () => ({ save: async () => Promise.reject({ code: 'declined', message: 'no' }) }))
+    try {
+      const log = createLog({ exportCancelled: () => 'exportação cancelada' })
+      await log.download('json')
+      expect(log.entries({ type: 'export_cancelled' }).map((e) => [e.text, e.data])).toEqual([['exportação cancelada', { format: 'json', code: 'declined' }]])
+      expect(createLog().entries()).toEqual([])
+    } finally {
+      restore()
+    }
+  })
+
+  it('falls back to the blob link when use resolves null or there is no claude', async () => {
+    withClaude(async () => null)
+    try {
+      const log = createLog()
+      ;(URL as { createObjectURL: (b: Blob) => string }).createObjectURL = vi.fn(() => 'blob:x')
+      await log.download('txt')
+      expect(URL.createObjectURL).toHaveBeenCalledTimes(1)
+      expect(log.entries({ type: 'export_cancelled' })).toEqual([])
+    } finally {
+      restore()
+    }
+  })
+})

@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import { guessMaterial, inferJoints } from '@adatechnology/game-destruction'
-import type { MaterialId, PartSpec } from '@adatechnology/game-destruction'
+import type { JointKind, JointSpec, MaterialId, PartSpec } from '@adatechnology/game-destruction'
 import type { Mesh, Object3D, SpecFromObjectOptions, SpecFromObjectResult, ThreeNamespace } from './types'
 
 interface Entry {
@@ -15,6 +15,27 @@ interface Entry {
   /** Part id wished by the host (`userData.destructionPart`). */
   fixedId: boolean
   name: string
+  /** `parent` / `kind` of an object-valued `destructionPart`: the part is attached to `parent` by a joint of that kind. */
+  parent?: string
+  jointKind?: JointKind
+}
+
+/** What `userData.destructionPart` says: a string (the part id) or an object `{ id, material?, parent?, kind? }`. */
+export interface PartHint {
+  id: string
+  material?: string
+  parent?: string
+  kind?: string
+}
+
+/** Read `userData.destructionPart` (string or object with an `id`); null when it names no part. */
+export function partHintOf(value: unknown): PartHint | null {
+  if (typeof value === 'string') return value ? { id: value } : null
+  if (!value || typeof value !== 'object') return null
+  const v = value as Record<string, unknown>
+  if (typeof v.id !== 'string' || !v.id) return null
+  const str = (x: unknown): string | undefined => (typeof x === 'string' && x ? x : undefined)
+  return { id: v.id, material: str(v.material), parent: str(v.parent), kind: str(v.kind) }
 }
 
 const METAL = /steel|iron|metal|alumin|copper|brass|bronze|tin|titan|chrome|zinc|lead/i
@@ -65,12 +86,14 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
         const mats = Array.isArray(o.material) ? o.material : [o.material]
         const matName = mats[0]?.name ?? ''
         const ud = o.userData ?? {}
+        const hint = partHintOf(ud.destructionPart)
         const material =
           options.materialOf?.(o) ??
           (typeof ud.destructionMaterial === 'string' ? (ud.destructionMaterial as string) : undefined) ??
+          hint?.material ??
           guessMaterial(`${o.name} ${matName} ${typeof ud.material === 'string' ? ud.material : ''}`) ??
           fallback
-        const explicit = typeof ud.destructionPart === 'string' && ud.destructionPart ? (ud.destructionPart as string) : null
+        const explicit = hint?.id ?? null
         const hollow = ud.hollow === true || /hollow/i.test(o.name)
         const fill = options.fillOf?.(o, material)
         const tags = Array.isArray(ud.destructionTags) ? (ud.destructionTags as string[]) : undefined
@@ -85,7 +108,7 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
           existing.hollow = existing.hollow || hollow
           if (fill !== undefined) existing.fill = fill
         } else {
-          const e: Entry = { key: explicit ?? `m${entries.length}`, meshes: [o], box, material, explicitId: explicit, fill, hollow, tags, fixedId: !!explicit, name: o.name }
+          const e: Entry = { key: explicit ?? `m${entries.length}`, meshes: [o], box, material, explicitId: explicit, fill, hollow, tags, fixedId: !!explicit, name: o.name, parent: hint?.parent, jointKind: hint?.kind as JointKind | undefined }
           entries.push(e)
           if (explicit) byKey.set(explicit, e)
         }
@@ -174,5 +197,24 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
   else if (root.name) spec.name = root.name
   if (options.tags) spec.tags = [...options.tags]
   spec.joints = options.joints === false ? [] : inferJoints(parts)
+  // explicit attachments from `destructionPart: { parent, kind }` win over the inferred joint between the same two parts
+  if (options.joints !== false) {
+    const finalId = new Map<Entry, string>()
+    kept.forEach((e, i) => finalId.set(e, parts[i].id))
+    const idOf = new Map<string, string>()
+    for (const e of kept) if (e.explicitId) idOf.set(e.explicitId, finalId.get(e)!)
+    const joints: JointSpec[] = spec.joints
+    for (const e of kept) {
+      if (!e.parent) continue
+      const id = finalId.get(e)!
+      const parent = idOf.get(e.parent) ?? (used.has(sanitizeId(e.parent)) ? sanitizeId(e.parent) : null)
+      if (!parent || parent === id) continue
+      const at = joints.findIndex((j) => (j.a === parent && j.b === id) || (j.a === id && j.b === parent))
+      const kind = e.jointKind ?? (at >= 0 ? joints[at].kind : 'resting')
+      const joint: JointSpec = { id: `${parent}~${id}`, a: parent, b: id, kind }
+      if (at >= 0) joints[at] = joint
+      else joints.push(joint)
+    }
+  }
   return { spec, parts: meshesOf }
 }

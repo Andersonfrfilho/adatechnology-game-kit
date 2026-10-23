@@ -1,0 +1,216 @@
+{
+ "id": "default",
+ "name": "Temperate (generic)",
+ "contexts": {
+  "front_yard": [
+   {
+    "species": "boxwood_hedge",
+    "weight": 5
+   },
+   {
+    "species": "azalea",
+    "weight": 4
+   },
+   {
+    "species": "rose_bush_red",
+    "weight": 3
+   },
+   {
+    "species": "rose_bush_pink",
+    "weight": 2
+   },
+   {
+    "species": "tulip",
+    "weight": 3
+   },
+   {
+    "species": "daisy",
+    "weight": 3
+   },
+   {
+    "species": "lawn_tuft",
+    "weight": 8
+   },
+   {
+    "species": "generic_round_shrub",
+    "weight": 4
+   },
+   {
+    "species": "hydrangea",
+    "weight": 3
+   },
+   {
+    "species": "lily",
+    "weight": 2
+   },
+   {
+    "species": "potted_fern",
+    "weight": 1
+   }
+  ],
+  "backyard": [
+   {
+    "species": "oak_like",
+    "weight": 3
+   },
+   {
+    "species": "lemon_tree",
+    "weight": 1
+   },
+   {
+    "species": "lawn_tuft",
+    "weight": 8
+   },
+   {
+    "species": "weeds",
+    "weight": 3
+   },
+   {
+    "species": "wild_flowers",
+    "weight": 2
+   },
+   {
+    "species": "fern",
+    "weight": 2
+   },
+   {
+    "species": "generic_round_shrub",
+    "weight": 3
+   },
+   {
+    "species": "sunflower",
+    "weight": 2
+   },
+   {
+    "species": "ivy",
+    "weight": 1
+   }
+  ],
+  "sidewalk_tree": [
+   {
+    "species": "oak_like",
+    "weight": 6
+   },
+   {
+    "species": "sidewalk_ficus",
+    "weight": 2
+   },
+   {
+    "species": "pine",
+    "weight": 2
+   },
+   {
+    "species": "weeping_willow",
+    "weight": 1
+   }
+  ],
+  "square": [
+   {
+    "species": "oak_like",
+    "weight": 5
+   },
+   {
+    "species": "pine",
+    "weight": 3
+   },
+   {
+    "species": "weeping_willow",
+    "weight": 2
+   },
+   {
+    "species": "boxwood_hedge",
+    "weight": 4
+   },
+   {
+    "species": "lawn_tuft",
+    "weight": 8
+   },
+   {
+    "species": "rose_bush_red",
+    "weight": 2
+   },
+   {
+    "species": "tulip",
+    "weight": 2
+   },
+   {
+    "species": "daisy",
+    "weight": 2
+   }
+  ],
+  "vacant_lot": [
+   {
+    "species": "weeds",
+    "weight": 8
+   },
+   {
+    "species": "wild_grass_tall",
+    "weight": 7
+   },
+   {
+    "species": "overgrown_bush",
+    "weight": 3
+   },
+   {
+    "species": "dead_tree",
+    "weight": 1
+   },
+   {
+    "species": "wild_flowers",
+    "weight": 2
+   },
+   {
+    "species": "pine",
+    "weight": 1
+   }
+  ],
+  "indoor": [
+   {
+    "species": "potted_fern",
+    "weight": 4
+   },
+   {
+    "species": "potted_snake_plant",
+    "weight": 3
+   },
+   {
+    "species": "potted_succulents",
+    "weight": 2
+   },
+   {
+    "species": "potted_cactus",
+    "weight": 1
+   },
+   {
+    "species": "boston_fern",
+    "weight": 2
+   }
+  ],
+  "semiarid": [
+   {
+    "species": "agave",
+    "weight": 3
+   },
+   {
+    "species": "prickly_pear",
+    "weight": 3
+   },
+   {
+    "species": "barrel_cactus",
+    "weight": 2
+   },
+   {
+    "species": "wild_grass_tall",
+    "weight": 4
+   },
+   {
+    "species": "weeds",
+    "weight": 3
+   },
+   {
+    "species": "dead_tree",
+    "weight": 1
+   }
+  ]
+ }
+}

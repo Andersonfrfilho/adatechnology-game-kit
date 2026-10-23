@@ -53,3 +53,10 @@ pnpm build && pnpm test && pnpm typecheck && pnpm lint
 - Every user-visible change needs a changeset (`pnpm changeset`). The first release of a package is a `minor` (0.1.0).
 - Commits are small and logical, with English messages (conventional style is welcome: `feat(game-camera): ...`, `fix(...)`, `chore: ...`, `docs: ...`).
 - A package ported from another codebase ships a `MIGRATION.md` with a complete old-name to new-name table (API names, options, fields and data ids).
+
+### Releasing
+
+- Every change adds a changeset with a semver bump: `patch` (fixes), `minor` (features) or `major` (breaking). While a package is 0.x, a `minor` may contain breaking changes.
+- After CI passes on `main`, the Release workflow runs `changeset version`: it bumps the versions, writes each package's `CHANGELOG.md` and bumps internal `@adatechnology/game-*` dependencies. It commits that as `chore(release): version packages` straight to `main`, publishes the changed packages to npm with provenance and pushes the git tags.
+- The workflow needs the repository secret `NPM_TOKEN`: an npm automation token with publish rights on the `@adatechnology` scope. Without it the publish step fails.
+- Consumers update with `pnpm up "@adatechnology/*" --latest`. Browser bundles are served from the CDN: `https://cdn.jsdelivr.net/npm/@adatechnology/<pkg>@<version>/dist/index.global.js`.

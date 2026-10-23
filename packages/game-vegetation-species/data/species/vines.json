@@ -1,0 +1,93 @@
+[
+ {
+  "id": "bougainvillea_vine",
+  "archetype": "vine",
+  "params": {
+   "host": {
+    "wall": {
+     "width": 2.6,
+     "height": 2.4
+    }
+   },
+   "leafColor": "#3f8a3a",
+   "flowers": {
+    "colors": [
+     "#c8208a",
+     "#d8409a",
+     "#e060a8"
+    ],
+    "style": "bract",
+    "count": 18
+   }
+  },
+  "tags": [
+   "vine",
+   "flowering"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "m",
+  "solid": false
+ },
+ {
+  "id": "ivy",
+  "archetype": "vine",
+  "params": {
+   "host": {
+    "wall": {
+     "width": 2.6,
+     "height": 2.4
+    }
+   },
+   "leafColor": "#2f6e34",
+   "leafSize": 0.9,
+   "density": 1.4
+  },
+  "tags": [
+   "vine"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate"
+  ],
+  "size": "m",
+  "solid": false
+ },
+ {
+  "id": "passion_fruit_vine",
+  "archetype": "vine",
+  "params": {
+   "host": {
+    "wall": {
+     "width": 2.6,
+     "height": 2.4
+    }
+   },
+   "leafColor": "#4a9a40",
+   "leafSize": 1.2,
+   "flowers": {
+    "colors": [
+     "#f6f0f8",
+     "#c8b0e0",
+     "#6a3a9a"
+    ],
+    "style": "passion",
+    "count": 8
+   }
+  },
+  "tags": [
+   "vine",
+   "flowering",
+   "fruit"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical"
+  ],
+  "size": "m",
+  "solid": false
+ }
+]

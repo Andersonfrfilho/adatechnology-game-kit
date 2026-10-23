@@ -1,0 +1,168 @@
+[
+ {
+  "id": "mandacaru",
+  "archetype": "columnar_cactus",
+  "params": {
+   "height": 4.6,
+   "ribs": 6,
+   "armStyle": "candelabra",
+   "arms": [
+    4,
+    6
+   ],
+   "color": "#5a9a88",
+   "spineColor": "#cdbf94",
+   "flowers": {
+    "color": "#fdf8f0",
+    "count": 1
+   }
+  },
+  "tags": [
+   "cactus",
+   "spiny",
+   "semiarid"
+  ],
+  "climate": [
+   "arid"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "saguaro",
+  "archetype": "columnar_cactus",
+  "params": {
+   "height": 5.2,
+   "ribs": 12,
+   "armStyle": "saguaro",
+   "arms": 2,
+   "color": "#5f9a62"
+  },
+  "tags": [
+   "cactus",
+   "spiny"
+  ],
+  "climate": [
+   "arid"
+  ],
+  "size": "l",
+  "solid": true
+ },
+ {
+  "id": "xique_xique",
+  "archetype": "columnar_cactus",
+  "params": {
+   "height": 1.4,
+   "radius": 0.07,
+   "ribs": 6,
+   "armStyle": "sprawl",
+   "arms": [
+    5,
+    7
+   ],
+   "color": "#7aa890"
+  },
+  "tags": [
+   "cactus",
+   "spiny",
+   "semiarid"
+  ],
+  "climate": [
+   "arid"
+  ],
+  "size": "m",
+  "solid": true
+ },
+ {
+  "id": "prickly_pear",
+  "archetype": "paddle_cactus",
+  "params": {
+   "fruit": {
+    "color": "#c83a4a",
+    "count": 7
+   },
+   "flowers": {
+    "color": "#f2c230",
+    "count": 3
+   }
+  },
+  "tags": [
+   "cactus",
+   "spiny",
+   "semiarid",
+   "fruit"
+  ],
+  "climate": [
+   "arid"
+  ],
+  "size": "m",
+  "solid": true
+ },
+ {
+  "id": "crown_cactus",
+  "archetype": "globe_cactus",
+  "params": {
+   "radius": 0.22,
+   "height": 0.5,
+   "ribs": 12,
+   "cephalium": {
+    "color": "#c8305a"
+   }
+  },
+  "tags": [
+   "cactus",
+   "spiny",
+   "semiarid"
+  ],
+  "climate": [
+   "arid"
+  ],
+  "size": "s",
+  "solid": true
+ },
+ {
+  "id": "barrel_cactus",
+  "archetype": "globe_cactus",
+  "params": {
+   "radius": 0.4,
+   "ribs": 16,
+   "height": 0.8,
+   "flowers": {
+    "color": "#f2c230",
+    "count": 8
+   }
+  },
+  "tags": [
+   "cactus",
+   "spiny"
+  ],
+  "climate": [
+   "arid"
+  ],
+  "size": "m",
+  "solid": true
+ },
+ {
+  "id": "small_cactus",
+  "archetype": "globe_cactus",
+  "params": {
+   "radius": 0.09,
+   "height": 0.14,
+   "ribs": 10,
+   "flowers": {
+    "color": "#f080b0",
+    "count": 5
+   }
+  },
+  "tags": [
+   "cactus",
+   "spiny",
+   "indoor"
+  ],
+  "climate": [
+   "arid"
+  ],
+  "size": "s",
+  "solid": true
+ }
+]

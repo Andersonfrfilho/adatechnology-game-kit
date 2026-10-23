@@ -1,0 +1,190 @@
+[
+ {
+  "id": "potted_fern",
+  "archetype": "potted",
+  "params": {
+   "pot": {
+    "shape": "terracotta",
+    "radius": 0.2,
+    "height": 0.3
+   },
+   "plant": {
+    "archetype": "fern",
+    "frondCount": 12,
+    "frondLength": 0.65
+   }
+  },
+  "tags": [
+   "potted",
+   "indoor",
+   "fern"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate",
+   "arid"
+  ],
+  "size": "s",
+  "solid": true
+ },
+ {
+  "id": "potted_snake_plant",
+  "archetype": "potted",
+  "params": {
+   "pot": {
+    "shape": "cylinder",
+    "radius": 0.17,
+    "height": 0.28,
+    "color": "#6a6e72"
+   },
+   "plant": {
+    "archetype": "rosette",
+    "form": "sword",
+    "height": 0.8
+   }
+  },
+  "tags": [
+   "potted",
+   "indoor",
+   "succulent"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate",
+   "arid"
+  ],
+  "size": "s",
+  "solid": true
+ },
+ {
+  "id": "potted_areca",
+  "archetype": "potted",
+  "params": {
+   "pot": {
+    "shape": "cachepot",
+    "radius": 0.27,
+    "height": 0.38
+   },
+   "plant": {
+    "archetype": "palm",
+    "variant": "areca",
+    "height": 1.6,
+    "stems": 6,
+    "trunkRadius": 0.02,
+    "frondLength": 1.0
+   }
+  },
+  "tags": [
+   "potted",
+   "indoor",
+   "palm"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate",
+   "arid"
+  ],
+  "size": "s",
+  "solid": true
+ },
+ {
+  "id": "potted_cactus",
+  "archetype": "potted",
+  "params": {
+   "pot": {
+    "shape": "terracotta",
+    "radius": 0.12,
+    "height": 0.16
+   },
+   "plant": {
+    "archetype": "globe_cactus",
+    "radius": 0.1,
+    "height": 0.18,
+    "ribs": 11,
+    "flowers": {
+     "color": "#f080b0",
+     "count": 4
+    }
+   }
+  },
+  "tags": [
+   "potted",
+   "indoor",
+   "cactus"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate",
+   "arid"
+  ],
+  "size": "s",
+  "solid": true
+ },
+ {
+  "id": "potted_rose",
+  "archetype": "potted",
+  "params": {
+   "pot": {
+    "shape": "terracotta",
+    "radius": 0.22,
+    "height": 0.32
+   },
+   "plant": {
+    "archetype": "flower_plant",
+    "flowerType": "rose",
+    "petalColors": [
+     "#e0405a"
+    ],
+    "height": 0.6,
+    "stemCount": 5
+   }
+  },
+  "tags": [
+   "potted",
+   "flowering",
+   "flower"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate",
+   "arid"
+  ],
+  "size": "s",
+  "solid": true
+ },
+ {
+  "id": "potted_succulents",
+  "archetype": "potted",
+  "params": {
+   "pot": {
+    "shape": "cachepot",
+    "radius": 0.14,
+    "height": 0.14,
+    "color": "#e8e2d4"
+   },
+   "plant": {
+    "archetype": "rosette",
+    "form": "echeveria",
+    "height": 0.12
+   }
+  },
+  "tags": [
+   "potted",
+   "indoor",
+   "succulent"
+  ],
+  "climate": [
+   "tropical",
+   "subtropical",
+   "temperate",
+   "arid"
+  ],
+  "size": "s",
+  "solid": true
+ }
+]

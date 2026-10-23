@@ -1,9 +1,17 @@
 {
   "name": "@adatechnology/game-fluids-three",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "three.js renderer for @adatechnology/game-fluids: liquid surfaces inside containers, streams with a drop at the tip, puddles that grow from a flow front, wet surfaces that reflect and dry from the edge.",
-  "keywords": ["game", "fluids", "liquids", "three", "threejs", "puddles", "wet"],
+  "keywords": [
+    "game",
+    "fluids",
+    "liquids",
+    "three",
+    "threejs",
+    "puddles",
+    "wet"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",

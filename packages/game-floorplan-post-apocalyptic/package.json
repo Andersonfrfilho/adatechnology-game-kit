@@ -1,0 +1,57 @@
+{
+  "name": "@adatechnology/game-floorplan-post-apocalyptic",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Post-apocalyptic genre pack for @adatechnology/game-floorplan: the fortified and abandoned house states as a state plugin, with their item types, flags and a configurable seed distribution.",
+  "keywords": [
+    "game",
+    "floorplan",
+    "post-apocalyptic",
+    "zombie",
+    "survival",
+    "house-state"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-floorplan-post-apocalyptic"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist",
+    "MIGRATION.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@adatechnology/game-floorplan": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4",
+    "@adatechnology/game-floorplan": "workspace:*",
+    "@adatechnology/game-floorplan-residential": "workspace:*",
+    "@adatechnology/game-floorplan-commercial": "workspace:*"
+  }
+}

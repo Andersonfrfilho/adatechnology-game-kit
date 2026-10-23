@@ -1,0 +1,7 @@
+{
+  "ui": {
+    "state_fortified": "Protegida",
+    "state_abandoned": "Abandonada",
+    "state_normal": "Normal"
+  }
+}

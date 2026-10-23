@@ -13,6 +13,36 @@
     ]
   },
   {
+    "id": "kick",
+    "name": "Kick",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 250,
+      "radius": 0.08,
+      "reach": 1.1,
+      "rpm": 60,
+      "noise": 8
+    },
+    "mass": 0
+  },
+  {
+    "id": "shove",
+    "name": "Shove",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 80,
+      "radius": 0.1,
+      "reach": 1.5,
+      "rpm": 90,
+      "noise": 5
+    },
+    "mass": 0
+  },
+  {
     "id": "pistol_9mm",
     "name": "9 mm service pistol",
     "category": "pistol",
