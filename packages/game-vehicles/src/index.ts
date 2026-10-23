@@ -40,3 +40,16 @@ export type {
   ZoneEffect,
   ZoneState,
 } from './api'
+export { createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES } from './destructible'
+export type {
+  JointDef,
+  LocalBox,
+  PartDef,
+  PartRole,
+  VehicleDestructible,
+  VehicleDestructibleOptions,
+  VehicleItem,
+  VehicleItemOptions,
+  VehicleModel,
+  VehicleStatus,
+} from './destructible'
