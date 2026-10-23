@@ -47,6 +47,8 @@ export interface PlantMesh {
   species: string
   lod: Lod
   triangleCount: number
+  /** condition the plant was generated with (decides dry wood vs green wood in the destruction material mapping) */
+  condition?: Condition
 }
 
 export interface GenerateOptions {

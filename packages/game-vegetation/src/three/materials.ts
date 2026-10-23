@@ -1,5 +1,6 @@
 import type { MaterialOptions, ThreeNS, VegetationMaterials, WindSettings, ActorInput } from './types'
 import { MAX_ACTORS } from './types'
+import { resolveMaterialIds } from '../destruction'
 
 const COMMON = /* glsl */ `
 #include <common>
@@ -86,6 +87,7 @@ export function createVegetationMaterials(THREE: ThreeNS, opts: MaterialOptions 
   const spines = make(true, true, 0.8)
   const dir = uniforms.uWindDir.value
   return {
+    materialIds: resolveMaterialIds(opts.materialIds),
     wood,
     foliage,
     flowers,

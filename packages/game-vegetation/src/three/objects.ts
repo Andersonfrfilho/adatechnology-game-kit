@@ -3,6 +3,8 @@ import type { Lot } from '../lot'
 import { generate } from '../generate'
 import type { ThreeNS, VegetationMaterials } from './types'
 import { createVegetationMaterials } from './materials'
+import { materialKeyForPart, resolveMaterialIds, type MaterialIds } from '../destruction'
+import type { Condition } from '../types'
 
 import type { BufferGeometry as Geo } from 'three'
 type Obj = InstanceType<ThreeNS['Object3D']>
@@ -27,45 +29,59 @@ function inflate(g: Geo, m: number): void {
   if (g.boundingSphere) g.boundingSphere.radius += m
 }
 
-function meshFor(THREE: ThreeNS, data: MeshData, material: unknown): InstanceType<ThreeNS['Mesh']> {
+export interface DestructionOptions {
+  /** override any destruction material id (merged over the materials' own mapping, then DEFAULT_MATERIAL_IDS) */
+  materialIds?: Partial<MaterialIds>
+}
+export type PlantObjectOptions = DestructionOptions
+
+function idsFor(mats: VegetationMaterials, o?: DestructionOptions): MaterialIds {
+  return resolveMaterialIds({ ...(mats.materialIds ?? {}), ...(o?.materialIds ?? {}) })
+}
+
+function meshFor(THREE: ThreeNS, data: MeshData, material: unknown, ids?: MaterialIds, condition?: Condition): InstanceType<ThreeNS['Mesh']> {
   const geo = toBufferGeometry(THREE, data)
   inflate(geo, 0.4)
   const mesh = new THREE.Mesh(geo, material as InstanceType<ThreeNS['Material']>)
   mesh.name = data.kind
   mesh.userData.damageable = { material: data.material }
+  if (ids) mesh.userData.destructionMaterial = ids[materialKeyForPart(data.kind, data.material, condition)]
   return mesh
 }
 
 /** One Mesh per part. userData: collider, bendable, thorny, species, bounds. */
-export function createPlantObject(THREE: ThreeNS, plant: PlantMesh, materials?: VegetationMaterials): InstanceType<ThreeNS['Group']> {
+export function createPlantObject(THREE: ThreeNS, plant: PlantMesh, materials?: VegetationMaterials, options: PlantObjectOptions = {}): InstanceType<ThreeNS['Group']> {
   const mats = materials ?? createVegetationMaterials(THREE)
+  const ids = idsFor(mats, options)
   const g = new THREE.Group()
   g.name = plant.species
   for (const kind of PART_ORDER) {
     const data = plant.parts[kind]
     if (!data) continue
-    g.add(meshFor(THREE, data, mats[kind]))
+    g.add(meshFor(THREE, data, mats[kind], ids, plant.condition))
   }
-  g.userData = { collider: plant.collider, bendable: plant.bendable, thorny: plant.thorny, species: plant.species, bounds: plant.bounds, damageable: { material: plant.parts.wood?.material ?? 'foliage' } }
+  g.userData = { collider: plant.collider, bendable: plant.bendable, thorny: plant.thorny, species: plant.species, bounds: plant.bounds, damageable: { material: plant.parts.wood?.material ?? 'foliage' }, destructionMaterial: ids[materialKeyForPart(plant.parts.wood ? 'wood' : 'foliage', plant.parts.wood?.material ?? 'foliage', plant.condition)] }
   return g
 }
 
 /** A merged lot: at most 3 meshes. userData: colliders, triangleCount. */
-export function createLotObject(THREE: ThreeNS, lot: Lot, materials?: VegetationMaterials): InstanceType<ThreeNS['Group']> {
+export function createLotObject(THREE: ThreeNS, lot: Lot, materials?: VegetationMaterials, options: DestructionOptions = {}): InstanceType<ThreeNS['Group']> {
   const mats = materials ?? createVegetationMaterials(THREE)
+  const ids = idsFor(mats, options)
   const g = new THREE.Group()
   g.name = 'vegetation-lot'
   const { wood, foliage, flowers } = lot.meshes
-  if (wood) g.add(meshFor(THREE, wood, mats.wood))
-  if (foliage) g.add(meshFor(THREE, foliage, mats.foliage))
-  if (flowers) g.add(meshFor(THREE, flowers, mats.flowers))
-  g.userData = { colliders: lot.colliders, triangleCount: lot.triangleCount }
+  if (wood) g.add(meshFor(THREE, wood, mats.wood, ids, lot.condition))
+  if (foliage) g.add(meshFor(THREE, foliage, mats.foliage, ids, lot.condition))
+  if (flowers) g.add(meshFor(THREE, flowers, mats.flowers, ids, lot.condition))
+  g.userData = { colliders: lot.colliders, triangleCount: lot.triangleCount, materialIds: ids }
   return g
 }
 
 /** InstancedMesh per part for many copies of one plant (grass, flowers, hedges). Wind phase varies per instance. */
-export function createInstancedPlants(THREE: ThreeNS, plant: PlantMesh, placements: readonly Placement[], materials?: VegetationMaterials): InstanceType<ThreeNS['Group']> {
+export function createInstancedPlants(THREE: ThreeNS, plant: PlantMesh, placements: readonly Placement[], materials?: VegetationMaterials, options: PlantObjectOptions = {}): InstanceType<ThreeNS['Group']> {
   const mats = materials ?? createVegetationMaterials(THREE)
+  const ids = idsFor(mats, options)
   const g = new THREE.Group()
   g.name = plant.species + '-instanced'
   const pos = new THREE.Vector3()
@@ -92,6 +108,7 @@ export function createInstancedPlants(THREE: ThreeNS, plant: PlantMesh, placemen
     im.frustumCulled = false
     im.name = kind
     im.userData.damageable = { material: data.material }
+    im.userData.destructionMaterial = ids[materialKeyForPart(data.kind, data.material, plant.condition)]
     g.add(im)
   }
   g.userData = { collider: plant.collider, bendable: plant.bendable, species: plant.species, count: placements.length }

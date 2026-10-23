@@ -21,6 +21,8 @@ export interface Lot {
   thinnedCount: number
   /** plants kept at LOD0, LOD1 and LOD2 */
   lodCounts: [number, number, number]
+  /** condition the lot was built with (default 'healthy') */
+  condition?: Condition
 }
 
 export interface BuildLotOptions {
@@ -129,5 +131,5 @@ export function buildLot(placements: Placement[], resolveSpec: (id: string) => P
   }
   for (const k of Object.keys(meshes) as (keyof Lot['meshes'])[]) if (!meshes[k]) delete meshes[k]
   const triangleCount = (meshes.wood?.triangleCount ?? 0) + (meshes.foliage?.triangleCount ?? 0) + (meshes.flowers?.triangleCount ?? 0)
-  return { meshes, colliders, triangleCount, plantCount: placements.length, thinnedCount: thinned, lodCounts }
+  return { meshes, colliders, triangleCount, plantCount: placements.length, thinnedCount: thinned, lodCounts, condition: opts.condition ?? 'healthy' }
 }

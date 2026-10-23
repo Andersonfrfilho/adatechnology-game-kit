@@ -106,5 +106,6 @@ export function generate(spec: PlantSpec, opts: GenerateOptions = {}): PlantMesh
     species: opts.species ?? spec.archetype,
     lod,
     triangleCount: tris,
+    condition,
   }
 }
