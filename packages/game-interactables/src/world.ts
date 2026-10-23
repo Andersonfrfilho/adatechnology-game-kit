@@ -1177,7 +1177,7 @@ export function createWorld(options: WorldOptions = {}): World {
         }
         if (intensity <= 0) continue
         const dir = rotY(e.dir ?? [0, 1, 0], o.public.transform.ry)
-        out.push({ id: gid(o, e.id), object: o.id, kind: e.kind, pos: toWorld(o, e.pos), dir, size: e.size ?? 0.3, intensity: clamp(intensity, 0, 1) })
+        out.push({ id: gid(o, e.id), object: o.id, kind: e.kind, pos: toWorld(o, e.pos), dir, size: e.size ?? 0.3, ...(e.reach !== undefined ? { reach: e.reach } : {}), intensity: clamp(intensity, 0, 1) })
       }
     }
     return out

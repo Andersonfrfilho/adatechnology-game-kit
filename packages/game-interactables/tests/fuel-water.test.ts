@@ -157,6 +157,15 @@ describe('fuel', () => {
     expect(w.target(eye)?.id).toBe('g:burner.bed')
   })
 
+  it('passes the optional emitter reach through', () => {
+    const { w } = world()
+    w.add('g', { ...grill, emitters: [{ id: 'fire', kind: 'fire', pos: [0, 0.8, 0], source: 'bed', reach: 0.25 }, { id: 'smoke', kind: 'smoke', pos: [0, 1, 0], source: 'bed' }] }, origin)
+    w.act('g:ignite.bed')
+    const out = w.emitters()
+    expect(out.find((e) => e.kind === 'fire')!.reach).toBe(0.25)
+    expect('reach' in out.find((e) => e.kind === 'smoke')!).toBe(false)
+  })
+
   it('emitters follow the burner; charcoal smoke lingers 20 s and fades', () => {
     const { w } = world()
     w.add('g', grill, origin)

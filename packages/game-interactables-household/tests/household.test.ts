@@ -369,6 +369,8 @@ describe('kitchen and bathroom', () => {
       expect(s.parts!.some((p) => p.id === 'tap_handle')).toBe(true)
       expect(s.containers![0].id).toBe('under_sink')
       expect(s.emitters!.some((e) => e.kind === 'water')).toBe(true)
+      // the tap stream ends in the basin, not on the floor
+      expect(s.emitters!.find((e) => e.kind === 'water')!.reach).toBeGreaterThan(0.1)
     }
   })
 

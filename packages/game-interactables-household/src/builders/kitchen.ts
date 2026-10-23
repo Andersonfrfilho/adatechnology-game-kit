@@ -30,7 +30,7 @@ function tap(c: Ctx, x: number, y: number, z: number, id: string, partId: string
   )
   const outlet: Vec3 = [round3(x), round3(y + 0.185), round3(z + 0.18)]
   c.add('fixtures', { id, kind: 'tap', outlet, dir: [0, -1, 0], flow: 7, part: partId, tank: 'auto' })
-  c.add('emitters', { id: `${id}_water`, kind: 'water', pos: outlet, dir: [0, -1, 0], source: id, size: 0.02 })
+  c.add('emitters', { id: `${id}_water`, kind: 'water', pos: outlet, dir: [0, -1, 0], source: id, size: 0.02, reach: 0.3 })
   c.interact(`use_${id}`, [round3(x + 0.05), round3(y + 0.126), round3(z)], { do: 'toggle_fixture', fixture: id }, 'prompt.tap', 1.3)
   return outlet
 }
@@ -411,7 +411,7 @@ export function toilet(c: Ctx): void {
     { label: 'prompt.flush', at: false, noSweep: true },
   )
   c.add('fixtures', { id: 'flush', kind: 'flush', outlet: [0, 0.36, 0.12], dir: [0, -1, 0], volume: 6, part: 'flush_button', tank: 'auto' })
-  c.add('emitters', { id: 'flush_water', kind: 'water', pos: [0, 0.38, 0.12], dir: [0, -1, 0], source: 'flush', size: 0.2 })
+  c.add('emitters', { id: 'flush_water', kind: 'water', pos: [0, 0.38, 0.12], dir: [0, -1, 0], source: 'flush', size: 0.2, reach: 0.12 })
   c.interact('use_flush', [0, ty + th + 0.05, -hd + 0.1], { do: 'toggle_fixture', fixture: 'flush' }, 'prompt.flush')
   c.add('damage', { target: 'self', kind: 'plastic', hp: 60 })
 }

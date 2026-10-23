@@ -300,6 +300,8 @@ export interface EmitterSpec {
   source: string
   /** Size hint in meters. */
   size?: number
+  /** How far (m) a water stream falls before it hits something (a basin, a bowl). Default: until the floor. */
+  reach?: number
 }
 
 export interface MirrorSpec {
@@ -464,6 +466,8 @@ export interface ActiveEmitter {
   pos: Vec3
   dir: Vec3
   size: number
+  /** Meters a water stream falls before it hits something; omitted = until the floor. */
+  reach?: number
   /** 0..1. */
   intensity: number
 }
