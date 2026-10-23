@@ -1,0 +1,17 @@
+node_modules
+**/node_modules
+**/dist
+.git
+.github
+.changeset
+.pnpm-store
+coverage
+shots
+**/shots
+*.log
+*.tsbuildinfo
+.env
+.env.*
+.idea
+.vscode
+.DS_Store
