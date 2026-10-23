@@ -57,7 +57,6 @@ pnpm build && pnpm test && pnpm typecheck && pnpm lint
 ### Releasing
 
 - Every change adds a changeset with a semver bump: `patch` (fixes), `minor` (features) or `major` (breaking). While a package is 0.x, a `minor` may contain breaking changes.
-- On merge to `main`, the Release workflow opens (or updates) a "chore: version packages" PR. It bumps the versions and writes each package's `CHANGELOG.md`. Internal dependencies between `@adatechnology/game-*` packages are bumped automatically.
-- Merging that PR publishes the changed packages to npm and creates git tags and GitHub releases.
-- The workflow needs the repository secret `NPM_TOKEN`: an npm automation token with publish rights on the `@adatechnology` scope. Without it the version PR is still opened, but nothing is published.
+- After CI passes on `main`, the Release workflow runs `changeset version`: it bumps the versions, writes each package's `CHANGELOG.md` and bumps internal `@adatechnology/game-*` dependencies. It commits that as `chore(release): version packages` straight to `main`, publishes the changed packages to npm with provenance and pushes the git tags.
+- The workflow needs the repository secret `NPM_TOKEN`: an npm automation token with publish rights on the `@adatechnology` scope. Without it the publish step fails.
 - Consumers update with `pnpm up "@adatechnology/*" --latest`. Browser bundles are served from the CDN: `https://cdn.jsdelivr.net/npm/@adatechnology/<pkg>@<version>/dist/index.global.js`.
