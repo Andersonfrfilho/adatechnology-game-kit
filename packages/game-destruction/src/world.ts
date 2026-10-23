@@ -330,13 +330,17 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     list.forEach((g, gi) => g.ix.forEach((i) => (o.parts[i].st.group = gi)))
   }
 
-  /** Which part `r` rests on over joint `j` (index), or -1 when the joint does not let `r` rest on its other end. */
-  const restsOn = (j: JointRT, r: number): number => {
+  /**
+   * Which part `r` rests on over joint `j` (index), or -1 when the joint does not let `r` rest on its other end. A `tie` is a rope: it only pulls,
+   * so it holds `r` up only when `r` hangs below the part it is tied to (a lamp from a ceiling), never when that part is beside or under it
+   * (a guy rope to a stake in the ground).
+   */
+  const restsOn = (o: ObjRT, j: JointRT, r: number): number => {
     const b = j.bears
     if (!b) return -1
-    if (b === true) return j.ia === r ? j.ib : j.ia
-    if (b === 'a_on_b') return j.ia === r ? j.ib : -1
-    return j.ib === r ? j.ia : -1
+    const k = b === true ? (j.ia === r ? j.ib : j.ia) : b === 'a_on_b' ? (j.ia === r ? j.ib : -1) : j.ib === r ? j.ia : -1
+    if (k < 0 || j.spec.kind !== 'tie') return k
+    return partXf(o, o.parts[k]).c[1] > partXf(o, o.parts[r]).c[1] + 1e-6 ? k : -1
   }
 
   /** Distribute own mass plus carried load down the bearing graph to the anchored parts; mark parts without any support path. */
@@ -359,7 +363,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       for (const j of o.byPart.get(parts[s].spec.id)!) {
         if (j.st.open || !j.bears) continue
         const r = j.ia === s ? j.ib : j.ia
-        if (dist[r] >= 0 || !ok(r) || restsOn(j, r) !== s) continue
+        if (dist[r] >= 0 || !ok(r) || restsOn(o, j, r) !== s) continue
         dist[r] = dist[s] + 1
         queue.push(r)
       }
@@ -372,7 +376,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const lower: number[] = []
       for (const j of o.byPart.get(parts[i].spec.id)!) {
         if (j.st.open || !j.bears) continue
-        const k = restsOn(j, i)
+        const k = restsOn(o, j, i)
         if (k >= 0 && dist[k] >= 0 && dist[k] < dist[i] && !isPartition(k)) lower.push(k)
       }
       for (const k of lower) incoming[k] += total / lower.length
