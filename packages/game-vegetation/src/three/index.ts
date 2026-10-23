@@ -1,0 +1,5 @@
+export { createVegetationMaterials } from './materials'
+export { toBufferGeometry, createPlantObject, createLotObject, createInstancedPlants, lodObject } from './objects'
+export type { LodObjectOptions } from './objects'
+export { MAX_ACTORS } from './types'
+export type { ThreeNS, VegetationMaterials, WindSettings, ActorInput, MaterialOptions } from './types'
