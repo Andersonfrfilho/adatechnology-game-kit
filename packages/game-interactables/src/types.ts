@@ -71,6 +71,11 @@ export interface PartSpec {
   requires?: string
   /** Label key used by the default interaction (see `InteractionSpec.label`). */
   label?: string
+  /**
+   * Parts of one object that share a group move together: `setPart` or a toggle on any member sets the target of all of them
+   * (blind slats, the two panels of a curtain).
+   */
+  group?: string
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------

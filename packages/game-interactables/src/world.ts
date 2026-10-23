@@ -210,14 +210,26 @@ export function createWorld(options: WorldOptions = {}): World {
     return !!p.spec.requires && o.parts.has(p.spec.requires) && !isOpen(o, p.spec.requires)
   }
 
-  function setPartTarget(o: ObjState, partId: string, target: number, instant = false): void {
-    const p = o.parts.get(partId)
-    if (!p) return
+  function setOnePart(o: ObjState, p: PartState, target: number, instant: boolean): void {
     const next = clamp(target, 0, p.maxT)
     const changed = next !== p.target
     p.target = next
     if (instant) writeT(o, p, next)
-    if (changed || instant) emit({ type: 'part', object: o.id, part: partId, t: p.t, target: p.target })
+    if (changed || instant) emit({ type: 'part', object: o.id, part: p.spec.id, t: p.t, target: p.target })
+  }
+
+  function setPartTarget(o: ObjState, partId: string, target: number, instant = false): void {
+    const p = o.parts.get(partId)
+    if (!p) return
+    const group = p.spec.group
+    const members = group ? [...o.parts.values()].filter((q) => q.spec.group === group) : [p]
+    for (const q of members) {
+      setOne(o, q, target, instant)
+    }
+  }
+
+  function setOne(o: ObjState, p: PartState, target: number, instant: boolean): void {
+    setOnePart(o, p, target, instant)
   }
 
   /** Frame of a part right now: rotation (axis in object-local, angle) and translation, both about its pivot. */

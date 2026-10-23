@@ -99,3 +99,53 @@ describe('load keeps the fitSweep limit', () => {
     expect(w.partT('c', 'door')).toBeCloseTo(max)
   })
 })
+
+describe('part groups', () => {
+  const blinds = {
+    type: 'blinds',
+    parts: [
+      { id: 'tilt_1', pivot: [0, 1, 0] as [number, number, number], group: 'tilt', motion: { kind: 'hinge' as const, axis: [1, 0, 0] as [number, number, number], angle: 1.4 } },
+      { id: 'tilt_2', pivot: [0, 1.1, 0] as [number, number, number], group: 'tilt', motion: { kind: 'hinge' as const, axis: [1, 0, 0] as [number, number, number], angle: 1.4 } },
+      { id: 'raise', pivot: [0, 2, 0] as [number, number, number], motion: { kind: 'scale' as const, axis: [0, 1, 0] as [number, number, number], scale: 0.2 } },
+    ],
+    interactions: [
+      { id: 'tilt', pos: [0, 1, 0] as [number, number, number], action: { do: 'toggle_part' as const, part: 'tilt_1' }, label: 'prompt.blinds' },
+    ],
+  }
+
+  it('setPart on one member moves the whole group and leaves other parts alone', () => {
+    const { w } = world()
+    w.add('b', blinds, origin)
+    w.setPart('b', 'tilt_2', 1)
+    run(w, 1)
+    expect(w.partT('b', 'tilt_1')).toBe(1)
+    expect(w.partT('b', 'tilt_2')).toBe(1)
+    expect(w.partT('b', 'raise')).toBe(0)
+    w.setPart('b', 'tilt_1', 0, true)
+    expect(w.partT('b', 'tilt_2')).toBe(0)
+  })
+
+  it('one toggle interaction opens and closes every member', () => {
+    const { w } = world()
+    w.add('b', blinds, origin)
+    expect(w.act('b:tilt')).toBe(true)
+    run(w, 1)
+    expect(w.partT('b', 'tilt_2')).toBe(1)
+    expect(w.act('b:tilt')).toBe(true)
+    run(w, 1)
+    expect(w.partT('b', 'tilt_1')).toBe(0)
+    expect(w.partT('b', 'tilt_2')).toBe(0)
+  })
+
+  it('emits one part event per member and survives serialize/load', () => {
+    const { w, events } = world()
+    w.add('b', blinds, origin)
+    w.setPart('b', 'tilt_1', 1, true)
+    const ids = events.filter((e) => e.type === 'part' && e.target === 1).map((e) => (e as { part: string }).part)
+    expect(ids.sort()).toEqual(['tilt_1', 'tilt_2'])
+    const s = w.serialize()
+    w.setPart('b', 'tilt_1', 0, true)
+    w.load(s)
+    expect(w.partT('b', 'tilt_2')).toBe(1)
+  })
+})
