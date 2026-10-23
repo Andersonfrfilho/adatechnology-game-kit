@@ -22,10 +22,13 @@ Antes de construir qualquer coisa (modelo 3D, animação, comportamento, efeito,
 - Não achou nem no SDK nem nas entregas, ou a entrega está incompleta: **pergunte** antes de inventar.
 - Ao terminar uma migração, atualize o inventário da spec de migração (`specs/`) marcando o que entrou e onde.
 
-## 2. Motor genérico, conteúdo em pacote de conteúdo
+## 2. Motor genérico; conteúdo de cada jogo no repositório do jogo
 
 - O núcleo de cada pacote não conhece o ZombiAdA (nada de Vale Cinzento, facções ou nomes de cidade no código do motor).
-- O conteúdo de um jogo vai em pacote de conteúdo, como já é feito com `-fleet`, `-species`, `-household`, `-residential`.
+- Conteúdo **reaproveitável por qualquer jogo** fica no SDK em pacote de conteúdo, como `-fleet`, `-species`, `-household`,
+  `-residential`. Isso inclui coisas do mundo real com o nome real: armas com marca e modelo, calibres, veículos (decisão de 2026-10-23).
+- Conteúdo **só de um jogo** (histórias, personagens nomeados, Vale Cinzento, sangue e marcas da horda) fica **no repositório do
+  jogo**, que consome os SDKs do game-kit.
 - three.js fica num adaptador `<lib>-three`, como `destruction-three`, `fluids-three`, `interactables-three` e `weapons-three`.
 
 ## 3. Testes: contrato genérico, módulo específico por lib

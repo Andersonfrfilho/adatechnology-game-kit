@@ -21,11 +21,11 @@ Legenda: ✅ decidido (data e resposta), ⏳ aguardando o dono, 🔁 decidido pe
 
 | # | Decisão | O que as fontes dizem | Recomendação | Situação |
 |---|---|---|---|---|
-| G1 | **Qual versão do jogo é a referência** | Modo livre é o mais novo (andares, bichos, Jardim das Palmeiras, Casa3DSDK, câmera); Jardim Aurora é a fatia v7 da revisão final, com casas à mão | Modo livre | ⏳ |
-| G2 | **Onde mora o conteúdo do ZombiAdA** (nomes, histórias, sangue, marca "horda", catálogo de itens, Vale Cinzento) | O CLAUDE.md pede só que fique fora do motor | Pacotes `*-zombiada` dentro do game-kit (`game-weapons-zombiada`, `game-characters-zombiada`…), publicados como os outros | ⏳ |
-| G3 | **Como medir "igual ao original"** | As páginas usam `Math.random` e estado global; o SDK exige semente | Trocar o sorteio por semente e medir pela sequência de eventos e pelo hash da cena com semente fixa, não por pixel | ⏳ |
+| G1 | **Qual versão do jogo é a referência** | Modo livre é o mais novo; Jardim Aurora é a fatia v7 | — | ✅ 2026-10-23: **nenhuma**. O jogo ainda está sendo montado; as duas versões são só mais uma fonte para comparar, e o SDK fica com o melhor de cada entrega |
+| G2 | **Onde mora o conteúdo do ZombiAdA** (nomes, histórias, sangue, marca "horda", Vale Cinzento) | O CLAUDE.md pedia só que ficasse fora do motor | — | ✅ 2026-10-23: **no repositório do jogo**, que usa os SDKs do game-kit. O SDK guarda motor e conteúdo reaproveitável por qualquer jogo |
+| G3 | **Como medir "igual ao original"** | As páginas usam `Math.random` e estado global; o SDK exige semente | — | ✅ 2026-10-23: sorteio com semente; o golden compara a sequência de eventos e o hash da cena com semente fixa |
 | G4 | **Nomes no código** | Times escreveram em português (`civico`, `brutamonte`); a regra de código pede inglês | Identificadores em inglês; textos em pt-BR pelo locale | 🔁 regra de código |
-| G5 | **Marcas reais de armas** (Glock, Taurus, AK) | O próprio Arsenal (§09) avisa que marca registrada pode pedir licença | Motor e dados com arquétipos genéricos; marcas reais no pacote de conteúdo do ZombiAdA, trocáveis | ⏳ |
+| G5 | **Marcas reais de armas** (Glock, Taurus, AK) | O próprio Arsenal (§09) avisa que marca registrada pode pedir licença | — | ✅ 2026-10-23: **marcas reais no SDK** (arma real serve a qualquer jogo) |
 | G6 | **three.js r128 → 0.160** | Páginas usam r128 e addons; o SDK usa ^0.160 | Portar para 0.160 (o addon `RoundedBoxGeometry` vira dependência dos `-three`) | 🔁 pacote do SDK |
 
 ## 2. Armas e itens (Fase 1 e 3)
