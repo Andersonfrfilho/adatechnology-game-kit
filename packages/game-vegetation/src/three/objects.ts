@@ -1,4 +1,4 @@
-import type { MeshData, PartKind, Placement, PlantMesh, PlantSpec, GenerateOptions } from '../types'
+import type { MeshData, PartKind, Vec3, Placement, PlantMesh, PlantSpec, GenerateOptions } from '../types'
 import type { Lot } from '../lot'
 import { generate } from '../generate'
 import type { ThreeNS, VegetationMaterials } from './types'
@@ -33,7 +33,14 @@ export interface DestructionOptions {
   /** override any destruction material id (merged over the materials' own mapping, then DEFAULT_MATERIAL_IDS) */
   materialIds?: Partial<MaterialIds>
 }
-export type PlantObjectOptions = DestructionOptions
+export interface PlantObjectOptions extends DestructionOptions {
+  /**
+   * Build one child Mesh per `plant.pieces` entry instead of one per part. Each child is positioned at the piece pivot (so it can
+   * fall / rotate about it), carries `userData.destructionPart = { id, kind, parent, material, materialKey }` and
+   * `userData.destructionMaterial`. Default false.
+   */
+  separable?: boolean
+}
 
 function idsFor(mats: VegetationMaterials, o?: DestructionOptions): MaterialIds {
   return resolveMaterialIds({ ...(mats.materialIds ?? {}), ...(o?.materialIds ?? {}) })
@@ -49,12 +56,59 @@ function meshFor(THREE: ThreeNS, data: MeshData, material: unknown, ids?: Materi
   return mesh
 }
 
+/** Copy the triangles of one index range into their own compact MeshData, moved by -origin. */
+export function slicePiece(mesh: MeshData, indexStart: number, indexCount: number, origin: Vec3): MeshData {
+  const remap = new Map<number, number>()
+  const order: number[] = []
+  const indices = new Uint32Array(indexCount)
+  for (let i = 0; i < indexCount; i++) {
+    const v = mesh.indices[indexStart + i]
+    let n = remap.get(v)
+    if (n === undefined) {
+      n = order.length
+      remap.set(v, n)
+      order.push(v)
+    }
+    indices[i] = n
+  }
+  const positions = new Float32Array(order.length * 3)
+  const normals = new Float32Array(order.length * 3)
+  const colors = new Float32Array(order.length * 3)
+  const sway = new Float32Array(order.length)
+  for (let i = 0; i < order.length; i++) {
+    const v = order[i]
+    positions[i * 3] = mesh.positions[v * 3] - origin[0]
+    positions[i * 3 + 1] = mesh.positions[v * 3 + 1] - origin[1]
+    positions[i * 3 + 2] = mesh.positions[v * 3 + 2] - origin[2]
+    normals.set(mesh.normals.subarray(v * 3, v * 3 + 3), i * 3)
+    colors.set(mesh.colors.subarray(v * 3, v * 3 + 3), i * 3)
+    sway[i] = mesh.sway[v]
+  }
+  return { positions, normals, colors, sway, indices, triangleCount: indexCount / 3, kind: mesh.kind, material: mesh.material }
+}
+
 /** One Mesh per part. userData: collider, bendable, thorny, species, bounds. */
 export function createPlantObject(THREE: ThreeNS, plant: PlantMesh, materials?: VegetationMaterials, options: PlantObjectOptions = {}): InstanceType<ThreeNS['Group']> {
   const mats = materials ?? createVegetationMaterials(THREE)
   const ids = idsFor(mats, options)
   const g = new THREE.Group()
   g.name = plant.species
+  if (options.separable) {
+    for (const pc of plant.pieces) {
+      const src = plant.parts[pc.part]
+      if (!src) continue
+      const data = slicePiece(src, pc.indexStart, pc.indexCount, pc.pivot)
+      const mesh = meshFor(THREE, data, mats[pc.part])
+      mesh.name = pc.id
+      mesh.position.set(pc.pivot[0], pc.pivot[1], pc.pivot[2])
+      const id = ids[pc.material]
+      mesh.userData.destructionMaterial = id
+      mesh.userData.destructionPart = { id: pc.id, kind: pc.kind, parent: pc.parent, material: id, materialKey: pc.material }
+      g.add(mesh)
+    }
+    g.userData = { collider: plant.collider, bendable: plant.bendable, thorny: plant.thorny, species: plant.species, bounds: plant.bounds, pieces: plant.pieces, separable: true }
+    return g
+  }
   for (const kind of PART_ORDER) {
     const data = plant.parts[kind]
     if (!data) continue
