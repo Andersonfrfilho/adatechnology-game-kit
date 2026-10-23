@@ -57,10 +57,10 @@ export function installZoneAuto(kit: Kit): void {
         return { g: g, n: label, key: key, side: gd.side || 0, bb: bb, cen: bb.getCenter(new V3()) }
       })
       const isWindshield = function (q: any) {
-        return q.key ? q.key === 'windshield' : matchers.windshield.test(q.n)
+        return q.key ? /(^|_)windshield($|_)/.test(q.key) : matchers.windshield.test(q.n)
       }
       const isRearGlass = function (q: any) {
-        return q.key ? REAR_GLASS_KEYS.indexOf(q.key) >= 0 : matchers.rear.test(q.n)
+        return q.key ? REAR_GLASS_KEYS.indexOf(q.key) >= 0 || /(^|_)rear($|_)/.test(q.key) : matchers.rear.test(q.n)
       }
       if (!grouped && gl.length <= 10) {
         const used: any = {}

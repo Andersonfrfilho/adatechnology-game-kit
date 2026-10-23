@@ -352,6 +352,11 @@ export interface VehicleKit {
    * which keeps the locale it was created with. English is the fallback for every locale.
    */
   registerLocale(code: string, strings: Record<string, any>): VehicleKit
+  /**
+   * Registers the original (pre-rename) text of zone ids and glass labels, which keeps the random damage of a renamed zone or
+   * pane unchanged. `zones`: new zone id to original id; `glassLabels`: glass part key to original label. Shared by every kit.
+   */
+  registerLegacySeeds(tables: { zones?: Record<string, string>; glassLabels?: Record<string, string> }): void
   plugin(plugin: Plugin): VehicleKit
   scenario(def: ScenarioDefinition): ScenarioDefinition
   defineFluid(key: string, def: FluidDefinition): FluidDefinition

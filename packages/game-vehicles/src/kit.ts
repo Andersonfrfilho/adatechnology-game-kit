@@ -1,5 +1,5 @@
 import { assignDeep, createMatchers, createTranslate, registerLocale, resolveStrings } from './locale'
-import { LEGACY_STATES } from './legacy-seeds'
+import { LEGACY_STATES, registerLegacySeeds } from './legacy-seeds'
 import { clamp, hash, markDecal, rng, smooth, strHash } from './util'
 import type { Kit } from './types'
 import type { VehicleKit, VehicleKitOptions } from './api'
@@ -295,6 +295,8 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
       if (o.geometry && !shared.includes(o.geometry)) o.geometry.dispose()
     })
   }
+
+  kit.registerLegacySeeds = registerLegacySeeds
 
   /* a content pack adds its own strings (under its own top-level key) to the locale this kit was created with */
   kit.registerLocale = function (code: string, table: Record<string, any>) {

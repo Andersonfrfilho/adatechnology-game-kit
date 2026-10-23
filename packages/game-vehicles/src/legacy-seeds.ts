@@ -81,13 +81,29 @@ export const LEGACY_ZONE_IDS: Record<string, string> = {
   skids: 'esquis',
 }
 
+/**
+ * Lets a content pack add its own legacy seeds: `zones` maps a new zone id to the original id and `glassLabels` maps the key of a
+ * glass part to its original label. The tables are shared by every kit of the process; an id keeps one meaning, so a different
+ * text for an id that is already known is an error.
+ */
+export function registerLegacySeeds(tables: { zones?: Record<string, string>; glassLabels?: Record<string, string> }): void {
+  const add = (target: Record<string, string>, source: Record<string, string> | undefined, what: string) => {
+    Object.keys(source || {}).forEach(function (k) {
+      if (target[k] !== undefined && target[k] !== source![k]) throw new Error('registerLegacySeeds: ' + what + ' "' + k + '" already maps to "' + target[k] + '"')
+      target[k] = source![k]
+    })
+  }
+  add(LEGACY_ZONE_IDS, tables.zones, 'zone id')
+  add(LEGACY_GLASS_LABELS, tables.glassLabels, 'glass label')
+}
+
 /** The text a zone contributes to its seed: an explicit `seedId`, the legacy id, or the id itself. */
 export function legacyZoneId(z: { id: string; seedId?: string }): string {
   return z.seedId || LEGACY_ZONE_IDS[z.id] || z.id
 }
 
 /** Original glass labels by part key; the zone id of a pane was the slug of its (Portuguese) label. */
-const LEGACY_GLASS_LABELS: Record<string, string> = {
+export const LEGACY_GLASS_LABELS: Record<string, string> = {
   windshield: 'Para-brisa',
   rear_window: 'Vidro traseiro',
   window_front: 'Janela dianteira',

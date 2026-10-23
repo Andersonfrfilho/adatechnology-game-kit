@@ -1,7 +1,7 @@
 export { createVehicleKit } from './kit'
 export { registerLocale, resolveStrings, listLocales, format, createTranslate } from './locale'
 export type { LocaleStrings, PartialLocaleStrings, Translate } from './locale'
-export { LEGACY_STATES, LEGACY_ZONE_IDS, SEED_SALTS, legacyZoneId } from './legacy-seeds'
+export { LEGACY_STATES, LEGACY_ZONE_IDS, SEED_SALTS, legacyZoneId, legacyGlassId, legacyLightId, registerLegacySeeds } from './legacy-seeds'
 export { hash, clamp, smooth, rng, strHash } from './util'
 export type {
   Band,

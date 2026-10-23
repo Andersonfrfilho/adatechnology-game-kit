@@ -206,7 +206,8 @@ ones in a strip below); `ui.bandButtons`, `ui.legend`, `ui.healthBar({ text, bar
 The random stream of a zone is seeded from the vehicle key, the zone id and the band. The first version of this engine used Portuguese ids, so ids
 and salts that were renamed keep their original text for seeding (`LEGACY_ZONE_IDS`, `LEGACY_STATES`, `SEED_SALTS`, `legacyZoneId`, and a
 `seedId` option on zones). A vehicle looks exactly as it did before the rename. A content pack can set `seedId` on its own zones to keep an older look,
-`seedKey` on a vehicle spec (used instead of `key` for every random stream) and `seedId` on a scenario (used instead of `id`), so ids can be renamed without changing a result.
+`seedKey` on a vehicle spec (used instead of `key` for every random stream) and `seedId` on a scenario (used instead of `id`), so ids can be renamed without changing a result. `kit.registerLegacySeeds({ zones, glassLabels })` registers the original text of
+zone ids and glass keys (shared by every kit); a glass key that contains `windshield` or `rear` counts as the windshield or the rear glass.
 
 Coming from the Portuguese `VehicleSDK`? The complete old-to-new table is in [MIGRATION.md](./MIGRATION.md).
 
