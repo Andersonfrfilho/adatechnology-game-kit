@@ -355,3 +355,54 @@ describe('water', () => {
     expect(w.emitters()).toHaveLength(0)
   })
 })
+
+describe('device-driven fixtures', () => {
+  const washer: ObjectSpec = {
+    type: 'washer',
+    devices: [{ id: 'washer', kind: 'appliance', watts: 500, circuit: 'laundry', fixture: 'inlet' }],
+    fixtures: [{ id: 'inlet', kind: 'hose', outlet: [0, 0.2, -0.3], flow: 12 }],
+  }
+
+  it('draws water while the device runs, 12 l/min, and stops when switched off', () => {
+    const { w } = world()
+    w.add('tk', { type: 'tank', tanks: [{ id: 't', capacity: 200, level: 100 }] }, origin)
+    w.add('m', washer, origin)
+    expect(w.interactables().map((i) => i.id)).not.toContain('m:fixture.inlet')
+    run(w, 10)
+    expect(w.water.level('tk:t')).toBe(100)
+    w.act('m:device.washer')
+    run(w, 60)
+    expect(w.water.level('tk:t')).toBeCloseTo(88, 0)
+    expect(w.water.isFlowing('m', 'inlet')).toBe(true)
+    w.act('m:device.washer')
+    run(w, 1)
+    expect(w.water.isFlowing('m', 'inlet')).toBe(false)
+    const level = w.water.level('tk:t')
+    run(w, 30)
+    expect(w.water.level('tk:t')).toBe(level)
+  })
+
+  it('stops with the breaker and resumes with it; a dry tank reports not flowing', () => {
+    const { w } = world()
+    w.add('tk', { type: 'tank', tanks: [{ id: 't', capacity: 200, level: 100 }] }, origin)
+    w.add('m', washer, origin)
+    w.act('m:device.washer')
+    run(w, 5)
+    expect(w.water.isFlowing('m', 'inlet')).toBe(true)
+    w.power.setBreaker('laundry', false)
+    run(w, 1)
+    expect(w.water.isFlowing('m', 'inlet')).toBe(false)
+    const level = w.water.level('tk:t')
+    run(w, 10)
+    expect(w.water.level('tk:t')).toBe(level)
+    w.power.setBreaker('laundry', true)
+    run(w, 5)
+    expect(w.water.isFlowing('m', 'inlet')).toBe(true)
+    expect(w.water.level('tk:t')).toBeLessThan(level)
+    const dry = world()
+    dry.w.add('m', washer, origin)
+    dry.w.act('m:device.washer')
+    run(dry.w, 2)
+    expect(dry.w.water.isFlowing('m', 'inlet')).toBe(false)
+  })
+})

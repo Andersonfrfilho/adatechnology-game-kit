@@ -192,6 +192,11 @@ export interface DeviceSpec {
   on?: boolean
   /** For screens: number of channels the host can draw. */
   channels?: number
+  /**
+   * Id of a fixture of the same object that flows while this device is on and powered (a washing machine's water inlet).
+   * The fixture is driven by the device: it gets no interaction of its own.
+   */
+  fixture?: string
 }
 
 export interface FuelSourceSpec {

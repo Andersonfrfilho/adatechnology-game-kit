@@ -900,8 +900,10 @@ export function createWorld(options: WorldOptions = {}): World {
       claim(s.part)
       out.push({ id: `switch.${s.id}`, pos: partPos(s.part, [0, 1.2, 0]), action: { do: 'toggle_switch', switch: s.id }, label: partLabel(s.part) })
     }
+    const driven = new Set((spec.devices ?? []).map((d) => d.fixture))
     for (const f of spec.fixtures ?? []) {
       claim(f.part)
+      if (driven.has(f.id)) continue
       out.push({ id: `fixture.${f.id}`, pos: f.part ? partPos(f.part, f.outlet) : f.outlet, action: { do: 'toggle_fixture', fixture: f.id }, label: partLabel(f.part) })
     }
     for (const b of spec.burners ?? []) {
@@ -1304,7 +1306,21 @@ export function createWorld(options: WorldOptions = {}): World {
         }
       }
     }
-    for (const o of objs.values()) for (const fx of o.fixtures.values()) stepFixture(o, fx, dt)
+    for (const o of objs.values()) {
+      for (const d of o.devices.values()) {
+        const fx = d.spec.fixture ? o.fixtures.get(d.spec.fixture) : undefined
+        if (!fx) continue
+        const run = d.on && devicePowered(o, d)
+        if (fx.on === run) continue
+        fx.on = run
+        if (!run) {
+          fx.flowing = false
+          fx.frac = 0
+          emitFixture(o, fx)
+        }
+      }
+      for (const fx of o.fixtures.values()) stepFixture(o, fx, dt)
+    }
   }
 
   // ------------------------------------------------------------------ add / remove
