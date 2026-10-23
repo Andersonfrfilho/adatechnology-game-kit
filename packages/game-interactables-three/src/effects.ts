@@ -12,6 +12,15 @@ export interface EffectsOptions {
   wind?: [number, number]
   /** Viewport height in pixels, used to size the point sprites. Update with `setViewHeight` on resize. Default 720. */
   viewHeight?: number
+  /** Camera whose vertical field of view sizes the sprites (read again every `update`, so zoom and fov changes follow). Default: a 90 degree lens. */
+  camera?: PerspectiveLike
+}
+
+/** What the effects read from a camera. */
+export interface PerspectiveLike {
+  /** Vertical field of view in degrees. */
+  fov: number
+  zoom?: number
 }
 
 export interface EffectsStats {
@@ -24,7 +33,9 @@ export type PoolKind = 'smoke' | 'steam' | 'fire' | 'water' | 'spark'
 
 export interface Effects {
   /** Spawns for the active emitters and advances every particle by `dt` seconds. No allocations per frame once warmed up. */
-  update(dt: number, emitters: readonly ActiveEmitter[]): void
+  update(dt: number, emitters: readonly ActiveEmitter[], camera?: PerspectiveLike): void
+  /** Camera used for the sprite size (or `null` to go back to a 90 degree lens). */
+  setCamera(camera: PerspectiveLike | null): void
   setWind(x: number, z: number): void
   setViewHeight(px: number): void
   stats(): EffectsStats
@@ -137,7 +148,15 @@ export function createEffects(THREE: ThreeLib, scene: ThreeNS.Object3D, options:
   const rand = mulberry(options.seed ?? 1)
   const wind: [number, number] = [options.wind?.[0] ?? 0, options.wind?.[1] ?? 0]
   const sprite = makeSprite(THREE, options.document)
-  const scale = { value: (options.viewHeight ?? 720) * 0.5 }
+  let viewHeight = options.viewHeight ?? 720
+  let camera: PerspectiveLike | null = options.camera ?? null
+  const scale = { value: 0 }
+  /** Point size in pixels is size * viewHeight / (2 tan(fov / 2)) / distance. */
+  const refreshScale = (cam: PerspectiveLike | null): void => {
+    const fov = cam ? 2 * Math.atan(Math.tan((Math.min(Math.max(cam.fov, 1), 175) * Math.PI) / 360) / Math.max(cam.zoom ?? 1, 0.01)) : Math.PI / 2
+    scale.value = viewHeight / (2 * Math.tan(fov / 2))
+  }
+  refreshScale(camera)
 
   const pools = {} as Record<PoolKind, Pool>
   const objects = {} as Record<PoolKind, ThreeNS.Points>
@@ -361,7 +380,9 @@ export function createEffects(THREE: ThreeLib, scene: ThreeNS.Object3D, options:
 
   return {
     objects,
-    update(dt, emitters) {
+    update(dt, emitters, cam) {
+      if (cam) camera = cam
+      refreshScale(camera)
       const step = Math.min(Math.max(dt, 0), 0.1)
       stamp++
       for (let i = 0; i < emitters.length; i++) {
@@ -393,8 +414,13 @@ export function createEffects(THREE: ThreeLib, scene: ThreeNS.Object3D, options:
       wind[0] = x
       wind[1] = z
     },
+    setCamera(cam) {
+      camera = cam
+      refreshScale(camera)
+    },
     setViewHeight(px) {
-      scale.value = px * 0.5
+      viewHeight = px
+      refreshScale(camera)
     },
     stats() {
       const byKind = {} as Record<PoolKind, number>

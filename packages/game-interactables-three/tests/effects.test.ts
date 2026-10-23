@@ -79,3 +79,25 @@ describe('createEffects', () => {
     expect(scene.children.length).toBe(0)
   })
 })
+
+describe('sprite size follows the camera lens', () => {
+  const scaleOf = (fx: ReturnType<typeof createEffects>) => (fx.objects.smoke.material as THREE.ShaderMaterial).uniforms.uScale.value as number
+
+  it('a 90 degree lens keeps viewHeight / 2; narrower lenses make bigger sprites', () => {
+    const fx = createEffects(THREE, new THREE.Scene(), { viewHeight: 800 })
+    expect(scaleOf(fx)).toBeCloseTo(400)
+    const cam = new THREE.PerspectiveCamera(60, 1.6, 0.1, 100)
+    fx.update(1 / 60, [], cam)
+    expect(scaleOf(fx)).toBeCloseTo(800 / (2 * Math.tan(Math.PI / 6)), 3)
+    cam.fov = 30
+    fx.update(1 / 60, [])
+    expect(scaleOf(fx)).toBeCloseTo(800 / (2 * Math.tan(Math.PI / 12)), 3)
+    cam.zoom = 2
+    fx.update(1 / 60, [])
+    expect(scaleOf(fx)).toBeGreaterThan(800 / (2 * Math.tan(Math.PI / 12)))
+    fx.setViewHeight(400)
+    expect(scaleOf(fx)).toBeLessThan(800 / (2 * Math.tan(Math.PI / 12)) * 2)
+    fx.setCamera(null)
+    expect(scaleOf(fx)).toBeCloseTo(200)
+  })
+})
