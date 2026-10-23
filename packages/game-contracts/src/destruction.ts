@@ -134,7 +134,10 @@ export type DamageType =
   | 'ballistic'
   /** hammers, falls, thrown objects, vehicle impacts: `energy`, `radius` of contact */
   | 'blunt'
-  /** axes, knives, machetes: `energy`; cuts and splinters, opens fabric */
+  /**
+   * axes, knives, machetes: `energy`; cuts and splinters, opens fabric. A cut only goes through a slice of the part, so its cost follows the
+   * cross-section, not the length: on a part longer than 1 m, slash damage is multiplied by its longest dimension in metres (at most 50).
+   */
   | 'slash'
   /** blasts: `energy`, `radius`; damage and impulse fall off with distance, joints break, fragments fly */
   | 'explosive'

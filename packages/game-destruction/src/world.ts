@@ -14,6 +14,10 @@ const DMG_PER_J = 0.02
 const BLAST_COUPLING = 0.1
 const FLAMMABLE_FLUIDS = ['gas', 'fuel']
 
+/** A cut only goes through a slice of the part, so a part longer than `CUT_SLICE` costs no more to cut than a 1 m piece of the same section. */
+const CUT_SLICE = 1
+const cutFactorOf = (shape: PartSpec['shape']): number => clamp(Math.max(...shapeDims(shape)) / CUT_SLICE, 1, 50)
+
 interface PartRT {
   spec: PartSpec
   mat: MaterialDef
@@ -25,6 +29,8 @@ interface PartRT {
   fuel0: number
   area: number
   thickness: number
+  /** Slash damage multiplier: longest dimension / 1 m (1..50). */
+  cutFactor: number
   dims: Vec3
   bound: number
   rt: PartRuntime
@@ -221,7 +227,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
       if (!c && ps.contains) pst.liters = ps.contains.liters
       const p: PartRT = {
-        spec: ps, mat, st: pst, q: quatFromEuler(...(ps.rotation ?? [0, 0, 0])), pos: [ps.position[0], ps.position[1], ps.position[2]], mass0, fuel0, area: shapeArea(ps.shape), thickness: partThickness(ps),
+        spec: ps, mat, st: pst, q: quatFromEuler(...(ps.rotation ?? [0, 0, 0])), pos: [ps.position[0], ps.position[1], ps.position[2]], mass0, fuel0, area: shapeArea(ps.shape), thickness: partThickness(ps), cutFactor: cutFactorOf(ps.shape),
         dims: shapeDims(ps.shape), bound: shapeBound(ps.shape), rt: c?.rt ?? { ...freshRuntime(), prevTemp: pst.temperature },
         structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat) : 0,
       }
@@ -789,7 +795,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (kind === 'blunt') wearJoints(o, p, E * 0.3, undefined, 0, src)
     else wearJoints(o, p, E * 0.3, point, 0.06, src)
     const scale = mat.damageScale?.[kind] ?? 1
-    return applyDamage(o, p, Ec * DMG_PER_J * scale, kind, point, d, E * 0.1, 12, src)
+    return applyDamage(o, p, Ec * DMG_PER_J * scale * (kind === 'slash' ? p.cutFactor : 1), kind, point, d, E * 0.1, 12, src)
   }
 
   const blastObject = (o: ObjRT, point: Vec3, energy: number, radius: number, src?: string): HitResult => {
