@@ -5,6 +5,7 @@ import { jitter, mix, rgb, shade, tintGreen } from '../color'
 import { tube } from '../geometry/tube'
 import { leaf } from '../geometry/leaf'
 import { blossom, flowerHead, type FlowerKind } from '../geometry/flower'
+import { clump, icoShell } from '../geometry/shell'
 
 interface TypeDef {
   height: number
@@ -16,13 +17,23 @@ interface TypeDef {
   leaf: { style: 'lance' | 'heart' | 'strap' | 'compound' | 'broad'; len: number; width: number; along: number; basal: number }
   woody?: boolean
   tilt?: number
+  /** upright, nearly vertical stems */
+  straight?: boolean
+  /** flower heads per stem (default 1) */
+  heads?: number
+  bushy?: boolean
+  hmin?: number
+  /** leafy mound the flowers sit on instead of free stems (radius / height as multiples of the plant height) */
+  mound?: { r: number; h: number; heads: number; leaf: number }
 }
 
 const TYPES: Record<FlowerType, TypeDef> = {
   daisy: { height: 0.38, size: 0.05, stems: 6, colors: [0xfbfaf2], center: 0xf0b820, kind: 'daisy', leaf: { style: 'lance', len: 0.16, width: 0.05, along: 2, basal: 4 } },
   sunflower: { height: 1.7, size: 0.2, stems: 3, colors: [0xf4c21a], center: 0x4a2c14, kind: 'sunflower', leaf: { style: 'heart', len: 0.3, width: 0.24, along: 5, basal: 3 }, tilt: 0.5 },
   rose: { height: 0.85, size: 0.062, stems: 7, colors: [0xd0243a], center: 0xe8c040, kind: 'rose', leaf: { style: 'compound', len: 0.12, width: 0.07, along: 4, basal: 2 }, woody: true },
-  tulip: { height: 0.42, size: 0.04, stems: 6, colors: [0xe03a52], center: 0x303030, kind: 'tulip', leaf: { style: 'strap', len: 0.3, width: 0.07, along: 0, basal: 2 } },
+  tulip: { height: 0.42, size: 0.042, stems: 7, colors: [0xe03a52], center: 0x303030, kind: 'tulip', leaf: { style: 'strap', len: 0.3, width: 0.085, along: 0, basal: 3 }, straight: true },
+  pompom: { height: 0.34, size: 0.019, stems: 8, colors: [0xf08a1a, 0xf5b020], center: 0x305020, kind: 'pompom', leaf: { style: 'lance', len: 0.11, width: 0.04, along: 5, basal: 3 }, bushy: true, heads: 2 },
+  hydrangea: { height: 0.95, size: 0.07, stems: 5, mound: { r: 0.46, h: 0.78, heads: 5, leaf: 0.15 }, colors: [0x5a84d8, 0x8aa8e8, 0x9a90e0], center: 0x405080, kind: 'florets', leaf: { style: 'broad', len: 0.26, width: 0.19, along: 9, basal: 4 }, bushy: true },
   hibiscus: { height: 0.9, size: 0.1, stems: 3, colors: [0xe02a3a], center: 0xe8c040, kind: 'hibiscus', leaf: { style: 'heart', len: 0.18, width: 0.12, along: 4, basal: 2 }, woody: true },
   cluster: { height: 0.8, size: 0.15, stems: 4, colors: [0x5a84d8, 0x8aa8e8], center: 0x405080, kind: 'cluster', leaf: { style: 'broad', len: 0.26, width: 0.2, along: 4, basal: 2 } },
   lily: { height: 0.85, size: 0.09, stems: 3, colors: [0xfffaf0], center: 0xe08a20, kind: 'lily', leaf: { style: 'lance', len: 0.22, width: 0.04, along: 5, basal: 2 } },
@@ -42,7 +53,9 @@ export function generateFlowerPlant(spec: FlowerPlantSpec, ctx: Ctx): ArchResult
   const stemBase = tintGreen(rgb(spec.leafColor ? spec.leafColor : 0x4a8a3a), ctx.condition)
   const size = (spec.flowerSize ?? def.size) * 1.25
   const spreading = !!spec.spreading
-  const bushy = !!spec.bushy || def.woody === true
+  const mnd = spreading ? { r: 1.15, h: 0.62, heads: 0, leaf: 0.075 } : def.mound
+  const isMound = !!mnd
+  const bushy = !!spec.bushy || def.woody === true || def.bushy === true
   const dead = ctx.condition === 'dead'
   const dry = ctx.condition === 'dry'
   const bloomShare = dead ? 0 : (ctx.season === 'winter' ? 0.35 : 1) * (dry ? 0.5 : 1)
@@ -57,20 +70,48 @@ export function generateFlowerPlant(spec: FlowerPlantSpec, ctx: Ctx): ArchResult
     const ang = (i / stemCount) * TAU + rng.range(-0.4, 0.4)
     const r0 = spreading ? rng.range(0.02, 0.06) : rng.range(0.0, 0.09) * Math.sqrt(height)
     const base: Vec3 = [Math.cos(ang) * r0, 0, Math.sin(ang) * r0]
-    const h = height * rng.range(0.72, 1.08)
-    const lean = spreading ? height * 3.5 * rng.range(0.6, 1.2) : h * rng.range(0.08, bushy ? 0.4 : 0.22)
+    const h = height * (def.hmin ? rng.range(def.hmin, 1.0) : rng.range(0.72, 1.08))
+    const lean = spreading ? height * 1.1 * rng.range(0.7, 1.25) : def.straight ? h * rng.range(0.0, 0.05) : h * rng.range(0.08, bushy ? 0.4 : 0.22)
     const la = ang + rng.range(-0.5, 0.5)
-    let tip: Vec3 = spreading ? [base[0] + Math.cos(la) * lean, h * 0.25, base[2] + Math.sin(la) * lean] : [base[0] + Math.cos(la) * lean, h, base[2] + Math.sin(la) * lean]
+    let tip: Vec3 = spreading ? [base[0] + Math.cos(la) * lean, h * 0.5, base[2] + Math.sin(la) * lean] : [base[0] + Math.cos(la) * lean, h, base[2] + Math.sin(la) * lean]
     if (dry) tip = [tip[0] * 1.4, tip[1] * 0.8, tip[2] * 1.4]
     if (dead) tip = [tip[0] * 2.2, tip[1] * 0.45, tip[2] * 2.2]
-    const mid: Vec3 = [lerp(base[0], tip[0], 0.3), tip[1] * 0.55, lerp(base[2], tip[2], 0.3)]
+    const mid: Vec3 = spreading ? [lerp(base[0], tip[0], 0.5), h * 1.0, lerp(base[2], tip[2], 0.5)] : [lerp(base[0], tip[0], 0.3), tip[1] * 0.55, lerp(base[2], tip[2], 0.3)]
     const ctrl: Vec3[] = [base, mid, tip]
     const path = catmull(ctrl, ctx.pick(3, 2, 1))
     stemsData.push({ base, tip, path, ang })
   }
 
-  const radius = Math.max(0.004, height * 0.014) * (def.woody ? 1.2 : 1)
-  for (const st of stemsData) {
+  const moundR = height * (mnd?.r ?? 1)
+  const moundH = height * (mnd?.h ?? 1)
+  const mLeaf = mnd?.leaf ?? 0.08
+  const blobs: { c: Vec3; r: number; sq: number }[] = []
+  if (isMound) {
+    if (spreading) blobs.push({ c: [0, moundH * 0.42, 0], r: moundR, sq: (moundH / moundR) * 0.95 })
+    else {
+      // leafy bush: a ring of rounded leaf clumps around a taller one
+      const nb = ctx.pick(6, 5, 4)
+      for (let i = 0; i < nb; i++) {
+        const a = i * 2.2 + 0.4
+        const ring = i === 0 ? 0 : moundR * 0.5
+        blobs.push({ c: [Math.cos(a) * ring, moundH * (i === 0 ? 0.55 : 0.28 + 0.07 * (i % 3)), Math.sin(a) * ring], r: moundR * (i === 0 ? 0.62 : 0.52), sq: 0.95 })
+      }
+    }
+    for (const bl of blobs) clump(ctx.foliage, { center: bl.c, radius: bl.r, squash: bl.sq, detail: ctx.pick(1, 1, 0) as 0 | 1, seed: rng.seed(), base: mix(leafBase, [0.25, 0.55, 0.22], 0.25), swayK: 0.3, noise: 0.16, flatBottom: 0.8, ao: 0.5 })
+    const nl = ctx.pick(spreading ? 70 : 90, spreading ? 30 : 40, 0)
+    for (let i = 0; i < nl; i++) {
+      const bl = blobs[i % blobs.length]
+      const a = rng.range(0, TAU)
+      const y = rng.range(0.05, 1)
+      const r = Math.sqrt(1 - y * y)
+      const d: Vec3 = [Math.cos(a) * r, y, Math.sin(a) * r]
+      const p: Vec3 = [bl.c[0] + d[0] * bl.r * 0.92, bl.c[1] + d[1] * bl.r * bl.sq * 0.92, bl.c[2] + d[2] * bl.r * 0.92]
+      const out = norm([d[0], d[1] * 0.8 + 0.3, d[2]])
+      leaf(ctx.foliage, p, norm([-d[2] * 0.3 + out[0], out[1] * 0.4 + 0.2, d[0] * 0.3 + out[2]]), out, mLeaf, mLeaf * 0.68, shade(leafBase, 0.7), mix(leafBase, [0.6, 0.8, 0.3], 0.2), { rows: 2, curl: 0.2, fold: 0.4, swayBase: 0.2, swayTip: 0.6, peak: 0.45, round: 0.7 })
+    }
+  }
+  const radius = isMound ? 0.0001 : Math.max(0.004, height * 0.014) * (def.woody ? 1.2 : 1)
+  for (const st of isMound ? [] : stemsData) {
     const n = st.path.length
     tube(stemBuilder, st.path, {
       sides,
@@ -87,8 +128,12 @@ export function generateFlowerPlant(spec: FlowerPlantSpec, ctx: Ctx): ArchResult
   const L = def.leaf
   const lscale = height / def.height
   const makeLeaf = (pos: Vec3, azimuth: number, elev: number, lenK: number): void => {
-    const len = L.len * lscale * lenK * (over ? 1.2 : 1)
-    const wid = L.width * lscale * lenK
+    let len = L.len * lscale * lenK * (over ? 1.2 : 1)
+    let wid = L.width * lscale * lenK
+    if (spreading) {
+      len = 0.07 * lenK * (over ? 1.2 : 1)
+      wid = 0.045 * lenK
+    }
     const dir = dirFromAngles(azimuth, elev)
     const c0 = jitter(leafC0, rng, 0.01, 0.06, 0.04)
     const c1 = jitter(leafC1, rng, 0.01, 0.06, 0.04)
@@ -117,7 +162,7 @@ export function generateFlowerPlant(spec: FlowerPlantSpec, ctx: Ctx): ArchResult
   }
   // basal leaves
   const basal = Math.round(L.basal * (bushy ? 1.5 : 1) * ctx.pick(1, 0.6, 0.35) * (over ? 1.4 : 1) * (dead ? 0.4 : 1))
-  const basalN = spreading ? Math.round(stemCount * 2.5 * ctx.pick(1, 0.5, 0.25)) : basal * Math.max(1, Math.round(stemCount / 3))
+  const basalN = isMound ? 0 : basal * Math.max(1, Math.round(stemCount / 3))
   for (let i = 0; i < basalN; i++) {
     const a = rng.range(0, TAU)
     const rr = spreading ? rng.range(0.02, 0.5) : rng.range(0, 0.07)
@@ -125,7 +170,7 @@ export function generateFlowerPlant(spec: FlowerPlantSpec, ctx: Ctx): ArchResult
     makeLeaf(pos, a, spreading ? rng.range(0.15, 0.5) : rng.range(0.5, 1.0), rng.range(0.7, 1.2))
   }
   // leaves along the stems
-  if (L.along > 0 && !dead) {
+  if (L.along > 0 && !dead && !isMound) {
     const per = Math.max(1, Math.round(L.along * ctx.pick(1, 0.5, 0)))
     for (const st of stemsData) {
       for (let k = 0; k < per; k++) {
@@ -151,11 +196,34 @@ export function generateFlowerPlant(spec: FlowerPlantSpec, ctx: Ctx): ArchResult
     let hc = multi ? [colors[i % colors.length]] : colors
     if (dry) hc = hc.map((c) => mix(c, [0.55, 0.42, 0.25], 0.5))
     const sz = size * rng.range(0.85, 1.15)
-    if (spreading) {
-      blossom(ctx.flowers, add(st.tip, [0, 0.01, 0]), [0, 1, 0], sz, hc[0], heart, 0.7, 5, rng.range(0, TAU))
-      for (let k = 0; k < 2; k++) {
-        const s = sampleLine(st.path, rng.range(0.4, 0.95))
-        blossom(ctx.flowers, add(s.p, [0, 0.01, 0]), [0, 1, 0], sz * 0.9, hc[0], heart, 0.7, 5, rng.range(0, TAU))
+    if (def.mound) {
+      // heads sitting on the leafy mound
+      if (i >= def.mound.heads) continue
+      const a = i * 2.4 + rng.range(-0.3, 0.3)
+      const bl = blobs[i % blobs.length]
+      const y = i === 0 ? 1 : rng.range(0.6, 0.95)
+      const r = Math.sqrt(1 - y * y)
+      const d: Vec3 = [Math.cos(a) * r, y, Math.sin(a) * r]
+      const p: Vec3 = [bl.c[0] + d[0] * bl.r * 0.9, bl.c[1] + d[1] * bl.r * bl.sq * 0.95, bl.c[2] + d[2] * bl.r * 0.9]
+      flowerHead(ctx.flowers, { kind: def.kind, center: p, axis: norm([d[0] * 0.5, 1, d[2] * 0.5]), size: sz * rng.range(0.9, 1.1), colors: hc, centerColor: heart, rng: rng.fork(i), lod: ctx.lod, sway: swayHead })
+    } else if (spreading) {
+      // five-petal flowers sitting on top of the mound
+      const nb = ctx.pick(2, 1, 1) + (i % 3 === 0 ? 1 : 0)
+      for (let k = 0; k < nb; k++) {
+        const a = rng.range(0, TAU)
+        const y = rng.range(0.35, 1)
+        const r = Math.sqrt(1 - y * y)
+        const d: Vec3 = [Math.cos(a) * r, y, Math.sin(a) * r]
+        const p: Vec3 = [d[0] * moundR * 0.9, moundH * 0.42 + d[1] * moundH * 0.9, d[2] * moundR * 0.9]
+        const nrm = norm([d[0] * 0.5, 0.9 + d[1] * 0.3, d[2] * 0.5])
+        blossom(ctx.flowers, add(p, mul(nrm, 0.012)), nrm, sz * rng.range(0.85, 1.1), hc[0], heart, 0.7, ctx.pick(5, 5, 4), rng.range(0, TAU))
+      }
+    } else if (def.heads && def.heads > 1) {
+      const nh = Math.max(1, Math.round(def.heads * ctx.pick(1, 0.7, 0.4)))
+      for (let k = 0; k < nh; k++) {
+        const s = sampleLine(st.path, k === 0 ? 1 : rng.range(0.55, 0.92))
+        const ax = norm([Math.cos(st.ang + k) * 0.5 * (k ? 1 : 0.3), 1, Math.sin(st.ang + k) * 0.5 * (k ? 1 : 0.3)])
+        flowerHead(ctx.flowers, { kind: def.kind, center: s.p, axis: ax, size: sz * (k === 0 ? 1 : 0.85), colors: hc, centerColor: heart, rng: rng.fork(i * 7 + k), lod: ctx.lod, sway: swayHead })
       }
     } else {
       flowerHead(ctx.flowers, { kind: def.kind, center: add(st.tip, mul(axis, def.kind === 'rose' ? 0 : 0.0)), axis, size: sz, colors: hc, centerColor: heart, rng: rng.fork(i), lod: ctx.lod, sway: swayHead })

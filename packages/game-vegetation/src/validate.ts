@@ -6,7 +6,7 @@ const ENUMS: Record<string, readonly string[]> = {
   crownStyle: ['dome', 'lumpy', 'cloud', 'sphere', 'umbrella', 'willow', 'sparse_high'],
   variant: ['coconut', 'royal', 'fan', 'areca', 'date'],
   shape: ['cone', 'candelabra', 'round', 'hedge', 'loose', 'terracotta', 'cylinder', 'square', 'cachepot'],
-  flowerType: ['daisy', 'rose', 'tulip', 'sunflower', 'hibiscus', 'cluster', 'lily', 'bird_of_paradise'],
+  flowerType: ['daisy', 'rose', 'tulip', 'sunflower', 'hibiscus', 'cluster', 'lily', 'bird_of_paradise', 'pompom', 'hydrangea'],
   form: ['agave', 'sword', 'aloe', 'echeveria'],
   armStyle: ['candelabra', 'saguaro', 'sprawl'],
   style: ['dots', 'clusters', 'hibiscus', 'bell', 'bract', 'passion'],

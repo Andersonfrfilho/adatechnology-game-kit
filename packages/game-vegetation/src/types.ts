@@ -179,7 +179,7 @@ export interface ShrubSpec {
   variegation?: Color[]
   leafSize?: number
 }
-export type FlowerType = 'daisy' | 'rose' | 'tulip' | 'sunflower' | 'hibiscus' | 'cluster' | 'lily' | 'bird_of_paradise'
+export type FlowerType = 'daisy' | 'rose' | 'tulip' | 'sunflower' | 'hibiscus' | 'cluster' | 'lily' | 'bird_of_paradise' | 'pompom' | 'hydrangea'
 export interface FlowerPlantSpec {
   archetype: 'flower_plant'
   flowerType?: FlowerType

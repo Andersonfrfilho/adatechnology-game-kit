@@ -24,7 +24,7 @@ export function blossom(b: MeshBuilder, center: Vec3, normal: Vec3, size: number
   }
 }
 
-export type FlowerKind = 'daisy' | 'sunflower' | 'rose' | 'tulip' | 'hibiscus' | 'cluster' | 'lily' | 'bird_of_paradise' | 'trumpet' | 'passion' | 'bract' | 'bell'
+export type FlowerKind = 'daisy' | 'sunflower' | 'rose' | 'tulip' | 'hibiscus' | 'cluster' | 'lily' | 'bird_of_paradise' | 'trumpet' | 'passion' | 'bract' | 'bell' | 'pompom' | 'florets'
 
 export interface HeadOptions {
   kind: FlowerKind
@@ -246,6 +246,53 @@ export function flowerHead(b: MeshBuilder, o: HeadOptions): void {
       for (let i = 0; i < n; i++) {
         const c = jitter(col(i), rng, 0.008, 0.06, 0.03)
         petal(b, f, { angle: (i / n) * TAU + rng.range(0, 0.5), r0: s * 0.05, elev: 0.5, length: s * 1.1, width: s * 1.0, c0: shade(c, 0.85), c1: lighten(c, 0.2), curl: -0.1, rows: 2, swayK: sw, peak: 0.55, round: 0.6 })
+      }
+      break
+    }
+    case 'pompom': {
+      // marigold: ruffled little ball, faceted, orange with yellow streaks, on a green calyx
+      const c0 = col(0)
+      const c1 = col(1 % o.colors.length)
+      const ctr = add(o.center, mul(o.axis, s * 0.55))
+      icoShell(b, {
+        center: ctr,
+        radii: [s, s * 0.82, s],
+        detail: o.lod === 0 ? 1 : 0,
+        rng,
+        noise: o.lod === 0 ? 0.16 : 0.1,
+        color: (v) => {
+          const h = (Math.sin(v.p[0] * 311 + v.p[1] * 177 + v.p[2] * 233) + 1) / 2
+          return shade(mix(c0, c1, h), lerp(0.72, 1.12, v.h))
+        },
+        sway: () => sw,
+      })
+      dome(b, { ...f, o: add(o.center, mul(o.axis, s * 0.05)) }, s * 0.5, s * 0.35, [0.2, 0.4, 0.15], [0.3, 0.5, 0.2], sw)
+      break
+    }
+    case 'florets': {
+      // hydrangea: a ball of many small four-petal florets over a dark core
+      const n = o.lod === 0 ? 44 : 22
+      const R = s
+      const ctr = add(o.center, mul(o.axis, R * 0.75))
+      icoShell(b, { center: ctr, radii: [R * 0.84, R * 0.8, R * 0.84], detail: 0, noise: 0, color: (v) => shade(mix(col(0), [0.15, 0.3, 0.2], 0.55), 0.65 + v.h * 0.3), sway: () => sw })
+      const w = R * 0.34 * Math.sqrt(44 / n)
+      for (let i = 0; i < n; i++) {
+        const y = 1 - (i + 0.5) * (2 / n)
+        const r = Math.sqrt(Math.max(0, 1 - y * y))
+        const a = i * 2.399963
+        const d: Vec3 = norm([Math.cos(a) * r, y, Math.sin(a) * r])
+        const fr = frameFromAxis(add(ctr, mul(d, R * 0.97)), d, a)
+        const c = jitter(col(i), rng, 0.01, 0.07, 0.05)
+        const base = shade(c, lerp(0.7, 1.08, (y + 1) / 2))
+        const tip = lighten(base, 0.35)
+        const pk = toWorld(fr, [0, w * 0.35, 0])
+        const ps: Vec3[] = [toWorld(fr, [w, 0, 0]), toWorld(fr, [0, 0, w]), toWorld(fr, [-w, 0, 0]), toWorld(fr, [0, 0, -w])]
+        for (let k = 0; k < 4; k++) {
+          const q = ps[k]
+          const q2 = ps[(k + 1) % 4]
+          b.flatTri(pk, q, q2, tip, base, base, sw, sw, sw, d)
+          if (o.lod === 0 && k % 2 === 0) b.flatTri(q, q2, add(ctr, mul(d, R * 0.8)), shade(base, 0.7), shade(base, 0.7), shade(base, 0.6), sw, sw, sw, d)
+        }
       }
       break
     }
