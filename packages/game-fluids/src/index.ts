@@ -21,5 +21,7 @@ export type {
   StreamCause,
   StreamState,
   SurfaceSpec,
+  TapSpec,
+  TapState,
   Vec3,
 } from './types'

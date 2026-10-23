@@ -48,6 +48,7 @@ export const locales: Record<FluidLocale, FluidStrings> = {
       dried: 'dried',
       steam: 'steam',
       mix: 'mixed',
+      tap: 'tap',
     },
     on: 'on',
     off: 'off',
@@ -87,6 +88,7 @@ export const locales: Record<FluidLocale, FluidStrings> = {
       dried: 'secou',
       steam: 'vapor',
       mix: 'misturou',
+      tap: 'torneira',
     },
     on: 'ligado',
     off: 'desligado',
@@ -126,5 +128,7 @@ export const describeEvent = (strings: FluidStrings, event: FluidEvent): string 
       return `${label}: ${event.container} ${event.on ? strings.on : strings.off}`
     case 'mix':
       return `${label}: ${event.container} ${name(event.from)} -> ${name(event.into)}`
+    case 'tap':
+      return `${label}: ${event.tap} ${event.on ? strings.on : strings.off}`
   }
 }

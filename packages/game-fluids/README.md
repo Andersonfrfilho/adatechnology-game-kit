@@ -72,6 +72,20 @@ viscosity), creating a `spill` stream. A closed container never spills or pours.
 `dt` seconds (optionally into another container). `puncture(id, point, normal, diameter)` makes a hole: it leaks (one `leak` stream per hole) while
 the liquid is above it and stops once the level falls below.
 
+### Taps
+
+A tap is a fixed source (a sink, a pipe, a hose end):
+
+```ts
+const sink = fluids.addTap({ position: [0, 1.0, -2], liquid: 'water', rate: 0.1 }) // direction [0, -1, 0], on by default
+fluids.setTap(sink, false) // off; fluids.setTap(sink, true, 0.2) turns it on at 0.2 l/s
+fluids.removeTap(sink)
+```
+
+While on it is a `tap` stream (`streams()` lists it with `tap: <id>`): it fills any container whose opening it lands in (the same logic as pouring
+into a cup) and otherwise makes a stain where it lands. Switching emits `{ type: 'tap', tap, on }`. `taps()` returns the state of every tap, and
+taps are part of `serialize` / `load`.
+
 ### Using it with `@adatechnology/game-destruction`
 
 The damage model reports `leak` events for parts that hold a fluid. Map them one to one onto `puncture`; the container then loses liquid by
@@ -130,10 +144,10 @@ hand ∘ pose; otherwise the host animates its own viewmodel from `pose()`. `def
 | `describeEvent(strings, event)`, `resolveStrings(locale)`, `locales` | Localised event text and liquid names |
 
 `FluidWorld` methods: `addContainer`, `removeContainer`, `setTransform`, `open`, `close`, `fill`, `pour`, `drink`, `puncture`, `heat`, `addSurface`,
-`removeSurface`, `splash`, `clearStains`, `update`, `container`, `containers`, `streams`, `stains`, `on`, `describe`, `serialize`, `load`, plus
+`removeSurface`, `addTap`, `setTap`, `removeTap`, `taps`, `splash`, `clearStains`, `update`, `container`, `containers`, `streams`, `stains`, `on`, `describe`, `serialize`, `load`, plus
 `liquids` and `gravity`.
 
-Events (`FluidEvent.type`): `fill`, `pour`, `spill`, `leak`, `drink`, `empty`, `stream_end`, `splash`, `stain`, `dried`, `steam`, `mix`.
+Events (`FluidEvent.type`): `fill`, `pour`, `spill`, `leak`, `drink`, `empty`, `stream_end`, `splash`, `stain`, `dried`, `steam`, `mix`, `tap`.
 
 Notes: liquid ids and event types are snake_case data ids and part of the public contract. Colours in `liquids.json` are `0xRRGGBB` stored as
 integers; density is in kg/m³ and viscosity is relative to water. The surface id `ground` is reserved for the implicit ground (`groundAt`).
@@ -156,3 +170,6 @@ Com `locale: 'pt-BR'`, `describe` usa os nomes em português ("água", "café", 
 "destilado", "gasolina", "diesel", "óleo de motor", "óleo de cozinha", "sangue", "seiva", "ácido", "tinta", "água sanitária", "mel") e os rótulos
 dos eventos ("bebeu", "derramou", "vazando", "encheu", "esvaziou", "mancha", "secou"...). Os usos de item prontos são `sip`, `drink`, `chug`,
 `pour`, `pour_out`, `open` e `close`.
+
+Torneiras: `fluids.addTap({ position, liquid: 'water', rate: 0.1 })` cria uma fonte fixa (pia, cano); `setTap(id, on, rate?)` liga e desliga e
+`removeTap(id)` remove. Ligada, é um fluxo `tap` que enche o recipiente em que cai ou deixa uma mancha, e emite o evento `tap`.

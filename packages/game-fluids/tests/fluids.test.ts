@@ -332,3 +332,69 @@ describe('determinism and snapshots', () => {
     expect(world.describe(e)).toContain('café')
   })
 })
+
+describe('taps', () => {
+  const tapAt = (world: FluidWorld, extra: Record<string, unknown> = {}) =>
+    world.addTap({ id: 'sink', position: [0, 1.2, 0], liquid: 'water', rate: 0.1, ...extra } as Parameters<FluidWorld['addTap']>[0])
+
+  it('a running tap is a `tap` stream, with events when it is switched', () => {
+    const world = createFluids()
+    world.addSurface(FLOOR)
+    const events: FluidEvent[] = []
+    world.on('tap', (e) => events.push(e))
+    expect(tapAt(world)).toBe('sink')
+    const s = world.streams()
+    expect(s).toHaveLength(1)
+    expect(s[0]).toMatchObject({ cause: 'tap', tap: 'sink', liquid: 'water', rate: 0.1 })
+    expect(world.taps()[0]).toMatchObject({ id: 'sink', on: true, direction: [0, -1, 0] })
+    run(world, 1)
+    world.setTap('sink', false)
+    expect(world.streams()).toHaveLength(0)
+    world.setTap('sink', false)
+    world.setTap('sink', true, 0.2)
+    expect(world.streams()[0].rate).toBe(0.2)
+    expect(events).toEqual([
+      { type: 'tap', tap: 'sink', on: true },
+      { type: 'tap', tap: 'sink', on: false },
+      { type: 'tap', tap: 'sink', on: true },
+    ])
+    expect(world.describe(events[0])).toBe('tap: sink on')
+    world.removeTap('sink')
+    expect(world.streams()).toHaveLength(0)
+    expect(world.taps()).toHaveLength(0)
+  })
+
+  it('fills the container it lands in, and makes a stain when nothing is below', () => {
+    const world = createFluids()
+    world.addSurface(FLOOR)
+    world.addContainer({ capacity: 1, shape: { kind: 'cylinder', radius: 0.05, height: 0.12 }, opening: 0.05 }, { id: 'glass', position: [0, 0.8, 0] })
+    tapAt(world)
+    run(world, 3)
+    const c = world.container('glass')!
+    expect(c.liquid).toBe('water')
+    expect(c.liters).toBeGreaterThan(0.2)
+    expect(world.stains()).toHaveLength(0)
+    world.removeContainer('glass')
+    run(world, 2)
+    expect(world.stains().length).toBeGreaterThan(0)
+    expect(world.stains()[0].liquid).toBe('water')
+  })
+
+  it('starts off with `on: false`, supports other directions, and survives a snapshot', () => {
+    const world = createFluids()
+    world.addSurface(FLOOR)
+    tapAt(world, { on: false, direction: [1, -1, 0], temperature: 60 })
+    expect(world.streams()).toHaveLength(0)
+    world.setTap('sink', true)
+    expect(world.taps()[0].direction[0]).toBeCloseTo(Math.SQRT1_2, 5)
+    run(world, 1)
+    const b = createFluids()
+    b.load(JSON.parse(JSON.stringify(world.serialize())))
+    expect(b.taps()).toEqual(world.taps())
+    run(world, 2)
+    run(b, 2)
+    expect(b.serialize()).toEqual(world.serialize())
+    b.setTap('sink', false)
+    expect(b.streams()).toHaveLength(0)
+  })
+})

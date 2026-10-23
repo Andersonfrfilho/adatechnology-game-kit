@@ -88,11 +88,42 @@ export interface ContainerState {
 
 export type StreamCause = 'pour' | 'spill' | 'leak' | 'tap'
 
+/** A fixed water source (a tap, a pipe, a hose end) that runs a stream while it is on. See `FluidWorld.addTap`. */
+export interface TapSpec {
+  /** Id (default `tap_<n>`). Adding a tap with an id that already exists replaces it. */
+  id?: string
+  /** World position of the nozzle. */
+  position: Vec3
+  /** Direction the liquid leaves in (normalised; default straight down `[0, -1, 0]`). */
+  direction?: Vec3
+  liquid: LiquidId
+  /** Litres per second while on (a kitchen tap is about 0.1). */
+  rate: number
+  /** Temperature of the liquid in °C (default the ambient temperature). */
+  temperature?: number
+  /** Starts running (default `true`). */
+  on?: boolean
+}
+
+export interface TapState {
+  id: string
+  position: Vec3
+  direction: Vec3
+  liquid: LiquidId
+  rate: number
+  temperature: number
+  on: boolean
+  /** Id of the `tap` stream while it runs. */
+  stream?: string
+}
+
 export interface StreamState {
   id: string
   liquid: LiquidId
   cause: StreamCause
   container?: string
+  /** The tap that feeds it (`cause: 'tap'`). */
+  tap?: string
   /** World start point and initial velocity. */
   origin: Vec3
   velocity: Vec3
@@ -157,6 +188,8 @@ export type FluidEvent =
   | { type: 'dried'; stain: string; mark: boolean }
   | { type: 'steam'; container: string; on: boolean }
   | { type: 'mix'; container: string; from: LiquidId; into: LiquidId }
+  /** A tap was switched on or off (`setTap`, `addTap` with `on`). */
+  | { type: 'tap'; tap: string; on: boolean }
 
 export interface FluidOptions {
   /** Extra or replacing liquid definitions (matched by `id`) on top of the built-in `LIQUIDS`. */
@@ -198,6 +231,17 @@ export interface FluidWorld {
   heat(id: string, deltaC: number): void
   addSurface(spec: SurfaceSpec): void
   removeSurface(id: string): void
+  /**
+   * Add a tap: while `on` it runs a `tap` stream (cause `'tap'`) from `position` along `direction` at `rate` litres per second. The stream fills any
+   * container whose opening it lands in (the same logic as a pour) and otherwise makes a stain on the surface below. Returns the tap id.
+   * Switching on or off emits a `tap` event.
+   */
+  addTap(spec: TapSpec): string
+  /** Switch a tap on or off, optionally changing its `rate`. Unknown ids are ignored. */
+  setTap(id: string, on: boolean, rate?: number): void
+  /** Remove a tap (and end its stream). */
+  removeTap(id: string): void
+  taps(): TapState[]
   /** Pour liquid straight onto a point (a broken bottle, a blood splash). */
   splash(liquid: LiquidId, point: Vec3, liters: number, velocity?: Vec3): void
   /** Wipe or burn stains in a radius (fire dries water and burns fuel stains). */

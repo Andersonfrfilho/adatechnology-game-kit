@@ -59,6 +59,17 @@ interface ContainerInt {
   lastMix: number
 }
 
+interface TapInt {
+  id: string
+  position: Vec3
+  direction: Vec3
+  liquid: LiquidId
+  rate: number
+  temperature: number
+  on: boolean
+  stream?: string
+}
+
 interface StreamInt extends StreamState {
   key: string
   lastSplash: number
@@ -72,7 +83,8 @@ interface Snapshot {
   version: 1
   time: number
   rng: number
-  counters: { container: number; stream: number; stain: number }
+  counters: { container: number; stream: number; stain: number; tap?: number }
+  taps?: TapInt[]
   containers: Array<Omit<ContainerInt, 'cols'>>
   surfaces: SurfaceSpec[]
   streams: StreamInt[]
@@ -99,10 +111,11 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
 
   let rng = new Rng(options.seed ?? 1)
   let time = 0
-  const counters = { container: 0, stream: 0, stain: 0 }
+  const counters = { container: 0, stream: 0, stain: 0, tap: 0 }
   let containers = new Map<string, ContainerInt>()
   let surfaces = new Map<string, SurfaceInt>()
   let streams = new Map<string, StreamInt>()
+  let taps = new Map<string, TapInt>()
   let stains = new Map<string, StainInt>()
   const listeners = new Map<string, Set<(e: FluidEvent) => void>>()
   let queue: FluidEvent[] = []
@@ -153,6 +166,8 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
     streams.delete(id)
     const c = s.container ? containers.get(s.container) : undefined
     if (c) delete c.streams[s.key]
+    const tap = s.tap ? taps.get(s.tap) : undefined
+    if (tap && tap.stream === id) tap.stream = undefined
     emit({ type: 'stream_end', stream: id })
   }
 
@@ -207,6 +222,44 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
     if (cause === 'leak') emit({ type: 'leak', container: c.id, liquid: c.liquid, rate, stream: id, point: copy3(origin) })
     else if (cause === 'spill') emit({ type: 'spill', container: c.id, liquid: c.liquid, rate, stream: id })
     else emit({ type: 'pour', container: c.id, liquid: c.liquid, rate, stream: id })
+  }
+
+  /** Speed (m/s) at which a tap's liquid leaves the nozzle. */
+  const TAP_SPEED = 1.2
+
+  /** Create or update the `tap` stream of a tap that is on; end it when it is off. */
+  const syncTap = (t: TapInt): void => {
+    if (!t.on || t.rate < 1e-5 || !liquids.has(t.liquid)) {
+      if (t.stream) stopStream(t.stream)
+      return
+    }
+    const velocity: Vec3 = [t.direction[0] * TAP_SPEED, t.direction[1] * TAP_SPEED, t.direction[2] * TAP_SPEED]
+    const existing = t.stream ? streams.get(t.stream) : undefined
+    if (existing) {
+      existing.rate = t.rate
+      existing.thin = t.rate < 0.04
+      existing.temperature = t.temperature
+      existing.velocity = velocity
+      return
+    }
+    const id = `stream_${++counters.stream}`
+    streams.set(id, {
+      id,
+      liquid: t.liquid,
+      cause: 'tap',
+      tap: t.id,
+      origin: copy3(t.position),
+      velocity,
+      rate: t.rate,
+      landing: null,
+      thin: t.rate < 0.04,
+      flightTime: MAX_FLIGHT,
+      key: `tap:${t.id}`,
+      lastSplash: -1,
+      visualOnly: false,
+      temperature: t.temperature,
+    })
+    t.stream = id
   }
 
   /** Where and how fast the liquid leaves over the lowest lip point. */
@@ -494,6 +547,7 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
     liquid: s.liquid,
     cause: s.cause,
     container: s.container,
+    tap: s.tap,
     origin: copy3(s.origin),
     velocity: copy3(s.velocity),
     rate: s.rate,
@@ -561,6 +615,45 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
       refreshLevel(c)
       return id
     },
+
+    addTap(spec) {
+      const id = spec.id ?? `tap_${++counters.tap}`
+      if (taps.has(id)) world.removeTap(id)
+      const d = spec.direction ?? [0, -1, 0]
+      const len = Math.hypot(d[0], d[1], d[2]) || 1
+      const t: TapInt = {
+        id,
+        position: copy3(spec.position),
+        direction: [d[0] / len, d[1] / len, d[2] / len],
+        liquid: spec.liquid,
+        rate: Math.max(0, spec.rate),
+        temperature: spec.temperature ?? ambientC,
+        on: false,
+      }
+      taps.set(id, t)
+      if (spec.on ?? true) world.setTap(id, true)
+      return id
+    },
+
+    setTap(id, on, rate) {
+      const t = taps.get(id)
+      if (!t) return
+      if (rate !== undefined) t.rate = Math.max(0, rate)
+      const changed = t.on !== on
+      t.on = on
+      syncTap(t)
+      if (changed) emit({ type: 'tap', tap: id, on })
+    },
+
+    removeTap(id) {
+      const t = taps.get(id)
+      if (!t) return
+      t.on = false
+      syncTap(t)
+      taps.delete(id)
+    },
+
+    taps: () => [...taps.values()].map((t) => ({ id: t.id, position: copy3(t.position), direction: copy3(t.direction), liquid: t.liquid, rate: t.rate, temperature: t.temperature, on: t.on, stream: t.stream })),
 
     removeContainer(id) {
       const c = containers.get(id)
@@ -745,6 +838,7 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
         }),
         surfaces: [...surfaces.values()].map((s) => clone({ id: s.id, point: s.point, normal: s.normal, halfSize: s.half, tangent: s.t1, porosity: s.porosity })),
         streams: [...streams.values()].map((s) => clone(s)),
+        taps: [...taps.values()].map((t) => clone(t)),
         stains: [...stains.values()].map((s) => clone(s)),
       }
       return snapshot
@@ -763,7 +857,9 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
       for (const raw of snap.containers) containers.set(raw.id, { ...raw, cols: makeColumns(raw.spec.shape) })
       surfaces = new Map()
       for (const s of snap.surfaces) world.addSurface(s)
+      counters.tap = snap.counters.tap ?? 0
       streams = new Map(snap.streams.map((s) => [s.id, s]))
+      taps = new Map((snap.taps ?? []).map((t) => [t.id, t]))
       stains = new Map(snap.stains.map((s) => [s.id, s]))
       queue = []
     },
