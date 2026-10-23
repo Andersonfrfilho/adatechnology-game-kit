@@ -38,6 +38,8 @@ interface PartRT {
   structural: boolean
   anchored: boolean
   cap: number
+  /** Structural part that never had a support path (the spec itself leaves it floating): it is held by its joints like a non-structural part and does not collapse by itself. */
+  orphan: boolean
 }
 
 interface JointRT {
@@ -67,6 +69,8 @@ interface ObjRT {
   active: boolean
   tmp: number[]
   hasStructure: boolean
+  /** Set only while `build` solves the structure for the first time. */
+  seeding?: boolean
   dirty: boolean
   maxStress: number
   collapsed: Set<string>
@@ -235,7 +239,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const p: PartRT = {
         spec: ps, mat, st: pst, q: quatFromEuler(...(ps.rotation ?? [0, 0, 0])), pos: [ps.position[0], ps.position[1], ps.position[2]], mass0, fuel0, area: shapeArea(ps.shape), thickness: partThickness(ps), cutFactor: cutFactorOf(ps.shape),
         dims: shapeDims(ps.shape), bound: shapeBound(ps.shape), rt: c?.rt ?? { ...freshRuntime(), prevTemp: pst.temperature },
-        structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat) : 0,
+        structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat) : 0, orphan: false,
       }
       if (p.structural) o.hasStructure = true
       o.idx.set(ps.id, o.parts.length)
@@ -269,7 +273,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     updateBound(o)
     o.anyAnchor = o.parts.some((p) => p.anchored)
     o.unsup = o.parts.map(() => false)
+    o.seeding = true
     solveStructure(o)
+    o.seeding = false
     recomputeGroups(o)
     o.st.destroyed = o.parts.length > 0 && o.parts.every(isLost)
     o.active = o.maxStress > 0.8 || o.parts.some((p) => p.st.burning || p.st.temperature > ambient + 0.5 || (p.st.liters ?? 0) > 0)
@@ -378,7 +384,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (dist[i] < 0 || isLost(p)) {
         p.st.load = p.st.mass
         p.st.stress = 0
-        o.unsup[i] = o.anyAnchor && !isLost(p)
+        if (o.seeding && !p.anchored && !isLost(p) && p.st.status !== 'collapsed' && !o.collapsed.has(p.spec.id)) p.orphan = true
+        o.unsup[i] = o.anyAnchor && !isLost(p) && !p.orphan
         continue
       }
       p.st.stress = p.st.load! / p.cap
