@@ -1,0 +1,62 @@
+{
+  "name": "@adatechnology/game-vehicles",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Generic procedural 3D vehicle engine for three.js: body shells, glass, lights, interiors, hood and engine bay, zone-based damage in five bands, cracking glass, particles, fluids, rollover, explosions and a damage-map UI. Content (the fleet, fuels, scenarios, texts) comes from packs and plugins.",
+  "keywords": [
+    "three",
+    "threejs",
+    "game",
+    "vehicles",
+    "procedural",
+    "damage",
+    "car"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-vehicles"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist",
+    "MIGRATION.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "example:build": "node example/build-example.mjs"
+  },
+  "peerDependencies": {
+    "three": ">=0.128.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "@types/three": "0.128.0",
+    "happy-dom": "^17.4.4",
+    "three": "0.128.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:*"
+  }
+}

@@ -1,0 +1,1110 @@
+{
+ "groups": {
+  "motorcycles": "Motos",
+  "cars": "Carros",
+  "suvs": "SUVs",
+  "pickups": "Picapes e bigfoot",
+  "vans": "Vans",
+  "heavy": "Caminhões e ônibus",
+  "agricultural": "Agrícola",
+  "military": "Militares",
+  "water": "Aquáticos",
+  "air": "Aéreos"
+ },
+ "fuels": {
+  "none": {
+   "name": "Sem combustível",
+   "yield": "—",
+   "shelf_life": "—",
+   "where": "—",
+   "effect": "Só força do personagem. Cansa."
+  },
+  "gasoline": {
+   "name": "Gasolina",
+   "yield": "100%",
+   "shelf_life": "6 meses",
+   "where": "Postos, galões em garagens, sifão de carros",
+   "effect": "Padrão. Vazada, espalha rápido, faz o ar tremular, pega fogo e evapora em 60 s."
+  },
+  "ethanol": {
+   "name": "Etanol (álcool)",
+   "yield": "70%",
+   "shelf_life": "3 meses, absorve água",
+   "where": "Postos e usinas no interior",
+   "effect": "Motor frio falha na partida em noites frias. Pode ser destilado em usina com energia."
+  },
+  "flex": {
+   "name": "Flex",
+   "yield": "70 a 100%",
+   "shelf_life": "A do que estiver no tanque",
+   "where": "Gasolina ou etanol",
+   "effect": "Aceita qualquer mistura de gasolina e etanol."
+  },
+  "diesel": {
+   "name": "Diesel",
+   "yield": "100%, mais torque",
+   "shelf_life": "12 meses",
+   "where": "Postos de rodovia, fazendas, garagens de ônibus",
+   "effect": "Motor mais barulhento e fumaça preta em alta rotação."
+  },
+  "electric": {
+   "name": "Elétrico",
+   "yield": "Bateria em kWh",
+   "shelf_life": "Bateria perde 2% por mês parada",
+   "where": "Tomada com gerador, painel solar ou carregador de shopping",
+   "effect": "Quase silencioso (15 m). Recarga lenta, em horas. Bateria batida pode pegar fogo."
+  },
+  "hybrid": {
+   "name": "Híbrido",
+   "yield": "Gasolina + bateria, 40% menos consumo",
+   "shelf_life": "Como a gasolina",
+   "where": "Postos; a bateria recarrega rodando",
+   "effect": "Modo elétrico silencioso abaixo de 40 km/h. O motor liga sozinho quando a bateria cai."
+  },
+  "avgas": {
+   "name": "Gasolina de aviação (AVGAS)",
+   "yield": "100%",
+   "shelf_life": "12 meses",
+   "where": "Aeroclubes e hangares",
+   "effect": "Rara. Funciona em carro, mas gasolina de carro não serve para avião."
+  },
+  "jet_fuel": {
+   "name": "Querosene de aviação (QAV)",
+   "yield": "100% (turbina)",
+   "shelf_life": "18 meses",
+   "where": "Aeroportos e bases militares",
+   "effect": "Só para turbinas. Helicóptero a turbina é ouvido a 450 m."
+  }
+ },
+ "scenarios": {
+  "front_crash": "Batida frontal",
+  "left_side_crash": "Batida lateral esquerda",
+  "rollover": "Capotado",
+  "abandoned": "Abandonado",
+  "burnt": "Queimado"
+ },
+ "part_effects": {
+  "headlight": "Farol quebrado: sem luz desse lado à noite.",
+  "taillight": "Lanterna quebrada: quem vem atrás não vê o veículo frear.",
+  "wheel": "Pneu furado: o veículo puxa para esse lado.",
+  "bumper": "Para-choque solto: fica pendurado e a próxima batida vai direto na lataria.",
+  "hood": "Capô amassado: fica entreaberto e atrapalha a visão.",
+  "radiator": "Radiador furado: fumaça branca e motor superaquecendo em minutos.",
+  "engine": "Motor danificado: perde potência, vaza óleo que pinga e espalha.",
+  "fuel_tank": "Tanque furado: a gasolina espalha rápido, é inflamável e evapora em 60 s.",
+  "battery": "Bateria danificada: pega fogo e solta fumaça preta, recarga bloqueada.",
+  "cargo": "Carroceria amassada: a porta traseira emperra.",
+  "hull": "Casco furado: entra água e o barco afunda devagar.",
+  "stern": "Motor de popa quebrado: só a remo.",
+  "propeller": "Hélice torta: o avião não decola.",
+  "wing": "Asa danificada: o avião não decola com segurança.",
+  "landing_gear": "Trem de pouso quebrado: o pouso vira acidente.",
+  "rotor": "Rotor principal danificado: o helicóptero não decola.",
+  "tail_rotor": "Rotor de cauda danificado: o helicóptero gira sem controle.",
+  "track": "Lagarta rompida: o blindado só gira no lugar.",
+  "armor": "Blindagem atingida: só faíscas, sem amassar.",
+  "explosion": "Capô, portas e uma roda arrancados; a carcaça queima e o veículo não anda mais."
+ },
+ "zone_effects": {
+  "hood": [
+   "Nenhum",
+   "Só estético, barulho de raspagem",
+   "capô entreaberto atrapalha a visão",
+   "capô dobrado para cima: visão bloqueada",
+   "sem capô: motor exposto a golpes"
+  ],
+  "cargo_bed": [
+   "Nenhum",
+   "Só estético, barulho de raspagem",
+   "tampa da caçamba emperra",
+   "caçamba rasgada: a carga pode cair",
+   "caçamba aberta: a carga cai na estrada"
+  ],
+  "headlight": [
+   "Nenhum",
+   "lente trincada: luz fraca",
+   "farol sem luz desse lado",
+   "farol pendurado e apagado",
+   "sem farol: anda no escuro desse lado"
+  ],
+  "taillight": [
+   "Nenhum",
+   "lente trincada",
+   "sem luz de freio desse lado",
+   "lanterna pendurada e apagada",
+   "sem lanterna: quem vem atrás não vê o veículo"
+  ],
+  "wheel": [
+   "Nenhum",
+   "aro riscado, só estético",
+   "pneu murcho: puxa para esse lado",
+   "pneu rasgado: no máximo 30 km/h",
+   "rodando no aro: faísca e barulho"
+  ],
+  "axle": [
+   "Nenhum",
+   "aros riscados, só estético",
+   "pneus murchos: puxa e gasta mais",
+   "pneus rasgados: no máximo 30 km/h",
+   "rodando no aro: faísca e barulho"
+  ],
+  "engine": [
+   "Nenhum",
+   "barulho estranho",
+   "perde 30% de potência, fumaça cinza",
+   "fumaça preta, falha e vaza óleo",
+   "motor morto: não liga"
+  ],
+  "radiator": [
+   "Nenhum",
+   "Só estético",
+   "vaza água: superaquece em 10 min",
+   "fumaça branca: superaquece em 2 min",
+   "sem radiador: o motor ferve em segundos"
+  ],
+  "fuel_tank": [
+   "Nenhum",
+   "Só estético",
+   "vazamento lento: perde 1 L por minuto",
+   "vaza rápido: poça inflamável embaixo",
+   "tanque perdido: sem combustível"
+  ],
+  "battery": [
+   "Nenhum",
+   "Só estético",
+   "recarga mais lenta",
+   "solta fumaça: pode pegar fogo",
+   "em chamas: veículo parado"
+  ],
+  "chassis": [
+   "Nenhum",
+   "raspagem embaixo",
+   "chassi torto: puxa para um lado",
+   "longarina trincada: carga máxima pela metade",
+   "chassi partido: não anda"
+  ],
+  "armor": [
+   "Nenhum",
+   "marcas de bala, só estético",
+   "a blindagem perde 50% de proteção",
+   "chapa rachada: tiro de fuzil atravessa",
+   "rombo: tripulação exposta"
+  ],
+  "turret": [
+   "Nenhum",
+   "Só estético",
+   "torre gira devagar",
+   "torre travada, escotilha emperrada",
+   "torre aberta: tripulação exposta"
+  ],
+  "weapon": [
+   "Nenhum",
+   "mira desregulada",
+   "arma desalinhada: erra de longe",
+   "arma emperrada: não atira",
+   "sem arma"
+  ],
+  "track": [
+   "Nenhum",
+   "Só estético",
+   "lagarta frouxa: anda devagar",
+   "lagarta solta: só gira no lugar",
+   "sem lagarta: parado"
+  ],
+  "hull": [
+   "Nenhum",
+   "Só estético",
+   "infiltração: entra água devagar",
+   "rombo: entra água rápido, afunda em minutos",
+   "aberto: afunda"
+  ],
+  "wing": [
+   "Nenhum",
+   "Só estético",
+   "asa amassada: decola só com pista longa",
+   "asa rasgada: não decola com segurança",
+   "sem asa: não voa"
+  ],
+  "tail": [
+   "Nenhum",
+   "Só estético",
+   "leme duro: curva ruim",
+   "cauda rasgada: não decola com segurança",
+   "sem cauda: não voa"
+  ],
+  "nose": [
+   "Nenhum",
+   "Só estético",
+   "vibração no motor e na hélice",
+   "hélice torta: o avião não decola",
+   "sem hélice: não voa"
+  ],
+  "landing_gear": [
+   "Nenhum",
+   "Só estético",
+   "trem desalinhado: pouso duro",
+   "o pouso vira acidente",
+   "sem trem: pouso de barriga"
+  ],
+  "rotor": [
+   "Nenhum",
+   "vibração leve",
+   "rotor desbalanceado: vibra muito",
+   "pás tortas: não decola",
+   "sem rotor: não voa"
+  ],
+  "tail_rotor": [
+   "Nenhum",
+   "Só estético",
+   "vibração na cauda",
+   "gira sem controle no ar",
+   "sem rotor de cauda: não decola"
+  ],
+  "tail_cone": [
+   "Nenhum",
+   "Só estético",
+   "cone amassado: vibração",
+   "cone rasgado: pode partir em voo",
+   "sem cauda: não voa"
+  ],
+  "skid": [
+   "Nenhum",
+   "Só estético",
+   "esqui torto: pouso inclinado",
+   "esqui quebrado: o pouso vira acidente",
+   "sem esqui: pouso de barriga"
+  ],
+  "fairing": [
+   "Nenhum",
+   "riscos, só estético",
+   "carenagem solta, farol sem luz",
+   "farol pendurado: anda no escuro",
+   "sem frente: farol e painel perdidos"
+  ],
+  "seat": [
+   "Nenhum",
+   "Só estético",
+   "banco rasgado: garupa desconfortável",
+   "rabeta solta: sem garupa",
+   "sem banco: pilota em pé"
+  ],
+  "handlebar": [
+   "Nenhum",
+   "manopla ralada",
+   "guidão torto: puxa para um lado",
+   "manete quebrada: sem freio dianteiro",
+   "sem guidão: não pilota"
+  ],
+  "frame": [
+   "Nenhum",
+   "Só estético",
+   "quadro empenado: pedala torto",
+   "quadro trincado: pode partir",
+   "quadro partido: inutilizável"
+  ]
+ },
+ "vehicles": {
+  "compact_hatch": {
+   "name": "Ônyx",
+   "inspired": "Chevrolet Onix",
+   "category": "Hatch compacto",
+   "description": "O carro mais comum da cidade. Econômico, ágil e frágil. Peça de reposição em qualquer garagem.",
+   "seats": "5",
+   "capacity": "44 L",
+   "efficiency": "13,9 km/L (G) · 9,8 km/L (E)",
+   "range": "610 km",
+   "skill": "—"
+  },
+  "taxi": {
+   "name": "Ônyx Plus Táxi",
+   "inspired": "Chevrolet Onix Plus",
+   "category": "Sedã compacto (táxi)",
+   "description": "Sedã branco com luminoso no teto e rádio da cooperativa. Porta-malas grande para mantimentos.",
+   "seats": "5",
+   "capacity": "44 L",
+   "efficiency": "13,4 km/L (G) · 9,4 km/L (E)",
+   "range": "590 km",
+   "skill": "—"
+  },
+  "entry_hatch": {
+   "name": "Kwyd",
+   "inspired": "Renault Kwid",
+   "category": "Hatch de entrada",
+   "description": "Leve, alto do chão e barato de manter. Cabe em qualquer beco, mas a lataria fina amassa fácil.",
+   "seats": "5",
+   "capacity": "38 L",
+   "efficiency": "15,3 km/L (G) · 10,8 km/L (E)",
+   "range": "580 km",
+   "skill": "—"
+  },
+  "electric_hatch": {
+   "name": "Dolfin",
+   "inspired": "BYD Dolphin",
+   "category": "Hatch elétrico",
+   "description": "Silencioso o bastante para passar por uma horda dormindo. Precisa de energia para recarregar; bateria batida pega fogo.",
+   "seats": "5",
+   "capacity": "44,9 kWh",
+   "efficiency": "6,5 km/kWh",
+   "range": "291 km",
+   "skill": "Eletricidade 1 (recarga improvisada)"
+  },
+  "midsize_sedan": {
+   "name": "Corola",
+   "inspired": "Toyota Corolla",
+   "category": "Sedã médio",
+   "description": "Equilíbrio entre conforto, porta-malas e velocidade. Confiável até o fim do mundo.",
+   "seats": "5",
+   "capacity": "50 L",
+   "efficiency": "11,8 km/L (G) · 8,2 km/L (E)",
+   "range": "590 km",
+   "skill": "—"
+  },
+  "police_sedan": {
+   "name": "Cruzi Patrulha",
+   "inspired": "Chevrolet Cruze da PM",
+   "category": "Sedã policial",
+   "description": "Motor turbo, giroflex, sirene e grade separando o banco de trás. Rádio e armário de armas vazios. A sirene atrai a horda num raio de 250 m.",
+   "seats": "4 + 1 detido",
+   "capacity": "52 L",
+   "efficiency": "11,5 km/L (G) · 8,1 km/L (E)",
+   "range": "600 km",
+   "skill": "—"
+  },
+  "highway_police_sedan": {
+   "name": "Cruzi Rodoviária",
+   "inspired": "Chevrolet Cruze da PRF",
+   "category": "Sedã policial rodoviário",
+   "description": "A mesma viatura com a pintura da polícia rodoviária: branca com faixas azul e amarela. Achada parada em postos de fiscalização à beira da estrada. A sirene atrai a horda num raio de 250 m.",
+   "seats": "4 + 1 detido",
+   "capacity": "52 L",
+   "efficiency": "11,5 km/L (G) · 8,1 km/L (E)",
+   "range": "600 km",
+   "skill": "—"
+  },
+  "bicycle": {
+   "name": "Monarca Barra Circular",
+   "inspired": "Monark Barra Circular",
+   "article": "na",
+   "category": "Bicicleta",
+   "description": "A clássica bicicleta de barra dupla curva, de aço, com bagageiro. Silenciosa, sem combustível e totalmente exposta.",
+   "seats": "1 (+1 no bagageiro)",
+   "capacity": "—",
+   "efficiency": "—",
+   "range": "Fôlego do ciclista",
+   "skill": "—"
+  },
+  "scooter": {
+   "name": "PXC 160",
+   "inspired": "Honda PCX 160",
+   "category": "Scooter 160 cc",
+   "description": "Câmbio automático, assoalho plano e baú sob o banco. Fácil de pilotar no meio do engarrafamento abandonado; rodas pequenas sofrem na terra.",
+   "seats": "2",
+   "capacity": "8,1 L",
+   "efficiency": "40 km/L",
+   "range": "320 km",
+   "skill": "Pilotagem 1"
+  },
+  "commuter_motorcycle": {
+   "name": "Titã 160",
+   "inspired": "Honda CG 160 Titan",
+   "article": "na",
+   "category": "Moto urbana 160 cc",
+   "description": "A moto mais vendida do país: passa entre carros parados e se conserta com qualquer peça. Uma queda no meio da horda pode ser fatal.",
+   "seats": "2",
+   "capacity": "16,1 L",
+   "efficiency": "40 km/L (G) · 28 km/L (E)",
+   "range": "640 km",
+   "skill": "Pilotagem 1"
+  },
+  "trail_bike": {
+   "name": "Brós 160",
+   "inspired": "Honda NXR 160 Bros",
+   "article": "na",
+   "category": "Moto trail 160 cc",
+   "description": "Suspensão longa e pneus de cravo: sobe barranco, atravessa lama e foge da horda por trilha onde carro não passa.",
+   "seats": "2",
+   "capacity": "12 L",
+   "efficiency": "38 km/L (G) · 26 km/L (E)",
+   "range": "450 km",
+   "skill": "Pilotagem 1"
+  },
+  "adventure_bike": {
+   "name": "GZ 1250 Aventura",
+   "inspired": "BMW R 1250 GS Adventure",
+   "article": "na",
+   "category": "Big trail 1250 cc",
+   "description": "Motor boxer, tanque de 30 litros e malas de alumínio. Atravessa o país sem parar em posto, mas pesa muito para levantar sozinho.",
+   "seats": "2",
+   "capacity": "30 L",
+   "efficiency": "20 km/L",
+   "range": "600 km",
+   "skill": "Pilotagem 2"
+  },
+  "highway_police_bike": {
+   "name": "GZ 1250 Rodoviária",
+   "inspired": "BMW R 1250 GS da PRF",
+   "article": "na",
+   "category": "Big trail policial",
+   "description": "A big trail da polícia rodoviária: branca e azul, malas com faixas, sirene e luzes no protetor do motor. Feita para rodar centenas de quilômetros por dia na rodovia.",
+   "seats": "2",
+   "capacity": "30 L",
+   "efficiency": "20 km/L",
+   "range": "600 km",
+   "skill": "Pilotagem 2"
+  },
+  "quad_bike": {
+   "name": "Grizzli 700",
+   "inspired": "Yamaha Grizzly 700",
+   "category": "Quadriciclo 4x4",
+   "description": "Tração 4x4 e bagageiros na frente e atrás. Bom em fazenda e mato; instável em alta velocidade e sem nenhuma proteção.",
+   "seats": "1 (+1 improvisado)",
+   "capacity": "18 L",
+   "efficiency": "13 km/L",
+   "range": "230 km",
+   "skill": "Pilotagem 1"
+  },
+  "beetle": {
+   "name": "Fusquinha 1300",
+   "inspired": "Volkswagen Fusca",
+   "category": "Sedã clássico (motor traseiro)",
+   "description": "Motor a ar atrás, sem radiador para furar. Mecânica simples: qualquer um conserta com chave e arame. Barulhento e lento, mas não morre.",
+   "seats": "5 (apertados)",
+   "capacity": "40 L",
+   "efficiency": "11 km/L",
+   "range": "440 km",
+   "skill": "Mecânica 1 (motor a ar, conserto fácil)"
+  },
+  "compact_suv": {
+   "name": "T-Crux",
+   "inspired": "Volkswagen T-Cross",
+   "category": "SUV compacto",
+   "description": "SUV compacto de cidade: alto o bastante para pular meio-fio, curto para manobrar entre carros abandonados. Turbo flex bebe o que achar.",
+   "seats": "5",
+   "capacity": "52 L",
+   "efficiency": "11,8 km/L (G) · 8,2 km/L (E)",
+   "range": "610 km",
+   "skill": "Direção 1"
+  },
+  "hybrid_suv": {
+   "name": "Corola Crux Híbrido",
+   "inspired": "Toyota Corolla Cross Hybrid",
+   "category": "SUV híbrido flex",
+   "description": "Anda no modo elétrico em silêncio pela cidade e liga o motor flex na estrada. Bateria híbrida batida pode pegar fogo.",
+   "seats": "5",
+   "capacity": "36 L + bateria de 1,3 kWh",
+   "efficiency": "17,0 km/L (G) · 11,8 km/L (E)",
+   "range": "610 km",
+   "skill": "Eletricidade 1 (bateria híbrida)"
+  },
+  "midsize_suv": {
+   "name": "Compas Longitude",
+   "inspired": "Jeep Compass",
+   "category": "SUV médio 4x4 diesel",
+   "description": "Grade de sete fendas, teto preto e tração 4x4 com diesel. Confortável na estrada e firme na terra.",
+   "seats": "5",
+   "capacity": "60 L",
+   "efficiency": "10,3 km/L (cidade) · 13,5 km/L (estrada)",
+   "range": "800 km",
+   "skill": "Direção 1 · tração 4x4"
+  },
+  "large_suv": {
+   "name": "Hylux SW-4",
+   "inspired": "Toyota SW4",
+   "article": "na",
+   "category": "SUV 4x4 de 7 lugares",
+   "description": "Alta, pesada e com chassi de picape. Sete lugares, reduzida e diesel: leva a família inteira para fora da cidade.",
+   "seats": "7",
+   "capacity": "80 L",
+   "efficiency": "9,8 km/L (cidade) · 11,2 km/L (estrada)",
+   "range": "800 km",
+   "skill": "Direção 2 (4x4 com reduzida)"
+  },
+  "compact_pickup": {
+   "name": "Estrada Cabine Dupla",
+   "inspired": "Fiat Strada",
+   "article": "na",
+   "category": "Picape compacta",
+   "description": "A picape mais vendida do país: leve, econômica e com caçamba para 650 kg. Não tem 4x4, mas acha peça em qualquer cidade.",
+   "seats": "5",
+   "capacity": "55 L",
+   "efficiency": "12,5 km/L (G) · 8,9 km/L (E)",
+   "range": "690 km",
+   "skill": "Direção 1"
+  },
+  "crossover_pickup": {
+   "name": "Touro Ultra",
+   "inspired": "Fiat Toro",
+   "article": "na",
+   "category": "Picape média 4x4 diesel",
+   "description": "Picape com jeito de SUV: farol dividido em dois andares, tampa traseira que abre como porta e diesel 4x4.",
+   "seats": "5",
+   "capacity": "60 L",
+   "efficiency": "10,1 km/L (cidade) · 12,6 km/L (estrada)",
+   "range": "610 a 750 km",
+   "skill": "Direção 1 · tração 4x4"
+  },
+  "midsize_pickup": {
+   "name": "Hylux Cabine Dupla",
+   "inspired": "Toyota Hilux",
+   "article": "na",
+   "category": "Picape média 4x4 diesel",
+   "description": "A favorita dos sobreviventes: chassi forte, reduzida, santo-antônio e caçamba para uma tonelada.",
+   "seats": "5",
+   "capacity": "80 L",
+   "efficiency": "10,1 km/L (cidade) · 11,3 km/L (estrada)",
+   "range": "800 km",
+   "skill": "Direção 2 (4x4 com reduzida)"
+  },
+  "monster_truck": {
+   "name": "Bigfut",
+   "inspired": "monster truck Bigfoot",
+   "article": "no",
+   "category": "Monster truck",
+   "description": "Carroceria de picape antiga em cima de pneus de 1,68 m. Passa por cima de carros, muros e hordas. O V8 com blower acorda a cidade inteira.",
+   "seats": "1",
+   "capacity": "120 L",
+   "efficiency": "0,7 km/L",
+   "range": "80 km",
+   "skill": "Direção 3 (monster truck)"
+  },
+  "cargo_van": {
+   "name": "Sprinta Furgão",
+   "inspired": "Mercedes-Benz Sprinter",
+   "article": "na",
+   "category": "Furgão de carga teto alto",
+   "description": "Teto alto, porta lateral corrediça e 1,9 tonelada de carga. Sem tração para lama, mas cabe um acampamento inteiro no baú.",
+   "seats": "3",
+   "capacity": "71 L",
+   "efficiency": "10,3 km/L (cidade) · 11,8 km/L (estrada)",
+   "range": "730 km",
+   "skill": "Direção 2 (veículo grande)"
+  },
+  "ambulance": {
+   "name": "Ducatto Resgate",
+   "inspired": "Fiat Ducato ambulância",
+   "article": "na",
+   "category": "Ambulância de resgate",
+   "description": "Furgão com maca, cilindro de oxigênio e armário de remédios. Ótimo para levar feridos; a sirene atrai zumbis de longe.",
+   "seats": "3 na cabine + 2 atrás + 1 maca",
+   "capacity": "90 L",
+   "efficiency": "8,6 km/L",
+   "range": "770 km",
+   "skill": "Direção 2 · Primeiros socorros 1 (maca e kit)"
+  },
+  "box_truck": {
+   "name": "Delivéri 11.180 Baú",
+   "inspired": "Volkswagen Delivery 11.180",
+   "category": "Caminhão leve com baú",
+   "description": "Cabine avançada estreita, faróis em cunha e baú de 5,5 m. Atravessa horda média sem parar e guarda suprimentos trancados. A cabine bascula para mostrar o diesel de 4 cilindros.",
+   "seats": "3",
+   "capacity": "150 L",
+   "efficiency": "5,5 km/L",
+   "range": "820 km",
+   "skill": "Direção pesada 1"
+  },
+  "tanker_truck": {
+   "name": "Constelação 24.280 Tanque",
+   "inspired": "Volkswagen Constellation 24.280",
+   "category": "Caminhão-tanque 6x2",
+   "description": "Cabine alta com grade preta e tanque elíptico de 20 mil litros de gasolina. Um tiro no tanque e a rua explode. A cabine bascula para mostrar o diesel de 6 cilindros.",
+   "seats": "2",
+   "capacity": "275 L (+20.000 L de carga)",
+   "efficiency": "2,9 km/L",
+   "range": "790 km",
+   "skill": "Direção pesada 2"
+  },
+  "school_bus": {
+   "name": "ON Escolar",
+   "inspired": "Volksbus ORE 2 (Caminho da Escola)",
+   "category": "Ônibus escolar rural",
+   "description": "O ônibus amarelo das escolas do interior: alto, robusto e com motor dianteiro. Porta dupla atrás da roda, 44 alunos sentados e nenhuma discrição. A tampa da frente abre para o motor.",
+   "seats": "44 alunos (ou 31 adultos) + motorista",
+   "capacity": "210 L",
+   "efficiency": "3,8 km/L",
+   "range": "800 km",
+   "skill": "Direção pesada 1"
+  },
+  "city_bus": {
+   "name": "Marcopólo Torino",
+   "inspired": "Marcopolo Torino",
+   "category": "Ônibus urbano de piso baixo",
+   "description": "O ônibus de linha das capitais: para-brisa gigante, letreiro de LED e duas portas largas. Piso baixo, catraca e motor traseiro com tampa que abre.",
+   "seats": "37 sentados + 43 em pé",
+   "capacity": "275 L",
+   "efficiency": "2,3 km/L",
+   "range": "630 km",
+   "skill": "Direção pesada 1"
+  },
+  "armored_truck": {
+   "name": "Atego Forte",
+   "inspired": "Mercedes-Benz Atego (carro-forte)",
+   "category": "Carro-forte blindado",
+   "description": "Cabine avançada blindada e cofre de aço com seteiras. Vidros à prova de tiro e de mordida. Pesado e beberrão, mas ninguém entra. A cabine bascula para o diesel.",
+   "seats": "4 (motorista + 3 vigilantes)",
+   "capacity": "210 L",
+   "efficiency": "3,6 km/L",
+   "range": "750 km",
+   "skill": "Direção pesada 1"
+  },
+  "tractor": {
+   "name": "Massei 275",
+   "inspired": "Massey Ferguson 275",
+   "category": "Trator agrícola",
+   "description": "O trator vermelho de toda fazenda: capô comprido, rodões traseiros e arco de proteção com toldo. Lento, mas não atola nunca e empurra carros parados. O capô abre para mostrar o diesel de quatro cilindros.",
+   "seats": "1",
+   "capacity": "68 L",
+   "efficiency": "5,5 L/h",
+   "range": "12 h de uso",
+   "skill": "—"
+  },
+  "light_4x4": {
+   "name": "Maruá AM2",
+   "inspired": "Agrale Marruá AM2",
+   "category": "Viatura leve 4x4",
+   "description": "Jipe militar de duas portas, capota de lona e para-brisa que rebate. Sobe barranco, atravessa riacho de 60 cm e leva seis com equipamento.",
+   "seats": "2 + 4 combatentes",
+   "capacity": "100 L + 20 L de reserva",
+   "efficiency": "9,5 km/L",
+   "range": "1.000 km",
+   "skill": "Direção 2 (4x4 com reduzida)"
+  },
+  "troop_truck": {
+   "name": "Worqer 15.210 Militar",
+   "inspired": "Volkswagen Worker 15.210 4x4 militar",
+   "category": "Caminhão de tropa 4x4",
+   "description": "Cabine avançada que bascula, tração 4x4 e carroceria com lona e dois bancos de madeira. Leva um pelotão inteiro ou cinco toneladas de suprimentos.",
+   "seats": "3 + 20 combatentes",
+   "capacity": "275 L",
+   "efficiency": "3,6 km/L",
+   "range": "950 km",
+   "skill": "Direção pesada 2 (4x4)"
+  },
+  "apc_6x6": {
+   "name": "Guaraní 6x6",
+   "inspired": "VBTP-MR Guarani",
+   "category": "Blindado de transporte de tropa 6x6",
+   "description": "Casco em cunha com laterais inclinadas, seis rodas e estação de armas no teto. Flutua, leva onze e aguenta tiro de fuzil por todos os lados.",
+   "seats": "3 + 8 combatentes",
+   "capacity": "550 L",
+   "efficiency": "1,1 km/L",
+   "range": "600 km",
+   "skill": "Blindados 2"
+  },
+  "armored_car_6x6": {
+   "name": "Cascável EE-9",
+   "inspired": "Engesa EE-9 Cascavel",
+   "category": "Blindado de reconhecimento 6x6",
+   "description": "Proa em cunha, bogie traseiro de balancim e torre com canhão de 90 mm. Rápido no asfalto, abre caminho em barricada e a tripulação vê tudo pelos periscópios.",
+   "seats": "3",
+   "capacity": "360 L",
+   "efficiency": "2,2 km/L",
+   "range": "750 km",
+   "skill": "Blindados 2"
+  },
+  "battle_tank": {
+   "name": "Leopardo 1A5",
+   "inspired": "Leopard 1A5 BR",
+   "category": "Carro de combate sobre lagartas",
+   "description": "Quarenta toneladas sobre lagartas, torre em cunha e canhão de 105 mm. Passa por cima de carro, muro e horda. Bebe diesel como ninguém e é ouvido de longe.",
+   "seats": "4",
+   "capacity": "955 L",
+   "efficiency": "0,6 km/L (≈ 160 L/100 km)",
+   "range": "600 km",
+   "skill": "Blindados 3 (lagartas)"
+  },
+  "transport_helicopter": {
+   "name": "Falcão Negro HM-2",
+   "inspired": "Sikorsky UH-60 Black Hawk",
+   "category": "Helicóptero de assalto e transporte",
+   "description": "Dois turboeixos, rotor de quatro pás e portas corrediças largas. Tira onze soldados de um telhado cercado e aguenta tiro de fuzil nas pás.",
+   "seats": "2 pilotos + 2 artilheiros + 11 soldados",
+   "capacity": "1.360 L",
+   "efficiency": "≈ 600 L/h",
+   "range": "590 km",
+   "skill": "Pilotagem aérea 5 (bimotor)"
+  },
+  "river_skiff": {
+   "name": "Levfort Marajó",
+   "inspired": "Levefort Marajó",
+   "article": "na",
+   "category": "Barco de alumínio com motor de popa",
+   "description": "Barco de alumínio de fundo semichato, o táxi dos rios. Leve, rápido e barulhento.",
+   "seats": "5",
+   "capacity": "25 L (tanque portátil)",
+   "efficiency": "≈ 9 L/h (30 hp)",
+   "range": "≈ 70 km",
+   "skill": "Náutica 1"
+  },
+  "speedboat": {
+   "name": "Foker 240",
+   "inspired": "Focker 240",
+   "article": "na",
+   "category": "Lancha de 24 pés com proa aberta",
+   "description": "Casco em V fundo e um motor de popa de 250 hp. Rota de fuga pela represa com a família inteira.",
+   "seats": "10",
+   "capacity": "140 L",
+   "efficiency": "≈ 50 L/h (cruzeiro)",
+   "range": "≈ 110 km",
+   "skill": "Náutica 2"
+  },
+  "fishing_boat": {
+   "name": "Traineira Esperança",
+   "inspired": "barco de pesca artesanal",
+   "article": "em um",
+   "category": "Traineira de madeira",
+   "description": "Casco de madeira com casaria a ré e pneus de defensa. Dá para morar nele, longe da margem.",
+   "seats": "10",
+   "capacity": "1.200 L",
+   "efficiency": "≈ 14 L/h",
+   "range": "≈ 900 km",
+   "skill": "Náutica 2"
+  },
+  "single_engine_plane": {
+   "name": "Sesna 172",
+   "inspired": "Cessna 172 Skyhawk",
+   "category": "Monomotor de asa alta, 4 lugares",
+   "description": "Avião de aeroclube. Asa alta, trem fixo e quatro lugares. Precisa de pista livre de zumbis e de gasolina de aviação.",
+   "seats": "4",
+   "capacity": "212 L (201 L utilizáveis)",
+   "efficiency": "36 L/h",
+   "range": "1.185 km",
+   "skill": "Pilotagem aérea 3"
+  },
+  "crop_duster": {
+   "name": "Ipanemá EMB-203",
+   "inspired": "Embraer Ipanema",
+   "category": "Monomotor agrícola a etanol",
+   "description": "Avião de lavoura movido a etanol. Pousa em pista de terra e a barra de pulverização pode espalhar isca ou fogo.",
+   "seats": "1",
+   "capacity": "264 L",
+   "efficiency": "≈ 75 L/h de etanol",
+   "range": "940 km",
+   "skill": "Pilotagem aérea 3"
+  },
+  "piston_helicopter": {
+   "name": "Robinsom R44",
+   "inspired": "Robinson R44",
+   "category": "Helicóptero leve a pistão",
+   "description": "Quatro lugares, rotor bipá e motor a pistão. Leve o bastante para pousar em telhado de prédio.",
+   "seats": "4",
+   "capacity": "185 L",
+   "efficiency": "≈ 57 L/h",
+   "range": "560 km",
+   "skill": "Pilotagem aérea 4"
+  },
+  "rescue_helicopter": {
+   "name": "Esquillo AS350",
+   "inspired": "Helibras AS350 Esquilo",
+   "category": "Helicóptero a turbina, 6 lugares",
+   "description": "Turbina, rotor de três pás, holofote e guincho de resgate. Tira gente de telhado cercado.",
+   "seats": "6 (piloto + 5)",
+   "capacity": "540 L",
+   "efficiency": "≈ 180 L/h",
+   "range": "650 km",
+   "skill": "Pilotagem aérea 4"
+  },
+  "step_through_scooter": {
+   "name": "Bis 125",
+   "inspired": "Honda Biz 125",
+   "article": "na",
+   "category": "Cub 125 cc (motoneta)",
+   "description": "A motoneta de passagem baixa: sobe-se nela de saia, cabe capacete sob o banco e roda quase 50 km com um litro. Rodas pequenas e pouca proteção na horda.",
+   "seats": "2",
+   "capacity": "5,1 L",
+   "efficiency": "50 km/L (G) · 35 km/L (E)",
+   "range": "255 km",
+   "skill": "Pilotagem 1"
+  },
+  "naked_bike": {
+   "name": "Fazê 250",
+   "inspired": "Yamaha FZ25 Fazer 250",
+   "article": "na",
+   "category": "Naked 250 cc",
+   "description": "Naked de 250 cc com farol de LED e tanque musculoso. Mais fôlego que as 160 para fugir na estrada, sem perder o jeito de moto de cidade.",
+   "seats": "2",
+   "capacity": "14 L",
+   "efficiency": "30 km/L (G) · 21 km/L (E)",
+   "range": "420 km",
+   "skill": "Pilotagem 1"
+  },
+  "sport_bike": {
+   "name": "Ninjá 400",
+   "inspired": "Kawasaki Ninja 400",
+   "article": "na",
+   "category": "Esportiva 400 cc",
+   "description": "Esportiva bicilíndrica leve: passa dos 180 km/h na estrada vazia. Posição de corrida e carenagem de plástico, que racha na primeira queda.",
+   "seats": "2",
+   "capacity": "14 L",
+   "efficiency": "25 km/L",
+   "range": "350 km",
+   "skill": "Pilotagem 2"
+  },
+  "cruiser": {
+   "name": "Fat Boi 114",
+   "inspired": "Harley-Davidson Fat Boy 114",
+   "article": "na",
+   "category": "Custom V2 1868 cc",
+   "description": "Custom pesada de rodas fechadas e motor V2 de 1,9 litro. O ronco chama zumbi de longe, mas o torque arrasta qualquer obstáculo.",
+   "seats": "2",
+   "capacity": "18,9 L",
+   "efficiency": "18 km/L",
+   "range": "340 km",
+   "skill": "Pilotagem 2"
+  },
+  "delivery_bike": {
+   "name": "Titã 160 Cargo",
+   "inspired": "Honda CG 160 Cargo",
+   "article": "na",
+   "category": "Moto de entrega 160 cc",
+   "description": "A moto de motoboy: banco só do piloto, bagageiro de aço e baú de entrega. O baú leva remédio, comida e munição pela cidade tomada.",
+   "seats": "1 (sem garupa)",
+   "capacity": "16,1 L + baú de 90 L (20 kg)",
+   "efficiency": "38 km/L (G) · 27 km/L (E)",
+   "range": "610 km",
+   "skill": "Pilotagem 1"
+  },
+  "boxy_hatch": {
+   "name": "Unno Mille",
+   "inspired": "Fiat Uno Mille",
+   "category": "Hatch popular quadrado",
+   "description": "O quadradinho que sobreviveu a tudo. Leve, alto do chão e com peça em qualquer ferro-velho. Este veio com a escada do eletricista no teto: serve para subir em muro e telhado.",
+   "seats": "5",
+   "capacity": "50 L",
+   "efficiency": "12,8 km/L (G) · 9,0 km/L (E)",
+   "range": "640 km",
+   "skill": "Mecânica 1 (peça em qualquer ferro-velho)"
+  },
+  "family_hatch": {
+   "name": "Gól G5",
+   "inspired": "Volkswagen Gol G5",
+   "category": "Hatch compacto",
+   "description": "O carro mais vendido de uma década inteira. Mecânica conhecida, suspensão firme e porta-malas pequeno. Fácil de achar parado em qualquer rua.",
+   "seats": "5",
+   "capacity": "55 L",
+   "efficiency": "12,9 km/L (G) · 8,9 km/L (E)",
+   "range": "700 km",
+   "skill": "—"
+  },
+  "rideshare_hatch": {
+   "name": "HB-21",
+   "inspired": "Hyundai HB20",
+   "category": "Hatch compacto",
+   "description": "Hatch moderno de frota de aplicativo. Econômico, confortável e cheio de eletrônica que ninguém mais sabe consertar.",
+   "seats": "5",
+   "capacity": "50 L",
+   "efficiency": "13,9 km/L (G) · 9,9 km/L (E)",
+   "range": "690 km",
+   "skill": "—"
+  },
+  "turbo_hatch": {
+   "name": "Pólo",
+   "inspired": "Volkswagen Polo",
+   "category": "Hatch compacto",
+   "description": "Motor turbo pequeno e bem firme na estrada. Rápido para fugir, econômico para viajar, mas a eletrônica sofre com a falta de oficina.",
+   "seats": "5",
+   "capacity": "52 L",
+   "efficiency": "15,0 km/L (G) · 10,4 km/L (E)",
+   "range": "780 km",
+   "skill": "—"
+  },
+  "fastback_sedan": {
+   "name": "Cívico",
+   "inspired": "Honda Civic G10",
+   "category": "Sedã médio fastback",
+   "description": "Sedã baixo e largo, de motor que gira alto. Corre muito na estrada, mas raspa o para-choque em qualquer lombada ou monte de entulho.",
+   "seats": "5",
+   "capacity": "56 L",
+   "efficiency": "12,1 km/L (G) · 8,5 km/L (E)",
+   "range": "680 km",
+   "skill": "—"
+  },
+  "classic_six_sedan": {
+   "name": "Opalla Comodoro",
+   "inspired": "Chevrolet Opala Comodoro",
+   "article": "no",
+   "category": "Sedã clássico (seis cilindros)",
+   "description": "Seis cilindros em linha, tração traseira e lataria grossa de chapa antiga. Bebe muito, mas aguenta pancada e empurra carro parado da rua.",
+   "seats": "5 (6 apertados)",
+   "capacity": "84 L",
+   "efficiency": "7,6 km/L",
+   "range": "640 km",
+   "skill": "Mecânica 1 (motor simples, carburador)"
+  },
+  "v8_coupe": {
+   "name": "Mustangue GT",
+   "inspired": "Ford Mustang GT",
+   "category": "Cupê esportivo V8",
+   "description": "V8 de cinco litros e tração traseira. O mais rápido da garagem em reta, mas o ronco acorda a horda de quarteirões inteiros e o tanque some rápido.",
+   "seats": "4 (2 + 2 apertados)",
+   "capacity": "61 L",
+   "efficiency": "7,2 km/L",
+   "range": "440 km",
+   "skill": "Direção 2 (tração traseira, traseira solta)"
+  },
+  "jet_ski": {
+   "name": "Si-Dú Spark",
+   "inspired": "Sea-Doo Spark",
+   "article": "no",
+   "category": "Moto aquática de 3 lugares",
+   "description": "Pequeno, leve e nervoso, com turbina em vez de hélice. Pula marola e foge por canal raso.",
+   "seats": "3",
+   "capacity": "30 L",
+   "efficiency": "≈ 10 L/h (cruzeiro) · 17 L/h (máx.)",
+   "range": "≈ 2,5 h · ≈ 100 km",
+   "skill": "Náutica 1"
+  },
+  "sailboat": {
+   "name": "Veleiro Delta 26",
+   "inspired": "veleiro de oceano de 26 pés",
+   "article": "em um",
+   "category": "Veleiro de oceano de 26 pés (vela e motor diesel auxiliar)",
+   "description": "Vela de dia, motor de 10 hp quando o vento some. Lento, mas cruza até o horizonte sem posto de gasolina.",
+   "seats": "6 (4 pernoites)",
+   "capacity": "40 L diesel · 80 L água",
+   "efficiency": "≈ 1,5 L/h no motor · zero na vela",
+   "range": "≈ 250 km no motor · ilimitada na vela",
+   "skill": "Náutica 3 (vela)"
+  },
+  "rescue_dinghy": {
+   "name": "Zodiaque de resgate",
+   "inspired": "bote inflável Zodiac FC 470",
+   "article": "no",
+   "category": "Bote inflável de resgate com motor de popa",
+   "description": "Boias de borracha que não afundam nem com furo em um gomo. Entra na enchente e sai com gente pendurada no cabo.",
+   "seats": "10",
+   "capacity": "25 L (tanque portátil)",
+   "efficiency": "≈ 14 L/h (40 hp)",
+   "range": "≈ 90 km",
+   "skill": "Náutica 1"
+  },
+  "patrol_boat": {
+   "name": "Lancha Patrulha",
+   "inspired": "lancha de patrulha fluvial LPR-40",
+   "article": "na",
+   "category": "Lancha de patrulha fluvial armada",
+   "description": "Casco de alumínio, dois jatos d'água e metralhadora na proa. Entra em rio raso e sai de ré sem leme.",
+   "seats": "4 tripulantes + 8",
+   "capacity": "≈ 1.600 L",
+   "efficiency": "≈ 120 L/h (cruzeiro de 20 nós)",
+   "range": "≈ 450 km",
+   "skill": "Náutica 3"
+  },
+  "tandem_trainer": {
+   "name": "Paipa Cub",
+   "inspired": "Piper J-3 Cub",
+   "category": "Monomotor de treinamento, asa alta, 2 lugares em tandem",
+   "description": "O amarelinho de aeroclube. Pousa em pasto, estrada de terra e clareira, e decola em 150 m. Pouco combustível e quase nenhuma proteção.",
+   "seats": "2 (em tandem)",
+   "capacity": "45 L",
+   "efficiency": "≈ 15 L/h",
+   "range": "350 km",
+   "skill": "Pilotagem aérea 2"
+  },
+  "regional_turboprop": {
+   "name": "Bandeirantte EMB-110",
+   "inspired": "Embraer EMB-110 Bandeirante",
+   "category": "Bimotor turboélice regional, 2 + 16 lugares",
+   "description": "O avião que ligou o interior do Brasil. Pousa em pista de terra curta, leva dezesseis pessoas e carga, e tem dois motores: perde um e ainda volta.",
+   "seats": "2 pilotos + 16 passageiros",
+   "capacity": "1.720 L",
+   "efficiency": "≈ 300 L/h (dois motores)",
+   "range": "1.960 km",
+   "skill": "Pilotagem aérea 4 (bimotor)"
+  },
+  "amphibian_turboprop": {
+   "name": "Caravana Anfíbio",
+   "inspired": "Cessna 208 Caravan anfíbio (flutuadores Wipline)",
+   "category": "Monomotor turboélice anfíbio, 10 lugares",
+   "description": "Pousa em rio, represa e pista. Na Amazônia vira ônibus, ambulância e caminhão. Os flutuadores aguentam o tranco, mas atolar na margem é um risco.",
+   "seats": "1 piloto + 9 passageiros",
+   "capacity": "1.257 L",
+   "efficiency": "≈ 200 L/h",
+   "range": "1.500 km",
+   "skill": "Pilotagem aérea 4 (hidroavião)"
+  },
+  "light_jet": {
+   "name": "Fenom 100",
+   "inspired": "Embraer Phenom 100",
+   "category": "Jato executivo leve, 2 + 4 lugares",
+   "description": "Jatinho de empresário. Rápido, alto e pressurizado: tira gente de uma cidade perdida em uma hora, se houver pista de asfalto inteira.",
+   "seats": "2 pilotos + 4 passageiros (até 6)",
+   "capacity": "1.590 L",
+   "efficiency": "≈ 380 L/h",
+   "range": "2.180 km",
+   "skill": "Pilotagem aérea 5 (jato)"
+  },
+  "light_attack_turboprop": {
+   "name": "Super Tucanno",
+   "inspired": "Embraer EMB-314 Super Tucano (A-29)",
+   "category": "Turboélice de ataque leve, 2 lugares em tandem",
+   "description": "Turboélice de ataque leve e treinamento avançado. Voa baixo e devagar o bastante para ver a horda, com duas .50 nas asas e foguetes nos pilones.",
+   "seats": "2 (piloto e operador em tandem)",
+   "capacity": "695 L internos (+ tanques externos)",
+   "efficiency": "≈ 260 L/h",
+   "range": "1.330 km",
+   "skill": "Pilotagem aérea 5 (caça) e armamento"
+  },
+  "trainer_helicopter": {
+   "name": "Robinsom R22",
+   "inspired": "Robinson R22 Beta II",
+   "category": "Helicóptero leve de 2 lugares a pistão",
+   "description": "O helicóptero de escola. Leve, barato e nervoso no comando. Pousa em qualquer laje, mas leva só duas pessoas e quase nenhuma carga.",
+   "seats": "2",
+   "capacity": "112 L (72 L + 40 L)",
+   "efficiency": "≈ 30 L/h",
+   "range": "390 km",
+   "skill": "Pilotagem aérea 4"
+  },
+  "turbine_helicopter": {
+   "name": "Bel 206 Jato",
+   "inspired": "Bell 206B-3 JetRanger III",
+   "category": "Helicóptero leve a turbina, 5 lugares",
+   "description": "Turbina pequena, cinco lugares e fama de indestrutível. Táxi aéreo, reportagem e polícia: tem um em cada heliponto de cidade grande.",
+   "seats": "1 piloto + 4",
+   "capacity": "344 L",
+   "efficiency": "≈ 100 L/h",
+   "range": "690 km",
+   "skill": "Pilotagem aérea 4"
+  },
+  "police_helicopter": {
+   "name": "H-145 Águia",
+   "inspired": "Airbus H145 policial",
+   "category": "Helicóptero bimotor policial, 2 + 6 lugares",
+   "description": "O helicóptero da polícia. Dois motores, câmera térmica, holofote e guincho: acha gente presa no telhado de noite e ainda desce corda.",
+   "seats": "2 pilotos + 6 tripulantes",
+   "capacity": "≈ 905 L",
+   "efficiency": "≈ 270 L/h",
+   "range": "650 km",
+   "skill": "Pilotagem aérea 5 (bimotor)"
+  },
+  "attack_helicopter": {
+   "name": "Sabre AH-2",
+   "inspired": "Mil Mi-35M (AH-2 Sabre da FAB)",
+   "category": "Helicóptero de ataque e transporte",
+   "description": "Tanque voador: blindado, armado com canhão duplo e foguetes, e ainda leva oito soldados no meio. Barulhento e sedento, mas abre caminho em qualquer horda.",
+   "seats": "2 tripulantes + 8 soldados",
+   "capacity": "≈ 2.100 L internos",
+   "efficiency": "≈ 700 L/h",
+   "range": "460 km",
+   "skill": "Pilotagem aérea 5 (ataque) e armamento"
+  }
+ },
+ "stripped": [
+  "electric_hatch",
+  "police_sedan",
+  "highway_police_sedan",
+  "commuter_motorcycle",
+  "trail_bike",
+  "monster_truck",
+  "ambulance",
+  "box_truck",
+  "armored_truck",
+  "battle_tank",
+  "single_engine_plane",
+  "step_through_scooter",
+  "cruiser",
+  "v8_coupe",
+  "light_attack_turboprop",
+  "attack_helicopter"
+ ]
+}
