@@ -121,6 +121,8 @@ class Pool {
   private readonly alphaMul: Float32Array
   private readonly tag: Int32Array
   private readonly colorHex: Int32Array
+  private readonly rgbStart: Float32Array
+  private readonly rgbEnd: Float32Array
   private readonly bounced: Uint8Array
 
   constructor(
@@ -144,6 +146,8 @@ class Pool {
     this.alphaMul = new Float32Array(n)
     this.tag = new Int32Array(n)
     this.colorHex = new Int32Array(n)
+    this.rgbStart = new Float32Array(n * 3)
+    this.rgbEnd = new Float32Array(n * 3)
     this.bounced = new Uint8Array(n)
     this.geometry = new THREE.BufferGeometry()
     const attr = (a: Float32Array, size: number) => {
@@ -192,6 +196,8 @@ class Pool {
     this.alphaMul[i] = o?.alpha ?? 1
     this.tag[i] = o?.tag ?? 0
     this.colorHex[i] = o?.color ?? -1
+    this.rgbStart.set(hexToRgb(o?.color ?? def.c0), i * 3)
+    this.rgbEnd.set(hexToRgb(o?.color ?? def.c1), i * 3)
     this.bounced[i] = 0
     this.siz[i] = this.size0[i]
     this.alp[i] = 0
@@ -289,13 +295,9 @@ class Pool {
       this.pos[i3 + 1] = y
       this.pos[i3 + 2] = z
       this.siz[i] = this.size0[i] * lerp(1, def.grow, t)
-      const c0 = this.colorHex[i] >= 0 ? this.colorHex[i] : def.c0
-      const c1 = this.colorHex[i] >= 0 ? this.colorHex[i] : def.c1
-      const a = hexToRgb(c0)
-      const b = hexToRgb(c1)
-      this.col[i3] = lerp(a[0], b[0], t)
-      this.col[i3 + 1] = lerp(a[1], b[1], t)
-      this.col[i3 + 2] = lerp(a[2], b[2], t)
+      this.col[i3] = lerp(this.rgbStart[i3], this.rgbEnd[i3], t)
+      this.col[i3 + 1] = lerp(this.rgbStart[i3 + 1], this.rgbEnd[i3 + 1], t)
+      this.col[i3 + 2] = lerp(this.rgbStart[i3 + 2], this.rgbEnd[i3 + 2], t)
       let env = t < def.fadeIn ? t / def.fadeIn : 1 - (t - def.fadeIn) / (1 - def.fadeIn)
       if (def.flicker) env *= 1 - def.flicker * (0.5 + 0.5 * Math.sin(age * 38 + this.seed[i] * 50))
       this.alp[i] = clamp(env, 0, 1) * def.alpha * this.alphaMul[i]
