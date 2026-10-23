@@ -1,4 +1,4 @@
-import type { PottedSpec, Vec3 } from '../types'
+import type { PartKind, PottedSpec, Vec3 } from '../types'
 import type { ArchResult, Ctx } from '../ctx'
 import { TAU } from '../math'
 import { jitter, rgb, shade } from '../color'
@@ -27,6 +27,7 @@ export function generatePotted(spec: PottedSpec, ctx: Ctx): ArchResult {
     default: // cachepot
       prof.push({ y: 0, r: R * 0.8 }, { y: h * 0.12, r: R * 0.95 }, { y: h * 0.55, r: R * 1.12 }, { y: h * 0.88, r: R * 1.04 }, { y: h * 0.95, r: R * 1.06 }, { y: h * 0.98, r: R * 0.95 })
   }
+  ctx.piece('pot', 'pot')
   const path: Vec3[] = prof.map((p) => [0, p.y, 0])
   tube(ctx.wood, path, {
     sides,
@@ -41,6 +42,7 @@ export function generatePotted(spec: PottedSpec, ctx: Ctx): ArchResult {
     smooth: shape !== 'square',
   })
   // soil disc
+  ctx.piece('soil', 'soil', 'pot')
   const soilY = h * 0.93
   const soil: Vec3 = [0.22, 0.15, 0.1]
   const rim = (prof[prof.length - 2]?.r ?? R) * 0.96
@@ -52,11 +54,22 @@ export function generatePotted(spec: PottedSpec, ctx: Ctx): ArchResult {
   // inner plant
   const inner = generate(spec.plant, { seed: ctx.rng.fork('plant').seed(), lod: ctx.lod, condition: ctx.condition, season: ctx.season })
   const yOff = soilY - 0.02
-  if (inner.parts.wood) ctx.wood.appendMesh(inner.parts.wood, 0, yOff, 0)
-  if (inner.parts.spines) ctx.spines.appendMesh(inner.parts.spines, 0, yOff, 0)
-  if (inner.parts.foliage) ctx.foliage.appendMesh(inner.parts.foliage, 0, yOff, 0)
-  if (inner.parts.flowers) ctx.flowers.appendMesh(inner.parts.flowers, 0, yOff, 0)
-  if (inner.parts.fruit) ctx.fruit.appendMesh(inner.parts.fruit, 0, yOff, 0)
+  const tagsOf = (part: PartKind): ((t: number) => string) | undefined => {
+    const mesh = inner.parts[part]
+    if (!mesh) return undefined
+    const tags = new Array<string>(mesh.triangleCount).fill('')
+    for (const pc of inner.pieces) {
+      if (pc.part !== part) continue
+      if (!ctx.pieceMeta.has(pc.id)) ctx.pieceMeta.set(pc.id, { kind: pc.kind, parent: pc.parent, pivot: [pc.pivot[0], pc.pivot[1] + yOff, pc.pivot[2]] })
+      for (let t = pc.indexStart / 3; t < (pc.indexStart + pc.indexCount) / 3; t++) tags[t] = pc.id
+    }
+    return (t) => tags[t]
+  }
+  if (inner.parts.wood) ctx.wood.appendMesh(inner.parts.wood, 0, yOff, 0, 0, 1, tagsOf('wood'))
+  if (inner.parts.spines) ctx.spines.appendMesh(inner.parts.spines, 0, yOff, 0, 0, 1, tagsOf('spines'))
+  if (inner.parts.foliage) ctx.foliage.appendMesh(inner.parts.foliage, 0, yOff, 0, 0, 1, tagsOf('foliage'))
+  if (inner.parts.flowers) ctx.flowers.appendMesh(inner.parts.flowers, 0, yOff, 0, 0, 1, tagsOf('flowers'))
+  if (inner.parts.fruit) ctx.fruit.appendMesh(inner.parts.fruit, 0, yOff, 0, 0, 1, tagsOf('fruit'))
   return {
     collider: { kind: 'cylinder', radius: Math.max(R * 1.1, 0.1), height: h },
     bendable: inner.bendable,

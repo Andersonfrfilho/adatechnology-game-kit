@@ -17,6 +17,9 @@ interface Pad {
   w: number
   l: number
   gen: number
+  index: number
+  parent?: number
+  start: Vec3
 }
 
 export function generatePaddleCactus(spec: PaddleCactusSpec, ctx: Ctx): ArchResult {
@@ -34,12 +37,12 @@ export function generatePaddleCactus(spec: PaddleCactusSpec, ctx: Ctx): ArchResu
     const f = frameFromAxis([0, 0, 0], dir, twist)
     return { x: f.x, z: f.z }
   }
-  const addPad = (start: Vec3, dir: Vec3, scale: number, gen: number, twist: number): Pad => {
+  const addPad = (start: Vec3, dir: Vec3, scale: number, gen: number, twist: number, parent?: Pad): Pad => {
     const l = padL * scale * rng.range(0.9, 1.1)
     const w = l * rng.range(0.62, 0.78)
     const d = norm(dir)
     const { x, z } = mkFrame(d, twist)
-    const p: Pad = { center: add(start, mul(d, l * 0.46)), dir: d, x, z, w, l, gen }
+    const p: Pad = { center: add(start, mul(d, l * 0.46)), dir: d, x, z, w, l, gen, index: pads.length, parent: parent?.index, start }
     pads.push(p)
     return p
   }
@@ -58,7 +61,7 @@ export function generatePaddleCactus(spec: PaddleCactusSpec, ctx: Ctx): ArchResu
         nd = norm(add(nd, [0, 0.25, 0]))
         if (dead) nd = norm(add(nd, [0, -0.7, 0]))
         const start = add(add(p.center, mul(p.dir, p.l * 0.42)), mul(p.x, side * p.w * 0.28))
-        next.push(addPad(start, nd, 0.86 - g * 0.04, g, rng.range(0, TAU)))
+        next.push(addPad(start, nd, 0.86 - g * 0.04, g, rng.range(0, TAU), p))
       }
     }
     frontier = next
@@ -67,6 +70,7 @@ export function generatePaddleCactus(spec: PaddleCactusSpec, ctx: Ctx): ArchResu
   const detail = (ctx.lod === 0 ? 1 : 0) as 0 | 1
   for (const p of pads) {
     if (p.gen > maxGen) continue
+    ctx.piece(`pad${p.index}`, 'pad', p.parent === undefined ? undefined : `pad${p.parent}`, p.start)
     const frame: Frame = { o: p.center, x: p.x, y: p.dir, z: p.z }
     const c = jitter(base, rng.fork(p.gen * 31 + Math.floor(p.l * 1000)), 0.012, 0.05, 0.04)
     icoShell(ctx.foliage, {
@@ -117,6 +121,7 @@ export function generatePaddleCactus(spec: PaddleCactusSpec, ctx: Ctx): ArchResu
     const fc = rgb(spec.flowers.color)
     for (let i = 0; i < spec.flowers.count; i++) {
       const p = outer[(i * 3 + 1) % Math.max(1, outer.length)] ?? root
+      ctx.piece(`pad${p.index}`, 'pad', p.parent === undefined ? undefined : `pad${p.parent}`, p.start)
       const pos = add(add(p.center, mul(p.dir, p.l * 0.5 * 0.9)), mul(p.x, frng.range(-0.25, 0.25) * p.w))
       blossom(ctx.flowers, add(pos, mul(p.z, p.l * 0.04)), norm(add(p.dir, mul(p.z, 0.5))), padL * 0.16, fc, [0.9, 0.5, 0.2], 0, 6, frng.range(0, TAU))
     }

@@ -1,3 +1,4 @@
+import type { MaterialKey } from './destruction'
 /** Condition of a plant (generic: drought, neglect). Genre packs decide which to use. */
 export type Condition = 'healthy' | 'dry' | 'dead' | 'overgrown'
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter'
@@ -24,6 +25,32 @@ export interface MeshData {
   material: DamageMaterial
 }
 
+/** Kind of a separable piece (see `PlantMesh.pieces`). */
+export type PieceKind = 'trunk' | 'branch' | 'crown' | 'pot' | 'soil' | 'fruit' | 'pad' | 'arm' | 'stem'
+
+/**
+ * A separable piece of a plant: a contiguous triangle range of one part's MeshData. A logical piece that spans several
+ * parts (e.g. a crown with leaves and flowers) is one entry per part; the entries after the first get the id `<id>:<part>`.
+ */
+export interface PlantPiece {
+  /** unique within the plant */
+  id: string
+  kind: PieceKind
+  /** key into the destruction material table (see MaterialIds), e.g. 'wood', 'woodDry', 'foliage', 'ceramic' is key 'pot' */
+  material: MaterialKey
+  /** id of the piece this one hangs from (a crown hangs from its branch, a branch from the trunk) */
+  parent?: string
+  /** the MeshData the range belongs to */
+  part: PartKind
+  /** first index in `parts[part].indices` (a multiple of 3) */
+  indexStart: number
+  /** number of indices (3 per triangle) */
+  indexCount: number
+  /** point the piece rotates about when it falls (plant space, meters): where it is attached, or its center */
+  pivot: Vec3
+  bounds: { min: Vec3; max: Vec3 }
+}
+
 export interface PlantParts {
   wood?: MeshData
   foliage?: MeshData
@@ -36,6 +63,8 @@ export type Collider = { kind: 'cylinder'; radius: number; height: number } | nu
 
 export interface PlantMesh {
   parts: PlantParts
+  /** separable pieces; together they cover every triangle of every part exactly once */
+  pieces: PlantPiece[]
   bounds: { radius: number; height: number }
   /** only trunk / stem / cactus body collides; foliage never blocks the player */
   collider: Collider

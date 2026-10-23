@@ -3,6 +3,7 @@ import type { ArchResult, Ctx } from '../ctx'
 import { rgb, shade, mix } from '../color'
 import { growTree } from '../geometry/branches'
 import { drawBranch } from '../geometry/wood'
+import { drawTreeWood } from './pieces'
 
 /** Bare, twisted tree with broken stubs. Also used for the `dead` condition of broadleaf trees. */
 export function generateDeadTree(spec: DeadTreeSpec, ctx: Ctx, fromTree = false): ArchResult {
@@ -23,7 +24,6 @@ export function generateDeadTree(spec: DeadTreeSpec, ctx: Ctx, fromTree = false)
     lean: 0.1,
     bare: true,
   })
-  drawBranch(ctx.wood, tree.trunk, bark, ctx.lod, 1)
-  for (let i = 0; i < tree.branches.length; i++) drawBranch(ctx.wood, tree.branches[i], bark, ctx.lod, i * 0.5)
+  drawTreeWood(ctx, tree, (br, i) => drawBranch(ctx.wood, br, bark, ctx.lod, i < 0 ? 1 : i * 0.5))
   return { collider: { kind: 'cylinder', radius: trunkRadius * 1.1, height: height * 0.5 }, bendable: false }
 }

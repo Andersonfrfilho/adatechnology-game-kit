@@ -1,4 +1,4 @@
-import type { Collider, Condition, DamageMaterial, Lod, Season } from './types'
+import type { Collider, Condition, DamageMaterial, Lod, PieceKind, Season, Vec3 } from './types'
 import type { Rng } from './rng'
 import type { MeshBuilder } from './geometry/builder'
 
@@ -13,8 +13,21 @@ export interface Ctx {
   flowers: MeshBuilder
   fruit: MeshBuilder
   spines: MeshBuilder
+  /** piece metadata by tag, filled by `piece()` */
+  pieceMeta: Map<string, PieceMeta>
+  /**
+   * Start (or resume) the separable piece `id`: geometry emitted into wood, foliage, flowers and spines from now on belongs to it.
+   * Fruit always goes to the 'fruit' piece. Pieces need not be emitted contiguously; builders group them when building.
+   */
+  piece(id: string, kind: PieceKind, parent?: string, pivot?: Vec3): void
   /** pick a value by lod: lod0, lod1, lod2 */
   pick<T>(a: T, b: T, c: T): T
+}
+
+export interface PieceMeta {
+  kind: PieceKind
+  parent?: string
+  pivot?: Vec3
 }
 
 export interface ArchResult {

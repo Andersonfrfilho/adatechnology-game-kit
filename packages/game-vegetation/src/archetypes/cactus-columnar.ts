@@ -109,11 +109,13 @@ export function generateColumnarCactus(spec: ColumnarCactusSpec, ctx: Ctx): Arch
     const p2 = add(start, add(mul(out, outLen), [0, outLen * rise + upLen * 0.18, 0]))
     let p3 = add(p2, add(mul(out, outLen * 0.15), [0, upLen, 0]))
     if (dead) p3 = add(p2, add(mul(out, upLen * 0.7), [0, upLen * 0.25, 0]))
+    ctx.piece(`arm${a}`, 'arm', 'stem', start)
     const armPath = catmull([start, p1, p2, p3], Math.max(1, Math.round(2 * rings)))
     const ar = s.r * (style === 'sprawl' ? 0.9 : 0.72)
     column(armPath, (t) => ar * (t > 0.9 ? 1 - (t - 0.9) * 1.6 : 1) * (t < 0.12 ? 0.85 + t * 1.2 : 1), a + 1, true)
   }
 
+  ctx.piece('stem', 'stem')
   const frng = rng.fork('flowers')
   // flowers (night bloom, white trumpets) at the tips
   if (spec.flowers && !dead && ctx.lod < 2) {

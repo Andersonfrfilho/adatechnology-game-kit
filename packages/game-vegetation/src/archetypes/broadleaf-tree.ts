@@ -9,6 +9,7 @@ import { clump, clumpLeaves, mergeAnchors, icoShell, octa } from '../geometry/sh
 import { blossom } from '../geometry/flower'
 import { leaf } from '../geometry/leaf'
 import { tube } from '../geometry/tube'
+import { drawTreeWood, splitCrown } from './pieces'
 import { inSeason, leafAmount, leafTint } from './shared'
 import { generateDeadTree } from './dead-tree'
 import { styleSkeleton, styledCrown, willowTree, type StyleGroup } from './tree-styles'
@@ -71,8 +72,8 @@ export function generateBroadleafTree(spec: BroadleafTreeSpec, ctx: Ctx): ArchRe
     tree.trunk = { ...tree.trunk, pts: tpts.slice(0, keepN), radii: tree.trunk.radii.slice(0, keepN) }
   }
   // wood
-  drawBranch(ctx.wood, tree.trunk, bark, ctx.lod, 0)
-  for (let i = 0; i < tree.branches.length; i++) drawBranch(ctx.wood, tree.branches[i], bark, ctx.lod, i * 0.37)
+  const anchors = drawTreeWood(ctx, tree, (br, i) => drawBranch(ctx.wood, br, bark, ctx.lod, i < 0 ? 0 : i * 0.37))
+  ctx.piece('crown', 'crown', 'trunk')
   const colorFor = (tip: Tip): { base: Vec3; accent?: { color: Vec3; amount: number } } => {
     const pc = palette[Math.floor(tip.roll * palette.length) % palette.length]
     let base = leafTint(ctx, pc, deciduous, tip.roll)
@@ -183,6 +184,9 @@ export function generateBroadleafTree(spec: BroadleafTreeSpec, ctx: Ctx): ArchRe
       }
     }
   }
+
+  splitCrown(ctx, anchors)
+  ctx.piece('fruit', 'fruit')
 
   // fruit
   if (spec.fruit && ctx.condition !== 'dry') {

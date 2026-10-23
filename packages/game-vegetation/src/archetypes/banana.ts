@@ -46,6 +46,7 @@ export function generateBanana(spec: BananaSpec, ctx: Ctx): ArchResult {
     end: 'flat',
   })
   const top = full[full.length - 1]
+  ctx.piece('crown', 'crown', 'trunk')
 
   // leaves
   const rows = ctx.pick(9, 6, 3)

@@ -10,6 +10,12 @@ export class MeshBuilder {
   col: number[] = []
   sway: number[] = []
   idx: number[] = []
+  /** piece tag of every triangle (see Ctx.piece); '' = untagged */
+  triTag: string[] = []
+  /** tag given to the triangles emitted from now on */
+  tag = ''
+  /** after `build`: contiguous triangle-index ranges per tag, in index units (3 per triangle) */
+  ranges: { tag: string; indexStart: number; indexCount: number }[] = []
 
   get triangleCount(): number {
     return this.idx.length / 3
@@ -28,6 +34,7 @@ export class MeshBuilder {
   }
   tri(a: number, b: number, c: number): void {
     this.idx.push(a, b, c)
+    this.triTag.push(this.tag)
   }
 
   /**
@@ -77,7 +84,7 @@ export class MeshBuilder {
   }
 
   /** Append already-built (linear) mesh data with a y-rotation, scale and translation. */
-  appendMesh(m: MeshData, tx: number, ty: number, tz: number, ry = 0, scale = 1): void {
+  appendMesh(m: MeshData, tx: number, ty: number, tz: number, ry = 0, scale = 1, tagOf?: (triangle: number) => string): void {
     const base = this.pos.length / 3
     const c = Math.cos(ry)
     const s = Math.sin(ry)
@@ -94,10 +101,64 @@ export class MeshBuilder {
       this.sway.push(m.sway[i])
     }
     for (let i = 0; i < m.indices.length; i++) this.idx.push(m.indices[i] + base)
+    for (let t = 0; t < m.indices.length / 3; t++) this.triTag.push(tagOf ? tagOf(t) : this.tag)
+  }
+
+  /** Make the triangles of every tag contiguous (stable, tags ordered by first appearance) and fill `ranges`. */
+  private groupTriangles(): void {
+    const nTri = this.idx.length / 3
+    const order: string[] = []
+    const count = new Map<string, number>()
+    for (let t = 0; t < nTri; t++) {
+      const tg = this.triTag[t]
+      const c = count.get(tg)
+      if (c === undefined) {
+        order.push(tg)
+        count.set(tg, 1)
+      } else count.set(tg, c + 1)
+    }
+    // already contiguous?
+    let contiguous = true
+    const seen = new Set<string>()
+    for (let t = 0; t < nTri && contiguous; t++) {
+      const tg = this.triTag[t]
+      if (t > 0 && tg === this.triTag[t - 1]) continue
+      if (seen.has(tg)) contiguous = false
+      seen.add(tg)
+    }
+    if (!contiguous) {
+      const start = new Map<string, number>()
+      let acc = 0
+      for (const tg of order) {
+        start.set(tg, acc)
+        acc += count.get(tg)!
+      }
+      const idx = new Array<number>(this.idx.length)
+      const tags = new Array<string>(nTri)
+      for (let t = 0; t < nTri; t++) {
+        const tg = this.triTag[t]
+        const o = start.get(tg)!
+        start.set(tg, o + 1)
+        idx[o * 3] = this.idx[t * 3]
+        idx[o * 3 + 1] = this.idx[t * 3 + 1]
+        idx[o * 3 + 2] = this.idx[t * 3 + 2]
+        tags[o] = tg
+      }
+      this.idx = idx
+      this.triTag = tags
+    }
+    this.ranges = []
+    let acc = 0
+    for (const tg of order) {
+      const c = count.get(tg)!
+      this.ranges.push({ tag: tg, indexStart: acc * 3, indexCount: c * 3 })
+      acc += c
+    }
   }
 
   build(kind: PartKind, material: DamageMaterial): MeshData | undefined {
     if (this.idx.length === 0) return undefined
+    this.groupTriangles()
     const n = this.pos.length / 3
     const colors = new Float32Array(n * 3)
     for (let i = 0; i < n * 3; i++) colors[i] = srgbToLinear(this.col[i])

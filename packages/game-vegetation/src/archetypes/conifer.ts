@@ -30,6 +30,7 @@ export function generateConifer(spec: ConiferSpec, ctx: Ctx): ArchResult {
     return trunkR * (1 - 0.7 * t) * (1 + 0.5 * Math.exp(-t * 20))
   })
   tube(ctx.wood, tp, { sides: ctx.pick(8, 6, 4), radii: tr, color: barkColor(bark, 0), sway: () => 0.02, end: 'point' })
+  ctx.piece('crown', 'crown', 'trunk')
 
   if (shape === 'cone') {
     const foliage = ctx.foliage

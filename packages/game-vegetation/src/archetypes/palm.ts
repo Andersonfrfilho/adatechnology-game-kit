@@ -46,6 +46,8 @@ export function generatePalm(spec: PalmSpec, ctx: Ctx): ArchResult {
   const crowns: { p: Vec3; r: number }[] = []
 
   const buildStem = (si: number, stemH: number, stemR: number, stemLean: number, az: number): void => {
+    const trunkId = si === 0 ? 'trunk' : `stem${si}`
+    ctx.piece(trunkId, si === 0 ? 'trunk' : 'stem')
     const srng = rng.fork(si * 101 + 7)
     const nPts = Math.max(4, Math.round(stemH / (clump ? 0.35 : 0.2)))
     const ctrl: Vec3[] = []
@@ -97,6 +99,7 @@ export function generatePalm(spec: PalmSpec, ctx: Ctx): ArchResult {
       crownTop = add(top, [0, stemR * 0.9, 0])
     }
     crowns.push({ p: crownTop, r: frondL })
+    ctx.piece(si === 0 ? 'crown' : `crown${si}`, 'crown', trunkId)
 
     const n = clump ? Math.max(3, Math.round(frondN)) : frondN
     for (let i = 0; i < n; i++) {
