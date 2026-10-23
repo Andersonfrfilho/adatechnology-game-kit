@@ -109,6 +109,48 @@ describe('structure', () => {
     expect(st.groups[0].every((p) => p.startsWith('f'))).toBe(true)
   })
 
+  it('a broken column is never reported as a collapse, even when its joints open a moment before it fractures', () => {
+    const w = createDestruction()
+    const id = w.add(slabSpec([0]))
+    const hit = strike(w, id, 'c0')
+    expect(w.part(id, 'c0')!.status).toBe('broken')
+    const ev = [...hit.events, ...run(w, 10)]
+    expect(types(ev)).not.toContain('collapse')
+    // nor in a frame hit with a huge blow, where the foundation joint opens first
+    const f = createDestruction()
+    const fid = f.add(buildFrame({ spanX: 4, spanZ: 4, columnsX: 2, columnsZ: 2, height: 2.8, floors: 1, walls: false, roof: true, columnCapacity: 4400 }), { position: [0, 0, -6] })
+    const r = f.hitPart(fid, 'column_0_0_0', { type: 'blunt', point: [-2, 1.4, -8], energy: 3e6, radius: 0.05 })
+    expect(f.part(fid, 'column_0_0_0')!.status).toBe('broken')
+    for (const e of [...r.events, ...run(f, 10)]) if (e.type === 'collapse') expect(e.parts).not.toContain('column_0_0_0')
+  })
+
+  it('when the columns and the roof supports fail on the same tick, the roof group still gets its collapse event, computed after all losses', () => {
+    const w = createDestruction()
+    const id = w.add(slabSpec([0, 1, 2, 3], { wall: true }))
+    const ev = w.explode([0, 1.5, 0], 20000, 8).flatMap((r) => r.events)
+    for (const c of ['c0', 'c1', 'c2', 'c3']) expect(w.part(id, c)!.status).toBe('broken')
+    const collapses = ev.filter((e) => e.type === 'collapse')
+    expect(collapses.length).toBeGreaterThan(0)
+    const parts = collapses.flatMap((e) => (e.type === 'collapse' ? e.parts : []))
+    expect(parts).toEqual(expect.arrayContaining(['slab', 'wall']))
+    expect(parts.some((p) => /^c\d$/.test(p))).toBe(false)
+    // reported once
+    expect(types(run(w, 10))).not.toContain('collapse')
+  })
+
+  it('the roof of a frame gets its own collapse event after columns went one by one and the stress broke the rest', () => {
+    const w = createDestruction()
+    const id = w.add(buildFrame({ spanX: 4, spanZ: 4, columnsX: 2, columnsZ: 2, height: 2.8, floors: 1, walls: false, roof: true, columnCapacity: 4400 }), { position: [0, 0, -6] })
+    const ev: DestructionEvent[] = []
+    for (const [c, p] of [['column_0_0_0', [-2, 1.4, -8]], ['column_0_1_0', [2, 1.4, -8]]] as const) ev.push(...w.hitPart(id, c, { type: 'blunt', point: [...p], energy: 3e6, radius: 0.05 }).events)
+    ev.push(...run(w, 60))
+    const collapsed = ev.flatMap((e) => (e.type === 'collapse' ? e.parts : []))
+    expect(collapsed).toContain('roof')
+    expect(collapsed).not.toContain('column_0_0_0')
+    expect(collapsed).not.toContain('column_0_1_0')
+    expect(w.part(id, 'roof')!.group).toBeGreaterThanOrEqual(1)
+  })
+
   it('a wall resting on the slab falls with it', () => {
     const w = createDestruction()
     const id = w.add(slabSpec([0, 1], { wall: true }))

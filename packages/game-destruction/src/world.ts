@@ -135,10 +135,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const base = (o: ObjRT, source?: string): { object: string; time: number; source?: string } =>
     source === undefined ? { object: o.id, time } : { object: o.id, time, source }
 
+  const pendingCollapse = new Map<ObjRT, string | undefined>()
+  let runDepth = 0
+
   const run = <T>(fn: () => T): { value: T; events: DestructionEvent[] } => {
     const prev = cur
     const mine: DestructionEvent[] = []
     cur = mine
+    runDepth++
     try {
       const value = fn()
       let guard = 0
@@ -146,8 +150,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         const b = blasts.shift()!
         blastWorld(b.point, b.energy, b.radius, b.source)
       }
+      if (runDepth === 1) flushCollapse()
       return { value, events: mine }
     } finally {
+      runDepth--
       cur = prev
     }
   }
@@ -362,15 +368,26 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (o.maxStress > 0.8) o.active = true
   }
 
-  /** Report groups of structural parts that lost every anchor (once per group). */
+  /**
+   * Ask for a collapse report. It is not computed right away: a blow can break several parts in one go (a column and the roof's supports, or a
+   * column whose joint opens just before the column itself fractures), so the groups are examined once, after every loss of the operation.
+   */
   const collapseCheck = (o: ObjRT, src?: string) => {
     if (!o.hasStructure || !o.parts.some((p) => p.anchored)) return
-    for (const g of o.st.groups) {
-      const ps = g.map((id) => o.byId.get(id)!)
-      if (ps.some((p) => p.anchored) || !ps.some((p) => p.structural)) continue
-      if (g.some((id) => o.collapsed.has(id))) continue
-      for (const id of g) o.collapsed.add(id)
-      emit({ ...base(o, src), type: 'collapse', parts: [...g], mass: ps.reduce((s, p) => s + p.st.mass, 0) })
+    if (!pendingCollapse.has(o)) pendingCollapse.set(o, src)
+  }
+
+  /** Report the groups of remaining structural parts that lost every anchor (each part is reported once). */
+  const flushCollapse = () => {
+    for (const [o, src] of [...pendingCollapse]) {
+      pendingCollapse.delete(o)
+      if (!objects.has(o.id) || objects.get(o.id) !== o) continue
+      for (const g of o.st.groups) {
+        const ps = g.map((id) => o.byId.get(id)!).filter((p) => !isLost(p) && !o.collapsed.has(p.spec.id))
+        if (ps.length === 0 || g.some((id) => o.byId.get(id)!.anchored) || !ps.some((p) => p.structural)) continue
+        for (const p of ps) o.collapsed.add(p.spec.id)
+        emit({ ...base(o, src), type: 'collapse', parts: ps.map((p) => p.spec.id), mass: ps.reduce((sum, p) => sum + p.st.mass, 0) })
+      }
     }
   }
 
@@ -1081,6 +1098,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   // World API
   // -------------------------------------------------------------------------------------------------------------------------------------------
 
+  /** Collapse events are produced after the whole operation: make sure the result of the operation carries them. */
+  const withCollapses = (r: { value: HitResult[]; events: DestructionEvent[] }): HitResult[] => {
+    const last = r.value[r.value.length - 1]
+    if (!last) return r.value
+    for (const e of r.events) if (e.type === 'collapse' && !r.value.some((h) => h.events.includes(e))) last.events.push(e)
+    return r.value
+  }
+
   const whole = (fn: () => HitResult): HitResult => {
     const r = run(fn)
     r.value.events = r.events
@@ -1164,14 +1189,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return whole(() => doHit(o, h, p))
     },
     explode(point, energy, radius, source) {
-      return run(() => blastWorld(point, energy, radius, source)).value
+      return withCollapses(run(() => blastWorld(point, energy, radius, source)))
     },
     raycast(origin, direction, maxDistance = Infinity) {
       const r = raycastInternal(origin, direction, maxDistance)
       return r ? { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: r.distance } : null
     },
     shoot(origin, direction, energy, caliber, source) {
-      return run(() => {
+      return withCollapses(run(() => {
         const results: HitResult[] = []
         const d = vec.normalize(direction)
         const ignore = new Set<string>()
@@ -1204,7 +1229,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           E = out.exitEnergy
         }
         return results
-      }).value
+      }))
     },
     disassemble(objectId, jointId, tool: ToolKind, dt) {
       const im = impls.get(objectId)
