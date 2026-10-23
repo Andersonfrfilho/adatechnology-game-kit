@@ -4,6 +4,9 @@ Decisões em `consolidado.md` (todas fechadas em 2026-10-23). Fontes em `fontes.
 **igual ao original** (G3: semente fixa, sequência de eventos e hash da cena), e termina com o seu `examples/<lib>-test-area` e a área na
 página do kit. Pacotes se compõem (`CLAUDE.md` §3): antes de escrever algo, use o pacote que já faz.
 
+Todo pacote nasce com o **mundo normal como padrão** e o surto como camada gradual conduzida pelo `game-infection` (G7), e é
+configurável por jogo (`CLAUDE.md` §2).
+
 Ordem: armas → casas → itens → personagens → efeitos → som e clima → veículos e cidade → multidão, histórias e jogador.
 
 ## Fase 0 — Base comum

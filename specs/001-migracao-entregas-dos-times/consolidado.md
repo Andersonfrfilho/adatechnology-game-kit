@@ -29,6 +29,7 @@ Desde 2026-10-23 o dono delegou: **decido o resto pela recomendação e aponto a
 | G4 | **Nomes no código** | Times escreveram em português (`civico`, `brutamonte`); a regra de código pede inglês | Identificadores em inglês; textos em pt-BR pelo locale | 🔁 regra de código |
 | G5 | **Marcas reais de armas** (Glock, Taurus, AK) | O próprio Arsenal (§09) avisa que marca registrada pode pedir licença | — | ✅ 2026-10-23: **marcas reais no SDK** (arma real serve a qualquer jogo) |
 | G6 | **three.js r128 → 0.160** | Páginas usam r128 e addons; o SDK usa ^0.160 | Portar para 0.160 (o addon `RoundedBoxGeometry` vira dependência dos `-three`) | 🔁 pacote do SDK |
+| G7 | **O jogo começa antes do surto** | "Antes do Dia 1" (fases D−6 ao Dia 1) e `game-infection` | — | ✅ 2026-10-23 (dono): no início a infecção ainda não se instaurou. **O padrão de todo pacote é o mundo normal** (cidade funcionando, gente e carros circulando, casas habitadas, lojas abastecidas) e o surto é uma **camada que avança com o tempo**, conduzida pelo `game-infection`: multidão de pedestres a pânico e horda, casas de habitadas a fortificadas ou abandonadas, lojas saqueadas, carros largados, zumbis de raros a espalhados. Cada pacote aceita a transição gradual e configurável, não só antes e depois |
 
 ## 2. Armas e itens (Fase 1 e 3)
 
