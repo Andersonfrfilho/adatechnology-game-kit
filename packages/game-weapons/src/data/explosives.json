@@ -1,0 +1,353 @@
+[
+  {
+    "id": "m67",
+    "name": "M67 fragmentation grenade",
+    "kind": "fragmentation",
+    "lethalRadius": 5,
+    "injuryRadius": 15,
+    "energy": 200000,
+    "destructionLevel": 2,
+    "noise": 500,
+    "fuse": 4,
+    "triggers": [
+      "timer"
+    ],
+    "mass": 0.4,
+    "sources": [
+      "arsenal",
+      "lab",
+      "game",
+      "gallery"
+    ]
+  },
+  {
+    "id": "molotov",
+    "name": "Molotov cocktail",
+    "kind": "incendiary",
+    "lethalRadius": 0,
+    "injuryRadius": 4,
+    "energy": 500,
+    "destructionLevel": 0,
+    "noise": 40,
+    "fire": {
+      "temperature": 700,
+      "radius": 4,
+      "seconds": 9
+    },
+    "triggers": [
+      "impact"
+    ],
+    "sources": [
+      "arsenal",
+      "lab",
+      "game",
+      "gallery"
+    ]
+  },
+  {
+    "id": "pipe_bomb",
+    "name": "Pipe bomb",
+    "kind": "fragmentation",
+    "lethalRadius": 3,
+    "injuryRadius": 10,
+    "energy": 43200,
+    "destructionLevel": 2,
+    "noise": 450,
+    "fuse": 3,
+    "triggers": [
+      "timer"
+    ],
+    "sources": [
+      "arsenal",
+      "lab",
+      "gallery"
+    ]
+  },
+  {
+    "id": "propane_p13",
+    "name": "P13 propane cylinder",
+    "kind": "fuel",
+    "lethalRadius": 5,
+    "injuryRadius": 14,
+    "energy": 200000,
+    "destructionLevel": 2,
+    "noise": 550,
+    "fire": {
+      "temperature": 700,
+      "radius": 1.4,
+      "seconds": 7
+    },
+    "triggers": [
+      "shot",
+      "fire"
+    ],
+    "sources": [
+      "arsenal",
+      "lab",
+      "game",
+      "gallery"
+    ]
+  },
+  {
+    "id": "dynamite",
+    "name": "Dynamite",
+    "kind": "blast",
+    "lethalRadius": 4,
+    "injuryRadius": 12,
+    "energy": 102400,
+    "destructionLevel": 3,
+    "noise": 600,
+    "triggers": [
+      "timer"
+    ],
+    "sources": [
+      "arsenal",
+      "lab",
+      "gallery"
+    ]
+  },
+  {
+    "id": "c4",
+    "name": "C4 charge",
+    "kind": "blast",
+    "lethalRadius": 6,
+    "injuryRadius": 18,
+    "energy": 345600,
+    "destructionLevel": 3,
+    "noise": 700,
+    "triggers": [
+      "remote"
+    ],
+    "mass": 0.57,
+    "sources": [
+      "arsenal",
+      "lab",
+      "gallery"
+    ]
+  },
+  {
+    "id": "claymore",
+    "name": "Claymore mine",
+    "kind": "directional",
+    "lethalRadius": 15,
+    "injuryRadius": 50,
+    "cone": {
+      "halfAngleDeg": 30,
+      "length": 50
+    },
+    "energy": 102400,
+    "destructionLevel": 1,
+    "noise": 500,
+    "triggers": [
+      "wire"
+    ],
+    "sources": [
+      "arsenal",
+      "lab",
+      "gallery"
+    ]
+  },
+  {
+    "id": "flashbang",
+    "name": "Flashbang",
+    "kind": "flash",
+    "lethalRadius": 0,
+    "injuryRadius": 10,
+    "energy": 0,
+    "destructionLevel": 0,
+    "noise": 400,
+    "stunSeconds": 4,
+    "triggers": [
+      "timer"
+    ],
+    "sources": [
+      "arsenal",
+      "lab",
+      "gallery"
+    ]
+  },
+  {
+    "id": "m79_40mm",
+    "name": "40 mm grenade",
+    "kind": "fragmentation",
+    "lethalRadius": 4,
+    "injuryRadius": 12,
+    "energy": 102400,
+    "destructionLevel": 2,
+    "noise": 450,
+    "triggers": [
+      "impact"
+    ],
+    "sources": [
+      "arsenal",
+      "lab",
+      "gallery"
+    ]
+  },
+  {
+    "id": "m72_66mm",
+    "name": "66 mm HEAT rocket",
+    "kind": "shaped_charge",
+    "lethalRadius": 5,
+    "injuryRadius": 15,
+    "energy": 200000,
+    "destructionLevel": 3,
+    "noise": 700,
+    "triggers": [
+      "impact"
+    ],
+    "sources": [
+      "arsenal",
+      "lab",
+      "gallery"
+    ]
+  },
+  {
+    "id": "at4_84mm",
+    "name": "84 mm HEAT rocket",
+    "kind": "shaped_charge",
+    "lethalRadius": 5,
+    "injuryRadius": 16,
+    "energy": 200000,
+    "destructionLevel": 3,
+    "noise": 750,
+    "triggers": [
+      "impact"
+    ],
+    "sources": [
+      "arsenal",
+      "lab",
+      "gallery"
+    ]
+  },
+  {
+    "id": "pg7v",
+    "name": "PG-7V rocket",
+    "kind": "shaped_charge",
+    "lethalRadius": 5,
+    "injuryRadius": 16,
+    "energy": 200000,
+    "destructionLevel": 3,
+    "noise": 750,
+    "triggers": [
+      "impact"
+    ],
+    "sources": [
+      "arsenal",
+      "lab",
+      "gallery"
+    ]
+  },
+  {
+    "id": "carl_gustaf_84mm",
+    "name": "84 mm HE/HEAT round",
+    "kind": "shaped_charge",
+    "lethalRadius": 5,
+    "injuryRadius": 16,
+    "energy": 200000,
+    "destructionLevel": 3,
+    "noise": 750,
+    "triggers": [
+      "impact"
+    ],
+    "sources": [
+      "lab",
+      "gallery",
+      "derived"
+    ]
+  },
+  {
+    "id": "fuel_barrel",
+    "name": "Fuel barrel",
+    "kind": "fuel",
+    "lethalRadius": 4,
+    "injuryRadius": 12,
+    "energy": 102400,
+    "destructionLevel": 2,
+    "noise": 550,
+    "fire": {
+      "temperature": 700,
+      "radius": 2,
+      "seconds": 12
+    },
+    "triggers": [
+      "shot",
+      "fire"
+    ],
+    "sources": [
+      "lab",
+      "game",
+      "derived"
+    ]
+  },
+  {
+    "id": "car_fuel_tank",
+    "name": "Car fuel tank",
+    "kind": "fuel",
+    "lethalRadius": 5,
+    "injuryRadius": 14,
+    "energy": 200000,
+    "destructionLevel": 2,
+    "noise": 550,
+    "fire": {
+      "temperature": 700,
+      "radius": 2.2,
+      "seconds": 30
+    },
+    "triggers": [
+      "shot",
+      "fire"
+    ],
+    "sources": [
+      "lab",
+      "game",
+      "derived"
+    ]
+  },
+  {
+    "id": "fuel_pump",
+    "name": "Fuel pump",
+    "kind": "fuel",
+    "lethalRadius": 4,
+    "injuryRadius": 12,
+    "energy": 102400,
+    "destructionLevel": 3,
+    "noise": 700,
+    "fire": {
+      "temperature": 700,
+      "radius": 1.1,
+      "seconds": 14
+    },
+    "triggers": [
+      "shot",
+      "fire"
+    ],
+    "sources": [
+      "lab",
+      "derived"
+    ]
+  },
+  {
+    "id": "fuel_station_tank",
+    "name": "Fuel station tank",
+    "kind": "fuel",
+    "lethalRadius": 12,
+    "injuryRadius": 30,
+    "energy": 2764800,
+    "destructionLevel": 3,
+    "noise": 700,
+    "fire": {
+      "temperature": 700,
+      "radius": 3.2,
+      "seconds": 20
+    },
+    "triggers": [
+      "shot",
+      "fire"
+    ],
+    "sources": [
+      "lab",
+      "derived"
+    ]
+  }
+]

@@ -1,0 +1,3334 @@
+[
+  {
+    "id": "glock_17",
+    "name": "Glock 17",
+    "maker": "Glock",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 17,
+      "reload": 1.8,
+      "muzzleSpeed": 375,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.63,
+        0.54
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.8,
+        "clear": 1.2
+      },
+      "faultFactor": 0.7,
+      "moa": 4
+    },
+    "mass": 0.7,
+    "dimensions": {
+      "length": 0.202,
+      "barrel": 0.114,
+      "emptyMass": 0.63
+    },
+    "archetype": "pistol_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "glock_18",
+    "name": "Glock 18",
+    "maker": "Glock",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 1200,
+      "modes": [
+        "semi",
+        "auto"
+      ],
+      "magazine": 17,
+      "magazineOptions": [
+        33
+      ],
+      "reload": 1.8,
+      "muzzleSpeed": 375,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.63,
+        0.54
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.8,
+        "clear": 1.2
+      },
+      "faultFactor": 0.9,
+      "moa": 4
+    },
+    "mass": 0.7,
+    "dimensions": {
+      "length": 0.202,
+      "barrel": 0.114,
+      "emptyMass": 0.62
+    },
+    "archetype": "pistol_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "glock_19",
+    "name": "Glock 19",
+    "maker": "Glock",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 15,
+      "reload": 1.7,
+      "muzzleSpeed": 360,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.75,
+        0.58
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.7,
+        "clear": 1.2
+      },
+      "faultFactor": 0.7,
+      "moa": 4
+    },
+    "mass": 0.6,
+    "dimensions": {
+      "length": 0.185,
+      "barrel": 0.102,
+      "emptyMass": 0.6
+    },
+    "archetype": "pistol_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "taurus_g2c",
+    "name": "Taurus G2C",
+    "maker": "Taurus",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 12,
+      "reload": 1.7,
+      "muzzleSpeed": 340,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.56,
+        0.52
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.7,
+        "clear": 1.2
+      },
+      "faultFactor": 1.5,
+      "moa": 5
+    },
+    "mass": 0.6,
+    "dimensions": {
+      "length": 0.159,
+      "barrel": 0.081,
+      "emptyMass": 0.62
+    },
+    "archetype": "pistol_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "taurus_ts9",
+    "name": "Taurus TS9",
+    "maker": "Taurus",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 17,
+      "reload": 1.8,
+      "muzzleSpeed": 360,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.5,
+        0.5
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.8,
+        "clear": 1.2
+      },
+      "faultFactor": 1.2,
+      "moa": 4
+    },
+    "mass": 0.7,
+    "dimensions": {
+      "length": 0.194,
+      "barrel": 0.104,
+      "emptyMass": 0.68
+    },
+    "archetype": "pistol_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "beretta_92fs",
+    "name": "Beretta 92FS",
+    "maker": "Beretta",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 15,
+      "reload": 1.9,
+      "muzzleSpeed": 381,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.24,
+        0.41
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.9,
+        "clear": 1.2
+      },
+      "faultFactor": 0.9,
+      "moa": 3
+    },
+    "mass": 0.95,
+    "dimensions": {
+      "length": 0.217,
+      "barrel": 0.125,
+      "emptyMass": 0.95
+    },
+    "archetype": "pistol_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "sig_sauer_p226",
+    "name": "SIG Sauer P226",
+    "maker": "SIG Sauer",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 15,
+      "reload": 1.9,
+      "muzzleSpeed": 350,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.03,
+        0.34
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.9,
+        "clear": 1.2
+      },
+      "faultFactor": 0.8,
+      "moa": 3
+    },
+    "mass": 0.96,
+    "dimensions": {
+      "length": 0.196,
+      "barrel": 0.112,
+      "emptyMass": 0.96
+    },
+    "archetype": "pistol_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "cz_75",
+    "name": "CZ 75",
+    "maker": "CZ",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 16,
+      "reload": 1.9,
+      "muzzleSpeed": 370,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.11,
+        0.37
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.9,
+        "clear": 1.2
+      },
+      "faultFactor": 0.9,
+      "moa": 3
+    },
+    "mass": 1,
+    "dimensions": {
+      "length": 0.206,
+      "barrel": 0.12,
+      "emptyMass": 1
+    },
+    "archetype": "pistol_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "taurus_pt100",
+    "name": "Taurus PT100",
+    "maker": "Taurus",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "40sw",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 11,
+      "reload": 1.9,
+      "muzzleSpeed": 300,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.14,
+        0.38
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.9,
+        "clear": 1.2
+      },
+      "faultFactor": 1.2,
+      "moa": 4
+    },
+    "mass": 1,
+    "dimensions": {
+      "length": 0.216,
+      "barrel": 0.127,
+      "emptyMass": 1
+    },
+    "archetype": "pistol_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "colt_m1911",
+    "name": "Colt M1911",
+    "maker": "Colt",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "45acp",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 7,
+      "reload": 1.8,
+      "muzzleSpeed": 253,
+      "spreadDeg": 1.1,
+      "bloomDeg": 0.8,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.79,
+        0.6
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.8,
+        "clear": 1.2
+      },
+      "faultFactor": 1.1,
+      "moa": 3
+    },
+    "mass": 1.1,
+    "dimensions": {
+      "length": 0.216,
+      "barrel": 0.127,
+      "emptyMass": 1.1
+    },
+    "archetype": "pistol_45",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "makarov_pm",
+    "name": "Makarov PM",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x18",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 8,
+      "reload": 1.7,
+      "muzzleSpeed": 315,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        0.9,
+        0.3
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.7,
+        "clear": 1.2
+      },
+      "faultFactor": 0.8,
+      "moa": 5
+    },
+    "mass": 0.73,
+    "dimensions": {
+      "length": 0.161,
+      "barrel": 0.094,
+      "emptyMass": 0.73
+    },
+    "archetype": "pistol_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "fn_five_seven",
+    "name": "FN Five-seveN",
+    "maker": "FN",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_7x28",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 20,
+      "reload": 1.8,
+      "muzzleSpeed": 650,
+      "spreadDeg": 1,
+      "bloomDeg": 0.6,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        1.5,
+        0.5
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.8,
+        "clear": 1.2
+      },
+      "faultFactor": 0.9,
+      "moa": 3
+    },
+    "mass": 0.61,
+    "dimensions": {
+      "length": 0.208,
+      "barrel": 0.122,
+      "emptyMass": 0.61
+    },
+    "archetype": "pistol_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "desert_eagle_mark_xix",
+    "name": "Desert Eagle Mark XIX",
+    "category": "pistol",
+    "action": {
+      "kind": "firearm",
+      "caliber": "50ae",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 7,
+      "reload": 2,
+      "muzzleSpeed": 470,
+      "spreadDeg": 1.1,
+      "bloomDeg": 0.8,
+      "recoveryDegPerS": 4,
+      "recoil": [
+        4.41,
+        1.47
+      ],
+      "range": 50,
+      "family": "pistol",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2,
+        "clear": 1.2
+      },
+      "faultFactor": 1.8,
+      "moa": 3
+    },
+    "mass": 2,
+    "dimensions": {
+      "length": 0.27,
+      "barrel": 0.152,
+      "emptyMass": 1.99
+    },
+    "archetype": "pistol_45",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "taurus_82",
+    "name": "Taurus 82",
+    "maker": "Taurus",
+    "category": "revolver",
+    "action": {
+      "kind": "firearm",
+      "caliber": "38spl",
+      "rpm": 150,
+      "modes": [
+        "single"
+      ],
+      "magazine": 6,
+      "reload": 2.2,
+      "muzzleSpeed": 260,
+      "spreadDeg": 0.9,
+      "bloomDeg": 0.7,
+      "recoveryDegPerS": 3.5,
+      "recoil": [
+        1.96,
+        0.61
+      ],
+      "range": 45,
+      "family": "revolver",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.2,
+        "perRound": 1,
+        "clear": 1.2
+      },
+      "moa": 4
+    },
+    "mass": 0.9,
+    "dimensions": {
+      "length": 0.24,
+      "barrel": 0.102,
+      "emptyMass": 0.95
+    },
+    "archetype": "revolver_38",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "sw_686",
+    "name": "S&W 686",
+    "maker": "S&W",
+    "category": "revolver",
+    "action": {
+      "kind": "firearm",
+      "caliber": "357mag",
+      "rpm": 150,
+      "modes": [
+        "single"
+      ],
+      "magazine": 7,
+      "reload": 2.4,
+      "muzzleSpeed": 430,
+      "spreadDeg": 0.8,
+      "bloomDeg": 1,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        3.21,
+        0.96
+      ],
+      "range": 60,
+      "family": "revolver",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.4,
+        "perRound": 1,
+        "clear": 1.2
+      },
+      "moa": 3,
+      "acceptsCalibers": [
+        "38spl"
+      ]
+    },
+    "mass": 1.2,
+    "dimensions": {
+      "length": 0.244,
+      "barrel": 0.102,
+      "emptyMass": 1.14
+    },
+    "archetype": "revolver_357",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "sw_model_29",
+    "name": "S&W Model 29",
+    "maker": "S&W",
+    "category": "revolver",
+    "action": {
+      "kind": "firearm",
+      "caliber": "44mag",
+      "rpm": 150,
+      "modes": [
+        "single"
+      ],
+      "magazine": 6,
+      "reload": 2.6,
+      "muzzleSpeed": 440,
+      "spreadDeg": 0.8,
+      "bloomDeg": 1,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        4.4,
+        1.32
+      ],
+      "range": 60,
+      "family": "revolver",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.6,
+        "perRound": 1,
+        "clear": 1.2
+      },
+      "moa": 3
+    },
+    "mass": 1.4,
+    "dimensions": {
+      "length": 0.302,
+      "barrel": 0.165,
+      "emptyMass": 1.4
+    },
+    "archetype": "revolver_357",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "hk_mp5a3",
+    "name": "HK MP5A3",
+    "maker": "HK",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 800,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.6,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.8,
+        0.44
+      ],
+      "range": 80,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.6,
+        "clear": 1.2
+      },
+      "moa": 3
+    },
+    "mass": 2.9,
+    "dimensions": {
+      "length": 0.7,
+      "barrel": 0.225,
+      "emptyMass": 2.54,
+      "lengthCollapsed": 0.55
+    },
+    "archetype": "smg_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "taurus_smt9",
+    "name": "Taurus SMT9",
+    "maker": "Taurus",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 750,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.5,
+      "muzzleSpeed": 380,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.78,
+        0.43
+      ],
+      "range": 80,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.5,
+        "clear": 1.2
+      },
+      "moa": 4
+    },
+    "mass": 2.7,
+    "dimensions": {
+      "length": 0.66,
+      "barrel": 0.2,
+      "emptyMass": 2.5,
+      "lengthCollapsed": 0.45
+    },
+    "archetype": "smg_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "hk_ump_45",
+    "name": "HK UMP-45",
+    "maker": "HK",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "45acp",
+      "rpm": 600,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 25,
+      "reload": 2.7,
+      "muzzleSpeed": 285,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        1.02,
+        0.57
+      ],
+      "range": 80,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.7,
+        "clear": 1.2
+      },
+      "moa": 4
+    },
+    "mass": 2.3,
+    "dimensions": {
+      "length": 0.69,
+      "barrel": 0.2,
+      "emptyMass": 2.3,
+      "lengthCollapsed": 0.45
+    },
+    "archetype": "smg_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "uzi",
+    "name": "Uzi",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 600,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 32,
+      "reload": 2.4,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.66,
+        0.37
+      ],
+      "range": 80,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.4,
+        "clear": 1.2
+      },
+      "moa": 6
+    },
+    "mass": 3.5,
+    "dimensions": {
+      "length": 0.65,
+      "barrel": 0.26,
+      "emptyMass": 3.5,
+      "lengthCollapsed": 0.47
+    },
+    "archetype": "smg_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "fn_p90",
+    "name": "FN P90",
+    "maker": "FN",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_7x28",
+      "rpm": 900,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 50,
+      "reload": 3,
+      "muzzleSpeed": 715,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.76,
+        0.42
+      ],
+      "range": 80,
+      "family": "top_magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 3,
+        "clear": 1.2
+      },
+      "moa": 3
+    },
+    "mass": 2.6,
+    "dimensions": {
+      "length": 0.5,
+      "barrel": 0.264,
+      "emptyMass": 2.6
+    },
+    "archetype": "smg_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "kriss_vector",
+    "name": "Kriss Vector",
+    "maker": "Kriss",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "45acp",
+      "rpm": 1100,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 25,
+      "reload": 2.5,
+      "muzzleSpeed": 290,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.9,
+        0.5
+      ],
+      "range": 80,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.5,
+        "clear": 1.2
+      },
+      "moa": 4
+    },
+    "mass": 2.7,
+    "dimensions": {
+      "length": 0.622,
+      "barrel": 0.14,
+      "emptyMass": 2.7,
+      "lengthCollapsed": 0.406
+    },
+    "archetype": "smg_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "thompson_m1a1",
+    "name": "Thompson M1A1",
+    "maker": "Thompson",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "45acp",
+      "rpm": 700,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.9,
+      "muzzleSpeed": 285,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.49,
+        0.27
+      ],
+      "range": 80,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.9,
+        "clear": 1.2
+      },
+      "moa": 5
+    },
+    "mass": 4.8,
+    "dimensions": {
+      "length": 0.813,
+      "barrel": 0.267,
+      "emptyMass": 4.8
+    },
+    "archetype": "smg_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "cz_scorpion_evo_3",
+    "name": "CZ Scorpion EVO 3",
+    "maker": "CZ",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "9x19",
+      "rpm": 1150,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.4,
+      "muzzleSpeed": 370,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.71,
+        0.39
+      ],
+      "range": 80,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.4,
+        "clear": 1.2
+      },
+      "moa": 4
+    },
+    "mass": 2.8,
+    "dimensions": {
+      "length": 0.67,
+      "barrel": 0.196,
+      "emptyMass": 2.77,
+      "lengthCollapsed": 0.41
+    },
+    "archetype": "smg_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "mac_10",
+    "name": "MAC-10",
+    "category": "smg",
+    "action": {
+      "kind": "firearm",
+      "caliber": "45acp",
+      "rpm": 1090,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.2,
+      "muzzleSpeed": 280,
+      "spreadDeg": 1.5,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 6,
+      "recoil": [
+        0.81,
+        0.45
+      ],
+      "range": 80,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.2,
+        "clear": 1.2
+      },
+      "faultFactor": 1.4,
+      "moa": 8
+    },
+    "mass": 2.8,
+    "dimensions": {
+      "length": 0.548,
+      "barrel": 0.146,
+      "emptyMass": 2.84,
+      "lengthCollapsed": 0.296
+    },
+    "archetype": "smg_9mm",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "remington_870",
+    "name": "Remington 870",
+    "maker": "Remington",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 120,
+      "modes": [
+        "pump"
+      ],
+      "magazine": 6,
+      "chamber": 1,
+      "reload": 0.55,
+      "perRound": true,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        3.32,
+        0.83
+      ],
+      "range": 40,
+      "family": "pump",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.55,
+        "perRound": 0.55,
+        "cycle": 0.5,
+        "clear": 1.2
+      },
+      "patternCm": 60
+    },
+    "mass": 3.6,
+    "dimensions": {
+      "length": 0.99,
+      "barrel": 0.47,
+      "emptyMass": 3.6
+    },
+    "archetype": "shotgun_pump_12",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "mossberg_500",
+    "name": "Mossberg 500",
+    "maker": "Mossberg",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 120,
+      "modes": [
+        "pump"
+      ],
+      "magazine": 5,
+      "chamber": 1,
+      "reload": 0.55,
+      "perRound": true,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        3.73,
+        0.93
+      ],
+      "range": 40,
+      "family": "pump",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.55,
+        "perRound": 0.55,
+        "cycle": 0.5,
+        "clear": 1.2
+      },
+      "patternCm": 60
+    },
+    "mass": 3.2,
+    "dimensions": {
+      "length": 0.99,
+      "barrel": 0.47,
+      "emptyMass": 3.2
+    },
+    "archetype": "shotgun_pump_12",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "cbc_pump_military_3_0",
+    "name": "CBC Pump Military 3.0",
+    "maker": "CBC",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 120,
+      "modes": [
+        "pump"
+      ],
+      "magazine": 7,
+      "chamber": 1,
+      "reload": 0.6,
+      "perRound": true,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        3.41,
+        0.85
+      ],
+      "range": 40,
+      "family": "pump",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.6,
+        "perRound": 0.6,
+        "cycle": 0.5,
+        "clear": 1.2
+      },
+      "patternCm": 60
+    },
+    "mass": 3.5,
+    "dimensions": {
+      "length": 1,
+      "barrel": 0.48,
+      "emptyMass": 3.4
+    },
+    "archetype": "shotgun_pump_12",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "benelli_m4",
+    "name": "Benelli M4",
+    "maker": "Benelli",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 180,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 7,
+      "chamber": 1,
+      "reload": 0.5,
+      "perRound": true,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        2.84,
+        0.84
+      ],
+      "range": 40,
+      "family": "tube_semi",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.5,
+        "perRound": 0.5,
+        "clear": 1.2
+      },
+      "patternCm": 60
+    },
+    "mass": 3.8,
+    "dimensions": {
+      "length": 1.01,
+      "barrel": 0.47,
+      "emptyMass": 3.82
+    },
+    "archetype": "shotgun_semi_12",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "franchi_spas_12",
+    "name": "Franchi SPAS-12",
+    "maker": "Franchi",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 120,
+      "modes": [
+        "pump",
+        "semi"
+      ],
+      "magazine": 8,
+      "chamber": 1,
+      "reload": 0.55,
+      "perRound": true,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        2.72,
+        0.68
+      ],
+      "range": 40,
+      "family": "pump",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.55,
+        "perRound": 0.55,
+        "cycle": 0.5,
+        "clear": 1.2
+      },
+      "patternCm": 55
+    },
+    "mass": 4.4,
+    "dimensions": {
+      "length": 1.041,
+      "barrel": 0.546,
+      "emptyMass": 4.4
+    },
+    "archetype": "shotgun_pump_12",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "kel_tec_ksg",
+    "name": "Kel-Tec KSG",
+    "maker": "Kel-Tec",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 120,
+      "modes": [
+        "pump"
+      ],
+      "magazine": 14,
+      "chamber": 1,
+      "tubes": 2,
+      "reload": 0.55,
+      "perRound": true,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        3.85,
+        0.96
+      ],
+      "range": 40,
+      "family": "pump",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.55,
+        "perRound": 0.55,
+        "cycle": 0.5,
+        "clear": 1.2
+      },
+      "patternCm": 60
+    },
+    "mass": 3.1,
+    "dimensions": {
+      "length": 0.66,
+      "barrel": 0.47,
+      "emptyMass": 3.1
+    },
+    "archetype": "shotgun_pump_12",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "saiga_12",
+    "name": "Saiga-12",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 180,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 8,
+      "magazineOptions": [
+        20
+      ],
+      "reload": 2.8,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        3,
+        0.88
+      ],
+      "range": 40,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.8,
+        "clear": 1.2
+      },
+      "faultFactor": 1.3,
+      "patternCm": 65
+    },
+    "mass": 3.6,
+    "dimensions": {
+      "length": 1,
+      "barrel": 0.43,
+      "emptyMass": 3.6
+    },
+    "archetype": "shotgun_semi_12",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "aa_12",
+    "name": "AA-12",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 300,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 8,
+      "magazineOptions": [
+        20
+      ],
+      "reload": 3,
+      "muzzleSpeed": 400,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        2.08,
+        0.61
+      ],
+      "range": 40,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 3,
+        "clear": 1.2
+      },
+      "patternCm": 65
+    },
+    "mass": 5.2,
+    "dimensions": {
+      "length": 0.966,
+      "barrel": 0.457,
+      "emptyMass": 5.2
+    },
+    "archetype": "shotgun_semi_12",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "boito_double_barrel",
+    "name": "Boito double-barrel",
+    "category": "shotgun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "12ga_00buck",
+      "rpm": 180,
+      "modes": [
+        "break",
+        "volley"
+      ],
+      "magazine": 2,
+      "reload": 2,
+      "muzzleSpeed": 410,
+      "spreadDeg": 1,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 3,
+      "pelletSpreadDeg": 3,
+      "recoil": [
+        4.14,
+        1.1
+      ],
+      "range": 35,
+      "family": "break",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2,
+        "clear": 1.2
+      },
+      "patternCm": 45
+    },
+    "mass": 3.2,
+    "dimensions": {
+      "length": 1.13,
+      "barrel": 0.71,
+      "emptyMass": 3.2
+    },
+    "archetype": "shotgun_double_12",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "ak_47",
+    "name": "AK-47",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x39",
+      "rpm": 600,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.6,
+      "muzzleSpeed": 715,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        1.29,
+        0.69
+      ],
+      "range": 350,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.6,
+        "reloadEmpty": 3.4,
+        "clear": 1.2
+      },
+      "faultFactor": 0.4,
+      "moa": 4
+    },
+    "mass": 4.3,
+    "dimensions": {
+      "length": 0.88,
+      "barrel": 0.415,
+      "emptyMass": 4.3
+    },
+    "archetype": "rifle_7_62x39",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "akm",
+    "name": "AKM",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x39",
+      "rpm": 600,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.6,
+      "muzzleSpeed": 715,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        1.54,
+        0.82
+      ],
+      "range": 350,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.6,
+        "reloadEmpty": 3.4,
+        "clear": 1.2
+      },
+      "faultFactor": 0.45,
+      "moa": 4
+    },
+    "mass": 3.6,
+    "dimensions": {
+      "length": 0.88,
+      "barrel": 0.415,
+      "emptyMass": 3.1
+    },
+    "archetype": "rifle_7_62x39",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "ak_74",
+    "name": "AK-74",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_45x39",
+      "rpm": 650,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.6,
+      "muzzleSpeed": 900,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.81,
+        0.49
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.6,
+        "reloadEmpty": 3.4,
+        "clear": 1.2
+      },
+      "moa": 3
+    },
+    "mass": 3.3,
+    "dimensions": {
+      "length": 0.943,
+      "barrel": 0.415,
+      "emptyMass": 3.3
+    },
+    "archetype": "rifle_5_56",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "ak_12",
+    "name": "AK-12",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_45x39",
+      "rpm": 700,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.5,
+      "muzzleSpeed": 880,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.73,
+        0.44
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.5,
+        "reloadEmpty": 3.3,
+        "clear": 1.2
+      },
+      "moa": 2.5
+    },
+    "mass": 3.5,
+    "dimensions": {
+      "length": 0.945,
+      "barrel": 0.415,
+      "emptyMass": 3.5,
+      "lengthCollapsed": 0.725
+    },
+    "archetype": "rifle_5_56",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "imbel_ia2",
+    "name": "IMBEL IA2",
+    "maker": "IMBEL",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 700,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.4,
+      "muzzleSpeed": 860,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.85,
+        0.51
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.4,
+        "reloadEmpty": 3.1,
+        "clear": 1.2
+      },
+      "moa": 3
+    },
+    "mass": 3.4,
+    "dimensions": {
+      "length": 0.85,
+      "barrel": 0.33,
+      "emptyMass": 3.4
+    },
+    "archetype": "rifle_5_56",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "taurus_t4",
+    "name": "Taurus T4",
+    "maker": "Taurus",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 750,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.4,
+      "muzzleSpeed": 880,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        1,
+        0.6
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.4,
+        "reloadEmpty": 3.1,
+        "clear": 1.2
+      },
+      "moa": 2
+    },
+    "mass": 3,
+    "dimensions": {
+      "length": 0.84,
+      "barrel": 0.368,
+      "emptyMass": 3
+    },
+    "archetype": "rifle_5_56",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "colt_m4a1",
+    "name": "Colt M4A1",
+    "maker": "Colt",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 800,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.3,
+      "muzzleSpeed": 880,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        1,
+        0.6
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.3,
+        "reloadEmpty": 3,
+        "clear": 1.2
+      },
+      "moa": 2
+    },
+    "mass": 3,
+    "dimensions": {
+      "length": 0.84,
+      "barrel": 0.368,
+      "emptyMass": 2.9,
+      "lengthCollapsed": 0.757
+    },
+    "archetype": "rifle_5_56",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "colt_m16a2",
+    "name": "Colt M16A2",
+    "maker": "Colt",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 800,
+      "modes": [
+        "semi",
+        "burst"
+      ],
+      "burst": 3,
+      "magazine": 30,
+      "reload": 2.4,
+      "muzzleSpeed": 948,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        1.03,
+        0.62
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.4,
+        "reloadEmpty": 3.1,
+        "clear": 1.2
+      },
+      "moa": 2
+    },
+    "mass": 3.4,
+    "dimensions": {
+      "length": 1,
+      "barrel": 0.508,
+      "emptyMass": 3.4
+    },
+    "archetype": "rifle_5_56",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "hk416",
+    "name": "HK416",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 850,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.3,
+      "muzzleSpeed": 880,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.86,
+        0.52
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.3,
+        "reloadEmpty": 3,
+        "clear": 1.2
+      },
+      "moa": 1.5
+    },
+    "mass": 3.5,
+    "dimensions": {
+      "length": 0.9,
+      "barrel": 0.368,
+      "emptyMass": 3.5,
+      "lengthCollapsed": 0.8
+    },
+    "archetype": "rifle_5_56",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "steyr_aug_a1",
+    "name": "Steyr AUG A1",
+    "maker": "Steyr",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 680,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 30,
+      "reload": 2.8,
+      "muzzleSpeed": 970,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        1.02,
+        0.61
+      ],
+      "range": 400,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.8,
+        "reloadEmpty": 3.4,
+        "clear": 1.2
+      },
+      "moa": 2
+    },
+    "mass": 3.6,
+    "dimensions": {
+      "length": 0.79,
+      "barrel": 0.508,
+      "emptyMass": 3.6
+    },
+    "archetype": "rifle_5_56",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "fn_fal",
+    "name": "FN FAL",
+    "maker": "FN",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 650,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 20,
+      "reload": 2.7,
+      "muzzleSpeed": 840,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        2.16,
+        1.15
+      ],
+      "range": 350,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.7,
+        "reloadEmpty": 3.5,
+        "clear": 1.2
+      },
+      "moa": 3
+    },
+    "mass": 4.3,
+    "dimensions": {
+      "length": 1.09,
+      "barrel": 0.533,
+      "emptyMass": 4.3
+    },
+    "archetype": "rifle_7_62x39",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "hk_g3a3",
+    "name": "HK G3A3",
+    "maker": "HK",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 550,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 20,
+      "reload": 2.7,
+      "muzzleSpeed": 800,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        1.91,
+        1.02
+      ],
+      "range": 350,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.7,
+        "reloadEmpty": 3.6,
+        "clear": 1.2
+      },
+      "moa": 2.5
+    },
+    "mass": 4.4,
+    "dimensions": {
+      "length": 1.025,
+      "barrel": 0.45,
+      "emptyMass": 4.4
+    },
+    "archetype": "rifle_7_62x39",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "sks",
+    "name": "SKS",
+    "category": "rifle",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x39",
+      "rpm": 120,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 10,
+      "reload": 2.2,
+      "muzzleSpeed": 735,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        1.54,
+        0.82
+      ],
+      "range": 350,
+      "family": "top_load_semi",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.2,
+        "clear": 1.2
+      },
+      "moa": 3
+    },
+    "mass": 3.8,
+    "dimensions": {
+      "length": 1.02,
+      "barrel": 0.52,
+      "emptyMass": 3.85
+    },
+    "archetype": "rifle_7_62x39",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "m14_ebr",
+    "name": "M14 EBR",
+    "category": "dmr",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 120,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 20,
+      "reload": 2.8,
+      "muzzleSpeed": 850,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        2.13,
+        0.36
+      ],
+      "range": 800,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.8,
+        "clear": 1.2
+      },
+      "moa": 1.5
+    },
+    "mass": 5.1,
+    "dimensions": {
+      "length": 1,
+      "barrel": 0.457,
+      "emptyMass": 5.1
+    },
+    "archetype": "rifle_bolt_308",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "svd_dragunov",
+    "name": "SVD Dragunov",
+    "category": "dmr",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x54r",
+      "rpm": 120,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 10,
+      "reload": 2.9,
+      "muzzleSpeed": 830,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        2.39,
+        0.4
+      ],
+      "range": 800,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.9,
+        "clear": 1.2
+      },
+      "moa": 1.5
+    },
+    "mass": 4.3,
+    "dimensions": {
+      "length": 1.225,
+      "barrel": 0.62,
+      "emptyMass": 4.3
+    },
+    "archetype": "rifle_bolt_308",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "fn_scar_h",
+    "name": "FN SCAR-H",
+    "maker": "FN",
+    "category": "dmr",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 600,
+      "modes": [
+        "auto",
+        "semi"
+      ],
+      "magazine": 20,
+      "reload": 2.6,
+      "muzzleSpeed": 770,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        2.48,
+        0.41
+      ],
+      "range": 800,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.6,
+        "clear": 1.2
+      },
+      "moa": 1.5
+    },
+    "mass": 3.6,
+    "dimensions": {
+      "length": 0.965,
+      "barrel": 0.4,
+      "emptyMass": 3.6,
+      "lengthCollapsed": 0.71
+    },
+    "archetype": "rifle_bolt_308",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "knights_sr_25_mk11",
+    "name": "Knight's SR-25 (Mk 11)",
+    "maker": "Knight's",
+    "category": "dmr",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 120,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 20,
+      "reload": 2.7,
+      "muzzleSpeed": 800,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        2.14,
+        0.36
+      ],
+      "range": 800,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.7,
+        "clear": 1.2
+      },
+      "moa": 1
+    },
+    "mass": 4.5,
+    "dimensions": {
+      "length": 1.156,
+      "barrel": 0.508,
+      "emptyMass": 4.5
+    },
+    "archetype": "rifle_bolt_308",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "hk_psg_1",
+    "name": "HK PSG-1",
+    "maker": "HK",
+    "category": "dmr",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 120,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 5,
+      "magazineOptions": [
+        20
+      ],
+      "reload": 2.7,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        1.51,
+        0.25
+      ],
+      "range": 800,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.7,
+        "reloadEmpty": 3.6,
+        "clear": 1.2
+      },
+      "faultFactor": 0.7
+    },
+    "mass": 7.2,
+    "dimensions": {
+      "length": 1.208,
+      "barrel": 0.65,
+      "emptyMass": 7.2
+    },
+    "archetype": "rifle_bolt_308",
+    "sources": [
+      "gallery",
+      "sdk",
+      "derived"
+    ]
+  },
+  {
+    "id": "steyr_ssg_69",
+    "name": "Steyr SSG 69",
+    "maker": "Steyr",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 5,
+      "reload": 0.7,
+      "perRound": true,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        2.79,
+        0.47
+      ],
+      "range": 800,
+      "family": "bolt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.7,
+        "perRound": 0.7,
+        "cycle": 0.82,
+        "clear": 1.2
+      },
+      "faultFactor": 0.6
+    },
+    "mass": 3.9,
+    "dimensions": {
+      "length": 1.14,
+      "barrel": 0.65,
+      "emptyMass": 3.9
+    },
+    "archetype": "rifle_bolt_308",
+    "sources": [
+      "gallery",
+      "sdk",
+      "derived"
+    ]
+  },
+  {
+    "id": "barrett_mrad",
+    "name": "Barrett MRAD",
+    "maker": "Barrett",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "338lapua",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 10,
+      "reload": 3.2,
+      "spreadDeg": 0.1,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 2.5,
+      "recoil": [
+        3.85,
+        0.6
+      ],
+      "range": 1500,
+      "family": "bolt_magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 3.2,
+        "cycle": 0.82,
+        "clear": 1.2
+      }
+    },
+    "mass": 6.9,
+    "dimensions": {
+      "length": 1.26,
+      "barrel": 0.686,
+      "emptyMass": 6.9
+    },
+    "archetype": "sniper_338",
+    "sources": [
+      "gallery",
+      "sdk",
+      "derived"
+    ]
+  },
+  {
+    "id": "cheytac_m200",
+    "name": "CheyTac M200",
+    "maker": "CheyTac",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "408cheytac",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 7,
+      "reload": 3.2,
+      "spreadDeg": 0.1,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 2.5,
+      "recoil": [
+        3.16,
+        0.49
+      ],
+      "range": 1500,
+      "family": "bolt_magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 3.2,
+        "cycle": 0.82,
+        "clear": 1.2
+      }
+    },
+    "mass": 14,
+    "dimensions": {
+      "length": 1.397,
+      "barrel": 0.737,
+      "emptyMass": 14
+    },
+    "archetype": "sniper_338",
+    "sources": [
+      "gallery",
+      "sdk",
+      "derived"
+    ]
+  },
+  {
+    "id": "remington_700",
+    "name": "Remington 700",
+    "maker": "Remington",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 4,
+      "reload": 0.7,
+      "perRound": true,
+      "muzzleSpeed": 790,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        2.35,
+        0.39
+      ],
+      "range": 800,
+      "family": "bolt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.7,
+        "perRound": 0.7,
+        "cycle": 0.82,
+        "clear": 1.2
+      },
+      "moa": 1
+    },
+    "mass": 4,
+    "dimensions": {
+      "length": 1.1,
+      "barrel": 0.61,
+      "emptyMass": 3.6
+    },
+    "archetype": "rifle_bolt_308",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "m24_sws",
+    "name": "M24 SWS",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 5,
+      "reload": 0.7,
+      "perRound": true,
+      "muzzleSpeed": 790,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        1.74,
+        0.29
+      ],
+      "range": 800,
+      "family": "bolt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.7,
+        "perRound": 0.7,
+        "cycle": 0.82,
+        "clear": 1.2
+      },
+      "moa": 0.75
+    },
+    "mass": 5.4,
+    "dimensions": {
+      "length": 1.092,
+      "barrel": 0.61,
+      "emptyMass": 5.4
+    },
+    "archetype": "rifle_bolt_308",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "mosin_nagant_91_30",
+    "name": "Mosin-Nagant 91/30",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x54r",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 5,
+      "reload": 2.4,
+      "muzzleSpeed": 865,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        2.79,
+        0.46
+      ],
+      "range": 800,
+      "family": "bolt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 2.4,
+        "cycle": 0.82,
+        "clear": 1.2
+      },
+      "moa": 2.5
+    },
+    "mass": 4,
+    "dimensions": {
+      "length": 1.232,
+      "barrel": 0.73,
+      "emptyMass": 4
+    },
+    "archetype": "rifle_bolt_308",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "accuracy_awm",
+    "name": "Accuracy AWM",
+    "maker": "Accuracy",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "338lapua",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 5,
+      "reload": 3.2,
+      "muzzleSpeed": 936,
+      "spreadDeg": 0.1,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 2.5,
+      "recoil": [
+        4.13,
+        0.64
+      ],
+      "range": 1500,
+      "family": "bolt_magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 3.2,
+        "cycle": 0.82,
+        "clear": 1.2
+      },
+      "moa": 0.5
+    },
+    "mass": 6.9,
+    "dimensions": {
+      "length": 1.23,
+      "barrel": 0.686,
+      "emptyMass": 6.9
+    },
+    "archetype": "sniper_338",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "sako_trg_42",
+    "name": "Sako TRG-42",
+    "maker": "Sako",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "338lapua",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 5,
+      "reload": 3,
+      "muzzleSpeed": 900,
+      "spreadDeg": 0.1,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 2.5,
+      "recoil": [
+        5.17,
+        0.8
+      ],
+      "range": 1500,
+      "family": "bolt_magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 3,
+        "cycle": 0.82,
+        "clear": 1.2
+      },
+      "moa": 0.5
+    },
+    "mass": 5.1,
+    "dimensions": {
+      "length": 1.2,
+      "barrel": 0.69,
+      "emptyMass": 5.1
+    },
+    "archetype": "sniper_338",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "barrett_m82a1",
+    "name": "Barrett M82A1",
+    "maker": "Barrett",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "50bmg",
+      "rpm": 30,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 10,
+      "reload": 4,
+      "muzzleSpeed": 853,
+      "spreadDeg": 0.15,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 2,
+      "recoil": [
+        4.82,
+        0.83
+      ],
+      "range": 1800,
+      "family": "magazine",
+      "timings": {
+        "draw": 0.35,
+        "reload": 4,
+        "clear": 1.2
+      },
+      "moa": 1.5
+    },
+    "mass": 14,
+    "dimensions": {
+      "length": 1.448,
+      "barrel": 0.737,
+      "emptyMass": 14
+    },
+    "archetype": "anti_materiel_50",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "ruger_10_22",
+    "name": "Ruger 10/22",
+    "maker": "Ruger",
+    "category": "hunting",
+    "action": {
+      "kind": "firearm",
+      "caliber": "22lr",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 10,
+      "magazineOptions": [
+        25
+      ],
+      "reload": 1.9,
+      "muzzleSpeed": 380,
+      "spreadDeg": 0.5,
+      "bloomDeg": 0.15,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.25,
+        0.09
+      ],
+      "range": 80,
+      "family": "top_load_semi",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.9,
+        "clear": 1.2
+      },
+      "moa": 1.5
+    },
+    "mass": 2.3,
+    "dimensions": {
+      "length": 0.94,
+      "barrel": 0.47,
+      "emptyMass": 2.3
+    },
+    "archetype": "carbine_22",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "cbc_7022",
+    "name": "CBC 7022",
+    "maker": "CBC",
+    "category": "hunting",
+    "action": {
+      "kind": "firearm",
+      "caliber": "22lr",
+      "rpm": 300,
+      "modes": [
+        "semi"
+      ],
+      "magazine": 10,
+      "reload": 1.9,
+      "muzzleSpeed": 380,
+      "spreadDeg": 0.5,
+      "bloomDeg": 0.15,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.29,
+        0.11
+      ],
+      "range": 80,
+      "family": "top_load_semi",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.9,
+        "clear": 1.2
+      },
+      "moa": 2
+    },
+    "mass": 2,
+    "dimensions": {
+      "length": 1,
+      "barrel": 0.53,
+      "emptyMass": 2
+    },
+    "archetype": "carbine_22",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "cbc_122",
+    "name": "CBC 122",
+    "maker": "CBC",
+    "category": "hunting",
+    "action": {
+      "kind": "firearm",
+      "caliber": "22lr",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 10,
+      "reload": 1.9,
+      "muzzleSpeed": 380,
+      "spreadDeg": 0.5,
+      "bloomDeg": 0.15,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.24,
+        0.09
+      ],
+      "range": 80,
+      "family": "bolt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 1.9,
+        "cycle": 0.82,
+        "clear": 1.2
+      },
+      "moa": 1.5
+    },
+    "mass": 2.4,
+    "dimensions": {
+      "length": 1.03,
+      "barrel": 0.59,
+      "emptyMass": 2.4
+    },
+    "archetype": "carbine_22",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "winchester_1894",
+    "name": "Winchester 1894",
+    "maker": "Winchester",
+    "category": "hunting",
+    "action": {
+      "kind": "firearm",
+      "caliber": "30_30",
+      "rpm": 109.09,
+      "modes": [
+        "lever"
+      ],
+      "magazine": 7,
+      "reload": 0.6,
+      "perRound": true,
+      "muzzleSpeed": 670,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        2.25,
+        0.38
+      ],
+      "range": 800,
+      "family": "lever",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.6,
+        "perRound": 0.6,
+        "cycle": 0.55,
+        "clear": 1.2
+      },
+      "moa": 3
+    },
+    "mass": 3,
+    "dimensions": {
+      "length": 0.965,
+      "barrel": 0.508,
+      "emptyMass": 3
+    },
+    "archetype": "rifle_bolt_308",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "rossi_puma",
+    "name": "Rossi Puma",
+    "maker": "Rossi",
+    "category": "hunting",
+    "action": {
+      "kind": "firearm",
+      "caliber": "357mag",
+      "rpm": 109.09,
+      "modes": [
+        "lever"
+      ],
+      "magazine": 10,
+      "reload": 0.5,
+      "perRound": true,
+      "muzzleSpeed": 500,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        1.47,
+        0.24
+      ],
+      "range": 800,
+      "family": "lever",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.5,
+        "perRound": 0.5,
+        "cycle": 0.55,
+        "clear": 1.2
+      },
+      "moa": 3,
+      "acceptsCalibers": [
+        "38spl"
+      ]
+    },
+    "mass": 2.7,
+    "dimensions": {
+      "length": 0.95,
+      "barrel": 0.508,
+      "emptyMass": 2.7
+    },
+    "archetype": "rifle_bolt_308",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "hunting_rifle_30_06",
+    "name": ".30-06 hunting rifle",
+    "category": "hunting",
+    "action": {
+      "kind": "firearm",
+      "caliber": "30_06",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 4,
+      "reload": 0.7,
+      "perRound": true,
+      "muzzleSpeed": 880,
+      "spreadDeg": 0.25,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 3,
+      "recoil": [
+        3.24,
+        0.54
+      ],
+      "range": 800,
+      "family": "bolt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.7,
+        "perRound": 0.7,
+        "cycle": 0.82,
+        "clear": 1.2
+      },
+      "moa": 1.5
+    },
+    "mass": 3.6,
+    "dimensions": {
+      "length": 1.1,
+      "barrel": 0.56,
+      "emptyMass": 3.6
+    },
+    "archetype": "rifle_bolt_308",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "fn_minimi",
+    "name": "FN Minimi",
+    "maker": "FN",
+    "category": "machine_gun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "5_56x45",
+      "rpm": 850,
+      "modes": [
+        "auto"
+      ],
+      "magazine": 200,
+      "reload": 7.5,
+      "muzzleSpeed": 915,
+      "spreadDeg": 0.6,
+      "bloomDeg": 0.25,
+      "recoveryDegPerS": 5,
+      "recoil": [
+        0.46,
+        0.28
+      ],
+      "range": 400,
+      "family": "belt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 7.5,
+        "clear": 1.2
+      },
+      "moa": 4
+    },
+    "mass": 7.1,
+    "dimensions": {
+      "length": 1.04,
+      "barrel": 0.465,
+      "emptyMass": 7.1
+    },
+    "archetype": "rifle_5_56",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "pkm",
+    "name": "PKM",
+    "category": "machine_gun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x54r",
+      "rpm": 650,
+      "modes": [
+        "auto"
+      ],
+      "magazine": 100,
+      "reload": 8,
+      "muzzleSpeed": 825,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        1.18,
+        0.63
+      ],
+      "range": 350,
+      "family": "belt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 8,
+        "clear": 1.2
+      },
+      "moa": 4
+    },
+    "mass": 7.5,
+    "dimensions": {
+      "length": 1.173,
+      "barrel": 0.658,
+      "emptyMass": 7.5
+    },
+    "archetype": "rifle_7_62x39",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "m60",
+    "name": "M60",
+    "category": "machine_gun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "7_62x51",
+      "rpm": 550,
+      "modes": [
+        "auto"
+      ],
+      "magazine": 100,
+      "reload": 8.5,
+      "muzzleSpeed": 853,
+      "spreadDeg": 0.8,
+      "bloomDeg": 0.35,
+      "recoveryDegPerS": 4.5,
+      "recoil": [
+        0.91,
+        0.49
+      ],
+      "range": 350,
+      "family": "belt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 8.5,
+        "clear": 1.2
+      },
+      "faultFactor": 1.3,
+      "moa": 4
+    },
+    "mass": 10.5,
+    "dimensions": {
+      "length": 1.105,
+      "barrel": 0.56,
+      "emptyMass": 10.5
+    },
+    "archetype": "rifle_7_62x39",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "browning_m2",
+    "name": "Browning M2 .50",
+    "maker": "Browning",
+    "category": "machine_gun",
+    "action": {
+      "kind": "firearm",
+      "caliber": "50bmg",
+      "rpm": 550,
+      "modes": [
+        "auto"
+      ],
+      "magazine": 100,
+      "reload": 10,
+      "muzzleSpeed": 890,
+      "spreadDeg": 0.15,
+      "bloomDeg": 0.5,
+      "recoveryDegPerS": 2,
+      "recoil": [
+        1.93,
+        0.33
+      ],
+      "range": 1800,
+      "family": "belt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 10,
+        "clear": 1.2
+      },
+      "moa": 2
+    },
+    "mass": 38,
+    "dimensions": {
+      "length": 1.65,
+      "barrel": 1.14,
+      "emptyMass": 38
+    },
+    "archetype": "anti_materiel_50",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk"
+    ]
+  },
+  {
+    "id": "remington_700_300wm",
+    "name": "Remington 700 (.300 WM)",
+    "maker": "Remington",
+    "category": "sniper",
+    "action": {
+      "kind": "firearm",
+      "caliber": "300wm",
+      "rpm": 73.17,
+      "modes": [
+        "bolt"
+      ],
+      "magazine": 3,
+      "reload": 0.7,
+      "perRound": true,
+      "spreadDeg": 0.1,
+      "bloomDeg": 0.3,
+      "recoveryDegPerS": 2.5,
+      "recoil": [
+        4.76,
+        0.74
+      ],
+      "range": 1500,
+      "family": "bolt",
+      "timings": {
+        "draw": 0.35,
+        "reload": 0.7,
+        "perRound": 0.7,
+        "cycle": 0.82,
+        "clear": 1.2
+      },
+      "moa": 1
+    },
+    "mass": 4,
+    "dimensions": {
+      "length": 1.1,
+      "barrel": 0.61,
+      "emptyMass": 3.6
+    },
+    "archetype": "sniper_338",
+    "variantOf": "remington_700",
+    "sources": [
+      "gallery",
+      "arsenal",
+      "sdk",
+      "derived"
+    ]
+  },
+  {
+    "id": "m79",
+    "name": "M79 grenade launcher",
+    "category": "launcher",
+    "action": {
+      "kind": "launcher",
+      "projectile": "m79_40mm",
+      "magazine": 1,
+      "reload": 2,
+      "timings": {
+        "draw": 0.35,
+        "reload": 2,
+        "clear": 1.2
+      },
+      "family": "break",
+      "speed": 76,
+      "minArmDistance": 10,
+      "backblast": 0,
+      "recoil": [
+        4.5,
+        1.2
+      ]
+    },
+    "mass": 2.93,
+    "dimensions": {
+      "length": 0.73,
+      "barrel": 0.356,
+      "emptyMass": 2.7
+    },
+    "sources": [
+      "gallery",
+      "arsenal",
+      "reference",
+      "derived"
+    ]
+  }
+]

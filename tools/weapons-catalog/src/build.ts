@@ -1,0 +1,93 @@
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
+
+import { buildCalibers } from './build-calibers'
+import type { CaliberRecord } from './build-calibers'
+import { buildExplosives } from './build-explosives'
+import { buildFirearm, caliberOf, firearmId } from './build-firearms'
+import type { WeaponRecord } from './build-firearms'
+import { buildFlamethrower, buildGrenadeLauncher, buildRocketLauncher } from './build-launchers'
+import { buildModels } from './build-models'
+import { loadDecisions } from './decisions'
+import { extractArsenal } from './extract-arsenal'
+import { extractGallery } from './extract-gallery'
+import { extractGame } from './extract-game'
+import { extractLab } from './extract-lab'
+import { ARCHETYPES_PATH, OUTPUT_PATHS, SDK_CALIBERS_PATH } from './paths'
+import type { ArchetypeRecord, WeaponContext } from './weapon-context'
+
+/** Generated files by absolute path, each with its exact content. */
+export type CatalogFiles = Readonly<Record<string, string>>
+
+const serialize = (data: unknown): string => `${JSON.stringify(data, null, 2)}\n`
+
+const readJson = <TValue>(path: string): TValue => JSON.parse(readFileSync(path, 'utf8')) as TValue
+
+const assertUniqueIds = (records: readonly { readonly id: string }[]): void => {
+  const seen = new Set<string>()
+  for (const { id } of records) {
+    if (seen.has(id)) throw new Error(`weapons-catalog: duplicate weapon id "${id}"`)
+    seen.add(id)
+  }
+}
+
+export const buildCatalog = (): CatalogFiles => {
+  const decisions = loadDecisions()
+  const gallery = extractGallery()
+  const arsenal = extractArsenal()
+  const lab = extractLab()
+  const game = extractGame()
+  const calibers = buildCalibers(readJson<CaliberRecord[]>(SDK_CALIBERS_PATH), gallery.ammo, decisions)
+  const explosives = buildExplosives({ arsenal: arsenal.explosives, lab, game: game.explosives, decisions })
+  const archetypes = readJson<ArchetypeRecord[]>(ARCHETYPES_PATH)
+  const context: WeaponContext = {
+    arsenal,
+    calibers: new Map(calibers.map((caliber) => [caliber.id, caliber])),
+    archetypes: new Map(archetypes.map((archetype) => [archetype.id, archetype])),
+    decisions,
+    drawSeconds: game.drawSeconds,
+  }
+  const firearmRows = gallery.weapons.filter((row) => row[7] !== 'launcher')
+  const launcherRows = gallery.weapons.filter((row) => row[7] === 'launcher')
+  const firearms: WeaponRecord[] = firearmRows.map((row) =>
+    buildFirearm({ row, id: firearmId(row, context), name: decisions.englishNames[row[0]]?.value ?? row[0], caliberId: caliberOf(row, context).id }, context),
+  )
+  const variants = Object.entries(decisions.variants).map(([key, decision]) => {
+    const row = firearmRows.find((candidate) => candidate[0] === decision.value.of)
+    if (!row) throw new Error(`weapons-catalog: variant "${key}" is of unknown weapon "${decision.value.of}"`)
+    return buildFirearm(
+      { row, id: decision.value.id, name: decision.value.name, caliberId: decision.value.caliber, timingKey: key, variantOf: firearmId(row, context), skipSheetSpeed: true, magazineCount: decision.value.capacity },
+      context,
+    )
+  })
+  const launchers = launcherRows.map((row) => (row[8].lt === 'flame' || row[8].lt === 'flameDIY' ? buildFlamethrower(row, context) : buildRocketLauncher(row, context)))
+  const allFirearms = [...firearms, ...variants, buildGrenadeLauncher(context)]
+  assertUniqueIds([...archetypes, ...allFirearms, ...launchers])
+  const variantNames = new Map(Object.values(decisions.variants).map((decision) => [decision.value.id, decision.value.of]))
+  return {
+    [OUTPUT_PATHS.calibers]: serialize(calibers),
+    [OUTPUT_PATHS.firearms]: serialize(allFirearms),
+    [OUTPUT_PATHS.launchers]: serialize(launchers),
+    [OUTPUT_PATHS.explosives]: serialize(explosives),
+    [OUTPUT_PATHS.models]: serialize(buildModels(gallery.weapons, variantNames, context)),
+  }
+}
+
+export const writeCatalog = (files: CatalogFiles): void => {
+  for (const [path, content] of Object.entries(files)) {
+    mkdirSync(dirname(path), { recursive: true })
+    writeFileSync(path, content)
+  }
+}
+
+/** Paths whose file on disk differs from what the sources generate now. */
+export const staleFiles = (files: CatalogFiles): string[] =>
+  Object.entries(files)
+    .filter(([path, content]) => {
+      try {
+        return readFileSync(path, 'utf8') !== content
+      } catch {
+        return true
+      }
+    })
+    .map(([path]) => path)

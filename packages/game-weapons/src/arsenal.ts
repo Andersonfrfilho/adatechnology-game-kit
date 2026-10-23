@@ -1,5 +1,5 @@
 import calibersJson from './data/calibers.json'
-import weaponsJson from './data/weapons.json'
+import weaponsJson from './data/archetypes.json'
 import { resolveStrings } from './locale'
 import type { Arsenal, ArsenalOptions, CaliberDef, CaliberId, WeaponCategory, WeaponDef, WeaponId, WeaponState } from './types'
 import { muzzleEnergy, WeaponRuntime } from './weapon'

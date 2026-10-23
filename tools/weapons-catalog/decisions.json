@@ -1,0 +1,2253 @@
+{
+  "weaponIds": {
+    "Boito (2 canos)": {
+      "value": "boito_double_barrel",
+      "source": "design",
+      "reason": "Id em inglês; o nome da Galeria tem o número de canos entre parênteses."
+    },
+    "Rifle de caça .30-06": {
+      "value": "hunting_rifle_30_06",
+      "source": "design",
+      "reason": "Nome genérico em português na Galeria; id em inglês."
+    },
+    "Lança-chamas M2": {
+      "value": "m2_flamethrower",
+      "source": "design",
+      "reason": "Id em inglês."
+    },
+    "Lança-chamas caseiro": {
+      "value": "improvised_flamethrower",
+      "source": "design",
+      "reason": "Id em inglês."
+    },
+    "Browning M2 .50": {
+      "value": "browning_m2",
+      "source": "design",
+      "reason": "O calibre já está no calibre da arma; id curto."
+    },
+    "Knight's SR-25 (Mk 11)": {
+      "value": "knights_sr_25_mk11",
+      "source": "design",
+      "reason": "Apóstrofo e parênteses saem; \"Mk 11\" vira \"mk11\"."
+    }
+  },
+  "englishNames": {
+    "Boito (2 canos)": {
+      "value": "Boito double-barrel",
+      "source": "design",
+      "reason": "Um dos 4 nomes genéricos da Galeria; o pt-BR fica no locale."
+    },
+    "Rifle de caça .30-06": {
+      "value": ".30-06 hunting rifle",
+      "source": "design",
+      "reason": "Um dos 4 nomes genéricos da Galeria; o pt-BR fica no locale."
+    },
+    "Lança-chamas M2": {
+      "value": "M2 flamethrower",
+      "source": "design",
+      "reason": "Um dos 4 nomes genéricos da Galeria; o pt-BR fica no locale."
+    },
+    "Lança-chamas caseiro": {
+      "value": "Improvised flamethrower",
+      "source": "design",
+      "reason": "Um dos 4 nomes genéricos da Galeria; o pt-BR fica no locale."
+    }
+  },
+  "makers": {
+    "value": [
+      "Glock",
+      "Taurus",
+      "Beretta",
+      "SIG Sauer",
+      "CZ",
+      "Colt",
+      "FN",
+      "S&W",
+      "HK",
+      "Kriss",
+      "Remington",
+      "Mossberg",
+      "CBC",
+      "Benelli",
+      "Franchi",
+      "Kel-Tec",
+      "IMBEL",
+      "Steyr",
+      "Barrett",
+      "CheyTac",
+      "Accuracy",
+      "Sako",
+      "Ruger",
+      "Winchester",
+      "Rossi",
+      "Browning",
+      "Knight's",
+      "Thompson"
+    ],
+    "source": "gallery",
+    "reason": "Fabricante = marca que abre o nome da Galeria (G5: marcas reais). Nome sem marca na frente (AK-47, SKS, Uzi, Boito) fica sem fabricante."
+  },
+  "arsenalCatalogNames": {
+    "FN FAL": {
+      "value": "FN FAL / ParaFAL",
+      "source": "arsenal",
+      "reason": "O Arsenal §06 chama a mesma arma de FAL / ParaFAL."
+    },
+    "Mosin-Nagant 91/30": {
+      "value": "Mosin-Nagant",
+      "source": "arsenal",
+      "reason": "O Arsenal §06 omite o modelo."
+    }
+  },
+  "arsenalSheetNames": {
+    "Taurus 82": {
+      "value": "Taurus 82 (4\")",
+      "source": "arsenal",
+      "reason": "O Arsenal §07 acrescenta o comprimento do cano."
+    },
+    "S&W 686": {
+      "value": "S&W 686 (4\")",
+      "source": "arsenal",
+      "reason": "O Arsenal §07 acrescenta o comprimento do cano."
+    },
+    "S&W Model 29": {
+      "value": "S&W Model 29 (6,5\")",
+      "source": "arsenal",
+      "reason": "O Arsenal §07 acrescenta o comprimento do cano."
+    },
+    "Remington 870": {
+      "value": "Remington 870 (18,5\")",
+      "source": "arsenal",
+      "reason": "O Arsenal §07 acrescenta o comprimento do cano."
+    },
+    "Mossberg 500": {
+      "value": "Mossberg 500 (18,5\")",
+      "source": "arsenal",
+      "reason": "O Arsenal §07 acrescenta o comprimento do cano."
+    },
+    "IMBEL IA2": {
+      "value": "IMBEL IA2 5,56",
+      "source": "arsenal",
+      "reason": "O Arsenal §07 acrescenta o calibre."
+    },
+    "HK416": {
+      "value": "HK416 (14,5\")",
+      "source": "arsenal",
+      "reason": "O Arsenal §07 acrescenta o comprimento do cano."
+    },
+    "Remington 700": {
+      "value": "Remington 700 (.308)",
+      "source": "arsenal",
+      "reason": "O Arsenal §07 acrescenta o calibre da versão."
+    },
+    "Accuracy AWM": {
+      "value": "Accuracy AWM (.338)",
+      "source": "arsenal",
+      "reason": "O Arsenal §07 acrescenta o calibre."
+    },
+    "Rossi Puma": {
+      "value": "Rossi Puma (.38/.357)",
+      "source": "arsenal",
+      "reason": "O Arsenal §07 acrescenta os calibres."
+    },
+    "Browning M2 .50": {
+      "value": "Browning M2",
+      "source": "arsenal",
+      "reason": "O Arsenal §07 omite o calibre."
+    }
+  },
+  "galleryCalibers": {
+    "9×19": {
+      "value": "9x19",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    ".40 S&W": {
+      "value": "40sw",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    ".45 ACP": {
+      "value": "45acp",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    "9×18": {
+      "value": "9x18",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    "5,7×28": {
+      "value": "5_7x28",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    ".50 AE": {
+      "value": "50ae",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    ".38 SPL": {
+      "value": "38spl",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    ".357 Magnum": {
+      "value": "357mag",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    ".44 Magnum": {
+      "value": "44mag",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    "12 ga": {
+      "value": "12ga_00buck",
+      "source": "gallery",
+      "reason": "Escopeta usa chumbo 00 (referência do Arsenal §04); o calibre é o padrão da arma."
+    },
+    "7,62×39": {
+      "value": "7_62x39",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    "5,45×39": {
+      "value": "5_45x39",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    "5,56×45": {
+      "value": "5_56x45",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    "7,62×51": {
+      "value": "7_62x51",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    "7,62×54R": {
+      "value": "7_62x54r",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    ".338 Lapua": {
+      "value": "338lapua",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    ".408 CheyTac": {
+      "value": "408cheytac",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    ".308": {
+      "value": "7_62x51",
+      "source": "gallery",
+      "reason": ".308 Winchester é o mesmo cartucho do 7,62×51."
+    },
+    ".50 BMG": {
+      "value": "50bmg",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    ".22 LR": {
+      "value": "22lr",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    ".30-30": {
+      "value": "30_30",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    },
+    ".38 SPL / .357": {
+      "value": "357mag",
+      "source": "gallery",
+      "reason": "A Rossi Puma dispara os dois; o calibre principal é o mais forte e o outro entra em acceptsCalibers."
+    },
+    ".30-06": {
+      "value": "30_06",
+      "source": "gallery",
+      "reason": "Texto de calibre da Galeria normalizado para o id do SDK."
+    }
+  },
+  "acceptsCalibers": {
+    "S&W 686": {
+      "value": [
+        "38spl"
+      ],
+      "source": "arsenal",
+      "reason": "Arsenal §06: aceita .38 SPL."
+    },
+    "Rossi Puma": {
+      "value": [
+        "38spl"
+      ],
+      "source": "arsenal",
+      "reason": "Arsenal §06: usa a mesma munição do revólver (.38 SPL e .357)."
+    }
+  },
+  "calibers": {
+    "22lr": {
+      "ammoRow": {
+        "value": ".22 LR",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 60,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). \".22 LR sem supressor\"."
+      },
+      "caseType": {
+        "value": "tiny",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimfire",
+        "source": "design",
+        "reason": "Aro do estojo."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "380acp": {
+      "ammoRow": {
+        "value": ".380 ACP",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 150,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). Pistola 9×19; \".380\" é \"médio\" no §04."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimless",
+        "source": "design",
+        "reason": "Aro do estojo."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "9x18": {
+      "ammoRow": {
+        "value": "9×18 Makarov",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 150,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). Pistola 9×19; \"médio\" no §04."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimless",
+        "source": "design",
+        "reason": "Aro do estojo."
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": "9×18 mm Makarov",
+          "bulletGrams": 6.1,
+          "muzzleSpeed": 315,
+          "dragPer100m": 0.2,
+          "kind": "fmj",
+          "id": "9x18"
+        },
+        "source": "reference",
+        "reason": "Massa REF; velocidade da Makarov PM no Arsenal §07 (315 m/s); diâmetro da Galeria."
+      }
+    },
+    "9x19": {
+      "ammoRow": {
+        "value": "9×19 mm",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 150,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). \"Pistola 9×19\"."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "40sw": {
+      "ammoRow": {
+        "value": ".40 S&W",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 150,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). Pistola 9×19; \"médio\" no §04."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "45acp": {
+      "ammoRow": {
+        "value": ".45 ACP",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 150,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). Pistola 9×19; \"médio\" no §04."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "5_7x28": {
+      "ammoRow": {
+        "value": "5,7×28 mm",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 150,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). Pistola 9×19; \"médio\" no §04."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimless",
+        "source": "design",
+        "reason": "Aro do estojo."
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": "5.7×28 mm",
+          "bulletGrams": 2,
+          "muzzleSpeed": 715,
+          "dragPer100m": 0.12,
+          "kind": "fmj",
+          "id": "5_7x28"
+        },
+        "source": "reference",
+        "reason": "Massa REF; velocidade da FN P90 no Arsenal §07 (715 m/s); diâmetro da Galeria."
+      }
+    },
+    "38spl": {
+      "ammoRow": {
+        "value": ".38 SPL",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 150,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). Pistola 9×19; \"médio\" no §04."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimmed",
+        "source": "design",
+        "reason": "Aro do estojo."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "357mag": {
+      "ammoRow": {
+        "value": ".357 Magnum",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 300,
+        "source": "derived",
+        "reason": "Arsenal §04 classifica como \"alto\"; o §12 dá 300 m para esse nível."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimmed",
+        "source": "design",
+        "reason": "Aro do estojo."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "44mag": {
+      "ammoRow": {
+        "value": ".44 Magnum",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 420,
+        "source": "derived",
+        "reason": "Q6: \"muito alto\" no §04 sem linha no §12; padrão 420 m (mesmo nível de .308 / .30-06)."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimmed",
+        "source": "design",
+        "reason": "Aro do estojo."
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": ".44 Magnum",
+          "bulletGrams": 15.6,
+          "muzzleSpeed": 440,
+          "dragPer100m": 0.18,
+          "kind": "fmj",
+          "id": "44mag"
+        },
+        "source": "reference",
+        "reason": "Massa REF; velocidade da S&W Model 29 no Arsenal §07 (440 m/s); diâmetro da Galeria."
+      }
+    },
+    "50ae": {
+      "ammoRow": {
+        "value": ".50 AE",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 420,
+        "source": "derived",
+        "reason": "Q6: \"muito alto\" no §04 sem linha no §12; padrão 420 m (mesmo nível de .308 / .30-06)."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": ".50 AE",
+          "bulletGrams": 19.4,
+          "muzzleSpeed": 470,
+          "dragPer100m": 0.18,
+          "kind": "fmj",
+          "id": "50ae"
+        },
+        "source": "reference",
+        "reason": "Massa REF; velocidade da Desert Eagle no Arsenal §07 (470 m/s); diâmetro da Galeria."
+      }
+    },
+    "12ga_00buck": {
+      "ammoRow": {
+        "value": "12 ga",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 350,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). \"Escopeta 12 ga\"."
+      },
+      "caseType": {
+        "value": "shell",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "shell",
+        "source": "design",
+        "reason": "Aro do estojo."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "12ga_slug": {
+      "ammoRow": {
+        "value": "12 ga",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 350,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). \"Escopeta 12 ga\"."
+      },
+      "caseType": {
+        "value": "shell",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "shell",
+        "source": "design",
+        "reason": "Aro do estojo."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "12ga_birdshot": {
+      "ammoRow": {
+        "value": "12 ga",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 350,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). \"Escopeta 12 ga\"."
+      },
+      "caseType": {
+        "value": "shell",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "shell",
+        "source": "design",
+        "reason": "Aro do estojo."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "20ga_buck": {
+      "ammoRow": {
+        "value": null,
+        "source": "reference",
+        "reason": "Sem linha na Galeria."
+      },
+      "noise": {
+        "value": 350,
+        "source": "derived",
+        "reason": "Sem linha própria no Arsenal; mesmo raio da escopeta 12 ga."
+      },
+      "caseType": {
+        "value": "shell",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "shell",
+        "source": "design",
+        "reason": "Aro do estojo."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "derived"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "5_56x45": {
+      "ammoRow": {
+        "value": "5,56×45 mm",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 300,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). \"Fuzil 5,56 / 7,62×39\"."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "5_45x39": {
+      "ammoRow": {
+        "value": "5,45×39 mm",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 300,
+        "source": "derived",
+        "reason": "Arsenal §04 classifica como \"alto\"; o §12 dá 300 m para esse nível."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": "5.45×39 mm",
+          "bulletGrams": 3.4,
+          "muzzleSpeed": 900,
+          "dragPer100m": 0.1,
+          "kind": "fmj",
+          "id": "5_45x39"
+        },
+        "source": "reference",
+        "reason": "Massa REF; velocidade da AK-74 no Arsenal §07 (900 m/s); diâmetro da Galeria."
+      }
+    },
+    "7_62x39": {
+      "ammoRow": {
+        "value": "7,62×39 mm",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 300,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). \"Fuzil 5,56 / 7,62×39\"."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "30_30": {
+      "ammoRow": {
+        "value": ".30-30 Win",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 300,
+        "source": "derived",
+        "reason": "Arsenal §04 classifica como \"alto\"; o §12 dá 300 m para esse nível."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimmed",
+        "source": "design",
+        "reason": "Aro do estojo."
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": ".30-30 Winchester",
+          "bulletGrams": 9.7,
+          "muzzleSpeed": 670,
+          "dragPer100m": 0.1,
+          "kind": "fmj",
+          "id": "30_30"
+        },
+        "source": "reference",
+        "reason": "Massa REF; velocidade da Winchester 1894 no Arsenal §07 (670 m/s); diâmetro da Galeria."
+      }
+    },
+    "7_62x51": {
+      "ammoRow": {
+        "value": "7,62×51 mm",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 420,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). \".308 / .30-06\"."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "7_62x54r": {
+      "ammoRow": {
+        "value": "7,62×54R",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 420,
+        "source": "derived",
+        "reason": "Q6: \"muito alto\" no §04 sem linha no §12; padrão 420 m (mesmo nível de .308 / .30-06)."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimmed",
+        "source": "design",
+        "reason": "Aro do estojo."
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": "7.62×54R",
+          "bulletGrams": 9.6,
+          "muzzleSpeed": 865,
+          "dragPer100m": 0.08,
+          "kind": "fmj",
+          "id": "7_62x54r"
+        },
+        "source": "reference",
+        "reason": "Massa REF; velocidade da Mosin-Nagant (cano mais longo, 730 mm) no Arsenal §07 (865 m/s); diâmetro da Galeria."
+      }
+    },
+    "30_06": {
+      "ammoRow": {
+        "value": ".30-06",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 420,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). \".308 / .30-06\"."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": ".30-06 Springfield",
+          "bulletGrams": 9.7,
+          "muzzleSpeed": 880,
+          "dragPer100m": 0.08,
+          "kind": "fmj",
+          "id": "30_06"
+        },
+        "source": "reference",
+        "reason": "Massa REF; velocidade do rifle de caça .30-06 no Arsenal §07 (880 m/s); diâmetro da Galeria."
+      }
+    },
+    "300wm": {
+      "ammoRow": {
+        "value": ".300 Win Mag",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 600,
+        "source": "derived",
+        "reason": "Arsenal §04 classifica como \"extremo\"; o §12 dá 600 m para esse nível."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": ".300 Winchester Magnum",
+          "bulletGrams": 11.7,
+          "muzzleSpeed": 900,
+          "dragPer100m": 0.07,
+          "kind": "fmj",
+          "id": "300wm"
+        },
+        "source": "reference",
+        "reason": "Massa e velocidade REF (nenhuma arma do Arsenal §07 usa este calibre); diâmetro da Galeria."
+      }
+    },
+    "338lapua": {
+      "ammoRow": {
+        "value": ".338 Lapua",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 600,
+        "source": "derived",
+        "reason": "Arsenal §04 classifica como \"extremo\"; o §12 dá 600 m para esse nível."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      }
+    },
+    "408cheytac": {
+      "ammoRow": {
+        "value": null,
+        "source": "reference",
+        "reason": "Sem linha na Galeria."
+      },
+      "noise": {
+        "value": 600,
+        "source": "derived",
+        "reason": "Arsenal §04 classifica como \"extremo\"; o §12 dá 600 m para esse nível."
+      },
+      "caseType": {
+        "value": "big",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": ".408 CheyTac",
+          "bulletGrams": 27.2,
+          "muzzleSpeed": 900,
+          "dragPer100m": 0.05,
+          "kind": "fmj",
+          "diameter": 10.4,
+          "id": "408cheytac"
+        },
+        "source": "reference",
+        "reason": "Massa, velocidade e diâmetro REF; a Galeria não tem linha de munição para este calibre."
+      },
+      "cartridge": {
+        "value": {
+          "caseDiameter": 16,
+          "overallLength": 115.6,
+          "caseLength": 77,
+          "projectileDiameter": 10.36
+        },
+        "source": "reference",
+        "reason": "Medidas CIP do .408 CheyTac."
+      }
+    },
+    "50bmg": {
+      "ammoRow": {
+        "value": ".50 BMG",
+        "source": "gallery",
+        "reason": "Linha da Galeria (AMMO) com o cartucho e o diâmetro do projétil."
+      },
+      "noise": {
+        "value": 600,
+        "source": "arsenal",
+        "reason": "Arsenal §12 (raio de atração). \".50 BMG\"."
+      },
+      "caseType": {
+        "value": "big",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "sources": {
+        "value": [
+          "sdk",
+          "gallery",
+          "arsenal"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "diameter": {
+        "value": 12.7,
+        "source": "sdk",
+        "reason": "A6: 12,7 mm (medida real); a Galeria diz 13,0 mm e fica registrado como desvio."
+      }
+    },
+    "arrow": {
+      "noise": {
+        "value": 20,
+        "source": "sdk",
+        "reason": "O ruído saía da arma (arco); passa para o calibre."
+      },
+      "sources": {
+        "value": [
+          "sdk"
+        ],
+        "source": "sdk",
+        "reason": "Calibre do SDK."
+      }
+    },
+    "crossbow_bolt": {
+      "noise": {
+        "value": 25,
+        "source": "sdk",
+        "reason": "O ruído saía da arma (besta); passa para o calibre."
+      },
+      "sources": {
+        "value": [
+          "sdk"
+        ],
+        "source": "sdk",
+        "reason": "Calibre do SDK."
+      }
+    }
+  },
+  "energyScale": {
+    "value": {
+      "anchor": "m67",
+      "anchorLethalRadius": 5,
+      "anchorEnergy": 200000,
+      "exponent": 3
+    },
+    "source": "derived",
+    "reason": "Q4: escala de Hopkinson (energia proporcional ao cubo do raio letal) ancorada na frag_grenade do SDK (200 kJ a 5 m)."
+  },
+  "explosives": {
+    "m67": {
+      "sources": {
+        "value": {
+          "gallery": "granada",
+          "arsenal": "Granada M67 (fragmentação)",
+          "lab": "granada",
+          "game": "granada"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "M67 fragmentation grenade",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "fragmentation",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "timer"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "extras": {
+        "value": {
+          "fuse": 4,
+          "mass": 0.4
+        },
+        "source": "arsenal",
+        "reason": "Pavio de 4 s (Arsenal §13 e Galeria; o jogo usa 3,5 s e é rejeitado); massa de cerca de 400 g na Galeria."
+      }
+    },
+    "molotov": {
+      "sources": {
+        "value": {
+          "gallery": "molotov",
+          "arsenal": "Coquetel molotov",
+          "lab": "molotov",
+          "game": "molotov"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "Molotov cocktail",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "incendiary",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "impact"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "extras": {
+        "value": {
+          "fireTemperature": 700,
+          "fireFrom": "game"
+        },
+        "source": "game",
+        "reason": "Raio e duração do fogo vêm de fogoRes do jogo (4 m, 9 s); a temperatura é a do molotov do SDK."
+      },
+      "energy": {
+        "value": 500,
+        "source": "sdk",
+        "reason": "Energia do molotov do SDK (500 J); a escala de Hopkinson dá zero para raio letal 0."
+      }
+    },
+    "pipe_bomb": {
+      "sources": {
+        "value": {
+          "gallery": "pipe",
+          "arsenal": "Bomba caseira (cano)",
+          "lab": "caseira"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "Pipe bomb",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "fragmentation",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "timer"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "extras": {
+        "value": {
+          "fuse": 3
+        },
+        "source": "sdk",
+        "reason": "Espoleta de 3 s da pipe_bomb do SDK."
+      }
+    },
+    "propane_p13": {
+      "sources": {
+        "value": {
+          "gallery": "p13",
+          "arsenal": "Botijão de gás P13",
+          "lab": "p13",
+          "game": "botijao"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "P13 propane cylinder",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "fuel",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "shot",
+          "fire"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "extras": {
+        "value": {
+          "fireTemperature": 700,
+          "fireFrom": "game"
+        },
+        "source": "game",
+        "reason": "Fogo residual de fogoRes do jogo (1,4 m, 7 s); temperatura do molotov do SDK."
+      }
+    },
+    "dynamite": {
+      "sources": {
+        "value": {
+          "gallery": "dyn",
+          "arsenal": "Dinamite",
+          "lab": "dinamite"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "Dynamite",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "blast",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "timer"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      }
+    },
+    "c4": {
+      "sources": {
+        "value": {
+          "gallery": "c4",
+          "arsenal": "C4 (com detonador)",
+          "lab": "c4"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "C4 charge",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "blast",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "remote"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "extras": {
+        "value": {
+          "mass": 0.57
+        },
+        "source": "gallery",
+        "reason": "Bloco de 0,57 kg (Galeria)."
+      }
+    },
+    "claymore": {
+      "sources": {
+        "value": {
+          "gallery": "claymore",
+          "arsenal": "Mina Claymore",
+          "lab": "claymore"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "Claymore mine",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "directional",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "wire"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "extras": {
+        "value": {
+          "cone": true
+        },
+        "source": "lab",
+        "reason": "Cone do Laboratório (meio ângulo de 30°, alcance 50 m); letal 15 m e ferimento 50 m."
+      },
+      "energy": {
+        "value": 102400,
+        "source": "derived",
+        "reason": "Q4: o raio letal de 15 m é de um cone e não de uma esfera, então a escala de Hopkinson não vale; usa o mesmo valor da dinamite (102 kJ) até o dono decidir."
+      }
+    },
+    "flashbang": {
+      "sources": {
+        "value": {
+          "gallery": "flash",
+          "arsenal": "Granada de luz (flashbang)",
+          "lab": "flash"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "Flashbang",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "flash",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "timer"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "extras": {
+        "value": {
+          "stunSeconds": 4
+        },
+        "source": "arsenal",
+        "reason": "Atordoa por 4 s (Arsenal §13)."
+      }
+    },
+    "m79_40mm": {
+      "sources": {
+        "value": {
+          "gallery": "m79",
+          "arsenal": "Lança-granadas M79 / M203",
+          "lab": "m79"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "40 mm grenade",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "fragmentation",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "impact"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      }
+    },
+    "m72_66mm": {
+      "sources": {
+        "value": {
+          "gallery": "m72",
+          "arsenal": "Bazuca M72 LAW",
+          "lab": "m72"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "66 mm HEAT rocket",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "shaped_charge",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "impact"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      }
+    },
+    "at4_84mm": {
+      "sources": {
+        "value": {
+          "gallery": "at4",
+          "arsenal": "AT4",
+          "lab": "at4"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "84 mm HEAT rocket",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "shaped_charge",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "impact"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      }
+    },
+    "pg7v": {
+      "sources": {
+        "value": {
+          "gallery": "rpg",
+          "arsenal": "RPG-7",
+          "lab": "rpg"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "PG-7V rocket",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "shaped_charge",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "impact"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      }
+    },
+    "carl_gustaf_84mm": {
+      "sources": {
+        "value": {
+          "gallery": "carl",
+          "lab": "at4"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "84 mm HE/HEAT round",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "shaped_charge",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "impact"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "world": {
+        "value": {
+          "noise": 750,
+          "destructionLevel": 3
+        },
+        "source": "derived",
+        "reason": "Q5: o Carl Gustaf usa o mesmo projétil de 84 mm do AT4; ruído e nível iguais ao AT4."
+      },
+      "copyOf": {
+        "value": "at4_84mm",
+        "source": "derived",
+        "reason": "Q5: raios, ruído e nível do AT4."
+      }
+    },
+    "fuel_barrel": {
+      "sources": {
+        "value": {
+          "lab": "barril",
+          "game": "barril"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "Fuel barrel",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "fuel",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "shot",
+          "fire"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "world": {
+        "value": {
+          "noise": 550,
+          "destructionLevel": 2
+        },
+        "source": "derived",
+        "reason": "Q5: explosivo do mundo sem linha no Arsenal; ruído e nível da irmã mais próxima. Mesma do botijão."
+      },
+      "extras": {
+        "value": {
+          "fireTemperature": 700,
+          "fireFrom": "game"
+        },
+        "source": "game",
+        "reason": "Fogo residual de fogoRes do jogo (2 m, 12 s); temperatura do molotov do SDK."
+      }
+    },
+    "car_fuel_tank": {
+      "sources": {
+        "value": {
+          "lab": "carro",
+          "game": "carro"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "Car fuel tank",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "fuel",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "shot",
+          "fire"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "world": {
+        "value": {
+          "noise": 550,
+          "destructionLevel": 2
+        },
+        "source": "derived",
+        "reason": "Q5: explosivo do mundo sem linha no Arsenal; ruído e nível da irmã mais próxima. Mesma do botijão."
+      },
+      "extras": {
+        "value": {
+          "fireTemperature": 700,
+          "fireFrom": "game"
+        },
+        "source": "game",
+        "reason": "Fogo residual de fogoRes do jogo (2,2 m, 30 s); temperatura do molotov do SDK."
+      }
+    },
+    "fuel_pump": {
+      "sources": {
+        "value": {
+          "lab": "bomba"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "Fuel pump",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "fuel",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "shot",
+          "fire"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "world": {
+        "value": {
+          "noise": 700,
+          "destructionLevel": 3
+        },
+        "source": "derived",
+        "reason": "Q5: explosivo do mundo sem linha no Arsenal; ruído e nível da irmã mais próxima. Posto de gasolina: nível 3 e 700 m (Arsenal §13, reação em cadeia)."
+      },
+      "extras": {
+        "value": {
+          "fireTemperature": 700,
+          "fireFrom": "lab"
+        },
+        "source": "lab",
+        "reason": "Fogo residual do Laboratório (1,1 m, 14 s); temperatura do molotov do SDK."
+      }
+    },
+    "fuel_station_tank": {
+      "sources": {
+        "value": {
+          "lab": "tanque"
+        },
+        "source": "design",
+        "reason": "Chaves do explosivo em cada fonte."
+      },
+      "name": {
+        "value": "Fuel station tank",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "fuel",
+        "source": "derived",
+        "reason": "Classe do efeito, a partir da descrição do Arsenal §13."
+      },
+      "triggers": {
+        "value": [
+          "shot",
+          "fire"
+        ],
+        "source": "derived",
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "world": {
+        "value": {
+          "noise": 700,
+          "destructionLevel": 3
+        },
+        "source": "derived",
+        "reason": "Q5: explosivo do mundo sem linha no Arsenal; ruído e nível da irmã mais próxima. Posto de gasolina: nível 3 e 700 m (Arsenal §13, reação em cadeia)."
+      },
+      "extras": {
+        "value": {
+          "fireTemperature": 700,
+          "fireFrom": "lab"
+        },
+        "source": "lab",
+        "reason": "Fogo residual do Laboratório (3,2 m, 20 s); temperatura do molotov do SDK."
+      }
+    }
+  },
+  "archetypes": {
+    "pistol:22lr": {
+      "value": "pistol_22",
+      "source": "derived",
+      "reason": "Calibre .22: arquétipo de pistola .22."
+    },
+    "pistol:45acp": {
+      "value": "pistol_45",
+      "source": "derived",
+      "reason": "Calibre .45: arquétipo de pistola .45."
+    },
+    "pistol:50ae": {
+      "value": "pistol_45",
+      "source": "derived",
+      "reason": "Sem arquétipo .50 AE; o mais próximo em massa de projétil é a .45."
+    },
+    "pistol:*": {
+      "value": "pistol_9mm",
+      "source": "derived",
+      "reason": "Pistola de calibre médio: arquétipo 9 mm."
+    },
+    "revolver:38spl": {
+      "value": "revolver_38",
+      "source": "derived",
+      "reason": "Calibre .38: arquétipo de revólver .38."
+    },
+    "revolver:*": {
+      "value": "revolver_357",
+      "source": "derived",
+      "reason": "Revólver forte: arquétipo .357."
+    },
+    "smg:*": {
+      "value": "smg_9mm",
+      "source": "derived",
+      "reason": "Submetralhadora: arquétipo 9 mm."
+    },
+    "shotgun:pump": {
+      "value": "shotgun_pump_12",
+      "source": "derived",
+      "reason": "Família bomba: arquétipo de escopeta de bomba."
+    },
+    "shotgun:break": {
+      "value": "shotgun_double_12",
+      "source": "derived",
+      "reason": "Família basculante: arquétipo de dois canos."
+    },
+    "shotgun:*": {
+      "value": "shotgun_semi_12",
+      "source": "derived",
+      "reason": "Escopeta semiautomática ou de carregador: arquétipo semi."
+    },
+    "rifle:5_56x45": {
+      "value": "rifle_5_56",
+      "source": "derived",
+      "reason": "Fuzil 5,56: arquétipo 5,56."
+    },
+    "rifle:5_45x39": {
+      "value": "rifle_5_56",
+      "source": "derived",
+      "reason": "Fuzil 5,45: arquétipo 5,56 (calibre pequeno e rápido)."
+    },
+    "rifle:*": {
+      "value": "rifle_7_62x39",
+      "source": "derived",
+      "reason": "Fuzil de calibre médio/grande: arquétipo 7,62×39."
+    },
+    "dmr:*": {
+      "value": "rifle_bolt_308",
+      "source": "derived",
+      "reason": "Fuzil de precisão: arquétipo .308 de ferrolho (dispersão e alcance)."
+    },
+    "sniper:338lapua": {
+      "value": "sniper_338",
+      "source": "derived",
+      "reason": "Calibre .338: arquétipo sniper."
+    },
+    "sniper:300wm": {
+      "value": "sniper_338",
+      "source": "derived",
+      "reason": "Calibre .300 WM: arquétipo sniper."
+    },
+    "sniper:408cheytac": {
+      "value": "sniper_338",
+      "source": "derived",
+      "reason": "Calibre .408: arquétipo sniper."
+    },
+    "sniper:50bmg": {
+      "value": "anti_materiel_50",
+      "source": "derived",
+      "reason": "Calibre .50 BMG: arquétipo antimaterial."
+    },
+    "sniper:*": {
+      "value": "rifle_bolt_308",
+      "source": "derived",
+      "reason": "Sniper de .308/.30-06: arquétipo .308 de ferrolho."
+    },
+    "hunting:22lr": {
+      "value": "carbine_22",
+      "source": "derived",
+      "reason": "Calibre .22: arquétipo de carabina .22."
+    },
+    "hunting:*": {
+      "value": "rifle_bolt_308",
+      "source": "derived",
+      "reason": "Arma de caça de calibre maior: arquétipo .308 de ferrolho."
+    },
+    "machine_gun:5_56x45": {
+      "value": "rifle_5_56",
+      "source": "derived",
+      "reason": "Metralhadora 5,56: arquétipo 5,56."
+    },
+    "machine_gun:50bmg": {
+      "value": "anti_materiel_50",
+      "source": "derived",
+      "reason": "Metralhadora .50: arquétipo antimaterial."
+    },
+    "machine_gun:*": {
+      "value": "rifle_7_62x39",
+      "source": "derived",
+      "reason": "Metralhadora 7,62: arquétipo 7,62×39."
+    }
+  },
+  "semiRate": {
+    "value": {
+      "22lr": 300,
+      "50bmg": 30,
+      "pistol": 300,
+      "revolver": 150,
+      "shotgun": 180,
+      "*": 120
+    },
+    "source": "design",
+    "reason": "Q2: cadência prática das armas sem número do time: pistola 300, revólver 150, escopeta 180, .22 300, .50 BMG 30, fuzil semi/DMR 120. Procura primeiro o calibre, depois a categoria, depois \"*\"."
+  },
+  "cycleSeconds": {
+    "value": {
+      "pump": 0.5,
+      "bolt": 0.82,
+      "bolt_magazine": 0.82,
+      "lever": 0.55
+    },
+    "source": "gallery",
+    "reason": "Q1: tempo de ciclo da ação manual da Galeria (linhas 757-784): bomba 0,5 s, ferrolho 0,82 s, alavanca 0,55 s."
+  },
+  "timings": {
+    "draw": {
+      "value": 0.35,
+      "source": "game",
+      "reason": "jogo.js: inv.cool = 0.35 ao trocar de arma."
+    },
+    "clear": {
+      "value": 1.2,
+      "source": "arsenal",
+      "reason": "Arsenal §10: animação de destravar de 1,2 s."
+    },
+    "oneByOne": {
+      "value": 1,
+      "source": "arsenal",
+      "reason": "Arsenal §10: um cartucho por vez no tambor leva cerca de 1 s cada (6 s para 6 tiros)."
+    }
+  },
+  "modes": {
+    "byName": {
+      "Colt M16A2": {
+        "value": {
+          "modes": [
+            "semi",
+            "burst"
+          ],
+          "burst": 3
+        },
+        "source": "gallery",
+        "reason": "Rajada de 3 (GAL burst:3, Arsenal §06 \"rajada de 3\")."
+      },
+      "Glock 18": {
+        "value": {
+          "modes": [
+            "semi",
+            "auto"
+          ]
+        },
+        "source": "design",
+        "reason": "Seletor automático (Arsenal §06: 1.200 rpm)."
+      },
+      "Franchi SPAS-12": {
+        "value": {
+          "modes": [
+            "pump",
+            "semi"
+          ]
+        },
+        "source": "arsenal",
+        "reason": "Arsenal §06: troca entre bomba e semiautomática."
+      },
+      "Boito (2 canos)": {
+        "value": {
+          "modes": [
+            "break",
+            "volley"
+          ]
+        },
+        "source": "arsenal",
+        "reason": "Arsenal §06: 1 ou 2 tiros juntos; a salva dispara os dois canos de uma vez."
+      }
+    },
+    "byFamily": {
+      "value": {
+        "belt": [
+          "auto"
+        ],
+        "pump": [
+          "pump"
+        ],
+        "bolt": [
+          "bolt"
+        ],
+        "bolt_magazine": [
+          "bolt"
+        ],
+        "lever": [
+          "lever"
+        ],
+        "break": [
+          "break"
+        ],
+        "revolver": [
+          "single"
+        ]
+      },
+      "source": "design",
+      "reason": "Modos pela família de recarga para armas sem cadência da Galeria."
+    },
+    "withRate": {
+      "value": [
+        "auto",
+        "semi"
+      ],
+      "source": "design",
+      "reason": "Arma com rpm na Galeria atira em automático e em semi (cinta só automático)."
+    },
+    "default": {
+      "value": [
+        "semi"
+      ],
+      "source": "design",
+      "reason": "Arma sem cadência e sem família manual: semiautomática."
+    }
+  },
+  "magazine": {
+    "Kel-Tec KSG": {
+      "value": {
+        "magazine": 14,
+        "tubes": 2,
+        "chamber": 1
+      },
+      "source": "design",
+      "reason": "Capacidade \"7+7+1\": dois tubos de 7 e 1 na câmara."
+    }
+  },
+  "siblingTimings": {
+    "HK PSG-1": {
+      "value": {
+        "siblingOf": "HK G3A3"
+      },
+      "source": "derived",
+      "reason": "Q5: a PSG-1 usa a recarga da G3A3 (mesma plataforma, o Arsenal não tem a PSG-1)."
+    },
+    "Steyr SSG 69": {
+      "value": {
+        "siblingOf": "Remington 700"
+      },
+      "source": "derived",
+      "reason": "Q5: ferrolho de carregamento por cima; recarga da Remington 700."
+    },
+    "Barrett MRAD": {
+      "value": {
+        "siblingOf": "Accuracy AWM"
+      },
+      "source": "derived",
+      "reason": "Q5: ferrolho de carregador .338; recarga da AWM."
+    },
+    "CheyTac M200": {
+      "value": {
+        "siblingOf": "Accuracy AWM"
+      },
+      "source": "derived",
+      "reason": "Q5: ferrolho de carregador de calibre grande; recarga da AWM."
+    },
+    "Remington 700 .300 WM": {
+      "value": {
+        "siblingOf": "Remington 700"
+      },
+      "source": "derived",
+      "reason": "Q5: é a mesma arma em outro calibre."
+    },
+    "M79": {
+      "value": {
+        "siblingOf": "Boito (2 canos)"
+      },
+      "source": "derived",
+      "reason": "Q5: basculante de um tiro; recarga da Boito (2,0 s)."
+    }
+  },
+  "launchers": {
+    "RPG-7": {
+      "value": {
+        "projectile": "pg7v",
+        "disposable": false,
+        "speed": 117,
+        "kick": 1.6,
+        "reload": 4.5,
+        "reloadSource": "arsenal"
+      },
+      "source": "arsenal",
+      "reason": "Recarga de 4,5 s (Arsenal §13); velocidade de saída do PG-7V é REF (117 m/s); coice da Galeria (kick 1,6)."
+    },
+    "M72 LAW": {
+      "value": {
+        "projectile": "m72_66mm",
+        "disposable": true,
+        "speed": 145,
+        "kick": 1.1,
+        "reload": 1.15,
+        "reloadSource": "gallery"
+      },
+      "source": "gallery",
+      "reason": "Q5: troca de tubo da Galeria (1,15 s); velocidade REF (145 m/s); coice da Galeria (kick 1,1)."
+    },
+    "AT4": {
+      "value": {
+        "projectile": "at4_84mm",
+        "disposable": true,
+        "speed": 285,
+        "kick": 1.3,
+        "reload": 1.15,
+        "reloadSource": "gallery"
+      },
+      "source": "gallery",
+      "reason": "Q5: troca de tubo da Galeria (1,15 s); velocidade REF (285 m/s); coice da Galeria (kick 1,3)."
+    },
+    "Carl Gustaf M4": {
+      "value": {
+        "projectile": "carl_gustaf_84mm",
+        "disposable": false,
+        "speed": 255,
+        "kick": 1.4,
+        "reload": 1.05,
+        "reloadSource": "gallery"
+      },
+      "source": "gallery",
+      "reason": "Q5: abrir culatra e inserir da Galeria (1,05 s); velocidade REF (255 m/s); coice da Galeria (kick 1,4)."
+    }
+  },
+  "launcherCommon": {
+    "value": {
+      "minArmDistance": 10,
+      "backblast": 5,
+      "recoilBase": "shotgun_pump_12",
+      "recoilKickBase": 1.6
+    },
+    "source": "arsenal",
+    "reason": "Arsenal §13: distância mínima de armar 10 m e sopro atrás do lançador a 5 m. Coice = o da escopeta de bomba × (kick da Galeria / 1,6, o kick da escopeta)."
+  },
+  "flamethrowers": {
+    "Lança-chamas M2": {
+      "value": {
+        "reload": 1.1,
+        "rangeFactor": 1
+      },
+      "source": "gallery",
+      "reason": "Q5: troca de tanque da Galeria (1,1 s); alcance do lança-chamas do SDK (6 m)."
+    },
+    "Lança-chamas caseiro": {
+      "value": {
+        "reload": 1.1,
+        "rangeFactor": 0.6
+      },
+      "source": "derived",
+      "reason": "Q5: troca de tanque da Galeria (1,1 s); alcance do SDK ×0,6."
+    }
+  },
+  "m79": {
+    "value": {
+      "id": "m79",
+      "name": "M79 grenade launcher",
+      "projectile": "m79_40mm",
+      "length": 0.73,
+      "barrel": 0.356,
+      "emptyMass": 2.7,
+      "mass": 2.93,
+      "speed": 76,
+      "kick": 1.6,
+      "recoilBase": "shotgun_double_12",
+      "backblast": 0
+    },
+    "source": "reference",
+    "reason": "Galeria EXP: arma basculante de 40 mm de cerca de 730 mm. Cano, massas e velocidade (76 m/s) REF do M79 real; sem sopro atrás (lança-granadas); coice do arquétipo de dois canos."
+  },
+  "variants": {
+    "Remington 700 .300 WM": {
+      "value": {
+        "of": "Remington 700",
+        "id": "remington_700_300wm",
+        "name": "Remington 700 (.300 WM)",
+        "caliber": "300wm",
+        "capacity": 3
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §06: \"Remington 700, .308 / .300 WM, 4 / 3\": a versão tática rara em .300 WM com 3 cartuchos."
+    }
+  },
+  "recoil": {
+    "value": {
+      "rounding": 2
+    },
+    "source": "arsenal",
+    "reason": "Arsenal §08: coice = energia do calibre dividida pelo peso da arma. Coice da arma = coice do arquétipo × (E_arma/m_arma)/(E_arq/m_arq); energia da escopeta = todos os bagos."
+  },
+  "conditions": {
+    "value": {
+      "new": "nova",
+      "used": "usada",
+      "worn": "gasta",
+      "rusty": "enferrujada"
+    },
+    "source": "gallery",
+    "reason": "Q3: curva de pane = QUAL da Galeria (nova 0,3%, usada 1,5%, gasta 5%, enferrujada 12%); a curva de durabilidade do Arsenal fica disponível pelo plugin rules.faultChance. O teste compara DEFAULT_RULES com o QUAL."
+  }
+}

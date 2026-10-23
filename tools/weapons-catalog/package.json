@@ -1,0 +1,21 @@
+{
+  "name": "@adatechnology/weapons-catalog-tool",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Weapons catalog tool: reads the team deliveries (Gallery, Arsenal, Explosion Lab, game) and writes the reconciled game-weapons data as plain JSON, with a --check that fails when the generated files are stale.",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "catalog": "node dist/cli.js",
+    "catalog:check": "node dist/cli.js --check"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

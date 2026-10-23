@@ -63,8 +63,7 @@
         1.2,
         0.4
       ],
-      "range": 50,
-      "noise": 150
+      "range": 50
     },
     "mass": 0.9,
     "tags": [
@@ -92,8 +91,7 @@
         1.8,
         0.6
       ],
-      "range": 50,
-      "noise": 160
+      "range": 50
     },
     "mass": 1.1,
     "tags": [
@@ -121,8 +119,7 @@
         0.5,
         0.2
       ],
-      "range": 40,
-      "noise": 90
+      "range": 40
     },
     "mass": 0.7,
     "tags": [
@@ -150,8 +147,7 @@
         3,
         0.9
       ],
-      "range": 60,
-      "noise": 220
+      "range": 60
     },
     "mass": 1.2,
     "tags": [
@@ -179,8 +175,7 @@
         1.6,
         0.5
       ],
-      "range": 45,
-      "noise": 170
+      "range": 45
     },
     "mass": 0.9,
     "tags": [
@@ -211,8 +206,7 @@
         0.9,
         0.5
       ],
-      "range": 80,
-      "noise": 180
+      "range": 80
     },
     "mass": 2.6,
     "tags": [
@@ -240,8 +234,7 @@
         0.4,
         0.15
       ],
-      "range": 80,
-      "noise": 100
+      "range": 80
     },
     "mass": 2.4,
     "tags": [
@@ -272,8 +265,7 @@
         1,
         0.6
       ],
-      "range": 400,
-      "noise": 300
+      "range": 400
     },
     "mass": 3.4,
     "tags": [
@@ -302,8 +294,7 @@
         1.5,
         0.8
       ],
-      "range": 350,
-      "noise": 320
+      "range": 350
     },
     "mass": 3.8,
     "tags": [
@@ -331,8 +322,7 @@
         3,
         0.5
       ],
-      "range": 800,
-      "noise": 350
+      "range": 800
     },
     "mass": 4,
     "tags": [
@@ -360,8 +350,7 @@
         4.5,
         0.7
       ],
-      "range": 1500,
-      "noise": 450
+      "range": 1500
     },
     "mass": 6.5,
     "tags": [
@@ -389,8 +378,7 @@
         7,
         1.2
       ],
-      "range": 1800,
-      "noise": 600
+      "range": 1800
     },
     "mass": 12.5,
     "tags": [
@@ -421,8 +409,7 @@
         4,
         1
       ],
-      "range": 40,
-      "noise": 400
+      "range": 40
     },
     "mass": 3.2,
     "tags": [
@@ -451,8 +438,7 @@
         4.5,
         1.2
       ],
-      "range": 35,
-      "noise": 400
+      "range": 35
     },
     "mass": 3,
     "tags": [
@@ -482,8 +468,7 @@
         3.4,
         1
       ],
-      "range": 40,
-      "noise": 400
+      "range": 40
     },
     "mass": 3.4,
     "tags": [
@@ -511,8 +496,7 @@
         0.3,
         0.1
       ],
-      "range": 60,
-      "noise": 20
+      "range": 60
     },
     "mass": 1.8,
     "tags": [
@@ -540,8 +524,7 @@
         0.5,
         0.1
       ],
-      "range": 70,
-      "noise": 25
+      "range": 70
     },
     "mass": 3,
     "tags": [
@@ -717,6 +700,7 @@
     "category": "throwable",
     "action": {
       "kind": "throwable",
+      "explosive": "molotov",
       "energy": 500,
       "radius": 1.5,
       "fuse": 0,
@@ -726,7 +710,7 @@
         "radius": 1.5,
         "seconds": 12
       },
-      "noise": 60
+      "noise": 40
     },
     "mass": 0.8,
     "tags": [
@@ -777,11 +761,12 @@
     "category": "throwable",
     "action": {
       "kind": "throwable",
+      "explosive": "m67",
       "energy": 200000,
-      "radius": 6,
+      "radius": 5,
       "fuse": 4,
       "throwSpeed": 15,
-      "noise": 400
+      "noise": 500
     },
     "mass": 0.45,
     "tags": [
@@ -794,11 +779,12 @@
     "category": "throwable",
     "action": {
       "kind": "throwable",
-      "energy": 100000,
-      "radius": 4,
+      "explosive": "pipe_bomb",
+      "energy": 43200,
+      "radius": 3,
       "fuse": 3,
       "throwSpeed": 13,
-      "noise": 350
+      "noise": 450
     },
     "mass": 0.7,
     "tags": [
