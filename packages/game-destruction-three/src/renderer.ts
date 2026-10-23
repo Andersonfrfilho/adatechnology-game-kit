@@ -348,8 +348,10 @@ class Renderer implements DestructionRenderer {
   private hardLanding(p: PieceBody, point: Vec3, speed: number): void {
     const key = this.impactSoundOf(p.objectId)
     this.sound(key, point, clamp(speed / 10, 0.2, 1))
+    // the piece just moved this frame: the world must know where it is before the hit is resolved against its parts
+    this.syncBound(p.objectId)
     try {
-      this.world.hit(p.objectId, { type: 'blunt', point, energy: 0.5 * p.mass * speed * speed, radius: 0.08, direction: [0, -1, 0] })
+      this.world.hit(p.objectId, { type: 'blunt', point, energy: 0.5 * p.mass * speed * speed, radius: 0.08, direction: [0, -1, 0], source: 'fall' })
     } catch {
       // the object may have been removed from the world
     }
@@ -400,20 +402,28 @@ class Renderer implements DestructionRenderer {
   }
 
   private syncTransforms(): void {
+    for (const b of this.bounds.values()) this.syncOne(b)
+  }
+
+  /** Push the current transform of one bound object to the world right now (used before a landing hit). */
+  private syncBound(objectId: string): void {
+    const b = this.bounds.get(objectId)
+    if (b) this.syncOne(b)
+  }
+
+  private syncOne(b: Bound): void {
+    if (!b.sync) return
     const p = this.v1
     const q = this.tmpQ
-    for (const b of this.bounds.values()) {
-      if (!b.sync) continue
-      b.root.updateWorldMatrix(true, false)
-      b.root.matrixWorld.decompose(p, q, this.v2)
-      const last = b.lastPos
-      const lq = b.lastQuat
-      const moved = !last || !lq || Math.abs(p.x - last[0]) + Math.abs(p.y - last[1]) + Math.abs(p.z - last[2]) > 1e-5 || Math.abs(q.x - lq[0]) + Math.abs(q.y - lq[1]) + Math.abs(q.z - lq[2]) + Math.abs(q.w - lq[3]) > 1e-6
-      if (!moved) continue
-      b.lastPos = [p.x, p.y, p.z]
-      b.lastQuat = [q.x, q.y, q.z, q.w]
-      if (this.world.has(b.id)) this.world.setTransform(b.id, [p.x, p.y, p.z], [q.x, q.y, q.z, q.w])
-    }
+    b.root.updateWorldMatrix(true, false)
+    b.root.matrixWorld.decompose(p, q, this.v2)
+    const last = b.lastPos
+    const lq = b.lastQuat
+    const moved = !last || !lq || Math.abs(p.x - last[0]) + Math.abs(p.y - last[1]) + Math.abs(p.z - last[2]) > 1e-5 || Math.abs(q.x - lq[0]) + Math.abs(q.y - lq[1]) + Math.abs(q.z - lq[2]) + Math.abs(q.w - lq[3]) > 1e-6
+    if (!moved) return
+    b.lastPos = [p.x, p.y, p.z]
+    b.lastQuat = [q.x, q.y, q.z, q.w]
+    if (this.world.has(b.id)) this.world.setTransform(b.id, [p.x, p.y, p.z], [q.x, q.y, q.z, q.w])
   }
 
   // ----------------------------------------------------------------------------------------------------------------------------------

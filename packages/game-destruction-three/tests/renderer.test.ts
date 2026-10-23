@@ -251,6 +251,32 @@ describe('detach and pieces', () => {
   })
 })
 
+describe('hard landing', () => {
+  it('syncs the world transform before it reports the landing hit', () => {
+    const { world, renderer, scene } = setup()
+    world.addObject('crate', [partState('box', 'wood', { mass: 10 })])
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.6))
+    const root = new THREE.Group()
+    root.add(mesh)
+    root.position.set(0, 2, 0)
+    scene.add(root)
+    renderer.bind('crate', root, { parts: { box: mesh } })
+    renderer.makePiece('crate')
+    let seen: { synced: number | null; actual: number } | null = null
+    const origHit = world.hit.bind(world)
+    world.hit = (id, hit) => {
+      const t = world.transforms[world.transforms.length - 1]
+      seen ??= { synced: t ? t.position[1] : null, actual: root.position.y }
+      return origHit(id, hit)
+    }
+    for (let i = 0; i < 120 && !seen; i++) renderer.update(1 / 60)
+    expect(seen).not.toBeNull()
+    // at the moment of the hit the world already knows where the crate landed
+    expect(seen!.synced).not.toBeNull()
+    expect(Math.abs(seen!.synced! - seen!.actual)).toBeLessThan(1e-6)
+  })
+})
+
 describe('fire, heat and melt', () => {
   it('chars a cloned material and emits fire and smoke while burning', () => {
     const { world, renderer } = setup()

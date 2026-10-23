@@ -51,6 +51,8 @@ export class FakeWorld {
   transforms: Array<{ id: string; position: Vec3; rotation: Quat }> = []
   hits: Array<{ id: string; hit: Hit }> = []
   splits: Array<{ id: string; group: number; newId: string }> = []
+  /** Order of `setTransform`/`hit` calls, to assert that the transform is synced before a hit. */
+  calls: string[] = []
   time = 0
   private counter = 0
 
@@ -93,10 +95,12 @@ export class FakeWorld {
   }
 
   setTransform(id: string, position: Vec3, rotation: Quat): void {
+    this.calls.push('setTransform:' + id)
     this.transforms.push({ id, position, rotation })
   }
 
   hit(id: string, hit: Hit): never[] {
+    this.calls.push('hit:' + id)
     this.hits.push({ id, hit })
     return [] as never[]
   }

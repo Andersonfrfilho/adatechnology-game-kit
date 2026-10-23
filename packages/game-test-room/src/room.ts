@@ -1284,13 +1284,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const vy = piece.velocity[1]
       const prev = prevVy.get(piece.objectId) ?? 0
       prevVy.set(piece.objectId, vy)
-      // the renderer reports hard landings too, but before it syncs the world transform; this one lands on the right spot
+      // the renderer applies the landing damage itself (source 'fall'); here we only describe it in the log
       if (piece.held || prev > -3 || vy < prev + 2 || !world.has(piece.objectId)) return
-      const box = tmpBox.setFromObject(piece.root)
-      const c = box.getCenter(tmpV)
       const energy = 0.5 * piece.mass * prev * prev
-      const point: Vec3 = [c.x, box.min.y + 0.01, c.z]
-      world.hit(piece.objectId, { type: 'blunt', point, direction: [0, -1, 0], energy, radius: 0.08, source: 'fall' })
       action('landing', t('act.landing', { name: nameOf(piece.objectId), speed: num(-prev, 1), energy: num(energy, 1) }), {
         objectId: piece.objectId,
         itemId: entryOf(piece.objectId)?.so.itemId,
