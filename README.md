@@ -80,6 +80,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the naming conventions.
 Releases use [changesets](https://github.com/changesets/changesets): `pnpm changeset` per change, then `pnpm version:changeset` and
 `pnpm publish:changesets`. Packages are public (`access: public`).
 
+## Demo site
+
+A static demo of the examples is built from `site/Dockerfile` and served by Caddy. Railway builds that Dockerfile on every push to `main` (see `railway.json`). The image runs `pnpm install --frozen-lockfile`, `pnpm build` and `node site/build-site.mjs`, which copies each example's self-contained HTML to `site/dist/<example>/index.html` and writes a landing page listing the examples and packages. To build it locally: `pnpm install && pnpm build && node site/build-site.mjs`, then serve `site/dist`.
+
 ## License
 
 MIT
