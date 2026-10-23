@@ -10,7 +10,7 @@ import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-
 import { createFluidRenderer } from '@adatechnology/game-fluids-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { checkAnimation, checkDestructible, checkSpec } from '@adatechnology/game-contracts'
-import type { AnimationClipSpec, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, HostEvent, ModuleArea, ModuleHost, TestableModule } from '@adatechnology/game-contracts'
 import { createArena } from './arena'
 import type { Arena } from './arena'
 import { buildFromSpec } from './build-from-spec'
@@ -150,8 +150,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const p = world.part(arena.table.id, arena.table.topPart)
     return !!p && p.status !== 'broken' && p.status !== 'melted' && p.status !== 'ashes'
   }
+  // tops of spawned objects that hold others (a module's counter, a shelf board): loose things rest on them while the object is in the world
+  const restingTops: Array<{ objectId: string; minX: number; maxX: number; minZ: number; maxZ: number; top: number }> = []
+  const restingTopAt = (x: number, z: number): number => {
+    let top = 0
+    for (const c of restingTops) if (x > c.minX && x < c.maxX && z > c.minZ && z < c.maxZ && world.has(c.objectId)) top = Math.max(top, c.top)
+    return top
+  }
   const groundAt = (x: number, z: number): number =>
-    x > arena.table.minX && x < arena.table.maxX && z > arena.table.minZ && z < arena.table.maxZ && tableOk() ? arena.table.top : 0
+    Math.max(x > arena.table.minX && x < arena.table.maxX && z > arena.table.minZ && z < arena.table.maxZ && tableOk() ? arena.table.top : 0, restingTopAt(x, z))
 
   const ownFluids = !options.fluids
   const fluids = options.fluids ?? createFluids({ seed: 1, locale, liquids: options.liquids, groundAt })
@@ -548,6 +555,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const clear = (): void => {
     clearEverything()
+    restingTops.length = 0
     pending = []
     action('clear', t('act.clear'))
   }
@@ -799,6 +807,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     })
     player.kick(recoil[0], recoil[1])
+    emitHost({ type: 'shot', weapon: toolId, shots: shots.length, recoil })
     const f = first as RayHit | null
     const d = f ? num(f.distance, 1) : ''
     let text: string
@@ -1050,7 +1059,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (cat === 'hand') return
     const res = tool.trigger([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], dt, held, 'player')
     if (res.status === 'empty') {
-      if (!tool.reloading && tool.reserve > 0) tool.reload()
+      emitHost({ type: 'empty', weapon: toolId })
+      if (!tool.reloading && tool.reserve > 0) startReload()
       say(t(tool.reloading ? 'hud.reloading' : 'hud.empty'))
       return
     }
@@ -1104,6 +1114,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     progress = null
     action('tool', t('act.tool', { weapon: toolName(id) }), { data: { weapon: id } })
     fire('tool', id)
+    emitHost({ type: 'tool', weapon: id })
   }
   const cycleTool = (dir: 1 | -1): void => {
     if (!loadout.length) return
@@ -1352,7 +1363,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       case 'KeyR':
         if (heldPiece) heldYaw += Math.PI / 8
         else {
-          tool.reload()
+          startReload()
           say(t('hud.reloading'))
         }
         break
@@ -1514,6 +1525,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     updateImpacts()
     fluidView.update(dt)
     for (const s of tools.values()) s.update(dt)
+    if (reloadingSeen && !tool.reloading) emitHost({ type: 'reload', weapon: toolId, phase: 'end' })
+    reloadingSeen = tool.reloading
+    for (const update of frameListeners) update(dt)
     for (const tr of tracers) {
       if (tr.life > 0) {
         tr.life -= dt
@@ -1672,6 +1686,40 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const moduleCheck = (ok: boolean, text: string, data: Record<string, unknown>, itemId?: string): void => {
     log.add({ channel: 'check', type: ok ? 'pass' : 'fail', text: `${ok ? '✓' : '✗'} ${text}`, itemId, data: { ok, ...data } })
   }
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  // What modules get from the room (game-contracts ModuleHost): the scene, the tool events and the frame
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  const modules = new Map<string, TestableModule<ScenarioContext>>()
+  const detachers: Array<() => void> = []
+  const hostListeners = new Set<(event: HostEvent) => void>()
+  const frameListeners = new Set<(dt: number) => void>()
+  let reloadingSeen = false
+  function emitHost(event: HostEvent): void {
+    for (const listener of hostListeners) listener(event)
+  }
+  function startReload(): void {
+    if (tool.reload()) emitHost({ type: 'reload', weapon: toolId, phase: 'start' })
+  }
+  const host: ModuleHost = {
+    THREE,
+    scene,
+    camera,
+    locale,
+    groundAt,
+    tool: () => ({ weapon: toolId, category: tool.def.category, ammo: tool.ammo, capacity: tool.capacity, reserve: tool.reserve, reloading: tool.reloading }),
+    on(listener) {
+      hostListeners.add(listener)
+      return () => hostListeners.delete(listener)
+    },
+    onFrame(update) {
+      frameListeners.add(update)
+      return () => frameListeners.delete(update)
+    },
+    log(text, data) {
+      action('module_note', text, { data })
+    },
+  }
+
   const loadModule = (mod: TestableModule<ScenarioContext>): ModuleReport => {
     const report: ModuleReport = { module: mod.id, items: [], scenarios: [], ok: true, problems: [] }
     const fail = (problem: string): void => {
@@ -1738,6 +1786,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       report.scenarios.push(sc.id)
     }
     action('module', t('act.module_loaded', { name: mod.name, items: report.items.length, scenarios: report.scenarios.length, result: t(report.ok ? 'mod.all_ok' : 'mod.some_failed') }), { data: { module: mod.id, items: report.items, scenarios: report.scenarios, ok: report.ok } })
+    modules.set(mod.id, mod)
+    if (mod.attach) detachers.push(mod.attach(host))
     ui?.refresh()
     return report
   }
@@ -1800,6 +1850,42 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // The room object
   // ---------------------------------------------------------------------------------------------------------------------------------------
+  // lays a module area: things that hold others first, so what goes on them finds their top
+  const layArea = (layout: ModuleArea): SpawnedObject[] => {
+    const holders = layout.placements.filter((p) => p.surface)
+    const rest = layout.placements.filter((p) => !p.surface)
+    const placed = [...holders, ...rest].map((p) => {
+      const so = spawn(p.item, p.position, p.rotationY ?? 0)
+      if (p.surface) {
+        const [hx, hz] = p.surface.halfSize
+        restingTops.push({ objectId: so.objectId, minX: p.position[0] - hx, maxX: p.position[0] + hx, minZ: p.position[2] - hz, maxZ: p.position[2] + hz, top: p.surface.height })
+      }
+      return { so, asleep: p.asleep === true }
+    })
+    for (const { so, asleep } of placed) {
+      const piece = asleep ? rendererPieces.get(so.objectId) : undefined
+      if (piece) piece.sleeping = true
+    }
+    if (layout.view) room.look(layout.view.eye, layout.view.target)
+    return placed.map(({ so }) => so)
+  }
+
+  // a test environment per catalogue group, the way the demo site links each area of the index: a loaded module brings its own area,
+  // any other group is laid in rows (small things in front, fixed big ones behind)
+  const openArea = (area: string): SpawnedObject[] => {
+    clear()
+    const mod = [...modules.values()].find((m) => m.id === area || m.group === area)
+    const label = mod?.group ?? S.groups[area] ?? area
+    ui?.showGroup(label)
+    const layout = mod?.area?.(locale)
+    if (layout) return layArea(layout)
+    const items = catalog.filter((item) => item.group === label)
+    const front = items.filter((item) => item.movable !== false)
+    const back = items.filter((item) => item.movable === false)
+    const row = (list: TestRoomItem[], gap: number, z: number): SpawnedObject[] => list.map((item, index) => spawn(item.id, [(index - (list.length - 1) / 2) * gap, 0, z], 0))
+    return [...row(front, 1.6, 1.5), ...row(back, 4.5, -4)]
+  }
+
   const room: TestRoom & {
     tilt(rad: number): void
     toggleTap(on?: boolean): boolean
@@ -1888,10 +1974,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       fastForward = on
     },
     equip,
+    openArea,
     loadModule,
     animations: animationsOf,
     playAnimation,
     dispose() {
+      for (const detach of detachers.splice(0)) detach()
       cancelAnimationFrame?.(raf)
       window.removeEventListener('resize', onResize)
       player.dispose()
@@ -1987,6 +2075,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   if (options.initial) {
     for (const [i, id] of options.initial.entries()) spawn(id, [(i - (options.initial.length - 1) / 2) * 1.3, 0, 0.5])
   }
+  if (options.area) openArea(options.area)
 
   return room
 }

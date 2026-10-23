@@ -87,6 +87,8 @@ export interface TestRoomOptions {
   arenaSize?: number
   /** Spawn these catalogue ids on start, in a row in front of the player. */
   initial?: string[]
+  /** Open on one catalogue group (`furniture`, `structure`, `weapons`…): see `TestRoom.openArea`. */
+  area?: string
   /** Called for every destruction event (to log, play sounds, sync over LAN). Fluid events reach the log too. */
   onEvent?: (event: DestructionEvent) => void
   onSound?: (key: string, point: Vec3, volume: number) => void
@@ -151,6 +153,11 @@ export interface TestRoom {
   setFastForward(on: boolean): void
   /** Equip a weapon by id, adding it to the hotbar when it is not there. Same as selecting a catalogue item with `TestRoomItem.weapon`. */
   equip(weaponId: string): void
+  /**
+   * Set the room up to test one catalogue group or loaded module (by its group or id): clear it and open the catalogue on that tab. A module
+   * that brings an `area` is laid out by it; any other group is laid in rows (small items in front, fixed big ones behind). Unknown: nothing.
+   */
+  openArea(group: string): SpawnedObject[]
   /** The scenarios the panel offers: the built-in `SCENARIOS` in the room locale plus `TestRoomOptions.scenarios`. */
   readonly scenarios: TestRoomScenario[]
   /** The liquid renderer of `@adatechnology/game-fluids-three` (containers, streams, stains). */

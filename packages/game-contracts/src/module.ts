@@ -43,7 +43,63 @@ export interface ModuleScenario<Context = unknown> {
   run(context: Context): void | Promise<void>
 }
 
-/** What a module hands the test room: its items and, optionally, scenarios that exercise them. */
+/** Where one item goes when the host sets the module's area up. */
+export interface AreaPlacement {
+  /** Id of an item of the module. */
+  item: string
+  /** World position of the item origin (centre of the footprint, on the floor). */
+  position: Vec3
+  rotationY?: number
+  /** Things placed on it rest on its top (a counter, a shelf board): half size on x and z around `position`, and the height of the top. */
+  surface?: { halfSize: [number, number]; height: number }
+  /** Starts still: no physics until it is grabbed, hit or pushed. For props laid side by side that would otherwise nudge each other off. */
+  asleep?: boolean
+}
+
+/** How the host sets the module's area up: what goes where, and where the camera starts. */
+export interface ModuleArea {
+  placements: AreaPlacement[]
+  view?: { eye: Vec3; target: Vec3 }
+}
+
+/** What the player did with the tool in hand, as the host reports it. Hosts emit what they support; modules ignore what they do not need. */
+export type HostEvent =
+  | { type: 'tool'; weapon: string }
+  | { type: 'shot'; weapon: string; shots: number; recoil: [number, number] }
+  | { type: 'reload'; weapon: string; phase: 'start' | 'end' }
+  | { type: 'empty'; weapon: string }
+
+/** The tool in hand as the host sees it. */
+export interface HostTool {
+  weapon: string
+  category: string
+  ammo: number
+  capacity: number
+  reserve: number
+  reloading: boolean
+}
+
+/**
+ * What the host lends a module that brings its own presentation (a weapon in the hands, sounds, ejected casings). `THREE`, `scene` and `camera`
+ * are the host's three.js namespace, scene and camera: `unknown` here because the contracts do not depend on three.js.
+ */
+export interface ModuleHost {
+  THREE: unknown
+  scene: unknown
+  camera: unknown
+  locale: string
+  /** Height of whatever things rest on at (x, z): the floor, a table, a counter. */
+  groundAt(x: number, z: number): number
+  tool(): HostTool
+  /** Follow the player's tool events. Returns the unsubscribe function. */
+  on(listener: (event: HostEvent) => void): () => void
+  /** Run every simulated frame with the frame's seconds. Returns the unsubscribe function. */
+  onFrame(update: (dt: number) => void): () => void
+  /** Write a line to the host's behaviour log. */
+  log(text: string, data?: Record<string, unknown>): void
+}
+
+/** What a module hands the test room: its items and, optionally, scenarios that exercise them, its area and its own presentation. */
 export interface TestableModule<Context = unknown> {
   /** snake_case id of the module. */
   id: string
@@ -52,4 +108,8 @@ export interface TestableModule<Context = unknown> {
   group: string
   items(locale: string): TestableItem[]
   scenarios?(locale: string): Array<ModuleScenario<Context>>
+  /** How to set the area up when the host opens the module's group. Without it the host lays the items in rows. */
+  area?(locale: string): ModuleArea
+  /** Called once when the module is loaded, with what the host lends. Returns the function that undoes it. */
+  attach?(host: ModuleHost): () => void
 }

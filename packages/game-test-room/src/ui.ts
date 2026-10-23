@@ -78,6 +78,8 @@ export interface RoomUi {
   toast(text: string): void
   /** Re-read the catalogue and the scenarios (after `loadModule`). */
   refresh(): void
+  /** Open the catalogue on a group tab (its translated name), clearing the search. */
+  showGroup(group: string): void
   togglePanels(): void
   dispose(): void
 }
@@ -85,7 +87,11 @@ export interface RoomUi {
 const CSS = `
 .tr-root{position:absolute;inset:0;pointer-events:none;font:12px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#e8eaee;overflow:hidden}
 .tr-root *{box-sizing:border-box}
-.tr-root button,.tr-root select,.tr-root label{pointer-events:auto}
+.tr-root button,.tr-root select,.tr-root label,.tr-root input{pointer-events:auto}
+.tr-search{width:100%;margin:0 0 6px;padding:5px 8px;border-radius:5px;border:1px solid #3a404c;background:#0f1116;color:#e8eaee;font:inherit}
+.tr-search::placeholder{color:#7d8594}
+.tr-item small{color:#7d8594;margin-left:4px}
+.tr-empty{color:#9aa3b2;padding:4px 2px;grid-column:1/-1}
 .tr-cross{position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px}
 .tr-cross:before,.tr-cross:after{content:"";position:absolute;background:#fff;opacity:.85;box-shadow:0 0 2px #000}
 .tr-cross:before{left:8px;top:0;width:2px;height:18px}.tr-cross:after{top:8px;left:0;height:2px;width:18px}
@@ -136,6 +142,9 @@ const CSS = `
 .tr-summary{margin-top:6px;color:#9aa3b2}
 @media (max-width:980px){.tr-left,.tr-right{display:none}.tr-root.open .tr-left,.tr-root.open .tr-right{display:flex}.tr-toggle{display:block;pointer-events:auto}.tr-root.open .tr-toggle{right:min(310px,34vw)}.tr-left{width:min(400px,46vw)}.tr-help{display:none}}
 `
+
+// accents are dropped on both sides of a search, so "gas" finds "gás"
+const fold = (text: string): string => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
 const mk = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string): HTMLElementTagNameMap[K] => {
   const e = document.createElement(tag)
@@ -292,15 +301,28 @@ export function createUi(o: UiOptions): RoomUi {
   right.append(cat, anim, tests)
 
   cat.appendChild(mk('h3', undefined, t('ui.catalog')))
+  const itemSearch = mk('input', 'tr-search')
+  itemSearch.type = 'search'
+  itemSearch.placeholder = t('ui.search_items')
   const tabs = mk('div', 'tr-tabs')
   const items = mk('div', 'tr-items')
-  cat.append(tabs, items)
+  cat.append(itemSearch, tabs, items)
   let activeGroup = ''
+  // a search looks in every group, so an item is found without knowing its tab
+  const visibleItems = (): Array<{ item: TestRoomItem; group: string }> => {
+    const term = fold(itemSearch.value.trim())
+    if (!term) return (o.groups().get(activeGroup) ?? []).map((item) => ({ item, group: activeGroup }))
+    return [...o.groups()].flatMap(([group, list]) => list.filter((item) => fold(`${item.name} ${item.id} ${group}`).includes(term)).map((item) => ({ item, group })))
+  }
   const renderItems = (): void => {
     items.textContent = ''
-    for (const it of o.groups().get(activeGroup) ?? []) {
+    const searching = itemSearch.value.trim() !== ''
+    const found = visibleItems()
+    if (!found.length) items.appendChild(mk('div', 'tr-empty', t('ui.no_results')))
+    for (const { item: it, group } of found) {
       const wrap = mk('div', 'tr-item')
       const b = mk('button', 'tr-btn', it.name)
+      if (searching) b.appendChild(mk('small', undefined, group))
       b.type = 'button'
       b.title = it.note ?? it.name
       b.onclick = () => o.onSpawn(it.id)
@@ -331,6 +353,9 @@ export function createUi(o: UiOptions): RoomUi {
     renderItems()
   }
   renderTabs()
+  itemSearch.oninput = renderItems
+  // typing in a search box must not move the player or switch tools
+  for (const box of [itemSearch]) box.addEventListener('keydown', (e) => e.stopPropagation())
 
   const controls = mk('div', 'tr-row')
   const ctl = (label: string, fn: (b: HTMLButtonElement) => void): HTMLButtonElement => {
@@ -375,8 +400,16 @@ export function createUi(o: UiOptions): RoomUi {
   const runAll = mk('button', 'tr-btn', t('ui.run_all'))
   runAll.type = 'button'
   const summary = mk('div', 'tr-summary')
+  const testSearch = mk('input', 'tr-search')
+  testSearch.type = 'search'
+  testSearch.placeholder = t('ui.search_tests')
+  testSearch.addEventListener('keydown', (e) => e.stopPropagation())
   const list = mk('div', 'list')
-  tests.append(runAll, summary, list)
+  tests.append(runAll, summary, testSearch, list)
+  testSearch.oninput = () => {
+    const term = fold(testSearch.value.trim())
+    for (const b of scBtns.values()) b.style.display = !term || fold(b.textContent ?? '').includes(term) ? '' : 'none'
+  }
   const scBtns = new Map<string, HTMLButtonElement>()
   let busy = false
   const mark = (rep: ScenarioReport | void): void => {
@@ -581,6 +614,11 @@ export function createUi(o: UiOptions): RoomUi {
     refresh() {
       renderTabs()
       renderScenarios()
+    },
+    showGroup(group) {
+      activeGroup = group
+      itemSearch.value = ''
+      renderTabs()
     },
     togglePanels,
     dispose() {
