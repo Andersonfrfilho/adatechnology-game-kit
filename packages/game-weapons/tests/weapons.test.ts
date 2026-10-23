@@ -294,6 +294,13 @@ describe('kick and shove', () => {
   })
 })
 
+describe('default loadout cutting tools', () => {
+  it('has the machete and the utility knife', () => {
+    expect(DEFAULT_LOADOUT).toEqual(expect.arrayContaining(['machete', 'utility_knife']))
+    expect(new Set(DEFAULT_LOADOUT).size).toBe(DEFAULT_LOADOUT.length)
+  })
+})
+
 describe('arsenal', () => {
   it('translates names', () => {
     const pt = createArsenal({ locale: 'pt-BR' })
