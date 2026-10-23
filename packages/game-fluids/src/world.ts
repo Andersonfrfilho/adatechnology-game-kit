@@ -2,7 +2,7 @@ import { LIQUIDS } from './liquids'
 import { GROUND_ID, MAX_FLIGHT, ballistic, trace } from './landing'
 import type { Hit, LandingSurface } from './landing'
 import { describeEvent, resolveStrings } from './locale'
-import { GRAVITY, Rng, add, clamp, copy3, cross, distance, dot, length, normalize, quatConjugate, quatRotate } from './math'
+import { GRAVITY, Rng, add, clamp, copy3, cross, distance, dot, length, normalize, quatConjugate, quatRotate, scale } from './math'
 import { levelFor, lipOf, lipRadius, makeColumns, planeFraction, planeRange, shapeHeight } from './shapes'
 import type { Columns } from './shapes'
 import { addInflow, createStain, makeBasis, meanRadius, nudgeCenter, stepStain } from './stains'
@@ -476,7 +476,7 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
     temperature: c.temperature,
     closed: c.closed,
     surfaceHeight: c.liters > 0 ? c.d : 0,
-    surfacePoint: add(c.position, [0, c.liters > 0 ? c.d : 0, 0]),
+    surfacePoint: add(c.position, scale(c.normal, c.liters > 0 ? c.d : 0)),
     surfaceNormal: copy3(c.normal),
     holes: c.holes.map((h) => ({ point: copy3(h.point), normal: copy3(h.normal), diameter: h.diameter })),
     outflow: c.outflow,
