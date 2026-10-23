@@ -67,10 +67,10 @@ Legenda: ✅ decidido (data e resposta), ⏳ aguardando o dono, 🔁 decidido pe
 
 | # | Decisão | O que as fontes dizem | Recomendação | Situação |
 |---|---|---|---|---|
-| C1 | Versão do PlantasSDK | `game-floorplan` é porte de versão antiga; a do Visor de casas 3D (VC3) é a mais nova encontrada | VC3 | ⏳ |
-| C2 | Pacotes | Casa3DSDK são 3 SDKs (PlantasSDK, Casa3DSDK renderizador, AdaptadorInterativos) | Estender `game-floorplan` + `game-floorplan-structure` + `game-floorplan-rural` + `game-floorplan-three` + `examples/floorplan-test-area` | ⏳ |
-| C3 | Ruas, postes, bairro, relevo | Sem casa no SDK | `game-urban` (+ `-three`) | ⏳ |
-| C4 | Massas da Galeria do Vale (sobrado, laje, colonial…) | Silhuetas sem planta | LOD distante dos modelos reais, não modelo principal | ⏳ |
+| C1 | Versão do PlantasSDK | `game-floorplan` é porte de versão antiga; a do Visor de casas 3D (VC3) é a mais nova encontrada | — | ✅ 2026-10-23: a do Visor de casas 3D (VC3): estrutura, instalações, 5 modelos rurais e regras R01–R72 entram no `game-floorplan`, mantendo o que o SDK faz melhor (6 zonas, visor 2D, idiomas, motor de cargas) |
+| C2 | Pacotes | Casa3DSDK são 3 SDKs (PlantasSDK, Casa3DSDK renderizador, AdaptadorInterativos) | — | ✅ 2026-10-23: estender `game-floorplan` + `game-floorplan-structure` + `game-floorplan-rural` + `game-floorplan-three` (desenho 3D e ponte para móveis) + `examples/floorplan-test-area` |
+| C3 | Ruas, postes, bairro, relevo | Sem casa no SDK | — | ✅ 2026-10-23: no SDK, como `game-urban` (+ `-three`): ruas, calçadas, os 5 postes, padrão de bairro, quarteirão e relevo; o Vale Cinzento em si fica no repositório do jogo |
+| C4 | Massas da Galeria do Vale (sobrado, laje, colonial…) | Silhuetas sem planta | — | ✅ 2026-10-23: cada tipologia vira modelo de planta real no SDK e a silhueta da Galeria é a versão de longe (LOD) |
 | C5 | Interiores (delegacia, escola, igreja, posto, hospital…) | Só como cena na galeria | Viram modelos de planta do SDK | ⏳ |
 | C6 | Andares (AndaresSDK, no modo livre) | Sem casa no SDK | Entra no `game-floorplan-three` | ⏳ |
 
