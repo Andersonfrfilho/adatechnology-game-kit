@@ -107,11 +107,13 @@ export function installParticles(kit: Kit): void {
     mat.userData.dis = dis
     mat.onBeforeCompile = function (sh: any) {
       sh.uniforms.uDis = dis
+      /* the sampled texel is called texelColor up to r152 and sampledDiffuseColor from r153 */
+      const texel = parseInt(THREE.REVISION, 10) >= 153 ? 'sampledDiffuseColor' : 'texelColor'
       sh.fragmentShader =
         'uniform float uDis;\n' +
         sh.fragmentShader.replace(
           '#include <alphatest_fragment>',
-          'diffuseColor.a *= smoothstep(uDis, uDis + 0.2, texelColor.a); if (diffuseColor.a < 0.003) discard;',
+          'diffuseColor.a *= smoothstep(uDis, uDis + 0.2, ' + texel + '.a); if (diffuseColor.a < 0.003) discard;',
         )
     }
     return mat
