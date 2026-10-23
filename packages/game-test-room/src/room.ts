@@ -165,7 +165,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const entries = new Map<string, Entry>()
   const splitOf = new Map<string, Entry>()
   let simTime = 0
-  const log = createLog()
+  const log = createLog({ exportCancelled: () => t('log.export_cancelled') })
   log.setClock(() => simTime)
 
   const renderer = createDestructionRenderer(THREE, {

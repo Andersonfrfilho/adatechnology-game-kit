@@ -100,6 +100,10 @@ One JSON object per line (`log.toNDJSON()`, "Baixar NDJSON"):
 `{ passed, failed, results: [{ id, name, ok, checks: [{ label, ok }] }] }`. 21 ship with the package (bullets vs steel, concrete and glass, hammer, shotgun, kick, screwdriver,
 fire and torch, gas bottle, bottle drop, thrown chair, coffee sips and spills, jerrycan leak, fuel fire, columns and a roof, extinguisher). Open the example with `?scenario=all` to run them.
 
+### Inside a claude.ai Artifact
+
+An Artifact page cannot use `<a download>` or blob links. When `globalThis.claude.use('downloads')` resolves, `log.download(format)` offers the file through that capability (the NDJSON goes out as `test-room-log.ndjson.txt`, since `.ndjson` is not on the allowlist) and a declined save writes an `export_cancelled` line to the log; otherwise it falls back to the blob link. **The artifact page must declare the `downloads` capability.** "Copy JSON" falls back to selecting the text in a textarea when `navigator.clipboard` is missing.
+
 ## Português
 
 Uma sala de testes em primeira pessoa para three.js. Você passa o seu catálogo de objetos, anda, atira, bate, queima, corta, arremessa, bebe café e

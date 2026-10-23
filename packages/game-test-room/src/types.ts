@@ -225,8 +225,12 @@ export interface TestRoomLog {
   toNDJSON(): string
   /** Plain text lines (the on-screen panel). */
   toText(): string
-  /** Download the log as a file in the browser (`.ndjson` by default). */
-  download(format?: 'json' | 'ndjson' | 'txt'): void
+  /**
+   * Download the log as a file (`.ndjson` by default). In a claude.ai Artifact page (a `globalThis.claude.use('downloads')` that resolves) it asks the
+   * viewer through the `downloads` capability (`ndjson` is saved as `.ndjson.txt`, the allowlist has no `.ndjson`); if the viewer declines, an
+   * `export_cancelled` action line is logged. Elsewhere it uses a blob link.
+   */
+  download(format?: 'json' | 'ndjson' | 'txt'): Promise<void>
   /** Counts per event type and per material (quick summary for checks). */
   summary(): { byType: Record<string, number>; byMaterial: Record<string, number>; objects: number; destroyed: number }
   /** Listener for new entries and for in-place updates of coalesced ones (`updated` true, same entry object). */
