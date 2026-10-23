@@ -1,0 +1,98 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ['CI']
+    branches: [main]
+    types: [completed]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      # detached HEAD at the commit CI validated; we push HEAD:main below
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+          fetch-depth: 0
+
+      # the pnpm version comes from "packageManager" in the root package.json
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Version packages
+        run: pnpm changeset version
+
+      - name: Commit version bump
+        id: bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No version changes"
+          else
+            git add -A
+            git commit -m "chore(release): version packages"
+            git push origin HEAD:main
+            echo "released=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # build after the bump so dist carries the new versions
+      - name: Build
+        run: pnpm build
+
+      # changeset publish skips versions already on npm, so reruns are safe
+      - name: Publish
+        run: |
+          [ -n "$NODE_AUTH_TOKEN" ] || { echo "::error::NPM_TOKEN secret is not set"; exit 1; }
+          pnpm exec changeset publish
+          git push origin --tags
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
+
+      - name: Check published packages are public
+        if: steps.bump.outputs.released == 'true'
+        run: |
+          missing="$(mktemp)"
+          check() {
+            local name="$1" version="$2" url
+            url="https://registry.npmjs.org/${name//\//%2f}/${version}"
+            for delay in 0 5 10 20 40 60; do
+              sleep "$delay"
+              if curl -fsS -o /dev/null "$url"; then return 0; fi
+            done
+            echo "${name}@${version}" >> "$missing"
+          }
+          for f in $(git diff --name-only HEAD~1 HEAD | grep -E '^packages/[^/]+/package\.json$' || true); do
+            [ -f "$f" ] || continue
+            [ "$(jq -r '.private // false' "$f")" = "true" ] && continue
+            check "$(jq -r .name "$f")" "$(jq -r .version "$f")" &
+          done
+          wait
+          if [ -s "$missing" ]; then
+            echo "::error::Not public on npm: $(paste -sd ' ' "$missing")"
+            exit 1
+          fi
