@@ -1,4 +1,4 @@
-import type { Condition, GenerateOptions, Lod, MeshData, Placement, PlantSpec, Season } from './types'
+import type { Condition, GenerateOptions, Lod, MeshData, Placement, PlantMesh, PlantSpec, Season } from './types'
 import { generate } from './generate'
 import { MeshBuilder } from './geometry/builder'
 import { hashMix, toSeed } from './rng'
@@ -26,6 +26,18 @@ export interface BuildLotOptions {
   lod?: Lod
   condition?: Condition
   season?: Season
+  /**
+   * LOD used for small plants (grass tufts, small flowers, ferns...) so a yard full of them stays cheap.
+   * Default: 2 in 'game' quality, `lod` (0 unless set) in 'high' quality. Set it equal to the main LOD to disable.
+   */
+  smallPlantsLod?: Lod
+  /** plants not taller than this (meters, after placement scale) count as small (default 0.7) */
+  smallPlantMaxHeight?: number
+  /**
+   * Soft triangle cap for the whole lot. When the plants exceed it, the smallest ones are switched to LOD2 (smallest
+   * first, trees last) until the lot fits. Default: 20000 in 'game' quality, unlimited in 'high' quality.
+   */
+  triangleBudget?: number
 }
 
 /**
@@ -34,12 +46,17 @@ export interface BuildLotOptions {
  */
 export function buildLot(placements: Placement[], resolveSpec: (id: string) => PlantSpec, opts: BuildLotOptions): Lot {
   const lod: Lod = opts.quality === 'game' ? 1 : (opts.lod ?? 0)
+  const smallLod: Lod = opts.smallPlantsLod ?? (opts.quality === 'game' ? 2 : lod)
+  const smallMax = opts.smallPlantMaxHeight ?? 0.8
+  const budget = opts.triangleBudget ?? (opts.quality === 'game' ? 20000 : Infinity)
   const base = toSeed(opts.seed)
   const wood = new MeshBuilder()
   const foliage = new MeshBuilder()
   const flowers = new MeshBuilder()
   const colliders: LotColliderData[] = []
   const cache = new Map<string, PlantSpec>()
+  const entries: { p: Placement; plant: PlantMesh; go: GenerateOptions; spec: PlantSpec }[] = []
+  let total = 0
   for (const p of placements) {
     let spec = cache.get(p.species)
     if (!spec) {
@@ -47,7 +64,28 @@ export function buildLot(placements: Placement[], resolveSpec: (id: string) => P
       cache.set(p.species, spec)
     }
     const go: GenerateOptions = { seed: hashMix(base, p.seed), lod, condition: opts.condition, season: opts.season }
-    const plant = generate(spec, go)
+    let plant: PlantMesh | undefined
+    if (smallLod !== lod) {
+      // small plants (judged by the cheap version) use the cheap LOD
+      const cheap = generate(spec, { ...go, lod: smallLod })
+      if (cheap.bounds.height * p.scale <= smallMax) plant = cheap
+    }
+    plant ??= generate(spec, go)
+    total += plant.triangleCount
+    entries.push({ p, plant, go, spec })
+  }
+  if (total > budget) {
+    // over budget: drop the smallest plants still above LOD2 to LOD2 until the lot fits
+    const order = entries.map((e, i) => i).filter((i) => entries[i].plant.lod < 2).sort((a, b) => entries[a].plant.bounds.height * entries[a].p.scale - entries[b].plant.bounds.height * entries[b].p.scale)
+    for (const i of order) {
+      if (total <= budget) break
+      const e = entries[i]
+      const cheap = generate(e.spec, { ...e.go, lod: 2 })
+      total += cheap.triangleCount - e.plant.triangleCount
+      e.plant = cheap
+    }
+  }
+  for (const { p, plant } of entries) {
     const { parts } = plant
     if (parts.wood) wood.appendMesh(parts.wood, p.x, 0, p.z, p.ry, p.scale)
     if (parts.spines) wood.appendMesh(parts.spines, p.x, 0, p.z, p.ry, p.scale)

@@ -46,7 +46,7 @@ export function generateFlowerPlant(spec: FlowerPlantSpec, ctx: Ctx): ArchResult
   const rng = ctx.rng
   const over = ctx.condition === 'overgrown'
   const height = (spec.height ?? def.height) * (over ? 1.15 : 1)
-  const stemCount = Math.round((spec.stemCount ?? def.stems) * (over ? 1.4 : 1))
+  const stemCount = Math.max(ctx.lod === 2 ? 2 : 1, Math.round((spec.stemCount ?? def.stems) * (over ? 1.4 : 1) * (ctx.lod === 2 ? 0.45 : 1)))
   const colors = (spec.petalColors ?? def.colors).map(rgb)
   const heart = rgb(spec.centerColor ?? def.center)
   const leafBase = tintGreen(rgb(spec.leafColor ?? 0x3f8a3a), ctx.condition)
@@ -78,7 +78,7 @@ export function generateFlowerPlant(spec: FlowerPlantSpec, ctx: Ctx): ArchResult
     if (dead) tip = [tip[0] * 2.2, tip[1] * 0.45, tip[2] * 2.2]
     const mid: Vec3 = spreading ? [lerp(base[0], tip[0], 0.5), h * 1.0, lerp(base[2], tip[2], 0.5)] : [lerp(base[0], tip[0], 0.3), tip[1] * 0.55, lerp(base[2], tip[2], 0.3)]
     const ctrl: Vec3[] = [base, mid, tip]
-    const path = catmull(ctrl, ctx.pick(3, 2, 1))
+    const path = ctx.lod === 2 ? [base, tip] : catmull(ctrl, ctx.pick(3, 2, 1))
     stemsData.push({ base, tip, path, ang })
   }
 

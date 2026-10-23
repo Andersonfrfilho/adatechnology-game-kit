@@ -147,3 +147,35 @@ describe('buildLot', () => {
     }
   })
 })
+
+describe('buildLot budget', () => {
+  const heavy = (n: number): Placement[] => {
+    const ids = ['tree', 'tree', 'palm', 'shrub', 'shrub', 'hedge', 'rose', 'rose', 'daisy', 'daisy', 'daisy', 'tulip', 'tulip', 'grass', 'grass', 'grass', 'grass', 'grass', 'fern', 'fern']
+    const out: Placement[] = []
+    for (let i = 0; i < n; i++) out.push({ species: ids[i % ids.length], x: (i % 12) - 6, z: Math.floor(i / 12) - 8, ry: i * 0.7, scale: 1, seed: i + 1 })
+    return out
+  }
+  it('keeps a 150-plant yard at or under 20k triangles in game quality', () => {
+    const lot = buildLot(heavy(150), resolve, { seed: 5, quality: 'game' })
+    expect(lot.plantCount).toBe(150)
+    expect(lot.triangleCount).toBeLessThanOrEqual(20000)
+  })
+  it('keeps a 20-plant yard at or under 15k triangles', () => {
+    expect(buildLot(heavy(20), resolve, { seed: 5, quality: 'game' }).triangleCount).toBeLessThanOrEqual(15000)
+  })
+  it('renders small plants at LOD2 in game quality unless smallPlantsLod is lowered', () => {
+    const p = heavy(60).filter((x) => x.species === 'grass' || x.species === 'daisy' || x.species === 'fern')
+    const cheap = buildLot(p, resolve, { seed: 5, quality: 'game', triangleBudget: Infinity })
+    const full = buildLot(p, resolve, { seed: 5, quality: 'game', triangleBudget: Infinity, smallPlantsLod: 1 })
+    expect(cheap.triangleCount).toBeLessThan(full.triangleCount * 0.6)
+  })
+  it('degrades the smallest plants first when over budget and leaves high quality alone', () => {
+    const p = heavy(150)
+    const tight = buildLot(p, resolve, { seed: 5, quality: 'game', triangleBudget: 6000 })
+    const loose = buildLot(p, resolve, { seed: 5, quality: 'game', triangleBudget: Infinity })
+    expect(tight.triangleCount).toBeLessThan(loose.triangleCount)
+    const high = buildLot(p.slice(0, 20), resolve, { seed: 5, quality: 'high' })
+    const high2 = buildLot(p.slice(0, 20), resolve, { seed: 5, quality: 'high', smallPlantsLod: 0, triangleBudget: Infinity })
+    expect(high.triangleCount).toBe(high2.triangleCount)
+  })
+})

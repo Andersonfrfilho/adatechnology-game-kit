@@ -5,6 +5,7 @@
 //   node scripts/render-contact-sheet.mjs out.png [--ids a,b,c] [--cols 6] [--lod 0] [--condition healthy]
 //        [--season summer] [--seed 1] [--size 1800x1100] [--zoom 1] [--specs file.json] [--filter tag]
 //        [--cell 3] [--yaw 0] [--pitch 50] [--fit]
+//        [--lot placements.json [--lot-quality game|high]]   (renders buildLot of a placements file instead of a sheet)
 //        [--group trees|palms|shrubs|flowers|cacti|succulents|vines|potted]
 //
 // Plants are rendered at TRUE relative scale (one shared scale, a 1.8 m reference pole in each cell) unless --fit is
@@ -49,6 +50,8 @@ const cfg = {
   fit: flag('fit'),
   fov: Number(opt('fov', 13)),
   specs: opt('specs', ''),
+  lot: opt('lot', ''),
+  lotQuality: opt('lot-quality', 'game'),
 }
 const [W, H] = opt('size', '1800x1100').split('x').map(Number)
 
@@ -67,6 +70,40 @@ const extraSpecs = cfg.specs
     ? (await import(path.resolve(cfg.specs))).default
     : JSON.parse(fs.readFileSync(cfg.specs, 'utf8'))
   : null
+
+const lotPlacements = cfg.lot ? JSON.parse(fs.readFileSync(cfg.lot, 'utf8')) : null
+const lotHtml = `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;height:100%;overflow:hidden;background:linear-gradient(#7fb4e6,#dfeadf)}canvas{display:block}</style></head><body><script src="/engine.js"></script><script src="/species.js"></script>
+<script type="module">
+import * as THREE from '/three.js'
+const W = ${W}, H = ${H}
+const V = window.GameVegetation, S = window.GameVegetationSpecies
+const pl = ${JSON.stringify(lotPlacements)}
+const lot = V.buildLot(pl, (id) => S.toSpec(id), { seed: 3, quality: ${JSON.stringify(cfg.lotQuality)} })
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true })
+renderer.setSize(W, H); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputColorSpace = THREE.SRGBColorSpace
+document.body.appendChild(renderer.domElement)
+const scene = new THREE.Scene()
+scene.background = new THREE.Color(0xa9cbe8)
+scene.add(new THREE.HemisphereLight(0xcfe6ff, 0x6b7a4a, 0.95))
+const sun = new THREE.DirectionalLight(0xfff1d6, 2.4)
+sun.position.set(-10, 25, 12); sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096)
+Object.assign(sun.shadow.camera, { left: -18, right: 18, top: 18, bottom: -18, near: 1, far: 80 })
+sun.shadow.bias = -0.0012; sun.shadow.normalBias = 0.08
+scene.add(sun)
+const g = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: 0x7a9a5c, roughness: 1 }))
+g.rotation.x = -Math.PI / 2; g.receiveShadow = true; scene.add(g)
+const mats = V.createVegetationMaterials(THREE)
+const obj = V.createLotObject(THREE, lot, mats)
+obj.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true } })
+scene.add(obj)
+const cam = new THREE.PerspectiveCamera(35, W / H, 0.1, 300)
+cam.position.set(${cfg.yaw ? 'Math.sin(' + cfg.yaw + ') * 24' : '0'}, 17, 24); cam.lookAt(0, 1.5, 0)
+mats.setWind && mats.setWind({ direction: [1, 0], strength: 0, gust: 0 }); mats.update && mats.update(0)
+renderer.render(scene, cam)
+console.log('lot tris', lot.triangleCount, 'plants', lot.plantCount)
+window.__done = true
+</script></body></html>`
 
 const html = `<!doctype html><html><head><meta charset="utf-8"><style>
 html,body{margin:0;height:100%;overflow:hidden;background:#9fc7e8}
@@ -235,7 +272,7 @@ const server = http.createServer((req, res) => {
   }
   if (u === '/') {
     res.writeHead(200, { 'content-type': 'text/html' })
-    res.end(html)
+    res.end(lotPlacements ? lotHtml : html)
   } else if (u === '/engine.js') send(engineDist, 'text/javascript')
   else if (u === '/species.js') send(speciesDist, 'text/javascript')
   else if (u === '/three.js') send(threeFile, 'text/javascript')

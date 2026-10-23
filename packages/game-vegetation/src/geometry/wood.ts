@@ -22,7 +22,7 @@ export function barkColor(base: Vec3, level: number, seed = 0): (t: number, a: n
 export function drawBranch(b: MeshBuilder, br: Branch, bark: Vec3, lod: Lod, seed = 0): void {
   const maxLevel = lod === 0 ? 99 : lod === 1 ? 2 : 1
   if (br.level > maxLevel) return
-  const stride = lod === 0 ? (br.level >= 1 ? 2 : 1) : lod === 1 ? 2 : br.level === 0 ? 4 : 3
+  const stride = lod === 0 ? (br.level >= 1 ? 2 : 1) : lod === 1 ? (br.level >= 1 ? 3 : 2) : br.level === 0 ? 4 : 3
   const pts: Vec3[] = []
   const radii: number[] = []
   for (let i = 0; i < br.pts.length; i += stride) {
@@ -34,7 +34,7 @@ export function drawBranch(b: MeshBuilder, br: Branch, bark: Vec3, lod: Lod, see
     radii.push(br.radii[br.radii.length - 1])
   }
   if (pts.length < 2) return
-  const sides = br.level === 0 ? (lod === 0 ? 8 : lod === 1 ? 6 : 4) : br.level === 1 ? (lod === 0 ? 5 : lod === 1 ? 4 : 3) : lod === 0 ? 4 : 3
+  const sides = br.level === 0 ? (lod === 0 ? 8 : lod === 1 ? 6 : 4) : br.level === 1 ? (lod === 0 ? 5 : 3) : lod === 0 ? 4 : 3
   const lv = br.level
   tube(b, pts, {
     sides,

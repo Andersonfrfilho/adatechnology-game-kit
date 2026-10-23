@@ -39,7 +39,7 @@ scene.add(createLotObject(THREE, lot, mats))
 
 - `generate(spec, { seed, lod?, condition?, season?, scale?, species? }): PlantMesh` (parts wood, foliage, flowers, fruit, spines; bounds; collider; triangleCount)
 - `archetypes(): string[]`, `validateSpec(spec): string[]`
-- `buildLot(placements, resolveSpec, { seed, quality: 'high' | 'game', lod?, condition?, season? })`: merges a lot into wood, foliage and flowers meshes plus trunk colliders (cacti carry `damage: 'thorns'`)
+- `buildLot(placements, resolveSpec, { seed, quality: 'high' | 'game', lod?, condition?, season?, smallPlantsLod?, smallPlantMaxHeight?, triangleBudget? })`: merges a lot into wood, foliage and flowers meshes plus trunk colliders (cacti carry `damage: 'thorns'`). In `game` quality small plants use LOD2 and the lot is capped at `triangleBudget` (default 20000) by dropping the smallest plants to LOD2 first.
 - `scatter(area, rules, { seed, exclude? })`: dart-throwing placement inside a polygon or rect, with `prefer` edge, center or any
 - `createRng`, `hashString`, `pointInPolygon`, `polygonArea`
 - three adapter: `createVegetationMaterials`, `createPlantObject`, `createLotObject`, `createInstancedPlants`, `lodObject`, `toBufferGeometry`. Wind and actor bend (up to 4 actors) run in the vertex shader; every mesh has `userData.damageable = { material: 'wood' | 'foliage' | 'cactus' }`.

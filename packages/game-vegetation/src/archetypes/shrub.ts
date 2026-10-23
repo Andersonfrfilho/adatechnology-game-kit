@@ -78,9 +78,9 @@ export function generateShrub(spec: ShrubSpec, ctx: Ctx): ArchResult {
         },
         sway: (hh) => 0.3 * hh,
       })
-      if (ctx.lod < 2) {
+      {
         // leafy lumps breaking the clipped surface (small low-poly clumps instead of a plain box)
-        const nb = ctx.pick(9, 7, 0)
+        const nb = ctx.pick(9, 4, 3)
         const br = width * 0.2
         for (let k = 0; k < nb; k++) {
           const onTop = k % 5 < 2

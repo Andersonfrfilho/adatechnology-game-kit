@@ -187,7 +187,7 @@ export function generateBroadleafTree(spec: BroadleafTreeSpec, ctx: Ctx): ArchRe
   // fruit
   if (spec.fruit && ctx.condition !== 'dry') {
     const f = spec.fruit
-    const count = Math.round(f.count * ctx.pick(1, 0.5, 0))
+    const count = Math.round(f.count * ctx.pick(1, 0.3, 0))
     const r2 = new Rng(Math.floor(height * 733) + 5)
     const fr = f.radius ?? 0.07
     if (f.onTrunk) {

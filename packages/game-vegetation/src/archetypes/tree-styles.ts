@@ -266,11 +266,11 @@ export function styledCrown(style: CrownStyle, env: StyleEnv): StyleGroup[] {
     if (ctx.lod === 1 && !bigSphere && style !== 'willow') {
       // mid LOD: several small low-subdivision lumps per clump instead of one big faceted icosahedron
       const sr = new Rng(a.tip.seed ^ 0x2545f491)
-      const subs = 3
+      const subs = 2
       for (let k = 0; k < subs; k++) {
         const ang = (k / subs) * TAU + sr.range(0, 1)
-        const off = r * 0.5
-        const sub = { ...o, radius: r * 0.64, seed: a.tip.seed + k * 977, center: [a.p[0] + Math.cos(ang) * off, a.p[1] + r * a.sq * sr.range(0, 0.35), a.p[2] + Math.sin(ang) * off] as Vec3 }
+        const off = r * 0.42
+        const sub = { ...o, radius: r * 0.74, seed: a.tip.seed + k * 977, center: [a.p[0] + Math.cos(ang) * off, a.p[1] + r * a.sq * sr.range(0, 0.35), a.p[2] + Math.sin(ang) * off] as Vec3 }
         clump(ctx.foliage, sub)
       }
     } else {
