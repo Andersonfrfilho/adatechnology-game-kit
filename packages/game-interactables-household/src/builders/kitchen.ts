@@ -165,6 +165,13 @@ export function gasBottle(c: Ctx): void {
   )
   c.add('fuels', { id: 'gas', kind: 'gas', capacity: g.capacityKg, level: g.capacityKg, valve: 'valve' })
   c.add('damage', { target: 'gas', kind: 'gas', hp: 40 })
+  // Steel cylinder of liquefied gas: ~0.54 kg per litre of liquid. It ruptures in a fire (BLEVE) and leaks gas through punctures.
+  c.spec.destruction = {
+    material: 'steel',
+    joint: 'weld',
+    explodes: { energy: Math.round(g.capacityKg * 46000), radius: 8, atC: 250 },
+    contains: { fluid: 'gas', liters: Math.round(g.capacityKg / 0.54), pressurized: true },
+  }
   c.interact('use_gas', [0, H, 0], { do: 'toggle_fuel', fuel: 'gas' }, 'prompt.gas_valve', 1.0, c.M.requires)
   c.spec.colliders = []
   c.collider('body', -R, 0, -R, R, H, R)

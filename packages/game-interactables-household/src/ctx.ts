@@ -9,6 +9,7 @@ import type {
   Vec3,
 } from '@adatechnology/game-interactables'
 import type { CylinderShape, Material, Primitive } from '@adatechnology/game-props3d'
+import { DESTRUCTION, partDestruction } from './destruction'
 import type { HouseholdApi, HouseholdItem, HouseholdTypeDef, Region } from './types'
 import { cornersOf, hex, rng, round3, seedOf, sweepOf } from './util'
 
@@ -165,6 +166,8 @@ export class Ctx {
     if (o.requires) spec.requires = o.requires
     if (o.group) spec.group = o.group
     if (o.label) spec.label = o.label
+    const dest = partDestruction(this.type, id)
+    if (dest) spec.destruction = dest
     if (!o.noSweep && pts.length) spec.sweep = sweepOf(pts, pivot, motion)
     if (!o.noSweep && pts.length && motion.kind !== 'scale') {
       const lo = [0, 1, 2].map((i) => round3(Math.min(...pts.map((q) => q[i]))))
@@ -253,6 +256,8 @@ export class Ctx {
     if (this.def.solid && s.colliders === undefined) {
       this.collider('body', -this.hw, this.y0, -this.hd, this.hw, this.y0 + this.h, this.hd)
     }
+    const body = DESTRUCTION[this.type]?.body
+    if (body && !this.spec.destruction) this.spec.destruction = { ...body }
     for (const k of Object.keys(s)) if (Array.isArray(s[k]) && (s[k] as unknown[]).length === 0) delete s[k]
     return this.spec
   }
