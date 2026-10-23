@@ -343,3 +343,26 @@ describe('pause and walk', () => {
     expect(room.camera.position.x).toBeCloseTo(2, 1)
   })
 })
+
+describe('grenade blast', () => {
+  it('draws fire, flash and smoke: live additive and normal particles with alpha above zero are in the scene', () => {
+    const room = makeRoom()
+    room.setTool('frag_grenade')
+    room.look([0, 1.7, 5], [0, 0.6, -3])
+    room.use()
+    for (let i = 0; i < 600 && room.log.entries({ type: 'explode' }).length === 0; i++) room.update(1 / 60)
+    expect(room.log.entries({ type: 'explode' })).toHaveLength(1)
+    room.update(1 / 60)
+    const liveCount = (name: string): number => {
+      const points = room.scene.getObjectByName(name) as THREE.Points
+      expect(points).toBeDefined()
+      const alpha = points.geometry.getAttribute('alpha').array as Float32Array
+      let live = 0
+      for (let i = 0; i < points.geometry.drawRange.count; i++) if (alpha[i] > 0) live++
+      return live
+    }
+    expect(liveCount('destruction-particles-additive')).toBeGreaterThan(30)
+    expect(liveCount('destruction-particles')).toBeGreaterThan(30)
+    expect(room.scene.children.some((c) => c instanceof THREE.PointLight && c.name === 'destruction-explosion-light')).toBe(true)
+  })
+})

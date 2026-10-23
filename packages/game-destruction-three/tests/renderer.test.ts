@@ -442,6 +442,21 @@ describe('particles and explosions', () => {
   })
 })
 
+describe('explode without an exploding part', () => {
+  it('draws flash, fire, smoke, light and sound, and shoves pieces, like an `explode` event', () => {
+    const { scene, renderer, sounds } = setup()
+    renderer.explode([0, 0.3, 0], 200000, 4)
+    renderer.update(1 / 60)
+    expect(sounds).toContain('explode')
+    expect(scene.children.some((c) => c instanceof THREE.PointLight)).toBe(true)
+    const additive = scene.getObjectByName('destruction-particles-additive') as THREE.Points
+    const normal = scene.getObjectByName('destruction-particles') as THREE.Points
+    const alphaOf = (points: THREE.Points): Float32Array => points.geometry.getAttribute('alpha').array as Float32Array
+    expect(alphaOf(additive).some((a) => a > 0.5)).toBe(true)
+    expect(alphaOf(normal).some((a) => a > 0)).toBe(true)
+  })
+})
+
 describe('clear and dispose', () => {
   it('leaves the scene with only what the host added', () => {
     const { scene, world, renderer, hostMesh } = setup()
