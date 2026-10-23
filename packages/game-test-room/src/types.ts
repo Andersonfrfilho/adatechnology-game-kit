@@ -9,15 +9,7 @@
  * from buttons (or headless in tests) and write pass/fail checks to the same log, so people and agents can verify the behaviour.
  */
 import type * as THREE_NS from 'three'
-import type {
-  DamageType,
-  DestructibleSpec,
-  DestructionEvent,
-  DestructionOptions,
-  DestructionWorld,
-  
-  Vec3,
-} from '@adatechnology/game-destruction'
+import type { DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
