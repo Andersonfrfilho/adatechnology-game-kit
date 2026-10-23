@@ -1,0 +1,786 @@
+[
+ {
+  "id": "steel",
+  "density": 7850,
+  "hpPerKg": 400,
+  "penetration": 110,
+  "ductility": 0.9,
+  "fracture": "none",
+  "damageScale": {
+   "slash": 0.1,
+   "blunt": 0.8
+  },
+  "hitDebris": "sparks",
+  "breakDebris": "sparks",
+  "ricochetDeg": 20,
+  "thermal": {
+   "meltC": 1450,
+   "meltRate": 0.05,
+   "conductivity": 0.5,
+   "heatCapacity": 3
+  },
+  "visual": {
+   "glows": true
+  },
+  "tags": [
+   "metal",
+   "conductive"
+  ]
+ },
+ {
+  "id": "cast_iron",
+  "density": 7200,
+  "hpPerKg": 150,
+  "penetration": 160,
+  "ductility": 0.2,
+  "fracture": "snap",
+  "fragmentSize": [
+   0.08,
+   0.3
+  ],
+  "damageScale": {
+   "slash": 0.1,
+   "blunt": 1.2
+  },
+  "hitDebris": "sparks",
+  "breakDebris": "chips",
+  "ricochetDeg": 15,
+  "thermal": {
+   "meltC": 1200,
+   "meltRate": 0.05,
+   "conductivity": 0.45,
+   "heatCapacity": 3
+  },
+  "visual": {
+   "glows": true
+  },
+  "tags": [
+   "metal",
+   "conductive"
+  ]
+ },
+ {
+  "id": "aluminium",
+  "density": 2700,
+  "hpPerKg": 250,
+  "penetration": 60,
+  "ductility": 0.85,
+  "fracture": "none",
+  "damageScale": {
+   "slash": 0.2
+  },
+  "hitDebris": "sparks",
+  "breakDebris": "sparks",
+  "ricochetDeg": 15,
+  "thermal": {
+   "meltC": 660,
+   "meltRate": 0.06,
+   "conductivity": 0.8,
+   "heatCapacity": 1.5
+  },
+  "visual": {
+   "glows": true
+  },
+  "tags": [
+   "metal",
+   "conductive"
+  ]
+ },
+ {
+  "id": "copper",
+  "density": 8960,
+  "hpPerKg": 300,
+  "penetration": 70,
+  "ductility": 0.95,
+  "fracture": "none",
+  "damageScale": {
+   "slash": 0.2
+  },
+  "hitDebris": "sparks",
+  "breakDebris": "sparks",
+  "ricochetDeg": 15,
+  "thermal": {
+   "meltC": 1085,
+   "meltRate": 0.05,
+   "conductivity": 1,
+   "heatCapacity": 2.5
+  },
+  "visual": {
+   "glows": true
+  },
+  "tags": [
+   "metal",
+   "conductive"
+  ]
+ },
+ {
+  "id": "wood_soft",
+  "density": 500,
+  "hpPerKg": 90,
+  "penetration": 9,
+  "ductility": 0.35,
+  "fracture": "splinter",
+  "fragmentSize": [
+   0.03,
+   0.15
+  ],
+  "damageScale": {
+   "blunt": 1.2,
+   "slash": 1.5
+  },
+  "hitDebris": "splinters",
+  "breakDebris": "splinters",
+  "thermal": {
+   "ignitionC": 300,
+   "flameC": 800,
+   "fuelFraction": 0.9,
+   "burnRate": 0.012,
+   "conductivity": 0.05,
+   "heatCapacity": 1.2,
+   "smoke": "grey"
+  },
+  "visual": {
+   "charColor": 1709072
+  },
+  "tags": [
+   "wood",
+   "organic",
+   "flammable"
+  ]
+ },
+ {
+  "id": "wood_hard",
+  "density": 750,
+  "hpPerKg": 140,
+  "penetration": 14,
+  "ductility": 0.3,
+  "fracture": "splinter",
+  "fragmentSize": [
+   0.03,
+   0.2
+  ],
+  "damageScale": {
+   "slash": 1.2
+  },
+  "hitDebris": "splinters",
+  "breakDebris": "splinters",
+  "thermal": {
+   "ignitionC": 330,
+   "flameC": 800,
+   "fuelFraction": 0.9,
+   "burnRate": 0.01,
+   "conductivity": 0.06,
+   "heatCapacity": 1.4,
+   "smoke": "grey"
+  },
+  "visual": {
+   "charColor": 1709072
+  },
+  "tags": [
+   "wood",
+   "organic",
+   "flammable"
+  ]
+ },
+ {
+  "id": "plywood",
+  "density": 600,
+  "hpPerKg": 70,
+  "penetration": 7,
+  "ductility": 0.3,
+  "fracture": "snap",
+  "fragmentSize": [
+   0.1,
+   0.4
+  ],
+  "damageScale": {
+   "slash": 1.3
+  },
+  "hitDebris": "splinters",
+  "breakDebris": "splinters",
+  "thermal": {
+   "ignitionC": 300,
+   "flameC": 800,
+   "fuelFraction": 0.85,
+   "burnRate": 0.013,
+   "conductivity": 0.05,
+   "heatCapacity": 1.2,
+   "smoke": "grey"
+  },
+  "visual": {
+   "charColor": 1709072
+  },
+  "tags": [
+   "wood",
+   "organic",
+   "flammable"
+  ]
+ },
+ {
+  "id": "mdf",
+  "density": 750,
+  "hpPerKg": 45,
+  "penetration": 6,
+  "ductility": 0.15,
+  "fracture": "snap",
+  "fragmentSize": [
+   0.08,
+   0.35
+  ],
+  "hitDebris": "chips",
+  "breakDebris": "dust",
+  "thermal": {
+   "ignitionC": 290,
+   "flameC": 750,
+   "fuelFraction": 0.85,
+   "burnRate": 0.014,
+   "conductivity": 0.05,
+   "heatCapacity": 1.2,
+   "smoke": "grey"
+  },
+  "visual": {
+   "charColor": 1709072
+  },
+  "tags": [
+   "wood",
+   "organic",
+   "flammable"
+  ]
+ },
+ {
+  "id": "glass",
+  "density": 2500,
+  "hpPerKg": 12,
+  "penetration": 6,
+  "ductility": 0.02,
+  "fracture": "shatter",
+  "fragmentSize": [
+   0.05,
+   0.25
+  ],
+  "damageScale": {
+   "blunt": 1.5
+  },
+  "hitDebris": "shards",
+  "breakDebris": "shards",
+  "ricochetDeg": 8,
+  "thermal": {
+   "meltC": 1400,
+   "meltRate": 0.03,
+   "conductivity": 0.1,
+   "heatCapacity": 1.5,
+   "thermalShockC": 150
+  },
+  "visual": {
+   "glows": true,
+   "transparent": true
+  },
+  "tags": [
+   "glass",
+   "brittle"
+  ]
+ },
+ {
+  "id": "tempered_glass",
+  "density": 2500,
+  "hpPerKg": 30,
+  "penetration": 9,
+  "ductility": 0.02,
+  "fracture": "crumble",
+  "fragmentSize": [
+   0.006,
+   0.02
+  ],
+  "hitDebris": "shards",
+  "breakDebris": "shards",
+  "ricochetDeg": 8,
+  "thermal": {
+   "meltC": 1400,
+   "meltRate": 0.03,
+   "conductivity": 0.1,
+   "heatCapacity": 1.5,
+   "thermalShockC": 250
+  },
+  "visual": {
+   "glows": true,
+   "transparent": true
+  },
+  "tags": [
+   "glass",
+   "brittle"
+  ]
+ },
+ {
+  "id": "ceramic",
+  "density": 2400,
+  "hpPerKg": 25,
+  "penetration": 12,
+  "ductility": 0.02,
+  "fracture": "shatter",
+  "fragmentSize": [
+   0.03,
+   0.12
+  ],
+  "damageScale": {
+   "blunt": 1.3
+  },
+  "hitDebris": "chips",
+  "breakDebris": "shards",
+  "thermal": {
+   "conductivity": 0.1,
+   "heatCapacity": 1.5,
+   "thermalShockC": 200
+  },
+  "tags": [
+   "ceramic",
+   "brittle"
+  ]
+ },
+ {
+  "id": "concrete",
+  "density": 2300,
+  "hpPerKg": 14,
+  "penetration": 18,
+  "ductility": 0.03,
+  "fracture": "crumble",
+  "fragmentSize": [
+   0.05,
+   0.25
+  ],
+  "damageScale": {
+   "explosive": 1.2
+  },
+  "hitDebris": "chips",
+  "breakDebris": "dust",
+  "thermal": {
+   "conductivity": 0.15,
+   "heatCapacity": 2.5
+  },
+  "tags": [
+   "masonry",
+   "brittle"
+  ]
+ },
+ {
+  "id": "brick",
+  "density": 1900,
+  "hpPerKg": 12,
+  "penetration": 14,
+  "ductility": 0.05,
+  "fracture": "crumble",
+  "fragmentSize": [
+   0.04,
+   0.12
+  ],
+  "hitDebris": "chips",
+  "breakDebris": "dust",
+  "thermal": {
+   "conductivity": 0.15,
+   "heatCapacity": 2.5
+  },
+  "tags": [
+   "masonry",
+   "brittle"
+  ]
+ },
+ {
+  "id": "plaster",
+  "density": 850,
+  "hpPerKg": 18,
+  "penetration": 3,
+  "ductility": 0.05,
+  "fracture": "crumble",
+  "fragmentSize": [
+   0.05,
+   0.3
+  ],
+  "hitDebris": "dust",
+  "breakDebris": "dust",
+  "thermal": {
+   "conductivity": 0.1,
+   "heatCapacity": 1.5
+  },
+  "tags": [
+   "masonry",
+   "brittle"
+  ]
+ },
+ {
+  "id": "stone",
+  "density": 2700,
+  "hpPerKg": 25,
+  "penetration": 25,
+  "ductility": 0.03,
+  "fracture": "crumble",
+  "fragmentSize": [
+   0.06,
+   0.3
+  ],
+  "hitDebris": "chips",
+  "breakDebris": "dust",
+  "thermal": {
+   "conductivity": 0.2,
+   "heatCapacity": 2.5
+  },
+  "tags": [
+   "masonry",
+   "brittle"
+  ]
+ },
+ {
+  "id": "plastic",
+  "density": 1100,
+  "hpPerKg": 60,
+  "penetration": 8,
+  "ductility": 0.5,
+  "fracture": "snap",
+  "fragmentSize": [
+   0.05,
+   0.3
+  ],
+  "hitDebris": "chips",
+  "breakDebris": "chips",
+  "thermal": {
+   "ignitionC": 400,
+   "flameC": 700,
+   "fuelFraction": 0.8,
+   "burnRate": 0.02,
+   "meltC": 200,
+   "meltRate": 0.06,
+   "conductivity": 0.05,
+   "heatCapacity": 1,
+   "smoke": "black"
+  },
+  "visual": {
+   "charColor": 855309
+  },
+  "tags": [
+   "plastic",
+   "flammable"
+  ]
+ },
+ {
+  "id": "rubber",
+  "density": 1100,
+  "hpPerKg": 80,
+  "penetration": 12,
+  "ductility": 0.9,
+  "fracture": "tear",
+  "fragmentSize": [
+   0.05,
+   0.2
+  ],
+  "hitDebris": "chips",
+  "breakDebris": "fibers",
+  "thermal": {
+   "ignitionC": 350,
+   "flameC": 750,
+   "fuelFraction": 0.6,
+   "burnRate": 0.015,
+   "conductivity": 0.05,
+   "heatCapacity": 1.2,
+   "smoke": "black"
+  },
+  "visual": {
+   "charColor": 855309
+  },
+  "tags": [
+   "rubber",
+   "flammable"
+  ]
+ },
+ {
+  "id": "fabric",
+  "density": 400,
+  "hpPerKg": 20,
+  "penetration": 0.8,
+  "ductility": 0.8,
+  "fracture": "tear",
+  "fragmentSize": [
+   0.05,
+   0.25
+  ],
+  "damageScale": {
+   "slash": 4,
+   "ballistic": 0.5
+  },
+  "hitDebris": "fibers",
+  "breakDebris": "fibers",
+  "thermal": {
+   "ignitionC": 230,
+   "flameC": 600,
+   "fuelFraction": 1,
+   "burnRate": 0.05,
+   "conductivity": 0.03,
+   "heatCapacity": 0.6,
+   "smoke": "grey"
+  },
+  "visual": {
+   "charColor": 1709072
+  },
+  "tags": [
+   "fabric",
+   "organic",
+   "flammable"
+  ]
+ },
+ {
+  "id": "foam",
+  "density": 30,
+  "hpPerKg": 15,
+  "penetration": 0.5,
+  "ductility": 0.7,
+  "fracture": "tear",
+  "fragmentSize": [
+   0.03,
+   0.15
+  ],
+  "damageScale": {
+   "slash": 2,
+   "ballistic": 0.4
+  },
+  "hitDebris": "fibers",
+  "breakDebris": "fibers",
+  "thermal": {
+   "ignitionC": 250,
+   "flameC": 900,
+   "fuelFraction": 0.95,
+   "burnRate": 0.09,
+   "conductivity": 0.02,
+   "heatCapacity": 0.5,
+   "smoke": "black"
+  },
+  "visual": {
+   "charColor": 855309
+  },
+  "tags": [
+   "fabric",
+   "flammable"
+  ]
+ },
+ {
+  "id": "leather",
+  "density": 900,
+  "hpPerKg": 50,
+  "penetration": 4,
+  "ductility": 0.8,
+  "fracture": "tear",
+  "fragmentSize": [
+   0.05,
+   0.25
+  ],
+  "damageScale": {
+   "slash": 2
+  },
+  "hitDebris": "fibers",
+  "breakDebris": "fibers",
+  "thermal": {
+   "ignitionC": 320,
+   "flameC": 650,
+   "fuelFraction": 0.7,
+   "burnRate": 0.01,
+   "conductivity": 0.05,
+   "heatCapacity": 1,
+   "smoke": "grey"
+  },
+  "visual": {
+   "charColor": 1709072
+  },
+  "tags": [
+   "fabric",
+   "organic",
+   "flammable"
+  ]
+ },
+ {
+  "id": "paper",
+  "density": 700,
+  "hpPerKg": 8,
+  "penetration": 0.3,
+  "ductility": 0.5,
+  "fracture": "tear",
+  "fragmentSize": [
+   0.03,
+   0.15
+  ],
+  "damageScale": {
+   "slash": 3
+  },
+  "hitDebris": "fibers",
+  "breakDebris": "fibers",
+  "thermal": {
+   "ignitionC": 230,
+   "flameC": 600,
+   "fuelFraction": 1,
+   "burnRate": 0.06,
+   "conductivity": 0.03,
+   "heatCapacity": 0.5,
+   "smoke": "grey"
+  },
+  "visual": {
+   "charColor": 1709072
+  },
+  "tags": [
+   "fabric",
+   "organic",
+   "flammable"
+  ]
+ },
+ {
+  "id": "foliage",
+  "density": 150,
+  "hpPerKg": 20,
+  "penetration": 0.5,
+  "ductility": 0.6,
+  "fracture": "tear",
+  "fragmentSize": [
+   0.03,
+   0.1
+  ],
+  "damageScale": {
+   "slash": 4
+  },
+  "hitDebris": "leaves",
+  "breakDebris": "leaves",
+  "thermal": {
+   "ignitionC": 300,
+   "flameC": 700,
+   "fuelFraction": 0.8,
+   "burnRate": 0.08,
+   "conductivity": 0.03,
+   "heatCapacity": 0.8,
+   "smoke": "white"
+  },
+  "visual": {
+   "charColor": 1709072
+  },
+  "tags": [
+   "plant",
+   "organic",
+   "flammable"
+  ]
+ },
+ {
+  "id": "green_wood",
+  "density": 650,
+  "hpPerKg": 120,
+  "penetration": 10,
+  "ductility": 0.5,
+  "fracture": "splinter",
+  "fragmentSize": [
+   0.03,
+   0.2
+  ],
+  "damageScale": {
+   "slash": 1.3
+  },
+  "hitDebris": "splinters",
+  "breakDebris": "leaves",
+  "thermal": {
+   "ignitionC": 400,
+   "flameC": 700,
+   "fuelFraction": 0.8,
+   "burnRate": 0.006,
+   "conductivity": 0.06,
+   "heatCapacity": 2,
+   "smoke": "white"
+  },
+  "visual": {
+   "charColor": 1709072
+  },
+  "tags": [
+   "plant",
+   "wood",
+   "organic",
+   "flammable"
+  ]
+ },
+ {
+  "id": "cactus",
+  "density": 900,
+  "hpPerKg": 30,
+  "penetration": 2,
+  "ductility": 0.6,
+  "fracture": "tear",
+  "fragmentSize": [
+   0.04,
+   0.15
+  ],
+  "damageScale": {
+   "slash": 3
+  },
+  "hitDebris": "fibers",
+  "breakDebris": "fibers",
+  "thermal": {
+   "ignitionC": 450,
+   "flameC": 650,
+   "fuelFraction": 0.3,
+   "burnRate": 0.01,
+   "conductivity": 0.05,
+   "heatCapacity": 3,
+   "smoke": "white"
+  },
+  "visual": {
+   "charColor": 1709072
+  },
+  "tags": [
+   "plant",
+   "organic",
+   "flammable"
+  ]
+ },
+ {
+  "id": "flesh_fruit",
+  "density": 950,
+  "hpPerKg": 15,
+  "penetration": 1.5,
+  "ductility": 0.7,
+  "fracture": "tear",
+  "fragmentSize": [
+   0.02,
+   0.08
+  ],
+  "damageScale": {
+   "slash": 2
+  },
+  "hitDebris": "drips",
+  "breakDebris": "drips",
+  "thermal": {
+   "conductivity": 0.05,
+   "heatCapacity": 3
+  },
+  "tags": [
+   "plant",
+   "organic"
+  ]
+ },
+ {
+  "id": "wax",
+  "density": 900,
+  "hpPerKg": 30,
+  "penetration": 3,
+  "ductility": 0.5,
+  "fracture": "snap",
+  "fragmentSize": [
+   0.05,
+   0.2
+  ],
+  "hitDebris": "chips",
+  "breakDebris": "chips",
+  "thermal": {
+   "ignitionC": 230,
+   "flameC": 700,
+   "fuelFraction": 0.9,
+   "burnRate": 0.02,
+   "meltC": 60,
+   "meltRate": 0.2,
+   "conductivity": 0.05,
+   "heatCapacity": 0.8,
+   "smoke": "grey"
+  },
+  "tags": [
+   "wax",
+   "flammable"
+  ]
+ }
+]
