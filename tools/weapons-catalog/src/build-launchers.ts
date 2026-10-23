@@ -45,6 +45,7 @@ export const buildRocketLauncher = (row: GalleryWeaponRow, context: WeaponContex
     },
     mass: row[6],
     dimensions: dimensionsOf(row),
+    archetype: recoilBase,
     sources: ['gallery', ...(decision.reloadSource === 'arsenal' ? ['arsenal'] : []), 'reference', 'derived'],
   }
 }
@@ -99,6 +100,7 @@ export const buildGrenadeLauncher = (context: WeaponContext): WeaponRecord => {
     },
     mass: decision.mass,
     dimensions: { length: decision.length, barrel: decision.barrel, emptyMass: decision.emptyMass },
+    archetype: decision.recoilBase,
     sources: ['gallery', 'arsenal', 'reference', 'derived'],
   }
 }

@@ -12,6 +12,10 @@
 
 import type { Shot, Use, Vec3 } from '@adatechnology/game-contracts'
 
+import type { ExplosiveDef, ExplosiveId } from './explosive-types'
+import type { WeaponsStrings } from './locale'
+import type { WeaponRules } from './rule-types'
+
 // `Shot` and `Use` are contracts: they live in @adatechnology/game-contracts and are re-exported here so that no import breaks.
 export type { Shot, Use, Vec3 }
 
@@ -186,7 +190,7 @@ export type WeaponAction =
       noise?: number
     }
   | { kind: 'melee'; damage: 'blunt' | 'slash'; energy: number; radius: number; reach: number; rpm: number; noise: number; stamina?: number }
-  | { kind: 'flame'; temperature: number; radius: number; range: number; fuelPerSecond: number; fuel: number; cone?: boolean; noise: number }
+  | { kind: 'flame'; temperature: number; radius: number; range: number; fuelPerSecond: number; fuel: number; cone?: boolean; noise: number; family?: ReloadFamily; timings?: WeaponTimings }
   | { kind: 'heat'; temperature: number; radius: number; range: number; fuelPerSecond: number; fuel: number; noise: number }
   | { kind: 'throwable'; /** Throwables carried (default 3). */ count?: number; /** The explosive this throwable uses; `energy`, `radius` and `noise` come from it. */ explosive?: ExplosiveId; energy: number; radius: number; fuse: number; throwSpeed: number; fire?: { temperature: number; radius: number; seconds: number }; noise: number }
   | { kind: 'tool'; tool: 'screwdriver' | 'wrench' | 'pry_bar' | 'saw' | 'cutting_torch' | 'knife' | 'hammer'; reach: number; noise: number }
@@ -211,130 +215,6 @@ export interface WeaponDef {
   variantOf?: WeaponId
   sources?: readonly DataSource[]
 }
-
-export type ExplosiveId = string
-
-export interface ExplosiveDef {
-  readonly id: ExplosiveId
-  readonly name?: string
-  readonly kind: 'fragmentation' | 'blast' | 'incendiary' | 'directional' | 'flash' | 'shaped_charge' | 'fuel'
-  /** Radius in metres inside which everything dies. */
-  readonly lethalRadius: number
-  /** Radius in metres of the wounding area (damage falls with distance). */
-  readonly injuryRadius: number
-  readonly cone?: { readonly halfAngleDeg: number; readonly length: number }
-  /** Joules. */
-  readonly energy: number
-  /** What the blast tears down: 0 nothing, 1 light, 2 walls, 3 structures. */
-  readonly destructionLevel: 0 | 1 | 2 | 3
-  /** Audible distance in metres. */
-  readonly noise: number
-  /** Seconds from arming to the blast. */
-  readonly fuse?: number
-  readonly stunSeconds?: number
-  readonly fire?: { temperature: number; radius: number; seconds: number }
-  readonly triggers?: readonly ('timer' | 'impact' | 'shot' | 'fire' | 'wire' | 'remote')[]
-  /** Kilograms. */
-  readonly mass?: number
-  readonly sources?: readonly DataSource[]
-}
-
-export type FaultId = 'misfire' | 'stovepipe' | 'double_feed' | 'failure_to_extract'
-
-/** Wear of a weapon and how likely it jams. */
-export interface ConditionDef {
-  readonly id: string
-  /** Chance of a fault per round, 0 to 1. */
-  readonly faultChance: number
-}
-
-/** Quality of the ammunition and how likely a round does not fire. */
-export interface AmmoQualityDef {
-  readonly id: string
-  readonly faultChance: number
-}
-
-export interface FaultContext {
-  readonly def: WeaponDef
-  readonly condition: ConditionDef
-  /** Heat of the weapon, 0 to `rules.heat.cap`. */
-  readonly heat: number
-}
-
-/** Numbers that rule how weapons behave in a game; override any of them with `ArsenalOptions.rules`. */
-export interface WeaponRules {
-  readonly faults: boolean
-  readonly conditions: readonly ConditionDef[]
-  readonly defaultCondition: string
-  readonly ammoQualities: readonly AmmoQualityDef[]
-  readonly defaultAmmoQuality: string
-  readonly faultChance: (context: FaultContext) => number
-  readonly heat: {
-    readonly cap: number
-    readonly displayMax: number
-    readonly decayBase: number
-    readonly decayPerPoint: number
-    readonly faultFrom: number
-    readonly faultSpan: number
-    readonly perShot: Readonly<Record<CaseType, number>>
-    readonly perRocket: number
-  }
-  /** Each shot in the last `window` seconds raises the noise radius by `step`, up to `cap`. */
-  readonly noiseBurst: { readonly step: number; readonly window: number; readonly cap: number }
-  readonly draw: number
-  readonly clear: number
-  readonly startSafe: boolean
-}
-
-export type ReloadKind = 'tactical' | 'empty' | 'one_by_one'
-
-export type ReloadStageId =
-  | 'magazine_out'
-  | 'magazine_in'
-  | 'charge'
-  | 'bolt_open'
-  | 'round_in'
-  | 'bolt_close'
-  | 'pump_cycle'
-  | 'lever_cycle'
-  | 'cylinder_open'
-  | 'cylinder_eject'
-  | 'cylinder_load'
-  | 'cylinder_close'
-  | 'barrels_open'
-  | 'casings_eject'
-  | 'rounds_in'
-  | 'barrels_close'
-  | 'cover_open'
-  | 'belt_swap'
-  | 'cover_close'
-  | 'tank_swap'
-  | 'tube_drop'
-  | 'tube_seat'
-  | 'rocket_seat'
-  | 'breech_open'
-  | 'breech_close'
-
-/** `at` is a fraction (0 to 1) of the whole reload. */
-export interface ReloadStage {
-  readonly stage: ReloadStageId
-  readonly at: number
-}
-
-/** Events a weapon emits for a host to animate and play sounds; `at` is the weapon clock in seconds. */
-export type WeaponEvent =
-  | { type: 'draw'; phase: 'start' | 'end'; at: number }
-  | { type: 'shot'; shots: number; rounds: number; mode: FireMode; at: number }
-  | { type: 'misfire'; at: number }
-  | { type: 'cycle'; phase: 'start' | 'end'; at: number }
-  | { type: 'reload'; phase: 'start' | 'end'; kind: ReloadKind; at: number }
-  | { type: 'reload_stage'; stage: ReloadStageId; at: number }
-  | { type: 'feed'; at: number }
-  | { type: 'empty'; at: number }
-  | { type: 'mode'; mode: FireMode; at: number }
-  | { type: 'fault'; fault: FaultId; at: number }
-  | { type: 'clear'; fault: FaultId; phase: 'start' | 'end'; at: number }
-  | { type: 'safety'; on: boolean; at: number }
 
 export interface TriggerResult {
   /** Shots fired this call (firearms). */
@@ -375,10 +255,37 @@ export interface WeaponState {
   refill(): void
 }
 
+/** Recursively optional; arrays and functions are replaced as a whole, objects are merged. */
+export type DeepPartial<TValue> = TValue extends (...args: never[]) => unknown
+  ? TValue
+  : TValue extends readonly unknown[]
+    ? TValue
+    : TValue extends object
+      ? { [TKey in keyof TValue]?: DeepPartial<TValue[TKey]> }
+      : TValue
+
+/** Changes to a weapon def: `action`, `timings` and `dimensions` merge field by field, anything else replaces. */
+export type WeaponPatch = DeepPartial<Omit<WeaponDef, 'id'>>
+
 export interface ArsenalOptions {
-  /** Extra or overriding calibres and weapons (merged by id over `CALIBERS` and `WEAPONS`). */
+  /** Extra or overriding calibres, weapons and explosives (merged by id over the ones the kit ships). */
   calibers?: CaliberDef[]
   weapons?: WeaponDef[]
+  explosives?: ExplosiveDef[]
+  /** Changes to shipped or added entries, by id, applied after the lists above are merged. */
+  patch?: {
+    weapons?: Record<WeaponId, WeaponPatch>
+    calibers?: Record<CaliberId, Partial<CaliberDef>>
+    explosives?: Record<ExplosiveId, Partial<ExplosiveDef>>
+  }
+  /** Entries to leave out, by id. */
+  remove?: { weapons?: WeaponId[]; calibers?: CaliberId[]; explosives?: ExplosiveId[] }
+  /** Keeps a weapon only when this returns true (applied after `remove`). */
+  include?: (def: WeaponDef) => boolean
+  /** Numbers that rule faults, heat, noise bursts and handling times. */
+  rules?: DeepPartial<WeaponRules>
+  /** Replaces display names (merged over the locale). */
+  strings?: DeepPartial<WeaponsStrings>
   seed?: number
   locale?: string
 }
@@ -386,11 +293,18 @@ export interface ArsenalOptions {
 export interface Arsenal {
   readonly calibers: ReadonlyMap<CaliberId, CaliberDef>
   readonly weapons: ReadonlyMap<WeaponId, WeaponDef>
+  readonly explosives: ReadonlyMap<ExplosiveId, ExplosiveDef>
+  readonly rules: WeaponRules
   /** Make a runtime state for a weapon (each holder gets its own). Unknown id throws. */
   create(id: WeaponId, options?: { seed?: number; reserve?: number }): WeaponState
   /** Muzzle energy of a calibre (optionally with a barrel factor). */
   muzzleEnergy(caliber: CaliberId, barrel?: number): number
-  /** Translated name of a weapon / calibre category / fire mode. */
-  name(id: WeaponId): string
+  /** Joules of what one use of a weapon delivers: one projectile (or one pellet), a blast, or a melee blow. */
+  energy(id: WeaponId): number
+  /** Translated name of a weapon, explosive, fire mode, category, fault, condition or calibre. */
+  name(id: string): string
   list(category?: WeaponCategory): WeaponDef[]
 }
+
+export type * from './explosive-types'
+export type * from './rule-types'

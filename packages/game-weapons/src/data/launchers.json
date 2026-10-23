@@ -28,6 +28,7 @@
       "barrel": 0.95,
       "emptyMass": 6.3
     },
+    "archetype": "shotgun_pump_12",
     "sources": [
       "gallery",
       "arsenal",
@@ -65,6 +66,7 @@
       "barrel": 0.881,
       "emptyMass": 2.5
     },
+    "archetype": "shotgun_pump_12",
     "sources": [
       "gallery",
       "reference",
@@ -101,6 +103,7 @@
       "barrel": 1.02,
       "emptyMass": 6.7
     },
+    "archetype": "shotgun_pump_12",
     "sources": [
       "gallery",
       "reference",
@@ -136,6 +139,7 @@
       "barrel": 0.95,
       "emptyMass": 6.6
     },
+    "archetype": "shotgun_pump_12",
     "sources": [
       "gallery",
       "reference",

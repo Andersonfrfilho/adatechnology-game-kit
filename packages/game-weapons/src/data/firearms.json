@@ -3324,6 +3324,7 @@
       "barrel": 0.356,
       "emptyMass": 2.7
     },
+    "archetype": "shotgun_double_12",
     "sources": [
       "gallery",
       "arsenal",
