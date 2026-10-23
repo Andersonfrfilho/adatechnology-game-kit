@@ -239,6 +239,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       o.byPart.get(r.b)!.push(j)
       o.st.joints.push(jst)
     }
+    // open joints whose parts are no longer both here (left behind by `splitGroup`) stay listed, inert, so callers still see them open
+    for (const [jid, c] of carry?.joints ?? []) if (c.st.open && !o.jointMap.has(jid)) o.st.joints.push(c.st)
     // bounding sphere
     if (o.parts.length) {
       const c: Vec3 = [0, 0, 0]
@@ -1161,9 +1163,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const moved = new Set(names)
       const nid = newId ?? nextId()
       if (objects.has(nid)) throw new Error(`object "${nid}" already exists`)
-      const carryFor = (keep: (pid: string) => boolean): Carry => ({
+      // an open joint between the two objects stays with the original
+      const carryFor = (keep: (pid: string) => boolean, keepOpen: (a: string, b: string) => boolean = () => false): Carry => ({
         parts: new Map(o.parts.filter((p) => keep(p.spec.id)).map((p) => [p.spec.id, { st: p.st, rt: p.rt }])),
-        joints: new Map(o.joints.filter((j) => keep(j.spec.a) && keep(j.spec.b)).map((j) => [j.spec.id, { st: j.st, step: j.step }])),
+        joints: new Map([
+          ...o.joints.filter((j) => (keep(j.spec.a) && keep(j.spec.b)) || (j.st.open && keepOpen(j.spec.a, j.spec.b))).map((j): [string, { st: JointState; step: number }] => [j.spec.id, { st: j.st, step: j.step }]),
+          ...o.st.joints.filter((st) => st.open && !o.jointMap.has(st.id) && keepOpen(st.a, st.b)).map((st): [string, { st: JointState; step: number }] => [st.id, { st, step: 0 }]),
+        ]),
         collapsed: [...o.collapsed].filter(keep),
       })
       const sub = (keep: (pid: string) => boolean): DestructibleSpec => {
@@ -1175,8 +1181,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const inNew = (pid: string) => moved.has(pid)
       const inOld = (pid: string) => !moved.has(pid)
       const pos = o.st.position, rot = o.st.rotation
-      const fresh = build(sub(inNew), nid, pos, rot, carryFor(inNew))
-      const rest = build(sub(inOld), id, pos, rot, carryFor(inOld))
+      const fresh = build(sub(inNew), nid, pos, rot, carryFor(inNew, (a, b) => inNew(a) && inNew(b)))
+      const rest = build(sub(inOld), id, pos, rot, carryFor(inOld, (a, b) => !(inNew(a) && inNew(b))))
       objects.set(id, rest)
       objects.set(nid, fresh)
       return nid
