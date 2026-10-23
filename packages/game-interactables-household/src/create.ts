@@ -9,7 +9,9 @@ import us from './data/regions/us.json'
 import typesJson from './data/types.json'
 import { conduitRun, serviceEntrance, tv, microwave, wallSocket, wallSwitch, washingMachine } from './builders/electrical'
 import { gasBottle, shower, sinkBathroom, sinkKitchen, stove, toilet, utilitySink } from './builders/kitchen'
+import { armchair, bedDouble, bedSingle, bench, diningChair, sofa } from './builders/seating'
 import { bathroomCabinet, dresser, fridge, fridgeCompact, kitchenCabinetBase, kitchenCabinetWall, nightstand, pantry, wardrobe } from './builders/storage'
+import { blinds, curtain } from './builders/windows'
 import type { BuilderFn, Household, HouseholdApi, HouseholdItem, HouseholdOptions, HouseholdType, HouseholdTypeDef, Region } from './types'
 
 const BUILDERS: Record<string, BuilderFn> = {
@@ -36,6 +38,14 @@ const BUILDERS: Record<string, BuilderFn> = {
   tv,
   microwave,
   washing_machine: washingMachine,
+  sofa,
+  armchair,
+  dining_chair: diningChair,
+  bed_double: bedDouble,
+  bed_single: bedSingle,
+  bench,
+  blinds,
+  curtain,
 }
 
 const DEFS = typesJson as HouseholdTypeDef[]
