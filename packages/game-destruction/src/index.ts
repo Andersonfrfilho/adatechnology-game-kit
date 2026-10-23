@@ -1,0 +1,6 @@
+export type * from './types'
+export { createDestruction } from './world'
+export { MATERIALS, JOINT_DEFAULTS, JOINT_BY_MATERIALS, inferJoints, guessMaterial, partVolume, partMass, partThickness } from './materials'
+export { vec, quat, quatFromEuler, rotateVec, toLocal, toWorld } from './math'
+export { resolveStrings, locales } from './locale'
+export type { DestructionStrings, DestructionLocale } from './locale'

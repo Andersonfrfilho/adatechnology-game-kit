@@ -274,7 +274,7 @@ export interface PartState {
   cracks: Crack[]
   /** Fluid left, when the part `contains` one. */
   liters?: number
-  /** Index into `ObjectState.groups` of the piece this part belongs to. */
+  /** Index into `ObjectState.groups` of the piece this part belongs to (-1 when the part is broken, melted or ash). */
   group: number
 }
 
@@ -403,6 +403,14 @@ export interface DestructionOptions {
   fireSpread?: number
 }
 
+/*
+ * Notes on behaviour that the types cannot express:
+ * - `leak` events carry the hole's world point, the outward normal as `direction`, and `rate` in litres per second; `PartState.liters` drops
+ *   in `update` while the part has through holes.
+ * - `state()` and `part()` return live views owned by the world. Do not mutate them; copy them if you need a snapshot.
+ * - A part with `explodes` can be destroyed even if its material never fractures (`fracture: 'none'`); it then fractures as `snap`.
+ */
+
 export interface AddOptions {
   /** Object id (default a generated `obj_1`, `obj_2`...). */
   id?: string
@@ -455,13 +463,40 @@ export interface DestructionWorld {
   /** Plain JSON of every object (spec + state + transform) and the rng state. */
   serialize(): DestructionSnapshot
   load(snapshot: DestructionSnapshot): void
+  /**
+   * Fill or empty a container part (`PartSpec.contains`); `liters` is clamped to `[0, contains.liters]` of its spec. Used by fluid simulations
+   * that drain or refill the part. Does nothing when the part has no `contains`.
+   */
+  setLiters(objectId: string, partId: string, liters: number): void
   /** Seconds since creation. */
   readonly time: number
+}
+
+/** Internal bookkeeping of a part that is saved with the world so that a loaded world continues identically. Treat as opaque. */
+export interface PartRuntime {
+  /** Last melt fraction reported in a `melt` event. */
+  meltEmitted: number
+  /** Seconds since the last `drip`. */
+  dripT: number
+  /** Temperature at the end of the previous update (thermal shock). */
+  prevTemp: number
+  /** Seconds left before another thermal crack is allowed. */
+  shockT: number
+  /** A leaking flammable fluid is burning on this part. */
+  jet: boolean
+}
+
+/** Opaque bookkeeping of an object (see `PartRuntime`). `joints` holds the last disassembly step reported per joint id. */
+export interface ObjectRuntime {
+  parts: Record<string, PartRuntime>
+  joints: Record<string, number>
 }
 
 export interface DestructionSnapshot {
   version: 1
   time: number
   rng: number
-  objects: Array<{ id: string; spec: DestructibleSpec; state: ObjectState }>
+  /** Counter for generated object ids (`obj_1`...). */
+  counter?: number
+  objects: Array<{ id: string; spec: DestructibleSpec; state: ObjectState; runtime?: ObjectRuntime }>
 }
