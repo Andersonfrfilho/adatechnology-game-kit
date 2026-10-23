@@ -31,9 +31,11 @@ COPY packages/game-vegetation-species/package.json packages/game-vegetation-spec
 COPY packages/game-vehicles/package.json packages/game-vehicles/
 COPY packages/game-vehicles-fleet/package.json packages/game-vehicles-fleet/
 COPY packages/game-weapons/package.json packages/game-weapons/
+COPY packages/game-weapons-three/package.json packages/game-weapons-three/
 COPY examples/interactables-showroom/package.json examples/interactables-showroom/
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
 COPY examples/test-room/package.json examples/test-room/
+COPY examples/weapons-test-area/package.json examples/weapons-test-area/
 RUN pnpm install --frozen-lockfile
 
 COPY . .
