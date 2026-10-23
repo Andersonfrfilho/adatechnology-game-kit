@@ -873,11 +873,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     )
   }
 
-  const meleeUse = (u: Extract<Use, { kind: 'melee' }>): void => {
-    const w = toolName()
+  const meleeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
+    const w = toolName(id)
     const r = rayWorld(u.origin, u.direction, u.reach)
     if (!r) {
-      action('melee', t('act.melee.miss', { weapon: w }), { data: { weapon: toolId } })
+      action('melee', t('act.melee.miss', { weapon: w }), { data: { weapon: id } })
       return
     }
     world.hitPart(r.object, r.part, { type: u.damage, point: r.point, direction: u.direction, energy: u.energy, radius: u.radius, source: 'player' })
@@ -886,7 +886,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       objectId: r.object,
       itemId: entryOf(r.object)?.so.itemId,
       part: r.part,
-      data: { weapon: toolId, damage: u.damage, energyJ: u.energy, distanceM: Math.round(r.distance * 100) / 100 },
+      data: { weapon: id, damage: u.damage, energyJ: u.energy, distanceM: Math.round(r.distance * 100) / 100 },
     })
   }
 
@@ -1085,6 +1085,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
+  /** The V shortcut: a kick with the `kick` tool, whatever tool is selected (it keeps its own cooldown). */
+  const kick = (): void => {
+    if (!arsenal.weapons.has('kick')) return
+    aim()
+    const res = toolState('kick').trigger([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 0, false, 'player')
+    if (res.status !== 'ok') return
+    for (const u of res.uses) if (u.kind === 'melee') meleeUse(u, 'kick')
+  }
   const setTool = (id: string): void => {
     if (!arsenal.weapons.has(id)) throw new Error(`game-test-room: unknown weapon "${id}"`)
     tool.release()
@@ -1361,7 +1369,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         break
       case 'KeyV':
         if (heldEntry?.uses[2]) useItem(heldEntry.uses[2])
-        else toggleTap()
+        else kick()
         break
       case 'KeyT':
         toggleTap()

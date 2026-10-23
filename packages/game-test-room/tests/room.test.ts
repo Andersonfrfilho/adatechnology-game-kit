@@ -288,3 +288,17 @@ describe('ui', () => {
     room.dispose()
   })
 })
+
+describe('kick shortcut', () => {
+  it('V kicks with the kick tool whatever tool is selected, and the selected tool does not change', () => {
+    const room = makeRoom()
+    room.spawn('chair', [0, 0, -4], 0)
+    room.setTool('hammer')
+    room.look([-1, 0.2, -4.18], [-0.18, 0.2, -4.18])
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyV' }))
+    const hits = room.log.entries({ type: 'melee' })
+    expect(hits).toHaveLength(1)
+    expect(hits[0].data).toMatchObject({ weapon: 'kick', damage: 'blunt', energyJ: 250 })
+    expect(room.tool.def.id).toBe('hammer')
+  })
+})

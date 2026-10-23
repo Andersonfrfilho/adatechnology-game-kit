@@ -9,7 +9,7 @@ export const WEAPONS = weaponsJson as unknown as WeaponDef[]
 
 /** A reasonable starting kit for a test room or a sandbox. */
 export const DEFAULT_LOADOUT: WeaponId[] = [
-  'hand', 'pistol_9mm', 'revolver_357', 'shotgun_pump_12', 'rifle_5_56', 'rifle_bolt_308', 'hammer', 'axe', 'crowbar', 'lighter', 'flamethrower',
+  'hand', 'kick', 'shove', 'pistol_9mm', 'revolver_357', 'shotgun_pump_12', 'rifle_5_56', 'rifle_bolt_308', 'hammer', 'axe', 'crowbar', 'lighter', 'flamethrower',
   'cutting_torch', 'molotov', 'frag_grenade', 'screwdriver', 'wrench', 'pry_bar', 'hacksaw', 'extinguisher',
 ]
 

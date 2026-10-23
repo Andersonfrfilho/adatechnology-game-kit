@@ -79,7 +79,7 @@ The items join the catalogue under the module's group and its scenarios become b
 | E | grab / drop |
 | R | rotate the held item |
 | Right button or G | throw |
-| F | use a fluid item (drink); Z tilt; C fill from the tap; V pour |
+| F | use a fluid item (drink); Z tilt; C fill from the tap; V pour (holding a fluid item) or kick (otherwise, with the `kick` tool whatever is selected) |
 | Tab | show / hide the panels |
 
 Panels: catalogue tabs (spawn, Clear, Reset all), slow motion 0.25x, time x10, quality select, inspector (material, state, hp, temperature, char, marks, joints, load and stress) and the behaviour log with filters.
