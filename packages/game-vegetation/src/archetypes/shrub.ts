@@ -55,7 +55,7 @@ export function generateShrub(spec: ShrubSpec, ctx: Ctx): ArchResult {
     const width = spec.width ?? Math.max(0.6, H * 0.6)
     const sections = Math.max(1, Math.round(length / (width * 1.1)))
     const secLen = length / sections
-    const grid = ctx.pick(3, 2, 1)
+    const grid: [number, number, number] = ctx.lod === 0 ? [6, 4, 4] : ctx.lod === 1 ? [4, 3, 3] : [3, 2, 2]
     const base = dead ? mix(palette[0], [0.42, 0.33, 0.22], 0.65) : ctx.condition === 'dry' ? mix(palette[0], [0.5, 0.45, 0.22], 0.35) : palette[0]
     for (let i = 0; i < sections; i++) {
       const sr = rng.fork(i * 17 + 3)
@@ -68,9 +68,11 @@ export function generateShrub(spec: ShrubSpec, ctx: Ctx): ArchResult {
         center: [cx, h * 0.5, 0],
         size: [secLen * 1.04, h, width],
         grid,
-        round: ctx.lod === 0 ? 0.4 : 0.5,
+        round: 0.42,
         rng: sect,
-        noise: ctx.lod === 0 ? 0.045 : ctx.lod === 1 ? 0.07 : 0.1,
+        noise: 0.12,
+        freq: 3 / Math.min(secLen, h, width),
+        jitter: 0.12,
         color: (p, hh, n) => {
           let k = lerp(0.7, 1.15, clamp(hh, 0, 1)) * (0.88 + 0.24 * ((Math.sin(p[0] * 47.3 + p[1] * 31.7 + p[2] * 53.9) + 1) / 2))
           if (n[1] > 0.5) k *= 1.08
@@ -78,20 +80,6 @@ export function generateShrub(spec: ShrubSpec, ctx: Ctx): ArchResult {
         },
         sway: (hh) => 0.3 * hh,
       })
-      {
-        // leafy lumps breaking the clipped surface (small low-poly clumps instead of a plain box)
-        const nb = ctx.pick(9, 6, 3)
-        const br = width * (ctx.lod === 0 ? 0.2 : 0.26)
-        for (let k = 0; k < nb; k++) {
-          const onTop = k % 5 < 2
-          const px = cx + sr.range(-secLen / 2, secLen / 2) * 0.92
-          const pz = sr.range(-width / 2, width / 2) * 0.85
-          const side = pz > 0 ? 1 : -1
-          const pos: Vec3 = onTop ? [px, h - br * 0.5, pz] : [px, sr.range(0.25, 0.85) * h, side * (width / 2 - br * 0.35)]
-          const lr = br * sr.range(0.75, 1.15)
-          clump(ctx.foliage, { center: pos, radius: lr, squash: 0.68, detail: 0, seed: sr.seed(), base: shade(c, sr.range(0.78, 1.05)), crown: [cx, h * 0.3, 0], swayK: 0.3, noise: 0.15, flatBottom: 0.2, ao: 0.6 })
-        }
-      }
       if (ctx.lod === 0) {
         // leaf flecks poking from the clipped surface
         const lc0 = shade(c, 0.75)
