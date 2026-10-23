@@ -174,3 +174,33 @@ describe('act', () => {
     expect(events.some((e) => e.type === 'container' && e.container === 'shelf')).toBe(true)
   })
 })
+
+describe('requires', () => {
+  const bottle: ObjectSpec = {
+    type: 'bottle',
+    parts: [{ id: 'valve', pivot: [0, 0.3, 0], motion: { kind: 'knob' } }],
+    fuels: [{ id: 'gas', kind: 'gas', capacity: 13, valve: 'valve' }],
+    interactions: [{ id: 'valve', pos: [0, 0.3, 0], radius: 1, action: { do: 'toggle_fuel', fuel: 'gas' }, label: '', requires: { object: 'c', part: 'door' } }],
+  }
+
+  it('the valve is available only while the cabinet door in front is open', () => {
+    const { w } = world()
+    w.add('c', cabinet, origin)
+    w.add('g', bottle, { x: 5, y: 0, z: 0, ry: 0 })
+    const eye = { x: 5, y: 0.3, z: 0.8, yaw: 0, pitch: 0 }
+    expect(w.target(eye)?.id).not.toBe('g:valve')
+    expect(w.act('g:valve')).toBe(false)
+    expect(w.partT('g', 'valve')).toBe(0)
+    w.setPart('c', 'door', 1, true)
+    expect(w.target({ ...eye, z: 0.4 })?.id).toBe('g:valve')
+    expect(w.act('g:valve')).toBe(true)
+    w.setPart('c', 'door', 0, true)
+    expect(w.act('g:valve')).toBe(false)
+  })
+
+  it('an unknown object or part never opens it', () => {
+    const { w } = world()
+    w.add('g', { ...bottle, interactions: [{ ...bottle.interactions![0], requires: { object: 'nope', part: 'door' } }] }, origin)
+    expect(w.act('g:valve')).toBe(false)
+  })
+})

@@ -1023,8 +1023,15 @@ export function createWorld(options: WorldOptions = {}): World {
     return t(key, { name: typeName(o), circuit: a.do === 'toggle_breaker' ? a.circuit : '' })
   }
 
+  function requirementMet(i: InteractionSpec): boolean {
+    if (!i.requires) return true
+    const p = objs.get(i.requires.object)?.parts.get(i.requires.part)
+    return !!p && targetIsOpen(p)
+  }
+
   function applicable(o: ObjState, i: InteractionSpec): boolean {
     const a = i.action
+    if (!requirementMet(i)) return false
     if (a.do === 'take' || a.do === 'read') return accessible(o.id, a.container)
     if (a.do === 'ignite') return !o.burners.get(a.burner)?.lit
     if (a.do === 'toggle_burner') {
@@ -1094,6 +1101,7 @@ export function createWorld(options: WorldOptions = {}): World {
       if (found) break
     }
     if (!found) return false
+    if (!requirementMet(found.spec)) return false
     if (options.canInteract?.(found.item, actor) === false) return false
     return execute(found.o, found.spec.action, actor)
   }

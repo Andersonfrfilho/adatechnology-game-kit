@@ -373,6 +373,8 @@ export interface InteractionSpec {
    * and falls back to `<label>`. Example keys: `prompt.door`, `prompt.drawer`, `prompt.stove_knob`.
    */
   label: string
+  /** The interaction is available only while this part of this object (world-wide object id) is open (`t >= 0.5`). */
+  requires?: { object: string; part: string }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------

@@ -92,6 +92,8 @@ around `+y` like `three.js` (`+z` turns toward `+x` for a positive angle). View 
   draw through it (`flow / 60 * dt` liters, a flush draws `volume` once). Dry fixtures stay "on" but report `flowing: false`.
   A device with `fixture: '<fixtureId>'` (same object, e.g. a washing machine inlet) drives that fixture: it flows while the device is on and
   powered, stops when it is switched off or loses power, and gets no interaction of its own.
+- **Gated interactions**: `InteractionSpec.requires = { object, part }` (world-wide object id) makes an interaction available only while that
+  part is open (`t >= 0.5`): `target` skips it and `act` refuses it otherwise (a gas valve behind a cabinet door).
 - **Seats**: one actor per seat. `sit` returns the world eye position and yaw, `stand` returns the world exit point.
 - **Soft volumes** never block and are never colliders. `push(pos, radius, vel)` swings them; they settle back by a damped spring. Wind adds a
   small oscillating force. A `panel` with a `part` opens when pushed from the front.
