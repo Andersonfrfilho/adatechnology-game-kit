@@ -73,5 +73,9 @@
  "acrylic": "plastic",
  "rubber": "rubber",
  "tire": "rubber",
- "tyre": "rubber"
+ "tyre": "rubber",
+ "soil": "soil",
+ "dirt": "soil",
+ "potting": "soil",
+ "mud": "soil"
 }

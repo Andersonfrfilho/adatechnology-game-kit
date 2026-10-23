@@ -45,7 +45,7 @@ piece into its own object (and body).
 
 ## Materials
 
-25 built-in materials in `src/data/materials.json` (override or extend with the `materials` option). Hit points per kilogram, penetration energy per
+26 built-in materials in `src/data/materials.json` (override or extend with the `materials` option). Hit points per kilogram, penetration energy per
 millimetre, ductility and fracture style drive the model.
 
 | Family | Ids | Behaviour |
@@ -53,7 +53,7 @@ millimetre, ductility and fracture style drive the model.
 | Metal | `steel`, `cast_iron`, `aluminium`, `copper` | dent, holes, sparks, ricochet, glow when hot; melt at 1450 / 1200 / 660 / 1085 °C. Never fracture (cast iron cracks and snaps) |
 | Wood | `wood_soft`, `wood_hard`, `plywood`, `mdf` | splinter or snap, ignite near 300 °C, burn, char, turn to ash |
 | Glass and ceramic | `glass`, `tempered_glass`, `ceramic` | crack, then `shatter` into shards (`tempered_glass` is `crumble` into tiny chunks); thermal shock |
-| Masonry | `concrete`, `brick`, `plaster`, `stone` | `crumble` with dust and chips; do not burn |
+| Masonry and soil | `concrete`, `brick`, `plaster`, `stone`, `soil` | `crumble` with dust and chips; do not burn |
 | Plastics | `plastic`, `rubber`, `foam`, `wax` | plastic snaps and melts near 200 °C, rubber and foam burn with black smoke, wax melts at 60 °C |
 | Soft | `fabric`, `leather`, `paper` | `tear`, ignite easily and burn fast |
 | Plants | `foliage`, `green_wood`, `cactus`, `flesh_fruit` | `tear` / `splinter`, hard to ignite (high water content) |

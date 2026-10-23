@@ -782,5 +782,27 @@
    "wax",
    "flammable"
   ]
+ },
+ {
+  "id": "soil",
+  "density": 1300,
+  "hpPerKg": 3,
+  "penetration": 5,
+  "ductility": 0.3,
+  "fracture": "crumble",
+  "fragmentSize": [
+   0.03,
+   0.12
+  ],
+  "hitDebris": "dust",
+  "breakDebris": "dust",
+  "thermal": {
+   "conductivity": 0.1,
+   "heatCapacity": 2.5
+  },
+  "tags": [
+   "soil",
+   "masonry"
+  ]
  }
 ]

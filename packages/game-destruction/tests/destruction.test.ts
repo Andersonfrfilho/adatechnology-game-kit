@@ -144,6 +144,14 @@ describe('ballistic', () => {
     expect(w.part(concrete, 'plate')!.cracks.length).toBe(1)
   })
 
+  it('soil stops a 9mm within about 10 cm', () => {
+    const w = createDestruction()
+    const thin = w.add(plate('soil', 1, 1, 0.05))
+    const deep = w.add(plate('soil', 1, 1, 0.15), { position: [3, 0, 0] })
+    expect(w.hit(thin, bullet).penetrated).toBe(true)
+    expect(w.hit(deep, { ...bullet, point: [3, 0, 0.1] }).penetrated).toBe(false)
+  })
+
   it('dents steel from a hammer and never breaks it', () => {
     const w = createDestruction()
     const id = w.add(plate('steel', 1, 1, 0.003))
