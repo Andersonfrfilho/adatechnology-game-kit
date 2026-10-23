@@ -106,6 +106,8 @@ export class FragmentSystem {
     const sc = new this.THREE.Vector3(Math.max(0.005, sz[0]), Math.max(0.005, sz[1]), Math.max(0.003, sz[2]))
     mesh.scale.copy(sc)
     mesh.castShadow = true
+    // pure visual debris: a host that picks with a raycast can skip it
+    mesh.userData.destructionDebris = true
     this.o.scene.add(mesh)
     const live: Live = {
       mesh,

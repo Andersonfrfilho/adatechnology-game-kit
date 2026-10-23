@@ -351,6 +351,7 @@ export class Visuals {
   }
 
   private addDecal(mv: MeshVis, decal: Decal): void {
+    decal.obj.userData.destructionDebris = true
     mv.mesh.add(decal.obj)
     mv.decals.push(decal)
     this.decalCount++

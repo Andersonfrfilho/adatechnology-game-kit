@@ -38,6 +38,8 @@ interface PartRT {
   structural: boolean
   anchored: boolean
   cap: number
+  /** Structural part that never had a support path (the spec itself leaves it floating): it is held by its joints like a non-structural part and does not collapse by itself. */
+  orphan: boolean
 }
 
 interface JointRT {
@@ -67,6 +69,8 @@ interface ObjRT {
   active: boolean
   tmp: number[]
   hasStructure: boolean
+  /** Set only while `build` solves the structure for the first time. */
+  seeding?: boolean
   dirty: boolean
   maxStress: number
   collapsed: Set<string>
@@ -235,7 +239,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const p: PartRT = {
         spec: ps, mat, st: pst, q: quatFromEuler(...(ps.rotation ?? [0, 0, 0])), pos: [ps.position[0], ps.position[1], ps.position[2]], mass0, fuel0, area: shapeArea(ps.shape), thickness: partThickness(ps), cutFactor: cutFactorOf(ps.shape),
         dims: shapeDims(ps.shape), bound: shapeBound(ps.shape), rt: c?.rt ?? { ...freshRuntime(), prevTemp: pst.temperature },
-        structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat) : 0,
+        structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat) : 0, orphan: false,
       }
       if (p.structural) o.hasStructure = true
       o.idx.set(ps.id, o.parts.length)
@@ -269,7 +273,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     updateBound(o)
     o.anyAnchor = o.parts.some((p) => p.anchored)
     o.unsup = o.parts.map(() => false)
+    o.seeding = true
     solveStructure(o)
+    o.seeding = false
     recomputeGroups(o)
     o.st.destroyed = o.parts.length > 0 && o.parts.every(isLost)
     o.active = o.maxStress > 0.8 || o.parts.some((p) => p.st.burning || p.st.temperature > ambient + 0.5 || (p.st.liters ?? 0) > 0)
@@ -324,13 +330,17 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     list.forEach((g, gi) => g.ix.forEach((i) => (o.parts[i].st.group = gi)))
   }
 
-  /** Which part `r` rests on over joint `j` (index), or -1 when the joint does not let `r` rest on its other end. */
-  const restsOn = (j: JointRT, r: number): number => {
+  /**
+   * Which part `r` rests on over joint `j` (index), or -1 when the joint does not let `r` rest on its other end. A `tie` is a rope: it only pulls,
+   * so it holds `r` up only when `r` hangs below the part it is tied to (a lamp from a ceiling), never when that part is beside or under it
+   * (a guy rope to a stake in the ground).
+   */
+  const restsOn = (o: ObjRT, j: JointRT, r: number): number => {
     const b = j.bears
     if (!b) return -1
-    if (b === true) return j.ia === r ? j.ib : j.ia
-    if (b === 'a_on_b') return j.ia === r ? j.ib : -1
-    return j.ib === r ? j.ia : -1
+    const k = b === true ? (j.ia === r ? j.ib : j.ia) : b === 'a_on_b' ? (j.ia === r ? j.ib : -1) : j.ib === r ? j.ia : -1
+    if (k < 0 || j.spec.kind !== 'tie') return k
+    return partXf(o, o.parts[k]).c[1] > partXf(o, o.parts[r]).c[1] + 1e-6 ? k : -1
   }
 
   /** Distribute own mass plus carried load down the bearing graph to the anchored parts; mark parts without any support path. */
@@ -353,7 +363,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       for (const j of o.byPart.get(parts[s].spec.id)!) {
         if (j.st.open || !j.bears) continue
         const r = j.ia === s ? j.ib : j.ia
-        if (dist[r] >= 0 || !ok(r) || restsOn(j, r) !== s) continue
+        if (dist[r] >= 0 || !ok(r) || restsOn(o, j, r) !== s) continue
         dist[r] = dist[s] + 1
         queue.push(r)
       }
@@ -366,7 +376,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const lower: number[] = []
       for (const j of o.byPart.get(parts[i].spec.id)!) {
         if (j.st.open || !j.bears) continue
-        const k = restsOn(j, i)
+        const k = restsOn(o, j, i)
         if (k >= 0 && dist[k] >= 0 && dist[k] < dist[i] && !isPartition(k)) lower.push(k)
       }
       for (const k of lower) incoming[k] += total / lower.length
@@ -378,7 +388,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (dist[i] < 0 || isLost(p)) {
         p.st.load = p.st.mass
         p.st.stress = 0
-        o.unsup[i] = o.anyAnchor && !isLost(p)
+        if (o.seeding && !p.anchored && !isLost(p) && p.st.status !== 'collapsed' && !o.collapsed.has(p.spec.id)) p.orphan = true
+        o.unsup[i] = o.anyAnchor && !isLost(p) && !p.orphan
         continue
       }
       p.st.stress = p.st.load! / p.cap

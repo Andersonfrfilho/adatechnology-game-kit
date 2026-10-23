@@ -251,6 +251,25 @@ class Renderer implements DestructionRenderer {
       if (!bound.parts.has(pid)) bound.parts.set(pid, this.makePartVis(objectId, pid, this.world.part(objectId, pid)?.material ?? '', meshes, hosts))
     }
     this.bounds.set(objectId, bound)
+    for (const pv of bound.parts.values()) this.tagPart(pv, objectId)
+  }
+
+  /**
+   * Label the meshes of a part so a host can go from a raycast hit to the world: `userData.destructionPart` (the part id) and
+   * `userData.destructionObject` (the id of the world object that part belongs to now; a loose piece has an id of its own). Parts drawn by a range
+   * of a merged mesh share that mesh with others and are left alone until they get a mesh of their own. Decals are marked `destructionDebris`.
+   */
+  private tagPart(pv: PartVis, objectId: string): void {
+    for (const mv of pv.meshes) {
+      if (mv.merged && !mv.loose) continue
+      mv.mesh.traverse((c) => {
+        if (!(c as Mesh).isMesh) return
+        const ud = c.userData as Record<string, unknown>
+        if (ud.destructionDebris) return
+        if (partHintOf(ud.destructionPart)?.id !== pv.id) ud.destructionPart = pv.id
+        ud.destructionObject = objectId
+      })
+    }
   }
 
   private makePartVis(home: string, id: string, material: string, meshes: Array<{ mesh: Mesh; range?: [number, number] }>, hosts: Map<Mesh, HostVis>): PartVis {
@@ -786,6 +805,7 @@ class Renderer implements DestructionRenderer {
       }
     }
     this.bounds.set(newId, nb)
+    for (const pv of nb.parts.values()) this.tagPart(pv, newId)
     const meshes = this.meshesOf(nb)
     if (meshes.length === 0) return
     const { half, center } = this.measure(group, meshes)
@@ -1017,6 +1037,7 @@ class Renderer implements DestructionRenderer {
       for (const [pid, pv] of [...b.parts]) {
         if (pv.home !== home) continue
         this.visuals.restorePart(pv)
+        this.tagPart(pv, home)
         if (b !== homeBound && homeBound) {
           b.parts.delete(pid)
           homeBound.parts.set(pid, pv)
