@@ -11,9 +11,15 @@ concatenates plain scripts can use them without a bundler.
 | Package | Global | What it is |
 |---|---|---|
 | [`@adatechnology/game-camera`](packages/game-camera) | `GameCamera` | Shoulder, third-person and first-person camera rig plus first-person viewmodel for three.js |
+| [`@adatechnology/game-destruction`](packages/game-destruction) | `GameDestruction` | Engine-agnostic destruction world: parts, joints, materials, damage, fire, melting, structural integrity |
+| [`@adatechnology/game-destruction-three`](packages/game-destruction-three) | `GameDestructionThree` | three.js renderer for the destruction world: pieces, holes, cracks, fire and debris |
+| [`@adatechnology/game-weapons`](packages/game-weapons) | `GameWeapons` | Arsenal of firearms, melee, fire, heat and tools with ballistics and tool state |
+| [`@adatechnology/game-fluids`](packages/game-fluids) | `GameFluids` | Liquids in containers, streams, stains, drinking and item uses |
+| [`@adatechnology/game-fluids-three`](packages/game-fluids-three) | `GameFluidsThree` | three.js renderer for the fluids world |
 | [`@adatechnology/game-devtools`](packages/game-devtools) | `GameDevtools` | Free-fly mode, position HUD, notes and marks, control panel, scenarios runner and entity labels |
 | [`@adatechnology/game-infection`](packages/game-infection) | `GameInfection` | Deterministic abstract epidemic model by regions (zombies, plague, rumours) |
 | [`@adatechnology/game-props3d`](packages/game-props3d) | `GameProps3d` | Procedural low-poly props (decor, furniture, yard, house state) that only describe primitives through a host-provided api |
+| [`@adatechnology/game-test-room`](packages/game-test-room) | `GameTestRoom` | First-person test room with a behaviour log and scenarios to verify destruction, weapons and fluids on your own catalogue |
 
 Each package has its own README (English, with a short Portuguese section) and a `MIGRATION.md` mapping the old Portuguese names to the new
 English ones, so the game adapter can be updated mechanically.
