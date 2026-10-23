@@ -1,6 +1,6 @@
 export type * from './types'
 export { createDestruction } from './world'
-export { MATERIALS, JOINT_DEFAULTS, JOINT_BY_MATERIALS, inferJoints, guessMaterial, partVolume, partMass, partThickness, partCapacity } from './materials'
+export { MATERIALS, JOINT_DEFAULTS, JOINT_BY_MATERIALS, inferJoints, guessMaterial, partVolume, partMass, partThickness, partCapacity, fragility } from './materials'
 export { buildFrame } from './frame'
 export type { FrameOptions } from './frame'
 export { vec, quat, quatFromEuler, rotateVec, toLocal, toWorld } from './math'

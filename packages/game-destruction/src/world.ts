@@ -1,5 +1,5 @@
 import { planFragments } from './fracture'
-import { JOINT_DEFAULTS, inferJoints, MATERIALS, partCapacity, partMass, partThickness, partVolume } from './materials'
+import { JOINT_DEFAULTS, inferJoints, MATERIALS, partCapacity, partMass, partThickness, partVolume, fragility } from './materials'
 import { aabbOf, createRng, distanceToShape, quat, quatFromEuler, rayShape, rotateVec, shapeArea, shapeBound, shapeDims, surfacePoint, toLocal, toWorld, vec } from './math'
 import type { DestructibleImpl } from './contracts'
 import type {
@@ -736,11 +736,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const melee = (o: ObjRT, p: PartRT, kind: 'blunt' | 'slash', E: number, point: Vec3, n: Vec3, d: Vec3, contactR: number, src?: string): number => {
     const mat = p.mat
     const thrMm = mat.penetration * p.thickness * 1000
+    // brittle thin shells (a bottle, a mug, a pane) break from a knock that a thick block shrugs off
+    const fragile = kind === 'blunt' ? fragility(mat.ductility, p.thickness) : 1
+    const Ec = E * fragile
     if (E > 0) {
       if (kind === 'blunt') {
         if (mat.ductility >= 0.5) addDent(o, p, point, n, Math.max(contactR, 0.015), clamp(E * 0.0001, 0.001, 0.06), src)
         else if (mat.ductility < 0.3) {
-          if (E >= 5) addCrack(o, p, point, n, clamp(0.04 + E * 0.0008, 0.04, 0.6), src)
+          if (Ec >= 5) addCrack(o, p, point, n, clamp(0.04 + Math.min(Ec, E * 6) * 0.0008, 0.04, 0.6), src)
         } else if (E >= thrMm * 0.2) addDent(o, p, point, n, Math.max(contactR, 0.015), clamp(E * 0.00006, 0.001, 0.04), src)
       } else if (mat.fracture === 'tear') {
         addHole(o, p, point, n, clamp(0.02 + E * 0.0005, 0.02, 0.3), true, undefined, src)
@@ -752,7 +755,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (kind === 'blunt') wearJoints(o, p, E * 0.3, undefined, 0, src)
     else wearJoints(o, p, E * 0.3, point, 0.06, src)
     const scale = mat.damageScale?.[kind] ?? 1
-    return applyDamage(o, p, E * DMG_PER_J * scale, kind, point, d, E * 0.1, 12, src)
+    return applyDamage(o, p, Ec * DMG_PER_J * scale, kind, point, d, E * 0.1, 12, src)
   }
 
   const blastObject = (o: ObjRT, point: Vec3, energy: number, radius: number, src?: string): HitResult => {

@@ -110,3 +110,14 @@ export const partCapacity = (part: PartSpec, material: MaterialDef): number => {
   const section = role === 'wall' || role === 'partition' ? Math.min(sh[0], sh[2]) * Math.max(sh[0], sh[2]) : role === 'slab' ? d[0] * d[2] : d[0] * d[1]
   return Math.max(1, section * (material.compressive ?? 20000) * (role === 'foundation' ? 10 : 1))
 }
+
+
+/**
+ * Multiplier of blunt damage on brittle parts (ductility < 0.3): up to x4.7 for fully brittle materials (glass, ceramic, stone), times a thinness
+ * term that follows bending stress (1 / thickness squared, x1 at 2 cm or more, at most x25). A 3 mm glass bottle breaks from a 1.5 m drop; a
+ * concrete block (thick) is only ever x4.4.
+ */
+export const fragility = (ductility: number, thickness: number): number => {
+  if (ductility >= 0.3) return 1
+  return (1 + (4 * (0.3 - ductility)) / 0.3) * Math.min(25, Math.max(1, (0.02 / Math.max(thickness, 1e-4)) ** 2))
+}
