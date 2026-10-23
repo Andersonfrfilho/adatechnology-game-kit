@@ -52,9 +52,9 @@ Sem `examples/` próprio: a verificação é a suíte `packages/game-vehicles-fl
 Rodar: `pnpm --filter @adatechnology/game-vehicles-fleet test` (demora, uns 2 minutos). `examples/vehicles-test-area` está previsto (V5).
 
 ## Cuidados
-- **Goldens desatualizados**: em 2026-10-23 a suíte tinha 12 testes falhando em 3 arquivos (856 passam). Um exemplo confirmado é `fastback_sedan` (antigo
-  `civico`) no cenário `rollover` (hash esperado `40a1b663`, recebido `330b1a88`). Os ids antigos citados na decisão V1 são `seda` = `midsize_sedan`,
-  `popular` = `entry_hatch` e `civico` = `fastback_sedan`. Não conserte o código para "voltar" ao golden: a decisão V1 manda regenerar o golden.
+- **Goldens regenerados (V1, T0.3)**: `tests/fixtures/golden.json` foi atualizado com a versão de hoje para `entry_hatch` (`popular`, cenário `rollover`),
+  `midsize_sedan` (`seda`, os três estados e os cinco cenários) e `fastback_sedan` (`civico`, cenário `rollover`); só os `hash` mudaram. A suíte inteira passa
+  (868 testes). Mudou a geometria de propósito? Regenere só o que falha, com as funções de `tests/helpers/` (`digest`, `legacyZoneId`), e anote em `evidence.md`.
 - `src/legacy-seeds.ts`: **não renomeie** os valores; eles seguram o visual idêntico ao original.
 - O README mostra `kit.build(...).group` num exemplo de navegador; o contexto real tem `c.root`.
 - Ficou fora de propósito (vai no adaptador do jogo via `kit.configure`): textos de 14 chaves de efeito de zona (`panel`, `door`, `glass`...),
@@ -64,7 +64,7 @@ Rodar: `pnpm --filter @adatechnology/game-vehicles-fleet test` (demora, uns 2 mi
 - Grupo `water` é marcado como água no kit; `exclude` aceita só ids válidos (`FleetVehicleId`).
 
 ## O que vem pela migração (spec 001)
-- V1: regenerar os goldens de `seda`, `popular`, `civico` com a versão de hoje (faz o CI voltar a ficar verde).
+- V1: feito na T0.3 (goldens de `seda`, `popular`, `civico` regenerados).
 - V2: entra o que o artefato da garagem tem e o SDK não tem (frotas de aviões, barcos, helicópteros, militares); a comparação a fundo vem primeiro.
 - V5: módulos de teste de veículos (8 itens, 11 cenários) em `examples/vehicles-test-area`.
 - Linha da horda e sangue vão para o repositório do jogo; `game-crowd` (P12) cuida da multidão.
