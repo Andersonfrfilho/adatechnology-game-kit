@@ -100,3 +100,34 @@ describe('module host', () => {
     expect(lent!.tool().weapon).toBe('pistol_9mm')
   })
 })
+
+describe('tool cycle events', () => {
+  const recording = (): { room: ReturnType<typeof makeRoom>; events: HostEvent[] } => {
+    const room = makeRoom()
+    const events: HostEvent[] = []
+    room.loadModule(benchModule((host) => host.on((e) => events.push(e))))
+    room.look([0, 1.7, 5], [0, 1.2, -11])
+    return { room, events }
+  }
+
+  it('Q reports the new mode, and a burst spends three rounds in that mode', () => {
+    const { room, events } = recording()
+    room.setTool('rifle_5_56')
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyQ' }))
+    expect(events.find((e) => e.type === 'mode')).toEqual({ type: 'mode', weapon: 'rifle_5_56', mode: 'burst' })
+    room.use()
+    const shot = events.find((e) => e.type === 'shot')
+    expect(shot).toMatchObject({ type: 'shot', weapon: 'rifle_5_56', shots: 3, rounds: 3, mode: 'burst' })
+    room.dispose()
+  })
+
+  it('a shotgun shell is many projectiles and one round', () => {
+    const { room, events } = recording()
+    room.setTool('shotgun_pump_12')
+    room.use()
+    const shot = events.find((e) => e.type === 'shot')
+    expect(shot?.type === 'shot' && shot.shots).toBeGreaterThan(1)
+    expect(shot).toMatchObject({ rounds: 1 })
+    room.dispose()
+  })
+})

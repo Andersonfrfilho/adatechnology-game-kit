@@ -100,6 +100,26 @@ room.loadModule(RENTAL_CARS) // items join the catalogue, scenarios become butto
 `build` receives the host's three.js namespace and returns its `Object3D` (both are `unknown` here: this package has no dependency on three.js).
 `impl` receives the object id the host gives the item and `DestructibleImpl.id` must equal it.
 
+### A bench for the module
+
+A module can also declare a bench as data: `controls` (number, boolean, choice, action), `layers` (things the viewer turns on or off) and
+`metrics` (counters the host pulls with `read()` a few times a second). The host keeps the values, draws them, and lends the module a
+`ModuleBench` in `attach` (`host.bench`): `value(id)`, `layer(id)`, `onChange(listener)` (right after `attach` it gets one change per control and
+layer, in order), `patch(id, { hidden, disabled, options, value })` (no echo) and `look(eye, target)`. `checkBench({ controls, layers, metrics })`
+checks the declaration (snake_case ids unique across the three, `min < max`, `step > 0`, defaults in range and among the options, `max > 0`).
+
+```ts
+controls: () => [
+  { kind: 'choice', id: 'distance', name: 'Distance', options: [{ id: 'near', name: 'Near' }, { id: 'far', name: 'Far' }], default: 'near' },
+  { kind: 'action', id: 'replay', name: 'Replay' },
+],
+layers: () => [{ id: 'smoke', name: 'Smoke' }],
+metrics: () => [{ id: 'particles', name: 'Particles', max: 400, read: () => fx.particles }],
+```
+
+Tool events are named after a tool's cycle, not a firearm: `mode`, `fault`, `clear` (start / end) and `safety`, and `shot` carries `rounds`
+(cartridges spent) next to `shots` (projectiles) and the `mode`. `HostTool` may report `mode`, `fault`, `safety` and `heat` (0..1).
+
 ## API
 
 Everything is exported from the package root; see `src/*.ts` for the doc comments. Units: metres, seconds, joules, millimetres (calibre), degrees Celsius.
@@ -119,3 +139,5 @@ antes definiam, então `import { Hit } from '@adatechnology/game-destruction'` c
 - **Animações**: `AnimationClipSpec` e `checkAnimation(clipe, idsDasPeças)` (uma porta `open`, uma pistola `reload`).
 - **Módulo**: `TestableModule` entrega itens, animações e cenários à sala de testes; `room.loadModule(modulo)` roda as verificações e escreve linhas
   ✓ / ✗ no log. Assim o módulo de um carro de aluguel já nasce com as suas animações e o seu jeito de quebrar.
+- **Bancada**: o módulo declara `controls`, `layers` e `metrics` como dados; a sala guarda os valores, desenha e empresta `host.bench`
+  (`ModuleBench`). `checkBench` valida a declaração. Eventos de ciclo da ferramenta: `mode`, `fault`, `clear`, `safety`, e `rounds` no `shot`.

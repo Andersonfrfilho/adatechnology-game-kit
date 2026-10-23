@@ -49,14 +49,16 @@ O módulo de teste completo (com `area` e `attach`) está na skill `game-test-ro
 | `AnimationClipSpec`, `ItemAnimationContract` | Animações de item |
 | `TestableModule`, `TestableItem`, `ModuleItemFluid`, `ModuleScenario` | O que um módulo entrega à sala |
 | `ModuleArea`, `AreaPlacement` | Como a sala monta a área do módulo (posições, `surface`, `asleep`, `view`) |
-| `ModuleHost`, `HostTool`, `HostEvent` | O que a sala empresta ao módulo em `attach` (eventos de ferramenta: `tool`, `shot`, `reload`, `empty`) |
+| `ModuleHost`, `HostTool`, `HostEvent` | O que a sala empresta ao módulo em `attach` (eventos de ferramenta: `tool`, `shot` com `rounds`/`mode`, `reload`, `empty`, `mode`, `fault`, `clear`, `safety`) |
+| `ModuleControl`, `ModuleLayer`, `ModuleMetric`, `ModuleBench`, `BenchChange`, `ControlPatch` | Bancada do módulo: controles, camadas e contadores declarados como dados; `host.bench` devolve as mudanças |
+| `checkBench({ controls, layers, metrics })` | Valida a bancada (`{ ok, problems }`): ids snake_case únicos entre os três, `min < max`, `step > 0`, padrões válidos, `max > 0` |
 
 ## Compõe com
 `game-destruction` (implementa o mundo e consome `Hit`), `game-weapons` (produz `Shot`/`Use`), `game-fluids`, `game-test-room` (carrega
 `TestableModule`) e todo pacote de conteúdo (`-fleet`, `-household`, `-species`) que expõe um módulo.
 
 ## Ambiente de teste
-`pnpm --filter @adatechnology/game-contracts test` (vitest: `contracts.test.ts`, `check-spec.test.ts`). Para ver um módulo funcionando, carregue-o
+`pnpm --filter @adatechnology/game-contracts test` (vitest: `contracts.test.ts`, `check-spec.test.ts`, `bench.test.ts`). Para ver um módulo funcionando, carregue-o
 na sala com `room.loadModule`; o relatório devolvido usa estes mesmos verificadores.
 
 ## Cuidados
@@ -65,7 +67,10 @@ na sala com `room.loadModule`; o relatório devolvido usa estes mesmos verificad
 - `ModuleHost.on` e `onFrame` devolvem a função de cancelamento; `attach` deve devolver a que desfaz tudo.
 - Id de módulo, item e clipe em snake_case; `checkAnimation` rejeita outro formato.
 - `shotToHit` ignora `normal` (aceito só por compatibilidade).
+- Eventos de ciclo da ferramenta têm nome genérico (`mode`, `fault`, `clear`, `safety`), nunca "jam"/"burst": servem a pistola de prego e a motosserra.
+  `shot.shots` são projéteis; `shot.rounds`, cartuchos gastos.
+- `ModuleMetric.read()` é puxado pela sala (~4 Hz, ou em `room.metrics()`): mantenha barato. `patch({ value })` não emite mudança.
 
 ## O que vem pela migração (spec 001)
-Decisão E5: ampliar o contrato genérico do módulo de teste (parâmetros, camadas e contadores) para a bancada de efeitos, que vira módulo do
-`game-vfx`. Também entram os contratos de `game-characters` (dano por região usando o `Hit`). Ainda não estão no código: não use antes de existirem.
+Decisão E5 (feita na T0.2): o contrato do módulo de teste tem bancada (controles, camadas e contadores), base da bancada de efeitos que vira
+módulo do `game-vfx`. Ainda por vir: os contratos de `game-characters` (dano por região usando o `Hit`); não use antes de existirem.

@@ -1,3 +1,6 @@
+import type { ControlValue } from '@adatechnology/game-contracts'
+import { createBenchPanel } from './bench-panel'
+import type { BenchView, MetricRow } from './bench-panel'
 import type { WritableLog } from './log'
 import type { RoomStrings } from './locale'
 import type { AnimationInfo, LogEntry, ScenarioReport, TestRoomItem, TestRoomScenario } from './types'
@@ -71,6 +74,9 @@ export interface UiOptions {
   onTap: () => void
   onPlay: (objectId: string, clipId: string) => void
   onResize: () => void
+  onControl: (id: string, value: ControlValue) => void
+  onLayer: (id: string, on: boolean) => void
+  onAction: (id: string) => void
 }
 
 export interface RoomUi {
@@ -81,6 +87,12 @@ export interface RoomUi {
   /** Open the catalogue on a group tab (its translated name), clearing the search. */
   showGroup(group: string): void
   togglePanels(): void
+  /** The active module's bench (null: none). */
+  bench(view: BenchView | null): void
+  /** Room counters and the active module's metrics, text only. */
+  metrics(rows: { room: readonly MetricRow[]; module: readonly MetricRow[] }): void
+  /** The bench panel has something to show (the room samples its counters only then). */
+  readonly benchVisible: boolean
   dispose(): void
 }
 
@@ -135,6 +147,13 @@ const CSS = `
 .tr-cat{flex:0 1 auto;max-height:40%}
 .tr-anim{flex:0 0 auto;max-height:18%}
 .tr-anim .list{display:flex;flex-wrap:wrap;gap:4px}.tr-anim .sub{color:#9aa3b2;margin-bottom:4px}
+.tr-bench{flex:0 1 auto;max-height:34%}
+.tr-bench .sub{color:#9aa3b2;margin-bottom:4px}
+.tr-ctls{display:flex;flex-direction:column;gap:5px}
+.tr-ctl{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.tr-ctl input[type=range]{flex:1;min-width:90px}.tr-ctl output{min-width:48px;text-align:right;color:#cfd3da}
+.tr-seg{display:inline-flex;flex-wrap:wrap;gap:2px}
+.tr-layers{margin-top:6px;display:flex;flex-direction:column;gap:2px}
+.tr-metrics{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin:6px 0 0}.tr-metrics dt{color:#9aa3b2}.tr-metrics dd{margin:0}
 .tr-tests{flex:1 1 auto;min-height:100px}
 .tr-tests .list{display:flex;flex-direction:column;gap:3px;margin-top:6px}.tr-tests .list .tr-btn{text-align:left}
 .tr-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;align-items:center}
@@ -298,7 +317,8 @@ export function createUi(o: UiOptions): RoomUi {
   const cat = mk('div', 'tr-panel tr-cat')
   const anim = mk('div', 'tr-panel tr-anim')
   const tests = mk('div', 'tr-panel tr-tests')
-  right.append(cat, anim, tests)
+  const benchPanel = createBenchPanel({ t, num: (n, d) => num(n, d), onControl: o.onControl, onLayer: o.onLayer, onAction: o.onAction })
+  right.append(cat, anim, benchPanel.element, tests)
 
   cat.appendChild(mk('h3', undefined, t('ui.catalog')))
   const itemSearch = mk('input', 'tr-search')
@@ -621,6 +641,11 @@ export function createUi(o: UiOptions): RoomUi {
       renderTabs()
     },
     togglePanels,
+    bench: benchPanel.show,
+    metrics: benchPanel.metrics,
+    get benchVisible() {
+      return benchPanel.visible
+    },
     dispose() {
       offLog()
       if (toastTimer) clearTimeout(toastTimer)

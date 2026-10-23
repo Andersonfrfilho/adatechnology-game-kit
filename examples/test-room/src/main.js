@@ -6,6 +6,7 @@
 //   ?area=furniture     open on one catalogue group (furniture, structure, vehicles, plants, items, containers, weapons)
 //   ?quality=low|medium|high
 //   ?ui=0               hide the panels
+//   ?bench=size=2;smoke=0   bench state of the loaded module (the page keeps it up to date as the controls change)
 import * as THREE from 'three'
 import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
 import { DEMO_MODULE } from './demo-module.js'
@@ -57,6 +58,14 @@ const room = createTestRoom({
   ui: params.get('ui') !== '0',
   initial: items ? items.split(',').filter(Boolean) : undefined,
   area: params.get('area') ?? undefined,
+  bench: {
+    state: params.get('bench') ?? undefined,
+    onChange: (_moduleId, encoded) => {
+      const url = new URL(location.href)
+      url.searchParams.set('bench', encoded)
+      history.replaceState(null, '', url)
+    },
+  },
 })
 
 // agents read the behaviour log from here, e.g. __testRoom.log.toNDJSON()
