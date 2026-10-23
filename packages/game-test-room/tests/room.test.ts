@@ -28,6 +28,19 @@ describe('room basics', () => {
     expect(room.spawn('steel_drum', [2, 0, -4]).movable).toBe(true)
   })
 
+  it('the tap is a core `tap` stream: it fills a container under it and stops when closed', () => {
+    const room = makeRoom()
+    const spout = room.fluids.taps()[0].position
+    room.fluids.addContainer({ capacity: 2, shape: { kind: 'cylinder', radius: 0.08, height: 0.2 }, opening: 0.08 }, { id: 'under_tap', position: [spout[0], spout[1] - 0.5, spout[2]] })
+    expect(room.fluids.streams()).toHaveLength(0)
+    expect(room.toggleTap()).toBe(true)
+    expect(room.fluids.streams().map((x) => x.cause)).toEqual(['tap'])
+    for (let i = 0; i < 120; i++) room.update(1 / 60)
+    expect(room.fluids.container('under_tap')!.liters).toBeGreaterThan(0.2)
+    expect(room.toggleTap()).toBe(false)
+    expect(room.fluids.streams()).toHaveLength(0)
+  })
+
   it('refuses an unknown item', () => {
     expect(() => makeRoom().spawn('nope')).toThrow(/unknown item/)
   })

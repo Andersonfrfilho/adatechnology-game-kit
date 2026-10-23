@@ -511,8 +511,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     renderer.clear()
     fluids.clearStains([0, 0, 0], 1e4)
     fluidView.clear()
-    arena.setTapJet(false, 0)
-    tapOn = false
+    fluids.setTap(TAP_ID, false)
   }
 
   const clear = (): void => {
@@ -1222,29 +1221,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Tap
   // ---------------------------------------------------------------------------------------------------------------------------------------
-  let tapOn = false
+  const TAP_ID = 'room_tap'
   const TAP_RATE = 0.25
-  const toggleTap = (on = !tapOn): boolean => {
-    tapOn = on
+  fluids.addTap({ id: TAP_ID, position: arena.tapSpout, liquid: 'water', rate: TAP_RATE, temperature: 16, on: false })
+  const isTapOn = (): boolean => fluids.taps().some((x) => x.id === TAP_ID && x.on)
+  const toggleTap = (on = !isTapOn()): boolean => {
+    fluids.setTap(TAP_ID, on)
     action('tap', t(on ? 'act.tap.on' : 'act.tap.off'))
-    if (!on) arena.setTapJet(false, 0)
-    return tapOn
-  }
-  const updateTap = (dt: number): void => {
-    if (!tapOn) return
-    const sp = arena.tapSpout
-    let top = arena.table.top
-    for (const c of fluids.containers()) {
-      if (!c.position || !c.shape) continue
-      const lip = c.lipRadius ?? 0.04
-      if (Math.hypot(c.position[0] - sp[0], c.position[2] - sp[2]) > Math.max(lip, 0.05)) continue
-      const h = c.shape.kind === 'cylinder' ? c.shape.height : c.shape.size[1]
-      if (c.position[1] + h > sp[1]) continue
-      top = Math.max(top, c.position[1] + c.surfaceHeight)
-      fluids.fill(c.id, 'water', TAP_RATE * dt, 16)
-    }
-    arena.setTapJet(true, sp[1] - top)
-    if (top <= arena.table.top + 1e-3) fluids.splash('water', [sp[0], arena.table.top, sp[2]], TAP_RATE * dt)
+    return on
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -1463,7 +1447,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const reps = fastForward ? 10 : 1
     updateItemUse(dt)
     updateProjectiles(dt)
-    updateTap(dt)
     syncContainers(dt)
     for (let i = 0; i < reps; i++) {
       world.update(dt)
@@ -1524,7 +1507,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       locked: player.locked,
       timeScale,
       fast: fastForward,
-      tap: tapOn,
+      tap: isTapOn(),
       quality: qualityName,
       objects: [...entries.values()].filter((e) => !e.arena).length,
     }

@@ -23,8 +23,6 @@ export interface Arena {
   /** Rectangle and height of the table top (pieces rest on it while the table stands). */
   table: { minX: number; maxX: number; minZ: number; maxZ: number; top: number; id: string; topPart: string }
   tapSpout: Vec3
-  /** Show or hide the water jet from the tap, `length` metres long. */
-  setTapJet(on: boolean, length: number): void
   sun: THREE_NS.DirectionalLight
 }
 
@@ -136,13 +134,6 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
     group.add(m)
   }
   const tapSpout: Vec3 = [tableX + 0.3, 1.28, 0]
-  const jet = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.011, 0.011, 1, 8),
-    new THREE.MeshStandardMaterial({ color: 0x6fb7e8, transparent: true, opacity: 0.7, roughness: 0.1 }),
-  )
-  jet.visible = false
-  jet.name = 'tap-jet'
-  group.add(jet)
 
   const objects: ArenaObject[] = [
     { id: 'target_wall', spec: brickWallSpec(), position: [0, 0, wallZ], colors: { brick: 0xa5472e } },
@@ -167,13 +158,6 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
     wallZ,
     table: { minX: tableX - 0.8, maxX: tableX + 0.8, minZ: -0.4, maxZ: 0.4, top: 0.78, id: 'table', topPart: 'top' },
     tapSpout,
-    setTapJet(on, length) {
-      jet.visible = on
-      if (!on) return
-      const len = Math.max(0.05, length)
-      jet.scale.set(1, len, 1)
-      jet.position.set(tapSpout[0], tapSpout[1] - len / 2, tapSpout[2])
-    },
     sun,
   }
 }
