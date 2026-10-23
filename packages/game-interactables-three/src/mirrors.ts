@@ -16,6 +16,12 @@ export interface MirrorOptions {
   scene?: ThreeNS.Object3D
   /** Distance in front of the plane, meters. Default 0.001. */
   offset?: number
+  /**
+   * three's `Reflector` renders the scene again inside the main `render()`, and that nested render resets `renderer.info` when
+   * `info.autoReset` is on, so the counters would only show the reflector pass. With `keepInfo` (default true) the reflector adds
+   * what was counted before it back, so `renderer.info.render.calls` covers the whole frame. Skipped when `info.autoReset` is off.
+   */
+  keepInfo?: boolean
 }
 
 /** The mirror entries of `world.mirrors(...)` (only these fields are read). */
@@ -77,6 +83,19 @@ export function createMirrors(THREE: ThreeLib, options: MirrorOptions = {}): Mir
     if (slots.length >= max) return null
     const reflector = new options.Reflector(geometry, { textureWidth: resolution, textureHeight: resolution, clipBias: 0.003 })
     reflector.name = 'mirror:reflector'
+    if (options.keepInfo !== false) {
+      const original = reflector.onBeforeRender
+      reflector.onBeforeRender = function (this: ThreeNS.Mesh, renderer, scene, camera, geo, mat, grp) {
+        const info = renderer.info
+        if (!info.autoReset) return original.call(this, renderer, scene, camera, geo, mat, grp)
+        const before = { calls: info.render.calls, triangles: info.render.triangles, points: info.render.points, lines: info.render.lines }
+        original.call(this, renderer, scene, camera, geo, mat, grp)
+        info.render.calls += before.calls
+        info.render.triangles += before.triangles
+        info.render.points += before.points
+        info.render.lines += before.lines
+      }
+    }
     reflector.visible = false
     const s: Slot = { reflector, id: null }
     slots.push(s)

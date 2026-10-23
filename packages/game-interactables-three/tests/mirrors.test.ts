@@ -129,3 +129,50 @@ describe('reflector orientation', () => {
     expect(reflector.scale.y).toBeCloseTo(2)
   })
 })
+
+describe('mirrors and renderer.info', () => {
+  // three's Reflector renders the scene inside onBeforeRender, and that nested render resets info when autoReset is on
+  class ResettingReflector extends FakeReflector {
+    onBeforeRender(renderer: any): void {
+      renderer.info.reset()
+      renderer.info.render.calls += 5
+      renderer.info.render.triangles += 50
+    }
+  }
+  const fakeRenderer = (autoReset: boolean) => {
+    const info = {
+      autoReset,
+      render: { calls: 0, triangles: 0, points: 0, lines: 0 },
+      reset() {
+        this.render.calls = this.render.triangles = this.render.points = this.render.lines = 0
+      },
+    }
+    return { info }
+  }
+  const run = (options: { keepInfo?: boolean }, autoReset = true) => {
+    const scene = new THREE.Scene()
+    const mirrors = createMirrors(THREE, { Reflector: ResettingReflector as any, ...options })
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial())
+    scene.add(mesh)
+    mirrors.register('o:m', mesh)
+    const camera = new THREE.PerspectiveCamera()
+    camera.position.set(0, 0, 3)
+    camera.updateMatrixWorld(true)
+    mirrors.update(camera, [{ id: 'o:m', center: [0, 0, 0], normal: [0, 0, 1] }])
+    const reflector = scene.children.find((c) => c instanceof ResettingReflector) as ResettingReflector
+    const renderer = fakeRenderer(autoReset)
+    renderer.info.render.calls = 100 // drawn before the reflector in the main pass
+    renderer.info.render.triangles = 1000
+    reflector.onBeforeRender(renderer as any, scene, camera, mesh.geometry, mesh.material, null as any)
+    return renderer.info.render
+  }
+
+  it('restores the counters of the main pass by default', () => {
+    expect(run({})).toMatchObject({ calls: 105, triangles: 1050 })
+  })
+
+  it('keepInfo false leaves three behaviour alone; a host with autoReset off is not touched', () => {
+    expect(run({ keepInfo: false })).toMatchObject({ calls: 5, triangles: 50 })
+    expect(run({}, false)).toMatchObject({ calls: 5, triangles: 50 })
+  })
+})

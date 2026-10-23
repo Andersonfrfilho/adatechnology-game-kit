@@ -60,6 +60,12 @@ Every function also exists unbound and takes `THREE` first: `createMeshApi(THREE
 - `materials` maps keys to your materials; missing keys get defaults with `vertexColors` (`MeshStandardMaterial` for `quality: 'high'`,
   `MeshLambertMaterial` for `'game'`, which also uses fewer segments). Atlas materials are yours to provide (a `CanvasTexture` of the atlas).
 - `api.light` creates a `PointLight` inside the right group; `finish()` also returns them as `lights`.
+- **Draw calls in `game` quality.** `plain`, `metal`, `wood` and `fabric` are one shared Lambert material, so they merge into one mesh per
+  target. `finish(spec)` (pass the spec the pack returned; option `mergeParts`, default on in `game` quality) also merges the parts of one
+  `PartSpec.group` that share a motion (blind slats: a per-vertex pivot in the vertex shader, one set of uniforms, shadows follow) and the
+  `cloth` soft volumes (clothes on a line: one mesh, a per-vertex cloth index and anchor, each cloth keeps its own swing). `parts[id]` then
+  points at the merged group (`userData.merged`) and `syncObject` drives it. Parts with a mirror, a turned part (`ry`) or a lone part stay as they are.
+  Measured on the household pack: blinds 38 meshes to 3, clothesline 31 to 2.
 
 ### Poses and sync
 
@@ -82,14 +88,21 @@ three on a mesh; `syncObject` drives its uniforms from `world.sway(...)`.
 
 ```ts
 const effects = gfx.createEffects(scene, { maxParticles: 800, document })
-effects.update(dt, world.emitters())
-effects.setViewHeight(renderer.domElement.height) // on resize, sizes the point sprites
+effects.update(dt, world.emitters(), camera) // the camera's fov sizes the point sprites
+effects.setViewHeight(renderer.domElement.height) // on resize
 ```
 
-Smoke (soft grey, rising and growing), steam, fire (additive, yellow to red), gas `flame` (blue ring), water (tapered particle stream with
-gravity, drips when the intensity is low) and sparks. One `Points` per kind, fixed buffers, swap-remove, no allocations per frame; the total
-alive never exceeds `maxParticles` (split by kind). The sprite is painted on a canvas from `document`, or generated as a data texture
-without one. Seeded, so the same seed gives the same plumes.
+Smoke and steam (thick, soft, rising and growing), fire (additive, yellow to red), sparks and water. One `Points` per kind, fixed buffers,
+swap-remove, no allocations per frame; the total alive never exceeds `maxParticles` (split by kind). The sprite is painted on a canvas from
+`document`, or generated as a data texture without one. Seeded, so the same seed gives the same plumes. Sprite sizes use the camera's
+vertical `fov` (and `zoom`), read on every `update` (or `setCamera(camera)`); without a camera a 90 degree lens is assumed.
+
+- **Water** (intensity 0.25 and up) is a tapered, translucent stream mesh with scrolling streaks along the gravity arc from the outlet down
+  to the floor (`floorY` option) or to `emitter.reach` meters below it (a tap ends in the basin), plus spray droplets around it and a splash
+  with a little mist where it lands. A thin emitter (tap) narrows as it falls, a wide one (shower) opens up. One draw call per stream
+  (`maxStreams`, default 6). Low intensities drip.
+- **Gas `flame`** is a ring of small blue cones per burner (all rings share one mesh, one draw call, `maxFlames`) plus a soft glow.
+- The meshes live in `effects.meshes` (`group`, `streams`, `flames`).
 
 ### Screens
 
@@ -112,6 +125,11 @@ mirrors.update(camera, world.mirrors(eye, 6)) // returns the ids that got a real
 
 Registered meshes show an env-map material. The nearest `max` facing the camera get a pooled `Reflector`, placed 1 mm in front of the plane
 with the mesh's rotation and size. Without a `Reflector` everything stays on the env map.
+
+**`renderer.info` and the Reflector.** three's `Reflector` renders the scene again inside the main `render()`; that nested render resets
+`renderer.info` (when `info.autoReset` is on), so `info.render.calls` would only count the reflector pass. `createMirrors({ keepInfo })`
+(default `true`) wraps the reflector so the counters of the main pass are added back and `info.render.calls` / `triangles` cover the whole
+frame. A host that sets `renderer.info.autoReset = false` and resets it itself is left alone.
 
 ### Cords
 
