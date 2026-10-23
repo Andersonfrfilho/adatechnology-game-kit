@@ -41,7 +41,7 @@ scene.add(group)
 world.update(dt)
 gfx.syncObject(world, 'wardrobe-1', parts, { time: clock.elapsedTime })
 effects.update(dt, world.emitters())
-mirrors.update(camera, world.mirrors({ x, y, z }, 6))
+mirrors.update(camera, world.mirrors([x, y, z], 6))
 ```
 
 Every function also exists unbound and takes `THREE` first: `createMeshApi(THREE, options)`, `applyPose(THREE, group, motion, t)`, ...
