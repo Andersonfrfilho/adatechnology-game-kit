@@ -195,4 +195,24 @@ describe('toggle_breaker', () => {
       expect(find().label).toBe(on)
     }
   })
+
+  it('a rocker gated behind a closed door cannot be flipped, and shows the display name', () => {
+    const gatedPanel: ObjectSpec = {
+      type: 'panel',
+      parts: [
+        { id: 'door', pivot: [0, 1, 0], motion: { kind: 'hinge' }, label: 'prompt.door' },
+        { id: 'br', pivot: [0, 1.5, 0], motion: { kind: 'rocker' }, t0: 1, requires: 'door' },
+      ],
+      interactions: [{ id: 'br', pos: [0, 1.5, 0], label: '', action: { do: 'toggle_breaker', circuit: 'c1', part: 'br', name: 'Kitchen' } }],
+    }
+    const { w } = world()
+    w.add('p', gatedPanel, origin)
+    expect(w.target({ x: 0, y: 1.5, z: 0.5, yaw: 0, pitch: 0 })?.id).not.toBe('p:br')
+    expect(w.act('p:br')).toBe(false)
+    expect(w.power.breaker('c1')).toBe(true)
+    w.setPart('p', 'door', 1, true)
+    expect(w.interactables().find((i) => i.id === 'p:br')!.label).toBe('Switch off Kitchen')
+    expect(w.act('p:br')).toBe(true)
+    expect(w.power.breaker('c1')).toBe(false)
+  })
 })

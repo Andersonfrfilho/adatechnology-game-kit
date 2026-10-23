@@ -352,8 +352,8 @@ export type Action =
   | { do: 'toggle_device'; device: string }
   | { do: 'cycle_device'; device: string }
   | { do: 'toggle_switch'; switch: string }
-  /** Flips the building circuit `circuit` (see `World.power.setBreaker`). `part` is a rocker of the same object that mirrors the state (t = 1 when on). */
-  | { do: 'toggle_breaker'; circuit: string; part?: string }
+  /** Flips the building circuit `circuit` (see `World.power.setBreaker`). `part` is a rocker of the same object that mirrors the state (t = 1 when on); while that part is gated (`PartSpec.requires`, e.g. a closed panel door) the action is refused. `name` is shown in the prompt instead of the circuit id. */
+  | { do: 'toggle_breaker'; circuit: string; part?: string; name?: string }
   | { do: 'toggle_fixture'; fixture: string }
   | { do: 'toggle_burner'; burner: string }
   | { do: 'ignite'; burner: string }

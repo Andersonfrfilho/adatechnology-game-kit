@@ -1020,7 +1020,7 @@ export function createWorld(options: WorldOptions = {}): World {
       if (state && table[`${i.label}.${state}`] !== undefined) key = `${i.label}.${state}`
       else if (table[i.label] !== undefined) key = i.label
     }
-    return t(key, { name: typeName(o), circuit: a.do === 'toggle_breaker' ? a.circuit : '' })
+    return t(key, { name: typeName(o), circuit: a.do === 'toggle_breaker' ? (a.name ?? a.circuit) : '' })
   }
 
   function requirementMet(i: InteractionSpec): boolean {
@@ -1032,6 +1032,10 @@ export function createWorld(options: WorldOptions = {}): World {
   function applicable(o: ObjState, i: InteractionSpec): boolean {
     const a = i.action
     if (!requirementMet(i)) return false
+    if (a.do === 'toggle_breaker' && a.part) {
+      const rocker = o.parts.get(a.part)
+      if (rocker && gated(o, rocker)) return false
+    }
     if (a.do === 'take' || a.do === 'read') return accessible(o.id, a.container)
     if (a.do === 'ignite') return !o.burners.get(a.burner)?.lit
     if (a.do === 'toggle_burner') {
@@ -1164,6 +1168,8 @@ export function createWorld(options: WorldOptions = {}): World {
       case 'toggle_switch':
         return toggleSwitch(o, a.switch)
       case 'toggle_breaker': {
+        const rocker = a.part ? o.parts.get(a.part) : undefined
+        if (rocker && gated(o, rocker)) return false
         const on = !breaker(a.circuit)
         if (a.part) setPartTarget(o, a.part, on ? 1 : 0)
         world.power.setBreaker(a.circuit, on)
