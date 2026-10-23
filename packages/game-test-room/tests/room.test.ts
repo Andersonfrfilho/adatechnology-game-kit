@@ -188,6 +188,58 @@ describe('carrying and drinking', () => {
   })
 })
 
+describe('log quality', () => {
+  const breakPane = (locale: string) => {
+    const room = makeRoom({ locale })
+    const pane = room.spawn('glass_pane', [0, 0, -4], 0)
+    for (let i = 0; i < 12 && room.world.part(pane.objectId, 'pane')?.status !== 'broken'; i++) {
+      room.world.hitPart(pane.objectId, 'pane', { type: 'ballistic', point: [0, 1.05, -4.0], direction: [0, 0, -1], energy: 500, caliber: 9 })
+    }
+    return room.log.entries({ objectId: pane.objectId })
+  }
+
+  it('a part that breaks is ONE line, with the joints it left and the pieces that remain', () => {
+    const en = breakPane('en').filter((e) => e.type === 'fracture' || e.type === 'detach')
+    expect(en.map((e) => e.text)).toEqual([expect.stringMatching(/^Glass pane › pane \(glass\): shattered into \d+ shards and came loose from 4 joints; the object now has 1 piece$/)])
+    const pt = breakPane('pt-BR').filter((e) => e.type === 'fracture' || e.type === 'detach')
+    expect(pt.map((e) => e.text)).toEqual([expect.stringMatching(/^Vidro de janela › pane \(vidro\): estilhaçou em \d+ cacos e se soltou de 4 encaixes; o objeto agora tem 1 peça$/)])
+  })
+
+  it('a blow that opens several joints of an object is one line too, with the right plural', () => {
+    const room = makeRoom()
+    const crate = room.spawn('wooden_crate', [0, 0, -4], 0)
+    room.world.hit(crate.objectId, { type: 'explosive', point: [0, 0.25, -4], energy: 30000, radius: 3 })
+    const detach = room.log.entries({ type: 'detach', objectId: crate.objectId })
+    expect(detach.length).toBeLessThanOrEqual(1)
+    const lines = room.log.entries({ objectId: crate.objectId }).map((e) => e.text)
+    expect(lines.filter((x) => /\b1 pieces\b/.test(x))).toEqual([])
+    expect(lines.some((x) => /came loose from \d+ joints; the object now has \d+ pieces?$/.test(x) || /\d+ joints broke loose/.test(x))).toBe(true)
+  })
+
+  it('spawned things rest on the floor or the table and never log a landing', () => {
+    const room = makeRoom()
+    for (const item of demoItems('en')) room.spawn(item.id)
+    room.spawn('coffee_cup', [3.5, 0, 0])
+    for (let i = 0; i < 240; i++) room.update(1 / 60)
+    expect(room.log.entries({ type: 'landing' })).toEqual([])
+    const cup = room.spawned().filter((s) => s.itemId === 'coffee_cup')[1]
+    const box = new THREE.Box3().setFromObject(cup.root)
+    expect(box.min.y).toBeGreaterThan(0.77)
+    expect(box.min.y).toBeLessThan(0.8)
+  })
+
+  it('a landing under 3 m/s is not logged, a real drop is, with its speed and energy', () => {
+    const room = makeRoom()
+    const crate = room.spawn('wooden_crate', [-1, 0.2, -3], 0)
+    const high = room.spawn('wooden_crate', [1, 1.5, -3], 0)
+    for (let i = 0; i < 240; i++) room.update(1 / 60)
+    const lines = room.log.entries({ type: 'landing' })
+    expect(lines.map((e) => e.objectId)).toEqual([high.objectId])
+    expect(crate.objectId).not.toBe(high.objectId)
+    expect(lines[0].text).toMatch(/Wooden crate landed at \d\.\d m\/s: \d+(\.\d)? J/)
+  })
+})
+
 describe('structure', () => {
   it('logs stress and collapse with the numbers, and the inspector reads load and stress', () => {
     const room = makeRoom({ locale: 'pt-BR' })
@@ -196,7 +248,7 @@ describe('structure', () => {
     room.world.hitPart(id, 'column_0_1_0', { type: 'blunt', point: [2, 1.4, -8], energy: 3e6, radius: 0.05 })
     for (let i = 0; i < 60; i++) room.update(1 / 60)
     const text = room.log.toText()
-    expect(text).toMatch(/Estrutura de prédio: desabou, \d+ peças caíram \(\d+ kg\)/)
+    expect(text).toMatch(/Estrutura de prédio: desabou, caíram (1 peça|\d+ peças) \(\d+ kg\): /)
     expect(text).toMatch(/column_0_\d_\d \(concreto\): sobrecarregado a \d+% da capacidade, sustentando \d+ kg/)
     room.look([-2, 1.5, -1.5], [-2, 1.4, -4])
     const info = room.inspectInfo()

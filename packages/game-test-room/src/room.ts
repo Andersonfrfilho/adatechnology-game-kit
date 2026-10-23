@@ -241,6 +241,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     liquidName: (id) => fStrings.liquids[id] ?? id,
     jointKind: (k) => dStrings.jointKinds[k as keyof typeof dStrings.jointKinds] ?? k,
     toolName: (k) => dStrings.toolKinds[k as keyof typeof dStrings.toolKinds] ?? k,
+    locatePart: (objectId, partId) => {
+      const own = world.part(objectId, partId)
+      if (own) return { objectId, part: own }
+      for (const [id, owner] of splitOf) {
+        if (owner.so.objectId !== objectId) continue
+        const p = world.part(id, partId)
+        if (p) return { objectId: id, part: p }
+      }
+      return null
+    },
     containerName: (cid) => {
       for (const e of entries.values()) if (e.containerId === cid) return { name: e.name, objectId: e.so.objectId, itemId: e.so.itemId }
       return undefined
@@ -418,7 +428,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (!item) throw new Error(`game-test-room: unknown item "${itemId}"`)
     const root = item.build(THREE)
     let pos: Vec3
-    if (position) pos = position
+    if (position) pos = [position[0], position[1], position[2]]
     else {
       const fx = -Math.sin(player.yaw)
       const fz = -Math.cos(player.yaw)
@@ -438,11 +448,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const { spec, parts } = resolveSpec(item, root)
     root.updateMatrixWorld(true)
     const objectId = `${item.id}_${++counter}`
-    const q = root.getWorldQuaternion(tmpQ)
-    world.add(spec, { id: objectId, position: pos, rotation: [q.x, q.y, q.z, q.w] })
     const mass = spec.parts.reduce((m, p) => m + (p.mass ?? 0), 0)
     const heavy = (mass || massGuess(spec)) > maxCarry
     const movable = item.movable ?? !heavy
+    if (movable) {
+      // things that can fall rest on the floor or the table by the bottom of their bounding box (or hang at the height asked for): no drop on spawn
+      const box = new THREE.Box3().setFromObject(root)
+      const base = Math.max(pos[1], groundAt(pos[0], pos[2]))
+      pos = [pos[0], pos[1] + (base - box.min.y), pos[2]]
+      root.position.set(pos[0], pos[1], pos[2])
+      root.updateMatrixWorld(true)
+    }
+    const q = root.getWorldQuaternion(tmpQ)
+    world.add(spec, { id: objectId, position: pos, rotation: [q.x, q.y, q.z, q.w] })
     const e = registerEntry(objectId, item.id, root, spec, item.name, parts, item, false, movable)
     action('spawn', t('act.spawn', { name: item.name, x: num(pos[0], 1), z: num(pos[2], 1) }), { objectId, itemId: item.id, data: { position: pos, movable, massKg: Math.round(massOfObject(objectId) * 10) / 10 } })
     fire('spawn', e.so)
@@ -1235,6 +1253,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // Thrown and falling pieces: damage to what they hit
   // ---------------------------------------------------------------------------------------------------------------------------------------
   const lastImpact = new Map<string, number>()
+  /** Landings slower than this (m/s) are not logged (the renderer only treats 3 m/s and up as a hard landing; nothing below 1.5 m/s is ever worth a line). */
+  const MIN_LANDING_LOG = 3
   const updateImpacts = (): void => {
     const check = (piece: Piece): void => {
       if (piece.held || piece.sleeping) return
@@ -1269,9 +1289,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const prev = prevVy.get(piece.objectId) ?? 0
       prevVy.set(piece.objectId, vy)
       // the renderer applies the landing damage itself (source 'fall'); here we only describe it in the log
-      if (piece.held || prev > -3 || vy < prev + 2 || !world.has(piece.objectId)) return
+      if (piece.held || prev > -MIN_LANDING_LOG || vy < prev + 2 || !world.has(piece.objectId)) return
       const energy = 0.5 * piece.mass * prev * prev
-      action('landing', t('act.landing', { name: nameOf(piece.objectId), speed: num(-prev, 1), energy: num(energy, 1) }), {
+      action('landing', t('act.landing', { name: nameOf(piece.objectId), speed: num(-prev, 1), energy: num(energy, energy < 100 ? 1 : 0) }), {
         objectId: piece.objectId,
         itemId: entryOf(piece.objectId)?.so.itemId,
         data: { energyJ: Math.round(energy * 10) / 10, speedMs: Math.round(-prev * 10) / 10 },

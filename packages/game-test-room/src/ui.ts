@@ -441,7 +441,8 @@ export function createUi(o: UiOptions): RoomUi {
     if (i.char > 0.01) insp.appendChild(row(t('ins.char'), `${num(i.char * 100, 0)} %`))
     if (i.melt > 0.01) insp.appendChild(row(t('ins.melt'), `${num(i.melt * 100, 0)} %`))
     if (i.liters !== undefined) insp.appendChild(row(t('ins.liters'), `${num(i.liters, 2)} l`))
-    insp.appendChild(row(t('ins.damage'), t('ins.damage_counts', { dents: i.dents, holes: i.holes, cracks: i.cracks })))
+    const cn = (what: string, n: number): string => t(`count.${what}.${n === 1 ? 'one' : 'other'}`, { n })
+    insp.appendChild(row(t('ins.damage'), t('ins.damage_counts', { dents: cn('dent', i.dents), holes: cn('hole', i.holes), cracks: cn('crack', i.cracks) })))
     insp.appendChild(row(t('ins.mass'), `${num(i.mass, 1)} kg`))
     if (i.load !== undefined) insp.appendChild(row(t('ins.load'), `${num(i.load, 0)} kg`))
     if (i.stress !== undefined) {

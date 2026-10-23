@@ -9,6 +9,8 @@ type Num = (n: number, digits?: number) => string
 /** Built-in scripted checks over the generic `DEMO_ITEMS`. Names and check texts come from the room locale. */
 export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[] {
   const yn = (b: boolean): string => t(b ? 'yes' : 'no')
+  const cn = (what: string, n: number): string => t(`count.${what}.${n === 1 ? 'one' : 'other'}`, { n })
+  const pc = (n: number): string => t(n === 1 ? 'count.piece.one' : 'count.piece.other', { n })
   const sc = (id: string, run: (c: ScenarioContext) => void | Promise<void>): TestRoomScenario => ({ id, name: t(`sc.${id}`), run })
 
   const at = (room: TestRoom, itemId: string, x: number, z: number, y = 0, rot = 0): string => room.spawn(itemId, [x, y, z], rot).objectId
@@ -54,7 +56,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
       const through = p?.holes.some((h) => h.through) ?? true
       expect(
         !through && (p?.holes.length ?? 0) + (p?.dents.length ?? 0) + (p?.cracks.length ?? 0) > 0 && (wall?.holes.length ?? 0) === 0,
-        t('sc.concrete_stops_bullet.check', { through: yn(through), dents: p?.dents.length ?? 0, holes: p?.holes.length ?? 0, cracks: p?.cracks.length ?? 0, hp: `${num(p?.hp ?? 0, 0)}/${num(p?.maxHp ?? 0, 0)}` }),
+        t('sc.concrete_stops_bullet.check', { through: yn(through), dents: cn('dent', p?.dents.length ?? 0), holes: cn('hole', p?.holes.length ?? 0), cracks: cn('crack', p?.cracks.length ?? 0), hp: `${num(p?.hp ?? 0, 0)}/${num(p?.maxHp ?? 0, 0)}` }),
         { through },
       )
     }),
@@ -135,7 +137,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
       const elapsed = done ? done.t - t0 : 5
       const want = JOINT_DEFAULTS.screw.seconds
       const groups = room.renderer.pieces().length
-      expect(!!done && Math.abs(elapsed - want) < 0.6 && groups >= 1, t('sc.screwdriver_shelf_board.check', { secs: num(elapsed, 1), want: num(want, 1), groups }), { elapsed, want })
+      expect(!!done && Math.abs(elapsed - want) < 0.6 && groups >= 1, t('sc.screwdriver_shelf_board.check', { secs: num(elapsed, 1), want: num(want, 1), pieces: pc(groups) }), { elapsed, want })
       step(0.2)
     }),
 
@@ -207,7 +209,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
       const state = room.world.state(crate)
       const lost = (state?.parts ?? []).filter((p) => p.status === 'broken').length + (state && state.groups.length > 1 ? 1 : 0)
       expect(count(room, 'explode', bottle) > 0, t('sc.gas_bottle_explodes.explode', { seconds }), { seconds })
-      expect(moved > 0.3 || lost > 0, t('sc.gas_bottle_explodes.push', { moved: num(moved, 1), lost }), { moved, lost })
+      expect(moved > 0.3 || lost > 0, t('sc.gas_bottle_explodes.push', { moved: num(moved, 1), lost: pc(lost) }), { moved, lost })
     }),
 
     sc('bottle_drop_shatters', ({ room, step, expect }) => {
@@ -314,7 +316,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
       const pieces = room.renderer.pieces().filter((p) => p.mass >= 2000)
       const logged = heavyCollapse(room) >= 2000
       const kg = pieces.reduce((m, p) => m + p.mass, 0)
-      expect(!part(room, id, 'roof') && pieces.length > 0, t('sc.two_columns_roof_collapses.check', { stress: num(stress0 * 100, 0), pieces: pieces.length, kg: num(kg, 0), logged: yn(logged) }), { kg, logged })
+      expect(!part(room, id, 'roof') && pieces.length > 0, t('sc.two_columns_roof_collapses.check', { stress: num(stress0 * 100, 0), pieces: pc(pieces.length), kg: num(kg, 0), logged: yn(logged) }), { kg, logged })
     }),
 
     sc('extinguisher_puts_out_fire', ({ room, step, expect }) => {

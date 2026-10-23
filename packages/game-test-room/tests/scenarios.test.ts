@@ -19,6 +19,12 @@ describe('built-in scenarios (headless)', () => {
     const checks = room.log.entries({ channel: 'check' })
     expect(checks.filter((c) => c.type === 'pass').every((c) => c.text.startsWith('✓ '))).toBe(true)
     expect(checks.filter((c) => c.type === 'scenario_pass')).toHaveLength(report.passed)
+    // readable log: right singular/plural, no per-joint spam, no empty parentheses or dangling commas
+    const text = room.log.entries().map((e) => e.text)
+    expect(text.filter((x) => /\b1 (pieces|joints|peças|encaixes)\b/.test(x))).toEqual([])
+    expect(text.filter((x) => /\(\)|, $|surface\./.test(x))).toEqual([])
+    expect(room.log.entries({ type: 'detach' }).filter((e) => (e.data?.parts as unknown[] | undefined)?.length && e.data?.by === 'part_lost' && !e.data?.jointsOpened)).toEqual([])
+    expect(room.log.entries({ type: 'landing' }).every((e) => Number(e.data?.speedMs) >= 3)).toBe(true)
   }, 120000)
 
   it('is deterministic: two rooms give the same checks and the same event counts', async () => {
