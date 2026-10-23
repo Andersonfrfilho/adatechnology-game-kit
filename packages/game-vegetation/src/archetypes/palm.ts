@@ -17,7 +17,7 @@ interface Defaults {
   lean: number
 }
 const DEF: Record<NonNullable<PalmSpec['variant']>, Defaults> = {
-  coconut: { height: 7, trunkRadius: 0.17, frondCount: 15, frondLength: 3.3, leaf: 0x4e9a3c, trunk: 0xa08a68, lean: 0.14 },
+  coconut: { height: 7, trunkRadius: 0.17, frondCount: 18, frondLength: 2.7, leaf: 0x4e9a3c, trunk: 0xa08a68, lean: 0.2 },
   royal: { height: 11, trunkRadius: 0.27, frondCount: 13, frondLength: 3.8, leaf: 0x4a9a3c, trunk: 0xbab4a4, lean: 0.01 },
   fan: { height: 3.2, trunkRadius: 0.2, frondCount: 16, frondLength: 1.5, leaf: 0x5a9a44, trunk: 0x7a5c3c, lean: 0.03 },
   areca: { height: 2.6, trunkRadius: 0.03, frondCount: 5, frondLength: 1.5, leaf: 0x78ae3e, trunk: 0x9aa860, lean: 0.25 },
@@ -52,7 +52,7 @@ export function generatePalm(spec: PalmSpec, ctx: Ctx): ArchResult {
     const wob = srng.range(0, TAU)
     for (let i = 0; i <= 4; i++) {
       const t = i / 4
-      const off = stemLean * stemH * (t * t) + Math.sin(t * 3 + wob) * 0.02 * stemH
+      const off = stemLean * stemH * (variant === 'coconut' ? 0.35 * t + 0.65 * t * t : t * t) + Math.sin(t * 3 + wob) * (variant === 'coconut' ? 0.045 : 0.02) * stemH
       ctrl.push([Math.cos(az) * off, stemH * t, Math.sin(az) * off])
     }
     const full = catmull(ctrl, Math.max(1, Math.round(nPts / 4)))
@@ -88,10 +88,10 @@ export function generatePalm(spec: PalmSpec, ctx: Ctx): ArchResult {
     let crownTop: Vec3 = top
     if (variant === 'royal') {
       // smooth green crownshaft
-      const shaft: Vec3[] = [top, add(top, [0, 0.35, 0]), add(top, [0.0, 0.8, 0])]
+      const shaft: Vec3[] = [top, add(top, [0, 0.5, 0]), add(top, [0.0, 1.25, 0])]
       const shaftC = mix(leafBase, [0.55, 0.75, 0.3], 0.3)
-      tube(ctx.wood, shaft, { sides: ctx.pick(7, 5, 4), radii: [stemR * 0.82, stemR * 0.86, stemR * 0.66], color: (t) => shade(shaftC, 0.8 + 0.3 * t), sway: () => 0.05, end: 'flat' })
-      crownTop = add(top, [0, 0.8, 0])
+      tube(ctx.wood, shaft, { sides: ctx.pick(7, 5, 4), radii: [stemR * 0.9, stemR * 0.95, stemR * 0.7], color: (t) => shade(shaftC, 0.8 + 0.3 * t), sway: () => 0.05, end: 'flat' })
+      crownTop = add(top, [0, 1.25, 0])
     } else if (variant !== 'areca') {
       icoShell(ctx.wood, { center: add(top, [0, stemR * 0.7, 0]), radii: [stemR * 1.35, stemR * 1.0, stemR * 1.35], detail: 0, rng: srng, noise: 0.06, color: (v) => shade(mix(trunkC, [0.35, 0.45, 0.2], 0.55), 0.7 + v.h * 0.5), sway: () => 0.05 })
       crownTop = add(top, [0, stemR * 0.9, 0])
@@ -115,9 +115,12 @@ export function generatePalm(spec: PalmSpec, ctx: Ctx): ArchResult {
       } else if (variant === 'areca') {
         elev = [1.1, 0.8, 0.5][ring] + f.range(-0.1, 0.1)
         droop = [0.45, 0.8, 1.1][ring]
+      } else if (variant === 'fan') {
+        elev = [1.3, 0.95, 0.6][ring] + f.range(-0.1, 0.1)
+        droop = [0.25, 0.35, 0.5][ring]
       } else {
-        elev = [1.05, 0.55, 0.05][ring] + f.range(-0.12, 0.12)
-        droop = [0.4, 0.8, 1.35][ring]
+        elev = [1.15, 0.75, 0.38][ring] + f.range(-0.1, 0.1)
+        droop = [0.45, 0.78, 1.1][ring]
       }
       if (dead) {
         elev = elev * 0.4 - 0.3
@@ -136,16 +139,16 @@ export function generatePalm(spec: PalmSpec, ctx: Ctx): ArchResult {
           elev,
           length: len,
           droop,
-          leafletLen: variant === 'areca' ? 0.24 : variant === 'date' ? 0.2 : 0.27,
-          pairs: variant === 'areca' ? 9 : variant === 'royal' ? 20 : 18,
+          leafletLen: variant === 'areca' ? 0.24 : variant === 'date' ? 0.2 : variant === 'coconut' ? 0.25 : 0.24,
+          pairs: variant === 'areca' ? 10 : variant === 'royal' ? 26 : variant === 'coconut' ? 28 : 18,
           c0: colA,
           c1: colB,
           lod: ctx.lod,
           rng: f,
           swayBase: 0.25,
           swayTip: 1,
-          hang: variant === 'date' ? 0.2 : variant === 'royal' ? 0.5 : 0.45,
-          leafletWidth: variant === 'date' ? 0.12 : 0.2,
+          hang: variant === 'date' ? 0.2 : variant === 'royal' ? 0.5 : variant === 'coconut' ? 0.8 : 0.45,
+          leafletWidth: variant === 'date' ? 0.12 : variant === 'coconut' ? 0.13 : 0.2,
         })
       }
     }
@@ -178,21 +181,26 @@ export function generatePalm(spec: PalmSpec, ctx: Ctx): ArchResult {
     : { collider: { kind: 'cylinder', radius: R * 1.15, height: H * 0.85 }, bendable: false }
 }
 
-/** Palmate frond: long petiole with a fan of folded segments drooping at the tips. */
+/** Palmate frond: long petiole ending in a round, ribbed fan of folded segments whose tips droop. */
 function fanFrond(ctx: Ctx, rng: import('../rng').Rng, origin: Vec3, az: number, elev: number, len: number, droop: number, c0: Vec3, c1: Vec3): void {
   const horiz = dirFromAngles(az, 0)
-  const petL = len * 0.55
-  const tipPet: Vec3 = [origin[0] + horiz[0] * petL * Math.cos(elev), origin[1] + petL * (Math.sin(elev) - droop * 0.25), origin[2] + horiz[2] * petL * Math.cos(elev)]
-  const mid: Vec3 = [lerp(origin[0], tipPet[0], 0.5), lerp(origin[1], tipPet[1], 0.5) + petL * 0.08, lerp(origin[2], tipPet[2], 0.5)]
-  tube(ctx.foliage, [origin, mid, tipPet], { sides: ctx.pick(3, 3, 3), radii: [len * 0.012, len * 0.01, len * 0.008], color: () => shade(c0, 0.9), sway: (t) => 0.2 + 0.5 * t, end: 'none' })
-  const segs: number = ctx.pick(11, 7, 3)
-  const spread = 1.5
+  const petL = len * 0.82
+  const pe = Math.max(0.15, elev)
+  const tipPet: Vec3 = [origin[0] + horiz[0] * petL * Math.cos(pe) * 0.8, origin[1] + petL * (Math.sin(pe) * 0.9 - droop * 0.12), origin[2] + horiz[2] * petL * Math.cos(pe) * 0.8]
+  const mid: Vec3 = [lerp(origin[0], tipPet[0], 0.5), lerp(origin[1], tipPet[1], 0.5) + petL * 0.06, lerp(origin[2], tipPet[2], 0.5)]
+  tube(ctx.foliage, [origin, mid, tipPet], { sides: 3, radii: [len * 0.02, len * 0.015, len * 0.011], color: (t) => shade(mix(c0, [0.55, 0.5, 0.25], 0.35), 0.85 + 0.2 * t), sway: (t) => 0.1 + 0.5 * t, end: 'none' })
+  const segs: number = ctx.pick(len < 1.3 ? 9 : 15, 7, 4)
+  const span = 3.7
+  const bR = len * 0.46
+  const tilt = Math.min(1.1, pe) * 0.65
+  const A: Vec3 = norm([horiz[0] * Math.cos(tilt), Math.sin(tilt) * 0.95, horiz[2] * Math.cos(tilt)])
+  const B: Vec3 = [-horiz[2], 0, horiz[0]]
   for (let i = 0; i < segs; i++) {
     const u = segs === 1 ? 0 : i / (segs - 1) - 0.5
-    const ang = az + u * spread
-    const dir = norm(add(mul(dirFromAngles(ang, 0), 1), [0, 0.25 - Math.abs(u) * 0.35, 0]))
-    const l2 = (len - petL) * (1.1 - Math.abs(u) * 0.35) * 1.3
-    const cc = jitter(mix(c0, c1, 0.5), rng, 0.01, 0.06, 0.04)
-    leaf(ctx.foliage, tipPet, dir, [0, 1, 0], l2, (l2 * spread * 1.1) / segs + 0.04, shade(cc, 0.75), c1, { rows: ctx.pick(2, 2, 2), curl: 0.42 + Math.abs(u) * 0.3, fold: 0.7, swayBase: 0.4, swayTip: 1, peak: 0.55, round: 1.3, baseWidth: 0.2 })
+    const th = u * span
+    const dir = norm(add(add(mul(A, Math.cos(th)), mul(B, Math.sin(th))), [0, 0.02 - Math.abs(u) * 0.12, 0]))
+    const cc = jitter(mix(c0, c1, 0.45), rng, 0.01, 0.07, 0.05)
+    const w = ((bR * (span / segs)) * 0.75) / 0.78 + 0.02
+    leaf(ctx.foliage, tipPet, dir, [0, 1, 0], bR * (0.92 + 0.08 * Math.cos(th)), w, shade(cc, 0.7), lighten(c1, 0.95), { rows: ctx.pick(3, 2, 2), curl: 0.22 + Math.abs(u) * 0.14, fold: 0.5, swayBase: 0.35, swayTip: 1, peak: 0.82, round: 0.45, baseWidth: 0.04 })
   }
 }
