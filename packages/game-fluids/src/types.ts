@@ -78,6 +78,12 @@ export interface ContainerState {
   /** Flowing out now (litres per second) through the opening (pour/spill) and holes. */
   outflow: number
   steaming: boolean
+  /** Inner shape and effective lip radius (metres), so a renderer can draw the liquid body without knowing the spec. */
+  shape?: ContainerSpec['shape']
+  lipRadius?: number
+  /** World transform the container was last given with `setTransform`. */
+  position?: Vec3
+  rotation?: Quat
 }
 
 export type StreamCause = 'pour' | 'spill' | 'leak' | 'tap'
@@ -96,6 +102,8 @@ export interface StreamState {
   landing: Vec3 | null
   /** Thin trickle (drops) or a jet. */
   thin: boolean
+  /** Seconds the jet flies before it lands (capped when it lands nowhere). Sample the path with `sampleStream`. */
+  flightTime?: number
 }
 
 export interface SurfaceSpec {
@@ -125,6 +133,15 @@ export interface StainState {
   wetness: number
   /** The wet area recedes from the edge in: radius fraction still wet. */
   wetRadius: number
+  /** Surface normal and tangent of the plane the stain lies on; `front[i]` points along `cos(2πi/16)·tangent + sin(2πi/16)·(normal × tangent)`. */
+  normal?: Vec3
+  tangent?: Vec3
+  /** Unit direction (in the surface plane) the liquid arrived from moving towards, when it landed with horizontal speed (the impact shows where it came from). */
+  flow?: Vec3
+  /** True once the wet part dried and only the permanent mark of a `leavesMark` liquid remains. */
+  mark?: boolean
+  /** Seconds since the stain was created. */
+  age?: number
 }
 
 export type FluidEvent =
@@ -142,7 +159,10 @@ export type FluidEvent =
   | { type: 'mix'; container: string; from: LiquidId; into: LiquidId }
 
 export interface FluidOptions {
+  /** Extra or replacing liquid definitions (matched by `id`) on top of the built-in `LIQUIDS`. */
   liquids?: LiquidDef[]
+  /** Locale of the strings returned by `describe` (`en` default, `pt-BR`; unknown locales fall back to `en`). */
+  locale?: string
   seed?: number
   ambientC?: number
   gravity?: number
@@ -156,6 +176,10 @@ export interface FluidOptions {
 
 export interface FluidWorld {
   readonly liquids: ReadonlyMap<LiquidId, LiquidDef>
+  /** Gravity in m/s² used by streams (so a renderer can sample the same path). */
+  readonly gravity: number
+  /** Human readable one-liner of an event in the configured locale, for logs and debug panels. */
+  describe(event: FluidEvent): string
   addContainer(spec: ContainerSpec, options?: { id?: string; position?: Vec3; rotation?: Quat }): string
   removeContainer(id: string): void
   /** Keep in sync with the object that carries it (tilt decides spilling and the surface plane; velocity makes it slosh). */
