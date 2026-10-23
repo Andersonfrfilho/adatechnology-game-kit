@@ -218,8 +218,15 @@ export interface DestructionWorld {
   extinguish(objectId: string, partId?: string, coolC?: number): void
   /** Advance fire, heat transfer, cooling, melting, leaks and delayed explosions. */
   update(dt: number): DestructionEvent[]
+  /**
+   * The object's LIVE state: the same object the world mutates every update (parts, joints, groups). Treat it as read-only and change the world only
+   * through the API (`hit`, `disassemble`, `setLiters`...). Do not keep it across frames to compare "before" and "after": use `snapshot`.
+   */
   state(id: string): ObjectState | null
+  /** The part's LIVE state (see `state`): read-only, mutated by the world. */
   part(id: string, partId: string): PartState | null
+  /** A deep copy of the object's state at this moment: safe to keep, compare and mutate. Null for an unknown id. */
+  snapshot(id: string): ObjectState | null
   /** Repair an object to its spec (test benches use it for "reset"). */
   reset(id: string): void
   on(type: DestructionEventType | '*', fn: (event: DestructionEvent) => void): () => void

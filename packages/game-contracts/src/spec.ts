@@ -88,7 +88,13 @@ export const checkSpec = (spec: DestructibleSpec, options: CheckSpecOptions = {}
     }
     const seen = new Set(anchored)
     const queue = [...anchored]
-    while (queue.length) for (const n of adj.get(queue.pop()!) ?? []) if (!seen.has(n)) (seen.add(n), queue.push(n))
+    while (queue.length) {
+      for (const n of adj.get(queue.pop()!) ?? []) {
+        if (seen.has(n)) continue
+        seen.add(n)
+        queue.push(n)
+      }
+    }
     const lost = structural.filter((p) => !seen.has(p.id)).map((p) => p.id)
     if (lost.length) warnings.push(`structural part(s) ${lost.map((i) => `"${i}"`).join(', ')} cannot reach an anchored part, so they will fall`)
   }

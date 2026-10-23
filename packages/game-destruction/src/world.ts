@@ -1394,6 +1394,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }).events
     },
     state: (id) => objects.get(id)?.st ?? impls.get(id)?.impl.state() ?? null,
+    snapshot: (id) => {
+      const st = objects.get(id)?.st ?? impls.get(id)?.impl.state()
+      return st ? clone(st) : null
+    },
     part: (id, partId) => objects.get(id)?.byId.get(partId)?.st ?? impls.get(id)?.impl.state().parts.find((p) => p.id === partId) ?? null,
     reset(id) {
       const im = impls.get(id)
