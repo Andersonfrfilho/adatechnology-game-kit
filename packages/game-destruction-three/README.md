@@ -71,6 +71,12 @@ renderer.impulse(id, [0, 40, -120], [2, 0.6, -3])
 equals a part id, else by the part box that contains the mesh centre. `specFromObject3D` reads `userData.destructionMaterial`,
 `destructionPart` (a part id, or `{ id, material?, parent?, kind? }`: `parent` + `kind` attach the part to its parent with a joint of that kind), `destructionIgnore`, `destructionTags` and `hollow`.
 
+For picking, `bind` and the loose pieces write back to the meshes: every mesh of a part has `userData.destructionPart` (the part id) and
+`userData.destructionObject` (the id of the world object the part belongs to now; a loose piece made by `splitGroup` has an id of its own, the same one
+`renderer.piece(id)` and `world.state(id)` use), also on the mesh a vertex-range part gets when it leaves a merged mesh. A raycast hit goes to
+`world.hitPart(hit.object.userData.destructionObject, hit.object.userData.destructionPart, ...)`. Purely visual meshes (fracture fragments, decals, ground
+stains) have `userData.destructionDebris = true`: skip them when picking. Parts drawn by a range of a merged mesh share it, so the merged mesh itself carries no part id.
+
 ### Parts of a merged mesh
 
 A building or a baked model often has one merged mesh for many parts. Bind each part by the vertex range it occupies (`{ mesh, range: [v0, v1] }`,
