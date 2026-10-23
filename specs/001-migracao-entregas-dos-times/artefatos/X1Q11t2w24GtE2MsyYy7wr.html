@@ -1,0 +1,1394 @@
+<!doctype html><html><head><!-- frame-runtime --><script>window.__FRAME_PREAMBLE={"v":1,"capabilities":{"artifact":"artifact.BBvTDtAn.js","assets":"assets.DOAjpBS9.js","comments":"comments.BjISm5Q7.js","db":"db.zFlAA4qL.js","dictation":"dictation.f3j7VXQ8.js","downloads":"downloads.axDW2QAi.js","embed":"embed.SWCZLzn6.js","endpoints":"endpoints.BPfoKaE1.js","files":"files.IkpCjcgM.js","mcp":"mcp.kl0G36TA.js","network":"network.B5UA9Su4.js","paste":"paste.DeKNLIxx.js","permissions":"permissions.6yWoDecA.js","reads":"reads.Bgov9hIw.js","room":"room.BYRHiLCc.js","sample":"sample.D0G8eGrV.js","self":"artifact.BBvTDtAn.js","tts":"tts.iS74i_mi.js","user":"user.uKicftX-.js"},"transforms":"_transforms.CRcnZuGX.js","comments":"_comments.AKhddNYY.js","translate":"_translate.DqxC5ek1.js","ldx":"_ldx.B4FSryPi.js"}                                                                                                                                                                                                                                                                                                                                                                                 </script><script>(function(){"use strict";function dr(t){return t==="cookie"||t==="query"?t:void 0}function hr(t){return typeof t=="number"&&Number.isSafeInteger(t)&&t>0?t:void 0}var to=3e5;function pr(t,e){try{const r=t("navigation")[0],n=[r.responseStart,r.redirectEnd-r.redirectStart,r.domContentLoadedEventStart,e(),r.connectEnd-r.domainLookupStart,r.responseStart-r.requestStart];r.requestStart>0||(n.length=4);for(let a=0;a<n.length;a++)if(n[a]>=0&&n[a]<=3e5)n[a]=n[a]|0;else{if(a<4)return;n.length=4}return n}catch{return}}var mr=["light","dark","system"],vr=/^[A-Za-z0-9_-]{1,64}$/,Mt=/^[a-zA-Z_:][a-zA-Z0-9_:.-]{0,127}$/,_r=new Set(["class","hidden","value","checked","style","title","alt","placeholder","lang","dir","role","tabindex","disabled","readonly","contenteditable","open","colspan","rowspan"]);function yr(t){const e=t.toLowerCase();return e.startsWith("data-")||e.startsWith("aria-")||_r.has(e)}var Pt="data-ldx-props";function gr(t,e){if(e.toLowerCase()===Pt)return!0;const r=t.getAttribute(Pt);if(r===null)return!1;try{const n=JSON.parse(r);if(n===null||typeof n!="object"||Array.isArray(n))return!0;const a=e.toLowerCase();return Object.keys(n).some(s=>s.toLowerCase()===a)}catch{return!0}}var ro="http://www.w3.org/1999/xhtml",wr="http://www.w3.org/2000/svg",br=new Set(["script","style","iframe","noscript","noframes","noembed","xmp","plaintext","template","title","textarea","object","embed"]),Er=new Set(["script","style"]);function Sr(t){const e=t.localName.toLowerCase();return t.namespaceURI==="http://www.w3.org/1999/xhtml"?!br.has(e):t.namespaceURI===wr?!Er.has(e):!1}function ot(t,e){return t===e||(t===160||t===32)&&(e===160||e===32)}function kr(t,e){const r=t.length,n=e.length;let a=0;for(;a<r&&a<n&&ot(t.charCodeAt(a),e.charCodeAt(a));)a++;let s=0;for(;s<r-a&&s<n-a&&ot(t.charCodeAt(r-1-s),e.charCodeAt(n-1-s));)s++;return{p:a,s}}function Ar(t,e){const r=t.firstChild;if(t.childNodes.length!==1||r===null||r.nodeType!==Node.TEXT_NODE){t.textContent=e;return}const n=r.data,a=n.length,s=e.length,{p:l,s:u}=kr(n,e);l===a&&u===0&&a===s||r.replaceData(l,a-l-u,e.slice(l,s-u));const R=r.data,b=t.ownerDocument.getSelection?.()??null,y=b!==null&&b.rangeCount>0&&(b.anchorNode===r||b.focusNode===r)?{anchor:b.anchorNode,anchorOffset:b.anchorOffset,focus:b.focusNode,focusOffset:b.focusOffset}:null;let p=-1,k=-1;for(let m=0;m<R.length&&m<e.length;m++){const j=R.charCodeAt(m),A=e.charCodeAt(m);j!==A&&ot(j,A)&&(p<0&&(p=m),k=m)}const L=p>=0;if(L&&r.replaceData(p,k-p+1,e.slice(p,k+1)),L&&y!==null&&y.anchor!==null&&y.focus!==null)try{b.setBaseAndExtent(y.anchor,y.anchorOffset,y.focus,y.focusOffset)}catch{}}var Rr=new Set(["html","head","body","frameset"]);function Tr(t){return t.namespaceURI==="http://www.w3.org/1999/xhtml"&&Rr.has(t.localName)}function Lr(t){if(t===null||typeof t!="object")return!1;const e=t;if(typeof e.target!="string"||!vr.test(e.target)||e.text!==void 0&&typeof e.text!="string")return!1;if(e.attrsSet!==void 0){if(e.attrsSet===null||typeof e.attrsSet!="object")return!1;for(const[r,n]of Object.entries(e.attrsSet))if(!Mt.test(r)||typeof n!="string")return!1}if(e.attrsRemoved!==void 0){if(!Array.isArray(e.attrsRemoved))return!1;for(const r of e.attrsRemoved)if(typeof r!="string"||!Mt.test(r))return!1}return!0}function Or(t,e){if(t===null||typeof t!="object")return!1;const{seq:r,elements:n}=t;if(typeof r!="number"||!Number.isSafeInteger(r)||!Array.isArray(n)||n.length===0||n.length>64)return!1;for(let a=0;a<n.length;a++)if(!e(n[a]))return!1;return!0}function Mr(t){return t===null||typeof t!="object"?!1:Or(t.__frame_patch,Lr)}function Pr(t){if(t===null||typeof t!="object")return!1;const e=t.__frame_init;return e!==null&&typeof e=="object"}function Nr(t){return t!==null&&typeof t=="object"&&t.__frame_size_poke===!0}function Cr(t){if(t===null||typeof t!="object")return!1;const e=t.__frame_host_visible;return e!==null&&typeof e=="object"&&typeof e.visible=="boolean"}function Fr(t){if(t===null||typeof t!="object")return!1;const e=t.__frame_theme;if(e===null||typeof e!="object")return!1;const r=e.theme;return typeof r=="string"&&mr.includes(r)}var xr=["ok","empty","snapshot_error","snapshot_timeout","unclonable","oversize","unavailable","restore_error","withheld"],jr=["TypeError","RangeError","ReferenceError","SyntaxError","DataCloneError","QuotaExceededError","AbortError","TimeoutError","SecurityError","Error","other"];function Ir(t){return typeof t=="string"&&jr.includes(t)?t:"other"}var Dr=Object.freeze({until:null,now:!1}),Hr="__claude_hot",Br="__claude_hot_in",qr=/^__claude_hot(?:_in)?(?::|$)/,Nt=/^[0-9a-z]{1,32}$/,at=t=>t===void 0?Hr:"__claude_hot:"+t,Oe=t=>t===void 0?Br:"__claude_hot_in:"+t;function Ur(t,e){const r=[];for(let n=0;n<t.length;n++){const a=t.key(n);a!==null&&a!==e&&qr.test(a)&&r.push(a)}for(const n of r)t.removeItem(n)}function Kr(t){let e=null;try{e=U(JSON.parse(t)?.hot)}catch{return null}return e===null||typeof e.k!="string"||!Nt.test(e.k)?null:he(e.g)?{k:e.k,g:e.g}:{k:e.k}}var no=262144,Gr=3e3,$r=5e3,Ct=/^[a-z0-9._:-]{1,64}$/,zr=["none","hot-restart","hard-reload"],Wr=["asset","doc","added","removed"],Vr=1500,Xr=/^[0-9a-f]{64}$/;function U(t){return t!==null&&typeof t=="object"?t:null}function he(t){return typeof t=="number"&&Number.isInteger(t)&&t>=0&&t<2**31}function Ft(t){return t===void 0||typeof t=="number"&&Number.isFinite(t)}function Yr(t){return t===void 0||typeof t=="string"&&Ct.test(t)}function xt(t){const e=U(t);return e!==null&&(e.until===null||typeof e.until=="number"&&Number.isFinite(e.until))&&typeof e.now=="boolean"}function st(t){const e=U(t);return e!==null&&typeof e.ver=="string"&&e.ver.length<=128&&Ft(e.seq)&&typeof e.handoff=="string"&&xr.includes(e.handoff)&&Yr(e.note)}function jt(t){const e=U(t);return e!==null&&he(e.gen)&&(e.phase==="final"||e.phase==="pending")&&(e.from===null||st(e.from))}function Jr(t){const e=U(t);return e!==null&&e.kv===1&&he(e.gen)&&st(e.from)&&Object.hasOwn(e,"data")}function Zr(t){const e=U(t);return e!==null&&e.__frame_hot_snapshot===!0&&he(e.gen)&&typeof e.timeoutMs=="number"&&e.timeoutMs>=0&&e.timeoutMs<=6e4&&(e.handoff===void 0||typeof e.handoff=="boolean")&&(e.deadline===void 0||xt(e.deadline))&&Ft(e.seq)&&(e.note===void 0||typeof e.note=="string")&&(e.key===void 0||typeof e.key=="string")}function Qr(t){const e=U(t);return e!==null&&e.__frame_hot_start===!0&&he(e.gen)&&st(e.from)}function en(t){return typeof t=="string"&&t.length>=1&&t.length<=128}function It(t){return U(t)!==null&&!Array.isArray(t)}function tn(t){const e=U(t);return e!==null&&e.__frame_cap_grant===!0&&typeof e.cap=="string"&&en(e.ver)&&(e.grant===void 0||It(e.grant))&&(e.budgets===void 0||It(e.budgets)&&Object.values(e.budgets).every(Number.isFinite))&&(e.brokerGen===void 0||he(e.brokerGen))}function rn(t){const e=U(t);return e!==null&&e.__frame_cap_rewired===!0&&(e.caps===void 0||Array.isArray(e.caps)&&e.caps.every(r=>typeof r=="string"))&&(e.brokerGen===void 0||he(e.brokerGen))}function Ge(t){const e=U(t);return e!==null&&typeof e.ver=="string"&&e.ver.length<=128&&Number.isFinite(e.seq)}function Dt(t){if(t==null||typeof t=="string")return!0;const e=U(t);return e!==null&&typeof e.doc=="string"&&typeof e.profile=="string"}function nn(t){const e=U(t);return e!==null&&typeof e.path=="string"&&Wr.includes(e.kind)&&Dt(e.from)&&Dt(e.to)}function on(t){return t===null?null:Object.freeze(t.filter(nn))}function an(t){const e=U(t);return e!==null&&e.__frame_hot_update===!0&&Number.isFinite(e.id)&&Ge(e.from)&&Ge(e.to)&&(e.changed===null||Array.isArray(e.changed))&&zr.includes(e.required)&&xt(e.deadline)&&typeof e.verdictTimeoutMs=="number"&&e.verdictTimeoutMs>=0&&e.verdictTimeoutMs<=6e4&&(e.preflight===void 0||typeof e.preflight=="string"&&Xr.test(e.preflight))}function sn(t){const e=U(t);return e!==null&&e.__frame_hot_readdress===!0&&Ge(e.from)&&Ge(e.to)}var pe=/^[\w.-]+\.js$/;function ln(t,e,r){return r?"inert":typeof e=="string"&&pe.test(e)?t?[e]:"inert":t?"inert":"framed"}var Ht=Object.freeze({[Symbol("claude.hot.restart")]:!0});function Bt(t,e){let r;try{r=t??sessionStorage}catch{return null}const n=at(e?.k),a=Oe(e?.k);let s=null;try{s=r.getItem(n)}catch{}try{r.removeItem(n)}catch{}try{Ur(r,a)}catch{}let l=null;if(s!==null&&!(e!==null&&e.g===void 0))try{const u=JSON.parse(s);Jr(u)&&(e===null||u.gen===e.g)&&(l=u)}catch{}if(l===null)try{r.removeItem(a)}catch{}return l}function qt(){const t=/^\/_f\/([^/]{1,128})\//.exec(location.pathname);return t?t[1]:""}var cn=/^[^/\\?#]{1,128}$/,it=t=>cn.test(t)&&t!=="."&&t!=="..";function Ut(t,e,r){const n=new URL(t),a="/_f/"+e+"/";if(!e||!n.pathname.startsWith(a)||!it(r))return null;const s=n.search.slice(1).split("&").filter(l=>!/^__frame_t(?:=|$)/.test(l)).join("&");return n.origin+"/_f/"+r+"/"+n.pathname.slice(a.length)+(s?"?"+s:"")+n.hash}var $e="{}";function Me(t){if(!t)return null;const e={ver:t.ver,handoff:t.handoff};return t.seq!==void 0&&(e.seq=t.seq),t.note!==void 0&&(e.note=t.note),e}function Kt(t,e){return t!==null&&t.note===void 0&&e?.note!==void 0?{...t,note:e.note}:t}function Gt(t){const e=t?.k;return e!==null&&typeof e=="object"?e:void 0}function un(t,e,r,n=null){const a=setTimeout,s=clearTimeout,l=queueMicrotask,u=performance.now.bind(performance),R=new TextEncoder;let b=null,y=null;try{b=history,y=b.replaceState.bind(b)}catch{}const p=(...o)=>{try{console.warn(...o)}catch{}};let k=qt(),L=null;try{L=sessionStorage}catch{}const m={storage:L,fetch:typeof fetch=="function"?fetch.bind(globalThis):null,entry:location.origin+location.pathname+location.search,ver:k,priors:[],key:n?.k};let j=n?.k;const A=typeof requestAnimationFrame=="function"?requestAnimationFrame:o=>a(()=>o(u()),16);let _=e?.data??{},E=Me(e?.from),I=e?.gen??0,D=e!==null,q=!1,$=!1,H=null,xe=!1;const be=new AbortController;let je=null,K=null,Ee=null,Ie=!1,le=()=>{};const te=new Promise(o=>{le=o});let ve=!1,Je=!1,Se=!1,c,h=null,g=!1,C=!1,O=!1,z=!1,B=!1,J=!1;const ce=o=>{for(const f of[at(o),Oe(o)])try{L?.removeItem(f)}catch{}},G=(o,f)=>{try{f!==null&&r.post(o,f)}catch{}},_e=()=>B||=O&&(K===null||z),Q=()=>{const o={__frame_hot:!0,ready:K!==null,accept:Ee!==null,demand:!0};J=!B,J&&(o.booting=!0),ve&&(o.readData=!0),Se&&(o.threw=!0),h?.assess&&(o.preflight=!0),G(o,H)};let De=!1,He=!1,ue=!1,re=!1;const Be=()=>{De||!xe||ue||(De=!0,G({__frame_reveal_hold:!0},"*"))},ke=()=>new Promise(o=>{let f,d=0;const v=P=>{if(f===void 0)f=P;else if(P!==f||++d>=8){o();return}try{A(v)}catch{o()}};try{A(v)}catch{o()}}),Ze=()=>{ue=!0,G({__frame_reveal_ready:!0},"*")},ye=o=>{He||(He=!0,o.then(f=>{if(f===!1)return;let d=null;try{d=h?.settle?.()??null}catch{}return(d===null?ke():new Promise(v=>{a(v,50),Promise.resolve(d).then(v,v)}).then(ke)).then(Ze)}))},Qe=()=>{if(re||!ue)return;re=!0;const o=()=>{try{h?.afterReveal?.()}catch{}};o(),ke().then(()=>{o(),Ze()})},ge=(o=!1)=>{if(Ie||K===null||!D||!$)return;Ie=!0;const f=K,d=_;l(()=>{let v;try{v=f(d)}catch(N){throw le(!1),N}let P=!1;try{P=typeof v?.then=="function"}catch{}if(!P){le(!0);return}Promise.resolve(v).then(()=>le(!0),N=>{le(!1),l(()=>{throw N})})}),ye(o?te:r.dcl.then(()=>te))},Ae=o=>typeof o=="string"&&Ct.test(o)?o:void 0,qe=o=>{const f={__frame_hot_restart:!0},d=Ae(o?.note);d!==void 0&&(f.note=d),o?.required==="hard-reload"&&(f.required="hard-reload"),G(f,H)},fe=Object.freeze({get data(){return $||(Je=!0),!D&&!ve&&(ve=!0,$&&Q()),_},get from(){return E},get gen(){return I},signal:be.signal,snapshot(o){typeof o=="function"&&(je=o)},ready(o){typeof o!="function"||K!==null||(K=o,Be(),Q(),q&&G({__frame_hot_ready:!0,gen:I},H),ge())},accept(o){typeof o=="function"&&(Ee=o,Q())},restart(o){const f={note:o?.note,required:o?.required};if($){qe(f);return}const d=c;c={note:Ae(d?.note)??f.note,required:d?.required==="hard-reload"||f.required==="hard-reload"?"hard-reload":void 0}}});let de=null,Ue=()=>{};const et=new Promise(o=>{Ue=o});let i=null;const S=()=>i??=r.dcl.then(()=>{let o=!1;try{o=de!==null&&de.expect()}catch{}if(!o)return;const f=de.maxMs;return new Promise(d=>{et.then(d),a(d,f)})}),w=()=>{if(!g||C||h===null)return;C=!0;const o=h;S().then(()=>{try{ue||o.afterStart(Gt(e),!1)}catch{}})},M=o=>{e!==null&&Je&&(ve=!0),_={},E=null,I=0;try{L?.removeItem(Oe(n?.k))}catch{}e!==null&&!o&&ye(r.dcl.then(()=>K!==null?te:void 0))},ee=()=>{g=!0,ye(S().then(()=>K!==null?te:void 0)),w()};try{addEventListener("error",()=>{Se||K!==null||(Se=!0,Q())})}catch{}const Z=()=>{a(()=>{!B&&_e()&&J&&Q()},0)};try{O=document.readyState==="complete",O||addEventListener("load",()=>{O=!0,Z()},{once:!0})}catch{O=!0}_e(),te.then(()=>{z=!0,Z()});let W=-1,Et,St,Ke=!0,kt=!1,At,tt=null;const Rt=o=>{const f=tt===null;tt=Ke&&o[0]!=="withheld"?o:["withheld",o[1],$e];let d=o[0];if(Ke&&d!=="withheld"){const P={ver:k,handoff:d};Et!==void 0&&(P.seq=Et),St!==void 0&&(P.note=St);try{if(L===null)throw new Error("no storage");L.setItem(at(j),'{"kv":1,"gen":'+W+',"from":'+JSON.stringify(P)+(At!==void 0?',"k":'+JSON.stringify(At):"")+',"data":'+(d==="ok"?o[2]:$e)+"}")}catch{d="unavailable"}}else{d="withheld",ce(j);try{h?.release?.()}catch{}}const v={__frame_hot_snapshotted:!0,gen:W,handoff:d,bytes:o[1]};o[3]!==void 0&&(v.errName=o[3]),G(v,H),f&&(d==="snapshot_error"||d==="unclonable"||d==="oversize")&&p("claude.hot: snapshot",d,o[3])},Re=o=>{try{return Ir(o?.name)}catch{return"other"}},Te=(o,f,d=0)=>Rt(f===void 0?[o,d,$e]:[o,d,$e,Re(f)]),zn=o=>{if(o.gen<=W)return;const f=W>=0;if(W=o.gen,Et=o.seq,St=Ae(o.note),typeof o.key=="string"&&Nt.test(o.key)&&o.key!==j&&(ce(j),j=o.key),Ke&&=o.handoff!==!1,f){tt!==null?Rt(tt):kt&&G({__frame_hot_held:!0,gen:W},H);return}be.abort();const d=Object.freeze({handoff:Ke,timeoutMs:o.timeoutMs,deadline:o.deadline??Dr}),v=je,P=()=>{if(Ke)try{At=h?.capture()}catch{}if(v===null){Te("empty");return}let T=!1;const V=a(()=>{T||(T=!0,Te("snapshot_timeout"))},Math.max(0,d.timeoutMs));Promise.resolve().then(()=>v(d)).then(Le=>{if(T)return;T=!0,s(V);let ne;try{ne=JSON.stringify(Le)}catch(Tt){Te("unclonable",Tt);return}if(typeof ne!="string"){Te("unclonable");return}let oe=ne.length;try{oe=R.encode(ne).length}catch{}if(oe>262144){Te("oversize",void 0,oe);return}Rt(["ok",oe,ne])},Le=>{T||(T=!0,s(V),Te("snapshot_error",Le))})};let N=null;try{N=h?.holdForIme()??null}catch{}if(N===null)P();else{kt=!0,G({__frame_hot_held:!0,gen:W},H);const T=()=>{kt=!1,P()};N.then(T,T)}},Wn=o=>{if(!q||D||K===null||o.gen!==I)return;let f=null;try{f=Bt(L,n&&{k:n.k,g:o.gen})}catch{}if(f!==null&&f.gen!==o.gen){f=null;try{L?.removeItem(Oe(n?.k))}catch{}}_=f?.data??{},E=Kt(Me(f?.from??o.from),Me(o.from)),f!==null&&(I=f.gen),D=!0,q=!1;const d=Gt(f);te.then(v=>{try{v&&h?.afterStart(d,!0)}catch{}}),ge(!0)},lr=o=>{const f=k,d=m.entry;let v="",P,N=null;try{if(v=location.href,P=b.state,N=Ut(v,f,o),N!==null)if(y(P,"",N),location.pathname.startsWith("/_f/"+o+"/"))N=location.href;else return{failed:"navigate event canceled"}}catch(T){return{failed:Re(T)}}k=m.ver=o,m.priors.push(f)>8&&m.priors.splice(1,1);try{m.entry=Ut(d,f,o)??d}catch{}return[N,f,d,v,P]},Vn=({from:o,to:f})=>{let d,v;if(!it(f.ver))d="adopt_failed",v="not a version path segment";else if(f.ver===k)d="adopted";else if(!k||o.ver!==k)d="stale";else{const N=lr(f.ver);"failed"in N?(d="adopt_failed",v=N.failed):d=N[0]===null?"adopt_skipped":"adopted"}v!==void 0&&p(`claude.hot: could not move this page's URL to its new version folder /_f/${f.ver}/ (${v})`);const P={__frame_hot_readdressed:!0,to:f.ver,at:k,outcome:d};G(P,H)};let rt=0;const Xn=o=>{const f=Ee;if(f===null||o.id<=rt)return;rt=o.id;const d=h?.assess;if(o.preflight===void 0||d===void 0){cr(o,f);return}let v=!1;const P=V=>{v||(v=!0,s(T),o.id===rt&&cr(o,f,V))},N=()=>P(d.timeout(o)),T=a(N,Vr+100);d.run(o,window).then(P,N)},cr=(o,f,d)=>{let v,P=!1,N=!1,T,V,Le=null;const ne=F=>{if(N)return!1;if(T!==void 0&&T!==F)return p(`claude.hot: u.${F}() ignored - u.${T}() was called first`),!1;const ae=T===void 0;return T=F,ae},oe=F=>{T="restart",p(`claude.hot: ${F} - restarting`)},Tt=()=>{if(!ne("adopt")||o.id!==rt)return;const F=o.to.ver;if(nt.required!=="none"){oe(`u.adopt() needs required 'none', it is '${nt.required}'`);return}if(!it(F)){oe("u.adopt() cannot address this version");return}if(!k||F===k)return;const ae=lr(F);if("failed"in ae){V="adopt_failed",oe(`adopt_failed ${ae.failed}; URL not changed`);return}const[Y,Ot,Zn,fr,Qn]=ae;Y===null?(V="adopt_skipped",p(`claude.hot: adopt_skipped - page already left /_f/${Ot}/; URL not changed, update still applied`)):V="adopted",Le=()=>{if(k===F){if(Y!==null)try{if(location.href!==Y)p("claude.hot: adopt_revert_skipped - update not applied; URL left where the page navigated");else{if(y(Qn,"",fr),location.href!==fr){p("claude.hot: adopt_revert_failed navigate event canceled - URL still at the new version");return}V="adopt_reverted",p("claude.hot: adopt_reverted - adopt() was called but the handler threw; URL restored")}}catch(eo){p(`claude.hot: adopt_revert_failed ${Re(eo)} - URL still at the new version`);return}k=m.ver=Ot,m.entry=Zn,m.priors[m.priors.length-1]===Ot&&m.priors.pop(),Y===null&&(V=void 0)}}},nt=Object.freeze({from:{ver:o.from.ver,seq:o.from.seq},to:{ver:o.to.ver,seq:o.to.seq},changed:on(o.changed),required:o.required,deadline:o.deadline,adopt:Tt,defer(){return ne("defer")&&nt.deadline.now&&oe("u.defer() past the deadline"),Ht},restart(F){return ne("restart"),T==="restart"&&!N&&(v??=Ae(F?.note),P||=F?.required==="hard-reload"),Ht},...d?.update}),Yn=(F,ae)=>{N=!0,F==="threw"?(Le?.(),v??=Re(ae).toLowerCase()):T===void 0&&p(F==="timeout"?"claude.hot: accept handler did not answer in time - restarting":"claude.hot: accept handler settled without defer/restart/adopt - restarting");const Y={__frame_hot_verdict:!0,id:o.id};Y.verdict=F==="threw"||T===void 0||T==="restart"?"restart":T==="adopt"?"applied":"deferred",Y.verdict==="restart"&&(P&&(Y.required="hard-reload"),v!==void 0&&(Y.note=v)),V!==void 0&&(Y.verdict==="applied"||V!=="adopted")&&(Y.adopt=V),G(Object.assign(Y,d?.verdict),H)};let ur=!1;const Lt=(F,ae)=>ur?!1:(ur=!0,s(Jn),Yn(F,ae),!0),Jn=a(()=>Lt("timeout"),o.verdictTimeoutMs);Promise.resolve().then(()=>f(nt)).then(()=>Lt("settled"),F=>{!Lt("threw",F)&&T==="adopt"&&qe({note:Re(F).toLowerCase()}),p("claude.hot: accept",Re(F))})};try{t.hot===void 0&&Object.defineProperty(t,"hot",{value:fe,writable:!1,configurable:!1,enumerable:!1})}catch{}return{hot:fe,boot:m,afterConnect(){xe=!0,(e!==null||K!==null)&&Be()},onInit(o,f){H=f,$=!0;const d=jt(o)?o:null;d?.phase==="final"&&e!==null&&e.gen===d.gen?(D=!0,E=Kt(E,Me(d.from)),ee()):(q=d?.phase==="pending",M(q),D=!q,I=d?.gen??0,E=Me(d?.from)),Q(),J&&a(()=>{B||(B=!0,Q())},$r),q&&K!==null&&G({__frame_hot_ready:!0,gen:I},f),c!==void 0&&(qe(c),c=void 0),ge()},onNoInit(){$=!0,M(!1),D=!0,ge()},onShell(o){return o?.__frame_revealed===!0?(Qe(),!1):Zr(o)?(zn(o),!0):Qr(o)?(Wn(o),!0):an(o)?(Xn(o),!0):sn(o)?(Vn(o),!0):!1},attachExtras(o){h=o,w(),o.assess&&Q()},inSlot:()=>Oe(j),hydration(o,f){de??={expect:o,maxMs:f}},hydrated(){Ue()},carried(){return D?_:{}},presented:()=>ue}}var oo="frame_ldx_runtime",fn="frame_ldx_build",ao="script#an-form",dn=256;function lt(t,e,r){for(const n of t)r(n)&&t.delete(n);t.size>=dn&&!t.has(e)&&t.delete(t.values().next().value),t.add(e)}function Pe(t,e,r,n){try{const a=t[e];if(typeof a!="function")return;t[e]=function(...s){if(n){let u;try{u=n(this)}catch{}if(u!==void 0)return u}const l=a.apply(this,s);try{r?.(this)}catch{}return l}}catch{}}var hn=()=>{},ct;function pn(){if(ct)return ct;const t={media:new Set,contexts:new Set,wakeLocks:new Set,gate:null,refuse:null,onStart:null,onStop:null};ct=t;const e=l=>t.gate?.(l),r=l=>{t.onStop?.(l)},n=window.HTMLMediaElement?.prototype;n&&(Pe(n,"play",l=>{lt(t.media,l,u=>u.paused),t.onStart?.(l)},e),Pe(n,"pause",r));const a=window.AudioContext,s=window.AudioNode?.prototype;a&&s&&(Pe(s,"connect",l=>{const u=l.context;u instanceof a&&(lt(t.contexts,u,R=>R.state==="closed"),t.onStart?.(u))}),Pe(a.prototype,"resume",void 0,e),Pe(a.prototype,"suspend",r));try{const l=window.WakeLock?.prototype,u=l?.request;l&&typeof u=="function"&&(l.request=function(...R){if(t.refuse)return t.refuse();const b=u.apply(this,R);return Promise.resolve(b).then(y=>{lt(t.wakeLocks,y,p=>p.released),t.onStart?.(y)},hn),b})}catch{}return t}function mn(t){let e=window;for(let r=0;e.parent&&e.parent!==e&&r<8;r++)if(e=e.parent,t(e))return!0;return!1}function vn(){let t=null;const e=()=>t??parent,r=n=>t?n===t:mn(a=>a===n);return{post(n,a){if(t){e().postMessage(n,a);return}let s=parent;for(let l=0;l<8&&(s.postMessage(n,a),!(!s.parent||s.parent===s));l++)s=s.parent},on(n){const a=s=>{const l=s.source;r(l)&&n(s.data,s.origin,s.isTrusted,()=>{t??=l})};return addEventListener("message",a),()=>removeEventListener("message",a)},port:n=>({post(a,s){if(s?.activation){e().postMessage(a,{targetOrigin:n,includeUserActivation:!0});return}if(s?.transfer){e().postMessage(a,n,s.transfer);return}e().postMessage(a,n)},on(a,s){const l=u=>{r(u.source)&&u.origin===n&&a(u.data,u)};return addEventListener("message",l,s),()=>removeEventListener("message",l,s)}})}}function _n(){const t={post:()=>{},on:()=>()=>{}};return{...t,port:()=>t}}var yn=500,gn=2e4,wn="data-token-reads",bn="data-frame-refused-watch",En="data-frame-unsupported",Sn=/(?:^|\s)stylesheet(?:\s|$)/i;function kn(t,e){let r="";if(t instanceof HTMLScriptElement?r=t.src:t instanceof HTMLLinkElement&&Sn.test(t.rel)&&(r=t.href),!r)return null;try{const n=new URL(r);return n.origin===location.origin&&n.pathname.startsWith(e)?n.origin+n.pathname:null}catch{return null}}function An(t,e,r){if(!t||e!=="query")return;const n="/_f/"+t+"/";document.documentElement.setAttribute(bn,"");const a=location.href,s=fetch,l=setTimeout,u={method:"HEAD",cache:"no-store",credentials:"same-origin"},R=m=>m.ok||m.status===304;let b=!1,y=!1;const p=()=>removeEventListener("error",L,!0),k=async m=>{const j=await s(m,u);if(R(j))y=!0;else if(j.status===403){const A=await s(a,u);if(R(A)){const _=(await s(m,u)).status;_===403?(y=!0,document.documentElement.setAttribute(En,""),r()):_<500&&(y=!0)}else A.status>=400&&A.status<500&&(y=!0)}},L=m=>{if(y||b)return;if(document.documentElement.hasAttribute(wn)){y=!0,p();return}const j=kn(m.target,n);j&&(b=!0,l(()=>{k(j).catch(()=>{}).finally(()=>{b=!1,y&&p()})},yn))};addEventListener("error",L,!0),addEventListener("load",p,{once:!0}),l(p,gn)}var ut="__frame_scroll",Rn=150,Tn=310,Ln=160,On=3e4,$t="p,h1,h2,h3,h4,h5,h6,li,pre,blockquote,tr,dt,dd,figcaption,summary",zt=()=>innerWidth<=Tn&&innerHeight<=Ln,Wt=t=>{const e=document.createTreeWalker(t,NodeFilter.SHOW_TEXT);let r="";for(;r.length<600&&e.nextNode();)r+=e.currentNode.nodeValue.slice(0,600-r.length);const n=r.replace(/\s+/g," ").trim().slice(0,120);let a=2166136261;for(let s=0;s<n.length;s++)a=Math.imul(a^n.charCodeAt(s),16777619);return n.length>11?a>>>0||1:0},Vt=t=>{for(let e=t;e&&e!==document.scrollingElement;e=e.parentElement){const r=getComputedStyle(e).position;if(r==="fixed"||r==="sticky"||e!==t&&e.scrollTop)return!1}return!0},Mn=()=>{const t=[],e=[];try{for(let r=0;r<16;r++){const n=document.elementFromPoint(innerWidth/(r%2?4:2),innerHeight*(r>>1)/8+1);let a=n?.closest($t)??n;for(;a&&!a.matches($t)&&![...a.childNodes].some(l=>l.nodeType===3&&l.nodeValue?.trim());)a=a.parentElement;const s=a&&!e.includes(a)?Wt(a):0;s&&!t.some(l=>l[0]===s&&l[2]===a.tagName)&&Vt(a)&&(e.push(a),t.push([s,Math.round(a.getBoundingClientRect().top),a.tagName]))}}catch{}return t.sort((r,n)=>+(r[1]<0)-+(n[1]<0)),t.length?t.slice(0,3):void 0},Pn=t=>{try{for(const[e,r,n]of t.a??[]){const a=document.getElementsByTagName(n);let s;for(let u=0;u<a.length&&a.length<5e3;u++)Wt(a[u])===e&&(s=s===void 0||s?.contains(a[u])?a[u]:null);const l=s?.getBoundingClientRect();if(l?.height&&s.checkVisibility?.()!==!1&&Vt(s)&&isFinite(r))return Math.max(0,Math.round(scrollY+l.top-r))}}catch{}return t.y};function Nn(){let t=0,e=!1,r=!1,n=!1,a={y:0},s=null;const l=E=>{try{sessionStorage.setItem(ut,JSON.stringify(E))}catch{}},u=E=>{if(clearTimeout(t),s===null)return;const I=s;s=null,l({y:I,a:E&&I>0?Mn():void 0})},R=()=>{if(e){e=!1;return}r=!0,s=scrollY,clearTimeout(t),t=setTimeout(u,Rn,!0)};try{addEventListener("scroll",R,{passive:!0}),addEventListener("pagehide",()=>u())}catch{}const b=()=>{let E;try{E=sessionStorage.getItem(ut)}catch{return null}if(E===null)return null;let I;try{I=JSON.parse(E)}catch{I=null}const{y:D,a:q}=I??{};if(!(typeof D=="number"&&Number.isFinite(D)&&D>=0)){try{sessionStorage.removeItem(ut)}catch{}return null}const $=H=>Array.isArray(H)&&typeof H[0]=="number"&&Number.isFinite(H[1])&&typeof H[2]=="string";return{y:D,a:Array.isArray(q)&&q.length<4&&q.every($)?q:void 0}};let y=!1,p=-1;const k=E=>{try{const I=scrollY,D=Pn(E);scrollTo({top:D,left:0,behavior:"instant"}),a=zt()?E:{y:D,a:E.a},n=!0,clearTimeout(t),s=null,l(a),p=scrollY,p!==I&&(e=!0);const q=D!==E.y&&document.readyState!=="complete";(p!==D||q)&&!y&&(y=!0,addEventListener("load",()=>{try{scrollY===p&&k(b()??a)}catch{}},{once:!0}))}catch{}},L=()=>{try{return!!location.hash}catch{return!0}};let m=!1;const j=()=>{try{if(m||!zt())return;m=!0;const E=Date.now(),I=()=>{try{removeEventListener("resize",I)}catch{}Date.now()-E>On||r||L()||k(b()??a)};addEventListener("resize",I)}catch{}};let A=!1,_=!1;return{restore(){if(A||(A=!0,L()))return;const E=b();E!==null&&(k(E),j())},promoted(){if(_||(_=!0,L()))return;const E=b();E!==null?(k(E),j()):n&&k(a)}}}function Cn(t,e,r,n){let a=null;try{a=window.trustedTypes?.createPolicy("frame-runtime",{createScriptURL:R=>R})??null}catch{}const s=window.Worker,l=s?.prototype,u=Object.freeze({Worker:s,workerOn:l?.addEventListener,workerPost:l?.postMessage,workerTerminate:l?.terminate,fetch:window.fetch.bind(window),preventDefault:Event.prototype.preventDefault,now:Date.now,policy:a,origins:e});r(t).then(R=>R?.bootTopLevel?R.bootTopLevel(u,n):n.settle()).catch(()=>n.settle())}var so="modulepreload",io=function(t){return"/"+t},lo={},Fn=function(e,r,n){let a=Promise.resolve();function s(l){const u=new Event("vite:preloadError",{cancelable:!0});if(u.payload=l,window.dispatchEvent(u),!u.defaultPrevented)throw l}return a.then(l=>{for(const u of l||[])u.status==="rejected"&&s(u.reason);return e().catch(s)})},xn=window===top,Xt=Object.getOwnPropertyDescriptor(window,"claude"),ze=ln(xn,window.__FRAME_PREAMBLE?.topLevel,Xt?.writable===!1),ft=typeof ze=="object"&&ze[0],x=ft?_n():vn();(function(){const t=Object.defineProperty,e=globalThis,r=["RTCPeerConnection","webkitRTCPeerConnection","RTCDataChannel","RTCIceCandidate","RTCSessionDescription","RTCRtpSender","RTCRtpReceiver"];let n=0;for(let a=0;a<r.length;a++){const s=r[a];try{t(e,s,{value:void 0,writable:!1,configurable:!1})}catch{try{delete e[s]}catch{}try{t(e,s,{value:void 0,writable:!1,configurable:!0})}catch{}}typeof e[s]=="function"&&n++}if(n&&ze==="framed")try{x.post({__frame_rtc_lockdown_failed:n},"*")}catch{}})();var Yt=1e4,jn=2e3,dt=2e3,ht=Object.freeze([...window.__FRAME_PREAMBLE?.origins??["https://claude.ai","https://preview.claude.ai"]]);function Jt(t){for(const e of ht)if(e.endsWith(":*"))try{const r=new URL(t);if(`${r.protocol}//${r.hostname}:*`===e)return!0}catch{}else if(t===e)return!0;return!1}var Ne=Object.freeze({...window.__FRAME_PREAMBLE?.capabilities}),Ce=window.__FRAME_PREAMBLE?.transforms,pt=window.__FRAME_PREAMBLE?.comments,mt=window.__FRAME_PREAMBLE?.translate,me=window.__FRAME_PREAMBLE?.ldx,We=dr(window.__FRAME_PREAMBLE?.cred),Zt=(()=>{try{const[t]=performance.getEntriesByType("navigation"),e=t?.serverTiming?.find(r=>r.name==="frame-cred-exp");return e!==void 0&&/^\d{1,15}$/.test(e.description)?hr(Number(e.description)):void 0}catch{return}})();function Qt(t){return Fn(()=>import("/_runtime/"+t),void 0)}var Fe=new Set,er=setTimeout,In=fetch,Dn=AbortController,Hn=800+800*Math.random(),Bn=3e3,Ve=null,tr=new Map;function qn(t,e){let r=tr.get(t);return r||tr.set(t,r=Un(t,e)),r}function Un(t,e){if(Ve?.has(t))return Promise.resolve("csp");if(navigator.onLine===!1)return Promise.resolve("offline");const r=new Dn;let n=!1;return er(()=>{n=!0,r.abort()},Bn),In("/_runtime/"+t,{signal:r.signal}).then(a=>(r.abort(),a.ok?/javascript/i.test(a.headers.get("content-type")??"")?e instanceof Error&&/:\d+:\d+\)?$/m.test(e.stack??"")?"eval":"served":"mime":"http"),()=>n?"timeout":Ve?.has(t)?"csp":"net")}function se(t){if(!Ve){const e=Ve=new Set;try{document.addEventListener("securitypolicyviolation",r=>{const n=/\/_runtime\/([^/?#]+)/.exec(r.blockedURI);n&&r.disposition!=="report"&&e.add(n[1])})}catch{}}return Qt(t).catch(()=>new Promise(e=>er(e,Hn)).then(()=>Qt(t+"?r=1")).then(e=>(e!==void 0&&Fe.add(t),e)))}function rr(t,e,r){return{contract:t.contract,changes:new Set(t.changes??[]),flags:new Set(t.flags??[]),capabilities:t.capabilities??{},capBudgets:t.capBudgets??{},brokerGen:t.brokerGen,transforms:new Map,shellOrigin:e,shell:r,mount:bt,hooks:Xe,pipe:()=>({wrap:(n,a)=>(...s)=>{try{return a(...s)}catch(l){return Promise.reject(l)}}})}}var we=null,X=null;function nr(t,e,r){try{Object.defineProperty(t,e,{value:r,writable:!1,configurable:!1,enumerable:!0})}catch{try{Object.defineProperty(t,e,{value:r,writable:!1,configurable:!0,enumerable:!0})}catch{}}}var vt=!1,Xe={editBefore:null,edit:null};function Kn(t,e,r=!1){const n=[];let a;if(r)try{Xe.editBefore?.(t)}catch{}for(const s of t.elements){const l=document.querySelector(`[data-id="${s.target}"]`);if(!l){a=s.target;break}if([...Object.keys(s.attrsSet??{}),...s.attrsRemoved??[]].some(u=>!yr(u)||gr(l,u))){a=s.target;break}if(s.text!==void 0&&(!Sr(l)||Tr(l))){a=s.target;break}for(const[u,R]of Object.entries(s.attrsSet??{}))if(!ar(l,u)){try{l.setAttribute(u,R)}catch{}or(l,u,R)}for(const u of s.attrsRemoved??[])ar(l,u)||(l.removeAttribute(u),or(l,u,null));typeof s.text=="string"&&Ar(l,s.text),n.push(s.target)}if(r)try{Xe.edit?.(t.seq,n,a)}catch{}if(a!==void 0){x.post({__frame_patch_miss:{seq:t.seq}},e);return}try{document.dispatchEvent(new CustomEvent("claude:edit",{detail:{seq:t.seq,targets:n}}))}catch{}}function or(t,e,r){if(!(t instanceof HTMLInputElement))return;const n=e.toLowerCase();n==="checked"?t.checked=r!==null:n==="value"&&t.type!=="file"&&(t.value=r??"")}function ar(t,e){const r=e.toLowerCase(),n=t;return r==="data-id"||(r==="value"||r==="checked")&&(n.__artifactSecret===!0||/^(password|hidden|file)$/.test(n.type??"")||/(^|\s)(cc-|one-time-code|current-password|new-password)/i.test(`${t.getAttribute("autocomplete")??""} ${n.autocomplete??""}`))}function sr(t){const e=document.documentElement;t==="light"||t==="dark"?(e.dataset.theme=t,e.style.colorScheme=t,vt=!0):vt&&(delete e.dataset.theme,e.style.colorScheme="",vt=!1)}var ie=new Map,_t=null;function yt(){let t;const e={u:new Promise(r=>{t=r}),r:r=>{e.done=!0,t(r)},done:!1,nulled:!1};return e}function Ye(t,e){t.nulled=!0,t.ver=e,t.r(null)}function gt(t,e){for(const[r,n]of ie)n.done||(e&&n.asked?e(r,n):Ye(n,t))}function Gn(){for(const t of ie.values())if(t.asked&&!t.done)return!0;return!1}var $n=Object.freeze(Object.assign(Object.create(null),{call:Function.prototype.call,apply:Function.prototype.apply,bind:Function.prototype.bind})),wt=!1,bt=(t,e)=>{let r=ie.get(t);if(r?.nulled&&wt)r=yt(),ie.set(t,r);else if(!r||r.done){r?.nulled&&X&&x.post({__frame_cap_telemetry:{kind:"cap-load-error",cap:t,phase:"install"}},X);return}const n=typeof e=="function"?Object.setPrototypeOf(e,$n):Object.assign(Object.create(null),e);typeof n.then=="function"&&delete n.then,r.want=void 0,r.r(Object.freeze(n))};function ir(){const t=Xt?.value??{};nr(window,"claude",t);for(const e of Object.keys(Ne)){if(t[e]!==void 0){nr(t,e,t[e]);continue}ie.set(e,yt())}if(t.use===void 0){const e=r=>{if(typeof r!="string"||!Object.hasOwn(Ne,r))return Promise.resolve(null);let n=ie.get(r);return n?(_t&&(n.nulled||n.want!==void 0)&&(n=_t(r,n)),n.asked=!0,n.u):Promise.resolve(t[r]??null)};try{Object.defineProperty(t,"use",{value:e,writable:!0,configurable:!0,enumerable:!1})}catch{}}return t}if(ze==="framed"){let t;const e=Ce&&pe.test(Ce)?se(Ce).catch(c=>{t={f:Ce,e:c}}):Promise.resolve(void 0),r=c=>{if(c.type==="auxclick"&&c.button!==1)return;const h=c.target,g=h&&h.closest?h.closest("a[href],area[href]"):null;if(!g)return;const C=g.getAttribute("href");if(!C)return;let O;try{O=new URL(C,document.baseURI)}catch{return}if((O.protocol==="http:"||O.protocol==="https:")&&O.origin!==location.origin){c.preventDefault();const z=(g.getAttribute("target")??"").toLowerCase(),B=c.type==="auxclick"||c.metaKey||c.ctrlKey||c.shiftKey||c.altKey||!["","_self","_top","_parent"].includes(z);x.post({__frame_nav:!0,url:O.href,newTab:B},"*")}};addEventListener("click",r,!0),addEventListener("auxclick",r,!0);const n={},a=c=>{c.isTrusted&&(n.pointer=!0)},s=c=>{c.isTrusted&&(n.click=!0)};addEventListener("pointermove",a,{capture:!0,passive:!0}),addEventListener("click",s,{capture:!0,passive:!0});const l={cb:null};addEventListener("keydown",c=>l.cb?.(c),!0);const u={cb:null};addEventListener("keydown",c=>u.cb?.(c));const R=pn();e.then(c=>c?.installEscapeForward?.(l,h=>{X&&x.post(h,X)})),e.then(c=>{try{c?.installFocusKeep?.()}catch{}}),e.then(c=>{if(!c?.wireNav)return;const h=x.port("*");c.wireNav(h),removeEventListener("click",r,!0),removeEventListener("auxclick",r,!0),removeEventListener("pointermove",a,!0),removeEventListener("click",s,!0),c.wireEngagement?.(n,h,R)});let b=null;try{b=Nn()}catch{}const y=document.readyState==="loading"?new Promise(c=>document.addEventListener("DOMContentLoaded",()=>c(),{once:!0})):Promise.resolve();let p="dcl",k=!1;y.then(()=>{k=!0});let L=null,m=null;try{m=Kr(window.name),L=Bt(null,m)}catch{}const j=ir();let A=null;try{A=un(j,L,{post:(c,h)=>x.post(c,h),dcl:y},m)}catch{}e.then(c=>{try{A&&c?.installHotExtras?.(A)}catch{}});let _=null;const E=()=>Array.isArray(_?.flags)&&_.flags.includes("frame_ldx_runtime")&&!!me&&pe.test(me)&&document.querySelector("script#an-form")!==null;try{A?.hydration(E,Gr)}catch{}let I=null,D=0;const q=x.on((c,h,g,C)=>{Jt(h)&&Pr(c)&&(C(),_=c.__frame_init,X=h,q(),clearTimeout(D),I?.())});if(We){const c=Zt===void 0?{__frame_cred:We}:{__frame_cred:We,exp:Zt};for(const h of ht)try{h.endsWith(":*")||x.post(c,h)}catch{}}x.post({__frame_connect:!0},"*");try{A?.afterConnect()}catch{}const $=setTimeout,H=clearTimeout,xe=()=>new Promise(c=>$(c,0));let be=()=>NaN,je=()=>[];try{be=performance.now.bind(performance),je=performance.getEntriesByType.bind(performance)}catch{}let K=0;const Ee=()=>{try{x.post({__frame_alive:!0},"*")}catch{}K=$(Ee,jn)},Ie=()=>H(K);Ee(),addEventListener("load",Ie,{once:!0});const le=new Promise(c=>{I=c,D=setTimeout(()=>{q(),c()},Yt)}),te=new WeakSet;addEventListener("error",c=>{c.target&&te.add(c.target)},!0);try{An(qt(),We,()=>{e.then(c=>{try{c?.drawRefusedNotice?.()}catch{}})})}catch{}const ve=()=>{let c=[];try{c=[...document.querySelectorAll("link[rel~=stylesheet]:not([rel~=alternate])")].filter(g=>!g.sheet&&!g.disabled&&!te.has(g)&&g.getAttribute("href")&&URL.canParse(g.href)&&(!g.media||matchMedia(g.media).matches))}catch{}let h=c.length;return h===0?Promise.resolve():new Promise(g=>{try{const C=dt-be();C>0&&(p="sheets");const O=$(g,C>0?C<dt?C:dt:0),z=()=>{--h===0&&(H(O),g())};for(const B of c)B.addEventListener("load",z,{once:!0}),B.addEventListener("error",z,{once:!0})}catch{g()}})};y.then(()=>{try{b?.restore()}catch{}});const Je=Promise.all([le,y,e]).then(c=>{if(_?.hostOverlays!==!0||!X)return;const h=c[2],g=B=>{try{return B?.()===!0}catch{return!1}},C=g(h?.declaresCover),O=_.hostSides===!0?{cover:C,sides:g(h?.declaresSides)}:{cover:C};if(x.post({__frame_layout:O},X),_.hostBackground!==!0)return;const z=X;return xe().then(ve).then(()=>{try{h?.watchBackground?.(B=>x.post({__frame_layout:{...O,background:B}},z))}catch{}})}),Se={cb:null};x.on((c,h)=>{if(Jt(h)&&Nr(c)){try{b?.promoted()}catch{}Se.cb?.()}}),le.then(async()=>{if(!_||!X){gt();try{A?.onNoInit()}catch{}return}if(sr(_.theme),_.hostVisible===!1&&e.then(i=>i?.applyHostVisible?.(!1,R)),_.hostKeys!==void 0){const i=X,S=_.hostKeys;e.then(w=>w?.installHostKeyForward?.(u,S,M=>x.post(M,i)))}try{A?.onInit(_.hot,X)}catch{}let c;const h=()=>{try{!c&&me&&E()&&(c=se(me),c.then(i=>i?.prefetch?.()).catch(()=>{}))}catch{}};h(),y.then(h);const g=X,C=x.port(g),O=(i,S)=>x.post({__frame_cap_telemetry:{kind:"cap-load-error",cap:i,phase:S}},g),z=(i,S,w)=>{new Promise(M=>M(qn(S,w))).then(M=>O(i,M),()=>O(i))},B=i=>x.post({__frame_cap_recovered:{cap:i}},g);let J=_.brokerGen;const ce=()=>A?.boot.ver??"",G=ce(),_e=(i,S)=>{const w=ce();H(S.t),S.want=w,S.t=$(()=>{S.done||Ye(S,w)},Yt),x.post({__frame_cap_want:!0,cap:i,ver:w},g)},Q=(i,S)=>{const w=ie.get(i.cap),M=Ne[i.cap];if(!S||!w||w.done||w.want!==i.ver||!pe.test(M))return;if(H(w.t),w.want=void 0,J=i.brokerGen??J,i.ver!==ce()){_e(i.cap,w);return}if(!i.grant||i.cap==="network"){Ye(w,i.ver);return}const ee=we,Z=we={...ee,capabilities:{...ee.capabilities,[i.cap]:i.grant},capBudgets:{...ee.capBudgets,[i.cap]:{...ee.capBudgets[i.cap],...i.budgets}}};se(M).then(W=>{Fe.has(M)&&B(i.cap),Z.brokerGen=J,wt=!0;try{W?.install?.(Z)}catch{O(i.cap,"install")}finally{wt=!1}},W=>z(i.cap,M,W)).then(()=>{w.done||Ye(w,i.ver)})};let De=!1,He=!1;x.on((i,S,w)=>{if(S!==g)return;try{if(A?.onShell(i))return}catch{}if(Fr(i)&&sr(i.__frame_theme.theme),tn(i)&&Q(i,w),w&&rn(i)&&(J=i.brokerGen??J),Cr(i)){const Z=i.__frame_host_visible.visible;e.then(W=>W?.applyHostVisible?.(Z,R))}Mr(i)&&Kn(i.__frame_patch,g,w);const M=i?.__fc_mode;M&&typeof M=="object"&&!De&&pt&&pe.test(pt)&&(De=!0,se(pt).then(Z=>Z.install?.(g,M.on===!0,C)).catch(()=>{}));const ee=i?.__ft_cmd;ee&&typeof ee=="object"&&!He&&mt&&pe.test(mt)&&(He=!0,se(mt).then(Z=>Z.install?.(g,ee,C)).catch(()=>{}))});const ue=Object.keys(_.capabilities??{}).filter(i=>Object.hasOwn(Ne,i)).map(i=>[i,Ne[i]]).filter(i=>typeof i[1]=="string"&&pe.test(i[1])),re=g;let Be=!1,ke=()=>{};const Ze=new Promise(i=>{ke=()=>{Be=!0,i()}}),ye=()=>(Be||(p="caps"),Ze),Qe=L!==null||jt(_.hot)||_.hostVisible===!1||_.hostOverlays===!0;k&&(p="init");const ge=_.hostBackground===!0,Ae=y.then(()=>(ge&&ye(),ge?Je:void 0)).then(()=>Qe?ye():xe()).then(ve).then(()=>{let i=!0;try{i=Qe||Gn()}catch{}return i?ye():void 0}).then(()=>{Ie();const i=pr(je,be);x.post(i?{__frame_ready:!0,nav:i,gate:p}:{__frame_ready:!0,gate:p},re),e.then(S=>{S?.installSizeReporter?.(re,Se,C),S?.installPaintReporter?.(C)})}),qe=await Promise.allSettled(ue.map(([,i])=>se(i))),fe=await e;if(fe?.buildBoot||(t?z("_transforms",t.f,t.e):O("_transforms")),fe?.buildBoot)try{we=fe.buildBoot(_,fe.TRANSFORMS??{},{shellOrigin:re,mount:bt,hooks:Xe,shell:C},i=>x.post({__frame_cap_telemetry:i},re))}catch{O("_transforms","install"),we=rr(_,re,C)}else we=rr(_,re,C);fe?.buildBoot&&Fe.has(Ce??"")&&B("_transforms");const de=we;de.brokerGen=J,qe.forEach((i,S)=>{const[w,M]=ue[S];if(i.status!=="fulfilled"){z(w,M,i.reason);return}Fe.has(M)&&B(w);try{i.value?.install?.(de)}catch{O(w,"install")}});const Ue=_.capWants===!0;Ue&&(_t=(i,S)=>{const w=ce();if(!w)return S;if(!S.nulled)return S.want!==w&&_e(i,S),S;if(w===S.ver)return S;const M=yt();return ie.set(i,M),_e(i,M),M}),gt(G,Ue&&ce()!==G?_e:void 0),ke(),await Ae;let et=!1;try{et=E()}catch{}me&&et?(c??se(me)).then(i=>i?.boot?.({shellOrigin:g,build:de.flags.has(fn),hot:A?.hot??null,carried:A?.carried(),presented:()=>A?.presented()??!0})).catch(()=>!1).then(i=>{A?.hydrated(),i!==!0?O("_ldx"):Fe.has(me)&&B("_ldx")}):A?.hydrated()})}else ft&&(ir(),Cn(ft,ht,se,{settle:gt,mount:bt}))})();</script><!-- /frame-runtime --><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Bestiário ZombiAdA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: dossiê de campo escuro; fichas por categoria com o brilho dos olhos como código de cor. Tema único escuro, por escolha. */
+:root{
+  --bg:#0f1210; --panel:#161b18; --line:#2a322d; --fg:#dfe5dc; --muted:#8e9a90; --accent:#b7c95a; --blood:#b3402f;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--body);margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-block:40px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.05}
+h1{font-size:clamp(44px,8vw,84px);font-weight:800;letter-spacing:.01em;text-transform:uppercase}
+h2{font-size:34px;font-weight:700;text-transform:uppercase;letter-spacing:.02em}
+h3{font-size:24px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+p{margin:0;max-width:68ch}
+.eyebrow{font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+header{display:grid;gap:16px;padding-bottom:28px;border-bottom:1px solid var(--line)}
+header .lede{color:var(--muted);font-size:17px}
+.stamp{display:inline-block;border:2px solid var(--blood);color:var(--blood);font:700 13px var(--mono);letter-spacing:.12em;padding:4px 10px;transform:rotate(-2deg);width:max-content}
+section{display:grid;gap:18px;padding-top:48px}
+.intro{color:var(--muted)}
+nav{display:flex;flex-wrap:wrap;gap:8px 16px;font:500 13px var(--mono);padding-top:18px}
+nav a{color:var(--accent);text-decoration:none}
+nav a:hover,nav a:focus-visible{text-decoration:underline;outline:none}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.rule{border-left:3px solid var(--accent);padding:4px 0 4px 14px}
+.rule b{display:block;font-family:var(--display);font-size:20px;text-transform:uppercase;letter-spacing:.03em}
+.rule span{color:var(--muted);font-size:14px}
+/* fichas */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:20px;display:grid;gap:14px;align-content:start;min-width:0}
+.card-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.eyes{display:flex;gap:7px;flex:none}
+.eyes i{width:12px;height:7px;border-radius:50%;background:var(--eye);box-shadow:0 0 10px 2px var(--eye)}
+.eyes.dim i{box-shadow:0 0 4px 0 var(--eye);opacity:.55}
+.card-head h3{flex:1}
+.pct{font:500 13px var(--mono);color:var(--muted)}
+.role{color:var(--fg);font-weight:500}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.stats div{border-top:1px solid var(--line);padding-top:6px;display:grid}
+.stats small{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stats b{font-size:16px;font-weight:500}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px}
+dt{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+dd{margin:0;min-width:0}
+/* horda */
+.horde{display:flex;height:34px;border-radius:3px;overflow:hidden;border:1px solid var(--line)}
+.horde div{background:var(--eye);opacity:.85;min-width:3px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font:13px var(--mono);font-variant-numeric:tabular-nums}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;background:var(--eye);margin-right:6px;vertical-align:-1px}
+/* tabelas */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:4px}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--panel)}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px}
+.two>div{display:grid;gap:12px;align-content:start;min-width:0}
+ul{margin:0;padding-left:18px;display:grid;gap:6px;max-width:68ch}
+li::marker{color:var(--accent)}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:2px}
+.timeline div{background:var(--panel);padding:14px;display:grid;gap:4px;border-top:3px solid var(--stage)}
+.timeline b{font:500 13px var(--mono)}
+.timeline span{font-size:14px;color:var(--muted)}
+.open{background:var(--panel);border:1px dashed var(--line);border-radius:4px;padding:20px;display:grid;gap:10px}
+footer{padding-top:48px;color:var(--muted);font-size:13px}
+@media (max-width:420px){.stats{grid-template-columns:repeat(2,1fr)}}
+/* visualizador 3D */
+.viewer{position:relative;height:clamp(340px,50vw,520px);background:#0a0d0b;border:1px solid var(--line);border-radius:4px;overflow:hidden;touch-action:pan-y}
+.viewer canvas{display:block;width:100%;height:100%;cursor:grab}
+.zlabels span{position:absolute;transform:translateX(-50%);font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg);pointer-events:none;white-space:nowrap;text-shadow:0 1px 3px #000}
+.nogl{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);padding:16px;text-align:center;max-width:none}
+.controls{display:grid;gap:10px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.seg small{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);min-width:130px}
+.seg button,.see3d{background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:3px;font:500 12px var(--mono);padding:6px 10px;cursor:pointer}
+.seg button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.seg button[style]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--eye);margin-right:6px;vertical-align:1px}
+.seg button:focus-visible,.see3d:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.see3d{padding:4px 8px;font-size:11px}
+.scap{color:var(--muted);min-height:3.2em}
+.h2row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
+.see3d:hover,.seg button:hover{border-color:var(--muted)}
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">ZombiAdA · Documento de design · v0.1 · 22/10/2026</span>
+  <h1>Bestiário dos infectados</h1>
+  <p class="lede">As 13 categorias de zumbis, como a idade da infecção muda cada uma, o dano por região, as roupas que protegem, como alguém vira zumbi e como tudo isso roda em hordas de milhares sem lag na LAN.</p>
+  <span class="stamp">PROPOSTA · NÚMEROS A TESTAR</span>
+  <nav aria-label="Seções">
+    <a href="#regras">Regras de ouro</a><a href="#artes">Artes 3D</a><a href="#cenas">Cenas</a><a href="#categorias">Categorias</a><a href="#horda">Horda</a><a href="#idade">Idade da infecção</a><a href="#faixa">Idade da pessoa</a><a href="#dano">Dano e penetração</a><a href="#variacoes">Roupas</a><a href="#transformacao">Mordida</a><a href="#som">Som</a><a href="#corpos">Corpos</a><a href="#corpo">Altura e porte</a><a href="#grupo">Grupo</a><a href="#tecnica">Técnica</a><a href="#aberto">Em aberto</a>
+  </nav>
+</header>
+
+<section id="regras">
+  <h2>Regras de ouro</h2>
+  <div class="rules">
+    <div class="rule"><b>Tiro no crânio mata</b><span>Qualquer categoria. Só capacete pode segurar um tiro.</span></div>
+    <div class="rule"><b>Mordida = fim</b><span>Infecção de 100%, sem cura. Arranhão tem 20% de chance.</span></div>
+    <div class="rule"><b>Olhos dizem o tipo</b><span>Silhueta + cor do brilho identificam a ameaça de longe e no escuro.</span></div>
+    <div class="rule"><b>Velho sangra menos</b><span>Quanto mais antiga a infecção, menos sangue, mais lento e mais frágil.</span></div>
+    <div class="rule"><b>Bala atravessa</b><span>Cada calibre atravessa um número de corpos e perde dano em cada um.</span></div>
+    <div class="rule"><b>Corpos ficam 15 min</b><span>E escondem o Espreitador, que finge de morto entre eles.</span></div>
+  </div>
+</section>
+
+<section id="artes">
+  <h2>Artes 3D</h2>
+  <p class="intro">Conceito low poly de cada categoria no mesmo corpo anatômico dos sobreviventes do Elenco do Vale, cada um com seu jeito de andar, em escala real: cada quadrado do chão tem 1 m. Arraste para girar, escolha um zumbi para chegar perto e troque as idades para ver como o visual muda. São bonecos de referência para silhueta, postura e cor dos olhos, não os modelos finais.</p>
+  <div class="viewer" id="viewer"><canvas id="zcanvas" aria-label="Fila com as 13 categorias de zumbis em 3D"></canvas><div class="zlabels"></div></div>
+  <div class="controls">
+    <div class="seg" id="zfocus" role="group" aria-label="Ver"><small>Ver</small><button type="button" data-v="-1" aria-pressed="true">Todos</button></div>
+    <div class="seg" id="zdecay" role="group" aria-label="Idade da infecção"><small>Idade da infecção</small><button type="button" data-v="0" aria-pressed="true">Fresco</button><button type="button" data-v="1" aria-pressed="false">Recente</button><button type="button" data-v="2" aria-pressed="false">Antigo</button><button type="button" data-v="3" aria-pressed="false">Decrépito</button></div>
+    <div class="seg" id="zlife" role="group" aria-label="Idade da pessoa"><small>Idade da pessoa</small><button type="button" data-v="0" aria-pressed="false">Jovem</button><button type="button" data-v="1" aria-pressed="true">Adulto</button><button type="button" data-v="2" aria-pressed="false">Idoso</button></div>
+    <div class="seg" id="zmove" role="group" aria-label="Movimento"><small>Movimento</small><button type="button" data-v="1" aria-pressed="true">Andando</button><button type="button" data-v="0" aria-pressed="false">Parado</button></div>
+    <div class="seg"><small>Aparência</small><button type="button" id="zreroll">Sortear aparência</button></div>
+  </div>
+</section>
+
+<section id="cenas">
+  <h2>Cenas de referência</h2>
+  <p class="intro">Tudo o que a equipe propôs, em 3D: roupas, dano por região, penetração, os comportamentos especiais, a transformação, os corpos e a técnica de hordas. Escolha uma cena e arraste para girar a câmera.</p>
+  <div class="controls"><div class="seg" id="sscene" role="group" aria-label="Cena"><small>Cena</small></div></div>
+  <div class="viewer" id="sviewer"><canvas aria-label="Cena 3D de referência"></canvas><div class="zlabels"></div></div>
+  <p class="scap" id="scap"></p>
+</section>
+
+<section id="categorias">
+  <h2>As 13 categorias</h2>
+  <p class="intro">Velocidade em m/s: vagando / perseguindo. Multiplicadores de dano valem para tronco · braços · pernas (a cabeça sempre mata com tiro). Spawn é a fatia de uma horda típica.</p>
+  <div class="cards" id="cards"></div>
+</section>
+
+<section id="horda">
+  <div class="h2row"><h2>Composição de uma horda de 100</h2><button type="button" class="see3d" data-scene="horda">Ver em 3D</button></div>
+  <div class="horde" id="hordeBar" role="img" aria-label="Barra da composição da horda"></div>
+  <div class="legend" id="hordeLegend"></div>
+  <p class="intro">Em cada grupo visível aparecem no máximo 2 ou 3 especiais, para que a silhueta deles se destaque da massa de Lentos. À noite, Corredores sobem para 25%.</p>
+</section>
+
+<section id="idade">
+  <h2>Idade da infecção</h2>
+  <p class="intro">Não é categoria: é um modificador sobre qualquer categoria. A mistura de idades acompanha os dias do mundo (1ª semana: 80% frescos; dia 60: cerca de metade antigos). Quem é transformado (jogador ou NPC) sempre nasce Fresco.</p>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>Fresco · 0–3 dias</th><th>Recente · 4–30 d</th><th>Antigo · 1–6 meses</th><th>Decrépito · 6+ meses</th></tr></thead>
+    <tbody>
+      <tr><td>Sangue / rastro</td><td class="n">100%</td><td class="n">70%</td><td class="n">35%</td><td class="n">10%</td></tr>
+      <tr><td>Velocidade</td><td class="n">+10%</td><td class="n">base</td><td class="n">−10%</td><td class="n">−25%</td></tr>
+      <tr><td>Vida</td><td class="n">100%</td><td class="n">100%</td><td class="n">85%</td><td class="n">65%</td></tr>
+      <tr><td>Dano nos membros</td><td class="n">×0,8</td><td class="n">×1,0</td><td class="n">×1,3</td><td class="n">×1,8</td></tr>
+      <tr><td>Percepção</td><td>base</td><td>base</td><td>audição −10%</td><td>visão −40%, olfato −30%</td></tr>
+      <tr><td>Pele</td><td>pálida, veias azuladas</td><td>cinza-esverdeada, manchas roxas</td><td>verde-oliva, feridas abertas</td><td>couro seco, ossos à mostra</td></tr>
+      <tr><td>Roupa</td><td>inteira, cores vivas</td><td>rasgada, suja</td><td>trapos desbotados</td><td>fiapos cinza</td></tr>
+      <tr><td>Sangue</td><td>vermelho vivo e brilhante; escorre e seca em 10 min para marrom fosco</td><td>vermelho-escuro; seca em 6 min</td><td>bordô-marrom, grosso; seca em 6 min</td><td>pó escuro, não escorre</td></tr>
+      <tr><td>Olhos</td><td>íris leitosa, brilho fraco</td><td>brilho normal</td><td>brilho normal</td><td>brilho falhando</td></tr>
+    </tbody>
+  </table></div>
+  <p class="intro">O Corredor só existe Fresco ou Recente: no dia 31 da infecção ele degrada para Lento.</p>
+</section>
+
+<section id="faixa">
+  <h2>Idade da pessoa</h2>
+  <p class="intro">Além de quanto tempo está infectado, todo zumbi tem a idade que a pessoa tinha ao morrer. As duas se somam: um idoso decrépito é o zumbi mais lento e frágil do jogo; um jovem fresco é o mais rápido. A faixa aparece na silhueta (altura, postura, cabelo) para ser lida de longe.</p>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>Jovem · 15–25 anos</th><th>Adulto · 26–55</th><th>Idoso · 56+</th></tr></thead>
+    <tbody>
+      <tr><td>Chance no mundo</td><td class="n">25%</td><td class="n">55%</td><td class="n">20%</td></tr>
+      <tr><td>Velocidade</td><td class="n">+15%</td><td class="n">base</td><td class="n">−20%</td></tr>
+      <tr><td>Vida</td><td class="n">−10%</td><td class="n">base</td><td class="n">−20%</td></tr>
+      <tr><td>Dano nos membros</td><td class="n">×0,9</td><td class="n">×1,0</td><td class="n">×1,3 (ossos frágeis)</td></tr>
+      <tr><td>Força do agarrão</td><td class="n">−10%</td><td class="n">base</td><td class="n">−25%</td></tr>
+      <tr><td>Percepção</td><td>audição +10%</td><td>base</td><td>visão −20%, audição −20%</td></tr>
+      <tr><td>Categorias</td><td>Corredor 2× mais comum; nunca Brutamonte</td><td>todas</td><td>Corredor e Brutamonte quase nunca (2%); Lento e Rastejante mais comuns</td></tr>
+      <tr><td>Visual</td><td>mais baixo e magro, postura ereta, roupa casual, mochila</td><td>padrão</td><td>curvado, cabelo grisalho ou careca, passos curtos, bengala às vezes</td></tr>
+      <tr><td>Loot típico</td><td>celular, mochila, lanche, skate</td><td>chaves, carteira, ferramentas</td><td>remédios, óculos, relógio, dinheiro</td></tr>
+      <tr><td>Som</td><td>grito mais agudo</td><td>padrão</td><td>gemido rouco, tosse seca</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li>Limite: nenhuma combinação passa de 6,5 m/s (o Corredor jovem e fresco bate no teto).</li>
+    <li>Onde: escola e universidade têm mais jovens; asilo, hospital e bairros residenciais têm mais idosos; zonas industriais e bases, mais adultos.</li>
+    <li>NPCs e jogadores transformados mantêm a idade que tinham; a idade da infecção começa em Fresco.</li>
+    <li>Crianças ficam fora por enquanto (classificação indicativa e regras das lojas). Ver "Em aberto".</li>
+  </ul>
+</section>
+
+<section id="dano">
+  <div class="h2row"><h2>Dano por região e penetração</h2><button type="button" class="see3d" data-scene="dano">Ver em 3D</button> <button type="button" class="see3d" data-scene="penetracao">Ver penetração</button></div>
+  <div class="two">
+    <div>
+      <h3>Regiões do corpo</h3>
+      <ul>
+        <li><b>Crânio:</b> projétil mata na hora. Mandíbula e pescoço dão ×2, mas não matam.</li>
+        <li><b>Corpo a corpo na cabeça:</b> ×3. Mata na hora só com arma pesada (machado, marreta) ou execução no zumbi caído.</li>
+        <li><b>Morte:</b> pela vida total da categoria. Os segmentos do corpo (cabeça 40, tronco 120, quadril 90, braço 60, antebraço 45, mão 25, coxa 80, canela 55) só decidem o que é arrancado. Dano no membro conta 100% para o segmento e 50% para a vida total.</li>
+        <li><b>Perna a 50%:</b> manca (−50% velocidade, sem investida). <b>Perna a 0:</b> cai e vira rastejante, mas mantém a categoria (um Brutamonte rastejando continua forte).</li>
+        <li><b>Braço a 0:</b> arrancado, agarrão −50%. Sem os dois braços: não agarra, só morde quem está caído ou encurralado.</li>
+        <li><b>Tronco:</b> dano direto na vida.</li>
+      </ul>
+      <p class="intro">Dano e penetração (pontos PEN) das armas vêm do Arsenal, a fonte única. Referência: 9mm 30 · 5.56 45 · .308 75. Cada corpo atravessado gasta 1 PEN; o Brutamonte gasta 2.</p>
+    </div>
+  </div>
+  <h3>As partes do corpo</h3>
+  <p class="intro">As partes seguem os 8 segmentos do corpo compartilhado com o Elenco (cabeça 40, tronco 120, quadril 90, braço 60, antebraço 45, mão 25, coxa 80, canela com pé 55), cada um dividido em pontos com efeito próprio. Cada parte tem 4 estados: <b>ferida</b>, <b>dilacerada</b> (pendurada, balança e pinga), <b>arrancada</b> (corte limpo com coto e osso, por arma com corte ≥ 0,5 ou golpe acima de 90% da vida) e <b>explodida</b> (escopeta a menos de 5 m, explosivo ou .50: some em pedaços). O zumbi só morre com o cérebro destruído.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Segmento</th><th>Parte</th><th>Dilacerada</th><th>Arrancada ou explodida</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="6">Cabeça · 40</td><td>Crânio e cérebro</td><td>couro cabeludo solto</td><td>morte na hora; explodida espalha pedaços</td></tr>
+      <tr><td>Olhos</td><td>um olho pendurado: visão −50%</td><td>cego: passa a caçar pelo som</td></tr>
+      <tr><td>Mandíbula</td><td>pendurada: mordida −70%</td><td>sem mandíbula: não morde, só agarra e arranha</td></tr>
+      <tr><td>Orelhas</td><td>—</td><td>audição −30% por orelha</td></tr>
+      <tr><td>Nariz</td><td>—</td><td>olfato −60% (Farejador perde o rastro)</td></tr>
+      <tr><td>Pescoço</td><td>cabeça tomba para o lado: visão torta</td><td>decapitado: corpo cai, cabeça segue mordendo no chão por 30 s</td></tr>
+      <tr><td rowspan="5">Tronco · 120</td><td>Clavícula e ombro</td><td>braço daquele lado sem força: agarrão −50%</td><td>braço inteiro cai no ombro</td></tr>
+      <tr><td>Costelas e peito</td><td>costelas à mostra</td><td>peito aberto: −40% de vida máxima</td></tr>
+      <tr><td>Abdômen</td><td>tripas penduradas: tropeça nelas (−20% de velocidade)</td><td>evisceração: −30% de velocidade, rastro de sangue</td></tr>
+      <tr><td>Coluna</td><td>corcunda, ataque mais lento</td><td>quebrada: pernas param, vira rastejante</td></tr>
+      <tr><td>Costas</td><td>carne pendurada</td><td>—</td></tr>
+      <tr><td>Quadril · 90</td><td>Pelve</td><td>manca das duas pernas</td><td>quebrada: rasteja</td></tr>
+      <tr><td>Braço · 60</td><td>Braço e cotovelo</td><td>antebraço pendurado em pêndulo</td><td>braço cai a partir do cotovelo ou do ombro</td></tr>
+      <tr><td>Antebraço · 45</td><td>Antebraço e pulso</td><td>mão pendurada: não agarra com ela</td><td>antebraço e mão caem</td></tr>
+      <tr><td>Mão · 25</td><td>Mão e dedos</td><td>dedos faltando: agarrão −25%</td><td>sem mão: só empurra</td></tr>
+      <tr><td rowspan="2">Coxa · 80</td><td>Coxa</td><td>manca: −50% de velocidade</td><td>perna inteira cai: rasteja</td></tr>
+      <tr><td>Joelho</td><td>joelho virado: cai a cada 3–5 passos</td><td>perna cai a partir do joelho</td></tr>
+      <tr><td rowspan="2">Canela e pé · 55</td><td>Canela</td><td>osso exposto: manca</td><td>anda no coto, desequilibrado</td></tr>
+      <tr><td>Pé e tornozelo</td><td>tornozelo virado: sem corrida</td><td>sem pé: −40% de velocidade, sem corrida</td></tr>
+    </tbody>
+  </table></div>
+  <div class="two">
+    <div>
+      <h3>Quantos zumbis a bala atravessa</h3>
+      <div class="tbl"><table style="min-width:0">
+        <thead><tr><th>Calibre</th><th>Corpos</th><th>Perda por corpo</th></tr></thead>
+        <tbody>
+          <tr><td>.22 / 12ga chumbo</td><td class="n">1</td><td class="n">—</td></tr>
+          <tr><td>9mm / .45</td><td class="n">2</td><td class="n">−50%</td></tr>
+          <tr><td>12ga balote</td><td class="n">2</td><td class="n">−40%</td></tr>
+          <tr><td>5.56 / 7.62x39</td><td class="n">3</td><td class="n">−35%</td></tr>
+          <tr><td>.308</td><td class="n">4</td><td class="n">−25%</td></tr>
+          <tr><td>.50</td><td class="n">6</td><td class="n">−15%</td></tr>
+        </tbody>
+      </table></div>
+      <ul>
+        <li>Brutamonte conta como 2 corpos.</li>
+        <li>Colete balístico bloqueia penetração de pistola.</li>
+        <li>Bala que já atravessou alguém ainda mata no crânio se chegar com 20 de dano ou mais.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="variacoes">
+  <div class="h2row"><h2>Roupas e profissões</h2><button type="button" class="see3d" data-scene="roupas">Ver em 3D</button></div>
+  <p class="intro">Qualquer categoria pode vestir qualquer variação. O equipamento precisa aparecer na silhueta low poly, e é ele que decide o loot do corpo. O "Blindado" é isto: um zumbi com equipamento de policial ou militar.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Variação</th><th>Onde · chance</th><th>Proteção</th><th>Loot</th></tr></thead>
+    <tbody>
+      <tr><td>Policial</td><td>cidade · 8%</td><td>Colete IIIA: tronco ×0,3 contra pistola, ×0,8 contra rifle, bloqueia penetração</td><td>9mm (40%), pistola (12%), algemas, rádio, lanterna</td></tr>
+      <tr><td>Militar</td><td>perto de bases · 3%</td><td>Capacete segura o 1º tiro de pistola na cabeça e cai (rifle passa). Colete IV: tronco ×0,5</td><td>carregador 5.56 (30%), ração, kit médico, granada (2%)</td></tr>
+      <tr><td>Bombeiro</td><td>2%</td><td>Fogo ×0,25, membros ×0,8; capacete segura 1 golpe na cabeça</td><td>machado (10%), máscara de gás, luvas</td></tr>
+      <tr><td>Motociclista</td><td>estradas · 3%</td><td>Jaqueta: braços ×0,7. Capacete fechado segura 1 tiro de .22/9mm e impede mordida até cair</td><td>chave de moto, ferramentas</td></tr>
+      <tr><td>Operário</td><td>zona industrial · 5%</td><td>Capacete leve segura golpe leve</td><td>ferramentas, fita, pregos</td></tr>
+      <tr><td>Médico / enfermeiro</td><td>hospital · 4%</td><td>nenhuma</td><td>bandagens, analgésico, antibiótico (8%)</td></tr>
+      <tr><td>Caçador</td><td>zona rural · 3%</td><td>nenhuma</td><td>munição .308 ou 12ga, faca</td></tr>
+    </tbody>
+  </table></div>
+  <p class="intro">Armadura cai com durabilidade reduzida. O loot fica no corpo pelos 15 min; quando o corpo some, vira uma sacola no chão por mais 30 min.</p>
+</section>
+
+<section id="transformacao">
+  <div class="h2row"><h2>Da mordida ao zumbi</h2><button type="button" class="see3d" data-scene="mordida">Ver em 3D</button></div>
+  <p class="intro">Tempo até virar: a pessoa morre 48 h de jogo depois da mordida e reanima 2 a 4 min reais depois. Acelerar só existe em modo de teste.</p>
+  <div class="timeline">
+    <div style="--stage:#5d6b5f"><b>0–30%</b><span>Nada aparente, só o ferimento.</span></div>
+    <div style="--stage:#b39a3a"><b>30–70% · Febre</b><span>−25% de stamina, tremor na mira.</span></div>
+    <div style="--stage:#b3672f"><b>70–95% · Delírio</b><span>Visão turva, tosse (faz barulho), não dorme.</span></div>
+    <div style="--stage:#b3402f"><b>95–100% · Colapso</b><span>Morte. O corpo reanima em 2–4 min; os dedos se mexem antes.</span></div>
+  </div>
+  <ul>
+    <li>Sorteio da categoria: 70% Lento, 30% Corredor, sempre Fresco. Morte com dano físico muito alto pode dar Brutamonte (5%).</li>
+    <li>Mantém roupa, armadura (com as regras de proteção), mochila e inventário. As armas ficam presas no corpo, ele não usa.</li>
+    <li>Morte sem infecção não reanima (opção do servidor: "todos reanimam").</li>
+    <li>No coop, o zumbi de um ex-jogador mostra o nome dele, nunca some antes de ser morto e o corpo fica 60 min para os amigos recuperarem o equipamento. O jogador volta como novo sobrevivente.</li>
+  </ul>
+</section>
+
+<section id="som">
+  <h2>Assinatura sonora</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Categoria</th><th>Voz</th><th>Respiração / passos</th></tr></thead>
+    <tbody id="soundRows"></tbody>
+  </table></div>
+  <ul>
+    <li>No máximo 24–32 vozes individuais. Prioridade: especial, depois mais próximo, depois quem está atacando.</li>
+    <li>Até 15 m: vozes 3D individuais. Além disso: "cama" de multidão em 3 loops (pequena, média, grande) com 4–8 emissores por quadrante, nunca um por zumbi.</li>
+    <li>Grito do Gritador e urro do Brutamonte abaixam a cama em 4–6 dB. Cooldown por tipo e pitch ±8%.</li>
+    <li>Na LAN o áudio não vai pela rede: cada máquina gera a partir do estado replicado.</li>
+  </ul>
+</section>
+
+<section id="corpos">
+  <div class="h2row"><h2>Feedback de dano e corpos</h2><button type="button" class="see3d" data-scene="corpos">Ver em 3D</button></div>
+  <div class="two">
+    <div>
+      <h3>Na hora do tiro</h3>
+      <ul>
+        <li><b>Headshot:</b> estalo seco próprio, cabeça troca por crânio estourado, 10–20 partículas e o brilho dos olhos apaga na hora.</li>
+        <li><b>Membro arrancado:</b> malha pré-cortada (braço, antebraço, perna, cabeça); a peça solta cai com física simples e o toco ganha tampa de osso.</li>
+        <li><b>Sangue e bile nunca ficam parados enquanto molhados:</b> a poça ondula e espalha, na parede escorre em fios, no declive corre e pinga. Fresco #8A0A0A brilhante seca para #3B1D14 fosco em 10 min; Recente e Antigo secam em 6 min; Decrépito é pó. A bile do Inchado (#8A9A2A, grossa, com bolhas) vira crosta #3E4220 em 15 min. Chuva clareia, espalha 50% a mais e não deixa secar; pisar no fresco deixa pegada.</li>
+        <li><b>Brutamonte:</b> cada tiro deixa marca e um tranco visível, para o jogador sentir a contagem.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Os 15 minutos do corpo</h3>
+      <div class="tbl"><table style="min-width:0">
+        <tbody>
+          <tr><td class="n">0–1 min</td><td>Ragdoll ~3 s, depois vira malha estática congelada (custo quase zero).</td></tr>
+          <tr><td class="n">1–10 min</td><td>Escurece e desatura. Enquanto está molhada, a poça ondula e se espalha, escorre em declive e pinga nas bordas; ao secar fica fosca e marrom.</td></tr>
+          <tr><td class="n">10–14 min</td><td>Moscas (só perto, &lt;20 m) e o corpo afunda de leve.</td></tr>
+          <tr><td class="n">14–15 min</td><td>Dissolve ou afunda em 5 s; a poça some.</td></tr>
+        </tbody>
+      </table></div>
+      <p class="intro">Limite global de corpos (pool de 400, configurável, 200 em PCs fracos). Cheio: some primeiro o mais antigo fora da vista. Só o host decide quando o corpo some.</p>
+    </div>
+  </div>
+</section>
+
+<section id="corpo">
+  <div class="h2row"><h2>Altura e porte</h2><button type="button" class="see3d" data-scene="corpo">Ver em 3D</button></div>
+  <p class="intro">Nenhum zumbi tem o mesmo tamanho. Cada um sorteia altura e porte no nascimento, a partir da mesma seed que já define roupa e idade. O sorteio custa 2 bytes e não pesa na rede.</p>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>Faixa</th><th>Chance</th><th>Efeito</th></tr></thead>
+    <tbody>
+      <tr><td>Altura</td><td class="n">1,62–1,98 m (×0,90–1,10)</td><td>curva normal, média 1,75 m</td><td>Caixas de acerto e cabeça sobem ou descem junto. Jovem −6%. Brutamonte parte de ×1,42.</td></tr>
+      <tr><td>Magro</td><td class="n">porte ×0,85–0,95</td><td class="n">30%</td><td>Vida −10%, velocidade +5%, empurra menos.</td></tr>
+      <tr><td>Médio</td><td class="n">porte ×0,95–1,08</td><td class="n">50%</td><td>Base.</td></tr>
+      <tr><td>Pesado</td><td class="n">porte ×1,08–1,25</td><td class="n">20%</td><td>Vida +15%, velocidade −10%, vale 1,5 na pressão contra barricadas.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="grupo">
+  <h2>Comportamento de grupo</h2>
+  <p class="intro">É o que faz a horda parecer uma força da natureza, como em Guerra Mundial Z, Days Gone e Left 4 Dead. Nada disso é física de verdade: são regras baratas sobre o campo de fluxo e vagas pré-definidas, por isso cabem centenas de zumbis.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Efeito</th><th>Referência</th><th>Regra</th><th>Contra-jogo</th><th></th></tr></thead>
+    <tbody>
+      <tr><td>Rio da horda</td><td>Days Gone</td><td>300–500 zumbis seguem um campo de fluxo com separação entre vizinhos. Abrem ao redor de obstáculos, viram fila em corredores e espalham no aberto. Corredores puxam a frente.</td><td>Gargalos, explosivos no corredor, fugir de moto</td><td><button type="button" class="see3d" data-scene="rio">Ver</button></td></tr>
+      <tr><td>Pirâmide no muro</td><td>Guerra Mundial Z</td><td>12+ zumbis presos num muro de até 5 m começam a empilhar. ~0,45 m por camada; ~30 vencem 4 m. Vagas inclinadas com pose de escalada, máximo 40 por pilha.</td><td>Explodir a base derruba tudo; fogo; muro mais alto</td><td><button type="button" class="see3d" data-scene="piramide">Ver</button></td></tr>
+      <tr><td>Vagas de ataque</td><td>Left 4 Dead, GMZ</td><td>Até 6 atacam ao mesmo tempo (Brutamonte ocupa 2). O resto faz fila empurrando e entra quando uma vaga abre. O empurrão desloca o jogador devagar.</td><td>Costas na parede reduz para 3 vagas</td><td><button type="button" class="see3d" data-scene="cerco">Ver</button></td></tr>
+      <tr><td>Alerta em cadeia</td><td>Days Gone</td><td>Quem vê o jogador geme; vizinhos até 8 m viram em 0,2–0,6 s e repassam. Com Gritador, 150 m.</td><td>Matar o primeiro em silêncio</td><td><button type="button" class="see3d" data-scene="alerta">Ver</button></td></tr>
+      <tr><td>Maré na barricada</td><td>Guerra Mundial Z</td><td>Pressão = soma de quem empurra (zumbi 1, pesado 1,5, Brutamonte 3). Vida da barricada cai por segundo pela pressão.</td><td>Reforçar, abrir saída lateral, Inchado no meio</td><td><button type="button" class="see3d" data-scene="mare">Ver</button></td></tr>
+      <tr><td>Cascata</td><td>Guerra Mundial Z</td><td>A pressão empurra quem está na beira de viadutos, sacadas e grades. Queda acima de 6 m quebra as pernas e vira rastejante. Os corpos amortecem quem cai depois.</td><td>Atrair a horda para a beira</td><td></td></tr>
+      <tr><td>Enxame no carro</td><td>Days Gone</td><td>Zumbis sobem no capô e no teto e batem nos vidros. Acima de 8 zumbis o carro não anda; os vidros quebram em 15 s.</td><td>Ré e acelerar cedo, buzina como isca em outro lugar</td><td></td></tr>
+      <tr><td>Horda dormente</td><td>Days Gone</td><td>De dia, hordas dormem em túneis, metrô e galpões. No fim da tarde saem atrás de água. Barulho perto acorda todas.</td><td>Explorar a toca de dia, fazer silêncio</td><td></td></tr>
+      <tr><td>Grande migração</td><td>Days Gone</td><td>Uma vez por semana de jogo, uma horda de 1.000+ cruza o mapa por uma rota anunciada por sinais (rádio, pássaros fugindo).</td><td>Sair da rota ou preparar uma armadilha</td><td></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="tecnica">
+  <div class="h2row"><h2>Como roda sem lag</h2><button type="button" class="see3d" data-scene="lod">Ver em 3D</button></div>
+  <p class="intro">Proposta do engenheiro: Unity 6 com DOTS (Entities, Burst, Jobs) e Netcode for Entities. Cada categoria é um arquivo de dados (ScriptableObject) com atributos e módulos plugáveis (Grito, Explosão, Emboscada, Rastejar, Farejar), então uma categoria nova não exige código. Idade, roupa e cor saem de uma seed de 32 bits.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Nível</th><th>Distância</th><th>IA</th><th>O que acontece</th><th>Quantos</th></tr></thead>
+    <tbody>
+      <tr><td>L0 Perto</td><td class="n">&lt;35 m</td><td class="n">20 Hz</td><td>IA completa, hitboxes por região, módulos especiais ativos</td><td class="n">60–100</td></tr>
+      <tr><td>L1 Médio</td><td class="n">35–120 m</td><td class="n">5 Hz</td><td>Segue flow field compartilhado, 1 cápsula de colisão</td><td class="n">300–500</td></tr>
+      <tr><td>L2 Longe</td><td class="n">120–400 m</td><td class="n">1 Hz</td><td>Grupos de 8–32 com um centro só, impostores instanciados</td><td class="n">1.000–2.000</td></tr>
+      <tr><td>L3 Virtual</td><td class="n">&gt;400 m</td><td class="n">0,2 Hz</td><td>Só dados: contagem por categoria por bloco de 64 m, migra com tiros e gritos</td><td class="n">10.000+</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><b>Animação na GPU</b> (vertex animation textures): ~8 clipes por categoria, malhas de 2.500 triângulos perto (só os ~40 mais próximos), 1.000, 400 e 150 ou cartão além de 120 m, tudo instanciado. A cascata e o membro pendulado entram na textura como atraso por osso; só os 32 mais próximos ganham esqueleto real.</li>
+    <li><b>Tiro:</b> raycast em lote, hits ordenados por distância, um por zumbi, e o calibre gasta seu orçamento de penetração. O host valida tudo com compensação de lag de até 150 ms.</li>
+    <li><b>Rede LAN:</b> host autoritativo a 30 Hz. Spawn manda só (id, seed, categoria). Estado por zumbi ~10 bytes, 3–5 com delta. Perto 20 Hz, médio 5 Hz, longe só o centro do grupo.</li>
+    <li><b>Metas:</b> ~22–30 KB/s por cliente (teto 64 KB/s). 60 FPS a 1080p numa GTX 1060 / RX 580 com CPU de 6 núcleos; mínimo de 30 FPS com até ~2.000 zumbis na tela.</li>
+    <li><b>Primeiro passo:</b> um teste de estresse com 2.000 zumbis animados na GPU e flow field, antes de hitboxes e rede.</li>
+  </ul>
+</section>
+
+<section id="aberto">
+  <h2>Em aberto</h2>
+  <div class="open">
+    <ul>
+      <li>"Blindado" virou variação de roupa (policial/militar) e "Fresco" virou idade da infecção, em vez de categorias próprias. Assim qualquer tipo pode ser blindado ou fresco.</li>
+      <li>Zumbis crianças: deixei de fora porque muitas lojas e classificações etárias restringem matar crianças, mesmo zumbis. Se quiser incluir, dá para entrar como faixa "Criança" sem dano mostrado.</li>
+      <li>O Farejador é novo: caçador que segue rastro de sangue e puxa Lentos atrás de si. Dá para cortar se quiser menos tipos.</li>
+      <li>O protótipo atual tem Lento, Corredor e Brutamonte. O Brutamonte do protótipo morre com 3 tiros; aqui ele tem 220 de vida e cai no 5º tiro de 5.56 (45) no tronco.</li>
+      <li>Unity DOTS é a recomendação técnica, mas escolher o motor é uma decisão grande: vale confirmar com o teste de estresse antes de fechar.</li>
+      <li>Todos os números são ponto de partida e precisam de playtest.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>Feito por uma equipe de três: design de jogabilidade, arte e som, engenharia de hordas.</footer>
+</div>
+
+<script>
+const Z=[
+ {n:"Lento",eye:"#e3c341",pct:48,role:"A massa da horda: cerca e prende.",hp:100,spd:"0,6 / 1,4",dmg:10,bite:"15%",mult:"1,0 · 0,8 · 0,8",
+  look:"Vertical, ombros caídos, arrasta um pé. Olhos amarelos fracos que piscam.",ai:"Visão 15 m (cone 90°), audição 40 m, olfato 10 m. Segue o som dos outros. Agarra e depois morde.",
+  spawn:"Todo lugar, dia e noite.",counter:"Gargalos, empurrão + golpe na cabeça, distância.",voice:"Gemido grave e longo",step:"Pé arrastando, chiado úmido"},
+ {n:"Corredor",eye:"#e5392b",pct:14,role:"Predador que quebra a formação do grupo.",hp:70,spd:"1,2 / 5,5",dmg:8,bite:"25%",mult:"1,0 · 1,2 · 1,3",
+  look:"Tronco inclinado 45°, braços para trás, magro. Vermelho intenso e fixo.",ai:"Visão 30 m, audição 50 m. Linha reta, pula obstáculos baixos. Investida que derruba e morde.",
+  spawn:"Mais na cidade; 25% à noite. Só Fresco/Recente.",counter:"Tiro na perna, portas fechadas, iscas sonoras.",voice:"Rosnado curto, grito ao avistar",step:"Ofegante, passos batidos"},
+ {n:"Brutamonte",eye:"#ef8a2a",pct:5,role:"Tanque que quebra barricadas.",hp:220,spd:"0,8 / 2,0",dmg:30,bite:"10%",mult:"1,0 · 0,6 · 0,7",
+  look:"1,5× altura, 2× largura, forma de V, cabeça afundada. Olhos laranja grandes.",ai:"Visão 20 m, audição 30 m. Dano ×3 em portas. Golpe em arco que derruba 2 m, com aviso de 0,8 s. Cabeça baixa: −40% de área de headshot.",
+  spawn:"Industrial, prisão, hordas grandes.",counter:"Atirar quando ele ergue a cabeça após o golpe (1,2 s), fogo, explosivos.",voice:"Urro subgrave",step:"Pisada pesada, câmera treme"},
+ {n:"Rastejante",eye:"#a9d14a",pct:9,role:"Emboscada no chão.",hp:60,spd:"0,4",dmg:6,bite:"35%",mult:"1,0 · 1,0 · —",
+  look:"Baixo e horizontal (0,4 de altura), puxa o corpo com os braços. Brilho amarelo-esverdeado rente ao chão.",ai:"Visão 5 m, audição 20 m. Esconde-se no mato e sob carros. Morde o tornozelo sem agarrar.",
+  spawn:"Rural e estradas, mais quem perde as pernas.",counter:"Lanterna, olhar para o chão, pisão (40 na cabeça).",voice:"Gorgolejo, unhas raspando",step:"Corpo arrastando"},
+ {n:"Gritador",eye:"#f2f2ea",pct:2,role:"O alarme vivo.",hp:50,spd:"1,0 / 3,0",dmg:4,bite:"5%",mult:"1,2 · 1,2 · 1,2",
+  look:"Magro, pescoço longo, mandíbula aberta. Brilho branco pulsante. Arqueia as costas antes de gritar (1,5 s).",ai:"Audição 60 m, visão 25 m. Ao ver alguém grita: chama todos num raio de 150 m e dá +20% de velocidade por 30 s. Repete a cada 20 s e foge do combate.",
+  spawn:"Shopping, hospital, escola; mais à noite.",counter:"Matar primeiro e em silêncio (arco, supressor), cortar a linha de visão.",voice:"Grito de 3 s ouvido a 100 m",step:"Inspiração audível antes do grito"},
+ {n:"Inchado",eye:"#5fe08a",pct:3,role:"Perigo de área.",hp:120,spd:"0,5 / 1,0",dmg:12,bite:"15%",mult:"1,5 · 1,0 · 1,0",
+  look:"Esférico, braços curtos, barriga translúcida com veias verdes brilhando. Incha antes de estourar.",ai:"Visão 10 m, olfato 25 m. Ao morrer explode numa nuvem de 4 m: cega 5 s, dobra seu rastro de cheiro e faz tossir.",
+  spawn:"Perto de água, esgoto e porões.",counter:"Tiro de longe, explodir no meio da horda, máscara.",voice:"Borbulho e gases",step:"Passo molhado; estouro com chiado"},
+ {n:"Espreitador",eye:"#9b5ce0",pct:3,dim:true,role:"Terror de interiores.",hp:90,spd:"1,0 / 4,0",dmg:10,bite:"40%",mult:"1,0 · 1,0 · 1,0",
+  look:"Agachado, membros longos, anda de quatro e cola nas paredes. Brilho roxo quase apagado, que acende no bote.",ai:"Finge de morto entre os corpos. Acorda se alguém passa a menos de 3 m ou de costas. Bote de 4 m/s por 3 s, agarra por trás.",
+  spawn:"Interiores escuros e entre corpos; mais à noite.",counter:"Tiro de confirmação nos corpos; corpo de verdade tem olho apagado. Entrar em dupla.",voice:"Silencioso; estalo de articulação a <8 m",step:"Clique de unha, respiração curta"},
+ {n:"Farejador",eye:"#4fc6d6",pct:5,role:"Caçador que segue rastro.",hp:80,spd:"1,0 / 3,5",dmg:9,bite:"20%",mult:"1,0 · 1,1 · 1,1",
+  look:"Cabeça erguida e inclinada, nariz exposto, narinas abertas. Brilho ciano.",ai:"Olfato 60 m, segue rastro de sangue (jogador ferido, zumbis frescos) e puxa até 8 Lentos atrás. Visão 10 m.",
+  spawn:"Rural e floresta; mais de dia.",counter:"Curativo para estancar, atravessar água, isca de carne.",voice:"Fungadas, rosnado baixo",step:"Passos rápidos e irregulares"},
+ {n:"Saltador",eye:"#e04aa8",pct:4,role:"Pula sobre o grupo e derruba quem está atrás de cobertura.",hp:75,spd:"1,0 / 4,5",dmg:14,bite:"30%",mult:"1,0 · 1,1 · 1,4",
+  look:"Agachado e enrolado como mola, pernas longas, braços para trás antes do salto. Olhos magenta.",ai:"Visão 25 m, audição 40 m. Salta 6 m na horizontal e 3 m para cima (capôs, muros baixos, telhados). O salto derruba o alvo por 1,5 s. Recarga de 5 s.",
+  spawn:"Cidade: telhados, viadutos e estacionamentos; mais à noite.",counter:"Tiro no ar durante o salto (ele não desvia), ficar junto de parede alta, empurrão no pouso.",voice:"Chiado agudo antes do salto",step:"Passos curtos, impacto seco no pouso"},
+ {n:"Cego",eye:"#d9d4c8",pct:3,blind:true,role:"Caça só pelo som.",hp:110,spd:"0,8 / 3,0",dmg:12,bite:"35%",mult:"1,0 · 0,9 · 0,9",
+  look:"Olhos brancos leitosos e apagados, cabeça inclinada escutando, boca aberta. É o único sem olhos acesos.",ai:"Não enxerga. Ouve tiros a 80 m e passos a 6 m (agachado, 2 m). Vai direto à fonte do som e ataca o que encontrar, até outros zumbis.",
+  spawn:"Metrô, túneis, porões e hospitais; dia e noite.",counter:"Andar agachado, jogar garrafa para desviar, não atirar sem supressor por perto.",voice:"Estalos de língua, como um morcego",step:"Passos lentos com pausas para ouvir"},
+ {n:"Afogado",eye:"#3d8bff",pct:1,role:"Emboscada na água.",hp:130,spd:"0,6 / 2,5 (3,0 na água)",dmg:10,bite:"25%",mult:"1,0 · 1,0 · 1,0",
+  look:"Pele azulada e inchada de água, cabelo grudado, roupa encharcada pingando. Olhos azuis.",ai:"Fica submerso em rios, lagos e enchentes. Agarra quem atravessa e puxa para baixo: 3 s para se soltar ou começa a afogar. Fora d'água é lento.",
+  spawn:"Só perto de água; mais depois de chuva.",counter:"Pontes, barco, atirar nas bolhas da água.",voice:"Gorgolejo encharcado",step:"Passo molhado e pesado, pingando"},
+ {n:"Carbonizado",eye:"#ff6a1a",pct:2,role:"Brasa ambulante.",hp:90,spd:"0,9 / 2,2",dmg:10,bite:"15%",mult:"0,8 · 0,8 · 0,8",
+  look:"Pele preta rachada com brasas acesas nas rachaduras, roupa queimada. Olhos laranja.",ai:"Imune a fogo. O corpo a corpo queima (3 de dano por segundo durante 4 s). À noite ilumina o entorno e se denuncia. Água apaga as brasas e tira 30% da vida.",
+  spawn:"Áreas de incêndio, postos de gasolina e onde o jogador usou fogo.",counter:"Tiro à distância, água, extintor.",voice:"Crepitar e chiado",step:"Passos estalando, faíscas"},
+ {n:"Devorador",eye:"#b0103a",pct:1,role:"Fica mais forte comendo.",hp:120,spd:"0,9 / 3,0",dmg:16,bite:"30%",mult:"1,0 · 1,0 · 1,0",
+  look:"Ajoelhado sobre os corpos, rosto e peito cobertos de sangue fresco. Olhos vermelho-escuros.",ai:"Procura os corpos que ficam 15 min no chão e come: cada um dá +20 de vida e +5% de tamanho, até 3 vezes. Enquanto come, só vê a 5 m. Defende a comida.",
+  spawn:"Onde há muitos corpos: depois de tiroteios e explosões.",counter:"Queimar ou recolher os corpos, atacar enquanto ele come.",voice:"Mastigar molhado, rosnado",step:"Arrasto de joelhos"}
+];
+const cards=document.getElementById("cards"), bar=document.getElementById("hordeBar"), leg=document.getElementById("hordeLegend"), snd=document.getElementById("soundRows");
+Z.forEach(z=>{
+  const c=document.createElement("article"); c.className="card"; c.style.setProperty("--eye",z.eye);
+  c.innerHTML=`<div class="card-head"><span class="eyes${z.dim?" dim":""}" aria-hidden="true"><i></i><i></i></span><h3>${z.n}</h3><span class="pct">${z.pct}%</span></div>
+  <p class="role">${z.role}</p>
+  <div class="stats"><div><small>Vida</small><b>${z.hp}</b></div><div><small>m/s</small><b>${z.spd}</b></div><div><small>Dano</small><b>${z.dmg}</b></div><div><small>Mordida</small><b>${z.bite}</b></div></div>
+  <dl><dt>Visual</dt><dd>${z.look}</dd><dt>IA</dt><dd>${z.ai}</dd><dt>Dano ×</dt><dd>${z.mult}</dd><dt>Onde</dt><dd>${z.spawn}</dd><dt>Como vencer</dt><dd>${z.counter}</dd></dl>`;
+  cards.appendChild(c);
+  const s=document.createElement("div"); s.style.setProperty("--eye",z.eye); s.style.flex=z.pct; s.title=`${z.n} ${z.pct}`; bar.appendChild(s);
+  const l=document.createElement("span"); l.style.setProperty("--eye",z.eye); l.textContent=`${z.n} ${z.pct}`; leg.appendChild(l);
+  const r=document.createElement("tr"); r.innerHTML=`<td>${z.n}</td><td>${z.voice}</td><td>${z.step}</td>`; snd.appendChild(r);
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fail=(el,msg)=>el.insertAdjacentHTML("beforeend",`<p class="nogl">${msg}</p>`);
+  if(!window.THREE){document.querySelectorAll(".viewer").forEach(el=>fail(el,"Não foi possível carregar o visualizador 3D."));return}
+  const V3=THREE.Vector3;
+
+  // ---------- biblioteca de bonecos ----------
+  const gc=document.createElement("canvas");gc.width=gc.height=64;
+  const gx=gc.getContext("2d"),gr=gx.createRadialGradient(32,32,0,32,32,32);
+  gr.addColorStop(0,"rgba(255,255,255,1)");gr.addColorStop(.25,"rgba(255,255,255,.6)");gr.addColorStop(1,"rgba(255,255,255,0)");
+  gx.fillStyle=gr;gx.fillRect(0,0,64,64);
+  const glowTex=new THREE.CanvasTexture(gc);
+
+  const SKIN=[0xcdbba8,0x94a084,0x7b744a,0x8c7c5e];
+  const BLOOD=[0x9e1b12,0x6e1410,0x4a2a18,0x1c1612];
+  const CLOTH=[0x4a6f96,0x8e3b3b,0x5d4a3a,0x4f7a43,0x6b6f78,0x3f5f3a,0x5a4a6e,0x8a6a3a];
+  const PANTS=0x2c3340, GRAY=0x4a4a46, RED=0x7a120c;
+  const col=(a,b,t)=>new THREE.Color(a).lerp(new THREE.Color(b),t);
+  const geoBox=(w,h,d)=>new THREE.BoxGeometry(w,h,d);
+  const box=(w,h,d,m)=>new THREE.Mesh(geoBox(w,h,d),m);
+  const limbGeo=(w,len)=>{const g=geoBox(w,len,w);g.translate(0,-len/2,0);return g};
+  const basic=(c,o)=>new THREE.MeshBasicMaterial(Object.assign({color:c},o||{}));
+  const glow=(c,s,op)=>{const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:op??.9}));sp.scale.setScalar(s);return sp};
+
+  // Corpo anatômico compartilhado com o Elenco do Vale (personagens/arte/elenco.html, build()):
+  // tronco em Lathe de 24 lados suavizado por spline, sombreado liso, membros em cilindros afinados com juntas esféricas, mesmo esqueleto do humano.
+  const PI=Math.PI, SEG=16;
+  const TORSO_P=[[.18,.86],[.205,.95],[.195,1.03],[.19,1.12],[.225,1.27],[.26,1.4],[.265,1.47],[.21,1.55],[.085,1.6]];
+  const TORSO_F=[[.17,.86],[.215,.95],[.2,1.02],[.165,1.1],[.2,1.25],[.245,1.38],[.25,1.46],[.2,1.54],[.085,1.6]];
+  const torsoGeo=(sx,sz,fem)=>{const g=new THREE.LatheGeometry(new THREE.SplineCurve((fem?TORSO_F:TORSO_P).map(p=>new THREE.Vector2(p[0],p[1]))).getPoints(30),24);g.scale(1.12*(sx||1),1,.64*(sz||1));return g};
+  const cylDown=(r1,r2,len)=>new THREE.CylinderGeometry(r1,r2,len,SEG,1).translate(0,-len/2,0);
+  const capGeo=(r,len)=>new THREE.SphereGeometry(r,20,10,0,PI*2,0,len||PI/2);
+
+  // pose base: braços/pernas em rotação x (negativo = para a frente), cotovelo e joelho dobram, drop desce o quadril
+  const BASE={s:1,bulk:1,lean:.15,armL:-1.15,armR:-.85,elbL:-.25,elbR:-.4,legL:-.15,legR:.25,kneeL:.15,kneeR:.35,headX:.08,headZ:.22,drop:-.02,neck:0};
+  const TYPES={
+    Lento:{},
+    Corredor:{s:.97,bulk:.88,lean:.75,armL:-1.35,armR:-1.05,elbL:-.08,elbR:-.12,legL:-.75,legR:.55,kneeL:.45,kneeR:1.25,headX:-.55,headZ:0,drop:-.1},
+    Brutamonte:{s:1.42,bulk:1.32,lean:.3,armL:-.4,armR:-.25,elbL:-.35,elbR:-.25,legL:-.12,legR:.12,kneeL:.12,kneeR:.12,headX:-.2,headZ:0,neck:-.07,drop:-.02},
+    Rastejante:{noLegs:true,lean:1.42,drop:-.74,armL:-2.75,armR:-2.35,elbL:-.5,elbR:-.3,headX:-1.35,headZ:.1},
+    Gritador:{bulk:.84,lean:-.18,armL:.35,armR:.45,elbL:-.6,elbR:-.5,legL:-.05,legR:.1,kneeL:.05,kneeR:.1,headX:-.65,headZ:0,neck:.12,mouth:true,drop:0},
+    Inchado:{bloat:true,s:1.03,bulk:1.15,lean:0,armL:-.55,armR:-.45,elbL:-.3,elbR:-.3,legL:0,legR:0,kneeL:.05,kneeR:.05,headZ:.1,drop:0,armOut:.45},
+    Espreitador:{bulk:.86,lean:1.2,drop:-.36,legL:-1.05,legR:-.85,kneeL:1.75,kneeR:1.6,armL:-1.1,armR:-1.35,elbL:-.05,elbR:-.1,headX:-1.05,headZ:0,dim:true},
+    Farejador:{lean:.45,headX:-.75,headFwd:.07,armL:-.35,armR:-.2,elbL:-.45,elbR:-.4,legL:-.25,legR:.2,kneeL:.3,kneeR:.45,headZ:.12,nose:true,drop:-.04},
+    Saltador:{bulk:.86,lean:.65,drop:-.36,legL:-1.15,legR:-.9,kneeL:1.9,kneeR:1.7,armL:.7,armR:.5,elbL:-.6,elbR:-.5,headX:-.7,headZ:0},
+    Cego:{lean:.05,armL:-.6,armR:-.35,elbL:-.5,elbR:-.7,legL:-.08,legR:.1,kneeL:.08,kneeR:.12,headX:-.25,headZ:.45,blind:true,mouth:true},
+    Afogado:{bulk:1.08,lean:.22,armL:-.25,armR:-.15,elbL:-.1,elbR:-.15,headX:.35,headZ:.3,wet:true},
+    Carbonizado:{lean:.2,armL:-1,armR:-.6,elbL:-.6,elbR:-.9,headX:.05,headZ:-.15,char:true},
+    Devorador:{lean:.95,drop:-.42,legL:-1.45,legR:-1.3,kneeL:2.3,kneeR:2.2,armL:-1.55,armR:-1.35,elbL:-.7,elbR:-.9,headX:.25,headZ:0,gore:true}
+  };
+  const OUTFITS={
+    policial:{cloth:0x1f2a44,pants:0x1a1f2c,vest:0x15171a,hat:"cap",hatC:0x1b2238},
+    militar:{cloth:0x4b5a32,pants:0x3f4a2b,vest:0x39412a,hat:"helmet",hatC:0x4a5532},
+    bombeiro:{cloth:0xa8874a,pants:0x8f7340,stripes:0xd9d24a,hat:"fire",hatC:0xa3241c},
+    motociclista:{cloth:0x18181a,pants:0x22252b,hat:"moto",hatC:0x111214},
+    operario:{cloth:0x6b6f78,pants:0x2c3340,vest:0xe0702a,hat:"hardhat",hatC:0xe6c13a},
+    medico:{cloth:0x7fb0c8,pants:0x6f9ab0,mask:true},
+    cacador:{cloth:0x5a4a2e,pants:0x4a4030,hat:"cap",hatC:0xe0702a}
+  };
+
+  function build(spec){
+    const ti=Math.max(0,Z.findIndex(x=>x.n===spec.type)), z=Z[ti];
+    const P=Object.assign({},BASE,TYPES[spec.type]||{},spec.pose||{}), d=spec.decay??0, life=spec.life??1, cut=spec.cut||{};
+    P.s*=spec.h??1;P.bulk*=spec.bulk??1;
+    if(life===0){P.s*=.94;P.bulk*=.9}
+    if(life===2){P.lean+=.28;P.headX-=.18;P.armL*=.8;P.armR*=.8;P.kneeL+=.1;P.kneeR+=.1}
+    if(spec.lying)Object.assign(P,{armL:.2,armR:-.15,elbL:-.15,elbR:-.3,legL:-.05,legR:.12,kneeL:.05,kneeR:.2,lean:0,drop:0,headX:0,headZ:.35});
+    const op=spec.opacity??1;
+    const cache={};
+    const M=c=>{const k=new THREE.Color(c).getHex();if(cache[k])return cache[k];const m=new THREE.MeshLambertMaterial({color:c});if(op<1){m.transparent=true;m.opacity=op}return cache[k]=m};
+    const O=spec.outfit?OUTFITS[spec.outfit]||{}:{};
+    // aparência sorteada: o tipo fica, rosto, cabelo, pele, corpo e roupa variam
+    const VR=rng(spec.seed??(Math.random()*1e9|0)), pick=a=>a[Math.floor(VR()*a.length)], uni=!!spec.uniform;
+    const fem=!uni&&spec.type!=="Brutamonte"&&(spec.fem??VR()<.42);
+    const tone=spec.tone??(uni?SKIN[0]:pick([0xf1c9a5,0xe0ac80,0xc68c62,0xa8714a,0x8a5a3a,0x5e3b26]));
+    const skinC=spec.skin??(uni?SKIN[d]:col(tone,SKIN[d],[.45,.65,.8,.88][d]));
+    const TOPS=[0x4a6f96,0x8e3b3b,0x5d4a3a,0x4f7a43,0x6b6f78,0x3f5f3a,0x5a4a6e,0x8a6a3a,0xb8b2a2,0x2c2c30,0x9a4a2a,0x2f5d63,0xc9a94a,0x7a2e4a,0xd8d4c8,0x3a4a6a];
+    const topC=O.cloth??(uni?CLOTH[spec.clothIdx??ti]:pick(TOPS)), pantC=O.pants??(uni?PANTS:pick([0x2c3340,0x1f2228,0x4a4030,0x5a5f66,0x3a4a6a,0x6a5a40,0x2a3a2a]));
+    const V=uni?{sleeve:"short",hair:"short",hx:1,hy:1,jaw:1,nose:1}:{sleeve:O.cloth?"long":pick(["short","short","long","tank"]),
+      hair:P.wet?"long":P.char?"bald":pick(fem?["long","long","bun","short","afro","bald"]:["short","short","buzz","bald","afro","long"]),
+      hx:1+(VR()-.5)*.16,hy:1+(VR()-.5)*.14,jaw:1+(VR()-.5)*.3,nose:1+(VR()-.5)*.5,
+      beard:!fem&&VR()<.25,glasses:VR()<.12,cap:!O.hat&&VR()<.12,capC:pick([0x8e3b3b,0x2c2c30,0x3a4a6a,0xc9a94a]),bag:VR()<.15,bagC:pick([0x3a4a3a,0x5a2a24,0x2c3340]),torn:VR()<.35,apron:VR()<.05};
+    const hairC=spec.hair??(life===2?0xb9b6ae:pick([0x1a1410,0x2a1e16,0x3b2c20,0x6a4a2a,0xb08a50,0x7a2a1a]));
+    const skinFinal=P.char?0x1c1612:P.wet?col(skinC,0x7a8fa0,.55):skinC;
+    const skinM=M(skinFinal);
+    const topM=M(P.char?col(topC,0x151210,.75):P.wet?col(topC,0x1a2230,.45):col(topC,GRAY,d*.3)), pantsM=M(col(pantC,GRAY,d*.3)), shoeM=M(uni?0x1d1f22:pick([0x1d1f22,0x3a2a1a,0xb8b4a8,0x4a1a1a])), red=M(RED);
+    const add=(p,geo,m,x,y,z,rx,ry,rz)=>{const o=new THREE.Mesh(geo,m);o.position.set(x||0,y||0,z||0);if(rx||ry||rz)o.rotation.set(rx||0,ry||0,rz||0);p.add(o);return o};
+    const ball=(p,r,m,x,y,z)=>add(p,new THREE.SphereGeometry(r,SEG,12),m,x,y,z);
+    // sangue no corpo: mancha plana irregular colada na roupa (mesma forma BLOB do chão), com satélites; n>0 deixa um filete escorrendo
+    const SKM={},skM=c=>SKM[c]||(SKM[c]=new THREE.MeshStandardMaterial({color:c,roughness:.3,metalness:0,polygonOffset:true,polygonOffsetFactor:-4,polygonOffsetUnits:-4}));
+    const flat=(p,x,y,zz,sx,sy,c)=>{const m=new THREE.Mesh(BLOB,skM(c));m.rotation.set(PI/2,0,Math.random()*6.28);m.scale.set(sx,1,sy);m.position.set(x,y,zz);p.add(m);return m};
+    const splat=(p,x,y,zz,r,c,n)=>{const a=flat(p,x,y,zz+.004,r,r*(.7+Math.random()*.5),c);
+      for(let k=0;k<(n||0);k++){const an=Math.random()*6.28,dd=r*(1.2+Math.random()*.9),q=r*(.12+Math.random()*.18);flat(p,x+Math.cos(an)*dd,y+Math.sin(an)*dd,zz+.004,q,q*.7,c)}
+      if(n)run(p,x+r*.15,y-r*.5,y-r*(2.2+Math.random()*1.2),zz+.003,zz,c,r*.35);return a};
+    // filete: desce pela pele/roupa afinando e termina num bulbo (é dali que a gota cai)
+    const run=(p,x,y0,y1,z0,z1,c,w)=>{const L=y0-y1,sh=new THREE.Shape();sh.moveTo(-w/2,0);sh.lineTo(w/2,0);sh.quadraticCurveTo(w*.3,-L*.5,w*.18,-L);sh.lineTo(-w*.12,-L);sh.quadraticCurveTo(-w*.35,-L*.5,-w/2,0);
+      const g=new THREE.ShapeGeometry(sh),m=new THREE.Mesh(g,skM(c));m.position.set(x,y0,z0);m.rotation.x=-Math.atan2(z0-z1,L);p.add(m);
+      const bl=new THREE.Mesh(new THREE.SphereGeometry(w*.42,10,8),skM(c));bl.scale.set(1,1.35,.5);bl.position.set(x+w*.03,y1,z1);p.add(bl);return bl};
+    const stump=(p,r,y,up)=>{const st=ball(p,r*1.02,red,0,y,0);st.scale.set(1,.35,1);add(p,new THREE.CylinderGeometry(r*.32,r*.36,.07,10),M(0xe8e0cc),0,y+(up?.04:-.04),0)};
+    const ring=(p,r,h,m,y,sx,sz)=>{const o=add(p,new THREE.CylinderGeometry(r,r,h,24),m,0,y,0);o.scale.set(sx||1.12,1,sz||.7);return o};
+    const root=new THREE.Group(), fig=new THREE.Group();
+    const drip=(p,x,y,zz,kind,every)=>{if(d>=3&&kind!=="bile")return;const o=new THREE.Object3D();o.position.set(x,y,zz);o.userData.drip={kind:kind||(d<1?"blood":"old"),every:every||(d<1?1.2:2.4)};p.add(o)};
+    fig.scale.set(P.s*P.bulk,P.s,P.s*Math.min(1.15,P.bulk));fig.position.y=P.drop*P.s;root.add(fig);
+    // quadril e pernas
+    const pel=ball(fig,.2,pantsM,0,.92,0);pel.scale.set(fem?1.16:1.08,.62,.74);
+    const legs=[];
+    [[-1,P.legL,P.kneeL],[1,P.legR,P.kneeR]].forEach(([s,r,kr])=>{
+      const g=new THREE.Group();g.position.set(s*(fem?.115:.105),.9,0);fig.add(g);
+      add(g,cylDown(P.bloat?.13:fem?.11:.105,P.bloat?.095:.078,.42),pantsM);
+      const kn=new THREE.Group();kn.position.y=-.42;g.add(kn);
+      ball(kn,.078,pantsM);
+      const lost=P.noLegs||cut.legs;
+      if(lost){stump(kn,.08,-.01);drip(kn,0,-.05,0,null,1);g.rotation.x=1.45}
+      else{add(kn,cylDown(.077,.056,.38),pantsM);const sh=ball(kn,.075,shoeM,0,-.43,.06);sh.scale.set(.95,.7,1.75);
+        g.rotation.x=r;kn.rotation.x=kr}
+      legs.push({g,kn,s,base:g.rotation.x,kBase:kn.rotation.x,lost});
+    });
+    // tronco com pivô no quadril
+    const upper=new THREE.Group();upper.position.y=.9;upper.rotation.x=P.lean;fig.add(upper);
+    const U=new THREE.Group();U.position.y=-.9;upper.add(U);
+    let frontZ=.175;
+    if(P.bloat){
+      // Inchado: pele esticada e esverdeada, barriga caída por baixo da camisa curta, pústulas que brilham
+      const sick=col(skinC,0x7f9a52,.45), sickM=M(sick), veinM=M(col(sick,0x2a3a1a,.55));
+      const chest=add(U,torsoGeo(1.25,1.35),topM);chest.scale.set(1,1,1);
+      const belly=add(U,new THREE.SphereGeometry(.34,24,18),sickM,0,1.06,.1);belly.scale.set(1.12,1,1.08);
+      const shirt=add(U,new THREE.SphereGeometry(.355,24,10,0,PI*2,0,PI*.42),topM,0,1.08,.1);shirt.scale.set(1.12,1,1.08);
+      for(let k=0;k<7;k++){const a=-1+k*.33+Math.sin(k*3.1)*.12,b=.05+((k*37)%5)*.11;const vv=add(U,new THREE.SphereGeometry(.012,8,6),veinM,Math.sin(a)*.36,1.0-b*.5,.1+Math.cos(a)*.36);vv.scale.set(1,6,1);vv.rotation.z=a*.8}
+      const pus=[[.12,1.0],[-.17,.92],[.02,.86],[-.06,1.12],[.2,.88],[-.22,1.05]];
+      drip(U,.05,.8,.3,"bile",1.6);pus.forEach(([x,y],k)=>{const zz=.1+Math.sqrt(Math.max(.01,.34*.34-x*x/1.25-(y-1.06)**2))*1.08;const r=.022+(k%3)*.01;
+        add(U,new THREE.SphereGeometry(r,10,8),basic(z.eye),x,y,zz);const g=glow(z.eye,r*5,.55);g.position.set(x,y,zz+.02);U.add(g)});
+      add(U,new THREE.CylinderGeometry(.09,.1,.12,16),sickM,0,1.62,0);
+      frontZ=.38;
+    }else add(U,torsoGeo(1,1,fem),topM);
+    if(P.char){const emb=[[.1,1.2,.17],[-.12,1.35,.17],[.02,1.02,.16],[-.15,1.08,.15],[.16,1.42,.15],[0,1.5,-.15],[.12,1.1,-.16]];
+      emb.forEach(([x,y,zz])=>{const c=add(U,new THREE.SphereGeometry(.018,8,6),basic(0xff6a1a),x,y,zz);c.scale.set(2.2,.6,.5);const g=glow(0xff5a10,.12,.7);g.position.set(x,y,zz*1.1);U.add(g)});
+      emb.forEach(([x,y,zz],k)=>{if(k%2)return;const o=new THREE.Object3D();o.position.set(x,y,zz*1.1);o.userData.ember={smoke:k===0||k===4};U.add(o)})}
+    if(P.gore){splat(U,0,1.4,frontZ+.01,.07,0x8a0a0a,5);splat(U,-.08,1.18,frontZ+.01,.05,0x8a0a0a,3)}
+    if(V.bag&&!P.bloat){const bm=M(V.bagC),sm=M(col(V.bagC,0x111111,.5));const b=ball(U,.2,bm,0,1.22,-.25);b.scale.set(1.05,1.25,.62);const f=ball(U,.12,bm,0,1.12,-.36);f.scale.set(1.2,.8,.5);
+      [-1,1].forEach(sx=>{const st=add(U,new THREE.TorusGeometry(.2,.018,6,18,PI*1.1),sm,sx*.14,1.3,0);st.rotation.set(0,PI/2,0)})}
+    if(spec.type==="Brutamonte"){[-1,1].forEach(sx=>{const t=ball(U,.17,topM,sx*.2,1.53,-.03);t.scale.set(1.2,.8,1)});const hb=ball(U,.2,topM,0,1.45,-.12);hb.scale.set(1.5,.9,.8)}
+    if(O.vest){const v=add(U,new THREE.CylinderGeometry(.275,.24,.48,24),M(O.vest),0,1.3,0);v.scale.set(1.12,1,.7);for(let i=0;i<3;i++)add(U,geoBox(.11,.13,.05),M(O.vest),-.15+i*.15,1.17,.17)}
+    if(O.stripes){ring(U,.205,.05,M(O.stripes),1.03,1.13,.68);ring(U,.268,.05,M(O.stripes),1.42,1.13,.67)}
+    if(d===3&&!P.bloat)[0,1,2].forEach(k=>add(U,geoBox(.2,.022,.02),M(0xd8cfb8),0,1.3+k*.065,.168));
+    if(!spec.human){const wy=P.bloat?1.25:1.36,hy=P.bloat?1.02:.98;run(U,.08,wy-.03,hy,frontZ+.012,frontZ-.01,col(BLOOD[d],0x1a0806,.35),.022);drip(U,.083,hy-.012,frontZ-.005);const bs=.07+.05*(3-d);splat(U,.07,P.bloat?1.25:1.36,frontZ+(O.vest?.02:0),bs*.32,col(BLOOD[d],0x1a0806,.35),d<2?3:1)}
+    for(let k=0;k<(spec.wounds||0);k++)splat(U,-.13+k*.13,1.15+.13*(k%2),frontZ+.012,.032,0x2a0503,2);
+    if(cut.gut){const gm=M(0xb04a50);for(let k=0;k<6;k++){const q=add(U,new THREE.TorusGeometry(.05,.022,6,10),gm,(k%2?.04:-.03),1.0-k*.06,frontZ+.02,0,k*.7,0);q.userData.flap=true}
+      const hole=ball(U,.1,red,0,1.05,frontZ-.03);hole.scale.set(1.2,1,.3);drip(U,0,.75,frontZ+.02,null,.5)}
+    if(cut.flaps){[[.12,1.2],[-.1,1.35],[.02,.98]].forEach(([x,y],k)=>{const f=add(U,geoBox(.07,.12,.012),k%2?skinM:M(0x9a2a2a),x,y,frontZ+.03);f.geometry.translate(0,-.06,0);f.userData.flap=true;drip(U,x,y-.12,frontZ+.03,null,1.5)})}
+    // pescoço e cabeça
+    const neckLen=.14+Math.max(0,P.neck);
+    if(!cut.head)add(U,new THREE.CylinderGeometry(.058,.068,neckLen,SEG),skinM,0,1.63+Math.max(0,P.neck)/2,0);
+    const headG=new THREE.Group();headG.position.set(0,1.64+P.neck,P.headFwd||0);headG.rotation.x=P.headX;headG.rotation.z=P.headZ;U.add(headG);
+    const Hd=new THREE.Group();Hd.position.y=-1.64;headG.add(Hd);
+    if(cut.head){
+      const jaw=add(Hd,new THREE.SphereGeometry(.12,16,12),skinM,0,1.69,.03);jaw.scale.set(1,.6,1);
+      drip(U,0,1.6,.1,null,.6);const hst=ball(Hd,.11,red,0,1.74,.02);hst.scale.set(1,.35,1);add(Hd,new THREE.CylinderGeometry(.03,.035,.08,10),M(0xe8e0cc),0,1.78,0);splat(U,0,1.5,.2,.05,BLOOD[0],3);
+    }else{
+      if(cut.blown){head0:{const hb=add(Hd,new THREE.SphereGeometry(.165,20,16,0,PI*2,PI*.55,PI*.45),skinM,0,1.8,0);hb.scale.set(.96,1.1,1.02);const cv=ball(Hd,.15,red,0,1.82,0);cv.scale.set(.95,.3,.95);
+        for(let k=0;k<5;k++){const f=ball(Hd,.03,k%2?M(0xe8e0cc):red,Math.cos(k*1.3)*.13,1.86,Math.sin(k*1.3)*.13);f.scale.set(1.4,.6,.9)};drip(Hd,0,1.7,.1,null,.4)}}
+      const head=add(Hd,new THREE.SphereGeometry(.165,20,16),skinM,0,1.8,0);if(cut.blown)head.visible=false;head.scale.set(.96*V.hx*(P.bloat?1.12:1),1.1*V.hy,1.02*(P.bloat?1.08:1));
+      const jaw=add(Hd,new THREE.SphereGeometry(.12,16,12),skinM,0,1.715,.03);jaw.scale.set(V.jaw*(P.bloat?1.3:1),.72*(P.bloat?1.25:1),1);
+      if(cut.jaw){jaw.geometry.translate(0,0,.06);jaw.position.set(.03,1.70,-.04);jaw.rotation.set(.75,0,.35);add(Hd,new THREE.SphereGeometry(.07,10,8),red,0,1.72,.11).scale.set(1.3,.5,.4);drip(Hd,.02,1.6,.12,null,.6);jaw.userData.flap=true}
+      [-1,1].forEach(s=>{const e=ball(Hd,.038,skinM,s*.158,1.79,-.005);e.scale.set(.6,1,.9)});
+      const nose=add(Hd,geoBox(.045,.065,.05),skinM,0,1.765,.172);nose.scale.set(V.nose,V.nose,1);if(P.nose)nose.scale.set(1.5,1.4,2.2);
+      let covered=false;
+      if(O.hat){const c=M(O.hatC);covered=true;
+        if(O.hat==="cap"){const o=add(Hd,capGeo(.182),c,0,1.84,0);o.scale.set(1,.78,1.02);add(Hd,geoBox(.28,.022,.17),c,0,1.85,.2,.12,0,0)}
+        if(O.hat==="helmet"){const o=add(Hd,capGeo(.205,PI*.55),c,0,1.82,-.01);o.scale.set(1,1,1.08)}
+        if(O.hat==="hardhat"){const o=add(Hd,capGeo(.198),c,0,1.86,0);o.scale.set(1,1.02,1.08);add(Hd,new THREE.CylinderGeometry(.25,.25,.02,24),c,0,1.865,.02)}
+        if(O.hat==="fire"){const o=add(Hd,capGeo(.205),c,0,1.86,0);o.scale.set(1,1.02,1.1);const br=add(Hd,new THREE.CylinderGeometry(.27,.27,.02,24),c,0,1.86,-.06);br.scale.set(1,1,1.25);add(Hd,geoBox(.09,.08,.02),M(0xd8b040),0,1.96,.205)}
+        if(O.hat==="moto"){const o=add(Hd,new THREE.SphereGeometry(.235,20,16),c,0,1.81,-.01);o.scale.set(.98,1.04,1.06);add(Hd,new THREE.SphereGeometry(.226,20,6,PI*.18,PI*.64,PI*.36,PI*.2),new THREE.MeshLambertMaterial({color:0x22303c}),0,1.81,.02)}}
+      if(O.mask)add(Hd,geoBox(.24,.12,.04),M(0xe8eef0),0,1.72,.15);
+      if(!covered&&V.cap){const c=M(V.capC);const o=add(Hd,capGeo(.182),c,0,1.84,0);o.scale.set(1,.78,1.02);add(Hd,geoBox(.28,.022,.17),c,0,1.85,.2,.12,0,0);covered=true}
+      const hc=M(hairC);
+      if(!cut.blown&&!(d===3&&VR()<.6)){
+        const hairCap=(r,len,tilt)=>{const o=add(Hd,capGeo(r,len),hc,0,1.8,-.004);o.scale.set(.97*V.hx,1.1*V.hy,1.04);o.rotation.x=tilt;return o};
+        const backBand=(t0,tl)=>{const o=add(Hd,new THREE.SphereGeometry(.172,20,8,PI*.85,PI*1.3,t0,tl),hc,0,1.8,0);o.scale.set(.97*V.hx,1.1*V.hy,1.04);return o};
+        const hs=V.hair;
+        if(!covered&&(hs==="short"||hs==="bun"||hs==="long"))hairCap(.174,PI/2,-.38);
+        if(hs==="short"||hs==="bun"||hs==="long")backBand(PI*.45,PI*.22);
+        if(!covered&&hs==="bun")ball(Hd,.085,hc,0,1.92,-.15);
+        if(hs==="long"){const l=add(Hd,new THREE.CylinderGeometry(.15,.12,.42,16,1,false,PI*.6,PI*.8),hc,0,1.66,-.02);l.scale.set(1.05,1,1.1)}
+        if(!covered&&hs==="buzz")hairCap(.17,PI*.45,-.32);
+        if(hs==="bald")backBand(PI*.42,PI*.2);
+        if(!covered&&hs==="afro"){const a=add(Hd,new THREE.SphereGeometry(.25,16,12),hc,0,1.9,-.045);a.scale.set(1.08,.9,1.02)}
+      }
+      if(V.beard){const b=add(Hd,new THREE.SphereGeometry(.128,16,12),hc,0,1.7,.035);b.scale.set(1.02*V.jaw,.78,1)}
+      if(V.glasses){add(Hd,geoBox(.27,.012,.015),M(0x1a1a1a),0,1.84,.175);[-1,1].forEach(s=>{add(Hd,geoBox(.09,.055,.012),new THREE.MeshLambertMaterial({color:0x8fb0c0,transparent:true,opacity:.3}),s*.06,1.817,.18);add(Hd,geoBox(.012,.012,.17),M(0x1a1a1a),s*.15,1.83,.09)})}
+      if(P.mouth){const m=add(Hd,geoBox(.1,.09,.03),basic(0x050505),0,1.69,.14)}
+      if(P.gore)splat(Hd,0,1.7,.15,.05,0x8a0a0a,3);
+      else if(!spec.human){add(Hd,geoBox(.1,.035,.02),M(0x3a0a08),0,1.69,.145)}
+      const moto=O.hat==="moto", eyeZ=moto?.245:.162, dim=spec.eyeDim??(P.dim||moto), eye=spec.eye??z.eye;
+      [-1,1].forEach(s=>{
+        if(cut.blown)return;
+        if(P.blind&&!spec.human){add(Hd,new THREE.SphereGeometry(.03,10,8),M(0xe8e4d8),s*.058,1.815,.152);return}
+        if(spec.human||spec.eyesOff){add(Hd,geoBox(.05,.028,.02),basic(spec.human?0x1a1a1a:0x2a2a22),s*.058,1.815,.158);return}
+        add(Hd,geoBox(.052,.03,.02),basic(eye),s*.058,1.815,eyeZ);
+        const g=glow(eye,dim?.1:.15,dim?.3:.85);g.position.set(s*.058,1.815,eyeZ+.025);Hd.add(g);
+      });
+    }
+    // braços: ombro -> cotovelo -> mão
+    const arms=[];
+    [[1,P.armR,P.elbR,cut.armR],[-1,P.armL,P.elbL,cut.armL]].forEach(([s,r,er,isCut])=>{
+      const g=new THREE.Group();g.position.set(s*(P.bloat?.37:fem?.285:.305),1.475,0);U.add(g);
+      const upM=V.sleeve==="tank"?skinM:topM, foreM=V.sleeve==="long"?topM:skinM, ab=P.bloat?1.35:1;
+      ball(g,.088*ab,upM);add(g,cylDown(.083*ab,.075*ab,.31),upM);
+      const el=new THREE.Group();el.position.y=-.31;g.add(el);
+      if(isCut){stump(el,.07,0);drip(el,0,-.05,0,null,.9)}
+      else{ball(el,.06*ab,foreM);add(el,cylDown(.06*ab,.046*ab,.29),foreM);const h=ball(el,.055*ab,skinM,0,-.33,.005);h.scale.set(.85,1.15,.7);
+        if(spec.bandage&&s<0)add(el,new THREE.CylinderGeometry(.068,.064,.09,SEG),M(0xe8e4d8),0,-.17,0)}
+      const dang=(s>0?cut.dangleR:cut.dangleL);if(dang&&!isCut){const fl=add(el,new THREE.CylinderGeometry(.065,.05,.06,10),red,0,.01,0);drip(el,0,-.33,0,null,.8);el.userData.dangle=true}
+      if((s>0?cut.shoulderR:cut.shoulderL)){g.children.slice().forEach(c=>{if(c!==el)g.remove(c)});el.visible=false;stump(g,.085,0);drip(g,0,-.05,0,null,.7)}
+      g.rotation.x=r;g.rotation.z=s*(.07+(P.armOut||0));el.rotation.x=isCut?0:er;
+      arms.push({g,el,s,base:r,eBase:el.rotation.x});
+    });
+    const flaps=[];root.traverse(o=>{if(o.userData.flap)flaps.push(o)});
+    const rig={flaps,dangles:arms.filter(a=>a.el.userData.dangle),type:spec.type||"Lento",fig,upper,headG,arms,legs,P,ph:(spec.phase??Math.random()*6),dropBase:fig.position.y,leanBase:P.lean,hxBase:P.headX};
+    if(spec.lying){root.rotation.x=-PI/2;root.position.set(0,.16*P.s,.9*P.s);const w=new THREE.Group();w.add(root);return w}
+    root.userData.rig=rig;return root;
+  }
+
+  // andar próprio de cada tipo (offsets sobre a pose base)
+  const GAIT={
+    Lento:{f:1.1,a:.28,k:.35,drag:true,arm:.08},
+    Corredor:{f:3.1,a:.75,k:1.1,arm:.12,bob:.05},
+    Brutamonte:{f:.9,a:.3,k:.3,arm:.15,bob:.04,sway:.05},
+    Rastejante:{f:1,crawl:true},
+    Gritador:{f:.8,idle:true},
+    Inchado:{f:.9,a:.18,k:.15,sway:.09,arm:.1},
+    Espreitador:{f:.7,a:.12,k:.15,arm:.25,stalk:true},
+    Farejador:{f:1.6,a:.4,k:.45,arm:.1,sniff:true},
+    Saltador:{f:.42,leap:true},
+    Cego:{f:.5,listen:true},
+    Afogado:{f:.9,a:.25,k:.25,arm:.06,drag:true},
+    Carbonizado:{f:1.1,a:.3,k:.35,arm:.12,bob:.03},
+    Devorador:{f:1.3,eat:true}
+  };
+  function animate(obj,t){const R=obj.userData.rig;if(!R)return;animate0(obj,t);
+    R.dangles.forEach(a=>{a.el.rotation.x=-(a.g.rotation.x+R.upper.rotation.x)+Math.sin(t*3.2+R.ph)*.3});
+    R.flaps.forEach((f,i)=>{f.rotation.x=(f.userData.rx0??(f.userData.rx0=f.rotation.x))+Math.sin(t*4+i+R.ph)*.18})}
+  function animate0(obj,t){
+    const R=obj.userData.rig;if(!R)return;const G=GAIT[R.type]||GAIT.Lento,p=t*G.f*2*PI+R.ph,sn=Math.sin(p),cs=Math.cos(p);
+    if(G.leap){const c=(t*G.f+R.ph/6.3)%1,air=c<.38?Math.sin(c/.38*PI):0;R.fig.position.y=R.dropBase+air*.95;R.upper.rotation.x=R.leanBase-air*.45;
+      R.legs.forEach(l=>{l.g.rotation.x=l.base*(1-air*.7);l.kn.rotation.x=l.kBase*(1-air*.75)});R.arms.forEach(a=>{a.g.rotation.x=a.base-air*2.3;a.el.rotation.x=a.eBase*(1-air)});return}
+    if(G.listen){R.headG.rotation.y=Math.sin(t*.7+R.ph)*.6;R.arms.forEach((a,i)=>a.g.rotation.x=a.base+Math.sin(t*.9+i)*.08);return}
+    if(G.eat){const q=Math.sin(t*G.f*2*PI+R.ph);R.headG.rotation.x=R.hxBase+Math.max(0,q)*.35;R.upper.rotation.x=R.leanBase+Math.max(0,q)*.08;R.arms.forEach(a=>a.el.rotation.x=a.eBase+q*.2);return}
+    if(G.crawl){R.arms.forEach((a,i)=>{const q=i?sn:-sn;a.g.rotation.x=a.base+q*.35;a.el.rotation.x=a.eBase-Math.max(0,q)*.6});R.upper.rotation.z=sn*.06;return}
+    if(G.idle){const sc=Math.max(0,Math.sin(t*.9+R.ph));R.upper.rotation.x=R.leanBase-sc*.18;R.headG.rotation.x=R.hxBase-sc*.25;R.arms.forEach(a=>a.g.rotation.x=a.base+sc*.25);return}
+    R.legs.forEach((l,i)=>{if(l.lost)return;const q=i?-sn:sn;
+      if(G.drag&&i===1){l.g.rotation.x=l.base+q*G.a*.35;l.kn.rotation.x=l.kBase;return}
+      l.g.rotation.x=l.base+q*G.a;l.kn.rotation.x=l.kBase+Math.max(0,(i?cs:-cs))*G.k});
+    R.arms.forEach((a,i)=>{const q=i?sn:-sn;a.g.rotation.x=a.base+q*(G.arm||.1)});
+    R.fig.position.y=R.dropBase-Math.abs(cs)*(G.bob||.02);
+    R.upper.rotation.y=sn*.06;R.upper.rotation.z=(G.sway||0)*sn+(G.drag?.04:0);
+    if(G.stalk)R.upper.rotation.x=R.leanBase+sn*.04;
+    if(G.sniff)R.headG.rotation.y=Math.sin(t*3.1+R.ph)*.35;
+  }
+  // ---------- movimento em cascata: cada junta chega na pose com um atraso, do quadril para a cabeça ----------
+  const CASC={hip:16,spine:11,shoulder:9,elbow:7,leg:14,knee:11,head:6};
+  function cascade(R,dt){
+    if(!R.cur){R.cur=new Map();R.jl=[[R.fig.position,"y","hip"],[R.upper.rotation,"x","spine"],[R.upper.rotation,"y","spine"],[R.upper.rotation,"z","spine"],
+      [R.headG.rotation,"x","head"],[R.headG.rotation,"y","head"],[R.headG.rotation,"z","head"]];
+      R.arms.forEach(a=>{R.jl.push([a.g.rotation,"x","shoulder"],[a.el.rotation,"x","elbow"])});
+      R.legs.forEach(l=>{R.jl.push([l.g.rotation,"x","leg"],[l.kn.rotation,"x","knee"])});
+      R.jl.forEach(j=>R.cur.set(j,j[0][j[1]]));return}
+    R.jl.forEach(j=>{const c=R.cur.get(j),tg=j[0][j[1]],v=c+(tg-c)*Math.min(1,dt*CASC[j[2]]);R.cur.set(j,v);j[0][j[1]]=v});
+  }
+  // pose por nome de junta (alvo); a cascata faz o caminho
+  function setPose(R,q){
+    if(q.lean!=null)R.upper.rotation.x=q.lean;if(q.twist!=null)R.upper.rotation.y=q.twist;if(q.side!=null)R.upper.rotation.z=q.side;
+    if(q.drop!=null)R.fig.position.y=R.dropBase+q.drop;
+    if(q.headX!=null)R.headG.rotation.x=q.headX;if(q.headY!=null)R.headG.rotation.y=q.headY;if(q.headZ!=null)R.headG.rotation.z=q.headZ;
+    const [aR,aL]=R.arms;if(q.armR!=null)aR.g.rotation.x=q.armR;if(q.armL!=null)aL.g.rotation.x=q.armL;if(q.elbR!=null)aR.el.rotation.x=q.elbR;if(q.elbL!=null)aL.el.rotation.x=q.elbL;
+    if(q.armRz!=null)aR.g.rotation.z=q.armRz;if(q.armLz!=null)aL.g.rotation.z=q.armLz;
+    const [lL,lR]=R.legs;if(q.legL!=null)lL.g.rotation.x=q.legL;if(q.legR!=null)lR.g.rotation.x=q.legR;if(q.kneeL!=null)lL.kn.rotation.x=q.kneeL;if(q.kneeR!=null)lR.kn.rotation.x=q.kneeR;
+  }
+  const lerpPose=(a,b,k)=>{const o={};for(const n in b)o[n]=a[n]==null?b[n]:a[n]+(b[n]-a[n])*k;return o};
+
+  // ---------- fluidos vivos: pingam, escorrem, a poça espalha, ondula e seca ----------
+  // ---------- partículas: puffs opacos que se desfazem por ruído, faíscas e névoa ----------
+  const TEX=(()=>{const mk=(fn)=>{const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d"),im=x.createImageData(64,64);
+      for(let j=0;j<64;j++)for(let i=0;i<64;i++){const [l,a]=fn(i,j);const k=(j*64+i)*4;im.data[k]=im.data[k+1]=im.data[k+2]=l*255;im.data[k+3]=a*255}
+      x.putImageData(im,0,0);const t=new THREE.CanvasTexture(c);return t};
+    const R=rng(77),N=[];for(let i=0;i<256;i++)N.push(R());
+    const vn=(u,v)=>{const i=Math.floor(u),j=Math.floor(v),fu=u-i,fv=v-j,s=t=>t*t*(3-2*t),g=(a,b)=>N[((a&15)*16+(b&15))],
+      a=g(i,j),b=g(i+1,j),c=g(i,j+1),d=g(i+1,j+1);return a+(b-a)*s(fu)+(c-a)*s(fv)+(a-b-c+d)*s(fu)*s(fv)};
+    const puff=mk((i,j)=>{const dx=(i-31.5)/31.5,dy=(j-31.5)/31.5,r=Math.hypot(dx,dy),n=.55*vn(i/8,j/8)+.3*vn(i/4,j/4)+.15*vn(i/2,j/2);
+      const a=Math.max(0,Math.min(1,(1-r)*1.7))*(.25+.75*n);return [.72+.28*(1-r)*n,a]});
+    const spark=mk((i,j)=>{const r=Math.hypot(i-31.5,j-31.5)/31.5;return [1,Math.max(0,1-r)**2.2]});
+    return{puff,spark}})();
+  const TC=new THREE.Color();
+  function Particles(par){
+    const P=[],self={P};
+    // dissolve: o limiar de alfa sobe com a idade, então a nuvem continua opaca e some comendo as bordas pelo ruído
+    const dmat=(c)=>{const m=new THREE.SpriteMaterial({map:TEX.puff,color:c,transparent:true,depthWrite:false});m.userData.thr={value:0};
+      m.onBeforeCompile=sh=>{sh.uniforms.uThr=m.userData.thr;sh.fragmentShader="uniform float uThr;\n"+sh.fragmentShader.replace("#include <alphatest_fragment>","if(diffuseColor.a<uThr)discard;diffuseColor.a=clamp((diffuseColor.a-uThr)*9.,0.,1.)*opacity;")};
+      m.customProgramCacheKey=()=>"dissolve";return m};
+    self.emit=o=>{if(P.length>700)return;
+      const m=o.dissolve?dmat(o.c):new THREE.SpriteMaterial({map:o.spark?TEX.spark:TEX.puff,color:o.c,transparent:true,depthWrite:false,opacity:o.op??1,blending:o.add?THREE.AdditiveBlending:THREE.NormalBlending});
+      m.rotation=Math.random()*6.28;const s=new THREE.Sprite(m);s.position.copy(o.p);s.scale.setScalar(o.s0);par.add(s);
+      P.push(Object.assign({s,age:0,ph:Math.random()*6,spin:(Math.random()-.5)*.8},o,{v:(o.v||new V3()).clone()}))};
+    self.step=dt=>{for(let i=P.length-1;i>=0;i--){const q=P[i];q.age+=dt;const k=q.age/q.life;
+        if(k>=1){par.remove(q.s);q.s.material.dispose();P.splice(i,1);continue}
+        q.v.y+=(q.g??0)*dt;q.v.multiplyScalar(Math.max(0,1-(q.drag??0)*dt));
+        if(q.wig){q.v.x+=Math.sin(q.age*7+q.ph)*q.wig*dt;q.v.z+=Math.cos(q.age*6+q.ph)*q.wig*dt}
+        q.s.position.addScaledVector(q.v,dt);if(q.s.position.y<(q.floor??-9)){q.s.position.y=q.floor;q.v.multiplyScalar(.2);q.v.y=0}
+        q.s.scale.setScalar(q.s0+(q.s1-q.s0)*(1-(1-k)*(1-k)));q.s.material.rotation+=q.spin*dt;
+        if(q.c1!=null)q.s.material.color.set(q.c).lerp(TC.set(q.c1),Math.min(1,k*(q.cs??1)));
+        if(q.dissolve)q.s.material.userData.thr.value=.03+.95*Math.pow(k,q.dp??1.4);
+        else q.s.material.opacity=(q.op??1)*(k<.15&&q.fadeIn?k/.15:1)*(1-k)}};
+    self.clear=()=>{P.forEach(q=>{par.remove(q.s);q.s.material.dispose()});P.length=0};
+    // receitas
+    self.burst=(p,n,o)=>{for(let i=0;i<n;i++){const a=Math.random()*6.28,e=(o.up??.3)+Math.random()*(o.upr??.5),sp=o.sp*(.5+Math.random()*.7);
+      self.emit(Object.assign({p:p.clone().add(new V3((Math.random()-.5)*(o.jit??.2),(Math.random()-.5)*(o.jit??.2),(Math.random()-.5)*(o.jit??.2))),
+        v:new V3(Math.cos(a)*sp,e*sp,Math.sin(a)*sp),life:o.life*(.7+Math.random()*.6),s0:o.s0*(.7+Math.random()*.6),s1:o.s1*(.7+Math.random()*.6)},o))}};
+    return self;
+  }
+  // explosão padrão: clarão, bola de fogo que vira fumaça, poeira no chão e coluna de fumaça
+  function blast(PS,p,sc){sc=sc||1;
+    PS.emit({p:p.clone().add(new V3(0,.4*sc,0)),c:0xfff0c0,add:true,spark:true,s0:3*sc,s1:6*sc,life:.25,op:1});
+    PS.burst(p.clone().add(new V3(0,.5*sc,0)),22,{c:0xffb040,c1:0x2a2622,cs:2.2,dissolve:true,sp:5*sc,drag:4,up:.2,upr:.6,g:1.2,life:1.8,s0:.5*sc,s1:1.6*sc,dp:1.8});
+    PS.burst(p.clone().add(new V3(0,.15,0)),18,{c:0x6a6258,c1:0x4a4640,dissolve:true,sp:6*sc,drag:3,up:0,upr:.12,life:3.2,s0:.4*sc,s1:1.5*sc,floor:.1});
+    PS.burst(p.clone().add(new V3(0,1*sc,0)),10,{c:0x2e2a26,dissolve:true,sp:.8,drag:.5,up:2,upr:1,g:.4,life:4.5,s0:.6*sc,s1:2*sc,wig:.6});
+    PS.burst(p.clone().add(new V3(0,.4,0)),26,{c:0xffc060,c1:0xff4010,spark:true,add:true,sp:9*sc,drag:1.2,up:.3,upr:.9,g:-9.8,life:1.1,s0:.06,s1:.03,floor:.02})}
+  // ---------- fluidos: marca irregular (coroa serrilhada + satélites), material iluminado único, seca pela borda e perde o brilho ----------
+  const BLOB=(()=>{const sh=new THREE.Shape(),N=64,R=rng(123),a=[R()*6,R()*6,R()*6];
+    for(let i=0;i<N;i++){const t=i/N*6.2832,r=1+.14*Math.sin(3*t+a[0])+.08*Math.sin(5*t+a[1])+.05*Math.sin(9*t+a[2])+(R()-.5)*.1+(i%5===0?R()*.22:0);
+      i?sh.lineTo(Math.cos(t)*r,Math.sin(t)*r):sh.moveTo(Math.cos(t)*r,Math.sin(t)*r)}
+    sh.closePath();const g=new THREE.ShapeGeometry(sh);g.rotateX(-PI/2);return g})();
+  function FluidMat(){const m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.5,metalness:0,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    m.onBeforeCompile=sh=>{
+      sh.vertexShader=sh.vertexShader.replace("#include <common>","#include <common>\nattribute float aWet;attribute vec3 aDry;varying float vWet;varying vec3 vDry;varying float vR;")
+        .replace("#include <begin_vertex>","#include <begin_vertex>\nvWet=aWet;vDry=aDry;vR=length(position.xz);");
+      // a borda seca primeiro; molhado brilha (rugosidade 0,08), seco fica fosco (0,95)
+      sh.fragmentShader=sh.fragmentShader.replace("#include <common>","#include <common>\nvarying float vWet;varying vec3 vDry;varying float vR;")
+        .replace("#include <color_fragment>","float wl=clamp(vWet*1.6-vR*.6,0.,1.);diffuseColor.rgb=mix(vDry,vColor,wl);")
+        .replace("#include <roughnessmap_fragment>","float roughnessFactor=mix(.95,.08,wl);")};
+    m.customProgramCacheKey=()=>"fluid";return m}
+  const MARKM={};
+  // marca parada para as cenas: alongada na direção do golpe, com satélites atrás
+  function mark(par,x,z,r,c,o){o=o||{};const m=MARKM[c]||(MARKM[c]=new THREE.MeshStandardMaterial({color:c,roughness:o.rough??.25,metalness:0,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));
+    const dir=o.dir??Math.random()*6.28,el=o.elong??1.3,g=new THREE.Group();g.position.set(x,.008,z);g.rotation.y=dir;par.add(g);
+    const b=new THREE.Mesh(BLOB,m);b.scale.set(r*el,1,r/el);b.rotation.y=Math.random()*.4;g.add(b);
+    const n=o.sat??(2+Math.floor(Math.random()*4));for(let k=0;k<n;k++){const s=new THREE.Mesh(BLOB,m),d=r*(1.3+Math.random()*1.4*el);s.position.set(d,0,(Math.random()-.5)*r*1.2);const q=r*(.08+Math.random()*.14);s.scale.set(q*1.6,1,q);s.rotation.y=(Math.random()-.5)*.6;g.add(s)}
+    return g}
+  // poça grande parada: lóbulos a partir da ferida, mais escura e grossa no meio, borda mais fina que seca primeiro
+  function poolMark(par,x,z,r,wc,dc,dir){const u={uWet:{value:1},uC:{value:new THREE.Color(wc)},uD:{value:new THREE.Color(dc)}};
+    const m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.5,metalness:0,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,u);
+      sh.vertexShader=sh.vertexShader.replace("#include <common>","#include <common>\nvarying float vR;").replace("#include <begin_vertex>","#include <begin_vertex>\nvR=length(position.xz);");
+      sh.fragmentShader=sh.fragmentShader.replace("#include <common>","#include <common>\nuniform float uWet;uniform vec3 uC;uniform vec3 uD;varying float vR;")
+        .replace("#include <color_fragment>","float wl=clamp(uWet*1.7-vR*.7,0.,1.);vec3 wc=mix(uC*.95,uC*.42,smoothstep(.95,.2,vR));vec3 dc=mix(uD*.85,uD*.55,smoothstep(.95,.3,vR));diffuseColor.rgb=mix(dc,wc,wl);")
+        .replace("#include <roughnessmap_fragment>","float roughnessFactor=mix(.95,.06,wl);")};
+    m.customProgramCacheKey=()=>"pool";
+    const g=new THREE.Group();g.position.set(x,.007,z);g.rotation.y=dir??0;par.add(g);
+    [[0,0,1,1.25,0],[.55,.1,.7,1.4,.5],[-.35,-.2,.55,1.2,2],[.9,-.25,.45,1.6,1],[.25,.45,.4,1.3,4]].forEach(([dx,dz,s,el,rot])=>{const b=new THREE.Mesh(BLOB,m);b.position.set(dx*r,0,dz*r);b.scale.set(r*s*el,1,r*s/el);b.rotation.y=rot;g.add(b)});
+    return{g,u}}
+  const WET={blood:{c:0x8a0a0a,dry:0x3b1d14,t:20},old:{c:0x5a0c10,dry:0x2e1810,t:12},bile:{c:0x8a9a2a,dry:0x3e4220,t:30}};
+  function Fluids(scene){
+    const MAXM=900,MAXD=160,geo=BLOB.clone(),aWet=new THREE.InstancedBufferAttribute(new Float32Array(MAXM),1),aDry=new THREE.InstancedBufferAttribute(new Float32Array(MAXM*3),3);
+    geo.setAttribute("aWet",aWet);geo.setAttribute("aDry",aDry);
+    const mk=new THREE.InstancedMesh(geo,FluidMat(),MAXM);
+    const sg=new THREE.CylinderGeometry(.0045,.0022,1,6,1,true);sg.translate(0,-.5,0);
+    const wetM=()=>new THREE.MeshStandardMaterial({roughness:.1,metalness:0});
+    const dm=new THREE.InstancedMesh(new THREE.SphereGeometry(.011,8,6),wetM(),MAXD),st=new THREE.InstancedMesh(sg,wetM(),MAXD),bu=new THREE.InstancedMesh(new THREE.SphereGeometry(.01,8,6),wetM(),MAXD);
+    [mk,dm,st,bu].forEach(m=>{for(let i=0;i<m.count;i++)m.setColorAt(i,TC.set(0x8a0a0a));m.frustumCulled=false;m.count=0;scene.add(m)});
+    const drops=[],pools=[],marks=[],self={anchors:[]},PS=Particles(scene);self.PS=PS;
+    self.collect=group=>{self.anchors=[];self.embers=[];group.traverse(o=>{if(o.userData.drip)self.anchors.push(o);if(o.userData.ember)self.embers.push(o)})};
+    const wp=new V3(),M4=new THREE.Matrix4(),Q=new THREE.Quaternion(),S=new V3(),P=new V3(),UP=new V3(0,1,0);
+    const addMark=(p,x,z,s,el,rot)=>{if(marks.length>=MAXM){const o=pools.shift();if(o)for(let i=marks.length-1;i>=0;i--)if(marks[i].p===o)marks.splice(i,1)}
+      const m={p,x,z,s:0,ts:s,el,rot,y:.006+Math.random()*.003};marks.push(m);p.marks++;return m};
+    // um pingo no chão: soma uma marca à poça vizinha (cresce em lóbulos) ou nasce uma coroa com 2 a 5 satélites
+    const land=(x,z,kind,spd)=>{let p=pools.find(p=>p.kind===kind&&Math.hypot(p.x-x,p.z-z)<p.r*1.1);
+      if(p){p.r=Math.min(.38,p.r+.01);p.age=Math.min(p.age,.5);const a=Math.random()*6.28,d=p.r*(.25+Math.random()*.6);
+        addMark(p,p.x+Math.cos(a)*d,p.z+Math.sin(a)*d,p.r*(.4+Math.random()*.3),1+Math.random()*.4,Math.random()*6.28);
+        if(Math.random()<.35){const b=Math.random()*6.28,e=p.r*(1.15+Math.random()*.5);addMark(p,p.x+Math.cos(b)*e,p.z+Math.sin(b)*e,.005+Math.random()*.006,1.5,b)}}
+      else{p={x,z,kind,age:0,r:.035,marks:0};pools.push(p);const s=.022+Math.min(.015,spd*.003);addMark(p,x,z,s,1+Math.random()*.3,Math.random()*6.28);
+        const n=2+Math.floor(Math.random()*4);for(let k=0;k<n;k++){const b=Math.random()*6.28,e=s*(1.6+Math.random()*1.8);addMark(p,x+Math.cos(b)*e,z+Math.sin(b)*e,s*(.12+Math.random()*.18),1.6,b)}}};
+    self.step=dt=>{
+      // Carbonizado: brasas sobem tremendo e um fiapo de fumaça sai das costas
+      self.embers.forEach(a=>{const e=a.userData.ember;e.cd=(e.cd??Math.random()*.5)-dt;e.sd=(e.sd??Math.random())-dt;a.getWorldPosition(wp);
+        if(e.cd<=0&&PS.P.length<600){e.cd=.18+Math.random()*.35;PS.emit({p:wp,v:new V3((Math.random()-.5)*.2,.5+Math.random()*.6,(Math.random()-.5)*.2),c:0xffc060,c1:0xff3a10,spark:true,add:true,s0:.05,s1:.015,life:.9+Math.random()*.9,wig:1.6})}
+        if(e.smoke&&e.sd<=0){e.sd=.35+Math.random()*.3;PS.emit({p:wp,v:new V3(0,.35,0),c:0x4a4440,op:.28,fadeIn:true,s0:.06,s1:.4,life:2.6,wig:.35})}});
+      PS.step(dt);
+      // ferida: o fio desce e afina, o bulbo na ponta engorda e só então a gota se solta
+      let ns=0;
+      self.anchors.forEach(a=>{const d=a.userData.drip;if(d.off)return;a.getWorldPosition(wp);if(wp.y<.05||!a.visible)return;
+        if(d.L==null){d.L=.04+Math.random()*.08;d.len=0;d.cd=Math.random()*d.every;d.ph=0}
+        if(d.ph===0){d.cd-=dt;if(d.cd<=0)d.ph=1}
+        else if(d.ph===1){d.len+=dt*d.L/(.35+d.every*.3);if(d.len>=d.L){d.ph=2;if(drops.length<MAXD)drops.push({x:wp.x,y:wp.y-d.len,z:wp.z,vy:-.3,kind:d.kind})}}
+        else{d.len-=dt*.4;if(d.len<=0){d.len=0;d.ph=0;d.cd=d.every*(.6+Math.random()*.8)}}
+        if(d.len>.002&&ns<MAXD){const c=TC.set(WET[d.kind].c),k=d.len/d.L;
+          S.set(1-.35*k,d.len,1-.35*k);M4.compose(wp,Q.identity(),S);st.setMatrixAt(ns,M4);st.setColorAt(ns,c);
+          P.copy(wp);P.y-=d.len;const bs=d.ph===1?.5+.7*k:.4;S.set(bs,bs*1.25,bs);M4.compose(P,Q,S);bu.setMatrixAt(ns,M4);bu.setColorAt(ns,c);ns++}});
+      st.count=bu.count=ns;st.instanceMatrix.needsUpdate=bu.instanceMatrix.needsUpdate=true;if(ns){st.instanceColor.needsUpdate=bu.instanceColor.needsUpdate=true}
+      for(let i=drops.length-1;i>=0;i--){const d=drops[i];d.vy-=9.8*dt;d.y+=d.vy*dt;if(d.y<=.01){land(d.x,d.z,d.kind,-d.vy);drops.splice(i,1)}}
+      drops.forEach((d,i)=>{P.set(d.x,d.y,d.z);S.set(1,1.4+Math.min(3,-d.vy*.5),1);M4.compose(P,Q.identity(),S);dm.setMatrixAt(i,M4);dm.setColorAt(i,TC.set(WET[d.kind].c))});
+      dm.count=drops.length;dm.instanceMatrix.needsUpdate=true;if(drops.length)dm.instanceColor.needsUpdate=true;
+      pools.forEach(p=>p.age+=dt);
+      marks.forEach((m,i)=>{m.s+=(m.ts-m.s)*Math.min(1,dt*7);const W=WET[m.p.kind];P.set(m.x,m.y,m.z);Q.setFromAxisAngle(UP,m.rot);S.set(m.s*m.el,1,m.s);M4.compose(P,Q,S);mk.setMatrixAt(i,M4);
+        mk.setColorAt(i,TC.set(W.c));aWet.array[i]=Math.max(0,1-m.p.age/W.t);TC.set(W.dry);aDry.array[i*3]=TC.r;aDry.array[i*3+1]=TC.g;aDry.array[i*3+2]=TC.b});
+      mk.count=marks.length;mk.instanceMatrix.needsUpdate=aWet.needsUpdate=aDry.needsUpdate=true;if(marks.length)mk.instanceColor.needsUpdate=true;
+    };
+    self.clear=()=>{PS.clear();drops.length=0;pools.length=0;marks.length=0;mk.count=dm.count=st.count=bu.count=0;self.anchors.forEach(a=>{const d=a.userData.drip;d.len=0;d.ph=0})};
+    return self;
+  }
+
+  // ---------- multidão: separação, empurrão, escalar quem está na frente, tropeçar e cair ----------
+  function Crowd(o){
+    const A=[],cell=.6,grid=new Map(),key=(x,z)=>(Math.floor(x/cell)*73856093)^(Math.floor(z/cell)*19349663);
+    const self={A,o};
+    self.add=(obj,x,z,sp,extra)=>{const a=Object.assign({o:obj,R:obj.userData.rig,x,z,y:0,vy:0,vx:0,vz:0,sp,tumble:0,climb:0,yaw:0,lane:(Math.random()-.5)},extra||{});A.push(a);obj.position.set(x,0,z);return a};
+    const near=(a,r,f)=>{const cx=Math.floor(a.x/cell),cz=Math.floor(a.z/cell);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const L=grid.get(((cx+i)*73856093)^((cz+j)*19349663));if(L)for(const b of L)if(b!==a){const dx=b.x-a.x,dz=b.z-a.z,d2=dx*dx+dz*dz;if(d2<r*r)f(b,dx,dz,Math.sqrt(d2)+1e-4)}}};
+    self.step=(dt,t)=>{
+      grid.clear();A.forEach(a=>{const k=key(a.x,a.z);(grid.get(k)||grid.set(k,[]).get(k)).push(a)});
+      A.forEach(a=>{
+        const g=o.goal(a,t);let dx=g.x-a.x,dz=g.z-a.z;const dl=Math.hypot(dx,dz)||1;dx/=dl;dz/=dl;
+        let sp=a.sp*(g.slow??1)*(a.tumble>0?.35:1)*(a.y>.3?1.15:1);
+        let sx=0,sz=0,ahead=0,aheadY=0,supp=0;
+        near(a,.62,(b,ex,ez,d)=>{const dy=b.y-a.y;
+          if(Math.abs(dy)<.38){const f=(.62-d)/.62;sx-=ex/d*f;sz-=ez/d*f;if((ex*dx+ez*dz)/d>.35&&d<.58){ahead++;aheadY=Math.max(aheadY,b.y)}}
+          if(d<.36&&b.y<a.y-.2)supp=Math.max(supp,b.y+.45)});
+        let vx=dx*sp+sx*2.6,vz=dz*sp+sz*2.6;
+        a.vx+=(vx-a.vx)*Math.min(1,dt*5);a.vz+=(vz-a.vz)*Math.min(1,dt*5);
+        let nx=a.x+a.vx*dt,nz=a.z+a.vz*dt,blocked=ahead>=(o.pileAt??2),top=0;
+        const pad=o.pad??.25;
+        (o.walls||[]).forEach(w=>{if(nx>w.x0-pad&&nx<w.x1+pad&&nz>w.z0-pad&&nz<w.z1+pad){
+          if(a.y>=w.h-.15&&!w.noPass){top=Math.max(top,w.h);return}
+          // empurra de volta para o lado de onde veio: nunca atravessa
+          const inX=a.x>w.x0-pad&&a.x<w.x1+pad,inZ=a.z>w.z0-pad&&a.z<w.z1+pad;
+          if(inX&&!inZ)nz=a.z<(w.z0+w.z1)/2?w.z0-pad:w.z1+pad;
+          else if(inZ&&!inX)nx=a.x<(w.x0+w.x1)/2?w.x0-pad:w.x1+pad;
+          else{const px=Math.min(nx-(w.x0-pad),(w.x1+pad)-nx),pz=Math.min(nz-(w.z0-pad),(w.z1+pad)-nz);
+            if(px<pz)nx=nx<(w.x0+w.x1)/2?w.x0-pad:w.x1+pad;else nz=nz<(w.z0+w.z1)/2?w.z0-pad:w.z1+pad}
+          blocked=true;a.atWall=w}});
+        if(o.bound){const b=o.bound(nx,nz);nx=b.x;nz=b.z}
+        a.x=nx;a.z=nz;
+        // escalar: quem está travado sobe em cima de quem está na frente
+        const cap=Math.min(a.atWall&&a.atWall.noPass?a.atWall.h-.4:9,o.cap?o.cap(a):9);
+        const want=blocked&&ahead?Math.min(cap,aheadY+.45):0;supp=Math.max(supp,top);
+        if(a.y>cap+.1&&a.vy<=0){a.y=Math.max(cap,a.y-1.5*dt);a.climb=Math.max(0,a.climb-dt)}
+        else if(want>a.y+.05&&a.tumble<=0){a.y+=1.9*dt;a.vy=0;a.climb=Math.min(1,a.climb+dt*3)}
+        else{a.climb=Math.max(0,a.climb-dt*2);a.vy-=9.8*dt;a.y+=a.vy*dt;if(a.y<=supp){if(a.vy<-3.2&&a.tumble<=0)a.tumble=.9;a.y=supp;a.vy=0}}
+        a.atWall=null;
+        if(a.tumble<=0&&ahead>=3&&a.y<.2&&Math.random()<dt*(o.trip??.25))a.tumble=.9;
+        if(a.tumble>0)a.tumble-=dt;
+        o.after&&o.after(a,t);
+        // visual
+        const tyaw=Math.atan2(a.vx,a.vz);let dyaw=((tyaw-a.yaw+PI)%(2*PI)+2*PI)%(2*PI)-PI;a.yaw+=dyaw*Math.min(1,dt*8);
+        a.o.position.set(a.x,a.y,a.z);a.o.rotation.y=a.yaw;
+        a.o.rotation.x=a.tumble>0?(1-a.tumble/.9)*PI*1.6:0;
+      });
+    };
+    // pose: correr, escalar (tronco deitado, braços buscando o alto) ou rolar
+    self.pose=(t,dt)=>A.forEach(a=>{const R=a.R;if(!R)return;
+      if(a.climb>.05){const s=Math.sin(t*9+R.ph);setPose(R,{lean:(self.o.climbLean??1.25)*a.climb+R.leanBase*(1-a.climb),armR:-2.9+s*.35,armL:-2.6-s*.35,elbR:-.3,elbL:-.5,legL:.9+s*.4,legR:.6-s*.4,kneeL:1,kneeR:1.2,headX:-1,drop:-.2})}
+      else if(a.tumble>0)setPose(R,{lean:1.2,armR:-2.5,armL:-2.2,legL:-1.2,legR:-.9,kneeL:1.6,kneeR:1.4,headX:.4});
+      else animate(a.o,t,true);
+      cascade(R,dt);
+      // nenhuma parte do corpo dentro de parede: mede braços e cabeça e empurra o corpo para fora pelo lado de onde veio
+      for(let it=0;it<2;it++)(o.walls||[]).forEach(w=>{if(a.x<w.x0-1.8||a.x>w.x1+1.8||a.z<w.z0-1.8||a.z>w.z1+1.8||a.y>=w.h-.15&&!w.noPass)return;
+        a.o.updateMatrixWorld(true);const m0=.1,inX=a.x>w.x0&&a.x<w.x1;let need=0;
+        a.o.traverse(m=>{if(!m.isMesh)return;m.getWorldPosition(wp2);if(wp2.y>w.h||wp2.x<w.x0-m0||wp2.x>w.x1+m0||wp2.z<w.z0-m0||wp2.z>w.z1+m0)return;
+          need=Math.max(need,inX?(a.z<(w.z0+w.z1)/2?wp2.z-(w.z0-m0):(w.z1+m0)-wp2.z):(a.x<(w.x0+w.x1)/2?wp2.x-(w.x0-m0):(w.x1+m0)-wp2.x))});
+        if(need>0){const sg=inX?(a.z<(w.z0+w.z1)/2?-1:1):(a.x<(w.x0+w.x1)/2?-1:1);if(inX)a.z+=sg*need;else a.x+=sg*need;a.o.position.set(a.x,a.y,a.z)}})});
+    const wp2=new V3();
+    return self;
+  }
+  const at=(o,x,y,z,ry)=>{o.position.set(x,y,z);if(ry!=null)o.rotation.y=ry;return o};
+  const pool=(r,c,op)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(r,20),basic(c,{transparent:true,opacity:op??.8,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.y=.006;return m};
+  const ring=(r,c,op)=>{const m=new THREE.Mesh(new THREE.RingGeometry(r-.06,r,48),basic(c,{transparent:true,opacity:op??.5,side:THREE.DoubleSide,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.y=.01;return m};
+  const looseLimb=(len,w,c)=>{const g=new THREE.Group(),l=box(w,len,w,new THREE.MeshLambertMaterial({color:c,flatShading:true}));l.rotation.z=Math.PI/2;l.position.y=w/2;g.add(l);const e=box(.03,w*1.1,w*1.1,new THREE.MeshLambertMaterial({color:RED}));e.position.set(len/2,w/2,0);g.add(e);return g};
+  const shadow=()=>{const m=pool(.45,0x000000,.45);return m};
+  const face=(x,z,tx,tz)=>Math.atan2(tx-x,tz-z);
+  function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  const fit=(aspect,W,o)=>{o=o||{};const ly=o.lookY??.85,d=Math.max(o.min??6,(W/2)/(Math.tan(19*Math.PI/180)*aspect));return{pos:new V3(o.x??0,ly+.4+d*(o.elev??.14),d+(o.z??0)),look:new V3(o.x??0,ly,o.z??0)}};
+
+  // ---------- visualizador genérico ----------
+  function Viewer(el){
+    const canvas=el.querySelector("canvas"), labelsEl=el.querySelector(".zlabels");
+    let renderer;
+    try{renderer=new THREE.WebGLRenderer({canvas,antialias:true})}catch(e){fail(el,"Este navegador não tem WebGL, então as artes 3D não aparecem.");return null}
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    const scene=new THREE.Scene();scene.background=new THREE.Color(0x0a0d0b);scene.fog=new THREE.Fog(0x0a0d0b,10,30);
+    const cam=new THREE.PerspectiveCamera(38,1,.1,120);
+    scene.add(new THREE.HemisphereLight(0x9fb3c8,0x1a1410,.6));
+    const moon=new THREE.DirectionalLight(0xb8c8e0,.85);moon.position.set(-4,8,6);scene.add(moon);
+    const rim=new THREE.DirectionalLight(0x7d8f4a,.55);rim.position.set(5,3,-6);scene.add(rim);
+    const ground=new THREE.Mesh(new THREE.PlaneGeometry(120,60),new THREE.MeshLambertMaterial({color:0x141915}));ground.rotation.x=-Math.PI/2;ground.renderOrder=-2;scene.add(ground);
+    const grid=new THREE.GridHelper(40,40,0x2c352f,0x1c221e);grid.position.y=.003;grid.renderOrder=-2;scene.add(grid);
+    const self={content:null,yaw:0,dragging:false,cam};const fluids=Fluids(scene);
+    const look=new V3(0,.9,0),lookT=new V3(),posT=new V3();let spans=[],first=true,visible=true;
+    self.retarget=()=>{if(!self.content)return;const t=self.content.cam(cam.aspect);lookT.copy(t.look);
+      const off=t.pos.clone().sub(t.look).applyAxisAngle(new V3(0,1,0),self.yaw);posT.copy(t.look).add(off);
+      if(first){cam.position.copy(posT);look.copy(lookT);first=false}};
+    self.set=c=>{if(self.content)scene.remove(self.content.group);self.content=c;scene.add(c.group);self.yaw=0;
+      if(!c.rigs){c.rigs=[];c.group.traverse(o=>{if(o.userData.rig)c.rigs.push(o)})}
+      fluids.clear();fluids.collect(c.group);labelsEl.textContent="";spans=(c.labels||[]).map(l=>{const s=document.createElement("span");s.textContent=l.text;labelsEl.appendChild(s);return s});self.retarget()};
+    const resize=()=>{const w=el.clientWidth,h=el.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();self.retarget()};
+    new ResizeObserver(resize).observe(el);
+    new IntersectionObserver(es=>{visible=es[0].isIntersecting}).observe(el);
+    let px=null;
+    canvas.addEventListener("pointerdown",e=>{px=e.clientX;self.dragging=true;canvas.setPointerCapture(e.pointerId);canvas.style.cursor="grabbing"});
+    canvas.addEventListener("pointermove",e=>{if(px===null)return;const dx=e.clientX-px;px=e.clientX;
+      if(self.content&&self.content.onDrag)self.content.onDrag(dx);else{self.yaw-=dx*.008;self.retarget()}});
+    const end=()=>{px=null;self.dragging=false;canvas.style.cursor=""};
+    canvas.addEventListener("pointerup",end);canvas.addEventListener("pointercancel",end);
+    const v=new V3();let last=performance.now(),time=0;
+    function tick(now){
+      const dt=Math.min(.05,(now-last)/1000);last=now;requestAnimationFrame(tick);
+      if(!visible||!self.content)return;time+=dt;
+      self.content.update&&self.content.update(dt,time,self.dragging);
+      if(!reduce&&(self.content.animate?self.content.animate():false))self.content.rigs.forEach(o=>{animate(o,time);cascade(o.userData.rig,dt)});
+      if(!reduce)fluids.step(dt);if(self.content.live)self.retarget();
+      const a=reduce?1:1-Math.pow(.002,dt);cam.position.lerp(posT,a);look.lerp(lookT,a);cam.lookAt(look);
+      const w=el.clientWidth,h=el.clientHeight;
+      (self.content.labels||[]).forEach((l,i)=>{const s=spans[i];v.copy(l.p);if(l.track)v.add(l.track.position);v.project(cam);if(l.fn&&s.textContent!==l.fn())s.textContent=l.fn();const show=v.z<1&&(!l.show||l.show());
+        s.hidden=!show;if(show){s.style.left=((v.x+1)/2*w)+"px";s.style.top=Math.max(4,Math.min(h-22,(1-v.y)/2*h))+"px"}});
+      renderer.render(scene,cam);
+    }
+    requestAnimationFrame(tick);resize();
+    return self;
+  }
+
+  function group(id,onPick){const el=document.getElementById(id);el.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+    el.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));onPick(b.dataset.v)});return el}
+
+  // ---------- fila das 13 categorias ----------
+  const lv=Viewer(document.getElementById("viewer"));
+  if(lv){
+    const SP=1.7,N=Z.length,xs=Z.map((_,i)=>(i-(N-1)/2)*SP);
+    const st={decay:0,life:1,focus:-1,spin:.5,walk:true,seed:1000};
+    const G=new THREE.Group();
+    const holders=Z.map((z,i)=>{const h=new THREE.Group();h.position.x=xs[i];G.add(h);G.add(at(shadow(),xs[i],.005,0));return h});
+    const models=[];
+    const rebuild=()=>{holders.forEach((h,i)=>{if(models[i])h.remove(models[i]);models[i]=build({type:Z[i].n,decay:st.decay,life:st.life,clothIdx:i,phase:i*.7,seed:st.seed+i*17});h.add(models[i])});if(lv.content)lv.content.rigs=models.slice()};
+    rebuild();
+    lv.set({group:G,
+      labels:Z.map((z,i)=>({text:z.n,p:new V3(xs[i],0,.75),show:()=>st.focus<0||st.focus===i})),
+      cam:a=>{if(st.focus<0)return fit(a,N*SP+.6,{min:7,elev:.12});const k=Z[st.focus].n==="Brutamonte"?1.45:1;return{pos:new V3(xs[st.focus]+.6,1.5*k,4.6*k),look:new V3(xs[st.focus],.8*k,0)}},
+      onDrag:dx=>{st.spin+=dx*.012},animate:()=>st.walk,
+      update:(dt,t,drag)=>{if(!reduce&&!drag)st.spin+=dt*.35;holders.forEach(h=>h.rotation.y=st.spin)}});
+    const focusEl=document.getElementById("zfocus");
+    Z.forEach((z,i)=>focusEl.insertAdjacentHTML("beforeend",`<button type="button" data-v="${i}" aria-pressed="false" style="--eye:${z.eye}">${z.n}</button>`));
+    const setFocus=v=>{st.focus=+v;if(st.focus>=0)st.spin=-.35;focusEl.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",+x.dataset.v===st.focus));lv.retarget()};
+    group("zfocus",setFocus);
+    group("zdecay",v=>{st.decay=+v;rebuild()});
+    group("zlife",v=>{st.life=+v;rebuild()});
+    group("zmove",v=>{st.walk=v==="1";if(!st.walk)rebuild()});
+    document.getElementById("zreroll").addEventListener("click",()=>{st.seed=Math.random()*1e9|0;rebuild()});
+    document.querySelectorAll("#cards .card").forEach((c,i)=>{const b=document.createElement("button");b.type="button";b.className="see3d";b.textContent="Ver em 3D";
+      b.addEventListener("click",()=>{setFocus(i);document.getElementById("artes").scrollIntoView({behavior:reduce?"auto":"smooth"})});c.querySelector(".card-head").appendChild(b)});
+  }
+
+  // ---------- cenas de referência ----------
+  const L=(text,x,y,z,show)=>({text,p:new V3(x,y,z),show});
+  const row=(n,sp)=>Array.from({length:n},(_,i)=>(i-(n-1)/2)*sp);
+  const SCENES={
+    roupas:{name:"Roupas e proteção",cap:"Qualquer categoria pode vestir qualquer roupa. Aqui todos são Lentos. O equipamento aparece na silhueta: colete, capacete e máscara mudam a proteção e o loot. O motociclista tem o brilho dos olhos abafado pelo visor e não morde enquanto estiver de capacete.",
+      make(){const G=new THREE.Group(),o=[["civil","Civil"],["policial","Policial"],["militar","Militar"],["bombeiro","Bombeiro"],["motociclista","Motociclista"],["operario","Operário"],["medico","Médico"],["cacador","Caçador"]],xs=row(o.length,1.5);
+        o.forEach(([k],i)=>{G.add(at(build({type:"Lento",decay:1,outfit:k,clothIdx:0,pose:{armL:-.95,armR:-.7}}),xs[i],0,0));G.add(at(shadow(),xs[i],.005,0))});
+        return{group:G,labels:o.map(([,n],i)=>L(n,xs[i],0,.75)),cam:a=>fit(a,o.length*1.5+.6,{min:6.5})}}},
+    dano:{name:"Dano por região",cap:"Na frente: os efeitos básicos. Atrás: os estados dilacerados, com antebraço pendurado balançando, mandíbula solta, cabeça explodida por escopeta, tripas para fora, carne rasgada e braço arrancado no ombro, todos pingando. Tiro no crânio apaga os olhos na hora. Braço a 0 é arrancado e cai no chão. Perna a 50% faz mancar; perna a 0 transforma em rastejante, mas ele continua sendo da mesma categoria. O Brutamonte mostra cada tiro no tronco e cai no quarto.",
+      make(){const G=new THREE.Group(),xs=row(7,2.15);
+        const add=(o,i)=>{G.add(at(o,xs[i],0,0));G.add(at(shadow(),xs[i],.005,0))};
+        add(build({type:"Lento",decay:1,clothIdx:0}),0);
+        add(build({type:"Lento",decay:1,clothIdx:0,cut:{head:true}}),1);
+        for(let k=0;k<6;k++){const f=box(.06+.04*(k%2),.04,.06,new THREE.MeshLambertMaterial({color:k%3?0x94a084:0x7a120c}));G.add(at(f,xs[1]+Math.cos(k*1.7)*.45,.02,-.2+Math.sin(k*1.7)*.4))}
+        mark(G,xs[1],-.3,.3,0x6e1410,{elong:1.2});
+        add(build({type:"Lento",decay:1,clothIdx:0,cut:{armR:true}}),2);G.add(at(looseLimb(.68,.12,0x94a084),xs[2]+.45,0,.35,.6));
+        add(build({type:"Lento",decay:1,clothIdx:0,cut:{armL:true,armR:true}}),3);
+        const limp=build({type:"Lento",decay:1,clothIdx:0,pose:{legR:.5,legL:-.3}});limp.rotation.z=.12;add(limp,4);
+        add(build({type:"Rastejante",eye:Z[0].eye,decay:1,clothIdx:0,cut:{legs:true}}),5);
+        G.add(at(looseLimb(.88,.16,PANTS),xs[5]-.2,0,-.9,.3));G.add(at(looseLimb(.88,.16,PANTS),xs[5]+.4,0,-1.1,-.4));
+        add(build({type:"Brutamonte",decay:1,wounds:3}),6);
+        const n=["Inteiro","Headshot","Sem um braço","Sem braços","Manca","Rastejante","3 tiros"];
+        const x2=row(6,2.6),z2=-3.2,row2=[[{cut:{dangleR:true}},"Antebraço solto"],[{cut:{jaw:true}},"Mandíbula solta"],[{cut:{blown:true}},"Cabeça explodida"],[{cut:{gut:true}},"Tripas"],[{cut:{flaps:true}},"Carne pendurada"],[{cut:{shoulderR:true}},"Sem braço"]];
+        row2.forEach(([sp,t],i)=>{G.add(at(build(Object.assign({type:"Lento",decay:0,phase:i},sp)),x2[i],0,z2));G.add(at(shadow(),x2[i],.005,z2))});
+        return{group:G,animate:()=>true,labels:n.map((t,i)=>L(t,xs[i],0,.85)).concat(row2.map(([,t],i)=>L(t,x2[i],i%2?2.15:0,z2+(i%2?0:.85)))),cam:a=>fit(a,7*2.15+1,{min:9,lookY:.9,elev:.32,z:-1.6})}}},
+    penetracao:{name:"Penetração",cap:"Cada calibre atravessa um número de corpos e perde dano em cada um: 9mm passa por 2 (−50% por corpo), 5.56 por 3 (−35%) e .308 por 4 (−25%). Os pontos vermelhos marcam quem foi atingido.",
+      make(){const G=new THREE.Group(),rows=[["9mm",2,0xe3c341],["5.56",3,0xef8a2a],[".308",4,0xe5392b]],labels=[];
+        rows.forEach(([c,n,colr],r)=>{const z=(1-r)*2.3;
+          const gun=box(.55,.08,.08,new THREE.MeshLambertMaterial({color:0x2a2d30}));G.add(at(gun,-4.4,1.25,z));
+          for(let k=0;k<5;k++){const x=-1.8+k*1.05;G.add(at(build({type:"Lento",decay:1,clothIdx:k,wounds:k<n?1:0,pose:{armL:-.9,armR:-.7}}),x,0,z,-Math.PI/2));
+            if(k<n){const s=glow(0xff3020,.35,.9);G.add(at(s,x-.1,1.2,z))}}
+          const xe=-1.8+(n-1)*1.05,len=xe+4.1,tr=box(len,.022,.022,basic(colr,{transparent:true,opacity:.9}));G.add(at(tr,-4.1+len/2,1.24,z));
+          labels.push(L(`${c} · atravessa ${n}`,-4.4,1.5,z))});
+        return{group:G,labels,cam:a=>{const f=fit(a,14,{min:9,lookY:.6,x:-1});f.pos.set(-1+f.pos.z*.15,f.pos.z*.55,f.pos.z);return f}}}},
+    espreitador:{name:"Espreitador",cap:"Ele finge de morto entre os corpos que ficam no chão por 15 min. A pista é o brilho roxo fraco nos olhos (corpo de verdade tem olho apagado). Quem passa a menos de 3 m, ou de costas, leva o bote.",
+      make(){const G=new THREE.Group(),R=rng(7);
+        [[-2.2,-.6],[-1.2,1.1],[.9,-1.3],[1.8,.7],[-.3,-2.1],[-2.6,1.6]].forEach(([x,z])=>{G.add(at(build({type:"Lento",decay:2,lying:true,eyesOff:true,clothIdx:Math.floor(R()*8)}),x,0,z,R()*6.28));mark(G,x,z,.45,0x3a1c12,{elong:1.15,rough:.85})});
+        const lie=build({type:"Lento",lying:true,decay:2,eye:Z[6].eye,eyeDim:true,clothIdx:6,pose:{torsoW:.36}});G.add(at(lie,0,0,0,.4));
+        const rg=ring(3,0x9b5ce0,.35);G.add(at(rg,0,.01,0));
+        G.add(at(build({type:"Espreitador",decay:1}),5,0,.3,-1.2));G.add(at(shadow(),5,.005,.3));
+        return{group:G,labels:[L("Fingindo de morto",0,.1,.9),L("Raio de 3 m",0,.05,3.15),L("O bote",5,0,1.1)],cam:a=>fit(a,11,{min:7,elev:.55,x:1,lookY:.3}),
+          update:(dt,t)=>{rg.material.opacity=.2+.18*Math.sin(t*2.2)}}}},
+    gritador:{name:"Gritador",cap:"Ao ver alguém, ele arqueia as costas e grita. Todos os zumbis num raio de 150 m vêm e ficam 20% mais rápidos por 30 s. Os anéis saindo da boca são o grito; os do chão mostram o som se espalhando (fora de escala).",
+      make(){const G=new THREE.Group(),rings=[0,1,2].map(()=>{const r=ring(1,0xf2f2ea,.5);G.add(r);return r});
+        G.add(build({type:"Gritador",decay:1}));G.add(shadow());
+        const mouth=[0,1,2].map(()=>{const m=new THREE.Mesh(new THREE.TorusGeometry(1,.014,6,48),basic(0xf2f2ea,{transparent:true,opacity:.6,depthWrite:false}));G.add(m);return m});
+        const ps=[[-4.5,-2],[-3,-4],[0,-5],[3,-4.2],[4.6,-1.8],[-5.2,1.2],[5.2,1.5],[-1.5,-5.4],[1.6,-5.2]];
+        ps.forEach(([x,z],i)=>{const t=i===2||i===6?"Corredor":"Lento";G.add(at(build({type:t,decay:i%3,clothIdx:i}),x,0,z,face(x,z,0,0)));G.add(at(shadow(),x,.005,z))});
+        return{group:G,animate:()=>true,labels:[L("Gritador",0,0,.8),L("Horda atraída",0,0,-5.9)],cam:a=>fit(a,15,{min:10,elev:.5,lookY:.4,z:-1.5}),
+          update:(dt,t)=>{rings.forEach((r,i)=>{const k=((reduce?.5:t*.35)+i/3)%1;r.scale.setScalar(.6+k*6.5);r.material.opacity=.55*(1-k)});
+            // o grito sai da boca em 3 anéis que crescem e somem
+            mouth.forEach((m,i)=>{const k=((reduce?.4:t*.9)+i/3)%1;m.scale.setScalar(.06+k*1.5);m.position.z=.2+k*1.4;m.position.y=1.62+k*.25;m.material.opacity=.7*(1-k)})}}}},
+    inchado:{name:"Inchado",cap:"Ele caminha até o grupo. Meio segundo antes de estourar ele incha e treme: é o aviso para fugir. Quando morre, estoura numa nuvem de bile de 4 m (em escala real aqui), em puffs opacos que se desfazem aos poucos pelas bordas. Quem está dentro fica cego por 5 s, com o dobro de rastro de cheiro, e tosse. A bile respinga, forma poça e vira crosta. Dá para usar a explosão contra a própria horda.",
+      make(){const G=new THREE.Group(),PS=Particles(G),R=rng(3),cx=1.4;
+        const inch=build({type:"Inchado",decay:1});G.add(inch);const sh=shadow();G.add(sh);const fig=inch.userData.rig.fig,s0=fig.scale.clone();
+        const bp=new THREE.Mesh(BLOB,new THREE.MeshStandardMaterial({color:0x8a9a2a,roughness:.15,metalness:0,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));bp.position.set(cx,.007,0);G.add(bp);
+        const hum=[[3.4,1.5],[4.3,-1],[3.7,.3]].map(([x,z],i)=>{const o=build({type:"Lento",human:true,seed:950+i});G.add(at(o,x,0,z,face(x,z,cx,0)));G.add(at(shadow(),x,.005,z));return o});
+        const gm=[0x6e7a26,0x5a1a10,0x9aaa30,0x7b8a48],gibs=Array.from({length:12},(_,k)=>{const m=box(.07+R()*.08,.05+R()*.05,.07+R()*.08,new THREE.MeshLambertMaterial({color:gm[k%4]}));m.visible=false;G.add(m);return{m,v:new V3(),w:new V3()}});
+        let T=0,popped=false;
+        const step=(dt,t)=>{T+=dt;if(T>8.5){T=0;popped=false;inch.visible=true;fig.scale.copy(s0);PS.clear();gibs.forEach(g=>g.m.visible=false)}
+          const x=-4+Math.min(T,3)/3*(cx+4);inch.position.x=x;sh.position.x=x;
+          if(T<3){animate(inch,t);cascade(inch.userData.rig,dt)}
+          else if(!popped){const k=Math.min(1,(T-3)/.5);fig.scale.set(s0.x*(1+.3*k),s0.y*(1+.08*k),s0.z*(1+.35*k));inch.position.x=x+Math.sin(T*70)*.03*k;
+            if(T>=3.5){popped=true;inch.visible=false;const c=new V3(cx,1.1,0);
+              PS.burst(c,42,{c:0x8a9a2a,c1:0x6e7a26,dissolve:true,sp:5,drag:2.4,up:.02,upr:.4,g:-.25,life:4.2,s0:.45,s1:1.8,dp:1.6,jit:.4});
+              PS.burst(c,36,{c:0x9aaa30,spark:true,sp:5.5,up:.3,upr:.9,g:-9.8,life:1.3,s0:.07,s1:.05,floor:.02});
+              gibs.forEach(g=>{g.m.visible=true;g.m.position.copy(c);const a=R()*6.28,s=2+R()*4;g.v.set(Math.cos(a)*s,2+R()*3,Math.sin(a)*s);g.w.set(R()*9,R()*9,R()*9)})}}
+          const k=popped?Math.min(1,(T-3.5)/1.6):0;bp.visible=k>0;bp.scale.setScalar(.05+2.1*k*(1+.03*Math.sin(T*3)));
+          const dk=Math.min(1,Math.max(0,(T-5)/3.5));bp.material.color.set(0x8a9a2a).lerp(TC.set(0x3e4220),dk);bp.material.roughness=.15+.8*dk;
+          gibs.forEach(g=>{if(!g.m.visible||g.m.position.y<=.03)return;g.v.y-=9.8*dt;g.m.position.addScaledVector(g.v,dt);g.m.rotation.x+=g.w.x*dt;g.m.rotation.y+=g.w.y*dt;if(g.m.position.y<.03)g.m.position.y=.03});
+          hum.forEach((o,i)=>{const Rg=o.userData.rig;if(popped&&T>3.6+i*.08)setPose(Rg,{lean:.45,armR:-2.5,armL:-2.3,elbR:-1.9,elbL:-2,headX:.6,headY:.3});else animate(o,t);cascade(Rg,dt)});
+          PS.step(dt)};
+        if(reduce){for(let k=0;k<80;k++)step(.05,k*.05)}
+        return{group:G,labels:[L("Inchado",-4,0,.8),L("Nuvem de bile de 4 m: cega 5 s",cx,0,4.3)],cam:a=>fit(a,14,{min:9,elev:.45,lookY:.6,x:-.4}),
+          update:(dt,t)=>{if(!reduce)step(Math.min(dt,.05),t)}}}},
+    explosao:{name:"Explosão na horda",cap:"Uma granada M67 no meio de 18 zumbis. Ela abre um buraco de 0,9 m com borda de asfalto levantada e placas voando. Até 25% do raio letal a cabeça estoura e o corpo vira membros voando e uns 20 pedaços de carne e osso, cada um respingando onde cai. Até 45%, membros e mais 5 pedaços. Até o raio letal ele é desmembrado (2 a 4 partes arrancadas, braço pendurado, tripas) e arremessado; a menos de 70% do letal, se a cabeça for arrancada, ela estoura. Quem cai perto pousa dentro do buraco. Até o raio de ferimento ele só é derrubado e levanta poeira ao cair. Fora disso nada acontece. Clarão, bola de fogo que vira fumaça, poeira no chão e faíscas vêm da Oficina de explosões.",
+      make(){const G=new THREE.Group(),PS=Particles(G),R=rng(55),ctr=new V3(0,0,0),LET=4,EXP=LET*.45,PUL=LET*.25,WND=8,CR=.9,CD=.25;
+        [[PUL,0xff2a2a],[EXP,0xff5a3a],[LET,0xffa040],[WND,0xd9d4c8]].forEach(([r,c])=>G.add(ring(r,c,.35)));
+        const Zs=[],CUTS=[{shoulderR:true,legs:true},{shoulderL:true,dangleR:true},{legs:true,jaw:true},{shoulderR:true,gut:true},{dangleL:true,legs:true,flaps:true}];
+        const place=(n,r0,r1,kind)=>{for(let i=0;i<n;i++){const a=(i/n)*6.28+R()*.6,r=r0+R()*(r1-r0),x=Math.cos(a)*r,z=Math.sin(a)*r,tp=R()<.6?"Lento":"Corredor";
+          const sp={type:tp,decay:Math.floor(R()*3),seed:Math.floor(R()*1e5),h:.95+R()*.1,phase:R()*6},o=build(sp);o.rotation.order="YXZ";G.add(o);
+          const q={o,x,z,r,kind,yaw:face(x,z,0,0),sh:shadow()};G.add(q.sh);
+          if(kind==="dism"){const cu=Object.assign({},CUTS[i%5]);if(r<.7*LET&&i%2===0){cu.blown=true;cu.jaw=false;q.pop=true}q.d=build(Object.assign({},sp,{cut:cu}));q.d.rotation.order="YXZ";q.d.visible=false;G.add(q.d)}
+          Zs.push(q)}};
+        place(2,.45,PUL-.15,"pulp");place(2,PUL+.2,EXP-.15,"exp");place(5,EXP+.4,LET-.3,"dism");place(6,LET+.6,WND-.6,"knock");place(4,WND+.8,10.5,"safe");
+        const chunks=[],splats=[],skin=[0x8a9478,0x94a084,0x7a8a6a];
+        // o chão afunda: bacia de 0,9 m e 25 cm (M67); quem cai dentro pousa no fundo
+        const floorY=(x,z)=>{const d=Math.hypot(x,z);return d<CR?-CD*(1-(d/CR)**2):0};
+        const crater=new THREE.Group();crater.visible=false;G.add(crater);
+        // buraco de verdade: um disco "apaga" a profundidade do chão (desenhado logo depois dele) e a bacia deformada aparece abaixo de 0
+        {const mask=new THREE.Mesh(new THREE.CircleGeometry(CR,40),new THREE.ShaderMaterial({vertexShader:"void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
+            fragmentShader:"void main(){gl_FragColor=vec4(0.);gl_FragDepthEXT=1.;}",extensions:{fragDepth:true},colorWrite:false,depthFunc:THREE.AlwaysDepth}));
+          mask.rotation.x=-PI/2;mask.position.y=.001;mask.renderOrder=-1;crater.add(mask);
+          const bg=new THREE.RingGeometry(0,CR+.2,48,14);bg.rotateX(-PI/2);const P=bg.attributes.position,cols=[],cA=new THREE.Color(0x3c3c3a),cD=new THREE.Color(0x2a2118),cK=new THREE.Color(0x120e0a);
+          for(let i=0;i<P.count;i++){const x=P.getX(i),z=P.getZ(i),d=Math.hypot(x,z),an=Math.atan2(z,x),n=1+.18*Math.sin(an*5+1.3)+.1*Math.sin(an*11);
+            let y=d<CR?-CD*(1-(d/CR)**2)*n:0;if(d>CR*.8)y+=.07*Math.max(0,1-Math.abs(d-CR*1.02)/(CR*.22))*n;P.setY(i,y);
+            const c=d>CR*.88?cA:d<CR*.45?cK.clone().lerp(cD,d/(CR*.45)):cD;cols.push(c.r,c.g,c.b)}
+          bg.setAttribute("color",new THREE.Float32BufferAttribute(cols,3));bg.computeVertexNormals();
+          crater.add(new THREE.Mesh(bg,new THREE.MeshLambertMaterial({vertexColors:true,flatShading:true})));
+          for(let k=0;k<7;k++){const a=k/7*6.28+R()*.5,sl=box(.22+R()*.18,.04,.16+R()*.14,new THREE.MeshLambertMaterial({color:0x34343a,flatShading:true}));sl.position.set(Math.cos(a)*(CR+.05),.07,Math.sin(a)*(CR+.05));sl.rotation.set((R()-.5)*.9,a,(R()-.5)*.9);crater.add(sl)}}
+        const part=(p,geo,c,o)=>{o=o||{};const m=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:c,flatShading:!!o.debris}));m.position.copy(p);G.add(m);const d=new V3(p.x,0,p.z).normalize();
+          const s=(o.sp??5)+Math.random()*(o.spr??5),a=(Math.random()-.5)*(o.spread??1.2);const ch={m,v:new V3((d.x*Math.cos(a)-d.z*Math.sin(a))*s,(o.up??4)+Math.random()*5,(d.z*Math.cos(a)+d.x*Math.sin(a))*s),w:new V3(Math.random()*12,Math.random()*12,Math.random()*12),tr:0,small:!!o.small,debris:!!o.debris};chunks.push(ch);
+          if(!o.debris)PS.burst(p,o.small?1:3,{c:0x6a0a0a,c1:0x2a0606,op:.5,sp:1.5,drag:2,up:.2,upr:.4,life:1.3,s0:o.small?.1:.2,s1:o.small?.3:.7});return ch};
+        const bits=(p,n)=>{for(let k=0;k<n;k++){const bone=Math.random()<.3,g=bone?geoBox(.025,.025,.07+Math.random()*.05):new THREE.SphereGeometry(.025+Math.random()*.03,6,5);
+          part(p.clone().add(new V3((Math.random()-.5)*.3,(Math.random()-.5)*.5,(Math.random()-.5)*.3)),g,bone?0xe0d8c4:[0x7a1a14,0x5a0c0c,0x8a2a22][k%3],{small:true,sp:3,spr:7,spread:2.4,up:2.5})}};
+        const pop=p=>{PS.burst(p,8,{c:0x8a0a0a,c1:0x3a0606,dissolve:true,sp:2.2,drag:2.5,up:.2,upr:.6,life:1.5,s0:.15,s1:.55});bits(p,4)};
+        const reset=()=>{T=0;fired=false;PS.clear();crater.visible=false;chunks.forEach(c=>G.remove(c.m));chunks.length=0;splats.forEach(s=>G.remove(s));splats.length=0;
+          Zs.forEach(q=>{q.o.visible=true;q.o.position.set(q.x,0,q.z);q.o.rotation.set(0,q.yaw,0);q.sh.position.set(q.x,.005,q.z);q.sh.visible=true;q.vy=0;q.fly=false;q.lie=0;if(q.d)q.d.visible=false;q.b=q.o})};
+        let T=0,fired=false;reset();
+        const fire=()=>{fired=true;blast(PS,ctr,1.4);crater.visible=true;
+          for(let k=0;k<4;k++){const a=k/4*6.28+.4;part(new V3(Math.cos(a)*.6,.1,Math.sin(a)*.6),geoBox(.2,.04,.15),0x34343a,{debris:true,sp:3,spr:4,up:3})}
+          Zs.forEach(q=>{const d=new V3(q.x,0,q.z).normalize();
+            if(q.kind==="exp"||q.kind==="pulp"){q.o.visible=false;q.sh.visible=false;const p=new V3(q.x,1,q.z),sk=skin[Math.floor(Math.random()*3)];
+              if(q.kind==="pulp"){pop(p.clone().setY(1.7));bits(p,20)}
+              else{part(p.clone().setY(1.7),new THREE.SphereGeometry(.11,10,8),sk);part(p.clone().setY(1.25),geoBox(.3,.32,.2),0x3a3a44);part(p.clone().setY(.95),geoBox(.26,.18,.18),0x2a2e3a);bits(p,5)}
+              [0,1,2,3].forEach(k=>part(p.clone().setY(k<2?1.3:.6),new THREE.CylinderGeometry(.05,.04,k<2?.55:.75,8),k<2?sk:0x2a2e3a));return}
+            if(q.kind==="safe")return;
+            const pow=q.kind==="dism"?(LET+1-q.r)*1.6:(WND+.5-q.r)*.55;q.fly=true;q.vx=d.x*pow;q.vz=d.z*pow;q.vy=q.kind==="dism"?3.5:1.6;
+            if(q.pop)pop(new V3(q.x,1.7,q.z));
+            if(q.d){q.o.visible=false;q.d.visible=true;q.d.position.copy(q.o.position);q.d.rotation.copy(q.o.rotation);q.b=q.d;
+              const c=part(new V3(q.x,1.3,q.z),new THREE.CylinderGeometry(.05,.04,.55,8),skin[0]);c.v.multiplyScalar(.6)}})};
+        const step=(dt,t)=>{T+=dt;if(T>9)reset();if(!fired&&T>1.5)fire();
+          Zs.forEach(q=>{const Rg=q.b.userData.rig;
+            if(q.fly){q.vy-=9.8*dt;q.b.position.x+=q.vx*dt;q.b.position.z+=q.vz*dt;const fy=floorY(q.b.position.x,q.b.position.z);q.b.position.y=Math.max(fy,q.b.position.y+q.vy*dt);
+              q.lie=Math.min(1,q.lie+dt*(q.kind==="dism"?2.2:1.6));q.b.rotation.x=-q.lie*PI/2;q.sh.position.set(q.b.position.x,.005,q.b.position.z);
+              if(q.b.position.y<=fy&&q.vy<0){q.fly=false;q.b.position.y=fy+.12;q.b.rotation.x=-PI/2;PS.burst(q.b.position.clone().setY(.2),7,{c:0x6a6258,dissolve:true,sp:1.6,drag:2.5,up:.1,upr:.3,life:1.8,s0:.25,s1:.8});
+                if(q.kind==="dism"){splats.push(mark(G,q.b.position.x,q.b.position.z,.28+Math.random()*.15,0x5a0a0a,{dir:Math.atan2(-q.vz,q.vx),elong:1.5}))}}
+              if(Rg){const s=Math.sin(t*14+q.x);setPose(Rg,{armR:-2.6+s*.6,armL:-2.2-s*.6,legL:.5+s*.4,legR:-.4-s*.4,headX:.5});cascade(Rg,dt)}}
+            else if(q.lie===0&&Rg){animate(q.b,t);cascade(Rg,dt)}});
+          chunks.forEach(c=>{const fy=floorY(c.m.position.x,c.m.position.z)+(c.small?.02:.05);if(c.done)return;c.v.y-=9.8*dt;c.m.position.addScaledVector(c.v,dt);c.m.rotation.x+=c.w.x*dt;c.m.rotation.z+=c.w.z*dt;
+            if(!c.small&&!c.debris){c.tr-=dt;if(c.tr<=0){c.tr=.1;PS.emit({p:c.m.position,v:new V3(),c:0x5a0808,op:.4,s0:.07,s1:.2,life:.6})}}
+            if(c.m.position.y<=fy&&c.v.y<0){c.m.position.y=fy;c.done=true;c.v.set(0,0,0);if(c.debris)return;
+              splats.push(mark(G,c.m.position.x,c.m.position.z,c.small?.04+Math.random()*.05:.12+Math.random()*.12,0x6a0a0a,{dir:Math.atan2(-c.m.position.z,c.m.position.x),elong:1.8,sat:c.small?1:undefined}));splats[splats.length-1].position.y+=Math.min(0,fy)}});
+          PS.step(dt)};
+        if(reduce){for(let k=0;k<50;k++)step(.05,k*.05)}
+        return{group:G,labels:[L("Estoura (25%)",0,0,-PUL-.3),L("Explodido (45%)",0,0,EXP+.35),L("Desmembrado (raio letal)",0,0,LET+.35),L("Arremessado (ferimento)",0,0,WND+.35)],cam:a=>fit(a,22,{min:14,elev:.62,lookY:0}),
+          update:(dt,t)=>{if(!reduce)step(Math.min(dt,.05),t)}}}},
+    impacto:{name:"Tiro por idade",cap:"O mesmo tiro no peito em cada idade. O Fresco solta névoa e gotas de sangue vivo para trás, o Recente sangue escuro, o Antigo um sangue grosso e pouco, e o Decrépito solta uma nuvem de pó com lascas de osso. O Carbonizado solta cinza e uma chuva de brasas, e brasas sobem dele o tempo todo junto com um fiapo de fumaça.",
+      make(){const G=new THREE.Group(),PS=Particles(G),xs=row(5,2.3);
+        const spec=[[{type:"Lento",decay:0},"Fresco"],[{type:"Lento",decay:1},"Recente"],[{type:"Lento",decay:2},"Antigo"],[{type:"Lento",decay:3},"Decrépito: pó"],[{type:"Carbonizado",decay:1},"Carbonizado: cinza e brasa"]];
+        const Q=spec.map(([sp,t],i)=>{const o=build(Object.assign({seed:300+i},sp));G.add(at(o,xs[i],0,0));G.add(at(shadow(),xs[i],.005,0));return{o,i,cd:.6+i*.35,fl:0}});
+        const hit=q=>{const p=new V3(xs[q.i],1.25,-.05),back=(sp,n,o)=>PS.burst(p,n,Object.assign({sp},o));q.fl=1;
+          if(q.i<3){const c=[0x8a0a0a,0x5a0c10,0x3a1c12][q.i],n=[16,10,6][q.i];
+            for(let k=0;k<n;k++)PS.emit({p,v:new V3((Math.random()-.5)*1.6,.4+Math.random()*1.4,-2.5-Math.random()*2.5),c,dissolve:true,s0:.08,s1:.3,life:.7+Math.random()*.4,drag:3});
+            for(let k=0;k<n;k++)PS.emit({p,v:new V3((Math.random()-.5)*2,Math.random()*2,-3-Math.random()*3),c,spark:true,g:-9.8,s0:.05,s1:.04,life:1.1,floor:.02})}
+          else if(q.i===3){back(1.4,14,{c:0x8a7a62,c1:0x6a5e4c,dissolve:true,up:.1,upr:.5,drag:1.8,g:.15,life:2,s0:.2,s1:.9});back(3,9,{c:0xd8d0b8,spark:true,up:.3,upr:.6,g:-9.8,life:1,s0:.05,s1:.04,floor:.02})}
+          else{back(1.2,10,{c:0x2a2622,dissolve:true,up:.3,upr:.6,drag:1.5,g:.3,life:1.8,s0:.18,s1:.7});back(4,22,{c:0xffc060,c1:0xff3a10,spark:true,add:true,up:.3,upr:.9,g:-6,life:1.2,s0:.06,s1:.02,floor:.02})}};
+        const step=(dt,t)=>{Q.forEach(q=>{q.cd-=dt;if(q.cd<=0){q.cd=2.6;hit(q)}const Rg=q.o.userData.rig;animate(q.o,t);q.fl=Math.max(0,q.fl-dt*3);Rg.upper.rotation.x-=q.fl*.45;Rg.headG.rotation.x-=q.fl*.3;cascade(Rg,dt)});PS.step(dt)};
+        if(reduce){for(let k=0;k<20;k++)step(.05,k*.05)}
+        return{group:G,labels:spec.map(([,t],i)=>L(t,xs[i],0,.85)),cam:a=>fit(a,5*2.3+1,{min:7,lookY:1}),update:(dt,t)=>{if(!reduce)step(Math.min(dt,.05),t)}}}},
+    farejador:{name:"Farejador",cap:"Ele sente sangue a 60 m e segue o rastro de quem está ferido, puxando até 8 Lentos atrás de si. Curativo, água ou uma isca de carne quebram a trilha.",
+      make(){const G=new THREE.Group(),R=rng(11);
+        const px=3.6,pz=-2.6;G.add(at(build({type:"Lento",human:true,skin:0xd9a88a,clothIdx:4,bandage:true,pose:{lean:.08,armL:-.2,armR:.15,legL:-.3,legR:.25,headZ:0}}),px,0,pz,face(px,pz,7,-5)));G.add(at(shadow(),px,.005,pz));
+        for(let k=0;k<16;k++){const t=k/15,x=-2.8+(px+2.8)*t+(R()-.5)*.3,z=2.4+(pz-2.4)*t+(R()-.5)*.3;mark(G,x,z,.05+R()*.05,0x8e1a12,{dir:Math.atan2(-(pz-2.4),px+2.8),elong:1.6,sat:2})}
+        const fx=-1.4,fz=1.1;G.add(at(build({type:"Farejador",decay:1}),fx,0,fz,face(fx,fz,px,pz)));G.add(at(shadow(),fx,.005,fz));
+        [[-2.6,2.2],[-2.2,3],[-3.3,1.5],[-3.4,2.9],[-2.8,3.8],[-4.1,2.3]].forEach(([x,z],i)=>{G.add(at(build({type:"Lento",decay:1+(i%2),clothIdx:i}),x,0,z,face(x,z,px,pz)));G.add(at(shadow(),x,.005,z))});
+        return{group:G,animate:()=>true,labels:[L("Farejador",fx,0,fz+.75),L("Lentos que ele puxa",-3.2,0,4.5),L("Rastro de sangue",1.1,0,-.3),L("Sobrevivente ferido",px,0,pz+.8)],cam:a=>fit(a,13,{min:9,elev:.55,lookY:.4,x:-.3})}}},
+    mordida:{name:"Da mordida ao zumbi",cap:"A mordida infecta 100%. Nas 48 h de jogo seguintes a pessoa passa por febre (stamina e mira pioram) e delírio (tosse e visão turva), morre e reanima em 2 a 4 minutos como Fresco, com a mesma roupa e mochila.",
+      make(){const G=new THREE.Group(),xs=row(5,1.8),P0={headZ:0,legL:0,legR:.05};
+        const add=(o,i)=>{G.add(at(o,xs[i],0,0));G.add(at(shadow(),xs[i],.005,0))};
+        add(build({type:"Lento",seed:777,human:true,skin:0xd9a88a,clothIdx:6,bandage:true,pose:Object.assign({},P0,{lean:.04,armL:-.15,armR:.05})}),0);
+        add(build({type:"Lento",seed:777,human:true,skin:0xd6c2ae,clothIdx:6,bandage:true,pose:Object.assign({},P0,{lean:.22,armL:-.4,armR:.05,headZ:.1})}),1);
+        add(build({type:"Lento",seed:777,human:true,skin:0xb9b4a4,clothIdx:6,bandage:true,pose:Object.assign({},P0,{lean:.45,armL:.08,armR:.05,headX:.35,headZ:.15})}),2);
+        G.add(at(build({type:"Lento",seed:777,human:true,lying:true,skin:0xa9a898,clothIdx:6,bandage:true}),xs[3],0,-.4,.3));
+        add(build({type:"Lento",seed:777,decay:0,clothIdx:6,bandage:true}),4);
+        const n=["Mordido · 0–30%","Febre · 30–70%","Delírio · 70–95%","Morte · 100%","Reanima em 2–4 min"];
+        return{group:G,labels:n.map((t,i)=>L(t,xs[i],0,.85)),cam:a=>fit(a,5*1.8+.6,{min:6.5})}}},
+    corpos:{name:"Corpos em 15 min",cap:"O ragdoll vira uma malha parada em 3 s, o que deixa o corpo quase sem custo. A poça nasce nas feridas e cresce em lóbulos no minuto 0, escura e grossa no meio e fina na borda; entre 5 e 15 min reais ela seca até o marrom fosco, a borda primeiro. O corpo escurece, aparecem moscas e no fim ele dissolve. O loot fica no corpo enquanto ele existir.",
+      make(){const G=new THREE.Group(),xs=row(4,2.3),flies=[];
+        // a poça nasce na ferida (peito e cabeça), cresce no minuto 0 e escurece até o marrom entre 5 e 15 min, borda primeiro
+        const pools=[];
+        [[1,.62,0x8a0a0a,1,1],[2,.6,0x8a0a0a,.5,1],[2,.58,0x5a0c10,.18,1],[3,.5,0x5a0c10,0,.35]].forEach(([d,r,c,wet,o],i)=>{
+          const pm=poolMark(G,xs[i]+.18,-.62,r,c,0x3b1d14,.4+i*.7);pm.u.uWet.value=wet;pools.push(pm);const b=build({type:"Lento",lying:true,decay:d,eyesOff:true,clothIdx:0,opacity:o});G.add(at(b,xs[i],i===3?-.06:0,-.5,.2));
+          if(i>=2)for(let k=0;k<7;k++){const f=box(.025,.025,.025,basic(0x050505));G.add(f);flies.push([f,xs[i],k])}});
+        const n=["0 min · vira malha parada","5 min · escurece","10 min · moscas","14–15 min · dissolve"];
+        return{group:G,labels:n.map((t,i)=>L(t,xs[i],0,.9)),cam:a=>fit(a,4*2.3+.6,{min:6,elev:.5,lookY:.2}),
+          update:(dt,t)=>{flies.forEach(([f,x,k])=>{const a=t*(1.5+k*.2)+k;f.position.set(x+Math.cos(a)*(.3+k*.04),.35+.15*Math.sin(a*1.7),-.4+Math.sin(a)*(.35))});
+            const k=reduce?1:Math.min(1,(t%8)/5);pools[0].g.scale.setScalar(.15+.85*(1-(1-k)*(1-k)))}}}},
+    lod:{name:"Níveis de detalhe",cap:"Como milhares de zumbis cabem sem lag. Perto, cada zumbi tem IA completa e caixas de acerto por região (as linhas verdes). No médio, uma cápsula só. Longe, vira um cartão plano em grupo. Muito longe, nem existe na tela: é só um número por região do mapa.",
+      make(){const G=new THREE.Group(),xs=row(4,2.4),wire=new THREE.LineBasicMaterial({color:0xb7c95a});
+        const wbox=(w,h,d,x,y,z,parent)=>{const l=new THREE.LineSegments(new THREE.EdgesGeometry(geoBox(w,h,d)),wire);l.position.set(x,y,z);parent.add(l)};
+        const z0=build({type:"Lento",decay:1,clothIdx:0,pose:{armL:-.15,armR:-.1,elbL:-.1,elbR:-.1,headZ:0,headX:0,lean:.02,legL:0,legR:0,kneeL:0,kneeR:0}});const h0=new THREE.Group();h0.add(z0);
+        wbox(.34,.4,.36,0,1.79,.02,h0);wbox(.6,.72,.38,0,1.24,0,h0);[-1,1].forEach(s=>{wbox(.2,.9,.2,s*.105,.45,0,h0);wbox(.16,.66,.16,s*.36,1.15,.05,h0)});
+        G.add(at(h0,xs[0],0,0));
+        const h1=new THREE.Group();h1.add(build({type:"Lento",decay:1,clothIdx:0}));const cyl=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.CylinderGeometry(.32,.32,1.85,10,1)),wire);cyl.position.y=.93;h1.add(cyl);G.add(at(h1,xs[1],0,0));
+        const card=new THREE.Mesh(new THREE.PlaneGeometry(.6,1.95),new THREE.MeshLambertMaterial({color:0x3a4038,side:THREE.DoubleSide}));card.position.y=.97;const h2=new THREE.Group();h2.add(card);
+        [-1,1].forEach(s=>{const e=glow(Z[0].eye,.18,.9);e.position.set(s*.06,1.8,.02);h2.add(e)});G.add(at(h2,xs[2],0,0));
+        const h3=new THREE.Group();const tile=new THREE.LineSegments(new THREE.EdgesGeometry(geoBox(1.6,.01,1.6)),wire);h3.add(tile);
+        for(let i=0;i<32;i++){const d=box(.05,.05,.05,basic(0xe3c341));d.position.set(((i%8)-3.5)*.18,.03,(Math.floor(i/8)-1.5)*.3);h3.add(d)}G.add(at(h3,xs[3],0,0));
+        [0,1,2].forEach(i=>G.add(at(shadow(),xs[i],.005,0)));
+        const n=["L0 · <35 m · completo","L1 · 35–120 m · simplificado","L2 · 120–400 m · cartão","L3 · >400 m · só números"];
+        return{group:G,labels:n.map((t,i)=>L(t,xs[i],0,1)),cam:a=>fit(a,4*2.4+1.6,{min:6.5,lookY:.8})}}},
+    horda:{name:"Horda de 100",cap:"Uma horda com a composição proposta: 48 Lentos, 14 Corredores, 9 Rastejantes, 5 Brutamontes, 5 Farejadores, 4 Saltadores, 3 Espreitadores, 3 Inchados, 3 Cegos, 2 Gritadores, 2 Carbonizados, 1 Afogado e 1 Devorador, com idades da infecção e da pessoa, altura e porte sorteados. Os olhos deixam ler os especiais no meio da massa.",
+      make(){const G=new THREE.Group(),R=rng(42),cnt={Lento:48,Corredor:14,Rastejante:9,Brutamonte:5,Farejador:5,Espreitador:3,Inchado:3,Gritador:2,Saltador:4,Cego:3,Afogado:1,Carbonizado:2,Devorador:1},list=[];
+        Object.entries(cnt).forEach(([t,n])=>{for(let i=0;i<n;i++)list.push(t)});
+        for(let i=list.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[list[i],list[j]]=[list[j],list[i]]}
+        const pts=[];
+        list.forEach(t=>{let x,z,ok,tries=0;do{x=(R()-.5)*15;z=-7+R()*10;ok=pts.every(([a,b])=>(a-x)**2+(b-z)**2>.62);tries++}while(!ok&&tries<40);pts.push([x,z]);
+          const r=R(),life=r<.25?0:r<.8?1:2,dr=R(),decay=dr<.35?0:dr<.7?1:dr<.9?2:3;
+          G.add(at(build({type:t,decay:t==="Corredor"?Math.min(decay,1):decay,life,clothIdx:Math.floor(R()*8),h:.93+R()*.14,bulk:.88+R()*.3,phase:R()*6}),x,0,z,(R()-.5)*.8))});
+        return{group:G,labels:[],cam:a=>fit(a,20,{min:13,elev:.42,lookY:.4,z:-2.5})}}},
+    rio:{name:"Perseguição (rio e bola)",live:true,cap:"Simulação de verdade: cada zumbi corre atrás do sobrevivente, empurra os vizinhos e fica colado neles. Quem fica travado sobe em cima de quem está na frente, como em Guerra Mundial Z; quem cai de cima tropeça e rola, e os de trás passam por cima. No estreitamento entre os carros a horda vira um funil e escala os carros. Em Days Gone é esse mesmo rio, só que de 300 a 500.",
+      make(){const G=new THREE.Group(),R=rng(5),RAD=11,W=3.4;
+        const ring_=new THREE.Mesh(new THREE.RingGeometry(RAD-W-.6,RAD+W+.6,96),new THREE.MeshLambertMaterial({color:0x1d221f}));ring_.rotation.x=-PI/2;ring_.position.y=.004;G.add(ring_);
+        for(let i=0;i<22;i++){const a=i/22*2*PI;[RAD-W-2.2,RAD+W+2.2].forEach((r,k)=>{const h=4+R()*6,b=box(3,h,3.2,new THREE.MeshLambertMaterial({color:k?0x262b28:0x2c302c}));b.position.set(Math.cos(a)*r,h/2,Math.sin(a)*r);b.rotation.y=-a;G.add(b)})}
+        const walls=[{x0:RAD-W,x1:RAD-.7,z0:-2.3,z1:2.3,h:1.45},{x0:RAD+.9,x1:RAD+W,z0:-1.2,z1:1.2,h:1.45}];
+        walls.forEach(w=>{const c=new THREE.Group();c.add(at(box(w.x1-w.x0,.8,w.z1-w.z0,new THREE.MeshLambertMaterial({color:0x3a4250})),0,.55,0));c.add(at(box((w.x1-w.x0)*.85,.6,(w.z1-w.z0)*.5,new THREE.MeshLambertMaterial({color:0x252b33})),0,1.15,0));c.position.set((w.x0+w.x1)/2,0,(w.z0+w.z1)/2);G.add(c)});
+        const runner=build({type:"Lento",human:true,seed:4242,skin:0xb98a64,pose:{lean:.35,headZ:0,headX:-.2}});runner.userData.rig.type="Corredor";G.add(runner);
+        let th=-.9;const tgt=new V3();
+        const crowd=Crowd({walls,trip:.35,pileAt:2,
+          goal:(a,t)=>{const aa=Math.atan2(a.z,a.x);let d=((th-aa)%(2*PI)+3*PI)%(2*PI)-PI;
+            if(Math.abs(d)<.18)return{x:tgt.x,z:tgt.z,slow:Math.hypot(a.x-tgt.x,a.z-tgt.z)<1.4?.92:1};
+            const ang=aa+Math.max(-.5,Math.min(.5,d)),r=RAD+a.lane*W*1.3;return{x:Math.cos(ang)*r,z:Math.sin(ang)*r}},
+          bound:(x,z)=>{const r=Math.hypot(x,z),k=Math.max(RAD-W,Math.min(RAD+W,r))/r;return{x:x*k,z:z*k}},
+          after:a=>{const aa=Math.atan2(a.z,a.x);let d=((th-aa)%(2*PI)+3*PI)%(2*PI)-PI;if(d>3||d<-2){const ang=th-1.2-R()*.6;a.x=Math.cos(ang)*(RAD+a.lane*W);a.z=Math.sin(ang)*(RAD+a.lane*W);a.y=0}}});
+        for(let i=0;i<150;i++){const ang=th-.25-R()*1.6,r=RAD+(R()-.5)*W*1.8,tp=R()<.75?"Corredor":R()<.6?"Lento":"Saltador";
+          const o=build({type:tp,decay:Math.floor(R()*3),life:R()<.25?0:R()<.75?1:2,h:.93+R()*.14,bulk:.88+R()*.3,phase:R()*6});G.add(o);
+          crowd.add(o,Math.cos(ang)*r,Math.sin(ang)*r,tp==="Lento"?3.9:4.6+R()*.7)}
+        const SP=4.25;
+        const step=(dt,t)=>{th+=SP/RAD*dt;const rr=RAD+Math.sin(t*.35)*1.6;tgt.set(Math.cos(th)*rr,0,Math.sin(th)*rr);
+          runner.position.copy(tgt);runner.rotation.y=Math.atan2(-Math.sin(th),Math.cos(th));crowd.step(dt,t)};
+        for(let k=0;k<160;k++)step(.05,k*.05);
+        const tan=new V3(),out=new V3();
+        return{group:G,crowd,labels:[L("Sobrevivente",0,2.2,0,()=>true)].map(l=>Object.assign(l,{track:runner})),
+          cam:a=>{tan.set(-Math.sin(th),0,Math.cos(th));out.set(Math.cos(th),0,Math.sin(th));const d=a<1?14:10.5;
+            return{pos:tgt.clone().addScaledVector(tan,-d).add(new V3(0,a<1?10:8,0)),look:tgt.clone().addScaledVector(tan,-3).add(new V3(0,.8,0))}},
+          update:(dt,t)=>{if(reduce)return;step(dt,t);crowd.pose(t,dt);animate(runner,t);cascade(runner.userData.rig,dt)}}}},
+    piramide:{name:"Pirâmide no muro",cap:"Simulação: a horda corre para o muro, os da frente ficam presos e os de trás sobem em cima deles. Quem fica travado vira degrau e fica preso se debatendo; os outros só conseguem subir meio corpo por vez, então a pilha cresce em rampa, mais alta encostada no muro e no centro e mais baixa atrás e nas bordas, até alcançar os 4 m. Ninguém atravessa o muro e os do topo passam por cima, caindo do outro lado. É a mesma regra da perseguição (travou, sobe em quem está na frente), só que contra um obstáculo fixo. A cada 16 s uma carga explode na base: a pilha desaba levantando poeira e começa a se formar de novo.",
+      make(){const G=new THREE.Group(),R=rng(9),wz=-6;
+        G.add(at(box(18,4,.5,new THREE.MeshLambertMaterial({color:0x3a3d38})),0,2,wz-.25));
+        [-1.2,1.4].forEach((x,i)=>G.add(at(build({type:"Lento",human:true,seed:900+i,skin:0xc99a78,pose:{lean:.3,armL:-1.4,armR:-1.2,elbL:-.6,elbR:-.6,headX:.6,headZ:0,legL:-.1,legR:.1,kneeL:.1,kneeR:.1}}),x,4,wz-.3,0)));
+        // a pilha é um mapa de altura feito de corpos: quem trava vira degrau, e só se sobe meio corpo por vez
+        const C=.6,hf=new Map(),ck=(x,z)=>Math.floor(x/C)+":"+Math.floor((z-wz)/C),H=(x,z)=>hf.get(ck(x,z))||0;
+        const face=wz+.6,STEP=.5,MAXPIN=160;let pins=0,bt=0;const A=[],PS=Particles(G);
+        const spawn=(a,far)=>{a.x=(R()-.5)*10;a.z=wz+(far?11+R()*8:2+R()*16);a.y=0;a.vy=0;a.st="run";a.stuck=0;a.over=0};
+        for(let i=0;i<205;i++){const tp=R()<.7?"Corredor":"Lento";
+          const o=build({type:tp,decay:Math.floor(R()*3),life:R()<.25?0:R()<.75?1:2,h:.93+R()*.14,bulk:.88+R()*.3,phase:R()*6});G.add(o);
+          const a={o,R:o.userData.rig,sp:tp==="Lento"?3:4.3+R()*.6,lane:(R()-.5)*4,yaw:PI,ph:R()*6};spawn(a,false);A.push(a)}
+        const step=(dt,t)=>{
+          A.forEach(a=>{if(a.st==="pin")return;
+            if(a.st==="over"){a.z-=a.sp*.6*dt;if(a.z<wz-.6){a.vy-=9.8*dt;a.y=Math.max(0,a.y+a.vy*dt)}if(a.y===0&&a.z<wz-.6){a.over+=dt;if(a.over>1.2)spawn(a,true)}return}
+            if(a.kx){a.x+=a.kx*dt;a.z=Math.max(face,a.z+a.kz*dt);a.kx*=Math.max(0,1-3*dt);a.kz*=Math.max(0,1-3*dt);if(Math.abs(a.kx)+Math.abs(a.kz)<.1)a.kx=a.kz=0}
+            let dx=a.lane-a.x,dz=wz-1-a.z;const dl=Math.hypot(dx,dz)||1;let vx=dx/dl*a.sp,vz=dz/dl*a.sp,sx=0,sz=0,ahead=0;
+            A.forEach(b=>{if(b===a||b.st!=="run"||Math.abs(b.y-a.y)>.45)return;const ex=b.x-a.x,ez=b.z-a.z,d=Math.hypot(ex,ez);if(d<.55&&d>1e-4){const f=(.55-d)/.55;sx-=ex/d*f;sz-=ez/d*f;if((ex*dx+ez*dz)/dl/d>.5)ahead++}});
+            vx+=sx*3;vz+=sz*3;let nx=a.x+vx*dt,nz=a.z+vz*dt,blocked=ahead>=2;
+            if(nz<face){if(a.y>=3.7&&Math.abs(nx)<9){a.st="over";a.y=4;a.vy=0;return}nz=face;blocked=true}
+            const hN=H(nx,nz),hC=H(a.x,a.z);
+            if(hN>a.y+STEP){blocked=true;nx=a.x;nz=a.z}
+            // rampa: a célula nunca passa da que está mais perto do muro; no muro, no máximo 1 m acima da fileira de trás
+            const nH=hC+.48,wallRow=a.z<face+C,okH=wallRow?nH<=Math.min(4.2,H(a.x,a.z+C)+1):nH<=H(a.x,a.z-C);
+            if(blocked){a.stuck+=dt;if(pins<MAXPIN&&okH&&a.stuck>.35+R()*.5&&a.y<=hC+.15){a.st="pin";pins++;a.y=hC;hf.set(ck(a.x,a.z),nH);
+                const yd=(R()-.5)*1.4,reach=Math.max(0,a.z-wz-.25)/(1.8*Math.max(.3,Math.cos(yd)));
+                // o corpo deita na direção do muro só até onde cabe: colado no muro fica de pé, agarrado nele
+                a.pin={yaw:PI+yd,tilt:Math.min(.7+R()*.8,Math.asin(Math.min(1,reach))),roll:(R()-.5)*.5,dy:-.15-R()*.15};return}}else a.stuck=Math.max(0,a.stuck-dt);
+            a.x=nx;a.z=nz;const s=H(a.x,a.z);
+            if(a.y<s){a.y=Math.min(s,a.y+3.2*dt);a.vy=0;a.climbing=1}else{a.climbing=Math.max(0,(a.climbing||0)-dt*3);a.vy-=9.8*dt;a.y=Math.max(s,a.y+a.vy*dt);if(a.y===s)a.vy=0}
+            const ty=Math.atan2(vx,vz);a.yaw+=(((ty-a.yaw+PI)%(2*PI)+2*PI)%(2*PI)-PI)*Math.min(1,dt*8)});
+          A.forEach(a=>{const o=a.o;
+            if(a.st==="pin"){o.position.set(a.x,a.y+a.pin.dy,a.z+(a.pin.dz||0));o.rotation.set(a.pin.tilt,a.pin.yaw,a.pin.roll,"YXZ")}
+            else{o.position.set(a.x,a.y,a.z);o.rotation.set(0,a.st==="over"?PI:a.yaw,0)}})};
+        let pose=(t,dt)=>A.forEach(a=>{const Rg=a.R;if(!Rg)return;const s=Math.sin(t*7+a.ph);
+          if(a.st==="pin")setPose(Rg,{lean:.4,armR:-2.6+s*.5,armL:-2.2-s*.5,elbR:-.4,elbL:-.7,legL:.6+s*.3,legR:-.3-s*.3,kneeL:1,kneeR:.8,headX:-.6+s*.2,drop:0});
+          else if(a.climbing>.05||a.y>.3)setPose(Rg,{lean:.55,armR:-2.9+s*.4,armL:-2.6-s*.4,elbR:-.3,elbL:-.5,legL:.9+s*.5,legR:.5-s*.5,kneeL:1.1,kneeR:1.2,headX:-.9,drop:-.1});
+          else if(a.st==="over")setPose(Rg,{lean:1,armR:-2.4,armL:-2,legL:-.6,legR:.4,kneeL:1.2,kneeR:.9,headX:.3});
+          else animate(a.o,t,true);
+          cascade(Rg,dt);
+          // braços e cabeça esticados alcançam mais longe que os pés: mede o corpo e empurra para trás até nenhuma parte entrar no muro
+          if(a.st!=="over"&&a.z-wz<2.4&&a.y<4.1&&(a.st!=="pin"||((fr+a.ph*10|0)%12===0))){a.o.updateMatrixWorld(true);let mn=99;a.o.traverse(m=>{if(m.isMesh){m.getWorldPosition(wp);if(wp.y<4.05)mn=Math.min(mn,wp.z)}});
+            const need=wz+.22-mn;if(need>0){if(a.st==="pin")a.pin.dz=(a.pin.dz||0)+need;a.o.position.z+=need}}});
+        let fr=0;const wp=new V3(),pose0=pose;pose=(t,dt)=>{fr++;pose0(t,dt)};
+        for(let k=0;k<260;k++)step(.05,k*.05);for(let k=0;k<13;k++)pose(13+k*.05,.05);
+        return{group:G,labels:[L("Muro de 4 m",-6.5,4.3,wz),L("Sobreviventes",0,5.2,wz-.3)],
+          cam:a=>{const d=a<1?18:13;return{pos:new V3(d*.95,3,wz+3.5+d*.3),look:new V3(0,1.8,wz+3)}},
+          update:(dt,t)=>{if(reduce)return;step(Math.min(dt,.05),t);pose(t,dt);PS.step(dt);
+            // carga na base: a pilha desaba levantando poeira e começa a se formar de novo
+            bt+=dt;if(bt>16){bt=0;const c=new V3(0,0,wz+1.4);blast(PS,c,1.3);hf.clear();pins=0;
+              A.forEach(a=>{if(a.st==="over")return;const dx=a.x-c.x,dz=a.z-c.z,d=Math.hypot(dx,dz);if(d<1.4&&a.y<2.2){spawn(a,true);return}
+                if(a.st==="pin"||d<5){a.st="run";a.stuck=0;a.vy=d<3?2.5:.5;const f=Math.max(.5,5-d);a.kx=dx/(d+.1)*f;a.kz=Math.abs(dz)/(d+.1)*f+.8}});
+              PS.burst(new V3(0,2,wz+.8),26,{c:0x6a6258,c1:0x4a4640,dissolve:true,sp:3,drag:1.6,up:.1,upr:.4,g:-.4,life:4,s0:.6,s1:2,floor:.2})}}}}},
+    mare:{name:"Maré na barricada",cap:"Simulação: a horda chega correndo e se amontoa contra as tábuas, cada um num ângulo, uns subindo nos ombros dos outros e esticando os braços por cima. Como a barricada não deixa passar, a pilha para abaixo do topo. A pressão é a soma de quem está encostado (zumbi 1, pesado 1,5, Brutamonte 3) e a barricada balança mais quanto maior ela é.",
+      make(){const G=new THREE.Group(),R=rng(31),planks=new THREE.Group();
+        const bar={x0:-3,x1:3,z0:-.12,z1:.12,h:2.1,noPass:true},walls=[bar,{x0:-4.6,x1:-3,z0:-4,z1:4,h:3.2,noPass:true},{x0:3,x1:4.6,z0:-4,z1:4,h:3.2,noPass:true}];
+        [-1,1].forEach(s=>G.add(at(box(1.6,3.2,8,new THREE.MeshLambertMaterial({color:0x2c302c})),s*3.8,1.6,0)));
+        for(let i=0;i<5;i++){const p=box(6,.32,.12,new THREE.MeshLambertMaterial({color:0x6a4a2c}));p.position.set(0,.4+i*.42,0);p.rotation.z=(R()-.5)*.08;planks.add(p)}
+        [-2,2].forEach(x=>planks.add(at(box(.14,2.4,.14,new THREE.MeshLambertMaterial({color:0x5a3e24})),x,1.2,-.1)));G.add(planks);
+        const crowd=Crowd({walls,trip:.2,pileAt:1,goal:a=>({x:a.lane*4,z:-3}),bound:(x,z)=>({x:Math.max(-2.85,Math.min(2.85,x)),z})});
+        for(let i=0;i<70;i++){const x=(R()-.5)*5.4,z=.5+R()*9,tp=R()<.08?"Brutamonte":R()<.6?"Lento":"Corredor";
+          const o=build({type:tp,decay:Math.floor(R()*3),life:R()<.25?0:R()<.75?1:2,h:.93+R()*.14,bulk:.88+R()*.3,phase:R()*6});G.add(o);crowd.add(o,x,z,tp==="Lento"?2.4:3.4+R()*.6)}
+        for(let k=0;k<240;k++)crowd.step(.05,k*.05);
+        return{group:G,crowd,labels:[L("Barricada",0,2.5,0),L("Pressão: 1 por zumbi, 3 por Brutamonte",0,0,9.5)],
+          cam:a=>{const f=fit(a,9,{min:8,lookY:1});f.pos.set(-4,8,-10.5);f.look.set(0,1,2.5);return f},
+          update:(dt,t)=>{if(reduce)return;crowd.step(dt,t);crowd.pose(t,dt);
+            const press=crowd.A.filter(a=>a.z<1.2).length;planks.position.z=-.02-Math.abs(Math.sin(t*2.6))*.004*press;planks.rotation.x=Math.sin(t*2.6)*.0015*press}}}},
+    ataque:{name:"Agarrão e mordida",live:true,cap:"Como a infecção acontece, em câmera um pouco lenta e em ciclo. 1) O zumbi corre e dá o bote. 2) Agarra pelos ombros: o jogador tem 3 s para se soltar com empurrão ou faca. 3) Se não soltar, ele puxa e morde o pescoço ou o ombro: infecção de 100%. 4) O jogador cai de joelhos e o zumbi vai junto. Cada parte do corpo chega na pose com atraso, do quadril para a cabeça, e o sangue escorre e pinga.",
+      make(){const G=new THREE.Group();
+        const hum=build({type:"Lento",human:true,seed:4321,skin:0xc68c62,pose:{lean:0,headZ:0,headX:0,armL:-.1,armR:.05,elbL:-.2,elbR:-.2,legL:-.05,legR:.05,kneeL:.05,kneeR:.05}});
+        const zom=build({type:"Corredor",decay:1,seed:99});G.add(hum,zom);
+        const H=hum.userData.rig,Zr=zom.userData.rig;hum.position.set(.45,0,0);hum.rotation.y=-PI/2;zom.rotation.y=PI/2;
+        const bite=new THREE.Group();H.headG.add(bite);bite.position.set(.07,-.1,.03);
+        const bm=basic(0x8a0a0a);const b0=new THREE.Mesh(new THREE.SphereGeometry(.05,10,8),bm);b0.scale.set(1,1.2,.35);b0.rotation.y=PI/2;bite.add(b0);bite.visible=false;
+        const drip=new THREE.Object3D();drip.position.set(.07,-.18,.05);drip.userData.drip={kind:"blood",every:.25};H.headG.add(drip);drip.userData.drip.off=true;
+        const HK=[[0,{lean:0,headY:0,armL:-.1,armR:.05,elbL:-.2,elbR:-.2,drop:0,kneeL:.05,kneeR:.05,legL:-.05,legR:.05,headX:0}],
+          [1.5,{lean:-.1,headY:-.6,armL:-.1,armR:.05,elbL:-.2,elbR:-.2,drop:0,kneeL:.05,kneeR:.05,legL:-.05,legR:.05,headX:-.1}],
+          [2.1,{lean:-.3,headY:-.2,armL:-1.3,armR:-1.2,elbL:-1.4,elbR:-1.5,drop:-.04,kneeL:.25,kneeR:.2,legL:-.3,legR:.25,headX:-.25}],
+          [3.6,{lean:-.35,headY:.3,armL:-1.5,armR:-1.0,elbL:-.6,elbR:-1.8,drop:-.05,kneeL:.3,kneeR:.2,legL:-.4,legR:.35,headX:-.2}],
+          [4.3,{lean:-.2,headY:.7,headZ:-.5,armL:-.6,armR:-1.9,elbL:-.4,elbR:-1.2,drop:-.06,kneeL:.3,kneeR:.3,legL:-.3,legR:.3,headX:-.3}],
+          [5.6,{lean:.55,headY:.4,headZ:-.3,armL:-.3,armR:-.5,elbL:-.6,elbR:-.8,drop:-.5,kneeL:1.9,kneeR:1.7,legL:-1.1,legR:-.9,headX:.3}],
+          [8,{lean:.6,headY:.4,headZ:-.3,armL:-.25,armR:-.45,elbL:-.6,elbR:-.8,drop:-.52,kneeL:1.95,kneeR:1.75,legL:-1.1,legR:-.95,headX:.4}]];
+        const ZK=[[0,{x:-6,lean:.75,armL:-1.35,armR:-1.05,elbL:-.08,elbR:-.12,headX:-.55,drop:-.1,run:1}],
+          [1.7,{x:-.9,lean:.75,armL:-1.35,armR:-1.05,elbL:-.08,elbR:-.12,headX:-.55,drop:-.1,run:1}],
+          [2.1,{x:-.32,lean:.45,armL:-1.65,armR:-1.6,elbL:-.25,elbR:-.3,headX:-.3,drop:-.08,legL:-.6,legR:.4,kneeL:.5,kneeR:.6,run:0}],
+          [3.6,{x:-.2,lean:.35,armL:-1.5,armR:-1.45,elbL:-1.1,elbR:-1.2,headX:-.2,drop:-.06,legL:-.4,legR:.3,kneeL:.4,kneeR:.4,run:0}],
+          [4.3,{x:-.1,lean:.5,armL:-1.4,armR:-1.3,elbL:-1.5,elbR:-1.5,headX:.35,headY:.35,drop:-.08,legL:-.35,legR:.3,kneeL:.4,kneeR:.4,run:0}],
+          [5.6,{x:0,lean:.95,armL:-1.2,armR:-1.0,elbL:-1.4,elbR:-1.3,headX:.5,headY:.3,drop:-.45,legL:-1.2,legR:-.8,kneeL:1.8,kneeR:1.5,run:0}],
+          [8,{x:0,lean:1.0,armL:-1.15,armR:-.95,elbL:-1.4,elbR:-1.3,headX:.55,headY:.3,drop:-.47,legL:-1.2,legR:-.8,kneeL:1.85,kneeR:1.5,run:0}]];
+        const sample=(K,t)=>{let i=0;while(i<K.length-2&&t>K[i+1][0])i++;const [t0,a]=K[i],[t1,b]=K[i+1],k=Math.min(1,Math.max(0,(t-t0)/(t1-t0)));const e=k*k*(3-2*k);return lerpPose(a,b,e)};
+        const PH=[[0,"1. Aproximação"],[1.7,"2. O bote"],[2.1,"3. Agarrão: 3 s para se soltar"],[4.3,"4. Mordida: infecção 100%"],[5.6,"5. Queda"]];
+        let lt=0;const phase=()=>{let s=PH[0][1];PH.forEach(([t,n])=>{if(lt>=t)s=n});return s};
+        cascade(H,0);cascade(Zr,0);
+        const step=(dt,t)=>{lt=(t*.8)%9;const T=Math.min(lt,8);
+          const zq=sample(ZK,T);zom.position.x=zq.x;
+          if(zq.run>.5){animate(zom,t)}else setPose(Zr,zq);
+          setPose(H,sample(HK,T));
+          bite.visible=T>4.4;drip.userData.drip.off=!(T>4.4);
+          if(T<.1){bite.visible=false}
+          cascade(H,dt);cascade(Zr,dt)};
+        return{group:G,labels:[{text:"",fn:phase,p:new V3(0,2.4,0)}],cam:a=>fit(a,4,{min:4.2,lookY:1.1,elev:.12,x:-.4}),update:(dt,t)=>step(reduce?0:dt,reduce?3:t)}}},
+    variedade:{name:"Ninguém é igual",fresh:true,cap:"24 Lentos, todos do mesmo tipo e com a mesma regra de jogo, mas cada um sorteia corpo masculino ou feminino, tom de pele, formato da cabeça, cabelo, barba, óculos, boné, mochila, manga, cores da roupa e do sapato, altura e porte. A cada vez que a cena abre, o sorteio é novo.",
+      make(){const G=new THREE.Group(),R=rng(Math.random()*1e9|0);
+        for(let i=0;i<24;i++){const x=((i%8)-3.5)*1.3,z=-Math.floor(i/8)*1.6+.8;
+          G.add(at(build({type:"Lento",decay:Math.floor(R()*3),life:R()<.25?0:R()<.75?1:2,h:.93+R()*.14,bulk:.88+R()*.3,phase:R()*6,pose:{armL:-.9-R()*.3,armR:-.6-R()*.3}}),x,0,z,(R()-.5)*.5));G.add(at(shadow(),x,.005,z))}
+        return{group:G,animate:()=>true,labels:[],cam:a=>fit(a,11,{min:8,elev:.32,lookY:.9,z:-.8})}}},
+    corpo:{name:"Altura e porte",cap:"Cada zumbi sorteia altura (1,62 m a 1,98 m) e porte (magro, médio ou pesado). Pesado tem mais vida e empurra mais, mas é mais lento; magro é o contrário. A caixa de acerto cresce junto, então a cabeça de um zumbi alto fica mais acima da mira.",
+      make(){const G=new THREE.Group(),hs=[.9,1,1.1],bs=[[.85,"magro"],[1,"médio"],[1.25,"pesado"]],items=[];
+        hs.forEach(h=>bs.forEach(([b,n])=>items.push([h,b,n])));const xs=row(items.length,1.35);
+        items.forEach(([h,b],i)=>{G.add(at(build({type:"Lento",decay:1,clothIdx:i%8,h,bulk:b,pose:{armL:-.9,armR:-.7}}),xs[i],0,0));G.add(at(shadow(),xs[i],.005,0))});
+        const mark=new THREE.Mesh(new THREE.PlaneGeometry(items.length*1.35+.6,.012),basic(0xb7c95a,{transparent:true,opacity:.5}));G.add(at(mark,0,1.8,-.3));
+        return{group:G,labels:items.map(([h,b,n],i)=>L(`${(1.8*h).toFixed(2).replace(".",",")} m ${n}`,xs[i],0,.8)).concat([L("1,80 m",xs[0]-.9,1.8,-.3)]),cam:a=>fit(a,items.length*1.35+1.2,{min:7,lookY:.95})}}},
+    cerco:{name:"Vagas de ataque",cap:"Como em Left 4 Dead e Guerra Mundial Z: no máximo 6 zumbis atacam ao mesmo tempo, um em cada vaga ao redor do jogador (o Brutamonte ocupa 2). O resto forma uma fila que empurra e entra quando uma vaga abre. Isso evita um bolo injusto e deixa ler quem vai morder primeiro.",
+      make(){const G=new THREE.Group(),R=rng(13);
+        G.add(build({type:"Lento",human:true,skin:0x9c6b4c,clothIdx:5,pose:{lean:.05,armL:-1.4,armR:-1.3,elbL:-1,elbR:-1.1,headZ:0,headX:.1,legL:-.3,legR:.3,kneeL:.2,kneeR:.2}}));
+        for(let i=0;i<6;i++){const a=i/6*Math.PI*2,x=Math.sin(a)*1.05,z=Math.cos(a)*1.05;
+          G.add(at(ring(.32,0xb7c95a,.7),x,.012,z));
+          G.add(at(build({type:i===3?"Corredor":"Lento",decay:Math.floor(R()*3),clothIdx:i,h:.94+R()*.12,bulk:.9+R()*.25,phase:R()*6,pose:{lean:.35,armL:-1.55,armR:-1.4,elbL:-.15,elbR:-.2,headX:-.2}}),x,0,z,face(x,z,0,0)))}
+        for(let i=0;i<16;i++){const a=i/16*Math.PI*2+R()*.2,r=2.1+R()*.8,x=Math.sin(a)*r,z=Math.cos(a)*r;
+          G.add(at(build({type:R()<.12?"Brutamonte":"Lento",decay:Math.floor(R()*3),clothIdx:Math.floor(R()*8),h:.93+R()*.14,bulk:.88+R()*.3,phase:R()*6,pose:{lean:.5,armL:-1.3,armR:-1.2}}),x,0,z,face(x,z,0,0)))}
+        G.add(at(ring(1.8,0xe5392b,.3),0,.011,0));
+        return{group:G,animate:()=>true,labels:[L("Jogador",0,2.1,0),L("6 vagas de ataque",0,0,1.5),L("Fila empurrando",0,0,3.3)],cam:a=>fit(a,10,{min:9,elev:.75,lookY:.2})}}},
+    alerta:{name:"Alerta em cadeia",cap:"Um zumbi vê o jogador e geme. Os vizinhos a até 8 m se viram depois de 0,2 a 0,6 s e repassam o alerta, formando uma onda de cabeças virando. O anel mostra a onda passando. Com um Gritador no grupo, o alcance vai a 150 m.",
+      make(){const G=new THREE.Group(),R=rng(21),src=new V3(-5,0,-2),player=new V3(7,0,5),Zs=[];
+        G.add(at(build({type:"Lento",human:true,skin:0xd9a88a,clothIdx:3,pose:{lean:.05,armL:-.2,armR:.1,headZ:0,legL:0,legR:0,kneeL:0,kneeR:0}}),player.x,0,player.z,face(player.x,player.z,src.x,src.z)));
+        for(let i=0;i<45;i++){const x=-9+R()*13,z=-6+R()*9,o=build({type:R()<.9?"Lento":"Corredor",decay:Math.floor(R()*3),clothIdx:Math.floor(R()*8),h:.93+R()*.14,bulk:.88+R()*.3,phase:R()*6});
+          const y0=R()*6.28,y1=face(x,z,player.x,player.z);G.add(at(o,x,0,z,y0));
+          Zs.push({o,y0,y1,d:Math.hypot(x-src.x,z-src.z)+R()*.8})}
+        const wave=ring(1,0xe3c341,.6);G.add(at(wave,src.x,.012,src.z));
+        const lerpA=(a,b,k)=>{let d=((b-a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;return a+d*k};
+        return{group:G,labels:[L("Primeiro a ver",src.x,0,src.z+.8),L("Jogador",player.x,0,player.z+.8)],cam:a=>fit(a,16,{min:11,elev:.6,lookY:0,x:-1}),
+          update:(dt,t)=>{const T=reduce?99:(t%7)*3.2;wave.scale.setScalar(Math.max(.01,T));wave.material.opacity=T<15?.6*(1-T/15):0;
+            Zs.forEach(z=>{const k=Math.min(1,Math.max(0,(T-z.d)/1.2));z.o.rotation.y=lerpA(z.y0,z.y1,k);const R_=z.o.userData.rig;if(R_)R_.headG.rotation.x=R_.hxBase-k*.25})}}}},
+  };
+  const sv=Viewer(document.getElementById("sviewer"));
+  if(sv){
+    const cache={},capEl=document.getElementById("scap"),sel=document.getElementById("sscene");
+    Object.entries(SCENES).forEach(([k,s],i)=>sel.insertAdjacentHTML("beforeend",`<button type="button" data-v="${k}" aria-pressed="${i===0}">${s.name}</button>`));
+    const show=k=>{if(!cache[k]||SCENES[k].fresh)cache[k]=SCENES[k].make();sv.set(cache[k]);capEl.textContent=SCENES[k].cap;
+      sel.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===k))};
+    group("sscene",show);show("roupas");
+    document.querySelectorAll("[data-scene]").forEach(b=>b.addEventListener("click",()=>{show(b.dataset.scene);document.getElementById("cenas").scrollIntoView({behavior:reduce?"auto":"smooth"})}));
+    const CARD_SCENE={Gritador:"gritador",Inchado:"inchado",Carbonizado:"impacto",Espreitador:"espreitador",Farejador:"farejador"};
+    document.querySelectorAll("#cards .card").forEach((c,i)=>{const k=CARD_SCENE[Z[i].n];if(!k)return;const b=document.createElement("button");b.type="button";b.className="see3d";b.textContent="Ver comportamento";
+      b.addEventListener("click",()=>{show(k);document.getElementById("cenas").scrollIntoView({behavior:reduce?"auto":"smooth"})});c.querySelector(".card-head").appendChild(b)});
+  }
+})();
+</script>
+
+</body></html>

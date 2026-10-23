@@ -1,0 +1,670 @@
+<!doctype html><html><head><!-- frame-runtime --><script>window.__FRAME_PREAMBLE={"v":1,"capabilities":{"artifact":"artifact.BBvTDtAn.js","assets":"assets.DOAjpBS9.js","comments":"comments.BjISm5Q7.js","db":"db.zFlAA4qL.js","dictation":"dictation.f3j7VXQ8.js","downloads":"downloads.axDW2QAi.js","embed":"embed.SWCZLzn6.js","endpoints":"endpoints.BPfoKaE1.js","files":"files.IkpCjcgM.js","mcp":"mcp.kl0G36TA.js","network":"network.B5UA9Su4.js","paste":"paste.DeKNLIxx.js","permissions":"permissions.6yWoDecA.js","reads":"reads.Bgov9hIw.js","room":"room.BYRHiLCc.js","sample":"sample.D0G8eGrV.js","self":"artifact.BBvTDtAn.js","tts":"tts.iS74i_mi.js","user":"user.uKicftX-.js"},"transforms":"_transforms.CRcnZuGX.js","comments":"_comments.AKhddNYY.js","translate":"_translate.DqxC5ek1.js","ldx":"_ldx.B4FSryPi.js"}                                                                                                                                                                                                                                                                                                                                                                                 </script><script>(function(){"use strict";function dr(t){return t==="cookie"||t==="query"?t:void 0}function hr(t){return typeof t=="number"&&Number.isSafeInteger(t)&&t>0?t:void 0}var to=3e5;function pr(t,e){try{const r=t("navigation")[0],n=[r.responseStart,r.redirectEnd-r.redirectStart,r.domContentLoadedEventStart,e(),r.connectEnd-r.domainLookupStart,r.responseStart-r.requestStart];r.requestStart>0||(n.length=4);for(let a=0;a<n.length;a++)if(n[a]>=0&&n[a]<=3e5)n[a]=n[a]|0;else{if(a<4)return;n.length=4}return n}catch{return}}var mr=["light","dark","system"],vr=/^[A-Za-z0-9_-]{1,64}$/,Mt=/^[a-zA-Z_:][a-zA-Z0-9_:.-]{0,127}$/,_r=new Set(["class","hidden","value","checked","style","title","alt","placeholder","lang","dir","role","tabindex","disabled","readonly","contenteditable","open","colspan","rowspan"]);function yr(t){const e=t.toLowerCase();return e.startsWith("data-")||e.startsWith("aria-")||_r.has(e)}var Pt="data-ldx-props";function gr(t,e){if(e.toLowerCase()===Pt)return!0;const r=t.getAttribute(Pt);if(r===null)return!1;try{const n=JSON.parse(r);if(n===null||typeof n!="object"||Array.isArray(n))return!0;const a=e.toLowerCase();return Object.keys(n).some(s=>s.toLowerCase()===a)}catch{return!0}}var ro="http://www.w3.org/1999/xhtml",wr="http://www.w3.org/2000/svg",br=new Set(["script","style","iframe","noscript","noframes","noembed","xmp","plaintext","template","title","textarea","object","embed"]),Er=new Set(["script","style"]);function Sr(t){const e=t.localName.toLowerCase();return t.namespaceURI==="http://www.w3.org/1999/xhtml"?!br.has(e):t.namespaceURI===wr?!Er.has(e):!1}function ot(t,e){return t===e||(t===160||t===32)&&(e===160||e===32)}function kr(t,e){const r=t.length,n=e.length;let a=0;for(;a<r&&a<n&&ot(t.charCodeAt(a),e.charCodeAt(a));)a++;let s=0;for(;s<r-a&&s<n-a&&ot(t.charCodeAt(r-1-s),e.charCodeAt(n-1-s));)s++;return{p:a,s}}function Ar(t,e){const r=t.firstChild;if(t.childNodes.length!==1||r===null||r.nodeType!==Node.TEXT_NODE){t.textContent=e;return}const n=r.data,a=n.length,s=e.length,{p:l,s:u}=kr(n,e);l===a&&u===0&&a===s||r.replaceData(l,a-l-u,e.slice(l,s-u));const R=r.data,b=t.ownerDocument.getSelection?.()??null,y=b!==null&&b.rangeCount>0&&(b.anchorNode===r||b.focusNode===r)?{anchor:b.anchorNode,anchorOffset:b.anchorOffset,focus:b.focusNode,focusOffset:b.focusOffset}:null;let p=-1,k=-1;for(let m=0;m<R.length&&m<e.length;m++){const j=R.charCodeAt(m),A=e.charCodeAt(m);j!==A&&ot(j,A)&&(p<0&&(p=m),k=m)}const L=p>=0;if(L&&r.replaceData(p,k-p+1,e.slice(p,k+1)),L&&y!==null&&y.anchor!==null&&y.focus!==null)try{b.setBaseAndExtent(y.anchor,y.anchorOffset,y.focus,y.focusOffset)}catch{}}var Rr=new Set(["html","head","body","frameset"]);function Tr(t){return t.namespaceURI==="http://www.w3.org/1999/xhtml"&&Rr.has(t.localName)}function Lr(t){if(t===null||typeof t!="object")return!1;const e=t;if(typeof e.target!="string"||!vr.test(e.target)||e.text!==void 0&&typeof e.text!="string")return!1;if(e.attrsSet!==void 0){if(e.attrsSet===null||typeof e.attrsSet!="object")return!1;for(const[r,n]of Object.entries(e.attrsSet))if(!Mt.test(r)||typeof n!="string")return!1}if(e.attrsRemoved!==void 0){if(!Array.isArray(e.attrsRemoved))return!1;for(const r of e.attrsRemoved)if(typeof r!="string"||!Mt.test(r))return!1}return!0}function Or(t,e){if(t===null||typeof t!="object")return!1;const{seq:r,elements:n}=t;if(typeof r!="number"||!Number.isSafeInteger(r)||!Array.isArray(n)||n.length===0||n.length>64)return!1;for(let a=0;a<n.length;a++)if(!e(n[a]))return!1;return!0}function Mr(t){return t===null||typeof t!="object"?!1:Or(t.__frame_patch,Lr)}function Pr(t){if(t===null||typeof t!="object")return!1;const e=t.__frame_init;return e!==null&&typeof e=="object"}function Nr(t){return t!==null&&typeof t=="object"&&t.__frame_size_poke===!0}function Cr(t){if(t===null||typeof t!="object")return!1;const e=t.__frame_host_visible;return e!==null&&typeof e=="object"&&typeof e.visible=="boolean"}function Fr(t){if(t===null||typeof t!="object")return!1;const e=t.__frame_theme;if(e===null||typeof e!="object")return!1;const r=e.theme;return typeof r=="string"&&mr.includes(r)}var xr=["ok","empty","snapshot_error","snapshot_timeout","unclonable","oversize","unavailable","restore_error","withheld"],jr=["TypeError","RangeError","ReferenceError","SyntaxError","DataCloneError","QuotaExceededError","AbortError","TimeoutError","SecurityError","Error","other"];function Ir(t){return typeof t=="string"&&jr.includes(t)?t:"other"}var Dr=Object.freeze({until:null,now:!1}),Hr="__claude_hot",Br="__claude_hot_in",qr=/^__claude_hot(?:_in)?(?::|$)/,Nt=/^[0-9a-z]{1,32}$/,at=t=>t===void 0?Hr:"__claude_hot:"+t,Oe=t=>t===void 0?Br:"__claude_hot_in:"+t;function Ur(t,e){const r=[];for(let n=0;n<t.length;n++){const a=t.key(n);a!==null&&a!==e&&qr.test(a)&&r.push(a)}for(const n of r)t.removeItem(n)}function Kr(t){let e=null;try{e=U(JSON.parse(t)?.hot)}catch{return null}return e===null||typeof e.k!="string"||!Nt.test(e.k)?null:he(e.g)?{k:e.k,g:e.g}:{k:e.k}}var no=262144,Gr=3e3,$r=5e3,Ct=/^[a-z0-9._:-]{1,64}$/,zr=["none","hot-restart","hard-reload"],Wr=["asset","doc","added","removed"],Vr=1500,Xr=/^[0-9a-f]{64}$/;function U(t){return t!==null&&typeof t=="object"?t:null}function he(t){return typeof t=="number"&&Number.isInteger(t)&&t>=0&&t<2**31}function Ft(t){return t===void 0||typeof t=="number"&&Number.isFinite(t)}function Yr(t){return t===void 0||typeof t=="string"&&Ct.test(t)}function xt(t){const e=U(t);return e!==null&&(e.until===null||typeof e.until=="number"&&Number.isFinite(e.until))&&typeof e.now=="boolean"}function st(t){const e=U(t);return e!==null&&typeof e.ver=="string"&&e.ver.length<=128&&Ft(e.seq)&&typeof e.handoff=="string"&&xr.includes(e.handoff)&&Yr(e.note)}function jt(t){const e=U(t);return e!==null&&he(e.gen)&&(e.phase==="final"||e.phase==="pending")&&(e.from===null||st(e.from))}function Jr(t){const e=U(t);return e!==null&&e.kv===1&&he(e.gen)&&st(e.from)&&Object.hasOwn(e,"data")}function Zr(t){const e=U(t);return e!==null&&e.__frame_hot_snapshot===!0&&he(e.gen)&&typeof e.timeoutMs=="number"&&e.timeoutMs>=0&&e.timeoutMs<=6e4&&(e.handoff===void 0||typeof e.handoff=="boolean")&&(e.deadline===void 0||xt(e.deadline))&&Ft(e.seq)&&(e.note===void 0||typeof e.note=="string")&&(e.key===void 0||typeof e.key=="string")}function Qr(t){const e=U(t);return e!==null&&e.__frame_hot_start===!0&&he(e.gen)&&st(e.from)}function en(t){return typeof t=="string"&&t.length>=1&&t.length<=128}function It(t){return U(t)!==null&&!Array.isArray(t)}function tn(t){const e=U(t);return e!==null&&e.__frame_cap_grant===!0&&typeof e.cap=="string"&&en(e.ver)&&(e.grant===void 0||It(e.grant))&&(e.budgets===void 0||It(e.budgets)&&Object.values(e.budgets).every(Number.isFinite))&&(e.brokerGen===void 0||he(e.brokerGen))}function rn(t){const e=U(t);return e!==null&&e.__frame_cap_rewired===!0&&(e.caps===void 0||Array.isArray(e.caps)&&e.caps.every(r=>typeof r=="string"))&&(e.brokerGen===void 0||he(e.brokerGen))}function Ge(t){const e=U(t);return e!==null&&typeof e.ver=="string"&&e.ver.length<=128&&Number.isFinite(e.seq)}function Dt(t){if(t==null||typeof t=="string")return!0;const e=U(t);return e!==null&&typeof e.doc=="string"&&typeof e.profile=="string"}function nn(t){const e=U(t);return e!==null&&typeof e.path=="string"&&Wr.includes(e.kind)&&Dt(e.from)&&Dt(e.to)}function on(t){return t===null?null:Object.freeze(t.filter(nn))}function an(t){const e=U(t);return e!==null&&e.__frame_hot_update===!0&&Number.isFinite(e.id)&&Ge(e.from)&&Ge(e.to)&&(e.changed===null||Array.isArray(e.changed))&&zr.includes(e.required)&&xt(e.deadline)&&typeof e.verdictTimeoutMs=="number"&&e.verdictTimeoutMs>=0&&e.verdictTimeoutMs<=6e4&&(e.preflight===void 0||typeof e.preflight=="string"&&Xr.test(e.preflight))}function sn(t){const e=U(t);return e!==null&&e.__frame_hot_readdress===!0&&Ge(e.from)&&Ge(e.to)}var pe=/^[\w.-]+\.js$/;function ln(t,e,r){return r?"inert":typeof e=="string"&&pe.test(e)?t?[e]:"inert":t?"inert":"framed"}var Ht=Object.freeze({[Symbol("claude.hot.restart")]:!0});function Bt(t,e){let r;try{r=t??sessionStorage}catch{return null}const n=at(e?.k),a=Oe(e?.k);let s=null;try{s=r.getItem(n)}catch{}try{r.removeItem(n)}catch{}try{Ur(r,a)}catch{}let l=null;if(s!==null&&!(e!==null&&e.g===void 0))try{const u=JSON.parse(s);Jr(u)&&(e===null||u.gen===e.g)&&(l=u)}catch{}if(l===null)try{r.removeItem(a)}catch{}return l}function qt(){const t=/^\/_f\/([^/]{1,128})\//.exec(location.pathname);return t?t[1]:""}var cn=/^[^/\\?#]{1,128}$/,it=t=>cn.test(t)&&t!=="."&&t!=="..";function Ut(t,e,r){const n=new URL(t),a="/_f/"+e+"/";if(!e||!n.pathname.startsWith(a)||!it(r))return null;const s=n.search.slice(1).split("&").filter(l=>!/^__frame_t(?:=|$)/.test(l)).join("&");return n.origin+"/_f/"+r+"/"+n.pathname.slice(a.length)+(s?"?"+s:"")+n.hash}var $e="{}";function Me(t){if(!t)return null;const e={ver:t.ver,handoff:t.handoff};return t.seq!==void 0&&(e.seq=t.seq),t.note!==void 0&&(e.note=t.note),e}function Kt(t,e){return t!==null&&t.note===void 0&&e?.note!==void 0?{...t,note:e.note}:t}function Gt(t){const e=t?.k;return e!==null&&typeof e=="object"?e:void 0}function un(t,e,r,n=null){const a=setTimeout,s=clearTimeout,l=queueMicrotask,u=performance.now.bind(performance),R=new TextEncoder;let b=null,y=null;try{b=history,y=b.replaceState.bind(b)}catch{}const p=(...o)=>{try{console.warn(...o)}catch{}};let k=qt(),L=null;try{L=sessionStorage}catch{}const m={storage:L,fetch:typeof fetch=="function"?fetch.bind(globalThis):null,entry:location.origin+location.pathname+location.search,ver:k,priors:[],key:n?.k};let j=n?.k;const A=typeof requestAnimationFrame=="function"?requestAnimationFrame:o=>a(()=>o(u()),16);let _=e?.data??{},E=Me(e?.from),I=e?.gen??0,D=e!==null,q=!1,$=!1,H=null,xe=!1;const be=new AbortController;let je=null,K=null,Ee=null,Ie=!1,le=()=>{};const te=new Promise(o=>{le=o});let ve=!1,Je=!1,Se=!1,c,h=null,g=!1,C=!1,O=!1,z=!1,B=!1,J=!1;const ce=o=>{for(const f of[at(o),Oe(o)])try{L?.removeItem(f)}catch{}},G=(o,f)=>{try{f!==null&&r.post(o,f)}catch{}},_e=()=>B||=O&&(K===null||z),Q=()=>{const o={__frame_hot:!0,ready:K!==null,accept:Ee!==null,demand:!0};J=!B,J&&(o.booting=!0),ve&&(o.readData=!0),Se&&(o.threw=!0),h?.assess&&(o.preflight=!0),G(o,H)};let De=!1,He=!1,ue=!1,re=!1;const Be=()=>{De||!xe||ue||(De=!0,G({__frame_reveal_hold:!0},"*"))},ke=()=>new Promise(o=>{let f,d=0;const v=P=>{if(f===void 0)f=P;else if(P!==f||++d>=8){o();return}try{A(v)}catch{o()}};try{A(v)}catch{o()}}),Ze=()=>{ue=!0,G({__frame_reveal_ready:!0},"*")},ye=o=>{He||(He=!0,o.then(f=>{if(f===!1)return;let d=null;try{d=h?.settle?.()??null}catch{}return(d===null?ke():new Promise(v=>{a(v,50),Promise.resolve(d).then(v,v)}).then(ke)).then(Ze)}))},Qe=()=>{if(re||!ue)return;re=!0;const o=()=>{try{h?.afterReveal?.()}catch{}};o(),ke().then(()=>{o(),Ze()})},ge=(o=!1)=>{if(Ie||K===null||!D||!$)return;Ie=!0;const f=K,d=_;l(()=>{let v;try{v=f(d)}catch(N){throw le(!1),N}let P=!1;try{P=typeof v?.then=="function"}catch{}if(!P){le(!0);return}Promise.resolve(v).then(()=>le(!0),N=>{le(!1),l(()=>{throw N})})}),ye(o?te:r.dcl.then(()=>te))},Ae=o=>typeof o=="string"&&Ct.test(o)?o:void 0,qe=o=>{const f={__frame_hot_restart:!0},d=Ae(o?.note);d!==void 0&&(f.note=d),o?.required==="hard-reload"&&(f.required="hard-reload"),G(f,H)},fe=Object.freeze({get data(){return $||(Je=!0),!D&&!ve&&(ve=!0,$&&Q()),_},get from(){return E},get gen(){return I},signal:be.signal,snapshot(o){typeof o=="function"&&(je=o)},ready(o){typeof o!="function"||K!==null||(K=o,Be(),Q(),q&&G({__frame_hot_ready:!0,gen:I},H),ge())},accept(o){typeof o=="function"&&(Ee=o,Q())},restart(o){const f={note:o?.note,required:o?.required};if($){qe(f);return}const d=c;c={note:Ae(d?.note)??f.note,required:d?.required==="hard-reload"||f.required==="hard-reload"?"hard-reload":void 0}}});let de=null,Ue=()=>{};const et=new Promise(o=>{Ue=o});let i=null;const S=()=>i??=r.dcl.then(()=>{let o=!1;try{o=de!==null&&de.expect()}catch{}if(!o)return;const f=de.maxMs;return new Promise(d=>{et.then(d),a(d,f)})}),w=()=>{if(!g||C||h===null)return;C=!0;const o=h;S().then(()=>{try{ue||o.afterStart(Gt(e),!1)}catch{}})},M=o=>{e!==null&&Je&&(ve=!0),_={},E=null,I=0;try{L?.removeItem(Oe(n?.k))}catch{}e!==null&&!o&&ye(r.dcl.then(()=>K!==null?te:void 0))},ee=()=>{g=!0,ye(S().then(()=>K!==null?te:void 0)),w()};try{addEventListener("error",()=>{Se||K!==null||(Se=!0,Q())})}catch{}const Z=()=>{a(()=>{!B&&_e()&&J&&Q()},0)};try{O=document.readyState==="complete",O||addEventListener("load",()=>{O=!0,Z()},{once:!0})}catch{O=!0}_e(),te.then(()=>{z=!0,Z()});let W=-1,Et,St,Ke=!0,kt=!1,At,tt=null;const Rt=o=>{const f=tt===null;tt=Ke&&o[0]!=="withheld"?o:["withheld",o[1],$e];let d=o[0];if(Ke&&d!=="withheld"){const P={ver:k,handoff:d};Et!==void 0&&(P.seq=Et),St!==void 0&&(P.note=St);try{if(L===null)throw new Error("no storage");L.setItem(at(j),'{"kv":1,"gen":'+W+',"from":'+JSON.stringify(P)+(At!==void 0?',"k":'+JSON.stringify(At):"")+',"data":'+(d==="ok"?o[2]:$e)+"}")}catch{d="unavailable"}}else{d="withheld",ce(j);try{h?.release?.()}catch{}}const v={__frame_hot_snapshotted:!0,gen:W,handoff:d,bytes:o[1]};o[3]!==void 0&&(v.errName=o[3]),G(v,H),f&&(d==="snapshot_error"||d==="unclonable"||d==="oversize")&&p("claude.hot: snapshot",d,o[3])},Re=o=>{try{return Ir(o?.name)}catch{return"other"}},Te=(o,f,d=0)=>Rt(f===void 0?[o,d,$e]:[o,d,$e,Re(f)]),zn=o=>{if(o.gen<=W)return;const f=W>=0;if(W=o.gen,Et=o.seq,St=Ae(o.note),typeof o.key=="string"&&Nt.test(o.key)&&o.key!==j&&(ce(j),j=o.key),Ke&&=o.handoff!==!1,f){tt!==null?Rt(tt):kt&&G({__frame_hot_held:!0,gen:W},H);return}be.abort();const d=Object.freeze({handoff:Ke,timeoutMs:o.timeoutMs,deadline:o.deadline??Dr}),v=je,P=()=>{if(Ke)try{At=h?.capture()}catch{}if(v===null){Te("empty");return}let T=!1;const V=a(()=>{T||(T=!0,Te("snapshot_timeout"))},Math.max(0,d.timeoutMs));Promise.resolve().then(()=>v(d)).then(Le=>{if(T)return;T=!0,s(V);let ne;try{ne=JSON.stringify(Le)}catch(Tt){Te("unclonable",Tt);return}if(typeof ne!="string"){Te("unclonable");return}let oe=ne.length;try{oe=R.encode(ne).length}catch{}if(oe>262144){Te("oversize",void 0,oe);return}Rt(["ok",oe,ne])},Le=>{T||(T=!0,s(V),Te("snapshot_error",Le))})};let N=null;try{N=h?.holdForIme()??null}catch{}if(N===null)P();else{kt=!0,G({__frame_hot_held:!0,gen:W},H);const T=()=>{kt=!1,P()};N.then(T,T)}},Wn=o=>{if(!q||D||K===null||o.gen!==I)return;let f=null;try{f=Bt(L,n&&{k:n.k,g:o.gen})}catch{}if(f!==null&&f.gen!==o.gen){f=null;try{L?.removeItem(Oe(n?.k))}catch{}}_=f?.data??{},E=Kt(Me(f?.from??o.from),Me(o.from)),f!==null&&(I=f.gen),D=!0,q=!1;const d=Gt(f);te.then(v=>{try{v&&h?.afterStart(d,!0)}catch{}}),ge(!0)},lr=o=>{const f=k,d=m.entry;let v="",P,N=null;try{if(v=location.href,P=b.state,N=Ut(v,f,o),N!==null)if(y(P,"",N),location.pathname.startsWith("/_f/"+o+"/"))N=location.href;else return{failed:"navigate event canceled"}}catch(T){return{failed:Re(T)}}k=m.ver=o,m.priors.push(f)>8&&m.priors.splice(1,1);try{m.entry=Ut(d,f,o)??d}catch{}return[N,f,d,v,P]},Vn=({from:o,to:f})=>{let d,v;if(!it(f.ver))d="adopt_failed",v="not a version path segment";else if(f.ver===k)d="adopted";else if(!k||o.ver!==k)d="stale";else{const N=lr(f.ver);"failed"in N?(d="adopt_failed",v=N.failed):d=N[0]===null?"adopt_skipped":"adopted"}v!==void 0&&p(`claude.hot: could not move this page's URL to its new version folder /_f/${f.ver}/ (${v})`);const P={__frame_hot_readdressed:!0,to:f.ver,at:k,outcome:d};G(P,H)};let rt=0;const Xn=o=>{const f=Ee;if(f===null||o.id<=rt)return;rt=o.id;const d=h?.assess;if(o.preflight===void 0||d===void 0){cr(o,f);return}let v=!1;const P=V=>{v||(v=!0,s(T),o.id===rt&&cr(o,f,V))},N=()=>P(d.timeout(o)),T=a(N,Vr+100);d.run(o,window).then(P,N)},cr=(o,f,d)=>{let v,P=!1,N=!1,T,V,Le=null;const ne=F=>{if(N)return!1;if(T!==void 0&&T!==F)return p(`claude.hot: u.${F}() ignored - u.${T}() was called first`),!1;const ae=T===void 0;return T=F,ae},oe=F=>{T="restart",p(`claude.hot: ${F} - restarting`)},Tt=()=>{if(!ne("adopt")||o.id!==rt)return;const F=o.to.ver;if(nt.required!=="none"){oe(`u.adopt() needs required 'none', it is '${nt.required}'`);return}if(!it(F)){oe("u.adopt() cannot address this version");return}if(!k||F===k)return;const ae=lr(F);if("failed"in ae){V="adopt_failed",oe(`adopt_failed ${ae.failed}; URL not changed`);return}const[Y,Ot,Zn,fr,Qn]=ae;Y===null?(V="adopt_skipped",p(`claude.hot: adopt_skipped - page already left /_f/${Ot}/; URL not changed, update still applied`)):V="adopted",Le=()=>{if(k===F){if(Y!==null)try{if(location.href!==Y)p("claude.hot: adopt_revert_skipped - update not applied; URL left where the page navigated");else{if(y(Qn,"",fr),location.href!==fr){p("claude.hot: adopt_revert_failed navigate event canceled - URL still at the new version");return}V="adopt_reverted",p("claude.hot: adopt_reverted - adopt() was called but the handler threw; URL restored")}}catch(eo){p(`claude.hot: adopt_revert_failed ${Re(eo)} - URL still at the new version`);return}k=m.ver=Ot,m.entry=Zn,m.priors[m.priors.length-1]===Ot&&m.priors.pop(),Y===null&&(V=void 0)}}},nt=Object.freeze({from:{ver:o.from.ver,seq:o.from.seq},to:{ver:o.to.ver,seq:o.to.seq},changed:on(o.changed),required:o.required,deadline:o.deadline,adopt:Tt,defer(){return ne("defer")&&nt.deadline.now&&oe("u.defer() past the deadline"),Ht},restart(F){return ne("restart"),T==="restart"&&!N&&(v??=Ae(F?.note),P||=F?.required==="hard-reload"),Ht},...d?.update}),Yn=(F,ae)=>{N=!0,F==="threw"?(Le?.(),v??=Re(ae).toLowerCase()):T===void 0&&p(F==="timeout"?"claude.hot: accept handler did not answer in time - restarting":"claude.hot: accept handler settled without defer/restart/adopt - restarting");const Y={__frame_hot_verdict:!0,id:o.id};Y.verdict=F==="threw"||T===void 0||T==="restart"?"restart":T==="adopt"?"applied":"deferred",Y.verdict==="restart"&&(P&&(Y.required="hard-reload"),v!==void 0&&(Y.note=v)),V!==void 0&&(Y.verdict==="applied"||V!=="adopted")&&(Y.adopt=V),G(Object.assign(Y,d?.verdict),H)};let ur=!1;const Lt=(F,ae)=>ur?!1:(ur=!0,s(Jn),Yn(F,ae),!0),Jn=a(()=>Lt("timeout"),o.verdictTimeoutMs);Promise.resolve().then(()=>f(nt)).then(()=>Lt("settled"),F=>{!Lt("threw",F)&&T==="adopt"&&qe({note:Re(F).toLowerCase()}),p("claude.hot: accept",Re(F))})};try{t.hot===void 0&&Object.defineProperty(t,"hot",{value:fe,writable:!1,configurable:!1,enumerable:!1})}catch{}return{hot:fe,boot:m,afterConnect(){xe=!0,(e!==null||K!==null)&&Be()},onInit(o,f){H=f,$=!0;const d=jt(o)?o:null;d?.phase==="final"&&e!==null&&e.gen===d.gen?(D=!0,E=Kt(E,Me(d.from)),ee()):(q=d?.phase==="pending",M(q),D=!q,I=d?.gen??0,E=Me(d?.from)),Q(),J&&a(()=>{B||(B=!0,Q())},$r),q&&K!==null&&G({__frame_hot_ready:!0,gen:I},f),c!==void 0&&(qe(c),c=void 0),ge()},onNoInit(){$=!0,M(!1),D=!0,ge()},onShell(o){return o?.__frame_revealed===!0?(Qe(),!1):Zr(o)?(zn(o),!0):Qr(o)?(Wn(o),!0):an(o)?(Xn(o),!0):sn(o)?(Vn(o),!0):!1},attachExtras(o){h=o,w(),o.assess&&Q()},inSlot:()=>Oe(j),hydration(o,f){de??={expect:o,maxMs:f}},hydrated(){Ue()},carried(){return D?_:{}},presented:()=>ue}}var oo="frame_ldx_runtime",fn="frame_ldx_build",ao="script#an-form",dn=256;function lt(t,e,r){for(const n of t)r(n)&&t.delete(n);t.size>=dn&&!t.has(e)&&t.delete(t.values().next().value),t.add(e)}function Pe(t,e,r,n){try{const a=t[e];if(typeof a!="function")return;t[e]=function(...s){if(n){let u;try{u=n(this)}catch{}if(u!==void 0)return u}const l=a.apply(this,s);try{r?.(this)}catch{}return l}}catch{}}var hn=()=>{},ct;function pn(){if(ct)return ct;const t={media:new Set,contexts:new Set,wakeLocks:new Set,gate:null,refuse:null,onStart:null,onStop:null};ct=t;const e=l=>t.gate?.(l),r=l=>{t.onStop?.(l)},n=window.HTMLMediaElement?.prototype;n&&(Pe(n,"play",l=>{lt(t.media,l,u=>u.paused),t.onStart?.(l)},e),Pe(n,"pause",r));const a=window.AudioContext,s=window.AudioNode?.prototype;a&&s&&(Pe(s,"connect",l=>{const u=l.context;u instanceof a&&(lt(t.contexts,u,R=>R.state==="closed"),t.onStart?.(u))}),Pe(a.prototype,"resume",void 0,e),Pe(a.prototype,"suspend",r));try{const l=window.WakeLock?.prototype,u=l?.request;l&&typeof u=="function"&&(l.request=function(...R){if(t.refuse)return t.refuse();const b=u.apply(this,R);return Promise.resolve(b).then(y=>{lt(t.wakeLocks,y,p=>p.released),t.onStart?.(y)},hn),b})}catch{}return t}function mn(t){let e=window;for(let r=0;e.parent&&e.parent!==e&&r<8;r++)if(e=e.parent,t(e))return!0;return!1}function vn(){let t=null;const e=()=>t??parent,r=n=>t?n===t:mn(a=>a===n);return{post(n,a){if(t){e().postMessage(n,a);return}let s=parent;for(let l=0;l<8&&(s.postMessage(n,a),!(!s.parent||s.parent===s));l++)s=s.parent},on(n){const a=s=>{const l=s.source;r(l)&&n(s.data,s.origin,s.isTrusted,()=>{t??=l})};return addEventListener("message",a),()=>removeEventListener("message",a)},port:n=>({post(a,s){if(s?.activation){e().postMessage(a,{targetOrigin:n,includeUserActivation:!0});return}if(s?.transfer){e().postMessage(a,n,s.transfer);return}e().postMessage(a,n)},on(a,s){const l=u=>{r(u.source)&&u.origin===n&&a(u.data,u)};return addEventListener("message",l,s),()=>removeEventListener("message",l,s)}})}}function _n(){const t={post:()=>{},on:()=>()=>{}};return{...t,port:()=>t}}var yn=500,gn=2e4,wn="data-token-reads",bn="data-frame-refused-watch",En="data-frame-unsupported",Sn=/(?:^|\s)stylesheet(?:\s|$)/i;function kn(t,e){let r="";if(t instanceof HTMLScriptElement?r=t.src:t instanceof HTMLLinkElement&&Sn.test(t.rel)&&(r=t.href),!r)return null;try{const n=new URL(r);return n.origin===location.origin&&n.pathname.startsWith(e)?n.origin+n.pathname:null}catch{return null}}function An(t,e,r){if(!t||e!=="query")return;const n="/_f/"+t+"/";document.documentElement.setAttribute(bn,"");const a=location.href,s=fetch,l=setTimeout,u={method:"HEAD",cache:"no-store",credentials:"same-origin"},R=m=>m.ok||m.status===304;let b=!1,y=!1;const p=()=>removeEventListener("error",L,!0),k=async m=>{const j=await s(m,u);if(R(j))y=!0;else if(j.status===403){const A=await s(a,u);if(R(A)){const _=(await s(m,u)).status;_===403?(y=!0,document.documentElement.setAttribute(En,""),r()):_<500&&(y=!0)}else A.status>=400&&A.status<500&&(y=!0)}},L=m=>{if(y||b)return;if(document.documentElement.hasAttribute(wn)){y=!0,p();return}const j=kn(m.target,n);j&&(b=!0,l(()=>{k(j).catch(()=>{}).finally(()=>{b=!1,y&&p()})},yn))};addEventListener("error",L,!0),addEventListener("load",p,{once:!0}),l(p,gn)}var ut="__frame_scroll",Rn=150,Tn=310,Ln=160,On=3e4,$t="p,h1,h2,h3,h4,h5,h6,li,pre,blockquote,tr,dt,dd,figcaption,summary",zt=()=>innerWidth<=Tn&&innerHeight<=Ln,Wt=t=>{const e=document.createTreeWalker(t,NodeFilter.SHOW_TEXT);let r="";for(;r.length<600&&e.nextNode();)r+=e.currentNode.nodeValue.slice(0,600-r.length);const n=r.replace(/\s+/g," ").trim().slice(0,120);let a=2166136261;for(let s=0;s<n.length;s++)a=Math.imul(a^n.charCodeAt(s),16777619);return n.length>11?a>>>0||1:0},Vt=t=>{for(let e=t;e&&e!==document.scrollingElement;e=e.parentElement){const r=getComputedStyle(e).position;if(r==="fixed"||r==="sticky"||e!==t&&e.scrollTop)return!1}return!0},Mn=()=>{const t=[],e=[];try{for(let r=0;r<16;r++){const n=document.elementFromPoint(innerWidth/(r%2?4:2),innerHeight*(r>>1)/8+1);let a=n?.closest($t)??n;for(;a&&!a.matches($t)&&![...a.childNodes].some(l=>l.nodeType===3&&l.nodeValue?.trim());)a=a.parentElement;const s=a&&!e.includes(a)?Wt(a):0;s&&!t.some(l=>l[0]===s&&l[2]===a.tagName)&&Vt(a)&&(e.push(a),t.push([s,Math.round(a.getBoundingClientRect().top),a.tagName]))}}catch{}return t.sort((r,n)=>+(r[1]<0)-+(n[1]<0)),t.length?t.slice(0,3):void 0},Pn=t=>{try{for(const[e,r,n]of t.a??[]){const a=document.getElementsByTagName(n);let s;for(let u=0;u<a.length&&a.length<5e3;u++)Wt(a[u])===e&&(s=s===void 0||s?.contains(a[u])?a[u]:null);const l=s?.getBoundingClientRect();if(l?.height&&s.checkVisibility?.()!==!1&&Vt(s)&&isFinite(r))return Math.max(0,Math.round(scrollY+l.top-r))}}catch{}return t.y};function Nn(){let t=0,e=!1,r=!1,n=!1,a={y:0},s=null;const l=E=>{try{sessionStorage.setItem(ut,JSON.stringify(E))}catch{}},u=E=>{if(clearTimeout(t),s===null)return;const I=s;s=null,l({y:I,a:E&&I>0?Mn():void 0})},R=()=>{if(e){e=!1;return}r=!0,s=scrollY,clearTimeout(t),t=setTimeout(u,Rn,!0)};try{addEventListener("scroll",R,{passive:!0}),addEventListener("pagehide",()=>u())}catch{}const b=()=>{let E;try{E=sessionStorage.getItem(ut)}catch{return null}if(E===null)return null;let I;try{I=JSON.parse(E)}catch{I=null}const{y:D,a:q}=I??{};if(!(typeof D=="number"&&Number.isFinite(D)&&D>=0)){try{sessionStorage.removeItem(ut)}catch{}return null}const $=H=>Array.isArray(H)&&typeof H[0]=="number"&&Number.isFinite(H[1])&&typeof H[2]=="string";return{y:D,a:Array.isArray(q)&&q.length<4&&q.every($)?q:void 0}};let y=!1,p=-1;const k=E=>{try{const I=scrollY,D=Pn(E);scrollTo({top:D,left:0,behavior:"instant"}),a=zt()?E:{y:D,a:E.a},n=!0,clearTimeout(t),s=null,l(a),p=scrollY,p!==I&&(e=!0);const q=D!==E.y&&document.readyState!=="complete";(p!==D||q)&&!y&&(y=!0,addEventListener("load",()=>{try{scrollY===p&&k(b()??a)}catch{}},{once:!0}))}catch{}},L=()=>{try{return!!location.hash}catch{return!0}};let m=!1;const j=()=>{try{if(m||!zt())return;m=!0;const E=Date.now(),I=()=>{try{removeEventListener("resize",I)}catch{}Date.now()-E>On||r||L()||k(b()??a)};addEventListener("resize",I)}catch{}};let A=!1,_=!1;return{restore(){if(A||(A=!0,L()))return;const E=b();E!==null&&(k(E),j())},promoted(){if(_||(_=!0,L()))return;const E=b();E!==null?(k(E),j()):n&&k(a)}}}function Cn(t,e,r,n){let a=null;try{a=window.trustedTypes?.createPolicy("frame-runtime",{createScriptURL:R=>R})??null}catch{}const s=window.Worker,l=s?.prototype,u=Object.freeze({Worker:s,workerOn:l?.addEventListener,workerPost:l?.postMessage,workerTerminate:l?.terminate,fetch:window.fetch.bind(window),preventDefault:Event.prototype.preventDefault,now:Date.now,policy:a,origins:e});r(t).then(R=>R?.bootTopLevel?R.bootTopLevel(u,n):n.settle()).catch(()=>n.settle())}var so="modulepreload",io=function(t){return"/"+t},lo={},Fn=function(e,r,n){let a=Promise.resolve();function s(l){const u=new Event("vite:preloadError",{cancelable:!0});if(u.payload=l,window.dispatchEvent(u),!u.defaultPrevented)throw l}return a.then(l=>{for(const u of l||[])u.status==="rejected"&&s(u.reason);return e().catch(s)})},xn=window===top,Xt=Object.getOwnPropertyDescriptor(window,"claude"),ze=ln(xn,window.__FRAME_PREAMBLE?.topLevel,Xt?.writable===!1),ft=typeof ze=="object"&&ze[0],x=ft?_n():vn();(function(){const t=Object.defineProperty,e=globalThis,r=["RTCPeerConnection","webkitRTCPeerConnection","RTCDataChannel","RTCIceCandidate","RTCSessionDescription","RTCRtpSender","RTCRtpReceiver"];let n=0;for(let a=0;a<r.length;a++){const s=r[a];try{t(e,s,{value:void 0,writable:!1,configurable:!1})}catch{try{delete e[s]}catch{}try{t(e,s,{value:void 0,writable:!1,configurable:!0})}catch{}}typeof e[s]=="function"&&n++}if(n&&ze==="framed")try{x.post({__frame_rtc_lockdown_failed:n},"*")}catch{}})();var Yt=1e4,jn=2e3,dt=2e3,ht=Object.freeze([...window.__FRAME_PREAMBLE?.origins??["https://claude.ai","https://preview.claude.ai"]]);function Jt(t){for(const e of ht)if(e.endsWith(":*"))try{const r=new URL(t);if(`${r.protocol}//${r.hostname}:*`===e)return!0}catch{}else if(t===e)return!0;return!1}var Ne=Object.freeze({...window.__FRAME_PREAMBLE?.capabilities}),Ce=window.__FRAME_PREAMBLE?.transforms,pt=window.__FRAME_PREAMBLE?.comments,mt=window.__FRAME_PREAMBLE?.translate,me=window.__FRAME_PREAMBLE?.ldx,We=dr(window.__FRAME_PREAMBLE?.cred),Zt=(()=>{try{const[t]=performance.getEntriesByType("navigation"),e=t?.serverTiming?.find(r=>r.name==="frame-cred-exp");return e!==void 0&&/^\d{1,15}$/.test(e.description)?hr(Number(e.description)):void 0}catch{return}})();function Qt(t){return Fn(()=>import("/_runtime/"+t),void 0)}var Fe=new Set,er=setTimeout,In=fetch,Dn=AbortController,Hn=800+800*Math.random(),Bn=3e3,Ve=null,tr=new Map;function qn(t,e){let r=tr.get(t);return r||tr.set(t,r=Un(t,e)),r}function Un(t,e){if(Ve?.has(t))return Promise.resolve("csp");if(navigator.onLine===!1)return Promise.resolve("offline");const r=new Dn;let n=!1;return er(()=>{n=!0,r.abort()},Bn),In("/_runtime/"+t,{signal:r.signal}).then(a=>(r.abort(),a.ok?/javascript/i.test(a.headers.get("content-type")??"")?e instanceof Error&&/:\d+:\d+\)?$/m.test(e.stack??"")?"eval":"served":"mime":"http"),()=>n?"timeout":Ve?.has(t)?"csp":"net")}function se(t){if(!Ve){const e=Ve=new Set;try{document.addEventListener("securitypolicyviolation",r=>{const n=/\/_runtime\/([^/?#]+)/.exec(r.blockedURI);n&&r.disposition!=="report"&&e.add(n[1])})}catch{}}return Qt(t).catch(()=>new Promise(e=>er(e,Hn)).then(()=>Qt(t+"?r=1")).then(e=>(e!==void 0&&Fe.add(t),e)))}function rr(t,e,r){return{contract:t.contract,changes:new Set(t.changes??[]),flags:new Set(t.flags??[]),capabilities:t.capabilities??{},capBudgets:t.capBudgets??{},brokerGen:t.brokerGen,transforms:new Map,shellOrigin:e,shell:r,mount:bt,hooks:Xe,pipe:()=>({wrap:(n,a)=>(...s)=>{try{return a(...s)}catch(l){return Promise.reject(l)}}})}}var we=null,X=null;function nr(t,e,r){try{Object.defineProperty(t,e,{value:r,writable:!1,configurable:!1,enumerable:!0})}catch{try{Object.defineProperty(t,e,{value:r,writable:!1,configurable:!0,enumerable:!0})}catch{}}}var vt=!1,Xe={editBefore:null,edit:null};function Kn(t,e,r=!1){const n=[];let a;if(r)try{Xe.editBefore?.(t)}catch{}for(const s of t.elements){const l=document.querySelector(`[data-id="${s.target}"]`);if(!l){a=s.target;break}if([...Object.keys(s.attrsSet??{}),...s.attrsRemoved??[]].some(u=>!yr(u)||gr(l,u))){a=s.target;break}if(s.text!==void 0&&(!Sr(l)||Tr(l))){a=s.target;break}for(const[u,R]of Object.entries(s.attrsSet??{}))if(!ar(l,u)){try{l.setAttribute(u,R)}catch{}or(l,u,R)}for(const u of s.attrsRemoved??[])ar(l,u)||(l.removeAttribute(u),or(l,u,null));typeof s.text=="string"&&Ar(l,s.text),n.push(s.target)}if(r)try{Xe.edit?.(t.seq,n,a)}catch{}if(a!==void 0){x.post({__frame_patch_miss:{seq:t.seq}},e);return}try{document.dispatchEvent(new CustomEvent("claude:edit",{detail:{seq:t.seq,targets:n}}))}catch{}}function or(t,e,r){if(!(t instanceof HTMLInputElement))return;const n=e.toLowerCase();n==="checked"?t.checked=r!==null:n==="value"&&t.type!=="file"&&(t.value=r??"")}function ar(t,e){const r=e.toLowerCase(),n=t;return r==="data-id"||(r==="value"||r==="checked")&&(n.__artifactSecret===!0||/^(password|hidden|file)$/.test(n.type??"")||/(^|\s)(cc-|one-time-code|current-password|new-password)/i.test(`${t.getAttribute("autocomplete")??""} ${n.autocomplete??""}`))}function sr(t){const e=document.documentElement;t==="light"||t==="dark"?(e.dataset.theme=t,e.style.colorScheme=t,vt=!0):vt&&(delete e.dataset.theme,e.style.colorScheme="",vt=!1)}var ie=new Map,_t=null;function yt(){let t;const e={u:new Promise(r=>{t=r}),r:r=>{e.done=!0,t(r)},done:!1,nulled:!1};return e}function Ye(t,e){t.nulled=!0,t.ver=e,t.r(null)}function gt(t,e){for(const[r,n]of ie)n.done||(e&&n.asked?e(r,n):Ye(n,t))}function Gn(){for(const t of ie.values())if(t.asked&&!t.done)return!0;return!1}var $n=Object.freeze(Object.assign(Object.create(null),{call:Function.prototype.call,apply:Function.prototype.apply,bind:Function.prototype.bind})),wt=!1,bt=(t,e)=>{let r=ie.get(t);if(r?.nulled&&wt)r=yt(),ie.set(t,r);else if(!r||r.done){r?.nulled&&X&&x.post({__frame_cap_telemetry:{kind:"cap-load-error",cap:t,phase:"install"}},X);return}const n=typeof e=="function"?Object.setPrototypeOf(e,$n):Object.assign(Object.create(null),e);typeof n.then=="function"&&delete n.then,r.want=void 0,r.r(Object.freeze(n))};function ir(){const t=Xt?.value??{};nr(window,"claude",t);for(const e of Object.keys(Ne)){if(t[e]!==void 0){nr(t,e,t[e]);continue}ie.set(e,yt())}if(t.use===void 0){const e=r=>{if(typeof r!="string"||!Object.hasOwn(Ne,r))return Promise.resolve(null);let n=ie.get(r);return n?(_t&&(n.nulled||n.want!==void 0)&&(n=_t(r,n)),n.asked=!0,n.u):Promise.resolve(t[r]??null)};try{Object.defineProperty(t,"use",{value:e,writable:!0,configurable:!0,enumerable:!1})}catch{}}return t}if(ze==="framed"){let t;const e=Ce&&pe.test(Ce)?se(Ce).catch(c=>{t={f:Ce,e:c}}):Promise.resolve(void 0),r=c=>{if(c.type==="auxclick"&&c.button!==1)return;const h=c.target,g=h&&h.closest?h.closest("a[href],area[href]"):null;if(!g)return;const C=g.getAttribute("href");if(!C)return;let O;try{O=new URL(C,document.baseURI)}catch{return}if((O.protocol==="http:"||O.protocol==="https:")&&O.origin!==location.origin){c.preventDefault();const z=(g.getAttribute("target")??"").toLowerCase(),B=c.type==="auxclick"||c.metaKey||c.ctrlKey||c.shiftKey||c.altKey||!["","_self","_top","_parent"].includes(z);x.post({__frame_nav:!0,url:O.href,newTab:B},"*")}};addEventListener("click",r,!0),addEventListener("auxclick",r,!0);const n={},a=c=>{c.isTrusted&&(n.pointer=!0)},s=c=>{c.isTrusted&&(n.click=!0)};addEventListener("pointermove",a,{capture:!0,passive:!0}),addEventListener("click",s,{capture:!0,passive:!0});const l={cb:null};addEventListener("keydown",c=>l.cb?.(c),!0);const u={cb:null};addEventListener("keydown",c=>u.cb?.(c));const R=pn();e.then(c=>c?.installEscapeForward?.(l,h=>{X&&x.post(h,X)})),e.then(c=>{try{c?.installFocusKeep?.()}catch{}}),e.then(c=>{if(!c?.wireNav)return;const h=x.port("*");c.wireNav(h),removeEventListener("click",r,!0),removeEventListener("auxclick",r,!0),removeEventListener("pointermove",a,!0),removeEventListener("click",s,!0),c.wireEngagement?.(n,h,R)});let b=null;try{b=Nn()}catch{}const y=document.readyState==="loading"?new Promise(c=>document.addEventListener("DOMContentLoaded",()=>c(),{once:!0})):Promise.resolve();let p="dcl",k=!1;y.then(()=>{k=!0});let L=null,m=null;try{m=Kr(window.name),L=Bt(null,m)}catch{}const j=ir();let A=null;try{A=un(j,L,{post:(c,h)=>x.post(c,h),dcl:y},m)}catch{}e.then(c=>{try{A&&c?.installHotExtras?.(A)}catch{}});let _=null;const E=()=>Array.isArray(_?.flags)&&_.flags.includes("frame_ldx_runtime")&&!!me&&pe.test(me)&&document.querySelector("script#an-form")!==null;try{A?.hydration(E,Gr)}catch{}let I=null,D=0;const q=x.on((c,h,g,C)=>{Jt(h)&&Pr(c)&&(C(),_=c.__frame_init,X=h,q(),clearTimeout(D),I?.())});if(We){const c=Zt===void 0?{__frame_cred:We}:{__frame_cred:We,exp:Zt};for(const h of ht)try{h.endsWith(":*")||x.post(c,h)}catch{}}x.post({__frame_connect:!0},"*");try{A?.afterConnect()}catch{}const $=setTimeout,H=clearTimeout,xe=()=>new Promise(c=>$(c,0));let be=()=>NaN,je=()=>[];try{be=performance.now.bind(performance),je=performance.getEntriesByType.bind(performance)}catch{}let K=0;const Ee=()=>{try{x.post({__frame_alive:!0},"*")}catch{}K=$(Ee,jn)},Ie=()=>H(K);Ee(),addEventListener("load",Ie,{once:!0});const le=new Promise(c=>{I=c,D=setTimeout(()=>{q(),c()},Yt)}),te=new WeakSet;addEventListener("error",c=>{c.target&&te.add(c.target)},!0);try{An(qt(),We,()=>{e.then(c=>{try{c?.drawRefusedNotice?.()}catch{}})})}catch{}const ve=()=>{let c=[];try{c=[...document.querySelectorAll("link[rel~=stylesheet]:not([rel~=alternate])")].filter(g=>!g.sheet&&!g.disabled&&!te.has(g)&&g.getAttribute("href")&&URL.canParse(g.href)&&(!g.media||matchMedia(g.media).matches))}catch{}let h=c.length;return h===0?Promise.resolve():new Promise(g=>{try{const C=dt-be();C>0&&(p="sheets");const O=$(g,C>0?C<dt?C:dt:0),z=()=>{--h===0&&(H(O),g())};for(const B of c)B.addEventListener("load",z,{once:!0}),B.addEventListener("error",z,{once:!0})}catch{g()}})};y.then(()=>{try{b?.restore()}catch{}});const Je=Promise.all([le,y,e]).then(c=>{if(_?.hostOverlays!==!0||!X)return;const h=c[2],g=B=>{try{return B?.()===!0}catch{return!1}},C=g(h?.declaresCover),O=_.hostSides===!0?{cover:C,sides:g(h?.declaresSides)}:{cover:C};if(x.post({__frame_layout:O},X),_.hostBackground!==!0)return;const z=X;return xe().then(ve).then(()=>{try{h?.watchBackground?.(B=>x.post({__frame_layout:{...O,background:B}},z))}catch{}})}),Se={cb:null};x.on((c,h)=>{if(Jt(h)&&Nr(c)){try{b?.promoted()}catch{}Se.cb?.()}}),le.then(async()=>{if(!_||!X){gt();try{A?.onNoInit()}catch{}return}if(sr(_.theme),_.hostVisible===!1&&e.then(i=>i?.applyHostVisible?.(!1,R)),_.hostKeys!==void 0){const i=X,S=_.hostKeys;e.then(w=>w?.installHostKeyForward?.(u,S,M=>x.post(M,i)))}try{A?.onInit(_.hot,X)}catch{}let c;const h=()=>{try{!c&&me&&E()&&(c=se(me),c.then(i=>i?.prefetch?.()).catch(()=>{}))}catch{}};h(),y.then(h);const g=X,C=x.port(g),O=(i,S)=>x.post({__frame_cap_telemetry:{kind:"cap-load-error",cap:i,phase:S}},g),z=(i,S,w)=>{new Promise(M=>M(qn(S,w))).then(M=>O(i,M),()=>O(i))},B=i=>x.post({__frame_cap_recovered:{cap:i}},g);let J=_.brokerGen;const ce=()=>A?.boot.ver??"",G=ce(),_e=(i,S)=>{const w=ce();H(S.t),S.want=w,S.t=$(()=>{S.done||Ye(S,w)},Yt),x.post({__frame_cap_want:!0,cap:i,ver:w},g)},Q=(i,S)=>{const w=ie.get(i.cap),M=Ne[i.cap];if(!S||!w||w.done||w.want!==i.ver||!pe.test(M))return;if(H(w.t),w.want=void 0,J=i.brokerGen??J,i.ver!==ce()){_e(i.cap,w);return}if(!i.grant||i.cap==="network"){Ye(w,i.ver);return}const ee=we,Z=we={...ee,capabilities:{...ee.capabilities,[i.cap]:i.grant},capBudgets:{...ee.capBudgets,[i.cap]:{...ee.capBudgets[i.cap],...i.budgets}}};se(M).then(W=>{Fe.has(M)&&B(i.cap),Z.brokerGen=J,wt=!0;try{W?.install?.(Z)}catch{O(i.cap,"install")}finally{wt=!1}},W=>z(i.cap,M,W)).then(()=>{w.done||Ye(w,i.ver)})};let De=!1,He=!1;x.on((i,S,w)=>{if(S!==g)return;try{if(A?.onShell(i))return}catch{}if(Fr(i)&&sr(i.__frame_theme.theme),tn(i)&&Q(i,w),w&&rn(i)&&(J=i.brokerGen??J),Cr(i)){const Z=i.__frame_host_visible.visible;e.then(W=>W?.applyHostVisible?.(Z,R))}Mr(i)&&Kn(i.__frame_patch,g,w);const M=i?.__fc_mode;M&&typeof M=="object"&&!De&&pt&&pe.test(pt)&&(De=!0,se(pt).then(Z=>Z.install?.(g,M.on===!0,C)).catch(()=>{}));const ee=i?.__ft_cmd;ee&&typeof ee=="object"&&!He&&mt&&pe.test(mt)&&(He=!0,se(mt).then(Z=>Z.install?.(g,ee,C)).catch(()=>{}))});const ue=Object.keys(_.capabilities??{}).filter(i=>Object.hasOwn(Ne,i)).map(i=>[i,Ne[i]]).filter(i=>typeof i[1]=="string"&&pe.test(i[1])),re=g;let Be=!1,ke=()=>{};const Ze=new Promise(i=>{ke=()=>{Be=!0,i()}}),ye=()=>(Be||(p="caps"),Ze),Qe=L!==null||jt(_.hot)||_.hostVisible===!1||_.hostOverlays===!0;k&&(p="init");const ge=_.hostBackground===!0,Ae=y.then(()=>(ge&&ye(),ge?Je:void 0)).then(()=>Qe?ye():xe()).then(ve).then(()=>{let i=!0;try{i=Qe||Gn()}catch{}return i?ye():void 0}).then(()=>{Ie();const i=pr(je,be);x.post(i?{__frame_ready:!0,nav:i,gate:p}:{__frame_ready:!0,gate:p},re),e.then(S=>{S?.installSizeReporter?.(re,Se,C),S?.installPaintReporter?.(C)})}),qe=await Promise.allSettled(ue.map(([,i])=>se(i))),fe=await e;if(fe?.buildBoot||(t?z("_transforms",t.f,t.e):O("_transforms")),fe?.buildBoot)try{we=fe.buildBoot(_,fe.TRANSFORMS??{},{shellOrigin:re,mount:bt,hooks:Xe,shell:C},i=>x.post({__frame_cap_telemetry:i},re))}catch{O("_transforms","install"),we=rr(_,re,C)}else we=rr(_,re,C);fe?.buildBoot&&Fe.has(Ce??"")&&B("_transforms");const de=we;de.brokerGen=J,qe.forEach((i,S)=>{const[w,M]=ue[S];if(i.status!=="fulfilled"){z(w,M,i.reason);return}Fe.has(M)&&B(w);try{i.value?.install?.(de)}catch{O(w,"install")}});const Ue=_.capWants===!0;Ue&&(_t=(i,S)=>{const w=ce();if(!w)return S;if(!S.nulled)return S.want!==w&&_e(i,S),S;if(w===S.ver)return S;const M=yt();return ie.set(i,M),_e(i,M),M}),gt(G,Ue&&ce()!==G?_e:void 0),ke(),await Ae;let et=!1;try{et=E()}catch{}me&&et?(c??se(me)).then(i=>i?.boot?.({shellOrigin:g,build:de.flags.has(fn),hot:A?.hot??null,carried:A?.carried(),presented:()=>A?.presented()??!0})).catch(()=>!1).then(i=>{A?.hydrated(),i!==!0?O("_ldx"):Fe.has(me)&&B("_ldx")}):A?.hydrated()})}else ft&&(ir(),Cn(ft,ht,se,{settle:gt,mount:bt}))})();</script><!-- /frame-runtime --><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Arsenal ZombiAdA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: coluna única estilo ficha técnica de caixa de munição; tabelas largas roláveis; índice fixo no topo */
+:root{
+  --bg:#e9e6dc; --panel:#f5f3ec; --ink:#23261f; --muted:#5d6153; --line:#c9c5b6;
+  --brass:#9a6a12; --olive:#4d5a2c; --blood:#9b2a1f; --chip:#dcd8c9;
+  --f-display:"Big Shoulders Stencil Display","Impact","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#16180f; --panel:#1f2217; --ink:#e4e2d6; --muted:#a3a690; --line:#363a2a;
+  --brass:#d9a441; --olive:#a7b86d; --blood:#e2665a; --chip:#2b2f20; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16180f; --panel:#1f2217; --ink:#e4e2d6; --muted:#a3a690; --line:#363a2a;
+  --brass:#d9a441; --olive:#a7b86d; --blood:#e2665a; --chip:#2b2f20; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 72px}
+header.hero{display:grid;gap:10px;padding-block:8px 24px;border-bottom:3px solid var(--ink)}
+.stamp{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--brass)}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(44px,9vw,88px);line-height:.9;margin:0;letter-spacing:.01em;text-wrap:balance}
+.lede{max-width:65ch;color:var(--muted);margin:0;font-size:16px}
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:6px;flex-wrap:wrap;padding-block:10px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+nav.toc a{font-family:var(--f-mono);font-size:12px;color:var(--ink);text-decoration:none;padding:4px 8px;border:1px solid var(--line);border-radius:2px}
+nav.toc a:hover,nav.toc a:focus-visible{border-color:var(--brass);color:var(--brass);outline:none}
+section{padding-block:36px 8px;scroll-margin-top:64px}
+h2{font-family:var(--f-display);font-weight:700;font-size:clamp(30px,5vw,42px);line-height:1;margin:0 0 6px;text-wrap:balance}
+h2 .code{font-family:var(--f-mono);font-size:13px;font-weight:500;color:var(--brass);letter-spacing:.1em;display:block;margin-bottom:6px}
+h3{font-size:17px;margin:22px 0 6px;font-weight:600}
+p{max-width:68ch;margin:8px 0}
+.muted{color:var(--muted)}
+.tbl{overflow-x:auto;border:1px solid var(--line);background:var(--panel);margin-block:12px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;white-space:nowrap;background:var(--chip)}
+td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.cal{font-family:var(--f-mono);font-weight:500;color:var(--brass);white-space:nowrap}
+.r{display:inline-block;font-family:var(--f-mono);font-size:11px;padding:1px 6px;border-radius:2px;border:1px solid currentColor;white-space:nowrap}
+.r1{color:var(--muted)}.r2{color:var(--olive)}.r3{color:var(--brass)}.r4{color:var(--blood)}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:11px;padding:1px 6px;background:var(--chip);border-radius:2px;margin:1px 2px 1px 0;white-space:nowrap}
+.formula{font-family:var(--f-mono);background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--brass);padding:14px 16px;overflow-x:auto;font-size:13.5px;white-space:pre;margin-block:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-block:12px}
+.card{background:var(--panel);border:1px solid var(--line);padding:14px 16px;min-width:0}
+.card h4{margin:0 0 4px;font-size:15px}
+.card p{margin:4px 0;font-size:14px}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-block:12px}
+.filters button{font-family:var(--f-mono);font-size:12px;background:transparent;color:var(--ink);border:1px solid var(--line);padding:5px 10px;border-radius:2px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.filters button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.callout{border:1px dashed var(--blood);padding:12px 14px;margin-block:12px;max-width:72ch}
+.callout b{color:var(--blood)}
+ul{padding-left:20px;max-width:68ch}li{margin:3px 0}
+.bar{height:8px;background:var(--chip);position:relative;min-width:80px}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--brass)}
+footer{margin-top:48px;padding-top:16px;border-top:3px solid var(--ink);font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <div class="stamp">ZombiAdA · Documento de design · Sistema de armas v0.1</div>
+  <h1>Arsenal, dano e achados</h1>
+  <p class="lede">Como cada arma, munição, peça e acessório funciona no jogo, quanto dano causa em cada parte do zumbi, quantos corpos o projétil atravessa e onde o jogador encontra tudo isso no mundo. Os números são valores de jogo inspirados em balística real, prontos para balanceamento.</p>
+  <p class="lede"><a href="https://claude.ai/artifact/C96Cxhb4bTA9bbojV4ctKH" style="color:var(--brass)">Ver tudo em 3D na Galeria do Arsenal</a></p>
+</header>
+
+<nav class="toc" aria-label="Seções">
+  <a href="#principios">Princípios</a><a href="#dano">Dano</a><a href="#regioes">Regiões</a><a href="#penetracao">Penetração</a><a href="#municoes">Munições</a><a href="#tipos">Tipos de munição</a><a href="#armas">Armas</a><a href="#ficha">Ficha técnica</a><a href="#precisao">Precisão</a><a href="#modelagem">Modelagem</a><a href="#recarga">Recarga</a><a href="#mods">Modificações</a><a href="#ruido">Ruído</a><a href="#explosivos">Explosivos</a><a href="#destruicao">Destruição</a><a href="#veiculos">Veículos</a><a href="#achados">Achados</a><a href="#dados">Dados</a><a href="#equipe">Equipe</a>
+</nav>
+
+<section id="principios">
+  <h2><span class="code">00</span>Princípios</h2>
+  <ul>
+    <li><b>Toda arma tem custo.</b> Disparar gasta munição escassa, faz barulho e atrai a horda. A pergunta do jogador nunca é só "consigo matar?", e sim "vale a pena atirar aqui?".</li>
+    <li><b>Munição é específica.</b> Um 9×19 não entra numa AK. Cada calibre tem caixa, carregador e peso próprios no inventário.</li>
+    <li><b>Cabeça resolve.</b> Tiro na cabeça com energia suficiente mata na hora, comum ou corredor. Tiro no corpo atrasa, derruba ou não faz nada.</li>
+    <li><b>Penetração é tática.</b> Fuzis atravessam fileiras de zumbis em corredores e portas; pistolas não.</li>
+    <li><b>Arma se desgasta.</b> Durabilidade, sujeira e engasgos fazem a manutenção ser parte do loop de sobrevivência.</li>
+    <li><b>Desempenho em LAN.</b> Projéteis são hitscan com queda simulada por tabela (sem física de bala por frame), e o servidor valida o acerto. Isso mantém centenas de zumbis sem lag.</li>
+  </ul>
+</section>
+
+<section id="dano">
+  <h2><span class="code">01</span>Fórmula de dano</h2>
+  <p>Todo acerto passa pela mesma conta. Zumbi comum tem <b>100 de vida</b>, corredor tem 80, e variantes pesadas (bombeiro, soldado com colete) têm de 160 a 250 e redução no tronco.</p>
+  <div class="formula">dano_final = dano_base(calibre)
+           × mult_tipo_munição
+           × mult_região(cabeça, tronco, braço, perna)
+           × queda_por_distância(alcance_efetivo)
+           × perda_por_penetração(alvos_já_atravessados)
+           × (1 − armadura_região)          // colete, capacete de bombeiro
+           × condição_da_arma(0,85 a 1,0)</div>
+  <p><b>Queda por distância:</b> 100% até o alcance efetivo do calibre, cai linearmente até 50% no dobro desse alcance, e o tiro some depois de 3×. Escopeta com chumbo usa curva própria e mais curta.</p>
+  <p><b>Atordoamento:</b> todo acerto acima de 35 de dano empurra o zumbi (stagger). Acima de 70 no tronco, derruba corredores. Isso dá valor a calibres grandes mesmo sem tiro na cabeça.</p>
+</section>
+
+<section id="regioes">
+  <h2><span class="code">02</span>Dano por região</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Região</th><th>Multiplicador</th><th>Efeito especial</th><th>Hitbox</th></tr></thead>
+    <tbody>
+      <tr><td><b>Cabeça</b></td><td class="n">morte</td><td>Mata na hora se a energia do projétil passar do limiar de crânio (veja munições). Abaixo disso, ×3.</td><td>Esfera pequena; capacete reduz 1 nível</td></tr>
+      <tr><td><b>Pescoço</b></td><td class="n">×2,0</td><td>30% de chance de decapitar com calibre de fuzil</td><td>Cápsula curta</td></tr>
+      <tr><td><b>Tronco</b></td><td class="n">×1,0</td><td>Stagger forte; colete reduz 40% a 70%</td><td>Caixa grande</td></tr>
+      <tr><td><b>Braços</b></td><td class="n">×0,6</td><td>Acima de 60 de dano, arranca o braço: o zumbi não agarra mais com aquele lado</td><td>2 cápsulas</td></tr>
+      <tr><td><b>Pernas</b></td><td class="n">×0,7</td><td>Acima de 50 de dano, quebra a perna: corredor passa a andar, andador passa a rastejar</td><td>2 cápsulas</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Desmembramento progressivo</h3>
+  <p>Cada parte do zumbi tem vida própria, separada da vida total. Os tiros vão arrancando pedaços em etapas, e cada etapa muda o comportamento do monstro.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Parte</th><th>Vida da parte</th><th>Etapa 1</th><th>Etapa 2</th><th>Etapa 3</th></tr></thead>
+    <tbody>
+      <tr><td><b>Cabeça</b></td><td class="n">40</td><td>Arranca mandíbula: não morde, só agarra</td><td>Abre o crânio: morte</td><td>Cabeça explode (calibre de fuzil, escopeta de perto)</td></tr>
+      <tr><td><b>Braço</b> (cada)</td><td class="n">45</td><td>Perde a mão: agarra mais fraco</td><td>Perde o antebraço</td><td>Braço inteiro sai: sem agarrar daquele lado</td></tr>
+      <tr><td><b>Perna</b> (cada)</td><td class="n">55</td><td>Perde o pé: manca</td><td>Canela quebrada: corredor vira andador</td><td>Perna sai: rasteja (mais baixo, difícil de acertar)</td></tr>
+      <tr><td><b>Tronco</b></td><td class="n">vida total</td><td>Carne rasgada, costelas à mostra</td><td>Colete ou roupa pesada destruídos: armadura cai a zero</td><td>Explosão ou .50 parte ao meio: a metade de cima continua rastejando</td></tr>
+    </tbody>
+  </table></div>
+  <p>Explosões e .50 BMG aplicam dano em várias partes ao mesmo tempo, então um zumbi perto de uma granada perde braços e pernas de uma vez. Partes arrancadas ficam no chão como objetos físicos por 60 s e depois viram decalque de sangue.</p>
+  <p class="muted">Desempenho: cada zumbi usa malhas pré-cortadas (cabeça, 2 braços em 3 segmentos, 2 pernas em 3 segmentos, tronco em 2 metades), trocadas por visibilidade. Sem corte procedural em tempo real. No máximo 40 pedaços soltos no mapa por jogador; os mais antigos somem primeiro.</p>
+</section>
+
+<section id="penetracao">
+  <h2><span class="code">03</span>Penetração</h2>
+  <p>Cada projétil sai com <b>pontos de penetração (PEN)</b>. Cada coisa atravessada consome pontos e tira 25% do dano restante. Quando PEN chega a zero, a bala para.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Material atravessado</th><th>Custo de PEN</th></tr></thead>
+    <tbody>
+      <tr><td>Membro de zumbi</td><td class="n">0,5</td></tr>
+      <tr><td>Tronco de zumbi</td><td class="n">1,0</td></tr>
+      <tr><td>Cabeça de zumbi</td><td class="n">0,7</td></tr>
+      <tr><td>Porta de madeira, drywall</td><td class="n">1,0</td></tr>
+      <tr><td>Lataria de carro</td><td class="n">2,0</td></tr>
+      <tr><td>Bloco de concreto</td><td class="n">6,0 (só .50 e AP de fuzil)</td></tr>
+    </tbody>
+  </table></div>
+  <p>Exemplo: 7,62×51 FMJ tem PEN 4. Atravessa três troncos em fila (perdendo dano a cada um) e ainda fere o quarto zumbi no braço. Uma 9×19 FMJ tem PEN 1,2 e para no primeiro tronco.</p>
+</section>
+
+<section id="municoes">
+  <h2><span class="code">04</span>Calibres</h2>
+  <p>Dano base é o valor no tronco a curta distância, com munição padrão (FMJ, ou chumbo 00 na escopeta). "Crânio" diz se o calibre mata garantido com tiro na cabeça.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Calibre</th><th>Dano</th><th>PEN</th><th>Alcance ef.</th><th>Crânio</th><th>Ruído</th><th>Raridade</th><th>Usado em</th></tr></thead>
+    <tbody>
+      <tr><td class="cal">.22 LR</td><td class="n">22</td><td class="n">0,6</td><td class="n">50 m</td><td>70% chance</td><td class="n">baixo</td><td><span class="r r1">comum</span></td><td>Ruger 10/22, Ruger Mk IV</td></tr>
+      <tr><td class="cal">.380 ACP</td><td class="n">28</td><td class="n">0,8</td><td class="n">20 m</td><td>até 10 m</td><td class="n">médio</td><td><span class="r r1">comum</span></td><td>Taurus TH380, Walther PPK</td></tr>
+      <tr><td class="cal">9×18 Makarov</td><td class="n">30</td><td class="n">0,9</td><td class="n">25 m</td><td>sim</td><td class="n">médio</td><td><span class="r r2">incomum</span></td><td>Makarov PM</td></tr>
+      <tr><td class="cal">.38 SPL</td><td class="n">32</td><td class="n">0,9</td><td class="n">25 m</td><td>sim</td><td class="n">médio</td><td><span class="r r1">comum</span></td><td>Taurus 82, S&amp;W Model 10</td></tr>
+      <tr><td class="cal">9×19 mm</td><td class="n">35</td><td class="n">1,2</td><td class="n">35 m</td><td>sim</td><td class="n">médio</td><td><span class="r r1">comum</span></td><td>Glock 17, Beretta 92, MP5, Taurus G2C</td></tr>
+      <tr><td class="cal">.40 S&amp;W</td><td class="n">42</td><td class="n">1,3</td><td class="n">35 m</td><td>sim</td><td class="n">médio</td><td><span class="r r2">incomum</span></td><td>Taurus PT100, Glock 22, .40 policial</td></tr>
+      <tr><td class="cal">.45 ACP</td><td class="n">48</td><td class="n">1,1</td><td class="n">30 m</td><td>sim</td><td class="n">médio</td><td><span class="r r2">incomum</span></td><td>M1911, UMP-45, Kriss Vector, Thompson, MAC-10</td></tr>
+      <tr><td class="cal">5,7×28 mm</td><td class="n">32</td><td class="n">2,2</td><td class="n">150 m</td><td>sim</td><td class="n">médio</td><td><span class="r r3">raro</span></td><td>FN Five-seveN, FN P90</td></tr>
+      <tr><td class="cal">.50 AE</td><td class="n">85</td><td class="n">2,4</td><td class="n">50 m</td><td>sim</td><td class="n">muito alto</td><td><span class="r r4">muito raro</span></td><td>Desert Eagle Mark XIX</td></tr>
+      <tr><td class="cal">.357 Magnum</td><td class="n">55</td><td class="n">1,8</td><td class="n">45 m</td><td>sim</td><td class="n">alto</td><td><span class="r r2">incomum</span></td><td>S&amp;W 686, Ruger GP100 (também dispara .38)</td></tr>
+      <tr><td class="cal">.44 Magnum</td><td class="n">70</td><td class="n">2,2</td><td class="n">50 m</td><td>sim</td><td class="n">muito alto</td><td><span class="r r3">raro</span></td><td>S&amp;W Model 29</td></tr>
+      <tr><td class="cal">12 ga</td><td class="n">9×12</td><td class="n">0,5</td><td class="n">15 m</td><td>até 8 m</td><td class="n">muito alto</td><td><span class="r r1">comum</span></td><td>Remington 870, Mossberg 500, Benelli M4, Saiga-12</td></tr>
+      <tr><td class="cal">5,56×45 mm</td><td class="n">45</td><td class="n">2,8</td><td class="n">300 m</td><td>sim</td><td class="n">alto</td><td><span class="r r2">incomum</span></td><td>M4A1, AR-15, IA2, HK416, FN Minimi</td></tr>
+      <tr><td class="cal">7,62×39 mm</td><td class="n">55</td><td class="n">3,0</td><td class="n">250 m</td><td>sim</td><td class="n">alto</td><td><span class="r r2">incomum</span></td><td>AK-47, AKM, SKS</td></tr>
+      <tr><td class="cal">5,45×39 mm</td><td class="n">42</td><td class="n">2,6</td><td class="n">300 m</td><td>sim</td><td class="n">alto</td><td><span class="r r3">raro</span></td><td>AK-74, AK-12</td></tr>
+      <tr><td class="cal">.30-30 Winchester</td><td class="n">62</td><td class="n">2,8</td><td class="n">150 m</td><td>sim</td><td class="n">alto</td><td><span class="r r2">incomum</span></td><td>Winchester 1894</td></tr>
+      <tr><td class="cal">7,62×51 mm (.308)</td><td class="n">75</td><td class="n">4,0</td><td class="n">600 m</td><td>sim</td><td class="n">muito alto</td><td><span class="r r3">raro</span></td><td>FAL, M14, SCAR-H, Remington 700, IA2 7,62</td></tr>
+      <tr><td class="cal">.30-06 Springfield</td><td class="n">80</td><td class="n">4,0</td><td class="n">600 m</td><td>sim</td><td class="n">muito alto</td><td><span class="r r2">incomum</span></td><td>Rifles de caça, M1 Garand</td></tr>
+      <tr><td class="cal">7,62×54R</td><td class="n">80</td><td class="n">4,2</td><td class="n">700 m</td><td>sim</td><td class="n">muito alto</td><td><span class="r r3">raro</span></td><td>Mosin-Nagant, SVD Dragunov, PKM</td></tr>
+      <tr><td class="cal">.300 Win Mag</td><td class="n">95</td><td class="n">5,0</td><td class="n">900 m</td><td>sim</td><td class="n">extremo</td><td><span class="r r4">muito raro</span></td><td>Remington 700 longa, AWM</td></tr>
+      <tr><td class="cal">.338 Lapua</td><td class="n">110</td><td class="n">6,0</td><td class="n">1.200 m</td><td>sim</td><td class="n">extremo</td><td><span class="r r4">muito raro</span></td><td>AWM .338, Sako TRG-42</td></tr>
+      <tr><td class="cal">.50 BMG</td><td class="n">180</td><td class="n">9,0</td><td class="n">1.500 m</td><td>sim</td><td class="n">extremo</td><td><span class="r r4">lendário</span></td><td>Barrett M82, M2 montada em veículo</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Peso por cartucho no inventário: pistola 0,012 kg, fuzil 0,018 kg, .308 0,025 kg, 12 ga 0,04 kg, .50 BMG 0,12 kg. Munição vem em caixas (20, 50 ou 100) e precisa ser municiada no carregador, o que leva tempo fora de combate.</p>
+</section>
+
+<section id="tipos">
+  <h2><span class="code">05</span>Tipos de munição</h2>
+  <p>O mesmo calibre pode existir em versões diferentes. Cada tipo muda dano, penetração e outros efeitos. Nem todo calibre tem todos os tipos.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Tipo</th><th>Dano</th><th>PEN</th><th>Efeito</th><th>Calibres</th><th>Onde aparece</th></tr></thead>
+    <tbody>
+      <tr><td><b>FMJ</b> (encamisada)</td><td class="n">×1,0</td><td class="n">×1,0</td><td>Padrão, confiável</td><td>todos de pistola e fuzil</td><td>em todo lugar</td></tr>
+      <tr><td><b>HP</b> (ponta oca)</td><td class="n">×1,35</td><td class="n">×0,4</td><td>Mais stagger e desmembramento; quase não atravessa</td><td>pistolas, .357, .44</td><td>delegacia, loja de armas</td></tr>
+      <tr><td><b>SP</b> (ponta macia)</td><td class="n">×1,25</td><td class="n">×0,6</td><td>Munição de caça; bom no corpo</td><td>.30-06, .308, 7,62×39, .300</td><td>loja de caça, fazendas</td></tr>
+      <tr><td><b>AP</b> (perfurante)</td><td class="n">×0,9</td><td class="n">×1,8</td><td>Ignora 50% de colete; atravessa carro</td><td>5,56, 7,62×51, 7,62×54R, .50</td><td>base militar</td></tr>
+      <tr><td><b>Traçante</b></td><td class="n">×1,0</td><td class="n">×1,0</td><td>Rastro visível; 5% de chance de incendiar; todos os zumbis próximos veem a origem</td><td>5,56, 7,62</td><td>base militar</td></tr>
+      <tr><td><b>Subsônica</b></td><td class="n">×0,85</td><td class="n">×0,8</td><td>Com supressor, ruído cai mais 40%</td><td>9×19, .45, .300 BLK*</td><td>raro, polícia especial</td></tr>
+      <tr><td><b>+P</b> (sobrepressão)</td><td class="n">×1,15</td><td class="n">×1,2</td><td>Gasta durabilidade 2× mais rápido</td><td>9×19, .38, .45</td><td>loja de armas</td></tr>
+      <tr><td><b>Chumbo 00</b> (buckshot)</td><td class="n">9 bagos ×12</td><td class="n">0,5 cada</td><td>Ótimo de 0 a 15 m; derruba</td><td>12 ga</td><td>delegacia, fazendas</td></tr>
+      <tr><td><b>Chumbinho</b> (birdshot)</td><td class="n">30 bagos ×3</td><td class="n">0,1</td><td>Quase só stagger; barato e comum</td><td>12 ga</td><td>casas rurais, loja de caça</td></tr>
+      <tr><td><b>Balote</b> (slug)</td><td class="n">1 × 95</td><td class="n">2,5</td><td>Projétil único, alcance de 60 m, mata na cabeça a qualquer distância útil</td><td>12 ga</td><td>loja de caça, delegacia</td></tr>
+      <tr><td><b>Recarregada</b> (caseira)</td><td class="n">×0,9</td><td class="n">×0,9</td><td>8% de chance de falha; feita na bancada com cápsula, pólvora e espoleta</td><td>qualquer um com estojo</td><td>crafting</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">* .300 Blackout é opcional, só se quisermos um fuzil silencioso dedicado no fim do jogo.</p>
+  <div class="callout"><b>Exemplo de decisão do jogador:</b> HP na Glock derruba melhor o zumbi à frente, mas FMJ atravessa e ajuda num corredor cheio. Slug na 870 vira um mini-rifle, mas chumbo 00 limpa a porta da frente.</div>
+</section>
+
+<section id="armas">
+  <h2><span class="code">06</span>Catálogo de armas</h2>
+  <p>Lista com 67 armas reais, com prioridade para as que fazem sentido numa cidade brasileira (polícia, segurança privada, caça, Exército) e algumas importadas raras. As três do protótipo estão marcadas.</p>
+  <div class="filters" role="group" aria-label="Filtrar por categoria">
+    <button type="button" id="f-all" data-f="all" aria-pressed="true">Todas</button>
+    <button type="button" id="f-pis" data-f="pis" aria-pressed="false">Pistolas</button>
+    <button type="button" id="f-rev" data-f="rev" aria-pressed="false">Revólveres</button>
+    <button type="button" id="f-smg" data-f="smg" aria-pressed="false">Submetralhadoras</button>
+    <button type="button" id="f-esc" data-f="esc" aria-pressed="false">Escopetas</button>
+    <button type="button" id="f-fuz" data-f="fuz" aria-pressed="false">Fuzis</button>
+    <button type="button" id="f-dmr" data-f="dmr" aria-pressed="false">Fuzis de precisão</button>
+    <button type="button" id="f-snp" data-f="snp" aria-pressed="false">Snipers</button>
+    <button type="button" id="f-cac" data-f="cac" aria-pressed="false">Caça e civil</button>
+    <button type="button" id="f-mtr" data-f="mtr" aria-pressed="false">Metralhadoras</button>
+  </div>
+  <div class="tbl"><table id="weapons">
+    <thead><tr><th>Arma</th><th>Calibre</th><th>Cap.</th><th>Cadência</th><th>Recarga</th><th>Peso</th><th>Raridade</th><th>Notas</th></tr></thead>
+    <tbody>
+      <tr data-c="pis"><td><b>Glock 17</b> <span class="tag">protótipo</span></td><td class="cal">9×19</td><td class="n">17</td><td class="n">semi</td><td class="n">1,8 s</td><td class="n">0,7 kg</td><td><span class="r r1">comum</span></td><td>Base de referência. Aceita carregador de 33</td></tr>
+      <tr data-c="pis"><td><b>Taurus G2C</b></td><td class="cal">9×19</td><td class="n">12</td><td class="n">semi</td><td class="n">1,7 s</td><td class="n">0,6 kg</td><td><span class="r r1">comum</span></td><td>Arma civil mais comum no Brasil. Engasga um pouco mais</td></tr>
+      <tr data-c="pis"><td><b>Beretta 92FS</b></td><td class="cal">9×19</td><td class="n">15</td><td class="n">semi</td><td class="n">1,9 s</td><td class="n">0,95 kg</td><td><span class="r r1">comum</span></td><td>Recuo baixo, boa precisão</td></tr>
+      <tr data-c="pis"><td><b>Taurus PT100</b></td><td class="cal">.40 S&amp;W</td><td class="n">11</td><td class="n">semi</td><td class="n">1,9 s</td><td class="n">1,0 kg</td><td><span class="r r2">incomum</span></td><td>Pistola policial clássica</td></tr>
+      <tr data-c="pis"><td><b>Colt M1911</b></td><td class="cal">.45 ACP</td><td class="n">7</td><td class="n">semi</td><td class="n">1,8 s</td><td class="n">1,1 kg</td><td><span class="r r2">incomum</span></td><td>Pouca munição, muito stagger</td></tr>
+      <tr data-c="pis"><td><b>Glock 18</b></td><td class="cal">9×19</td><td class="n">17/33</td><td class="n">1.200 rpm</td><td class="n">1,8 s</td><td class="n">0,7 kg</td><td><span class="r r4">muito raro</span></td><td>Automática. Esvazia o carregador em 1 s</td></tr>
+      <tr data-c="pis"><td><b>Glock 19</b></td><td class="cal">9×19</td><td class="n">15</td><td class="n">semi</td><td class="n">1,7 s</td><td class="n">0,6 kg</td><td><span class="r r1">comum</span></td><td>Compacta, saca mais rápido que a 17</td></tr>
+      <tr data-c="pis"><td><b>Taurus TS9</b></td><td class="cal">9×19</td><td class="n">17</td><td class="n">semi</td><td class="n">1,8 s</td><td class="n">0,7 kg</td><td><span class="r r1">comum</span></td><td>Polícias estaduais brasileiras</td></tr>
+      <tr data-c="pis"><td><b>SIG Sauer P226</b></td><td class="cal">9×19</td><td class="n">15</td><td class="n">semi</td><td class="n">1,9 s</td><td class="n">0,96 kg</td><td><span class="r r2">incomum</span></td><td>Precisa e confiável, primeiro tiro em dupla ação</td></tr>
+      <tr data-c="pis"><td><b>CZ 75</b></td><td class="cal">9×19</td><td class="n">16</td><td class="n">semi</td><td class="n">1,9 s</td><td class="n">1,0 kg</td><td><span class="r r2">incomum</span></td><td>Ferrolho dentro da armação: recuo muito baixo</td></tr>
+      <tr data-c="pis"><td><b>Makarov PM</b></td><td class="cal">9×18</td><td class="n">8</td><td class="n">semi</td><td class="n">1,7 s</td><td class="n">0,73 kg</td><td><span class="r r2">incomum</span></td><td>Coleção, munição própria rara</td></tr>
+      <tr data-c="pis"><td><b>FN Five-seveN</b></td><td class="cal">5,7×28</td><td class="n">20</td><td class="n">semi</td><td class="n">1,8 s</td><td class="n">0,61 kg</td><td><span class="r r3">raro</span></td><td>Pistola que atravessa 2 zumbis</td></tr>
+      <tr data-c="pis"><td><b>Desert Eagle Mark XIX</b></td><td class="cal">.50 AE</td><td class="n">7</td><td class="n">semi</td><td class="n">2,0 s</td><td class="n">2,0 kg</td><td><span class="r r4">muito raro</span></td><td>Recuo brutal, munição quase inexistente. Arma de troféu</td></tr>
+      <tr data-c="rev"><td><b>Taurus 82</b></td><td class="cal">.38 SPL</td><td class="n">6</td><td class="n">dupla ação</td><td class="n">1 a 1 / 2,2 s c/ jet</td><td class="n">0,9 kg</td><td><span class="r r1">comum</span></td><td>Casas, vigias. Nunca engasga</td></tr>
+      <tr data-c="rev"><td><b>S&amp;W 686</b></td><td class="cal">.357 Mag</td><td class="n">7</td><td class="n">dupla ação</td><td class="n">1 a 1 / 2,4 s c/ jet</td><td class="n">1,2 kg</td><td><span class="r r2">incomum</span></td><td>Aceita .38 SPL</td></tr>
+      <tr data-c="rev"><td><b>S&amp;W Model 29</b></td><td class="cal">.44 Mag</td><td class="n">6</td><td class="n">dupla ação</td><td class="n">2,6 s c/ jet</td><td class="n">1,4 kg</td><td><span class="r r3">raro</span></td><td>Penetração de fuzil curto, recuo enorme</td></tr>
+      <tr data-c="smg"><td><b>HK MP5A3</b></td><td class="cal">9×19</td><td class="n">30</td><td class="n">800 rpm</td><td class="n">2,6 s</td><td class="n">2,9 kg</td><td><span class="r r2">incomum</span></td><td>Polícia especial. Versão SD integralmente suprimida é muito rara</td></tr>
+      <tr data-c="smg"><td><b>Taurus SMT9</b></td><td class="cal">9×19</td><td class="n">30</td><td class="n">750 rpm</td><td class="n">2,5 s</td><td class="n">2,7 kg</td><td><span class="r r2">incomum</span></td><td>Viaturas da polícia militar</td></tr>
+      <tr data-c="smg"><td><b>HK UMP-45</b></td><td class="cal">.45 ACP</td><td class="n">25</td><td class="n">600 rpm</td><td class="n">2,7 s</td><td class="n">2,3 kg</td><td><span class="r r3">raro</span></td><td>Lenta e pesada, ótima com supressor</td></tr>
+      <tr data-c="smg"><td><b>Uzi</b></td><td class="cal">9×19</td><td class="n">32</td><td class="n">600 rpm</td><td class="n">2,4 s</td><td class="n">3,5 kg</td><td><span class="r r3">raro</span></td><td>Coleção, crime organizado</td></tr>
+      <tr data-c="smg"><td><b>FN P90</b></td><td class="cal">5,7×28</td><td class="n">50</td><td class="n">900 rpm</td><td class="n">3,0 s</td><td class="n">2,6 kg</td><td><span class="r r4">muito raro</span></td><td>Carregador horizontal no topo; animação própria</td></tr>
+      <tr data-c="smg"><td><b>Kriss Vector</b></td><td class="cal">.45 ACP</td><td class="n">25</td><td class="n">1.100 rpm</td><td class="n">2,5 s</td><td class="n">2,7 kg</td><td><span class="r r4">muito raro</span></td><td>Recuo jogado para baixo: cadência alta e controlável</td></tr>
+      <tr data-c="smg"><td><b>Thompson M1A1</b></td><td class="cal">.45 ACP</td><td class="n">30</td><td class="n">700 rpm</td><td class="n">2,9 s</td><td class="n">4,8 kg</td><td><span class="r r3">raro</span></td><td>Museu, colecionador. Pesada e estável</td></tr>
+      <tr data-c="smg"><td><b>CZ Scorpion EVO 3</b></td><td class="cal">9×19</td><td class="n">30</td><td class="n">1.150 rpm</td><td class="n">2,4 s</td><td class="n">2,8 kg</td><td><span class="r r3">raro</span></td><td>Leve e muito modular</td></tr>
+      <tr data-c="smg"><td><b>MAC-10</b></td><td class="cal">.45 ACP</td><td class="n">30</td><td class="n">1.090 rpm</td><td class="n">2,2 s</td><td class="n">2,8 kg</td><td><span class="r r3">raro</span></td><td>Imprecisa e barulhenta, mas cospe chumbo</td></tr>
+      <tr data-c="esc"><td><b>Remington 870</b> <span class="tag">protótipo</span></td><td class="cal">12 ga</td><td class="n">6+1</td><td class="n">bomba</td><td class="n">0,55 s por cartucho</td><td class="n">3,6 kg</td><td><span class="r r1">comum</span></td><td>Referência de escopeta. Recarga cancelável a qualquer momento</td></tr>
+      <tr data-c="esc"><td><b>Mossberg 500</b></td><td class="cal">12 ga</td><td class="n">5+1</td><td class="n">bomba</td><td class="n">0,55 s por cartucho</td><td class="n">3,2 kg</td><td><span class="r r1">comum</span></td><td>Variante de cano curto (cruiser) sem coronha</td></tr>
+      <tr data-c="esc"><td><b>CBC Pump Military 3.0</b></td><td class="cal">12 ga</td><td class="n">7+1</td><td class="n">bomba</td><td class="n">0,6 s por cartucho</td><td class="n">3,5 kg</td><td><span class="r r1">comum</span></td><td>Arma de segurança privada e PM no Brasil</td></tr>
+      <tr data-c="esc"><td><b>Benelli M4</b></td><td class="cal">12 ga</td><td class="n">7+1</td><td class="n">semi</td><td class="n">0,5 s por cartucho</td><td class="n">3,8 kg</td><td><span class="r r3">raro</span></td><td>Semiautomática, rápida</td></tr>
+      <tr data-c="esc"><td><b>Saiga-12</b></td><td class="cal">12 ga</td><td class="n">8 / 20 (tambor)</td><td class="n">semi</td><td class="n">2,8 s</td><td class="n">3,6 kg</td><td><span class="r r4">muito raro</span></td><td>Escopeta de carregador. Arma de horda</td></tr>
+      <tr data-c="esc"><td><b>Boito (2 canos)</b></td><td class="cal">12 ga</td><td class="n">2</td><td class="n">1 ou 2 tiros juntos</td><td class="n">2,0 s</td><td class="n">3,2 kg</td><td><span class="r r1">comum</span></td><td>Fazendas brasileiras. Pode serrar o cano na bancada</td></tr>
+      <tr data-c="esc"><td><b>Franchi SPAS-12</b></td><td class="cal">12 ga</td><td class="n">8+1</td><td class="n">bomba ou semi</td><td class="n">0,55 s por cartucho</td><td class="n">4,4 kg</td><td><span class="r r3">raro</span></td><td>Troca entre bomba e semiautomática</td></tr>
+      <tr data-c="esc"><td><b>Kel-Tec KSG</b></td><td class="cal">12 ga</td><td class="n">7+7+1</td><td class="n">bomba</td><td class="n">0,55 s por cartucho</td><td class="n">3,1 kg</td><td><span class="r r3">raro</span></td><td>Bullpup com 2 tubos: um com 00 e outro com slug</td></tr>
+      <tr data-c="esc"><td><b>AA-12</b></td><td class="cal">12 ga</td><td class="n">8 / 20 (tambor)</td><td class="n">300 rpm</td><td class="n">3,0 s</td><td class="n">5,2 kg</td><td><span class="r r4">lendário</span></td><td>Escopeta automática com recuo quase zero</td></tr>
+      <tr data-c="fuz"><td><b>AK-47</b> <span class="tag">protótipo</span></td><td class="cal">7,62×39</td><td class="n">30</td><td class="n">600 rpm</td><td class="n">2,6 s / 3,4 s vazio</td><td class="n">4,3 kg</td><td><span class="r r2">incomum</span></td><td>Robusta: metade da chance de engasgo</td></tr>
+      <tr data-c="fuz"><td><b>AKM</b></td><td class="cal">7,62×39</td><td class="n">30</td><td class="n">600 rpm</td><td class="n">2,6 s / 3,4 s vazio</td><td class="n">3,6 kg</td><td><span class="r r3">raro</span></td><td>AK mais leve, aceita trilho lateral</td></tr>
+      <tr data-c="fuz"><td><b>AK-74</b></td><td class="cal">5,45×39</td><td class="n">30</td><td class="n">650 rpm</td><td class="n">2,6 s / 3,4 s vazio</td><td class="n">3,3 kg</td><td><span class="r r3">raro</span></td><td>Menos recuo que a AK-47</td></tr>
+      <tr data-c="fuz"><td><b>IMBEL IA2</b></td><td class="cal">5,56×45</td><td class="n">30</td><td class="n">700 rpm</td><td class="n">2,4 s / 3,1 s vazio</td><td class="n">3,4 kg</td><td><span class="r r2">incomum</span></td><td>Fuzil padrão do Exército Brasileiro</td></tr>
+      <tr data-c="fuz"><td><b>Colt M4A1</b></td><td class="cal">5,56×45</td><td class="n">30</td><td class="n">800 rpm</td><td class="n">2,3 s / 3,0 s vazio</td><td class="n">3,0 kg</td><td><span class="r r3">raro</span></td><td>Mais trilhos: aceita quase todos os acessórios</td></tr>
+      <tr data-c="fuz"><td><b>HK416</b></td><td class="cal">5,56×45</td><td class="n">30</td><td class="n">850 rpm</td><td class="n">2,3 s / 3,0 s vazio</td><td class="n">3,5 kg</td><td><span class="r r4">muito raro</span></td><td>Pistão a gás: suja menos com supressor</td></tr>
+      <tr data-c="fuz"><td><b>FN FAL / ParaFAL</b></td><td class="cal">7,62×51</td><td class="n">20</td><td class="n">650 rpm</td><td class="n">2,7 s / 3,5 s vazio</td><td class="n">4,3 kg</td><td><span class="r r2">incomum</span></td><td>Clássico das Forças Armadas brasileiras</td></tr>
+      <tr data-c="fuz"><td><b>SKS</b></td><td class="cal">7,62×39</td><td class="n">10</td><td class="n">semi</td><td class="n">pente de 10 em 2,2 s</td><td class="n">3,8 kg</td><td><span class="r r2">incomum</span></td><td>Carregamento por pente (stripper clip)</td></tr>
+      <tr data-c="fuz"><td><b>Taurus T4</b></td><td class="cal">5,56×45</td><td class="n">30</td><td class="n">750 rpm</td><td class="n">2,4 s / 3,1 s vazio</td><td class="n">3,0 kg</td><td><span class="r r2">incomum</span></td><td>Fuzil das polícias brasileiras, plataforma AR</td></tr>
+      <tr data-c="fuz"><td><b>Colt M16A2</b></td><td class="cal">5,56×45</td><td class="n">30</td><td class="n">rajada de 3</td><td class="n">2,4 s / 3,1 s vazio</td><td class="n">3,4 kg</td><td><span class="r r3">raro</span></td><td>Cano longo, alcance +15% sobre a M4</td></tr>
+      <tr data-c="fuz"><td><b>Steyr AUG A1</b></td><td class="cal">5,56×45</td><td class="n">30</td><td class="n">680 rpm</td><td class="n">2,8 s / 3,4 s vazio</td><td class="n">3,6 kg</td><td><span class="r r3">raro</span></td><td>Bullpup com luneta 1,5× integrada</td></tr>
+      <tr data-c="fuz"><td><b>HK G3A3</b></td><td class="cal">7,62×51</td><td class="n">20</td><td class="n">550 rpm</td><td class="n">2,7 s / 3,6 s vazio</td><td class="n">4,4 kg</td><td><span class="r r3">raro</span></td><td>Ferrolho com roletes, puxar alavanca na recarga vazia</td></tr>
+      <tr data-c="fuz"><td><b>AK-12</b></td><td class="cal">5,45×39</td><td class="n">30</td><td class="n">700 rpm</td><td class="n">2,5 s / 3,3 s vazio</td><td class="n">3,5 kg</td><td><span class="r r4">muito raro</span></td><td>AK moderna com trilhos completos</td></tr>
+      <tr data-c="dmr"><td><b>M14 EBR</b></td><td class="cal">7,62×51</td><td class="n">20</td><td class="n">semi</td><td class="n">2,8 s</td><td class="n">5,1 kg</td><td><span class="r r3">raro</span></td><td>Tiro rápido de precisão, PEN 4</td></tr>
+      <tr data-c="dmr"><td><b>SVD Dragunov</b></td><td class="cal">7,62×54R</td><td class="n">10</td><td class="n">semi</td><td class="n">2,9 s</td><td class="n">4,3 kg</td><td><span class="r r4">muito raro</span></td><td>Luneta PSO-1 integrada</td></tr>
+      <tr data-c="dmr"><td><b>FN SCAR-H</b></td><td class="cal">7,62×51</td><td class="n">20</td><td class="n">600 rpm</td><td class="n">2,6 s</td><td class="n">3,6 kg</td><td><span class="r r4">muito raro</span></td><td>Arma de fim de jogo, muito modular</td></tr>
+      <tr data-c="dmr"><td><b>Knight's SR-25 (Mk 11)</b></td><td class="cal">7,62×51</td><td class="n">20</td><td class="n">semi</td><td class="n">2,7 s</td><td class="n">4,5 kg</td><td><span class="r r4">muito raro</span></td><td>O fuzil semiautomático mais preciso do jogo</td></tr>
+      <tr data-c="snp"><td><b>Remington 700</b></td><td class="cal">.308 / .300 WM</td><td class="n">4 / 3</td><td class="n">ferrolho</td><td class="n">1 a 1, 0,7 s cada</td><td class="n">4,0 kg</td><td><span class="r r2">incomum</span></td><td>Versão de caça comum, versão tática rara</td></tr>
+      <tr data-c="snp"><td><b>Mosin-Nagant</b></td><td class="cal">7,62×54R</td><td class="n">5</td><td class="n">ferrolho</td><td class="n">pente de 5 em 2,4 s</td><td class="n">4,0 kg</td><td><span class="r r2">incomum</span></td><td>Barata e potente, mira de ferro</td></tr>
+      <tr data-c="snp"><td><b>Accuracy AWM</b></td><td class="cal">.338 Lapua</td><td class="n">5</td><td class="n">ferrolho</td><td class="n">3,2 s</td><td class="n">6,9 kg</td><td><span class="r r4">lendário</span></td><td>Atravessa 6 troncos em fila</td></tr>
+      <tr data-c="snp"><td><b>Barrett M82A1</b></td><td class="cal">.50 BMG</td><td class="n">10</td><td class="n">semi</td><td class="n">4,0 s</td><td class="n">14 kg</td><td><span class="r r4">lendário</span></td><td>Só em base militar. Precisa deitar ou apoiar; o barulho chama a cidade inteira</td></tr>
+      <tr data-c="snp"><td><b>M24 SWS</b></td><td class="cal">7,62×51</td><td class="n">5</td><td class="n">ferrolho</td><td class="n">1 a 1, 0,7 s cada</td><td class="n">5,4 kg</td><td><span class="r r3">raro</span></td><td>Vem com luneta 10× fixa</td></tr>
+      <tr data-c="snp"><td><b>Sako TRG-42</b></td><td class="cal">.338 Lapua</td><td class="n">5</td><td class="n">ferrolho</td><td class="n">3,0 s</td><td class="n">5,1 kg</td><td><span class="r r4">lendário</span></td><td>Alternativa à AWM, ferrolho mais curto</td></tr>
+      <tr data-c="cac"><td><b>Ruger 10/22</b></td><td class="cal">.22 LR</td><td class="n">10 / 25</td><td class="n">semi</td><td class="n">1,9 s</td><td class="n">2,3 kg</td><td><span class="r r1">comum</span></td><td>Silenciosa, munição abundante. Ótima para começo de jogo</td></tr>
+      <tr data-c="cac"><td><b>CBC 7022</b></td><td class="cal">.22 LR</td><td class="n">10</td><td class="n">semi</td><td class="n">1,9 s</td><td class="n">2,0 kg</td><td><span class="r r1">comum</span></td><td>Versão brasileira, muito comum em sítios</td></tr>
+      <tr data-c="cac"><td><b>Winchester 1894</b></td><td class="cal">.30-30</td><td class="n">7</td><td class="n">alavanca</td><td class="n">0,6 s por cartucho</td><td class="n">3,0 kg</td><td><span class="r r2">incomum</span></td><td>Recarga tubular, como a escopeta</td></tr>
+      <tr data-c="cac"><td><b>Rifle de caça .30-06</b></td><td class="cal">.30-06</td><td class="n">4</td><td class="n">ferrolho</td><td class="n">1 a 1, 0,7 s cada</td><td class="n">3,6 kg</td><td><span class="r r2">incomum</span></td><td>Vem com luneta 3–9× às vezes</td></tr>
+      <tr data-c="cac"><td><b>Rossi Puma</b></td><td class="cal">.38 SPL / .357</td><td class="n">10</td><td class="n">alavanca</td><td class="n">0,5 s por cartucho</td><td class="n">2,7 kg</td><td><span class="r r1">comum</span></td><td>Carabina brasileira; usa a mesma munição do revólver</td></tr>
+      <tr data-c="cac"><td><b>CBC 122</b></td><td class="cal">.22 LR</td><td class="n">10</td><td class="n">ferrolho</td><td class="n">1,9 s</td><td class="n">2,4 kg</td><td><span class="r r1">comum</span></td><td>A arma mais silenciosa sem supressor</td></tr>
+      <tr data-c="mtr"><td><b>FN Minimi</b></td><td class="cal">5,56×45</td><td class="n">200 (cinta)</td><td class="n">850 rpm</td><td class="n">7,5 s</td><td class="n">7,1 kg</td><td><span class="r r4">lendário</span></td><td>Defesa de base. Reduz velocidade de movimento</td></tr>
+      <tr data-c="mtr"><td><b>PKM</b></td><td class="cal">7,62×54R</td><td class="n">100 (caixa)</td><td class="n">650 rpm</td><td class="n">8,0 s</td><td class="n">7,5 kg</td><td><span class="r r4">lendário</span></td><td>Montável em janela ou veículo</td></tr>
+      <tr data-c="mtr"><td><b>M60</b></td><td class="cal">7,62×51</td><td class="n">100 (cinta)</td><td class="n">550 rpm</td><td class="n">8,5 s</td><td class="n">10,5 kg</td><td><span class="r r4">lendário</span></td><td>Cano superaquece: troca de cano após 200 tiros seguidos</td></tr>
+      <tr data-c="mtr"><td><b>Browning M2 .50</b></td><td class="cal">.50 BMG</td><td class="n">100 (cinta)</td><td class="n">550 rpm</td><td class="n">10 s</td><td class="n">38 kg</td><td><span class="r r4">lendário</span></td><td>Só montada em veículo ou tripé. Derruba paredes</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Armas brancas e improvisadas (facão, machado, taco, lança, besta, arco) ficam num documento separado, mas usam a mesma tabela de regiões.</p>
+</section>
+
+<section id="ficha">
+  <h2><span class="code">07</span>Ficha técnica real</h2>
+  <p>Medidas e dados reais de cada arma, para os modeladores acertarem a escala e para o balanceamento partir de números verdadeiros. Valores com <b>~</b> são aproximados ou variam por versão: confirmar no manual do fabricante antes de modelar. Peso vazio é sem carregador; o peso do jogo, na tabela anterior, já inclui carregador cheio.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Arma</th><th>Mecanismo</th><th>Compr. total</th><th>Cano</th><th>Peso vazio</th><th>Vel. de boca</th><th>Precisão real</th></tr></thead>
+    <tbody>
+      <tr><td colspan="7"><b>Pistolas</b></td></tr>
+      <tr><td>Glock 17</td><td>recuo curto, percussor lançado</td><td class="n">202 mm</td><td class="n">114 mm</td><td class="n">0,63 kg</td><td class="n">375 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>Glock 18</td><td>igual à 17, com seletor automático</td><td class="n">202 mm</td><td class="n">114 mm</td><td class="n">0,62 kg</td><td class="n">375 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>Glock 19</td><td>recuo curto, percussor lançado</td><td class="n">185 mm</td><td class="n">102 mm</td><td class="n">0,60 kg</td><td class="n">360 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>Taurus G2C</td><td>recuo curto, percussor</td><td class="n">~159 mm</td><td class="n">~81 mm</td><td class="n">~0,62 kg</td><td class="n">~340 m/s</td><td class="n">~5 MOA</td></tr>
+      <tr><td>Taurus TS9</td><td>recuo curto, percussor</td><td class="n">~194 mm</td><td class="n">~104 mm</td><td class="n">~0,68 kg</td><td class="n">~360 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>Beretta 92FS</td><td>recuo curto, bloco basculante, cão DA/SA</td><td class="n">217 mm</td><td class="n">125 mm</td><td class="n">0,95 kg</td><td class="n">381 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td>SIG Sauer P226</td><td>recuo curto, cão DA/SA</td><td class="n">196 mm</td><td class="n">112 mm</td><td class="n">0,96 kg</td><td class="n">~350 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td>CZ 75</td><td>recuo curto, cão DA/SA</td><td class="n">206 mm</td><td class="n">120 mm</td><td class="n">1,00 kg</td><td class="n">~370 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td>Taurus PT100</td><td>recuo curto, cão DA/SA</td><td class="n">~216 mm</td><td class="n">~127 mm</td><td class="n">~1,0 kg</td><td class="n">~300 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>Colt M1911</td><td>recuo curto (Browning), ação simples</td><td class="n">216 mm</td><td class="n">127 mm</td><td class="n">1,10 kg</td><td class="n">253 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td>Makarov PM</td><td>blowback simples, cão DA/SA</td><td class="n">161 mm</td><td class="n">94 mm</td><td class="n">0,73 kg</td><td class="n">315 m/s</td><td class="n">~5 MOA</td></tr>
+      <tr><td>FN Five-seveN</td><td>blowback retardado, percussor</td><td class="n">208 mm</td><td class="n">122 mm</td><td class="n">0,61 kg</td><td class="n">~650 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td>Desert Eagle Mark XIX</td><td>gás, ferrolho rotativo</td><td class="n">270 mm</td><td class="n">152 mm</td><td class="n">1,99 kg</td><td class="n">~470 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td colspan="7"><b>Revólveres</b></td></tr>
+      <tr><td>Taurus 82 (4")</td><td>dupla ação, tambor 6</td><td class="n">~240 mm</td><td class="n">102 mm</td><td class="n">~0,95 kg</td><td class="n">~260 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>S&amp;W 686 (4")</td><td>dupla ação, tambor 7</td><td class="n">~244 mm</td><td class="n">102 mm</td><td class="n">1,14 kg</td><td class="n">~430 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td>S&amp;W Model 29 (6,5")</td><td>dupla ação, tambor 6</td><td class="n">~302 mm</td><td class="n">165 mm</td><td class="n">1,40 kg</td><td class="n">~440 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td colspan="7"><b>Submetralhadoras</b></td></tr>
+      <tr><td>HK MP5A3</td><td>blowback retardado por roletes, ferrolho fechado</td><td class="n">700 / 550 mm</td><td class="n">225 mm</td><td class="n">2,54 kg</td><td class="n">400 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td>Taurus SMT9</td><td>blowback, ferrolho fechado</td><td class="n">~660 / 450 mm</td><td class="n">~200 mm</td><td class="n">~2,5 kg</td><td class="n">~380 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>HK UMP-45</td><td>blowback, ferrolho fechado</td><td class="n">690 / 450 mm</td><td class="n">200 mm</td><td class="n">2,30 kg</td><td class="n">285 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>Uzi</td><td>blowback, ferrolho aberto</td><td class="n">650 / 470 mm</td><td class="n">260 mm</td><td class="n">3,50 kg</td><td class="n">400 m/s</td><td class="n">~6 MOA</td></tr>
+      <tr><td>FN P90</td><td>blowback, bullpup</td><td class="n">500 mm</td><td class="n">264 mm</td><td class="n">2,60 kg</td><td class="n">715 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td>Kriss Vector</td><td>blowback retardado (Super V)</td><td class="n">622 / 406 mm</td><td class="n">140 mm</td><td class="n">2,70 kg</td><td class="n">~290 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>Thompson M1A1</td><td>blowback, ferrolho aberto</td><td class="n">813 mm</td><td class="n">267 mm</td><td class="n">4,80 kg</td><td class="n">285 m/s</td><td class="n">~5 MOA</td></tr>
+      <tr><td>CZ Scorpion EVO 3</td><td>blowback, ferrolho fechado</td><td class="n">670 / 410 mm</td><td class="n">196 mm</td><td class="n">2,77 kg</td><td class="n">~370 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>MAC-10</td><td>blowback, ferrolho aberto</td><td class="n">548 / 296 mm</td><td class="n">146 mm</td><td class="n">2,84 kg</td><td class="n">280 m/s</td><td class="n">~8 MOA</td></tr>
+      <tr><td colspan="7"><b>Escopetas</b> (precisão = abertura do chumbo 00 a 25 m)</td></tr>
+      <tr><td>Remington 870 (18,5")</td><td>bomba, tubo sob o cano</td><td class="n">~990 mm</td><td class="n">470 mm</td><td class="n">3,6 kg</td><td class="n">~400 m/s</td><td class="n">~60 cm</td></tr>
+      <tr><td>Mossberg 500 (18,5")</td><td>bomba, tubo sob o cano</td><td class="n">~990 mm</td><td class="n">470 mm</td><td class="n">3,2 kg</td><td class="n">~400 m/s</td><td class="n">~60 cm</td></tr>
+      <tr><td>CBC Pump Military 3.0</td><td>bomba, tubo sob o cano</td><td class="n">~1.000 mm</td><td class="n">~480 mm</td><td class="n">~3,4 kg</td><td class="n">~400 m/s</td><td class="n">~60 cm</td></tr>
+      <tr><td>Benelli M4</td><td>gás (ARGO), semiautomática</td><td class="n">1.010 mm</td><td class="n">470 mm</td><td class="n">3,82 kg</td><td class="n">~400 m/s</td><td class="n">~60 cm</td></tr>
+      <tr><td>Franchi SPAS-12</td><td>bomba ou gás, selecionável</td><td class="n">1.041 mm</td><td class="n">546 mm</td><td class="n">4,40 kg</td><td class="n">~400 m/s</td><td class="n">~55 cm</td></tr>
+      <tr><td>Kel-Tec KSG</td><td>bomba, bullpup, 2 tubos</td><td class="n">660 mm</td><td class="n">470 mm</td><td class="n">3,10 kg</td><td class="n">~400 m/s</td><td class="n">~60 cm</td></tr>
+      <tr><td>Saiga-12</td><td>gás pistão longo, ferrolho rotativo, carregador</td><td class="n">~1.000 mm</td><td class="n">430 mm</td><td class="n">3,6 kg</td><td class="n">~400 m/s</td><td class="n">~65 cm</td></tr>
+      <tr><td>AA-12</td><td>blowback, ferrolho aberto, automática</td><td class="n">966 mm</td><td class="n">457 mm</td><td class="n">5,2 kg</td><td class="n">~400 m/s</td><td class="n">~65 cm</td></tr>
+      <tr><td>Boito (2 canos)</td><td>basculante, 2 gatilhos</td><td class="n">~1.130 mm</td><td class="n">~710 mm</td><td class="n">~3,2 kg</td><td class="n">~410 m/s</td><td class="n">~45 cm</td></tr>
+      <tr><td colspan="7"><b>Fuzis</b></td></tr>
+      <tr><td>AK-47</td><td>gás pistão longo, ferrolho rotativo</td><td class="n">880 mm</td><td class="n">415 mm</td><td class="n">4,3 kg</td><td class="n">715 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>AKM</td><td>gás pistão longo, ferrolho rotativo</td><td class="n">880 mm</td><td class="n">415 mm</td><td class="n">3,1 kg</td><td class="n">715 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>AK-74</td><td>gás pistão longo, ferrolho rotativo</td><td class="n">943 mm</td><td class="n">415 mm</td><td class="n">3,3 kg</td><td class="n">900 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td>AK-12</td><td>gás pistão longo, ferrolho rotativo</td><td class="n">~945 / 725 mm</td><td class="n">415 mm</td><td class="n">~3,5 kg</td><td class="n">~880 m/s</td><td class="n">~2,5 MOA</td></tr>
+      <tr><td>IMBEL IA2 5,56</td><td>gás, ferrolho rotativo</td><td class="n">~850 mm</td><td class="n">~330 mm</td><td class="n">~3,4 kg</td><td class="n">~860 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td>Taurus T4</td><td>impingimento direto (AR)</td><td class="n">~840 mm</td><td class="n">368 mm</td><td class="n">~3,0 kg</td><td class="n">~880 m/s</td><td class="n">~2 MOA</td></tr>
+      <tr><td>Colt M4A1</td><td>impingimento direto, ferrolho rotativo</td><td class="n">840 / 757 mm</td><td class="n">368 mm</td><td class="n">2,9 kg</td><td class="n">~880 m/s</td><td class="n">~2 MOA</td></tr>
+      <tr><td>Colt M16A2</td><td>impingimento direto, rajada de 3</td><td class="n">1.000 mm</td><td class="n">508 mm</td><td class="n">3,4 kg</td><td class="n">948 m/s</td><td class="n">~2 MOA</td></tr>
+      <tr><td>HK416 (14,5")</td><td>gás pistão curto, ferrolho rotativo</td><td class="n">~900 / 800 mm</td><td class="n">368 mm</td><td class="n">3,5 kg</td><td class="n">~880 m/s</td><td class="n">~1,5 MOA</td></tr>
+      <tr><td>Steyr AUG A1</td><td>gás pistão curto, bullpup</td><td class="n">790 mm</td><td class="n">508 mm</td><td class="n">3,6 kg</td><td class="n">970 m/s</td><td class="n">~2 MOA</td></tr>
+      <tr><td>FN FAL</td><td>gás pistão curto, bloco basculante</td><td class="n">1.090 mm</td><td class="n">533 mm</td><td class="n">4,3 kg</td><td class="n">840 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td>HK G3A3</td><td>blowback retardado por roletes</td><td class="n">1.025 mm</td><td class="n">450 mm</td><td class="n">4,4 kg</td><td class="n">800 m/s</td><td class="n">~2,5 MOA</td></tr>
+      <tr><td>SKS</td><td>gás pistão curto, bloco basculante</td><td class="n">1.020 mm</td><td class="n">520 mm</td><td class="n">3,85 kg</td><td class="n">735 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td colspan="7"><b>Fuzis de precisão e snipers</b></td></tr>
+      <tr><td>M14 EBR</td><td>gás pistão curto, ferrolho rotativo</td><td class="n">~890–1.120 mm</td><td class="n">457 mm</td><td class="n">5,1 kg</td><td class="n">~850 m/s</td><td class="n">~1,5 MOA</td></tr>
+      <tr><td>SVD Dragunov</td><td>gás pistão curto, ferrolho rotativo</td><td class="n">1.225 mm</td><td class="n">620 mm</td><td class="n">4,3 kg</td><td class="n">830 m/s</td><td class="n">~1,5 MOA</td></tr>
+      <tr><td>FN SCAR-H</td><td>gás pistão curto, ferrolho rotativo</td><td class="n">~965 / 710 mm</td><td class="n">400 mm</td><td class="n">3,6 kg</td><td class="n">~770 m/s</td><td class="n">~1,5 MOA</td></tr>
+      <tr><td>Knight's SR-25 (Mk 11)</td><td>impingimento direto</td><td class="n">1.156 mm</td><td class="n">508 mm</td><td class="n">4,5 kg</td><td class="n">~800 m/s</td><td class="n">~1 MOA</td></tr>
+      <tr><td>Remington 700 (.308)</td><td>ferrolho</td><td class="n">~1.100 mm</td><td class="n">610 mm</td><td class="n">~3,6 kg</td><td class="n">~790 m/s</td><td class="n">~1 MOA</td></tr>
+      <tr><td>M24 SWS</td><td>ferrolho (base Remington 700)</td><td class="n">1.092 mm</td><td class="n">610 mm</td><td class="n">5,4 kg</td><td class="n">~790 m/s</td><td class="n">~0,75 MOA</td></tr>
+      <tr><td>Mosin-Nagant 91/30</td><td>ferrolho</td><td class="n">1.232 mm</td><td class="n">730 mm</td><td class="n">4,0 kg</td><td class="n">865 m/s</td><td class="n">~2,5 MOA</td></tr>
+      <tr><td>Accuracy AWM (.338)</td><td>ferrolho</td><td class="n">~1.230 mm</td><td class="n">686 mm</td><td class="n">6,9 kg</td><td class="n">~936 m/s</td><td class="n">~0,5 MOA</td></tr>
+      <tr><td>Sako TRG-42</td><td>ferrolho</td><td class="n">~1.200 mm</td><td class="n">690 mm</td><td class="n">5,1 kg</td><td class="n">~900 m/s</td><td class="n">~0,5 MOA</td></tr>
+      <tr><td>Barrett M82A1</td><td>recuo curto, semiautomático</td><td class="n">1.448 mm</td><td class="n">737 mm</td><td class="n">14 kg</td><td class="n">853 m/s</td><td class="n">~1,5 MOA</td></tr>
+      <tr><td colspan="7"><b>Caça e civil</b></td></tr>
+      <tr><td>Ruger 10/22</td><td>blowback, carregador rotativo</td><td class="n">940 mm</td><td class="n">470 mm</td><td class="n">2,3 kg</td><td class="n">~380 m/s</td><td class="n">~1,5 MOA</td></tr>
+      <tr><td>CBC 7022</td><td>blowback</td><td class="n">~1.000 mm</td><td class="n">~530 mm</td><td class="n">~2,0 kg</td><td class="n">~380 m/s</td><td class="n">~2 MOA</td></tr>
+      <tr><td>CBC 122</td><td>ferrolho</td><td class="n">~1.030 mm</td><td class="n">~590 mm</td><td class="n">~2,4 kg</td><td class="n">~380 m/s</td><td class="n">~1,5 MOA</td></tr>
+      <tr><td>Winchester 1894</td><td>alavanca, tubo sob o cano</td><td class="n">~965 mm</td><td class="n">508 mm</td><td class="n">3,0 kg</td><td class="n">~670 m/s</td><td class="n">~3 MOA</td></tr>
+      <tr><td>Rossi Puma (.38/.357)</td><td>alavanca, tubo sob o cano</td><td class="n">~950 mm</td><td class="n">508 mm</td><td class="n">~2,7 kg</td><td class="n">~500 m/s (.357)</td><td class="n">~3 MOA</td></tr>
+      <tr><td>Rifle de caça .30-06</td><td>ferrolho</td><td class="n">~1.100 mm</td><td class="n">~560 mm</td><td class="n">~3,6 kg</td><td class="n">~880 m/s</td><td class="n">~1,5 MOA</td></tr>
+      <tr><td colspan="7"><b>Metralhadoras</b></td></tr>
+      <tr><td>FN Minimi</td><td>gás, ferrolho aberto, cinta ou carregador</td><td class="n">1.040 mm</td><td class="n">465 mm</td><td class="n">7,1 kg</td><td class="n">915 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>PKM</td><td>gás pistão longo, ferrolho aberto</td><td class="n">1.173 mm</td><td class="n">658 mm</td><td class="n">7,5 kg</td><td class="n">825 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>M60</td><td>gás, ferrolho aberto</td><td class="n">1.105 mm</td><td class="n">560 mm</td><td class="n">10,5 kg</td><td class="n">853 m/s</td><td class="n">~4 MOA</td></tr>
+      <tr><td>Browning M2</td><td>recuo curto, ferrolho fechado</td><td class="n">1.650 mm</td><td class="n">1.140 mm</td><td class="n">38 kg</td><td class="n">~890 m/s</td><td class="n">~2 MOA (tripé)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">MOA (minuto de ângulo) é quanto os tiros se espalham: 1 MOA ≈ 2,9 cm a 100 m. Os números são de armas em bom estado, com munição comum, apoiadas.</p>
+</section>
+
+<section id="precisao">
+  <h2><span class="code">08</span>Precisão e manuseio</h2>
+  <p>A precisão no jogo parte do MOA real da arma e é piorada por tudo o que o personagem faz. Isso deixa um sniper parado e deitado muito preciso, e o mesmo sniper correndo inútil.</p>
+  <div class="formula">dispersão_final = MOA_real
+                × mult_postura
+                × mult_movimento
+                × mult_mira (sem mirar ×6, mirando ×1)
+                × (1 + calor_do_cano)          // tiros seguidos
+                × (2 − condição_da_arma)       // arma gasta espalha mais
+                × mult_ferimento_braço (×1,5 se ferido)</div>
+  <div class="tbl"><table>
+    <thead><tr><th>Estado</th><th>Multiplicador</th></tr></thead>
+    <tbody>
+      <tr><td>Deitado com bipé ou apoiado</td><td class="n">×0,4</td></tr>
+      <tr><td>Deitado</td><td class="n">×0,6</td></tr>
+      <tr><td>Agachado</td><td class="n">×0,75</td></tr>
+      <tr><td>Em pé parado</td><td class="n">×1,0</td></tr>
+      <tr><td>Andando</td><td class="n">×1,8</td></tr>
+      <tr><td>Correndo (só sem mirar)</td><td class="n">×3,0</td></tr>
+      <tr><td>Cansado (estamina abaixo de 20%)</td><td class="n">×1,4 e balanço da mira dobrado</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Recuo</h3>
+  <p>Cada arma tem um <b>padrão de recuo fixo</b> (os primeiros 10 tiros sobem sempre do mesmo jeito, e o jogador aprende a compensar) mais uma parte aleatória pequena. A força do recuo vem da energia do calibre dividida pelo peso da arma, então uma AK pesada em 7,62×39 sobe menos que uma Desert Eagle em .50 AE.</p>
+  <h3>Tempo para mirar</h3>
+  <p>Tempo de levantar a arma até a mira = 0,15 s + 0,05 s por kg. Uma Glock mira em 0,18 s, uma M4 em 0,30 s, uma AWM em 0,50 s e uma Barrett em 0,85 s. Coronha retrátil e empunhadura alteram esse tempo.</p>
+  <h3>Balística</h3>
+  <p>Até o alcance efetivo, o tiro é hitscan com queda calculada pela velocidade de boca (bala mais rápida cai menos). Acima de 300 m, snipers usam projétil simulado com tempo de voo e queda real, para valorizar o tiro de longa distância sem pesar no servidor.</p>
+</section>
+
+<section id="modelagem">
+  <h2><span class="code">09</span>Guia de modelagem das armas</h2>
+  <p>Regras para os artistas 3D, para que todas as armas fiquem no mesmo padrão de qualidade e funcionem com as animações compartilhadas.</p>
+  <div class="grid">
+    <div class="card"><h4>Escala e referência</h4><p>Escala 1:1 em metros, usando o comprimento total e o comprimento do cano da ficha técnica. Pelo menos 3 fotos de referência (lado esquerdo, lado direito, topo) e uma vista explodida do manual.</p></div>
+    <div class="card"><h4>Peças móveis separadas</h4><p>Ferrolho ou corrediça, gatilho, cão, carregador, retém do carregador, seletor de tiro, alavanca de manejo, tampa de ejeção, tambor (revólver), telha de bomba (escopeta), ferrolho de ação.</p></div>
+    <div class="card"><h4>Pontos de encaixe</h4><p>Sockets padronizados: boca do cano, trilho superior, trilho inferior, trilhos laterais, carregador, mão esquerda, mão direita, ejeção do estojo, ponto da mira de ferro.</p></div>
+    <div class="card"><h4>Orçamento de polígonos</h4><p>Low poly sombrio, com detalhe nas partes que o jogador vê de perto. Primeira pessoa: pistola até 6 mil triângulos, fuzil até 12 mil. Mundo e terceira pessoa: 3 LODs (50%, 20%, 5%).</p></div>
+    <div class="card"><h4>Texturas e desgaste</h4><p>Um conjunto de texturas por arma, com máscara de desgaste ligada à durabilidade: arma nova, gasta, enferrujada e suja de sangue sem trocar modelo.</p></div>
+    <div class="card"><h4>Fidelidade</h4><p>Controles no lugar real (seletor da AK do lado direito, retém da Glock atrás do guarda-mato), número correto de raias do cano visíveis na boca e marcações de calibre na lateral, sem logotipos de marcas registradas.</p></div>
+  </div>
+  <div class="callout"><b>Nome e marcas:</b> usar armas reais pelo modelo é comum em jogos, mas logotipos e marcas registradas (Glock, Colt, Taurus) podem exigir licença. Na versão pública, o mais seguro é manter o desenho e a mecânica reais e usar marcações genéricas no modelo.</div>
+</section>
+
+<section id="recarga">
+  <h2><span class="code">10</span>Recarga e manuseio</h2>
+  <p>Cada arma pertence a um tipo de recarga, e cada tipo precisa de um conjunto de animações. Isso evita animar 40 armas do zero: animamos 7 famílias e ajustamos por arma.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Família</th><th>Animações</th><th>Regra de jogo</th><th>Armas</th></tr></thead>
+    <tbody>
+      <tr><td><b>Carregador destacável</b></td><td>tática (com bala na câmara), vazia (com ferrolho), checar carregador</td><td>Recarga tática guarda o carregador parcial na mochila; ele não some</td><td>pistolas, SMG, fuzis</td></tr>
+      <tr><td><b>Tubular</b></td><td>entrar, inserir 1 cartucho (loop), sair, bombear</td><td>Cancelável a qualquer momento para atirar</td><td>870, Mossberg, Winchester</td></tr>
+      <tr><td><b>Cilindro</b></td><td>abrir, ejetar, 1 a 1 ou speedloader (jet), fechar</td><td>Com jet loader cai de 6 s para 2,2 s</td><td>revólveres</td></tr>
+      <tr><td><b>Pente (stripper)</b></td><td>abrir ferrolho, pressionar pente, fechar</td><td>Só funciona com o ferrolho aberto</td><td>SKS, Mosin</td></tr>
+      <tr><td><b>Ferrolho</b></td><td>ciclar após cada tiro, recarga 1 a 1 ou carregador</td><td>Ciclar tira a mira da luneta por 0,4 s</td><td>Remington 700, AWM</td></tr>
+      <tr><td><b>Basculante</b></td><td>abrir, ejetar estojos, inserir 2, fechar</td><td>Estojos podem ser guardados para recarregar munição</td><td>2 canos</td></tr>
+      <tr><td><b>Cinta / caixa</b></td><td>abrir tampa, trocar cinta, fechar, engatilhar</td><td>Personagem fica parado; longa e vulnerável</td><td>Minimi, PKM</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Engasgos e desgaste</h3>
+  <p>Toda arma tem durabilidade de 0 a 100. Abaixo de 60, começa a chance de engasgo, que pede uma animação de destravar (1,2 s). Kit de limpeza e peças de reposição restauram. Lama, chuva e munição recarregada aumentam o desgaste.</p>
+</section>
+
+<section id="mods">
+  <h2><span class="code">11</span>Modificações e acessórios</h2>
+  <p>Cada arma tem slots. O que cabe depende do trilho (Picatinny, M-LOK, trilho lateral de AK) e da rosca do cano. Montar e desmontar exige bancada ou chave de fenda, e leva tempo.</p>
+  <div class="grid">
+    <div class="card"><h4>Boca do cano</h4><p><b>Supressor</b>: ruído −60% (com subsônica −75%), dano −5%, aquece e gasta durabilidade.</p><p><b>Supressor caseiro</b> (filtro de óleo): ruído −40%, quebra depois de 30 a 60 tiros.</p><p><b>Freio de boca / compensador</b>: recuo −25%, ruído +10%.</p></div>
+    <div class="card"><h4>Miras</h4><p><b>Red dot / holográfica</b>: aquisição rápida, mira com olhos abertos.</p><p><b>ACOG 4×</b>: médio alcance.</p><p><b>Luneta 3–9× e 6–24×</b>: sniper; balanço da mira ao respirar.</p><p><b>Visão noturna / térmica</b>: muito rara, usa bateria.</p></div>
+    <div class="card"><h4>Trilho inferior</h4><p><b>Empunhadura vertical</b>: recuo vertical −15%.</p><p><b>Bipé</b>: recuo −60% deitado ou apoiado.</p><p><b>Lança-granadas M203</b>: lendário, só base militar.</p></div>
+    <div class="card"><h4>Trilho lateral</h4><p><b>Lanterna</b>: essencial à noite, mas zumbis veem a luz a 40 m.</p><p><b>Laser</b>: menos dispersão atirando sem mirar.</p></div>
+    <div class="card"><h4>Carregador</h4><p><b>Estendido</b>: +50% de capacidade, recarga +15% mais lenta.</p><p><b>Tambor</b>: 50 a 100 tiros, peso e chance de engasgo maiores.</p><p><b>Acoplador duplo</b>: segunda recarga muito mais rápida.</p></div>
+    <div class="card"><h4>Coronha e cano</h4><p><b>Coronha retrátil</b>: sacar mais rápido, mais recuo.</p><p><b>Cano serrado</b> (escopeta): dispersão maior, arma vira de mão.</p><p><b>Cano longo</b>: alcance +20%, mais pesada.</p></div>
+  </div>
+  <h3>Bancada e peças</h3>
+  <p>Peças genéricas (molas, pinos, canos, ferrolhos) vêm de desmontar armas danificadas. Com a habilidade "Armeiro", o jogador conserta armas, faz supressor caseiro e recarrega munição. Isso dá valor a armas quebradas encontradas no mundo.</p>
+</section>
+
+<section id="ruido">
+  <h2><span class="code">12</span>Ruído e hordas</h2>
+  <p>O disparo cria um evento de som com raio. Zumbis dentro do raio vão até o ponto; os de fora do raio só reagem se outro zumbi agitado passar perto (propagação em cadeia, barata de calcular por grade).</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Fonte</th><th>Raio de atração</th><th style="min-width:160px">Escala</th></tr></thead>
+    <tbody>
+      <tr><td>.22 LR subsônica com supressor</td><td class="n">12 m</td><td><div class="bar"><i style="width:2%"></i></div></td></tr>
+      <tr><td>9×19 subsônica com supressor</td><td class="n">25 m</td><td><div class="bar"><i style="width:4%"></i></div></td></tr>
+      <tr><td>.22 LR sem supressor</td><td class="n">60 m</td><td><div class="bar"><i style="width:10%"></i></div></td></tr>
+      <tr><td>Pistola 9×19</td><td class="n">150 m</td><td><div class="bar"><i style="width:25%"></i></div></td></tr>
+      <tr><td>Fuzil 5,56 / 7,62×39</td><td class="n">300 m</td><td><div class="bar"><i style="width:50%"></i></div></td></tr>
+      <tr><td>Escopeta 12 ga</td><td class="n">350 m</td><td><div class="bar"><i style="width:58%"></i></div></td></tr>
+      <tr><td>.308 / .30-06</td><td class="n">420 m</td><td><div class="bar"><i style="width:70%"></i></div></td></tr>
+      <tr><td>.50 BMG</td><td class="n">600 m</td><td><div class="bar"><i style="width:100%"></i></div></td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Rajadas somam: cada tiro extra em 3 s aumenta o raio em 5%, até +50%.</p>
+</section>
+
+<section id="explosivos">
+  <h2><span class="code">13</span>Explosivos e lança-foguetes</h2>
+  <p>Explosivos são a resposta para hordas grandes e para abrir caminho no cenário. Todo explosivo tem raio letal (mata e despedaça), raio de ferimento (dano que cai com a distância) e um nível de destruição que diz o que ele derruba. Fogo amigo vale: o jogador também é atingido.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Explosivo</th><th>Dano no centro</th><th>Raio letal</th><th>Raio de ferimento</th><th>Destruição</th><th>Ruído</th><th>Raridade</th><th>Onde</th></tr></thead>
+    <tbody>
+      <tr><td><b>Granada M67</b> (fragmentação)</td><td class="n">300</td><td class="n">5 m</td><td class="n">15 m</td><td>nível 2</td><td class="n">500 m</td><td><span class="r r3">raro</span></td><td>Exército, base militar</td></tr>
+      <tr><td><b>Coquetel molotov</b></td><td class="n">15/s fogo</td><td class="n">área 4 m</td><td class="n">fogo se espalha</td><td>queima madeira</td><td class="n">40 m</td><td><span class="r r1">crafting</span></td><td>garrafa, gasolina, pano</td></tr>
+      <tr><td><b>Bomba caseira</b> (cano)</td><td class="n">220</td><td class="n">3 m</td><td class="n">10 m</td><td>nível 2</td><td class="n">450 m</td><td><span class="r r1">crafting</span></td><td>cano, pólvora, pregos</td></tr>
+      <tr><td><b>Botijão de gás P13</b></td><td class="n">350</td><td class="n">5 m</td><td class="n">14 m</td><td>nível 2 + fogo</td><td class="n">550 m</td><td><span class="r r1">comum</span></td><td>toda cozinha; explode com tiro ou fogo</td></tr>
+      <tr><td><b>Dinamite</b></td><td class="n">400</td><td class="n">4 m</td><td class="n">12 m</td><td>nível 3</td><td class="n">600 m</td><td><span class="r r3">raro</span></td><td>pedreira, mineração, fazenda</td></tr>
+      <tr><td><b>C4</b> (com detonador)</td><td class="n">600</td><td class="n">6 m</td><td class="n">18 m</td><td>nível 3</td><td class="n">700 m</td><td><span class="r r4">muito raro</span></td><td>base militar</td></tr>
+      <tr><td><b>Mina Claymore</b></td><td class="n">250 em cone</td><td class="n">cone 60°, 15 m</td><td class="n">50 m no cone</td><td>nível 1</td><td class="n">500 m</td><td><span class="r r4">muito raro</span></td><td>base militar; armadilha por fio</td></tr>
+      <tr><td><b>Lança-granadas M79 / M203</b></td><td class="n">200</td><td class="n">4 m</td><td class="n">12 m</td><td>nível 2</td><td class="n">450 m</td><td><span class="r r4">muito raro</span></td><td>base militar; granada 40 mm</td></tr>
+      <tr><td><b>Bazuca M72 LAW</b></td><td class="n">500</td><td class="n">5 m</td><td class="n">15 m</td><td>nível 3</td><td class="n">700 m</td><td><span class="r r4">muito raro</span></td><td>descartável, 1 tiro</td></tr>
+      <tr><td><b>AT4</b></td><td class="n">650</td><td class="n">5 m</td><td class="n">16 m</td><td>nível 3</td><td class="n">750 m</td><td><span class="r r4">lendário</span></td><td>descartável, 1 tiro, atravessa veículos blindados</td></tr>
+      <tr><td><b>RPG-7</b></td><td class="n">600</td><td class="n">5 m</td><td class="n">16 m</td><td>nível 3</td><td class="n">750 m</td><td><span class="r r4">lendário</span></td><td>reutilizável; foguetes PG-7V muito raros; recarga 4,5 s</td></tr>
+      <tr><td><b>Granada de luz</b> (flashbang)</td><td class="n">0</td><td class="n">—</td><td class="n">10 m</td><td>nenhuma</td><td class="n">400 m</td><td><span class="r r3">raro</span></td><td>atordoa zumbis por 4 s, mas chama todos em volta</td></tr>
+    </tbody>
+  </table></div>
+  <p><b>Arremesso:</b> segurar para cozinhar a granada (pavio de 4 s na M67), mirar com arco de trajetória. Bombas de tempo e C4 podem ser presas em portas, carros ou usadas como isca de som para puxar a horda para longe.</p>
+  <p><b>Bazucas:</b> o foguete é um projétil físico real (não hitscan), com tempo de voo e queda. Tem distância mínima de armar de 10 m; abaixo disso, bate sem explodir. O sopro atrás do lançador fere quem estiver a 5 m.</p>
+  <div class="callout"><b>Regra de reação em cadeia:</b> explosão atinge botijões, tanques de carro e postos de gasolina próximos. Um posto de gasolina vira uma bomba de nível 3 que pode limpar uma horda inteira e derrubar o quarteirão.</div>
+</section>
+
+<section id="destruicao">
+  <h2><span class="code">14</span>Cenário destrutível</h2>
+  <p>Prédios, móveis, itens e materiais têm vida e se quebram. Tiros abrem buracos pequenos, escopetas e machados quebram portas, explosivos derrubam paredes e andares. Zumbis em horda também destroem: barricadas, cercas e portas cedem quando muitos empurram ao mesmo tempo.</p>
+  <h3>Níveis de destruição</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Nível</th><th>O que quebra</th><th>Como quebra</th></tr></thead>
+    <tbody>
+      <tr><td><b>Nível 1</b> objetos</td><td>vidros, móveis, eletrodomésticos, caixas, cercas de madeira, itens soltos</td><td>tiros, golpes, pisoteio da horda; viram pedaços e loot espalhado</td></tr>
+      <tr><td><b>Nível 2</b> estrutura leve</td><td>portas, janelas, paredes de drywall e madeira, telhados de telha, barricadas</td><td>tiros acumulados, machado, marreta, granada, veículo batendo</td></tr>
+      <tr><td><b>Nível 3</b> estrutura pesada</td><td>paredes de alvenaria e concreto, lajes, pilares, muros</td><td>dinamite, C4, bazuca, posto de gasolina, caminhão em alta velocidade</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Materiais</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Material</th><th>Vida por placa</th><th>Custo de PEN</th><th>Resiste a</th><th>Fraco contra</th></tr></thead>
+    <tbody>
+      <tr><td>Vidro</td><td class="n">10</td><td class="n">0,2</td><td>nada</td><td>tudo; barulho de vidro chama zumbis a 60 m</td></tr>
+      <tr><td>Drywall, compensado</td><td class="n">80</td><td class="n">0,5</td><td>pouco</td><td>tiros, golpes</td></tr>
+      <tr><td>Madeira maciça</td><td class="n">200</td><td class="n">1,0</td><td>pistola</td><td>machado, fogo, escopeta</td></tr>
+      <tr><td>Chapa de metal, portão</td><td class="n">350</td><td class="n">2,0</td><td>golpes, fogo</td><td>AP, explosivos, maçarico</td></tr>
+      <tr><td>Tijolo, bloco</td><td class="n">800</td><td class="n">4,0</td><td>armas comuns</td><td>marreta (lento), nível 3</td></tr>
+      <tr><td>Concreto armado</td><td class="n">2.000</td><td class="n">6,0</td><td>quase tudo</td><td>C4, AT4, RPG-7</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Prédios</h3>
+  <ul>
+    <li>Cada prédio é dividido em peças (paredes, lajes, pilares) ligadas por um grafo de suporte. Quando um pilar ou parede de apoio cai, as peças sem apoio desabam junto.</li>
+    <li>Desabamento mata ou prende zumbis e jogadores embaixo, e bloqueia ruas. Isso vira tática: derrubar a fachada de um prédio para fechar a avenida contra a horda.</li>
+    <li>Fogo se espalha por madeira, móveis e tecido, consome o loot do cômodo e enfraquece a estrutura.</li>
+    <li>Itens dentro do inventário de um contêiner destruído caem no chão; alguns quebram (vidros de remédio, eletrônicos).</li>
+  </ul>
+  <p class="muted">Desempenho e LAN: todas as peças vêm pré-fraturadas pelos artistas (nada de quebra procedural). O servidor guarda só o estado da peça (inteira, danificada, destruída) e envia mudanças como eventos pequenos. Os detritos e a poeira são só visuais, simulados em cada máquina, e somem depois de 30 s. O estado destruído é salvo no mapa: a cidade fica marcada pelas batalhas.</p>
+</section>
+
+<section id="veiculos">
+  <h2><span class="code">15</span>Veículos</h2>
+  <p>Veículos são armas, abrigo e alvo ao mesmo tempo. Cada um tem peças com vida própria, e o estado de cada peça muda como o carro anda.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Peça</th><th>Vida</th><th>Quando quebra</th></tr></thead>
+    <tbody>
+      <tr><td>Motor</td><td class="n">300</td><td>perde velocidade, solta fumaça, depois para; pode pegar fogo</td></tr>
+      <tr><td>Tanque de combustível</td><td class="n">150</td><td>vaza (rastro de gasolina inflamável); com fogo, explode como botijão grande</td></tr>
+      <tr><td>Pneus</td><td class="n">60 cada</td><td>furado: puxa para o lado e perde velocidade</td></tr>
+      <tr><td>Para-brisa e vidros</td><td class="n">40</td><td>racha, depois quebra: zumbis passam a alcançar e puxar o motorista</td></tr>
+      <tr><td>Portas e lataria</td><td class="n">200 cada</td><td>amassa, depois cai: menos proteção e zumbis entram</td></tr>
+      <tr><td>Bateria e faróis</td><td class="n">50</td><td>sem farol à noite; sem bateria não liga</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Atropelar e furar hordas</h3>
+  <p>Dano no zumbi = velocidade (km/h) × massa do veículo. Acima de 40 km/h um carro mata e despedaça; abaixo disso, só derruba e o zumbi pode agarrar a lateral. Cada zumbi atingido tira vida do para-brisa e do motor. Furar uma horda de 50 com um carro popular acaba com o carro; com um caminhão ou blindado, passa.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Veículo</th><th>Blindagem</th><th>Atropelamento</th><th>Lugares</th><th>Raridade</th></tr></thead>
+    <tbody>
+      <tr><td>Carro popular, moto</td><td>nenhuma</td><td>fraco; moto derruba o piloto</td><td class="n">1 a 5</td><td><span class="r r1">comum</span></td></tr>
+      <tr><td>Picape, SUV</td><td>baixa</td><td>bom; aceita grade de para-choque</td><td class="n">2 a 5 + caçamba</td><td><span class="r r1">comum</span></td></tr>
+      <tr><td>Viatura policial</td><td>baixa</td><td>bom; sirene vira isca de som</td><td class="n">4</td><td><span class="r r2">incomum</span></td></tr>
+      <tr><td>Caminhão, ônibus</td><td>média</td><td>excelente; lento para virar</td><td class="n">2 a 40</td><td><span class="r r2">incomum</span></td></tr>
+      <tr><td>Carro-forte</td><td>alta; ignora tiros de pistola e fuzil</td><td>excelente</td><td class="n">4</td><td><span class="r r3">raro</span></td></tr>
+      <tr><td>Blindado do Exército (Guarani)</td><td>muito alta; só AT4, RPG e C4 ferem</td><td>passa por qualquer horda</td><td class="n">11</td><td><span class="r r4">lendário</span></td></tr>
+    </tbody>
+  </table></div>
+  <h3>Modificações de veículo</h3>
+  <p>Na oficina: grade de aço no para-choque (atropelamento +50%), chapas nas janelas (vidros não quebram, visão menor), pneus reforçados, tanque extra, e suporte de arma na caçamba ou no teto para PKM, Minimi ou M2 .50. Combustível é escasso e precisa ser sifonado de outros carros ou de postos.</p>
+  <p class="muted">Barulho: motor ligado atrai zumbis a 120 m, buzina a 300 m, alarme de carro a 400 m por 30 s.</p>
+</section>
+
+<section id="achados">
+  <h2><span class="code">16</span>Achados no mundo</h2>
+  <p>Cada local tem uma tabela de loot. A chance cai com o tempo: lojas e delegacias são saqueadas por NPCs sobreviventes ao longo dos dias, então o jogador que demora encontra menos.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Local</th><th>Armas típicas</th><th>Munição</th><th>Acessórios e peças</th><th>Risco</th></tr></thead>
+    <tbody>
+      <tr><td><b>Casa urbana</b></td><td>Taurus 82, G2C, .380 (5% por casa)</td><td>.38, 9×19, .380 em caixas pequenas</td><td>lanterna, kit de limpeza</td><td><span class="r r1">baixo</span></td></tr>
+      <tr><td><b>Sítio e fazenda</b></td><td>2 canos, CBC 7022, rifle .30-06, Winchester</td><td>12 ga chumbinho e 00, .22, SP de caça</td><td>luneta de caça, bipé</td><td><span class="r r1">baixo</span></td></tr>
+      <tr><td><b>Loja de caça e pesca</b></td><td>Ruger 10/22, Remington 700, Mossberg</td><td>caixas grandes de .22, 12 ga, .308, .30-06, slug</td><td>lunetas, insumos de recarga, coldres</td><td><span class="r r2">médio</span></td></tr>
+      <tr><td><b>Loja de armas (CAC)</b></td><td>pistolas variadas, AR-15 civil, 870, Glock</td><td>todos os de pistola, HP, +P</td><td>red dot, carregadores, lanterna de trilho</td><td><span class="r r2">médio</span>; alarme dispara</td></tr>
+      <tr><td><b>Delegacia</b></td><td>.40, Glock, CBC Pump, SMT9</td><td>.40, 9×19, 00, slug</td><td>coletes, carregadores, algemas</td><td><span class="r r3">alto</span>; policiais zumbis com colete</td></tr>
+      <tr><td><b>Viatura abandonada</b></td><td>escopeta ou SMT9 no suporte (25%)</td><td>1 a 2 carregadores</td><td>lanterna, rádio</td><td><span class="r r2">médio</span></td></tr>
+      <tr><td><b>Carro-forte, banco</b></td><td>escopeta, .38</td><td>12 ga, .38</td><td>colete</td><td><span class="r r2">médio</span></td></tr>
+      <tr><td><b>Posto do Exército / bloqueio</b></td><td>IA2, FAL, ParaFAL</td><td>5,56, 7,62×51, traçante</td><td>ACOG, empunhadura</td><td><span class="r r3">alto</span>; soldados zumbis</td></tr>
+      <tr><td><b>Base militar</b></td><td>M4, SCAR-H, Minimi, M82 (lendários com 1% a 3%)</td><td>AP, caixas de munição de fuzil</td><td>supressores, visão noturna, M203</td><td><span class="r r4">extremo</span>; hordas presas no perímetro</td></tr>
+      <tr><td><b>Corpo de sobrevivente</b></td><td>o que o NPC carregava (mochila real dele)</td><td>restos do carregador</td><td>itens da história do NPC</td><td>variável</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Raridades</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Nível</th><th>Peso na tabela</th><th>Estado ao achar</th></tr></thead>
+    <tbody>
+      <tr><td><span class="r r1">comum</span></td><td class="n">60%</td><td>durabilidade 30 a 90</td></tr>
+      <tr><td><span class="r r2">incomum</span></td><td class="n">28%</td><td>durabilidade 40 a 90</td></tr>
+      <tr><td><span class="r r3">raro</span></td><td class="n">9%</td><td>durabilidade 50 a 100, às vezes com acessório</td></tr>
+      <tr><td><span class="r r4">muito raro</span></td><td class="n">2,5%</td><td>quase sempre com acessório</td></tr>
+      <tr><td><span class="r r4">lendário</span></td><td class="n">0,5%</td><td>lugar fixo do mapa, guardado por horda ou evento</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout"><b>Regra de LAN:</b> o loot é gerado pelo servidor quando alguém entra na área pela primeira vez, e fica igual para todos. Cada contêiner pertence a quem abriu primeiro por 5 s, para evitar duplicar itens.</div>
+</section>
+
+<section id="dados">
+  <h2><span class="code">17</span>Formato de dados</h2>
+  <p>Armas, munições e acessórios ficam em arquivos de dados (JSON ou ScriptableObject/DataAsset), nunca no código. Assim, balancear não exige recompilar.</p>
+  <div class="formula">{
+  "id": "ak47",
+  "nome": "AK-47",
+  "categoria": "fuzil",
+  "calibre": "762x39",
+  "capacidade": 30,
+  "cadencia_rpm": 600,
+  "modos": ["semi", "auto"],
+  "recarga": { "familia": "carregador", "tatica_s": 2.6, "vazia_s": 3.4 },
+  "recuo": { "vertical": 1.4, "horizontal": 0.6 },
+  "peso_kg": 4.3,
+  "durabilidade_perda_por_tiro": 0.04,
+  "chance_engasgo_mult": 0.5,
+  "slots": ["boca_rosca_14x1", "trilho_lateral_ak", "carregador_ak"],
+  "raridade": "incomum"
+}
+
+{
+  "id": "762x39_fmj",
+  "calibre": "762x39",
+  "tipo": "FMJ",
+  "dano": 55, "pen": 3.0, "alcance_m": 250,
+  "cranio": "garantido", "ruido_m": 300,
+  "peso_kg": 0.018
+}</div>
+</section>
+
+<section id="equipe">
+  <h2><span class="code">18</span>Equipe de armas</h2>
+  <p>Proposta de como dividir este sistema em frentes de trabalho. Cada frente pode virar uma conversa ou um responsável separado.</p>
+  <div class="grid">
+    <div class="card"><h4>Design e balanceamento</h4><p>Tabelas de calibre, tipos de munição, regiões e curvas de queda. Planilha de "tiros para matar" por arma e distância.</p></div>
+    <div class="card"><h4>Programação de combate</h4><p>Hitscan com penetração, hitboxes, desmembramento, validação no servidor LAN, sistema de ruído em grade.</p></div>
+    <div class="card"><h4>Arte e animação</h4><p>Modelos low poly das armas seguindo a ficha técnica e o guia de modelagem, 7 famílias de recarga, engasgo, ciclar ferrolho, inspeção de arma.</p></div>
+    <div class="card"><h4>Áudio e efeitos</h4><p>Som por calibre e por ambiente (rua, interior, túnel), supressor, estojos caindo, impacto em carne, madeira e metal.</p></div>
+    <div class="card"><h4>Loot e economia</h4><p>Tabelas por local, decaimento por dia, crafting de munição e peças, armas de NPCs.</p></div>
+    <div class="card"><h4>Destruição e física</h4><p>Peças pré-fraturadas, grafo de suporte dos prédios, fogo, explosões em cadeia, dano de veículos e sincronização do estado destruído na LAN.</p></div>
+  </div>
+  <h3>Ordem sugerida</h3>
+  <ul>
+    <li>Fórmula de dano, regiões, penetração e precisão com as 3 armas do protótipo.</li>
+    <li>Arquivos de dados e mais 10 armas comuns (pistolas, revólveres, escopetas, .22).</li>
+    <li>Ruído atraindo hordas e tipos de munição.</li>
+    <li>Acessórios, bancada, durabilidade e engasgo.</li>
+    <li>Tabelas de achados por local e armas raras e lendárias.</li>
+    <li>Explosivos, cenário destrutível nível 1 e 2, veículos e atropelamento.</li>
+    <li>Destruição nível 3 (prédios desabando) e bazucas.</li>
+  </ul>
+</section>
+
+<footer>ZombiAdA · Sistema de armas v0.1 · Valores iniciais para playtest; todos ajustáveis nos arquivos de dados.</footer>
+</div>
+
+<script>
+(function(){
+  var btns=document.querySelectorAll('.filters button');
+  var rows=document.querySelectorAll('#weapons tbody tr');
+  btns.forEach(function(b){
+    b.addEventListener('click',function(){
+      var f=b.getAttribute('data-f');
+      btns.forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')});
+      rows.forEach(function(r){r.hidden=!(f==='all'||r.getAttribute('data-c')===f)});
+    });
+  });
+})();
+</script>
+
+</body></html>
