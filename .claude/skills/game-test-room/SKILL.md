@@ -74,6 +74,10 @@ Sem `area`, os itens vão em fileiras. `openArea` de um grupo sem módulo també
 | `room.spawn / clear / resetAll / spawned` | Objetos da cena |
 | `room.setTool / use / grab / throwHeld / look / walk / update` | Dirigir a sala por script |
 | `room.playAnimation(clipId)` / `room.animations()` | Clipes dos itens |
+| `room.bench(moduleId?)` | Bancada do módulo ativo (ou do id): `controls`, `layers`, `value`, `set`, `setLayer`, `act`, `encode` |
+| `room.metrics()` | Contadores da sala (`fps`, `frame_ms`, `draw_calls`, `triangles`, `objects`, `fragments`, `particles`, `decals`) e os do módulo ativo |
+| `options.metrics`, `options.bench` | Quais contadores da sala (`false` para nenhum); estado da bancada (`state`) e `onChange(moduleId, encoded)` |
+| `encodeBenchState`, `decodeBenchState` | Estado `id=valor;id=valor`; o decode trata a entrada como hostil |
 | `room.runScenarios()` / `room.scenarios` | Cenários embutidos e os do módulo |
 | `room.log` / `createLog` | Log de comportamento (`toNDJSON`, JSON) |
 | `demoItems`, `brickWallSpec`, `buildFromSpec` | Itens de demonstração e desenho de uma spec em malhas |
@@ -87,18 +91,22 @@ A tela já traz busca no catálogo (todas as abas, sem acento) e busca de testes
 Libs de conteúdo (`-fleet`, `-household`, `-species`) entregam módulos; não importam a sala.
 
 ## Ambiente de teste
-`pnpm --filter @adatechnology/game-test-room test` (vitest: `module.test.ts`, `module-host.test.ts`, `room.test.ts`, `scenarios.test.ts`).
+`pnpm --filter @adatechnology/game-test-room test` (vitest: `module.test.ts`, `module-host.test.ts`, `room.test.ts`, `scenarios.test.ts`,
+`bench.test.ts`, `metrics.test.ts`).
 Exemplos no repositório: `examples/test-room` (carrega `DEMO_MODULE`), `examples/weapons-test-area`, `examples/interactables-test-area`.
-Query strings do exemplo: `?area=`, `?items=`, `?scenario=all|<id>`, `?lang=`, `?quality=`, `?ui=0`.
+Query strings do exemplo: `?area=`, `?items=`, `?scenario=all|<id>`, `?lang=`, `?quality=`, `?ui=0`, `?bench=` (estado da bancada).
 
 ## Cuidados
 - O `build` recebe `THREE` como `unknown`; nomeie as malhas e ponha `userData.destructionPart` com o id da peça para a destruição achá-las.
 - Item com `impl` (destruição própria) não é movível; o `DestructibleImpl.id` deve ser o id que a sala passa.
-- `attach` roda uma vez no `loadModule`; devolva o desfazer. `ModuleHost.onFrame` roda a cada quadro simulado.
+- `attach` roda uma vez no `loadModule`; devolva o desfazer. Recarregar o módulo chama o desfazer anterior antes do novo `attach`.
+  `ModuleHost.onFrame` roda a cada quadro simulado.
+- A bancada é emprestada (`host.bench`) só a módulo que declara controles, camadas ou contadores e passa no `checkBench`. As mudanças iniciais
+  chegam logo depois do `attach`, já com o estado de `options.bench.state` restaurado. A sala nunca mexe em `location`.
+- Q emite `mode` quando o modo de tiro muda; `fault`, `clear` e `safety` ainda não são emitidos pela sala (Fase 1, T1.3).
 - Id de módulo/item/clipe em snake_case. Nos cenários avance o tempo com `step(segundos)`, não espere tempo real.
 - Sem `renderer` injetado a sala é dona do canvas e do laço.
 
 ## O que vem pela migração (spec 001)
-Decisão E5: o contrato do módulo cresce (parâmetros, camadas e contadores) para a Oficina de efeitos virar módulo do `game-vfx` carregado
-aqui. V5: módulos de veículos e vegetação viram `examples/vehicles-test-area` e `vegetation-test-area`. Cada área da página do kit abre o seu
+Decisão E5: o contrato do módulo já tem bancada (T0.2); falta a Oficina de efeitos virar módulo do `game-vfx` carregado aqui. V5: módulos de veículos e vegetação viram `examples/vehicles-test-area` e `vegetation-test-area`. Cada área da página do kit abre o seu
 ambiente via `?area=`. Nada disso existe ainda no pacote.

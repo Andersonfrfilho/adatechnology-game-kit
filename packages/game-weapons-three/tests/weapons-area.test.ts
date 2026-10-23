@@ -73,4 +73,19 @@ describe('weapons test area', () => {
     expect(module.fx?.casings).toBe(6)
     expect(module.fx?.magazines).toBe(0)
   })
+
+  it('takes the tool cycle events it does not handle yet without error', () => {
+    const { room, module } = roomWithWeapons()
+    room.setTool('rifle_5_56')
+    const tool = { weapon: 'rifle_5_56', category: room.tool.def.category, ammo: room.tool.ammo, capacity: room.tool.capacity, reserve: room.tool.reserve, reloading: false, mode: 'burst', fault: 'stovepipe', safety: true, heat: 0.4 }
+    expect(() => {
+      module.fx?.handle({ type: 'mode', weapon: 'rifle_5_56', mode: 'burst' }, tool)
+      module.fx?.handle({ type: 'fault', weapon: 'rifle_5_56', fault: 'stovepipe' }, tool)
+      module.fx?.handle({ type: 'clear', weapon: 'rifle_5_56', fault: 'stovepipe', phase: 'end' }, tool)
+      module.fx?.handle({ type: 'safety', weapon: 'rifle_5_56', on: true }, tool)
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyQ' }))
+      room.update(0.1)
+    }).not.toThrow()
+    expect(module.fx?.inHand).toBe('rifle_5_56')
+  })
 })

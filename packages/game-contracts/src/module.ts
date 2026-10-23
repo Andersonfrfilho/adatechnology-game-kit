@@ -1,4 +1,5 @@
 import type { AnimationClipSpec } from './animation'
+import type { ModuleBench, ModuleControl, ModuleLayer, ModuleMetric } from './bench'
 import type { DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
 import type { ContainerSpec } from './fluids'
@@ -62,12 +63,20 @@ export interface ModuleArea {
   view?: { eye: Vec3; target: Vec3 }
 }
 
-/** What the player did with the tool in hand, as the host reports it. Hosts emit what they support; modules ignore what they do not need. */
+/**
+ * What the player did with the tool in hand, as the host reports it. Hosts emit what they support; modules ignore what they do not need. The
+ * names are of a tool's cycle, not of a firearm: a nail gun, a chainsaw or a hose has modes, faults and a safety too.
+ */
 export type HostEvent =
   | { type: 'tool'; weapon: string }
-  | { type: 'shot'; weapon: string; shots: number; recoil: [number, number] }
+  /** `shots` are projectiles (a shotgun shell is many), `rounds` the cartridges spent (a burst is several). */
+  | { type: 'shot'; weapon: string; shots: number; recoil: [number, number]; rounds?: number; mode?: string }
   | { type: 'reload'; weapon: string; phase: 'start' | 'end' }
   | { type: 'empty'; weapon: string }
+  | { type: 'mode'; weapon: string; mode: string }
+  | { type: 'fault'; weapon: string; fault: string }
+  | { type: 'clear'; weapon: string; fault: string; phase: 'start' | 'end' }
+  | { type: 'safety'; weapon: string; on: boolean }
 
 /** The tool in hand as the host sees it. */
 export interface HostTool {
@@ -77,6 +86,12 @@ export interface HostTool {
   capacity: number
   reserve: number
   reloading: boolean
+  mode?: string
+  /** The fault the tool is stuck with, if any. */
+  fault?: string
+  safety?: boolean
+  /** 0..1 */
+  heat?: number
 }
 
 /**
@@ -97,6 +112,8 @@ export interface ModuleHost {
   onFrame(update: (dt: number) => void): () => void
   /** Write a line to the host's behaviour log. */
   log(text: string, data?: Record<string, unknown>): void
+  /** Lent only to a module that declares controls, layers or metrics. */
+  bench?: ModuleBench
 }
 
 /** What a module hands the test room: its items and, optionally, scenarios that exercise them, its area and its own presentation. */
@@ -110,6 +127,10 @@ export interface TestableModule<Context = unknown> {
   scenarios?(locale: string): Array<ModuleScenario<Context>>
   /** How to set the area up when the host opens the module's group. Without it the host lays the items in rows. */
   area?(locale: string): ModuleArea
+  /** The bench: what the viewer can set (controls), turn on or off (layers) and watch (metrics). Names already translated for `locale`. */
+  controls?(locale: string): ModuleControl[]
+  layers?(locale: string): ModuleLayer[]
+  metrics?(locale: string): ModuleMetric[]
   /** Called once when the module is loaded, with what the host lends. Returns the function that undoes it. */
   attach?(host: ModuleHost): () => void
 }
