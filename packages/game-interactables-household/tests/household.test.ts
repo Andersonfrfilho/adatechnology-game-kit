@@ -608,3 +608,25 @@ describe('recorder', () => {
     expect(cornersOf(b.rec.primitives[0]).length).toBeGreaterThan(0)
   })
 })
+
+describe('slot layout is robust to size overrides', () => {
+  const sweep = (lo: number, hi: number, step: number) => {
+    const out: number[] = []
+    for (let v = lo; v <= hi + 1e-9; v += step) out.push(Math.round(v * 1000) / 1000)
+    return out
+  }
+  const ok = (tag: string, spec: ReturnType<typeof build>['spec']) => {
+    for (const c of spec.containers ?? []) {
+      expect(c.slots.length, `${tag} ${c.id} has slots`).toBeGreaterThan(0)
+      for (const [i, s] of c.slots.entries()) {
+        expect(s.max.every((n) => n > 0.01), `${tag} ${c.id} slot ${i} positive ${s.max}`).toBe(true)
+        const fits = Object.values(hh.items).some((it) => fitsSize(it.size, s.max))
+        expect(fits, `${tag} ${c.id} slot ${i} fits an item ${s.max}`).toBe(true)
+      }
+    }
+  }
+
+  it('wardrobe: every slot has a positive size and fits a catalog item for w 0.4..3, h 1.2..2.6', () => {
+    for (const w of sweep(0.4, 3, 0.1)) for (const h of sweep(1.2, 2.6, 0.1)) ok(`wardrobe w${w} h${h}`, build('wardrobe', { w, h }).spec)
+  })
+})

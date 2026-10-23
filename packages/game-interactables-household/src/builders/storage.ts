@@ -246,7 +246,7 @@ export function wardrobe(c: Ctx): void {
   // vertical divider
   c.b('wood', xs - 0.009, yBoard + 0.018, sh.iz0, xs + 0.009, sh.iy1, sh.iz1 - 0.02, shade(body, 0.95))
   // hanging rod with clothes
-  const rodY = 1.82
+  const rodY = Math.min(1.82, h - 0.28)
   const zc = (sh.iz0 + sh.iz1) / 2 - 0.02
   c.rod('metal', 'x', (sh.ix0 + xs - 0.009) / 2, rodY, zc, 0.0125, xs - 0.009 - sh.ix0, 0xb4b8bc)
   for (const x of [sh.ix0 + 0.01, xs - 0.02]) c.b('metal', x - 0.01, rodY - 0.03, zc - 0.03, x + 0.01, rodY + 0.03, zc + 0.03, 0x8c9096)
@@ -266,10 +266,15 @@ export function wardrobe(c: Ctx): void {
     drawPieces(c, g.pieces, { x, y: rodY - 0.09 * scale, z: zc, yaw, scale })
   }
   // shelves in the last door's section
-  const sy = [0.7, 1.05, 1.4, 1.75]
+  const sy = [0.7, 1.05, 1.4, 1.75].filter((y) => y < h - 0.2)
   for (const y of sy) shelf(c, xs + 0.009, sh.ix1, y, sh.iz0, sh.iz1 - 0.02, body)
   const levels = [yBoard + 0.021, ...sy]
-  const shelfSlots = levels.flatMap((y, i) => c.row(xs + 0.02, sh.ix1 - 0.01, y, (sh.iz0 + sh.iz1 - 0.02) / 2, 2, [0.24, (i < levels.length - 1 ? levels[i + 1] - y : sh.iy1 - y) - 0.035, 0.45]))
+  const cols = sh.ix1 - (xs + 0.02) >= 0.3 ? 2 : 1 // a narrow shelf section holds one column, not two slivers
+  const shelfSlots = levels
+    .flatMap((y, i) => {
+      const room = (i < levels.length - 1 ? levels[i + 1] - y : sh.iy1 - y) - 0.035
+      return room >= 0.06 ? c.row(xs + 0.02, sh.ix1 - 0.01, y, (sh.iz0 + sh.iz1 - 0.02) / 2, cols, [0.24, room, 0.45]) : []
+    })
   // drawers under the doors
   const side = sideOf(c, 'left')
   const y1 = h - 0.005
