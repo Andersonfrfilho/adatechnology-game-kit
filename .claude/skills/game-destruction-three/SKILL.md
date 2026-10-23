@@ -52,6 +52,7 @@ Malha fundida (prédio assado): ligue cada peça por faixa de vértices, `{ mesh
 | `renderer.makePiece / pieces / piece / impulse` | peça física arremessável e empurrões |
 | `renderer.update(dt)` | integra fragmentos, peças e partículas |
 | `renderer.emit(kind, point, normal, count, speed?)` | partículas diretas (clarão de boca, espuma, faíscas de ferramenta) |
+| `renderer.explode(point, energy, radius)` | desenha uma explosão sem peça que explode (granada, foguete): clarão, fogo, fumaça, luz, som e empurrão nas peças |
 | `renderer.restore / clear / stats / dispose` | restaurar um objeto, limpar tudo, contagens, soltar recursos |
 | `specFromObject3D(THREE, root, options?)` | gera `{ spec, parts }`: uma peça por malha, material pelo nome, juntas inferidas |
 | `heatColor(temperatureC)` | cor `0xRRGGBB` do brilho: 0 abaixo de ~450 °C, vermelho ~500, laranja ~800, branco de 1400 |
@@ -76,10 +77,11 @@ Malha fundida (prédio assado): ligue cada peça por faixa de vértices, `{ mesh
 - A luz da explosão é criada na primeira explosão: há uma recompilação de shader única; use `explosionLight: false` para evitar.
 - `pointScale` (padrão 700) deve acompanhar a altura do viewport, senão fumaça e fogo ficam com tamanho errado.
 - Queda dura de peça (acima de 3 m/s) chama `world.hit` do tipo `blunt` com `source: 'fall'`.
+- `world.explode` **não emite evento** (só uma peça com `explodes` emite `explode`): quem detona granada ou foguete chama `renderer.explode` junto, senão só aparecem os detritos e o fogo, o clarão e a fumaça ficam de fora.
 - Global de navegador `GameDestructionThree` já inclui o núcleo; só falta carregar o three.js.
 
 ## O que vem pela migração (spec 001)
-- Bug conhecido a corrigir: as partículas de explosão não aparecem na comparação (fogo e clarão vazios, fumaça sem desenhar), junto com a troca para a explosão do Laboratório (E1).
+- A explosão atual desenha (T0.3: a sala de testes passou a chamar `renderer.explode`); a troca para a explosão do Laboratório (E1) segue na Fase 5.
 - Efeitos passam a vir do `game-vfx-three` (E4), com teto de 6 explosões a cada 4 s por área e menos detalhe de longe.
 - Juntar as duas versões da Sala de destruição, mantendo o que cada uma tem a mais (V8).
 - Concreto armado e tijolo ganham aparência de dano aqui quando entrarem em `game-destruction`.

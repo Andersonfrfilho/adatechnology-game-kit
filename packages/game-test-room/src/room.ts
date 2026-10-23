@@ -998,6 +998,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const detonate = (p: Projectile, at: Vec3, impact: boolean): void => {
     const w = toolName(p.weapon)
     const results = world.explode(at, p.energy, p.radius, 'player')
+    renderer.explode(at, p.energy, p.radius)
     action('explode', t('act.explode', { weapon: w, energy: num(p.energy, 0), radius: num(p.radius, 1), n: results.length }), { data: { weapon: p.weapon, energyJ: p.energy, radius: p.radius, point: at } })
     if (p.fire) {
       fluids.splash('fuel', [at[0], Math.max(at[1], groundAt(at[0], at[2])), at[2]], 0.5)
