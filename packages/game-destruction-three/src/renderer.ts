@@ -7,6 +7,7 @@ import { clamp, createRng, hashNumbers, hashString, mixHex } from './math'
 import { ParticleSystem } from './particles'
 import type { ParticleKind } from './particles'
 import { PieceSystem } from './pieces'
+import { partHintOf } from './spec'
 import type { DestructionRenderer, BindOptions, Mesh, Object3D, Piece, RendererOptions, ThreeNamespace } from './types'
 import { Visuals } from './visual'
 
@@ -217,8 +218,8 @@ class Renderer implements DestructionRenderer {
     } else {
       const leftovers: Mesh[] = []
       for (const m of meshesIn(root)) {
-        const ud = m.userData?.destructionPart
-        if (typeof ud === 'string' && partIds.has(ud)) add(ud, m)
+        const ud = partHintOf(m.userData?.destructionPart)?.id
+        if (ud !== undefined && partIds.has(ud)) add(ud, m)
         else if (partIds.has(m.name)) add(m.name, m)
         else leftovers.push(m)
       }
