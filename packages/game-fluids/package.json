@@ -34,6 +34,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^22.10.7",
     "tsup": "^8.5.1",

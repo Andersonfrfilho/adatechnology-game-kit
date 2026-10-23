@@ -35,6 +35,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
     "@adatechnology/game-destruction": "workspace:*",
     "@adatechnology/game-destruction-three": "workspace:*",
     "@adatechnology/game-fluids": "workspace:*",

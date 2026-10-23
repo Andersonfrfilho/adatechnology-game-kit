@@ -10,7 +10,10 @@
  * Every random choice (spread) comes from the state's seed: same inputs, same shots on every machine.
  */
 
-export type Vec3 = [number, number, number]
+import type { Shot, Use, Vec3 } from '@adatechnology/game-contracts'
+
+// `Shot` and `Use` are contracts: they live in @adatechnology/game-contracts and are re-exported here so that no import breaks.
+export type { Shot, Use, Vec3 }
 
 /** snake_case calibre id, e.g. `9x19`, `5_56x45`, `12ga_00buck`. */
 export type CaliberId = string
@@ -104,34 +107,6 @@ export interface WeaponDef {
   mass: number
   tags?: string[]
 }
-
-/** A ballistic shot (one per pellet). */
-export interface Shot {
-  origin: Vec3
-  /** Unit vector. */
-  direction: Vec3
-  /** Muzzle energy in joules. */
-  energy: number
-  /** mm */
-  caliber: number
-  caliberId: CaliberId
-  speed: number
-  /** Energy at a distance, with the calibre's drag. */
-  energyAt(distance: number): number
-  pellet: number
-  weapon: WeaponId
-  source?: string
-}
-
-/** One use of a non-firearm (melee swing, flame tick, heat tick, throw, tool tick, extinguisher tick). */
-export type Use =
-  | { kind: 'melee'; damage: 'blunt' | 'slash'; energy: number; radius: number; reach: number; origin: Vec3; direction: Vec3 }
-  | { kind: 'flame'; temperature: number; radius: number; range: number; cone: boolean; duration: number; origin: Vec3; direction: Vec3 }
-  | { kind: 'heat'; temperature: number; radius: number; range: number; duration: number; origin: Vec3; direction: Vec3 }
-  | { kind: 'throw'; energy: number; radius: number; fuse: number; velocity: Vec3; origin: Vec3; fire?: { temperature: number; radius: number; seconds: number } }
-  | { kind: 'tool'; tool: string; reach: number; duration: number; origin: Vec3; direction: Vec3 }
-  | { kind: 'extinguish'; range: number; coolC: number; duration: number; origin: Vec3; direction: Vec3 }
-  | { kind: 'hand'; reach: number; origin: Vec3; direction: Vec3 }
 
 export interface TriggerResult {
   /** Shots fired this call (firearms). */
