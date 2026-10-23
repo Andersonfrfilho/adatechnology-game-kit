@@ -55,7 +55,7 @@ jobs:
 
       - id: set
         env:
-          SHARDS: '{"@adatechnology/game-vehicles-fleet":4}'
+          SHARDS: '{"@adatechnology/game-vehicles-fleet":13}'
         run: |
           node -e '
             const fs = require("fs");
@@ -99,7 +99,7 @@ jobs:
       - name: Test
         run: |
           if [ "${{ matrix.total }}" -gt 1 ]; then
-            pnpm --filter "${{ matrix.pkg }}" exec vitest run --shard=${{ matrix.shard }}/${{ matrix.total }}
+            pnpm --filter "${{ matrix.pkg }}" exec vitest run --passWithNoTests --shard=${{ matrix.shard }}/${{ matrix.total }}
           else
             pnpm --filter "${{ matrix.pkg }}" test
           fi

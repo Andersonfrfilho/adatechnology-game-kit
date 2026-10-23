@@ -57,7 +57,7 @@ pnpm build && pnpm test && pnpm typecheck && pnpm lint
 ### CI
 
 - CI runs `lint`, `typecheck` and one `test` job per package in parallel; the `ci-ok` job aggregates them into a single required check, and Release starts only after the whole workflow succeeds.
-- If a package's tests get slow, split them: add it to the `SHARDS` map in the `matrix` job of `.github/workflows/ci.yml` (for example `{"@adatechnology/game-vehicles-fleet":4}`) and CI runs it as N `vitest --shard` jobs.
+- If a package's tests get slow, split them: add it to the `SHARDS` map in the `matrix` job of `.github/workflows/ci.yml` (for example `{"@adatechnology/game-vehicles-fleet":13}`, one shard per test file; vitest shards by file, so a single heavy file sets the floor) and CI runs it as N `vitest --shard` jobs.
 
 ### Releasing
 
