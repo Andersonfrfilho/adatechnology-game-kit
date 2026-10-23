@@ -74,6 +74,7 @@ export class WeaponRuntime implements WeaponState {
     this.mode = a.kind === 'firearm' ? a.modes[0] ?? 'single' : 'single'
     switch (a.kind) {
       case 'firearm':
+      case 'launcher':
         this._capacity = a.magazine
         break
       case 'flame':
@@ -223,6 +224,9 @@ export class WeaponRuntime implements WeaponState {
       case 'throwable':
         res = this.fireThrowable(a, origin, dir, held)
         break
+      case 'launcher':
+        res = result('empty')
+        break
       case 'tool':
         res = d > 0 ? result('ok', { uses: [{ kind: 'tool', tool: a.tool, reach: a.reach, duration: d, origin, direction: dir }], noise: a.noise }) : result('ok')
         break
@@ -308,7 +312,7 @@ export class WeaponRuntime implements WeaponState {
     this.extra = Math.min(bloomNow + (a.bloomDeg ?? 0), a.spreadDeg * (BLOOM_CAP - 1))
     this.extraClock = t
     res.recoil = [res.recoil[0] + a.recoil[0], res.recoil[1] + (this.rng() * 2 - 1) * a.recoil[1]]
-    res.noise = a.noise
+    res.noise = a.noise ?? cal.noise ?? 0
   }
 
   private fireMelee(a: Extract<WeaponAction, { kind: 'melee' }>, origin: Vec3, dir: Vec3, start: number, end: number): TriggerResult {

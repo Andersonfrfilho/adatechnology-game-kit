@@ -1,4 +1,6 @@
 export { createArsenal, CALIBERS, WEAPONS, DEFAULT_LOADOUT, muzzleEnergy } from './arsenal'
+export { DEFAULT_RULES } from './rules'
+export { RELOAD_STAGES } from './reload-stages'
 export { resolveStrings, locales } from './locale'
 export type { WeaponsLocale, WeaponsStrings } from './locale'
 export type * from './types'
