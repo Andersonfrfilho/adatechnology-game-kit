@@ -117,7 +117,7 @@ const ROLE_RESIST: Partial<Record<PartRole, number>> = {
   engine: 10,
   gearbox: 8,
   pillar: 4,
-  fuel_tank: 0.7,
+  fuel_tank: 0.4,
   radiator: 0.3,
   battery: 0.8,
   brakes: 5,
@@ -407,7 +407,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   const armour = (): number => (c.meta.armored || c.meta.bullet ? 30 : 1)
   const resist = (d: PartDef, p: PState): number => {
     let base = RESIST[d.material] ?? 100
-    if (d.material === 'glass' && d.hp > 1000) base = 260
+    if (d.material === 'glass' && d.hp > 1000) base = 120
     if (d.material === 'glass' && c.meta.bullet) base *= 30
     const k = ROLE_RESIST[d.role] ?? 1
     const arm = d.material === 'steel' || d.material === 'aluminium' ? armour() : 1
@@ -1018,7 +1018,10 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       return d ? toWorld(d.box.center) : [0, 0, 0]
     },
     rollover,
-    detachedParts: () => [...ps.values()].filter((p) => !p.lost && !attached(p.def.id)).map((p) => p.def.id),
+    detachedParts: () =>
+      [...ps.values()]
+        .filter((p) => (!p.lost && !attached(p.def.id)) || (p.lost && p.def.visual && js.some((j) => j.open && j.def.a === p.def.id)))
+        .map((p) => p.def.id),
   }
   return impl
 }
