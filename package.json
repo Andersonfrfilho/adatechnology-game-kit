@@ -17,7 +17,9 @@
     "clean": "pnpm -r exec rm -rf dist",
     "changeset": "changeset",
     "version:changeset": "changeset version",
-    "publish:changesets": "pnpm build && changeset publish"
+    "publish:changesets": "pnpm build && changeset publish",
+    "site:dev": "docker compose -p adatechnology-game-kit watch",
+    "site:thumbs": "node site/capture-thumbs.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.0",

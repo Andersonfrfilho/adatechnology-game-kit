@@ -1,0 +1,16 @@
+{
+  "name": "@adatechnology/weapons-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Weapons area for the shared test room: every weapon of the arsenal on counters, targets, the weapon in the hands with fire and reload motion, ejected casings, dropped magazines and sounds.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-weapons-three": "workspace:*"
+  }
+}

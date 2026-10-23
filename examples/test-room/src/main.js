@@ -3,6 +3,7 @@
 //   ?scenario=all       run every scenario on load; the report lands in window.__testRoomReport
 //   ?scenario=<id>      run one scenario
 //   ?items=chair,jerrycan   spawn these catalogue ids in a row on start
+//   ?area=furniture     open on one catalogue group (furniture, structure, vehicles, plants, items, containers, weapons)
 //   ?quality=low|medium|high
 //   ?ui=0               hide the panels
 import * as THREE from 'three'
@@ -55,6 +56,7 @@ const room = createTestRoom({
   quality,
   ui: params.get('ui') !== '0',
   initial: items ? items.split(',').filter(Boolean) : undefined,
+  area: params.get('area') ?? undefined,
 })
 
 // agents read the behaviour log from here, e.g. __testRoom.log.toNDJSON()

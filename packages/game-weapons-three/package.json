@@ -1,0 +1,64 @@
+{
+  "name": "@adatechnology/game-weapons-three",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "three.js presentation for @adatechnology/game-weapons: low-poly weapon models, the weapon in the hands with fire and reload motion, ejected casings and dropped magazines, synthesized sounds, and the weapons test area (counters with every weapon) as a TestableModule.",
+  "keywords": [
+    "three",
+    "threejs",
+    "game",
+    "weapons",
+    "firearms",
+    "viewmodel",
+    "procedural",
+    "webaudio"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-weapons-three"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-weapons": "workspace:*"
+  },
+  "peerDependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@adatechnology/game-destruction": "workspace:*",
+    "@adatechnology/game-test-room": "workspace:*",
+    "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "happy-dom": "^17.4.4",
+    "three": "^0.160.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}
