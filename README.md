@@ -11,6 +11,7 @@ concatenates plain scripts can use them without a bundler.
 | Package | Global | What it is |
 |---|---|---|
 | [`@adatechnology/game-camera`](packages/game-camera) | `GameCamera` | Shoulder, third-person and first-person camera rig plus first-person viewmodel for three.js |
+| [`@adatechnology/game-contracts`](packages/game-contracts) | `GameContracts` | The contracts every module depends on: destruction (`DestructibleImpl`, hits, events), shots, containers, item animations and `TestableModule`; types plus tiny checkers, no runtime deps |
 | [`@adatechnology/game-destruction`](packages/game-destruction) | `GameDestruction` | Engine-agnostic destruction world: parts, joints, materials, damage, fire, melting, structural integrity |
 | [`@adatechnology/game-destruction-three`](packages/game-destruction-three) | `GameDestructionThree` | three.js renderer for the destruction world: pieces, holes, cracks, fire and debris |
 | [`@adatechnology/game-weapons`](packages/game-weapons) | `GameWeapons` | Arsenal of firearms, melee, fire, heat and tools with ballistics and tool state |

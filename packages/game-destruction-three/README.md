@@ -9,6 +9,8 @@ physics, loose pieces after a part comes off, and pooled particles (fire, smoke,
 - `three` is a peer dependency used for types only: you pass your own `THREE` instance at runtime.
 - Sounds are not played: you get keys (`impact_metal`, `shatter_glass`, ...) through `onSound`.
 
+Contracts live in [`@adatechnology/game-contracts`](../game-contracts); the types are re-exported here, so existing imports keep working.
+
 ## Install
 
 ```sh

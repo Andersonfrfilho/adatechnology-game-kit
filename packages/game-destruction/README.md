@@ -7,6 +7,8 @@ the right tool (the object is taken apart). The world reports everything as **ev
 
 Units: metres, kilograms, seconds, joules, degrees Celsius.
 
+Contracts live in [`@adatechnology/game-contracts`](../game-contracts); the types are re-exported here, so existing imports keep working.
+
 ## Install
 
 ```sh

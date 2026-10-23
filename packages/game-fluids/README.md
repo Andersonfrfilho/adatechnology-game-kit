@@ -15,6 +15,8 @@ Engine-agnostic liquids for games, with no renderer. It knows nothing about any 
 - Deterministic from a seed (no `Math.random`), so a LAN host can run it and send events. `serialize()` / `load()` round trip the whole world.
 - Units: metres, litres, seconds, degrees Celsius. Locale table `en` / `pt-BR` for liquid names and event labels.
 
+Contracts live in [`@adatechnology/game-contracts`](../game-contracts); the types are re-exported here, so existing imports keep working.
+
 ## Install
 
 ```sh

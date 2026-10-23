@@ -7,6 +7,8 @@ tools and a fire extinguisher. A trigger pull returns plain-data `Shot`s and `Us
 Units: metres, seconds, joules, mm (calibre diameter), grams (bullet mass), m/s, degrees, °C. Every random choice comes from a seeded generator, so the
 same seed gives the same shots on every machine.
 
+Contracts live in [`@adatechnology/game-contracts`](../game-contracts); the types are re-exported here, so existing imports keep working.
+
 ## Install
 
 ```sh
