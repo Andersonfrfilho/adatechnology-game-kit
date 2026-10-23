@@ -7,6 +7,7 @@ import ptBR from './data/locales/pt-BR.json'
 import br from './data/regions/br.json'
 import us from './data/regions/us.json'
 import typesJson from './data/types.json'
+import { conduitRun, serviceEntrance, tv, microwave, wallSocket, wallSwitch, washingMachine } from './builders/electrical'
 import { gasBottle, shower, sinkBathroom, sinkKitchen, stove, toilet, utilitySink } from './builders/kitchen'
 import { bathroomCabinet, dresser, fridge, fridgeCompact, kitchenCabinetBase, kitchenCabinetWall, nightstand, pantry, wardrobe } from './builders/storage'
 import type { BuilderFn, Household, HouseholdApi, HouseholdItem, HouseholdOptions, HouseholdType, HouseholdTypeDef, Region } from './types'
@@ -28,6 +29,13 @@ const BUILDERS: Record<string, BuilderFn> = {
   shower,
   toilet,
   utility_sink: utilitySink,
+  wall_socket: wallSocket,
+  wall_switch: wallSwitch,
+  service_entrance: serviceEntrance,
+  conduit_run: conduitRun,
+  tv,
+  microwave,
+  washing_machine: washingMachine,
 }
 
 const DEFS = typesJson as HouseholdTypeDef[]
