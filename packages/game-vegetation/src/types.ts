@@ -200,6 +200,8 @@ export interface GrassTuftSpec {
   height?: number
   color?: Color
   seedHeads?: boolean
+  /** papyrus style: bare stems topped by umbrellas of thin rays */
+  umbrellaHeads?: boolean
   seedColor?: Color
   radius?: number
 }
