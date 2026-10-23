@@ -2,7 +2,7 @@ import type { Vec3 } from '@adatechnology/game-interactables'
 import type { Ctx } from '../ctx'
 import { mix, round3, shade } from '../util'
 
-const FACE = Math.PI // facing +z; yaw 0 faces -z in game-interactables
+const FACE = 0 // facing +z (away from the backrest at -z): the engine adds PI, so seat.ry 0 gives view yaw PI, which looks toward +z
 
 /** Sofa or armchair: legs, frame, arms with rounded tops, seat cushions, back cushions, piping. */
 function sofaLike(c: Ctx, n: number, lie: boolean): void {
