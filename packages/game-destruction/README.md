@@ -132,6 +132,11 @@ without any `structure` behave exactly as before.
   `splitGroup`.
 - `buildFrame({ spanX, spanZ, columnsX, columnsZ, height, floors, walls, roof, columnCapacity, ... })` returns a test structure: columns on
   foundations (`rebar`), beams, a slab per floor, optional brick walls (`mortar`) with a door opening, and a roof that rests (`resting`) on the top beams.
+- `sizeStructure(spec, { safety?, redundancy? })` returns a copy of the spec with `structure.capacity` set from the loads the world itself solves
+  for the intact spec, so every structural part rests at stress `safety` (default 0.65). With `redundancy` (e.g. 0.97) the capacities are also
+  raised where needed so that losing any single `column` keeps every other part at or below that stress: the structure stands with one column
+  gone and, without help, falls with two neighbours gone. Raw material capacities are rarely a sensible design (a 54 t roof on 20 cm columns is
+  already over 1 at rest); size the structure instead of hand-tuning. Parts without `structure` or with role `none` are untouched.
 
 ## Contracts: implement your own or use the default world
 
@@ -182,7 +187,7 @@ world continues with the same events as the original. The loading world must use
 `raycast`, `shoot`, `disassemble`, `workableJoints`, `nearestJoint`, `extinguish`, `setLiters`, `update`, `state`, `part`, `reset`, `on`,
 `register`, `serialize`, `load`, `time`. `state()` and `part()` return live views; do not mutate them.
 
-Also exported: `buildFrame`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
+Also exported: `buildFrame`, `sizeStructure`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
 helpers `vec`, `quat`, `quatFromEuler`, `rotateVec`, `toLocal`, `toWorld`, the locale (`locales`, `resolveStrings`, `DestructionStrings`) and all types.
 
 The locale table has `en` and `pt-BR` strings for material names, part statuses, joint kinds, tools, damage types, event labels and fracture styles:
