@@ -26,7 +26,9 @@ export interface ThreeAdapter {
   syncObject(world: World, objectId: string, parts: Record<string, ThreeNS.Object3D>, options?: SyncOptions): void
   swayMaterial(base: ThreeNS.Material, options?: SwayOptions): ReturnType<typeof swayMaterial>
   attachSway(mesh: ThreeNS.Mesh, options?: SwayOptions): SwayHandle
-  createEffects(scene: ThreeNS.Object3D, options?: EffectsOptions): Effects
+  createEffects(options: EffectsOptions): Effects
+  /** @deprecated Pass `{ scene, camera, ... }`. */
+  createEffects(scene: ThreeNS.Object3D, options?: Partial<EffectsOptions>): Effects
   createScreen(options?: Partial<ScreenOptions>): Screen
   createMirrors(options?: MirrorOptions): Mirrors
   createCord(points: readonly Vec3[], radius: number, material: ThreeNS.Material): ThreeNS.Mesh
@@ -42,7 +44,10 @@ export function createThreeAdapter(THREE: ThreeLib, options: ThreeAdapterOptions
     syncObject: (world, objectId, parts, o) => syncObject(THREE, world, objectId, parts, o),
     swayMaterial: (base, o) => swayMaterial(THREE, base, o),
     attachSway: (mesh, o) => attachSway(THREE, mesh, o),
-    createEffects: (scene, o = {}) => createEffects(THREE, scene, { document: options.document, ...o }),
+    createEffects: ((a: EffectsOptions | ThreeNS.Object3D, o: Partial<EffectsOptions> = {}) =>
+      (a as ThreeNS.Object3D).isObject3D
+        ? createEffects(THREE, a as ThreeNS.Object3D, { document: options.document, ...o })
+        : createEffects(THREE, { document: options.document, ...(a as EffectsOptions) })) as ThreeAdapter['createEffects'],
     createScreen: (o = {}) => {
       const document = o.document ?? options.document
       if (!document) throw new Error('createScreen needs a document (option of createThreeAdapter or of the call)')

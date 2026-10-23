@@ -1024,7 +1024,7 @@
   // ---------------------------------------------------------------------------------------------------------------------------
   // Effects (smoke, fire, steam, water, flames), screens, lamps, rain
   // ---------------------------------------------------------------------------------------------------------------------------
-  const effects = gfx.createEffects(scene, { maxParticles: 2800, seed: 11, document })
+  const effects = gfx.createEffects({ scene, camera, maxParticles: 2800, seed: 11, document })
   const markerMat = new T.SpriteMaterial({ map: (() => canvasTexture(64, 64, (g, w, h) => {
     g.beginPath()
     g.arc(w / 2, h / 2, 22, 0, Math.PI * 2)
@@ -1433,7 +1433,7 @@
     const em = world.emitters()
     const leak = leakEmitter()
     if (leak) em.push(leak)
-    effects.update(dt, em, camera)
+    effects.update(dt, em)
     updateItems()
     updateScreens(dt)
     updateLamps()

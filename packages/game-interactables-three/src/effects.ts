@@ -2,6 +2,13 @@ import type { ActiveEmitter, EmitterKind } from '@adatechnology/game-interactabl
 import type { CanvasFactory, ThreeLib, ThreeNS } from './types'
 
 export interface EffectsOptions {
+  /** Where the particle objects are added (the `Points` of every kind, the water streams and the flame ring). Required. */
+  scene: ThreeNS.Object3D
+  /**
+   * Camera whose vertical field of view sizes the sprites, read again every `update` so zoom and fov changes follow. Required: pass the
+   * camera the scene is rendered with (a `PerspectiveCamera` fits), or a function returning the current one (`null` = 90 degree lens).
+   */
+  camera: PerspectiveLike | (() => PerspectiveLike | null) | null
   /** Total particles alive at once, shared by all kinds (split by weight). Default 800. */
   maxParticles?: number
   /** Used to paint the soft sprite on a canvas. Without it (or without a 2D context) a data texture is generated. */
@@ -18,8 +25,6 @@ export interface EffectsOptions {
   maxStreams?: number
   /** Most gas flame rings drawn at once (all rings share one draw call). Default 16. */
   maxFlames?: number
-  /** Camera whose vertical field of view sizes the sprites (read again every `update`, so zoom and fov changes follow). Default: a 90 degree lens. */
-  camera?: PerspectiveLike
 }
 
 /** What the effects read from a camera. */
@@ -38,10 +43,13 @@ export interface EffectsStats {
 export type PoolKind = 'smoke' | 'steam' | 'fire' | 'water' | 'spark'
 
 export interface Effects {
-  /** Spawns for the active emitters and advances every particle by `dt` seconds. No allocations per frame once warmed up. */
+  /**
+   * Spawns for the active emitters and advances every particle by `dt` seconds, sizing the sprites for the camera given to
+   * `createEffects` (or `setCamera`). No allocations per frame once warmed up. `camera` overrides it for this call (deprecated).
+   */
   update(dt: number, emitters: readonly ActiveEmitter[], camera?: PerspectiveLike): void
-  /** Camera used for the sprite size (or `null` to go back to a 90 degree lens). */
-  setCamera(camera: PerspectiveLike | null): void
+  /** Replace the camera used for the sprite size (or `null` to go back to a 90 degree lens). */
+  setCamera(camera: PerspectiveLike | (() => PerspectiveLike | null) | null): void
   setWind(x: number, z: number): void
   setViewHeight(px: number): void
   stats(): EffectsStats
@@ -179,13 +187,22 @@ function makeStreaks(THREE: ThreeLib): ThreeNS.DataTexture {
  * Pooled particle effects: smoke, steam, fire (and the blue gas `flame` ring), water streams with drips, and sparks.
  * One `Points` per kind, fixed-size buffers, swap-remove; the total alive never exceeds `maxParticles`.
  */
-export function createEffects(THREE: ThreeLib, scene: ThreeNS.Object3D, options: EffectsOptions = {}): Effects {
+export function createEffects(THREE: ThreeLib, options: EffectsOptions): Effects
+/** @deprecated Pass `{ scene, camera, ... }` as the one options argument. */
+export function createEffects(THREE: ThreeLib, scene: ThreeNS.Object3D, options?: Partial<EffectsOptions>): Effects
+export function createEffects(THREE: ThreeLib, a: EffectsOptions | ThreeNS.Object3D, b: Partial<EffectsOptions> = {}): Effects {
+  const legacy = !!(a as ThreeNS.Object3D).isObject3D
+  const options: Partial<EffectsOptions> = legacy ? { ...b, scene: a as ThreeNS.Object3D } : (a as EffectsOptions)
+  const scene = options.scene
+  if (!scene) throw new Error('createEffects: options.scene is required')
+  if (!legacy && options.camera === undefined) throw new Error('createEffects: options.camera is required (pass null for a 90 degree lens)')
   const total = Math.max(POOLS.length, Math.floor(options.maxParticles ?? 800))
   const rand = mulberry(options.seed ?? 1)
   const wind: [number, number] = [options.wind?.[0] ?? 0, options.wind?.[1] ?? 0]
   const sprite = makeSprite(THREE, options.document)
   let viewHeight = options.viewHeight ?? 720
-  let camera: PerspectiveLike | null = options.camera ?? null
+  let cameraSource: PerspectiveLike | (() => PerspectiveLike | null) | null = options.camera ?? null
+  let camera: PerspectiveLike | null = typeof cameraSource === 'function' ? cameraSource() : cameraSource
   const scale = { value: 0 }
   /** Point size in pixels is size * viewHeight / (2 tan(fov / 2)) / distance. */
   const refreshScale = (cam: PerspectiveLike | null): void => {
@@ -674,7 +691,7 @@ export function createEffects(THREE: ThreeLib, scene: ThreeNS.Object3D, options:
     objects,
     meshes: { group, streams, flames },
     update(dt, emitters, cam) {
-      if (cam) camera = cam
+      camera = cam ?? (typeof cameraSource === 'function' ? cameraSource() : cameraSource)
       refreshScale(camera)
       const step = Math.min(Math.max(dt, 0), 0.1)
       stamp++
@@ -734,7 +751,8 @@ export function createEffects(THREE: ThreeLib, scene: ThreeNS.Object3D, options:
       wind[1] = z
     },
     setCamera(cam) {
-      camera = cam
+      cameraSource = cam
+      camera = typeof cam === 'function' ? cam() : cam
       refreshScale(camera)
     },
     setViewHeight(px) {
