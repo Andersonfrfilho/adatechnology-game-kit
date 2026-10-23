@@ -107,6 +107,12 @@ interface Blast {
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 const isLost = (p: PartRT) => p.st.status === 'broken' || p.st.status === 'melted' || p.st.status === 'ashes'
 const clone = <T>(v: T): T => structuredClone(v)
+/**
+ * Fraction of a structural part's hit points lost per second while its stress is above 1. A floor of 0.12 makes even a barely overloaded part
+ * give way in about 8 s (a rate proportional to the excess alone never finishes: stress 1.02 would take two minutes), then it grows with the
+ * excess and tops out at 0.6: stress 1.1 fails in ~4.5 s, 1.5 in ~1.9 s and anything above 1.7 in ~1.7 s. Deterministic: depends only on stress.
+ */
+const overloadRate = (stress: number) => Math.min(0.6, 0.12 + 0.8 * (stress - 1))
 const updateBound = (o: ObjRT) => {
   if (!o.parts.length) return
   const c: Vec3 = [0, 0, 0]
@@ -398,7 +404,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       for (const g of o.st.groups) {
         const ps = g.map((id) => o.byId.get(id)!).filter((p) => !isLost(p) && !o.collapsed.has(p.spec.id))
         if (ps.length === 0 || g.some((id) => o.byId.get(id)!.anchored) || !ps.some((p) => p.structural)) continue
-        for (const p of ps) o.collapsed.add(p.spec.id)
+        for (const p of ps) {
+          o.collapsed.add(p.spec.id)
+          p.st.status = 'collapsed'
+        }
         emit({ ...base(o, src), type: 'collapse', parts: ps.map((p) => p.spec.id), mass: ps.reduce((sum, p) => sum + p.st.mass, 0) })
       }
     }
@@ -737,7 +746,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const effM = p.thickness / Math.max(sin, 0.3)
     const thr = mat.penetration * effM * 1000
     const penetrated = E > thr
-    const scale = mat.damageScale?.ballistic ?? 1
+    // a thin brittle shell that shatters (a pane, a bottle) is lost to one bullet that a thick block of the same glass shrugs off: the same
+    // fragility factor that melee uses for blunt hits (1 for ductile materials and for shells 2 cm or thicker, up to x118 for 3 mm glass)
+    const scale = (mat.damageScale?.ballistic ?? 1) * (mat.fracture === 'shatter' ? fragility(mat.ductility, p.thickness) : 1)
     const id = p.spec.id
     if (!penetrated && mat.ricochetDeg && angle < mat.ricochetDeg) {
       const r = vec.sub(d, vec.scale(n, 2 * vec.dot(d, n)))
@@ -1100,7 +1111,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
             p.rt.stressT = 0.5
             emit({ ...base(o), type: 'stress', part: p.spec.id, stress, load: p.st.load ?? 0 })
           }
-          applyDamage(o, p, (stress - 1) * p.st.maxHp * 0.5 * dt, 'blunt', null, null, 5, 3)
+          applyDamage(o, p, overloadRate(stress) * p.st.maxHp * dt, 'blunt', null, null, 5, 3)
         } else if (stress > 0.8 && p.mat.ductility < 0.3 && p.rt.stressT <= 0 && p.st.cracks.length < 6) {
           p.rt.stressT = 0.5
           const { c, q } = partXf(o, p)

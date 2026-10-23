@@ -80,6 +80,9 @@ makes a through hole, through 5 cm concrete it only cracks and lodges. Grazing h
 | `fire` | `temperature`, `radius`, `duration` | heats towards the flame temperature and ignites at the material's ignition point |
 | `heat` | same | heat without flame (cutting torch, hot plate); melts what it can reach |
 
+Brittle materials that `shatter` (glass, ceramic) take blunt and ballistic damage multiplied by `fragility(ductility, thickness)` (x1 from 2 cm up, to x118
+for 3 mm glass), so a 9 mm shatters a window pane in one shot while a 5 cm block of glass takes several.
+
 `hit(objectId, hit)` finds the part along `direction`; `hitPart` targets a known part; `shoot` and `raycast` work in world space.
 
 ## Fire, melting and leaks
@@ -125,13 +128,20 @@ without any `structure` behave exactly as before.
   horizontal length for walls. A 0.3 m concrete column carries 40 t, a 0.2 m brick wall 8 t per metre, a 0.1 x 0.2 m softwood beam 2 t.
 - **Joints** carry load when `bears` is true (default when both parts have a role). `bears: 'a_on_b'` means part `a` rests on `b`: load flows only
   that way. A `partition` is supported but supports nothing, so breaking it never drops anything.
-- **Overload**: above stress 1 a part takes `(stress - 1) * maxHp * 0.5` damage per second, emits `stress` (once per 0.5 s) and cascades; brittle
+- **Overload**: above stress 1 a part loses `min(0.6, 0.12 + 0.8 * (stress - 1))` of its `maxHp` per second (stress 1.02 gives way in ~7 s, 1.1 in ~5 s,
+  1.5 in ~2 s, anything above 1.7 in ~1.7 s; deterministic), emits `stress` (once per 0.5 s) and cascades; brittle
   parts `crack` from stress 0.8. Metal never fractures, so overloaded steel only reports stress.
 - **Collapse**: a part with no support path to an anchored part falls: it is cut from the supported pieces into its own group (index 1 or more) and
-  one `collapse` event lists the group. Non-structural parts that hang only on collapsed parts fall with them. Make the group its own object with
+  one `collapse` event lists the group, and every part in it that is not already lost gets `PartState.status === 'collapsed'` (kept through
+  `serialize`/`load`, cleared by `reset`; a part that later breaks becomes `broken`). Non-structural parts that hang only on collapsed parts fall with them. Make the group its own object with
   `splitGroup`.
 - `buildFrame({ spanX, spanZ, columnsX, columnsZ, height, floors, walls, roof, columnCapacity, ... })` returns a test structure: columns on
   foundations (`rebar`), beams, a slab per floor, optional brick walls (`mortar`) with a door opening, and a roof that rests (`resting`) on the top beams.
+- `sizeStructure(spec, { safety?, redundancy? })` returns a copy of the spec with `structure.capacity` set from the loads the world itself solves
+  for the intact spec, so every structural part rests at stress `safety` (default 0.65). With `redundancy` (e.g. 0.97) the capacities are also
+  raised where needed so that losing any single `column` keeps every other part at or below that stress: the structure stands with one column
+  gone and, without help, falls with two neighbours gone. Raw material capacities are rarely a sensible design (a 54 t roof on 20 cm columns is
+  already over 1 at rest); size the structure instead of hand-tuning. Parts without `structure` or with role `none` are untouched.
 
 ## Contracts: implement your own or use the default world
 
@@ -182,7 +192,7 @@ world continues with the same events as the original. The loading world must use
 `raycast`, `shoot`, `disassemble`, `workableJoints`, `nearestJoint`, `extinguish`, `setLiters`, `update`, `state`, `part`, `reset`, `on`,
 `register`, `serialize`, `load`, `time`. `state()` and `part()` return live views; do not mutate them.
 
-Also exported: `buildFrame`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
+Also exported: `buildFrame`, `sizeStructure`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
 helpers `vec`, `quat`, `quatFromEuler`, `rotateVec`, `toLocal`, `toWorld`, the locale (`locales`, `resolveStrings`, `DestructionStrings`) and all types.
 
 The locale table has `en` and `pt-BR` strings for material names, part statuses, joint kinds, tools, damage types, event labels and fracture styles:

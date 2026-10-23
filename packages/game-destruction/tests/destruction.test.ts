@@ -3,7 +3,7 @@ import {
   JOINT_BY_MATERIALS, JOINT_DEFAULTS, MATERIALS, createDestruction, guessMaterial, inferJoints, partMass, partVolume, quatFromEuler, resolveStrings, rotateVec, toLocal,
   toWorld,
 } from '../src'
-import type { DestructionEvent } from '../src'
+import type { DestructibleSpec, DestructionEvent } from '../src'
 import { chair, plate } from './helpers'
 
 const types = (events: DestructionEvent[]) => events.map((e) => e.type)
@@ -165,7 +165,7 @@ describe('ballistic', () => {
     expect(w.part(id, 'plate')!.holes.length).toBeGreaterThan(5)
   })
 
-  it('glass pane shatters within a few shots into shards', () => {
+  it('a glass pane shatters on the first 9 mm shot into shards', () => {
     const w = createDestruction()
     const id = w.add(plate('glass', 0.6, 0.6, 0.004))
     const events: DestructionEvent[] = []
@@ -174,8 +174,7 @@ describe('ballistic', () => {
       events.push(...w.hit(id, bullet).events)
       shots++
     }
-    expect(shots).toBeGreaterThanOrEqual(3)
-    expect(shots).toBeLessThanOrEqual(6)
+    expect(shots).toBe(1)
     const fr = events.find((e) => e.type === 'fracture')!
     expect(fr.type === 'fracture' && fr.style).toBe('shatter')
     if (fr.type === 'fracture') {
@@ -188,6 +187,30 @@ describe('ballistic', () => {
     expect(types(events)).toContain('crack')
     expect(types(events)).toContain('destroyed')
     expect(w.state(id)!.destroyed).toBe(true)
+  })
+
+  it('thin shattering shells break on one bullet, a thick block of glass does not', () => {
+    const shotsToBreak = (spec: DestructibleSpec, part = 'plate') => {
+      const w = createDestruction()
+      const id = w.add(spec)
+      let shots = 0
+      while (w.part(id, part)!.status !== 'broken' && shots < 60) {
+        w.hit(id, bullet)
+        shots++
+      }
+      return { shots, w, id }
+    }
+    // a 5 kg, 4 mm window pane (hp 60): six shots before, one now
+    const pane = plate('glass', 0.5, 1, 0.004)
+    expect(shotsToBreak(pane).shots).toBe(1)
+    expect(shotsToBreak(plate('glass', 0.5, 0.67, 0.006)).shots).toBe(1)
+    // a 5 cm slab of glass: the fragility factor is only x4.7 (it is thick), so it still takes several shots
+    const block = shotsToBreak(plate('glass', 0.5, 0.5, 0.05)).shots
+    expect(block).toBeGreaterThan(1)
+    // ceramic (shatter) follows the same rule; steel, wood and tempered glass (crumble) are unchanged
+    expect(shotsToBreak(plate('ceramic', 0.2, 0.2, 0.004)).shots).toBe(1)
+    const tempered = shotsToBreak(plate('tempered_glass', 1, 1.25, 0.004)).shots
+    expect(tempered).toBeGreaterThan(5)
   })
 
   it('ricochets off a grazing steel hit', () => {

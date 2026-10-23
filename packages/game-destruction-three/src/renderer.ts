@@ -2,13 +2,13 @@ import type * as THREE_NS from 'three'
 import type { DebrisKind, DestructionEvent, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
-import type { Bound, PartVis, PieceBody } from './internal'
+import type { Bound, HostVis, MeshVis, PartVis, PieceBody } from './internal'
 import { clamp, createRng, hashNumbers, hashString, mixHex } from './math'
 import { ParticleSystem } from './particles'
 import type { ParticleKind } from './particles'
 import { PieceSystem } from './pieces'
 import { partHintOf } from './spec'
-import type { DestructionRenderer, BindOptions, Mesh, Object3D, Piece, RendererOptions, ThreeNamespace } from './types'
+import type { DestructionRenderer, BindOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, ThreeNamespace } from './types'
 import { Visuals } from './visual'
 
 type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: T }>
@@ -96,6 +96,11 @@ function fallbackColor(id: string, def: MaterialDef | undefined): number {
 
 function materialsOf(m: THREE_NS.Material | THREE_NS.Material[]): THREE_NS.Material[] {
   return Array.isArray(m) ? m : [m]
+}
+
+function isMeshRange(v: Object3D | MeshRange): v is MeshRange {
+  const r = v as Partial<MeshRange>
+  return !!r.mesh && Array.isArray(r.range)
 }
 
 /** Create the renderer. See `DestructionRenderer`. */
@@ -195,14 +200,25 @@ class Renderer implements DestructionRenderer {
     if (this.bounds.has(objectId)) this.unbind(objectId)
     const state = this.world.state(objectId)
     const partIds = new Set((state?.parts ?? []).map((p) => p.id))
-    const byPart = new Map<string, Mesh[]>()
+    const byPart = new Map<string, Array<{ mesh: Mesh; range?: [number, number] }>>()
     const taken = new Set<Mesh>()
+    const put = (pid: string, e: { mesh: Mesh; range?: [number, number] }): void => {
+      const l = byPart.get(pid)
+      if (l) l.push(e)
+      else byPart.set(pid, [e])
+    }
     const add = (pid: string, m: Mesh): void => {
       if (taken.has(m)) return
       taken.add(m)
-      const l = byPart.get(pid)
-      if (l) l.push(m)
-      else byPart.set(pid, [m])
+      put(pid, { mesh: m })
+    }
+    const addRange = (pid: string, r: MeshRange): void => {
+      const n = (r.mesh.geometry.getAttribute('position')?.count ?? 0) as number
+      const [v0, v1] = r.range
+      if (!Number.isInteger(v0) || !Number.isInteger(v1) || v0 < 0 || v1 <= v0 || v1 > n) {
+        throw new Error(`game-destruction-three: invalid vertex range [${v0}, ${v1}) for part "${pid}" (the mesh has ${n} vertices)`)
+      }
+      put(pid, { mesh: r.mesh, range: [v0, v1] })
     }
     const meshesIn = (o: Object3D): Mesh[] => {
       const out: Mesh[] = []
@@ -213,7 +229,10 @@ class Renderer implements DestructionRenderer {
     }
     if (options.parts) {
       for (const [pid, v] of Object.entries(options.parts)) {
-        for (const o of Array.isArray(v) ? v : [v]) for (const m of meshesIn(o)) add(pid, m)
+        for (const o of Array.isArray(v) ? v : [v]) {
+          if (isMeshRange(o)) addRange(pid, o)
+          else for (const m of meshesIn(o)) add(pid, m)
+        }
       }
     } else {
       const leftovers: Mesh[] = []
@@ -226,15 +245,16 @@ class Renderer implements DestructionRenderer {
       if (leftovers.length) this.matchByBox(objectId, root, leftovers, add)
     }
     const bound: Bound = { id: objectId, root, sync: options.syncTransform !== false, parts: new Map(), lastPos: null, lastQuat: null, piece: null, isSplit: false }
-    for (const pid of partIds) bound.parts.set(pid, this.makePartVis(objectId, pid, state?.parts.find((p) => p.id === pid)?.material ?? '', byPart.get(pid) ?? []))
+    const hosts = new Map<Mesh, HostVis>()
+    for (const pid of partIds) bound.parts.set(pid, this.makePartVis(objectId, pid, state?.parts.find((p) => p.id === pid)?.material ?? '', byPart.get(pid) ?? [], hosts))
     for (const [pid, meshes] of byPart) {
-      if (!bound.parts.has(pid)) bound.parts.set(pid, this.makePartVis(objectId, pid, this.world.part(objectId, pid)?.material ?? '', meshes))
+      if (!bound.parts.has(pid)) bound.parts.set(pid, this.makePartVis(objectId, pid, this.world.part(objectId, pid)?.material ?? '', meshes, hosts))
     }
     this.bounds.set(objectId, bound)
   }
 
-  private makePartVis(home: string, id: string, material: string, meshes: Mesh[]): PartVis {
-    return { id, home, material, meshes: meshes.map((m) => this.visuals.makeMeshVis(m, home)), charApplied: 0, glowApplied: 0, meltApplied: 0, gone: 'none' }
+  private makePartVis(home: string, id: string, material: string, meshes: Array<{ mesh: Mesh; range?: [number, number] }>, hosts: Map<Mesh, HostVis>): PartVis {
+    return { id, home, material, meshes: meshes.map((m) => this.visuals.makeMeshVis(m.mesh, home, m.range, hosts)), charApplied: 0, glowApplied: 0, meltApplied: 0, gone: 'none' }
   }
 
   /** Match unlabelled meshes to the part whose shape contains the centre of the mesh's bounding box. */
@@ -293,25 +313,27 @@ class Renderer implements DestructionRenderer {
   // ----------------------------------------------------------------------------------------------------------------------------------
 
   /** Half extents and centre of the box around some meshes, in the local space of `root`. */
-  private measure(root: Object3D, meshes: Mesh[]): { half: Vec3; center: THREE_NS.Vector3 } {
+  private measure(root: Object3D, meshes: MeshVis[]): { half: Vec3; center: THREE_NS.Vector3 } {
     root.updateMatrixWorld(true)
     const inv = root.matrixWorld.clone().invert()
     const total = new this.THREE.Box3()
     const m4 = new this.THREE.Matrix4()
-    for (const m of meshes) {
-      const g = m.geometry
-      if (!g.boundingBox) g.computeBoundingBox()
-      if (!g.boundingBox || g.boundingBox.isEmpty()) continue
-      total.union(g.boundingBox.clone().applyMatrix4(m4.multiplyMatrices(inv, m.matrixWorld)))
+    const lb = new this.THREE.Box3()
+    for (const mv of meshes) {
+      const m = mv.mesh
+      m.updateWorldMatrix(true, false)
+      this.visuals.localBox(mv, lb)
+      if (lb.isEmpty()) continue
+      total.union(lb.clone().applyMatrix4(m4.multiplyMatrices(inv, m.matrixWorld)))
     }
     if (total.isEmpty()) return { half: [0.25, 0.25, 0.25], center: new this.THREE.Vector3() }
     const size = total.getSize(new this.THREE.Vector3())
     return { half: [Math.max(0.02, size.x / 2), Math.max(0.02, size.y / 2), Math.max(0.02, size.z / 2)], center: total.getCenter(new this.THREE.Vector3()) }
   }
 
-  private meshesOf(b: Bound): Mesh[] {
-    const out: Mesh[] = []
-    for (const pv of b.parts.values()) if (pv.gone === 'none') for (const mv of pv.meshes) out.push(mv.mesh)
+  private meshesOf(b: Bound): MeshVis[] {
+    const out: MeshVis[] = []
+    for (const pv of b.parts.values()) if (pv.gone === 'none') for (const mv of pv.meshes) out.push(mv)
     return out
   }
 
@@ -460,6 +482,9 @@ class Renderer implements DestructionRenderer {
       case 'detach':
         this.onDetach(ev)
         break
+      case 'collapse':
+        this.splitLoose(ev.object)
+        break
       case 'disassemble_progress': {
         const k = `unscrew:${ev.joint}`
         if (this.time - (this.throttles.get(k) ?? -1) > 0.25) {
@@ -585,8 +610,8 @@ class Renderer implements DestructionRenderer {
     let best: PartVis['meshes'][number] | null = null
     let bd = Infinity
     for (const mv of pv.meshes) {
-      if (!mv.mesh.visible) continue
-      const d = this.box.setFromObject(mv.mesh).distanceToPoint(p)
+      if (!this.visuals.shown(mv)) continue
+      const d = this.visuals.worldBox(mv, this.box).distanceToPoint(p)
       if (d < bd) {
         bd = d
         best = mv
@@ -608,7 +633,7 @@ class Renderer implements DestructionRenderer {
     const wp = new this.THREE.Vector3(ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
     const wn = this.worldDir(b, ev.dent.normal)
     for (const mv of pv.meshes) {
-      if (!mv.mesh.visible) continue
+      if (!this.visuals.shown(mv)) continue
       this.visuals.applyDent(mv, wp, wn, ev.dent)
     }
     if (def?.tags?.includes('metal')) this.particles.burst('sparks', ev.worldPoint, [wn.x, wn.y, wn.z], 4 + Math.min(8, ev.dent.depth * 150), 3.2)
@@ -703,17 +728,22 @@ class Renderer implements DestructionRenderer {
 
   private onDetach(ev: Ev<'detach'>): void {
     this.sound('detach', this.rootPoint(ev.object), 0.5)
+    this.splitLoose(ev.object)
+  }
+
+  /** Turn every loose group of the object (a detach, a collapse) into a piece of its own. */
+  private splitLoose(objectId: string): void {
     if (!this.autoSplit) return
-    const b = this.bounds.get(ev.object)
+    const b = this.bounds.get(objectId)
     if (!b) return
-    const st = this.world.state(ev.object)
+    const st = this.world.state(objectId)
     if (!st || st.groups.length < 2) return
     const loose = st.groups.length - 1
     for (let i = 0; i < loose; i++) {
       // the loose groups are always read from index 1: each split renumbers the rest
       let newId: string
       try {
-        newId = this.world.splitGroup(ev.object, 1)
+        newId = this.world.splitGroup(objectId, 1)
       } catch {
         break
       }
@@ -724,7 +754,7 @@ class Renderer implements DestructionRenderer {
       const { half, center } = this.measure(b.root, this.meshesOf(b))
       old.halfExtents = half
       this.pieceSys.setCenter(old, center)
-      old.mass = Math.max(0.05, this.massOf(ev.object))
+      old.mass = Math.max(0.05, this.massOf(objectId))
       old.sleeping = false
     }
   }
@@ -747,8 +777,12 @@ class Renderer implements DestructionRenderer {
       from.parts.delete(p.id)
       nb.parts.set(p.id, pv)
       for (const mv of pv.meshes) {
-        group.attach(mv.mesh)
-        mv.moved = true
+        // a part drawn by a range of a merged mesh leaves its faces behind: it gets a mesh of its own
+        if (mv.host && !mv.loose) this.visuals.extract(mv, group)
+        else {
+          group.attach(mv.mesh)
+          mv.moved = true
+        }
       }
     }
     this.bounds.set(newId, nb)
@@ -877,7 +911,7 @@ class Renderer implements DestructionRenderer {
 
   private onGone(objectId: string, pv: PartVis, reason: 'melted' | 'ashes', def: MaterialDef | undefined): void {
     const bb = new this.THREE.Box3()
-    for (const mv of pv.meshes) bb.union(this.box.setFromObject(mv.mesh))
+    for (const mv of pv.meshes) bb.union(this.visuals.worldBox(mv, this.box))
     this.visuals.hide(pv, reason)
     if (bb.isEmpty()) return
     const c = bb.getCenter(new this.THREE.Vector3())
@@ -895,7 +929,7 @@ class Renderer implements DestructionRenderer {
     const bb = this.box
     bb.makeEmpty()
     const tmp = new this.THREE.Box3()
-    for (const mv of pv.meshes) if (mv.mesh.visible) bb.union(tmp.setFromObject(mv.mesh))
+    for (const mv of pv.meshes) if (this.visuals.shown(mv)) bb.union(this.visuals.worldBox(mv, tmp))
     let cx = f.point[0]
     let cy = f.point[1]
     let cz = f.point[2]

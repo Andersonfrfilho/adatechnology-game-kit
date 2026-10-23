@@ -175,6 +175,8 @@ export interface Hit {
 export type PartStatus =
   | 'intact'
   | 'damaged'
+  /** the part lost its support path to the ground and fell with its group (reported by a `collapse` event); it still exists as a piece */
+  | 'collapsed'
   /** hp reached 0; the part fractured into fragments (it no longer exists as one piece) */
   | 'broken'
   /** melted into a puddle */
@@ -230,7 +232,7 @@ export interface PartState {
   liters?: number
   /**
    * Structural parts only. Load in kg: own mass plus what rests on the part. `stress` = `load / capacity`; above 1 the part takes damage every
-   * `update` (`(stress - 1) * maxHp * 0.5` per second), which can cascade. Capacity is `structure.capacity`, else `compressive * section` of the
+   * `update` (`min(0.6, 0.12 + 0.8 * (stress - 1))` of `maxHp` per second: about 7 s at stress 1.02, 2 s at 1.5, 1.7 s above 1.7), which can cascade. Capacity is `structure.capacity`, else `compressive * section` of the
    * material, where the section is the product of the two smallest dimensions (columns, beams, roofs, stairs, foundations x10), thickness times longest dimension (slabs) or
    * thickness times horizontal length (walls). Example: a 0.3 m concrete column carries 40 t, a 0.2 m brick wall 8 t per metre, a 0.1x0.2 m softwood beam 2 t.
    */

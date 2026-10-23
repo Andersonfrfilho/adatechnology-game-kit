@@ -153,6 +153,19 @@ export interface DestructionOptions {
   fireSpread?: number
 }
 
+export interface SizeStructureOptions {
+  /** Stress every structural part has at rest after sizing (`load / capacity`), 0..1 (default 0.65). */
+  safety?: number
+  /**
+   * Redundancy target: when set, the capacity of a part is raised (never lowered) until losing any single `column` leaves every other
+   * structural part at this stress or below, e.g. 0.97 (an N-1 design: the building stands with one column gone). Omit to skip the check.
+   * Should be above `safety` and, to let the structure fall when a second column goes, below 1.
+   */
+  redundancy?: number
+  /** Extra or overriding materials, the same list given to `createDestruction`. */
+  materials?: MaterialDef[]
+}
+
 /*
  * Notes on behaviour that the types cannot express:
  * - `leak` events carry the hole's world point, the outward normal as `direction`, and `rate` in litres per second; `PartState.liters` drops
