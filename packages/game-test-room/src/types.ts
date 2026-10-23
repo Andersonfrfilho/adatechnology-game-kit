@@ -14,7 +14,7 @@ import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adate
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
-import type { AnimationClipSpec, DestructibleImpl, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, ControlValue, DestructibleImpl, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -94,6 +94,36 @@ export interface TestRoomOptions {
   onSound?: (key: string, point: Vec3, volume: number) => void
   /** Show the built-in HUD and panels (default true). */
   ui?: boolean
+  /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
+  metrics?: readonly RoomMetricId[] | false
+  /**
+   * Module bench state. `state` maps a module id to its encoded state, restored when that module is first loaded (a module reloaded
+   * keeps its live state instead) before its first changes are sent; ids are per module, so two modules may share a control id.
+   * `onChange` gets the encoded state of a module whenever it changes (a page keeps it in its URL). The room never touches `location`.
+   */
+  bench?: { readonly state?: Readonly<Record<string, string>>; readonly onChange?: (moduleId: string, encoded: string) => void }
+}
+
+/** Counters the room measures itself. `fps` and `frame_ms` use the real frame time, so slow motion does not change them. */
+export type RoomMetricId = 'fps' | 'frame_ms' | 'draw_calls' | 'triangles' | 'objects' | 'fragments' | 'particles' | 'decals'
+
+/** A module control as the room holds it: the declaration with the module's patches applied, and its value (none for an action). */
+export type BenchControl = ModuleControl & { readonly disabled: boolean; readonly value?: ControlValue }
+
+export type BenchLayer = ModuleLayer & { readonly on: boolean }
+
+/** The bench of a loaded module, driven from outside the panel (tests, scripts, a page that keeps the state in its URL). */
+export interface BenchHandle {
+  controls(): BenchControl[]
+  layers(): BenchLayer[]
+  value(id: string): ControlValue | undefined
+  layer(id: string): boolean
+  /** Numbers are clamped and snapped to the step. False for an unknown id, a wrong type, an option not offered or a disabled control. */
+  set(id: string, value: ControlValue): boolean
+  setLayer(id: string, on: boolean): boolean
+  act(id: string): boolean
+  /** `id=value;id=value`, the format `TestRoomOptions.bench.state[moduleId]` reads back. */
+  encode(): string
 }
 
 export interface SpawnedObject {
@@ -179,6 +209,10 @@ export interface TestRoom {
    * offsets from the rest pose, interpolated linearly; the item keeps the last pose. Events are logged (and `sound` events reach `onSound`).
    */
   playAnimation(clipId: string, objectId?: string): boolean
+  /** The bench of a loaded module (default the active one: the module of the last `openArea`, else the last loaded with a bench), or null. */
+  bench(moduleId?: string): BenchHandle | null
+  /** Room counters and the active module's metrics, read now. */
+  metrics(): { room: Partial<Record<RoomMetricId, number>>; module: Record<string, number | string> }
   dispose(): void
 }
 

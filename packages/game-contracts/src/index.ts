@@ -41,3 +41,20 @@ export type { ContainerSpec, ItemUseDef, LiquidId } from './fluids'
 export { checkAnimation } from './animation'
 export type { AnimationClipSpec, AnimationEventSpec, AnimationKey, AnimationPose, ItemAnimationContract } from './animation'
 export type { AreaPlacement, HostEvent, HostTool, ModuleArea, ModuleHost, ModuleItemFluid, ModuleScenario, TestableItem, TestableModule } from './module'
+export { checkBench } from './bench'
+export type {
+  ActionControl,
+  BenchChange,
+  BenchDeclaration,
+  BenchReport,
+  BooleanControl,
+  ChoiceControl,
+  ChoiceOption,
+  ControlPatch,
+  ControlValue,
+  ModuleBench,
+  ModuleControl,
+  ModuleLayer,
+  ModuleMetric,
+  NumberControl,
+} from './bench'

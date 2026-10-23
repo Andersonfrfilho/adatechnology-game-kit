@@ -103,6 +103,8 @@ export interface DestructionRenderer {
   update(dt: number): void
   /** Emit particles directly (muzzle flashes, extinguisher foam, tool sparks). */
   emit(kind: DebrisKind | 'fire' | 'flash' | 'foam', point: Vec3, normal: Vec3, count: number, speed?: number): void
+  /** Draw a blast that has no exploding part (a grenade, a rocket): flash, fire, smoke, light, sound and a shove on pieces in range. Call it next to `world.explode`, which emits no event of its own. */
+  explode(point: Vec3, energy: number, radius: number): void
   /** Remove every fragment, decal and particle, restore every bound mesh to its original geometry and colours. */
   clear(): void
   /** Restore one object (after `world.reset`). */

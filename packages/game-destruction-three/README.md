@@ -111,6 +111,8 @@ loose meshes. An invalid range (outside the geometry or empty) throws from `bind
 | `leak` | stream of drops (or a faint puff for gas) from the hole while the part still has liters | |
 | `explode` | flash, fire, smoke, dust and sparks, a pooled `PointLight` pulse, impulses on pieces and fragments in range | `explode` |
 
+`world.explode` emits no event of its own (only a part with `explodes` does), so a host that detonates a grenade or rocket calls `renderer.explode(point, energy, radius)` next to it to get the same flash, fire, smoke, light, sound and shove.
+
 Pieces report hard landings: above 3 m/s the renderer calls `world.hit(id, { type: 'blunt', energy: 0.5 m v^2, radius: 0.08, direction: [0, -1, 0], source: 'fall' })`
 (throttled to once per 0.15 s per piece; the object's transform is synced to the world first, so the hit lands on the right spot), so a dropped glass
 pane shatters and a thrown chair can lose a leg. `Piece.localCenter` is the centre of mass relative to the root origin (it moves when a part breaks off).
@@ -142,7 +144,7 @@ heatColor(temperatureC: number): number // 0xRRGGBB, 0 below ~450 C, dark red ~5
 `RendererOptions`: `scene`, `world`, `quality`, `maxFragments`, `maxParticles`, `fragmentLife`, `groundAt`, `gravity`, `autoSplit`, `onPiece`, `onSound`,
 `explosionLight`, `pointScale` (point size in pixels per metre at 1 m; about `viewportHeight / (2 tan(fov / 2))`, default 700).
 
-`DestructionRenderer`: `bind`, `unbind`, `makePiece`, `pieces`, `piece`, `impulse`, `update`, `emit`, `clear`, `restore`, `stats`, `dispose`.
+`DestructionRenderer`: `bind`, `unbind`, `makePiece`, `pieces`, `piece`, `impulse`, `update`, `emit`, `explode`, `clear`, `restore`, `stats`, `dispose`.
 `clear()` removes fragments, decals, puddles and particles from the scene and restores every bound mesh; `dispose()` also unsubscribes from the world.
 
 ## Português

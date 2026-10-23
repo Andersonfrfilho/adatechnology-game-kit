@@ -997,6 +997,10 @@ class Renderer implements DestructionRenderer {
     this.particles.burst(kind as ParticleKind, point, normal, count, speed ?? DEFAULT_SPEED[kind] ?? 1, kind === 'smoke' ? { color: SMOKE_TONES.grey } : undefined)
   }
 
+  explode(point: Vec3, energy: number, radius: number): void {
+    this.onExplode({ type: 'explode', object: '', part: '', time: this.time, point, energy, radius })
+  }
+
   restore(objectId: string): void {
     const homes = new Set<string>([objectId])
     const self = this.bounds.get(objectId)
