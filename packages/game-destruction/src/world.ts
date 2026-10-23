@@ -1,6 +1,7 @@
 import { planFragments } from './fracture'
 import { JOINT_DEFAULTS, inferJoints, MATERIALS, partCapacity, partMass, partThickness, partVolume } from './materials'
 import { aabbOf, createRng, distanceToShape, quat, quatFromEuler, rayShape, rotateVec, shapeArea, shapeBound, shapeDims, surfacePoint, toLocal, toWorld, vec } from './math'
+import type { DestructibleImpl } from './contracts'
 import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
   DestructionWorld, Fragment, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec,
@@ -80,6 +81,12 @@ interface Loc {
   pathLen: number
 }
 
+interface ImplRT {
+  impl: DestructibleImpl
+  position: Vec3
+  rotation: Quat
+}
+
 interface Blast {
   point: Vec3
   energy: number
@@ -110,6 +117,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const listeners = new Map<string, Set<(e: DestructionEvent) => void>>()
   let cur: DestructionEvent[] = []
   const blasts: Blast[] = []
+  const impls = new Map<string, ImplRT>()
+  const taken = (id: string) => objects.has(id) || impls.has(id)
 
   // -------------------------------------------------------------------------------------------------------------------------------------------
   // Events
@@ -150,7 +159,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const nextId = () => {
     let id: string
     do id = `obj_${++counter}`
-    while (objects.has(id))
+    while (taken(id))
     return id
   }
 
@@ -394,12 +403,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   interface PartRay { t0: number; t1: number; n: Vec3 }
-  const rayPart = (o: ObjRT, p: PartRT, origin: Vec3, d: Vec3): PartRay | null => {
-    const { c, q } = partXf(o, p)
+  const rayPartRaw = (pos: Vec3, rot: Quat, spec: PartSpec, pq: Quat, origin: Vec3, d: Vec3): PartRay | null => {
+    const c = toWorld(pos, rot, spec.position)
+    const q = quat.mul(rot, pq)
     const qi = quat.conjugate(q)
-    const r = rayShape(p.spec.shape, rotateVec(qi, vec.sub(origin, c)), rotateVec(qi, d))
+    const r = rayShape(spec.shape, rotateVec(qi, vec.sub(origin, c)), rotateVec(qi, d))
     return r ? { t0: r.t0, t1: r.t1, n: rotateVec(q, r.n0) } : null
   }
+  const rayPart = (o: ObjRT, p: PartRT, origin: Vec3, d: Vec3): PartRay | null => rayPartRaw(o.st.position, o.st.rotation, p.spec, p.q, origin, d)
 
   const raySphereMiss = (origin: Vec3, d: Vec3, c: Vec3, r: number, maxDist: number): boolean => {
     const oc = vec.sub(origin, c)
@@ -423,7 +434,45 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (!best || r.t0 < best.distance) best = { object: o.id, part: p.spec.id, point: vec.madd(origin, d, r.t0), normal: r.n, distance: r.t0, pathLen: r.t1 - r.t0 }
       }
     }
+    for (const im of impls.values()) {
+      for (const ps of im.impl.describe().parts) {
+        if (ignore?.has(`${im.impl.id}\0${ps.id}`)) continue
+        const r = rayPartRaw(im.position, im.rotation, ps, quatFromEuler(...(ps.rotation ?? [0, 0, 0])), origin, d)
+        if (!r || r.t0 < 0 || r.t0 > maxDist) continue
+        if (!best || r.t0 < best.distance) best = { object: im.impl.id, part: ps.id, point: vec.madd(origin, d, r.t0), normal: r.n, distance: r.t0, pathLen: r.t1 - r.t0 }
+      }
+    }
     return best
+  }
+
+  // impl hosting
+  const implHit = (im: ImplRT, hit: Hit): HitResult => {
+    let h = hit
+    if (hit.space === 'local') {
+      h = { ...hit, space: 'world', point: toWorld(im.position, im.rotation, hit.point) }
+      if (hit.direction) h.direction = rotateVec(im.rotation, hit.direction)
+    }
+    const start = cur.length
+    for (const e of im.impl.hit(h) ?? []) emit(e.time === undefined ? { ...e, time } : e)
+    const mine = cur.slice(start)
+    const res: HitResult = { object: im.impl.id, damage: 0, penetrated: false, exitEnergy: 0, events: mine, point: hit.point }
+    for (const e of mine) {
+      if (e.type === 'damage') res.damage += e.amount
+      if (e.type === 'hole' && e.hole.through) res.penetrated = true
+      if (res.part === undefined && 'part' in e) res.part = (e as { part: string }).part
+    }
+    return res
+  }
+
+  const implJointPos = (im: ImplRT, a: string, b: string): Vec3 | null => {
+    const parts = im.impl.describe().parts
+    const pa = parts.find((p) => p.id === a), pb = parts.find((p) => p.id === b)
+    if (!pa || !pb) return null
+    const A = aabbOf(pa.shape, pa.position, quatFromEuler(...(pa.rotation ?? [0, 0, 0])))
+    const B = aabbOf(pb.shape, pb.position, quatFromEuler(...(pb.rotation ?? [0, 0, 0])))
+    const pos: Vec3 = [0, 0, 0]
+    for (let k = 0; k < 3; k++) pos[k] = (Math.max(A.min[k], B.min[k]) + Math.min(A.max[k], B.max[k])) / 2
+    return toWorld(im.position, im.rotation, pos)
   }
 
   /** Find the part a hit lands on: a short ray along `dir`, else the nearest part within `tol`. */
@@ -736,6 +785,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const r = blastObject(o, point, energy, radius, src)
       if (r.part) out.push(r)
     }
+    for (const im of [...impls.values()]) {
+      const inRange = im.impl.describe().parts.some((ps) => {
+        const c = toWorld(im.position, im.rotation, ps.position)
+        const q = quat.mul(im.rotation, quatFromEuler(...(ps.rotation ?? [0, 0, 0])))
+        return distanceToShape(ps.shape, toLocal(c, q, point)) < radius
+      })
+      if (inRange) out.push(implHit(im, { type: 'explosive', point, energy, radius, ...(src !== undefined ? { source: src } : {}) }))
+    }
     return out
   }
 
@@ -1037,21 +1094,35 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     },
     add(spec, opts: AddOptions = {}) {
       const id = opts.id ?? nextId()
-      if (objects.has(id)) throw new Error(`object "${id}" already exists`)
+      if (taken(id)) throw new Error(`object "${id}" already exists`)
       objects.set(id, build(resolveSpec(spec), id, opts.position ?? [0, 0, 0], opts.rotation ?? [0, 0, 0, 1]))
+      return id
+    },
+    register(impl, opts: AddOptions = {}) {
+      const id = opts.id ?? impl.id
+      if (taken(id)) throw new Error(`object "${id}" already exists`)
+      impls.set(id, { impl, position: opts.position ?? [0, 0, 0], rotation: opts.rotation ?? [0, 0, 0, 1] })
       return id
     },
     remove(id) {
       objects.delete(id)
+      impls.delete(id)
     },
-    has: (id) => objects.has(id),
-    ids: () => [...objects.keys()],
+    has: (id) => taken(id),
+    ids: () => [...objects.keys(), ...impls.keys()],
     setTransform(id, position, rotation) {
+      const im = impls.get(id)
+      if (im) {
+        im.position = [position[0], position[1], position[2]]
+        im.rotation = [rotation[0], rotation[1], rotation[2], rotation[3]]
+        return
+      }
       const o = getObj(id)
       o.st.position = [position[0], position[1], position[2]]
       o.st.rotation = [rotation[0], rotation[1], rotation[2], rotation[3]]
     },
     splitGroup(id, group, newId) {
+      if (impls.has(id)) throw new Error(`object "${id}" is a registered DestructibleImpl and cannot be split; its module owns its pieces`)
       const o = getObj(id)
       if (o.st.groups.length < 2) return id
       const names = o.st.groups[group]
@@ -1080,10 +1151,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return nid
     },
     hit(objectId, h) {
+      const im = impls.get(objectId)
+      if (im) return whole(() => implHit(im, h))
       const o = getObj(objectId)
       return whole(() => doHit(o, h))
     },
     hitPart(objectId, partId, h) {
+      const im = impls.get(objectId)
+      if (im) return whole(() => implHit(im, h))
       const o = getObj(objectId)
       const p = getPart(o, partId)
       return whole(() => doHit(o, h, p))
@@ -1105,6 +1180,19 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         for (let i = 0; i < 4 && E > 0; i++) {
           const rh = raycastInternal(org, d, Infinity, ignore)
           if (!rh) break
+          const im = impls.get(rh.object)
+          if (im) {
+            const r = implHit(im, { type: 'ballistic', point: rh.point, direction: d, energy: E, caliber, ...(source !== undefined ? { source } : {}) })
+            r.part = rh.part
+            r.point = rh.point
+            r.exitEnergy = r.penetrated ? E * 0.5 : 0
+            results.push(r)
+            ignore.add(`${im.impl.id}\0${rh.part}`)
+            if (!r.penetrated) break
+            org = vec.madd(rh.point, d, Math.min(rh.pathLen, 0.05) + 0.001)
+            E = r.exitEnergy
+            continue
+          }
           const o = getObj(rh.object)
           const p = getPart(o, rh.part)
           const start = cur.length
@@ -1119,6 +1207,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }).value
     },
     disassemble(objectId, jointId, tool: ToolKind, dt) {
+      const im = impls.get(objectId)
+      if (im) return im.impl.disassemble ? im.impl.disassemble(jointId, tool, dt) : -1
       const o = getObj(objectId)
       const j = o.jointMap.get(jointId)
       if (!j || !j.spec.tools.includes(tool)) return -1
@@ -1143,9 +1233,32 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }).value
     },
     workableJoints(objectId, tool) {
+      const im = impls.get(objectId)
+      if (im) {
+        const spec = im.impl.describe()
+        return im.impl.state().joints.filter((js) => {
+          const j = (spec.joints ?? []).find((x) => (x.id ?? `${x.a}~${x.b}`) === js.id)
+          return !js.open && !!j && (j.tools ?? JOINT_DEFAULTS[j.kind].tools).includes(tool)
+        })
+      }
       return getObj(objectId).joints.filter((j) => !j.st.open && j.spec.tools.includes(tool)).map((j) => j.st)
     },
     nearestJoint(objectId, point, maxDistance = 0.3) {
+      const im = impls.get(objectId)
+      if (im) {
+        let best: JointState | null = null
+        let bd = maxDistance
+        for (const js of im.impl.state().joints) {
+          if (js.open) continue
+          const pos = implJointPos(im, js.a, js.b)
+          const d = pos ? vec.distance(pos, point) : Infinity
+          if (d <= bd) {
+            bd = d
+            best = js
+          }
+        }
+        return best
+      }
       const o = getObj(objectId)
       let best: JointState | null = null
       let bd = maxDistance
@@ -1160,6 +1273,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return best
     },
     extinguish(objectId, partId, coolC = 200) {
+      const im = impls.get(objectId)
+      if (im) {
+        run(() => im.impl.extinguish?.(partId))
+        return
+      }
       const o = getObj(objectId)
       run(() => {
         for (const p of partId ? [getPart(o, partId)] : o.parts) {
@@ -1175,6 +1293,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       })
     },
     setLiters(objectId, partId, liters) {
+      if (impls.has(objectId)) return
       const p = getPart(getObj(objectId), partId)
       if (!p.spec.contains) return
       p.st.liters = clamp(liters, 0, p.spec.contains.liters)
@@ -1187,11 +1306,20 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         const sources: Array<{ o: ObjRT; p: PartRT; flame: number }> = []
         for (const o of [...objects.values()]) if (o.active) stepObject(o, dt, sources)
         if (sources.length) spread(sources, dt)
+        for (const im of [...impls.values()]) {
+          if (!im.impl.update) continue
+          for (const e of im.impl.update(dt) ?? []) emit(e.time === undefined ? { ...e, time } : e)
+        }
       }).events
     },
-    state: (id) => objects.get(id)?.st ?? null,
-    part: (id, partId) => objects.get(id)?.byId.get(partId)?.st ?? null,
+    state: (id) => objects.get(id)?.st ?? impls.get(id)?.impl.state() ?? null,
+    part: (id, partId) => objects.get(id)?.byId.get(partId)?.st ?? impls.get(id)?.impl.state().parts.find((p) => p.id === partId) ?? null,
     reset(id) {
+      const im = impls.get(id)
+      if (im) {
+        im.impl.reset?.()
+        return
+      }
       const o = getObj(id)
       objects.set(id, build(o.spec, id, o.st.position, o.st.rotation))
     },
@@ -1215,6 +1343,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           for (const j of o.joints) runtime.joints[j.spec.id] = j.step
           return { id: o.id, spec: clone(o.spec), state: clone(o.st), runtime }
         }),
+        ...(impls.size
+          ? { impls: [...impls.values()].map((im) => ({ id: im.impl.id, position: [...im.position] as Vec3, rotation: [...im.rotation] as Quat, data: im.impl.serialize?.() })) }
+          : {}),
       }
     },
     load(snap) {
@@ -1233,6 +1364,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           collapsed: e.runtime?.collapsed,
         }
         objects.set(e.id, build(clone(e.spec), e.id, state.position, state.rotation, carry))
+      }
+      for (const e of snap.impls ?? []) {
+        const im = impls.get(e.id)
+        if (!im) continue
+        im.position = [e.position[0], e.position[1], e.position[2]]
+        im.rotation = [e.rotation[0], e.rotation[1], e.rotation[2], e.rotation[3]]
+        if (e.data !== undefined) im.impl.load?.(e.data)
       }
     },
   }

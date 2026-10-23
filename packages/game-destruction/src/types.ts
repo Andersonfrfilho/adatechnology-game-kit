@@ -10,6 +10,8 @@
  * events on every machine (a LAN host can run the world and send only the inputs, or the events).
  */
 
+import type { DestructibleImpl } from './contracts'
+
 export type Vec3 = [number, number, number]
 /** Quaternion `[x, y, z, w]`. */
 export type Quat = [number, number, number, number]
@@ -457,6 +459,12 @@ export interface DestructionWorld {
   readonly materials: ReadonlyMap<MaterialId, MaterialDef>
   /** Add an object and return its id. */
   add(spec: DestructibleSpec, options?: AddOptions): string
+  /**
+   * Host an object whose behaviour a game module owns (see `DestructibleImpl`) next to the world's own objects. Returns its id (`options.id`, else
+   * `impl.id`). Raycast, shoot, explode, hit, disassemble, extinguish, update, state, reset, remove and `on` route to it; its events go through the
+   * same listeners in order. `splitGroup` on it throws.
+   */
+  register(impl: DestructibleImpl, options?: AddOptions): string
   remove(id: string): void
   has(id: string): boolean
   ids(): string[]
@@ -538,4 +546,6 @@ export interface DestructionSnapshot {
   /** Counter for generated object ids (`obj_1`...). */
   counter?: number
   objects: Array<{ id: string; spec: DestructibleSpec; state: ObjectState; runtime?: ObjectRuntime }>
+  /** Registered impls: transform and `serialize()` data. `load` restores them into impls registered under the same ids. */
+  impls?: Array<{ id: string; position: Vec3; rotation: Quat; data?: unknown }>
 }

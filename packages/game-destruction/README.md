@@ -104,15 +104,68 @@ when the part has `explodes`). `contains` parts leak through punctures: the `lea
 | `mortar` | 400 | hammer | 6 |
 | `fused` | 1000 | none (can only break) | 0 |
 | `stem` | 40 | knife, saw, hand | 1.5 |
+| `rebar` | 1500 | cutting_torch, saw | 20 |
+| `resting` | 30 | hand | 1 |
 
 `inferJoints` joins parts whose bounds touch (default tolerance 1 cm) with the kind from `JOINT_BY_MATERIALS`. Joints open when their hit points
 run out (`detach` with `by: 'break'`), when a part is lost (`'part_lost'`) or when a tool finishes the work (`'tool'`). `ObjectState.groups` lists
 the connected pieces; index 0 keeps the object's id (the anchored one, else the heaviest).
 
+## Structural integrity
+
+Give parts a `structure: { role, capacity? }` (`foundation`, `column`, `beam`, `slab`, `wall`, `partition`, `roof`, `stair`, `none`) and the world
+solves loads: each structural part carries its own mass plus what rests on it, down to the anchored parts (`foundation` implies `anchored`).
+`PartState.load` is in kg and `PartState.stress` is `load / capacity`. Parts without a role (windows, doors, furniture) carry nothing. Objects
+without any `structure` behave exactly as before.
+
+- **Capacity** defaults to `material.compressive` (kg per m²: concrete 444 000, brick 40 000, softwood 100 000, steel 2 000 000) times the section:
+  the two smallest dimensions for columns, beams, roofs and stairs (foundations x10), thickness times longest side for slabs, thickness times
+  horizontal length for walls. A 0.3 m concrete column carries 40 t, a 0.2 m brick wall 8 t per metre, a 0.1 x 0.2 m softwood beam 2 t.
+- **Joints** carry load when `bears` is true (default when both parts have a role). `bears: 'a_on_b'` means part `a` rests on `b`: load flows only
+  that way. A `partition` is supported but supports nothing, so breaking it never drops anything.
+- **Overload**: above stress 1 a part takes `(stress - 1) * maxHp * 0.5` damage per second, emits `stress` (once per 0.5 s) and cascades; brittle
+  parts `crack` from stress 0.8. Metal never fractures, so overloaded steel only reports stress.
+- **Collapse**: a part with no support path to an anchored part falls: it is cut from the supported pieces into its own group (index 1 or more) and
+  one `collapse` event lists the group. Non-structural parts that hang only on collapsed parts fall with them. Make the group its own object with
+  `splitGroup`.
+- `buildFrame({ spanX, spanZ, columnsX, columnsZ, height, floors, walls, roof, columnCapacity, ... })` returns a test structure: columns on
+  foundations (`rebar`), beams, a slab per floor, optional brick walls (`mortar`) with a door opening, and a roof that rests (`resting`) on the top beams.
+
+## Contracts: implement your own or use the default world
+
+The kit defines contracts; each game module implements them for the objects it owns, and the world in this package is the optional default
+implementation. A module implements `DestructibleImpl` (`describe`, `hit`, `update`, `state`, `reset`, `disassemble`, `extinguish`,
+`serialize`, `load`) and registers it:
+
+```ts
+const id = world.register(myVehicleDoor, { position: [10, 0, 0] })
+world.shoot(origin, dir, 500, 9) // passes through default objects and impls in order
+```
+
+The world routes raycast, shoot, explode, hit, disassemble, extinguish, update, state, reset, remove and `on` to the impl; its events go through the
+same listeners in order. The impl receives hits in world space and returns events in world space (the transform given to `register` and
+`setTransform` is only used for raycast and blast range). `splitGroup` on an impl throws. After a shot that goes through an impl the world assumes
+half of the energy continues when a through `hole` was reported. `checkDestructible(impl, { materials })` returns `{ ok, problems }`: `describe()`
+valid (unique ids, known materials, joints reference parts), a 500 J ballistic hit returns events of this impl naming known parts, `state()` matches
+`describe()`, hit points never go negative, `update(0.016)` returns an array, events are finite JSON.
+
+### Impact contract (what weapons must produce)
+
+| `type` | Required | Optional | Notes |
+|---|---|---|---|
+| `ballistic` | `point`, `direction`, `energy`, `caliber` | `space`, `source` | joules, diameter in millimetres |
+| `blunt` | `point`, `energy` | `direction`, `radius`, `space`, `source` | contact radius in metres |
+| `slash` | `point`, `energy` | `direction`, `radius`, `space`, `source` | axes, knives |
+| `explosive` | `point`, `energy`, `radius` | `space`, `source` | `point` is the blast centre |
+| `fire` | `point`, `temperature`, `radius` | `duration`, `space`, `source` | call every frame with `duration: dt` |
+| `heat` | `point`, `temperature`, `radius` | `duration`, `space`, `source` | cutting torch, hot plate |
+
+`IMPACT_CONTRACT` holds this table as data and `checkHit(hit)` returns the problems of a hit.
+
 ## Events
 
 `damage`, `dent`, `hole`, `crack`, `ricochet`, `debris`, `fracture` (with oriented `fragments` in world space), `detach`, `disassemble_progress`,
-`ignite`, `extinguish`, `burnout`, `melt`, `drip`, `leak`, `explode`, `destroyed`. All points are in world space. Subscribe with
+`ignite`, `extinguish`, `burnout`, `melt`, `drip`, `leak`, `explode`, `stress`, `collapse`, `destroyed`. All points are in world space. Subscribe with
 `world.on(type | '*', fn)` or the `onEvent` option; `hit` and `update` also return their events.
 
 ## Determinism and LAN
@@ -125,9 +178,9 @@ world continues with the same events as the original. The loading world must use
 
 `createDestruction(options)` returns a `DestructionWorld`: `add`, `remove`, `has`, `ids`, `setTransform`, `splitGroup`, `hit`, `hitPart`, `explode`,
 `raycast`, `shoot`, `disassemble`, `workableJoints`, `nearestJoint`, `extinguish`, `setLiters`, `update`, `state`, `part`, `reset`, `on`,
-`serialize`, `load`, `time`. `state()` and `part()` return live views; do not mutate them.
+`register`, `serialize`, `load`, `time`. `state()` and `part()` return live views; do not mutate them.
 
-Also exported: `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
+Also exported: `buildFrame`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
 helpers `vec`, `quat`, `quatFromEuler`, `rotateVec`, `toLocal`, `toWorld`, the locale (`locales`, `resolveStrings`, `DestructionStrings`) and all types.
 
 The locale table has `en` and `pt-BR` strings for material names, part statuses, joint kinds, tools, damage types, event labels and fracture styles:
