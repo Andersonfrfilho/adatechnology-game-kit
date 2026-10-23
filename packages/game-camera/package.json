@@ -1,9 +1,17 @@
 {
   "name": "@adatechnology/game-camera",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Shoulder, third-person and first-person camera rig plus viewmodel for three.js games. Knows nothing about any game.",
-  "keywords": ["three", "threejs", "camera", "game", "third-person", "first-person", "viewmodel"],
+  "keywords": [
+    "three",
+    "threejs",
+    "camera",
+    "game",
+    "third-person",
+    "first-person",
+    "viewmodel"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",

@@ -1,9 +1,17 @@
 {
   "name": "@adatechnology/game-fluids",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Engine-agnostic liquids for games: containers with level, temperature and tilt (fill, pour, drink, spill, leak through holes), streams, and puddles and stains that spread, soak and dry on surfaces. Deterministic. Knows nothing about any game.",
-  "keywords": ["game", "fluids", "liquids", "containers", "puddles", "leaks", "drinking"],
+  "keywords": [
+    "game",
+    "fluids",
+    "liquids",
+    "containers",
+    "puddles",
+    "leaks",
+    "drinking"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
