@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createWorld } from '@adatechnology/game-interactables'
+import { cornersOf } from '../src'
 import { SEEDS, boxes, build, localPrims, pack } from './helpers'
 
 const NEW_TYPES = ['bunk_bed', 'wood_stove', 'fireplace', 'outhouse', 'well', 'cooler', 'campfire', 'camp_stove', 'gas_canister', 'lantern_lamp', 'camp_chair', 'camp_table']
@@ -275,5 +276,25 @@ describe('rural and camping types', () => {
         expect(i.label, `${locale} ${i.id}`).not.toMatch(/^prompt\./)
       }
     }
+  })
+})
+
+describe('mounting height and variants', () => {
+  it('camp stove, canister and lantern follow item.y (they stand on tables)', () => {
+    for (const t of ['camp_stove', 'gas_canister', 'lantern_lamp']) {
+      const b = build(t, { y: 0.7 })
+      let min = Infinity
+      for (const p of b.rec.primitives) for (const c of cornersOf(p)) min = Math.min(min, c[1])
+      expect(min, t).toBeGreaterThanOrEqual(0.7 - 0.02)
+      const maxY = Math.max(...b.rec.primitives.flatMap((p) => cornersOf(p).map((c) => c[1])))
+      expect(maxY, t).toBeLessThanOrEqual(0.7 + b.dims.h + 0.02)
+    }
+  })
+
+  it('service entrance "gato" variant has no meter box, no riser and keeps the drop wire', () => {
+    const s = build('service_entrance', { variant: 'gato', house: [0, 3, 8] }).spec
+    expect(s.parts).toBeUndefined()
+    expect(s.wires!.map((w) => w.id)).toEqual(['drop', 'hook'])
+    expect(build('service_entrance', { house: [0, 3, 8] }).spec.parts!.map((p) => p.id)).toEqual(['meter_door'])
   })
 })

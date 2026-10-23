@@ -126,32 +126,33 @@ export function campfire(c: Ctx): void {
 
 export function campStove(c: Ctx): void {
   const { hw, hd, h } = c
+  const Y = c.y0 // mounting height (the stove stands on a table in a camp)
   const steel = c.metal(ALU)
   const enamel = c.main(0xc0392b)
   const zf = hd - HANDLE
   // case: low tray with the burner head on a stem, three pot supports, a wind guard on three sides
-  c.b('metal', -hw, 0.02, -hd, hw, 0.09, zf, enamel)
-  c.b('metal', -hw + 0.01, 0.09, -hd + 0.01, hw - 0.01, 0.095, zf - 0.01, shade(enamel, 0.8)) // recessed top
-  c.b('metal', -hw + 0.02, 0, -hd + 0.02, -hw + 0.06, 0.02, -hd + 0.06, DARK) // feet
-  c.b('metal', hw - 0.06, 0, -hd + 0.02, hw - 0.02, 0.02, -hd + 0.06, DARK)
-  c.b('metal', -hw + 0.02, 0, zf - 0.06, -hw + 0.06, 0.02, zf - 0.02, DARK)
-  c.b('metal', hw - 0.06, 0, zf - 0.06, hw - 0.02, 0.02, zf - 0.02, DARK)
-  const burnerY = 0.095
+  c.b('metal', -hw, Y + 0.02, -hd, hw, Y + 0.09, zf, enamel)
+  c.b('metal', -hw + 0.01, Y + 0.09, -hd + 0.01, hw - 0.01, Y + 0.095, zf - 0.01, shade(enamel, 0.8)) // recessed top
+  c.b('metal', -hw + 0.02, Y + 0.001, -hd + 0.02, -hw + 0.06, Y + 0.02, -hd + 0.06, DARK) // feet
+  c.b('metal', hw - 0.06, Y + 0.001, -hd + 0.02, hw - 0.02, Y + 0.02, -hd + 0.06, DARK)
+  c.b('metal', -hw + 0.02, Y + 0.001, zf - 0.06, -hw + 0.06, Y + 0.02, zf - 0.02, DARK)
+  c.b('metal', hw - 0.06, Y + 0.001, zf - 0.06, hw - 0.02, Y + 0.02, zf - 0.02, DARK)
+  const burnerY = Y + 0.095
   c.cyl('metal', 0, burnerY, 0, 0.022, 0.03, DARK, 'cyl')
   c.cyl('metal', 0, burnerY + 0.03, 0, 0.055, 0.018, shade(steel, 0.7), 'cyl')
   c.cyl('metal', 0, burnerY + 0.048, 0, 0.042, 0.006, 0x1c1c1e, 'cyl') // flame cap
   for (const a of [0, 2.094, 4.189]) {
     const px = Math.sin(a) * 0.085
     const pz = Math.cos(a) * 0.085
-    c.b('metal', px - 0.008, burnerY + 0.02, pz - 0.008, px + 0.008, h - 0.005, pz + 0.008, DARK) // pot supports
+    c.b('metal', px - 0.008, burnerY + 0.02, pz - 0.008, px + 0.008, Y + h - 0.005, pz + 0.008, DARK) // pot supports
   }
-  c.cyl('metal', 0, h - 0.012, 0, 0.1, 0.008, DARK, 'cyl6') // support ring
-  c.b('metal', -hw + 0.005, burnerY, -hd + 0.005, -hw + 0.012, h - 0.01, zf - 0.04, shade(steel, 0.9)) // wind guard: left, right
-  c.b('metal', hw - 0.012, burnerY, -hd + 0.005, hw - 0.005, h - 0.01, zf - 0.04, shade(steel, 0.9))
-  c.b('metal', -hw + 0.012, burnerY, -hd + 0.005, hw - 0.012, h - 0.01, -hd + 0.012, shade(steel, 0.8))
+  c.cyl('metal', 0, Y + h - 0.012, 0, 0.1, 0.008, DARK, 'cyl6') // support ring
+  c.b('metal', -hw + 0.005, burnerY, -hd + 0.005, -hw + 0.012, Y + h - 0.01, zf - 0.04, shade(steel, 0.9)) // wind guard: left, right, back
+  c.b('metal', hw - 0.012, burnerY, -hd + 0.005, hw - 0.005, Y + h - 0.01, zf - 0.04, shade(steel, 0.9))
+  c.b('metal', -hw + 0.012, burnerY, -hd + 0.005, hw - 0.012, Y + h - 0.01, -hd + 0.012, shade(steel, 0.8))
   // control knob on the front
   const kx = hw * 0.55
-  const ky = 0.055
+  const ky = Y + 0.055
   c.part(
     'knob',
     [kx, ky, zf],
@@ -167,29 +168,30 @@ export function campStove(c: Ctx): void {
   c.add('emitters', { id: 'burner_flame', kind: 'flame', pos: [0, round3(burnerY + 0.056), 0], dir: [0, 1, 0], source: 'burner', size: 0.05 })
   c.add('wires', {
     id: 'gas_hose', kind: 'cable', radius: 0.005,
-    points: [[round3(-hw * 0.6), 0.05, -hd], [round3(-hw * 0.6), 0.03, round3(-hd - 0.08)], [round3(-hw * 0.6 - 0.04), 0.02, round3(-hd - 0.22)]],
+    points: [[round3(-hw * 0.6), Y + 0.05, -hd], [round3(-hw * 0.6), Y + 0.03, round3(-hd - 0.08)], [round3(-hw * 0.6 - 0.04), Y + 0.02, round3(-hd - 0.22)]],
   })
   c.interact('use_burner', [kx, ky, round3(zf + HANDLE)], { do: 'toggle_burner', burner: 'burner' }, 'prompt.camp_stove', 0.9)
 }
 
 export function gasCanister(c: Ctx): void {
   const g = c.region.canister
+  const Y = c.y0
   const R = Math.min(g.diameter, c.w, c.d) / 2
   const H = Math.min(g.height, c.h)
   const col = Number.parseInt(g.color.replace('#', ''), 16)
-  c.cyl('metal', 0, 0, 0, R * 0.96, 0.012, 0x6a6e72, 'cyl') // rolled bottom
-  c.cyl('metal', 0, 0.012, 0, R, H - 0.012 - 0.045, col, 'cyl')
-  c.cyl('metal', 0, 0.012 + (H - 0.057) * 0.35, 0, R + 0.001, (H - 0.057) * 0.3, 0xf0ece0, 'cyl') // label band
-  c.cyl('metal', 0, H - 0.075, 0, R * 0.96, 0.04, col, 'sphere') // shoulder
-  c.cyl('metal', 0, H - 0.05, 0, R * 0.45, 0.012, 0x9a9ea2, 'cyl') // crimped top
-  c.cyl('metal', 0, H - 0.04, 0, R * 0.3, 0.02, 0xb08a34, 'cyl6') // valve neck
+  c.cyl('metal', 0, Y + 0.001, 0, R * 0.96, 0.011, 0x6a6e72, 'cyl') // rolled bottom
+  c.cyl('metal', 0, Y + 0.012, 0, R, H - 0.012 - 0.045, col, 'cyl')
+  c.cyl('metal', 0, Y + 0.012 + (H - 0.057) * 0.35, 0, R + 0.001, (H - 0.057) * 0.3, 0xf0ece0, 'cyl') // label band
+  c.cyl('metal', 0, Y + H - 0.075, 0, R * 0.96, 0.04, col, 'sphere') // shoulder
+  c.cyl('metal', 0, Y + H - 0.05, 0, R * 0.45, 0.012, 0x9a9ea2, 'cyl') // crimped top
+  c.cyl('metal', 0, Y + H - 0.04, 0, R * 0.3, 0.02, 0xb08a34, 'cyl6') // valve neck
   c.part(
     'valve',
-    [0, H - 0.02, 0],
+    [0, Y + H - 0.02, 0],
     { kind: 'knob', axis: [0, 1, 0], angle: 1.6 },
     () => {
-      c.cyl('metal', 0, H - 0.02, 0, 0.012, 0.02, 0x8a6a2a, 'cyl6')
-      c.b('metal', -0.022, H - 0.004, -0.004, 0.022, H, 0.004, 0xd8d8dc)
+      c.cyl('metal', 0, Y + H - 0.02, 0, 0.012, 0.02, 0x8a6a2a, 'cyl6')
+      c.b('metal', -0.022, Y + H - 0.004, -0.004, 0.022, Y + H, 0.004, 0xd8d8dc)
     },
     { label: 'prompt.canister_valve', at: false, noSweep: true, radius: 0.9 },
   )
@@ -202,9 +204,9 @@ export function gasCanister(c: Ctx): void {
     explodes: { energy: Math.round(g.capacityKg * 46000), radius: 3, atC: 180 },
     contains: { fluid: 'gas', liters: Math.max(0.1, round3(g.capacityKg / 0.54)), pressurized: true },
   }
-  c.interact('use_gas', [0, H, 0], { do: 'toggle_fuel', fuel: 'gas' }, 'prompt.canister_valve', 0.9, c.M.requires)
+  c.interact('use_gas', [0, Y + H, 0], { do: 'toggle_fuel', fuel: 'gas' }, 'prompt.canister_valve', 0.9, c.M.requires)
   c.spec.colliders = []
-  c.collider('body', -R, 0, -R, R, H, R)
+  c.collider('body', -R, Y, -R, R, Y + H, R)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -213,6 +215,7 @@ export function gasCanister(c: Ctx): void {
 
 export function lanternLamp(c: Ctx): void {
   const { h } = c
+  const Y = c.y0 // a table lantern stands on a table, a hanging one hangs at this height
   const hanging = c.M.variant === 'hanging'
   const brass = c.metal(0xb08a34)
   const chain = hanging ? 0.1 : 0
@@ -220,10 +223,10 @@ export function lanternLamp(c: Ctx): void {
   const baseR = 0.085
   const globeR = 0.062
   // fuel font (reservoir), burner collar, glass globe inside a wire cage, chimney, cap and bail
-  c.cyl('metal', 0, 0, 0, baseR, 0.03, shade(brass, 0.8), 'cyl')
-  c.cyl('metal', 0, 0.03, 0, baseR * 0.9, 0.05, brass, 'sphere')
-  c.cyl('metal', 0, 0.075, 0, baseR * 0.75, 0.025, shade(brass, 1.1), 'cyl')
-  const gy = 0.1
+  c.cyl('metal', 0, Y + 0.001, 0, baseR, 0.029, shade(brass, 0.8), 'cyl')
+  c.cyl('metal', 0, Y + 0.03, 0, baseR * 0.9, 0.05, brass, 'sphere')
+  c.cyl('metal', 0, Y + 0.075, 0, baseR * 0.75, 0.025, shade(brass, 1.1), 'cyl')
+  const gy = Y + 0.1
   const gh = bodyTop - 0.2
   c.cyl('glass', 0, gy, 0, globeR, gh * 0.75, 0xe8f0f2, 'cyl')
   c.cyl('glass', 0, gy + gh * 0.55, 0, globeR * 0.98, gh * 0.45, 0xe8f0f2, 'sphere')
@@ -231,18 +234,18 @@ export function lanternLamp(c: Ctx): void {
   c.cyl('metal', 0, gy + gh, 0, baseR * 0.85, 0.03, brass, 'cone')
   c.cyl('metal', 0, gy + gh + 0.03, 0, 0.02, 0.04, shade(brass, 0.8), 'cyl')
   c.cyl('metal', 0, gy + gh + 0.07, 0, 0.045, 0.01, brass, 'cyl')
-  c.cyl('plain', 0, 0.1, 0, 0.012, 0.03, 0xf0e8d0, 'cyl6') // wick
+  c.cyl('plain', 0, gy, 0, 0.012, 0.03, 0xf0e8d0, 'cyl6') // wick
   // bail over the top
   const by = gy + gh + 0.08
-  for (const s of [-1, 1]) c.b('metal', s * baseR - 0.003, 0.08, -0.003, s * baseR + 0.003, by + 0.02, 0.003, DARK)
+  for (const s of [-1, 1]) c.b('metal', s * baseR - 0.003, Y + 0.08, -0.003, s * baseR + 0.003, by + 0.02, 0.003, DARK)
   c.b('metal', -baseR + 0.007, by + 0.014, -0.003, baseR - 0.007, by + 0.02, 0.003, DARK)
   if (hanging) {
-    for (let y = by + 0.02; y < h - 0.012; y += 0.022) c.b('metal', -0.004, y, -0.004, 0.004, y + 0.016, 0.004, DARK) // chain links
-    c.b('metal', -0.012, h - 0.012, -0.012, 0.012, h, 0.012, DARK)
+    for (let y = by + 0.02; y < Y + h - 0.012; y += 0.022) c.b('metal', -0.004, y, -0.004, 0.004, y + 0.016, 0.004, DARK) // chain links
+    c.b('metal', -0.012, Y + h - 0.012, -0.012, 0.012, Y + h, 0.012, DARK)
   }
   // wick wheel
   const kx = baseR * 0.85
-  const ky = 0.055
+  const ky = Y + 0.055
   c.part(
     'wick',
     [kx, ky, 0],
@@ -254,10 +257,10 @@ export function lanternLamp(c: Ctx): void {
     { label: 'prompt.lantern_knob', at: false, noSweep: true, radius: 0.9 },
   )
   c.add('devices', { id: 'lamp', kind: 'lamp', watts: 0, electric: false, part: 'wick', ...(c.M.on ? { on: true } : {}) })
-  c.add('emitters', { id: 'lamp_flame', kind: 'flame', pos: [0, 0.14, 0], dir: [0, 1, 0], source: 'lamp', size: 0.04 })
+  c.add('emitters', { id: 'lamp_flame', kind: 'flame', pos: [0, round3(gy + 0.04), 0], dir: [0, 1, 0], source: 'lamp', size: 0.04 })
   c.interact('toggle_lamp', [kx + 0.02, ky, 0], { do: 'toggle_device', device: 'lamp' }, 'prompt.lantern', 1.2)
   c.spec.colliders = []
-  if (!hanging) c.collider('body', -baseR, 0, -baseR, baseR, bodyTop, baseR)
+  if (!hanging) c.collider('body', -baseR, Y, -baseR, baseR, Y + bodyTop, baseR)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------

@@ -86,7 +86,7 @@ rotated by `ry`, which is always 0 in this pack), so the host makes one movable 
 | `circuits` | `electrical_panel`: `[{ id, label? }]`, one breaker per circuit (default one circuit `main`) |
 | `requires` | `gas_bottle` in a cabinet: `{ object, part }` (world-wide object id); the valve is usable only while that part is open |
 | `flueHeight`, `chimneyHeight` | `wood_stove` / `fireplace`: where the flue pipe or chimney ends and the smoke emitter sits (default: the item height; pass `h` too when it is taller) |
-| `house`, `sag` | `service_entrance`: where the drop wire ends (object-local) and how much it sags |
+| `house`, `sag` | `service_entrance`: where the drop wire ends (object-local) and how much it sags; `variant: 'gato'` is an illegal tap: a bare drop wire, no pole, riser or meter box |
 | `variant` | `fridge`: `'steel'`; `pantry`: `'garage'` (open steel shelves, loot `garage_shelf`); `blinds`: `'wood'`, `'closed'` (starts with the slats closed); `dog_house`: `'no_bowl'`; `fireplace`: `'stone'` (default brick); `lantern_lamp`: `'hanging'` (chain, no collider); `campfire` has log seats when the footprint is at least 2 m |
 
 ## Types
