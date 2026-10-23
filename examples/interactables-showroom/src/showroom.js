@@ -290,7 +290,8 @@
   renderer.toneMappingExposure = 1.0
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = T.PCFSoftShadowMap
-  renderer.info.autoReset = false // the mirror renders the scene again inside render(): count both passes
+  // three resets renderer.info after the shadow pass (and the mirror's nested render resets it again): count every pass ourselves
+  renderer.info.autoReset = false
 
   const scene = new T.Scene()
   scene.fog = new T.Fog(0xcfe0ec, 45, 150)
@@ -586,20 +587,8 @@
   const gfx = GT.createThreeAdapter(T, { document, Reflector, envMap: envTexture })
 
   let mats = null
-  /** Runs `fn` without three's "parameter has value of undefined" warnings (the adapter's game-quality defaults pass undefined props). */
-  function quiet(fn) {
-    const warn = console.warn
-    console.warn = (msg, ...rest) => {
-      if (!String(msg).includes('has value of undefined')) warn.call(console, msg, ...rest)
-    }
-    try {
-      return fn()
-    } finally {
-      console.warn = warn
-    }
-  }
   function makeMaterials() {
-    const m = quiet(() => GT.createDefaultMaterials(T, state.quality))
+    const m = GT.createDefaultMaterials(T, state.quality)
     for (const k of Object.keys(m)) if ('envMapIntensity' in m[k]) m[k].envMapIntensity = k === 'metal' ? 0.9 : 0.5
     return m
   }
@@ -608,45 +597,10 @@
   const entries = new Map()
   const order = []
 
-  // The household pack draws inside `part(...)` in the part frame (relative to the pivot); the mesh api converts object-local
-  // coordinates into the part frame itself. When both do the conversion the parts land one pivot away from where they belong, so
-  // the showroom probes the adapter once and, if needed, hands it object-local coordinates (add the pivot back).
-  function probePartFrame() {
-    const m = quiet(() => gfx.createMeshApi({ quality: state.quality, materials: mats }))
-    m.api.part('probe', [1, 0, 0], 0, () => m.api.box({}, 'plain', 0.5, 0, 0, 0.2, 0.2, 0.2, 0xffffff, 0, 0, 0))
-    const g = m.finish().parts.probe.children[0].geometry
-    g.computeBoundingBox()
-    return g.boundingBox.min.x + g.boundingBox.max.x < 0 // -1 (+ 0.5): double conversion
-  }
-  function objectLocalApi(api) {
-    let pv = null
-    const sh = (x, y, z) => (pv ? [x + pv[0], y + pv[1], z + pv[2]] : [x, y, z])
-    return {
-      box: (M, m, x, y, z, ...r) => api.box(M, m, ...sh(x, y, z), ...r),
-      cylinder: (M, m, x, y, z, ...r) => api.cylinder(M, m, ...sh(x, y, z), ...r),
-      leaf: (M, x, y, z, ...r) => api.leaf(M, ...sh(x, y, z), ...r),
-      plane: (M, m, x, y, z, ...r) => api.plane(M, m, ...sh(x, y, z), ...r),
-      light: (M, x, y, z, ...r) => api.light(M, ...sh(x, y, z), ...r),
-      part(id, pivot, ry, draw) {
-        const prev = pv
-        api.part(id, pivot, ry, () => {
-          pv = pivot
-          try {
-            draw()
-          } finally {
-            pv = prev
-          }
-        })
-      },
-    }
-  }
-  let shiftParts = null
-
   function buildVisual(type, item) {
-    const mesh = quiet(() => gfx.createMeshApi({ quality: state.quality, materials: mats, shadows: true }))
-    if (shiftParts === null) shiftParts = probePartFrame()
-    const spec = hh.build(type, item, shiftParts ? objectLocalApi(mesh.api) : mesh.api)
-    const res = mesh.finish()
+    const mesh = gfx.createMeshApi({ quality: state.quality, materials: mats, shadows: true, swayAmplitude: 0.035 })
+    const spec = hh.build(type, item, mesh.api)
+    const res = mesh.finish(spec) // game quality merges blind slats and clothes into a few meshes
     for (const l of res.lights) l.removeFromParent() // the showroom owns the lights (a handful of PointLights, constant count)
     return { spec, group: res.group, parts: res.parts }
   }
@@ -686,7 +640,7 @@
     for (const s of spec.soft || []) {
       if (s.kind !== 'cloth' && s.kind !== 'curtain') continue
       const g = e.parts[s.part || s.id]
-      if (!g) continue
+      if (!g || g.userData.merged) continue // merged cloth already carries its own sway shader
       g.traverse((o) => {
         if (o.isMesh && !o.userData.sway) gfx.attachSway(o, { amplitude: s.kind === 'cloth' ? 0.035 : 0.02 })
       })
@@ -1477,18 +1431,7 @@
     const em = world.emitters()
     const leak = leakEmitter()
     if (leak) em.push(leak)
-    // The pool emits a fixed rate per emitter id and `size` is only a hint: a thin stream (shower, tap) reads better with a few
-    // copies side by side and a little thicker drops.
-    for (let i = 0, n = em.length; i < n; i++) {
-      const e = em[i]
-      if (e.kind === 'water' && e.intensity > 0.25) {
-        em[i] = Object.assign({}, e, { size: e.size * 1.7 })
-        for (let k = 1; k <= 2; k++) em.push(Object.assign({}, em[i], { id: `${e.id}#${k}`, pos: [e.pos[0] + (k === 1 ? 0.012 : -0.012), e.pos[1], e.pos[2] + (k === 1 ? -0.01 : 0.01)] }))
-      } else if (e.kind === 'steam') {
-        for (let k = 1; k <= 2; k++) em.push(Object.assign({}, e, { id: `${e.id}#${k}`, size: e.size * 1.3, pos: [e.pos[0] + (k === 1 ? 0.08 : -0.08), e.pos[1], e.pos[2] + (k === 1 ? -0.06 : 0.07)] }))
-      }
-    }
-    effects.update(dt, em)
+    effects.update(dt, em, camera)
     updateItems()
     updateScreens(dt)
     updateLamps()
@@ -1878,8 +1821,7 @@
     camera.aspect = w / h
     camera.fov = w / h < 0.9 ? 82 : 72
     camera.updateProjectionMatrix()
-    // the sprite size assumes a 90 degree lens: correct for ours (and make the thin streams readable)
-    effects.setViewHeight(renderer.domElement.height * (1 / Math.tan((camera.fov * Math.PI) / 360)) * 1.6)
+    effects.setViewHeight(renderer.domElement.height)
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------

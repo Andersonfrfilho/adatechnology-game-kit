@@ -22,7 +22,7 @@ function loadPlaywright() {
 const { chromium } = loadPlaywright()
 
 /** Draw-call budget in game quality, worst view with the sun's shadow map redrawn and a mirror in sight (measured, see README). */
-const GAME_CALLS_MAX = Number(process.env.GAME_CALLS_MAX || 760)
+const GAME_CALLS_MAX = Number(process.env.GAME_CALLS_MAX || 400)
 
 const dist = join(here, 'dist/showroom.html')
 if (!existsSync(dist)) execFileSync(process.execPath, [join(here, 'build.mjs')], { stdio: 'inherit' })
@@ -397,8 +397,8 @@ saved.push(await shot('01-overview', `${PRE} ensure("shower:use_shower", st().sh
 saved.push(
   await shot(
     '02-kitchen',
-    `${PRE} ensure("switch_kitchen:use_switch", w.power.isOn("lamp_kitchen","lamp")); ensure("fridge:toggle_door_fridge", w.partT("fridge","door_fridge") > 0.5); ensure("stove:use_burner_1", st().stove.burners.burner_1.on); ensure("stove:use_burner_4", st().stove.burners.burner_4.on); ensure("sink_kitchen:use_tap", st().sink_kitchen.fixtures.tap); ensure("microwave:use_microwave", w.power.isOn("microwave","microwave"))`,
-    { x: 2.9, z: 2.3, look: [2.1, 1.0, 0.3] },
+    `${PRE} ensure("switch_kitchen:use_switch", w.power.isOn("lamp_kitchen","lamp")); ensure("fridge:toggle_door_fridge", w.partT("fridge","door_fridge") > 0.5); ensure("gas_bottle:use_gas", w.partT("gas_bottle","valve") > 0.5); ensure("stove:use_burner_1", st().stove.burners.burner_1.on); ensure("stove:use_burner_3", st().stove.burners.burner_3.on); ensure("stove:use_burner_4", st().stove.burners.burner_4.on); ensure("sink_kitchen:use_tap", st().sink_kitchen.fixtures.tap); ensure("microwave:use_microwave", w.power.isOn("microwave","microwave"))`,
+    { x: 3.4, z: 2.2, look: [2.8, 0.95, 0.3], fov: 72 },
   ),
 )
 saved.push(await shot('03-bathroom', `${PRE} ensure("shower:use_shower", st().shower.fixtures.shower); ensure("switch_bath:use_switch", w.power.isOn("lamp_bath","lamp")); w.setPart("shower","glass_door",1)`, { x: 10.0, z: 3.2, look: [9.8, 1.25, 0.3] }))
@@ -410,6 +410,7 @@ saved.push(
   ),
 )
 saved.push(await shot('05-yard-bbq-clothesline', `${PRE} ensure("bbq:ignite_coal", w.isLit("bbq","coal")); ensure("trash_bin:toggle_lid", w.partT("trash_bin","lid") > 0.5); s.step(3)`, { x: 6.9, z: 8.4, look: [6.6, 1.2, 12.6], fov: 94 }))
+saved.push(await shot('05b-clothesline', `s.step(1)`, { x: 4.2, z: 8.6, look: [4.2, 1.2, 11.0], fov: 62 }))
 saved.push(await shot('06-living-night', `${PRE} s.setNight(true); ensure("switch_living:use_switch", w.power.isOn("lamp_living","lamp")); ensure("switch_kitchen:use_switch", w.power.isOn("lamp_kitchen","lamp")); ensure("tv:use_tv", w.power.isOn("tv","tv"))`, { x: 6.6, z: 6.6, look: [2.5, 1.2, 3.0] }))
 await E(() => window.__showroom.setNight(false))
 
@@ -424,7 +425,12 @@ await E(() => {
 await page.locator('#c').click({ position: { x: 300, y: 300 } })
 const p0 = await E(() => ({ x: window.__showroom.player.x, z: window.__showroom.player.z, yaw: window.__showroom.player.yaw }))
 await page.keyboard.down('KeyW')
-await page.waitForTimeout(1200)
+// software GL is slow and the frame time is clamped: hold the key until the player has moved (at most 5 s)
+for (let i = 0; i < 25; i++) {
+  await page.waitForTimeout(200)
+  const q = await E(() => ({ x: window.__showroom.player.x, z: window.__showroom.player.z }))
+  if (Math.hypot(q.x - p0.x, q.z - p0.z) > 0.3) break
+}
 await page.keyboard.up('KeyW')
 await page.mouse.move(300, 300)
 await page.mouse.down()
