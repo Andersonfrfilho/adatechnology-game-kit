@@ -257,9 +257,9 @@ export function flowerHead(b: MeshBuilder, o: HeadOptions): void {
       icoShell(b, {
         center: ctr,
         radii: [s, s * 0.82, s],
-        detail: o.lod === 0 ? 1 : 0,
+        detail: 0,
         rng,
-        noise: o.lod === 0 ? 0.16 : 0.1,
+        noise: 0.13,
         color: (v) => {
           const h = (Math.sin(v.p[0] * 311 + v.p[1] * 177 + v.p[2] * 233) + 1) / 2
           return shade(mix(c0, c1, h), lerp(0.72, 1.12, v.h))
@@ -271,11 +271,11 @@ export function flowerHead(b: MeshBuilder, o: HeadOptions): void {
     }
     case 'florets': {
       // hydrangea: a ball of many small four-petal florets over a dark core
-      const n = o.lod === 0 ? 44 : 22
+      const n = o.lod === 0 ? 34 : 20
       const R = s
       const ctr = add(o.center, mul(o.axis, R * 0.75))
       icoShell(b, { center: ctr, radii: [R * 0.84, R * 0.8, R * 0.84], detail: 0, noise: 0, color: (v) => shade(mix(col(0), [0.15, 0.3, 0.2], 0.55), 0.65 + v.h * 0.3), sway: () => sw })
-      const w = R * 0.34 * Math.sqrt(44 / n)
+      const w = R * 0.34 * Math.sqrt(34 / n)
       for (let i = 0; i < n; i++) {
         const y = 1 - (i + 0.5) * (2 / n)
         const r = Math.sqrt(Math.max(0, 1 - y * y))
@@ -291,7 +291,6 @@ export function flowerHead(b: MeshBuilder, o: HeadOptions): void {
           const q = ps[k]
           const q2 = ps[(k + 1) % 4]
           b.flatTri(pk, q, q2, tip, base, base, sw, sw, sw, d)
-          if (o.lod === 0 && k % 2 === 0) b.flatTri(q, q2, add(ctr, mul(d, R * 0.8)), shade(base, 0.7), shade(base, 0.7), shade(base, 0.6), sw, sw, sw, d)
         }
       }
       break

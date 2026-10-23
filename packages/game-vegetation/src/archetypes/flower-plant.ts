@@ -5,7 +5,7 @@ import { jitter, mix, rgb, shade, tintGreen } from '../color'
 import { tube } from '../geometry/tube'
 import { leaf } from '../geometry/leaf'
 import { blossom, flowerHead, type FlowerKind } from '../geometry/flower'
-import { clump, icoShell } from '../geometry/shell'
+import { clump } from '../geometry/shell'
 
 interface TypeDef {
   height: number
@@ -98,7 +98,7 @@ export function generateFlowerPlant(spec: FlowerPlantSpec, ctx: Ctx): ArchResult
       }
     }
     for (const bl of blobs) clump(ctx.foliage, { center: bl.c, radius: bl.r, squash: bl.sq, detail: ctx.pick(1, 1, 0) as 0 | 1, seed: rng.seed(), base: mix(leafBase, [0.25, 0.55, 0.22], 0.25), swayK: 0.3, noise: 0.16, flatBottom: 0.8, ao: 0.5 })
-    const nl = ctx.pick(spreading ? 70 : 90, spreading ? 30 : 40, 0)
+    const nl = ctx.pick(spreading ? 60 : 66, spreading ? 26 : 30, 0)
     for (let i = 0; i < nl; i++) {
       const bl = blobs[i % blobs.length]
       const a = rng.range(0, TAU)
@@ -223,7 +223,7 @@ export function generateFlowerPlant(spec: FlowerPlantSpec, ctx: Ctx): ArchResult
       for (let k = 0; k < nh; k++) {
         const s = sampleLine(st.path, k === 0 ? 1 : rng.range(0.55, 0.92))
         const ax = norm([Math.cos(st.ang + k) * 0.5 * (k ? 1 : 0.3), 1, Math.sin(st.ang + k) * 0.5 * (k ? 1 : 0.3)])
-        flowerHead(ctx.flowers, { kind: def.kind, center: s.p, axis: ax, size: sz * (k === 0 ? 1 : 0.85), colors: hc, centerColor: heart, rng: rng.fork(i * 7 + k), lod: ctx.lod, sway: swayHead })
+        flowerHead(ctx.flowers, { kind: def.kind, center: s.p, axis: ax, size: sz * (k === 0 ? 1 : 0.85), colors: hc, centerColor: heart, rng: rng.fork(i * 7 + k), lod: k === 0 ? ctx.lod : (Math.max(ctx.lod, 1) as 0 | 1 | 2), sway: swayHead })
       }
     } else {
       flowerHead(ctx.flowers, { kind: def.kind, center: add(st.tip, mul(axis, def.kind === 'rose' ? 0 : 0.0)), axis, size: sz, colors: hc, centerColor: heart, rng: rng.fork(i), lod: ctx.lod, sway: swayHead })
