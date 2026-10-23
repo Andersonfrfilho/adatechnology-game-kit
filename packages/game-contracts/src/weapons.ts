@@ -53,3 +53,39 @@ export const shotToHit = (shot: Shot, point: Vec3, normal?: Vec3): Hit => {
     source: shot.source ?? shot.weapon,
   }
 }
+
+/**
+ * The `Hit` a non-firearm `Use` makes at `point` (world space), or `null` for uses that do not damage by themselves.
+ *
+ * - `melee` -> `blunt` / `slash` with the swing's `energy`, contact `radius` and `direction`;
+ * - `flame` -> `fire` and `heat` -> `heat`, with `temperature`, `duration` and a contact radius of at most 0.3 m (one ray of the cone);
+ * - `throw` -> the blast (`explosive`, `energy`, `radius`, centred on `point`, the place it detonates). A thrown item with no blast energy but
+ *   a `fire` patch (a molotov) gives that patch as a `fire` hit (`temperature`, `radius`, `seconds` as `duration`). No energy and no fire -> `null`;
+ * - `tool`, `extinguish` and `hand` -> `null` (tools work on joints, the extinguisher cools, the hand only grabs).
+ *
+ * `normal` does not change the hit (same as `shotToHit`).
+ */
+export const useToHit = (use: Use, point: Vec3, normal?: Vec3): Hit | null => {
+  void normal
+  const p: Vec3 = [point[0], point[1], point[2]]
+  switch (use.kind) {
+    case 'melee':
+      return { type: use.damage, point: p, direction: [use.direction[0], use.direction[1], use.direction[2]], energy: use.energy, radius: use.radius }
+    case 'flame':
+    case 'heat':
+      return {
+        type: use.kind === 'flame' ? 'fire' : 'heat',
+        point: p,
+        direction: [use.direction[0], use.direction[1], use.direction[2]],
+        temperature: use.temperature,
+        radius: Math.min(use.radius, 0.3),
+        duration: use.duration,
+      }
+    case 'throw':
+      if (use.energy > 0) return { type: 'explosive', point: p, energy: use.energy, radius: use.radius }
+      if (use.fire) return { type: 'fire', point: p, temperature: use.fire.temperature, radius: use.fire.radius, duration: use.fire.seconds }
+      return null
+    default:
+      return null
+  }
+}

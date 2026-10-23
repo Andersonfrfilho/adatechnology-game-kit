@@ -9,7 +9,7 @@ import { createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidS
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFluidRenderer } from '@adatechnology/game-fluids-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkDestructible, checkSpec } from '@adatechnology/game-contracts'
+import { checkAnimation, checkDestructible, checkSpec, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, TestableModule } from '@adatechnology/game-contracts'
 import { createArena } from './arena'
 import type { Arena } from './arena'
@@ -845,7 +845,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         const r = world.raycast(u.origin, d, u.range)
         if (!r) continue
         if (!target) target = r
-        world.hit(r.object, { type, point: r.point, direction: d, temperature: u.temperature, radius: Math.min(u.radius, 0.3), duration: u.duration, source: 'player' })
+        world.hit(r.object, { ...useToHit(u, r.point, r.normal)!, type, direction: d, source: 'player' })
         if (type === 'fire') igniteNear(r.point, 0.25)
         else renderer.emit('sparks', r.point, r.normal, 2, 4)
       }
@@ -881,7 +881,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       action('melee', t('act.melee.miss', { weapon: w }), { data: { weapon: id } })
       return
     }
-    world.hitPart(r.object, r.part, { type: u.damage, point: r.point, direction: u.direction, energy: u.energy, radius: u.radius, source: 'player' })
+    world.hitPart(r.object, r.part, { ...useToHit(u, r.point, r.normal)!, source: 'player' })
     pushPiece(r.object, u.direction, (2 * u.energy) / 6, r.point)
     action('melee', t('act.melee.hit', { weapon: w, energy: num(u.energy, 0), where: hitWhere(r), dist: num(r.distance, 1) }), {
       objectId: r.object,
