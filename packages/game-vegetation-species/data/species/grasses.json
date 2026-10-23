@@ -3,7 +3,7 @@
   "id": "lawn_tuft",
   "archetype": "grass_tuft",
   "params": {
-   "count": 34,
+   "count": 46,
    "height": 0.3,
    "color": "#6aa646"
   },
@@ -44,7 +44,7 @@
   "id": "weeds",
   "archetype": "grass_tuft",
   "params": {
-   "count": 22,
+   "count": 30,
    "height": 0.5,
    "color": "#7a9a4a",
    "radius": 0.3
@@ -66,12 +66,11 @@
   "id": "papyrus",
   "archetype": "grass_tuft",
   "params": {
-   "count": 26,
-   "height": 1.7,
-   "color": "#6a9a4a",
-   "seedHeads": true,
-   "seedColor": "#9ab060",
-   "radius": 0.6
+   "count": 30,
+   "height": 1.8,
+   "color": "#5f9a44",
+   "umbrellaHeads": true,
+   "radius": 0.55
   },
   "tags": [
    "ground",
