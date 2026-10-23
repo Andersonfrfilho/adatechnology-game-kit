@@ -1,0 +1,384 @@
+{
+ "id": "br",
+ "name": "Brazil (urban)",
+ "contexts": {
+  "front_yard": [
+   {
+    "species": "boxwood_hedge",
+    "weight": 6
+   },
+   {
+    "species": "hibiscus_shrub",
+    "weight": 5
+   },
+   {
+    "species": "ixora_hedge",
+    "weight": 4
+   },
+   {
+    "species": "bougainvillea",
+    "weight": 4
+   },
+   {
+    "species": "lawn_tuft",
+    "weight": 8
+   },
+   {
+    "species": "croton",
+    "weight": 4
+   },
+   {
+    "species": "rose_bush_red",
+    "weight": 3
+   },
+   {
+    "species": "rose_bush_pink",
+    "weight": 3
+   },
+   {
+    "species": "rose_bush_white",
+    "weight": 2
+   },
+   {
+    "species": "azalea",
+    "weight": 3
+   },
+   {
+    "species": "potted_fern",
+    "weight": 2
+   },
+   {
+    "species": "lemon_tree",
+    "weight": 2
+   },
+   {
+    "species": "bird_of_paradise",
+    "weight": 2
+   },
+   {
+    "species": "daisy",
+    "weight": 2
+   },
+   {
+    "species": "marigold",
+    "weight": 2
+   },
+   {
+    "species": "banana_plant",
+    "weight": 1
+   },
+   {
+    "species": "periwinkle_pink",
+    "weight": 2
+   },
+   {
+    "species": "periwinkle_white",
+    "weight": 2
+   },
+   {
+    "species": "areca_palm",
+    "weight": 2
+   },
+   {
+    "species": "bougainvillea_vine",
+    "weight": 1
+   },
+   {
+    "species": "sidewalk_ficus",
+    "weight": 1
+   }
+  ],
+  "backyard": [
+   {
+    "species": "mango_tree",
+    "weight": 4
+   },
+   {
+    "species": "banana_plant",
+    "weight": 5
+   },
+   {
+    "species": "banana_with_bunch",
+    "weight": 3
+   },
+   {
+    "species": "guava_tree",
+    "weight": 3
+   },
+   {
+    "species": "lemon_tree",
+    "weight": 3
+   },
+   {
+    "species": "pitanga_bush_tree",
+    "weight": 3
+   },
+   {
+    "species": "avocado_tree",
+    "weight": 2
+   },
+   {
+    "species": "jabuticaba_tree",
+    "weight": 2
+   },
+   {
+    "species": "coconut_palm",
+    "weight": 1
+   },
+   {
+    "species": "lawn_tuft",
+    "weight": 6
+   },
+   {
+    "species": "weeds",
+    "weight": 4
+   },
+   {
+    "species": "wild_grass_tall",
+    "weight": 2
+   },
+   {
+    "species": "fern",
+    "weight": 2
+   },
+   {
+    "species": "aloe_vera",
+    "weight": 2
+   },
+   {
+    "species": "snake_plant",
+    "weight": 1
+   },
+   {
+    "species": "passion_fruit_vine",
+    "weight": 2
+   },
+   {
+    "species": "papyrus",
+    "weight": 1
+   },
+   {
+    "species": "hibiscus_shrub",
+    "weight": 1
+   }
+  ],
+  "sidewalk_tree": [
+   {
+    "species": "sidewalk_ficus",
+    "weight": 8
+   },
+   {
+    "species": "yellow_ipe",
+    "weight": 3
+   },
+   {
+    "species": "pink_ipe",
+    "weight": 3
+   },
+   {
+    "species": "royal_palm",
+    "weight": 2
+   },
+   {
+    "species": "eucalyptus",
+    "weight": 2
+   },
+   {
+    "species": "mango_tree",
+    "weight": 2
+   },
+   {
+    "species": "flamboyant",
+    "weight": 2
+   },
+   {
+    "species": "oak_like",
+    "weight": 1
+   },
+   {
+    "species": "coconut_palm",
+    "weight": 1
+   }
+  ],
+  "square": [
+   {
+    "species": "royal_palm",
+    "weight": 4
+   },
+   {
+    "species": "flamboyant",
+    "weight": 3
+   },
+   {
+    "species": "yellow_ipe",
+    "weight": 3
+   },
+   {
+    "species": "pink_ipe",
+    "weight": 3
+   },
+   {
+    "species": "mango_tree",
+    "weight": 3
+   },
+   {
+    "species": "sidewalk_ficus",
+    "weight": 3
+   },
+   {
+    "species": "araucaria",
+    "weight": 2
+   },
+   {
+    "species": "fan_palm",
+    "weight": 2
+   },
+   {
+    "species": "boxwood_hedge",
+    "weight": 4
+   },
+   {
+    "species": "azalea",
+    "weight": 3
+   },
+   {
+    "species": "lawn_tuft",
+    "weight": 8
+   },
+   {
+    "species": "rose_bush_red",
+    "weight": 2
+   },
+   {
+    "species": "hibiscus_shrub",
+    "weight": 2
+   },
+   {
+    "species": "weeping_willow",
+    "weight": 1
+   },
+   {
+    "species": "coconut_palm",
+    "weight": 1
+   }
+  ],
+  "vacant_lot": [
+   {
+    "species": "weeds",
+    "weight": 8
+   },
+   {
+    "species": "wild_grass_tall",
+    "weight": 7
+   },
+   {
+    "species": "overgrown_bush",
+    "weight": 4
+   },
+   {
+    "species": "dead_tree",
+    "weight": 1
+   },
+   {
+    "species": "guava_tree",
+    "weight": 1
+   },
+   {
+    "species": "eucalyptus",
+    "weight": 1
+   },
+   {
+    "species": "wild_flowers",
+    "weight": 2
+   },
+   {
+    "species": "lawn_tuft",
+    "weight": 3
+   },
+   {
+    "species": "mango_tree",
+    "weight": 1
+   },
+   {
+    "species": "banana_plant",
+    "weight": 1
+   },
+   {
+    "species": "prickly_pear",
+    "weight": 1
+   }
+  ],
+  "indoor": [
+   {
+    "species": "potted_fern",
+    "weight": 4
+   },
+   {
+    "species": "potted_snake_plant",
+    "weight": 4
+   },
+   {
+    "species": "potted_areca",
+    "weight": 3
+   },
+   {
+    "species": "potted_cactus",
+    "weight": 2
+   },
+   {
+    "species": "potted_rose",
+    "weight": 1
+   },
+   {
+    "species": "potted_succulents",
+    "weight": 3
+   },
+   {
+    "species": "boston_fern",
+    "weight": 2
+   }
+  ],
+  "semiarid": [
+   {
+    "species": "mandacaru",
+    "weight": 5
+   },
+   {
+    "species": "xique_xique",
+    "weight": 5
+   },
+   {
+    "species": "prickly_pear",
+    "weight": 4
+   },
+   {
+    "species": "crown_cactus",
+    "weight": 2
+   },
+   {
+    "species": "barrel_cactus",
+    "weight": 1
+   },
+   {
+    "species": "agave",
+    "weight": 2
+   },
+   {
+    "species": "wild_grass_tall",
+    "weight": 3
+   },
+   {
+    "species": "weeds",
+    "weight": 3
+   },
+   {
+    "species": "dead_tree",
+    "weight": 2
+   },
+   {
+    "species": "aloe_vera",
+    "weight": 1
+   }
+  ]
+ }
+}

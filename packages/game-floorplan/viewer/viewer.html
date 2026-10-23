@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Floor plan viewer</title>
+<style>
+  :root { --bg:#f4f5f7; --panel:#fff; --ink:#1d2129; --muted:#667085; --line:#d5d9e0; --accent:#2f6fed; --bad:#c0392b; --good:#1e8e5a; --canvas:#e9ecf1; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#15181d; --panel:#1e232a; --ink:#e6e9ee; --muted:#9aa4b2; --line:#323945; --accent:#6c9bff; --bad:#ff7b6b; --good:#4cc38a; --canvas:#10131733; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.4 system-ui, sans-serif; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 16px; background:var(--panel); border-bottom:1px solid var(--line); }
+  h1 { font-size:16px; margin:0; }
+  main { display:grid; grid-template-columns:300px 1fr 320px; gap:12px; padding:12px 16px; align-items:start; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px; }
+  .panel h2 { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:14px 0 6px; }
+  .panel h2:first-child { margin-top:0; }
+  label { display:block; font-size:12px; color:var(--muted); margin:8px 0 2px; }
+  select, input[type=number], button { width:100%; font:inherit; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:6px 8px; }
+  input[type=range] { width:100%; }
+  button { cursor:pointer; background:var(--accent); color:#fff; border:0; }
+  .row { display:flex; gap:8px; } .row > * { flex:1; }
+  .checks label { display:flex; align-items:center; gap:6px; color:var(--ink); margin:4px 0; }
+  .checks input { width:auto; }
+  #stage { position:relative; background:var(--canvas); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  canvas { display:block; width:100%; height:min(78vh, 760px); }
+  #tip { position:absolute; left:8px; bottom:8px; background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:4px 8px; font-size:12px; max-width:90%; }
+  .ok { color:var(--good); } .bad { color:var(--bad); }
+  ul { margin:4px 0; padding-left:18px; } li { margin:2px 0; }
+  .sw { display:inline-block; width:12px; height:12px; border-radius:2px; vertical-align:-2px; margin-right:6px; border:1px solid var(--line); }
+  @media (max-width: 1000px) { main { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header><h1 id="title"></h1><div style="width:180px"><select id="lang" aria-label="Language"><option value="en">English</option><option value="pt-BR">Português (Brasil)</option></select></div></header>
+<main>
+  <section class="panel" id="controls"></section>
+  <section id="stage"><canvas id="cv"></canvas><div id="tip"></div></section>
+  <section class="panel" id="info"></section>
+</main>
+<!--BUNDLES-->
+<script>
+(function () {
+  'use strict'
+  var engine = GameFloorplan.engine
+  GameFloorplanResidential.register(engine, { region: 'br' })
+  GameFloorplanCommercial.register(engine, { region: 'br' })
+  GameFloorplanPostApocalyptic.register(engine)
+
+  var state = { locale: 'en', template: null, seed: 1, st: '', style: '', zone: '', floor: 0, opts: {}, auto: true, w: 0, d: 0, show: { labels: true, items: true, state: true, lot: true, grid: false } }
+  var plan = null, hit = []
+  try { var saved = localStorage.getItem('floorplan-viewer-locale'); if (saved) state.locale = saved } catch (e) {}
+  if (!/^(en|pt-BR)$/.test(state.locale)) state.locale = (navigator.language || 'en').toLowerCase().indexOf('pt') === 0 ? 'pt-BR' : 'en'
+
+  var $ = function (id) { return document.getElementById(id) }
+  var T = function (key, vars) { return engine.translate('ui', key, state.locale, vars) }
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] }) }
+  var hex = function (n) { return '#' + ('000000' + (n >>> 0).toString(16)).slice(-6) }
+  var templates = engine.listTemplates()
+  state.template = templates[0].id
+
+  function tplName(t) { return engine.translate('templates', t.id, state.locale) === t.id ? t.name : engine.translate('templates', t.id, state.locale) }
+  function styleName(s) { return engine.translate('styles', s, state.locale) }
+  function stateName(s) { return engine.translate('ui', 'state_' + s, state.locale) }
+  function zoneName(z) { return engine.translate('zones', z, state.locale) }
+  function cur() { return templates.filter(function (t) { return t.id === state.template })[0] }
+
+  function options(selectId, values, selected) {
+    return '<select id="' + selectId + '">' + values.map(function (v) { return '<option value="' + esc(v[0]) + '"' + (String(v[0]) === String(selected) ? ' selected' : '') + '>' + esc(v[1]) + '</option>' }).join('') + '</select>'
+  }
+
+  function buildControls() {
+    var t = cur(), lim = t.limits
+    var styles = Object.keys(engine.styles)
+    var h = '<h2>' + T('template') + '</h2>' + options('f-template', templates.map(function (x) { return [x.id, tplName(x)] }), state.template)
+    h += '<label>' + T('seed') + '</label><div class="row"><input type="number" id="f-seed" value="' + state.seed + '" min="1"><button id="f-rand" style="max-width:96px">' + T('random_seed') + '</button></div>'
+    h += '<label>' + T('state') + '</label>' + options('f-state', [['', T('default')]].concat(engine.listStates().map(function (s) { return [s, stateName(s)] })), state.st)
+    h += '<label>' + T('style') + '</label>' + options('f-style', [['', T('default')]].concat(styles.map(function (s) { return [s, styleName(s)] })), state.style)
+    h += '<label>' + T('zone') + '</label>' + options('f-zone', [['', T('no_zone')]].concat(engine.listZones().map(function (z) { return [z.id, zoneName(z.id)] })), state.zone)
+    var keys = Object.keys(t.options || {})
+    if (keys.length) h += '<h2>' + T('options') + '</h2>'
+    keys.forEach(function (k) {
+      var vals = t.options[k].map(function (v) { return [v, typeof v === 'boolean' ? T(v ? 'yes' : 'no') : v] })
+      h += '<label>' + T('opt_' + k) + '</label>' + options('o-' + k, [['', T('default')]].concat(vals), state.opts[k] === undefined ? '' : state.opts[k])
+    })
+    h += '<h2>' + T('width') + ' / ' + T('depth') + '</h2><div class="checks"><label><input type="checkbox" id="f-auto"' + (state.auto ? ' checked' : '') + '>' + T('auto_size') + '</label></div>'
+    if (!state.auto) {
+      h += '<label>' + T('width') + ': <b id="wv">' + state.w + '</b></label><input type="range" id="f-w" min="' + lim.w[0] + '" max="' + lim.w[1] + '" step="0.5" value="' + state.w + '">'
+      h += '<label>' + T('depth') + ': <b id="dv">' + state.d + '</b></label><input type="range" id="f-d" min="' + lim.d[0] + '" max="' + lim.d[1] + '" step="0.5" value="' + state.d + '">'
+    }
+    h += '<h2>' + T('floor') + '</h2><div id="floors"></div>'
+    h += '<h2>' + T('legend') + '</h2><div class="checks">' + [['labels', 'show_labels'], ['items', 'show_items'], ['state', 'show_state'], ['lot', 'show_lot'], ['grid', 'show_grid']].map(function (c) { return '<label><input type="checkbox" data-show="' + c[0] + '"' + (state.show[c[0]] ? ' checked' : '') + '>' + T(c[1]) + '</label>' }).join('') + '</div>'
+    $('controls').innerHTML = h
+    bind()
+  }
+
+  function buildFloors() {
+    if (!plan) return
+    var opts = [['-1', T('outside')]].concat(plan.floors.map(function (f) { return [f.index, f.name] }))
+    $('floors').innerHTML = options('f-floor', opts, state.floor)
+    $('f-floor').onchange = function (e) { state.floor = +e.target.value; draw() }
+  }
+
+  function bind() {
+    $('f-template').onchange = function (e) { state.template = e.target.value; state.opts = {}; var t = cur(); state.w = t.defaults.w; state.d = t.defaults.d; buildControls(); run() }
+    $('f-seed').onchange = function (e) { state.seed = Math.max(1, +e.target.value || 1); run() }
+    $('f-rand').onclick = function () { state.seed = 1 + Math.floor(Math.random() * 99999); $('f-seed').value = state.seed; run() }
+    $('f-state').onchange = function (e) { state.st = e.target.value; run() }
+    $('f-style').onchange = function (e) { state.style = e.target.value; run() }
+    $('f-zone').onchange = function (e) { state.zone = e.target.value; run() }
+    Object.keys(cur().options || {}).forEach(function (k) {
+      $('o-' + k).onchange = function (e) { var v = e.target.value; if (v === '') delete state.opts[k]; else state.opts[k] = v === 'true' ? true : v === 'false' ? false : isNaN(+v) ? v : +v; run() }
+    })
+    $('f-auto').onchange = function (e) { state.auto = e.target.checked; var t = cur(); if (!state.auto) { state.w = t.defaults.w; state.d = t.defaults.d } buildControls(); run() }
+    if ($('f-w')) { $('f-w').oninput = function (e) { state.w = +e.target.value; $('wv').textContent = state.w; run() }; $('f-d').oninput = function (e) { state.d = +e.target.value; $('dv').textContent = state.d; run() } }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-show]'), function (el) { el.onchange = function () { state.show[el.getAttribute('data-show')] = el.checked; draw() } })
+  }
+
+  function run() {
+    var o = { seed: state.seed, locale: state.locale }
+    if (state.st) o.state = state.st
+    if (state.style) o.style = state.style
+    if (state.zone) o.zone = state.zone
+    Object.keys(state.opts).forEach(function (k) { o[k] = state.opts[k] })
+    if (!state.auto) { o.w = state.w; o.d = state.d }
+    try { plan = engine.generate(state.template, o) } catch (e) { plan = null; $('info').innerHTML = '<p class="bad">' + esc(e.message) + '</p>'; return }
+    if (state.floor >= plan.floors.length) state.floor = 0
+    buildFloors(); info(); draw()
+  }
+
+  function info() {
+    var p = plan, errs = engine.validate(p, { locale: state.locale }), z = p.zoning, h = ''
+    h += '<h2>' + T('summary') + '</h2><div><b>' + esc(p.name) + '</b></div><div>' + T('style') + ': ' + esc(styleName(p.style)) + ' · ' + T('state') + ': ' + esc(stateName(p.state)) + '</div>'
+    h += '<div>' + T('opt_floors') + ': ' + p.floors.length + ' · ' + p.w + ' × ' + p.d + ' ' + T('meters') + '</div>'
+    h += '<div>' + T('use_label') + ': ' + esc(p.use) + '</div>'
+    h += '<div>' + T('rooms') + ': ' + p.rooms.length + ' · ' + T('items') + ': ' + p.items.length + ' · ' + T('state_items') + ': ' + p.stateItems.length + '</div>'
+    h += '<h2>' + T('missing') + '</h2>' + (p.missing.length ? '<ul class="bad">' + p.missing.map(function (m) { return '<li>' + esc(JSON.stringify(m)) + '</li>' }).join('') + '</ul>' : '<div class="ok">' + T('none') + '</div>')
+    h += '<h2>' + T('validation') + '</h2>' + (errs.length ? '<ul class="bad">' + errs.slice(0, 12).map(function (m) { return '<li>' + esc(m) + '</li>' }).join('') + '</ul>' : '<div class="ok">' + T('valid') + '</div>')
+    if (z) {
+      h += '<h2>' + T('zoning') + ': ' + esc(zoneName(z.zone)) + '</h2>'
+      h += '<b>' + T('adjustments') + '</b>' + (z.adjustments.length ? '<ul>' + z.adjustments.map(function (a) { return '<li>' + esc(a.field) + ': ' + esc(a.from) + ' → ' + esc(a.to) + ' (' + esc(T('reason_' + a.reason)) + ')</li>' }).join('') + '</ul>' : '<div>' + T('none') + '</div>')
+      h += '<b>' + T('violations') + '</b>' + (z.violations.length ? '<ul class="bad">' + z.violations.map(function (v) { return '<li>' + esc(T('rule_' + v.rule)) + ': ' + esc(v.actual) + ' / ' + esc(v.limit) + '</li>' }).join('') + '</ul>' : '<div class="ok">' + T('compliant') + '</div>')
+    }
+    h += '<h2>' + T('legend') + '</h2>' + [['#555b66', 'legend_wall'], ['#a0693a', 'legend_door'], ['#4aa3df', 'legend_window'], ['#e08a1e', 'legend_gate'], ['#d6cdb8', 'legend_path'], ['#8f7a63', 'legend_item'], ['#d33', 'legend_state']].map(function (l) { return '<div><span class="sw" style="background:' + l[0] + '"></span>' + T(l[1]) + '</div>' }).join('')
+    $('info').innerHTML = h
+  }
+
+  var GROUND = { lawn: 'lawn', dirt: 'dirt', deck_floor: 'deck_floor' }
+  function groundColor(g) { var c = plan.colors; if (GROUND[g] && c[GROUND[g]] != null) return hex(c[GROUND[g]]); return g === 'concrete' ? '#b9bcc2' : g === 'tile_floor' ? '#cbb8a2' : '#c9c9c9' }
+  function itemColor(it) {
+    var c = it.color, cols = plan.colors
+    if (typeof c === 'number') return hex(c)
+    if (typeof c === 'string') { if (cols[c] != null) return hex(cols[c]); if (c[0] === '#') return c }
+    return '#8f7a63'
+  }
+
+  function draw() {
+    var cv = $('cv'), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight
+    cv.width = W * dpr; cv.height = H * dpr
+    var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H)
+    hit = []
+    if (!plan) return
+    var all = state.floor < 0, f = all ? 0 : state.floor
+    var b = [1e9, 1e9, -1e9, -1e9]
+    function grow(r) { b[0] = Math.min(b[0], r[0]); b[1] = Math.min(b[1], r[1]); b[2] = Math.max(b[2], r[2]); b[3] = Math.max(b[3], r[3]) }
+    if (plan.lot && (state.show.lot || all)) grow(plan.lot.rect)
+    plan.rooms.forEach(function (r) { grow([r.u0, r.v0, r.u1, r.v1]) })
+    if (plan.lot) plan.lot.zones.forEach(function (z) { z.parts.forEach(grow) })
+    var pad = 24, s = Math.min((W - pad * 2) / (b[2] - b[0]), (H - pad * 2) / (b[3] - b[1]))
+    var ox = (W - (b[2] - b[0]) * s) / 2 - b[0] * s, oz = (H - (b[3] - b[1]) * s) / 2 - b[1] * s
+    var X = function (u) { return u * s + ox }, Z = function (v) { return v * s + oz }
+    function rect(r, fill, stroke, lw) { g.beginPath(); g.rect(X(r[0]), Z(r[1]), (r[2] - r[0]) * s, (r[3] - r[1]) * s); if (fill) { g.fillStyle = fill; g.fill() } if (stroke) { g.strokeStyle = stroke; g.lineWidth = lw || 1; g.stroke() } }
+
+    if (state.show.grid) { g.strokeStyle = 'rgba(128,128,128,.25)'; g.lineWidth = 1; for (var u = Math.ceil(b[0]); u <= b[2]; u++) { g.beginPath(); g.moveTo(X(u), Z(b[1])); g.lineTo(X(u), Z(b[3])); g.stroke() } for (var v = Math.ceil(b[1]); v <= b[3]; v++) { g.beginPath(); g.moveTo(X(b[0]), Z(v)); g.lineTo(X(b[2]), Z(v)); g.stroke() } }
+
+    if (plan.lot && state.show.lot) {
+      rect(plan.lot.rect, 'rgba(120,120,120,.08)', 'rgba(120,120,120,.6)', 1)
+      plan.lot.zones.forEach(function (z) { z.parts.forEach(function (p) { rect(p, groundColor(z.ground)) }) })
+      plan.lot.paths.forEach(function (c) { c.rects.forEach(function (r) { rect(r, 'rgba(214,205,184,.85)') }) })
+    }
+    var floorRooms = plan.rooms.filter(function (r) { return all ? r.floor === 0 : r.floor === f })
+    floorRooms.forEach(function (r) {
+      var fl = r.color && plan.colors[r.color.floor] != null ? hex(plan.colors[r.color.floor]) : '#ddd'
+      r.parts.forEach(function (p) { rect(p, fl) })
+    })
+    // items
+    if (state.show.items) plan.items.forEach(function (it) {
+      if (!it.aabb || it.category === 'ground_cover') return
+      if (it.outdoor ? !(all || f === 0) : it.floor !== f) return
+      var fill = itemColor(it)
+      rect(it.aabb, fill, 'rgba(0,0,0,.45)', 1)
+      hit.push({ r: it.aabb, text: it.id + ' · ' + it.type + ' (' + it.category + ')' })
+    })
+    if (state.show.state) plan.stateItems.forEach(function (it) {
+      if (!it.aabb) return
+      if (it.outdoor ? !(all || f === 0) : it.floor !== f) return
+      rect(it.aabb, itemColor(it), '#d33', 2)
+      hit.push({ r: it.aabb, text: it.id + ' · ' + it.type })
+    })
+    // walls
+    g.strokeStyle = '#555b66'
+    plan.walls.filter(function (w) { return w.floor === f }).forEach(function (w) {
+      g.lineWidth = Math.max(2, w.thickness * s); g.beginPath(); g.moveTo(X(w.u0), Z(w.v0)); g.lineTo(X(w.u1), Z(w.v1)); g.stroke()
+    })
+    // perimeter
+    if (plan.lot && state.show.lot) {
+      g.strokeStyle = '#3b3f48'
+      plan.lot.perimeter.forEach(function (p) { g.lineWidth = Math.max(2, p.thickness * s); g.beginPath(); g.moveTo(X(p.u0), Z(p.v0)); g.lineTo(X(p.u1), Z(p.v1)); g.stroke() })
+      plan.lot.gates.forEach(function (gt) { var h = gt.width / 2; g.strokeStyle = '#e08a1e'; g.lineWidth = Math.max(3, 0.2 * s); g.beginPath(); g.moveTo(X(gt.u - h), Z(gt.v)); g.lineTo(X(gt.u + h), Z(gt.v)); g.stroke(); hit.push({ r: [gt.u - h, gt.v - 0.3, gt.u + h, gt.v + 0.3], text: gt.id + ' · ' + gt.type + (gt.open ? ' (open)' : '') }) })
+    }
+    // doors and windows
+    plan.doors.filter(function (d) { return all ? d.floor === 0 : d.floor === f }).forEach(function (d) {
+      var h = d.width / 2
+      g.strokeStyle = d.blocked ? '#d33' : '#a0693a'; g.lineWidth = Math.max(3, 0.18 * s); g.beginPath()
+      if (d.axis === 'u') { g.moveTo(X(d.u - h), Z(d.v)); g.lineTo(X(d.u + h), Z(d.v)) } else { g.moveTo(X(d.u), Z(d.v - h)); g.lineTo(X(d.u), Z(d.v + h)) }
+      g.stroke()
+      hit.push({ r: d.axis === 'u' ? [d.u - h, d.v - 0.2, d.u + h, d.v + 0.2] : [d.u - 0.2, d.v - h, d.u + 0.2, d.v + h], text: d.id + ' · ' + d.a + ' → ' + d.b + (d.blocked ? ' (blocked)' : d.open ? ' (open)' : '') })
+    })
+    plan.windows.filter(function (w) { return all ? w.floor === 0 : w.floor === f }).forEach(function (w) {
+      var h = w.width / 2
+      g.strokeStyle = w.boards ? '#7a5a2a' : '#4aa3df'; g.lineWidth = Math.max(3, 0.14 * s); g.beginPath()
+      if (w.axis === 'u') { g.moveTo(X(w.u - h), Z(w.v)); g.lineTo(X(w.u + h), Z(w.v)) } else { g.moveTo(X(w.u), Z(w.v - h)); g.lineTo(X(w.u), Z(w.v + h)) }
+      g.stroke()
+    })
+    if (state.show.labels) {
+      g.fillStyle = '#1d2129'; g.font = '11px system-ui, sans-serif'; g.textAlign = 'center'
+      floorRooms.forEach(function (r) { var p = r.parts[0]; g.fillText(r.name, X((p[0] + p[2]) / 2), Z((p[1] + p[3]) / 2)) })
+      if (plan.lot && state.show.lot) plan.lot.zones.forEach(function (z) { var p = z.parts[0]; g.fillStyle = '#334'; g.fillText(z.name, X((p[0] + p[2]) / 2), Z((p[1] + p[3]) / 2)) })
+    }
+    cv._t = { s: s, ox: ox, oz: oz }
+  }
+
+  $('cv').addEventListener('mousemove', function (e) {
+    var cv = $('cv'), t = cv._t; if (!t) return
+    var rc = cv.getBoundingClientRect(), u = (e.clientX - rc.left - t.ox) / t.s, v = (e.clientY - rc.top - t.oz) / t.s, found = null
+    for (var i = hit.length - 1; i >= 0; i--) { var r = hit[i].r; if (u >= r[0] && u <= r[2] && v >= r[1] && v <= r[3]) { found = hit[i]; break } }
+    $('tip').textContent = found ? found.text : T('hover')
+  })
+  window.addEventListener('resize', draw)
+
+  function applyLocale() {
+    document.documentElement.lang = state.locale
+    document.title = T('title')
+    $('title').textContent = T('title')
+    $('lang').value = state.locale
+    $('lang').setAttribute('aria-label', T('language'))
+    $('tip').textContent = T('hover')
+    buildControls()
+    if (plan) run()
+  }
+  $('lang').onchange = function (e) { state.locale = e.target.value; try { localStorage.setItem('floorplan-viewer-locale', state.locale) } catch (err) {} applyLocale() }
+  var t0 = cur(); state.w = t0.defaults.w; state.d = t0.defaults.d
+  applyLocale()
+  if (!plan) run()
+})()
+</script>
+</body>
+</html>

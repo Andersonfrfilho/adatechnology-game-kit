@@ -33,6 +33,8 @@ export interface Player {
   look(position: Vec3, target: Vec3): void
   /** Camera kick in degrees. */
   kick(pitchDeg: number, yawDeg: number): void
+  /** Move the player by a world offset on the floor plane, stopped by the colliders and the arena limit (scripted walks). */
+  moveBy(dx: number, dz: number): void
   /** Walk by hand (tests): moves the player `forward` and `right` metres along its facing. */
   walk(forward: number, right: number): void
   dispose(): void
@@ -249,6 +251,10 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     kick(pitchDeg, yawDeg) {
       pitch = Math.max(-1.5, Math.min(1.5, pitch + (pitchDeg * Math.PI) / 180))
       yaw += (yawDeg * Math.PI) / 180
+      apply()
+    },
+    moveBy(dx, dz) {
+      move(dx, dz)
       apply()
     },
     walk(forward, right) {

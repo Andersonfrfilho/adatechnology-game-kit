@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-infection",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Deterministic abstract epidemic model by regions (anything that spreads by contact with a delay: zombies, plague, rumours). Knows nothing about any game.",
   "keywords": [

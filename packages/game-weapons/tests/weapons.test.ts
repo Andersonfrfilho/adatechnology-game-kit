@@ -282,6 +282,25 @@ describe('non-firearms', () => {
   })
 })
 
+describe('kick and shove', () => {
+  it('are blunt melee tools in the default loadout right after the hand, with pt-BR names', () => {
+    const a = createArsenal()
+    expect(DEFAULT_LOADOUT.slice(0, 3)).toEqual(['hand', 'kick', 'shove'])
+    expect(a.create('kick').trigger(O, D, 0.016, false).uses[0]).toMatchObject({ kind: 'melee', damage: 'blunt', energy: 250, radius: 0.08, reach: 1.1 })
+    expect(a.create('shove').trigger(O, D, 0.016, false).uses[0]).toMatchObject({ kind: 'melee', damage: 'blunt', energy: 80, reach: 1.5 })
+    const pt = createArsenal({ locale: 'pt-BR' })
+    expect(pt.name('kick')).toBe('chute')
+    expect(pt.name('shove')).toBe('empurrão')
+  })
+})
+
+describe('default loadout cutting tools', () => {
+  it('has the machete and the utility knife', () => {
+    expect(DEFAULT_LOADOUT).toEqual(expect.arrayContaining(['machete', 'utility_knife']))
+    expect(new Set(DEFAULT_LOADOUT).size).toBe(DEFAULT_LOADOUT.length)
+  })
+})
+
 describe('arsenal', () => {
   it('translates names', () => {
     const pt = createArsenal({ locale: 'pt-BR' })

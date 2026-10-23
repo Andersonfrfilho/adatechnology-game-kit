@@ -1,4 +1,4 @@
-import { JOINT_DEFAULTS } from '@adatechnology/game-destruction'
+import { JOINT_DEFAULTS, rotateVec, toWorld } from '@adatechnology/game-destruction'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import { resolveStrings } from './locale'
 import type { ScenarioContext, TestRoom, TestRoomScenario } from './types'
@@ -125,6 +125,25 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
         t('sc.kick_chair_leg.check', { kicks, groups, before, after, leg: part(room, id, 'leg_1') ? t('leg.still') : t('leg.gone') }),
         { kicks, before, after },
       )
+    }),
+
+    sc('kick_detaches_leg_via_tool', ({ room, step, expect }) => {
+      const id = at(room, 'chair', 0, -4)
+      const before = room.renderer.pieces().length
+      room.setTool('kick')
+      let kicks = 0
+      for (; kicks < 8 && room.renderer.pieces().length <= before && part(room, id, 'leg_1'); kicks++) {
+        // the chair moves when it is kicked: aim at the leg where it is now, from the side
+        const st = room.world.state(id)!
+        const leg = toWorld(st.position, st.rotation, [-0.18, 0.2, -0.18])
+        const side = rotateVec(st.rotation, [-0.8, 0, 0])
+        look(room, [leg[0] + side[0], leg[1] + side[1], leg[2] + side[2]], leg)
+        room.use()
+        step(1.05)
+      }
+      step(0.5)
+      const after = room.renderer.pieces().length
+      expect(after > before, t('sc.kick_detaches_leg_via_tool.check', { kicks, before, after, leg: part(room, id, 'leg_1') ? t('leg.still') : t('leg.gone') }), { kicks, before, after })
     }),
 
     sc('screwdriver_shelf_board', ({ room, step, expect }) => {

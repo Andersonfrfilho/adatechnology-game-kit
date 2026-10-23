@@ -69,7 +69,7 @@ renderer.impulse(id, [0, 40, -120], [2, 0.6, -3])
 
 `bind` finds the meshes of each part from `options.parts` (what `specFromObject3D` returns), else from `userData.destructionPart` or a mesh name that
 equals a part id, else by the part box that contains the mesh centre. `specFromObject3D` reads `userData.destructionMaterial`,
-`destructionPart`, `destructionIgnore`, `destructionTags` and `hollow`.
+`destructionPart` (a part id, or `{ id, material?, parent?, kind? }`: `parent` + `kind` attach the part to its parent with a joint of that kind), `destructionIgnore`, `destructionTags` and `hollow`.
 
 ## What each event draws
 

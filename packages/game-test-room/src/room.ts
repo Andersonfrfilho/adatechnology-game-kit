@@ -9,7 +9,7 @@ import { createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidS
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFluidRenderer } from '@adatechnology/game-fluids-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkDestructible } from '@adatechnology/game-contracts'
+import { checkAnimation, checkDestructible, checkSpec } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, TestableModule } from '@adatechnology/game-contracts'
 import { createArena } from './arena'
 import type { Arena } from './arena'
@@ -165,7 +165,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const entries = new Map<string, Entry>()
   const splitOf = new Map<string, Entry>()
   let simTime = 0
-  const log = createLog()
+  const log = createLog({ exportCancelled: () => t('log.export_cancelled') })
   log.setClock(() => simTime)
 
   const renderer = createDestructionRenderer(THREE, {
@@ -589,6 +589,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     addArena()
     timeScale = 1
     fastForward = false
+    walkPlan = null
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -873,11 +874,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     )
   }
 
-  const meleeUse = (u: Extract<Use, { kind: 'melee' }>): void => {
-    const w = toolName()
+  const meleeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
+    const w = toolName(id)
     const r = rayWorld(u.origin, u.direction, u.reach)
     if (!r) {
-      action('melee', t('act.melee.miss', { weapon: w }), { data: { weapon: toolId } })
+      action('melee', t('act.melee.miss', { weapon: w }), { data: { weapon: id } })
       return
     }
     world.hitPart(r.object, r.part, { type: u.damage, point: r.point, direction: u.direction, energy: u.energy, radius: u.radius, source: 'player' })
@@ -886,7 +887,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       objectId: r.object,
       itemId: entryOf(r.object)?.so.itemId,
       part: r.part,
-      data: { weapon: toolId, damage: u.damage, energyJ: u.energy, distanceM: Math.round(r.distance * 100) / 100 },
+      data: { weapon: id, damage: u.damage, energyJ: u.energy, distanceM: Math.round(r.distance * 100) / 100 },
     })
   }
 
@@ -898,7 +899,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       log.coalesce(`use:${toolId}`, { channel: 'action', type: 'tool', text: t('act.tool.none', { weapon: w }), data: { weapon: toolId } }, 1)
       return
     }
-    const j: JointState | null = world.nearestJoint(r.object, r.point, 0.45)
+    const j: JointState | null = world.nearestJoint(r.object, r.point, 0.45, u.tool as ToolKind)
     if (!j) {
       progress = null
       log.coalesce(`use:${toolId}`, { channel: 'action', type: 'tool', text: t('act.tool.nojoint', { weapon: w, where: hitWhere(r) }), objectId: r.object, part: r.part }, 1)
@@ -1085,6 +1086,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
+  /** The V shortcut: a kick with the `kick` tool, whatever tool is selected (it keeps its own cooldown). */
+  const kick = (): void => {
+    if (!arsenal.weapons.has('kick')) return
+    aim()
+    const res = toolState('kick').trigger([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 0, false, 'player')
+    if (res.status !== 'ok') return
+    for (const u of res.uses) if (u.kind === 'melee') meleeUse(u, 'kick')
+  }
   const setTool = (id: string): void => {
     if (!arsenal.weapons.has(id)) throw new Error(`game-test-room: unknown weapon "${id}"`)
     tool.release()
@@ -1361,7 +1370,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         break
       case 'KeyV':
         if (heldEntry?.uses[2]) useItem(heldEntry.uses[2])
-        else toggleTap()
+        else kick()
         break
       case 'KeyT':
         toggleTap()
@@ -1475,9 +1484,21 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
+  let paused = false
+  let walkPlan: { x: number; z: number; remaining: number } | null = null
+  const stepWalk = (dt: number): void => {
+    if (!walkPlan) return
+    const f = walkPlan.remaining <= dt ? 1 : dt / walkPlan.remaining
+    player.moveBy((walkPlan.x - camera.position.x) * f, (walkPlan.z - camera.position.z) * f)
+    walkPlan.remaining -= dt
+    if (walkPlan.remaining <= 1e-9) walkPlan = null
+  }
+
   const stepSim = (dt: number): void => {
+    if (paused) return
     // `dt` is simulated seconds; real time only drives input
     simTime += dt
+    stepWalk(dt)
     const reps = fastForward ? 10 : 1
     updateAnimations(dt)
     updateItemUse(dt)
@@ -1507,13 +1528,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (tiltKey || heldTilt > 0) {
       heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
     }
-    if (useHeld) {
+    if (useHeld && !paused) {
       if (tool.def.category === 'hand') {
         if (useFirst) grab()
       } else useTool(dt, !useFirst)
       useFirst = false
     }
-    followHeld(dt)
+    if (!paused) followHeld(dt)
     stepSim(dt * timeScale)
     if (progress && simTime - progress.at > 0.25) progress = null
     hudAcc += dt
@@ -1586,6 +1607,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const pose = poseAt(pl.clip, id === '' ? null : id, pl.t)
       obj.position.set(rest.p[0] + pose.position[0], rest.p[1] + pose.position[1], rest.p[2] + pose.position[2])
       obj.rotation.set(rest.r[0] + pose.rotation[0], rest.r[1] + pose.rotation[1], rest.r[2] + pose.rotation[2])
+      // animations are visual only: move the part's collision/raycast shape to the same pose (spec rest + clip offset)
+      const ps = id === '' ? undefined : specs.get(pl.entry.so.objectId)?.parts.find((p) => p.id === id)
+      if (ps) {
+        const r0 = ps.rotation ?? ZERO
+        world.setPartPose(
+          pl.entry.so.objectId, id,
+          [ps.position[0] + pose.position[0], ps.position[1] + pose.position[1], ps.position[2] + pose.position[2]],
+          [r0[0] + pose.rotation[0], r0[1] + pose.rotation[1], r0[2] + pose.rotation[2]],
+        )
+      }
     }
   }
   const updateAnimations = (dt: number): void => {
@@ -1678,8 +1709,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
           partIds = probe.describe().parts.map((p) => p.id)
           moduleCheck(r.ok, r.ok ? t('mod.destructible_ok', { name: item.name, parts: partIds.length }) : t('mod.destructible_fail', { name: item.name, problems: r.problems.join('; ') }), { ...base, check: 'destructible', problems: r.problems }, item.id)
           for (const p of r.problems) fail(`${item.id}: ${p}`)
-        } else {
-          partIds = resolveSpec(item, root).spec.parts.map((p) => p.id)
+        }
+        if (!item.impl || item.spec) {
+          // the spec is resolved after the build (it may be a function of the root, or derived from the meshes)
+          const spec = resolveSpec(item, root).spec
+          if (!item.impl) partIds = spec.parts.map((p) => p.id)
+          const r = checkSpec(spec, { materials: world.materials.keys() })
+          moduleCheck(r.ok, r.ok ? t('mod.spec_ok', { name: item.name, parts: spec.parts.length }) : t('mod.spec_fail', { name: item.name, problems: r.problems.join('; ') }), { ...base, check: 'spec', problems: r.problems, warnings: r.warnings }, item.id)
+          for (const p of r.problems) fail(`${item.id}: ${p}`)
+          for (const w of r.warnings) log.add({ channel: 'check', type: 'warn', text: `⚠ ${t('mod.spec_warn', { name: item.name, warning: w })}`, itemId: item.id, data: { ok: true, ...base, check: 'spec', warning: w } })
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
@@ -1721,6 +1759,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const all = list ?? allScenarios()
     const report: ScenarioReport = { passed: 0, failed: 0, results: [] }
     scenarioRunning = true
+    const wasPaused = paused
+    paused = false
     try {
       for (const sc of all) {
         hardReset()
@@ -1752,6 +1792,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     } finally {
       scenarioRunning = false
+      paused = wasPaused
     }
     return report
   }
@@ -1827,6 +1868,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       heldTilt = rad
     },
     toggleTap,
+    pause() {
+      paused = true
+    },
+    resume() {
+      paused = false
+    },
+    get paused() {
+      return paused
+    },
+    walk(to, seconds) {
+      walkPlan = seconds > 0 ? { x: to[0], z: to[2], remaining: seconds } : null
+      if (!walkPlan) player.moveBy(to[0] - camera.position.x, to[2] - camera.position.z)
+    },
     setSlowMotion(on) {
       timeScale = on ? 0.25 : 1
     },

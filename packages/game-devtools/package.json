@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-devtools",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "In-game test tooling for three.js games: free-fly mode, position HUD, notes and marks, control panel, scenario runner and entity labels. Knows nothing about any game.",
   "keywords": [

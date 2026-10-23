@@ -1,0 +1,286 @@
+{
+ "mango_tree": {
+  "name": "Mangueira",
+  "description": "Copa larga e sombreada com mangas penduradas."
+ },
+ "yellow_ipe": {
+  "name": "Ipê-amarelo",
+  "description": "Verde no verão, copa coberta de flores amarelas na seca."
+ },
+ "pink_ipe": {
+  "name": "Ipê-roxo",
+  "description": "Verde no verão, copa coberta de flores rosa na seca."
+ },
+ "jabuticaba_tree": {
+  "name": "Jabuticabeira",
+  "description": "Árvore densa e pequena com frutos escuros brotando direto do tronco."
+ },
+ "flamboyant": {
+  "name": "Flamboyant",
+  "description": "Copa em guarda-chuva coberta de flores vermelhas."
+ },
+ "guava_tree": {
+  "name": "Goiabeira",
+  "description": "Árvore pequena e retorcida, casca lisa avermelhada e frutos redondos."
+ },
+ "avocado_tree": {
+  "name": "Abacateiro",
+  "description": "Árvore alta de folhagem escura com frutos em forma de pera."
+ },
+ "lemon_tree": {
+  "name": "Limoeiro",
+  "description": "Árvore pequena de quintal com limões amarelos."
+ },
+ "pitanga_bush_tree": {
+  "name": "Pitangueira",
+  "description": "Árvore baixa e ramificada coberta de frutinhas vermelhas."
+ },
+ "sidewalk_ficus": {
+  "name": "Ficus de calçada",
+  "description": "Copa redonda e podada, típica de calçadas."
+ },
+ "oak_like": {
+  "name": "Árvore de folha larga",
+  "description": "Árvore de sombra genérica que muda com as estações."
+ },
+ "weeping_willow": {
+  "name": "Salgueiro-chorão",
+  "description": "Cortinas caídas de folhas verde-claras."
+ },
+ "araucaria": {
+  "name": "Araucária",
+  "description": "Tronco alto e limpo com copa em candelabro de ramos erguidos."
+ },
+ "pine": {
+  "name": "Pinheiro",
+  "description": "Conífera cônica com camadas caídas."
+ },
+ "eucalyptus": {
+  "name": "Eucalipto",
+  "description": "Árvore muito alta de casca clara e copa rala."
+ },
+ "dead_tree": {
+  "name": "Árvore morta",
+  "description": "Tronco torcido e sem folhas, com galhos quebrados."
+ },
+ "coconut_palm": {
+  "name": "Coqueiro",
+  "description": "Tronco curvo e inclinado, copa de frondes longas e cocos."
+ },
+ "royal_palm": {
+  "name": "Palmeira-imperial",
+  "description": "Tronco reto, liso e cinza, com bainha verde sob a copa."
+ },
+ "fan_palm": {
+  "name": "Palmeira-leque",
+  "description": "Tronco curto e grosso com frondes redondas em leque."
+ },
+ "areca_palm": {
+  "name": "Palmeira-areca",
+  "description": "Palmeira em touceira com muitas hastes finas e frondes plumosas."
+ },
+ "date_palm": {
+  "name": "Tamareira",
+  "description": "Tronco áspero, frondes rígidas e eretas e cachos de tâmaras."
+ },
+ "banana_plant": {
+  "name": "Bananeira",
+  "description": "Falso tronco com folhas enormes, algumas rasgadas."
+ },
+ "banana_with_bunch": {
+  "name": "Bananeira com cacho",
+  "description": "Bananeira com um cacho pendente e o coração roxo."
+ },
+ "boxwood_hedge": {
+  "name": "Cerca-viva de buxinho",
+  "description": "Cerca-viva podada de verde escuro."
+ },
+ "ixora_hedge": {
+  "name": "Cerca-viva de ixora",
+  "description": "Cerca-viva salpicada de cachos de flores vermelhas."
+ },
+ "hibiscus_shrub": {
+  "name": "Hibisco",
+  "description": "Arbusto de folhas brilhantes com grandes flores vermelhas e rosa."
+ },
+ "bougainvillea": {
+  "name": "Primavera",
+  "description": "Arbusto espalhado coberto de brácteas magenta."
+ },
+ "azalea": {
+  "name": "Azaleia",
+  "description": "Arbusto baixo e redondo cheio de flores rosa."
+ },
+ "croton": {
+  "name": "Cróton",
+  "description": "Arbusto de folhas multicoloridas em amarelo, vermelho e verde."
+ },
+ "lady_palm": {
+  "name": "Palmeira-ráfia",
+  "description": "Palmeira-leque anã em touceira, com hastes finas (rhapis)."
+ },
+ "generic_round_shrub": {
+  "name": "Arbusto redondo",
+  "description": "Arbusto verde redondo e simples."
+ },
+ "overgrown_bush": {
+  "name": "Moita crescida",
+  "description": "Moita desgrenhada e sem poda."
+ },
+ "rose_bush_red": {
+  "name": "Roseira vermelha",
+  "description": "Hastes espinhosas com rosas vermelhas."
+ },
+ "rose_bush_pink": {
+  "name": "Roseira rosa",
+  "description": "Hastes espinhosas com rosas cor-de-rosa."
+ },
+ "rose_bush_white": {
+  "name": "Roseira branca",
+  "description": "Hastes espinhosas com rosas brancas."
+ },
+ "sunflower": {
+  "name": "Girassol",
+  "description": "Hastes altas com grandes flores douradas."
+ },
+ "daisy": {
+  "name": "Margarida",
+  "description": "Pétalas brancas em volta de um miolo amarelo."
+ },
+ "tulip": {
+  "name": "Tulipa",
+  "description": "Flores em forma de taça sobre hastes retas."
+ },
+ "lily": {
+  "name": "Lírio",
+  "description": "Flores brancas em forma de estrela."
+ },
+ "marigold": {
+  "name": "Cravo-de-defunto",
+  "description": "Flores laranja redondas em pompom."
+ },
+ "periwinkle_pink": {
+  "name": "Vinca rosa",
+  "description": "Tapete baixo de florzinhas rosa."
+ },
+ "periwinkle_white": {
+  "name": "Vinca branca",
+  "description": "Tapete baixo de florzinhas brancas."
+ },
+ "hydrangea": {
+  "name": "Hortênsia",
+  "description": "Grandes bolas azuis de florzinhas."
+ },
+ "bird_of_paradise": {
+  "name": "Estrelítzia",
+  "description": "Flores laranja e azuis em forma de ave sobre folhas grandes."
+ },
+ "wild_flowers": {
+  "name": "Flores do campo",
+  "description": "Mistura de florzinhas de campo."
+ },
+ "mandacaru": {
+  "name": "Mandacaru",
+  "description": "Cacto alto em candelabro, azul-esverdeado, com grandes flores brancas noturnas."
+ },
+ "saguaro": {
+  "name": "Saguaro",
+  "description": "Cacto colunar gigante com braços voltados para cima."
+ },
+ "xique_xique": {
+  "name": "Xique-xique",
+  "description": "Cacto colunar baixo e espalhado do sertão."
+ },
+ "prickly_pear": {
+  "name": "Palma",
+  "description": "Raquetes achatadas encadeadas, com frutos vermelhos."
+ },
+ "crown_cactus": {
+  "name": "Coroa-de-frade",
+  "description": "Globo com costelas coroado por uma capa vermelha."
+ },
+ "barrel_cactus": {
+  "name": "Cacto-barril",
+  "description": "Barril redondo com costelas e espinhos dourados."
+ },
+ "small_cactus": {
+  "name": "Cactinho",
+  "description": "Cacto pequeno e redondo."
+ },
+ "snake_plant": {
+  "name": "Espada-de-são-jorge",
+  "description": "Folhas altas e rígidas em forma de espada, com faixas."
+ },
+ "agave": {
+  "name": "Agave",
+  "description": "Grande roseta azul-esverdeada de folhas grossas e pontudas."
+ },
+ "aloe_vera": {
+  "name": "Babosa",
+  "description": "Folhas carnudas e serrilhadas com espiga de flores laranja."
+ },
+ "echeveria": {
+  "name": "Echeveria",
+  "description": "Roseta compacta de folhas com pontas rosadas."
+ },
+ "lawn_tuft": {
+  "name": "Touceira de grama",
+  "description": "Touceira curta de grama verde."
+ },
+ "wild_grass_tall": {
+  "name": "Capim alto",
+  "description": "Capim alto com espigas."
+ },
+ "weeds": {
+  "name": "Mato",
+  "description": "Tufo bagunçado de mato."
+ },
+ "papyrus": {
+  "name": "Papiro",
+  "description": "Juncos altos coroados por penachos."
+ },
+ "fern": {
+  "name": "Samambaia",
+  "description": "Frondes arqueadas de folíolos pequenos."
+ },
+ "boston_fern": {
+  "name": "Samambaia-americana",
+  "description": "Samambaia farta em vaso, com frondes caindo pela borda."
+ },
+ "bougainvillea_vine": {
+  "name": "Primavera trepadeira",
+  "description": "Trepadeira coberta de brácteas magenta."
+ },
+ "ivy": {
+  "name": "Hera",
+  "description": "Trepadeira densa e verde escura para muros."
+ },
+ "passion_fruit_vine": {
+  "name": "Maracujazeiro",
+  "description": "Trepadeira vigorosa com flores roxas e brancas."
+ },
+ "potted_fern": {
+  "name": "Samambaia de vaso",
+  "description": "Samambaia em vaso de barro."
+ },
+ "potted_snake_plant": {
+  "name": "Espada-de-são-jorge de vaso",
+  "description": "Espada-de-são-jorge em vaso cinza."
+ },
+ "potted_areca": {
+  "name": "Areca de vaso",
+  "description": "Palmeira-areca em cachepô."
+ },
+ "potted_cactus": {
+  "name": "Cacto de vaso",
+  "description": "Cacto redondo pequeno em vaso."
+ },
+ "potted_rose": {
+  "name": "Rosa de vaso",
+  "description": "Roseira em vaso."
+ },
+ "potted_succulents": {
+  "name": "Suculenta de vaso",
+  "description": "Echeveria em cachepô pequeno."
+ }
+}
