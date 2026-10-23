@@ -114,3 +114,31 @@ describe('plugins and scenarios', () => {
     expect(() => makeKit({ THREE: undefined as never }, false)).toThrow(/THREE/)
   })
 })
+
+describe('seedKey and seedId', () => {
+  it('a renamed vehicle with seedKey looks and breaks exactly like the original key', async () => {
+    const { digest } = await import('./helpers/digest')
+    const kit = makeKit()
+    const spec = kit.find('proto')!
+    kit.register({ ...spec, key: 'proto_renamed', seedKey: 'proto' }, spec.build as never)
+    const health = { hood: 20, roof: 35, bumper_front: 10, windshield: 0 }
+    const a = digest(kit.build('proto', 'damaged', { health, flags: {} }))
+    const b = digest(kit.build('proto_renamed', 'damaged', { health, flags: {} }))
+    expect(b).toEqual(a)
+    kit.register({ ...spec, key: 'proto_other' }, spec.build as never)
+    expect(digest(kit.build('proto_other', 'damaged', { health, flags: {} })).hash).not.toBe(a.hash)
+  })
+
+  it('a scenario renamed with seedId keeps the random stream of the old id', () => {
+    const rolled = (id: string, seedId?: string): ScenarioDefinition => ({
+      id,
+      seedId,
+      name: id,
+      zone: (z, x) => x.set(z, 20 + x.rand() * 60),
+    })
+    const kit = makeKit({ scenarios: [rolled('old_id'), rolled('new_id', 'old_id'), rolled('other_id')] })
+    const run = (id: string) => kit.zoneScenario(kit.build('proto', 'intact'), id).health
+    expect(run('new_id')).toEqual(run('old_id'))
+    expect(run('other_id')).not.toEqual(run('old_id'))
+  })
+})

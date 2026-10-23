@@ -34,7 +34,7 @@ export function installZoneApply(kit: Kit): void {
     const inv = I.worldInverseOf(c)
     ;(c.zones || []).forEach(function (z: any) {
       if (z.internal || ['panel', 'door', 'roof', 'lid', 'hood', 'bumper'].indexOf(z.type) < 0) return
-      c.rand = rng(strHash(c.key + SEED_SALTS.rust + legacyZoneId(z)))
+      c.rand = rng(strHash((c.seedKey || c.key) + SEED_SALTS.rust + legacyZoneId(z)))
       I.zoneDecals(c, z, { rust: 3 }, I.zoneCands(c, z, inv))
     })
   }
@@ -135,7 +135,7 @@ export function installZoneApply(kit: Kit): void {
     Zs.forEach(function (z: any) {
       if (z.health >= 100) return
       any = true
-      c.rand = rng(strHash(c.key + '|' + legacyZoneId(z) + '|' + z.band))
+      c.rand = rng(strHash((c.seedKey || c.key) + '|' + legacyZoneId(z) + '|' + z.band))
       try {
         const b = z.band
         if (z.type === 'wheel' && z.fxKey === 'landing_gear' && c.meta.kind === 'plane') I.gearBand(c, z, b)
@@ -188,7 +188,7 @@ export function installZoneApply(kit: Kit): void {
     } catch (e: any) {
       c.zoneErrors.push('settling: ' + e.message)
     }
-    c.rand = rng(strHash(c.key + SEED_SALTS.scenario))
+    c.rand = rng(strHash((c.seedKey || c.key) + SEED_SALTS.scenario))
     const flagList = Object.keys(FL)
       .filter(function (k) {
         return FL[k] && kit.flagEffects[k]
@@ -206,11 +206,11 @@ export function installZoneApply(kit: Kit): void {
         return kit.flagEffects[k].settle
       })
     ) {
-      c.rand = rng(strHash(c.key + SEED_SALTS.settle))
+      c.rand = rng(strHash((c.seedKey || c.key) + SEED_SALTS.settle))
       kit.settle(c, 2.5)
     }
     if (FL.flipped && !c.flipped) {
-      c.rand = rng(strHash(c.key + SEED_SALTS.rollover))
+      c.rand = rng(strHash((c.seedKey || c.key) + SEED_SALTS.rollover))
       if (c.hood) {
         c.hood.target = 0
       }

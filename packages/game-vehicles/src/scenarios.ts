@@ -43,7 +43,7 @@ export function installScenarios(kit: Kit): void {
     const sc = S ? S.id : name
     const health: Record<string, number> = {}
     const flags: any = {}
-    const rand = rng(strHash((c.key || '') + '|' + sc))
+    const rand = rng(strHash((c.seedKey || c.key || '') + '|' + ((S && S.seedId) || sc)))
     function set(z: any, v: any) {
       health[z.id] = clamp(Math.round(v), 0, 100)
     }

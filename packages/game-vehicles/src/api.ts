@@ -73,6 +73,8 @@ export interface VehicleMeta {
 export interface VehicleSpec {
   /** Unique id of the vehicle. */
   key: string
+  /** Seeds the random streams (look and damage) instead of `key`. Lets a vehicle be renamed without changing how it looks. */
+  seedKey?: string
   /** Display name. */
   name?: string
   /** Fleet group (see `configure({ groups })`). */
@@ -159,6 +161,8 @@ export interface ScenarioContext {
 
 export interface ScenarioDefinition {
   id: string
+  /** Seeds the random stream of the scenario instead of `id`. Lets a scenario be renamed without changing its result. */
+  seedId?: string
   /** Display name. */
   name: string
   init?(x: ScenarioContext): void

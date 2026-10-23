@@ -235,9 +235,12 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
     const spec = kit.find(key)
     if (!spec) throw new Error('Unknown vehicle: ' + key)
     const st = state || 'intact'
-    const c = new kit.BuildContext(st, strHash(key + (LEGACY_STATES[st] || st)))
+    /* a vehicle renamed after the first release keeps its old key as the seed of every random stream */
+    const seedKey = spec.seedKey || key
+    const c = new kit.BuildContext(st, strHash(seedKey + (LEGACY_STATES[st] || st)))
     c.spec = spec
     c.key = key
+    c.seedKey = seedKey
     spec.build(c, kit)
     const m = c.meta
     m.kind = m.kind || 'car'
