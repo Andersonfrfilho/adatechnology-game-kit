@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      # secrets cannot be read in `if:`, so expose "is it set" as a plain env var
+      HAS_NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # the pnpm version comes from "packageManager" in the root package.json
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Test
+        run: pnpm test
+
+      # With an npm token: open/update the version PR, and publish once it is merged.
+      - name: Version PR and publish
+        if: env.HAS_NPM_TOKEN == 'true'
+        uses: changesets/action@v1
+        with:
+          version: pnpm version:changeset
+          publish: pnpm publish:changesets
+          title: "chore: version packages"
+          commit: "chore: version packages"
+          createGithubReleases: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
+
+      # Without a token: still open/update the version PR, but never publish.
+      - name: Version PR only (no NPM_TOKEN)
+        if: env.HAS_NPM_TOKEN != 'true'
+        uses: changesets/action@v1
+        with:
+          version: pnpm version:changeset
+          title: "chore: version packages"
+          commit: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
