@@ -10,7 +10,7 @@ Conteúdo comercial para o `game-floorplan`: os modelos `market` (mercadinho) e 
 
 ## Quando usar e quando não usar
 - Use para comércio de rua gerado por semente.
-- Não use para casas (`game-floorplan-residential`) nem para interiores especiais como delegacia, escola ou posto (planejados como modelos novos, ver migração).
+- Não use para casas (`game-floorplan-residential`). Delegacia, escola, posto, igreja, pronto-socorro e os outros prédios de cidade vão entrar aqui (decisão C5 da spec 001); até lá, só `market` e `pharmacy` existem.
 
 ## Como usar
 ```ts
@@ -55,5 +55,5 @@ Sem exemplo próprio; use o visualizador 2D do `game-floorplan` e a suíte em `g
 - Ids antigos: `mercado` é `market`, `farmacia` é `pharmacy` (tabelas em `MIGRATION.md`).
 
 ## O que vem pela migração (spec 001)
-- C5: interiores (delegacia, escola, igreja, posto, hospital...) viram modelos de planta com interior completo (estrutura, móveis e itens de achado por lugar), ligados ao catálogo único de itens (A9); a lista de lugares vai crescer. Onde cada um mora (aqui ou pacote novo) ainda não está fechado.
+- C5: interiores (delegacia, escola, igreja, posto, hospital...) viram modelos de planta com interior completo (estrutura, móveis e itens de achado por lugar), ligados ao catálogo único de itens (A9); a lista de lugares vai crescer. Todos entram neste pacote (decisão do dono em 2026-10-23), como prédios de cidade genéricos; o que é só de apocalipse zumbi vira estado ou conteúdo do jogo.
 - A9: itens de loja passam a vir do catálogo único com peso, volume, raridade e onde aparece.
