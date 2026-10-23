@@ -25,8 +25,8 @@ export interface TestableItem {
   build: (THREE: unknown) => unknown
   /** Destruction spec for the default destruction world. A module that owns its destruction gives `impl` instead (or as well). */
   spec?: DestructibleSpec | ((root: unknown) => DestructibleSpec)
-  /** The module's own destruction: parts, hits and state are its business. The world hosts it next to its own objects. */
-  impl?: (root: unknown) => DestructibleImpl
+  /** The module's own destruction: parts, hits and state are its business. The world hosts it next to its own objects. `id` is the object id the host gives it: `DestructibleImpl.id` must be that id. */
+  impl?: (root: unknown, id: string) => DestructibleImpl
   fluid?: ModuleItemFluid
   /** The item is also a weapon the player can equip: an id of the arsenal in use. */
   weapon?: string

@@ -110,12 +110,12 @@ describe('testable module', () => {
       id: 'toys',
       name: 'Toys',
       group: 'Toys',
-      items: (locale) => [{ id: 'panel', name: locale === 'pt-BR' ? 'Painel' : 'Panel', build: () => ({}), impl: () => panelImpl('panel_1') }],
+      items: (locale) => [{ id: 'panel', name: locale === 'pt-BR' ? 'Painel' : 'Panel', build: () => ({}), impl: (_root, id) => panelImpl(id) }],
       scenarios: () => [{ id: 'noop', name: 'Nothing', run: () => undefined }],
     }
     const item = mod.items('pt-BR')[0]
     expect(item.name).toBe('Painel')
-    expect(checkDestructible(item.impl!({})).ok).toBe(true)
+    expect(checkDestructible(item.impl!({}, 'panel_1')).ok).toBe(true)
   })
 
   it('has no runtime dependencies', () => {

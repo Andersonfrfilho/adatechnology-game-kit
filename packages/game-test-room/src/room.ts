@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
-import type { DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
+import type { DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createDestructionRenderer, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
@@ -9,6 +9,8 @@ import { createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidS
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFluidRenderer } from '@adatechnology/game-fluids-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
+import { checkAnimation, checkDestructible } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, TestableModule } from '@adatechnology/game-contracts'
 import { createArena } from './arena'
 import type { Arena } from './arena'
 import { buildFromSpec } from './build-from-spec'
@@ -21,6 +23,8 @@ import { resolveStrings } from './locale'
 import { createUi } from './ui'
 import type { HudState, InspectInfo, RoomUi } from './ui'
 import type {
+  AnimationInfo,
+  ModuleReport,
   ScenarioContext,
   ScenarioReport,
   SpawnedObject,
@@ -216,7 +220,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const catalogMap = new Map<string, TestRoomItem>()
   for (const i of demoItems(locale)) catalogMap.set(i.id, i)
   for (const i of options.catalog) catalogMap.set(i.id, i)
-  const catalog = options.catalog
+  const catalog = [...options.catalog]
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Names and narration
@@ -445,12 +449,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     root.name = item.id
     scene.add(root)
     root.updateMatrixWorld(true)
-    const { spec, parts } = resolveSpec(item, root)
-    root.updateMatrixWorld(true)
     const objectId = `${item.id}_${++counter}`
+    let own: DestructibleImpl | undefined
+    let resolved: { spec: DestructibleSpec; parts?: Record<string, THREE_NS.Object3D[]> }
+    if (item.impl) {
+      own = item.impl(root, objectId)
+      if (own.id !== objectId) throw new Error(`game-test-room: item "${item.id}": DestructibleImpl.id is "${own.id}", the room gave it "${objectId}" (use the id passed to impl)`)
+      resolved = { spec: structuredCloneSpec(own.describe()) }
+    } else resolved = resolveSpec(item, root)
+    const { spec, parts } = resolved
+    root.updateMatrixWorld(true)
     const mass = spec.parts.reduce((m, p) => m + (p.mass ?? 0), 0)
     const heavy = (mass || massGuess(spec)) > maxCarry
-    const movable = item.movable ?? !heavy
+    const movable = own ? false : (item.movable ?? !heavy)
     if (movable) {
       // things that can fall rest on the floor or the table by the bottom of their bounding box (or hang at the height asked for): no drop on spawn
       const box = new THREE.Box3().setFromObject(root)
@@ -460,7 +471,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       root.updateMatrixWorld(true)
     }
     const q = root.getWorldQuaternion(tmpQ)
-    world.add(spec, { id: objectId, position: pos, rotation: [q.x, q.y, q.z, q.w] })
+    if (own) world.register(own, { id: objectId, position: pos, rotation: [q.x, q.y, q.z, q.w] })
+    else world.add(spec, { id: objectId, position: pos, rotation: [q.x, q.y, q.z, q.w] })
     const e = registerEntry(objectId, item.id, root, spec, item.name, parts, item, false, movable)
     action('spawn', t('act.spawn', { name: item.name, x: num(pos[0], 1), z: num(pos[2], 1) }), { objectId, itemId: item.id, data: { position: pos, movable, massKg: Math.round(massOfObject(objectId) * 10) / 10 } })
     fire('spawn', e.so)
@@ -480,6 +492,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const e = entries.get(id)
     if (!e) return
     if (heldEntry === e) releaseHeld()
+    for (let i = playing.length - 1; i >= 0; i--) if (playing[i].entry === e) playing.splice(i, 1)
     if (e.containerId) {
       fluidView.unbindContainer(e.containerId)
       fluids.removeContainer(e.containerId)
@@ -516,6 +529,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const clearEverything = (): void => {
     if (heldEntry || heldPiece) releaseHeld()
     useItemPlayer = null
+    playing.length = 0
     projectiles.length = 0
     clearProjectileMeshes()
     fireZones.length = 0
@@ -1465,6 +1479,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     // `dt` is simulated seconds; real time only drives input
     simTime += dt
     const reps = fastForward ? 10 : 1
+    updateAnimations(dt)
     updateItemUse(dt)
     updateProjectiles(dt)
     syncContainers(dt)
@@ -1524,6 +1539,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       progress: progress ? { label: progress.label, value: progress.value } : null,
       held: heldEntry || heldPiece ? { name: heldName, uses: (heldEntry?.uses ?? []).map((u, i) => ({ key: ['F', 'C', 'V'][i] ?? '', label: S.text[`use.${u}`] ?? u })), weapon: heldEntry?.item?.weapon ? arsenal.name(heldEntry.item.weapon) : undefined, using: useItemName } : null,
       inspect: inspectInfo(),
+      animations: animationsOf(),
       locked: player.locked,
       timeScale,
       fast: fastForward,
@@ -1534,9 +1550,160 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
-  // Scenarios
+  // Item animations (clips of AnimationClipSpec)
   // ---------------------------------------------------------------------------------------------------------------------------------------
-  const extraScenarios = options.scenarios ?? []
+  interface Playing {
+    entry: Entry
+    clip: AnimationClipSpec
+    t: number
+    fired: number
+    targets: Map<string, THREE_NS.Object3D>
+  }
+  const playing: Playing[] = []
+  const restPose = new WeakMap<THREE_NS.Object3D, { p: Vec3; r: Vec3 }>()
+  const ZERO: Vec3 = [0, 0, 0]
+  const animTarget = (): Entry | undefined => {
+    if (heldEntry) return heldEntry
+    const r = inspectTarget()
+    return r ? entryOf(r.object) : undefined
+  }
+  const poseAt = (clip: AnimationClipSpec, id: string | null, time: number): { position: Vec3; rotation: Vec3 } => {
+    const pick = (k: AnimationClipSpec['keys'][number]): { position?: Vec3; rotation?: Vec3 } | undefined => (id === null ? k : k.parts?.[id])
+    const pts = clip.keys.map((k) => ({ t: k.t, position: pick(k)?.position ?? ZERO, rotation: pick(k)?.rotation ?? ZERO }))
+    if (pts.length === 0 || pts[0].t > 0) pts.unshift({ t: 0, position: ZERO, rotation: ZERO })
+    let a = pts[0]
+    let b = pts[pts.length - 1]
+    if (time >= b.t) a = b
+    else for (let i = 0; i < pts.length - 1; i++) if (time >= pts[i].t && time < pts[i + 1].t) [a, b] = [pts[i], pts[i + 1]]
+    const f = a === b || b.t <= a.t ? 0 : (time - a.t) / (b.t - a.t)
+    const mix = (x: Vec3, y: Vec3): Vec3 => [x[0] + (y[0] - x[0]) * f, x[1] + (y[1] - x[1]) * f, x[2] + (y[2] - x[2]) * f]
+    return { position: mix(a.position, b.position), rotation: mix(a.rotation, b.rotation) }
+  }
+  const applyClip = (pl: Playing): void => {
+    for (const [id, obj] of pl.targets) {
+      const rest = restPose.get(obj)
+      if (!rest) continue
+      const pose = poseAt(pl.clip, id === '' ? null : id, pl.t)
+      obj.position.set(rest.p[0] + pose.position[0], rest.p[1] + pose.position[1], rest.p[2] + pose.position[2])
+      obj.rotation.set(rest.r[0] + pose.rotation[0], rest.r[1] + pose.rotation[1], rest.r[2] + pose.rotation[2])
+    }
+  }
+  const updateAnimations = (dt: number): void => {
+    for (let i = playing.length - 1; i >= 0; i--) {
+      const pl = playing[i]
+      pl.t = Math.min(pl.clip.duration, pl.t + dt)
+      applyClip(pl)
+      const evs = pl.clip.events ?? []
+      while (pl.fired < evs.length && evs[pl.fired].t <= pl.t) {
+        const ev = evs[pl.fired++]
+        action('animation_event', t('act.anim_event', { name: pl.entry.name, clip: pl.clip.id, type: ev.type }), { objectId: pl.entry.so.objectId, itemId: pl.entry.so.itemId, data: { clip: pl.clip.id, type: ev.type, at: ev.t, ...(ev.data ?? {}) } })
+        const key = ev.type === 'sound' ? ev.data?.key : undefined
+        if (typeof key === 'string') options.onSound?.(key, v3(pl.entry.so.root.getWorldPosition(tmpV)), 1)
+      }
+      if (pl.t >= pl.clip.duration) {
+        playing.splice(i, 1)
+        action('animation_end', t('act.anim_end', { name: pl.entry.name, clip: pl.clip.id }), { objectId: pl.entry.so.objectId, itemId: pl.entry.so.itemId, data: { clip: pl.clip.id } })
+      }
+    }
+  }
+  const animationsOf = (): AnimationInfo | null => {
+    const e = animTarget()
+    if (!e || e.arena) return null
+    const clips = (e.item?.animations ?? []).map((c) => ({ id: c.id, duration: c.duration }))
+    return { objectId: e.so.objectId, itemId: e.so.itemId, name: e.name, clips, playing: playing.find((p) => p.entry === e)?.clip.id ?? null }
+  }
+  const playAnimation = (clipId: string, objectId?: string): boolean => {
+    const e = objectId ? entries.get(objectId) : animTarget()
+    const clip = e?.item?.animations?.find((c) => c.id === clipId)
+    if (!e || !clip) return false
+    for (let i = playing.length - 1; i >= 0; i--) if (playing[i].entry === e && playing[i].clip.id === clipId) playing.splice(i, 1)
+    const targets = new Map<string, THREE_NS.Object3D>()
+    const ids = new Set<string>()
+    for (const k of clip.keys) for (const id of Object.keys(k.parts ?? {})) ids.add(id)
+    const grab = (key: string, obj: THREE_NS.Object3D | undefined): void => {
+      if (!obj) return
+      if (!restPose.has(obj)) restPose.set(obj, { p: [obj.position.x, obj.position.y, obj.position.z], r: [obj.rotation.x, obj.rotation.y, obj.rotation.z] })
+      targets.set(key, obj)
+    }
+    if (clip.keys.some((k) => k.position || k.rotation)) grab('', e.so.root)
+    for (const id of ids) grab(id, e.so.root.getObjectByName(id) ?? undefined)
+    const pl: Playing = { entry: e, clip, t: 0, fired: 0, targets }
+    playing.push(pl)
+    applyClip(pl)
+    action('animation', t('act.anim_start', { name: e.name, clip: clip.id, seconds: num(clip.duration, 1) }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { clip: clip.id, duration: clip.duration } })
+    return true
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  // Scenarios and modules
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  const extraScenarios: TestRoomScenario[] = [...(options.scenarios ?? [])]
+  const moduleCheck = (ok: boolean, text: string, data: Record<string, unknown>, itemId?: string): void => {
+    log.add({ channel: 'check', type: ok ? 'pass' : 'fail', text: `${ok ? '✓' : '✗'} ${text}`, itemId, data: { ok, ...data } })
+  }
+  const loadModule = (mod: TestableModule<ScenarioContext>): ModuleReport => {
+    const report: ModuleReport = { module: mod.id, items: [], scenarios: [], ok: true, problems: [] }
+    const fail = (problem: string): void => {
+      report.ok = false
+      report.problems.push(problem)
+    }
+    const added = mod.items(locale)
+    for (const ti of added) {
+      const item: TestRoomItem = {
+        id: ti.id,
+        name: ti.name,
+        group: mod.group,
+        build: (T) => ti.build(T) as THREE_NS.Object3D,
+        spec: ti.spec as TestRoomItem['spec'],
+        movable: ti.movable,
+        fluid: ti.fluid,
+        weapon: ti.weapon,
+        impl: ti.impl as TestRoomItem['impl'],
+        animations: ti.animations,
+      }
+      catalogMap.set(item.id, item)
+      const at = catalog.findIndex((c) => c.id === item.id)
+      if (at >= 0) catalog[at] = item
+      else catalog.push(item)
+      report.items.push(item.id)
+      // contract checks on a throwaway build of the item (never added to the scene)
+      let partIds: string[] = []
+      const base = { module: mod.id, item: item.id }
+      try {
+        const root = item.build(THREE)
+        root.updateMatrixWorld(true)
+        if (item.impl) {
+          const probe = item.impl(root, `${item.id}_check`)
+          const r = checkDestructible(probe, { materials: world.materials.keys() })
+          partIds = probe.describe().parts.map((p) => p.id)
+          moduleCheck(r.ok, r.ok ? t('mod.destructible_ok', { name: item.name, parts: partIds.length }) : t('mod.destructible_fail', { name: item.name, problems: r.problems.join('; ') }), { ...base, check: 'destructible', problems: r.problems }, item.id)
+          for (const p of r.problems) fail(`${item.id}: ${p}`)
+        } else {
+          partIds = resolveSpec(item, root).spec.parts.map((p) => p.id)
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        moduleCheck(false, t('mod.destructible_fail', { name: item.name, problems: msg }), { ...base, check: 'destructible', problems: [msg] }, item.id)
+        fail(`${item.id}: ${msg}`)
+      }
+      for (const clip of item.animations ?? []) {
+        const r = checkAnimation(clip, partIds)
+        moduleCheck(r.ok, r.ok ? t('mod.animation_ok', { name: item.name, clip: clip.id, seconds: num(clip.duration, 1) }) : t('mod.animation_fail', { name: item.name, clip: clip.id, problems: r.problems.join('; ') }), { ...base, check: 'animation', clip: clip.id, problems: r.problems }, item.id)
+        for (const p of r.problems) fail(`${item.id}: ${p}`)
+      }
+    }
+    for (const ms of mod.scenarios?.(locale) ?? []) {
+      const sc: TestRoomScenario = { id: ms.id, name: ms.name, run: ms.run }
+      const at = extraScenarios.findIndex((x) => x.id === sc.id)
+      if (at >= 0) extraScenarios[at] = sc
+      else extraScenarios.push(sc)
+      report.scenarios.push(sc.id)
+    }
+    action('module', t('act.module_loaded', { name: mod.name, items: report.items.length, scenarios: report.scenarios.length, result: t(report.ok ? 'mod.all_ok' : 'mod.some_failed') }), { data: { module: mod.id, items: report.items, scenarios: report.scenarios, ok: report.ok } })
+    ui?.refresh()
+    return report
+  }
+
   const allScenarios = (): TestRoomScenario[] => [...makeScenarios(t, num, locale), ...extraScenarios]
   let scenarioRunning = false
 
@@ -1667,6 +1834,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       fastForward = on
     },
     equip,
+    loadModule,
+    animations: animationsOf,
+    playAnimation,
     dispose() {
       cancelAnimationFrame?.(raf)
       window.removeEventListener('resize', onResize)
@@ -1688,11 +1858,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   let ui: RoomUi | null = null
   if (options.ui !== false) {
-    const groups = new Map<string, TestRoomItem[]>()
-    for (const i of catalog) {
-      const g = groups.get(i.group) ?? []
-      g.push(i)
-      groups.set(i.group, g)
+    const groups = (): Map<string, TestRoomItem[]> => {
+      const m = new Map<string, TestRoomItem[]>()
+      for (const i of catalog) {
+        const g = m.get(i.group) ?? []
+        g.push(i)
+        m.set(i.group, g)
+      }
+      return m
     }
     ui = createUi({
       container,
@@ -1736,6 +1909,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         setTool(loadout[index])
       },
       onTap: () => toggleTap(),
+      onPlay: (objectId, clipId) => {
+        playAnimation(clipId, objectId)
+      },
       onResize: resize,
     })
     ui.hud(hudState())

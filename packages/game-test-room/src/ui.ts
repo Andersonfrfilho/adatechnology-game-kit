@@ -1,6 +1,6 @@
 import type { WritableLog } from './log'
 import type { RoomStrings } from './locale'
-import type { LogEntry, ScenarioReport, TestRoomItem, TestRoomScenario } from './types'
+import type { AnimationInfo, LogEntry, ScenarioReport, TestRoomItem, TestRoomScenario } from './types'
 
 export interface InspectInfo {
   object: string
@@ -39,6 +39,8 @@ export interface HudState {
   progress: { label: string; value: number } | null
   held: { name: string; uses: Array<{ key: string; label: string }>; weapon?: string; using: string } | null
   inspect: InspectInfo | null
+  /** Animations of the aimed or held item. */
+  animations: AnimationInfo | null
   locked: boolean
   timeScale: number
   fast: boolean
@@ -52,7 +54,7 @@ export interface UiOptions {
   strings: RoomStrings
   t: (key: string, vars?: Record<string, string | number>) => string
   log: WritableLog
-  groups: Map<string, TestRoomItem[]>
+  groups: () => Map<string, TestRoomItem[]>
   loadout: () => Array<{ id: string; name: string }>
   onSpawn: (itemId: string) => void
   onEquip: (itemId: string) => void
@@ -67,12 +69,15 @@ export interface UiOptions {
   onRunAll: () => Promise<ScenarioReport | void>
   onTool: (index: number) => void
   onTap: () => void
+  onPlay: (objectId: string, clipId: string) => void
   onResize: () => void
 }
 
 export interface RoomUi {
   hud(state: HudState): void
   toast(text: string): void
+  /** Re-read the catalogue and the scenarios (after `loadModule`). */
+  refresh(): void
   togglePanels(): void
   dispose(): void
 }
@@ -121,7 +126,9 @@ const CSS = `
 .tr-tabs{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px}
 .tr-items{display:grid;grid-template-columns:1fr 1fr;gap:4px}
 .tr-item{display:flex;gap:2px}.tr-item .tr-btn:first-child{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tr-cat{flex:0 1 auto;max-height:46%}
+.tr-cat{flex:0 1 auto;max-height:40%}
+.tr-anim{flex:0 0 auto;max-height:18%}
+.tr-anim .list{display:flex;flex-wrap:wrap;gap:4px}.tr-anim .sub{color:#9aa3b2;margin-bottom:4px}
 .tr-tests{flex:1 1 auto;min-height:100px}
 .tr-tests .list{display:flex;flex-direction:column;gap:3px;margin-top:6px}.tr-tests .list .tr-btn{text-align:left}
 .tr-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;align-items:center}
@@ -270,18 +277,18 @@ export function createUi(o: UiOptions): RoomUi {
   // right: catalogue and tests
   const right = mk('div', 'tr-right')
   const cat = mk('div', 'tr-panel tr-cat')
+  const anim = mk('div', 'tr-panel tr-anim')
   const tests = mk('div', 'tr-panel tr-tests')
-  right.append(cat, tests)
+  right.append(cat, anim, tests)
 
   cat.appendChild(mk('h3', undefined, t('ui.catalog')))
   const tabs = mk('div', 'tr-tabs')
   const items = mk('div', 'tr-items')
   cat.append(tabs, items)
-  const groupNames = [...o.groups.keys()]
-  let activeGroup = groupNames[0] ?? ''
+  let activeGroup = ''
   const renderItems = (): void => {
     items.textContent = ''
-    for (const it of o.groups.get(activeGroup) ?? []) {
+    for (const it of o.groups().get(activeGroup) ?? []) {
       const wrap = mk('div', 'tr-item')
       const b = mk('button', 'tr-btn', it.name)
       b.type = 'button'
@@ -298,20 +305,22 @@ export function createUi(o: UiOptions): RoomUi {
       items.appendChild(wrap)
     }
   }
-  const tabBtns: HTMLButtonElement[] = []
-  for (const g of groupNames) {
-    const b = mk('button', 'tr-btn', g)
-    b.type = 'button'
-    b.onclick = () => {
-      activeGroup = g
-      tabBtns.forEach((x) => x.classList.toggle('on', x === b))
-      renderItems()
+  const renderTabs = (): void => {
+    tabs.textContent = ''
+    const groupNames = [...o.groups().keys()]
+    if (!groupNames.includes(activeGroup)) activeGroup = groupNames[0] ?? ''
+    for (const g of groupNames) {
+      const b = mk('button', g === activeGroup ? 'tr-btn on' : 'tr-btn', g)
+      b.type = 'button'
+      b.onclick = () => {
+        activeGroup = g
+        renderTabs()
+      }
+      tabs.appendChild(b)
     }
-    tabBtns.push(b)
-    tabs.appendChild(b)
+    renderItems()
   }
-  tabBtns[0]?.classList.add('on')
-  renderItems()
+  renderTabs()
 
   const controls = mk('div', 'tr-row')
   const ctl = (label: string, fn: (b: HTMLButtonElement) => void): HTMLButtonElement => {
@@ -371,21 +380,26 @@ export function createUi(o: UiOptions): RoomUi {
     }
     summary.textContent = t('ui.report', { passed: rep.passed, failed: rep.failed })
   }
-  for (const s of o.scenarios()) {
-    const b = mk('button', 'tr-btn', s.name)
-    b.type = 'button'
-    b.onclick = async () => {
-      if (busy) return
-      busy = true
-      try {
-        mark(await o.onRun(s))
-      } finally {
-        busy = false
+  const renderScenarios = (): void => {
+    list.textContent = ''
+    scBtns.clear()
+    for (const s of o.scenarios()) {
+      const b = mk('button', 'tr-btn', s.name)
+      b.type = 'button'
+      b.onclick = async () => {
+        if (busy) return
+        busy = true
+        try {
+          mark(await o.onRun(s))
+        } finally {
+          busy = false
+        }
       }
+      scBtns.set(s.id, b)
+      list.appendChild(b)
     }
-    scBtns.set(s.id, b)
-    list.appendChild(b)
   }
+  renderScenarios()
   runAll.onclick = async () => {
     if (busy) return
     busy = true
@@ -459,6 +473,30 @@ export function createUi(o: UiOptions): RoomUi {
     if (i.note) insp.appendChild(mk('div', undefined, i.note))
   }
 
+  let lastAnim = ''
+  const renderAnimations = (a: AnimationInfo | null): void => {
+    anim.textContent = ''
+    anim.appendChild(mk('h3', undefined, t('ui.animations')))
+    if (!a) {
+      anim.appendChild(mk('div', 'sub', t('ui.animations_aim')))
+      return
+    }
+    anim.appendChild(mk('div', 'sub', a.name))
+    if (a.clips.length === 0) {
+      anim.appendChild(mk('div', 'sub', t('ui.animations_none')))
+      return
+    }
+    const l = mk('div', 'list')
+    for (const c of a.clips) {
+      const b = mk('button', a.playing === c.id ? 'tr-btn on' : 'tr-btn', `▶ ${t(`anim.${c.id}`) === `anim.${c.id}` ? c.id : t(`anim.${c.id}`)} (${num(c.duration, 1)} s)`)
+      b.type = 'button'
+      b.onclick = () => o.onPlay(a.objectId, c.id)
+      l.appendChild(b)
+    }
+    anim.appendChild(l)
+  }
+  renderAnimations(null)
+
   let toastTimer: ReturnType<typeof setTimeout> | null = null
   const slotsEl: HTMLButtonElement[] = []
   let lastSlotsKey = ''
@@ -512,6 +550,11 @@ export function createUi(o: UiOptions): RoomUi {
       slotsEl.forEach((b, i) => b.classList.toggle('on', i === s.slot))
       tapBtn.classList.toggle('on', s.tap)
       count.textContent = t('ui.objects', { n: s.objects })
+      const ak = JSON.stringify(s.animations)
+      if (ak !== lastAnim) {
+        lastAnim = ak
+        renderAnimations(s.animations)
+      }
       const ik = JSON.stringify(s.inspect)
       if (ik !== lastInspect) {
         lastInspect = ik
@@ -524,6 +567,10 @@ export function createUi(o: UiOptions): RoomUi {
       toastTimer = setTimeout(() => {
         toastTimer = null
       }, 2000)
+    },
+    refresh() {
+      renderTabs()
+      renderScenarios()
     },
     togglePanels,
     dispose() {

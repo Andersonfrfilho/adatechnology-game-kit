@@ -14,6 +14,7 @@ import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adate
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
+import type { AnimationClipSpec, DestructibleImpl, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -44,6 +45,13 @@ export interface TestRoomItem {
   fluid?: { container: ContainerSpec; part?: string; uses?: string[]; offset?: Vec3 }
   /** The item is also a weapon the player can equip from the catalogue (e.g. a crowbar, a knife, a pistol on the table). */
   weapon?: string
+  /**
+   * The item's own destruction (a `DestructibleImpl` of a game module). The room registers it in the world (`world.register`) instead of
+   * building a default object from `spec`; `id` is the object id the room gives it and `DestructibleImpl.id` must be that id. Impl items are not movable.
+   */
+  impl?: (root: THREE_NS.Object3D, id: string) => DestructibleImpl
+  /** Use animations the item brings (see `TestRoom.playAnimation`). Part poses move the child of the built object named after the part id. */
+  animations?: AnimationClipSpec[]
 }
 
 export interface TestRoomOptions {
@@ -145,7 +153,42 @@ export interface TestRoom {
   readonly log: TestRoomLog
   /** Run scripted checks (no input needed; works headless in tests and from the browser console). */
   runScenarios(scenarios?: TestRoomScenario[]): Promise<ScenarioReport>
+  /**
+   * Load a module that follows the `TestableModule` contract of `@adatechnology/game-contracts`: its items join the catalogue under `module.group`,
+   * its scenarios become buttons, and the contract checks run now (`checkDestructible` for every item with an `impl`, `checkAnimation` for every
+   * clip) writing a check line (pass or fail) per result to the log. Loading the same module twice replaces its items and scenarios.
+   */
+  loadModule(module: TestableModule<ScenarioContext>): ModuleReport
+  /** Animations of the aimed (or held) item: what the animations panel shows. */
+  animations(): AnimationInfo | null
+  /**
+   * Play an animation clip of an item (default the held, else the aimed one). Returns false when there is no such item or clip. Poses are
+   * offsets from the rest pose, interpolated linearly; the item keeps the last pose. Events are logged (and `sound` events reach `onSound`).
+   */
+  playAnimation(clipId: string, objectId?: string): boolean
   dispose(): void
+}
+
+/** What `TestRoom.loadModule` did. */
+export interface ModuleReport {
+  module: string
+  /** Catalogue ids added. */
+  items: string[]
+  /** Scenario ids added. */
+  scenarios: string[]
+  /** Every contract check passed. */
+  ok: boolean
+  /** Each failed check, in words. */
+  problems: string[]
+}
+
+export interface AnimationInfo {
+  objectId: string
+  itemId: string
+  name: string
+  clips: Array<{ id: string; duration: number }>
+  /** Clip playing now, if any. */
+  playing: string | null
 }
 
 /**
@@ -223,3 +266,11 @@ export interface ScenarioReport {
 }
 
 export type { DestructionEvent, Vec3 }
+export type {
+  AnimationClipSpec,
+  ItemAnimationContract,
+  DestructibleImpl,
+  TestableModule,
+  TestableItem,
+  ModuleScenario,
+} from '@adatechnology/game-contracts'

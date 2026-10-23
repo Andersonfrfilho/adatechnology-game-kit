@@ -6,6 +6,8 @@ check the behaviour and write pass/fail lines to the same log.
 
 It composes `@adatechnology/game-destruction`, `game-destruction-three`, `game-weapons`, `game-fluids` and `game-fluids-three`. `three` is a peer dependency used only as a type: you pass the namespace in.
 
+Contracts live in [`@adatechnology/game-contracts`](../game-contracts); the types are re-exported here, so existing imports keep working.
+
 ## Install
 
 ```sh
@@ -55,6 +57,16 @@ const room = createTestRoom({
 
 `DEMO_MATERIALS` is now empty (kept for compatibility: the demo items use only core materials). `buildFromSpec` turns a `DestructibleSpec` into meshes,
 and `brickWallSpec` / `DEMO_ITEMS` / `SCENARIOS` are exported to reuse or extend.
+
+## Loading a module
+
+A game module hands the room a `TestableModule` from `@adatechnology/game-contracts` (items, each with an optional `impl` for its own destruction and `animations`, plus scenarios):
+
+```ts
+const report = room.loadModule(RENTAL_CARS) // { module, items, scenarios, ok, problems }
+```
+
+The items join the catalogue under the module's group and its scenarios become buttons. The contract checks run at once and write one line per result to the log: `checkDestructible` for every item with an `impl`, `checkAnimation` for every clip (`✓ Rental car: destructible contract ok (4 parts...)` or `✗ ...: <problem>`). The animations panel lists the clips of the aimed or held item; `room.playAnimation(clipId)` plays one (poses are offsets from the rest pose, events go to the log and `sound` events to `onSound`). The example (`examples/test-room`) loads a `DEMO_MODULE` rental car that owns its damage rule, its door `open` clip and a wheel that comes off with a wrench.
 
 ## Controls
 
