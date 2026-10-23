@@ -178,4 +178,17 @@ describe('buildLot budget', () => {
     const high2 = buildLot(p.slice(0, 20), resolve, { seed: 5, quality: 'high', smallPlantsLod: 0, triangleBudget: Infinity })
     expect(high.triangleCount).toBe(high2.triangleCount)
   })
+  it('thins grass first and keeps trees at LOD1 while the budget can still be met', () => {
+    const trees: Placement[] = Array.from({ length: 10 }, (_, i) => ({ species: 'tree', x: i * 4 - 18, z: 0, ry: i, scale: 1, seed: i + 1 }))
+    const grass: Placement[] = Array.from({ length: 120 }, (_, i) => ({ species: 'grass', x: (i % 20) - 10, z: 6 + Math.floor(i / 20), ry: i, scale: 1, seed: 100 + i }))
+    const treesOnly = buildLot(trees, resolve, { seed: 5, quality: 'game' }).triangleCount
+    const all = [...trees, ...grass]
+    const free = buildLot(all, resolve, { seed: 5, quality: 'game', triangleBudget: Infinity })
+    const budget = treesOnly + Math.round((free.triangleCount - treesOnly) * 0.5)
+    const lot = buildLot(all, resolve, { seed: 5, quality: 'game', triangleBudget: budget })
+    expect(lot.triangleCount).toBeLessThanOrEqual(budget)
+    expect(lot.thinnedCount).toBeGreaterThan(0)
+    expect(lot.lodCounts[1]).toBe(10)
+    expect(lot.lodCounts[0] + lot.lodCounts[1] + lot.lodCounts[2] + lot.thinnedCount).toBe(130)
+  })
 })

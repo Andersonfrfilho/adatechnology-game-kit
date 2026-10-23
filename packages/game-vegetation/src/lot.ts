@@ -17,6 +17,10 @@ export interface Lot {
   colliders: LotColliderData[]
   triangleCount: number
   plantCount: number
+  /** grass tufts left out to meet the triangle budget */
+  thinnedCount: number
+  /** plants kept at LOD0, LOD1 and LOD2 */
+  lodCounts: [number, number, number]
 }
 
 export interface BuildLotOptions {
@@ -34,8 +38,8 @@ export interface BuildLotOptions {
   /** plants not taller than this (meters, after placement scale) count as small (default 0.7) */
   smallPlantMaxHeight?: number
   /**
-   * Soft triangle cap for the whole lot. When the plants exceed it, the smallest ones are switched to LOD2 (smallest
-   * first, trees last) until the lot fits. Default: 20000 in 'game' quality, unlimited in 'high' quality.
+   * Soft triangle cap for the whole lot. When the plants exceed it: some grass tufts are left out first, then small
+   * plants, then shrubs / hedges, and only then trees and palms are switched to LOD2 (smallest first) until the lot fits. Default: 20000 in 'game' quality, unlimited in 'high' quality.
    */
   triangleBudget?: number
 }
@@ -55,7 +59,7 @@ export function buildLot(placements: Placement[], resolveSpec: (id: string) => P
   const flowers = new MeshBuilder()
   const colliders: LotColliderData[] = []
   const cache = new Map<string, PlantSpec>()
-  const entries: { p: Placement; plant: PlantMesh; go: GenerateOptions; spec: PlantSpec }[] = []
+  const entries: { p: Placement; plant: PlantMesh; go: GenerateOptions; spec: PlantSpec; dropped?: boolean }[] = []
   let total = 0
   for (const p of placements) {
     let spec = cache.get(p.species)
@@ -74,18 +78,38 @@ export function buildLot(placements: Placement[], resolveSpec: (id: string) => P
     total += plant.triangleCount
     entries.push({ p, plant, go, spec })
   }
+  let thinned = 0
   if (total > budget) {
-    // over budget: drop the smallest plants still above LOD2 to LOD2 until the lot fits
-    const order = entries.map((e, i) => i).filter((i) => entries[i].plant.lod < 2).sort((a, b) => entries[a].plant.bounds.height * entries[a].p.scale - entries[b].plant.bounds.height * entries[b].p.scale)
-    for (const i of order) {
-      if (total <= budget) break
-      const e = entries[i]
-      const cheap = generate(e.spec, { ...e.go, lod: 2 })
-      total += cheap.triangleCount - e.plant.triangleCount
-      e.plant = cheap
+    const kindOf = (e: (typeof entries)[number]): number => {
+      const a = e.spec.archetype
+      if (a === 'grass_tuft' && e.plant.bounds.height * e.p.scale < 1) return 0
+      if (a === 'broadleaf_tree' || a === 'conifer' || a === 'dead_tree' || a === 'palm' || a === 'banana') return 3
+      return e.plant.bounds.height * e.p.scale <= smallMax ? 1 : 2
+    }
+    const cost = (e: (typeof entries)[number]): number => e.plant.triangleCount
+    // 1) thin out grass tufts and weeds (a deterministic share, in hash order): they are tiny
+    const grass = entries.filter((e) => kindOf(e) === 0).sort((a, b) => hashMix(a.p.seed, 7) - hashMix(b.p.seed, 7))
+    const keepMin = Math.ceil(grass.length * 0.2)
+    for (let i = 0; i < grass.length - keepMin && total > budget; i++) {
+      total -= cost(grass[i])
+      grass[i].dropped = true
+      thinned++
+    }
+    // 2..4) small plants, then shrubs / hedges / the rest, then trees and palms: drop to LOD2, smallest first
+    for (const kind of [1, 2, 3]) {
+      const group = entries.filter((e) => !e.dropped && kindOf(e) === kind && e.plant.lod < 2).sort((a, b) => a.plant.bounds.height * a.p.scale - b.plant.bounds.height * b.p.scale)
+      for (const e of group) {
+        if (total <= budget) break
+        const cheap = generate(e.spec, { ...e.go, lod: 2 })
+        total += cheap.triangleCount - e.plant.triangleCount
+        e.plant = cheap
+      }
     }
   }
-  for (const { p, plant } of entries) {
+  const lodCounts: [number, number, number] = [0, 0, 0]
+  for (const { p, plant, dropped } of entries) {
+    if (dropped) continue
+    lodCounts[plant.lod]++
     const { parts } = plant
     if (parts.wood) wood.appendMesh(parts.wood, p.x, 0, p.z, p.ry, p.scale)
     if (parts.spines) wood.appendMesh(parts.spines, p.x, 0, p.z, p.ry, p.scale)
@@ -105,5 +129,5 @@ export function buildLot(placements: Placement[], resolveSpec: (id: string) => P
   }
   for (const k of Object.keys(meshes) as (keyof Lot['meshes'])[]) if (!meshes[k]) delete meshes[k]
   const triangleCount = (meshes.wood?.triangleCount ?? 0) + (meshes.foliage?.triangleCount ?? 0) + (meshes.flowers?.triangleCount ?? 0)
-  return { meshes, colliders, triangleCount, plantCount: placements.length }
+  return { meshes, colliders, triangleCount, plantCount: placements.length, thinnedCount: thinned, lodCounts }
 }
