@@ -187,5 +187,23 @@
     "aria": "Mapa de danos visto de cima, frente para cima",
     "noZones": "Este veículo não tem zonas.",
     "health": "Saúde geral"
+  },
+  "mechanics": {
+    "chassis": "Chassi",
+    "battery": "Bateria",
+    "alternator": "Alternador",
+    "gearbox": "Caixa de câmbio",
+    "brakes": "Freios",
+    "steering": "Direção",
+    "shock_absorbers": "Amortecedores",
+    "tow_hitch": "Engate de reboque",
+    "oil_pan": "Cárter",
+    "mirror": "Retrovisor {sideM}",
+    "tyre": "Pneu ({zone})",
+    "pillar_a": "Coluna A {sideM}",
+    "pillar_c": "Coluna C {sideM}",
+    "engine": "Motor",
+    "radiator": "Radiador",
+    "fuel_tank": "Tanque de combustível"
   }
 }

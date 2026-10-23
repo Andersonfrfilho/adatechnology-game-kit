@@ -187,5 +187,23 @@
     "aria": "Damage map seen from above, front up",
     "noZones": "This vehicle has no zones.",
     "health": "Overall health"
+  },
+  "mechanics": {
+    "chassis": "Chassis frame",
+    "battery": "Battery",
+    "alternator": "Alternator",
+    "gearbox": "Gearbox",
+    "brakes": "Brakes",
+    "steering": "Steering",
+    "shock_absorbers": "Shock absorbers",
+    "tow_hitch": "Tow hitch",
+    "oil_pan": "Oil pan",
+    "mirror": "{Side} mirror",
+    "tyre": "{zone} tyre",
+    "pillar_a": "{Side} A pillar",
+    "pillar_c": "{Side} C pillar",
+    "engine": "Engine",
+    "radiator": "Radiator",
+    "fuel_tank": "Fuel tank"
   }
 }
