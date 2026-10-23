@@ -58,9 +58,10 @@ Legenda: ✅ decidido (data e resposta), ⏳ aguardando o dono, 🔁 decidido pe
 | P7 | Penetração | Bestiário: 9 mm atravessa 2 corpos; jogo: modelo de custo por membro | — | ✅ 2026-10-23: **força da arma contra a resistência de cada ponto do corpo**: o calibre tem força de penetração (energia), cada um dos 11 segmentos tem resistência (osso, carne, roupa e proteção); o tiro atravessa enquanto sobra força e perde o que cada parte resistiu. Calibrado para reproduzir a tabela do Bestiário (9 mm 2 corpos, 5,56 3, .308 4) |
 | P8 | Desmembramento | Dividido em 3: regra do Elenco, dinâmica do Arsenal, versão barata do jogo | Juntar os três em `game-characters` | 🔁 |
 | P9 | NPCs só do jogo (Cícero, Sandra) | Não estão em Os Vivos nem nos Retratos | — | ✅ 2026-10-23: **gerador de histórias**: várias histórias escritas com papéis; nomes e quem faz cada papel sorteados na criação do mundo, com histórias que se cruzam e partidas sempre diferentes. Cícero e Sandra viram papéis. Motor genérico no SDK (novo pacote, nome a definir, ex. `game-stories`); histórias e listas de nomes do ZombiAdA no repositório do jogo |
-| P10 | Animais | 13 espécies na página; o jogo usa 9, sem regra de bicho zumbi | Portar as 13 com o visual de infectado; regra de jogo depois | ⏳ |
-| P11 | Pacote dos 13 tipos de zumbi | — | `game-characters-undead` genérico (serve a outro jogo de zumbi); nomes e histórias no conteúdo | ⏳ |
-| P12 | Horda | Bancada e jogo; não existe no SDK | Pacote próprio `game-crowd`, ligado ao `game-infection` por `materialize`/`giveBack` | ⏳ |
+| P10 | Animais | 13 espécies na página; o jogo usa 9, sem regra de bicho zumbi | — | ✅ 2026-10-23: as 13 espécies com os três visuais (vivo, infectado, morto) e a **regra de infecção de animal no SDK** (quem pega e como age), que o jogo liga ou desliga |
+| P11 | Pacote dos 13 tipos de zumbi | — | — | ✅ 2026-10-23: `game-characters-undead` genérico no SDK, com os 13 tipos e o comportamento; nomes e histórias no repositório do jogo |
+| P12 | Horda | Bancada e jogo; não existe no SDK | — | ✅ 2026-10-23: **`game-crowd` genérico** no SDK: qualquer multidão (horda, civis fugindo, manada, revoada, enxame), não só zumbi; ligado ao `game-infection` por `materialize`/`giveBack` |
+| P13 | Ficha de personagem (atributos, habilidades, traços, derivados) | Documento Personagens; o jogo usa ficha fixa 5-5-5-5-5-5 | — | ✅ 2026-10-23: no SDK, junto com o gerador de histórias (sorteia na criação), e a ficha **acumula as decisões e as histórias** vividas pelo personagem, que o gerador usa para cruzar as próximas |
 
 ## 4. Casas e mapa (Fase 2 e 8)
 
