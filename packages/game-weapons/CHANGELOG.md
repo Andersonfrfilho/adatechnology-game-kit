@@ -1,5 +1,15 @@
 # @adatechnology/game-weapons
 
+## 0.1.1
+
+### Patch Changes
+
+- 3a094cc: Add the `kick` and `shove` melee tools (pt-BR "chute" and "empurrão") to the arsenal and the default loadout; in the test room V kicks whatever tool is selected, and a `kick_detaches_leg_via_tool` scenario covers the hotbar path.
+- 5954706: Add `machete` and `utility_knife` to `DEFAULT_LOADOUT`.
+- Updated dependencies [930b9ab]
+- Updated dependencies [632a45a]
+  - @adatechnology/game-contracts@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
