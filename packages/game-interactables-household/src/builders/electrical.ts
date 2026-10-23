@@ -221,3 +221,99 @@ export function washingMachine(c: Ctx): void {
   plugged(c, 'washer', 'appliance', 500, [hw * 0.5, 0.15, -hd], { part: 'dial', on: c.M.on, fixture: 'inlet' })
   c.interact('use_washer', [0.04, h - 0.07, zf + 0.03], { do: 'toggle_device', device: 'washer' }, 'prompt.washing_machine', 1.2)
 }
+
+// ---------------------------------------------------------------------------------------------------------------------------------
+// Breaker panel and meter box
+// ---------------------------------------------------------------------------------------------------------------------------------
+
+/** Wall breaker panel: a door over a DIN rail with one rocker part per circuit (`item.circuits`), each toggling its building circuit. */
+export function electricalPanel(c: Ctx): void {
+  const { hw, hd, h, y0 } = c
+  const circuits = c.M.circuits && c.M.circuits.length > 0 ? c.M.circuits : [{ id: 'main' }]
+  const n = circuits.length
+  const body = c.main(0xc9cdd0)
+  const y1 = y0 + h
+  const dt = 0.012
+  const zf = hd
+  const sh = shell(c, { x0: -hw, x1: hw, y0, y1, z0: -hd, z1: zf - dt - 0.003, color: body, inner: 0xe4e6e8, t: 0.012, tBack: 0.008, material: 'metal' })
+  const cols = n > 6 ? 2 : 1
+  const rows = Math.ceil(n / cols)
+  const top = sh.iy1 - 0.04
+  const bottom = sh.iy0 + 0.04
+  const pitch = Math.min(0.07, (top - bottom) / rows)
+  const colW = (sh.ix1 - sh.ix0 - 0.04) / cols
+  const bw = Math.min(0.06, colW - 0.05)
+  const zb = sh.iz0 + 0.04
+  for (let k = 0; k < cols; k++) c.b('metal', sh.ix0 + 0.02 + k * colW + colW / 2 - 0.008, bottom - 0.01, sh.iz0, sh.ix0 + 0.02 + k * colW + colW / 2 + 0.008, top + 0.01, sh.iz0 + 0.012, 0x8a8e92) // DIN rail
+  const used = new Set<string>()
+  circuits.forEach((circ, i) => {
+    const col = Math.floor(i / rows)
+    const row = i % rows
+    const cx = sh.ix0 + 0.02 + col * colW + colW / 2
+    const cy = top - (row + 0.5) * pitch
+    let part = `breaker_${circ.id.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`
+    if (used.has(part)) part = `${part}_${i}`
+    used.add(part)
+    c.b('plain', cx - bw / 2, cy - pitch / 2 + 0.004, sh.iz0 + 0.012, cx + bw / 2, cy + pitch / 2 - 0.004, zb, 0x2a2c30) // breaker module
+    c.b('plain', cx - bw / 2 - 0.045, cy - 0.008, sh.iz0 + 0.012, cx - bw / 2 - 0.006, cy + 0.008, sh.iz0 + 0.016, 0xf4f4f0) // label tag
+    c.part(
+      part, [cx, cy, zb], { kind: 'rocker', axis: [1, 0, 0], angle: 0.4 },
+      () => {
+        c.b('plain', cx - bw * 0.3, cy - pitch * 0.3, zb, cx + bw * 0.3, cy + pitch * 0.3, zb + 0.016, 0xe8e8e8)
+        c.b('plain', cx - bw * 0.3, cy + pitch * 0.05, zb + 0.016, cx + bw * 0.3, cy + pitch * 0.3, zb + 0.0175, 0xd04030)
+      },
+      { t0: 1, requires: 'door', at: false, noSweep: true },
+    )
+    const action: { do: 'toggle_breaker'; circuit: string; part: string; name?: string } = { do: 'toggle_breaker', circuit: circ.id, part }
+    if (circ.label) action.name = circ.label
+    c.interact(`toggle_${part}`, [round3(cx), round3(cy), round3(zb + 0.02)], action, 'prompt.breaker', 0.9)
+  })
+  hingedDoor(c, {
+    id: 'door', x0: -hw + 0.003, x1: hw - 0.003, y0: y0 + 0.003, y1: y1 - 0.003, zf, t: dt, side: 'left', color: shade(body, 1.04), inner: 0xd8dadc, style: 'flat', handle: 'none', angle: 1.7, label: 'prompt.panel_door',
+    extra: () => {
+      c.b('plain', hw - 0.05, (y0 + y1) / 2 - 0.02, zf, hw - 0.02, (y0 + y1) / 2 + 0.02, zf + 0.008, 0x5a5e62) // latch
+      c.b('plain', -hw + 0.04, y1 - 0.06, zf, hw - 0.04, y1 - 0.03, zf + 0.002, 0xe8e8e0) // circuit directory card
+    },
+  })
+  c.spec.colliders = []
+}
+
+/** Utility meter box: grey case, a dial meter behind a glass window in the door, a lead seal on the latch. */
+export function powerMeter(c: Ctx): void {
+  const { hw, hd, h, y0 } = c
+  const body = c.main(0x8a8e92)
+  const y1 = y0 + h
+  const dt = 0.014
+  const zf = hd
+  const sh = shell(c, { x0: -hw, x1: hw, y0, y1, z0: -hd, z1: zf - dt - 0.004, color: body, inner: 0xd4d6d6, t: 0.012, tBack: 0.01, material: 'metal' })
+  const cx = 0
+  const cy = (y0 + y1) / 2 + 0.02
+  const R = Math.min(hw - 0.04, 0.09)
+  c.rod('plain', 'z', cx, cy, sh.iz0 + 0.03, R, 0.03, 0xf2f2f0) // meter body
+  c.rod('plain', 'z', cx, cy, sh.iz0 + 0.046, R - 0.012, 0.004, 0xe8e8e0) // dial face
+  for (let i = 0; i < 5; i++) c.b('plain', cx - 0.05 + i * 0.02, cy + 0.025, sh.iz0 + 0.048, cx - 0.034 + i * 0.02, cy + 0.05, sh.iz0 + 0.05, 0x2a2a2a) // digits
+  c.rod('plain', 'z', cx, cy - 0.02, sh.iz0 + 0.049, 0.026, 0.002, 0xd8d0c0) // rotating disc seen through the slot
+  c.b('plain', cx - 0.05, y0 + 0.025, sh.iz0, cx + 0.05, y0 + 0.07, sh.iz0 + 0.04, 0x4a4a4e) // terminal block
+  const px = -hw + 0.004
+  const f = 0.028
+  const wy0 = y0 + 0.02
+  const wy1 = y1 - 0.02
+  const wx0 = -hw + 0.004
+  const wx1 = hw - 0.004
+  c.part(
+    'door', [px, (y0 + y1) / 2, zf - dt / 2], { kind: 'hinge', axis: [0, 1, 0], angle: -1.7 },
+    () => {
+      const z0 = zf - dt
+      c.b('metal', wx0, wy0, z0, wx1, wy0 + f, zf, shade(body, 1.1)) // frame around the window
+      c.b('metal', wx0, wy1 - f, z0, wx1, wy1, zf, shade(body, 1.1))
+      c.b('metal', wx0, wy0 + f, z0, wx0 + f, wy1 - f, zf, shade(body, 1.1))
+      c.b('metal', wx1 - f, wy0 + f, z0, wx1, wy1 - f, zf, shade(body, 1.1))
+      c.plane('glass', 0, (wy0 + wy1) / 2, z0 + dt * 0.6, wx1 - wx0 - 2 * f, wy1 - wy0 - 2 * f, 0x8aa0aa)
+      c.b('metal', wx1 - f - 0.012, (wy0 + wy1) / 2 - 0.025, zf, wx1 - f + 0.012, (wy0 + wy1) / 2 + 0.025, zf + 0.008, 0x5a5e62) // latch
+      c.rod('metal', 'z', wx1 - f, (wy0 + wy1) / 2 - 0.04, zf + 0.012, 0.008, 0.012, 0xc4c4cc) // lead seal
+      c.b('plain', wx1 - f - 0.002, (wy0 + wy1) / 2 - 0.036, zf + 0.002, wx1 - f + 0.002, (wy0 + wy1) / 2 - 0.02, zf + 0.004, 0xb8b8c0) // seal wire
+    },
+    { label: 'prompt.meter_door', at: [0, (y0 + y1) / 2, zf + 0.06], radius: 1.4 },
+  )
+  c.spec.colliders = []
+}

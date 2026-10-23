@@ -13,7 +13,7 @@ function fitsSize(size: number[], max: number[]): boolean {
 
 describe('catalog and data', () => {
   it('has the expected types', () => {
-    expect(TYPES.length).toBe(37)
+    expect(TYPES.length).toBe(39)
     for (const t of ['fridge', 'fridge_compact', 'kitchen_cabinet_base', 'kitchen_cabinet_wall', 'pantry', 'wardrobe', 'dresser', 'nightstand', 'bathroom_cabinet', 'stove', 'gas_bottle', 'sink_kitchen', 'sink_bathroom', 'shower', 'toilet', 'utility_sink', 'wall_socket', 'wall_switch', 'service_entrance', 'conduit_run', 'tv', 'microwave', 'washing_machine', 'sofa', 'armchair', 'dining_chair', 'bed_double', 'bed_single', 'bench', 'blinds', 'curtain', 'trash_bin', 'wheelie_bin', 'mailbox', 'dog_house', 'bbq', 'clothesline']) expect(TYPES).toContain(t)
   })
 

@@ -141,3 +141,46 @@ describe('gas bottle in a cabinet', () => {
     expect(build('gas_bottle').spec.interactions!.every((i) => !i.requires)).toBe(true)
   })
 })
+
+describe('electrical panel and power meter', () => {
+  const circuits = [{ id: 'lights', label: 'Luzes' }, { id: 'sockets', label: 'Tomadas' }, { id: 'ac' }]
+
+  it('builds one rocker part per circuit, gated behind the door, and flips the building circuits', () => {
+    const { w } = world()
+    const b = build('electrical_panel', { circuits })
+    expect(b.spec.parts!.filter((p) => p.motion.kind === 'rocker').length).toBe(3)
+    expect(b.spec.parts!.filter((p) => p.motion.kind === 'rocker').every((p) => p.requires === 'door' && p.t0 === 1)).toBe(true)
+    expect(b.spec.interactions!.map((i) => i.action).filter((a) => a.do === 'toggle_breaker')).toEqual([
+      expect.objectContaining({ do: 'toggle_breaker', circuit: 'lights', name: 'Luzes' }),
+      expect.objectContaining({ do: 'toggle_breaker', circuit: 'sockets', name: 'Tomadas' }),
+      expect.objectContaining({ do: 'toggle_breaker', circuit: 'ac' }),
+    ])
+    w.add('q', b.spec, { x: 0, y: 0, z: 0, ry: 0 })
+    w.add('lamp', { type: 'lamp', devices: [{ id: 'bulb', kind: 'lamp', watts: 9, circuit: 'lights', on: true }] }, { x: 3, y: 0, z: 0, ry: 0 })
+    const flip = 'q:toggle_breaker_lights'
+    expect(w.act(flip)).toBe(false) // door closed
+    w.setPart('q', 'door', 1, true)
+    expect(w.interactables().find((i) => i.id === flip)!.label).toBe('Desligar Luzes')
+    expect(w.act(flip)).toBe(true)
+    expect(w.power.isPowered('lamp', 'bulb')).toBe(false)
+    expect(w.interactables().find((i) => i.id === flip)!.label).toBe('Ligar Luzes')
+    expect(w.act(flip)).toBe(true)
+    expect(w.power.isPowered('lamp', 'bulb')).toBe(true)
+  })
+
+  it('defaults to one main circuit and uses two columns for many circuits', () => {
+    expect(build('electrical_panel').spec.interactions!.filter((i) => i.action.do === 'toggle_breaker').length).toBe(1)
+    const many = Array.from({ length: 10 }, (_, i) => ({ id: `c${i}` }))
+    const b = build('electrical_panel', { circuits: many })
+    expect(b.spec.parts!.filter((p) => p.motion.kind === 'rocker').length).toBe(10)
+    expect(new Set(b.spec.parts!.map((p) => p.id)).size).toBe(11)
+  })
+
+  it('power meter has a door, a glass window and a seal', () => {
+    const b = build('power_meter')
+    expect(b.spec.parts!.map((p) => p.id)).toEqual(['door'])
+    const prims = b.rec.parts.door.primitives
+    expect(prims.some((p) => p.kind === 'plane' && p.material === 'glass')).toBe(true)
+    expect(prims.some((p) => p.kind === 'cylinder')).toBe(true)
+  })
+})

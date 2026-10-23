@@ -29,6 +29,8 @@ export interface HouseholdItem extends PropItem {
   controls?: string[]
   /** `gas_bottle` placed in a cabinet: the valve interaction is available only while this part (world-wide object id) is open. */
   requires?: { object: string; part: string }
+  /** `electrical_panel`: the circuits, one breaker each. Default: a single circuit `main`. */
+  circuits?: Array<{ id: string; label?: string }>
   /** `conduit_run`: polyline in object-local coordinates. */
   points?: Vec3[]
   /** `service_entrance`: where the drop wire ends (the house attachment point), object-local. */

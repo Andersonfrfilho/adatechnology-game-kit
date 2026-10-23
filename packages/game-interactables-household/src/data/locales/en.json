@@ -225,5 +225,13 @@
   "letter.flyer_3": "Garage sale this weekend. Furniture, tools and clothes.",
   "letter.postcard_1": "Greetings from the coast. The weather is great and the water is warm.",
   "letter.postcard_2": "Wish you were here. We climbed the mountain yesterday.",
-  "letter.postcard_3": "Happy birthday! See you at the party next month."
+  "letter.postcard_3": "Happy birthday! See you at the party next month.",
+  "type.electrical_panel": "Breaker panel",
+  "type.power_meter": "Power meter",
+  "prompt.panel_door": "Breaker panel",
+  "prompt.panel_door.open": "Close the breaker panel",
+  "prompt.panel_door.closed": "Open the breaker panel",
+  "prompt.breaker": "Breaker",
+  "prompt.breaker.on": "Switch off {circuit}",
+  "prompt.breaker.off": "Switch on {circuit}"
 }

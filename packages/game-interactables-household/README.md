@@ -1,6 +1,6 @@
 # @adatechnology/game-interactables-household
 
-Household content pack for [`@adatechnology/game-interactables`](../game-interactables): 37 objects for houses and yards (fridge, cabinets, wardrobe,
+Household content pack for [`@adatechnology/game-interactables`](../game-interactables): 39 objects for houses and yards (fridge, cabinets, wardrobe,
 drawers, stove, gas bottle, sinks, shower, toilet, sockets, service entrance, TV, sofa, beds, blinds, bins, mailbox, dog house, barbecue,
 clothesline...) modeled **with real depth**: doors hinged on the front edge that never go through the wall, hollow carcasses with lighter inner
 liners, real open-top drawers, door trays, handles, hinges and gaps between doors.
@@ -83,6 +83,8 @@ rotated by `ry`, which is always 0 in this pack), so the host makes one movable 
 | `circuit` | Circuit of a `wall_socket` and of the shower heater |
 | `controls` | Device ids a `wall_switch` toggles |
 | `points` | `conduit_run`: polyline in object-local coordinates |
+| `circuits` | `electrical_panel`: `[{ id, label? }]`, one breaker per circuit (default one circuit `main`) |
+| `requires` | `gas_bottle` in a cabinet: `{ object, part }` (world-wide object id); the valve is usable only while that part is open |
 | `house`, `sag` | `service_entrance`: where the drop wire ends (object-local) and how much it sags |
 | `variant` | `fridge`: `'steel'`; `pantry`: `'garage'` (open steel shelves, loot `garage_shelf`); `blinds`: `'wood'`, `'closed'` (starts with the slats closed); `dog_house`: `'no_bowl'` |
 
@@ -126,10 +128,12 @@ when closed, the slide distance is 0.75 x the inner depth, slots sit on the draw
 | `wall_socket` | 0.08 x 0.03 x 0.08, y 0.3 | plate with the holes of the region standard (BR NBR 14136 three round holes, US NEMA 5-15); `socket` |
 | `wall_switch` | 0.08 x 0.03 x 0.08, y 1.2 | `rocker` part; `switch` with `controls` from `item.controls` |
 | `service_entrance` | 0.6 x 0.5 x 6.5 | concrete pole, cross arm with insulators, meter box with `meter_door`; wires: `drop` (catenary to `item.house`), `riser` conduit, `earth` cable |
+| `electrical_panel` | 0.36 x 0.12 x 0.52, y 1.3 | wall breaker panel: `door`, DIN rail, one `breaker_<circuit>` rocker part per circuit (starts on, usable only with the door open) and a `toggle_breaker` interaction each |
+| `power_meter` | 0.24 x 0.16 x 0.34, y 1.4 | utility meter box: dial meter behind a `door` with a glass window and a lead seal |
 | `conduit_run` | - | no primitives; `item.points` becomes a `conduit` wire |
 | `tv` | 1.0 x 0.22 x 0.68 | stand, bezel, back shell, screen (the only `emissive` plane), `power` part; `tv` screen device with `socket: 'auto'`, `plug`, 6 channels, cord wire |
 | `microwave` | 0.5 x 0.38 x 0.3, y 0.9 | hollow cavity with turntable, `door`, `dial`; appliance device (plugged) |
-| `washing_machine` | 0.6 x 0.6 x 0.85 | cabinet with drum, round `door`, `dial`; appliance device (plugged) |
+| `washing_machine` | 0.6 x 0.6 x 0.85 | cabinet with drum, round `door`, `dial`; appliance device (plugged) that drives the `inlet` hose fixture (12 l/min while it runs) |
 
 ### Seating
 

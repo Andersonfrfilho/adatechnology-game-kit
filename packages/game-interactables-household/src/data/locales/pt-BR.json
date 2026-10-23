@@ -225,5 +225,13 @@
   "letter.flyer_3": "Bazar de garagem neste fim de semana. Móveis, ferramentas e roupas.",
   "letter.postcard_1": "Saudações do litoral. O tempo está ótimo e a água está quente.",
   "letter.postcard_2": "Queria que você estivesse aqui. Subimos a montanha ontem.",
-  "letter.postcard_3": "Feliz aniversário! Nos vemos na festa no mês que vem."
+  "letter.postcard_3": "Feliz aniversário! Nos vemos na festa no mês que vem.",
+  "type.electrical_panel": "Quadro de disjuntores",
+  "type.power_meter": "Medidor de energia",
+  "prompt.panel_door": "Quadro de disjuntores",
+  "prompt.panel_door.open": "Fechar o quadro de disjuntores",
+  "prompt.panel_door.closed": "Abrir o quadro de disjuntores",
+  "prompt.breaker": "Disjuntor",
+  "prompt.breaker.on": "Desligar {circuit}",
+  "prompt.breaker.off": "Ligar {circuit}"
 }
