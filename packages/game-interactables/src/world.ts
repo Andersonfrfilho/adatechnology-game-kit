@@ -278,24 +278,38 @@ export function createWorld(options: WorldOptions = {}): World {
     const xs = axisPoints(0)
     const ys = axisPoints(1)
     const zs = axisPoints(2)
+    // `blocked` only sees x/z, so only the floor footprint matters. About a vertical axis (and for slides) y never changes
+    // the footprint, so the x/z grid is enough; otherwise the footprint boundary is the projection of the box edges.
+    const flat = m.kind === 'slide' || Math.abs(axis[1]) > 0.999
+    const seen = new Set<string>()
+    const pts: Vec3[] = []
+    const add = (x: number, y: number, z: number): void => {
+      const key = `${x.toFixed(5)},${y.toFixed(5)},${z.toFixed(5)}`
+      if (seen.has(key)) return
+      seen.add(key)
+      pts.push([x, y, z])
+    }
+    if (flat) {
+      for (const x of xs) for (const z of zs) add(x, lo[1], z)
+    } else {
+      for (const x of xs) for (const y of [lo[1], hi[1]]) for (const z of [lo[2], hi[2]]) add(x, y, z)
+      for (const y of ys) for (const x of [lo[0], hi[0]]) for (const z of [lo[2], hi[2]]) add(x, y, z)
+      for (const z of zs) for (const x of [lo[0], hi[0]]) for (const y of [lo[1], hi[1]]) add(x, y, z)
+    }
     const tr = o.public.transform
     const pivot = p.spec.pivot
     for (let i = 1; i <= ANGLES; i++) {
       const tt = i / ANGLES
       const angle = m.kind === 'slide' ? 0 : (m.angle ?? Math.PI / 2) * tt
       const d = m.kind === 'slide' ? (m.distance ?? 0.4) * tt : 0
-      for (const x of xs) {
-        for (const y of ys) {
-          for (const z of zs) {
-            let q: Vec3 = [x, y, z]
-            if (angle !== 0) {
-              const r = rotateAxis([x - pivot[0], y - pivot[1], z - pivot[2]], axis, angle)
-              q = [pivot[0] + r[0], pivot[1] + r[1], pivot[2] + r[2]]
-            }
-            const w = localToWorld(tr, [q[0] + axis[0] * d, 0, q[2] + axis[2] * d])
-            if (blockedAt(w[0], w[2])) return (i - 1) / ANGLES
-          }
+      for (const [x, y, z] of pts) {
+        let q: Vec3 = [x, y, z]
+        if (angle !== 0) {
+          const r = rotateAxis([x - pivot[0], y - pivot[1], z - pivot[2]], axis, angle)
+          q = [pivot[0] + r[0], pivot[1] + r[1], pivot[2] + r[2]]
         }
+        const w = localToWorld(tr, [q[0] + axis[0] * d, 0, q[2] + axis[2] * d])
+        if (blockedAt(w[0], w[2])) return (i - 1) / ANGLES
       }
     }
     return 1

@@ -224,4 +224,27 @@ describe('fitSweep with part bounds', () => {
       expect(w.fitSweep('f', 'flap', () => false)).toBe(1)
     })
   }
+
+  it('samples the floor footprint only: a large slab costs a bounded number of blocked() calls', () => {
+    const big: ObjectSpec = {
+      type: 'gate',
+      parts: [
+        { id: 'door', pivot: [-1.5, 1, 0.1], motion: { kind: 'hinge', angle: -Math.PI / 2 }, bounds: [-1.5, 0, 0.05, 1.5, 2.5, 0.15] },
+        { id: 'flap', pivot: [0, 0.1, 0.1], motion: { kind: 'hinge', axis: [1, 0, 0], angle: 1.5 }, bounds: [-1.5, 0.1, 0.05, 1.5, 2.1, 0.15] },
+        { id: 'slab', pivot: [0, 0, 0], motion: { kind: 'slide', axis: [0, 0, 1], distance: 0.6 }, bounds: [-1.5, 0, 0.05, 1.5, 2.5, 0.15] },
+      ],
+    }
+    const { w } = world()
+    w.add('g', big, origin)
+    for (const part of ['door', 'flap', 'slab']) {
+      let calls = 0
+      const t0 = Date.now()
+      expect(w.fitSweep('g', part, () => { calls++; return false })).toBe(1)
+      expect(calls).toBeLessThan(20000)
+      expect(Date.now() - t0).toBeLessThan(250)
+    }
+    // exactness is unchanged: a wall still clamps each of them
+    expect(w.fitSweep('g', 'door', (_x, z) => z > 0.8)).toBeLessThan(1)
+    expect(w.fitSweep('g', 'slab', (_x, z) => z > 0.4)).toBeLessThan(1)
+  })
 })
