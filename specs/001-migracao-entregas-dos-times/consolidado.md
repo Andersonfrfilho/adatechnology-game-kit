@@ -32,10 +32,10 @@ Legenda: ✅ decidido (data e resposta), ⏳ aguardando o dono, 🔁 decidido pe
 
 | # | Decisão | O que as fontes dizem | Recomendação | Situação |
 |---|---|---|---|---|
-| A1 | Lista de armas | Arsenal: 67; Galeria: 71 de fogo + 4 que o documento não tem (PSG-1, SSG 69, MRAD, M200) + 6 lançadores | Entram todas as da Galeria; o documento é atualizado | ⏳ |
-| A2 | Dano: pontos ou joules | Arsenal usa pontos (35 para 9×19); SDK usa joules | Joules no motor; os pontos ficam como calibração no conteúdo do ZombiAdA | ⏳ |
-| A3 | Ruído | Arsenal 150/300/600 m; SDK na mesma ordem; jogo 60/110/130 m | Arsenal | ⏳ |
-| A4 | Dano por região | Arsenal: 5 regiões, braço 45, perna 55; Galeria: braço 60, perna 80; jogo: 11 segmentos (`zDamage`) | 11 segmentos do jogo (é o mais completo: calibre, capacete, colete) com a vida do Arsenal | ⏳ |
+| A1 | Lista de armas | Arsenal: 67; Galeria: 71 de fogo + 4 que o documento não tem (PSG-1, SSG 69, MRAD, M200) + 6 lançadores | — | ✅ 2026-10-23: **união de todas as fontes**: as 77 da Galeria (71 de fogo + 6 lançadores) e tudo o que as outras atualizações trazem: granadas e explosivos do Laboratório (luz, bomba caseira, claymore), molotov, lança-chamas, arco, besta e ferramentas do `game-weapons`, e os explosivos do jogo (`EXP`). O documento Arsenal é atualizado |
+| A2 | Dano: pontos ou joules | Arsenal usa pontos (35 para 9×19); SDK usa joules | — | ✅ 2026-10-23: joules no motor; os pontos do Arsenal são a calibragem que o repositório do jogo aplica |
+| A3 | Ruído | Arsenal 150/300/600 m; SDK na mesma ordem; jogo 60/110/130 m | — | ✅ 2026-10-23: Arsenal (150 / 300 / 600 m) |
+| A4 | Dano por região | Arsenal: 5 regiões, braço 45, perna 55; Galeria: braço 60, perna 80; jogo: 11 segmentos (`zDamage`) | — | ✅ 2026-10-23: 11 segmentos do jogo com a vida do Arsenal |
 | A5 | Tempo de recarga | Arsenal tem tempo tático e vazio; Galeria só animação | A regra é do Arsenal; a animação se ajusta ao tempo da regra | ⏳ |
 | A6 | Calibre do .50 BMG | Galeria 13,0 mm; SDK 12,7 mm | 12,7 mm (medida real) | 🔁 |
 | A7 | Calibres que faltam no SDK (9×18, 5,7×28, .44 Mag, .50 AE, 5,45×39, .30-30, 7,62×54R, .30-06, .300 WM, .408) | Só na Galeria | Entram todos | 🔁 |
