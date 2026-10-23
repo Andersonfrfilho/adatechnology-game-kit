@@ -621,13 +621,36 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     checkDestroyed(o, src)
   }
 
+  /**
+   * Distance from a world point to the joint's contact region: the overlap box of the two parts' bounds (or, when they only nearly touch, the box
+   * of the gap between them). Measuring to the joint centre would make a thick part untouchable: a blow on a trunk's surface is half the trunk's
+   * width away from a joint that sits on its axis.
+   */
+  const jointReach = (o: ObjRT, j: JointRT, point: Vec3): number => {
+    const A = partWorldAabb(o, o.parts[j.ia]), B = partWorldAabb(o, o.parts[j.ib])
+    let d2 = 0
+    for (let k = 0; k < 3; k++) {
+      const lo = Math.min(Math.max(A.min[k], B.min[k]), Math.min(A.max[k], B.max[k]))
+      const hi = Math.max(Math.max(A.min[k], B.min[k]), Math.min(A.max[k], B.max[k]))
+      const d = point[k] < lo ? lo - point[k] : point[k] > hi ? point[k] - hi : 0
+      d2 += d * d
+    }
+    return Math.sqrt(d2)
+  }
+  /** How far from the contact region a blow still counts: half the smallest dimension of the smaller part, at least 6 cm. */
+  const jointReachLimit = (o: ObjRT, j: JointRT): number => {
+    const pa = o.parts[j.ia], pb = o.parts[j.ib]
+    const small = pa.dims[0] * pa.dims[1] * pa.dims[2] <= pb.dims[0] * pb.dims[1] * pb.dims[2] ? pa : pb
+    return Math.max(0.06, 0.5 * Math.min(small.dims[0], small.dims[1], small.dims[2]))
+  }
+
   const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false) => {
     if (amount <= 0) return
     const mine = (o.byPart.get(p.spec.id) ?? []).filter((j) => !j.st.open)
     if (split && mine.length) amount /= mine.length
     for (const j of mine) {
       if (j.st.open) continue
-      if (near && vec.distance(jointWorld(o, j), near) > radius) continue
+      if (near && jointReach(o, j, near) > Math.max(radius, jointReachLimit(o, j))) continue
       j.st.hp -= amount
       if (j.st.hp <= 0) {
         j.st.hp = 0
