@@ -50,7 +50,7 @@ for (const lang of ['pt-BR', 'en']) {
     const checks = room.log.entries({ channel: 'check' }).filter((e) => e.data?.module === r.module)
     return { module: r.module, ok: r.ok, items: r.items.length, scenarios: r.scenarios.length, problems: r.problems, checks: checks.length, failed: checks.filter((e) => e.type !== 'pass').map((e) => e.text), clips: checks.filter((e) => e.data?.check === 'animation').length }
   })
-  check(`[${lang}] module loaded, 39 items, contract report ok`, rep.ok && rep.items === 39 && rep.problems.length === 0, rep)
+  check(`[${lang}] module loaded, 51 items, contract report ok`, rep.ok && rep.items === 51 && rep.problems.length === 0, rep)
   check(`[${lang}] every checkAnimation line in the room log passed`, rep.clips > 100 && rep.failed.length === 0, { clips: rep.clips, failed: rep.failed.slice(0, 3) })
 
   const spawned = await page.evaluate(() => {
@@ -75,7 +75,7 @@ for (const lang of ['pt-BR', 'en']) {
     const rep = await room.runScenarios(room.scenarios.filter((s) => s.id.startsWith('furniture_')))
     return { passed: rep.passed, failed: rep.failed, bad: rep.results.filter((r) => !r.ok).map((r) => `${r.id}: ${r.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) }
   })
-  check(`[${lang}] every furniture scenario is green`, report.failed === 0 && report.passed >= 12, report)
+  check(`[${lang}] every furniture scenario is green`, report.failed === 0 && report.passed >= 14, report)
 
   if (lang === 'pt-BR') {
     await page.close()
