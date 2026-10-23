@@ -1,5 +1,19 @@
 # @adatechnology/game-destruction
 
+## 0.1.1
+
+### Patch Changes
+
+- 745e342: Document that `state()` / `part()` return live read-only views and add `snapshot(id)`, a deep copy of the object's state.
+- cc23a66: Ballistic hits now only wear the joints of the part they hit, scaled by the energy that part absorbed (a bullet that goes through transfers little), instead of opening every joint near the entry point. A joint that opens now stays listed in `state(objectId).joints` with `open: true` and `openedBy`, even after `splitGroup` moves its parts.
+- d727a0c: Retune `green_wood`: an axe fells a 15 cm trunk in about 9 blows and a 30 cm trunk in about 36, a machete cuts a 3 cm branch in one, and 9 mm bullets only chip it (`damageScale.ballistic` 0.1).
+- f1e3349: Slash joint wear now measures from the hit to the joint's contact region (not its centre), with a reach of max(6 cm, half the smaller part's smallest dimension), so an axe on a thick trunk next to a branch joint wears it.
+- fd82f4a: `world.nearestJoint(objectId, point, maxDistance?, tool?)` takes an optional tool kind and then returns the nearest joint that tool can undo (falling back to the nearest joint of any kind only if none qualifies), so a wrench aimed at a wheel picks the hub bolt instead of the tyre clip. The test room's disassemble tool now passes its tool kind.
+- 632a45a: Add `DestructionWorld.setPartPose` (and the optional `DestructibleImpl.setPartPose`) so animated parts keep their collision and raycast shape in sync; the test room calls it for every animated part.
+- Updated dependencies [930b9ab]
+- Updated dependencies [632a45a]
+  - @adatechnology/game-contracts@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
