@@ -12,6 +12,8 @@ import { gasBottle, shower, sinkBathroom, sinkKitchen, stove, toilet, utilitySin
 import { armchair, bedDouble, bedSingle, bench, diningChair, sofa } from './builders/seating'
 import { bathroomCabinet, dresser, fridge, fridgeCompact, kitchenCabinetBase, kitchenCabinetWall, nightstand, pantry, wardrobe } from './builders/storage'
 import { blinds, curtain } from './builders/windows'
+import { bbq, clothesline } from './builders/outdoor'
+import { dogHouse, mailbox, trashBin, wheelieBin } from './builders/yard'
 import type { BuilderFn, Household, HouseholdApi, HouseholdItem, HouseholdOptions, HouseholdType, HouseholdTypeDef, Region } from './types'
 
 const BUILDERS: Record<string, BuilderFn> = {
@@ -46,6 +48,12 @@ const BUILDERS: Record<string, BuilderFn> = {
   bench,
   blinds,
   curtain,
+  trash_bin: trashBin,
+  wheelie_bin: wheelieBin,
+  mailbox,
+  dog_house: dogHouse,
+  bbq,
+  clothesline,
 }
 
 const DEFS = typesJson as HouseholdTypeDef[]
