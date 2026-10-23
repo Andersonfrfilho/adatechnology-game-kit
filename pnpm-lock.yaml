@@ -252,6 +252,10 @@ importers:
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
   packages/game-vehicles:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
     devDependencies:
       '@types/node':
         specifier: ^22.10.7
@@ -277,6 +281,9 @@ importers:
 
   packages/game-vehicles-fleet:
     devDependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
       '@adatechnology/game-vehicles':
         specifier: workspace:*
         version: link:../game-vehicles
