@@ -51,6 +51,7 @@
     "three": "^0.160.0"
   },
   "devDependencies": {
+    "@adatechnology/game-interactables-household": "workspace:*",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "three": "^0.160.1",

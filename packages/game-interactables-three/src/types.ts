@@ -17,7 +17,8 @@ export type Quality = 'high' | 'game'
 /**
  * What content packs draw through: the props primitives plus `part`.
  * `part(id, pivot, ry, draw)` runs `draw()` and routes every primitive drawn inside it into the movable part `id`.
- * `pivot` and the primitives' coordinates are object-local; the part's group origin sits at `pivot`, turned by `ry` around +y.
+ * `pivot` is object-local; the primitives drawn inside `draw` are in the part frame (relative to the pivot, turned by `ry`): the part's
+ * group origin sits at `pivot`, turned by `ry` around +y.
  */
 export interface HouseholdApi extends PropsApi {
   part(id: string, pivot: Vec3, ry: number, draw: () => void): void

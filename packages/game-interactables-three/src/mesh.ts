@@ -152,9 +152,8 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
   }
 
   const m4 = new THREE.Matrix4()
-  const mFinal = new THREE.Matrix4()
   const mItem = new THREE.Matrix4()
-  const mPartInv = new THREE.Matrix4()
+  const mTotal = new THREE.Matrix4()
   const n3 = new THREE.Matrix3()
   const v = new THREE.Vector3()
   const quat = new THREE.Quaternion()
@@ -171,23 +170,20 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
     return a
   }
 
-  /** Item transform (M.x, M.z, M.ry), then the inverse of the target frame. */
+  /**
+   * Item transform (M.x, M.z, M.ry). Inside a part the coordinates are already relative to the pivot (the `HouseholdApi.part`
+   * contract: the pack draws in the part frame), so nothing else is applied: the part group supplies pivot and `ry`.
+   */
   const frame = (M: PropItem | undefined): ThreeNS.Matrix4 => {
     mItem.makeRotationY(M?.ry ?? 0)
     mItem.setPosition(M?.x ?? 0, 0, M?.z ?? 0)
-    if (current.id === null) return mItem
-    mPartInv.makeRotationY(current.ry)
-    mPartInv.setPosition(current.pivot[0], current.pivot[1], current.pivot[2])
-    mPartInv.invert()
-    return mFinal.multiplyMatrices(mPartInv, mItem)
+    return mItem
   }
 
   const emit = (requested: MaterialKey, M: PropItem | undefined, local: ThreeNS.Matrix4, t: Template, hexColor: number, uv?: Uv): void => {
     const key: MaterialKey = requested in materials ? requested : 'plain'
     const a = accOf(key)
-    const fr = frame(M)
-    const total = fr === mFinal ? mFinal : mFinal.copy(fr)
-    total.multiply(local)
+    const total = mTotal.copy(frame(M)).multiply(local)
     n3.getNormalMatrix(total)
     const base = a.pos.length / 3
     color.setHex(hexColor)

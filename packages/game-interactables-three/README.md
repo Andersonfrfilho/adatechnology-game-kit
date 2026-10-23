@@ -56,7 +56,7 @@ Every function also exists unbound and takes `THREE` first: `createMeshApi(THREE
 - `part(id, pivot, ry, draw)` routes everything drawn inside `draw` into a group of its own, merged per material as well. The group origin is
   the pivot and it is turned by `ry`, so a hinge or slide axis is expressed in the part frame. Names are `part:<id>` and `userData.part = id`
   on the group **and** its meshes, so `raycaster.intersectObject(group, true)[0].object.userData.part` gives the part that was hit.
-- `M.x`, `M.z`, `M.ry` of each primitive's item are applied; pivots are object-local.
+- `M.x`, `M.z`, `M.ry` of each primitive's item are applied; pivots are object-local, coordinates drawn inside a part are relative to its pivot.
 - `materials` maps keys to your materials; missing keys get defaults with `vertexColors` (`MeshStandardMaterial` for `quality: 'high'`,
   `MeshLambertMaterial` for `'game'`, which also uses fewer segments). Atlas materials are yours to provide (a `CanvasTexture` of the atlas).
 - `api.light` creates a `PointLight` inside the right group; `finish()` also returns them as `lights`.

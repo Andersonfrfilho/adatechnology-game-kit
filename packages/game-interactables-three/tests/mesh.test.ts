@@ -62,8 +62,8 @@ describe('createMeshApi', () => {
     const { api, finish } = createMeshApi(THREE)
     api.box(M, 'plain', 0, 0, 0, 2, 1, 1, 0xffffff, 0, 0, 0)
     api.part('door', [1, 0, 0.5], Math.PI / 2, () => {
-      api.box(M, 'wood', 1, 0, 0.5, 0.1, 2, 1, 0x884422, 0, 0, 0)
-      api.box(M, 'metal', 1, 1, 0.5, 0.1, 0.1, 0.1, 0xcccccc, 0, 0, 0)
+      api.box(M, 'wood', 0, 0, 0, 0.1, 2, 1, 0x884422, 0, 0, 0)
+      api.box(M, 'metal', 0, 1, 0, 0.1, 0.1, 0.1, 0xcccccc, 0, 0, 0)
     })
     api.part('drawer', [0, 0, 0], 0, () => {
       api.box(M, 'wood', 0, 0, 0, 1, 1, 1, 0x884422, 0, 0, 0)
@@ -84,7 +84,7 @@ describe('createMeshApi', () => {
     // the static mesh does not contain the door geometry
     const staticMesh = group.children.find((c) => (c as THREE.Mesh).isMesh) as THREE.Mesh
     expect(staticMesh.geometry.getAttribute('position').count).toBe(24)
-    // world position of the door box centre is unchanged by the pivot move: (1, 1, 0.5)
+    // the door was drawn in the part frame: its box centre is the pivot (1, 0, 0.5) plus (0, 1, 0), turned by ry (here a no-op on x = z = 0)
     group.updateMatrixWorld(true)
     const wood = door.children.find((c) => c.userData.material === 'wood') as THREE.Mesh
     wood.geometry.computeBoundingBox()
@@ -99,7 +99,7 @@ describe('createMeshApi', () => {
 
   it('traces a raycast hit back to the part', () => {
     const { api, finish } = createMeshApi(THREE)
-    api.part('lid', [0, 1, 0], 0, () => api.box(M, 'plain', 0, 1, 0, 1, 0.1, 1, 0xffffff, 0, 0, 0))
+    api.part('lid', [0, 1, 0], 0, () => api.box(M, 'plain', 0, 0, 0, 1, 0.1, 1, 0xffffff, 0, 0, 0))
     const { group } = finish()
     group.updateMatrixWorld(true)
     const ray = new THREE.Raycaster(new THREE.Vector3(0, 5, 0), new THREE.Vector3(0, -1, 0))
@@ -139,7 +139,7 @@ describe('createMeshApi', () => {
 describe('applyPose', () => {
   const part = () => {
     const { api, finish } = createMeshApi(THREE)
-    api.part('p', [1, 0, 2], Math.PI / 2, () => api.box(M, 'plain', 1, 0, 2, 1, 1, 1, 0xffffff, 0, 0, 0))
+    api.part('p', [1, 0, 2], Math.PI / 2, () => api.box(M, 'plain', 0, 0, 0, 1, 1, 1, 0xffffff, 0, 0, 0))
     return finish().parts.p
   }
 

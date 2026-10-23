@@ -47,7 +47,9 @@ describe('rendered parts agree with the engine', () => {
     world.setPart('o', 'p', 0.6, true)
 
     const { api, finish } = createMeshApi(THREE)
-    api.part('p', pivot, ry, () => api.box({}, 'plain', at[0], at[1] - 0.005, at[2], 0.01, 0.01, 0.01, 0xffffff, 0, 0, 0))
+    // inside a part the primitives are in the part frame: relative to the pivot, turned back by ry
+    const l = new THREE.Vector3(at[0] - pivot[0], at[1] - pivot[1], at[2] - pivot[2]).applyAxisAngle(new THREE.Vector3(0, 1, 0), -ry)
+    api.part('p', pivot, ry, () => api.box({}, 'plain', l.x, l.y - 0.005, l.z, 0.01, 0.01, 0.01, 0xffffff, 0, 0, 0))
     const { group, parts } = finish()
     group.position.set(transform.x, transform.y, transform.z)
     group.rotation.y = transform.ry
