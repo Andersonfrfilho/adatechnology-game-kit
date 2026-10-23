@@ -12,7 +12,11 @@ import type * as THREE_NS from 'three'
 import type { DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
+import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
+
+export type { InspectInfo } from './ui'
+import type { InspectInfo } from './ui'
 
 export type ThreeNamespace = typeof THREE_NS
 
@@ -117,10 +121,26 @@ export interface TestRoom {
   look(position: Vec3, target: Vec3): void
   /** Object and part the camera looks at, with its state, for the inspector. */
   inspect(): { objectId: string; partId: string; itemId: string } | null
+  /** Everything the inspector panel shows for the aimed part (state, joints and the tools that undo them), or null. */
+  inspectInfo(): InspectInfo | null
   spawned(): SpawnedObject[]
   /** Advance one frame (only needed when the host owns the loop). */
   update(dt: number): void
   on(type: 'spawn' | 'tool' | 'grab' | 'throw' | 'event', fn: (data: unknown) => void): () => void
+  /** Tilt the held item by `rad` radians around its own x axis (hold Z in the room). Pouring and spilling follow from the tilt. */
+  tilt(rad: number): void
+  /** Open or close the tap over the table (default: toggle). Returns whether it is open. */
+  toggleTap(on?: boolean): boolean
+  /** 0.25x simulation speed. */
+  setSlowMotion(on: boolean): void
+  /** Run the simulation 10x per frame (fire, melting and drying take a tenth of the time). */
+  setFastForward(on: boolean): void
+  /** Equip a weapon by id, adding it to the hotbar when it is not there. Same as selecting a catalogue item with `TestRoomItem.weapon`. */
+  equip(weaponId: string): void
+  /** The scenarios the panel offers: the built-in `SCENARIOS` in the room locale plus `TestRoomOptions.scenarios`. */
+  readonly scenarios: TestRoomScenario[]
+  /** The liquid renderer of `@adatechnology/game-fluids-three` (containers, streams, stains). */
+  readonly fluidRenderer: FluidRenderer
   /** The behaviour log (see `TestRoomLog`). */
   readonly log: TestRoomLog
   /** Run scripted checks (no input needed; works headless in tests and from the browser console). */
@@ -166,8 +186,19 @@ export interface TestRoomLog {
   download(format?: 'json' | 'ndjson' | 'txt'): void
   /** Counts per event type and per material (quick summary for checks). */
   summary(): { byType: Record<string, number>; byMaterial: Record<string, number>; objects: number; destroyed: number }
-  on(fn: (entry: LogEntry) => void): () => void
+  /** Listener for new entries and for in-place updates of coalesced ones (`updated` true, same entry object). */
+  on(fn: (entry: LogEntry, updated: boolean) => void): () => void
+  /** Write a line (hosts and scenarios add their own). `seq` and `t` (room time) are filled in. */
+  add(entry: NewLogEntry): LogEntry
+  /**
+   * Write a line, or update in place the last line written with the same `key` when it was touched less than `windowS` seconds ago (default 1).
+   * Used for noisy sequences: melting, dripping, taking something apart.
+   */
+  coalesce(key: string, entry: NewLogEntry, windowS?: number): LogEntry
 }
+
+/** What `TestRoomLog.add` takes. */
+export type NewLogEntry = Omit<LogEntry, 'seq' | 't'> & { t?: number }
 
 /** A scripted check: spawn things, act, then assert on the log and the world state. */
 export interface TestRoomScenario {

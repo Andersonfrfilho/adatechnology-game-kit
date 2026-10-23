@@ -37,6 +37,8 @@
   "dependencies": {
     "@adatechnology/game-destruction": "workspace:*",
     "@adatechnology/game-destruction-three": "workspace:*",
+    "@adatechnology/game-fluids": "workspace:*",
+    "@adatechnology/game-fluids-three": "workspace:*",
     "@adatechnology/game-weapons": "workspace:*"
   },
   "peerDependencies": {

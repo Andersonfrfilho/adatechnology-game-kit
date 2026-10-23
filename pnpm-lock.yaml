@@ -190,6 +190,12 @@ importers:
       '@adatechnology/game-destruction-three':
         specifier: workspace:*
         version: link:../game-destruction-three
+      '@adatechnology/game-fluids':
+        specifier: workspace:*
+        version: link:../game-fluids
+      '@adatechnology/game-fluids-three':
+        specifier: workspace:*
+        version: link:../game-fluids-three
       '@adatechnology/game-weapons':
         specifier: workspace:*
         version: link:../game-weapons
