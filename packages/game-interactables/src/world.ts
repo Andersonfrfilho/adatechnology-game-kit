@@ -263,13 +263,55 @@ export function createWorld(options: WorldOptions = {}): World {
     return [f.pivot[0] + r[0] + f.offset[0], f.pivot[1] + r[1] + f.offset[1], f.pivot[2] + r[2] + f.offset[2]]
   }
 
+  /** Moves the full closed-pose slab of a part and returns the largest t whose pose keeps every sampled point clear. */
+  function fitBounds(o: ObjState, p: PartState, b: NonNullable<PartSpec['bounds']>, blockedAt: (x: number, z: number) => boolean): number {
+    const STEP = 0.05
+    const ANGLES = 48
+    const m = p.spec.motion
+    const axis = rotY(m.axis ?? [0, 1, 0], p.spec.ry ?? 0)
+    const lo: Vec3 = [Math.min(b[0], b[3]), Math.min(b[1], b[4]), Math.min(b[2], b[5])]
+    const hi: Vec3 = [Math.max(b[0], b[3]), Math.max(b[1], b[4]), Math.max(b[2], b[5])]
+    const axisPoints = (i: number): number[] => {
+      const n = Math.max(1, Math.ceil((hi[i] - lo[i]) / STEP))
+      return Array.from({ length: n + 1 }, (_, k) => lo[i] + ((hi[i] - lo[i]) * k) / n)
+    }
+    const xs = axisPoints(0)
+    const ys = axisPoints(1)
+    const zs = axisPoints(2)
+    const tr = o.public.transform
+    const pivot = p.spec.pivot
+    for (let i = 1; i <= ANGLES; i++) {
+      const tt = i / ANGLES
+      const angle = m.kind === 'slide' ? 0 : (m.angle ?? Math.PI / 2) * tt
+      const d = m.kind === 'slide' ? (m.distance ?? 0.4) * tt : 0
+      for (const x of xs) {
+        for (const y of ys) {
+          for (const z of zs) {
+            let q: Vec3 = [x, y, z]
+            if (angle !== 0) {
+              const r = rotateAxis([x - pivot[0], y - pivot[1], z - pivot[2]], axis, angle)
+              q = [pivot[0] + r[0], pivot[1] + r[1], pivot[2] + r[2]]
+            }
+            const w = localToWorld(tr, [q[0] + axis[0] * d, 0, q[2] + axis[2] * d])
+            if (blockedAt(w[0], w[2])) return (i - 1) / ANGLES
+          }
+        }
+      }
+    }
+    return 1
+  }
+
   function fitSweep(objectId: string, partId: string, blocked: (x: number, z: number) => boolean): number {
     const o = objectOrThrow(objectId)
     const p = o.parts.get(partId)
     if (!p) throw new Error(`Unknown part "${partId}" on "${objectId}"`)
     const sweep = p.spec.sweep
     let result = 1
-    if (sweep) {
+    const bounds = p.spec.bounds
+    const mk = p.spec.motion.kind
+    if (bounds && (mk === 'hinge' || mk === 'rocker' || mk === 'knob' || mk === 'slide')) {
+      result = fitBounds(o, p, bounds, blocked)
+    } else if (sweep) {
       const x0 = Math.min(sweep[0], sweep[2])
       const x1 = Math.max(sweep[0], sweep[2])
       const z0 = Math.min(sweep[1], sweep[3])

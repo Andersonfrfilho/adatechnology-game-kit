@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { ObjectSpec } from '../src'
 import { cabinet, origin, run, world } from './fixtures'
 
 describe('parts', () => {
@@ -183,4 +184,44 @@ describe('requires closing', () => {
     expect(w.partT('c', 'drawer')).toBe(0)
     expect(w.act('c:part.drawer')).toBe(false)
   })
+})
+
+describe('fitSweep with part bounds', () => {
+  const door: ObjectSpec = {
+    type: 'door',
+    parts: [{ id: 'door', pivot: [-0.4, 0.5, 0.3], motion: { kind: 'hinge', angle: -1.7 }, bounds: [-0.4, 0, 0.28, 0.4, 1, 0.32] }],
+  }
+  const flap: ObjectSpec = {
+    type: 'flap',
+    parts: [{ id: 'flap', pivot: [0, 0.1, 0.3], motion: { kind: 'hinge', axis: [1, 0, 0], angle: 1.5 }, bounds: [-0.3, 0.1, 0.26, 0.3, 0.7, 0.34] }],
+  }
+  const at = (ry: number) => ({ x: 3, y: 0, z: -2, ry })
+  const wallAt = (ry: number, pred: (lx: number, lz: number) => boolean) => (x: number, z: number) => {
+    const dx = x - 3
+    const dz = z + 2
+    return pred(Math.cos(-ry) * dx + Math.sin(-ry) * dz, -Math.sin(-ry) * dx + Math.cos(-ry) * dz)
+  }
+
+  for (const ry of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) {
+    it(`a wall flush with the hinge side blocks the slab, a 20 cm gap does not (ry ${ry.toFixed(2)})`, () => {
+      const { w } = world()
+      w.add('d', door, at(ry))
+      expect(w.fitSweep('d', 'door', wallAt(ry, (lx) => lx < -0.4 - 1e-9))).toBe(0)
+      w.add('e', door, { ...at(ry), x: 30 })
+      const far = (x: number, z: number) => wallAt(ry, (lx) => lx < -0.6)(x - 27, z)
+      expect(w.fitSweep('e', 'door', far)).toBe(1)
+    })
+
+    it(`a wall in front of a horizontal hinge clamps it and the slab stays clear (ry ${ry.toFixed(2)})`, () => {
+      const { w } = world()
+      w.add('f', flap, at(ry))
+      const m = w.fitSweep('f', 'flap', wallAt(ry, (_lx, lz) => lz > 0.5))
+      expect(m).toBeGreaterThan(0.05)
+      expect(m).toBeLessThan(1)
+      // independent check: the top edge of the leaf after rotating m * 1.5 rad about x stays at z <= 0.5
+      const z = 0.3 + 0.6 * Math.sin(1.5 * m)
+      expect(z).toBeLessThanOrEqual(0.5 + 0.34 - 0.3 + 1e-6)
+      expect(w.fitSweep('f', 'flap', () => false)).toBe(1)
+    })
+  }
 })

@@ -67,6 +67,11 @@ export interface PartSpec {
    * Hosts use it with `fitSweep` so a door never opens through a wall.
    */
   sweep?: Rect
+  /**
+   * Closed-pose bounding box of the part's geometry, object-local: [x0, y0, z0, x1, y1, z1]. When present, `fitSweep` moves this
+   * whole slab (thickness, hinge offset, any hinge axis, slides) instead of testing the thin `sweep` rectangle.
+   */
+  bounds?: [number, number, number, number, number, number]
   /** The part only moves while this part is at t >= 0.5 (an inner drawer behind a door). */
   requires?: string
   /** Label key used by the default interaction (see `InteractionSpec.label`). */
