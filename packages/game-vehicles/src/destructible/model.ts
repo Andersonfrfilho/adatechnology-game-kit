@@ -192,6 +192,15 @@ const roleOfZone = (z: { id: string; type: string; sub?: string; fxKey?: string 
   }
 }
 
+/**
+ * The frame hub is a thin floor pan under the cabin: wide enough to touch the wheels (so a wrench finds the wheel bolts), but low and short so
+ * a bullet aimed at the tank or the engine does not hit it first.
+ */
+const floorPan = (b: LocalBox): LocalBox => ({
+  center: [b.center[0], b.center[1] - b.size[1] / 2 + Math.min(0.14, b.size[1]) / 2 + 0.04, b.center[2]],
+  size: [b.size[0] * 0.5, Math.min(0.14, b.size[1]), b.size[2] * 0.95],
+})
+
 /** Builds the part and joint model of a built vehicle. */
 export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: ModelOptions = {}): VehicleModel {
   const kind = kindOf(c)
@@ -199,7 +208,7 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
   const spec = c.spec as { fuel?: string; hitch?: boolean }
   const t = kit.t
   const skin = skinOf(kind)
-  const armour = m.armored || m.armor || m.bullet ? 12 : 1
+  const armour = m.armored || m.bullet ? 12 : 1
   const mass = vehicleMass(c)
   const W = m.width ?? 1.7
   const F = m.front ?? 2
@@ -323,7 +332,7 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
       continue
     }
     if (role === 'frame') {
-      add({ id, role, name: label, material: 'steel', box, mass: mass * 0.25, hp: 150000 * armour, zoneId: id, visual: false, tags: ['frame', ...tags] })
+      add({ id, role, name: label, material: 'steel', box: floorPan(box), mass: mass * 0.25, hp: 150000 * armour, zoneId: id, visual: false, tags: ['frame', ...tags] })
       continue
     }
     const roofLike = role === 'roof'
@@ -350,7 +359,7 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
       role: 'frame',
       name: t('mechanics.chassis'),
       material: 'steel',
-      box: { center: [(F + R) / 2, clearance + h * 0.45, 0], size: [Math.max(0.4, L * 0.8), h * 0.7, Math.max(0.2, W * 0.6)] },
+      box: floorPan({ center: [(F + R) / 2, clearance + h * 0.45, 0], size: [Math.max(0.4, L * 0.8), h * 0.7, Math.max(0.2, W * 0.9)] }),
       mass: mass * 0.25,
       hp: 150000 * armour,
       visual: false,
