@@ -83,6 +83,8 @@ around `+y` like `three.js` (`+z` turns toward `+x` for a positive angle). View 
 - **Power**: `grid`, a breaker per circuit (default on), sockets (optionally on a circuit) and devices plugged to a socket (`auto` = nearest free
   socket within 2 m, across the whole world) or hard-wired to a circuit. `powered = grid && breaker && socket found`. A device that is on but
   unpowered stays on, reports `powered: false` and emits the `no_power` message. Switches toggle the listed devices (`object:device` or local ids).
+  The `toggle_breaker` action (`{ do: 'toggle_breaker', circuit, part? }`) flips a circuit from a breaker panel, mirrors the optional rocker `part`
+  (t = 1 when on) and uses the prompts `prompt.breaker_on|off` (`{circuit}` is the circuit id).
 - **Fuel**: burners need fuel and, for a bottle with a valve, the valve open. `fuel: 'auto'` = nearest gas source within 2 m. Gas is consumed
   while lit; running out or closing the valve puts the flame out, and a gas knob left on without gas lights by itself when the valve opens. Charcoal needs `ignite`, burns until empty, and `toggle_burner` puts it out.
   Smoke emitters of solid fuel linger 20 s after the fire is out, fading.

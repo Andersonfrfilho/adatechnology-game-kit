@@ -968,6 +968,12 @@ export function createWorld(options: WorldOptions = {}): World {
         def = on ? 'prompt.turn_off' : 'prompt.turn_on'
         break
       }
+      case 'toggle_breaker': {
+        const on = breaker(a.circuit)
+        state = on ? 'on' : 'off'
+        def = on ? 'prompt.breaker_off' : 'prompt.breaker_on'
+        break
+      }
       case 'toggle_fixture': {
         const on = !!o.fixtures.get(a.fixture)?.on
         state = on ? 'on' : 'off'
@@ -1012,7 +1018,7 @@ export function createWorld(options: WorldOptions = {}): World {
       if (state && table[`${i.label}.${state}`] !== undefined) key = `${i.label}.${state}`
       else if (table[i.label] !== undefined) key = i.label
     }
-    return t(key, { name: typeName(o) })
+    return t(key, { name: typeName(o), circuit: a.do === 'toggle_breaker' ? a.circuit : '' })
   }
 
   function applicable(o: ObjState, i: InteractionSpec): boolean {
@@ -1147,6 +1153,12 @@ export function createWorld(options: WorldOptions = {}): World {
       }
       case 'toggle_switch':
         return toggleSwitch(o, a.switch)
+      case 'toggle_breaker': {
+        const on = !breaker(a.circuit)
+        if (a.part) setPartTarget(o, a.part, on ? 1 : 0)
+        world.power.setBreaker(a.circuit, on)
+        return true
+      }
       case 'toggle_fixture':
         return toggleFixture(o, a.fixture)
       case 'toggle_burner':

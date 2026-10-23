@@ -161,3 +161,38 @@ describe('power', () => {
     expect(w.power.channel('x', 'y')).toBe(0)
   })
 })
+
+describe('toggle_breaker', () => {
+  const panel: ObjectSpec = {
+    type: 'panel',
+    parts: [{ id: 'br_lights', pivot: [0, 1.5, 0], motion: { kind: 'rocker' }, t0: 1 }],
+    interactions: [{ id: 'br.lights', pos: [0, 1.5, 0], radius: 1.2, label: '', action: { do: 'toggle_breaker', circuit: 'lights', part: 'br_lights' } }],
+  }
+
+  it('cuts and restores the devices of its circuit, mirrors the rocker and emits power changes', () => {
+    const { w, events } = world()
+    w.add('p', panel, origin)
+    w.add('l', lamp, { x: 3, y: 0, z: 0, ry: 0 })
+    w.act('l:device.bulb')
+    expect(w.power.isPowered('l', 'bulb')).toBe(true)
+    expect(w.act('p:br.lights')).toBe(true)
+    expect(w.power.breaker('lights')).toBe(false)
+    expect(w.power.isPowered('l', 'bulb')).toBe(false)
+    for (let i = 0; i < 60; i++) w.update(1 / 30)
+    expect(w.partT('p', 'br_lights')).toBe(0)
+    expect(events.some((e) => e.type === 'device' && e.device === 'bulb' && e.powered === false)).toBe(true)
+    expect(w.act('p:br.lights')).toBe(true)
+    expect(w.power.isPowered('l', 'bulb')).toBe(true)
+  })
+
+  it('the prompt names the circuit and flips with the state, in both locales', () => {
+    for (const [locale, off, on] of [['en', 'Switch off lights', 'Switch on lights'], ['pt-BR', 'Desligar lights', 'Ligar lights']] as const) {
+      const { w } = world({ locale })
+      w.add('p', panel, origin)
+      const find = () => w.interactables().find((i) => i.id === 'p:br.lights')!
+      expect(find().label).toBe(off)
+      w.act('p:br.lights')
+      expect(find().label).toBe(on)
+    }
+  })
+})
