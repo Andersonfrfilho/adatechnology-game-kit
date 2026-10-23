@@ -1,5 +1,22 @@
 # @adatechnology/game-test-room
 
+## 0.1.3
+
+### Patch Changes
+
+- 463c9cc: Thin brittle shells that shatter now break on the first bullet. For materials with `fracture: 'shatter'` (glass, ceramic) ballistic damage is multiplied by the same `fragility(ductility, thickness)` factor that blunt hits already used: a 9 mm (about 500 J) now shatters a 4-6 mm window pane in one shot (a 5 kg pane took 6 before), a 2 cm glass block takes 4 (15 before) and a 5 cm block 8 (38 before). Ductile materials, shells 2 cm or thicker (factor up to x4.7 only for glass) and `crumble` materials such as tempered glass are unchanged apart from the thickness term. The test room scenario `glass_shatters` now expects the first shot.
+- Updated dependencies [4573613]
+- Updated dependencies [4babeca]
+- Updated dependencies [463c9cc]
+- Updated dependencies [5603151]
+- Updated dependencies [d913ace]
+  - @adatechnology/game-destruction-three@0.2.0
+  - @adatechnology/game-contracts@0.2.0
+  - @adatechnology/game-destruction@0.3.0
+  - @adatechnology/game-fluids@0.1.2
+  - @adatechnology/game-weapons@0.1.2
+  - @adatechnology/game-fluids-three@0.1.2
+
 ## 0.1.2
 
 ### Patch Changes

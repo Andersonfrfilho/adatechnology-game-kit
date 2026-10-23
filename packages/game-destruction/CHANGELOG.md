@@ -1,5 +1,20 @@
 # @adatechnology/game-destruction
 
+## 0.3.0
+
+### Minor Changes
+
+- 4babeca: Overloaded structures now fail on a game-feel timescale. The overload damage was proportional to the excess alone (`(stress - 1) * maxHp * 0.5` per second), so a part at stress 1.02 took about 100 s to give way and a cascade of slightly overloaded columns took 30-70 s. It is now `min(0.6, 0.12 + 0.8 * (stress - 1))` of `maxHp` per second: stress 1.02 gives way in about 7 s, 1.1 in 5 s, 1.5 in 2 s and anything above 1.7 in 1.7 s (it was 0.3 s at stress 8: very high stress is slightly slower now). Still deterministic. Hosts that tuned capacities around the old timing may see structures fall sooner.
+- 463c9cc: Thin brittle shells that shatter now break on the first bullet. For materials with `fracture: 'shatter'` (glass, ceramic) ballistic damage is multiplied by the same `fragility(ductility, thickness)` factor that blunt hits already used: a 9 mm (about 500 J) now shatters a 4-6 mm window pane in one shot (a 5 kg pane took 6 before), a 2 cm glass block takes 4 (15 before) and a 5 cm block 8 (38 before). Ductile materials, shells 2 cm or thicker (factor up to x4.7 only for glass) and `crumble` materials such as tempered glass are unchanged apart from the thickness term. The test room scenario `glass_shatters` now expects the first shot.
+- 5603151: New part status `'collapsed'` (added to `PartStatus`). Every part that is reported in a `collapse` event and was not already broken, melted or ash gets `status: 'collapsed'` instead of staying `intact`/`damaged`; it is kept by `serialize`/`load`, cleared by `reset`, and the part becomes `broken` if it later fractures. `partStatus` locale tables gained `collapsed` (`desabado`). A collapsed part still exists as a piece, so code that treats `broken`, `melted` and `ashes` as lost needs no change; exhaustive switches over `PartStatus` need a new case.
+- d913ace: New `sizeStructure(spec, { safety?, redundancy? })`: runs the world's own load solver on the intact spec and returns a copy where every structural part has `structure.capacity` set so its at-rest stress equals `safety` (default 0.65). With `redundancy` (for example 0.97) capacities are raised so that losing any single column keeps every other part at or below that stress (N-1 design). Parts without `structure` are left unchanged. Replaces hand-calibrated capacities.
+
+### Patch Changes
+
+- Updated dependencies [4babeca]
+- Updated dependencies [5603151]
+  - @adatechnology/game-contracts@0.2.0
+
 ## 0.2.0
 
 ### Minor Changes
