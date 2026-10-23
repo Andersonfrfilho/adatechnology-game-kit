@@ -125,7 +125,8 @@ without any `structure` behave exactly as before.
   horizontal length for walls. A 0.3 m concrete column carries 40 t, a 0.2 m brick wall 8 t per metre, a 0.1 x 0.2 m softwood beam 2 t.
 - **Joints** carry load when `bears` is true (default when both parts have a role). `bears: 'a_on_b'` means part `a` rests on `b`: load flows only
   that way. A `partition` is supported but supports nothing, so breaking it never drops anything.
-- **Overload**: above stress 1 a part takes `(stress - 1) * maxHp * 0.5` damage per second, emits `stress` (once per 0.5 s) and cascades; brittle
+- **Overload**: above stress 1 a part loses `min(0.6, 0.12 + 0.8 * (stress - 1))` of its `maxHp` per second (stress 1.02 gives way in ~7 s, 1.1 in ~5 s,
+  1.5 in ~2 s, anything above 1.7 in ~1.7 s; deterministic), emits `stress` (once per 0.5 s) and cascades; brittle
   parts `crack` from stress 0.8. Metal never fractures, so overloaded steel only reports stress.
 - **Collapse**: a part with no support path to an anchored part falls: it is cut from the supported pieces into its own group (index 1 or more) and
   one `collapse` event lists the group, and every part in it that is not already lost gets `PartState.status === 'collapsed'` (kept through
