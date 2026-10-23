@@ -1,6 +1,7 @@
 import type { Vec3 } from '@adatechnology/game-interactables'
 import type { Ctx } from '../ctx'
 import { HANDLE, hingedDoor } from '../parts'
+import { drawPieces, garment, pegs, type GarmentKind } from '../garments'
 import { mix, round3, shade } from '../util'
 
 /** Brick courses between two corners: alternating relief so mortar lines read from afar. */
@@ -115,8 +116,8 @@ export function bbq(c: Ctx): void {
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-/** [width, height] of the hanging items by kind: t-shirt, trousers, towel, dress, socks. */
-const SIZES: Array<[number, number]> = [[0.5, 0.62], [0.36, 0.82], [0.5, 0.9], [0.4, 1.0], [0.2, 0.22]]
+const LINE_KINDS: GarmentKind[] = ['tshirt', 'trousers', 'towel', 'dress', 'socks', 'tshirt', 'trousers']
+const PEG_COLORS = [0xe8e0c8, 0xd24a3a, 0x3a6ab0, 0xe0c030, 0x4aa06a]
 
 export function clothesline(c: Ctx): void {
   const { hw, h } = c
@@ -155,46 +156,26 @@ export function clothesline(c: Ctx): void {
     line[0] = [x0, yTip, z]
     line[n] = [x1, yTip, z]
     c.add('wires', { id: `wire_${wi + 1}`, kind: 'cable', radius: 0.0025, points: line })
-    // clothes
-    const span = x1 - x0 - 0.5
-    const count = Math.max(2, Math.floor(span / 0.62))
-    for (let i = 0; i < count; i++) {
-      const t = (i + 0.5) / count
-      const px = x0 + 0.25 + span * t
-      const py = yTip - sag * 4 * ((px - x0) / (x1 - x0)) * (1 - (px - x0) / (x1 - x0))
-      const kind = Math.floor(c.rnd() * 5)
+    // clothes: garments of different widths side by side, hung by pegs on the wire
+    const sagAt = (x: number) => yTip - sag * 4 * ((x - x0) / (x1 - x0)) * (1 - (x - x0) / (x1 - x0))
+    let cursor = x0 + 0.28
+    let i = 0
+    while (i < 12) {
+      const kind = LINE_KINDS[Math.floor(c.rnd() * LINE_KINDS.length)]
       const col = clothHues[Math.floor(c.rnd() * clothHues.length)]
-      const id = `cloth_${wi + 1}_${i + 1}`
-      const [cw, ch] = SIZES[kind]
+      const g = garment(kind, col)
+      const peg = PEG_COLORS[Math.floor(c.rnd() * PEG_COLORS.length)]
+      const px = round3(cursor + g.width / 2)
+      if (px + g.width / 2 > x1 - 0.25) break
+      cursor += g.width + 0.06 + c.rnd() * 0.08
+      i++
+      const py = round3(sagAt(px))
+      const id = `cloth_${wi + 1}_${i}`
+      const cw = g.width
+      const ch = g.height
       c.part(
         id, [px, py, z], { kind: 'hinge', axis: [1, 0, 0], angle: 0.5 },
-        () => {
-          if (kind === 0) {
-            // t-shirt: body and two sleeves
-            c.b('fabric', px - 0.2, py - ch, z - 0.006, px + 0.2, py - 0.04, z + 0.006, col)
-            c.b('fabric', px - 0.25, py - 0.22, z - 0.006, px - 0.2, py - 0.04, z + 0.006, shade(col, 0.95))
-            c.b('fabric', px + 0.2, py - 0.22, z - 0.006, px + 0.25, py - 0.04, z + 0.006, shade(col, 0.95))
-            c.b('fabric', px - 0.07, py - 0.045, z - 0.007, px + 0.07, py - 0.03, z + 0.007, shade(col, 0.8)) // collar
-          } else if (kind === 1) {
-            // trousers: two legs folded over the wire
-            c.b('fabric', px - 0.18, py - ch, z - 0.007, px - 0.01, py - 0.03, z + 0.007, col)
-            c.b('fabric', px + 0.01, py - ch, z - 0.007, px + 0.18, py - 0.03, z + 0.007, shade(col, 0.92))
-            c.b('fabric', px - 0.18, py - 0.1, z - 0.008, px + 0.18, py - 0.03, z + 0.008, shade(col, 0.8)) // waistband
-          } else if (kind === 2) {
-            // towel
-            c.b('fabric', px - 0.25, py - ch, z - 0.008, px + 0.25, py - 0.03, z + 0.008, col)
-            c.b('fabric', px - 0.25, py - 0.25, z - 0.0085, px + 0.25, py - 0.2, z + 0.0085, mix(col, 0xffffff, 0.5))
-          } else if (kind === 3) {
-            // dress
-            c.b('fabric', px - 0.1, py - 0.4, z - 0.006, px + 0.1, py - 0.04, z + 0.006, col)
-            c.b('fabric', px - 0.2, py - ch, z - 0.006, px + 0.2, py - 0.4, z + 0.006, shade(col, 0.95))
-          } else {
-            // pair of socks
-            c.b('fabric', px - 0.1, py - ch, z - 0.005, px - 0.03, py - 0.03, z + 0.005, col)
-            c.b('fabric', px + 0.03, py - ch, z - 0.005, px + 0.1, py - 0.03, z + 0.005, shade(col, 0.9))
-          }
-          for (const s of [-1, 1]) c.b('plain', px + s * (cw / 2 - 0.05) - 0.008, py - 0.05, z - 0.012, px + s * (cw / 2 - 0.05) + 0.008, py + 0.012, z + 0.012, 0xe8e0c8) // pegs
-        },
+        () => drawPieces(c, [...g.pieces, ...pegs(g, peg)], { x: px, y: py, z, yaw: 0 }),
         { noSweep: true },
       )
       c.add('soft', { id, kind: 'cloth', anchor: [px, py, z], size: [cw, ch, 0.03], stiffness: 24, damping: 3, maxAngle: 0.7, wind: 1 })

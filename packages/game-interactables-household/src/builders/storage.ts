@@ -1,6 +1,7 @@
 import type { Vec3 } from '@adatechnology/game-interactables'
 import type { Ctx } from '../ctx'
 import { HANDLE, drawer, dropDoor, hingedDoor, plugged, shelf, shell } from '../parts'
+import { drawPieces, garment, hanger, type GarmentKind } from '../garments'
 import { mix, shade } from '../util'
 
 type Side = 'left' | 'right'
@@ -252,12 +253,17 @@ export function wardrobe(c: Ctx): void {
   const span = xs - 0.009 - sh.ix0 - 0.1
   const count = Math.max(4, Math.floor(span / 0.07))
   const palette = [0x3a5a8a, 0xa84a3a, 0x4a7a4a, 0xd8d0c0, 0x2a2a30, 0x8a6a9a, 0xc8a040]
+  const kinds: GarmentKind[] = ['shirt', 'tshirt', 'jacket', 'dress', 'trousers']
+  const start = Math.floor(c.rnd() * kinds.length)
+  const avail = sh.iz1 - sh.iz0 - 0.07 // depth the garments may use, door side and back wall left free
   for (let i = 0; i < count; i++) {
     const x = sh.ix0 + 0.06 + (i + 0.5) * (span / count)
-    const len = 0.5 + c.rnd() * 0.5
-    const col = palette[Math.floor(c.rnd() * palette.length)]
-    c.b('plain', x - 0.005, rodY - 0.012 - len, zc - 0.2, x + 0.005, rodY - 0.012, zc + 0.2, col)
-    c.b('wood', x - 0.003, rodY - 0.045, zc - 0.21, x + 0.003, rodY - 0.035, zc + 0.21, 0xc9b99a)
+    const g = garment(kinds[(start + i) % kinds.length], palette[Math.floor(c.rnd() * palette.length)])
+    const scale = Math.min(1, avail / g.width)
+    // garments hang on wire hangers, edge on to the doors, each a little turned
+    const yaw = Math.PI / 2 + (c.rnd() - 0.5) * 0.22
+    drawPieces(c, hanger(g.width), { x, y: rodY, z: zc, yaw, scale })
+    drawPieces(c, g.pieces, { x, y: rodY - 0.09 * scale, z: zc, yaw, scale })
   }
   // shelves in the last door's section
   const sy = [0.7, 1.05, 1.4, 1.75]
