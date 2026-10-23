@@ -106,6 +106,8 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
   let stains = new Map<string, StainInt>()
   const listeners = new Map<string, Set<(e: FluidEvent) => void>>()
   let queue: FluidEvent[] = []
+  /** Only events produced by `update` are queued and returned by it; direct calls just notify the listeners. */
+  let updating = false
 
   const groundSurface: StainSurface = {
     normal: [0, 1, 0],
@@ -119,7 +121,7 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
   // ---- events ----
 
   const emit = (e: FluidEvent): void => {
-    queue.push(e)
+    if (updating) queue.push(e)
     options.onEvent?.(e)
     listeners.get(e.type)?.forEach((fn) => fn(e))
     listeners.get('*')?.forEach((fn) => fn(e))
@@ -702,7 +704,12 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
     update(dt) {
       if (dt > 0) {
         const n = clamp(Math.ceil(dt / MAX_STEP), 1, MAX_SUBSTEPS)
-        for (let i = 0; i < n; i++) step(dt / n)
+        updating = true
+        try {
+          for (let i = 0; i < n; i++) step(dt / n)
+        } finally {
+          updating = false
+        }
       }
       const out = queue
       queue = []

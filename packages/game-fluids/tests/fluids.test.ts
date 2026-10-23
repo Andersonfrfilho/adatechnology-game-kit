@@ -81,6 +81,23 @@ describe('drinking', () => {
   })
 })
 
+describe('event delivery', () => {
+  it('delivers a direct-call event exactly once, and update returns only what it produced', () => {
+    const world = createFluids()
+    cup(world)
+    const heard: FluidEvent[] = []
+    world.on('*', (e) => heard.push(e))
+    const returned: FluidEvent[] = []
+    const ev = world.drink('cup', 0.03)
+    if (ev) returned.push(ev)
+    returned.push(...world.update(0.05))
+    const all = [...returned]
+    expect(all.filter((e) => e.type === 'drink')).toHaveLength(1)
+    expect(heard.filter((e) => e.type === 'drink')).toHaveLength(1)
+    expect(world.update(0.05)).toEqual([])
+  })
+})
+
 describe('spilling', () => {
   it('a full cup tilted 90 degrees spills and leaves a stain on the floor', () => {
     const world = createFluids({ seed: 3 })

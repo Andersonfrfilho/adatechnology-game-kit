@@ -59,7 +59,7 @@ for (const event of fluids.update(dt)) {
 }
 ```
 
-`update` returns the events produced since the previous call, in order, and also fires `onEvent` and the listeners registered with
+Events from direct calls (`drink`, `fill`, `puncture`, `splash`...) are delivered once: to the listeners at once and, for `drink`, as its return value; `update` never repeats them. `update` returns the events it produced, in order, and also fires `onEvent` and the listeners registered with
 `fluids.on(type | '*', fn)`. Use `fluids.describe(event)` for a localised one-liner, handy for a debug panel or a log.
 
 Draw from the state, never from the events: `container(id)`, `containers()`, `streams()` and `stains()` return plain copies.
