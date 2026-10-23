@@ -44,13 +44,30 @@ export interface RendererOptions {
   pointScale?: number
 }
 
+/**
+ * A part drawn by a range of the vertices of a mesh it shares with other parts (a merged house, a baked car body). `range` is `[v0, v1)`: vertex
+ * indices of the mesh's geometry, the end exclusive. For indexed geometry the faces whose three vertices all lie in the range belong to the part;
+ * for non-indexed geometry the range is the part's triangles (three vertices each).
+ *
+ * Dents, char and heat colours (through vertex colours: the mesh gets a `color` attribute and its material `vertexColors` when it has none) and
+ * melt change only that range, and hole and crack decals are attached to the part. When the part detaches or collapses, its faces are copied
+ * into a new mesh with the merged mesh's transform and material (a loose piece) and the range is collapsed to a point in the merged mesh, so it
+ * disappears from there. A broken, melted or burnt-out part collapses too. `restore` and `clear` give the merged mesh its original geometry and
+ * material back and remove the loose meshes.
+ */
+export interface MeshRange {
+  mesh: Mesh
+  /** Vertex index range `[v0, v1)` of `mesh.geometry`. */
+  range: [number, number]
+}
+
 /** Options of `bind`. */
 export interface BindOptions {
   /**
-   * Part id -> meshes that draw it. When omitted, every Mesh under the root with `userData.destructionPart` (or whose name equals a part id) is
+   * Part id -> meshes that draw it (a mesh or group, a list of them, a `MeshRange`, or a list mixing both). When omitted, every Mesh under the root with `userData.destructionPart` (or whose name equals a part id) is
    * used; meshes with neither are matched to the part whose box contains the mesh's bounding-box centre.
    */
-  parts?: Record<string, Object3D | Object3D[]>
+  parts?: Record<string, Object3D | MeshRange | Array<Object3D | MeshRange>>
   /** Keep the world transform in sync from the root's matrixWorld every update (default true). */
   syncTransform?: boolean
 }

@@ -8,6 +8,21 @@ export interface Decal {
   geometry?: THREE_NS.BufferGeometry
 }
 
+/** One merged mesh whose vertex ranges are bound to several parts (or, after a split, the loose mesh of one part). */
+export interface HostVis {
+  mesh: THREE_NS.Mesh
+  origGeometry: THREE_NS.BufferGeometry
+  origMaterial: THREE_NS.Material | THREE_NS.Material[]
+  /** `mesh.geometry` is a clone the renderer may edit. */
+  ownGeo: boolean
+  /** Current dented positions of the whole mesh (before melt), once the geometry is owned. */
+  work: Float32Array | null
+  /** `mesh.material` is a clone (vertex colours switched on). */
+  ownMat: boolean
+  /** Every MeshVis that draws a range of this mesh, or whose merged binding is this mesh. */
+  sharers: MeshVis[]
+}
+
 /** Everything the renderer knows about one bound mesh: the original assets (kept to restore) and what has been changed. */
 export interface MeshVis {
   mesh: THREE_NS.Mesh
@@ -33,6 +48,25 @@ export interface MeshVis {
   /** World height of the bottom of the mesh when it first started melting. */
   bottomY: number
   moved: boolean
+  /**
+   * Set when the part is bound by a vertex range of a merged mesh: the mesh state lives in `host` and every edit is limited to `range`. After
+   * the part detaches they point at its own loose mesh and `[0, vertices]`; `merged` always keeps the binding to go back to.
+   */
+  host: HostVis | null
+  range: [number, number] | null
+  merged: { host: HostVis; range: [number, number] } | null
+  /** The part's faces were extracted into `mesh` (a mesh the renderer made and owns). */
+  loose: boolean
+  /** The range is collapsed to a point in the merged mesh (the part is hidden or loose). */
+  collapsed: boolean
+  /** The part is not drawn (broken, melted, ash). */
+  hidden: boolean
+  /** Dents, colours, melt or hiding differ from the original geometry. */
+  touched: boolean
+  charK: number
+  charHex: number
+  glowHex: number
+  glowK: number
 }
 
 export interface PartVis {

@@ -71,6 +71,27 @@ renderer.impulse(id, [0, 40, -120], [2, 0.6, -3])
 equals a part id, else by the part box that contains the mesh centre. `specFromObject3D` reads `userData.destructionMaterial`,
 `destructionPart` (a part id, or `{ id, material?, parent?, kind? }`: `parent` + `kind` attach the part to its parent with a joint of that kind), `destructionIgnore`, `destructionTags` and `hollow`.
 
+### Parts of a merged mesh
+
+A building or a baked model often has one merged mesh for many parts. Bind each part by the vertex range it occupies (`{ mesh, range: [v0, v1] }`,
+end exclusive; a part value can also be an array mixing meshes and ranges):
+
+```js
+renderer.bind(houseId, houseRoot, { parts: {
+  wall_north: { mesh: merged, range: [0, 1280] },
+  wall_south: { mesh: merged, range: [1280, 2610] },
+  door: doorMesh,                      // plain meshes still work
+} })
+```
+
+For indexed geometry the faces whose three vertices all lie in the range belong to the part; for non-indexed geometry the range is the part's
+triangles. Dents move only the range's vertices; char and heat go to the range's vertex colours (the mesh gets a `color` attribute, and a cloned
+material with `vertexColors`, when it has none); hole and crack decals stay on the part; melt squashes and widens only the range. When the part
+detaches or collapses (`detach` and `collapse` events), its faces are copied, with their dents and colours and the merged mesh's transform and
+material, into a new mesh that becomes the loose piece, and the range is collapsed to a point in the merged mesh so it vanishes there. A broken,
+melted or burnt-out part vanishes the same way. `restore` and `clear` put the merged mesh's original geometry and material back and remove the
+loose meshes. An invalid range (outside the geometry or empty) throws from `bind`.
+
 ## What each event draws
 
 | Event | Visual | Sound key |

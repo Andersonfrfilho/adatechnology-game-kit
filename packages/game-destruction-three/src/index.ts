@@ -7,6 +7,7 @@ export type {
   BindOptions,
   DestructionRenderer,
   Mesh,
+  MeshRange,
   Object3D,
   Piece,
   Quality,
