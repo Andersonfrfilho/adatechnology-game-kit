@@ -3,6 +3,7 @@ import { GENERATORS } from './generate'
 const ENUMS: Record<string, readonly string[]> = {
   crownShape: ['round', 'spreading', 'columnar', 'weeping'],
   leafShape: ['clump', 'sparse'],
+  crownStyle: ['dome', 'lumpy', 'cloud', 'sphere', 'umbrella', 'willow', 'sparse_high'],
   variant: ['coconut', 'royal', 'fan', 'areca', 'date'],
   shape: ['cone', 'candelabra', 'round', 'hedge', 'loose', 'terracotta', 'cylinder', 'square', 'cachepot'],
   flowerType: ['daisy', 'rose', 'tulip', 'sunflower', 'hibiscus', 'cluster', 'lily', 'bird_of_paradise'],
@@ -12,7 +13,7 @@ const ENUMS: Record<string, readonly string[]> = {
 }
 const POSITIVE = [
   'height', 'trunkRadius', 'crownRadius', 'radius', 'length', 'width', 'frondLength', 'padSize', 'leafSize', 'flowerSize', 'size', 'tiers', 'ribs', 'branchLevels',
-  'frondCount', 'leafCount', 'stemCount', 'stems', 'generations', 'count',
+  'clumpSize', 'frondCount', 'leafCount', 'stemCount', 'stems', 'generations', 'count',
 ]
 const SEASONS = ['spring', 'summer', 'autumn', 'winter']
 

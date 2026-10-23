@@ -50,7 +50,7 @@ export function generate(spec: PlantSpec, opts: GenerateOptions = {}): PlantMesh
   const seed = toSeed(opts.seed)
   const lod: Lod = opts.lod ?? 0
   const condition: Condition = opts.condition ?? 'healthy'
-  const season: Season = opts.season ?? 'summer'
+  const season: Season = opts.season ?? 'spring'
   const scale = opts.scale ?? 1
   const ctx: Ctx = {
     rng: new Rng(seed),

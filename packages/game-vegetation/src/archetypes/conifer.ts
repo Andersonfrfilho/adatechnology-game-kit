@@ -74,28 +74,30 @@ export function generateConifer(spec: ConiferSpec, ctx: Ctx): ArchResult {
     }
   } else {
     // candelabra (araucaria): whorls of upturned branches carrying thick needle sleeves
-    const whorls = Math.max(3, Math.min(tiers, ctx.pick(7, 5, 3)))
-    const perWhorl = ctx.pick(6, 5, 4)
+    const whorls = Math.max(3, Math.min(tiers, ctx.pick(5, 4, 3)))
+    const perWhorl = ctx.pick(8, 6, 5)
     for (let w = 0; w < whorls; w++) {
       const f = whorls === 1 ? 1 : w / (whorls - 1)
-      const y = lerp(H * 0.55, H * 0.98, f)
-      const len = R * lerp(1.0, 0.35, Math.pow(f, 1.1))
+      const y = lerp(H * 0.66, H * 0.9, f)
+      const len = R * lerp(1.15, 0.6, f)
+      const topY = H * lerp(0.93, 1.0, f)
       for (let k = 0; k < perWhorl; k++) {
         const fr = rng.fork(w * 31 + k)
         const az = (k / perWhorl) * TAU + w * 0.9 + fr.range(-0.2, 0.2)
         const out = dirFromAngles(az, 0)
         const start: Vec3 = [lean * (y / H) ** 2, y, 0]
-        const p1 = add(start, add(mul(out, len * 0.5), [0, len * 0.05, 0]))
-        const p2 = add(start, add(mul(out, len * 0.9), [0, len * 0.22, 0]))
-        const p3 = add(start, add(mul(out, len * 1.0), [0, len * 0.55, 0]))
+        const rise = Math.max(0.5, topY - y)
+        const p1 = add(start, add(mul(out, len * 0.4), [0, rise * 0.02, 0]))
+        const p2 = add(start, add(mul(out, len * 0.75), [0, rise * 0.22, 0]))
+        const p3 = add(start, add(mul(out, len * 1.0), [0, rise * 0.95, 0]))
         const path = catmull([start, p1, p2, p3], ctx.pick(2, 1, 1))
         const n = path.length
         if (ctx.lod < 2) tube(ctx.wood, path, { sides: ctx.pick(4, 3, 3), radii: path.map((_, i) => trunkR * 0.35 * (1 - 0.6 * (i / (n - 1)))), color: barkColor(bark, 1), sway: (t) => 0.1 + 0.2 * t, end: 'none' })
         const col = jitter(leafBase, fr, 0.012, 0.08, 0.05)
-        const sleeve = path.slice(Math.floor(n * 0.3))
-        const sr = Math.max(0.1, R * 0.07 * lerp(1, 0.6, f))
+        const sleeve = path.slice(Math.floor(n * 0.2))
+        const sr = Math.max(0.12, R * 0.085 * lerp(1, 0.85, f))
         tube(ctx.foliage, sleeve, {
-          sides: ctx.pick(7, 5, 4),
+          sides: ctx.pick(6, 5, 4),
           radii: sleeve.map((_, i) => sr * (0.55 + 0.45 * Math.sin(Math.min(1, (i + 0.5) / (sleeve.length - 0.5)) * Math.PI * 0.9 + 0.3))),
           color: (t, a) => mix(shade(col, 0.55), lighten(col, 0.7), clamp01(0.4 * t + 0.6 * (0.5 + 0.5 * Math.sin(a * TAU)))),
           sway: (t) => 0.2 + 0.4 * t,

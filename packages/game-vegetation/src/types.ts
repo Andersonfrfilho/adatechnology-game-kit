@@ -53,6 +53,7 @@ export interface GenerateOptions {
   seed?: number | string
   lod?: Lod
   condition?: Condition
+  /** default 'spring' (blooming trees such as ipe show their flowers; pass 'summer' for green) */
   season?: Season
   /** uniform scale applied to the finished mesh (default 1) */
   scale?: number
@@ -81,6 +82,14 @@ export interface BloomSpec {
 }
 
 export type CrownShape = 'round' | 'spreading' | 'columnar' | 'weeping'
+/**
+ * Foliage composition of a broadleaf tree (the branch skeleton follows it):
+ * `dome` wide dense dome lower than wide (mango), `lumpy` irregular spreading clumps with visible branches (oak),
+ * `cloud` a few big rounded clumps with gaps (fruit trees), `sphere` clipped lollipop (street ficus),
+ * `umbrella` wide flat layered crown (flamboyant), `willow` arching branches with long hanging curtains,
+ * `sparse_high` thin high irregular crown on a tall bare trunk (eucalyptus).
+ */
+export type CrownStyle = 'dome' | 'lumpy' | 'cloud' | 'sphere' | 'umbrella' | 'willow' | 'sparse_high'
 
 export interface BroadleafTreeSpec {
   archetype: 'broadleaf_tree'
@@ -102,6 +111,10 @@ export interface BroadleafTreeSpec {
   leafShape?: 'clump' | 'sparse'
   /** clipped, perfectly round crown (street ficus) */
   clipped?: boolean
+  /** foliage composition, see CrownStyle (default: legacy merged clumps) */
+  crownStyle?: CrownStyle
+  /** clump size multiplier for crownStyle (default 1) */
+  clumpSize?: number
 }
 export interface DeadTreeSpec {
   archetype: 'dead_tree'
