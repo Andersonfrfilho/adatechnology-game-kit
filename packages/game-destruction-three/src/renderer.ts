@@ -557,7 +557,10 @@ class Renderer implements DestructionRenderer {
     if (!mv) return null
     const mat = materialsOf(mv.mesh.material)[0] as THREE_NS.MeshStandardMaterial | undefined
     const c = mat?.color
-    if (c && (c as THREE_NS.Color).isColor) return c.getHex()
+    if (c && (c as THREE_NS.Color).isColor) {
+      const tint = this.visuals.vertexTint(mv)
+      return tint ? c.clone().multiply(tint).getHex() : c.getHex()
+    }
     return def ? fallbackColor(def.id, def) : null
   }
 
