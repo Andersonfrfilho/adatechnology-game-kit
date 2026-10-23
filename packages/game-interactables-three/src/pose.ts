@@ -83,13 +83,27 @@ export function syncObject(THREE: ThreeLib, world: World, objectId: string, part
   for (const p of obj.spec.parts ?? []) {
     motionOf.set(p.id, p.motion)
     const g = parts[p.id]
-    if (g) applyPose(THREE, g, p.motion, world.partT(objectId, p.id))
+    if (!g) continue
+    const merged = g.userData.merged as { kind: string; apply?: (m: Motion, t: number) => void } | undefined
+    if (merged) {
+      // parts merged into one mesh: the batch poses every vertex around its own pivot (cloth batches stay at rest)
+      merged.apply?.(p.motion, world.partT(objectId, p.id))
+      continue
+    }
+    applyPose(THREE, g, p.motion, world.partT(objectId, p.id))
   }
   for (const soft of obj.spec.soft ?? []) {
     const key = soft.part ?? soft.id
     const g = parts[key] ?? parts[soft.id]
     if (!g) continue
     const { ax, az } = world.sway(objectId, soft.id)
+    const batch = g.userData.merged as { kind: string; index?: Record<string, number>; setAt?: (i: number, ax: number, az: number) => void; setTime?: (t: number) => void } | undefined
+    if (batch?.kind === 'sway') {
+      const i = batch.index?.[soft.id]
+      if (i !== undefined) batch.setAt?.(i, ax, az)
+      if (options.time !== undefined) batch.setTime?.(options.time)
+      continue
+    }
     let shaded = false
     g.traverse((o) => {
       const sway = o.userData.sway as { set(ax: number, az: number, time?: number): void } | undefined

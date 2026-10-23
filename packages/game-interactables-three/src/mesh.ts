@@ -1,6 +1,8 @@
+import type { ObjectSpec } from '@adatechnology/game-interactables'
 import type { CylinderShape, PropItem, Uv } from '@adatechnology/game-props3d'
 import type { HouseholdApi, MaterialKey, Quality, ThreeLib, ThreeNS, Vec3 } from './types'
 import { MATERIAL_KEYS } from './types'
+import { mergeParts } from './merge'
 import { rememberRest } from './pose'
 
 export type MaterialMap = Partial<Record<MaterialKey, ThreeNS.Material>>
@@ -14,12 +16,19 @@ export interface MeshApiOptions {
   shadows?: boolean
   /** Make `plane` primitives double sided (applies to the default materials only). Default false. */
   doubleSidedPlanes?: boolean
+  /**
+   * Cut draw calls: `finish(spec)` merges the parts of one `PartSpec.group` that share a motion (blind slats) and the `cloth` soft
+   * volumes (clothes on a line) into one mesh per material (see `mergeParts`). Needs the spec in `finish`. Default: on in `game` quality.
+   */
+  mergeParts?: boolean
+  /** Idle flutter of merged cloth. Default 0.04. */
+  swayAmplitude?: number
 }
 
 export interface MeshResult {
-  /** Root group: static meshes (one per material) plus one child group per part. */
+  /** Root group: static meshes (one per material) plus one child group per part (merged parts share one group, see `mergeParts`). */
   group: ThreeNS.Group
-  /** Part groups by id. Origin at the pivot, rotated by the part's `ry`; `userData.rest` holds the rest pose. */
+  /** Part groups by id. Origin at the pivot, rotated by the part's `ry`; `userData.rest` holds the rest pose. A merged part maps to the shared group (`userData.merged`). */
   parts: Record<string, ThreeNS.Group>
   /** Real lights requested by the builders (already children of their group). */
   lights: ThreeNS.Light[]
@@ -27,13 +36,13 @@ export interface MeshResult {
 
 export interface MeshApi {
   api: HouseholdApi
-  /** Builds the groups from everything drawn so far. Call once; the api is spent afterwards. */
-  finish(): MeshResult
+  /** Builds the groups from everything drawn so far. Call once; the api is spent afterwards. Pass the spec the pack returned to allow `mergeParts`. */
+  finish(spec?: ObjectSpec): MeshResult
   /** Materials in use (defaults merged with the given ones). */
   materials: Record<MaterialKey, ThreeNS.Material>
 }
 
-/** Default materials: vertex colors everywhere, glass and water transparent, emissive unlit. */
+/** Default materials: vertex colors everywhere (in `game` quality plain, metal, wood and fabric are one shared Lambert material), glass and water transparent, emissive unlit. */
 export function createDefaultMaterials(THREE: ThreeLib, quality: Quality = 'high'): Record<MaterialKey, ThreeNS.Material> {
   // three warns about every parameter that is present but undefined: only pass the ones that are set
   const defined = <T extends object>(o: T): T => {
@@ -45,12 +54,15 @@ export function createDefaultMaterials(THREE: ThreeLib, quality: Quality = 'high
     quality === 'game'
       ? new THREE.MeshLambertMaterial(defined({ vertexColors: true, transparent: p.transparent, opacity: p.opacity, depthWrite: p.depthWrite, side: p.side }))
       : new THREE.MeshStandardMaterial(defined({ vertexColors: true, roughness: 0.85, metalness: 0, ...p }))
+  // Lambert has no roughness or metalness: in `game` quality the opaque default materials are one and the same instance, so the
+  // mesh api (which merges per material instance) draws plain, metal, wood and fabric together
+  const solid = quality === 'game' ? std({}) : null
   return {
-    plain: std({}),
-    metal: std({ roughness: 0.35, metalness: 0.7 }),
-    wood: std({ roughness: 0.8 }),
+    plain: solid ?? std({}),
+    metal: solid ?? std({ roughness: 0.35, metalness: 0.7 }),
+    wood: solid ?? std({ roughness: 0.8 }),
     glass: std({ roughness: 0.05, transparent: true, opacity: 0.35, depthWrite: false }),
-    fabric: std({ roughness: 1 }),
+    fabric: solid ?? std({ roughness: 1 }),
     plant: std({ roughness: 0.9, side: THREE.DoubleSide }),
     water: std({ roughness: 0.1, transparent: true, opacity: 0.7, depthWrite: false }),
     emissive: new THREE.MeshBasicMaterial({ vertexColors: true }),
@@ -167,7 +179,14 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
   const scl = new THREE.Vector3()
   const color = new THREE.Color()
 
-  const accOf = (key: MaterialKey): Acc => {
+  /** Keys that share a material instance share the geometry too: the first key stands for all of them. */
+  const canonical = new Map<MaterialKey, MaterialKey>()
+  for (const k of MATERIAL_KEYS) {
+    const first = MATERIAL_KEYS.find((o) => materials[o] === materials[k]) ?? k
+    canonical.set(k, first)
+  }
+  const accOf = (requested: MaterialKey): Acc => {
+    const key = canonical.get(requested) ?? requested
     let a = current.acc.get(key)
     if (!a) {
       a = { pos: [], nor: [], col: [], uv: [], idx: [] }
@@ -288,7 +307,7 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
   return {
     api,
     materials,
-    finish() {
+    finish(spec) {
       if (finished) throw new Error('createMeshApi: finish() was already called')
       finished = true
       const group = new THREE.Group()
@@ -307,6 +326,7 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
         group.add(g)
         parts[id] = g
       }
+      if (spec && (options.mergeParts ?? quality === 'game')) mergeParts(THREE, group, parts, spec, { swayAmplitude: options.swayAmplitude })
       return { group, parts, lights: lightsOut }
     },
   }
