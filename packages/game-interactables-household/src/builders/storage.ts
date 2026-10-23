@@ -328,8 +328,9 @@ export function dresser(c: Ctx): void {
   const sh = shell(c, { x0: -hw, x1: hw, y0: legH, y1: top, z0: -hd, z1: zf, color: body, inner: lining, t: 0.02, tBack: 0.012 })
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) c.b('wood', sx * (hw - 0.05) - 0.025, 0, sz * (hd - 0.06) - 0.025, sx * (hw - 0.05) + 0.025, legH, sz * (hd - 0.06) + 0.025, shade(body, 0.7))
   c.b('wood', -hw - 0.005, top, -hd, hw + 0.005, h, zf + 0.015, shade(body, 1.1))
-  const n = 4
   const gap = 0.003
+  // fewer drawers on a low chest: every drawer keeps at least 0.1 m of inner height (the box eats 58 mm of the front)
+  const n = Math.max(1, Math.min(4, Math.floor((top - legH - gap) / (0.158 + gap))))
   const dh = (top - legH - gap * (n + 1)) / n
   for (let i = 0; i < n; i++) {
     const y0 = legH + gap + i * (dh + gap)

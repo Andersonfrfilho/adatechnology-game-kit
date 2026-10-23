@@ -629,4 +629,15 @@ describe('slot layout is robust to size overrides', () => {
   it('wardrobe: every slot has a positive size and fits a catalog item for w 0.4..3, h 1.2..2.6', () => {
     for (const w of sweep(0.4, 3, 0.1)) for (const h of sweep(1.2, 2.6, 0.1)) ok(`wardrobe w${w} h${h}`, build('wardrobe', { w, h }).spec)
   })
+
+  it('dresser: each drawer keeps at least 0.1 m of inner height for h 0.4..1.4', () => {
+    for (const h of sweep(0.4, 1.4, 0.05)) {
+      const spec = build('dresser', { h }).spec
+      const drawers = (spec.parts ?? []).filter((p) => p.id.startsWith('drawer'))
+      expect(drawers.length, `h${h}`).toBeGreaterThan(0)
+      for (const c of spec.containers ?? []) expect(c.volume.half[1] * 2, `h${h} ${c.id} inner height`).toBeGreaterThanOrEqual(0.1 - 1e-9)
+      ok(`dresser h${h}`, spec)
+    }
+    expect((build('dresser').spec.parts ?? []).filter((p) => p.id.startsWith('drawer')).length).toBe(4)
+  })
 })
