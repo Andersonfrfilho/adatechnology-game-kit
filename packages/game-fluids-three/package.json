@@ -1,13 +1,13 @@
 {
-  "name": "@adatechnology/game-destruction-bench",
+  "name": "@adatechnology/game-fluids-three",
   "version": "0.0.0",
   "license": "MIT",
-  "description": "Reusable destruction test area for three.js: spawn any object, grab, carry and throw it, shoot, hit, burn, melt and take it apart with tools, and inspect every part. Knows nothing about any game.",
-  "keywords": ["game", "destruction", "damage", "materials", "fracture", "fire", "three", "threejs", "devtools", "playtest"],
+  "description": "three.js renderer for @adatechnology/game-fluids: liquid surfaces inside containers, streams with a drop at the tip, puddles that grow from a flow front, wet surfaces that reflect and dry from the edge.",
+  "keywords": ["game", "fluids", "liquids", "three", "threejs", "puddles", "wet"],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
-    "directory": "packages/game-destruction-bench"
+    "directory": "packages/game-fluids-three"
   },
   "publishConfig": {
     "access": "public"
@@ -35,8 +35,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-destruction": "workspace:*",
-    "@adatechnology/game-destruction-three": "workspace:*"
+    "@adatechnology/game-fluids": "workspace:*"
   },
   "peerDependencies": {
     "three": "^0.160.0"
@@ -47,7 +46,6 @@
     "three": "^0.160.1",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",
-    "vitest": "^3.2.4",
-    "happy-dom": "^17.4.4"
+    "vitest": "^3.2.4"
   }
 }
