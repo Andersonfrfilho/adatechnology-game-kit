@@ -589,6 +589,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     addArena()
     timeScale = 1
     fastForward = false
+    walkPlan = null
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -1483,9 +1484,21 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
+  let paused = false
+  let walkPlan: { x: number; z: number; remaining: number } | null = null
+  const stepWalk = (dt: number): void => {
+    if (!walkPlan) return
+    const f = walkPlan.remaining <= dt ? 1 : dt / walkPlan.remaining
+    player.moveBy((walkPlan.x - camera.position.x) * f, (walkPlan.z - camera.position.z) * f)
+    walkPlan.remaining -= dt
+    if (walkPlan.remaining <= 1e-9) walkPlan = null
+  }
+
   const stepSim = (dt: number): void => {
+    if (paused) return
     // `dt` is simulated seconds; real time only drives input
     simTime += dt
+    stepWalk(dt)
     const reps = fastForward ? 10 : 1
     updateAnimations(dt)
     updateItemUse(dt)
@@ -1515,13 +1528,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (tiltKey || heldTilt > 0) {
       heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
     }
-    if (useHeld) {
+    if (useHeld && !paused) {
       if (tool.def.category === 'hand') {
         if (useFirst) grab()
       } else useTool(dt, !useFirst)
       useFirst = false
     }
-    followHeld(dt)
+    if (!paused) followHeld(dt)
     stepSim(dt * timeScale)
     if (progress && simTime - progress.at > 0.25) progress = null
     hudAcc += dt
@@ -1746,6 +1759,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const all = list ?? allScenarios()
     const report: ScenarioReport = { passed: 0, failed: 0, results: [] }
     scenarioRunning = true
+    const wasPaused = paused
+    paused = false
     try {
       for (const sc of all) {
         hardReset()
@@ -1777,6 +1792,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     } finally {
       scenarioRunning = false
+      paused = wasPaused
     }
     return report
   }
@@ -1852,6 +1868,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       heldTilt = rad
     },
     toggleTap,
+    pause() {
+      paused = true
+    },
+    resume() {
+      paused = false
+    },
+    get paused() {
+      return paused
+    },
+    walk(to, seconds) {
+      walkPlan = seconds > 0 ? { x: to[0], z: to[2], remaining: seconds } : null
+      if (!walkPlan) player.moveBy(to[0] - camera.position.x, to[2] - camera.position.z)
+    },
     setSlowMotion(on) {
       timeScale = on ? 0.25 : 1
     },

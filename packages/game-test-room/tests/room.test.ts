@@ -302,3 +302,44 @@ describe('kick shortcut', () => {
     expect(room.tool.def.id).toBe('hammer')
   })
 })
+
+const run = (room: ReturnType<typeof makeRoom>, seconds: number): void => {
+  for (let i = 0; i < Math.round(seconds * 60); i++) room.update(1 / 60)
+}
+
+describe('pause and walk', () => {
+  it('pause stops the simulation but not the log, resume continues', () => {
+    const room = makeRoom()
+    const so = room.spawn('chair', [0, 3, -4], 0)
+    room.pause()
+    expect(room.paused).toBe(true)
+    const y = so.root.position.y
+    run(room, 1)
+    run(room, 0.5)
+    expect(so.root.position.y).toBe(y)
+    room.log.add({ channel: 'action', type: 'note', text: 'still logging' })
+    expect(room.log.entries({ type: 'note' })).toHaveLength(1)
+    room.resume()
+    expect(room.paused).toBe(false)
+    run(room, 0.5)
+    expect(so.root.position.y).toBeLessThan(y)
+  })
+
+  it('walk moves the player along a straight line during frames, and not while paused', () => {
+    const room = makeRoom()
+    room.look([0, 1.6, 4], [0, 1.6, 0])
+    room.walk([2, 0, 0], 2)
+    run(room, 1)
+    expect(room.camera.position.x).toBeCloseTo(1, 1)
+    expect(room.camera.position.z).toBeCloseTo(2, 1)
+    room.pause()
+    run(room, 1)
+    expect(room.camera.position.x).toBeCloseTo(1, 1)
+    room.resume()
+    run(room, 1.2)
+    expect(room.camera.position.x).toBeCloseTo(2, 1)
+    expect(room.camera.position.z).toBeCloseTo(0, 1)
+    run(room, 1)
+    expect(room.camera.position.x).toBeCloseTo(2, 1)
+  })
+})

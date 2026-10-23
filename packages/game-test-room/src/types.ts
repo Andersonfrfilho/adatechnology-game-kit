@@ -139,6 +139,12 @@ export interface TestRoom {
   tilt(rad: number): void
   /** Open or close the tap over the table (default: toggle). Returns whether it is open. */
   toggleTap(on?: boolean): boolean
+  /** Stop the simulation (time, physics, animations, tools, walks): the UI, the camera and the log stay live. `step` and `update` do nothing until `resume`. Scenarios run unpaused. */
+  pause(): void
+  resume(): void
+  readonly paused: boolean
+  /** Walk the player in a straight line to the floor position `to` (x and z; y is ignored) over `seconds` of simulated time, during the next `step()` / frames. Colliders still block. 0 seconds moves at once. */
+  walk(to: Vec3, seconds: number): void
   /** 0.25x simulation speed. */
   setSlowMotion(on: boolean): void
   /** Run the simulation 10x per frame (fire, melting and drying take a tenth of the time). */
