@@ -1,0 +1,511 @@
+[
+  {
+    "id": "sip",
+    "duration": 1.2,
+    "keys": [
+      {
+        "t": 0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 0.35,
+        "position": [
+          0.0,
+          0.02,
+          -0.2
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 0.45,
+        "position": [
+          0.0,
+          0.02,
+          -0.2
+        ],
+        "rotation": [
+          -0.9,
+          0,
+          0
+        ],
+        "action": "drink",
+        "rate": 0.06
+      },
+      {
+        "t": 0.95,
+        "position": [
+          0.0,
+          0.02,
+          -0.2
+        ],
+        "rotation": [
+          -0.9,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 1.2,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      }
+    ]
+  },
+  {
+    "id": "drink",
+    "duration": 2.5,
+    "keys": [
+      {
+        "t": 0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 0.5,
+        "position": [
+          0.0,
+          0.02,
+          -0.2
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 0.8,
+        "position": [
+          0.0,
+          0.02,
+          -0.2
+        ],
+        "rotation": [
+          -1.22,
+          0,
+          0
+        ],
+        "action": "drink",
+        "rate": 0.1667
+      },
+      {
+        "t": 2.0,
+        "position": [
+          0.0,
+          0.02,
+          -0.2
+        ],
+        "rotation": [
+          -1.22,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 2.5,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      }
+    ]
+  },
+  {
+    "id": "chug",
+    "duration": 4,
+    "keys": [
+      {
+        "t": 0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 0.5,
+        "position": [
+          0.0,
+          0.02,
+          -0.2
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 0.9,
+        "position": [
+          0.0,
+          0.02,
+          -0.2
+        ],
+        "rotation": [
+          -1.45,
+          0,
+          0
+        ],
+        "action": "drink",
+        "rate": 0.2
+      },
+      {
+        "t": 3.4,
+        "position": [
+          0.0,
+          0.02,
+          -0.2
+        ],
+        "rotation": [
+          -1.45,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 4,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      }
+    ]
+  },
+  {
+    "id": "pour",
+    "duration": 3,
+    "keys": [
+      {
+        "t": 0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 0.4,
+        "position": [
+          0.1,
+          0.0,
+          -0.35
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 0.8,
+        "position": [
+          0.1,
+          0.0,
+          -0.35
+        ],
+        "rotation": [
+          -1.745,
+          0,
+          0
+        ],
+        "action": "pour",
+        "rate": 1
+      },
+      {
+        "t": 2.4,
+        "position": [
+          0.1,
+          0.0,
+          -0.35
+        ],
+        "rotation": [
+          -1.745,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 3,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      }
+    ]
+  },
+  {
+    "id": "pour_out",
+    "duration": 4,
+    "keys": [
+      {
+        "t": 0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 0.5,
+        "position": [
+          0.1,
+          0.1,
+          -0.35
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 1.0,
+        "position": [
+          0.1,
+          0.1,
+          -0.35
+        ],
+        "rotation": [
+          -2.2,
+          0,
+          0
+        ],
+        "action": "pour",
+        "rate": 40
+      },
+      {
+        "t": 3.2,
+        "position": [
+          0.1,
+          0.1,
+          -0.35
+        ],
+        "rotation": [
+          -2.2,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 4,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      }
+    ]
+  },
+  {
+    "id": "open",
+    "duration": 1,
+    "keys": [
+      {
+        "t": 0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 0.25,
+        "position": [
+          0.1,
+          0,
+          -0.3
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "open"
+      },
+      {
+        "t": 0.7,
+        "position": [
+          0.1,
+          0,
+          -0.3
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 1,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      }
+    ]
+  },
+  {
+    "id": "close",
+    "duration": 1,
+    "keys": [
+      {
+        "t": 0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 0.25,
+        "position": [
+          0.1,
+          0,
+          -0.3
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "close"
+      },
+      {
+        "t": 0.7,
+        "position": [
+          0.1,
+          0,
+          -0.3
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      },
+      {
+        "t": 1,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "action": "none"
+      }
+    ]
+  }
+]

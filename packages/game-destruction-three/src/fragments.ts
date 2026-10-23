@@ -1,0 +1,269 @@
+import type * as THREE_NS from 'three'
+import type { Fragment } from '@adatechnology/game-destruction'
+import { clamp, createRng, hashString } from './math'
+
+interface Live {
+  mesh: THREE_NS.Mesh
+  home: string
+  vel: THREE_NS.Vector3
+  ang: THREE_NS.Vector3
+  half: THREE_NS.Vector3
+  baseScale: THREE_NS.Vector3
+  still: number
+  asleep: boolean
+  /** Seconds at rest. */
+  rest: number
+  /** 1 while alive; counts down to 0 while shrinking away. */
+  fade: number
+  dying: boolean
+}
+
+export interface FragmentSystemOptions {
+  scene: THREE_NS.Scene
+  groundAt: (x: number, z: number) => number
+  gravity: number
+  max: number
+  life: number
+}
+
+/** Light physics for fracture debris: gravity, ground bounce and friction, spin damping, settling flat, sleep, shrink-away and removal. */
+export class FragmentSystem {
+  private readonly list: Live[] = []
+  private readonly box: THREE_NS.BoxGeometry
+  private shardGeos: THREE_NS.BufferGeometry[] = []
+  private readonly materials = new Map<string, THREE_NS.Material>()
+  private readonly q: THREE_NS.Quaternion
+  private readonly dq: THREE_NS.Quaternion
+  private readonly m: THREE_NS.Matrix4
+  private readonly v: THREE_NS.Vector3
+  private readonly w: THREE_NS.Vector3
+  private readonly rng = createRng(0x51ed270b)
+
+  constructor(
+    private readonly THREE: typeof THREE_NS,
+    private readonly o: FragmentSystemOptions,
+  ) {
+    this.box = new THREE.BoxGeometry(1, 1, 1)
+    this.q = new THREE.Quaternion()
+    this.dq = new THREE.Quaternion()
+    this.m = new THREE.Matrix4()
+    this.v = new THREE.Vector3()
+    this.w = new THREE.Vector3()
+  }
+
+  get count(): number {
+    return this.list.length
+  }
+
+  /** Meshes of every live fragment (tests and picking). */
+  meshes(): THREE_NS.Mesh[] {
+    return this.list.map((f) => f.mesh)
+  }
+
+  /** One shared material per source material id + colour (+ transparency). */
+  materialFor(materialId: string, color: number, transparent: boolean, opacity = 0.5): THREE_NS.Material {
+    const key = `${materialId}:${color}:${transparent ? 1 : 0}`
+    let m = this.materials.get(key)
+    if (!m) {
+      m = transparent
+        ? new this.THREE.MeshStandardMaterial({ color, roughness: 0.15, metalness: 0.1, transparent: true, opacity, side: this.THREE.DoubleSide, depthWrite: false })
+        : new this.THREE.MeshLambertMaterial({ color })
+      this.materials.set(key, m)
+    }
+    return m
+  }
+
+  private shardGeometry(seed: number): THREE_NS.BufferGeometry {
+    const idx = seed % 6
+    let g = this.shardGeos[idx]
+    if (!g) {
+      const r = createRng(1000 + idx)
+      const n = 3 + Math.floor(r() * 3) // triangle, quad or pentagon, irregular
+      const shape = new this.THREE.Shape()
+      const pts: Array<[number, number]> = []
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + (r() - 0.5) * 0.7
+        const rad = 0.35 + r() * 0.15
+        pts.push([Math.cos(a) * rad, Math.sin(a) * rad])
+      }
+      shape.moveTo(pts[0][0], pts[0][1])
+      for (let i = 1; i < n; i++) shape.lineTo(pts[i][0], pts[i][1])
+      shape.closePath()
+      g = new this.THREE.ExtrudeGeometry(shape, { depth: 1, bevelEnabled: false })
+      g.translate(0, 0, -0.5)
+      this.shardGeos[idx] = g
+    }
+    return g
+  }
+
+  /** Create the mesh of a fragment and start its motion. `maxAllowed` is the live budget. */
+  spawn(f: Fragment, material: THREE_NS.Material, home: string, maxAllowed: number): void {
+    const geo = f.shape === 'shard' ? this.shardGeometry(hashString(f.id)) : this.box
+    const mesh = new this.THREE.Mesh(geo, material)
+    mesh.position.set(f.center[0], f.center[1], f.center[2])
+    mesh.quaternion.set(f.rotation[0], f.rotation[1], f.rotation[2], f.rotation[3]).normalize()
+    const sz = f.size
+    const sc = new this.THREE.Vector3(Math.max(0.005, sz[0]), Math.max(0.005, sz[1]), Math.max(0.003, sz[2]))
+    mesh.scale.copy(sc)
+    mesh.castShadow = true
+    this.o.scene.add(mesh)
+    const live: Live = {
+      mesh,
+      home,
+      vel: new this.THREE.Vector3(f.velocity[0], f.velocity[1], f.velocity[2]),
+      ang: new this.THREE.Vector3(f.angularVelocity[0], f.angularVelocity[1], f.angularVelocity[2]),
+      // shards are thin: the contact extent uses the real (small) thickness, the chunk uses half of each side
+      half: sc.clone().multiplyScalar(0.5),
+      baseScale: sc,
+      still: 0,
+      asleep: false,
+      rest: 0,
+      fade: 1,
+      dying: false,
+    }
+    this.list.push(live)
+    let alive = this.list.reduce((n, l) => n + (l.dying ? 0 : 1), 0)
+    for (let i = 0; i < this.list.length && alive > maxAllowed; i++) {
+      if (!this.list[i].dying) {
+        this.list[i].dying = true
+        alive--
+      }
+    }
+  }
+
+  /** Add velocity to every fragment within `radius` of a point (blasts). */
+  blast(point: [number, number, number], radius: number, speed: number): void {
+    for (const f of this.list) {
+      const d = this.v.copy(f.mesh.position).sub(this.w.set(point[0], point[1], point[2]))
+      const dist = d.length()
+      if (dist > radius || f.dying) continue
+      const k = (1 - dist / radius) ** 2 * speed
+      d.normalize().multiplyScalar(k)
+      d.y += k * 0.4
+      f.vel.add(d)
+      f.ang.add(this.w.set(this.rng() - 0.5, this.rng() - 0.5, this.rng() - 0.5).multiplyScalar(k))
+      f.asleep = false
+      f.rest = 0
+    }
+  }
+
+  update(dt: number): void {
+    const g = this.o.gravity
+    for (let i = this.list.length - 1; i >= 0; i--) {
+      const f = this.list[i]
+      if (f.dying) {
+        f.fade -= dt / 0.6
+        if (f.fade <= 0) {
+          this.o.scene.remove(f.mesh)
+          this.list.splice(i, 1)
+          continue
+        }
+        f.mesh.scale.copy(f.baseScale).multiplyScalar(f.fade)
+      }
+      if (f.asleep) {
+        f.rest += dt
+        if (this.o.life > 0 && f.rest > this.o.life) f.dying = true
+        continue
+      }
+      this.step(f, dt, g)
+    }
+  }
+
+  private step(f: Live, dt: number, g: number): void {
+    const mesh = f.mesh
+    f.vel.y -= g * dt
+    mesh.position.addScaledVector(f.vel, dt)
+    const w = f.ang.length()
+    if (w > 1e-5) {
+      this.dq.setFromAxisAngle(this.v.copy(f.ang).multiplyScalar(1 / w), w * dt)
+      mesh.quaternion.premultiply(this.dq).normalize()
+    }
+    // ground contact: lowest point of the oriented box
+    this.m.makeRotationFromQuaternion(mesh.quaternion)
+    const e = this.m.elements
+    const h = f.half
+    const sc = f.dying ? f.fade : 1
+    const ext = (Math.abs(e[1]) * h.x + Math.abs(e[5]) * h.y + Math.abs(e[9]) * h.z) * sc
+    const gy = this.o.groundAt(mesh.position.x, mesh.position.z)
+    let contact = false
+    if (mesh.position.y - ext < gy) {
+      contact = true
+      mesh.position.y = gy + ext
+      if (f.vel.y < -0.6) {
+        f.vel.y = -f.vel.y * 0.25
+        f.vel.x *= 0.7
+        f.vel.z *= 0.7
+        f.ang.multiplyScalar(0.55)
+        // a hit on a corner makes it tumble a little
+        f.ang.x += (this.rng() - 0.5) * 2
+        f.ang.z += (this.rng() - 0.5) * 2
+      } else {
+        f.vel.y = 0
+        const fr = Math.exp(-7 * dt)
+        f.vel.x *= fr
+        f.vel.z *= fr
+        f.ang.multiplyScalar(Math.exp(-6 * dt))
+      }
+    } else {
+      f.ang.multiplyScalar(Math.exp(-0.15 * dt))
+    }
+    if (contact && f.vel.lengthSq() < 4) this.settle(f, dt)
+    const slow = f.vel.lengthSq() < 0.012 && f.ang.lengthSq() < 0.2
+    if (contact && slow) {
+      f.still += dt
+      if (f.still > 0.4) {
+        f.asleep = true
+        f.vel.set(0, 0, 0)
+        f.ang.set(0, 0, 0)
+      }
+    } else {
+      f.still = 0
+    }
+  }
+
+  /** Tip the fragment towards lying on its flattest face. */
+  private settle(f: Live, dt: number): void {
+    const mesh = f.mesh
+    this.m.makeRotationFromQuaternion(mesh.quaternion)
+    const e = this.m.elements
+    const up = [e[1], e[5], e[9]] // world-y component of each local axis
+    const half = [f.half.x, f.half.y, f.half.z]
+    let small = 0
+    for (let i = 1; i < 3; i++) if (half[i] < half[small]) small = i
+    let axis = small
+    if (Math.abs(up[small]) < 0.35) {
+      axis = 0
+      for (let i = 1; i < 3; i++) if (Math.abs(up[i]) > Math.abs(up[axis])) axis = i
+    }
+    const sign = up[axis] >= 0 ? 1 : -1
+    this.v.set(e[axis * 4], e[axis * 4 + 1], e[axis * 4 + 2]).multiplyScalar(sign)
+    this.w.set(0, 1, 0)
+    this.dq.setFromUnitVectors(this.v, this.w)
+    this.q.copy(this.dq).multiply(mesh.quaternion)
+    mesh.quaternion.slerp(this.q, clamp(dt * 7, 0, 1))
+  }
+
+  /** Remove the fragments of one object (after `restore`). */
+  removeHome(home: string): void {
+    for (let i = this.list.length - 1; i >= 0; i--) {
+      if (this.list[i].home === home) {
+        this.o.scene.remove(this.list[i].mesh)
+        this.list.splice(i, 1)
+      }
+    }
+  }
+
+  clear(): void {
+    for (const f of this.list) this.o.scene.remove(f.mesh)
+    this.list.length = 0
+  }
+
+  dispose(): void {
+    this.clear()
+    this.box.dispose()
+    for (const g of this.shardGeos) g?.dispose()
+    this.shardGeos = []
+    for (const m of this.materials.values()) m.dispose()
+    this.materials.clear()
+  }
+}
