@@ -431,6 +431,8 @@ export type WorldEvent =
   | { type: 'leak'; object: string; target: string; pos: Vec3 }
   | { type: 'message'; key: string; text: string }
   | { type: 'power'; grid: boolean }
+  /** A container without an access part was opened (open shelf): the host may show its contents. */
+  | { type: 'container'; object: string; container: string; open: boolean }
 
 /** World-space interaction, compatible with hosts that list `{id, tipo, pos, raio, rotulo, agir()}`. */
 export interface Interactable {
