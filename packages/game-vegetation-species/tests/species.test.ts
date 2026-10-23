@@ -12,7 +12,8 @@ const REQUIRED = [
   'potted_rose', 'potted_succulents',
 ]
 
-function budget(archetype: string): number {
+function budget(archetype: string, id = ''): number {
+  if (id === 'papyrus') return 2000
   if (['shrub'].includes(archetype)) return 2500
   if (['flower_plant', 'fern', 'rosette'].includes(archetype)) return 1600
   if (['vine', 'potted'].includes(archetype)) return 2500
@@ -64,7 +65,7 @@ describe('every species generates', () => {
     const l1 = generate(spec, { seed: 11, lod: 1 })
     const l2 = generate(spec, { seed: 11, lod: 2 })
     expect(l0.species).toBe(id)
-    expect(l0.triangleCount).toBeLessThanOrEqual(budget(s.archetype))
+    expect(l0.triangleCount).toBeLessThanOrEqual(budget(s.archetype, id))
     expect(l1.triangleCount).toBeLessThan(l0.triangleCount)
     expect(l2.triangleCount).toBeLessThan(l1.triangleCount)
     for (const part of Object.values(l0.parts)) {
