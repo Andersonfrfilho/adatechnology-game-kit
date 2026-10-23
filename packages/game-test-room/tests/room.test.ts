@@ -135,14 +135,17 @@ describe('carrying and drinking', () => {
     const p = cup.root.position
     expect(Math.hypot(p.x - room.camera.position.x, p.z - room.camera.position.z)).toBeLessThan(1.6)
     expect(p.y).toBeGreaterThan(0.3)
-    expect(room.grab()).toBe(true) // drop
+    expect(room.grab()).toBe(true) // drop (a ceramic cup may well break from that height)
     for (let i = 0; i < 120; i++) room.update(1 / 60)
     expect(cup.root.position.y).toBeLessThan(0.2)
-    const c = cup.root.position
-    room.look([c.x, 1.0, c.z + 1.2], [c.x, 0.05, c.z])
+    // a plastic bucket survives being dropped and thrown
+    const bucket = room.spawn('plastic_bucket', [1, 0, -3], 0)
+    room.look([1, 1.0, -1.8], [1, 0.05, -3])
     expect(room.grab()).toBe(true)
     expect(room.throwHeld(8)).toBe(true)
-    expect(text(room)).toMatch(/Grabbed Cup of coffee[\s\S]*Dropped Cup of coffee[\s\S]*Grabbed[\s\S]*Threw Cup of coffee at 8\.0 m\/s/)
+    for (let i = 0; i < 60; i++) room.update(1 / 60)
+    expect(bucket.root.position.y).toBeLessThan(1)
+    expect(text(room)).toMatch(/Grabbed Cup of coffee[\s\S]*Dropped Cup of coffee[\s\S]*Grabbed Plastic bucket[\s\S]*Threw Plastic bucket at 8\.0 m\/s/)
     expect(room.throwHeld()).toBe(false)
   })
 

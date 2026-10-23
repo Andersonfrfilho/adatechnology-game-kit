@@ -1,18 +1,15 @@
 import type * as THREE_NS from 'three'
-import { buildFrame, MATERIALS } from '@adatechnology/game-destruction'
+import { buildFrame } from '@adatechnology/game-destruction'
 import type { DestructibleSpec, JointSpec, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { buildFromSpec } from './build-from-spec'
 import { resolveStrings } from './locale'
 import type { TestRoomItem } from './types'
 
 /**
- * Extra materials the demo items use: `glass_thin` is bottle glass (a thin shell that breaks from a fall, which the stock `glass` of a window
- * pane does not). The room adds them to the world it creates; add them to your own world with `worldOptions.materials`.
+ * Extra materials the demo items need on top of the core ones. None any more (the bottle uses the core `glass`, which now breaks from a drop);
+ * kept so that code passing it to `worldOptions.materials` keeps working.
  */
-export const DEMO_MATERIALS: MaterialDef[] = (() => {
-  const glass = MATERIALS.find((m) => m.id === 'glass')
-  return glass ? [{ ...glass, id: 'glass_thin', hpPerKg: 3, damageScale: { ...glass.damageScale, blunt: 12 } }] : []
-})()
+export const DEMO_MATERIALS: MaterialDef[] = []
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // Small spec helpers
@@ -185,8 +182,8 @@ const bucket = (): DestructibleSpec => ({
 const bottle = (): DestructibleSpec => ({
   name: 'glass bottle',
   parts: [
-    cyl('bottle_body', 'glass_thin', 0.037, 0.17, [0, 0.085, 0], { mass: 0.3, thickness: 0.003, contains: { fluid: 'water', liters: 0.5 } }),
-    cyl('bottle_neck', 'glass_thin', 0.015, 0.09, [0, 0.215, 0], { mass: 0.08, thickness: 0.002 }),
+    cyl('bottle_body', 'glass', 0.037, 0.17, [0, 0.085, 0], { mass: 0.3, thickness: 0.003, contains: { fluid: 'water', liters: 0.5 } }),
+    cyl('bottle_neck', 'glass', 0.015, 0.09, [0, 0.215, 0], { mass: 0.08, thickness: 0.002 }),
   ],
   joints: [joint('bottle_neck', 'bottle_body', 'fused')],
   tags: ['item'],

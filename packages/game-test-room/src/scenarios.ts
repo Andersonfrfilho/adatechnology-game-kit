@@ -215,7 +215,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
       step(2)
       const p = part(room, id, 'bottle_body')
       const stain = room.fluids.stains().find((s) => s.liquid === 'water')
-      expect(p?.status === 'broken' || (p?.cracks.length ?? 0) > 0, t('sc.bottle_drop_shatters.check', { status: p?.status ?? '?', cracks: p?.cracks.length ?? 0, stain: yn(!!stain) }), { status: p?.status })
+      expect(p?.status === 'broken', t('sc.bottle_drop_shatters.check', { status: p?.status ?? '?', cracks: p?.cracks.length ?? 0, stain: yn(!!stain) }), { status: p?.status })
     }),
 
     sc('throw_chair_at_wall', ({ room, step, expect }) => {

@@ -53,7 +53,7 @@ const room = createTestRoom({
 })
 ```
 
-Use `DEMO_MATERIALS` if your own world needs the same materials (including `glass_thin`). `buildFromSpec` turns a `DestructibleSpec` into meshes,
+`DEMO_MATERIALS` is now empty (kept for compatibility: the demo items use only core materials). `buildFromSpec` turns a `DestructibleSpec` into meshes,
 and `brickWallSpec` / `DEMO_ITEMS` / `SCENARIOS` are exported to reuse or extend.
 
 ## Controls
