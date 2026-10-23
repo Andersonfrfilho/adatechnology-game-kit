@@ -23,6 +23,12 @@ export interface MeshApiOptions {
   mergeParts?: boolean
   /** Idle flutter of merged cloth. Default 0.04. */
   swayAmplitude?: number
+  /**
+   * Material of one draw: called per mesh with its material key and the part id (`null` for the static body). Return the material the
+   * host wants there (a per-room light mask, a flickering emissive...); the default is `materials[key]`. Merged groups (blind slats,
+   * clothes) keep what you return, including its `onBeforeCompile`, `customProgramCacheKey`, `defines` and `userData`.
+   */
+  materialFor?: (key: MaterialKey, partId: string | null) => ThreeNS.Material | undefined
 }
 
 export interface MeshResult {
@@ -34,10 +40,15 @@ export interface MeshResult {
   lights: ThreeNS.Light[]
 }
 
+export interface FinishOptions {
+  /** Same as `MeshApiOptions.materialFor`; wins over it for this call. */
+  materialFor?: MeshApiOptions['materialFor']
+}
+
 export interface MeshApi {
   api: HouseholdApi
   /** Builds the groups from everything drawn so far. Call once; the api is spent afterwards. Pass the spec the pack returned to allow `mergeParts`. */
-  finish(spec?: ObjectSpec): MeshResult
+  finish(spec?: ObjectSpec, finishOptions?: FinishOptions): MeshResult
   /** Materials in use (defaults merged with the given ones). */
   materials: Record<MaterialKey, ThreeNS.Material>
 }
@@ -275,7 +286,7 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
     },
   }
 
-  const build = (target: Target, into: ThreeNS.Group): void => {
+  const build = (target: Target, into: ThreeNS.Group, materialFor: MeshApiOptions['materialFor']): void => {
     for (const [key, a] of target.acc) {
       if (!a.idx.length) continue
       const g = new THREE.BufferGeometry()
@@ -286,7 +297,7 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
       g.setIndex(a.pos.length / 3 > 65535 ? new THREE.Uint32BufferAttribute(a.idx, 1) : new THREE.Uint16BufferAttribute(a.idx, 1))
       g.computeBoundingSphere()
       g.computeBoundingBox()
-      const mesh = new THREE.Mesh(g, materials[key as MaterialKey])
+      const mesh = new THREE.Mesh(g, materialFor?.(key as MaterialKey, target.id) ?? materials[key as MaterialKey])
       mesh.name = target.id === null ? `static:${key}` : `part:${target.id}`
       if (target.id !== null) mesh.userData.part = target.id
       mesh.userData.material = key
@@ -307,13 +318,14 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
   return {
     api,
     materials,
-    finish(spec) {
+    finish(spec, finishOptions) {
+      const materialFor = finishOptions?.materialFor ?? options.materialFor
       if (finished) throw new Error('createMeshApi: finish() was already called')
       finished = true
       const group = new THREE.Group()
       group.name = 'interactable'
       const parts: Record<string, ThreeNS.Group> = {}
-      build(root, group)
+      build(root, group, materialFor)
       for (const [id, target] of partTargets) {
         const g = new THREE.Group()
         g.name = `part:${id}`
@@ -321,7 +333,7 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
         g.position.set(target.pivot[0], target.pivot[1], target.pivot[2])
         g.rotation.y = target.ry
         g.updateMatrix()
-        build(target, g)
+        build(target, g, materialFor)
         rememberRest(g)
         group.add(g)
         parts[id] = g

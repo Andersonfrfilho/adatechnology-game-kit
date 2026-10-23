@@ -1,7 +1,7 @@
 export { createThreeAdapter } from './adapter'
 export type { ThreeAdapter, ThreeAdapterOptions } from './adapter'
 export { createMeshApi, createDefaultMaterials } from './mesh'
-export type { MaterialMap, MeshApi, MeshApiOptions, MeshResult } from './mesh'
+export type { FinishOptions, MaterialMap, MeshApi, MeshApiOptions, MeshResult } from './mesh'
 export { mergeParts } from './merge'
 export type { MergedGroup, MergeOptions, PoseBatch, SwayBatch } from './merge'
 export { applyPose, poseOf, rememberRest, syncObject } from './pose'

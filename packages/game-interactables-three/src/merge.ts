@@ -31,20 +31,33 @@ const QROT = /* glsl */ `
 vec3 batchRotate(vec4 q, vec3 v) { return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v); }
 `
 
-function patchProgram<M extends ThreeNS.Material>(material: M, key: string, patchShader: (shader: { uniforms: Record<string, any>; vertexShader: string }) => void): M {
+function patchProgram<M extends ThreeNS.Material>(material: M, key: string, patchShader: (shader: { uniforms: Record<string, any>; vertexShader: string }) => void, inherit?: ThreeNS.Material): M {
   const previous = material.onBeforeCompile
   material.onBeforeCompile = (shader, renderer) => {
     previous?.call(material, shader, renderer)
     patchShader(shader)
   }
-  material.customProgramCacheKey = () => key
+  const inherited = inherit?.customProgramCacheKey
+  material.customProgramCacheKey = inherited && inherit ? () => `${inherited.call(inherit)}|${key}` : () => key
   return material
+}
+
+/**
+ * `Material.clone()` drops `onBeforeCompile`, `customProgramCacheKey` and (for some classes) `defines`. A merged group must still look
+ * like the material the host passed in (a light mask, a fog patch...), so the clone gets them back before the batch patch is chained on.
+ */
+function cloneKeepingHooks(base: ThreeNS.Material): ThreeNS.Material {
+  const clone = base.clone()
+  if (base.defines) clone.defines = { ...(clone.defines ?? {}), ...base.defines }
+  if (base.onBeforeCompile !== Object.getPrototypeOf(base).onBeforeCompile) clone.onBeforeCompile = base.onBeforeCompile
+  clone.userData = { ...base.userData, mergedFrom: base.uuid }
+  return clone
 }
 
 /** Material, depth material and distance material patched by the same function, so shadows follow the animation. */
 function patchedSet(THREE: ThreeLib, base: ThreeNS.Material, key: string, patchShader: (shader: { uniforms: Record<string, any>; vertexShader: string }) => void) {
   return {
-    material: patchProgram(base.clone(), key, patchShader),
+    material: patchProgram(cloneKeepingHooks(base), key, patchShader, base),
     depth: patchProgram(new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }), key, patchShader),
     distance: patchProgram(new THREE.MeshDistanceMaterial(), key, patchShader),
   }
@@ -146,7 +159,7 @@ export function mergeParts(THREE: ThreeLib, root: ThreeNS.Group, parts: Record<s
     for (const g of groups) {
       g.updateMatrix()
       for (const mesh of meshesOf(g)) {
-        const key = String(mesh.userData.material)
+        const key = `${String(mesh.userData.material)}|${(mesh.material as ThreeNS.Material).uuid}`
         let e = map.get(key)
         if (!e) {
           e = { base: mesh.material as ThreeNS.Material, pieces: [], mesh }
@@ -211,7 +224,8 @@ export function mergeParts(THREE: ThreeLib, root: ThreeNS.Group, parts: Record<s
 }`,
         )
     }
-    for (const [key, e] of plan) {
+    for (const e of plan.values()) {
+      const key = String(e.mesh.userData.material)
       const set = patchedSet(THREE, e.base, `swayBatch:${n}:${amplitude}`, patch)
       finishMesh('merge:cloth', key, concat(THREE, e.pieces, { swayId: 1, swayAnchor: 1 }), e.mesh, set, merged)
     }
@@ -264,7 +278,8 @@ export function mergeParts(THREE: ThreeLib, root: ThreeNS.Group, parts: Record<s
       src = src.replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\nobjectNormal = batchRotate(batchQ, objectNormal);')
       shader.vertexShader = src
     }
-    for (const [key, e] of plan) {
+    for (const e of plan.values()) {
+      const key = String(e.mesh.userData.material)
       const set = patchedSet(THREE, e.base, 'poseBatch', patch)
       finishMesh(merged.name, key, concat(THREE, e.pieces, { batchPivot: 3 }), e.mesh, set, merged)
     }

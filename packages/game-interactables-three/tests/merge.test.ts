@@ -133,3 +133,79 @@ describe('mergeParts (game quality)', () => {
     for (const p of w.spec.parts!) expect(w.res.parts[p.id].userData.merged).toBeUndefined()
   })
 })
+
+describe('merged groups keep the host material', () => {
+  // a light mask like a host would add: marks the shader, a define and a cache key on the material it passes in
+  function masked() {
+    const mat = new THREE.MeshLambertMaterial({ vertexColors: true })
+    const calls: unknown[] = []
+    mat.defines = { ROOM_MASK: '1' }
+    mat.userData.mask = true
+    mat.onBeforeCompile = function (this: THREE.Material, shader: any) {
+      calls.push(this)
+      shader.fragmentShader = `${shader.fragmentShader ?? ''}// masked`
+      shader.hostRan = true
+    }
+    mat.customProgramCacheKey = () => 'mask1'
+    return { mat, calls }
+  }
+
+  it.each(['blinds', 'clothesline'])('%s: the merged clone still runs the original onBeforeCompile, defines, cache key and userData', (type) => {
+    const { mat, calls } = masked()
+    const mesh = createMeshApi(THREE, { quality: 'game', mergeParts: true, materials: { plain: mat, wood: mat, metal: mat, fabric: mat }, shadows: true })
+    const spec = hh.build(type, { seed: 4 }, mesh.api)
+    const res = mesh.finish(spec)
+    const merged = Object.values(res.parts).find((g) => g.userData.merged)!
+    expect(merged).toBeTruthy()
+    const m = (merged.children[0] as THREE.Mesh).material as THREE.Material
+    expect(m).not.toBe(mat)
+    expect(m.defines).toMatchObject({ ROOM_MASK: '1' })
+    expect(m.userData.mask).toBe(true)
+    expect(m.customProgramCacheKey()).toMatch(/^mask1\|/)
+    const shader: any = { uniforms: {}, vertexShader: '#include <begin_vertex>', fragmentShader: '' }
+    m.onBeforeCompile(shader, undefined as any)
+    expect(shader.hostRan).toBe(true)
+    expect(shader.fragmentShader).toContain('masked')
+    expect(calls).toHaveLength(1)
+    expect(calls[0]).toBe(m) // the hook runs against the clone it patches
+    expect(shader.uniforms.batchQ ?? shader.uniforms.swayAxz).toBeTruthy() // and the batch patch is chained after it
+  })
+
+  it('materialFor picks the material per key and part, at the options and at finish (finish wins)', () => {
+    const a = new THREE.MeshLambertMaterial({ vertexColors: true })
+    const b = new THREE.MeshLambertMaterial({ vertexColors: true })
+    const seen: Array<[string, string | null]> = []
+    const mesh = createMeshApi(THREE, {
+      quality: 'game',
+      mergeParts: false,
+      materialFor: (k, id) => {
+        seen.push([k, id])
+        return a
+      },
+    })
+    const spec = hh.build('wardrobe', { seed: 1 }, mesh.api)
+    const res = mesh.finish(spec)
+    const meshes: THREE.Mesh[] = []
+    res.group.traverse((o) => (o as THREE.Mesh).isMesh && meshes.push(o as THREE.Mesh))
+    expect(meshes.every((x) => x.material === a)).toBe(true)
+    expect(seen.some(([, id]) => id === null)).toBe(true)
+    expect(seen.some(([, id]) => id !== null)).toBe(true)
+
+    const m2 = createMeshApi(THREE, { quality: 'game', materialFor: () => a })
+    const s2 = hh.build('wardrobe', { seed: 1 }, m2.api)
+    const r2 = m2.finish(s2, { materialFor: () => b })
+    const ms: THREE.Mesh[] = []
+    r2.group.traverse((o) => (o as THREE.Mesh).isMesh && ms.push(o as THREE.Mesh))
+    expect(ms.every((x) => x.material === b)).toBe(true)
+  })
+
+  it('slats given different materials per part are not mixed into one mesh', () => {
+    const a = new THREE.MeshLambertMaterial({ vertexColors: true })
+    const b = new THREE.MeshLambertMaterial({ vertexColors: true })
+    const mesh = createMeshApi(THREE, { quality: 'game', mergeParts: true, materialFor: (_k, id) => (id && Number(/\d+$/.exec(id)?.[0]) % 2 ? a : b) })
+    const spec = hh.build('blinds', { seed: 4 }, mesh.api)
+    const res = mesh.finish(spec)
+    const merged = res.parts['slat_1']
+    expect(merged.children.length).toBeGreaterThanOrEqual(2)
+  })
+})
