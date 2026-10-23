@@ -79,7 +79,7 @@ The items join the catalogue under the module's group and its scenarios become b
 | E | grab / drop |
 | R | rotate the held item |
 | Right button or G | throw |
-| F | use a fluid item (drink); Z tilt; C fill from the tap; V pour |
+| F | use a fluid item (drink); Z tilt; C fill from the tap; V pour (holding a fluid item) or kick (otherwise, with the `kick` tool whatever is selected) |
 | Tab | show / hide the panels |
 
 Panels: catalogue tabs (spawn, Clear, Reset all), slow motion 0.25x, time x10, quality select, inspector (material, state, hp, temperature, char, marks, joints, load and stress) and the behaviour log with filters.
@@ -99,6 +99,10 @@ One JSON object per line (`log.toNDJSON()`, "Baixar NDJSON"):
 `room.scenarios` lists them; `room.runScenarios(list?)` resets the room, runs each one deterministically with `step(seconds)` instead of rendering, and returns
 `{ passed, failed, results: [{ id, name, ok, checks: [{ label, ok }] }] }`. 21 ship with the package (bullets vs steel, concrete and glass, hammer, shotgun, kick, screwdriver,
 fire and torch, gas bottle, bottle drop, thrown chair, coffee sips and spills, jerrycan leak, fuel fire, columns and a roof, extinguisher). Open the example with `?scenario=all` to run them.
+
+### Inside a claude.ai Artifact
+
+An Artifact page cannot use `<a download>` or blob links. When `globalThis.claude.use('downloads')` resolves, `log.download(format)` offers the file through that capability (the NDJSON goes out as `test-room-log.ndjson.txt`, since `.ndjson` is not on the allowlist) and a declined save writes an `export_cancelled` line to the log; otherwise it falls back to the blob link. **The artifact page must declare the `downloads` capability.** "Copy JSON" falls back to selecting the text in a textarea when `navigator.clipboard` is missing.
 
 ## Português
 

@@ -1,9 +1,16 @@
 {
   "name": "@adatechnology/game-destruction",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Engine-agnostic destruction model: materials decide how parts dent, burn, melt, crumble, shatter, splinter, break apart and come apart at their joints. Deterministic and serializable. Knows nothing about any game.",
-  "keywords": ["game", "destruction", "damage", "materials", "fracture", "fire"],
+  "keywords": [
+    "game",
+    "destruction",
+    "damage",
+    "materials",
+    "fracture",
+    "fire"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",

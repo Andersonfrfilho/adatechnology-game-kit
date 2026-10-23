@@ -20,7 +20,7 @@ const categoriesEn = {
 export const locales: Record<WeaponsLocale, WeaponsStrings> = {
   en: {
     weapons: {
-      hand: 'Hand', pistol_9mm: '9 mm service pistol', pistol_45: '.45 ACP pistol', pistol_22: '.22 LR pistol', revolver_357: '.357 Magnum revolver',
+      hand: 'Hand', kick: 'Kick', shove: 'Shove', pistol_9mm: '9 mm service pistol', pistol_45: '.45 ACP pistol', pistol_22: '.22 LR pistol', revolver_357: '.357 Magnum revolver',
       revolver_38: '.38 Special revolver', smg_9mm: '9 mm submachine gun', carbine_22: '.22 LR carbine', rifle_5_56: '5.56 mm assault rifle',
       rifle_7_62x39: '7.62×39 mm assault rifle', rifle_bolt_308: '.308 bolt-action rifle', sniper_338: '.338 Lapua sniper rifle',
       anti_materiel_50: '.50 BMG anti-materiel rifle', shotgun_pump_12: '12 gauge pump-action shotgun', shotgun_double_12: '12 gauge double-barrel shotgun',
@@ -35,7 +35,7 @@ export const locales: Record<WeaponsLocale, WeaponsStrings> = {
   },
   'pt-BR': {
     weapons: {
-      hand: 'mão', pistol_9mm: 'pistola 9 mm', pistol_45: 'pistola .45', pistol_22: 'pistola .22', revolver_357: 'revólver .357', revolver_38: 'revólver .38',
+      hand: 'mão', kick: 'chute', shove: 'empurrão', pistol_9mm: 'pistola 9 mm', pistol_45: 'pistola .45', pistol_22: 'pistola .22', revolver_357: 'revólver .357', revolver_38: 'revólver .38',
       smg_9mm: 'submetralhadora 9 mm', carbine_22: 'carabina .22', rifle_5_56: 'fuzil 5,56', rifle_7_62x39: 'fuzil 7,62×39', rifle_bolt_308: 'fuzil de ferrolho .308',
       sniper_338: 'fuzil de precisão .338', anti_materiel_50: 'fuzil antimaterial .50', shotgun_pump_12: 'espingarda de repetição calibre 12',
       shotgun_double_12: 'espingarda de dois canos calibre 12', shotgun_semi_12: 'espingarda semiautomática calibre 12', bow_compound: 'arco composto',

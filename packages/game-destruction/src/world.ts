@@ -19,6 +19,8 @@ interface PartRT {
   mat: MaterialDef
   st: PartState
   q: Quat
+  /** Current object-local position (the spec's, unless moved by `setPartPose`). */
+  pos: Vec3
   mass0: number
   fuel0: number
   area: number
@@ -85,6 +87,8 @@ interface ImplRT {
   impl: DestructibleImpl
   position: Vec3
   rotation: Quat
+  /** Part pose overrides set by `setPartPose` (object-local). */
+  poses: Map<string, { pos: Vec3; q: Quat }>
 }
 
 interface Blast {
@@ -97,6 +101,15 @@ interface Blast {
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 const isLost = (p: PartRT) => p.st.status === 'broken' || p.st.status === 'melted' || p.st.status === 'ashes'
 const clone = <T>(v: T): T => structuredClone(v)
+const updateBound = (o: ObjRT) => {
+  if (!o.parts.length) return
+  const c: Vec3 = [0, 0, 0]
+  for (const p of o.parts) for (let k = 0; k < 3; k++) c[k] += p.pos[k] / o.parts.length
+  let r = 0
+  for (const p of o.parts) r = Math.max(r, vec.distance(c, p.pos) + p.bound)
+  o.bc = c
+  o.br = r
+}
 const AXIS = { x: 0, y: 1, z: 2 } as const
 
 export const createDestruction = (options: DestructionOptions = {}): DestructionWorld => {
@@ -208,7 +221,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
       if (!c && ps.contains) pst.liters = ps.contains.liters
       const p: PartRT = {
-        spec: ps, mat, st: pst, q: quatFromEuler(...(ps.rotation ?? [0, 0, 0])), mass0, fuel0, area: shapeArea(ps.shape), thickness: partThickness(ps),
+        spec: ps, mat, st: pst, q: quatFromEuler(...(ps.rotation ?? [0, 0, 0])), pos: [ps.position[0], ps.position[1], ps.position[2]], mass0, fuel0, area: shapeArea(ps.shape), thickness: partThickness(ps),
         dims: shapeDims(ps.shape), bound: shapeBound(ps.shape), rt: c?.rt ?? { ...freshRuntime(), prevTemp: pst.temperature },
         structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat) : 0,
       }
@@ -239,15 +252,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       o.byPart.get(r.b)!.push(j)
       o.st.joints.push(jst)
     }
-    // bounding sphere
-    if (o.parts.length) {
-      const c: Vec3 = [0, 0, 0]
-      for (const p of o.parts) for (let k = 0; k < 3; k++) c[k] += p.spec.position[k] / o.parts.length
-      let r = 0
-      for (const p of o.parts) r = Math.max(r, vec.distance(c, p.spec.position) + p.bound)
-      o.bc = c
-      o.br = r
-    }
+    // open joints whose parts are no longer both here (left behind by `splitGroup`) stay listed, inert, so callers still see them open
+    for (const [jid, c] of carry?.joints ?? []) if (c.st.open && !o.jointMap.has(jid)) o.st.joints.push(c.st)
+    updateBound(o)
     o.anyAnchor = o.parts.some((p) => p.anchored)
     o.unsup = o.parts.map(() => false)
     solveStructure(o)
@@ -406,7 +413,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   // Geometry in world space
   // -------------------------------------------------------------------------------------------------------------------------------------------
 
-  const partXf = (o: ObjRT, p: PartRT): { c: Vec3; q: Quat } => ({ c: toWorld(o.st.position, o.st.rotation, p.spec.position), q: quat.mul(o.st.rotation, p.q) })
+  const partXf = (o: ObjRT, p: PartRT): { c: Vec3; q: Quat } => ({ c: toWorld(o.st.position, o.st.rotation, p.pos), q: quat.mul(o.st.rotation, p.q) })
   const objLocal = (o: ObjRT, w: Vec3) => toLocal(o.st.position, o.st.rotation, w)
   const objLocalDir = (o: ObjRT, w: Vec3) => rotateVec(quat.conjugate(o.st.rotation), w)
   const jointWorld = (o: ObjRT, j: JointRT) => toWorld(o.st.position, o.st.rotation, j.pos)
@@ -420,14 +427,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   interface PartRay { t0: number; t1: number; n: Vec3 }
-  const rayPartRaw = (pos: Vec3, rot: Quat, spec: PartSpec, pq: Quat, origin: Vec3, d: Vec3): PartRay | null => {
-    const c = toWorld(pos, rot, spec.position)
+  const rayPartRaw = (pos: Vec3, rot: Quat, spec: PartSpec, pq: Quat, origin: Vec3, d: Vec3, lp: Vec3 = spec.position): PartRay | null => {
+    const c = toWorld(pos, rot, lp)
     const q = quat.mul(rot, pq)
     const qi = quat.conjugate(q)
     const r = rayShape(spec.shape, rotateVec(qi, vec.sub(origin, c)), rotateVec(qi, d))
     return r ? { t0: r.t0, t1: r.t1, n: rotateVec(q, r.n0) } : null
   }
-  const rayPart = (o: ObjRT, p: PartRT, origin: Vec3, d: Vec3): PartRay | null => rayPartRaw(o.st.position, o.st.rotation, p.spec, p.q, origin, d)
+  const rayPart = (o: ObjRT, p: PartRT, origin: Vec3, d: Vec3): PartRay | null => rayPartRaw(o.st.position, o.st.rotation, p.spec, p.q, origin, d, p.pos)
 
   const raySphereMiss = (origin: Vec3, d: Vec3, c: Vec3, r: number, maxDist: number): boolean => {
     const oc = vec.sub(origin, c)
@@ -454,7 +461,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     for (const im of impls.values()) {
       for (const ps of im.impl.describe().parts) {
         if (ignore?.has(`${im.impl.id}\0${ps.id}`)) continue
-        const r = rayPartRaw(im.position, im.rotation, ps, quatFromEuler(...(ps.rotation ?? [0, 0, 0])), origin, d)
+        const ov = im.poses.get(ps.id)
+        const r = rayPartRaw(im.position, im.rotation, ps, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0])), origin, d, ov?.pos)
         if (!r || r.t0 < 0 || r.t0 > maxDist) continue
         if (!best || r.t0 < best.distance) best = { object: im.impl.id, part: ps.id, point: vec.madd(origin, d, r.t0), normal: r.n, distance: r.t0, pathLen: r.t1 - r.t0 }
       }
@@ -613,11 +621,36 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     checkDestroyed(o, src)
   }
 
-  const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string) => {
+  /**
+   * Distance from a world point to the joint's contact region: the overlap box of the two parts' bounds (or, when they only nearly touch, the box
+   * of the gap between them). Measuring to the joint centre would make a thick part untouchable: a blow on a trunk's surface is half the trunk's
+   * width away from a joint that sits on its axis.
+   */
+  const jointReach = (o: ObjRT, j: JointRT, point: Vec3): number => {
+    const A = partWorldAabb(o, o.parts[j.ia]), B = partWorldAabb(o, o.parts[j.ib])
+    let d2 = 0
+    for (let k = 0; k < 3; k++) {
+      const lo = Math.min(Math.max(A.min[k], B.min[k]), Math.min(A.max[k], B.max[k]))
+      const hi = Math.max(Math.max(A.min[k], B.min[k]), Math.min(A.max[k], B.max[k]))
+      const d = point[k] < lo ? lo - point[k] : point[k] > hi ? point[k] - hi : 0
+      d2 += d * d
+    }
+    return Math.sqrt(d2)
+  }
+  /** How far from the contact region a blow still counts: half the smallest dimension of the smaller part, at least 6 cm. */
+  const jointReachLimit = (o: ObjRT, j: JointRT): number => {
+    const pa = o.parts[j.ia], pb = o.parts[j.ib]
+    const small = pa.dims[0] * pa.dims[1] * pa.dims[2] <= pb.dims[0] * pb.dims[1] * pb.dims[2] ? pa : pb
+    return Math.max(0.06, 0.5 * Math.min(small.dims[0], small.dims[1], small.dims[2]))
+  }
+
+  const wearJoints = (o: ObjRT, p: PartRT, amount: number, near?: Vec3, radius = 0.06, src?: string, split = false) => {
     if (amount <= 0) return
-    for (const j of o.byPart.get(p.spec.id) ?? []) {
+    const mine = (o.byPart.get(p.spec.id) ?? []).filter((j) => !j.st.open)
+    if (split && mine.length) amount /= mine.length
+    for (const j of mine) {
       if (j.st.open) continue
-      if (near && vec.distance(jointWorld(o, j), near) > radius) continue
+      if (near && jointReach(o, j, near) > Math.max(radius, jointReachLimit(o, j))) continue
       j.st.hp -= amount
       if (j.st.hp <= 0) {
         j.st.hp = 0
@@ -728,7 +761,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (mat.fracture !== 'shatter') addHole(o, p, entry, n, caliber / 1000, false, undefined, src)
     } else addHole(o, p, entry, n, caliber / 1000, false, undefined, src)
     debris(o, p, mat.hitDebris, entry, n, clamp(Math.round(E / 60) + 2, 2, 14), clamp(Math.sqrt(E) / 6, 1, 8), src)
-    wearJoints(o, p, E * 0.2, entry, 0.06, src)
+    // a bullet only wears the joints of the part it hits, by the energy the part absorbed (a through-and-through shot transfers little)
+    wearJoints(o, p, (penetrated ? thr : E) * 0.02, undefined, 0, src, true)
     const dmg = applyDamage(o, p, E * DMG_PER_J * scale, 'ballistic', entry, d, E * 0.1, 12, src)
     return { penetrated, exitEnergy: penetrated ? E - thr : 0, exitPoint, damage: dmg }
   }
@@ -807,8 +841,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     for (const im of [...impls.values()]) {
       const inRange = im.impl.describe().parts.some((ps) => {
-        const c = toWorld(im.position, im.rotation, ps.position)
-        const q = quat.mul(im.rotation, quatFromEuler(...(ps.rotation ?? [0, 0, 0])))
+        const ov = im.poses.get(ps.id)
+        const c = toWorld(im.position, im.rotation, ov?.pos ?? ps.position)
+        const q = quat.mul(im.rotation, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0])))
         return distanceToShape(ps.shape, toLocal(c, q, point)) < radius
       })
       if (inRange) out.push(implHit(im, { type: 'explosive', point, energy, radius, ...(src !== undefined ? { source: src } : {}) }))
@@ -1075,7 +1110,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const spread = (sources: Array<{ o: ObjRT; p: PartRT; flame: number }>, dt: number) => {
     for (const src of sources) {
       if (!src.p.st.burning && !src.p.rt.jet) continue
-      const sc = toWorld(src.o.st.position, src.o.st.rotation, src.p.spec.position)
+      const sc = toWorld(src.o.st.position, src.o.st.rotation, src.p.pos)
       const A = partWorldAabb(src.o, src.p)
       for (const o of objects.values()) {
         if (o === src.o) continue
@@ -1129,8 +1164,22 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     register(impl, opts: AddOptions = {}) {
       const id = opts.id ?? impl.id
       if (taken(id)) throw new Error(`object "${id}" already exists`)
-      impls.set(id, { impl, position: opts.position ?? [0, 0, 0], rotation: opts.rotation ?? [0, 0, 0, 1] })
+      impls.set(id, { impl, position: opts.position ?? [0, 0, 0], rotation: opts.rotation ?? [0, 0, 0, 1], poses: new Map() })
       return id
+    },
+    setPartPose(objectId, partId, position, rotation) {
+      const q = quatFromEuler(...(rotation ?? [0, 0, 0]))
+      const im = impls.get(objectId)
+      if (im) {
+        im.impl.setPartPose?.(partId, position, rotation)
+        im.poses.set(partId, { pos: [position[0], position[1], position[2]], q })
+        return
+      }
+      const o = getObj(objectId)
+      const p = getPart(o, partId)
+      p.pos = [position[0], position[1], position[2]]
+      p.q = q
+      updateBound(o)
     },
     remove(id) {
       objects.delete(id)
@@ -1158,9 +1207,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const moved = new Set(names)
       const nid = newId ?? nextId()
       if (objects.has(nid)) throw new Error(`object "${nid}" already exists`)
-      const carryFor = (keep: (pid: string) => boolean): Carry => ({
+      // an open joint between the two objects stays with the original
+      const carryFor = (keep: (pid: string) => boolean, keepOpen: (a: string, b: string) => boolean = () => false): Carry => ({
         parts: new Map(o.parts.filter((p) => keep(p.spec.id)).map((p) => [p.spec.id, { st: p.st, rt: p.rt }])),
-        joints: new Map(o.joints.filter((j) => keep(j.spec.a) && keep(j.spec.b)).map((j) => [j.spec.id, { st: j.st, step: j.step }])),
+        joints: new Map([
+          ...o.joints.filter((j) => (keep(j.spec.a) && keep(j.spec.b)) || (j.st.open && keepOpen(j.spec.a, j.spec.b))).map((j): [string, { st: JointState; step: number }] => [j.spec.id, { st: j.st, step: j.step }]),
+          ...o.st.joints.filter((st) => st.open && !o.jointMap.has(st.id) && keepOpen(st.a, st.b)).map((st): [string, { st: JointState; step: number }] => [st.id, { st, step: 0 }]),
+        ]),
         collapsed: [...o.collapsed].filter(keep),
       })
       const sub = (keep: (pid: string) => boolean): DestructibleSpec => {
@@ -1172,8 +1225,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const inNew = (pid: string) => moved.has(pid)
       const inOld = (pid: string) => !moved.has(pid)
       const pos = o.st.position, rot = o.st.rotation
-      const fresh = build(sub(inNew), nid, pos, rot, carryFor(inNew))
-      const rest = build(sub(inOld), id, pos, rot, carryFor(inOld))
+      const fresh = build(sub(inNew), nid, pos, rot, carryFor(inNew, (a, b) => inNew(a) && inNew(b)))
+      const rest = build(sub(inOld), id, pos, rot, carryFor(inOld, (a, b) => !(inNew(a) && inNew(b))))
       objects.set(id, rest)
       objects.set(nid, fresh)
       return nid
@@ -1271,34 +1324,38 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
       return getObj(objectId).joints.filter((j) => !j.st.open && j.spec.tools.includes(tool)).map((j) => j.st)
     },
-    nearestJoint(objectId, point, maxDistance = 0.3) {
+    nearestJoint(objectId, point, maxDistance = 0.3, tool) {
       const im = impls.get(objectId)
+      // Candidates: closed joints with their world position and whether `tool` can undo them.
+      const cands: { st: JointState; d: number; ok: boolean }[] = []
       if (im) {
-        let best: JointState | null = null
-        let bd = maxDistance
+        const spec = im.impl.describe()
         for (const js of im.impl.state().joints) {
           if (js.open) continue
           const pos = implJointPos(im, js.a, js.b)
-          const d = pos ? vec.distance(pos, point) : Infinity
-          if (d <= bd) {
-            bd = d
-            best = js
+          const j = (spec.joints ?? []).find((x) => (x.id ?? `${x.a}~${x.b}`) === js.id)
+          cands.push({ st: js, d: pos ? vec.distance(pos, point) : Infinity, ok: !!j && (j.tools ?? JOINT_DEFAULTS[j.kind].tools).includes(tool as ToolKind) })
+        }
+      } else {
+        const o = getObj(objectId)
+        for (const j of o.joints) {
+          if (j.st.open) continue
+          cands.push({ st: j.st, d: vec.distance(jointWorld(o, j), point), ok: tool ? j.spec.tools.includes(tool) : true })
+        }
+      }
+      const pick = (only: boolean): JointState | null => {
+        let best: JointState | null = null
+        let bd = maxDistance
+        for (const c of cands) {
+          if (only && !c.ok) continue
+          if (c.d <= bd) {
+            bd = c.d
+            best = c.st
           }
         }
         return best
       }
-      const o = getObj(objectId)
-      let best: JointState | null = null
-      let bd = maxDistance
-      for (const j of o.joints) {
-        if (j.st.open) continue
-        const d = vec.distance(jointWorld(o, j), point)
-        if (d <= bd) {
-          bd = d
-          best = j.st
-        }
-      }
-      return best
+      return (tool ? pick(true) : null) ?? pick(false)
     },
     extinguish(objectId, partId, coolC = 200) {
       const im = impls.get(objectId)
@@ -1341,6 +1398,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }).events
     },
     state: (id) => objects.get(id)?.st ?? impls.get(id)?.impl.state() ?? null,
+    snapshot: (id) => {
+      const st = objects.get(id)?.st ?? impls.get(id)?.impl.state()
+      return st ? clone(st) : null
+    },
     part: (id, partId) => objects.get(id)?.byId.get(partId)?.st ?? impls.get(id)?.impl.state().parts.find((p) => p.id === partId) ?? null,
     reset(id) {
       const im = impls.get(id)

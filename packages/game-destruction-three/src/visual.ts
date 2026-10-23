@@ -114,10 +114,36 @@ export class Visuals {
     return mv.mesh.geometry.getAttribute(POS_ATTR)?.count ?? 0
   }
 
-  /** Colour of the original material (before any char), `0xRRGGBB`, or -1. */
+  private readonly tints = new WeakMap<THREE_NS.Mesh, THREE_NS.Color | null>()
+
+  /**
+   * Average vertex colour of a mesh whose material uses `vertexColors` (computed once per mesh, from its original geometry), else null. Fragments
+   * and debris of such a mesh multiply it by `material.color`; without it they come out white.
+   */
+  vertexTint(mv: MeshVis): THREE_NS.Color | null {
+    if (this.tints.has(mv.mesh)) return this.tints.get(mv.mesh) ?? null
+    let tint: THREE_NS.Color | null = null
+    const used = materialsOf(mv.origMaterial).some((m) => (m as THREE_NS.MeshStandardMaterial).vertexColors === true)
+    const attr = used ? (mv.origGeometry.getAttribute('color') as THREE_NS.BufferAttribute | undefined) : undefined
+    if (attr && attr.count > 0 && attr.itemSize >= 3) {
+      let r = 0, g = 0, b = 0
+      for (let i = 0; i < attr.count; i++) {
+        r += attr.getX(i)
+        g += attr.getY(i)
+        b += attr.getZ(i)
+      }
+      tint = new this.THREE.Color(r / attr.count, g / attr.count, b / attr.count)
+    }
+    this.tints.set(mv.mesh, tint)
+    return tint
+  }
+
+  /** Colour of the original material (before any char) times the vertex tint, `0xRRGGBB`, or -1. */
   baseColorHex(mv: MeshVis): number {
     const c = mv.baseColors?.[0] ?? colorOf(materialsOf(mv.origMaterial)[0])
-    return c ? c.getHex() : -1
+    if (!c) return -1
+    const tint = this.vertexTint(mv)
+    return tint ? c.clone().multiply(tint).getHex() : c.getHex()
   }
 
   /** Is the original material transparent? */

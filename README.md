@@ -22,15 +22,14 @@ concatenates plain scripts can use them without a bundler.
 | [`@adatechnology/game-props3d`](packages/game-props3d) | `GameProps3d` | Procedural low-poly props (decor, furniture, yard, house state) that only describe primitives through a host-provided api |
 | [`@adatechnology/game-vegetation`](packages/game-vegetation) | `GameVegetation` | Deterministic procedural low-poly plants (trees, palms, shrubs, flowers, cacti, grasses, vines), LODs, scatter, lot merging and an optional three.js adapter with shader wind |
 | [`@adatechnology/game-vegetation-species`](packages/game-vegetation-species) | `GameVegetationSpecies` | JSON content pack of 71 species (en / pt-BR) with regional planting tables for `game-vegetation` |
+| [`@adatechnology/game-floorplan`](packages/game-floorplan) | `GameFloorplan` | Seeded procedural floor plans, lots, furniture slots, colour palettes, state plugins and urban zoning (engine), plus an offline 2D viewer |
+| [`@adatechnology/game-floorplan-residential`](packages/game-floorplan-residential) | `GameFloorplanResidential` | Residential content for the floor plan engine: houses, apartments, furniture, decor, region `br` |
+| [`@adatechnology/game-floorplan-commercial`](packages/game-floorplan-commercial) | `GameFloorplanCommercial` | Commercial content for the floor plan engine: market and pharmacy, commercial and industrial zones |
+| [`@adatechnology/game-floorplan-post-apocalyptic`](packages/game-floorplan-post-apocalyptic) | `GameFloorplanPostApocalyptic` | Fortified and abandoned house states as a state plugin, with a configurable seed distribution |
 | [`@adatechnology/game-test-room`](packages/game-test-room) | `GameTestRoom` | First-person test room with a behaviour log and scenarios to verify destruction, weapons and fluids on your own catalogue |
 
 Each package has its own README (English, with a short Portuguese section) and a `MIGRATION.md` mapping the old Portuguese names to the new
 English ones, so the game adapter can be updated mechanically.
-
-### Coming next
-
-`@adatechnology/game-floorplan` (plus `-residential`, `-commercial` and `-post-apocalyptic`) is a placeholder: it will be migrated in a separate step
-and does not exist in this repository yet.
 
 ## The layering rule
 
