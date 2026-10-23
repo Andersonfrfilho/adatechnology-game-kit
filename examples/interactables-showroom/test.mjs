@@ -197,6 +197,46 @@ check('switch toggles the lamp and its light', !lamp.off && lamp.on && lamp.ligh
 check('breaker off: lamp unpowered, light off', !lamp.breakerOff && lamp.light2 === 0)
 check('switch turns the lamp off again', lamp.offAgain)
 
+// the breaker panel: every rocker flips its own circuit, only with the door open
+const panel = await E(() => {
+  const s = window.__showroom
+  const w = s.world
+  const o = {}
+  w.act('switch_bath:use_switch')
+  w.act('tv:use_tv')
+  s.step(0.5)
+  o.lampOn = w.power.isPowered('lamp_bath', 'lamp') && w.power.isOn('lamp_bath', 'lamp')
+  o.tvOn = w.power.isPowered('tv', 'tv')
+  o.closedAct = w.act('electrical_panel:toggle_breaker_lights')
+  o.closedBreaker = w.power.breaker('lights')
+  w.setPart('electrical_panel', 'door', 1, true)
+  s.step(1)
+  o.lightsAct = w.act('electrical_panel:toggle_breaker_lights')
+  s.step(1)
+  o.lampCut = !w.power.isPowered('lamp_bath', 'lamp')
+  o.lampLight = s.lamps.find((l) => l.id === 'lamp_bath').light.intensity
+  o.tvStill = w.power.isPowered('tv', 'tv')
+  o.rocker = w.partT('electrical_panel', 'breaker_lights')
+  o.label = w.interactables().find((i) => i.id === 'electrical_panel:toggle_breaker_lights').label
+  w.act('electrical_panel:toggle_breaker_lights')
+  w.act('electrical_panel:toggle_breaker_sockets')
+  s.step(1)
+  o.lampBack = w.power.isPowered('lamp_bath', 'lamp')
+  o.tvCut = !w.power.isPowered('tv', 'tv')
+  w.act('electrical_panel:toggle_breaker_sockets')
+  s.step(1)
+  o.tvBack = w.power.isPowered('tv', 'tv')
+  w.act('tv:use_tv')
+  w.act('switch_bath:use_switch')
+  w.setPart('electrical_panel', 'door', 0, true)
+  const meter = w.interactables().filter((i) => i.object === 'power_meter').map((i) => i.id)
+  o.meter = meter
+  return o
+})
+check('breaker panel: door closed refuses, open lets "Luzes" cut the lamp (light off) but not the TV', panel.lampOn && panel.tvOn && !panel.closedAct && panel.closedBreaker && panel.lightsAct && panel.lampCut && panel.lampLight === 0 && panel.tvStill && panel.rocker < 0.5, panel)
+check('breaker panel: prompt names the circuit, "Tomadas" cuts the TV and everything comes back', /Luzes/.test(panel.label) && panel.lampBack && panel.tvCut && panel.tvBack, panel)
+check('power meter is in the house with its door interaction', panel.meter.includes('power_meter:toggle_door'), panel.meter)
+
 // ------------------------------------------------------------------------------------------------------------------------------
 // Water: shower emits water; empty tank -> not flowing; rain refills
 // ------------------------------------------------------------------------------------------------------------------------------

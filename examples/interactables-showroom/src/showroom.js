@@ -803,6 +803,7 @@
     ['socket_counter_1', 'wall_socket', 0.9, 0.015, 0, { y: 1.05, circuit: 'sockets' }],
     ['socket_counter_2', 'wall_socket', 3.75, 0.015, 0, { y: 1.05, circuit: 'sockets' }],
     ['switch_kitchen', 'wall_switch', 5.75, 0.015, 0, { controls: ['lamp_kitchen:lamp'] }],
+    ['electrical_panel', 'electrical_panel', 6.9, 0.06, 0, { circuits: CIRCUITS.map(([id, label]) => ({ id, label })) }],
     // dining
     ['chair_1', 'dining_chair', 6.2, 1.5, 0],
     ['chair_2', 'dining_chair', 7.2, 1.5, 0],
@@ -839,6 +840,7 @@
     ['switch_bedroom', 'wall_switch', 8.065, 5.6, H, { controls: ['lamp_bedroom:lamp'] }],
     // electricity outside and conduits
     ['service_entrance', 'service_entrance', 13.2, 2.6, 0, { house: [-1.05, 2.5, -1.0] }],
+    ['power_meter', 'power_meter', 12.2, 2.5, H],
     ['conduit_east', 'conduit_run', 0, 0, 0, { points: [[12.15, 2.5, 1.6], [12.15, 1.2, 1.6], [12.15, 1.2, 3.4], [12.15, 0.35, 3.4]] }],
     ['conduit_kitchen', 'conduit_run', 0, 0, 0, { points: [[5.75, 1.3, 0.04], [5.75, 2.58, 0.04], [3.0, 2.58, 0.04]] }],
     ['conduit_bedroom', 'conduit_run', 0, 0, 0, { points: [[8.1, 1.3, 5.6], [8.1, 2.6, 5.6], [10.3, 2.6, 5.6], [10.3, 2.6, 5.8]] }],
