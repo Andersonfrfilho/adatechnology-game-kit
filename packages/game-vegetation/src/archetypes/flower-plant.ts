@@ -85,6 +85,7 @@ export function generateFlowerPlant(spec: FlowerPlantSpec, ctx: Ctx): ArchResult
   const moundR = height * (mnd?.r ?? 1)
   const moundH = height * (mnd?.h ?? 1)
   const mLeaf = mnd?.leaf ?? 0.08
+  const mLeafC = dead ? mix(leafBase, [0.42, 0.32, 0.2], 0.8) : dry ? mix(leafBase, [0.55, 0.48, 0.22], 0.5) : leafBase
   const blobs: { c: Vec3; r: number; sq: number }[] = []
   if (isMound) {
     if (spreading) blobs.push({ c: [0, moundH * 0.42, 0], r: moundR, sq: (moundH / moundR) * 0.95 })
@@ -97,7 +98,7 @@ export function generateFlowerPlant(spec: FlowerPlantSpec, ctx: Ctx): ArchResult
         blobs.push({ c: [Math.cos(a) * ring, moundH * (i === 0 ? 0.55 : 0.28 + 0.07 * (i % 3)), Math.sin(a) * ring], r: moundR * (i === 0 ? 0.62 : 0.52), sq: 0.95 })
       }
     }
-    for (const bl of blobs) clump(ctx.foliage, { center: bl.c, radius: bl.r, squash: bl.sq, detail: ctx.pick(1, 1, 0) as 0 | 1, seed: rng.seed(), base: mix(leafBase, [0.25, 0.55, 0.22], 0.25), swayK: 0.3, noise: 0.16, flatBottom: 0.8, ao: 0.5 })
+    for (const bl of blobs) clump(ctx.foliage, { center: bl.c, radius: bl.r, squash: bl.sq, detail: ctx.pick(1, 1, 0) as 0 | 1, seed: rng.seed(), base: dead ? mix(leafBase, [0.42, 0.32, 0.2], 0.7) : dry ? mix(leafBase, [0.55, 0.48, 0.22], 0.45) : mix(leafBase, [0.25, 0.55, 0.22], 0.25), swayK: 0.3, noise: 0.16, flatBottom: 0.8, ao: 0.5 })
     const nl = ctx.pick(spreading ? 60 : 66, spreading ? 26 : 30, 0)
     for (let i = 0; i < nl; i++) {
       const bl = blobs[i % blobs.length]
@@ -107,7 +108,7 @@ export function generateFlowerPlant(spec: FlowerPlantSpec, ctx: Ctx): ArchResult
       const d: Vec3 = [Math.cos(a) * r, y, Math.sin(a) * r]
       const p: Vec3 = [bl.c[0] + d[0] * bl.r * 0.92, bl.c[1] + d[1] * bl.r * bl.sq * 0.92, bl.c[2] + d[2] * bl.r * 0.92]
       const out = norm([d[0], d[1] * 0.8 + 0.3, d[2]])
-      leaf(ctx.foliage, p, norm([-d[2] * 0.3 + out[0], out[1] * 0.4 + 0.2, d[0] * 0.3 + out[2]]), out, mLeaf, mLeaf * 0.68, shade(leafBase, 0.7), mix(leafBase, [0.6, 0.8, 0.3], 0.2), { rows: 2, curl: 0.2, fold: 0.4, swayBase: 0.2, swayTip: 0.6, peak: 0.45, round: 0.7 })
+      leaf(ctx.foliage, p, norm([-d[2] * 0.3 + out[0], out[1] * 0.4 + 0.2, d[0] * 0.3 + out[2]]), out, mLeaf, mLeaf * 0.68, shade(mLeafC, 0.7), mix(mLeafC, [0.6, 0.8, 0.3], dead ? 0 : 0.2), { rows: 2, curl: 0.2, fold: 0.4, swayBase: 0.2, swayTip: 0.6, peak: 0.45, round: 0.7 })
     }
   }
   const radius = isMound ? 0.0001 : Math.max(0.004, height * 0.014) * (def.woody ? 1.2 : 1)

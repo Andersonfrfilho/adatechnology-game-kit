@@ -56,7 +56,7 @@ export function generateShrub(spec: ShrubSpec, ctx: Ctx): ArchResult {
     const sections = Math.max(1, Math.round(length / (width * 1.1)))
     const secLen = length / sections
     const grid = ctx.pick(3, 2, 1)
-    const base = palette[0]
+    const base = dead ? mix(palette[0], [0.42, 0.33, 0.22], 0.65) : ctx.condition === 'dry' ? mix(palette[0], [0.5, 0.45, 0.22], 0.35) : palette[0]
     for (let i = 0; i < sections; i++) {
       const sr = rng.fork(i * 17 + 3)
       const cx = -length / 2 + secLen * (i + 0.5)
