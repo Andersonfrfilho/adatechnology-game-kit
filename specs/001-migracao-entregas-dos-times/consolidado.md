@@ -71,8 +71,10 @@ Legenda: ✅ decidido (data e resposta), ⏳ aguardando o dono, 🔁 decidido pe
 | C2 | Pacotes | Casa3DSDK são 3 SDKs (PlantasSDK, Casa3DSDK renderizador, AdaptadorInterativos) | — | ✅ 2026-10-23: estender `game-floorplan` + `game-floorplan-structure` + `game-floorplan-rural` + `game-floorplan-three` (desenho 3D e ponte para móveis) + `examples/floorplan-test-area` |
 | C3 | Ruas, postes, bairro, relevo | Sem casa no SDK | — | ✅ 2026-10-23: no SDK, como `game-urban` (+ `-three`): ruas, calçadas, os 5 postes, padrão de bairro, quarteirão e relevo; o Vale Cinzento em si fica no repositório do jogo |
 | C4 | Massas da Galeria do Vale (sobrado, laje, colonial…) | Silhuetas sem planta | — | ✅ 2026-10-23: cada tipologia vira modelo de planta real no SDK e a silhueta da Galeria é a versão de longe (LOD) |
-| C5 | Interiores (delegacia, escola, igreja, posto, hospital…) | Só como cena na galeria | Viram modelos de planta do SDK | ⏳ |
-| C6 | Andares (AndaresSDK, no modo livre) | Sem casa no SDK | Entra no `game-floorplan-three` | ⏳ |
+| C5 | Interiores (delegacia, escola, igreja, posto, hospital…) | Só como cena na galeria | — | ✅ 2026-10-23: viram modelos de planta do SDK **com o interior completo**: estrutura, móveis e os itens (achados) de cada lugar, ligados ao catálogo único de itens. A lista de lugares vai crescer depois |
+| C6 | Andares (AndaresSDK, no modo livre) | Sem casa no SDK | — | ✅ 2026-10-23: entra no `game-floorplan-three`; toda casa gerada pode ter andares e escada |
+| C7 | Casa de laje com 1 a 3 andares | Galeria tem 1–3 (puxadinho vertical); `budget_slab_house` tem 1 | — | ✅ 2026-10-23: o modelo sorteia de 1 a 3 andares |
+| C8 | Barraco e "gato" de luz | `service_entrance` já tem `variant: 'gato'` | — | ✅ 2026-10-23: no SDK, marcados como Brasil (região `br`), junto dos modelos rurais e populares |
 
 ## 5. Efeitos (Fase 6)
 
