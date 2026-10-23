@@ -80,12 +80,12 @@ Legenda: ✅ decidido (data e resposta), ⏳ aguardando o dono, 🔁 decidido pe
 
 | # | Decisão | O que as fontes dizem | Recomendação | Situação |
 |---|---|---|---|---|
-| E1 | Qual explosão vale | Laboratório ("versão final"), jogo (reduzida, com teto por área e LOD), SDK (mais fraca) | Laboratório + teto e LOD do jogo | ⏳ |
-| E2 | Dados de fluido | Sangue seca marrom `3B1D14` em 10 min (time) ou `4A0506` em 20 min (SDK); gasolina 60 s sem marca ou 120 s com marca | Time | ⏳ |
+| E1 | Qual explosão vale | Laboratório ("versão final"), jogo (reduzida, com teto por área e LOD), SDK (mais fraca) | — | ⏳ o dono pediu uma **prévia lado a lado** das três (Laboratório, jogo, SDK) antes de decidir: `comparacoes/explosoes/` |
+| E2 | Dados de fluido | Sangue seca marrom `3B1D14` em 10 min (time) ou `4A0506` em 20 min (SDK); gasolina 60 s sem marca ou 120 s com marca | — | ✅ 2026-10-23: **configurável por jogo**; o SDK traz os valores do time (Padrão de Fluidos F1–F12) como padrão, e entram no `game-fluids` o filme que escorre, o respingo por ângulo, a bile e o sangue antigo |
 | E3 | Dois raios de explosão (letal e ferimento) | Em tudo do time; SDK tem um | Dados em `game-weapons`, dano em `game-characters` | 🔁 |
 | E4 | Pacote | — | `game-vfx` + `game-vfx-three`; destruição, fluidos e armas passam a usá-lo | 🔁 |
-| E5 | Contrato da bancada de efeitos | O `TestableModule` é centrado em item | Ampliar o contrato genérico com parâmetros, camadas e contadores | ⏳ |
-| E6 | Clima (chuva, neblina, raio) | Na Oficina e no jogo | `game-weather` futuro; fora desta fase | ⏳ |
+| E5 | Contrato da bancada de efeitos | O `TestableModule` é centrado em item | — | ✅ 2026-10-23: ampliar o contrato genérico do módulo de teste com parâmetros, camadas e contadores; a Oficina vira módulo do `game-vfx` carregado na sala |
+| E6 | Clima (chuva, neblina, raio) | Na Oficina e no jogo | — | ✅ 2026-10-23: **`game-weather` entra nesta migração**: chuva leve e forte, neblina, relâmpago, vento e **eventos extremos** (ciclone, tufão, calor intenso), ligados a fluidos (chuva espalha o sangue e impede secar), sons e efeitos |
 
 ## 6. Veículos, móveis, vegetação e jogo
 
