@@ -1,9 +1,14 @@
 import type { Ctx } from '../ctx'
 import { round3, shade } from '../util'
 
+/** Tilt of a closed slat: 80 degrees from horizontal, so neighbours overlap and the blind blocks the view. */
+const SLAT_TILT = 1.4
+
 /**
- * Horizontal slat blinds. One `slats` part (scale along y) raises and lowers the whole pack, so a single interaction closes or opens it.
- * The slats are drawn tilted so the lowered blind reads as closed.
+ * Horizontal slat blinds. Every slat is its own part (`slat_1`... hinged around x) and all of them share the group `tilt`, so one
+ * interaction tilts the whole pack: t = 0 is closed (slats nearly vertical and overlapping), t = 1 is open (slats horizontal). The
+ * separate `raise` part (scale along y) lifts the cord, rail and pull. The host animates parts as flat groups, so the slats themselves
+ * do not stack when raised.
  */
 export function blinds(c: Ctx): void {
   const { hw, hd, h, y0, w } = c
@@ -15,26 +20,33 @@ export function blinds(c: Ctx): void {
   // head rail with a small valance and the mounting brackets
   c.b('plain', -hw, yTop - head, -hd, hw, yTop, hd, shade(col, 0.8))
   c.b('plain', -hw + 0.01, yTop - head - 0.01, -hd + 0.008, hw - 0.01, yTop - head, hd - 0.008, shade(col, 0.7))
-  // slat pack hangs from the head rail and scales toward it
-  const pitch = 0.03
-  const span = h - head - foot
-  const n = Math.max(3, Math.floor(span / pitch))
-  const tilt = c.M.variant === 'open' ? 0.2 : 1.0
+  // slats: thin boards drawn tilted, each hinged around its own axis
+  const chord = 0.05
+  const pitch = 0.035
+  const first = yTop - head - 0.03
+  const n = Math.max(3, Math.floor((first - (y0 + foot + 0.03)) / pitch) + 1)
+  const tiltT0 = c.M.variant === 'closed' ? 0 : 1
+  for (let i = 0; i < n; i++) {
+    const y = round3(first - i * pitch)
+    c.part(
+      `slat_${i + 1}`, [0, y, 0], { kind: 'hinge', axis: [1, 0, 0], angle: -SLAT_TILT, speed: 1.8 },
+      () => c.box(wood ? 'wood' : 'plain', 0, y - 0.003, 0, w - 0.02, 0.006, chord, i % 2 ? col : shade(col, 0.97), 0, SLAT_TILT),
+      { t0: tiltT0, noSweep: true, at: false, group: 'tilt' },
+    )
+  }
+  c.toggle('slat_1', [0, round3(y0 + h * 0.5), hd], 'prompt.blinds_tilt', 1.8)
+  // cord ladders, bottom rail and pull: they lift with the `raise` part
   const t0 = Math.min(1, Math.max(0, c.M.retracted ?? 0.15))
   c.part(
-    'slats', [0, yTop - head, 0], { kind: 'scale', axis: [0, 1, 0], scale: 0.1 },
+    'raise', [0, yTop - head, 0], { kind: 'scale', axis: [0, 1, 0], scale: 0.1 },
     () => {
       for (const sx of [-1, 1]) c.b('plain', sx * (hw - 0.05) - 0.004, y0 + foot, -0.004, sx * (hw - 0.05) + 0.004, yTop - head, 0.004, 0xb8b6ae) // ladder strings
-      for (let i = 0; i < n; i++) {
-        const y = yTop - head - (i + 0.5) * (span / n)
-        c.box(wood ? 'wood' : 'plain', 0, y - 0.003, 0, w - 0.02, 0.006, 0.05, i % 2 ? col : shade(col, 0.97), 0, tilt)
-      }
       c.b('plain', -hw + 0.01, y0, -hd + 0.015, hw - 0.01, y0 + foot, hd - 0.015, shade(col, 0.75)) // bottom rail
       c.b('plain', -0.04, y0 - 0.0, hd - 0.014, 0.04, y0 + foot, hd - 0.012, 0x888a8c) // pull
     },
-    { label: 'prompt.blinds', t0, at: [0, y0 + h * 0.5, hd], radius: 1.8 },
+    { label: 'prompt.blinds', t0, at: [0, round3(y0 + 0.1), hd], radius: 1.8 },
   )
-  // tilt wand + cord on the left side (decoration, reaches below the blind)
+  // tilt wand + cord (decoration, reaches below the blind)
   c.cyl('plain', -hw + 0.03, yTop - head - 0.25, hd - 0.012, 0.004, 0.25, 0xc8c6be, 'cyl6')
   c.cyl('plain', hw - 0.03, y0 + 0.2, hd - 0.012, 0.0025, yTop - head - y0 - 0.2, 0xd8d6ce, 'cyl6')
   c.cyl('plain', hw - 0.03, y0 + 0.17, hd - 0.012, 0.007, 0.03, 0xb8b6ae, 'cyl6')
@@ -73,9 +85,10 @@ export function curtain(c: Ctx): void {
         }
         for (let i = 0; i < folds; i++) c.cyl('metal', xOuter - s * (i + 0.5) * (pw / folds), rodY - 0.012, 0, 0.012, 0.008, 0x8a7a5a, 'cyl6', Math.PI / 2, 0) // rings
       },
-      { label: 'prompt.curtain', t0, at: [xOuter - s * pw * 0.5, y0 + h * 0.5, 0.05], radius: 1.6 },
+      { label: 'prompt.curtain', t0, at: false, group: 'panels' },
     )
     c.add('soft', { id, kind: 'curtain', anchor: [round3(xOuter - s * pw / 2), round3(yTop - 0.06), 0], size: [round3(pw), round3(h - 0.06), 0.05], stiffness: 14, damping: 3, maxAngle: 0.5, wind: 0.6, part: id })
   }
+  c.toggle('panel_l', [0, round3(y0 + h * 0.5), 0.05], 'prompt.curtain', 1.8) // one interaction moves both panels (group)
   c.spec.colliders = []
 }

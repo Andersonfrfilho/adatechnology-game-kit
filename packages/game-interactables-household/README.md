@@ -84,7 +84,7 @@ rotated by `ry`, which is always 0 in this pack), so the host makes one movable 
 | `controls` | Device ids a `wall_switch` toggles |
 | `points` | `conduit_run`: polyline in object-local coordinates |
 | `house`, `sag` | `service_entrance`: where the drop wire ends (object-local) and how much it sags |
-| `variant` | `fridge`: `'steel'`; `pantry`: `'garage'` (open steel shelves, loot `garage_shelf`); `blinds`: `'wood'`, `'open'`; `dog_house`: `'no_bowl'` |
+| `variant` | `fridge`: `'steel'`; `pantry`: `'garage'` (open steel shelves, loot `garage_shelf`); `blinds`: `'wood'`, `'closed'` (starts with the slats closed); `dog_house`: `'no_bowl'` |
 
 ## Types
 
@@ -147,8 +147,8 @@ Seats face `+z` of the object (`ry = PI`, because yaw 0 is -z in `game-interacta
 
 | Type | Size | What it exposes |
 |---|---|---|
-| `blinds` | 1.2 x 0.08 x 1.4, y 0.9 | `slats` (scale along y, raises the whole pack; starts mostly lowered), head rail, cord, wand. Slats are drawn tilted so the lowered blind reads as closed |
-| `curtain` | 1.6 x 0.1 x 1.6, y 0.7 | `panel_l`, `panel_r` (scale along x, bunching toward the end) with a **soft curtain** each (`soft.part` = the panel, so walking through drives it); rod, rings, folds |
+| `blinds` | 1.2 x 0.08 x 1.4, y 0.9 | one hinged part per slat (`slat_1`...) in the part group `tilt`, so a single interaction closes (slats ~80 degrees, overlapping) or opens (flat) the whole blind; a separate `raise` part (scale along y) lifts the cord ladders, rail and pull. Parts are flat groups, so the slats do not stack when raised |
+| `curtain` | 1.6 x 0.1 x 1.6, y 0.7 | `panel_l`, `panel_r` (scale along x, bunching toward the end) in the part group `panels`: one interaction opens and closes both. Each has a **soft curtain** (`soft.part` = the panel, so walking through sways it); rod, rings, folds |
 
 ### Yard
 

@@ -19,6 +19,8 @@ export interface PartOptions {
   label?: string
   t0?: number
   requires?: string
+  /** Parts with the same group move together (see `PartSpec.group`). */
+  group?: string
   /** Where the default interaction is aimed (object-local). Default: center of the part. `false` = no interaction. */
   at?: Vec3 | false
   radius?: number
@@ -161,6 +163,7 @@ export class Ctx {
     const spec: PartSpec = { id, pivot, motion }
     if (o.t0) spec.t0 = o.t0
     if (o.requires) spec.requires = o.requires
+    if (o.group) spec.group = o.group
     if (o.label) spec.label = o.label
     if (!o.noSweep && pts.length) spec.sweep = sweepOf(pts, pivot, motion)
     this.list('parts').push(spec)

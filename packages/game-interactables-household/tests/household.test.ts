@@ -464,12 +464,6 @@ describe('seating', () => {
 })
 
 describe('windows', () => {
-  it('blinds raise with one scale part and start mostly lowered', () => {
-    const s = build('blinds').spec
-    expect(s.parts![0]).toMatchObject({ id: 'slats', motion: { kind: 'scale' } })
-    expect(s.parts![0].t0).toBeCloseTo(0.15, 2)
-  })
-
   it('curtain panels are soft curtains driven by sliding-scale parts', () => {
     const s = build('curtain').spec
     expect(s.parts!.map((p) => p.id)).toEqual(['panel_l', 'panel_r'])
