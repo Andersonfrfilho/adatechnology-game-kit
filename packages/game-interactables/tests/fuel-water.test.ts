@@ -44,6 +44,39 @@ describe('fuel', () => {
     expect(w.fuelLevel('bot', 'gas')).toBeCloseTo(13 - 0.1, 3)
   })
 
+  it('a knob left open before the valve opens lights by itself when the valve opens', () => {
+    const { w, events } = world()
+    w.add('bot', bottle, { x: 1, y: 0, z: 0, ry: 0 })
+    w.add('st', stove, origin)
+    w.act('st:burner.b')
+    run(w, 0.5)
+    expect(w.isLit('st', 'b')).toBe(false)
+    w.act('bot:fuel.gas')
+    run(w, 0.1)
+    expect(w.isLit('st', 'b')).toBe(true)
+    expect(events.some((e) => e.type === 'burner' && e.burner === 'b' && e.lit)).toBe(true)
+    expect(w.emitters().some((e) => e.id === 'st:flame')).toBe(true)
+    run(w, 10)
+    expect(w.fuelLevel('bot', 'gas')).toBeLessThan(13)
+  })
+
+  it('does not light by itself without fuel, after turning the knob off, or for a burner that needs ignition', () => {
+    const { w } = world()
+    w.add('bot', { ...bottle, fuels: [{ id: 'gas', kind: 'gas', capacity: 13, level: 0, valve: 'valve' }] }, { x: 1, y: 0, z: 0, ry: 0 })
+    w.add('st', stove, origin)
+    w.add('g', grill, { x: 5, y: 0, z: 0, ry: 0 })
+    w.act('st:burner.b')
+    w.act('bot:fuel.gas')
+    run(w, 1)
+    expect(w.isLit('st', 'b')).toBe(false)
+    w.act('st:burner.b') // off
+    w.setPart('bot', 'valve', 0, true)
+    w.setPart('bot', 'valve', 1, true)
+    run(w, 1)
+    expect(w.isLit('st', 'b')).toBe(false)
+    expect(w.isLit('g', 'bed')).toBe(false)
+  })
+
   it('closing the valve puts the flame out', () => {
     const { w } = world()
     w.add('bot', bottle, { x: 1, y: 0, z: 0, ry: 0 })

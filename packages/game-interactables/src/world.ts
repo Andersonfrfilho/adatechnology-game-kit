@@ -1214,6 +1214,11 @@ export function createWorld(options: WorldOptions = {}): World {
             ref.f.level = Math.max(0, ref.f.level - b.spec.rate * dt)
             if (ref.f.level <= 0) extinguish(o, b, !!b.spec.needsIgnition)
           }
+        } else if (b.on && !b.spec.needsIgnition && canBurn(b, resolveFuel(o, b))) {
+          // a gas knob left open without gas lights as soon as the bottle valve opens
+          b.lit = true
+          b.smoke = 0
+          emitBurner(o, b)
         } else if (b.smoke > 0) {
           b.smoke = Math.max(0, b.smoke - dt)
         }

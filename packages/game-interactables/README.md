@@ -84,7 +84,7 @@ around `+y` like `three.js` (`+z` turns toward `+x` for a positive angle). View 
   socket within 2 m, across the whole world) or hard-wired to a circuit. `powered = grid && breaker && socket found`. A device that is on but
   unpowered stays on, reports `powered: false` and emits the `no_power` message. Switches toggle the listed devices (`object:device` or local ids).
 - **Fuel**: burners need fuel and, for a bottle with a valve, the valve open. `fuel: 'auto'` = nearest gas source within 2 m. Gas is consumed
-  while lit; running out or closing the valve puts the flame out. Charcoal needs `ignite`, burns until empty, and `toggle_burner` puts it out.
+  while lit; running out or closing the valve puts the flame out, and a gas knob left on without gas lights by itself when the valve opens. Charcoal needs `ignite`, burns until empty, and `toggle_burner` puts it out.
   Smoke emitters of solid fuel linger 20 s after the fire is out, fading.
 - **Water**: tanks (`capacity`, `level`, `rainArea`), a default tank, fixtures that flow while on and supplied. With `options.waterSupply`, fixtures
   draw through it (`flow / 60 * dt` liters, a flush draws `volume` once). Dry fixtures stay "on" but report `flowing: false`.
