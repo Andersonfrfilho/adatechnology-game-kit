@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vehicles example · Cosmic Rally</title>
+<style>
+  :root { --bg: #14181d; --fg: #e8ecef; --muted: #98a2ab; --panel-2: #1c2127; --line: #39414a; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.4 system-ui, sans-serif; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; padding: 12px; }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+  #view { width: 100%; height: 420px; display: block; background: #0d1014; border-radius: 6px; touch-action: none; }
+  h1 { font-size: 16px; margin: 0 0 8px; } .muted { color: var(--muted); }
+  button { background: var(--panel-2); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 5px 9px; margin: 2px; cursor: pointer; }
+  #legend span { display: inline-flex; align-items: center; margin-right: 8px; font-size: 12px; } #legend i { width: 10px; height: 10px; margin-right: 4px; display: inline-block; }
+  #bar { height: 6px; background: #333; border-radius: 3px; } #barfill { height: 100%; width: 0; border-radius: 3px; }
+  #info { min-height: 3em; }
+</style>
+</head>
+<body>
+<main>
+  <section><h1>Cosmic Rally · a second game on the same engine</h1><canvas id="view"></canvas><p id="info" class="muted"></p></section>
+  <aside>
+    <div id="overall" class="muted"></div><div id="bar"><div id="barfill"></div></div>
+    <div id="scenarios"></div><div id="damageMap"></div><div id="bands"></div><div id="legend"></div>
+  </aside>
+</main>
+<!--BUNDLES-->
+<script>
+/* A tiny "game": a content plugin (bands, texts, a fluid and three scenarios) plus one vehicle.
+   It only uses the public API: createVehicleKit, plugin, register, build and the ui helpers. */
+(function () {
+  'use strict'
+  var V3 = THREE.Vector3
+  var query = new URLSearchParams(location.search)
+  var kit = GameVehicles.createVehicleKit({ THREE: THREE, locale: query.get('lang') || 'en' })
+  kit.ui.injectStyles()
+
+  kit.plugin({
+    name: 'cosmic-rally',
+    configure: {
+      bands: [{ name: 'Pristine', color: '#4aa3df' }, { name: 'Scuffed', color: '#9ac23f' }, { name: 'Bent', color: '#e5a82a' }, { name: 'Broken', color: '#d4542f' }, { name: 'Gone', color: '#6e7377' }],
+      zoneEffects: {
+        panel: ['Nothing', 'Loses 1 style point', 'Loses 5 seconds per lap', 'Possible disqualification', 'No panel: out of the race'],
+        door: ['Nothing', 'Loses 1 style point', 'Stuck door: the driver exits through the roof', 'Flapping door: track fine', 'No door: driver exposed to dust'],
+        glass: ['Nothing', 'Harmless chip', 'Bad visibility: {who} misses the corner', 'No glass: dust for {who}', 'Open gap'],
+        wheel: ['Nothing', 'Scratched rim', 'Low tyre: pulls to one side', 'Torn tyre: 30 km/h', 'On the rim: sparks'],
+        light: ['Nothing', 'Cracked lens', 'Dim light', 'Hanging light', 'No light'],
+        hood: ['Nothing', 'Scratched paint', 'Bent hood', 'Folded hood', 'No hood'],
+        bumper: ['Nothing', 'Scraped', 'Loose on one side', 'On the ground', 'No bumper']
+      },
+      fluids: { paint: { fresh: '#2a6fd6', dry: '#1b3f7a', dryTime: 120, wipeable: true } },
+      impactStain: 'paint',
+      defaultSplat: 'paint',
+      scenarios: [
+        { id: 'left', name: 'Hit the left wall',
+          zone: function (z, x) { if (z.side < 0 && (z.type === 'door' || z.type === 'panel' || z.type === 'glass' || z.type === 'wheel')) x.set(z, 20 + x.rand() * 15) } },
+        { id: 'front', name: 'Crushed nose',
+          init: function (x) { x.limit = x.front - 0.4 * x.length },
+          zone: function (z, x) { if (x.center.x > x.limit) x.set(z, 15 + x.rand() * 20) } },
+        { id: 'rolled', name: 'Rolled in a corner', zone: function (z, x) { if (z.type === 'roof') x.set(z, 10); x.flags.flipped = true } }
+      ],
+      texts: { who: 'the driver', plate: 'RALLY-01', ui: { front: '▲ NOSE', inside: 'Mechanics', health: 'Car condition' } },
+      defaultGroup: 'Prototypes',
+      damagedScenario: 'front'
+    }
+  })
+
+  kit.register({ key: 'proto', group: 'Prototypes', name: 'Meteor 1', fuel: 'flex', hood: true }, function (c) {
+    kit.car(c, {
+      W: 1.74, col: '#c23b22', bottomY: 0.3, noseY: 0.62, tailY: 0.8,
+      lower: [[-2.0, 0.32, 0.05], [-2.05, 0.95, 0.12], [1.3, 0.98, 0.2], [2.05, 0.75, 0.2], [2.08, 0.35, 0.08]],
+      arches: [[1.3, 0.31, 0.37], [-1.25, 0.31, 0.37]],
+      gh: { rb: -1.75, rt: -1.2, ft: 0.35, fb: 1.2, belt: 0.98, roof: 1.48, Wg: 1.62, k: 0.18, pillars: [-0.45, -1.2] },
+      hl: { style: 'wedge', w: 0.36, h: 0.1 }, tl: { style: 'bar' }, grille: { style: 'seven' },
+      interior: { rows: 2, col: '#2c2d30' }, hood: { motor: 'v8' },
+      wheels: [[1.3, 0.31, 0.2], [-1.25, 0.31, 0.2, { spokes: 6 }]]
+    })
+  })
+
+  /* minimal viewer */
+  var canvas = document.getElementById('view')
+  var info = document.getElementById('info')
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true })
+  renderer.shadowMap.enabled = true
+  var scene = new THREE.Scene()
+  scene.background = new THREE.Color(0x0d1014)
+  scene.add(new THREE.HemisphereLight(0xaab8d0, 0x202020, 0.9))
+  var sun = new THREE.DirectionalLight(0xffffff, 0.9)
+  sun.position.set(5, 9, 6)
+  sun.castShadow = true
+  sun.shadow.normalBias = 0.04
+  scene.add(sun)
+  var ground = new THREE.Mesh(new THREE.CircleGeometry(30, 40), new THREE.MeshStandardMaterial({ color: 0x2a2c2f }))
+  ground.rotation.x = -Math.PI / 2
+  ground.receiveShadow = true
+  scene.add(ground)
+  var camera = new THREE.PerspectiveCamera(34, 2, 0.1, 100)
+  var theta = 0.8, phi = 1.15, dist = 8.5
+  var current = null, zoneState = null, selected = null
+
+  function render() {
+    var w = canvas.clientWidth, h = canvas.clientHeight
+    if (canvas.width !== Math.round(w * devicePixelRatio)) {
+      renderer.setPixelRatio(devicePixelRatio)
+      renderer.setSize(w, h, false)
+      camera.aspect = w / h
+      camera.updateProjectionMatrix()
+    }
+    camera.position.set(dist * Math.sin(phi) * Math.cos(theta), dist * Math.cos(phi), dist * Math.sin(phi) * Math.sin(theta))
+    camera.lookAt(0, 0.7, 0)
+    renderer.render(scene, camera)
+  }
+  function show() {
+    if (current) { scene.remove(current.root); kit.dispose(current) }
+    current = kit.build('proto', 'intact', zoneState)
+    scene.add(current.root)
+    render()
+  }
+  function panel() {
+    kit.ui.healthBar({ text: document.getElementById('overall'), bar: document.getElementById('barfill') }, current)
+    kit.ui.damageMap(document.getElementById('damageMap'), current, {
+      selected: selected,
+      onSelect: function (id) {
+        selected = id
+        var z = current.zones.find(function (q) { return q.id === id })
+        info.textContent = kit.ui.zoneLabel(z) + ' · ' + kit.zoneEffect(z)
+        panel()
+      }
+    })
+  }
+  kit.ui.scenarioButtons(document.getElementById('scenarios'), function (id) {
+    zoneState = kit.zoneScenario(current, id)
+    selected = null
+    show()
+    info.textContent = 'Scenario: ' + id
+    panel()
+  })
+  kit.ui.bandButtons(document.getElementById('bands'), function (health) {
+    if (!selected) { info.textContent = 'Pick a zone on the map first'; return }
+    zoneState = { health: Object.assign({}, current.zoneState.health), flags: Object.assign({}, current.zoneState.flags) }
+    zoneState.health[selected] = health
+    show()
+    panel()
+  })
+  kit.ui.legend(document.getElementById('legend'))
+
+  var drag = null
+  canvas.addEventListener('pointerdown', function (e) { drag = [e.clientX, e.clientY] })
+  addEventListener('pointerup', function () { drag = null })
+  addEventListener('pointermove', function (e) {
+    if (!drag) return
+    theta -= (e.clientX - drag[0]) * 0.008
+    phi = Math.max(0.3, Math.min(1.5, phi - (e.clientY - drag[1]) * 0.006))
+    drag = [e.clientX, e.clientY]
+    render()
+  })
+  addEventListener('resize', render)
+  show()
+  panel()
+  window.__example = { kit: kit, run: function (id) { zoneState = kit.zoneScenario(current, id); show(); panel(); return Object.keys(zoneState.health).length } }
+})()
+</script>
+</body>
+</html>
