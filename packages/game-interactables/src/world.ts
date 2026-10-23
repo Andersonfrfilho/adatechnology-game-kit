@@ -279,7 +279,7 @@ export function createWorld(options: WorldOptions = {}): World {
     const ys = axisPoints(1)
     const zs = axisPoints(2)
     // `blocked` only sees x/z, so only the floor footprint matters. About a vertical axis (and for slides) y never changes
-    // the footprint, so the x/z grid is enough; otherwise the footprint boundary is the projection of the box edges.
+    // the footprint, so the x/z outline is enough; otherwise the footprint boundary is the projection of the box edges.
     const flat = m.kind === 'slide' || Math.abs(axis[1]) > 0.999
     const seen = new Set<string>()
     const pts: Vec3[] = []
@@ -290,7 +290,8 @@ export function createWorld(options: WorldOptions = {}): World {
       pts.push([x, y, z])
     }
     if (flat) {
-      for (const x of xs) for (const z of zs) add(x, lo[1], z)
+      for (const x of xs) for (const z of [lo[2], hi[2]]) add(x, lo[1], z)
+      for (const z of zs) for (const x of [lo[0], hi[0]]) add(x, lo[1], z)
     } else {
       for (const x of xs) for (const y of [lo[1], hi[1]]) for (const z of [lo[2], hi[2]]) add(x, y, z)
       for (const y of ys) for (const x of [lo[0], hi[0]]) for (const z of [lo[2], hi[2]]) add(x, y, z)
