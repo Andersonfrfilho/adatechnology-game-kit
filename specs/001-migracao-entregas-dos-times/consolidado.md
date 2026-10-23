@@ -49,10 +49,10 @@ Legenda: ✅ decidido (data e resposta), ⏳ aguardando o dono, 🔁 decidido pe
 
 | # | Decisão | O que as fontes dizem | Recomendação | Situação |
 |---|---|---|---|---|
-| P1 | Base do corpo | 8 versões; proporção do guia (Elenco/Retratos: 1,80 m, ombros 0,60); execução do jogo (`buildBody`, GPU) com ombros 0,48 | Execução do jogo com a proporção do guia | ⏳ |
-| P2 | Bestiário de referência | O jogo cita v17 e v12; a página é v0.1 | v17 (embutido no jogo) | ⏳ |
-| P3 | Velocidade dos zumbis | Bestiário/jogo: Cego 0,8/3,0, Carbonizado 0,9/2,2, Afogado 0,6/2,5, Devorador 0,9/3,0; Bancada: 1,6 / 1,6 / 1,2 / 2,4; Corredor 5,5 ou 6,0 | Bestiário v17 | ⏳ |
-| P4 | Cor dos olhos | Bestiário/jogo e Bancada divergem em 4 tipos | Bestiário v17 | ⏳ |
+| P1 | Base do corpo | 8 versões; proporção do guia (Elenco/Retratos: 1,80 m, ombros 0,60); execução do jogo (`buildBody`, GPU) com ombros 0,48 | — | ✅ 2026-10-23: execução do jogo (`buildBody`, `bodyAnim`, GPU, passada casada com o chão) com a proporção do guia (1,80 m, ombros 0,60 m, cabeça 1/6) |
+| P2 | Bestiário de referência | O jogo cita v17 e v12; a página é v0.1 | — | ✅ 2026-10-23: **v17**, extraído de dentro do jogo e levado para o SDK como fonte própria (o jogo passa a consumir do SDK); a página v0.1 fica como histórico |
+| P3 | Velocidade dos zumbis | Bestiário/jogo: Cego 0,8/3,0, Carbonizado 0,9/2,2, Afogado 0,6/2,5, Devorador 0,9/3,0; Bancada: 1,6 / 1,6 / 1,2 / 2,4; Corredor 5,5 ou 6,0 | — | ✅ 2026-10-23 (o dono pediu para decidir o que faz sentido, ajustável): **base do Bestiário** (zumbi lento 0,6–1,0 m/s, abaixo da pessoa a 1,4 m/s) com **multiplicadores por momento** que o jogo pode trocar: vagando, alerta, perseguindo, frenesi (sangue, multidão), ferido (perna perdida vira rastejo), noite e água. Os valores da Bancada viram o estado "perseguindo" dos tipos lentos. Corredor: 5,5 m/s sustentado e 6,0 na arrancada |
+| P4 | Cor dos olhos | Bestiário/jogo e Bancada divergem em 4 tipos | — | ✅ 2026-10-23: Bestiário v17 |
 | P5 | Zumbi nomeado | Elenco: corredor; Bestiário: sempre Fresco; Retratos: categoria por pessoa; jogo: sempre Lento | Retratos (por pessoa) | ⏳ |
 | P6 | Crianças viram zumbi? | Retratos: nunca; o jogo não impede | Nunca (regra dos Retratos) | ⏳ |
 | P7 | Penetração | Bestiário: 9 mm atravessa 2 corpos; jogo: modelo de custo por membro | Modelo do jogo, calibrado para bater com o Bestiário | ⏳ |
