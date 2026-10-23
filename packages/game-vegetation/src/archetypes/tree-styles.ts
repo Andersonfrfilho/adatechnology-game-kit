@@ -263,7 +263,19 @@ export function styledCrown(style: CrownStyle, env: StyleEnv): StyleGroup[] {
       flatBottom: style === 'umbrella' || style === 'dome' ? 0.75 : 0.5,
       ao: env.bloomOn && env.spec.bloom?.replacesLeaves ? 0.78 : style === 'dome' ? 0.45 : 0.55,
     }
-    clump(ctx.foliage, o)
+    if (ctx.lod === 1 && !bigSphere && style !== 'willow') {
+      // mid LOD: several small low-subdivision lumps per clump instead of one big faceted icosahedron
+      const sr = new Rng(a.tip.seed ^ 0x2545f491)
+      const subs = 3
+      for (let k = 0; k < subs; k++) {
+        const ang = (k / subs) * TAU + sr.range(0, 1)
+        const off = r * 0.5
+        const sub = { ...o, radius: r * 0.64, seed: a.tip.seed + k * 977, center: [a.p[0] + Math.cos(ang) * off, a.p[1] + r * a.sq * sr.range(0, 0.35), a.p[2] + Math.sin(ang) * off] as Vec3 }
+        clump(ctx.foliage, sub)
+      }
+    } else {
+      clump(ctx.foliage, o)
+    }
     if (ctx.lod === 0) clumpLeaves(ctx.foliage, o)
     groups.push({ p: a.p, r, sq: a.sq })
     if (style === 'sparse_high' && a.tip.p[0] === 0 && a.tip.p[1] === 0 && ctx.lod < 2) {

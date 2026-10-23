@@ -78,6 +78,20 @@ export function generateShrub(spec: ShrubSpec, ctx: Ctx): ArchResult {
         },
         sway: (hh) => 0.3 * hh,
       })
+      if (ctx.lod < 2) {
+        // leafy lumps breaking the clipped surface (small low-poly clumps instead of a plain box)
+        const nb = ctx.pick(9, 7, 0)
+        const br = width * 0.2
+        for (let k = 0; k < nb; k++) {
+          const onTop = k % 5 < 2
+          const px = cx + sr.range(-secLen / 2, secLen / 2) * 0.92
+          const pz = sr.range(-width / 2, width / 2) * 0.85
+          const side = pz > 0 ? 1 : -1
+          const pos: Vec3 = onTop ? [px, h - br * 0.5, pz] : [px, sr.range(0.25, 0.85) * h, side * (width / 2 - br * 0.35)]
+          const lr = br * sr.range(0.75, 1.15)
+          clump(ctx.foliage, { center: pos, radius: lr, squash: 0.68, detail: 0, seed: sr.seed(), base: shade(c, sr.range(0.84, 0.98)), crown: [cx, h * 0.3, 0], swayK: 0.3, noise: 0.15, flatBottom: 0.2, ao: 0.6 })
+        }
+      }
       if (ctx.lod === 0) {
         // leaf flecks poking from the clipped surface
         const lc0 = shade(c, 0.75)
@@ -99,7 +113,7 @@ export function generateShrub(spec: ShrubSpec, ctx: Ctx): ArchResult {
   // round / loose: multi stem bush with clumps
   const crownC: Vec3 = [0, H * 0.5, 0]
   const nStems = ctx.pick(6, 4, 3)
-  const nClumps = Math.max(3, Math.round(ctx.pick(9, 6, 4) * clamp(density, 0.3, 1.4) * (shape === 'loose' ? 0.9 : 1)))
+  const nClumps = Math.max(3, Math.round(ctx.pick(9, 10, 4) * clamp(density, 0.3, 1.4) * (shape === 'loose' ? 0.9 : 1)))
   const anchors: { p: Vec3; r: number; seed: number }[] = []
   for (let i = 0; i < nClumps; i++) {
     const f = rng.fork(i + 1)
@@ -107,7 +121,7 @@ export function generateShrub(spec: ShrubSpec, ctx: Ctx): ArchResult {
     const layer = i % 3
     const rr = R * (layer === 0 ? f.range(0.0, 0.35) : f.range(0.45, 0.8)) * (shape === 'loose' ? 1.15 : 1)
     const y = H * (layer === 0 ? f.range(0.55, 0.8) : layer === 1 ? f.range(0.35, 0.55) : f.range(0.22, 0.4))
-    anchors.push({ p: [Math.cos(a) * rr, y, Math.sin(a) * rr], r: R * f.range(0.42, 0.62) * (shape === 'loose' ? 0.9 : 1), seed: f.seed() })
+    anchors.push({ p: [Math.cos(a) * rr, y, Math.sin(a) * rr], r: R * f.range(0.42, 0.62) * (shape === 'loose' ? 0.9 : 1) * (ctx.lod === 1 ? 0.8 : 1), seed: f.seed() })
   }
   // stems from the ground to the lower clumps
   for (let i = 0; i < nStems; i++) {
@@ -127,14 +141,14 @@ export function generateShrub(spec: ShrubSpec, ctx: Ctx): ArchResult {
       seed: a.seed,
       base: dead ? mix(base, [0.4, 0.35, 0.27], 0.6) : base,
       crown: crownC,
-      leaves: ctx.lod === 0 ? { count: 6 + Math.round(a.r * 8), length: a.r * 0.5 * lsize, width: a.r * 0.4 * lsize } : undefined,
+      leaves: ctx.lod === 0 ? { count: 6 + Math.round(a.r * 8), length: a.r * 0.5 * lsize, width: a.r * 0.4 * lsize } : ctx.lod === 1 ? { count: 2 + Math.round(a.r * 3), length: a.r * 0.55 * lsize, width: a.r * 0.45 * lsize } : undefined,
       swayK: 0.7,
       noise: shape === 'loose' ? 0.3 : 0.2,
       flatBottom: 0.6,
       ao: 0.45,
     }
     clump(ctx.foliage, o)
-    if (ctx.lod === 0) clumpLeaves(ctx.foliage, o)
+    if (ctx.lod < 2) clumpLeaves(ctx.foliage, o)
   })
   if (variegation && ctx.lod < 2) {
     // colorful croton leaves: broad leaves in the variegation palette all over the surface
