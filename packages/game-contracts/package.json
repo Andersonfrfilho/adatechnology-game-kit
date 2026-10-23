@@ -1,0 +1,43 @@
+{
+  "name": "@adatechnology/game-contracts",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "The contracts every game module depends on, and nothing else: destruction (parts, hits, events, DestructibleImpl), weapons (shots), fluids (containers, item uses), item animations and the TestableModule a module hands the test room. Types plus tiny checkers, no runtime dependencies.",
+  "keywords": ["game", "contracts", "types", "destruction", "weapons", "fluids", "animation", "modules"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-contracts"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

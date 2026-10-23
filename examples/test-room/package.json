@@ -1,0 +1,12 @@
+{
+  "name": "@adatechnology/test-room-example",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "The test room with the generic demo catalogue (first person, pt-BR or en). Builds ONE self-contained HTML file and tests it with Playwright.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  }
+}
