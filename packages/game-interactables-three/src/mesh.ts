@@ -35,10 +35,16 @@ export interface MeshApi {
 
 /** Default materials: vertex colors everywhere, glass and water transparent, emissive unlit. */
 export function createDefaultMaterials(THREE: ThreeLib, quality: Quality = 'high'): Record<MaterialKey, ThreeNS.Material> {
+  // three warns about every parameter that is present but undefined: only pass the ones that are set
+  const defined = <T extends object>(o: T): T => {
+    const out = {} as T
+    for (const k of Object.keys(o) as Array<keyof T>) if (o[k] !== undefined) out[k] = o[k]
+    return out
+  }
   const std = (p: ThreeNS.MeshStandardMaterialParameters): ThreeNS.Material =>
     quality === 'game'
-      ? new THREE.MeshLambertMaterial({ vertexColors: true, transparent: p.transparent, opacity: p.opacity, depthWrite: p.depthWrite, side: p.side })
-      : new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0, ...p })
+      ? new THREE.MeshLambertMaterial(defined({ vertexColors: true, transparent: p.transparent, opacity: p.opacity, depthWrite: p.depthWrite, side: p.side }))
+      : new THREE.MeshStandardMaterial(defined({ vertexColors: true, roughness: 0.85, metalness: 0, ...p }))
   return {
     plain: std({}),
     metal: std({ roughness: 0.35, metalness: 0.7 }),

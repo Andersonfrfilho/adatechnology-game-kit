@@ -179,3 +179,20 @@ describe('applyPose', () => {
     expect(poseOf({ kind: 'slide', axis: [0, 1, 0], distance: 1 }, -1).position).toEqual([0, 0, 0])
   })
 })
+
+describe('material parameters', () => {
+  it.each(['high', 'game'] as const)('%s quality never passes undefined parameters to three', (quality) => {
+    const warn: string[] = []
+    const orig = console.warn
+    console.warn = (...a: unknown[]) => void warn.push(a.join(' '))
+    try {
+      const m = createMeshApi(THREE, { quality, doubleSidedPlanes: true })
+      m.api.box({}, 'glass', 0, 0, 0, 1, 1, 1, 0xffffff, 0, 0, 0)
+      m.finish()
+      createMeshApi(THREE, { quality })
+    } finally {
+      console.warn = orig
+    }
+    expect(warn.filter((w) => w.includes("undefined"))).toEqual([])
+  })
+})
