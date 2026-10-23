@@ -335,7 +335,8 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
 
 /**
  * Copies the spec's destruction tags onto the objects: `userData.destructionMaterial` (SDK material id) and, on part groups,
- * `userData.destructionPart` (`{ id, piece, joint }`). Static meshes get the object default; the meshes of a part get the part's tags.
+ * `userData.destructionPart` (the part id, the key @adatechnology/game-destruction-three binds by), `userData.destructionPiece` and
+ * `userData.destructionJoint`. Static meshes get the object default; the meshes of a part get the part's tags.
  * Parts merged into a shared group (blind slats) carry the tags of the first part of the group.
  */
 function tagDestruction(group: ThreeNS.Group, parts: Record<string, ThreeNS.Group>, spec: ObjectSpec): void {
@@ -352,11 +353,12 @@ function tagDestruction(group: ThreeNS.Group, parts: Record<string, ThreeNS.Grou
     const d = ps.destruction
     if (!g || !d || done.has(g)) continue
     done.add(g)
-    const tag = { id: ps.id, piece: d.piece, joint: d.joint }
     for (const o of [g, ...g.children]) {
       if (o !== g && !(o as ThreeNS.Mesh).isMesh) continue
       o.userData.destructionMaterial = d.material
-      o.userData.destructionPart = { ...tag }
+      o.userData.destructionPart = ps.id
+      if (d.piece) o.userData.destructionPiece = d.piece
+      if (d.joint) o.userData.destructionJoint = d.joint
     }
   }
 }

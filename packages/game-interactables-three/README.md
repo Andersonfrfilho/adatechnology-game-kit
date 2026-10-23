@@ -143,7 +143,7 @@ point is `sag` meters below the chord.
 
 ## Destruction
 
-`finish(spec)` copies the spec's destruction tags to Three objects so a destruction host can find what each mesh is made of: `userData.destructionMaterial` (SDK material id) on the static meshes (object default) and on each part group and its meshes, and `userData.destructionPart = { id, piece, joint }` on part groups and their meshes. Parts merged into a shared group (blind slats) carry the tags of the first part. The damage itself is done by `@adatechnology/game-destruction`; this package only tags. Without a spec nothing is tagged.
+`finish(spec)` copies the spec's destruction tags to Three objects so a destruction host can find what each mesh is made of: `userData.destructionMaterial` (SDK material id) on the static meshes (object default) and on each part group and its meshes, and, on part groups and their meshes, `userData.destructionPart` (the part id, as `@adatechnology/game-destruction-three` expects), `userData.destructionPiece` and `userData.destructionJoint`. Parts merged into a shared group (blind slats) carry the tags of the first part. The damage itself is done by `@adatechnology/game-destruction`; this package only tags. Without a spec nothing is tagged.
 
 ## Português
 

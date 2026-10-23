@@ -457,7 +457,8 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
       if (!g) return
       g.name = id
       g.userData.destructionMaterial = material
-      g.userData.destructionPart = tag
+      g.userData.destructionPart = id
+      g.userData.destructionPiece = tag.piece
       g.traverse((o) => {
         if (!o.isMesh) return
         o.name = id

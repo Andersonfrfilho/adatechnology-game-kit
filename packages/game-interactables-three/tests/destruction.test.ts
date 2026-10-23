@@ -26,12 +26,16 @@ describe('destruction tags', () => {
     for (const m of statics) expect(m.userData.destructionMaterial).toBe('mdf')
     const door = parts.door
     expect(door.userData.destructionMaterial).toBe('tempered_glass')
-    expect(door.userData.destructionPart).toEqual({ id: 'door', piece: 'door', joint: 'hinge' })
+    expect(door.userData.destructionPart).toBe('door')
+    expect(door.userData.destructionPiece).toBe('door')
+    expect(door.userData.destructionJoint).toBe('hinge')
     const meshes = door.children.filter((c): c is THREE.Mesh => (c as THREE.Mesh).isMesh)
     expect(meshes.length).toBe(2)
     for (const m of meshes) {
       expect(m.userData.destructionMaterial).toBe('tempered_glass')
-      expect(m.userData.destructionPart).toEqual({ id: 'door', piece: 'door', joint: 'hinge' })
+      expect(m.userData.destructionPart).toBe('door')
+      expect(m.userData.destructionPiece).toBe('door')
+      expect(m.userData.destructionJoint).toBe('hinge')
     }
     // a part without tags is left alone
     expect(parts.plain_part.userData.destructionMaterial).toBeUndefined()
@@ -51,8 +55,12 @@ describe('destruction tags', () => {
     const spec = hh.build('wardrobe', { seed: 3 }, mesh.api)
     const { group, parts } = mesh.finish(spec)
     for (const c of group.children) if ((c as THREE.Mesh).isMesh) expect(c.userData.destructionMaterial).toBe('mdf')
-    expect(parts.door_1.userData.destructionPart).toEqual({ id: 'door_1', piece: 'door', joint: 'hinge' })
-    expect(parts.drawer_1.userData.destructionPart).toEqual({ id: 'drawer_1', piece: 'drawer', joint: 'clip' })
+    expect(parts.door_1.userData.destructionPart).toBe('door_1')
+    expect(parts.door_1.userData.destructionPiece).toBe('door')
+    expect(parts.door_1.userData.destructionJoint).toBe('hinge')
+    expect(parts.drawer_1.userData.destructionPart).toBe('drawer_1')
+    expect(parts.drawer_1.userData.destructionPiece).toBe('drawer')
+    expect(parts.drawer_1.userData.destructionJoint).toBe('clip')
     for (const g of Object.values(parts)) expect(g.userData.destructionMaterial).toBe('mdf')
   })
 
@@ -63,6 +71,6 @@ describe('destruction tags', () => {
     const { parts } = mesh.finish(spec)
     const g = parts.slat_1
     expect(g.userData.destructionMaterial).toBe('aluminium')
-    expect(g.userData.destructionPart.piece).toBe('slat')
+    expect(g.userData.destructionPiece).toBe('slat')
   })
 })
