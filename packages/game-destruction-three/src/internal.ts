@@ -48,8 +48,8 @@ export interface PartVis {
 }
 
 export interface PieceBody extends Piece {
-  /** Centre of the local box in root space. */
-  localCenter: THREE_NS.Vector3
+  /** `localCenter` as a vector (kept in sync with it). */
+  centerV: THREE_NS.Vector3
   /** Seconds the piece has been nearly still (sleeps after 0.5). */
   still: number
   /** Time of the last hard-landing report. */

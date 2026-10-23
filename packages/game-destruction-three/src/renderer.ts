@@ -719,7 +719,7 @@ class Renderer implements DestructionRenderer {
     if (old) {
       const { half, center } = this.measure(b.root, this.meshesOf(b))
       old.halfExtents = half
-      old.localCenter.copy(center)
+      this.pieceSys.setCenter(old, center)
       old.mass = Math.max(0.05, this.massOf(ev.object))
       old.sleeping = false
     }

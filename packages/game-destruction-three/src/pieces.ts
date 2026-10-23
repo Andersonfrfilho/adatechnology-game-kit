@@ -53,7 +53,7 @@ export class PieceSystem {
       existing.root = root
       existing.halfExtents = halfExtents
       existing.mass = mass
-      existing.localCenter.copy(localCenter)
+      this.setCenter(existing, localCenter)
       if (velocity) existing.velocity = [...velocity]
       existing.sleeping = false
       return existing
@@ -67,13 +67,20 @@ export class PieceSystem {
       mass: Math.max(0.05, mass),
       sleeping: false,
       held: false,
-      localCenter: localCenter.clone(),
+      localCenter: [localCenter.x, localCenter.y, localCenter.z],
+      centerV: localCenter.clone(),
       still: 0,
       lastHit: -1,
       onGround: false,
     }
     this.list.push(body)
     return body
+  }
+
+  /** Move the centre of mass (after a part broke off). */
+  setCenter(b: PieceBody, c: THREE_NS.Vector3): void {
+    b.centerV.copy(c)
+    b.localCenter = [c.x, c.y, c.z]
   }
 
   remove(objectId: string): void {
@@ -87,7 +94,7 @@ export class PieceSystem {
 
   /** World position of the centre of mass. */
   centerOf(b: PieceBody, out: THREE_NS.Vector3): THREE_NS.Vector3 {
-    return out.copy(b.localCenter).applyQuaternion(b.root.quaternion).add(b.root.position)
+    return out.copy(b.centerV).applyQuaternion(b.root.quaternion).add(b.root.position)
   }
 
   impulse(b: PieceBody, impulse: Vec3, point?: Vec3): void {
@@ -268,7 +275,7 @@ export class PieceSystem {
 
     // write back
     b.root.quaternion.copy(q)
-    const off = this.ax.copy(b.localCenter).applyQuaternion(q)
+    const off = this.ax.copy(b.centerV).applyQuaternion(q)
     b.root.position.set(pos[0] - off.x, pos[1] - off.y, pos[2] - off.z)
     b.root.updateMatrixWorld(true)
     b.onGround = contactedLast

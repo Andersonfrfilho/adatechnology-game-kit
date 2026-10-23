@@ -251,6 +251,28 @@ describe('detach and pieces', () => {
   })
 })
 
+describe('piece centre of mass', () => {
+  it('exposes localCenter: the centre of the meshes relative to the root origin', () => {
+    const { world, renderer, scene } = setup()
+    world.addObject('plank', [partState('box', 'wood', { mass: 4 })])
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 0.2, 0.2))
+    mesh.position.set(0.5, 0.1, 0)
+    const root = new THREE.Group()
+    root.add(mesh)
+    root.position.set(3, 1, 0)
+    scene.add(root)
+    renderer.bind('plank', root, { parts: { box: mesh } })
+    const piece = renderer.makePiece('plank')
+    expect(piece.localCenter[0]).toBeCloseTo(0.5, 5)
+    expect(piece.localCenter[1]).toBeCloseTo(0.1, 5)
+    expect(piece.localCenter[2]).toBeCloseTo(0, 5)
+    // it is a plain copy: the renderer keeps working from its own state
+    piece.localCenter[0] = 99
+    for (let i = 0; i < 60; i++) renderer.update(1 / 60)
+    expect(Number.isFinite(root.position.x)).toBe(true)
+  })
+})
+
 describe('hard landing', () => {
   it('syncs the world transform before it reports the landing hit', () => {
     const { world, renderer, scene } = setup()

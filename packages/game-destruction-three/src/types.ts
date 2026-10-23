@@ -64,6 +64,8 @@ export interface Piece {
   angularVelocity: Vec3
   /** Half extents of the local bounding box used for ground contact and grabbing. */
   halfExtents: Vec3
+  /** Centre of mass relative to the root's origin, in the root's local space (metres). It moves when a part breaks off the piece. */
+  localCenter: Vec3
   mass: number
   sleeping: boolean
   /** While held by a player the renderer does not integrate it. */

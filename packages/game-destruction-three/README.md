@@ -88,8 +88,9 @@ equals a part id, else by the part box that contains the mesh centre. `specFromO
 | `leak` | stream of drops (or a faint puff for gas) from the hole while the part still has liters | |
 | `explode` | flash, fire, smoke, dust and sparks, a pooled `PointLight` pulse, impulses on pieces and fragments in range | `explode` |
 
-Pieces report hard landings: above 3 m/s the renderer calls `world.hit(id, { type: 'blunt', energy: 0.5 m v^2, radius: 0.08, direction: [0, -1, 0] })`
-(throttled to once per 0.15 s per piece), so a dropped glass pane shatters and a thrown chair can lose a leg.
+Pieces report hard landings: above 3 m/s the renderer calls `world.hit(id, { type: 'blunt', energy: 0.5 m v^2, radius: 0.08, direction: [0, -1, 0], source: 'fall' })`
+(throttled to once per 0.15 s per piece; the object's transform is synced to the world first, so the hit lands on the right spot), so a dropped glass
+pane shatters and a thrown chair can lose a leg. `Piece.localCenter` is the centre of mass relative to the root origin (it moves when a part breaks off).
 
 ## Performance
 
