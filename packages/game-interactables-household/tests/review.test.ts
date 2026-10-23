@@ -214,3 +214,21 @@ describe('walls next to the object stop doors, lids and drawers (world-level fit
     }
   })
 })
+
+describe('trash bin against a wall', () => {
+  it('a bin flush with the back wall opens its lid fully (world fitSweep), at any rotation', () => {
+    for (const ry of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) {
+      const b = build('trash_bin')
+      const tr = { x: 3, y: 0, z: -2, ry }
+      const w = world()
+      w.add('o', b.spec, tr)
+      const blocked = (x: number, z: number) => {
+        const dx = x - tr.x
+        const dz = z - tr.z
+        const lz = -Math.sin(-ry) * dx + Math.cos(-ry) * dz
+        return lz < -b.dims.d / 2 - 1e-4
+      }
+      expect(w.fitSweep('o', 'lid', blocked), `ry ${ry}`).toBe(1)
+    }
+  })
+})

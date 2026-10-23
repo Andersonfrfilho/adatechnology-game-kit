@@ -48,12 +48,15 @@ export function trashBin(c: Ctx): void {
   c.b('plain', -hw + 0.04, 0.0, -hd + 0.04, hw - 0.04, 0.012, hd - 0.04, 0x1e2022) // base ring
   // lid hinged at the back
   const hy = h - 0.04
+  // The hinge sits on the back edge at the lid's highest point (bounds included), so nothing of the lid is behind or above the pivot while it swings:
+  // a bin flush with a wall opens fully.
+  const top = hy + 0.036
   c.part(
-    'lid', [0, hy, -hd + 0.06], { kind: 'hinge', axis: [1, 0, 0], angle: -1.5 },
+    'lid', [0, hy + 0.054, -hd], { kind: 'hinge', axis: [1, 0, 0], angle: -1.5 },
     () => {
-      c.b('plain', -hw - 0.006, hy, -hd + 0.0, hw + 0.006, hy + 0.025, hd + 0.0, shade(col, 1.05))
-      c.b('plain', -hw + 0.03, hy + 0.025, -hd + 0.03, hw - 0.03, hy + 0.036, hd - 0.03, shade(col, 1.18))
-      c.b('plain', -0.07, hy + 0.036, hd - 0.1, 0.07, hy + 0.054, hd - 0.07, shade(col, 0.7)) // grip
+      c.b('plain', -hw - 0.006, hy, -hd, hw + 0.006, hy + 0.025, hd, shade(col, 1.05))
+      c.b('plain', -hw + 0.03, hy + 0.025, -hd + 0.03, hw - 0.03, top, hd - 0.03, shade(col, 1.18))
+      c.b('plain', -0.07, top, hd - 0.1, 0.07, hy + 0.054, hd - 0.07, shade(col, 0.7)) // grip
     },
     { label: 'prompt.bin_lid', at: [0, hy + 0.05, hd - 0.05], radius: 1.6 },
   )
