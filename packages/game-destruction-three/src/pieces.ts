@@ -18,6 +18,10 @@ const SLEEP_AFTER = 0.5
 const HARD_LANDING = 3
 /** Contact tolerance in metres: corners this close to the ground count as touching, which keeps the contact set (and a resting box) stable. */
 const SLOP = 0.002
+/** A resting support narrower than this fraction of the centre-of-mass height is a balancing act, not a rest: the piece topples. */
+const NARROW = 0.3
+/** Angular acceleration (rad/s^2 per metre of height) that pushes a balancing piece off its edge, toward the side its centre of mass leans to. */
+const TOPPLE = 3
 
 /**
  * Light rigid-body physics for loose pieces: gravity, the 8 corners of the local box against the ground with an impulse (restitution, friction,
@@ -169,6 +173,7 @@ export class PieceSystem {
     let landPoint: Vec3 = [pos[0], pos[1], pos[2]]
     let contactedLast = false
     let touched = false
+    let unstable = false
 
     for (let s = 0; s < steps; s++) {
       v[1] -= this.o.gravity * h
@@ -263,6 +268,29 @@ export class PieceSystem {
           }
         }
       }
+      // Support check. The corner contacts above are relative to the centre of mass, so they already give a torque when the centre of mass is
+      // outside the support. What they cannot do is end a balancing act: a tall thin piece on its edge (or a single corner) is in equilibrium
+      // with the centre of mass above a very small support, so it must not rest there. It gets a gentle topple push toward the side it leans
+      // to (or toward the wider side when it leans nowhere), and it may not sleep.
+      let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity, low = 0
+      for (const r of rs) {
+        x0 = Math.min(x0, r[0]); x1 = Math.max(x1, r[0])
+        z0 = Math.min(z0, r[2]); z1 = Math.max(z1, r[2])
+        low = Math.min(low, r[1])
+      }
+      const height = -low
+      const wx = x1 - x0
+      const wz = z1 - z0
+      unstable = Math.min(wx, wz) < NARROW * height || x0 > 0 || x1 < 0 || z0 > 0 || z1 < 0
+      if (unstable) {
+        // the support centre relative to the centre of mass: the piece falls away from it (toward +axis when it is centred)
+        const dirX = x0 + x1 > 0 ? -1 : 1
+        const dirZ = z0 + z1 > 0 ? -1 : 1
+        const k = TOPPLE * Math.min(height, 1) * h
+        // rotating about -z moves the top toward +x; rotating about +x moves it toward +z
+        if (wx <= wz) w[2] -= dirX * k
+        else w[0] += dirZ * k
+      }
       // rolling / spinning resistance while touching the ground
       const rd = Math.exp((rs.length >= 3 ? -3 : -1.5) * h)
       w[0] *= rd
@@ -285,7 +313,7 @@ export class PieceSystem {
       this.o.onHardLanding(b, landPoint, landing)
     }
 
-    const still = touched && Math.hypot(v[0], v[1], v[2]) < 0.12 && Math.hypot(w[0], w[1], w[2]) < 0.45
+    const still = touched && !unstable && Math.hypot(v[0], v[1], v[2]) < 0.12 && Math.hypot(w[0], w[1], w[2]) < 0.45
     if (still) {
       b.still += dt
       if (b.still >= SLEEP_AFTER) {
