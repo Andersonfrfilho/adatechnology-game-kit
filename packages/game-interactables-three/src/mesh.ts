@@ -327,8 +327,37 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
         parts[id] = g
       }
       if (spec && (options.mergeParts ?? quality === 'game')) mergeParts(THREE, group, parts, spec, { swayAmplitude: options.swayAmplitude })
+      if (spec) tagDestruction(group, parts, spec)
       return { group, parts, lights: lightsOut }
     },
+  }
+}
+
+/**
+ * Copies the spec's destruction tags onto the objects: `userData.destructionMaterial` (SDK material id) and, on part groups,
+ * `userData.destructionPart` (`{ id, piece, joint }`). Static meshes get the object default; the meshes of a part get the part's tags.
+ * Parts merged into a shared group (blind slats) carry the tags of the first part of the group.
+ */
+function tagDestruction(group: ThreeNS.Group, parts: Record<string, ThreeNS.Group>, spec: ObjectSpec): void {
+  const body = spec.destruction
+  const partGroups = new Set<ThreeNS.Object3D>(Object.values(parts))
+  if (body) {
+    for (const child of group.children) {
+      if (!partGroups.has(child) && (child as ThreeNS.Mesh).isMesh) child.userData.destructionMaterial = body.material
+    }
+  }
+  const done = new Set<ThreeNS.Object3D>()
+  for (const ps of spec.parts ?? []) {
+    const g = parts[ps.id]
+    const d = ps.destruction
+    if (!g || !d || done.has(g)) continue
+    done.add(g)
+    const tag = { id: ps.id, piece: d.piece, joint: d.joint }
+    for (const o of [g, ...g.children]) {
+      if (o !== g && !(o as ThreeNS.Mesh).isMesh) continue
+      o.userData.destructionMaterial = d.material
+      o.userData.destructionPart = { ...tag }
+    }
   }
 }
 
