@@ -80,6 +80,9 @@ makes a through hole, through 5 cm concrete it only cracks and lodges. Grazing h
 | `fire` | `temperature`, `radius`, `duration` | heats towards the flame temperature and ignites at the material's ignition point |
 | `heat` | same | heat without flame (cutting torch, hot plate); melts what it can reach |
 
+Brittle materials that `shatter` (glass, ceramic) take blunt and ballistic damage multiplied by `fragility(ductility, thickness)` (x1 from 2 cm up, to x118
+for 3 mm glass), so a 9 mm shatters a window pane in one shot while a 5 cm block of glass takes several.
+
 `hit(objectId, hit)` finds the part along `direction`; `hitPart` targets a known part; `shoot` and `raycast` work in world space.
 
 ## Fire, melting and leaks

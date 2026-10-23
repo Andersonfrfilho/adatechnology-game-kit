@@ -90,7 +90,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
       step(0.5)
       const fr = room.log.entries({ type: 'fracture', objectId: id }).find((e) => e.part === 'pane')
       const n = Number(fr?.data?.fragments ?? 0)
-      expect(part(room, id, 'pane')?.status === 'broken' && n >= 4, t('sc.glass_shatters.check', { shots, n }), { shots, fragments: n })
+      expect(part(room, id, 'pane')?.status === 'broken' && shots === 1 && n >= 4, t('sc.glass_shatters.check', { shots, n }), { shots, fragments: n })
     }),
 
     sc('shotgun_splinters_crate', ({ room, step, expect }) => {

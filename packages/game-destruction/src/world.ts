@@ -746,7 +746,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const effM = p.thickness / Math.max(sin, 0.3)
     const thr = mat.penetration * effM * 1000
     const penetrated = E > thr
-    const scale = mat.damageScale?.ballistic ?? 1
+    // a thin brittle shell that shatters (a pane, a bottle) is lost to one bullet that a thick block of the same glass shrugs off: the same
+    // fragility factor that melee uses for blunt hits (1 for ductile materials and for shells 2 cm or thicker, up to x118 for 3 mm glass)
+    const scale = (mat.damageScale?.ballistic ?? 1) * (mat.fracture === 'shatter' ? fragility(mat.ductility, p.thickness) : 1)
     const id = p.spec.id
     if (!penetrated && mat.ricochetDeg && angle < mat.ricochetDeg) {
       const r = vec.sub(d, vec.scale(n, 2 * vec.dot(d, n)))
