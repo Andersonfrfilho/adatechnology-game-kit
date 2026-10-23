@@ -198,11 +198,15 @@ describe('structure', () => {
       return w.hit(id, { type: 'blunt', point: [p.position[0] + 0.15, p.position[1], p.position[2]], direction: [-1, 0, 0], energy: 3e6, radius: 0.05 })
     }
     strikeCol('column_0_0_0')
-    const t0 = performance.now()
-    strikeCol('column_0_1_0')
-    const ms = performance.now() - t0
-    expect(w.part(id, 'column_0_1_0')!.status).toBe('broken')
-    expect(ms).toBeLessThan(25)
+    // best of three breaks (each one runs the load solver over ~330 parts) to ignore GC noise
+    const times: number[] = []
+    for (const c of ['column_0_1_0', 'column_0_2_0', 'column_0_3_0']) {
+      const t0 = performance.now()
+      strikeCol(c)
+      times.push(performance.now() - t0)
+      expect(w.part(id, c)!.status).toBe('broken')
+    }
+    expect(Math.min(...times)).toBeLessThan(15)
     const t1 = performance.now()
     for (let i = 0; i < 60; i++) w.update(1 / 60)
     expect(performance.now() - t1).toBeLessThan(200)
