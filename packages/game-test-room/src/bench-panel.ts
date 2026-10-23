@@ -243,7 +243,9 @@ export function createBenchPanel(o: BenchPanelOptions): BenchPanel {
       }
     },
     get visible() {
-      return element.style.display !== 'none'
+      if (element.style.display === 'none') return false
+      const parent = element.parentElement
+      return !parent || getComputedStyle(parent).display !== 'none'
     },
   }
 }

@@ -1480,6 +1480,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let fastForward = false
   let hudAcc = 1
   let metricsAcc = 0
+  // when the room runs its own loop it feeds the counters the unclamped real delta; otherwise update(dt) is the only source
+  let ownsLoop = false
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
   const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, ids: roomMetricIds })
   let qualityName: 'low' | 'medium' | 'high' = quality
@@ -1551,7 +1553,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   const update = (dt: number): void => {
-    roomMetrics.frame(dt)
+    if (!ownsLoop) roomMetrics.frame(dt)
     player.update(dt)
     if (tiltKey || heldTilt > 0) {
       heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
@@ -1718,11 +1720,28 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (!store) return null
     return { title: modules.get(store.moduleId)?.name ?? store.moduleId, controls: store.controls(), layers: store.layers() }
   }
-  const metricText = (value: number | string, digits: number, unit?: string): string => (typeof value === 'number' ? `${num(value, digits)}${unit ? ` ${unit}` : ''}` : value)
+  const METRIC_UNAVAILABLE = 'n/a'
+  const metricText = (value: number | string | undefined, digits: number, unit?: string): string =>
+    typeof value === 'number' ? `${num(value, digits)}${unit ? ` ${unit}` : ''}` : value ?? METRIC_UNAVAILABLE
+  const reportedFailures = new Set<string>()
+  // a module's failure is told once (not every metrics tick) in the room log
+  const reportOnce = (key: string, text: string): void => {
+    if (reportedFailures.has(key)) return
+    reportedFailures.add(key)
+    host.log(text)
+  }
+  const failureText = (error: unknown): string => (error instanceof Error ? error.message : String(error))
   const moduleMetrics = (): Record<string, number | string> => {
     const store = activeBench ? benches.get(activeBench) : undefined
     const out: Record<string, number | string> = {}
-    for (const metric of store?.metrics ?? []) out[metric.id] = metric.read()
+    for (const metric of store?.metrics ?? []) {
+      try {
+        out[metric.id] = metric.read()
+      } catch (error) {
+        out[metric.id] = METRIC_UNAVAILABLE
+        reportOnce(`${store?.moduleId}:metric:${metric.id}`, t('mod.metric_failed', { name: modules.get(store?.moduleId ?? '')?.name ?? '', metric: metric.id, error: failureText(error) }))
+      }
+    }
     return out
   }
   const metricRows = (): { room: MetricRow[]; module: MetricRow[] } => {
@@ -1781,7 +1800,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     look: (eye, target) => room.look(eye, target),
   })
   const checkModuleBench = (mod: TestableModule<ScenarioContext>, fail: (problem: string) => void): BenchStore | null => {
-    const store = createBenchStore(mod, locale)
+    const store = createBenchStore(mod, locale, (error) => reportOnce(`${mod.id}:listener`, t('mod.listener_failed', { name: mod.name, error: failureText(error) })))
     const { controls, layers, metrics } = store.declared
     if (controls.length + layers.length + metrics.length === 0) return null
     const r = checkBench(store.declared)
@@ -1860,16 +1879,23 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const bench = checkModuleBench(mod, fail)
     detachers.get(mod.id)?.()
     detachers.delete(mod.id)
+    // a reloaded module keeps its live bench state; the host's state only seeds a module the room has not seen
+    const previous = benches.get(mod.id)
+    const kept = previous?.encode()
+    previous?.dispose()
     benches.delete(mod.id)
+    for (const key of [...reportedFailures]) if (key.startsWith(`${mod.id}:`)) reportedFailures.delete(key)
     modules.set(mod.id, mod)
     if (bench) {
-      if (options.bench?.state) bench.restore(options.bench.state)
+      const seed = options.bench?.state?.[mod.id]
+      const restored = kept ?? (typeof seed === 'string' ? seed : undefined)
+      if (restored !== undefined) bench.restore(restored)
       benches.set(mod.id, bench)
       bench.watch(() => {
         options.bench?.onChange?.(mod.id, bench.encode())
         if (activeBench === mod.id) ui?.bench(benchView())
       })
-      activeBench = mod.id
+      if (!activeBench || !benches.has(activeBench)) activeBench = mod.id
     } else if (activeBench === mod.id) activeBench = lastBench()
     if (mod.attach) detachers.set(mod.id, mod.attach(bench ? { ...host, bench: lendBench(bench) } : host))
     bench?.sendInitial()
@@ -2076,6 +2102,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     dispose() {
       for (const detach of detachers.values()) detach()
       detachers.clear()
+      for (const store of benches.values()) store.dispose()
+      benches.clear()
       cancelAnimationFrame?.(raf)
       window.removeEventListener('resize', onResize)
       player.dispose()
@@ -2168,9 +2196,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let raf = 0
   if (ownRenderer && typeof requestAnimationFrame === 'function') {
     let last = performance.now()
+    ownsLoop = true
     const loop = (now: number): void => {
       raf = requestAnimationFrame(loop)
-      const dt = Math.min(0.05, (now - last) / 1000)
+      const realDelta = (now - last) / 1000
+      roomMetrics.frame(realDelta)
+      const dt = Math.min(0.05, realDelta)
       last = now
       if (!scenarioRunning) update(dt)
       gl.render(scene, camera)

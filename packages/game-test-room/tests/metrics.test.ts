@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createTestRoom, demoItems } from '../src'
 import * as THREE from 'three'
 import { makeRoom, stubRenderer } from './helpers'
 
@@ -44,5 +45,42 @@ describe('room metrics', () => {
     for (let i = 0; i < 40; i++) room.update(1 / 60)
     expect(Object.keys(room.metrics().room)).toEqual(['fps'])
     expect(makeRoom({ metrics: false }).metrics().room).toEqual({})
+  })
+
+  describe('with the room owning the loop', () => {
+    afterEach(() => vi.unstubAllGlobals())
+
+    // a requestAnimationFrame the test fires by hand, and a THREE whose renderer is the stub so the room owns the canvas and the loop
+    function ownLoopRoom(): { frame(now: number): void; room: ReturnType<typeof createTestRoom> } {
+      let callback: FrameRequestCallback | undefined
+      vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+        callback = cb
+        return 1
+      })
+      vi.stubGlobal('cancelAnimationFrame', () => undefined)
+      const FakeRenderer = function () {
+        return Object.assign(stubRenderer(), { toneMapping: 0, outputColorSpace: '' })
+      } as unknown as typeof THREE.WebGLRenderer
+      const container = document.createElement('div')
+      document.body.appendChild(container)
+      const room = createTestRoom({ THREE: { ...THREE, WebGLRenderer: FakeRenderer }, container, locale: 'en', catalog: demoItems('en'), ui: false })
+      return { room, frame: (now) => callback?.(now) }
+    }
+
+    it('fps follows the real delta even past the 50 ms the simulation is clamped to', () => {
+      const { room, frame } = ownLoopRoom()
+      let now = performance.now()
+      for (let i = 0; i < 8; i++) frame((now += 100))
+      expect(room.metrics().room.fps).toBeCloseTo(10, 0)
+      expect(room.metrics().room.frame_ms).toBeCloseTo(100, 0)
+    })
+
+    it('keeps sampling while a scenario runs', async () => {
+      const { room, frame } = ownLoopRoom()
+      let now = performance.now()
+      const running = room.runScenarios([{ id: 'wait', name: 'Wait', run: async (ctx) => { for (let i = 0; i < 8; i++) frame((now += 100)); ctx.expect(true, 'ok') } }])
+      await running
+      expect(room.metrics().room.fps).toBeCloseTo(10, 0)
+    })
   })
 })

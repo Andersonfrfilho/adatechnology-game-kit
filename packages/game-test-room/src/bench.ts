@@ -15,6 +15,8 @@ export interface BenchStore extends BenchHandle {
   sendInitial(): void
   /** Apply an encoded state without emitting. */
   restore(encoded: string): void
+  /** Drops every listener and watcher (the room is gone). */
+  dispose(): void
 }
 
 type ControlState = ModuleControl & { disabled: boolean }
@@ -74,7 +76,7 @@ export function decodeBenchState(encoded: string, controls: readonly ModuleContr
   return out
 }
 
-export function createBenchStore(module: TestableModule<unknown>, locale: string): BenchStore {
+export function createBenchStore(module: TestableModule<unknown>, locale: string, onListenerError?: (error: unknown) => void): BenchStore {
   const declared = { controls: module.controls?.(locale) ?? [], layers: module.layers?.(locale) ?? [], metrics: module.metrics?.(locale) ?? [] }
   const controls: ControlState[] = declared.controls.map((control) => ({ ...control, disabled: false }))
   const values = new Map<string, ControlValue>()
@@ -83,7 +85,13 @@ export function createBenchStore(module: TestableModule<unknown>, locale: string
   const listeners = new Set<(change: BenchChange) => void>()
   const watchers = new Set<() => void>()
   const emit = (change: BenchChange): void => {
-    for (const listener of listeners) listener(change)
+    for (const listener of listeners) {
+      try {
+        listener(change)
+      } catch (error) {
+        onListenerError?.(error)
+      }
+    }
   }
   const changed = (): void => {
     for (const watcher of watchers) watcher()
@@ -154,12 +162,17 @@ export function createBenchStore(module: TestableModule<unknown>, locale: string
         if (value !== undefined) emit({ kind: 'control', id: control.id, value })
       }
       for (const layer of declared.layers) emit({ kind: 'layer', id: layer.id, on: layers.get(layer.id) === true })
+      changed()
     },
     restore(encoded) {
       for (const [id, value] of decodeBenchState(encoded, controls, declared.layers)) {
         if (typeof value === 'boolean' && layers.has(id)) layers.set(id, value)
         else values.set(id, value)
       }
+    },
+    dispose() {
+      listeners.clear()
+      watchers.clear()
     },
   }
   return store

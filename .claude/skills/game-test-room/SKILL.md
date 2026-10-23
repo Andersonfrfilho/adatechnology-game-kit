@@ -76,7 +76,7 @@ Sem `area`, os itens vão em fileiras. `openArea` de um grupo sem módulo també
 | `room.playAnimation(clipId)` / `room.animations()` | Clipes dos itens |
 | `room.bench(moduleId?)` | Bancada do módulo ativo (ou do id): `controls`, `layers`, `value`, `set`, `setLayer`, `act`, `encode` |
 | `room.metrics()` | Contadores da sala (`fps`, `frame_ms`, `draw_calls`, `triangles`, `objects`, `fragments`, `particles`, `decals`) e os do módulo ativo |
-| `options.metrics`, `options.bench` | Quais contadores da sala (`false` para nenhum); estado da bancada (`state`) e `onChange(moduleId, encoded)` |
+| `options.metrics`, `options.bench` | Quais contadores da sala (`false` para nenhum); estado da bancada (`state`: `{ [moduleId]: 'id=valor;...' }`) e `onChange(moduleId, encoded)` |
 | `encodeBenchState`, `decodeBenchState` | Estado `id=valor;id=valor`; o decode trata a entrada como hostil |
 | `room.runScenarios()` / `room.scenarios` | Cenários embutidos e os do módulo |
 | `room.log` / `createLog` | Log de comportamento (`toNDJSON`, JSON) |
@@ -102,7 +102,7 @@ Query strings do exemplo: `?area=`, `?items=`, `?scenario=all|<id>`, `?lang=`, `
 - `attach` roda uma vez no `loadModule`; devolva o desfazer. Recarregar o módulo chama o desfazer anterior antes do novo `attach`.
   `ModuleHost.onFrame` roda a cada quadro simulado.
 - A bancada é emprestada (`host.bench`) só a módulo que declara controles, camadas ou contadores e passa no `checkBench`. As mudanças iniciais
-  chegam logo depois do `attach`, já com o estado de `options.bench.state` restaurado. A sala nunca mexe em `location`.
+  chegam logo depois do `attach`, já com o estado restaurado (o vivo, se o módulo está sendo recarregado; senão `options.bench.state[moduleId]`). Leitura de contador que lança mostra `n/a` e entra uma vez no log; ouvinte que lança não derruba os outros. A sala nunca mexe em `location`.
 - Q emite `mode` quando o modo de tiro muda; `fault`, `clear` e `safety` ainda não são emitidos pela sala (Fase 1, T1.3).
 - Id de módulo/item/clipe em snake_case. Nos cenários avance o tempo com `step(segundos)`, não espere tempo real.
 - Sem `renderer` injetado a sala é dona do canvas e do laço.

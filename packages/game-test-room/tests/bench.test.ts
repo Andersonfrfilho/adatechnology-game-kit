@@ -123,11 +123,82 @@ describe('module bench', () => {
     expect(encoded.at(-1)).toEqual(['lab', state])
 
     const probe = newProbe()
-    const restored = makeRoom({ bench: { state } })
+    const restored = makeRoom({ bench: { state: { lab: state } } })
     restored.loadModule(benchedModule(probe))
     expect(restored.bench()!.encode()).toBe(state)
     expect(probe.changes[0]).toEqual({ kind: 'control', id: 'size', value: 2.5 })
     expect(probe.changes.at(-1)).toEqual({ kind: 'layer', id: 'flash', on: true })
+  })
+
+  it('two modules sharing a control id keep their values apart, and each restores only its own state across a reload', () => {
+    const second = (probe: Probe): TestableModule<ScenarioContext> => benchedModule(probe, { id: 'other', name: 'Other' })
+    const changes: Array<[string, string]> = []
+    const room = makeRoom({ bench: { onChange: (moduleId, encoded) => changes.push([moduleId, encoded]) } })
+    room.loadModule(benchedModule(newProbe()))
+    room.loadModule(second(newProbe()))
+    room.bench('lab')!.set('size', 2)
+    room.bench('other')!.set('size', 3.5)
+    const saved = { lab: room.bench('lab')!.encode(), other: room.bench('other')!.encode() }
+    expect(saved.lab).not.toBe(saved.other)
+
+    const reloaded = makeRoom({ bench: { state: saved } })
+    reloaded.loadModule(benchedModule(newProbe()))
+    reloaded.loadModule(second(newProbe()))
+    expect(reloaded.bench('lab')!.value('size')).toBe(2)
+    expect(reloaded.bench('other')!.value('size')).toBe(3.5)
+
+    const onlyOther = makeRoom({ bench: { state: { other: saved.other } } })
+    onlyOther.loadModule(benchedModule(newProbe()))
+    expect(onlyOther.bench('lab')!.value('size')).toBe(1)
+  })
+
+  it('reloading a module keeps its live values, and the host state only seeds a module not seen yet', () => {
+    const room = makeRoom({ bench: { state: { lab: 'size=4' } } })
+    room.loadModule(benchedModule(newProbe()))
+    expect(room.bench('lab')!.value('size')).toBe(4)
+    room.bench('lab')!.set('size', 2)
+    room.loadModule(benchedModule(newProbe()))
+    expect(room.bench('lab')!.value('size')).toBe(2)
+  })
+
+  it('a module loaded later does not take the panel from the one being viewed', () => {
+    const room = makeRoom()
+    room.loadModule(benchedModule(newProbe()))
+    room.loadModule(benchedModule(newProbe(), { id: 'other', name: 'Other' }))
+    room.bench('lab')!.set('size', 2)
+    room.bench('other')!.set('size', 3.5)
+    expect(room.bench()!.value('size')).toBe(2)
+  })
+
+  it('a metric that throws shows n/a and is logged once, not at every read', () => {
+    const room = makeRoom()
+    room.loadModule(benchedModule(newProbe(), { metrics: () => [{ id: 'puffs', name: 'Puffs', read: () => { throw new Error('boom') } }] }))
+    expect(room.metrics().module).toEqual({ puffs: 'n/a' })
+    room.metrics()
+    room.metrics()
+    const notes = room.log.entries().filter((entry) => entry.type === 'module_note' && entry.text.includes('boom'))
+    expect(notes).toHaveLength(1)
+  })
+
+  it('a listener that throws does not stop the others, the state still changes and the watchers still hear it', () => {
+    const encoded: string[] = []
+    const probe = newProbe()
+    const room = makeRoom({ bench: { onChange: (_moduleId, state) => encoded.push(state) } })
+    room.loadModule(
+      benchedModule(probe, {
+        attach(host) {
+          host.bench?.onChange(() => {
+            throw new Error('listener broke')
+          })
+          host.bench?.onChange((change) => probe.changes.push(change))
+          return () => undefined
+        },
+      }),
+    )
+    expect(probe.changes).toHaveLength(6)
+    expect(room.bench()!.set('size', 2)).toBe(true)
+    expect(probe.changes.at(-1)).toEqual({ kind: 'control', id: 'size', value: 2 })
+    expect(encoded.at(-1)).toContain('size=2')
   })
 
   it('reads a hostile state: unknown ids, NaN, bad escapes, options not offered and malformed pairs are dropped, numbers clamped', () => {
@@ -225,5 +296,16 @@ describe('bench panel', () => {
     expect(plain.container.querySelectorAll('.tr-metrics dt')).toHaveLength(0)
     expect(plain.container.querySelector('.tr-bench-room')!.textContent).toContain('Objects')
     plain.room.dispose()
+  })
+  it('stops sampling the counters while the panels column is hidden', () => {
+    const probe = newProbe()
+    const { room, container } = roomWithUi()
+    room.loadModule(benchedModule(probe))
+    room.update(0.3)
+    const reads = probe.reads
+    ;(container.querySelector('.tr-bench')!.parentElement as HTMLElement).style.display = 'none'
+    room.update(0.3)
+    expect(probe.reads).toBe(reads)
+    room.dispose()
   })
 })

@@ -91,7 +91,7 @@ export interface RoomUi {
   bench(view: BenchView | null): void
   /** Room counters and the active module's metrics, text only. */
   metrics(rows: { room: readonly MetricRow[]; module: readonly MetricRow[] }): void
-  /** The bench panel has something to show (the room samples its counters only then). */
+  /** The bench panel has something to show and is on screen (the room samples its counters only then). */
   readonly benchVisible: boolean
   dispose(): void
 }

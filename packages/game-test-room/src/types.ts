@@ -97,10 +97,11 @@ export interface TestRoomOptions {
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
   metrics?: readonly RoomMetricId[] | false
   /**
-   * Module bench state. `state` is restored on every module loaded (each one keeps the ids it knows) before its first changes are sent;
+   * Module bench state. `state` maps a module id to its encoded state, restored when that module is first loaded (a module reloaded
+   * keeps its live state instead) before its first changes are sent; ids are per module, so two modules may share a control id.
    * `onChange` gets the encoded state of a module whenever it changes (a page keeps it in its URL). The room never touches `location`.
    */
-  bench?: { readonly state?: string; readonly onChange?: (moduleId: string, encoded: string) => void }
+  bench?: { readonly state?: Readonly<Record<string, string>>; readonly onChange?: (moduleId: string, encoded: string) => void }
 }
 
 /** Counters the room measures itself. `fps` and `frame_ms` use the real frame time, so slow motion does not change them. */
@@ -121,7 +122,7 @@ export interface BenchHandle {
   set(id: string, value: ControlValue): boolean
   setLayer(id: string, on: boolean): boolean
   act(id: string): boolean
-  /** `id=value;id=value`, the format `TestRoomOptions.bench.state` reads back. */
+  /** `id=value;id=value`, the format `TestRoomOptions.bench.state[moduleId]` reads back. */
   encode(): string
 }
 

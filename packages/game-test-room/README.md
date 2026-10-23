@@ -72,20 +72,21 @@ The items join the catalogue under the module's group and its scenarios become b
 
 A module that declares `controls`, `layers` or `metrics` (see `@adatechnology/game-contracts`) gets a bench: `loadModule` checks it with
 `checkBench` (a `✓ ... bench ok` / `✗ ... bench broken` line), lends `host.bench` to `attach`, then sends one change per control and layer. The
-panel between the animations and the tests shows the active module (the one of the last `openArea`, else the last loaded with a bench): a
+panel between the animations and the tests shows the active module (the one of the last `openArea`; else the first loaded with a bench, a later module never takes the panel from the one on screen): a
 range per number, a checkbox per boolean, buttons (up to four options) or a select per choice, a button per action, the layers, and the
 module counters at 4 Hz with a bar when they have a budget (`warn` from 80 %, `bad` past it). A compact line on top shows the room counters
 (`fps`, `frame_ms`, `draw_calls`, `triangles`, `objects`, `fragments`, `particles`, `decals`); `fps` uses the real frame time, so slow motion
 does not change it.
 
 ```ts
-const room = createTestRoom({ ..., metrics: ['fps', 'draw_calls'], bench: { state: params.get('bench') ?? undefined, onChange: (moduleId, encoded) => keepInUrl(encoded) } })
+const room = createTestRoom({ ..., metrics: ['fps', 'draw_calls'], bench: { state: { lab: params.get('bench.lab') ?? '' }, onChange: (moduleId, encoded) => keepInUrl(moduleId, encoded) } })
 room.bench()?.set('size', 2) // clamped and snapped; false for an unknown id, a wrong type or an option not offered
 room.metrics() // { room: { fps, draw_calls, ... }, module: { particles: 120 } }
 ```
 
-The state is `id=value;id=value` (`encodeBenchState` / `decodeBenchState`); decoding treats it as hostile input. The room never touches
-`location`: the example page keeps it in `?bench=`. Loading a module again detaches the previous `attach` first. Q now reports the new fire
+The state is `id=value;id=value` (`encodeBenchState` / `decodeBenchState`); decoding treats it as hostile input. `bench.state` is keyed by
+module id, so two modules can share a control id; a module loaded again keeps its live values. The room never touches
+`location`: the example page keeps it in `?bench.<moduleId>=`. `fps` and `frame_ms` use the real frame time, even past the 50 ms the simulation is clamped to. Loading a module again detaches the previous `attach` first. Q now reports the new fire
 mode (`mode` event) and `shot` events carry `rounds` and `mode`.
 
 ## Controls
@@ -130,7 +131,7 @@ Uma sala de testes em primeira pessoa para three.js. Você passa o seu catálogo
 derrama líquidos, e lê o que aconteceu em linguagem simples no registro de comportamento (também exportável em JSON, NDJSON ou texto). Os cenários
 automáticos conferem o resultado e gravam aprovado/reprovado no mesmo registro. Use `locale: 'pt-BR'` para textos em português.
 
-Um módulo que declara controles, camadas ou contadores ganha um painel de bancada genérico; o estado vai para a URL do exemplo (`?bench=`) e
+Um módulo que declara controles, camadas ou contadores ganha um painel de bancada genérico; o estado vai para a URL do exemplo (`?bench.<idDoMódulo>=`) e
 `room.bench()` / `room.metrics()` dirigem e leem a bancada por script.
 
 ## Known limitations
