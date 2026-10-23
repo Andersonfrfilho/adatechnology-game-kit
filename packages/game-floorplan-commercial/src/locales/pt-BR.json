@@ -1,0 +1,30 @@
+{
+  "labels": {
+    "bathroom": "Banheiro",
+    "checkouts": "Caixas",
+    "consulting_room": "Consultório",
+    "counter": "Balcão",
+    "ground_floor": "Térreo",
+    "office": "Escritório",
+    "shop": "Loja",
+    "stockroom": "Estoque"
+  },
+  "templates": {
+    "market": "Mercadinho",
+    "pharmacy": "Farmácia"
+  },
+  "styles": {
+    "commercial": "Comercial"
+  },
+  "facadeColors": {
+    "white": "Branco",
+    "shop_red": "Vermelho comércio",
+    "shop_blue": "Azul comércio",
+    "bright_yellow": "Amarelo vivo",
+    "pharmacy_green": "Verde farmácia"
+  },
+  "zones": {
+    "zc": "ZC – Comercial / central",
+    "zi": "ZI – Industrial"
+  }
+}

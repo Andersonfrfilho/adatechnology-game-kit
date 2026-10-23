@@ -1,0 +1,81 @@
+[
+ {
+  "id": "snake_plant",
+  "archetype": "rosette",
+  "params": {
+   "form": "sword",
+   "height": 0.9
+  },
+  "tags": [
+   "succulent",
+   "indoor"
+  ],
+  "climate": [
+   "arid",
+   "tropical",
+   "subtropical"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "agave",
+  "archetype": "rosette",
+  "params": {
+   "form": "agave",
+   "height": 1.0
+  },
+  "tags": [
+   "succulent",
+   "semiarid"
+  ],
+  "climate": [
+   "arid",
+   "tropical",
+   "subtropical"
+  ],
+  "size": "m",
+  "solid": false
+ },
+ {
+  "id": "aloe_vera",
+  "archetype": "rosette",
+  "params": {
+   "form": "aloe",
+   "height": 0.55,
+   "bloom": {
+    "color": "#e8702a"
+   }
+  },
+  "tags": [
+   "succulent",
+   "indoor"
+  ],
+  "climate": [
+   "arid",
+   "tropical",
+   "subtropical"
+  ],
+  "size": "s",
+  "solid": false
+ },
+ {
+  "id": "echeveria",
+  "archetype": "rosette",
+  "params": {
+   "form": "echeveria",
+   "height": 0.14
+  },
+  "tags": [
+   "succulent",
+   "indoor"
+  ],
+  "climate": [
+   "arid",
+   "tropical",
+   "subtropical"
+  ],
+  "size": "s",
+  "solid": false
+ }
+]

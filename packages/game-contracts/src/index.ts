@@ -33,6 +33,8 @@ export type {
 } from './destruction'
 export { IMPACT_CONTRACT, checkDestructible, checkHit } from './impact'
 export type { CheckOptions, DestructibleImpl, ImpactContract } from './impact'
+export { checkSpec } from './spec'
+export type { CheckSpecOptions, SpecReport } from './spec'
 export { shotToHit } from './weapons'
 export type { Shot, Use } from './weapons'
 export type { ContainerSpec, ItemUseDef, LiquidId } from './fluids'

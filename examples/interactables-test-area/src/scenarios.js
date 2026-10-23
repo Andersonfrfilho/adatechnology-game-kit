@@ -1,0 +1,263 @@
+// Scenarios of the furniture area, written against the test room's `ScenarioContext` ({ room, step, expect }). Texts are pt-BR and en.
+// `analysisOf(type)` gives the destruction spec the area built for a type (part ids and positions), so a scenario aims where the part is.
+
+const AT = [0, 0, -5] // where scenarios spawn things; the camera looks from +z toward -z, the front of an object is +z
+
+export function buildScenarios(locale, analysisOf) {
+  const en = locale === 'en'
+  const T = (pt, e) => (en ? e : pt)
+  const n1 = (n) => Number(n).toFixed(1)
+
+  const specPart = (type, id) => analysisOf(type).destructible.parts.find((p) => p.id === id)
+  const world = (p, at = AT) => [at[0] + p.position[0], at[1] + p.position[1], at[2] + p.position[2]]
+  const spawn = (room, type, at = AT, rot = 0) => room.spawn(type, at, rot).objectId
+  const part = (room, id, pid) => room.world.part(id, pid)
+  const count = (room, type, id) => room.log.entries({ type, objectId: id }).length
+  /** Aim at the front of a part from `dist` metres away and fire the current tool once. */
+  const shoot = (room, step, p, dist = 1.6, at = AT) => {
+    const c = world(p, at)
+    room.look([c[0], c[1], c[2] + p.shape.size[2] / 2 + dist], [c[0], c[1], c[2]])
+    room.use()
+    step(0.45)
+  }
+  /** A part that came loose from its object (its hinge, screws or clips broke) is no longer one of the object's parts. */
+  const gone = (room, id, pid) => !(room.world.state(id)?.parts ?? []).some((p) => p.id === pid)
+  /**
+   * Where a joint sits: the destruction world puts it at the middle of the overlap of its two parts' boxes, and a hit wears only the joints within
+   * 6 cm of where it lands. So hitting a hinge, screw or clip means aiming at it (not at the middle of the door). Returns a pseudo part to shoot at.
+   */
+  const jointTarget = (type, partId) => {
+    const d = analysisOf(type).destructible
+    const a = d.parts.find((p) => p.id === partId)
+    const j = (d.joints ?? []).find((q) => q.a === partId || q.b === partId)
+    const b = d.parts.find((p) => p.id === (j.a === partId ? j.b : j.a))
+    const box = (p) => p.position.map((c, k) => [c - p.shape.size[k] / 2, c + p.shape.size[k] / 2])
+    const A = box(a)
+    const B = box(b)
+    const pos = [0, 1, 2].map((k) => (Math.max(A[k][0], B[k][0]) + Math.min(A[k][1], B[k][1])) / 2)
+    return { id: `${partId}~joint`, position: pos, shape: { size: [0, 0, 0] } }
+  }
+  const sc = (id, name, run) => ({ id: `furniture_${id}`, name, run })
+
+  return [
+    sc('fridge_door_hinge', T('Geladeira: abre a porta, atira na dobradiça e acerta com uma marreta, a dobradiça quebra e a porta cai', 'Fridge: open the door, shoot the hinge and hit it with a sledge, the hinge breaks and the door falls'), ({ room, step, expect }) => {
+      const id = spawn(room, 'fridge')
+      const so = room.spawned().find((s) => s.objectId === id)
+      const hinge = jointTarget('fridge', 'door_fridge')
+      expect(room.playAnimation('open_door_fridge', id), T('Clipe "open_door_fridge" tocou', 'Clip "open_door_fridge" played'))
+      step(1.3)
+      const turned = Math.abs(so.root.getObjectByName('door_fridge').rotation.y)
+      expect(turned > 1, T(`Porta aberta pelo clipe: girou ${n1(turned)} rad (esperado: mais que 1,0)`, `Door opened by the clip: turned ${n1(turned)} rad (expected: more than 1.0)`), { turned })
+      // a bullet only wears a joint within 6 cm of where it lands and a pistol round has little left after a steel door (about 3 of the hinge's
+      // 120 points a shot): shooting the hinge marks it, it takes a heavy blow to tear the door off
+      room.setTool('pistol_9mm')
+      for (let i = 0; i < 3; i++) shoot(room, step, hinge)
+      const hinges = () => (room.world.state(id)?.joints ?? []).filter((j) => j.id.startsWith('door_fridge'))
+      const worn = hinges().some((j) => j.hp < j.maxHp)
+      expect(worn, T('Os tiros na dobradiça a desgastaram', 'The shots at the hinge wore it'), { hinges: hinges().map((j) => j.hp) })
+      const c = world(hinge)
+      let blows = 0
+      for (; blows < 6 && !gone(room, id, 'door_fridge'); blows++) {
+        room.world.hitPart(id, 'door_fridge', { type: 'blunt', point: c, direction: [0, 0, -1], energy: 260, radius: 0.08, source: 'test' })
+        step(0.3)
+      }
+      step(1.5)
+      const detach = room.log.entries({ type: 'detach', objectId: id }).length
+      const falling = room.renderer.pieces().length
+      expect(gone(room, id, 'door_fridge') && falling >= 1, T(`Porta solta após 3 tiro(s) e ${blows} golpe(s): ${falling} peça(s) solta(s), ${detach} linha(s) de soltura no log (esperado: porta fora do corpo, 1 peça solta, 1 linha)`, `Door off after 3 shot(s) and ${blows} blow(s): ${falling} loose piece(s), ${detach} detach line(s) in the log (expected: door out of the body, 1 loose piece, 1 line)`), { blows, falling, detach })
+    }),
+
+    sc('drawer_dropped', T('Cômoda: gaveta puxada e derrubada, o trilho solta e ela cai', 'Dresser: a drawer pulled out and dropped, the slide lets go and it falls'), ({ room, step, expect }) => {
+      const id = spawn(room, 'dresser')
+      const drawer = specPart('dresser', 'drawer_1')
+      expect(room.playAnimation('open_drawer_1', id), T('Clipe "open_drawer_1" tocou', 'Clip "open_drawer_1" played'))
+      step(1)
+      const so = room.spawned().find((s) => s.objectId === id)
+      const out = so.root.getObjectByName('drawer_1').position.z
+      const c = world(drawer)
+      let blows = 0
+      for (; blows < 12 && !gone(room, id, 'drawer_1'); blows++) {
+        room.world.hitPart(id, 'drawer_1', { type: 'blunt', point: [c[0], c[1], c[2] + 0.1], direction: [0, -0.4, -1], energy: 260, radius: 0.08, source: 'test' })
+        step(0.3)
+      }
+      step(1.5)
+      expect(out > 0.1, T(`Gaveta puxada pelo clipe: saiu ${n1(out * 100)} cm`, `Drawer pulled out by the clip: ${n1(out * 100)} cm out`), { out })
+      expect(gone(room, id, 'drawer_1') && room.renderer.pieces().length >= 1, T(`Gaveta derrubada após ${blows} golpe(s): ${room.renderer.pieces().length} peça(s) solta(s)`, `Drawer dropped after ${blows} blow(s): ${room.renderer.pieces().length} loose piece(s)`), { blows })
+    }),
+
+    sc('chair_kicked_apart', T('Cadeira de jantar: um chute atrás do outro solta os parafusos e ela desmonta', 'Dining chair: kick after kick frees the screws and it comes apart'), ({ room, step, expect }) => {
+      const id = spawn(room, 'dining_chair')
+      const legs = analysisOf('dining_chair').destructible.parts.filter((p) => p.position[1] - p.shape.size[1] / 2 < 0.02 && p.shape.size[1] > 0.3)
+      const before = room.world.state(id).parts.length
+      let kicks = 0
+      for (; kicks < 16 && room.world.state(id).parts.length === before; kicks++) {
+        const leg = legs[kicks % legs.length]
+        const c = world(leg)
+        room.world.hitPart(id, leg.id, { type: 'blunt', point: [c[0], c[1], c[2]], direction: [0.7, 0, -0.7], energy: 240, radius: 0.05, source: 'kick' })
+        step(0.3)
+      }
+      step(1)
+      const open = room.world.state(id).joints.filter((j) => j.open).length
+      const screws = room.log.entries({ type: 'detach', objectId: id }).length
+      expect(room.world.state(id).parts.length < before || screws > 0, T(`Chutes: ${kicks}; peças que saíram: ${before - room.world.state(id).parts.length}; juntas abertas: ${open}; linhas de soltura: ${screws}`, `Kicks: ${kicks}; pieces that came off: ${before - room.world.state(id).parts.length}; open joints: ${open}; detach lines: ${screws}`), { kicks, open })
+      const joints = analysisOf('dining_chair').destructible.joints
+      expect(joints.every((j) => j.kind === 'screw'), T(`Todas as ${joints.length} juntas da cadeira são parafusos`, `All ${joints.length} joints of the chair are screws`))
+    }),
+
+    sc('tv_screen_shatters', T('TV: um tiro na tela quebra o vidro em cacos', 'TV: a shot at the screen shatters the glass'), ({ room, step, expect }) => {
+      const id = spawn(room, 'tv')
+      const screen = specPart('tv', 'screen')
+      room.setTool('pistol_9mm')
+      let shots = 0
+      for (; shots < 8 && part(room, id, 'screen')?.status !== 'broken'; shots++) shoot(room, step, screen)
+      step(0.5)
+      const fr = room.log.entries({ type: 'fracture', objectId: id }).find((e) => e.part === 'screen')
+      const n = Number(fr?.data?.fragments ?? 0)
+      expect(part(room, id, 'screen')?.status === 'broken' && n >= 4, T(`Tela depois de ${shots} tiro(s): ${part(room, id, 'screen')?.status}, ${n} caco(s) (esperado: broken, 4 ou mais)`, `Screen after ${shots} shot(s): ${part(room, id, 'screen')?.status}, ${n} shard(s) (expected: broken, 4 or more)`), { shots, n })
+      expect(part(room, id, 'screen')?.material === 'glass', T('A tela é de vidro', 'The screen is glass'))
+    }),
+
+    sc('sofa_burns', T('Sofá: fogo no estofado queima o tecido e a espuma', 'Sofa: fire on the upholstery burns the fabric and the foam'), ({ room, step, expect }) => {
+      const id = spawn(room, 'sofa')
+      const parts = analysisOf('sofa').destructible.parts
+      const seat = parts.filter((p) => p.material === 'foam').sort((a, b) => b.shape.size[0] * b.shape.size[2] - a.shape.size[0] * a.shape.size[2])[0]
+      const c = world(seat)
+      room.setTool('lighter')
+      room.look([c[0], c[1] + 0.35, c[2] + 0.5], [c[0], c[1] + 0.05, c[2] + 0.1])
+      room.use(6)
+      const ignited = room.world.state(id).parts.filter((p) => p.burning)
+      expect(ignited.length > 0, T(`Isqueiro no assento: ${ignited.length} parte(s) pegando fogo (${[...new Set(ignited.map((p) => p.material))].join(', ')})`, `Lighter on the seat: ${ignited.length} part(s) burning (${[...new Set(ignited.map((p) => p.material))].join(', ')})`), { burning: ignited.length })
+      step(240)
+      const after = room.world.state(id).parts
+      const burned = (m) => after.filter((p) => p.material === m && (p.status === 'ashes' || p.char > 0.5)).length
+      expect(burned('foam') > 0 && burned('fabric') + burned('foam') > 1, T(`Depois de 4 min: espuma queimada em ${burned('foam')} parte(s), tecido em ${burned('fabric')}`, `After 4 min: foam burned in ${burned('foam')} part(s), fabric in ${burned('fabric')}`), { foam: burned('foam'), fabric: burned('fabric') })
+    }),
+
+    sc('gas_bottle_explodes', T('Botijão de gás: aquecido passa dos 250 °C e explode', 'Gas bottle: heated past 250 °C it explodes'), ({ room, step, expect }) => {
+      const id = spawn(room, 'gas_bottle')
+      const chair = spawn(room, 'dining_chair', [1.4, 0, -5])
+      const shell = analysisOf('gas_bottle').destructible.parts.find((p) => p.explodes)
+      const c = world(shell)
+      const c0 = room.spawned().find((s) => s.objectId === chair).root.position.clone()
+      let seconds = 0
+      for (; seconds < 90 && count(room, 'explode', id) === 0; seconds++) {
+        room.world.hit(id, { type: 'fire', point: c, temperature: 1000, radius: 0.5, duration: 1 })
+        step(1)
+      }
+      step(1.5)
+      const moved = c0.distanceTo(room.spawned().find((s) => s.objectId === chair)?.root.position ?? c0)
+      const hurt = (room.world.state(chair)?.parts ?? []).filter((p) => p.status !== 'intact').length
+      expect(count(room, 'explode', id) > 0, T(`Botijão explodiu após ${seconds} s de calor (${shell.explodes.energy} J, limite ${shell.explodes.atC} °C)`, `Bottle exploded after ${seconds} s of heat (${shell.explodes.energy} J, limit ${shell.explodes.atC} °C)`), { seconds })
+      expect(moved > 0.2 || hurt > 0, T(`A cadeira ao lado: moveu ${n1(moved)} m, ${hurt} parte(s) danificada(s)`, `The chair next to it: moved ${n1(moved)} m, ${hurt} part(s) damaged`), { moved, hurt })
+    }),
+
+    sc('shower_glass_shatters', T('Box do chuveiro: o vidro temperado quebra em pedaços pequenos', 'Shower: the tempered glass shatters into small pieces'), ({ room, step, expect }) => {
+      const id = spawn(room, 'shower')
+      const glass = specPart('shower', 'tempered_glass_2')
+      room.setTool('pistol_9mm')
+      let shots = 0
+      for (; shots < 12 && part(room, id, 'tempered_glass_2')?.status !== 'broken'; shots++) shoot(room, step, glass)
+      step(0.5)
+      const fr = room.log.entries({ type: 'fracture', objectId: id }).find((e) => e.part === 'tempered_glass_2')
+      const n = Number(fr?.data?.fragments ?? 0)
+      expect(part(room, id, 'tempered_glass_2')?.status === 'broken' && n >= 12, T(`Vidro temperado após ${shots} tiro(s): ${part(room, id, 'tempered_glass_2')?.status}, ${n} pedaço(s) (esperado: broken, 12 ou mais)`, `Tempered glass after ${shots} shot(s): ${part(room, id, 'tempered_glass_2')?.status}, ${n} piece(s) (expected: broken, 12 or more)`), { shots, n })
+      expect(part(room, id, 'tempered_glass_2')?.material === 'tempered_glass', T('O vidro do box é temperado', 'The shower glass is tempered'))
+    }),
+
+    sc('trash_bin_crushed', T('Lixeira: golpes de marreta amassam o plástico', 'Trash bin: sledgehammer blows dent the plastic'), ({ room, step, expect }) => {
+      const id = spawn(room, 'trash_bin')
+      const body = analysisOf('trash_bin').destructible.parts.filter((p) => p.material === 'plastic' && p.id !== 'lid').sort((a, b) => b.shape.size[1] - a.shape.size[1])[0]
+      const c = world(body)
+      room.setTool('sledgehammer')
+      let blows = 0
+      for (; blows < 10 && part(room, id, body.id)?.status !== 'broken'; blows++) {
+        room.look([c[0], c[1], c[2] + body.shape.size[2] / 2 + 0.5], [c[0], c[1], c[2]])
+        room.use()
+        step(1)
+      }
+      const p = part(room, id, body.id)
+      expect(p?.status === 'broken' || (p?.dents.length ?? 0) > 0, T(`Marreta na lixeira: ${blows} golpe(s), ${p?.status}, ${p?.dents.length ?? 0} amassado(s), hp ${n1(p?.hp ?? 0)}/${n1(p?.maxHp ?? 0)}`, `Sledgehammer on the bin: ${blows} blow(s), ${p?.status}, ${p?.dents.length ?? 0} dent(s), hp ${n1(p?.hp ?? 0)}/${n1(p?.maxHp ?? 0)}`), { blows })
+    }),
+
+    sc('bbq_blast_crumbles', T('Churrasqueira: uma explosão esfarela o tijolo e solta a argamassa', 'Barbecue: a blast crumbles the brick and frees the mortar'), ({ room, step, expect }) => {
+      const id = spawn(room, 'bbq')
+      room.world.hit(id, { type: 'explosive', point: [AT[0], AT[1] + 0.5, AT[2] + 0.9], energy: 400000, radius: 3, source: 'test' })
+      step(2)
+      const st = room.world.state(id)
+      const crumble = room.log.entries({ type: 'fracture', objectId: id }).filter((e) => e.data?.style === 'crumble').length
+      const open = (st?.joints ?? []).filter((j) => j.open && j.kind === 'mortar').length
+      const total = analysisOf('bbq').destructible.parts.length
+      const lost = total - (st?.parts.length ?? 0)
+      expect(crumble > 0 && open + lost > 0, T(`Explosão na churrasqueira: ${crumble} esfarelamento(s) de tijolo, ${open} junta(s) de argamassa abertas, ${lost} peça(s) soltas`, `Blast on the barbecue: ${crumble} brick crumbling(s), ${open} open mortar joint(s), ${lost} piece(s) loose`), { crumble, open, lost })
+    }),
+
+    sc('mailbox_flap_off', T('Caixa de correio: a aba sai da dobradiça com pancadas', 'Mailbox: the flap comes off its hinge with blows'), ({ room, step, expect }) => {
+      const id = spawn(room, 'mailbox')
+      const flap = specPart('mailbox', 'flap')
+      const c = world(flap)
+      expect(room.playAnimation('open_flap', id), T('Clipe "open_flap" tocou', 'Clip "open_flap" played'))
+      step(1.2)
+      let blows = 0
+      for (; blows < 14 && !gone(room, id, 'flap'); blows++) {
+        room.world.hitPart(id, 'flap', { type: 'blunt', point: c, direction: [0, -0.3, -1], energy: 160, radius: 0.05, source: 'test' })
+        step(0.3)
+      }
+      step(1)
+      expect(gone(room, id, 'flap'), T(`Aba fora após ${blows} pancada(s); ${room.renderer.pieces().length} peça(s) solta(s)`, `Flap off after ${blows} blow(s); ${room.renderer.pieces().length} loose piece(s)`), { blows })
+    }),
+
+    sc('use_animations', T('Uso: todas as portas, gavetas, tampas e botões abrem e voltam ao lugar', 'Use: every door, drawer, lid and knob opens and comes back'), ({ room, step, expect }) => {
+      const types = ['fridge', 'wardrobe', 'dresser', 'stove', 'microwave', 'toilet', 'trash_bin', 'mailbox', 'sink_kitchen', 'washing_machine']
+      for (const type of types) {
+        room.clear()
+        const id = spawn(room, type)
+        const so = room.spawned().find((s) => s.objectId === id)
+        const clips = room.animations()?.clips ?? []
+        void clips
+        const names = analysisOf(type).animations.map((c) => c.id)
+        const moved = []
+        const rest = {}
+        for (const clipId of ['open_all', 'on_all']) {
+          const clip = analysisOf(type).animations.find((c) => c.id === clipId)
+          if (!clip) continue
+          const ids = Object.keys(clip.keys[clip.keys.length - 1].parts)
+          for (const pid of ids) {
+            const o = so.root.getObjectByName(pid)
+            rest[pid] = [o.position.x, o.position.y, o.position.z, o.rotation.x, o.rotation.y, o.rotation.z]
+          }
+          room.playAnimation(clipId, id)
+          step(clip.duration + 0.2)
+          for (const pid of ids) {
+            const o = so.root.getObjectByName(pid)
+            const d = Math.hypot(o.position.x - rest[pid][0], o.position.y - rest[pid][1], o.position.z - rest[pid][2], o.rotation.x - rest[pid][3], o.rotation.y - rest[pid][4], o.rotation.z - rest[pid][5])
+            if (d > 0.05) moved.push(pid)
+          }
+          const back = clipId === 'open_all' ? 'close_all' : 'off_all'
+          room.playAnimation(back, id)
+          step(analysisOf(type).animations.find((c) => c.id === back).duration + 0.2)
+          for (const pid of ids) {
+            const o = so.root.getObjectByName(pid)
+            const d = Math.hypot(o.position.x - rest[pid][0], o.position.y - rest[pid][1], o.position.z - rest[pid][2], o.rotation.x - rest[pid][3], o.rotation.y - rest[pid][4], o.rotation.z - rest[pid][5])
+            if (d > 0.01) moved.push(`${pid}!`)
+          }
+        }
+        const opened = moved.filter((m) => !m.endsWith('!')).length
+        const stuck = moved.filter((m) => m.endsWith('!'))
+        expect(opened > 0 && stuck.length === 0, T(`${type}: ${opened} parte(s) se moveram (${names.length} clipes); não voltaram: ${stuck.length}`, `${type}: ${opened} part(s) moved (${names.length} clips); did not come back: ${stuck.length}`), { type, opened, stuck })
+      }
+    }),
+
+    sc('tap_on', T('Pia: o clipe da torneira gira o registro', 'Sink: the tap clip turns the handle'), ({ room, step, expect }) => {
+      const id = spawn(room, 'sink_bathroom')
+      const so = room.spawned().find((s) => s.objectId === id)
+      const h = so.root.getObjectByName('tap_handle')
+      const rest = h.rotation.y
+      expect(room.playAnimation('on_tap_handle', id), T('Clipe "on_tap_handle" tocou', 'Clip "on_tap_handle" played'))
+      step(0.6)
+      const turned = Math.abs(h.rotation.y - rest)
+      expect(turned > 0.3, T(`Registro girou ${n1(turned)} rad (esperado: mais que 0,3)`, `Handle turned ${n1(turned)} rad (expected: more than 0.3)`), { turned })
+      const fluid = room.fluids.container(`${id}_fluid`)
+      expect(!!fluid && fluid.liters > 0, T(`Bacia com água: ${n1(fluid?.liters ?? 0)} L`, `Basin holds water: ${n1(fluid?.liters ?? 0)} L`), { liters: fluid?.liters })
+    }),
+  ]
+}

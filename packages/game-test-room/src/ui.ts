@@ -217,16 +217,26 @@ export function createUi(o: UiOptions): RoomUi {
   }
   logBtn(t('ui.copy_json'), () => {
     const text = o.log.toJSON()
-    try {
-      void navigator.clipboard.writeText(text)
-    } catch {
+    // no clipboard API (an Artifact iframe, file://): select the text in a textarea and ask the browser to copy it, leaving it selected
+    const select = (): void => {
       const ta = mk('textarea')
       ta.value = text
+      ta.setAttribute('readonly', '')
+      ta.style.cssText = 'position:fixed;left:8px;bottom:8px;width:min(480px,80vw);height:120px;z-index:99999'
       document.body.appendChild(ta)
+      ta.focus()
       ta.select()
-      document.execCommand?.('copy')
-      ta.remove()
+      let copied = false
+      try {
+        copied = !!document.execCommand?.('copy')
+      } catch {
+        copied = false
+      }
+      if (copied) ta.remove()
+      else ta.onblur = () => ta.remove()
     }
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) navigator.clipboard.writeText(text).catch(select)
+    else select()
   })
   logBtn(t('ui.download_ndjson'), () => o.log.download('ndjson'))
   logBtn(t('ui.download_txt'), () => o.log.download('txt'))

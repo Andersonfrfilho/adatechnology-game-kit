@@ -1,0 +1,732 @@
+{
+  "fridge": {
+    "fill": 0.65,
+    "entries": [
+      {
+        "type": "milk_carton",
+        "weight": 6,
+        "qty": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "eggs",
+        "weight": 5
+      },
+      {
+        "type": "cheese",
+        "weight": 4
+      },
+      {
+        "type": "butter",
+        "weight": 4
+      },
+      {
+        "type": "ketchup",
+        "weight": 3
+      },
+      {
+        "type": "water_bottle",
+        "weight": 5,
+        "qty": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "juice_box",
+        "weight": 3
+      },
+      {
+        "type": "soda_can",
+        "weight": 4,
+        "qty": [
+          1,
+          4
+        ]
+      },
+      {
+        "type": "ham",
+        "weight": 3
+      },
+      {
+        "type": "apple",
+        "weight": 3,
+        "qty": [
+          1,
+          4
+        ]
+      },
+      {
+        "type": "tomato",
+        "weight": 3,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "yogurt",
+        "weight": 3,
+        "qty": [
+          1,
+          4
+        ]
+      }
+    ]
+  },
+  "freezer": {
+    "fill": 0.55,
+    "entries": [
+      {
+        "type": "frozen_meat",
+        "weight": 6
+      },
+      {
+        "type": "ice_cream",
+        "weight": 4
+      },
+      {
+        "type": "frozen_pizza",
+        "weight": 4
+      },
+      {
+        "type": "frozen_vegetables",
+        "weight": 4,
+        "qty": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "bread",
+        "weight": 2
+      }
+    ]
+  },
+  "kitchen_cabinet": {
+    "fill": 0.6,
+    "entries": [
+      {
+        "type": "plate",
+        "weight": 4,
+        "qty": [
+          2,
+          6
+        ]
+      },
+      {
+        "type": "bowl",
+        "weight": 3,
+        "qty": [
+          1,
+          4
+        ]
+      },
+      {
+        "type": "cup",
+        "weight": 3,
+        "qty": [
+          1,
+          4
+        ]
+      },
+      {
+        "type": "pot",
+        "weight": 3
+      },
+      {
+        "type": "pan",
+        "weight": 3
+      },
+      {
+        "type": "canned_food",
+        "weight": 4,
+        "qty": [
+          1,
+          4
+        ]
+      },
+      {
+        "type": "rice",
+        "weight": 3
+      },
+      {
+        "type": "beans",
+        "weight": 3
+      },
+      {
+        "type": "pasta",
+        "weight": 3
+      },
+      {
+        "type": "salt",
+        "weight": 3
+      },
+      {
+        "type": "coffee",
+        "weight": 2
+      },
+      {
+        "type": "cooking_oil",
+        "weight": 2
+      },
+      {
+        "type": "sugar",
+        "weight": 2
+      },
+      {
+        "type": "flour",
+        "weight": 2
+      },
+      {
+        "type": "cereal_box",
+        "weight": 2
+      },
+      {
+        "type": "biscuits",
+        "weight": 2
+      }
+    ]
+  },
+  "kitchen_drawer": {
+    "fill": 0.7,
+    "entries": [
+      {
+        "type": "cutlery",
+        "weight": 6
+      },
+      {
+        "type": "knife",
+        "weight": 3
+      },
+      {
+        "type": "scissors",
+        "weight": 2
+      },
+      {
+        "type": "matches",
+        "weight": 2
+      },
+      {
+        "type": "lighter",
+        "weight": 2
+      },
+      {
+        "type": "batteries",
+        "weight": 2
+      },
+      {
+        "type": "pen",
+        "weight": 1
+      },
+      {
+        "type": "sponge",
+        "weight": 2
+      }
+    ]
+  },
+  "pantry": {
+    "fill": 0.7,
+    "entries": [
+      {
+        "type": "canned_food",
+        "weight": 6,
+        "qty": [
+          1,
+          6
+        ]
+      },
+      {
+        "type": "rice",
+        "weight": 5,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "beans",
+        "weight": 5,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "pasta",
+        "weight": 5,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "salt",
+        "weight": 3
+      },
+      {
+        "type": "coffee",
+        "weight": 3
+      },
+      {
+        "type": "cooking_oil",
+        "weight": 3
+      },
+      {
+        "type": "sugar",
+        "weight": 3
+      },
+      {
+        "type": "flour",
+        "weight": 3
+      },
+      {
+        "type": "cereal_box",
+        "weight": 2
+      },
+      {
+        "type": "biscuits",
+        "weight": 3
+      },
+      {
+        "type": "water_bottle",
+        "weight": 3,
+        "qty": [
+          1,
+          4
+        ]
+      },
+      {
+        "type": "juice_box",
+        "weight": 2
+      }
+    ]
+  },
+  "wardrobe": {
+    "fill": 0.6,
+    "entries": [
+      {
+        "type": "tshirt",
+        "weight": 5,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "jeans",
+        "weight": 4,
+        "qty": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "jacket",
+        "weight": 3
+      },
+      {
+        "type": "sneakers",
+        "weight": 3
+      },
+      {
+        "type": "socks",
+        "weight": 3,
+        "qty": [
+          1,
+          4
+        ]
+      },
+      {
+        "type": "blanket",
+        "weight": 3
+      },
+      {
+        "type": "pillow",
+        "weight": 2
+      },
+      {
+        "type": "backpack",
+        "weight": 2
+      },
+      {
+        "type": "hat",
+        "weight": 1
+      },
+      {
+        "type": "scarf",
+        "weight": 1
+      }
+    ]
+  },
+  "dresser": {
+    "fill": 0.65,
+    "entries": [
+      {
+        "type": "tshirt",
+        "weight": 5,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "jeans",
+        "weight": 3,
+        "qty": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "socks",
+        "weight": 5,
+        "qty": [
+          2,
+          6
+        ]
+      },
+      {
+        "type": "underwear",
+        "weight": 4,
+        "qty": [
+          1,
+          4
+        ]
+      },
+      {
+        "type": "scarf",
+        "weight": 1
+      },
+      {
+        "type": "hat",
+        "weight": 1
+      },
+      {
+        "type": "towel",
+        "weight": 2
+      }
+    ]
+  },
+  "nightstand": {
+    "fill": 0.6,
+    "entries": [
+      {
+        "type": "flashlight",
+        "weight": 3
+      },
+      {
+        "type": "batteries",
+        "weight": 3,
+        "qty": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "candles",
+        "weight": 3,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "matches",
+        "weight": 3
+      },
+      {
+        "type": "lighter",
+        "weight": 3
+      },
+      {
+        "type": "notebook",
+        "weight": 2
+      },
+      {
+        "type": "pen",
+        "weight": 3
+      },
+      {
+        "type": "painkillers",
+        "weight": 3
+      },
+      {
+        "type": "phone_charger",
+        "weight": 2
+      },
+      {
+        "type": "wallet",
+        "weight": 1
+      },
+      {
+        "type": "thermometer",
+        "weight": 1
+      },
+      {
+        "type": "documents",
+        "weight": 1
+      },
+      {
+        "type": "first_aid_kit",
+        "weight": 1
+      }
+    ]
+  },
+  "bathroom_cabinet": {
+    "fill": 0.65,
+    "entries": [
+      {
+        "type": "soap",
+        "weight": 4,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "shampoo",
+        "weight": 4
+      },
+      {
+        "type": "toothpaste",
+        "weight": 4
+      },
+      {
+        "type": "toothbrush",
+        "weight": 4,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "painkillers",
+        "weight": 3
+      },
+      {
+        "type": "bandage",
+        "weight": 3,
+        "qty": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "alcohol_70",
+        "weight": 2
+      },
+      {
+        "type": "thermometer",
+        "weight": 2
+      },
+      {
+        "type": "deodorant",
+        "weight": 3
+      }
+    ]
+  },
+  "under_sink": {
+    "fill": 0.6,
+    "entries": [
+      {
+        "type": "toilet_paper",
+        "weight": 4,
+        "qty": [
+          1,
+          4
+        ]
+      },
+      {
+        "type": "soap",
+        "weight": 3,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "towel",
+        "weight": 3
+      },
+      {
+        "type": "detergent",
+        "weight": 3
+      },
+      {
+        "type": "bleach",
+        "weight": 2
+      },
+      {
+        "type": "sponge",
+        "weight": 3,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "alcohol_70",
+        "weight": 2
+      },
+      {
+        "type": "shampoo",
+        "weight": 2
+      },
+      {
+        "type": "first_aid_kit",
+        "weight": 1
+      }
+    ]
+  },
+  "trash": {
+    "fill": 0.7,
+    "entries": [
+      {
+        "type": "crumpled_paper",
+        "weight": 6,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "empty_can",
+        "weight": 5,
+        "qty": [
+          1,
+          3
+        ]
+      },
+      {
+        "type": "empty_bottle",
+        "weight": 4,
+        "qty": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "food_scraps",
+        "weight": 5
+      },
+      {
+        "type": "plastic_bag",
+        "weight": 4,
+        "qty": [
+          1,
+          2
+        ]
+      }
+    ]
+  },
+  "mailbox": {
+    "fill": 0.6,
+    "entries": [
+      {
+        "type": "bill",
+        "weight": 5
+      },
+      {
+        "type": "letter",
+        "weight": 4
+      },
+      {
+        "type": "flyer",
+        "weight": 5
+      },
+      {
+        "type": "postcard",
+        "weight": 2
+      }
+    ]
+  },
+  "bbq_counter": {
+    "fill": 0.7,
+    "entries": [
+      {
+        "type": "charcoal_bag",
+        "weight": 5
+      },
+      {
+        "type": "tongs",
+        "weight": 4
+      },
+      {
+        "type": "skewers",
+        "weight": 4,
+        "qty": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "lighter",
+        "weight": 3
+      },
+      {
+        "type": "matches",
+        "weight": 3
+      },
+      {
+        "type": "firelighter",
+        "weight": 3,
+        "qty": [
+          1,
+          4
+        ]
+      },
+      {
+        "type": "salt",
+        "weight": 2
+      }
+    ]
+  },
+  "garage_shelf": {
+    "fill": 0.65,
+    "entries": [
+      {
+        "type": "paint_can",
+        "weight": 3
+      },
+      {
+        "type": "duct_tape",
+        "weight": 3
+      },
+      {
+        "type": "hammer",
+        "weight": 3
+      },
+      {
+        "type": "screwdriver",
+        "weight": 3
+      },
+      {
+        "type": "rope",
+        "weight": 3
+      },
+      {
+        "type": "batteries",
+        "weight": 2
+      },
+      {
+        "type": "flashlight",
+        "weight": 2
+      },
+      {
+        "type": "candles",
+        "weight": 2
+      },
+      {
+        "type": "water_bottle",
+        "weight": 2
+      },
+      {
+        "type": "canned_food",
+        "weight": 2
+      }
+    ]
+  }
+}

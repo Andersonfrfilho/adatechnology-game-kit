@@ -1,0 +1,55 @@
+{
+  "name": "@adatechnology/game-interactables-household",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Household content pack for @adatechnology/game-interactables: fridges, wardrobes, drawers, stove, gas bottle, sockets, sofas, bins, mailbox, barbecue, clothesline and more, modeled with real depth, parts and containers.",
+  "keywords": [
+    "game",
+    "interaction",
+    "furniture",
+    "household",
+    "procedural",
+    "low-poly",
+    "three"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-interactables-household"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-interactables": "workspace:*",
+    "@adatechnology/game-props3d": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "id": "us",
+  "gas": {
+    "kind": "20lb",
+    "capacityKg": 9.1,
+    "diameter": 0.31,
+    "height": 0.48,
+    "color": "#e8e8e4"
+  },
+  "socket": {
+    "standard": "NEMA 5-15",
+    "pins": 3,
+    "layout": "us",
+    "voltage": [
+      120
+    ],
+    "hz": 60
+  },
+  "mailbox": {
+    "style": "post",
+    "color": "#2f3a48"
+  },
+  "clothesline": {
+    "style": "t_post",
+    "wires": 3
+  }
+}
