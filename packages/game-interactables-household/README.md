@@ -174,6 +174,33 @@ Everything is plain JSON in `src/data` (bundled): `types.json`, `items.json`, `l
 { "id": "br", "gas": { "kind": "P13", "capacityKg": 13 }, "socket": { "standard": "NBR 14136", "voltage": [127, 220], "hz": 60 }, "mailbox": { "style": "wall" } }
 ```
 
+## Destruction
+
+Every type has a default material and joint for its body (`spec.destruction`) and every movable part has its own (`part.destruction`: `material`, `joint`, `piece`), using the ids of `@adatechnology/game-destruction`. Damage, fire and blasts go through that SDK; the pack only tags. Doors are `hinge`, drawers `clip`, MDF bodies `screw`, bricks `mortar`, welded metal `weld`. The `gas_bottle` body also has `explodes` and `contains` (pressurized gas, sized from the region's cylinder). Water fixtures hold no water themselves.
+
+| Type | Body | Parts |
+| --- | --- | --- |
+| fridge, fridge_compact | steel, weld | doors steel, hinge |
+| kitchen cabinets, pantry, wardrobe, dresser, nightstand, bathroom cabinet | mdf, screw | doors mdf, hinge; drawers mdf, clip |
+| stove | steel, weld | oven door steel, hinge; knobs plastic, clip |
+| gas_bottle | steel, weld, explodes + contains gas | valve copper, screw |
+| sink_kitchen, sink_bathroom, utility_sink | ceramic, glue | taps steel, screw; cabinet doors mdf, hinge |
+| shower | tempered_glass, clip | glass door tempered_glass, clip; valve steel, screw |
+| toilet | ceramic, bolt | lid plastic, hinge; flush button plastic, clip |
+| wall_socket, wall_switch, conduit_run, power_meter, tv | plastic, screw / clip | rocker, button, door: plastic, clip / hinge |
+| service_entrance, electrical_panel | steel, bolt / screw | doors steel, hinge; breakers plastic, clip |
+| microwave, washing_machine | steel, screw | doors steel / tempered_glass, hinge; dials plastic, clip |
+| sofa, armchair | fabric, glue | none |
+| dining_chair | wood_hard, screw | none |
+| bed_double, bed_single, bench | wood_soft, screw / nail | none |
+| blinds | aluminium, clip | slats aluminium, clip; cord aluminium, tie |
+| curtain | fabric, tie | panels fabric, tie |
+| trash_bin, wheelie_bin | plastic, fused | lid plastic, hinge |
+| mailbox | steel, weld | flap and flag steel, hinge |
+| dog_house | plywood, nail | none |
+| bbq | brick, mortar | counter door steel, hinge |
+| clothesline | steel, weld | clothes fabric, tie |
+
 ## Guarantees (tested)
 
 For every type, with defaults and three seeds, in both regions: the build succeeds; all static primitives and all closed-part primitives stay inside
