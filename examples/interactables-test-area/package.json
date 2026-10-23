@@ -1,0 +1,15 @@
+{
+  "name": "@adatechnology/interactables-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Furniture and interactive objects area for the shared destruction test room: a TestableModule with one destructible item per household type, animations, fluids and scenarios.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-contracts": "workspace:*"
+  }
+}

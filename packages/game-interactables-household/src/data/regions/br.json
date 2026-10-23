@@ -1,0 +1,35 @@
+{
+  "id": "br",
+  "gas": {
+    "kind": "P13",
+    "capacityKg": 13,
+    "diameter": 0.36,
+    "height": 0.58,
+    "color": "#d9d6cf"
+  },
+  "socket": {
+    "standard": "NBR 14136",
+    "pins": 3,
+    "layout": "br",
+    "voltage": [
+      127,
+      220
+    ],
+    "hz": 60
+  },
+  "mailbox": {
+    "style": "wall",
+    "color": "#c0432e"
+  },
+  "clothesline": {
+    "style": "t_post",
+    "wires": 3
+  },
+  "canister": {
+    "kind": "butane_230",
+    "capacityKg": 0.23,
+    "diameter": 0.11,
+    "height": 0.19,
+    "color": "#4f8f5a"
+  }
+}
