@@ -55,7 +55,7 @@ jobs:
 
       - id: set
         env:
-          SHARDS: '{"@adatechnology/game-vehicles-fleet":13}'
+          SHARDS: '{"@adatechnology/game-vehicles-fleet":16}'
         run: |
           node -e '
             const fs = require("fs");
