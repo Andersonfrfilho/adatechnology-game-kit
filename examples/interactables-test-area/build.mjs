@@ -1,5 +1,5 @@
 // Bundles the furniture area (and the two kit packages it needs) into dist/furniture-area.js (IIFE, global `FurnitureArea`) and, when the
-// shared test room page is found (ROOM_HTML, default the offline copy under /mnt/project-files), writes dist/sala-moveis.html: the room page
+// shared test room page is found (ROOM_HTML, default the kit's own examples/test-room build), writes dist/sala-moveis.html: the room page
 // with the area loaded into it, one file, no network.
 import { createRequire } from 'node:module'
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'node:fs'
@@ -46,7 +46,7 @@ const bundle = result.outputFiles[0].text
 writeFileSync(join(here, 'dist/furniture-area.js'), bundle)
 console.log(`dist/furniture-area.js ${(bundle.length / 1024).toFixed(0)} KB`)
 
-const roomHtml = process.env.ROOM_HTML || '/mnt/project-files/docs/offline/sala-de-testes/sala-de-testes.html'
+const roomHtml = process.env.ROOM_HTML || join(here, '../test-room/dist/test-room.html')
 if (existsSync(roomHtml)) {
   const safe = (s) => s.replace(/<\/(script)/gi, '<\\/$1')
   const page = readFileSync(roomHtml, 'utf8')
@@ -58,5 +58,5 @@ if (existsSync(roomHtml)) {
   writeFileSync(join(here, 'dist/sala-moveis.html'), html)
   console.log(`dist/sala-moveis.html ${(html.length / 1024).toFixed(0)} KB`)
 } else {
-  console.log(`room page not found at ${roomHtml}: set ROOM_HTML to build dist/sala-moveis.html`)
+  console.log(`room page not found at ${roomHtml}: build examples/test-room first or set ROOM_HTML to build dist/sala-moveis.html`)
 }

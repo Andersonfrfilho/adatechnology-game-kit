@@ -13,7 +13,7 @@ const { chromium } = ['playwright', '/opt/node-tools/node_modules/playwright'].m
 if (!chromium) throw new Error('playwright not found')
 const dist = join(here, 'dist/sala-moveis.html')
 if (!existsSync(dist)) execFileSync(process.execPath, [join(here, 'build.mjs')], { stdio: 'inherit' })
-if (!existsSync(dist)) throw new Error('dist/sala-moveis.html missing: set ROOM_HTML to the test room page and run build.mjs')
+if (!existsSync(dist)) throw new Error('dist/sala-moveis.html missing: build examples/test-room (or set ROOM_HTML), then run build.mjs')
 const shots = join(here, 'shots')
 mkdirSync(shots, { recursive: true })
 

@@ -17,7 +17,9 @@ rmSync(out, { recursive: true, force: true })
 mkdirSync(out, { recursive: true })
 
 const examples = []
-for (const name of dirs(join(root, 'examples'))) {
+// test-room goes first: other examples (interactables-test-area) load their area into its page
+const exampleNames = dirs(join(root, 'examples')).sort((a, b) => (b === 'test-room') - (a === 'test-room'))
+for (const name of exampleNames) {
   const dir = join(root, 'examples', name)
   const pkgPath = join(dir, 'package.json')
   if (!existsSync(pkgPath)) continue
