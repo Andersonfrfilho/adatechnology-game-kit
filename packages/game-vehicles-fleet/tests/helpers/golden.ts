@@ -45,9 +45,12 @@ function kitFor(locale: string): VehicleKit {
  * three.js with a fake canvas document) for every vehicle: the scene graph of each state, the zones and parts with their original ids and
  * pt-BR names, and the health and look after each scenario. Matching them proves the pack renders and breaks every vehicle as it did.
  */
-export function describeGolden(group: FleetGroupId): void {
-  describe(`golden: ${group}`, () => {
-    for (const key of fleetGroups[group]) {
+export function describeGolden(group: FleetGroupId, slice?: { part: number; of: number }): void {
+  const keys = fleetGroups[group]
+  const size = slice ? Math.ceil(keys.length / slice.of) : keys.length
+  const mine = slice ? keys.slice((slice.part - 1) * size, slice.part * size) : keys
+  describe(slice ? `golden: ${group} ${slice.part}/${slice.of}` : `golden: ${group}`, () => {
+    for (const key of mine) {
       const g = G[key]
       describe(key, () => {
         it('has a golden entry', () => {
