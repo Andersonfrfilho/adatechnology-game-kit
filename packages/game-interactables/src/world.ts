@@ -864,6 +864,14 @@ export function createWorld(options: WorldOptions = {}): World {
   // ------------------------------------------------------------------ damage
   function damage(objectId: string, target: string, amount: number, _kind?: string): { hp: number; destroyed: boolean } | null {
     const o = objs.get(objectId)
+    if (o && options.destruction) {
+      const pos = toWorld(o, [0, 0.5, 0])
+      const type = _kind === 'gas' ? 'explosive' : _kind === 'fabric' ? 'slash' : 'blunt'
+      const result = options.destruction.hitPart(objectId, target, { type, point: pos, energy: Math.max(0, amount), source: 'interactables' }) as { events?: Array<{ type?: string; part?: string }> } | null | undefined
+      const destroyed = !!result?.events?.some((e) => e.type === 'fracture' && e.part === target)
+      emit({ type: 'damage', object: objectId, target, hp: -1, destroyed })
+      return { hp: -1, destroyed }
+    }
     const st = o?.hp.get(target)
     if (!o || !st) return null
     if (st.hp <= 0) return { hp: 0, destroyed: true }
@@ -1586,7 +1594,7 @@ export function createWorld(options: WorldOptions = {}): World {
     mirrors,
     colliders,
     damage,
-    hp: (objectId, target) => objs.get(objectId)?.hp.get(target)?.hp ?? null,
+    hp: (objectId, target) => (options.destruction ? null : (objs.get(objectId)?.hp.get(target)?.hp ?? null)),
     t,
     setLocale: (l) => {
       locale = l

@@ -184,3 +184,7 @@ alvo?.act()
 
 O pacote não desenha nada: você informa o `ObjectSpec` (dados), chama `update(dt)` a cada quadro e desenha o que o mundo reportar. Os textos do
 motor (`Abrir`, `Ligar`, `Sem energia`, `Sem gás`, `Sem água`...) vêm em `pt-BR`; os pacotes de conteúdo acrescentam as suas chaves em `strings`.
+
+## Destruction delegate
+
+Pass `destruction: { hitPart }` (the shape of `DestructionWorld.hitPart` from `@adatechnology/game-destruction`, no dependency on it) to `createWorld` and `world.damage` forwards to it as a `blunt` (`explosive` for `gas`, `slash` for `fabric`) hit with `energy: amount`; the world stops its own hp bookkeeping and `world.hp` returns `null`. Without it the deprecated `DamageSpec` behaviour is unchanged.

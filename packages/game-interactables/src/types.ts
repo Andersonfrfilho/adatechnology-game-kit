@@ -445,6 +445,11 @@ export type InteractablesLocale = 'en' | 'pt-BR'
 /** Locale table: key -> text. `{n}` style placeholders are filled from `vars`. */
 export type Strings = Record<string, string>
 
+/** The part of `DestructionWorld` the engine uses. A result with an `events` array of `{ type, part }` lets `damage` report `destroyed`. */
+export interface DestructionDelegate {
+  hitPart(objectId: string, partId: string, hit: { type: string; point: [number, number, number]; energy: number; source?: string }): unknown
+}
+
 export interface WorldOptions {
   locale?: InteractablesLocale | string
   /** Extra strings per locale, merged over the built-in ones (content packs pass theirs here). */
@@ -465,6 +470,14 @@ export interface WorldOptions {
    * (0 = dry: the host should show only a drip). Lets a building SDK own the tank, leaks and refills.
    */
   waterSupply?: { draw(fixture: string, liters: number): number }
+  /**
+   * Destruction delegate, duck-typed to `DestructionWorld.hitPart` of `@adatechnology/game-destruction` (no dependency on it). When given,
+   * `world.damage(objectId, target, amount, kind)` forwards to `destruction.hitPart(objectId, target, hit)` and the world stops its own hp
+   * bookkeeping (`DamageSpec` is ignored; `world.hp` returns null). The host registers the object in the destruction world under the same id.
+   * The hit is `{ type, point (world space), energy: amount, source: 'interactables' }`: `type` is `explosive` for `gas`, `slash` for `fabric`,
+   * `blunt` otherwise. Without it the deprecated behaviour is unchanged.
+   */
+  destruction?: DestructionDelegate
   /** Called for every event. */
   onEvent?: (event: WorldEvent) => void
   /** Return false to cancel an interaction (locked, needs a tool, tutorial...). */
