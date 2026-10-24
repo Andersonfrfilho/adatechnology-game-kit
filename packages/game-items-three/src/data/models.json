@@ -778,5 +778,15 @@
       0.356
     ],
     "scale": 0.1
+  },
+  {
+    "id": "suture_kit",
+    "teamId": "kit_sutura",
+    "teamBox": [
+      1.5,
+      0.8,
+      0.3
+    ],
+    "scale": 0.1
   }
 ]
