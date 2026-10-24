@@ -1378,5 +1378,15 @@
       1
     ],
     "scale": 0.1
+  },
+  {
+    "id": "sheet_metal",
+    "teamId": "chapa",
+    "teamBox": [
+      6,
+      0.03,
+      4.5
+    ],
+    "scale": 0.1
   }
 ]

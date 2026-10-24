@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **138 de 257 itens têm modelo 3D; faltam 119.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **139 de 257 itens têm modelo 3D; faltam 118.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **138** | **119** |
+| **Total** | **139** | **118** |
 
 ## Comida (36 de 36)
 
@@ -174,7 +174,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Taco de beisebol (kit) | `taco` | `baseball_bat` | 1,0 kg | incomum | 860 x 70 x 70 mm |
 | [x] | Tonfa policial (kit) | `tonfa` | `police_baton` | 0,6 kg | comum | 500 x 100 x 45 mm |
 
-## Materiais de construção e crafting (4 de 23)
+## Materiais de construção e crafting (5 de 23)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -182,7 +182,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Arame (rolo de 10 m) (kit) | `arame` | `wire_roll` | 0,5 kg | comum | 140 x 50 x 140 mm |
 | [x] | Arame farpado (rolo de 25 m) (kit) | `arame_farpado` | `barbed_wire` | 4,0 kg | incomum | 300 x 120 x 300 mm |
 | [x] | Cacos de vidro (kit) | `cacos` | `glass_shards` | 0,2 kg | comum | 120 x 50 x 100 mm |
-| [ ] | Chapa de metal | `chapa` | `sheet_metal` | 6,0 kg | incomum | 600 x 3 x 450 mm |
+| [x] | Chapa de metal (kit) | `chapa` | `sheet_metal` | 6,0 kg | incomum | 600 x 3 x 450 mm |
 | [ ] | Cimento (saco de 25 kg) | `cimento` | `cement_bag` | 25,0 kg | incomum | 500 x 100 x 300 mm |
 | [ ] | Cola epóxi | `cola` | `epoxy_glue` | 0,1 kg | incomum | 100 x 60 x 30 mm |
 | [ ] | Componentes eletrônicos | `componentes` | `electronic_components` | 0,1 kg | incomum | 100 x 20 x 80 mm |
