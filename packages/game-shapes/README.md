@@ -111,6 +111,28 @@ engine and returns one message per problem with its path; `generate` throws on a
 lists them for `postMessage`; cached results are shared and read-only (`cloneBuffers` before deforming). `shapeKey(schema, options)` is the
 64-bit cache key; `mergeTransformed(pieces)` is three's `toNonIndexed` + `applyMatrix4` + join, for merging existing geometry.
 
+## Cache and workers
+
+```ts
+import { createShapeCache, createShapePool } from '@adatechnology/game-shapes'
+
+const cache = createShapeCache({ maxEntries: 512, maxBytes: 128 * 1024 * 1024 }) // LRU by shapeKey, counted in bytes of the arrays
+const pool = createShapePool({ size: 4, spawn: () => new Worker(new URL('./shape-worker.js', import.meta.url), { type: 'module' }), cache })
+const house = await pool.generateMany(rooms.map((schema) => ({ schema, options: { seed } })))
+
+// shape-worker.js
+import { installShapeWorker } from '@adatechnology/game-shapes/worker'
+installShapeWorker(self, { generators: myGenerators })
+```
+
+- A cache hit resolves at once; a key already in flight shares its promise; otherwise the job goes to the least busy worker and every array
+  comes back transferred (zero copy). The result is shared: read-only.
+- `spawn` returns anything with `postMessage`, `onmessage` and `terminate` (a browser `Worker`, a `worker_threads` wrapper, a fake). Without it,
+  or with `size: 0`, the pool generates in the calling thread with the same cache and sharing.
+- Custom generators are functions: register them in the worker script too. A job whose options carry `generators` runs in the calling
+  thread. A worker that crashes rejects its jobs and is replaced.
+- A worker result is byte-equal to `generate` in the calling thread for the same key (tested with `worker_threads`).
+
 ## LOD and instancing
 
 A `lod` rule `{ distance, detail, minSize?, minSegments? }` regenerates the tree with round segment counts times `detail` (never below
@@ -122,4 +144,5 @@ vertex.
 
 Gerador único de 3D do kit: forma em JSON vira buffers por material, puro, por semente, pronto para worker e cache. Os geradores são portes linha a
 linha do three r160 e o resultado é igual bit a bit, por isso os pacotes migram sem mudar nenhum golden de cena. O desenho em three.js fica no
-`@adatechnology/game-shapes-three`.
+`@adatechnology/game-shapes-three`. O `createShapePool` gera em workers (`installShapeWorker` no script do worker) e o `createShapeCache` guarda
+os resultados por chave.

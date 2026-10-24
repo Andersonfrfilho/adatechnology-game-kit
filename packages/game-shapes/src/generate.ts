@@ -507,7 +507,7 @@ export function generate(schema: ShapeSchema, options: GenerateOptions = {}): Sh
       first.instanced.reduce((sum, batch) => sum + ((batch.geometry.indices ? batch.geometry.indices.length : batch.geometry.positions.length / 3) / 3) * batch.count, 0)
     : 0
   return {
-    key: shapeKey(schema, options),
+    key: options.key === false ? '' : options.key ?? shapeKey(schema, options),
     ...(schema.name !== undefined ? { name: schema.name } : {}),
     levels,
     parts,

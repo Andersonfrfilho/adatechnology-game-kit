@@ -347,6 +347,9 @@ bytes a miss would produce (tested).
 - Custom generators must be registered on both sides (the worker script imports the same registration module); an unknown generator fails the
   job with its name.
 - Result equality: a worker result is byte-equal to an in-thread result for the same key (tested with `worker_threads`).
+- *Landed (T9d):* `createShapeCache`, `createShapePool`, `installShapeWorker` (also `@adatechnology/game-shapes/worker`). A job whose options
+  carry `generators` runs in the calling thread; a crashed worker rejects its jobs and is replaced. `generate(schema, { key: false })` skips
+  the hash for a schema built in code and used once (the in-thread migrations of §7 use it).
 
 ## 5. LOD and instancing rules
 

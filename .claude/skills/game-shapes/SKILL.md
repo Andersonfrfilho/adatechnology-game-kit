@@ -40,9 +40,13 @@ buildPrimitive({ kind: 'cylinder', radialSegments: 12 }) // uma primitiva sozinh
   em repouso.
 - Cache: `shapeKey(schema, options)` (64 bits) e o cache de modelos de primitiva por parâmetros (`templateCacheStats`). Resultado em cache é
   só leitura: `cloneBuffers` antes de deformar.
-- Worker: `transferablesOf(buffers)` lista os `ArrayBuffer` para `postMessage`.
+- Worker: `createShapePool({ size, spawn, cache })` com `generate`/`generateMany` (chave em voo compartilhada, arrays transferidos, sem `spawn`
+  gera na própria thread); no script do worker, `installShapeWorker(self, { generators })` de `@adatechnology/game-shapes/worker`. Gerador
+  `custom` é função: registre dos dois lados. `createShapeCache({ maxEntries, maxBytes })` é o LRU por chave.
+- `transferablesOf(buffers)` lista os `ArrayBuffer` para `postMessage`.
 
 ## Arquivos
 - `src/primitives/three-generators.ts`, `extrude.ts`, `earcut.ts` (cópia do three): os portes; `difference.ts`: o booleano barato.
 - `src/math.ts`: compose, euler, normal matrix como o three. `src/generate.ts`: o assado, peças, faixas, pontos, LOD, instâncias.
 - `src/schema.ts` + `schema/shape.schema.json`: JSON Schema e validador. `tests/three-parity.test.ts`: a prova bit a bit.
+- `src/cache.ts`, `src/pool.ts`, `src/worker.ts`: cache e workers; `tests/pool.test.ts` compara o worker_threads byte a byte.

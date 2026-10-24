@@ -1,9 +1,9 @@
 import { defineConfig } from 'tsup'
 
-// ESM + d.ts for bundlers and workers, and an IIFE (dist/index.global.js) exposing the `GameShapes` global. No runtime dependency.
+// ESM + d.ts for bundlers and workers (dist/worker.js: only what a worker script needs), and an IIFE (dist/index.global.js) exposing the `GameShapes` global. No runtime dependency.
 export default defineConfig([
   {
-    entry: { index: 'src/index.ts' },
+    entry: { index: 'src/index.ts', worker: 'src/worker.ts' },
     format: ['esm'],
     dts: true,
     sourcemap: true,

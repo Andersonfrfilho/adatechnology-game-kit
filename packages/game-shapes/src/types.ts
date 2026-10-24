@@ -375,4 +375,9 @@ export interface GenerateOptions {
   readonly generators?: Readonly<Record<string, ShapeGenerator>>
   /** Validate the schema first (default true). */
   readonly validate?: boolean
+  /**
+   * The result's `key`: computed by default (`shapeKey`, a hash of the whole schema text), taken as given when a string, or `''` with `false`
+   * (a schema built in code, used once and never cached: the hash would cost more than a small shape).
+   */
+  readonly key?: string | false
 }
