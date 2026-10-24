@@ -1,0 +1,27 @@
+{
+  "name": "@adatechnology/weapon-thumbnails-tool",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Weapon thumbnails tool: projects the 3D model of each weapon onto its side plane and writes a compact, deterministic SVG silhouette per weapon, then writes the manifest and the credits of the thumbnails (generated or from Wikimedia Commons).",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "generate": "node dist/cli.js generate",
+    "manifest": "node dist/cli.js manifest"
+  },
+  "dependencies": {
+    "@adatechnology/game-weapons": "workspace:*",
+    "@adatechnology/game-weapons-three": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "three": "^0.160.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}
