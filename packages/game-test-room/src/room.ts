@@ -29,6 +29,8 @@ import { createLog } from './log'
 import { createRoomMetrics, ROOM_METRICS } from './metrics'
 import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
+import { THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
+import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
 import { makeScenarios } from './scenarios'
 import { resolveStrings } from './locale'
 import { createUi } from './ui'
@@ -315,7 +317,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   let pending: DestructionEvent[] = []
   const eventListeners = new Set<(d: unknown) => void>()
-  const listeners: Record<string, Set<(d: unknown) => void>> = { spawn: new Set(), tool: new Set(), grab: new Set(), throw: new Set(), event: eventListeners }
+  const listeners: Record<string, Set<(d: unknown) => void>> = { spawn: new Set(), tool: new Set(), grab: new Set(), throw: new Set(), event: eventListeners, camera: new Set() }
   const fire = (type: string, data: unknown): void => {
     for (const fn of listeners[type] ?? []) fn(data)
   }
@@ -657,6 +659,85 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   const aimO: Vec3 = [0, 0, 0]
   const aimD: Vec3 = [0, 0, -1]
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  // Avatar and third-person camera. The simulation always sees the first-person camera (the eye: tools, grabs, walks, listener); the shoulder
+  // view only moves the camera for the render (`applyCamera`), and the aim ray goes from the eye through the point the camera ray hits.
+  // ---------------------------------------------------------------------------------------------------------------------------------------
+  const third: Required<ThirdPersonOptions> = { ...THIRD_PERSON_DEFAULTS, ...options.thirdPerson }
+  let avatar: RoomAvatar | null = null
+  let cameraMode: CameraMode = options.cameraMode ?? 'first'
+  const avatarState: RoomAvatarState = { speed: 0, running: false, crouch: false, down: false, armed: false, pitch: 0 }
+  let feetPrev: [number, number] | null = null
+  /** `armed` forced by a module (the bench); null follows the tool in hand. */
+  let armedForced: boolean | null = null
+  let camDistance = Infinity
+  const tmpHand = new THREE.Vector3()
+
+  const thirdPose = (dt: number): ThirdPersonPose => {
+    const pose = thirdPersonPose({ x: player.x, z: player.z, feet: player.feet, yaw: player.yaw, pitch: player.pitch, crouch: avatarState.crouch }, third, (o, d, max) =>
+      withoutHeld(() => world.raycast(o, d, max))?.distance ?? null,
+    )
+    // a wall pulls the camera in at once, the way back is slow (`view.cd`, line 76559 of the team game)
+    camDistance = pose.free <= camDistance ? pose.free : dt > 0 ? camDistance + (pose.free - camDistance) * (1 - Math.exp(-dt * third.recover)) : camDistance
+    return { ...pose, position: pose.at(camDistance), free: camDistance }
+  }
+
+  const thirdActive = (): boolean => cameraMode === 'third' && avatar !== null
+  const syncAvatarVisible = (): void => {
+    if (avatar) avatar.root.visible = cameraMode === 'third'
+  }
+  const setCameraMode = (mode: CameraMode): void => {
+    if (mode !== 'first' && mode !== 'third') return
+    if (mode === cameraMode) return
+    cameraMode = mode
+    camDistance = Infinity
+    syncAvatarVisible()
+    action('camera', t('act.camera', { mode: t(`camera.${mode}`) }), { data: { mode, avatar: avatar !== null } })
+    fire('camera', mode)
+  }
+  const setAvatar = (next: RoomAvatar | null): void => {
+    if (avatar === next) return
+    avatar?.root.removeFromParent()
+    avatar = next
+    feetPrev = null
+    if (avatar) {
+      scene.add(avatar.root)
+      syncAvatarVisible()
+      stepAvatar(0)
+    }
+    ui?.hud(hudState())
+  }
+  const stepAvatar = (dt: number): void => {
+    if (!avatar) return
+    const x = player.x
+    const z = player.z
+    if (dt > 0 && feetPrev) {
+      const raw = Math.hypot(x - feetPrev[0], z - feetPrev[1]) / dt
+      avatarState.speed += (raw - avatarState.speed) * (1 - Math.exp(-dt * 15))
+      if (avatarState.speed < 0.02) avatarState.speed = 0
+    }
+    feetPrev = [x, z]
+    avatarState.running = player.keys.has('ShiftLeft') || player.keys.has('ShiftRight')
+    avatarState.armed = armedForced ?? tool.def.action.kind === 'firearm'
+    avatarState.pitch = player.pitch
+    avatar.root.position.set(x, player.feet, z)
+    avatar.root.rotation.set(0, player.yaw, 0)
+    avatar.update(dt, avatarState)
+    avatar.root.updateMatrixWorld(true)
+  }
+  /** Moves the camera to the shoulder view for the render that follows, and answers the function that puts it back. */
+  const applyThirdView = (): (() => void) => {
+    if (!thirdActive()) return () => undefined
+    const home = camera.position.clone()
+    const pose = thirdPose(0)
+    camera.position.set(pose.position[0], pose.position[1], pose.position[2])
+    camera.updateMatrixWorld(true)
+    return () => {
+      camera.position.copy(home)
+      camera.updateMatrixWorld(true)
+    }
+  }
+
   const aim = (): void => {
     camera.updateMatrixWorld(true)
     camera.getWorldPosition(tmpV)
@@ -667,6 +748,22 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     aimD[0] = tmpV2.x
     aimD[1] = tmpV2.y
     aimD[2] = tmpV2.z
+    if (thirdActive()) {
+      // shoulder view: the camera ray finds the target, the shot leaves the eye for it (a shot from the camera would cross the player's own back)
+      const pose = thirdPose(0)
+      const reach = 80
+      const hit = withoutHeld(() => world.raycast(pose.position, pose.direction, reach))
+      const dist = hit ? hit.distance : reach
+      const tx = pose.position[0] + pose.direction[0] * dist - aimO[0]
+      const ty = pose.position[1] + pose.direction[1] * dist - aimO[1]
+      const tz = pose.position[2] + pose.direction[2] * dist - aimO[2]
+      const len = Math.hypot(tx, ty, tz)
+      if (len > 0.5 && (tx * pose.direction[0] + ty * pose.direction[1] + tz * pose.direction[2]) / len > 0.5) {
+        aimD[0] = tx / len
+        aimD[1] = ty / len
+        aimD[2] = tz / len
+      }
+    }
   }
 
   const FAR: Quat = [0, 0, 0, 1]
@@ -1250,7 +1347,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const root = piece.root
     let pos: THREE_NS.Vector3
     const targetQ = tmpQ
-    if (useItemPlayer) {
+    const hand = thirdActive() ? avatar?.hand?.('R') : undefined
+    if (hand) {
+      // shoulder view: the item rides the avatar's weapon hand (the body is in view, the camera is not at the eye)
+      pos = hand.getWorldPosition(tmpHand)
+      targetQ.setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw + heldYaw)
+      targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -heldTilt))
+    } else if (useItemPlayer) {
       // the hand frame follows the camera's yaw only, so looking down at the item does not tilt it
       const pose = useItemPlayer.pose()
       const handQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw)
@@ -1426,6 +1529,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         break
       case 'KeyV':
         if (heldEntry?.uses[2]) useItem(heldEntry.uses[2])
+        else if (avatar && !e.shiftKey) setCameraMode(cameraMode === 'first' ? 'third' : 'first')
         else kick()
         break
       case 'KeyT':
@@ -1605,6 +1709,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const update = (dt: number): void => {
     if (!ownsLoop) roomMetrics.frame(dt)
     player.update(dt)
+    stepAvatar(paused ? 0 : dt)
     if (tiltKey || heldTilt > 0) {
       heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
     }
@@ -1652,6 +1757,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       tap: isTapOn(),
       blast: { shelter: blastOn('shelter'), fragmentHits: blastOn('fragmentHits'), confinement: blastOn('confinement') },
       quality: qualityName,
+      camera: avatar ? cameraMode : null,
       objects: [...entries.values()].filter((e) => !e.arena).length,
     }
   }
@@ -2257,7 +2363,28 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const id = moduleId ?? activeBench
       return (id ? benches.get(id) : undefined) ?? null
     },
-    applyCamera: () => vfx.applyCamera(),
+    applyCamera: () => {
+      const back = applyThirdView()
+      const shake = vfx.applyCamera()
+      return () => {
+        shake()
+        back()
+      }
+    },
+    setAvatar,
+    get avatar() {
+      return avatar
+    },
+    setAvatarState(state) {
+      if (state.crouch !== undefined) avatarState.crouch = state.crouch
+      if (state.down !== undefined) avatarState.down = state.down
+      if (state.armed !== undefined) armedForced = state.armed
+    },
+    avatarState: () => ({ ...avatarState }),
+    setCameraMode,
+    get cameraMode() {
+      return cameraMode
+    },
     metrics() {
       return { room: roomMetrics.sample(), module: moduleMetrics() }
     },
@@ -2373,7 +2500,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const dt = Math.min(0.05, realDelta)
       last = now
       if (!scenarioRunning) update(dt)
-      const restoreCamera = vfx.applyCamera()
+      const restoreCamera = room.applyCamera()
       gl.render(scene, camera)
       restoreCamera()
       roomMetrics.rendered()
@@ -2384,6 +2511,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   if (options.initial) {
     for (const [i, id] of options.initial.entries()) spawn(id, [(i - (options.initial.length - 1) / 2) * 1.3, 0, 0.5])
   }
+  if (options.avatar) setAvatar(options.avatar)
   if (options.area) openArea(options.area)
 
   return room

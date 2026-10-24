@@ -116,10 +116,28 @@ when a body (the player, an object of the room) crosses it; whatever was already
 | E | grab / drop |
 | R | rotate the held item |
 | Right button or G | throw |
-| F | use a fluid item (drink); Z tilt; C fill from the tap; V pour (holding a fluid item) or kick (otherwise, with the `kick` tool whatever is selected) |
+| F | use a fluid item (drink); Z tilt; C fill from the tap; V pour (holding a fluid item); otherwise V toggles 1st/3rd person when a body is set (`setAvatar`), and kicks when there is none (Shift+V kicks with a body too; the `kick` tool whatever is selected) |
 | Tab | show / hide the panels |
 
 Panels: catalogue tabs (spawn, Clear, Reset all), slow motion 0.25x, time x10, quality select, inspector (material, state, hp, temperature, char, marks, joints, load and stress) and the behaviour log with filters.
+
+## The player's body and the third-person camera
+
+The room is a bare first-person camera until you give it a body. `room.setAvatar(avatar | null)` takes anything shaped like `RoomAvatar` (the room imports no character code):
+
+```ts
+interface RoomAvatar {
+  root: Object3D
+  update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; armed: boolean; pitch: number }): void
+  hand?(side: 'R' | 'L'): Object3D
+}
+```
+
+Every frame the room puts `root` at the player's feet with the player's yaw (the body faces -z at yaw 0, like the camera) and calls `update` with the ground speed of the player's movement, Shift, `armed` (a firearm is the tool in hand) and the camera `pitch` (radians, positive looking up). `crouch` and `down` are not known to the room: a player module sets them with `room.setAvatarState({ crouch, down })` (`avatarState()` reads them back). `@adatechnology/game-characters-three` has such a body: `toRoomAvatar(createPlayerAvatar(THREE))`.
+
+`room.setCameraMode('first' | 'third')` (option `cameraMode`, property `cameraMode`, event `room.on('camera', fn)`; every change is a `camera` action in the log). V toggles it when a body is set. In `first` the body is hidden; in `third` it is shown, the camera stands over the shoulder, and a carried item rides `avatar.hand('R')` instead of the camera frame. Option `thirdPerson` changes the view; the defaults are the team game's shoulder camera (`zombiada-modo-livre.html`, `cameraUpdate`, line 76546): `back` 3.8 m, `side` 0.9 m to the right, `up` 1.95 m (`crouchUp` 1.4 m), `lift` 0.1 m, three probe rays (`probes` 0 and +-0.2 m) that pull the camera in `margin` 0.3 m short of a wall (never closer than `minDistance` 0.2 m) and let it out at `recover` 4 per second.
+
+The simulation always sees the eye: tools, grabs, scripted walks and the listener work as in first person. Only the render moves the camera (`applyCamera()` does it, a host that renders by itself calls it around its `render`). A shot or grab leaves the eye toward the point the camera ray hits, so the crosshair stays true.
 
 ## Log format
 
@@ -149,6 +167,8 @@ automáticos conferem o resultado e gravam aprovado/reprovado no mesmo registro.
 
 Um módulo que declara controles, camadas ou contadores ganha um painel de bancada genérico; o estado vai para a URL do exemplo (`?bench.<idDoMódulo>=`) e
 `room.bench()` / `room.metrics()` dirigem e leem a bancada por script.
+
+Corpo do jogador: `room.setAvatar(corpo)` põe um corpo (qualquer objeto no formato `RoomAvatar`) nos pés do jogador; `room.setCameraMode('first' | 'third')` e a tecla V alternam entre 1ª e 3ª pessoa (câmera sobre o ombro com os números do jogo da equipe, puxada para perto de paredes). `room.setAvatarState({ crouch, down })` deixa um módulo de jogador agachar e derrubar o corpo. Com corpo, V alterna a câmera e Shift+V chuta.
 
 ## Known limitations
 

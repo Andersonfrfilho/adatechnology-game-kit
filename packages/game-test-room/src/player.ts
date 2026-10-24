@@ -27,6 +27,10 @@ export interface Player {
   readonly yaw: number
   readonly pitch: number
   readonly locked: boolean
+  /** Where the feet are: x and z on the floor, y above it (a jump lifts it). The eye is `EYE` above, the camera sits there. */
+  readonly x: number
+  readonly z: number
+  readonly feet: number
   /** Held keys, by `KeyboardEvent.code`. */
   keys: ReadonlySet<string>
   update(dt: number): void
@@ -198,6 +202,15 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     },
     get locked() {
       return locked
+    },
+    get x() {
+      return px.x
+    },
+    get z() {
+      return px.z
+    },
+    get feet() {
+      return y
     },
     keys,
     update(dt) {
