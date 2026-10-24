@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **102 de 257 itens têm modelo 3D; faltam 155.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **103 de 257 itens têm modelo 3D; faltam 154.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **102** | **155** |
+| **Total** | **103** | **154** |
 
 ## Comida (36 de 36)
 
@@ -114,7 +114,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Termômetro (kit) | `termometro` | `thermometer` | 0,02 kg | comum | 120 x 20 x 30 mm |
 | [x] | Álcool 70% (500 ml) (kit) | `alcool70` | `alcohol_70` | 0,5 kg | comum | 70 x 200 x 50 mm |
 
-## Ferramentas (14 de 30)
+## Ferramentas (15 de 30)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -132,7 +132,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Enxada (kit) | `enxada` | `hoe` | 1,8 kg | comum | 1,35 x 0,06 x 0,17 m |
 | [x] | Extintor de pó (kit) | `extintor` | `fire_extinguisher` | 4,0 kg | comum | 160 x 480 x 160 mm |
 | [x] | Fita silver tape (kit) | `silver_tape` | `duct_tape` | 0,2 kg | comum | 100 x 50 x 100 mm |
-| [ ] | Fogareiro de camping | `fogareiro` | `camp_stove` | 0,8 kg | incomum | 180 x 100 x 110 mm |
+| [x] | Fogareiro de camping (kit) | `fogareiro` | `camp_stove` | 0,8 kg | incomum | 180 x 100 x 110 mm |
 | [ ] | Isqueiro | `isqueiro` | `lighter` | 0,02 kg | comum | 25 x 80 x 12 mm |
 | [ ] | Kit de chaveiro (gazuas) | `kit_chaveiro` | `lockpick_kit` | 0,1 kg | muito raro | 100 x 70 x 20 mm |
 | [ ] | Kit de costura | `kit_costura` | `sewing_kit` | 0,05 kg | comum | 90 x 50 x 30 mm |

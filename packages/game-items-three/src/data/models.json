@@ -1018,5 +1018,15 @@
       1
     ],
     "scale": 0.1
+  },
+  {
+    "id": "camp_stove",
+    "teamId": "fogareiro",
+    "teamBox": [
+      1.8,
+      1,
+      1.1
+    ],
+    "scale": 0.1
   }
 ]
