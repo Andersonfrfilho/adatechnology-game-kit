@@ -1,3 +1,4 @@
+import type * as THREE_NS from 'three'
 import { catenary, createCord } from '@adatechnology/game-interactables-three'
 import type { AttachmentModel, AttachmentModelBuilder } from './types'
 
@@ -11,9 +12,11 @@ export const buildSling: AttachmentModelBuilder = ({ kit, frame }): AttachmentMo
   const { THREE, M } = kit
   const group = kit.group()
   const rear: [number, number, number] = [frame.secondary[0] - frame.position[0], frame.secondary[1] - frame.position[1], frame.secondary[2] - frame.position[2]]
+  const swivels: THREE_NS.Mesh[] = []
   for (const at of [[0, 0, 0], rear] as const) {
     const swivel = kit.torus(group, new THREE.TorusGeometry(0.006, 0.0015, 6, 12), M.metal, at[0], at[1], at[2])
     swivel.rotation.y = Math.PI / 2
+    swivels.push(swivel)
   }
   const strap = createCord(THREE, catenary(rear, [0, 0, 0], SAG, CORD_POINTS), STRAP_RADIUS, M.olive)
   group.add(strap)
@@ -21,6 +24,7 @@ export const buildSling: AttachmentModelBuilder = ({ kit, frame }): AttachmentMo
     object: group,
     dispose() {
       strap.geometry.dispose()
+      for (const swivel of swivels) swivel.geometry.dispose()
     },
   }
 }

@@ -163,13 +163,15 @@ describe('suppressor, light, laser, launcher', () => {
     const rig = fitAttachmentModels(model, [fit('weapon_light', 'rail_left')], kit, { catalogue })
     const spot = model.root.getObjectByProperty('isSpotLight', true) as THREE.SpotLight
     expect(spot).toBeDefined()
-    expect(spot.visible).toBe(false)
+    expect(spot.visible).toBe(true)
+    expect(spot.intensity).toBe(0)
     expect(spot.angle).toBeCloseTo((30 / 2) * (Math.PI / 180), 5)
     expect(spot.distance).toBe(60)
     rig.sync([fit('weapon_light', 'rail_left', { on: true })])
-    expect(spot.visible).toBe(true)
+    expect(spot.intensity).toBeGreaterThan(0)
     rig.sync([fit('weapon_light', 'rail_left', { on: false })])
-    expect(spot.visible).toBe(false)
+    expect(spot.intensity).toBe(0)
+    expect(spot.visible, 'toggling never changes the number of lights in the scene (no shader recompile)').toBe(true)
   })
 
   it('the beams layer puts the light and the laser out whatever they are set to', () => {
@@ -177,10 +179,10 @@ describe('suppressor, light, laser, launcher', () => {
     let beams = true
     const rig = fitAttachmentModels(model, [fit('weapon_light', 'rail_left', { on: true })], kit, { catalogue, areBeamsOn: () => beams })
     const spot = model.root.getObjectByProperty('isSpotLight', true) as THREE.SpotLight
-    expect(spot.visible).toBe(true)
+    expect(spot.intensity).toBeGreaterThan(0)
     beams = false
     rig.update()
-    expect(spot.visible).toBe(false)
+    expect(spot.intensity).toBe(0)
   })
 
   it('a laser draws a beam to what the host says it hits and a dot there; no hit means no dot', () => {
