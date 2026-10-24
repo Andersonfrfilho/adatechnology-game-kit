@@ -38,8 +38,11 @@ export interface TestableItem {
   /**
    * A picture of the item for menus, search results and the label of the aimed item: the URL of an image (an SVG silhouette is drawn in the text colour, so give it one colour with
    * the tones as opacity) or the SVG markup itself (starts with `<svg`). Optional: an item without one shows its name only.
+   * The room draws it as a CSS mask, so a URL on another origin needs CORS headers (or must be same-origin), and the host must trust the URL: it is loaded as given, not sanitized.
    */
   thumbnail?: string
+  /** Author and licence of the thumbnail, shown as the tooltip of the picture in the inspector (e.g. `Skoll, CC BY 3.0`). */
+  thumbnailCredit?: string
 }
 
 /** A scripted check a module brings: the host calls `run` with its own context (the test room passes a `ScenarioContext`). */

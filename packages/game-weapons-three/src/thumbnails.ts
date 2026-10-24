@@ -14,6 +14,12 @@ export interface WeaponThumbnailEntry {
 /** Every weapon (and world explosive) that has a thumbnail, by weapon id: the Commons file when one was kept, else the one generated from the 3D model. */
 export const WEAPON_THUMBNAILS: Readonly<Record<string, WeaponThumbnailEntry>> = (manifest as { assets: Record<string, WeaponThumbnailEntry> }).assets
 
+/** `Author, licence` of a Commons thumbnail (the credit its licence asks for), or undefined for a generated one. */
+export function weaponThumbnailCredit(id: string): string | undefined {
+  const entry = WEAPON_THUMBNAILS[id]
+  return entry?.source === 'commons' && entry.author && entry.license ? `${entry.author}, ${entry.license}` : undefined
+}
+
 /** The folder of the thumbnails relative to the page that shows them; the site build copies `assets/weapon-svg` there. */
 export const DEFAULT_THUMBNAIL_BASE = 'weapon-svg/'
 

@@ -29,6 +29,8 @@ export interface InspectInfo {
   note?: string
   /** Thumbnail of the aimed item (`TestRoomItem.thumbnail`). */
   thumbnail?: string
+  /** Author and licence of the thumbnail (`TestRoomItem.thumbnailCredit`). */
+  thumbnailCredit?: string
   distance: number
 }
 
@@ -183,9 +185,10 @@ const thumbSource = (thumbnail: string): string => {
   const source = thumbnail.trim().startsWith('<') ? `data:image/svg+xml,${encodeURIComponent(thumbnail.trim())}` : thumbnail.trim()
   return source.replace(/["\\\n\r]/g, (char) => encodeURIComponent(char))
 }
-const thumb = (thumbnail: string): HTMLElement => {
+const thumb = (thumbnail: string, credit?: string): HTMLElement => {
   const e = mk('span', 'tr-thumb')
-  e.setAttribute('aria-hidden', 'true')
+  if (credit) e.title = credit
+  else e.setAttribute('aria-hidden', 'true')
   e.style.setProperty('--tr-thumb', `url("${thumbSource(thumbnail)}")`)
   return e
 }
@@ -527,7 +530,7 @@ export function createUi(o: UiOptions): RoomUi {
       insp.appendChild(mk('div', undefined, t('ui.aim_at_something')))
       return
     }
-    if (i.thumbnail) insp.appendChild(thumb(i.thumbnail))
+    if (i.thumbnail) insp.appendChild(thumb(i.thumbnail, i.thumbnailCredit))
     insp.appendChild(mk('div', 't', `${i.object} › ${i.part}`))
     insp.appendChild(row(t('ins.material'), i.material))
     insp.appendChild(row(t('ins.status'), i.status + (i.burning ? ` · ${t('ins.burning')}` : '')))

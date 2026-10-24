@@ -18,6 +18,11 @@ const dirs = (base) =>
 const BACK_LINK = `<a href="../" id="kit-back" title="Voltar ao Game Kit" style="position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:2147483647;background:rgba(12,14,19,.88);color:#fff;border:1px solid #4a505c;border-left:0;border-radius:0 8px 8px 0;padding:10px 10px 10px 8px;font:600 13px/1.2 system-ui,sans-serif;text-decoration:none;writing-mode:vertical-rl;transform-origin:center">← Voltar ao kit</a>`
 const withBackLink = (html) => (/<body[^>]*>/i.test(html) ? html.replace(/<body[^>]*>/i, (body) => `${body}\n${BACK_LINK}`) : `${BACK_LINK}\n${html}`)
 
+// Pages that show the weapon thumbnails link their credits (CC BY and CC BY-SA ask for the credit where the picture appears).
+const CREDITS_LINK = `<a href="../weapon-svg/credits.html" id="kit-weapon-credits" style="position:fixed;right:8px;bottom:8px;z-index:2147483646;background:rgba(12,14,19,.88);color:#fff;border:1px solid #4a505c;border-radius:6px;padding:3px 8px;font:12px/1.4 system-ui,sans-serif;text-decoration:none">Miniaturas das armas: créditos e licenças</a>`
+const WEAPON_THUMBNAIL_EXAMPLES = new Set(['weapons-test-area', 'test-room'])
+const withCreditsLink = (name, html) => (WEAPON_THUMBNAIL_EXAMPLES.has(name) && /<\/body>/i.test(html) ? html.replace(/<\/body>/i, `${CREDITS_LINK}\n</body>`) : html)
+
 rmSync(out, { recursive: true, force: true })
 mkdirSync(out, { recursive: true })
 
@@ -40,9 +45,9 @@ for (const name of exampleNames) {
   }
   const target = join(out, name)
   mkdirSync(target, { recursive: true })
-  writeFileSync(join(target, 'index.html'), withBackLink(readFileSync(join(distDir, pages[0]), 'utf8')))
+  writeFileSync(join(target, 'index.html'), withCreditsLink(name, withBackLink(readFileSync(join(distDir, pages[0]), 'utf8'))))
   // Any additional page is kept next to the first one.
-  for (const extra of pages.slice(1)) writeFileSync(join(target, extra), withBackLink(readFileSync(join(distDir, extra), 'utf8')))
+  for (const extra of pages.slice(1)) writeFileSync(join(target, extra), withCreditsLink(name, withBackLink(readFileSync(join(distDir, extra), 'utf8'))))
   examples.push({ name, description: pkg.description ?? '' })
 }
 

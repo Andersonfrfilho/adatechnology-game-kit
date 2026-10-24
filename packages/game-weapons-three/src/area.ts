@@ -13,7 +13,7 @@ import { ARCHETYPE_MODELS, hasWeaponModel } from './models'
 import type { AttachmentModelRegistry } from './models/attachments/types'
 import { BODY_ACTIONS, buildModeledProp, buildProp, buildTripodMountedProp, modeledPropSpec, weaponProp } from './props'
 import type { WeaponProp } from './props'
-import { DEFAULT_THUMBNAIL_BASE, weaponThumbnailUrl } from './thumbnails'
+import { DEFAULT_THUMBNAIL_BASE, weaponThumbnailCredit, weaponThumbnailUrl } from './thumbnails'
 import { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
 
 export interface WeaponsTestModuleOptions {
@@ -256,7 +256,9 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   const thumbnailBase = options.thumbnailBase ?? DEFAULT_THUMBNAIL_BASE
   const withThumbnail = (item: TestableItem, key: string): TestableItem => {
     const thumbnail = thumbnailBase === false ? undefined : weaponThumbnailUrl(key, thumbnailBase)
-    return thumbnail ? { ...item, thumbnail } : item
+    if (!thumbnail) return item
+    const thumbnailCredit = weaponThumbnailCredit(key)
+    return thumbnailCredit ? { ...item, thumbnail, thumbnailCredit } : { ...item, thumbnail }
   }
   // An archetype wearing the model of a brand weapon is the same thing twice on the counters: it stays in the catalogue (the hands still take it) but is not laid out.
   const weaponIds = weaponDefs.filter((def) => !(def.id in ARCHETYPE_MODELS)).map((def) => `${WEAPON_ITEM_PREFIX}${def.id}`)
