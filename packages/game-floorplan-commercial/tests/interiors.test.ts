@@ -67,6 +67,27 @@ const PROGRAMS: Record<string, Program> = {
     fixtures: { bookcase: 4, library_stack: 2, reading_table: 1, canteen_table: 2, industrial_counter: 1, locker_bank_9: 1, blackboard: 1, office_desk: 1, school_desk: 16, basketball_hoop: 2 },
     pins: [['Mesa do professor', 'classroom', 'office_desk'], ['Biblioteca', 'library', 'bookcase'], ['Cozinha da merenda', 'kitchen', 'industrial_counter'], ['Armários de alunos', 'corridor', 'locker']],
   },
+  gas_station: {
+    use: 'commercial',
+    size: [22, 7], ceiling: 3,
+    rooms: { convenience_store: [14, 7], restroom: [2, 2], utility: [2, 5], oil_bay: [6, 7] },
+    fixtures: { convenience_aisle: 3, convenience_counter: 1, cash_register: 1, display_fridge: 4, tool_shelf: 1, lift_post: 2, metal_shelf: 1, oil_drum: 4, fuel_pump_island: 3, canopy_column: 4, toilet: 1, washbasin: 1 },
+    pins: [['Conveniência', 'convenience_store', 'gondola_shelf'], ['Troca de óleo', 'oil_bay', 'metal_shelf']],
+  },
+  church: {
+    use: 'institutional',
+    size: [12, 20], ceiling: 7,
+    rooms: { parish_hall: [12, 4], nave: [12, 12.8], sanctuary: [9.4, 3.2], sacristy: [2.6, 3.2] },
+    fixtures: { pew: 14, donation_cabinet: 1, altar: 1, altar_cross: 1, wardrobe_small: 1, sacristy_table: 1, church_bell: 1 },
+    pins: [['Altar', 'sanctuary', 'altar'], ['Sacristia', 'sacristy', 'wardrobe'], ['Armário de doações', 'nave', 'donation_cabinet']],
+  },
+  metalworks: {
+    use: 'industrial',
+    size: [30, 20], ceiling: 8,
+    rooms: { canteen: [10, 4.5], reception: [10, 4.5], shipping_bay: [10, 10], storage: [20, 5.5], production_floor: [27, 7], office_mezzanine: [8.5, 3], locker_room: [3, 10] },
+    fixtures: { canteen_table: 2, fridge: 1, forklift: 1, oil_drum: 6, pallet_rack: 3, metal_press: 4, conveyor_line: 1, furnace: 1, office_desk: 1, locker_bank_6: 1 },
+    pins: [['Vestiário', 'locker_room', 'locker'], ['Porta-pallets', 'storage', 'pallet_rack'], ['Escritório no mezanino', 'office_mezzanine', 'office_desk'], ['Refeitório', 'canteen', 'canteen_table']],
+  },
 }
 
 const SEEDS = Array.from({ length: 25 }, (_, index) => index + 1)
