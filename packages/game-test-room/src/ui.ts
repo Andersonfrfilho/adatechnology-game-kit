@@ -106,6 +106,7 @@ const CSS = `
 .tr-search::placeholder{color:#7d8594}
 .tr-item small{color:#7d8594;margin-left:4px}
 .tr-thumb{display:block;width:100%;height:26px;background:currentColor;-webkit-mask:var(--tr-thumb) center/contain no-repeat;mask:var(--tr-thumb) center/contain no-repeat}
+.tr-item{min-width:0}
 .tr-item .tr-btn.has-thumb{display:flex;flex-direction:column;gap:3px;min-width:0}.tr-item .tr-btn.has-thumb .tr-name{overflow:hidden;text-overflow:ellipsis}
 .tr-insp .tr-thumb{width:140px;height:28px;margin-bottom:3px}
 .tr-empty{color:#9aa3b2;padding:4px 2px;grid-column:1/-1}
