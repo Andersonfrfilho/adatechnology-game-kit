@@ -439,3 +439,24 @@ Atualizado em 2026-10-23. O que da Galeria (seção 1.1) entrou nesta etapa. As 
 | Área de armas com todas as armas | Sim: 117 em até 6 balcões, `asleep` | `game-weapons-three/src/area.ts` |
 | Teclas de pane e trava na sala | Sim: X destrava, B trava; `draw()` ao pegar | `game-test-room/src/room.ts` |
 | Abas de explosivos (`buildExp`), zumbi, carro, parede | Não | |
+
+---
+
+## 9. Situação depois da T1.6: Fase 1 fechada (R5)
+
+Atualizado em 2026-10-23. Armas, munição, explosivos e a área de teste estão no kit. O que falta do inventário (itens, zumbi, veículo, parede) é de outras fases.
+
+| Item do inventário | Entrou? | Onde |
+|---|---|---|
+| Regra "igual ao original" por arma | Sim: um cenário com semente por arma (125), sequência de eventos, munição, reserva e calor de cada passo | `game-weapons/tests/weapon-goldens.test.ts`, `tests/support/weapon-scenario.ts`, `tests/fixtures/rule-goldens/weapon-scenarios.json` |
+| Modelo 3D, animação, cápsula, pente, desgaste das 78 da Galeria | Sim (T1.3), golden nó a nó | `game-weapons-three` (`src/models`, `src/animation`, `src/fx`) |
+| Modelo dos 42 arquétipos | Sim: o da primeira marca (menor id) que aponta o arquétipo e atira do mesmo jeito; corpo a corpo, arco, besta e arremessáveis seguem com o prop | `ARCHETYPE_MODELS` em `src/models/index.ts` |
+| Som do tiro (classe, abafamento, energia do calibre) e sons mecânicos | Sim, na mão e na área; a explosão toca pela distância da câmera | `src/audio.ts`, `src/audio/*`, `src/fx/viewmodel.ts`, `src/area.ts` |
+| Explosivos na sala: granada, foguete, Claymore, C4, sopro atrás do lançador | Sim, pelo `ExplosiveBody`, `blastEffect` e `backblastEffect`; Y detona as cargas postas | `game-test-room/src/room.ts` |
+| Barril, botijão e tanque do carro no mundo, com reação em cadeia | Sim, no canto leste da área (tanque do posto e bomba seguem só como dado) | `game-weapons-three/src/world-explosives.ts`, `game-destruction/src/chain.ts` |
+| Bancada da área: camadas, estado da arma, munição, distância do som, métricas | Sim | `game-weapons-three/src/area.ts` |
+| Ambiente de teste e vitrine | Sim: 121 armas, explosivos e a reação em cadeia | `examples/weapons-test-area`, `site/catalog.mjs`, `site/thumbs/weapons-test-area.jpg` |
+| Abas de zumbi, carro, parede da Galeria | Não (outras fases) | |
+| Dano em pontos, PEN, raridade, acessórios, durabilidade | Não, de propósito (calibragem do jogo) | |
+
+Perguntas novas para o dono: ver `evidence.md`, "T1.6".

@@ -10,7 +10,8 @@ Lado three.js do `@adatechnology/game-weapons`: os **modelos reais das 78 armas 
 fuzil, bullpup, P90, basculante, M2, lançadores e lança-chamas), cartucho e estojo por calibre, a arma na mão tocando os **clipes** que o contrato de
 `game-contracts` pede (tiro, rajada, ciclo, pane, destravar, trava e as sete recargas, no tempo que a regra dá), cápsulas, pentes e fumaça, o desgaste do
 metal (nova, usada, gasta, enferrujada), sons sintetizados com WebAudio e a **área de testes de armas** (balcões com todas as armas e alvos) como `TestableModule`.
-As armas que a Galeria não desenhou (os arquétipos genéricos, corpo a corpo, arco) continuam com o prop low-poly.
+Cada arquétipo genérico veste o modelo da primeira marca (menor id) que o aponta e atira do mesmo jeito (`ARCHETYPE_MODELS`); corpo a corpo, arco, besta e arremessáveis continuam com o prop low-poly.
+A área tem **bancada** (clarão, cápsulas e pentes; estado da arma, munição e distância do som; cápsulas, pentes e calor) e, no canto leste, barril de combustível, botijão e tanque do carro para a reação em cadeia.
 
 ## Quando usar e quando não usar
 - Use para mostrar e ouvir uma arma, ou para carregar a área de armas numa sala de testes.
@@ -54,8 +55,9 @@ ferramenta do host) e `fx.update(dt)` a cada quadro. `tool: () => HostTool` dá 
 |---|---|
 | `createWeaponsTestModule(options?)` | `TestableModule` com `id: 'weapons_area'`; expõe também `audio` e `fx`. Opções: `locale` (padrão `pt-BR`), `arsenal`, `sound`, `condition`, `seed` |
 | `weaponsLayout(weaponItemIds, pitchOf?)` | posições dos balcões (até 6, em duas fileiras), armas lado a lado (cada uma com a sua faixa) e alvos (aço, compensado, concreto) |
-| `createWeaponFx(options)` | arma na mão: as da Galeria tocam os clipes, as outras têm o prop de caixas; `handle`, `update`, `setCondition`, `inHand`, `casings`, `magazines`, `dispose` |
-| `MODEL_ENTRIES`, `hasWeaponModel(id)`, `buildWeaponModelById(THREE, id)` | os 78 modelos da Galeria (`data/models.json`: construtor, medidas e opções por id) |
+| `createWeaponFx(options)` | arma na mão: as com modelo tocam os clipes, as outras têm o prop de caixas; `handle`, `update`, `setCondition`, `layers` (`casings`, `magazines`, `muzzleFlash`), `inHand`, `casings`, `magazines`, `dispose`. Opção `soundDistance: () => metros` abafa o tiro |
+| `MODEL_ENTRIES`, `ARCHETYPE_MODELS`, `hasWeaponModel(id)`, `buildWeaponModelById(THREE, id)` | os 78 modelos da Galeria (`data/models.json`) e o modelo que cada arquétipo veste (`pistol_9mm` → `beretta_92fs`, `shotgun_pump_12` → `cbc_pump_military_3_0`...) |
+| `worldExplosiveItem(def, nome)`, `WORLD_EXPLOSIVE_IDS`, `WORLD_EXPLOSIVE_PREFIX` | barril, botijão P13 e tanque do carro como item com `explodes.chain` do `ExplosiveDef` (a cadeia é do `game-destruction`) |
 | `buildCartridge`, `buildCasing`, `cartridgeShape` | cartucho (em mm, como a Galeria mostra), estojo vazio (m) e a forma por calibre, das medidas do `CaliberDef.cartridge` |
 | `modelKit(THREE)` | materiais e primitivas da Galeria (uma por namespace do three); `applyCondition(kit, model, id)` veste o desgaste |
 | `createWeaponAudio(volume?, options?)` | `shot(energyJ, category, extras?)` (extras: `distance`, `volume`, `suppressed`, `indoors`, `caliber`), `shotSound(input)`, `mechanical(id)`, `event(weaponEvent)`, `play(soundClass, volume?, distance?)`, `click`, `reloadStart/End`, `cycle`, `clink`, `thud`, `setVolume`, `dispose`. Opções: `seed`, `classes`, `distance`, `energy`, `referenceEnergy`, `classOf`, `bands`, `suppressor`, `indoors`, `mechanical`, `createContext` |
@@ -66,6 +68,16 @@ ferramenta do host) e `fx.update(dt)` a cada quadro. `tool: () => HostTool` dá 
 | `BODY_ACTIONS` | ids sem modelo próprio (`hand`, `kick`, `shove`, `fists`) |
 | `WEAPON_ITEM_PREFIX`, `COUNTER_ITEM_ID` | prefixo `weapon_` dos itens e id do balcão |
 
+## Bancada da área (`weapons_area`)
+| Id | Tipo | O que faz |
+|---|---|---|
+| `condition` | escolha | nova, usada, gasta, enferrujada: `setCondition` na regra (`host.configureTool`) e nos materiais do modelo |
+| `ammo_quality` | escolha | de fábrica ou recarregada (`setAmmoQuality` na regra) |
+| `sound_distance` | número 0 a 200 m | distância do ouvinte: prévia do abafamento do tiro |
+| `muzzle_flash`, `casings`, `magazines` | camadas | ligam e desligam o clarão, as cápsulas e os pentes |
+| `casings_live`, `magazines_live`, `heat` | métricas | o que está na cena e o calor do cano (máximo 100) |
+Atirar, rajada e destravar ficam nas teclas (entrada do jogador). O som da explosão sai do evento `explosion` do host, pela distância da câmera.
+
 ## Compõe com
 - `game-weapons` (dependência): arsenal e definições.
 - `@adatechnology/game-contracts` (dependência): `TestableModule`, `HostEvent`, `HostTool`.
@@ -75,7 +87,8 @@ ferramenta do host) e `fx.update(dt)` a cada quadro. `tool: () => HostTool` dá 
 ## Ambiente de teste
 `examples/weapons-test-area`: `node build.mjs` empacota o módulo em `dist/weapons-area.js` (global `WeaponsArea`) e gera `dist/sala-armas.html`
 (sala de testes com a área carregada e aberta, um arquivo, sem rede). `node test.mjs` testa. No arquivo `src/entry.js`, `WeaponsArea.loadInto(room)`
-carrega e abre a área. As áreas da página do kit abrem por `?area=`. Os testes do pacote ficam em `tests/weapons-area.test.ts`.
+carrega e abre a área. As áreas da página do kit abrem por `?area=`. Os testes do pacote ficam em `tests/weapons-area.test.ts` e `tests/integration.test.ts` (som, bancada, modelos dos arquétipos e a cadeia dos barris).
+Teclas: H equipa a arma mirada, clique atira ou arremessa, R recarrega, Q muda o modo, X destrava, B trava, Y detona cargas postas (Claymore, C4), E pega, G arremessa o que está na mão.
 
 ## Cuidados
 - `three` é peer (`^0.160.0`): passe o seu `THREE`.
@@ -89,6 +102,7 @@ carrega e abre a área. As áreas da página do kit abrem por `?area=`. Os teste
   escala volume, duração e brilho em torno da classe; nos calibres do jogo (9x19, 12ga, 7,62×39, 7,62×51) o resultado é exatamente o do jogo.
   Tudo sai de `computeShotSound` (puro, sem `Math.random`; o ruído usa o `createRng` do kit com `seed`). Os sons mecânicos (etapas de recarga, ferrolho,
   pane, desobstruir, tiro em vazio, trava) vêm por id; a Galeria não tem som, então os metálicos são do SDK e só `recarga`/`vazio` são do jogo.
+  Na mão, `weaponEventOf(hostEvent)` (interno) converte o evento do host no da regra e `audio.event` toca `mechanicalSoundOf`; o tiro leva `{ caliber, distance }`.
 
 ## Clipes e golden
 - `src/animation/`: os tweens da Galeria (`tw`) viram `AnimationClipSpec` (`clip-builder.ts`: amostra a curva `ease` em 10 passos), por mecanismo: `shot-clips`, `cycle-clips` (ciclo e destravar), `reload-clips` (as sete recargas) e `magazine-clips`.
@@ -98,3 +112,4 @@ carrega e abre a área. As áreas da página do kit abrem por `?area=`. Os teste
 ## O que ainda vem pela migração (spec 001)
 - Sons: o tiro (classe e abafamento do jogo + energia do calibre, S2) e os sons mecânicos estão feitos (T1.4); falta mover a síntese para o `game-audio` genérico (S1) e o golden de parâmetros (S3).
 - Efeitos de boca e explosivos passam a vir do `game-vfx-three` (E4).
+- Fase 1 fechada (T1.6): o som do tiro e os mecânicos tocam na mão e na área, a bancada e os explosivos do mundo estão na área, e cada arma do catálogo tem golden da regra (`game-weapons/tests/weapon-goldens.test.ts`).

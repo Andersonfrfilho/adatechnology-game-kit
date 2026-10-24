@@ -45,7 +45,7 @@ Panes: `result.fault` (ou `status` `fault`/`misfire`); `weapon.clearFault()` des
 | `WeaponState` | `ammo`, `capacity`, `reserve`, `mode`, `reloading`, `locked`, `phase`, `fault`, `safety`, `heat`, `heatLevel`, `spread`, `trigger`, `release`, `draw`, `reload(kind?)`, `cycleMode`, `setSafety`, `clearFault`, `setCondition`, `setAmmoQuality`, `update`, `refill`, `drain` |
 | `Shot` | `origin`, `direction`, `energy` (J), `caliber` (mm), `caliberId`, `speed`, `energyAt(distância)`, `pellet`, `weapon`, `source` |
 | `Use` | `melee`, `flame`, `heat`, `throw` (com `explosive`, `trigger`, `armDistance`), `place` (mina, C4), `backblast`, `tool`, `extinguish`, `hand` |
-| `arsenal.explosiveBody(use)` | `ExplosiveBody` de um `throw`/`place`: `step(dt, probe?)` voa com gravidade, quica, conta a espoleta e devolve eventos `armed`, `impact`, `dud`, `detonate`; `trigger('wire'\|'remote'\|…)` dispara a carga posta |
+| `createExplosiveBody(use, arsenal.explosives, arsenal.rules.explosives)` | `ExplosiveBody` de um `throw`/`place`: `step(dt, probe?)` voa com gravidade, quica, conta a espoleta e devolve eventos `armed`, `impact`, `dud`, `detonate`; `trigger('wire'\|'remote'\|…)` dispara a carga posta |
 | `blastEffect(detonation, ponto)`, `backblastEffect(use, ponto)` | zona (`lethal`, `injury`, `none`), queda de 1 a 0 e atordoamento; cone da Claymore; perigo atrás do lançador |
 | `TriggerResult` | `shots`, `uses`, `status` (`ok`, `empty`, `reloading`, `cooldown`, `no_fuel`, `safe`, `drawing`, `fault`, `misfire`, `clearing`), `recoil`, `noise`, `rounds`, `roundTimes`, `fault?` |
 | `CALIBERS`, `WEAPONS`, `EXPLOSIVES`, `ARCHETYPE_IDS`, `DEFAULT_LOADOUT` | dados embutidos (28 calibres, 79 armas reais + 42 arquétipos, 17 explosivos, kit inicial) |
@@ -57,7 +57,7 @@ Panes: `result.fault` (ou `status` `fault`/`misfire`); `weapon.clearFault()` des
 ```ts
 const result = launcher.trigger(pos, dir, dt)            // rpg_7, at4, m72_law, carl_gustaf_m4, m79
 const [projectile, backblast] = result.uses              // throw (explosive, trigger 'impact', armDistance 10 m) + backblast (5 m, cone de 19°)
-const body = arsenal.explosiveBody(projectile)
+const body = createExplosiveBody(projectile, arsenal.explosives, arsenal.rules.explosives)
 for (const event of body.step(dt, (from, to) => raycast(from, to))) {   // probe: { point, normal, ground? } ou null
   if (event.type === 'detonate') for (const target of targets) apply(blastEffect(event.detonation, target.position))
 }
@@ -77,7 +77,7 @@ mine.trigger(pos, dir, 0)                                // claymore/c4: use `pl
 
 ## Ambiente de teste
 `examples/weapons-test-area` (ver `game-weapons-three`): `node build.mjs` gera `dist/sala-armas.html`, a sala de testes com todas as armas em balcões.
-Os testes do pacote estão em `packages/game-weapons/tests/` (`weapons`, `rules`, `catalog`, `arsenal-options` e o golden da Galeria em `team-golden`). A área mostra só os arquétipos até a T1.3 (três balcões cabem 39 armas).
+Os testes do pacote estão em `packages/game-weapons/tests/` (`weapons`, `rules`, `catalog`, `arsenal-options` e o golden da Galeria em `team-golden`). A área mostra as 121 armas e ferramentas em até seis balcões. Golden por arma: `tests/weapon-goldens.test.ts` roda um cenário com semente (saque, trava, cada modo de tiro, vazio, as recargas que a arma tem, pane forçada e destravar) e compara a sequência de eventos, munição, reserva e calor de cada passo com `tests/fixtures/rule-goldens/weapon-scenarios.json`; mudou a regra de propósito: `UPDATE_GOLDEN=1 pnpm --filter @adatechnology/game-weapons test` e leia o diff.
 
 ## Cuidados
 - A recarga nunca é automática: o jogo chama `reload()`. Arma de tubo carrega uma bala por `reload` segundos e o gatilho interrompe.
@@ -96,5 +96,5 @@ Já entrou (T1.1): a lista é a **união das fontes** (A1) com marcas e modelos 
 .50 AE, 5,45×39, .30-30, 7,62×54R, .30-06, .300 WM, .408; .50 BMG em 12,7 mm, A6); tempos do Arsenal (A5), fases com tempo e eventos (saque, ciclo, recarga tática, vazia e
 um a um, pane, desobstruir), calor do cano, ruído do Arsenal 150 / 300 / 420 / 600 m (A3) e dois raios de explosão (E3). Falta:
 - Modelos 3D, animação por família e a área com todas as armas (T1.2 a T1.4). Entrou na T1.5: lançador completo, arremessáveis, cargas postas, lança-chamas e a cadeia dos explosivos do mundo.
-- Tecla de desobstruir e de trava na sala de teste (T1.3); até lá a sala usa `rules: { faults: false }`.
+- (Feito na T1.3) Teclas X (desobstruir) e B (trava) na sala; a sala usa as panes da regra. Y detona as cargas postas (T1.6).
 - Força de penetração por calibre, para o dano em corpos (P7). O jogo passa a atirar por este pacote (A12).
