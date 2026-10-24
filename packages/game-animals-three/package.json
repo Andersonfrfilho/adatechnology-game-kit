@@ -59,7 +59,8 @@
     "@adatechnology/game-animals": "workspace:*",
     "@adatechnology/game-audio": "workspace:*",
     "@adatechnology/game-contracts": "workspace:*",
-    "@adatechnology/game-props3d": "workspace:*"
+    "@adatechnology/game-props3d": "workspace:*",
+    "@adatechnology/game-shapes-three": "workspace:*"
   },
   "peerDependencies": {
     "three": "^0.160.0"

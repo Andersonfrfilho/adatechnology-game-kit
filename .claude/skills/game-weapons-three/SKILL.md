@@ -144,3 +144,4 @@ Teclas: H equipa a arma mirada, clique atira ou arremessa, R recarrega, Q muda o
 - Efeitos de boca e explosivos passam a vir do `game-vfx-three` (E4).
 - Decisões do dono de 2026-10-24: o modelo do revólver desenha as câmaras da capacidade (686: 7; `options.chambers`, gerado pela ferramenta; arquétipo emprestado fica com 6) e a bancada ganhou `fuse_length`.
 - Fase 1 fechada (T1.6): o som do tiro e os mecânicos tocam na mão e na área, a bancada e os explosivos do mundo estão na área, e cada arma do catálogo tem golden da regra (`game-weapons/tests/weapon-goldens.test.ts`).
+- Geometria: o `THREE` do `modelKit` é `shapeGeometries(host)` do `game-shapes-three` (caixa, cilindro, cone, esfera e toro do `game-shapes`, os mesmos bytes); `tests/exact-golden.test.ts` guarda cada bit dos modelos, acessórios, cartuchos e props (`UPDATE_EXACT=1` regrava só quando a mudança for de propósito).

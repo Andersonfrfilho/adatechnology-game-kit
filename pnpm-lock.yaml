@@ -75,6 +75,9 @@ importers:
       '@adatechnology/game-props3d':
         specifier: workspace:*
         version: link:../game-props3d
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:*
+        version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-animals-species':
         specifier: workspace:*
@@ -211,6 +214,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:*
+        version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-characters-people':
         specifier: workspace:*
@@ -1581,9 +1587,9 @@ importers:
       '@adatechnology/game-interactables-three':
         specifier: workspace:*
         version: link:../game-interactables-three
-      '@adatechnology/game-props3d':
+      '@adatechnology/game-shapes-three':
         specifier: workspace:*
-        version: link:../game-props3d
+        version: link:../game-shapes-three
       '@adatechnology/game-vfx':
         specifier: workspace:*
         version: link:../game-vfx

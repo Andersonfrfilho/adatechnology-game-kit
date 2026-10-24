@@ -1,3 +1,4 @@
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import { TEAM_GAME } from '@adatechnology/game-characters'
 import type { BodySpec, JointId } from '@adatechnology/game-characters'
 
@@ -96,7 +97,8 @@ export type BuildInstancedBodyParams = {
  * The crowd body as one merged geometry, torso, head, hair, jaw, eyes, arms and legs tagged with the bone, pivot and material the shader reads
  * (G 65367 `buildBody`). The joints come from the spec, so a different `body` moves the limbs; the parts' own sizes follow the segment lengths.
  */
-export const buildInstancedBody = (three: Three, { segments, body = TEAM_GAME }: BuildInstancedBodyParams): Geometry => {
+export const buildInstancedBody = (host: Three, { segments, body = TEAM_GAME }: BuildInstancedBodyParams): Geometry => {
+  const three = shapeGeometries(host)
   const joints = jointsOf(body)
   const parts: Geometry[] = []
   const half = Math.max(4, segments >> 1)
