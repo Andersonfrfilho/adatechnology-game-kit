@@ -788,5 +788,15 @@
       0.3
     ],
     "scale": 0.1
+  },
+  {
+    "id": "exam_gloves",
+    "teamId": "luva_proc",
+    "teamBox": [
+      1,
+      1.2,
+      0.1
+    ],
+    "scale": 0.1
   }
 ]

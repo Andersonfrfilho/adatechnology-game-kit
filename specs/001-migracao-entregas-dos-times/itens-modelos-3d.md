@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **79 de 257 itens têm modelo 3D; faltam 178.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **80 de 257 itens têm modelo 3D; faltam 177.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **79** | **178** |
+| **Total** | **80** | **177** |
 
 ## Comida (36 de 36)
 
@@ -83,7 +83,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Água de coco (kit) | `agua_coco` | `coconut_water` | 0,4 kg | comum | 60 x 170 x 60 mm |
 | [x] | Água de rio ou poça (kit) | `agua_suja` | `dirty_water` | 0,5 kg | comum | 66 x 183 x 66 mm |
 
-## Medicina e primeiros socorros (15 de 26)
+## Medicina e primeiros socorros (16 de 26)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -102,7 +102,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Gaze estéril (kit) | `gaze` | `sterile_gauze` | 0,02 kg | comum | 100 x 100 x 15 mm |
 | [x] | Iodopovidona (kit) | `pvpi` | `povidone_iodine` | 0,1 kg | incomum | 45 x 110 x 35 mm |
 | [x] | Kit de sutura (kit) | `kit_sutura` | `suture_kit` | 0,15 kg | raro | 150 x 80 x 30 mm |
-| [ ] | Luvas de procedimento | `luva_proc` | `exam_gloves` | 0,02 kg | comum | 100 x 120 x 10 mm |
+| [x] | Luvas de procedimento (kit) | `luva_proc` | `exam_gloves` | 0,02 kg | comum | 100 x 120 x 10 mm |
 | [ ] | Máscara N95 | `n95` | `n95_mask` | 0,02 kg | incomum | 150 x 110 x 25 mm |
 | [ ] | Polivitamínico | `vitamina` | `multivitamin` | 0,05 kg | comum | 50 x 90 x 50 mm |
 | [ ] | Remédio de uso contínuo | `remedio_continuo` | `maintenance_medication` | 0,05 kg | comum | 45 x 90 x 45 mm |
