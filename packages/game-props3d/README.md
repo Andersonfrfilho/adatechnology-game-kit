@@ -60,6 +60,20 @@ props.builders.sauna({ w: 2, d: 1.8, h: 2.1 }, api)
 console.log(primitives.length, primitives[0])
 ```
 
+As a [`game-shapes`](../game-shapes) schema (what `createMeshApi` of game-interactables-three bakes; any renderer, a worker, a cache):
+
+```ts
+import { createShapeRecorder } from '@adatechnology/game-props3d'
+import { generate } from '@adatechnology/game-shapes'
+const recorder = createShapeRecorder({ cylinderSegments: 12, sphereSegments: [12, 8] })
+props.builders.sauna({ w: 2, d: 1.8, h: 2.1 }, recorder.api)
+const buffers = generate(recorder.schema()) // one batch per material, parts, lights as points
+```
+
+Each primitive sits under its item frame (`heading` = `M.ry` at `M.x, 0, M.z`) as a unit template placed by position, YXZ rotation and
+scale; `recorder.api.part(id, pivot, ry, draw)` draws into a part node and `light` becomes a point with `data: { light, color, range, kind }`.
+`mergeByMaterial(THREE, root, space)` is the one of `@adatechnology/game-shapes-three`, re-exported here.
+
 ## The item `M`
 
 Front is local `+z`, origin at the center of the footprint on the floor, `M.w` (x), `M.d` (z), `M.h` (y), in meters. Without `w/d/h` the defaults of

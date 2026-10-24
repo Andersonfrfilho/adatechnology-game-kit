@@ -890,10 +890,16 @@ importers:
       '@adatechnology/game-props3d':
         specifier: workspace:*
         version: link:../game-props3d
+      '@adatechnology/game-shapes':
+        specifier: workspace:*
+        version: link:../game-shapes
     devDependencies:
       '@adatechnology/game-interactables-household':
         specifier: workspace:*
         version: link:../game-interactables-household
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -977,9 +983,9 @@ importers:
       '@adatechnology/game-items':
         specifier: workspace:*
         version: link:../game-items
-      '@adatechnology/game-props3d':
+      '@adatechnology/game-shapes-three':
         specifier: workspace:*
-        version: link:../game-props3d
+        version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-items-goods':
         specifier: workspace:*
@@ -1035,7 +1041,63 @@ importers:
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
   packages/game-props3d:
+    dependencies:
+      '@adatechnology/game-shapes':
+        specifier: workspace:*
+        version: link:../game-shapes
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:*
+        version: link:../game-shapes-three
     devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      '@types/three':
+        specifier: ^0.160.0
+        version: 0.160.0
+      three:
+        specifier: ^0.160.1
+        version: 0.160.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-shapes:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      '@types/three':
+        specifier: ^0.160.0
+        version: 0.160.0
+      three:
+        specifier: ^0.160.1
+        version: 0.160.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-shapes-three:
+    dependencies:
+      '@adatechnology/game-shapes':
+        specifier: workspace:*
+        version: link:../game-shapes
+    devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -1699,6 +1761,66 @@ importers:
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  tools/shapes-bench:
+    devDependencies:
+      '@adatechnology/game-animals-species':
+        specifier: workspace:*
+        version: link:../../packages/game-animals-species
+      '@adatechnology/game-animals-three':
+        specifier: workspace:*
+        version: link:../../packages/game-animals-three
+      '@adatechnology/game-interactables-household':
+        specifier: workspace:*
+        version: link:../../packages/game-interactables-household
+      '@adatechnology/game-interactables-three':
+        specifier: workspace:*
+        version: link:../../packages/game-interactables-three
+      '@adatechnology/game-items-goods':
+        specifier: workspace:*
+        version: link:../../packages/game-items-goods
+      '@adatechnology/game-items-three':
+        specifier: workspace:*
+        version: link:../../packages/game-items-three
+      '@adatechnology/game-props3d':
+        specifier: workspace:*
+        version: link:../../packages/game-props3d
+      '@adatechnology/game-shapes':
+        specifier: workspace:*
+        version: link:../../packages/game-shapes
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:*
+        version: link:../../packages/game-shapes-three
+      '@adatechnology/game-vehicles':
+        specifier: workspace:*
+        version: link:../../packages/game-vehicles
+      '@adatechnology/game-vehicles-fleet':
+        specifier: workspace:*
+        version: link:../../packages/game-vehicles-fleet
+      '@adatechnology/game-vehicles-three':
+        specifier: workspace:*
+        version: link:../../packages/game-vehicles-three
+      '@adatechnology/game-weapons-three':
+        specifier: workspace:*
+        version: link:../../packages/game-weapons-three
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      '@types/three':
+        specifier: ^0.160.0
+        version: 0.160.0
+      three:
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)

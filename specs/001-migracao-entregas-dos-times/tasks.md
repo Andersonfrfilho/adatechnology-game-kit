@@ -109,6 +109,24 @@ Desenho: `design/T8-multidao-historias-jogador.md`. Subtarefas, nesta ordem:
 | T8.1c | `game-crowd-three` (renderizador instanciado, módulo de teste), `examples/crowd-test-area` | `sonnet` |
 | T8.2 🧠 | `game-stories` (elenco por sorteio, histórias como dados, crônica, ficha, simulação da vida); nomes e regras da ficha no `game-characters-people`; `game-slice/stories/`; golden; `examples/stories-test-area` | `opus` |
 
+## Fase 9 — Gerador único de 3D (`game-shapes`) e desempenho
+> 🤖 Modelo: `opus`
+
+Desenho: `design/T9-game-shapes-e-desempenho.md` (inventário dos construtores, esquema, buffers, cache, workers, regra de migração e plano de
+desempenho). Pedido do dono (2026-10-24): o 3D de tudo sai de um SDK que aceita JSON e vira a forma, e os outros SDKs o usam.
+
+| # | Commit | Estado |
+|---|---|---|
+| T9.0 | desenho e inventário | feito |
+| T9a | `game-shapes`: esquema JSON, geradores portados do three r160 (bit a bit), buffers por material, peças, pontos, LOD, instâncias | feito |
+| T9b | `game-shapes-three`: geometria com a classe do three, `shapeGeometries(THREE)`, `toObject3D`, `mergeByMaterial` | feito |
+| T9c | `tools/shapes-bench` e o job `shapes-bench` do CI (teto de regressão) | feito |
+| T9d | pool de workers e cache por chave | feito |
+| T9e | goldens exatos e as primeiras migrações: `game-props3d` (`createShapeRecorder`, `mergeByMaterial` vindo do `game-shapes-three`), `game-interactables-three` (`createMeshApi`), `game-items-three` (kit `T`, `mergeItem`) | feito |
+| T9f | próximas migrações, na ordem do T9 §7.2: weapons, animals, characters e crowd-three, vegetation, urban, floorplan, vehicles | a fazer |
+
+Inventário da migração (o que entrou e onde): T9 §7.4.
+
 ## Gates de cada task
 
 `pnpm build`, `pnpm -r typecheck`, testes do pacote (goldens incluídos), `pnpm lint`, skill do pacote atualizada em

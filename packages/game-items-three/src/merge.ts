@@ -1,4 +1,4 @@
-import { mergeByMaterial } from '@adatechnology/game-props3d'
+import { mergeByMaterial } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 
 import type { ItemModel } from './build-item'

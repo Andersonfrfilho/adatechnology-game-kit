@@ -20,3 +20,8 @@ scene.add(buildItemLod(THREE, items.get('hammer')).root)  // merged, with LOD an
 ```
 
 three.js is a peer dependency (`^0.160`). The global of the IIFE build is `GameItemsThree`.
+
+The geometry comes from [`game-shapes`](../game-shapes): the kit's `T` is `shapeGeometries(THREE)`, so the ported builders keep writing
+`new T.CylinderGeometry(...)` and get the same bytes from game-shapes' template cache (a tube still comes from three), and `mergeItem` joins on
+`game-shapes-three`. `tests/exact-golden.test.ts` holds every bit of the 24 models and 25 shapes (alone, merged, half detail, LOD) as the old
+path made them.

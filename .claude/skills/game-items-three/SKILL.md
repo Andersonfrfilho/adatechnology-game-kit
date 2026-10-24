@@ -43,12 +43,12 @@ Para os itens do catálogo ganharem miniatura: `createItems({ patch: thumbnailPa
 | `registerItemModel`, `itemModelEntry`, `listItemModels`, `SHIPPED_MODELS`, `MODEL_BUDGET_DEVIATIONS` | registro dos modelos (`models.json` gerado pelo `tools/items-catalog`) e os 7 que passam do orçamento por serem do time |
 | `shapeThumbnailSvg`, `itemThumbnail`, `itemThumbnailSvg`, `thumbnailPatch`, `composeThumbnailScene`, `renderItemThumbnail` | miniatura SVG por forma (64x64) ou pedido de render (`Thumbnail`), cena enquadrada e render com o renderer do host |
 | `createItemsTestModule({ catalog, locale, translate, seed, wear, provider })`, `shelvesLayout` | a área de testes e o cálculo puro das prateleiras |
-| `createItemKit(THREE)` | os helpers (`mesh`, `cyl`, `bx`, `lathe`, `extrude`, `G`, `metal`, `wood`...) que os construtores do time recebem |
+| `createItemKit(THREE)` | os helpers (`mesh`, `cyl`, `bx`, `lathe`, `extrude`, `G`, `metal`, `wood`...) que os construtores do time recebem; o `T` do kit é `shapeGeometries(THREE)` (geometria do `game-shapes`, os mesmos bytes) |
 
 ## Compõe com
 - `@adatechnology/game-items`: o `ItemDef` (tamanho, `model`, `shape`, `color`), o `createFindsProvider`, `freshness`, `craft`; a área usa tudo isso.
 - `@adatechnology/game-items-goods`: o catálogo que a área e os testes carregam (devDependency; a área recebe o catálogo por opção, o motor não conhece conteúdo).
-- `@adatechnology/game-props3d`: `mergeByMaterial` (veio do `game-weapons-three`) junta as malhas por material.
+- `@adatechnology/game-shapes-three`: `shapeGeometries` (o `T` do kit) e `mergeByMaterial`, que junta as malhas por material. `tests/exact-golden.test.ts` guarda cada bit dos modelos e formas.
 - `@adatechnology/game-contracts`: `TestableModule`, `ModuleArea`, bancada, `Thumbnail`. `@adatechnology/game-test-room`: carrega a área (devDependency).
 - `@adatechnology/game-interactables-household` / `examples/interactables-test-area`: a geladeira, os armários e o guarda-roupa mostram o conteúdo como itens reais.
 
