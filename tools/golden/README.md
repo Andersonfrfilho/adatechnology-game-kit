@@ -104,8 +104,9 @@ came out identical byte for byte.
 |---|---|---|---|
 | `explosion-lab.js` | Laboratório de Explosões (`artefatos/XHSLUfNEdzAqGrqVQCWifG.html`) | `explosion-lab.json` (`game-vfx`, `game-vfx-three`) | `blast,PROF,P,S,GL,CH,FIRES,SHOCKS,RINGS,XL,FL,layers,clearAll,seed,simT,clock,xlIdx,decalY,camera,lodNow,renderFicha,profOf,ORDER,SC,applyCam,stage,WINDOWS,U,pA,pD,pC,puffGeo,evCount,shakeAmp,flashV,flashDecay,puff,spark,glow,chunk,fire,shock,boomLight,scorch,crater,mushroom,updateRings,updatePuffs,updateSparks,updateGlows,updateShocks,updateChunks,updateBodies,updateFires,updateBlood,updateZombies,updateLights` |
 | `vfx-workshop.js` (`--param mode=effects`) | Oficina de VFX (`artefatos/LhJANM9RPMxWKS1ZXCzQ56.html`) | `vfx-workshop.json` (`game-vfx` recipes) | `FX,select,pr,auto,renderer,addP,norP,streak,DB,DC,RG,LP,S,debris,decal,ring,flash,fLaunch,fh,fdry` |
-| `vfx-workshop.js` (`--param mode=fluids`) | same | `vfx-workshop-fluids.json` (`game-fluids` film, `WORKSHOP_LAYOUT`) | same |
-| `fluid-standard.js` | Padrão de Fluidos (`artefatos/XnjUUwx8fq5oQdDGvEq4Nv.html`) | `fluid-standard.json` (`game-fluids` film, `PADRAO_LAYOUT`) | `h,dry,renderer,speed,sk,runN,setFluid,runScene,launch,SKEYS,FKEYS` |
+| `vfx-workshop.js` (`--param mode=fluids`) | same | `packages/game-fluids/tests/fixtures/team-golden/vfx-workshop-fluids.json` (film, `WORKSHOP_LAYOUT`) | same, plus `H` for `mode=trace` |
+| `vfx-workshop.js` (`--param mode=trace`) | same | `.../vfx-workshop-fluids-trace.json`: the dripping arm's world position per frame (the page animates the zombie) and the `Math.random` call count per frame | same |
+| `fluid-standard.js` | Padrão de Fluidos (`artefatos/XnjUUwx8fq5oQdDGvEq4Nv.html`) | `packages/game-fluids/tests/fixtures/team-golden/fluid-standard.json` (film, `PADRAO_LAYOUT`) | `h,dry,renderer,speed,sk,runN,setFluid,runScene,launch,SKEYS,FKEYS` |
 
 What each one records:
 

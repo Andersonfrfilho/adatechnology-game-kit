@@ -63,6 +63,13 @@ Vazar por tiro: mapeie o evento `leak` do `game-destruction` em `fluids.puncture
 
 Eventos: `fill`, `pour`, `spill`, `leak`, `drink`, `empty`, `stream_end`, `splash`, `stain`, `dried`, `steam`, `mix`, `tap`.
 
+## Filme que escorre (`film/*`)
+- `createFilm({ layout, profile, random, maxSteps? })`: grade de espessura (mm) e secagem por célula; `launch`, `splat`, `blob`, `stroke`, `drip`, `sources`, `drags`, `update({ dt, dryingSeconds })`, `setWeather({ rain })`, `clear`. Porte literal do Padrão de Fluidos F60-114 (passo de 180 Hz limitado à caixa molhada, no máximo 6 por quadro).
+- Layouts: `PADRAO_LAYOUT`, `WORKSHOP_LAYOUT`, `createFoldedLayout`, `layoutFromSurfaces({ floor, wall?, curb?, center })` a partir dos `SurfaceSpec` do host.
+- Perfis em `data/film-profiles.json` (`blood`, `old_blood`, `bile`, `motor_oil`, `fuel`); `spikes` (bile 0,3), `landsAsBlob` (óleo e gasolina) e `maxAmount` são as variantes da Oficina e o padrão. Quem quer o Padrão de Fluidos exato passa `filmProfileOf(id, { spikes: 1, ... })`.
+- Sem `Math.random`: o host passa `random` (`createFilmLcg(seed)` é o gerador do Padrão). O relógio de secagem é em segundos de simulação (o jogo escala).
+- Interface `FilmSimulator` para uma versão GPU futura; o CPU é o golden de referência. Goldens em `tests/film-golden.test.ts` (25 combinações) e `tests/film-workshop-golden.test.ts` (4).
+
 ## Compõe com
 - `@adatechnology/game-contracts`: dono de `ContainerSpec`, `ItemUseDef` e `LiquidId` (reexportados aqui).
 - `game-destruction`: `leak` vira `puncture`; `setLiters` na peça acompanha o recipiente. A mancha de líquido inflamável pode ser entregue pelo host ao sistema de fogo.

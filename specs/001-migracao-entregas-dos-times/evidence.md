@@ -1391,3 +1391,37 @@ Testes de comportamento (`tests/utilities.test.ts`): todo modelo tem instalaçõ
 | `docker build -f site/Dockerfile .` | exit 0 |
 
 Modelo da execução: `sonnet` (nenhum portão falhou duas vezes, sem escalada).
+
+## T5.3a–d — filme de fluidos (grupo E)
+
+Branch `work/spec001-t5-e` (de `feat/spec-001-fase-5`, com a T5.3b). Contrato: `design/T5-efeitos.md` §1 (Padrão de Fluidos e fluidos da Oficina), §3, §4, §6 e §7. Um commit por task: T5.3a (`game-fluids/src/film`), T5.3d (goldens), T5.3c (renderizador three, abaixo).
+
+### T5.3a — `game-fluids` film
+
+- Porte literal de F60-114 em `film/deposit.ts` (`dep`, `blob`, `stroke`, `splat`), `film/simulate.ts` (`bbox`, `mob`, `step`, `age`; passo de 180 Hz limitado à caixa molhada, no máximo 6 por quadro ou `maxSteps`, 9 na Oficina), `film/drops.ts` (F250-278: anel de gotas, voo, `land`), `film/sources.ts` (pingo F282, fonte F288, arrasto F291) e `film/layout.ts` (F12-42: grade dobrada sobre parede, calçada, meio-fio e rua; `PADRAO_LAYOUT` e `WORKSHOP_LAYOUT` são dois ajustes de `createFoldedLayout`). `layoutFromSurfaces({ floor, wall?, curb?, center })` monta a dobra a partir de `SurfaceSpec` (a grade 160 x 160 de 2 x 2 m por padrão); `curb` é a superfície mais baixa para onde o meio-fio desce.
+- Perfis em `data/film-profiles.json` (sangue, sangue antigo, bile, óleo de motor, combustível; F46-55 e W583-586), com `spikes` (bile 0,3, W578), `landsAsBlob` (óleo e combustível, W691) e `maxAmount` (teto da espessura do centro: 2,6; bile 4 na Oficina). Padrão = a Oficina; o Padrão de Fluidos roda a bile com `{ spikes: 1, maxAmount: 2.6 }` e óleo e combustível com `{ landsAsBlob: false }` (o contrato só nomeava `spikes` e `landsAsBlob`; `maxAmount` é a terceira diferença da Oficina, W691).
+- O relógio de secagem é em segundos de simulação (`update({ dt, dryingSeconds })`; o jogo escala). Sem `Math.random`: o host passa `random`. `createFilmLcg` é o gerador do Padrão (F17-18).
+- `FilmSimulator` (interface do passo e da secagem; o CPU é o golden de referência) e `film.setWeather({ rain })`: chuva 1 para a secagem e espalha 1,5 vezes (gancho; sem efeito até o `game-weather`).
+- Regras que diferem entre as duas páginas ficam em `layout.rules` (anel de 600 ou 400 gotas, gota que passa a borda cai no meio-fio só no Padrão, caixa de fuga, fórmulas do pingo), não em condicionais espalhadas.
+
+### T5.3d — fidelidade do filme
+
+| Teste | Resultado |
+|---|---|
+| `game-fluids/tests/film-golden.test.ts`: Padrão de Fluidos, 5 cenas x 5 fluidos, hash de `h` e `dry`, células molhadas e lançamentos em 0,5, 1, 2, 5 e 10 s | 25/25 |
+| `game-fluids/tests/film-workshop-golden.test.ts`: `fluidos` da Oficina, 4 fluidos, mesmos instantes | 4/4 |
+| Node 22.23.4 e 24.22.0 | iguais (`installPortableMath` nos dois testes) |
+
+Fidelidade do filme: **29/29**, bit a bit (hash do campo inteiro, 4 casas).
+
+- O Padrão roda as 25 combinações num filme só, como a página: o cursor do anel de gotas e o resto de tempo do passo atravessam as cenas (`clear` não os zera, igual a `clearAll`). A Oficina zera o resto de tempo a cada opção (`setup`) e mantém o cursor.
+- O relógio do teste repete o do gravador (`elapsed += 1000/60`, `dt = (agora - antes) / 1000`): o resto do passo de 1/180 s cai na fronteira do `>=` e só bate com os mesmos bits.
+- **Oficina: a página usa o fluxo de `Math.random` com outros consumidores** (os 3 sorteios do tremor de câmera por quadro, as partículas do `burst` e da neblina, 8 sorteios cada). Para a Oficina o teste reproduz essa intercalação e a confere contra uma gravação nova, `vfx-workshop-fluids-trace.json` (`--param mode=trace` em `vfx-workshop.js`): contagem acumulada de `Math.random` no início de cada quadro, em todas as 4 opções (a igualdade é a primeira asserção do teste), e a posição do braço do zumbi que pinga (a página anima o zumbi; não há como reconstruí-la sem ele), uma por quadro, em texto para não perder bits. A gravação `mode=fluids` refeita com `H` exposto saiu idêntica byte a byte à da T5.0.
+- Verificação de sensibilidade: trocar `spikes` da bile no teste do Padrão quebra as combinações de bile, óleo e gasolina que seguem (o estado atravessa as cenas).
+
+### Perf do filme (CPU, Node 24, máquina de desenvolvimento)
+
+| Cenário | Média por quadro |
+|---|---|
+| Padrão, grade 256 x 396, cena "tiro na parede" (356 gotas), 600 quadros | 1,4 ms (pior quadro 13 ms: as 330 gotas do disparo) |
+| Grade 160 x 160 com 6 respingos, 300 quadros | 0,54 ms |
