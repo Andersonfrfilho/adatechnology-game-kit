@@ -40,6 +40,6 @@ export { DEFAULT_RAIN_SOUND, DEFAULT_WIND_SOUND, createWeatherSound, rainVolume,
 export type { WeatherSound, WeatherSoundOptions, WeatherSoundStyle } from './audio/sound'
 
 export { createWeatherTestModule } from './bench/module'
-export type { WeatherScenarioLike, WeatherTestModule, WeatherTestModuleOptions } from './bench/module'
+export type { WeatherScenarioLike, WeatherTestModule, WeatherTestModuleOptions, WeatherVisual, WeatherVisualContext, WeatherVisualFactory } from './bench/module'
 export { weatherBenchTextOf } from './bench/locale'
 export type { WeatherBenchText } from './bench/locale'

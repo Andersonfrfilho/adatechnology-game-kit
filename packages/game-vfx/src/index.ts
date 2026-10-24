@@ -22,6 +22,8 @@ export { WORKSHOP_BEHAVIORS, createWorkshopBehaviors } from './effects/behaviors
 export type { Behavior, BehaviorHost } from './effects/behavior'
 export type { CueRequest, EffectDef, EffectStep } from './effects/types'
 export { WorkshopEngine, workshopGround } from './workshop/engine'
+export { RAIN_CAPACITY, RainField, WORKSHOP_PUDDLES, inPuddle } from './workshop/rain'
+export type { Puddle } from './workshop/rain'
 export type { LensBlob, Placement, PostProcess, WorkshopOptions } from './workshop/engine'
 export type { Decal } from './workshop/decals'
 export type { DebrisSpawn, DecalOptions, SpriteSpawn, SpriteSystem, Vec3Tuple, WorkshopContext, WorkshopTrace } from './workshop/types'

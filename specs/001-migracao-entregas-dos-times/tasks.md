@@ -77,7 +77,7 @@ Ordem: armas → casas → itens → personagens → efeitos → som e clima →
 - T6.1 `game-audio` (S1): síntese, mixagem, distância, limite de vozes, sons contínuos; os sons do jogo e da Cena de Arte.
   Feitas: T6.1c (motor WebAudio), T6.1e e T6.1e2 (armas), T6.1f (destruição), T6.1g (personagens e bichos), T6.1h (`audio-test-area`).
 - T6.2 `game-weather` (E6): chuva leve e forte, neblina, relâmpago, vento, ciclone, tufão, calor intenso, ligados a fluidos e som.
-  Feitas: T6.2a (núcleo), T6.2b (pontes e som) e T6.2d (`weather-test-area`). Falta T6.2c (`game-weather-three`: o visual).
+  Feitas: T6.2a (núcleo), T6.2b (pontes e som), T6.2c (`game-weather-three`: cortina, chuva perto, neblina, céu, relâmpago, faróis e névoa de calor; os três efeitos da Oficina `chuva`, `neblina` e `farol` no `game-vfx`) e T6.2d (`weather-test-area`).
 - T6.3 A sala empresta `host.audio` e `host.environment`; as áreas de som e clima entram no `interactables-test-area` (feita). T6.4 `site/` com os exemplos e miniaturas (feita nas partes de som e clima).
 
 ## Fase 7 — Veículos e cidade

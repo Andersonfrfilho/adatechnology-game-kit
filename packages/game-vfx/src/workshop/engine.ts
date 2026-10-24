@@ -4,6 +4,7 @@ import { createScreenState, resetScreenState, updateScreen } from '../screen'
 import type { ScreenState, VfxProfile } from '../types'
 import { DebrisPool } from './debris'
 import { DecalPool } from './decals'
+import { RainField } from './rain'
 import { SpritePool } from './sprites'
 import { StreakPool } from './streaks'
 import type { DebrisSpawn, DecalOptions, SpriteSpawn, SpriteSystem, Vec3Tuple, WorkshopContext, WorkshopTrace } from './types'
@@ -72,6 +73,7 @@ export class WorkshopEngine {
   readonly decals: DecalPool
   readonly rings = new WaveRingPool()
   readonly lights: FlashLightPool
+  readonly rain = new RainField(this)
   readonly screen: ScreenState = createScreenState()
   readonly lens: LensBlob[] = []
   post: PostProcess = {}
@@ -229,6 +231,7 @@ export class WorkshopEngine {
     this.decals.clear()
     this.rings.clear()
     this.lights.clear()
+    this.rain.clear()
     this.accumulators.clear()
     resetScreenState(this.screen)
     this.lens.length = 0

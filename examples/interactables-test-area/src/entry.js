@@ -12,6 +12,7 @@ import { placeFinds } from '@adatechnology/game-items'
 import { createGoodsFindsProvider, createGoodsItems, goodsText } from '@adatechnology/game-items-goods'
 import { buildItem, createItemsTestModule } from '@adatechnology/game-items-three'
 import { createWeatherTestModule } from '@adatechnology/game-weather'
+import { createWeatherVisual } from '@adatechnology/game-weather-three'
 import { createVfxTestModule } from '@adatechnology/game-vfx-three'
 import { createWeaponsTestModule } from '@adatechnology/game-weapons-three'
 import { registerBodyMaterial } from '@adatechnology/game-characters-three'
@@ -91,9 +92,9 @@ export function loadInto(room, options = {}) {
   const characters = options.characters === false ? undefined : room.loadModule(createCharactersModule({ fluids: room.fluids, film: room.film, locale: lang }))
   const animals = options.animals === false ? undefined : room.loadModule(createAnimalsModule({ locale: lang }))
   const vfx = options.vfx === false ? undefined : room.loadModule(createVfxTestModule({ locale: lang }))
-  // the sound and the weather ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here
+  // the sound and the weather (with its picture: rain curtain, near rain, mist, lightning, headlights, haze; the sky and the fog stay the room's own) ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here
   const audio = options.audio === false ? undefined : room.loadModule(createAudioTestModule({ locale: lang }))
-  const weather = options.weather === false ? undefined : room.loadModule(createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx } }))
+  const weather = options.weather === false ? undefined : room.loadModule(createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false } }) }))
   const report = room.loadModule(createFurnitureArea({ ...options, locale: lang }))
   return { ...report, ...(weapons ? { weapons } : {}), ...(itemsArea ? { itemsArea } : {}), ...(characters ? { characters } : {}), ...(animals ? { animals } : {}), ...(vfx ? { vfx } : {}), ...(audio ? { audio } : {}), ...(weather ? { weather } : {}) }
 }

@@ -5,9 +5,25 @@ import type { WeatherBridges, WeatherTargets } from '../bridges'
 import type { WeatherSoundOptions } from '../audio/sound'
 import { createWeather } from '../weather'
 import type { Weather, WeatherOptions } from '../weather'
-import type { Strike } from '../types'
+import type { Strike, WeatherSample } from '../types'
 import { weatherBenchTextOf } from './locale'
 import type { WeatherBenchText } from './locale'
+
+/** What a renderer of the weather (game-weather-three) gives the bench: its layers, a step per frame and the switch of each layer. */
+export type WeatherVisual = {
+  update(dt: number): void
+  setLayer(id: string, on: boolean): void
+  dispose(): void
+}
+
+/** The bench hands a visual the weather it shows (always the live one, even after the bench restarts it) and what the room lends. */
+export type WeatherVisualContext = { readonly host: ModuleHost; readonly locale: string; readonly weather: { sample(): WeatherSample } }
+
+/** The bench declares its layers before the room lends anything, so the factory tells them first (`fog` is the bench's own layer and reaches the visual through `setLayer` too). */
+export type WeatherVisualFactory = {
+  layers(locale: string): readonly ModuleLayer[]
+  create(context: WeatherVisualContext): WeatherVisual
+}
 
 export type WeatherTestModuleOptions = WeatherOptions & {
   locale?: string
@@ -21,6 +37,8 @@ export type WeatherTestModuleOptions = WeatherOptions & {
   targets?: Omit<WeatherTargets, 'environment' | 'audio'>
   /** The rain, wind and thunder on the host's `audio`; `false` keeps the area silent. */
   sound?: WeatherSoundOptions | false
+  /** The picture of the weather (rain, fog, sky, lightning, headlights, haze), from `@adatechnology/game-weather-three`. With it the bench leaves the scene fog to the visual. */
+  visual?: WeatherVisualFactory
 }
 
 /** What the scenarios use of the context the test room passes. */
@@ -51,11 +69,12 @@ type ThreeLike = { Fog?: FogLike }
 export function createWeatherTestModule(options: WeatherTestModuleOptions = {}): WeatherTestModule {
   const locale = options.locale ?? 'pt-BR'
   const text: WeatherBenchText = weatherBenchTextOf(locale)
-  const { locale: _locale, translate, weather: given, fog: _fog, targets: _targets, sound: _sound, ...weatherOptions } = options
+  const { locale: _locale, translate, weather: given, fog: _fog, targets: _targets, sound: _sound, visual: _visual, ...weatherOptions } = options
   void _locale
   void _fog
   void _targets
   void _sound
+  void _visual
   const state = {
     seed: options.seed ?? 1,
     hour: options.startHour ?? 8,
@@ -68,6 +87,7 @@ export function createWeatherTestModule(options: WeatherTestModuleOptions = {}):
   let strikes = 0
   let offStrike: (() => void) | undefined
   let bridges: WeatherBridges | undefined
+  let visual: WeatherVisual | undefined
   let weather: Weather = given ?? createWeather({ ...weatherOptions, autoSchedule: state.auto, ...(state.auto ? { timeScale: FAST_SCALE } : {}) })
 
   const watch = (): void => {
@@ -99,12 +119,13 @@ export function createWeatherTestModule(options: WeatherTestModuleOptions = {}):
   const publish = (): void => {
     const sample = weather.sample()
     if (state.environment) host?.environment?.set(environmentOf(sample))
-    if (state.fog) applyFog(sample.fogFar)
+    if (state.fog && !visual) applyFog(sample.fogFar)
   }
 
   const onChange = (change: BenchChange): void => {
     if (change.kind === 'layer') {
       if (change.id === 'environment' || change.id === 'fog') state[change.id] = change.on
+      visual?.setLayer(change.id, change.on)
       return
     }
     if (change.kind === 'action') return
@@ -145,6 +166,7 @@ export function createWeatherTestModule(options: WeatherTestModuleOptions = {}):
   const layers = (): ModuleLayer[] => [
     { id: 'environment', name: text.layers.environment },
     { id: 'fog', name: text.layers.fog, default: state.fog },
+    ...(options.visual?.layers(locale) ?? []),
   ]
 
   const metrics = (): ModuleMetric[] => [
@@ -240,13 +262,18 @@ export function createWeatherTestModule(options: WeatherTestModuleOptions = {}):
       const off = lent.bench?.onChange(onChange)
       bridges = createWeatherBridges({ ...options.targets, ...(lent.audio ? { audio: lent.audio } : {}) }, { sound: options.sound ?? {} })
       bridges.bind(weather)
+      visual = options.visual?.create({ host: lent, locale, weather: { sample: () => weather.sample() } })
+      if (visual && !state.fog) visual.setLayer('fog', false)
       publish()
       const offFrame = lent.onFrame((dt) => {
         weather.advance(dt)
         publish()
         bridges?.update(dt)
+        visual?.update(dt)
       })
       return () => {
+        visual?.dispose()
+        visual = undefined
         off?.()
         offFrame()
         bridges?.dispose()

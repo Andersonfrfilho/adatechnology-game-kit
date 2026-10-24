@@ -49,7 +49,7 @@ reports what is alive, what the last explosion made, the scale it was made at an
 
 ## Workshop recipes, sprites and event effects
 
-`vfx.play(id, point, { direction?, normal?, seed?, param? })` plays one of the **36 recipes of the Workshop of VFX** (blood by infection age, headshot,
+`vfx.play(id, point, { direction?, normal?, seed?, param? })` plays one of the **39 recipes of the Workshop of VFX** (the 36 of the first pass and the weather ones: `rain_and_puddles` three intensities, `fog_and_ash`, `headlights_in_rain`; the rain lives in `workshop().rain`, a `RainField` that `game-weather-three` also drives) (blood by infection age, headshot,
 dismemberment, bloater cloud, scream, muzzle flashes by weapon, impact by material, glass, doors, collapses, fires, cars, the screen effects) into the
 Workshop pools (`vfx.workshop()`: additive and normal sprites, streaks, physics debris, decals, rings, flash and fire lights, screen state). The recipes
 are **data** (`WORKSHOP_EFFECTS`, `EffectDef`: a small language of expressions and steps) that a runner executes in the page's own order of random draws,

@@ -91,6 +91,32 @@ function streakLayer(THREE: ThreeLib, pool: WorkshopEngine['streaks']): Drawn {
   }
 }
 
+/** The Workshop's rain (W317-320): one line segment per streak, pale blue, 35% opaque. */
+function rainLayer(THREE: ThreeLib, rain: WorkshopEngine['rain']): Drawn {
+  const geometry = new THREE.BufferGeometry()
+  const position = new THREE.BufferAttribute(rain.positions, 3).setUsage(THREE.DynamicDrawUsage)
+  geometry.setAttribute('position', position)
+  geometry.setDrawRange(0, 0)
+  const material = new THREE.LineBasicMaterial({ color: 0x9fb3cf, transparent: true, opacity: 0.35, depthWrite: false })
+  const lines = new THREE.LineSegments(geometry, material)
+  lines.frustumCulled = false
+  lines.name = 'workshop-rain'
+  return {
+    object: lines,
+    sync() {
+      const drawn = rain.on && rain.count > 0
+      lines.visible = drawn
+      geometry.setDrawRange(0, drawn ? rain.count * 2 : 0)
+      position.needsUpdate = true
+      return drawn
+    },
+    dispose() {
+      geometry.dispose()
+      material.dispose()
+    },
+  }
+}
+
 function debrisLayer(THREE: ThreeLib, pool: WorkshopEngine['debris']): Drawn {
   const geometry = new THREE.BoxGeometry(1, 1, 1)
   const material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.45, metalness: 0.25, flatShading: true })
@@ -303,6 +329,7 @@ export function createWorkshopLayers(THREE: ThreeLib, engine: WorkshopEngine, po
     spriteLayer(THREE, engine.add, true, 1, pointScale),
     spriteLayer(THREE, engine.normal, false, 0.55, pointScale),
     streakLayer(THREE, engine.streaks),
+    rainLayer(THREE, engine.rain),
     debrisLayer(THREE, engine.debris),
     decalLayer(THREE, engine.decals),
     ringLayer(THREE, engine.rings),

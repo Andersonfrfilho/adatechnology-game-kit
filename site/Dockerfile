@@ -49,6 +49,7 @@ COPY packages/game-vfx-three/package.json packages/game-vfx-three/
 COPY packages/game-weapons/package.json packages/game-weapons/
 COPY packages/game-weapons-three/package.json packages/game-weapons-three/
 COPY packages/game-weather/package.json packages/game-weather/
+COPY packages/game-weather-three/package.json packages/game-weather-three/
 COPY tools/animals-catalog/package.json tools/animals-catalog/
 COPY tools/characters-catalog/package.json tools/characters-catalog/
 COPY tools/golden/package.json tools/golden/

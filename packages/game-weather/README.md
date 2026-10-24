@@ -123,3 +123,7 @@ vegetation's `strength` is `min(1, speed / 20)`.
 Sound: `WEATHER_BANK` holds `rain_loop` and `wind_loop` (art scene), `rain_hiss_game` (game) and `thunder`. `createWeatherSound` sets the rain loop
 from 0.035 (light rain) to 0.06 (heavy), the wind loop at 0.05 in the breeze and in proportion to the speed, and plays the thunder at the strike's
 bearing when it arrives (`distance / 343` s after the flash). `options.sound` changes the style (`art_scene` or `game`), the levels and the listener.
+
+The picture is `@adatechnology/game-weather-three`. The bench takes it as `visual` (a `WeatherVisualFactory`: `layers(locale)` before the room lends anything, then
+`create({ host, locale, weather })` returning `{ update(dt), setLayer(id, on), dispose() }`); with a visual the bench leaves the scene fog to it:
+`createWeatherTestModule({ visual: createWeatherVisual({ vfx: room.vfx }) })`.

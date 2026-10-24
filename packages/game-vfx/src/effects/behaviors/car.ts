@@ -1,4 +1,5 @@
 import type { Behavior } from '../behavior'
+import { carPoint } from '../vehicles/car'
 import type { Vec3Tuple } from '../../workshop/types'
 
 const ORIGIN: Vec3Tuple = [5.6, 0, 0.8]
@@ -38,8 +39,14 @@ export function createCarBehavior(): Behavior {
         }
       }
     },
-    query(_host, name) {
+    query(_host, name, args) {
       if (name === 'position') return [ORIGIN[0], y, ORIGIN[2]]
+      // `carW(x, y, z)` (W104): a point of the car's own space in the world, with the car where it is now
+      if (name === 'point') {
+        const [x, py, z] = args as readonly [number, number, number]
+        const point = carPoint(x, py, z)
+        return [point[0], point[1] + y, point[2]]
+      }
       if (name === 'roll') return roll
       throw new Error(`car: unknown query ${name}`)
     },

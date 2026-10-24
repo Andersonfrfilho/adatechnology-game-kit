@@ -2342,3 +2342,38 @@ Ramo `int/p6b`, depois de T5.3e e T6.1g.
 - O trovão é do kit (ribombo e curva): quer outra conta, ou um som do time de áudio?
 - Chuva leve lava o sangue? Hoje não (decisão 9); a folha diz "chuva lava", sem separar leve de forte.
 - Vento do `vfx` com o vento do clima em todo anfitrião que ligar a ponte: aceita a brisa de 3,5; 1,5 m/s no lugar de 0,55; 0,2?
+
+## T6.2c — o clima desenhado (`game-weather-three`) e a chuva, a neblina e os faróis da Oficina
+
+Ramo `int/p6b`, depois de T6.2b.
+
+| O que | Onde |
+|---|---|
+| Chuva da Oficina (W312-331): `RainField` em `engine.rain`, até 4 000 riscos num `Float32Array`, sorteios na ordem da página (`rnd(-15,15)`, `rnd(0,16)`, `rnd(-6,16)`; ao cair, 35 % de respingo a menos de `12/(1+qualidade)` m, 50 % de sprite e anel só em poça; volta em `rnd(14,17)`). A página não diz o que fazer com a caixa fora da origem: `drive(count, wind, centerX, centerZ)` é do kit e o golden nunca o chama | `game-vfx/src/workshop/rain.ts`, `effects/behaviors/rain.ts` |
+| Os três efeitos da Oficina que a T5 deixou de fora: `chuva` (`rain_and_puddles`, 3 intensidades, 4 poças, relâmpago duplo no temporal), `neblina` (`fog_and_ash`, 3 zumbis, névoa 5/s e cinza 14/s) e `farol` (`headlights_in_rain`, 1 800 gotas, 6 zumbis na luz, 600 gotas acesas/s no feixe); a consulta `car.point` | `game-vfx/src/effects/{world/rain,world/fog-and-ash,vehicles/headlights}.ts`, `behaviors/car.ts` |
+| Golden dos três na captura `vfx-workshop.js` (`mode=weather`): sequência de eventos, contagem de sorteios, contagem por quadro e hash do pool de chuva; 16 testes | `game-vfx/tests/weather-golden.test.ts`, `tests/fixtures/team-golden/vfx-workshop-weather.json` |
+| `game-vfx-three` desenha o campo de chuva (`workshop-rain`, `LineSegments` 0x9fb3cf, opacidade 0,35) | `game-vfx-three/src/workshop-layers.ts` |
+| Pacote novo `game-weather-three`: cortina de chuva do jogo (14 000 pontos, caixa de 70 m x 25 m, 13 m/s, shaders do `jogo.js` letra por letra), chuva perto (`createNearRain`, liga o `engine.rain` ao clima), névoa e cinza (`emitAirborne`), neblina linear e exp2 com zona (`fogOf`), céu (`createSky`), relâmpago (`createLightning`), faróis (`createHeadlights`), névoa de calor (`createHeatHaze`) e `createWeatherRenderer` | `packages/game-weather-three` |
+| A bancada do clima aceita `visual` (`WeatherVisualFactory`); `createWeatherVisual` dá 7 camadas (pt-BR e en) e um suporte de lanternas diante da câmera; as duas áreas de teste ligam o visual (no `interactables-test-area`, com o céu da sala) | `game-weather/src/bench/module.ts`, `game-weather-three/src/bench`, `examples/*/src/entry.js` |
+| Miniatura do clima: tempestade às 20 h, com chuva, céu escuro e os faróis do suporte | `site/thumbs/weather-test-area.jpg`, `site/catalog.mjs` |
+
+**Prova**: `tools/golden/bin/record-weather-visual.mjs` corta o bloco da chuva do `jogo.js` (`const RAIN = 14000` até `skyUpdate`) e o roda num `vm` com três.js falso sob `Math.random` semeado; `fixtures/weather/game-rain-curtain.json` guarda o SHA-256 dos 42 000 floats, os shaders e as linhas de céu, neblina e zona. `tests/rain-curtain-golden.test.ts` (9) compara pontos bit a bit, shaders letra por letra e os números de céu, neblina, relâmpago, faróis, névoa e cinza com o texto das páginas; `tests/renderer.test.ts` (15) e `tests/bench-visual.test.ts` (2) cobrem neblina, céu, cortina por perfil, chuva perto (inclusive desenhada pelo `game-vfx-three`), relâmpago, faróis a 40 m, névoa de calor, camadas e a bancada. No navegador: `weather-test-area/test.mjs` confere a tempestade (cortina 14 000, 4 000 riscos, neblina linear de 110 m, suporte aceso), a neblina exp2 de 0,075 com névoa e cinza e o calor com a névoa; `interactables-test-area/test.mjs` confere a cortina e os 4 000 riscos sobre os móveis e o céu da sala intacto.
+
+### Escolhas minhas (padrões reversíveis)
+
+1. **Cortina por `drops`**: a cortina toda (14 000) aparece a 4 000 gotas (a tempestade); a chuva forte (2 200) desenha 55 % e a leve (900), 22 %; perfis `low` 0,35, `medium` 0,7, `high` 1. O jogo só tem chuva ou não; a escala é do kit (`fullAt`).
+2. **Céu**: o `0,8` do jogo na chuva vira `skyScale` do estado (1 limpo, 0,9 chuva leve, 0,8 chuva forte, 0,7 temporal); o dia 0..1 é `sample.sun`.
+3. **Neblina exp2**: onde o estado tem densidade (`fog` 0,075, `overcast` 0,03) usa `FogExp2`; a zona entra por uma densidade equivalente a `far` (`sqrt(ln 50) / far`). O jogo só tem neblina linear.
+4. **Relâmpago**: o `hemi.intensity` e o fundo da Oficina são absolutos (0,6 + I x 3,2); aqui são acréscimos, para valer sobre o céu do dia (o fundo só muda com a camada `sky` ligada).
+5. **Respingo**: a chuva da Oficina só respinga a partir da "chuva" (a garoa não); aqui, de 5 mm/h. Anéis só onde `puddleAt` ou `puddles` dizem que há poça (nenhuma por padrão; a Oficina tem 4 elipses fixas).
+6. **Faróis**: acendem à noite (fator de noite > 0,3), com chuva, com neblina densa ou visibilidade menor que 150 m; luz de verdade só a menos de 40 m da câmera (texto `b` da página).
+7. **Suporte de lanternas** da bancada: dois faróis e um bloco com as lentes `hlMat`. Não é carro: o time de veículos entrega os carros e o `game-vehicles-three` ainda não existe; quando existir, o `headlights.attach(carro, lente)` já serve.
+
+### Não migrado
+- **Névoa de calor com distorção**: nenhum time entregou; a camada é uma faixa quente que sobe na parte de baixo da tela. Distorcer a imagem pede um alvo de render, que só o anfitrião tem.
+- **A prateleira do showroom** (`interactables-showroom`) segue com a chuva de malha própria (ver T6.2b); trocá-la pela cortina muda a página.
+
+### Perguntas para o dono
+- A cortina com 22 % a 55 % da chuva na chuva leve e na forte (e 100 % só no temporal) está certa, ou a chuva do jogo (14 000 sempre) vale para todo estado com chuva?
+- Névoa de calor: quer o time de efeitos para a distorção de verdade, ou a faixa quente basta?
+- Faróis: a regra "noite, chuva ou neblina" liga os faróis de qualquer carro do mundo. O jogo decide por veículo (o motorista), ou o clima pode ligar todos?

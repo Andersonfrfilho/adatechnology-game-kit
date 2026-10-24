@@ -87,11 +87,11 @@ export const EXAMPLES = [
   {
     name: 'weather-test-area',
     title: 'Área de clima',
-    summary: 'O clima do kit na sala de testes: os dez estados (de céu limpo a tufão) com troca de uma vez ou em 10 s, a hora do dia, o sorteio automático do clima a 600 vezes o tempo real e a semente. O clima é escrito no ambiente da sala (chuva, vento, névoa, visibilidade, noite, temperatura, chão molhado) e a bancada mostra o que o jogo lê dele: chuva em mm/h, visibilidade, escala de visão e de audição, vento, índice de calor, chão molhado e raios.',
-    controls: 'Mesmos controles da sala de testes · a bancada escolhe o clima, a transição, a hora do dia, o sorteio automático e a semente · camadas: escrever no ambiente e névoa na cena',
+    summary: 'O clima do kit na sala de testes: os dez estados (de céu limpo a tufão) com troca de uma vez ou em 10 s, a hora do dia, o sorteio automático do clima a 600 vezes o tempo real e a semente. O clima é escrito no ambiente da sala (chuva, vento, névoa, visibilidade, noite, temperatura, chão molhado) e é desenhado pelo game-weather-three (cortina de chuva de 14 000 pontos, chuva perto com respingos, névoa e cinza, neblina linear e exponencial, céu, relâmpago, faróis na chuva com um suporte de lanternas diante da câmera, névoa de calor); a bancada mostra o que o jogo lê dele: chuva em mm/h, visibilidade, escala de visão e de audição, vento, índice de calor, chão molhado e raios.',
+    controls: 'Mesmos controles da sala de testes · a bancada escolhe o clima, a transição, a hora do dia, o sorteio automático e a semente · camadas: escrever no ambiente, névoa na cena, cortina de chuva, chuva perto e respingos, névoa e cinza, céu, relâmpago, faróis e névoa de calor',
     url: 'weather-test-area/',
     ready: 'window.__testRoom && window.__weatherReport',
-    setup: `(() => { const r = window.__testRoom; r.openArea('weather_area'); r.bench('weather_area').set('state', 'storm'); for (let t = 0; t < 30; t += 0.1) r.update(0.1); r.look([0, 1.7, 4], [0, 1.2, -8]); r.update(0.02) })()`,
+    setup: `(() => { const r = window.__testRoom; r.openArea('weather_area'); const b = r.bench('weather_area'); b.set('time_of_day', 20); b.set('state', 'storm'); for (let t = 0; t < 40; t += 0.1) r.update(0.1); r.look([0, 1.7, 4], [0, 0.9, -6]); r.update(0.02) })()`,
     areas: [],
   },
   {
@@ -149,7 +149,7 @@ export const FAMILIES = [
   { id: 'props', title: 'Objetos de cenário', what: 'Decoração, móveis modernos, quintal e estados da casa em low-poly', packages: ['game-props3d'], thumb: 'interactables-showroom-yard', seeIn: 'interactables-showroom' },
   { id: 'effects', title: 'Efeitos', what: 'Explosões, sangue, tiros, impactos, destruição, fogo e efeitos de tela, tocados por id e sorteados por semente', packages: ['game-vfx', 'game-vfx-three'], thumb: null, seeIn: 'vfx-test-area' },
   { id: 'audio', title: 'Som', what: 'Motor de som semeado: receitas de som como dado, plano puro e realização em WebAudio, barramentos, mixagem do jogo e da Cena de Arte, limite de vozes, pan e abafamento pela distância, laços', packages: ['game-audio'], thumb: 'audio-test-area', seeIn: 'audio-test-area' },
-  { id: 'weather', title: 'Clima', what: 'Clima semeado: dez estados de céu limpo a tufão, climas com sorteio no tempo do jogo, frentes, raios com atraso do trovão, chão molhado, efeitos de jogo e índice de calor', packages: ['game-weather'], thumb: 'weather-test-area', seeIn: 'weather-test-area' },
+  { id: 'weather', title: 'Clima', what: 'Clima semeado: dez estados de céu limpo a tufão, climas com sorteio no tempo do jogo, frentes, raios com atraso do trovão, chão molhado, efeitos de jogo e índice de calor, chuva em pontos de GPU, neblina, céu, raio, faróis e névoa de calor', packages: ['game-weather', 'game-weather-three'], thumb: 'weather-test-area', seeIn: 'weather-test-area' },
   { id: 'camera', title: 'Câmera', what: 'Câmera de ombro, terceira e primeira pessoa, com a arma na mão', packages: ['game-camera'], thumb: 'test-room', seeIn: 'test-room' },
   { id: 'infection', title: 'Contágio', what: 'Modelo de epidemia por regiões, determinístico: zumbis, pragas, boatos', packages: ['game-infection'], thumb: null, seeIn: null },
   { id: 'base', title: 'Base e ferramentas', what: 'Contratos entre módulos, sala de testes reutilizável e ferramentas de teste dentro do jogo', packages: ['game-contracts', 'game-test-room', 'game-devtools'], thumb: 'test-room-furniture', seeIn: 'test-room' },

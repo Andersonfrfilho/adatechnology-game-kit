@@ -37,8 +37,8 @@ describe('event effects', () => {
   })
 
   it('keeps the Workshop recipes apart from the event ones', () => {
-    expect(Object.keys(WORKSHOP_EFFECTS)).toHaveLength(36)
-    expect(Object.keys(GAME_EFFECTS).length).toBe(36 + EVENT_EFFECTS.length)
+    expect(Object.keys(WORKSHOP_EFFECTS)).toHaveLength(39)
+    expect(Object.keys(GAME_EFFECTS).length).toBe(39 + EVENT_EFFECTS.length)
   })
 })
 
