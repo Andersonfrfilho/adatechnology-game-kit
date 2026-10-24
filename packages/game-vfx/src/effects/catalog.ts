@@ -39,6 +39,7 @@ import { CAMPFIRE } from './screen/campfire'
 import { COUGH_AND_BREATH } from './screen/cough-and-breath'
 import { EVENT_EFFECTS } from './events'
 import { VIEWMODEL_EFFECTS } from './weapons/viewmodel'
+import { VEHICLE_EFFECTS } from './vehicles/game-effects'
 import type { EffectDef } from './types'
 
 const ALL_EFFECTS: readonly EffectDef[] = [BLOOD_HIT, HEADSHOT, DISMEMBER, BLOATER_CLOUD, SCREAMER_SHRIEK, CORPSE_DECAY, REANIMATION, EYES_IN_FOG, MUZZLE_FLASH, IMPACT_BY_MATERIAL, PENETRATION, CASINGS_AND_MAGAZINE, MOLOTOV, GRENADE, EXPLOSIVE_BARREL, SHOPFRONT_GLASS, DOOR_STAGES, BUILDING_COLLAPSE, BLOCK_WALL, METAL_DOOR_EFFECT, IRON_RAILING, WOODEN_FENCE, HIT_POINT_BREAKAGE, PRESSURE_CYLINDERS, BUILDING_FIRE, RAIN_AND_PUDDLES, FOG_AND_ASH, SCRAPING_SPARKS, ENGINE_SMOKE, FUEL_LEAK, CAR_EXPLOSION, WINDSHIELD, HEADLIGHTS_IN_RAIN, DAMAGE_AND_BITE, INFECTION_PHASES, PANIC, BLOATER_BLINDNESS, CAMPFIRE, COUGH_AND_BREATH]
@@ -46,8 +47,8 @@ const ALL_EFFECTS: readonly EffectDef[] = [BLOOD_HIT, HEADSHOT, DISMEMBER, BLOAT
 /** Every effect of the Workshop by id. A game adds, changes or removes entries with `patchEffects`. */
 export const WORKSHOP_EFFECTS: Readonly<Record<string, EffectDef>> = Object.fromEntries(ALL_EFFECTS.map((effect) => [effect.id, effect]))
 
-/** The Workshop's recipes plus the one-shot effects the destruction events play (`event-effects.json`) and the ones of the weapon in the player's hands: what a world plays by default. */
-export const GAME_EFFECTS: Readonly<Record<string, EffectDef>> = { ...WORKSHOP_EFFECTS, ...Object.fromEntries([...EVENT_EFFECTS, ...VIEWMODEL_EFFECTS].map((effect) => [effect.id, effect])) }
+/** The Workshop's recipes plus the one-shot effects the destruction events play (`event-effects.json`) and the ones of the weapon in the player's hands and the vehicle ones (`vehicle_fire`, `vehicle_exhaust`, `vehicle_leak`, written around a car): what a world plays by default. */
+export const GAME_EFFECTS: Readonly<Record<string, EffectDef>> = { ...WORKSHOP_EFFECTS, ...Object.fromEntries([...EVENT_EFFECTS, ...VIEWMODEL_EFFECTS, ...VEHICLE_EFFECTS].map((effect) => [effect.id, effect])) }
 
 /** A copy of the recipes with some changed (a partial replaces the fields it names), added or removed (`null`); a game tunes the Workshop's effects without touching the core. */
 export function patchEffects(base: Readonly<Record<string, EffectDef>>, changes: Readonly<Record<string, Partial<EffectDef> | EffectDef | null>>): Record<string, EffectDef> {

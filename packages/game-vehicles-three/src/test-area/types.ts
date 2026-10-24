@@ -1,11 +1,11 @@
-import type { Vec3 } from '@adatechnology/game-contracts'
+import type { EffectSink, Vec3 } from '@adatechnology/game-contracts'
 import type { VehicleKit } from '@adatechnology/game-vehicles'
 
 /** What the module needs of a document (canvas textures of the kit): a real `document`, or a stub in Node. */
 export type DocumentLike = { createElement(tag: string): unknown }
 
-/** The host's effects, when it has them (`host.effects` of `game-vfx-three`): the module asks by id and writes no particle code. */
-export type EffectsLike = { play(id: string, options?: { readonly position?: Vec3; readonly direction?: Vec3; readonly scale?: number; readonly [key: string]: unknown }): unknown }
+/** The host's effects (`host.effects`, an `EffectSink` of the contracts: `game-vfx-three` is one): the module asks by id and writes no particle code. */
+export type EffectsLike = EffectSink
 
 /** The events the module turns into effect requests, and the effect id each one asks for. A game maps its own ids over these. */
 export type VehicleEffectIds = {
@@ -18,12 +18,12 @@ export type VehicleEffectIds = {
 }
 
 export const defaultEffectIds: VehicleEffectIds = {
-  ignite: 'vehicle.fire',
-  explode: 'vehicle.explosion',
-  glass: 'vehicle.glass',
-  sparks: 'vehicle.sparks',
-  leak: 'vehicle.leak',
-  exhaust: 'vehicle.exhaust',
+  ignite: 'vehicle_fire',
+  explode: 'car_fuel_tank',
+  glass: 'glass_burst',
+  sparks: 'impact_metal',
+  leak: 'vehicle_leak',
+  exhaust: 'vehicle_exhaust',
 }
 
 export type VehiclesTestOptions = {
@@ -36,7 +36,7 @@ export type VehiclesTestOptions = {
   readonly three?: unknown
   /** The vehicles to lay out, as fleet ids (default the 8 of the Frota test: hatch, sedan, pickup, sport bike, box truck, city bus, battle tank, attack helicopter). */
   readonly vehicles?: readonly string[]
-  /** Effect ids requested through `host.effects` (the defaults are the ids the vfx recipes of the vehicles use). */
+  /** Effect ids requested through `host.effects` (the defaults are ids of `game-vfx`: the Garagem's `car_fuel_tank` blast, the `vehicle_fire`, `vehicle_leak` and `vehicle_exhaust` recipes written around a car from `engine_smoke` and `fuel_leak`, and the point-based `glass_burst` and `impact_metal`). */
   readonly effects?: Partial<VehicleEffectIds>
 }
 

@@ -4,7 +4,7 @@ import * as THREE from 'three160'
 import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 
-import { VEHICLES_AREA_ID, VEHICLE_SCENARIO_IDS, createVehiclesTestModule, loadVehiclesTestModule } from '../src'
+import { defaultEffectIds, VEHICLES_AREA_ID, VEHICLE_SCENARIO_IDS, createVehiclesTestModule, loadVehiclesTestModule } from '../src'
 import { fakeDocument } from './fake-dom'
 
 // the vehicles are long synchronous builds, and the scenarios run seconds of simulation
@@ -28,6 +28,14 @@ const roomWithVehicles = (locale = 'pt-BR'): { room: TestRoom; module: ReturnTyp
 }
 
 describe('vehicles test area', () => {
+  it('asks the room effects for ids the game-vfx catalogue knows (no particle code of its own)', () => {
+    const { room } = roomWithVehicles('en')
+    const known = new Set([...room.vfx.catalog(), ...room.vfx.effectIds()])
+    for (const [event, id] of Object.entries(defaultEffectIds)) expect([event, known.has(id)]).toEqual([event, true])
+    expect(room.vfx.play(defaultEffectIds.sparks, [0, 1, 0])).not.toBeNull()
+    expect(room.vfx.explosion(defaultEffectIds.explode, [0, 0.6, 4])).not.toBeNull()
+  })
+
   it('learns the room three.js by itself and brings the door, hood and trunk clips', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)

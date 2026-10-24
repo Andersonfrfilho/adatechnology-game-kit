@@ -55,7 +55,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
 
   type Lane = { car: any; group: any; wall: any; mode: 'arcade' | 'semi'; step(dt: number): void; speed(): number; distance(): number; done: boolean; stopped: number }
 
-  const effects = (): EffectsLike | undefined => (host as (ModuleHost & { effects?: EffectsLike }) | null)?.effects
+  const effects = (): EffectsLike | undefined => host?.effects
 
   const kitFor = (THREE: Three): VehicleKit => {
     three = THREE
@@ -138,11 +138,11 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       for (const e of events as { type: string; part?: string; point?: Vec3; worldPoint?: Vec3 }[]) {
         const position = e.point ?? e.worldPoint
         if (!position) continue
-        if (e.type === 'ignite') fx.play(effectIds.ignite, { position })
-        else if (e.type === 'explode') fx.play(effectIds.explode, { position })
-        else if (e.type === 'leak') fx.play(effectIds.leak, { position })
-        else if (e.type === 'fracture' && /glass|window|windshield/.test(e.part ?? '')) fx.play(effectIds.glass, { position })
-        else if (e.type === 'hole') fx.play(/glass|window|windshield/.test(e.part ?? '') ? effectIds.glass : effectIds.sparks, { position })
+        if (e.type === 'ignite') fx.play({ effect: effectIds.ignite, point: position })
+        else if (e.type === 'explode') fx.play({ effect: effectIds.explode, point: position })
+        else if (e.type === 'leak') fx.play({ effect: effectIds.leak, point: position })
+        else if (e.type === 'fracture' && /glass|window|windshield/.test(e.part ?? '')) fx.play({ effect: effectIds.glass, point: position })
+        else if (e.type === 'hole') fx.play({ effect: /glass|window|windshield/.test(e.part ?? '') ? effectIds.glass : effectIds.sparks, point: position })
       }
     }
     const hit = d.hit.bind(d)
@@ -295,8 +295,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         state.exhaust -= dt
         const fx = effects()
         if (fx && state.exhaust <= 0 && Math.abs(lane?.speed() ?? 0) > 0.5) {
-          state.exhaust = 0.1
-          fx.play(effectIds.exhaust, { position: [driver.state.x - Math.cos(driver.state.yaw) * (built.length / 2), 0.3, driver.state.z + Math.sin(driver.state.yaw) * (built.length / 2)], scale: Math.min(1, Math.abs(lane?.speed() ?? 0) / 17) })
+          state.exhaust = 0.4
+          fx.play({ effect: effectIds.exhaust, point: [driver.state.x - Math.cos(driver.state.yaw) * (built.length / 2), 0.3, driver.state.z + Math.sin(driver.state.yaw) * (built.length / 2)], scale: Math.min(1, Math.abs(lane?.speed() ?? 0) / 17) })
         }
         if (!state.ended && state.time > 1 && Math.abs(lane?.speed() ?? 0) < 0.05) {
           state.ended = true
