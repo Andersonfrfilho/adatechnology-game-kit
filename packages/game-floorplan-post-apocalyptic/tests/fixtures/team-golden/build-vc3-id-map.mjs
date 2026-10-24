@@ -1,4 +1,4 @@
-// Turns the old-to-new tables of the four MIGRATION.md files into vc3-id-map.json, which the team-golden test uses to put
+// Turns the old-to-new tables of the five MIGRATION.md files into vc3-id-map.json, which the team-golden test uses to put
 // an SDK plan back into the vocabulary the team page (PlantasSDK) speaks. Run again after a MIGRATION table changes:
 //   node tests/fixtures/team-golden/build-vc3-id-map.mjs
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -11,6 +11,7 @@ const FILES = {
   engine: 'game-floorplan/MIGRATION.md',
   residential: 'game-floorplan-residential/MIGRATION.md',
   commercial: 'game-floorplan-commercial/MIGRATION.md',
+  rural: 'game-floorplan-rural/MIGRATION.md',
   postApocalyptic: 'game-floorplan-post-apocalyptic/MIGRATION.md',
 }
 

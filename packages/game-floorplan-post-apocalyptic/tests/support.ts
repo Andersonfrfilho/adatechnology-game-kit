@@ -5,10 +5,12 @@
 import { engine } from '@adatechnology/game-floorplan'
 import { register as registerResidential } from '@adatechnology/game-floorplan-residential'
 import { register as registerCommercial } from '@adatechnology/game-floorplan-commercial'
+import { register as registerRural } from '@adatechnology/game-floorplan-rural'
 import { register as registerPostApocalyptic } from '../src'
 
 registerResidential(engine)
 registerCommercial(engine)
+registerRural(engine)
 registerPostApocalyptic(engine)
 
 export { engine }
@@ -56,7 +58,7 @@ const rectOf = (m: any): Rect => {
 const isSolid = (m: any) => !m.flat && !m.on && (!m.decor || m.mount === 'floor')
 const NON_SOLID_MOUNTS = new Set(['window', 'support', 'wall_top', 'ground', 'ceiling', 'wall', 'roof'])
 const HEAVY = new Set(['sofa', 'wardrobe', 'wardrobe_large', 'fridge', 'shelf_unit', 'tv_unit', 'buffet', 'china_cabinet', 'pantry', 'bookcase', 'dining_table_large', 'freezer', 'wall_shelving'])
-const NO_LIGHT_ROOMS = new Set(['void', 'elevator', 'balcony', 'terrace'])
+const NO_LIGHT_ROOMS = new Set(['void', 'elevator', 'balcony', 'terrace', 'porch', 'tent'])
 
 function openingZone(a: any): Rect[] {
   const h = a.width / 2
@@ -172,7 +174,8 @@ function checkDecor(tag: string, res: Plan, F: Failures) {
     for (const j of res.windows) if (j.floor === q.floor && overlap(q.aabb, openingRect(j), 0.001)) F.add('picture over a window', tag + ' ' + q.id + ' ' + j.id)
     for (const p of res.doors) if (p.floor === q.floor && overlap(q.aabb, openingRect(p), 0.001)) F.add('picture over a door', tag + ' ' + q.id + ' ' + p.id)
   }
-  for (const c of res.rooms) if (!NO_LIGHT_ROOMS.has(c.type) && !res.items.some((m: any) => m.room === c.id && m.category === 'ceiling_light')) F.add('room without ceiling_light', tag + ' ' + c.id)
+  const lightCategory = res.config?.power === 'offgrid' ? 'oil_lamp' : 'ceiling_light'
+  for (const c of res.rooms) if (!NO_LIGHT_ROOMS.has(c.type) && !res.items.some((m: any) => m.room === c.id && m.category === lightCategory)) F.add('room without ' + lightCategory, tag + ' ' + c.id)
   for (const m of res.items.filter((m: any) => m.category === 'curtain')) if (!res.windows.some((j: any) => j.id === m.window)) F.add('curtain without window', tag + m.id)
   if (res.style !== 'budget') for (const j of res.windows) if (!res.items.some((m: any) => m.category === 'curtain' && m.window === j.id) && res.style !== 'commercial') F.add('window without curtain (mid/high)', tag + ' ' + j.id)
   for (const m of res.items.filter((m: any) => m.category === 'ceiling_light')) {
@@ -405,6 +408,11 @@ export function variants(): [string, string, Record<string, unknown>][] {
     else if (t.id === 'mansion') out.push([t.id + '[3]', t.id, {}], [t.id + '[2]', t.id, { floors: 2 }], [t.id + '[1]', t.id, { floors: 1 }], [t.id + '[3+elevator]', t.id, { floors: 3, elevator: true }])
     else if (t.id === 'high_end_contemporary') out.push([t.id + '[2]', t.id, {}], [t.id + '[3]', t.id, { floors: 3 }])
     else if (t.id === 'mid_modern_townhouse') out.push([t.id + '[2]', t.id, {}], [t.id + '[3]', t.id, { floors: 3 }])
+    else if (t.id === 'wood_frame_house') out.push([t.id + '[1]', t.id, { floors: 1 }], [t.id + '[2]', t.id, { floors: 2 }], [t.id + '[2+basement+fireplace]', t.id, { floors: 2, basement: 'basement', fireplace: true }], [t.id + '[1+4 bedrooms, no garage]', t.id, { floors: 1, garage: false, bedrooms: 4 }])
+    else if (t.id === 'a_frame_chalet') out.push([t.id + '[stilts]', t.id, { foundation: 'stilts' }], [t.id + '[slab]', t.id, { foundation: 'slab' }])
+    else if (t.id === 'log_cabin') out.push([t.id + '[1 room, off the grid]', t.id, { rooms: 1, power: 'offgrid' }], [t.id + '[2 rooms, indoor bathroom]', t.id, { rooms: 2, bathroom: 'indoor', power: 'grid' }], [t.id + '[2 rooms, off the grid, well]', t.id, { rooms: 2, power: 'offgrid', water: 'well' }])
+    else if (t.id === 'shack') out.push([t.id + '[1 room]', t.id, { rooms: 1 }], [t.id + '[2 rooms, indoor bathroom]', t.id, { rooms: 2, bathroom: 'indoor' }], [t.id + '[2 rooms, outside bathroom]', t.id, { rooms: 2, bathroom: 'outside' }])
+    else if (t.id === 'campsite') out.push([t.id + '[1 tent]', t.id, { tents: 1 }], [t.id + '[4 tents]', t.id, { tents: 4 }])
     else out.push([t.id, t.id, {}])
   }
   return out

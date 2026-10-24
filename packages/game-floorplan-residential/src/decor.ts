@@ -26,6 +26,7 @@ export const decorPass: DecorPass = (c: DecorPassContext) => {
   const isBudget = density === profiles.budget
   const isHigh = density === profiles.high
   const isApartment = !plan.tpl.lot
+  const isOffGrid = plan.config?.power === 'offgrid'
   const { make, add, added, itemsOfRoom, placeOnFloor, gridOf, roomById } = ctx
   void roomById
 
@@ -128,8 +129,23 @@ export const decorPass: DecorPass = (c: DecorPassContext) => {
       }
       return null
     }
+    // no mains: kerosene lamps hung from the ceiling and on the tables
+    if (!isOpen && isOffGrid) {
+      const lampCount = area > 14 ? 2 : 1
+      const hung = CATALOG.ceiling_oil_lamp
+      for (let i = 0; i < lampCount; i++) {
+        const cx = P0[0] + ((i + 0.5) / lampCount) * (P0[2] - P0[0])
+        const cz = (P0[1] + P0[3]) / 2
+        add(make(room, 'ceiling_oil_lamp', [cx - hung.w / 2, cz - hung.d / 2, cx + hung.w / 2, cz + hung.d / 2], [0, 1], { y: r2(ceiling - 0.7 - hung.h), h: hung.h }))
+      }
+      for (const m of itemsOfRoom(room).filter((m) => ['dining_table', 'nightstand', 'dresser'].includes(m.category) && !m.decor && !m.flat && !m.on)) {
+        if (rng() >= 0.7 || m.w < 0.35 || m.d < 0.3) continue
+        const it = CATALOG.oil_lamp
+        add(make(room, 'oil_lamp', [m.x - it.w / 2, m.z - it.d / 2, m.x + it.w / 2, m.z + it.d / 2], [0, 1], { y: r2(topOf(m)), supportId: m.id }))
+      }
+    }
     // ceiling lights
-    if (!isOpen) {
+    if (!isOpen && !isOffGrid) {
       let n = isBudget ? (area > 16 ? 2 : 1) : clamp(Math.ceil(area / density.lightAreaPerLight), 1, 6)
       if (['bathroom', 'corridor', 'laundry', 'garage'].includes(room.type)) n = Math.min(n, room.type === 'garage' ? 3 : 1)
       const table = itemsOfRoom(room).find((m) => m.category === 'dining_table' || m.category === 'dining_table_large' || m.category === 'gourmet')

@@ -11,24 +11,28 @@ const tables = idMap as unknown as { [pack: string]: Table }
 const inverse = (...pairLists: Pairs[]): Map<string, string> => new Map(pairLists.flatMap((pairs) => pairs.map(([team, sdk]) => [sdk, team] as const)))
 const direct = (...pairLists: Pairs[]): Map<string, string> => new Map(pairLists.flatMap((pairs) => pairs.map(([team, sdk]) => [team, sdk] as const)))
 
+const ruralTemplates = tables.rural!['Template ids']!
 const itemTypes = inverse(
   tables.residential!['Item types (residential)']!,
   tables.commercial!['Item types (commercial)']!,
   tables.postApocalyptic!['Item types of this pack']!,
   tables.postApocalyptic!['State item types (`estadoItens`, now `stateItems`)']!,
+  tables.rural!['Item types (rural)']!,
   tables.engine!['Engine-level item types and categories (ground cover)']!.slice(0, 8),
 )
 const roomIds = inverse(
   tables.residential!['Room types']!,
   tables.residential!['Room ids (inside templates)']!,
   tables.commercial!['Room types']!,
+  tables.rural!['Room types']!,
+  tables.rural!['Room ids (inside templates)']!,
   [['caixas', 'checkouts']],
 )
-const templates = inverse(tables.residential!['Template ids']!, tables.commercial!['Template ids']!)
-export const sdkTemplateOf = direct(tables.residential!['Template ids']!, tables.commercial!['Template ids']!)
+const templates = inverse(tables.residential!['Template ids']!, tables.commercial!['Template ids']!, ruralTemplates)
+export const sdkTemplateOf = direct(tables.residential!['Template ids']!, tables.commercial!['Template ids']!, ruralTemplates)
 export const sdkStateOf = direct(tables.postApocalyptic!['States']!, [['normal', 'normal']])
 const styles = inverse(tables.residential!['Styles, tiers']!, tables.commercial!['Style']!)
-const vocabulary = inverse(tables.engine!['Miscellaneous vocabulary']!, tables.engine!['Anchors']!, tables.engine!['Facing (`frente`)']!, tables.engine!['Sides and corners']!, tables.engine!['Mounts (`montagem`)']!, tables.engine!['Lot zone types, wall tops, gates, doors, finishes']!)
+const vocabulary = inverse(tables.engine!['Miscellaneous vocabulary']!, tables.engine!['Anchors']!, tables.engine!['Facing (`frente`)']!, tables.engine!['Sides and corners']!, tables.engine!['Mounts (`montagem`)']!, tables.engine!['Lot zone types, wall tops, gates, doors, finishes']!, tables.rural!['Door models and types']!, tables.rural!['Lot zone types']!)
 
 const SIDES = new Map([['front', 'frente'], ['back', 'fundos'], ['left', 'esq'], ['right', 'dir']])
 const BOUNDARY = new Map([['wall', 'muro'], ['fence', 'cerca'], ['railing', 'grade']])
@@ -86,7 +90,7 @@ export function teamRowsOf(plan: Loose): PlanLists {
     rooms: plan.rooms.map((room: Loose) => row([teamRoom(room.id), teamRoom(room.type), room.floor, room.parts, room.link, room.ceiling])),
     walls: plan.walls.map((wall: Loose) => row([wall.floor, wall.axis, wall.u0, wall.v0, wall.u1, wall.v1, wall.thickness, wall.sides.map(teamRoom), wall.exterior, teamWord(wall.type), wall.h])),
     openings: [
-      ...plan.doors.map((door: Loose) => row(['door', door.floor, door.axis, door.u, door.v, door.pos, door.at, door.width, teamRoom(door.a), teamRoom(door.b), teamRoom(door.opensTo), door.exterior, teamSide(door.side), door.leaves, teamWord(door.model), 'porta', door.steps ?? 0, teamWord(door.hinge), door.zones, door.blocked])),
+      ...plan.doors.map((door: Loose) => row(['door', door.floor, door.axis, door.u, door.v, door.pos, door.at, door.width, teamRoom(door.a), teamRoom(door.b), teamRoom(door.opensTo), door.exterior, teamSide(door.side), door.leaves, teamWord(door.model), teamWord(door.type), door.steps ?? 0, teamWord(door.hinge), door.zones, door.blocked])),
       ...plan.windows.map((win: Loose) => row(['window', win.floor, win.axis, win.u, win.v, win.pos, win.at, win.width, win.y0, win.y1, teamRoom(win.room), teamSide(win.side), win.boards])),
       ...plan.openPairs.map((open: readonly string[]) => row(['open', cell(open.map(teamRoom))])),
     ],

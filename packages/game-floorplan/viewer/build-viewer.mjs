@@ -10,6 +10,7 @@ const BUNDLES = [
   ['game-floorplan', 'GameFloorplan'],
   ['game-floorplan-residential', 'GameFloorplanResidential'],
   ['game-floorplan-commercial', 'GameFloorplanCommercial'],
+  ['game-floorplan-rural', 'GameFloorplanRural'],
   ['game-floorplan-post-apocalyptic', 'GameFloorplanPostApocalyptic'],
 ]
 

@@ -1,0 +1,33 @@
+import type { ItemInput } from '@adatechnology/game-floorplan'
+
+/** Furniture and decor of the wood houses, the cabins, the shack and the campsite. Shared items (car, bench, crate, trees...) come from the residential pack. */
+export const ruralItems: ItemInput[] = [
+  { type: 'fireplace', category: 'fireplace', w: 1.4, d: 0.5, h: 1.2, window: false },
+  { type: 'wood_stove', category: 'wood_stove', w: 0.6, d: 0.5, h: 0.95, window: false },
+  { type: 'basement_stairs', category: 'basement_stairs', w: 0.9, d: 2.4, h: 1, window: false },
+  { type: 'bunk_bed', category: 'bunk_bed', w: 1, d: 2.05, h: 1.75, window: false },
+  { type: 'improvised_bed', category: 'bed', w: 0.9, d: 1.9, h: 0.45, exactOnly: true },
+  { type: 'rustic_sink', category: 'kitchen_cabinet', w: 1, d: 0.5, h: 0.9, exactOnly: true },
+  { type: 'bucket', category: 'bucket', w: 0.35, d: 0.35, h: 0.35 },
+  { type: 'log_bench', category: 'bench', w: 1.2, d: 0.35, h: 0.45, exactOnly: true },
+  { type: 'log_table', category: 'dining_table', w: 1.2, d: 0.8, h: 0.78, exactOnly: true },
+  { type: 'plank_shelf', category: 'shelf_unit', w: 1.2, d: 0.3, h: 1.6, exactOnly: true },
+  { type: 'rocking_chair', category: 'porch_chair', w: 0.7, d: 0.8, h: 1 },
+  { type: 'firewood', category: 'firewood', w: 1.5, d: 0.5, h: 1.2 },
+  { type: 'outhouse', category: 'outhouse', w: 1, d: 1.1, h: 2.2, window: false },
+  { type: 'well', category: 'well', w: 1, d: 1, h: 1, window: false },
+  { type: 'water_drum', category: 'water_drum', w: 0.6, d: 0.6, h: 0.9 },
+  { type: 'oil_lamp', category: 'oil_lamp', w: 0.2, d: 0.2, h: 0.35, decor: true, mount: 'support' },
+  { type: 'ceiling_oil_lamp', category: 'oil_lamp', w: 0.25, d: 0.25, h: 0.4, decor: true, mount: 'ceiling' },
+  { type: 'plank_pile', category: 'scrap', w: 1.2, d: 0.6, h: 0.6 },
+  { type: 'zinc_scrap', category: 'scrap', w: 1, d: 0.5, h: 0.7 },
+  { type: 'sleeping_bag', category: 'sleeping_bag', w: 0.65, d: 1.95, h: 0.12, flat: true },
+  { type: 'sleeping_pad', category: 'sleeping_pad', w: 0.6, d: 1.9, h: 0.04, flat: true },
+  { type: 'campfire', category: 'campfire', w: 1.1, d: 1.1, h: 0.35, window: false },
+  { type: 'camp_table', category: 'camp_table', w: 1.2, d: 0.6, h: 0.7 },
+  { type: 'camp_chair', category: 'camp_chair', w: 0.55, d: 0.55, h: 0.85, window: false },
+  { type: 'cooler', category: 'cooler', w: 0.6, d: 0.4, h: 0.4 },
+  { type: 'camp_lantern', category: 'oil_lamp', w: 0.25, d: 0.25, h: 0.35, window: false },
+  { type: 'camp_stove', category: 'camp_stove', w: 0.45, d: 0.35, h: 0.15, low: true },
+  { type: 'camp_gas_canister', category: 'camp_gas_canister', w: 0.2, d: 0.2, h: 0.3 },
+]

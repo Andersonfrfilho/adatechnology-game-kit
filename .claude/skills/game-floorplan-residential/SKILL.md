@@ -10,7 +10,7 @@ Conteúdo residencial para o `game-floorplan`: dez modelos de casa e apartamento
 
 ## Quando usar e quando não usar
 - Use para qualquer jogo que precise de casas e apartamentos gerados por semente.
-- Não use para loja ou prédio comercial (`game-floorplan-commercial`), nem para o estado da casa (barricada, abandono: `game-floorplan-post-apocalyptic`).
+- Não use para loja ou prédio comercial (`game-floorplan-commercial`), nem para casa de madeira, cabana, barraco ou acampamento (`game-floorplan-rural`, que estende as bibliotecas e a paleta daqui), nem para o estado da casa (barricada, abandono: `game-floorplan-post-apocalyptic`).
 - Casa de gênero ou do enredo de um jogo específico fica no repositório do jogo.
 
 ## Como usar
@@ -55,5 +55,5 @@ Sem exemplo próprio. Veja o visualizador 2D do `game-floorplan` (`viewer:build`
 ## O que vem pela migração (spec 001)
 - C4: cada tipologia da Galeria do Vale (sobrado, laje, colonial...) vira modelo de planta real aqui; a silhueta da Galeria vira a versão de longe (LOD).
 - C7: casa de laje passa a sortear de 1 a 3 andares (hoje `budget_slab_house` tem 1).
-- C8: barraco e "gato" de luz marcados como Brasil (região `br`), junto dos modelos rurais e populares.
+- C8: barraco e "gato" de luz marcados como Brasil (região `br`): o barraco e os outros quatro modelos rurais já estão em `game-floorplan-rural` (T2.2f); o marcador `power: 'tap'` do gato entra na T2.2g.
 - C5 (interiores com itens de achado) liga ao catálogo único de itens (A9).

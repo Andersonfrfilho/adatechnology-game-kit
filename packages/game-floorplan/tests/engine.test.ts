@@ -113,6 +113,14 @@ describe('result extensions and finds', () => {
   })
 })
 
+describe('registries packs read back', () => {
+  it('exposes the palette recipes so a pack can build on one', () => {
+    const recipe = { facadeColors: [['x', 0, 0, 0.5]] as [string, number, number, number][], early: () => ({}) as never, late: () => ({}) }
+    engine.registerPaletteStyle('zz_recipe', recipe)
+    expect(engine.paletteStyles.zz_recipe).toBe(recipe)
+  })
+})
+
 describe('furniture and window rules', () => {
   const window = { y0: 1.0 }
   it('a wall cabinet blocks a window unless it was dropped', () => {
