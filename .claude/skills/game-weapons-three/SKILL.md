@@ -54,7 +54,7 @@ ferramenta do host) e `fx.update(dt)` a cada quadro. `tool: () => HostTool` dá 
 | Função / tipo | Para que serve |
 |---|---|
 | `createWeaponsTestModule(options?)` | `TestableModule` com `id: 'weapons_area'`; expõe também `audio` e `fx`. Opções: `locale` (padrão `pt-BR`), `arsenal`, `sound`, `condition`, `seed` |
-| `weaponsLayout(weaponItemIds, pitchOf?)` | posições dos balcões (até 6, em duas fileiras), armas lado a lado (cada uma com a sua faixa) e alvos (aço, compensado, concreto) |
+| `weaponsLayout(weaponItemIds, pitchOf?)` | posições dos balcões (até 6, em duas fileiras), armas lado a lado (cada uma com a sua faixa) e alvos (aço, compensado, concreto); lança erro se as armas não couberem nos balcões |
 | `createWeaponFx(options)` | arma na mão: as com modelo tocam os clipes, as outras têm o prop de caixas; `handle`, `update`, `setCondition`, `layers` (`casings`, `magazines`, `muzzleFlash`), `inHand`, `casings`, `magazines`, `dispose`. Opção `soundDistance: () => metros` abafa o tiro |
 | `MODEL_ENTRIES`, `ARCHETYPE_MODELS`, `hasWeaponModel(id)`, `buildWeaponModelById(THREE, id)` | os 78 modelos da Galeria (`data/models.json`) e o modelo que cada arquétipo veste (`pistol_9mm` → `beretta_92fs`, `shotgun_pump_12` → `cbc_pump_military_3_0`...) |
 | `worldExplosiveItem(def, nome)`, `WORLD_EXPLOSIVE_IDS`, `WORLD_EXPLOSIVE_PREFIX` | barril, botijão P13 e tanque do carro como item com `explodes.chain` do `ExplosiveDef` (a cadeia é do `game-destruction`) |
@@ -95,7 +95,7 @@ Teclas: H equipa a arma mirada, clique atira ou arremessa, R recarrega, Q muda o
 - O som só nasce no primeiro disparo vindo de clique ou tecla (política dos navegadores) e é no-op onde não há `AudioContext` (testes, workers).
 - Cápsulas e partículas têm teto (900 partículas, 25 s de vida); o revólver só larga as cápsulas ao abrir o tambor e o basculante ao abrir os canos.
 - O relógio é da regra: `reload`, `cycle` e `clear` trazem `duration`, e o clipe é escalado a ela; as etapas (`stage`) levam o clipe até o marcador, e o fim da fase o fecha.
-- As armas da Galeria ficam no balcão como **um corpo rígido** (`body`, caixa do tamanho do modelo e a massa real); o modelo desenhado vai por cima, preso a ele. Armas no balcão nascem `asleep`.
+- As armas da Galeria ficam no balcão como **um corpo rígido** (`body`, caixa do tamanho do modelo e a massa real); o modelo desenhado vai por cima, preso a ele, **unido num mesh por material** e sem sombra projetada (a área caiu de 11.929 para 902 chamadas de desenho; a arma na mão mantém o modelo com os pivôs). Arquétipo que só empresta o modelo de uma marca (`ARCHETYPE_MODELS`) não vai para o balcão ao lado da marca: continua no catálogo e na mão. Armas no balcão nascem `asleep`.
 - A cor vem do `ColorManagement` do three r160 (a Galeria convertia à mão no r128): o golden lê os valores lineares como a página.
 - Itens não podem ter id começando por `weapon_` se não forem arma: a sala distingue pelo prefixo (por isso o balcão é `counter_weapons`).
 - Som do tiro (T1.4, S2): classe e abafamento por distância portados do jogo (`jogo.js` L62089-L62110, calibre → classe na L68697) e a energia do calibre

@@ -72,7 +72,8 @@ Sem `area`, os itens vão em fileiras. `openArea` de um grupo sem módulo també
 | `room.loadModule(module)` | Junta itens ao catálogo, roda `checkDestructible`/`checkAnimation`, registra cenários e chama `attach`; devolve `ModuleReport` |
 | `room.openArea(group)` | Limpa a sala e monta a área do módulo (ou fileiras do grupo); aba do catálogo aberta |
 | `room.spawn / clear / resetAll / spawned` | Objetos da cena |
-| `room.setTool / use / grab / throwHeld / look / walk / update` | Dirigir a sala por script |
+| `room.setTool / use / grab / throwHeld / look / walk / update` | Dirigir a sala por script (`setTool` toca o saque da regra: o gatilho responde `drawing` até acabar) |
+| `room.waitUntilReady(maxSeconds?)` | Avança quadros até a ferramenta na mão não ter fase (saque, recarga, ciclo) e devolve os segundos esperados; use depois de `setTool` antes de `use` |
 | `room.playAnimation(clipId)` / `room.animations()` | Clipes dos itens |
 | `room.bench(moduleId?)` | Bancada do módulo ativo (ou do id): `controls`, `layers`, `value`, `set`, `setLayer`, `act`, `encode` |
 | `room.metrics()` | Contadores da sala (`fps`, `frame_ms`, `draw_calls`, `triangles`, `objects`, `fragments`, `particles`, `decals`) e os do módulo ativo |
