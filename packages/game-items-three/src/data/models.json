@@ -858,5 +858,15 @@
       0.506
     ],
     "scale": 0.1
+  },
+  {
+    "id": "saline_iv_bag",
+    "teamId": "soro",
+    "teamBox": [
+      1.2,
+      2.5,
+      0.45
+    ],
+    "scale": 0.1
   }
 ]
