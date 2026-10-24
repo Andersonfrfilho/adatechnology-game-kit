@@ -1,6 +1,8 @@
 import type { DeepPartial } from '@adatechnology/game-contracts'
 
+import type { RecipeDef } from './recipe-types'
 import type { ItemRules } from './rules-types'
+import type { UseEffectDef } from './use-types'
 import type { CategoryDef, ContainerDef, ItemCategory, ItemDef, ItemPack, PlaceDef, PlaceTag } from './types'
 
 export interface ItemsOptions {
@@ -16,6 +18,8 @@ export interface ItemsOptions {
   categories?: readonly CategoryDef[]
   places?: readonly PlaceDef[]
   containers?: readonly ContainerDef[]
+  useEffects?: readonly UseEffectDef[]
+  recipes?: readonly RecipeDef[]
   rules?: DeepPartial<ItemRules>
 }
 
@@ -24,6 +28,8 @@ export interface ItemsCatalog {
   readonly categories: ReadonlyMap<ItemCategory, CategoryDef>
   readonly places: ReadonlyMap<PlaceTag, PlaceDef>
   readonly containers: ReadonlyMap<string, ContainerDef>
+  readonly useEffects: readonly UseEffectDef[]
+  readonly recipes: ReadonlyMap<string, RecipeDef>
   readonly rules: ItemRules
   has(id: string): boolean
   /** Throws on an unknown id. */

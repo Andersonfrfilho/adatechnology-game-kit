@@ -4,7 +4,9 @@ import { ITEM_CATEGORIES } from './categories'
 import type { ItemsCatalog, ItemsOptions } from './catalog-types'
 import { checkItems, findDuplicateIds } from './check-items'
 import { DEFAULT_RULES } from './rules'
+import type { RecipeDef } from './recipe-types'
 import type { ContainerDef, ItemDef, PlaceDef } from './types'
+import type { UseEffectDef } from './use-types'
 
 const LITRES_PER_CUBIC_METRE = 1000
 
@@ -32,6 +34,8 @@ export const createItems = (options: ItemsOptions = {}): ItemsCatalog => {
   const categories = mergeById(ITEM_CATEGORIES, [...packs.flatMap((pack) => pack.categories ?? []), ...(options.categories ?? [])])
   const places = mergeById<PlaceDef>([], [...packs.flatMap((pack) => pack.places ?? []), ...(options.places ?? [])])
   const containers = mergeById<ContainerDef>([], [...packs.flatMap((pack) => pack.containers ?? []), ...(options.containers ?? [])])
+  const useEffects = [...mergeById<UseEffectDef>([], [...packs.flatMap((pack) => pack.useEffects ?? []), ...(options.useEffects ?? [])]).values()]
+  const recipes = mergeById<RecipeDef>([], [...packs.flatMap((pack) => pack.recipes ?? []), ...(options.recipes ?? [])])
   const rules = deepMerge(DEFAULT_RULES, options.rules)
 
   const problems = [
@@ -39,6 +43,8 @@ export const createItems = (options: ItemsOptions = {}): ItemsCatalog => {
     ...findDuplicateIds('category', options.categories),
     ...findDuplicateIds('place', options.places),
     ...findDuplicateIds('container', options.containers),
+    ...findDuplicateIds('use effect', options.useEffects),
+    ...findDuplicateIds('recipe', options.recipes),
     ...checkItems({ items, categories, places, containers, rules }),
   ]
   if (problems.length > 0) throw new Error(`game-items: the catalog is not consistent:\n${problems.map((problem) => `  - ${problem}`).join('\n')}`)
@@ -52,6 +58,8 @@ export const createItems = (options: ItemsOptions = {}): ItemsCatalog => {
     categories,
     places,
     containers,
+    useEffects,
+    recipes,
     rules,
     has: (id) => items.has(id),
     get(id) {

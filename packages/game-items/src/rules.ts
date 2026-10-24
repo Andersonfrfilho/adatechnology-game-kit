@@ -21,5 +21,15 @@ export const DEFAULT_RULES: ItemRules = {
   },
   carry: { baseKg: 8, perStrengthKg: 2.5, factor: 1.2, encumbered: 1, overloaded: 1.5 },
   protection: { cap: 0.9, wear: { bite: 8, scratch: 3 }, tornShare: 0.25, repairMargin: 10 },
+  aging: { thawShelfDays: { freezer: 2 } },
+  inventory: { defaultSlots: 10, encumberedRunFactor: 0.75 },
+  use: {
+    freshness: {
+      stale: { satietyFactor: 0.7, poisonChance: 0.1, morale: 0, isEdible: true },
+      spoiled: { satietyFactor: 0.7, poisonChance: 0.5, morale: -20, isEdible: true },
+      rotten: { satietyFactor: 0, poisonChance: 0, morale: 0, isEdible: false },
+    },
+    cookedPoisonFactor: 0.25,
+  },
   spawn: { retailNew: true, retailPlaces: [] },
 }

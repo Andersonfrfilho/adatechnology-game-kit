@@ -6,6 +6,9 @@
  */
 import type { ItemDef as BaseItemDef } from '@adatechnology/game-interactables'
 
+import type { RecipeDef } from './recipe-types'
+import type { UseEffectDef } from './use-types'
+
 export type { BaseItemDef }
 
 export const RARITIES = ['common', 'uncommon', 'rare', 'very_rare', 'legendary', 'unique'] as const
@@ -92,4 +95,7 @@ export interface ItemPack {
   categories?: readonly CategoryDef[]
   places?: readonly PlaceDef[]
   containers?: readonly ContainerDef[]
+  /** What using an item does, in priority order (`resolveUse`). */
+  useEffects?: readonly UseEffectDef[]
+  recipes?: readonly RecipeDef[]
 }
