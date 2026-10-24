@@ -23,6 +23,7 @@ const VERSOES = [
   { id: 'jogo', url: 'http://localhost:4810/jogo-site.html', ready: 'window.__cmp',
     antes: `(async () => { window.__cmp.start(); await new Promise((r) => setTimeout(r, 2500)) })()`,
     detonar: `(() => { const p = window.__cmp.player, x = p.x + 3, z = p.z; window.__cam = { p: [x + 7, 15, z + 10], t: [x, 0.8, z] }; window.__cmp.explode('granada', x, 0.2, z) })()`, detonou: 'true' },
+  // as capturas de 2026-10-23 (antes da Fase 5) são `sdk-*`; o SDK de depois sai de `capturar-sdk-novo.mjs`
   { id: 'sdk', url: 'http://localhost:4801/test-room/?ui=0', ready: 'window.__testRoom',
     detonar: `(() => { const r = window.__testRoom; r.setTool('frag_grenade'); r.look([0, 1.7, 5], [0, 0.6, -3]); r.use() })()`,
     detonou: `window.__testRoom.log.entries().some((e) => e.type === 'explode')`,

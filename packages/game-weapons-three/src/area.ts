@@ -15,6 +15,7 @@ import { BODY_ACTIONS, buildModeledProp, buildProp, buildTripodMountedProp, mode
 import type { WeaponProp } from './props'
 import { DEFAULT_THUMBNAIL_BASE, weaponThumbnailCredit, weaponThumbnailUrl } from './thumbnails'
 import { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
+import { createWorldEffects } from './world-effects'
 
 export interface WeaponsTestModuleOptions {
   /** `en` or `pt-BR` (default). */
@@ -360,7 +361,9 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         } else if (change.kind === 'control' && change.id === 'sound_distance' && typeof change.value === 'number') soundDistance = change.value
         else if (change.kind === 'control' && change.id === 'fuse_length' && typeof change.value === 'number') lent.configureTool?.({ fuse_length: String(change.value) })
       })
+      const worldEffects = createWorldEffects({ arsenal })
       const offEvents = lent.on((event) => {
+        worldEffects.handle(event, lent.effects)
         if (event.type === 'explosion') {
           const away = Math.hypot(event.point[0] - camera.position.x, event.point[1] - camera.position.y, event.point[2] - camera.position.z)
           audio?.play('explosion', Math.min(1, EXPLOSION_VOLUME_BASE + event.radius * EXPLOSION_VOLUME_PER_METRE), away)

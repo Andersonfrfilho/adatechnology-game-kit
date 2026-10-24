@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
+import { createVfx } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
 
@@ -31,7 +32,8 @@ function setup(opts: { nonIndexed?: boolean } = {}) {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
   const sounds: string[] = []
-  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onSound: (k) => sounds.push(k) })
+  // a shared effects world adds nothing to the scene, so these tests read only what the host put there
+  const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onSound: (k) => sounds.push(k), vfx: createVfx() })
   // two walls 0.2 apart, merged into one mesh and placed away from the origin
   const { geo: indexed, ranges } = merge([box(-0.6), box(0.6)])
   const geo = opts.nonIndexed ? indexed.toNonIndexed() : indexed

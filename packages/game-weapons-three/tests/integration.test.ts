@@ -183,6 +183,10 @@ describe('explosives of the world in the area', () => {
     expect(barrels).toHaveLength(2)
     expect(others).toHaveLength(2)
     const exploded = (): number => [...barrels, ...others].filter((object) => room.world.part(object.objectId, 'tank')?.status === 'broken').length
+    const effects: string[] = []
+    room.world.on('explode', (event) => {
+      if (event.type === 'explode' && event.effect !== undefined) effects.push(event.effect)
+    })
     equip(room, 'ak_47')
     room.look([10.5, 1.7, 0], [10, 0.55, -8])
     room.use()
@@ -190,5 +194,7 @@ describe('explosives of the world in the area', () => {
     expect(exploded()).toBe(0)
     run(room, 8)
     expect(exploded()).toBe(4)
+    // each blast names its explosive, so the host plays that explosive's effect from the shared catalogue
+    expect([...new Set(effects)].sort()).toEqual(['car_fuel_tank', 'fuel_barrel', 'propane_p13'])
   })
 })

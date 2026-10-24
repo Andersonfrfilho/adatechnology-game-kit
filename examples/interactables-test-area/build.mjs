@@ -22,7 +22,7 @@ function findEsbuild() {
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
 const people = ['game-characters', 'game-characters-three', 'game-characters-people', 'game-characters-undead', 'game-animals', 'game-animals-species', 'game-animals-three']
-for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', ...people]) {
+for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-vfx', 'game-vfx-three', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', ...people]) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -41,6 +41,9 @@ const result = await esbuild.build({
     '@adatechnology/game-interactables-household': join(pkg('game-interactables-household'), 'dist/index.js'),
     '@adatechnology/game-interactables-three': join(pkg('game-interactables-three'), 'dist/index.js'),
     '@adatechnology/game-props3d': join(pkg('game-props3d'), 'dist/index.js'),
+    // the effects bench rides along: the smoke, sparks and blood of what the furniture goes through
+    '@adatechnology/game-vfx': join(pkg('game-vfx'), 'dist/index.js'),
+    '@adatechnology/game-vfx-three': join(pkg('game-vfx-three'), 'dist/index.js'),
     // the weapons module (with its accessories) rides along: furniture is shot, burned and blown up by real weapons
     '@adatechnology/game-weapons': join(pkg('game-weapons'), 'dist/index.js'),
     '@adatechnology/game-weapons-three': join(pkg('game-weapons-three'), 'dist/index.js'),
