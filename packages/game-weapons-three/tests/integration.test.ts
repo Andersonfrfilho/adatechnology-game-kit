@@ -96,7 +96,7 @@ describe('bench of the weapons module', () => {
     expect(bench?.controls().map((control) => control.id)).toEqual([
       'condition', 'ammo_quality', 'sound_distance', 'fuse_length',
       'fit_muzzle', 'fit_rail_top', 'fit_rail_left', 'fit_rail_right', 'fit_rail_bottom', 'fit_underbarrel', 'fit_magazine', 'fit_feed', 'fit_sling', 'fit_barrel',
-      'toggle_light', 'toggle_laser', 'toggle_stock', 'switch_underbarrel',
+      'supported_stance', 'toggle_light', 'toggle_laser', 'toggle_stock', 'switch_underbarrel',
     ])
     expect(bench?.layers().map((layer) => layer.id)).toEqual(['muzzle_flash', 'casings', 'magazines', 'attachments', 'beams'])
     expect(Object.keys(room.metrics().module).sort()).toEqual(['accessories_fitted', 'aim_time', 'casings_live', 'heat', 'magazines_live', 'suppressed', 'weapon_mass'])
