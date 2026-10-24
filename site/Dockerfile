@@ -43,11 +43,13 @@ COPY tools/golden/package.json tools/golden/
 COPY tools/weapon-thumbnails/package.json tools/weapon-thumbnails/
 COPY tools/items-catalog/package.json tools/items-catalog/
 COPY tools/weapons-catalog/package.json tools/weapons-catalog/
+COPY examples/audio-test-area/package.json examples/audio-test-area/
 COPY examples/interactables-showroom/package.json examples/interactables-showroom/
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
 COPY examples/items-test-area/package.json examples/items-test-area/
 COPY examples/test-room/package.json examples/test-room/
 COPY examples/weapons-test-area/package.json examples/weapons-test-area/
+COPY examples/weather-test-area/package.json examples/weather-test-area/
 RUN pnpm install --frozen-lockfile
 
 COPY . .
