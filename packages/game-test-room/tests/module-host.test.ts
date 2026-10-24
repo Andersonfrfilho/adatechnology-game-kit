@@ -67,6 +67,19 @@ describe('areas', () => {
 })
 
 describe('module host', () => {
+  it('configureTool sets the wear and the ammunition of the tool in hand and of the ones taken later', () => {
+    const room = makeRoom()
+    let lent: ModuleHost | null = null
+    room.loadModule(benchModule((host) => (lent = host)))
+    room.setTool('pistol_9mm')
+    lent!.configureTool?.({ condition: 'rusty', ammoQuality: 'reloaded' })
+    expect(room.tool.condition).toBe('rusty')
+    expect(room.tool.ammoQuality).toBe('reloaded')
+    room.setTool('rifle_5_56')
+    expect(room.tool.condition).toBe('rusty')
+    expect(room.tool.ammoQuality).toBe('reloaded')
+  })
+
   it('lends the scene and the camera and reports the tool events', () => {
     const room = makeRoom()
     const events: HostEvent[] = []
