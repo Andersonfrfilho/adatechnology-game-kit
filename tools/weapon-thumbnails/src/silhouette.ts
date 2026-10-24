@@ -34,6 +34,20 @@ const outlinesOf = (mask: Uint8Array, width: number, height: number): Loop[] =>
     .map((loop) => simplifyLoop(loop, SIMPLIFY_TOLERANCE))
     .filter((loop) => loop.length >= 3)
 
+/** The cells the outline is traced on (the raster of the viewBox at the supersampling). */
+export const RASTER_WIDTH = VIEW_WIDTH * SUPERSAMPLE
+export const RASTER_HEIGHT = VIEW_HEIGHT * SUPERSAMPLE
+export const RASTER_PADDING = VIEW_PADDING * SUPERSAMPLE
+
+/** The SVG of a tone raster (`RASTER_WIDTH` x `RASTER_HEIGHT`): one path for everything that shows, lighter, and one for the solid cells on top. Undefined when the raster is empty. */
+export function svgOfRaster(tone: Uint8Array): string | undefined {
+  const everything = outlinesOf(maskOf({ width: RASTER_WIDTH, height: RASTER_HEIGHT, tone }, (value) => value !== TONE_EMPTY), RASTER_WIDTH, RASTER_HEIGHT)
+  if (everything.length === 0) return undefined
+  const solid = outlinesOf(maskOf({ width: RASTER_WIDTH, height: RASTER_HEIGHT, tone }, (value) => value === TONE_SOLID), RASTER_WIDTH, RASTER_HEIGHT)
+  const solidPath = solid.length > 0 ? `<path d="${pathOf(solid)}"/>` : ''
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}" fill="currentColor" fill-rule="evenodd"><path fill-opacity="${LIGHT_OPACITY}" d="${pathOf(everything)}"/>${solidPath}</svg>\n`
+}
+
 /**
  * The silhouette of an object as a compact SVG: one path for everything that shows, lighter, and one for the solid parts on top, both `currentColor`
  * (the page sets the colour). Same object and view, same bytes. Undefined when nothing of the object shows.
@@ -42,13 +56,6 @@ export function silhouetteSvg(THREE: typeof THREE_NS, root: THREE_NS.Object3D, v
   const triangles = collectTriangles(THREE, root, view)
   const box = boundsOf(triangles)
   if (!box) return undefined
-  const width = VIEW_WIDTH * SUPERSAMPLE
-  const height = VIEW_HEIGHT * SUPERSAMPLE
-  fitTriangles(triangles, box, width, height, VIEW_PADDING * SUPERSAMPLE)
-  const raster = rasterize(triangles, width, height)
-  const everything = outlinesOf(maskOf(raster, (tone) => tone !== TONE_EMPTY), width, height)
-  if (everything.length === 0) return undefined
-  const solid = outlinesOf(maskOf(raster, (tone) => tone === TONE_SOLID), width, height)
-  const solidPath = solid.length > 0 ? `<path d="${pathOf(solid)}"/>` : ''
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}" fill="currentColor" fill-rule="evenodd"><path fill-opacity="${LIGHT_OPACITY}" d="${pathOf(everything)}"/>${solidPath}</svg>\n`
+  fitTriangles(triangles, box, RASTER_WIDTH, RASTER_HEIGHT, RASTER_PADDING)
+  return svgOfRaster(rasterize(triangles, RASTER_WIDTH, RASTER_HEIGHT).tone)
 }

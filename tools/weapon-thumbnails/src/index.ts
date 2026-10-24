@@ -6,3 +6,5 @@ export { buildManifest, creditsOf, writeManifest, MANIFEST_VERSION } from './man
 export type { CommonsSource, Manifest, ManifestEntry } from './manifest'
 export { traceMask, simplifyLoop, signedArea } from './trace'
 export { rasterize } from './raster'
+export { bitmapSilhouetteSvg, fillEnclosed } from './bitmap'
+export type { ToneBitmap } from './bitmap'
