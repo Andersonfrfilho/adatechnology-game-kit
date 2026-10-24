@@ -89,6 +89,8 @@ export interface PartSpec {
      * Each part goes off once. Without `chain`, it explodes only when destroyed (or at `atC`).
      */
     chain?: ExplosionChain
+    /** Id of the effect the host plays for the blast (`explosion_fuel_barrel`); without it the host picks a generic one by `energy` and `radius`. */
+    effect?: string
   }
   /** Fixed to the world (a wall-mounted cabinet, a tree trunk in the ground). Groups that keep an anchored part stay in place. */
   anchored?: boolean
@@ -405,7 +407,7 @@ export type DestructionEvent =
   | (EventBase & { type: 'melt'; part: string; melt: number })
   | (EventBase & { type: 'drip'; part: string; point: Vec3; material: MaterialId })
   | (EventBase & { type: 'leak'; part: string; fluid: FluidKind; point: Vec3; direction: Vec3; rate: number; pressurized: boolean })
-  | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number })
+  | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number; effect?: string })
   /** An explosive part was set off by a bullet, fire or a nearby blast and will explode `delay` seconds from now (`explodes.chain`). */
   | (EventBase & { type: 'primed'; part: string; point: Vec3; trigger: 'shot' | 'fire' | 'explosion'; delay: number })
   /** A structural part is overloaded (`stress` > 1); throttled to once per 0.5 s per part. Brittle parts also `crack` at stress > 0.8. */

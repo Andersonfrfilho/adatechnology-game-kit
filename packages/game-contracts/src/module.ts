@@ -2,6 +2,7 @@ import type { AnimationClipSpec } from './animation'
 import type { ModuleBench, ModuleControl, ModuleLayer, ModuleMetric } from './bench'
 import type { DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
+import type { EffectSink } from './effects'
 import type { ContainerSpec } from './fluids'
 
 /** An item that holds a liquid (a cup, a bottle, a fuel tank). `part` is the destruction part that is the container; a hole in it makes it leak. */
@@ -108,8 +109,11 @@ export type HostEvent =
   | { type: 'stock'; weapon: string; state: 'collapsed' | 'extended'; kind?: string; duration?: number }
   /** The weapon in hand changed between the main weapon and the one under its barrel (`on`: the under-barrel one is in use); `duration` is the seconds of the switch. */
   | { type: 'underbarrel'; weapon: string; on: boolean; duration?: number }
-  /** Something blew up: a thrown or launched explosive, a charge, or a part of the world (a fuel barrel); `source` is the weapon or the object, `cause` what set it off. */
-  | { type: 'explosion'; source: string; point: Vec3; energy: number; radius: number; cause: string }
+  /**
+   * Something blew up: a thrown or launched explosive, a charge, or a part of the world (a fuel barrel); `source` is the weapon or the object, `cause` what set it off.
+   * `explosive` is the id of the explosive when there is one (`m67`, `c4`, `fuel_barrel`): the host picks the blast by it.
+   */
+  | { type: 'explosion'; source: string; point: Vec3; energy: number; radius: number; cause: string; explosive?: string }
 
 /** The tool in hand as the host sees it. */
 export interface HostTool {
@@ -189,6 +193,8 @@ export interface ModuleHost {
   command?(command: ToolCommand): ToolCommandResult
   /** Lent only to a module that declares controls, layers or metrics. */
   bench?: ModuleBench
+  /** The host's effects (smoke, sparks, blast, impacts): a module asks for them by id instead of drawing its own. Absent when the host has none. */
+  effects?: EffectSink
 }
 
 /** What a module hands the test room: its items and, optionally, scenarios that exercise them, its area and its own presentation. */

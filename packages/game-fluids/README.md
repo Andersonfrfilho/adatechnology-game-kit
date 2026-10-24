@@ -8,8 +8,8 @@ Engine-agnostic liquids for games, with no renderer. It knows nothing about any 
 - **Streams**: the jet leaving a lip or a hole. Ballistic, it ends on the first surface it hits (planes with half extents) or on the ground.
 - **Stains**: grow from a flow front (16 radial samples, never a perfect disc), run downhill, soak into porous surfaces, dry from the edge in and
   either vanish or leave a permanent mark (coffee, blood, oil).
-- **19 built-in liquids** (`LIQUIDS`): water, coffee, tea, milk, soda, juice, beer, wine, spirits, fuel, diesel, motor_oil, cooking_oil, blood,
-  sap, acid, paint, bleach, honey. Each one has its own colour, viscosity, drying time, gloss and drink effects (`caffeine`, `alcohol`, `poison`,
+- **21 built-in liquids** (`LIQUIDS`): water, coffee, tea, milk, soda, juice, beer, wine, spirits, fuel, diesel, motor_oil, cooking_oil, blood,
+  old_blood, bile, sap, acid, paint, bleach, honey. Each one has its own colour, viscosity, drying time, gloss and drink effects (`caffeine`, `alcohol`, `poison`,
   `disgust`).
 - **Item uses** (`ITEM_USES`): scripted `sip`, `drink`, `chug`, `pour`, `pour_out`, `open` and `close`, as pure keyframe data plus a player.
 - Deterministic from a seed (no `Math.random`), so a LAN host can run it and send events. `serialize()` / `load()` round trip the whole world.
@@ -88,15 +88,23 @@ While on it is a `tap` stream (`streams()` lists it with `tap: <id>`): it fills 
 into a cup) and otherwise makes a stain where it lands. Switching emits `{ type: 'tap', tap, on }`. `taps()` returns the state of every tap, and
 taps are part of `serialize` / `load`.
 
+### The team's values as defaults
+
+Blood dries in 600 s and leaves a `0x3B1D14` mark, `old_blood` (`0x6C1C16` drying to `0x2A160E`, 360 s) and `bile` (`0x8A9A2A` to `0x3E4220`, 900 s)
+come from the Padrão de Fluidos, fuel evaporates in 60 s without a mark and water takes 180 s (the Oficina de VFX rule table). A game that wants other
+values replaces a liquid by id: `createFluids({ liquids: [{ ...LIQUIDS.find((l) => l.id === 'blood')!, dryTime: 1200, stainColor: 0x4a0506 }] })`.
+`splash(liquid, point, liters, velocity, { tint: { fresh, dry } })` colours one splash (and the stain it makes or joins; the latest tint wins) without
+touching the liquid: the age of an infection is the characters' data, not fluids'.
+
 ### Using it with `@adatechnology/game-destruction`
 
 The damage model reports `leak` events for parts that hold a fluid. Map them one to one onto `puncture`; the container then loses liquid by
 Torricelli and the stream and stains follow:
 
 ```ts
-import type { DamageEvent } from '@adatechnology/game-destruction'
+import type { DestructionEvent } from '@adatechnology/game-contracts'
 
-destruction.on('leak', (e) => {
+destruction.on('leak', (e: Extract<DestructionEvent, { type: 'leak' }>) => {
   // e.part is the damaged part, e.point the world hit point of the hole, e.direction where the fluid leaves
   const id = containerOfPart(e.part)
   if (!id) return
@@ -138,7 +146,7 @@ hand ∘ pose; otherwise the host animates its own viewmodel from `pose()`. `def
 | Export | What it is |
 |---|---|
 | `createFluids(options?)` | Creates a `FluidWorld`. Options: `liquids`, `locale`, `seed`, `ambientC`, `gravity`, `groundAt(x, z)`, `mergeDistance`, `maxStains`, `onEvent` |
-| `LIQUIDS` | The 19 built-in `LiquidDef`s (`id`, `color`, `opacity`, `stainColor`, `viscosity`, `density`, `dryTime`, `leavesMark`, `gloss`, `drink`...) |
+| `LIQUIDS` | The 21 built-in `LiquidDef`s (`id`, `color`, `opacity`, `stainColor`, `viscosity`, `density`, `dryTime`, `leavesMark`, `gloss`, `drink`...) |
 | `ITEM_USES` | The built-in `ItemUseDef`s |
 | `createItemUse(world, containerId, def, getHandTransform?)` | Returns an `ItemUsePlayer` (`pose()`, `update(dt)`, `cancel()`, `time`, `done`) |
 | `sampleStream(stream, gravity, t)` | Point of a stream's path at time `t` (0 to `flightTime`) |

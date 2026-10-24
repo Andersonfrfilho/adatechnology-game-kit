@@ -107,6 +107,15 @@ A module can also declare a bench as data: `controls` (number, boolean, choice, 
 `ModuleBench` in `attach` (`host.bench`): `value(id)`, `layer(id)`, `onChange(listener)` (right after `attach` it gets one change per control and
 layer, in order), `patch(id, { hidden, disabled, options, value })` (no echo) and `look(eye, target)`. `checkBench({ controls, layers, metrics })`
 checks the declaration (snake_case ids unique across the three, `min < max`, `step > 0`, defaults in range and among the options, `max > 0`).
+A choice's options may carry a `group` (the host lists them under that heading; the options of a group sit next to each other, and `checkBench` says
+so when they do not). `ModuleBench.sheet(sheet)` puts a card on the host's panel (`BenchSheet`: kicker, title, body, facts, steps, colour swatches, note and a
+timeline of segments whose playhead follows a module metric); a host with no sheet area leaves it out.
+
+### Effects the host lends
+
+`ModuleHost.effects` is an `EffectSink`: `play({ effect, point, direction?, normal?, seed?, param?, scale? })` starts an effect of the host's catalogue by id
+and answers a handle (or `null` when the host does not know it), `stop(handle)` ends a looping one, and `configure`, `stats` and `catalog` are optional. The
+`explosion` host event carries `explosive` (the id of the explosive), `PartSpec.explodes.effect` and the `explode` event name the effect of a part's blast.
 
 ```ts
 controls: () => [
