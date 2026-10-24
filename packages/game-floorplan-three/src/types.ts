@@ -30,6 +30,10 @@ export interface HouseRendererOptions {
   atlas?: Record<string, any>
   /** Materials the game swaps (a material or a function of the default one). */
   materials?: Record<string, any>
+  /** The world of `@adatechnology/game-destruction`; the house registers itself in it on first need. */
+  destruction?: any
+  /** `createDestructionRenderer(THREE, { scene, world })` of `@adatechnology/game-destruction-three`: draws fracture, collapse, fragments, spalls and the rebar cage on the house's meshes. */
+  destructionRenderer?: any
   /** Maps an id of the plan to the key its seeded random draws use, to reproduce a scene drawn with other ids (golden tests). */
   seedKey?: (id: string) => string | null | undefined
   /** Distance (m) beyond which the interior (`interior`) and the house (`hide`) are drawn no more, or `false` to switch distance LOD off. */
@@ -38,6 +42,7 @@ export interface HouseRendererOptions {
   onChange?: (change: { shadow: boolean }) => void
   onCollider?: (collider: any) => void
   onDamage?: (part: any, point: { x: number; y: number; z: number } | null, type: string) => void
+  onWreck?: (event: any, house: any) => void
   onLight?: (light: any) => void
   onMessage?: (text: string) => void
 }
@@ -86,6 +91,8 @@ export interface House {
   /** The real lights the builders asked for (at night) in `list`, and the same grouped by room id in `byRoom`. */
   lights: { list: any[]; byRoom: Record<string, any[]> }
   stats: any
+  structure: any
+  destruction: any
   update(dt: number, time?: number, focus?: { x: number; y: number; z: number }): void
   show(options: { floor?: number; cut?: boolean; lot?: boolean }): void
   toggleDoor(id: string): any

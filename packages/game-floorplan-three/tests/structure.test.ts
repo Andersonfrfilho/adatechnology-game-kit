@@ -45,6 +45,10 @@ describe('walls, doors, windows, floors and stairs', () => {
         expect(ranges.size).toBeGreaterThan(3)
         // the frames of the doors and windows are pieces of the mesh from the start
         for (const door of house.doors) expect(ranges.get(`jamb:${door.id}`)?.length, door.id).toBeGreaterThan(0)
+        // with the destruction binding the walls of the structure are pieces too
+        const walls = plan.structure.parts.filter((p: any) => p.role === 'wall' || p.role === 'partition')
+        expect(walls.length).toBeGreaterThan(3)
+        for (const wall of walls) expect(ranges.get(wall.id)?.length, wall.id).toBeGreaterThan(0)
         // every range sits inside its mesh and the ranges of one mesh never overlap: a piece that disappears takes nothing of another
         const byMesh = new Map<any, { v0: number; v1: number; i0: number; i1: number }[]>()
         for (const list of ranges.values()) for (const r of list) byMesh.set(r.mesh, [...(byMesh.get(r.mesh) ?? []), r])

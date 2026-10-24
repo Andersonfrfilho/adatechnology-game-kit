@@ -111,7 +111,8 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         const distance = focus => center().distanceTo(focus instanceof THREE.Vector3 ? focus : new THREE.Vector3(focus.x, focus.y, focus.z));
 
         // ---- destruction: tags the loose groups, describes the structure and prepares the world adapter (cfg.destruction) ----
-        const structure: any = null, destruction: any = { world: null, active: false, statistics: () => ({ falling: 0, fragments: 0 }), animate() { }, deactivate() { } }; // the binding to the destruction of the structure comes in a later slice
+        markGroups(r, root, parts);
+        const structure = assembleStructure(r0, root), destruction = createHouseDestruction(root, house, structure, parts, colliders, water); h.destruction = destruction; destruction.breach.setLod(h.lodCurrent);
         // legacy damage: `house.damage(id, point, type, amount)` still subtracts the damageable's hp (the game reads `hp`) and calls cfg.onDamage, and now also
         // becomes a hit in the core when there is a world (cfg.destruction): the piece really breaks, hides its mesh and drops what it carries. Once fractured, hp is zeroed.
         const strikePiece = (id, point, type, amount, d, before) => {

@@ -48,6 +48,9 @@ import { installInteractionFittings } from './interaction/fittings.js'
 import { installInteractionDoors } from './interaction/doors.js'
 import { installBuildInstance } from './build/instance.js'
 import { installLightsRoomLight } from './lights/room-light.js'
+import { installDestructionPieces } from './destruction/pieces.js'
+import { installDestructionBreach } from './destruction/breach.js'
+import { installDestructionWorld } from './destruction/world.js'
 import { installBuildBuild } from './build/build.js'
 import { buildApi } from './build/api.js'
 
@@ -120,6 +123,9 @@ export function create(THREE: any, options: HouseRendererOptions = {}): HouseRen
   installInteractionDoors(K, shared)
   installBuildInstance(K, shared)
   installLightsRoomLight(K, shared)
+  installDestructionPieces(K, shared)
+  installDestructionBreach(K, shared)
+  installDestructionWorld(K, shared)
   installBuildBuild(K, shared)
   return buildApi(K, shared) as HouseRenderer
 }
