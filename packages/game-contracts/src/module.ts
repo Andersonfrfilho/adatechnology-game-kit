@@ -85,6 +85,8 @@ export type HostEvent =
   | { type: 'stage'; weapon: string; stage: string }
   /** One more round went into the tool while it loads round by round. */
   | { type: 'feed'; weapon: string }
+  /** Something blew up: a thrown or launched explosive, a charge, or a part of the world (a fuel barrel); `source` is the weapon or the object, `cause` what set it off. */
+  | { type: 'explosion'; source: string; point: Vec3; energy: number; radius: number; cause: string }
 
 /** The tool in hand as the host sees it. */
 export interface HostTool {
