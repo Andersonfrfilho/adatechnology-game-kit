@@ -928,5 +928,15 @@
       1.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "bucket",
+    "teamId": "balde",
+    "teamBox": [
+      2.804,
+      2.7,
+      2.804
+    ],
+    "scale": 0.1
   }
 ]
