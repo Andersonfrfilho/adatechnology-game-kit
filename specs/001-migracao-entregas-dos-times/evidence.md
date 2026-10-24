@@ -1601,3 +1601,16 @@ Node 22.23.4: `tools/items-catalog` 35, `game-items` 18, `tools/golden` 42, `cat
 - Sem `recurso` do Math.random nas fontes: o jogo usa `R()` (substituído) e o visor `criaRng` (semeado), nenhuma chamada a `Math.random` fica no recorte.
 
 **Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` exit 0; `game-items` 143 testes em 14 arquivos (eram 139 em 13); **Node 22.23.4**: `game-items` 143 passaram. Modelo da execução: `sonnet`.
+
+### T3.1j — Fatia do jogo dos itens (grupo E)
+
+**O que entrou**
+- `specs/001-migracao-entregas-dos-times/game-slice/items/`, gerada por `catalog --game-out`: `documents.json` (14), `regions.json` (10 regiões, 101 itens com região, 10 especialidades), `uses.json` (textos `uso`), `damage-points.json` (20 itens de arma com `dano`/`cr`, A2), `fixed.json` (9 posições fixas), `faction-loot.json` (51), `supply-events.json` (queda do exército, trem de carga, cronograma de luz, teto de itens no chão por célula).
+- `README.md` na pasta: o conteúdo vai para `content/items/` do repositório `Andersonfrfilho/zombiada` (que **não** foi tocado), lista de arquivos com contagens e como regenerar.
+- Cobertura do `catalog:check`: **coerente e ligada por padrão.** `tools/items-catalog/src/paths.ts` ganhou `GAME_SLICE_DIR`; o CLI usa essa pasta quando não há `--game-out` (então `catalog` regenera e `catalog:check` compara goods + fatia, 22 arquivos) e `tests/catalog-up-to-date.test.ts` compara os mesmos 22. Com `--game-out <pasta>`, tanto a escrita quanto o `--check` valem para aquela pasta. Provado: acrescentar um espaço a `fixed.json` faz `catalog:check` falhar listando o arquivo. README do tool atualizado.
+
+**Desvios e escolhas reversíveis**
+- O desenho dizia só "fatia por `--game-out`"; escolhi gravá-la também no repositório do SDK (em `specs/.../game-slice/`) para ficar versionada e conferida até o jogo recebê-la. Reverter = tirar o padrão do CLI e o 22 do teste de atualização.
+- Nenhuma edição em arquivo gerado nem no repositório `zombiada`.
+
+**Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` e `pnpm -r test` verdes (`items-catalog` 39); `catalog:check` de items e weapons up to date. **Node 22.23.4**: `items-catalog` 39 passou. Modelo da execução: `sonnet`.

@@ -14,7 +14,7 @@ Writes the reconciled data of the real-world items catalog (`packages/game-items
 | Writes | |
 |---|---|
 | `packages/game-items-goods/src/data/{items,categories,places,rarities,storage,recipes,containers,depletion,spawn,house-pools,ammo-boxes,use-effects,melee,provenance}.json` | generated |
-| `--game-out <dir>`: `{documents,regions,uses,damage-points,fixed,faction-loot,supply-events}.json` | the slice that belongs to the game, not to the SDK |
+| `{documents,regions,uses,damage-points,fixed,faction-loot,supply-events}.json` in `specs/001-migracao-entregas-dos-times/game-slice/items/` (`--game-out <dir>` writes it elsewhere) | the slice that belongs to the game, not to the SDK; `catalog` regenerates it and `catalog:check` compares it with the committed one |
 
 Every item has a definitive English id (`decisions.json.ids`, the household id for the 38 `merge`d pairs; `mergeRejected` keeps the look-alikes that stay apart). `extraItems` creates the 28 items the sources
 lack (a viewer pool entry or a recipe term needs them; `provenance.json` marks them `created`). A recipe term that is not an item is a fluid, a thing of the world (furniture, fire, soil) or a trait (`match`), never a hole:
@@ -24,7 +24,7 @@ every recipe resolves. `dimensions` holds the measure of every item (metres, `[w
 pnpm --filter @adatechnology/items-catalog-tool build
 pnpm --filter @adatechnology/items-catalog-tool catalog                          # regenerate
 pnpm --filter @adatechnology/items-catalog-tool catalog:check                    # fail when the generated files are stale
-node tools/items-catalog/dist/cli.js --game-out ../zombiada/content/items       # also write (or, with --check, compare) the game slice
+node tools/items-catalog/dist/cli.js --game-out ../zombiada/content/items       # write (or, with --check, compare) the slice in another folder, e.g. a checkout of the game repository
 ```
 
 To change a choice, edit its value in `decisions.json` and regenerate. `tests/sources.test.ts` checks the generated data against the sources (counts, weight, rarity, places, fields, durability and

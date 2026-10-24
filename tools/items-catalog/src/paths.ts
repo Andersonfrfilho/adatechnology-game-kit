@@ -12,6 +12,9 @@ export const SOURCE_PATHS = {
   houseViewer: join(SPEC_DIR, 'sources', 'jogo__visor-casas-3d.js'),
 } as const
 
+/** Where the game slice is kept in this repository until it moves to `zombiada/content/items/`; `catalog` and `catalog:check` cover it unless `--game-out` points elsewhere. */
+export const GAME_SLICE_DIR = join(SPEC_DIR, 'game-slice', 'items')
+
 export const DECISIONS_PATH = join(TOOL_DIR, 'decisions.json')
 export const HOUSEHOLD_ITEMS_PATH = join(TOOL_DIR, 'base', 'household-items.sdk.json')
 export const HOUSEHOLD_NAMES_PATH = join(TOOL_DIR, 'base', 'household-item-names.json')

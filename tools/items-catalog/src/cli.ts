@@ -1,6 +1,7 @@
 import { resolve } from 'node:path'
 
 import { buildCatalog, staleFiles, writeCatalog } from './build'
+import { GAME_SLICE_DIR } from './paths'
 
 const args = process.argv.slice(2)
 const isCheck = args.includes('--check')
@@ -11,7 +12,7 @@ if (gameOutIndex >= 0 && !gameOutput) {
   process.exit(1)
 }
 
-const files = buildCatalog(gameOutput ? { gameOutput: resolve(gameOutput) } : {})
+const files = buildCatalog({ gameOutput: gameOutput ? resolve(gameOutput) : GAME_SLICE_DIR })
 
 if (isCheck) {
   const stale = staleFiles(files)
