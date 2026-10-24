@@ -298,5 +298,15 @@
       1.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "game_meat",
+    "teamId": "carne_caca",
+    "teamBox": [
+      3,
+      0.8,
+      2
+    ],
+    "scale": 0.1
   }
 ]
