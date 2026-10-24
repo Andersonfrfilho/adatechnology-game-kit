@@ -69,6 +69,7 @@ const buildOne = (id: string, decision: ExplosiveDecision, inputs: ExplosiveInpu
   if (fire) record.fire = fire
   record.triggers = decision.triggers.value
   if (extras?.chain) record.chain = extras.chain
+  if (extras?.tripwire) record.tripwire = extras.tripwire
   if (extras?.mass !== undefined) record.mass = extras.mass
   const isReferenced = extras?.fuseRange !== undefined || extras?.burnRate !== undefined
   const origins = [arsenal ? 'arsenal' : undefined, 'lab', names.game ? 'game' : undefined, names.gallery ? 'gallery' : undefined, isReferenced ? 'reference' : undefined, world || decision.copyOf ? 'derived' : undefined]

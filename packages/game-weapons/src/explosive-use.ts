@@ -53,10 +53,10 @@ export type ThrowableUseParams = {
   readonly cooked?: number
   /** Set off in the hand: no throw, the fuse is spent. */
   readonly inHand?: boolean
-  readonly rules: Pick<WeaponRules['explosives'], 'placeFuseFrom'>
+  readonly rules: Pick<WeaponRules['explosives'], 'placeFuseFrom' | 'tripwire'>
 }
 
-const placedUse = ({ action, explosive, origin, direction, fuse }: ThrowableUseParams & { explosive: ExplosiveDef }): Use => ({
+const placedUse = ({ action, explosive, origin, direction, fuse, rules }: ThrowableUseParams & { explosive: ExplosiveDef }): Use => ({
   kind: 'place',
   explosive: explosive.id,
   triggers: (explosive.triggers ?? []).filter((trigger): trigger is 'timer' | 'wire' | 'remote' => TIMER_TRIGGERS.has(trigger)),
@@ -64,6 +64,7 @@ const placedUse = ({ action, explosive, origin, direction, fuse }: ThrowableUseP
   radius: explosive.lethalRadius,
   injuryRadius: explosive.injuryRadius,
   ...(explosive.cone ? { cone: { halfAngleDeg: explosive.cone.halfAngleDeg, length: explosive.cone.length } } : {}),
+  ...(explosive.triggers?.includes('wire') ? { tripwire: { ...rules.tripwire, ...explosive.tripwire } } : {}),
   ...(fuse > 0 && action.fuse > 0 ? { fuse } : {}),
   origin,
   direction,

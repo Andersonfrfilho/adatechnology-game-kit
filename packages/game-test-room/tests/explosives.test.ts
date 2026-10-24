@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { explosivePart } from '@adatechnology/game-destruction'
+import { createArsenal } from '@adatechnology/game-weapons'
 import type { DestructibleSpec } from '@adatechnology/game-destruction'
 import type { HostEvent, ModuleHost } from '@adatechnology/game-contracts'
 import { makeRoom } from './helpers'
@@ -26,6 +27,9 @@ const hostEventsOf = (room: TestRoom, type: HostEvent['type']): HostEvent[] => {
   room.loadModule({ id: `spy_${type}`, name: 'spy', group: 'spy', items: () => [], attach: (host) => host.on((event) => event.type === type && events.push(event)) })
   return events
 }
+
+/** The Claymore as a charge for the remote detonator, to try the cone of the blast without the wire. */
+const remoteClaymore = (): ReturnType<typeof createArsenal> => createArsenal({ patch: { explosives: { claymore: { triggers: ['remote'] } } }, seed: 1 })
 
 const equip = (room: TestRoom, weapon: string): void => {
   room.setTool(weapon)
@@ -88,7 +92,7 @@ describe('explosives of the room go through the rule of game-weapons', () => {
   })
 
   it('a charge set down waits for the detonator (Y) and only reaches what is in front of its cone', () => {
-    const room = makeRoom()
+    const room = makeRoom({ arsenal: remoteClaymore() })
     const explosions = explosionsOf(room)
     const ahead = room.spawn('chair', [0, 0, -2]).objectId
     const behind = room.spawn('chair', [0, 0, 9]).objectId
@@ -100,13 +104,13 @@ describe('explosives of the room go through the rule of game-weapons', () => {
     expect(explosions).toHaveLength(0)
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyY' }))
     run(room, 0.2)
-    expect(explosions).toMatchObject([{ type: 'explosion', cause: 'wire' }])
+    expect(explosions).toMatchObject([{ type: 'explosion', cause: 'remote' }])
     expect(room.world.state(ahead)?.parts.some((part) => part.status !== 'intact')).toBe(true)
     expect(room.world.state(behind)?.parts.every((part) => part.status === 'intact')).toBe(true)
   })
 
   it('a long object reaches into the cone of a charge even when its origin lies behind it', () => {
-    const room = makeRoom()
+    const room = makeRoom({ arsenal: remoteClaymore() })
     const beam: DestructibleSpec = { name: 'Beam', parts: [{ id: 'body', material: 'wood_soft', shape: { kind: 'box', size: [0.4, 0.4, 12] }, position: [0, 0.2, 0] }], joints: [] }
     room.loadModule({ id: 'beams', name: 'b', group: 'b', items: () => [{ id: 'beam', name: 'Beam', build: (THREE) => meshOf(THREE as typeof import('three'), [0.4, 0.4, 12]), spec: beam }] })
     // the charge lands about 2 m ahead of the player (z 3), facing -z; the origin of the beam (z 6) is behind it and its near end (z 0) is 3 m ahead of it
@@ -212,5 +216,90 @@ describe('cooking a grenade in the room (hold the trigger)', () => {
     room.look([0, 1.7, 5], [0, 0.6, -3])
     room.use()
     expect(room.log.entries({ type: 'throw_projectile' })).toHaveLength(1)
+  })
+})
+
+describe('trip wire of the Claymore', () => {
+  const place = (room: TestRoom): void => {
+    equip(room, 'claymore')
+    room.look([0, 1.7, 5], [0, 0.2, 1])
+    room.use()
+  }
+
+  it('shows a marker where the charge was set down and draws the wire, and takes both away when it goes off', () => {
+    const room = makeRoom()
+    place(room)
+    const marker = room.scene.getObjectByName('charge_marker')
+    const wire = room.scene.getObjectByName('charge_wire')
+    expect(marker).toBeDefined()
+    expect(wire).toBeDefined()
+    expect(marker?.position.z).toBeCloseTo(3, 0)
+    expect(room.log.entries({ type: 'place_charge' })[0]?.data).toMatchObject({ wire: { from: expect.any(Array), to: expect.any(Array) } })
+    room.look([0, 1.7, -3], [0, 1.7, -8])
+    run(room, 0.2)
+    expect(room.scene.getObjectByName('charge_marker')).toBeUndefined()
+    expect(room.scene.getObjectByName('charge_wire')).toBeUndefined()
+  })
+
+  it('goes off when the player crosses the wire, and not before', () => {
+    const room = makeRoom()
+    const explosions = explosionsOf(room)
+    place(room)
+    run(room, 2)
+    expect(explosions).toHaveLength(0)
+    room.look([0, 1.7, -3], [0, 1.7, -8])
+    run(room, 0.2)
+    expect(explosions).toMatchObject([{ type: 'explosion', cause: 'wire' }])
+    expect(room.log.entries({ type: 'tripwire' })).toHaveLength(1)
+  })
+
+  it('a body that stays clear of the wire does not set it off', () => {
+    const room = makeRoom()
+    const explosions = explosionsOf(room)
+    place(room)
+    room.look([3, 1.7, -3], [3, 1.7, -8])
+    room.spawn('chair', [3, 0, 0])
+    run(room, 3)
+    expect(explosions).toHaveLength(0)
+    expect(room.log.entries({ type: 'tripwire' })).toHaveLength(0)
+    expect(room.scene.getObjectByName('charge_wire')).toBeDefined()
+  })
+
+  it('goes off when an object of the room lands on the wire', () => {
+    const room = makeRoom()
+    const explosions = explosionsOf(room)
+    place(room)
+    run(room, 1)
+    room.spawn('chair', [0, 0, -4])
+    run(room, 0.2)
+    expect(explosions).toMatchObject([{ cause: 'wire' }])
+  })
+
+  it('lets through what was already on the wire when it was set, until it steps off and crosses again', () => {
+    const room = makeRoom()
+    const explosions = explosionsOf(room)
+    room.spawn('chair', [0, 0, -2])
+    place(room)
+    run(room, 2)
+    expect(explosions).toHaveLength(0)
+  })
+
+  it('C4 has a marker but no wire, and the detonator does not set off a wire charge', () => {
+    const room = makeRoom()
+    const explosions = explosionsOf(room)
+    equip(room, 'c4')
+    room.look([0, 1.7, 5], [0, 0.2, 1])
+    room.use()
+    expect(room.scene.getObjectByName('charge_marker')).toBeDefined()
+    expect(room.scene.getObjectByName('charge_wire')).toBeUndefined()
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyY' }))
+    run(room, 0.2)
+    expect(explosions).toMatchObject([{ cause: 'remote' }])
+    const second = makeRoom()
+    const secondExplosions = explosionsOf(second)
+    place(second)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyY' }))
+    run(second, 0.2)
+    expect(secondExplosions).toHaveLength(0)
   })
 })

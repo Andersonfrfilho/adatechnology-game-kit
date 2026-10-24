@@ -60,6 +60,7 @@ export type ExplosiveExtras = {
   readonly fuseLength?: number
   readonly burnRate?: number
   readonly burnTolerance?: number
+  readonly tripwire?: { readonly length: number; readonly angleDeg?: number; readonly height?: number }
   readonly mass?: number
   readonly stunSeconds?: number
   readonly cone?: boolean

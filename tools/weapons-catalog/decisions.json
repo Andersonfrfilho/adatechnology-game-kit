@@ -1467,10 +1467,15 @@
       },
       "extras": {
         "value": {
-          "cone": true
+          "cone": true,
+          "tripwire": {
+            "length": 10,
+            "angleDeg": 0,
+            "height": 0.15
+          }
         },
-        "source": "lab",
-        "reason": "Cone do Laboratório (meio ângulo de 30°, alcance 50 m); letal 15 m e ferimento 50 m."
+        "source": "derived",
+        "reason": "Cone do Laboratório (meio ângulo de 30°, alcance 50 m); letal 15 m e ferimento 50 m. Dono (2026-10-24), Q5: dispara por FIO DE TROPEÇO. Nenhuma fonte dá o comprimento do kit do M18A1 (o FM 23-23 descreve o fio, sem número que se pôde conferir), então o padrão é derivado e configurável: 10 m, na direção do cone (0°), a 0,15 m do chão (canela), dentro do raio letal de 15 m."
       },
       "energy": {
         "value": 102400,

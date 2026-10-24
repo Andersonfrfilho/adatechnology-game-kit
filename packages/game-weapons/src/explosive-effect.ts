@@ -42,3 +42,23 @@ export const backblastEffect = (use: Extract<Use, { kind: 'backblast' }>, target
   if (distance > use.radius || !insideCone(offset, use.direction, use.halfAngleDeg)) return 0
   return 1 - distance / use.radius
 }
+
+export interface TripwireSegment {
+  readonly from: Vec3
+  readonly to: Vec3
+}
+
+/**
+ * Where the wire of a charge set down with `use` runs: from the charge, `length` metres along the horizontal facing turned by `angleDeg`
+ * (counter-clockwise seen from above), `height` metres above it. Null for a charge with no wire.
+ */
+export const tripwireSegment = (use: Extract<Use, { kind: 'place' }>): TripwireSegment | null => {
+  const wire = use.tripwire
+  if (!wire) return null
+  const facing = normalize([use.direction[0], 0, use.direction[2]])
+  const angle = (wire.angleDeg * Math.PI) / 180
+  const dx = facing[0] * Math.cos(angle) + facing[2] * Math.sin(angle)
+  const dz = -facing[0] * Math.sin(angle) + facing[2] * Math.cos(angle)
+  const from: Vec3 = [use.origin[0], use.origin[1] + wire.height, use.origin[2]]
+  return { from, to: [from[0] + dx * wire.length, from[1], from[2] + dz * wire.length] }
+}

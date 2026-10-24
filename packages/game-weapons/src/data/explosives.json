@@ -154,6 +154,11 @@
     "triggers": [
       "wire"
     ],
+    "tripwire": {
+      "length": 10,
+      "angleDeg": 0,
+      "height": 0.15
+    },
     "sources": [
       "arsenal",
       "lab",

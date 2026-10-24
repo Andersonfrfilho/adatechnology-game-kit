@@ -63,6 +63,8 @@ export type Use =
       injuryRadius: number
       /** Cone the blast goes through, in front of `direction` (mine); absent for a blast in every direction. */
       cone?: { halfAngleDeg: number; length: number }
+      /** The wire a `wire` charge stretches from where it is set down: metres out, degrees from its facing (counter-clockwise from above) and metres above it. */
+      tripwire?: { length: number; angleDeg: number; height: number }
       fuse?: number
       origin: Vec3
       direction: Vec3

@@ -1,3 +1,4 @@
+import type { ExplosiveTripwire } from './explosive-types'
 import type { CaseType, FireMode, WeaponDef } from './types'
 
 export type FaultId = 'misfire' | 'stovepipe' | 'double_feed' | 'failure_to_extract'
@@ -54,6 +55,8 @@ export interface WeaponRules {
     readonly wallRestitution: number
     /** A timer explosive whose fuse is at least this many seconds is set down lit instead of thrown (a long safety fuse: a delayed trap). */
     readonly placeFuseFrom: number
+    /** The wire of a charge set down with the `wire` trigger that does not name one. */
+    readonly tripwire: Required<ExplosiveTripwire>
   }
   readonly draw: number
   readonly clear: number

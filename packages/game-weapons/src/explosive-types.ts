@@ -10,6 +10,16 @@ export type ExplosiveTrigger = 'timer' | 'impact' | 'shot' | 'fire' | 'wire' | '
 /** Chain reaction of an explosive that sits in the world (fuel barrel, car tank, gas pump); `game-destruction` reads it from `explodes.chain`. */
 export type ExplosiveChain = ExplosionChain
 
+/** The wire a placed charge stretches: from the charge, `length` metres out at `angleDeg` from the way it faces, `height` metres above where it sits. */
+export interface ExplosiveTripwire {
+  /** Metres. */
+  readonly length: number
+  /** Degrees from the facing of the charge, counter-clockwise seen from above (default 0: straight ahead). */
+  readonly angleDeg?: number
+  /** Metres above the charge (default 0.15: shin height). */
+  readonly height?: number
+}
+
 export interface ExplosiveDef {
   readonly id: ExplosiveId
   readonly name?: string
@@ -39,6 +49,8 @@ export interface ExplosiveDef {
   readonly fire?: { temperature: number; radius: number; seconds: number }
   readonly triggers?: readonly ExplosiveTrigger[]
   readonly chain?: ExplosiveChain
+  /** The trip wire of an explosive with the `wire` trigger; without it the one in `rules.explosives.tripwire` is used. */
+  readonly tripwire?: ExplosiveTripwire
   /** Kilograms. */
   readonly mass?: number
   readonly sources?: readonly DataSource[]

@@ -1,9 +1,11 @@
 import type * as THREE_NS from 'three'
 import type { DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { DestructionRenderer } from '@adatechnology/game-destruction-three'
-import { backblastEffect, blastEffect, createExplosiveBody } from '@adatechnology/game-weapons'
+import { backblastEffect, blastEffect, createExplosiveBody, tripwireSegment } from '@adatechnology/game-weapons'
 import type { Arsenal, Detonation, ExplosiveBody, SurfaceProbe, Use } from '@adatechnology/game-weapons'
 import type { HostEvent } from '@adatechnology/game-contracts'
+
+import { segmentTouchesBox } from './segment-box'
 
 type Vars = Record<string, string | number>
 type Fire = { temperature: number; radius: number; seconds: number }
@@ -28,7 +30,14 @@ interface Projectile {
   aligned?: boolean
   /** Set down where it was used: waits for its trigger instead of flying. */
   placed?: boolean
+  /** The wire of a charge that waits for a body to cross it, and the bodies already touching it when it was set (they are let out first). */
+  wire?: { from: Vec3; to: Vec3; letThrough: Set<string> }
+  /** What shows where it was set down (marker and wire), taken away with it. */
+  attached?: THREE_NS.Object3D[]
 }
+
+/** A body that can set off a trip wire: the player, a physics object, or anything a module brings. */
+export type CrossingBody = { readonly id: string; readonly box: THREE_NS.Box3 }
 
 /** What the explosives need from the room: the world to blast, the renderer to draw it, the log and the host to tell, and the few room rules (ground, held object, fire). */
 export type ExplosivesContext = {
@@ -40,6 +49,8 @@ export type ExplosivesContext = {
   readonly arsenal: Pick<Arsenal, 'explosives' | 'rules'>
   /** The roots of the objects a blast can reach (the arena is not one). */
   readonly objects: () => readonly THREE_NS.Object3D[]
+  /** The bodies that set off a trip wire when they cross it: their world boxes, now. */
+  readonly bodies: () => readonly CrossingBody[]
   readonly toolId: () => string
   readonly toolName: (id?: string) => string
   readonly withoutHeld: <TResult>(run: () => TResult) => TResult
@@ -56,7 +67,7 @@ export type Explosives = {
   throwUse: (use: Extract<Use, { kind: 'throw' }>) => void
   placeUse: (use: Extract<Use, { kind: 'place' }>) => void
   backblastUse: (use: Extract<Use, { kind: 'backblast' }>) => void
-  /** Sets off the charges set down that wait for a remote detonator or a trip wire; returns how many went off. */
+  /** Sets off the charges set down that wait for the remote detonator; returns how many went off. A trip wire charge goes off by itself, when a body crosses the wire. */
   detonateCharges: () => number
   update: (dt: number) => void
   /** Removes every projectile and charge, and their meshes. */
@@ -88,6 +99,11 @@ export function createExplosives(context: ExplosivesContext): Explosives {
   }
 
   const remove = (projectile: Projectile): void => {
+    for (const extra of projectile.attached ?? []) {
+      extra.removeFromParent()
+      const extraAt = meshes.indexOf(extra)
+      if (extraAt >= 0) meshes.splice(extraAt, 1)
+    }
     projectile.mesh.removeFromParent()
     const meshAt = meshes.indexOf(projectile.mesh)
     if (meshAt >= 0) meshes.splice(meshAt, 1)
@@ -128,14 +144,55 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     return [x, context.groundAt(x, z) + 0.03, z]
   }
 
+  /** The marker that shows where a charge was set down: a stake with a flag, so it can be found (and avoided). */
+  const markerAt = (at: Vec3): THREE_NS.Group => {
+    const marker = new THREE.Group()
+    marker.name = 'charge_marker'
+    const stake = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.4, 6), new THREE.MeshStandardMaterial({ color: 0x8b6b3d, roughness: 0.8 }))
+    stake.position.y = 0.2
+    const flag = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.12, 4), new THREE.MeshStandardMaterial({ color: 0xff6a00, emissive: 0xff3300, emissiveIntensity: 0.4 }))
+    flag.position.y = 0.46
+    marker.add(stake, flag)
+    marker.position.set(at[0] + 0.12, at[1] - 0.03, at[2])
+    scene.add(marker)
+    meshes.push(marker)
+    return marker
+  }
+
+  const wireLine = (from: Vec3, to: Vec3): THREE_NS.Line => {
+    const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...from), new THREE.Vector3(...to)])
+    const line = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: 0xe8e4c8 }))
+    line.name = 'charge_wire'
+    scene.add(line)
+    meshes.push(line)
+    return line
+  }
+
+  /** The bodies whose box the wire touches right now. */
+  const touching = (wire: NonNullable<Projectile['wire']>): string[] =>
+    context
+      .bodies()
+      .filter((body) => segmentTouchesBox(wire.from, wire.to, toArray(body.box.min), toArray(body.box.max)))
+      .map((body) => body.id)
+
   const placeUse = (use: Extract<Use, { kind: 'place' }>): void => {
     const at = placementPoint(use)
-    const body = createExplosiveBody({ ...use, origin: at }, arsenal.explosives, arsenal.rules.explosives)
+    const placed = { ...use, origin: at }
+    const body = createExplosiveBody(placed, arsenal.explosives, arsenal.rules.explosives)
     if (!body) return
     const mesh = addMesh(new THREE.BoxGeometry(0.18, 0.06, 0.1), use.explosive === 'claymore' ? 0x556b2f : 0xc2a878, 0.1, at)
     mesh.rotation.y = Math.atan2(use.direction[0], use.direction[2])
-    projectiles.push({ mesh, pos: new THREE.Vector3(at[0], at[1], at[2]), vel: new THREE.Vector3(), weapon: context.toolId(), fuse: 0, burstOnImpact: false, energy: use.energy, radius: use.radius, age: 0, body, placed: true })
-    action('place_charge', translate('act.place', { weapon: context.toolName(), triggers: use.triggers.join('/') || '-' }), { data: { weapon: context.toolId(), explosive: use.explosive, triggers: [...use.triggers], point: at } })
+    const attached: THREE_NS.Object3D[] = [markerAt(at)]
+    const segment = tripwireSegment(placed)
+    const projectile: Projectile = { mesh, pos: new THREE.Vector3(at[0], at[1], at[2]), vel: new THREE.Vector3(), weapon: context.toolId(), fuse: 0, burstOnImpact: false, energy: use.energy, radius: use.radius, age: 0, body, placed: true, attached }
+    if (segment) {
+      const wire = { from: segment.from, to: segment.to, letThrough: new Set<string>() }
+      for (const id of touching(wire)) wire.letThrough.add(id)
+      attached.push(wireLine(segment.from, segment.to))
+      projectile.wire = wire
+    }
+    projectiles.push(projectile)
+    action('place_charge', translate('act.place', { weapon: context.toolName(), triggers: use.triggers.join('/') || '-' }), { data: { weapon: context.toolId(), explosive: use.explosive, triggers: [...use.triggers], point: at, ...(segment ? { wire: segment } : {}) } })
   }
 
   /** The blast behind a launcher: a puff of dust in the cone and what lies inside it, counted. */
@@ -232,7 +289,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     let count = 0
     for (const projectile of [...projectiles]) {
       if (!projectile.placed || !projectile.body) continue
-      const event = projectile.body.trigger('remote') ?? projectile.body.trigger('wire')
+      const event = projectile.body.trigger('remote')
       if (event?.type !== 'detonate') continue
       detonate(projectile, event.detonation)
       remove(projectile)
@@ -290,12 +347,27 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     return isBurst
   }
 
+  /** A body crossed the wire: the charge goes off. Bodies already on the wire when it was set are let through until they step off it. */
+  const checkWire = (projectile: Projectile, body: ExplosiveBody): void => {
+    const wire = projectile.wire
+    if (!wire) return
+    const crossing = touching(wire)
+    for (const id of [...wire.letThrough]) if (!crossing.includes(id)) wire.letThrough.delete(id)
+    const crosser = crossing.find((id) => !wire.letThrough.has(id))
+    if (crosser === undefined) return
+    const event = body.trigger('wire')
+    if (event?.type !== 'detonate') return
+    action('tripwire', translate('act.tripwire', { weapon: context.toolName(projectile.weapon), who: crosser }), { data: { weapon: projectile.weapon, body: crosser } })
+    detonate(projectile, event.detonation)
+  }
+
   const update = (dt: number): void => {
     for (let index = projectiles.length - 1; index >= 0; index--) {
       const projectile = projectiles[index]
       if (!projectile) continue
       projectile.age += dt
       if (projectile.body) {
+        if (projectile.wire && !projectile.body.done) checkWire(projectile, projectile.body)
         stepBody(projectile, projectile.body, dt)
         if (projectile.body.done || (!projectile.placed && projectile.age > 60)) remove(projectile)
         continue

@@ -43,13 +43,14 @@ const checkExplosiveReference = (def: WeaponDef, explosives: ArsenalParts['explo
   return id !== undefined && !explosives.has(id) ? [`weapon "${def.id}" uses unknown explosive "${id}"`] : []
 }
 
-const checkFuse = (explosive: ExplosiveDef): string[] => {
+const checkExplosiveNumbers = (explosive: ExplosiveDef): string[] => {
   const problems: string[] = []
   const [low, high] = explosive.fuseRange ?? [1, 1]
   if (!(low > 0 && high >= low)) problems.push(`explosive "${explosive.id}" has a fuse range of ${low} to ${high} s`)
   if (explosive.fuseLength !== undefined && !(explosive.fuseLength > 0)) problems.push(`explosive "${explosive.id}" has a fuse length of ${explosive.fuseLength} m`)
   if (explosive.burnRate !== undefined && !(explosive.burnRate > 0)) problems.push(`explosive "${explosive.id}" has a burn rate of ${explosive.burnRate} s/m`)
   if (explosive.burnTolerance !== undefined && !(explosive.burnTolerance >= 0 && explosive.burnTolerance < 1)) problems.push(`explosive "${explosive.id}" has a burn tolerance of ${explosive.burnTolerance}`)
+  if (explosive.tripwire && !(explosive.tripwire.length > 0)) problems.push(`explosive "${explosive.id}" has a trip wire of ${explosive.tripwire.length} m`)
   return problems
 }
 
@@ -64,6 +65,6 @@ const checkRuleDefaults = (rules: ArsenalParts['rules']): string[] => {
 /** Every problem found in an arsenal, so a game sees them all at once instead of one per run. Empty when it is consistent. */
 export const checkArsenal = ({ weapons, calibers, explosives, rules }: ArsenalParts): string[] => [
   ...[...weapons.values()].flatMap((def) => [...checkFirearm(def, calibers), ...checkTimings(def), ...checkExplosiveReference(def, explosives)]),
-  ...[...explosives.values()].flatMap(checkFuse),
+  ...[...explosives.values()].flatMap(checkExplosiveNumbers),
   ...checkRuleDefaults(rules),
 ]

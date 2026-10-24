@@ -23,7 +23,7 @@ import { DEMO_MATERIALS, demoItems } from './items'
 import { createLog } from './log'
 import { createRoomMetrics, ROOM_METRICS } from './metrics'
 import { createNarrator } from './narrate'
-import { createPlayer } from './player'
+import { createPlayer, PLAYER_RADIUS } from './player'
 import { makeScenarios } from './scenarios'
 import { resolveStrings } from './locale'
 import { createUi } from './ui'
@@ -967,6 +967,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     action('molotov_fire', t('act.molotov_fire', { weapon: toolName(weapon), seconds: num(fire.seconds, 0), radius: num(fire.radius, 1) }), { data: { weapon, impact } })
   }
 
+  /** The bodies that trip a wire: the player (a column from the ground to the eyes) and every object of the room that is not the arena. */
+  function crossingBodies(): { id: string; box: THREE_NS.Box3 }[] {
+    const bodies = [...entries.values()].filter((e) => !e.arena).map((e) => ({ id: e.so.objectId, box: new THREE.Box3().setFromObject(e.so.root) }))
+    const { x, y, z } = camera.position
+    const feet = groundAt(x, z)
+    bodies.push({ id: 'player', box: new THREE.Box3(new THREE.Vector3(x - PLAYER_RADIUS, feet, z - PLAYER_RADIUS), new THREE.Vector3(x + PLAYER_RADIUS, y + 0.1, z + PLAYER_RADIUS)) })
+    return bodies
+  }
+
   // ----- projectiles (grenades, molotovs, rockets) and charges set down: the room lends the explosives its world, log and host
   const explosives = createExplosives({
     THREE,
@@ -976,6 +985,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     renderer,
     arsenal,
     objects: () => [...entries.values()].filter((e) => !e.arena).map((e) => e.so.root),
+    bodies: crossingBodies,
     toolId: () => toolId,
     toolName,
     withoutHeld,
