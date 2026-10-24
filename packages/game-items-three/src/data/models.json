@@ -678,5 +678,15 @@
       0.4
     ],
     "scale": 0.1
+  },
+  {
+    "id": "tramadol",
+    "teamId": "opioide",
+    "teamBox": [
+      0.952,
+      0.5,
+      0.152
+    ],
+    "scale": 0.1
   }
 ]
