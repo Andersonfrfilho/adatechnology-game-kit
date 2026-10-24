@@ -808,5 +808,15 @@
       0.25
     ],
     "scale": 0.1
+  },
+  {
+    "id": "multivitamin",
+    "teamId": "vitamina",
+    "teamBox": [
+      0.508,
+      0.9,
+      0.508
+    ],
+    "scale": 0.1
   }
 ]
