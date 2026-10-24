@@ -388,5 +388,15 @@
       0.734
     ],
     "scale": 0.1
+  },
+  {
+    "id": "pasta",
+    "teamId": "macarrao",
+    "teamBox": [
+      1,
+      2.5,
+      0.402
+    ],
+    "scale": 0.1
   }
 ]
