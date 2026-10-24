@@ -234,7 +234,7 @@ Pacote novo `game-floorplan-three` (`GameFloorplanThree`). Porte literal: mesma 
 | Espelhos | 41326–41390 | `mirrors.ts` (`Reflector` injetado em `reflector`) | portado |
 | Carros | 41391–41498 | `cars.ts` (frota injetada em `fleet`, tipos por estilo em `carKinds`) | portado |
 | Interação | 41534–41883 | `interaction/{state,doors,items,fittings,target,collision}.ts` | portado |
-| Interativos | 41884–42174 | `interactables/{kit,bridge}.ts` | ponte portada; o `AdaptadorInterativos` é código do jogo (cabeçalho dele) e entra injetado em `interactives.adapter` |
+| Interativos | 41884–42174 | `interactables/{kit,bridge}.ts` | ponte portada; o `AdaptadorInterativos` era código do jogo (cabeçalho dele) e entrava injetado em `interactives.adapter`; **dúvida 5 respondida (2026-10-24, decisão do dono): entrou no kit, em `packages/game-floorplan-interactables`, e é o padrão de `interactives`** (evidence.md, seção "AdaptadorInterativos") |
 | Animações | 42175–42220 | `animation/clotheslines.ts` | portado |
 | Destruição | 42296–42466 | `destruction/{pieces,world}.ts`; `breach.ts` é novo (abertura na malha e fiadas de tijolo no LOD 0) | portado; fragmentos, lascamento e armadura aparente são do `game-destruction-three` |
 | LOD | 42659–42680 | `statics.ts` (`planLod`), `build/build.ts` (`setLod`, LOD por distância) | portado |
