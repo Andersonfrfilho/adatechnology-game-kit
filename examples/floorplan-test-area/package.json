@@ -1,0 +1,24 @@
+{
+  "name": "@adatechnology/floorplan-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Houses area for the shared test room: any typology of the residential, commercial, rural and post-apocalyptic packages (22 buildings and houses, the camp and the triage tent) built by game-floorplan-three from a seed and a state, laid in the room facing the player, with the walls and the closed doors stopping the walk, E to use the doors, floors up and down, the level of detail by hand, by distance or shared among a row of houses by a draw-call budget, and the houses registered in the room's destruction world: shot, struck, blown up and burnt with the room's tools or the bench's hit (9 mm and 7.62 bursts, sledgehammer, C4, RPG). Six scenarios of the team's house area (pillars, partition, window, water tank, gas bottle) and one that builds every typology check the rules.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-destruction": "workspace:*",
+    "@adatechnology/game-floorplan": "workspace:*",
+    "@adatechnology/game-floorplan-commercial": "workspace:*",
+    "@adatechnology/game-floorplan-post-apocalyptic": "workspace:*",
+    "@adatechnology/game-floorplan-residential": "workspace:*",
+    "@adatechnology/game-floorplan-rural": "workspace:*",
+    "@adatechnology/game-floorplan-structure": "workspace:*",
+    "@adatechnology/game-floorplan-three": "workspace:*",
+    "@adatechnology/game-props3d": "workspace:*"
+  }
+}

@@ -1,5 +1,61 @@
 # @adatechnology/game-destruction
 
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies [98ae206]
+  - @adatechnology/game-contracts@0.12.0
+
+## 0.7.0
+
+### Minor Changes
+
+- 968d7df: Shelter, fragment hits and confinement for blasts (`DestructionOptions.blast`, `explode(..., options)`, explosive `Hit`), all off by default and with every number an option; `Hit.piercing` and `piercingOf` (soft lead does not go through steel on energy alone); `breach.blastReach`; glass `damageScale.shelter`. `tests/beams-and-columns.test.ts` documents real calibres against beams and columns.
+
+### Patch Changes
+
+- Updated dependencies [968d7df]
+  - @adatechnology/game-contracts@0.11.0
+
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [7fd46fb]
+  - @adatechnology/game-contracts@0.10.0
+
+## 0.6.0
+
+### Minor Changes
+
+- aa2c014: `game-destruction-three` draws blasts and fires with the effects world (T5.1f). A new `RendererOptions.vfx` takes the world the host shares (stepped by the host's `VfxRenderer`); without it the renderer makes its own world and `game-vfx-three` layer and steps them in `update`, so existing callers keep working. An `explode` event plays `ev.effect ?? 'generic'` (the M67 scaled by `radius / 15`; an id the catalogue does not know falls back to it), the five old bursts and the point light are gone, and a burning part gets one `vfx.fire` that follows it and stops when the part stops burning. `explode(point, energy, radius, options?)` takes `{ effect, direction, visual }`; `visual: false` keeps only the shove and the sound. `RendererOptions.explosionLight` is removed (the light belongs to the effects world) and `RendererOptions.camera` is new. Debris, sparks, ash, steam, drips and leaks go through the shared sprite pool (see `t5-1fg-sprite-pool`).
+
+  `game-destruction` gets `blastFrontSpeed` (default off): glass an explosion reaches breaks `distance / speed` seconds later, in `update`. The `explode` event now carries `effect` from `explodes.effect`.
+
+  `game-vfx-three` names its puff, spark and glow meshes (`vfx-puffs`, `vfx-sparks`, `vfx-glows`) and draws blank mark textures when there is no DOM, so it runs headless.
+
+### Patch Changes
+
+- Updated dependencies [cb85470]
+- Updated dependencies [6aa11f1]
+  - @adatechnology/game-contracts@0.9.0
+
+## 0.5.0
+
+### Minor Changes
+
+- 9e58b50: Contratos de parede em camadas e estágios de dano (todos opcionais): `PartSpec.layers` (`SurfaceLayer`), `reinforcement` (`Reinforcement`), `units` (`PartUnits`) e `breach` (`PartBreach`); `PartState.stage` (`DamageStage` 0 a 3), `stripped` e `opening`; `Fragment.marks` (`FragmentMark`); eventos `spall`, `stage` (com `opening` e `fragments`) e `expose`. `checkSpec` valida os campos novos. Módulos existentes compilam sem mudança.
+- 95c4bdd: Paredes em camadas, estágios e armadura. Registro de montagens (`ASSEMBLIES`, `registerAssembly`, `assemblyPart`) com as 8 paredes de medida real (tijolo rebocado, bloco, concreto armado, drywall, madeira, tronco, chapa e vidro). Penetração soma `penetration x espessura` de cada camada, a camada de fora lasca primeiro (`spall`). Estágios 0 a 3 com brecha (0,25 m² dentro de 0,55 m: fragmentos do tamanho da peça, abertura, a peça fica; `stage`), gaiola de armadura (`expose`, `stripped`, capacidade residual, colapso progressivo por sobrecarga, corte com maçarico ou serra) e furos que ficam nos fragmentos (`Fragment.marks`). `sizeStructure` ganha `redundancyRoles` e `safetyByRole`. `DestructionOptions.breach` (`radius`, `blastFactor`). Goldens próprios em Node 22 e 24 (`@adatechnology/golden-tool` como devDependency).
+
+### Patch Changes
+
+- 76d15b6: Contrato do corpo vivo (fase 4): `body.ts` com `BodySlot`, `SegmentKind`, `BodyRegion` e `MISSING_BITS`; `Hit.mass`, `Hit.cut` e `Hit.part`; evento `body`; `ObjectState.body`. `Shot.mass` (gramas do projétil) sai das armas e `shotToHit` copia para o `Hit`. O `game-destruction` ganha o rótulo do evento `body` nos dois idiomas.
+- Updated dependencies [76d15b6]
+- Updated dependencies [cc182c7]
+- Updated dependencies [9e58b50]
+  - @adatechnology/game-contracts@0.8.0
+
 ## 0.4.2
 
 ### Patch Changes

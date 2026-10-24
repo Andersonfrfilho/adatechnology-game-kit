@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { AreaPlacement, BenchChange, DestructibleSpec, HostTool, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
+import type { EngineSink } from '@adatechnology/game-audio'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import { createAccessoryBench, accessoryControls, accessoryLayers, accessoryMetrics } from './accessory-bench'
@@ -15,6 +16,7 @@ import { BODY_ACTIONS, buildModeledProp, buildProp, buildTripodMountedProp, mode
 import type { WeaponProp } from './props'
 import { DEFAULT_THUMBNAIL_BASE, weaponThumbnailCredit, weaponThumbnailUrl } from './thumbnails'
 import { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
+import { createWorldEffects } from './world-effects'
 
 export interface WeaponsTestModuleOptions {
   /** `en` or `pt-BR` (default). */
@@ -251,7 +253,9 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   const arsenal = options.arsenal ?? createArsenal({ locale })
   const text = textOf(locale)
   const accessoryText = accessoryTextOf(locale)
-  const audio = options.sound === false ? null : createWeaponAudio(undefined, options.seed === undefined ? {} : { seed: options.seed })
+  const seedOption = options.seed === undefined ? {} : { seed: options.seed }
+  // the module's own audio (it makes no context until the first sound); when the host lends a sound engine, `attach` swaps it for one on that engine
+  let audio: WeaponAudio | null = options.sound === false ? null : createWeaponAudio(undefined, seedOption)
   const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id))
   const thumbnailBase = options.thumbnailBase ?? DEFAULT_THUMBNAIL_BASE
   const withThumbnail = (item: TestableItem, key: string): TestableItem => {
@@ -279,7 +283,9 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
     id: 'weapons_area',
     name: text.name,
     group: text.group,
-    audio,
+    get audio() {
+      return audio
+    },
     get fx() {
       return fx
     },
@@ -327,6 +333,11 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
     ],
     attach(lent) {
       host = lent
+      const lentEngine = (lent.audio as EngineSink | undefined)?.engine
+      if (audio && lentEngine) {
+        audio.dispose()
+        audio = createWeaponAudio(undefined, { ...seedOption, engine: lentEngine })
+      }
       const created = createWeaponFx({
         THREE: lent.THREE as typeof THREE_NS,
         scene: lent.scene as THREE_NS.Scene,
@@ -337,6 +348,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         tool: lent.tool,
         soundDistance: () => soundDistance,
         raycast: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera),
+        ...(lent.effects ? { effects: lent.effects } : {}),
         ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
         ...(options.condition ? { condition: options.condition } : {}),
         ...(options.seed === undefined ? {} : { seed: options.seed }),
@@ -360,7 +372,9 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         } else if (change.kind === 'control' && change.id === 'sound_distance' && typeof change.value === 'number') soundDistance = change.value
         else if (change.kind === 'control' && change.id === 'fuse_length' && typeof change.value === 'number') lent.configureTool?.({ fuse_length: String(change.value) })
       })
+      const worldEffects = createWorldEffects({ arsenal })
       const offEvents = lent.on((event) => {
+        worldEffects.handle(event, lent.effects)
         if (event.type === 'explosion') {
           const away = Math.hypot(event.point[0] - camera.position.x, event.point[1] - camera.position.y, event.point[2] - camera.position.z)
           audio?.play('explosion', Math.min(1, EXPLOSION_VOLUME_BASE + event.radius * EXPLOSION_VOLUME_PER_METRE), away)

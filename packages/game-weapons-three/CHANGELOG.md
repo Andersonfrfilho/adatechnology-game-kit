@@ -1,5 +1,72 @@
 # @adatechnology/game-weapons-three
 
+## 0.6.2
+
+### Patch Changes
+
+- Updated dependencies [98ae206]
+  - @adatechnology/game-contracts@0.12.0
+  - @adatechnology/game-audio@0.1.2
+  - @adatechnology/game-weapons@0.4.4
+  - @adatechnology/game-interactables-three@0.1.5
+
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [968d7df]
+  - @adatechnology/game-contracts@0.11.0
+  - @adatechnology/game-audio@0.1.1
+  - @adatechnology/game-weapons@0.4.3
+  - @adatechnology/game-interactables-three@0.1.4
+
+## 0.6.0
+
+### Minor Changes
+
+- 0f9e616: `createWeaponAudio` now runs on `@adatechnology/game-audio`: the three primitives are recipes and the WebAudio trace is the one recorded before the change. New option `engine` to play on a shared engine (the weapons area uses the one the host lends in `host.audio`), with its own random stream. The reload, dry-fire and bolt sounds of the art scene replace the SDK's clicks as the default `MECHANICAL_SOUNDS` (steps `scene_tone` and `scene_noise`). `game-audio` is a dependency.
+
+### Patch Changes
+
+- Updated dependencies [7fd46fb]
+- Updated dependencies [0f9e616]
+- Updated dependencies [3a8cc95]
+  - @adatechnology/game-contracts@0.10.0
+  - @adatechnology/game-audio@0.1.0
+  - @adatechnology/game-weapons@0.4.2
+  - @adatechnology/game-interactables-three@0.1.3
+
+## 0.5.0
+
+### Minor Changes
+
+- 6aa11f1: One sprite pool for the whole kit (T5.1f-g, spec 001). `game-vfx` gets `vfx.burst(kind, point, normal, count, speed?, options?)`, `vfx.spawn(...)`, `vfx.onLand(owner, fn)` and `vfx.sprites()` over 14 kinds (`data/sprite-kinds.json`, `patchSpriteKinds`; the numbers and the generator are the ones of the old `particles.ts`), with `floor` and `rise` spawn options; `game-vfx-three` draws them in two layers (`vfx-sprites-additive`, `vfx-sprites`). `game-destruction-three` and `game-fluids-three` delete their own `particles.ts` and use the pool (`ParticleKind` stays as an alias of `SpriteKind`; `FluidRendererOptions` gets `vfx` and `camera`; the destruction renderer plays the effects of the Phase 2 events through `eventEffects`, default `EVENT_EFFECTS_MAP`). `game-weapons-three` plays the muzzle flash and the casing of a shot seen from outside through `host.effects` (`muzzle_glock|ak|r870|barrett`, `casing_brass|shell|50`, by case type, in `data/world-effects.json`); the `shot` host event of `game-contracts` carries optional `origin` and `direction`, and the effect sink falls back from explosions to the Workshop recipes (`param` by index or id).
+
+### Patch Changes
+
+- 496b397: The test room shares one effects world (T5.1g). It creates a single `createVfxRenderer` (screen overlay in the container), passes its world to the destruction renderer, lends it to every module as `host.effects`, steps it once per frame, wraps its render in `applyCamera` (new `TestRoom.applyCamera()` for hosts that render themselves) and counts its pools in the `particles` metric. Grenades, rockets and charges play the profile of their explosive (`vfx.world.explosion(explosive, point, { direction })`; the destruction renderer keeps only the shove and the sound), and the `explosion` host event carries `explosive` (also for parts that blow up, from `explodes.effect`). New option `craters` replaces the floor with a deformable ground patch that big explosions dig into (default off). `game-weapons-three`: the explosives it puts in the world (fuel barrel, propane cylinder, car tank) name their effect in `explodes.effect`, so their blast is the explosive's profile.
+- Updated dependencies [cb85470]
+- Updated dependencies [6aa11f1]
+  - @adatechnology/game-contracts@0.9.0
+  - @adatechnology/game-weapons@0.4.1
+  - @adatechnology/game-interactables-three@0.1.2
+
+## 0.4.1
+
+### Patch Changes
+
+- 32a00c6: `mergeByMaterial` now comes from `@adatechnology/game-props3d` (new dependency); nothing changes for callers of the package. The thumbnails of the twelve melee weapons added for the goods catalog were generated (`weapon-svg/generated`, manifest and credits), and the weapons area test allows eight counters.
+- Updated dependencies [76d15b6]
+- Updated dependencies [50eee43]
+- Updated dependencies [afffd1b]
+- Updated dependencies [cc182c7]
+- Updated dependencies [32a00c6]
+- Updated dependencies [9e58b50]
+  - @adatechnology/game-contracts@0.8.0
+  - @adatechnology/game-weapons@0.4.0
+  - @adatechnology/game-props3d@0.2.0
+  - @adatechnology/game-interactables-three@0.1.1
+
 ## 0.4.0
 
 ### Minor Changes

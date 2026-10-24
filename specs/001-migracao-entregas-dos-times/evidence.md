@@ -1263,6 +1263,44 @@ Modelo: `sonnet`. Branch `work/spec001-t2-f` (sobre `feat/spec-001-fase-2` com a
 
 1. Com 200 sementes (`FULL=1`) os modelos rurais têm raras plantas que a própria página também gera (idênticas): alpendre da cabana com centro inalcançável (sementes 53, 68, 123, 167, 173), pouso de escada bloqueado por vaso no chalé (187), quarto do barraco com 29% de área alcançável (200) e estado abandonado sem cadeira caída no barraco (90). Mantive o porte fiel (suíte padrão, 25 sementes, passa); corrijo na página e no porte juntos se quiser.
 2. A laje com andares: a escada na margem esquerda tapa a porta lateral da cozinha por cima? (ela passa acima de 2,6 m; confirma o desenho?)
+## Fase 5 — grupos A e B
+
+Branch `feat/spec-001-fase-5` (de `main`), worktree `spec001-fase-5`. Contrato: `design/T5-efeitos.md`. Cada task é um commit isolado, na ordem do prompt (T5.0, T5.1a, T5.3b, T5.1b, T5.1c, T5.1d, T5.1e). Os grupos C (destruição, fluidos, armas e sala de testes passam a usar o mundo de efeitos), D (Oficina de VFX e bancada) e E (filme de fluidos) não foram começados.
+
+### T5.0 — capturas e fixtures
+
+- `--expose` no gravador: mesma implementação da T2.2a (`feat/spec-001-fase-2`, commit `822cbdb`), trazida com `git checkout feat/spec-001-fase-2 -- tools/golden/{bin,src,tests}` (`expose-in-page.mjs`, `hashText`, o teste), para as duas branches convergirem no merge. A linha do README é a mesma.
+- Capturas: `explosion-lab.js` (16 cenas), `vfx-workshop.js` (modo `effects` e modo `fluids`), `fluid-standard.js` (5 cenas x 5 fluidos). Cada gravação saiu idêntica byte a byte repetida e entre Node 22.23.4 e 24.22.0 (o gravador roda o V8 do Chrome; o Node só roda o script).
+- Desvios do contrato, todos de método:
+  - O Laboratório não é guiado por `frame` da página (tem `IntersectionObserver` e renderiza): a captura chama as funções `update*` da página, na ordem do `frame`, a 1/60 s. `blast` é chamado direto, sem os zumbis, as janelas (`WINDOWS.length = 0`) nem a física de arremesso; o estado global que a página guarda entre cenas (`clock`, `xlIdx`, `decalY`, `flashDecay`, `lodNow`) é zerado por cena para a cena poder ser reproduzida sozinha.
+  - Hashes de pool são de estado em `number` (4 casas), não dos buffers `pA/pD/pC` em float32 (o arredondamento de float32 vira fronteira de hash). Os buffers entram como amostra com tolerância (primeira e sexta linha escritas no quadro, `puffGeo.instanceCount`: puffs nascidos depois do `updatePuffs` do mesmo quadro ainda não estão no buffer).
+  - A Oficina tem 40 definições; sem chuva, neblina, faróis e o filme sobram 36 (o contrato diz 34), por opção de parâmetro: 54 execuções. O filme dos 4 fluidos é a captura `mode=fluids`.
+  - `renderer.render` é silenciado nas páginas da Oficina e do Padrão de Fluidos: a gravação leva segundos.
+- Fixtures: Lab 770 KB, Oficina 1,9 MB, filme da Oficina 4 KB, Padrão de Fluidos 24 KB. O do Laboratório foi para `packages/game-vfx/tests/fixtures/team-golden/` na T5.1e; os outros ficam em `specs/.../goldens/` até a T5.2c e a T5.3d.
+
+### T5.1a e T5.3b
+
+- Contratos: `effects.ts`, `ModuleHost.effects`, `explosive` no `explosion`, `explodes.effect` e `explode.effect`, `ChoiceOption.group` (o `checkBench` recusa grupo vazio ou partido), `ModuleBench.sheet` e `BenchSheet`. Tudo aditivo.
+- Fluidos: valores do time por padrão (sangue 0x3B1D14 e 600 s, combustível 60 s sem marca, água 180 s), `old_blood` e `bile` novos, `splash` com `tint`. Valores antigos (sangue 0x4A0506 e 1200 s, combustível 120 s com marca, água 600 s) listados no changeset. Dois testes que dependiam dos tempos antigos foram ajustados. Decisão minha: viscosidade/densidade/brilho de `old_blood` (4/1060/0,7) e `bile` (6/1020/0,75) e efeitos de beber (`disgust`) não vêm do time; ficam como padrão configurável.
+
+### T5.1b a T5.1d — `game-vfx` e `game-vfx-three`
+
+- Porte literal do Laboratório: compositor de camadas na ordem do `blast`, com os sorteios na mesma ordem (cada função de camada declara a ordem dos `rr`), laços de simulação na ordem do `frame`, luzes, fogo, cogumelo, crateras com `GroundField` em float32 (o `dent` sorteia por célula, então o chão tem de viver no núcleo puro).
+- Piscinas de registros reaproveitados em ordem de entrada (`OrderedPool`): sem alocação por quadro; a mais antiga sai quando cheia (detritos: um parado primeiro); halo de detrito vira posição fixa quando o detrito sai.
+- Teto de área (40 m no plano, 4 s, 6, 0,3), `LOD_GAME` e `LOD_LAB`, `PROFILES`, `estimateCost` igual à ficha do Laboratório nos 16 perfis, agenda do último para o primeiro.
+- Os 16 perfis em `explosions.json` por id de explosivo de `game-weapons` (+ `generic` e os dois apelidos), gerados do `PROF` da fonte, com `sources` (linha). Todos os 18 explosivos de `game-weapons` respondem.
+- Renderizador three: shaders verbatim (`encodings_fragment` virou `colorspace_fragment`; `extensions.derivatives` saiu), luzes com cores cruas do r128 e `lightScale` π (luzes físicas do r160), marcas criadas no instante do evento (acompanham o chão daquele momento), `EffectSink`, `applyCamera`, sobreposição de tela.
+- Achado pelo golden: o renderizador deve seguir a câmera também em `play` (antes do primeiro `update` o LOD usava a câmera na origem); corrigido e com teste.
+
+### T5.1e — fidelidade do Laboratório
+
+| Teste | Resultado |
+|---|---|
+| `game-vfx/tests/team-golden.test.ts` (puro: `randomMode: 'shared'`, `LOD_LAB`, `profile: 'high'`, `areaCap: false`) | 16/16 cenas: detonação (LOD, contagens, tela, fluxo), 400 primeiros spawns, contagens por quadro, camadas, estado das piscinas em 0,08, 0,25, 0,5, 1, 2 e 4 s, fluxo final |
+| `game-vfx-three/tests/team-golden.test.ts` | 16/16: hash da cena das marcas (malhas conformadas, pedras da borda), casca e anel do choque, buffers dos puffs (float32, tolerância 2e-3) |
+| Node 22.23.4 e 24.22.0 | iguais (`installPortableMath` no setup; `Math.hypot` e `Math.atan2` do chão dão o mesmo nas duas) |
+
+Fidelidade do Laboratório: **16/16**.
 
 ### Portões
 
@@ -1377,6 +1415,80 @@ Desenho: `design/T3-itens.md`. Execução em `sonnet` (o desenho recomendava `ha
 **Changeset:** `.changeset/items-thumbnail-registry-helpers.md` (contracts minor, interactables minor, weapons patch).
 
 **Portões (Node 24.22.0)**
+## Fase 6 — grupo A
+
+Desenho: `design/T6-som-e-clima.md`. Modelo da execução: `opus` (a pedido do orquestrador). Branch `feat/spec-001-fase-6`, a partir de `main`; nada foi enviado ao remoto.
+
+### T6.0a — Contratos de som e clima
+
+| O que | Onde |
+|---|---|
+| `SoundRequest`, `SoundHandle`, `LoopHandle`, `AudioListener`, `AudioSink` (`play`, `stop`, `loop?`, `setListener?`, `register?`) e `ModuleHost.audio?` | `game-contracts/src/audio.ts`, `module.ts` |
+| `EnvironmentState` (10 campos), `EnvironmentBus` (`get`, `set`, `on`), `DEFAULT_ENVIRONMENT` (dia seco e calmo: mundo normal primeiro) e `ModuleHost.environment?` | `game-contracts/src/environment.ts`, `module.ts` |
+| `createEnvironmentBus(initial?)`: o repositório de estado mínimo que implementa o barramento (a sala o usa na T6.3; testes e `game-weather` também). Escolha minha: o desenho dizia "a sala implementa", mas um contrato sem implementação de referência obriga cada consumidor a reescrever o mesmo repositório | `environment.ts` |
+| Testes (6): padrão, mesclagem, só avisa o que mudou, silêncio sem mudança, descadastro durante o aviso, sink e host opcionais | `tests/audio-environment.test.ts` |
+
+`game-contracts` 34 testes (eram 28). Changeset `t6-0a-contracts-audio-environment.md` (minor).
+
+### T6.0b — Gravador de áudio, cortes literais e fixtures
+
+| O que | Onde |
+|---|---|
+| `createAudioRecorder`: `AudioContext` falso que registra cada nó criado, propriedade e parâmetro (`value`, `setValueAtTime`, rampas, `setTargetAtTime`), conexão (a nó ou a parâmetro), `start`/`stop` e `close`; buffers viram uma soma FNV-1a por canal; números arredondados a 10 casas; `currentTime` começa em 0 (`setTime`, `clearEntries`). `diffAudioTrace` e `assertAudioTraceMatches` (tolerância 1e-9) | `tools/golden/src/audio-recorder.ts` |
+| `cut-source.ts` (e o teste): o mesmo arquivo da `feat/spec-001-fase-4`, copiado sem mudança para os merges serem limpos; entrada ESM própria (`./cut-source`) | `tools/golden/src/cut-source.ts` |
+| `team-audio.ts`: cortes literais de `jogo.js` (`audioInit`, `noise`, `sfx`, `loopSet`, `grito`, `voz`, `bichoSom`, `boom`, `chiado`, `buzina` e as três declarações) e da Cena de Arte (L1303-1372 mais `clamp`), rodados em `vm` com `Math.random` semeado e `Math.pow` portátil | `tools/golden/src/team-audio.ts`, `bin/record-audio.mjs` |
+| Fixtures do jogo: 111 casos (12 classes a 0/10/60/120/160 m, classe desconhecida, os 4 sons contínuos em 3 níveis com a segunda chamada de suavização, `grito` a 5 distâncias, `voz` gemido/corredor/grito, 4 bichos a 4 distâncias, `boom`, `chiado`, `buzina`) | `tools/golden/fixtures/audio/game-audio.json` (170 KB) |
+| Fixtures da Cena: 85 casos (a cadeia compressor + reverb + 3 laços, os 31 `sfx.*` em 3 posições, `shot` das 5 armas, `groan` dos 3 tipos) | `tools/golden/fixtures/audio/art-scene-audio.json` (461 KB) |
+| **Trace do `createWeaponAudio` ATUAL**, gravado antes de qualquer mudança no som das armas (`git status` de `game-weapons-three/src` limpo na gravação): 3 casos (padrão semente 1, padrão semente 7 com relógio em 2,5 s, opções próprias com classe, curva e mecânico trocados), cada um com a cena de `audio.test.ts` L154-200 mais tiros de todas as classes (supressor, ambiente fechado, silêncio por distância), todos os sons de `MECHANICAL_SOUNDS`, as 12 classes mais as duas extras (`thump`, desconhecida) a 0/10/60/120 m, ajudantes de recarga, ciclo, `clink`, `thud`, volume, `dispose` e som depois dele | `packages/game-weapons-three/tests/fixtures/audio-trace.json` (681 KB; cerca de 3.200 entradas e 245 inícios de fonte por caso), `tests/audio-trace.test.ts`, `tests/support/audio-trace-scenario.ts` |
+
+Notas:
+
+- **Fixtures regravam byte a byte** nas duas versões do Node (22.23.4 e 24.22.0): `Math.random` do mulberry32, `Math.pow` portátil (`exp`/`log`), e a soma dos buffers em bytes do `Float32Array`. `Math.hypot` do `panFor` da Cena também bateu.
+- **O corte de `jogo.js` por nome não basta**: `boom`, `AC` e `noiseBuf` existem também em outro lugar do arquivo (`boom` é efeito do mapa). O corte é o da função que usa `AC`, e as três declarações vão pelo texto exato da linha.
+- **`AudioBuffer.length` é inteiro**: a Cena chama `createBuffer(2, sampleRate * 2.2, ...)` (105600,00000000001); o gravador trunca, como o navegador.
+- **O trace do peso das armas** só muda de propósito: a T6.1e (adaptador sobre `game-audio`) tem de devolvê-lo idêntico (`audio-trace.test.ts` compara e também exige o texto igual); só a T6.1e2 (cliques da Cena) regrava, com `UPDATE_GOLDEN=1`.
+- Regravar: `pnpm build && node tools/golden/bin/record-audio.mjs`; o trace das armas, `UPDATE_GOLDEN=1 pnpm --filter @adatechnology/game-weapons-three exec vitest run tests/audio-trace.test.ts`.
+
+### T6.2a — `game-weather` (núcleo puro)
+
+Pacote novo `packages/game-weather` (`@adatechnology/game-weather`, versão 0.0.0 e changeset minor, que vira 0.1.0; ESM e IIFE `GameWeather`; Dockerfile com o manifesto; skill `game-weather`; linha no README raiz e na skill `game-kit`). Sem dependências de execução; `golden-tool` só como devDependency.
+
+| Peça | O que é | Arquivo |
+|---|---|---|
+| 10 estados com `sources` por estado | `clear`, `overcast`, `light_rain`, `heavy_rain`, `storm`, `fog`, `windy` (números do jogo, Cena de Arte, Oficina de VFX e Galeria), mais `cyclone`, `typhoon` (33 e 50 m/s, rajada ×1,3, chuva de temporal, empurrão em destroços) e `extreme_heat` (sem fonte de time, Q3) | `src/data/states.json` |
+| 2 climas | `temperate` (padrão, sem extremos) e `tropical` (extremos raros e ligados); os dois começam `clear` | `src/data/climates.json` |
+| Escalonador | Cadeia de Markov com semente em tempo de jogo; permanência uniforme de 2 a 6 h; ordem de sorteio fixa (próximo estado, depois permanência); fluxo próprio `schedule` | `src/scheduler.ts`, `src/rng.ts` |
+| Mistura | todos os 20 números do estado se misturam por `blendMinutes` (10 min de jogo); `force(id, segundos)` parte do ponto em que a mistura estava; `front` = `{ direction: [1, 0], progress }` (a cortina anda em +x, chega de oeste) | `src/blend.ts`, `src/weather.ts` |
+| Relâmpago | fluxo próprio `lightning` (o servidor manda a semente); primeiro clarão 2 a 4 s depois de entrar no estado, depois 3,5 a 6 s; envelope duplo da Oficina (1 até 0,08 s, 0,2 até 0,16, 0,8 até 0,26, fim em 0,4 s); trovão `distância / 343` s depois; eventos `strike` e `thunder` | `src/lightning.ts` |
+| Solo molhado | sobe 1/120 por segundo até o teto do estado e seca em linha reta, chegando a 0 exatos 180 s depois que a chuva para (a 90 s com calor intenso, `dryingScale` 2) | `src/wetness.ts` |
+| Efeitos | `visibility`, `sightScale` (visibilidade / 220 × `1 − 0,4 × noite`), `hearingScale` (0,8, 0,6 e 0,5 na chuva leve, forte e temporal), `footstepScale`, `heatIndexC`, `heatStress`, `lightningReveal` 0,2 s, `dryingScale`, `debrisPush` | `src/effects.ts` |
+| Calor | índice de Rothfusz da NOAA com os ajustes de umidade baixa e alta (só `+ - * /` e `sqrt`) e `heatStress` 0..1 nas faixas 27, 32, 41 e 54 °C | `src/heat.ts` |
+| Dia e noite | fórmula do jogo L69128-69130 (`s`, `nightF`), dia de 20 min (`timeScale` 72), começa às 8 h | `src/daylight.ts` |
+| Registro | `createWeatherRegistry({ states, climates, patch, remove })` e os verbos `register`, `patch`, `remove` em tempo de execução; estado removido sai do sorteio | `src/registry.ts` |
+| Linha do tempo | `createTimeline({ seed, climate, hours })` passo de 1 min de jogo; JSON com mudanças, relâmpagos (tempo, distância, rumo) e amostra a cada 10 min | `src/weather.ts` |
+
+Goldens: `tests/fixtures/timeline-{temperate,tropical}-seed{1,7,42}.json` (6 arquivos, 72 h cada, 115 a 129 KB), no formato do `golden-tool` (`GoldenRecord`, eventos `transition`, `strike`, `sample`), comparados por `assertMatchesGolden` e por texto idêntico. **Passam em Node 22.23.4 e 24.22.0.** Sementes e climas mostram de 0 a 75 relâmpagos em 72 h (`temperate` semente 7 e `tropical` semente 1 ficam sem tempestade). Regravar: `UPDATE_GOLDEN=1 pnpm --filter @adatechnology/game-weather exec vitest run tests/timeline-golden.test.ts`.
+
+Testes: 56 em 5 arquivos (dados com os números das fontes; escalonador: 2 a 6 h, só a cadeia do clima, semente repete, independente do tamanho do passo, relâmpago não desloca o calendário; mistura e `force`; relâmpago: só em estados com ele, 2 a 4 s e 3,5 a 6 s, trovão, fluxo próprio entre climas, envelope; solo; efeitos; calor contra a tabela da NOAA (±1,5 °F); dia e noite; registro).
+
+### Escolhas minhas (padrões reversíveis; as perguntas do §7 já tinham padrão, estas são as que o desenho não fixou)
+
+1. **Tempo**: o calendário e a mistura são em tempo **de jogo**; o solo (180 s), o relâmpago e `force(id, segundos)` são em segundos **reais** (a 72× um solo de 180 s de jogo secaria em 2,5 s reais). `advance(dt)` recebe segundos reais. Reverter: `setTimeScale(1)`.
+2. **Hora inicial 8 h** (o jogo começa às 17 h 17, `dayT 0.72`; o mundo normal começa de manhã). `startHour`.
+3. **Calor intenso como +6 °C sobre o clima** (38 °C ao meio-dia tropical, 30 °C à meia-noite) em vez de 38 °C fixos: assim todos os números se misturam do mesmo jeito. `temperatureDeltaC` do estado.
+4. **Temperatura** = média do clima + oscilação × (2 × sol − 1) + delta do estado: `temperate` 16 ± 6 °C, `tropical` 29 ± 3 °C, umidade `tropical` +10 pontos.
+5. **Vento de `overcast`** (0,35, 0,12) vem da Cena sem mudança de unidade (m/s no SDK); chuva leve/forte/temporal usam a inclinação da Oficina (0,3; 1,2; 4,5) como `windX` em m/s. Rajadas sem fonte: 0,6, 2, 6 m/s.
+6. **Visibilidade** sem fonte: `overcast` 200, `light_rain` 160 (desenho), `storm` 100, `cyclone` 60, `typhoon` 40, `extreme_heat` 200. `sightScale` = visibilidade / 220 (a distância seca do jogo).
+7. **`footstepScale`** (0,85, 0,7, 0,6 na chuva; 0,5 e 0,4 no ciclone e tufão; 0,9 no vento) e **`hearingScale`** do vento (0,85), do ciclone (0,3) e do tufão (0,25) são meus; `hearingScale` da chuva é a Q4.
+8. **Teto de molhado** por estado: 0,35 chuva leve (desenho), 0,8 forte, 1 temporal, ciclone e tufão, 0,15 neblina; subida 120 s até o máximo.
+9. **Relâmpago** cai entre 200 e 4.000 m, rumo uniforme de 0 a 360°; também em ciclone e tufão. O clarão `reveal` de 0,2 s é o texto da Oficina ("clareia por 0,2 s").
+10. **`skyScale`**: `overcast` 0,9 e chuva forte 0,8 vêm das fontes; chuva leve 0,9, temporal 0,7, neblina 0,85, ciclone 0,6 e tufão 0,5 são meus.
+11. **Cinza da neblina** (14/s) vem da Oficina (a neblina da página tem cinza); num mundo sem fogo, `patch` de `ashPerSecond` para 0.
+12. **Divergência do desenho, a avisar**: o §7 Q11 diz que 2 a 6 h de jogo são "10 a 30 min reais com o dia de 20 min"; a 72× são 1,7 a 5 min reais. Para 10 a 30 min reais com este calendário, `timeScale` ≈ 12 ou `dwellHours` ×6 num clima próprio.
+13. **`patch` mescla objetos mas não apaga chaves** (um peso em 0 impede uma mudança; `{}` não). Dito na skill.
+14. **Pesos das cadeias** são meus (as fontes só dizem "muda a cada 2 a 6 h e chega de oeste"); `temperate` fica mais em limpo e nublado, `tropical` chega a ciclone só pela tempestade e a tufão só pelo ciclone.
+
+### Portões do grupo A
 
 | Comando | Resultado |
 |---|---|
@@ -1586,6 +1698,101 @@ Gravados do código do próprio time (mecanismo da seção 3 do desenho): a lóg
 - **G-body** e as páginas r128 (Bestiário, Elenco, Retratos, Arsenal, Bichos) gravam com three r128 (cor sem conversão sRGB); o que vem do jogo grava com r160, a mesma versão do SDK. Os desvios r128 contra r160 que o porte vir a ter entram em `KNOWN_DEVIATIONS`.
 - **`record.mjs`** (ferramenta de golden): uma resposta do CDP que chegava depois de o Chrome parar deixava o processo vivo por 30 s e terminava com erro mesmo com o golden gravado; agora a resposta tardia é ignorada e o processo sai ao fim.
 - **`tools/golden`** ganhou dois módulos de Node, fora do bundle da página: `cut-source` (corta e roda código do time em `vm`) e `record-page` (copia a página com o trecho que a expõe e chama o gravador). Os testes de `cut-source` estão em `tools/golden/tests/cut-source.test.ts`.
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0, nenhuma falha |
+| `game-vfx` e `game-vfx-three` em Node 22.23.4 | 161 e 59 testes passam |
+| `docker build -f site/Dockerfile .` | exit 0 |
+
+Modelo da execução: `sonnet` (nenhum portão falhou duas vezes, sem escalada).
+
+## T5.3a–d — filme de fluidos (grupo E)
+
+Branch `work/spec001-t5-e` (de `feat/spec-001-fase-5`, com a T5.3b). Contrato: `design/T5-efeitos.md` §1 (Padrão de Fluidos e fluidos da Oficina), §3, §4, §6 e §7. Um commit por task: T5.3a (`game-fluids/src/film`), T5.3d (goldens), T5.3c (renderizador three, abaixo).
+
+### T5.3a — `game-fluids` film
+
+- Porte literal de F60-114 em `film/deposit.ts` (`dep`, `blob`, `stroke`, `splat`), `film/simulate.ts` (`bbox`, `mob`, `step`, `age`; passo de 180 Hz limitado à caixa molhada, no máximo 6 por quadro ou `maxSteps`, 9 na Oficina), `film/drops.ts` (F250-278: anel de gotas, voo, `land`), `film/sources.ts` (pingo F282, fonte F288, arrasto F291) e `film/layout.ts` (F12-42: grade dobrada sobre parede, calçada, meio-fio e rua; `PADRAO_LAYOUT` e `WORKSHOP_LAYOUT` são dois ajustes de `createFoldedLayout`). `layoutFromSurfaces({ floor, wall?, curb?, center })` monta a dobra a partir de `SurfaceSpec` (a grade 160 x 160 de 2 x 2 m por padrão); `curb` é a superfície mais baixa para onde o meio-fio desce.
+- Perfis em `data/film-profiles.json` (sangue, sangue antigo, bile, óleo de motor, combustível; F46-55 e W583-586), com `spikes` (bile 0,3, W578), `landsAsBlob` (óleo e combustível, W691) e `maxAmount` (teto da espessura do centro: 2,6; bile 4 na Oficina). Padrão = a Oficina; o Padrão de Fluidos roda a bile com `{ spikes: 1, maxAmount: 2.6 }` e óleo e combustível com `{ landsAsBlob: false }` (o contrato só nomeava `spikes` e `landsAsBlob`; `maxAmount` é a terceira diferença da Oficina, W691).
+- O relógio de secagem é em segundos de simulação (`update({ dt, dryingSeconds })`; o jogo escala). Sem `Math.random`: o host passa `random`. `createFilmLcg` é o gerador do Padrão (F17-18).
+- `FilmSimulator` (interface do passo e da secagem; o CPU é o golden de referência) e `film.setWeather({ rain })`: chuva 1 para a secagem e espalha 1,5 vezes (gancho; sem efeito até o `game-weather`).
+- Regras que diferem entre as duas páginas ficam em `layout.rules` (anel de 600 ou 400 gotas, gota que passa a borda cai no meio-fio só no Padrão, caixa de fuga, fórmulas do pingo), não em condicionais espalhadas.
+
+### T5.3d — fidelidade do filme
+
+| Teste | Resultado |
+|---|---|
+| `game-fluids/tests/film-golden.test.ts`: Padrão de Fluidos, 5 cenas x 5 fluidos, hash de `h` e `dry`, células molhadas e lançamentos em 0,5, 1, 2, 5 e 10 s | 25/25 |
+| `game-fluids/tests/film-workshop-golden.test.ts`: `fluidos` da Oficina, 4 fluidos, mesmos instantes | 4/4 |
+| Node 22.23.4 e 24.22.0 | iguais (`installPortableMath` nos dois testes) |
+
+Fidelidade do filme: **29/29**, bit a bit (hash do campo inteiro, 4 casas).
+
+- O Padrão roda as 25 combinações num filme só, como a página: o cursor do anel de gotas e o resto de tempo do passo atravessam as cenas (`clear` não os zera, igual a `clearAll`). A Oficina zera o resto de tempo a cada opção (`setup`) e mantém o cursor.
+- O relógio do teste repete o do gravador (`elapsed += 1000/60`, `dt = (agora - antes) / 1000`): o resto do passo de 1/180 s cai na fronteira do `>=` e só bate com os mesmos bits.
+- **Oficina: a página usa o fluxo de `Math.random` com outros consumidores** (os 3 sorteios do tremor de câmera por quadro, as partículas do `burst` e da neblina, 8 sorteios cada). Para a Oficina o teste reproduz essa intercalação e a confere contra uma gravação nova, `vfx-workshop-fluids-trace.json` (`--param mode=trace` em `vfx-workshop.js`): contagem acumulada de `Math.random` no início de cada quadro, em todas as 4 opções (a igualdade é a primeira asserção do teste), e a posição do braço do zumbi que pinga (a página anima o zumbi; não há como reconstruí-la sem ele), uma por quadro, em texto para não perder bits. A gravação `mode=fluids` refeita com `H` exposto saiu idêntica byte a byte à da T5.0.
+- Verificação de sensibilidade: trocar `spikes` da bile no teste do Padrão quebra as combinações de bile, óleo e gasolina que seguem (o estado atravessa as cenas).
+
+### Perf do filme (CPU, Node 24, máquina de desenvolvimento)
+
+| Cenário | Média por quadro |
+|---|---|
+| Padrão, grade 256 x 396, cena "tiro na parede" (356 gotas), 600 quadros | 1,4 ms (pior quadro 13 ms: as 330 gotas do disparo) |
+| Grade 160 x 160 com 6 respingos, 300 quadros | 0,54 ms |
+
+
+## T5.1f–g
+
+Branch `work/spec001-t5-c` (de `feat/spec-001-fase-5`, com `game-vfx`/`game-vfx-three` prontos e Laboratório 16/16). Dois commits, um por task.
+
+### O que trocou
+
+| Onde | Antes | Agora |
+|---|---|---|
+| `game-destruction-three` `onExplode` | cinco jatos de `ParticleSystem` + `PointLight` própria | `vfx.explosion(ev.effect ?? 'generic', p, ...)`, escala `raio/15` só no `generic`; id fora do catálogo cai no `generic`; fica o empurrão nas peças e fragmentos e o som |
+| fogo de peça (`emitFire`) | acumuladores de `spawn('fire'/'smoke')` por quadro | um `vfx.fire` por peça queimando, seguindo a caixa da peça, parado quando a peça deixa de queimar (`extinguish`, `burnout`, `restore`, `clear`); peça preparada por tiro ou fogo ganha uma chama de `delay` segundos |
+| `RendererOptions` | `explosionLight` | `vfx` (mundo compartilhado; o hospedeiro o passa) e `camera`; sem `vfx` o renderizador cria mundo e camada três próprios e os passa no `update` |
+| `renderer.explode` | 3 parâmetros | `explode(ponto, energia, raio, { effect, direction, visual })`; `visual: false` deixa só empurrão e som |
+| `game-destruction` | explosão atinge o vidro na hora | opção `blastFrontSpeed` (padrão desligado; 340 = som): o vidro quebra `distância/velocidade` depois, em `update`; evento `explode` leva `effect` |
+| sala de testes | `renderer.explode` desenhava | **um** `createVfxRenderer` (sobreposição no contêiner), mundo passado à destruição, `host.effects` a todo módulo, `explosives.ts` com `vfx.world.explosion(explosivo, ponto, { direction })`, `explosive` no evento `explosion` (granada e peça que explode), `applyCamera` em volta do `gl.render` (e `TestRoom.applyCamera()`), métrica `particles` soma as piscinas, opção `craters` (remendo deformável no lugar do piso) |
+| `game-weapons-three` | explosivo do mundo sem efeito | `explodes.effect` = id do explosivo (barril, botijão, tanque do carro) |
+
+### O que **não** trocou, e por quê
+
+O contrato manda detritos, fogo de contato, gotas e vazamentos para `vfx.burst`/`vfx.spawn` (`SpriteKind`) e apagar `particles.ts`. Na T5.1b/d o `VfxWorld` ainda não tinha esse pool; ele entrou com a T5.2a (a bancada de receitas) e a T5.1f foi **fechada depois dela**, na ordem dos commits desta branch:
+
+- **`game-vfx`**: `src/sprites/` (`SpriteKindPool`, `SpriteKindSystem`, `SPRITE_KINDS`, `patchSpriteKinds`) e `data/sprite-kinds.json` com os 14 tipos do `particles.ts` **com os números iguais** (a conta do `burst`, do chão e da vida é a mesma, com o mesmo gerador mulberry32). `VfxWorld` ganhou `burst`, `spawn`, `onLand(owner, ...)` (quem escuta onde a gota caiu, por dono, para um mundo compartilhado entre renderizadores), `sprites()`, a opção `sprites: { capacity, density, kinds }` e `push` agora empurra também os sprites.
+- **`game-vfx-three`**: `shaders/sprite.ts` (o shader de pontos, movido sem mudar) e `createSpriteLayer`: duas camadas `vfx-sprites-additive` e `vfx-sprites`, antes do grupo de marcas. Opção `pointScale`.
+- **`game-destruction-three`**: `particles.ts` apagado; detritos, faíscas, cinzas, vapor, gotas e vazamentos vão para `vfx.burst/spawn`; `ParticleKind` é alias de `SpriteKind`; as gotas que caem avisam o próprio renderizador (dono `destruction-<n>`). Eventos da Fase 2 por `RendererOptions.eventEffects` (padrão `EVENT_EFFECTS_MAP`): `spall` toca `impact_<material>` (pelas tags `metal`, `glass`, `wood`; o resto é `concrete`), `stage` toca o efeito do estágio (o 2 **troca** o puff de poeira que já havia, que continua como reserva quando não há efeito), `expose` toca `rebar_expose`, `collapse` toca `collapse_dust`. Os efeitos de oficina só aparecem na tela com os desenhistas da T5.2d.
+- O que sobra do pool antigo de fluidos e de armas continua descrito abaixo (T5.1g).
+
+**T5.1g.**
+
+- **`game-fluids-three`**: `particles.ts` (`ParticlePool`) apagado; `sprites.ts` (`FluidSprites`) faz as gotas do respingo e o vapor com os tipos `drips` e `steam` do mundo de efeitos (`options.vfx`; sem ele o renderizador cria o seu e o passa em `update`). Duas opções de `SpriteSpawnOptions` nasceram para isso e valem para qualquer jogo: `floor` (a altura onde a gota para, em vez do chão) e `rise` (multiplicador da subida do vapor). As gotas e o vapor mudam de números (tamanho, vida e subida são o tipo escalado para os valores antigos), não de comportamento.
+- **`game-weapons-three`**: o clarão do viewmodel e a fumaça da Galeria **ficam** (goldens da T1.3). Para tiro visto de fora, `HostEvent` `shot` ganhou `origin` e `direction` opcionais; com `origin`, o módulo toca pelo `host.effects` o clarão do cano e a cápsula (`muzzle_glock|ak|r870|barrett`, `casing_brass|shell|50`, fatias literais de `muzzle`/`casing` da Oficina em `game-vfx`) escolhidos pelo tipo de cápsula do calibre (`data/world-effects.json`, configurável por `createWorldEffects({ ids })`). Sem `origin` (o tiro em primeira pessoa) nada é tocado, então nada dobra.
+- **`game-vfx-three`**: `play` do `EffectSink` cai para as receitas da Oficina quando o id não é uma explosão (com `param` por índice ou id) e o catálogo lista os dois.
+- **`game-test-room`**: o filme e as gotas de fluidos usam o mundo único da sala (`vfx: vfx.world`) e o `pointScale` da sala vai para a camada de sprites; `host.effects` já era emprestado na T5.1e.
+- **Pendências para a T5.2d**: nenhum desenhista de pools da Oficina ainda existe em `game-vfx-three`, então `play` de receitas toca no motor (`world.workshop()`) mas só aparece na tela depois dela. A fumaça `muzzle_smoke` da Galeria não foi trocada (o hash do golden T1.3 inclui a fumaça).
+
+### Perguntas para o dono
+
+- Não há `HostEvent` de acerto (`hit`) com ponto, normal e material, então `impact_<material>`, `penetration` e a sangria por idade não têm de onde sair no módulo de armas. Criar o evento `hit` no contrato (quem emite é o hospedeiro que faz o raio) ou deixar o jogo tocar `impact_*` pelo `host.effects`?
+
+### Testes mudados
+
+| Teste | Mudança e motivo |
+|---|---|
+| `game-test-room` `room.test.ts` "grenade blast" | olhava as camadas `destruction-particles-additive` e `destruction-particles` e a luz `destruction-explosion-light`; a explosão agora vem das malhas instanciadas do mundo de efeitos (`vfx-sparks`, `vfx-puffs`, `vfx-glows`, nomeadas nesta task) e das luzes dele. Mesma exigência: mais de 30 instâncias vivas de faísca e de puff, brilho, luz acesa |
+| `game-destruction-three` `renderer.test.ts` "explodes" e "explode without an exploding part" | mesma troca de camadas; acrescentados efeito nomeado, fallback para `generic`, mundo compartilhado não é passado pelo renderizador, `visual: false`, fogo que segue a peça |
+| mesmo arquivo, "fire and smoke while burning" | contava > 10 partículas do pool antigo; o fogo do mundo de efeitos dá 6 em 30 quadros para uma peça de 0,5 m: o limite virou > 3 |
+| mesmo arquivo, "clear and dispose", e `vertex-range.test.ts` | liam `scene.children` e esperavam só o que o hospedeiro pôs; o mundo próprio acrescenta um grupo, então passam mundo compartilhado (`createVfx()`), que não acrescenta nada; o mundo próprio tem teste à parte |
+| `game-weapons-three` `integration.test.ts` (explosivos do mundo) | acrescentou a conferência de `effect` nos três explosivos |
+| Novos | `game-destruction/tests/blast-front.test.ts`, `game-test-room/tests/effects.test.ts` |
+
+### Decisões
+
+- `game-vfx-three`: texturas de marca em branco quando não há `document` (senão o renderizador próprio não existe em Node) e nomes nas três malhas instanciadas. Mudança mínima, coberta pelos testes do pacote.
+- `blastFrontSpeed` fica desligado por padrão e a sala não o liga: o desenho pede a opção, não a mudança de comportamento da sala.
+- O pedido `crater` do mundo de efeitos já cava o campo de altura (o núcleo faz isso); a sala só redesenha o remendo a cada quadro quando a versão do campo muda.
+- `explosionLight` saiu de `RendererOptions` (a luz é do mundo de efeitos). Estava sem uso em todo o repositório.
 
 ### Portões
 
@@ -1961,3 +2168,422 @@ G-semi não tem golden (não há código do time): os números do documento são
 8. **Marcadores do mapa e decoração do Vale** ficam no repositório do jogo (`game-slice/urban/`): confirma?
 
 Modelo da execução: `sonnet`.
+| testes dos pacotes afetados | `game-vfx` 163, `game-vfx-three` 59, `game-destruction` 101, `game-destruction-three` 52, `game-test-room` 128, `game-weapons-three` 162, `game-fluids-three` 11, todos passam |
+| exemplos (`test-room`, `interactables-test-area`, `weapons-test-area`: build e teste, Playwright por `NODE_PATH`) | passam (`test-room` OK; furniture 12/12; weapons ok). Imagens e logs gerados não foram commitados |
+| `pnpm -r test` inteiro (segundo plano) | ver abaixo |
+| `docker build -f site/Dockerfile .` | exit 0 |
+
+Modelo da execução: `sonnet`; nenhum portão falhou duas vezes, sem escalada.
+
+## T5.2a–c — receitas da Oficina de VFX em `game-vfx`
+
+Fonte: `sources/efeitos__oficina-vfx.js` (W168–1295) e a gravação `vfx-workshop.json` (54 execuções, 36 `pageId`; chuva, neblina, faróis e o filme dos fluidos ficam de fora: o filme é a T5.3).
+
+- **T5.2a.** `src/workshop/` é o motor dos pools da página (sprites aditivo e normal em arrays tipados, riscos, detritos, decalques, anéis, luzes de clarão e de fogo, estado de tela, bolhas de lente, pós-processo `P0`, qualidade 0/1/2) com a ordem de sorteio da página. `src/effects/` guarda as receitas como **dados** (DSL de expressões e passos: `burst`, `spawn`, `emit`, `debris`, `decal`, `ring`, `flash`, `lens`, `screen`, `fire_light`, `cue`, `call`, `after`, `when`, `repeat`, `set`, `append`, `camera`, `post`, `behavior`), as macros (`blood_hit`, `impact`, `fire_emit`, `explode`, `muzzle`, `casing`, `chips`, `spark_at`, `rust_at`) e os adereços que a página anima à mão e que mexem em posições ou sorteios (andadores, rachaduras, blocos, placa, cilindro, carro). `EffectInstance` roda um efeito (timers do último ao primeiro, como a página), `EffectRunner` é a visão de um efeito por vez da bancada e `EffectPlayer` toca vários ao mesmo tempo, cada um com relógio, variáveis e adereços próprios, posição, direção (`anchor`/`heading` da receita), semente (LAN) e `follow`. `VfxWorld` ganhou `play`, `workshop()` e `effectIds()`; `patchEffects` ajusta o catálogo como `patchExplosions`.
+- **T5.2b.** As 20 receitas restantes (destruição, veículos, mundo, tela), `data/event-effects.json` com `effectForEvent` e `src/effects/events.ts`, e os textos das fichas (`quando`, `visual`, `orçamento`, `rede`, rótulo do parâmetro) em `locales/en.ts` e `locales/pt-BR.ts` (o pt-BR é o texto da página, extraído por script; o en é tradução).
+- **T5.2c.** O golden da Oficina sai de `specs/.../goldens/` para `packages/game-vfx/tests/fixtures/team-golden/` e `tests/workshop-golden.test.ts` o reproduz: para cada execução, a lista de spawns (quadro, tipo, contagem de sorteios, opções) igual à gravada, a contagem de tudo vivo em cada quadro e os hashes dos instantes. 162 asserções, todas passam. Cada receita foi escrita contra esse teste; o que a página sorteia sem querer entrou como dado (`cue(..., draws)` para os 4 `Math.random` por objeto do uuid do three r128 e o `FRESH` da primeira montagem de garrafa e granada).
+
+### Decisões
+
+- Os efeitos de evento (`stage_crack`, `breach_dust`, `collapse_dust`, `rebar_expose`, `glass_burst`, `impact_<material>`) **não são páginas da Oficina**: o desenho os cita com linhas da página, então cada um é uma fatia literal de uma receita já portada (mesmos números, centrada no ponto do evento) ou do ajudante `chips`/`rust_at`. Não têm golden próprio; o teste só confere que tocam e deixam algo vivo.
+- O movimento de adereços que a página anima por quadro (a porta que cai, os blocos da parede, a placa que amassa) fica com o dono do objeto, que recebe os `cue` (`door_fall`, `slab_gone`, `glass_pane_gone`...). O motor só reproduz o que afeta onde e quando as partículas nascem.
+- `world.play` sem `setCamera` com orientação usa a câmera na identidade para as receitas de tela (`forward(local)` devolve o vetor local).
+
+### Perguntas para o dono
+
+- `rebar_expose` o desenho descreve só como "poeira + lascas"; usei o ajudante `chips` (lascas e poeira, W849) mais `rust_at` (ferrugem, W899). Se o time tinha outra intenção, a receita é um arquivo de dados.
+- `stage 1 -> stage_crack` e `collapse -> collapse_dust`: o desenho dá os nomes, as fatias são minhas escolhas entre as seções que a página tem (porta e desabamento). Confirmar.
+
+## T5.2d — desenhistas da Oficina e bancada de efeitos
+
+- **`game-vfx-three/src/workshop-layers.ts`** desenha os pools do motor da Oficina (o que `world.play` enche): sprites aditivo e normal com o shader da página (tamanho em metros preso a 1..512 px, suavidade 1 e 0,55), riscos (`LineSegments` com cor por vértice), detritos (500 caixas instanciadas), decalques (duas malhas instanciadas, brilhante e fosca, círculo de borda irregular que cresce, espalha, seca e evapora pelos campos do decalque), anéis (instanciados, cor por `hold` ou `1-k`) e as 4 luzes de clarão e 2 de fogo. Criados sob demanda: só quando algo já criou o motor (`VfxWorld.peekWorkshop()`). A tela (`screen`) da Oficina e a do Lab entram no overlay pelo maior valor de cada campo.
+- **`createVfxTestModule`** (`game-vfx-three/src/bench/`): módulo `vfx`, grupo `effects`. Efeito (16 explosões do Lab e as receitas por time, em grupos), variante (o `params` da receita, trocado com `bench.patch`), repetir, repetição automática, distância, faixa de LOD, qualidade, 6 camadas (`show_*`), 8 contadores (nuvens, faíscas, destroços com teto 40, luzes com teto 6, partículas do efeito com teto 400, escala de LOD, tempo desde a repetição, tempo desde a explosão) e a ficha com a linha do tempo. Toca por `host.effects`; sem ele, cria um renderizador próprio.
+- **Anfitrião (`game-test-room`)**: `ModuleBench.sheet` (cartão da ficha no painel, com linha do tempo e cabeça de leitura que segue o contador `metric`), `ChoiceOption.group` (`optgroup` no seletor; opções agrupadas nunca viram botões), `MetricRow.value` numérico.
+- `EffectSink.configure` do renderizador entende `quality` (`high`/`medium`/`low`, níveis 0/1/2 do pool) e `layer_<id>`.
+
+### Decisões
+
+- `generic` (perfil de reserva do Lab) não é listado na bancada; as 16 explosões são as da página.
+- Receita com o mesmo id de uma explosão (`molotov`) não aparece na lista: o `EffectSink` tenta a explosão primeiro, então a receita nunca seria alcançada por esse id.
+
+### Perguntas para o dono
+
+- As bolhas de lente (`engine.lens`) e o `engine.post` da Oficina têm dados no motor, mas ainda não são desenhados (a página os pinta num canvas 2D sobre a cena). Quer a lente e o pós-processo no overlay agora ou junto da câmera do jogo?
+- Os nomes das explosões na bancada vêm do id (`m67` -> `m67`), porque o Lab não tem textos por explosão. Há nomes traduzidos que o time de armas queira usar?
+
+## T5.2e — área de efeitos na sala de testes
+
+- `examples/vfx-test-area` (`build.mjs`, `src/{entry,area,scenarios}.js`, `test.mjs`): bundle IIFE `VfxArea` e a página `dist/sala-efeitos.html` (a sala de testes com a bancada de efeitos carregada e a área `vfx` aberta). Três cenários: todas as explosões do Lab desenham nuvens e faíscas, todas as receitas da Oficina tocam, e quatro granadas seguidas ficam dentro do teto de 6 luzes.
+- `examples/interactables-test-area` passa a carregar também a bancada de efeitos (alias de `game-vfx` e `game-vfx-three` no `build.mjs`, `loadInto` devolve `vfx` no relatório) e o teste confere os 7 controles e as 6 camadas.
+- Site: `site/Dockerfile` (COPY do `package.json` do exemplo, em ordem alfabética), `site/build-site.mjs` (comentário da ordem: a sala de testes primeiro) e `site/catalog.mjs` (o exemplo e a família "Efeitos"); `ci.yml` constrói e testa o exemplo.
+- Teste de navegador (Chromium, sem rede): 6 verificações passam nos dois idiomas, incluindo as capturas da granada e do sangue.
+
+## T5.3c — renderizador do filme em `game-fluids-three`
+
+- `src/film/shader.ts`: o fragmento da página (F131-209) linha por linha. Diferenças, todas pelo mesmo motivo (a página pintava a cena inteira; o filme agora cobre a superfície do jogo): `baseCol` (parede, calçada, meio-fio, rua) vira a cor chapada `uBase`; a saída leva **alfa = cobertura** (`max(m, gw*.55)`: o molhado e, no combustível, o chão que escureceu); o tamanho da grade e o vão são uniformes (`uGrid`, `uSpan`; a página fixa 256 x 396 e 4,95); a tangente vem da geometria (`aT`; a da página era o eixo x); duas linhas que espelham a parede da própria página no reflexo ficam de fora (descrevem a cena dela); a saída passa as cores da página (espaço de exibição) para linear e usa `#include <colorspace_fragment>` do r160.
+- `strips.ts`: uma faixa por região do layout (u = coluna, v = linha / altura, `aB` = para onde o filme escorre). `material` com `DoubleSide`, porque os eixos de um layout podem ter qualquer mão.
+- `drops.ts`: gotas em voo (icosfera instanciada, esticada pela velocidade, F258-262) e o bulbo do pingo (F282).
+- `grid.ts`: `FilmGrid` = filme + textura RGBA8 (r: espessura em raiz, g: seca, b: umidade, como o `upload` da página F360) + faixas + gotas. Devolve o retângulo sujo (união dos limites molhados do quadro anterior e do atual) e mede o quanto ficou parado (`idle`: nada chegando e a área molhada variando menos de 0,5%).
+- `manager.ts`: `FilmManager` guarda **no máximo 6 grades de 2 x 2 m** (160 x 160 células de 1,25 cm), **só a até 30 m** do jogador, simula dentro de um **orçamento em ms por quadro** (as mais próximas primeiro; as que não cabem esperam o quadro seguinte) e **envia à GPU só o retângulo sujo**: uma textura de apoio do tamanho do retângulo e `renderer.copyTextureToTexture` (a primeira vez sobe inteira, quando o three avisa por `texture.onUpdate`; sem `gpu` sobe sempre inteira). A grade que fica longe (mais de 30 m x 1,25), parada (20 s sem mudar) ou espremida por uma nova **vira decalque**: `fluids.splash(líquido, centro de massa, litros, undefined, { tint })`, com os litros = soma das espessuras em mm x área da célula e o `tint` {fresco: `thin`, seco: `dry`} do perfil, e a grade é liberada. `onBake` também recebe o motivo (`range`, `settled`, `budget`, `clear`).
+- API: `launch({ fluid, point, velocity?, radius?, surfaces? })` (cria a grade sob o ponto), `drip({ fluid, point, every, radius? })`, `setWeather({ rain })` (repassa a todas as grades; o gancho da Fase 6), `update(dt)`, `stats()`, `clear(bake?)`. `surfaceAt(ponto)` dá o chão, a parede e o meio-fio (`layoutFromSurfaces`); sem ele, um chão em `groundAt`.
+- Conferido num Chromium com GL por software: o shader compila e os 4 líquidos aparecem (sangue, bile, óleo com irisação, combustível).
+
+### Decisões
+
+- Decalque sem `fluids` no gerenciador: só `onBake` (o anfitrião decide).
+- A GPU entra por `FilmGpu` (`copyTextureToTexture`); o mesmo vale para o `WebGLRenderer` direto.
+
+### Perguntas para o dono
+
+- O filme é só CPU perto do jogador (decisão do desenho). Os fluidos longe viram decalque estático. Quer o filme em GPU (ping-pong) depois da Fase 5, atrás da mesma interface `FilmSimulator`?
+
+## T5.3e — pontes do filme
+
+- **`createFilmBridge({ fluids, manager, random })`** (`game-fluids-three/src/film/bridge.ts`): um `leak` de líquido que tem filme (`blood`, `old_blood`, `bile`, `motor_oil`, `fuel`; `liquids` mapeia outros, p. ex. `diesel -> fuel`) passa a jogar gotas do furo, com a velocidade e a vazão que o mundo dá (`dropLiters`, 0,15 mL por gota, no máximo 6 por quadro), até o `stream_end`. As gotas caem na grade sob o furo (o gerenciador cria) e, fora de alcance, o mundo de fluidos segue com o jato e a mancha dele. Líquido sem filme (água) fica só com o mundo.
+- **`bridge.splat({ fluid, point, direction?, speed?, radius?, count?, tint? })`**: é o que o `body` vai usar. Com `tint` ({ fresco, seco }) a grade é desenhada nessas cores (`tinted(perfil, tint)`: fino e gotas no fresco, o miolo grosso 55% mais escuro, seco no seco); grades de tintas diferentes ficam separadas e o decalque da grade parada guarda a mesma `tint`.
+- **Gancho da chuva**: `bridge.setWeather({ rain })` -> `manager.setWeather` -> `film.setWeather` de cada grade (para a secagem e espalha 1,5 vez mais). Sem efeito até o `game-weather` (Fase 6) mandar o valor.
+- **Sala de testes**: o gerenciador e a ponte entram na sala (grade só quando algo pinga; `clear` libera; o `gpu` é o `WebGLRenderer` quando ele sabe `copyTextureToTexture`). Teste: uma lata de combustível furada pinga numa grade do chão.
+
+### Pendente
+
+- ~~`body` (T4.0) -> `splat` com `tint`~~: feito na T5.3e-body (seção abaixo, Fase 6 parte 2), depois que a Fase 4 entrou na `main`.
+
+### Perguntas para o dono
+
+- A vazão por gota (0,15 mL) e o teto de 6 gotas por quadro são meus: o time só mostra pingo, fonte e arrasto. Quer outra conta para um furo grande (um jato em vez de gotas)?
+
+## T5.4 — comparação das explosões (coluna SDK novo)
+
+- `comparacoes/explosoes/capturar-sdk-novo.mjs` e os 6 quadros `quadros/sdk-novo-*.jpg` (0,08 · 0,25 · 0,5 · 1 · 2 · 4 s depois da detonação, câmera do Laboratório); `index.html` ganha a linha "SDK novo (Fase 5)" e a antiga vira "SDK antes da Fase 5". Os quadros do Laboratório e do jogo não foram refeitos (as páginas do time não mudaram).
+- A captura roda a sala de testes num Chromium do Playwright com GL por software e anda a simulação em passos de 1/60 s (a captura antiga usava o relógio da parede com a página servida em `localhost:4801`, que não existe neste ambiente).
+- `consolidado.md` §8 e §9: partículas do SDK que não apareciam (item 1 de §9 e o de §8), lixo de memória por quadro (2), fluido na CPU (8) e o README de `game-fluids` (11) marcados como feitos, cada um com a task.
+- O que ainda difere do Laboratório nos quadros é o cenário (chão liso da sala em vez da rua, dos corpos e da luz noturna da página).
+
+## T5.5 — Documentação, changesets e portões finais da Fase 5
+
+- READMEs e SKILL.md de `game-vfx`, `game-vfx-three`, `game-fluids-three` e `game-test-room` atualizados; changesets de T5.1f/g, T5.2a–e, T5.3c e T5.3e; inventário `efeitos-destruicao.md` ganhou a seção "Fase 5: o que entrou (R5)"; `tasks.md` marca T5.1, T5.2 e T5.3.
+- Portões (`pnpm install`, `build`, `-r typecheck`, `lint`): exit 0. Testes por pacote (um de cada vez): game-contracts 36, game-vfx 348, game-vfx-three 67, game-fluids 70, game-fluids-three 27, game-destruction 159, game-destruction-three 60, game-test-room 139, game-floorplan 38: todos passam.
+- `game-weapons-three`: 1 teste estoura os 5000 ms padrão quando a máquina está carregada (load average ~20, outros agentes rodando); os outros 174 passam. Não toca código da Fase 5.
+- `game-floorplan-structure`: 11 falhas (`Unknown construction "canvas"` em `triage_tent` e `expected 0 to be greater than 0` em utilities de vários prédios). Reproduzidas no commit-base 1c10405, antes de qualquer commit da Fase 5; nenhum commit da Fase 5 altera `game-floorplan*` ou `game-destruction`. Pendência da Fase 2, não da 5.
+
+### Perguntas para o dono
+- Evento `hit` do HostEvent para impactos (T5.1g) ainda não existe no contrato; o evento `body` depende de T4.0.
+- Fatias rebar_expose / stage / collapse das destruições sem receita na Oficina.
+- Borrões de lente e pós-processamento não são desenhados.
+- Nomes de explosão derivados dos ids (sem texto de locale do time).
+- Filme na GPU real (hoje validado em swiftshader), volume de vazamento por gota e teto de gotas.
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0 (a primeira rodada estourou os 5 s do teste que regrava as 85 fixtures da Cena com o workspace inteiro em paralelo; o teste ganhou 120 s) |
+| `game-weather` / `golden-tool` / `game-contracts` | 56 / 63 / 34 testes; os goldens e os traces também em Node 22.23.4 |
+| `game-weapons-three` `audio-trace.test.ts` | 5 testes (trace gravado antes de qualquer mudança no som) |
+| `docker build -f site/Dockerfile .` | exit 0 (com o manifesto de `game-weather`) |
+
+## Fase 6 — grupo C (som das armas)
+
+### T6.1e2 — Sons de recarga da Cena de Arte como padrão em `MECHANICAL_SOUNDS`
+
+A T1.4 (desvio 1) deixou os cliques metálicos de recarga como síntese do SDK porque a Galeria não tem som. A Cena de Arte tem (`sfx.empty`, `magOut`, `magIn`, `bolt`, `shell`, `casing`, L1339-L1344, mais o `click` de L1338 que é a primitiva), então, pela regra 1 do CLAUDE.md, a entrega do time substitui o invento.
+
+| Cena | Vira | Obs. |
+|---|---|---|
+| `empty` (`click(0, 3200, .35)`) | `dry_fire` | mantém a classe `vazio` do jogo e troca o `metal` do SDK |
+| `magOut` (`click 1600` + ruído bandpass 900, Q2, atraso .03) | `magazine_out` | mantém a classe `recarga` do jogo |
+| `magIn` (`click 1100` + tom 320 para 200) | `magazine_in` | idem; `seat` continua nos cilindros, canos e tubos |
+| `bolt` (`click 2200` e `click 2700` a .12) | `charge` | |
+| `shell` (`click 1400` + ruído bandpass 1200, Q3, atraso .02) | `round_in` | |
+| `casing` (tom 4200-5700 para 3800, .06, atraso .25-.45) | `clink()` | um toque só, no lugar dos dois do SDK |
+
+Os passos novos `scene_tone` e `scene_noise` de `SoundStep` são o `sTone` e o `sNoise` da Cena (receitas `layered` com palco de saída: ganho de distância, pan, envio de reverb). O que o time não entregou (`misfire`, trava, ferrolho aberto, cilindro, cobertura, tanque, tubo...) segue com o `metal` do SDK.
+
+**Prova:** `tests/audio-scene.test.ts` roda cada som no motor com a mixagem `art_scene` e compara com o traço do próprio código da Cena (`tools/golden/fixtures/audio/art-scene-audio.json`, casos `empty`, `magOut`, `magIn`, `bolt`, `shell`): diferenças vazias, tolerância 1e-9. O `casing` da Cena é posicional (3,2 / 12,-9 / 40,25) e o `clink` toca no ouvinte, então ele é conferido por faixas (frequência, atraso, rampa a 3800).
+
+**Fixture regravada de propósito:** `packages/game-weapons-three/tests/fixtures/audio-trace.json` (`UPDATE_GOLDEN=1`). Só mudam os casos com recarga, vazio e `clink`; o resto do traço (tiros, classes, `thud`, volume, `dispose`) é o mesmo da T6.1e. `tests/audio.test.ts` (T1.4) ficou com uma só mudança: o piso de osciladores passa de 5 para 4, porque o `clink` agora é um toque. Reverter: desfazer este commit (Q5).
+
+## Fase 6 — grupo C (camada WebAudio, bancadas e sala)
+
+Branch `int/p6`; nada foi enviado ao remoto. Fica de fora, por esperar as Fases 4 e 5: T6.1g (sons de personagens e bichos), T6.2b (visual, som e pontes do clima) e T6.2c.
+
+| Task | Commit | O que entrou |
+|---|---|---|
+| T6.1c | `f0c4664` | `createAudioEngine` e a camada WebAudio: contexto preguiçoso com `unlock`, ruído e impulso de reverb vindos da semente, `realize` na ordem de nós de cada rotina do time, laços nas duas ordens (`game_loop`, `chain_loop`), canais, perfis de mixagem, barramentos e limite de vozes. Os 111 casos do jogo e o encadeamento da Cena dão o mesmo traço dos fixtures dos times (tolerância 1e-9) |
+| T6.1e | `e035414` | `createWeaponAudio` vira adaptador sobre o `game-audio` (ordem `weapon`, `setMaster`, `createAudioSink`, `{ from }` sem rampa). O traço gravado antes da mudança volta idêntico (`audio-trace.test.ts`); a área de armas usa o motor de `host.audio` |
+| T6.1e2 | `1ed74c6` | Sons de recarga da Cena de Arte como padrão de `MECHANICAL_SOUNDS` (seção acima) |
+| T6.1f | `909eae2` | `createDestructionSound`: sons dos materiais da Cena (12) e `explosion_boom` do jogo, com traço igual ao do código do time; `burn_end`, `burn_loop` (laço de fogo); `to: 'from'` |
+| T6.1h | `4d97a3d` | `createAudioTestModule` (`audio_area`) e `examples/audio-test-area` |
+| T6.2d | `2d46daa` | `createWeatherTestModule` (`weather_area`) e `examples/weather-test-area` |
+| T6.3 | `c66fc64` | A sala empresta `host.audio` e `host.environment`; as duas áreas entram em `examples/interactables-test-area` |
+| T6.4 | `c72ecbe` | `site/Dockerfile` (manifestos dos dois exemplos), `site/catalog.mjs` (2 exemplos e 2 famílias, Som e Clima) e as miniaturas |
+
+### T6.1h — a bancada de som
+
+Controles: som, origem (ajustes da bancada ou a sonda posta na área), distância (0, 10, 40, 60, 120, 160 m), direção, volume, mixagem, semente, tocar, tempestade de vozes, laço com nível e altura. Camadas: reverb, compressor, pan, abafamento pela distância (desligar zera o `cutoffK` do som para uma chamada só). Métricas: vozes, pico, derrubadas, laços, contexto, duração, nível e pan do som escolhido e o nível de cada um dos 6 barramentos (analisadores criados quando o barramento nasce). 4 cenários: `panning`, `distance`, `determinism`, `limiter`. O módulo usa o motor de `host.audio` quando a sala empresta, e o seu quando não. `BENCH_BANK` (`bench_ping`, `bench_hiss`) são sons de prova do próprio módulo, feitos pelo kit (`sdk` nas fontes), não entrega de time.
+
+### T6.2d — a bancada de clima
+
+Controles: clima (os 10 estados, nomes em pt-BR e en), transição (de uma vez ou 10 s), hora do dia, sorteio automático (liga: o clima do lugar muda sozinho e o relógio corre a 600×; desliga: o clima fica até trocar, relógio a 72×) e semente. Hora e semente refazem o mundo mantendo o clima atual (o chão molhado volta a 0: é o preço de reiniciar o relógio). Camadas: escrever em `host.environment`, névoa na cena (opção `fog`, ligada por padrão e desligada no `interactables-test-area`, que não é sobre clima). Métricas: clima, hora, mistura, chuva (mm/h), visibilidade, escala de visão e de audição, vento, temperatura, índice de calor, chão molhado e raios. 4 cenários, cada um em mundo próprio, sem tocar o ao vivo: tempestade enxerga e é ouvida menos que o dia limpo e solta raios; mistura de 10 s passa pelo meio e assenta; a mesma semente dá o mesmo dia de 48 h; chuva molha e o chão seca depois. Sem visual (céu, chuva, relâmpago) e sem som: esperam T6.2b e T6.2c.
+
+### T6.3 — a sala empresta som e ambiente
+
+`createTestRoom` cria o motor (opção `audio`, `false` para sala muda), empresta `createAudioSink(motor)` em `host.audio` e põe o ouvinte na câmera a cada quadro (posição e giro); empresta `host.environment` (opção `environment`, `room.environment`). `examples/interactables-test-area` carrega as áreas de armas, itens, som e clima junto da dos móveis (a bancada que o painel mostra segue a dos móveis); o teste do navegador manda `storm` e confere `room.environment` (chuva 60, visibilidade 100) e o pico de vozes no motor da sala. `examples/test-room/build.mjs` passa a nomear `game-audio` na lista de aliases (antes só entrava pelos links do pnpm).
+
+### Testes e gates
+
+| Gate | Resultado |
+|---|---|
+| `pnpm build`, `pnpm -r typecheck`, `pnpm lint` | verdes depois de cada commit |
+| `game-audio` | 169 testes (traços do jogo e da Cena, motor, bancada) |
+| `game-weather` | 62 testes (eram 56; 6 da bancada) |
+| `game-test-room` | 130 testes (1 novo: `host.audio` e `host.environment`) |
+| `game-weapons-three` | 186 testes; novo `tests/audio-host.test.ts` (o módulo toca no motor emprestado e não fecha o contexto dele). Com a máquina carregada (carga ~18 de outras ramas) a rodada inteira do pacote estoura os 5 s em 4 arquivos; cada arquivo roda verde sozinho |
+| `examples/audio-test-area`, `weather-test-area`, `interactables-test-area` | `node test.mjs` no Chromium (pt-BR e en): relatório de contrato limpo, cenários verdes, sem erro de console; o dos móveis 16/16 |
+| `node site/build-site.mjs` | 7 exemplos, 30 pacotes; miniaturas novas capturadas com o Chromium do Playwright |
+| `docker build -f site/Dockerfile .` | não rodei (sem docker aqui); os manifestos dos dois exemplos novos entraram nos COPY, em ordem alfabética |
+
+### Escolhas minhas (padrões reversíveis)
+
+1. A hora do dia da bancada de clima reinicia o relógio do mundo (`createWeather` só aceita `startHour` na criação).
+2. `fog` do módulo de clima é opção para a sala que não é sobre clima não ganhar névoa.
+3. A miniatura da área de clima mostra a tempestade só nos números: a névoa de 100 m quase não aparece a 12 m de distância. O céu e a chuva virão com T6.2b.
+4. Inventário: os relatórios de `inventario/` não têm linhas para S1 nem E6 (som e clima nasceram do desenho `design/T6-som-e-clima.md`), então não havia o que marcar lá; as marcas estão em `tasks.md` (T6.1 e T6.2).
+
+### Perguntas para o dono
+
+1. O ouvinte da sala é a câmera. Em jogo de terceira pessoa o ouvinte deve ser o jogador ou a câmera? (Hoje a sala usa a câmera.)
+2. As miniaturas de Som e Clima não têm o que mostrar de som (e o clima sem visual): aceita uma miniatura da bancada ou prefere esperar a T6.2b?
+3. Falta o docker no ambiente: rodar `docker build -f site/Dockerfile .` antes do PR.
+4. A rodada inteira de `game-weapons-three` precisa de máquina livre; vale subir o `testTimeout` do pacote (hoje 5 s) como foi feito no `golden-tool`?
+
+## Explosões: abrigo, estilhaços como projéteis e confinamento (modelo novo do kit)
+
+> Modelo novo, **sem entrega de time**: conferi o Laboratório de Explosões, a Oficina de VFX, o Arsenal e o jogo e nenhum tem abrigo,
+> estilhaço que acerta quem está atrás nem pressão em ambiente fechado. O dono aprovou criar os três como opções em **2026-10-24**, com a
+> frase: "tem paredes que vão destruir e o personagem vai receber esse impacto, não tão grande, mas recebe parte do empurrão e estilhaços".
+> Por isso não há o que marcar no inventário; a regra do `CLAUDE.md` §1 foi cumprida pela pergunta ao dono antes de inventar.
+
+- `game-destruction`: `DestructionOptions.blast` / `explode(..., options)` / `Hit.blast`: `shelter`, `fragmentHits`, `confinement`, tudo desligado por
+  padrão (resultados e goldens idênticos; a suíte inteira passa sem mudar nenhum golden). Números em `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS` e
+  `CONFINEMENT_DEFAULTS`. Exemplos com os padrões: parede de tijolo de 20 cm deixa passar ~19%, porta de madeira de 4 cm ~53%, vidro de 6 mm ~83%,
+  pilar de concreto de 30 cm ~3%; a parede que quebra na mesma explosão deixa passar mais 50% do que segurou; sala fechada de 6 m x3, a mesma sem
+  uma parede ~x2, chão aberto x1.
+- `game-destruction-three`: `renderer.explode(..., { report })` empurra cada peça com a energia que chegou ao seu objeto.
+- `game-test-room`: opção `blast`, `blast()` / `setBlast()`, três botões no painel (pt-BR e en) e as métricas `blast_shelter`, `blast_confinement`,
+  `blast_fragments`.
+- Vigas e pilares (pedido do dono na mesma sessão): `tests/beams-and-columns.test.ts` cruza calibres reais de `game-weapons` com pilar e viga de
+  concreto armado, viga I de aço, viga de madeira e pilar de tijolo. Correções, todas por opção ou valor e sem tocar nos goldens: `Hit.piercing`
+  (chumbo mole não fura 8,5 mm de aço só pela energia), `breach.blastReach` (padrão **desligado**; o valor realista é 0,12 m por raiz cúbica de kJ:
+  ligado, o `gas_explodes` do golden `house-scenarios` muda, então a decisão de ligar e regravar é do dono) e `damageScale.shelter: 3` no vidro
+  (valor novo no JSON de materiais, sem efeito fora do abrigo).
+
+## T2.4
+
+Porte literal do Casa3DSDK (`construir`, `planejaLOD`) e do AndaresSDK da página do time (`visor-casas-3d`, L39443-42734; `zombiada-modo-livre`, L7372-7557) para o pacote novo `@adatechnology/game-floorplan-three`. Cinco commits, na ordem do brief.
+
+| Etapa | O que entrou |
+|---|---|
+| T2.4a | fecho `K` com 54 instaladores de módulo, acumuladores de geometria por grupo/material, materiais e texturas, locale (en, pt-BR), paredes + rodapé, portas, janelas, pisos, lajes, escadas, `build`/`dispose`; `userData.ranges` (faixa de vértices de cada peça) |
+| T2.4b | lote (terreno, calçada, muro, portão), telhados e calhas, ladrilhos, espelhos (Reflector injetado), luzes, carros (frota injetada), fachadas, utilidades, edícula, tabela de tipos e construtores de mobília, torneiras, fixtures, plantas, quintal, colisão/itens/acessórios |
+| T2.4c | ligação com a destruição: faixa de vértices por peça, fiadas de tijolo no LOD0 (`destruction/breach.ts`), marca de lascamento (spall), gaiola de vergalhão (via `game-destruction-three`) |
+| T2.4d | alvo do olhar, navegação (AndaresSDK: grade de 10 cm, `blocked`/`FREE`, escadas), interação, mapa de móveis, varal, pontes de interativos e vegetação |
+| T2.4e | golden de cena `vc3-house-scene` com 6 pares exatos (casaA 3, sobrado 3, apartamento 1, media_terrea_moderna 3, mercado 3, farmacia 2) e o plano de LOD |
+
+**Efeitos:** o pacote não tem sistema de partículas próprio. Poeira, estilhaços, fagulhas, fogo e vazamento vêm do mundo de efeitos do `game-destruction-three` (fiadas, vergalhão, marcas) e do kit de interativos injetado; o vazamento da caixa d'água é só o estado (`water.leak(taxa)`, litros por segundo), sem desenho. Nada faltou em `game-vfx`, então nenhuma receita nova.
+
+**Desvios:**
+- Props: o `game-props3d` usa mulberry32 em vez do LCG do time; construtores como `bbq_simple`, atlas de quadros, cores do piso do lote e props de canteiro/plantas diferem da página. Os 6 pares do golden são exatos; outros não (casaA 1/2, sobrado 1/2, apartamento 2, popular_laje 1, popular_geminada 1, media_terrea_moderna 1/2, sobrado_medio_moderno 1-3, alto_padrao_contemporanea 1-3, mansao 1-3, apartamento_novo 1/2).
+- Carros, interativos e Reflector ficam fora do golden (o `criar` da página não os recebe).
+- `cfg.seedKey` mapeia ids novos para os ids legados nos sais do sorteio (ids `lp_`, `sw_`, `lamp_*_` mantidos) para o golden reproduzir.
+- `AdaptadorInterativos` é código de jogo (diz o próprio cabeçalho): não portado; o adaptador é injetado.
+- `breach.ts` (fiadas no LOD0) é desenho inferido: a spec só dizia "Falta para a T2.4c".
+- A spec da estrutura é melhorada neste pacote (montagem nas paredes, vergalhão em laje/viga/pilar/escada de concreto): decisão minha.
+- Sólidos da navegação: só colisores de parede/tabuleiro (vãos de porta ficam livres).
+- `wallDetail` `panels`/`units` para a malha 3D e os botões do visor não foram portados.
+- O Chrome do golden roda a three r160 da página; o `golden-tool` tem three 0.128 como devDependency.
+- Node 24 indisponível: testado em 20 e 22.
+- Partição das etapas difere do brief: construtores de mobília, colisão/itens/acessórios, edículas e utilidades caem em T2.4b porque luzes, espelhos e carros nascem dos construtores.
+- Docs (README, MIGRATION, skill, catálogo, inventário) num commit à parte.
+
+**Gate:**
+
+| Etapa | build | typecheck | testes do pacote | lint |
+|---|---|---|---|---|
+| a | ok | ok | 39 | ok |
+| b | ok | ok | 56 | ok |
+| c | ok | ok | 70 | ok |
+| d | ok | ok | 103 | ok |
+| e | ok | ok | 118 | ok |
+
+**Perguntas para o dono:**
+1. Aceita a diferença do PRNG do `game-props3d` (mulberry32) nos pares fora do golden, ou o `game-props3d` passa a oferecer o LCG do time como opção?
+2. O `flag userData.without` (original `userData.sem`) tem uso desconhecido: manter?
+3. O AndaresSDK fica em `-three` como pediu o brief; o inventário 4.4/5.5 sugeria função pura em `game-floorplan` ou `game-navigation`. Qual?
+4. Nome da área de teste: tasks.md diz `buildings-test-area`, a regra diz `examples/floorplan-test-area`.
+5. O `AdaptadorInterativos` entra em algum pacote ou fica no jogo?
+
+## T2.6
+
+Módulo de teste das casas, exemplo e goldens contra o VC3 (T2.6a-c). Branch `work/t2-4`, commits `fix(floorplan-three)` aa2bc27, `feat(contracts,test-room)` 98ae206, T2.6a 4c38dd2, T2.6b a451571, T2.6c b13c881.
+
+| Etapa | O que entrou |
+|---|---|
+| (fix) | `assembleStructure.spec` passa `contains`, `explodes`, `thickness`, `fill` e `tags` das peças para a spec: sem isso a caixa d'água e o botijão não chegavam ao mundo (a caixa nunca vazava). Teste novo em `destruction.test.ts` |
+| (contratos) | `ModuleHost.addBlocker(fn)` e `ModuleHost.onClear(fn)` (opcionais), implementados em `game-test-room` (o jogador consulta os bloqueios com o raio dele; `clear()` avisa os módulos). Testes em `module-host.test.ts` |
+| a | `createFloorplanTestModule` (`packages/game-floorplan-three/src/test-area/`): bancada com pacote (residencial, comercial, rural, pós-apocalíptico), tipologia, estado, semente, qualidade, LOD (manual ou por orçamento), 1 a 5 casas, orçamento, andar, golpe (rajada 9 mm, rajada 7,62, marreta, C4, RPG) e as ações construir, entrar, subir, descer, porta, golpe, restaurar, limpar; camadas telhado, lote e noite; 12 métricas. Cenários: os 6 do time (mesmos ids e checagens) e `floorplan_typologies`. `examples/floorplan-test-area` (build, test em pt-BR e en com Playwright, `?arena=` na sala) |
+| b | `examples/interactables-test-area` carrega o módulo (relatório `floorplan`, checagem de 5 espécimes e 7 cenários no `test.mjs`) |
+| c | `site/catalog.mjs` (entrada e família de plantas), `site/Dockerfile`, miniatura `site/thumbs/floorplan-test-area.jpg`, job `examples` do CI. Golden `house-area.json` movido para `packages/game-floorplan-three/tests/fixtures/team-golden/vc3-house-area.json` e comparado em `tests/team-golden-house-area.test.ts` (ids, número de checagens e booleanos, eventos fracture, collapse, hole, leak e explode) |
+
+**Decisões e desvios:**
+- As casas são do módulo, não itens da sala: ele as constrói com `house.destruction.activate()` no mundo da sala e a sala só as limpa (`onClear`). Os espécimes dos cenários são itens da sala, com malha de caixas nomeada pela peça como a página do time.
+- Sem partículas próprias: poeira de rombo e de desabamento saem do desenhista de destruição da sala (`game-vfx`); o módulo não toca efeitos.
+- `?arena=` (14 a 200) na página da sala: a arena padrão (14 m) é pequena para uma casa de 12 m e uma fileira.
+- Os andares de cima são alcançados por teletransporte do olho (`up`/`down`); o jogador da sala não tem altura de piso e as escadas não são andadas.
+- O grupo pós-apocalíptico lista só `triage_tent`; os estados `fortified` e `abandoned` valem para as outras tipologias.
+- `house_two_pillars` usa o pórtico com a casa `townhouse` (a `single_storey_a` segura a laje nas divisórias) e, na sala, derruba os pilares seguintes até a laje cair: com o desenhista ligado, dois pilares deixam os outros a 0,95 de tensão e a laje a 0,45 e nada cai. As checagens são as do time; só o roteiro de golpes foi estendido.
+- Contagens de ticks de dano diferem do mundo do time; só os eventos de sentido e as checagens são comparados.
+- Pós-fix, a tank d'água vaza 500 L para 496 L em 40 s com um tiro de 600 J (calibre 9).
+
+**Gate:**
+
+| Etapa | build | typecheck | testes do pacote | lint | browser |
+|---|---|---|---|---|---|
+| todas | ok | ok | 138 (floorplan-three) | ok | `floorplan-test-area/test.mjs` 22 PASS (pt-BR e en), `interactables-test-area/test.mjs` 22 PASS |
+
+**Perguntas para o dono:**
+1. Dois pilares do pórtico: o time derruba a laje; na sala (com o desenhista de destruição ligado) nenhum par de pilares a derruba e só o solver puro a derruba. Ajustamos a carga ou a capacidade dos pilares em `game-destruction`, ou o roteiro estendido (mais pilares) vale?
+2. A `single_storey_a` segura a laje nas divisórias (o pórtico do time não tem divisórias portantes): a divisória portante é a regra certa do kit?
+3. Os andares de cima devem ser andados (altura de piso no jogador da sala) ou o teletransporte basta?
+4. Nome da área (pergunta 4 da T2.4): usado `floorplan-test-area`, como manda a regra.
+## T5.3e (body) — o evento `body` dos personagens chega ao filme de fluidos
+
+Ramo `int/p6b`, a partir da `main` com as Fases 0 a 6 (parte 1). O evento `body` (T4.0) já está no contrato; o que faltava era a ponte.
+
+- **Onde mora a ponte**: no `createFluidsBridge` do `game-characters-three` (o pacote dos personagens não importa os pacotes de fluidos: recebe um `FilmSink` com o `splat` do `createFilmBridge`). `wounds.handle` já lia o `body`; agora, além do `sink.splash` de litros que existia, ele chama `bridge.wound(...)` no `wound` e `bridge.burst(change, ponto, look, direção)` no corte (`severed`), no estouro (`destroyed`) e na divisão (`split`).
+- **Gotas**: `wound` joga 3 gotas de 3,2 mm a 2,5 m/s (`spray`); corte, estouro e divisão jogam 4, 7 e 10 (`burstDrops`), na direção de saída do evento (`exit`) ou do lado do membro; sem direção, caem retas. Os números são meus: o time só mostra gotas, a ponte do filme não tem conta por ferimento.
+- **Cor da idade**: `WoundBody.blood` (`BloodLook`: `liquid?`, `tint { fresh, dry }`, `amount`). `bloodLookOfAge(idade)` lê o `ages.json` (`freshBloodColor`, `dryBloodColor`, `blood`): sangue fresco 0x8A0A0A / 0x3B1D14, recente 0x5A0C10 / 0x2E1810, antigo 0x3A1C12 / 0x2A160E, decrépito 0x1A1612. O fator `blood` escala as gotas (decrépito, 0, não joga nenhuma) e as idades com `blood < 0,3` sangram `old_blood` (limiar e líquido por opção). A área de personagens recebe `film` e `bloodOf(idade)` e põe o olhar no corpo do zumbi pela idade de `traitsOf(...).age`.
+- **A sala**: `room.film` é a ponte do filme (`splat`, `setWeather`, `leaks`); `characters-test-area` e `interactables-test-area` passam `film: room.film`.
+- **Testes**: `game-characters-three/tests/film-blood.test.ts` (6: cores de `ages.json`, ferida com cor e direção, ferida sem olhar, corte/estouro/divisão com 2/4/6 gotas a 60% de sangue, sangue antigo e corpo seco, sem filme só o mundo); `game-test-room` (`room.film.splat` cria uma grade); no navegador, `interactables-test-area` ferve um zumbi com um golpe de corte e confere o `splat` de sangue com `tint` e a grade `film_grid`.
+
+### Perguntas para o dono
+- Quantas gotas por ferimento (3, 4, 7, 10) e a regra do sangue antigo (`blood < 0,3`) são minhas. Quer outra conta (por energia do golpe, por exemplo)?
+
+## T6.1g — vozes dos personagens e chamados dos bichos no `game-audio`
+
+Ramo `int/p6b`, depois da Fase 4 (corpo e `body`) na `main`.
+
+| O que | Onde |
+|---|---|
+| As primitivas da Cena (`sNoise`, `sTone`, `voice`) como camadas de receita, que antes moravam dentro do `destruction-three`: `sceneNoise`, `sceneTone`, `sceneVoice`, `sceneMany`, `sceneRecipe`. O `destruction-three` passou a importá-las (as receitas e os 12 traços dos materiais não mudaram) | `game-audio/src/recipes/scene.ts` |
+| Banco dos corpos: 16 receitas. Do jogo (movidas dos suportes de teste do `game-audio`, onde esperavam o dono): `scream_hoarse` (`grito`, L62128), `groan` e `runner_groan` (`voz`, L62143). Da Cena: `groan_walker`, `groan_runner`, `groan_brute` (L1345), `scream` (L1347), `inhale` (L1348), `leap` (L1349), `grab`, `bite`, `hurt` (L1350-L1352, no ouvinte), `flesh`, `flesh_head` (L1353), `sever` (L1355), `gore` (L1356). Cada uma com a linha do time em `sources` | `game-characters-three/src/audio/recipes.ts` |
+| Tabela de quem fala o quê nos 13 tipos | `game-characters-three/src/audio/voices.json` (`UNDEAD_VOICES`) |
+| `createCharacterSound(host.audio)`: `voice`, `body`, `player`, `update`; estilo `art_scene` (padrão) ou `game`; vozes e regras de corpo trocáveis | `src/audio/sound.ts` |
+| Os quatro chamados do `bichoSom` (L66625) e `createAnimalSound` com a recarga da página por bicho (6, 8, 30 e 3 s) | `game-animals-three/src/audio/{recipes.ts,calls.json,sound.ts}` |
+| `createWounds({ sound })` toca ferimento, corte, estouro e divisão onde o segmento estava; a área de personagens ganhou as ações `voice` e `special_call` e a de bichos `call`, todas no motor que a sala empresta | `wounds.ts`, `test-area/module.ts` |
+
+**Prova ("igual ao original")**: `game-characters-three/tests/audio.test.ts` (46 casos) roda cada receita no motor sobre o `AudioContext` falso, com a semente do fixture, e compara com o traço do código do time em `tools/golden/fixtures/audio`: `grito` a 5 distâncias, `voz('gemido')` a 4, `voz('corredor')` a 3, `groan` Lento/Corredor/Brutamonte, `scream`, `inhale`, `leap` em 3 posições, `grab`, `bite`, `hurt`, `flesh`, `flesh_head`, `sever` e `gore` (tolerância 1e-9). `game-animals-three/tests/audio.test.ts` faz o mesmo com os 4 chamados a 4 distâncias (16 casos). O limitador de vozes fica de fora dos traços (`groups` vazio no teste: o grupo `undead_voice` tem teste próprio, e o golden do limitador está no `game-audio`). Os casos `grito`, `voz` e `bichoSom` saíram do `team-trace.test.ts` do `game-audio` porque o dono agora é o pacote do assunto; o resto do arquivo ficou.
+
+### Escolhas minhas (padrões reversíveis)
+
+1. **A regra de classe da Cena vale para os 13 tipos**: Brutamonte tem o seu, velocidade de perseguição acima de 3,4 é gemido de corredor, o resto é de lento. Pelos números do `types.json`, farejador (3,5), saltador (4,5) e espreitador (4) gemem como corredor.
+2. **Tipos sem som próprio no time** (Rastejante, Inchado, Espreitador, Cego, Carbonizado, Afogado, Farejador, Devorador): usam o gemido pela regra acima (`origin: 'rule'`). Dois ganharam um som extra da página mais perto da linha de voz do `types.json` (`origin: 'extra'`): Farejador inspira antes de rosnar (`inhale`, "Fungadas") e Devorador morde (`bite`, "Mastigar molhado"). O Espreitador fica calado parado ("Silencioso") e geme ao acordar. Nada foi sintetizado do zero.
+3. **Grupo `undead_voice` só nos gemidos** (cinco ao mesmo tempo, um a cada 0,25 s, a menos de 40 m). Grito, inspirar e salto da Cena ficam fora do limite (o `grito` do jogo é chamado direto, `screamAt`, sem o orçamento). A Cena conta também o grito e o salto nos cinco do `AU.groans`; aqui só contam os gemidos.
+4. **Alerta**: no estilo do jogo, todo corpo que percebe o jogador responde com `voz('corredor')` (L67275, L67328); no da Cena, com o gemido da sua classe.
+5. **Gritador**: a sequência é inspirar, depois de 1,5 s (`windUpSeconds`) gritar; no estilo do jogo só o `grito`.
+6. **Corpo ferido**: `wound` = `flesh` (`flesh_head` em cabeça e mandíbula), `severed` = `sever`, `destroyed` e `split` = `gore`; no estilo do jogo o `wound` é a classe `sfx_flesh`. A Cena chama `flesh`/`sever`/`gore` nas funções de dano (L1084, L1101, L1127, L1132, L1143), a ligação com os eventos `body` é do kit.
+7. **Chamados dos bichos**: espécie -> chamado pelo gatilho do jogo (galinha, quero-quero, vaca, cachorro). O som do quero-quero dispara pela proximidade do jogador (`alarme`) no jogo; o kit só toca quando o anfitrião manda.
+
+### Perguntas para o dono
+- Os 8 tipos sem som no time (Rastejante, Inchado, Espreitador, Cego, Carbonizado, Afogado, Farejador, Devorador) e as 9 espécies sem chamado (cavalo, porco, javali, capivara, onça, gato, urubu, jararaca, rato) ficam com o gemido da regra, o som "extra" ou silêncio. Quer que o time de som entregue vozes novas, ou aceita as escolhas acima?
+- O Espreitador fica calado enquanto finge morto: aceita?
+
+## T6.2b — as pontes do clima e o som de chuva, vento e trovão
+
+Ramo `int/p6b`, depois de T5.3e e T6.1g.
+
+| O que | Onde |
+|---|---|
+| `createWeatherBridges(targets, options)`: cada alvo é opcional e uma interface pequena (o clima não importa nenhum dos pacotes que move). `film`, `interactables`, `vegetation`, `vfx`, `environment` (`EnvironmentBus`), `audio` (`AudioSink`); `bind(weather)` e `update(dt)` | `game-weather/src/bridges.ts` |
+| Filme de fluidos: `Film.setWeather({ rain, drying })` (`drying` multiplica a secagem; o calor intenso passa `dryingScale` 2) e `Film.wash(maxDryness = 0,5)` (o `ZG.wipe(c, "chuva")` do visor L13489-L13494: só a mancha com menos da metade seca; sangue e sangue velho, óleo e combustível não), com `FilmManager.wash`, `FilmGrid.wash` (reenvia o retângulo lavado), `FilmBridge.wash` e a opção `washable` | `game-fluids/src/film/{film,types,simulate}.ts`, `game-fluids-three/src/film/{manager,grid,bridge}.ts` |
+| Vento do vfx: `VfxWorld.setWind([x, y, z])` e `wind()` (`VfxOptions.wind` só dava o início) | `game-vfx/src/world.ts` |
+| Receitas: `rain_loop` (Cena L1314, passa-alta 600 e passa-baixa 6000), `wind_loop` (Cena L1315, passa-baixa 320, LFO 0,07 Hz de 0,035), `rain_hiss_game` (jogo L62116) e `thunder` | `game-weather/src/audio/recipes.ts` |
+| `createWeatherSound(audio)`: chuva 0,035 (chuva leve, 2,5 mm/h, a âncora do jogo) a 0,06 (forte, 15 mm/h, a âncora da Cena); vento 0,05 na brisa de 3,8 m/s e proporcional à velocidade, no máximo 0,12; o trovão toca no rumo do raio (graus no sentido horário a partir do norte, -z) quando o `thunder` do clima chega (o clima já espera `distância / 343` s) | `game-weather/src/audio/sound.ts` |
+| A bancada do clima recebe `targets` e `sound` e liga as pontes ao `host.audio`; `room.vfx` expõe o mundo de efeitos da sala; as áreas `weather-test-area` e `interactables-test-area` passam `room.film` e `room.vfx` | `bench/module.ts`, `game-test-room`, `examples/*/src/entry.js` |
+
+**Prova**: `game-weather/tests/sound.test.ts` roda os laços no motor sobre o `AudioContext` falso e compara com os traços do código dos times (Cena `chain` com chuva 0,06, vento 0,05 e fogo 0; jogo `loop.chuva` a 0,001, 0,035 e 0,3; tolerância 1e-9). `tests/bridges.test.ts` (8) cobre o que cada alvo recebe, só o que mudou, chuva leve sem lavar e forte lavando a cada segundo, calor, regras trocadas, troca de clima e trovão. `game-fluids` (secagem em dobro e lavagem pela metade), `game-fluids-three` (óleo não lava) e `game-vfx` (o fumo anda para o lado do vento) têm testes novos; no navegador, as duas áreas conferem que o vento da tempestade (4,5; 0) chega ao `room.vfx`, volta à brisa (3,5; 1,5) e que os laços abrem no motor da sala.
+
+### Escolhas minhas (padrões reversíveis)
+
+1. **Trovão**: o time não tem trovão. É o `boom` do jogo (seno de 70 a 28 Hz em 1,2 s) mais um ribombo de ruído passa-baixa que desce de 260 a 50 Hz em 3,2 s com envio de reverb. A curva é `1,4 / (1 + d² × 0,00001)`: com a do boom (0,002) um raio a 200 m, o mais perto que o clima sorteia, já chegaria a 0,017 e um a 4 km, a nada.
+2. **Chuva do filme**: `rain = min(1, mm/h / 2,5)`, ou seja, a chuva leve já para a secagem por completo (a regra da folha: "não seca enquanto chove"); lavar só de 15 mm/h (chuva forte) em diante, a cada 1 s (decisão 9 da T6: a chuva leve não lava).
+3. **Vegetação**: `strength = min(1, vento / 20)` (como na spec) e `gust = min(1, rajada / 20)` na mesma escala; a spec não diz a conta da rajada. Sem vento a direção não é enviada (o renderizador normaliza e um vetor zero a estragaria).
+4. **Vento do vfx**: passa a ser o do clima (a brisa do `clear` é 3,5; 1,5 m/s, bem mais forte que o 0,55; 0,2 de partida do `game-vfx`); só muda onde o anfitrião liga a ponte (as duas áreas de teste).
+5. **Vento da Cena**: o laço abre a 0,05 na Cena e o volume segue a velocidade a partir dali; a escala (0,05 a 3,8 m/s, teto 0,12) é do kit.
+
+### Não migrado
+- **A prateleira do showroom** (`interactables-showroom`) ainda liga chuva (60 mm/h) e vento (3,5; 1,5) à mão, com malha de chuva própria. As pontes aceitam o mundo de interativos e o `effects` do showroom, mas trocar os botões por estados do clima muda o comportamento da página (a chuva dela é uma malha); fica para quando a T6.2c entregar a chuva desenhada.
+
+### Perguntas para o dono
+- O trovão é do kit (ribombo e curva): quer outra conta, ou um som do time de áudio?
+- Chuva leve lava o sangue? Hoje não (decisão 9); a folha diz "chuva lava", sem separar leve de forte.
+- Vento do `vfx` com o vento do clima em todo anfitrião que ligar a ponte: aceita a brisa de 3,5; 1,5 m/s no lugar de 0,55; 0,2?
+
+## T6.2c — o clima desenhado (`game-weather-three`) e a chuva, a neblina e os faróis da Oficina
+
+Ramo `int/p6b`, depois de T6.2b.
+
+| O que | Onde |
+|---|---|
+| Chuva da Oficina (W312-331): `RainField` em `engine.rain`, até 4 000 riscos num `Float32Array`, sorteios na ordem da página (`rnd(-15,15)`, `rnd(0,16)`, `rnd(-6,16)`; ao cair, 35 % de respingo a menos de `12/(1+qualidade)` m, 50 % de sprite e anel só em poça; volta em `rnd(14,17)`). A página não diz o que fazer com a caixa fora da origem: `drive(count, wind, centerX, centerZ)` é do kit e o golden nunca o chama | `game-vfx/src/workshop/rain.ts`, `effects/behaviors/rain.ts` |
+| Os três efeitos da Oficina que a T5 deixou de fora: `chuva` (`rain_and_puddles`, 3 intensidades, 4 poças, relâmpago duplo no temporal), `neblina` (`fog_and_ash`, 3 zumbis, névoa 5/s e cinza 14/s) e `farol` (`headlights_in_rain`, 1 800 gotas, 6 zumbis na luz, 600 gotas acesas/s no feixe); a consulta `car.point` | `game-vfx/src/effects/{world/rain,world/fog-and-ash,vehicles/headlights}.ts`, `behaviors/car.ts` |
+| Golden dos três na captura `vfx-workshop.js` (`mode=weather`): sequência de eventos, contagem de sorteios, contagem por quadro e hash do pool de chuva; 16 testes | `game-vfx/tests/weather-golden.test.ts`, `tests/fixtures/team-golden/vfx-workshop-weather.json` |
+| `game-vfx-three` desenha o campo de chuva (`workshop-rain`, `LineSegments` 0x9fb3cf, opacidade 0,35) | `game-vfx-three/src/workshop-layers.ts` |
+| Pacote novo `game-weather-three`: cortina de chuva do jogo (14 000 pontos, caixa de 70 m x 25 m, 13 m/s, shaders do `jogo.js` letra por letra), chuva perto (`createNearRain`, liga o `engine.rain` ao clima), névoa e cinza (`emitAirborne`), neblina linear e exp2 com zona (`fogOf`), céu (`createSky`), relâmpago (`createLightning`), faróis (`createHeadlights`), névoa de calor (`createHeatHaze`) e `createWeatherRenderer` | `packages/game-weather-three` |
+| A bancada do clima aceita `visual` (`WeatherVisualFactory`); `createWeatherVisual` dá 7 camadas (pt-BR e en) e um suporte de lanternas diante da câmera; as duas áreas de teste ligam o visual (no `interactables-test-area`, com o céu da sala) | `game-weather/src/bench/module.ts`, `game-weather-three/src/bench`, `examples/*/src/entry.js` |
+| Miniatura do clima: tempestade às 20 h, com chuva, céu escuro e os faróis do suporte | `site/thumbs/weather-test-area.jpg`, `site/catalog.mjs` |
+
+**Prova**: `tools/golden/bin/record-weather-visual.mjs` corta o bloco da chuva do `jogo.js` (`const RAIN = 14000` até `skyUpdate`) e o roda num `vm` com três.js falso sob `Math.random` semeado; `fixtures/weather/game-rain-curtain.json` guarda o SHA-256 dos 42 000 floats, os shaders e as linhas de céu, neblina e zona. `tests/rain-curtain-golden.test.ts` (9) compara pontos bit a bit, shaders letra por letra e os números de céu, neblina, relâmpago, faróis, névoa e cinza com o texto das páginas; `tests/renderer.test.ts` (15) e `tests/bench-visual.test.ts` (2) cobrem neblina, céu, cortina por perfil, chuva perto (inclusive desenhada pelo `game-vfx-three`), relâmpago, faróis a 40 m, névoa de calor, camadas e a bancada. No navegador: `weather-test-area/test.mjs` confere a tempestade (cortina 14 000, 4 000 riscos, neblina linear de 110 m, suporte aceso), a neblina exp2 de 0,075 com névoa e cinza e o calor com a névoa; `interactables-test-area/test.mjs` confere a cortina e os 4 000 riscos sobre os móveis e o céu da sala intacto.
+
+### Escolhas minhas (padrões reversíveis)
+
+1. **Cortina por `drops`**: a cortina toda (14 000) aparece a 4 000 gotas (a tempestade); a chuva forte (2 200) desenha 55 % e a leve (900), 22 %; perfis `low` 0,35, `medium` 0,7, `high` 1. O jogo só tem chuva ou não; a escala é do kit (`fullAt`).
+2. **Céu**: o `0,8` do jogo na chuva vira `skyScale` do estado (1 limpo, 0,9 chuva leve, 0,8 chuva forte, 0,7 temporal); o dia 0..1 é `sample.sun`.
+3. **Neblina exp2**: onde o estado tem densidade (`fog` 0,075, `overcast` 0,03) usa `FogExp2`; a zona entra por uma densidade equivalente a `far` (`sqrt(ln 50) / far`). O jogo só tem neblina linear.
+4. **Relâmpago**: o `hemi.intensity` e o fundo da Oficina são absolutos (0,6 + I x 3,2); aqui são acréscimos, para valer sobre o céu do dia (o fundo só muda com a camada `sky` ligada).
+5. **Respingo**: a chuva da Oficina só respinga a partir da "chuva" (a garoa não); aqui, de 5 mm/h. Anéis só onde `puddleAt` ou `puddles` dizem que há poça (nenhuma por padrão; a Oficina tem 4 elipses fixas).
+6. **Faróis**: acendem à noite (fator de noite > 0,3), com chuva, com neblina densa ou visibilidade menor que 150 m; luz de verdade só a menos de 40 m da câmera (texto `b` da página).
+7. **Suporte de lanternas** da bancada: dois faróis e um bloco com as lentes `hlMat`. Não é carro: o time de veículos entrega os carros e o `game-vehicles-three` ainda não existe; quando existir, o `headlights.attach(carro, lente)` já serve.
+
+### Não migrado
+- **Névoa de calor com distorção**: nenhum time entregou; a camada é uma faixa quente que sobe na parte de baixo da tela. Distorcer a imagem pede um alvo de render, que só o anfitrião tem.
+- **A prateleira do showroom** (`interactables-showroom`) segue com a chuva de malha própria (ver T6.2b); trocá-la pela cortina muda a página.
+
+### Perguntas para o dono
+- A cortina com 22 % a 55 % da chuva na chuva leve e na forte (e 100 % só no temporal) está certa, ou a chuva do jogo (14 000 sempre) vale para todo estado com chuva?
+- Névoa de calor: quer o time de efeitos para a distorção de verdade, ou a faixa quente basta?
+- Faróis: a regra "noite, chuva ou neblina" liga os faróis de qualquer carro do mundo. O jogo decide por veículo (o motorista), ou o clima pode ligar todos?
+
+## T5 (restante) — clarão, fumaça, sopro do lançador e jato de chama da arma na mão sobre o `game-vfx`
+
+Ramo `int/p6b`, depois de T6.2c. Feito em duas passadas: f49e466 trouxe as receitas com sprites; a segunda passada (pedido do coordenador: "proibido reescrever parecido") trocou os sprites pelos sólidos da galeria.
+
+| O que | Onde |
+|---|---|
+| O `createEffects` da galeria (clarão: um cone aberto de 10 lados, quatro cones de 6 lados e uma esfera de 12 por 8, aditivos, `0,6 + min(1, idade/0,055) x 0,9` de escala; luz laranja de `4 k` a `2 k` m; seis esferas de fumaça de 10 por 8) vira a receita `viewmodel_muzzle_flash`; a `smoke(posição, velocidade, tamanho, vida, opacidade)` vira `weapon_smoke_puff`; o sopro de trás do lançador (26 esferas de fumaça e 14 icosaedros de fogo, `launchRocket`) vira `launcher_backblast`; os icosaedros e a fumaça do `flameJet` (`floor(dt x 420 x escala)` por quadro) viram `flame_jet`. As receitas estão nos eixos da arma (x no cano, y para cima, z à direita), como a galeria | `game-vfx/src/effects/weapons/viewmodel.ts` |
+| Primitiva nova: partícula de sólido (`MeshSpawn`: cone, cone aberto, esfera, icosaedro, com segmentos, material aditivo ou iluminado, `at`/`rot`/`roll` de grupo, `ramp`, `grow`, `drag`, gravidade, giro, opacidade que some), com o mesmo passo por quadro do `Particles` da galeria (idade, opacidade, gravidade, arrasto, movimento, giro, crescimento) | `game-vfx/src/workshop/meshes.ts` (`MeshPool`), passo `mesh` em `effects/steps.ts`, desenho em `game-vfx-three/src/mesh-layer.ts` (uma `Mesh` por partícula, geometria e material dela) |
+| A orientação inteira da arma (o quaternion, com a inclinação e o rolar) chega à receita: `EffectRequest.orientation` no contrato, `PlayOptions.orientation`, `Placement.orientation` (posições e velocidades giram com ele; sem ele, só pelo eixo vertical como antes) | `game-contracts/src/effects.ts`, `game-vfx/src/effects/player.ts`, `workshop/engine.ts` |
+| A luz do clarão segura a força nos 55 ms e apaga (`flash(..., force, steady)`), como a luz da galeria; antes a luz do Workshop caía com o quadrado da idade | `game-vfx/src/workshop/waves.ts` |
+| Números nomeados: `PlayOptions.values` (lidos com `variable(nome)`) e `EffectRequest.values`; a expressão `exp` | `game-vfx/src/effects/{player,instance,expression,dsl}.ts` |
+| Sorteios na ordem da galeria, de um fluxo próprio da receita: cada `play` tira uma semente do fluxo do viewmodel (uma tirada) e a receita sorteia da semente na ordem em que a galeria sorteava (ângulo dos quatro cones, rolar do grupo, velocidade e vida de cada fumaça; no lançador e no jato, a ordem de `heavy.ts`) | receitas e `game-weapons-three/src/fx/effects.ts` |
+| `game-weapons-three` toca as receitas pelo `host.effects` (`createWeaponFx({ effects })`); sem `host.effects` (visualizador sozinho) cria um mundo de efeitos próprio (`createVfxRenderer`, como a `destruction-three`), atualizado e apagado junto com o viewmodel. Ficam como malha: cápsulas, pentes, o foguete em voo (e o cone e a luz do escape), as gotas em chamas e as três chamas no chão | `game-weapons-three/src/fx/{effects,heavy,viewmodel}.ts`, `box-fx.ts`, `fx.ts`, `area.ts` |
+
+**Prova**
+- `tools/golden/bin/record-viewmodel-flash.mjs` roda `fx/effects.ts` e `fx/particles.ts` do commit d15e990 (antes de f49e466), sem mudar uma linha (só transpilados), no three.js de verdade e com um fluxo sorteado de semente fixa, e grava `tools/golden/fixtures/weapons/viewmodel-flash.json`: em três cenários (cano reto, inclinado e girado, 100 e 60 quadros por segundo) e 13 quadros cada, as peças do clarão (geometria e seus números, material, posição e giro no mundo, escala), a luz (intensidade, distância, decaimento, cor, posição) e as esferas de fumaça (raio, segmentos, posição, escala, opacidade).
+- `game-vfx-three/tests/viewmodel-flash.test.ts` toca a receita pelo `createVfxRenderer` com a mesma semente e compara tudo com 9 casas. Passa nos 39 quadros.
+- `game-vfx/tests/viewmodel-effects.test.ts` (10) confere a ordem dos sorteios do clarão, o passo por quadro da fumaça e, número a número, o sopro do lançador e o jato de chama contra o laço de `heavy.ts` (reescrito no teste com o mesmo fluxo de sementes), com o cano reto e com o cano inclinado.
+- `game-weapons-three/tests/viewmodel-effects.test.ts` (7) confere o que a arma pede ao `host.effects` (ids, quaternion e números), o tiro, o lançador e o lança-chamas na sala de testes, e o visualizador sem `host.effects` (peças do clarão e luz nos dois primeiros quadros, só a fumaça depois). Os goldens do `game-weapons-three` seguem os mesmos; nenhum foi regravado.
+
+### Diferenças que sobram em relação à galeria
+1. **A luz não precisa de divisão por π**: o coordenador pediu `intensidade / π`, supondo que o `game-vfx-three` multiplica as luzes do Workshop por π. Quem multiplica é a camada de luzes do Laboratório (`lightScale`, padrão π). A camada do Workshop, onde a receita toca, usa escala 1 (`createWorkshopLayers(..., 1)`), então a receita pede `4 k` e a luz sai com `4 k`, igual à da galeria (o teste compara a intensidade quadro a quadro com a gravada). Dividir por π a deixaria π vezes mais fraca.
+2. **O sorteio sai do fluxo do viewmodel**: o clarão não tira mais 29 números do fluxo do viewmodel, tira um (a semente). Os números que a receita sorteia são os mesmos que a galeria sortearia com o fluxo `lehmer(semente)` (o teste prova); o que muda é o que o viewmodel sorteia depois (cápsulas, giro), que deixa de depender do clarão. Nenhum golden depende disso.
+3. **Sem `host.effects`, o mundo próprio usa o perfil `medium`** e a câmera que o viewmodel recebeu; as luzes do Workshop do mundo próprio são quatro, e a do clarão é forçada (aparece mesmo com a qualidade baixa do hospedeiro).
+
+### Perguntas para o dono
+- Sem `host.effects` o visualizador cria o próprio mundo de efeitos (um `VfxWorld` por viewmodel). Quer que vários viewmodels no mesmo cenário dividam um só (uma opção `vfx`), ou um por arma está bem?
+- O sopro do lançador e o jato de chama agora giram com o cano inteiro; a faísca e o fogo do foguete em voo (cone e luz do escape) seguem como malha da `game-weapons-three`. Quer o escape do foguete também como receita (precisa de um passo que acompanhe a malha do foguete)?

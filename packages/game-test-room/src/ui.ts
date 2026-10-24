@@ -52,6 +52,8 @@ export interface HudState {
   timeScale: number
   fast: boolean
   tap: boolean
+  /** The room's blast options that are on. */
+  blast: { shelter: boolean; fragmentHits: boolean; confinement: boolean }
   quality: string
   objects: number
 }
@@ -76,6 +78,7 @@ export interface UiOptions {
   onRunAll: () => Promise<ScenarioReport | void>
   onTool: (index: number) => void
   onTap: () => void
+  onBlast: (key: 'shelter' | 'fragmentHits' | 'confinement') => void
   onPlay: (objectId: string, clipId: string) => void
   onResize: () => void
   onControl: (id: string, value: ControlValue) => void
@@ -122,6 +125,13 @@ const CSS = `
 .tr-status{margin-top:4px;min-height:16px;color:#ffd23f;text-shadow:0 1px 2px #000}
 .tr-prog{margin:4px auto 0;width:260px;background:rgba(10,12,16,.72);border-radius:6px;padding:4px 8px;display:none}
 .tr-prog b{display:block;font-weight:500;margin-bottom:3px}
+.tr-sheet{margin-top:8px;padding:8px;border:1px solid #2a2e36;border-radius:6px;font-size:12px;line-height:1.4}
+.tr-sheet h4{margin:2px 0 4px;font-size:13px}.tr-sheet p{margin:4px 0}
+.tr-facts{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin:4px 0}.tr-facts dt{opacity:.7}.tr-facts dd{margin:0}
+.tr-steps{margin:4px 0;padding-left:16px}.tr-swatches{display:flex;flex-wrap:wrap;gap:6px}.tr-swatch i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.tr-timeline{position:relative;height:22px;margin:8px 0;background:#1b1e24;border-radius:4px;overflow:hidden}
+.tr-segment{position:absolute;top:0;height:100%;font-size:10px;overflow:hidden;white-space:nowrap;opacity:.85;padding:0 3px;box-sizing:border-box;color:#000}
+.tr-tick{position:absolute;top:0;bottom:0;width:1px;background:#fff6;text-decoration:none}.tr-playhead{position:absolute;top:0;bottom:0;width:2px;background:#fff;text-decoration:none}
 .tr-bar{height:7px;background:#2a2e36;border-radius:4px;overflow:hidden}
 .tr-bar i{display:block;height:100%;background:#4fc3f7;width:0}
 .tr-bar.hp i{background:#66bb6a}.tr-bar.warn i{background:#ffb300}.tr-bar.bad i{background:#ef5350}
@@ -422,6 +432,8 @@ export function createUi(o: UiOptions): RoomUi {
     o.onFast(fast)
   })
   const tapBtn = ctl(t('ui.tap'), () => o.onTap())
+  const blastBtns = (['shelter', 'fragmentHits', 'confinement'] as const).map((key) => ({ key, b: ctl(t(`ui.blast.${key}`), () => o.onBlast(key)) }))
+  for (const { key, b } of blastBtns) b.title = t(`ui.blast.${key}.hint`)
   const qSel = mk('select')
   for (const q of ['low', 'medium', 'high'] as const) {
     const op = mk('option', undefined, t(`ui.quality.${q}`))
@@ -635,6 +647,7 @@ export function createUi(o: UiOptions): RoomUi {
       }
       slotsEl.forEach((b, i) => b.classList.toggle('on', i === s.slot))
       tapBtn.classList.toggle('on', s.tap)
+      for (const { key, b } of blastBtns) b.classList.toggle('on', s.blast[key])
       count.textContent = t('ui.objects', { n: s.objects })
       const ak = JSON.stringify(s.animations)
       if (ak !== lastAnim) {

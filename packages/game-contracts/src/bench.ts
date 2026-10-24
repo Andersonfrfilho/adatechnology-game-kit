@@ -9,6 +9,8 @@ export type ControlValue = number | boolean | string
 export interface ChoiceOption {
   readonly id: string
   readonly name: string
+  /** Heading the host lists the option under (`optgroup`, a grouped row of buttons). Options of a group must sit next to each other. */
+  readonly group?: string
 }
 
 interface ControlBase {
@@ -88,6 +90,28 @@ export interface ModuleBench {
   patch(id: string, patch: ControlPatch): void
   /** Move the host camera (a near / middle / far choice). */
   look(eye: Vec3, target: Vec3): void
+  /** Shows a sheet on the host's panel, or takes it down with `null`. A host without a sheet area ignores it. */
+  sheet?(sheet: BenchSheet | null): void
+}
+
+/**
+ * A card of text the module puts on the host's panel (the sheet of an effect, of a weapon): what it is, its numbers, its steps, its colours and,
+ * optionally, a strip of segments over time. Names and texts are already translated for the host's locale.
+ */
+export interface BenchSheet {
+  readonly kicker?: string
+  readonly title: string
+  readonly body?: string
+  readonly facts?: readonly { readonly label: string; readonly value: string }[]
+  readonly steps?: readonly { readonly at: string; readonly text: string }[]
+  readonly swatches?: readonly { readonly color: string; readonly name: string }[]
+  readonly note?: string
+  /** A strip of named segments (seconds), with tick marks and a playhead that follows the module metric `metric`. */
+  readonly timeline?: {
+    readonly segments: readonly { readonly name: string; readonly start: number; readonly end: number; readonly color: string }[]
+    readonly ticks: readonly number[]
+    readonly metric: string
+  }
 }
 
 export interface BenchReport {
@@ -118,14 +142,20 @@ function checkControl(control: ModuleControl, problems: string[]): void {
     return
   }
   const seen = new Set<string>()
+  const groups = new Set<string>()
+  let previousGroup: string | undefined
   for (const option of control.options) {
     if (seen.has(option.id)) problems.push(`${label} repeats option "${option.id}"`)
     seen.add(option.id)
+    if (option.group !== undefined && (typeof option.group !== 'string' || option.group === '')) problems.push(`${label} option "${option.id}" has an empty group`)
+    else if (option.group !== undefined && option.group !== previousGroup && groups.has(option.group)) problems.push(`${label} group "${option.group}" is split: its options must be next to each other`)
+    if (typeof option.group === 'string' && option.group !== '') groups.add(option.group)
+    previousGroup = option.group
   }
   if (!seen.has(control.default)) problems.push(`${label} default "${control.default}" is not among its options`)
 }
 
-/** snake_case ids unique across controls, layers and metrics; min < max; step > 0; default in range; options non-empty, unique, default among them; metric max > 0. */
+/** snake_case ids unique across controls, layers and metrics; min < max; step > 0; default in range; options non-empty, unique, default among them, each group in one run; metric max > 0. */
 export function checkBench(declared: BenchDeclaration): BenchReport {
   const problems: string[] = []
   const ids = new Set<string>()

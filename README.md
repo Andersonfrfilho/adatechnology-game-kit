@@ -19,6 +19,8 @@ concatenates plain scripts can use them without a bundler.
 | [`@adatechnology/game-fluids-three`](packages/game-fluids-three) | `GameFluidsThree` | three.js renderer for the fluids world |
 | [`@adatechnology/game-devtools`](packages/game-devtools) | `GameDevtools` | Free-fly mode, position HUD, notes and marks, control panel, scenarios runner and entity labels |
 | [`@adatechnology/game-infection`](packages/game-infection) | `GameInfection` | Deterministic abstract epidemic model by regions (zombies, plague, rumours) |
+| [`@adatechnology/game-audio`](packages/game-audio) | `GameAudio` | Sound as data: seeded recipes planned into sound plans, the teams' distance curves, pan, a voice limiter, loops and the game and art scene mixing chains |
+| [`@adatechnology/game-weather`](packages/game-weather) | `GameWeather` | Pure seeded weather: states from clear to typhoon, climates in game time, lightning with thunder delay, ground wetness, sight and hearing effects, heat index, day and night |
 | [`@adatechnology/game-props3d`](packages/game-props3d) | `GameProps3d` | Procedural low-poly props (decor, furniture, yard, house state) that only describe primitives through a host-provided api |
 | [`@adatechnology/game-vehicles`](packages/game-vehicles) | `GameVehicles` | Procedural vehicle engine for three.js: bodies, glass, lights, interiors, zone-based damage in five bands, fluids, rollover, explosions and a damage-map UI; fleets and texts come from plugins |
 | [`@adatechnology/game-vehicles-fleet`](packages/game-vehicles-fleet) | `GameVehiclesFleet` | Content pack for `game-vehicles`: 69 vehicles in ten groups (motorcycles to helicopters), fuels, group names, crash texts and five damage scenarios |
@@ -29,6 +31,7 @@ concatenates plain scripts can use them without a bundler.
 | [`@adatechnology/game-floorplan-commercial`](packages/game-floorplan-commercial) | `GameFloorplanCommercial` | Commercial content for the floor plan engine: market and pharmacy, commercial and industrial zones |
 | [`@adatechnology/game-floorplan-post-apocalyptic`](packages/game-floorplan-post-apocalyptic) | `GameFloorplanPostApocalyptic` | Fortified and abandoned house states as a state plugin, with a configurable seed distribution |
 | [`@adatechnology/game-floorplan-structure`](packages/game-floorplan-structure) | `GameFloorplanStructure` | Structure of every floor plan: construction systems, load path (roof, trusses, beams, pillars, walls, foundation, porches), destructible spec |
+| [`@adatechnology/game-floorplan-three`](packages/game-floorplan-three) | `GameFloorplanThree` | three.js renderer of a floor plan (walls, doors, floors, stairs, roofs, lot, furniture, lights, mirrors, cars) bound to the destruction of its structure, plus the multi-floor navigator |
 | [`@adatechnology/game-test-room`](packages/game-test-room) | `GameTestRoom` | First-person test room with a behaviour log and scenarios to verify destruction, weapons and fluids on your own catalogue |
 
 Each package has its own README (English, with a short Portuguese section) and a `MIGRATION.md` mapping the old Portuguese names to the new

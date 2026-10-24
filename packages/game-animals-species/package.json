@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-animals-species",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Content pack for @adatechnology/game-animals: 13 species (cow, horse, pig, wild boar, capybara, jaguar, dog, cat, chicken, southern lapwing, vulture, lancehead, rat) with body specs, gaits, sound ranges and the outbreak rule as data, in en and pt-BR. A game that never reads the outbreak field gets plain animals.",
   "keywords": [

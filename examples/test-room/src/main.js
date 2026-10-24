@@ -6,6 +6,7 @@
 //   ?area=furniture     open on one catalogue group (furniture, structure, vehicles, plants, items, containers, weapons)
 //   ?quality=low|medium|high
 //   ?ui=0               hide the panels
+//   ?arena=40           half size of the arena in metres (default 14): the houses area needs room for a whole lot
 //   ?bench.<moduleId>=size=2;smoke=0   bench state of that module (the page keeps it up to date as the controls change)
 import * as THREE from 'three'
 import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
@@ -17,6 +18,7 @@ const locale = params.get('lang') === 'en' ? 'en' : 'pt-BR'
 document.documentElement.lang = locale
 document.title = locale === 'en' ? 'Test room' : 'Sala de testes'
 
+const arena = Number(params.get('arena'))
 const quality = ['low', 'medium', 'high'].includes(params.get('quality')) ? params.get('quality') : 'medium'
 const items = params.get('items')
 
@@ -56,6 +58,7 @@ const room = createTestRoom({
   catalog: demoItems(locale),
   scenarios: [loadModuleScenario],
   quality,
+  arenaSize: arena >= 14 && arena <= 200 ? arena : undefined,
   ui: params.get('ui') !== '0',
   initial: items ? items.split(',').filter(Boolean) : undefined,
   area: params.get('area') ?? undefined,

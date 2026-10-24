@@ -1,6 +1,7 @@
 import type { SegmentId } from '@adatechnology/game-characters'
 
 import type { THREE_NS } from '../three'
+import type { BloodLook } from './fluids-bridge'
 import type { RichRig } from '../rich/animator'
 
 /** The group that stands for one segment of the engine's tree on a drawn body, with what the wounds need to cut it off. */
@@ -20,6 +21,8 @@ export type WoundBody = {
   readonly root: THREE_NS.Object3D
   readonly rig: RichRig
   readonly nodes: Partial<Record<SegmentId, WoundNode>>
+  /** The colours this body bleeds in (the infection age of a zombie). Without it the bridge's liquid and the liquid's own colours. */
+  blood?: BloodLook
 }
 
 /** Radii of the cut faces by segment, from the Elenco's `segs` table (`r`). */

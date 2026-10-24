@@ -337,3 +337,32 @@ LOD, filme fluido, forma por ângulo, impacto por material, clarão de disparo p
 12. **Contagem divergente**: a Oficina tem 40 efeitos; o Laboratório diz "catálogo de 38". Faltam dois ou sobraram dois?
 13. **Granada de luz, bomba caseira e claymore** só existem no Laboratório (não no Arsenal 3D nem em `weapons.json` como `flash`/cone). Entram no `game-weapons`?
 14. **Projétil de foguete** (M72, AT4, RPG-7) não existe em `game-weapons`. É escopo desta migração ou da migração de armas?
+
+
+---
+
+## 6. Fase 5: o que entrou (R5)
+
+Atualizado em 2026-10-24. Cada linha: a peça da página, onde ficou, e o que **não** entrou. Evidência e números em `evidence.md` (seções T5.1 a T5.5).
+
+| Peça da página | Onde ficou | Estado |
+|---|---|---|
+| Laboratório de Explosões: compositor de camadas, laços de simulação, 16 explosivos, LOD, teto por área, tela | `game-vfx` (`createVfx`, `data/explosions.json`) e `game-vfx-three` (shaders, marcas, luzes, tela) | entrou; 16/16 cenas iguais ao original (puro e three) |
+| Explosão do SDK antigo (cinco jatos de `ParticleSystem` e luz própria) | `game-destruction-three` toca `vfx.explosion` e `vfx.fire`; `particles.ts` apagado | trocado |
+| Detritos, faíscas, cinzas, vapor, gotas e vazamentos (fluidos e destruição) | pool de sprites por tipo de `game-vfx` (`burst`, `spawn`, `onLand`, 14 tipos); `game-fluids-three/sprites.ts` | trocado |
+| Oficina de VFX: 36 receitas (criaturas, armas, destruição, veículos, mundo, tela) | `game-vfx/src/effects/*` como dados, `vfx.play`; texturas e pools em `src/workshop/*` | entrou; 162 asserções do golden sobre 54 execuções |
+| Oficina: desenhistas (sprites, riscos, detritos, decalques, anéis, luzes) | `game-vfx-three/src/workshop-layers.ts` | entrou; bolha de lente e pós-processo (`P0`) **só nos dados** |
+| Oficina: chuva (W321-331), neblina, faróis | efeitos `chuva`, `neblina` e `farol` em `game-vfx/src/effects/world` e `vehicles`, `RainField` em `src/workshop/rain.ts`; a cortina de 14 000 pontos, a chuva perto, o céu, o relâmpago, os faróis e a névoa de calor em `game-weather-three` (T6.2c) | entrou; golden `vfx-workshop-weather` e golden da cortina |
+| Arsenal: clarão do cano (`muzzleFlash`), fumaça, sopro do lançador e jato do lança-chamas da arma na mão | receitas `viewmodel_muzzle_flash`, `weapon_smoke_puff`, `launcher_backblast` e `flame_jet` (`VIEWMODEL_EFFECTS`, `game-vfx/src/effects/weapons/viewmodel.ts`, desenhadas como sólidos pelo `mesh-layer` do `game-vfx-three`), tocadas pelo `host.effects` em `game-weapons-three` | entrou como a galeria desenha (sólidos, segmentos, 55 ms, luz que segura, giro inteiro do cano, sorteios na ordem); comparado quadro a quadro com o código antigo (`record-viewmodel-flash.mjs`) |
+| Oficina: impacto por material, sangue por idade, clarão de disparo, cápsulas | receitas `impact`, `blood_hit`, `muzzle`, `casing` e as fatias `impact_<material>`, `muzzle_*`, `casing_*` | entrou; o módulo de armas toca clarão e cápsula de tiro visto de fora; **`hit` com ponto, normal e material não existe** no contrato (pergunta ao dono) |
+| Oficina: fichas (Quando, Visual, Orçamento, Rede) | `game-vfx/src/locales` (`en`, `pt-BR`) e a ficha do módulo de bancada | entrou |
+| Bancada de efeitos | `createVfxTestModule` (`game-vfx-three`), painel com ficha, `optgroup` e linha do tempo em `game-test-room`, `examples/vfx-test-area` e dentro de `interactables-test-area` | entrou |
+| Padrão de Fluidos: filme que escorre (F60-114), respingo por ângulo, gotas, pingo, fontes, arrasto, 5 perfis | `game-fluids/src/film/*`, `data/film-profiles.json` | entrou; 29/29 bit a bit (25 do Padrão e 4 da Oficina) |
+| Padrão de Fluidos: shader do filme, gotas instanciadas, bulbo | `game-fluids-three/src/film/*` | entrou; só CPU perto do jogador (6 grades, 30 m, orçamento em ms, envio do retângulo sujo, decalque da grade parada) |
+| Fluidos vivos da Oficina (W562-744) | mesmo filme com `WORKSHOP_LAYOUT` e os perfis da Oficina como padrão | entrou |
+| Valores do time: sangue 0x3B1D14 e 600 s, sangue antigo, bile, gasolina que evapora em 60 s | `game-fluids/data/liquids.json` (padrão configurável por `patchLiquids`) | entrou; os valores antigos estão no changeset |
+| Vazamento vira gota no filme, `tint` por idade, gancho da chuva | `createFilmBridge` e `film.setWeather` | entrou; **`body` (T4.0) -> `splat` pendente**: o evento não existe no contrato desta branch |
+| Efeitos de tela (tremor, clarão, vermelho, bordas, aberração, dessaturação, gás, batimento) | estado em `game-vfx`; overlay em `game-vfx-three` | entrou (CSS no overlay) |
+| Jogo (versão reduzida, teto por área, cadeia) | `AREA_CAP_GAME`, `LOD_GAME`, `delay` do `explosion` | entrou como padrão do SDK |
+
+Dúvidas 1 a 9 da seção 5: a 9 (efeitos de tela) foi decidida como estado em `game-vfx` mais overlay DOM em `game-vfx-three`. As abertas ficam em "Perguntas para o dono" de cada seção do `evidence.md`.

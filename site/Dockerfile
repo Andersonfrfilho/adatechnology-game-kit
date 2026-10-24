@@ -9,6 +9,7 @@ WORKDIR /app
 
 # Manifests first so the install layer stays cached until dependencies change.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY packages/game-audio/package.json packages/game-audio/
 COPY packages/game-animals/package.json packages/game-animals/
 COPY packages/game-animals-species/package.json packages/game-animals-species/
 COPY packages/game-animals-three/package.json packages/game-animals-three/
@@ -28,6 +29,7 @@ COPY packages/game-floorplan-post-apocalyptic/package.json packages/game-floorpl
 COPY packages/game-floorplan-residential/package.json packages/game-floorplan-residential/
 COPY packages/game-floorplan-rural/package.json packages/game-floorplan-rural/
 COPY packages/game-floorplan-structure/package.json packages/game-floorplan-structure/
+COPY packages/game-floorplan-three/package.json packages/game-floorplan-three/
 COPY packages/game-fluids/package.json packages/game-fluids/
 COPY packages/game-fluids-three/package.json packages/game-fluids-three/
 COPY packages/game-infection/package.json packages/game-infection/
@@ -48,8 +50,12 @@ COPY packages/game-vehicles/package.json packages/game-vehicles/
 COPY packages/game-vehicles-fleet/package.json packages/game-vehicles-fleet/
 COPY packages/game-vehicles-three/package.json packages/game-vehicles-three/
 COPY packages/game-vehicles-driving/package.json packages/game-vehicles-driving/
+COPY packages/game-vfx/package.json packages/game-vfx/
+COPY packages/game-vfx-three/package.json packages/game-vfx-three/
 COPY packages/game-weapons/package.json packages/game-weapons/
 COPY packages/game-weapons-three/package.json packages/game-weapons-three/
+COPY packages/game-weather/package.json packages/game-weather/
+COPY packages/game-weather-three/package.json packages/game-weather-three/
 COPY tools/animals-catalog/package.json tools/animals-catalog/
 COPY tools/characters-catalog/package.json tools/characters-catalog/
 COPY tools/golden/package.json tools/golden/
@@ -57,8 +63,10 @@ COPY tools/weapon-thumbnails/package.json tools/weapon-thumbnails/
 COPY tools/items-catalog/package.json tools/items-catalog/
 COPY tools/weapons-catalog/package.json tools/weapons-catalog/
 COPY tools/vehicles-catalog/package.json tools/vehicles-catalog/
+COPY examples/audio-test-area/package.json examples/audio-test-area/
 COPY examples/animals-test-area/package.json examples/animals-test-area/
 COPY examples/characters-test-area/package.json examples/characters-test-area/
+COPY examples/floorplan-test-area/package.json examples/floorplan-test-area/
 COPY examples/interactables-showroom/package.json examples/interactables-showroom/
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
 COPY examples/items-test-area/package.json examples/items-test-area/
@@ -66,7 +74,9 @@ COPY examples/test-room/package.json examples/test-room/
 COPY examples/urban-test-area/package.json examples/urban-test-area/
 COPY examples/vegetation-test-area/package.json examples/vegetation-test-area/
 COPY examples/vehicles-test-area/package.json examples/vehicles-test-area/
+COPY examples/vfx-test-area/package.json examples/vfx-test-area/
 COPY examples/weapons-test-area/package.json examples/weapons-test-area/
+COPY examples/weather-test-area/package.json examples/weather-test-area/
 RUN pnpm install --frozen-lockfile
 
 COPY . .

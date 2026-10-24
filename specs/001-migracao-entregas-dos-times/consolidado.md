@@ -128,7 +128,7 @@ teste e da bancada de móveis é do three.js embutido, sem uso.
 
 | # | Decisão | Recomendação | Situação |
 |---|---|---|---|
-| S1 | Pacote | `game-audio` genérico: síntese (ruído filtrado, osciladores, formantes), mixagem com compressor e reverb, atenuação por distância, limite de vozes e sons contínuos. Os sons de cada assunto ficam no pacote do assunto: armas no `game-weapons-three`, vozes no `game-characters-three`, bichos no `game-animals-three`, motor e rotor no `game-vehicles-three`, chuva no futuro clima | ✅ 2026-10-23 (decidido por mim): `game-audio` genérico; sons de cada assunto no pacote do assunto |
+| S1 | Pacote | `game-audio` genérico: síntese (ruído filtrado, osciladores, formantes), mixagem com compressor e reverb, atenuação por distância, limite de vozes e sons contínuos. Os sons de cada assunto ficam no pacote do assunto: armas no `game-weapons-three`, vozes no `game-characters-three`, bichos no `game-animals-three`, motor e rotor no `game-vehicles-three`, chuva no futuro clima | ✅ 2026-10-23 (decidido por mim): `game-audio` genérico; sons de cada assunto no pacote do assunto. Entrou: `game-audio` (motor e síntese), armas (T6.1e, T6.1e2), destruição (T6.1f), vozes dos 13 tipos e chamados dos bichos (T6.1g), chuva, vento e trovão do `game-weather` (T6.2b); motor e rotor seguem com `game-vehicles-three` (Fase 7) |
 | S2 | Som de tiro | — | ✅ 2026-10-23: juntar a classe e o abafamento por distância do jogo com a energia do calibre do SDK |
 | S3 | Igual ao original | O golden do som compara os parâmetros gerados (frequência, volume, duração, filtros) para cada evento com semente fixa, já que não dá para comparar áudio por hash | 🔁 G3 |
 
@@ -138,28 +138,28 @@ teste e da bancada de móveis é do three.js embutido, sem uso.
   alvenaria de tijolo com o comportamento certo, mas isso não aparece aplicado nas casas, **nem nos cenários de teste**, onde deveria.
   Verificar qual artefato (provável Sala de testes de destruição ou área de casas), portar para `game-destruction` como material e
   regra, e usar nas casas (`game-floorplan-structure`) e nos cenários.
-- **Partículas de explosão do SDK** sem aparecer na comparação (ver `comparacoes/explosoes/README.md`).
+- ~~**Partículas de explosão do SDK** sem aparecer na comparação (ver `comparacoes/explosoes/README.md`).~~ **Resolvido na Fase 5 (T5.1f, T5.4):** a explosão é a do Laboratório (`game-vfx`) e a coluna "SDK novo" da comparação mostra fogo, fumaça e poeira.
 - **Jogo publicado como "versão atual"** quebra ao carregar (`GameVegetation` ausente); a versão do site é a completa.
 
 ## 9. Melhorias apontadas
 
 Além de portar, o que encontrei para melhorar (em ordem de impacto):
 
-1. **Partículas de explosão do SDK não aparecem** (`game-destruction-three`): a camada de fogo e clarão fica vazia e a fumaça não desenha na
-   comparação. Corrigir junto com a troca para a explosão do Laboratório.
-2. **Lixo de memória por quadro nas partículas do SDK** (`particles.ts` L294-295, dois arrays por partícula por quadro em `hexToRgb`):
-   trocar por cor pré-calculada.
+1. ~~**Partículas de explosão do SDK não aparecem** (`game-destruction-three`): a camada de fogo e clarão fica vazia e a fumaça não desenha na
+   comparação. Corrigir junto com a troca para a explosão do Laboratório.~~ **Feito (Fase 5, T5.1f):** troca para a explosão do Laboratório.
+2. ~~**Lixo de memória por quadro nas partículas do SDK** (`particles.ts` L294-295, dois arrays por partícula por quadro em `hexToRgb`):
+   trocar por cor pré-calculada.~~ **Feito (Fase 5, T5.1f/g):** `particles.ts` foi apagado; os tipos de sprite de `game-vfx` têm a cor pré-calculada.
 3. **`game-camera` ignora o `smoothing`**: a câmera de ombro do jogo tem amortecimento e FOV por zoom. Portar e ligar o parâmetro.
 4. **Goldens de `game-vehicles-fleet` velhos**: regenerar (V1) para o CI voltar a ficar verde.
 5. **Jogo publicado quebrado** (artefato "versão atual" sem `GameVegetation`): avisar o time de jogo; a versão do site é a completa.
 6. **O jogo embute SDKs sem usar** (`GameTestRoom`, `GameWeapons`, `GameDestruction*`, `GameFluids*`) e atira com tabelas próprias: quando
    o porte de armas terminar, o jogo passa a usar o `game-weapons`.
 7. **Itens sem tamanho real** (a vitrine normaliza tudo para 1,55 de altura): o catálogo ganha dimensões em metros.
-8. **Fluido da Oficina na CPU** (sobe a textura inteira a cada quadro): no SDK, simular só perto do jogador ou passar para a GPU.
+8. ~~**Fluido da Oficina na CPU** (sobe a textura inteira a cada quadro): no SDK, simular só perto do jogador ou passar para a GPU.~~ **Feito (Fase 5, T5.3c):** o filme é simulado só perto do jogador (até 6 grades, 30 m, orçamento em ms) e sobe só o retângulo sujo; a GPU (ping-pong) fica para depois, atrás da mesma interface.
 9. **Sorteio sem semente nas entregas** (`Math.random` e estado global): todo porte troca por semente (G3), o que também deixa os
    resultados repetíveis para teste.
 10. **Corpo com 8 versões**: depois do `game-characters`, as páginas dos times passam a montar a partir dele, para não divergirem de novo.
-11. **README de `game-fluids` com import errado**: o exemplo importa `DamageEvent`, que não existe; o certo é `DestructionEvent` (evento `leak`).
+11. ~~**README de `game-fluids` com import errado**: o exemplo importa `DamageEvent`, que não existe; o certo é `DestructionEvent` (evento `leak`).~~ **Feito (Fase 5, T5.3b).**
 12. **README de `game-weapons` diz "sem marcas"**: atualizar quando as marcas reais entrarem (G5).
 13. **README de `game-vehicles-fleet`** mostra `kit.build(...).group`; o objeto real tem `root`.
 14. **`game-vegetation-species`** diz "~90 espécies" no `package.json`; o catálogo tem 71.

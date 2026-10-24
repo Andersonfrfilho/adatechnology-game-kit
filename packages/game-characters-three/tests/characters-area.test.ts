@@ -3,6 +3,8 @@ import * as THREE from 'three'
 import { createCharacters } from '@adatechnology/game-characters'
 import { PROFESSIONS, createPeoplePack } from '@adatechnology/game-characters-people'
 import { UNDEAD_TYPES, createUndead, createUndeadPack } from '@adatechnology/game-characters-undead'
+import { createAudioEngine } from '@adatechnology/game-audio'
+import { createAudioRecorder } from '@adatechnology/golden-tool'
 import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 
@@ -16,10 +18,10 @@ const stubRenderer = (): THREE.WebGLRenderer => {
   return { domElement: dom, shadowMap: { enabled: false, type: 0 }, setSize: () => undefined, setPixelRatio: () => undefined, render: () => undefined, dispose: () => undefined } as unknown as THREE.WebGLRenderer
 }
 
-const roomWithCharacters = (): { room: TestRoom; module: ReturnType<typeof createCharactersTestModule> } => {
+const roomWithCharacters = (audio?: ReturnType<typeof createAudioEngine>): { room: TestRoom; module: ReturnType<typeof createCharactersTestModule> } => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: demoItems('pt-BR'), renderer: stubRenderer(), ui: false })
+  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: demoItems('pt-BR'), renderer: stubRenderer(), ui: false, ...(audio ? { audio } : {}) })
   registerBodyMaterial(room.world as never)
   const module = createCharactersTestModule({
     locale: 'pt-BR',
@@ -88,5 +90,51 @@ describe('characters test area', () => {
     const module = createCharactersTestModule({ locale: 'en', createKit: () => createCharacters() })
     expect(module.items('en')).toEqual([])
     expect(room.loadModule(module as never).problems).toEqual([])
+  })
+})
+
+describe('the sounds of the bodies on the room engine', () => {
+  const loud = () => {
+    const recorder = createAudioRecorder()
+    const engine = createAudioEngine({ seed: 3, mix: 'art_scene', createContext: () => recorder.context })
+    engine.unlock()
+    const starts = (): number => recorder.trace().entries.filter((entry) => entry.op === 'start').length
+    return { engine, starts }
+  }
+
+  it('registers the banks in the room engine and speaks for the aimed zombie', () => {
+    const { engine, starts } = loud()
+    const { room } = roomWithCharacters(engine)
+    room.openArea(CHARACTERS_AREA_ID)
+    for (let i = 0; i < 10; i++) room.update(1 / 60)
+    expect(engine.registry.sound('groan_walker')).toBeDefined()
+    const bench = room.bench(CHARACTERS_AREA_ID)!
+    expect(bench.act('voice')).toBe(true)
+    expect(starts()).toBeGreaterThan(0)
+    room.dispose()
+  })
+
+  it('the special call of a zombie plays its sounds as the time goes by', () => {
+    const { engine, starts } = loud()
+    const { room } = roomWithCharacters(engine)
+    room.openArea(CHARACTERS_AREA_ID)
+    const bench = room.bench(CHARACTERS_AREA_ID)!
+    expect(bench.act('special_call')).toBe(true)
+    // the first zombie of the area is the walker, which has no special call: nothing starts, and nothing breaks
+    for (let i = 0; i < 100; i++) room.update(1 / 60)
+    expect(starts()).toBe(0)
+    room.dispose()
+  })
+
+  it('a cut makes the sound of a cut where the segment was', () => {
+    const { engine, starts } = loud()
+    const { room } = roomWithCharacters(engine)
+    const placed = room.openArea(CHARACTERS_AREA_ID)
+    const target = placed.find((object) => object.itemId === `${ZOMBIE_ITEM_PREFIX}walker`)!
+    for (let i = 0; i < 10; i++) room.update(1 / 60)
+    const before = starts()
+    room.world.hit(target.objectId, { type: 'slash', point: [target.root.position.x, 1.3, target.root.position.z], direction: [-1, 0, 0], part: 'upperArmL', points: 100, cut: 1 } as never)
+    expect(starts()).toBeGreaterThan(before)
+    room.dispose()
   })
 })

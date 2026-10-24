@@ -1,0 +1,64 @@
+{
+  "name": "@adatechnology/game-weather-three",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "three.js renderer for @adatechnology/game-weather: the game's rain curtain (14 000 GPU points), the near rain and mist and ash on the game-vfx pools, linear and exponential fog with zone fog, the sky that dims in rain, lightning, headlights in rain and a heat haze.",
+  "keywords": [
+    "three",
+    "threejs",
+    "game",
+    "weather",
+    "rain",
+    "fog",
+    "lightning"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-weather-three"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-vfx": "workspace:*",
+    "@adatechnology/game-vfx-three": "workspace:*",
+    "@adatechnology/game-weather": "workspace:*"
+  },
+  "peerDependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "happy-dom": "^17.4.4",
+    "three": "^0.160.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

@@ -29,7 +29,7 @@ export const createLaserRaycast = (THREE: typeof THREE_NS, scene: THREE_NS.Scene
   const now = options.now ?? ((): number => performance.now())
   const interval = 1000 / LASER_RAYCAST_HZ
   const raycaster = new THREE.Raycaster()
-  // the smoke is made of sprites, which need the camera to be tested at all
+  // the smoke is made of sprites and translucent solids, and the sprites need the camera to be tested at all
   raycaster.camera = camera
   let lastAt = -Infinity
   let lastReach: number | null = null

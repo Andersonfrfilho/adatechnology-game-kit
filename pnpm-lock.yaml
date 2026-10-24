@@ -66,6 +66,9 @@ importers:
       '@adatechnology/game-animals':
         specifier: workspace:*
         version: link:../game-animals
+      '@adatechnology/game-audio':
+        specifier: workspace:*
+        version: link:../game-audio
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
@@ -97,6 +100,28 @@ importers:
       three:
         specifier: ^0.160.1
         version: 0.160.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-audio:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+    devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
@@ -177,6 +202,9 @@ importers:
 
   packages/game-characters-three:
     dependencies:
+      '@adatechnology/game-audio':
+        specifier: workspace:*
+        version: link:../game-audio
       '@adatechnology/game-characters':
         specifier: workspace:*
         version: link:../game-characters
@@ -304,13 +332,25 @@ importers:
 
   packages/game-destruction-three:
     dependencies:
+      '@adatechnology/game-audio':
+        specifier: workspace:*
+        version: link:../game-audio
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
       '@adatechnology/game-destruction':
         specifier: workspace:*
         version: link:../game-destruction
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:*
+        version: link:../game-vfx-three
     devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -511,12 +551,76 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
+  packages/game-floorplan-three:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+      '@adatechnology/game-destruction':
+        specifier: workspace:*
+        version: link:../game-destruction
+      '@adatechnology/game-floorplan-structure':
+        specifier: workspace:*
+        version: link:../game-floorplan-structure
+      '@adatechnology/game-props3d':
+        specifier: workspace:*
+        version: link:../game-props3d
+    devDependencies:
+      '@adatechnology/game-destruction-three':
+        specifier: workspace:*
+        version: link:../game-destruction-three
+      '@adatechnology/game-floorplan':
+        specifier: workspace:*
+        version: link:../game-floorplan
+      '@adatechnology/game-floorplan-commercial':
+        specifier: workspace:*
+        version: link:../game-floorplan-commercial
+      '@adatechnology/game-floorplan-post-apocalyptic':
+        specifier: workspace:*
+        version: link:../game-floorplan-post-apocalyptic
+      '@adatechnology/game-floorplan-residential':
+        specifier: workspace:*
+        version: link:../game-floorplan-residential
+      '@adatechnology/game-floorplan-rural':
+        specifier: workspace:*
+        version: link:../game-floorplan-rural
+      '@adatechnology/game-vegetation':
+        specifier: workspace:*
+        version: link:../game-vegetation
+      '@adatechnology/game-vegetation-species':
+        specifier: workspace:*
+        version: link:../game-vegetation-species
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      '@types/three':
+        specifier: ^0.160.0
+        version: 0.160.0
+      three:
+        specifier: ^0.160.1
+        version: 0.160.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
   packages/game-fluids:
     dependencies:
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
     devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -535,6 +639,12 @@ importers:
       '@adatechnology/game-fluids':
         specifier: workspace:*
         version: link:../game-fluids
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:*
+        version: link:../game-vfx-three
     devDependencies:
       '@types/node':
         specifier: ^22.10.7
@@ -770,6 +880,9 @@ importers:
 
   packages/game-test-room:
     dependencies:
+      '@adatechnology/game-audio':
+        specifier: workspace:*
+        version: link:../game-audio
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
@@ -785,6 +898,12 @@ importers:
       '@adatechnology/game-fluids-three':
         specifier: workspace:*
         version: link:../game-fluids-three
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:*
+        version: link:../game-vfx-three
       '@adatechnology/game-weapons':
         specifier: workspace:*
         version: link:../game-weapons
@@ -1103,6 +1222,62 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
+  packages/game-vfx:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+    devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-vfx-three:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+    devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      '@types/three':
+        specifier: ^0.160.0
+        version: 0.160.0
+      happy-dom:
+        specifier: ^17.4.4
+        version: 17.6.3
+      three:
+        specifier: ^0.160.1
+        version: 0.160.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
   packages/game-weapons:
     dependencies:
       '@adatechnology/game-contracts':
@@ -1124,6 +1299,9 @@ importers:
 
   packages/game-weapons-three:
     dependencies:
+      '@adatechnology/game-audio':
+        specifier: workspace:*
+        version: link:../game-audio
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
@@ -1133,6 +1311,12 @@ importers:
       '@adatechnology/game-props3d':
         specifier: workspace:*
         version: link:../game-props3d
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:*
+        version: link:../game-vfx-three
       '@adatechnology/game-weapons':
         specifier: workspace:*
         version: link:../game-weapons
@@ -1143,6 +1327,71 @@ importers:
       '@adatechnology/game-test-room':
         specifier: workspace:*
         version: link:../game-test-room
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      '@types/three':
+        specifier: ^0.160.0
+        version: 0.160.0
+      happy-dom:
+        specifier: ^17.4.4
+        version: 17.6.3
+      three:
+        specifier: ^0.160.1
+        version: 0.160.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-weather:
+    dependencies:
+      '@adatechnology/game-audio':
+        specifier: workspace:*
+        version: link:../game-audio
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+    devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-weather-three:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:*
+        version: link:../game-vfx-three
+      '@adatechnology/game-weather':
+        specifier: workspace:*
+        version: link:../game-weather
+    devDependencies:
       '@adatechnology/golden-tool':
         specifier: workspace:*
         version: link:../../tools/golden

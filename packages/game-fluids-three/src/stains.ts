@@ -122,7 +122,7 @@ export class StainVisual {
     const soakRatio = stain.soaked / (stain.soaked + stain.liters + 1e-6)
 
     // Outer film: tinted by the liquid, darker while wet and where it soaked in, fainter once only the mark is left.
-    this.tint.setHex(stainColorOf(def))
+    this.tint.setHex(stain.tint?.dry ?? stainColorOf(def))
     const dark = 1 - 0.3 * wet - 0.2 * soakRatio
     const markAlpha = def.leavesMark ? 0.34 : 0.1
     const aMid = (markAlpha + (0.62 - markAlpha) * wet) * (0.75 + 0.25 * Math.min(1, stain.liters * 20 + soakRatio))
@@ -134,7 +134,7 @@ export class StainVisual {
     const showInner = wr > 0.05 && wet > 0.03
     this.inner.mesh.visible = showInner
     if (showInner) {
-      this.tint.setHex(def.color)
+      this.tint.setHex(stain.tint?.fresh ?? def.color)
       const shift = stain.flow ? -mean * 0.1 * (1 - wr) : 0
       const centre: Vec3 = stain.flow
         ? [stain.center[0] + stain.flow[0] * shift, stain.center[1] + stain.flow[1] * shift, stain.center[2] + stain.flow[2] * shift]

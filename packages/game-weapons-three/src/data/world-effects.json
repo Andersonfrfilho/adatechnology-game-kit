@@ -1,0 +1,7 @@
+{
+  "pistol": { "muzzle": "muzzle_glock", "casing": "casing_brass" },
+  "tiny": { "muzzle": "muzzle_glock", "casing": "casing_brass" },
+  "rifle": { "muzzle": "muzzle_ak", "casing": "casing_brass" },
+  "shell": { "muzzle": "muzzle_r870", "casing": "casing_shell" },
+  "big": { "muzzle": "muzzle_barrett", "casing": "casing_50" }
+}

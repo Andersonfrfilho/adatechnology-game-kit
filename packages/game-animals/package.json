@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-animals",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Engine-agnostic animals for games: the body spec of quadrupeds, birds and snakes (proportions, legs, neck, head, ears, tail, colours), the three gait phase tables (walk, trot, gallop), the alive / infected / dead visual states, the layout math (leg heights, body height, size) and a species registry with packs, patch and remove. No three.js, no game.",
   "keywords": [

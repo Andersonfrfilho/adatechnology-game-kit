@@ -1,6 +1,6 @@
 import type { RoomMetricId } from './types'
 
-export const ROOM_METRICS: readonly RoomMetricId[] = ['fps', 'frame_ms', 'draw_calls', 'triangles', 'objects', 'fragments', 'particles', 'decals']
+export const ROOM_METRICS: readonly RoomMetricId[] = ['fps', 'frame_ms', 'draw_calls', 'triangles', 'objects', 'fragments', 'particles', 'decals', 'blast_shelter', 'blast_confinement', 'blast_fragments']
 
 const WINDOW_S = 0.5
 
@@ -12,7 +12,10 @@ export interface RoomMetricsSources {
   readonly gl: unknown
   readonly destruction: { stats(): { fragments: number; particles: number; pieces: number; decals: number } }
   readonly fluids: { stats(): { particles: number; stains: number } }
+  readonly effects: { stats(): { puffs: number; sparks: number; glows: number; chunks: number } }
   readonly ids: readonly RoomMetricId[]
+  /** What the last blast with a report did (none until one). */
+  readonly blast?: () => { shelter: number; confinement: number; fragmentHits: number } | undefined
 }
 
 export interface RoomMetrics {
@@ -58,12 +61,19 @@ export function createRoomMetrics(sources: RoomMetricsSources): RoomMetrics {
       const render = ownsRender ? { calls, triangles } : gl.info?.render
       put('draw_calls', render?.calls)
       put('triangles', render?.triangles)
+      const blast = sources.blast?.()
+      if (blast) {
+        put('blast_shelter', blast.shelter * 100)
+        put('blast_confinement', blast.confinement)
+        put('blast_fragments', blast.fragmentHits)
+      }
       if (!['objects', 'fragments', 'particles', 'decals'].some((id) => wanted.has(id as RoomMetricId))) return out
       const destruction = sources.destruction.stats()
       const fluids = sources.fluids.stats()
+      const effects = sources.effects.stats()
       put('objects', destruction.pieces)
       put('fragments', destruction.fragments)
-      put('particles', destruction.particles + fluids.particles)
+      put('particles', destruction.particles + fluids.particles + effects.puffs + effects.sparks + effects.glows + effects.chunks)
       put('decals', destruction.decals + fluids.stains)
       return out
     },

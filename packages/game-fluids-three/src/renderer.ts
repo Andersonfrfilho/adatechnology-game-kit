@@ -1,12 +1,16 @@
 import type * as THREE_NS from 'three'
 import type { FluidEvent, StainState, StreamState } from '@adatechnology/game-fluids'
+import { createVfx } from '@adatechnology/game-vfx'
+import { createVfxRenderer } from '@adatechnology/game-vfx-three'
 import { LiquidBody } from './liquid-body'
 import { MaterialCache } from './materials'
-import { ParticlePool } from './particles'
 import { profileOf } from './quality'
+import { FluidSprites } from './sprites'
 import { StainVisual } from './stains'
 import { StreamVisual } from './streams'
 import type { BindOptions, FluidQuality, FluidRenderer, FluidRendererOptions, FluidRendererStats, ThreeLib } from './types'
+
+let rendererCount = 0
 
 /**
  * Draws a `FluidWorld` with three.js. It only reads the world state (plus `splash` events for droplets), so a LAN client that receives the
@@ -20,8 +24,10 @@ export function createFluidRenderer(THREE: ThreeLib, options: FluidRendererOptio
   const root = new THREE.Group()
   root.name = 'fluid_renderer'
   scene.add(root)
-  const particles = new ParticlePool(THREE, profile.maxParticles, options.pointScale ?? 600)
-  root.add(particles.points)
+  // The droplets and steam are sprites of the effects world: the host's shared one, or one made here and stepped in `update`.
+  const vfx = options.vfx ?? createVfx({ profile: quality, gravity: fluids.gravity, sprites: { capacity: profile.maxParticles } })
+  const ownVfx = options.vfx ? undefined : createVfxRenderer(THREE, { scene, camera: options.camera ?? new THREE.PerspectiveCamera(), vfx, pointScale: options.pointScale ?? 600 })
+  const particles = new FluidSprites(vfx, `fluids-${++rendererCount}`)
   const dropGeometry = new THREE.SphereGeometry(1, 8, 6)
 
   const bodies = new Map<string, LiquidBody>()
@@ -148,7 +154,7 @@ export function createFluidRenderer(THREE: ThreeLib, options: FluidRendererOptio
       for (const body of bodies.values()) body.update(dt, fluids, materials, profile, particles)
       syncStreams(dt)
       syncStains()
-      particles.update(dt, fluids.gravity)
+      ownVfx?.update(dt)
     },
 
     clear() {
@@ -158,7 +164,8 @@ export function createFluidRenderer(THREE: ThreeLib, options: FluidRendererOptio
         stainsActive.delete(id)
         stainsFree.push(v)
       }
-      particles.clear()
+      if (ownVfx) vfx.clear()
+      else vfx.sprites().clear()
     },
 
     dispose() {
@@ -173,7 +180,7 @@ export function createFluidRenderer(THREE: ThreeLib, options: FluidRendererOptio
       stainsActive.clear()
       streamsFree.length = 0
       stainsFree.length = 0
-      particles.dispose()
+      ownVfx?.dispose()
       dropGeometry.dispose()
       materials.dispose()
       scene.remove(root)

@@ -1,0 +1,15 @@
+{
+  "id": "rotor_blades",
+  "bus": "world",
+  "order": "game_loop",
+  "source": { "kind": "noise", "loop": true },
+  "filters": { "mode": "serial", "bank": [{ "type": "lowpass", "frequency": { "set": 300 } }] },
+  "modulators": [{ "target": "gain", "rate": 11, "depth": 0.5, "base": 0.5 }],
+  "smoothing": { "volume": 0.15, "frequency": 0.08 },
+  "startAbove": 0.002,
+  "sources": [
+    "jogo:L62116-62120 rotor: noise through a 300 Hz lowpass, blade beat as an 11 Hz LFO of 0.5 on a 0.5 gain stage",
+    "jogo:L70426 level min(0.5, 30 / (distance + 10))",
+    "temporary home until the vehicles package (Q12)"
+  ]
+}
