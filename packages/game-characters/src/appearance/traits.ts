@@ -24,8 +24,6 @@ export type OutfitLook = { readonly cloth?: number; readonly pants?: number; rea
 
 export type AppearanceParams = {
   readonly seed: number
-  /** 0 fresh .. 3 decrepit: sets the skin of a uniform body. */
-  readonly decay?: number
   /** The look of an outfit (police, military ...): its colours replace the draws, so the stream does not spend them. */
   readonly outfit?: OutfitLook
   /** A baked crowd variant: no random look, fixed skin, shirt by `typeIndex`, short hair. */
