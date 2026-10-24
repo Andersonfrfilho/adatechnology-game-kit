@@ -32,7 +32,7 @@ describe('weapons test area', () => {
     const { room } = roomWithWeapons()
     const placed = room.openArea('weapons_area')
     const weapons = placed.filter((o) => o.itemId.startsWith(WEAPON_ITEM_PREFIX))
-    expect(weapons.length).toBe([...room.arsenal.weapons.keys()].filter((id) => !['hand', 'kick', 'shove', 'fists'].includes(id)).length)
+    expect(weapons.length).toBe([...room.arsenal.weapons.values()].filter((def) => !['hand', 'kick', 'shove', 'fists'].includes(def.id) && def.archetype === undefined).length)
     expect(placed.filter((o) => o.itemId === COUNTER_ITEM_ID).length).toBe(3)
     expect(placed.some((o) => o.itemId === 'target_steel_plate')).toBe(true)
     for (let i = 0; i < 120; i++) room.update(1 / 60)

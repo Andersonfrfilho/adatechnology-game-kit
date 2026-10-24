@@ -361,3 +361,31 @@ Não entra: dano por região do corpo, desmembramento, sangramento, raridade, ta
 5. Lançadores e explosivos (T1.5), com os efeitos visuais ligados ao `game-vfx` quando existir.
 6. `weapons-test-area` com os controles novos (T1.7).
 7. Itens (T3.x) só depois de responder D8 a D10.
+
+---
+
+## 7. Situação depois da Fase 1, T1.1 (R5)
+
+Atualizado em 2026-10-23. O que do inventário acima já entrou, e onde. O restante segue como descrito nas seções 3 e 4.
+
+| Item do inventário | Entrou? | Onde |
+|---|---|---|
+| Lista de armas (união GAL + ARS, A1) | Sim: 73 de fogo (71 da Galeria + Remington 700 .300 WM + M79), 6 lançadores e lança-chamas, 42 arquétipos | `packages/game-weapons/src/data/{firearms,launchers,archetypes}.json`, gerados por `tools/weapons-catalog` |
+| Marcas e modelos reais (D1, G5) | Sim, com `maker`, `archetype` e `sources` | idem |
+| Ficha de dimensões e `lengthCollapsed` | Sim (`dimensions`) | `types.ts` `WeaponDimensions`; dados em `firearms.json` |
+| Calibres (22 de GAL/ARS §04) | Sim: 28 (10 novos), com estojo, aro, cartucho e ruído | `src/data/calibers.json` |
+| Ruído do Arsenal §12 (D5, A3) | Sim, por calibre, com rajada de ruído (+5% por tiro em 3 s, até +50%) | `calibers.json`; `src/heat.ts` `burstNoise` |
+| Tempos de recarga tática, vazia e por cartucho (D7, A5) | Sim, como `timings` por arma | `firearms.json`; `src/reload.ts` |
+| Recarga por família e etapas | Sim, regra e ordem das etapas (a animação fica para a T1.4) | `src/reload-stages.ts` `RELOAD_STAGES`, `src/reload.ts` |
+| Capacidade com câmara, carregadores alternativos, dois tubos | Dado (`chamber`, `magazineOptions`, `tubes`); `capacity` ainda é só o carregador | `types.ts`, `firearms.json` |
+| Pane/engasgo (`QUAL`, `jamRoll`, `clearJam`, `rel`) | Sim: 4 tipos, 4 condições, `faultFactor`, desobstruir 1,2 s, qualidade da munição (Arsenal §05) | `src/faults.ts`, `src/weapon.ts`, `src/rules.ts` |
+| Calor do cano (`heat`, `heatPer`, `stepWeapon`) | Sim, igual à Galeria (golden de calor e munição) | `src/heat.ts`; `tests/team-golden.test.ts` |
+| Tiro, rajada, salva, ciclo manual | Sim (`roundTimes`, `volley`, `timings.cycle`) | `src/fire.ts`, `src/weapon.ts` |
+| Lançadores (`launcher`) | Mínimo: um cartucho gera `Use` `throw` com velocidade e explosivo; a regra completa fica na T1.5 | `src/weapon.ts` `fireLauncher` |
+| Explosivos (D14): raios letal e de ferimento, energia, ruído | Sim, 17 | `src/data/explosives.json` |
+| Modelos 3D, animação por família, ejeção, carregador, cartucho 3D | Não (T1.2 a T1.4); só o construtor da Galeria foi extraído para `models.json` | `packages/game-weapons-three/src/data/models.json` |
+| Área de armas com todas as armas | Não: mostra só os 42 arquétipos até a T1.3 | `packages/game-weapons-three/src/area.ts` |
+| Dano em pontos, PEN, dano por região, raridade (D4, D6) | Não, de propósito (calibragem do jogo) | |
+| Acessórios, supressor, durabilidade 0-100 (D13) | Não; o supressor é a sobrescrita `noise` da arma | |
+
+Perguntas novas para o dono: ver `evidence.md`, "T1.1 (parte B)".

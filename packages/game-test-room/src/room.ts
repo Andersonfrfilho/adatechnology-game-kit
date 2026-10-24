@@ -17,6 +17,7 @@ import { createBenchStore } from './bench'
 import type { BenchStore } from './bench'
 import type { BenchView, MetricRow } from './bench-panel'
 import { buildFromSpec } from './build-from-spec'
+import { toHostEvent } from './host-events'
 import { DEMO_MATERIALS, demoItems } from './items'
 import { createLog } from './log'
 import { createRoomMetrics, ROOM_METRICS } from './metrics'
@@ -214,7 +215,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const specs = new Map<string, DestructibleSpec>()
   const loose: Piece[] = []
 
-  const arsenal = options.arsenal ?? createArsenal({ locale, weapons: options.weapons, seed: 1 })
+  const arsenal = options.arsenal ?? createArsenal({ locale, weapons: options.weapons, seed: 1, rules: { faults: false } })
   const loadout = (options.loadout ?? DEFAULT_LOADOUT).filter((id) => arsenal.weapons.has(id))
   const tools = new Map<string, WeaponState>()
   let toolIndex = Math.max(0, loadout.indexOf('hand'))
@@ -813,7 +814,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     })
     player.kick(recoil[0], recoil[1])
-    emitHost({ type: 'shot', weapon: toolId, shots: shots.length, recoil, rounds: shots.filter((s) => s.pellet === 0).length, mode: tool.mode })
     const f = first as RayHit | null
     const d = f ? num(f.distance, 1) : ''
     let text: string
@@ -1065,8 +1065,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const cat = tool.def.category
     if (cat === 'hand') return
     const res = tool.trigger([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], dt, held, 'player')
+    flushEvents(toolId, tool, res.recoil)
     if (res.status === 'empty') {
-      emitHost({ type: 'empty', weapon: toolId })
       if (!tool.reloading && tool.reserve > 0) startReload()
       say(t(tool.reloading ? 'hud.reloading' : 'hud.empty'))
       return
@@ -1375,9 +1375,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         }
         break
       case 'KeyQ': {
-        const before = tool.mode
-        const mode = tool.cycleMode()
-        if (mode !== before) emitHost({ type: 'mode', weapon: toolId, mode })
+        tool.cycleMode()
+        flushEvents(toolId, tool)
         break
       }
       case 'KeyZ':
@@ -1539,9 +1538,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     renderer.update(dt)
     updateImpacts()
     fluidView.update(dt)
-    for (const s of tools.values()) s.update(dt)
-    if (reloadingSeen && !tool.reloading) emitHost({ type: 'reload', weapon: toolId, phase: 'end' })
-    reloadingSeen = tool.reloading
+    for (const [id, s] of tools) {
+      s.update(dt)
+      flushEvents(id, s)
+    }
     for (const update of frameListeners) update(dt)
     for (const tr of tracers) {
       if (tr.life > 0) {
@@ -1766,12 +1766,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const hostListeners = new Set<(event: HostEvent) => void>()
   const frameListeners = new Set<(dt: number) => void>()
-  let reloadingSeen = false
   function emitHost(event: HostEvent): void {
     for (const listener of hostListeners) listener(event)
   }
+  function flushEvents(id: string, state: WeaponState, recoil?: [number, number]): void {
+    for (const event of state.drain()) {
+      const hostEvent = toHostEvent(id, event, recoil)
+      if (hostEvent) emitHost(hostEvent)
+    }
+  }
   function startReload(): void {
-    if (tool.reload()) emitHost({ type: 'reload', weapon: toolId, phase: 'start' })
+    tool.reload()
+    flushEvents(toolId, tool)
   }
   const host: ModuleHost = {
     THREE,
@@ -1779,7 +1785,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     camera,
     locale,
     groundAt,
-    tool: () => ({ weapon: toolId, category: tool.def.category, ammo: tool.ammo, capacity: tool.capacity, reserve: tool.reserve, reloading: tool.reloading, mode: tool.mode }),
+    tool: () => ({
+      weapon: toolId,
+      category: tool.def.category,
+      ammo: tool.ammo,
+      capacity: tool.capacity,
+      reserve: tool.reserve,
+      reloading: tool.reloading,
+      mode: tool.mode,
+      ...(tool.fault ? { fault: tool.fault } : {}),
+      safety: tool.safety,
+      heat: tool.heatLevel,
+    }),
     on(listener) {
       hostListeners.add(listener)
       return () => hostListeners.delete(listener)

@@ -129,7 +129,8 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   const arsenal = options.arsenal ?? createArsenal({ locale })
   const text = textOf(locale)
   const audio = options.sound === false ? null : createWeaponAudio()
-  const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id))
+  // the three counters hold 39 weapons; the real models wait for the layout of T1.3
+  const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id) && def.archetype === undefined)
   const weaponIds = weaponDefs.map((def) => `${WEAPON_ITEM_PREFIX}${def.id}`)
   let fx: WeaponFx | null = null
   return {
