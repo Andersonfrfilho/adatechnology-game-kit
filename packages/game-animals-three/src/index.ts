@@ -93,3 +93,6 @@ export const createAnimalsThree = (THREE: Three, options: AnimalsThreeOptions = 
     createSkin: (rig) => createNodeSkin(THREE, rig.root, { nodes: collectReferencedNodes(rig, ['species']) }),
   }
 }
+export { createAnimalsTestModule, ANIMALS_AREA_ID, ANIMAL_ITEM_PREFIX } from './test-area/module'
+export type { AnimalsContext } from './test-area/scenarios'
+export type { AnimalsTestOptions, OutbreakLike } from './test-area/types'

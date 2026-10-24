@@ -66,6 +66,9 @@ importers:
       '@adatechnology/game-animals':
         specifier: workspace:*
         version: link:../game-animals
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
       '@adatechnology/game-props3d':
         specifier: workspace:*
         version: link:../game-props3d
@@ -73,6 +76,12 @@ importers:
       '@adatechnology/game-animals-species':
         specifier: workspace:*
         version: link:../game-animals-species
+      '@adatechnology/game-characters-undead':
+        specifier: workspace:*
+        version: link:../game-characters-undead
+      '@adatechnology/game-test-room':
+        specifier: workspace:*
+        version: link:../game-test-room
       '@adatechnology/golden-tool':
         specifier: workspace:*
         version: link:../../tools/golden
@@ -82,6 +91,9 @@ importers:
       '@types/three':
         specifier: ^0.160.0
         version: 0.160.0
+      happy-dom:
+        specifier: ^17.4.4
+        version: 17.6.3
       three:
         specifier: ^0.160.1
         version: 0.160.1

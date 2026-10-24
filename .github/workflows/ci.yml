@@ -155,6 +155,7 @@ jobs:
           node examples/interactables-test-area/build.mjs
           node examples/weapons-test-area/build.mjs
           node examples/characters-test-area/build.mjs
+          node examples/animals-test-area/build.mjs
 
       - name: Check the examples
         run: |
@@ -162,6 +163,7 @@ jobs:
           node examples/interactables-test-area/test.mjs
           node examples/weapons-test-area/test.mjs
           node examples/characters-test-area/test.mjs
+          node examples/animals-test-area/test.mjs
 
   # One stable required check; Release waits on the whole "CI" workflow.
   ci-ok:
