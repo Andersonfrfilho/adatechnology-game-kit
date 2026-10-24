@@ -878,5 +878,15 @@
       0.1
     ],
     "scale": 0.1
+  },
+  {
+    "id": "thermometer",
+    "teamId": "termometro",
+    "teamBox": [
+      1.2,
+      0.2,
+      0.3
+    ],
+    "scale": 0.1
   }
 ]
