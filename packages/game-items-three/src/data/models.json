@@ -308,5 +308,15 @@
       2
     ],
     "scale": 0.1
+  },
+  {
+    "id": "jerked_beef",
+    "teamId": "charque",
+    "teamBox": [
+      2.5,
+      0.25,
+      1.5
+    ],
+    "scale": 0.1
   }
 ]
