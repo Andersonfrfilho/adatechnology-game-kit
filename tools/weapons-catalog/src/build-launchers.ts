@@ -1,5 +1,6 @@
 import type { WeaponRecord } from './build-firearms'
 import type { GalleryWeaponRow } from './extract-gallery'
+import type { UnderbarrelLauncherDecision } from './decisions'
 import type { WeaponContext } from './weapon-context'
 import { reloadOf } from './weapon-context'
 import { slugOf } from './weapon-rules'
@@ -103,5 +104,33 @@ export const buildGrenadeLauncher = (context: WeaponContext): WeaponRecord => {
     dimensions: { length: decision.length, barrel: decision.barrel, emptyMass: decision.emptyMass },
     archetype: decision.recoilBase,
     sources: ['gallery', 'arsenal', 'reference', 'derived'],
+  }
+}
+
+/** A grenade launcher that goes under a barrel (M203, GP-25, AG36): the M79 rule (a single 40 mm grenade, break reload) with its own measures. */
+export const buildUnderbarrelLauncher = (decision: UnderbarrelLauncherDecision, context: WeaponContext): WeaponRecord => {
+  const { minArmDistance } = context.decisions.launcherCommon.value
+  const reload = reloadOf(decision.reloadFrom, context).reload.reload ?? 0
+  return {
+    id: decision.id,
+    name: decision.name,
+    category: 'launcher',
+    action: {
+      kind: 'launcher',
+      projectile: decision.projectile,
+      magazine: 1,
+      reload,
+      timings: { draw: context.drawSeconds, reload, clear: context.decisions.timings.clear.value },
+      family: 'underbarrel',
+      speed: decision.speed,
+      minArmDistance,
+      backblast: decision.backblast,
+      recoil: recoilFrom(decision.recoilBase, decision.kick, context),
+    },
+    mass: decision.mass,
+    dimensions: { length: decision.length, barrel: decision.barrel, emptyMass: decision.emptyMass },
+    archetype: decision.recoilBase,
+    tags: ['underbarrel'],
+    sources: ['arsenal', 'reference', 'derived'],
   }
 }

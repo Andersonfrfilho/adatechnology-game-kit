@@ -19,7 +19,7 @@ export const toHostEvent = (weapon: string, event: WeaponEvent, options: HostEve
       return event.phase === 'start' ? { type: 'tool', weapon, ...durationOf(phase, 'draw') } : null
     // a launcher spends a round and throws one projectile: the weapon counts none because it is a throw, a host counts the one that leaves
     case 'shot':
-      return { type: 'shot', weapon, shots: Math.max(1, event.shots), recoil, rounds: event.rounds, mode: event.mode }
+      return { type: 'shot', weapon, shots: Math.max(1, event.shots), recoil, rounds: event.rounds, mode: event.mode, ...(event.suppressed ? { suppressed: true } : {}) }
     case 'misfire':
       return { type: 'misfire', weapon }
     case 'reload':
@@ -42,6 +42,14 @@ export const toHostEvent = (weapon: string, event: WeaponEvent, options: HostEve
       return { type: 'safety', weapon, on: event.on }
     case 'cook':
       return { type: 'cook', weapon, phase: event.phase, fuse: event.fuse }
+    case 'attachment':
+      return { type: 'attachment', weapon, action: event.action, attachment: event.id, mount: event.mount, ...(event.action === 'break' ? {} : durationOf(phase, 'fit')) }
+    case 'toggle':
+      return { type: 'toggle', weapon, attachment: event.id, on: event.on }
+    case 'stock':
+      return { type: 'stock', weapon, state: event.state, kind: event.kind, ...durationOf(phase, 'stock') }
+    case 'underbarrel':
+      return { type: 'underbarrel', weapon, on: event.on, ...durationOf(phase, 'switch') }
     default:
       return null
   }

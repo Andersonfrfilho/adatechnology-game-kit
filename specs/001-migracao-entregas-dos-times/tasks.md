@@ -30,6 +30,10 @@ Ordem: armas → casas → itens → personagens → efeitos → som e clima →
 - T1.4 Som do tiro (S2): classe e abafamento por distância do jogo + energia do calibre.
 - T1.5 Explosivos e lançadores: regra em `game-weapons`; reação em cadeia em `game-destruction` (A11).
 - T1.6 Goldens por arma; `weapons-test-area` com os controles novos.
+- T1.7 🧠 Armas que faltam (MP5SD/K, UMP9, Mini Uzi, MP7 + 4,6×30, G36/K/C, M249, Minimi Para, FN MAG, RPK, MPX, MG3, Bizon, vz.61 + .32 ACP,
+  ParaFAL, AR-15 civil, .380, Mossberg Cruiser, M134 em três modos) e sistema de acessórios com encaixes (miras, laser, lanterna,
+  supressor, lança-granada sob o cano só onde há encaixe, carregadores, bandoleira, empunhadura, bipé, mochila de munição, coronha
+  retrátil/dobrável). Desenho em `design/T1.7-armas-e-acessorios.md`. PR próprio (dono, 2026-10-24).
 
 ## Fase 2 — Casas (Visor de casas 3D, Galeria do Vale, área de casas)
 > 🤖 Modelo: `sonnet` (T2.1 é 🧠 → `opus`)

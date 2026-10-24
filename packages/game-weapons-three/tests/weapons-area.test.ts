@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
-import { ARCHETYPE_MODELS, COUNTER_ITEM_ID, createWeaponsTestModule, weaponsLayout, WEAPON_ITEM_PREFIX } from '../src'
+import { ARCHETYPE_MODELS, COUNTER_ITEM_ID, createWeaponsTestModule, MOUNTED_M134_ITEM_ID, weaponsLayout, WEAPON_ITEM_PREFIX } from '../src'
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')
@@ -150,5 +150,35 @@ describe('weapons test area', () => {
     const after = room.world.part(target?.objectId ?? '', 'body')
     expect(after?.status).not.toBe('intact')
     expect(after?.holes.length).toBeGreaterThan(0)
+  })
+
+  it('lays the weapons T1.7.5 added on the counters like the others, all on four columns of counters at most', () => {
+    const { room } = roomWithWeapons()
+    const placed = room.openArea('weapons_area')
+    const counters = placed.filter((o) => o.itemId === COUNTER_ITEM_ID)
+    expect(counters.length).toBeLessThanOrEqual(8)
+    for (const id of ['hk_mp5sd3', 'm134', 'pp19_bizon', 'mg3', 'vz61', 'taurus_th380']) {
+      const weapon = placed.find((o) => o.itemId === `${WEAPON_ITEM_PREFIX}${id}`)
+      expect(weapon, id).toBeDefined()
+      expect(counters.some((c) => Math.abs(c.root.position.x - (weapon?.root.position.x ?? 0)) < 0.01), id).toBe(true)
+    }
+  })
+
+  it('stands the M134 on its tripod apart from the counters, asleep, one mesh per material, and takes the gun from it', () => {
+    const { room } = roomWithWeapons()
+    const placed = room.openArea('weapons_area')
+    const mounted = placed.find((o) => o.itemId === MOUNTED_M134_ITEM_ID)
+    expect(mounted).toBeDefined()
+    const before = mounted?.root.position.clone() ?? new THREE.Vector3()
+    for (let i = 0; i < 120; i++) room.update(1 / 60)
+    expect(mounted?.root.position.distanceTo(before)).toBeLessThan(0.01)
+    const meshes: THREE.Mesh[] = []
+    mounted?.root.traverse((object) => {
+      if ((object as THREE.Mesh).isMesh) meshes.push(object as THREE.Mesh)
+    })
+    expect(meshes.length).toBeGreaterThan(0)
+    expect(new Set(meshes.map((mesh) => mesh.material)).size).toBe(meshes.length)
+    expect(meshes.length).toBeLessThanOrEqual(12)
+    expect(placed.filter((o) => o.itemId.startsWith(WEAPON_ITEM_PREFIX)).some((o) => o.itemId === MOUNTED_M134_ITEM_ID)).toBe(false)
   })
 })

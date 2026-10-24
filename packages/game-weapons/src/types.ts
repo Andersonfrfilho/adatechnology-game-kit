@@ -12,6 +12,8 @@
 
 import type { Shot, Use, Vec3 } from '@adatechnology/game-contracts'
 
+import type { AttachmentDef, AttachmentId, AttachmentInstall, FittedAttachment, MountDef, MountKind, StockDef, StockState, WeaponSnapshot } from './attachment-types'
+import type { CanFit, FitRefusal, IsCompatible } from './attachments'
 import type { ExplosiveBody } from './explosive-body'
 import type { ExplosiveDef, ExplosiveId } from './explosive-types'
 import type { WeaponsStrings } from './locale'
@@ -106,6 +108,7 @@ export type ReloadFamily =
   | 'revolver'
   | 'break'
   | 'rocket'
+  | 'underbarrel'
   | 'flame'
 
 /** Seconds of each phase of handling a weapon. */
@@ -170,6 +173,10 @@ export type WeaponAction =
       tubes?: number
       /** Multiplies the fault chance (1 = average, below 1 more reliable). */
       faultFactor?: number
+      /** A rotary gun: seconds the barrels need to reach speed before the first round of a pull, and how long they keep spinning after the last one. */
+      spin?: { readonly upSeconds: number; readonly holdSeconds: number }
+      /** The cyclic rates a rotary gun can be set to; `rpm` is the default and a `patch` may change it inside this range. */
+      rpmRange?: readonly [number, number]
       /** Real accuracy in minutes of angle (data only). */
       moa?: number
       /** Shotgun pattern width at 25 m in centimetres (data only). */
@@ -183,7 +190,7 @@ export type WeaponAction =
       magazine: number
       reload: number
       timings?: WeaponTimings
-      family: 'rocket' | 'break'
+      family: 'rocket' | 'break' | 'underbarrel'
       disposable?: boolean
       speed: number
       /** Distance in metres below which the projectile hits without exploding. */
@@ -219,6 +226,12 @@ export interface WeaponDef {
   archetype?: WeaponId
   /** The weapon this one is a variant of. */
   variantOf?: WeaponId
+  /** The places an accessory can go on this weapon. */
+  mounts?: readonly MountDef[]
+  /** The accessories the weapon comes with; their effects are already in the numbers of `action`. */
+  fitted?: readonly FittedAttachment[]
+  /** What the stock does (fold, retract); absent: a fixed stock or none. */
+  stock?: StockDef
   sources?: readonly DataSource[]
 }
 
@@ -228,11 +241,13 @@ export interface TriggerResult {
   /** Uses this call (everything else). */
   uses: Use[]
   /** `ok`, or why nothing happened. */
-  status: 'ok' | 'empty' | 'reloading' | 'cooldown' | 'no_fuel' | 'safe' | 'drawing' | 'fault' | 'misfire' | 'clearing'
+  status: 'ok' | 'empty' | 'reloading' | 'cooldown' | 'no_fuel' | 'safe' | 'drawing' | 'fault' | 'misfire' | 'clearing' | 'busy'
   /** Camera kick to apply, degrees [pitch, yaw]. */
   recoil: [number, number]
   /** Audible radius of what happened, metres (0 when nothing). */
   noise: number
+  /** True when a suppressor was on for the shots of this call (the host passes it to the shot sound). */
+  suppressed?: boolean
   /** Cartridges spent by this call: a shotgun shell is one, a burst is several. */
   rounds: number
   /** Seconds after the start of the call at which each round left the barrel. */
@@ -245,9 +260,25 @@ export type ReloadRequest = 'auto' | 'full' | 'one_by_one'
 
 /** What the weapon is busy with right now, and between which seconds of its own clock. */
 export interface WeaponPhase {
-  readonly id: 'draw' | 'cycle' | 'reload' | 'clear' | 'mode'
+  readonly id: 'draw' | 'cycle' | 'reload' | 'clear' | 'mode' | 'fit' | 'stock' | 'switch'
   readonly start: number
   readonly end: number
+}
+
+/** What the hands have to put an accessory on (`install`) and where, when it fits on more than one place (`mount`). */
+export interface FitOptions {
+  readonly install?: AttachmentInstall
+  readonly mount?: MountKind
+}
+
+/** Whether the work started, with the seconds it takes (the phase `fit`), or why not. */
+export type FitResult = { readonly ok: true; readonly seconds: number } | { readonly ok: false; readonly reason: FitRefusal | 'busy' | 'unknown' | 'install' | 'fixed' | 'not_fitted' }
+
+/** How the weapon is held: it decides which conditional effects count. */
+export interface WeaponStance {
+  readonly aiming?: boolean
+  /** Lying down, or on a bipod or tripod. */
+  readonly supported?: boolean
 }
 
 export interface WeaponState {
@@ -312,6 +343,34 @@ export interface WeaponState {
   update(dt: number): void
   /** Fill the magazine and reserve (test rooms). */
   refill(): void
+  /** What is on the weapon, factory parts included. */
+  readonly attachments: readonly FittedAttachment[]
+  /** Kg: the weapon with what is on it. */
+  readonly mass: number
+  /** Seconds to raise the weapon to the sights: `rules.aim.base` + `perKg` × mass, with the effects of the accessories. */
+  readonly aimSeconds: number
+  /** True while a suppressor is on: shots carry `suppressed` and the noise already counts it. */
+  readonly suppressed: boolean
+  readonly stock: StockState
+  /** Whether the accessory goes on, and where, with what is on the weapon now. */
+  canFit(id: AttachmentId, mount?: MountKind): CanFit
+  /** Starts putting an accessory on (phase `fit`, `rules.attachments.fitSeconds` by where it installs); it counts when the phase ends. */
+  fit(id: AttachmentId, options?: FitOptions): FitResult
+  /** Starts taking an accessory off; a factory part that is `integral` stays. Sobra de cartuchos de um carregador maior volta à reserva. */
+  remove(id: AttachmentId, options?: FitOptions): FitResult
+  /** Turns a light or a laser on or off; returns the state it is in now, or null when the accessory is not a light or a laser on the weapon. */
+  toggle(id: AttachmentId): boolean | null
+  /** Folds or slides the stock in or opens it (phase `stock`); false when the weapon has no such stock or it is already there. */
+  setStock(state: StockState): boolean
+  setStance(stance: WeaponStance): void
+  /** The launcher under the barrel (a second state with its own ammunition), or null when no launcher is fitted. */
+  readonly underbarrel: WeaponState | null
+  /** True while the trigger and the reload go to the launcher. */
+  readonly underbarrelActive: boolean
+  /** Changes between the weapon and the launcher under its barrel (phase `switch`, `rules.attachments.switchSeconds`); false when there is none, it is already so, or the weapon is busy. */
+  useUnderbarrel(on: boolean): boolean
+  /** Enough to rebuild the weapon as it is (`arsenal.restore`). */
+  snapshot(): WeaponSnapshot
   /** What happened since the last call (for animation and sound), in order of time; empties the list. */
   drain(): WeaponEvent[]
 }
@@ -338,11 +397,16 @@ export interface ArsenalOptions {
     weapons?: Record<WeaponId, WeaponPatch>
     calibers?: Record<CaliberId, Partial<CaliberDef>>
     explosives?: Record<ExplosiveId, Partial<ExplosiveDef>>
+    attachments?: Record<AttachmentId, DeepPartial<AttachmentDef>>
   }
   /** Entries to leave out, by id. */
-  remove?: { weapons?: WeaponId[]; calibers?: CaliberId[]; explosives?: ExplosiveId[] }
+  remove?: { weapons?: WeaponId[]; calibers?: CaliberId[]; explosives?: ExplosiveId[]; attachments?: AttachmentId[] }
   /** Keeps a weapon only when this returns true (applied after `remove`). */
   include?: (def: WeaponDef) => boolean
+  /** Added or replaced accessories (merged by id over the ones the kit ships). */
+  attachments?: AttachmentDef[]
+  /** Keeps an accessory off a weapon whatever its mounts say (applied after the mounts and calibre checks). */
+  isCompatible?: IsCompatible
   /** Numbers that rule faults, heat, noise bursts and handling times. */
   rules?: DeepPartial<WeaponRules>
   /** Replaces display names (merged over the locale). */
@@ -355,7 +419,12 @@ export interface Arsenal {
   readonly calibers: ReadonlyMap<CaliberId, CaliberDef>
   readonly weapons: ReadonlyMap<WeaponId, WeaponDef>
   readonly explosives: ReadonlyMap<ExplosiveId, ExplosiveDef>
+  readonly attachments: ReadonlyMap<AttachmentId, AttachmentDef>
   readonly rules: WeaponRules
+  /** Whether an accessory goes on a weapon with the given parts on it (a weapon as it ships when `fitted` is left out), and where. */
+  canFit(weapon: WeaponId, attachment: AttachmentId, options?: { fitted?: readonly FittedAttachment[]; mount?: MountKind }): CanFit
+  /** Rebuilds a weapon from `WeaponState.snapshot()`; the random streams start again from `seed`. */
+  restore(snapshot: WeaponSnapshot, options?: { seed?: number }): WeaponState
   /** Make a runtime state for a weapon (each holder gets its own). Unknown id throws. */
   create(id: WeaponId, options?: { seed?: number; reserve?: number; condition?: string; ammoQuality?: string }): WeaponState
   /** Muzzle energy of a calibre (optionally with a barrel factor). */
@@ -369,5 +438,6 @@ export interface Arsenal {
   list(category?: WeaponCategory): WeaponDef[]
 }
 
+export type * from './attachment-types'
 export type * from './explosive-types'
 export type * from './rule-types'

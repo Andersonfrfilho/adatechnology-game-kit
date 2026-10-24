@@ -32,6 +32,13 @@ const breechSwing: readonly ReloadStage[] = [
   { stage: 'barrels_close', at: 0.833 },
 ]
 
+// A grenade launcher under a barrel: the breech opens, the grenade goes in, the breech closes (the same stages for every kind of reload)
+const breechLoad: readonly ReloadStage[] = [
+  { stage: 'breech_open', at: 0 },
+  { stage: 'round_in', at: 0.305 },
+  { stage: 'breech_close', at: 0.724 },
+]
+
 const beltSwap: readonly ReloadStage[] = [
   { stage: 'cover_open', at: 0 },
   { stage: 'belt_swap', at: 0.129 },
@@ -71,6 +78,7 @@ export const RELOAD_STAGES: Readonly<Record<ReloadFamily, StageTable>> = {
       { stage: 'breech_close', at: 0.724 },
     ],
   },
+  underbarrel: { tactical: breechLoad, empty: breechLoad, one_by_one: breechLoad },
   flame: {
     tactical: [{ stage: 'tank_swap', at: 0 }],
     empty: [{ stage: 'tank_swap', at: 0 }],

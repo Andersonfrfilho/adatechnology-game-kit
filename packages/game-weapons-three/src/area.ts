@@ -1,13 +1,17 @@
 import type * as THREE_NS from 'three'
-import type { AreaPlacement, BenchChange, DestructibleSpec, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
+import type { AreaPlacement, BenchChange, DestructibleSpec, HostTool, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
+import { createAccessoryBench, accessoryControls, accessoryLayers, accessoryMetrics } from './accessory-bench'
+import { accessoryTextOf } from './accessory-text'
 import { createWeaponAudio } from './audio'
 import type { WeaponAudio } from './audio'
 import { createWeaponFx } from './fx'
 import type { WeaponFx } from './fx'
+import { createLaserRaycast } from './laser-raycast'
 import { ARCHETYPE_MODELS, hasWeaponModel } from './models'
-import { BODY_ACTIONS, buildModeledProp, buildProp, modeledPropSpec, weaponProp } from './props'
+import type { AttachmentModelRegistry } from './models/attachments/types'
+import { BODY_ACTIONS, buildModeledProp, buildProp, buildTripodMountedProp, modeledPropSpec, weaponProp } from './props'
 import type { WeaponProp } from './props'
 import { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
 
@@ -22,6 +26,8 @@ export interface WeaponsTestModuleOptions {
   condition?: string
   /** Seed of the scatter of casings and smoke (default 1). */
   seed?: number
+  /** Builders of accessory models that replace or add to the ones the kit ships (by the `model` of the accessory). */
+  attachmentModels?: AttachmentModelRegistry
 }
 
 /** Prefix of the item ids of the weapon props (`weapon_pistol_9mm`). */
@@ -37,14 +43,17 @@ const SOUND_DISTANCE_MAX = 200
 const FUSE_LENGTH_MAX = 1
 const DEFAULT_FUSE_LENGTH = 0.03
 const COUNTER = { length: 4.8, depth: 1.6, height: 0.9 }
-// three columns on the free left side of the room, in two rows: counters fill in this order
-const COUNTER_X = [-6.5, -9, -11.5]
+// four columns on the free left side of the room, in two rows: counters fill in this order
+const COUNTER_X = [-6.5, -9, -11.5, -14]
 const COUNTER_Z = [-1, 5.5]
+// the M134 mounted on its tripod stands apart from the counters, in front of the targets and pointing at them
+export const MOUNTED_M134_ITEM_ID = 'm134_tripod'
+const MOUNTED_M134 = { weaponId: 'm134', at: [-3.5, 0, 2] as Vec3, rotationY: Math.PI / 2 }
 // props closer than this to a counter end have nothing next to them on one side
 const END_MARGIN = 0.5
 // the strip of counter a weapon lying across it takes: most are slim, a few are wide (a tripod, two fuel tanks, a bow limb)
 const DEFAULT_PITCH = 0.16
-const PITCH_BY_ID: Readonly<Record<string, number>> = { browning_m2: 0.5, m2_flamethrower: 0.45, bow: 0.3, crossbow: 0.3 }
+const PITCH_BY_ID: Readonly<Record<string, number>> = { browning_m2: 0.5, m134: 0.45, m2_flamethrower: 0.45, bow: 0.3, crossbow: 0.3 }
 // the explosives of the world stand together in the far corner (the player is at the other end, 17 m away): a bullet, fire or blast starts the chain reaction
 const WORLD_EXPLOSIVES: Array<{ id: string; at: Vec3 }> = [
   { id: 'fuel_barrel', at: [10, 0, -8] },
@@ -59,6 +68,8 @@ const TARGETS: Array<{ id: string; at: Vec3 }> = [
   { id: 'target_concrete', at: [1.5, 0, -7] },
 ]
 
+const EMPTY_TOOL: HostTool = { weapon: '', category: '', ammo: 0, capacity: 0, reserve: 0, reloading: false }
+
 interface Text {
   group: string
   name: string
@@ -67,6 +78,7 @@ interface Text {
   reloadStart: string
   reloadEnd: string
   worldExplosives: Record<string, string>
+  mountedM134: string
   condition: string
   conditionHint: string
   conditions: Record<string, string>
@@ -90,6 +102,7 @@ const TEXT: Record<string, Text> = {
     reloadStart: 'Reload started: {weapon} ({ammo}/{capacity})',
     reloadEnd: 'Reload done: {weapon} ({ammo}/{capacity})',
     worldExplosives: { fuel_barrel: 'Fuel barrel', propane_p13: 'Propane cylinder (P13)', car_fuel_tank: 'Car fuel tank' },
+    mountedM134: 'M134 Minigun on its tripod',
     condition: 'Weapon condition',
     conditionHint: 'Wear of the weapon: it jams more and the metal shows it',
     conditions: { new: 'New', used: 'Used', worn: 'Worn', rusty: 'Rusty' },
@@ -111,6 +124,7 @@ const TEXT: Record<string, Text> = {
     reloadStart: 'Recarga iniciada: {weapon} ({ammo}/{capacity})',
     reloadEnd: 'Recarga completa: {weapon} ({ammo}/{capacity})',
     worldExplosives: { fuel_barrel: 'Barril de combustível', propane_p13: 'Botijão de gás (P13)', car_fuel_tank: 'Tanque de combustível do carro' },
+    mountedM134: 'M134 Minigun no tripé',
     condition: 'Estado da arma',
     conditionHint: 'Desgaste da arma: trava mais e o metal mostra',
     conditions: { new: 'Nova', used: 'Usada', worn: 'Gasta', rusty: 'Enferrujada' },
@@ -181,6 +195,16 @@ const weaponItem = (def: WeaponDef, name: string): TestableItem => {
   }
 }
 
+/** The M134 standing on a tripod: the support the `tripod` accessory gives, as a prop of its own (aim at it and press H to take the gun). */
+const mountedM134Item = (def: WeaponDef, name: string): TestableItem => ({
+  id: MOUNTED_M134_ITEM_ID,
+  name,
+  build: (THREE: unknown) => buildTripodMountedProp(THREE as typeof THREE_NS, def, name) as THREE_NS.Group,
+  spec: (root: unknown) => modeledPropSpec(root, def, name),
+  weapon: def.id,
+  movable: false,
+})
+
 const asItem = (id: string, name: string, prop: WeaponProp, extra: Partial<TestableItem> = {}): TestableItem => ({
   id,
   name,
@@ -223,6 +247,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   const locale = options.locale ?? 'pt-BR'
   const arsenal = options.arsenal ?? createArsenal({ locale })
   const text = textOf(locale)
+  const accessoryText = accessoryTextOf(locale)
   const audio = options.sound === false ? null : createWeaponAudio(undefined, options.seed === undefined ? {} : { seed: options.seed })
   const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id))
   // An archetype wearing the model of a brand weapon is the same thing twice on the counters: it stays in the catalogue (the hands still take it) but is not laid out.
@@ -234,6 +259,8 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
     return item ? [item] : []
   })
   const worldExplosiveIds = new Set(worldExplosives.map((item) => item.id))
+  const mountedM134Def = arsenal.weapons.get(MOUNTED_M134.weaponId)
+  const mountedM134 = mountedM134Def && hasWeaponModel(mountedM134Def.id) ? [mountedM134Item(mountedM134Def, text.mountedM134)] : []
   let fx: WeaponFx | null = null
   let host: ModuleHost | null = null
   let soundDistance = 0
@@ -251,9 +278,13 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       asItem(COUNTER_ITEM_ID, text.counter, counterProp(text.counter), { movable: false }),
       ...TARGETS.map((target) => asItem(target.id, text.targets[target.id] ?? target.id, targetProp(target.id, text.targets[target.id] ?? target.id), { movable: false })),
       ...worldExplosives,
+      ...mountedM134,
     ],
     area: (): ModuleArea => ({
-      placements: weaponsLayout(weaponIds, pitchOf).filter((placement) => !placement.item.startsWith(WORLD_EXPLOSIVE_PREFIX) || worldExplosiveIds.has(placement.item)),
+      placements: [
+        ...weaponsLayout(weaponIds, pitchOf).filter((placement) => !placement.item.startsWith(WORLD_EXPLOSIVE_PREFIX) || worldExplosiveIds.has(placement.item)),
+        ...mountedM134.map((item) => ({ item: item.id, position: MOUNTED_M134.at, rotationY: MOUNTED_M134.rotationY, asleep: true })),
+      ],
       view: { eye: [-3.4, 1.9, 9.2], target: [-9, 0.9, 1.6] },
     }),
     controls: (): ModuleControl[] => [
@@ -275,12 +306,14 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       },
       { kind: 'number', id: 'sound_distance', name: text.soundDistance, hint: text.soundDistanceHint, unit: 'm', min: 0, max: SOUND_DISTANCE_MAX, step: 5, default: 0 },
       { kind: 'number', id: 'fuse_length', name: text.fuseLength, hint: text.fuseLengthHint, unit: 'm', min: 0.01, max: FUSE_LENGTH_MAX, step: 0.01, default: arsenal.explosives.get('dynamite')?.fuseLength ?? DEFAULT_FUSE_LENGTH },
+      ...accessoryControls(accessoryText),
     ],
-    layers: (): ModuleLayer[] => (['muzzle_flash', 'casings', 'magazines'] as const).map((id) => ({ id, name: text.layers[id] })),
+    layers: (): ModuleLayer[] => [...(['muzzle_flash', 'casings', 'magazines'] as const).map((id) => ({ id, name: text.layers[id] })), ...accessoryLayers(accessoryText)],
     metrics: (): ModuleMetric[] => [
       { id: 'casings_live', name: text.metrics.casings_live, read: () => fx?.casings ?? 0 },
       { id: 'magazines_live', name: text.metrics.magazines_live, read: () => fx?.magazines ?? 0 },
       { id: 'heat', name: text.metrics.heat, unit: '%', max: 100, digits: 0, read: heatPercent },
+      ...accessoryMetrics(accessoryText, () => host?.tool() ?? EMPTY_TOOL),
     ],
     attach(lent) {
       host = lent
@@ -293,14 +326,20 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         audio,
         tool: lent.tool,
         soundDistance: () => soundDistance,
+        raycast: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera),
+        ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
         ...(options.condition ? { condition: options.condition } : {}),
         ...(options.seed === undefined ? {} : { seed: options.seed }),
       })
       fx = created
       const camera = lent.camera as THREE_NS.Camera
+      const accessories = createAccessoryBench({ arsenal, host: lent, text: accessoryText })
       const offBench = lent.bench?.onChange((change: BenchChange) => {
+        if (accessories.handleChange(change)) return
         if (change.kind === 'layer') {
-          if (change.id === 'muzzle_flash') created.layers.muzzleFlash = change.on
+          if (change.id === 'attachments') created.layers.attachments = change.on
+          else if (change.id === 'beams') created.layers.beams = change.on
+          else if (change.id === 'muzzle_flash') created.layers.muzzleFlash = change.on
           else if (change.id === 'casings') created.layers.casings = change.on
           else if (change.id === 'magazines') created.layers.magazines = change.on
         } else if (change.kind === 'control' && typeof change.value === 'string') {
@@ -324,6 +363,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       const offFrame = lent.onFrame((dt) => created.update(dt))
       created.handle({ type: 'tool', weapon: lent.tool().weapon }, lent.tool())
       return () => {
+        accessories.dispose()
         offBench?.()
         offEvents()
         offFrame()

@@ -6,6 +6,8 @@ import { toWorld, worldPositionOf } from './session'
 import type { FxWorld, Session } from './session'
 
 const PI = Math.PI
+// the flash of a 40 mm launcher, a little under the one of a rocket tube
+const UGL_FLASH = 1.6
 
 const restFlat = (object: THREE_NS.Object3D): void => {
   object.rotation.x = 0
@@ -121,7 +123,9 @@ export function createClipEventHandler(world: FxWorld, session: Session): (event
     const data = event.data ?? {}
     switch (event.type) {
       case 'muzzle_flash':
-        if (parts.muzzle && world.layers.muzzleFlash) effects.muzzleFlash(positionOf(parts.muzzle), root.getWorldQuaternion(new THREE.Quaternion()), session.def.action.kind === 'launcher' ? 2.2 : FLASH_BY_CASE[session.caseType])
+        if (data.at === 'ugl') {
+          if (parts.uglMuzzle && world.layers.muzzleFlash) effects.muzzleFlash(positionOf(parts.uglMuzzle), root.getWorldQuaternion(new THREE.Quaternion()), UGL_FLASH)
+        } else if (parts.muzzle && world.layers.muzzleFlash) effects.muzzleFlash(positionOf(parts.muzzle), root.getWorldQuaternion(new THREE.Quaternion()), session.def.action.kind === 'launcher' ? 2.2 : FLASH_BY_CASE[session.caseType])
         break
       case 'eject_casing':
         if (data.from === 'chambers') ejectAll(parts.chambers, () => ({ velocity: vector(-0.5 - random() * 0.3, -0.1 + random() * 0.3, (random() - 0.5) * 0.25), spin: vector(10, 20, 5), tilt: 0 }))

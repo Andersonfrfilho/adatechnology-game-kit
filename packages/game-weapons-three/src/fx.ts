@@ -45,6 +45,8 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     ...(options.seed === undefined ? {} : { seed: options.seed }),
     ...(options.tool ? { tool: options.tool } : {}),
     ...(options.condition ? { condition: options.condition } : {}),
+    ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
+    ...(options.raycast ? { raycast: options.raycast } : {}),
   })
   return {
     handle(event, tool) {

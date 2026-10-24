@@ -1,3 +1,4 @@
+import type { AttachmentId, AttachmentInstall, MountKind, StatModifier, StockDef, StockState } from './attachment-types'
 import type { ExplosiveTripwire } from './explosive-types'
 import type { CaseType, FireMode, WeaponDef } from './types'
 
@@ -58,6 +59,19 @@ export interface WeaponRules {
     /** The wire of a charge set down with the `wire` trigger that does not name one. */
     readonly tripwire: Required<ExplosiveTripwire>
   }
+  /** Putting accessories on and taking them off. */
+  readonly attachments: {
+    /** Seconds the work takes, by where it can be done: with the hands, with a tool, at a bench. */
+    readonly fitSeconds: Readonly<Record<AttachmentInstall, number>>
+    /** Seconds to change between the weapon and the launcher under its barrel. */
+    readonly switchSeconds: number
+    /** m/s: a bullet slower than this is subsonic (a suppressor mutes it more). */
+    readonly speedOfSound: number
+  }
+  /** Time to raise the weapon to the sights (`base` + `perKg` × mass) and how much worse the hip is: `hipSpread` times the spread when not aiming (1: no difference). */
+  readonly aim: { readonly base: number; readonly perKg: number; readonly hipSpread: number }
+  /** Folding or sliding in the stock: the seconds it takes and what it does to the weapon while it is in. */
+  readonly stock: { readonly seconds: number; readonly collapsed: readonly StatModifier[] }
   readonly draw: number
   readonly clear: number
   readonly startSafe: boolean
@@ -101,7 +115,7 @@ export interface ReloadStage {
 /** Events a weapon emits for a host to animate and play sounds; `at` is the weapon clock in seconds. */
 export type WeaponEvent =
   | { type: 'draw'; phase: 'start' | 'end'; at: number }
-  | { type: 'shot'; shots: number; rounds: number; mode: FireMode; at: number }
+  | { type: 'shot'; shots: number; rounds: number; mode: FireMode; at: number; suppressed?: boolean }
   | { type: 'misfire'; at: number }
   | { type: 'cycle'; phase: 'start' | 'end'; at: number }
   | { type: 'reload'; phase: 'start' | 'end'; kind: ReloadKind; at: number }
@@ -114,3 +128,11 @@ export type WeaponEvent =
   | { type: 'safety'; on: boolean; at: number }
   /** Cooking a throwable: `start` pulls the pin, `throw` releases it with `fuse` seconds left, `burst` is the fuse running out while held (`fuse` 0). */
   | { type: 'cook'; phase: 'start' | 'throw' | 'burst'; fuse: number; at: number }
+  /** An accessory goes on (`fit`), comes off (`remove`) or breaks (`break`, a home-made suppressor). `mount` is where it was. */
+  | { type: 'attachment'; action: 'fit' | 'remove' | 'break'; id: AttachmentId; mount: MountKind; at: number }
+  /** A light or a laser is turned on or off. */
+  | { type: 'toggle'; id: AttachmentId; on: boolean; at: number }
+  /** The stock is folded or slid in (`collapsed`) or opened (`extended`). */
+  | { type: 'stock'; state: StockState; kind: StockDef['kind']; at: number }
+  /** The weapon in the hand changes between the rifle and the launcher under its barrel. */
+  | { type: 'underbarrel'; on: boolean; at: number }

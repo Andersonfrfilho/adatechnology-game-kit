@@ -1,4 +1,4 @@
-// Bundles the weapons area (@adatechnology/game-weapons-three and the arsenal) into dist/weapons-area.js (IIFE, global `WeaponsArea`) and,
+// Bundles the weapons area (@adatechnology/game-weapons-three, the arsenal and the cord of the interactables) into dist/weapons-area.js (IIFE, global `WeaponsArea`) and,
 // when the shared test room page is found (ROOM_HTML, default the kit's own examples/test-room build), writes dist/sala-armas.html: the room
 // page with the area loaded and opened, one file, no network.
 import { createRequire } from 'node:module'
@@ -21,7 +21,7 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-for (const p of ['game-weapons', 'game-weapons-three']) {
+for (const p of ['game-weapons', 'game-weapons-three', 'game-interactables', 'game-props3d', 'game-interactables-three']) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -38,6 +38,10 @@ const result = await esbuild.build({
   alias: {
     '@adatechnology/game-weapons': join(pkg('game-weapons'), 'dist/index.js'),
     '@adatechnology/game-weapons-three': join(pkg('game-weapons-three'), 'dist/index.js'),
+    // the sling and the ammunition belt of the accessories are drawn with the cord of the interactables
+    '@adatechnology/game-interactables': join(pkg('game-interactables'), 'dist/index.js'),
+    '@adatechnology/game-props3d': join(pkg('game-props3d'), 'dist/index.js'),
+    '@adatechnology/game-interactables-three': join(pkg('game-interactables-three'), 'dist/index.js'),
   },
 })
 mkdirSync(join(here, 'dist'), { recursive: true })

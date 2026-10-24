@@ -3,6 +3,8 @@ import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology
 import type { WeaponDef } from '@adatechnology/game-weapons'
 import { mergeByMaterial } from './merge-by-material'
 import { buildWeaponModelById } from './models'
+import { buildTripodLegs } from './models/attachments/tripod'
+import { modelKit } from './models/kit'
 
 /** A low-poly prop: its destruction spec (box parts only) and one colour per part. */
 export interface WeaponProp {
@@ -106,9 +108,10 @@ const MODEL_BODY = 'body'
  * material (the hands keep the model with its pivots, `buildWeaponModelById`), every mesh naming the one rigid part (`body`) that moves it. The size of that part is left in
  * `userData.footprint` for `modeledPropSpec`.
  */
-export function buildModeledProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, name: string): THREE_NS.Group | undefined {
+export function buildModeledProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, name: string, decorate?: (root: THREE_NS.Object3D) => void): THREE_NS.Group | undefined {
   const model = buildWeaponModelById(THREE, def.id)
   if (!model) return undefined
+  decorate?.(model.root)
   const group = new THREE.Group()
   group.name = name
   const box = new THREE.Box3().setFromObject(model.root)
@@ -124,6 +127,17 @@ export function buildModeledProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'i
   const size = box.getSize(new THREE.Vector3())
   group.userData.footprint = [size.x, size.y, size.z]
   return group
+}
+
+// where the tripod joins the gun (along it, under it)
+const TRIPOD_HEAD = { x: 0.4, y: -0.1 }
+
+/** A modeled weapon on a tripod of three steel legs under its middle (the same legs the `tripod` accessory draws in the hands). */
+export function buildTripodMountedProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, name: string): THREE_NS.Group | undefined {
+  return buildModeledProp(THREE, def, name, (root) => {
+    const kit = modelKit(THREE)
+    buildTripodLegs(kit, kit.pivot(root, TRIPOD_HEAD.x, TRIPOD_HEAD.y, 0))
+  })
 }
 
 /** The destruction spec of a modeled prop: one steel box of its measures, with the real mass of the weapon. */

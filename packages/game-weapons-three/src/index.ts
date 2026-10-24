@@ -3,7 +3,7 @@
  * fire and reload motion, ejected casings and dropped magazines, synthesized sounds, and the weapons test area as a `TestableModule`
  * (any host of @adatechnology/game-contracts, like the test room, loads it with `loadModule`).
  */
-export { createWeaponsTestModule, weaponsLayout, WEAPON_ITEM_PREFIX, COUNTER_ITEM_ID } from './area'
+export { createWeaponsTestModule, weaponsLayout, WEAPON_ITEM_PREFIX, COUNTER_ITEM_ID, MOUNTED_M134_ITEM_ID } from './area'
 export type { WeaponsTestModuleOptions } from './area'
 export { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
 export { createWeaponFx } from './fx'
@@ -44,3 +44,11 @@ export type { ClipContext } from './animation/context'
 export type { CartridgeShape } from './models/cartridge'
 export { modelKit } from './models/kit'
 export type { ModelKit, ModelMaterials } from './models/kit'
+export { fitAttachmentModels } from './models/attachments/fit'
+export type { AttachmentRig, FitAttachmentOptions } from './models/attachments/fit'
+export { ATTACHMENT_MODELS } from './models/attachments/registry'
+export { mountFrame, deriveFrames } from './models/attachments/mount-frames'
+export type { MountFrame } from './models/attachments/mount-frames'
+export type { AttachmentBuildContext, AttachmentModel, AttachmentModelBuilder, AttachmentModelRegistry, LaserRaycast } from './models/attachments/types'
+export { rigUnderbarrel } from './models/attachments/rig-underbarrel'
+export { rigStock } from './models/rig-stock'

@@ -23,6 +23,9 @@ export type MechanicalSoundId =
   | 'jam'
   | 'clear_start'
   | 'clear_end'
+  | 'stock_fold'
+  | 'light_click'
+  | 'attach'
 
 const metal = (at: number, frequency: number, gain: number): SoundStep => ({ layer: 'metal', at, frequency, gain })
 const sound = (at: number, soundClass: keyof typeof GAME_SOUND_CLASSES, volume: number): SoundStep => ({ layer: 'class', at, soundClass, volume })
@@ -47,6 +50,9 @@ export const MECHANICAL_SOUNDS: Readonly<Record<MechanicalSoundId, readonly Soun
   jam: [metal(0, 700, 0.4), metal(0.08, 500, 0.35)],
   clear_start: [metal(0, 1000, 0.3)],
   clear_end: [metal(0, 1300, 0.35)],
+  stock_fold: [metal(0, 800, 0.3), metal(0.18, 1200, 0.3), thud(0.3, 0.2, 600)],
+  light_click: [metal(0, 2400, 0.2), metal(0.03, 1800, 0.12)],
+  attach: [metal(0, 1400, 0.35), thud(0.04, 0.2, 700), metal(0.12, 1900, 0.25)],
   magazine_out: [metal(0, 1500, 0.35), sound(0, 'reload', 0.6)],
   magazine_in: seat,
   charge: slide,
@@ -95,6 +101,14 @@ export const mechanicalSoundOf = (event: WeaponEvent): MechanicalSoundId | undef
       return 'jam'
     case 'clear':
       return event.phase === 'start' ? 'clear_start' : 'clear_end'
+    case 'attachment':
+      return event.action === 'break' ? 'jam' : 'attach'
+    case 'toggle':
+      return 'light_click'
+    case 'stock':
+      return 'stock_fold'
+    case 'underbarrel':
+      return 'mode'
     default:
       return undefined
   }

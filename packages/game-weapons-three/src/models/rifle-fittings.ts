@@ -1,27 +1,23 @@
+import { buildBipod } from './attachments/bipod'
+import { recordFitting } from './capture'
 import { scope } from './details'
 import type { RifleContext } from './rifle-context'
+
+/** The accessory each `scope` option of the page stands for. */
+const SCOPE_IDS: Readonly<Record<number, string>> = { 1: 'red_dot', 2: 'acog_4x', 3: 'scope_3_9x', 4: 'scope_6_24x' }
 
 /** What is bolted on after the stock: optic, carry handle, bipod, bolt handle, lever, magazine tube, pump, heat shield, bayonet lug and cleaning rod. */
 export function buildFittings(context: RifleContext, gripX: number): void {
   const { kit, group, parts, options: o, furniture: furn, length: L, receiverStart: x0, receiverEnd: x1, receiverHeight: hR, receiverWidth: wR, barrelRadius: r, barrelY: by } = context
   const { M, box, cylinderX, cylinderZ, sphere } = kit
   const middle = (x0 + x1) / 2
-  if (o.scope) scope(kit, group, o.scope, middle + 0.03, hR / 2 + (o.rail ? 0.006 : 0), o.scope === 4 ? -0.02 : 0)
+  if (o.scope) recordFitting(parts, SCOPE_IDS[o.scope] ?? 'scope', group, () => scope(kit, group, o.scope as number, middle + 0.03, hR / 2 + (o.rail ? 0.006 : 0), o.scope === 4 ? -0.02 : 0))
   if (o.carry) {
     box(group, 0.15, 0.026, 0.014, M.metal, middle, hR / 2 + 0.03, 0)
     box(group, 0.012, 0.03, 0.014, M.metal, middle + 0.07, hR / 2 + 0.014, 0)
     box(group, 0.012, 0.03, 0.014, M.metal, middle - 0.07, hR / 2 + 0.014, 0)
   }
-  if (o.bipod) {
-    const bx = x1 + (L - x1) * 0.45
-    cylinderX(group, 0.008, 0.02, M.dark, bx + 0.04, by - 0.012, 0, 12)
-    for (const side of [-1, 1]) {
-      const leg = kit.pivot(group, bx + 0.04, by - 0.012, side * 0.012)
-      leg.rotation.set(side * 0.15, 0, -0.35)
-      box(leg, 0.006, 0.2, 0.006, M.dark, 0, -0.1, 0)
-      box(leg, 0.01, 0.006, 0.01, M.rubber, 0, -0.2, 0)
-    }
-  }
+  if (o.bipod) recordFitting(parts, 'bipod', group, () => buildBipod(kit, group, x1 + (L - x1) * 0.45 + 0.04, by - 0.012))
   if (o.bolt) {
     const handle = kit.pivot(group, x1 - 0.045, by, 0)
     parts.boltHandle = handle

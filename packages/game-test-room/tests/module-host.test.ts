@@ -80,6 +80,53 @@ describe('module host', () => {
     expect(room.tool.ammoQuality).toBe('reloaded')
   })
 
+  it('command fits, toggles and removes accessories of the tool in hand, folds the stock and switches the launcher, and the tool tells what is on it', () => {
+    const room = makeRoom()
+    const events: HostEvent[] = []
+    let lent: ModuleHost | null = null
+    room.loadModule(benchModule((host) => (lent = host)))
+    lent!.on((event) => events.push(event))
+    room.setTool('colt_m4a1')
+    for (let i = 0; i < 60; i++) room.update(0.02)
+    expect(lent!.tool().attachments?.map((part) => part.id)).toContain('acog_4x')
+    expect(lent!.tool().stock).toBe('extended')
+    expect(lent!.command?.({ type: 'fit', attachment: 'suppressor', mount: 'muzzle' })).toEqual({ ok: true, seconds: 15 })
+    expect(lent!.command?.({ type: 'remove', attachment: 'acog_4x' })).toEqual({ ok: false, reason: 'busy' })
+    for (let i = 0; i < 800; i++) room.update(0.02)
+    expect(lent!.tool().suppressed).toBe(true)
+    expect(lent!.tool().mass).toBeGreaterThan(room.arsenal.weapons.get('colt_m4a1')!.mass)
+    expect(events.find((event) => event.type === 'attachment')).toMatchObject({ action: 'fit', attachment: 'suppressor', mount: 'muzzle', duration: 15 })
+    expect(lent!.command?.({ type: 'fit', attachment: 'weapon_light' })).toMatchObject({ ok: true })
+    for (let i = 0; i < 200; i++) room.update(0.02)
+    expect(lent!.command?.({ type: 'toggle', attachment: 'weapon_light' })).toEqual({ ok: true })
+    expect(lent!.tool().attachments?.find((part) => part.id === 'weapon_light')?.on).toBe(true)
+    expect(events.find((event) => event.type === 'toggle')).toMatchObject({ attachment: 'weapon_light', on: true })
+    expect(lent!.command?.({ type: 'toggle', attachment: 'laser_sight' })).toEqual({ ok: false, reason: 'not_fitted' })
+    expect(lent!.command?.({ type: 'fit', attachment: 'gp_25' })).toEqual({ ok: false, reason: 'interface' })
+    expect(lent!.command?.({ type: 'stock', state: 'collapsed' })).toEqual({ ok: true })
+    for (let i = 0; i < 60; i++) room.update(0.02)
+    expect(lent!.tool().stock).toBe('collapsed')
+    expect(lent!.command?.({ type: 'stance', aiming: true })).toEqual({ ok: true })
+    expect(lent!.command?.({ type: 'underbarrel', on: true })).toEqual({ ok: false, reason: 'busy' })
+    room.setTool('glock_17')
+    expect(lent!.command?.({ type: 'stock', state: 'collapsed' })).toEqual({ ok: false, reason: 'busy' })
+  })
+
+  it('a suppressed shot reaches the module with the flag', () => {
+    const room = makeRoom()
+    const events: HostEvent[] = []
+    let lent: ModuleHost | null = null
+    room.loadModule(benchModule((host) => (lent = host)))
+    lent!.on((event) => events.push(event))
+    room.setTool('colt_m4a1')
+    for (let i = 0; i < 60; i++) room.update(0.02)
+    lent!.command?.({ type: 'fit', attachment: 'suppressor', mount: 'muzzle' })
+    for (let i = 0; i < 800; i++) room.update(0.02)
+    room.use()
+    for (let i = 0; i < 20; i++) room.update(0.02)
+    expect(events.find((event) => event.type === 'shot')).toMatchObject({ suppressed: true })
+  })
+
   it('lends the scene and the camera and reports the tool events', () => {
     const room = makeRoom()
     const events: HostEvent[] = []

@@ -2,7 +2,7 @@ const ENTITIES: Readonly<Record<string, string>> = { '&amp;': '&', '&lt;': '<', 
 
 const decodeEntities = (text: string): string => text.replace(/&(?:amp|lt|gt|quot|#39|nbsp);/g, (entity) => ENTITIES[entity] ?? entity)
 
-const cellText = (cellHtml: string): string =>
+export const cellText = (cellHtml: string): string =>
   decodeEntities(cellHtml.replace(/<span class="tag">.*?<\/span>/g, '').replace(/<br\s*\/?>/g, ' / ').replace(/<[^>]+>/g, ''))
     .replace(/\s+/g, ' ')
     .trim()

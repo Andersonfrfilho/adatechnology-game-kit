@@ -2,10 +2,12 @@ import type * as THREE_NS from 'three'
 import { WEAPONS } from '@adatechnology/game-weapons'
 import data from '../data/models.json'
 import { buildBreakAction } from './break-action'
+import { deriveFrames } from './attachments/mount-frames'
 import { buildBullpup } from './bullpup'
 import { modelKit } from './kit'
 import type { ModelKit } from './kit'
 import { buildLauncher } from './launcher'
+import { buildM134 } from './m134'
 import { buildM2 } from './m2'
 import { buildP90 } from './p90'
 import { partRegistry } from './part-registry'
@@ -18,7 +20,7 @@ export type { ModelFamily, ModelOptions, ModelParts } from './types'
 
 /** One weapon of the gallery as `data/models.json` keeps it: the builder, the measures in mm and the builder's options. */
 export interface ModelEntry {
-  readonly builder: 'pistol' | 'revolver' | 'rifle' | 'bullpup' | 'p90' | 'break' | 'm2' | 'launcher'
+  readonly builder: 'pistol' | 'revolver' | 'rifle' | 'bullpup' | 'p90' | 'break' | 'm2' | 'm134' | 'launcher'
   readonly caliber: string
   readonly length: number
   readonly barrel: number
@@ -59,6 +61,7 @@ const BUILDERS: Record<ModelEntry['builder'], (kit: ModelKit, options: ModelOpti
   p90: (kit) => buildP90(kit),
   break: buildBreakAction,
   m2: (kit) => buildM2(kit),
+  m134: (kit) => buildM134(kit),
   launcher: buildLauncher,
 }
 
@@ -95,5 +98,7 @@ export function buildWeaponModelById(THREE: typeof THREE_NS, id: string): Weapon
     built.group.position.x = -new THREE.Box3().setFromObject(built.group).min.x
   } else root = fitLength(kit, built.group, entry.length / 1000)
   root.name = id
-  return { id, root, inner: built.group, parts: built.parts }
+  const model: WeaponModel = { id, root, inner: built.group, parts: built.parts }
+  if (!built.parts.frames) built.parts.frames = deriveFrames(THREE, model)
+  return model
 }

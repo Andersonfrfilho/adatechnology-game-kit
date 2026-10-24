@@ -41,8 +41,13 @@ export abstract class WeaponCommands extends WeaponCore {
     this.fuseLengthOverride = metres
   }
 
+  /** Seconds to put the weapon in hand. */
+  protected drawDuration(): number {
+    return drawSeconds(this.action, this.rules)
+  }
+
   draw(): void {
-    const seconds = drawSeconds(this.action, this.rules)
+    const seconds = this.drawDuration()
     this.drawEnd = this.clock + seconds
     this._phase = { id: 'draw', start: this.clock, end: this.drawEnd }
     this.emit({ type: 'draw', phase: 'start', at: this.clock })

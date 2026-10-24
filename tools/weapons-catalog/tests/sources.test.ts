@@ -161,7 +161,7 @@ describe('Gallery AMMO', () => {
   })
 
   it('gives every calibre the shell, rim and noise decided', () => {
-    expect(calibers.size).toBe(28)
+    expect(calibers.size).toBe(30)
     for (const [id, decision] of Object.entries(decisions.calibers)) {
       expect(calibers.get(id)?.noise, id).toBe(decision.noise.value)
     }
@@ -199,7 +199,7 @@ describe('Arsenal tables', () => {
       expect(entry.barrel, row[0]).toBeCloseTo(row[5] / 1000, 9)
       expect(entry.emptyMass, row[0]).toBe(row[6])
       expect(weapon.action.muzzleSpeed, row[0]).toBe(entry.muzzleSpeed)
-      expect(weapon.dimensions.lengthCollapsed, row[0]).toBe(entry.lengthCollapsed)
+      expect(weapon.dimensions.lengthCollapsed, row[0]).toBe(entry.lengthCollapsed ?? decisions.stocks[weapon.id]?.value.lengthCollapsed)
       expect(weapon.action.moa, row[0]).toBe(entry.moa)
       expect(weapon.action.patternCm, row[0]).toBe(entry.patternCm)
     }

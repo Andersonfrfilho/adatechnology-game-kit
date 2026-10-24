@@ -1,9 +1,11 @@
-import type { CaliberDef, CaliberId, ExplosiveDef, ExplosiveId, WeaponDef, WeaponId, WeaponRules } from './types'
+import type { AttachmentDef, AttachmentId } from './attachment-types'
+import type { CaliberDef, CaliberId, ExplosiveDef, ExplosiveId, FirearmAction, WeaponDef, WeaponId, WeaponRules } from './types'
 
 export interface ArsenalParts {
   readonly weapons: ReadonlyMap<WeaponId, WeaponDef>
   readonly calibers: ReadonlyMap<CaliberId, CaliberDef>
   readonly explosives: ReadonlyMap<ExplosiveId, ExplosiveDef>
+  readonly attachments?: ReadonlyMap<AttachmentId, AttachmentDef>
   /** When given, the default condition and ammunition quality must be ones the rules define. */
   readonly rules?: Pick<WeaponRules, 'conditions' | 'defaultCondition' | 'ammoQualities' | 'defaultAmmoQuality'>
 }
@@ -19,6 +21,15 @@ export const findDuplicateIds = (kind: string, entries: readonly { readonly id: 
   return problems
 }
 
+const checkRotary = (id: string, action: FirearmAction): string[] => {
+  const problems: string[] = []
+  const { rpm, rpmRange, spin } = action
+  if (rpmRange && !(rpmRange[0] > 0 && rpmRange[0] <= rpmRange[1])) problems.push(`weapon "${id}" has an empty rate range ${rpmRange[0]}-${rpmRange[1]} rpm`)
+  if (rpmRange && (rpm < rpmRange[0] || rpm > rpmRange[1])) problems.push(`weapon "${id}" fires at ${rpm} rpm, outside its range ${rpmRange[0]}-${rpmRange[1]}`)
+  if (spin && !(spin.upSeconds >= 0 && spin.holdSeconds >= 0)) problems.push(`weapon "${id}" has a negative spin time`)
+  return problems
+}
+
 const checkFirearm = (def: WeaponDef, calibers: ArsenalParts['calibers']): string[] => {
   if (def.action.kind !== 'firearm') return []
   const problems: string[] = []
@@ -28,6 +39,7 @@ const checkFirearm = (def: WeaponDef, calibers: ArsenalParts['calibers']): strin
   if (def.action.modes.length === 0) problems.push(`weapon "${def.id}" has no fire modes`)
   if (!(def.action.rpm > 0)) problems.push(`weapon "${def.id}" has a rate of fire of ${def.action.rpm} rpm`)
   if (!(def.action.reload > 0)) problems.push(`weapon "${def.id}" has a reload time of ${def.action.reload} s`)
+  problems.push(...checkRotary(def.id, def.action))
   return problems
 }
 
@@ -54,6 +66,33 @@ const checkExplosiveNumbers = (explosive: ExplosiveDef): string[] => {
   return problems
 }
 
+const STATS: ReadonlySet<string> = new Set(['noise', 'spread', 'hipSpreadExcess', 'recoilVertical', 'recoilHorizontal', 'range', 'muzzleSpeed', 'mass', 'capacity', 'reload', 'reloadEmpty', 'draw', 'aim', 'faultChance', 'heatPerShot'])
+const INSTALLS: ReadonlySet<string> = new Set(['field', 'tool', 'bench'])
+
+const checkAttachment = (attachment: AttachmentDef, weapons: ArsenalParts['weapons']): string[] => {
+  const problems: string[] = []
+  if (attachment.launcher !== undefined && weapons.get(attachment.launcher)?.action.kind !== 'launcher') problems.push(`attachment "${attachment.id}" names "${attachment.launcher}" as its launcher, which is not a launcher weapon`)
+  const label = `attachment "${attachment.id}"`
+  if (!INSTALLS.has(attachment.install)) problems.push(`${label} installs "${attachment.install}"`)
+  if (attachment.mounts.length === 0) problems.push(`${label} has no mount`)
+  if (attachment.interfaces.length === 0) problems.push(`${label} has no interface`)
+  for (const effect of attachment.effects) {
+    if (!STATS.has(effect.stat)) problems.push(`${label} changes the unknown stat "${effect.stat}"`)
+    if (effect.mul !== undefined && !(effect.mul > 0)) problems.push(`${label} multiplies ${effect.stat} by ${effect.mul}`)
+  }
+  return problems
+}
+
+const checkFitted = (def: WeaponDef, attachments: ArsenalParts['attachments']): string[] => {
+  if (!attachments) return []
+  return (def.fitted ?? []).flatMap((part) => {
+    const problems: string[] = []
+    if (!attachments.has(part.id)) problems.push(`weapon "${def.id}" is fitted with unknown attachment "${part.id}"`)
+    if (!(def.mounts ?? []).some((mount) => mount.kind === part.mount)) problems.push(`weapon "${def.id}" has "${part.id}" on "${part.mount}", which it has no mount for`)
+    return problems
+  })
+}
+
 const checkRuleDefaults = (rules: ArsenalParts['rules']): string[] => {
   if (!rules) return []
   const problems: string[] = []
@@ -63,8 +102,9 @@ const checkRuleDefaults = (rules: ArsenalParts['rules']): string[] => {
 }
 
 /** Every problem found in an arsenal, so a game sees them all at once instead of one per run. Empty when it is consistent. */
-export const checkArsenal = ({ weapons, calibers, explosives, rules }: ArsenalParts): string[] => [
-  ...[...weapons.values()].flatMap((def) => [...checkFirearm(def, calibers), ...checkTimings(def), ...checkExplosiveReference(def, explosives)]),
+export const checkArsenal = ({ weapons, calibers, explosives, attachments, rules }: ArsenalParts): string[] => [
+  ...[...weapons.values()].flatMap((def) => [...checkFirearm(def, calibers), ...checkTimings(def), ...checkExplosiveReference(def, explosives), ...checkFitted(def, attachments)]),
+  ...[...(attachments?.values() ?? [])].flatMap((attachment) => checkAttachment(attachment, weapons)),
   ...[...explosives.values()].flatMap(checkExplosiveNumbers),
   ...checkRuleDefaults(rules),
 ]

@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { ModelParts } from './types'
 
-const SINGLE_PARTS = ['slide', 'bolt', 'boltHandle', 'mag', 'trigger', 'hammer', 'lever', 'pump', 'belt', 'cover', 'crane', 'cylinder', 'barrels', 'safety', 'muzzle', 'eject', 'loadPort', 'topLoad', 'rear', 'round', 'gauge'] as const
+const SINGLE_PARTS = ['slide', 'bolt', 'boltHandle', 'mag', 'trigger', 'hammer', 'lever', 'pump', 'belt', 'cover', 'crane', 'cylinder', 'barrels', 'safety', 'muzzle', 'eject', 'loadPort', 'topLoad', 'rear', 'round', 'gauge', 'stock', 'ugl'] as const
 
 /** The parts of a model by the id the clips use: `slide`, `mag`, `trigger`..., `breech_0`, `chamber_3`. */
 export function partRegistry(parts: ModelParts): Map<string, THREE_NS.Object3D> {

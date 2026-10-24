@@ -13,8 +13,8 @@ describe('shipped catalog', () => {
   })
 
   it('has the calibres, explosives and weapons of the team deliveries', () => {
-    expect(CALIBERS).toHaveLength(28)
-    expect(EXPLOSIVES).toHaveLength(17)
+    expect(CALIBERS).toHaveLength(30)
+    expect(EXPLOSIVES).toHaveLength(18)
     expect(WEAPONS.filter((def) => def.sources?.includes('gallery'))).toHaveLength(79)
     expect(ARCHETYPE_IDS).toHaveLength(42)
   })
@@ -36,8 +36,10 @@ describe('shipped catalog', () => {
     for (const id of DEFAULT_LOADOUT) expect(arsenal.weapons.has(id), id).toBe(true)
   })
 
-  it('takes firearm noise from the calibre, not from the weapon', () => {
-    for (const def of firearms) expect(def.action.noise, def.id).toBeUndefined()
+  it('takes firearm noise from the calibre, not from the weapon (the integral suppressor of the MP5SD3 is the one weapon that carries its own)', () => {
+    const isSilenced = (def: (typeof firearms)[number]): boolean => def.fitted?.some((part) => part.id === 'integral_suppressor') ?? false
+    for (const def of firearms.filter((entry) => !isSilenced(entry))) expect(def.action.noise, def.id).toBeUndefined()
+    for (const def of firearms.filter(isSilenced)) expect(def.action.noise, def.id).toBeLessThan(arsenal.calibers.get(def.action.caliber)?.noise ?? 0)
     for (const caliber of CALIBERS) expect(caliber.noise, caliber.id).toBeGreaterThan(0)
   })
 
@@ -106,10 +108,10 @@ describe('explosives', () => {
     for (const explosive of EXPLOSIVES) if (!explosive.triggers?.includes('explosion')) expect(explosive.chain, explosive.id).toBeUndefined()
   })
 
-  it('give every launcher the backblast of the Arsenal §13 (5 m) except the M79, and every explosive with a timer a fuse', () => {
+  it('give every launcher the backblast of the Arsenal §13 (5 m) except the M79 and the ones under a barrel, and every explosive with a timer a fuse', () => {
     for (const def of WEAPONS) {
       if (def.action.kind !== 'launcher') continue
-      expect(def.action.backblast, def.id).toBe(def.id === 'm79' ? 0 : 5)
+      expect(def.action.backblast, def.id).toBe(def.id === 'm79' || def.tags?.includes('underbarrel') ? 0 : 5)
       expect(def.action.minArmDistance, def.id).toBe(10)
     }
     for (const explosive of EXPLOSIVES) if (explosive.triggers?.includes('timer')) expect(nominalFuse(explosive), explosive.id).toBeGreaterThan(0)

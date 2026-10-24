@@ -210,14 +210,17 @@ export function buildScenarios(locale, analysisOf) {
       const body = analysisOf('trash_bin').destructible.parts.filter((p) => p.material === 'plastic' && p.id !== 'lid').sort((a, b) => b.shape.size[1] - a.shape.size[1])[0]
       const c = world(body)
       room.setTool('sledgehammer')
+      room.waitUntilReady()
+      // the first blow throws the 3 kg bin across the room, so the part that gets dented is the one under the hammer, not necessarily the largest
+      const struck = () => (room.world.state(id)?.parts ?? []).map((p) => part(room, id, p.id)).filter((p) => p?.status === 'broken' || (p?.dents.length ?? 0) > 0)
       let blows = 0
-      for (; blows < 10 && part(room, id, body.id)?.status !== 'broken'; blows++) {
+      for (; blows < 10 && !struck().length; blows++) {
         room.look([c[0], c[1], c[2] + body.shape.size[2] / 2 + 0.5], [c[0], c[1], c[2]])
         room.use()
         step(1)
       }
-      const p = part(room, id, body.id)
-      expect(p?.status === 'broken' || (p?.dents.length ?? 0) > 0, T(`Marreta na lixeira: ${blows} golpe(s), ${p?.status}, ${p?.dents.length ?? 0} amassado(s), hp ${n1(p?.hp ?? 0)}/${n1(p?.maxHp ?? 0)}`, `Sledgehammer on the bin: ${blows} blow(s), ${p?.status}, ${p?.dents.length ?? 0} dent(s), hp ${n1(p?.hp ?? 0)}/${n1(p?.maxHp ?? 0)}`), { blows })
+      const p = struck()[0]
+      expect(!!p, T(`Marreta na lixeira: ${blows} golpe(s), ${p?.status}, ${p?.dents.length ?? 0} amassado(s), hp ${n1(p?.hp ?? 0)}/${n1(p?.maxHp ?? 0)}`, `Sledgehammer on the bin: ${blows} blow(s), ${p?.status}, ${p?.dents.length ?? 0} dent(s), hp ${n1(p?.hp ?? 0)}/${n1(p?.maxHp ?? 0)}`), { blows })
     }),
 
     sc('bbq_blast_crumbles', T('Churrasqueira: uma explosão esfarela o tijolo e solta a argamassa', 'Barbecue: a blast crumbles the brick and frees the mortar'), ({ room, step, expect }) => {

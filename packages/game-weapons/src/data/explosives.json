@@ -404,5 +404,22 @@
       "lab",
       "derived"
     ]
+  },
+  {
+    "id": "vog_25",
+    "name": "VOG-25 40 mm grenade",
+    "kind": "fragmentation",
+    "lethalRadius": 4,
+    "injuryRadius": 12,
+    "energy": 102400,
+    "destructionLevel": 2,
+    "noise": 450,
+    "triggers": [
+      "impact"
+    ],
+    "sources": [
+      "lab",
+      "derived"
+    ]
   }
 ]

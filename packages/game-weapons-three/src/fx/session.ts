@@ -2,6 +2,7 @@ import type * as THREE_NS from 'three'
 import type { CartridgeDims, CaseType, WeaponDef } from '@adatechnology/game-weapons'
 import type { WeaponModel } from '../models'
 import type { CartridgeShape } from '../models/cartridge'
+import type { AttachmentRig } from '../models/attachments/fit'
 import type { ModelKit } from '../models/kit'
 import type { Effects } from './effects'
 import type { Particles } from './particles'
@@ -35,6 +36,9 @@ export interface Session {
   readonly cartridge: { dims: CartridgeDims; shape: CartridgeShape } | null
   stuckCase: THREE_NS.Object3D | null
   nextChamber: number
+  /** The accessories drawn on the model, and what was fitted when they were last synced (to see a change). */
+  attachments: AttachmentRig | null
+  attachmentsSignature: string
 }
 
 /** World position of a part of the model. */

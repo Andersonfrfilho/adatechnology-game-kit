@@ -284,6 +284,70 @@ Energia: nenhuma coluna de ARS está em joules; as proporções mostram que dano
 | GAL 856-860 | cabeça 3, mandíbula 2, pescoço 2, tronco/quadril 1, braço/antebraço/mão 0,6, coxa/canela/pé 0,7 | cabeça 40, mandíbula 12, pescoço 25, tronco 150, quadril 90, braço 45, antebraço 30, mão 12, coxa 55, canela 40, pé 15 | 11 segmentos; sangramento por região `BLEED` (pescoço 46, cabeça 40, coxa 19, braço 15...) |
 | JML `zDamage` 71337 | por categoria de zumbi `C.mult[]` (tronco, braço, perna); colete por classe `RO.colete`; capacete anula 1º tiro de pistola | `SEG` 66328: cabeça 40, braço 60, perna 80 | 7 regiões numeradas 0-5 |
 
+### 3.5 T1.7.5: armas, calibres, construtores e peças que o SDK criou (para o dono ver)
+
+Nada disto está nas páginas dos times como dado ou modelo (só os cinco "portados por citação" aparecem em uma linha de texto do ARS). Tudo vem de `tools/weapons-catalog/decisions.json` (`creations`, cada número com `source` e `reason`; REF com URL) e é gerado; nada foi escrito à mão nos JSON.
+
+| id | tipo | calibre | comp./cano (mm), massa (kg), cadência, pente | origem dos números |
+|---|---|---|---|---|
+| `hk_mp5sd3` | portada por citação | `9x19` | 805 / 146, 3.4, 700, 30 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: noise, reload |
+| `fn_parafal` | portada por citação | `7_62x51` | 1020 / 440, 4.0, 650, 20 | REF: barrel, capacity, length, rpm; derivado: emptyMass, muzzleSpeed, reload |
+| `taurus_t4_civil` | portada por citação | `5_56x45` | 878 / 406, 3.0, 120, 30 | REF: barrel, capacity; derivado: emptyMass, length, muzzleSpeed, reload, rpm |
+| `taurus_th380` | portada por citação | `380acp` | 165 / 90, 0.55, semi, 12+1 | REF: -; derivado: barrel, capacity, emptyMass, length, reload |
+| `mossberg_500_cruiser` | portada por citação | `12ga_00buck` | 720 / 470, 2.7, semi, 5+1 | REF: barrel, capacity; derivado: emptyMass, length, muzzleSpeed, reload, rpm |
+| `hk_mp5k` | criação | `9x19` | 325 / 115, 2.0, 900, 30/15 | REF: barrel, capacity, emptyMass, length, rpm; derivado: muzzleSpeed, reload |
+| `hk_ump9` | criação | `9x19` | 690 / 200, 2.3, 700, 30 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `mini_uzi` | criação | `9x19` | 600 / 197, 2.7, 950, 20/25/32 | REF: barrel, capacity, emptyMass, length, rpm; derivado: muzzleSpeed, reload |
+| `hk_mp7a1` | criação | `4_6x30` | 638 / 180, 1.9, 950, 40/20/30 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `hk_g36` | criação | `5_56x45` | 999 / 480, 3.63, 750, 30/100 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `hk_g36k` | criação | `5_56x45` | 860 / 318, 3.3, 750, 30/100 | REF: barrel, capacity, emptyMass, length, rpm; derivado: reload |
+| `hk_g36c` | criação | `5_56x45` | 720 / 228, 2.82, 750, 30/100 | REF: barrel, capacity, emptyMass, length, rpm; derivado: reload |
+| `fn_m249` | criação | `5_56x45` | 1040 / 465, 7.1, 850, 200/30 | REF: barrel, capacity, emptyMass, length; derivado: muzzleSpeed, reload, rpm |
+| `fn_minimi_para` | criação | `5_56x45` | 893 / 349, 7.1, 850, 200/30 | REF: barrel, capacity, length; derivado: emptyMass, muzzleSpeed, reload, rpm |
+| `fn_mag` | criação | `7_62x51` | 1263 / 630, 11.79, 750, 100 | REF: barrel, emptyMass, length, muzzleSpeed; derivado: capacity, reload, rpm |
+| `rpk` | criação | `7_62x39` | 1040 / 590, 4.8, 600, 40/75 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `sig_mpx` | criação | `9x19` | 610 / 203, 2.7, 850, 30/20/35 | REF: capacity, emptyMass, length, rpm; derivado: barrel, muzzleSpeed, reload |
+| `mg3` | criação | `7_62x51` | 1225 / 565, 11.5, 1100, 100 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `pp19_bizon` | criação | `9x18` | 660 / 195, 2.1, 680, 64 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `vz61` | criação | `32acp` | 517 / 115, 1.3, 850, 20/10 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `m134` | criação | `7_62x51` | 801 / 559, 39, 3000, 200 | REF: barrel, emptyMass, length, muzzleSpeed, rpm; derivado: capacity, reload, spin |
+
+**Portadas por citação (5)**: `hk_mp5sd3` (ARS §06 "versão SD"), `fn_parafal` (ARS §06, jogo, Vivos), `taurus_t4_civil` ("AR-15 civil", ARS §16, marca decidida pelo dono), `taurus_th380` (".380", ARS §16, marca decidida pelo dono) e `mossberg_500_cruiser` (ARS §06). **Criações (16)**: `hk_mp5k`, `hk_ump9`, `mini_uzi`, `hk_mp7a1`, `hk_g36`, `hk_g36k`, `hk_g36c`, `fn_m249`, `fn_minimi_para`, `fn_mag`, `rpk`, `sig_mpx`, `mg3`, `pp19_bizon`, `vz61` e `m134`.
+
+**Calibres criados (2)**: `4_6x30` (2,0 g, 735 m/s, estojo 8,0 mm, 30,5 mm, cartucho 38,5 mm, projétil 4,65 mm; REF Wikipedia/MP7A1) e `32acp` (4,6 g a 276 m/s, aro 9,1 mm, estojo 17,3 mm, cartucho 25,0 mm, projétil 7,94 mm; REF Wikipedia). Ruído 150 m nos dois, derivado da classe "médio" do ARS §04.
+
+**Construtores 3D criados (2, sem página de time, com golden próprio)**: o grupo de seis canos rotativos do `m134` (`src/models/m134.ts`; gira um sexto de volta por tiro) e o carregador helicoidal do `pp19_bizon` (`mag: 'helical'`, sob o cano). Mais o tripé do M134 na área de armas (três pernas, do tripé da M2 da Galeria).
+
+**Acessórios criados (2)**: `integral_suppressor` (MP5SD3, não sai) e `integral_optic_3x` (G36 e G36K, não sai).
+
+**Regras criadas**: `FirearmAction.spin` e `rpmRange` (canhão rotativo), o fator subsônico já nos números base de uma peça de fábrica subsônica (MP5SD3) e `gp25Mount` (GP-25 só em arma com a opção `ak`).
+
+### 3.6 T1.7.6 e T1.7.7: os modelos dos acessórios, a coronha e a bancada (o que é porte e o que é criação)
+
+Os acessórios do ARS §11 vieram só como texto; a geometria dos que a Galeria desenha é do time, os outros são criação do SDK (desenhados com as primitivas da Galeria e o `game-interactables-three`). Código em `packages/game-weapons-three/src/models/attachments/`; cada modelo é escolhido pelo campo `model` do acessório, e um jogo troca qualquer um por `attachmentModels`.
+
+| Acessório (`model`) | Origem | Como é desenhado | Golden |
+|---|---|---|---|
+| `red_dot`, `holographic_sight`, `acog_4x`, `scope_3_9x`, `scope_6_24x`, `pso_1`, `fixed_scope_10x` | **porte GAL** (`scope(1..4)`, linhas 169-245 da página) | a mesma função que o `rifle` usa, no quadro do trilho superior ou lateral; trilho curto (`rail()`) sob ela onde o topo não tem | do time: os 77 hashes (a arma que traz a óptica usa a função) e o teste que compara o acessório com `scope(kind)` nó a nó |
+| `night_vision_scope`, `thermal_scope` | porte GAL (`scope(3)`) + criação (cor da lente) | luneta longa com a lente verde ou laranja | idem |
+| `bipod` | **porte GAL** (`bipod` do `rifle`) | `buildBipod`, compartilhada com o `rifle` | do time (hashes) |
+| `muzzle_brake`, `muzzle_brake_heavy` | **porte GAL** (`brake` 1 e 2) | `buildBrake`, compartilhada com o `rifle` | do time (hashes) |
+| `drum_magazine` | **porte GAL** (`mag: 'drum'`) | `buildDrum` no pivô do carregador, que esconde o carregador da arma e se move na recarga | do time (hashes) |
+| `ammo_backpack` | **porte GAL** (caixa de fita) + criação | `buildBeltBox` na arma, mochila nas costas e correia de cartuchos em catenária (`catenary`/`createCord` do `game-interactables-three`); esconde a caixa da arma | próprio |
+| `suppressor`, `oil_filter_suppressor`, `integral_suppressor` | criação | tubo com chicanas do tamanho dos dados; o integral termina na boca e o encaixado a leva para a ponta | próprio |
+| `compensator`, `vertical_grip` | criação | tubo com fendas; braçadeira e cabo com nervuras | próprio |
+| `weapon_light` | criação | corpo, lente e um `SpotLight` real (cone e alcance dos dados); apagada até ligar | próprio |
+| `laser_sight` | criação | corpo, emissor, feixe e ponto; o ponto cai onde o raio da cena acaba | próprio |
+| `m203`, `gp_25`, `ag36` | criação (dados do TM 9-1010-221-10 e dos fabricantes) | carcaça e gatilho na arma e tubo de 40 mm no pivô `ugl`, que desliza na recarga | próprio |
+| `tripod` | criação (já desenhado na T1.7.5 para o M134 do balcão) | as mesmas três pernas, agora também nas mãos | próprio |
+| `sling` | criação | duas argolas e a correia numa catenária (cordão do `game-interactables-three`) | próprio |
+| `extended_magazine`, `dual_coupler` | criação | extensão sob o carregador; segundo carregador preso ao lado | próprio |
+| `sawn_off_barrel`, `long_barrel`, `integral_optic_1_5x`, `integral_optic_3x` | **não desenhados** | o cano é uma peça só no construtor e a óptica integral a arma já desenha | -- |
+
+**Coronha (`rigStock`)**: pivô `stock` montado depois da construção; dobra meio giro pelo lado do `foldAxis` (REF dos lados na T1.7.2) ou desliza `length - lengthCollapsed`. Clipes `stock_fold`, `stock_unfold`, `stock_collapse`, `stock_extend` (0,6 s por padrão; a regra dá a duração em jogo): movimento do SDK, a Galeria não anima coronha.
+
+**Bancada (T1.7.7)**: um campo por encaixe com só o que a regra aceita na arma na mão (o lançador só onde há o encaixe), teclas L, K, V e U, botão direito mira com zoom pela óptica encaixada; camadas, métricas e nomes em pt-BR e en. A página `interactables-test-area` carrega também o módulo de armas.
+
 ---
 
 ## 4. Destino por módulo
@@ -359,7 +423,7 @@ Não entra: dano por região do corpo, desmembramento, sangramento, raridade, ta
 3. Regras no motor (`reloadEmpty`, `perRound` no ferrolho, capacidade com câmara, pane, calor, durabilidade) + testes com semente (T1.4).
 4. Animação por família no `-three` (T1.4) e eventos novos no contrato de módulo.
 5. Lançadores e explosivos (T1.5), com os efeitos visuais ligados ao `game-vfx` quando existir.
-6. `weapons-test-area` com os controles novos (T1.7).
+6. `weapons-test-area` com os controles novos (T1.7): feito na T1.7.7 (bancada de acessórios, teclas L, K, V e U e botão direito para mirar).
 7. Itens (T3.x) só depois de responder D8 a D10.
 
 ---
@@ -386,7 +450,7 @@ Atualizado em 2026-10-23. O que do inventário acima já entrou, e onde. O resta
 | Modelos 3D, animação por família, ejeção, carregador, cartucho 3D | Não (T1.2 a T1.4); só o construtor da Galeria foi extraído para `models.json` | `packages/game-weapons-three/src/data/models.json` |
 | Área de armas com todas as armas | Não: mostra só os 42 arquétipos até a T1.3 | `packages/game-weapons-three/src/area.ts` |
 | Dano em pontos, PEN, dano por região, raridade (D4, D6) | Não, de propósito (calibragem do jogo) | |
-| Acessórios, supressor, durabilidade 0-100 (D13) | Não; o supressor é a sobrescrita `noise` da arma | |
+| Acessórios, supressor, durabilidade 0-100 (D13) | Sim (T1.7): acessórios com encaixes, coronha que dobra ou recolhe, supressor com ruído e calor, lança-granada sob o cano, mochila de munição; só o supressor improvisado quebra com os tiros, a durabilidade 0-100 geral continua fora | `src/attachment-*.ts`, `src/weapon-attachments.ts`, `packages/game-weapons-three/src/models/attachments/` |
 
 ## 8. Situação depois da T1.5
 

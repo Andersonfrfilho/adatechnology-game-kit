@@ -40,6 +40,20 @@ describe('toolAnimationStep', () => {
     expect(step({ type: 'safety', weapon: 'w', on: true })).toEqual({ type: 'play', clip: TOOL_CLIP.SAFETY_ON })
     expect(step({ type: 'safety', weapon: 'w', on: false })).toEqual({ type: 'play', clip: TOOL_CLIP.SAFETY_OFF })
   })
+
+  it('maps the stock to fold/unfold or collapse/extend by how it moves, and a light or laser to on/off', () => {
+    expect(step({ type: 'stock', weapon: 'w', state: 'collapsed', kind: 'fold', duration: 0.8 })).toEqual({ type: 'play', clip: TOOL_CLIP.STOCK, variant: 'fold', duration: 0.8 })
+    expect(step({ type: 'stock', weapon: 'w', state: 'extended', kind: 'fold_retract' })).toEqual({ type: 'play', clip: TOOL_CLIP.STOCK, variant: 'unfold' })
+    expect(step({ type: 'stock', weapon: 'w', state: 'collapsed', kind: 'retract' })).toEqual({ type: 'play', clip: TOOL_CLIP.STOCK, variant: 'collapse' })
+    expect(step({ type: 'stock', weapon: 'w', state: 'extended' })).toEqual({ type: 'play', clip: TOOL_CLIP.STOCK, variant: 'extend' })
+    expect(step({ type: 'toggle', weapon: 'w', attachment: 'weapon_light', on: true })).toEqual({ type: 'play', clip: TOOL_CLIP.TOGGLE, variant: 'on' })
+    expect(step({ type: 'toggle', weapon: 'w', attachment: 'weapon_light', on: false })).toEqual({ type: 'play', clip: TOOL_CLIP.TOGGLE, variant: 'off' })
+  })
+
+  it('has no motion for fitting an accessory or switching the under-barrel weapon (the host plays a sound)', () => {
+    expect(step({ type: 'attachment', weapon: 'w', action: 'fit', attachment: 'suppressor', mount: 'muzzle', duration: 2 })).toBeNull()
+    expect(step({ type: 'underbarrel', weapon: 'w', on: true })).toBeNull()
+  })
 })
 
 describe('scaleClip and sampleClip', () => {

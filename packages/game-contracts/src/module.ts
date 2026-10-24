@@ -71,7 +71,7 @@ export type HostEvent =
   /** The tool is put in hand; `duration` is the seconds the rule takes to ready it (absent: no draw time). */
   | { type: 'tool'; weapon: string; duration?: number }
   /** `shots` are projectiles (a shotgun shell is many), `rounds` the cartridges spent (a burst is several). */
-  | { type: 'shot'; weapon: string; shots: number; recoil: [number, number]; rounds?: number; mode?: string }
+  | { type: 'shot'; weapon: string; shots: number; recoil: [number, number]; rounds?: number; mode?: string; suppressed?: boolean }
   /** The trigger was pulled, the round was spent and nothing left the tool (a dud cartridge): no projectile, no recoil. */
   | { type: 'misfire'; weapon: string }
   /** `kind` is how the rule reloads (`tactical`, `empty`, `one_by_one`); `duration` the seconds of the whole reload, on `start`. */
@@ -92,6 +92,14 @@ export type HostEvent =
    * the fuse (`throw`), and holding past the fuse sets it off in the hand (`burst`, `fuse` 0).
    */
   | { type: 'cook'; weapon: string; phase: 'start' | 'throw' | 'burst'; fuse: number }
+  /** An accessory went on (`fit`), came off (`remove`) or broke (`break`) at `mount`; `duration` is the seconds the work takes, on `fit` and `remove`. */
+  | { type: 'attachment'; weapon: string; action: 'fit' | 'remove' | 'break'; attachment: string; mount: string; duration?: number }
+  /** A light or a laser was turned on or off. */
+  | { type: 'toggle'; weapon: string; attachment: string; on: boolean }
+  /** The stock was folded or slid in (`collapsed`) or opened (`extended`); `kind` is how it moves (`fold`, `retract`), `duration` the seconds it takes. */
+  | { type: 'stock'; weapon: string; state: 'collapsed' | 'extended'; kind?: string; duration?: number }
+  /** The weapon in hand changed between the main weapon and the one under its barrel (`on`: the under-barrel one is in use); `duration` is the seconds of the switch. */
+  | { type: 'underbarrel'; weapon: string; on: boolean; duration?: number }
   /** Something blew up: a thrown or launched explosive, a charge, or a part of the world (a fuel barrel); `source` is the weapon or the object, `cause` what set it off. */
   | { type: 'explosion'; source: string; point: Vec3; energy: number; radius: number; cause: string }
 
@@ -109,6 +117,41 @@ export interface HostTool {
   safety?: boolean
   /** 0..1 */
   heat?: number
+  /** What is on the tool (factory parts included): the accessory, where it sits, and whether a light or laser is on. */
+  attachments?: readonly HostToolAttachment[]
+  /** Where the stock is, for a tool with one that folds or slides. */
+  stock?: 'collapsed' | 'extended'
+  /** True while a suppressor is on: the shot sound is the muffled one. */
+  suppressed?: boolean
+  /** True while the trigger and the reload go to the launcher under the barrel. */
+  underbarrelActive?: boolean
+  /** Kg: the tool with what is on it. */
+  mass?: number
+  /** Seconds to bring the tool to the sights, with what is on it. */
+  aimSeconds?: number
+}
+
+export interface HostToolAttachment {
+  readonly id: string
+  readonly mount: string
+  readonly integral?: boolean
+  readonly on?: boolean
+}
+
+/** What a module asks of the tool in hand (accessories, stock, the launcher under the barrel, how it is held). The work takes the seconds the rule gives it and shows as host events. */
+export type ToolCommand =
+  | { readonly type: 'fit'; readonly attachment: string; readonly mount?: string }
+  | { readonly type: 'remove'; readonly attachment: string }
+  | { readonly type: 'toggle'; readonly attachment: string }
+  | { readonly type: 'stock'; readonly state: 'collapsed' | 'extended' }
+  | { readonly type: 'underbarrel'; readonly on: boolean }
+  | { readonly type: 'stance'; readonly aiming?: boolean; readonly supported?: boolean }
+
+/** `ok`, or why nothing happened (the rule's refusal: `no_mount`, `interface`, `occupied`, `busy`...); `seconds` is how long the work takes. */
+export interface ToolCommandResult {
+  readonly ok: boolean
+  readonly reason?: string
+  readonly seconds?: number
 }
 
 /**
@@ -134,6 +177,8 @@ export interface ModuleHost {
    * ones taken later start that way. A host applies the ids it knows and ignores the rest. The test room knows `condition` (how worn the tools are) and `ammo_quality` (how good what they load is).
    */
   configureTool?(settings: Readonly<Record<string, string>>): void
+  /** Asks the tool in hand to do something (see `ToolCommand`). A host without accessories leaves it out. */
+  command?(command: ToolCommand): ToolCommandResult
   /** Lent only to a module that declares controls, layers or metrics. */
   bench?: ModuleBench
 }

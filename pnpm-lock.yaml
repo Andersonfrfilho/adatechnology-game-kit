@@ -522,6 +522,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
+      '@adatechnology/game-interactables-three':
+        specifier: workspace:*
+        version: link:../game-interactables-three
       '@adatechnology/game-weapons':
         specifier: workspace:*
         version: link:../game-weapons
