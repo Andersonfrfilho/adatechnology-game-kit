@@ -1158,5 +1158,15 @@
       1.2
     ],
     "scale": 0.1
+  },
+  {
+    "id": "handsaw",
+    "teamId": "serrote",
+    "teamBox": [
+      5,
+      0.352,
+      1.3
+    ],
+    "scale": 0.1
   }
 ]
