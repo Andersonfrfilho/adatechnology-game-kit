@@ -114,5 +114,5 @@ All the texts the house shows are in `locales` (`en`, `pt-BR`): `prompt.*` (E: a
 
 ## What is not here
 
-- `AdaptadorInterativos` (plan to objects of the interactables kit) is game code by its own header. The `interactives` option takes the adapter from the game.
+- `AdaptadorInterativos` (plan to objects of the interactables kit) lives in `@adatechnology/game-floorplan-interactables` (spec 001, question 5) and is the default of the `interactives` option; a game can still inject its own with `interactives.adapter`.
 - The globals of the page (`Moveis3DSDK`, `FrotaLeve`, `Reflector`...) are options now.

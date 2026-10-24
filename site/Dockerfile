@@ -27,6 +27,7 @@ COPY packages/game-destruction-three/package.json packages/game-destruction-thre
 COPY packages/game-devtools/package.json packages/game-devtools/
 COPY packages/game-floorplan/package.json packages/game-floorplan/
 COPY packages/game-floorplan-commercial/package.json packages/game-floorplan-commercial/
+COPY packages/game-floorplan-interactables/package.json packages/game-floorplan-interactables/
 COPY packages/game-floorplan-post-apocalyptic/package.json packages/game-floorplan-post-apocalyptic/
 COPY packages/game-floorplan-residential/package.json packages/game-floorplan-residential/
 COPY packages/game-floorplan-rural/package.json packages/game-floorplan-rural/

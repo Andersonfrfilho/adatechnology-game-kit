@@ -8,6 +8,9 @@ import { register as registerPostApocalyptic } from '@adatechnology/game-floorpl
 import { register as registerResidential, residentialTemplateIds } from '@adatechnology/game-floorplan-residential'
 import { register as registerRural, ruralTemplateIds } from '@adatechnology/game-floorplan-rural'
 import { register as registerStructure } from '@adatechnology/game-floorplan-structure'
+import * as GameInteractables from '@adatechnology/game-interactables'
+import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
+import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
 import { FLOORPLAN_AREA_ID, createFloorplanTestModule } from '@adatechnology/game-floorplan-three'
 
 export { FLOORPLAN_AREA_ID, createFloorplanTestModule }
@@ -36,7 +39,8 @@ export const GROUPS = [
 /** The module for the room's locale (`?lang=en` or pt-BR); options replace or extend anything. */
 export function createModule(options = {}) {
   registerPacks()
-  return createFloorplanTestModule({ engine, groups: GROUPS, ...options })
+  // the houses are drawn with the interactables kit: the adapter that turns the plan into doors, drawers, appliances, sockets and lamps is the package's default (game-floorplan-interactables)
+  return createFloorplanTestModule({ engine, groups: GROUPS, ...options, house: { interactives: { GameInteractables, GameInteractablesHousehold, GameInteractablesThree }, ...options.house } })
 }
 
 /**

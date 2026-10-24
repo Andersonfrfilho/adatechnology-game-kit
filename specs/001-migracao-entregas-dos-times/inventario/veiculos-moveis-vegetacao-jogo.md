@@ -271,7 +271,7 @@ Legenda de "melhor": **SDK**, **ZombiAdA**, **igual**, **ausente** (só um lado 
 | Bancada de móveis interativos | bancada 3791-5696 | `examples/interactables-showroom` | **igual** | o código da página **é** o do SDK (5 linhas a menos) | manter SDK |
 | Área de móveis | area-moveis 3789-3848 | `examples/interactables-test-area` | **igual** (SDK mais novo) | a página é um build antigo do exemplo | manter SDK, atualizar o build da página |
 | Tipos de móvel | jogo: 39 tipos (bundle em modo-livre 35661) | household: 51 tipos | **SDK** | o jogo não tem cabana, campismo, beliche, poço, privada, fogão a lenha, lareira, cooler | atualizar o bundle do jogo |
-| Planta para objeto do kit | `AdaptadorInterativos` modo-livre 34747-35660 (`MAPA_TIPOS`) | `game-floorplan` e household, sem ponte | **ZombiAdA** | só o jogo sabe que `geladeira_med` é `fridge` variante `steel` | decidir (dúvida 3): ponte genérica `game-floorplan-interactables` ou fica no jogo |
+| Planta para objeto do kit | `AdaptadorInterativos` modo-livre 34747-35660 (`MAPA_TIPOS`) | `game-floorplan` e household, sem ponte | **ZombiAdA** | só o jogo sabe que `geladeira_med` é `fridge` variante `steel` | **decidido: ponte genérica `game-floorplan-interactables`, portada em 2026-10-24** (`TYPE_MAP` e demais tabelas são registros; o jogo troca ou tira entradas) |
 
 ### 3.3 Vegetação
 
@@ -370,7 +370,7 @@ então o método de geração está validado) e tratar a página como referênci
 2. **Horda: pacote próprio (`game-crowd`) ou dentro de `game-infection`?** Recomendo pacote próprio: `game-infection` é epidemia por região
    (horas, compartimentos); a horda é por agente (metros, segundos). A ponte já existe no contágio: `materialize(region, n)` entrega os infectados
    como sementes e `giveBack` os devolve.
-3. **Ponte planta para household** (`AdaptadorInterativos`): vira `game-floorplan-interactables` genérico ou continua código do jogo, como o cabeçalho diz?
+3. **Ponte planta para household** (`AdaptadorInterativos`): vira `game-floorplan-interactables` genérico ou continua código do jogo, como o cabeçalho diz? **Respondida (2026-10-24): virou `packages/game-floorplan-interactables`, genérico e configurável (evidence.md, seção "AdaptadorInterativos").**
 4. **Os fontes do gerador dos carros "assados"** (`veh/gen.py`, `veh/ext.mjs`, `veh/simp.mjs`) existem? O jogo ainda usa os 15 modelos da Garagem v3, e eles
    estão defasados em relação à v5. Se não existirem, o modo leve do SDK os substitui.
 5. **Condução**: o documento da frota pede semi-simulação com suspensão por raycast, e o jogo entrega arcade sem suspensão. O que entra no SDK, as duas
