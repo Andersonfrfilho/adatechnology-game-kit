@@ -17,6 +17,8 @@ the counters show; props lie flat, so they are seen from above), project it orth
 - Tracing: cell edges with the filled side on the right (a right turn at the corners where two cells only touch), then Douglas-Peucker. No geometry dependency.
 - Deterministic: same bytes every run (`tests/silhouette.test.ts` compares with the committed files). Each file is limited to 12 KB (about 2 KB in practice).
 
+Every weapon keeps its generated file, including the ones that have a Commons file: those generated files are not referenced by the manifest, they are the fallback the weapon goes back to when its Commons file is removed (see `LICENSE-NOTE.md`).
+
 ## Wikimedia Commons
 
 `scripts/` is the record of how the `commons/` files were chosen. Run from a scratch work folder, never inside the asset folder:
