@@ -1,6 +1,6 @@
 // Records a golden from a team page in headless Chrome (CDP) under a seeded, frozen-clock environment.
 // Usage: node bin/record.mjs --page <html> --capture <script.js> --out <golden.json> [--seed 1] [--param key=value]...
-//        [--ready "<expression>"] [--three <three.min.js>] [--addon <three example script>]... [--timeout-ms 90000]
+//        [--ready "<expression>"] [--three <three.min.js>] [--addon <three example script>]... [--expose name,name] [--timeout-ms 90000]
 // Needs `pnpm build` first (the bundle in dist/index.global.js is injected into the page). CHROME_BIN overrides the browser.
 import { spawn } from 'node:child_process'
 import { createServer } from 'node:http'
@@ -9,6 +9,8 @@ import { tmpdir } from 'node:os'
 import { basename, dirname, extname, join, normalize, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
+
+import { exposeInPage } from './expose-in-page.mjs'
 
 const TOOL_DIR = join(dirname(fileURLToPath(import.meta.url)), '..')
 const MIME_TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.css': 'text/css' }
@@ -28,6 +30,7 @@ const { values } = parseArgs({
     ready: { type: 'string', default: 'true' },
     three: { type: 'string' },
     addon: { type: 'string', multiple: true, default: [] },
+    expose: { type: 'string', default: '' },
     'timeout-ms': { type: 'string', default: '90000' },
   },
 })
@@ -37,6 +40,7 @@ for (const required of ['page', 'capture', 'out']) {
 const seed = Number(values.seed)
 if (!Number.isInteger(seed)) throw new Error(`--seed must be an integer, got "${values.seed}"`)
 const timeoutMs = Number(values['timeout-ms'])
+const exposedNames = values.expose.split(',').map((name) => name.trim()).filter(Boolean)
 const params = { seed, ...Object.fromEntries(values.param.map((entry) => [entry.split('=')[0], entry.slice(entry.indexOf('=') + 1)])) }
 
 // A published artifact page references its scripts relative to a folder with the page's own name; serve both under "/".
@@ -54,7 +58,8 @@ function startStaticServer(pagePath) {
     const candidates = urlPath === '/' ? [resolve(pagePath)] : [join(assetDir, relative), join(pageDir, relative)]
     const file = candidates.find((candidate) => existsSync(candidate) && statSync(candidate).isFile())
     if (!file) return response.writeHead(404).end()
-    response.writeHead(200, { 'content-type': MIME_TYPES[extname(file)] ?? 'application/octet-stream' }).end(readFileSync(file))
+    const content = urlPath === '/' && exposedNames.length > 0 ? exposeInPage(readFileSync(file, 'utf8'), exposedNames) : readFileSync(file)
+    response.writeHead(200, { 'content-type': MIME_TYPES[extname(file)] ?? 'application/octet-stream' }).end(content)
   })
   return new Promise((done) => server.listen(0, '127.0.0.1', () => done(server)))
 }
@@ -95,6 +100,7 @@ function createClient(socket, onEvent) {
         pending.delete(id)
         fail(new Error(`CDP ${method} got no answer in ${limitMs} ms`))
       }, limitMs)
+      timer.unref() // a call nobody awaits (Fetch answers) must not keep the process alive after the golden is written
       pending.set(id, (message) => {
         clearTimeout(timer)
         done(message)
@@ -126,17 +132,17 @@ function answerRequests(client, origin) {
   return (message) => {
     if (message.method !== 'Fetch.requestPaused') return
     const { requestId, request } = message.params
-    if (request.url.startsWith(origin)) return void client.send('Fetch.continueRequest', { requestId })
+    if (request.url.startsWith(origin)) return void client.send('Fetch.continueRequest', { requestId }).catch(() => {})
     const addon = addons.get(THREE_ADDON_URL.exec(request.url)?.[1] ?? '')
     if (addon) {
       const headers = [{ name: 'content-type', value: 'text/javascript' }]
-      return void client.send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: headers, body: addon })
+      return void client.send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: headers, body: addon }).catch(() => {})
     }
     if (threeSource && THREE_URL.test(request.url)) {
       const headers = [{ name: 'content-type', value: 'text/javascript' }]
-      return void client.send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: headers, body: threeSource })
+      return void client.send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: headers, body: threeSource }).catch(() => {})
     }
-    void client.send('Fetch.failRequest', { requestId, errorReason: 'BlockedByClient' })
+    void client.send('Fetch.failRequest', { requestId, errorReason: 'BlockedByClient' }).catch(() => {})
   }
 }
 

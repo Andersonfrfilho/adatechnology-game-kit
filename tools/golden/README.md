@@ -44,6 +44,7 @@ node tools/golden/bin/record.mjs \
 | `--ready` | expression that becomes truthy when the page has built what the capture needs |
 | `--three` | local three.js file served in place of the CDN URL; every other external request is refused, so recording is offline |
 | `--addon` | a three.js `examples/js` script (OrbitControls, RoundedBoxGeometry...) served in place of its jsDelivr URL; repeat for each one the page loads |
+| `--expose a,b,c` | for a page that keeps its functions inside an IIFE: the recorder adds, at the end of the page's last inline IIFE, accessors on `globalThis.GoldenExposed` (the getter reads the binding, the setter writes it, so a capture can also swap a `let`, for example the page's seeded random). A `const` can be read but not assigned. Use it in the `--ready` expression too (`GoldenExposed.sobrado`) |
 
 Before any page script runs, the recorder installs the seeded environment: `Math.random` is seeded, `Date.now` and `performance.now`
 are frozen and only move through `advance`, and `requestAnimationFrame` is queued and only runs when the capture calls
@@ -78,6 +79,36 @@ capture beside it: `packages/game-vehicles-fleet/tests/team-golden.test.ts` and 
 
 Keep the capture and the SDK test symmetric: the same states, the same events, the same seed. Content that only the game adds
 (for example blood) is left out of the page capture with `--param`, as `gameOnlyFlags` does, because it lives in the game repository.
+
+## Captures of the effects pages (spec 001, T5.0)
+
+All three use `--expose` (see the flag above), the three.js r128 build and OrbitControls from `node_modules/.pnpm/three@0.128.0/node_modules/three`
+(`--three $T/build/three.min.js --addon $T/examples/js/controls/OrbitControls.js`), and silence `renderer.render`, so a run takes seconds.
+Fixtures are staged in `specs/001-migracao-entregas-dos-times/goldens/` until the package that consumes them exists, then the task that
+builds the package moves them to `packages/<package>/tests/fixtures/team-golden/`. Every one was recorded twice on Node 22 and Node 24 and
+came out identical byte for byte.
+
+| Capture | Page | Fixture (consumer) | `--expose` |
+|---|---|---|---|
+| `explosion-lab.js` | Laboratório de Explosões (`artefatos/XHSLUfNEdzAqGrqVQCWifG.html`) | `explosion-lab.json` (`game-vfx`, `game-vfx-three`) | `blast,PROF,P,S,GL,CH,FIRES,SHOCKS,RINGS,XL,FL,layers,clearAll,seed,simT,clock,xlIdx,decalY,camera,lodNow,renderFicha,profOf,ORDER,SC,applyCam,stage,WINDOWS,U,pA,pD,pC,evCount,shakeAmp,flashV,flashDecay,puff,spark,glow,chunk,fire,shock,boomLight,scorch,crater,mushroom,updateRings,updatePuffs,updateSparks,updateGlows,updateShocks,updateChunks,updateBodies,updateFires,updateBlood,updateZombies,updateLights` |
+| `vfx-workshop.js` (`--param mode=effects`) | Oficina de VFX (`artefatos/LhJANM9RPMxWKS1ZXCzQ56.html`) | `vfx-workshop.json` (`game-vfx` recipes) | `FX,select,pr,auto,renderer,addP,norP,streak,DB,DC,RG,LP,S,debris,decal,ring,flash,fLaunch,fh,fdry` |
+| `vfx-workshop.js` (`--param mode=fluids`) | same | `vfx-workshop-fluids.json` (`game-fluids` film, `WORKSHOP_LAYOUT`) | same |
+| `fluid-standard.js` | Padrão de Fluidos (`artefatos/XnjUUwx8fq5oQdDGvEq4Nv.html`) | `fluid-standard.json` (`game-fluids` film, `PADRAO_LAYOUT`) | `h,dry,renderer,speed,sk,runN,setFluid,runScene,launch,SKEYS,FKEYS` |
+
+What each one records:
+
+- **Lab**: per scene, a camera at the scene's own position, the page seed `1000 + index * 97`, `blast` called directly (the throw physics, the
+  zombies and the building windows are left out, so the random stream only carries the explosion), 480 frames of 1/60 s with the page's update
+  functions in the page's order. Events: `scene` (camera, the sheet's `#mPv` number), `after_blast` (LOD, counts, shake, flash, seed), `spawns`
+  (the first 400 spawner calls, `frame kind numbers`, rounded to 4 decimals), `frames` (live counts per frame), `layers` (first and last frame each
+  layer is alive), `instant` at 0.08, 0.25, 0.5, 1, 2 and 4 s (hash of every pool state, the shock meshes, the lights, a hash of the persistent
+  meshes, the first and last puff buffer rows) and `end`.
+- **Workshop**: every catalogue effect except rain, fog, headlights and the film (36 entries in the page) once per parameter option, with
+  `Math.random` replaced by a counted stream seeded from the id and option. Events: `spawns` (the first 300 spawner calls with the number of
+  random draws made so far), `frames` (pool counts per frame) and `instant` (pool hashes and the screen state at 0.1, 0.5, 1, 2 s and the end of the loop).
+  The film capture records the thickness and dryness hashes, wet cells and launches at 0.5, 1, 2, 5 and 10 s for the 4 fluids.
+- **Fluid Standard**: 5 scenes x 5 fluids with the page's seed formula (`runN` = 0) at speed x20: hashes of `h` and `dry`, wet cells and
+  launches at 0.5, 1, 2, 5 and 10 s.
 
 ## Hashes must not depend on the Node version
 
