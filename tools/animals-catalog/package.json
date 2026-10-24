@@ -1,0 +1,23 @@
+{
+  "name": "@adatechnology/animals-catalog-tool",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Animals catalog tool: reads the Bichos do Vale delivery (SPECIES, SPEC, GAIT, ORDER, the infection rule) and writes the data of game-animals and game-animals-species as plain JSON, plus the game slice for the zombiada repository, with a --check that fails when the generated files are stale.",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "catalog": "node dist/cli.js",
+    "catalog:check": "node dist/cli.js --check",
+    "catalog:game": "node dist/cli.js --game-out"
+  },
+  "devDependencies": {
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}
