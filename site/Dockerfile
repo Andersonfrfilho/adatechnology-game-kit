@@ -32,6 +32,7 @@ COPY packages/game-vehicles/package.json packages/game-vehicles/
 COPY packages/game-vehicles-fleet/package.json packages/game-vehicles-fleet/
 COPY packages/game-weapons/package.json packages/game-weapons/
 COPY packages/game-weapons-three/package.json packages/game-weapons-three/
+COPY packages/game-weather/package.json packages/game-weather/
 COPY tools/golden/package.json tools/golden/
 COPY tools/weapon-thumbnails/package.json tools/weapon-thumbnails/
 COPY tools/weapons-catalog/package.json tools/weapons-catalog/

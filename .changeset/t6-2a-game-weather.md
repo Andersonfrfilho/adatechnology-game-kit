@@ -1,0 +1,5 @@
+---
+'@adatechnology/game-weather': minor
+---
+
+Initial release (0.1.0): pure, seeded weather. Ten states with the numbers of the teams' pages and a `sources` list each (`clear`, `overcast`, `light_rain`, `heavy_rain`, `storm`, `fog`, `windy`, plus the physics presets `cyclone`, `typhoon` and `extreme_heat`), and two climates, `temperate` (default, no extremes) and `tropical`, that start `clear` (the normal world first). A seeded Markov scheduler in game time (2 to 6 hours per state, 10 game minutes of blend, fronts from the west), lightning on its own stream (2 to 4 s to the first strike, then 3.5 to 6 s, the Workshop's double flash, thunder at `distance / 343` s), ground wetness that is dry 180 s after the rain stops, gameplay effects (`visibility`, `sightScale`, `hearingScale`, `footstepScale`), the NOAA heat index with `heatStress`, and the game's day-night formula. A registry with add, patch and remove by id, a `timeline` that gives plain JSON for goldens, and `ESM` plus the `GameWeather` global.
