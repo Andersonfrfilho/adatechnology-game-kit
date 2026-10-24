@@ -1,5 +1,37 @@
 # @adatechnology/game-destruction-three
 
+## 0.3.1
+
+### Patch Changes
+
+- 76ae86f: Chain reaction of explosives (A11). A part with `explodes.chain` is set off by a bullet, fire or a blast within reach and explodes after the delay of that trigger (fixed or drawn from the seed); the world emits `primed` and then `explode`, a part goes off once, blasts resolve in order of time and the delays count from the blast that armed the part, so the timeline does not depend on the `dt` of `update`. `explosivePart(explosive, part)` builds the part from an `ExplosiveDef` of `game-weapons` (fuel barrel, car tank, propane, pump, station tank). A bullet or a blast that would have destroyed such a part now arms it instead. `game-destruction-three` draws the fire of a part primed by a shot or fire.
+- Updated dependencies [04929d4]
+- Updated dependencies [76ae86f]
+- Updated dependencies [d10c7f7]
+- Updated dependencies [a569662]
+- Updated dependencies [b3a5d99]
+- Updated dependencies [9666008]
+- Updated dependencies [9666008]
+- Updated dependencies [f4da1a6]
+- Updated dependencies [c0fcb62]
+- Updated dependencies [85ac930]
+  - @adatechnology/game-destruction@0.4.0
+  - @adatechnology/game-contracts@0.5.0
+
+## 0.3.0
+
+### Minor Changes
+
+- 1920f22: `DestructionRenderer.explode(point, energy, radius)` draws a blast that has no exploding part (flash, fire, smoke, light, sound and a shove on pieces in range). `world.explode` emits no event, so a grenade used to leave only debris; the test room now calls the new method when a thrown explosive detonates.
+
+  `explode` is a new **required** member of the `DestructionRenderer` interface: any implementer of the interface (a custom renderer, a test double) must add it.
+
+### Patch Changes
+
+- Updated dependencies [71fb367]
+  - @adatechnology/game-contracts@0.4.0
+  - @adatechnology/game-destruction@0.3.2
+
 ## 0.2.1
 
 ### Patch Changes
