@@ -2369,9 +2369,130 @@ Controles: clima (os 10 estados, nomes em pt-BR e en), transição (de uma vez o
   `blast_fragments`.
 - Vigas e pilares (pedido do dono na mesma sessão): `tests/beams-and-columns.test.ts` cruza calibres reais de `game-weapons` com pilar e viga de
   concreto armado, viga I de aço, viga de madeira e pilar de tijolo. Correções, todas por opção ou valor e sem tocar nos goldens: `Hit.piercing`
-  (chumbo mole não fura 8,5 mm de aço só pela energia), `breach.blastReach` (padrão **desligado**; o valor realista é 0,12 m por raiz cúbica de kJ:
-  ligado, o `gas_explodes` do golden `house-scenarios` muda, então a decisão de ligar e regravar é do dono) e `damageScale.shelter: 3` no vidro
+  (chumbo mole não fura 8,5 mm de aço só pela energia), `breach.blastReach` (padrão **desligado**; o valor realista é 0,12 m por raiz cúbica de kJ; **removida em 2026-10-24**, ver "Decisões do dono de 2026-10-24" abaixo) e `damageScale.shelter: 3` no vidro
   (valor novo no JSON de materiais, sem efeito fora do abrigo).
+
+### Decisões do dono de 2026-10-24 (física)
+
+**1. Tanque de combustível realista.** Dono: "depende, na vida real se receber um tiro quais possibilidades de explodi-lo". Bala comum que fura tanque de veículo ou recipiente inflamável (`contains` com `gas` ou
+`fuel`: galão, botijão) **vaza e não explode sozinha**. Para acender precisa de uma fonte: faísca de munição dura em metal, incendiária ou traçante, fogo perto ou explosão. Aceso, corre o fogo e a explosão de sempre.
+- Antes: `game-vehicles/src/destructible/impl.ts` aquecia o tanque ao ponto de ignição com qualquer acerto de energia acima de 1500 J (linha `E > 1500`, removida); o mundo genérico só acendia por calor (350 °C).
+- Contratos (`game-contracts/src/ignition.ts`): `IgnitionRules` (lado do recipiente) e `ignitionChance`. Padrões: curva de enchimento `[0,0.6] [0.1,1] [0.35,0.6] [0.65,0.3] [0.9,0.15] [1,0.12]`
+  (cheio fica rico demais para queimar e só vaza; quase vazio acende mais; a chama sente metade da curva, `flameFillInfluence 0.5`), faísca por material (aço e ferro 1, alumínio 0,25, outro metal 0,5, não metal 0),
+  diesel com 0,15 da faísca (ponto de fulgor de 52 °C ou mais), fogo perto a 1,5 m com 0,5 por segundo, chama padrão de quem manda só a marca (incendiária 0,7, traçante 0,2).
+- Munição (`game-weapons`, `rules.ignition`, lido de `ammo.json`): faísca = 1 - (1 - núcleo)(1 - jaqueta). Núcleo: chumbo 0,005, chumbo com ponta de aço 0,04, aço 0,12, aço temperado 0,25, carbeto de tungstênio 0,25, cobre 0,01.
+  Jaqueta: metal dourado 0,005, cobre 0,005, latão 0,01, aço 0,08. Chama: incendiária 0,7, traçante 0,2. Resultado: 7.62x51 M80 (chumbo, metal dourado) 1%; 7.62x39 M43 e 5.45x39 7N6 (aço e aço) 19%; M993 e M2 AP 25%.
+  Fonte: não existe tabela pública de ignição por cartucho; são números do kit (modelo), na ordem de grandeza da literatura de vulnerabilidade de tanques (bala comum raramente acende, perfurante incendiária acende), para o jogo ajustar.
+- Medido com 500 tiros semeados no tanque de 55 L do `proto` (`game-vehicles/tests/tank-ignition.test.ts`), % que acende, cheio / meio / 10%: M80 0 / 0,2 / 1; 7.62x39 M43 2,2 / 9 / 19; 5.45x39 7N6 2,2 / 9 / 19; M993 AP 3,2 / 11,4 / 24,8;
+  7.62x51 traçante 11,4 / 14,8 / 20,8; .50 BMG M8 API 40 / 56 / 80. A incendiária cheia dá 40% e não 70% por causa da curva (0,7 x (1 - 0,5 x 0,88)); vazio a 10% dá 80%.
+- Testes: 100 tiros M80 num tanque cheio de aço vazam e acendem no máximo 2 vezes; núcleo de aço e AP acendem mais que M80; tanque quase vazio acende mais de 2 vezes o cheio; incendiária acende na taxa configurada; vazamento ao lado de um pneu
+  em chamas acende em menos de 4 s (o tanque inteiro, sem vazamento, só esquenta bem depois: 18 s); explosão perto acende. Mesmo roteiro no mundo genérico (`game-destruction/tests/ignition.test.ts`, galão de aço e de plástico: plástico nunca faísca).
+- Efeitos (`game-vfx`): `vehicle_leak` agora é só a poça e o pingar (passos `decal` e `emit` da Garagem sem o fogo e a explosão) e a sequência inteira (faísca, fogo pela poça, explosão aos 7,2 s) é `vehicle_leak_ignited`, pedida
+  pelo `game-vehicles-three` quando o tanque pega fogo (`defaultEffectIds.leakIgnited`). Nível do tanque: opção nova `fuel` (0 a 1) do `createVehicleDestructible`.
+- Goldens: nenhum arquivo de golden mudou por este item.
+
+**3. Correção da granada sempre ligada.** Dono: "Correção da granada já ligada não deveria nem ter dois caminhos já que é correção." A opção
+`breach.blastReach` e o padrão `Infinity` saíram; os 0,12 m por raiz cúbica de kJ são a física (constante nomeada `BREACH_BLAST_REACH` em `world.ts`).
+Golden regravado com `UPDATE_GOLDEN=1 vitest run tests/wall-golden.test.ts`: só mudou o cenário `gas_explodes` de `house-scenarios.json` (3 eventos a menos:
+o `fracture`, o `debris` e o `stage 3` da janela). A janela fica a ~2,3 m do botijão (60 kJ alcançam 0,47 m), então ela deixa de
+estourar pela brecha da explosão; o estilhaço e o dano da explosão continuam. Os outros cinco cenários não mudaram. Testes de pilar/viga perdem a opção
+e o caso "sem a opção".
+
+**2. Pilares: a sustentação é a soma dos pilares.** Resposta do dono à pergunta 1 da T2.6: "deve ser ajustada nas configs; às vezes ficaria melhor tipo 4 pilares e a sustentação é a soma dos 4".
+- Diagnóstico (script no navegador, sala real, `house_two_pillars` com os dois pilares do time): o solver já soma. A laje reparte a carga entre os apoios que restam e cai
+  quando a capacidade que sobra é menor que a carga (teste novo em `structure.test.ts`: 4 pilares dimensionados a 0,72/0,97, perde 1 e fica a 0,9; perde 2 e passa de 1,1 e cai).
+  O que segurava a casa era o **dimensionamento** e a **carga que some**: com `safety 0,65` os 4 pilares ficam a 0,65 em repouso; perdidos 2, os outros 2 iriam a 1,3, mas a cascata
+  de peças que caem arranca as divisórias do andar de cima na hora (junta `thrown`, 0,5 s) e a carga cai ~27%: os 2 pilares ficam parados a 0,95 e a laje a 0,33 (na sala; fora
+  da sala, no mundo puro, a casa caía). Parcelas iguais: nenhuma peça menor (placas, vigas) leva carga, só os pilares.
+- Configuração exposta: capacidade da peça (`structure.capacity` ou `MaterialDef.compressive` × seção), `sizeStructure({ safety, redundancy })`, opção nova do mundo
+  `structure: { safetyFactor }` (padrão 1; tensão = carga × fator / capacidade) e `SpecimenDef.sizing` no `game-floorplan-three`.
+- O pórtico da área (`house_casa_portico`) passa a ser dimensionado a `safety 0,72` e `redundancy 0,97` (um pilar perdido deixa os outros a 0,96, dois passam de 1 mesmo com a carga
+  que some). Com os dois pilares do time a laje e o telhado caem na sala real (`floorplan-test-area/test.mjs`, pt-BR e en). O roteiro estendido do módulo saiu.
+- Goldens: nenhum mudou por este item (o solver não mudou; a opção nova vale 1). O golden `vc3-house-area.json` do time compara só ids, checagens e eventos de sentido.
+
+**4. Tabela de penetração por calibre em `game-weapons`.** O dono pediu que cada calibre e tipo de munição traga massa, energia e penetração em aço, concreto, tijolo e madeira, e que o motor
+de destruição não conheça nomes de calibre.
+- Onde: `packages/game-weapons/src/data/ammo.json` (50 cargas, id `<calibre>:<tipo>`), `arsenal.loadOf(calibre, tipo?)`, `weapon.setAmmoKind(tipo)`, opções `ammo`/`patch.ammo`/`remove.ammo`.
+  O `Shot` leva `ammo`, `mass`, `penetration`, `incendiary`, `tracer`; `shotToHit`/`shotExtras` (contratos) escalam a penetração pela energia que sobra e põem em `Hit.penetration`.
+- Motor: lê `Hit.penetration` por classe de material (`MaterialDef.penetrationClass`/`penetrationScale`, em `materials.json`: aço estrutural 1,3 contra o RHA das tabelas, madeira mole 1,5,
+  alumínio 3...); sem tabela vale a regra da energia com `Hit.piercing`. `PIERCING_BY_KIND`, `PIERCING_BY_CALIBER` e `piercingOf` saíram do `game-destruction`.
+- Fonte dos números: **um** valor publicado (7,62x51 M993 AP: 18 mm RHA a 100 m, 7 mm a 500 m; página do produto da Nammo); o resto é **estimativa** minha a partir de ordens de grandeza
+  publicadas (bola 4 a 6 mm de RHA, núcleo de aço 6 a 8, AP 10 a 22, .50 BMG bola cerca de 14), da energia e da construção. Cada carga diz `basis: 'published' | 'estimated'` e as notas
+  do arquivo explicam. Concreto, tijolo e madeira não têm fonte citada: pergunta ao dono abaixo.
+- Tabela do arquivo (`ammo.json`):
+
+| Load | kind | g | m/s | J | core / jacket | steel mm | concrete mm | brick mm | wood mm | basis |
+|---|---|---|---|---|---|---|---|---|---|---|
+| .22 LR lead round nose | rimfire | 2.6 | 350 | 159 | lead / none | 1.4 | 12 | 25 | 60 | estimated |
+| .380 ACP FMJ | fmj | 6.2 | 295 | 270 | lead / gilding_metal | 2.2 | 20 | 40 | 80 | estimated |
+| 9x18 Makarov FMJ | fmj | 6.1 | 315 | 303 | lead / steel | 2.6 | 22 | 45 | 85 | estimated |
+| 9x19 FMJ 124 gr | fmj | 7.5 | 365 | 500 | lead / gilding_metal | 3 | 25 | 50 | 80 | estimated |
+| 9x19 JHP | hp | 7.5 | 365 | 500 | lead / gilding_metal | 2 | 15 | 35 | 55 | estimated |
+| .40 S&W FMJ | fmj | 11.7 | 310 | 562 | lead / gilding_metal | 3 | 28 | 55 | 85 | estimated |
+| .45 ACP FMJ 230 gr | fmj | 14.9 | 254 | 481 | lead / gilding_metal | 2.8 | 28 | 55 | 85 | estimated |
+| .45 ACP JHP | hp | 14.9 | 254 | 481 | lead / gilding_metal | 1.8 | 18 | 40 | 60 | estimated |
+| 5.7x28 SS190 | fmj | 2 | 715 | 511 | lead_steel / gilding_metal | 4 | 25 | 50 | 100 | estimated |
+| .38 Special lead round nose | fmj | 10.2 | 247 | 311 | lead / none | 2 | 20 | 40 | 70 | estimated |
+| .357 Magnum JHP | hp | 10.2 | 396 | 800 | lead / gilding_metal | 3 | 25 | 45 | 90 | estimated |
+| .44 Magnum FMJ | fmj | 15.6 | 440 | 1510 | lead / gilding_metal | 4 | 40 | 70 | 150 | estimated |
+| .50 AE FMJ | fmj | 19.4 | 470 | 2143 | lead / gilding_metal | 4 | 38 | 65 | 130 | estimated |
+| 12 ga 00 buck (one pellet) | buck | 3.5 | 414 | 300 | lead / none | 0.8 | 10 | 25 | 60 | estimated |
+| 12 ga rifled slug | slug | 28 | 463 | 3001 | lead / none | 4 | 60 | 100 | 250 | estimated |
+| 12 ga birdshot (one pellet) | birdshot | 0.2 | 400 | 16 | lead / none | 0.2 | 3 | 8 | 20 | estimated |
+| 20 ga buck (one pellet) | buck | 1.3 | 400 | 104 | lead / none | 0.6 | 8 | 20 | 50 | estimated |
+| 5.56x45 M855 (steel tip, lead core) | fmj | 4 | 935 | 1748 | lead_steel / gilding_metal | 4.5 | 90 | 180 | 280 | estimated |
+| 5.45x39 7N6 (steel core) | fmj | 3.4 | 900 | 1377 | steel / steel | 5.5 | 90 | 180 | 280 | estimated |
+| 7.62x39 M43 (steel core) | fmj | 8 | 725 | 2102 | steel / steel | 6.5 | 110 | 220 | 300 | estimated |
+| .30-30 Winchester flat nose | fmj | 9.7 | 670 | 2177 | lead / gilding_metal | 3 | 80 | 160 | 250 | estimated |
+| 7.62x51 M80 ball | fmj | 9.7 | 850 | 3504 | lead / gilding_metal | 5 | 120 | 250 | 330 | estimated |
+| 7.62x54R LPS (steel core) | fmj | 9.6 | 865 | 3591 | steel / steel | 6.5 | 130 | 260 | 330 | estimated |
+| .30-06 M1 ball | fmj | 9.7 | 880 | 3756 | lead / gilding_metal | 5.5 | 130 | 260 | 340 | estimated |
+| .300 Win Mag FMJ | fmj | 11.7 | 900 | 4738 | lead / gilding_metal | 6.5 | 150 | 290 | 360 | estimated |
+| .338 Lapua Magnum FMJ | fmj | 16.2 | 903 | 6605 | lead / gilding_metal | 8 | 190 | 360 | 450 | estimated |
+| .408 CheyTac solid | fmj | 27.2 | 900 | 11016 | copper / none | 12 | 250 | 450 | 550 | estimated |
+| Arrow (steel broadhead) | arrow | 25 | 90 | 101 | steel / none | 0.5 | 5 | 15 | 100 | estimated |
+| Crossbow bolt | bolt | 20 | 122 | 149 | steel / none | 0.8 | 8 | 20 | 120 | estimated |
+| 4.6x30 DM11 | fmj | 2 | 735 | 540 | steel / gilding_metal | 3.5 | 25 | 50 | 100 | estimated |
+| .32 ACP FMJ | fmj | 4.6 | 276 | 175 | lead / gilding_metal | 1.8 | 15 | 30 | 60 | estimated |
+| 9x19 tracer | tracer | 7.5 | 365 | 500 | lead / gilding_metal | 2.8 | 22 | 45 | 75 | estimated |
+| 5.56x45 M995 AP (tungsten carbide) | ap | 3.6 | 1013 | 1847 | tungsten_carbide / gilding_metal | 10 | 110 | 210 | 300 | estimated |
+| 5.56x45 M856 tracer | tracer | 3.95 | 914 | 1650 | lead / gilding_metal | 3.5 | 80 | 160 | 260 | estimated |
+| 5.45x39 7T3M tracer | tracer | 3.4 | 900 | 1377 | lead / steel | 4 | 80 | 160 | 260 | estimated |
+| 7.62x39 BZ API | incendiary | 7.7 | 720 | 1996 | hardened_steel / steel | 8 | 110 | 220 | 300 | estimated |
+| 7.62x39 T-45 tracer | tracer | 8 | 725 | 2102 | lead / steel | 4.5 | 100 | 200 | 280 | estimated |
+| 7.62x51 M993 AP (tungsten carbide) | ap | 8.2 | 930 | 3546 | tungsten_carbide / gilding_metal | 18 | 160 | 300 | 360 | published |
+| 7.62x51 M62 tracer | tracer | 9.7 | 850 | 3504 | lead / gilding_metal | 4 | 110 | 230 | 320 | estimated |
+| 7.62x54R 7N37 AP | ap | 9.6 | 865 | 3591 | hardened_steel / steel | 11 | 140 | 270 | 340 | estimated |
+| 7.62x54R B-32 API | incendiary | 10 | 830 | 3445 | hardened_steel / steel | 10 | 130 | 260 | 330 | estimated |
+| 7.62x54R T-46 tracer | tracer | 9.6 | 865 | 3591 | lead / steel | 4.5 | 110 | 220 | 300 | estimated |
+| .30-06 M2 AP (hardened steel) | ap | 10.8 | 860 | 3994 | hardened_steel / gilding_metal | 10 | 140 | 270 | 340 | estimated |
+| .30-06 M25 tracer | tracer | 9.7 | 880 | 3756 | lead / gilding_metal | 4 | 110 | 230 | 320 | estimated |
+| .338 Lapua AP (tungsten) | ap | 16.2 | 903 | 6605 | tungsten_carbide / gilding_metal | 16 | 200 | 380 | 470 | estimated |
+| .50 BMG M33 ball | fmj | 42 | 925 | 17968 | lead_steel / gilding_metal | 14 | 330 | 560 | 600 | estimated |
+| .50 BMG M2 AP (hardened steel) | ap | 42 | 925 | 17968 | hardened_steel / gilding_metal | 22 | 350 | 580 | 600 | estimated |
+| .50 BMG M8 API | incendiary | 42 | 925 | 17968 | hardened_steel / gilding_metal | 18 | 340 | 570 | 600 | estimated |
+| .50 BMG M17 tracer | tracer | 42 | 925 | 17968 | lead / gilding_metal | 9 | 300 | 520 | 580 | estimated |
+| 12 ga incendiary shell (one pellet, magnesium) | incendiary | 3.5 | 414 | 300 | none / none | 0.1 | 3 | 8 | 15 | estimated |
+
+- Resultado contra vigas e pilares (`tests/beams-and-columns.test.ts`, "results table", lê a tabela acima; `PRINT_TABLE=1` imprime). Um tiro no meio de cada elemento, a 3 m:
+
+| Munição | Energia (J) | aço (mm) | concreto (mm) | tijolo (mm) | madeira (mm) | pilar CA 30 cm | viga CA | viga I aço 8,5 mm | viga madeira 10 cm | pilar tijolo 40 cm |
+|---|---|---|---|---|---|---|---|---|---|---|
+| .22 LR lead round nose | 159 | 1.4 | 12 | 25 | 60 | não | não | não | não | não |
+| 9x19 FMJ 124 gr | 500 | 3 | 25 | 50 | 80 | não | não | não | não | não |
+| .45 ACP FMJ 230 gr | 481 | 2.8 | 28 | 55 | 85 | não | não | não | não | não |
+| 5.56x45 M855 (steel tip, lead core) | 1748 | 4.5 | 90 | 180 | 280 | não | não | não | sim | não |
+| 5.56x45 M995 AP (tungsten carbide) | 1847 | 10 | 110 | 210 | 300 | não | não | sim | sim | não |
+| 7.62x39 M43 (steel core) | 2103 | 6.5 | 110 | 220 | 300 | não | não | não | sim | não |
+| 7.62x51 M80 ball | 3504 | 5 | 120 | 250 | 330 | não | não | não | sim | não |
+| 7.62x51 M993 AP (tungsten carbide) | 3546 | 18 | 160 | 300 | 360 | não | não | sim | sim | não |
+| .50 BMG M33 ball | 17968 | 14 | 330 | 560 | 600 | sim | sim | sim | sim | sim |
+| .50 BMG M2 AP (hardened steel) | 17968 | 22 | 350 | 580 | 600 | sim | sim | sim | sim | sim |
+| 12 ga rifled slug | 3001 | 4 | 60 | 100 | 250 | não | não | não | sim | não |
+| 12 ga 00 buck (one pellet) | 300 | 0.8 | 10 | 25 | 60 | não | não | não | não | não |
+
+  Lê-se: a bola M80 (7,62x51) não fura a mesa de 8,5 mm da viga I e a M993 AP fura; a .50 BMG M33 (bola) fura o pilar de concreto armado de 30 cm; 5,56 e 7,62 de bola furam a
+  viga de madeira de 10 cm e não furam o tijolo de 40 cm nem o concreto. Os goldens do mundo (`wall-golden`, `house-scenarios`) não mudam: nenhum usa `Hit.penetration`.
 
 ## T2.4
 
@@ -2436,7 +2557,7 @@ Módulo de teste das casas, exemplo e goldens contra o VC3 (T2.6a-c). Branch `wo
 - `?arena=` (14 a 200) na página da sala: a arena padrão (14 m) é pequena para uma casa de 12 m e uma fileira.
 - Os andares de cima são alcançados por teletransporte do olho (`up`/`down`); o jogador da sala não tem altura de piso e as escadas não são andadas.
 - O grupo pós-apocalíptico lista só `triage_tent`; os estados `fortified` e `abandoned` valem para as outras tipologias.
-- `house_two_pillars` usa o pórtico com a casa `townhouse` (a `single_storey_a` segura a laje nas divisórias) e, na sala, derruba os pilares seguintes até a laje cair: com o desenhista ligado, dois pilares deixam os outros a 0,95 de tensão e a laje a 0,45 e nada cai. As checagens são as do time; só o roteiro de golpes foi estendido.
+- `house_two_pillars` usa o pórtico com a casa `townhouse` (a `single_storey_a` segura a laje nas divisórias). ~~Na sala, derruba os pilares seguintes até a laje cair~~ **[2026-10-24: resolvido, ver "Decisões do dono de 2026-10-24 (física)", item 2; o roteiro estendido saiu e o cenário roda com os dois pilares do time.]**
 - Contagens de ticks de dano diferem do mundo do time; só os eventos de sentido e as checagens são comparados.
 - Pós-fix, a tank d'água vaza 500 L para 496 L em 40 s com um tiro de 600 J (calibre 9).
 

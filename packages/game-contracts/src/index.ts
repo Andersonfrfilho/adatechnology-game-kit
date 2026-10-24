@@ -22,7 +22,9 @@ export type {
   Fragment,
   FragmentMark,
   FractureStyle,
+  BallisticExtras,
   Hit,
+  HitIgnition,
   HitResult,
   Hole,
   JointKind,
@@ -50,7 +52,9 @@ export { MISSING_BITS } from './body'
 export type { BodyRegion, BodySlot, SegmentKind } from './body'
 export { checkSpec } from './spec'
 export type { CheckSpecOptions, SpecReport } from './spec'
-export { shotToHit } from './weapons'
+export { shotToHit, shotExtras } from './weapons'
+export { DEFAULT_IGNITION_RULES, fillFactor, ignitionChance, resolveIgnitionRules, sparkTargetFactor } from './ignition'
+export type { IgnitionRules } from './ignition'
 export type { Shot, Use } from './weapons'
 export type { ContainerSpec, ItemUseDef, LiquidId } from './fluids'
 export type { EffectHandle, EffectRequest, EffectSink } from './effects'

@@ -1,3 +1,4 @@
+import { AMMO, resolveLoad } from './ammo'
 import attachmentsJson from './data/attachments.json'
 import { applyPatches, deepMerge, mergeById, removeIds } from '@adatechnology/game-contracts'
 import archetypesJson from './data/archetypes.json'
@@ -13,7 +14,7 @@ import { resolveStrings } from './locale'
 import { resolveThrowables } from './registry'
 import { DEFAULT_RULES } from './rules'
 import type { AttachmentDef, FittedAttachment, MountKind, WeaponSnapshot } from './attachment-types'
-import type { Arsenal, ArsenalOptions, CaliberDef, CaliberId, ExplosiveDef, WeaponCategory, WeaponDef, WeaponId, WeaponState } from './types'
+import type { AmmoKind, Arsenal, ArsenalOptions, CaliberDef, CaliberId, ExplosiveDef, WeaponCategory, WeaponDef, WeaponId, WeaponState } from './types'
 import { createExplosiveBody } from './explosive-body'
 import { muzzleEnergy, WeaponRuntime } from './weapon'
 
@@ -62,15 +63,18 @@ const dropOrphanLaunchers = (attachments: Map<string, AttachmentDef>, weapons: R
 export const createArsenal = (options: ArsenalOptions = {}): Arsenal => {
   const calibers = mergeById(CALIBERS, options.calibers)
   const explosives = mergeById(EXPLOSIVES, options.explosives)
+  const ammo = mergeById(AMMO, options.ammo)
   const weapons = mergeById(WEAPONS, options.weapons)
   const attachments = mergeById(ATTACHMENTS, options.attachments)
   applyPatches(calibers, options.patch?.calibers)
   applyPatches(explosives, options.patch?.explosives)
+  applyPatches(ammo, options.patch?.ammo)
   applyPatches(attachments, options.patch?.attachments)
   resolveThrowables(weapons, explosives)
   applyPatches(weapons, options.patch?.weapons)
   removeIds(calibers, options.remove?.calibers)
   removeIds(explosives, options.remove?.explosives)
+  removeIds(ammo, options.remove?.ammo)
   removeIds(attachments, options.remove?.attachments)
   removeIds(weapons, options.remove?.weapons)
   if (options.include) for (const [id, def] of weapons) if (!options.include(def)) weapons.delete(id)
@@ -81,8 +85,9 @@ export const createArsenal = (options: ArsenalOptions = {}): Arsenal => {
     ...findDuplicateIds('calibre', options.calibers),
     ...findDuplicateIds('weapon', options.weapons),
     ...findDuplicateIds('explosive', options.explosives),
+    ...findDuplicateIds('ammo', options.ammo),
     ...findDuplicateIds('attachment', options.attachments),
-    ...checkArsenal({ weapons, calibers, explosives, attachments, rules }),
+    ...checkArsenal({ weapons, calibers, explosives, attachments, ammo, rules }),
   ]
   if (problems.length > 0) throw new Error(`game-weapons: the arsenal is not consistent:\n${problems.map((problem) => `  - ${problem}`).join('\n')}`)
 
@@ -90,20 +95,21 @@ export const createArsenal = (options: ArsenalOptions = {}): Arsenal => {
   const baseSeed = options.seed ?? 1
   let counter = 0
 
-  const create = (id: WeaponId, opts: { seed?: number; reserve?: number; condition?: string; ammoQuality?: string; snapshot?: WeaponSnapshot } = {}): WeaponState => {
+  const create = (id: WeaponId, opts: { seed?: number; reserve?: number; condition?: string; ammoQuality?: string; ammoKind?: AmmoKind; snapshot?: WeaponSnapshot } = {}): WeaponState => {
     const def = weapons.get(id)
     if (!def) throw new Error(`game-weapons: unknown weapon "${id}"`)
     const caliber = def.action.kind === 'firearm' ? calibers.get(def.action.caliber) ?? null : null
     counter += 1
     const seed = opts.seed ?? (baseSeed + Math.imul(counter, 0x9e3779b1)) >>> 0
     const explosive = explosiveOf(def, explosives)
-    return new WeaponRuntime({ def, caliber, seed, reserve: opts.reserve, rules, explosive, condition: opts.condition, ammoQuality: opts.ammoQuality, attachments, isCompatible: options.isCompatible, snapshot: opts.snapshot, makeUnderbarrel: (launcherId, launcherSeed, launcherSnapshot) => create(launcherId, { seed: launcherSeed, snapshot: launcherSnapshot }) })
+    return new WeaponRuntime({ def, caliber, seed, reserve: opts.reserve, rules, explosive, condition: opts.condition, ammoQuality: opts.ammoQuality, ammoKind: opts.ammoKind, ammo, attachments, isCompatible: options.isCompatible, snapshot: opts.snapshot, makeUnderbarrel: (launcherId, launcherSeed, launcherSnapshot) => create(launcherId, { seed: launcherSeed, snapshot: launcherSnapshot }) })
   }
 
   return {
     calibers,
     weapons,
     explosives,
+    ammo,
     attachments,
     rules,
     create,
@@ -117,7 +123,14 @@ export const createArsenal = (options: ArsenalOptions = {}): Arsenal => {
       return canFitAttachment(def, part, fitted, { caliber, catalogue: attachments, isCompatible: options.isCompatible }, opts.mount as MountKind | undefined)
     },
     restore(snapshot, opts = {}) {
-      return create(snapshot.id, { seed: opts.seed, reserve: snapshot.reserve, condition: snapshot.condition, ammoQuality: snapshot.ammoQuality, snapshot })
+      return create(snapshot.id, { seed: opts.seed, reserve: snapshot.reserve, condition: snapshot.condition, ammoQuality: snapshot.ammoQuality, ammoKind: snapshot.ammoKind as AmmoKind | undefined, snapshot })
+    },
+    loadOf(caliber, kind) {
+      const c = calibers.get(caliber)
+      if (!c) throw new Error(`game-weapons: unknown calibre "${caliber}"`)
+      const load = resolveLoad(c, ammo, kind)
+      if (!load) throw new Error(`game-weapons: no ammo "${caliber}:${kind ?? c.kind ?? ''}" in the table`)
+      return load
     },
     muzzleEnergy(caliber, barrel = 1) {
       const c = calibers.get(caliber)

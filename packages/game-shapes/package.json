@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-shapes",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Renderer-agnostic 3D shape generator: a JSON shape schema (primitives, extrusions, lathes, cheap booleans, transforms, groups, named parts, materials by id, LOD rules, instancing hints) in, typed-array buffers per material out. Pure, deterministic by seed, worker friendly and cacheable; the generators are bit-exact ports of three.js r160.",
   "keywords": [

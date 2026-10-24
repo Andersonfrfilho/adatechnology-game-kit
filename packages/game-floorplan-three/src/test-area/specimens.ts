@@ -4,10 +4,11 @@ import type { FloorplanEngineLike, SpecimenDef } from './types.js'
 
 /**
  * The five items of the team's house area (sala-de-testes/area-casas): a frame house, a whole house, a wood-frame house, a log cabin and a tent. The team's frame house is its single-storey house A; here it is the
- * two-storey townhouse, because the ceiling slab of the single-storey plan keeps standing on its bearing partitions when two pillars go (see evidence, T2.6).
+ * two-storey townhouse, because the ceiling slab of the single-storey plan keeps standing on its bearing partitions when two pillars go (see evidence, T2.6). The frame house is sized for four pillars that carry
+ * the slab together (`sizing`): one lost leaves the other three at 0.96 of their capacity, two lost overload the rest (owner, 2026-10-24: "4 pilares e a sustentação é a soma dos 4").
  */
 export const DEFAULT_SPECIMENS: readonly SpecimenDef[] = [
-  { id: 'house_casa_portico', template: 'townhouse', seed: 1, portico: true },
+  { id: 'house_casa_portico', template: 'townhouse', seed: 1, portico: true, sizing: { safety: 0.72, redundancy: 0.97 } },
   { id: 'house_casa_inteira', template: 'single_storey_a', seed: 1 },
   { id: 'house_casa_wood_frame', template: 'wood_frame_house', seed: 1 },
   { id: 'house_casa_tronco', template: 'log_cabin', seed: 1 },
@@ -35,13 +36,13 @@ const cache = new WeakMap<object, Map<string, SpecimenSpec>>()
 export function specimenSpec(THREE: any, engine: FloorplanEngineLike, def: SpecimenDef, houseOptions: Partial<HouseRendererOptions> = {}): SpecimenSpec {
   let byId = cache.get(THREE)
   if (!byId) cache.set(THREE, (byId = new Map()))
-  const key = `${def.id}|${def.template}|${def.seed ?? 1}|${def.state ?? 'normal'}|${def.portico ? 'p' : ''}`
+  const key = `${def.id}|${def.template}|${def.seed ?? 1}|${def.state ?? 'normal'}|${def.portico ? 'p' : ''}|${def.sizing ? JSON.stringify(def.sizing) : ''}`
   let made = byId.get(key)
   if (!made) {
     const plan = engine.generate(def.template, { seed: def.seed ?? 1, ...(def.state ? { state: def.state } : {}) })
     // no world: the house is drawn only to describe its structure and thrown away
     const house = create(THREE, { ...houseOptions, destruction: undefined, destructionRenderer: undefined, interactives: undefined, vegetation: undefined, fleet: null }).build(plan, { quality: 'game', terrain: false, noPerimeter: true })
-    const spec = house.structure.spec({ wallDetail: 'coarse', ...(def.portico ? { portico: true } : {}) })
+    const spec = house.structure.spec({ wallDetail: 'coarse', ...(def.portico ? { portico: true } : {}), ...(def.sizing ?? {}) })
     house.dispose()
     made = { spec, plan }
     byId.set(key, made)

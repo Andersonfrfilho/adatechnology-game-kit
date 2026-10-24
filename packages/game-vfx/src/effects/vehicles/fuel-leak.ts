@@ -46,3 +46,20 @@ export const FUEL_LEAK: EffectDef = {
     ]),
   ],
 }
+
+/**
+ * The same leak without the fire and the explosion: the pool of petrol spreading under the car and the drips from the hole, for as long as it plays. The steps
+ * are the page's own (`decal` of the pool, `emit` of the drips); the spark of the shot and everything from `BOOM_AT` on (the fire running to the tank, the
+ * blast) are left out. A normal bullet only does this; when the leak catches fire the vehicle asks for the full `fuel_leak` sequence (`vehicle_leak_ignited`).
+ */
+export const FUEL_LEAK_ONLY: EffectDef = {
+  id: 'fuel_leak_only',
+  pageId: 'vazamento',
+  team: 'vehicles',
+  budget: { particles: 200, lights: 0 },
+  loop: 11,
+  view: FUEL_LEAK.view,
+  setup: FUEL_LEAK.setup,
+  timeline: [decal(POOL[0], 0, POOL[2], 2.2, 0x1f2230, { grow: 3, life: 60, ar: 0.6, fluid: 'oil' })],
+  tick: [emit('drip', 'normal', 12, { p: TANK, box: [0.05, 0, 0.05], sp: 0, life: 1, size: 0.03, c0: 0x5a5a7a, a: 0.9, g: 9.8, fi: 0, gnd: 1 })],
+}

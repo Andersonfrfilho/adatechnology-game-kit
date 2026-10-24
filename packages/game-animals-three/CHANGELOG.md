@@ -1,5 +1,12 @@
 # @adatechnology/game-animals-three
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [e29f38d]
+  - @adatechnology/game-props3d@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

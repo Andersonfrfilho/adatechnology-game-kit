@@ -100,6 +100,91 @@ The generic archetypes:
 
 `DEFAULT_LOADOUT` lists a starter kit of 19 ids. Pass `calibers` / `weapons` / `explosives` to `createArsenal` to add or override entries by id.
 
+## Ammo table: construction and penetration
+
+`AMMO` (`src/data/ammo.json`, 50 loads) says, per calibre and kind of round (`fmj`, `hp`, `ap`, `buck`, `slug`, `birdshot`, `rimfire`, `arrow`, `bolt`,
+`incendiary`, `tracer`; id `<caliber>:<kind>`), what the projectile is made of (`core`, `jacket`, `tracer`, `incendiary`), its mass and speed when they differ from
+the calibre's (an armour-piercing core is lighter and faster) and how many millimetres of **steel** (RHA-equivalent), **concrete**, **brick** and
+**wood** (dry hardwood) it goes through at close range and normal incidence. Every calibre ships with the load of its own `kind`. The numbers are
+documented in the `_notes` of the file: one anchor is a manufacturer figure (7.62x51 M993 AP: 18 mm RHA at 100 m, Nammo) and the rest are estimates
+from published orders of magnitude, muzzle energy and construction, each marked `basis: 'estimated'`; refine any entry with `ArsenalOptions.ammo` / `patch.ammo`.
+
+- `arsenal.loadOf(caliber, kind?)` returns `{ def, kind, grams, speed, energy, penetration }`; `weapon.setAmmoKind('ap')` (or `create(id, { ammoKind })`) loads another
+  kind, the next `Shot` carries `ammo`, `mass`, `energy`, `penetration`, `incendiary` and `tracer` of that load, and `snapshot()` keeps it.
+- The shot's `penetration` is what a damage model reads: `shotToHit(shot, point)` / `shotExtras(shot, distance)` of `@adatechnology/game-contracts` scale it by the energy
+  left at the distance and put it in `Hit.penetration`, which `game-destruction` compares with the thickness of the part (it reads no calibre names).
+- Add, change or remove loads without touching the code: `createArsenal({ ammo: [...], patch: { ammo: { '7_62x51:fmj': { penetration: { steel: 7 } } } }, remove: { ammo: [...] } })`.
+  `checkArsenal` reports a load of an unknown calibre, a missing penetration, or a calibre whose own kind has no entry.
+
+| Load | kind | g | m/s | J | core / jacket | steel mm | concrete mm | brick mm | wood mm | basis |
+|---|---|---|---|---|---|---|---|---|---|---|
+| .22 LR lead round nose | rimfire | 2.6 | 350 | 159 | lead / none | 1.4 | 12 | 25 | 60 | estimated |
+| .380 ACP FMJ | fmj | 6.2 | 295 | 270 | lead / gilding_metal | 2.2 | 20 | 40 | 80 | estimated |
+| 9x18 Makarov FMJ | fmj | 6.1 | 315 | 303 | lead / steel | 2.6 | 22 | 45 | 85 | estimated |
+| 9x19 FMJ 124 gr | fmj | 7.5 | 365 | 500 | lead / gilding_metal | 3 | 25 | 50 | 80 | estimated |
+| 9x19 JHP | hp | 7.5 | 365 | 500 | lead / gilding_metal | 2 | 15 | 35 | 55 | estimated |
+| .40 S&W FMJ | fmj | 11.7 | 310 | 562 | lead / gilding_metal | 3 | 28 | 55 | 85 | estimated |
+| .45 ACP FMJ 230 gr | fmj | 14.9 | 254 | 481 | lead / gilding_metal | 2.8 | 28 | 55 | 85 | estimated |
+| .45 ACP JHP | hp | 14.9 | 254 | 481 | lead / gilding_metal | 1.8 | 18 | 40 | 60 | estimated |
+| 5.7x28 SS190 | fmj | 2 | 715 | 511 | lead_steel / gilding_metal | 4 | 25 | 50 | 100 | estimated |
+| .38 Special lead round nose | fmj | 10.2 | 247 | 311 | lead / none | 2 | 20 | 40 | 70 | estimated |
+| .357 Magnum JHP | hp | 10.2 | 396 | 800 | lead / gilding_metal | 3 | 25 | 45 | 90 | estimated |
+| .44 Magnum FMJ | fmj | 15.6 | 440 | 1510 | lead / gilding_metal | 4 | 40 | 70 | 150 | estimated |
+| .50 AE FMJ | fmj | 19.4 | 470 | 2143 | lead / gilding_metal | 4 | 38 | 65 | 130 | estimated |
+| 12 ga 00 buck (one pellet) | buck | 3.5 | 414 | 300 | lead / none | 0.8 | 10 | 25 | 60 | estimated |
+| 12 ga rifled slug | slug | 28 | 463 | 3001 | lead / none | 4 | 60 | 100 | 250 | estimated |
+| 12 ga birdshot (one pellet) | birdshot | 0.2 | 400 | 16 | lead / none | 0.2 | 3 | 8 | 20 | estimated |
+| 20 ga buck (one pellet) | buck | 1.3 | 400 | 104 | lead / none | 0.6 | 8 | 20 | 50 | estimated |
+| 5.56x45 M855 (steel tip, lead core) | fmj | 4 | 935 | 1748 | lead_steel / gilding_metal | 4.5 | 90 | 180 | 280 | estimated |
+| 5.45x39 7N6 (steel core) | fmj | 3.4 | 900 | 1377 | steel / steel | 5.5 | 90 | 180 | 280 | estimated |
+| 7.62x39 M43 (steel core) | fmj | 8 | 725 | 2102 | steel / steel | 6.5 | 110 | 220 | 300 | estimated |
+| .30-30 Winchester flat nose | fmj | 9.7 | 670 | 2177 | lead / gilding_metal | 3 | 80 | 160 | 250 | estimated |
+| 7.62x51 M80 ball | fmj | 9.7 | 850 | 3504 | lead / gilding_metal | 5 | 120 | 250 | 330 | estimated |
+| 7.62x54R LPS (steel core) | fmj | 9.6 | 865 | 3591 | steel / steel | 6.5 | 130 | 260 | 330 | estimated |
+| .30-06 M1 ball | fmj | 9.7 | 880 | 3756 | lead / gilding_metal | 5.5 | 130 | 260 | 340 | estimated |
+| .300 Win Mag FMJ | fmj | 11.7 | 900 | 4738 | lead / gilding_metal | 6.5 | 150 | 290 | 360 | estimated |
+| .338 Lapua Magnum FMJ | fmj | 16.2 | 903 | 6605 | lead / gilding_metal | 8 | 190 | 360 | 450 | estimated |
+| .408 CheyTac solid | fmj | 27.2 | 900 | 11016 | copper / none | 12 | 250 | 450 | 550 | estimated |
+| Arrow (steel broadhead) | arrow | 25 | 90 | 101 | steel / none | 0.5 | 5 | 15 | 100 | estimated |
+| Crossbow bolt | bolt | 20 | 122 | 149 | steel / none | 0.8 | 8 | 20 | 120 | estimated |
+| 4.6x30 DM11 | fmj | 2 | 735 | 540 | steel / gilding_metal | 3.5 | 25 | 50 | 100 | estimated |
+| .32 ACP FMJ | fmj | 4.6 | 276 | 175 | lead / gilding_metal | 1.8 | 15 | 30 | 60 | estimated |
+| 9x19 tracer | tracer | 7.5 | 365 | 500 | lead / gilding_metal | 2.8 | 22 | 45 | 75 | estimated |
+| 5.56x45 M995 AP (tungsten carbide) | ap | 3.6 | 1013 | 1847 | tungsten_carbide / gilding_metal | 10 | 110 | 210 | 300 | estimated |
+| 5.56x45 M856 tracer | tracer | 3.95 | 914 | 1650 | lead / gilding_metal | 3.5 | 80 | 160 | 260 | estimated |
+| 5.45x39 7T3M tracer | tracer | 3.4 | 900 | 1377 | lead / steel | 4 | 80 | 160 | 260 | estimated |
+| 7.62x39 BZ API | incendiary | 7.7 | 720 | 1996 | hardened_steel / steel | 8 | 110 | 220 | 300 | estimated |
+| 7.62x39 T-45 tracer | tracer | 8 | 725 | 2102 | lead / steel | 4.5 | 100 | 200 | 280 | estimated |
+| 7.62x51 M993 AP (tungsten carbide) | ap | 8.2 | 930 | 3546 | tungsten_carbide / gilding_metal | 18 | 160 | 300 | 360 | published |
+| 7.62x51 M62 tracer | tracer | 9.7 | 850 | 3504 | lead / gilding_metal | 4 | 110 | 230 | 320 | estimated |
+| 7.62x54R 7N37 AP | ap | 9.6 | 865 | 3591 | hardened_steel / steel | 11 | 140 | 270 | 340 | estimated |
+| 7.62x54R B-32 API | incendiary | 10 | 830 | 3445 | hardened_steel / steel | 10 | 130 | 260 | 330 | estimated |
+| 7.62x54R T-46 tracer | tracer | 9.6 | 865 | 3591 | lead / steel | 4.5 | 110 | 220 | 300 | estimated |
+| .30-06 M2 AP (hardened steel) | ap | 10.8 | 860 | 3994 | hardened_steel / gilding_metal | 10 | 140 | 270 | 340 | estimated |
+| .30-06 M25 tracer | tracer | 9.7 | 880 | 3756 | lead / gilding_metal | 4 | 110 | 230 | 320 | estimated |
+| .338 Lapua AP (tungsten) | ap | 16.2 | 903 | 6605 | tungsten_carbide / gilding_metal | 16 | 200 | 380 | 470 | estimated |
+| .50 BMG M33 ball | fmj | 42 | 925 | 17968 | lead_steel / gilding_metal | 14 | 330 | 560 | 600 | estimated |
+| .50 BMG M2 AP (hardened steel) | ap | 42 | 925 | 17968 | hardened_steel / gilding_metal | 22 | 350 | 580 | 600 | estimated |
+| .50 BMG M8 API | incendiary | 42 | 925 | 17968 | hardened_steel / gilding_metal | 18 | 340 | 570 | 600 | estimated |
+| .50 BMG M17 tracer | tracer | 42 | 925 | 17968 | lead / gilding_metal | 9 | 300 | 520 | 580 | estimated |
+| 12 ga incendiary shell (one pellet, magnesium) | incendiary | 3.5 | 414 | 300 | none / none | 0.1 | 3 | 8 | 15 | estimated |
+
+## Ignition: what a round does to a fuel tank
+
+A normal bullet that goes through a fuel tank, a jerrycan or a gas bottle makes a **leak** and does not set it alight by itself. `rules.ignition` gives each round the
+chances that it supplies a flame, built from its construction in the ammo table, and they travel in `Shot.ignition` and `Hit.ignition` (`{ spark, flame }`, plus the
+flags `incendiary` and `tracer`); the damage model rolls them against the container (see "Ignition of a leak" in `game-destruction`).
+
+- **Spark** (only against steel): the chance of the `core` and the chance of the `jacket` are independent, `spark = 1 - (1 - core) x (1 - jacket)`.
+  Defaults, `rules.ignition.core`: lead 0.005, lead_steel (steel tip or insert) 0.04, steel 0.12, hardened_steel 0.25, tungsten_carbide 0.25, copper 0.01, none 0;
+  `rules.ignition.jacket`: gilding_metal 0.005, copper 0.005, brass 0.01, steel 0.08, none 0. So a lead round in a copper jacket (7.62x51 M80) gives about 1 percent, a
+  steel core in a steel jacket (7.62x39 M43, 5.45x39 7N6) about 19 percent and an armour-piercing core (M993, M2 AP) about 25 percent: all of that before the fill of the tank
+  weighs on it (a full tank keeps 12 percent of it).
+- **Flame** (any wall): `rules.ignition.flame.incendiary` 0.7 and `.tracer` 0.2. An incendiary composition or a burning tracer base lights the vapour without a spark.
+- `ammoIgnition(ammoDef, rules.ignition)` computes the pair for any load; `createArsenal({ rules: { ignition: { core: { steel: 0.3 }, flame: { tracer: 0 } } } })` changes any number.
+- No public per-cartridge table of the ignition of a fuel tank exists: the numbers are the kit's model (owner decision, 2026-10-24), with the order of magnitude of the
+  fuel-tank vulnerability literature (ball ammunition rarely lights a tank, armour-piercing incendiary does), meant to be tuned per game.
+
 ## Explosives, launchers and flamethrowers
 
 A trigger pull on a launcher returns a `throw` use (the rocket: `explosive`, `trigger: 'impact'`, `armDistance`, speed in `velocity`) and, when the launcher has one, a
@@ -174,14 +259,14 @@ it goes back off when another tool is taken. The laser measures its distance at 
 ## API
 
 - `createArsenal(options?)` returns an `Arsenal`: `calibers`, `weapons`, `explosives` (maps), `rules`, `create(id, { seed?, reserve?, condition?, ammoQuality? })` (unknown id throws), `attachments`, `canFit(weapon, attachment, options?)`, `restore(snapshot, options?)`,
-  `muzzleEnergy(caliberId, barrel?)`, `energy(weaponId)`, `name(id)` (weapon, explosive, fire mode, category, fault, condition or calibre, translated), `list(category?)`.
+  `ammo` (map), `loadOf(caliberId, kind?)`, `muzzleEnergy(caliberId, barrel?)`, `energy(weaponId)`, `name(id)` (weapon, explosive, fire mode, category, fault, condition or calibre, translated), `list(category?)`.
   Options: `calibers`, `weapons`, `explosives`, `patch`, `remove`, `include`, `rules`, `strings`, `seed`, `locale`.
 - `WeaponState`: `def`, `caliber`, `ammo`, `capacity`, `reserve`, `mode`, `reloading`, `locked`, `phase`, `fault`, `clearing`, `safety`, `heat`, `heatLevel`, `condition`,
   `ammoQuality`, `spread`, `trigger(origin, direction, dt, held?, source?)`, `release(origin?, direction?)`, `draw()`, `reload(kind?)`, `cycleMode()`, `setSafety(on)`, `clearFault()`,
-  `setCondition(id)`, `setAmmoQuality(id)`, `setFuseLength(metres)`, `cooking`, `attachments`, `mass`, `aimSeconds`, `suppressed`, `stock`, `canFit`, `fit`, `remove`, `toggle`, `setStock`, `setStance`, `snapshot`, `update(dt)`, `refill()`, `drain()`. `release(origin?, direction?)` returns the throw of a cooked grenade (null for anything else).
-- `Shot`: `origin`, `direction`, `energy` (J), `caliber` (mm), `caliberId`, `speed`, `energyAt(distance)` (energy × speed factor², drag per 100 m), `pellet`, `weapon`, `source`.
+  `setCondition(id)`, `setAmmoQuality(id)`, `setAmmoKind(kind)`, `ammoKind`, `setFuseLength(metres)`, `cooking`, `attachments`, `mass`, `aimSeconds`, `suppressed`, `stock`, `canFit`, `fit`, `remove`, `toggle`, `setStock`, `setStance`, `snapshot`, `update(dt)`, `refill()`, `drain()`. `release(origin?, direction?)` returns the throw of a cooked grenade (null for anything else).
+- `Shot`: `origin`, `direction`, `energy` (J), `caliber` (mm), `caliberId`, `speed`, `mass`, `energyAt(distance)` (energy × speed factor², drag per 100 m), `pellet`, `weapon`, `source`, `ammo`, `penetration`, `incendiary`, `tracer`.
 - `Use`: `melee`, `flame`, `heat`, `throw`, `tool`, `extinguish`, `hand`. `TriggerResult`: `shots`, `uses`, `status` (`ok`, `empty`, `reloading`, `cooldown`, `no_fuel`, `safe`, `drawing`, `fault`, `misfire`, `clearing`, `busy`), `recoil`, `noise`, `rounds`, `roundTimes`, `fault?`, `suppressed?`.
-- `muzzleEnergy(caliber, barrel?)`, `CALIBERS`, `WEAPONS`, `EXPLOSIVES`, `ARCHETYPE_IDS`, `DEFAULT_LOADOUT`, `DEFAULT_RULES`, `RELOAD_STAGES`, `checkArsenal`, `locales`, `resolveStrings`.
+- `muzzleEnergy(caliber, barrel?)`, `AMMO`, `ammoId`, `resolveLoad`, `CALIBERS`, `WEAPONS`, `EXPLOSIVES`, `ARCHETYPE_IDS`, `DEFAULT_LOADOUT`, `DEFAULT_RULES`, `RELOAD_STAGES`, `checkArsenal`, `locales`, `resolveStrings`.
 
 Locales: `en` and `pt-BR` (`locale` option; unknown falls back to `en`). Calibre labels are technical names and are not translated.
 

@@ -152,7 +152,8 @@ describe('weapons test area', () => {
     }
     const after = room.world.part(target?.objectId ?? '', 'body')
     expect(after?.status).not.toBe('intact')
-    expect(after?.holes.length).toBeGreaterThan(0)
+    // a .50 ball has about 20 mm of steel in it (see the ammo table), so it dents the 6 cm solid body that stands for the gun instead of drilling it
+    expect((after?.holes.length ?? 0) + (after?.dents.length ?? 0)).toBeGreaterThan(0)
   })
 
   it('lays the weapons T1.7.5 added on the counters like the others, all on four columns of counters at most', () => {

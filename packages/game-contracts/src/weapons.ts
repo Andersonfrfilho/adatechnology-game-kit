@@ -1,4 +1,4 @@
-import type { Hit, Vec3 } from './destruction'
+import type { BallisticExtras, Hit, HitIgnition, Vec3 } from './destruction'
 
 /**
  * A ballistic shot (one per pellet) as a weapon module produces it. Plain data: any damage model can consume it (`shotToHit` makes the `Hit`).
@@ -23,6 +23,33 @@ export interface Shot {
   /** snake_case weapon id. */
   weapon: string
   source?: string
+  /** Kind of the round that was loaded (`fmj`, `hp`, `ap`, `buck`, `slug`, `incendiary`, `tracer`...). */
+  ammo?: string
+  /** Millimetres of steel, concrete, brick and wood the round goes through at the muzzle (the ammo table of the weapons module). `shotToHit` scales it by the energy left. */
+  penetration?: Readonly<Record<string, number>>
+  incendiary?: boolean
+  tracer?: boolean
+  /** Chances that the round lights flammable vapour or fuel. */
+  ignition?: HitIgnition
+}
+
+/**
+ * The fields of the round that a damage model takes besides the geometry: the penetration by material scaled by the energy that is left at `distance`
+ * (linear in the energy: half the energy goes through half as much), the incendiary and tracer flags and the ignition chances. Pass it as the sixth
+ * argument of `DestructionWorld.shoot` or spread it in a `Hit`.
+ */
+export const shotExtras = (shot: Shot, distance = 0): BallisticExtras => {
+  const out: { -readonly [K in keyof BallisticExtras]: BallisticExtras[K] } = {}
+  if (shot.penetration) {
+    const k = shot.energy > 0 ? Math.min(1, Math.max(0, shot.energyAt(distance) / shot.energy)) : 1
+    const scaled: Record<string, number> = {}
+    for (const key of Object.keys(shot.penetration)) scaled[key] = shot.penetration[key]! * k
+    out.penetration = scaled
+  }
+  if (shot.incendiary) out.incendiary = true
+  if (shot.tracer) out.tracer = true
+  if (shot.ignition) out.ignition = { spark: shot.ignition.spark, flame: shot.ignition.flame }
+  return out
 }
 
 /** One use of a non-firearm (melee swing, flame tick, heat tick, throw, tool tick, extinguisher tick). */
@@ -95,6 +122,7 @@ export const shotToHit = (shot: Shot, point: Vec3, normal?: Vec3): Hit => {
     energy: shot.energyAt(distance),
     caliber: shot.caliber,
     ...(shot.mass === undefined ? {} : { mass: shot.mass }),
+    ...shotExtras(shot, distance),
     source: shot.source ?? shot.weapon,
   }
 }
