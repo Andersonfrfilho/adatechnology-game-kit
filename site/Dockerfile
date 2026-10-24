@@ -44,6 +44,7 @@ COPY packages/game-vegetation-species/package.json packages/game-vegetation-spec
 COPY packages/game-vehicles/package.json packages/game-vehicles/
 COPY packages/game-vehicles-fleet/package.json packages/game-vehicles-fleet/
 COPY packages/game-vehicles-three/package.json packages/game-vehicles-three/
+COPY packages/game-vehicles-driving/package.json packages/game-vehicles-driving/
 COPY packages/game-weapons/package.json packages/game-weapons/
 COPY packages/game-weapons-three/package.json packages/game-weapons-three/
 COPY tools/animals-catalog/package.json tools/animals-catalog/

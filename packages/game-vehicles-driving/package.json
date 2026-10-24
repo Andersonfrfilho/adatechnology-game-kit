@@ -1,0 +1,52 @@
+{
+  "name": "@adatechnology/game-vehicles-driving",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Driving for vehicles, without three.js and without a game: an arcade driver (the game's car: acceleration, braking, handbrake, steering, corner collision, crash damage, noise, run-over of bodies) and a semi-simulation driver (suspension, tyre friction, gearbox, surfaces, damage coupling, consumption). Knows nothing about any game.",
+  "keywords": [
+    "game",
+    "vehicles",
+    "driving",
+    "arcade",
+    "physics",
+    "car"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-vehicles-driving"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist",
+    "MIGRATION.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4",
+    "@adatechnology/golden-tool": "workspace:*"
+  }
+}
