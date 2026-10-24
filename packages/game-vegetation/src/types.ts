@@ -49,6 +49,22 @@ export interface PlantPiece {
   /** point the piece rotates about when it falls (plant space, meters): where it is attached, or its center */
   pivot: Vec3
   bounds: { min: Vec3; max: Vec3 }
+  /** wood pieces (trunk, branch, stem, arm, pad): the radius of the body of the piece, away from the root flare and the tip, in meters */
+  radius?: number
+  /** wood pieces: the length of the centreline, in meters */
+  length?: number
+  /** wood pieces: unit vector from the first to the last point of the centreline */
+  axis?: Vec3
+  /** wood pieces: the first point of the centreline (plant space), the end the piece hangs from */
+  base?: Vec3
+}
+
+/** The straight-tube fit of a wood piece (what a chopping or sawing rule needs: how thick, how long, which way). */
+export interface PieceGeometry {
+  radius: number
+  length: number
+  axis: Vec3
+  base: Vec3
 }
 
 export interface PlantParts {
