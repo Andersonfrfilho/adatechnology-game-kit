@@ -498,5 +498,15 @@
       1
     ],
     "scale": 0.1
+  },
+  {
+    "id": "rapadura",
+    "teamId": "rapadura",
+    "teamBox": [
+      1.9,
+      1,
+      0.61
+    ],
+    "scale": 0.1
   }
 ]
