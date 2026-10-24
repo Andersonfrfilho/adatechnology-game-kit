@@ -169,6 +169,15 @@ importers:
         specifier: workspace:*
         version: link:../game-contracts
     devDependencies:
+      '@adatechnology/game-characters-people':
+        specifier: workspace:*
+        version: link:../game-characters-people
+      '@adatechnology/game-characters-undead':
+        specifier: workspace:*
+        version: link:../game-characters-undead
+      '@adatechnology/game-test-room':
+        specifier: workspace:*
+        version: link:../game-test-room
       '@adatechnology/golden-tool':
         specifier: workspace:*
         version: link:../../tools/golden
