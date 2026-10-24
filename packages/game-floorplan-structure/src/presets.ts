@@ -129,6 +129,8 @@ export function constructionOfSystem(system: string, source: StructureSource): C
       return logCabinConstruction(keep)
     case 'improvised':
       return shackConstruction()
+    case 'canvas':
+      return campConstruction()
     default:
       return undefined
   }
