@@ -167,7 +167,8 @@ describe('createWeaponAudio with a fake AudioContext', () => {
   it('builds nodes for a shot, the mechanical sounds and the game classes', () => {
     const { starts } = play(7)
     expect(starts.filter((entry) => entry.kind === 'noise').length).toBeGreaterThanOrEqual(6)
-    expect(starts.filter((entry) => entry.kind === 'osc').length).toBeGreaterThanOrEqual(5)
+    // 4 since T6.1e2: the art scene's casing is one ring, not the two the SDK made up
+    expect(starts.filter((entry) => entry.kind === 'osc').length).toBeGreaterThanOrEqual(4)
   })
 
   it('is silent past the audible distance and without a context', () => {

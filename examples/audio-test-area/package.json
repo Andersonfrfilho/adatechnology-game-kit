@@ -1,0 +1,16 @@
+{
+  "name": "@adatechnology/audio-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Sound area for the shared test room: any sound of the engine played at a distance and bearing from the listener (or from the probe standing in the area), loops with their level and pitch, a storm of twenty voices for the voice limiter, the game and art scene mixing chains with reverb and compressor switched apart, panning and distance muffling switched apart, the level of each bus and the resolved plan of the chosen sound printed number by number.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-audio": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:*"
+  }
+}

@@ -140,7 +140,7 @@ Teclas: H equipa a arma mirada, clique atira ou arremessa, R recarrega, Q muda o
 - Dependência nova: `@adatechnology/game-interactables-three` (o cordão); entra no IIFE do pacote.
 
 ## O que ainda vem pela migração (spec 001)
-- Sons: o tiro (classe e abafamento do jogo + energia do calibre, S2) e os sons mecânicos estão feitos (T1.4); falta mover a síntese para o `game-audio` genérico (S1) e o golden de parâmetros (S3).
+- Sons: o tiro (classe e abafamento do jogo + energia do calibre, S2) e os sons mecânicos estão feitos (T1.4); a síntese já está no `game-audio` genérico (T6.1e): `createWeaponAudio` é um adaptador que toca no motor próprio (mixagem do jogo, sem limite de vozes) ou, com a opção `engine` (a área usa o de `host.audio`), no motor emprestado. O traço do WebAudio é igual ao gravado antes da mudança (`tests/audio-trace.test.ts`). Os sons de recarga da Cena de Arte são o padrão de `MECHANICAL_SOUNDS` (T6.1e2).
 - Efeitos de boca e explosivos passam a vir do `game-vfx-three` (E4).
 - Decisões do dono de 2026-10-24: o modelo do revólver desenha as câmaras da capacidade (686: 7; `options.chambers`, gerado pela ferramenta; arquétipo emprestado fica com 6) e a bancada ganhou `fuse_length`.
 - Fase 1 fechada (T1.6): o som do tiro e os mecânicos tocam na mão e na área, a bancada e os explosivos do mundo estão na área, e cada arma do catálogo tem golden da regra (`game-weapons/tests/weapon-goldens.test.ts`).

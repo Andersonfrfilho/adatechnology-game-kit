@@ -9,6 +9,7 @@ WORKDIR /app
 
 # Manifests first so the install layer stays cached until dependencies change.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY packages/game-audio/package.json packages/game-audio/
 COPY packages/game-animals/package.json packages/game-animals/
 COPY packages/game-animals-species/package.json packages/game-animals-species/
 COPY packages/game-animals-three/package.json packages/game-animals-three/
@@ -47,12 +48,14 @@ COPY packages/game-vfx/package.json packages/game-vfx/
 COPY packages/game-vfx-three/package.json packages/game-vfx-three/
 COPY packages/game-weapons/package.json packages/game-weapons/
 COPY packages/game-weapons-three/package.json packages/game-weapons-three/
+COPY packages/game-weather/package.json packages/game-weather/
 COPY tools/animals-catalog/package.json tools/animals-catalog/
 COPY tools/characters-catalog/package.json tools/characters-catalog/
 COPY tools/golden/package.json tools/golden/
 COPY tools/weapon-thumbnails/package.json tools/weapon-thumbnails/
 COPY tools/items-catalog/package.json tools/items-catalog/
 COPY tools/weapons-catalog/package.json tools/weapons-catalog/
+COPY examples/audio-test-area/package.json examples/audio-test-area/
 COPY examples/animals-test-area/package.json examples/animals-test-area/
 COPY examples/characters-test-area/package.json examples/characters-test-area/
 COPY examples/interactables-showroom/package.json examples/interactables-showroom/
@@ -61,6 +64,7 @@ COPY examples/items-test-area/package.json examples/items-test-area/
 COPY examples/test-room/package.json examples/test-room/
 COPY examples/vfx-test-area/package.json examples/vfx-test-area/
 COPY examples/weapons-test-area/package.json examples/weapons-test-area/
+COPY examples/weather-test-area/package.json examples/weather-test-area/
 RUN pnpm install --frozen-lockfile
 
 COPY . .

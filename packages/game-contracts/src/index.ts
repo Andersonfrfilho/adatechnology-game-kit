@@ -74,3 +74,6 @@ export type {
   ModuleMetric,
   NumberControl,
 } from './bench'
+export type { AudioListener, AudioSink, LoopHandle, SoundHandle, SoundRequest } from './audio'
+export { DEFAULT_ENVIRONMENT, createEnvironmentBus } from './environment'
+export type { EnvironmentBus, EnvironmentKey, EnvironmentState } from './environment'

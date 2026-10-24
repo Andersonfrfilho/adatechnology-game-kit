@@ -1,7 +1,9 @@
 import type * as THREE_NS from 'three'
 import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
 import type { DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
-import { createDestructionRenderer, specFromObject3D } from '@adatechnology/game-destruction-three'
+import { createAudioEngine, createAudioSink } from '@adatechnology/game-audio'
+import type { AudioEngine } from '@adatechnology/game-audio'
+import { createDestructionRenderer, createDestructionSound, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
@@ -11,7 +13,7 @@ import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adate
 import { createGroundField, createVfx } from '@adatechnology/game-vfx'
 import { createGroundPatch, createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkBench, checkDestructible, checkSpec } from '@adatechnology/game-contracts'
+import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createArena } from './arena'
 import type { Arena } from './arena'
@@ -172,6 +174,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const log = createLog({ exportCancelled: () => t('log.export_cancelled') })
   log.setClock(() => simTime)
 
+  // sound: one engine for the room (no AudioContext until the first sound), and the destruction renderer's sound keys play on it
+  const ownAudio = options.audio === undefined
+  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine())
+  const destructionSound = audio ? createDestructionSound(audio) : null
+  const playSound = (key: string, point: Vec3, volume: number): void => {
+    destructionSound?.onSound(key, point, volume)
+    options.onSound?.(key, point, volume)
+  }
+
   // one effects world for the whole room: the destruction and fluid renderers and every module draw into it, and the room steps it once per frame
   const craterField = options.craters ? createGroundField() : undefined
   const craterPatch = craterField ? createGroundPatch(THREE, { field: craterField, material: new THREE.MeshStandardMaterial({ color: 0x8e8e8a, roughness: 0.95 }) }) : undefined
@@ -199,7 +210,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     quality,
     groundAt,
     pointScale,
-    onSound: options.onSound,
+    onSound: playSound,
     onPiece: (piece) => {
       rendererPieces.set(piece.objectId, piece)
       loose.push(piece)
@@ -1558,6 +1569,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       s.update(dt)
       flushEvents(id, s)
     }
+    if (audio) {
+      // the listener is the camera: where it stands and which way it looks (yaw 0 faces -z)
+      const look = camera.getWorldDirection(listenerDirection)
+      audio.setListener({ position: [camera.position.x, camera.position.y, camera.position.z], yaw: Math.atan2(-look.x, -look.z) })
+    }
     for (const update of frameListeners) update(dt)
     for (const tr of tracers) {
       if (tr.life > 0) {
@@ -1680,7 +1696,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         const ev = evs[pl.fired++]
         action('animation_event', t('act.anim_event', { name: pl.entry.name, clip: pl.clip.id, type: ev.type }), { objectId: pl.entry.so.objectId, itemId: pl.entry.so.itemId, data: { clip: pl.clip.id, type: ev.type, at: ev.t, ...(ev.data ?? {}) } })
         const key = ev.type === 'sound' ? ev.data?.key : undefined
-        if (typeof key === 'string') options.onSound?.(key, v3(pl.entry.so.root.getWorldPosition(tmpV)), 1)
+        if (typeof key === 'string') playSound(key, v3(pl.entry.so.root.getWorldPosition(tmpV)), 1)
       }
       if (pl.t >= pl.clip.duration) {
         playing.splice(i, 1)
@@ -1782,6 +1798,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const hostListeners = new Set<(event: HostEvent) => void>()
   const frameListeners = new Set<(dt: number) => void>()
+  const listenerDirection = new THREE.Vector3()
+  const environment = options.environment ?? createEnvironmentBus()
+  const audioSink = audio ? createAudioSink(audio) : undefined
   function emitHost(event: HostEvent): void {
     for (const listener of hostListeners) listener(event)
   }
@@ -1832,6 +1851,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     scene,
     camera,
     locale,
+    ...(audioSink ? { audio: audioSink } : {}),
+    environment,
     groundAt,
     effects: vfx,
     tool: () => ({
@@ -2110,6 +2131,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     arsenal,
     fluids,
     fluidRenderer: fluidView,
+    audio,
+    environment,
     log,
     get tool() {
       return tool
@@ -2204,6 +2227,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return { room: roomMetrics.sample(), module: moduleMetrics() }
     },
     dispose() {
+      destructionSound?.dispose()
+      if (ownAudio) audio?.dispose()
       for (const detach of detachers.values()) detach()
       detachers.clear()
       for (const store of benches.values()) store.dispose()

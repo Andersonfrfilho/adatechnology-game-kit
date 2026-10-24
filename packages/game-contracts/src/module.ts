@@ -1,7 +1,9 @@
 import type { AnimationClipSpec } from './animation'
+import type { AudioSink } from './audio'
 import type { ModuleBench, ModuleControl, ModuleLayer, ModuleMetric } from './bench'
 import type { DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
+import type { EnvironmentBus } from './environment'
 import type { EffectSink } from './effects'
 import type { ContainerSpec } from './fluids'
 
@@ -213,6 +215,10 @@ export interface ModuleHost {
   command?(command: ToolCommand): ToolCommandResult
   /** Lent only to a module that declares controls, layers or metrics. */
   bench?: ModuleBench
+  /** The host's shared sound engine; a module that makes sound uses it when lent and stays silent (or brings its own) when not. */
+  audio?: AudioSink
+  /** The host's weather, light and ground; a module that reacts to rain, wind or night reads it. */
+  environment?: EnvironmentBus
   /** The host's effects (smoke, sparks, blast, impacts): a module asks for them by id instead of drawing its own. Absent when the host has none. */
   effects?: EffectSink
 }

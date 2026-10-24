@@ -107,6 +107,28 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
+  packages/game-audio:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+    devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
   packages/game-camera:
     devDependencies:
       '@types/node':
@@ -301,6 +323,9 @@ importers:
 
   packages/game-destruction-three:
     dependencies:
+      '@adatechnology/game-audio':
+        specifier: workspace:*
+        version: link:../game-audio
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
@@ -314,6 +339,9 @@ importers:
         specifier: workspace:*
         version: link:../game-vfx-three
     devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -782,6 +810,9 @@ importers:
 
   packages/game-test-room:
     dependencies:
+      '@adatechnology/game-audio':
+        specifier: workspace:*
+        version: link:../game-audio
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
@@ -1004,6 +1035,9 @@ importers:
 
   packages/game-weapons-three:
     dependencies:
+      '@adatechnology/game-audio':
+        specifier: workspace:*
+        version: link:../game-audio
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
@@ -1038,6 +1072,28 @@ importers:
       three:
         specifier: ^0.160.1
         version: 0.160.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-weather:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+    devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)

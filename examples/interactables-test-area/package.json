@@ -13,6 +13,7 @@
     "@adatechnology/game-animals": "workspace:*",
     "@adatechnology/game-animals-species": "workspace:*",
     "@adatechnology/game-animals-three": "workspace:*",
+    "@adatechnology/game-audio": "workspace:*",
     "@adatechnology/game-characters": "workspace:*",
     "@adatechnology/game-characters-people": "workspace:*",
     "@adatechnology/game-characters-three": "workspace:*",
@@ -25,6 +26,7 @@
     "@adatechnology/game-vfx": "workspace:*",
     "@adatechnology/game-vfx-three": "workspace:*",
     "@adatechnology/game-weapons": "workspace:*",
-    "@adatechnology/game-weapons-three": "workspace:*"
+    "@adatechnology/game-weapons-three": "workspace:*",
+    "@adatechnology/game-weather": "workspace:*"
   }
 }

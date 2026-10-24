@@ -310,6 +310,24 @@ describe('hard landing', () => {
 })
 
 describe('fire, heat and melt', () => {
+  it('sends burn_loop when a part starts to burn and burn_end when it burns out or is put out', () => {
+    const { world, renderer, sounds } = setup()
+    world.addObject('o1', [partState('plank', 'wood'), partState('beam', 'wood')])
+    const root = new THREE.Group()
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), new THREE.MeshStandardMaterial())
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), new THREE.MeshStandardMaterial())
+    root.add(plank, beam)
+    renderer.bind('o1', root, { parts: { plank, beam } })
+    world.emit({ type: 'ignite', object: 'o1', part: 'plank', point: [0, 0.05, 0] })
+    world.emit({ type: 'primed', object: 'o1', part: 'beam', point: [0, 0.05, 0], trigger: 'shot', delay: 1 })
+    world.emit({ type: 'burnout', object: 'o1', part: 'plank', point: [0, 0.05, 0] })
+    world.emit({ type: 'extinguish', object: 'o1', part: 'beam' })
+    // a part that is not burning (any more) is put out without a second burn_end
+    world.emit({ type: 'extinguish', object: 'o1', part: 'beam' })
+    renderer.update(1 / 60)
+    expect(sounds.filter((key) => key.startsWith('burn_'))).toEqual(['burn_loop', 'burn_loop', 'burn_end', 'burn_end'])
+  })
+
   it('chars a cloned material and emits fire and smoke while burning', () => {
     const { world, renderer } = setup()
     const st = world.addObject('o1', [partState('plank', 'wood')])

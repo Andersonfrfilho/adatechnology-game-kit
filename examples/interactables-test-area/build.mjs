@@ -21,8 +21,8 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-const people = ['game-characters', 'game-characters-three', 'game-characters-people', 'game-characters-undead', 'game-animals', 'game-animals-species', 'game-animals-three']
-for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-vfx', 'game-vfx-three', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', ...people]) {
+  const people = ['game-characters', 'game-characters-three', 'game-characters-people', 'game-characters-undead', 'game-animals', 'game-animals-species', 'game-animals-three']
+  for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-vfx', 'game-vfx-three', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', 'game-audio', 'game-weather', ...people]) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -49,6 +49,9 @@ const result = await esbuild.build({
     '@adatechnology/game-weapons-three': join(pkg('game-weapons-three'), 'dist/index.js'),
     // the items module and the goods catalog ride along: the containers of the furniture hold real items
     '@adatechnology/game-contracts': join(pkg('game-contracts'), 'dist/index.js'),
+    // the sound and weather modules ride along: both use what the room lends (host.audio, host.environment)
+    '@adatechnology/game-audio': join(pkg('game-audio'), 'dist/index.js'),
+    '@adatechnology/game-weather': join(pkg('game-weather'), 'dist/index.js'),
     '@adatechnology/game-items': join(pkg('game-items'), 'dist/index.js'),
     '@adatechnology/game-items-goods': join(pkg('game-items-goods'), 'dist/index.js'),
     '@adatechnology/game-items-three': join(pkg('game-items-three'), 'dist/index.js'),

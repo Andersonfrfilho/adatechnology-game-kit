@@ -101,6 +101,9 @@ A sala executa `host.command` pela regra do `game-weapons` na bancada (acessóri
 Exemplos no repositório: `examples/test-room` (carrega `DEMO_MODULE`), `examples/weapons-test-area`, `examples/interactables-test-area` (a página leva também o módulo de armas com os acessórios, para atirar nos móveis).
 Query strings do exemplo: `?area=`, `?items=`, `?scenario=all|<id>`, `?lang=`, `?quality=`, `?ui=0`, `?bench=` (estado da bancada).
 
+## Som e ambiente emprestados (T6.3)
+A sala cria um motor de `@adatechnology/game-audio` (opção `audio`, `false` para sala muda; `room.audio`) e o empresta em `host.audio` (`createAudioSink`); o ouvinte do motor segue a câmera a cada quadro. Empresta também `host.environment` (opção `environment`, `room.environment`; padrão `createEnvironmentBus()`, o dia seco e calmo). Os sons das chaves do `onSound` da destruição tocam nesse motor.
+
 ## Cuidados
 - O `build` recebe `THREE` como `unknown`; nomeie as malhas e ponha `userData.destructionPart` com o id da peça para a destruição achá-las.
 - Item com `impl` (destruição própria) não é movível; o `DestructibleImpl.id` deve ser o id que a sala passa.

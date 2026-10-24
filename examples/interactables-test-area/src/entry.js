@@ -4,12 +4,14 @@
 // And the items module (`ItemsArea`: every item of the goods catalog at real size): the containers of the furniture hold real items, drawn by game-items-three at their real size.
 // It carries the characters and the animals modules as well (owner rule: this area shows what every phase adds), so a shot can cross a wardrobe door and reach a zombie behind it.
 // And the effects bench (explosions and recipes of the Workshop), to see the smoke, sparks and blood the furniture's destruction plays.
+import { createAudioTestModule } from '@adatechnology/game-audio'
 import { rng } from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
 import { placeFinds } from '@adatechnology/game-items'
 import { createGoodsFindsProvider, createGoodsItems, goodsText } from '@adatechnology/game-items-goods'
 import { buildItem, createItemsTestModule } from '@adatechnology/game-items-three'
+import { createWeatherTestModule } from '@adatechnology/game-weather'
 import { createVfxTestModule } from '@adatechnology/game-vfx-three'
 import { createWeaponsTestModule } from '@adatechnology/game-weapons-three'
 import { registerBodyMaterial } from '@adatechnology/game-characters-three'
@@ -71,14 +73,14 @@ export function createFurnitureArea(options = {}) {
   return create({ GameInteractablesHousehold, GameInteractablesThree, fillContainers: createItemContents(), ...options })
 }
 
-export { createVfxTestModule, createWeaponsTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule }
+export { createVfxTestModule, createWeaponsTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createAudioTestModule, createWeatherTestModule }
 
 // the site copies the weapon thumbnails to site/dist/weapon-svg, next to the folder of each example page
 const SITE_THUMBNAIL_BASE = '../weapon-svg/'
 
 /**
- * Creates the module for the room's locale (`?lang=en` or pt-BR) and loads it, after the weapons, items, characters, animals and effects modules (the furniture bench stays the one the panel shows).
- * Returns the room's report of the furniture module, with the other modules' reports under `weapons`, `itemsArea`, `characters`, `animals` and `vfx`.
+ * Creates the module for the room's locale (`?lang=en` or pt-BR) and loads it, after the weapons, items, characters, animals, effects, sound and weather modules (the furniture bench stays the one the panel shows).
+ * Returns the room's report of the furniture module, with the other modules' reports under `weapons`, `itemsArea`, `characters`, `animals`, `vfx`, `audio` and `weather`.
  */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
@@ -89,6 +91,9 @@ export function loadInto(room, options = {}) {
   const characters = options.characters === false ? undefined : room.loadModule(createCharactersModule({ fluids: room.fluids, locale: lang }))
   const animals = options.animals === false ? undefined : room.loadModule(createAnimalsModule({ locale: lang }))
   const vfx = options.vfx === false ? undefined : room.loadModule(createVfxTestModule({ locale: lang }))
+  // the sound and the weather ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here
+  const audio = options.audio === false ? undefined : room.loadModule(createAudioTestModule({ locale: lang }))
+  const weather = options.weather === false ? undefined : room.loadModule(createWeatherTestModule({ locale: lang, fog: false }))
   const report = room.loadModule(createFurnitureArea({ ...options, locale: lang }))
-  return { ...report, ...(weapons ? { weapons } : {}), ...(itemsArea ? { itemsArea } : {}), ...(characters ? { characters } : {}), ...(animals ? { animals } : {}), ...(vfx ? { vfx } : {}) }
+  return { ...report, ...(weapons ? { weapons } : {}), ...(itemsArea ? { itemsArea } : {}), ...(characters ? { characters } : {}), ...(animals ? { animals } : {}), ...(vfx ? { vfx } : {}), ...(audio ? { audio } : {}), ...(weather ? { weather } : {}) }
 }
