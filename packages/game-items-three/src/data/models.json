@@ -1068,5 +1068,15 @@
       1.1
     ],
     "scale": 0.1
+  },
+  {
+    "id": "mechanic_toolbox",
+    "teamId": "kit_mecanico",
+    "teamBox": [
+      4,
+      2,
+      2
+    ],
+    "scale": 0.1
   }
 ]
