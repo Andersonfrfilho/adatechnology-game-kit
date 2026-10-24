@@ -45,6 +45,18 @@ export type PartShape =
 
 export type FluidKind = 'water' | 'fuel' | 'oil' | 'gas' | 'sap' | 'acid' | 'blood' | string
 
+/** Seconds from a trigger to the blast: fixed, or `[min, max]` drawn from the world seed. */
+export type ChainDelay = number | readonly [number, number]
+
+/** How an explosive part is set off by what happens around it. See `PartSpec.explodes`. */
+export interface ExplosionChain {
+  shot?: ChainDelay
+  fire?: ChainDelay
+  explosion?: ChainDelay
+  /** Fraction of the part's hit points a shot must have taken off before it sets the part off (default 0: any hit). */
+  shotDamageFraction?: number
+}
+
 export interface PartSpec {
   /** Unique inside the object. */
   id: string
@@ -67,7 +79,17 @@ export interface PartSpec {
   /** Fluid inside the part; punctures make it leak (a `leak` event per hole, the level drops in `update`). */
   contains?: { fluid: FluidKind; liters: number; pressurized?: boolean }
   /** The part explodes when destroyed, or when its temperature passes `atC` (gas bottle, fuel tank, aerosol). */
-  explodes?: { energy: number; radius: number; atC?: number }
+  explodes?: {
+    energy: number
+    radius: number
+    atC?: number
+    /**
+     * Chain reaction: what sets the part off before it is destroyed and the seconds from that to the blast (a number, or `[min, max]` drawn
+     * from the world seed). `shot`: a bullet hit; `fire`: the part gets to `atC` (default 300 °C) or burns; `explosion`: a blast reaches it.
+     * Each part goes off once. Without `chain`, it explodes only when destroyed (or at `atC`).
+     */
+    chain?: ExplosionChain
+  }
   /** Fixed to the world (a wall-mounted cabinet, a tree trunk in the ground). Groups that keep an anchored part stay in place. */
   anchored?: boolean
   /** Free tags the host can use (`door`, `wheel`, `screen`, `trunk`, `leaf`...). */
@@ -317,6 +339,8 @@ export type DestructionEvent =
   | (EventBase & { type: 'drip'; part: string; point: Vec3; material: MaterialId })
   | (EventBase & { type: 'leak'; part: string; fluid: FluidKind; point: Vec3; direction: Vec3; rate: number; pressurized: boolean })
   | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number })
+  /** An explosive part was set off by a bullet, fire or a nearby blast and will explode `delay` seconds from now (`explodes.chain`). */
+  | (EventBase & { type: 'primed'; part: string; point: Vec3; trigger: 'shot' | 'fire' | 'explosion'; delay: number })
   /** A structural part is overloaded (`stress` > 1); throttled to once per 0.5 s per part. Brittle parts also `crack` at stress > 0.8. */
   | (EventBase & { type: 'stress'; part: string; stress: number; load: number })
   /** A group with structural parts lost every anchored part (an anchored part exists in the object): it falls. Reported once per group. */
