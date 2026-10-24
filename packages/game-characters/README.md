@@ -17,3 +17,18 @@ person.lastHit // { points, killed, headshot, through, exitEnergy }
 ```
 
 Plain script: `dist/index.global.js` exposes the `GameCharacters` global.
+
+## Pose clips
+
+Keyframed poses over the joint names of the rich body (`lean`, `twist`, `side`, `drop`, `headX/Y/Z`, `armR/L`, `elbR/L`, `armRz/Lz`, `legL/R`, `kneeL/R`). `samplePoseClip(clip, t)` is
+the Bestiário's `sample` (find the segment, clamp, smoothstep, `lerpPose`); `clipEventsBetween(clip, t0, t1)` gives the events crossed in `(t0, t1]` (`impact` for "the blow lands
+now", `phase` with a locale key). `channels` says what a clip drives: `full`, `upper` (the legs keep walking) or `lower`. `POSE_CLIPS` has the two clips of the "grab and bite"
+scene (`grabbed_bitten_human`, `grab_bite_zombie`, with `x` and `run` as extra channels), texts in `POSE_CLIP_LOCALES` (`pt-BR`, `en`). A game adds or replaces clips with
+`createPoseClipRegistry(POSE_CLIPS).register(clip)`.
+
+```ts
+import { POSE_CLIPS, createPoseClipRegistry, samplePoseClip } from '@adatechnology/game-characters'
+
+const clips = createPoseClipRegistry(POSE_CLIPS)
+samplePoseClip(clips.get('grabbed_bitten_human')!, 2.5) // { lean, headY, armL, ... }
+```
