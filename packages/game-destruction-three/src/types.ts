@@ -33,7 +33,7 @@ export interface RendererOptions {
   autoSplit?: boolean
   /** Called when a loose piece is created (the bench registers it as grabbable). */
   onPiece?: (piece: Piece) => void
-  /** Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). */
+  /** Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). `burn_loop` is sent when a part starts to burn and `burn_end` when it burns out or is put out. */
   onSound?: (key: string, point: Vec3, volume: number) => void
   /** A point light flashes on explosions (default true; costs one light). */
   explosionLight?: boolean

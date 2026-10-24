@@ -1,7 +1,9 @@
 import type * as THREE_NS from 'three'
 import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
 import type { DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
-import { createDestructionRenderer, specFromObject3D } from '@adatechnology/game-destruction-three'
+import { createAudioEngine } from '@adatechnology/game-audio'
+import type { AudioEngine } from '@adatechnology/game-audio'
+import { createDestructionRenderer, createDestructionSound, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
@@ -170,13 +172,22 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const log = createLog({ exportCancelled: () => t('log.export_cancelled') })
   log.setClock(() => simTime)
 
+  // sound: one engine for the room (no AudioContext until the first sound), and the destruction renderer's sound keys play on it
+  const ownAudio = options.audio === undefined
+  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine())
+  const destructionSound = audio ? createDestructionSound(audio) : null
+  const playSound = (key: string, point: Vec3, volume: number): void => {
+    destructionSound?.onSound(key, point, volume)
+    options.onSound?.(key, point, volume)
+  }
+
   const renderer = createDestructionRenderer(THREE, {
     scene,
     world,
     quality,
     groundAt,
     pointScale,
-    onSound: options.onSound,
+    onSound: playSound,
     onPiece: (piece) => {
       rendererPieces.set(piece.objectId, piece)
       loose.push(piece)
@@ -1639,7 +1650,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         const ev = evs[pl.fired++]
         action('animation_event', t('act.anim_event', { name: pl.entry.name, clip: pl.clip.id, type: ev.type }), { objectId: pl.entry.so.objectId, itemId: pl.entry.so.itemId, data: { clip: pl.clip.id, type: ev.type, at: ev.t, ...(ev.data ?? {}) } })
         const key = ev.type === 'sound' ? ev.data?.key : undefined
-        if (typeof key === 'string') options.onSound?.(key, v3(pl.entry.so.root.getWorldPosition(tmpV)), 1)
+        if (typeof key === 'string') playSound(key, v3(pl.entry.so.root.getWorldPosition(tmpV)), 1)
       }
       if (pl.t >= pl.clip.duration) {
         playing.splice(i, 1)
@@ -2067,6 +2078,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     arsenal,
     fluids,
     fluidRenderer: fluidView,
+    audio,
     log,
     get tool() {
       return tool
@@ -2160,6 +2172,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return { room: roomMetrics.sample(), module: moduleMetrics() }
     },
     dispose() {
+      destructionSound?.dispose()
+      if (ownAudio) audio?.dispose()
       for (const detach of detachers.values()) detach()
       detachers.clear()
       for (const store of benches.values()) store.dispose()

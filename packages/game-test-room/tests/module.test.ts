@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
+import { createAudioEngine } from '@adatechnology/game-audio'
 import type { AnimationClipSpec, DestructibleImpl, TestableModule } from '@adatechnology/game-contracts'
 import type { ScenarioContext } from '../src'
 import { makeRoom } from './helpers'
@@ -163,6 +164,23 @@ describe('animations', () => {
     expect(room.animations()?.playing).toBeNull()
     expect(room.log.entries().filter((e) => e.type.startsWith('animation')).map((e) => e.type)).toEqual(['animation', 'animation_event', 'animation_end'])
     expect(room.playAnimation('nope')).toBe(false)
+  })
+
+  it('plays the sound keys on the room engine, positioned at the item, and leaves a silent room alone', () => {
+    const played: Array<{ id: string; position?: readonly number[] }> = []
+    const engine = createAudioEngine({ createContext: () => null })
+    const spy = { ...engine, register: engine.register, play: (id: string, options?: { position?: readonly number[] }) => (played.push({ id, ...(options?.position ? { position: options.position } : {}) }), null) } as unknown as typeof engine
+    const room = makeRoom({ audio: spy })
+    expect(room.audio).toBe(spy)
+    room.loadModule(mod({ ...slide, events: [{ t: 0.5, type: 'sound', data: { key: 'impact_metal' } }] }))
+    room.spawn('sliding_panel', [0, 0, -4], 0)
+    room.look([0, 1, -1.5], [0, 0.5, -4])
+    room.playAnimation('slide')
+    for (let i = 0; i < 31; i++) room.update(1 / 60)
+    expect(played.map((entry) => entry.id)).toEqual(['clang'])
+    expect(played[0]!.position).toBeDefined()
+    expect(makeRoom({ audio: false }).audio).toBeNull()
+    expect(makeRoom().audio).not.toBeNull()
   })
 
   it('the collision shape follows the animation: after the clip the shot hits the open pose, not the closed one', () => {

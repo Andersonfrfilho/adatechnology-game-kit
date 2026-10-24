@@ -510,6 +510,7 @@ class Renderer implements DestructionRenderer {
           this.activate(ev.object, ev.part)
           this.particles.burst('fire', ev.point, [0, 1, 0], 6, 1)
           this.sound('ignite', ev.point, 0.7)
+          this.sound('burn_loop', ev.point, 0.5)
         }
         break
       case 'spall':
@@ -526,6 +527,7 @@ class Renderer implements DestructionRenderer {
         if (f) {
           this.fires.delete(`${ev.object}|${ev.part}`)
           this.particles.burst('steam', f.point, [0, 1, 0], 14, 1.2)
+          this.sound('burn_end', f.point, 0.5)
         }
         this.activate(ev.object, ev.part)
         this.sound('extinguish', f?.point ?? this.rootPoint(ev.object), 0.6)
@@ -533,6 +535,7 @@ class Renderer implements DestructionRenderer {
       }
       case 'burnout': {
         this.fires.delete(`${ev.object}|${ev.part}`)
+        this.sound('burn_end', ev.point, 0.5)
         this.particles.burst('ash', ev.point, [0, 1, 0], 16, 1)
         this.particles.burst('smoke', ev.point, [0, 1, 0], 6, 0.8, { color: SMOKE_TONES.grey })
         const pv = this.partVis(ev.object, ev.part)

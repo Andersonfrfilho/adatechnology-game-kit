@@ -9,6 +9,7 @@
  * from buttons (or headless in tests) and write pass/fail checks to the same log, so people and agents can verify the behaviour.
  */
 import type * as THREE_NS from 'three'
+import type { AudioEngine } from '@adatechnology/game-audio'
 import type { DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
@@ -96,6 +97,11 @@ export interface TestRoomOptions {
   /** Called for every destruction event (to log, play sounds, sync over LAN). Fluid events reach the log too. */
   onEvent?: (event: DestructionEvent) => void
   onSound?: (key: string, point: Vec3, volume: number) => void
+  /**
+   * The sound engine of the room (@adatechnology/game-audio): the destruction renderer's sound keys play on it, and modules get it as `host.audio`.
+   * Default: a new engine of the room's own (it makes no AudioContext until the first sound); `false` for a silent room.
+   */
+  audio?: AudioEngine | false
   /** Show the built-in HUD and panels (default true). */
   ui?: boolean
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
@@ -138,6 +144,8 @@ export interface SpawnedObject {
 }
 
 export interface TestRoom {
+  /** The room's sound engine, or `null` in a silent room. */
+  readonly audio: AudioEngine | null
   readonly world: DestructionWorld
   readonly renderer: DestructionRenderer
   readonly scene: THREE_NS.Scene

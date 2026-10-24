@@ -21,11 +21,11 @@ export type Curve = 'linear' | 'exp'
  * How an AudioParam moves:
  * - `{ set }` assigns `.value`;
  * - `{ set, to, curve, over }` assigns `.value`, then ramps to `to` at `over`;
- * - `{ from, to?, curve, over }` calls `setValueAtTime(from)` at the start, then ramps to `to` (default `from`) at `over`.
+ * - `{ from }` calls `setValueAtTime(from)` at the start; with `to`, `curve` and `over` it then ramps to `to` (`'from'` is the value drawn for `from`: the art scene ramps a tone back to its own start when it gives no end).
  */
 export type Automation =
-  | { readonly set: Range; readonly to?: Range; readonly curve?: Curve; readonly over?: Time }
-  | { readonly from: Range; readonly to?: Range; readonly curve?: Curve; readonly over?: Time }
+  | { readonly set: Range; readonly to?: Range | 'from'; readonly curve?: Curve; readonly over?: Time }
+  | { readonly from: Range; readonly to?: Range | 'from'; readonly curve?: Curve; readonly over?: Time }
 
 /**
  * One gain point: time (seconds, or `'0.6d'`), value and how it is reached (`set` = `setValueAtTime`, or a ramp). The value is multiplied by the

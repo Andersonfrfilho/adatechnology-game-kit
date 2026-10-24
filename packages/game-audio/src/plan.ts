@@ -140,7 +140,7 @@ function drawAutomation(automation: Automation, scope: Scope): PendingAutomation
   for (const key of Object.keys(automation)) {
     if (key === 'set' && 'set' in automation) pending.value = draw(automation.set, scope)
     else if (key === 'from' && 'from' in automation) pending.from = draw(automation.from, scope)
-    else if (key === 'to' && automation.to !== undefined) pending.to = draw(automation.to, scope)
+    else if (key === 'to' && automation.to !== undefined) pending.to = automation.to === 'from' ? (pending.from ?? pending.value ?? 0) : draw(automation.to, scope)
     else if (key === 'curve') pending.curve = automation.curve
     else if (key === 'over' && automation.over !== undefined) pending.over = drawTime(automation.over, scope)
   }
