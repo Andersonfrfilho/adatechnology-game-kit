@@ -2,9 +2,18 @@
 // writes search/<id>.json after every weapon and downloads the licensed candidates raw into raw/<id>/ of the WORK folder (scratch, never the repo). Resumable.
 // Usage: node scripts/commons-search.mjs <work folder> [weapon id...]
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { SUBJECTS } from './commons-subjects.mjs'
-const BASE = join(process.argv[2])
+const repository = resolve(dirname(fileURLToPath(import.meta.url)), '../../..')
+const BASE = (() => {
+  const given = process.argv[2]
+  if (!given || given.startsWith('-')) throw new Error('usage: node scripts/commons-search.mjs <work folder> [weapon id...]')
+  const base = resolve(given)
+  const inside = relative(repository, base)
+  if (!inside.startsWith('..') && !isAbsolute(inside)) throw new Error(`the work folder must be scratch space outside the repository, got ${base}`)
+  return base
+})()
 const UA = 'adatechnology-game-kit-thumbnail-research/1.0 (https://github.com/Andersonfrfilho/adatechnology-game-kit) node-fetch'
 const API = 'https://commons.wikimedia.org/w/api.php'
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -55,7 +64,7 @@ for (const [id, [query, ...keys]] of Object.entries(SUBJECTS)) {
       const license = v('LicenseShortName')
       candidates.push({
         title: page.title, mime: ii.mime, originalUrl: ii.url, page: ii.descriptionurl, width: ii.width, height: ii.height,
-        author: v('Artist'), license, licenseUrl: v('LicenseUrl'), credit: v('Credit'),
+        author: v('Artist'), license, licenseUrl: v('LicenseUrl'), credit: v('Credit'), creditHtml: meta.Credit?.value ?? '',
         ok: ii.mime === 'image/svg+xml' && ALLOWED.test(license) && !NOT_ALLOWED.test(license),
       })
     }

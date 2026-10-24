@@ -21,6 +21,8 @@ let sources = {}
 try {
   sources = JSON.parse(readFileSync(sourcesPath, 'utf8'))
 } catch {}
+// The Credit line of the file page keeps only its links (e.g. game-icons.net, the collection the drawing came from).
+const creditOf = (candidate) => [...(candidate.creditHtml ?? '').matchAll(/href="([^"]+)"/g)].map((match) => match[1]).join(', ')
 const renderer = await openRenderer()
 for (const [id, pick] of Object.entries(picks)) {
   const search = JSON.parse(readFileSync(join(work, 'search', `${id}.json`), 'utf8'))
@@ -38,7 +40,7 @@ for (const [id, pick] of Object.entries(picks)) {
     continue
   }
   writeFileSync(join(folder, 'commons', `${id}.svg`), svg)
-  sources[id] = { title: candidate.title, author: candidate.author || 'unknown', license: candidate.license, licenseUrl: candidate.licenseUrl || candidate.page, page: candidate.page, originalUrl: candidate.originalUrl.split('?')[0] }
+  sources[id] = { title: candidate.title, author: candidate.author || 'unknown', license: candidate.license, licenseUrl: candidate.licenseUrl || candidate.page, page: candidate.page, originalUrl: candidate.originalUrl.split('?')[0], ...(creditOf(candidate) && { credit: creditOf(candidate) }) }
   writeFileSync(sourcesPath, `${JSON.stringify(Object.fromEntries(Object.entries(sources).sort(([a], [b]) => (a < b ? -1 : 1))), null, 1)}\n`)
   console.log(`ok ${id} <- ${candidate.title} (${candidate.license}) ${Buffer.byteLength(svg)} bytes`)
 }
