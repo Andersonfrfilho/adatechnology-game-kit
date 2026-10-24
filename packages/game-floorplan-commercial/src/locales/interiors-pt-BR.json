@@ -1,20 +1,40 @@
 {
   "templates": {
     "drugstore": "Farmácia com manipulação",
+    "emergency_room": "Pronto-socorro",
     "gun_shop": "Loja de armas",
+    "police_station": "Delegacia",
+    "school": "Escola",
     "supermarket": "Supermercado"
   },
   "labels": {
+    "arsenal": "Arsenal",
     "bakery": "Padaria",
+    "bullpen": "Sala dos policiais",
     "butcher": "Açougue e câmara fria",
+    "cafeteria": "Refeitório",
+    "cell_1": "Cela 1",
+    "cell_2": "Cela 2",
     "checkouts": "Caixas",
+    "chief_office": "Sala do delegado",
+    "classroom": "Sala de aula",
     "compounding_room": "Sala de manipulação",
     "controlled_storage": "Depósito de controlados",
     "dispensing": "Balcão de dispensação",
+    "emergency_room": "Pronto-socorro",
+    "evidence_depot": "Depósito de evidências",
+    "icu": "UTI",
+    "library": "Biblioteca",
+    "locker_room": "Vestiário",
     "manager_office": "Escritório do gerente",
+    "reception": "Recepção",
     "sales_floor": "Salão de vendas",
+    "school_kitchen": "Cozinha da merenda",
     "service_corridor": "Corredor de serviço",
     "shooting_range": "Estande de tiro",
-    "vault": "Depósito blindado"
+    "sports_court": "Quadra",
+    "vault": "Depósito blindado",
+    "ward_a": "Ala de internação A",
+    "ward_b": "Ala de internação B"
   }
 }

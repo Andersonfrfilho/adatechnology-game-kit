@@ -46,6 +46,27 @@ const PROGRAMS: Record<string, Program> = {
     fixtures: { long_gun_rack: 1, gun_counter: 1, reload_bench: 1, trophy_head: 3, camo_rack: 1, vault_shelf: 1, shooting_bench: 4, target_frame: 4 },
     pins: [['Armas longas', 'sales_floor', 'gun_rack'], ['Vitrine de pistolas', 'sales_floor', 'gun_counter'], ['Roupa camuflada', 'sales_floor', 'camo_rack'], ['Bancada de recarga', 'sales_floor', 'reload_bench'], ['Estande de tiro', 'shooting_range', 'shooting_bench'], ['Depósito blindado (classe D)', 'vault', 'vault_shelf']],
   },
+  police_station: {
+    use: 'institutional',
+    size: [16, 11], ceiling: 3,
+    rooms: { evidence_depot: [1.8, 3.5], reception: [9.6, 3.5], chief_office: [4.6, 3.5], arsenal: [2.4, 3], locker_room: [2.4, 4.5], bullpen: [8.6, 7.5], cell_1: [2.5, 6.5], cell_2: [2.5, 6.5] },
+    fixtures: { reception_counter: 1, evidence_rack: 1, office_desk: 4, filing_cabinet: 1, weapon_locker: 1, locker_bank_6: 1, investigation_board: 1, cell_bunk: 2, car: 1 },
+    pins: [['Arsenal (classe D)', 'arsenal', 'weapon_locker'], ['Sala do delegado', 'chief_office', 'office_desk'], ['Depósito de evidências', 'evidence_depot', 'evidence_rack'], ['Pátio de viaturas', 'garden', 'car'], ['Vestiário', 'locker_room', 'locker'], ['Mesas', 'bullpen', 'office_desk']],
+  },
+  emergency_room: {
+    use: 'institutional',
+    size: [18, 11], ceiling: 3,
+    rooms: { emergency_room: [18, 6.5], ward_a: [8, 4.5], icu: [2, 4.5], ward_b: [8, 4.5] },
+    fixtures: { stretcher: 3, crash_cart: 1, oxygen_cylinder: 6, hospital_bed: 5, patient_monitor: 5, medicine_cabinet: 2 },
+    pins: [['Carrinho de emergência', 'emergency_room', 'crash_cart'], ['Ala de internação (A)', 'ward_a', 'medicine_cabinet'], ['Ala de internação (B)', 'ward_b', 'medicine_cabinet']],
+  },
+  school: {
+    use: 'institutional',
+    size: [18, 15], ceiling: 3,
+    rooms: { library: [5.5, 5.9], cafeteria: [4.5, 3.6], kitchen: [4.5, 2.3], corridor: [10, 2.6], classroom: [10, 6.5], sports_court: [8, 15] },
+    fixtures: { bookcase: 4, library_stack: 2, reading_table: 1, canteen_table: 2, industrial_counter: 1, locker_bank_9: 1, blackboard: 1, office_desk: 1, school_desk: 16, basketball_hoop: 2 },
+    pins: [['Mesa do professor', 'classroom', 'office_desk'], ['Biblioteca', 'library', 'bookcase'], ['Cozinha da merenda', 'kitchen', 'industrial_counter'], ['Armários de alunos', 'corridor', 'locker']],
+  },
 }
 
 const SEEDS = Array.from({ length: 25 }, (_, index) => index + 1)

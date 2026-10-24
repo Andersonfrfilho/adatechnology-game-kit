@@ -1,20 +1,40 @@
 {
   "templates": {
     "drugstore": "Drugstore",
+    "emergency_room": "Emergency room",
     "gun_shop": "Gun shop",
+    "police_station": "Police station",
+    "school": "School",
     "supermarket": "Supermarket"
   },
   "labels": {
+    "arsenal": "Arsenal",
     "bakery": "Bakery",
+    "bullpen": "Squad room",
     "butcher": "Butcher and cold room",
+    "cafeteria": "Cafeteria",
+    "cell_1": "Cell 1",
+    "cell_2": "Cell 2",
     "checkouts": "Checkouts",
+    "chief_office": "Chief's office",
+    "classroom": "Classroom",
     "compounding_room": "Compounding room",
     "controlled_storage": "Controlled drugs store",
     "dispensing": "Dispensing",
+    "emergency_room": "Emergency room",
+    "evidence_depot": "Evidence depot",
+    "icu": "Intensive care",
+    "library": "Library",
+    "locker_room": "Locker room",
     "manager_office": "Manager's office",
+    "reception": "Reception",
     "sales_floor": "Sales floor",
+    "school_kitchen": "School kitchen",
     "service_corridor": "Service corridor",
     "shooting_range": "Shooting range",
-    "vault": "Armored vault"
+    "sports_court": "Sports court",
+    "vault": "Armored vault",
+    "ward_a": "Ward A",
+    "ward_b": "Ward B"
   }
 }
