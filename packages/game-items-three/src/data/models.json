@@ -398,5 +398,15 @@
       0.402
     ],
     "scale": 0.1
+  },
+  {
+    "id": "instant_noodles",
+    "teamId": "macarrao_inst",
+    "teamBox": [
+      1.2,
+      1.6,
+      0.3
+    ],
+    "scale": 0.1
   }
 ]
