@@ -1,5 +1,37 @@
 # @adatechnology/game-test-room
 
+## 0.7.0
+
+### Minor Changes
+
+- 496b397: The test room shares one effects world (T5.1g). It creates a single `createVfxRenderer` (screen overlay in the container), passes its world to the destruction renderer, lends it to every module as `host.effects`, steps it once per frame, wraps its render in `applyCamera` (new `TestRoom.applyCamera()` for hosts that render themselves) and counts its pools in the `particles` metric. Grenades, rockets and charges play the profile of their explosive (`vfx.world.explosion(explosive, point, { direction })`; the destruction renderer keeps only the shove and the sound), and the `explosion` host event carries `explosive` (also for parts that blow up, from `explodes.effect`). New option `craters` replaces the floor with a deformable ground patch that big explosions dig into (default off). `game-weapons-three`: the explosives it puts in the world (fuel barrel, propane cylinder, car tank) name their effect in `explodes.effect`, so their blast is the explosive's profile.
+- 6aa11f1: The effects bench (T5.2d, spec 001). `game-vfx-three` draws the Workshop pools (soft-point sprites with the page's shader, streaks, instanced debris, wet and dry decals, rings, flash and fire lights) when the first recipe plays, merges the Workshop screen into the overlay, understands `configure({ quality, layer_<id> })` and exports `createVfxTestModule({ locale })` (id `vfx`, group `effects`): explosion or recipe by group, variant, replay, auto replay, distance, LOD band, quality, six layers, counters against the budget and a sheet with a timeline. `game-test-room` implements the contracts the bench needs: `ModuleBench.sheet` (a card with facts, steps, swatches and a timeline whose playhead follows a module metric), `ChoiceOption.group` (`optgroup`; grouped options never become buttons) and a numeric `MetricRow.value`.
+- 6aa11f1: Bridges of the film (T5.3e, spec 001). `createFilmBridge({ fluids, manager, random })`: a `leak` of a liquid that has a film (blood, old blood, bile, motor oil, fuel; `liquids` maps others) throws drops from the hole into the film until the stream ends; `splat({ fluid, point, direction, tint })` throws drops in the colours of a splash (an infection age; the characters will use it for a wound); `setWeather({ rain })` is the rain hook for Phase 6. `tinted(profile, tint)` and `launch({ tint })` draw a grid in a splash's colours. The test room runs the film manager and the bridge (a punctured can of fuel drips into a grid on the floor). The `body` event is not in the contract yet, so the characters side is still to wire.
+
+### Patch Changes
+
+- Updated dependencies [cb85470]
+- Updated dependencies [3f89fd3]
+- Updated dependencies [55037ce]
+- Updated dependencies [51d16d1]
+- Updated dependencies [4415620]
+- Updated dependencies [aa2c014]
+- Updated dependencies [6aa11f1]
+- Updated dependencies [6aa11f1]
+- Updated dependencies [6aa11f1]
+- Updated dependencies [ba652e9]
+- Updated dependencies [0d9cb33]
+- Updated dependencies [6aa11f1]
+- Updated dependencies [6aa11f1]
+  - @adatechnology/game-contracts@0.9.0
+  - @adatechnology/game-vfx@0.1.0
+  - @adatechnology/game-vfx-three@0.1.0
+  - @adatechnology/game-destruction@0.6.0
+  - @adatechnology/game-destruction-three@0.5.0
+  - @adatechnology/game-fluids-three@0.2.0
+  - @adatechnology/game-fluids@0.2.0
+  - @adatechnology/game-weapons@0.4.1
+
 ## 0.6.1
 
 ### Patch Changes
