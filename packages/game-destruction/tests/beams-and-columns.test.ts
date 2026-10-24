@@ -103,20 +103,16 @@ describe('shots: reinforced concrete', () => {
     expect(s.part().status).not.toBe('broken')
   })
 
-  it('a hand grenade at 1 m does not cut a column; at contact it strips it', () => {
+  it('a hand grenade at 1 m does not cut a column (reach 0.12 m per cbrt kJ, always on); at contact it strips it', () => {
     const grenade = { energy: 200000, radius: 15 }
-    const far = single('rc_column', { breach: { blastReach: 0.12 } })
+    const far = single('rc_column')
     far.world.explode([1, 1.5, 0], grenade.energy, grenade.radius)
     expect(far.part().stripped).toBeFalsy()
     expect(far.part().stage ?? 0).toBeLessThanOrEqual(1)
-    const near = single('rc_column', { breach: { blastReach: 0.12 } })
+    const near = single('rc_column')
     near.world.explode([0.2, 1.5, 0], grenade.energy, grenade.radius)
     expect(near.part().stripped).toBe(true)
     expect(types(near.events).has('expose')).toBe(true)
-    // without the option the falloff over a 15 m radius makes the 1 m blast cut it (the old behaviour)
-    const old = single('rc_column')
-    old.world.explode([1, 1.5, 0], grenade.energy, grenade.radius)
-    expect(old.part().stripped).toBe(true)
   })
 })
 
@@ -152,7 +148,7 @@ describe('shots: steel I-beam', () => {
 
   it('a grenade or C4 at 1 m dents it and leaves it standing', () => {
     for (const energy of [200000, 345600]) {
-      const s = single('steel_ibeam', { breach: { blastReach: 0.12 } })
+      const s = single('steel_ibeam')
       s.world.explode([1, 1.5, 0], energy, 15)
       expect(s.part().dents.length).toBeGreaterThan(0)
       expect(hpShare(s.part())).toBeGreaterThan(0.95)

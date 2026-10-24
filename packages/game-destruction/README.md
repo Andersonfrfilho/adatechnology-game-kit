@@ -225,14 +225,15 @@ the results for the push on pieces: `renderer.explode(point, energy, radius, { r
 ### Bullets and blasts against beams and columns
 
 `tests/beams-and-columns.test.ts` documents calibres of `@adatechnology/game-weapons` against a reinforced concrete column and beam, a steel
-I-beam, a hardwood beam and a brick pillar. Two options came out of it, both off or neutral by default:
+I-beam, a hardwood beam and a brick pillar. Two corrections came out of it:
 
 - `Hit.piercing` (6th argument of `shoot`): how well the bullet cuts through for its energy; the energy compared with the penetration of a hard
   material (metal, masonry) is `energy * piercing`. `PIERCING_BY_KIND` (fmj 1, hp 0.6, ap 1.6, buck 0.5, slug 0.25) and `PIERCING_BY_CALIBER`
   (5.56, 5.45 and .22 0.5) give the numbers from `CaliberDef.kind` (`piercingOf(id, kind)`). Without it a 12 ga slug (3000 J) went through 8.5 mm of
   steel.
-- `breach.blastReach` (default `Infinity`, 0.12 recommended): a blast only opens a breach within `blastReach * cbrt(energy / 1000)` metres of the
-  part. With 0.12 a hand grenade (200 kJ) at 1 m no longer cuts a reinforced column in two (at 0.2 m it strips it).
+- Blast reach of a breach (no option, it is the physics): a blast only opens a breach within 0.12 m per cube root of kilojoule of the part
+  (`BREACH_BLAST_REACH`). A hand grenade (200 kJ) at 1 m does not cut a reinforced column in two (at 0.2 m it strips it). Farther away the blast still
+  damages, dents and cracks. The old `breach.blastReach` option (default `Infinity`) is gone: it was a second path for a correction.
 
 ## Contracts: implement your own or use the default world
 

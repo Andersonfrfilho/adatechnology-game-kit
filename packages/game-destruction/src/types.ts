@@ -172,12 +172,6 @@ export interface DestructionOptions {
     radius?: number
     /** Multiplier of the breach area a blast makes over a blow of the same damage: a blast loads the whole crater (default 6). */
     blastFactor?: number
-    /**
-     * Metres of reach per cube root of kilojoule: a blast only opens a breach in a part within `blastReach * cbrt(energy / 1000)` of the centre
-     * (a hand grenade of 200 kJ: 0.7 m; 2 MJ: 1.5 m). Farther away it still damages, dents and cracks. Without it a falloff that is gentle over a
-     * large radius let a grenade at 1 m cut a reinforced column in two. Default `Infinity` (off, so the goldens stay as they were); 0.12 is the value that matches real charges.
-     */
-    blastReach?: number
   }
   /**
    * Speed of the blast front in m/s. A glass part at distance `d` from an explosion breaks `d / blastFrontSpeed` seconds later, in `update`

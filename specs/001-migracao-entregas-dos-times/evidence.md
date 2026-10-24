@@ -2369,9 +2369,17 @@ Controles: clima (os 10 estados, nomes em pt-BR e en), transição (de uma vez o
   `blast_fragments`.
 - Vigas e pilares (pedido do dono na mesma sessão): `tests/beams-and-columns.test.ts` cruza calibres reais de `game-weapons` com pilar e viga de
   concreto armado, viga I de aço, viga de madeira e pilar de tijolo. Correções, todas por opção ou valor e sem tocar nos goldens: `Hit.piercing`
-  (chumbo mole não fura 8,5 mm de aço só pela energia), `breach.blastReach` (padrão **desligado**; o valor realista é 0,12 m por raiz cúbica de kJ:
-  ligado, o `gas_explodes` do golden `house-scenarios` muda, então a decisão de ligar e regravar é do dono) e `damageScale.shelter: 3` no vidro
+  (chumbo mole não fura 8,5 mm de aço só pela energia), `breach.blastReach` (padrão **desligado**; o valor realista é 0,12 m por raiz cúbica de kJ; **removida em 2026-10-24**, ver "Decisões do dono de 2026-10-24" abaixo) e `damageScale.shelter: 3` no vidro
   (valor novo no JSON de materiais, sem efeito fora do abrigo).
+
+### Decisões do dono de 2026-10-24 (física)
+
+**3. Correção da granada sempre ligada.** Dono: "Correção da granada já ligada não deveria nem ter dois caminhos já que é correção." A opção
+`breach.blastReach` e o padrão `Infinity` saíram; os 0,12 m por raiz cúbica de kJ são a física (constante nomeada `BREACH_BLAST_REACH` em `world.ts`).
+Golden regravado com `UPDATE_GOLDEN=1 vitest run tests/wall-golden.test.ts`: só mudou o cenário `gas_explodes` de `house-scenarios.json` (3 eventos a menos:
+o `fracture`, o `debris` e o `stage 3` da janela). A janela fica a ~2,3 m do botijão (60 kJ alcançam 0,47 m), então ela deixa de
+estourar pela brecha da explosão; o estilhaço e o dano da explosão continuam. Os outros cinco cenários não mudaram. Testes de pilar/viga perdem a opção
+e o caso "sem a opção".
 
 ## T2.4
 

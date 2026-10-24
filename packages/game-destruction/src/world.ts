@@ -36,7 +36,7 @@ const BREACH_RADIUS = 0.55
 const BREACH_BLAST_FACTOR = 6
 const BREACH_AREA = 0.25
 /** Metres of reach per cube root of kilojoule for a blast to open a breach. */
-const BREACH_BLAST_REACH = Infinity
+const BREACH_BLAST_REACH = 0.12
 const RESIDUAL_CAPACITY = 0.15
 /** Unit-sized fragments of a whole wall: at most this many times `maxFragments`. A breach picks its units from a grid of up to `BREACH_GRID_CAP`. */
 const UNIT_FRAGMENT_FACTOR = 4
@@ -175,7 +175,6 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const fireSpread = options.fireSpread ?? 0.6
   const breachRadius = options.breach?.radius ?? BREACH_RADIUS
   const breachBlastFactor = options.breach?.blastFactor ?? BREACH_BLAST_FACTOR
-  const breachBlastReach = options.breach?.blastReach ?? BREACH_BLAST_REACH
   const rng = createRng(options.seed ?? 1)
   const rnd = () => rng.next()
 
@@ -1137,7 +1136,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (Ein > 20 && p.layers.length > 0) spallOuter(o, p, wp, faceOf(o, p, wn), wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), src)
     const dealt = applyDamage(o, p, amount, 'explosive', point, null, Ein * 0.3, 40, src)
     res.damage += dealt
-    if (dist <= breachBlastReach * Math.cbrt(Math.max(0, energy) / 1000)) addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
+    if (dist <= BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000)) addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
     return reach
   }
 
