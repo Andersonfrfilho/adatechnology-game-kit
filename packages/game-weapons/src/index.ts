@@ -1,3 +1,4 @@
+export { createRng } from './rng'
 export { createArsenal, CALIBERS, WEAPONS, EXPLOSIVES, ARCHETYPE_IDS, DEFAULT_LOADOUT, muzzleEnergy, checkArsenal } from './arsenal'
 export { DEFAULT_RULES } from './rules'
 export { RELOAD_STAGES } from './reload-stages'
