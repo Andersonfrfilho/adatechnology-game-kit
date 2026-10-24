@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-contracts",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "license": "MIT",
   "description": "The contracts every game module depends on, and nothing else: destruction (parts, hits, events, DestructibleImpl), weapons (shots), fluids (containers, item uses), item animations and the TestableModule a module hands the test room. Types plus tiny checkers, no runtime dependencies.",
   "keywords": [

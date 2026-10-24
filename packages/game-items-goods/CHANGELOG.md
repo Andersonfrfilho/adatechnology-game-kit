@@ -1,5 +1,11 @@
 # @adatechnology/game-items-goods
 
+## 0.1.2
+
+### Patch Changes
+
+- @adatechnology/game-items@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes

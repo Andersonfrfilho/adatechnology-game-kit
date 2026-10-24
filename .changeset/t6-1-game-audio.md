@@ -1,5 +1,0 @@
----
-'@adatechnology/game-audio': minor
----
-
-Initial release (0.1.0): sound as data. Recipes (layers of seeded noise, oscillators, formant voices, serial or parallel filters, LFOs and an envelope, with `sources` for every number) are planned by `planSound` into a `SoundPlan` with every number drawn from a seeded stream in the order the recipe is written. The teams' distance curves (`DISTANCE_CURVES`: the game's 0.004 / 0.006 / 0.01 / 0.002 and its cutoff muffling, the art scene's 0.008, the animals' linear 70 m), the art scene's stereo pan, optional occlusion, a voice limiter (groups with concurrency, cooldown and distance; a global cap of 32 that drops the lowest `priority × gain`), loop state with the game's start threshold and smoothing, mixing profiles and a sound registry with register, patch and remove. `ESM` plus the `GameAudio` global. Shipped data with `sources`: the game's 12 noise classes and fallback (`game-sfx.json`, `noiseClassRecipe`), the two team mixing profiles (`game` and `art_scene`, the kit default), the `undead_voice` group, and a temporary library (motor, rotor, horde, horn, radio static, siren) until their packages exist.
