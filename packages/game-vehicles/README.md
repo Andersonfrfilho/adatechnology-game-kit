@@ -266,3 +266,7 @@ scene.add(c.root)
 ### Contrato de destruição
 
 `createVehicleDestructible(kit, c, opções)` faz um veículo construído seguir o `DestructibleImpl` de `@adatechnology/game-contracts`: cada zona de dano vira uma peça com material, as peças mecânicas (bateria, alternador, câmbio, freios, direção, amortecedores, pneus, retrovisores, engate) são acrescentadas, as juntas (dobradiça, parafuso, solda) se desfazem por desgaste ou com a chave inglesa, e as peças saem do veículo e caem. `status()` diz o que a mecânica faz (freios, direção, bateria, câmbio). Os nomes em português estão em `locales/pt-BR.json` (`mechanics.*`).
+
+## Light mode and damageable parts
+
+`createVehicleKit({ lod })` takes the settings of the light mode (`defaultLodSettings`: every number can be overridden). `kit.build(key, state, zones, { lod: true })` builds the same vehicle with fewer triangles (rounded boxes with one ring, coarser lofts, grilles and generators, interiors tagged `userData.skipLite`) and puts the switch back; with it off nothing changes. `kit.damageables(c, matrix?)` lists the metal, glass, rubber and fuel parts of a built vehicle as `Box3` boxes (`kit.damageableKinds` maps zone types to parts and can be extended).

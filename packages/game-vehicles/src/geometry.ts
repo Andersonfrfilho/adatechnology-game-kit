@@ -7,11 +7,14 @@ export function installGeometry(kit: Kit): void {
   const V3 = THREE.Vector3
   const PI = Math.PI
   const I = kit._
+  const lod = kit.lod
 
   /* ================= geometry ================= */
   function roundedBoxGeometry(w: any, h: any, d: any, r: any) {
     r = Math.max(0.002, Math.min(r, w * 0.45, h * 0.45, d * 0.45))
-    const nb = 3
+    /* light mode: a small or hard-edged box is a plain box (12 triangles), the rest gets fewer rounding rings */
+    if (lod.on && (r < 0.012 || Math.max(w, h, d) < lod.flatBoxEdge || Math.min(w, h, d) < 0.08)) return new THREE.BoxGeometry(w, h, d)
+    const nb = lod.on ? lod.roundingRings : 3
     const n = 2 * nb + 1
     const g = new THREE.BoxGeometry(1, 1, 1, n, n, n)
     const p = g.attributes.position
@@ -56,6 +59,7 @@ export function installGeometry(kit: Kit): void {
     geo.computeVertexNormals()
   }
   function subdivide(geo: any, maxLen: any) {
+    if (lod.on) maxLen = maxLen * lod.subdivisionFactor
     const src = geo.index ? geo.toNonIndexed() : geo
     const a = src.attributes.position.array
     const out: any = []

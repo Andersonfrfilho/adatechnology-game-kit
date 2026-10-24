@@ -41,6 +41,7 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
   /* superellipse loft. x axis: stations [x, top, base, width, p, zc]; y axis: [y, xFront, xRear, width, p, zc] */
   function sloft(st: any, o: any) {
     o = o || {}
+    if (kit.lod.on) o = Object.assign({}, o, { seg: Math.max(kit.lod.minLoftSegments, Math.round((o.seg || 24) * kit.lod.loftSegmentFraction)) })
     const seg = o.seg || 24,
       pos: any = [],
       idx = [],
@@ -133,8 +134,8 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
   /* fender arch over the wheel. cx, cy centre; r inner radius; a0..a1 angles (0 = front); w width; t bulge */
   function fenderGeo(cx: any, cy: any, r: any, a0: any, a1: any, w: any, t: any, zc: any, o?: any) {
     o = o || {}
-    const na = o.na || 22,
-      nu = 10,
+    const na = kit.lod.on ? 10 : o.na || 22,
+      nu = kit.lod.on ? 5 : 10,
       pos = [],
       idx = []
     for (let i = 0; i <= na; i++) {
