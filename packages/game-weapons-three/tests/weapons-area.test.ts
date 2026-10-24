@@ -84,7 +84,7 @@ describe('weapons test area', () => {
     fireUntilEmpty(room)
     expect(module.fx?.casings).toBe(0)
     room.use()
-    room.update(0.1)
+    for (let i = 0; i < 40; i++) room.update(0.1)
     expect(module.fx?.casings).toBe(6)
     expect(module.fx?.magazines).toBe(0)
   })

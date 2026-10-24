@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { WEAPONS } from '@adatechnology/game-weapons'
 import data from '../data/models.json'
 import { buildBreakAction } from './break-action'
 import { buildBullpup } from './bullpup'
@@ -26,6 +27,21 @@ export interface ModelEntry {
 }
 
 export const MODEL_ENTRIES: Readonly<Record<string, ModelEntry>> = data as Record<string, ModelEntry>
+
+/**
+ * The model each generic archetype wears: the one of the first brand weapon (lowest id) that points to it with `archetype` and fires the same way (a rocket launcher that points to
+ * `shotgun_pump_12` does not lend its tube to the shotgun). An archetype nothing points to, the melee weapons and the bow keep their simple prop.
+ */
+export const ARCHETYPE_MODELS: Readonly<Record<string, string>> = (() => {
+  const actionOf = new Map(WEAPONS.map((def) => [def.id, def.action.kind]))
+  const chosen: Record<string, string> = {}
+  for (const def of [...WEAPONS].sort((a, b) => (a.id < b.id ? -1 : 1))) {
+    const { archetype } = def
+    if (!archetype || !(def.id in MODEL_ENTRIES) || archetype in MODEL_ENTRIES || archetype in chosen) continue
+    if (actionOf.get(archetype) === def.action.kind) chosen[archetype] = def.id
+  }
+  return chosen
+})()
 
 /** A weapon model: `root` (the page's `wr`) holds `inner` (what the builder made, fitted to the real length); `parts` are pivots and marks inside `inner`. */
 export interface WeaponModel {
@@ -61,11 +77,11 @@ const fitLength = (kit: ModelKit, inner: THREE_NS.Group, lengthMetres: number): 
   return root
 }
 
-export const hasWeaponModel = (id: string): boolean => id in MODEL_ENTRIES
+export const hasWeaponModel = (id: string): boolean => id in MODEL_ENTRIES || id in ARCHETYPE_MODELS
 
-/** The gallery model of a weapon, long axis along +x, rear at the origin; undefined when the gallery has none (the generic archetypes, melee, throwables). */
+/** The gallery model of a weapon (or of the brand weapon an archetype wears, see `ARCHETYPE_MODELS`), long axis along +x, rear at the origin; undefined for melee, throwables and what nothing drew. */
 export function buildWeaponModelById(THREE: typeof THREE_NS, id: string): WeaponModel | undefined {
-  const entry = MODEL_ENTRIES[id]
+  const entry = MODEL_ENTRIES[ARCHETYPE_MODELS[id] ?? id]
   if (!entry) return undefined
   const kit = modelKit(THREE)
   const options: ModelOptions = { L: entry.length, B: entry.barrel, cal: entry.caliber, ...entry.options }
