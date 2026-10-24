@@ -1,0 +1,55 @@
+{
+  "name": "@adatechnology/game-shapes",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Renderer-agnostic 3D shape generator: a JSON shape schema (primitives, extrusions, lathes, cheap booleans, transforms, groups, named parts, materials by id, LOD rules, instancing hints) in, typed-array buffers per material out. Pure, deterministic by seed, worker friendly and cacheable; the generators are bit-exact ports of three.js r160.",
+  "keywords": [
+    "3d",
+    "geometry",
+    "procedural",
+    "low-poly",
+    "game",
+    "json",
+    "worker"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-shapes"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema.json": "./schema/shape.schema.json",
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist",
+    "schema"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "three": "^0.160.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

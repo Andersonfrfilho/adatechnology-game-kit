@@ -1,0 +1,32 @@
+export { generate, isPrimitiveNode, keyOptions, shapeKey } from './generate'
+export {
+  box,
+  buildPrimitive,
+  circle,
+  clearTemplateCache,
+  clonePrimitive,
+  computeVertexNormals,
+  cone,
+  cylinder,
+  difference,
+  extrude,
+  lathe,
+  plane,
+  primitiveParameters,
+  ring,
+  setTemplateCacheSize,
+  sphere,
+  templateCacheStats,
+  torus,
+} from './primitives'
+export type { DetailOptions } from './primitives'
+export { byteSizeOf, cloneBuffers, mergeTransformed, transferablesOf } from './merge'
+export type { MergedArrays, TransformedPiece } from './merge'
+export { SHAPE_SCHEMA, assertValidShape, validateShape } from './schema'
+export { getGenerator, listGenerators, registerGenerator, unregisterGenerator } from './registry'
+export { canonicalJson, hash64, hashValue } from './hash'
+export { mulberry32, streamFor } from './random'
+export { colorChannels, colorHex, srgbToLinear } from './color'
+export { compose, headingMatrix, identity4, isAffine, matrixOf, multiply, normalMatrix, quaternionFromEuler, transformPoint } from './math'
+export type { Matrix3, Matrix4 } from './math'
+export type * from './types'
