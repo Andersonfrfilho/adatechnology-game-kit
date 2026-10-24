@@ -1,4 +1,5 @@
 import attachmentsJson from './data/attachments.json'
+import { applyPatches, deepMerge, mergeById, removeIds } from '@adatechnology/game-contracts'
 import archetypesJson from './data/archetypes.json'
 import calibersJson from './data/calibers.json'
 import explosivesJson from './data/explosives.json'
@@ -6,10 +7,10 @@ import explosiveWeaponsJson from './data/explosive-weapons.json'
 import firearmsJson from './data/firearms.json'
 import launchersJson from './data/launchers.json'
 import { canFit as canFitAttachment } from './attachments'
+import meleeWeaponsJson from './data/melee-weapons.json'
 import { checkArsenal, findDuplicateIds } from './check-arsenal'
 import { resolveStrings } from './locale'
-import { deepMerge } from './merge'
-import { applyPatches, mergeById, removeIds, resolveThrowables } from './registry'
+import { resolveThrowables } from './registry'
 import { DEFAULT_RULES } from './rules'
 import type { AttachmentDef, FittedAttachment, MountKind, WeaponSnapshot } from './attachment-types'
 import type { Arsenal, ArsenalOptions, CaliberDef, CaliberId, ExplosiveDef, WeaponCategory, WeaponDef, WeaponId, WeaponState } from './types'
@@ -22,7 +23,7 @@ export const EXPLOSIVES = explosivesJson as unknown as ExplosiveDef[]
 /** The generic weapons: handling numbers (spread, bloom, range, recoil) by type, which the real models point to through `archetype`. */
 const ARCHETYPES = archetypesJson as unknown as WeaponDef[]
 export const ARCHETYPE_IDS: readonly WeaponId[] = ARCHETYPES.map((def) => def.id)
-export const WEAPONS: WeaponDef[] = [...ARCHETYPES, ...(firearmsJson as unknown as WeaponDef[]), ...(launchersJson as unknown as WeaponDef[]), ...(explosiveWeaponsJson as unknown as WeaponDef[])]
+export const WEAPONS: WeaponDef[] = [...ARCHETYPES, ...(firearmsJson as unknown as WeaponDef[]), ...(launchersJson as unknown as WeaponDef[]), ...(explosiveWeaponsJson as unknown as WeaponDef[]), ...(meleeWeaponsJson as unknown as WeaponDef[])]
 
 /** A reasonable starting kit for a test room or a sandbox. */
 export const DEFAULT_LOADOUT: WeaponId[] = [

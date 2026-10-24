@@ -29,7 +29,7 @@ const findGroupEnd = (source: string, start: number): number => {
       if (depth === 0) return index + 1
     }
   }
-  throw new Error('weapons-catalog: unbalanced brackets')
+  throw new Error('golden-tool: unbalanced brackets')
 }
 
 const skipString = (source: string, start: number): number => {
@@ -39,13 +39,13 @@ const skipString = (source: string, start: number): number => {
     if (character === '\\') index += 1
     else if (character === quote) return index
   }
-  throw new Error('weapons-catalog: unterminated string')
+  throw new Error('golden-tool: unterminated string')
 }
 
 /** The text of `const <name> = <literal>;` (the literal only), found at the start of a line. */
 export const cutLiteral = (source: string, name: string): string => {
   const match = new RegExp(`^(?:const|let|var) ${name}\\s*=\\s*`, 'm').exec(source)
-  if (!match) throw new Error(`weapons-catalog: "${name}" not found in the source`)
+  if (!match) throw new Error(`golden-tool: "${name}" not found in the source`)
   const start = match.index + match[0].length
   return source.slice(start, findGroupEnd(source, start))
 }

@@ -1348,3 +1348,256 @@ média de loja também liga numa tomada, e o sorteio da edícula usa o nome de f
 Testes de comportamento (`tests/utilities.test.ts`): todo modelo tem instalações e passa no `engine.validate` (12 modelos x 8 sementes x 3 estados); gás em pelo menos duas posições; botijão externo fora da casa e o de baixo da bancada escondido; aparelho com tomada a até 1,2 m e chuveiro com tomada própria a 1,10 m; chave no lado do trinco; barraco (`tap`) sem medidor e com ligação a 2,6 m; cabana `offgrid` sem instalação, só a fonte (`solar` ou `lamp`); solar no telhado ou em rack de laje; edícula com porta de 0,85 m, 2 janelas, móveis dentro e caminho; geladeira com mais mantimento fortificada do que normal e normal mais do que abandonada, comida estragada na abandonada; um provedor registrado responde antes do padrão.
 
 **Escolhas de negócio (padrão reversível):** as regras de estado (`fortified`, `abandoned`) do conteúdo ficam em `CONTENT_STATES` neste pacote até o catálogo de itens (Fase 3) e o pacote do gênero (G7: multiplicadores do estado em `-post-apocalyptic`) assumirem; ids de item de conteúdo em inglês (`water_bottle`, `canned_tuna`, `spoiled_food`...) são provisórios para o catálogo da Fase 3; `gaveteiro` e `sapateira` do time não têm categoria equivalente no SDK e ficam sem conteúdo; o botijão de cozinha é um tipo novo (`cooking_gas_cylinder`, 0,36 x 0,36 x 0,48) ao lado do `gas_cylinder` externo do residencial.
+
+## Fase 3
+
+Desenho: `design/T3-itens.md`. Execução em `sonnet` (o desenho recomendava `haiku` para a T3.0 e `sonnet` para a T3.1a; a ordem da orquestração foi dada sem troca de modelo).
+
+### T3.0 — `Thumbnail`, helpers de registro e `cut-literal` (grupo A)
+
+**O que entrou**
+- `game-contracts`: `Thumbnail` (`{ svg?, render?: true | { yaw?, pitch?, distance?, wear?: 0|1|2 } }`) em `src/module.ts` e `TestableItem.thumbnail?`. Novo `src/registry.ts` com `mergeById`, `applyPatches`, `removeIds`, `deepMerge` e o tipo `DeepPartial`, movidos de `game-weapons/src/registry.ts:7-24` e `merge.ts`; exportados pelo index.
+- `game-weapons`: `arsenal.ts` e `locale.ts` importam os helpers do contracts; `merge.ts` apagado; `registry.ts` ficou só com `resolveThrowables`. API pública igual: `DeepPartial` continua exportado por `export type { DeepPartial }` em `types.ts` (os helpers nunca foram exportados pelo index do weapons, então nada a reexportar).
+- `game-interactables`: `ItemDef.thumbnail?: Thumbnail` (é o `BaseItemDef` do desenho) e dependência `@adatechnology/game-contracts` (`workspace:*`, só tipo; `pnpm-lock.yaml` atualizado). O Dockerfile já copia os dois manifestos.
+- `cut-literal`: `tools/weapons-catalog/src/cut-literal.ts` foi com `git mv` para `tools/golden/src/cut-literal.ts` e é exportado pelo index do `@adatechnology/golden-tool` (`cutLiteral`, `evaluateLiteral`, `extractLiteral`). `extract-game/lab/gallery.ts` importam de lá; `golden-tool` é devDependency do `weapons-catalog` (o `tsup` o embute no CLI). Mensagens de erro agora começam com `golden-tool:`. Não havia teste do `cut-literal`; criado `tools/golden/tests/cut-literal.test.ts` (3 testes).
+
+**Desvios do desenho e por quê**
+- O `cut-literal` importa `node:vm`, e o `dist/index.global.js` do golden-tool é injetado na página pelo gravador: com o arquivo no mesmo bundle a página quebraria ao carregar (`__require("vm")` no topo). Por isso `tools/golden/src/browser.ts` (tudo menos o `cut-literal`) é a entrada do IIFE, e `src/index.ts` = `browser.ts` + `cut-literal`. Conferido: o IIFE novo não contém `vm`.
+- Teste novo no contracts (`tests/registry.test.ts`, 4 testes) para os helpers que agora moram lá; antes só eram cobertos por `createArsenal`.
+- A tarefa paralela das armas (branch `work/spec001-thumbs`) também põe `thumbnail` no `TestableItem`. Esta task usa o tipo `Thumbnail` do desenho; **a tarefa das armas adotará/mesclará este tipo** (ao rebasear, ficar com um só `Thumbnail` em `module.ts` e um só campo `TestableItem.thumbnail`).
+
+**Changeset:** `.changeset/items-thumbnail-registry-helpers.md` (contracts minor, interactables minor, weapons patch).
+
+**Portões (Node 24.22.0)**
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro) | exit 0; contracts 31, weapons 277, interactables 153, household 1907, golden 42, weapons-catalog 17, weapons-three 94, test-room 118, fleet 875 |
+| `pnpm --filter @adatechnology/weapons-catalog-tool catalog:check` | up to date |
+
+Node 22.23.4 (npm em pasta de rascunho): `tools/golden` 42, `game-weapons` 277, `game-contracts` 31, `tools/weapons-catalog` 17, `game-weapons-three` 94 passaram (os hashes de golden usam `installPortableMath`, sem mudança).
+
+### T3.1a — Esqueleto do `game-items` (grupo A)
+
+**O que entrou** (`packages/game-items`, `@adatechnology/game-items` 0.1.0 pelo changeset; sem three, sem conteúdo, sem lógica)
+- Tipos do desenho (seção 2): `ItemDef extends BaseItemDef` (o `ItemDef` do interactables) com `category`, `tags`, `rarity`, `volume`, `durability`, `shelfLife`, `portions`, `cookable`, `nutrition`, `protection`, `carry`, `weapon`, `fluid`, `uses`, `finds`, `charge`, `agingFault`, `model` (e `thumbnail`, herdado). Vocabulários fechados `RARITIES` (6), `BODY_SLOTS` (7), `DURABILITY_KINDS` (12). Registros extensíveis: categorias (as 14 em inglês em `ITEM_CATEGORIES`), lugares (`PlaceDef`) e recipientes (`ContainerDef`).
+- `createItems({ packs, patch, remove, include, categories, places, containers, rules })`, mesma ordem do `createArsenal` (pacotes por id, `patch`, `remove`, `include`) sobre `mergeById`/`applyPatches`/`removeIds`/`deepMerge` do contracts. Devolve `ItemsCatalog`: mapas `items`, `categories`, `places`, `containers`, `rules` e `has`, `get` (lança em id desconhecido), `list`, `byCategory`, `byPlace`, `byTag`. `volume` é derivado do `size` (litros) quando o pacote não dá. Tudo inconsistente sai num erro só (`checkItems`): categoria, raridade, lugar, tamanho, peso, validade, porções, durabilidade, proteção, carga, recipientes, regras e ids repetidos.
+- `DEFAULT_RULES` (`ItemRules`): pesos de raridade 60/28/9/2,5/0,5/0 com `fixedOnly: ['unique']`; frescor 0,5/1/1,5; armazenamento (`StorageRule`: `multiplier`, `needsPower`, `limitDays`, `afterLimit`); carga `(8 + 2,5·FOR)·1,2` com `encumbered` 1 e `overloaded` 1,5; proteção teto 0,9, desgaste 8/3, rasgado 0,25, margem de conserto 10; `spawn.retailNew` (true) e `spawn.retailPlaces`. Todas por opção, mescladas com `deepMerge`.
+- Pacote completo: `package.json`, `tsconfig`, `tsup` (ESM + IIFE `GameItems`), `vitest.config`, README, `.claude/skills/game-items/SKILL.md` (esqueleto declarado como tal), changeset `game-items-skeleton.md`, COPY do manifesto em `site/Dockerfile`, `pnpm-lock.yaml`.
+- Testes (18): registro (vazio, ordem dos pacotes, volume derivado, `patch` aninhado e id inexistente, `remove` e `include`, índices, categorias/lugares/recipientes de pacote e de opção, regras mescladas, `get` desconhecido), validação (duplicados, todos os problemas de um item num erro, proteção/carga/lugar/recipiente, lugar não conferido sem registro, regras inconsistentes) e regras padrão.
+
+**Desvios do desenho e escolhas reversíveis**
+- **Multiplicadores de armazenamento:** o brief pedia valores PLACEHOLDER; como a tabela do HTML (L205–211) é curta, os 7 valores já vêm lidos à mão dela (geladeira 0,33 e freezer 0,1 só com energia, caixa térmica 0,5 por 2 dias e depois 1, bag 0,8, porão 0,66, ambiente 1, sol 2). Quem prova é o teste de fonte do `tools/items-catalog` (T3.1b/f); se divergir, muda aqui. Ids em inglês: `fridge`, `freezer`, `cooler`, `delivery_bag`, `cellar`, `ambient`, `hot`.
+- **Lugares sem padrão:** nenhum lugar vem embutido (os 24 são conteúdo do `goods`); `finds.places` só é conferido quando algum lugar foi registrado. Categoria desconhecida, ao contrário, é erro (as 14 sempre existem).
+- **`ContainerDef` provisório** (`categories` por peso e `count`): a T3.1e fixa os campos do sorteio. `ItemRules.spawn.retailPlaces` acompanha `retailNew` (decisão 1 da seção 6) porque a regra precisa saber quais lugares são prateleira/estoque; vazio por padrão, o `goods` preenche.
+- **Limiares de carga:** nomes `encumbered`/`overloaded` (>100% corrida e fôlego −25%; >150% não corre) são interpretação dos textos do HTML; os efeitos ficam para a T3.1e.
+- `unique` com peso 0 e `fixedOnly: ['unique']` (o sexto valor "só-fixo" do brief); `legendary` 0,5 entra no sorteio. Se o HTML disser que lendário também é só de ponto fixo, vira uma linha em `fixedOnly`.
+- `game-items` depende de `game-contracts` e `game-interactables` (`workspace:*`); em T3.1a o interactables só dá o tipo base (o `fitsSize` entra na T3.1e).
+
+**Portões da T3.1a (Node 24.22.0)**
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro) | exit 0; `game-items` 18 (2 arquivos) |
+| `pnpm --filter @adatechnology/weapons-catalog-tool catalog:check` | up to date |
+
+Node 22.23.4: `game-items` 18, `tools/golden` 42, `game-interactables` 153 passaram. Goldens (`golden-tool`, `game-weapons` team-golden e por arma) sem mudança nos dois Nodes; sem golden novo nesta task (o do `game-items` é da T3.1e). Modelo da execução: `sonnet`.
+
+### T3.1b — `tools/items-catalog` (grupo B)
+
+**O que entrou** (`@adatechnology/items-catalog-tool`, privado, copia o `tools/weapons-catalog`)
+- Extratores: `extract-ite.ts` (`DATA` do ITE pelo `cutLiteral` do golden-tool), `extract-ite-html.ts` (tabela de armazenamento e 32 regras em prosa do HTML, cada uma com número de linha e citação exata), `extract-game.ts` (`ITENS`, `EXTRA`, `RAR_W`, `CONT_TAB`, `FIXOS`, `LOOT` e o texto de `useItem` como guarda), `extract-vc3.ts` (`CONTEUDO` L10824–10878 e `COMIDA_SUP`, avaliados num `vm` vazio), `base/household-items.sdk.json` (cópia byte a byte do `items.json` do household).
+- `parse-durability.ts` (`dur` → `Durability` + `formatDurability` pt-BR inverso) e `parse-recipe.ts` (receitas → `{ inputs, tools, skill?, seconds, output }` + `formatRecipe` inverso; frases → ids por `decisions.json.recipeTerms`).
+- `build.ts` com `--check` e `--game-out <dir>`; `cli.ts`; `paths.ts`; README; scripts `build`/`catalog`/`catalog:check`.
+- `decisions.json` inicial (`{ value, source, reason }`, citação opcional): categorias (14 + 3 do jogo: `ammo`, `firearms`, `throwables`), lugares (24), raridades, regiões, 39 junções com o household, 16 ids em inglês (histórias genéricas + `notebook`→`laptop`), 12 `scope: 'game'`, tabelas de padrão (densidade, pilha, forma por categoria), `slotMap`, armazenamento (7, com citação de linha), contêineres, saque progressivo, 33 receitas, 9 habilidades, 80 frases de receita, 89 aliases do VC3, calibres e armas do `EXTRA`. `dimensions` vazio.
+- Saída em `packages/game-items-goods/src/data/` (o diretório e um `package.json` privado mínimo; o pacote completo é a T3.1f): `items` (298), `categories` (17), `places` (24), `rarities` (6), `storage` (7), `recipes` (33), `containers` (17), `depletion` (6), `spawn`, `house-pools`, `ammo-boxes` (4 caixas, 3 armas, M67, molotov), `use-effects` (9), `melee` (20: alcance e ruído), `provenance`. Fatia do jogo (`--game-out`): `documents` (14), `regions` (10 regiões, 111 itens com região, 10 especialidades), `uses` (textos `uso`), `damage-points` (20), `fixed` (9), `faction-loot` (`LOOT`), `supply-events` (lançamento do Exército, trem, escala de luz, teto de 400 no chão).
+
+**Contagens reais**
+- ITE: 257 itens (245 no SDK, 12 `scope: 'game'`), 14 categorias, 24 lugares, 6 raridades, 33 receitas, 16 contêineres, 10 regiões, 10 especialidades, 111 itens com `reg`. `ITENS` do jogo: 146, todos no ITE com `kg`, `rar`, `cat`, `onde`, `f`, `s` e `uso` iguais (0 diferenças).
+- Catálogo gerado: 298 itens = 245 do time + 53 do household sem par (92 − 39 juntados); ids: 39 do household por junção, 16 decididos, 190 ainda provisórios (slug do id do time), 53 do household. Tamanhos: 92 do household, 206 provisórios (cubo derivado de `kg` e densidade por categoria); `provenance.json` diz qual.
+- Durabilidade: 115 textos distintos, ida e volta exata nos 257; 77 itens sem durabilidade (`—`), 18 com texto livre (`vida 500`, `ver Arsenal`, `10 m`: `kind: 'condition'` com as palavras em `per`, sem inventar quantidade).
+- Receitas: 33 lidas e escritas de volta idênticas nos 5 campos; 3 saídas em item, 30 em efeito (o texto fica em `output.text`, `params` vazio); 18 termos sem item no catálogo, listados em `recipe.unresolved` (`fire`, `water`, `table`, `door`, `cabinet`, `garment`, `branch`, `barrel`, `ingredient`, `glass_jar`, `vegetable`, `broomstick`, `raffia_sack`, `soil`, `feather`, `stick`, `bread_mold`, `clean_glass`).
+- Pools VC3: 25 recipientes (20 próprios e 5 que repartem o pool de outro), 89 tipos, 106 entradas; 86 resolvem para item, 20 ficam com `item: null` (`aliases` com `null`: sem item equivalente ainda).
+- Contêineres: 16 do ITE, 9 deles com a tabela `CONT_TAB` (faixa e pesos), mais `counter` (`balcao`, só do jogo); `prateleira` (sem categorias no jogo) guarda o recuo por lugar (`categoriesByPlace`).
+
+**Desvios do desenho e escolhas reversíveis**
+- **`DEFAULT_RULES` do `game-items` mudou:** a página diz "Lendário e único nunca são sorteados" (L276), então `fixedOnly` é `['legendary', 'unique']` (era só `unique`; o peso 0,5 do lendário fica da tabela). Ajustados `rules.ts`, o teste e o SKILL; changeset `items-catalog-rules.md` (game-items patch). Os outros números (armazenamento, frescor, carga, proteção, pesos 60/28/9/2,5) batem com o HTML: o teste de fonte compara um a um.
+- **Fontes de `v` nulo:** 8 itens (sal, açúcar, água, cachaça…) têm `v: null` no ITE: não estragam; ficam sem `shelfLife` e sem a etiqueta `perishable`.
+- **Receitas:** `output` guarda `label` e `note` (palavras do original) para a ida e volta; `inputs[].label` e `tools[].label` idem. `tools` é uma lista de exigências (E entre elas, OU dentro de `anyOf`); "mãos" é `anyOf: []`. O desenho previa `params` nas saídas em efeito: ficou vazio, quem os preenche é a T3.1e/f.
+- **Lendário/único e raridade sem peso:** `rarities.json` traz `isFixedOnly` (peso da tabela mais a marca).
+- **Escolhas de negócio padrão (reversíveis, uma linha em `decisions.json`):** `slotMap` ("por cima" = tronco, braços, pernas; "corpo e cabeça" = tudo); `warmthScale` 10 (`cal` 0 a 9 → fração); `carryWheelsAt` 100 (`red` 100 = rodas); categoria do household (`hygiene`→medical, `cleaning`/`trash`→materials, `office`/`mail`→collectibles, `kitchen`/`tool`/`garage`→tools, `bbq`→outdoors); household sem raridade = `common`; "lugares remotos" do saque progressivo = mina, represa, pousada, igreja; carga e combustível: só pilha AA, bateria 9 V e gasolina recebem `charge`/`agingFault`.
+- **`ammo`/`firearms`/`throwables`** entram em `categories.json` (as 14 do time não cobrem o `EXTRA` nem `CONT_TAB.guarda`/`gaveta` com `mun`); o pacote goods registra essas três.
+- Guarda de deriva do `useItem`: cada efeito de `use-effects.json` carrega um trecho do código do jogo; o build falha se o trecho sumir.
+- Fora desta task (ficam para a T3.1c/d/f): ids em inglês dos 190 provisórios, medidas reais, `weapon` dos 20 corpo a corpo (T3.1i), textos pt-BR/en, tipos do pacote goods.
+
+**Portões (Node 24.22.0)**
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro) | exit 0; `items-catalog` 24 (3 arquivos), `game-items` 18, `golden` 42, `game-weapons` 277, `weapons-catalog` 17 |
+| `pnpm --filter @adatechnology/items-catalog-tool catalog:check` | up to date (também com `--game-out`) |
+| `pnpm --filter @adatechnology/weapons-catalog-tool catalog:check` | up to date |
+
+Node 22.23.4: `tools/items-catalog` 24, `game-items` 18, `tools/golden` 42 passaram. Sem golden novo (os hashes da T3.1k/T3.2b); nada do `game-weapons` mudou. Modelo da execução: `sonnet`.
+
+### T3.1c — `decisions.json`: ids, junções, escopo, pilhas, aliases e termos de receita (grupo B)
+
+**O que entrou** (tudo em `tools/items-catalog/decisions.json`; dados regenerados em `packages/game-items-goods/src/data/`)
+- **Ids em inglês definitivos:** os 245 itens do SDK têm id snake_case (38 do household por junção, 207 por decisão); nenhum slug provisório sobra (`finalIdOf` agora falha se faltar decisão, e o tipo `IdSource` perdeu `provisional`). Os 12 itens `scope: 'game'` e os 2 extras só do jogo (`chave_casa_d`, `sinalizador`) também ganham id em inglês (`survivor_diary`, `military_map`, `evacuation_order`, `patient_zero_record`, `prisoner_files`, `mine_logbook`, `radio_tape`, `valley_postcard`, `npc_marked_item`, `bunker_code`, `cable_car_key`, `dam_badge`, `house_d_key`, `signal_flare`); a fatia do jogo usa esses ids.
+- **Junções com o household: 39 propostas → 38 confirmadas.** Cada uma tem `reason` com a conferência (mesmo objeto; o id do household fica, valores do time vencem em peso, raridade, durabilidade e validade). **Corrigida:** `jaqueta_jeans`→`jacket` (a jaqueta jeans é um tipo de jaqueta; juntar faria a `jacket` genérica das tabelas do household virar jeans) agora é `denim_jacket`. Novo `mergeRejected` guarda 11 pares parecidos que ficam separados, com razão (`frigideira`/`pan`, `garrafa_pet`/`empty_bottle`, `sacola`/`plastic_bag`, `notebook`/`notebook`, `carne_bovina`/`frozen_meat`...), para ninguém propor de novo; teste confere que nenhum deles está em `merge`. Genéricos como `canned_food` ficam separados.
+- **Categorias do household:** `householdCategoryMap` com razão por categoria (mesmo mapa da T3.1b, confirmado) e `householdItemCategory` (3 exceções por item: `phone_charger`→electronics, `ice_pack`→tools, `towel`→clothing).
+- **Escopo:** 12 itens de história `scope: 'game'` (lista do pedido, confirmada); o SDK mantém as formas neutras (`safe_key`, `generator_key`, `cell_key`, `master_key`, `padlock_key`, `dog_tag`, `photo`, `note`, `city_map`, `road_map`, `cash`, `cigarettes`) e ganha `access_badge`, criado (o time só tem o crachá da represa, só do jogo).
+- **Itens criados (`extraItems`, 28):** o motor não inventa item; o que as fontes não têm vira decisão com razão. Termos de receita: `branch`, `stick`, `feather`, `bread_mold`, `glass_jar`, `broomstick`, `barrel`. Tipos de pool do VC3 sem item: `insulin`, `leftover_meal`, `disinfectant`, `seasoning`, `stapler`, `remote_control`, `dvd`, `cable_bundle`, `shoe_polish`, `laundry_powder`, `broom`, `rubber_gloves`, `fabric_softener`, `clothespins`, `electrical_tape`, `full_trash_bag`, `food_packaging`, `wine_glass`. Dois aliases estavam errados e viraram itens: `livro` apontava para o livro de habilidade (raro) e `oculos` para o óculos de proteção; agora `book` e `eyeglasses`. `provenance.json` marca `created: true`.
+- **Pools VC3:** os 20 `item: null` (18 tipos) agora resolvem; os 89 aliases foram revistos (ids finais, razão por alias; os aproximados dizem por quê). Teste exige `item` diferente de `null`.
+- **Termos de receita (18 sem item → 0):** 7 viraram itens criados (acima); `saco de ráfia` já existia (`raffia_sack`, o item `saco_areia`); `legume` = `potatoes`/`cassava_root`/`tomato` (família); `vidro limpo` = `glass_jar` ou `glass_bottle`; `mesa`/`porta`/`armário`/`terra` = **coisa do mundo** (`world`, nunca carregada); `fogo` = estação do mundo em `tools[].world`; `água` = **fluido** (`fluid: 'water'`, em litros, id do `game-fluids`); `roupa` = qualquer item da categoria `clothing`; `ingredientes` = qualquer item `cookable` (`match`). O tipo `TermTarget` ganhou `items`, `fluid`, `world`, `match`; `RecipeInput` ganhou `fluid`, `world`, `match`; `RecipeTool.world`. `unresolved` fica `[]` em todas as receitas (teste novo) e a ida e volta pt-BR continua exata nas 33.
+- **Pilhas:** `stackByCategory` revista com razão por categoria (medical 6, materials 8→4, demais mantidas) e `stackOverrides` (28 itens): pesados e volumosos 1 a 2 (`bricks`, `cement_bag`, `portable_generator`...), embalados por caixa/pacote (sementes 8, `nails`/`screws` 6, `wire_roll` 4). Juntados continuam com a pilha do household.
+
+**Contagens:** 327 itens = 245 do time + 54 do household sem par (92 − 38) + 28 criados; ids: 38 `merge`, 235 `decision`, 54 `household`; receitas 33 (0 `unresolved`); pools 25 recipientes, 106 entradas, 0 `item: null`.
+
+**Desvios do desenho e escolhas reversíveis:** (1) o desenho previa "~30 junções" e `access_badge` sem dizer de onde vinha: 38 junções, `access_badge` criado. (2) O desenho dizia 307 itens no SDK (~12 documentos no jogo): são 327, porque os 28 itens criados vêm da exigência de resolver pools e receitas. (3) Termos de receita que não são item são dado (`world`/`fluid`/`match`), não buraco: quem consome (T3.1e) trata cada um. (4) Opção reversível: cada item criado, cada exceção de categoria e cada override de pilha é uma linha; apagar a linha de `extraItems` exige trocar o alias/termo que a usa (o teste avisa).
+
+**Portões (Node 24.22.0)**
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 (ESLint: No issues found) |
+| `items-catalog` testes | 27 (3 arquivos; eram 24) |
+| `game-items` 18, `golden-tool` 42 | verdes |
+| `catalog:check` | up to date |
+
+Node 22.23.4: `tools/items-catalog` 27, `game-items` 18, `tools/golden` 42, `catalog:check` up to date. Sem golden novo (os hashes da T3.1k/T3.2b). Modelo da execução: `sonnet` (o pedido recomendava `haiku`; houve decisões de modelagem: extras, termos de receita).
+
+### T3.1d — Medidas reais (`decisions.json.dimensions`) e teste de densidade (grupo B)
+
+**O que entrou**
+- `decisions.json.dimensions`: uma entrada por item do catálogo (327) mais `survivor_diary` (o modelo `diario` é do jogo): `{ value: [largura, altura, profundidade] em metros, source, reason, material, modelScaleRef? }`. Fontes: `household` 84 (54 sem par + 30 juntados que ficam com a medida do household), `REF` 208 (medida real razoável do tipo de objeto, com a descrição e as medidas em mm na `reason`), `model` 23 (os modelados do SDK; mais o `diario`), `derived` 12 (cópia de outro item: garrafa de 500 ml, lata de 350 ml, litro de combustível, caixa de comprimidos...). Substitui os 206 tamanhos provisórios derivados de kg: `provisionalSize`, `densityByCategory` e `SizeSource 'provisional'` saíram; item sem medida **derruba o build**.
+- **Os 24 modelados:** os construtores do ITE (L144-168) foram avaliados com `three@0.128.0` (como o golden) e a caixa de cada um medida (`Box3.setFromObject`, nas unidades da página). O tamanho é essa caixa × **uma escala**, tirada de uma medida real de um eixo (`modelScaleRef`: `teamId`, `teamBox`, `axis`, `meters`, `scale`), preservando as proporções do time. Ex.: garrafa de 500 ml = diâmetro 66 mm → 66 x 183 x 66 mm; pé de cabra = 750 mm (30 pol); botijão P13 = 490 mm; galão de 20 L = 470 mm (30,8 x 47 x 15,4 cm); pilha AA = 50,5 mm; martelo = 330 mm; facão = 550 mm; lata = diâmetro 80 mm (a lata do time é achatada, diâmetro maior que a altura: com 73 mm ficaria 62 mm de altura e mais densa que a água; com a altura de 113 mm do exemplo do pedido ficaria 4x o volume de um feijão de 450 g). `diario` (21 cm) fica na tabela para a T3.2b, mas é item do jogo.
+- **Teste de densidade** (`tests/density.test.ts`): kg por litro da caixa dentro de uma faixa por material (14 materiais: `liquid`, `food`, `paper`, `cloth`, `wood`, `metal_solid`, `metal_tool`, `long`, `stone`, `glass`, `plastic`, `electronic`, `battery`, `hollow`); `hollow` é a lista explícita de 45 itens ocos ou cheios de ar (embalagens, bolsas, capacetes, balde, tábua em leque...), cada um com razão. Também testa que cada lado fica entre 1 mm e 2 m e que um dedo escorregado (×10 ou ÷10 num lado) sai da faixa em 80% dos itens (medido: 0,80; as faixas são largas de propósito, o teste pega ordem de grandeza e não arredondamento). `tests/dimensions.test.ts`: uma medida por item (nada além do `diario`), `items.json` = decisão, `sizeSource` = fonte, `household` = valor do household, e os 24 modelados = caixa × escala em 1%, com `teamId` iguais aos 24 `MODELS` lidos do ITE (a conferência de 2% contra o `models.json` é da T3.2b).
+- **Pilha:** nenhuma mudança (valor do household nos juntados, senão padrão por categoria e `stackOverrides`, da T3.1c).
+
+**Desvios do desenho e escolhas reversíveis**
+- **Juntado e modelado ao mesmo tempo (7 itens):** o pedido diz que juntados herdam o tamanho do household, mas os 24 modelados são dimensionados pela caixa do time, e um item não pode ter duas caixas (o teste da T3.2b compara caixa × escala com o `size`). **Padrão adotado: o modelo vence** nos 7 (`water_bottle`, `rice`, `first_aid_kit`, `bandage`, `hammer`, `flashlight`, `batteries`); a `reason` guarda o valor antigo do household. Reverter um deles = apagar a entrada de `dimensions` e pôr `source: 'household'` (e tirar o item do `models.json` na T3.2b). Antes → depois (m): `water_bottle` 0,07x0,28x0,07 → 0,066x0,183x0,066; `rice` 0,1x0,2x0,06 → 0,171x0,25x0,071; `first_aid_kit` 0,25x0,09x0,17 → 0,25x0,214x0,096; `bandage` 0,1x0,03x0,05 → 0,101x0,078x0,044; `hammer` 0,3x0,03x0,1 (deitado) → 0,159x0,33x0,047 (em pé); `flashlight` 0,04x0,04x0,16 → 0,056x0,16x0,056; `batteries` 0,06x0,02x0,05 → 0,037x0,051x0,017. **A T3.1g precisa avisar o household**: as alturas e a orientação mudam nesses 7.
+- **Erro achado pelo teste no household:** `juice_box` (0,07 x 0,2 x 0,07 = 1 L) contradiz o peso do time (0,2 kg, caixinha de 200 ml). Peso do time vence, então a medida passou a REF 52 x 100 x 37 mm (`source: 'REF'`, `reason` explica). Mudança de medida do household, também para a T3.1g.
+- **Orientação:** `size` está no quadro do próprio item: modelados na pose do modelo (y para cima, ferramentas longas em pé), os demais na pose de repouso (y para cima, ferramentas longas deitadas ao longo de x, como o household). A T3.2 desenha pelo `size`, então as duas convivem.
+- **Roupas** medidas dobradas (como `tshirt` e `jeans` do household); sacos e mochilas vazios. Padrões reversíveis: cada medida é uma linha.
+- **Ajustes de dado achados pelo teste, nos itens criados:** `stick` pesa 20 g (eram 50 g para um galho de 12 mm); faixa `hollow` começa em 0,004 kg/L (o saco plástico do household pesa 20 g em 4 L).
+- **Contagem:** o pedido falava em 298 itens; são 327 porque a T3.1c criou 28 itens e desfez uma junção (ver T3.1c).
+
+**Portões (Node 24.22.0)**
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro) | exit 0; `items-catalog` 35 (5 arquivos), `game-items` 18, `golden` 42, `game-weapons` 277, `game-interactables-household` 1907 |
+| `catalog:check` (items e weapons, também com `--game-out`) | up to date |
+
+Node 22.23.4: `tools/items-catalog` 35, `game-items` 18, `tools/golden` 42, `catalog:check` up to date. Sem golden novo (os hashes da T3.1k/T3.2b); o teste de densidade falhou **0 vezes** depois de os 7 desvios acima serem tratados na tabela (a primeira rodada de rascunho tinha 7 itens fora da faixa; nenhum gate falhou 2x). Modelo da execução: `sonnet` (o pedido recomendava `haiku` com escalada para `sonnet`; as medidas exigiram escolha por objeto).
+
+### T3.1e — Motor do `game-items`: envelhecimento, carga, proteção, uso, receitas, achados e ponte do arsenal (grupo C)
+
+**O que entrou** (`packages/game-items`, três commits isolados: `17a8b74` envelhecimento/carga/proteção/uso/receitas, `15aa34d` achados, este com `itemsFromArsenal` e a documentação)
+- `decay.ts`: `advanceAge` (`ageDays += (now - since) x multiplicador`, preguiçoso e puro), `moveToStorage`, `storageMultiplier`, `freshness` (fresh/stale/spoiled/rotten em 0,5/1/1,5), freezer sem luz vira fresco com 2 dias de prazo, caixa térmica x0,5 por 2 dias (contado desde a entrada) depois x1, `chargeLevel` (-10%/mês), `failsToStart` (gasolina > 180 d falha 10%).
+- `protection.ts` (`1-PROD(1-b·c)`, teto 90%, -8/-3, rasgado 25%, conserto até 100-10), `carry.ts` (`(8+2,5·FOR)·1,2`, 100%/150%, vagas e peso), `use-effect.ts` (`resolveUse` puro sobre `use-effects.json`; comida passada/estragada/podre e cozida como regras `rules.use`), `recipes.ts` (`canCraft`/`craft`; habilidade e `unlockedBy` só se o host passa `skills`/`unlocked`; saída em efeito é do host).
+- `finds/`: `category-roll.ts` (porte do `rollItems`), `explicit-pool.ts` (porte do `sorteiaConteudo`), `depletion.ts` (`max(piso, 1-queda·dias)`, nada no dia 0), `spawn-state.ts` (idade = dias de surto + U(0;0,6)·validade, condição por raridade, loja nova no dia 0, carga, enchimento), `provider.ts` (`createFindsProvider`, `findsFor` igual à forma do `FindsProvider` da planta, lida de `feat/spec-001-fase-2`), `place-finds.ts` (`fitsSize`), `loot-tables.ts` (`toLootTables`).
+- `arsenal-items.ts`: `itemsFromArsenal(arsenal, { records })`: `ammo_<calibre>` (28), `firearm_<id>`, `throwable_<id>` a partir de `mass` e `dimensions.length`; caixa do jogo vem de `ammo-boxes.json` (`records`), o resto é estimado (REF). Estrutural (`ArsenalLike`); `game-weapons` só como devDependency de teste.
+- Registro: `ItemPack`/`createItems` ganharam `pools`, `poolAliases`, `useEffects`, `recipes`; `ContainerDef` fixou `count`, `categories`, `categoriesByPlace`, `places`. `DEFAULT_RULES` ganhou `aging`, `inventory`, `use`, `spawn.*`, `finds.*` (os números de `depletion.json` e `spawn.json`, provados por teste de integração que lê o JSON do goods).
+
+**Ordem de sorteio (contrato dos goldens G-b e G-c, T3.1k), documentada no código**
+- `rollByCategory`: 1 para a contagem; por pilha 1 para a categoria e 1 para o item (nenhuma se a categoria não tem o que sortear). O estado (idade, condição...) é sorteado depois de todas as escolhas.
+- `rollExplicitPool`: 1 (contagem `base`); abandonada +1; ordem ponderada completa (1 por entrada, antes do corte); 1 por entrada mantida (quantidade); só abandonada e vazia +1 (lixo).
+
+**Desvios e escolhas reversíveis**
+- Planta: não registrei nada no `game-floorplan` (T3.1h pulada); **a ligação na planta fica pendente** (`registerFindsProvider`, `TemplateDef.place`). O stub só existe em `feat/spec-001-fase-2`; repliquei `FindsQuery`/`FindStack`/`FindsProvider { findsFor }` estruturalmente.
+- `createFindsProvider({ pools: 'team' })` usa os pools registrados no catálogo (`ItemPack.pools`), não dados embutidos (o motor não tem conteúdo).
+- `rollByCategory` não rola `legendary`/`unique` (página do time, L276) nem `rules.finds.rollExcluded` (`ammo_7_62x39`, que o jogo exclui); o jogo daria peso 1 aos de raridade só-fixo. A ordem dos itens do goods pode diferir da do ITE: o G-b deve comparar por ids.
+- Contagem escalada por dia/região depois de sorteada (dia 0 = jogo). Item removido do catálogo some dos achados depois do sorteio.
+- `ItemRules.storage/carry/protection` não mudaram de forma (teste de fonte do items-catalog compara por `toEqual`); o que é novo foi para `aging`, `inventory`, `use`.
+- Condição vai de 0 a 100 e conserto até 90 (`dur` de condição não é lido como máximo). `carry.capacityKg` de bolsa vira vagas (`cap` do jogo). Saciedade -30% vale também para estragada; podre não se come. `very_rare`/`legendary`/`unique` usam a faixa de condição 50–100. Lojas do dia 0: `retailPlaces` e `retailContainers` com os lugares/recipientes de loja do time.
+- Sem golden G-b/G-c nesta task.
+
+**Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` exit 0; `pnpm -r test` verde (`game-items` 139 em 13 arquivos, eram 18; `items-catalog` 35); `catalog:check` de items e weapons up to date. **Node 22.23.4**: `game-items` 139, `tools/items-catalog` 35, `tools/golden` 42 passaram. Nenhum gate falhou 2x. Modelo da execução: `sonnet`.
+
+### T3.1f — Pacote `game-items-goods` (grupo B/C)
+
+**O que entrou** (`packages/game-items-goods`, `@adatechnology/game-items-goods` 0.1.0 pelo changeset `game-items-goods-package.md`)
+- `src/data.ts` (JSON gerados importados e tipados: `GOODS_ITEMS` 327, `GOODS_CATEGORIES` 17, `GOODS_PLACES` 24, `GOODS_CONTAINERS` 17, `GOODS_RECIPES` 33, `GOODS_USE_EFFECTS` 9, `GOODS_HOUSE_POOLS` cortado para `PoolEntry`, `GOODS_TABLES` com raridades/armazenamento/esgotamento/surgimento/corpo a corpo, `GOODS_ARSENAL_RECORDS` para `itemsFromArsenal`, `GOODS_PROVENANCE`), `src/pack.ts` (`goodsPack` e `createGoodsItems(options)`: goods primeiro, pacotes e opções do jogo depois e vencem), `src/locale.ts` (`GOODS_STRINGS`, `goodsText`, `pickGoodsLocale`).
+- Textos: `src/data/locales/pt-BR.json` **gerado** pelo `tools/items-catalog` (424 chaves: `item.*` 327, `category.*` 17, `place.*` 24, `rarity.*` 6, `container.*` 17, `recipe.*` 33): nome do time (ITE `n`) nos 245 do time; nome que o household já tinha nos 54 sem par; `decisions.json.names` (nova tabela, com razão) nos 28 itens criados, nas 3 categorias do jogo e no recipiente `counter`. `src/data/locales/en.json` **à mão** (tradução mecânica; os 92 itens do household reaproveitam o inglês que o SDK já tinha, congelado em `tools/items-catalog/base/household-item-names.json`, de onde também sai o pt-BR deles depois que a T3.1g tirar as chaves `item.*` do household).
+- Ferramenta: `build-locale.ts`, saída `locales/pt-BR` em `OUTPUT_FILE_NAMES` (entra no `--check` e no `catalog-up-to-date`), `Sources.householdNames`, `Decisions.names`; teste `tests/locale.test.ts` (nome do time em todo item, nenhum nome morto em `decisions.names`, nomes congelados do household nos dois idiomas, nenhum texto vazio).
+- Pacote completo: `package.json` (dep `game-items`, sem ciclo), `tsconfig`, `tsup` (ESM + IIFE `GameItemsGoods`), `vitest.config`, README, `.claude/skills/game-items-goods/SKILL.md`, changeset, `site/Dockerfile` (a linha `COPY` já existia desde a T3.1b), `pnpm-lock.yaml`.
+- Testes (13): o pacote valida em `createItems` (sozinho e por `createGoodsItems`; 327/17/24/17/33/9), ids únicos, em inglês e snake_case, jogo estende com `patch`/`remove`/pacote próprio, categoria/lugar/raridade referenciados existem, pools/receitas/efeitos/corpo a corpo/caixas só nomeiam itens existentes, medidas entre 1 mm e 2 m e peso positivo, provenance cobre todos e só os itens, todo item tem origem; texto nos dois idiomas para todas as chaves e nada além delas, tradução de todo nome exceto os iguais nos dois idiomas (`dvd`, `ketchup`, `power_bank`, `shampoo`).
+
+**Desvios do desenho e escolhas reversíveis**
+- O desenho dizia "textos en: tradução (haiku)"; fiz eu mesmo (mecânica, 235 nomes + 28 criados). Para os 38 itens juntados o inglês é o do household (nome do time só vale em pt-BR, onde o desenho manda o nome do time).
+- Os pools do goods são cortados para `{ item, weight, qty, isSupply? }`; `type`, `name` e `viewerCategory` do visor ficam só em `data/house-pools.json`.
+- Textos de receita (`recipe.<id>`) e de recipiente entram no locale (não estavam no desenho); os de armazenamento e os efeitos de uso não (são ids de máquina).
+- Raridade em pt-BR fica em minúsculas como no ITE (`comum`); quem exibe capitaliza.
+- `GOODS_TABLES` repete números que o `DEFAULT_RULES` do engine já tem; o teste de integração do `game-items` (T3.1e) prova a igualdade, aqui só se expõe.
+- Nada de golden novo nesta task.
+
+**Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` exit 0; `pnpm -r test` exit 0 (`game-items-goods` 13, `items-catalog` 39, `game-items` 139, `game-interactables-household` 1907, `game-weapons` 277, `golden` 42...); `catalog:check` de items e weapons up to date. **Node 22.23.4**: `game-items-goods` 13, `game-items` 139, `tools/items-catalog` 39, `tools/golden` 42 passaram e `catalog:check` up to date. Goldens (golden-tool, `game-weapons`) sem mudança. Nenhum gate falhou 2x. Modelo da execução: `sonnet`.
+
+### T3.1g — Household pega os itens do goods (grupo E)
+
+**O que entrou** (`packages/game-interactables-household`, `minor` pelo changeset `household-items-from-goods.md`)
+- `src/data/items.json` apagado; `create.ts` monta `hh.items` com os itens do goods que nasceram household (`GOODS_PROVENANCE[id].household`): 92, mesmos ids (as 38 junções mantêm o id do household), clonados. Nova exportação `HOUSEHOLD_ITEM_IDS`. Categoria antiga virou `tags` (feito pelo extrator na T3.1c); `category` agora é uma das 14.
+- Chaves `item.*` saíram de `locales/en.json` e `locales/pt-BR.json` (332 -> 240 chaves cada); `hh.strings` junta os `item.*` dos 92 vindos de `GOODS_STRINGS` (pt-BR: nome do time nos 38 juntados; en: o que o SDK já tinha). Mesmas chaves nos dois idiomas, como o teste antigo exige.
+- `loot.json` não mudou: todos os ids que ele usa continuam existindo (teste novo `tests/goods-items.test.ts`, que também prova ids = os 92 congelados, definição igual à do goods, categoria entre as 14 e textos do goods). Nenhum teste existente precisou mudar (1907 + 4 passam).
+- `package.json`: dependência `@adatechnology/game-items-goods`, devDependency `@adatechnology/game-items` (só no teste); `tsup.config.ts` virou ESM + IIFE com `noExternal` para os `@adatechnology/*` (agora há import em tempo de execução, e o IIFE `GameInteractablesHousehold` precisa levar o goods junto). README e SKILL atualizados (inclusive a nota de quebra de medidas).
+- Nada mais no repositório importava `items.json` nem o locale do household por caminho (conferido com grep); `interactables-test-area`, `interactables-showroom`, `floorplan-*` e `test-room` usam `createHousehold()`/`hh.items` e seguem verdes.
+
+**Mudanças de dado para quem consome (changeset e SKILL):** 18 itens mudaram de peso (vale o do time) e 8 de medida: `rice`, `water_bottle`, `juice_box`, `bandage`, `first_aid_kit`, `flashlight`, `batteries`, `hammer` (T3.1d); o martelo ficou em pé (pose do modelo do time), 15,9 x 33 x 4,7 cm. Categorias antigas: `hygiene`->`medical`, `cleaning`/`trash`->`materials`, `office`/`mail`->`collectibles`, `kitchen`/`tool`/`garage`->`tools`, `bbq`->`outdoors`, exceções por item na `decisions.json`.
+
+**Desvios e escolhas reversíveis**
+- `hh.items` continua com os **92** (não os 327): o teste do pacote exige tamanho < 1 m e o catálogo do household é o que os móveis e a loot table do pacote usam. Quem quiser tudo usa o `createGoodsItems()`. Reverter = trocar o filtro por todos os itens.
+- A lista dos 92 vem da rastreabilidade do goods (`provenance.household`), não de uma lista escrita no pacote.
+- O desenho dizia "re-exporte `ITEMS`/helpers que já eram públicos": o household nunca exportou `ITEMS`; o público era `hh.items`, preservado.
+
+**Portões (Node 24.22.0)**: ver a seção T3.1f para o conjunto; nesta task `pnpm build`, `pnpm -r typecheck`, `pnpm lint` e `pnpm -r test` (household 1911, interactables 153, floorplan-* , test-room 118, goods 13, items 139, golden 42) verdes e `catalog:check` up to date; Node 22.23.4: household 1911 e goods 13 passaram (items 139 e golden 42 não mudaram desde a T3.1f). `examples/interactables-showroom` builda com o IIFE novo; `interactables-test-area` pede o build prévio do `test-room` (igual antes da task). Sem golden novo. Modelo da execução: `sonnet`.
+
+### T3.1i — Ligações corpo a corpo e armas genéricas (grupo E)
+
+**O que entrou**
+- `decisions.json`: tabela `meleeWeapons` (id do item -> id no arsenal, 18 itens) e `meleeWithoutWeapon` (os 2 que ficam sem arma e por quê). `build-items.ts` grava `weapon` nos itens; `items.json` regenerado (18 linhas novas, nada mais mudou).
+- Já existiam no arsenal e foram só ligados: `knife`, `machete`, `axe`, `baseball_bat`, `sledgehammer`, `crossbow`.
+- `game-weapons`: `src/data/melee-weapons.json` (arquivo à mão, anexado **depois** das armas existentes em `WEAPONS`): `tactical_knife`, `meat_cleaver`, `hatchet`, `nail_bat`, `iron_pipe`, `pickaxe`, `sickle`, `police_baton`, `cast_iron_skillet`, `improvised_spear`, `chainsaw` (corpo a corpo, alcance `alc` m, ruído `ru` m e massa `kg` do item) e `recurve_bow` (arco: calibre `arrow`, alcance 40 m, como o `bow_compound`). Energia, raio e cadência são números genéricos plausíveis (REF), não do time.
+- Testes: `game-items-goods` (todo `weapon` resolve no `createArsenal`, só `melee` carrega `weapon`, só `slingshot` e `arrows_and_bolts` ficam sem, alcance/ruído/massa das 11 defs novas = item, `checkArsenal` sem problemas e `itemsFromArsenal` + goods valem em `createItems`); `game-weapons/tests/catalog.test.ts` (as 12 defs). `game-items-goods` ganhou `game-weapons` como devDependency.
+- Changeset `game-weapons` minor. Os pontos `dano`/`cr` ficam na fatia do jogo (`damage-points.json`, T3.1j), não no SDK.
+
+**Fidelidade e goldens de armas**: o golden por arma (`weapon-scenarios.json`) cresceu **só por acréscimo** (+66 linhas, 0 removidas; as 12 armas novas no fim, mesma ordem das anteriores); `catalog:check` de armas e de itens up to date; nenhum hash de modelo 3D mudou.
+
+**Desvios e escolhas reversíveis**
+- Os "20 itens melee" ficam em **18 com `weapon`**: `slingshot` (o arsenal não tem calibre de pedra e acrescentar um mudaria o `calibers.json` gerado) e `arrows_and_bolts` (munição, não arma: já chega por `ammo_arrow`/`ammo_crossbow_bolt` do `itemsFromArsenal`). Reverter = acrescentar o calibre/arma e uma linha em `meleeWeapons`.
+- Os existentes (`knife` 0,4 m etc.) mantêm o alcance/ruído do arsenal; o do time só vale nas defs novas. O `improvised_spear` é `slash` porque o tipo de dano do arsenal só tem `blunt|slash`.
+- `recurve_bow` é arma de fogo de calibre `arrow` porque é assim que o arsenal modela arco; o `alc` 40 virou `range`.
+
+**Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` exit 0; `pnpm -r test` verde (`game-weapons` 290 em 10 arquivos, `game-items-goods` 17, `items-catalog` 39); `catalog:check` de items e weapons up to date. **Node 22.23.4**: `game-weapons` 290, `game-items-goods` 17 passaram. Nenhum gate falhou 2x. Modelo da execução: `sonnet`.
+
+### T3.1k — Goldens G-b e G-c dos achados (grupo E)
+
+**O que entrou** (`packages/game-items`)
+- `scripts/record-team-golden.mjs` (`pnpm --filter @adatechnology/game-items record:team-golden`): recorta do original com `cutLiteral` (`ITENS`, `EXTRA`, `RAR_W`, `CONT_TAB`, `FIXOS`) e por texto as funções (`rollItems` do `jogo.js` L68796-68812; `mulberry32`/`hashStr`/`criaRng`/`ordemPonderada`, `LT`/`CONTEUDO`/`COMIDA_SUP` e `sorteiaConteudo` do `visor-casas-3d.js`), avalia em `vm` e grava **uma vez** `tests/fixtures/team-golden/roll-items.json` (222 KB) e `house-contents.json` (672 KB). `installPortableMath` ligado; `package.json` do `game-items` ganhou `@adatechnology/golden-tool` (devDependency) e o script.
+- G-b: o `R()` do jogo foi trocado pelo `createSeededRandom(semente)` do golden-tool; 10 recipientes (`CONT_TAB`) x 24 lugares x sementes 1-10 = **2400 casos**, `nome = ''` e sem `extra` (as posições fixas e extras não são sorteio). Cada caso guarda os ids sorteados e o número de sorteios.
+- G-c: `sorteiaConteudo` com o `criaRng(sem, chave)` do próprio visor (não substituído: já é semeado); 25 chaves de recipiente (20 pools + 5 aliases) x 3 estados (normal/protegida/abandonada) x sementes 1-25 = **1875 casos**, 5 áreas de móvel diferentes. Cada caso guarda as escolhas `{tipo, qtd}` e os sorteios que o original consumiu.
+- `tests/team-golden.test.ts` (4 testes): G-b compara ids, ordem e **contagem de sorteios** do `rollByCategory` sobre um catálogo reduzido ao pool do jogo; G-c alimenta o `rollExplicitPool` com os sorteios gravados e confere escolhas, quantidades e que consumiu exatamente os mesmos.
+
+**Resultado**: 2400/2400 e 1875/1875 iguais, nas duas, sem mudar o porte (a ordem de sorteio do `category-roll` e do `explicit-pool` já era a das fontes). O fixture gravado com Node 22 e com Node 24 é **idêntico** (md5), e os testes passam nos dois.
+
+**Escolhas e ressalvas**
+- O pool do G-b é o do jogo: os 146 `ITENS` (ids com `provenance.game`) mais as caixas de munição do `EXTRA` (`ammo-boxes.json`); o que o catálogo acrescenta sozinho (os outros itens do time, os do household, os criados, os outros 19 calibres do `itemsFromArsenal`) fica de fora por `include`, senão o sorteio ponderado percorreria outra lista. Nos itens do jogo só há raridade `c/i/r`, então a regra "lendário/único só em ponto fixo" não muda o resultado; a ordem dos itens do goods dentro da categoria é a do ITE e bate com a do jogo.
+- A ressalva do T3.1e ("comparar por ids") não foi preciso: a ordem bateu, então a comparação é por sequência exata.
+- Sem `recurso` do Math.random nas fontes: o jogo usa `R()` (substituído) e o visor `criaRng` (semeado), nenhuma chamada a `Math.random` fica no recorte.
+
+**Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` exit 0; `game-items` 143 testes em 14 arquivos (eram 139 em 13); **Node 22.23.4**: `game-items` 143 passaram. Modelo da execução: `sonnet`.

@@ -1514,5 +1514,71 @@
 {"step":"use","status":"ok","shots":0,"rounds":0,"uses":"place×1","ammo":2,"reserve":0,"heat":0,"events":""},
 {"step":"empty","status":"empty","shots":0,"rounds":0,"uses":"place×2","ammo":0,"reserve":0,"heat":0,"events":""},
 {"step":"reload:auto:refused","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":""}
+]},
+{"id":"tactical_knife","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"empty","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""}
+]},
+{"id":"meat_cleaver","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"empty","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""}
+]},
+{"id":"hatchet","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"empty","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""}
+]},
+{"id":"nail_bat","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"empty","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""}
+]},
+{"id":"iron_pipe","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"empty","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""}
+]},
+{"id":"pickaxe","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"empty","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""}
+]},
+{"id":"sickle","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"empty","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""}
+]},
+{"id":"police_baton","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"empty","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""}
+]},
+{"id":"cast_iron_skillet","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"empty","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""}
+]},
+{"id":"improvised_spear","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"empty","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""}
+]},
+{"id":"chainsaw","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"empty","status":"ok","shots":0,"rounds":0,"uses":"melee×1","ammo":0,"reserve":0,"heat":0,"events":""}
+]},
+{"id":"recurve_bow","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":3,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":3,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"fire:single","status":"ok","shots":1,"rounds":1,"uses":"","ammo":0,"reserve":3,"heat":0,"events":"shot:single:1/1@1"},
+{"step":"empty","status":"empty","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":3,"heat":0,"events":"empty@4"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":2,"heat":0,"events":"reload:start:empty@7 reload:end:empty@8.5"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":1,"heat":0,"events":"reload:start:empty@67.7 reload:end:empty@69.2"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":0,"heat":0,"events":"reload:start:empty@128.4 reload:end:empty@129.9"},
+{"step":"fault","status":"ok","shots":1,"rounds":1,"uses":"","ammo":0,"reserve":3,"heat":0,"events":"shot:single:1/1@1"},
+{"step":"clear:refused","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":3,"heat":0,"events":"","status":"none"}
 ]}
 ]}

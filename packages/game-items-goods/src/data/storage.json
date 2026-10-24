@@ -1,0 +1,41 @@
+[
+  {
+    "id": "fridge",
+    "multiplier": 0.33,
+    "needsPower": true,
+    "line": 208
+  },
+  {
+    "id": "freezer",
+    "multiplier": 0.1,
+    "needsPower": true,
+    "line": 209
+  },
+  {
+    "id": "cooler",
+    "multiplier": 0.5,
+    "limitDays": 2,
+    "afterLimit": 1,
+    "line": 210
+  },
+  {
+    "id": "delivery_bag",
+    "multiplier": 0.8,
+    "line": 211
+  },
+  {
+    "id": "cellar",
+    "multiplier": 0.66,
+    "line": 212
+  },
+  {
+    "id": "ambient",
+    "multiplier": 1,
+    "line": 213
+  },
+  {
+    "id": "hot",
+    "multiplier": 2,
+    "line": 214
+  }
+]

@@ -44,9 +44,11 @@
   },
   "dependencies": {
     "@adatechnology/game-interactables": "workspace:*",
+    "@adatechnology/game-items-goods": "workspace:*",
     "@adatechnology/game-props3d": "workspace:*"
   },
   "devDependencies": {
+    "@adatechnology/game-items": "workspace:*",
     "@types/node": "^22.10.7",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",
