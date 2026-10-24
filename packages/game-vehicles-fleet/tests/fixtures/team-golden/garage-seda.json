@@ -69,7 +69,7 @@
  "scenes": {
   "intact": {
    "objects": 374,
-   "hash": "8cdc1a2c",
+   "hash": "3d4b5a96",
    "lines": [
     "Group p0,0,0 q0,0,0,1 s1,1,1",
     "Group p0,0,0 q0,0,0,1 s1,1,1",
@@ -284,7 +284,7 @@
     "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v384:dd2d47b5 i1764 bbox-0.008,-0.0067,-0.0294,0.008,0.0067,0.0294 mat:MeshStandardMaterial:b8bcbf:1",
     "Mesh p0,0,0.0105 q0.2474,0,0,0.9689 s1,1,1 geo:BoxGeometry v384:716959c5 i1764 bbox-0.008,-0.021,-0.0046,0.008,0.021,0.0046 mat:MeshStandardMaterial:b8bcbf:1",
     "Mesh p2.2271,0.4137,0 q0,0,0,1 s1,1,1 geo:BufferGeometry v792:476cbc56 bbox-0.1023,-0.1087,-0.6217,0.0103,0.1087,0.6217 mat:MeshStandardMaterial:ffffff:1",
-    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:TubeGeometry v918:1aed17e7 i4560 bbox2.1066,0.2907,-0.6518,2.2447,0.5584,0.6508 mat:MeshStandardMaterial:0c0d0f:1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:TubeGeometry v918:d48e0d45 i4560 bbox2.1067,0.2908,-0.6518,2.2445,0.5585,0.6508 mat:MeshStandardMaterial:0c0d0f:1",
     "Mesh p2.1665,0.4127,0.803 q0,0,0,1 s1,1,1 geo:BufferGeometry v234:76d25aec bbox-0.2763,-0.0863,-0.1708,-0.0514,0.0863,0.0494 mat:MeshStandardMaterial:0c0d0f:1",
     "Mesh p2.2349,0.413,0.74 q0,0,0,1 s1,1,1 geo:BufferGeometry v36:1f5dd664 bbox-0.1501,-0.0568,-0.0758,-0.1266,0.0568,-0.0335 mat:MeshStandardMaterial:f2f7ff:1",
     "Mesh p2.1665,0.4127,-0.803 q0,0,0,1 s1,1,1 geo:BufferGeometry v234:39146452 bbox-0.2763,-0.0863,-0.0494,-0.0514,0.0863,0.1708 mat:MeshStandardMaterial:0c0d0f:1",
@@ -449,7 +449,7 @@
   },
   "damaged": {
    "objects": 486,
-   "hash": "ca041bca",
+   "hash": "f53a5934",
    "lines": [
     "Group p0,0,0 q0,0,0,1 s1,1,1",
     "Group p0,0,0 q0,0,0,1 s1,1,1",
@@ -676,7 +676,7 @@
     "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v384:dd2d47b5 i1764 bbox-0.008,-0.0067,-0.0294,0.008,0.0067,0.0294 mat:MeshStandardMaterial:b8bcbf:1",
     "Mesh p0,0,0.0105 q0.2474,0,0,0.9689 s1,1,1 geo:BoxGeometry v384:716959c5 i1764 bbox-0.008,-0.021,-0.0046,0.008,0.021,0.0046 mat:MeshStandardMaterial:b8bcbf:1",
     "Mesh p2.2271,0.4137,0 q0,0,0,1 s1,1,1 geo:BufferGeometry v792:476cbc56 bbox-0.1023,-0.1087,-0.6217,0.0103,0.1087,0.6217 mat:MeshStandardMaterial:ffffff:1",
-    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:TubeGeometry v918:1aed17e7 i4560 bbox2.1066,0.2907,-0.6518,2.2447,0.5584,0.6508 mat:MeshStandardMaterial:0c0d0f:1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:TubeGeometry v918:d48e0d45 i4560 bbox2.1067,0.2908,-0.6518,2.2445,0.5585,0.6508 mat:MeshStandardMaterial:0c0d0f:1",
     "Mesh p2.1665,0.4127,0.803 q0,0,0,1 s1,1,1 geo:BufferGeometry v234:76d25aec bbox-0.2763,-0.0863,-0.1708,-0.0514,0.0863,0.0494 mat:MeshStandardMaterial:0c0d0f:1",
     "Mesh p2.2349,0.413,0.74 q0,0,0,1 s1,1,1 geo:BufferGeometry v36:1f5dd664 bbox-0.1501,-0.0568,-0.0758,-0.1266,0.0568,-0.0335 mat:MeshStandardMaterial:f2f7ff:1",
     "Mesh p2.1665,0.4127,-0.803 q0,0,0,1 s1,1,1 geo:BufferGeometry v234:39146452 bbox-0.2763,-0.0863,-0.0494,-0.0514,0.0863,0.1708 mat:MeshStandardMaterial:0c0d0f:1",
@@ -941,7 +941,7 @@
   },
   "modified": {
    "objects": 528,
-   "hash": "947e7388",
+   "hash": "fc323de6",
    "lines": [
     "Group p0,0,0 q0,0,0,1 s1,1,1",
     "Group p0,0,0 q0,0,0,1 s1,1,1",
@@ -1156,7 +1156,7 @@
     "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v384:dd2d47b5 i1764 bbox-0.008,-0.0067,-0.0294,0.008,0.0067,0.0294 mat:MeshStandardMaterial:b8bcbf:1",
     "Mesh p0,0,0.0105 q0.2474,0,0,0.9689 s1,1,1 geo:BoxGeometry v384:716959c5 i1764 bbox-0.008,-0.021,-0.0046,0.008,0.021,0.0046 mat:MeshStandardMaterial:b8bcbf:1",
     "Mesh p2.2271,0.4137,0 q0,0,0,1 s1,1,1 geo:BufferGeometry v792:476cbc56 bbox-0.1023,-0.1087,-0.6217,0.0103,0.1087,0.6217 mat:MeshStandardMaterial:ffffff:1",
-    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:TubeGeometry v918:1aed17e7 i4560 bbox2.1066,0.2907,-0.6518,2.2447,0.5584,0.6508 mat:MeshStandardMaterial:0c0d0f:1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:TubeGeometry v918:d48e0d45 i4560 bbox2.1067,0.2908,-0.6518,2.2445,0.5585,0.6508 mat:MeshStandardMaterial:0c0d0f:1",
     "Mesh p2.1665,0.4127,0.803 q0,0,0,1 s1,1,1 geo:BufferGeometry v234:76d25aec bbox-0.2763,-0.0863,-0.1708,-0.0514,0.0863,0.0494 mat:MeshStandardMaterial:0c0d0f:1",
     "Mesh p2.2349,0.413,0.74 q0,0,0,1 s1,1,1 geo:BufferGeometry v36:1f5dd664 bbox-0.1501,-0.0568,-0.0758,-0.1266,0.0568,-0.0335 mat:MeshStandardMaterial:f2f7ff:1",
     "Mesh p2.1665,0.4127,-0.803 q0,0,0,1 s1,1,1 geo:BufferGeometry v234:39146452 bbox-0.2763,-0.0863,-0.0494,-0.0514,0.0863,0.1708 mat:MeshStandardMaterial:0c0d0f:1",

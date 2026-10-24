@@ -1,10 +1,11 @@
+import { portablePow } from './portable-math'
 import { createSeededRandom } from './seeded-random'
 
 type FrameCallback = (timestamp: number) => void
 
 /** The slice of the global scope the tool replaces; tests pass a plain object instead of the real global. */
 export type DeterminismTarget = {
-  Math: { random: () => number }
+  Math: { random: () => number; pow?: (base: number, exponent: number) => number }
   Date: { now: () => number }
   performance: { now: () => number }
   requestAnimationFrame?: (callback: FrameCallback) => number
@@ -33,6 +34,7 @@ export function installDeterminism(options: DeterminismOptions): Determinism {
   const target = options.target ?? (globalThis as unknown as DeterminismTarget)
   const original = {
     random: target.Math.random,
+    pow: target.Math.pow,
     dateNow: target.Date.now,
     performanceNow: target.performance.now,
     requestAnimationFrame: target.requestAnimationFrame,
@@ -44,6 +46,7 @@ export function installDeterminism(options: DeterminismOptions): Determinism {
   let queue = new Map<number, FrameCallback>()
 
   target.Math.random = createSeededRandom(options.seed)
+  target.Math.pow = portablePow
   target.Date.now = () => startTimeMs + elapsedMs
   target.performance.now = () => elapsedMs
   target.requestAnimationFrame = (callback) => {
@@ -69,6 +72,8 @@ export function installDeterminism(options: DeterminismOptions): Determinism {
 
   function restore(): void {
     target.Math.random = original.random
+    if (original.pow) target.Math.pow = original.pow
+    else delete target.Math.pow
     target.Date.now = original.dateNow
     target.performance.now = original.performanceNow
     if (original.requestAnimationFrame) target.requestAnimationFrame = original.requestAnimationFrame
@@ -81,7 +86,7 @@ export function installDeterminism(options: DeterminismOptions): Determinism {
   return { advance, stepFrames, restore }
 }
 
-/** Runs `run` under the seeded environment and always restores the real clocks and `Math.random` afterwards. */
+/** Runs `run` under the seeded environment and always restores the real clocks, `Math.random` and `Math.pow` afterwards. */
 export function withDeterminism<TResult>(options: DeterminismOptions, run: (environment: Determinism) => TResult): TResult {
   const environment = installDeterminism(options)
   try {

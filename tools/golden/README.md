@@ -79,6 +79,22 @@ capture beside it: `packages/game-vehicles-fleet/tests/team-golden.test.ts` and 
 Keep the capture and the SDK test symmetric: the same states, the same events, the same seed. Content that only the game adds
 (for example blood) is left out of the page capture with `--param`, as `gameOnlyFlags` does, because it lives in the game repository.
 
+## Hashes must not depend on the Node version
+
+A hash that passes on Node 22 and fails on Node 24 is a bug in the golden, not in the SDK. What changed between them is the last bit of
+`Math.pow` and `**` (V8 12 -> 13); `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, `exp`, `log`, `sqrt` and `cbrt` are the same on both.
+three.js centripetal curves call `pow`, and a closed `TubeGeometry` on a nearly straight path turns that bit into a twist of the ring (up to
+8e-4 on a 9 mm tube in `midsize_sedan`), so rounding to 3 or 4 decimals cannot absorb it: a rounded hash flips whenever a value sits near a boundary.
+
+- `installDeterminism` / `withDeterminism` also install `portablePow` (only `+ - * /`, `exp` and `log`, which agree on both versions), and a test
+  that does not use them calls `installPortableMath()` in its setup file (the fleet does, in `tests/setup.ts`). The recorder installs it in the page
+  too, so a page recording and an SDK build compute the same bits.
+- Never use `**` with a fractional exponent in code that feeds a golden; it cannot be replaced.
+- `tests/portable-math.test.ts` fingerprints `portablePow` and every native `Math` function the goldens rely on. If it fails on a new Node,
+  that Node changed a function: install a portable version of it the same way, then re-record and regenerate once, checking both Node 22 and the new one.
+- Before committing a regenerated fixture, run its tests on two Node versions (CI runs the goldens on 22 and 24). Keep a 1 mm test: a
+  vertex or a transform moved by 0.001 must still change the hash (`scene-hash.test.ts`, `game-vehicles-fleet/tests/digest.test.ts`).
+
 ## Tests
 
 `pnpm --filter @adatechnology/golden-tool test` covers the seeded PRNG, the determinism installer, the scene hash (stable across runs,

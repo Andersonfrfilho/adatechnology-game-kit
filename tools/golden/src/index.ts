@@ -1,6 +1,8 @@
 export { createSeededRandom } from './seeded-random'
 export { installDeterminism, withDeterminism } from './determinism'
 export type { Determinism, DeterminismOptions, DeterminismTarget } from './determinism'
+export { installPortableMath, portablePow } from './portable-math'
+export type { PortableMathTarget } from './portable-math'
 export { describeScene, snapshotScene } from './scene-hash'
 export type { DescribeSceneOptions, SceneNodeLike } from './scene-hash'
 export { createEventRecorder } from './event-recorder'
