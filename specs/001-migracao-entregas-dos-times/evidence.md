@@ -1879,3 +1879,85 @@ Commits em `int/p4`: T4.1h `4ecce49`, T4.3b `68dfb3c`, T4.1i `048cf2a`, T4.2b `6
 
 Modelo da execução: `sonnet`.
 
+
+
+## Fase 7 — veículos, vegetação, cidade e câmera (T7.0 a T7.5)
+
+Commits em `int/p7`: T7.0 `222a95f`, T7.1a `1ea43bd`, T7.1b `5718964`, T7.1c `537b5b0`, T7.1d `5304161`, T7.1e `4ed1cc7`, T7.1f `35c2caa`, T7.2a `0b3c030`, T7.2b `54419e4`, T7.2c `2645d90`, T7.3a `528db5a`, T7.3b `b22ecfe`, T7.3c `34a560e`, T7.3d `d8b89c2`, T7.3e `8762b85`, T7.4 `841c4cd`, T7.5 (este). O desenho da fase é `design/T7-veiculos-e-cidade.md`.
+
+### O que entrou
+
+- **T7.0** `tools/vehicles-catalog`: extratores de `DIMS`, paletas e dos 69 cartões da Frota (`--check`), o plugin do jogo como fatia (`game-slice/vehicles/`) e o `compare`, que roda o artefato da Garagem, a página v4 e o SDK em Node: 69 veículos x 3 estados, 207 comparações, 0 diferenças. A premissa de V2 (frotas novas de aviões, barcos, helicópteros e militares) **não vale**: o `game-vehicles-fleet` já registra os mesmos 69 veículos em 10 arquivos.
+- **T7.1a-b** `game-vehicles`: modo leve (`kit.lod`, ganchos `[LOD]` do núcleo e das cópias da frota, `skipLite`), `kit.damageables`; `game-vehicles-fleet`: `fleetDims`, `paintPalettes`, `colorFromSeed`, `fleetStats`. Desligado por padrão: os goldens da frota e do motor seguem idênticos.
+- **T7.1c** `game-vehicles-three` (novo): fusão em seis malhas, poda de 3 cm, quadro de saída (+z), cor por semente, medidas e caixas danificáveis. Golden contra a página (three r160, semente 7) em 12 veículos; 193.908 triângulos do hatch em alta; `DIMS` dos 69 ao milímetro.
+- **T7.1d-e** `game-vehicles-driving` (novo, sem three): motorista arcade do jogo (`CAR`, `carUpdate`, oito pontos de colisão, atropelamento a 3 e 8 m/s, barulho, buzina) com golden de seis roteiros quadro a quadro; semissimulação do documento da Frota (mola e amortecedor por roda, pneu com força longitudinal e lateral, câmbio automático com RPM, freio de mão, superfícies, dano que muda a direção, consumo), com os números do documento como testes (não há código do time).
+- **T7.1f** módulo de teste de veículos (8 itens, 13 cenários: os 11 da página, literais, e `vehicles_drive_arcade` e `vehicles_drive_semi`), `examples/vehicles-test-area`, `car_in_the_yard` na `interactables-test-area`.
+- **T7.2a-c** `game-vegetation`: geometria das peças de madeira do artefato do Viveiro (`radius`, `length`, `axis`, `base`), 40 de 40 peças iguais; `game-vegetation-species`: `scatterRulesFor` (48 casos iguais ao `rulesFor` da página); `game-vegetation-three` (novo): 18 plantas, 13 cenários `veg_*`, canteiro de 12 x 20 m e caminhante, `examples/vegetation-test-area`.
+- **T7.3a-b** `game-urban` e `game-urban-three` (novos): cinco postes com orçamento de luzes, ruas, calçadas, grade, quarteirão, adereços e os dez padrões de bairro (G-poles: 34 casos; G-padrao: a folha de amostra inteira, 1029 objetos).
+- **T7.3c** terreno por camadas (G-terrain: malha de 181 x 181 vértices, alturas e cores iguais às da página; `hW` e `forestF` a 1e-9); números do Vale em `game-slice/urban/`.
+- **T7.3d** parte `placement` (`b.place`), `createVehicleProvider` (frota) e `createPlantProvider` (tabela regional) em `game-urban`; `createVehicleResolver` (modo leve) e `createPlantResolver` em `game-urban-three`.
+- **T7.3e** módulo de teste da cidade (17 itens, 8 cenários `urban_*`), `examples/urban-test-area`, os três módulos na `interactables-test-area`.
+- **T7.4** `game-camera`: o `smoothing` passa a ser lido; `aim`, `wallRecovery`, `deathOrbit`, `look`, `shake`, `rig.look`; G-camera com 640 quadros roteirizados iguais ao `cameraUpdate` do jogo a 1e-9.
+- **T7.5** inventário (R5), esta seção, skills, changesets e READMEs.
+
+### Goldens da fase
+
+| Golden | Contra | Resultado |
+|---|---|---|
+| G-garage | Garagem (artefato), site v4 e SDK, 69 x 3 estados | 207 comparações, 0 diferenças |
+| G-fleet-regression | `golden.json` da frota (868 testes) | idêntico depois da T7.1a |
+| G-lite, G-dims, G-damageables, G-lod-high | `FrotaLeve` em Node (three r160) | triângulos, chamadas, vértices por classe, caixas e `DIMS` iguais |
+| G-colour, G-stats | `corDaSemente`, `PALETA`, `fleet` da Frota | sementes 0-499 e 40 textos; 69 cartões iguais |
+| G-arcade | `carUpdate` cortado do jogo | seis roteiros, estado e eventos iguais |
+| G-veh-module | `MODULO_VEICULOS` da página contra a sala do kit | os 11 cenários com os mesmos checks e linhas de log |
+| G-veg-pieces, G-veg-module, G-nursery, G-rules | bundle e módulo do artefato do Viveiro, `buildLotVeg` e `rulesFor` da página | 40 de 40 peças; 18 specs e 13 cenários; 8 sementes; 48 casos |
+| G-poles, G-padrao, G-terrain | Galeria do Vale Cinzento no Chrome (`--expose`) | 34 casos; folha inteira de 1029 objetos; malha e `hW`/`forestF` |
+| G-camera | `cameraUpdate` cortado do jogo | 640 quadros, posição, olhar, FOV, yaw e pitch a 1e-9 |
+
+G-semi não tem golden (não há código do time): os números do documento são testes.
+
+### Decisões e desvios
+
+1. A Garagem do artefato é a página v4 do site, byte a byte no código (V2): nada foi portado por V2 além do que realmente faltava (modo leve, `DIMS`, paletas, `damageables`).
+2. O contrato de teste é só o genérico; os três módulos vivem nos pacotes `-three` e os exemplos só os carregam.
+3. Os módulos **não desenham partículas e não pedem efeitos por conta própria**. Veículos pedem a `host.effects` por id; vegetação e cidade não pedem nada (ver "Dependência do vfx").
+4. Recorte de `Math.random`: `colorFromSeed`, o atropelamento e as escolhas dos provedores usam semente ou o lugar; o `rig.look` recebe o sorteio do host e nunca chama `Math.random`.
+5. **O padrão do `smoothing` mudou de "não lido" para 12** (V7): quem dependia do salto instantâneo passa `smoothing: 0`. É o único comportamento que muda por padrão na fase; dois testes antigos do `game-camera` passaram a pedir `smoothing: 0`.
+6. A escolha do veículo e da planta pelos provedores depende do lugar (hash de x, z), não do sorteio da cena: assim a ordem de sorteio da página, que o golden confere, não se mexe quando um jogo liga um provedor.
+7. O carro de caixas da amostra da Galeria **não foi entregue** (substituto de caixas é proibido pelo CLAUDE.md §1): o provedor de veículos padrão não estaciona nada e o jogo liga `createVehicleProvider`.
+8. O módulo de teste da cidade estende a câmera da sala para 600 m enquanto está carregado (a folha de amostra tem 240 m e a sala vê 140 m) e devolve a antiga ao descarregar.
+9. A sala atual dá tempo de saque a toda ferramenta, que as páginas dos times não conheciam: os cenários de tiro esperam a ferramenta ficar pronta (`waitUntilReady`), e os goldens fazem o mesmo na sala da página.
+10. Cada item da área urbana é cenário: um bloco de concreto ancorado do tamanho da amostra (a sala exige um corpo); a destruição de prédios e casas é do `game-floorplan` e do `game-destruction`.
+
+### Dependência do vfx e receitas que faltam
+
+`game-vfx` não está em `int/p7` (a Fase 5 anda em outro ramo) e a fase não o traz. O que cada módulo pede:
+
+- **Veículos** pedem a `host.effects` (quando o host tem) os ids `vehicle.fire`, `vehicle.explosion`, `vehicle.glass`, `vehicle.sparks`, `vehicle.leak` e `vehicle.exhaust` (`defaultEffectIds`, trocáveis por `effects`). São as receitas que o `game-vfx` precisa registrar: o fogo do motor, a explosão com a coreografia do carro (pula, capô, portas e roda voam em brasa, carcaça queimando), o estilhaço do vidro, a faísca de raspagem, a poça do vazamento e a fumaça do escapamento por condição (100/60/30/10).
+- **Vegetação** não pede efeitos: o mundo de destruição padrão não entrega seus eventos (folhas, seiva, fogo) ao módulo, então o módulo não os vê. Um host com `game-vfx-three` liga os efeitos aos eventos do mundo.
+- **Cidade** não pede efeitos.
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm install --prefer-offline` | ok em cada commit |
+| `pnpm build` | exit 0 em cada commit |
+| `pnpm -r typecheck` | exit 0 em cada commit |
+| Testes por pacote (um de cada vez) | game-vehicles 247, game-vehicles-fleet 879, game-vehicles-three 127, game-vehicles-driving 32, game-vegetation 241, game-vegetation-species 135, game-vegetation-three 46, game-urban 43, game-urban-three 64, game-camera 26: todos passaram |
+| `examples/urban-test-area` e `vegetation-test-area` e `vehicles-test-area` (Chromium) | `urban`: 8 de 8 cenários; `vegetation`: 13 de 13; `vehicles`: 13 de 13 |
+| `examples/interactables-test-area` (Chromium) | 22 de 22 (pt-BR e en), com os módulos de veículos, vegetação e cidade |
+| `pnpm lint` | exit 0 em cada commit |
+
+### Perguntas para o dono
+
+1. **Efeitos dos módulos de vegetação e cidade.** O mundo de destruição padrão não entrega seus eventos a um módulo (`ModuleHost` não tem `effects` para a vegetação). Aceita que o `game-vfx-three` ligue os efeitos aos eventos do mundo, ou o módulo deve passar a ouvir o mundo?
+2. **A bancada da vegetação não escolhe a espécie** (só o canteiro por semente, qualidade, detalhe, condição e estação). Vale um controle de espécie?
+3. **Métrica de triângulos por LOD** na vegetação: hoje só as plantas do canteiro por LOD; não há triângulos por LOD das 18 plantas da fila.
+4. **Folha de contatos da Garagem** (miniaturas com cache em `localStorage`): sem destino. Vira recurso da `vehicles-test-area` ou fica de fora?
+5. **Peças que o `buildWorld` espalha** e que não entraram em `game-urban`: árvores e vilas pelo mapa, estradas, trilhas e trilhos, túneis, pontes, linhas de transmissão, muros, decoração do vale e marcadores do mapa. Entram como "características" genéricas com ganchos de decoração (e a decoração do Vale na fatia do jogo), ou ficam só no repositório do jogo?
+6. **`smoothing` padrão 12** no `game-camera` (decisão 5 acima): manter ou voltar a 0 e deixar o 12 como predefinição do jogo?
+7. **Carro de caixas da amostra**: o padrão é não estacionar nada; o jogo liga `createVehicleProvider`. Prefere que a `urban-test-area` já ligue o provedor?
+8. **Marcadores do mapa e decoração do Vale** ficam no repositório do jogo (`game-slice/urban/`): confirma?
+
+Modelo da execução: `sonnet`.
