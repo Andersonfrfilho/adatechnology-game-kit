@@ -1258,5 +1258,15 @@
       0.402
     ],
     "scale": 0.1
+  },
+  {
+    "id": "sickle",
+    "teamId": "foice",
+    "teamBox": [
+      4,
+      0.352,
+      3.5
+    ],
+    "scale": 0.1
   }
 ]
