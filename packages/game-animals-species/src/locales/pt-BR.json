@@ -1,0 +1,5 @@
+{
+  "groups": { "domestic": "Doméstico", "farm": "Fazenda", "wild": "Selvagem", "environment": "Ambiente" },
+  "phases": { "mvp": "MVP", "phase_2": "Fase 2", "phase_3": "Fase 3" },
+  "outcomes": { "turns": "Vira", "dies": "Morre", "immune": "Imune" }
+}
