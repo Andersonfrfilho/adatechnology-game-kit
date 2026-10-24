@@ -1468,5 +1468,15 @@
       0.664
     ],
     "scale": 0.1
+  },
+  {
+    "id": "firewood",
+    "teamId": "lenha",
+    "teamBox": [
+      4.006,
+      1.2,
+      1.6
+    ],
+    "scale": 0.1
   }
 ]
