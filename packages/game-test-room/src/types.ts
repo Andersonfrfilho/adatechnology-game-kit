@@ -10,7 +10,7 @@
  */
 import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
-import type { DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
+import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
@@ -110,6 +110,8 @@ export interface TestRoomOptions {
   ui?: boolean
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
   metrics?: readonly RoomMetricId[] | false
+  /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
+  blast?: BlastOptions
   /**
    * Module bench state. `state` maps a module id to its encoded state, restored when that module is first loaded (a module reloaded
    * keeps its live state instead) before its first changes are sent; ids are per module, so two modules may share a control id.
@@ -119,7 +121,10 @@ export interface TestRoomOptions {
 }
 
 /** Counters the room measures itself. `fps` and `frame_ms` use the real frame time, so slow motion does not change them. */
-export type RoomMetricId = 'fps' | 'frame_ms' | 'draw_calls' | 'triangles' | 'objects' | 'fragments' | 'particles' | 'decals'
+export type RoomMetricId =
+  | 'fps' | 'frame_ms' | 'draw_calls' | 'triangles' | 'objects' | 'fragments' | 'particles' | 'decals'
+  /** Of the last blast, once the room's blast options are on: the share that reached the most sheltered target (%), the pressure multiplier, the fragment hits. */
+  | 'blast_shelter' | 'blast_confinement' | 'blast_fragments'
 
 /** A module control as the room holds it: the declaration with the module's patches applied, and its value (none for an action). */
 export type BenchControl = ModuleControl & { readonly disabled: boolean; readonly value?: ControlValue }
@@ -191,6 +196,9 @@ export interface TestRoom {
   tilt(rad: number): void
   /** Open or close the tap over the table (default: toggle). Returns whether it is open. */
   toggleTap(on?: boolean): boolean
+  /** The blast options the room's explosions use now, and a way to change them (each key replaces the old one; `undefined` clears it). */
+  blast(): BlastOptions
+  setBlast(options: BlastOptions): void
   /** Stop the simulation (time, physics, animations, tools, walks): the UI, the camera and the log stay live. `step` and `update` do nothing until `resume`. Scenarios run unpaused. */
   pause(): void
   resume(): void
