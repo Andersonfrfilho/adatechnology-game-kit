@@ -40,6 +40,17 @@ export interface LiquidDef {
   tags?: string[]
 }
 
+/** Colours of one splash: the wet film (`fresh`) and what it dries to (`dry`). A game uses it for what the liquid depends on (the age of an infection) while the liquid stays generic. */
+export interface StainTint {
+  fresh: number
+  dry: number
+}
+
+export interface SplashOptions {
+  /** Overrides the colours the liquid's definition gives the stain this splash makes (or joins; the latest tint wins). */
+  tint?: StainTint
+}
+
 export interface ContainerState {
   id: string
   liquid: LiquidId | null
@@ -152,6 +163,8 @@ export interface StainState {
   mark?: boolean
   /** Seconds since the stain was created. */
   age?: number
+  /** The colours of the splash that made it, when it was given a `tint`. */
+  tint?: StainTint
 }
 
 export type FluidEvent =
@@ -221,8 +234,8 @@ export interface FluidWorld {
   /** Remove a tap (and end its stream). */
   removeTap(id: string): void
   taps(): TapState[]
-  /** Pour liquid straight onto a point (a broken bottle, a blood splash). */
-  splash(liquid: LiquidId, point: Vec3, liters: number, velocity?: Vec3): void
+  /** Pour liquid straight onto a point (a broken bottle, a blood splash). `options.tint` colours the stain for this splash only. */
+  splash(liquid: LiquidId, point: Vec3, liters: number, velocity?: Vec3, options?: SplashOptions): void
   /** Wipe or burn stains in a radius (fire dries water and burns fuel stains). */
   clearStains(point: Vec3, radius: number): void
   update(dt: number): FluidEvent[]
