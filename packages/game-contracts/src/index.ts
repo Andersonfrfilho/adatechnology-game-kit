@@ -40,6 +40,7 @@ export type { CheckSpecOptions, SpecReport } from './spec'
 export { shotToHit } from './weapons'
 export type { Shot, Use } from './weapons'
 export type { ContainerSpec, ItemUseDef, LiquidId } from './fluids'
+export type { EffectHandle, EffectRequest, EffectSink } from './effects'
 export { checkAnimation } from './animation'
 export type { AnimationClipSpec, AnimationEventSpec, AnimationKey, AnimationPose, ItemAnimationContract } from './animation'
 export { STAGE_EVENT, TOOL_CLIP, checkToolClips, createToolClipPlayer, sampleClip, scaleClip, toolAnimationStep } from './tool-animation'
@@ -51,6 +52,7 @@ export type {
   BenchChange,
   BenchDeclaration,
   BenchReport,
+  BenchSheet,
   BooleanControl,
   ChoiceControl,
   ChoiceOption,
