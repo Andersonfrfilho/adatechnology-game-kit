@@ -388,10 +388,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   let useHeld = false
   let useFirst = false
+  /** What modules ask the walking player to stay out of (`ModuleHost.addBlocker`). */
+  const blockers = new Set<(x: number, z: number, radius: number) => boolean>()
   const player = createPlayer(THREE, {
     camera,
     dom,
     colliders: arena.colliders,
+    blockers,
     limit: arenaSize,
     start: arena.playerStart,
     hooks: {
@@ -600,8 +603,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     fluids.setTap(TAP_ID, false)
   }
 
+  const clearListeners = new Set<() => void>()
   const clear = (): void => {
     clearEverything()
+    for (const listener of [...clearListeners]) listener()
     restingTops.length = 0
     pending = []
     action('clear', t('act.clear'))
@@ -1915,6 +1920,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     log(text, data) {
       action('module_note', text, { data })
+    },
+    addBlocker(blocked) {
+      blockers.add(blocked)
+      return () => blockers.delete(blocked)
+    },
+    onClear(listener) {
+      clearListeners.add(listener)
+      return () => clearListeners.delete(listener)
     },
   }
   const lendBench = (store: BenchStore): ModuleBench => ({

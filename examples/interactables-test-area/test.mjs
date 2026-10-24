@@ -113,6 +113,12 @@ for (const lang of ['pt-BR', 'en']) {
     return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, inFridge: found.length }
   })
   check(`[${lang}] the items module is loaded too and the fridge holds real items`, items.module === 'items_area' && items.ok && items.problems.length === 0 && items.items > 300 && items.inFridge > 0, items)
+  // the floorplan module rides along too, on the room's world and renderer (houses are built on demand, not on load)
+  const floorplan = await page.evaluate(() => {
+    const loaded = window.__furnitureReport.floorplan
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, scenarios: loaded?.scenarios?.length ?? 0 }
+  })
+  check(`[${lang}] the floorplan module is loaded too (5 specimens, 7 scenarios)`, floorplan.module === 'floorplan_area' && floorplan.ok && floorplan.problems.length === 0 && floorplan.items === 5 && floorplan.scenarios === 7, floorplan)
   const effects = await page.evaluate(() => {
     const loaded = window.__furnitureReport.vfx
     const bench = window.__testRoom.bench('vfx')
