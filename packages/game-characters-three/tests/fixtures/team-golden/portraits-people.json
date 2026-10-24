@@ -1,0 +1,581 @@
+{
+ "schema": 1,
+ "name": "portraits-people",
+ "seed": 1,
+ "events": [
+  {
+   "type": "person",
+   "data": {
+    "id": "zilda",
+    "characters": 1,
+    "objects": 167
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "arnaldo",
+    "characters": 1,
+    "objects": 157
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "val",
+    "characters": 1,
+    "objects": 153
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "mariana",
+    "characters": 1,
+    "objects": 155
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "criancas",
+    "characters": 3,
+    "objects": 449
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "brasa",
+    "characters": 1,
+    "objects": 165
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "bigode",
+    "characters": 1,
+    "objects": 164
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "italo",
+    "characters": 1,
+    "objects": 152
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "rafa",
+    "characters": 1,
+    "objects": 153
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "jessica",
+    "characters": 1,
+    "objects": 156
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "nelson",
+    "characters": 1,
+    "objects": 158
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "rosa",
+    "characters": 1,
+    "objects": 178
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "gil",
+    "characters": 1,
+    "objects": 153
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "otavio",
+    "characters": 1,
+    "objects": 185
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "bianca",
+    "characters": 1,
+    "objects": 157
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "sato",
+    "characters": 1,
+    "objects": 185
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "livia",
+    "characters": 1,
+    "objects": 161
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "diego",
+    "characters": 1,
+    "objects": 152
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "nicole",
+    "characters": 1,
+    "objects": 162
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "kauan",
+    "characters": 1,
+    "objects": 163
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "biel",
+    "characters": 1,
+    "objects": 154
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "neide",
+    "characters": 1,
+    "objects": 155
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "helena",
+    "characters": 2,
+    "objects": 300
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "chico",
+    "characters": 1,
+    "objects": 157
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "armando",
+    "characters": 1,
+    "objects": 163
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "dito",
+    "characters": 1,
+    "objects": 176
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "ivone",
+    "characters": 1,
+    "objects": 154
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "tadeu",
+    "characters": 1,
+    "objects": 150
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "profeta",
+    "characters": 1,
+    "objects": 160
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "cida",
+    "characters": 1,
+    "objects": 157
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "renata",
+    "characters": 1,
+    "objects": 159
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "taina",
+    "characters": 1,
+    "objects": 152
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "lucas",
+    "characters": 1,
+    "objects": 155
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "caio",
+    "characters": 1,
+    "objects": 161
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "ferraz",
+    "characters": 1,
+    "objects": 167
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "vinicius",
+    "characters": 1,
+    "objects": 164
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "lucia",
+    "characters": 1,
+    "objects": 162
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "douglas",
+    "characters": 1,
+    "objects": 157
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "josue",
+    "characters": 1,
+    "objects": 164
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "jacare",
+    "characters": 1,
+    "objects": 150
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "lince",
+    "characters": 1,
+    "objects": 170
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "paula",
+    "characters": 1,
+    "objects": 165
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "kevin",
+    "characters": 1,
+    "objects": 166
+   }
+  },
+  {
+   "type": "person",
+   "data": {
+    "id": "azevedo",
+    "characters": 1,
+    "objects": 160
+   }
+  }
+ ],
+ "scenes": {
+  "person_zilda": {
+   "objects": 167,
+   "hash": "56596c36",
+   "lines": []
+  },
+  "person_arnaldo": {
+   "objects": 157,
+   "hash": "f8150895",
+   "lines": []
+  },
+  "person_val": {
+   "objects": 153,
+   "hash": "3faa529",
+   "lines": []
+  },
+  "person_mariana": {
+   "objects": 155,
+   "hash": "1e3c19",
+   "lines": []
+  },
+  "person_criancas": {
+   "objects": 449,
+   "hash": "aec5e932",
+   "lines": []
+  },
+  "person_brasa": {
+   "objects": 165,
+   "hash": "5b4526d3",
+   "lines": []
+  },
+  "person_bigode": {
+   "objects": 164,
+   "hash": "ff88dd57",
+   "lines": []
+  },
+  "person_italo": {
+   "objects": 152,
+   "hash": "36bd76b2",
+   "lines": []
+  },
+  "person_rafa": {
+   "objects": 153,
+   "hash": "72e3e1a3",
+   "lines": []
+  },
+  "person_jessica": {
+   "objects": 156,
+   "hash": "7c8ab707",
+   "lines": []
+  },
+  "person_nelson": {
+   "objects": 158,
+   "hash": "6d5b52fd",
+   "lines": []
+  },
+  "person_rosa": {
+   "objects": 178,
+   "hash": "9090ab06",
+   "lines": []
+  },
+  "person_gil": {
+   "objects": 153,
+   "hash": "a733f407",
+   "lines": []
+  },
+  "person_otavio": {
+   "objects": 185,
+   "hash": "29883104",
+   "lines": []
+  },
+  "person_bianca": {
+   "objects": 157,
+   "hash": "3228aa2f",
+   "lines": []
+  },
+  "person_sato": {
+   "objects": 185,
+   "hash": "ac27a743",
+   "lines": []
+  },
+  "person_livia": {
+   "objects": 161,
+   "hash": "742fdd23",
+   "lines": []
+  },
+  "person_diego": {
+   "objects": 152,
+   "hash": "6b6a5073",
+   "lines": []
+  },
+  "person_nicole": {
+   "objects": 162,
+   "hash": "d529075b",
+   "lines": []
+  },
+  "person_kauan": {
+   "objects": 163,
+   "hash": "4f9debbc",
+   "lines": []
+  },
+  "person_biel": {
+   "objects": 154,
+   "hash": "7ee4c34d",
+   "lines": []
+  },
+  "person_neide": {
+   "objects": 155,
+   "hash": "5b3b077b",
+   "lines": []
+  },
+  "person_helena": {
+   "objects": 300,
+   "hash": "31eef91b",
+   "lines": []
+  },
+  "person_chico": {
+   "objects": 157,
+   "hash": "423bbc8a",
+   "lines": []
+  },
+  "person_armando": {
+   "objects": 163,
+   "hash": "cd004f27",
+   "lines": []
+  },
+  "person_dito": {
+   "objects": 176,
+   "hash": "96711151",
+   "lines": []
+  },
+  "person_ivone": {
+   "objects": 154,
+   "hash": "fc3c5b79",
+   "lines": []
+  },
+  "person_tadeu": {
+   "objects": 150,
+   "hash": "9580eb3d",
+   "lines": []
+  },
+  "person_profeta": {
+   "objects": 160,
+   "hash": "40835b92",
+   "lines": []
+  },
+  "person_cida": {
+   "objects": 157,
+   "hash": "efd88e1c",
+   "lines": []
+  },
+  "person_renata": {
+   "objects": 159,
+   "hash": "82bc6b7b",
+   "lines": []
+  },
+  "person_taina": {
+   "objects": 152,
+   "hash": "49c48df5",
+   "lines": []
+  },
+  "person_lucas": {
+   "objects": 155,
+   "hash": "4bb51949",
+   "lines": []
+  },
+  "person_caio": {
+   "objects": 161,
+   "hash": "27321b2b",
+   "lines": []
+  },
+  "person_ferraz": {
+   "objects": 167,
+   "hash": "21270f16",
+   "lines": []
+  },
+  "person_vinicius": {
+   "objects": 164,
+   "hash": "463b7b73",
+   "lines": []
+  },
+  "person_lucia": {
+   "objects": 162,
+   "hash": "fe888a29",
+   "lines": []
+  },
+  "person_douglas": {
+   "objects": 157,
+   "hash": "a6daa151",
+   "lines": []
+  },
+  "person_josue": {
+   "objects": 164,
+   "hash": "8091c37f",
+   "lines": []
+  },
+  "person_jacare": {
+   "objects": 150,
+   "hash": "934177e1",
+   "lines": []
+  },
+  "person_lince": {
+   "objects": 170,
+   "hash": "5ac542a4",
+   "lines": []
+  },
+  "person_paula": {
+   "objects": 165,
+   "hash": "d8bda76c",
+   "lines": []
+  },
+  "person_kevin": {
+   "objects": 166,
+   "hash": "aa06e11d",
+   "lines": []
+  },
+  "person_azevedo": {
+   "objects": 160,
+   "hash": "91c26a1a",
+   "lines": []
+  }
+ }
+}

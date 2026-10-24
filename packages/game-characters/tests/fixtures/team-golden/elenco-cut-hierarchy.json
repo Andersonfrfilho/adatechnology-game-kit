@@ -1,0 +1,7149 @@
+{
+ "schema": 1,
+ "name": "elenco-cut-hierarchy",
+ "seed": 1,
+ "events": [
+  {
+   "type": "start",
+   "data": {
+    "scenario": "faca_head",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_head",
+    "step": 1,
+    "message": "Faca no cabeça: −25, resta 15 de 40.",
+    "segmentHp": 14.9579,
+    "segmentState": "ferido",
+    "states": "head:ferido torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     14.9579,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_head",
+    "step": 2,
+    "message": "Faca no cabeça: −24, resta 0 de 40. Cabeça arrancada.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:cut torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     0,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 1,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "faca_torso",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_torso",
+    "step": 1,
+    "message": "Faca no tronco: −24, resta 96 de 120.",
+    "segmentHp": 96.1753,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     96.1753,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_torso",
+    "step": 2,
+    "message": "Faca no tronco: −22, resta 74 de 120.",
+    "segmentHp": 74.3791,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     74.3791,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_torso",
+    "step": 3,
+    "message": "Faca no tronco: −25, resta 49 de 120.",
+    "segmentHp": 49.1842,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     49.1842,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_torso",
+    "step": 4,
+    "message": "Faca no tronco: −21, resta 28 de 120.",
+    "segmentHp": 28.1974,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     28.1974,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_torso",
+    "step": 5,
+    "message": "Faca no tronco: −22, resta 6 de 120.",
+    "segmentHp": 5.7596,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     5.7596,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_torso",
+    "step": 6,
+    "message": "Faca no tronco: −21, resta 0 de 120. Ferimento fatal no tronco (humano). Zumbi só cai com tiro na cabeça.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:quebrado pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     0,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 1,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "faca_pelvis",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_pelvis",
+    "step": 1,
+    "message": "Faca no quadril: −19, resta 71 de 90.",
+    "segmentHp": 70.9478,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ferido uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     70.9478,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_pelvis",
+    "step": 2,
+    "message": "Faca no quadril: −23, resta 48 de 90.",
+    "segmentHp": 48.4381,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ferido uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     48.4381,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_pelvis",
+    "step": 3,
+    "message": "Faca no quadril: −23, resta 25 de 90.",
+    "segmentHp": 25.4354,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ferido uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     25.4354,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_pelvis",
+    "step": 4,
+    "message": "Faca no quadril: −24, resta 1 de 90.",
+    "segmentHp": 1.4676,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ferido uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     1.4676,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_pelvis",
+    "step": 5,
+    "message": "Faca no quadril: −22, resta 0 de 90. Quadril destruído: rasteja.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:quebrado uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     0,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "faca_uArm0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_uArm0",
+    "step": 1,
+    "message": "Faca no braço esquerdo: −20, resta 40 de 60.",
+    "segmentHp": 40.0258,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ferido fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     40.0258,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_uArm0",
+    "step": 2,
+    "message": "Faca no braço esquerdo: −20, resta 20 de 60.",
+    "segmentHp": 20.3504,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ferido fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     20.3504,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_uArm0",
+    "step": 3,
+    "message": "Faca no braço esquerdo: −20, resta 1 de 60.",
+    "segmentHp": 0.54,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ferido fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     0.54,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_uArm0",
+    "step": 4,
+    "message": "Faca no braço esquerdo: −23, resta 0 de 60. Cortado na junta: cai o braço inteiro.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:cut fArm0:cut hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     0,
+     0,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "faca_uArm1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_uArm1",
+    "step": 1,
+    "message": "Faca no braço direito: −23, resta 37 de 60.",
+    "segmentHp": 37.4516,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ferido fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     37.4516,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_uArm1",
+    "step": 2,
+    "message": "Faca no braço direito: −22, resta 15 de 60.",
+    "segmentHp": 15.3486,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ferido fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     15.3486,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_uArm1",
+    "step": 3,
+    "message": "Faca no braço direito: −19, resta 0 de 60. Cortado na junta: cai o braço inteiro.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:cut fArm1:cut hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     0,
+     0,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "faca_fArm0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_fArm0",
+    "step": 1,
+    "message": "Faca no antebraço esquerdo: −21, resta 24 de 45.",
+    "segmentHp": 23.547,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ferido hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     23.547,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_fArm0",
+    "step": 2,
+    "message": "Faca no antebraço esquerdo: −25, resta 0 de 45. Cortado na junta: cai o antebraço com a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:cut hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     0,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "faca_fArm1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_fArm1",
+    "step": 1,
+    "message": "Faca no antebraço direito: −20, resta 25 de 45.",
+    "segmentHp": 25.4239,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ferido hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     25.4239,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_fArm1",
+    "step": 2,
+    "message": "Faca no antebraço direito: −19, resta 6 de 45.",
+    "segmentHp": 6.0374,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ferido hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     6.0374,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_fArm1",
+    "step": 3,
+    "message": "Faca no antebraço direito: −24, resta 0 de 45. Cortado na junta: cai o antebraço com a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:cut hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     0,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "faca_hand0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_hand0",
+    "step": 1,
+    "message": "Faca no mão esquerdo: −21, resta 4 de 25.",
+    "segmentHp": 4.4885,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ferido uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     4.4885,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_hand0",
+    "step": 2,
+    "message": "Faca no mão esquerdo: −22, resta 0 de 25. Cortado na junta: cai a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "faca_hand1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_hand1",
+    "step": 1,
+    "message": "Faca no mão direito: −19, resta 6 de 25.",
+    "segmentHp": 6.1515,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ferido thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     6.1515,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_hand1",
+    "step": 2,
+    "message": "Faca no mão direito: −22, resta 0 de 25. Cortado na junta: cai a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "faca_thigh0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_thigh0",
+    "step": 1,
+    "message": "Faca no coxa direita: −19, resta 61 de 80.",
+    "segmentHp": 60.9876,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ferido shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     60.9876,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_thigh0",
+    "step": 2,
+    "message": "Faca no coxa direita: −24, resta 37 de 80.",
+    "segmentHp": 37.0736,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ferido shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     37.0736,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_thigh0",
+    "step": 3,
+    "message": "Faca no coxa direita: −25, resta 12 de 80.",
+    "segmentHp": 12.0059,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ferido shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     12.0059,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_thigh0",
+    "step": 4,
+    "message": "Faca no coxa direita: −24, resta 0 de 80. Cortado na junta: cai a perna inteira.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:cut shin0:cut thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     0,
+     0,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "faca_thigh1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_thigh1",
+    "step": 1,
+    "message": "Faca no coxa esquerda: −22, resta 58 de 80.",
+    "segmentHp": 58.0702,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ferido shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     58.0702,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_thigh1",
+    "step": 2,
+    "message": "Faca no coxa esquerda: −22, resta 36 de 80.",
+    "segmentHp": 35.7363,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ferido shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     35.7363,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_thigh1",
+    "step": 3,
+    "message": "Faca no coxa esquerda: −21, resta 14 de 80.",
+    "segmentHp": 14.3952,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ferido shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     14.3952,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_thigh1",
+    "step": 4,
+    "message": "Faca no coxa esquerda: −22, resta 0 de 80. Cortado na junta: cai a perna inteira.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:cut shin1:cut",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     0,
+     0
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "faca_shin0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_shin0",
+    "step": 1,
+    "message": "Faca no canela e pé direita: −21, resta 34 de 55.",
+    "segmentHp": 33.7464,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ferido thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     33.7464,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_shin0",
+    "step": 2,
+    "message": "Faca no canela e pé direita: −24, resta 10 de 55.",
+    "segmentHp": 10.2451,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ferido thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     10.2451,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_shin0",
+    "step": 3,
+    "message": "Faca no canela e pé direita: −22, resta 0 de 55. Cortado na junta: cai a canela com o pé.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:cut thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     0,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "faca_shin1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_shin1",
+    "step": 1,
+    "message": "Faca no canela e pé esquerda: −22, resta 33 de 55.",
+    "segmentHp": 33.1859,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ferido",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     33.1859
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_shin1",
+    "step": 2,
+    "message": "Faca no canela e pé esquerda: −19, resta 14 de 55.",
+    "segmentHp": 14.3381,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ferido",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     14.3381
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "faca_shin1",
+    "step": 3,
+    "message": "Faca no canela e pé esquerda: −22, resta 0 de 55. Cortado na junta: cai a canela com o pé.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:cut",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     0
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "facao_head",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_head",
+    "step": 1,
+    "message": "Facão no cabeça: −55, resta 0 de 40. Cabeça arrancada.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:cut torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     0,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 1,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "facao_torso",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_torso",
+    "step": 1,
+    "message": "Facão no tronco: −55, resta 65 de 120.",
+    "segmentHp": 64.6087,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     64.6087,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_torso",
+    "step": 2,
+    "message": "Facão no tronco: −52, resta 12 de 120.",
+    "segmentHp": 12.3869,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     12.3869,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_torso",
+    "step": 3,
+    "message": "Facão no tronco: −58, resta 0 de 120. Ferimento fatal no tronco (humano). Zumbi só cai com tiro na cabeça.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:quebrado pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     0,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 1,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "facao_pelvis",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_pelvis",
+    "step": 1,
+    "message": "Facão no quadril: −59, resta 31 de 90.",
+    "segmentHp": 31.4491,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ferido uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     31.4491,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_pelvis",
+    "step": 2,
+    "message": "Facão no quadril: −51, resta 0 de 90. Quadril destruído: rasteja.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:quebrado uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     0,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "facao_uArm0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_uArm0",
+    "step": 1,
+    "message": "Facão no braço esquerdo: −52, resta 8 de 60.",
+    "segmentHp": 7.7878,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ferido fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     7.7878,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_uArm0",
+    "step": 2,
+    "message": "Facão no braço esquerdo: −49, resta 0 de 60. Cortado na junta: cai o braço inteiro.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:cut fArm0:cut hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     0,
+     0,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "facao_uArm1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_uArm1",
+    "step": 1,
+    "message": "Facão no braço direito: −60, resta 0 de 60.",
+    "segmentHp": 0.09,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ferido fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     0.09,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_uArm1",
+    "step": 2,
+    "message": "Facão no braço direito: −58, resta 0 de 60. Cortado na junta: cai o braço inteiro.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:cut fArm1:cut hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     0,
+     0,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "facao_fArm0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_fArm0",
+    "step": 1,
+    "message": "Facão no antebraço esquerdo: −47, resta 0 de 45. Cortado na junta: cai o antebraço com a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:cut hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     0,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "facao_fArm1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_fArm1",
+    "step": 1,
+    "message": "Facão no antebraço direito: −51, resta 0 de 45. Cortado na junta: cai o antebraço com a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:cut hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     0,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "facao_hand0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_hand0",
+    "step": 1,
+    "message": "Facão no mão esquerdo: −57, resta 0 de 25. Cortado na junta: cai a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "facao_hand1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_hand1",
+    "step": 1,
+    "message": "Facão no mão direito: −48, resta 0 de 25. Cortado na junta: cai a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "facao_thigh0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_thigh0",
+    "step": 1,
+    "message": "Facão no coxa direita: −59, resta 21 de 80.",
+    "segmentHp": 21.1945,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ferido shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     21.1945,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_thigh0",
+    "step": 2,
+    "message": "Facão no coxa direita: −53, resta 0 de 80. Cortado na junta: cai a perna inteira.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:cut shin0:cut thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     0,
+     0,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "facao_thigh1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_thigh1",
+    "step": 1,
+    "message": "Facão no coxa esquerda: −51, resta 29 de 80.",
+    "segmentHp": 28.6946,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ferido shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     28.6946,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_thigh1",
+    "step": 2,
+    "message": "Facão no coxa esquerda: −51, resta 0 de 80. Cortado na junta: cai a perna inteira.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:cut shin1:cut",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     0,
+     0
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "facao_shin0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_shin0",
+    "step": 1,
+    "message": "Facão no canela e pé direita: −52, resta 3 de 55.",
+    "segmentHp": 2.6448,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ferido thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     2.6448,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_shin0",
+    "step": 2,
+    "message": "Facão no canela e pé direita: −59, resta 0 de 55. Cortado na junta: cai a canela com o pé.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:cut thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     0,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "facao_shin1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_shin1",
+    "step": 1,
+    "message": "Facão no canela e pé esquerda: −47, resta 8 de 55.",
+    "segmentHp": 7.8625,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ferido",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     7.8625
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "facao_shin1",
+    "step": 2,
+    "message": "Facão no canela e pé esquerda: −56, resta 0 de 55. Cortado na junta: cai a canela com o pé.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:cut",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     0
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "machado_head",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_head",
+    "step": 1,
+    "message": "Machado no cabeça: −77, resta 0 de 40. Cabeça arrancada.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:cut torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     0,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 1,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "machado_torso",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_torso",
+    "step": 1,
+    "message": "Machado no tronco: −74, resta 46 de 120.",
+    "segmentHp": 45.6638,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     45.6638,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_torso",
+    "step": 2,
+    "message": "Machado no tronco: −91, resta 0 de 120. Ferimento fatal no tronco (humano). Zumbi só cai com tiro na cabeça.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:quebrado pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     0,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 1,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "machado_pelvis",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_pelvis",
+    "step": 1,
+    "message": "Machado no quadril: −84, resta 6 de 90.",
+    "segmentHp": 5.5131,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ferido uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     5.5131,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_pelvis",
+    "step": 2,
+    "message": "Machado no quadril: −88, resta 0 de 90. Quadril destruído: rasteja.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:quebrado uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     0,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "machado_uArm0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_uArm0",
+    "step": 1,
+    "message": "Machado no braço esquerdo: −86, resta 0 de 60. Cortado na junta: cai o braço inteiro.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:cut fArm0:cut hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     0,
+     0,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "machado_uArm1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_uArm1",
+    "step": 1,
+    "message": "Machado no braço direito: −81, resta 0 de 60. Cortado na junta: cai o braço inteiro.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:cut fArm1:cut hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     0,
+     0,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "machado_fArm0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_fArm0",
+    "step": 1,
+    "message": "Machado no antebraço esquerdo: −87, resta 0 de 45. Cortado na junta: cai o antebraço com a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:cut hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     0,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "machado_fArm1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_fArm1",
+    "step": 1,
+    "message": "Machado no antebraço direito: −89, resta 0 de 45. Cortado na junta: cai o antebraço com a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:cut hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     0,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "machado_hand0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_hand0",
+    "step": 1,
+    "message": "Machado no mão esquerdo: −87, resta 0 de 25. Cortado na junta: cai a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "machado_hand1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_hand1",
+    "step": 1,
+    "message": "Machado no mão direito: −82, resta 0 de 25. Cortado na junta: cai a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "machado_thigh0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_thigh0",
+    "step": 1,
+    "message": "Machado no coxa direita: −94, resta 0 de 80. Cortado na junta: cai a perna inteira.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:cut shin0:cut thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     0,
+     0,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "machado_thigh1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_thigh1",
+    "step": 1,
+    "message": "Machado no coxa esquerda: −78, resta 2 de 80.",
+    "segmentHp": 2.2874,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ferido shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     2.2874,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_thigh1",
+    "step": 2,
+    "message": "Machado no coxa esquerda: −76, resta 0 de 80. Cortado na junta: cai a perna inteira.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:cut shin1:cut",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     0,
+     0
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "machado_shin0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_shin0",
+    "step": 1,
+    "message": "Machado no canela e pé direita: −87, resta 0 de 55. Cortado na junta: cai a canela com o pé.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:cut thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     0,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "machado_shin1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "machado_shin1",
+    "step": 1,
+    "message": "Machado no canela e pé esquerda: −79, resta 0 de 55. Cortado na junta: cai a canela com o pé.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:cut",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     0
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "p9_head",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_head",
+    "step": 1,
+    "message": "Pistola 9 mm no cabeça: −33, resta 7 de 40.",
+    "segmentHp": 7.3448,
+    "segmentState": "ferido",
+    "states": "head:ferido torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     7.3448,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_head",
+    "step": 2,
+    "message": "Pistola 9 mm no cabeça: −33, resta 0 de 40. Tiro na cabeça: abatido.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:quebrado torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     0,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 1,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "p9_torso",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_torso",
+    "step": 1,
+    "message": "Pistola 9 mm no tronco: −28, resta 92 de 120.",
+    "segmentHp": 92.4531,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     92.4531,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_torso",
+    "step": 2,
+    "message": "Pistola 9 mm no tronco: −29, resta 63 de 120.",
+    "segmentHp": 63.2526,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     63.2526,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_torso",
+    "step": 3,
+    "message": "Pistola 9 mm no tronco: −27, resta 37 de 120.",
+    "segmentHp": 36.703,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     36.703,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_torso",
+    "step": 4,
+    "message": "Pistola 9 mm no tronco: −34, resta 2 de 120.",
+    "segmentHp": 2.3272,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     2.3272,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_torso",
+    "step": 5,
+    "message": "Pistola 9 mm no tronco: −31, resta 0 de 120. Ferimento fatal no tronco (humano). Zumbi só cai com tiro na cabeça.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:quebrado pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     0,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 1,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "p9_pelvis",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_pelvis",
+    "step": 1,
+    "message": "Pistola 9 mm no quadril: −30, resta 60 de 90.",
+    "segmentHp": 60.2079,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ferido uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     60.2079,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_pelvis",
+    "step": 2,
+    "message": "Pistola 9 mm no quadril: −29, resta 31 de 90.",
+    "segmentHp": 30.9059,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ferido uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     30.9059,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_pelvis",
+    "step": 3,
+    "message": "Pistola 9 mm no quadril: −29, resta 2 de 90.",
+    "segmentHp": 2.2938,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ferido uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     2.2938,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_pelvis",
+    "step": 4,
+    "message": "Pistola 9 mm no quadril: −34, resta 0 de 90. Quadril destruído: rasteja.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:quebrado uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     0,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "p9_uArm0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_uArm0",
+    "step": 1,
+    "message": "Pistola 9 mm no braço esquerdo: −31, resta 29 de 60.",
+    "segmentHp": 28.6333,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ferido fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     28.6333,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_uArm0",
+    "step": 2,
+    "message": "Pistola 9 mm no braço esquerdo: −28, resta 1 de 60.",
+    "segmentHp": 1.0762,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ferido fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     1.0762,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_uArm0",
+    "step": 3,
+    "message": "Pistola 9 mm no braço esquerdo: −26, resta 0 de 60. Osso quebrado: o membro fica pendurado.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:ok uArm0:quebrado fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     0,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": [
+     [
+      "shoulder",
+      0,
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "p9_uArm1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_uArm1",
+    "step": 1,
+    "message": "Pistola 9 mm no braço direito: −28, resta 32 de 60.",
+    "segmentHp": 31.8958,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ferido fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     31.8958,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_uArm1",
+    "step": 2,
+    "message": "Pistola 9 mm no braço direito: −29, resta 3 de 60.",
+    "segmentHp": 3.1676,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ferido fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     3.1676,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_uArm1",
+    "step": 3,
+    "message": "Pistola 9 mm no braço direito: −31, resta 0 de 60. Osso quebrado: o membro fica pendurado.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:quebrado fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     0,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": [
+     [
+      "shoulder",
+      1,
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "p9_fArm0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_fArm0",
+    "step": 1,
+    "message": "Pistola 9 mm no antebraço esquerdo: −33, resta 12 de 45.",
+    "segmentHp": 12.4609,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ferido hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     12.4609,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_fArm0",
+    "step": 2,
+    "message": "Pistola 9 mm no antebraço esquerdo: −26, resta 0 de 45. Osso quebrado: o membro fica pendurado.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:quebrado hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     0,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": [
+     [
+      "elbow",
+      0,
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "p9_fArm1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_fArm1",
+    "step": 1,
+    "message": "Pistola 9 mm no antebraço direito: −27, resta 18 de 45.",
+    "segmentHp": 18.1968,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ferido hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     18.1968,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_fArm1",
+    "step": 2,
+    "message": "Pistola 9 mm no antebraço direito: −29, resta 0 de 45. Osso quebrado: o membro fica pendurado.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:quebrado hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     0,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": [
+     [
+      "elbow",
+      1,
+      0,
+      6
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "p9_hand0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_hand0",
+    "step": 1,
+    "message": "Pistola 9 mm no mão esquerdo: −26, resta 0 de 25. Cortado na junta: cai a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "p9_hand1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_hand1",
+    "step": 1,
+    "message": "Pistola 9 mm no mão direito: −27, resta 0 de 25. Cortado na junta: cai a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "p9_thigh0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_thigh0",
+    "step": 1,
+    "message": "Pistola 9 mm no coxa direita: −31, resta 49 de 80.",
+    "segmentHp": 49.1842,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ferido shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     49.1842,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_thigh0",
+    "step": 2,
+    "message": "Pistola 9 mm no coxa direita: −33, resta 16 de 80.",
+    "segmentHp": 15.9192,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ferido shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     15.9192,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_thigh0",
+    "step": 3,
+    "message": "Pistola 9 mm no coxa direita: −30, resta 0 de 80. Osso quebrado: passa a mancar.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:quebrado shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     0,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     1,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "p9_thigh1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_thigh1",
+    "step": 1,
+    "message": "Pistola 9 mm no coxa esquerda: −27, resta 53 de 80.",
+    "segmentHp": 52.9856,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ferido shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     52.9856,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_thigh1",
+    "step": 2,
+    "message": "Pistola 9 mm no coxa esquerda: −33, resta 20 de 80.",
+    "segmentHp": 20.4587,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ferido shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     20.4587,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_thigh1",
+    "step": 3,
+    "message": "Pistola 9 mm no coxa esquerda: −29, resta 0 de 80. Osso quebrado: passa a mancar.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:quebrado shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     0,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     1
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "p9_shin0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_shin0",
+    "step": 1,
+    "message": "Pistola 9 mm no canela e pé direita: −26, resta 29 de 55.",
+    "segmentHp": 29.2679,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ferido thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     29.2679,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_shin0",
+    "step": 2,
+    "message": "Pistola 9 mm no canela e pé direita: −26, resta 4 de 55.",
+    "segmentHp": 3.6165,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ferido thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     3.6165,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_shin0",
+    "step": 3,
+    "message": "Pistola 9 mm no canela e pé direita: −29, resta 0 de 55. Osso quebrado: passa a mancar.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:quebrado thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     0,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     1,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "p9_shin1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_shin1",
+    "step": 1,
+    "message": "Pistola 9 mm no canela e pé esquerda: −31, resta 24 de 55.",
+    "segmentHp": 23.9108,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ferido",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     23.9108
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "p9_shin1",
+    "step": 2,
+    "message": "Pistola 9 mm no canela e pé esquerda: −33, resta 0 de 55. Osso quebrado: passa a mancar.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:quebrado",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     0
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     1
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "e12_head",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_head",
+    "step": 1,
+    "message": "Espingarda 12 no cabeça: −106, resta 0 de 40. Cabeça arrancada.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:cut torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     0,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 1,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "e12_torso",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_torso",
+    "step": 1,
+    "message": "Espingarda 12 no tronco: −97, resta 23 de 120.",
+    "segmentHp": 22.9332,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     22.9332,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_torso",
+    "step": 2,
+    "message": "Espingarda 12 no tronco: −94, resta 0 de 120. Ferimento fatal no tronco (humano). Zumbi só cai com tiro na cabeça.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:quebrado pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     0,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 1,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "e12_pelvis",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_pelvis",
+    "step": 1,
+    "message": "Espingarda 12 no quadril: −94, resta 0 de 90. Quadril destruído: rasteja.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:quebrado uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     0,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "e12_uArm0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_uArm0",
+    "step": 1,
+    "message": "Espingarda 12 no braço esquerdo: −88, resta 0 de 60. Cortado na junta: cai o braço inteiro.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:cut fArm0:cut hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     0,
+     0,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "e12_uArm1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_uArm1",
+    "step": 1,
+    "message": "Espingarda 12 no braço direito: −94, resta 0 de 60. Cortado na junta: cai o braço inteiro.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:cut fArm1:cut hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     0,
+     0,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "e12_fArm0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_fArm0",
+    "step": 1,
+    "message": "Espingarda 12 no antebraço esquerdo: −98, resta 0 de 45. Cortado na junta: cai o antebraço com a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:cut hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     0,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "e12_fArm1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_fArm1",
+    "step": 1,
+    "message": "Espingarda 12 no antebraço direito: −94, resta 0 de 45. Cortado na junta: cai o antebraço com a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:cut hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     0,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "e12_hand0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_hand0",
+    "step": 1,
+    "message": "Espingarda 12 no mão esquerdo: −96, resta 0 de 25. Cortado na junta: cai a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "e12_hand1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_hand1",
+    "step": 1,
+    "message": "Espingarda 12 no mão direito: −99, resta 0 de 25. Cortado na junta: cai a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "e12_thigh0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_thigh0",
+    "step": 1,
+    "message": "Espingarda 12 no coxa direita: −93, resta 0 de 80. Cortado na junta: cai a perna inteira.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:cut shin0:cut thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     0,
+     0,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "e12_thigh1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_thigh1",
+    "step": 1,
+    "message": "Espingarda 12 no coxa esquerda: −108, resta 0 de 80. Cortado na junta: cai a perna inteira.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:cut shin1:cut",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     0,
+     0
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "e12_shin0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_shin0",
+    "step": 1,
+    "message": "Espingarda 12 no canela e pé direita: −99, resta 0 de 55. Cortado na junta: cai a canela com o pé.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:cut thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     0,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "e12_shin1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "e12_shin1",
+    "step": 1,
+    "message": "Espingarda 12 no canela e pé esquerda: −88, resta 0 de 55. Cortado na junta: cai a canela com o pé.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:cut",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     0
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "f762_head",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_head",
+    "step": 1,
+    "message": "Fuzil 7,62 no cabeça: −68, resta 0 de 40. Tiro na cabeça: abatido.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:quebrado torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     0,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 1,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "f762_torso",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_torso",
+    "step": 1,
+    "message": "Fuzil 7,62 no tronco: −60, resta 60 de 120.",
+    "segmentHp": 60.4755,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     60.4755,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_torso",
+    "step": 2,
+    "message": "Fuzil 7,62 no tronco: −59, resta 1 de 120.",
+    "segmentHp": 1.1873,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ferido pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     1.1873,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_torso",
+    "step": 3,
+    "message": "Fuzil 7,62 no tronco: −59, resta 0 de 120. Ferimento fatal no tronco (humano). Zumbi só cai com tiro na cabeça.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:quebrado pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     0,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 1,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "f762_pelvis",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_pelvis",
+    "step": 1,
+    "message": "Fuzil 7,62 no quadril: −56, resta 34 de 90.",
+    "segmentHp": 33.665,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ferido uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     33.665,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_pelvis",
+    "step": 2,
+    "message": "Fuzil 7,62 no quadril: −75, resta 0 de 90. Quadril destruído: rasteja.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:quebrado uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     0,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "f762_uArm0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_uArm0",
+    "step": 1,
+    "message": "Fuzil 7,62 no braço esquerdo: −70, resta 0 de 60. Cortado na junta: cai o braço inteiro.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:cut fArm0:cut hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     0,
+     0,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "f762_uArm1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_uArm1",
+    "step": 1,
+    "message": "Fuzil 7,62 no braço direito: −74, resta 0 de 60. Cortado na junta: cai o braço inteiro.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:cut fArm1:cut hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     0,
+     0,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "f762_fArm0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_fArm0",
+    "step": 1,
+    "message": "Fuzil 7,62 no antebraço esquerdo: −74, resta 0 de 45. Cortado na junta: cai o antebraço com a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:cut hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     0,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "f762_fArm1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_fArm1",
+    "step": 1,
+    "message": "Fuzil 7,62 no antebraço direito: −74, resta 0 de 45. Cortado na junta: cai o antebraço com a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:cut hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     0,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "f762_hand0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_hand0",
+    "step": 1,
+    "message": "Fuzil 7,62 no mão esquerdo: −61, resta 0 de 25. Cortado na junta: cai a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:cut uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     0,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "f762_hand1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_hand1",
+    "step": 1,
+    "message": "Fuzil 7,62 no mão direito: −70, resta 0 de 25. Cortado na junta: cai a mão.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:cut thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     0,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "f762_thigh0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_thigh0",
+    "step": 1,
+    "message": "Fuzil 7,62 no coxa direita: −74, resta 6 de 80.",
+    "segmentHp": 5.838,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ferido shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     5.838,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_thigh0",
+    "step": 2,
+    "message": "Fuzil 7,62 no coxa direita: −69, resta 0 de 80. Osso quebrado: passa a mancar.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:quebrado shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     0,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     1,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "f762_thigh1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_thigh1",
+    "step": 1,
+    "message": "Fuzil 7,62 no coxa esquerda: −73, resta 7 de 80.",
+    "segmentHp": 6.5538,
+    "segmentState": "ferido",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ferido shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     6.5538,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_thigh1",
+    "step": 2,
+    "message": "Fuzil 7,62 no coxa esquerda: −70, resta 0 de 80. Osso quebrado: passa a mancar.",
+    "segmentHp": 0,
+    "segmentState": "quebrado",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:quebrado shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     0,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     1
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "f762_shin0",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_shin0",
+    "step": 1,
+    "message": "Fuzil 7,62 no canela e pé direita: −71, resta 0 de 55. Cortado na junta: cai a canela com o pé.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:cut thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     0,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "f762_shin1",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:ok",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     55
+    ],
+    "dead": 0,
+    "crawl": 0,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "f762_shin1",
+    "step": 1,
+    "message": "Fuzil 7,62 no canela e pé esquerda: −73, resta 0 de 55. Cortado na junta: cai a canela com o pé.",
+    "segmentHp": 0,
+    "segmentState": "cut",
+    "states": "head:ok torso:ok pelvis:ok uArm0:ok fArm0:ok hand0:ok uArm1:ok fArm1:ok hand1:ok thigh0:ok shin0:ok thigh1:ok shin1:cut",
+    "hp": [
+     40,
+     120,
+     90,
+     60,
+     45,
+     25,
+     60,
+     45,
+     25,
+     80,
+     55,
+     80,
+     0
+    ],
+    "dead": 0,
+    "crawl": 1,
+    "limp": [
+     0,
+     0
+    ],
+    "pendulums": []
+   }
+  }
+ ],
+ "scenes": {}
+}

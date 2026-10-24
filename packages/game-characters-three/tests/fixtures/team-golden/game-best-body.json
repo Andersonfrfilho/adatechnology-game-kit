@@ -1,0 +1,5175 @@
+{
+ "schema": 1,
+ "name": "game-best-body",
+ "seed": 1,
+ "events": [
+  {
+   "type": "hash",
+   "data": {
+    "algorithm": "fnv1a-32 over round(value * 1e4)"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "walker",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7000,
+    "lod": 1,
+    "vertices": 6309,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 27042,
+    "position": "5e6adff1",
+    "normal": "01101f00",
+    "vcol": "3a0a0675",
+    "bone": "71bfa19f",
+    "pivot": "57507333",
+    "ppivot": "e42d7f27",
+    "index": "4872aead"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "walker",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7000,
+    "lod": 0.5,
+    "vertices": 1706,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 5466,
+    "position": "7523dd95",
+    "normal": "d93b2a53",
+    "vcol": "b8698dd6",
+    "bone": "53d1242d",
+    "pivot": "0b8599c1",
+    "ppivot": "0d7139dd",
+    "index": "f7ab542d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "walker",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7000,
+    "lod": 0.28,
+    "vertices": 1149,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 2796,
+    "position": "10847f45",
+    "normal": "8c6cabdf",
+    "vcol": "a379e86a",
+    "bone": "588b7bdf",
+    "pivot": "be73c5c7",
+    "ppivot": "3bea1e47",
+    "index": "884fd405"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "walker",
+    "variant": 1,
+    "decay": 2,
+    "seed": 7013,
+    "lod": 1,
+    "vertices": 5930,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 25578,
+    "position": "bd93a86e",
+    "normal": "f9b8536d",
+    "vcol": "e09e7308",
+    "bone": "32e6c5ed",
+    "pivot": "590bfc29",
+    "ppivot": "e450978d",
+    "index": "9473e4ed"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "walker",
+    "variant": 1,
+    "decay": 2,
+    "seed": 7013,
+    "lod": 0.5,
+    "vertices": 1540,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 4968,
+    "position": "2baf5044",
+    "normal": "29a5a196",
+    "vcol": "f56a1773",
+    "bone": "c5cd69b5",
+    "pivot": "11505f09",
+    "ppivot": "f55cc405",
+    "index": "c3867b15"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "walker",
+    "variant": 1,
+    "decay": 2,
+    "seed": 7013,
+    "lod": 0.28,
+    "vertices": 1045,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 2526,
+    "position": "d3f6e9f4",
+    "normal": "e07744cb",
+    "vcol": "84f750de",
+    "bone": "cbe4af7f",
+    "pivot": "2252e327",
+    "ppivot": "d91d6aa7",
+    "index": "36f1ccbd"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "walker",
+    "variant": 2,
+    "decay": 1,
+    "seed": 7026,
+    "lod": 1,
+    "vertices": 6010,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 25854,
+    "position": "056c9d38",
+    "normal": "97a12162",
+    "vcol": "0d2bdb34",
+    "bone": "e574622d",
+    "pivot": "c52b6ea9",
+    "ppivot": "d211213d",
+    "index": "b39bcafd"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "walker",
+    "variant": 2,
+    "decay": 1,
+    "seed": 7026,
+    "lod": 0.5,
+    "vertices": 1596,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 5124,
+    "position": "063a008d",
+    "normal": "54c51735",
+    "vcol": "99a91a86",
+    "bone": "3c93e995",
+    "pivot": "2417c369",
+    "ppivot": "6c9c3775",
+    "index": "8bb69ea5"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "walker",
+    "variant": 2,
+    "decay": 1,
+    "seed": 7026,
+    "lod": 0.28,
+    "vertices": 1085,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 2610,
+    "position": "6755bd1a",
+    "normal": "fa0d8459",
+    "vcol": "ceeeb39a",
+    "bone": "c90d8edf",
+    "pivot": "5a861cc7",
+    "ppivot": "74e8f547",
+    "index": "5446352d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "walker",
+    "variant": 3,
+    "decay": 2,
+    "seed": 7039,
+    "lod": 1,
+    "vertices": 6382,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 27774,
+    "position": "3b45f69e",
+    "normal": "4e85e8bf",
+    "vcol": "fb3159d1",
+    "bone": "a9b6e6dd",
+    "pivot": "17117bf9",
+    "ppivot": "f2aea56d",
+    "index": "8f0bd41d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "walker",
+    "variant": 3,
+    "decay": 2,
+    "seed": 7039,
+    "lod": 0.5,
+    "vertices": 1669,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 5478,
+    "position": "8cd37911",
+    "normal": "ddb676b6",
+    "vcol": "68ecebe5",
+    "bone": "f3372cbf",
+    "pivot": "4c0f7cdb",
+    "ppivot": "f54e8b07",
+    "index": "5a1d4b1d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "walker",
+    "variant": 3,
+    "decay": 2,
+    "seed": 7039,
+    "lod": 0.28,
+    "vertices": 1093,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 2664,
+    "position": "50ffd709",
+    "normal": "1380e135",
+    "vcol": "0742cd06",
+    "bone": "fcef84bf",
+    "pivot": "223d9867",
+    "ppivot": "4336fce7",
+    "index": "3903f4d5"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "runner",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7101,
+    "lod": 1,
+    "vertices": 6044,
+    "scale": 0.97,
+    "bulk": 0.88,
+    "indices": 25926,
+    "position": "46e5f78f",
+    "normal": "6f4730dd",
+    "vcol": "b3c54861",
+    "bone": "5daab135",
+    "pivot": "f77e4203",
+    "ppivot": "370a5571",
+    "index": "61045d5d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "runner",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7101,
+    "lod": 0.5,
+    "vertices": 1623,
+    "scale": 0.97,
+    "bulk": 0.88,
+    "indices": 5166,
+    "position": "b1f49556",
+    "normal": "174e0093",
+    "vcol": "10cc1b60",
+    "bone": "e9008937",
+    "pivot": "816bd185",
+    "ppivot": "948ab193",
+    "index": "a7fb0c5d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "runner",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7101,
+    "lod": 0.28,
+    "vertices": 1117,
+    "scale": 0.97,
+    "bulk": 0.88,
+    "indices": 2676,
+    "position": "7fbc4f6a",
+    "normal": "114a0c3c",
+    "vcol": "aaa7ef82",
+    "bone": "2490785f",
+    "pivot": "aab44733",
+    "ppivot": "1354b987",
+    "index": "692e54c5"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "runner",
+    "variant": 1,
+    "decay": 2,
+    "seed": 7114,
+    "lod": 1,
+    "vertices": 5972,
+    "scale": 0.97,
+    "bulk": 0.88,
+    "indices": 25758,
+    "position": "fa3bd999",
+    "normal": "1faafed3",
+    "vcol": "024b9452",
+    "bone": "33b1d815",
+    "pivot": "6cb97843",
+    "ppivot": "34040a11",
+    "index": "8fa9cb9d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "runner",
+    "variant": 1,
+    "decay": 2,
+    "seed": 7114,
+    "lod": 0.5,
+    "vertices": 1551,
+    "scale": 0.97,
+    "bulk": 0.88,
+    "indices": 4998,
+    "position": "e420d852",
+    "normal": "3f6c075b",
+    "vcol": "5ae62165",
+    "bone": "589ccbd7",
+    "pivot": "b9c21845",
+    "ppivot": "ca741373",
+    "index": "71e134dd"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "runner",
+    "variant": 1,
+    "decay": 2,
+    "seed": 7114,
+    "lod": 0.28,
+    "vertices": 1045,
+    "scale": 0.97,
+    "bulk": 0.88,
+    "indices": 2508,
+    "position": "d5146ba4",
+    "normal": "b00f6bba",
+    "vcol": "842ff720",
+    "bone": "cbe4af7f",
+    "pivot": "07f4fef3",
+    "ppivot": "bf7af467",
+    "index": "fbd7b905"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "runner",
+    "variant": 2,
+    "decay": 1,
+    "seed": 7127,
+    "lod": 1,
+    "vertices": 6686,
+    "scale": 0.97,
+    "bulk": 0.88,
+    "indices": 29118,
+    "position": "ccb1e22b",
+    "normal": "d518063d",
+    "vcol": "6304922b",
+    "bone": "4eb2bb3d",
+    "pivot": "d7f10973",
+    "ppivot": "d5187ae9",
+    "index": "a705b83d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "runner",
+    "variant": 2,
+    "decay": 1,
+    "seed": 7127,
+    "lod": 0.5,
+    "vertices": 1738,
+    "scale": 0.97,
+    "bulk": 0.88,
+    "indices": 5664,
+    "position": "3d728fdd",
+    "normal": "d5c742ba",
+    "vcol": "a6f50498",
+    "bone": "7ba061ad",
+    "pivot": "e4b5aa7f",
+    "ppivot": "51587511",
+    "index": "72e535f5"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "runner",
+    "variant": 2,
+    "decay": 1,
+    "seed": 7127,
+    "lod": 0.28,
+    "vertices": 1181,
+    "scale": 0.97,
+    "bulk": 0.88,
+    "indices": 2934,
+    "position": "9fda95b9",
+    "normal": "75a7d442",
+    "vcol": "78891610",
+    "bone": "2b19915f",
+    "pivot": "6b096633",
+    "ppivot": "d04b3287",
+    "index": "703711dd"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "crawler",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7202,
+    "lod": 1,
+    "vertices": 6358,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 27762,
+    "position": "c351d2d0",
+    "normal": "24d2e9e3",
+    "vcol": "bad24173",
+    "bone": "d27122dd",
+    "pivot": "35f1dae9",
+    "ppivot": "0a467ffd",
+    "index": "93b41d6d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "crawler",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7202,
+    "lod": 0.5,
+    "vertices": 1729,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 5634,
+    "position": "3a53c0e5",
+    "normal": "dae0e1ed",
+    "vcol": "9e4c55a1",
+    "bone": "a1addb0f",
+    "pivot": "c6ef2493",
+    "ppivot": "f752bbaf",
+    "index": "186fb9cd"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "crawler",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7202,
+    "lod": 0.28,
+    "vertices": 1141,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 2796,
+    "position": "5182a38e",
+    "normal": "3d0af08b",
+    "vcol": "c2f718f3",
+    "bone": "2e3279ff",
+    "pivot": "b9ca8b27",
+    "ppivot": "f3b7aea7",
+    "index": "854be705"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "crawler",
+    "variant": 1,
+    "decay": 2,
+    "seed": 7215,
+    "lod": 1,
+    "vertices": 6921,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 30210,
+    "position": "410fec07",
+    "normal": "db5fa683",
+    "vcol": "79349f4c",
+    "bone": "0311db8f",
+    "pivot": "4a79f683",
+    "ppivot": "85c44517",
+    "index": "d714c00d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "crawler",
+    "variant": 1,
+    "decay": 2,
+    "seed": 7215,
+    "lod": 0.5,
+    "vertices": 1844,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 5958,
+    "position": "bf22c951",
+    "normal": "b591fbc9",
+    "vcol": "5439d13c",
+    "bone": "2c34f975",
+    "pivot": "dbf42f41",
+    "ppivot": "429617fd",
+    "index": "746254bd"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "crawler",
+    "variant": 1,
+    "decay": 2,
+    "seed": 7215,
+    "lod": 0.28,
+    "vertices": 1213,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 2976,
+    "position": "1ee5af98",
+    "normal": "4e76964b",
+    "vcol": "b3f91496",
+    "bone": "81f62cdf",
+    "pivot": "b1f265c7",
+    "ppivot": "2540cb47",
+    "index": "d722bbd5"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "brute",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7303,
+    "lod": 1,
+    "vertices": 6872,
+    "scale": 1.42,
+    "bulk": 1.32,
+    "indices": 30018,
+    "position": "4908bf58",
+    "normal": "0ee42557",
+    "vcol": "68fd1cd1",
+    "bone": "12636fd5",
+    "pivot": "77911883",
+    "ppivot": "870b1ee9",
+    "index": "1ee1476d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "brute",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7303,
+    "lod": 0.5,
+    "vertices": 1759,
+    "scale": 1.42,
+    "bulk": 1.32,
+    "indices": 5730,
+    "position": "07c514be",
+    "normal": "c57fcf0c",
+    "vcol": "31875ec0",
+    "bone": "cfdf8367",
+    "pivot": "833d8a6d",
+    "ppivot": "b35e74ab",
+    "index": "00d227ad"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "brute",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7303,
+    "lod": 0.28,
+    "vertices": 1181,
+    "scale": 1.42,
+    "bulk": 1.32,
+    "indices": 2892,
+    "position": "ac35daa9",
+    "normal": "0e6feb56",
+    "vcol": "b1817843",
+    "bone": "73255c1f",
+    "pivot": "afe2b5ff",
+    "ppivot": "0ce3495f",
+    "index": "93f9d905"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "brute",
+    "variant": 1,
+    "decay": 2,
+    "seed": 7316,
+    "lod": 1,
+    "vertices": 7556,
+    "scale": 1.42,
+    "bulk": 1.32,
+    "indices": 33330,
+    "position": "d92401bb",
+    "normal": "21bba17a",
+    "vcol": "38b0e93f",
+    "bone": "d1a2cde5",
+    "pivot": "00925ca3",
+    "ppivot": "e893fe79",
+    "index": "cfb1db8d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "brute",
+    "variant": 1,
+    "decay": 2,
+    "seed": 7316,
+    "lod": 0.5,
+    "vertices": 1885,
+    "scale": 1.42,
+    "bulk": 1.32,
+    "indices": 6198,
+    "position": "91454a1c",
+    "normal": "7e9353a6",
+    "vcol": "a0fb463d",
+    "bone": "c759af2f",
+    "pivot": "25c795ed",
+    "ppivot": "7387c423",
+    "index": "8a40a9dd"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "brute",
+    "variant": 1,
+    "decay": 2,
+    "seed": 7316,
+    "lod": 0.28,
+    "vertices": 1245,
+    "scale": 1.42,
+    "bulk": 1.32,
+    "indices": 3072,
+    "position": "0d0a6eb3",
+    "normal": "94e41c49",
+    "vcol": "218375a1",
+    "bone": "0f72969f",
+    "pivot": "a9898e1f",
+    "ppivot": "8655be5f",
+    "index": "24906ad5"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "sniffer",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7404,
+    "lod": 1,
+    "vertices": 6209,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 26850,
+    "position": "d655562c",
+    "normal": "7a717c81",
+    "vcol": "aadb090d",
+    "bone": "e74e14af",
+    "pivot": "0252a163",
+    "ppivot": "784098d7",
+    "index": "12e3cdad"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "sniffer",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7404,
+    "lod": 0.5,
+    "vertices": 1654,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 5370,
+    "position": "4141fe1f",
+    "normal": "ee3e8334",
+    "vcol": "ccd13991",
+    "bone": "0a57f53d",
+    "pivot": "152beab1",
+    "ppivot": "9b28e96d",
+    "index": "d3fc236d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "sniffer",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7404,
+    "lod": 0.28,
+    "vertices": 1121,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 2748,
+    "position": "85161d34",
+    "normal": "eeac3953",
+    "vcol": "3ea2eb4e",
+    "bone": "f9b9c02f",
+    "pivot": "d3edecb7",
+    "ppivot": "a0cb4857",
+    "index": "4e71a965"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "leaper",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7505,
+    "lod": 1,
+    "vertices": 6309,
+    "scale": 1,
+    "bulk": 0.86,
+    "indices": 27042,
+    "position": "03f62601",
+    "normal": "163f8e14",
+    "vcol": "9600891a",
+    "bone": "71bfa19f",
+    "pivot": "7d128fcf",
+    "ppivot": "055d0e3b",
+    "index": "4872aead"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "leaper",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7505,
+    "lod": 0.5,
+    "vertices": 1706,
+    "scale": 1,
+    "bulk": 0.86,
+    "indices": 5466,
+    "position": "ec269c5b",
+    "normal": "f2e63a76",
+    "vcol": "6e88ac8d",
+    "bone": "53d1242d",
+    "pivot": "df09dbc5",
+    "ppivot": "71075319",
+    "index": "f7ab542d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "leaper",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7505,
+    "lod": 0.28,
+    "vertices": 1149,
+    "scale": 1,
+    "bulk": 0.86,
+    "indices": 2796,
+    "position": "aa9a4e7e",
+    "normal": "c4f2d7a2",
+    "vcol": "38bb89a8",
+    "bone": "588b7bdf",
+    "pivot": "18bc8ae7",
+    "ppivot": "c2763e87",
+    "index": "884fd405"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "bloater",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7606,
+    "lod": 1,
+    "vertices": 8118,
+    "scale": 1.03,
+    "bulk": 1.15,
+    "indices": 35094,
+    "position": "de506bb0",
+    "normal": "93352cb9",
+    "vcol": "888cb70f",
+    "bone": "50daa08d",
+    "pivot": "beb8b2d7",
+    "ppivot": "f068a509",
+    "index": "7c9c51dd"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "bloater",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7606,
+    "lod": 0.5,
+    "vertices": 2258,
+    "scale": 1.03,
+    "bulk": 1.15,
+    "indices": 7278,
+    "position": "6fdb17b6",
+    "normal": "c0982db1",
+    "vcol": "bc3c0b71",
+    "bone": "0c4b8c6d",
+    "pivot": "f8c6b701",
+    "ppivot": "d7aed4c1",
+    "index": "f63b3cfd"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "bloater",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7606,
+    "lod": 0.28,
+    "vertices": 1513,
+    "scale": 1.03,
+    "bulk": 1.15,
+    "indices": 3729,
+    "position": "03d33a0f",
+    "normal": "4beb2ab6",
+    "vcol": "6268d926",
+    "bone": "7e2ff70f",
+    "pivot": "f2105c3b",
+    "ppivot": "a1ceecef",
+    "index": "de90684f"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "stalker",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7707,
+    "lod": 1,
+    "vertices": 6020,
+    "scale": 1,
+    "bulk": 0.86,
+    "indices": 25890,
+    "position": "b78218dc",
+    "normal": "6c10b4f3",
+    "vcol": "60eb9f8c",
+    "bone": "e12adcd5",
+    "pivot": "6e1bdb49",
+    "ppivot": "117287c9",
+    "index": "7c5b4b2d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "stalker",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7707,
+    "lod": 0.5,
+    "vertices": 1599,
+    "scale": 1,
+    "bulk": 0.86,
+    "indices": 5130,
+    "position": "2f6d83c2",
+    "normal": "93ab99e8",
+    "vcol": "345f6195",
+    "bone": "ac816d17",
+    "pivot": "17b9381b",
+    "ppivot": "445a9cab",
+    "index": "8b8cf42d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "stalker",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7707,
+    "lod": 0.28,
+    "vertices": 1093,
+    "scale": 1,
+    "bulk": 0.86,
+    "indices": 2640,
+    "position": "83949062",
+    "normal": "05c9ad97",
+    "vcol": "80d52353",
+    "bone": "e2e3aabf",
+    "pivot": "6a3a9107",
+    "ppivot": "719844a7",
+    "index": "6d3f3975"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "blind",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7808,
+    "lod": 1,
+    "vertices": 7191,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 31254,
+    "position": "6a10dba2",
+    "normal": "20d77e9e",
+    "vcol": "41c05c3e",
+    "bone": "cae1da77",
+    "pivot": "b0ffbbeb",
+    "ppivot": "69526a2f",
+    "index": "6d94599d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "blind",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7808,
+    "lod": 0.5,
+    "vertices": 1892,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 6174,
+    "position": "99867065",
+    "normal": "9a4b81cf",
+    "vcol": "9f065572",
+    "bone": "68bff535",
+    "pivot": "de4fe7d9",
+    "ppivot": "7ce956d5",
+    "index": "bea1a05d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "blind",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7808,
+    "lod": 0.28,
+    "vertices": 1253,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 3132,
+    "position": "065289f8",
+    "normal": "f6dedddb",
+    "vcol": "e42e0623",
+    "bone": "b82442bf",
+    "pivot": "92658ae7",
+    "ppivot": "83d81567",
+    "index": "c4c68e25"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "screamer",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7909,
+    "lod": 1,
+    "vertices": 6333,
+    "scale": 1,
+    "bulk": 0.84,
+    "indices": 27078,
+    "position": "dedf580d",
+    "normal": "b553ed75",
+    "vcol": "06bf5882",
+    "bone": "d9dcd03f",
+    "pivot": "4c1339f3",
+    "ppivot": "33fc8ba7",
+    "index": "b101835d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "screamer",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7909,
+    "lod": 0.5,
+    "vertices": 1730,
+    "scale": 1,
+    "bulk": 0.84,
+    "indices": 5502,
+    "position": "dbaa1938",
+    "normal": "043638cc",
+    "vcol": "bf0e9a55",
+    "bone": "a5365a8d",
+    "pivot": "86a8fc41",
+    "ppivot": "0986a1dd",
+    "index": "b8fb67dd"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "screamer",
+    "variant": 0,
+    "decay": 1,
+    "seed": 7909,
+    "lod": 0.28,
+    "vertices": 1173,
+    "scale": 1,
+    "bulk": 0.84,
+    "indices": 2832,
+    "position": "82dafb4c",
+    "normal": "e55fe7a4",
+    "vcol": "a005f593",
+    "bone": "ada71f7f",
+    "pivot": "7d9cc747",
+    "ppivot": "9c60a127",
+    "index": "923dc955"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "charred",
+    "variant": 0,
+    "decay": 1,
+    "seed": 8010,
+    "lod": 1,
+    "vertices": 7127,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 30798,
+    "position": "316c2f3d",
+    "normal": "c5be2b59",
+    "vcol": "9d72c3ce",
+    "bone": "8f7d04a7",
+    "pivot": "9d360ca3",
+    "ppivot": "ba475f9f",
+    "index": "8d51df7d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "charred",
+    "variant": 0,
+    "decay": 1,
+    "seed": 8010,
+    "lod": 0.5,
+    "vertices": 1878,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 6000,
+    "position": "35016ebd",
+    "normal": "0f41a8a1",
+    "vcol": "034837f9",
+    "bone": "4a3877dd",
+    "pivot": "a658c801",
+    "ppivot": "2b38475d",
+    "index": "2d7eb455"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "charred",
+    "variant": 0,
+    "decay": 1,
+    "seed": 8010,
+    "lod": 0.28,
+    "vertices": 1321,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 3270,
+    "position": "d20c3d49",
+    "normal": "fad176ca",
+    "vcol": "ea83c3a5",
+    "bone": "b5f50f4f",
+    "pivot": "97cc6a57",
+    "ppivot": "32738af7",
+    "index": "76d5c3fd"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "drowned",
+    "variant": 0,
+    "decay": 1,
+    "seed": 8111,
+    "lod": 1,
+    "vertices": 6530,
+    "scale": 1,
+    "bulk": 1.08,
+    "indices": 28098,
+    "position": "137711cc",
+    "normal": "77c2be3f",
+    "vcol": "7d8b41ea",
+    "bone": "3a0133cd",
+    "pivot": "74814ed1",
+    "ppivot": "29f4d9ed",
+    "index": "52ab2a2d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "drowned",
+    "variant": 0,
+    "decay": 1,
+    "seed": 8111,
+    "lod": 0.5,
+    "vertices": 1769,
+    "scale": 1,
+    "bulk": 1.08,
+    "indices": 5706,
+    "position": "d1eb0cca",
+    "normal": "34c4a870",
+    "vcol": "a5a83b9c",
+    "bone": "e455c52f",
+    "pivot": "a75c9663",
+    "ppivot": "03038dc7",
+    "index": "caf520ad"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "drowned",
+    "variant": 0,
+    "decay": 1,
+    "seed": 8111,
+    "lod": 0.28,
+    "vertices": 1169,
+    "scale": 1,
+    "bulk": 1.08,
+    "indices": 2844,
+    "position": "7b6daeb4",
+    "normal": "7ad3e901",
+    "vcol": "dc89ac1d",
+    "bone": "3c75a26f",
+    "pivot": "788f8737",
+    "ppivot": "3a848377",
+    "index": "7d5140a5"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "devourer",
+    "variant": 0,
+    "decay": 1,
+    "seed": 8212,
+    "lod": 1,
+    "vertices": 7801,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 33642,
+    "position": "18dde1df",
+    "normal": "c8f6c969",
+    "vcol": "5197fb0a",
+    "bone": "fec88a4f",
+    "pivot": "a87d4cc3",
+    "ppivot": "074beb67",
+    "index": "2779a74d"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "devourer",
+    "variant": 0,
+    "decay": 1,
+    "seed": 8212,
+    "lod": 0.5,
+    "vertices": 2295,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 7392,
+    "position": "1c7a92e9",
+    "normal": "5451a9d1",
+    "vcol": "08b8d24f",
+    "bone": "52a4c2b7",
+    "pivot": "c79e86d3",
+    "ppivot": "d8f1305f",
+    "index": "94c81395"
+   }
+  },
+  {
+   "type": "bake",
+   "data": {
+    "type": "devourer",
+    "variant": 0,
+    "decay": 1,
+    "seed": 8212,
+    "lod": 0.28,
+    "vertices": 1655,
+    "scale": 1,
+    "bulk": 1,
+    "indices": 4284,
+    "position": "fea0f138",
+    "normal": "b97df771",
+    "vcol": "87865b82",
+    "bone": "923a0717",
+    "pivot": "c23256af",
+    "ppivot": "13e3b8af",
+    "index": "e9a33045"
+   }
+  }
+ ],
+ "scenes": {
+  "best_walker_d0_s1_l1": {
+   "objects": 63,
+   "hash": "99b6dc87",
+   "lines": []
+  },
+  "best_walker_d0_s1_l0.5": {
+   "objects": 63,
+   "hash": "f9469b44",
+   "lines": []
+  },
+  "best_walker_d0_s1_l0.28": {
+   "objects": 63,
+   "hash": "b1db10a5",
+   "lines": []
+  },
+  "best_walker_d0_s2_l1": {
+   "objects": 62,
+   "hash": "cbfb81f9",
+   "lines": []
+  },
+  "best_walker_d0_s2_l0.5": {
+   "objects": 62,
+   "hash": "57ec3bc5",
+   "lines": []
+  },
+  "best_walker_d0_s2_l0.28": {
+   "objects": 62,
+   "hash": "15dd5066",
+   "lines": []
+  },
+  "best_walker_d0_s3_l1": {
+   "objects": 68,
+   "hash": "66e86e2d",
+   "lines": []
+  },
+  "best_walker_d0_s3_l0.5": {
+   "objects": 68,
+   "hash": "9a4c86b9",
+   "lines": []
+  },
+  "best_walker_d0_s3_l0.28": {
+   "objects": 68,
+   "hash": "95ff6ac2",
+   "lines": []
+  },
+  "best_walker_d0_s4_l1": {
+   "objects": 62,
+   "hash": "2ac0f5ad",
+   "lines": []
+  },
+  "best_walker_d0_s4_l0.5": {
+   "objects": 62,
+   "hash": "63dae8d7",
+   "lines": []
+  },
+  "best_walker_d0_s4_l0.28": {
+   "objects": 62,
+   "hash": "e2801382",
+   "lines": []
+  },
+  "best_walker_d0_s5_l1": {
+   "objects": 62,
+   "hash": "79acaddc",
+   "lines": []
+  },
+  "best_walker_d0_s5_l0.5": {
+   "objects": 62,
+   "hash": "c5dfca54",
+   "lines": []
+  },
+  "best_walker_d0_s5_l0.28": {
+   "objects": 62,
+   "hash": "71cf6a65",
+   "lines": []
+  },
+  "best_walker_d1_s1_l1": {
+   "objects": 63,
+   "hash": "d2b173df",
+   "lines": []
+  },
+  "best_walker_d1_s1_l0.5": {
+   "objects": 63,
+   "hash": "a33357e0",
+   "lines": []
+  },
+  "best_walker_d1_s1_l0.28": {
+   "objects": 63,
+   "hash": "a5d24450",
+   "lines": []
+  },
+  "best_walker_d1_s2_l1": {
+   "objects": 62,
+   "hash": "18897918",
+   "lines": []
+  },
+  "best_walker_d1_s2_l0.5": {
+   "objects": 62,
+   "hash": "389c94c2",
+   "lines": []
+  },
+  "best_walker_d1_s2_l0.28": {
+   "objects": 62,
+   "hash": "d5d479c",
+   "lines": []
+  },
+  "best_walker_d1_s3_l1": {
+   "objects": 68,
+   "hash": "7c79e450",
+   "lines": []
+  },
+  "best_walker_d1_s3_l0.5": {
+   "objects": 68,
+   "hash": "35274508",
+   "lines": []
+  },
+  "best_walker_d1_s3_l0.28": {
+   "objects": 68,
+   "hash": "34e81d80",
+   "lines": []
+  },
+  "best_walker_d1_s4_l1": {
+   "objects": 62,
+   "hash": "fda02f83",
+   "lines": []
+  },
+  "best_walker_d1_s4_l0.5": {
+   "objects": 62,
+   "hash": "37e8bc77",
+   "lines": []
+  },
+  "best_walker_d1_s4_l0.28": {
+   "objects": 62,
+   "hash": "64326efb",
+   "lines": []
+  },
+  "best_walker_d1_s5_l1": {
+   "objects": 62,
+   "hash": "cfa84c9",
+   "lines": []
+  },
+  "best_walker_d1_s5_l0.5": {
+   "objects": 62,
+   "hash": "c5ec547",
+   "lines": []
+  },
+  "best_walker_d1_s5_l0.28": {
+   "objects": 62,
+   "hash": "b346315",
+   "lines": []
+  },
+  "best_walker_d2_s1_l1": {
+   "objects": 61,
+   "hash": "6c3cb428",
+   "lines": []
+  },
+  "best_walker_d2_s1_l0.5": {
+   "objects": 61,
+   "hash": "39ed6de6",
+   "lines": []
+  },
+  "best_walker_d2_s1_l0.28": {
+   "objects": 61,
+   "hash": "8752eeef",
+   "lines": []
+  },
+  "best_walker_d2_s2_l1": {
+   "objects": 60,
+   "hash": "3762849",
+   "lines": []
+  },
+  "best_walker_d2_s2_l0.5": {
+   "objects": 60,
+   "hash": "7996155a",
+   "lines": []
+  },
+  "best_walker_d2_s2_l0.28": {
+   "objects": 60,
+   "hash": "47937b93",
+   "lines": []
+  },
+  "best_walker_d2_s3_l1": {
+   "objects": 66,
+   "hash": "21159e57",
+   "lines": []
+  },
+  "best_walker_d2_s3_l0.5": {
+   "objects": 66,
+   "hash": "4ef291a4",
+   "lines": []
+  },
+  "best_walker_d2_s3_l0.28": {
+   "objects": 66,
+   "hash": "ce0bea1",
+   "lines": []
+  },
+  "best_walker_d2_s4_l1": {
+   "objects": 60,
+   "hash": "90f4b828",
+   "lines": []
+  },
+  "best_walker_d2_s4_l0.5": {
+   "objects": 60,
+   "hash": "7b53c33",
+   "lines": []
+  },
+  "best_walker_d2_s4_l0.28": {
+   "objects": 60,
+   "hash": "6a318a6",
+   "lines": []
+  },
+  "best_walker_d2_s5_l1": {
+   "objects": 60,
+   "hash": "937276b8",
+   "lines": []
+  },
+  "best_walker_d2_s5_l0.5": {
+   "objects": 60,
+   "hash": "a1f9e517",
+   "lines": []
+  },
+  "best_walker_d2_s5_l0.28": {
+   "objects": 60,
+   "hash": "26bbcc02",
+   "lines": []
+  },
+  "best_walker_d3_s1_l1": {
+   "objects": 61,
+   "hash": "431c5ac6",
+   "lines": []
+  },
+  "best_walker_d3_s1_l0.5": {
+   "objects": 61,
+   "hash": "c449f69b",
+   "lines": []
+  },
+  "best_walker_d3_s1_l0.28": {
+   "objects": 61,
+   "hash": "2f8359ae",
+   "lines": []
+  },
+  "best_walker_d3_s2_l1": {
+   "objects": 62,
+   "hash": "5381f7ba",
+   "lines": []
+  },
+  "best_walker_d3_s2_l0.5": {
+   "objects": 62,
+   "hash": "30eeed55",
+   "lines": []
+  },
+  "best_walker_d3_s2_l0.28": {
+   "objects": 62,
+   "hash": "41b0c001",
+   "lines": []
+  },
+  "best_walker_d3_s3_l1": {
+   "objects": 67,
+   "hash": "534f8ce9",
+   "lines": []
+  },
+  "best_walker_d3_s3_l0.5": {
+   "objects": 67,
+   "hash": "7eb130a4",
+   "lines": []
+  },
+  "best_walker_d3_s3_l0.28": {
+   "objects": 67,
+   "hash": "ee0acf02",
+   "lines": []
+  },
+  "best_walker_d3_s4_l1": {
+   "objects": 62,
+   "hash": "8d571852",
+   "lines": []
+  },
+  "best_walker_d3_s4_l0.5": {
+   "objects": 62,
+   "hash": "32255e1f",
+   "lines": []
+  },
+  "best_walker_d3_s4_l0.28": {
+   "objects": 62,
+   "hash": "c1e8a51d",
+   "lines": []
+  },
+  "best_walker_d3_s5_l1": {
+   "objects": 61,
+   "hash": "7aed2d77",
+   "lines": []
+  },
+  "best_walker_d3_s5_l0.5": {
+   "objects": 61,
+   "hash": "f5ab6d00",
+   "lines": []
+  },
+  "best_walker_d3_s5_l0.28": {
+   "objects": 61,
+   "hash": "46c5888f",
+   "lines": []
+  },
+  "best_runner_d0_s1_l1": {
+   "objects": 63,
+   "hash": "cae5f638",
+   "lines": []
+  },
+  "best_runner_d0_s1_l0.5": {
+   "objects": 63,
+   "hash": "645d1f51",
+   "lines": []
+  },
+  "best_runner_d0_s1_l0.28": {
+   "objects": 63,
+   "hash": "554b4044",
+   "lines": []
+  },
+  "best_runner_d0_s2_l1": {
+   "objects": 62,
+   "hash": "fbfd8790",
+   "lines": []
+  },
+  "best_runner_d0_s2_l0.5": {
+   "objects": 62,
+   "hash": "982d7b6c",
+   "lines": []
+  },
+  "best_runner_d0_s2_l0.28": {
+   "objects": 62,
+   "hash": "98c803bd",
+   "lines": []
+  },
+  "best_runner_d0_s3_l1": {
+   "objects": 68,
+   "hash": "253df5d6",
+   "lines": []
+  },
+  "best_runner_d0_s3_l0.5": {
+   "objects": 68,
+   "hash": "8308a170",
+   "lines": []
+  },
+  "best_runner_d0_s3_l0.28": {
+   "objects": 68,
+   "hash": "f786346f",
+   "lines": []
+  },
+  "best_runner_d0_s4_l1": {
+   "objects": 62,
+   "hash": "c0344fa6",
+   "lines": []
+  },
+  "best_runner_d0_s4_l0.5": {
+   "objects": 62,
+   "hash": "811349bc",
+   "lines": []
+  },
+  "best_runner_d0_s4_l0.28": {
+   "objects": 62,
+   "hash": "ae58eeff",
+   "lines": []
+  },
+  "best_runner_d0_s5_l1": {
+   "objects": 62,
+   "hash": "bf48425b",
+   "lines": []
+  },
+  "best_runner_d0_s5_l0.5": {
+   "objects": 62,
+   "hash": "22b2546f",
+   "lines": []
+  },
+  "best_runner_d0_s5_l0.28": {
+   "objects": 62,
+   "hash": "5e724638",
+   "lines": []
+  },
+  "best_runner_d1_s1_l1": {
+   "objects": 63,
+   "hash": "c9c206f0",
+   "lines": []
+  },
+  "best_runner_d1_s1_l0.5": {
+   "objects": 63,
+   "hash": "86ba31fd",
+   "lines": []
+  },
+  "best_runner_d1_s1_l0.28": {
+   "objects": 63,
+   "hash": "56db0707",
+   "lines": []
+  },
+  "best_runner_d1_s2_l1": {
+   "objects": 62,
+   "hash": "587f027d",
+   "lines": []
+  },
+  "best_runner_d1_s2_l0.5": {
+   "objects": 62,
+   "hash": "fbcd7b63",
+   "lines": []
+  },
+  "best_runner_d1_s2_l0.28": {
+   "objects": 62,
+   "hash": "856c2529",
+   "lines": []
+  },
+  "best_runner_d1_s3_l1": {
+   "objects": 68,
+   "hash": "5c45be17",
+   "lines": []
+  },
+  "best_runner_d1_s3_l0.5": {
+   "objects": 68,
+   "hash": "6333f331",
+   "lines": []
+  },
+  "best_runner_d1_s3_l0.28": {
+   "objects": 68,
+   "hash": "352f5b23",
+   "lines": []
+  },
+  "best_runner_d1_s4_l1": {
+   "objects": 62,
+   "hash": "a3384bc2",
+   "lines": []
+  },
+  "best_runner_d1_s4_l0.5": {
+   "objects": 62,
+   "hash": "c5b43326",
+   "lines": []
+  },
+  "best_runner_d1_s4_l0.28": {
+   "objects": 62,
+   "hash": "84ae11fa",
+   "lines": []
+  },
+  "best_runner_d1_s5_l1": {
+   "objects": 62,
+   "hash": "c92b488",
+   "lines": []
+  },
+  "best_runner_d1_s5_l0.5": {
+   "objects": 62,
+   "hash": "1e81b866",
+   "lines": []
+  },
+  "best_runner_d1_s5_l0.28": {
+   "objects": 62,
+   "hash": "916eb2a4",
+   "lines": []
+  },
+  "best_runner_d2_s1_l1": {
+   "objects": 61,
+   "hash": "3c947fb7",
+   "lines": []
+  },
+  "best_runner_d2_s1_l0.5": {
+   "objects": 61,
+   "hash": "3db3bb85",
+   "lines": []
+  },
+  "best_runner_d2_s1_l0.28": {
+   "objects": 61,
+   "hash": "866a9960",
+   "lines": []
+  },
+  "best_runner_d2_s2_l1": {
+   "objects": 60,
+   "hash": "7ed4fc14",
+   "lines": []
+  },
+  "best_runner_d2_s2_l0.5": {
+   "objects": 60,
+   "hash": "90940609",
+   "lines": []
+  },
+  "best_runner_d2_s2_l0.28": {
+   "objects": 60,
+   "hash": "448f8612",
+   "lines": []
+  },
+  "best_runner_d2_s3_l1": {
+   "objects": 66,
+   "hash": "a040ee44",
+   "lines": []
+  },
+  "best_runner_d2_s3_l0.5": {
+   "objects": 66,
+   "hash": "dc9d7dcf",
+   "lines": []
+  },
+  "best_runner_d2_s3_l0.28": {
+   "objects": 66,
+   "hash": "9df6d7ea",
+   "lines": []
+  },
+  "best_runner_d2_s4_l1": {
+   "objects": 60,
+   "hash": "25b6df55",
+   "lines": []
+  },
+  "best_runner_d2_s4_l0.5": {
+   "objects": 60,
+   "hash": "604e8cc8",
+   "lines": []
+  },
+  "best_runner_d2_s4_l0.28": {
+   "objects": 60,
+   "hash": "c42d68bf",
+   "lines": []
+  },
+  "best_runner_d2_s5_l1": {
+   "objects": 60,
+   "hash": "6ff7e8d3",
+   "lines": []
+  },
+  "best_runner_d2_s5_l0.5": {
+   "objects": 60,
+   "hash": "cf785d2e",
+   "lines": []
+  },
+  "best_runner_d2_s5_l0.28": {
+   "objects": 60,
+   "hash": "d5a3f1f1",
+   "lines": []
+  },
+  "best_runner_d3_s1_l1": {
+   "objects": 61,
+   "hash": "a106ebeb",
+   "lines": []
+  },
+  "best_runner_d3_s1_l0.5": {
+   "objects": 61,
+   "hash": "ad11d6ce",
+   "lines": []
+  },
+  "best_runner_d3_s1_l0.28": {
+   "objects": 61,
+   "hash": "90158153",
+   "lines": []
+  },
+  "best_runner_d3_s2_l1": {
+   "objects": 62,
+   "hash": "d2b2ce0d",
+   "lines": []
+  },
+  "best_runner_d3_s2_l0.5": {
+   "objects": 62,
+   "hash": "236450a0",
+   "lines": []
+  },
+  "best_runner_d3_s2_l0.28": {
+   "objects": 62,
+   "hash": "4af8717c",
+   "lines": []
+  },
+  "best_runner_d3_s3_l1": {
+   "objects": 67,
+   "hash": "ab52fae2",
+   "lines": []
+  },
+  "best_runner_d3_s3_l0.5": {
+   "objects": 67,
+   "hash": "151f446f",
+   "lines": []
+  },
+  "best_runner_d3_s3_l0.28": {
+   "objects": 67,
+   "hash": "a82d7bc5",
+   "lines": []
+  },
+  "best_runner_d3_s4_l1": {
+   "objects": 62,
+   "hash": "15bbd213",
+   "lines": []
+  },
+  "best_runner_d3_s4_l0.5": {
+   "objects": 62,
+   "hash": "bbebfec4",
+   "lines": []
+  },
+  "best_runner_d3_s4_l0.28": {
+   "objects": 62,
+   "hash": "3051b0ba",
+   "lines": []
+  },
+  "best_runner_d3_s5_l1": {
+   "objects": 61,
+   "hash": "ed5e33e8",
+   "lines": []
+  },
+  "best_runner_d3_s5_l0.5": {
+   "objects": 61,
+   "hash": "d54f9b03",
+   "lines": []
+  },
+  "best_runner_d3_s5_l0.28": {
+   "objects": 61,
+   "hash": "c9588434",
+   "lines": []
+  },
+  "best_crawler_d0_s1_l1": {
+   "objects": 65,
+   "hash": "ceebcbc7",
+   "lines": []
+  },
+  "best_crawler_d0_s1_l0.5": {
+   "objects": 65,
+   "hash": "a39fd602",
+   "lines": []
+  },
+  "best_crawler_d0_s1_l0.28": {
+   "objects": 65,
+   "hash": "c83ab2fd",
+   "lines": []
+  },
+  "best_crawler_d0_s2_l1": {
+   "objects": 64,
+   "hash": "25ccc261",
+   "lines": []
+  },
+  "best_crawler_d0_s2_l0.5": {
+   "objects": 64,
+   "hash": "454a6df5",
+   "lines": []
+  },
+  "best_crawler_d0_s2_l0.28": {
+   "objects": 64,
+   "hash": "1ead1edc",
+   "lines": []
+  },
+  "best_crawler_d0_s3_l1": {
+   "objects": 70,
+   "hash": "f3663f43",
+   "lines": []
+  },
+  "best_crawler_d0_s3_l0.5": {
+   "objects": 70,
+   "hash": "566bb8eb",
+   "lines": []
+  },
+  "best_crawler_d0_s3_l0.28": {
+   "objects": 70,
+   "hash": "13fab36c",
+   "lines": []
+  },
+  "best_crawler_d0_s4_l1": {
+   "objects": 64,
+   "hash": "a4f4ebdf",
+   "lines": []
+  },
+  "best_crawler_d0_s4_l0.5": {
+   "objects": 64,
+   "hash": "4c70cf75",
+   "lines": []
+  },
+  "best_crawler_d0_s4_l0.28": {
+   "objects": 64,
+   "hash": "1a7421f0",
+   "lines": []
+  },
+  "best_crawler_d0_s5_l1": {
+   "objects": 64,
+   "hash": "3417a802",
+   "lines": []
+  },
+  "best_crawler_d0_s5_l0.5": {
+   "objects": 64,
+   "hash": "ecbcd60e",
+   "lines": []
+  },
+  "best_crawler_d0_s5_l0.28": {
+   "objects": 64,
+   "hash": "ec4d0b15",
+   "lines": []
+  },
+  "best_crawler_d1_s1_l1": {
+   "objects": 65,
+   "hash": "369ffe77",
+   "lines": []
+  },
+  "best_crawler_d1_s1_l0.5": {
+   "objects": 65,
+   "hash": "4b7ba7ee",
+   "lines": []
+  },
+  "best_crawler_d1_s1_l0.28": {
+   "objects": 65,
+   "hash": "c2fead1e",
+   "lines": []
+  },
+  "best_crawler_d1_s2_l1": {
+   "objects": 64,
+   "hash": "dd52a0f4",
+   "lines": []
+  },
+  "best_crawler_d1_s2_l0.5": {
+   "objects": 64,
+   "hash": "9183612e",
+   "lines": []
+  },
+  "best_crawler_d1_s2_l0.28": {
+   "objects": 64,
+   "hash": "865557c6",
+   "lines": []
+  },
+  "best_crawler_d1_s3_l1": {
+   "objects": 70,
+   "hash": "219c79e2",
+   "lines": []
+  },
+  "best_crawler_d1_s3_l0.5": {
+   "objects": 70,
+   "hash": "b59a683a",
+   "lines": []
+  },
+  "best_crawler_d1_s3_l0.28": {
+   "objects": 70,
+   "hash": "fd60b1fe",
+   "lines": []
+  },
+  "best_crawler_d1_s4_l1": {
+   "objects": 64,
+   "hash": "5e8831a5",
+   "lines": []
+  },
+  "best_crawler_d1_s4_l0.5": {
+   "objects": 64,
+   "hash": "5dcd99ed",
+   "lines": []
+  },
+  "best_crawler_d1_s4_l0.28": {
+   "objects": 64,
+   "hash": "da06adb9",
+   "lines": []
+  },
+  "best_crawler_d1_s5_l1": {
+   "objects": 64,
+   "hash": "c5759fe3",
+   "lines": []
+  },
+  "best_crawler_d1_s5_l0.5": {
+   "objects": 64,
+   "hash": "d1c1c7d5",
+   "lines": []
+  },
+  "best_crawler_d1_s5_l0.28": {
+   "objects": 64,
+   "hash": "559546b",
+   "lines": []
+  },
+  "best_crawler_d2_s1_l1": {
+   "objects": 63,
+   "hash": "48ecb20c",
+   "lines": []
+  },
+  "best_crawler_d2_s1_l0.5": {
+   "objects": 63,
+   "hash": "efa47a48",
+   "lines": []
+  },
+  "best_crawler_d2_s1_l0.28": {
+   "objects": 63,
+   "hash": "3c6cd763",
+   "lines": []
+  },
+  "best_crawler_d2_s2_l1": {
+   "objects": 62,
+   "hash": "21e93895",
+   "lines": []
+  },
+  "best_crawler_d2_s2_l0.5": {
+   "objects": 62,
+   "hash": "e4049caa",
+   "lines": []
+  },
+  "best_crawler_d2_s2_l0.28": {
+   "objects": 62,
+   "hash": "2ee30cc7",
+   "lines": []
+  },
+  "best_crawler_d2_s3_l1": {
+   "objects": 68,
+   "hash": "1c4283f5",
+   "lines": []
+  },
+  "best_crawler_d2_s3_l0.5": {
+   "objects": 68,
+   "hash": "c5ffc4e",
+   "lines": []
+  },
+  "best_crawler_d2_s3_l0.28": {
+   "objects": 68,
+   "hash": "ec98f899",
+   "lines": []
+  },
+  "best_crawler_d2_s4_l1": {
+   "objects": 62,
+   "hash": "1ebebb92",
+   "lines": []
+  },
+  "best_crawler_d2_s4_l0.5": {
+   "objects": 62,
+   "hash": "7df7dc35",
+   "lines": []
+  },
+  "best_crawler_d2_s4_l0.28": {
+   "objects": 62,
+   "hash": "40e660e2",
+   "lines": []
+  },
+  "best_crawler_d2_s5_l1": {
+   "objects": 62,
+   "hash": "d3645956",
+   "lines": []
+  },
+  "best_crawler_d2_s5_l0.5": {
+   "objects": 62,
+   "hash": "e95ded51",
+   "lines": []
+  },
+  "best_crawler_d2_s5_l0.28": {
+   "objects": 62,
+   "hash": "d7d64840",
+   "lines": []
+  },
+  "best_crawler_d3_s1_l1": {
+   "objects": 61,
+   "hash": "5439f2d0",
+   "lines": []
+  },
+  "best_crawler_d3_s1_l0.5": {
+   "objects": 61,
+   "hash": "e546ebed",
+   "lines": []
+  },
+  "best_crawler_d3_s1_l0.28": {
+   "objects": 61,
+   "hash": "2512f72e",
+   "lines": []
+  },
+  "best_crawler_d3_s2_l1": {
+   "objects": 62,
+   "hash": "909ff74a",
+   "lines": []
+  },
+  "best_crawler_d3_s2_l0.5": {
+   "objects": 62,
+   "hash": "e802fa59",
+   "lines": []
+  },
+  "best_crawler_d3_s2_l0.28": {
+   "objects": 62,
+   "hash": "93b5a47",
+   "lines": []
+  },
+  "best_crawler_d3_s3_l1": {
+   "objects": 67,
+   "hash": "1f4de5e3",
+   "lines": []
+  },
+  "best_crawler_d3_s3_l0.5": {
+   "objects": 67,
+   "hash": "55de193a",
+   "lines": []
+  },
+  "best_crawler_d3_s3_l0.28": {
+   "objects": 67,
+   "hash": "ac5ab4e8",
+   "lines": []
+  },
+  "best_crawler_d3_s4_l1": {
+   "objects": 62,
+   "hash": "845d3d84",
+   "lines": []
+  },
+  "best_crawler_d3_s4_l0.5": {
+   "objects": 62,
+   "hash": "86ef0d49",
+   "lines": []
+  },
+  "best_crawler_d3_s4_l0.28": {
+   "objects": 62,
+   "hash": "15599cc7",
+   "lines": []
+  },
+  "best_crawler_d3_s5_l1": {
+   "objects": 61,
+   "hash": "d3c3b829",
+   "lines": []
+  },
+  "best_crawler_d3_s5_l0.5": {
+   "objects": 61,
+   "hash": "69fd19e",
+   "lines": []
+  },
+  "best_crawler_d3_s5_l0.28": {
+   "objects": 61,
+   "hash": "1ce2571d",
+   "lines": []
+  },
+  "best_brute_d0_s1_l1": {
+   "objects": 67,
+   "hash": "f4d6ae94",
+   "lines": []
+  },
+  "best_brute_d0_s1_l0.5": {
+   "objects": 67,
+   "hash": "20c84865",
+   "lines": []
+  },
+  "best_brute_d0_s1_l0.28": {
+   "objects": 67,
+   "hash": "bc82f254",
+   "lines": []
+  },
+  "best_brute_d0_s2_l1": {
+   "objects": 68,
+   "hash": "c7544d6e",
+   "lines": []
+  },
+  "best_brute_d0_s2_l0.5": {
+   "objects": 68,
+   "hash": "948becab",
+   "lines": []
+  },
+  "best_brute_d0_s2_l0.28": {
+   "objects": 68,
+   "hash": "d0697e77",
+   "lines": []
+  },
+  "best_brute_d0_s3_l1": {
+   "objects": 66,
+   "hash": "75fc230f",
+   "lines": []
+  },
+  "best_brute_d0_s3_l0.5": {
+   "objects": 66,
+   "hash": "221acdfc",
+   "lines": []
+  },
+  "best_brute_d0_s3_l0.28": {
+   "objects": 66,
+   "hash": "72326fef",
+   "lines": []
+  },
+  "best_brute_d0_s4_l1": {
+   "objects": 66,
+   "hash": "2ec2129f",
+   "lines": []
+  },
+  "best_brute_d0_s4_l0.5": {
+   "objects": 66,
+   "hash": "ad6ba04b",
+   "lines": []
+  },
+  "best_brute_d0_s4_l0.28": {
+   "objects": 66,
+   "hash": "2bf2c4af",
+   "lines": []
+  },
+  "best_brute_d0_s5_l1": {
+   "objects": 71,
+   "hash": "5cfa3b9",
+   "lines": []
+  },
+  "best_brute_d0_s5_l0.5": {
+   "objects": 71,
+   "hash": "86640edb",
+   "lines": []
+  },
+  "best_brute_d0_s5_l0.28": {
+   "objects": 71,
+   "hash": "f8eec78c",
+   "lines": []
+  },
+  "best_brute_d1_s1_l1": {
+   "objects": 67,
+   "hash": "cfd52d3b",
+   "lines": []
+  },
+  "best_brute_d1_s1_l0.5": {
+   "objects": 67,
+   "hash": "b0ec4fd8",
+   "lines": []
+  },
+  "best_brute_d1_s1_l0.28": {
+   "objects": 67,
+   "hash": "33d3226e",
+   "lines": []
+  },
+  "best_brute_d1_s2_l1": {
+   "objects": 68,
+   "hash": "69abefc6",
+   "lines": []
+  },
+  "best_brute_d1_s2_l0.5": {
+   "objects": 68,
+   "hash": "8b35f39f",
+   "lines": []
+  },
+  "best_brute_d1_s2_l0.28": {
+   "objects": 68,
+   "hash": "88fc9054",
+   "lines": []
+  },
+  "best_brute_d1_s3_l1": {
+   "objects": 66,
+   "hash": "e992287d",
+   "lines": []
+  },
+  "best_brute_d1_s3_l0.5": {
+   "objects": 66,
+   "hash": "94e76d60",
+   "lines": []
+  },
+  "best_brute_d1_s3_l0.28": {
+   "objects": 66,
+   "hash": "e37122fa",
+   "lines": []
+  },
+  "best_brute_d1_s4_l1": {
+   "objects": 66,
+   "hash": "54e92ce4",
+   "lines": []
+  },
+  "best_brute_d1_s4_l0.5": {
+   "objects": 66,
+   "hash": "9e0d68aa",
+   "lines": []
+  },
+  "best_brute_d1_s4_l0.28": {
+   "objects": 66,
+   "hash": "f161ad75",
+   "lines": []
+  },
+  "best_brute_d1_s5_l1": {
+   "objects": 71,
+   "hash": "c10c8a8c",
+   "lines": []
+  },
+  "best_brute_d1_s5_l0.5": {
+   "objects": 71,
+   "hash": "43ee5a00",
+   "lines": []
+  },
+  "best_brute_d1_s5_l0.28": {
+   "objects": 71,
+   "hash": "32827a6",
+   "lines": []
+  },
+  "best_brute_d2_s1_l1": {
+   "objects": 65,
+   "hash": "b0f6e8f6",
+   "lines": []
+  },
+  "best_brute_d2_s1_l0.5": {
+   "objects": 65,
+   "hash": "70d2c424",
+   "lines": []
+  },
+  "best_brute_d2_s1_l0.28": {
+   "objects": 65,
+   "hash": "bbbca959",
+   "lines": []
+  },
+  "best_brute_d2_s2_l1": {
+   "objects": 66,
+   "hash": "625677c5",
+   "lines": []
+  },
+  "best_brute_d2_s2_l0.5": {
+   "objects": 66,
+   "hash": "9d1d6aa9",
+   "lines": []
+  },
+  "best_brute_d2_s2_l0.28": {
+   "objects": 66,
+   "hash": "a810266d",
+   "lines": []
+  },
+  "best_brute_d2_s3_l1": {
+   "objects": 64,
+   "hash": "2b1f095e",
+   "lines": []
+  },
+  "best_brute_d2_s3_l0.5": {
+   "objects": 64,
+   "hash": "47069048",
+   "lines": []
+  },
+  "best_brute_d2_s3_l0.28": {
+   "objects": 64,
+   "hash": "c7b732f3",
+   "lines": []
+  },
+  "best_brute_d2_s4_l1": {
+   "objects": 64,
+   "hash": "6558cd85",
+   "lines": []
+  },
+  "best_brute_d2_s4_l0.5": {
+   "objects": 64,
+   "hash": "98c7ec2a",
+   "lines": []
+  },
+  "best_brute_d2_s4_l0.28": {
+   "objects": 64,
+   "hash": "e06456a8",
+   "lines": []
+  },
+  "best_brute_d2_s5_l1": {
+   "objects": 69,
+   "hash": "f68a32c2",
+   "lines": []
+  },
+  "best_brute_d2_s5_l0.5": {
+   "objects": 69,
+   "hash": "f4f8e3f3",
+   "lines": []
+  },
+  "best_brute_d2_s5_l0.28": {
+   "objects": 69,
+   "hash": "65be3a12",
+   "lines": []
+  },
+  "best_brute_d3_s1_l1": {
+   "objects": 67,
+   "hash": "b84bc041",
+   "lines": []
+  },
+  "best_brute_d3_s1_l0.5": {
+   "objects": 67,
+   "hash": "eebc4271",
+   "lines": []
+  },
+  "best_brute_d3_s1_l0.28": {
+   "objects": 67,
+   "hash": "fcd38817",
+   "lines": []
+  },
+  "best_brute_d3_s2_l1": {
+   "objects": 65,
+   "hash": "dac5274b",
+   "lines": []
+  },
+  "best_brute_d3_s2_l0.5": {
+   "objects": 65,
+   "hash": "ffc1b96b",
+   "lines": []
+  },
+  "best_brute_d3_s2_l0.28": {
+   "objects": 65,
+   "hash": "ba840b6",
+   "lines": []
+  },
+  "best_brute_d3_s3_l1": {
+   "objects": 66,
+   "hash": "c27ffb55",
+   "lines": []
+  },
+  "best_brute_d3_s3_l0.5": {
+   "objects": 66,
+   "hash": "288b214b",
+   "lines": []
+  },
+  "best_brute_d3_s3_l0.28": {
+   "objects": 66,
+   "hash": "da02813f",
+   "lines": []
+  },
+  "best_brute_d3_s4_l1": {
+   "objects": 66,
+   "hash": "4a96f4f9",
+   "lines": []
+  },
+  "best_brute_d3_s4_l0.5": {
+   "objects": 66,
+   "hash": "c5fc1226",
+   "lines": []
+  },
+  "best_brute_d3_s4_l0.28": {
+   "objects": 66,
+   "hash": "22d64437",
+   "lines": []
+  },
+  "best_brute_d3_s5_l1": {
+   "objects": 71,
+   "hash": "189b763d",
+   "lines": []
+  },
+  "best_brute_d3_s5_l0.5": {
+   "objects": 71,
+   "hash": "841fca72",
+   "lines": []
+  },
+  "best_brute_d3_s5_l0.28": {
+   "objects": 71,
+   "hash": "5d2eeec",
+   "lines": []
+  },
+  "best_sniffer_d0_s1_l1": {
+   "objects": 63,
+   "hash": "2b511447",
+   "lines": []
+  },
+  "best_sniffer_d0_s1_l0.5": {
+   "objects": 63,
+   "hash": "43a38430",
+   "lines": []
+  },
+  "best_sniffer_d0_s1_l0.28": {
+   "objects": 63,
+   "hash": "930a2dfd",
+   "lines": []
+  },
+  "best_sniffer_d0_s2_l1": {
+   "objects": 62,
+   "hash": "a3b4fab5",
+   "lines": []
+  },
+  "best_sniffer_d0_s2_l0.5": {
+   "objects": 62,
+   "hash": "1cb49f55",
+   "lines": []
+  },
+  "best_sniffer_d0_s2_l0.28": {
+   "objects": 62,
+   "hash": "c2beaa4",
+   "lines": []
+  },
+  "best_sniffer_d0_s3_l1": {
+   "objects": 68,
+   "hash": "7671ef07",
+   "lines": []
+  },
+  "best_sniffer_d0_s3_l0.5": {
+   "objects": 68,
+   "hash": "550d7c81",
+   "lines": []
+  },
+  "best_sniffer_d0_s3_l0.28": {
+   "objects": 68,
+   "hash": "fdcf7192",
+   "lines": []
+  },
+  "best_sniffer_d0_s4_l1": {
+   "objects": 62,
+   "hash": "b07ed8d5",
+   "lines": []
+  },
+  "best_sniffer_d0_s4_l0.5": {
+   "objects": 62,
+   "hash": "6173a787",
+   "lines": []
+  },
+  "best_sniffer_d0_s4_l0.28": {
+   "objects": 62,
+   "hash": "d1973ba4",
+   "lines": []
+  },
+  "best_sniffer_d0_s5_l1": {
+   "objects": 62,
+   "hash": "a077a0f0",
+   "lines": []
+  },
+  "best_sniffer_d0_s5_l0.5": {
+   "objects": 62,
+   "hash": "66fa9394",
+   "lines": []
+  },
+  "best_sniffer_d0_s5_l0.28": {
+   "objects": 62,
+   "hash": "a33e35cb",
+   "lines": []
+  },
+  "best_sniffer_d1_s1_l1": {
+   "objects": 63,
+   "hash": "7ef5c7a3",
+   "lines": []
+  },
+  "best_sniffer_d1_s1_l0.5": {
+   "objects": 63,
+   "hash": "7f36d3d4",
+   "lines": []
+  },
+  "best_sniffer_d1_s1_l0.28": {
+   "objects": 63,
+   "hash": "ad72a6ac",
+   "lines": []
+  },
+  "best_sniffer_d1_s2_l1": {
+   "objects": 62,
+   "hash": "d1cc6008",
+   "lines": []
+  },
+  "best_sniffer_d1_s2_l0.5": {
+   "objects": 62,
+   "hash": "a5771052",
+   "lines": []
+  },
+  "best_sniffer_d1_s2_l0.28": {
+   "objects": 62,
+   "hash": "5c00cfea",
+   "lines": []
+  },
+  "best_sniffer_d1_s3_l1": {
+   "objects": 68,
+   "hash": "4a0ea72e",
+   "lines": []
+  },
+  "best_sniffer_d1_s3_l0.5": {
+   "objects": 68,
+   "hash": "201f1c3c",
+   "lines": []
+  },
+  "best_sniffer_d1_s3_l0.28": {
+   "objects": 68,
+   "hash": "5656ad28",
+   "lines": []
+  },
+  "best_sniffer_d1_s4_l1": {
+   "objects": 62,
+   "hash": "43b5106b",
+   "lines": []
+  },
+  "best_sniffer_d1_s4_l0.5": {
+   "objects": 62,
+   "hash": "587da3ef",
+   "lines": []
+  },
+  "best_sniffer_d1_s4_l0.28": {
+   "objects": 62,
+   "hash": "cf2ad761",
+   "lines": []
+  },
+  "best_sniffer_d1_s5_l1": {
+   "objects": 62,
+   "hash": "707a0cb1",
+   "lines": []
+  },
+  "best_sniffer_d1_s5_l0.5": {
+   "objects": 62,
+   "hash": "b85d7377",
+   "lines": []
+  },
+  "best_sniffer_d1_s5_l0.28": {
+   "objects": 62,
+   "hash": "c9309f1b",
+   "lines": []
+  },
+  "best_sniffer_d2_s1_l1": {
+   "objects": 61,
+   "hash": "b6b3678",
+   "lines": []
+  },
+  "best_sniffer_d2_s1_l0.5": {
+   "objects": 61,
+   "hash": "2bf980de",
+   "lines": []
+  },
+  "best_sniffer_d2_s1_l0.28": {
+   "objects": 61,
+   "hash": "b6c2b8bb",
+   "lines": []
+  },
+  "best_sniffer_d2_s2_l1": {
+   "objects": 60,
+   "hash": "c887d7b5",
+   "lines": []
+  },
+  "best_sniffer_d2_s2_l0.5": {
+   "objects": 60,
+   "hash": "1f77809a",
+   "lines": []
+  },
+  "best_sniffer_d2_s2_l0.28": {
+   "objects": 60,
+   "hash": "959cd17d",
+   "lines": []
+  },
+  "best_sniffer_d2_s3_l1": {
+   "objects": 66,
+   "hash": "22d3d07d",
+   "lines": []
+  },
+  "best_sniffer_d2_s3_l0.5": {
+   "objects": 66,
+   "hash": "2a0a3be8",
+   "lines": []
+  },
+  "best_sniffer_d2_s3_l0.28": {
+   "objects": 66,
+   "hash": "74b1c035",
+   "lines": []
+  },
+  "best_sniffer_d2_s4_l1": {
+   "objects": 60,
+   "hash": "f8abd6ec",
+   "lines": []
+  },
+  "best_sniffer_d2_s4_l0.5": {
+   "objects": 60,
+   "hash": "a7cb4333",
+   "lines": []
+  },
+  "best_sniffer_d2_s4_l0.28": {
+   "objects": 60,
+   "hash": "b1188a70",
+   "lines": []
+  },
+  "best_sniffer_d2_s5_l1": {
+   "objects": 60,
+   "hash": "4f2be928",
+   "lines": []
+  },
+  "best_sniffer_d2_s5_l0.5": {
+   "objects": 60,
+   "hash": "f495b407",
+   "lines": []
+  },
+  "best_sniffer_d2_s5_l0.28": {
+   "objects": 60,
+   "hash": "7d077d38",
+   "lines": []
+  },
+  "best_sniffer_d3_s1_l1": {
+   "objects": 61,
+   "hash": "18151fbc",
+   "lines": []
+  },
+  "best_sniffer_d3_s1_l0.5": {
+   "objects": 61,
+   "hash": "55fcb2db",
+   "lines": []
+  },
+  "best_sniffer_d3_s1_l0.28": {
+   "objects": 61,
+   "hash": "1cba8006",
+   "lines": []
+  },
+  "best_sniffer_d3_s2_l1": {
+   "objects": 62,
+   "hash": "c7288cae",
+   "lines": []
+  },
+  "best_sniffer_d3_s2_l0.5": {
+   "objects": 62,
+   "hash": "7447b631",
+   "lines": []
+  },
+  "best_sniffer_d3_s2_l0.28": {
+   "objects": 62,
+   "hash": "6ccd45b",
+   "lines": []
+  },
+  "best_sniffer_d3_s3_l1": {
+   "objects": 67,
+   "hash": "56d6ddb3",
+   "lines": []
+  },
+  "best_sniffer_d3_s3_l0.5": {
+   "objects": 67,
+   "hash": "21ccf55c",
+   "lines": []
+  },
+  "best_sniffer_d3_s3_l0.28": {
+   "objects": 67,
+   "hash": "e2a2f8e0",
+   "lines": []
+  },
+  "best_sniffer_d3_s4_l1": {
+   "objects": 62,
+   "hash": "223bd282",
+   "lines": []
+  },
+  "best_sniffer_d3_s4_l0.5": {
+   "objects": 62,
+   "hash": "dc5a2ecf",
+   "lines": []
+  },
+  "best_sniffer_d3_s4_l0.28": {
+   "objects": 62,
+   "hash": "7d6dc93f",
+   "lines": []
+  },
+  "best_sniffer_d3_s5_l1": {
+   "objects": 61,
+   "hash": "c9c55af9",
+   "lines": []
+  },
+  "best_sniffer_d3_s5_l0.5": {
+   "objects": 61,
+   "hash": "8139a4e8",
+   "lines": []
+  },
+  "best_sniffer_d3_s5_l0.28": {
+   "objects": 61,
+   "hash": "494b99fb",
+   "lines": []
+  },
+  "best_leaper_d0_s1_l1": {
+   "objects": 63,
+   "hash": "402a7d87",
+   "lines": []
+  },
+  "best_leaper_d0_s1_l0.5": {
+   "objects": 63,
+   "hash": "31c41718",
+   "lines": []
+  },
+  "best_leaper_d0_s1_l0.28": {
+   "objects": 63,
+   "hash": "253c08fd",
+   "lines": []
+  },
+  "best_leaper_d0_s2_l1": {
+   "objects": 62,
+   "hash": "2cb2a907",
+   "lines": []
+  },
+  "best_leaper_d0_s2_l0.5": {
+   "objects": 62,
+   "hash": "f013dd0f",
+   "lines": []
+  },
+  "best_leaper_d0_s2_l0.28": {
+   "objects": 62,
+   "hash": "fb1b771a",
+   "lines": []
+  },
+  "best_leaper_d0_s3_l1": {
+   "objects": 68,
+   "hash": "dab9a9e7",
+   "lines": []
+  },
+  "best_leaper_d0_s3_l0.5": {
+   "objects": 68,
+   "hash": "84e55011",
+   "lines": []
+  },
+  "best_leaper_d0_s3_l0.28": {
+   "objects": 68,
+   "hash": "445cee66",
+   "lines": []
+  },
+  "best_leaper_d0_s4_l1": {
+   "objects": 62,
+   "hash": "b30d7899",
+   "lines": []
+  },
+  "best_leaper_d0_s4_l0.5": {
+   "objects": 62,
+   "hash": "ec66ec43",
+   "lines": []
+  },
+  "best_leaper_d0_s4_l0.28": {
+   "objects": 62,
+   "hash": "b0be81b8",
+   "lines": []
+  },
+  "best_leaper_d0_s5_l1": {
+   "objects": 62,
+   "hash": "e666946a",
+   "lines": []
+  },
+  "best_leaper_d0_s5_l0.5": {
+   "objects": 62,
+   "hash": "8c3569d6",
+   "lines": []
+  },
+  "best_leaper_d0_s5_l0.28": {
+   "objects": 62,
+   "hash": "f06784fd",
+   "lines": []
+  },
+  "best_leaper_d1_s1_l1": {
+   "objects": 63,
+   "hash": "b4e9e3cf",
+   "lines": []
+  },
+  "best_leaper_d1_s1_l0.5": {
+   "objects": 63,
+   "hash": "4c5c4686",
+   "lines": []
+  },
+  "best_leaper_d1_s1_l0.28": {
+   "objects": 63,
+   "hash": "2b3d6f9a",
+   "lines": []
+  },
+  "best_leaper_d1_s2_l1": {
+   "objects": 62,
+   "hash": "23659604",
+   "lines": []
+  },
+  "best_leaper_d1_s2_l0.5": {
+   "objects": 62,
+   "hash": "1b2c3868",
+   "lines": []
+  },
+  "best_leaper_d1_s2_l0.28": {
+   "objects": 62,
+   "hash": "ca129360",
+   "lines": []
+  },
+  "best_leaper_d1_s3_l1": {
+   "objects": 68,
+   "hash": "c0b556ac",
+   "lines": []
+  },
+  "best_leaper_d1_s3_l0.5": {
+   "objects": 68,
+   "hash": "e1ed4b94",
+   "lines": []
+  },
+  "best_leaper_d1_s3_l0.28": {
+   "objects": 68,
+   "hash": "4ff392e8",
+   "lines": []
+  },
+  "best_leaper_d1_s4_l1": {
+   "objects": 62,
+   "hash": "df2d2f47",
+   "lines": []
+  },
+  "best_leaper_d1_s4_l0.5": {
+   "objects": 62,
+   "hash": "89f4c1",
+   "lines": []
+  },
+  "best_leaper_d1_s4_l0.28": {
+   "objects": 62,
+   "hash": "f9785423",
+   "lines": []
+  },
+  "best_leaper_d1_s5_l1": {
+   "objects": 62,
+   "hash": "e539acd9",
+   "lines": []
+  },
+  "best_leaper_d1_s5_l0.5": {
+   "objects": 62,
+   "hash": "c572c041",
+   "lines": []
+  },
+  "best_leaper_d1_s5_l0.28": {
+   "objects": 62,
+   "hash": "c15fb1b5",
+   "lines": []
+  },
+  "best_leaper_d2_s1_l1": {
+   "objects": 61,
+   "hash": "e9717c22",
+   "lines": []
+  },
+  "best_leaper_d2_s1_l0.5": {
+   "objects": 61,
+   "hash": "e0b2933c",
+   "lines": []
+  },
+  "best_leaper_d2_s1_l0.28": {
+   "objects": 61,
+   "hash": "25108cdf",
+   "lines": []
+  },
+  "best_leaper_d2_s2_l1": {
+   "objects": 60,
+   "hash": "19da65dd",
+   "lines": []
+  },
+  "best_leaper_d2_s2_l0.5": {
+   "objects": 60,
+   "hash": "69b0815a",
+   "lines": []
+  },
+  "best_leaper_d2_s2_l0.28": {
+   "objects": 60,
+   "hash": "6c743e5f",
+   "lines": []
+  },
+  "best_leaper_d2_s3_l1": {
+   "objects": 66,
+   "hash": "3398fced",
+   "lines": []
+  },
+  "best_leaper_d2_s3_l0.5": {
+   "objects": 66,
+   "hash": "cb9cd438",
+   "lines": []
+  },
+  "best_leaper_d2_s3_l0.28": {
+   "objects": 66,
+   "hash": "1bb6bf8f",
+   "lines": []
+  },
+  "best_leaper_d2_s4_l1": {
+   "objects": 60,
+   "hash": "85cb18d4",
+   "lines": []
+  },
+  "best_leaper_d2_s4_l0.5": {
+   "objects": 60,
+   "hash": "56504637",
+   "lines": []
+  },
+  "best_leaper_d2_s4_l0.28": {
+   "objects": 60,
+   "hash": "d68729ea",
+   "lines": []
+  },
+  "best_leaper_d2_s5_l1": {
+   "objects": 60,
+   "hash": "9591a890",
+   "lines": []
+  },
+  "best_leaper_d2_s5_l0.5": {
+   "objects": 60,
+   "hash": "218180eb",
+   "lines": []
+  },
+  "best_leaper_d2_s5_l0.28": {
+   "objects": 60,
+   "hash": "76e6490e",
+   "lines": []
+  },
+  "best_leaper_d3_s1_l1": {
+   "objects": 61,
+   "hash": "a1942bb6",
+   "lines": []
+  },
+  "best_leaper_d3_s1_l0.5": {
+   "objects": 61,
+   "hash": "78cd98fb",
+   "lines": []
+  },
+  "best_leaper_d3_s1_l0.28": {
+   "objects": 61,
+   "hash": "168fe7c2",
+   "lines": []
+  },
+  "best_leaper_d3_s2_l1": {
+   "objects": 62,
+   "hash": "4d32d3dc",
+   "lines": []
+  },
+  "best_leaper_d3_s2_l0.5": {
+   "objects": 62,
+   "hash": "dc49ea41",
+   "lines": []
+  },
+  "best_leaper_d3_s2_l0.28": {
+   "objects": 62,
+   "hash": "c060c49f",
+   "lines": []
+  },
+  "best_leaper_d3_s3_l1": {
+   "objects": 67,
+   "hash": "9cf05e77",
+   "lines": []
+  },
+  "best_leaper_d3_s3_l0.5": {
+   "objects": 67,
+   "hash": "4ebbcfd6",
+   "lines": []
+  },
+  "best_leaper_d3_s3_l0.28": {
+   "objects": 67,
+   "hash": "2e550912",
+   "lines": []
+  },
+  "best_leaper_d3_s4_l1": {
+   "objects": 62,
+   "hash": "f434ec20",
+   "lines": []
+  },
+  "best_leaper_d3_s4_l0.5": {
+   "objects": 62,
+   "hash": "778a0637",
+   "lines": []
+  },
+  "best_leaper_d3_s4_l0.28": {
+   "objects": 62,
+   "hash": "a862cd37",
+   "lines": []
+  },
+  "best_leaper_d3_s5_l1": {
+   "objects": 61,
+   "hash": "2c033d59",
+   "lines": []
+  },
+  "best_leaper_d3_s5_l0.5": {
+   "objects": 61,
+   "hash": "7dcbfa9e",
+   "lines": []
+  },
+  "best_leaper_d3_s5_l0.28": {
+   "objects": 61,
+   "hash": "87572bcd",
+   "lines": []
+  },
+  "best_bloater_d0_s1_l1": {
+   "objects": 86,
+   "hash": "c51407af",
+   "lines": []
+  },
+  "best_bloater_d0_s1_l0.5": {
+   "objects": 86,
+   "hash": "7980df55",
+   "lines": []
+  },
+  "best_bloater_d0_s1_l0.28": {
+   "objects": 86,
+   "hash": "b1437eae",
+   "lines": []
+  },
+  "best_bloater_d0_s2_l1": {
+   "objects": 85,
+   "hash": "b5f6b932",
+   "lines": []
+  },
+  "best_bloater_d0_s2_l0.5": {
+   "objects": 85,
+   "hash": "72a19da3",
+   "lines": []
+  },
+  "best_bloater_d0_s2_l0.28": {
+   "objects": 85,
+   "hash": "b6777f40",
+   "lines": []
+  },
+  "best_bloater_d0_s3_l1": {
+   "objects": 91,
+   "hash": "bde023da",
+   "lines": []
+  },
+  "best_bloater_d0_s3_l0.5": {
+   "objects": 91,
+   "hash": "a2ec46b1",
+   "lines": []
+  },
+  "best_bloater_d0_s3_l0.28": {
+   "objects": 91,
+   "hash": "4368aa0a",
+   "lines": []
+  },
+  "best_bloater_d0_s4_l1": {
+   "objects": 85,
+   "hash": "dba6da5b",
+   "lines": []
+  },
+  "best_bloater_d0_s4_l0.5": {
+   "objects": 85,
+   "hash": "8c0b80ba",
+   "lines": []
+  },
+  "best_bloater_d0_s4_l0.28": {
+   "objects": 85,
+   "hash": "6dc010b3",
+   "lines": []
+  },
+  "best_bloater_d0_s5_l1": {
+   "objects": 85,
+   "hash": "c78b442d",
+   "lines": []
+  },
+  "best_bloater_d0_s5_l0.5": {
+   "objects": 85,
+   "hash": "2300b34",
+   "lines": []
+  },
+  "best_bloater_d0_s5_l0.28": {
+   "objects": 85,
+   "hash": "a873ea2f",
+   "lines": []
+  },
+  "best_bloater_d1_s1_l1": {
+   "objects": 86,
+   "hash": "3b146805",
+   "lines": []
+  },
+  "best_bloater_d1_s1_l0.5": {
+   "objects": 86,
+   "hash": "b1ec8965",
+   "lines": []
+  },
+  "best_bloater_d1_s1_l0.28": {
+   "objects": 86,
+   "hash": "7c395651",
+   "lines": []
+  },
+  "best_bloater_d1_s2_l1": {
+   "objects": 85,
+   "hash": "92b37951",
+   "lines": []
+  },
+  "best_bloater_d1_s2_l0.5": {
+   "objects": 85,
+   "hash": "b4ac9dce",
+   "lines": []
+  },
+  "best_bloater_d1_s2_l0.28": {
+   "objects": 85,
+   "hash": "a8f29282",
+   "lines": []
+  },
+  "best_bloater_d1_s3_l1": {
+   "objects": 91,
+   "hash": "7cf23afa",
+   "lines": []
+  },
+  "best_bloater_d1_s3_l0.5": {
+   "objects": 91,
+   "hash": "ba8e9f27",
+   "lines": []
+  },
+  "best_bloater_d1_s3_l0.28": {
+   "objects": 91,
+   "hash": "477c2b51",
+   "lines": []
+  },
+  "best_bloater_d1_s4_l1": {
+   "objects": 85,
+   "hash": "e0174061",
+   "lines": []
+  },
+  "best_bloater_d1_s4_l0.5": {
+   "objects": 85,
+   "hash": "eb591142",
+   "lines": []
+  },
+  "best_bloater_d1_s4_l0.28": {
+   "objects": 85,
+   "hash": "2bad0b2c",
+   "lines": []
+  },
+  "best_bloater_d1_s5_l1": {
+   "objects": 85,
+   "hash": "3273c10b",
+   "lines": []
+  },
+  "best_bloater_d1_s5_l0.5": {
+   "objects": 85,
+   "hash": "5025218e",
+   "lines": []
+  },
+  "best_bloater_d1_s5_l0.28": {
+   "objects": 85,
+   "hash": "27bf15d6",
+   "lines": []
+  },
+  "best_bloater_d2_s1_l1": {
+   "objects": 84,
+   "hash": "1cb04c25",
+   "lines": []
+  },
+  "best_bloater_d2_s1_l0.5": {
+   "objects": 84,
+   "hash": "57c8838c",
+   "lines": []
+  },
+  "best_bloater_d2_s1_l0.28": {
+   "objects": 84,
+   "hash": "401b327",
+   "lines": []
+  },
+  "best_bloater_d2_s2_l1": {
+   "objects": 83,
+   "hash": "1649373",
+   "lines": []
+  },
+  "best_bloater_d2_s2_l0.5": {
+   "objects": 83,
+   "hash": "13dfed49",
+   "lines": []
+  },
+  "best_bloater_d2_s2_l0.28": {
+   "objects": 83,
+   "hash": "6cb98718",
+   "lines": []
+  },
+  "best_bloater_d2_s3_l1": {
+   "objects": 89,
+   "hash": "7269234c",
+   "lines": []
+  },
+  "best_bloater_d2_s3_l0.5": {
+   "objects": 89,
+   "hash": "b57cdcb0",
+   "lines": []
+  },
+  "best_bloater_d2_s3_l0.28": {
+   "objects": 89,
+   "hash": "5eaae509",
+   "lines": []
+  },
+  "best_bloater_d2_s4_l1": {
+   "objects": 83,
+   "hash": "e2dd427b",
+   "lines": []
+  },
+  "best_bloater_d2_s4_l0.5": {
+   "objects": 83,
+   "hash": "106aa46f",
+   "lines": []
+  },
+  "best_bloater_d2_s4_l0.28": {
+   "objects": 83,
+   "hash": "194f7860",
+   "lines": []
+  },
+  "best_bloater_d2_s5_l1": {
+   "objects": 83,
+   "hash": "1998d78d",
+   "lines": []
+  },
+  "best_bloater_d2_s5_l0.5": {
+   "objects": 83,
+   "hash": "20ce46d9",
+   "lines": []
+  },
+  "best_bloater_d2_s5_l0.28": {
+   "objects": 83,
+   "hash": "ba347bda",
+   "lines": []
+  },
+  "best_bloater_d3_s1_l1": {
+   "objects": 81,
+   "hash": "cdb060a0",
+   "lines": []
+  },
+  "best_bloater_d3_s1_l0.5": {
+   "objects": 81,
+   "hash": "bd4ef2fe",
+   "lines": []
+  },
+  "best_bloater_d3_s1_l0.28": {
+   "objects": 81,
+   "hash": "5282491f",
+   "lines": []
+  },
+  "best_bloater_d3_s2_l1": {
+   "objects": 82,
+   "hash": "166be915",
+   "lines": []
+  },
+  "best_bloater_d3_s2_l0.5": {
+   "objects": 82,
+   "hash": "a2397e55",
+   "lines": []
+  },
+  "best_bloater_d3_s2_l0.28": {
+   "objects": 82,
+   "hash": "52398e9f",
+   "lines": []
+  },
+  "best_bloater_d3_s3_l1": {
+   "objects": 87,
+   "hash": "774b34de",
+   "lines": []
+  },
+  "best_bloater_d3_s3_l0.5": {
+   "objects": 87,
+   "hash": "f0c4aaf2",
+   "lines": []
+  },
+  "best_bloater_d3_s3_l0.28": {
+   "objects": 87,
+   "hash": "982e28ee",
+   "lines": []
+  },
+  "best_bloater_d3_s4_l1": {
+   "objects": 82,
+   "hash": "2a668cef",
+   "lines": []
+  },
+  "best_bloater_d3_s4_l0.5": {
+   "objects": 82,
+   "hash": "a0111677",
+   "lines": []
+  },
+  "best_bloater_d3_s4_l0.28": {
+   "objects": 82,
+   "hash": "6a4fb9bf",
+   "lines": []
+  },
+  "best_bloater_d3_s5_l1": {
+   "objects": 81,
+   "hash": "c9091e3b",
+   "lines": []
+  },
+  "best_bloater_d3_s5_l0.5": {
+   "objects": 81,
+   "hash": "2ac4f27",
+   "lines": []
+  },
+  "best_bloater_d3_s5_l0.28": {
+   "objects": 81,
+   "hash": "e9b1e4d0",
+   "lines": []
+  },
+  "best_stalker_d0_s1_l1": {
+   "objects": 63,
+   "hash": "5a0409fa",
+   "lines": []
+  },
+  "best_stalker_d0_s1_l0.5": {
+   "objects": 63,
+   "hash": "cac28a25",
+   "lines": []
+  },
+  "best_stalker_d0_s1_l0.28": {
+   "objects": 63,
+   "hash": "d0540fbe",
+   "lines": []
+  },
+  "best_stalker_d0_s2_l1": {
+   "objects": 62,
+   "hash": "e3432b60",
+   "lines": []
+  },
+  "best_stalker_d0_s2_l0.5": {
+   "objects": 62,
+   "hash": "78c9aca",
+   "lines": []
+  },
+  "best_stalker_d0_s2_l0.28": {
+   "objects": 62,
+   "hash": "eefed607",
+   "lines": []
+  },
+  "best_stalker_d0_s3_l1": {
+   "objects": 68,
+   "hash": "1b9e97d8",
+   "lines": []
+  },
+  "best_stalker_d0_s3_l0.5": {
+   "objects": 68,
+   "hash": "26fcc0fe",
+   "lines": []
+  },
+  "best_stalker_d0_s3_l0.28": {
+   "objects": 68,
+   "hash": "c30b81a3",
+   "lines": []
+  },
+  "best_stalker_d0_s4_l1": {
+   "objects": 62,
+   "hash": "b1dbbf86",
+   "lines": []
+  },
+  "best_stalker_d0_s4_l0.5": {
+   "objects": 62,
+   "hash": "5cb6cf72",
+   "lines": []
+  },
+  "best_stalker_d0_s4_l0.28": {
+   "objects": 62,
+   "hash": "d0eb5419",
+   "lines": []
+  },
+  "best_stalker_d0_s5_l1": {
+   "objects": 62,
+   "hash": "e96e80bf",
+   "lines": []
+  },
+  "best_stalker_d0_s5_l0.5": {
+   "objects": 62,
+   "hash": "f732dce9",
+   "lines": []
+  },
+  "best_stalker_d0_s5_l0.28": {
+   "objects": 62,
+   "hash": "8be25312",
+   "lines": []
+  },
+  "best_stalker_d1_s1_l1": {
+   "objects": 63,
+   "hash": "f98c8564",
+   "lines": []
+  },
+  "best_stalker_d1_s1_l0.5": {
+   "objects": 63,
+   "hash": "89bce9b5",
+   "lines": []
+  },
+  "best_stalker_d1_s1_l0.28": {
+   "objects": 63,
+   "hash": "2b46ff85",
+   "lines": []
+  },
+  "best_stalker_d1_s2_l1": {
+   "objects": 62,
+   "hash": "e3e87613",
+   "lines": []
+  },
+  "best_stalker_d1_s2_l0.5": {
+   "objects": 62,
+   "hash": "76d3397d",
+   "lines": []
+  },
+  "best_stalker_d1_s2_l0.28": {
+   "objects": 62,
+   "hash": "cf79136f",
+   "lines": []
+  },
+  "best_stalker_d1_s3_l1": {
+   "objects": 68,
+   "hash": "d5a45acb",
+   "lines": []
+  },
+  "best_stalker_d1_s3_l0.5": {
+   "objects": 68,
+   "hash": "2d5c7447",
+   "lines": []
+  },
+  "best_stalker_d1_s3_l0.28": {
+   "objects": 68,
+   "hash": "d12cb39f",
+   "lines": []
+  },
+  "best_stalker_d1_s4_l1": {
+   "objects": 62,
+   "hash": "43476906",
+   "lines": []
+  },
+  "best_stalker_d1_s4_l0.5": {
+   "objects": 62,
+   "hash": "8571ecda",
+   "lines": []
+  },
+  "best_stalker_d1_s4_l0.28": {
+   "objects": 62,
+   "hash": "4c9efd36",
+   "lines": []
+  },
+  "best_stalker_d1_s5_l1": {
+   "objects": 62,
+   "hash": "a252bbcc",
+   "lines": []
+  },
+  "best_stalker_d1_s5_l0.5": {
+   "objects": 62,
+   "hash": "b20fc006",
+   "lines": []
+  },
+  "best_stalker_d1_s5_l0.28": {
+   "objects": 62,
+   "hash": "4082e980",
+   "lines": []
+  },
+  "best_stalker_d2_s1_l1": {
+   "objects": 61,
+   "hash": "596f752f",
+   "lines": []
+  },
+  "best_stalker_d2_s1_l0.5": {
+   "objects": 61,
+   "hash": "31a47713",
+   "lines": []
+  },
+  "best_stalker_d2_s1_l0.28": {
+   "objects": 61,
+   "hash": "80a7b26e",
+   "lines": []
+  },
+  "best_stalker_d2_s2_l1": {
+   "objects": 60,
+   "hash": "f3cab7d0",
+   "lines": []
+  },
+  "best_stalker_d2_s2_l0.5": {
+   "objects": 60,
+   "hash": "54616d4b",
+   "lines": []
+  },
+  "best_stalker_d2_s2_l0.28": {
+   "objects": 60,
+   "hash": "e934be7e",
+   "lines": []
+  },
+  "best_stalker_d2_s3_l1": {
+   "objects": 66,
+   "hash": "832d2744",
+   "lines": []
+  },
+  "best_stalker_d2_s3_l0.5": {
+   "objects": 66,
+   "hash": "3c3e4ee7",
+   "lines": []
+  },
+  "best_stalker_d2_s3_l0.28": {
+   "objects": 66,
+   "hash": "991ca756",
+   "lines": []
+  },
+  "best_stalker_d2_s4_l1": {
+   "objects": 60,
+   "hash": "1f2b77c3",
+   "lines": []
+  },
+  "best_stalker_d2_s4_l0.5": {
+   "objects": 60,
+   "hash": "ed88dba0",
+   "lines": []
+  },
+  "best_stalker_d2_s4_l0.28": {
+   "objects": 60,
+   "hash": "b1dd1bf9",
+   "lines": []
+  },
+  "best_stalker_d2_s5_l1": {
+   "objects": 60,
+   "hash": "51820ff",
+   "lines": []
+  },
+  "best_stalker_d2_s5_l0.5": {
+   "objects": 60,
+   "hash": "114865ac",
+   "lines": []
+  },
+  "best_stalker_d2_s5_l0.28": {
+   "objects": 60,
+   "hash": "75500155",
+   "lines": []
+  },
+  "best_stalker_d3_s1_l1": {
+   "objects": 61,
+   "hash": "589f818b",
+   "lines": []
+  },
+  "best_stalker_d3_s1_l0.5": {
+   "objects": 61,
+   "hash": "63db9fc",
+   "lines": []
+  },
+  "best_stalker_d3_s1_l0.28": {
+   "objects": 61,
+   "hash": "8ad4f4b3",
+   "lines": []
+  },
+  "best_stalker_d3_s2_l1": {
+   "objects": 62,
+   "hash": "d2ff26a1",
+   "lines": []
+  },
+  "best_stalker_d3_s2_l0.5": {
+   "objects": 62,
+   "hash": "c38bc080",
+   "lines": []
+  },
+  "best_stalker_d3_s2_l0.28": {
+   "objects": 62,
+   "hash": "f50b54f0",
+   "lines": []
+  },
+  "best_stalker_d3_s3_l1": {
+   "objects": 67,
+   "hash": "58fd350",
+   "lines": []
+  },
+  "best_stalker_d3_s3_l0.5": {
+   "objects": 67,
+   "hash": "880c243",
+   "lines": []
+  },
+  "best_stalker_d3_s3_l0.28": {
+   "objects": 67,
+   "hash": "16416aa9",
+   "lines": []
+  },
+  "best_stalker_d3_s4_l1": {
+   "objects": 62,
+   "hash": "1024e16d",
+   "lines": []
+  },
+  "best_stalker_d3_s4_l0.5": {
+   "objects": 62,
+   "hash": "e3797716",
+   "lines": []
+  },
+  "best_stalker_d3_s4_l0.28": {
+   "objects": 62,
+   "hash": "258ddcf8",
+   "lines": []
+  },
+  "best_stalker_d3_s5_l1": {
+   "objects": 61,
+   "hash": "7509905c",
+   "lines": []
+  },
+  "best_stalker_d3_s5_l0.5": {
+   "objects": 61,
+   "hash": "7b9fe6c1",
+   "lines": []
+  },
+  "best_stalker_d3_s5_l0.28": {
+   "objects": 61,
+   "hash": "8e7477d4",
+   "lines": []
+  },
+  "best_blind_d0_s1_l1": {
+   "objects": 62,
+   "hash": "319a1c6a",
+   "lines": []
+  },
+  "best_blind_d0_s1_l0.5": {
+   "objects": 62,
+   "hash": "aa9febb1",
+   "lines": []
+  },
+  "best_blind_d0_s1_l0.28": {
+   "objects": 62,
+   "hash": "9f5e716c",
+   "lines": []
+  },
+  "best_blind_d0_s2_l1": {
+   "objects": 61,
+   "hash": "44293e",
+   "lines": []
+  },
+  "best_blind_d0_s2_l0.5": {
+   "objects": 61,
+   "hash": "e0930646",
+   "lines": []
+  },
+  "best_blind_d0_s2_l0.28": {
+   "objects": 61,
+   "hash": "2adcfb81",
+   "lines": []
+  },
+  "best_blind_d0_s3_l1": {
+   "objects": 67,
+   "hash": "93da373a",
+   "lines": []
+  },
+  "best_blind_d0_s3_l0.5": {
+   "objects": 67,
+   "hash": "9ce95d6",
+   "lines": []
+  },
+  "best_blind_d0_s3_l0.28": {
+   "objects": 67,
+   "hash": "deef7aad",
+   "lines": []
+  },
+  "best_blind_d0_s4_l1": {
+   "objects": 61,
+   "hash": "80377fba",
+   "lines": []
+  },
+  "best_blind_d0_s4_l0.5": {
+   "objects": 61,
+   "hash": "159cdb44",
+   "lines": []
+  },
+  "best_blind_d0_s4_l0.28": {
+   "objects": 61,
+   "hash": "a186e071",
+   "lines": []
+  },
+  "best_blind_d0_s5_l1": {
+   "objects": 61,
+   "hash": "cc85d491",
+   "lines": []
+  },
+  "best_blind_d0_s5_l0.5": {
+   "objects": 61,
+   "hash": "317d6821",
+   "lines": []
+  },
+  "best_blind_d0_s5_l0.28": {
+   "objects": 61,
+   "hash": "2b322a74",
+   "lines": []
+  },
+  "best_blind_d1_s1_l1": {
+   "objects": 62,
+   "hash": "4bce6ac2",
+   "lines": []
+  },
+  "best_blind_d1_s1_l0.5": {
+   "objects": 62,
+   "hash": "cab9f4a5",
+   "lines": []
+  },
+  "best_blind_d1_s1_l0.28": {
+   "objects": 62,
+   "hash": "6dd9bb5",
+   "lines": []
+  },
+  "best_blind_d1_s2_l1": {
+   "objects": 61,
+   "hash": "52b52ec9",
+   "lines": []
+  },
+  "best_blind_d1_s2_l0.5": {
+   "objects": 61,
+   "hash": "7fb610b3",
+   "lines": []
+  },
+  "best_blind_d1_s2_l0.28": {
+   "objects": 61,
+   "hash": "89526c71",
+   "lines": []
+  },
+  "best_blind_d1_s3_l1": {
+   "objects": 67,
+   "hash": "578f9a4d",
+   "lines": []
+  },
+  "best_blind_d1_s3_l0.5": {
+   "objects": 67,
+   "hash": "60793bcd",
+   "lines": []
+  },
+  "best_blind_d1_s3_l0.28": {
+   "objects": 67,
+   "hash": "505b97f9",
+   "lines": []
+  },
+  "best_blind_d1_s4_l1": {
+   "objects": 61,
+   "hash": "c78c3d22",
+   "lines": []
+  },
+  "best_blind_d1_s4_l0.5": {
+   "objects": 61,
+   "hash": "86a57b42",
+   "lines": []
+  },
+  "best_blind_d1_s4_l0.28": {
+   "objects": 61,
+   "hash": "4b98896e",
+   "lines": []
+  },
+  "best_blind_d1_s5_l1": {
+   "objects": 61,
+   "hash": "dacf5d98",
+   "lines": []
+  },
+  "best_blind_d1_s5_l0.5": {
+   "objects": 61,
+   "hash": "79aa0a42",
+   "lines": []
+  },
+  "best_blind_d1_s5_l0.28": {
+   "objects": 61,
+   "hash": "569b88d4",
+   "lines": []
+  },
+  "best_blind_d2_s1_l1": {
+   "objects": 60,
+   "hash": "2e2df7c7",
+   "lines": []
+  },
+  "best_blind_d2_s1_l0.5": {
+   "objects": 60,
+   "hash": "12c4c6fd",
+   "lines": []
+  },
+  "best_blind_d2_s1_l0.28": {
+   "objects": 60,
+   "hash": "3161e8c0",
+   "lines": []
+  },
+  "best_blind_d2_s2_l1": {
+   "objects": 59,
+   "hash": "f56fd21e",
+   "lines": []
+  },
+  "best_blind_d2_s2_l0.5": {
+   "objects": 59,
+   "hash": "f46dddbd",
+   "lines": []
+  },
+  "best_blind_d2_s2_l0.28": {
+   "objects": 59,
+   "hash": "da7769f0",
+   "lines": []
+  },
+  "best_blind_d2_s3_l1": {
+   "objects": 65,
+   "hash": "4007d014",
+   "lines": []
+  },
+  "best_blind_d2_s3_l0.5": {
+   "objects": 65,
+   "hash": "33d2bddf",
+   "lines": []
+  },
+  "best_blind_d2_s3_l0.28": {
+   "objects": 65,
+   "hash": "32e4484e",
+   "lines": []
+  },
+  "best_blind_d2_s4_l1": {
+   "objects": 59,
+   "hash": "3e0038f3",
+   "lines": []
+  },
+  "best_blind_d2_s4_l0.5": {
+   "objects": 59,
+   "hash": "d2158b60",
+   "lines": []
+  },
+  "best_blind_d2_s4_l0.28": {
+   "objects": 59,
+   "hash": "fc085941",
+   "lines": []
+  },
+  "best_blind_d2_s5_l1": {
+   "objects": 59,
+   "hash": "d1e4b4b5",
+   "lines": []
+  },
+  "best_blind_d2_s5_l0.5": {
+   "objects": 59,
+   "hash": "88b4f43a",
+   "lines": []
+  },
+  "best_blind_d2_s5_l0.28": {
+   "objects": 59,
+   "hash": "cd0fd9a7",
+   "lines": []
+  },
+  "best_blind_d3_s1_l1": {
+   "objects": 60,
+   "hash": "b893ea55",
+   "lines": []
+  },
+  "best_blind_d3_s1_l0.5": {
+   "objects": 60,
+   "hash": "c7725224",
+   "lines": []
+  },
+  "best_blind_d3_s1_l0.28": {
+   "objects": 60,
+   "hash": "3ea68a61",
+   "lines": []
+  },
+  "best_blind_d3_s2_l1": {
+   "objects": 61,
+   "hash": "4b879a89",
+   "lines": []
+  },
+  "best_blind_d3_s2_l0.5": {
+   "objects": 61,
+   "hash": "da96d6c6",
+   "lines": []
+  },
+  "best_blind_d3_s2_l0.28": {
+   "objects": 61,
+   "hash": "367bf1ca",
+   "lines": []
+  },
+  "best_blind_d3_s3_l1": {
+   "objects": 66,
+   "hash": "2e75b196",
+   "lines": []
+  },
+  "best_blind_d3_s3_l0.5": {
+   "objects": 66,
+   "hash": "acba96f",
+   "lines": []
+  },
+  "best_blind_d3_s3_l0.28": {
+   "objects": 66,
+   "hash": "bc15de59",
+   "lines": []
+  },
+  "best_blind_d3_s4_l1": {
+   "objects": 61,
+   "hash": "88f10449",
+   "lines": []
+  },
+  "best_blind_d3_s4_l0.5": {
+   "objects": 61,
+   "hash": "56c357c4",
+   "lines": []
+  },
+  "best_blind_d3_s4_l0.28": {
+   "objects": 61,
+   "hash": "34055aea",
+   "lines": []
+  },
+  "best_blind_d3_s5_l1": {
+   "objects": 60,
+   "hash": "e53c8a",
+   "lines": []
+  },
+  "best_blind_d3_s5_l0.5": {
+   "objects": 60,
+   "hash": "d2cb0f09",
+   "lines": []
+  },
+  "best_blind_d3_s5_l0.28": {
+   "objects": 60,
+   "hash": "b601a25e",
+   "lines": []
+  },
+  "best_screamer_d0_s1_l1": {
+   "objects": 64,
+   "hash": "dfe865e2",
+   "lines": []
+  },
+  "best_screamer_d0_s1_l0.5": {
+   "objects": 64,
+   "hash": "9a5c4886",
+   "lines": []
+  },
+  "best_screamer_d0_s1_l0.28": {
+   "objects": 64,
+   "hash": "67a49f3b",
+   "lines": []
+  },
+  "best_screamer_d0_s2_l1": {
+   "objects": 63,
+   "hash": "d918c9b6",
+   "lines": []
+  },
+  "best_screamer_d0_s2_l0.5": {
+   "objects": 63,
+   "hash": "d83b1d5b",
+   "lines": []
+  },
+  "best_screamer_d0_s2_l0.28": {
+   "objects": 63,
+   "hash": "dc1ccfb6",
+   "lines": []
+  },
+  "best_screamer_d0_s3_l1": {
+   "objects": 69,
+   "hash": "4325dcb6",
+   "lines": []
+  },
+  "best_screamer_d0_s3_l0.5": {
+   "objects": 69,
+   "hash": "644b2fb1",
+   "lines": []
+  },
+  "best_screamer_d0_s3_l0.28": {
+   "objects": 69,
+   "hash": "23fdd2fe",
+   "lines": []
+  },
+  "best_screamer_d0_s4_l1": {
+   "objects": 63,
+   "hash": "c2cae10e",
+   "lines": []
+  },
+  "best_screamer_d0_s4_l0.5": {
+   "objects": 63,
+   "hash": "8fe699d9",
+   "lines": []
+  },
+  "best_screamer_d0_s4_l0.28": {
+   "objects": 63,
+   "hash": "175a07de",
+   "lines": []
+  },
+  "best_screamer_d0_s5_l1": {
+   "objects": 63,
+   "hash": "cd74781d",
+   "lines": []
+  },
+  "best_screamer_d0_s5_l0.5": {
+   "objects": 63,
+   "hash": "6d7f894",
+   "lines": []
+  },
+  "best_screamer_d0_s5_l0.28": {
+   "objects": 63,
+   "hash": "19f03367",
+   "lines": []
+  },
+  "best_screamer_d1_s1_l1": {
+   "objects": 64,
+   "hash": "f1d06d10",
+   "lines": []
+  },
+  "best_screamer_d1_s1_l0.5": {
+   "objects": 64,
+   "hash": "7fc6fbfc",
+   "lines": []
+  },
+  "best_screamer_d1_s1_l0.28": {
+   "objects": 64,
+   "hash": "2de6d280",
+   "lines": []
+  },
+  "best_screamer_d1_s2_l1": {
+   "objects": 63,
+   "hash": "85dc7e2f",
+   "lines": []
+  },
+  "best_screamer_d1_s2_l0.5": {
+   "objects": 63,
+   "hash": "d175b9a0",
+   "lines": []
+  },
+  "best_screamer_d1_s2_l0.28": {
+   "objects": 63,
+   "hash": "5910412c",
+   "lines": []
+  },
+  "best_screamer_d1_s3_l1": {
+   "objects": 69,
+   "hash": "ced0ba6b",
+   "lines": []
+  },
+  "best_screamer_d1_s3_l0.5": {
+   "objects": 69,
+   "hash": "8ea1f6c4",
+   "lines": []
+  },
+  "best_screamer_d1_s3_l0.28": {
+   "objects": 69,
+   "hash": "a8e07ee8",
+   "lines": []
+  },
+  "best_screamer_d1_s4_l1": {
+   "objects": 63,
+   "hash": "8d731fec",
+   "lines": []
+  },
+  "best_screamer_d1_s4_l0.5": {
+   "objects": 63,
+   "hash": "2b8b8fb5",
+   "lines": []
+  },
+  "best_screamer_d1_s4_l0.28": {
+   "objects": 63,
+   "hash": "fd75a567",
+   "lines": []
+  },
+  "best_screamer_d1_s5_l1": {
+   "objects": 63,
+   "hash": "d3fa1fb6",
+   "lines": []
+  },
+  "best_screamer_d1_s5_l0.5": {
+   "objects": 63,
+   "hash": "41aefb95",
+   "lines": []
+  },
+  "best_screamer_d1_s5_l0.28": {
+   "objects": 63,
+   "hash": "14f24661",
+   "lines": []
+  },
+  "best_screamer_d2_s1_l1": {
+   "objects": 62,
+   "hash": "9e533f09",
+   "lines": []
+  },
+  "best_screamer_d2_s1_l0.5": {
+   "objects": 62,
+   "hash": "cfe6ddf0",
+   "lines": []
+  },
+  "best_screamer_d2_s1_l0.28": {
+   "objects": 62,
+   "hash": "7f11edcd",
+   "lines": []
+  },
+  "best_screamer_d2_s2_l1": {
+   "objects": 61,
+   "hash": "22ee64c4",
+   "lines": []
+  },
+  "best_screamer_d2_s2_l0.5": {
+   "objects": 61,
+   "hash": "4fea576e",
+   "lines": []
+  },
+  "best_screamer_d2_s2_l0.28": {
+   "objects": 61,
+   "hash": "2ebd8619",
+   "lines": []
+  },
+  "best_screamer_d2_s3_l1": {
+   "objects": 67,
+   "hash": "5034e3c6",
+   "lines": []
+  },
+  "best_screamer_d2_s3_l0.5": {
+   "objects": 67,
+   "hash": "c39a199e",
+   "lines": []
+  },
+  "best_screamer_d2_s3_l0.28": {
+   "objects": 67,
+   "hash": "ca5b2a9b",
+   "lines": []
+  },
+  "best_screamer_d2_s4_l1": {
+   "objects": 61,
+   "hash": "49d0657d",
+   "lines": []
+  },
+  "best_screamer_d2_s4_l0.5": {
+   "objects": 61,
+   "hash": "65acb6db",
+   "lines": []
+  },
+  "best_screamer_d2_s4_l0.28": {
+   "objects": 61,
+   "hash": "190bcde8",
+   "lines": []
+  },
+  "best_screamer_d2_s5_l1": {
+   "objects": 61,
+   "hash": "5c89272b",
+   "lines": []
+  },
+  "best_screamer_d2_s5_l0.5": {
+   "objects": 61,
+   "hash": "6d31a49",
+   "lines": []
+  },
+  "best_screamer_d2_s5_l0.28": {
+   "objects": 61,
+   "hash": "5cf5dd6",
+   "lines": []
+  },
+  "best_screamer_d3_s1_l1": {
+   "objects": 62,
+   "hash": "57c8b6d",
+   "lines": []
+  },
+  "best_screamer_d3_s1_l0.5": {
+   "objects": 62,
+   "hash": "b4ed477b",
+   "lines": []
+  },
+  "best_screamer_d3_s1_l0.28": {
+   "objects": 62,
+   "hash": "49c3745a",
+   "lines": []
+  },
+  "best_screamer_d3_s2_l1": {
+   "objects": 63,
+   "hash": "eb124db5",
+   "lines": []
+  },
+  "best_screamer_d3_s2_l0.5": {
+   "objects": 63,
+   "hash": "167aabf",
+   "lines": []
+  },
+  "best_screamer_d3_s2_l0.28": {
+   "objects": 63,
+   "hash": "f710a125",
+   "lines": []
+  },
+  "best_screamer_d3_s3_l1": {
+   "objects": 68,
+   "hash": "8d5d27ee",
+   "lines": []
+  },
+  "best_screamer_d3_s3_l0.5": {
+   "objects": 68,
+   "hash": "597beaa0",
+   "lines": []
+  },
+  "best_screamer_d3_s3_l0.28": {
+   "objects": 68,
+   "hash": "c605c1cc",
+   "lines": []
+  },
+  "best_screamer_d3_s4_l1": {
+   "objects": 63,
+   "hash": "692dc785",
+   "lines": []
+  },
+  "best_screamer_d3_s4_l0.5": {
+   "objects": 63,
+   "hash": "93afeef1",
+   "lines": []
+  },
+  "best_screamer_d3_s4_l0.28": {
+   "objects": 63,
+   "hash": "2c7dc7d5",
+   "lines": []
+  },
+  "best_screamer_d3_s5_l1": {
+   "objects": 62,
+   "hash": "ab47f4a2",
+   "lines": []
+  },
+  "best_screamer_d3_s5_l0.5": {
+   "objects": 62,
+   "hash": "48ce4838",
+   "lines": []
+  },
+  "best_screamer_d3_s5_l0.28": {
+   "objects": 62,
+   "hash": "60c16ab3",
+   "lines": []
+  },
+  "best_charred_d0_s1_l1": {
+   "objects": 80,
+   "hash": "942017fd",
+   "lines": []
+  },
+  "best_charred_d0_s1_l0.5": {
+   "objects": 80,
+   "hash": "63f19891",
+   "lines": []
+  },
+  "best_charred_d0_s1_l0.28": {
+   "objects": 80,
+   "hash": "50e243d0",
+   "lines": []
+  },
+  "best_charred_d0_s2_l1": {
+   "objects": 81,
+   "hash": "ed2f537d",
+   "lines": []
+  },
+  "best_charred_d0_s2_l0.5": {
+   "objects": 81,
+   "hash": "22ef13e7",
+   "lines": []
+  },
+  "best_charred_d0_s2_l0.28": {
+   "objects": 81,
+   "hash": "9c264371",
+   "lines": []
+  },
+  "best_charred_d0_s3_l1": {
+   "objects": 82,
+   "hash": "1d395497",
+   "lines": []
+  },
+  "best_charred_d0_s3_l0.5": {
+   "objects": 82,
+   "hash": "4ea1be35",
+   "lines": []
+  },
+  "best_charred_d0_s3_l0.28": {
+   "objects": 82,
+   "hash": "3688431e",
+   "lines": []
+  },
+  "best_charred_d0_s4_l1": {
+   "objects": 80,
+   "hash": "e4ff0d94",
+   "lines": []
+  },
+  "best_charred_d0_s4_l0.5": {
+   "objects": 80,
+   "hash": "42b6268c",
+   "lines": []
+  },
+  "best_charred_d0_s4_l0.28": {
+   "objects": 80,
+   "hash": "37431185",
+   "lines": []
+  },
+  "best_charred_d0_s5_l1": {
+   "objects": 85,
+   "hash": "5dae3ced",
+   "lines": []
+  },
+  "best_charred_d0_s5_l0.5": {
+   "objects": 85,
+   "hash": "49e79cad",
+   "lines": []
+  },
+  "best_charred_d0_s5_l0.28": {
+   "objects": 85,
+   "hash": "a51458b1",
+   "lines": []
+  },
+  "best_charred_d1_s1_l1": {
+   "objects": 80,
+   "hash": "b81dd47b",
+   "lines": []
+  },
+  "best_charred_d1_s1_l0.5": {
+   "objects": 80,
+   "hash": "81df340f",
+   "lines": []
+  },
+  "best_charred_d1_s1_l0.28": {
+   "objects": 80,
+   "hash": "9cfa97f7",
+   "lines": []
+  },
+  "best_charred_d1_s2_l1": {
+   "objects": 81,
+   "hash": "9e5736af",
+   "lines": []
+  },
+  "best_charred_d1_s2_l0.5": {
+   "objects": 81,
+   "hash": "71cdcecb",
+   "lines": []
+  },
+  "best_charred_d1_s2_l0.28": {
+   "objects": 81,
+   "hash": "23c37454",
+   "lines": []
+  },
+  "best_charred_d1_s3_l1": {
+   "objects": 82,
+   "hash": "378c4f0b",
+   "lines": []
+  },
+  "best_charred_d1_s3_l0.5": {
+   "objects": 82,
+   "hash": "d5b819d1",
+   "lines": []
+  },
+  "best_charred_d1_s3_l0.28": {
+   "objects": 82,
+   "hash": "397f73bb",
+   "lines": []
+  },
+  "best_charred_d1_s4_l1": {
+   "objects": 80,
+   "hash": "8ff24307",
+   "lines": []
+  },
+  "best_charred_d1_s4_l0.5": {
+   "objects": 80,
+   "hash": "28b73e1f",
+   "lines": []
+  },
+  "best_charred_d1_s4_l0.28": {
+   "objects": 80,
+   "hash": "4662d24b",
+   "lines": []
+  },
+  "best_charred_d1_s5_l1": {
+   "objects": 85,
+   "hash": "2a3b193",
+   "lines": []
+  },
+  "best_charred_d1_s5_l0.5": {
+   "objects": 85,
+   "hash": "9ae3cadf",
+   "lines": []
+  },
+  "best_charred_d1_s5_l0.28": {
+   "objects": 85,
+   "hash": "2c848090",
+   "lines": []
+  },
+  "best_charred_d2_s1_l1": {
+   "objects": 78,
+   "hash": "44971454",
+   "lines": []
+  },
+  "best_charred_d2_s1_l0.5": {
+   "objects": 78,
+   "hash": "4f2eed63",
+   "lines": []
+  },
+  "best_charred_d2_s1_l0.28": {
+   "objects": 78,
+   "hash": "d4ce1920",
+   "lines": []
+  },
+  "best_charred_d2_s2_l1": {
+   "objects": 79,
+   "hash": "712d16a5",
+   "lines": []
+  },
+  "best_charred_d2_s2_l0.5": {
+   "objects": 79,
+   "hash": "16c33c5a",
+   "lines": []
+  },
+  "best_charred_d2_s2_l0.28": {
+   "objects": 79,
+   "hash": "10d6b296",
+   "lines": []
+  },
+  "best_charred_d2_s3_l1": {
+   "objects": 80,
+   "hash": "f1acc46e",
+   "lines": []
+  },
+  "best_charred_d2_s3_l0.5": {
+   "objects": 80,
+   "hash": "8ffab7fb",
+   "lines": []
+  },
+  "best_charred_d2_s3_l0.28": {
+   "objects": 80,
+   "hash": "ee452504",
+   "lines": []
+  },
+  "best_charred_d2_s4_l1": {
+   "objects": 78,
+   "hash": "ae61cfc5",
+   "lines": []
+  },
+  "best_charred_d2_s4_l0.5": {
+   "objects": 78,
+   "hash": "fa0e4d24",
+   "lines": []
+  },
+  "best_charred_d2_s4_l0.28": {
+   "objects": 78,
+   "hash": "64118d15",
+   "lines": []
+  },
+  "best_charred_d2_s5_l1": {
+   "objects": 83,
+   "hash": "6fd87323",
+   "lines": []
+  },
+  "best_charred_d2_s5_l0.5": {
+   "objects": 83,
+   "hash": "1b9c382",
+   "lines": []
+  },
+  "best_charred_d2_s5_l0.28": {
+   "objects": 83,
+   "hash": "a0246f02",
+   "lines": []
+  },
+  "best_charred_d3_s1_l1": {
+   "objects": 80,
+   "hash": "61f3044d",
+   "lines": []
+  },
+  "best_charred_d3_s1_l0.5": {
+   "objects": 80,
+   "hash": "7042aa42",
+   "lines": []
+  },
+  "best_charred_d3_s1_l0.28": {
+   "objects": 80,
+   "hash": "ef763496",
+   "lines": []
+  },
+  "best_charred_d3_s2_l1": {
+   "objects": 80,
+   "hash": "e2b3ed50",
+   "lines": []
+  },
+  "best_charred_d3_s2_l0.5": {
+   "objects": 80,
+   "hash": "b75ad893",
+   "lines": []
+  },
+  "best_charred_d3_s2_l0.28": {
+   "objects": 80,
+   "hash": "2c9f64a5",
+   "lines": []
+  },
+  "best_charred_d3_s3_l1": {
+   "objects": 82,
+   "hash": "2d711d9f",
+   "lines": []
+  },
+  "best_charred_d3_s3_l0.5": {
+   "objects": 82,
+   "hash": "9e1f35a",
+   "lines": []
+  },
+  "best_charred_d3_s3_l0.28": {
+   "objects": 82,
+   "hash": "d4d19d5a",
+   "lines": []
+  },
+  "best_charred_d3_s4_l1": {
+   "objects": 80,
+   "hash": "6196a6cb",
+   "lines": []
+  },
+  "best_charred_d3_s4_l0.5": {
+   "objects": 80,
+   "hash": "dbe082c6",
+   "lines": []
+  },
+  "best_charred_d3_s4_l0.28": {
+   "objects": 80,
+   "hash": "d59b91a2",
+   "lines": []
+  },
+  "best_charred_d3_s5_l1": {
+   "objects": 85,
+   "hash": "c159d202",
+   "lines": []
+  },
+  "best_charred_d3_s5_l0.5": {
+   "objects": 85,
+   "hash": "66ef39dd",
+   "lines": []
+  },
+  "best_charred_d3_s5_l0.28": {
+   "objects": 85,
+   "hash": "60655de8",
+   "lines": []
+  },
+  "best_drowned_d0_s1_l1": {
+   "objects": 64,
+   "hash": "58d04b5",
+   "lines": []
+  },
+  "best_drowned_d0_s1_l0.5": {
+   "objects": 64,
+   "hash": "bb4cc971",
+   "lines": []
+  },
+  "best_drowned_d0_s1_l0.28": {
+   "objects": 64,
+   "hash": "ecbc968b",
+   "lines": []
+  },
+  "best_drowned_d0_s2_l1": {
+   "objects": 65,
+   "hash": "c6245958",
+   "lines": []
+  },
+  "best_drowned_d0_s2_l0.5": {
+   "objects": 65,
+   "hash": "7716113e",
+   "lines": []
+  },
+  "best_drowned_d0_s2_l0.28": {
+   "objects": 65,
+   "hash": "8c0a3557",
+   "lines": []
+  },
+  "best_drowned_d0_s3_l1": {
+   "objects": 65,
+   "hash": "e6a3ba2f",
+   "lines": []
+  },
+  "best_drowned_d0_s3_l0.5": {
+   "objects": 65,
+   "hash": "af25ade5",
+   "lines": []
+  },
+  "best_drowned_d0_s3_l0.28": {
+   "objects": 65,
+   "hash": "be400acd",
+   "lines": []
+  },
+  "best_drowned_d0_s4_l1": {
+   "objects": 64,
+   "hash": "4f871090",
+   "lines": []
+  },
+  "best_drowned_d0_s4_l0.5": {
+   "objects": 64,
+   "hash": "9c4f116",
+   "lines": []
+  },
+  "best_drowned_d0_s4_l0.28": {
+   "objects": 64,
+   "hash": "7f1ecd34",
+   "lines": []
+  },
+  "best_drowned_d0_s5_l1": {
+   "objects": 69,
+   "hash": "ac5b298f",
+   "lines": []
+  },
+  "best_drowned_d0_s5_l0.5": {
+   "objects": 69,
+   "hash": "ea38bb2f",
+   "lines": []
+  },
+  "best_drowned_d0_s5_l0.28": {
+   "objects": 69,
+   "hash": "72534a18",
+   "lines": []
+  },
+  "best_drowned_d1_s1_l1": {
+   "objects": 64,
+   "hash": "7a4d13f5",
+   "lines": []
+  },
+  "best_drowned_d1_s1_l0.5": {
+   "objects": 64,
+   "hash": "d60e8d5",
+   "lines": []
+  },
+  "best_drowned_d1_s1_l0.28": {
+   "objects": 64,
+   "hash": "8e748fd4",
+   "lines": []
+  },
+  "best_drowned_d1_s2_l1": {
+   "objects": 65,
+   "hash": "4b4d36d0",
+   "lines": []
+  },
+  "best_drowned_d1_s2_l0.5": {
+   "objects": 65,
+   "hash": "b2f9b922",
+   "lines": []
+  },
+  "best_drowned_d1_s2_l0.28": {
+   "objects": 65,
+   "hash": "f4139f06",
+   "lines": []
+  },
+  "best_drowned_d1_s3_l1": {
+   "objects": 65,
+   "hash": "daa40e89",
+   "lines": []
+  },
+  "best_drowned_d1_s3_l0.5": {
+   "objects": 65,
+   "hash": "1a3fb269",
+   "lines": []
+  },
+  "best_drowned_d1_s3_l0.28": {
+   "objects": 65,
+   "hash": "eca7744a",
+   "lines": []
+  },
+  "best_drowned_d1_s4_l1": {
+   "objects": 64,
+   "hash": "adb1fe83",
+   "lines": []
+  },
+  "best_drowned_d1_s4_l0.5": {
+   "objects": 64,
+   "hash": "15d820d1",
+   "lines": []
+  },
+  "best_drowned_d1_s4_l0.28": {
+   "objects": 64,
+   "hash": "4a14496a",
+   "lines": []
+  },
+  "best_drowned_d1_s5_l1": {
+   "objects": 69,
+   "hash": "101895c7",
+   "lines": []
+  },
+  "best_drowned_d1_s5_l0.5": {
+   "objects": 69,
+   "hash": "269c6171",
+   "lines": []
+  },
+  "best_drowned_d1_s5_l0.28": {
+   "objects": 69,
+   "hash": "4eeb1ad1",
+   "lines": []
+  },
+  "best_drowned_d2_s1_l1": {
+   "objects": 62,
+   "hash": "fefbd9de",
+   "lines": []
+  },
+  "best_drowned_d2_s1_l0.5": {
+   "objects": 62,
+   "hash": "3ee85cb5",
+   "lines": []
+  },
+  "best_drowned_d2_s1_l0.28": {
+   "objects": 62,
+   "hash": "4445e323",
+   "lines": []
+  },
+  "best_drowned_d2_s2_l1": {
+   "objects": 63,
+   "hash": "e97985d0",
+   "lines": []
+  },
+  "best_drowned_d2_s2_l0.5": {
+   "objects": 63,
+   "hash": "2ab3608b",
+   "lines": []
+  },
+  "best_drowned_d2_s2_l0.28": {
+   "objects": 63,
+   "hash": "aef6900c",
+   "lines": []
+  },
+  "best_drowned_d2_s3_l1": {
+   "objects": 63,
+   "hash": "14715d76",
+   "lines": []
+  },
+  "best_drowned_d2_s3_l0.5": {
+   "objects": 63,
+   "hash": "172faf2b",
+   "lines": []
+  },
+  "best_drowned_d2_s3_l0.28": {
+   "objects": 63,
+   "hash": "5c7612e5",
+   "lines": []
+  },
+  "best_drowned_d2_s4_l1": {
+   "objects": 62,
+   "hash": "80d78e43",
+   "lines": []
+  },
+  "best_drowned_d2_s4_l0.5": {
+   "objects": 62,
+   "hash": "76aaac9a",
+   "lines": []
+  },
+  "best_drowned_d2_s4_l0.28": {
+   "objects": 62,
+   "hash": "162041f8",
+   "lines": []
+  },
+  "best_drowned_d2_s5_l1": {
+   "objects": 67,
+   "hash": "c5d0cddb",
+   "lines": []
+  },
+  "best_drowned_d2_s5_l0.5": {
+   "objects": 67,
+   "hash": "c8274cbe",
+   "lines": []
+  },
+  "best_drowned_d2_s5_l0.28": {
+   "objects": 67,
+   "hash": "8cd171b",
+   "lines": []
+  },
+  "best_drowned_d3_s1_l1": {
+   "objects": 64,
+   "hash": "7e1eabf1",
+   "lines": []
+  },
+  "best_drowned_d3_s1_l0.5": {
+   "objects": 64,
+   "hash": "57fa3a5a",
+   "lines": []
+  },
+  "best_drowned_d3_s1_l0.28": {
+   "objects": 64,
+   "hash": "9c99fe2d",
+   "lines": []
+  },
+  "best_drowned_d3_s2_l1": {
+   "objects": 62,
+   "hash": "91537f9e",
+   "lines": []
+  },
+  "best_drowned_d3_s2_l0.5": {
+   "objects": 62,
+   "hash": "be81d42b",
+   "lines": []
+  },
+  "best_drowned_d3_s2_l0.28": {
+   "objects": 62,
+   "hash": "961ec5d3",
+   "lines": []
+  },
+  "best_drowned_d3_s3_l1": {
+   "objects": 65,
+   "hash": "751aaf23",
+   "lines": []
+  },
+  "best_drowned_d3_s3_l0.5": {
+   "objects": 65,
+   "hash": "2d705182",
+   "lines": []
+  },
+  "best_drowned_d3_s3_l0.28": {
+   "objects": 65,
+   "hash": "9060149f",
+   "lines": []
+  },
+  "best_drowned_d3_s4_l1": {
+   "objects": 64,
+   "hash": "4ca8c677",
+   "lines": []
+  },
+  "best_drowned_d3_s4_l0.5": {
+   "objects": 64,
+   "hash": "7195e878",
+   "lines": []
+  },
+  "best_drowned_d3_s4_l0.28": {
+   "objects": 64,
+   "hash": "c1e8cae1",
+   "lines": []
+  },
+  "best_drowned_d3_s5_l1": {
+   "objects": 69,
+   "hash": "50a225c6",
+   "lines": []
+  },
+  "best_drowned_d3_s5_l0.5": {
+   "objects": 69,
+   "hash": "c263bf17",
+   "lines": []
+  },
+  "best_drowned_d3_s5_l0.28": {
+   "objects": 69,
+   "hash": "434a37f5",
+   "lines": []
+  },
+  "best_devourer_d0_s1_l1": {
+   "objects": 81,
+   "hash": "5839574f",
+   "lines": []
+  },
+  "best_devourer_d0_s1_l0.5": {
+   "objects": 81,
+   "hash": "399788c1",
+   "lines": []
+  },
+  "best_devourer_d0_s1_l0.28": {
+   "objects": 81,
+   "hash": "946796f3",
+   "lines": []
+  },
+  "best_devourer_d0_s2_l1": {
+   "objects": 80,
+   "hash": "237f87e",
+   "lines": []
+  },
+  "best_devourer_d0_s2_l0.5": {
+   "objects": 80,
+   "hash": "9f2cd8c5",
+   "lines": []
+  },
+  "best_devourer_d0_s2_l0.28": {
+   "objects": 80,
+   "hash": "17931147",
+   "lines": []
+  },
+  "best_devourer_d0_s3_l1": {
+   "objects": 86,
+   "hash": "3810aa57",
+   "lines": []
+  },
+  "best_devourer_d0_s3_l0.5": {
+   "objects": 86,
+   "hash": "6b6246",
+   "lines": []
+  },
+  "best_devourer_d0_s3_l0.28": {
+   "objects": 86,
+   "hash": "2d9a4a20",
+   "lines": []
+  },
+  "best_devourer_d0_s4_l1": {
+   "objects": 80,
+   "hash": "15bd8d07",
+   "lines": []
+  },
+  "best_devourer_d0_s4_l0.5": {
+   "objects": 80,
+   "hash": "dd430758",
+   "lines": []
+  },
+  "best_devourer_d0_s4_l0.28": {
+   "objects": 80,
+   "hash": "c8dc9490",
+   "lines": []
+  },
+  "best_devourer_d0_s5_l1": {
+   "objects": 80,
+   "hash": "e9ab9d96",
+   "lines": []
+  },
+  "best_devourer_d0_s5_l0.5": {
+   "objects": 80,
+   "hash": "9f7cc55d",
+   "lines": []
+  },
+  "best_devourer_d0_s5_l0.28": {
+   "objects": 80,
+   "hash": "112e5215",
+   "lines": []
+  },
+  "best_devourer_d1_s1_l1": {
+   "objects": 81,
+   "hash": "929f8c52",
+   "lines": []
+  },
+  "best_devourer_d1_s1_l0.5": {
+   "objects": 81,
+   "hash": "d2a2032e",
+   "lines": []
+  },
+  "best_devourer_d1_s1_l0.28": {
+   "objects": 81,
+   "hash": "930f0143",
+   "lines": []
+  },
+  "best_devourer_d1_s2_l1": {
+   "objects": 80,
+   "hash": "9f5c7d2b",
+   "lines": []
+  },
+  "best_devourer_d1_s2_l0.5": {
+   "objects": 80,
+   "hash": "60800efe",
+   "lines": []
+  },
+  "best_devourer_d1_s2_l0.28": {
+   "objects": 80,
+   "hash": "3f606cb",
+   "lines": []
+  },
+  "best_devourer_d1_s3_l1": {
+   "objects": 86,
+   "hash": "c3a1122d",
+   "lines": []
+  },
+  "best_devourer_d1_s3_l0.5": {
+   "objects": 86,
+   "hash": "afd9cdd2",
+   "lines": []
+  },
+  "best_devourer_d1_s3_l0.28": {
+   "objects": 86,
+   "hash": "8cab83af",
+   "lines": []
+  },
+  "best_devourer_d1_s4_l1": {
+   "objects": 80,
+   "hash": "4ed49947",
+   "lines": []
+  },
+  "best_devourer_d1_s4_l0.5": {
+   "objects": 80,
+   "hash": "1b8851fc",
+   "lines": []
+  },
+  "best_devourer_d1_s4_l0.28": {
+   "objects": 80,
+   "hash": "944e8f51",
+   "lines": []
+  },
+  "best_devourer_d1_s5_l1": {
+   "objects": 80,
+   "hash": "f403a9fd",
+   "lines": []
+  },
+  "best_devourer_d1_s5_l0.5": {
+   "objects": 80,
+   "hash": "eb8b8a4e",
+   "lines": []
+  },
+  "best_devourer_d1_s5_l0.28": {
+   "objects": 80,
+   "hash": "391b345f",
+   "lines": []
+  },
+  "best_devourer_d2_s1_l1": {
+   "objects": 79,
+   "hash": "69c3e4e0",
+   "lines": []
+  },
+  "best_devourer_d2_s1_l0.5": {
+   "objects": 79,
+   "hash": "b1cea2b",
+   "lines": []
+  },
+  "best_devourer_d2_s1_l0.28": {
+   "objects": 79,
+   "hash": "16926bf1",
+   "lines": []
+  },
+  "best_devourer_d2_s2_l1": {
+   "objects": 78,
+   "hash": "b0242d17",
+   "lines": []
+  },
+  "best_devourer_d2_s2_l0.5": {
+   "objects": 78,
+   "hash": "284532cd",
+   "lines": []
+  },
+  "best_devourer_d2_s2_l0.28": {
+   "objects": 78,
+   "hash": "a2f190d3",
+   "lines": []
+  },
+  "best_devourer_d2_s3_l1": {
+   "objects": 84,
+   "hash": "39ee3516",
+   "lines": []
+  },
+  "best_devourer_d2_s3_l0.5": {
+   "objects": 84,
+   "hash": "ad655ba8",
+   "lines": []
+  },
+  "best_devourer_d2_s3_l0.28": {
+   "objects": 84,
+   "hash": "7c81c6c4",
+   "lines": []
+  },
+  "best_devourer_d2_s4_l1": {
+   "objects": 78,
+   "hash": "2fb17ea8",
+   "lines": []
+  },
+  "best_devourer_d2_s4_l0.5": {
+   "objects": 78,
+   "hash": "e6c5d990",
+   "lines": []
+  },
+  "best_devourer_d2_s4_l0.28": {
+   "objects": 78,
+   "hash": "9ee955b8",
+   "lines": []
+  },
+  "best_devourer_d2_s5_l1": {
+   "objects": 78,
+   "hash": "36a8e79f",
+   "lines": []
+  },
+  "best_devourer_d2_s5_l0.5": {
+   "objects": 78,
+   "hash": "83493fdb",
+   "lines": []
+  },
+  "best_devourer_d2_s5_l0.28": {
+   "objects": 78,
+   "hash": "2627e967",
+   "lines": []
+  },
+  "best_devourer_d3_s1_l1": {
+   "objects": 79,
+   "hash": "d7fd461b",
+   "lines": []
+  },
+  "best_devourer_d3_s1_l0.5": {
+   "objects": 79,
+   "hash": "10ba7b1b",
+   "lines": []
+  },
+  "best_devourer_d3_s1_l0.28": {
+   "objects": 79,
+   "hash": "f0e53625",
+   "lines": []
+  },
+  "best_devourer_d3_s2_l1": {
+   "objects": 80,
+   "hash": "4c015b62",
+   "lines": []
+  },
+  "best_devourer_d3_s2_l0.5": {
+   "objects": 80,
+   "hash": "73776db4",
+   "lines": []
+  },
+  "best_devourer_d3_s2_l0.28": {
+   "objects": 80,
+   "hash": "c2aea3ab",
+   "lines": []
+  },
+  "best_devourer_d3_s3_l1": {
+   "objects": 85,
+   "hash": "3cd4058",
+   "lines": []
+  },
+  "best_devourer_d3_s3_l0.5": {
+   "objects": 85,
+   "hash": "60062f04",
+   "lines": []
+  },
+  "best_devourer_d3_s3_l0.28": {
+   "objects": 85,
+   "hash": "6aaa13f3",
+   "lines": []
+  },
+  "best_devourer_d3_s4_l1": {
+   "objects": 80,
+   "hash": "7d93126a",
+   "lines": []
+  },
+  "best_devourer_d3_s4_l0.5": {
+   "objects": 80,
+   "hash": "96cb1b6c",
+   "lines": []
+  },
+  "best_devourer_d3_s4_l0.28": {
+   "objects": 80,
+   "hash": "ba0fe8a7",
+   "lines": []
+  },
+  "best_devourer_d3_s5_l1": {
+   "objects": 79,
+   "hash": "ffb7d0ae",
+   "lines": []
+  },
+  "best_devourer_d3_s5_l0.5": {
+   "objects": 79,
+   "hash": "38dabc48",
+   "lines": []
+  },
+  "best_devourer_d3_s5_l0.28": {
+   "objects": 79,
+   "hash": "a2e315a8",
+   "lines": []
+  }
+ }
+}

@@ -1,0 +1,74 @@
+{
+  "guide": {
+    "heightMetres": 1.8,
+    "shoulderWidthMetres": 0.61,
+    "shoulderWidthWomanMetres": 0.57,
+    "shoulderHeightMetres": 1.475,
+    "headToHeight": 0.1667
+  },
+  "teamGame": {
+    "source": "G 65336 J (shoulders +-0.24 m)",
+    "joints": {
+      "quadril": [
+        0,
+        0.95,
+        0
+      ],
+      "pescoco": [
+        0,
+        1.52,
+        0
+      ],
+      "ombroE": [
+        -0.24,
+        1.44,
+        0
+      ],
+      "ombroD": [
+        0.24,
+        1.44,
+        0
+      ],
+      "cotoveloE": [
+        -0.27,
+        1.13,
+        0
+      ],
+      "cotoveloD": [
+        0.27,
+        1.13,
+        0
+      ],
+      "coxaE": [
+        -0.1,
+        0.92,
+        0
+      ],
+      "coxaD": [
+        0.1,
+        0.92,
+        0
+      ],
+      "joelhoE": [
+        -0.1,
+        0.5,
+        0
+      ],
+      "joelhoD": [
+        0.1,
+        0.5,
+        0
+      ]
+    },
+    "heightMetres": 1.8
+  },
+  "lodDistancesMetres": [
+    18,
+    55
+  ],
+  "triangleBudget": {
+    "lod0": 2500,
+    "lod1": 800,
+    "lod2": 250
+  }
+}

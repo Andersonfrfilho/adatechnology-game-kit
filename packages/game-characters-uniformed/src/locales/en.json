@@ -1,0 +1,5 @@
+{
+  "categories": { "weapon": "Weapon", "protection": "Protection", "equipment": "Equipment", "consumable": "Consumable", "key": "Key", "document": "Document", "trade": "Trade" },
+  "rarities": { "comum": "Common", "incomum": "Uncommon", "raro": "Rare", "muito raro": "Very rare", "lendário": "Legendary" },
+  "rule": "Rank decides who commands when the leader falls (the highest rank alive with courage + loyalty of at least 100) and what a soldier obeys. A higher rank beats opinion, unless the soldier's opinion of the superior is below -20: then he disobeys, deserts or mutinies."
+}

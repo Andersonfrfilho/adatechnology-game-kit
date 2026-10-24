@@ -1,0 +1,427 @@
+[
+  {
+    "d": 1,
+    "t": "Quarentena no norte",
+    "who": [
+      "caio",
+      "ferraz",
+      "vinicius"
+    ]
+  },
+  {
+    "d": 2,
+    "t": "O helicóptero cai na serra",
+    "who": [
+      "lince",
+      "paula",
+      "kevin",
+      "profeta"
+    ]
+  },
+  {
+    "d": 3,
+    "t": "Pedido de socorro no Jardim Aurora",
+    "who": [
+      "helena",
+      "jessica",
+      "kauan"
+    ]
+  },
+  {
+    "d": 6,
+    "t": "Tainá chega à Matriz",
+    "who": [
+      "taina",
+      "zilda"
+    ]
+  },
+  {
+    "d": 8,
+    "t": "A canela do recruta",
+    "who": [
+      "vinicius",
+      "caio",
+      "ferraz"
+    ]
+  },
+  {
+    "d": 10,
+    "t": "Helena tenta sair sozinha",
+    "who": [
+      "helena"
+    ]
+  },
+  {
+    "d": 10,
+    "t": "A noite no contêiner",
+    "who": [
+      "vinicius",
+      "caio",
+      "ferraz"
+    ]
+  },
+  {
+    "d": 11,
+    "t": "O sargento assume",
+    "who": [
+      "caio",
+      "ferraz"
+    ]
+  },
+  {
+    "d": 12,
+    "t": "Helena reanima",
+    "who": [
+      "helena"
+    ]
+  },
+  {
+    "d": 14,
+    "t": "Mariana sem insulina",
+    "who": [
+      "mariana",
+      "zilda",
+      "armando"
+    ]
+  },
+  {
+    "d": 14,
+    "t": "A Falcão chega ao hospital",
+    "who": [
+      "lince",
+      "paula",
+      "kevin",
+      "nelson"
+    ]
+  },
+  {
+    "d": 16,
+    "t": "Mariana morre",
+    "who": [
+      "mariana",
+      "zilda"
+    ]
+  },
+  {
+    "d": 18,
+    "t": "Otávio perde o controle",
+    "who": [
+      "otavio",
+      "bianca"
+    ]
+  },
+  {
+    "d": 20,
+    "t": "Um gaúcho na BR-Sul",
+    "who": [
+      "lucas",
+      "lucia",
+      "gil"
+    ]
+  },
+  {
+    "d": 22,
+    "t": "O porão da igreja",
+    "who": [
+      "arnaldo",
+      "zilda",
+      "val",
+      "criancas"
+    ]
+  },
+  {
+    "d": 24,
+    "t": "A igreja sem a Zilda",
+    "who": [
+      "zilda",
+      "criancas",
+      "val",
+      "taina"
+    ]
+  },
+  {
+    "d": 25,
+    "t": "Horda ao pé da torre",
+    "who": [
+      "jessica",
+      "nelson"
+    ]
+  },
+  {
+    "d": 26,
+    "t": "O acordo do bloco C",
+    "who": [
+      "josue",
+      "jacare"
+    ]
+  },
+  {
+    "d": 28,
+    "t": "Kauã entra no hospital",
+    "who": [
+      "kauan",
+      "livia",
+      "sato"
+    ]
+  },
+  {
+    "d": 30,
+    "t": "O laboratório",
+    "who": [
+      "otavio",
+      "bianca"
+    ]
+  },
+  {
+    "d": 30,
+    "t": "A mensagem do Comando",
+    "who": [
+      "kevin",
+      "lince",
+      "paula"
+    ]
+  },
+  {
+    "d": 33,
+    "t": "Ítalo quer desertar",
+    "who": [
+      "italo",
+      "brasa",
+      "rafa"
+    ]
+  },
+  {
+    "d": 36,
+    "t": "A dívida do Lucas",
+    "who": [
+      "lucas",
+      "bigode",
+      "brasa"
+    ]
+  },
+  {
+    "d": 38,
+    "t": "O parto",
+    "who": [
+      "taina",
+      "zilda",
+      "cida",
+      "biel",
+      "neide"
+    ]
+  },
+  {
+    "d": 40,
+    "t": "O diesel da oficina",
+    "who": [
+      "brasa",
+      "rosa",
+      "gil",
+      "bigode",
+      "nelson",
+      "lucas"
+    ]
+  },
+  {
+    "d": 45,
+    "t": "O experimento",
+    "who": [
+      "sato",
+      "nicole",
+      "diego",
+      "kauan",
+      "bianca"
+    ]
+  },
+  {
+    "d": 46,
+    "t": "Fogo na ala isolada",
+    "who": [
+      "lince",
+      "paula",
+      "kevin",
+      "sato",
+      "nicole",
+      "kauan"
+    ]
+  },
+  {
+    "d": 47,
+    "t": "Nicole reanima",
+    "who": [
+      "nicole",
+      "sato"
+    ]
+  },
+  {
+    "d": 48,
+    "t": "Velas de ignição",
+    "who": [
+      "tadeu",
+      "rosa"
+    ]
+  },
+  {
+    "d": 50,
+    "t": "Assembleia dos grupos",
+    "who": [
+      "jessica",
+      "brasa",
+      "rafa",
+      "italo",
+      "jacare"
+    ]
+  },
+  {
+    "d": 52,
+    "t": "Dois comandos no Bloqueio",
+    "who": [
+      "lince",
+      "paula",
+      "ferraz",
+      "caio"
+    ]
+  },
+  {
+    "d": 55,
+    "t": "Os Corvos descem da serra",
+    "who": [
+      "profeta",
+      "ivone",
+      "tadeu",
+      "brasa"
+    ]
+  },
+  {
+    "d": 57,
+    "t": "A viatura na fazenda",
+    "who": [
+      "lucia",
+      "douglas",
+      "ivone"
+    ]
+  },
+  {
+    "d": 58,
+    "t": "Sítio Boa Vista",
+    "who": [
+      "dito",
+      "profeta",
+      "ivone"
+    ]
+  },
+  {
+    "d": 60,
+    "t": "Horda migratória na Ponte Velha",
+    "who": [
+      "armando",
+      "neide",
+      "biel",
+      "zilda",
+      "criancas"
+    ]
+  },
+  {
+    "d": 62,
+    "t": "Depois da horda",
+    "who": [
+      "neide",
+      "cida",
+      "profeta"
+    ]
+  },
+  {
+    "d": 63,
+    "t": "Ataque ao posto da PRF",
+    "who": [
+      "lucia",
+      "douglas",
+      "profeta",
+      "jacare"
+    ]
+  },
+  {
+    "d": 66,
+    "t": "Chico vende o resto",
+    "who": [
+      "chico",
+      "rosa"
+    ]
+  },
+  {
+    "d": 68,
+    "t": "O bloco C",
+    "who": [
+      "josue",
+      "jacare",
+      "brasa"
+    ]
+  },
+  {
+    "d": 70,
+    "t": "O ônibus blindado",
+    "who": [
+      "rosa",
+      "gil",
+      "lucas",
+      "nelson",
+      "chico",
+      "tadeu"
+    ]
+  },
+  {
+    "d": 72,
+    "t": "A ala B",
+    "who": [
+      "sato",
+      "kauan"
+    ]
+  },
+  {
+    "d": 74,
+    "t": "Reanimações no hospital",
+    "who": [
+      "sato",
+      "kauan"
+    ]
+  },
+  {
+    "d": 75,
+    "t": "O galpão desperta",
+    "who": [
+      "chico"
+    ]
+  },
+  {
+    "d": 77,
+    "t": "Chico reanima",
+    "who": [
+      "chico"
+    ]
+  },
+  {
+    "d": 80,
+    "t": "Sinal da base",
+    "who": [
+      "renata",
+      "nelson",
+      "jessica",
+      "kevin"
+    ]
+  },
+  {
+    "d": 85,
+    "t": "Os Corvos",
+    "who": [
+      "profeta",
+      "dito"
+    ]
+  },
+  {
+    "d": 88,
+    "t": "A torre do 7º BIS",
+    "who": [
+      "renata"
+    ]
+  }
+]

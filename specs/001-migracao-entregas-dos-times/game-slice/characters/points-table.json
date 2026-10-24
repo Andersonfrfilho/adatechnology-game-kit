@@ -1,0 +1,48 @@
+{
+  "calibers": {
+    "7_62x51": {
+      "name": "7,62×51 (.308)",
+      "points": 75
+    },
+    "9x19": {
+      "name": "9×19 mm",
+      "points": 35
+    },
+    "12ga_00buck": {
+      "name": "12 ga 00",
+      "points": 12,
+      "pellets": 9
+    },
+    "7_62x39": {
+      "name": "7,62×39 mm",
+      "points": 55
+    }
+  },
+  "weapons": {
+    "pistola": {
+      "n": "Pistola 9×19",
+      "dmg": 35,
+      "pel": 1
+    },
+    "fuzil": {
+      "n": "Fuzil 7,62×39",
+      "dmg": 55,
+      "pel": 1
+    },
+    "escopeta": {
+      "n": "Escopeta 12 ga",
+      "dmg": 12,
+      "pel": 9
+    },
+    "cinquenta": {
+      "n": ".50 BMG",
+      "dmg": 180,
+      "pel": 1
+    },
+    "granada": {
+      "n": "Granada",
+      "dmg": 300,
+      "pel": 0
+    }
+  }
+}

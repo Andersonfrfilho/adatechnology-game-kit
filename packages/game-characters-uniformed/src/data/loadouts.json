@@ -1,0 +1,129 @@
+{
+  "army_soldier": {
+    "force": "army",
+    "name": {
+      "en": "Army soldier",
+      "pt-BR": "Soldado do Exército"
+    },
+    "weapons": [
+      "imbel_ia2",
+      "fn_fal"
+    ],
+    "weaponChoice": "one",
+    "magazines": 3,
+    "items": [
+      "helmet_combat",
+      "vest_police",
+      "field_ration",
+      "identity_tag",
+      "handheld_radio"
+    ],
+    "radioPerPair": true
+  },
+  "military_police_patrol": {
+    "force": "military_police",
+    "name": {
+      "en": "Military police patrol officer",
+      "pt-BR": "PM de patrulha"
+    },
+    "weapons": [
+      "taurus_pt100",
+      "taurus_smt9",
+      "cbc_pump_military_3_0"
+    ],
+    "weaponChoice": "one",
+    "items": [
+      "vest_police",
+      "handcuffs",
+      "handheld_radio",
+      "patrol_car_key"
+    ]
+  },
+  "riot_police": {
+    "force": "military_police",
+    "name": {
+      "en": "Riot police officer",
+      "pt-BR": "PM do Choque"
+    },
+    "weapons": [
+      "cbc_pump_military_3_0"
+    ],
+    "weaponChoice": "all",
+    "items": [
+      "ballistic_shield",
+      "helmet_riot",
+      "vest_police",
+      "tonfa",
+      "tear_gas_grenade"
+    ]
+  },
+  "tactical_operator": {
+    "force": "tactical_unit",
+    "name": {
+      "en": "Tactical escort operator (BOPE, COT, GATE)",
+      "pt-BR": "Escolta tática (BOPE, COT ou GATE)"
+    },
+    "weapons": [
+      "hk_mp5a3",
+      "taurus_t4"
+    ],
+    "weaponChoice": "one",
+    "items": [
+      "vest_tactical_iiia",
+      "helmet_combat",
+      "tactical_flashlight",
+      "handcuffs"
+    ]
+  },
+  "highway_police_officer": {
+    "force": "highway_police",
+    "name": {
+      "en": "Highway police officer",
+      "pt-BR": "Policial rodoviário"
+    },
+    "weapons": [
+      "cbc_pump_military_3_0",
+      "taurus_t4"
+    ],
+    "weaponChoice": "one",
+    "items": [
+      "vest_police",
+      "vest_high_visibility",
+      "handheld_radio",
+      "extrication_kit"
+    ]
+  },
+  "prison_officer": {
+    "force": "prison_police",
+    "name": {
+      "en": "Prison officer",
+      "pt-BR": "Policial penal"
+    },
+    "weapons": [
+      "cbc_pump_military_3_0"
+    ],
+    "weaponChoice": "all",
+    "items": [
+      "tear_gas_grenade",
+      "handcuffs"
+    ]
+  },
+  "special_forces_operator": {
+    "force": "special_forces",
+    "name": {
+      "en": "Special forces operator",
+      "pt-BR": "Operador das forças especiais"
+    },
+    "weapons": [
+      "hk416"
+    ],
+    "weaponChoice": "all",
+    "items": [
+      "night_vision_goggles",
+      "military_gps",
+      "trauma_kit",
+      "c4"
+    ],
+    "suppressed": true
+  }
+}

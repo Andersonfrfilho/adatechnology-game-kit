@@ -15,6 +15,8 @@ export interface Shot {
   caliberId: string
   /** Muzzle speed in m/s. */
   speed: number
+  /** Projectile mass in grams (one pellet for a shotgun load). */
+  mass?: number
   /** Energy at a distance in metres, with the calibre's drag. */
   energyAt(distance: number): number
   pellet: number
@@ -92,6 +94,7 @@ export const shotToHit = (shot: Shot, point: Vec3, normal?: Vec3): Hit => {
     direction: [shot.direction[0], shot.direction[1], shot.direction[2]],
     energy: shot.energyAt(distance),
     caliber: shot.caliber,
+    ...(shot.mass === undefined ? {} : { mass: shot.mass }),
     source: shot.source ?? shot.weapon,
   }
 }

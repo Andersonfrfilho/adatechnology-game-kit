@@ -41,6 +41,8 @@ export type {
 } from './destruction'
 export { IMPACT_CONTRACT, checkDestructible, checkHit } from './impact'
 export type { CheckOptions, DestructibleImpl, ImpactContract } from './impact'
+export { MISSING_BITS } from './body'
+export type { BodyRegion, BodySlot, SegmentKind } from './body'
 export { checkSpec } from './spec'
 export type { CheckSpecOptions, SpecReport } from './spec'
 export { shotToHit } from './weapons'

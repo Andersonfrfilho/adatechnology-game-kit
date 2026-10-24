@@ -44,8 +44,10 @@ O módulo de teste completo (com `area` e `attach`) está na skill `game-test-ro
 | `IMPACT_CONTRACT` | Campos obrigatórios/opcionais do `Hit` por `DamageType` |
 | `DestructibleSpec`, `PartSpec`, `Hit`, `DestructionEvent`, `ObjectState` | Dados da destruição |
 | `SurfaceLayer`, `Reinforcement`, `PartUnits`, `PartBreach`, `DamageStage`, `FragmentMark` | Parede em camadas (reboco lasca antes do núcleo), vergalhão, alvenaria por peças, brecha e estágios 0 a 3 (todos opcionais em `PartSpec`; `PartState.stage/stripped/opening`; eventos `spall`, `stage`, `expose`) |
+| `DestructibleSpec`, `PartSpec`, `Hit`, `DestructionEvent`, `ObjectState` | Dados da destruição. `Hit` ganhou `mass` (g do projétil), `cut` (0..1, quanto do golpe é gume) e `part` (parte já resolvida por um raycast de multidão); o evento `body` (`change`: `wound`, `broken`, `severed`, `destroyed`, `split`, `limp`, `crawl`, `stunned`, `killed`) e `ObjectState.body` (`alive`, `vitality`, `missing`, `limp`, `crawl`) são de corpos vivos |
+| `BodySlot`, `SegmentKind`, `BodyRegion`, `MISSING_BITS` | Vocabulário do corpo: os 8 espaços de vestir, os 11 segmentos, as 6 regiões da multidão e a máscara de partes faltando que o shader do corpo instanciado lê (valores fixos) |
 | `DestructibleImpl` | Destruição própria de um módulo (`describe`, `hit`, `state`, ...) |
-| `Shot`, `Use` | Tiro balístico e uso de arma não-balística |
+| `Shot`, `Use` | Tiro balístico (com `mass` em gramas, que `shotToHit` copia para o `Hit`) e uso de arma não-balística |
 | `ContainerSpec`, `ItemUseDef`, `LiquidId`, `FluidKind` | Fluidos |
 | `AnimationClipSpec`, `ItemAnimationContract` | Animações de item |
 | `TestableModule`, `TestableItem`, `ModuleItemFluid`, `ModuleScenario` | O que um módulo entrega à sala. `TestableItem.thumbnail?` (opcional): URL de imagem ou SVG em linha (`<svg…`) que a sala mostra no catálogo, na busca e no rótulo do item mirado; uma silhueta de uma cor, pois a sala a desenha como máscara sobre a cor do texto (os tons vão em opacidade) |

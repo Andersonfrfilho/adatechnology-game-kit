@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { CALIBERS, DEFAULT_LOADOUT, WEAPONS, createArsenal, muzzleEnergy } from '../src'
 import type { Vec3 } from '../src'
+import { shotToHit } from '@adatechnology/game-contracts'
 
 const O: Vec3 = [0, 1.5, 0]
 const D: Vec3 = [0, 0, -1]
@@ -183,6 +184,12 @@ describe('firing', () => {
     const a = createArsenal({ seed: 3 }).create('pistol_9mm').trigger(O, D, 0.016, false).shots[0].direction
     const b = createArsenal({ seed: 3 }).create('pistol_9mm').trigger(O, D, 0.016, false).shots[0].direction
     expect(a).toEqual(b)
+  })
+
+  it('a shot carries the projectile mass in grams, the pellet mass for a shotgun load', () => {
+    const pistol = createArsenal().create('pistol_9mm').trigger(O, D, 0.016, false).shots[0]
+    expect(pistol.mass).toBe(7.5)
+    expect(shotToHit(pistol, [0, 1, -5]).mass).toBe(7.5)
   })
 
   it('shot energy falls with distance (speed squared)', () => {

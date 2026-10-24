@@ -1,0 +1,8585 @@
+{
+ "schema": 1,
+ "name": "arsenal-damage-segments",
+ "seed": 1,
+ "events": [
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_head",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_head",
+    "hit": 1,
+    "text": "Cabeça · 105 de dano · crânio estourou",
+    "segmentHp": -65,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Tiro na cabeça",
+    "attached": "11111111100111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     -65,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      60,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_jaw",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_jaw",
+    "hit": 1,
+    "text": "Mandíbula · 70 de dano · arrancada",
+    "segmentHp": -58,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111110111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     -58,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_neck",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_neck",
+    "hit": 1,
+    "text": "Pescoço · 70 de dano · cabeça arrancada",
+    "segmentHp": -45,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Sem cabeça",
+    "attached": "11111111000111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     -45,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      69,
+      45,
+      1
+     ],
+     [
+      16.1,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_torso",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_torso",
+    "hit": 1,
+    "text": "Tronco · 35 de dano",
+    "segmentHp": 115,
+    "attachedSegment": true,
+    "life": 65,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     115,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_torso",
+    "hit": 2,
+    "text": "Tronco · 35 de dano",
+    "segmentHp": 80,
+    "attachedSegment": true,
+    "life": 30,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     80,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_torso",
+    "hit": 3,
+    "text": "Tronco · 35 de dano",
+    "segmentHp": 45,
+    "attachedSegment": true,
+    "life": -5,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Dano acumulado",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     45,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_pelvis",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_pelvis",
+    "hit": 1,
+    "text": "Quadril · 35 de dano",
+    "segmentHp": 55,
+    "attachedSegment": true,
+    "life": 65,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     55,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_pelvis",
+    "hit": 2,
+    "text": "Quadril · 35 de dano",
+    "segmentHp": 20,
+    "attachedSegment": true,
+    "life": 30,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     20,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_pelvis",
+    "hit": 3,
+    "text": "Quadril · 35 de dano · partido ao meio",
+    "segmentHp": -15,
+    "attachedSegment": true,
+    "life": -5,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Partido ao meio",
+    "attached": "11111110000000000",
+    "hp": [
+     -15,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      10,
+      45,
+      1
+     ],
+     [
+      3.5,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_upperArm_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_upperArm_L",
+    "hit": 1,
+    "text": "Braço · 21 de dano",
+    "segmentHp": 24,
+    "attachedSegment": true,
+    "life": 93.7,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     24,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_upperArm_L",
+    "hit": 2,
+    "text": "Braço · 21 de dano",
+    "segmentHp": 3,
+    "attachedSegment": true,
+    "life": 87.4,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     3,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_upperArm_L",
+    "hit": 3,
+    "text": "Braço · 21 de dano · arrancado",
+    "segmentHp": -18,
+    "attachedSegment": false,
+    "life": 81.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111000111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     -18,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      5.25,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_upperArm_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_upperArm_R",
+    "hit": 1,
+    "text": "Braço · 21 de dano",
+    "segmentHp": 24,
+    "attachedSegment": true,
+    "life": 93.7,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     24,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_upperArm_R",
+    "hit": 2,
+    "text": "Braço · 21 de dano",
+    "segmentHp": 3,
+    "attachedSegment": true,
+    "life": 87.4,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     3,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_upperArm_R",
+    "hit": 3,
+    "text": "Braço · 21 de dano · arrancado",
+    "segmentHp": -18,
+    "attachedSegment": false,
+    "life": 81.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111000",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     -18,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      5.25,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_forearm_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_forearm_L",
+    "hit": 1,
+    "text": "Antebraço · 21 de dano",
+    "segmentHp": 9,
+    "attachedSegment": true,
+    "life": 93.7,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     9,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_forearm_L",
+    "hit": 2,
+    "text": "Antebraço · 21 de dano · arrancado",
+    "segmentHp": -12,
+    "attachedSegment": false,
+    "life": 87.4,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111100111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     -12,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_forearm_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_forearm_R",
+    "hit": 1,
+    "text": "Antebraço · 21 de dano",
+    "segmentHp": 9,
+    "attachedSegment": true,
+    "life": 93.7,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     9,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_forearm_R",
+    "hit": 2,
+    "text": "Antebraço · 21 de dano · arrancado",
+    "segmentHp": -12,
+    "attachedSegment": false,
+    "life": 87.4,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111100",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     -12,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_hand_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_hand_L",
+    "hit": 1,
+    "text": "Mão · 21 de dano · arrancado",
+    "segmentHp": -9,
+    "attachedSegment": false,
+    "life": 93.7,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111110111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     -9,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      1.05,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_hand_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_hand_R",
+    "hit": 1,
+    "text": "Mão · 21 de dano · arrancado",
+    "segmentHp": -9,
+    "attachedSegment": false,
+    "life": 93.7,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111110",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     -9
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      1.05,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_thigh_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_thigh_L",
+    "hit": 1,
+    "text": "Coxa · 25 de dano",
+    "segmentHp": 30.5,
+    "attachedSegment": true,
+    "life": 92.65,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     30.5,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_thigh_L",
+    "hit": 2,
+    "text": "Coxa · 25 de dano",
+    "segmentHp": 6,
+    "attachedSegment": true,
+    "life": 85.3,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     6,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_thigh_L",
+    "hit": 3,
+    "text": "Coxa · 25 de dano · arrancado",
+    "segmentHp": -18.5,
+    "attachedSegment": false,
+    "life": 77.95,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "10001111111111111",
+    "hp": [
+     90,
+     -18.5,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      6.65,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_thigh_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_thigh_R",
+    "hit": 1,
+    "text": "Coxa · 25 de dano",
+    "segmentHp": 30.5,
+    "attachedSegment": true,
+    "life": 92.65,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     30.5,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_thigh_R",
+    "hit": 2,
+    "text": "Coxa · 25 de dano",
+    "segmentHp": 6,
+    "attachedSegment": true,
+    "life": 85.3,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     6,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_thigh_R",
+    "hit": 3,
+    "text": "Coxa · 25 de dano · arrancado",
+    "segmentHp": -18.5,
+    "attachedSegment": false,
+    "life": 77.95,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11110001111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     -18.5,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      6.65,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_shin_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_shin_L",
+    "hit": 1,
+    "text": "Canela · 25 de dano",
+    "segmentHp": 15.5,
+    "attachedSegment": true,
+    "life": 92.65,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     15.5,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_shin_L",
+    "hit": 2,
+    "text": "Canela · 25 de dano · arrancado",
+    "segmentHp": -9,
+    "attachedSegment": false,
+    "life": 85.3,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11001111111111111",
+    "hp": [
+     90,
+     55,
+     -9,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      9,
+      45,
+      1
+     ],
+     [
+      3.15,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_shin_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_shin_R",
+    "hit": 1,
+    "text": "Canela · 25 de dano",
+    "segmentHp": 15.5,
+    "attachedSegment": true,
+    "life": 92.65,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     15.5,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_shin_R",
+    "hit": 2,
+    "text": "Canela · 25 de dano · arrancado",
+    "segmentHp": -9,
+    "attachedSegment": false,
+    "life": 85.3,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11111001111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     -9,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      9,
+      45,
+      1
+     ],
+     [
+      3.15,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_foot_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_foot_L",
+    "hit": 1,
+    "text": "Pé · 25 de dano · arrancado · passa a mancar",
+    "segmentHp": -9.5,
+    "attachedSegment": false,
+    "life": 92.65,
+    "alive": true,
+    "state": "Mancando",
+    "limp": 1,
+    "why": "",
+    "attached": "11101111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     -9.5,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      1.05,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "pistola_foot_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "pistola_foot_R",
+    "hit": 1,
+    "text": "Pé · 25 de dano · arrancado · passa a mancar",
+    "segmentHp": -9.5,
+    "attachedSegment": false,
+    "life": 92.65,
+    "alive": true,
+    "state": "Mancando",
+    "limp": -1,
+    "why": "",
+    "attached": "11111101111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     -9.5,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      1.05,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_head",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_head",
+    "hit": 1,
+    "text": "Cabeça · 165 de dano · crânio estourou",
+    "segmentHp": -125,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Tiro na cabeça",
+    "attached": "11111111100111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     -125,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      60,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_head_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_head_point",
+    "hit": 1,
+    "text": "Cabeça · 165 de dano · crânio estourou",
+    "segmentHp": -125,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Tiro na cabeça",
+    "attached": "11111111100111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     -125,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      12,
+      10,
+      0
+     ],
+     [
+      60,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_jaw",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_jaw",
+    "hit": 1,
+    "text": "Mandíbula · 110 de dano · arrancada",
+    "segmentHp": -98,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111110111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     -98,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_jaw_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_jaw_point",
+    "hit": 1,
+    "text": "Mandíbula · 110 de dano · arrancada",
+    "segmentHp": -98,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111110111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     -98,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      2.4,
+      10,
+      0
+     ],
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_neck",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_neck",
+    "hit": 1,
+    "text": "Pescoço · 110 de dano · cabeça arrancada",
+    "segmentHp": -85,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Sem cabeça",
+    "attached": "11111111000111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     -85,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      69,
+      45,
+      1
+     ],
+     [
+      16.1,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_neck_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_neck_point",
+    "hit": 1,
+    "text": "Pescoço · 110 de dano · cabeça arrancada",
+    "segmentHp": -85,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Sem cabeça",
+    "attached": "11111111000111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     -85,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      13.8,
+      10,
+      0
+     ],
+     [
+      69,
+      45,
+      1
+     ],
+     [
+      16.1,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_torso",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_torso",
+    "hit": 1,
+    "text": "Tronco · 55 de dano",
+    "segmentHp": 95,
+    "attachedSegment": true,
+    "life": 45,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     95,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_torso",
+    "hit": 2,
+    "text": "Tronco · 55 de dano",
+    "segmentHp": 40,
+    "attachedSegment": true,
+    "life": -10,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Dano acumulado",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     40,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_torso_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_torso_point",
+    "hit": 1,
+    "text": "Tronco · 55 de dano",
+    "segmentHp": 95,
+    "attachedSegment": true,
+    "life": 45,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     95,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      10,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_torso_point",
+    "hit": 2,
+    "text": "Tronco · 55 de dano",
+    "segmentHp": 40,
+    "attachedSegment": true,
+    "life": -10,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Dano acumulado",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     40,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      10,
+      0
+     ],
+     [
+      3,
+      10,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_pelvis",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_pelvis",
+    "hit": 1,
+    "text": "Quadril · 55 de dano",
+    "segmentHp": 35,
+    "attachedSegment": true,
+    "life": 45,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     35,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_pelvis",
+    "hit": 2,
+    "text": "Quadril · 55 de dano · partido ao meio",
+    "segmentHp": -20,
+    "attachedSegment": true,
+    "life": -10,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Partido ao meio",
+    "attached": "11111110000000000",
+    "hp": [
+     -20,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      10,
+      45,
+      1
+     ],
+     [
+      3.5,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_pelvis_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_pelvis_point",
+    "hit": 1,
+    "text": "Quadril · 55 de dano",
+    "segmentHp": 35,
+    "attachedSegment": true,
+    "life": 45,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     35,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3.6,
+      10,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_pelvis_point",
+    "hit": 2,
+    "text": "Quadril · 55 de dano · partido ao meio",
+    "segmentHp": -20,
+    "attachedSegment": true,
+    "life": -10,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Partido ao meio",
+    "attached": "11111110000000000",
+    "hp": [
+     -20,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3.6,
+      10,
+      0
+     ],
+     [
+      3.6,
+      10,
+      0
+     ],
+     [
+      10,
+      45,
+      1
+     ],
+     [
+      3.5,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_upperArm_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_upperArm_L",
+    "hit": 1,
+    "text": "Braço · 33 de dano",
+    "segmentHp": 12,
+    "attachedSegment": true,
+    "life": 90.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     12,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_upperArm_L",
+    "hit": 2,
+    "text": "Braço · 33 de dano · arrancado",
+    "segmentHp": -21,
+    "attachedSegment": false,
+    "life": 80.2,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111000111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     -21,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      5.25,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_upperArm_L_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_upperArm_L_point",
+    "hit": 1,
+    "text": "Braço · 33 de dano",
+    "segmentHp": 12,
+    "attachedSegment": true,
+    "life": 90.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     12,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      4.5,
+      10,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_upperArm_L_point",
+    "hit": 2,
+    "text": "Braço · 33 de dano · arrancado",
+    "segmentHp": -21,
+    "attachedSegment": false,
+    "life": 80.2,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111000111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     -21,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      4.5,
+      10,
+      0
+     ],
+     [
+      4.5,
+      10,
+      0
+     ],
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      5.25,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_upperArm_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_upperArm_R",
+    "hit": 1,
+    "text": "Braço · 33 de dano",
+    "segmentHp": 12,
+    "attachedSegment": true,
+    "life": 90.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     12,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_upperArm_R",
+    "hit": 2,
+    "text": "Braço · 33 de dano · arrancado",
+    "segmentHp": -21,
+    "attachedSegment": false,
+    "life": 80.2,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111000",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     -21,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      5.25,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_upperArm_R_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_upperArm_R_point",
+    "hit": 1,
+    "text": "Braço · 33 de dano",
+    "segmentHp": 12,
+    "attachedSegment": true,
+    "life": 90.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     12,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      4.5,
+      10,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_upperArm_R_point",
+    "hit": 2,
+    "text": "Braço · 33 de dano · arrancado",
+    "segmentHp": -21,
+    "attachedSegment": false,
+    "life": 80.2,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111000",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     -21,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      4.5,
+      10,
+      0
+     ],
+     [
+      4.5,
+      10,
+      0
+     ],
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      5.25,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_forearm_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_forearm_L",
+    "hit": 1,
+    "text": "Antebraço · 33 de dano · arrancado",
+    "segmentHp": -3,
+    "attachedSegment": false,
+    "life": 90.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111100111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     -3,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_forearm_L_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_forearm_L_point",
+    "hit": 1,
+    "text": "Antebraço · 33 de dano · arrancado",
+    "segmentHp": -3,
+    "attachedSegment": false,
+    "life": 90.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111100111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     -3,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      2.4,
+      10,
+      0
+     ],
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_forearm_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_forearm_R",
+    "hit": 1,
+    "text": "Antebraço · 33 de dano · arrancado",
+    "segmentHp": -3,
+    "attachedSegment": false,
+    "life": 90.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111100",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     -3,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_forearm_R_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_forearm_R_point",
+    "hit": 1,
+    "text": "Antebraço · 33 de dano · arrancado",
+    "segmentHp": -3,
+    "attachedSegment": false,
+    "life": 90.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111100",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     -3,
+     12
+    ],
+    "bleeders": [
+     [
+      2.4,
+      10,
+      0
+     ],
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_hand_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_hand_L",
+    "hit": 1,
+    "text": "Mão · 33 de dano · estourou",
+    "segmentHp": -21,
+    "attachedSegment": false,
+    "life": 90.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111110111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     -21,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_hand_L_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_hand_L_point",
+    "hit": 1,
+    "text": "Mão · 33 de dano · estourou",
+    "segmentHp": -21,
+    "attachedSegment": false,
+    "life": 90.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111110111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     -21,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      0.9,
+      10,
+      0
+     ],
+     [
+      3,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_hand_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_hand_R",
+    "hit": 1,
+    "text": "Mão · 33 de dano · estourou",
+    "segmentHp": -21,
+    "attachedSegment": false,
+    "life": 90.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111110",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     -21
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_hand_R_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_hand_R_point",
+    "hit": 1,
+    "text": "Mão · 33 de dano · estourou",
+    "segmentHp": -21,
+    "attachedSegment": false,
+    "life": 90.1,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111110",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     -21
+    ],
+    "bleeders": [
+     [
+      0.9,
+      10,
+      0
+     ],
+     [
+      3,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_thigh_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_thigh_L",
+    "hit": 1,
+    "text": "Coxa · 39 de dano",
+    "segmentHp": 16.5,
+    "attachedSegment": true,
+    "life": 88.45,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     16.5,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_thigh_L",
+    "hit": 2,
+    "text": "Coxa · 39 de dano · arrancado",
+    "segmentHp": -22,
+    "attachedSegment": false,
+    "life": 76.9,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "10001111111111111",
+    "hp": [
+     90,
+     -22,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      6.65,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_thigh_L_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_thigh_L_point",
+    "hit": 1,
+    "text": "Coxa · 39 de dano",
+    "segmentHp": 16.5,
+    "attachedSegment": true,
+    "life": 88.45,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     16.5,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      5.7,
+      10,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_thigh_L_point",
+    "hit": 2,
+    "text": "Coxa · 39 de dano · arrancado",
+    "segmentHp": -22,
+    "attachedSegment": false,
+    "life": 76.9,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "10001111111111111",
+    "hp": [
+     90,
+     -22,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      5.7,
+      10,
+      0
+     ],
+     [
+      5.7,
+      10,
+      0
+     ],
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      6.65,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_thigh_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_thigh_R",
+    "hit": 1,
+    "text": "Coxa · 39 de dano",
+    "segmentHp": 16.5,
+    "attachedSegment": true,
+    "life": 88.45,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     16.5,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_thigh_R",
+    "hit": 2,
+    "text": "Coxa · 39 de dano · arrancado",
+    "segmentHp": -22,
+    "attachedSegment": false,
+    "life": 76.9,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11110001111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     -22,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      6.65,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_thigh_R_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_thigh_R_point",
+    "hit": 1,
+    "text": "Coxa · 39 de dano",
+    "segmentHp": 16.5,
+    "attachedSegment": true,
+    "life": 88.45,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     16.5,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      5.7,
+      10,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_thigh_R_point",
+    "hit": 2,
+    "text": "Coxa · 39 de dano · arrancado",
+    "segmentHp": -22,
+    "attachedSegment": false,
+    "life": 76.9,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11110001111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     -22,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      5.7,
+      10,
+      0
+     ],
+     [
+      5.7,
+      10,
+      0
+     ],
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      6.65,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_shin_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_shin_L",
+    "hit": 1,
+    "text": "Canela · 39 de dano",
+    "segmentHp": 1.5,
+    "attachedSegment": true,
+    "life": 88.45,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     1.5,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_shin_L",
+    "hit": 2,
+    "text": "Canela · 39 de dano · arrancado",
+    "segmentHp": -37,
+    "attachedSegment": false,
+    "life": 76.9,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11001111111111111",
+    "hp": [
+     90,
+     55,
+     -37,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      9,
+      45,
+      1
+     ],
+     [
+      3.15,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_shin_L_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_shin_L_point",
+    "hit": 1,
+    "text": "Canela · 39 de dano",
+    "segmentHp": 1.5,
+    "attachedSegment": true,
+    "life": 88.45,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     1.5,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      2.7,
+      10,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_shin_L_point",
+    "hit": 2,
+    "text": "Canela · 39 de dano · arrancado",
+    "segmentHp": -37,
+    "attachedSegment": false,
+    "life": 76.9,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11001111111111111",
+    "hp": [
+     90,
+     55,
+     -37,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      2.7,
+      10,
+      0
+     ],
+     [
+      2.7,
+      10,
+      0
+     ],
+     [
+      9,
+      45,
+      1
+     ],
+     [
+      3.15,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_shin_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_shin_R",
+    "hit": 1,
+    "text": "Canela · 39 de dano",
+    "segmentHp": 1.5,
+    "attachedSegment": true,
+    "life": 88.45,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     1.5,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_shin_R",
+    "hit": 2,
+    "text": "Canela · 39 de dano · arrancado",
+    "segmentHp": -37,
+    "attachedSegment": false,
+    "life": 76.9,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11111001111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     -37,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      9,
+      45,
+      1
+     ],
+     [
+      3.15,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_shin_R_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_shin_R_point",
+    "hit": 1,
+    "text": "Canela · 39 de dano",
+    "segmentHp": 1.5,
+    "attachedSegment": true,
+    "life": 88.45,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     1.5,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      2.7,
+      10,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_shin_R_point",
+    "hit": 2,
+    "text": "Canela · 39 de dano · arrancado",
+    "segmentHp": -37,
+    "attachedSegment": false,
+    "life": 76.9,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11111001111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     -37,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      2.7,
+      10,
+      0
+     ],
+     [
+      2.7,
+      10,
+      0
+     ],
+     [
+      9,
+      45,
+      1
+     ],
+     [
+      3.15,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_foot_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_foot_L",
+    "hit": 1,
+    "text": "Pé · 39 de dano · estourou · passa a mancar",
+    "segmentHp": -23.5,
+    "attachedSegment": false,
+    "life": 88.45,
+    "alive": true,
+    "state": "Mancando",
+    "limp": 1,
+    "why": "",
+    "attached": "11101111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     -23.5,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_foot_L_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_foot_L_point",
+    "hit": 1,
+    "text": "Pé · 39 de dano · estourou · passa a mancar",
+    "segmentHp": -23.5,
+    "attachedSegment": false,
+    "life": 88.45,
+    "alive": true,
+    "state": "Mancando",
+    "limp": 1,
+    "why": "",
+    "attached": "11101111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     -23.5,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      0.9,
+      10,
+      0
+     ],
+     [
+      3,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_foot_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_foot_R",
+    "hit": 1,
+    "text": "Pé · 39 de dano · estourou · passa a mancar",
+    "segmentHp": -23.5,
+    "attachedSegment": false,
+    "life": 88.45,
+    "alive": true,
+    "state": "Mancando",
+    "limp": -1,
+    "why": "",
+    "attached": "11111101111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     -23.5,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "fuzil_foot_R_point",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "fuzil_foot_R_point",
+    "hit": 1,
+    "text": "Pé · 39 de dano · estourou · passa a mancar",
+    "segmentHp": -23.5,
+    "attachedSegment": false,
+    "life": 88.45,
+    "alive": true,
+    "state": "Mancando",
+    "limp": -1,
+    "why": "",
+    "attached": "11111101111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     -23.5,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      0.9,
+      10,
+      0
+     ],
+     [
+      3,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_head",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_head",
+    "hit": 1,
+    "text": "Cabeça · 36 de dano · crânio estourou",
+    "segmentHp": -32,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Tiro na cabeça",
+    "attached": "11111111100111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     -32,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      60,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_jaw",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_jaw",
+    "hit": 1,
+    "text": "Mandíbula · 24 de dano · arrancada",
+    "segmentHp": -12,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111110111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     -12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_neck",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_neck",
+    "hit": 1,
+    "text": "Pescoço · 24 de dano · cabeça arrancada",
+    "segmentHp": -23,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Sem cabeça",
+    "attached": "11111111000111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     -23,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      69,
+      45,
+      1
+     ],
+     [
+      16.1,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_torso",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_torso",
+    "hit": 1,
+    "text": "Tronco · 12 de dano",
+    "segmentHp": 42,
+    "attachedSegment": true,
+    "life": -8,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Dano acumulado",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     42,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_pelvis",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_pelvis",
+    "hit": 1,
+    "text": "Quadril · 12 de dano · partido ao meio",
+    "segmentHp": -18,
+    "attachedSegment": true,
+    "life": -8,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Partido ao meio",
+    "attached": "11111110000000000",
+    "hp": [
+     -18,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      10,
+      45,
+      1
+     ],
+     [
+      3.5,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_upperArm_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_upperArm_L",
+    "hit": 1,
+    "text": "Braço · 7 de dano · arrancado",
+    "segmentHp": -5.4,
+    "attachedSegment": false,
+    "life": 84.88,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111000111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     -5.4,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      5.25,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_upperArm_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_upperArm_R",
+    "hit": 1,
+    "text": "Braço · 7 de dano · arrancado",
+    "segmentHp": -5.4,
+    "attachedSegment": false,
+    "life": 84.88,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111000",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     -5.4,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      5.25,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_forearm_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_forearm_L",
+    "hit": 1,
+    "text": "Antebraço · 7 de dano · arrancado",
+    "segmentHp": -6,
+    "attachedSegment": false,
+    "life": 89.2,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111100111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     -6,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_forearm_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_forearm_R",
+    "hit": 1,
+    "text": "Antebraço · 7 de dano · arrancado",
+    "segmentHp": -6,
+    "attachedSegment": false,
+    "life": 89.2,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111100",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     -6,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_hand_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_hand_L",
+    "hit": 1,
+    "text": "Mão · 7 de dano · arrancado",
+    "segmentHp": -2.4,
+    "attachedSegment": false,
+    "life": 95.68,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111110111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     -2.4,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      1.05,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_hand_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_hand_R",
+    "hit": 1,
+    "text": "Mão · 7 de dano · arrancado",
+    "segmentHp": -2.4,
+    "attachedSegment": false,
+    "life": 95.68,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111110",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     -2.4
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      1.05,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_thigh_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_thigh_L",
+    "hit": 1,
+    "text": "Coxa · 8 de dano · arrancado",
+    "segmentHp": -3.8,
+    "attachedSegment": false,
+    "life": 82.36,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "10001111111111111",
+    "hp": [
+     90,
+     -3.8,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      6.65,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_thigh_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_thigh_R",
+    "hit": 1,
+    "text": "Coxa · 8 de dano · arrancado",
+    "segmentHp": -3.8,
+    "attachedSegment": false,
+    "life": 82.36,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11110001111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     -3.8,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      6.65,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_shin_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_shin_L",
+    "hit": 1,
+    "text": "Canela · 8 de dano · arrancado",
+    "segmentHp": -2,
+    "attachedSegment": false,
+    "life": 87.4,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11001111111111111",
+    "hp": [
+     90,
+     55,
+     -2,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      9,
+      45,
+      1
+     ],
+     [
+      3.15,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_shin_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_shin_R",
+    "hit": 1,
+    "text": "Canela · 8 de dano · arrancado",
+    "segmentHp": -2,
+    "attachedSegment": false,
+    "life": 87.4,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11111001111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     -2,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      9,
+      45,
+      1
+     ],
+     [
+      3.15,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_foot_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_foot_L",
+    "hit": 1,
+    "text": "Pé · 8 de dano · arrancado · passa a mancar",
+    "segmentHp": -1.8,
+    "attachedSegment": false,
+    "life": 94.96,
+    "alive": true,
+    "state": "Mancando",
+    "limp": 1,
+    "why": "",
+    "attached": "11101111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     -1.8,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      1.05,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "escopeta_foot_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "escopeta_foot_R",
+    "hit": 1,
+    "text": "Pé · 8 de dano · arrancado · passa a mancar",
+    "segmentHp": -1.8,
+    "attachedSegment": false,
+    "life": 94.96,
+    "alive": true,
+    "state": "Mancando",
+    "limp": -1,
+    "why": "",
+    "attached": "11111101111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     -1.8,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      1.05,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_head",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_head",
+    "hit": 1,
+    "text": "Cabeça · 540 de dano · crânio estourou",
+    "segmentHp": -500,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Tiro na cabeça",
+    "attached": "11111111100111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     -500,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      60,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_jaw",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_jaw",
+    "hit": 1,
+    "text": "Mandíbula · 360 de dano · arrancada",
+    "segmentHp": -348,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111110111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     -348,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_neck",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_neck",
+    "hit": 1,
+    "text": "Pescoço · 360 de dano · cabeça arrancada",
+    "segmentHp": -335,
+    "attachedSegment": false,
+    "life": 100,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Sem cabeça",
+    "attached": "11111111000111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     -335,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      69,
+      45,
+      1
+     ],
+     [
+      16.1,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_torso",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_torso",
+    "hit": 1,
+    "text": "Tronco · 180 de dano · partido ao meio",
+    "segmentHp": -30,
+    "attachedSegment": false,
+    "life": -80,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Partido ao meio",
+    "attached": "11111110000000000",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     -30,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      10,
+      45,
+      1
+     ],
+     [
+      3.5,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_pelvis",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_pelvis",
+    "hit": 1,
+    "text": "Quadril · 180 de dano · partido ao meio",
+    "segmentHp": -90,
+    "attachedSegment": true,
+    "life": -80,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Partido ao meio",
+    "attached": "11111110000000000",
+    "hp": [
+     -90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      10,
+      45,
+      1
+     ],
+     [
+      3.5,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_upperArm_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_upperArm_L",
+    "hit": 1,
+    "text": "Braço · 108 de dano · estourou",
+    "segmentHp": -63,
+    "attachedSegment": false,
+    "life": 67.6,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111000111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     -63,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      15,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_upperArm_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_upperArm_R",
+    "hit": 1,
+    "text": "Braço · 108 de dano · estourou",
+    "segmentHp": -63,
+    "attachedSegment": false,
+    "life": 67.6,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111000",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     -63,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      15,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_forearm_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_forearm_L",
+    "hit": 1,
+    "text": "Antebraço · 108 de dano · estourou",
+    "segmentHp": -78,
+    "attachedSegment": false,
+    "life": 67.6,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111100111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     -78,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_forearm_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_forearm_R",
+    "hit": 1,
+    "text": "Antebraço · 108 de dano · estourou",
+    "segmentHp": -78,
+    "attachedSegment": false,
+    "life": 67.6,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111100",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     -78,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_hand_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_hand_L",
+    "hit": 1,
+    "text": "Mão · 108 de dano · estourou",
+    "segmentHp": -96,
+    "attachedSegment": false,
+    "life": 67.6,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111110111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     -96,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_hand_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_hand_R",
+    "hit": 1,
+    "text": "Mão · 108 de dano · estourou",
+    "segmentHp": -96,
+    "attachedSegment": false,
+    "life": 67.6,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111110",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     -96
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_thigh_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_thigh_L",
+    "hit": 1,
+    "text": "Coxa · 126 de dano · estourou",
+    "segmentHp": -71,
+    "attachedSegment": false,
+    "life": 62.2,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "10001111111111111",
+    "hp": [
+     90,
+     -71,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      19,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_thigh_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_thigh_R",
+    "hit": 1,
+    "text": "Coxa · 126 de dano · estourou",
+    "segmentHp": -71,
+    "attachedSegment": false,
+    "life": 62.2,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11110001111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     -71,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      19,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_shin_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_shin_L",
+    "hit": 1,
+    "text": "Canela · 126 de dano · estourou",
+    "segmentHp": -86,
+    "attachedSegment": false,
+    "life": 62.2,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11001111111111111",
+    "hp": [
+     90,
+     55,
+     -86,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      9,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_shin_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_shin_R",
+    "hit": 1,
+    "text": "Canela · 126 de dano · estourou",
+    "segmentHp": -86,
+    "attachedSegment": false,
+    "life": 62.2,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 0,
+    "why": "",
+    "attached": "11111001111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     -86,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      9,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_foot_L",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_foot_L",
+    "hit": 1,
+    "text": "Pé · 126 de dano · estourou · passa a mancar",
+    "segmentHp": -111,
+    "attachedSegment": false,
+    "life": 62.2,
+    "alive": true,
+    "state": "Mancando",
+    "limp": 1,
+    "why": "",
+    "attached": "11101111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     -111,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "start",
+   "data": {
+    "scenario": "cinquenta_foot_R",
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "hit",
+   "data": {
+    "scenario": "cinquenta_foot_R",
+    "hit": 1,
+    "text": "Pé · 126 de dano · estourou · passa a mancar",
+    "segmentHp": -111,
+    "attachedSegment": false,
+    "life": 62.2,
+    "alive": true,
+    "state": "Mancando",
+    "limp": -1,
+    "why": "",
+    "attached": "11111101111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     -111,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "grenade",
+   "data": {
+    "scenario": "grenade_pelvis_0.5",
+    "distance": 0.5,
+    "life": -229.58,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Partido ao meio",
+    "attached": "10000000000000000",
+    "hp": [
+     -116.25,
+     -169.1609,
+     40,
+     15,
+     -131.9389,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      10,
+      45,
+      1
+     ],
+     [
+      3.5,
+      15,
+      1
+     ],
+     [
+      19,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "grenade",
+   "data": {
+    "scenario": "grenade_head_0.5",
+    "distance": 0.5,
+    "life": -383.9902,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Explosão",
+    "attached": "10000000000000000",
+    "hp": [
+     -47.5894,
+     -83.0022,
+     40,
+     15,
+     -62.5869,
+     40,
+     15,
+     -0.6459,
+     -179.7249,
+     40,
+     12,
+     -200.2064,
+     30,
+     12,
+     -106.7208,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      60,
+      45,
+      1
+     ],
+     [
+      69,
+      45,
+      1
+     ],
+     [
+      16.1,
+      15,
+      1
+     ],
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      10,
+      45,
+      1
+     ],
+     [
+      3.5,
+      15,
+      1
+     ],
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      19,
+      45,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "grenade",
+   "data": {
+    "scenario": "grenade_foot_0.5",
+    "distance": 0.5,
+    "life": -335.2002,
+    "alive": false,
+    "state": "Morto",
+    "limp": 1,
+    "why": "Dano acumulado",
+    "attached": "10000000000000000",
+    "hp": [
+     -25.6235,
+     -78.0236,
+     -160.9311,
+     -215.5339,
+     -61.9532,
+     -137.5638,
+     -191.25,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      9,
+      45,
+      1
+     ],
+     [
+      9,
+      45,
+      1
+     ],
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      10,
+      45,
+      1
+     ],
+     [
+      3.5,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "grenade",
+   "data": {
+    "scenario": "grenade_pelvis_1",
+    "distance": 1,
+    "life": -160.5531,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Dano acumulado",
+    "attached": "10000000000000000",
+    "hp": [
+     -22.5,
+     -75.8754,
+     40,
+     15,
+     -38.4434,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     -86.1107,
+     -108.0809,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      10,
+      45,
+      1
+     ],
+     [
+      3.5,
+      15,
+      1
+     ],
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      6.65,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "grenade",
+   "data": {
+    "scenario": "grenade_head_1",
+    "distance": 1,
+    "life": -153.4018,
+    "alive": false,
+    "state": "Morto",
+    "limp": 0,
+    "why": "Explosão",
+    "attached": "10001111000000000",
+    "hp": [
+     19.6615,
+     -23.4264,
+     40,
+     15,
+     6.3112,
+     40,
+     15,
+     70.6215,
+     -86.7328,
+     40,
+     12,
+     -114.013,
+     30,
+     12,
+     -14.4879,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      60,
+      45,
+      1
+     ],
+     [
+      69,
+      45,
+      1
+     ],
+     [
+      16.1,
+      15,
+      1
+     ],
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      6.65,
+      15,
+      1
+     ],
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      5.25,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "grenade",
+   "data": {
+    "scenario": "grenade_foot_1",
+    "distance": 1,
+    "life": -221.055,
+    "alive": false,
+    "state": "Morto",
+    "limp": 1,
+    "why": "Dano acumulado",
+    "attached": "10000001111100111",
+    "hp": [
+     28.4245,
+     -27.7051,
+     -89.2646,
+     -129.5604,
+     -0.3098,
+     -56.6338,
+     -97.5,
+     100.5988,
+     25,
+     40,
+     12,
+     35.0351,
+     -4.1368,
+     -23.1859,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      9,
+      45,
+      1
+     ],
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      9,
+      45,
+      1
+     ],
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      6.65,
+      15,
+      1
+     ],
+     [
+      19,
+      45,
+      1
+     ],
+     [
+      6.65,
+      15,
+      1
+     ],
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "grenade",
+   "data": {
+    "scenario": "grenade_pelvis_1.5",
+    "distance": 1.5,
+    "life": 13.6071,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111000111",
+    "hp": [
+     71.25,
+     17.741,
+     17.477,
+     15,
+     55,
+     40,
+     15,
+     131.7558,
+     25,
+     40,
+     12,
+     -4.0484,
+     -25.832,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ],
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      5.25,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "grenade",
+   "data": {
+    "scenario": "grenade_head_1.5",
+    "distance": 1.5,
+    "life": 79.9267,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111110000111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     6.762,
+     21.25,
+     -6.6734,
+     -21.911,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      15,
+      45,
+      1
+     ],
+     [
+      5.25,
+      15,
+      1
+     ],
+     [
+      8,
+      45,
+      1
+     ],
+     [
+      2.8,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "grenade",
+   "data": {
+    "scenario": "grenade_foot_1.5",
+    "distance": 1.5,
+    "life": 62.6406,
+    "alive": true,
+    "state": "Rastejador",
+    "limp": 1,
+    "why": "",
+    "attached": "11001101111111111",
+    "hp": [
+     90,
+     45.0536,
+     -2.9696,
+     -37.8653,
+     55,
+     40,
+     -3.75,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": [
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      9,
+      45,
+      1
+     ],
+     [
+      3.15,
+      15,
+      1
+     ],
+     [
+      3,
+      45,
+      1
+     ],
+     [
+      1.05,
+      15,
+      1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "grenade",
+   "data": {
+    "scenario": "grenade_pelvis_2",
+    "distance": 2,
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "grenade",
+   "data": {
+    "scenario": "grenade_head_2",
+    "distance": 2,
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  },
+  {
+   "type": "grenade",
+   "data": {
+    "scenario": "grenade_foot_2",
+    "distance": 2,
+    "life": 100,
+    "alive": true,
+    "state": "Em pé",
+    "limp": 0,
+    "why": "",
+    "attached": "11111111111111111",
+    "hp": [
+     90,
+     55,
+     40,
+     15,
+     55,
+     40,
+     15,
+     150,
+     25,
+     40,
+     12,
+     45,
+     30,
+     12,
+     45,
+     30,
+     12
+    ],
+    "bleeders": []
+   }
+  }
+ ],
+ "scenes": {}
+}
