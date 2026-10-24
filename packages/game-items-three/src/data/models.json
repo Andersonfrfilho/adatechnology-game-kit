@@ -1008,5 +1008,15 @@
       1.6
     ],
     "scale": 0.1
+  },
+  {
+    "id": "duct_tape",
+    "teamId": "silver_tape",
+    "teamBox": [
+      1,
+      0.502,
+      1
+    ],
+    "scale": 0.1
   }
 ]
