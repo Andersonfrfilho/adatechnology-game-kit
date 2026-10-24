@@ -18,6 +18,10 @@ export const TOOL_CLIP = {
   MODE: 'mode',
   /** A throwable with the pin out, held until it is thrown. */
   COOK: 'cook',
+  /** The stock folds, unfolds, slides in or out (variants `fold`, `unfold`, `collapse`, `extend`). */
+  STOCK: 'stock',
+  /** A light or a laser is switched (variants `on`, `off`). */
+  TOGGLE: 'toggle',
 } as const
 export type ToolClipId = (typeof TOOL_CLIP)[keyof typeof TOOL_CLIP]
 
@@ -28,6 +32,12 @@ export type ToolAnimationStep =
   | { readonly type: 'sync'; readonly stage: string }
   /** The rule says the phase is over: the clip jumps to its end if it is still running. */
   | { readonly type: 'finish'; readonly clip: ToolClipId }
+
+const stockVariant = (event: Extract<HostEvent, { type: 'stock' }>): string => {
+  const isFolding = event.kind === undefined ? false : event.kind.includes('fold')
+  if (event.state === 'collapsed') return isFolding ? 'fold' : 'collapse'
+  return isFolding ? 'unfold' : 'extend'
+}
 
 /** The move a host event asks of the tool in hand, or null when it has no motion. */
 export const toolAnimationStep = (event: HostEvent): ToolAnimationStep | null => {
@@ -62,6 +72,10 @@ export const toolAnimationStep = (event: HostEvent): ToolAnimationStep | null =>
     case 'cook':
       if (event.phase === 'start') return { type: 'play', clip: TOOL_CLIP.COOK, duration: event.fuse }
       return { type: 'finish', clip: TOOL_CLIP.COOK }
+    case 'stock':
+      return { type: 'play', clip: TOOL_CLIP.STOCK, variant: stockVariant(event), ...(event.duration === undefined ? {} : { duration: event.duration }) }
+    case 'toggle':
+      return { type: 'play', clip: TOOL_CLIP.TOGGLE, variant: event.on ? 'on' : 'off' }
     default:
       return null
   }

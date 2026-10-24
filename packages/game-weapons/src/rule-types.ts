@@ -1,3 +1,4 @@
+import type { AttachmentId, MountKind, StockDef, StockState } from './attachment-types'
 import type { ExplosiveTripwire } from './explosive-types'
 import type { CaseType, FireMode, WeaponDef } from './types'
 
@@ -101,7 +102,7 @@ export interface ReloadStage {
 /** Events a weapon emits for a host to animate and play sounds; `at` is the weapon clock in seconds. */
 export type WeaponEvent =
   | { type: 'draw'; phase: 'start' | 'end'; at: number }
-  | { type: 'shot'; shots: number; rounds: number; mode: FireMode; at: number }
+  | { type: 'shot'; shots: number; rounds: number; mode: FireMode; at: number; suppressed?: boolean }
   | { type: 'misfire'; at: number }
   | { type: 'cycle'; phase: 'start' | 'end'; at: number }
   | { type: 'reload'; phase: 'start' | 'end'; kind: ReloadKind; at: number }
@@ -114,3 +115,11 @@ export type WeaponEvent =
   | { type: 'safety'; on: boolean; at: number }
   /** Cooking a throwable: `start` pulls the pin, `throw` releases it with `fuse` seconds left, `burst` is the fuse running out while held (`fuse` 0). */
   | { type: 'cook'; phase: 'start' | 'throw' | 'burst'; fuse: number; at: number }
+  /** An accessory goes on (`fit`), comes off (`remove`) or breaks (`break`, a home-made suppressor). `mount` is where it was. */
+  | { type: 'attachment'; action: 'fit' | 'remove' | 'break'; id: AttachmentId; mount: MountKind; at: number }
+  /** A light or a laser is turned on or off. */
+  | { type: 'toggle'; id: AttachmentId; on: boolean; at: number }
+  /** The stock is folded or slid in (`collapsed`) or opened (`extended`). */
+  | { type: 'stock'; state: StockState; kind: StockDef['kind']; at: number }
+  /** The weapon in the hand changes between the rifle and the launcher under its barrel. */
+  | { type: 'underbarrel'; on: boolean; at: number }

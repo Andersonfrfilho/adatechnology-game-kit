@@ -12,6 +12,7 @@
 
 import type { Shot, Use, Vec3 } from '@adatechnology/game-contracts'
 
+import type { FittedAttachment, MountDef, StockDef } from './attachment-types'
 import type { ExplosiveBody } from './explosive-body'
 import type { ExplosiveDef, ExplosiveId } from './explosive-types'
 import type { WeaponsStrings } from './locale'
@@ -219,6 +220,12 @@ export interface WeaponDef {
   archetype?: WeaponId
   /** The weapon this one is a variant of. */
   variantOf?: WeaponId
+  /** The places an accessory can go on this weapon. */
+  mounts?: readonly MountDef[]
+  /** The accessories the weapon comes with; their effects are already in the numbers of `action`. */
+  fitted?: readonly FittedAttachment[]
+  /** What the stock does (fold, retract); absent: a fixed stock or none. */
+  stock?: StockDef
   sources?: readonly DataSource[]
 }
 
@@ -233,6 +240,8 @@ export interface TriggerResult {
   recoil: [number, number]
   /** Audible radius of what happened, metres (0 when nothing). */
   noise: number
+  /** True when a suppressor was on for the shots of this call (the host passes it to the shot sound). */
+  suppressed?: boolean
   /** Cartridges spent by this call: a shotgun shell is one, a burst is several. */
   rounds: number
   /** Seconds after the start of the call at which each round left the barrel. */
@@ -245,7 +254,7 @@ export type ReloadRequest = 'auto' | 'full' | 'one_by_one'
 
 /** What the weapon is busy with right now, and between which seconds of its own clock. */
 export interface WeaponPhase {
-  readonly id: 'draw' | 'cycle' | 'reload' | 'clear' | 'mode'
+  readonly id: 'draw' | 'cycle' | 'reload' | 'clear' | 'mode' | 'fit' | 'stock' | 'switch'
   readonly start: number
   readonly end: number
 }
@@ -369,5 +378,6 @@ export interface Arsenal {
   list(category?: WeaponCategory): WeaponDef[]
 }
 
+export type * from './attachment-types'
 export type * from './explosive-types'
 export type * from './rule-types'

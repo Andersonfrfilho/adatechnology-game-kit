@@ -42,6 +42,14 @@ export const toHostEvent = (weapon: string, event: WeaponEvent, options: HostEve
       return { type: 'safety', weapon, on: event.on }
     case 'cook':
       return { type: 'cook', weapon, phase: event.phase, fuse: event.fuse }
+    case 'attachment':
+      return { type: 'attachment', weapon, action: event.action, attachment: event.id, mount: event.mount, ...(event.action === 'break' ? {} : durationOf(phase, 'fit')) }
+    case 'toggle':
+      return { type: 'toggle', weapon, attachment: event.id, on: event.on }
+    case 'stock':
+      return { type: 'stock', weapon, state: event.state, kind: event.kind, ...durationOf(phase, 'stock') }
+    case 'underbarrel':
+      return { type: 'underbarrel', weapon, on: event.on, ...durationOf(phase, 'switch') }
     default:
       return null
   }

@@ -11,6 +11,11 @@ describe('toHostEvent', () => {
     expect(toHostEvent('glock_17', { type: 'clear', fault: 'stovepipe', phase: 'start', at: 0 })).toEqual({ type: 'clear', weapon: 'glock_17', fault: 'stovepipe', phase: 'start' })
     expect(toHostEvent('glock_17', { type: 'safety', on: true, at: 0 })).toEqual({ type: 'safety', weapon: 'glock_17', on: true })
     expect(toHostEvent('glock_17', { type: 'empty', at: 0 })).toEqual({ type: 'empty', weapon: 'glock_17' })
+    expect(toHostEvent('colt_m4a1', { type: 'attachment', action: 'fit', id: 'suppressor', mount: 'muzzle', at: 0 }, { phase: { id: 'fit', start: 0, end: 15 } })).toEqual({ type: 'attachment', weapon: 'colt_m4a1', action: 'fit', attachment: 'suppressor', mount: 'muzzle', duration: 15 })
+    expect(toHostEvent('colt_m4a1', { type: 'attachment', action: 'break', id: 'oil_filter_suppressor', mount: 'muzzle', at: 0 })).toEqual({ type: 'attachment', weapon: 'colt_m4a1', action: 'break', attachment: 'oil_filter_suppressor', mount: 'muzzle' })
+    expect(toHostEvent('colt_m4a1', { type: 'toggle', id: 'weapon_light', on: true, at: 0 })).toEqual({ type: 'toggle', weapon: 'colt_m4a1', attachment: 'weapon_light', on: true })
+    expect(toHostEvent('colt_m4a1', { type: 'stock', state: 'collapsed', kind: 'retract', at: 0 }, { phase: { id: 'stock', start: 0, end: 0.6 } })).toEqual({ type: 'stock', weapon: 'colt_m4a1', state: 'collapsed', kind: 'retract', duration: 0.6 })
+    expect(toHostEvent('colt_m4a1', { type: 'underbarrel', on: true, at: 0 })).toEqual({ type: 'underbarrel', weapon: 'colt_m4a1', on: true })
     expect(toHostEvent('glock_17', { type: 'mode', mode: 'auto', at: 0 })).toEqual({ type: 'mode', weapon: 'glock_17', mode: 'auto' })
   })
 
