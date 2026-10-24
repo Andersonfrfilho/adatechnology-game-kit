@@ -88,7 +88,7 @@ for 3 mm glass), so a 9 mm shatters a window pane in one shot while a 5 cm block
 ## Fire, melting and leaks
 
 `update(dt)` advances everything that is hot. Burning parts consume fuel (`burnRate * surface`), lose hit points, char and finally turn to ashes
-(`fuelFraction >= 0.8`) or stay charred. Heat flows through closed joints by conductivity and to parts of other objects within `fireSpread`. Heat
+(`fuelFraction >= 0.8`) or stay charred. Heat flows through closed joints by conductivity and to parts of other objects within `fireSpread`. With `blastFrontSpeed` (m/s, 340 is the speed of sound; default off) the glass an explosion reaches breaks `distance / speed` seconds later, in `update`, instead of on the spot. Heat
 only moves towards a source temperature, so a wood fire (800 °C) never melts steel (1450 °C) but melts aluminium and plastic, and a 3000 °C torch
 melts anything. Melting emits `melt` and `drip`; a melted part is lost and its joints open. Pressurized gas that leaks near fire burns (or explodes
 when the part has `explodes`). `contains` parts leak through punctures: the `leak` event carries the hole's world point, the outward normal as

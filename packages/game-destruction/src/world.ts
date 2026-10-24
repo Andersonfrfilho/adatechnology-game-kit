@@ -146,6 +146,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const listeners = new Map<string, Set<(e: DestructionEvent) => void>>()
   let cur: DestructionEvent[] = []
   const blasts: Blast[] = []
+  /** Glass the blast front has not reached yet: the damage lands when it does (`blastFrontSpeed`). */
+  const frontQueue: Array<{ o: ObjRT; p: PartRT; due: number; amount: number; fragEnergy: number; point: Vec3; src?: string }> = []
+  const blastFrontSpeed = options.blastFrontSpeed ?? 0
   /** Explosive parts that were primed and wait for their delay. */
   const primed = new Map<PartRT, ObjRT>()
   let orderCounter = 0
@@ -723,7 +726,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     emit({ ...base(o, src), type: 'fracture', part: p.spec.id, style, fragments, point: hitW })
     debris(o, p, p.mat.breakDebris, c, [0, 1, 0], clamp(Math.round(Math.cbrt(partVolume(p.spec.shape)) * 30), 3, 20), 2, src)
     if (ex) {
-      emit({ ...base(o, src), type: 'explode', part: p.spec.id, point: c, energy: ex.energy, radius: ex.radius })
+      emit({ ...base(o, src), type: 'explode', part: p.spec.id, point: c, energy: ex.energy, radius: ex.radius, ...(ex.effect !== undefined ? { effect: ex.effect } : {}) })
       blasts.push({ point: c, energy: ex.energy, radius: ex.radius, source: src })
     }
     partLost(o, p, src)
@@ -873,7 +876,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         }
       }
       wearJoints(o, p, Ein * 0.5, undefined, 0, src)
-      res.damage += applyDamage(o, p, Ein * DMG_PER_J * (mat.damageScale?.explosive ?? 1), 'explosive', point, null, Ein * 0.3, 40, src)
+      const amount = Ein * DMG_PER_J * (mat.damageScale?.explosive ?? 1)
+      if (blastFrontSpeed > 0 && dist > 0 && mat.tags?.includes('glass')) {
+        frontQueue.push({ o, p, due: time + dist / blastFrontSpeed, amount, fragEnergy: Ein * 0.3, point, ...(src !== undefined ? { src } : {}) })
+        continue
+      }
+      res.damage += applyDamage(o, p, amount, 'explosive', point, null, Ein * 0.3, 40, src)
     }
     res.events = cur.slice(start)
     return res
@@ -1224,6 +1232,17 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     time = end
   }
 
+  /** Lands the damage of the glass the blast front has reached by `time`, the nearest first. */
+  const releaseFront = () => {
+    if (frontQueue.length === 0) return
+    frontQueue.sort((a, b) => a.due - b.due)
+    while (frontQueue.length > 0 && frontQueue[0]!.due <= time) {
+      const hit = frontQueue.shift()!
+      if (objects.get(hit.o.id) !== hit.o) continue
+      applyDamage(hit.o, hit.p, hit.amount, 'explosive', hit.point, null, hit.fragEnergy, 40, hit.src)
+    }
+  }
+
   /** Collapse events are produced after the whole operation: make sure the result of the operation carries them. */
   const withCollapses = (r: { value: HitResult[]; events: DestructionEvent[] }): HitResult[] => {
     const last = r.value[r.value.length - 1]
@@ -1480,6 +1499,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         for (const o of [...objects.values()]) if (o.active) stepObject(o, dt, sources)
         if (sources.length) spread(sources, dt)
         detonatePrimed(time)
+        releaseFront()
         for (const im of [...impls.values()]) {
           if (!im.impl.update) continue
           for (const e of im.impl.update(dt) ?? []) emit(e.time === undefined ? { ...e, time } : e)

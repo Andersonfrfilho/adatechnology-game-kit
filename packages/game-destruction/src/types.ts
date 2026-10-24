@@ -153,6 +153,11 @@ export interface DestructionOptions {
   maxHoles?: number
   /** Distance at which a burning part heats parts of other objects, in metres (default 0.6). */
   fireSpread?: number
+  /**
+   * Speed of the blast front in m/s. A glass part at distance `d` from an explosion breaks `d / blastFrontSpeed` seconds later, in `update`
+   * (the speed of sound is 340). Default off: every part takes the blast at once.
+   */
+  blastFrontSpeed?: number
 }
 
 export interface SizeStructureOptions {
