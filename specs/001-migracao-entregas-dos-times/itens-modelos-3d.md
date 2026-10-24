@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **114 de 257 itens têm modelo 3D; faltam 143.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **115 de 257 itens têm modelo 3D; faltam 142.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **114** | **143** |
+| **Total** | **115** | **142** |
 
 ## Comida (36 de 36)
 
@@ -114,7 +114,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Termômetro (kit) | `termometro` | `thermometer` | 0,02 kg | comum | 120 x 20 x 30 mm |
 | [x] | Álcool 70% (500 ml) (kit) | `alcool70` | `alcohol_70` | 0,5 kg | comum | 70 x 200 x 50 mm |
 
-## Ferramentas (26 de 30)
+## Ferramentas (27 de 30)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -144,7 +144,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Parafusadeira a bateria (kit) | `parafusadeira` | `cordless_drill` | 1,5 kg | incomum | 220 x 200 x 70 mm |
 | [x] | Pederneira (kit) | `pederneira` | `flint_striker` | 0,08 kg | raro | 110 x 20 x 15 mm |
 | [x] | Pedra de amolar (kit) | `amolador` | `sharpening_stone` | 0,3 kg | incomum | 200 x 50 x 25 mm |
-| [ ] | Pá | `pa` | `shovel` | 2,0 kg | comum | 1,1 x 0,07 x 0,22 m |
+| [x] | Pá (kit) | `pa` | `shovel` | 2,0 kg | comum | 1,1 x 0,07 x 0,22 m |
 | [ ] | Serra de arco | `serra_arco` | `hacksaw` | 0,4 kg | incomum | 420 x 30 x 120 mm |
 | [ ] | Serrote | `serrote` | `handsaw` | 0,5 kg | comum | 500 x 35 x 130 mm |
 | [ ] | Tesoura | `tesoura` | `scissors` | 0,1 kg | comum | 180 x 15 x 70 mm |
