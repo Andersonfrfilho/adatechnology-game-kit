@@ -70,3 +70,13 @@ export function buildCasing(kit: ModelKit, dims: CartridgeDims, shape: Cartridge
   } else cylinderX(group, radius, length, M.brass, 0, 0, 0, 12)
   return { group, radius, length }
 }
+
+/** A live round in metres, lying along x with the base at the origin: what is loaded into a weapon and what a clear throws out. */
+export function buildRound(kit: ModelKit, dims: CartridgeDims, shape: CartridgeShape): { group: THREE.Group; radius: number } {
+  const group = kit.group()
+  const cartridge = buildCartridge(kit, dims, shape)
+  cartridge.scale.setScalar(0.001)
+  cartridge.rotation.z = -Math.PI / 2
+  group.add(cartridge)
+  return { group, radius: dims.caseDiameter / 2000 }
+}

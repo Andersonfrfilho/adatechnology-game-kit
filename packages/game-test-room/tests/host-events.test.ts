@@ -29,3 +29,9 @@ describe('toHostEvent', () => {
     expect(toHostEvent('glock_17', { type: 'draw', phase: 'end', at: 0.35 })).toBeNull()
   })
 })
+
+describe('toHostEvent: launchers', () => {
+  it('a launcher spends a round and throws one projectile, which the weapon counts as none: the host hears one', () => {
+    expect(toHostEvent('rpg_7', { type: 'shot', shots: 0, rounds: 1, mode: 'single', at: 0 })).toMatchObject({ type: 'shot', shots: 1, rounds: 1 })
+  })
+})

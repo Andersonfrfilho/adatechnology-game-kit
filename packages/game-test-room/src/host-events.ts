@@ -9,7 +9,7 @@ export interface HostEventOptions {
   phase?: WeaponPhase | null
 }
 
-const durationOf = (phase: WeaponPhase | null | undefined, id: WeaponPhase['id']): { duration?: number } => (phase?.id === id ? { duration: phase.end - phase.start } : {})
+const durationOf = (phase: WeaponPhase | null | undefined, id: WeaponPhase['id']): { duration?: number } => (phase?.id === id ? { duration: Math.round((phase.end - phase.start) * 1e6) / 1e6 } : {})
 
 /** What the host tells a module about a weapon event: the whole cycle, with the seconds the rule gave each phase. */
 export const toHostEvent = (weapon: string, event: WeaponEvent, options: HostEventOptions = {}): HostEvent | null => {
@@ -17,8 +17,9 @@ export const toHostEvent = (weapon: string, event: WeaponEvent, options: HostEve
   switch (event.type) {
     case 'draw':
       return event.phase === 'start' ? { type: 'tool', weapon, ...durationOf(phase, 'draw') } : null
+    // a launcher spends a round and throws one projectile: the weapon counts none because it is a throw, a host counts the one that leaves
     case 'shot':
-      return { type: 'shot', weapon, shots: event.shots, recoil, rounds: event.rounds, mode: event.mode }
+      return { type: 'shot', weapon, shots: Math.max(1, event.shots), recoil, rounds: event.rounds, mode: event.mode }
     case 'misfire':
       return { type: 'shot', weapon, shots: 0, recoil: NO_RECOIL, rounds: 1 }
     case 'reload':

@@ -7,6 +7,7 @@ import type { ModelKit } from './kit'
 import { buildLauncher } from './launcher'
 import { buildM2 } from './m2'
 import { buildP90 } from './p90'
+import { partRegistry } from './part-registry'
 import { buildPistol } from './pistol'
 import { buildRevolver } from './revolver'
 import { buildRifle } from './rifle'
@@ -45,15 +46,8 @@ const BUILDERS: Record<ModelEntry['builder'], (kit: ModelKit, options: ModelOpti
   launcher: buildLauncher,
 }
 
-const PART_NAMES = ['slide', 'bolt', 'boltHandle', 'mag', 'trigger', 'hammer', 'lever', 'pump', 'belt', 'cover', 'crane', 'cylinder', 'barrels', 'safety', 'muzzle', 'eject', 'loadPort', 'topLoad', 'rear', 'round', 'gauge'] as const
-
 const nameParts = (parts: ModelParts): void => {
-  for (const key of PART_NAMES) {
-    const part = parts[key]
-    if (part) part.name = key
-  }
-  parts.breech?.forEach((part, index) => (part.name = `breech_${index}`))
-  parts.chambers?.forEach((part, index) => (part.name = `chamber_${index}`))
+  for (const [name, part] of partRegistry(parts)) part.name = name
 }
 
 /** Stretches the model along x to the real length of the weapon (the page's `fitLength`) and puts its rear at the origin. */

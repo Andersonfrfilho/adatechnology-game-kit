@@ -55,8 +55,8 @@ export const EXAMPLES = [
   {
     name: 'weapons-test-area',
     title: 'Área de armas',
-    summary: 'Todas as 38 armas e ferramentas do arsenal em balcões, alvos de aço, compensado e concreto, e a arma na mão: coice, cápsula saindo a cada tiro, carregador caindo na recarga e o som de cada calibre. Vem do pacote game-weapons-three, carregado na sala de testes pelo contrato de módulo.',
-    controls: 'Mire numa arma e aperte H para equipar · clique atira · R recarrega · E pega',
+    summary: 'As 117 armas e ferramentas do arsenal em balcões (as 78 da Galeria 3D do Arsenal com o modelo real), alvos de aço, compensado e concreto, e a arma na mão: coice, rajada, ciclo do ferrolho e da corrediça, pane e destravar, trava, as sete recargas, cápsula e cartucho de cada calibre e o som de cada tiro. Vem do pacote game-weapons-three, carregado na sala de testes pelo contrato de módulo.',
+    controls: 'Mire numa arma e aperte H para equipar · clique atira · R recarrega · Q muda o modo (rajada) · X destrava a pane · B liga a trava · E pega',
     url: 'weapons-test-area/',
     ready: 'window.__testRoom && window.__weaponsReport',
     setup: null,

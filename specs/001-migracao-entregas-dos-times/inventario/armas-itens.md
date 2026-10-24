@@ -389,3 +389,33 @@ Atualizado em 2026-10-23. O que do inventário acima já entrou, e onde. O resta
 | Acessórios, supressor, durabilidade 0-100 (D13) | Não; o supressor é a sobrescrita `noise` da arma | |
 
 Perguntas novas para o dono: ver `evidence.md`, "T1.1 (parte B)".
+
+---
+
+## 8. Situação depois da Fase 1, T1.2 e T1.3 (R5)
+
+Atualizado em 2026-10-23. O que da Galeria (seção 1.1) entrou nesta etapa. As abas de zumbi, veículo e parede seguem como a seção 5 (itens 6, 12).
+
+| Item da Galeria | Entrou? | Onde |
+|---|---|---|
+| Materiais `M` e primitivas (`rbox`, `B`, `CX`, `CY`, `CZ`, `SP`, `mark`, `piv`, `rail`, `vents`, `scope`, `buttpad`, `swivel`, `heatify`) | Sim, só o que as armas usam; o addon `RoundedBoxGeometry` foi portado sobre o `THREE` do host (D16) | `game-weapons-three/src/models/{kit,details,rounded-box}.ts` |
+| `pistol` + `PSTY` (11 estilos) | Sim, igual (golden nó a nó) | `models/pistol*.ts` |
+| `revolver` | Sim | `models/revolver.ts` |
+| `rifle` (50 armas longas, todas as opções) | Sim, dividido em receptor, cano, guarda-mão, empunhadura e carregador, coronha e acessórios | `models/rifle*.ts` |
+| `bullpup`, `p90`, `shotgunBreak`, `m2` | Sim | `models/{bullpup,p90,break-action,m2}.ts` |
+| `launcher` (RPG-7, M72, AT4, Carl Gustaf, lança-chamas M2 e caseiro), `pg7`, `ffv`, `rocketBody`, `hose`, `pilot` | Sim | `models/launcher*.ts` |
+| `buildWeapon`, `fitLength` | Sim (`buildWeaponModelById`) | `models/index.ts` |
+| `cartridge(a)` (22 calibres, em mm) | Sim, das medidas do `CaliberDef.cartridge`; `casingMesh`/`cartridgeMesh` agora também por calibre | `models/cartridge.ts` |
+| `fire`: clarão, coice, gatilho, cão, corrediça e ferrolho, estojo ejetado | Sim, como clipes do contrato | `animation/shot-clips.ts`, `fx/effects.ts`, `fx/viewmodel-events.ts` |
+| `cycleBolt`, pump, alavanca | Sim, no tempo `timings.cycle` da regra | `animation/cycle-clips.ts` |
+| `burst` | Sim: a regra dá as rodadas (`rounds`) e o tocador as espaça por `60/rpm` | `game-contracts` `createToolClipPlayer` |
+| `jamRoll`, `setJam`, `stuckCase`, `clearJam` | Sim: panes da regra; cápsula presa na janela; destravar por família | `animation/shot-clips.ts` (`faultClips`), `cycle-clips.ts` (`clearClips`) |
+| `magSwap`, `tubeLoad`, `topLoad`, `revolverReload`, `breakReload`, `beltReload`, `heavyReload` (as sete recargas) | Sim, nas chaves da Galeria, escaladas ao tempo da regra | `animation/reload-clips.ts`, `magazine-clips.ts` |
+| `QUAL` / `applyQuality` (materiais gasto e enferrujado) | Sim, como opção e método `setCondition` | `models/condition.ts` |
+| `stepWeapon` (brilho do cano e fiapo de fumaça) | Sim | `fx/viewmodel.ts` |
+| `fireHeavy` (foguete e jato de fogo) | Sim, com a semente do kit | `fx/heavy.ts` |
+| Alavanca de trava e seletor animados | **Novo**: a Galeria desenha o seletor e não o move | `animation/shot-clips.ts` (`safetyClips`) |
+| Saque (`draw`) | **Novo**: a Galeria não tem mãos | `animation/shot-clips.ts` (`drawClip`) |
+| Área de armas com todas as armas | Sim: 117 em até 6 balcões, `asleep` | `game-weapons-three/src/area.ts` |
+| Teclas de pane e trava na sala | Sim: X destrava, B trava; `draw()` ao pegar | `game-test-room/src/room.ts` |
+| Abas de explosivos (`buildExp`), zumbi, carro, parede | Não | |

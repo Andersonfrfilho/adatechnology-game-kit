@@ -77,6 +77,7 @@ await shot('burning-crate', () => {
   const r = window.__testRoom
   const o = r.spawn('wooden_crate', [0, 0, -4])
   r.setTool('lighter')
+  r.update(0.4)
   r.look([0, 0.3, -3.65], [0, 0.25, -3.76])
   r.use(5)
   for (let i = 0; i < 12; i++) r.update(0.25)
@@ -98,6 +99,7 @@ await shot('rental-car-module', async () => {
   r.playAnimation('open', car.objectId)
   for (let i = 0; i < 90; i++) r.update(1 / 60)
   r.setTool('pistol_9mm')
+  r.update(0.4)
   r.look([-3.4, 1.5, -1.6], [-0.4, 0.7, -4.6])
 })
 

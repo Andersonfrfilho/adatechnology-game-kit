@@ -215,7 +215,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const specs = new Map<string, DestructibleSpec>()
   const loose: Piece[] = []
 
-  const arsenal = options.arsenal ?? createArsenal({ locale, weapons: options.weapons, seed: 1, rules: { faults: false } })
+  const arsenal = options.arsenal ?? createArsenal({ locale, weapons: options.weapons, seed: 1 })
   const loadout = (options.loadout ?? DEFAULT_LOADOUT).filter((id) => arsenal.weapons.has(id))
   const tools = new Map<string, WeaponState>()
   let toolIndex = Math.max(0, loadout.indexOf('hand'))
@@ -1074,6 +1074,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (res.status !== 'ok') {
       if (res.status === 'reloading') say(t('hud.reloading'))
       else if (res.status === 'no_fuel') say(t('hud.no_fuel'))
+      else if (res.status === 'fault' && res.fault) say(t('hud.fault', { fault: t(`fault.${res.fault}`) }))
+      else if (res.status === 'safe') say(t('hud.safe'))
       return
     }
     if (res.shots.length) fireShots(res.shots, res.recoil)
@@ -1121,7 +1123,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     progress = null
     action('tool', t('act.tool', { weapon: toolName(id) }), { data: { weapon: id } })
     fire('tool', id)
-    emitHost({ type: 'tool', weapon: id })
+    tool.draw()
+    flushEvents(id, tool)
   }
   const cycleTool = (dir: 1 | -1): void => {
     if (!loadout.length) return
@@ -1379,6 +1382,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         flushEvents(toolId, tool)
         break
       }
+      case 'KeyX':
+        clearToolFault()
+        break
+      case 'KeyB':
+        toggleSafety()
+        break
       case 'KeyZ':
         tiltKey = 1
         break
@@ -1779,6 +1788,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   function startReload(): void {
     tool.reload()
     flushEvents(toolId, tool)
+  }
+  function clearToolFault(): void {
+    if (!tool.clearFault()) return
+    flushEvents(toolId, tool)
+    say(t('hud.clearing'))
+  }
+  function toggleSafety(): void {
+    tool.setSafety(!tool.safety)
+    flushEvents(toolId, tool)
+    say(t(tool.safety ? 'hud.safety_on' : 'hud.safety_off'))
   }
   const host: ModuleHost = {
     THREE,
