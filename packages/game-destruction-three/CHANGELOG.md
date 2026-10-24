@@ -1,5 +1,13 @@
 # @adatechnology/game-destruction-three
 
+## 0.7.3
+
+### Patch Changes
+
+- Updated dependencies [0aafb73]
+  - @adatechnology/game-vfx@0.3.0
+  - @adatechnology/game-vfx-three@0.2.1
+
 ## 0.7.2
 
 ### Patch Changes

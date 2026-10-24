@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-vehicles-three",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "three.js output of the vehicles of @adatechnology/game-vehicles: a vehicle in a game frame (front on +z, centred, on the ground) at full detail or fused into six meshes (the team's Frota Leve light mode), coloured by seed, with its damageable boxes; and the vehicles test module.",
   "keywords": [

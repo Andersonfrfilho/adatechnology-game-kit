@@ -1,5 +1,18 @@
 # @adatechnology/game-vehicles-fleet
 
+## 2.0.0
+
+### Minor Changes
+
+- 5718964: Medidas, tintas e cartões de projeto da frota (spec 001, T7.1b): `fleetDims`, `paintPalettes`, `paletteOf`, `colorFromSeed`, `fleetStats` e `fleetCard`, com os dados gerados por `tools/vehicles-catalog` (`DIMS`, `PALETA`, `PALETA_MIL` da Frota Leve e os 69 cartões da Frota). A cor por semente confere com o código do time para as sementes 0 a 499 e 40 textos.
+- 1ea43bd: Modo leve e peças danificáveis (spec 001, T7.1a): `createVehicleKit({ lod })` e `kit.build(key, state, zonas, { lod: true })` desenham o mesmo veículo com menos triângulos (porte dos ganchos `[LOD]` da Frota Leve: caixa arredondada com um anel, lofts, grades e geradores do three mais grossos, interiores marcados com `skipLite`), todos os números configuráveis; desligado, nada muda e os 868 goldens da frota continuam idênticos. `kit.damageables(c, matriz?)` devolve as caixas de metal, vidro, borracha e combustível. O `game-vehicles-fleet` aplica os mesmos ganchos nas cópias locais de loft, para-lama e grade.
+
+### Patch Changes
+
+- Updated dependencies [1ea43bd]
+- Updated dependencies [35c2caa]
+  - @adatechnology/game-vehicles@0.2.0
+
 ## 1.0.0
 
 ### Minor Changes

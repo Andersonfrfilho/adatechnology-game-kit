@@ -1,5 +1,0 @@
----
-'@adatechnology/game-camera': minor
----
-
-A câmera de ombro do jogo entra no `game-camera` (spec 001, T7.4, decisão V7). O `smoothing` (padrão 12) passa a ser lido: a haste, o ombro, a altura e o FOV amortecem (`1 - exp(-smoothing * dt)`, o FOV por `min(1, smoothing * dt)`), e `smoothing: 0` é o comportamento instantâneo de antes (quem dependia dele passa `smoothing: 0`). Opções novas: `aim` (FOV 65 dividido pelo zoom, sensibilidade 0,0022 dividida pela raiz do zoom), `wallRecovery` (4), `deathOrbit` (raio 6, altura 3,5, 0,2 rad/s), `look` (pitch de -0,55 a 1,2) e `shake` (febre e pânico). `update` aceita `zoom`, `alive` e `deathT` no alvo e mexe no `fov` da câmera que o tem; `rig.look`, `rig.lookSensitivity` e `rig.lookShake` giram o olhar com o sorteio do host (o pacote não chama `Math.random`). Teste de ouro G-camera: `cameraUpdate` do jogo cortado do código e comparado quadro a quadro (640 quadros: andar, mirar, trocar de ombro, agachar, parede, febre, pânico e morte) com posição, olhar, FOV, yaw e pitch iguais a 1e-9.
