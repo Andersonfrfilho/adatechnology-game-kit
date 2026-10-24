@@ -505,3 +505,24 @@ Todas bloqueiam dado ou nome. Cada uma traz o que cada fonte diz.
 15. **Aleatoriedade e goldens.** Elenco usa um `R=rng(77)` global compartilhado (o resultado depende da ordem de construção) e quase todo `splat`/`blob` usa `Math.random`. Para golden (T0.3) precisa de semente por chamada: aceito mudar a origem do sorteio, mesmo que a mancha de sangue não seja idêntica pixel a pixel?
 16. **Afogado com peso 0.** No jogo o Afogado não é sorteado (`peso: 0`, só nasce na água); o Bestiário dá 1%. Confirmar.
 17. **Nomes de identificadores.** Proposta de inglês na seção 1.1 e 4.1 (`walker`, `runner`, `brute`, `crawler`, `screamer`, `bloater`, `stalker`, `sniffer`, `leaper`, `blind`, `drowned`, `charred`, `devourer`; idades `fresh`, `recent`, `old`, `decrepit`). Aprovar ou trocar.
+
+---
+
+## 6. Situação depois da Fase 4, grupo A (R5)
+
+Atualizado em 2026-10-24. O que do inventário acima já entrou, e onde. Ainda **não há** `game-characters`, `game-characters-undead`, `game-animals` nem os pacotes
+`-three`: o grupo A entrega os **dados gerados**, a **fatia do jogo** e os **goldens gravados**. Os pacotes (grupos B a F) leem os dados e comparam contra os goldens.
+
+| Item do inventário | Entrou? | Onde |
+|---|---|---|
+| 13 tipos (peso, vida, velocidades, dano, mordida, `mult`, percepção, escala, olho) | Sim, ids em inglês, velocidades P3, olhos v17, habilidades como dado com a evidência na fonte | `packages/game-characters-undead/src/data/types.json`, gerado por `tools/characters-catalog` |
+| Idades da infecção, roupas com proteção, `FERIDA`/`INFEC`, horas do Elenco | Sim (idades com a percepção do Bestiário; as três feridas do jogo; relógio acelerado) | `…-undead/src/data/{ages,outfits,infection,moments}.json` |
+| Penetração P7 (física) e a do jogo (`team-game`) | Sim, com a calibração 9 mm 2 corpos, 5,56 3, .308 4, 7,62×39 3, 00 buck 1 | `packages/game-characters/src/presets/{physical,team-game}.json`; `tools/characters-catalog/tests/calibration.test.ts` |
+| 11 segmentos (Arsenal), árvore e corte (Elenco), regiões do jogo | Sim | `…game-characters/src/data/segments.json` |
+| Corpo (proporção do guia e `J` do jogo), passada, cascata, `MOVES`, poses, variância de `zSpawn`, corpos 400/900 s | Sim (dados) | `…game-characters/src/data/{body,gait,appearance}.json` |
+| Pessoas nomeadas (44), grupos (18), relações, eventos, forças com 7º BIS, `life`/`simulate`, tabela de pontos, `ZONES`, NPCs do quarteirão (Cícero e Sandra) | Sim, como fatia do jogo (vai para o repositório zombiada) | `specs/001-migracao-entregas-dos-times/game-slice/characters/` (README), gerado por `--game-out` |
+| 13 espécies (corpo, passos, desfecho da mordida, surto, alcance do som), três andares | Sim | `packages/game-animals-species/src/data/species.json`, `packages/game-animals/src/data/gaits.json`, gerados por `tools/animals-catalog` |
+| Textos e lugares dos bichos, `ZONES`, `TER` | Sim, como fatia do jogo | `specs/001-migracao-entregas-dos-times/game-slice/animals/` |
+| Construtores 3D (BEST v17, Retratos, `buildBody`, `bodyChunk`, `bichoPele`, bichos) | **Não** (grupos C a E); o golden de cada um já está gravado | `packages/*/tests/fixtures/team-golden/` (lista em `evidence.md`, seção Fase 4, grupo A) |
+| Contratos do corpo (`BodySlot`, `SegmentKind`, `BodyRegion`, `MISSING_BITS`, `Hit.mass/cut/part`, evento `body`, `ObjectState.body`, `Shot.mass`) | Sim | `packages/game-contracts/src/body.ts`, `destruction.ts`, `weapons.ts`; `game-weapons` preenche `Shot.mass` |
+| `protection.ballistic` e o reexport de `BodySlot` no `game-items` | **Pendente** da Fase 3 (o `game-items` está em outra branch) | entram no merge da Fase 3 |

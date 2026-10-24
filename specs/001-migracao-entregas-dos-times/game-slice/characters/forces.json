@@ -1,0 +1,657 @@
+{
+  "factions": [
+    {
+      "k": "eb",
+      "n": "Exército Brasileiro · 7º BIS",
+      "c": "#7d8a6a",
+      "onde": "Base 7º BIS (caída), Bunker de comando, Bloqueio Norte, Ponte do Quartel, Estrada do Quartel",
+      "quem": [
+        "caio",
+        "ferraz",
+        "vinicius",
+        "renata",
+        "azevedo"
+      ],
+      "gen": "6 soldados vivos no Bloqueio; cerca de 2.000 zumbis fardados na base",
+      "faz": "Quarentena. Contêineres e arame na estrada norte, sentinela 24 h, patrulha a pé em dupla na margem do rio e de jipe Maruá AM2 na Estrada do Quartel. Troca munição e ração por comida e notícia na barreira.",
+      "jog": "Tiro de advertência a 150 m, ordem de parar a 30 m, revista de mordida. Atira para matar quem cruza a faixa sem ordem.",
+      "fases": "Ordem (dias 1–10) → desgaste: rádio mudo, fome, recruta mordido (10–50) → ponto de triagem que escolta civis, ou pedágio armado do Ferraz (50+)"
+    },
+    {
+      "k": "pm",
+      "n": "Polícia Militar · Delegacia do 4º DP e Choque",
+      "c": "#c4483b",
+      "onde": "Delegacia do 4º DP, viaturas paradas nas avenidas, pátio da penitenciária (Choque)",
+      "quem": [
+        "brasa",
+        "bigode",
+        "italo"
+      ],
+      "gen": "4 PMs genéricos na delegacia; 30 zumbis da tropa de choque no pátio da penitenciária",
+      "faz": "Pedágio na avenida, ronda de viatura com sirene desligada, arsenal classe D. Disciplina por medo do Brasa.",
+      "jog": "Cobra pedágio, revista e confisca arma longa. Abaixo de −20 de reputação, atira em quem para na avenida.",
+      "fases": "Polícia que ainda manda (1–40) → toma o diesel (40) → domina o Centro ou perde a delegacia para a Rafa na assembleia (50)"
+    },
+    {
+      "k": "pc",
+      "n": "Polícia Civil",
+      "c": "#b58ad6",
+      "onde": "Cartório e depósito de armas apreendidas do 4º DP",
+      "quem": [
+        "rafa"
+      ],
+      "gen": "1 delegado zumbi trancado no cartório",
+      "faz": "Guarda papel: a lista do portão, inquéritos, o livro de armas apreendidas. Não patrulha.",
+      "jog": "Rafa só fala com quem chega sem arma na mão.",
+      "fases": "Escrivã escondida (1–33) → cópias da lista saem com o Ítalo (33) → Rafa assume a delegacia (50, se a lista for ao ar)"
+    },
+    {
+      "k": "prf",
+      "n": "Polícia Rodoviária Federal",
+      "c": "#e0c341",
+      "onde": "Posto da PRF na BR-Sul, na saída sul de Santa Aurora, pedágio",
+      "quem": [
+        "lucia",
+        "douglas"
+      ],
+      "gen": "2 policiais rodoviários genéricos",
+      "faz": "Mantém a BR aberta: retira carros da pista, registra quem chega no livro de ocorrências, escolta caravanas até a oficina, batedor de moto.",
+      "jog": "Amigável até prova em contrário. Registra o jogador e oferece escolta pela BR por comida ou combustível.",
+      "fases": "Posto aberto (1–55) → recebe refugiados do oeste (57) → os Corvos atacam o posto se tomarem o sítio do Dito (63)"
+    },
+    {
+      "k": "pp",
+      "n": "Polícia Penal · Penitenciária estadual",
+      "c": "#a3836a",
+      "onde": "Penitenciária, bloco C, Estrada da Penitenciária",
+      "quem": [
+        "josue",
+        "jacare"
+      ],
+      "gen": "2 policiais penais e 40 presos (6 como agentes, o resto como número da base)",
+      "faz": "Acordo frágil: agentes no portão, presos no muro. Horta no pátio, sabão de cadeia, escudos do Choque reaproveitados.",
+      "jog": "Com acordo, feira semanal no portão. Sem acordo, presos armados que descem ao Centro e cobram parte dos saques.",
+      "fases": "Acordo (1–25) → feira, se o jogador levar comida, ou rebelião armada (26) → aliança com o Brasa (50) ou com a oficina (68)"
+    },
+    {
+      "k": "fe",
+      "n": "Forças especiais · Equipe Falcão",
+      "c": "#5fb0a0",
+      "onde": "Destroços do Falcão Negro HM-2 na Serra do Corvo, edifício-garagem ao lado do hospital",
+      "quem": [
+        "lince",
+        "paula",
+        "kevin"
+      ],
+      "gen": "Piloto morto nos destroços, com equipamento",
+      "faz": "Reconhecimento noturno, tiro suprimido, rádio de satélite. Missão: tirar o Dr. Sato e as amostras do vale; plano B: queimar o laboratório.",
+      "jog": "Não aparecem para ninguém até o dia 14. Contratam o jogador para entrar no hospital; Paula trata quem o jogador trouxer.",
+      "fases": "Queda (2) → esconderijo (14) → ordem de queimar o laboratório (30) → fogo na ala isolada (46) → se juntam ao Bloqueio ou morrem nele (52)"
+    },
+    {
+      "k": "tat",
+      "n": "Unidades táticas de fora · BOPE, COT, GATE",
+      "c": "#9aa0a6",
+      "onde": "Atego Forte de escolta capotado na Estrada da Penitenciária, pátio da penitenciária",
+      "quem": [],
+      "gen": "Nenhuma equipe viva na temporada: 4 zumbis de escolta tática no carro-forte, 30 do Choque no pátio",
+      "faz": "No dia do surto, uma escolta tática transferia presos e a tropa de choque entrou para conter a rebelião. Nenhuma das duas saiu.",
+      "jog": "São saque de alto risco: zumbis de colete III-A e capacete, que pedem tiro no rosto, por baixo da viseira, ou na nuca.",
+      "fases": "Fora da temporada de 90 dias: se o rádio de satélite falar com o Comando e o Bloqueio estiver aberto, um comboio de fora vira evento de fim de jogo"
+    }
+  ],
+  "ranks": [
+    [
+      "Exército",
+      "Soldado → Cabo → 3º, 2º e 1º Sargento → Subtenente → Aspirante → 2º e 1º Tenente → Capitão → Major → Tenente-Coronel → Coronel",
+      "Vinícius (Soldado), Renata (Cabo), Ferraz (1º Sargento), Caio (2º Tenente), Lince (Capitão), Azevedo (Major)"
+    ],
+    [
+      "Polícia Militar",
+      "Soldado → Cabo → 3º, 2º e 1º Sargento → Subtenente → Aspirante → 2º e 1º Tenente → Capitão → Major → Tenente-Coronel → Coronel",
+      "Ítalo (Soldado), Bigode (Sargento), Brasa (Tenente, expulso)"
+    ],
+    [
+      "Polícia Civil",
+      "Agente → Escrivão → Investigador → Delegado",
+      "Rafa (Escrivã)"
+    ],
+    [
+      "PRF",
+      "Policial rodoviário federal, por classe e tempo de casa; chefe de posto por função",
+      "Lúcia (chefe do posto), Douglas"
+    ],
+    [
+      "Polícia Penal",
+      "Policial penal → chefe de plantão → diretor",
+      "Josué (chefe de plantão)"
+    ]
+  ],
+  "rankRule": "No jogo, patente decide quem manda quando o líder cai (maior patente viva com coragem + lealdade ≥ 100) e o que um soldado obedece. Ordem de patente maior vence opinião, a menos que a opinião do soldado pelo superior esteja abaixo de −20: aí ele desobedece, deserta ou se amotina.",
+  "loot": [
+    [
+      "farda_eb",
+      "Farda camuflada do Exército",
+      "eb",
+      "protecao",
+      "Bloqueio, soldados e zumbis fardados",
+      "Na mata e no campo, −15% na distância em que zumbis e humanos te veem. Soldados do Bloqueio não atiram de longe em quem está fardado.",
+      "comum"
+    ],
+    [
+      "capacete_bal",
+      "Capacete balístico",
+      "eb",
+      "protecao",
+      "Bloqueio, zumbis fardados (30%)",
+      "Cabeça: reduz 1 nível de dano de bala e bloqueia mordida no topo da cabeça.",
+      "incomum"
+    ],
+    [
+      "colete_iii",
+      "Colete com placa nível III",
+      "eb",
+      "protecao",
+      "Bloqueio, paiol da base",
+      "Tronco −50% de dano de bala, 60% de chance de bloquear mordida no tronco. 9 kg: estamina cai 20% mais rápido.",
+      "raro"
+    ],
+    [
+      "ia2",
+      "Fuzil IMBEL IA2 5,56",
+      "eb",
+      "arma",
+      "Bloqueio, paiol, zumbis fardados (10%, desgastado)",
+      "Ficha no Arsenal.",
+      "incomum"
+    ],
+    [
+      "fal",
+      "FN FAL / ParaFAL 7,62",
+      "eb",
+      "arma",
+      "Bloqueio (Ferraz), paiol",
+      "Ficha no Arsenal.",
+      "incomum"
+    ],
+    [
+      "minimi",
+      "FN Minimi",
+      "eb",
+      "arma",
+      "Torre de vigia da Renata, paiol",
+      "Ficha no Arsenal. Defesa de base.",
+      "lendário"
+    ],
+    [
+      "m67",
+      "Granada M67",
+      "eb",
+      "arma",
+      "Paiol, Bloqueio (2 por dupla)",
+      "Ficha no Arsenal e efeito no Laboratório de Explosões.",
+      "raro"
+    ],
+    [
+      "fumaca",
+      "Granada de fumaça",
+      "eb",
+      "equip",
+      "Bloqueio, viaturas do Exército",
+      "Cortina de 12 m por 40 s. Zumbis e atiradores perdem a linha de visão.",
+      "incomum"
+    ],
+    [
+      "racao_militar",
+      "Ração operacional",
+      "eb",
+      "consumo",
+      "Bloqueio, base, mochilas de soldado",
+      "Um dia inteiro de fome, com esquentador químico. Validade de 12 meses. Moeda forte no norte.",
+      "comum"
+    ],
+    [
+      "aph",
+      "Kit individual de primeiros socorros (APH)",
+      "eb",
+      "consumo",
+      "Soldados, Falcão, viaturas",
+      "Torniquete e gaze hemostática: para sangramento grave em 5 s.",
+      "incomum"
+    ],
+    [
+      "ht",
+      "Rádio portátil (HT)",
+      "eb",
+      "equip",
+      "Bloqueio, delegacia, PRF, Falcão",
+      "Fala com quem estiver na mesma faixa, até 5 km. Bateria de 12 h.",
+      "incomum"
+    ],
+    [
+      "plaqueta",
+      "Plaqueta de identificação",
+      "eb",
+      "documento",
+      "Todo soldado vivo ou zumbi",
+      "Sem valor de troca. Entregar a quem conhecia o soldado dá +10 de opinião e uma entrada no diário.",
+      "comum"
+    ],
+    [
+      "mapa_topo",
+      "Mapa topográfico marcado",
+      "eb",
+      "documento",
+      "Caio, bunker de comando",
+      "Revela trilhas, o túnel da serra e as posições de horda conhecidas.",
+      "raro"
+    ],
+    [
+      "binoculo_mil",
+      "Binóculo militar 7×50",
+      "eb",
+      "equip",
+      "Ferraz, torre da base",
+      "Zoom 7× sem fazer barulho. Vê o item marcado de um zumbi nomeado a 200 m.",
+      "incomum"
+    ],
+    [
+      "cartao_bunker",
+      "Cartão de acesso do bunker",
+      "eb",
+      "chave",
+      "Peito do Major Azevedo (zumbi)",
+      "Abre a porta externa do bunker, a sala de rádio e o paiol por dentro, sem a chave da Renata. O cofre interno pede o código do bunker (6 dígitos em 3 papéis, catálogo de Itens).",
+      "único"
+    ],
+    [
+      "chave_paiol",
+      "Chave do paiol",
+      "eb",
+      "chave",
+      "Cabo Renata",
+      "Abre o paiol classe D da base.",
+      "único"
+    ],
+    [
+      "colete_iia",
+      "Colete policial nível II-A",
+      "pm",
+      "protecao",
+      "Delegacia, viaturas, PMs zumbis",
+      "Tronco −30% de dano de bala, 60% de chance de bloquear mordida no tronco. 3 kg.",
+      "incomum"
+    ],
+    [
+      "pt100",
+      "Taurus PT100 .40",
+      "pm",
+      "arma",
+      "Delegacia, PMs zumbis",
+      "Ficha no Arsenal.",
+      "incomum"
+    ],
+    [
+      "smt9",
+      "Taurus SMT9 9×19",
+      "pm",
+      "arma",
+      "Porta-malas de viatura (trava com chave)",
+      "Ficha no Arsenal.",
+      "incomum"
+    ],
+    [
+      "pump",
+      "CBC Pump Military 3.0",
+      "pm",
+      "arma",
+      "Viaturas, penitenciária, PRF",
+      "Ficha no Arsenal.",
+      "comum"
+    ],
+    [
+      "t4",
+      "Taurus T4 5,56",
+      "pm",
+      "arma",
+      "Arsenal da delegacia",
+      "Ficha no Arsenal.",
+      "incomum"
+    ],
+    [
+      "algemas",
+      "Algemas",
+      "pm",
+      "equip",
+      "Viaturas, delegacia, penitenciária",
+      "Prende humano rendido. Prende um zumbi Lento num poste ou grade: não mata, segura.",
+      "comum"
+    ],
+    [
+      "tonfa",
+      "Tonfa",
+      "pm",
+      "arma",
+      "Viaturas, Choque",
+      "Arma branca de bloqueio: empurra zumbi sem gastar estamina de golpe.",
+      "comum"
+    ],
+    [
+      "lanterna_tat",
+      "Lanterna tática",
+      "pm",
+      "equip",
+      "Viaturas, Falcão, PRF",
+      "Acopla no trilho da arma. Zumbis veem a luz a 40 m.",
+      "incomum"
+    ],
+    [
+      "escudo",
+      "Escudo balístico do Choque",
+      "pm",
+      "protecao",
+      "Pátio da penitenciária (zumbis do Choque)",
+      "Bloqueia agarrão frontal e empurra zumbis. Movimento −40%, só arma de uma mão.",
+      "raro"
+    ],
+    [
+      "capacete_choque",
+      "Capacete do Choque com viseira",
+      "pm",
+      "protecao",
+      "Pátio da penitenciária",
+      "Bloqueia mordida no rosto. Visão periférica −20%.",
+      "incomum"
+    ],
+    [
+      "gas",
+      "Granada de gás lacrimogêneo",
+      "pm",
+      "arma",
+      "Penitenciária, delegacia",
+      "Humanos tossem e saem da área por 20 s. Zumbis não reagem.",
+      "incomum"
+    ],
+    [
+      "chave_viatura",
+      "Chave de viatura",
+      "pm",
+      "chave",
+      "Quadro de chaves da delegacia, bolso de PM zumbi",
+      "Liga a Cruzi Patrulha da Frota. Sirene ligada chama horda num raio de 250 m: serve de isca.",
+      "incomum"
+    ],
+    [
+      "distintivo",
+      "Distintivo da Polícia Civil",
+      "pc",
+      "documento",
+      "Rafa, cartório",
+      "Sem valor de troca. Abre conversa com a Rafa.",
+      "raro"
+    ],
+    [
+      "lista_portao",
+      "Pasta com a lista do portão",
+      "pc",
+      "documento",
+      "Rafa, depois Ítalo",
+      "Prova contra o Brasa. Levada à rádio, muda a assembleia do dia 50.",
+      "único"
+    ],
+    [
+      "chave_deposito",
+      "Chave do depósito de armas apreendidas",
+      "pc",
+      "chave",
+      "Cartório do 4º DP (delegado zumbi)",
+      "Abre um depósito com armas variadas e munição desencontrada.",
+      "único"
+    ],
+    [
+      "colete_refl",
+      "Colete refletivo da PRF",
+      "prf",
+      "protecao",
+      "Posto da PRF",
+      "Visível a 200 m: humanos amigáveis reconhecem de longe; zumbis também, à noite.",
+      "comum"
+    ],
+    [
+      "pente_pregos",
+      "Pente de pregos e cones",
+      "prf",
+      "equip",
+      "Posto da PRF, viatura",
+      "Barreira de estrada: fura pneu de qualquer veículo e faz zumbi tropeçar.",
+      "incomum"
+    ],
+    [
+      "livro_ocorr",
+      "Livro de ocorrências da PRF",
+      "prf",
+      "documento",
+      "Mesa da Lúcia",
+      "Lista quem entrou no vale: revela bases e genéricos com vínculo.",
+      "único"
+    ],
+    [
+      "mapa_rod",
+      "Mapa rodoviário com bloqueios marcados",
+      "prf",
+      "documento",
+      "Posto, viatura",
+      "Mostra carros parados e rotas livres na BR e nas estradas.",
+      "incomum"
+    ],
+    [
+      "kit_desenc",
+      "Kit de desencarceramento",
+      "prf",
+      "equip",
+      "Viatura da PRF",
+      "Corta-cinto e quebra-vidro: tira alguém preso num carro em 3 s.",
+      "incomum"
+    ],
+    [
+      "chave_moto",
+      "Chave da moto da PRF",
+      "prf",
+      "chave",
+      "Douglas",
+      "GZ 1250 Rodoviária da PRF: rápida e barulhenta.",
+      "único"
+    ],
+    [
+      "chaveiro_c",
+      "Chaveiro do bloco C",
+      "pp",
+      "chave",
+      "Josué",
+      "Abre celas, portões e a sala de armas da penitenciária.",
+      "único"
+    ],
+    [
+      "estoque",
+      "Estoque (faca artesanal)",
+      "pp",
+      "arma",
+      "Presos, celas",
+      "Arma branca fraca e rápida. Quebra em 15 golpes.",
+      "comum"
+    ],
+    [
+      "celular_contrabando",
+      "Celular contrabandeado com carregador solar",
+      "pp",
+      "equip",
+      "Jacaré, celas",
+      "Fala com quem tiver outro celular (o Brasa tem). Ouve conversas dos dois.",
+      "raro"
+    ],
+    [
+      "cigarro",
+      "Maço de cigarro",
+      "pp",
+      "troca",
+      "Celas, viaturas, mochilas",
+      "Moeda preferida na penitenciária e no Bloqueio.",
+      "comum"
+    ],
+    [
+      "sabao",
+      "Sabão de cadeia",
+      "pp",
+      "troca",
+      "Penitenciária com feira",
+      "Limpa sangue seco de roupa e para-brisa; troca por comida.",
+      "comum"
+    ],
+    [
+      "hk416",
+      "HK416 com supressor",
+      "fe",
+      "arma",
+      "Lince, destroços do helicóptero",
+      "Ficha no Arsenal.",
+      "muito raro"
+    ],
+    [
+      "nvg",
+      "Óculos de visão noturna",
+      "fe",
+      "equip",
+      "Lince, piloto morto nos destroços",
+      "Enxerga 60 m no escuro sem lanterna. Bateria de 6 h.",
+      "muito raro"
+    ],
+    [
+      "radio_sat",
+      "Rádio de satélite",
+      "fe",
+      "equip",
+      "Kevin",
+      "Fala com o Comando de fora. Abre o evento de extração depois da temporada.",
+      "único"
+    ],
+    [
+      "gps",
+      "GPS militar",
+      "fe",
+      "equip",
+      "Falcão, piloto",
+      "Marca até 10 pontos no mapa e mostra a posição do grupo.",
+      "raro"
+    ],
+    [
+      "c4",
+      "Carga de demolição",
+      "fe",
+      "arma",
+      "Mochila do Lince, paiol",
+      "Derruba porta blindada ou ponte pequena. Efeito no Laboratório de Explosões.",
+      "muito raro"
+    ],
+    [
+      "kit_med",
+      "Kit médico avançado",
+      "fe",
+      "consumo",
+      "Paula",
+      "Sutura, soro e antibiótico. Com a Paula, a amputação de um mordido em até 60 s salva 30% em vez de 15%.",
+      "raro"
+    ],
+    [
+      "maleta",
+      "Maleta térmica das amostras",
+      "fe",
+      "documento",
+      "Laboratório do Sato",
+      "Item de missão. Quem a entrega ao Lince decide o fim do arco do hospital.",
+      "único"
+    ],
+    [
+      "colete_iiia",
+      "Colete tático III-A com porta-carregadores",
+      "tat",
+      "protecao",
+      "Zumbis da escolta tática",
+      "Tronco −40% de dano de bala, 60% de chance de bloquear mordida no tronco, 6 carregadores à mão (recarga 20% mais rápida).",
+      "raro"
+    ],
+    [
+      "mp5",
+      "HK MP5A3",
+      "tat",
+      "arma",
+      "Carro-forte de escolta",
+      "Ficha no Arsenal.",
+      "incomum"
+    ]
+  ],
+  "lootCategories": {
+    "arma": "Arma",
+    "protecao": "Proteção",
+    "equip": "Equipamento",
+    "consumo": "Consumo",
+    "chave": "Chave",
+    "documento": "Documento",
+    "troca": "Troca"
+  },
+  "generics": [
+    [
+      "Soldado do Exército",
+      "eb",
+      "IA2 ou FAL, 3 carregadores, capacete, colete II-A, ração, plaqueta, HT a cada dupla",
+      "Sentinela e patrulha em dupla. Fogo controlado, mira na cabeça até 50 m, recua quando a munição cai abaixo de 20%."
+    ],
+    [
+      "Zumbi fardado",
+      "eb",
+      "Farda, capacete (30%), colete (50%, danificado), carregador parcial (20%), plaqueta",
+      "Variante pesada do Arsenal: 160 a 250 de vida, tronco blindado. Arma pendurada no ombro, nunca dispara."
+    ],
+    [
+      "PM de patrulha",
+      "pm",
+      "PT100 .40, SMT9 ou Pump, colete II-A, algemas, HT, chave de viatura",
+      "Pedágio e ronda. Abre fogo em grupo e chama reforço pelo rádio."
+    ],
+    [
+      "PM do Choque (zumbi)",
+      "pm",
+      "Escudo, capacete com viseira, colete, Pump, tonfa, gás",
+      "Bloqueia tiro de frente com o escudo. Tiro na nuca ou por baixo da viseira."
+    ],
+    [
+      "Escolta tática BOPE, COT ou GATE (zumbi)",
+      "tat",
+      "MP5A3 ou T4, colete III-A, capacete, lanterna tática, algemas",
+      "Os mais blindados do vale. Ficam no carro-forte capotado e acordam com barulho de motor."
+    ],
+    [
+      "Policial rodoviário",
+      "prf",
+      "Pump ou T4, colete balístico e refletivo, HT, kit de desencarceramento",
+      "Escolta e ronda de estrada. Ajuda civil cercado se a reputação for 20 ou mais."
+    ],
+    [
+      "Policial penal",
+      "pp",
+      "Pump, gás, algemas, chaves de ala",
+      "Guarda de portão. Só sai da unidade em grupo de três."
+    ],
+    [
+      "Preso",
+      "pp",
+      "Estoque, cigarro, às vezes escudo do Choque",
+      "Defende o muro. Obedece ao Jacaré; reputação própria, separada da dos agentes."
+    ],
+    [
+      "Operador das forças especiais",
+      "fe",
+      "HK416 suprimido, NVG, GPS, APH, C4",
+      "Só a Falcão. Movimento furtivo, tiro suprimido a 25 m de ruído, prioridade a cumprir a missão."
+    ]
+  ]
+}

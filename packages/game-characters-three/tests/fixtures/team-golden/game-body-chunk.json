@@ -1,0 +1,9 @@
+{
+ "schema": 1,
+ "name": "game-body-chunk",
+ "seed": 1,
+ "events": [
+  {"type":"glsl","data":{"length":5757,"lines":72,"sha256":"543d5d0525faaa0b16038cdb1da122c72e2e6f8d2328326b6b1bda6c863c1028","jointUniforms":11}}
+ ],
+ "scenes": {}
+}

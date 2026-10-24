@@ -1,0 +1,1766 @@
+{
+  "people": [
+    {
+      "id": "zilda",
+      "n": "Dona Zilda Ramos",
+      "i": 67,
+      "o": "Enfermeira aposentada",
+      "g": "igreja",
+      "orig": 1,
+      "h": "Trabalhou 38 anos no hospital municipal. Quando o surto começou, abriu a igreja para feridos e ficou. Acredita que todo mundo merece ser cuidado, até o final. Cuida de quatro crianças órfãs que encontrou nas primeiras semanas.",
+      "p": [
+        55,
+        95,
+        80,
+        5,
+        60
+      ],
+      "r": [
+        [
+          "06:00",
+          "Reza e acende velas"
+        ],
+        [
+          "07:00",
+          "Prepara mingau para as crianças"
+        ],
+        [
+          "09:00",
+          "Atende feridos que chegam"
+        ],
+        [
+          "14:00",
+          "Lava curativos e ferve água"
+        ],
+        [
+          "18:00",
+          "Tranca a igreja"
+        ],
+        [
+          "21:00",
+          "Desce ao porão sozinha"
+        ]
+      ],
+      "obj": "Achar insulina para uma das crianças, que é diabética.",
+      "seg": "O marido dela, Seu Arnaldo, foi mordido. Ela o mantém acorrentado no porão e leva comida todas as noites.",
+      "it": "Terço de contas de madeira no pulso",
+      "of": "Trata ferimentos, ensina Primeiros Socorros até nível 7."
+    },
+    {
+      "id": "arnaldo",
+      "n": "Seu Arnaldo Ramos",
+      "i": 70,
+      "o": "Ferroviário aposentado (zumbi)",
+      "g": "igreja",
+      "h": "Foi mordido no terceiro dia, protegendo a esposa de um vizinho. Reanimou como Lento. Está acorrentado no porão da igreja com uma corrente de portão e um cadeado que só a Zilda abre. Ainda usa o relógio de bolso da ferrovia.",
+      "p": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "r": [
+        [
+          "24h",
+          "Acorrentado no porão, geme quando ouve passos"
+        ]
+      ],
+      "obj": "Nenhum. É um zumbi Lento Recente, que vai ficando Antigo com os dias.",
+      "seg": "Se ouvir o sino ou houver pânico na igreja, puxa a corrente com força dobrada. A argola na parede está solta: o cadeado não é o problema.",
+      "it": "Relógio de bolso da ferrovia",
+      "of": "Peso moral. É o ponto de virada mais perigoso da igreja."
+    },
+    {
+      "id": "val",
+      "n": "Seu Valdir “Val” Cardoso",
+      "i": 58,
+      "o": "Sacristão e coveiro",
+      "g": "igreja",
+      "h": "Cuida da Matriz há 30 anos. Abre covas no terreno atrás da igreja e anota cada nome num caderno. Foi ele quem ajudou a Zilda a descer o Arnaldo para o porão, e se arrepende todo dia.",
+      "p": [
+        50,
+        70,
+        85,
+        10,
+        55
+      ],
+      "r": [
+        [
+          "05:30",
+          "Abre o portão lateral e olha a rua"
+        ],
+        [
+          "08:00",
+          "Busca água no poço da praça"
+        ],
+        [
+          "11:00",
+          "Abre covas e enterra quem morreu"
+        ],
+        [
+          "16:00",
+          "Conserta portas e bancos"
+        ],
+        [
+          "20:00",
+          "Escuta a rádio com as crianças"
+        ]
+      ],
+      "obj": "Convencer a Zilda a dar paz ao marido antes que aconteça uma tragédia.",
+      "seg": "Ele tem uma cópia da chave do cadeado. Se o jogador tiver opinião +40, Val pede que o jogador faça o que ele não tem coragem.",
+      "it": "Pá com o cabo enrolado em fita vermelha",
+      "of": "Ensina Carpintaria. Abre a missão de dar paz ao Arnaldo."
+    },
+    {
+      "id": "mariana",
+      "n": "Mariana",
+      "i": 8,
+      "o": "Criança órfã, diabética",
+      "g": "igreja",
+      "h": "Encontrada pela Zilda dentro de um carro de escola na primeira semana. Diabética tipo 1. A última caneta de insulina acabou no dia 9. Desenha a família que perdeu nas paredes da sacristia.",
+      "p": [
+        30,
+        80,
+        90,
+        0,
+        40
+      ],
+      "r": [
+        [
+          "07:00",
+          "Mingau com as outras crianças"
+        ],
+        [
+          "10:00",
+          "Desenha na sacristia"
+        ],
+        [
+          "15:00",
+          "Ajuda a dobrar curativos"
+        ],
+        [
+          "19:00",
+          "Dorme cedo, cansada"
+        ]
+      ],
+      "obj": "Ficar perto da Zilda.",
+      "seg": "Sabe que o 'tio' do porão é o marido da Zilda, porque viu ela descer com o prato. Não contou para ninguém.",
+      "it": "Mochila de unicórnio",
+      "of": "Missão de insulina. Se morrer, dispara o luto da Zilda."
+    },
+    {
+      "id": "criancas",
+      "n": "Theo, Duda e Pedrinho",
+      "i": "6–11",
+      "o": "Crianças órfãs",
+      "g": "igreja",
+      "h": "Três irmãos de criação que a Zilda achou escondidos numa padaria. Theo (11) quer aprender a atirar, Duda (9) não fala desde o surto, Pedrinho (6) acha que é tudo um acampamento.",
+      "p": [
+        45,
+        60,
+        85,
+        5,
+        35
+      ],
+      "r": [
+        [
+          "07:00",
+          "Mingau"
+        ],
+        [
+          "09:00",
+          "Aula de leitura com o Val"
+        ],
+        [
+          "14:00",
+          "Brincam no salão paroquial"
+        ],
+        [
+          "20:00",
+          "Rádio da Jéssica"
+        ]
+      ],
+      "obj": "Theo quer encontrar o pai, que era vigia do shopping.",
+      "seg": "Theo pegou um revólver .38 sem munição de um policial morto e esconde debaixo do altar.",
+      "it": "Boné do Theo, do time da cidade",
+      "of": "Tratadas como um grupo no simulador. Mudam de base juntas se a igreja cair."
+    },
+    {
+      "id": "brasa",
+      "n": "Tenente Marcos “Brasa” Valença",
+      "i": 41,
+      "o": "Ex-policial militar",
+      "g": "deleg",
+      "orig": 1,
+      "h": "Comandava a evacuação do bairro. Quando a linha caiu, juntou seis homens e tomou a delegacia, que tem armário de armas e muro alto. Mantém ordem na base com regras rígidas e cobra pedágio de quem passa na avenida.",
+      "p": [
+        90,
+        25,
+        65,
+        55,
+        45
+      ],
+      "r": [
+        [
+          "05:30",
+          "Treino físico com o grupo"
+        ],
+        [
+          "07:00",
+          "Distribui turnos de vigia"
+        ],
+        [
+          "10:00",
+          "Patrulha armada na avenida"
+        ],
+        [
+          "15:00",
+          "Inventário do armamento"
+        ],
+        [
+          "19:00",
+          "Reunião, julga quem quebrou regras"
+        ],
+        [
+          "23:00",
+          "Bebe sozinho no telhado"
+        ]
+      ],
+      "obj": "Transformar a delegacia na única autoridade da cidade.",
+      "seg": "Na evacuação, mandou fechar o portão com civis do lado de fora para salvar os ônibus. Uma das sobreviventes, Jéssica, perdeu a mãe nesse portão.",
+      "it": "Boina preta do batalhão",
+      "of": "Vende munição de .38 e 9 mm, ensina Pistolas. Pode virar inimigo."
+    },
+    {
+      "id": "bigode",
+      "n": "Sargento Cleber “Bigode” Nunes",
+      "i": 48,
+      "o": "Policial militar",
+      "g": "deleg",
+      "h": "Braço direito do Brasa há 15 anos. Executa as punições da reunião das 19h sem perguntar. Engraçado no churrasco, assustador de serviço.",
+      "p": [
+        75,
+        20,
+        90,
+        60,
+        60
+      ],
+      "r": [
+        [
+          "05:30",
+          "Treino com o grupo"
+        ],
+        [
+          "08:00",
+          "Cobra pedágio na avenida"
+        ],
+        [
+          "13:00",
+          "Dorme"
+        ],
+        [
+          "19:00",
+          "Executa as decisões da reunião"
+        ],
+        [
+          "02:00",
+          "Some por duas horas com a viatura"
+        ]
+      ],
+      "obj": "Garantir que a família dele, escondida em outra cidade, receba o que ele manda pelo caminhoneiro.",
+      "seg": "As duas horas de madrugada são para vender munição do arsenal aos Corvos da serra. O Brasa não sabe.",
+      "it": "Óculos espelhados",
+      "of": "Inimigo duro. Se o segredo vazar para o Brasa, os dois se enfrentam."
+    },
+    {
+      "id": "italo",
+      "n": "Soldado Ítalo Prates",
+      "i": 22,
+      "o": "Soldado PM recém-formado",
+      "g": "deleg",
+      "h": "Estava no portão da evacuação e foi quem fechou o cadeado por ordem do Brasa. Não dorme desde então. É o informante anônimo que liga para a rádio da Jéssica às 14h.",
+      "p": [
+        40,
+        75,
+        35,
+        10,
+        30
+      ],
+      "r": [
+        [
+          "05:30",
+          "Treino"
+        ],
+        [
+          "07:00",
+          "Vigia no muro"
+        ],
+        [
+          "14:00",
+          "Some 20 min 'para o banheiro' (rádio portátil)"
+        ],
+        [
+          "19:00",
+          "Reunião, de cabeça baixa"
+        ],
+        [
+          "22:00",
+          "Escreve cartas que não manda"
+        ]
+      ],
+      "obj": "Sair da delegacia vivo e contar a verdade.",
+      "seg": "Foi ele quem fechou o portão com a mãe da Jéssica do lado de fora. A Jéssica não sabe que o informante dela é o homem que ela procura.",
+      "it": "Apito de metal no pescoço",
+      "of": "Ensina Fuzis e carabinas. Pode desertar com a ajuda do jogador."
+    },
+    {
+      "id": "rafa",
+      "n": "Rafaela “Rafa” Duarte",
+      "i": 36,
+      "o": "Escrivã de polícia",
+      "g": "deleg",
+      "h": "A única civil de dentro da delegacia, mantida porque organiza estoque, escala e o livro de ocorrências. Anota tudo, inclusive o que não deveria.",
+      "p": [
+        45,
+        55,
+        50,
+        20,
+        75
+      ],
+      "r": [
+        [
+          "07:00",
+          "Escala de vigia"
+        ],
+        [
+          "09:00",
+          "Inventário de comida e munição"
+        ],
+        [
+          "14:00",
+          "Registra pedágios"
+        ],
+        [
+          "19:00",
+          "Ata da reunião"
+        ],
+        [
+          "22:00",
+          "Lê romances de banca"
+        ]
+      ],
+      "obj": "Manter a cabeça baixa até ver para que lado o vento sopra.",
+      "seg": "Guarda no forro da sala do delegado a lista da evacuação com hora, ordem e nomes de quem ficou do lado de fora. É a prova que a Jéssica precisa.",
+      "it": "Caneta presa no coque",
+      "of": "Fonte de informação. Pode assumir a delegacia se o Brasa cair."
+    },
+    {
+      "id": "jessica",
+      "n": "Jéssica Monteiro",
+      "i": 27,
+      "o": "Locutora de rádio comunitária",
+      "g": "radio",
+      "orig": 1,
+      "h": "Faz uma transmissão diária às 20h com notícias, avisos de hordas e músicas. Virou a voz da cidade. Perdeu a mãe no portão da evacuação e quer justiça.",
+      "p": [
+        65,
+        80,
+        60,
+        15,
+        40
+      ],
+      "r": [
+        [
+          "09:00",
+          "Escuta frequências e anota"
+        ],
+        [
+          "11:00",
+          "Conserta equipamento com gerador"
+        ],
+        [
+          "14:00",
+          "Recebe informantes"
+        ],
+        [
+          "20:00",
+          "Transmissão ao vivo de 30 min"
+        ],
+        [
+          "22:00",
+          "Escreve o roteiro de amanhã"
+        ]
+      ],
+      "obj": "Expor o que o Tenente Brasa fez e organizar uma assembleia dos grupos.",
+      "seg": "O gerador da rádio faz barulho e atrai zumbis. Ela sabe que uma horda grande está se juntando ao pé da torre e não contou a ninguém.",
+      "it": "Fones de ouvido vermelhos",
+      "of": "Avisos de horda no rádio, missões de comunicação. Ensina Elétrica."
+    },
+    {
+      "id": "nelson",
+      "n": "Seu Nelson Kubo",
+      "i": 63,
+      "o": "Radioamador e técnico de TV",
+      "g": "radio",
+      "h": "Montou a antena da Vale FM nos anos 90 e nunca saiu do morro. Mantém o gerador vivo com peças de TV velha. Fala mais com estranhos no rádio do que com gente.",
+      "p": [
+        35,
+        60,
+        75,
+        15,
+        70
+      ],
+      "r": [
+        [
+          "06:00",
+          "Liga o radioamador e varre frequências"
+        ],
+        [
+          "10:00",
+          "Manutenção do gerador"
+        ],
+        [
+          "13:00",
+          "Cozinha arroz para os dois"
+        ],
+        [
+          "17:00",
+          "Sobe na torre e ajusta a antena"
+        ],
+        [
+          "23:00",
+          "Escuta a faixa militar"
+        ]
+      ],
+      "obj": "Manter a rádio no ar enquanto houver gente ouvindo.",
+      "seg": "Fala em segredo com uma soldada presa na base do 7º BIS. Ela pediu para ele não contar: tem medo de que o Brasa vá saquear o paiol.",
+      "it": "Rádio amador portátil com antena remendada",
+      "of": "Ensina Elétrica. Substitui a Jéssica no ar se ela morrer."
+    },
+    {
+      "id": "rosa",
+      "n": "Rosa Tavares",
+      "i": 34,
+      "o": "Mecânica de oficina",
+      "g": "oficina",
+      "orig": 1,
+      "h": "Herdou a oficina do pai. Soldou chapas nas janelas na primeira semana e transformou o lugar em fortaleza. Faz trocas justas, mas não dá nada de graça. Quer consertar um ônibus para tirar todo mundo da cidade.",
+      "p": [
+        75,
+        50,
+        70,
+        45,
+        80
+      ],
+      "r": [
+        [
+          "07:00",
+          "Café preto e checa as armadilhas"
+        ],
+        [
+          "08:00",
+          "Trabalha no ônibus"
+        ],
+        [
+          "12:00",
+          "Abre a janela de troca"
+        ],
+        [
+          "15:00",
+          "Vai buscar peças com quem estiver junto"
+        ],
+        [
+          "20:00",
+          "Escuta rádio e anota informações"
+        ]
+      ],
+      "obj": "Terminar o ônibus blindado e achar diesel suficiente.",
+      "seg": "Ela já tem o diesel guardado, mas só vai revelar a quem tiver opinião +70, porque teme que o Tenente Brasa tome tudo.",
+      "it": "Macacão azul com nome bordado",
+      "of": "Conserta veículos, blinda carros, ensina Mecânica e Metalurgia."
+    },
+    {
+      "id": "gil",
+      "n": "Gilmar “Gil” Batista",
+      "i": 44,
+      "o": "Caminhoneiro",
+      "g": "oficina",
+      "h": "Estava com uma carreta de soja no posto quando a BR fechou. Rosa o aceitou porque ele sabe dirigir pesado. É ele que vai guiar o ônibus. Conta piada ruim e chora escondido.",
+      "p": [
+        60,
+        65,
+        70,
+        25,
+        50
+      ],
+      "r": [
+        [
+          "07:00",
+          "Café com a Rosa"
+        ],
+        [
+          "08:00",
+          "Desmonta a carreta para peças"
+        ],
+        [
+          "14:00",
+          "Treina manobra no pátio"
+        ],
+        [
+          "18:00",
+          "Vigia o portão"
+        ],
+        [
+          "21:00",
+          "Escuta música no rádio da carreta"
+        ]
+      ],
+      "obj": "Voltar para Goiânia, onde ficaram a mulher e as filhas.",
+      "seg": "Leva as cartas do Bigode para fora da cidade numa rota de contrabando. Sabe dos encontros com os Corvos e tem medo de falar.",
+      "it": "Boné de transportadora e cordão com foto das filhas",
+      "of": "Motorista do ônibus. Ensina Direção. Sem ele o ônibus não sai."
+    },
+    {
+      "id": "otavio",
+      "n": "Otávio Lins",
+      "i": 52,
+      "o": "Professor de química",
+      "g": "colegio",
+      "orig": 1,
+      "h": "Ficou trancado no laboratório com três alunos. Dois morreram. Hoje fabrica pólvora, sabão e antisséptico, e troca isso por comida. Bebe álcool de laboratório para dormir.",
+      "p": [
+        20,
+        70,
+        55,
+        20,
+        25
+      ],
+      "r": [
+        [
+          "08:00",
+          "Acorda tarde, com dor de cabeça"
+        ],
+        [
+          "09:00",
+          "Prepara reagentes"
+        ],
+        [
+          "13:00",
+          "Escreve no diário dos alunos mortos"
+        ],
+        [
+          "16:00",
+          "Produz pólvora ou sabão"
+        ],
+        [
+          "22:00",
+          "Bebe e fala sozinho"
+        ]
+      ],
+      "obj": "Proteger a aluna que sobrou, Bianca, e conseguir mais enxofre.",
+      "seg": "Ele sabe fazer explosivos fortes o bastante para derrubar a ponte e isolar a cidade de uma horda, mas tem medo do que o Tenente faria com isso.",
+      "it": "Óculos de proteção na testa",
+      "of": "Ensina Química e recarga de munição, vende pólvora. Pode surtar se a moral cair."
+    },
+    {
+      "id": "bianca",
+      "n": "Bianca Rocha",
+      "i": 16,
+      "o": "Estudante do 2º ano",
+      "g": "colegio",
+      "h": "Única aluna que sobrou no laboratório. Faz a parte do trabalho que o Otávio não consegue mais com as mãos tremendo. Era da mesma turma da Lívia, irmã do Kauã.",
+      "p": [
+        55,
+        65,
+        80,
+        10,
+        45
+      ],
+      "r": [
+        [
+          "07:00",
+          "Busca água na caixa do colégio"
+        ],
+        [
+          "09:00",
+          "Pesa reagentes"
+        ],
+        [
+          "13:00",
+          "Dorme"
+        ],
+        [
+          "16:00",
+          "Embala pólvora"
+        ],
+        [
+          "21:00",
+          "Tira a garrafa do Otávio quando ele dorme"
+        ]
+      ],
+      "obj": "Que o professor pare de beber e que alguém leve os dois para longe da quadra.",
+      "seg": "Foi ela que abriu a porta do laboratório para o colega mordido, Rodrigo, no primeiro dia. Os dois alunos mortos vieram dali. O Otávio acha que a culpa é dele.",
+      "it": "Jaqueta do colégio com bottons",
+      "of": "Aprende rápido. Sabe onde a Lívia foi vista pela última vez."
+    },
+    {
+      "id": "sato",
+      "n": "Dr. Henrique Sato",
+      "i": 45,
+      "o": "Médico infectologista",
+      "g": "hospital",
+      "orig": 1,
+      "h": "Estudava doenças tropicais quando o surto começou. Acha que pode entender a infecção. Mantém zumbis presos para pesquisa e um pequeno grupo de jovens que ele protege em troca de ajuda.",
+      "p": [
+        60,
+        35,
+        30,
+        40,
+        65
+      ],
+      "r": [
+        [
+          "06:00",
+          "Anota o estado dos zumbis presos"
+        ],
+        [
+          "08:00",
+          "Autópsia"
+        ],
+        [
+          "12:00",
+          "Almoça sozinho lendo artigos"
+        ],
+        [
+          "15:00",
+          "Manda o grupo buscar remédios"
+        ],
+        [
+          "21:00",
+          "Grava diário em fita"
+        ]
+      ],
+      "obj": "Observar uma pessoa mordida desde o início até a reanimação.",
+      "seg": "Ele não procura uma cura (a regra do jogo é que não existe). Quer entender como os corredores surgem, e para isso aceita infectar alguém de propósito. A irmã do Kauã está no grupo dele.",
+      "it": "Gravador de fita no bolso do jaleco",
+      "of": "Vende antibiótico e analgésico, revela informações sobre tipos de zumbi. Moralmente perigoso."
+    },
+    {
+      "id": "livia",
+      "n": "Lívia Ferreira",
+      "i": 14,
+      "o": "Estudante, irmã do Kauã",
+      "g": "hospital",
+      "h": "Estava na escola no dia do surto e fugiu com um grupo de alunos até o hospital. O Dr. Sato os acolheu. Acha que o irmão morreu porque ninguém viu a moto dele desde então.",
+      "p": [
+        50,
+        75,
+        70,
+        5,
+        50
+      ],
+      "r": [
+        [
+          "07:00",
+          "Lava roupas da ala"
+        ],
+        [
+          "10:00",
+          "Organiza a farmácia hospitalar"
+        ],
+        [
+          "15:00",
+          "Fica no hospital quando o grupo sai"
+        ],
+        [
+          "20:00",
+          "Escuta a rádio escondida"
+        ]
+      ],
+      "obj": "Saber se o irmão está vivo.",
+      "seg": "Escutou o Dr. Sato no gravador dizendo que 'a mais nova é a candidata mais limpa'. Não entendeu o que significa.",
+      "it": "Pulseira de miçangas que o Kauã deu",
+      "of": "Reencontro com o Kauã. Se ela entrar no grupo, o Kauã também entra."
+    },
+    {
+      "id": "diego",
+      "n": "Diego Paiva",
+      "i": 24,
+      "o": "Técnico de enfermagem",
+      "g": "hospital",
+      "h": "Trabalhava no pronto-socorro na noite do surto. Ficou porque o Sato era o único médico vivo. Lidera as saídas atrás de remédio e é quem coloca as correntes nos zumbis da pesquisa.",
+      "p": [
+        65,
+        55,
+        45,
+        25,
+        45
+      ],
+      "r": [
+        [
+          "06:00",
+          "Ajuda nas anotações"
+        ],
+        [
+          "09:00",
+          "Prende e alimenta os zumbis da ala B"
+        ],
+        [
+          "15:00",
+          "Lidera a saída atrás de remédios"
+        ],
+        [
+          "20:00",
+          "Fica com a Nicole no heliponto"
+        ]
+      ],
+      "obj": "Tirar a Nicole do hospital antes que o Sato perca o limite.",
+      "seg": "Sabe que o Sato quer um voluntário e já viu a lista. O nome da Nicole está primeiro, o da Lívia em segundo.",
+      "it": "Crachá do pronto-socorro",
+      "of": "Ensina Primeiros Socorros. Desertor provável se souber que tem apoio."
+    },
+    {
+      "id": "nicole",
+      "n": "Nicole Andrade",
+      "i": 20,
+      "o": "Estudante de medicina",
+      "g": "hospital",
+      "h": "Estava no 3º ano da faculdade. Admira o Sato e anota as autópsias com ele. Namora o Diego desde o segundo mês.",
+      "p": [
+        55,
+        60,
+        75,
+        15,
+        60
+      ],
+      "r": [
+        [
+          "06:00",
+          "Anota com o Sato"
+        ],
+        [
+          "08:00",
+          "Assiste à autópsia"
+        ],
+        [
+          "13:00",
+          "Estuda os prontuários antigos"
+        ],
+        [
+          "20:00",
+          "Heliponto com o Diego"
+        ]
+      ],
+      "obj": "Ajudar o Sato a entender os corredores. Acredita que é ciência.",
+      "seg": "Se ofereceria como voluntária se o Sato pedisse com as palavras certas. Ele sabe disso.",
+      "it": "Estetoscópio cor-de-rosa",
+      "of": "Ensina Medicina básica. Vítima do experimento se ninguém interferir."
+    },
+    {
+      "id": "kauan",
+      "n": "Kauã Ferreira",
+      "i": 19,
+      "o": "Motoboy de entregas",
+      "g": "nomade",
+      "orig": 1,
+      "h": "Conhece cada beco porque fazia entrega em todos. Sobrevive correndo e não confia em grupo nenhum. Procura a irmã mais nova, que estava na escola no dia do surto.",
+      "p": [
+        70,
+        60,
+        40,
+        30,
+        50
+      ],
+      "r": [
+        [
+          "06:00",
+          "Sai antes do sol para explorar"
+        ],
+        [
+          "08:00",
+          "Saqueia lojas pequenas"
+        ],
+        [
+          "12:00",
+          "Troca itens na igreja ou na oficina"
+        ],
+        [
+          "16:00",
+          "Vai até uma escola diferente procurar a irmã"
+        ],
+        [
+          "19:00",
+          "Sobe em um telhado para dormir"
+        ]
+      ],
+      "obj": "Achar a irmã Lívia, que pode estar com o grupo do Dr. Sato.",
+      "seg": "Ele carrega um rádio que capta a rádio da Jéssica e sabe que tem alguém pedindo socorro do lado norte do rio.",
+      "it": "Capacete de moto com adesivo de entregas, preso na mochila verde",
+      "of": "Revela rotas e esconderijos no mapa, ensina Corrida e Escalada."
+    },
+    {
+      "id": "biel",
+      "n": "Gabriel “Biel” Souza",
+      "i": 17,
+      "o": "Entregador de gás e moleque das lajes",
+      "g": "vila",
+      "h": "Cresceu nas vielas da Vila Esperança e atravessa o bairro inteiro sem pôr o pé no chão, de laje em laje. Disputava ponto de entrega com o Kauã antes do surto. Mora na igreja da Vila porque a Pastora Neide criou ele.",
+      "p": [
+        80,
+        55,
+        75,
+        35,
+        55
+      ],
+      "r": [
+        [
+          "05:00",
+          "Ronda pelas lajes"
+        ],
+        [
+          "08:00",
+          "Troca gás de cozinha por comida"
+        ],
+        [
+          "13:00",
+          "Dorme na laje da igreja"
+        ],
+        [
+          "17:00",
+          "Guia quem precisa atravessar a Vila"
+        ],
+        [
+          "21:00",
+          "Vigia com estilingue"
+        ]
+      ],
+      "obj": "Proteger a Vila, mesmo que isso signifique enfrentar a Pastora.",
+      "seg": "Ele já matou dois dos 'doentes' acorrentados da Pastora, de noite, e disse que eles fugiram.",
+      "it": "Estilingue de borracha de câmara",
+      "of": "Rotas pelas lajes da Vila. Ensina Escalada e Furtividade."
+    },
+    {
+      "id": "neide",
+      "n": "Pastora Neide Santos",
+      "i": 50,
+      "o": "Pastora evangélica",
+      "g": "vila",
+      "h": "Lidera a igreja da Vila Esperança. Acorrenta os mordidos e os zumbis da comunidade no salão, à vista de todos, e ora por eles todas as noites. Acredita que vão voltar.",
+      "p": [
+        70,
+        85,
+        80,
+        10,
+        30
+      ],
+      "r": [
+        [
+          "06:00",
+          "Culto da manhã"
+        ],
+        [
+          "09:00",
+          "Divide comida entre as famílias"
+        ],
+        [
+          "14:00",
+          "Visita os doentes do salão"
+        ],
+        [
+          "19:00",
+          "Culto com louvor alto"
+        ],
+        [
+          "22:00",
+          "Conta os acorrentados"
+        ]
+      ],
+      "obj": "Manter a Vila unida e os doentes vivos até o milagre.",
+      "seg": "O filho dela, Josué, está entre os acorrentados. Ela sabe que ele não vai voltar, mas não consegue soltar a corrente.",
+      "it": "Bíblia com capa de couro gasta",
+      "of": "Comida dividida, abrigo. Rival da Zilda: as duas acorrentam, uma em segredo e outra às claras."
+    },
+    {
+      "id": "helena",
+      "n": "Helena Vieira",
+      "i": 31,
+      "o": "Arquiteta",
+      "g": "aurora",
+      "h": "Ficou presa num sobrado do Jardim Aurora com o filho Davi, de 6 anos, quando o marido saiu para buscar comida e não voltou. Chama no rádio do marido toda noite. É a voz que o Kauã ouve 'do lado norte do rio'.",
+      "p": [
+        50,
+        75,
+        85,
+        10,
+        45
+      ],
+      "r": [
+        [
+          "06:00",
+          "Olha a rua pela fresta da janela"
+        ],
+        [
+          "09:00",
+          "Racha a comida que sobrou"
+        ],
+        [
+          "14:00",
+          "Desenha plantas das casas vizinhas para saber onde saquear"
+        ],
+        [
+          "20:00",
+          "Chama no rádio"
+        ]
+      ],
+      "obj": "Tirar o Davi do sobrado antes da comida acabar.",
+      "seg": "Desenhou a planta de cada casa da rua com o que viu pela janela: onde tem zumbi, onde tem carro com chave. É um mapa de saque do Jardim Aurora.",
+      "it": "Sinalizador laranja de carro no bolso",
+      "of": "Primeiro resgate do jogo, na área de início. Revela o loot do Jardim Aurora."
+    },
+    {
+      "id": "chico",
+      "n": "Francisco “Chico Maranhão”",
+      "i": 39,
+      "o": "Metalúrgico",
+      "g": "fabril",
+      "h": "Operador de prensa que se trancou no depósito de combustível com a chave dos tanques. Vende diesel e gasolina por munição e remédio. Não desliga a linha de produção do galpão vizinho porque o barulho mantém os zumbis longe da porta dele.",
+      "p": [
+        55,
+        40,
+        40,
+        70,
+        60
+      ],
+      "r": [
+        [
+          "07:00",
+          "Mede os tanques"
+        ],
+        [
+          "10:00",
+          "Atende quem vem trocar"
+        ],
+        [
+          "14:00",
+          "Solda reforço no portão"
+        ],
+        [
+          "18:00",
+          "Abastece o gerador da linha"
+        ],
+        [
+          "22:00",
+          "Dorme dentro da guarita"
+        ]
+      ],
+      "obj": "Juntar o suficiente para ir embora para o Maranhão.",
+      "seg": "Os tanques estão quase vazios. Ele vende a mesma reserva para três grupos diferentes.",
+      "it": "Capacete amarelo de EPI",
+      "of": "Combustível. Concorrente da Rosa. Ensina Metalurgia."
+    },
+    {
+      "id": "armando",
+      "n": "Armando Kessler",
+      "i": 60,
+      "o": "Dono de loja de armas",
+      "g": "armas",
+      "h": "Atirador esportivo, dono da Kessler Armas e Caça há 25 anos. Segurou a porta da loja contra a multidão do segundo dia (os cartuchos no chão e os corpos na calçada são dele). Recusou entregar as armas ao Brasa.",
+      "p": [
+        85,
+        30,
+        50,
+        50,
+        55
+      ],
+      "r": [
+        [
+          "06:00",
+          "Limpa armas"
+        ],
+        [
+          "09:00",
+          "Vigia a rua pela seteira"
+        ],
+        [
+          "13:00",
+          "Recarrega munição na bancada"
+        ],
+        [
+          "17:00",
+          "Negocia pela grade com quem chega"
+        ],
+        [
+          "22:00",
+          "Dorme no depósito blindado"
+        ]
+      ],
+      "obj": "Que ninguém encoste no estoque dele, principalmente o Brasa.",
+      "seg": "Tem diabetes e está racionando a própria insulina. Trocaria uma caneta por munição .308, mas nunca vai admitir que tem.",
+      "it": "Colete de caça com cartucheira",
+      "of": "Vende armas e munição por calibre. Ensina Armeiro. Tem insulina."
+    },
+    {
+      "id": "dito",
+      "n": "Seu Benedito “Dito” Alves",
+      "i": 71,
+      "o": "Agricultor e caçador",
+      "g": "oeste",
+      "orig": 1,
+      "h": "Vive no mesmo sítio há 50 anos. Para ele, o fim do mundo mudou pouco: planta, caça e não gosta de gente da cidade. Tem uma espingarda calibre 12 e um cachorro, Trovão.",
+      "p": [
+        80,
+        40,
+        90,
+        10,
+        90
+      ],
+      "r": [
+        [
+          "04:30",
+          "Ordenha a vaca"
+        ],
+        [
+          "06:00",
+          "Cuida da roça"
+        ],
+        [
+          "11:00",
+          "Almoço no fogão a lenha"
+        ],
+        [
+          "14:00",
+          "Verifica armadilhas na mata"
+        ],
+        [
+          "18:00",
+          "Fecha a porteira e solta o Trovão"
+        ],
+        [
+          "20:00",
+          "Dorme cedo"
+        ]
+      ],
+      "obj": "Que deixem ele em paz e que alguém cuide do sítio quando ele morrer.",
+      "seg": "Enterrou a família inteira no pomar. Se o jogador cuidar do túmulo, ele passa a considerar o jogador como neto e deixa o sítio de herança.",
+      "it": "Chapéu de palha e o cachorro Trovão",
+      "of": "Ensina Agricultura e Caça, troca comida fresca. Base perfeita se ganhar a confiança."
+    },
+    {
+      "id": "ivone",
+      "n": "Ivone Moreira",
+      "i": 49,
+      "o": "Fazendeira",
+      "g": "oeste",
+      "h": "Dona da fazenda vizinha ao Dito, com os filhos Tadeu e Joel. Pregou todas as janelas por dentro e atira em quem chega pela estrada. Já matou dois sobreviventes que achou que eram saqueadores.",
+      "p": [
+        75,
+        30,
+        85,
+        30,
+        40
+      ],
+      "r": [
+        [
+          "05:00",
+          "Galinheiro e curral"
+        ],
+        [
+          "08:00",
+          "Vigia a estrada do alpendre"
+        ],
+        [
+          "12:00",
+          "Almoço com os filhos"
+        ],
+        [
+          "16:00",
+          "Troca com o Dito na cerca"
+        ],
+        [
+          "20:00",
+          "Tranca tudo"
+        ]
+      ],
+      "obj": "Que nenhum filho dela morra.",
+      "seg": "Um dos dois sobreviventes que ela matou era um garoto de 15 anos procurando comida. Está enterrado atrás do silo.",
+      "it": "Espingarda de dois canos com cabo remendado",
+      "of": "Comida em quantidade. Hostil no começo, aliada se o Dito confiar no jogador."
+    },
+    {
+      "id": "tadeu",
+      "n": "Tadeu Moreira",
+      "i": 22,
+      "o": "Filho mais velho dos Moreira",
+      "g": "oeste",
+      "h": "Quer sair da fazenda e conhecer a cidade, mesmo destruída. Faz escondido as trocas com a Rosa, levando ovos e queijo de moto pela estrada de terra.",
+      "p": [
+        70,
+        60,
+        55,
+        20,
+        55
+      ],
+      "r": [
+        [
+          "05:00",
+          "Ordenha com o Joel"
+        ],
+        [
+          "09:00",
+          "Conserta cerca"
+        ],
+        [
+          "13:00",
+          "Sai 'caçar' (vai trocar na oficina)"
+        ],
+        [
+          "18:00",
+          "Volta pela estrada de terra"
+        ]
+      ],
+      "obj": "Convencer a mãe a ir no ônibus da Rosa.",
+      "seg": "Está apaixonado pela Rosa. Ela não sabe.",
+      "it": "Lenço vermelho no pescoço",
+      "of": "Ponte entre os Moreira e a oficina."
+    },
+    {
+      "id": "profeta",
+      "n": "Wesley “Profeta” Lacerda",
+      "i": 36,
+      "o": "Ex-segurança, líder dos Corvos",
+      "g": "serra",
+      "h": "Fugiu da cadeia pública no dia do surto com outros doze presos e subiu a serra. Diz que o surto é castigo e que os Corvos são os escolhidos para recomeçar. Saqueia sítios e cobra 'dízimo' na BR.",
+      "p": [
+        85,
+        10,
+        60,
+        85,
+        35
+      ],
+      "r": [
+        [
+          "05:00",
+          "Pregação no acampamento"
+        ],
+        [
+          "08:00",
+          "Manda grupos saquearem"
+        ],
+        [
+          "14:00",
+          "Treino de tiro com munição comprada"
+        ],
+        [
+          "19:00",
+          "Divide o saque"
+        ],
+        [
+          "23:00",
+          "Fogueira e vigia"
+        ]
+      ],
+      "obj": "Tomar os Sítios do Oeste: comida, água e visão da BR.",
+      "seg": "Ele não acredita em nada do que prega. Os Corvos têm cada vez menos munição, e o fornecedor dele é um policial da delegacia.",
+      "it": "Pena preta presa no boné",
+      "of": "Antagonista do oeste. Pode ser negociado, enganado ou derrubado."
+    },
+    {
+      "id": "cida",
+      "n": "Dona Aparecida “Cida” Moura",
+      "i": 74,
+      "o": "Raizeira e benzedeira",
+      "g": "serra",
+      "h": "Mora numa cabana perto da cachoeira desde que ficou viúva. Os Corvos a deixam em paz porque ela trata as feridas deles com ervas. Velha amiga do Dito: os dois namoraram aos 17.",
+      "p": [
+        60,
+        80,
+        70,
+        5,
+        85
+      ],
+      "r": [
+        [
+          "05:00",
+          "Colhe ervas na neblina"
+        ],
+        [
+          "09:00",
+          "Seca e moe raízes"
+        ],
+        [
+          "13:00",
+          "Atende quem sobe a trilha"
+        ],
+        [
+          "17:00",
+          "Reza na cachoeira"
+        ],
+        [
+          "19:00",
+          "Dorme"
+        ]
+      ],
+      "obj": "Ver o Dito mais uma vez.",
+      "seg": "Sabe onde os Corvos guardam a munição e o caminho da trilha que chega ao acampamento por trás.",
+      "it": "Patuá de couro no pescoço",
+      "of": "Ervas (antisséptico, analgésico fraco). Informação sobre os Corvos."
+    },
+    {
+      "id": "taina",
+      "n": "Tainá Costa",
+      "i": 23,
+      "o": "Cozinheira, grávida de sete meses",
+      "g": "igreja",
+      "h": "Trabalhava na cozinha de um restaurante da rodoviária. O companheiro, Wellington, sumiu no segundo dia indo buscar a mãe. Ela chega à Matriz no sexto dia com um saco de arroz de 5 kg nas costas e uma barriga de sete meses. Cozinha para todo mundo e conversa com o bebê quando acha que ninguém está ouvindo.",
+      "p": [
+        45,
+        75,
+        70,
+        15,
+        50
+      ],
+      "r": [
+        [
+          "06:30",
+          "Acende o fogão a lenha"
+        ],
+        [
+          "08:00",
+          "Faz o mingau com a Zilda"
+        ],
+        [
+          "11:00",
+          "Cozinha o almoço"
+        ],
+        [
+          "15:00",
+          "Descansa com os pés para cima"
+        ],
+        [
+          "19:00",
+          "Serve a sopa e conta histórias às crianças"
+        ]
+      ],
+      "obj": "Ter o bebê debaixo de um teto, com alguém que saiba fazer o parto.",
+      "seg": "Acha que o Wellington está vivo e anota no caderno do Val cada boato sobre ele. Wellington é um dos zumbis da plataforma 3 da rodoviária, de jaqueta de motoboy.",
+      "it": "Lenço amarelo na cabeça e barriga de grávida",
+      "of": "A comida da base rende 25% mais. Ensina Culinária."
+    },
+    {
+      "id": "lucas",
+      "n": "Lucas “Gaúcho” Kraemer",
+      "i": 33,
+      "o": "Caminhoneiro",
+      "g": "oficina",
+      "h": "Veio do Rio Grande do Sul com uma carreta de remédios que nunca chegou. Largou a carga num bloqueio, pegou uma picape e entrou no vale pela BR-Sul no 20º dia, escoltado pela PRF até a oficina. Conhece o Gil de posto de estrada, fala alto, ri alto e joga truco com quem aceitar.",
+      "p": [
+        60,
+        40,
+        25,
+        70,
+        45
+      ],
+      "r": [
+        [
+          "07:00",
+          "Chimarrão no pátio"
+        ],
+        [
+          "09:00",
+          "Solda as chapas do ônibus"
+        ],
+        [
+          "13:00",
+          "Sai 'atrás de peça' pela avenida"
+        ],
+        [
+          "17:00",
+          "Truco com o Gil"
+        ],
+        [
+          "22:00",
+          "Fuma escondido atrás do muro"
+        ]
+      ],
+      "obj": "Juntar munição e cigarro para sair do vale pelo norte.",
+      "seg": "Deve dinheiro ao Bigode desde antes do surto, de uma carga de contrabando. O Bigode não esqueceu, e cobra no dia 36.",
+      "it": "Cuia de chimarrão no cinto e boné de transportadora",
+      "of": "Dirige qualquer coisa pesada, Mecânica 5, liga caminhão sem chave."
+    },
+    {
+      "id": "caio",
+      "n": "Tenente Caio Albuquerque",
+      "i": 27,
+      "o": "2º Tenente do Exército, 7º BIS",
+      "g": "bloqueio",
+      "h": "Comanda o pelotão que fechou a estrada norte no primeiro dia, com ordem de não deixar ninguém sair do vale até a triagem. A triagem nunca veio. Segura os homens com rotina: barba feita, chamada às 6h e relatório toda noite.",
+      "p": [
+        70,
+        60,
+        85,
+        10,
+        60
+      ],
+      "r": [
+        [
+          "06:00",
+          "Chamada e revista do pelotão"
+        ],
+        [
+          "08:00",
+          "Inspeção da barreira e dos contêineres"
+        ],
+        [
+          "12:00",
+          "Tenta o rádio da base"
+        ],
+        [
+          "16:00",
+          "Treino de tiro com os recrutas"
+        ],
+        [
+          "21:00",
+          "Escreve o relatório que ninguém lê"
+        ]
+      ],
+      "obj": "Cumprir a quarentena sem virar assassino de civil.",
+      "seg": "No dia 3 recebeu pelo rádio a ordem de atirar em qualquer um que tentasse passar. Não repassou aos homens. O Sargento Ferraz ouviu.",
+      "it": "Boina verde-oliva e mapa topográfico no bolso da gandola",
+      "of": "Abre a estrada norte, patrulha de escolta, munição 5,56 e ração operacional."
+    },
+    {
+      "id": "ferraz",
+      "n": "Sargento Edvaldo Ferraz",
+      "i": 44,
+      "o": "1º Sargento do Exército",
+      "g": "bloqueio",
+      "h": "Vinte e dois anos de quartel e duas missões de paz. Os recrutas obedecem a ele antes do tenente. Acha que a quarentena é o que impede o resto do país de acabar igual ao vale, e que um civil morto aqui vale um milhão de vivos lá fora.",
+      "p": [
+        85,
+        25,
+        60,
+        30,
+        55
+      ],
+      "r": [
+        [
+          "05:00",
+          "Ronda nos contêineres"
+        ],
+        [
+          "07:00",
+          "Comanda a barreira"
+        ],
+        [
+          "12:00",
+          "Limpa o fuzil e conta munição"
+        ],
+        [
+          "18:00",
+          "Ronda de viatura na Estrada do Quartel"
+        ],
+        [
+          "23:00",
+          "Vigia a Ponte do Quartel de binóculo"
+        ]
+      ],
+      "obj": "Manter a estrada norte fechada, custe o que custar.",
+      "seg": "Ouviu a ordem de atirar que o tenente escondeu. Para ele, quem desobedece perde o direito de comandar.",
+      "it": "Capacete balístico com fita de identificação e binóculo no peito",
+      "of": "Aliado, treina Fuzis e carabinas. Inimigo, é o atirador mais perigoso do norte."
+    },
+    {
+      "id": "vinicius",
+      "n": "Soldado Vinícius Lopes",
+      "i": 19,
+      "o": "Recruta do Exército",
+      "g": "bloqueio",
+      "h": "Entrou no quartel pelo salário, para ajudar a mãe em Três Pontes. Tinha três meses de farda quando o surto começou. Faz piada no rádio para os outros não ouvirem o medo e guarda uma foto da mãe dentro do capacete.",
+      "p": [
+        35,
+        70,
+        75,
+        10,
+        35
+      ],
+      "r": [
+        [
+          "06:00",
+          "Chamada"
+        ],
+        [
+          "07:00",
+          "Sentinela na barreira"
+        ],
+        [
+          "13:00",
+          "Patrulha a pé na margem do rio"
+        ],
+        [
+          "19:00",
+          "Rancho e piada no rádio"
+        ],
+        [
+          "22:00",
+          "Escreve carta para a mãe"
+        ]
+      ],
+      "obj": "Voltar a Três Pontes e achar a mãe.",
+      "seg": "No dia 8 é mordido na canela na patrulha do rio e esconde com fita e meia. Ninguém sabe.",
+      "it": "Foto da mãe presa por dentro do capacete",
+      "of": "Conta a rotina e as falhas da barreira."
+    },
+    {
+      "id": "lucia",
+      "n": "Lúcia Bento",
+      "i": 38,
+      "o": "Policial rodoviária federal",
+      "g": "prf",
+      "h": "Chefe do posto da PRF na BR-Sul, dezesseis anos de rodovia. No dia do surto fechou a pista, abriu o pátio para os carros parados e virou, sem querer, a prefeitura de quem chega pela estrada. Anota cada placa e cada nome no livro de ocorrências.",
+      "p": [
+        70,
+        75,
+        70,
+        10,
+        70
+      ],
+      "r": [
+        [
+          "06:00",
+          "Ronda de viatura até a saída sul de Santa Aurora"
+        ],
+        [
+          "09:00",
+          "Recebe quem chega pela BR"
+        ],
+        [
+          "13:00",
+          "Escolta caravanas até a oficina"
+        ],
+        [
+          "17:00",
+          "Conserta a cerca do pátio"
+        ],
+        [
+          "21:00",
+          "Escuta a rádio e anota no livro"
+        ]
+      ],
+      "obj": "Manter a BR aberta e saber quem entra e quem sai do vale.",
+      "seg": "O livro de ocorrências tem a placa da carreta do Lucas e um alerta de carga de remédios desviada no nome dele.",
+      "it": "Colete refletivo da PRF por cima do colete balístico",
+      "of": "Escolta na BR, notícias de quem chega, viatura e escopeta 12."
+    },
+    {
+      "id": "douglas",
+      "n": "Douglas Prado",
+      "i": 29,
+      "o": "Policial rodoviário federal, motociclista",
+      "g": "prf",
+      "h": "O motociclista mais rápido da BR-Sul. Faz a ronda até o pedágio e volta antes de escurecer. Conta para todo mundo que um dia sai do vale de moto, sozinho, pela serra.",
+      "p": [
+        75,
+        50,
+        65,
+        20,
+        55
+      ],
+      "r": [
+        [
+          "07:00",
+          "Ronda de moto até o pedágio"
+        ],
+        [
+          "11:00",
+          "Tira gasolina de carros parados"
+        ],
+        [
+          "15:00",
+          "Treina escopeta"
+        ],
+        [
+          "19:00",
+          "Baralho com a Lúcia"
+        ]
+      ],
+      "obj": "Achar uma trilha pela serra para tirar gente do vale de moto.",
+      "seg": "Já achou a trilha. Não contou porque acha que só dá para levar uma pessoa por vez.",
+      "it": "Capacete de moto branco da PRF com faixa amarela",
+      "of": "Batedor: revela estradas livres e bloqueios de carros. Moto."
+    },
+    {
+      "id": "josue",
+      "n": "Josué Freitas",
+      "i": 46,
+      "o": "Policial penal, chefe de plantão",
+      "g": "penit",
+      "h": "Chefe de plantão na penitenciária estadual quando a rebelião e o surto vieram no mesmo dia. A tropa de choque da PM entrou para retomar o pátio e não saiu mais. Ele ficou trancado no bloco C com dois colegas e quarenta presos vivos, e fez um acordo com o Jacaré: os agentes guardam o portão, os presos guardam o muro.",
+      "p": [
+        60,
+        55,
+        70,
+        15,
+        50
+      ],
+      "r": [
+        [
+          "06:00",
+          "Conta presos e agentes"
+        ],
+        [
+          "08:00",
+          "Divide a comida do refeitório"
+        ],
+        [
+          "12:00",
+          "Inspeção das celas e grades"
+        ],
+        [
+          "18:00",
+          "Reunião com o Jacaré no pátio"
+        ],
+        [
+          "22:00",
+          "Dorme com a chave no pescoço"
+        ]
+      ],
+      "obj": "Manter o acordo até a comida acabar e depois tirar todo mundo vivo.",
+      "seg": "O chaveiro dele abre a sala de armas da unidade. O acordo só existe porque o Jacaré não sabe disso.",
+      "it": "Chaveiro grande das celas no pescoço",
+      "of": "Acesso à penitenciária, escopeta e gás lacrimogêneo; mão de obra se o acordo durar."
+    },
+    {
+      "id": "jacare",
+      "n": "Reinaldo “Jacaré” Lima",
+      "i": 41,
+      "o": "Preso, liderança do bloco C",
+      "g": "penit",
+      "h": "Cumpria pena por assalto a carro-forte. Respeitado no pavilhão e sem pressa nenhuma. Foi quem segurou os presos quando os mortos levantaram no pátio, e quem decide quem come primeiro.",
+      "p": [
+        75,
+        35,
+        55,
+        60,
+        70
+      ],
+      "r": [
+        [
+          "07:00",
+          "Conversa com cada cela"
+        ],
+        [
+          "10:00",
+          "Cuida da horta do pátio"
+        ],
+        [
+          "14:00",
+          "Treina os rapazes com escudo do choque"
+        ],
+        [
+          "18:00",
+          "Reunião com o Josué"
+        ],
+        [
+          "23:00",
+          "Escuta o rádio contrabandeado"
+        ]
+      ],
+      "obj": "Sair pela porta da frente com os seus e nunca mais voltar.",
+      "seg": "Tem um celular contrabandeado com carregador solar e fala com o Brasa desde o dia 10. Os dois se conhecem do carro-forte.",
+      "it": "Bandana vermelha na cabeça e camiseta bege da unidade",
+      "of": "Mão de obra, contatos do crime, rota de fuga pela galeria de esgoto."
+    },
+    {
+      "id": "lince",
+      "n": "Capitão Rodrigo Sá “Lince”",
+      "i": 36,
+      "o": "Forças especiais do Exército",
+      "g": "falcao",
+      "h": "Comandante da Equipe Falcão, mandada de helicóptero no segundo dia para tirar do vale um infectologista e as amostras dele. O helicóptero caiu na Serra do Corvo e o piloto morreu. Ele, uma sargento de saúde e um cabo de comunicações andaram três noites até a cidade e se esconderam no edifício-garagem ao lado do hospital.",
+      "p": [
+        90,
+        40,
+        95,
+        5,
+        85
+      ],
+      "r": [
+        [
+          "04:30",
+          "Reconhecimento antes do sol"
+        ],
+        [
+          "09:00",
+          "Observa o hospital do edifício-garagem"
+        ],
+        [
+          "14:00",
+          "Planeja com Paula e Kevin"
+        ],
+        [
+          "20:00",
+          "Escuta a Vale FM"
+        ],
+        [
+          "00:00",
+          "Tenta o Comando pelo rádio de satélite"
+        ]
+      ],
+      "obj": "Cumprir a missão: tirar o Dr. Sato e as amostras do vale.",
+      "seg": "Se a extração falhar, a ordem é destruir as amostras e o laboratório, com quem estiver dentro.",
+      "it": "Capacete com óculos de visão noturna e HK416 com supressor",
+      "of": "Treina Fuzis e Furtividade; óculos de visão noturna; acesso ao Comando por rádio."
+    },
+    {
+      "id": "paula",
+      "n": "Sargento Paula Neves",
+      "i": 32,
+      "o": "Sargento de saúde, forças especiais",
+      "g": "falcao",
+      "h": "Médica de combate da equipe. Tirou o piloto das ferragens e ficou com ele até o fim. Desde então trata quem aparece, zumbi preso ou bandido, e discute com o capitão sobre o que é a missão.",
+      "p": [
+        70,
+        85,
+        70,
+        5,
+        70
+      ],
+      "r": [
+        [
+          "05:00",
+          "Confere o kit médico"
+        ],
+        [
+          "08:00",
+          "Atende quem chega ao esconderijo"
+        ],
+        [
+          "13:00",
+          "Busca remédio na farmácia da rua"
+        ],
+        [
+          "19:00",
+          "Troca os curativos do Kevin"
+        ]
+      ],
+      "obj": "Voltar para a filha em Goiânia sem ter matado nenhum civil.",
+      "seg": "Sabe da ordem de destruir o laboratório e não vai cumprir se houver gente dentro.",
+      "it": "Bolsa médica com cruz vermelha e torniquete no ombro",
+      "of": "Primeiros Socorros até nível 9, kit médico avançado, amputação a tempo de salvar um mordido."
+    },
+    {
+      "id": "kevin",
+      "n": "Cabo Kevin Araújo",
+      "i": 24,
+      "o": "Comunicações, forças especiais",
+      "g": "falcao",
+      "h": "O mais novo da equipe, de Manaus. Carrega o rádio de satélite nas costas e um fone só, para ouvir a rua com o outro ouvido. Foi ele quem achou a frequência da Vale FM e o rádio secreto da Cabo Renata.",
+      "p": [
+        55,
+        65,
+        80,
+        10,
+        50
+      ],
+      "r": [
+        [
+          "06:00",
+          "Monta a antena no telhado"
+        ],
+        [
+          "10:00",
+          "Varre frequências"
+        ],
+        [
+          "15:00",
+          "Conserta rádios em troca de comida"
+        ],
+        [
+          "21:00",
+          "Fala com a Renata na faixa militar"
+        ]
+      ],
+      "obj": "Fazer o rádio de satélite falar com o Comando de novo.",
+      "seg": "O Comando respondeu uma vez, no dia 30. Ele foi o único que ouviu a mensagem inteira.",
+      "it": "Rádio de satélite nas costas com antena dobrável",
+      "of": "Rádios, frequências militares, conserto de eletrônicos."
+    },
+    {
+      "id": "renata",
+      "n": "Cabo Renata Lobo",
+      "i": 29,
+      "o": "Atiradora do Exército",
+      "g": "base",
+      "h": "Estava na torre de vigia quando a triagem da base virou massacre. Ficou lá em cima com um fuzil, 200 cartuchos e caixas de ração. Atira em zumbi e em quem tenta pular a cerca. Só fala com o Nelson, pelo rádio, à noite.",
+      "p": [
+        80,
+        45,
+        90,
+        15,
+        50
+      ],
+      "r": [
+        [
+          "05:00",
+          "Conta os zumbis na cerca"
+        ],
+        [
+          "08:00",
+          "Racha água e ração"
+        ],
+        [
+          "12:00",
+          "Dorme em turnos de 2 h"
+        ],
+        [
+          "18:00",
+          "Atira em quem se aproxima do paiol"
+        ],
+        [
+          "23:00",
+          "Rádio com o Nelson"
+        ]
+      ],
+      "obj": "Sair viva da torre sem entregar o paiol a quem vai usá-lo mal.",
+      "seg": "Tem a chave do paiol (classe D do mapa) e o código da torre de comunicação da base.",
+      "it": "Fuzil com fita camuflada e nome na coronha",
+      "of": "Acesso ao paiol e à torre de comunicação. Fim de jogo."
+    },
+    {
+      "id": "azevedo",
+      "n": "Major Hélio Azevedo",
+      "i": 52,
+      "o": "Subcomandante do 7º BIS (zumbi)",
+      "g": "base",
+      "h": "Comandou a triagem na base no primeiro dia e foi mordido abrindo o portão para os civis. Reanimou dentro do bunker de comando e a porta blindada trancou atrás dele. Ainda leva no peito o cartão de acesso do paiol e da sala de rádio.",
+      "p": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "r": [
+        [
+          "24h",
+          "Anda em círculos no bunker de comando"
+        ]
+      ],
+      "obj": "Nenhum. É um Brutamonte fardado, de colete e capacete.",
+      "seg": "O cartão no peito abre o paiol pelo lado de dentro, sem a chave da Renata.",
+      "it": "Cartão de acesso vermelho no cordão e boina de oficial",
+      "of": "Quem o abate leva o cartão do bunker. Caminho alternativo para o fim de jogo."
+    }
+  ],
+  "extra": [
+    {
+      "id": "vitoria",
+      "n": "Vitória Costa",
+      "i": 0,
+      "o": "Bebê, filha da Tainá",
+      "g": "igreja",
+      "born": 1
+    }
+  ]
+}

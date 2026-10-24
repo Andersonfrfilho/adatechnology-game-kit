@@ -1,0 +1,168 @@
+{
+  "groups": {
+    "igreja": {
+      "n": "Igreja Matriz",
+      "reg": "Centro",
+      "c": "#e0a548",
+      "def": 0.45,
+      "food": 9,
+      "d": "Nave e salão paroquial viraram enfermaria. Portas de madeira reforçadas com bancos. O sino é a última arma: chama toda horda num raio de 1,5 km."
+    },
+    "deleg": {
+      "n": "Delegacia do 4º DP",
+      "reg": "Centro",
+      "c": "#c4483b",
+      "def": 0.75,
+      "food": 30,
+      "d": "Muro alto, arsenal classe D e seis homens armados. Cobra pedágio na avenida. Mais segura do mapa e a mais perigosa para quem não obedece."
+    },
+    "radio": {
+      "n": "Rádio Vale FM",
+      "reg": "Morro da antena, entre o Centro e o Jardim Aurora",
+      "c": "#6fa3c7",
+      "def": 0.3,
+      "food": 12,
+      "d": "Torre com gerador barulhento. Transmissão diária às 20h. Uma horda se junta lentamente ao pé do morro."
+    },
+    "oficina": {
+      "n": "Auto Center Tavares",
+      "reg": "Saída sul, perto do Posto BR-Sul",
+      "c": "#a3836a",
+      "def": 0.65,
+      "food": 15,
+      "d": "Janelas soldadas, armadilhas no pátio, um ônibus blindado pela metade. Tem diesel escondido."
+    },
+    "colegio": {
+      "n": "Colégio Estadual",
+      "reg": "Vila Esperança",
+      "c": "#c9c26f",
+      "def": 0.4,
+      "food": 6,
+      "d": "Laboratório trancado no 2º andar. Pólvora, sabão e antisséptico em troca de comida. Quadra coberta virou horda."
+    },
+    "hospital": {
+      "n": "Hospital Regional, ala isolada",
+      "reg": "Centro",
+      "c": "#8fc9c0",
+      "def": 0.55,
+      "food": 14,
+      "d": "Ala com gerador próprio, zumbis presos em macas para pesquisa e um grupo de jovens que busca remédio em troca de proteção."
+    },
+    "vila": {
+      "n": "Igreja da Vila",
+      "reg": "Vila Esperança",
+      "c": "#d27fa3",
+      "def": 0.35,
+      "food": 8,
+      "d": "Igreja evangélica entre vielas e lajes. Mantém os 'doentes' acorrentados no salão à vista de todos, esperando um milagre."
+    },
+    "aurora": {
+      "n": "Sobrado da rua das Acácias",
+      "reg": "Jardim Aurora",
+      "c": "#9aa0a6",
+      "def": 0.2,
+      "food": 3,
+      "d": "Uma mãe e um filho presos num sobrado da área de início. Primeiro pedido de socorro que o jogador ouve."
+    },
+    "fabril": {
+      "n": "Depósito de combustível",
+      "reg": "Distrito Fabril",
+      "c": "#e07b4f",
+      "def": 0.4,
+      "food": 10,
+      "d": "Tanques de diesel e gasolina, galpão vizinho com uma linha de produção que nunca parou e uma horda dormente."
+    },
+    "armas": {
+      "n": "Kessler Armas e Caça",
+      "reg": "Centro",
+      "c": "#b58ad6",
+      "def": 0.6,
+      "food": 20,
+      "d": "Loja de armas com depósito blindado. O dono atira em quem força a porta."
+    },
+    "oeste": {
+      "n": "Sítios do Oeste",
+      "reg": "Sítios do Oeste",
+      "c": "#7fae73",
+      "def": 0.5,
+      "food": 60,
+      "d": "Sítio Boa Vista do Dito e a fazenda dos Moreira, a 2 km. Comida de verdade, visão longa da BR e das hordas que vêm por ela."
+    },
+    "serra": {
+      "n": "Serra do Corvo",
+      "reg": "Serra do Corvo",
+      "c": "#5fb08a",
+      "def": 0.5,
+      "food": 25,
+      "d": "Acampamento dos Corvos na mata e a cabana da Dona Cida perto da cachoeira."
+    },
+    "base": {
+      "n": "Torre de vigia do 7º BIS",
+      "reg": "Base 7º BIS",
+      "c": "#7d8a6a",
+      "def": 0.7,
+      "food": 5,
+      "d": "Uma soldada sozinha numa torre cercada por milhares de zumbis fardados."
+    },
+    "bloqueio": {
+      "n": "Bloqueio Norte (Exército)",
+      "reg": "Estrada do Quartel, saída norte do vale",
+      "c": "#8f9a5c",
+      "def": 0.7,
+      "food": 12,
+      "d": "Contêineres, arame e duas torres de andaime na estrada norte. Um pelotão do 7º BIS cumpre uma quarentena que ninguém mais comanda. Ninguém sai do vale por aqui."
+    },
+    "prf": {
+      "n": "Posto da PRF",
+      "reg": "BR-Sul, na saída sul de Santa Aurora",
+      "c": "#e0c341",
+      "def": 0.45,
+      "food": 10,
+      "d": "Posto da Polícia Rodoviária Federal com pátio cercado, uma Cruzi Rodoviária com o 191 na porta, uma moto GZ 1250 Rodoviária e um livro de ocorrências com o nome de todo mundo que entrou no vale pela BR."
+    },
+    "penit": {
+      "n": "Penitenciária estadual, bloco C",
+      "reg": "Estrada da Penitenciária, ao norte",
+      "c": "#a3836a",
+      "def": 0.8,
+      "food": 8,
+      "d": "Muralha, guaritas e um pátio cheio de zumbis do Choque. No bloco C, policiais penais e presos dividem a comida num acordo que dura enquanto ela durar."
+    },
+    "falcao": {
+      "n": "Equipe Falcão",
+      "reg": "Edifício-garagem ao lado do hospital, Centro",
+      "c": "#5fb0a0",
+      "def": 0.5,
+      "food": 6,
+      "d": "Três militares das forças especiais escondidos no último andar de um edifício-garagem, com antena no telhado e vista para a ala isolada."
+    },
+    "nomade": {
+      "n": "Nômades",
+      "reg": "Cidade inteira",
+      "c": "#d9dcd3",
+      "def": 0,
+      "food": 0,
+      "d": "Sem base fixa. Dormem em telhados e lajes, trocam com todo mundo."
+    }
+  },
+  "colors": {
+    "igreja": "#e0a548",
+    "deleg": "#c4483b",
+    "radio": "#6fa3c7",
+    "oficina": "#a3836a",
+    "colegio": "#c9c26f",
+    "hospital": "#8fc9c0",
+    "vila": "#d27fa3",
+    "aurora": "#9aa0a6",
+    "fabril": "#e07b4f",
+    "armas": "#b58ad6",
+    "oeste": "#7fae73",
+    "serra": "#5fb08a",
+    "base": "#7d8a6a",
+    "nomade": "#d9dcd3",
+    "bloqueio": "#8f9a5c",
+    "prf": "#e0c341",
+    "penit": "#a3836a",
+    "falcao": "#5fb0a0"
+  }
+}

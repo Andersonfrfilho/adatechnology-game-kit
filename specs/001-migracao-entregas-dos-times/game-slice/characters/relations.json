@@ -1,0 +1,593 @@
+{
+  "relations": [
+    [
+      "zilda",
+      "arnaldo",
+      "fam",
+      "casada há 44 anos"
+    ],
+    [
+      "zilda",
+      "mariana",
+      "fam",
+      "cuida como neta"
+    ],
+    [
+      "zilda",
+      "criancas",
+      "fam",
+      "cuida dos três"
+    ],
+    [
+      "zilda",
+      "val",
+      "ali",
+      "braço direito"
+    ],
+    [
+      "val",
+      "arnaldo",
+      "seg",
+      "tem a cópia da chave"
+    ],
+    [
+      "mariana",
+      "arnaldo",
+      "seg",
+      "viu o prato descer"
+    ],
+    [
+      "zilda",
+      "neide",
+      "odio",
+      "duas igrejas, duas correntes"
+    ],
+    [
+      "zilda",
+      "sato",
+      "odio",
+      "não perdoa o que ele faz com os presos"
+    ],
+    [
+      "brasa",
+      "bigode",
+      "ali",
+      "15 anos juntos"
+    ],
+    [
+      "brasa",
+      "italo",
+      "medo",
+      "Ítalo obedece por medo"
+    ],
+    [
+      "brasa",
+      "rafa",
+      "seg",
+      "ela guarda a lista"
+    ],
+    [
+      "brasa",
+      "jessica",
+      "odio",
+      "o portão"
+    ],
+    [
+      "italo",
+      "jessica",
+      "seg",
+      "é o informante dela e fechou o portão"
+    ],
+    [
+      "bigode",
+      "profeta",
+      "seg",
+      "vende munição aos Corvos"
+    ],
+    [
+      "gil",
+      "bigode",
+      "seg",
+      "leva as cartas dele"
+    ],
+    [
+      "brasa",
+      "rosa",
+      "odio",
+      "quer o diesel"
+    ],
+    [
+      "brasa",
+      "armando",
+      "odio",
+      "quer as armas dele"
+    ],
+    [
+      "brasa",
+      "otavio",
+      "medo",
+      "Otávio teme o que ele faria com explosivo"
+    ],
+    [
+      "jessica",
+      "nelson",
+      "ali",
+      "dividem a torre"
+    ],
+    [
+      "nelson",
+      "renata",
+      "seg",
+      "rádio secreto com a base"
+    ],
+    [
+      "kauan",
+      "jessica",
+      "ali",
+      "ouve todas as transmissões"
+    ],
+    [
+      "helena",
+      "jessica",
+      "ali",
+      "pedido de socorro no ar"
+    ],
+    [
+      "rosa",
+      "gil",
+      "ali",
+      "ele vai dirigir o ônibus"
+    ],
+    [
+      "rosa",
+      "nelson",
+      "ali",
+      "anota o que a rádio diz"
+    ],
+    [
+      "rosa",
+      "chico",
+      "odio",
+      "disputa por combustível"
+    ],
+    [
+      "tadeu",
+      "rosa",
+      "fam",
+      "apaixonado por ela"
+    ],
+    [
+      "otavio",
+      "bianca",
+      "fam",
+      "protege como filha"
+    ],
+    [
+      "bianca",
+      "livia",
+      "ali",
+      "mesma turma"
+    ],
+    [
+      "kauan",
+      "livia",
+      "fam",
+      "irmãos"
+    ],
+    [
+      "livia",
+      "sato",
+      "medo",
+      "ouviu o gravador"
+    ],
+    [
+      "diego",
+      "sato",
+      "seg",
+      "viu a lista"
+    ],
+    [
+      "nicole",
+      "sato",
+      "ali",
+      "admira o médico"
+    ],
+    [
+      "diego",
+      "nicole",
+      "fam",
+      "namorados"
+    ],
+    [
+      "kauan",
+      "biel",
+      "odio",
+      "rivais de entrega"
+    ],
+    [
+      "neide",
+      "biel",
+      "fam",
+      "criou o menino"
+    ],
+    [
+      "dito",
+      "ivone",
+      "ali",
+      "vizinhos de cerca"
+    ],
+    [
+      "ivone",
+      "tadeu",
+      "fam",
+      "mãe e filho"
+    ],
+    [
+      "dito",
+      "profeta",
+      "odio",
+      "quer o sítio"
+    ],
+    [
+      "dito",
+      "cida",
+      "fam",
+      "namoro antigo"
+    ],
+    [
+      "cida",
+      "profeta",
+      "seg",
+      "trata os Corvos e sabe onde está a munição"
+    ],
+    [
+      "taina",
+      "zilda",
+      "ali",
+      "a Zilda vai fazer o parto"
+    ],
+    [
+      "taina",
+      "val",
+      "ali",
+      "anota os boatos no caderno dele"
+    ],
+    [
+      "lucas",
+      "gil",
+      "ali",
+      "amigos de posto de estrada"
+    ],
+    [
+      "lucas",
+      "bigode",
+      "seg",
+      "dívida de contrabando"
+    ],
+    [
+      "lucia",
+      "lucas",
+      "seg",
+      "a placa no livro de ocorrências"
+    ],
+    [
+      "lucia",
+      "rosa",
+      "ali",
+      "escolta as caravanas"
+    ],
+    [
+      "douglas",
+      "lucia",
+      "ali",
+      "parceiros de posto"
+    ],
+    [
+      "caio",
+      "ferraz",
+      "odio",
+      "a ordem escondida"
+    ],
+    [
+      "caio",
+      "vinicius",
+      "ali",
+      "protege o recruta"
+    ],
+    [
+      "ferraz",
+      "vinicius",
+      "medo",
+      "o recruta teme o sargento"
+    ],
+    [
+      "caio",
+      "renata",
+      "ali",
+      "mesma unidade, rádio mudo"
+    ],
+    [
+      "josue",
+      "jacare",
+      "seg",
+      "o acordo do bloco C"
+    ],
+    [
+      "jacare",
+      "brasa",
+      "seg",
+      "celular e o carro-forte"
+    ],
+    [
+      "lince",
+      "sato",
+      "seg",
+      "a missão é ele"
+    ],
+    [
+      "paula",
+      "lince",
+      "odio",
+      "o que é a missão"
+    ],
+    [
+      "kevin",
+      "renata",
+      "ali",
+      "faixa militar à noite"
+    ],
+    [
+      "kevin",
+      "nelson",
+      "ali",
+      "trocam peças de rádio"
+    ],
+    [
+      "lince",
+      "profeta",
+      "odio",
+      "os Corvos saquearam o helicóptero"
+    ],
+    [
+      "azevedo",
+      "renata",
+      "seg",
+      "o cartão e a chave do paiol"
+    ]
+  ],
+  "types": {
+    "fam": [
+      "Família ou amor",
+      "#e0a548"
+    ],
+    "ali": [
+      "Confiança",
+      "#7fae73"
+    ],
+    "odio": [
+      "Ódio ou rivalidade",
+      "#c4483b"
+    ],
+    "seg": [
+      "Segredo ou dívida",
+      "#b58ad6"
+    ],
+    "medo": [
+      "Medo",
+      "#6fa3c7"
+    ]
+  },
+  "joinRules": [
+    [
+      "Helena Vieira",
+      "Resgatada no sobrado até o dia 10",
+      "Planta do Jardim Aurora com loot marcado; Davi (criança, não luta)",
+      "Se Davi morrer, ela sai do grupo ou se entrega à horda"
+    ],
+    [
+      "Kauã e Lívia",
+      "Jogador leva o Kauã ao hospital e tira a Lívia",
+      "Rotas, mapa revelado, Corrida e Escalada",
+      "Kauã sai se o grupo deixar alguém para trás (memória “deixou para trás”)"
+    ],
+    [
+      "Soldado Ítalo",
+      "Jogador cobre a deserção no dia 33",
+      "Fuzil, Fuzis e carabinas, cópias da lista da Rafa",
+      "Se a Jéssica descobrir quem fechou o portão, um dos dois sai"
+    ],
+    [
+      "Otávio e Bianca",
+      "Jogador traz enxofre e tira o álcool do laboratório",
+      "Pólvora, recarga de munição, explosivo para a ponte",
+      "Moral do grupo abaixo de 30: Otávio volta a beber"
+    ],
+    [
+      "Diego e Nicole",
+      "Jogador expõe o plano do Sato antes do dia 45",
+      "Antibiótico, Primeiros Socorros, Medicina",
+      "Nicole pode querer voltar para o Sato se ele pedir"
+    ],
+    [
+      "Dito (não sai do sítio)",
+      "Túmulo cuidado + opinião 80",
+      "O sítio inteiro como base, comida, Caça",
+      "Se o jogador trouxer o Brasa ou os Corvos ao sítio"
+    ],
+    [
+      "Tenente Caio (com o pelotão)",
+      "Vinícius tratado a tempo (dia 8) e Bloqueio aberto (dia 52)",
+      "Escolta armada, ração, munição 5,56, passagem pelo norte",
+      "Se o jogador atirar em soldado do Bloqueio"
+    ],
+    [
+      "Sargento Paula",
+      "Equipe Falcão desfeita e opinião 60",
+      "Primeiros Socorros 9, kit médico avançado",
+      "Se o jogador matar civil desarmado na frente dela"
+    ],
+    [
+      "Josué",
+      "Acordo do bloco C mantido (dia 26)",
+      "Escopeta, gás, chaves da penitenciária",
+      "Se o jogador trouxer o Brasa ou soltar o Jacaré"
+    ]
+  ],
+  "states": [
+    [
+      "ok",
+      "vivo",
+      "Segue a rotina"
+    ],
+    [
+      "ferido",
+      "ferido",
+      "Rotina reduzida, risco ×2"
+    ],
+    [
+      "mordido",
+      "mordido",
+      "48 h até reanimar"
+    ],
+    [
+      "zumbi",
+      "zumbi nomeado",
+      "Vaga pela rotina antiga"
+    ],
+    [
+      "morto",
+      "morto",
+      "Corpo e item ficam no lugar"
+    ],
+    [
+      "sumido",
+      "sumido",
+      "Capturado ou perdido; pode voltar"
+    ],
+    [
+      "grupo",
+      "com o jogador",
+      "Mora na base do jogador"
+    ],
+    [
+      "hostil",
+      "hostil",
+      "Ataca ou rouba o jogador"
+    ],
+    [
+      "mudou",
+      "mudou de base",
+      "Vive em outro grupo"
+    ],
+    [
+      "partiu",
+      "saiu do vale",
+      "Sobreviveu fora do mapa"
+    ]
+  ],
+  "actions": [
+    {
+      "id": "helena",
+      "n": "Resgatar Helena e Davi no Jardim Aurora",
+      "w": "até o dia 10"
+    },
+    {
+      "id": "vinicius",
+      "n": "Notar a mordida do Vinícius e avisar o Tenente Caio",
+      "w": "até o dia 8 (Primeiros Socorros 3 percebe a febre e o mancar)"
+    },
+    {
+      "id": "insulina",
+      "n": "Levar insulina para a Mariana",
+      "w": "até o dia 14 (farmácia hospitalar ou a caneta do Armando)"
+    },
+    {
+      "id": "otavio",
+      "n": "Trazer enxofre e tirar o álcool do Otávio",
+      "w": "até o dia 18"
+    },
+    {
+      "id": "arnaldo",
+      "n": "Dar paz ao Seu Arnaldo, com a chave do Val",
+      "w": "até o dia 22"
+    },
+    {
+      "id": "radio",
+      "n": "Avisar a Jéssica da horda ao pé da torre",
+      "w": "até o dia 25"
+    },
+    {
+      "id": "penit",
+      "n": "Levar comida e remédio ao bloco C da penitenciária",
+      "w": "até o dia 25"
+    },
+    {
+      "id": "kauan",
+      "n": "Levar o Kauã ao hospital atrás da Lívia",
+      "w": "até o dia 28"
+    },
+    {
+      "id": "italo",
+      "n": "Cobrir a deserção do Ítalo",
+      "w": "até o dia 33"
+    },
+    {
+      "id": "diesel",
+      "n": "Contar ao Brasa onde está o diesel da Rosa",
+      "w": "até o dia 40 (escolha ruim)"
+    },
+    {
+      "id": "sato",
+      "n": "Expor o plano do Dr. Sato ao grupo do hospital",
+      "w": "até o dia 45"
+    },
+    {
+      "id": "dito",
+      "n": "Cuidar do túmulo da família do Dito",
+      "w": "até o dia 55"
+    },
+    {
+      "id": "ponte",
+      "n": "Derrubar a Ponte Velha com os explosivos do Otávio",
+      "w": "até o dia 60 (Otávio vivo)"
+    }
+  ],
+  "risk": [
+    [
+      "Jardim Aurora",
+      0.002
+    ],
+    [
+      "Sítios do Oeste e Várzea",
+      0.002
+    ],
+    [
+      "Serra do Corvo",
+      0.0015
+    ],
+    [
+      "Vila Esperança",
+      0.004
+    ],
+    [
+      "Distrito Fabril",
+      0.005
+    ],
+    [
+      "Centro",
+      0.008
+    ],
+    [
+      "Base 7º BIS",
+      0.02
+    ],
+    [
+      "Bloqueio Norte e Penitenciária",
+      0.0055
+    ],
+    [
+      "BR-Sul (posto da PRF)",
+      0.004
+    ]
+  ]
+}

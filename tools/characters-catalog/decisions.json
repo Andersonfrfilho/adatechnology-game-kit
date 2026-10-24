@@ -1,0 +1,206 @@
+{
+  "typeIds": {
+    "value": { "lento": "walker", "corredor": "runner", "rastejante": "crawler", "brutamonte": "brute", "farejador": "sniffer", "saltador": "leaper", "inchado": "bloater", "espreitador": "stalker", "cego": "blind", "gritador": "screamer", "carbonizado": "charred", "afogado": "drowned", "devorador": "devourer" },
+    "source": "G 61950 CATS (game ids), bestiario:6 Z (names)",
+    "reason": "Code names are English (design T4 §2); the Portuguese names stay as the pt-BR label of each type."
+  },
+  "typeNames": {
+    "value": { "walker": "Walker", "runner": "Runner", "crawler": "Crawler", "brute": "Brute", "sniffer": "Sniffer", "leaper": "Leaper", "bloater": "Bloater", "stalker": "Stalker", "blind": "Blind", "screamer": "Screamer", "charred": "Charred", "drowned": "Drowned", "devourer": "Devourer" },
+    "source": "design T4 §2 (undead types)",
+    "reason": "English label of each type."
+  },
+  "typeOrder": {
+    "value": ["walker", "runner", "crawler", "brute", "sniffer", "leaper", "bloater", "stalker", "blind", "screamer", "charred", "drowned", "devourer"],
+    "source": "G 61950 CATS order (the game indexes types by position)",
+    "reason": "Same order as the game, so a type index means the same in both."
+  },
+  "typeSpeeds": {
+    "value": {
+      "benchChaseFrom": ["blind", "charred", "drowned", "devourer"],
+      "frenzyFromGameChase": ["blind", "charred", "drowned", "devourer"],
+      "runner": { "chase": 5.5, "sprint": 6 },
+      "drownedWater": 3
+    },
+    "source": "consolidado.md P3; jogo__bancada-de-hordas.js CATS; G 61950",
+    "reason": "P3: Bestiário base. For blind, charred, drowned and devourer the Bancada value is the `chase` state and the game/Bestiário chase speed is `frenzy`. Runner holds 5.5 m/s and sprints at 6.0."
+  },
+  "drownedSpawn": {
+    "value": { "spawnWeight": 1, "requires": "water" },
+    "source": "design T4 §6 question 4",
+    "reason": "The game has weight 0, the Bestiário 1%. Default: weight 1, only near water."
+  },
+  "childTypePool": {
+    "value": { "exclude": ["brute", "bloater"] },
+    "source": "design T4 §6 question 2; consolidado.md P6",
+    "reason": "Children can turn into every type except brute and bloater. The `childTypePool` option replaces it."
+  },
+  "woundNames": {
+    "value": { "arranhao": "scratch", "laceracao": "laceration", "mordida": "bite" },
+    "source": "design T4 §6 question 1; G 62016 FERIDA",
+    "reason": "Default is the game's three wound types ([share of wounds, chance to infect]); the Bestiário's scratch 20% is one line in infection.json."
+  },
+  "ageIds": {
+    "value": ["fresh", "recent", "old", "decrepit"],
+    "source": "G 61968 IDADES",
+    "reason": "English ids in the game's order."
+  },
+  "agePerception": {
+    "value": { "fresh": {}, "recent": {}, "old": { "hearing": -0.1 }, "decrepit": { "sight": -0.4, "smell": -0.3 } },
+    "source": "bestiario:2 age table (Percepção: base, base, audição −10%, visão −40% olfato −30%)",
+    "reason": "The game's IDADES has no perception; the Bestiário table adds it. Multipliers are fractions added to 1."
+  },
+  "outfitIds": {
+    "value": ["civilian", "police", "military", "firefighter"],
+    "source": "G 61976 ROUPAS",
+    "reason": "English ids in the game's order."
+  },
+  "protectionPresets": {
+    "value": {
+      "police": { "protectionId": "vest_police", "kind": "vest", "resistance": 14, "blunt": 0.3, "pass": 0.8 },
+      "military": { "protectionId": "vest_military", "kind": "vest", "resistance": 28, "blunt": 0.5 },
+      "helmet": { "protectionId": "helmet_combat", "kind": "helmet", "resistance": 9, "consumable": true, "absorbs": "pistol" },
+      "firefighter": { "protectionId": "turnout_gear", "kind": "gear", "fire": 0.25, "limbs": 0.8 }
+    },
+    "source": "design T4 §2 damage pipeline step 2; G 61976 ROUPAS",
+    "reason": "Item ids are the ones game-items takes `protection.ballistic` for when Phase 3 merges. `blunt` is the vest's multiplier on pistol-class shots and `pass` on rifle-class (absent: same as `blunt`), exactly the game's `colete` pair."
+  },
+  "lootPools": {
+    "value": { "police": { "item": "9x19", "chance": 0.4 }, "military": { "item": "556", "chance": 0.3 } },
+    "source": "G 61976 ROUPAS loot",
+    "reason": "Calibre ids become game-weapons calibre ids (556 -> 5_56x45)."
+  },
+  "calibreIds": {
+    "value": { "9x19": "9x19", "12ga": "12ga_00buck", "762x39": "7_62x39", "308": "7_62x51", "556": "5_56x45" },
+    "source": "G 61987 CALIBRES; packages/game-weapons calibers.json",
+    "reason": "Maps the game's calibre keys to the SDK's, which the P7 calibration test reads."
+  },
+  "poseIds": {
+    "value": ["walk", "crawl", "fallen", "attack", "scream", "crouch", "leap", "eat"],
+    "source": "G 65500 iB comment (pose 0 anda/1 rasteja/2 caído/3 ataca/4 grito/5 agachado/6 salto/7 comendo)",
+    "reason": "English ids of the 8 game poses, in the game's index order."
+  },
+  "regionIds": {
+    "value": ["head", "torso", "armL", "armR", "legL", "legR"],
+    "source": "G 67011 zDamage regiao 0..5",
+    "reason": "Game regions in index order."
+  },
+  "segmentRegions": {
+    "value": { "head": "head", "jaw": "head", "neck": "head", "torso": "torso", "pelvis": "torso", "upperArm": "arm", "forearm": "arm", "hand": "arm", "thigh": "leg", "shin": "leg", "foot": "leg" },
+    "source": "design T4 §2 damage pipeline step 1",
+    "reason": "A segment resolves to a region (the arm and leg ones by side)."
+  },
+  "elencoSegmentIds": {
+    "value": { "head": "head", "torso": "torso", "pelvis": "pelvis", "uArm": "upperArm", "fArm": "forearm", "hand": "hand", "thigh": "thigh", "shin": "shin" },
+    "source": "elenco:336-339 segs; arsenal:856 ids",
+    "reason": "Elenco has 8 kinds; they map onto the Arsenal's 11 segments (the shin carries the foot)."
+  },
+  "severity": {
+    "value": { "severAtCut": 0.5, "severAtDamageFraction": 0.9, "destroyAtDamageMultiple": 2, "limpAtHpFraction": 0.5, "splitAtDamage": 150, "headKillDamage": 20, "jawChance": 0.3, "jawDamage": 25, "headBitDamage": 60, "headBitShotgunMetres": 5 },
+    "source": "G 67011 zDamage; arsenal:979-992 damage; elenco:463 hit",
+    "reason": "Game and Elenco agree on cut >= 0.5 or damage > 0.9 of max; Arsenal destroys at damage >= 2x max and splits the torso at >= 150."
+  },
+  "defaultCut": {
+    "value": { "slash": 0.85, "blunt": 0, "explosive": 1, "ballistic": { "pistol": 0.15, "buckshot": 0.75, "rifle": 0.45 } },
+    "source": "design T4 §2 step 6; elenco:461 WEAPONS cut",
+    "reason": "Ballistic cut comes from the Elenco weapon table."
+  },
+  "deathRule": {
+    "value": { "default": "vitality-or-head", "options": ["vitality-or-head", "head-only"] },
+    "source": "design T4 §2 step 7",
+    "reason": "Game rule by default; the Elenco/Bestiário golden rule as an option."
+  },
+  "proportions": {
+    "value": {
+      "guide": { "heightMetres": 1.8, "shoulderWidthMetres": 0.61, "shoulderWidthWomanMetres": 0.57, "shoulderHeightMetres": 1.475, "headToHeight": 0.1667 },
+      "teamGame": "G 65336 J (shoulders +-0.24 m)"
+    },
+    "source": "consolidado.md P1; elenco:244; G 65336",
+    "reason": "P1: the guide's proportions are the default; the game's narrower body is the TEAM_GAME preset the goldens use."
+  },
+  "physicalPenetration": {
+    "value": {
+      "tissuePerCentimetre": { "flesh": 0.25, "bone": 1 },
+      "torsoPath": { "fleshCentimetres": 22, "boneCentimetres": 2 },
+      "regionFactor": { "head": 0.7, "limb": 0.5, "torso": 1 },
+      "bruteTorsoFactor": 2,
+      "energyKept": "P / (P + R)",
+      "points": { "coefficient": 3.5, "exponent": 0.37 },
+      "tolerance": { "bodies": 0, "energyKept": 0.05 },
+      "calibration": [
+        { "caliber": "9x19", "bodies": 2, "bestiaryEnergyKept": 0.5 },
+        { "caliber": "5_56x45", "bodies": 3, "bestiaryEnergyKept": 0.65 },
+        { "caliber": "7_62x51", "bodies": 4, "bestiaryEnergyKept": 0.75 },
+        { "caliber": "7_62x39", "bodies": 3 },
+        { "caliber": "12ga_00buck", "bodies": 1 }
+      ]
+    },
+    "source": "consolidado.md P7; design T4 §2 step 3; bestiario:2 (9 mm 2 bodies, 5.56 3, .308 4); G 68699 shootRay",
+    "reason": "Force P = sqrt(E*m/A) in mm^2 against the resistance R of the path; the segment hit, then P -= R until P <= 0. Torso R = 22*0.25 + 2*1.0 = 7.5."
+  },
+  "teamGamePenetration": {
+    "value": { "damageKeptPerBody": 0.75, "falloffAtTwiceRange": 0.5, "regionCost": { "head": 0.7, "torso": 1, "bruteTorso": 2, "limb": 0.5 } },
+    "source": "G 68699-68724 shootRay; G 61993 note",
+    "reason": "The game's pen points: each body costs by region and keeps 75% of the damage. Used only by the golden preset."
+  },
+  "appearanceVariance": {
+    "value": {
+      "height": { "gaussianSpread": 0.09, "min": 0.9, "max": 1.1 },
+      "buildBands": [{ "below": 0.3, "base": 0.85, "range": 0.1 }, { "below": 0.8, "base": 0.95, "range": 0.13 }, { "base": 1.08, "range": 0.17 }],
+      "buildSpeed": { "lean": 1.05, "heavy": 0.9 },
+      "buildHealth": { "lean": 0.9, "heavy": 1.15 },
+      "speedJitter": { "base": 0.92, "range": 0.16 },
+      "wanderJitter": { "base": 0.8, "range": 0.4 },
+      "runnerAgeClamp": 1,
+      "variantCount": { "walker": 4, "runner": 3, "crawler": 2, "brute": 2 },
+      "variantSeedBase": 7000
+    },
+    "source": "G 66746-66779 zSpawn; G 67079-67092 ZVAR",
+    "reason": "The numbers zSpawn draws with; the G-spawn golden replays the game's own function."
+  },
+  "moments": {
+    "value": {
+      "wander": 1,
+      "alert": 1.3,
+      "scream": 1.2,
+      "injured": 0.5,
+      "crawlCap": 0.4,
+      "water": { "drowned": 3, "others": 0.6 },
+      "night": 1
+    },
+    "source": "design T4 §2 speeds; G 66907, 66918, 67357",
+    "reason": "Defaults of the moment multipliers; the game can replace each one. Night has none in the game."
+  },
+  "abilities": {
+    "value": {
+      "runner": { "evidence": "Investida que derruba e morde", "tackle": true },
+      "crawler": { "evidence": "Morde o tornozelo sem agarrar", "ankleBite": true },
+      "brute": { "evidence": "Dano ×3 em portas", "doorDamageMultiplier": 3, "headshotAreaMultiplier": 0.6, "swingWarningSeconds": 0.8, "knockdownMetres": 2, "recoverySeconds": 1.2 },
+      "sniffer": { "evidence": "puxa até 8 Lentos", "followsBloodTrail": true, "pullsWalkers": 8 },
+      "leaper": { "evidence": "Salta 6 m na horizontal e 3 m para cima", "leapHorizontalMetres": 6, "leapVerticalMetres": 3, "knockdownSeconds": 1.5, "cooldownSeconds": 5 },
+      "bloater": { "evidence": "explode numa nuvem de 4 m: cega 5 s", "burstRadiusMetres": 4, "blindSeconds": 5, "scentSeconds": 60, "burstNoiseMetres": 15 },
+      "stalker": { "evidence": "Finge de morto entre os corpos", "playsDead": true, "wakeMetres": 3, "pounceSpeed": 4, "pounceSeconds": 3 },
+      "blind": { "evidence": "Ouve tiros a 80 m e passos a 6 m", "hearsShotsMetres": 80, "hearsStepsMetres": 6, "hearsCrouchedMetres": 2 },
+      "screamer": { "evidence": "chama todos num raio de 150 m e dá +20% de velocidade por 30 s", "windUpSeconds": 1.5, "callRadiusMetres": 150, "speedBoost": 1.2, "boostSeconds": 30, "repeatSeconds": 20 },
+      "charred": { "evidence": "3 de dano por segundo durante 4 s", "fireImmune": true, "burnDamagePerSecond": 3, "burnSeconds": 4, "waterHealthLoss": 0.3 },
+      "drowned": { "evidence": "3 s para se soltar", "submerged": true, "breakFreeSeconds": 3 },
+      "devourer": { "evidence": "cada um dá +20 de vida e +5% de tamanho, até 3 vezes", "eatsCorpses": true, "healthPerCorpse": 20, "sizePerCorpse": 0.05, "maxCorpses": 3, "sightWhileEatingMetres": 5 }
+    },
+    "source": "bestiario:6-46 Z ai text; G 67257 zSpecialSpawn, 67266 zAbility, 67053 inchadoBurst",
+    "reason": "Movement abilities ship as data (game-crowd runs them in Phase 8). `evidence` is a snippet the source test finds in the Bestiário text of the type, so a changed source fails the check."
+  },
+  "scope": {
+    "value": {
+      "sdk": ["types", "ages", "outfits", "infection", "moments", "penetration presets", "segments", "body proportions", "gait", "appearance variance"],
+      "gameSlice": ["44 people", "18 groups", "relations", "events", "life and simulate", "7º BIS and named units", "ZONES", "non-player characters of the block", "calibre points table"],
+      "phase8Roles": ["Cícero Tavares", "Sandra Monteiro"],
+      "notPorted": ["Bancada buildZombie (only its triangle budget 2500/800/250)", "Mapa figures", "Bestiário v0.1 builder (text and gait data only)"]
+    },
+    "source": "design T4 §1, §2 content packs, consolidado.md P9",
+    "reason": "What goes where. The game slice is written by --game-out into specs/001-migracao-entregas-dos-times/game-slice/characters/ and copied to the zombiada repository."
+  },
+  "triangleBudget": {
+    "value": { "lod0": 2500, "lod1": 800, "lod2": 250 },
+    "source": "design T4 §1 (Bancada buildZombie)",
+    "reason": "The 1000-body benchmark budget."
+  }
+}

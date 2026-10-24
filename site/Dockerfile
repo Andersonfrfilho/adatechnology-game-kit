@@ -10,6 +10,7 @@ WORKDIR /app
 # Manifests first so the install layer stays cached until dependencies change.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY packages/game-camera/package.json packages/game-camera/
+COPY packages/game-characters/package.json packages/game-characters/
 COPY packages/game-contracts/package.json packages/game-contracts/
 COPY packages/game-destruction/package.json packages/game-destruction/
 COPY packages/game-destruction-three/package.json packages/game-destruction-three/
@@ -34,6 +35,8 @@ COPY packages/game-vehicles/package.json packages/game-vehicles/
 COPY packages/game-vehicles-fleet/package.json packages/game-vehicles-fleet/
 COPY packages/game-weapons/package.json packages/game-weapons/
 COPY packages/game-weapons-three/package.json packages/game-weapons-three/
+COPY tools/animals-catalog/package.json tools/animals-catalog/
+COPY tools/characters-catalog/package.json tools/characters-catalog/
 COPY tools/golden/package.json tools/golden/
 COPY tools/weapon-thumbnails/package.json tools/weapon-thumbnails/
 COPY tools/weapons-catalog/package.json tools/weapons-catalog/

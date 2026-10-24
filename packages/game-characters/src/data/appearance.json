@@ -1,0 +1,64 @@
+{
+  "variance": {
+    "height": {
+      "gaussianSpread": 0.09,
+      "min": 0.9,
+      "max": 1.1
+    },
+    "buildBands": [
+      {
+        "below": 0.3,
+        "base": 0.85,
+        "range": 0.1
+      },
+      {
+        "below": 0.8,
+        "base": 0.95,
+        "range": 0.13
+      },
+      {
+        "base": 1.08,
+        "range": 0.17
+      }
+    ],
+    "buildSpeed": {
+      "lean": 1.05,
+      "heavy": 0.9
+    },
+    "buildHealth": {
+      "lean": 0.9,
+      "heavy": 1.15
+    },
+    "speedJitter": {
+      "base": 0.92,
+      "range": 0.16
+    },
+    "wanderJitter": {
+      "base": 0.8,
+      "range": 0.4
+    },
+    "runnerAgeClamp": 1,
+    "variantCount": {
+      "walker": 4,
+      "runner": 3,
+      "crawler": 2,
+      "brute": 2
+    },
+    "variantSeedBase": 7000
+  },
+  "civilianColors": [
+    "6D5A4A",
+    "4D5D6B",
+    "7A3B33",
+    "5B6B4A",
+    "8A7A5A",
+    "3E4A5C",
+    "6A4A6A",
+    "9A8A70",
+    "40403A"
+  ],
+  "corpses": {
+    "max": 400,
+    "lifeSeconds": 900
+  }
+}

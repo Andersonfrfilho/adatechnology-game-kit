@@ -1,0 +1,58 @@
+{
+  "speciesIds": {
+    "value": { "cao": "dog", "gato": "cat", "galinha": "chicken", "vaca": "cow", "cavalo": "horse", "porco": "pig", "javali": "wild_boar", "capivara": "capybara", "onca": "jaguar", "urubu": "vulture", "queroquero": "southern_lapwing", "jararaca": "lancehead", "rato": "rat" },
+    "source": "bichos:9-75 SPECIES",
+    "reason": "Code names are English (design T4 §2); the Portuguese name stays as the pt-BR label."
+  },
+  "speciesNames": {
+    "value": { "dog": "Dog", "cat": "Cat", "chicken": "Chicken", "cow": "Cow", "horse": "Horse", "pig": "Pig", "wild_boar": "Wild boar", "capybara": "Capybara", "jaguar": "Jaguar", "vulture": "Vulture", "southern_lapwing": "Southern lapwing", "lancehead": "Lancehead", "rat": "Rat" },
+    "source": "bichos:9-75 SPECIES (nome, sci)",
+    "reason": "English label of each species."
+  },
+  "groups": {
+    "value": { "Doméstico": "domestic", "Fazenda": "farm", "Selvagem": "wild", "Ambiente": "environment" },
+    "source": "bichos:9-75 SPECIES grupo; GCOL",
+    "reason": "English ids of the four groups."
+  },
+  "phases": {
+    "value": { "MVP": "mvp", "Fase 2": "phase_2", "Fase 3": "phase_3" },
+    "source": "bichos:9-75 SPECIES fase",
+    "reason": "Production phase of the team plan, kept as data."
+  },
+  "outcomes": {
+    "value": { "vira": "turns", "morre": "dies", "imune": "immune" },
+    "source": "bichos:9-75 SPECIES inf; rule text at line 2",
+    "reason": "What a bite does to the animal."
+  },
+  "outbreak": {
+    "value": {
+      "turns": { "turnMinutes": { "min": 10, "max": 30 }, "exceptions": { "rat": { "min": 2, "max": 2 }, "jaguar": { "min": 60, "max": 60 } }, "biteInfectsPlayer": true, "ratBiteInfectionChance": 0.05 },
+      "dies": { "deathHours": { "min": 2, "max": 6 }, "carcass": { "lureRadiusMetres": 200, "lureDays": 1, "vulturesArriveMinutes": 10 } },
+      "eating": { "rawMeatStaminaLoss": 0.3, "rawMeatHours": 6 },
+      "evidence": ["Vira em 10 a 30 min (rato em 2 min, onça em 1 h)", "Morre em 2 a 6 h e não levanta", "chama zumbis num raio de 200 m por 1 dia e urubus em 10 min", "30% menos vigor por 6 h", "Cada mordida tem 5% de chance de infectar"]
+    },
+    "source": "bichos:2 (rule text of the page)",
+    "reason": "The animal infection rule as data: it lives in game-characters-undead (`undead/animals`), the species only point to it. `evidence` snippets are checked against the page text."
+  },
+  "soundRanges": {
+    "value": {
+      "dog": { "metres": 60, "evidence": "Latido atrai zumbis a 60 m" },
+      "chicken": { "metres": 30, "evidence": "alcance 30 m" },
+      "cow": { "metres": 80, "evidence": "Mugido de sede atrai zumbis a 80 m" },
+      "horse": { "metres": 50, "evidence": "Relincho atrai a 50 m" },
+      "wild_boar": { "metres": 40, "evidence": "faz barulho a 40 m" },
+      "southern_lapwing": { "metres": 40, "evidence": "alcance 40 m" }
+    },
+    "source": "bichos:9-75 SPECIES som",
+    "reason": "Sound ranges as data (design T4 §2 animals); the other species make no sound that wakes zombies."
+  },
+  "scope": {
+    "value": {
+      "sdk": ["body specs", "gait phase tables", "13 species with outcome and outbreak data"],
+      "gameSlice": ["species texts (where they live, role, care, yield, sound)", "ZONES", "TER (rivers, lakes, roads, cities)"],
+      "notPorted": ["G 66146 BICHOS (copy of the page; ignored)", "the page canvas textures (spots and stripes become data markers)"]
+    },
+    "source": "design T4 §1 (Animals), CLAUDE.md of the game kit",
+    "reason": "Texts and places name the valley: they go to the game repository."
+  }
+}

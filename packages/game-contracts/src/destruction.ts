@@ -240,6 +240,12 @@ export interface Hit {
   space?: 'world' | 'local'
   /** Who caused it (passed through to events). */
   source?: string
+  /** Projectile mass in grams (ballistic): the penetration of a body needs it, the energy alone does not say how much a bullet pushes. */
+  mass?: number
+  /** 0..1, how much of the blow is an edge that cuts through (slash 0.85, blunt 0, explosive 1; a bullet carries its own). */
+  cut?: number
+  /** A part the caller already resolved, by id (a crowd raycast against capsules); the impl then skips its own part search. */
+  part?: string
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -351,6 +357,8 @@ export interface ObjectState {
   groups: string[][]
   /** Every part is broken, melted or ash. */
   destroyed: boolean
+  /** Only objects that are a living body (a character, an animal): the summary the crowd and the HUD read. */
+  body?: { alive: boolean; vitality: number; missing: number; limp: boolean; crawl: boolean }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -421,6 +429,15 @@ export type DestructionEvent =
   | (EventBase & { type: 'stage'; part: string; stage: DamageStage; opening?: { center: Vec3; radius: number }; fragments?: readonly Fragment[] })
   /** Rebar of a reinforced part is bare: segments in world space. Empty `bars` means the cage is gone. */
   | (EventBase & { type: 'expose'; part: string; bars: readonly [Vec3, Vec3][] })
+  /** A living body changed: a wound, a broken or severed limb, a destroyed segment, a split torso, limp, crawl, stun or death. `below` lists the parts that fall with a severed one. */
+  | (EventBase & {
+      type: 'body'
+      part?: string
+      change: 'wound' | 'broken' | 'severed' | 'destroyed' | 'split' | 'limp' | 'crawl' | 'stunned' | 'killed'
+      cause?: 'head' | 'vitality' | 'bleed' | 'explosion'
+      below?: string[]
+      exit?: Vec3
+    })
   | (EventBase & { type: 'destroyed' })
 
 export type DestructionEventType = DestructionEvent['type']

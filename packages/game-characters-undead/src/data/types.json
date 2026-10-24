@@ -1,0 +1,816 @@
+[
+  {
+    "id": "walker",
+    "name": {
+      "en": "Walker",
+      "pt-BR": "Lento"
+    },
+    "spawnWeight": 48,
+    "health": 100,
+    "speed": {
+      "wander": 0.6,
+      "chase": 1.4
+    },
+    "damage": 10,
+    "biteChance": 0.15,
+    "multipliers": {
+      "head": 1,
+      "torso": 1,
+      "arms": 0.8,
+      "legs": 0.8
+    },
+    "perception": {
+      "sight": 15,
+      "hearing": 40,
+      "smell": 10
+    },
+    "eye": {
+      "color": "E3C341"
+    },
+    "posture": {},
+    "gait": {
+      "f": 1.1,
+      "a": 0.28,
+      "k": 0.35,
+      "drag": true,
+      "arm": 0.08
+    },
+    "abilities": {},
+    "text": {
+      "pt-BR": {
+        "role": "A massa da horda: cerca e prende.",
+        "ai": "Visão 15 m (cone 90°), audição 40 m, olfato 10 m. Segue o som dos outros. Agarra e depois morde.",
+        "counter": "Gargalos, empurrão + golpe na cabeça, distância.",
+        "voice": "Gemido grave e longo"
+      }
+    }
+  },
+  {
+    "id": "runner",
+    "name": {
+      "en": "Runner",
+      "pt-BR": "Corredor"
+    },
+    "spawnWeight": 14,
+    "nightShare": 0.25,
+    "health": 70,
+    "speed": {
+      "wander": 1.2,
+      "chase": 5.5,
+      "sprint": 6
+    },
+    "damage": 8,
+    "biteChance": 0.25,
+    "multipliers": {
+      "head": 1,
+      "torso": 1,
+      "arms": 1.2,
+      "legs": 1.3
+    },
+    "perception": {
+      "sight": 30,
+      "hearing": 50,
+      "smell": 0
+    },
+    "eye": {
+      "color": "E5392B"
+    },
+    "posture": {
+      "s": 0.97,
+      "bulk": 0.88,
+      "lean": 0.75,
+      "armL": -1.35,
+      "armR": -1.05,
+      "elbL": -0.08,
+      "elbR": -0.12,
+      "legL": -0.75,
+      "legR": 0.55,
+      "kneeL": 0.45,
+      "kneeR": 1.25,
+      "headX": -0.55,
+      "headZ": 0,
+      "drop": -0.1
+    },
+    "gait": {
+      "f": 3.1,
+      "a": 0.75,
+      "k": 1.1,
+      "arm": 0.12,
+      "bob": 0.05
+    },
+    "abilities": {
+      "tackle": true
+    },
+    "text": {
+      "pt-BR": {
+        "role": "Predador que quebra a formação do grupo.",
+        "ai": "Visão 30 m, audição 50 m. Linha reta, pula obstáculos baixos. Investida que derruba e morde.",
+        "counter": "Tiro na perna, portas fechadas, iscas sonoras.",
+        "voice": "Rosnado curto, grito ao avistar"
+      }
+    }
+  },
+  {
+    "id": "crawler",
+    "name": {
+      "en": "Crawler",
+      "pt-BR": "Rastejante"
+    },
+    "spawnWeight": 9,
+    "health": 60,
+    "speed": {
+      "wander": 0.4,
+      "chase": 0.4
+    },
+    "damage": 6,
+    "biteChance": 0.35,
+    "multipliers": {
+      "head": 1,
+      "torso": 1,
+      "arms": 1,
+      "legs": 1
+    },
+    "perception": {
+      "sight": 5,
+      "hearing": 20,
+      "smell": 0
+    },
+    "eye": {
+      "color": "A9D14A"
+    },
+    "crawls": true,
+    "posture": {
+      "noLegs": true,
+      "lean": 1.42,
+      "drop": -0.74,
+      "armL": -2.75,
+      "armR": -2.35,
+      "elbL": -0.5,
+      "elbR": -0.3,
+      "headX": -1.35,
+      "headZ": 0.1
+    },
+    "gait": {
+      "f": 1,
+      "crawl": true
+    },
+    "abilities": {
+      "ankleBite": true
+    },
+    "text": {
+      "pt-BR": {
+        "role": "Emboscada no chão.",
+        "ai": "Visão 5 m, audição 20 m. Esconde-se no mato e sob carros. Morde o tornozelo sem agarrar.",
+        "counter": "Lanterna, olhar para o chão, pisão (40 na cabeça).",
+        "voice": "Gorgolejo, unhas raspando"
+      }
+    }
+  },
+  {
+    "id": "brute",
+    "name": {
+      "en": "Brute",
+      "pt-BR": "Brutamonte"
+    },
+    "spawnWeight": 5,
+    "health": 220,
+    "speed": {
+      "wander": 0.8,
+      "chase": 2
+    },
+    "damage": 30,
+    "biteChance": 0.1,
+    "multipliers": {
+      "head": 1,
+      "torso": 1,
+      "arms": 0.6,
+      "legs": 0.7
+    },
+    "perception": {
+      "sight": 20,
+      "hearing": 30,
+      "smell": 0
+    },
+    "eye": {
+      "color": "EF8A2A"
+    },
+    "scale": 1.42,
+    "bodyCount": 2,
+    "posture": {
+      "s": 1.42,
+      "bulk": 1.32,
+      "lean": 0.3,
+      "armL": -0.4,
+      "armR": -0.25,
+      "elbL": -0.35,
+      "elbR": -0.25,
+      "legL": -0.12,
+      "legR": 0.12,
+      "kneeL": 0.12,
+      "kneeR": 0.12,
+      "headX": -0.2,
+      "headZ": 0,
+      "neck": -0.07,
+      "drop": -0.02
+    },
+    "gait": {
+      "f": 0.9,
+      "a": 0.3,
+      "k": 0.3,
+      "arm": 0.15,
+      "bob": 0.04,
+      "sway": 0.05
+    },
+    "abilities": {
+      "doorDamageMultiplier": 3,
+      "headshotAreaMultiplier": 0.6,
+      "swingWarningSeconds": 0.8,
+      "knockdownMetres": 2,
+      "recoverySeconds": 1.2
+    },
+    "text": {
+      "pt-BR": {
+        "role": "Tanque que quebra barricadas.",
+        "ai": "Visão 20 m, audição 30 m. Dano ×3 em portas. Golpe em arco que derruba 2 m, com aviso de 0,8 s. Cabeça baixa: −40% de área de headshot.",
+        "counter": "Atirar quando ele ergue a cabeça após o golpe (1,2 s), fogo, explosivos.",
+        "voice": "Urro subgrave"
+      }
+    }
+  },
+  {
+    "id": "sniffer",
+    "name": {
+      "en": "Sniffer",
+      "pt-BR": "Farejador"
+    },
+    "spawnWeight": 5,
+    "health": 80,
+    "speed": {
+      "wander": 1,
+      "chase": 3.5
+    },
+    "damage": 9,
+    "biteChance": 0.2,
+    "multipliers": {
+      "head": 1,
+      "torso": 1,
+      "arms": 1.1,
+      "legs": 1.1
+    },
+    "perception": {
+      "sight": 10,
+      "hearing": 0,
+      "smell": 60
+    },
+    "eye": {
+      "color": "4FC6D6"
+    },
+    "posture": {
+      "lean": 0.45,
+      "headX": -0.75,
+      "headFwd": 0.07,
+      "armL": -0.35,
+      "armR": -0.2,
+      "elbL": -0.45,
+      "elbR": -0.4,
+      "legL": -0.25,
+      "legR": 0.2,
+      "kneeL": 0.3,
+      "kneeR": 0.45,
+      "headZ": 0.12,
+      "nose": true,
+      "drop": -0.04
+    },
+    "gait": {
+      "f": 1.6,
+      "a": 0.4,
+      "k": 0.45,
+      "arm": 0.1,
+      "sniff": true
+    },
+    "abilities": {
+      "followsBloodTrail": true,
+      "pullsWalkers": 8
+    },
+    "text": {
+      "pt-BR": {
+        "role": "Caçador que segue rastro.",
+        "ai": "Olfato 60 m, segue rastro de sangue (jogador ferido, zumbis frescos) e puxa até 8 Lentos atrás. Visão 10 m.",
+        "counter": "Curativo para estancar, atravessar água, isca de carne.",
+        "voice": "Fungadas, rosnado baixo"
+      }
+    }
+  },
+  {
+    "id": "leaper",
+    "name": {
+      "en": "Leaper",
+      "pt-BR": "Saltador"
+    },
+    "spawnWeight": 4,
+    "health": 75,
+    "speed": {
+      "wander": 1,
+      "chase": 4.5
+    },
+    "damage": 14,
+    "biteChance": 0.3,
+    "multipliers": {
+      "head": 1,
+      "torso": 1,
+      "arms": 1.1,
+      "legs": 1.4
+    },
+    "perception": {
+      "sight": 25,
+      "hearing": 40,
+      "smell": 0
+    },
+    "eye": {
+      "color": "E04AA8"
+    },
+    "posture": {
+      "bulk": 0.86,
+      "lean": 0.65,
+      "drop": -0.36,
+      "legL": -1.15,
+      "legR": -0.9,
+      "kneeL": 1.9,
+      "kneeR": 1.7,
+      "armL": 0.7,
+      "armR": 0.5,
+      "elbL": -0.6,
+      "elbR": -0.5,
+      "headX": -0.7,
+      "headZ": 0
+    },
+    "gait": {
+      "f": 0.42,
+      "leap": true
+    },
+    "abilities": {
+      "leapHorizontalMetres": 6,
+      "leapVerticalMetres": 3,
+      "knockdownSeconds": 1.5,
+      "cooldownSeconds": 5
+    },
+    "text": {
+      "pt-BR": {
+        "role": "Pula sobre o grupo e derruba quem está atrás de cobertura.",
+        "ai": "Visão 25 m, audição 40 m. Salta 6 m na horizontal e 3 m para cima (capôs, muros baixos, telhados). O salto derruba o alvo por 1,5 s. Recarga de 5 s.",
+        "counter": "Tiro no ar durante o salto (ele não desvia), ficar junto de parede alta, empurrão no pouso.",
+        "voice": "Chiado agudo antes do salto"
+      }
+    }
+  },
+  {
+    "id": "bloater",
+    "name": {
+      "en": "Bloater",
+      "pt-BR": "Inchado"
+    },
+    "spawnWeight": 3,
+    "health": 120,
+    "speed": {
+      "wander": 0.5,
+      "chase": 1
+    },
+    "damage": 12,
+    "biteChance": 0.15,
+    "multipliers": {
+      "head": 1,
+      "torso": 1.5,
+      "arms": 1,
+      "legs": 1
+    },
+    "perception": {
+      "sight": 10,
+      "hearing": 0,
+      "smell": 25
+    },
+    "eye": {
+      "color": "5FE08A"
+    },
+    "build": 1.35,
+    "posture": {
+      "bloat": true,
+      "s": 1.03,
+      "bulk": 1.15,
+      "lean": 0,
+      "armL": -0.55,
+      "armR": -0.45,
+      "elbL": -0.3,
+      "elbR": -0.3,
+      "legL": 0,
+      "legR": 0,
+      "kneeL": 0.05,
+      "kneeR": 0.05,
+      "headZ": 0.1,
+      "drop": 0,
+      "armOut": 0.45
+    },
+    "gait": {
+      "f": 0.9,
+      "a": 0.18,
+      "k": 0.15,
+      "sway": 0.09,
+      "arm": 0.1
+    },
+    "abilities": {
+      "burstRadiusMetres": 4,
+      "blindSeconds": 5,
+      "scentSeconds": 60,
+      "burstNoiseMetres": 15
+    },
+    "text": {
+      "pt-BR": {
+        "role": "Perigo de área.",
+        "ai": "Visão 10 m, olfato 25 m. Ao morrer explode numa nuvem de 4 m: cega 5 s, dobra seu rastro de cheiro e faz tossir.",
+        "counter": "Tiro de longe, explodir no meio da horda, máscara.",
+        "voice": "Borbulho e gases"
+      }
+    }
+  },
+  {
+    "id": "stalker",
+    "name": {
+      "en": "Stalker",
+      "pt-BR": "Espreitador"
+    },
+    "spawnWeight": 3,
+    "health": 90,
+    "speed": {
+      "wander": 1,
+      "chase": 4
+    },
+    "damage": 10,
+    "biteChance": 0.4,
+    "multipliers": {
+      "head": 1,
+      "torso": 1,
+      "arms": 1,
+      "legs": 1
+    },
+    "perception": {
+      "sight": 12,
+      "hearing": 35,
+      "smell": 0
+    },
+    "eye": {
+      "color": "9B5CE0",
+      "dim": true
+    },
+    "posture": {
+      "bulk": 0.86,
+      "lean": 1.2,
+      "drop": -0.36,
+      "legL": -1.05,
+      "legR": -0.85,
+      "kneeL": 1.75,
+      "kneeR": 1.6,
+      "armL": -1.1,
+      "armR": -1.35,
+      "elbL": -0.05,
+      "elbR": -0.1,
+      "headX": -1.05,
+      "headZ": 0,
+      "dim": true
+    },
+    "gait": {
+      "f": 0.7,
+      "a": 0.12,
+      "k": 0.15,
+      "arm": 0.25,
+      "stalk": true
+    },
+    "abilities": {
+      "playsDead": true,
+      "wakeMetres": 3,
+      "pounceSpeed": 4,
+      "pounceSeconds": 3
+    },
+    "text": {
+      "pt-BR": {
+        "role": "Terror de interiores.",
+        "ai": "Finge de morto entre os corpos. Acorda se alguém passa a menos de 3 m ou de costas. Bote de 4 m/s por 3 s, agarra por trás.",
+        "counter": "Tiro de confirmação nos corpos; corpo de verdade tem olho apagado. Entrar em dupla.",
+        "voice": "Silencioso; estalo de articulação a <8 m"
+      }
+    }
+  },
+  {
+    "id": "blind",
+    "name": {
+      "en": "Blind",
+      "pt-BR": "Cego"
+    },
+    "spawnWeight": 3,
+    "health": 110,
+    "speed": {
+      "wander": 0.8,
+      "chase": 1.6,
+      "frenzy": 3
+    },
+    "damage": 12,
+    "biteChance": 0.35,
+    "multipliers": {
+      "head": 1,
+      "torso": 1,
+      "arms": 0.9,
+      "legs": 0.9
+    },
+    "perception": {
+      "sight": 0,
+      "hearing": 80,
+      "smell": 0
+    },
+    "eye": {
+      "color": "D9D4C8",
+      "blind": true
+    },
+    "posture": {
+      "lean": 0.05,
+      "armL": -0.6,
+      "armR": -0.35,
+      "elbL": -0.5,
+      "elbR": -0.7,
+      "legL": -0.08,
+      "legR": 0.1,
+      "kneeL": 0.08,
+      "kneeR": 0.12,
+      "headX": -0.25,
+      "headZ": 0.45,
+      "blind": true,
+      "mouth": true
+    },
+    "gait": {
+      "f": 0.5,
+      "listen": true
+    },
+    "abilities": {
+      "hearsShotsMetres": 80,
+      "hearsStepsMetres": 6,
+      "hearsCrouchedMetres": 2
+    },
+    "text": {
+      "pt-BR": {
+        "role": "Caça só pelo som.",
+        "ai": "Não enxerga. Ouve tiros a 80 m e passos a 6 m (agachado, 2 m). Vai direto à fonte do som e ataca o que encontrar, até outros zumbis.",
+        "counter": "Andar agachado, jogar garrafa para desviar, não atirar sem supressor por perto.",
+        "voice": "Estalos de língua, como um morcego"
+      }
+    }
+  },
+  {
+    "id": "screamer",
+    "name": {
+      "en": "Screamer",
+      "pt-BR": "Gritador"
+    },
+    "spawnWeight": 2,
+    "health": 50,
+    "speed": {
+      "wander": 1,
+      "chase": 3
+    },
+    "damage": 4,
+    "biteChance": 0.05,
+    "multipliers": {
+      "head": 1,
+      "torso": 1.2,
+      "arms": 1.2,
+      "legs": 1.2
+    },
+    "perception": {
+      "sight": 25,
+      "hearing": 60,
+      "smell": 0
+    },
+    "eye": {
+      "color": "F2F2EA"
+    },
+    "posture": {
+      "bulk": 0.84,
+      "lean": -0.18,
+      "armL": 0.35,
+      "armR": 0.45,
+      "elbL": -0.6,
+      "elbR": -0.5,
+      "legL": -0.05,
+      "legR": 0.1,
+      "kneeL": 0.05,
+      "kneeR": 0.1,
+      "headX": -0.65,
+      "headZ": 0,
+      "neck": 0.12,
+      "mouth": true,
+      "drop": 0
+    },
+    "gait": {
+      "f": 0.8,
+      "idle": true
+    },
+    "abilities": {
+      "windUpSeconds": 1.5,
+      "callRadiusMetres": 150,
+      "speedBoost": 1.2,
+      "boostSeconds": 30,
+      "repeatSeconds": 20
+    },
+    "text": {
+      "pt-BR": {
+        "role": "O alarme vivo.",
+        "ai": "Audição 60 m, visão 25 m. Ao ver alguém grita: chama todos num raio de 150 m e dá +20% de velocidade por 30 s. Repete a cada 20 s e foge do combate.",
+        "counter": "Matar primeiro e em silêncio (arco, supressor), cortar a linha de visão.",
+        "voice": "Grito de 3 s ouvido a 100 m"
+      }
+    }
+  },
+  {
+    "id": "charred",
+    "name": {
+      "en": "Charred",
+      "pt-BR": "Carbonizado"
+    },
+    "spawnWeight": 2,
+    "health": 90,
+    "speed": {
+      "wander": 0.9,
+      "chase": 1.6,
+      "frenzy": 2.2
+    },
+    "damage": 10,
+    "biteChance": 0.15,
+    "multipliers": {
+      "head": 1,
+      "torso": 0.8,
+      "arms": 0.8,
+      "legs": 0.8
+    },
+    "perception": {
+      "sight": 15,
+      "hearing": 40,
+      "smell": 0
+    },
+    "eye": {
+      "color": "FF6A1A"
+    },
+    "posture": {
+      "lean": 0.2,
+      "armL": -1,
+      "armR": -0.6,
+      "elbL": -0.6,
+      "elbR": -0.9,
+      "headX": 0.05,
+      "headZ": -0.15,
+      "char": true
+    },
+    "gait": {
+      "f": 1.1,
+      "a": 0.3,
+      "k": 0.35,
+      "arm": 0.12,
+      "bob": 0.03
+    },
+    "abilities": {
+      "fireImmune": true,
+      "burnDamagePerSecond": 3,
+      "burnSeconds": 4,
+      "waterHealthLoss": 0.3
+    },
+    "text": {
+      "pt-BR": {
+        "role": "Brasa ambulante.",
+        "ai": "Imune a fogo. O corpo a corpo queima (3 de dano por segundo durante 4 s). À noite ilumina o entorno e se denuncia. Água apaga as brasas e tira 30% da vida.",
+        "counter": "Tiro à distância, água, extintor.",
+        "voice": "Crepitar e chiado"
+      }
+    }
+  },
+  {
+    "id": "drowned",
+    "name": {
+      "en": "Drowned",
+      "pt-BR": "Afogado"
+    },
+    "spawnWeight": 1,
+    "requires": "water",
+    "health": 130,
+    "speed": {
+      "wander": 0.6,
+      "chase": 1.2,
+      "frenzy": 2.5,
+      "water": 3
+    },
+    "damage": 10,
+    "biteChance": 0.25,
+    "multipliers": {
+      "head": 1,
+      "torso": 1,
+      "arms": 1,
+      "legs": 1
+    },
+    "perception": {
+      "sight": 10,
+      "hearing": 30,
+      "smell": 0
+    },
+    "eye": {
+      "color": "3D8BFF"
+    },
+    "posture": {
+      "bulk": 1.08,
+      "lean": 0.22,
+      "armL": -0.25,
+      "armR": -0.15,
+      "elbL": -0.1,
+      "elbR": -0.15,
+      "headX": 0.35,
+      "headZ": 0.3,
+      "wet": true
+    },
+    "gait": {
+      "f": 0.9,
+      "a": 0.25,
+      "k": 0.25,
+      "arm": 0.06,
+      "drag": true
+    },
+    "abilities": {
+      "submerged": true,
+      "breakFreeSeconds": 3
+    },
+    "text": {
+      "pt-BR": {
+        "role": "Emboscada na água.",
+        "ai": "Fica submerso em rios, lagos e enchentes. Agarra quem atravessa e puxa para baixo: 3 s para se soltar ou começa a afogar. Fora d'água é lento.",
+        "counter": "Pontes, barco, atirar nas bolhas da água.",
+        "voice": "Gorgolejo encharcado"
+      }
+    }
+  },
+  {
+    "id": "devourer",
+    "name": {
+      "en": "Devourer",
+      "pt-BR": "Devorador"
+    },
+    "spawnWeight": 1,
+    "health": 120,
+    "speed": {
+      "wander": 0.9,
+      "chase": 2.4,
+      "frenzy": 3
+    },
+    "damage": 16,
+    "biteChance": 0.3,
+    "multipliers": {
+      "head": 1,
+      "torso": 1,
+      "arms": 0.9,
+      "legs": 0.9
+    },
+    "perception": {
+      "sight": 20,
+      "hearing": 40,
+      "smell": 20
+    },
+    "eye": {
+      "color": "B0122A"
+    },
+    "posture": {
+      "lean": 0.95,
+      "drop": -0.42,
+      "legL": -1.45,
+      "legR": -1.3,
+      "kneeL": 2.3,
+      "kneeR": 2.2,
+      "armL": -1.55,
+      "armR": -1.35,
+      "elbL": -0.7,
+      "elbR": -0.9,
+      "headX": 0.25,
+      "headZ": 0,
+      "gore": true
+    },
+    "gait": {
+      "f": 1.3,
+      "eat": true
+    },
+    "abilities": {
+      "eatsCorpses": true,
+      "healthPerCorpse": 20,
+      "sizePerCorpse": 0.05,
+      "maxCorpses": 3,
+      "sightWhileEatingMetres": 5
+    },
+    "text": {
+      "pt-BR": {
+        "role": "Fica mais forte comendo.",
+        "ai": "Procura os corpos que ficam 15 min no chão e come: cada um dá +20 de vida e +5% de tamanho, até 3 vezes. Enquanto come, só vê a 5 m. Defende a comida.",
+        "counter": "Queimar ou recolher os corpos, atacar enquanto ele come.",
+        "voice": "Mastigar molhado, rosnado"
+      }
+    }
+  }
+]

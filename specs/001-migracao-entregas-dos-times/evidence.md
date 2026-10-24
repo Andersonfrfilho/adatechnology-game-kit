@@ -1348,3 +1348,160 @@ média de loja também liga numa tomada, e o sorteio da edícula usa o nome de f
 Testes de comportamento (`tests/utilities.test.ts`): todo modelo tem instalações e passa no `engine.validate` (12 modelos x 8 sementes x 3 estados); gás em pelo menos duas posições; botijão externo fora da casa e o de baixo da bancada escondido; aparelho com tomada a até 1,2 m e chuveiro com tomada própria a 1,10 m; chave no lado do trinco; barraco (`tap`) sem medidor e com ligação a 2,6 m; cabana `offgrid` sem instalação, só a fonte (`solar` ou `lamp`); solar no telhado ou em rack de laje; edícula com porta de 0,85 m, 2 janelas, móveis dentro e caminho; geladeira com mais mantimento fortificada do que normal e normal mais do que abandonada, comida estragada na abandonada; um provedor registrado responde antes do padrão.
 
 **Escolhas de negócio (padrão reversível):** as regras de estado (`fortified`, `abandoned`) do conteúdo ficam em `CONTENT_STATES` neste pacote até o catálogo de itens (Fase 3) e o pacote do gênero (G7: multiplicadores do estado em `-post-apocalyptic`) assumirem; ids de item de conteúdo em inglês (`water_bottle`, `canned_tuna`, `spoiled_food`...) são provisórios para o catálogo da Fase 3; `gaveteiro` e `sapateira` do time não têm categoria equivalente no SDK e ficam sem conteúdo; o botijão de cozinha é um tipo novo (`cooking_gas_cylinder`, 0,36 x 0,36 x 0,48) ao lado do `gas_cylinder` externo do residencial.
+
+## Fase 4 — grupo A
+
+Tarefas T4.0 (só o que não toca o `game-items`), T4.1a, T4.1b e T4.1c do desenho `design/T4-personagens-e-animais.md`. Branch `feat/spec-001-fase-4`, a partir da `main`. Nada foi enviado ao remoto.
+
+### T4.0 — contratos do corpo vivo
+
+| Mudança | Onde | Teste |
+|---|---|---|
+| `BodySlot`, `SegmentKind`, `BodyRegion`, `MISSING_BITS` (os dez bits que o shader lê) | `packages/game-contracts/src/body.ts` | `contracts.test.ts`: os valores 1, 2, 4 ... 512 |
+| `Hit.mass` (g), `Hit.cut` (0..1), `Hit.part` | `destruction.ts` | tipos |
+| Evento `body` (`change`, `cause`, `below`, `exit`) e `ObjectState.body` | `destruction.ts`; `game-destruction/src/locale.ts` ganhou o rótulo em `en` e `pt-BR` (o `Record` do evento exige) | `pnpm -r typecheck` |
+| `Shot.mass` e `shotToHit` copia | `weapons.ts`; `game-weapons/src/weapon-firearm.ts` preenche `bulletGrams` (do chumbo na espingarda) | `contracts.test.ts`, `game-weapons/tests/weapons.test.ts` |
+
+**Pendente da Fase 3** (o `game-items` está em outra branch e não foi tocado): `protection.ballistic` (`{ resistance, blunt, pass?, consumable? }`) e o reexport de `BodySlot` em `game-items`. Os ids de proteção que os presets citam (`vest_police`, `vest_military`, `helmet_combat`, `turnout_gear`) são os que o `game-items` deve receber.
+
+### T4.1a — `tools/characters-catalog`
+
+Lê o jogo, o Bestiário, o Elenco, os Retratos, Os Vivos do Vale, o corpo da Galeria do Arsenal e a Bancada de Hordas; escreve (cada arquivo com a origem do número em `decisions.json`, `{ value, source, reason }`):
+
+- `packages/game-characters-undead/src/data/{types,ages,outfits,infection,moments}.json`;
+- `packages/game-characters/src/presets/{team-game,physical}.json` e `src/data/{body,segments,gait,appearance}.json`;
+- `--game-out`: `specs/001-migracao-entregas-dos-times/game-slice/characters/` com README (vai para o repositório zombiada): 44 pessoas, 18 grupos, relações, 47 eventos, 7 facções com o 7º BIS, simulação de vida, tabela de pontos, `ZONES` e os NPCs do quarteirão (Cícero e Sandra).
+
+As pastas dos pacotes são escritas antes de os pacotes existirem (o `package.json` vem nas tasks seguintes). `catalog:check` e o `catalog:check` da fatia passam; o teste `catalog-up-to-date` é o mesmo.
+
+**Calibração P7** (`tests/calibration.test.ts`, contra os calibres do `game-weapons`, fórmula refeita no teste sem usar o código da ferramenta):
+
+| Calibre | Força P | Corpos | Alvo | Energia que fica no 1º corpo | Bestiário |
+|---|---|---|---|---|---|
+| 9×19 | 7,67 | 2 | 2 | 0,51 | 0,50 |
+| 5,56×45 | 16,56 | 3 | 3 | 0,69 | 0,65 |
+| .308 (7,62×51) | 26,67 | 4 | 4 | 0,78 | 0,75 |
+| 7,62×39 | 18,52 | 3 | 3 (PEN 3,0 do jogo) | 0,71 | — |
+| 00 buck (chumbo) | 4,35 | 1 | 1 (PEN 0,5 do jogo) | 0,37 | — |
+
+Contagens exatas, energia dentro de ±0,05. O preset `team-game` (PEN do jogo, custo 0,7 / 1 / 2 / 0,5, 75% por corpo) cruza 2, 1, 3 e 4 corpos, igual. Pontos padrão `3,5·E^0,37`: 35 (9×19), 59 (7,62×39) e **71,7** (.308): o desenho diz 71, arredondado para baixo; o teste aceita o valor real.
+
+**Divergências entre as fontes que o catálogo registra** (o teste lista cada uma):
+
+| Assunto | Fonte A | Fonte B | O que o catálogo adota |
+|---|---|---|---|
+| Cor do olho do Devorador | página v0.1 `#b0103a` | jogo v17 `0xB0122A` | v17 (P4); é a única diferença entre a página e o jogo |
+| Multiplicadores do Devorador | página 1,0·1,0·1,0 | jogo 1·0,9·0,9 | jogo |
+| Sangue por idade | Bestiário 100 / 70 / 35 / 10% | jogo 1 / 0,6 / 0,25 / 0 | jogo (velocidade, vida e dano de membro dos dois são iguais) |
+
+### T4.1b — `tools/animals-catalog`
+
+Lê `SPECIES`, `SPEC` (a página põe funções e texturas de canvas dentro do dado: viram `hasExtraBuilder` e marcadores `{ kind: 'spots' | 'stripes' }`), `GAIT`, `ORDER`, `ZONES` e `TER`. Escreve `packages/game-animals/src/data/gaits.json`, `packages/game-animals-species/src/data/species.json` (13 espécies; desfecho `turns` 6, `dies` 3, `immune` 4; surto como dado; alcance do som) e, com `--game-out`, `game-slice/animals/` com README (textos do Vale, zonas, terreno). Cada número da regra de infecção e do som tem na `decisions.json` o trecho da fonte que o prova, e o teste confere o trecho.
+
+### T4.1c — goldens gravados
+
+Gravados do código do próprio time (mecanismo da seção 3 do desenho): a lógica pura é cortada de `jogo.js` com `cut-source` (novo em `@adatechnology/golden-tool/cut-source`) e roda em `node:vm` com o RNG semeado por personagem; as cenas rodam no Chrome (`record.mjs`) na página do time com um trecho que expõe o fechamento (`writePatchedPage`), ou, para código do jogo, numa página em branco com o `three.module.js` r160 do próprio jogo (idêntico ao `three@0.160.1` do repositório). Os fixtures ficam onde os pacotes vão lê-los, `packages/<pacote>/tests/fixtures/team-golden/` (as pastas existem antes dos pacotes).
+
+| Golden | Fixture | Como | Eventos / cenas |
+|---|---|---|---|
+| G-spawn | `game-characters-undead/game-spawn.json` | vm, `zSpawn` real | 650 spawns (13 tipos × sementes 1 a 50) + 200 sorteios de tipo |
+| G-damage-regions | `game-characters/game-damage-regions.json` | vm, `zDamage` real, efeitos e `zKill` em stub | 18 sequências (capacete + 9 mm, colete + 7,62, perna até mancar e rastejar, 12 ga a 3 m na cabeça, corte do braço...) + 20 sorteios de mandíbula |
+| G-penetration | `game-characters/game-penetration.json` | vm, `shootRay` + `zDamage` reais; mundo e lista de corpos em stub | 10 linhas de 5 corpos: os 4 calibres contra 5 lentos, brutamonte na frente e em segundo, tipos mistos, membros, cabeças e alvos longe |
+| G-gait (puro) | `game-characters/game-walk-gait.json` | vm, `walkCad`, `walkGait` | 100 pontos (0 a 6 m/s, 4 alturas) |
+| G-instanced (fonte) | `game-characters-three/game-body-chunk.json` | vm, `bodyChunk` | sha256 do trecho de shader |
+| G-damage-segments | `game-characters/arsenal-damage-segments.json` | Chrome, Galeria do Arsenal | 214 eventos: 11 segmentos × 4 armas (com e sem ponto de impacto) e a granada a 0,5 a 2 m |
+| G-cut-hierarchy | `game-characters/elenco-cut-hierarchy.json` | Chrome, Elenco | 225 eventos: 6 armas × 13 segmentos |
+| G-body | `game-characters-three/game-best-body.json` | Chrome, r160 | 780 cenas (13 tipos × decay 0 a 3 × sementes 1 a 5 × LOD 1, 0,5, 0,28) e 60 `bakeBody` das variantes ZVAR |
+| G-instanced | `game-characters-three/game-instanced-body.json` | Chrome, r160 | `buildBody(16/10/5)`: 6048 / 2856 / 1485 vértices |
+| G-people | `game-characters-three/portraits-people.json` | Chrome, Retratos | 44 cenas (só o hash) |
+| G-gait (rig) | `game-characters-three/bestiary-gait.json` | Chrome, Bestiário | 117 poses (13 tipos × t = 0 a 2 s) |
+| G-animals | `game-animals-three/animals-page.json` | Chrome, Bichos do Vale | 65 cenas (13 espécies × vivo, mordido, andar, trote, galope) |
+| G-animals (pele) | `game-props3d/game-animal-skin.json` | Chrome, r160 | 26 peles de GPU (13 espécies, sã e mordida) |
+
+**Regravados duas vezes, byte a byte iguais**: `golden:vm:check` (cada vm golden duas vezes no mesmo processo e contra o fixture) e `golden:chrome:check` (cada captura do Chrome duas vezes em pasta de rascunho, comparadas entre si e com o fixture): todos iguais. Os vm goldens também passam no teste do pacote em **Node 22 e Node 24**, e `catalog:check` nos dois.
+
+**Para quem compara depois** (T4.1d a T4.1i): o RNG de cada golden. G-spawn: fluxo `createSeededRandom(semente)` por personagem, semente = 1 a 50 (e 1 a 200 no sorteio de tipo); G-damage-regions: a semente de cada sequência está no evento `start`; G-penetration: semente 1 por linha; G-damage-segments: `Math.random = createSeededRandom(semente × 100000 + n)`, `n` crescendo na ordem das capturas; G-cut-hierarchy: o mesmo esquema, um sorteio por golpe. O hash de vetores é FNV-1a 32 sobre `round(valor × 1e4)` (declarado no primeiro evento de cada golden que o usa).
+
+**Desvios e limites assumidos**
+
+- **Orçamento de triângulos** (a 1000 corpos, T4.4a): o `buildBody` do jogo tem 2016 / 952 / 495 triângulos nos três LODs e o corpo do Bestiário assado 9014 no LOD 0, acima do orçamento 2500 / 800 / 250 que o desenho tira da Bancada. O teste de orçamento de T4.4a precisa de decisão do dono (medir o que o jogo tem, ou reduzir os LODs).
+- **Mandíbula**: no jogo só se chega ao `miss |= 512` com golpe de cabeça não letal acima de 25; nenhum projétil faz isso (o crânio morre a partir de 20). A sequência `jaw_roll_*` é sintética (12 ga a 12 m com dano 30) para gravar a regra e o sorteio de 30%.
+- **`zKill` em stub e `corpseAdd` fora**: o jogo remove o zumbi (e `corpseAdd` sorteia mais um `R()`); o golden deixa o corpo no lugar, então o fluxo de sorteios depois de uma morte não é o do jogo (as sequências terminam na morte).
+- **`ZVAR_OF`** do G-spawn usa a própria expressão `nv` do bloco ZVAR cortada do jogo; o bloco inteiro precisa de WebGL para assar os corpos.
+- **MOVES do Elenco** (mistura contínua) fica só como dado (`gait.json`): a mistura roda no `tick` da página, preso ao relógio dela. O golden de passada do rig é do Bestiário (`animate0`, sem sorteio).
+- **G-body** e as páginas r128 (Bestiário, Elenco, Retratos, Arsenal, Bichos) gravam com three r128 (cor sem conversão sRGB); o que vem do jogo grava com r160, a mesma versão do SDK. Os desvios r128 contra r160 que o porte vir a ter entram em `KNOWN_DEVIATIONS`.
+- **`record.mjs`** (ferramenta de golden): uma resposta do CDP que chegava depois de o Chrome parar deixava o processo vivo por 30 s e terminava com erro mesmo com o golden gravado; agora a resposta tardia é ignorada e o processo sai ao fim.
+- **`tools/golden`** ganhou dois módulos de Node, fora do bundle da página: `cut-source` (corta e roda código do time em `vm`) e `record-page` (copia a página com o trecho que a expõe e chama o gravador). Os testes de `cut-source` estão em `tools/golden/tests/cut-source.test.ts`.
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0; nenhum arquivo falhou |
+| `game-contracts` / `game-weapons` / `game-destruction` | 29 / 278 / 97 passaram |
+| `tools/golden` / `tools/characters-catalog` / `tools/animals-catalog` / `tools/weapons-catalog` | 44 / 60 / 8 / 17 passaram |
+| Golden tools em **Node 22.23** (`vitest` dos catálogos, `golden:vm:check`, `catalog:check`) | 60 / 8 passaram; vm goldens iguais aos fixtures gravados no Node 24.22 |
+| `golden:vm:check` e `golden:chrome:check` | 5 vm e 8 Chrome: cada um gravado duas vezes, byte a byte iguais e iguais ao fixture |
+| `catalog:check` (characters, animals) e `catalog:check` das duas fatias do jogo | up to date |
+| `docker build -f site/Dockerfile .` | exit 0 (manifestos das duas ferramentas novas no Dockerfile) |
+
+Commits (todos terminam com o `Co-Authored-By` de Opus 5.5): `feat(contracts,weapons)` contrato do corpo; `feat(golden)` cut-source; `feat(characters-catalog)`; `feat(animals-catalog)`; `feat(characters-catalog,golden)` goldens da Fase 4; `docs(spec-001)` evidência e inventário do grupo A.
+
+Modelo da execução: `sonnet`.
+
+## T4.1d–e — `game-characters`: esqueleto e modelo de dano
+
+Tarefas T4.1d e T4.1e 🧠 do desenho `design/T4-personagens-e-animais.md` (§2, §3, §5, §6). Branch `feat/spec-001-fase-4`; nada enviado ao remoto.
+
+### O que entrou
+
+- **T4.1d** — pacote novo `@adatechnology/game-characters` (ESM + IIFE `GameCharacters`, manifesto no `site/Dockerfile`, changeset 0.1.0, skill `.claude/skills/game-characters`): `GUIDE` (guia do Elenco: 1,80 m, ombros 0,61 m a 1,475 m) e `TEAM_GAME` (o `J` do jogo, como está), rig de 17 juntas com os ossos 0–11 do corpo instanciado (`GAME_BONES`), árvore de 17 segmentos (os 11 tipos do Arsenal, dois lados) com as 6 regiões do jogo e `MISSING_BITS`, registros (`packs`/`patch`/`remove`), `createCharacters`, `describe()`/`state()` no contrato de destruição e `setDetail` (segmentos → regiões sem perda, o inverso com perda).
+- **T4.1e** — o personagem é `DestructibleImpl`. Pipeline (`src/damage/pipeline.ts`), nas 8 etapas do desenho: 1) resolve (`hit.part` segmento ou região, senão a parte mais próxima); 2) proteção (camadas por `BodySlot`; mordida/arranhão `1 − Π(1 − b·c)`, teto 90 %; presets que reproduzem `ROUPAS`); 3) penetração `physical` (P = √(E·m/A), R por caminho, `P/(P+R)` de energia) e `team-game` (PEN do jogo, ×0,75 por corpo); 4) pontos `3,5·E^0,37`, ou a tabela por calibre, ou `Hit.points`; 5) multiplicadores (`MULT` × tipo × idade × roupa); 6) gravidade por segmento (destruído/arrancado/quebrado, cascata de `segmentsBelow`, manca, rasteja, partido ao meio, regra da cabeça com capacete e mandíbula); 7) `deathRule` `vitality-or-head` (padrão) ou `head-only`; 8) sangramento por segmento (`BLEED`, × `bloodFactor`) em eventos `leak`. `penetrateLine` para uma bala atravessando vários corpos. Presets de regra: `kit` (padrão), `arsenal` e `elenco` (repetem as páginas).
+- O motor fica em joules (A2). Um fluxo de sorteios por personagem: `createRng(seed ^ contador de golpes)`; `spec.random` o substitui para repetir um jogo gravado. Nada de regra só de zumbi no pacote: tipo, idade, roupa e atordoamento do brutamonte entram como números do spec (`multipliers`, `limbFactor`, `bloodFactor`, `bodyCount`, `stunSeconds`, `crawling`), que o `-undead` (T4.2b) vai preencher.
+
+### Fidelidade por golden
+
+| Golden | Lado do SDK | Comparado | Resultado |
+|---|---|---|---|
+| G-damage-regions (`game-damage-regions.json`) | `detail: 'regions'`, modelo `team-game`; zumbi com os números do catálogo (`types`/`ages`/`outfits` do `-undead`) e a vida do `start` | por golpe: vida, cabeça, braços, pernas, `missing`, manca, rasteja, capacete, atordoamento, morreu, headshot | **exato**, 38/38 sequências (125 eventos) |
+| G-penetration (`game-penetration.json`) | `kit.penetrateLine` com `team-game` | por corpo: alcançado, dano, vida, morte; corpos atingidos e onde para | **exato**, 10/10 linhas |
+| G-damage-segments (`arsenal-damage-segments.json`) | `detail: 'segments'`, preset `arsenal`, corpo com os pivôs do `buildZombie` da página (para a granada) | por golpe/granada: vida, vivo, estado, lado do manco, causa, presos, hp dos 17, sangramentos (taxa, duração, jorro) em ordem | **exato**, 97/97 cenários (214 eventos) |
+| G-cut-hierarchy (`elenco-cut-hierarchy.json`) | preset `elenco`, o sorteio do golpe no mesmo lugar do fluxo da página | estados dos 13 segmentos, hp, morte, rasteja, manca por perna, pêndulos (junta e braço) | **exato**, 78/78 cenários (225 eventos); ângulo inicial e `v` do pêndulo ficam para o `-three` (T4.1i) |
+| P7 (`calibration.test.ts`, contra `game-weapons` `CALIBERS`) | `penetrationForce`, `penetrateLine` `physical` | corpos atingidos, energia mantida, pontos | contagens **exatas** (2/3/4/3/1); energia 0,51/0,69/0,78 contra 0,50/0,65/0,75 (±0,05); pontos 35/59/71,7 |
+
+**Como o RNG casa.** G-damage-regions: só a mandíbula sorteia; o teste refaz a posição do fluxo do jogo depois do `zSpawn` (escolha de idade e de roupa, 13 sorteios, mais 1 da cor civil quando a roupa sorteada é civil) — confere com os 20 sorteios de mandíbula (5 levam o bit 512). G-cut-hierarchy: o `build` da página gasta 1284 sorteios e cada golpe gasta 1 + `burst` (8 + 7 por partícula, 8 + round(dano/6) partículas); achado no fixture, constante por arma, e o SDK recebe só o sorteio do golpe.
+
+### Desvios e decisões (padrões reversíveis)
+
+1. **Lado esquerdo em +x**, de frente para +z (Elenco e Arsenal concordam). O `TEAM_GAME` guarda o `J` como está; as juntas que o `J` não tem saem dos ossos do jogo (coluna no quadril, cabeça no pescoço) ou um antebraço/canela abaixo (punho, tornozelo); a mandíbula é sintética.
+2. **Regra `kit` (padrão dos segmentos)**: membro tira 0,3 do dano da vitalidade (Arsenal); nas regiões, 0,5 (jogo). Golpe não letal na cabeça tira da vitalidade (jogo); tiro letal sem tirar a cabeça deixa o segmento `broken`. Destruído quando o golpe chega a 2× o segmento (desenho); o preset `arsenal` mantém o `-hp > max` da página.
+3. **Regra de crânio no `physical`**: letal quando P passa a resistência da cabeça (5,25) e os pontos chegam a 20. Sem tabela de calibre: classe `rifle` acima de 1000 J, `buckshot` com `pellets > 1`; massa padrão 8 g quando o `Hit` não traz `mass`.
+4. **Elenco**: o tronco a 0 mata (o golden marca `dead`), então o preset `elenco` usa `vitality-or-head`. Com `head-only`, a vitalidade não mata e o partido ao meio passa a rastejar.
+5. **`big` do tiro direto** = pontos acima de 120 (o `bigPoints` da granada): reproduz o `.50` da página sem precisar do id da arma.
+6. **`BodyHit.woundAtPoint: false`**: golpe sem ponto de superfície (a aba do Arsenal sem ponto, raycast da multidão em cápsula) não abre ferida no ponto.
+7. **Atordoamento**: nas regiões usa os pontos do golpe antes do colete (o jogo atordoa pelo `dano`); na regra `kit`, depois da proteção. Capacete com `pass: 1` (fuzil passa sem efeito, como no jogo).
+8. **`limbEffect`** do golden (o `fxLimb` repete a cada golpe num membro já perdido) não é comparado: o SDK emite o evento `body` uma vez por bit novo, e os bits de `missing` são comparados. O estado de alerta (`st` 1) é de IA, fora do dano.
+9. **`leak`** em litros por segundo (0,27 ml por gota); `bleeders()` guarda a taxa do Arsenal (gotas/s). Nas regiões não há sangramento (multidão: o sangue é efeito visual).
+10. **Fogo/calor**: `burnPointsPerSecond` 3 × segundos × fator de fogo da roupa, só na vitalidade.
+11. **Mundo de destruição**: o `DestructionWorld.shoot` dá 50 % de energia de saída a qualquer impl com `hole.through`; o corpo calcula `P/(P+R)` (`lastHit.exitEnergy`, `penetrateLine`), mas o mundo não lê. Não mexi no `game-destruction` (fora do escopo).
+12. **Linha `team-game`**: depois de uma morte o raio recomeça 0,3 m além do corpo e as distâncias seguintes contam dali (recursão do `shootRay`); mantido.
+13. Os presets de proteção estão em `src/damage/defaults.ts` espelhando `decisions.json` `protectionPresets` (um teste confere); `protection.ballistic` no `game-items` continua pendente da Fase 3.
+14. Corpo morto continua apanhando (desmembrar cadáver); `killed` sai uma vez.
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 (nos dois commits) |
+| `pnpm -r typecheck` | exit 0 (nos dois commits) |
+| `pnpm lint` | exit 0 |
+| `game-characters` (vitest, Node 24.22 e **Node 22.23**) | T4.1d: 14 passaram; T4.1e: 274 passaram em 9 arquivos |
+| `pnpm -r test` (inteiro, em segundo plano) | 1ª rodada: exit 1 — um teste do `game-weapons-three` (`weapons-area.test.ts`, área de armas) estourou o limite de 5 s com a máquina carregada; o pacote não depende do `game-characters` e passa sozinho (94/94). 2ª rodada: **exit 0**, 28 pacotes, 5126 testes |
+| `docker build -f site/Dockerfile .` | exit 0 (manifesto do `game-characters` no Dockerfile) |
+
+Commits (todos com o `Co-Authored-By` de Opus 5.5): `feat(characters)` esqueleto do game-characters (T4.1d); `feat(characters)` modelo de dano do corpo (T4.1e); `docs(spec-001)` esta evidência.
+
+Modelo da execução: `opus`.
