@@ -11,3 +11,13 @@ export { createGoldenRecord } from './golden-record'
 export type { CreateGoldenRecordParams } from './golden-record'
 export { assertMatchesGolden, diffGolden } from './diff-golden'
 export type { EventValue, GoldenEvent, GoldenRecord, SceneSnapshot } from './types'
+export { assertAudioTraceMatches, createAudioRecorder, diffAudioTrace } from './audio-recorder'
+export type {
+  AudioRecorder,
+  AudioRecorderOptions,
+  AudioTrace,
+  AudioTraceBuffer,
+  AudioTraceDifferenceOptions,
+  AudioTraceEntry,
+  AudioTraceValue,
+} from './audio-recorder'

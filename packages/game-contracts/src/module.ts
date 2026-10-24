@@ -1,7 +1,9 @@
 import type { AnimationClipSpec } from './animation'
+import type { AudioSink } from './audio'
 import type { ModuleBench, ModuleControl, ModuleLayer, ModuleMetric } from './bench'
 import type { DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
+import type { EnvironmentBus } from './environment'
 import type { ContainerSpec } from './fluids'
 
 /** An item that holds a liquid (a cup, a bottle, a fuel tank). `part` is the destruction part that is the container; a hole in it makes it leak. */
@@ -195,6 +197,10 @@ export interface ModuleHost {
   command?(command: ToolCommand): ToolCommandResult
   /** Lent only to a module that declares controls, layers or metrics. */
   bench?: ModuleBench
+  /** The host's shared sound engine; a module that makes sound uses it when lent and stays silent (or brings its own) when not. */
+  audio?: AudioSink
+  /** The host's weather, light and ground; a module that reacts to rain, wind or night reads it. */
+  environment?: EnvironmentBus
 }
 
 /** What a module hands the test room: its items and, optionally, scenarios that exercise them, its area and its own presentation. */

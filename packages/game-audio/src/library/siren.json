@@ -1,0 +1,18 @@
+{
+  "id": "siren",
+  "bus": "world",
+  "order": "siren",
+  "duration": 9,
+  "tail": 0.2,
+  "layers": [
+    {
+      "wet": 1.5,
+      "source": { "kind": "osc", "wave": "sine", "frequency": { "set": 850 } },
+      "modulators": [{ "target": "frequency", "rate": 0.18, "depth": 280 }],
+      "filters": { "mode": "serial", "bank": [{ "type": "lowpass", "frequency": { "set": 1400 } }] },
+      "envelope": [[0, 0.0001, "set", "fixed"], [2, 0.035, "exp"], [6, 0.035, "set"], [9, 0.0001, "exp", "fixed"]]
+    }
+  ],
+  "falloff": { "model": "none" },
+  "sources": ["cena:L1369 siren: 850 Hz sine swept ±280 Hz at 0.18 Hz, 1400 Hz lowpass, 0.035 for 9 s, reverb send 1.5", "temporary home until the vehicles package (Q12)"]
+}

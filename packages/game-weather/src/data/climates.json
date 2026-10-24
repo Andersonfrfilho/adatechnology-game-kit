@@ -1,0 +1,43 @@
+[
+  {
+    "id": "temperate",
+    "sources": ["galeria-vale-cinzento:L1393 (changes every 2-6 h, arrives from the west)", "design:T6 3.2 kit default: mostly clear and overcast, no extremes"],
+    "start": "clear",
+    "dwellHours": [2, 6],
+    "blendMinutes": 10,
+    "frontDirection": [1, 0],
+    "temperatureC": { "mean": 16, "swing": 6 },
+    "humidityOffset": 0,
+    "transitions": {
+      "clear": { "overcast": 4, "windy": 1, "fog": 1, "light_rain": 1 },
+      "overcast": { "clear": 3, "light_rain": 3, "heavy_rain": 1, "fog": 1, "windy": 1 },
+      "light_rain": { "overcast": 3, "clear": 2, "heavy_rain": 2 },
+      "heavy_rain": { "light_rain": 3, "overcast": 2, "storm": 1 },
+      "storm": { "heavy_rain": 3, "light_rain": 2, "overcast": 1 },
+      "fog": { "clear": 3, "overcast": 2 },
+      "windy": { "clear": 3, "overcast": 3, "light_rain": 1 }
+    }
+  },
+  {
+    "id": "tropical",
+    "sources": ["galeria-vale-cinzento:L1393 (changes every 2-6 h, arrives from the west)", "design:T6 3.2 and Q3: extremes rare and enabled"],
+    "start": "clear",
+    "dwellHours": [2, 6],
+    "blendMinutes": 10,
+    "frontDirection": [1, 0],
+    "temperatureC": { "mean": 29, "swing": 3 },
+    "humidityOffset": 0.1,
+    "transitions": {
+      "clear": { "overcast": 3, "light_rain": 2, "windy": 1, "extreme_heat": 0.8 },
+      "overcast": { "clear": 3, "light_rain": 3, "heavy_rain": 2, "fog": 0.5 },
+      "light_rain": { "overcast": 3, "clear": 2, "heavy_rain": 2 },
+      "heavy_rain": { "light_rain": 3, "overcast": 2, "storm": 1.5 },
+      "storm": { "heavy_rain": 3, "light_rain": 2, "overcast": 1, "cyclone": 0.5 },
+      "fog": { "clear": 3, "overcast": 2 },
+      "windy": { "clear": 3, "overcast": 2, "light_rain": 1, "storm": 0.5 },
+      "extreme_heat": { "clear": 4, "overcast": 2, "storm": 0.8 },
+      "cyclone": { "storm": 3, "heavy_rain": 2, "typhoon": 0.5 },
+      "typhoon": { "cyclone": 3, "storm": 2 }
+    }
+  }
+]
