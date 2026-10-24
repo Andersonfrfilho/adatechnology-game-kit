@@ -224,6 +224,7 @@ export const FAMILIES = [
   { id: 'stories', title: 'Histórias', what: 'Gerador de histórias semeado: papéis escalados na criação do mundo, histórias como dado que se cruzam, crônica, ficha de personagem que guarda as decisões e as histórias vividas, e a vida sorteada (riscos, laços, nascimentos, brigas, traição, comida, caravanas, ataques, chegadas) com mundo normal por padrão', packages: ['game-stories'], thumb: 'stories-test-area', seeIn: 'stories-test-area' },
   { id: 'camera', title: 'Câmera', what: 'Câmera de ombro, terceira e primeira pessoa, com a arma na mão', packages: ['game-camera'], thumb: 'test-room', seeIn: 'test-room' },
   { id: 'infection', title: 'Contágio', what: 'Modelo de epidemia por regiões, determinístico: zumbis, pragas, boatos', packages: ['game-infection'], thumb: null, seeIn: null },
+  { id: 'shapes', title: 'Formas 3D', what: 'O gerador único de 3D do kit: uma forma em JSON (primitivas, extrusões, tornos, furos em caixa, grupos, peças móveis, materiais por id, LOD e instâncias) vira buffers por material, puros, por semente, prontos para worker e cache, iguais bit a bit aos do three.js', packages: ['game-shapes', 'game-shapes-three'], thumb: null, seeIn: null },
   { id: 'base', title: 'Base e ferramentas', what: 'Contratos entre módulos, sala de testes reutilizável e ferramentas de teste dentro do jogo', packages: ['game-contracts', 'game-test-room', 'game-devtools'], thumb: 'test-room-furniture', seeIn: 'test-room' },
 ]
 

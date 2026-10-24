@@ -1,0 +1,37 @@
+{
+  "name": "@adatechnology/shapes-bench-tool",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Timing bench of the kit's 3D builders (props, household, items, weapons, animals, light vehicles and the game-shapes generators): medians normalised by a calibration loop, a baseline and a --check that fails on a regression past the budget.",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "bench": "node --expose-gc dist/cli.js",
+    "bench:check": "node --expose-gc dist/cli.js --check",
+    "bench:update": "node --expose-gc dist/cli.js --update"
+  },
+  "devDependencies": {
+    "@adatechnology/game-animals-species": "workspace:*",
+    "@adatechnology/game-animals-three": "workspace:*",
+    "@adatechnology/game-interactables-household": "workspace:*",
+    "@adatechnology/game-interactables-three": "workspace:*",
+    "@adatechnology/game-items-goods": "workspace:*",
+    "@adatechnology/game-items-three": "workspace:*",
+    "@adatechnology/game-props3d": "workspace:*",
+    "@adatechnology/game-shapes": "workspace:*",
+    "@adatechnology/game-shapes-three": "workspace:*",
+    "@adatechnology/game-vehicles": "workspace:*",
+    "@adatechnology/game-vehicles-fleet": "workspace:*",
+    "@adatechnology/game-vehicles-three": "workspace:*",
+    "@adatechnology/game-weapons-three": "workspace:*",
+    "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "three": "^0.160.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

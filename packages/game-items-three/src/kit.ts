@@ -1,3 +1,4 @@
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 
 type Three = typeof THREE_NS
@@ -19,7 +20,9 @@ type Triple = [number, number, number]
 
 /**
  * The helpers the showcase page defines before its models (`M`, `mesh`, `cyl`, `bx`, `lathe`, `torus`, `extrude`, `G` and the seven material makers), so that the
- * builders ported from the page read the same as the originals. `T` is the three.js the kit was made with; `materials` lists every material it made, in order.
+ * builders ported from the page read the same as the originals. `T` is the three.js the kit was made with, with its box, cylinder, cone, sphere, plane, lathe, torus and
+ * (straight-edged) extrude geometries made by game-shapes (`shapeGeometries`: the same bytes, the same classes, a template cache); `materials` lists every material it made,
+ * in order.
  */
 export interface ItemKit {
   readonly T: Three
@@ -45,7 +48,8 @@ export interface ItemKit {
 const channelsOf = (hex: number): readonly [number, number, number] => [((hex >> 16) & 255) / 255, ((hex >> 8) & 255) / 255, (hex & 255) / 255]
 
 /** The helpers of the showcase page on a given three.js; every kit has its own list of materials. */
-export function createItemKit(T: Three): ItemKit {
+export function createItemKit(three: Three): ItemKit {
+  const T = shapeGeometries(three)
   const materials: THREE_NS.MeshStandardMaterial[] = []
   const M: ItemKit['M'] = (color, tag, options = {}) => {
     const material = new T.MeshStandardMaterial(Object.assign({ color, roughness: 0.78, metalness: 0 }, options))

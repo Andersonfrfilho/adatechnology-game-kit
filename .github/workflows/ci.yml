@@ -185,10 +185,39 @@ jobs:
           node examples/crowd-test-area/test.mjs
           node examples/stories-test-area/test.mjs
 
+  # Timing of the kit's 3D builders (tools/shapes-bench): medians as ratios to a calibration loop, against baseline.json.
+  # Fails when a builder is twice as slow as its baseline, or a group (props3d, household, items, weapons, animals...) 1.5 times, after
+  # re-timing the suspects; the table goes to the job summary and the run to an artifact (bench --baseline-from turns it into a baseline).
+  shapes-bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter "@adatechnology/shapes-bench-tool..." run build
+
+      - run: pnpm --filter @adatechnology/shapes-bench-tool test
+
+      - run: node --expose-gc tools/shapes-bench/dist/cli.js --check --json shapes-bench-run.json
+
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shapes-bench-run
+          path: shapes-bench-run.json
+          if-no-files-found: ignore
+
   # One stable required check; Release waits on the whole "CI" workflow.
   ci-ok:
     if: always()
-    needs: [lint, typecheck, test, goldens-node-24, examples]
+    needs: [lint, typecheck, test, goldens-node-24, examples, shapes-bench]
     runs-on: ubuntu-latest
     steps:
       - name: Check results

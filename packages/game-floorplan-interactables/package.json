@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-floorplan-interactables",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Bridge between a game-floorplan plan and the interactables kit: turns the furniture, sockets, switches, lamps, gas, plumbing and fixtures of a plan into objects of game-interactables-household, wires the world (power, water, gas) and fits the doors against the walls.",
   "keywords": [
