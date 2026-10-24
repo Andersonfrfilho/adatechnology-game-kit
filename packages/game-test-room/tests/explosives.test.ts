@@ -26,6 +26,15 @@ const equip = (room: TestRoom, weapon: string): void => {
   run(room, 0.5)
 }
 
+/** One mesh of the given size lying on the floor, so the object has a box of its own. */
+const meshOf = (THREE: typeof import('three'), size: [number, number, number]): import('three').Group => {
+  const group = new THREE.Group()
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(size[0], size[1], size[2]))
+  mesh.position.y = size[1] / 2
+  group.add(mesh)
+  return group
+}
+
 const barrel = (room: TestRoom, x: number): string => {
   const def = room.arsenal.explosives.get('fuel_barrel')
   if (!def) throw new Error('no fuel_barrel')
@@ -88,6 +97,21 @@ describe('explosives of the room go through the rule of game-weapons', () => {
     expect(explosions).toMatchObject([{ type: 'explosion', cause: 'wire' }])
     expect(room.world.state(ahead)?.parts.some((part) => part.status !== 'intact')).toBe(true)
     expect(room.world.state(behind)?.parts.every((part) => part.status === 'intact')).toBe(true)
+  })
+
+  it('a long object reaches into the cone of a charge even when its origin lies behind it', () => {
+    const room = makeRoom()
+    const beam: DestructibleSpec = { name: 'Beam', parts: [{ id: 'body', material: 'wood_soft', shape: { kind: 'box', size: [0.4, 0.4, 12] }, position: [0, 0.2, 0] }], joints: [] }
+    room.loadModule({ id: 'beams', name: 'b', group: 'b', items: () => [{ id: 'beam', name: 'Beam', build: (THREE) => meshOf(THREE as typeof import('three'), [0.4, 0.4, 12]), spec: beam }] })
+    // the charge lands about 2 m ahead of the player (z 3), facing -z; the origin of the beam (z 6) is behind it and its near end (z 0) is 3 m ahead of it
+    const spanning = room.spawn('beam', [0.5, 0, 6]).objectId
+    equip(room, 'claymore')
+    room.look([0, 1.7, 5], [0, 0.2, 1])
+    room.use()
+    run(room, 5)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyY' }))
+    run(room, 0.2)
+    expect(room.world.state(spanning)?.parts.some((part) => part.status !== 'intact')).toBe(true)
   })
 
   it('a fuel barrel set off by a blast primes the next one and it goes off after its own delay (chain reaction)', () => {

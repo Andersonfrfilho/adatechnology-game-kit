@@ -167,14 +167,28 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     return best ? { point: best.point, normal: best.normal, ground: best.ground } : null
   }
 
-  /** A directional charge only reaches what is inside its cone: each object in reach takes a blast of its own at its place, scaled by how close it is. */
+  /** The point of the object's box (its center, its corners, the closest to the charge) that takes the most of the blast, or undefined when none is inside the cone. */
+  const mostExposedPoint = (box: THREE_NS.Box3, detonation: Detonation): Vec3 | undefined => {
+    const { min, max } = box
+    const candidates: Vec3[] = [toArray(box.getCenter(new THREE.Vector3())), toArray(box.clampPoint(new THREE.Vector3(...detonation.point), new THREE.Vector3()))]
+    for (const x of [min.x, max.x]) for (const y of [min.y, max.y]) for (const z of [min.z, max.z]) candidates.push([x, y, z])
+    let best: { point: Vec3; falloff: number } | undefined
+    for (const point of candidates) {
+      const effect = blastEffect(detonation, point)
+      if (effect.zone !== 'none' && (!best || effect.falloff > best.falloff)) best = { point, falloff: effect.falloff }
+    }
+    return best?.point
+  }
+
+  /** A directional charge only reaches what is inside its cone: each object whose box has a point in reach takes a blast of its own there, scaled by how close that point is. */
   const coneBlast = (detonation: Detonation): number => {
     let reached = 0
     for (const object of context.objects()) {
-      const at = toArray(object.position)
-      const effect = blastEffect(detonation, at)
-      if (effect.zone === 'none') continue
-      reached += world.explode(at, detonation.energy * effect.falloff, CONE_BLAST_RADIUS, 'player').length
+      const box = new THREE.Box3().setFromObject(object)
+      if (box.isEmpty()) box.expandByPoint(object.position)
+      const at = mostExposedPoint(box, detonation)
+      if (!at) continue
+      reached += world.explode(at, detonation.energy * blastEffect(detonation, at).falloff, CONE_BLAST_RADIUS, 'player').length
     }
     return reached
   }
