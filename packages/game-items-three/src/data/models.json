@@ -508,5 +508,15 @@
       0.61
     ],
     "scale": 0.1
+  },
+  {
+    "id": "dog_food",
+    "teamId": "racao_cao",
+    "teamBox": [
+      1.8,
+      2.6,
+      0.71
+    ],
+    "scale": 0.1
   }
 ]
