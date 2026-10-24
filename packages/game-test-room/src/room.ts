@@ -185,6 +185,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     camera,
     overlay: container,
     quality,
+    pointScale,
     vfx: createVfx({
       profile: quality,
       groundAt: (x, z) => groundAt(x, z) + (craterField?.heightAt(x, z) ?? 0),
@@ -221,7 +222,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (best) splitOf.set(piece.objectId, best)
     },
   })
-  const fluidView: FluidRenderer = createFluidRenderer(THREE, { scene, fluids, quality, pointScale })
+  const fluidView: FluidRenderer = createFluidRenderer(THREE, { scene, fluids, quality, pointScale, vfx: vfx.world })
   const specs = new Map<string, DestructibleSpec>()
   const loose: Piece[] = []
 

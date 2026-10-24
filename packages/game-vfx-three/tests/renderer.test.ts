@@ -110,6 +110,18 @@ describe('createVfxRenderer', () => {
   })
 })
 
+describe('effects of the Workshop through the sink', () => {
+  it('plays a recipe by id when the id is no explosion, with its parameter, and lists it in the catalogue', () => {
+    const { renderer } = setup()
+    expect(renderer.catalog?.()).toContain('muzzle_ak')
+    expect(renderer.play({ effect: 'muzzle_ak', point: [0, 1, 0], direction: [1, 0, 0] })).not.toBeNull()
+    expect(renderer.play({ effect: 'impact', point: [0, 1, 0], param: 'wood' })).not.toBeNull()
+    expect(renderer.play({ effect: 'nothing_here', point: [0, 1, 0] })).toBeNull()
+    renderer.update(1 / 60)
+    expect(renderer.world.workshop().add.count + renderer.world.workshop().streaks.count).toBeGreaterThan(0)
+  })
+})
+
 describe('sprite kinds', () => {
   it('draws the bursts of the world as two point layers and counts them as draw calls', () => {
     const { scene, renderer } = setup()

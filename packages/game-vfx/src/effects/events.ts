@@ -5,6 +5,7 @@ import type { EffectDef } from './types'
 const FACING = [0, 0, 1] as const
 const UP = [0, 1, 0] as const
 const ORIGIN = [0, 0, 0] as const
+const FORWARD = [0, 0, -1] as const
 const IMPACT_MATERIALS = ['concrete', 'metal', 'wood', 'glass', 'flesh', 'water'] as const
 
 /** What a hit leaves on one material, the way the Workshop's `impact` helper does (W374-391), played once at the hit. */
@@ -17,12 +18,36 @@ const impactEffect = (material: (typeof IMPACT_MATERIALS)[number]): EffectDef =>
   timeline: [call('impact', material, ORIGIN, FACING, 1, 0)],
 })
 
+/** The flash of one weapon at its muzzle (W417 `muzzle`), played once: the recipe's own per-weapon sizes, petals, light and smoke. */
+const muzzleEffect = (weapon: 'glock' | 'ak' | 'r870' | 'barrett'): EffectDef => ({
+  id: `muzzle_${weapon}`,
+  pageId: `event:muzzle_${weapon}`,
+  team: 'weapons',
+  budget: { particles: 60, lights: 1 },
+  loop: 2.4,
+  timeline: [call('muzzle', weapon, ORIGIN, FORWARD)],
+})
+
+/** A case thrown out of the port (W430 `casing`): brass, a red shell or a .50 case. */
+const casingEffect = (id: string, type: '' | 'shell' | '50'): EffectDef => ({
+  id,
+  pageId: `event:${id}`,
+  team: 'weapons',
+  budget: { debris: 1 },
+  loop: 2,
+  timeline: [call('casing', ORIGIN, type)],
+})
+
 /**
  * The effects the destruction events play, as slices of the Workshop's recipes: the same bursts, with the recipe's own numbers, centred on the point the event
  * happens (`data/event-effects.json` says which event plays which). They are not Workshop pages, so they have no golden of their own; each cites the lines it was cut from.
  */
 export const EVENT_EFFECTS: readonly EffectDef[] = [
   ...IMPACT_MATERIALS.map(impactEffect),
+  ...(['glock', 'ak', 'r870', 'barrett'] as const).map(muzzleEffect),
+  casingEffect('casing_brass', ''),
+  casingEffect('casing_shell', 'shell'),
+  casingEffect('casing_50', '50'),
   {
     // door_stages (W856-871): the dust a blow shakes loose from the frame and the splinters.
     id: 'stage_crack',

@@ -88,10 +88,17 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
     world,
     play(request) {
       followCamera()
-      return world.explosion(request.effect, request.point, {
+      const explosion = world.explosion(request.effect, request.point, {
         ...(request.direction ? { direction: request.direction } : {}),
         ...(request.seed !== undefined ? { seed: request.seed } : {}),
         ...(request.scale !== undefined ? { scale: request.scale } : {}),
+      })
+      if (explosion !== null) return explosion
+      return world.play(request.effect, request.point, {
+        ...(request.direction ? { direction: request.direction } : {}),
+        ...(request.normal ? { normal: request.normal } : {}),
+        ...(request.seed !== undefined ? { seed: request.seed } : {}),
+        ...(request.param !== undefined ? { param: request.param } : {}),
       })
     },
     stop: (handle) => world.stop(handle),
@@ -99,7 +106,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
       const band = settings.lod_band
       if (typeof band === 'string' && band in LOD_BANDS) world.forceLod(LOD_BANDS[band] ?? null)
     },
-    catalog: () => world.catalog(),
+    catalog: () => [...world.catalog(), ...world.effectIds()],
     update(dt) {
       clock += dt
       uniforms.uTime.value = clock

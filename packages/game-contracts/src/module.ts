@@ -80,7 +80,21 @@ export type HostEvent =
   /** The tool is put in hand; `duration` is the seconds the rule takes to ready it (absent: no draw time). */
   | { type: 'tool'; weapon: string; duration?: number }
   /** `shots` are projectiles (a shotgun shell is many), `rounds` the cartridges spent (a burst is several). */
-  | { type: 'shot'; weapon: string; shots: number; recoil: [number, number]; rounds?: number; mode?: string; suppressed?: boolean }
+  | {
+      type: 'shot'
+      weapon: string
+      shots: number
+      recoil: [number, number]
+      rounds?: number
+      mode?: string
+      suppressed?: boolean
+      /**
+       * Where the muzzle is in the world and where it points, for a shot the viewer sees from outside (another player, the third-person camera). A module
+       * then shows the shooter's flash and casing through `host.effects`. Absent for the player's own shot, which the weapon in the hands already draws.
+       */
+      origin?: Vec3
+      direction?: Vec3
+    }
   /** The trigger was pulled, the round was spent and nothing left the tool (a dud cartridge): no projectile, no recoil. */
   | { type: 'misfire'; weapon: string }
   /** `kind` is how the rule reloads (`tactical`, `empty`, `one_by_one`); `duration` the seconds of the whole reload, on `start`. */

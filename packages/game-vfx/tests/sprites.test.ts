@@ -89,3 +89,19 @@ describe('VfxWorld sprites', () => {
     expect(world.sprites().live).toBe(0)
   })
 })
+
+describe('sprite spawn overrides', () => {
+  it('stops a drip at the floor it was given, and slows the rise of steam', () => {
+    const world = createVfx({ seed: 5 })
+    const landed: number[] = []
+    world.onLand('fluids', (_x, y) => landed.push(y))
+    world.spawn('drips', [0, 1.2, 0], [0, 0, 0], { owner: 'fluids', tag: 1, floor: 1 })
+    world.spawn('steam', [0, 0, 0], [0, 0, 0], { rise: 0.1 })
+    const fast = createVfx({ seed: 5 })
+    fast.spawn('steam', [0, 0, 0], [0, 0, 0])
+    step(world, 0.9)
+    step(fast, 0.9)
+    expect(landed).toEqual([1])
+    expect(world.sprites().normal.position[4]!).toBeLessThan(fast.sprites().normal.position[1]! * 0.5)
+  })
+})

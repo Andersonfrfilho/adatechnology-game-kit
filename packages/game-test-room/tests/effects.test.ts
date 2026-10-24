@@ -40,6 +40,22 @@ describe('the room lends one effects world', () => {
     expect(effects?.play({ effect: 'not_an_effect', point: [0, 0.3, -3] })).toBeNull()
   })
 
+  it('plays the Workshop recipes by id and the weapon effects too', () => {
+    const room = makeRoom()
+    const { effects } = spy(room)
+    expect(effects?.catalog?.()).toEqual(expect.arrayContaining(['blood_hit', 'muzzle_ak', 'casing_brass', 'impact_concrete']))
+    expect(effects?.play({ effect: 'muzzle_ak', point: [0, 1.5, -2], direction: [0, 0, -1], seed: 3 })).not.toBeNull()
+    expect(effects?.play({ effect: 'impact', point: [0, 1, -3], param: 'metal' })).not.toBeNull()
+    run(room, 0.2)
+  })
+
+  it('draws the droplets and steam of the fluids in the same world', () => {
+    const room = makeRoom()
+    room.fluids.splash('water', [0, 0.01, -2], 0.2)
+    run(room, 0.2)
+    expect(room.metrics().room.particles).toBeGreaterThan(0)
+  })
+
   it('draws a grenade with its own explosive profile and names the explosive on the host event', () => {
     const room = makeRoom()
     const { explosions } = spy(room)

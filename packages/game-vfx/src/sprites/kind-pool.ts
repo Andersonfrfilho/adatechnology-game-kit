@@ -21,6 +21,10 @@ export interface SpriteSpawnOptions {
   tag?: number
   /** Who hears the landing (see `VfxWorld.onLand`). */
   owner?: string
+  /** Height the sprite stops or lands at, instead of the ground's under it (a splash on a table top). */
+  floor?: number
+  /** Multiplier on the kind's upward acceleration (slow steam). */
+  rise?: number
 }
 
 export interface KindPoolHost {
@@ -69,6 +73,8 @@ export class SpriteKindPool {
   private readonly rgbStart: Float32Array
   private readonly rgbEnd: Float32Array
   private readonly bounced: Uint8Array
+  private readonly floor: Float32Array
+  private readonly riseMul: Float32Array
 
   constructor(
     readonly capacity: number,
@@ -94,6 +100,8 @@ export class SpriteKindPool {
     this.rgbStart = new Float32Array(n * 3)
     this.rgbEnd = new Float32Array(n * 3)
     this.bounced = new Uint8Array(n)
+    this.floor = new Float32Array(n)
+    this.riseMul = new Float32Array(n)
   }
 
   spawn(kind: number, p: readonly number[], v: readonly number[], random: () => number, options?: SpriteSpawnOptions): void {
@@ -119,6 +127,8 @@ export class SpriteKindPool {
     this.rgbStart.set(rgb(options?.color ?? def.c0), i * 3)
     this.rgbEnd.set(rgb(options?.color ?? def.c1), i * 3)
     this.bounced[i] = 0
+    this.floor[i] = options?.floor ?? Number.NaN
+    this.riseMul[i] = options?.rise ?? 1
     this.size[i] = this.size0[i]!
     this.alpha[i] = 0
   }
@@ -180,7 +190,7 @@ export class SpriteKindPool {
       let vx = this.velocity[i3]!
       let vy = this.velocity[i3 + 1]!
       let vz = this.velocity[i3 + 2]!
-      vy += (def.rise - def.gravity * host.gravity) * dt
+      vy += (def.rise * this.riseMul[i]! - def.gravity * host.gravity) * dt
       if (def.flutter) {
         const phase = age * 7 + this.seed[i]! * 40
         vx += Math.sin(phase) * def.flutter * dt
@@ -196,7 +206,8 @@ export class SpriteKindPool {
       let y = this.position[i3 + 1]! + vy * dt
       const z = this.position[i3 + 2]! + vz * dt
       if (def.ground !== 'none') {
-        const gy = host.groundAt(x, z) + 0.005
+        const own = this.floor[i]!
+        const gy = Number.isNaN(own) ? host.groundAt(x, z) + 0.005 : own
         if (y < gy) {
           if (def.ground === 'land') {
             const tag = this.tag[i]!

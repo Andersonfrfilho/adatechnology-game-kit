@@ -69,6 +69,19 @@ describe('VfxWorld.play', () => {
     expect(world.workshop().add.count).toBe(0)
   })
 
+  it('takes the parameter as an option id or an index', () => {
+    const named = createVfx({ seed: 2 })
+    const indexed = createVfx({ seed: 2 })
+    expect(named.play('impact', [0, 0, 0], { param: 'metal', seed: 4 })).not.toBeNull()
+    expect(indexed.play('impact', [0, 0, 0], { param: 1, seed: 4 })).not.toBeNull()
+    for (let frame = 0; frame < 20; frame++) {
+      named.update(1 / 60)
+      indexed.update(1 / 60)
+    }
+    expect(named.workshop().add.count).toBe(indexed.workshop().add.count)
+    expect(named.workshop().streaks.count).toBe(indexed.workshop().streaks.count)
+  })
+
   it('takes a patched catalogue', () => {
     const effects = patchEffects(WORKSHOP_EFFECTS, { muzzle_flash: null })
     const world = createVfx({ effects })

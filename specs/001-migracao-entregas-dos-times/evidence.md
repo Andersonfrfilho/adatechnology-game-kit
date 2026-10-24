@@ -1452,6 +1452,18 @@ O contrato manda detritos, fogo de contato, gotas e vazamentos para `vfx.burst`/
 - **`game-destruction-three`**: `particles.ts` apagado; detritos, faíscas, cinzas, vapor, gotas e vazamentos vão para `vfx.burst/spawn`; `ParticleKind` é alias de `SpriteKind`; as gotas que caem avisam o próprio renderizador (dono `destruction-<n>`). Eventos da Fase 2 por `RendererOptions.eventEffects` (padrão `EVENT_EFFECTS_MAP`): `spall` toca `impact_<material>` (pelas tags `metal`, `glass`, `wood`; o resto é `concrete`), `stage` toca o efeito do estágio (o 2 **troca** o puff de poeira que já havia, que continua como reserva quando não há efeito), `expose` toca `rebar_expose`, `collapse` toca `collapse_dust`. Os efeitos de oficina só aparecem na tela com os desenhistas da T5.2d.
 - O que sobra do pool antigo de fluidos e de armas continua descrito abaixo (T5.1g).
 
+**T5.1g.**
+
+- **`game-fluids-three`**: `particles.ts` (`ParticlePool`) apagado; `sprites.ts` (`FluidSprites`) faz as gotas do respingo e o vapor com os tipos `drips` e `steam` do mundo de efeitos (`options.vfx`; sem ele o renderizador cria o seu e o passa em `update`). Duas opções de `SpriteSpawnOptions` nasceram para isso e valem para qualquer jogo: `floor` (a altura onde a gota para, em vez do chão) e `rise` (multiplicador da subida do vapor). As gotas e o vapor mudam de números (tamanho, vida e subida são o tipo escalado para os valores antigos), não de comportamento.
+- **`game-weapons-three`**: o clarão do viewmodel e a fumaça da Galeria **ficam** (goldens da T1.3). Para tiro visto de fora, `HostEvent` `shot` ganhou `origin` e `direction` opcionais; com `origin`, o módulo toca pelo `host.effects` o clarão do cano e a cápsula (`muzzle_glock|ak|r870|barrett`, `casing_brass|shell|50`, fatias literais de `muzzle`/`casing` da Oficina em `game-vfx`) escolhidos pelo tipo de cápsula do calibre (`data/world-effects.json`, configurável por `createWorldEffects({ ids })`). Sem `origin` (o tiro em primeira pessoa) nada é tocado, então nada dobra.
+- **`game-vfx-three`**: `play` do `EffectSink` cai para as receitas da Oficina quando o id não é uma explosão (com `param` por índice ou id) e o catálogo lista os dois.
+- **`game-test-room`**: o filme e as gotas de fluidos usam o mundo único da sala (`vfx: vfx.world`) e o `pointScale` da sala vai para a camada de sprites; `host.effects` já era emprestado na T5.1e.
+- **Pendências para a T5.2d**: nenhum desenhista de pools da Oficina ainda existe em `game-vfx-three`, então `play` de receitas toca no motor (`world.workshop()`) mas só aparece na tela depois dela. A fumaça `muzzle_smoke` da Galeria não foi trocada (o hash do golden T1.3 inclui a fumaça).
+
+### Perguntas para o dono
+
+- Não há `HostEvent` de acerto (`hit`) com ponto, normal e material, então `impact_<material>`, `penetration` e a sangria por idade não têm de onde sair no módulo de armas. Criar o evento `hit` no contrato (quem emite é o hospedeiro que faz o raio) ou deixar o jogo tocar `impact_*` pelo `host.effects`?
+
 ### Testes mudados
 
 | Teste | Mudança e motivo |

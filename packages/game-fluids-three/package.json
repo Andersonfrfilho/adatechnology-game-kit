@@ -43,7 +43,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-fluids": "workspace:*"
+    "@adatechnology/game-fluids": "workspace:*",
+    "@adatechnology/game-vfx": "workspace:*",
+    "@adatechnology/game-vfx-three": "workspace:*"
   },
   "peerDependencies": {
     "three": "^0.160.0"

@@ -23,7 +23,7 @@ export interface PlayOptions {
   /** Repeats the same visual: a LAN client draws the same numbers from the same seed. */
   readonly seed?: number
   /** The recipe's parameter (age, material, weapon...). */
-  readonly param?: number
+  readonly param?: number | string
   /** Moves with a thing: the effect sits at its position plus the point it was played at. */
   readonly follow?: Follow
   /** Stops after this many seconds (default: the recipe's loop). */
@@ -68,6 +68,13 @@ interface Playing {
 const positionOf = (follow: Follow): Vec3Tuple => {
   const source = 'position' in follow ? follow.position : follow
   return [source.x, source.y, source.z]
+}
+
+/** A parameter given by its option id (`'ak'`, `'concrete'`) as the index of the option; a number is taken as it is. */
+function paramIndex(def: EffectDef, param: number | string | undefined): number | undefined {
+  if (typeof param !== 'string') return param
+  const index = def.params?.options.indexOf(param) ?? -1
+  return index >= 0 ? index : undefined
 }
 
 /** The turn about the vertical axis that takes the recipe's `heading` onto `direction` (three.js turns by `x' = cos x + sin z`). */
@@ -143,7 +150,7 @@ export function createEffectPlayer(options: EffectPlayerOptions): EffectPlayer {
       }
       playing.push(entry)
       drawing(entry, () =>
-        instance.begin(def, playOptions.param, {
+        instance.begin(def, paramIndex(def, playOptions.param), {
           placement: placementOf(entry),
           ...(playOptions.direction ? { direction: playOptions.direction } : {}),
           ...(playOptions.normal ? { normal: playOptions.normal } : {}),
