@@ -1,5 +1,9 @@
 import type * as THREE_NS from 'three'
 import type { DebrisKind, DestructionEvent, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import { createVfx } from '@adatechnology/game-vfx'
+import type { VfxWorld } from '@adatechnology/game-vfx'
+import { createVfxRenderer } from '@adatechnology/game-vfx-three'
+import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartVis, PieceBody } from './internal'
@@ -9,20 +13,28 @@ import type { ParticleKind } from './particles'
 import { PieceSystem } from './pieces'
 import { RebarCages } from './rebar'
 import { partHintOf } from './spec'
-import type { DestructionRenderer, BindOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, ThreeNamespace } from './types'
+import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, ThreeNamespace } from './types'
 import { Visuals } from './visual'
 
 type Ev<T extends DestructionEvent['type']> = Extract<DestructionEvent, { type: T }>
 
 const GLOW_FROM_C = 430
 const QUEUE_CAP = 4000
+/** A part's fire lasts until the part stops burning (`stopFire`); this is only the ceiling the effects world needs. */
+const FIRE_CEILING_SECONDS = 3600
+/** The `generic` explosion is the M67's (15 m injury radius): a blast with no effect id of its own scales with its radius. */
+const GENERIC_REFERENCE_RADIUS = 15
+/** The small flame of a part that a bullet or fire primed: it burns until the part goes off. */
+const PRIMED_FIRE_RADIUS = 0.2
 
 interface FireEmitter {
   object: string
   part: string
   point: Vec3
-  accFire: number
-  accSmoke: number
+  /** The burning part's position, moved every frame; the effects world's fire follows it. */
+  follow: { x: number; y: number; z: number }
+  /** Handle of the fire in the effects world, once the part's box is known. */
+  handle?: number
 }
 
 interface Leak {
@@ -133,10 +145,9 @@ class Renderer implements DestructionRenderer {
   private readonly homeTags: string[] = []
   private readonly throttles = new Map<string, number>()
   private readonly rng = createRng(0xc0ffee)
-  private light: THREE_NS.PointLight | null = null
-  private lightT = 0
-  private lightDur = 0.3
-  private lightPeak = 0
+  private readonly vfx: VfxWorld
+  /** The effects renderer made here when the host gave no shared world; it is stepped in `update`. */
+  private readonly ownVfx: VfxRenderer | undefined
   private time = 0
   private scanTimer = 0
   private disposed = false
@@ -176,6 +187,8 @@ class Renderer implements DestructionRenderer {
         this.ground.add('puddle', x, z, 0.05 + this.rng() * 0.04, color, home)
       },
     })
+    this.vfx = o.vfx ?? createVfx({ profile: this.quality })
+    this.ownVfx = o.vfx ? undefined : createVfxRenderer(THREE, { scene: o.scene, camera: o.camera ?? new THREE.PerspectiveCamera(), vfx: this.vfx })
     this.fragments = new FragmentSystem(THREE, {
       scene: o.scene,
       groundAt: this.groundAt,
@@ -410,8 +423,8 @@ class Renderer implements DestructionRenderer {
     this.pieceSys.update(dt)
     this.fragments.update(dt)
     this.ground.update(dt)
-    this.updateLight(dt)
     this.particles.update(dt)
+    this.ownVfx?.update(dt)
     this.syncTransforms()
   }
 
@@ -497,18 +510,16 @@ class Renderer implements DestructionRenderer {
         break
       }
       case 'ignite':
-        this.fires.set(`${ev.object}|${ev.part}`, { object: ev.object, part: ev.part, point: ev.point, accFire: 0, accSmoke: 0 })
+        this.startFire(ev)
         this.activate(ev.object, ev.part)
-        this.particles.burst('fire', ev.point, [0, 1, 0], 6, 1)
         this.sound('ignite', ev.point, 0.7)
         this.sound('burn_loop', ev.point, 0.5)
         break
       case 'primed':
         // a bullet or fire sets the part burning until its delay runs out; a blast nearby only waits for the explosion
         if (ev.trigger !== 'explosion') {
-          this.fires.set(`${ev.object}|${ev.part}`, { object: ev.object, part: ev.part, point: ev.point, accFire: 0, accSmoke: 0 })
+          this.vfx.fire({ point: ev.point, radius: PRIMED_FIRE_RADIUS, life: ev.delay })
           this.activate(ev.object, ev.part)
-          this.particles.burst('fire', ev.point, [0, 1, 0], 6, 1)
           this.sound('ignite', ev.point, 0.7)
         }
         break
@@ -524,7 +535,7 @@ class Renderer implements DestructionRenderer {
       case 'extinguish': {
         const f = this.fires.get(`${ev.object}|${ev.part}`)
         if (f) {
-          this.fires.delete(`${ev.object}|${ev.part}`)
+          this.stopFire(`${ev.object}|${ev.part}`)
           this.particles.burst('steam', f.point, [0, 1, 0], 14, 1.2)
         }
         this.activate(ev.object, ev.part)
@@ -532,7 +543,7 @@ class Renderer implements DestructionRenderer {
         break
       }
       case 'burnout': {
-        this.fires.delete(`${ev.object}|${ev.part}`)
+        this.stopFire(`${ev.object}|${ev.part}`)
         this.particles.burst('ash', ev.point, [0, 1, 0], 16, 1)
         this.particles.burst('smoke', ev.point, [0, 1, 0], 6, 0.8, { color: SMOKE_TONES.grey })
         const pv = this.partVis(ev.object, ev.part)
@@ -868,27 +879,11 @@ class Renderer implements DestructionRenderer {
     this.o.onPiece?.(piece)
   }
 
-  private onExplode(ev: Ev<'explode'>): void {
+  private onExplode(ev: Ev<'explode'>, options: ExplodeOptions = {}): void {
     const p = ev.point
-    const k = clamp(ev.radius / 3, 0.4, 2.5)
-    this.particles.burst('flash', p, [0, 1, 0], 1, 0, { size: k })
-    this.particles.burst('fire', p, [0, 1, 0], 34 * k, 4 * k, { size: 1 + k * 0.5 })
-    this.particles.burst('smoke', p, [0, 1, 0], 24 * k, 2.2, { color: SMOKE_TONES.black, size: 1 + k * 0.6 })
-    this.particles.burst('dust', p, [0, 1, 0], 22 * k, 3.5 * k)
-    this.particles.burst('sparks', p, [0, 1, 0], 16 * k, 8)
+    if (options.visual !== false) this.playExplosion(ev, options)
+    this.vfx.push(p, ev.radius, 4)
     this.particles.push(p, ev.radius, 4)
-    if (this.o.explosionLight !== false) {
-      if (!this.light) {
-        this.light = new this.THREE.PointLight(0xffa860, 0, 10, 2)
-        this.light.name = 'destruction-explosion-light'
-      }
-      if (!this.light.parent) this.scene.add(this.light)
-      this.light.position.set(p[0], p[1] + 0.5, p[2])
-      this.light.distance = Math.max(6, ev.radius * 3)
-      this.lightPeak = clamp(Math.sqrt(Math.max(1, ev.energy)) * 0.6, 10, 400)
-      this.lightDur = 0.35
-      this.lightT = this.lightDur
-    }
     // shove pieces and fragments
     const c = this.v1
     for (const pc of this.pieceSys.list) {
@@ -909,11 +904,25 @@ class Renderer implements DestructionRenderer {
     this.sound('explode', p, clamp(0.5 + ev.radius / 10, 0.5, 1))
   }
 
-  private updateLight(dt: number): void {
-    if (!this.light || this.lightT <= 0) return
-    this.lightT = Math.max(0, this.lightT - dt)
-    const t = this.lightT / this.lightDur
-    this.light.intensity = this.lightPeak * t * t
+  private playExplosion(ev: Ev<'explode'>, options: ExplodeOptions): void {
+    const named = options.effect ?? ev.effect
+    const direction = options.direction
+    const scale = clamp(ev.radius / GENERIC_REFERENCE_RADIUS, 0.2, 3)
+    if (named !== undefined && this.vfx.explosion(named, ev.point, direction ? { direction } : {}) !== null) return
+    this.vfx.explosion('generic', ev.point, { scale, ...(direction ? { direction } : {}) })
+  }
+
+  private startFire(ev: { object: string; part: string; point: Vec3 }): void {
+    const key = `${ev.object}|${ev.part}`
+    this.stopFire(key)
+    this.fires.set(key, { object: ev.object, part: ev.part, point: ev.point, follow: { x: ev.point[0], y: ev.point[1], z: ev.point[2] } })
+  }
+
+  private stopFire(key: string): void {
+    const fire = this.fires.get(key)
+    if (!fire) return
+    if (fire.handle !== undefined) this.vfx.stop(fire.handle)
+    this.fires.delete(key)
   }
 
   // ----------------------------------------------------------------------------------------------------------------------------------
@@ -959,8 +968,8 @@ class Renderer implements DestructionRenderer {
       }
       const fire = this.fires.get(key)
       if (fire) {
-        if (ps.burning && ps.status !== 'broken' && ps.status !== 'ashes' && ps.status !== 'melted') this.emitFire(fire, pv, def, dt)
-        else this.fires.delete(key)
+        if (ps.burning && ps.status !== 'broken' && ps.status !== 'ashes' && ps.status !== 'melted') this.emitFire(fire, pv, def)
+        else this.stopFire(key)
       }
       const hot = def?.visual?.glows === true && ps.temperature > GLOW_FROM_C
       if (!ps.burning && !hot && Math.abs(ps.char - pv.charApplied) < 0.01 && Math.abs(ps.melt - pv.meltApplied) < 0.01) {
@@ -986,40 +995,22 @@ class Renderer implements DestructionRenderer {
     }
   }
 
-  private emitFire(f: FireEmitter, pv: PartVis, def: MaterialDef | undefined, dt: number): void {
+  private emitFire(f: FireEmitter, pv: PartVis, def: MaterialDef | undefined): void {
     const bb = this.box
     bb.makeEmpty()
     const tmp = new this.THREE.Box3()
     for (const mv of pv.meshes) if (this.visuals.shown(mv)) bb.union(this.visuals.worldBox(mv, tmp))
-    let cx = f.point[0]
-    let cy = f.point[1]
-    let cz = f.point[2]
-    let sx = 0.2
-    let sy = 0.2
-    let sz = 0.2
     if (!bb.isEmpty()) {
       const c = bb.getCenter(this.v1)
-      const s = bb.getSize(this.v2)
-      cx = c.x
-      cy = bb.min.y
-      cz = c.z
-      sx = s.x
-      sy = s.y
-      sz = s.z
+      f.follow.x = c.x
+      f.follow.y = bb.min.y
+      f.follow.z = c.z
     }
-    const vol = clamp(Math.cbrt(Math.max(sx * sy * sz, 1e-5)), 0.05, 1.5)
-    f.accFire += (18 + 70 * vol) * dt
-    f.accSmoke += (6 + 24 * vol) * dt
-    const tone = SMOKE_TONES[def?.thermal.smoke ?? 'grey']
-    const rnd = this.rng
-    while (f.accFire >= 1) {
-      f.accFire -= 1
-      this.particles.spawn('fire', [cx + (rnd() - 0.5) * sx, cy + sy * (0.3 + 0.7 * rnd()), cz + (rnd() - 0.5) * sz], [(rnd() - 0.5) * 0.4, 0.5 + rnd() * 0.9, (rnd() - 0.5) * 0.4], { size: 0.6 + vol * 0.8 })
-    }
-    while (f.accSmoke >= 1) {
-      f.accSmoke -= 1
-      this.particles.spawn('smoke', [cx + (rnd() - 0.5) * sx, cy + sy * (0.8 + 0.4 * rnd()), cz + (rnd() - 0.5) * sz], [(rnd() - 0.5) * 0.3 + 0.1, 0.4 + rnd() * 0.5, (rnd() - 0.5) * 0.3], { color: tone, size: 0.6 + vol })
-    }
+    if (f.handle !== undefined) return
+    const size = bb.isEmpty() ? this.v2.set(0.2, 0.2, 0.2) : bb.getSize(this.v2)
+    const radius = clamp(Math.max(size.x, size.z) * 0.5, 0.12, 1.2)
+    const smokeColor = SMOKE_TONES[def?.thermal.smoke ?? 'grey']
+    f.handle = this.vfx.fire({ point: [f.follow.x, f.follow.y, f.follow.z], radius, life: FIRE_CEILING_SECONDS, follow: f.follow, ...(smokeColor !== undefined ? { smokeColor } : {}) })
   }
 
   private updateLeaks(dt: number): void {
@@ -1058,8 +1049,8 @@ class Renderer implements DestructionRenderer {
     this.particles.burst(kind as ParticleKind, point, normal, count, speed ?? DEFAULT_SPEED[kind] ?? 1, kind === 'smoke' ? { color: SMOKE_TONES.grey } : undefined)
   }
 
-  explode(point: Vec3, energy: number, radius: number): void {
-    this.onExplode({ type: 'explode', object: '', part: '', time: this.time, point, energy, radius })
+  explode(point: Vec3, energy: number, radius: number, options?: ExplodeOptions): void {
+    this.onExplode({ type: 'explode', object: '', part: '', time: this.time, point, energy, radius }, options)
   }
 
   restore(objectId: string): void {
@@ -1068,7 +1059,7 @@ class Renderer implements DestructionRenderer {
     if (self?.isSplit) for (const pv of self.parts.values()) homes.add(pv.home)
     for (const home of homes) this.restoreHome(home)
     for (const [key, a] of [...this.active]) if (homes.has(a.object)) this.active.delete(key)
-    for (const [key, f] of [...this.fires]) if (homes.has(f.object)) this.fires.delete(key)
+    for (const [key, f] of [...this.fires]) if (homes.has(f.object)) this.stopFire(key)
     for (let i = this.leaks.length - 1; i >= 0; i--) if (homes.has(this.leaks[i].object)) this.leaks.splice(i, 1)
     for (const home of homes) {
       this.fragments.removeHome(home)
@@ -1099,7 +1090,7 @@ class Renderer implements DestructionRenderer {
   clear(): void {
     this.queue.length = 0
     this.active.clear()
-    this.fires.clear()
+    for (const key of [...this.fires.keys()]) this.stopFire(key)
     this.leaks.length = 0
     for (const id of [...this.bounds.keys()]) if (this.bounds.has(id)) this.restore(id)
     // anything left of a split object whose home is gone
@@ -1115,15 +1106,17 @@ class Renderer implements DestructionRenderer {
     this.ground.clear()
     this.cages.clear()
     this.particles.clear()
-    if (this.light) {
-      this.light.intensity = 0
-      this.lightT = 0
-      this.scene.remove(this.light)
-    }
+    this.ownVfx?.world.clear()
   }
 
   stats(): { fragments: number; particles: number; pieces: number; decals: number } {
-    return { fragments: this.fragments.count, particles: this.particles.live, pieces: this.pieceSys.list.length, decals: this.visuals.decalCount + this.ground.count }
+    return { fragments: this.fragments.count, particles: this.particles.live + this.ownedVfxParticles(), pieces: this.pieceSys.list.length, decals: this.visuals.decalCount + this.ground.count }
+  }
+
+  private ownedVfxParticles(): number {
+    if (!this.ownVfx) return 0
+    const { puffs, sparks, glows, chunks } = this.vfx.stats()
+    return puffs + sparks + glows + chunks
   }
 
   rebarCount(): number {
@@ -1140,8 +1133,7 @@ class Renderer implements DestructionRenderer {
     this.cages.dispose()
     this.particles.dispose()
     this.visuals.dispose()
-    this.light?.dispose?.()
-    this.light = null
+    this.ownVfx?.dispose()
     this.disposed = true
   }
 }

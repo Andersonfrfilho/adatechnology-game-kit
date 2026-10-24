@@ -96,6 +96,12 @@ importers:
       '@adatechnology/game-destruction':
         specifier: workspace:*
         version: link:../game-destruction
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:*
+        version: link:../game-vfx-three
     devDependencies:
       '@types/node':
         specifier: ^22.10.7
@@ -450,6 +456,12 @@ importers:
       '@adatechnology/game-fluids-three':
         specifier: workspace:*
         version: link:../game-fluids-three
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:*
+        version: link:../game-vfx-three
       '@adatechnology/game-weapons':
         specifier: workspace:*
         version: link:../game-weapons

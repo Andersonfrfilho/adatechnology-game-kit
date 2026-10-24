@@ -45,7 +45,9 @@
   },
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:*",
-    "@adatechnology/game-destruction": "workspace:*"
+    "@adatechnology/game-destruction": "workspace:*",
+    "@adatechnology/game-vfx": "workspace:*",
+    "@adatechnology/game-vfx-three": "workspace:*"
   },
   "peerDependencies": {
     "three": "^0.160.0"

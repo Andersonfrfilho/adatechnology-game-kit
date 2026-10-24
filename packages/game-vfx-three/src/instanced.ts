@@ -42,6 +42,7 @@ export function createPuffLayer(THREE: ThreeLib, pool: OrderedPool<Puff>, unifor
   geometry.instanceCount = 0
   const material = new THREE.ShaderMaterial({ uniforms: uniforms as never, vertexShader: PUFF_VERTEX, fragmentShader: PUFF_FRAGMENT })
   const mesh = new THREE.Mesh(geometry, material)
+  mesh.name = 'vfx-puffs'
   mesh.frustumCulled = false
   return {
     mesh,
@@ -87,6 +88,7 @@ export function createSparkLayer(THREE: ThreeLib, pool: OrderedPool<Spark>): Dra
   geometry.instanceCount = 0
   const material = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexShader: SPARK_VERTEX, fragmentShader: SPARK_FRAGMENT })
   const mesh = new THREE.Mesh(geometry, material)
+  mesh.name = 'vfx-sparks'
   mesh.frustumCulled = false
   mesh.renderOrder = 5
   return {
@@ -130,6 +132,7 @@ export function createGlowLayer(THREE: ThreeLib, pool: OrderedPool<Glow>): Drawn
   geometry.instanceCount = 0
   const material = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexShader: GLOW_VERTEX, fragmentShader: GLOW_FRAGMENT })
   const mesh = new THREE.Mesh(geometry, material)
+  mesh.name = 'vfx-glows'
   mesh.frustumCulled = false
   mesh.renderOrder = 6
   return {

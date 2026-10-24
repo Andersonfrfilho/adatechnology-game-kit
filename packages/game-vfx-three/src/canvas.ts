@@ -12,7 +12,13 @@ export function createTextureStream(): RandomStream {
   return lehmer(SCORCH_SEED)
 }
 
+/** Without a DOM (a server, a test in Node) there is nothing to draw on: the textures stay blank and the marks still lay down their geometry. */
+function blankCanvas(): CanvasLike {
+  return { width: 0, height: 0, getContext: () => null }
+}
+
 function defaultCanvas(): CanvasLike {
+  if (typeof document === 'undefined') return blankCanvas()
   return document.createElement('canvas') as unknown as CanvasLike
 }
 

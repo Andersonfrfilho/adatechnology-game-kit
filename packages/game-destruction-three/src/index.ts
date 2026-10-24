@@ -6,6 +6,7 @@ export type { ParticleKind } from './particles'
 export type {
   BindOptions,
   DestructionRenderer,
+  ExplodeOptions,
   Mesh,
   MeshRange,
   Object3D,

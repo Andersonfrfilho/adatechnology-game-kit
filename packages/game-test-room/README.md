@@ -71,6 +71,12 @@ The items join the catalogue under the module's group and its scenarios become b
 
 ## Module bench
 
+The room makes **one** effects world (`game-vfx` and its `game-vfx-three` layer) and steps it once per frame, after the destruction renderer. The destruction
+renderer draws into it, every module gets it as `host.effects` (an `EffectSink`: `play({ effect: 'm67', point })`, `catalog()`), grenades and rockets play the
+profile of their explosive (`explosive` is on the `explosion` host event), the camera shakes and the screen flashes through an overlay in the container, and the
+`particles` metric counts its pools. Without a DOM nothing is drawn on the screen. `TestRoom.applyCamera()` wraps a host's own `render`; the room's loop does it itself.
+`craters: true` swaps the floor for a deformable patch that big explosions dig into.
+
 A module that declares `controls`, `layers` or `metrics` (see `@adatechnology/game-contracts`) gets a bench: `loadModule` checks it with
 `checkBench` (a `✓ ... bench ok` / `✗ ... bench broken` line), lends `host.bench` to `attach`, then sends one change per control and layer. The
 panel between the animations and the tests shows the active module (the one of the last `openArea`; else the first loaded with a bench, a later module never takes the panel from the one on screen): a
