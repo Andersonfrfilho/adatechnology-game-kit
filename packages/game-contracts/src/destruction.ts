@@ -322,6 +322,11 @@ export interface Hit {
   cut?: number
   /** A part the caller already resolved, by id (a crowd raycast against capsules); the impl then skips its own part search. */
   part?: string
+  /**
+   * Ballistic: how well the bullet cuts through for its energy, default 1 (a rifle FMJ). Soft lead (a slug, buckshot) deforms and goes through
+   * less steel than its joules say, an armour-piercing core more: the energy that counts against the penetration of a hard material (metal, masonry) is `energy * piercing`; wood, glass and soft materials take the energy as it is.
+   */
+  piercing?: number
   /** Explosive: pressure multiplier the host knows (a room volume); the energy is then `energy * confinement` and the ray estimate is skipped. */
   confinement?: number
   /** Explosive: per-call blast options (see `BlastOptions`). */

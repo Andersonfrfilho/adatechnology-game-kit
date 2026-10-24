@@ -35,6 +35,8 @@ const FLAMMABLE_FLUIDS = ['gas', 'fuel']
 const BREACH_RADIUS = 0.55
 const BREACH_BLAST_FACTOR = 6
 const BREACH_AREA = 0.25
+/** Metres of reach per cube root of kilojoule for a blast to open a breach. */
+const BREACH_BLAST_REACH = Infinity
 const RESIDUAL_CAPACITY = 0.15
 /** Unit-sized fragments of a whole wall: at most this many times `maxFragments`. A breach picks its units from a grid of up to `BREACH_GRID_CAP`. */
 const UNIT_FRAGMENT_FACTOR = 4
@@ -173,6 +175,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const fireSpread = options.fireSpread ?? 0.6
   const breachRadius = options.breach?.radius ?? BREACH_RADIUS
   const breachBlastFactor = options.breach?.blastFactor ?? BREACH_BLAST_FACTOR
+  const breachBlastReach = options.breach?.blastReach ?? BREACH_BLAST_REACH
   const rng = createRng(options.seed ?? 1)
   const rnd = () => rng.next()
 
@@ -1002,7 +1005,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   interface BallisticOut { penetrated: boolean; exitEnergy: number; exitPoint?: Vec3; damage: number }
 
-  const ballistic = (o: ObjRT, p: PartRT, entry: Vec3, n: Vec3, d: Vec3, E: number, caliber: number, pathLen: number, src?: string): BallisticOut => {
+  const ballistic = (o: ObjRT, p: PartRT, entry: Vec3, n: Vec3, d: Vec3, E: number, caliber: number, pathLen: number, src?: string, piercing = 1): BallisticOut => {
     const mat = p.mat
     // a bare cage and an opening do not stop a bullet
     if (p.st.stripped || (p.st.opening && insideOpening(o, p, objLocal(o, entry)))) {
@@ -1017,7 +1020,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const coats = p.layers.length > 0 ? layersEnergy(p.layers, p.rt.spalls, face, objLocal(o, entry)) + layersEnergy(p.layers, p.rt.spalls, -face, exitLocal) : 0
     // each coat adds penetration x thickness to the core's; a part without layers keeps the plain formula
     const thr = coats > 0 ? (mat.penetration * p.thickness * 1000 + coats) / slant : mat.penetration * effM * 1000
-    const penetrated = E > thr
+    // the bullet's kind matters against hard targets (steel, masonry); wood, flesh and the like take every bullet for its energy
+    const hard = mat.tags?.includes('metal') || mat.tags?.includes('masonry')
+    const Ep = piercing === 1 || !hard ? E : E * piercing
+    const penetrated = Ep > thr
     // a thin brittle shell that shatters (a pane, a bottle) is lost to one bullet that a thick block of the same glass shrugs off: the same
     // fragility factor that melee uses for blunt hits (1 for ductile materials and for shells 2 cm or thicker, up to x118 for 3 mm glass)
     const scale = (mat.damageScale?.ballistic ?? 1) * (mat.fracture === 'shatter' ? fragility(mat.ductility, p.thickness) : 1)
@@ -1031,7 +1037,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     if (p.layers.length > 0) spallOuter(o, p, entry, face, n, Math.max(0.03, (caliber / 1000) * 4), src)
     const brittle = mat.ductility < 0.3
-    const ratio = E / Math.max(thr, 1e-6)
+    const ratio = Ep / Math.max(thr, 1e-6)
     const crackLen = clamp(0.03 + ratio * 0.2, 0.03, 0.8)
     let exitPoint: Vec3 | undefined
     if (penetrated) {
@@ -1056,7 +1062,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // a bullet only wears the joints of the part it hits, by the energy the part absorbed (a through-and-through shot transfers little)
     wearJoints(o, p, (penetrated ? thr : E) * 0.02, undefined, 0, src, true)
     const dmg = applyDamage(o, p, E * DMG_PER_J * scale, 'ballistic', entry, d, E * 0.1, 12, src)
-    return { penetrated, exitEnergy: penetrated ? E - thr : 0, exitPoint, damage: dmg }
+    return { penetrated, exitEnergy: penetrated ? E - thr / (hard ? piercing : 1) : 0, exitPoint, damage: dmg }
   }
 
   const melee = (o: ObjRT, p: PartRT, kind: 'blunt' | 'slash', E: number, point: Vec3, n: Vec3, d: Vec3, contactR: number, src?: string): number => {
@@ -1131,7 +1137,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (Ein > 20 && p.layers.length > 0) spallOuter(o, p, wp, faceOf(o, p, wn), wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), src)
     const dealt = applyDamage(o, p, amount, 'explosive', point, null, Ein * 0.3, 40, src)
     res.damage += dealt
-    addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
+    if (dist <= breachBlastReach * Math.cbrt(Math.max(0, energy) / 1000)) addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
     return reach
   }
 
@@ -1499,7 +1505,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (hit.type === 'ballistic') {
       const loc = locate(o, point, dir, 0.05, only)
       if (loc) {
-        const out = ballistic(o, loc.p, loc.point, loc.normal, loc.dir, E, hit.caliber ?? 9, loc.pathLen, src)
+        const out = ballistic(o, loc.p, loc.point, loc.normal, loc.dir, E, hit.caliber ?? 9, loc.pathLen, src, hit.piercing ?? 1)
         res = { ...res, part: loc.p.spec.id, point: loc.point, damage: out.damage, penetrated: out.penetrated, exitEnergy: out.exitEnergy }
       }
     } else if (hit.type === 'blunt' || hit.type === 'slash') {
@@ -1930,7 +1936,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const r = raycastInternal(origin, direction, maxDistance)
       return r ? { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: r.distance } : null
     },
-    shoot(origin, direction, energy, caliber, source) {
+    shoot(origin, direction, energy, caliber, source, piercing) {
       return withCollapses(run(() => {
         const results: HitResult[] = []
         const d = vec.normalize(direction)
@@ -1942,7 +1948,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           if (!rh) break
           const im = impls.get(rh.object)
           if (im) {
-            const r = implHit(im, { type: 'ballistic', point: rh.point, direction: d, energy: E, caliber, ...(source !== undefined ? { source } : {}) })
+            const r = implHit(im, { type: 'ballistic', point: rh.point, direction: d, energy: E, caliber, ...(piercing !== undefined ? { piercing } : {}), ...(source !== undefined ? { source } : {}) })
             r.part = rh.part
             r.point = rh.point
             r.exitEnergy = r.penetrated ? E * 0.5 : 0
@@ -1956,7 +1962,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           const o = getObj(rh.object)
           const p = getPart(o, rh.part)
           const start = cur.length
-          const out = ballistic(o, p, rh.point, rh.normal, d, E, caliber, rh.pathLen, source)
+          const out = ballistic(o, p, rh.point, rh.normal, d, E, caliber, rh.pathLen, source, piercing ?? 1)
           results.push({ object: o.id, part: p.spec.id, point: rh.point, damage: out.damage, penetrated: out.penetrated, exitEnergy: out.exitEnergy, events: cur.slice(start) })
           ignore.add(`${o.id}\0${p.spec.id}`)
           if (!out.penetrated || !out.exitPoint) break
