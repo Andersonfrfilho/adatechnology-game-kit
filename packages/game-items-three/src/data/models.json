@@ -1388,5 +1388,15 @@
       4.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "cement_bag",
+    "teamId": "cimento",
+    "teamBox": [
+      5,
+      1.01,
+      3
+    ],
+    "scale": 0.1
   }
 ]
