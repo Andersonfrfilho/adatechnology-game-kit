@@ -80,4 +80,19 @@ describe('checkArsenal through createArsenal', () => {
     }
     for (const part of ['unknown calibre "nope"', 'no fire modes', 'draw time of 0 s', 'unknown explosive "missing"', 'weapon "twice" is listed more than once']) expect(message).toContain(part)
   })
+
+  it('rejects a default condition or ammunition quality the rules do not define', () => {
+    expect(() => createArsenal({ rules: { defaultCondition: 'shiny' } })).toThrow(/default condition "shiny"/)
+    expect(() => createArsenal({ rules: { defaultAmmoQuality: 'magic' } })).toThrow(/default ammunition quality "magic"/)
+  })
+})
+
+describe('rules patches', () => {
+  it('ignore keys that would reach the prototype', () => {
+    const patch = JSON.parse('{"__proto__": {"polluted": true}, "constructor": {"prototype": {"polluted": true}}, "heat": {"cap": 50}}') as object
+    const arsenal = createArsenal({ rules: patch })
+    expect(arsenal.rules.heat.cap).toBe(50)
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined()
+    expect(Object.getPrototypeOf(arsenal.rules)).toBe(Object.prototype)
+  })
 })

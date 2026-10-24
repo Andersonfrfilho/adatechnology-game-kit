@@ -9,9 +9,8 @@ const THROW_LIFT = 0.15
 
 const PLACED_TRIGGERS: ReadonlySet<string> = new Set(['wire', 'remote'])
 
-const blastNumbers = (explosive: ExplosiveDef): Pick<Extract<Use, { kind: 'throw' }>, 'energy' | 'radius' | 'injuryRadius'> => ({
+const blastNumbers = (explosive: ExplosiveDef): Pick<Extract<Use, { kind: 'throw' }>, 'energy' | 'injuryRadius'> => ({
   energy: explosive.energy,
-  radius: explosive.lethalRadius,
   injuryRadius: explosive.injuryRadius,
 })
 

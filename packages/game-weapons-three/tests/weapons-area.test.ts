@@ -52,6 +52,12 @@ describe('weapons test area', () => {
     expect(weaponsLayout(['weapon_a', 'weapon_b']).filter((p) => p.item === COUNTER_ITEM_ID).length).toBe(1)
   })
 
+  it('throws when the weapons do not fit on the counters, or one is longer than a counter', () => {
+    const many = Array.from({ length: 400 }, (_, index) => `weapon_${index}`)
+    expect(() => weaponsLayout(many)).toThrow(/do not fit/)
+    expect(() => weaponsLayout(['weapon_long'], () => 50)).toThrow(/a counter holds/)
+  })
+
   it('shows the equipped weapon in the hands and ejects one casing per shot', () => {
     const { room, module } = roomWithWeapons()
     room.setTool('pistol_9mm')

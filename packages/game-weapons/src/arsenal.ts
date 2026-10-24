@@ -61,15 +61,15 @@ export const createArsenal = (options: ArsenalOptions = {}): Arsenal => {
   removeIds(weapons, options.remove?.weapons)
   if (options.include) for (const [id, def] of weapons) if (!options.include(def)) weapons.delete(id)
 
+  const rules = deepMerge(DEFAULT_RULES, options.rules)
   const problems = [
     ...findDuplicateIds('calibre', options.calibers),
     ...findDuplicateIds('weapon', options.weapons),
     ...findDuplicateIds('explosive', options.explosives),
-    ...checkArsenal({ weapons, calibers, explosives }),
+    ...checkArsenal({ weapons, calibers, explosives, rules }),
   ]
   if (problems.length > 0) throw new Error(`game-weapons: the arsenal is not consistent:\n${problems.map((problem) => `  - ${problem}`).join('\n')}`)
 
-  const rules = deepMerge(DEFAULT_RULES, options.rules)
   const strings = resolveStrings(options.locale, options.strings)
   const baseSeed = options.seed ?? 1
   let counter = 0

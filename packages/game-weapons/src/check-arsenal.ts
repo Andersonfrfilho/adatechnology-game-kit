@@ -1,9 +1,11 @@
-import type { CaliberDef, CaliberId, ExplosiveDef, ExplosiveId, WeaponDef, WeaponId } from './types'
+import type { CaliberDef, CaliberId, ExplosiveDef, ExplosiveId, WeaponDef, WeaponId, WeaponRules } from './types'
 
 export interface ArsenalParts {
   readonly weapons: ReadonlyMap<WeaponId, WeaponDef>
   readonly calibers: ReadonlyMap<CaliberId, CaliberDef>
   readonly explosives: ReadonlyMap<ExplosiveId, ExplosiveDef>
+  /** When given, the default condition and ammunition quality must be ones the rules define. */
+  readonly rules?: Pick<WeaponRules, 'conditions' | 'defaultCondition' | 'ammoQualities' | 'defaultAmmoQuality'>
 }
 
 /** Ids that appear more than once in a list a game passed in. */
@@ -41,6 +43,16 @@ const checkExplosiveReference = (def: WeaponDef, explosives: ArsenalParts['explo
   return id !== undefined && !explosives.has(id) ? [`weapon "${def.id}" uses unknown explosive "${id}"`] : []
 }
 
+const checkRuleDefaults = (rules: ArsenalParts['rules']): string[] => {
+  if (!rules) return []
+  const problems: string[] = []
+  if (!rules.conditions.some((condition) => condition.id === rules.defaultCondition)) problems.push(`the default condition "${rules.defaultCondition}" is not one of the conditions`)
+  if (!rules.ammoQualities.some((quality) => quality.id === rules.defaultAmmoQuality)) problems.push(`the default ammunition quality "${rules.defaultAmmoQuality}" is not one of the qualities`)
+  return problems
+}
+
 /** Every problem found in an arsenal, so a game sees them all at once instead of one per run. Empty when it is consistent. */
-export const checkArsenal = ({ weapons, calibers, explosives }: ArsenalParts): string[] =>
-  [...weapons.values()].flatMap((def) => [...checkFirearm(def, calibers), ...checkTimings(def), ...checkExplosiveReference(def, explosives)])
+export const checkArsenal = ({ weapons, calibers, explosives, rules }: ArsenalParts): string[] => [
+  ...[...weapons.values()].flatMap((def) => [...checkFirearm(def, calibers), ...checkTimings(def), ...checkExplosiveReference(def, explosives)]),
+  ...checkRuleDefaults(rules),
+]

@@ -190,7 +190,9 @@ export function weaponsLayout(weaponItemIds: string[], pitchOf: (itemId: string)
     const pitch = pitchOf(item)
     let counter = counterOf[counterOf.length - 1]
     if (!counter || counter.used + pitch > usable + 1e-9) {
-      const slot = slots[Math.min(counterOf.length, slots.length - 1)] as { x: number; z: number }
+      const slot = slots[counterOf.length]
+      if (!slot) throw new Error(`weapons area: ${weaponItemIds.length} weapons do not fit on ${slots.length} counters of ${usable.toFixed(2)} m`)
+      if (pitch > usable + 1e-9) throw new Error(`weapons area: "${item}" takes ${pitch} m and a counter holds ${usable.toFixed(2)} m`)
       counter = { ...slot, used: 0 }
       counterOf.push(counter)
     }
