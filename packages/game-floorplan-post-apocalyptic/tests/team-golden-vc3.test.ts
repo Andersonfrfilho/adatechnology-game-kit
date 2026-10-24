@@ -20,8 +20,6 @@ type PlanEvent = {
 const LISTS = ['rooms', 'walls', 'openings', 'items', 'stateItems', 'lot'] as const
 const plansOf = (file: unknown): PlanEvent[] => (file as GoldenRecord).events.map((event) => event.data as unknown as PlanEvent)
 const allPlans = plansOf(goldenFile)
-/** Templates the team page has and the SDK has not (yet): the five rural ones, ported in T2.2f. */
-const PENDING_TEMPLATES = ['barraca_camping', 'barraco', 'cabana_tronco', 'casa_madeira_americana', 'chale_madeira']
 
 function sdkRows(plan: PlanEvent): PlanLists {
   return teamRowsOf(engine.generate(sdkTemplateOf.get(plan.template) as string, { seed: plan.seed, state: sdkStateOf.get(plan.state) }))
@@ -51,9 +49,10 @@ describe('plans against the Visor de casas 3D (VC3)', () => {
     })
   }
 
-  it('the templates only the team page has are exactly the rural ones', () => {
+  it('every template of the team page has an SDK template (the five rural ones included)', () => {
     const missing = [...new Set(allPlans.map((plan) => plan.template))].filter((template) => !sdkTemplateOf.has(template)).sort()
-    expect(missing).toEqual(PENDING_TEMPLATES)
+    expect(missing).toEqual([])
+    expect(comparable).toHaveLength(17)
   })
 
   it('a hash notices an item moved by 1 cm', () => {

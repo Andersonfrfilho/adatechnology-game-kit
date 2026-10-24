@@ -197,6 +197,8 @@ export interface TemplateDef {
   noWalls?: boolean
   /** Storey heights add up (a mezzanine with a different ceiling) instead of `index * ceiling`. */
   cumulativeCeilings?: boolean
+  /** Settings the packs read from the plan (`power`: `grid`, `offgrid` or `tap`; `solar`); it lands in `result.config`. */
+  config?: (o: FloorplanOptions, w: number, d: number) => Json
   /** Marks lot areas taken by the building (chimney, tank, tents) as keep-out zones for the lot fill. */
   reservations?: (plan: Plan) => void
   /** Own paths from the doors that sit away from the building edge (tents); replaces the generated ones. */
@@ -347,6 +349,10 @@ export interface Plan {
   zoning?: ZoningReport
   /** Lot areas the building keeps out of the fill (set by `TemplateDef.reservations`). */
   reservations: Rect[]
+  /** The options the plan was built with (seed included). */
+  options: FloorplanOptions
+  /** Result of `TemplateDef.config`. */
+  config?: Json
   /** Cache of the wall bodies per storey, filled by the walkability grid. */
   wallBodies?: Record<number, Rect[]>
   playerRadius: number

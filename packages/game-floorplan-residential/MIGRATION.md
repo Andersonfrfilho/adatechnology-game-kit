@@ -21,7 +21,7 @@ The only deliberate behaviour additions are opt-in: the `zone` option (urban zon
 | `casaA` | `single_storey_a` | `budget` | `residential_single` | 1 |
 | `sobrado` | `townhouse` | `budget` | `residential_single` | 2 |
 | `apartamento` | `apartment_basic` | `budget` | `residential_multi` | 1 (unit) |
-| `popular_laje` | `budget_slab_house` | `budget` | `residential_single` | 1, party wall right |
+| `popular_laje` | `budget_slab_house` | `budget` | `residential_single` | 1 (default) to 3, party wall right |
 | `popular_geminada` | `budget_semi_detached` | `budget` | `residential_single` | 1, party wall left |
 | `media_terrea_moderna` | `mid_modern_single_storey` | `mid` | `residential_single` | 1 |
 | `sobrado_medio_moderno` | `mid_modern_townhouse` | `mid` | `residential_single` | 2 or 3 |
@@ -486,3 +486,9 @@ The strings below were literal Portuguese in the old SDK. They are now keys in `
 | `zr3_zm` | Mixed use | single, multi, `commercial`, `mixed` | 12 | 40 m | 0 / 0 / 3 |
 
 Labels are in the `zones` locale namespace (for example `pt-BR`: `ZR-1 – Residencial de baixa densidade`). Commercial and industrial zones (`zc`, `zi`) come with the commercial pack.
+
+## Slab house with upper floors (spec 001, T2.2g)
+
+`budget_slab_house` takes `floors` 1 to 3 (`floorRange: [1, 3]`). **Default stays 1 floor**, the page's plan (the 75 recorded plans of `popular_laje` still match); `randomFloors: true` draws 1 to 3 evenly from the seed (the Galeria's `1 + floor(R * 3)`).
+Each upper floor repeats the footprint with two bedrooms and a bathroom (`bedroom_1`, `bedroom_2`, `bath_1`; then `bedroom_3`, `bedroom_4`, `bath_2`). A straight stair on the left side margin reaches them from outside:
+`result.config.sideStair` = `{ side, rect, flights, risers, doors }` (one 3.9 m flight per floor, `doors` are the outside doors of the upper floors, ids `d1_0`, `d2_0`). The top slab shows rebar starter bars (`facade.slab.exposedRebar`) in 60% of the multi-floor houses (always on the one-floor house, as on the page).

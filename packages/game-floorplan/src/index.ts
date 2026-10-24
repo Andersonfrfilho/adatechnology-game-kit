@@ -7,6 +7,7 @@ import { HIGH_SATURATION, MIN_FABRIC_FLOOR_CONTRAST, MIN_WALL_FLOOR_CONTRAST, he
 import {
   CATALOG,
   LIBRARIES,
+  PALETTE_STYLES,
   STYLES,
   TEMPLATES,
   VIEWER_LAYERS,
@@ -96,6 +97,7 @@ export const engine = {
   catalog: CATALOG,
   libraries: LIBRARIES,
   styles: STYLES,
+  paletteStyles: PALETTE_STYLES,
   createRng,
   mulberry32,
   hashString,

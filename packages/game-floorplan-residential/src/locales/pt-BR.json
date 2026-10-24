@@ -17,6 +17,7 @@
     "bedroom_1": "Quarto 1",
     "bedroom_2": "Quarto 2",
     "bedroom_3": "Quarto 3",
+    "bedroom_4": "Quarto 4",
     "cinema": "Cinema",
     "circulation": "Circulação",
     "closet": "Closet",
@@ -61,6 +62,7 @@
     "terrace": "Terraço",
     "terrace_deck": "Terraço (deck e jacuzzi)",
     "upper_floor": "Andar superior",
+    "upper_floor_2": "Segundo andar superior",
     "veranda": "Varanda",
     "veranda_gourmet": "Varanda gourmet",
     "void_living": "Vazio da sala"

@@ -65,19 +65,19 @@ API pública (L10702–10816 e retorno em L11180): `gerar`, `slots`, `validar`, 
 | `sobrado` | 7975 | sim (`townhouse`) |
 | `mercado`, `farmacia` | 8034, 8060 | sim (`market`, `pharmacy`) |
 | `apartamento` (1 unidade por andar) | 8086 | sim (`apartment_basic`) |
-| `popular_laje`, `popular_geminada` | 8154, 8181 | sim (`budget_slab_house`, `budget_semi_detached`) |
+| `popular_laje`, `popular_geminada` | 8154, 8181 | sim (`budget_slab_house`, `budget_semi_detached`); a laje ganhou 1 a 3 andares na T2.2g (`floors`, `randomFloors`; o time só tem o térreo, andares de cima são padrão reversível) |
 | `media_terrea_moderna`, `sobrado_medio_moderno` | 8207, 8241 | sim |
 | `alto_padrao_contemporanea` | 8309 | sim (`high_end_contemporary`) |
 | `mansao` (1 a 3 andares, elevador opcional) | 8408 | sim (`mansion`) |
 | `apartamento_novo` (médio/alto, prédio 3–20 andares) | 8503 | sim (`apartment_modern`) |
-| **`casa_madeira_americana`** (wood frame, 1–2 andares; w 11–16,5, d 12,4–15,5; padrão 12,6×13; telhado asfáltico 28°) | 8794 | **não** |
-| **`chale_madeira`** (A-frame 52°, pé-direito duplo com lareira e mezanino; w 7,5–9,5, d 10–12) | 8862 | **não** |
-| **`cabana_tronco`** (troncos, 1–2 cômodos, fogão a lenha, alpendre, caixa d'água em cavalete; w 5,2–7,6, d 5,6–8,8) | 8948 | **não** |
-| **`barraco`** (sucata, zinco 12° preso com "pregos e pedras", gato de luz; w 3,6–5,2, d 4,4–6,6) | 9027 | **não** |
-| **`barraca_camping`** (1 a 4 barracas iglu/túnel, fogueira, fogareiro, coolers, varal; sistema `lona`) | 9124 | **não** |
+| **`casa_madeira_americana`** (wood frame, 1–2 andares; w 11–16,5, d 12,4–15,5; padrão 12,6×13; telhado asfáltico 28°) | 8794 | **sim** (`wood_frame_house`, `game-floorplan-rural`, T2.2f) |
+| **`chale_madeira`** (A-frame 52°, pé-direito duplo com lareira e mezanino; w 7,5–9,5, d 10–12) | 8862 | **sim** (`a_frame_chalet`, T2.2f) |
+| **`cabana_tronco`** (troncos, 1–2 cômodos, fogão a lenha, alpendre, caixa d'água em cavalete; w 5,2–7,6, d 5,6–8,8) | 8948 | **sim** (`log_cabin`, T2.2f) |
+| **`barraco`** (sucata, zinco 12° preso com "pregos e pedras", gato de luz; w 3,6–5,2, d 4,4–6,6) | 9027 | **sim** (`shack`, T2.2f; `power: 'tap'` do gato na T2.2g) |
+| **`barraca_camping`** (1 a 4 barracas iglu/túnel, fogueira, fogareiro, coolers, varal; sistema `lona`) | 9124 | **sim** (`campsite`, T2.2f) |
 
 Estilos: `popular`, `medio`, `alto` (= `nobre`), `comercial` e **`rural`** (cerca baixa 1,1 m, fachada de tábua/tronco, telha asfáltica ou zinco; L7922–7940 e
-paleta `rural`). O SDK não tem estilo `rural`.
+paleta `rural`). O estilo `rural` entrou em `game-floorplan-rural` (T2.2f), com a paleta, o perfil de decoração e as 375 plantas conferidas.
 
 Mudanças de regra de colocação e validação que o time fez **depois** do porte do SDK (comparando VP × VC3; todas marcadas "R##" nos comentários):
 
@@ -345,7 +345,7 @@ Não há README do PlantasSDK/Casa3DSDK em `sources/` (o cabeçalho de VC3 manda
 | `game-test-room` | contrato `TestableModule`, sala genérica; item de casa **provisório**: `frame()` com `buildFrame` (2×2 colunas, vigas, laje, `columnCapacity: 4400`) em `items.ts:166` | — |
 
 Lacunas confirmadas (nada no SDK): renderizador three.js de casa (paredes com vão, porta, janela, piso, teto, telhado, lote); estrutura de uma planta real (grafo de peças e apoios) e construção por material; instalações (elétrica, hidráulica, gás, solar, caixa d'água, edícula);
-templates rurais e estilo `rural`; ponte planta → interativos; builders estáticos de ~100 tipos do catálogo de planta (o catálogo do floorplan tem 164 tipos; `game-props3d` desenha 57 e `-household` 51); multi-andar andável (AndaresSDK); ruas, postes e padrões urbanos; dados de terreno.
+ponte planta → interativos; builders estáticos de ~100 tipos do catálogo de planta (o catálogo do floorplan tem 164 tipos; `game-props3d` desenha 57 e `-household` 51); multi-andar andável (AndaresSDK); ruas, postes e padrões urbanos; dados de terreno.
 
 ---
 
@@ -361,7 +361,7 @@ Legenda de "melhor": **T** = time (ZombiAdA), **S** = SDK, **=** equivalentes, *
 | 4 | Móvel tapando janela | `bloqueiaJanela` com `hjan`, `aereo`, `H_AEREO` 2,15 (L9482) | `blocksWindow` (`queries.ts:39`) | **T** | cobre armário aéreo e box de vidro (R04); SDK só compara 1,0 e `y0 - 0,05` | **Portar** (campos `windowHeight`, `overhead` no `ItemDef`) — **entrou na T2.2b** (`game-floorplan`; conferido com 900 plantas do VC3) |
 | 5 | Vaga de carro | `FOLGA_CARRO` e `candidatosCarro` (L9704) | sem equivalente | **T** | lado do motorista livre (0,8) e pontas (0,6) | **Portar** — **entrou na T2.2b** (`game-floorplan`; conferido com 900 plantas do VC3) |
 | 6 | Templates residenciais e comerciais | 12 (+1 duplicado) | 12 | **=** | mesmos ids após o mapa de nomes | manter SDK |
-| 7 | Templates rurais (madeira, chalé, cabana, barraco, camping) | L8794–9124 | **nenhum** | **T** | só o time tem; incluem wood_frame, tronco, improvisado, lona | **Portar** para pacote de conteúdo rural |
+| 7 | Templates rurais (madeira, chalé, cabana, barraco, camping) | L8794–9124 | `game-floorplan-rural` (5 modelos) | **T** | só o time tem; incluem wood_frame, tronco, improvisado, lona | **Portar** para pacote de conteúdo rural — **entrou na T2.2f** (375 plantas do VC3 conferem lista por lista; estrutura na T2.2c–e) |
 | 8 | Zoneamento | `ZONAS` ZR1 e ZR-AP, `zonaAssert` (ML L67798) | `defineZone`, `checkLot`, 6 zonas `br`, ajuste automático e relatório | **S** | gabarito, recuo, taxa de ocupação, coeficiente, permeabilidade, uso por template; o do jogo é 2 zonas fixas com `throw` | manter SDK; trocar `zonaAssert` do jogo por `engine.validate` |
 | 9 | Estados da casa (protegida/abandonada) | `aplicaEstado` L10163 | `game-floorplan-post-apocalyptic` | **=** (não verificado se `aplicaEstado` mudou depois do porte) | mesma distribuição e itens | conferir diff de `aplicaEstado` (VP × VC3) |
 | 10 | Conteúdo dos móveis por estado | `CONTEUDO`, `sorteiaConteudo` (L10824–10878) | `-household` `loot.json` (por contêiner, no motor de interativos) | **T+S** | time sorteia o conteúdo na planta, por semente e estado; SDK tem as tabelas de loot por tipo, sem a regra de estado | **Mesclar**: regra de estado no pacote post-apocalyptic, tabelas no household |

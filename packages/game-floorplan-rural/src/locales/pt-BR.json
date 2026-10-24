@@ -1,0 +1,42 @@
+{
+  "labels": {
+    "porch": "Alpendre",
+    "covered_deck": "Deck coberto",
+    "bedroom_4": "Quarto 4",
+    "study_room": "Sala de estudos",
+    "loft_bedroom": "Quarto do mezanino",
+    "cabin": "Cabana",
+    "living_kitchen": "Sala e cozinha",
+    "shack": "Barraco",
+    "pantry": "Despensa",
+    "mezzanine": "Mezanino",
+    "campsite": "Acampamento",
+    "clearing": "Clareira",
+    "tent_dome_1": "Barraca iglu 1p",
+    "tent_tunnel_1": "Barraca túnel 1p",
+    "tent_dome_2": "Barraca iglu 2p",
+    "tent_tunnel_2": "Barraca túnel 2p",
+    "tent_dome_3": "Barraca iglu 3p",
+    "tent_tunnel_3": "Barraca túnel 3p",
+    "tent_dome_4": "Barraca iglu 4p",
+    "tent_tunnel_4": "Barraca túnel 4p"
+  },
+  "templates": {
+    "wood_frame_house": "Casa de madeira americana (wood frame)",
+    "a_frame_chalet": "Chalé de madeira (montanha)",
+    "log_cabin": "Cabana de troncos",
+    "shack": "Barraco",
+    "campsite": "Camping com barracas"
+  },
+  "styles": {
+    "rural": "Rural"
+  },
+  "facadeColors": {
+    "natural_wood": "Madeira natural",
+    "worn_white": "Branco desgastado",
+    "moss_green": "Verde musgo",
+    "bluish_grey": "Azul acinzentado",
+    "barn_red": "Vermelho celeiro",
+    "wood_grey": "Cinza madeira"
+  }
+}

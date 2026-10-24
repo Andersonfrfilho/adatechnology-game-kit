@@ -29,7 +29,7 @@ export function buildPlan(tpl: TemplateDef, wIn: number | undefined, dIn: number
   const FLOOR_DEFS = floorsOf(tpl, op)
   const style = styleOf(styleId)
   const plan: Plan = {
-    w, d, tpl, floorDefs: FLOOR_DEFS, style: styleId, floors: [], rooms: [], zones: [], doors: [], windows: [], walls: [], gates: [], paths: [], lot: null, openPairs: {}, reservations: [],
+    w, d, tpl, floorDefs: FLOOR_DEFS, style: styleId, floors: [], rooms: [], zones: [], doors: [], windows: [], walls: [], gates: [], paths: [], lot: null, openPairs: {}, reservations: [], options: op,
     playerRadius: op.playerRadius ?? PLAYER_RADIUS,
     carClearance: Object.assign({}, CAR_CLEARANCE, op.carClearance),
   }
@@ -99,6 +99,7 @@ export function buildPlan(tpl: TemplateDef, wIn: number | undefined, dIn: number
     plan.windows.push(...windowsOut)
     plan.walls.push(...floorWalls)
   })
+  if (tpl.config) plan.config = tpl.config(op, w, d)
   if (tpl.reservations) tpl.reservations(plan)
   buildLot(plan, tpl, w, d, op, style, styleId, bc)
   return plan
