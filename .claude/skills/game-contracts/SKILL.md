@@ -49,9 +49,24 @@ O módulo de teste completo (com `area` e `attach`) está na skill `game-test-ro
 | `AnimationClipSpec`, `ItemAnimationContract` | Animações de item |
 | `TestableModule`, `TestableItem`, `ModuleItemFluid`, `ModuleScenario` | O que um módulo entrega à sala |
 | `ModuleArea`, `AreaPlacement` | Como a sala monta a área do módulo (posições, `surface`, `asleep`, `view`) |
-| `ModuleHost`, `HostTool`, `HostEvent` | O que a sala empresta ao módulo em `attach` (eventos de ferramenta: `tool`, `shot` com `rounds`/`mode`, `reload`, `empty`, `mode`, `fault`, `clear`, `safety`) |
+| `ModuleHost`, `HostTool`, `HostEvent` | O que a sala empresta ao módulo em `attach` (eventos de ferramenta: `tool`, `shot` com `rounds`/`mode` (sempre 1+ projétil), `misfire` (cartucho falhou, sem projétil), `reload` com `kind`/`duration`, `empty`, `mode`, `fault`, `clear`, `safety`, `cycle`, `stage`, `feed`; `duration` é o tempo que a regra deu à fase; `host.configureTool({ condition, ammo_quality })` recebe `Record<string,string>` pelos ids dos controles do módulo) |
+| `toolAnimationStep(event)`, `TOOL_CLIP`, `ToolAnimationStep` | Mapa do evento da ferramenta para o movimento (`play` de um clipe, `sync` com uma etapa, `finish`) |
+| `createToolClipPlayer({ clips, rig, onEvent })`, `ToolRig`, `ToolAnimator`, `ToolClipSet` | Tocador de clipes sem renderizador: escala o clipe à duração da regra, aplica as poses na `ToolRig` e dispara os eventos do clipe |
+| `scaleClip`, `sampleClip`, `checkToolClips`, `STAGE_EVENT` | Escala e amostra um clipe; valida o conjunto de clipes de uma ferramenta |
 | `ModuleControl`, `ModuleLayer`, `ModuleMetric`, `ModuleBench`, `BenchChange`, `ControlPatch` | Bancada do módulo: controles, camadas e contadores declarados como dados; `host.bench` devolve as mudanças |
 | `checkBench({ controls, layers, metrics })` | Valida a bancada (`{ ok, problems }`): ids snake_case únicos entre os três, `min < max`, `step > 0`, padrões válidos, `max > 0` |
+
+## Animação de ferramenta (contrato para quem for plugar)
+Qualquer renderizador anima a ferramenta na mão pelos mesmos passos, sem conhecer a arma: o módulo traz um `ToolClipSet` (clipes `AnimationClipSpec`
+com ids `draw`, `shot`, `cycle`, `reload`, `reload_<kind>`, `feed`, `fault_<id>`, `clear_<id>`, `safety_on`...), a sala manda `HostEvent`, e
+`toolAnimationStep` diz o que fazer. Eventos de clipe do tipo `stage` (`data.stage`) são marcadores: a etapa que a regra alcança (`stage`)
+leva o clipe até o marcador, e o fim da fase (`reload end`) fecha o clipe. Poses são deslocamentos do repouso e uma chave que não cita a peça
+significa repouso.
+```ts
+const player = createToolClipPlayer({ clips, rig, onEvent: (event) => spawn(event.type, event.data) })
+host.on((event) => { const step = toolAnimationStep(event); if (step) player.apply(step) })
+host.onFrame((dt) => player.update(dt))
+```
 
 ## Compõe com
 `game-destruction` (implementa o mundo e consome `Hit`), `game-weapons` (produz `Shot`/`Use`), `game-fluids`, `game-test-room` (carrega

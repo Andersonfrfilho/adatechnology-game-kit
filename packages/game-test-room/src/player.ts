@@ -41,7 +41,8 @@ export interface Player {
 }
 
 const EYE = 1.7
-const RADIUS = 0.3
+/** Horizontal radius of the player, metres: what the colliders and a trip wire see. */
+export const PLAYER_RADIUS = 0.3
 const WALK = 3.4
 const RUN = 6.2
 const JUMP = 4.6
@@ -73,8 +74,8 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   apply()
 
   const blocked = (x: number, z: number): boolean => {
-    if (Math.abs(x) > o.limit - RADIUS || Math.abs(z) > o.limit - RADIUS) return true
-    for (const c of o.colliders) if (x > c[0] - RADIUS && x < c[2] + RADIUS && z > c[1] - RADIUS && z < c[3] + RADIUS) return true
+    if (Math.abs(x) > o.limit - PLAYER_RADIUS || Math.abs(z) > o.limit - PLAYER_RADIUS) return true
+    for (const c of o.colliders) if (x > c[0] - PLAYER_RADIUS && x < c[2] + PLAYER_RADIUS && z > c[1] - PLAYER_RADIUS && z < c[3] + PLAYER_RADIUS) return true
     return false
   }
   const move = (dx: number, dz: number): void => {

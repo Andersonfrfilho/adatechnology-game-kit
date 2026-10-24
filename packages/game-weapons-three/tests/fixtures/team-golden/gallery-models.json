@@ -1,0 +1,914 @@
+{
+ "schema": 1,
+ "name": "arsenal-gallery-models",
+ "seed": 1,
+ "events": [
+  {
+   "type": "weapon",
+   "data": {
+    "index": 0,
+    "name": "Glock 17",
+    "caliber": "9×19",
+    "length": 202,
+    "barrel": 114
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 14,
+    "name": "S&W 686",
+    "caliber": ".357 Magnum",
+    "length": 244,
+    "barrel": 102
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 34,
+    "name": "AK-47",
+    "caliber": "7,62×39",
+    "length": 880,
+    "barrel": 415
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 43,
+    "name": "Steyr AUG A1",
+    "caliber": "5,56×45",
+    "length": 790,
+    "barrel": 508
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 20,
+    "name": "FN P90",
+    "caliber": "5,7×28",
+    "length": 500,
+    "barrel": 264
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 33,
+    "name": "Boito (2 canos)",
+    "caliber": "12 ga",
+    "length": 1130,
+    "barrel": 710
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 76,
+    "name": "Browning M2 .50",
+    "caliber": ".50 BMG",
+    "length": 1650,
+    "barrel": 1140
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 70,
+    "name": "RPG-7",
+    "caliber": "PG-7V 40/85 mm",
+    "length": 950,
+    "barrel": 950
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 74,
+    "name": "Lança-chamas M2",
+    "caliber": "Napalm / gasolina gel",
+    "length": 1000,
+    "barrel": 620
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 0,
+    "name": ".22 LR"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 1,
+    "name": ".380 ACP"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 2,
+    "name": "9×18 Makarov"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 3,
+    "name": "9×19 mm"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 4,
+    "name": ".40 S&W"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 5,
+    "name": ".45 ACP"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 6,
+    "name": "5,7×28 mm"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 7,
+    "name": ".38 SPL"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 8,
+    "name": ".357 Magnum"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 9,
+    "name": ".44 Magnum"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 10,
+    "name": ".50 AE"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 11,
+    "name": "12 ga"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 12,
+    "name": "5,56×45 mm"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 13,
+    "name": "5,45×39 mm"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 14,
+    "name": "7,62×39 mm"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 15,
+    "name": ".30-30 Win"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 16,
+    "name": "7,62×51 mm"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 17,
+    "name": "7,62×54R"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 18,
+    "name": ".30-06"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 19,
+    "name": ".300 Win Mag"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 20,
+    "name": ".338 Lapua"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 21,
+    "name": ".50 BMG"
+   }
+  }
+ ],
+ "scenes": {
+  "weapon_00": {
+   "objects": 58,
+   "hash": "d65450e1",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0.0059,0,0 q0,0,0,1 s0.9761,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.098,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:30c58b81 bbox-0.098,-0.0155,-0.0125,0.098,0.0155,0.0125 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.007,-0.002,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:bac6cc35 bbox-0.0011,-0.0112,-0.0132,0.0011,0.0112,0.0132 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.0122,-0.002,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:bac6cc35 bbox-0.0011,-0.0112,-0.0132,0.0011,0.0112,0.0132 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.0174,-0.002,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:bac6cc35 bbox-0.0011,-0.0112,-0.0132,0.0011,0.0112,0.0132 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.0226,-0.002,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:bac6cc35 bbox-0.0011,-0.0112,-0.0132,0.0011,0.0112,0.0132 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.0278,-0.002,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:bac6cc35 bbox-0.0011,-0.0112,-0.0132,0.0011,0.0112,0.0132 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.033,-0.002,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:bac6cc35 bbox-0.0011,-0.0112,-0.0132,0.0011,0.0112,0.0132 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.0382,-0.002,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:bac6cc35 bbox-0.0011,-0.0112,-0.0132,0.0011,0.0112,0.0132 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.1176,0.0145,0.003 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:d1aff269 bbox-0.0196,-0.002,-0.0069,0.0196,0.002,0.0069 mat:MeshStandardMaterial:000000:1",
+    "Mesh p0.1176,0.0151,0.0025 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:5f9eb96d bbox-0.0167,-0.0015,-0.005,0.0167,0.0015,0.005 mat:MeshStandardMaterial:404347:1",
+    "Mesh p0.1078,0.0046,0.0133 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:c478af91 bbox-0.006,-0.002,-0.001,0.006,0.002,0.001 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.1974,0.002,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v112:1d390bd5 i216 bbox-0.0061,-0.002,-0.0062,0.0061,0.002,0.0062 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.1984,0.002,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:7ad7b69 i144 bbox-0.0034,-0.0025,-0.0034,0.0034,0.0025,0.0034 mat:MeshStandardMaterial:000000:1",
+    "Mesh p0.1879,0.019,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:807a2101 bbox-0.002,-0.0035,-0.002,0.002,0.0035,0.002 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.1879,0.0213,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:9b0aa7d bbox-0.0011,-0.0011,-0.0023,0.0011,0.0011,0.0023 mat:MeshStandardMaterial:9f9374:1",
+    "Mesh p0.009,0.019,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:bc8bf5c5 bbox-0.004,-0.0035,-0.008,0.004,0.0035,0.008 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.009,0.0215,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:ef3e5239 bbox-0.002,-0.001,-0.0061,0.002,0.001,0.0061 mat:MeshStandardMaterial:9f9374:1",
+    "Mesh p0.0901,-0.0235,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:53dcec5d bbox-0.0784,-0.008,-0.0115,0.0784,0.008,0.0115 mat:MeshStandardMaterial:040404:1",
+    "Mesh p0.1215,-0.0325,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:ac524cf1 bbox-0.002,-0.0015,-0.012,0.002,0.0015,0.012 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.1305,-0.0325,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:ac524cf1 bbox-0.002,-0.0015,-0.012,0.002,0.0015,0.012 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.1395,-0.0325,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:ac524cf1 bbox-0.002,-0.0015,-0.012,0.002,0.0015,0.012 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.098,-0.0185,-0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:2acbf201 bbox-0.004,-0.002,-0.0015,0.004,0.002,0.0015 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.098,-0.0185,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:2acbf201 bbox-0.004,-0.002,-0.0015,0.004,0.002,0.0015 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.0882,-0.0185,-0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:c06fd2f1 bbox-0.006,-0.002,-0.0015,0.006,0.002,0.0015 mat:MeshStandardMaterial:020203:1",
+    "Group p0.0334,-0.062,0 q0,0,-0.179,0.9838 s1,1,1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:afac3345 bbox-0.016,-0.0525,-0.0132,0.016,0.0525,0.0132 mat:MeshStandardMaterial:040404:1",
+    "Mesh p0.018,0.0189,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:5abc2719 bbox-0.003,-0.006,-0.013,0.003,0.006,0.013 mat:MeshStandardMaterial:040404:1",
+    "Mesh p0.018,-0.0031,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:5abc2719 bbox-0.003,-0.006,-0.013,0.003,0.006,0.013 mat:MeshStandardMaterial:040404:1",
+    "Mesh p0.018,-0.0251,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:5abc2719 bbox-0.003,-0.006,-0.013,0.003,0.006,0.013 mat:MeshStandardMaterial:040404:1",
+    "Mesh p-0.008,-0.0262,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0,-0.0262,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.008,-0.0262,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p-0.008,-0.0142,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0,-0.0142,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.008,-0.0142,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p-0.008,-0.0022,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0,-0.0022,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.008,-0.0022,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p-0.008,0.0098,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0,0.0098,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.008,0.0098,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p-0.008,0.0218,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0,0.0218,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.008,0.0218,0.0137 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:ab651301 i36 bbox-0.0015,-0.0015,-0.0006,0.0015,0.0015,0.0006 mat:MeshStandardMaterial:020203:1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.003,-0.004,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:5bc00925 bbox-0.011,-0.0494,-0.009,0.011,0.0494,0.009 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.003,-0.0545,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:a15d4865 bbox-0.0155,-0.003,-0.0135,0.0155,0.003,0.0135 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.004,-0.0215,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:4cf81131 bbox-0.01,-0.0045,-0.0113,0.01,0.0045,0.0113 mat:MeshStandardMaterial:040404:1",
+    "Mesh p0.0834,-0.0495,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:c84bc619 bbox-0.023,-0.002,-0.0045,0.023,0.002,0.0045 mat:MeshStandardMaterial:040404:1",
+    "Mesh p0.1074,-0.0355,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:d7e67801 bbox-0.002,-0.015,-0.0045,0.002,0.015,0.0045 mat:MeshStandardMaterial:040404:1",
+    "Mesh p0.1084,-0.0495,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:44b3ea09 bbox-0.003,-0.002,-0.0045,0.003,0.002,0.0045 mat:MeshStandardMaterial:040404:1",
+    "Mesh p0.0754,-0.0375,0 q0,0,0.0998,0.995 s1,1,1 geo:BoxGeometry v900:319d3261 bbox-0.002,-0.007,-0.002,0.002,0.007,0.002 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0,-0.001,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:ecf95301 bbox-0.0008,-0.004,-0.0022,0.0008,0.004,0.0022 mat:MeshStandardMaterial:08090a:1",
+    "Object3D p0.2019,0.002,0 q0,0,0,1 s1,1,1",
+    "Object3D p0.1176,0.0155,0.0063 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "weapon_14": {
+   "objects": 44,
+   "hash": "f94735c5",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0.011,0,0 q0,0,0,1 s1.0686,1,1",
+    "Mesh p0.07,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:e205ad15 bbox-0.04,-0.022,-0.012,0.04,0.022,0.012 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0.096,0.022,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:b3edb6b1 bbox-0.018,-0.006,-0.011,0.018,0.006,0.011 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0.055,0.006,-0.013 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:1759e431 bbox-0.012,-0.006,-0.002,0.012,0.006,0.002 mat:MeshStandardMaterial:020203:1",
+    "Group p0.077,-0.024,0 q0,0,0,1 s1,1,1",
+    "Group p0,0.022,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v148:3974435 i288 bbox-0.0215,-0.021,-0.0215,0.0215,0.021,0.0215 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0,0.0205,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:7571b7f1 bbox-0.013,-0.0025,-0.0025,0.013,0.0025,0.0025 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0,0.0103,0.0178 q0.5,0,0,0.866 s1,1,1 geo:BoxGeometry v900:7571b7f1 bbox-0.013,-0.0025,-0.0025,0.013,0.0025,0.0025 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0,-0.0102,0.0178 q0.866,0,0,0.5 s1,1,1 geo:BoxGeometry v900:7571b7f1 bbox-0.013,-0.0025,-0.0025,0.013,0.0025,0.0025 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0,-0.0205,0 q1,0,0,0 s1,1,1 geo:BoxGeometry v900:7571b7f1 bbox-0.013,-0.0025,-0.0025,0.013,0.0025,0.0025 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0,-0.0103,-0.0178 q0.866,0,0,-0.5 s1,1,1 geo:BoxGeometry v900:7571b7f1 bbox-0.013,-0.0025,-0.0025,0.013,0.0025,0.0025 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0,0.0103,-0.0178 q0.5,0,0,-0.866 s1,1,1 geo:BoxGeometry v900:7571b7f1 bbox-0.013,-0.0025,-0.0025,0.013,0.0025,0.0025 mat:MeshStandardMaterial:020203:1",
+    "Object3D p-0.022,0.0113,0.0065 q0,0,0,1 s1,1,1",
+    "Mesh p-0.0215,0.0113,0.0065 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:c06dd695 i144 bbox-0.0046,-0.001,-0.0046,0.0046,0.001,0.0046 mat:MeshStandardMaterial:8b520f:1",
+    "Object3D p-0.022,0,0.013 q0,0,0,1 s1,1,1",
+    "Mesh p-0.0215,0,0.013 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:c06dd695 i144 bbox-0.0046,-0.001,-0.0046,0.0046,0.001,0.0046 mat:MeshStandardMaterial:8b520f:1",
+    "Object3D p-0.022,-0.0113,0.0065 q0,0,0,1 s1,1,1",
+    "Mesh p-0.0215,-0.0113,0.0065 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:c06dd695 i144 bbox-0.0046,-0.001,-0.0046,0.0046,0.001,0.0046 mat:MeshStandardMaterial:8b520f:1",
+    "Object3D p-0.022,-0.0113,-0.0065 q0,0,0,1 s1,1,1",
+    "Mesh p-0.0215,-0.0113,-0.0065 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:c06dd695 i144 bbox-0.0046,-0.001,-0.0046,0.0046,0.001,0.0046 mat:MeshStandardMaterial:8b520f:1",
+    "Object3D p-0.022,0,-0.013 q0,0,0,1 s1,1,1",
+    "Mesh p-0.0215,0,-0.013 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:c06dd695 i144 bbox-0.0046,-0.001,-0.0046,0.0046,0.001,0.0046 mat:MeshStandardMaterial:8b520f:1",
+    "Object3D p-0.022,0.0113,-0.0065 q0,0,0,1 s1,1,1",
+    "Mesh p-0.0215,0.0113,-0.0065 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:c06dd695 i144 bbox-0.0046,-0.001,-0.0046,0.0046,0.001,0.0046 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0.163,0.009,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v112:fe3f9bb9 i216 bbox-0.0087,-0.051,-0.0088,0.0087,0.051,0.0088 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0.1589,-0.005,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:7e3be4a5 bbox-0.0469,-0.0075,-0.0065,0.0469,0.0075,0.0065 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0.2155,0.009,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:3b3504b9 i144 bbox-0.004,-0.0025,-0.004,0.004,0.0025,0.004 mat:MeshStandardMaterial:000000:1",
+    "Mesh p0.206,0.021,0 q0,0,-0.1494,0.9888 s1,1,1 geo:BoxGeometry v900:6e3cef31 bbox-0.006,-0.0045,-0.002,0.006,0.0045,0.002 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.105,0.031,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:4bc81721 bbox-0.006,-0.003,-0.006,0.006,0.003,0.006 mat:MeshStandardMaterial:020203:1",
+    "Group p0.036,0.018,0 q0,0,0,1 s1,1,1",
+    "Mesh p-0.004,0.008,0 q0,0,0.2231,0.9748 s1,1,1 geo:BoxGeometry v900:295fc645 bbox-0.005,-0.01,-0.004,0.005,0.01,0.004 mat:MeshStandardMaterial:020203:1",
+    "Group p0.024,-0.062,0 q0,0,-0.1889,0.982 s1,1,1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:95b87e95 bbox-0.017,-0.05,-0.0155,0.017,0.05,0.0155 mat:MeshStandardMaterial:010101:1",
+    "Mesh p-0.012,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:1c4e6f19 bbox-0.003,-0.035,-0.0165,0.003,0.035,0.0165 mat:MeshStandardMaterial:020203:1",
+    "Mesh p-0.004,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:1c4e6f19 bbox-0.003,-0.035,-0.0165,0.003,0.035,0.0165 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.004,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:1c4e6f19 bbox-0.003,-0.035,-0.0165,0.003,0.035,0.0165 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.012,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:1c4e6f19 bbox-0.003,-0.035,-0.0165,0.003,0.035,0.0165 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.062,-0.036,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:30061761 bbox-0.019,-0.002,-0.004,0.019,0.002,0.004 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0.08,-0.026,0 q0,0,0.0998,0.995 s1,1,1 geo:BoxGeometry v900:a72e3871 bbox-0.002,-0.011,-0.004,0.002,0.011,0.004 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0.06,-0.027,0 q0,0,0.0998,0.995 s1,1,1 geo:BoxGeometry v900:5e3b80f1 bbox-0.002,-0.0075,-0.002,0.002,0.0075,0.002 mat:MeshStandardMaterial:020203:1",
+    "Object3D p0.22,0.009,0 q0,0,0,1 s1,1,1",
+    "Object3D p0.077,0,0 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "weapon_34": {
+   "objects": 58,
+   "hash": "4cfe172f",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0.002,0,0 q0,0,0,1 s0.9949,1,1",
+    "Mesh p0.3811,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:ee8eb315 bbox-0.1171,-0.03,-0.017,0.1171,0.03,0.017 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.3731,0.034,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:37f2b345 bbox-0.1007,-0.0084,-0.0161,0.1007,0.0084,0.0161 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.3226,0.034,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:1cee3971 bbox-0.002,-0.009,-0.0165,0.002,0.009,0.0165 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.3426,0.034,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:1cee3971 bbox-0.002,-0.009,-0.0165,0.002,0.009,0.0165 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.3626,0.034,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:1cee3971 bbox-0.002,-0.009,-0.0165,0.002,0.009,0.0165 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.3928,-0.0012,0.0185 q0,0,-0.025,0.9997 s1,1,1 geo:BoxGeometry v900:faff4271 bbox-0.0586,-0.006,-0.0015,0.0586,0.006,0.0015 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.3389,-0.003,0.019 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:72d6c59 bbox-0.006,-0.007,-0.0015,0.006,0.007,0.0015 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.4282,0.009,0.0166 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:499e1801 bbox-0.025,-0.0108,-0.002,0.025,0.0108,0.002 mat:MeshStandardMaterial:000000:1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.4282,0.009,0.0158 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:d647f419 bbox-0.022,-0.0078,-0.003,0.022,0.0078,0.003 mat:MeshStandardMaterial:404347:1",
+    "Mesh p0.4682,0.013,0.029 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:395f83ad bbox-0.006,-0.005,-0.015,0.006,0.005,0.015 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.4682,0.013,0.045 q0,0,0,1 s1,1,1 geo:IcosahedronGeometry v240:42db4ee5 bbox-0.0065,-0.0065,-0.0065,0.0065,0.0065,0.0065 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.6725,0.009,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:7689d029 i192 bbox-0.0085,-0.2075,-0.0085,0.0085,0.2075,0.0085 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.6127,0.0277,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v88:87678729 i168 bbox-0.0062,-0.105,-0.0064,0.0062,0.105,0.0064 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.859,0.009,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:f8c9fae5 i192 bbox-0.0123,-0.021,-0.0123,0.0123,0.021,0.0123 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.86,0.0175,0.0085 q0.3827,0,0,0.9239 s1,1,1 geo:BoxGeometry v900:c81d5499 bbox-0.013,-0.0012,-0.002,0.013,0.0012,0.002 mat:MeshStandardMaterial:000000:1",
+    "Mesh p0.86,0.0005,0.0085 q0.9239,0,0,0.3827 s1,1,1 geo:BoxGeometry v900:c81d5499 bbox-0.013,-0.0012,-0.002,0.013,0.0012,0.002 mat:MeshStandardMaterial:000000:1",
+    "Mesh p0.86,0.0005,-0.0085 q0.9239,0,0,-0.3827 s1,1,1 geo:BoxGeometry v900:c81d5499 bbox-0.013,-0.0012,-0.002,0.013,0.0012,0.002 mat:MeshStandardMaterial:000000:1",
+    "Mesh p0.86,0.0175,-0.0085 q0.3827,0,0,-0.9239 s1,1,1 geo:BoxGeometry v900:c81d5499 bbox-0.013,-0.0012,-0.002,0.013,0.0012,0.002 mat:MeshStandardMaterial:000000:1",
+    "Mesh p0.8805,0.009,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:e9feb25 i144 bbox-0.0047,-0.002,-0.0047,0.0047,0.002,0.0047 mat:MeshStandardMaterial:000000:1",
+    "Mesh p0.5784,-0.0016,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:eeb51879 bbox-0.0802,-0.0132,-0.0184,0.0802,0.0132,0.0184 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.5623,0.0277,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:553f7709 bbox-0.0601,-0.0084,-0.0119,0.0601,0.0084,0.0119 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.5182,0.0403,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:5b38441 bbox-0.015,-0.008,-0.0102,0.015,0.008,0.0102 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.5282,0.0493,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:779d8779 bbox-0.006,-0.002,-0.0085,0.006,0.002,0.0085 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.82,0.017,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:1a2c21e9 bbox-0.011,-0.011,-0.0102,0.011,0.011,0.0102 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.82,0.035,0.008 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:e7f9e5f9 bbox-0.003,-0.012,-0.002,0.003,0.012,0.002 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.82,0.035,-0.008 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:e7f9e5f9 bbox-0.003,-0.012,-0.002,0.003,0.012,0.002 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.82,0.031,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:e827dded bbox-0.0015,-0.008,-0.0015,0.0015,0.008,0.0015 mat:MeshStandardMaterial:020203:1",
+    "Group p0.322,-0.076,0 q0,0,-0.1494,0.9888 s1,1,1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:c979f265 bbox-0.016,-0.0525,-0.014,0.016,0.0525,0.014 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.017,0.022,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:5abc2719 bbox-0.003,-0.006,-0.013,0.003,0.006,0.013 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.017,0.002,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:5abc2719 bbox-0.003,-0.006,-0.013,0.003,0.006,0.013 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.017,-0.018,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:5abc2719 bbox-0.003,-0.006,-0.013,0.003,0.006,0.013 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0,-0.052,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:faae4d bbox-0.017,-0.004,-0.015,0.017,0.004,0.015 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.364,-0.054,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:99c87039 bbox-0.03,-0.002,-0.005,0.03,0.002,0.005 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.394,-0.043,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:78e0f6a1 bbox-0.002,-0.011,-0.005,0.002,0.011,0.005 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.358,-0.042,0 q0,0,0.0749,0.9972 s1,1,1 geo:BoxGeometry v900:2f6a7059 bbox-0.002,-0.008,-0.002,0.002,0.008,0.002 mat:MeshStandardMaterial:020203:1",
+    "Group p0.409,-0.03,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.0021,-0.0349,0 q0,0,0.03,0.9996 s1,1,1 geo:BoxGeometry v900:1169cacd bbox-0.026,-0.037,-0.012,0.026,0.037,0.012 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.0021,-0.0349,0 q0,0,0.03,0.9996 s1,1,1 geo:BoxGeometry v900:6e4cc669 bbox-0.02,-0.028,-0.013,0.02,0.028,0.013 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.0118,-0.104,0 q0,0,0.1098,0.994 s1,1,1 geo:BoxGeometry v900:1169cacd bbox-0.026,-0.037,-0.012,0.026,0.037,0.012 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.0118,-0.104,0 q0,0,0.1098,0.994 s1,1,1 geo:BoxGeometry v900:6e4cc669 bbox-0.02,-0.028,-0.013,0.02,0.028,0.013 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.0325,-0.1707,0 q0,0,0.1889,0.982 s1,1,1 geo:BoxGeometry v900:1169cacd bbox-0.026,-0.037,-0.012,0.026,0.037,0.012 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.0325,-0.1707,0 q0,0,0.1889,0.982 s1,1,1 geo:BoxGeometry v900:6e4cc669 bbox-0.02,-0.028,-0.013,0.02,0.028,0.013 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.0454,-0.2032,0 q0,0,0.1889,0.982 s1,1,1 geo:BoxGeometry v900:114548ad bbox-0.029,-0.004,-0.014,0.029,0.004,0.014 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.132,-0.008,0 q0,0,0.025,0.9997 s1,1,1 geo:BoxGeometry v900:90b71131 bbox-0.132,-0.025,-0.015,0.132,0.025,0.015 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.022,-0.035,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:9c260b69 bbox-0.015,-0.065,-0.018,0.015,0.065,0.018 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.004,-0.035,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:74a147f9 bbox-0.006,-0.065,-0.018,0.006,0.065,0.018 mat:MeshStandardMaterial:010101:1",
+    "Mesh p0.1452,-0.045,0 q0,0,0.0998,0.995 s1,1,1 geo:BoxGeometry v900:8fe09bad bbox-0.0792,-0.015,-0.014,0.0792,0.015,0.014 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.08,-0.09,0 q0,0,0,1 s1,1,1 geo:TorusGeometry v91:8469a7d0 i432 bbox-0.0075,-0.0075,-0.0013,0.0075,0.0075,0.0013 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.81,-0.007,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:160d2671 bbox-0.0125,-0.004,-0.005,0.0125,0.004,0.005 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.67,-0.005,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v52:ff4f2dc9 i96 bbox-0.003,-0.1623,-0.003,0.003,0.1623,0.003 mat:MeshStandardMaterial:26282a:1",
+    "Object3D p0.89,0.009,0 q0,0,0,1 s1,1,1",
+    "Object3D p0.4282,0.009,0.023 q0,0,0,1 s1,1,1",
+    "Object3D p0.4482,-0.034,0 q0,0,0,1 s1,1,1",
+    "Object3D p0.4282,0.034,0 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "weapon_43": {
+   "objects": 32,
+   "hash": "ae95d65c",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s0.9962,1,1",
+    "Mesh p0.2121,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:400752d bbox-0.2121,-0.0375,-0.021,0.2121,0.0375,0.021 mat:MeshStandardMaterial:111507:1",
+    "Mesh p0.2121,-0.02,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:75434475 bbox-0.1909,-0.01,-0.022,0.1909,0.01,0.022 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.016,-0.025,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:63b237bd bbox-0.016,-0.065,-0.022,0.016,0.065,0.022 mat:MeshStandardMaterial:010101:1",
+    "Group p0.3394,-0.085,0 q0,0,-0.1247,0.9922 s1,1,1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:c88c5f69 bbox-0.015,-0.05,-0.015,0.015,0.05,0.015 mat:MeshStandardMaterial:040404:1",
+    "Mesh p0.3494,-0.06,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:3a9f7de9 bbox-0.05,-0.003,-0.015,0.05,0.003,0.015 mat:MeshStandardMaterial:111507:1",
+    "Mesh p0.3594,-0.05,0 q0,0,0.0749,0.9972 s1,1,1 geo:BoxGeometry v900:2f6a7059 bbox-0.002,-0.008,-0.002,0.002,0.008,0.002 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.536,0.012,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:f24094e5 i192 bbox-0.0085,-0.254,-0.0085,0.0085,0.254,0.0085 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.791,0.012,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:75d7f685 i144 bbox-0.006,-0.002,-0.006,0.006,0.002,0.006 mat:MeshStandardMaterial:000000:1",
+    "Mesh p0.1061,0.005,0.0212 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:e1112769 bbox-0.025,-0.012,-0.002,0.025,0.012,0.002 mat:MeshStandardMaterial:000000:1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.1061,0.005,0.02 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:6f4c8229 bbox-0.022,-0.01,-0.003,0.022,0.01,0.003 mat:MeshStandardMaterial:404347:1",
+    "Group p0.2294,-0.03,0 q0,0,0.0699,0.9976 s1,1,1",
+    "Mesh p0,-0.07,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:5da35669 bbox-0.025,-0.07,-0.013,0.025,0.07,0.013 mat:MeshStandardMaterial:365d63:0.42",
+    "Mesh p0,-0.01,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:900f78cd i72 bbox-0.0026,-0.02,-0.003,0.0026,0.02,0.003 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,-0.03,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:900f78cd i72 bbox-0.0026,-0.02,-0.003,0.0026,0.02,0.003 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,-0.05,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:900f78cd i72 bbox-0.0026,-0.02,-0.003,0.0026,0.02,0.003 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,-0.07,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:900f78cd i72 bbox-0.0026,-0.02,-0.003,0.0026,0.02,0.003 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,-0.09,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:900f78cd i72 bbox-0.0026,-0.02,-0.003,0.0026,0.02,0.003 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,-0.11,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:900f78cd i72 bbox-0.0026,-0.02,-0.003,0.0026,0.02,0.003 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0.2121,0.046,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:cfa87809 bbox-0.035,-0.006,-0.013,0.035,0.006,0.013 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.2021,0.072,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v112:ae19eb8d i216 bbox-0.0158,-0.05,-0.016,0.0158,0.05,0.016 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.2671,0.072,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v112:f800ac41 i216 bbox-0.0197,-0.0175,-0.02,0.0197,0.0175,0.02 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.2851,0.072,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v112:a9527339 i216 bbox-0.0167,-0.001,-0.017,0.0167,0.001,0.017 mat:MeshStandardMaterial:040f1a:0.9",
+    "Mesh p0.2121,0.092,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v76:281594e5 i144 bbox-0.007,-0.006,-0.007,0.007,0.006,0.007 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.2021,0.094,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:f7f573f5 bbox-0.015,-0.005,-0.006,0.015,0.005,0.006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.263,0.048,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:e3fe73a1 bbox-0.1,-0.015,-0.01,0.1,0.015,0.01 mat:MeshStandardMaterial:111507:1",
+    "Mesh p0.4742,-0.05,0 q0,0,0.05,0.9988 s1,1,1 geo:BoxGeometry v900:ac1947b1 bbox-0.013,-0.0375,-0.013,0.013,0.0375,0.013 mat:MeshStandardMaterial:111507:1",
+    "Object3D p0.8,0.012,0 q0,0,0,1 s1,1,1",
+    "Object3D p0.1061,0.005,0.03 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "weapon_20": {
+   "objects": 31,
+   "hash": "7317a0f5",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1.0526,1,1",
+    "Mesh p0.2,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:806364fd bbox-0.2,-0.035,-0.0275,0.2,0.035,0.0275 mat:MeshStandardMaterial:040404:1",
+    "Mesh p0.2,-0.07,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:cecf6e91 bbox-0.06,-0.0375,-0.025,0.06,0.0375,0.025 mat:MeshStandardMaterial:040404:1",
+    "Mesh p0.21,-0.06,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:27732bf9 bbox-0.04,-0.02,-0.015,0.04,0.02,0.015 mat:MeshStandardMaterial:000000:1",
+    "Mesh p0.03,-0.03,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:e2f1e9fd bbox-0.03,-0.065,-0.028,0.03,0.065,0.028 mat:MeshStandardMaterial:040404:1",
+    "Mesh p0.33,-0.04,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:e3d92249 bbox-0.025,-0.015,-0.028,0.025,0.015,0.028 mat:MeshStandardMaterial:040404:1",
+    "Mesh p0.43,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:dd1d5665 i192 bbox-0.008,-0.045,-0.008,0.008,0.045,0.008 mat:MeshStandardMaterial:08090a:1",
+    "Group p0.22,0.047,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:5ef86935 bbox-0.15,-0.011,-0.025,0.15,0.011,0.025 mat:MeshStandardMaterial:365d63:0.42",
+    "Mesh p-0.12,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:f382595d i72 bbox-0.0024,-0.01,-0.0028,0.0024,0.01,0.0028 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p-0.098,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:f382595d i72 bbox-0.0024,-0.01,-0.0028,0.0024,0.01,0.0028 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p-0.076,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:f382595d i72 bbox-0.0024,-0.01,-0.0028,0.0024,0.01,0.0028 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p-0.054,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:f382595d i72 bbox-0.0024,-0.01,-0.0028,0.0024,0.01,0.0028 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p-0.032,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:f382595d i72 bbox-0.0024,-0.01,-0.0028,0.0024,0.01,0.0028 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p-0.01,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:f382595d i72 bbox-0.0024,-0.01,-0.0028,0.0024,0.01,0.0028 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0.012,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:f382595d i72 bbox-0.0024,-0.01,-0.0028,0.0024,0.01,0.0028 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0.034,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:f382595d i72 bbox-0.0024,-0.01,-0.0028,0.0024,0.01,0.0028 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0.056,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:f382595d i72 bbox-0.0024,-0.01,-0.0028,0.0024,0.01,0.0028 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0.078,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:f382595d i72 bbox-0.0024,-0.01,-0.0028,0.0024,0.01,0.0028 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0.1,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:f382595d i72 bbox-0.0024,-0.01,-0.0028,0.0024,0.01,0.0028 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0.122,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v40:f382595d i72 bbox-0.0024,-0.01,-0.0028,0.0024,0.01,0.0028 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0.24,0.065,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:504d5cfd bbox-0.022,-0.005,-0.014,0.022,0.005,0.014 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.244,0.086,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v112:87188d39 i216 bbox-0.0153,-0.017,-0.0155,0.0153,0.017,0.0155 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.262,0.086,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v112:fe277c39 i216 bbox-0.0123,-0.001,-0.0125,0.0123,0.001,0.0125 mat:MeshStandardMaterial:040f1a:0.9",
+    "Mesh p0.244,0.104,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v64:6787ccf9 i120 bbox-0.0038,-0.003,-0.004,0.0038,0.003,0.004 mat:MeshStandardMaterial:020203:1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.3,0.02,0.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:819db6d9 bbox-0.01,-0.006,-0.006,0.01,0.006,0.006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.24,-0.045,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:2f6a7059 bbox-0.002,-0.008,-0.002,0.002,0.008,0.002 mat:MeshStandardMaterial:020203:1",
+    "Object3D p0.48,0,0 q0,0,0,1 s1,1,1",
+    "Object3D p0.2,-0.07,0 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "weapon_33": {
+   "objects": 27,
+   "hash": "44563006",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s0.9974,1,1",
+    "Mesh p0.38,-0.005,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:d09d6f51 bbox-0.045,-0.025,-0.021,0.045,0.025,0.021 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0.38,0.01,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:aef958c9 bbox-0.025,-0.001,-0.0215,0.025,0.001,0.0215 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.38,0.002,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:aef958c9 bbox-0.025,-0.001,-0.0215,0.025,0.001,0.0215 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.38,-0.006,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:aef958c9 bbox-0.025,-0.001,-0.0215,0.025,0.001,0.0215 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.38,-0.014,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:aef958c9 bbox-0.025,-0.001,-0.0215,0.025,0.001,0.0215 mat:MeshStandardMaterial:020203:1",
+    "Group p0.42,-0.01,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.355,0.01,0.011 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v112:e34c7489 i216 bbox-0.0103,-0.355,-0.0105,0.0103,0.355,0.0105 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0.355,0.01,-0.011 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v112:e34c7489 i216 bbox-0.0103,-0.355,-0.0105,0.0103,0.355,0.0105 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0.355,0.022,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:13ce9ca1 bbox-0.355,-0.002,-0.004,0.355,0.002,0.004 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.7,0.026,0 q0,0,0,1 s1,1,1 geo:IcosahedronGeometry v240:28463b49 bbox-0.002,-0.002,-0.002,0.002,0.002,0.002 mat:MeshStandardMaterial:9f9374:1",
+    "Mesh p0.711,0.01,0.011 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:ccff5e65 i144 bbox-0.0075,-0.002,-0.0075,0.0075,0.002,0.0075 mat:MeshStandardMaterial:000000:1",
+    "Mesh p0.711,0.01,-0.011 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:ccff5e65 i144 bbox-0.0075,-0.002,-0.0075,0.0075,0.002,0.0075 mat:MeshStandardMaterial:000000:1",
+    "Mesh p0.12,-0.01,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:e97ed879 bbox-0.11,-0.015,-0.019,0.11,0.015,0.019 mat:MeshStandardMaterial:110602:1",
+    "Object3D p0.004,0.01,0.011 q0,0,0,1 s1,1,1",
+    "Object3D p0.004,0.01,-0.011 q0,0,0,1 s1,1,1",
+    "Object3D p0.72,0.01,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.28,-0.022,0 q0,0,0.0699,0.9976 s1,1,1 geo:BoxGeometry v900:d8baeedd bbox-0.06,-0.021,-0.016,0.06,0.021,0.016 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.15,-0.05,0 q0,0,0.04,0.9992 s1,1,1 geo:BoxGeometry v900:42736071 bbox-0.14,-0.035,-0.018,0.14,0.035,0.018 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.006,-0.06,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:ee245099 bbox-0.006,-0.065,-0.02,0.006,0.065,0.02 mat:MeshStandardMaterial:010101:1",
+    "Mesh p0.37,-0.04,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:319d3261 bbox-0.002,-0.007,-0.002,0.002,0.007,0.002 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.385,-0.04,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:319d3261 bbox-0.002,-0.007,-0.002,0.002,0.007,0.002 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.375,-0.05,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:13bcb441 bbox-0.02,-0.002,-0.005,0.02,0.002,0.005 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0.34,0.022,0.012 q0,0,0.2474,0.9689 s1,1,1 geo:BoxGeometry v900:49d31649 bbox-0.006,-0.008,-0.003,0.006,0.008,0.003 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.34,0.022,-0.012 q0,0,0.2474,0.9689 s1,1,1 geo:BoxGeometry v900:49d31649 bbox-0.006,-0.008,-0.003,0.006,0.008,0.003 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.35,0.025,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:84320bd9 bbox-0.01,-0.003,-0.004,0.01,0.003,0.004 mat:MeshStandardMaterial:26282a:1"
+   ]
+  },
+  "weapon_76": {
+   "objects": 42,
+   "hash": "881053ba",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p-0.0041,0,0 q0,0,0,1 s0.9645,1,1",
+    "Mesh p0.36,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:968d9da9 bbox-0.26,-0.065,-0.06,0.26,0.065,0.06 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.15,-0.03,0 q0.7071,0,0,0.7071 s1,1,1 geo:CylinderGeometry v64:81dd632d i120 bbox-0.0057,-0.062,-0.006,0.0057,0.062,0.006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.25,-0.03,0 q0.7071,0,0,0.7071 s1,1,1 geo:CylinderGeometry v64:81dd632d i120 bbox-0.0057,-0.062,-0.006,0.0057,0.062,0.006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.35,-0.03,0 q0.7071,0,0,0.7071 s1,1,1 geo:CylinderGeometry v64:81dd632d i120 bbox-0.0057,-0.062,-0.006,0.0057,0.062,0.006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.45,-0.03,0 q0.7071,0,0,0.7071 s1,1,1 geo:CylinderGeometry v64:81dd632d i120 bbox-0.0057,-0.062,-0.006,0.0057,0.062,0.006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.55,-0.03,0 q0.7071,0,0,0.7071 s1,1,1 geo:CylinderGeometry v64:81dd632d i120 bbox-0.0057,-0.062,-0.006,0.0057,0.062,0.006 mat:MeshStandardMaterial:020203:1",
+    "Mesh p1.14,0.01,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:51f6dc45 i192 bbox-0.016,-0.57,-0.016,0.016,0.57,0.016 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.74,0.01,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:daa920b5 i192 bbox-0.034,-0.12,-0.034,0.034,0.12,0.034 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.66,0.01,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:bbd67375 i192 bbox-0.036,-0.006,-0.036,0.036,0.006,0.036 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.695,0.01,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:bbd67375 i192 bbox-0.036,-0.006,-0.036,0.036,0.006,0.036 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.73,0.01,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:bbd67375 i192 bbox-0.036,-0.006,-0.036,0.036,0.006,0.036 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.765,0.01,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:bbd67375 i192 bbox-0.036,-0.006,-0.036,0.036,0.006,0.036 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.8,0.01,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:bbd67375 i192 bbox-0.036,-0.006,-0.036,0.036,0.006,0.036 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.835,0.01,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:bbd67375 i192 bbox-0.036,-0.006,-0.036,0.036,0.006,0.036 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p1.69,0.01,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:4d5fa8f5 i192 bbox-0.022,-0.025,-0.022,0.022,0.025,0.022 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.05,-0.02,0.05 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:f1d33c31 bbox-0.02,-0.045,-0.015,0.02,0.045,0.015 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.05,-0.02,-0.05 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:f1d33c31 bbox-0.02,-0.045,-0.015,0.02,0.045,0.015 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.09,-0.02,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:a91692f9 bbox-0.03,-0.01,-0.06,0.03,0.01,0.06 mat:MeshStandardMaterial:08090a:1",
+    "Group p0.38,-0.05,-0.12 q0,0,0,1 s1,1,1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:2dc08fe1 bbox-0.08,-0.06,-0.045,0.08,0.06,0.045 mat:MeshStandardMaterial:111507:1",
+    "Mesh p-0.08,0.08,0.04 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v52:217a2c15 i96 bbox-0.006,-0.025,-0.006,0.006,0.025,0.006 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p-0.06,0.08,0.04 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v52:217a2c15 i96 bbox-0.006,-0.025,-0.006,0.006,0.025,0.006 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p-0.04,0.08,0.04 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v52:217a2c15 i96 bbox-0.006,-0.025,-0.006,0.006,0.025,0.006 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p-0.02,0.08,0.04 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v52:217a2c15 i96 bbox-0.006,-0.025,-0.006,0.006,0.025,0.006 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,0.08,0.04 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v52:217a2c15 i96 bbox-0.006,-0.025,-0.006,0.006,0.025,0.006 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0.02,0.08,0.04 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v52:217a2c15 i96 bbox-0.006,-0.025,-0.006,0.006,0.025,0.006 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0.04,0.08,0.04 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v52:217a2c15 i96 bbox-0.006,-0.025,-0.006,0.006,0.025,0.006 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0.06,0.08,0.04 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v52:217a2c15 i96 bbox-0.006,-0.025,-0.006,0.006,0.025,0.006 mat:MeshStandardMaterial:8b520f:1",
+    "Group p0.12,0.065,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.2,0.006,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:c0ef8659 bbox-0.2,-0.006,-0.06,0.2,0.006,0.06 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.66,0.1,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:711da639 bbox-0.02,-0.025,-0.02,0.02,0.025,0.02 mat:MeshStandardMaterial:020203:1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.5,0,0.07 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:c97ce141 bbox-0.015,-0.015,-0.01,0.015,0.015,0.01 mat:MeshStandardMaterial:08090a:1",
+    "Group p0.42,-0.1,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:24580a09 bbox-0.015,-0.03,-0.015,0.015,0.03,0.015 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p-0.2,-0.25,0 q0,0,0.3663,0.9305 s1,1,1 geo:BoxGeometry v900:7c5cead9 bbox-0.006,-0.31,-0.006,0.006,0.31,0.006 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.22,-0.25,0.16 q0.1391,0.0547,-0.3622,0.9201 s1,1,1 geo:BoxGeometry v900:7c5cead9 bbox-0.006,-0.31,-0.006,0.006,0.31,0.006 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.22,-0.25,-0.16 q-0.1391,-0.0547,-0.3622,0.9201 s1,1,1 geo:BoxGeometry v900:7c5cead9 bbox-0.006,-0.31,-0.006,0.006,0.31,0.006 mat:MeshStandardMaterial:08090a:1",
+    "Object3D p1.72,0.01,0 q0,0,0,1 s1,1,1",
+    "Object3D p0.3,-0.07,0 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "weapon_70": {
+   "objects": 34,
+   "hash": "f27367b9",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0.006,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.065,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v124:dcdea581 i240 bbox-0.036,-0.065,-0.036,0.036,0.065,0.036 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v124:9e633b35 i240 bbox-0.038,-0.006,-0.038,0.038,0.006,0.038 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.545,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v112:f556301 i216 bbox-0.0207,-0.415,-0.021,0.0207,0.415,0.021 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0.47,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:d42f8175 i192 bbox-0.03,-0.15,-0.03,0.03,0.15,0.03 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.32,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:a606b995 i192 bbox-0.031,-0.006,-0.031,0.031,0.006,0.031 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.62,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:a606b995 i192 bbox-0.031,-0.006,-0.031,0.031,0.006,0.031 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.94,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v100:fb07b6a5 i192 bbox-0.024,-0.01,-0.024,0.024,0.01,0.024 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.46,-0.028,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:a56f8d79 bbox-0.045,-0.015,-0.016,0.045,0.015,0.016 mat:MeshStandardMaterial:08090a:1",
+    "Group p0.4,-0.04,0 q0,0,-0.1098,0.994 s1,1,1",
+    "Mesh p0,-0.05,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:c88c5f69 bbox-0.015,-0.05,-0.015,0.015,0.05,0.015 mat:MeshStandardMaterial:110602:1",
+    "Group p0.5,-0.04,0 q0,0,-0.0899,0.996 s1,1,1",
+    "Mesh p0,-0.05,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:c88c5f69 bbox-0.015,-0.05,-0.015,0.015,0.05,0.015 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.53,-0.05,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:c90460f1 bbox-0.03,-0.002,-0.006,0.03,0.002,0.006 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.56,-0.04,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:9f4a4aa1 bbox-0.002,-0.0125,-0.006,0.002,0.0125,0.006 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.535,-0.045,0 q0,0,0.0749,0.9972 s1,1,1 geo:BoxGeometry v900:fa28a0c9 bbox-0.002,-0.009,-0.002,0.002,0.009,0.002 mat:MeshStandardMaterial:020203:1",
+    "Group p0.44,-0.012,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:1ac1832d bbox-0.006,-0.01,-0.005,0.006,0.01,0.005 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.78,0.032,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:632ffbc1 bbox-0.003,-0.015,-0.003,0.003,0.015,0.003 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.46,0.032,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:90bf16f5 bbox-0.01,-0.011,-0.007,0.01,0.011,0.007 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.5,0.04,-0.04 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:d8baeedd bbox-0.06,-0.021,-0.016,0.06,0.021,0.016 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.42,0.048,-0.04 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v88:45e909b1 i168 bbox-0.0127,-0.025,-0.013,0.0127,0.025,0.013 mat:MeshStandardMaterial:010101:1",
+    "Mesh p0.565,0.048,-0.04 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v88:ea9b42fd i168 bbox-0.0156,-0.002,-0.016,0.0156,0.002,0.016 mat:MeshStandardMaterial:040f1a:0.9",
+    "Mesh p0.5,0.016,-0.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:37413a71 bbox-0.02,-0.006,-0.006,0.02,0.006,0.006 mat:MeshStandardMaterial:08090a:1",
+    "Group p0.95,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p-0.05,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v88:87beae19 i168 bbox-0.0175,-0.075,-0.018,0.0175,0.075,0.018 mat:MeshStandardMaterial:111507:1",
+    "Mesh p0.035,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v112:b878e985 i216 bbox-0.0419,-0.035,-0.0425,0.0419,0.035,0.0425 mat:MeshStandardMaterial:111507:1",
+    "Mesh p0.13,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v124:4083d795 i240 bbox-0.0425,-0.06,-0.0425,0.0425,0.06,0.0425 mat:MeshStandardMaterial:111507:1",
+    "Mesh p0.09,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v124:d543c7f5 i240 bbox-0.0428,-0.006,-0.0428,0.0428,0.006,0.0428 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.255,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v124:24b28b29 i240 bbox-0.0425,-0.065,-0.0425,0.0425,0.065,0.0425 mat:MeshStandardMaterial:111507:1",
+    "Mesh p0.335,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v64:10357bcd i120 bbox-0.0105,-0.015,-0.011,0.0105,0.015,0.011 mat:MeshStandardMaterial:08090a:1",
+    "Group p0.95,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "weapon_74": {
+   "objects": 33,
+   "hash": "72c6ea1e",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0.4635,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.42,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v88:d386a6bd i168 bbox-0.0156,-0.31,-0.016,0.0156,0.31,0.016 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0.78,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v88:ccd1f5ed i168 bbox-0.0214,-0.05,-0.022,0.0214,0.05,0.022 mat:MeshStandardMaterial:020203:1",
+    "Mesh p0.88,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:f5edab15 i144 bbox-0.013,-0.05,-0.013,0.013,0.05,0.013 mat:MeshStandardMaterial:26282a:1",
+    "Mesh p0.73,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v88:804925ed i168 bbox-0.0175,-0.01,-0.018,0.0175,0.01,0.018 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.84,-0.025,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v64:5af3724d i120 bbox-0.0114,-0.03,-0.012,0.0114,0.03,0.012 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.935,-0.012,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v27:81165d77 i54 bbox-0.0052,-0.015,-0.006,0.0052,0.015,0.006 mat:MeshBasicMaterial:ff9f1a:1",
+    "Mesh p0.932,-0.012,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v27:50c69c6f i54 bbox-0.0035,-0.011,-0.004,0.0035,0.011,0.004 mat:MeshBasicMaterial:ff3104:1",
+    "Group p0.6,-0.02,0 q0,0,-0.05,0.9988 s1,1,1",
+    "Mesh p0,-0.05,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:c88c5f69 bbox-0.015,-0.05,-0.015,0.015,0.05,0.015 mat:MeshStandardMaterial:110602:1",
+    "Group p0.62,-0.02,0 q0,0,0,1 s1,1,1",
+    "Mesh p0.02,-0.03,0 q0,0,0.1494,0.9888 s1,1,1 geo:BoxGeometry v900:15b97591 bbox-0.004,-0.025,-0.003,0.004,0.025,0.003 mat:MeshStandardMaterial:08090a:1",
+    "Group p0.17,-0.02,0 q0,0,-0.1395,0.9902 s1,1,1",
+    "Mesh p0,-0.05,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:c88c5f69 bbox-0.015,-0.05,-0.015,0.015,0.05,0.015 mat:MeshStandardMaterial:110602:1",
+    "Mesh p0.2,-0.035,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:7897fce1 bbox-0.025,-0.002,-0.006,0.025,0.002,0.006 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0.1,0,0 q0,0,-0.7071,0.7071 s1,1,1 geo:CylinderGeometry v76:49845925 i144 bbox-0.02,-0.02,-0.02,0.02,0.02,0.02 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p0,0,0 q0,0,0,1 s1,1,1 geo:TubeGeometry v369:7b628210 i1920 bbox-0.2516,-0.3409,-0.0131,0.0849,0.0098,0.0922 mat:MeshStandardMaterial:010101:1",
+    "Mesh p-0.3,-0.05,-0.1 q0,0,0,1 s1,1,1 geo:CylinderGeometry v124:f72ad8a5 i240 bbox-0.085,-0.25,-0.085,0.085,0.25,0.085 mat:MeshStandardMaterial:111507:1",
+    "Mesh p-0.3,0.2,-0.1 q0,0,0,1 s1,0.45,1 geo:IcosahedronGeometry v540:1767a92d bbox-0.0833,-0.0833,-0.0833,0.0833,0.0833,0.0833 mat:MeshStandardMaterial:111507:1",
+    "Mesh p-0.3,-0.3,-0.1 q0,0,0,1 s1,0.45,1 geo:IcosahedronGeometry v540:1767a92d bbox-0.0833,-0.0833,-0.0833,0.0833,0.0833,0.0833 mat:MeshStandardMaterial:111507:1",
+    "Mesh p-0.3,0.24,-0.1 q0,0,0,1 s1,1,1 geo:CylinderGeometry v76:632a32ed i144 bbox-0.03,-0.015,-0.03,0.03,0.015,0.03 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p-0.3,-0.05,0.1 q0,0,0,1 s1,1,1 geo:CylinderGeometry v124:f72ad8a5 i240 bbox-0.085,-0.25,-0.085,0.085,0.25,0.085 mat:MeshStandardMaterial:111507:1",
+    "Mesh p-0.3,0.2,0.1 q0,0,0,1 s1,0.45,1 geo:IcosahedronGeometry v540:1767a92d bbox-0.0833,-0.0833,-0.0833,0.0833,0.0833,0.0833 mat:MeshStandardMaterial:111507:1",
+    "Mesh p-0.3,-0.3,0.1 q0,0,0,1 s1,0.45,1 geo:IcosahedronGeometry v540:1767a92d bbox-0.0833,-0.0833,-0.0833,0.0833,0.0833,0.0833 mat:MeshStandardMaterial:111507:1",
+    "Mesh p-0.3,0.24,0.1 q0,0,0,1 s1,1,1 geo:CylinderGeometry v76:632a32ed i144 bbox-0.03,-0.015,-0.03,0.03,0.015,0.03 mat:MeshStandardMaterial:08090a:1",
+    "Mesh p-0.39,0.1,0 q0,0,0,1 s1,1,1 geo:IcosahedronGeometry v540:21564f69 bbox-0.0735,-0.0735,-0.0735,0.0735,0.0735,0.0735 mat:MeshStandardMaterial:111507:1",
+    "Mesh p-0.4,-0.05,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:28b3fd1 bbox-0.015,-0.3,-0.12,0.015,0.3,0.12 mat:MeshStandardMaterial:020203:1",
+    "Mesh p-0.39,0.18,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:b4b8a98d i168 bbox-0.0292,-0.006,-0.03,0.0292,0.006,0.03 mat:MeshStandardMaterial:08090a:1",
+    "Group p-0.39,0.18,0.003 q0,0,0,1 s1,1,1",
+    "Mesh p0,0.008,0.012 q0,0,0,1 s1,1,1 geo:BoxGeometry v900:8c8633a1 bbox-0.001,-0.011,-0.001,0.001,0.011,0.001 mat:MeshStandardMaterial:440201:1",
+    "Group p0.94,0,0 q0,0,0,1 s1,1,1",
+    "Group p0.1,0,0 q0,0,0,1 s1,1,1"
+   ]
+  },
+  "cartridge_00": {
+   "objects": 5,
+   "hash": "cdce128f",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0.6,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:fcd58ddd i168 bbox-3.1953,-0.6,-3.2775,3.1953,0.6,3.2775 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,7.8,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:cc8db1e5 i168 bbox-2.7785,-7.8,-2.85,2.7785,7.8,2.85 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,17.805,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:efa31c9 i168 bbox-2.7785,-2.205,-2.85,2.7785,2.205,2.85 mat:MeshStandardMaterial:26282b:1",
+    "Mesh p0,22.705,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:85c6442d i168 bbox-2.7785,-2.695,-2.85,2.7785,2.695,2.85 mat:MeshStandardMaterial:26282b:1"
+   ]
+  },
+  "cartridge_01": {
+   "objects": 4,
+   "hash": "fe6346c1",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,8.65,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:e91055b5 i168 bbox-4.6309,-8.65,-4.75,4.6309,8.65,4.75 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,19.0325,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:1283ff2d i168 bbox-4.3872,-1.7325,-4.5,4.3872,1.7325,4.5 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,22.8825,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:fb44c8ed i168 bbox-4.3872,-2.1175,-4.5,4.3872,2.1175,4.5 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_02": {
+   "objects": 4,
+   "hash": "e1928ce3",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,9,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:ec8b6655 i168 bbox-4.8259,-9,-4.95,4.8259,9,4.95 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,19.6425,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:2d538395 i168 bbox-4.5334,-1.6425,-4.65,4.5334,1.6425,4.65 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,23.2925,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:2fcc086d i168 bbox-4.5334,-2.0075,-4.65,4.5334,2.0075,4.65 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_03": {
+   "objects": 4,
+   "hash": "b940c5bb",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,9.575,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:5f1f5281 i168 bbox-4.8259,-9.575,-4.95,4.8259,9.575,4.95 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,21.5238,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:5e6c5ce5 i168 bbox-4.3872,-2.3737,-4.5,4.3872,2.3737,4.5 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,26.7988,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:c13be91 i168 bbox-4.3872,-2.9012,-4.5,4.3872,2.9012,4.5 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_04": {
+   "objects": 4,
+   "hash": "43b52bfd",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,10.8,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:269183dd i168 bbox-5.2646,-10.8,-5.4,5.2646,10.8,5.4 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,23.175,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:97d4bd21 i168 bbox-4.9721,-1.575,-5.1,4.9721,1.575,5.1 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,26.675,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:151f804d i168 bbox-4.9721,-1.925,-5.1,4.9721,1.925,5.1 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_05": {
+   "objects": 4,
+   "hash": "599f2aa5",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,11.4,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:15a77bbd i168 bbox-5.8496,-11.4,-6,5.8496,11.4,6 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,24.96,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:de1d859d i168 bbox-5.6058,-2.16,-5.75,5.6058,2.16,5.75 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,29.76,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:cb62319d i168 bbox-5.6058,-2.64,-5.75,5.6058,2.64,5.75 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_06": {
+   "objects": 6,
+   "hash": "e49e5f18",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,11.271,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:4cb9c119 i168 bbox-3.851,-11.271,-3.95,3.851,11.271,3.95 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,23.698,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:906abf4d i168 bbox-3.851,-1.156,-3.95,3.851,1.156,3.95 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,26.877,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:75ff6f79 i168 bbox-3.1198,-2.023,-3.2,3.1198,2.023,3.2 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,30.64,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:11514b8d i168 bbox-2.7785,-1.74,-2.85,2.7785,1.74,2.85 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,36.44,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:e2c7e87d i168 bbox-2.7785,-4.06,-2.85,2.7785,4.06,2.85 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_07": {
+   "objects": 5,
+   "hash": "9032944",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0.6,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:199f9ddd i168 bbox-5.3816,-0.6,-5.52,5.3816,0.6,5.52 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,14.65,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:4f43748d i168 bbox-4.6797,-14.65,-4.8,4.6797,14.65,4.8 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,31.5725,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:4280835 i168 bbox-4.4359,-2.2725,-4.55,4.4359,2.2725,4.55 mat:MeshStandardMaterial:26282b:1",
+    "Mesh p0,36.6225,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:577a4c91 i168 bbox-4.4359,-2.7775,-4.55,4.4359,2.7775,4.55 mat:MeshStandardMaterial:26282b:1"
+   ]
+  },
+  "cartridge_08": {
+   "objects": 5,
+   "hash": "d89ac363",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0.6,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:199f9ddd i168 bbox-5.3816,-0.6,-5.52,5.3816,0.6,5.52 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,16.5,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:208f56bd i168 bbox-4.6797,-16.5,-4.8,4.6797,16.5,4.8 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,34.575,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:87c40a49 i168 bbox-4.4359,-1.575,-4.55,4.4359,1.575,4.55 mat:MeshStandardMaterial:26282b:1",
+    "Mesh p0,38.075,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:177e1451 i168 bbox-4.4359,-1.925,-4.55,4.4359,1.925,4.55 mat:MeshStandardMaterial:26282b:1"
+   ]
+  },
+  "cartridge_09": {
+   "objects": 5,
+   "hash": "97a15f2b",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0.6,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:ded2e345 i168 bbox-6.5028,-0.6,-6.67,6.5028,0.6,6.67 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,16.3,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:dcfd8bed i168 bbox-5.6546,-16.3,-5.8,5.6546,16.3,5.8 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,34.4675,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:db978f19 i168 bbox-5.3134,-1.8675,-5.45,5.3134,1.8675,5.45 mat:MeshStandardMaterial:26282b:1",
+    "Mesh p0,38.6175,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:6fc64bd1 i168 bbox-5.3134,-2.2825,-5.45,5.3134,2.2825,5.45 mat:MeshStandardMaterial:26282b:1"
+   ]
+  },
+  "cartridge_10": {
+   "objects": 4,
+   "hash": "2f957522",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,16.3,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:228ee54d i168 bbox-6.7757,-16.3,-6.95,6.7757,16.3,6.95 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,34.4675,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:ef03779 i168 bbox-6.1908,-1.8675,-6.35,6.1908,1.8675,6.35 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,38.6175,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:a61f5315 i168 bbox-6.1908,-2.2825,-6.35,6.1908,2.2825,6.35 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_11": {
+   "objects": 4,
+   "hash": "23ba9e4a",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,42,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:6e77fa2d i168 bbox-9.7493,-28,-10,9.7493,28,10 mat:MeshStandardMaterial:5d0502:1",
+    "Mesh p0,7.7,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:381b9b0d i168 bbox-10.0418,-7.7,-10.3,10.0418,7.7,10.3 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,0.6,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:75458d4d i168 bbox-10.5292,-0.6,-10.8,10.5292,0.6,10.8 mat:MeshStandardMaterial:8b520f:1"
+   ]
+  },
+  "cartridge_12": {
+   "objects": 6,
+   "hash": "bf6bcd5c",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,17.433,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:3a56a161 i168 bbox-4.6797,-17.433,-4.8,4.6797,17.433,4.8 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,36.654,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:bbb273ed i168 bbox-4.6797,-1.788,-4.8,4.6797,1.788,4.8 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,41.571,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:33f72351 i168 bbox-3.1198,-3.129,-3.2,3.1198,3.129,3.2 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,46.605,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:49ac9009 i168 bbox-2.7785,-1.905,-2.85,2.7785,1.905,2.85 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,52.955,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:9fce1c89 i168 bbox-2.7785,-4.445,-2.85,2.7785,4.445,2.85 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_13": {
+   "objects": 6,
+   "hash": "a26f8a94",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,15.522,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:37b8209d i168 bbox-4.8746,-15.522,-5,4.8746,15.522,5 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,32.636,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:1586ffa5 i168 bbox-4.8746,-1.592,-5,4.8746,1.592,5 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,37.014,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:5fdbc70d i168 bbox-3.071,-2.786,-3.15,3.071,2.786,3.15 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,42.38,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:6f8d2d0d i168 bbox-2.7298,-2.58,-2.8,2.7298,2.58,2.8 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,50.98,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:770b14ad i168 bbox-2.7298,-6.02,-2.8,2.7298,6.02,2.8 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_14": {
+   "objects": 6,
+   "hash": "53acb630",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,15.093,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:ee7260d9 i168 bbox-5.5083,-15.093,-5.65,5.5083,15.093,5.65 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,31.734,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:48213cb5 i168 bbox-5.5083,-1.548,-5.65,5.5083,1.548,5.65 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,35.991,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:3d9a3819 i168 bbox-4.1922,-2.709,-4.3,4.1922,2.709,4.3 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,41.295,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:dfb6c949 i168 bbox-3.851,-2.595,-3.95,3.851,2.595,3.95 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,49.945,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:a401d179 i168 bbox-3.851,-6.055,-3.95,3.851,6.055,3.95 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_15": {
+   "objects": 7,
+   "hash": "2073517f",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0.6,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:553b7bcd i168 bbox-5.9982,-0.6,-6.1525,5.9982,0.6,6.1525 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,20.202,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:f1f1466d i168 bbox-5.2159,-20.202,-5.35,5.2159,20.202,5.35 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,42.476,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:bc1e2f1d i168 bbox-5.2159,-2.072,-5.35,5.2159,2.072,5.35 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,48.174,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:29c4f8fd i168 bbox-4.1434,-3.626,-4.25,4.1434,3.626,4.25 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,53.75,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:5a9e069d i168 bbox-3.8022,-1.95,-3.9,3.8022,1.95,3.9 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,60.25,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:e6a563cd i168 bbox-3.8022,-4.55,-3.9,3.8022,4.55,3.9 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_16": {
+   "objects": 6,
+   "hash": "f6e85215",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,19.968,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:5127cc9d i168 bbox-5.8496,-19.968,-6,5.8496,19.968,6 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,41.984,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:32a33bb5 i168 bbox-5.8496,-2.048,-6,5.8496,2.048,6 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,47.616,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:8d28297d i168 bbox-4.1434,-3.584,-4.25,4.1434,3.584,4.25 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,54.185,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:c94a9649 i168 bbox-3.8022,-2.985,-3.9,3.8022,2.985,3.9 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,64.135,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:3f7e7991 i168 bbox-3.8022,-6.965,-3.9,3.8022,6.965,3.9 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_17": {
+   "objects": 7,
+   "hash": "a529fde6",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0.6,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:fcdd21b5 i168 bbox-6.9512,-0.6,-7.13,6.9512,0.6,7.13 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,20.943,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:73655ba1 i168 bbox-6.0446,-20.943,-6.2,6.0446,20.943,6.2 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,44.034,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:893d0f1d i168 bbox-6.0446,-2.148,-6.2,6.0446,2.148,6.2 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,49.941,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:69bcf1c1 i168 bbox-4.1922,-3.759,-4.3,4.1922,3.759,4.3 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,57.225,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:173cde91 i168 bbox-3.851,-3.525,-3.95,3.851,3.525,3.95 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,68.975,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:acfbd0c1 i168 bbox-3.851,-8.225,-3.95,3.851,8.225,3.95 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_18": {
+   "objects": 6,
+   "hash": "e5ec8994",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,24.687,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:5678bf21 i168 bbox-5.8496,-24.687,-6,5.8496,24.687,6 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,51.906,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:700b8db5 i168 bbox-5.8496,-2.532,-6,5.8496,2.532,6 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,58.869,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:d5aad209 i168 bbox-4.1434,-4.431,-4.25,4.1434,4.431,4.25 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,66.525,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:98521349 i168 bbox-3.8022,-3.225,-3.9,3.8022,3.225,3.9 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,77.275,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:14b41bd1 i168 bbox-3.8022,-7.525,-3.9,3.8022,7.525,3.9 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_19": {
+   "objects": 6,
+   "hash": "93e4db9",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,25.935,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:69915431 i168 bbox-6.337,-25.935,-6.5,6.337,25.935,6.5 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,54.53,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:6ed861dd i168 bbox-6.337,-2.66,-6.5,6.337,2.66,6.5 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,61.845,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:a273f09 i168 bbox-4.1434,-4.655,-4.25,4.1434,4.655,4.25 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,69.245,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:9ca4f5c9 i168 bbox-3.8022,-2.745,-3.9,3.8022,2.745,3.9 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,78.395,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:a48d6f39 i168 bbox-3.8022,-6.405,-3.9,3.8022,6.405,3.9 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_20": {
+   "objects": 6,
+   "hash": "2091d0f2",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,26.988,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:3c3bec45 i168 bbox-7.2632,-26.988,-7.45,7.2632,26.988,7.45 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,56.744,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:7b5dc6ad i168 bbox-7.2632,-2.768,-7.45,7.2632,2.768,7.45 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,64.356,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:697630ad i168 bbox-4.5334,-4.844,-4.65,4.5334,4.844,4.65 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,72.845,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:1f41e739 i168 bbox-4.1922,-3.645,-4.3,4.1922,3.645,4.3 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,84.995,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:2e1a1229 i168 bbox-4.1922,-8.505,-4.3,4.1922,8.505,4.3 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  },
+  "cartridge_21": {
+   "objects": 6,
+   "hash": "489e1690",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,38.61,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:59cc0e9d i168 bbox-9.9443,-38.61,-10.2,9.9443,38.61,10.2 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,81.18,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:5a475d0d i168 bbox-9.9443,-3.96,-10.2,9.9443,3.96,10.2 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,92.07,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:fd08a1cd i168 bbox-6.6783,-6.93,-6.85,6.6783,6.93,6.85 mat:MeshStandardMaterial:8b520f:1",
+    "Mesh p0,104.85,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:ae33137d i168 bbox-6.337,-5.85,-6.5,6.337,5.85,6.5 mat:MeshStandardMaterial:6e240b:1",
+    "Mesh p0,124.35,0 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:186488b5 i168 bbox-6.337,-13.65,-6.5,6.337,13.65,6.5 mat:MeshStandardMaterial:6e240b:1"
+   ]
+  }
+ }
+}

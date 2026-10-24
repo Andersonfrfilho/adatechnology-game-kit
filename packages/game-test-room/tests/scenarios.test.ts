@@ -44,6 +44,7 @@ describe('built-in scenarios (headless)', () => {
     const first = await room.runScenarios([one])
     room.spawn('chair')
     room.setTool('hammer')
+    room.update(0.4)
     const second = await room.runScenarios([one])
     expect(second.results[0].checks.map((c) => c.label)).toEqual(first.results[0].checks.map((c) => c.label))
     expect(room.spawned().map((s) => s.itemId)).toEqual(['steel_sheet'])

@@ -171,6 +171,377 @@ changeset `explode-renderer` avisa que `DestructionRenderer.explode` é membro o
 | `pnpm -r test` | todos os pacotes passaram (test-room 92, vehicles-fleet 874, tools/golden 22) |
 | `pnpm lint` | exit 0 |
 
+## T1.1 (parte A)
+
+Modelo: `sonnet` (desenho validado pelo `architect`/opus: `design/T1.1-dados-das-armas.md`). Parte A = tasks 1, 2 e 3 do §5 do desenho, em 3 commits.
+As tasks 4a e 4b (regra do `WeaponRuntime`) e os testes (d) a (f) ficam para os passos seguintes.
+
+### O que foi feito
+
+| Commit | Conteúdo |
+|---|---|
+| 1 `feat(weapons): tipos de dados de armas…` | Tipos do §2 do desenho (`CaliberDef` com ruído/estojo/cartucho, `WeaponTimings`, `WeaponDimensions`, ação `launcher`, `ExplosiveDef`, falha/condição, `WeaponRules`, `WeaponEvent`), `DEFAULT_RULES` (`src/rules.ts`) e `RELOAD_STAGES` (`src/reload-stages.ts`, frações dos quadros-chave da Galeria). Desenho incluído |
+| 2 `feat(weapons-catalog): extrator…` | `tools/weapons-catalog/` (extratores da Galeria, Arsenal, Laboratório e jogo; `decisions.json`; `build.ts` com `--check`), dados gerados, `archetypes.json` (ex-`weapons.json`, sem ruído nas armas de fogo), `base/calibers.sdk.json` congelado e `models.json` da Galeria. Testes (a) e (b) |
+| 3 `feat(weapons): registro…` | `createArsenal` com explosivos, `patch`/`remove`/`include`, `rules` (merge profundo), `strings`, `checkArsenal` (todos os problemas de uma vez), `energy()`; exports `EXPLOSIVES`, `ARCHETYPE_IDS`, `checkArsenal`; locale en e pt-BR; teste (c) `catalog.test.ts` e `arsenal-options.test.ts` |
+
+### Contagens
+
+| | Antes | Agora |
+|---|---|---|
+| Calibres | 18 | **28** (10 novos: 9×18, 5,7×28, .44 Mag, .50 AE, 5,45×39, .30-30, 7,62×54R, .30-06, .300 WM, .408 CheyTac) |
+| Armas de fogo reais (`firearms.json`) | 0 | **73** (71 da Galeria + Remington 700 .300 WM + M79) |
+| Lançadores (`launchers.json`) | 0 | **6** (RPG-7, M72, AT4, Carl Gustaf M4, lança-chamas M2 e caseiro) |
+| Arquétipos (`archetypes.json`) | 42 | 42 (os 17 de arma de fogo sem `noise`; frag, bomba caseira e molotov com `explosive`) |
+| Explosivos | 0 | **17** |
+| `WEAPONS` | 42 | 121 (79 reais + 42 arquétipos) |
+| Modelos 3D da Galeria (`models.json`) | 0 | 78 (77 + a variante .300 WM) |
+
+### Desvios do desenho (e por quê)
+
+1. **Ação `flame` ganha `family?` e `timings?`** (o desenho só dava `timings` ao fogo e ao lançador): o tempo de troca de tanque da Galeria (1,1 s) e a família `flame` não tinham onde morar. Aditivo e opcional.
+2. **`weapon.ts` tocado na task 1**, três linhas: `capacity` de `launcher`, `case 'launcher'` devolvendo `empty` (o `switch` deixa de compilar com a ação nova) e `res.noise = a.noise ?? cal.noise ?? 0` (o `noise` virou opcional; sem isso nem o typecheck passa). Comportamento igual: o calibre ainda não tinha ruído.
+3. **Tipos de estado e `create()` ficaram para a 4a/4b**: `WeaponState`, `TriggerResult` e as opções `condition`/`ammoQuality` do `create` exigem o runtime; adicioná-los agora quebraria `WeaponRuntime implements WeaponState`. `WeaponEvent`, `WeaponRules` e os tipos de pane/condição já estão.
+4. **`WeaponRules.heat` com `number`** em vez dos literais `140`, `120`…: o jogo troca esses números (regra "tudo configurável"); os literais do desenho são os padrões.
+5. **Lançadores e M79 têm `archetype`** (`shotgun_pump_12` e `shotgun_double_12`, de onde vem o coice): o teste (c) pede arquétipo em toda arma real.
+6. **Ruído do calibre das 3 faixas sem linha no §12** (357 Mag, 5,45, .30-30 = 300; .300 WM, .338, .408 = 600) vem do nível "alto/extremo" do §04 pelo mesmo mapa do §12. Marcado `derived` no `decisions.json`.
+7. **`base/calibers.sdk.json` é cópia do `calibers.json` de antes**, e `calibers.json` agora é gerado (ordem do desenho, não a de antes).
+8. **Throwables regenerados no registro, além do `archetypes.json`**: `createArsenal` faz `energy`/`noise`/`radius` do arremessável seguir o explosivo (assim `patch.explosives` propaga). O molotov mantém o `radius` 1,5 e o `fire` 700 °C/1,5 m/12 s do SDK (raio letal 0 não vale como raio do fogo; teste existente).
+9. Ruído do frag 400→500, da bomba caseira 350→450, do molotov 60→40; energia da bomba caseira 100 kJ→43,2 kJ e raio 4→3, frag raio 6→5: consequência de "regenerados da def" (Arsenal §13 e Hopkinson).
+
+### Escolhas que não vinham das fontes (REF/derivadas) — confirmar com o dono
+
+Todas estão em `decisions.json` com `source: reference` ou `derived`.
+
+- **Lançadores**: velocidade de saída (RPG-7 117 m/s, M72 145, AT4 285, Carl Gustaf 255, M79 76), distância mínima de armar 10 m e sopro 5 m (Arsenal §13, valem para todos), coice = coice da escopeta de bomba × kick da Galeria / 1,6. Nenhuma fonte do time dá velocidade nem coice de foguete.
+- **M79 como arma**: cano 0,356 m e massas 2,7/2,93 kg (REF do M79 real); comprimento 0,73 m da Galeria.
+- **Massa do projétil dos 10 calibres novos** (REF) e velocidade do .300 WM e .408 (REF 900 m/s); arrasto de todos os novos.
+- **Temperatura do fogo** dos explosivos de combustível (700 °C, a do molotov do SDK): as fontes só dão raio e duração.
+- **Energia da Claymore**: 102,4 kJ (Q4 "usar 102 até decisão"); a escala de Hopkinson não vale para cone.
+- **Rimfire/aro e tipo de estojo**: os de calibre sem entrada no desenho (20 ga: `shell`/`shell`).
+- **Cadência do arremesso `volley` da Boito** = 180 rpm (Q2, "escopeta 180"); o desenho não dá número para basculante.
+
+### Conflitos entre fontes não cobertos pelo desenho (não decidi; registrar)
+
+1. **Tipo de estojo do 5,7×28**: a função `caseType` da Galeria (linha 513) devolve `rifle` (calor 4,5 por tiro na P90); o desenho manda `pistol` (calor 3). Segui o desenho.
+2. **Molotov no jogo**: `EXP.molotov` do `jogo.js` tem `fer: 0`; Laboratório e Arsenal dizem 4 m. Segui Laboratório/Arsenal (desvio registrado em `sources.test.ts`).
+3. **Taurus 82**: o Arsenal diz "Nunca engasga" (§06) e a Galeria não dá `rel` (padrão 1, ou seja, engasga como as outras).
+4. **Calibres sem linha na Galeria**: `.380 ACP` e `20 ga` têm arma no SDK e/ou §04 mas nenhuma arma da Galeria os usa; ficam só como calibres.
+5. **Armas citadas só no §04** (Ruger Mk IV, Taurus TH380, Walther PPK, Glock 22, S&W Model 10, Ruger GP100, M1 Garand, AR-15): sem linha no §06 nem na Galeria, não entraram.
+6. **Carl Gustaf M4** não tem linha no Arsenal §13; raios, ruído e nível vêm do AT4 (Q5, como o desenho manda).
+7. **Remington 700 no Arsenal §07** tem a ficha do calibre .308; a variante .300 WM fica sem velocidade da arma (usa a do calibre, 900 REF) e herda a precisão (MOA).
+8. **Arco e besta** (`arrow`, `crossbow_bolt`) não têm `caseType`; a regra de calor (4b) precisa de um padrão para eles.
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm --filter @adatechnology/game-weapons test` | 66 passaram (47 antigos, 12 de `catalog.test.ts`, 7 de `arsenal-options.test.ts`) |
+| `pnpm --filter @adatechnology/weapons-catalog-tool test` | 14 passaram (`sources.test.ts` 13, `catalog-up-to-date.test.ts` 1) |
+| `pnpm --filter @adatechnology/weapons-catalog-tool catalog:check` | `up to date` |
+| `pnpm --filter @adatechnology/game-test-room test` e `game-weapons-three test` | 92 e 5 passaram |
+| `pnpm lint` | exit 0 |
+
+Os 47 testes antigos de `game-weapons` continuam verdes sem alteração (nenhum precisou de `rules: { faults: false }` ainda: a pane é da 4b).
+`pnpm -r test` inteiro passa de 2 min neste ambiente; os pacotes que tocam armas foram rodados à parte, como acima.
+
+## T1.1 (parte B)
+
+Modelo: `sonnet` (a regra do `WeaponRuntime` está desenhada no §3 de `design/T1.1-dados-das-armas.md`; nada exigiu `opus`). Parte B = tasks 4a, 4b, 5 (testes (d) e (f)), 6 e 7 do §5 do desenho, em 5 commits.
+
+### O que foi feito
+
+| Commit | Conteúdo |
+|---|---|
+| 4a `feat(weapons): regra de manuseio…` | Velocidade e ruído por arma, `timings` resolvidos (`src/fire.ts`), `draw()` com fase e status `drawing`, ciclo manual (pump, ferrolho, alavanca), recarga `auto`/`full`/`one_by_one` com `RELOAD_STAGES` (`src/reload.ts`), fila de eventos com `drain()`, `roundTimes`, salva (`volley`), `locked` da pistola, `WeaponState`/`TriggerResult` completados |
+| 4b `feat(weapons): panes…` | Pane por cartucho no gerador `seed ^ 0x6a09e667` (`src/faults.ts`), `clearFault`, `setSafety`, calor com decaimento em passos de até 1/60 s (`src/heat.ts`), `condition` e `ammoQuality` (opções do `create` e `set*`), rajada de ruído, lançador mínimo (`Use` `throw` com a energia e o raio letal do explosivo, `perRocket` de calor) |
+| 5 `test(weapons): testes da regra…` | `tests/rules.test.ts` (29 testes): taxa de pane por condição em 20 mil tiros (±3σ), mistura de panes por família, revólver sem trava, desobstruir, trava, M16A2 e Boito, calor, etapas, ruído, dispersão da semente 7 igual com pane ligada |
+| 6 `test(weapons): golden da Galeria…` | `tools/golden/captures/arsenal-gallery.js`, `tests/fixtures/team-golden/gallery-heat.json`, `tests/team-golden.test.ts` (4 testes) |
+| 7 `feat(test-room,weapons-three): …` | Sala: `rules: { faults: false }` e mapeamento dos eventos da arma para os do host (`src/host-events.ts`); `HostTool` com `fault`, `safety` e `heat`; README, SKILL, changeset, inventário (§7) |
+
+### Resultado do golden (e)
+
+O gravador recusava o `RoundedBoxGeometry` e os outros complementos do three r128 (jsDelivr). Foi estendido: `--addon <arquivo>` (repetível) serve `OrbitControls`, `RoundedBoxGeometry` e `RoomEnvironment` do `node_modules`, e `GoldenTool.stepFrames` passou a existir de fato (o README já o prometia; faltava ligar). O teste numérico da fórmula da linha 798 **não** foi necessário: a Galeria real foi gravada (`artefatos/C96Cxhb4bTA9bbojV4ctKH.html`, seed 1, quadros de 1/60 s).
+
+Para a gravação não depender do sorteio da página, a captura troca `Math.random` por 0,99 (nunca engasga). A captura clica Atirar 5 vezes (40 quadros entre cada) e Rajada (10 tiros, 90 quadros) em Glock 17, AK-47, Remington 870 e Browning M2 .50 ("M2" do desenho = Browning M2, não o lança-chamas) e lê "Calor h%" e a munição.
+
+Resultado: **o SDK bate com a página em todos os passos** (calor arredondado e cartuchos gastos nas 4 armas; ex.: AK-47 47% e 10 cartuchos a menos depois da rajada, M2 100%). O teste foi sensível: com 30 quadros entre tiros em vez de 40 ele falha. A ordem por quadro é `trigger` e depois `update`, como a página (tween soma, `stepWeapon` esfria). A Remington aparece com 7 na página (`'6+1'`) e 6 no SDK (`capacity` é o carregador); por isso o teste compara **cartuchos gastos**, não a munição absoluta.
+
+### Decisões aplicadas (as do pedido)
+
+- **Arco e besta**: sem `caseType`, somam 0 de calor e nunca engasgam (`heatPerRound` e `rollFault`).
+- **Taurus 82**: fica como na Galeria (`faultFactor` 1). Pergunta para o dono abaixo.
+- O resto da lista da parte A segue como está em `decisions.json`.
+
+### Desvios do desenho (e por quê)
+
+1. **Nenhum teste antigo precisou de `rules: { faults: false }`** (item (f)): os 47 testes de `weapons.test.ts` seguem verdes sem mudança porque cada um tem semente fixa e nenhum sorteio de pane cai nos seus tiros. É determinístico, mas frágil a mudança de semente; se algum dia um deles falhar por engasgo, a correção é essa opção no teste.
+2. **`weapon.ts` ficou com ~550 linhas** (o desenho previa ~200 com `fire.ts` e `reload.ts`). Fora do arquivo foram `fire.ts`, `reload.ts`, `faults.ts` e `heat.ts`; o que sobra é o estado da arma e os `fire*` de cada ação (melee, chama, extintor, arremessável, lançador, arma de fogo), que usam o mesmo estado. Dividir por ação é refatoração à parte (sugestão para a T1.5, quando o lançador sair do mínimo).
+3. **`roundTimes`** é medido a partir do **início da chamada** (`start` do `trigger`), não do primeiro cartucho; com a arma pronta é o mesmo número (M16A2: k·0,075).
+4. **Misfire de revólver/basculante** devolve `status: 'misfire'` com `rounds: 1` e sem `shots`; o evento `shot` só sai quando há projétil, e `misfire` vira `shot{shots:0, rounds:1}` no host.
+5. **`reload('one_by_one')`** só vale em arma que carrega assim (tem `perRound`); nas outras vira `auto`. Revólver em `auto` é sempre `one_by_one` (`full` = speed loader), como o desenho diz; tubo e ferrolho vazios usam o `empty` das etapas (fecha com o ciclo).
+6. **`setSafety(on)` devolve o estado atual**; só vale para armas que recarregam (fogo e lançador) e só emite `safety` quando muda.
+7. **Lançador mínimo**: ruído do disparo = `noise` da ação (hoje 0, nenhuma fonte dá ruído de disparo do foguete); a explosão tem o próprio ruído no explosivo. Recarga do lançador funciona (`rocket_seat`/`tube_drop`+`tube_seat`); o lança-chamas segue sem recarga até a T1.5.
+8. **Área de armas**: com 121 armas nos três balcões (39 lugares), as armas empilhariam no último balcão. Apliquei o filtro previsto (`def.archetype === undefined`) em `game-weapons-three/src/area.ts` e ajustei a contagem do teste; as 42 voltam a ser as mesmas de antes. Reverter na T1.3.
+9. **Sala de teste**: os eventos de `tool`, `shot`, `empty`, `mode` e `reload` deixaram de ser emitidos à mão e saem do `drain()` da arma (após o gatilho, `Q`, recarga e a cada quadro, para todas as armas já pegas). `setTool` ainda emite `tool` direto e **não** chama `draw()`: ligar o saque faria o gatilho responder `drawing` por 0,35 s (T1.3).
+10. **`GoldenTool.stepFrames`** e `--addon` no gravador (ver acima).
+
+### Perguntas para o dono
+
+1. **Taurus 82**: o Arsenal §06 diz "nunca engasga", a Galeria não dá `rel` (então engasga como as outras, `faultFactor` 1). Mantive a Galeria. Quer `faultFactor` baixo (por exemplo 0,1) ou 0?
+2. **`capacity` com câmara**: a Galeria conta `'6+1'` como 7 na munição; o SDK conta 6 e guarda `chamber: 1` só como dado. A recarga tática deveria deixar +1 na câmara?
+3. **Ruído do disparo do lançador**: usar o ruído do calibre mais próximo (330?) ou o do explosivo? Hoje é 0.
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm --filter @adatechnology/game-weapons test` | 99 passaram (66 de antes + 29 de `rules.test.ts` + 4 de `team-golden.test.ts`) |
+| `pnpm --filter @adatechnology/weapons-catalog-tool test` | 14 passaram |
+| `pnpm --filter @adatechnology/game-test-room test` | 94 passaram (92 + 2 de `host-events.test.ts`) |
+| `pnpm --filter @adatechnology/game-weapons-three test` | 5 passaram |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro) | exit 0, nenhum arquivo de teste falhou |
+| `node examples/weapons-test-area/build.mjs && test.mjs` | `ok: bundle` |
+
+Modelo da execução: `sonnet`.
+
+## T1.4 — Som do tiro (S2)
+
+Modelo da execução: `sonnet`. Branch `work/spec001-t1-4`.
+
+### O que foi portado
+
+| Origem | Linhas | Destino |
+|---|---|---|
+| Jogo `sfx` (`artefatos/2UG1Mhe9LqJkQKKVsJkTWR/jogo.js`): tabela `P` `[corte, volume, duração]` | L62101-L62104 | `GAME_SOUND_CLASSES` (`game-weapons-three/src/audio/shot-sound.ts`), valores literais; `|| [1000, 0.5, 0.1]` = `FALLBACK_SOUND_CLASS` |
+| Jogo `sfx`: abafamento `att = vol / (1 + d² × 0.004)`, corte `P[0] / (1 + d × 0.01)`, silêncio com `att < 0.01` | L62091-L62093, L62105 | `GAME_DISTANCE_CURVE` e `computeShotSound` |
+| Jogo `sfx`: envelope (ganho de uma vez, queda exponencial até 0,001 em `P[2]`), ruído branco de 1,5 s, início em `Math.random()` do buffer | L62078-L62083, L62106-L62108 | `classBurst` em `audio.ts`; buffer e início saem do `createRng` do kit (semente) |
+| Jogo: calibre → classe (`12ga` escopeta, `9x19` pistola, `308` rifle, o resto fuzil) | L68697 | `computeShotSound` (escopeta pelo cartucho, mão pela categoria, resto por faixas de energia que reproduzem os quatro calibres do jogo) |
+| Jogo: `recarga` e `vazio` tocados na troca de arma, recarga e arma vazia | L68644-L68662 | classes `reload`/`empty` dentro de `MECHANICAL_SOUNDS` (`dry_fire`, `magazine_out`, `rounds_in`...) |
+
+Nomes em inglês: `pistola→pistol`, `escopeta→shotgun`, `fuzil→rifle`, `rifle→long_rifle` (7,62×51), `impacto→impact`, `carne→flesh`, `passo→step`, `vidro→glass`, `madeira→wood`, `recarga→reload`, `vazio→empty`, `explosao→explosion`.
+
+### API
+
+- `computeShotSound({ caliber? | energyJ?, category?, distance?, volume?, suppressed?, indoors? }, options?)` → `{ soundClass, energyJ, audible, cutoff, gain, duration, crack, body }` (puro).
+- Energia (S2): fator `base + span × k` (k de 0 a 1 em escala log, 50 J a ~15,8 kJ) dividido pelo fator na energia de referência da classe (`CLASS_REFERENCE_ENERGY`: 500, 2700, 2100, 3500 J = os calibres do jogo no SDK), então os calibres do jogo dão exatamente o som do jogo. Crack (alto) e corpo (grave) seguem só a energia, como já era no SDK.
+- `createWeaponAudio(volume?, options?)`: `seed`, `classes`, `distance`, `energy`, `referenceEnergy`, `classOf`, `bands`, `suppressor`, `indoors`, `mechanical`, `createContext`. Métodos novos: `shotSound`, `mechanical(id)`, `event(weaponEvent)`, `play(classe, volume, distância)`; `shot` aceita `extras`. Os métodos antigos continuam (o `fx.ts` não mudou).
+- `MECHANICAL_SOUNDS` (uma entrada por id de `RELOAD_STAGES`, mais `dry_fire`, `misfire`, `feed`, `cycle`, `mode`, `safety_on/off`, `jam`, `clear_start/end`) e `mechanicalSoundOf(event)` para a T1.3 ligar eventos da regra a sons.
+- `game-weapons` passa a exportar `createRng` (mulberry32 já usado pela regra).
+
+### Desvios
+
+1. **A Galeria não tem som** (`armas-itens__galeria-3d-arsenal.js` não usa `AudioContext` nem osciladores; nenhum `Oscillator` no arquivo). Só `recarga` e `vazio` têm base no jogo; os cliques metálicos de ferrolho, ferrolho, pane, desobstruir, trava e cilindro são do SDK (a mesma síntese `metal` da versão anterior), com frequências por etapa escolhidas por mim. Se o dono quiser outros timbres, é troca de dados em `MECHANICAL_SOUNDS`.
+2. **Supressor e ambiente fechado** não existem no jogo: multiplicadores meus (supressor: volume ×0,3, corte ×0,6, sem crack, corpo ×0,5; fechado: duração ×1,5, corte ×0,85), todos configuráveis.
+3. O ruído do calibre (`noise`, metros) não entra no som: no jogo ele só atrai zumbis (`emitNoise`).
+4. O jogo escolhe a classe pelo id do calibre; o SDK tem 28 calibres, então a classe vem de faixas de energia (pistola < 1000 J, fuzil < 3000 J, rifle longo acima), por categoria de mão e pelo cartucho de escopeta, substituíveis por `classOf` e `bands`.
+5. Buffer de ruído de 1,5 s como no jogo (era 0,6 s); o `Math.random` foi trocado pelo gerador com semente (buffer, início e tom da cápsula).
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm --filter @adatechnology/game-weapons test` | 99 passaram |
+| `pnpm --filter @adatechnology/game-weapons-three test` | 32 passaram (5 de antes + 27 de `audio.test.ts`: fórmulas do jogo nos quatro calibres a 0, 10, 60 e 120 m, silêncio acima de ~157 m, monotonia por energia e distância, supressor e ambiente, opções, determinismo e `AudioContext` falso) |
+| `pnpm lint` | exit 0 |
+
+Modelo da execução: `sonnet`.
+
+## T1.2 — Contratos de animação da arma (A5)
+
+### O que entrou
+
+- **`game-contracts/src/tool-animation.ts`**: o contrato genérico (sem arma, sem three.js) pelo qual uma regra dirige qualquer renderizador.
+  `toolAnimationStep(event)` traduz o `HostEvent` em `play` (clipe, variante, duração, repetição), `sync` (etapa) ou `finish`;
+  `createToolClipPlayer({ clips, rig, onEvent })` toca `AnimationClipSpec` escalados à duração que a regra deu, aplica as poses em uma
+  `ToolRig` e dispara os eventos do clipe; `scaleClip`, `sampleClip` e `checkToolClips` são as peças puras. Interface `ToolAnimator` para quem
+  implementar o seu. Os marcadores de etapa são eventos de clipe `stage` com `data.stage`.
+- **`HostEvent`** ganha `cycle`, `stage` e `feed`; `tool`, `reload` e `clear` (início) levam `duration` (segundos da fase, tirados do `phase`
+  `{id,start,end}` da arma) e `reload` leva `kind`.
+- **`game-test-room/src/host-events.ts`**: mapeia `cycle`, `reload_stage` e `feed` (antes `null`) e passa a duração do `phase` ativo; a sala o
+  lê em `flushEvents` logo antes de esvaziar os eventos.
+
+### Desvios do desenho (e por quê)
+
+1. **A regra não foi alterada**: a duração sai de `WeaponState.phase`, não de um campo novo em `WeaponEvent`, para os 99 testes de `game-weapons` ficarem iguais.
+2. **`toHostEvent`** troca o terceiro parâmetro (`recoil`) por `{ recoil, phase }` (quebra para quem chamava direto; só a sala chama).
+3. O tocador fica em `game-contracts` (e não em um pacote novo) porque é puro e sem dependência; o pacote já guardava `checkAnimation`.
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm --filter @adatechnology/game-contracts test` | 24 passaram (16 + 8 de `tool-animation.test.ts`) |
+| `pnpm --filter @adatechnology/game-weapons test` | 99 passaram |
+| `pnpm --filter @adatechnology/game-weapons-three test` | 5 passaram |
+| `pnpm --filter @adatechnology/game-test-room test` | 96 passaram (95 + 1 de ciclo e recarga; `host-events.test.ts` reescrito) |
+| `pnpm lint` | exit 0 |
+| `node examples/weapons-test-area/build.mjs && test.mjs` | `ok: bundle and room page` |
+
+Modelo da execução: `sonnet`.
+
+## T1.5
+
+Modelo: `sonnet` (nenhuma decisão estrutural nova; o desenho da T1.1 §2/§3 e o consolidado A11/E1 bastaram). Branch `work/spec001-t1-5`, 4 commits: divisão do `weapon.ts`, contratos, lançador/arremessáveis/lança-chamas, reação em cadeia.
+
+### O que foi feito
+
+| Commit | Conteúdo |
+|---|---|
+| `refactor(weapons): divide weapon.ts…` | `weapon.ts` (614 linhas) virou `weapon-core.ts` (estado e relógio, 219), `weapon-commands.ts` (91), `weapon-firearm.ts` (129), `weapon-shared.ts` (59) e `weapon.ts` (gatilho, 136), em classes abstratas encadeadas. Sem mudança de comportamento: os 99 testes e as sementes ficaram iguais. |
+| `feat(contracts): …` | `Use` ganha `explosive`, `trigger`, `armDistance`, `injuryRadius`, `stunSeconds` no `throw` e os usos `place` e `backblast`; `PartSpec.explodes.chain` (`ExplosionChain`); evento `primed`. Aditivo. |
+| `feat(weapons): lançador completo…` | `ExplosiveBody`, `blastEffect`, `backblastEffect`, `throwableUse`, `launcherUses`; `rules.explosives`; `explosive-weapons.json` (flashbang, dynamite, c4, claymore); `chain` e `explosion` nos explosivos; `tests/explosives.test.ts` (18) + 2 em `catalog.test.ts`. |
+| `feat(destruction): reação em cadeia…` | `chain.ts` (`explosivePart`), `prime`/`detonatePrimed` em `world.ts`, evento `primed`, fogo da peça armada no renderizador; `tests/chain.test.ts` (12) + 1 de renderizador. |
+
+### Valores portados (fonte)
+
+| Valor | De onde |
+|---|---|
+| Distância mínima de armar 10 m; sopro 5 m; foguete físico com queda; "abaixo disso, bate sem explodir" | Arsenal §13 (texto "Bazucas"), já em `launcherCommon` |
+| Gravidade 9,8; quique no chão 0,35 da queda e 0,6 do deslocamento; parede 0,4 | `jogo.js` `explosionsUpdate` 68300-68312 |
+| M67: espoleta 4 s (o jogo usa 3,5 e foi rejeitado na T1.1); bomba de cano 3 s | Arsenal §13; SDK |
+| Molotov explode no primeiro choque, fogo 4 m por 9 s (antes 1,5 m por 12 s no arquétipo do SDK) | `jogo.js` `fogoRes` 68068; `explode` 68231 |
+| Flashbang atordoa 4 s num raio de 10 m | Arsenal §13; Lab `SC.flash` |
+| Claymore: cone de 60° (meio ângulo 30°), letal 15 m, ferimento/alcance 50 m, só com fio; atrás, nada | Arsenal §13; Lab `PROF.claymore` e `SC.claymore` |
+| C4 só dispara com `remote` | Arsenal §13 ("com detonador") |
+| Lança-chamas: alcance M2 6 m, caseiro 3,6 m; combustível 9 s e 5 s | `launchers.json` (T1.1, Galeria `WEAP` + SDK), testes novos |
+| Cone do sopro 19° (atan 0,35) | Lab `backblast()` ~785 (desvio lateral ±0,35) |
+| Botijão: tiro 1,4 s, explosão 0,25 a 0,6 s | `jogo.js` `exploDamage` 68173-68180 |
+| Barril: tiro 1,2 s, explosão 0,2 a 0,4 s | `jogo.js` `exploDamage`; Lab `SC.barril` (t>1,2) |
+| Tanque do carro: 3 a 8 s após metade do hp, explosão 0,6 s | `jogo.js` `exploDamage` (hp < 300 de 600; dano > 400) |
+| Bomba do posto: tiro 1,0 s, vizinha 0,4 s depois; tanque do posto 2,0 s depois da última bomba | Lab `SC.posto` 968-995 (1,0; 1,4; 1,9; 2,3; 4,3 s) |
+
+Tudo isso mora em `tools/weapons-catalog/decisions.json` (fonte, razão) e foi regenerado pela ferramenta; `catalog:check` está verde.
+
+### Decisões e desvios
+
+1. **Divisão do `weapon.ts` por herança**: quatro classes abstratas (núcleo, comandos, arma de fogo) e `WeaponRuntime` final. O estado mutável compartilhado impede funções soltas sem passar o estado inteiro; a herança manteve o diff mecânico.
+2. **Contratos**: o arremesso continua `throw` (a sala de teste só trata esse tipo e ignora os novos). Foguete = `throw` com `trigger: 'impact'` e `armDistance`. Carga posta (Claymore, C4) = `place`. A sala (`room.ts`) não mudou.
+3. **Fuso da molotov**: o `ExplosiveDef` passa a mandar no arremessável (fuse e fogo, além de energia/ruído/raio). O teste "molotov carries fire" mudou de 1,5 m/12 s para 4 m/9 s, com a fonte na linha do teste.
+4. **Quatro arremessáveis novos** (`flashbang`, `dynamite`, `c4`, `claymore`) ficam num arquivo à mão e apontam `archetype: 'frag_grenade'`; assim a área de armas (só arquétipos até a T1.3) continua com os mesmos balcões.
+5. **Cadeia: tiro ou explosão que mataria a peça a arma em vez de despedaçar** (`hp` fica em 1 e a peça é armada). Sem isso o atraso do jogo (vazar 1,2 s, explodir 0,2 a 0,4 s depois) nunca apareceria, porque o dano da explosão em joules passa o hp do barril.
+6. **O atraso conta do instante da explosão que armou**, não do fim do quadro: a linha do tempo é a mesma com `dt` de 0,01 ou 0,5 (teste).
+7. **Escalonamento do Laboratório não é reproduzido**: no `SC.posto` as bombas explodem em 1,0, 1,4, 2,3 s por roteiro. Pelas regras, toda bomba dentro de 12 m é armada junto (0,4 s) e explode em 1,4 s; o carro em 1,0 + 0,6 s; o tanque em 3,0 s (o Laboratório 4,3 s). A ordem é por tempo, depois objeto e peça.
+8. **Carro, faixa média**: no jogo, explosão de dano 200 a 400 incendeia o motor (3 a 8 s) e acima de 400 explode em 0,6 s. Aqui toda explosão no alcance usa 0,6 s (uma faixa só); o fogo e o tiro usam 3 a 8 s.
+9. **Lança-chamas**: sem mudança de regra (alcance, combustível e fogo já saíam da T1.1); entraram só os testes de alcance e combustível. Recarga do tanque (1,1 s) segue não ligada, como na T1.1.
+10. **Cozinhar a granada** (segurar antes de arremessar, Arsenal §13) não foi feito: o gatilho dispara no apertar (teste antigo "uma vez por puxada") e cozinhar pede soltar para arremessar.
+
+### Perguntas para o dono (escolhas de negócio que as fontes não cobrem)
+
+1. **Espoleta da dinamite e do flashbang**: sem número nas fontes (o Laboratório usa 2,1 s só na demonstração). Usei os 4 s da M67 (`decisions.json`, Q7). Quer outro valor?
+2. **Temperatura que arma pelo fogo**: o Arsenal diz "explode com tiro ou fogo", sem graus. Usei 300 °C (`FIRE_PRIME_C`, ou `explodes.atC`). Quer outra?
+3. **Atraso do fogo no botijão, barril, bomba**: o jogo só trata tiro e explosão. Igualei o atraso do fogo ao do vazamento do tiro (1,4 s, 1,2 s, 1,0 s). Quer outro?
+4. **Dano do sopro atrás do lançador**: o Arsenal só diz "fere quem estiver a 5 m". A regra dá `falloff` linear de 1 a 0 e o cone de 19° (derivado do Laboratório); o dano em pontos é do `game-characters`. Cone e queda estão certos?
+5. **Fio da Claymore**: nenhuma fonte dá comprimento ou ângulo do fio; hoje o host decide quando "o fio foi tocado" e chama `trigger('wire')`.
+6. **Ruído do disparo do lançador**: continua 0 (pergunta 3 da T1.1 em aberto).
+7. **Massas dos arremessáveis novos** (referência real, sem fonte do time): flashbang 0,23 kg, dinamite 0,5 kg, Claymore 1,6 kg; o C4 usa 0,57 (Galeria). Quer outras?
+8. **Cozinhar a granada**: quer que segurar o gatilho encurte a espoleta e o arremesso saia ao soltar? Muda a semântica de `held` das granadas.
+9. **Tanque subterrâneo do posto**: só responde a fogo e a explosão (não a tiro); ok?
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm --filter @adatechnology/game-weapons test` | 119 passaram (99 + 18 de `explosives.test.ts` + 2 de `catalog.test.ts`) |
+| `pnpm --filter @adatechnology/weapons-catalog-tool test` / `catalog:check` | 14 passaram / atualizado |
+| `pnpm --filter @adatechnology/game-destruction test` | 96 passaram (84 + 12 de `chain.test.ts`) |
+| `pnpm --filter @adatechnology/game-destruction-three test` | 47 passaram (46 + 1) |
+| `pnpm --filter @adatechnology/game-test-room test` | 94 passaram |
+| `pnpm --filter @adatechnology/game-weapons-three test` | 5 passaram |
+| `pnpm lint` | exit 0 |
+
+Modelo da execução: `sonnet`.
+
+## T1.3 — `game-weapons-three`: os modelos e a animação da Galeria
+
+### O que entrou
+
+- **Modelos (porte, não reescrita)**: `src/models/` traz os construtores da Galeria com as mesmas peças, medidas e ordem de criação (a ordem entra no hash): pistola (11
+  estilos), revólver, fuzil (50 armas, em receptor, cano, guarda-mão, empunhadura e carregador, coronha e acessórios), bullpup, P90, basculante, M2, os quatro lançadores
+  e os dois lança-chamas. Os 78 ids de `data/models.json` constroem seu modelo; o do ar livre (`buildWeaponModelById`) estica a arma ao comprimento real como o `fitLength`
+  da página. Peças ganham nome (`slide`, `mag`, `bolt`, `trigger`...) por `partRegistry`. Materiais e primitivas em `models/kit.ts`, uma por namespace do three; o addon
+  `RoundedBoxGeometry` foi portado sobre o `THREE` do host (`models/rounded-box.ts`), porque o host empresta o namespace e não importa addons.
+- **Cartucho e estojo por calibre**: `buildCartridge` (a `cartridge(a)` da página, em mm) a partir de `CaliberDef.cartridge`, com a forma derivada do aro e do estreitamento
+  do estojo (`cartridgeShape`); `buildCasing` (estojo vazio, em metros) e `buildRound` (cartucho inteiro) usam as mesmas medidas, no lugar dos quatro tamanhos fixos da página.
+- **Clipes** (`src/animation/`): cada `tw` da Galeria virou um tween e `composeClip` o transforma em `AnimationClipSpec` (amostra a curva da página em 10 passos). Há um
+  conjunto por modelo: `shot` e `shot_last` (corrediça fica atrás na última), `misfire`, `empty`, `cycle` (pump 0,5 s, ferrolho 0,82 s, alavanca 0,55 s: os mesmos
+  `timings.cycle` da regra), `reload`, `reload_empty` e `reload_one_by_one` com as sete recargas, `feed`, `fault_*`, `clear_*`, `safety_on/off`, `mode` e `draw`.
+  Os marcadores `stage` de cada recarga vêm de `RELOAD_STAGES`, na fração em que a regra os põe.
+- **Arma na mão** (`src/fx/`): `createViewmodel` toca os clipes pelo `createToolClipPlayer` do T1.2, com o relógio da regra, e trata os eventos de clipe: clarão, estojo,
+  pente que cai (cópia do pente com a física da página), cartucho entrando (`moveIn`), cápsula presa na janela (`stuckCase`) que voa ao destravar, tubo descartável, foguete
+  e jato de fogo (`fireHeavy`), brilho do cano e fiapo de fumaça (`stepWeapon`). Tudo sorteia de uma semente (`createRandom`); o `Math.random` que restou é o ruído do
+  sintetizador de som (`audio.ts`), que a S1 troca.
+- **Desgaste (`QUAL`)**: `applyCondition(kit, model, 'new' | 'used' | 'worn' | 'rusty')` troca os materiais como `applyQuality`; opção `condition` do módulo e `fx.setCondition`.
+- **Área de armas**: o filtro `archetype === undefined` saiu; 117 armas e ferramentas (as 121 menos os 4 gestos do corpo) em até 6 balcões, em duas fileiras, cada arma com a
+  sua faixa (`weaponsLayout`), `asleep`. Cada arma da Galeria é um corpo rígido (`body`, caixa do modelo com a massa real) com os meshes presos a ele por `destructionPart`.
+  Os arquétipos, o corpo a corpo e o arco seguem com o prop de caixas (`box-fx.ts`).
+- **Sala de testes**: `rules: { faults: false }` saiu (a regra padrão com panes vale na sala); `setTool` chama `draw()` e o evento `tool` carrega a duração; **X** destrava
+  e **B** liga a trava (R e Q seguem); mensagens de pane e trava no HUD (pt-BR e en); a ajuda lista R, Q, X e B. Eventos `cycle`, `stage` e `feed` chegam aos módulos.
+
+### Golden (o "igual ao original")
+
+`tools/golden/captures/arsenal-models.js` roda **a página** (Chrome headless, three r128, o artefato `C96Cxhb4bTA9bbojV4ctKH.html`): corta de dentro do IIFE da página os
+construtores (do `T = THREE` até os explosivos, mais `casingMesh`) e devolve a cena de cada arma e de cada cartucho. Fixtures em
+`packages/game-weapons-three/tests/fixtures/team-golden/`: `gallery-models.json` (9 armas, uma por construtor, com as linhas de cada nó: Glock 17, S&W 686, AK-47,
+Steyr AUG, FN P90, Boito, Browning M2, RPG-7 e lança-chamas M2) e `gallery-model-hashes.json` (as 77 e os 22 cartuchos, só o hash).
+
+| Comparação | Resultado |
+|---|---|
+| 9 armas, nó a nó (tipo, posição, quaternion, escala, geometria, cor, opacidade) | **idênticas** |
+| 77 armas da Galeria, hash da cena | **77 de 77 idênticas** (a variante Remington 700 .300 WM sai igual à base) |
+| 22 cartuchos, hash da cena | **21 de 22 idênticos**; o .50 BMG difere só pelo projétil (13,0 mm na página, 12,7 mm no SDK, decisão A6 da T1.1); com 13,0 o teste bate |
+
+### Desvios do desenho (e por quê)
+
+1. **Só o que o r128 para o r160 obriga**: (a) cores: a página chama `convertSRGBToLinear` à mão, o r160 converte sozinho no `Color.set`, então o código não chama; o teste lê os
+   valores lineares e arredonda como o r128 (`getHexString` truncado). (b) `RoundedBoxGeometry`: mesmo algoritmo e mesmos vértices (conferido contra o `jsm` do r128 e do r160), mas
+   feito sobre o `BoxGeometry` do host; o `type` da geometria segue `BoxGeometry` como na página. Nada mais mudou; **nenhuma diferença de forma, medida ou material**.
+2. **Gravação**: usei o gravador por página (`bin/record.mjs`) com uma captura que corta os construtores do próprio texto da página (eles estão num IIFE, sem global).
+3. **Nomes**: as peças móveis ganham nome; a página não nomeia nada, então o hash do teste ignora os nomes (`ignoreNames`).
+4. **Curva**: o `ease` da página vira chaves lineares amostradas em 10 passos por tween (erro máximo de 0,4% do movimento); os valores finais e os tempos são os da página.
+5. **Relógio da regra**: o tempo dos clipes é o da página, escalado à duração que a regra dá (recarga, ciclo, destravar). Destravar leva 1,2 s na regra contra 0,3 a 0,6 s da página;
+   recargas por cartucho esticam com o número de cartuchos. A parte que não escala é o que a regra não conhece (os 0,24 s de cada cartucho entrando).
+6. **Coisas que a Galeria não faz e entraram**: o seletor ou a alavanca de trava gira (a página só o desenha), o saque levanta a arma (a página não tem mãos), e `mode` mexe no
+   seletor. São movimentos pequenos, ligados a peças que já existiam; sem peça de trava no modelo, o clipe não existe.
+7. **Misfire (nega)**: na regra do SDK uma nega em revólver e basculante só gasta o cartucho (clipe `misfire`) e nas outras armas trava (clipe `fault_misfire`, o mesmo gesto): igual à página.
+8. **Lançador**: a regra emite `shot` com `shots: 0` (é um arremesso); o host agora diz `shots: 1` para o lançador, e só a nega (`misfire`) chega com 0. O lança-chamas não emite
+   evento algum, então o jato sai da queda do combustível (`tool().ammo`).
+9. **Capacidade do 686**: a regra dá 7 e o modelo da Galeria tem 6 câmaras; a recarga ejeta 6 cápsulas. Dado, não código.
+10. **Saque na sala**: todo teste que pega uma arma e atira em seguida espera 0,4 s (a regra responde `drawing` por 0,35 s); a sala e os exemplos foram ajustados.
+
+### Perguntas para o dono
+
+1. **Arquétipos sem modelo**: as 42 armas genéricas (`pistol_9mm`, `rifle_5_56`...) e o corpo a corpo seguem como caixas porque nenhuma entrega os desenhou. Quer que cada arquétipo
+   use o modelo da marca que o aponta (`archetype`), ou o time de armas desenha os genéricos?
+2. **Capacidade do 686 e das revólveres de 7 tiros**: a Galeria desenha 6 câmaras para todos. O SDK diz 7. Manter o dado (7) e desenhar 6, ou 7 câmaras só nesse modelo?
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm --filter @adatechnology/game-contracts test` | 24 passaram |
+| `pnpm --filter @adatechnology/game-weapons test` | 99 passaram |
+| `pnpm --filter @adatechnology/game-weapons-three test` | 53 passaram (5 de antes, 33 do golden, 10 da arma na mão, 4 dos clipes, e a área ganhou 1) |
+| `pnpm --filter @adatechnology/game-test-room test` | 99 passaram (96 + 2 de X/B e saque + 1 de lançador) |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro) | exit 0, nenhum arquivo falhou |
+| `node examples/weapons-test-area/build.mjs && node examples/weapons-test-area/test.mjs` | `ok: bundle and room page` |
+| Chrome real (headless): `dist/sala-armas.html`, AK-47 na mão atirando | sem erro de execução; 49 meshes na mão; 126 posicionamentos |
+
+Modelo da execução: `sonnet`.
+
 ## Hotfix — goldens dependentes da versão do Node
 
 **Corrige a premissa da T0.3/V1.** O texto acima ("Causa provável: ajustes em `game-vehicles` depois do golden"; "goldens desatualizados") estava errado. Os
@@ -205,3 +576,184 @@ CI: `.nvmrc` (22) e o job `goldens-node-24` (golden-tool e as suítes sensíveis
 | `pnpm -r typecheck` | exit 0 | (não repetido) |
 | `pnpm lint` | exit 0 | (não repetido) |
 | `pnpm -r test` | todos passam (fleet 875 em 18 arquivos, tools/golden 39) | fleet 875 em 18 arquivos; tools/golden 39 |
+
+Modelo da execução: `sonnet`.
+
+## T1.6 — Goldens por arma e `weapons-test-area` com os controles novos
+
+Modelo da execução: `sonnet`. Branch `feat/spec-001-fase-1` (sobre T1.1 a T1.5 e o hotfix). Fecha a Fase 1.
+
+### O que foi integrado
+
+| Item | O que entrou | Onde |
+|---|---|---|
+| 1. Som na mão e na área | O tiro toca `computeShotSound` com `{ caliber, distance }` (energia do calibre, `muzzleEnergy × chumbos`); os eventos da regra tocam `mechanicalSoundOf` por `audio.event` (etapas de recarga, ciclo, pane, destravar, trava, vazio, nega, modo); o lançador toca a classe `explosao` do jogo; a explosão (evento novo `explosion` do host) toca pela distância da câmera. `Math.random`: nenhum restou em `game-weapons-three/src` (a T1.4 já tinha semeado; conferido por `grep`) | `fx/viewmodel.ts`, `audio/host-events.ts`, `box-fx.ts`, `area.ts` |
+| 2. Explosivos na área | A sala arremessa e põe pelo `ExplosiveBody`: espoleta, armar por distância (`dud` abaixo de 10 m), `blastEffect` (cone da Claymore, zona do jogador), `backblastEffect`, `renderer.explode`; Y detona cargas postas. Barril (2), botijão P13 e tanque do carro no canto leste (x 8,6 a 11,2; z -8 a -9,3) com `explodes.chain` do `ExplosiveDef` | `game-test-room/src/room.ts`, `game-weapons-three/src/world-explosives.ts` |
+| 3. Bancada | Camadas `muzzle_flash`, `casings`, `magazines`; controles `condition` (regra e materiais), `ammo_quality`, `sound_distance` (0 a 200 m); métricas `casings_live`, `magazines_live`, `heat` (máx. 100). Disparar, rajada e destravar seguem teclas | `area.ts`, `fx/layers.ts` |
+| 4. Modelos dos arquétipos | Decidido: cada arquétipo veste o modelo da primeira marca (menor id) que o aponta **e atira do mesmo jeito**; corpo a corpo, arco e besta sem ponteiro ficam com o prop | `ARCHETYPE_MODELS` em `models/index.ts` |
+| 5. Goldens por arma | 125 armas, 989 passos; cada arma: saque, trava, cada modo de tiro, vazio, recarga automática, completa e um a um, pane forçada e destravar | `game-weapons/tests/weapon-goldens.test.ts`, `tests/support/weapon-scenario.ts`, `tests/fixtures/rule-goldens/weapon-scenarios.json` (162 KB, uma linha por passo) |
+| 6. Área, vitrine e miniatura | Texto de controles, `catalog.mjs` (121 armas, explosivos, reação em cadeia), miniatura regravada | `examples/weapons-test-area`, `site/catalog.mjs`, `site/thumbs/weapons-test-area.jpg` |
+
+### Decisões
+
+1. **Arquétipo só empresta modelo de quem atira do mesmo jeito.** Os lançadores (`rpg_7`, `m72_law`, `at4`, `carl_gustaf_m4`) têm `archetype: shotgun_pump_12` nos dados; pela regra "menor id" o `at4` daria um tubo de foguete à escopeta. A condição é `action.kind` igual ao do arquétipo. Resultado: 15 arquétipos com modelo (`pistol_9mm` → `beretta_92fs`, `pistol_45` → `colt_m1911`, `revolver_357` → `sw_686`, `revolver_38` → `taurus_82`, `smg_9mm` → `cz_scorpion_evo_3`, `shotgun_pump_12` → `cbc_pump_military_3_0`, `shotgun_semi_12` → `aa_12`, `shotgun_double_12` → `boito_double_barrel`, `rifle_7_62x39` → `ak_47`, `rifle_5_56` → `ak_12`, `rifle_bolt_308` → `fn_scar_h`, `sniper_338` → `accuracy_awm`, `anti_materiel_50` → `barrett_m82a1`, `carbine_22` → `cbc_122`, `flamethrower` → `improvised_flamethrower`); `pistol_22` (nenhuma marca o aponta), o corpo a corpo, o arco, a besta, as ferramentas e os arremessáveis seguem com o prop. O comprimento do modelo é o da marca, não o do arquétipo.
+2. **Explosão vira evento do host** (`HostEvent.explosion`) em vez de o módulo ouvir a sala: aditivo, genérico (não cita arma), e é o que deixa a área tocar o som por distância. Também sai das peças do mundo (`explode` do destruidor).
+3. **`ModuleHost.configureTool({ condition, ammoQuality })`**: o módulo não tinha como mudar a regra da arma na mão. O host aplica à ferramenta em mãos e às seguintes (`toolSettings`). Genérico (desgaste e qualidade da munição valem para qualquer ferramenta).
+4. **Raio do mundo = alcance de ferimento.** A explosão arremessada passa a chamar `world.explode` com `injuryRadius` (antes o raio letal da arremessável), igual ao da peça armada em cadeia (`explodes.radius = injuryRadius`): o mesmo explosivo faz o mesmo estrago no mundo, arremessado ou em cadeia. A energia cai com a distância.
+5. **Cone da Claymore no mundo**: `world.explode` é esférico; para o cone, cada objeto do cone leva uma explosão própria no seu centro, com a energia vezes a queda de `blastEffect`. Atrás, nada (teste com duas cadeiras).
+6. **Fio da Claymore e detonador**: a mesma tecla (Y) dispara `remote` e depois `wire` (pergunta 5 da T1.5 segue aberta).
+7. **Golden regrava sozinho se o arquivo não existe** ou com `UPDATE_GOLDEN=1`; com ele existindo, compara. Duas armas (a sala e o jogo) rodam com `faults: false`, exceto o passo da pane (`faultChance: () => 1`).
+8. **Explosivos do mundo sem `game-destruction` como dependência**: o `game-weapons-three` monta o `explodes` à mão (o mesmo conteúdo de `explosivePart`) porque o bundle global (`index.global.js`) só embute o `game-weapons` e a dependência nova mudaria o pacote.
+
+### Desvios e limites
+
+- **Vitrine em 1,5 quadro por segundo** no Chrome headless (SwiftShader): a área tem 5.962 chamadas de desenho e 1,5 milhão de triângulos com as 121 armas nos balcões com modelo real. Em GPU não medi. Para a verificação no navegador escondi as armas dos balcões (`root.visible = false`; a regra e a física seguem), e a sala foi a 60 fps. Se a área precisar rodar em máquina fraca, o caminho é instanciar os balcões ou carregar o modelo só da arma mirada (decisão de negócio de desempenho, abaixo).
+- **O canto dos explosivos não é seguro contra granada**: fica a 17 m do jogador e a 12,5 m do alvo mais próximo, mas uma M67 (alcance de ferimento 15 m) jogada nos alvos arma os barris (é o comportamento pedido: explosão primando vizinha). Para testar por tiro basta mirar o barril de 17 m, como o teste do navegador.
+- A miniatura mostra o AK-47 na mão sobre os balcões; as demais miniaturas não foram regravadas (`capture-thumbs.mjs --only=<exemplo>` agora existe para isso).
+- A Galeria não tem som: os timbres das etapas de recarga seguem os da T1.4 (SDK).
+
+### Verificação no Chrome real (headless, `site/dist` servido em porta local)
+
+`node site/build-site.mjs`, `python3 -m http.server`, Chrome `--headless=new` com um `AudioContext` embrulhado que conta nós, via DevTools:
+
+| Verificação | Resultado |
+|---|---|
+| Área abre sem erro de execução | Sem exceção nem `console.error`; só um 404 de `favicon.ico` |
+| Módulo e bancada | 134 itens; controles `condition`, `ammo_quality`, `sound_distance`; métricas `casings_live`, `magazines_live`, `heat` |
+| Fuzil atira com som | AK-47: munição 30 → 29; 2 rajadas de ruído (clarão e corpo do tiro) e 5 osciladores; 1 cápsula no ar |
+| Recarga com som | 5 fontes de ruído nas etapas |
+| Barril em cadeia por um tiro | Os 4 explosivos do mundo `broken` (barril, botijão, barril, tanque do carro, explosões em 8,98, 9,27, 9,29 e 9,60 s do relógio) |
+| Granada | `explode` no log: 1 entrada, 200.000 J, 15 m |
+
+### Perguntas para o dono (escolhas de negócio que as fontes não cobrem)
+
+1. **Desempenho da área**: 5.962 chamadas de desenho com 121 modelos reais nos balcões. Aceitável, ou quer instanciar/ocultar o que está longe?
+2. **Som do lançador**: usei a classe `explosao` do jogo a 60% (o lançador não tem calibre). Quer outro timbre?
+3. **Som da explosão pelo alcance** (`0,4 + 0,04 × raio`, no máximo 1): valor meu. Quer outra curva?
+4. **Claymore e fio**: ainda é o jogador quem aperta Y; quer que algo que cruze o fio (objeto ou jogador) dispare sozinho?
+5. **Estado "usada", "gasta" e "enferrujada" na bancada**: valem para todas as armas ao mesmo tempo. Quer por arma?
+6. **Modelo dos arquétipos**: o comprimento é o da marca (um `pistol_9mm` com o corpo de uma Beretta). Quer esticar ao comprimento do arquétipo?
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 (ESLint: sem problemas) |
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0; nenhum arquivo falhou |
+| `pnpm --filter @adatechnology/game-weapons test` | 247 passaram (119 de antes + 128 do golden por arma: 125 armas + cobertura + repetição) |
+| `pnpm --filter @adatechnology/game-weapons-three test` | 90 passaram (80 de antes + 10 de `integration.test.ts`: som do tiro e distância, sons mecânicos, explosão por distância, bancada, estado da arma, camadas, modelos dos arquétipos e a cadeia dos barris) |
+| `pnpm --filter @adatechnology/game-test-room test` | 104 passaram (99 + 4 de `explosives.test.ts` + 1 de `configureTool`) |
+| `pnpm --filter @adatechnology/game-contracts test` | 24 passaram |
+| `pnpm --filter @adatechnology/game-destruction test` / `-three` | 96 / 47 passaram (sem mudança) |
+| Golden da Galeria (modelos e calor) | verde (`gallery-models.test.ts` 33, `team-golden.test.ts`) |
+| `node examples/weapons-test-area/build.mjs && node test.mjs` | `ok: bundle and room page` |
+| `node site/build-site.mjs` e `node site/capture-thumbs.mjs <url> --only=weapons-test-area` | site gerado (4 exemplos, 23 pacotes) e miniatura regravada |
+| Chrome real, `site/dist` em `127.0.0.1:4811` | ver a tabela acima: sem erro, tiro com som, recarga com som, cadeia por um tiro, granada |
+
+Commits (todos terminam com o `Co-Authored-By` de Opus 5.5): `test(weapons)` golden por arma; `feat(test-room,contracts)` explosivos da regra na sala; `feat(weapons-three)` modelos dos arquétipos; `feat(weapons-three,test-room)` som, bancada e explosivos do mundo; `feat(site,examples)` vitrine; `test(test-room)` `configureTool`; e o de documentação (skills, changesets, inventário, evidência).
+
+Modelo da execução: `sonnet`.
+
+## Revisão da Fase 1
+
+Correção dos achados da revisão de código da Fase 1 (branch `feat/spec-001-fase-1`). Cada item foi um commit pequeno, com teste que falha sem a correção quando o achado era de comportamento.
+
+### Achados e correções
+
+| Id | Achado | Correção |
+|---|---|---|
+| S1 | Área de armas com ~5.962 chamadas de desenho e 1,5 M de triângulos | `buildModeledProp` agrupa os meshes do modelo por material, assa a matriz relativa ao grupo em geometria clonada não indexada e emite um mesh por material (`userData.destructionPart = 'body'`, `castShadow = false`). A junção é um port local de `mergeGeometries` (`src/merge-by-material.ts`, só `position`, `normal`, `uv`): o pacote recebe `THREE` do host e não importa `three/addons` (mesma decisão do `rounded-box.ts`), então o IIFE continua precisando só de three. A arma na mão não mudou (modelo com pivôs). Arquétipos que só emprestam o modelo de uma marca (`ARCHETYPE_MODELS`, 15 armas) saem do balcão ao lado da marca: seguem no catálogo (`items()`) e na mão. `matrixAutoUpdate = false` **não** foi usado: o destruidor move os meshes ao quebrar a peça e a matriz travada ignoraria o movimento |
+| S2 | `team-golden` passaria em silêncio se o nome mudasse | Exige mais de um passo gravado e o `selected` como primeiro |
+| S3 | `sources.test.ts` frouxo | Conta as linhas do §06 (67), tipos e guarda no lugar de `any`, `DEFAULT_RULES` importado do pacote `@adatechnology/game-weapons` (devDependency nova da ferramenta), mais duas asserções de texto cru (linha da Glock 17 na Galeria, linha do AK-47 no §06) |
+| S4 | Subsistema de explosivos dentro do `room.ts` | `packages/game-test-room/src/explosives.ts` com contexto injetado (`room.ts` 2.408 → 2.203 linhas, `explosives.ts` 301). O projétil sem explosivo detona pela mesma função dos demais (log, evento do host, parte do jogador, fogo) e voa com `rules.explosives.gravity` (9,8), não 9,81 |
+| S5 | `configureTool` específico e misfire como `shot` de 0 | `configureTool(settings: Readonly<Record<string, string>>)` com os ids dos controles do módulo (`condition`, `ammo_quality`); misfire virou o evento `{ type: 'misfire', weapon }` (genérico: "o cartucho foi gasto e nada saiu"), `toolAnimationStep`, `toHostEvent`, sons, viewmodel e box-fx ajustados. Cresce a união `HostEvent`: **quebra para `switch` exaustivo** (changeset `minor`) |
+| S6 | `DRAW_SECONDS = 0.4` fixo nos cenários | `room.waitUntilReady(maxSeconds?)` lê a fase da ferramenta e espera mais um quadro (o gatilho julga o quadro por onde começa: sem esse quadro, o primeiro puxão ainda respondia `drawing`). README, SKILL e changeset dizem que `setTool` toca o saque |
+| S7 | `random.ts` duplicava `createRng`; `ease` em dois lugares | Usa `createRng` do `game-weapons`; `ease` vem de `clip-builder.ts` |
+| S8 | `drainBlasts` limitado a 64 | Esvazia a fila (termina porque a peça explode e é preparada uma vez). Teste: 100 cargas sem atraso numa chamada e uma chapa dentro do alcance de todas; sem a correção sobram blasts para a chamada seguinte (a vida da chapa muda depois) |
+| S9 | Detalhes | Comentário de `withCollapses` de volta ao lugar; ruído do áudio com deslocamento `rng() * max(0, 1,5 - duração)` (teste de que nenhuma rajada passa do fim do buffer); o resto do quadro atravessa o atraso nas repetições do player de clipes (`time += dt - delay`, teste com passos variáveis); `coneBlast` por caixa (centro, cantos e ponto mais próximo; fallback à origem para objeto sem mesh) com o raio `CONE_BLAST_RADIUS`, teste com uma viga cuja origem fica atrás da carga |
+| Nits | | `scaleClip` com duração zero sem NaN; `checkToolClips` exige duração > 0; `radius` duplicado de `blastNumbers` removido; `checkArsenal` valida `defaultCondition` e `defaultAmmoQuality`; `deepMerge` ignora `__proto__`, `constructor`, `prototype`; `weaponsLayout` lança quando as armas não cabem (ou uma é maior que o balcão) |
+
+### Chamadas de desenho e triângulos da área de armas (S1)
+
+Medido no Chrome real (`google-chrome-stable --headless=new`, SwiftShader), abrindo `examples/weapons-test-area/dist/sala-armas.html` pelo CDP, três quadros seguidos com o mesmo valor. A contagem é a das chamadas `drawElements`/`drawArrays` do WebGL (o mesmo que `renderer.info.render` conta, mais a passada do mapa de sombra, por isso é o dobro do número da T1.6, que lia só a passada principal).
+
+| | Chamadas de desenho por quadro | Triângulos por quadro |
+|---|---|---|
+| Antes | 11.929 | 6,41 M |
+| Depois | 902 | 1,70 M |
+
+Queda de 13x nas chamadas e de 3,8x nos triângulos (as armas do balcão deixaram de projetar sombra). Destruição verificada no mesmo Chrome: tiro de `barrett_m82a1` por cima da `weapon_ak_47` no balcão, a parte `body` passa de `intact` para `damaged` com 1 furo, sem erro de execução. No Vitest, o teste de `weapons-area.test.ts` cobre os dois casos (um mesh por material e a peça tomando o tiro).
+
+### Fica como seguimento
+
+- Tamanho de `world.ts` (destruição), `types.ts` e `area.ts` além do que o S4 tirou do `room.ts`.
+- Fio da Claymore por corpo (quem cruza o fio dispara): pergunta ao dono, ainda aberta.
+- Clipe de destravar de 1,2 s contra 0,4 a 0,6 s da Galeria: pergunta ao dono.
+- Duplicação entre os explosivos do mundo (`world-explosives.ts`) e `explosivePart` da destruição.
+- Triângulos: 1,7 M ainda é muito para máquina fraca; o caminho seguinte é instanciar por modelo ou carregar só a arma mirada (a pergunta 1 da T1.6 segue aberta).
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 (sem erro) |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0; nenhum arquivo falhou |
+| `game-weapons` / `game-weapons-three` / `game-test-room` / `game-contracts` | 249 / 94 / 108 / 27 passaram |
+| `game-destruction` / `-three` | 97 / 47 passaram |
+| `tools/weapons-catalog` / `tools/golden` | 16 / 39 passaram |
+| Goldens (`team-golden`, `weapon-goldens`, `gallery-models`) | verdes dentro da suíte acima |
+| `node examples/weapons-test-area/build.mjs && node test.mjs` | `ok: bundle and room page` |
+| Chrome real, área de armas | sem exceção nem `console.error`; 902 chamadas; tiro no balcão causa dano |
+
+Commits (todos terminam com o `Co-Authored-By` de Opus 5.5): `perf(weapons-three)` balcão; `test(weapons,weapons-catalog)` goldens e fontes; `refactor(test-room)` explosivos; `feat(contracts,test-room,weapons-three)` misfire e `configureTool`; `feat(test-room)` `waitUntilReady`; `refactor(weapons-three)` rng e ease; `fix(destruction)` fila de blasts; `fix(test-room)` cone por caixa; `fix(contracts,weapons-three)` clipes e ruído; `fix(weapons,weapons-three)` validações; `docs(skills)`; `test(contracts)` tipo da pose; e o de evidência.
+
+Modelo da execução: `sonnet`.
+
+## Decisões do dono (2026-10-24)
+
+Respostas do dono às perguntas abertas da T1.1B, T1.3, T1.5, T1.6 e da Revisão da Fase 1. Cada decisão virou uma linha decidida na seção 2 do `consolidado.md` (A13 a A19) e, onde é dado, entrou em `tools/weapons-catalog/decisions.json` (`modelChambers`, `reliability`, `timings.clear`, extras de `dynamite`, `flashbang` e `claymore`), com os arquivos gerados refeitos pela ferramenta (`catalog:check` verde).
+
+| # | Decisão | O que mudou | Fontes | Testes |
+|---|---|---|---|---|
+| 1 | S&W 686 e revólveres de 7 tiros: o dado vence | O modelo desenha tantas câmaras quanto a capacidade (`options.chambers`, gerado; padrão 6; arquétipo emprestado fica com 6). Desvio da página: o golden da Galeria exclui o `sw_686` (`OWNER_DEVIATIONS`) e um teste próprio confere 7 câmaras no 686, 6 nos outros e que o hash difere do da página; a recarga solta 7 cápsulas | Arsenal §06 e a regra (7); Galeria desenha 6 | `gallery-models.test.ts`, `viewmodel.test.ts`, `sources.test.ts` |
+| 2 | Taurus 82 não é especialmente confiável | `faultFactor` 1 mantido (sem "nunca engasga"); registrado em `decisions.json` `reliability` | Galeria (sem `rel`) contra Arsenal §06 | `sources.test.ts` |
+| 3 | Cozinhar a granada: sim | Ver abaixo | — | `cooking.test.ts` (12), `weapons.test.ts`, 3 da sala, goldens regravados |
+| 4 | Claymore, minas e cargas de fio disparam por fio de tropeço | Ver abaixo | derivado (ver abaixo) | `tripwire.test.ts` (6), 6 da sala |
+| 5 | Destravar fica em 1,2 s (regra); a animação estica | Sem mudança de código; só registrado | Arsenal §10 | — |
+| 6 | Espoleta do flashbang: M84, 1,0 a 2,3 s da alavanca | `fuseRange` genérico no `ExplosiveDef`, sorteado por arremesso na regra, em fluxo próprio (`seed ^ 0xbb67ae85`) | [Wikipedia M84](https://en.wikipedia.org/wiki/M84_stun_grenade), [SAM.gov](https://sam.gov/opp/ec681d45302a4afb8e4c4b6f4ea50cd1/view), GlobalSecurity XM84 | `fuse.test.ts` |
+| 7 | Espoleta da dinamite: pavio de segurança, cerca de 131 s/m ±10% | `fuseLength` (m) × `burnRate` (s/m) com `burnTolerance`; padrão 0,03 m (3,93 s, cerca de 4); `setFuseLength`, controle `fuse_length` da bancada e `patch.explosives` fazem pavio longo; de `rules.explosives.placeFuseFrom` (10 s) a dinamite é posta no chão acesa | [Chemring](https://www.chemring.com/~/media/Files/C/Chemring-V3/documents/energetics/heds/safety-fuze-apr22.pdf), [Primetake 9504](https://www.primetake.com/wp-content/uploads/sites/5/2016/03/9504.pdf), 30 CFR 57.6502 | `fuse.test.ts` (conversão, tolerância com semente, fluxo separado, pavio longo), `explosives.test.ts` da sala |
+
+### Cozinhar a granada (decisão 3)
+
+- **Regra (`game-weapons`):** arremessável com espoleta de tempo e que não é posto no chão cozinha. O puxão tira o pino (evento `cook` `start`, `fuse` = espoleta inteira) e não devolve uso; a cada quadro `trigger` confere o tempo; `release(origin?, direction?)` **devolve** o arremesso com o que sobrou (`use.fuse`, `use.cooked`, evento `throw`); segurar além da espoleta devolve um `throw` com `inHand`, `fuse` 0 e velocidade zero (evento `burst`, no instante exato `início + espoleta`), uma vez só. Impacto (molotov, lançadores), remoto, fio e carga posta agem no puxão, como antes. A espoleta do flashbang e da dinamite é sorteada na hora de puxar o pino.
+- **Sala (host):** o clique segurado chama `trigger` por quadro; ao soltar (ou ao trocar de ferramenta) a sala chama `release` e aplica o arremesso; emite o evento `cook` do host. `room.use(hold)` faz o mesmo por script. Dica de animação: `TOOL_CLIP.COOK` (começa com a espoleta como duração, termina no arremesso ou na explosão); nenhuma arma tem clipe ainda, então é só contrato. Sem som novo.
+- **Desvios assumidos:** `WeaponState.release` agora devolve `TriggerResult | null`; os goldens das 4 armas de espoleta (`frag_grenade`, `pipe_bomb`, `flashbang`, `dynamite`) ganharam os eventos `cook:start` e `cook:throw` (só essas 8 linhas mudaram).
+
+### Fio de tropeço e marcador (decisão 4)
+
+- **Dado:** `ExplosiveDef.tripwire` (`length`, `angleDeg`, `height`); padrão em `rules.explosives.tripwire`: 10 m na direção do cone, a 0,15 m do chão. **Derivado:** buscas e o FM 23-23 (acesso negado no globalsecurity.org na verificação) não trouxeram comprimento conferível para o kit do M18A1; 10 m fica dentro do raio letal de 15 m do cone. É configurável por explosivo (`patch.explosives.claymore.tripwire`) e pelas regras.
+- **Regra:** o `Use` `place` traz `tripwire`; `tripwireSegment(use)` dá o segmento (ângulo anti-horário visto de cima, fio sempre horizontal).
+- **Sala:** ao pôr a carga ela põe um marcador (`charge_marker`, estaca com bandeira) e, havendo fio, desenha `charge_wire`; todo quadro testa a caixa de cada corpo (`bodies` do contexto: jogador como coluna do chão aos olhos e cada objeto da sala; futuros personagens entram por aí) contra o segmento e, ao cruzar, detona (`cause: 'wire'`, ação `tripwire` no log). Quem já estava sobre o fio ao pôr é deixado passar até sair. Y só dispara o `remote` (C4); a Claymore deixou de responder a Y.
+- **Limites:** o teste é de sobreposição por quadro (sem varredura): corpo mais rápido que a espessura da caixa por quadro pode atravessar. A verificação genérica mora na sala (`segment-box.ts`), não no mundo da destruição.
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0 |
+| `game-weapons` / `game-weapons-three` / `game-test-room` / `game-contracts` | 277 / 94 / 118 / 27 passaram |
+| `game-destruction` / `-three` | 97 / 47 passaram |
+| `tools/weapons-catalog` | 17 passaram |
+| `node examples/weapons-test-area/build.mjs && node test.mjs` | `ok: bundle and room page` |
+| `pnpm --filter @adatechnology/weapons-catalog-tool catalog:check` | up to date |
+
+Commits (todos terminam com o `Co-Authored-By` de Opus 5.5): `feat(weapons-three,weapons-catalog)` câmaras, Taurus e destravar; `feat(weapons,weapons-three,test-room)` espoletas; `feat(weapons,contracts,test-room)` cozinhar a granada; `feat(weapons,contracts,test-room)` fio de tropeço e marcador; e o de documentação (README, skills, changesets, evidência).
+
+Modelo da execução: `sonnet`.

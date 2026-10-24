@@ -1,5 +1,7 @@
 // Bundle entry (IIFE global `WeaponsArea`): the weapons module of @adatechnology/game-weapons-three, ready for any room page:
 // `WeaponsArea.loadInto(room)` loads it and opens its area.
+// Controls: aim at a weapon and press H to equip it, click fires or throws, R reloads, Q changes the fire mode (burst), X clears a jam, B turns the safety on and off,
+// Y detonates the charges set down for the remote detonator (C4); the Claymore goes off by itself when a body crosses its trip wire, E grabs, G throws what is held. The fuel barrels, the propane cylinder and the car tank stand in the east corner.
 import { createWeaponsTestModule } from '@adatechnology/game-weapons-three'
 
 export { createWeaponsTestModule }

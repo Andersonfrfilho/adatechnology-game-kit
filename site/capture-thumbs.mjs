@@ -1,5 +1,5 @@
 // Captures the landing page thumbnails into site/thumbs/ from a running demo site.
-// Usage: node site/capture-thumbs.mjs [baseUrl]   (default http://localhost:4801, needs Chrome; CHROME_BIN overrides)
+// Usage: node site/capture-thumbs.mjs [baseUrl] [--only=<example name>]   (default http://localhost:4801, needs Chrome; CHROME_BIN overrides; --only keeps the other thumbnails as they are)
 // Thumbnails are committed: the Docker build only copies them, so it needs no browser.
 import { spawn } from 'node:child_process'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -9,7 +9,9 @@ import { fileURLToPath } from 'node:url'
 
 import { EXAMPLES } from './catalog.mjs'
 
-const baseUrl = (process.argv[2] ?? 'http://localhost:4801').replace(/\/$/, '')
+const args = process.argv.slice(2)
+const only = args.find((arg) => arg.startsWith('--only='))?.slice('--only='.length)
+const baseUrl = (args.find((arg) => !arg.startsWith('--')) ?? 'http://localhost:4801').replace(/\/$/, '')
 const thumbsDir = join(dirname(fileURLToPath(import.meta.url)), 'thumbs')
 const chromeBin = process.env.CHROME_BIN ?? 'google-chrome-stable'
 const PORT = 9335
@@ -97,7 +99,7 @@ async function main() {
     const client = createClient(await connect())
     await client.send('Page.enable')
     await client.send('Emulation.setDeviceMetricsOverride', { ...VIEWPORT, deviceScaleFactor: 1, mobile: false })
-    for (const example of EXAMPLES) {
+    for (const example of EXAMPLES.filter((entry) => !only || entry.name === only)) {
       console.log(`> ${example.name}`)
       await capture({ client, key: example.name, url: example.url, ready: example.ready, setup: example.setup })
       for (const area of example.areas) {

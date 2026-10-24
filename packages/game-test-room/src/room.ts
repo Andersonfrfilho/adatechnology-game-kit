@@ -4,7 +4,7 @@ import type { DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, 
 import { createDestructionRenderer, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
-import type { Shot, Use, WeaponState } from '@adatechnology/game-weapons'
+import type { Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFluidRenderer } from '@adatechnology/game-fluids-three'
@@ -17,11 +17,13 @@ import { createBenchStore } from './bench'
 import type { BenchStore } from './bench'
 import type { BenchView, MetricRow } from './bench-panel'
 import { buildFromSpec } from './build-from-spec'
+import { createExplosives } from './explosives'
+import { toHostEvent } from './host-events'
 import { DEMO_MATERIALS, demoItems } from './items'
 import { createLog } from './log'
 import { createRoomMetrics, ROOM_METRICS } from './metrics'
 import { createNarrator } from './narrate'
-import { createPlayer } from './player'
+import { createPlayer, PLAYER_RADIUS } from './player'
 import { makeScenarios } from './scenarios'
 import { resolveStrings } from './locale'
 import { createUi } from './ui'
@@ -53,19 +55,6 @@ interface Entry {
   piece: Piece | null
   last: Vec3
   velocity: Vec3
-}
-
-interface Projectile {
-  mesh: THREE_NS.Object3D
-  pos: THREE_NS.Vector3
-  vel: THREE_NS.Vector3
-  weapon: string
-  fuse: number
-  burstOnImpact: boolean
-  energy: number
-  radius: number
-  fire?: { temperature: number; radius: number; seconds: number }
-  age: number
 }
 
 interface FireZone {
@@ -219,10 +208,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const tools = new Map<string, WeaponState>()
   let toolIndex = Math.max(0, loadout.indexOf('hand'))
   let toolId = loadout[toolIndex] ?? 'hand'
+  const toolSettings: { condition?: string; ammoQuality?: string } = {}
+  let fuseLength: number | undefined
+  const SETTING_IDS = { condition: 'condition', ammoQuality: 'ammo_quality', fuseLength: 'fuse_length' } as const
   const toolState = (id: string): WeaponState => {
     let s = tools.get(id)
     if (!s) {
-      s = arsenal.create(id, { seed: 7, reserve: 999 })
+      s = arsenal.create(id, { seed: 7, reserve: 999, ...toolSettings })
+      s.setFuseLength(fuseLength)
       s.refill()
       tools.set(id, s)
     }
@@ -337,6 +330,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const ev of batch) {
       if (ev.type === 'leak') puncture(ev)
       else if (ev.type === 'ignite') igniteNear(ev.point, 0.9)
+      else if (ev.type === 'explode') emitHost({ type: 'explosion', source: ev.object, point: ev.point, energy: ev.energy, radius: ev.radius, cause: 'part' })
       fire('event', ev)
       options.onEvent?.(ev)
     }
@@ -361,7 +355,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       },
       primaryUp: () => {
         useHeld = false
-        tool.release()
+        releaseTrigger()
       },
       secondary: () => {
         if (heldEntry) throwHeld()
@@ -543,8 +537,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (heldEntry || heldPiece) releaseHeld()
     useItemPlayer = null
     playing.length = 0
-    projectiles.length = 0
-    clearProjectileMeshes()
+    explosives.clear()
     fireZones.length = 0
     burningStains.length = 0
     for (const id of [...entries.keys()]) if (!entries.get(id)?.arena) removeEntry(id)
@@ -813,7 +806,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     })
     player.kick(recoil[0], recoil[1])
-    emitHost({ type: 'shot', weapon: toolId, shots: shots.length, recoil, rounds: shots.filter((s) => s.pellet === 0).length, mode: tool.mode })
     const f = first as RayHit | null
     const d = f ? num(f.distance, 1) : ''
     let text: string
@@ -968,96 +960,43 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     )
   }
 
-  // ----- projectiles (grenades and molotovs)
-  const projectiles: Projectile[] = []
-  const projMeshes: THREE_NS.Object3D[] = []
-  const clearProjectileMeshes = (): void => {
-    for (const m of projMeshes) m.removeFromParent()
-    projMeshes.length = 0
-  }
-  const throwUse = (u: Extract<Use, { kind: 'throw' }>): void => {
-    const w = toolName()
-    const molotov = !!u.fire
-    const mesh = new THREE.Mesh(
-      molotov ? new THREE.CylinderGeometry(0.035, 0.04, 0.2, 8) : new THREE.SphereGeometry(0.045, 8, 6),
-      new THREE.MeshStandardMaterial({ color: molotov ? 0x3b7a3b : 0x4b5320, roughness: 0.6, metalness: molotov ? 0 : 0.4 }),
-    )
-    mesh.castShadow = true
-    mesh.position.set(u.origin[0], u.origin[1], u.origin[2])
-    scene.add(mesh)
-    projMeshes.push(mesh)
-    projectiles.push({
-      mesh,
-      pos: new THREE.Vector3(u.origin[0], u.origin[1], u.origin[2]),
-      vel: new THREE.Vector3(u.velocity[0], u.velocity[1], u.velocity[2]),
-      weapon: toolId,
-      fuse: u.fuse,
-      burstOnImpact: molotov && u.fuse <= 0,
-      energy: u.energy,
-      radius: u.radius,
-      fire: u.fire,
-      age: 0,
-    })
-    action('throw_projectile', t(molotov ? 'act.throw.molotov' : 'act.throw.grenade', { weapon: w, fuse: num(u.fuse, 1) }), { data: { weapon: toolId, fuse: u.fuse } })
+  const startFire = (weapon: string, at: Vec3, fire: { temperature: number; radius: number; seconds: number }, impact: boolean): void => {
+    fluids.splash('fuel', [at[0], Math.max(at[1], groundAt(at[0], at[2])), at[2]], 0.5)
+    fireZones.push({ point: [at[0], Math.max(0.02, groundAt(at[0], at[2])), at[2]], radius: fire.radius, temperature: fire.temperature, remaining: fire.seconds, acc: 0 })
+    renderer.emit('fire', at, [0, 1, 0], 24, 3)
+    action('molotov_fire', t('act.molotov_fire', { weapon: toolName(weapon), seconds: num(fire.seconds, 0), radius: num(fire.radius, 1) }), { data: { weapon, impact } })
   }
 
-  const detonate = (p: Projectile, at: Vec3, impact: boolean): void => {
-    const w = toolName(p.weapon)
-    const results = world.explode(at, p.energy, p.radius, 'player')
-    renderer.explode(at, p.energy, p.radius)
-    action('explode', t('act.explode', { weapon: w, energy: num(p.energy, 0), radius: num(p.radius, 1), n: results.length }), { data: { weapon: p.weapon, energyJ: p.energy, radius: p.radius, point: at } })
-    if (p.fire) {
-      fluids.splash('fuel', [at[0], Math.max(at[1], groundAt(at[0], at[2])), at[2]], 0.5)
-      fireZones.push({ point: [at[0], Math.max(0.02, groundAt(at[0], at[2])), at[2]], radius: p.fire.radius, temperature: p.fire.temperature, remaining: p.fire.seconds, acc: 0 })
-      renderer.emit('fire', at, [0, 1, 0], 24, 3)
-      action('molotov_fire', t('act.molotov_fire', { weapon: w, seconds: num(p.fire.seconds, 0), radius: num(p.fire.radius, 1) }), { data: { weapon: p.weapon, impact } })
-    }
+  /** The bodies that trip a wire: the player (a column from the ground to the eyes) and every object of the room that is not the arena. */
+  function crossingBodies(): { id: string; box: THREE_NS.Box3 }[] {
+    const bodies = [...entries.values()].filter((e) => !e.arena).map((e) => ({ id: e.so.objectId, box: new THREE.Box3().setFromObject(e.so.root) }))
+    const { x, y, z } = camera.position
+    const feet = groundAt(x, z)
+    bodies.push({ id: 'player', box: new THREE.Box3(new THREE.Vector3(x - PLAYER_RADIUS, feet, z - PLAYER_RADIUS), new THREE.Vector3(x + PLAYER_RADIUS, y + 0.1, z + PLAYER_RADIUS)) })
+    return bodies
   }
 
-  const updateProjectiles = (dt: number): void => {
-    for (let i = projectiles.length - 1; i >= 0; i--) {
-      const p = projectiles[i]
-      p.age += dt
-      p.vel.y -= 9.81 * dt
-      const speed = p.vel.length()
-      const step = speed * dt
-      let burst = false
-      if (step > 1e-6) {
-        const d: Vec3 = [p.vel.x / speed, p.vel.y / speed, p.vel.z / speed]
-        const r = withoutHeld(() => world.raycast(v3(p.pos), d, step + 0.05))
-        if (r && r.distance <= step + 0.04) {
-          p.pos.set(r.point[0] - d[0] * 0.03, r.point[1] - d[1] * 0.03, r.point[2] - d[2] * 0.03)
-          if (p.burstOnImpact) burst = true
-          else {
-            const n = r.normal
-            const vn = p.vel.x * n[0] + p.vel.y * n[1] + p.vel.z * n[2]
-            p.vel.x = (p.vel.x - 2 * vn * n[0]) * 0.35
-            p.vel.y = (p.vel.y - 2 * vn * n[1]) * 0.35
-            p.vel.z = (p.vel.z - 2 * vn * n[2]) * 0.35
-          }
-        } else p.pos.addScaledVector(p.vel, dt)
-      }
-      const g = groundAt(p.pos.x, p.pos.z) + 0.045
-      if (p.pos.y < g) {
-        p.pos.y = g
-        if (p.burstOnImpact) burst = true
-        else {
-          p.vel.y = Math.abs(p.vel.y) * 0.35
-          p.vel.x *= 0.7
-          p.vel.z *= 0.7
-        }
-      }
-      p.mesh.position.copy(p.pos)
-      p.mesh.rotation.x += dt * 8
-      p.fuse -= dt
-      if (burst || (!p.burstOnImpact && p.fuse <= 0) || p.age > 30) {
-        detonate(p, v3(p.pos), burst)
-        p.mesh.removeFromParent()
-        projMeshes.splice(projMeshes.indexOf(p.mesh), 1)
-        projectiles.splice(i, 1)
-      }
-    }
-  }
+  // ----- projectiles (grenades, molotovs, rockets) and charges set down: the room lends the explosives its world, log and host
+  const explosives = createExplosives({
+    THREE,
+    scene,
+    camera,
+    world,
+    renderer,
+    arsenal,
+    objects: () => [...entries.values()].filter((e) => !e.arena).map((e) => e.so.root),
+    bodies: crossingBodies,
+    toolId: () => toolId,
+    toolName,
+    withoutHeld,
+    groundAt,
+    translate: t,
+    format: num,
+    action,
+    emitHost,
+    startFire,
+    say,
+  })
 
   // ----- the trigger
   const useTool = (dt: number, held: boolean): void => {
@@ -1065,8 +1004,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const cat = tool.def.category
     if (cat === 'hand') return
     const res = tool.trigger([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], dt, held, 'player')
+    flushEvents(toolId, tool, res.recoil)
     if (res.status === 'empty') {
-      emitHost({ type: 'empty', weapon: toolId })
       if (!tool.reloading && tool.reserve > 0) startReload()
       say(t(tool.reloading ? 'hud.reloading' : 'hud.empty'))
       return
@@ -1074,8 +1013,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (res.status !== 'ok') {
       if (res.status === 'reloading') say(t('hud.reloading'))
       else if (res.status === 'no_fuel') say(t('hud.no_fuel'))
+      else if (res.status === 'fault' && res.fault) say(t('hud.fault', { fault: t(`fault.${res.fault}`) }))
+      else if (res.status === 'safe') say(t('hud.safe'))
       return
     }
+    applyUses(res, dt)
+  }
+
+  const applyUses = (res: TriggerResult, dt: number): void => {
     if (res.shots.length) fireShots(res.shots, res.recoil)
     for (const u of res.uses) {
       switch (u.kind) {
@@ -1089,7 +1034,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
           heatRays(u, 'heat')
           break
         case 'throw':
-          throwUse(u)
+          explosives.throwUse(u)
+          break
+        case 'place':
+          explosives.placeUse(u)
+          break
+        case 'backblast':
+          explosives.backblastUse(u)
           break
         case 'tool':
           toolWork(u, dt)
@@ -1103,6 +1054,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
+  /** The trigger goes up: a grenade being cooked leaves the hand now, with the fuse that is left (or has already gone off in it). */
+  const releaseTrigger = (): void => {
+    if (!tool.cooking) {
+      tool.release()
+      return
+    }
+    aim()
+    const res = tool.release([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]])
+    flushEvents(toolId, tool)
+    if (res) applyUses(res, 0)
+  }
+
   /** The V shortcut: a kick with the `kick` tool, whatever tool is selected (it keeps its own cooldown). */
   const kick = (): void => {
     if (!arsenal.weapons.has('kick')) return
@@ -1113,7 +1076,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const setTool = (id: string): void => {
     if (!arsenal.weapons.has(id)) throw new Error(`game-test-room: unknown weapon "${id}"`)
-    tool.release()
+    releaseTrigger()
     toolId = id
     const i = loadout.indexOf(id)
     if (i >= 0) toolIndex = i
@@ -1121,7 +1084,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     progress = null
     action('tool', t('act.tool', { weapon: toolName(id) }), { data: { weapon: id } })
     fire('tool', id)
-    emitHost({ type: 'tool', weapon: id })
+    tool.draw()
+    flushEvents(id, tool)
   }
   const cycleTool = (dir: 1 | -1): void => {
     if (!loadout.length) return
@@ -1375,11 +1339,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         }
         break
       case 'KeyQ': {
-        const before = tool.mode
-        const mode = tool.cycleMode()
-        if (mode !== before) emitHost({ type: 'mode', weapon: toolId, mode })
+        tool.cycleMode()
+        flushEvents(toolId, tool)
         break
       }
+      case 'KeyX':
+        clearToolFault()
+        break
+      case 'KeyB':
+        toggleSafety()
+        break
       case 'KeyZ':
         tiltKey = 1
         break
@@ -1395,6 +1364,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         break
       case 'KeyT':
         toggleTap()
+        break
+      case 'KeyY':
+        explosives.detonateCharges()
         break
       case 'KeyH': {
         const w = (heldEntry ?? entryOf(inspectTarget()?.object ?? ''))?.item?.weapon
@@ -1528,7 +1500,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const reps = fastForward ? 10 : 1
     updateAnimations(dt)
     updateItemUse(dt)
-    updateProjectiles(dt)
+    explosives.update(dt)
     syncContainers(dt)
     for (let i = 0; i < reps; i++) {
       world.update(dt)
@@ -1539,9 +1511,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     renderer.update(dt)
     updateImpacts()
     fluidView.update(dt)
-    for (const s of tools.values()) s.update(dt)
-    if (reloadingSeen && !tool.reloading) emitHost({ type: 'reload', weapon: toolId, phase: 'end' })
-    reloadingSeen = tool.reloading
+    for (const [id, s] of tools) {
+      s.update(dt)
+      flushEvents(id, s)
+    }
     for (const update of frameListeners) update(dt)
     for (const tr of tracers) {
       if (tr.life > 0) {
@@ -1766,12 +1739,29 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const hostListeners = new Set<(event: HostEvent) => void>()
   const frameListeners = new Set<(dt: number) => void>()
-  let reloadingSeen = false
   function emitHost(event: HostEvent): void {
     for (const listener of hostListeners) listener(event)
   }
+  function flushEvents(id: string, state: WeaponState, recoil?: [number, number]): void {
+    const phase = state.phase
+    for (const event of state.drain()) {
+      const hostEvent = toHostEvent(id, event, { ...(recoil ? { recoil } : {}), phase })
+      if (hostEvent) emitHost(hostEvent)
+    }
+  }
   function startReload(): void {
-    if (tool.reload()) emitHost({ type: 'reload', weapon: toolId, phase: 'start' })
+    tool.reload()
+    flushEvents(toolId, tool)
+  }
+  function clearToolFault(): void {
+    if (!tool.clearFault()) return
+    flushEvents(toolId, tool)
+    say(t('hud.clearing'))
+  }
+  function toggleSafety(): void {
+    tool.setSafety(!tool.safety)
+    flushEvents(toolId, tool)
+    say(t(tool.safety ? 'hud.safety_on' : 'hud.safety_off'))
   }
   const host: ModuleHost = {
     THREE,
@@ -1779,7 +1769,31 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     camera,
     locale,
     groundAt,
-    tool: () => ({ weapon: toolId, category: tool.def.category, ammo: tool.ammo, capacity: tool.capacity, reserve: tool.reserve, reloading: tool.reloading, mode: tool.mode }),
+    tool: () => ({
+      weapon: toolId,
+      category: tool.def.category,
+      ammo: tool.ammo,
+      capacity: tool.capacity,
+      reserve: tool.reserve,
+      reloading: tool.reloading,
+      mode: tool.mode,
+      ...(tool.fault ? { fault: tool.fault } : {}),
+      safety: tool.safety,
+      heat: tool.heatLevel,
+    }),
+    configureTool(settings) {
+      const condition = settings[SETTING_IDS.condition]
+      const ammoQuality = settings[SETTING_IDS.ammoQuality]
+      if (condition !== undefined) toolSettings.condition = condition
+      if (ammoQuality !== undefined) toolSettings.ammoQuality = ammoQuality
+      const fuseMetres = settings[SETTING_IDS.fuseLength] === undefined ? undefined : Number(settings[SETTING_IDS.fuseLength])
+      if (fuseMetres !== undefined && fuseMetres > 0) fuseLength = fuseMetres
+      for (const state of tools.values()) {
+        if (condition !== undefined) state.setCondition(condition)
+        if (ammoQuality !== undefined) state.setAmmoQuality(ammoQuality)
+        if (fuseMetres !== undefined && fuseMetres > 0) state.setFuseLength(fuseMetres)
+      }
+    },
     on(listener) {
       hostListeners.add(listener)
       return () => hostListeners.delete(listener)
@@ -2042,7 +2056,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         stepSim(FIXED_DT)
         t0 += FIXED_DT
       }
-      tool.release()
+      releaseTrigger()
     },
     grab,
     throwHeld,
@@ -2059,6 +2073,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return [...entries.values()].filter((e) => !e.arena).map((e) => e.so)
     },
     update,
+    waitUntilReady(maxSeconds = 5) {
+      let waited = 0
+      while (tool.phase && waited < maxSeconds) {
+        update(FIXED_DT)
+        waited += FIXED_DT
+      }
+      // the trigger judges a frame by where it starts: one more frame, or the first pull of a fresh draw still answers `drawing`
+      update(FIXED_DT)
+      return waited + FIXED_DT
+    },
     on(type, fn) {
       listeners[type].add(fn)
       return () => listeners[type].delete(fn)
@@ -2111,7 +2135,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       renderer.dispose()
       fluidView.dispose()
       for (const tr of tracers) tr.line.removeFromParent()
-      clearProjectileMeshes()
+      explosives.clear()
       if (ownRenderer) {
         gl.dispose()
         dom.remove()

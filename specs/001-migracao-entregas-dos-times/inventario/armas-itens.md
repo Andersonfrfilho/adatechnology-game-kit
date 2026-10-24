@@ -361,3 +361,102 @@ Não entra: dano por região do corpo, desmembramento, sangramento, raridade, ta
 5. Lançadores e explosivos (T1.5), com os efeitos visuais ligados ao `game-vfx` quando existir.
 6. `weapons-test-area` com os controles novos (T1.7).
 7. Itens (T3.x) só depois de responder D8 a D10.
+
+---
+
+## 7. Situação depois da Fase 1, T1.1 (R5)
+
+Atualizado em 2026-10-23. O que do inventário acima já entrou, e onde. O restante segue como descrito nas seções 3 e 4.
+
+| Item do inventário | Entrou? | Onde |
+|---|---|---|
+| Lista de armas (união GAL + ARS, A1) | Sim: 73 de fogo (71 da Galeria + Remington 700 .300 WM + M79), 6 lançadores e lança-chamas, 42 arquétipos | `packages/game-weapons/src/data/{firearms,launchers,archetypes}.json`, gerados por `tools/weapons-catalog` |
+| Marcas e modelos reais (D1, G5) | Sim, com `maker`, `archetype` e `sources` | idem |
+| Ficha de dimensões e `lengthCollapsed` | Sim (`dimensions`) | `types.ts` `WeaponDimensions`; dados em `firearms.json` |
+| Calibres (22 de GAL/ARS §04) | Sim: 28 (10 novos), com estojo, aro, cartucho e ruído | `src/data/calibers.json` |
+| Ruído do Arsenal §12 (D5, A3) | Sim, por calibre, com rajada de ruído (+5% por tiro em 3 s, até +50%) | `calibers.json`; `src/heat.ts` `burstNoise` |
+| Tempos de recarga tática, vazia e por cartucho (D7, A5) | Sim, como `timings` por arma | `firearms.json`; `src/reload.ts` |
+| Recarga por família e etapas | Sim, regra e ordem das etapas (a animação fica para a T1.4) | `src/reload-stages.ts` `RELOAD_STAGES`, `src/reload.ts` |
+| Capacidade com câmara, carregadores alternativos, dois tubos | Dado (`chamber`, `magazineOptions`, `tubes`); `capacity` ainda é só o carregador | `types.ts`, `firearms.json` |
+| Pane/engasgo (`QUAL`, `jamRoll`, `clearJam`, `rel`) | Sim: 4 tipos, 4 condições, `faultFactor`, desobstruir 1,2 s, qualidade da munição (Arsenal §05) | `src/faults.ts`, `src/weapon.ts`, `src/rules.ts` |
+| Calor do cano (`heat`, `heatPer`, `stepWeapon`) | Sim, igual à Galeria (golden de calor e munição) | `src/heat.ts`; `tests/team-golden.test.ts` |
+| Tiro, rajada, salva, ciclo manual | Sim (`roundTimes`, `volley`, `timings.cycle`) | `src/fire.ts`, `src/weapon.ts` |
+| Lançadores (`launcher`) | Sim (T1.5): projétil físico com gravidade, distância de armar de 10 m (antes disso `dud`), sopro de 5 m em cone de 19°, tubo descartável | `src/explosive-use.ts`, `src/explosive-body.ts`, `src/explosive-effect.ts` |
+| Explosivos (D14): raios letal e de ferimento, energia, ruído | Sim, 17 | `src/data/explosives.json` |
+| Modelos 3D, animação por família, ejeção, carregador, cartucho 3D | Não (T1.2 a T1.4); só o construtor da Galeria foi extraído para `models.json` | `packages/game-weapons-three/src/data/models.json` |
+| Área de armas com todas as armas | Não: mostra só os 42 arquétipos até a T1.3 | `packages/game-weapons-three/src/area.ts` |
+| Dano em pontos, PEN, dano por região, raridade (D4, D6) | Não, de propósito (calibragem do jogo) | |
+| Acessórios, supressor, durabilidade 0-100 (D13) | Não; o supressor é a sobrescrita `noise` da arma | |
+
+## 8. Situação depois da T1.5
+
+Atualizado em 2026-10-23.
+
+| Item do inventário | Entrou? | Onde |
+|---|---|---|
+| Granada M67 (espoleta 4 s, quique), molotov (fogo de 4 m por 9 s), bomba de cano, flashbang (atordoa 4 s), dinamite | Sim, pelo `ExplosiveDef` | `ExplosiveBody`, `throwableUse` em `game-weapons`; `explosive-weapons.json` |
+| Claymore (cone de 60°, fio) e C4 (detonador) | Sim: uso `place`, `body.trigger('wire' \| 'remote')`, `blastEffect` com o cone | idem |
+| Lança-chamas (alcance, combustível em segundos, fogo) | Já estava (T1.1); testes de alcance e combustível | `launchers.json`; `tests/explosives.test.ts` |
+| Botijão, barril, tanque do carro, bomba e tanque do posto em cadeia (A11) | Sim: `ExplosiveDef.chain` (dado) e `explodes.chain` (regra) | `explosives.json`; `game-destruction` `chain.ts`, `world.ts` |
+| Explosão do Laboratório com teto por área (E1) | Não: é visual, fica para o `game-vfx` | |
+| Cozinhar a granada (segurar antes de arremessar) | Não: pergunta aberta | |
+| Dano no centro (300, 220, 350... do Arsenal) | Não, de propósito (calibragem do jogo): vale a energia por Hopkinson | |
+
+Perguntas novas para o dono: ver `evidence.md`, "T1.5".
+
+---
+
+Perguntas anteriores para o dono: ver `evidence.md`, "T1.1 (parte B)".
+
+Perguntas novas para o dono: ver `evidence.md`, "T1.1 (parte B)".
+
+---
+
+## 8. Situação depois da Fase 1, T1.2 e T1.3 (R5)
+
+Atualizado em 2026-10-23. O que da Galeria (seção 1.1) entrou nesta etapa. As abas de zumbi, veículo e parede seguem como a seção 5 (itens 6, 12).
+
+| Item da Galeria | Entrou? | Onde |
+|---|---|---|
+| Materiais `M` e primitivas (`rbox`, `B`, `CX`, `CY`, `CZ`, `SP`, `mark`, `piv`, `rail`, `vents`, `scope`, `buttpad`, `swivel`, `heatify`) | Sim, só o que as armas usam; o addon `RoundedBoxGeometry` foi portado sobre o `THREE` do host (D16) | `game-weapons-three/src/models/{kit,details,rounded-box}.ts` |
+| `pistol` + `PSTY` (11 estilos) | Sim, igual (golden nó a nó) | `models/pistol*.ts` |
+| `revolver` | Sim | `models/revolver.ts` |
+| `rifle` (50 armas longas, todas as opções) | Sim, dividido em receptor, cano, guarda-mão, empunhadura e carregador, coronha e acessórios | `models/rifle*.ts` |
+| `bullpup`, `p90`, `shotgunBreak`, `m2` | Sim | `models/{bullpup,p90,break-action,m2}.ts` |
+| `launcher` (RPG-7, M72, AT4, Carl Gustaf, lança-chamas M2 e caseiro), `pg7`, `ffv`, `rocketBody`, `hose`, `pilot` | Sim | `models/launcher*.ts` |
+| `buildWeapon`, `fitLength` | Sim (`buildWeaponModelById`) | `models/index.ts` |
+| `cartridge(a)` (22 calibres, em mm) | Sim, das medidas do `CaliberDef.cartridge`; `casingMesh`/`cartridgeMesh` agora também por calibre | `models/cartridge.ts` |
+| `fire`: clarão, coice, gatilho, cão, corrediça e ferrolho, estojo ejetado | Sim, como clipes do contrato | `animation/shot-clips.ts`, `fx/effects.ts`, `fx/viewmodel-events.ts` |
+| `cycleBolt`, pump, alavanca | Sim, no tempo `timings.cycle` da regra | `animation/cycle-clips.ts` |
+| `burst` | Sim: a regra dá as rodadas (`rounds`) e o tocador as espaça por `60/rpm` | `game-contracts` `createToolClipPlayer` |
+| `jamRoll`, `setJam`, `stuckCase`, `clearJam` | Sim: panes da regra; cápsula presa na janela; destravar por família | `animation/shot-clips.ts` (`faultClips`), `cycle-clips.ts` (`clearClips`) |
+| `magSwap`, `tubeLoad`, `topLoad`, `revolverReload`, `breakReload`, `beltReload`, `heavyReload` (as sete recargas) | Sim, nas chaves da Galeria, escaladas ao tempo da regra | `animation/reload-clips.ts`, `magazine-clips.ts` |
+| `QUAL` / `applyQuality` (materiais gasto e enferrujado) | Sim, como opção e método `setCondition` | `models/condition.ts` |
+| `stepWeapon` (brilho do cano e fiapo de fumaça) | Sim | `fx/viewmodel.ts` |
+| `fireHeavy` (foguete e jato de fogo) | Sim, com a semente do kit | `fx/heavy.ts` |
+| Alavanca de trava e seletor animados | **Novo**: a Galeria desenha o seletor e não o move | `animation/shot-clips.ts` (`safetyClips`) |
+| Saque (`draw`) | **Novo**: a Galeria não tem mãos | `animation/shot-clips.ts` (`drawClip`) |
+| Área de armas com todas as armas | Sim: 117 em até 6 balcões, `asleep` | `game-weapons-three/src/area.ts` |
+| Teclas de pane e trava na sala | Sim: X destrava, B trava; `draw()` ao pegar | `game-test-room/src/room.ts` |
+| Abas de explosivos (`buildExp`), zumbi, carro, parede | Não | |
+
+---
+
+## 9. Situação depois da T1.6: Fase 1 fechada (R5)
+
+Atualizado em 2026-10-23. Armas, munição, explosivos e a área de teste estão no kit. O que falta do inventário (itens, zumbi, veículo, parede) é de outras fases.
+
+| Item do inventário | Entrou? | Onde |
+|---|---|---|
+| Regra "igual ao original" por arma | Sim: um cenário com semente por arma (125), sequência de eventos, munição, reserva e calor de cada passo | `game-weapons/tests/weapon-goldens.test.ts`, `tests/support/weapon-scenario.ts`, `tests/fixtures/rule-goldens/weapon-scenarios.json` |
+| Modelo 3D, animação, cápsula, pente, desgaste das 78 da Galeria | Sim (T1.3), golden nó a nó | `game-weapons-three` (`src/models`, `src/animation`, `src/fx`) |
+| Modelo dos 42 arquétipos | Sim: o da primeira marca (menor id) que aponta o arquétipo e atira do mesmo jeito; corpo a corpo, arco, besta e arremessáveis seguem com o prop | `ARCHETYPE_MODELS` em `src/models/index.ts` |
+| Som do tiro (classe, abafamento, energia do calibre) e sons mecânicos | Sim, na mão e na área; a explosão toca pela distância da câmera | `src/audio.ts`, `src/audio/*`, `src/fx/viewmodel.ts`, `src/area.ts` |
+| Explosivos na sala: granada, foguete, Claymore, C4, sopro atrás do lançador | Sim, pelo `ExplosiveBody`, `blastEffect` e `backblastEffect`; Y detona as cargas postas | `game-test-room/src/room.ts` |
+| Barril, botijão e tanque do carro no mundo, com reação em cadeia | Sim, no canto leste da área (tanque do posto e bomba seguem só como dado) | `game-weapons-three/src/world-explosives.ts`, `game-destruction/src/chain.ts` |
+| Bancada da área: camadas, estado da arma, munição, distância do som, métricas | Sim | `game-weapons-three/src/area.ts` |
+| Ambiente de teste e vitrine | Sim: 121 armas, explosivos e a reação em cadeia | `examples/weapons-test-area`, `site/catalog.mjs`, `site/thumbs/weapons-test-area.jpg` |
+| Abas de zumbi, carro, parede da Galeria | Não (outras fases) | |
+| Dano em pontos, PEN, raridade, acessórios, durabilidade | Não, de propósito (calibragem do jogo) | |
+
+Perguntas novas para o dono: ver `evidence.md`, "T1.6".

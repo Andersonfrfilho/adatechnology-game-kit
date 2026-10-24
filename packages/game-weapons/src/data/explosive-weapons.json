@@ -1,0 +1,101 @@
+[
+  {
+    "id": "flashbang",
+    "name": "Flashbang",
+    "category": "throwable",
+    "action": {
+      "kind": "throwable",
+      "explosive": "flashbang",
+      "energy": 0,
+      "radius": 0,
+      "fuse": 0,
+      "throwSpeed": 15,
+      "noise": 0
+    },
+    "mass": 0.23,
+    "tags": [
+      "explosive"
+    ],
+    "archetype": "frag_grenade",
+    "sources": [
+      "arsenal",
+      "lab",
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "dynamite",
+    "name": "Dynamite",
+    "category": "throwable",
+    "action": {
+      "kind": "throwable",
+      "explosive": "dynamite",
+      "energy": 0,
+      "radius": 0,
+      "fuse": 0,
+      "throwSpeed": 15,
+      "noise": 0
+    },
+    "mass": 0.5,
+    "tags": [
+      "explosive"
+    ],
+    "archetype": "frag_grenade",
+    "sources": [
+      "arsenal",
+      "lab",
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "c4",
+    "name": "C4 charge",
+    "category": "throwable",
+    "action": {
+      "kind": "throwable",
+      "explosive": "c4",
+      "energy": 0,
+      "radius": 0,
+      "fuse": 0,
+      "throwSpeed": 0,
+      "noise": 0
+    },
+    "mass": 0.57,
+    "tags": [
+      "explosive",
+      "placed"
+    ],
+    "archetype": "frag_grenade",
+    "sources": [
+      "arsenal",
+      "lab"
+    ]
+  },
+  {
+    "id": "claymore",
+    "name": "Claymore mine",
+    "category": "throwable",
+    "action": {
+      "kind": "throwable",
+      "explosive": "claymore",
+      "energy": 0,
+      "radius": 0,
+      "fuse": 0,
+      "throwSpeed": 0,
+      "noise": 0
+    },
+    "mass": 1.6,
+    "tags": [
+      "explosive",
+      "placed"
+    ],
+    "archetype": "frag_grenade",
+    "sources": [
+      "arsenal",
+      "lab",
+      "reference"
+    ]
+  }
+]

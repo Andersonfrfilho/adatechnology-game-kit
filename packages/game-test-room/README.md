@@ -46,6 +46,7 @@ const room = createTestRoom({
     { id: 'my_crate_breaks', name: 'My crate breaks', run: ({ room, step, expect }) => {
       const o = room.spawn('my_crate', [0, 0, -4])
       room.setTool('pistol_9mm')
+      room.waitUntilReady() // setTool plays the draw: the tool answers `drawing` until the rule's draw time is over
       room.look([0, 1, -2], [0, 0.5, -4])
       room.use()
       step(2)
@@ -88,6 +89,10 @@ The state is `id=value;id=value` (`encodeBenchState` / `decodeBenchState`); deco
 module id, so two modules can share a control id; a module loaded again keeps its live values. The room never touches
 `location`: the example page keeps it in `?bench.<moduleId>=`. `fps` and `frame_ms` use the real frame time, even past the 50 ms the simulation is clamped to. Loading a module again detaches the previous `attach` first. Q now reports the new fire
 mode (`mode` event) and `shot` events carry `rounds` and `mode`.
+
+Grenades are cooked: hold the button to pull the pin and let go to throw with the fuse that is left (`cook` host events: `start`, `throw`, `burst` when it goes off in the hand; `room.use(hold)` does the same
+by script). A charge set down gets a marker (`charge_marker`, a stake with a flag) and, when it waits for a trip wire (the Claymore), the wire is drawn (`charge_wire`) and the charge goes off by itself
+when a body (the player, an object of the room) crosses it; whatever was already on the wire when it was set is let through until it steps off. Y only fires the charges for the remote detonator (C4).
 
 ## Controls
 

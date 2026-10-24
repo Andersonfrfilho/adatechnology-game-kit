@@ -328,6 +328,22 @@ describe('fire, heat and melt', () => {
     expect(mesh.material).toBe(orig)
   })
 
+  it('shows fire on a part primed by a shot or fire, and nothing for one primed by a nearby blast', () => {
+    const { world, renderer } = setup()
+    world.addObject('o1', [partState('drum', 'steel')])
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshStandardMaterial({ color: 0x9b1c18 }))
+    const root = new THREE.Group()
+    root.add(mesh)
+    renderer.bind('o1', root, { parts: { drum: mesh } })
+    world.emit({ type: 'primed', object: 'o1', part: 'drum', point: [0, 0.3, 0], trigger: 'explosion', delay: 0.3 })
+    for (let i = 0; i < 30; i++) renderer.update(1 / 60)
+    const quiet = renderer.stats().particles
+    world.emit({ type: 'primed', object: 'o1', part: 'drum', point: [0, 0.3, 0], trigger: 'shot', delay: 1.2 })
+    for (let i = 0; i < 30; i++) renderer.update(1 / 60)
+    expect(quiet).toBe(0)
+    expect(renderer.stats().particles).toBeGreaterThan(0)
+  })
+
   it('glows when a metal part is hot, and cools back', () => {
     const { world, renderer } = setup()
     const st = world.addObject('o1', [partState('bar', 'steel')])

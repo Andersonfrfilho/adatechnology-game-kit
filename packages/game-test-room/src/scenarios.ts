@@ -33,6 +33,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
     sc('steel_through_hole', ({ room, step, expect }) => {
       const id = at(room, 'steel_sheet', 0, -4)
       room.setTool('pistol_9mm')
+      room.waitUntilReady()
       look(room, [0, 1.1, -1.5], [0, 1.1, -4])
       room.use()
       step(0.2)
@@ -48,6 +49,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
     sc('concrete_stops_bullet', ({ room, step, expect }) => {
       const id = at(room, 'concrete_block', 0, -4)
       room.setTool('pistol_9mm')
+      room.waitUntilReady()
       look(room, [0, 0.5, -1.5], [0, 0.2, -3.8])
       room.use()
       step(0.2)
@@ -64,6 +66,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
     sc('hammer_dents_drum', ({ room, step, expect }) => {
       const id = at(room, 'steel_drum', 0, -4)
       room.setTool('hammer')
+      room.waitUntilReady()
       look(room, [0, 0.6, -3.35], [0, 0.5, -4])
       let swings = 0
       for (; swings < 8 && (part(room, id, 'drum_body')?.dents.length ?? 0) === 0; swings++) {
@@ -81,6 +84,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
     sc('glass_shatters', ({ room, step, expect }) => {
       const id = at(room, 'glass_pane', 0, -4)
       room.setTool('pistol_9mm')
+      room.waitUntilReady()
       look(room, [0, 1.3, -1.5], [0, 1.05, -4])
       let shots = 0
       for (; shots < 10 && part(room, id, 'pane')?.status !== 'broken'; shots++) {
@@ -96,6 +100,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
     sc('shotgun_splinters_crate', ({ room, step, expect }) => {
       const id = at(room, 'wooden_crate', 0, -4)
       room.setTool('shotgun_pump_12')
+      room.waitUntilReady()
       look(room, [0, 0.6, -1.8], [0, 0.25, -3.77])
       let shots = 0
       const splinters = (): number => room.log.entries({ type: 'fracture', objectId: id }).filter((e) => e.data?.style === 'splinter').length
@@ -131,6 +136,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
       const id = at(room, 'chair', 0, -4)
       const before = room.renderer.pieces().length
       room.setTool('kick')
+      room.waitUntilReady()
       let kicks = 0
       for (; kicks < 8 && room.renderer.pieces().length <= before && part(room, id, 'leg_1'); kicks++) {
         // the chair moves when it is kicked: aim at the leg where it is now, from the side
@@ -149,6 +155,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
     sc('screwdriver_shelf_board', ({ room, step, expect }) => {
       const id = at(room, 'shelf', 0, -4)
       room.setTool('screwdriver')
+      room.waitUntilReady()
       look(room, [0, 0.8, -3.5], [0, 0.75, -3.86])
       const t0 = room.log.entries().length ? room.log.entries().slice(-1)[0].t : 0
       room.use(5)
@@ -163,6 +170,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
     sc('wrong_tool_refused', ({ room, expect }) => {
       const id = at(room, 'steel_sheet', 0, -4)
       room.setTool('screwdriver')
+      room.waitUntilReady()
       look(room, [0.2, 1.05, -3.6], [0.34, 1.0, -4])
       room.use(0.5)
       const refused = count(room, 'tool_refused')
@@ -173,6 +181,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
     sc('lighter_burns_crate', ({ room, step, expect }) => {
       const id = at(room, 'wooden_crate', 0, -4)
       room.setTool('lighter')
+      room.waitUntilReady()
       look(room, [0, 0.3, -3.65], [0, 0.25, -3.76])
       room.use(5)
       const lit = anyBurning(room, id)
@@ -196,6 +205,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
       const melt0 = part(room, drum, 'drum_body')?.melt ?? 0
       expect(melt0 === 0 && peak < 1450, t('sc.torch_melts_steel.wood', { peak: num(peak, 0), melt: num(melt0 * 100, 0), crate: yn(anyBurning(room, crate)) }), { peak })
       room.setTool('cutting_torch')
+      room.waitUntilReady()
       look(room, [-0.15, 0.55, -3.55], [-0.15, 0.5, -3.72])
       room.use(20)
       const p = part(room, drum, 'drum_body')
@@ -205,6 +215,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
     sc('bucket_melts_drips', ({ room, step, expect }) => {
       const id = at(room, 'plastic_bucket', 0, -4)
       room.setTool('flamethrower')
+      room.waitUntilReady()
       look(room, [0, 0.5, -2.4], [0, 0.15, -4])
       room.use(2.5)
       step(10)
@@ -285,6 +296,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
     sc('jerrycan_leaks_fuel', ({ room, step, expect }) => {
       const id = at(room, 'jerrycan', 0, -3.5)
       room.setTool('pistol_9mm')
+      room.waitUntilReady()
       look(room, [0, 0.4, -1.5], [0, 0.12, -3.43])
       room.use()
       step(1.5)
@@ -300,6 +312,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
       const id = at(room, 'jerrycan', 0, -3.5)
       const crate = at(room, 'wooden_crate', 0.9, -3.2)
       room.setTool('pistol_9mm')
+      room.waitUntilReady()
       look(room, [0, 0.4, -1.5], [0, 0.12, -3.43])
       room.use()
       step(6)
@@ -307,6 +320,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
       expect(!!stain, t('sc.fuel_stain_burns.stain', { stain: yn(!!stain) }))
       if (!stain) return
       room.setTool('lighter')
+      room.waitUntilReady()
       look(room, [stain.center[0], 0.1, stain.center[2] + 0.06], [stain.center[0], 0, stain.center[2]])
       room.use(1)
       step(4)
@@ -345,6 +359,7 @@ export function makeScenarios(t: T, num: Num, _locale = 'en'): TestRoomScenario[
       const before = anyBurning(room, id)
       expect(before, t('sc.extinguisher_puts_out_fire.burning', { burning: yn(before) }))
       room.setTool('extinguisher')
+      room.waitUntilReady()
       look(room, [0, 0.9, -2.2], [0, 0.25, -4])
       room.use(2.5)
       step(1)

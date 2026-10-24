@@ -1,6 +1,6 @@
 // Records a golden from a team page in headless Chrome (CDP) under a seeded, frozen-clock environment.
 // Usage: node bin/record.mjs --page <html> --capture <script.js> --out <golden.json> [--seed 1] [--param key=value]...
-//        [--ready "<expression>"] [--three <three.min.js>] [--timeout-ms 90000]
+//        [--ready "<expression>"] [--three <three.min.js>] [--addon <three example script>]... [--timeout-ms 90000]
 // Needs `pnpm build` first (the bundle in dist/index.global.js is injected into the page). CHROME_BIN overrides the browser.
 import { spawn } from 'node:child_process'
 import { createServer } from 'node:http'
@@ -14,6 +14,7 @@ const TOOL_DIR = join(dirname(fileURLToPath(import.meta.url)), '..')
 const MIME_TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.css': 'text/css' }
 const CHROME_BIN = process.env.CHROME_BIN ?? 'google-chrome-stable'
 const CDP_CALL_TIMEOUT_MS = 30000
+const THREE_ADDON_URL = /^https:\/\/cdn\.jsdelivr\.net\/npm\/three@[^/]+\/examples\/js\/.+\/([^/]+\.js)$/
 const THREE_URL = /^https:\/\/(cdnjs\.cloudflare\.com\/ajax\/libs\/three\.js\/[^/]+|(cdn\.jsdelivr\.net\/npm|unpkg\.com)\/three@[^/]+\/build)\/three(\.min)?\.js(\?.*)?$/
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms))
 
@@ -26,6 +27,7 @@ const { values } = parseArgs({
     param: { type: 'string', multiple: true, default: [] },
     ready: { type: 'string', default: 'true' },
     three: { type: 'string' },
+    addon: { type: 'string', multiple: true, default: [] },
     'timeout-ms': { type: 'string', default: '90000' },
   },
 })
@@ -120,10 +122,16 @@ async function waitFor(client, expression) {
 // Offline and repeatable: the page's three.js CDN URL is answered from disk and every other external request is refused.
 function answerRequests(client, origin) {
   const threeSource = values.three ? readFileSync(resolve(values.three)).toString('base64') : undefined
+  const addons = new Map(values.addon.map((file) => [basename(file), readFileSync(resolve(file)).toString('base64')]))
   return (message) => {
     if (message.method !== 'Fetch.requestPaused') return
     const { requestId, request } = message.params
     if (request.url.startsWith(origin)) return void client.send('Fetch.continueRequest', { requestId })
+    const addon = addons.get(THREE_ADDON_URL.exec(request.url)?.[1] ?? '')
+    if (addon) {
+      const headers = [{ name: 'content-type', value: 'text/javascript' }]
+      return void client.send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: headers, body: addon })
+    }
     if (threeSource && THREE_URL.test(request.url)) {
       const headers = [{ name: 'content-type', value: 'text/javascript' }]
       return void client.send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: headers, body: threeSource })
@@ -149,7 +157,7 @@ async function record() {
     handleEvent = answerRequests(client, origin)
     await client.send('Page.enable')
     await client.send('Fetch.enable', { patterns: [{ urlPattern: '*' }] })
-    const setup = `${bundle}\n;globalThis.__GOLDEN_PARAMS = ${JSON.stringify(params)};GoldenTool.installDeterminism({ seed: ${seed} })`
+    const setup = `${bundle}\n;globalThis.__GOLDEN_PARAMS = ${JSON.stringify(params)};GoldenTool.stepFrames = GoldenTool.installDeterminism({ seed: ${seed} }).stepFrames`
     await client.send('Page.addScriptToEvaluateOnNewDocument', { source: setup })
     await client.send('Page.navigate', { url: `${origin}/` })
     await waitFor(client, values.ready)

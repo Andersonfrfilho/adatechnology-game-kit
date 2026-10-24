@@ -5,9 +5,42 @@
  */
 export { createWeaponsTestModule, weaponsLayout, WEAPON_ITEM_PREFIX, COUNTER_ITEM_ID } from './area'
 export type { WeaponsTestModuleOptions } from './area'
+export { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
 export { createWeaponFx } from './fx'
-export type { WeaponFx, WeaponFxOptions } from './fx'
-export { createWeaponAudio } from './audio'
-export type { WeaponAudio } from './audio'
+export type { FxLayers, WeaponFx, WeaponFxOptions } from './fx'
+export {
+  createWeaponAudio,
+  computeShotSound,
+  mechanicalSoundOf,
+  MECHANICAL_SOUNDS,
+  GAME_SOUND_CLASSES,
+  GAME_DISTANCE_CURVE,
+  DEFAULT_ENERGY_CURVE,
+  CLASS_REFERENCE_ENERGY,
+} from './audio'
+export type {
+  WeaponAudio,
+  WeaponAudioOptions,
+  ShotExtras,
+  ShotSound,
+  ShotSoundInput,
+  ShotSoundOptions,
+  ShotSoundClass,
+  SoundClassDef,
+  DistanceCurve,
+  EnergyCurve,
+  MechanicalSoundId,
+  SoundStep,
+} from './audio'
 export { buildWeaponModel, buildProp, weaponProp, BODY_ACTIONS } from './props'
 export type { WeaponProp } from './props'
+export { MODEL_ENTRIES, ARCHETYPE_MODELS, buildWeaponModelById, hasWeaponModel } from './models'
+export type { ModelEntry, ModelFamily, ModelOptions, ModelParts, WeaponModel } from './models'
+export { buildCartridge, buildCasing, buildRound, cartridgeShape } from './models/cartridge'
+export { applyCondition } from './models/condition'
+export { partRegistry } from './models/part-registry'
+export { buildToolClips } from './animation/clip-set'
+export type { ClipContext } from './animation/context'
+export type { CartridgeShape } from './models/cartridge'
+export { modelKit } from './models/kit'
+export type { ModelKit, ModelMaterials } from './models/kit'

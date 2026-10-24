@@ -102,6 +102,7 @@ for (const lang of ['pt-BR', 'en']) {
       room.playAnimation('open_door_fridge', id)
       for (let i = 0; i < 80; i++) room.update(0.02)
       room.setTool('pistol_9mm')
+      room.update(0.4)
       for (let n = 0; n < 6 && room.world.state(id).parts.some((p) => p.id === 'door_fridge'); n++) {
         room.look([0, 1.1, -3.4], [0, 1.1, -4.7]); room.use()
         for (let i = 0; i < 25; i++) room.update(0.02)
@@ -118,6 +119,7 @@ for (const lang of ['pt-BR', 'en']) {
       room.world.hit(sofa, { type: 'fire', point: [-1.5, 0.4, -5], temperature: 900, radius: 0.9, duration: 6 })
       for (let i = 0; i < 160; i++) room.update(0.05)
       room.setTool('pistol_9mm')
+      room.update(0.4)
       for (let n = 0; n < 6 && room.world.part(tv, 'screen')?.status !== 'broken'; n++) {
         room.look([1.5, 0.4, -3.4], [1.5, 0.4, -5]); room.use()
         for (let i = 0; i < 25; i++) room.update(0.02)

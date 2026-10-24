@@ -1,0 +1,236 @@
+{
+ "schema": 1,
+ "name": "arsenal-gallery-heat",
+ "seed": 1,
+ "events": [
+  {
+   "type": "selected",
+   "data": {
+    "weapon": "Glock 17",
+    "heatPercent": 0,
+    "ammo": 17
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Glock 17",
+    "shot": 1,
+    "heatPercent": 2,
+    "ammo": 16
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Glock 17",
+    "shot": 2,
+    "heatPercent": 3,
+    "ammo": 15
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Glock 17",
+    "shot": 3,
+    "heatPercent": 5,
+    "ammo": 14
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Glock 17",
+    "shot": 4,
+    "heatPercent": 6,
+    "ammo": 13
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Glock 17",
+    "shot": 5,
+    "heatPercent": 8,
+    "ammo": 12
+   }
+  },
+  {
+   "type": "selected",
+   "data": {
+    "weapon": "AK-47",
+    "heatPercent": 0,
+    "ammo": 30
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "AK-47",
+    "shot": 1,
+    "heatPercent": 3,
+    "ammo": 29
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "AK-47",
+    "shot": 2,
+    "heatPercent": 6,
+    "ammo": 28
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "AK-47",
+    "shot": 3,
+    "heatPercent": 8,
+    "ammo": 27
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "AK-47",
+    "shot": 4,
+    "heatPercent": 11,
+    "ammo": 26
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "AK-47",
+    "shot": 5,
+    "heatPercent": 13,
+    "ammo": 25
+   }
+  },
+  {
+   "type": "burst",
+   "data": {
+    "weapon": "AK-47",
+    "heatPercent": 47,
+    "ammo": 15
+   }
+  },
+  {
+   "type": "selected",
+   "data": {
+    "weapon": "Remington 870",
+    "heatPercent": 0,
+    "ammo": 7
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Remington 870",
+    "shot": 1,
+    "heatPercent": 4,
+    "ammo": 6
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Remington 870",
+    "shot": 2,
+    "heatPercent": 8,
+    "ammo": 5
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Remington 870",
+    "shot": 3,
+    "heatPercent": 12,
+    "ammo": 4
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Remington 870",
+    "shot": 4,
+    "heatPercent": 16,
+    "ammo": 3
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Remington 870",
+    "shot": 5,
+    "heatPercent": 19,
+    "ammo": 2
+   }
+  },
+  {
+   "type": "selected",
+   "data": {
+    "weapon": "Browning M2 .50",
+    "heatPercent": 0,
+    "ammo": 100
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Browning M2 .50",
+    "shot": 1,
+    "heatPercent": 6,
+    "ammo": 99
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Browning M2 .50",
+    "shot": 2,
+    "heatPercent": 13,
+    "ammo": 98
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Browning M2 .50",
+    "shot": 3,
+    "heatPercent": 19,
+    "ammo": 97
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Browning M2 .50",
+    "shot": 4,
+    "heatPercent": 25,
+    "ammo": 96
+   }
+  },
+  {
+   "type": "fire",
+   "data": {
+    "weapon": "Browning M2 .50",
+    "shot": 5,
+    "heatPercent": 31,
+    "ammo": 95
+   }
+  },
+  {
+   "type": "burst",
+   "data": {
+    "weapon": "Browning M2 .50",
+    "heatPercent": 100,
+    "ammo": 85
+   }
+  }
+ ],
+ "scenes": {}
+}

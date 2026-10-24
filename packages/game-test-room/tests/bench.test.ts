@@ -232,6 +232,7 @@ describe('module bench', () => {
     expect(probe.detached).toBe(1)
     probe.events.length = 0
     room.setTool('pistol_9mm')
+    room.update(0.4)
     expect(probe.events.filter((e) => e.type === 'tool')).toHaveLength(1)
   })
 
