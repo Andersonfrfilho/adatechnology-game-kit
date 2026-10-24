@@ -48,6 +48,8 @@ export type VoiceManager = {
   request(request: VoiceRequest): VoiceDecision
   /** Ends a voice early (stopped by the host). */
   release(id: number): void
+  /** Sets how long an accepted voice lasts (the engine admits a voice before its random length is drawn). */
+  setLength(id: number, seconds: number): void
   /** Moves time on: cooldowns count down and finished voices leave. Returns the ids that ended. */
   advance(dt: number): number[]
   setGroup(id: string, group: VoiceGroup | undefined): void
@@ -111,6 +113,10 @@ export function createVoiceManager(options: VoiceManagerOptions = {}): VoiceMana
     },
     release(id) {
       voices = voices.filter((voice) => voice.id !== id)
+    },
+    setLength(id, seconds) {
+      const voice = voices.find((entry) => entry.id === id)
+      if (voice) voice.remaining = seconds
     },
     advance(dt) {
       for (const [group, budget] of budgets) budgets.set(group, budget - dt)
