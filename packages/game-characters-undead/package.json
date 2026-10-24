@@ -1,0 +1,49 @@
+{
+  "name": "@adatechnology/game-characters-undead",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Zombie-only layer over @adatechnology/game-characters, as data: the 13 undead types (health, speeds, multipliers, perception, eyes, posture, gait, abilities), 4 infection ages, 4 outfits with protection and loot, the infection timeline and the speed moments. Kept apart so a GTA-style game never imports anything about zombies.",
+  "keywords": [
+    "game",
+    "zombie",
+    "undead",
+    "infection",
+    "content-pack"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-characters-undead"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}
