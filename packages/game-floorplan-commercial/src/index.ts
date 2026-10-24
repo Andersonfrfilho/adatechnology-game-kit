@@ -1,6 +1,6 @@
 import type { FloorplanEngine, SlotLibrary } from '@adatechnology/game-floorplan'
 import { commercialItems } from './catalog'
-import { commercialDecorProfile } from './decor-profiles'
+import { commercialDecorProfile, farmDecorProfile } from './decor-profiles'
 import { legacySeedKeys } from './legacy-seeds'
 import { createCommercialLibraries } from './libraries'
 import enInteriorLocale from './locales/interiors-en.json'
@@ -47,7 +47,7 @@ export function register(engine: FloorplanEngine, options: CommercialOptions = {
   for (const style of commercialStyles) {
     engine.registerStyle({ ...style, swatches: region.swatches[style.id] })
     engine.registerPaletteStyle(style.id, createCommercialPalette(region.facadeColors[style.id]))
-    engine.registerDecorProfile(style.id, commercialDecorProfile)
+    engine.registerDecorProfile(style.id, style.id === 'farm' ? farmDecorProfile : commercialDecorProfile)
   }
   engine.registerRoomColors(commercialRoomColors)
   engine.registerTemplate(market)
@@ -58,5 +58,5 @@ export function register(engine: FloorplanEngine, options: CommercialOptions = {
 
 export { interiorFindsHints, interiorTemplateIds }
 export type { FindsHint } from './interiors'
-export { commercialItems, commercialStyles, commercialRoomColors, commercialDecorProfile, regions, createCommercialLibraries, enLocale, ptBrLocale }
+export { commercialItems, commercialStyles, commercialRoomColors, commercialDecorProfile, farmDecorProfile, regions, createCommercialLibraries, enLocale, ptBrLocale }
 export type { CommercialRegion }

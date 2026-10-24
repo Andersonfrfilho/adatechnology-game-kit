@@ -88,6 +88,13 @@ const PROGRAMS: Record<string, Program> = {
     fixtures: { canteen_table: 2, fridge: 1, forklift: 1, oil_drum: 6, pallet_rack: 3, metal_press: 4, conveyor_line: 1, furnace: 1, office_desk: 1, locker_bank_6: 1 },
     pins: [['Vestiário', 'locker_room', 'locker'], ['Porta-pallets', 'storage', 'pallet_rack'], ['Escritório no mezanino', 'office_mezzanine', 'office_desk'], ['Refeitório', 'canteen', 'canteen_table']],
   },
+  farm: {
+    use: 'agricultural',
+    size: [12, 9], ceiling: 3,
+    rooms: { living_room: [12, 4], kitchen: [7, 5], bedroom: [5, 5] },
+    fixtures: { pantry: 1, wood_stove: 1, farm_table: 1, double_bed: 1, hammock: 1, veranda_post: 2, farm_well: 1, chicken_coop: 1, corral: 1, tractor: 2, barn: 1, silo: 1, machine_shed: 1, scarecrow: 1, hay_bale: 10 },
+    pins: [['Dentro da casa sede', 'kitchen', 'wood_stove'], ['Galpão de máquinas', 'backyard', 'machine_shed'], ['Celeiro', 'backyard', 'barn'], ['Poço', 'garden', 'farm_well'], ['Trator', 'side_right', 'tractor']],
+  },
 }
 
 const SEEDS = Array.from({ length: 25 }, (_, index) => index + 1)

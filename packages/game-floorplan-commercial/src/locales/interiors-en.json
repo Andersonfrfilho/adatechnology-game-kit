@@ -3,6 +3,7 @@
     "church": "Church",
     "drugstore": "Drugstore",
     "emergency_room": "Emergency room",
+    "farm": "Farm",
     "gas_station": "Gas station",
     "gun_shop": "Gun shop",
     "metalworks": "Metalworks",
@@ -28,8 +29,10 @@
     "dispensing": "Dispensing",
     "emergency_room": "Emergency room",
     "evidence_depot": "Evidence depot",
+    "farm_kitchen": "Farmhouse kitchen",
     "icu": "Intensive care",
     "library": "Library",
+    "living_room": "Living room",
     "locker_room": "Locker room",
     "manager_office": "Manager's office",
     "nave": "Nave",
@@ -52,5 +55,17 @@
     "vault": "Armored vault",
     "ward_a": "Ward A",
     "ward_b": "Ward B"
+  },
+  "facadeColors": {
+    "barn_red": "Barn red",
+    "farm_cream": "Farm cream",
+    "ochre": "Ochre",
+    "whitewash": "Whitewash"
+  },
+  "styles": {
+    "farm": "Farm"
+  },
+  "zones": {
+    "za": "ZA – Agricultural"
   }
 }

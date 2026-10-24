@@ -3,6 +3,7 @@
     "church": "Igreja",
     "drugstore": "Farmácia com manipulação",
     "emergency_room": "Pronto-socorro",
+    "farm": "Fazenda",
     "gas_station": "Posto de gasolina",
     "gun_shop": "Loja de armas",
     "metalworks": "Metalúrgica",
@@ -28,8 +29,10 @@
     "dispensing": "Balcão de dispensação",
     "emergency_room": "Pronto-socorro",
     "evidence_depot": "Depósito de evidências",
+    "farm_kitchen": "Cozinha da casa sede",
     "icu": "UTI",
     "library": "Biblioteca",
+    "living_room": "Sala",
     "locker_room": "Vestiário",
     "manager_office": "Escritório do gerente",
     "nave": "Nave",
@@ -52,5 +55,17 @@
     "vault": "Depósito blindado",
     "ward_a": "Ala de internação A",
     "ward_b": "Ala de internação B"
+  },
+  "facadeColors": {
+    "barn_red": "Vermelho de celeiro",
+    "farm_cream": "Creme de fazenda",
+    "ochre": "Ocre",
+    "whitewash": "Caiação"
+  },
+  "styles": {
+    "farm": "Fazenda"
+  },
+  "zones": {
+    "za": "ZA – Agrícola"
   }
 }

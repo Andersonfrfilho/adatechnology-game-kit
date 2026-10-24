@@ -2,6 +2,7 @@ import type { FindsHint, InteriorModule } from './types'
 import { church } from './church'
 import { drugstore } from './drugstore'
 import { emergencyRoom } from './emergency-room'
+import { farm } from './farm'
 import { gasStation } from './gas-station'
 import { gunShop } from './gun-shop'
 import { metalworks } from './metalworks'
@@ -10,7 +11,7 @@ import { school } from './school'
 import { supermarket } from './supermarket'
 
 /** Buildings of the interior pass, in registration order. */
-export const interiorModules: readonly InteriorModule[] = [supermarket, drugstore, gunShop, policeStation, emergencyRoom, school, gasStation, church, metalworks]
+export const interiorModules: readonly InteriorModule[] = [supermarket, drugstore, gunShop, policeStation, emergencyRoom, school, gasStation, church, metalworks, farm]
 
 /** Library of the rooms with no fixtures of their own (a corridor, a hall). */
 export const sharedInteriorLibraries = { no_fixtures: () => [] }
