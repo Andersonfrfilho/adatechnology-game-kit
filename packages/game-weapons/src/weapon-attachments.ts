@@ -4,9 +4,9 @@ import type { Loadout } from './attachment-effects'
 import { canFit, canInstallWith } from './attachments'
 import type { CanFit } from './attachments'
 import { createRng } from './rng'
-import type { FitOptions, FitResult, ReloadRequest, WeaponStance } from './types'
+import type { FitOptions, FitResult, ReloadRequest, WeaponEvent, WeaponState, WeaponStance } from './types'
 import { WeaponCommands } from './weapon-commands'
-import { BREAK_RNG_SALT, EPS } from './weapon-shared'
+import { BREAK_RNG_SALT, EPS, UNDERBARREL_SEED_SALT } from './weapon-shared'
 import type { WeaponStateInit } from './weapon-shared'
 
 const NO_ATTACHMENTS: ReadonlyMap<AttachmentId, AttachmentDef> = new Map()
@@ -25,18 +25,34 @@ export abstract class WeaponAttachments extends WeaponCommands {
   protected readonly catalogue: ReadonlyMap<AttachmentId, AttachmentDef>
   protected readonly isCompatible: WeaponStateInit['isCompatible']
   protected readonly breakRng: () => number
+  protected under: WeaponState | null = null
+  protected underActive = false
+  /** Seconds the weapon has run since the launcher under the barrel was last brought up to its clock (it idles while the rifle is in use). */
+  protected underBehind = 0
+  private readonly makeUnderbarrel: WeaponStateInit['makeUnderbarrel']
+  private readonly seed: number
 
   constructor(init: WeaponStateInit) {
     super(init)
     this.catalogue = init.attachments ?? NO_ATTACHMENTS
     this.isCompatible = init.isCompatible
+    this.makeUnderbarrel = init.makeUnderbarrel
+    this.seed = init.seed
     this.breakRng = createRng((init.seed ^ BREAK_RNG_SALT) >>> 0)
     this.fitted = (init.snapshot?.attachments ?? init.def.fitted ?? []).map(copyOf)
     if (init.snapshot) this.stockState = init.snapshot.stock
     this.fitted = this.fitted.map((part) => (part.shotsLeft === undefined ? this.withDurability(part) : part))
     this.load = this.resolve()
     this.applyLoad()
+    this.syncUnderbarrel(init.snapshot?.underbarrel)
     if (init.snapshot) this.applySnapshot(init.snapshot)
+  }
+
+  get underbarrel(): WeaponState | null {
+    return this.under
+  }
+  get underbarrelActive(): boolean {
+    return this.underActive
   }
 
   get attachments(): readonly FittedAttachment[] {
@@ -70,6 +86,73 @@ export abstract class WeaponAttachments extends WeaponCommands {
     if (this._ammo <= capacity) return
     this.reserve += this._ammo - capacity
     this._ammo = capacity
+  }
+
+  /** Makes the launcher state when a fitted accessory is one (and drops it when none is). */
+  private syncUnderbarrel(snapshot?: WeaponSnapshot): void {
+    const launcher = this.fitted.map((part) => this.catalogue.get(part.id)?.launcher).find((id) => id !== undefined)
+    if (launcher === undefined || !this.makeUnderbarrel) {
+      this.under = null
+      this.underActive = false
+      return
+    }
+    if (this.under?.def.id === launcher) return
+    this.under = this.makeUnderbarrel(launcher, (this.seed ^ UNDERBARREL_SEED_SALT) >>> 0, snapshot)
+    this.underBehind = this.clock
+    this.flushUnderbarrel()
+  }
+
+  /** Brings the idle launcher up to the clock of the weapon (its phases and events keep the same time). */
+  private flushUnderbarrel(): void {
+    if (!this.under) return
+    if (this.underBehind > 0) {
+      this.under.update(this.underBehind)
+      this.under.update(0)
+    }
+    this.underBehind = 0
+  }
+
+  protected advance(seconds: number): void {
+    super.advance(seconds)
+    if (!this.underActive) this.underBehind += Math.max(0, seconds)
+  }
+
+  update(dt: number): void {
+    super.update(dt)
+    if (this.underActive) this.under?.update(dt)
+  }
+
+  drain(): WeaponEvent[] {
+    const own = super.drain()
+    const launcher = this.under?.drain() ?? []
+    return launcher.length === 0 ? own : [...own, ...launcher].sort((a, b) => a.at - b.at)
+  }
+
+  refill(): void {
+    super.refill()
+    this.under?.refill()
+  }
+
+  useUnderbarrel(on: boolean): boolean {
+    if (!this.under || on === this.underActive || this.isWorking() || this._reloading || this.under.reloading) return false
+    const seconds = this.rules.attachments.switchSeconds
+    this.emit({ type: 'underbarrel', on, at: this.clock })
+    const apply = (): void => {
+      if (on) this.flushUnderbarrel()
+      this.underActive = on
+    }
+    if (seconds <= EPS) {
+      apply()
+      return true
+    }
+    this._phase = { id: 'switch', start: this.clock, end: this.clock + seconds }
+    this.schedule({ at: this.clock + seconds, apply })
+    return true
+  }
+
+  /** The weapon is busy fitting, folding or switching: nothing else answers. */
+  protected workGate(): boolean {
+    return this.isWorking()
   }
 
   private applySnapshot(snapshot: WeaponSnapshot): void {
@@ -122,6 +205,7 @@ export abstract class WeaponAttachments extends WeaponCommands {
     return this.startWork('fit', attachment, check.mount, () => {
       this.fitted.push(this.withDurability({ id, mount: check.mount }))
       this.applyLoad()
+      this.syncUnderbarrel()
     })
   }
 
@@ -135,6 +219,7 @@ export abstract class WeaponAttachments extends WeaponCommands {
     return this.startWork('remove', attachment, part.mount, () => {
       this.fitted = this.fitted.filter((candidate) => candidate !== part)
       this.applyLoad()
+      this.syncUnderbarrel()
     })
   }
 
@@ -175,6 +260,7 @@ export abstract class WeaponAttachments extends WeaponCommands {
   }
 
   snapshot(): WeaponSnapshot {
+    const launcher = this.under?.snapshot()
     return {
       id: this.def.id,
       attachments: this.fitted.map(copyOf),
@@ -184,6 +270,7 @@ export abstract class WeaponAttachments extends WeaponCommands {
       mode: this.mode,
       condition: this._condition.id,
       ammoQuality: this._ammoQuality.id,
+      ...(launcher ? { underbarrel: launcher } : {}),
     }
   }
 
@@ -202,6 +289,7 @@ export abstract class WeaponAttachments extends WeaponCommands {
 
   reload(request: ReloadRequest = 'auto'): boolean {
     if (this.isWorking()) return false
+    if (this.underActive && this.under) return this.under.reload(request)
     const base = this.action
     const factor = this.load.secondReloadFactor
     const isFast = factor !== 1 && this.reloadCount % 2 === 1 && base.kind === 'firearm'

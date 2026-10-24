@@ -1879,6 +1879,45 @@
         "source": "lab",
         "reason": "Fogo residual do Laboratório (3,2 m, 20 s); temperatura do molotov do SDK. Reação em cadeia: Laboratório SC.posto: o tanque subterrâneo sobe 2,0 s depois da última bomba (2,3 s para 4,3 s). Enterrado, não leva tiro (sem \"shot\")."
       }
+    },
+    "vog_25": {
+      "sources": {
+        "value": {
+          "lab": "m79"
+        },
+        "source": "design",
+        "reason": "Laboratório: o VOG-25 usa o perfil `m79` (40 mm de fragmentação), sem perfil próprio."
+      },
+      "name": {
+        "value": "VOG-25 40 mm grenade",
+        "source": "design",
+        "reason": "Nome em inglês; o pt-BR fica no locale."
+      },
+      "kind": {
+        "value": "fragmentation",
+        "source": "derived",
+        "reason": "Granada de fragmentação de 40 mm (a Galeria não tem a do GP-25)."
+      },
+      "triggers": {
+        "value": [
+          "impact"
+        ],
+        "source": "derived",
+        "reason": "Dispara no impacto, como a `m79_40mm`."
+      },
+      "world": {
+        "value": {
+          "noise": 450,
+          "destructionLevel": 2
+        },
+        "source": "derived",
+        "reason": "Sem fonte do time para o VOG-25: ruído e nível iguais aos da `m79_40mm`."
+      },
+      "copyOf": {
+        "value": "m79_40mm",
+        "source": "derived",
+        "reason": "Decisão do dono (2026-10-24): raios do `m79_40mm` salvo fonte. Munição real do GP-25: https://en.wikipedia.org/wiki/VOG-25"
+      }
     }
   },
   "archetypes": {
@@ -3879,6 +3918,62 @@
       },
       "source": "derived",
       "reason": "Criação (decisão do dono, 2026-10-24): M134 e metralhadoras montadas em tripé ou veículo. Apoio (`supported`) e números de recuo derivados do bipé do §11 (×0,4)."
+    }
+  },
+  "underbarrelLaunchers": {
+    "m203": {
+      "value": {
+        "id": "m203",
+        "name": "M203 grenade launcher",
+        "projectile": "m79_40mm",
+        "length": 0.38,
+        "barrel": 0.305,
+        "emptyMass": 1.36,
+        "mass": 1.59,
+        "speed": 76,
+        "kick": 1.6,
+        "recoilBase": "shotgun_double_12",
+        "backblast": 0,
+        "reloadFrom": "M79"
+      },
+      "source": "reference",
+      "reason": "M203: 380 mm, cano de 305 mm, 1,36 kg e 76 m/s do manual TM 9-1010-221-10 (https://en.wikipedia.org/wiki/M203_grenade_launcher); munição `m79_40mm` (a mesma do M79, Arsenal §11/§13). Massa carregada = vazia + 0,23 kg da granada; recarga e coice do M79 (derivados)."
+    },
+    "gp_25": {
+      "value": {
+        "id": "gp_25",
+        "name": "GP-25 grenade launcher",
+        "projectile": "vog_25",
+        "length": 0.323,
+        "barrel": 0.26,
+        "emptyMass": 1.5,
+        "mass": 1.73,
+        "speed": 76,
+        "kick": 1.6,
+        "recoilBase": "shotgun_double_12",
+        "backblast": 0,
+        "reloadFrom": "M79"
+      },
+      "source": "reference",
+      "reason": "GP-25: 323 mm, 1,5 kg e 76 m/s (https://en.wikipedia.org/wiki/GP-25); granada `vog_25`. Cano de 260 mm derivado (a razão cano/comprimento do M203); massa carregada = vazia + 0,23 kg; recarga e coice do M79 (derivados)."
+    },
+    "ag36": {
+      "value": {
+        "id": "ag36",
+        "name": "AG36 grenade launcher",
+        "projectile": "m79_40mm",
+        "length": 0.35,
+        "barrel": 0.28,
+        "emptyMass": 1.5,
+        "mass": 1.73,
+        "speed": 76,
+        "kick": 1.6,
+        "recoilBase": "shotgun_double_12",
+        "backblast": 0,
+        "reloadFrom": "M79"
+      },
+      "source": "reference",
+      "reason": "AG36: cerca de 350 mm, cano de 280 mm e 1,5 kg (https://en.wikipedia.org/wiki/AG36); munição `m79_40mm` (decisão do dono). Velocidade de 76 m/s, massa carregada (+0,23 kg), recarga e coice do M79 (derivados)."
     }
   }
 }

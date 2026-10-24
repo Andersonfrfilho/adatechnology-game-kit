@@ -108,6 +108,7 @@ export type ReloadFamily =
   | 'revolver'
   | 'break'
   | 'rocket'
+  | 'underbarrel'
   | 'flame'
 
 /** Seconds of each phase of handling a weapon. */
@@ -185,7 +186,7 @@ export type WeaponAction =
       magazine: number
       reload: number
       timings?: WeaponTimings
-      family: 'rocket' | 'break'
+      family: 'rocket' | 'break' | 'underbarrel'
       disposable?: boolean
       speed: number
       /** Distance in metres below which the projectile hits without exploding. */
@@ -358,6 +359,12 @@ export interface WeaponState {
   /** Folds or slides the stock in or opens it (phase `stock`); false when the weapon has no such stock or it is already there. */
   setStock(state: StockState): boolean
   setStance(stance: WeaponStance): void
+  /** The launcher under the barrel (a second state with its own ammunition), or null when no launcher is fitted. */
+  readonly underbarrel: WeaponState | null
+  /** True while the trigger and the reload go to the launcher. */
+  readonly underbarrelActive: boolean
+  /** Changes between the weapon and the launcher under its barrel (phase `switch`, `rules.attachments.switchSeconds`); false when there is none, it is already so, or the weapon is busy. */
+  useUnderbarrel(on: boolean): boolean
   /** Enough to rebuild the weapon as it is (`arsenal.restore`). */
   snapshot(): WeaponSnapshot
   /** What happened since the last call (for animation and sound), in order of time; empties the list. */

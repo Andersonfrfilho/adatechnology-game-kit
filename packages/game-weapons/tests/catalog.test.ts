@@ -14,7 +14,7 @@ describe('shipped catalog', () => {
 
   it('has the calibres, explosives and weapons of the team deliveries', () => {
     expect(CALIBERS).toHaveLength(28)
-    expect(EXPLOSIVES).toHaveLength(17)
+    expect(EXPLOSIVES).toHaveLength(18)
     expect(WEAPONS.filter((def) => def.sources?.includes('gallery'))).toHaveLength(79)
     expect(ARCHETYPE_IDS).toHaveLength(42)
   })
@@ -106,10 +106,10 @@ describe('explosives', () => {
     for (const explosive of EXPLOSIVES) if (!explosive.triggers?.includes('explosion')) expect(explosive.chain, explosive.id).toBeUndefined()
   })
 
-  it('give every launcher the backblast of the Arsenal §13 (5 m) except the M79, and every explosive with a timer a fuse', () => {
+  it('give every launcher the backblast of the Arsenal §13 (5 m) except the M79 and the ones under a barrel, and every explosive with a timer a fuse', () => {
     for (const def of WEAPONS) {
       if (def.action.kind !== 'launcher') continue
-      expect(def.action.backblast, def.id).toBe(def.id === 'm79' ? 0 : 5)
+      expect(def.action.backblast, def.id).toBe(def.id === 'm79' || def.tags?.includes('underbarrel') ? 0 : 5)
       expect(def.action.minArmDistance, def.id).toBe(10)
     }
     for (const explosive of EXPLOSIVES) if (explosive.triggers?.includes('timer')) expect(nominalFuse(explosive), explosive.id).toBeGreaterThan(0)

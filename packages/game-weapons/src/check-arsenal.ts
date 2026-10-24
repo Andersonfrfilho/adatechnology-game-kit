@@ -59,8 +59,9 @@ const checkExplosiveNumbers = (explosive: ExplosiveDef): string[] => {
 const STATS: ReadonlySet<string> = new Set(['noise', 'spread', 'hipSpreadExcess', 'recoilVertical', 'recoilHorizontal', 'range', 'muzzleSpeed', 'mass', 'capacity', 'reload', 'reloadEmpty', 'draw', 'aim', 'faultChance', 'heatPerShot'])
 const INSTALLS: ReadonlySet<string> = new Set(['field', 'tool', 'bench'])
 
-const checkAttachment = (attachment: AttachmentDef): string[] => {
+const checkAttachment = (attachment: AttachmentDef, weapons: ArsenalParts['weapons']): string[] => {
   const problems: string[] = []
+  if (attachment.launcher !== undefined && weapons.get(attachment.launcher)?.action.kind !== 'launcher') problems.push(`attachment "${attachment.id}" names "${attachment.launcher}" as its launcher, which is not a launcher weapon`)
   const label = `attachment "${attachment.id}"`
   if (!INSTALLS.has(attachment.install)) problems.push(`${label} installs "${attachment.install}"`)
   if (attachment.mounts.length === 0) problems.push(`${label} has no mount`)
@@ -93,7 +94,7 @@ const checkRuleDefaults = (rules: ArsenalParts['rules']): string[] => {
 /** Every problem found in an arsenal, so a game sees them all at once instead of one per run. Empty when it is consistent. */
 export const checkArsenal = ({ weapons, calibers, explosives, attachments, rules }: ArsenalParts): string[] => [
   ...[...weapons.values()].flatMap((def) => [...checkFirearm(def, calibers), ...checkTimings(def), ...checkExplosiveReference(def, explosives), ...checkFitted(def, attachments)]),
-  ...[...(attachments?.values() ?? [])].flatMap(checkAttachment),
+  ...[...(attachments?.values() ?? [])].flatMap((attachment) => checkAttachment(attachment, weapons)),
   ...[...explosives.values()].flatMap(checkExplosiveNumbers),
   ...checkRuleDefaults(rules),
 ]

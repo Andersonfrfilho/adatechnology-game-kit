@@ -48,6 +48,12 @@ const energyOf = (def: WeaponDef, calibers: ReadonlyMap<CaliberId, CaliberDef>, 
   return action.kind === 'throwable' || action.kind === 'melee' ? action.energy : 0
 }
 
+/** A shipped grenade launcher accessory goes when its launcher was removed or filtered out (one the game added itself is left for `checkArsenal` to report). */
+const dropOrphanLaunchers = (attachments: Map<string, AttachmentDef>, weapons: ReadonlyMap<WeaponId, WeaponDef>, added: readonly AttachmentDef[] | undefined): void => {
+  const addedIds = new Set((added ?? []).map((attachment) => attachment.id))
+  for (const [id, attachment] of attachments) if (attachment.launcher !== undefined && !addedIds.has(id) && !weapons.has(attachment.launcher)) attachments.delete(id)
+}
+
 /**
  * Create an arsenal. Order: the shipped entries, then `calibers`/`weapons`/`explosives` (added or replaced by id), then `patch`, then `remove`, then `include`;
  * a throwable that names an explosive follows that explosive. Every inconsistency found is reported in one error.
@@ -67,6 +73,7 @@ export const createArsenal = (options: ArsenalOptions = {}): Arsenal => {
   removeIds(attachments, options.remove?.attachments)
   removeIds(weapons, options.remove?.weapons)
   if (options.include) for (const [id, def] of weapons) if (!options.include(def)) weapons.delete(id)
+  dropOrphanLaunchers(attachments, weapons, options.attachments)
 
   const rules = deepMerge(DEFAULT_RULES, options.rules)
   const problems = [
@@ -89,7 +96,7 @@ export const createArsenal = (options: ArsenalOptions = {}): Arsenal => {
     counter += 1
     const seed = opts.seed ?? (baseSeed + Math.imul(counter, 0x9e3779b1)) >>> 0
     const explosive = explosiveOf(def, explosives)
-    return new WeaponRuntime({ def, caliber, seed, reserve: opts.reserve, rules, explosive, condition: opts.condition, ammoQuality: opts.ammoQuality, attachments, isCompatible: options.isCompatible, snapshot: opts.snapshot })
+    return new WeaponRuntime({ def, caliber, seed, reserve: opts.reserve, rules, explosive, condition: opts.condition, ammoQuality: opts.ammoQuality, attachments, isCompatible: options.isCompatible, snapshot: opts.snapshot, makeUnderbarrel: (launcherId, launcherSeed, launcherSnapshot) => create(launcherId, { seed: launcherSeed, snapshot: launcherSnapshot }) })
   }
 
   return {

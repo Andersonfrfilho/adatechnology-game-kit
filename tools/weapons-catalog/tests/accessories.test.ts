@@ -158,3 +158,22 @@ describe('stocks', () => {
     expect(firearms.find((firearm) => firearm.id === 'mac_10')?.stock?.kind).toBe('retract')
   })
 })
+
+describe('launchers under a barrel', () => {
+  it('has the measures of the manuals for the M203, a URL for every reference and the explosive of each', () => {
+    const launchers = JSON.parse(readFileSync(OUTPUT_PATHS.launchers, 'utf8')) as { id: string; mass: number; tags?: string[]; dimensions: { length: number; barrel: number; emptyMass: number }; action: { projectile: string; speed: number; family: string } }[]
+    const explosives = JSON.parse(readFileSync(OUTPUT_PATHS.explosives, 'utf8')) as { id: string; sources: string[] }[]
+    const m203 = launchers.find((launcher) => launcher.id === 'm203')
+    expect(m203?.dimensions).toEqual({ length: 0.38, barrel: 0.305, emptyMass: 1.36 })
+    expect(m203?.action).toMatchObject({ projectile: 'm79_40mm', speed: 76, family: 'underbarrel' })
+    for (const [id, decision] of Object.entries(decisions.underbarrelLaunchers)) {
+      expect(decision.reason, id).toMatch(/https?:\/\//)
+      expect(launchers.find((launcher) => launcher.id === id)?.tags, id).toEqual(['underbarrel'])
+      expect(explosives.some((explosive) => explosive.id === decision.value.projectile), id).toBe(true)
+    }
+    expect(decisions.explosives.vog_25?.copyOf?.value).toBe('m79_40mm')
+    expect(decisions.explosives.vog_25?.copyOf?.reason).toMatch(/https?:\/\//)
+    const attached = attachments as unknown as { id: string; launcher?: string }[]
+    for (const part of attached.filter((candidate) => candidate.launcher !== undefined)) expect(launchers.some((launcher) => launcher.id === part.launcher), part.id).toBe(true)
+  })
+})

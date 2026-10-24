@@ -1214,6 +1214,39 @@
 {"step":"reload:full:refused","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":""},
 {"step":"reload:one_by_one:refused","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":""}
 ]},
+{"id":"m203","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":3,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":3,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"use","status":"ok","shots":0,"rounds":1,"uses":"throw×1","ammo":0,"reserve":3,"heat":27.4,"events":"shot:single:0/1@1"},
+{"step":"empty","status":"empty","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":3,"heat":20.4,"events":"empty@4"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":2,"heat":0,"events":"reload:start:tactical@7 stage:breech_open@7 stage:round_in@7.61 stage:breech_close@8.45 reload:end:tactical@9"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":1,"heat":0,"events":"reload:start:tactical@67.7 stage:breech_open@67.7 stage:round_in@68.31 stage:breech_close@69.15 reload:end:tactical@69.7"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":0,"heat":0,"events":"reload:start:tactical@128.4 stage:breech_open@128.4 stage:round_in@129.01 stage:breech_close@129.85 reload:end:tactical@130.4"},
+{"step":"fault","status":"ok","shots":0,"rounds":1,"uses":"throw×1","ammo":0,"reserve":3,"heat":27.4,"events":"shot:single:0/1@1"},
+{"step":"clear:refused","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":3,"heat":22.7,"events":"","status":"none"}
+]},
+{"id":"gp_25","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":3,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":3,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"use","status":"ok","shots":0,"rounds":1,"uses":"throw×1","ammo":0,"reserve":3,"heat":27.4,"events":"shot:single:0/1@1"},
+{"step":"empty","status":"empty","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":3,"heat":20.4,"events":"empty@4"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":2,"heat":0,"events":"reload:start:tactical@7 stage:breech_open@7 stage:round_in@7.61 stage:breech_close@8.45 reload:end:tactical@9"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":1,"heat":0,"events":"reload:start:tactical@67.7 stage:breech_open@67.7 stage:round_in@68.31 stage:breech_close@69.15 reload:end:tactical@69.7"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":0,"heat":0,"events":"reload:start:tactical@128.4 stage:breech_open@128.4 stage:round_in@129.01 stage:breech_close@129.85 reload:end:tactical@130.4"},
+{"step":"fault","status":"ok","shots":0,"rounds":1,"uses":"throw×1","ammo":0,"reserve":3,"heat":27.4,"events":"shot:single:0/1@1"},
+{"step":"clear:refused","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":3,"heat":22.7,"events":"","status":"none"}
+]},
+{"id":"ag36","steps":[
+{"step":"draw","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":3,"heat":0,"events":"draw:start@0 draw:end@0.35"},
+{"step":"safety","status":"safe","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":3,"heat":0,"events":"safety:on@1 safety:off@1"},
+{"step":"use","status":"ok","shots":0,"rounds":1,"uses":"throw×1","ammo":0,"reserve":3,"heat":27.4,"events":"shot:single:0/1@1"},
+{"step":"empty","status":"empty","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":3,"heat":20.4,"events":"empty@4"},
+{"step":"reload:auto:started","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":2,"heat":0,"events":"reload:start:tactical@7 stage:breech_open@7 stage:round_in@7.61 stage:breech_close@8.45 reload:end:tactical@9"},
+{"step":"reload:full:started","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":1,"heat":0,"events":"reload:start:tactical@67.7 stage:breech_open@67.7 stage:round_in@68.31 stage:breech_close@69.15 reload:end:tactical@69.7"},
+{"step":"reload:one_by_one:started","shots":0,"rounds":0,"uses":"","ammo":1,"reserve":0,"heat":0,"events":"reload:start:tactical@128.4 stage:breech_open@128.4 stage:round_in@129.01 stage:breech_close@129.85 reload:end:tactical@130.4"},
+{"step":"fault","status":"ok","shots":0,"rounds":1,"uses":"throw×1","ammo":0,"reserve":3,"heat":27.4,"events":"shot:single:0/1@1"},
+{"step":"clear:refused","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":3,"heat":22.7,"events":"","status":"none"}
+]},
 {"id":"flashbang","steps":[
 {"step":"draw","shots":0,"rounds":0,"uses":"","ammo":3,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
 {"step":"use","status":"ok","shots":0,"rounds":0,"uses":"throw×1","ammo":2,"reserve":0,"heat":0,"events":"cook:start@1 cook:throw@1"},

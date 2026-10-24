@@ -215,5 +215,122 @@
       "sdk",
       "derived"
     ]
+  },
+  {
+    "id": "m203",
+    "name": "M203 grenade launcher",
+    "category": "launcher",
+    "action": {
+      "kind": "launcher",
+      "projectile": "m79_40mm",
+      "magazine": 1,
+      "reload": 2,
+      "timings": {
+        "draw": 0.35,
+        "reload": 2,
+        "clear": 1.2
+      },
+      "family": "underbarrel",
+      "speed": 76,
+      "minArmDistance": 10,
+      "backblast": 0,
+      "recoil": [
+        4.5,
+        1.2
+      ]
+    },
+    "mass": 1.59,
+    "dimensions": {
+      "length": 0.38,
+      "barrel": 0.305,
+      "emptyMass": 1.36
+    },
+    "archetype": "shotgun_double_12",
+    "tags": [
+      "underbarrel"
+    ],
+    "sources": [
+      "arsenal",
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "gp_25",
+    "name": "GP-25 grenade launcher",
+    "category": "launcher",
+    "action": {
+      "kind": "launcher",
+      "projectile": "vog_25",
+      "magazine": 1,
+      "reload": 2,
+      "timings": {
+        "draw": 0.35,
+        "reload": 2,
+        "clear": 1.2
+      },
+      "family": "underbarrel",
+      "speed": 76,
+      "minArmDistance": 10,
+      "backblast": 0,
+      "recoil": [
+        4.5,
+        1.2
+      ]
+    },
+    "mass": 1.73,
+    "dimensions": {
+      "length": 0.323,
+      "barrel": 0.26,
+      "emptyMass": 1.5
+    },
+    "archetype": "shotgun_double_12",
+    "tags": [
+      "underbarrel"
+    ],
+    "sources": [
+      "arsenal",
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "ag36",
+    "name": "AG36 grenade launcher",
+    "category": "launcher",
+    "action": {
+      "kind": "launcher",
+      "projectile": "m79_40mm",
+      "magazine": 1,
+      "reload": 2,
+      "timings": {
+        "draw": 0.35,
+        "reload": 2,
+        "clear": 1.2
+      },
+      "family": "underbarrel",
+      "speed": 76,
+      "minArmDistance": 10,
+      "backblast": 0,
+      "recoil": [
+        4.5,
+        1.2
+      ]
+    },
+    "mass": 1.73,
+    "dimensions": {
+      "length": 0.35,
+      "barrel": 0.28,
+      "emptyMass": 1.5
+    },
+    "archetype": "shotgun_double_12",
+    "tags": [
+      "underbarrel"
+    ],
+    "sources": [
+      "arsenal",
+      "reference",
+      "derived"
+    ]
   }
 ]

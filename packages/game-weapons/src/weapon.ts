@@ -28,8 +28,10 @@ export class WeaponRuntime extends WeaponFirearm implements WeaponState {
     const dir = normalize(direction)
     let res: TriggerResult
     const a = this.action
-    const gate = this.gateStatus(start)
+    const launcher = this.underActive ? this.under : null
+    const gate = launcher ? this.launcherGate(start) : this.gateStatus(start)
     if (gate) res = gate
+    else if (launcher) res = launcher.trigger(origin, dir, d, held, source)
     else switch (a.kind) {
       case 'firearm':
         res = this.fireFirearm(a, origin, dir, start, end, held, source)
@@ -62,6 +64,12 @@ export class WeaponRuntime extends WeaponFirearm implements WeaponState {
     this.advance(Math.max(0, end - this.clock))
     this.settle(this.clock)
     return res
+  }
+
+  /** The launcher under the barrel answers for itself; the weapon only says when it is busy putting it in hand. */
+  protected launcherGate(start: number): TriggerResult | null {
+    if (start < this.drawEnd - EPS) return result('drawing')
+    return this.workGate() ? result('busy') : null
   }
 
   /** Why the trigger does nothing before the action even looks at it. */

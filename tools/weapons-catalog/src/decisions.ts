@@ -120,7 +120,25 @@ export type AttachmentChoice = Readonly<Record<string, unknown>> & {
   readonly arsenal?: string
 }
 
+export type UnderbarrelLauncherDecision = {
+  readonly id: string
+  readonly name: string
+  readonly projectile: string
+  readonly length: number
+  readonly barrel: number
+  readonly emptyMass: number
+  readonly mass: number
+  readonly speed: number
+  readonly kick: number
+  readonly recoilBase: string
+  readonly backblast: number
+  /** The Arsenal row whose reload time the launcher takes (the M79: both load a 40 mm grenade by hand). */
+  readonly reloadFrom: string
+}
+
 export type Decisions = {
+  /** Grenade launchers that go under a barrel, by id. */
+  readonly underbarrelLaunchers: Readonly<Record<string, Decision<UnderbarrelLauncherDecision>>>
   /** Thread of the muzzle by weapon id: what a suppressor or a brake screws on. */
   readonly threads: Readonly<Record<string, Decision<{ readonly interface: string }>>>
   /** Places the Gallery options do not show, by weapon id (§06 notes, §17 slots, grenade launcher mounts). */
