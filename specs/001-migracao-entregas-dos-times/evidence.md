@@ -2313,3 +2313,37 @@ Porte literal do Casa3DSDK (`construir`, `planejaLOD`) e do AndaresSDK da págin
 3. O AndaresSDK fica em `-three` como pediu o brief; o inventário 4.4/5.5 sugeria função pura em `game-floorplan` ou `game-navigation`. Qual?
 4. Nome da área de teste: tasks.md diz `buildings-test-area`, a regra diz `examples/floorplan-test-area`.
 5. O `AdaptadorInterativos` entra em algum pacote ou fica no jogo?
+
+## T2.6
+
+Módulo de teste das casas, exemplo e goldens contra o VC3 (T2.6a-c). Branch `work/t2-4`, commits `fix(floorplan-three)` aa2bc27, `feat(contracts,test-room)` 98ae206, T2.6a 4c38dd2, T2.6b a451571, T2.6c b13c881.
+
+| Etapa | O que entrou |
+|---|---|
+| (fix) | `assembleStructure.spec` passa `contains`, `explodes`, `thickness`, `fill` e `tags` das peças para a spec: sem isso a caixa d'água e o botijão não chegavam ao mundo (a caixa nunca vazava). Teste novo em `destruction.test.ts` |
+| (contratos) | `ModuleHost.addBlocker(fn)` e `ModuleHost.onClear(fn)` (opcionais), implementados em `game-test-room` (o jogador consulta os bloqueios com o raio dele; `clear()` avisa os módulos). Testes em `module-host.test.ts` |
+| a | `createFloorplanTestModule` (`packages/game-floorplan-three/src/test-area/`): bancada com pacote (residencial, comercial, rural, pós-apocalíptico), tipologia, estado, semente, qualidade, LOD (manual ou por orçamento), 1 a 5 casas, orçamento, andar, golpe (rajada 9 mm, rajada 7,62, marreta, C4, RPG) e as ações construir, entrar, subir, descer, porta, golpe, restaurar, limpar; camadas telhado, lote e noite; 12 métricas. Cenários: os 6 do time (mesmos ids e checagens) e `floorplan_typologies`. `examples/floorplan-test-area` (build, test em pt-BR e en com Playwright, `?arena=` na sala) |
+| b | `examples/interactables-test-area` carrega o módulo (relatório `floorplan`, checagem de 5 espécimes e 7 cenários no `test.mjs`) |
+| c | `site/catalog.mjs` (entrada e família de plantas), `site/Dockerfile`, miniatura `site/thumbs/floorplan-test-area.jpg`, job `examples` do CI. Golden `house-area.json` movido para `packages/game-floorplan-three/tests/fixtures/team-golden/vc3-house-area.json` e comparado em `tests/team-golden-house-area.test.ts` (ids, número de checagens e booleanos, eventos fracture, collapse, hole, leak e explode) |
+
+**Decisões e desvios:**
+- As casas são do módulo, não itens da sala: ele as constrói com `house.destruction.activate()` no mundo da sala e a sala só as limpa (`onClear`). Os espécimes dos cenários são itens da sala, com malha de caixas nomeada pela peça como a página do time.
+- Sem partículas próprias: poeira de rombo e de desabamento saem do desenhista de destruição da sala (`game-vfx`); o módulo não toca efeitos.
+- `?arena=` (14 a 200) na página da sala: a arena padrão (14 m) é pequena para uma casa de 12 m e uma fileira.
+- Os andares de cima são alcançados por teletransporte do olho (`up`/`down`); o jogador da sala não tem altura de piso e as escadas não são andadas.
+- O grupo pós-apocalíptico lista só `triage_tent`; os estados `fortified` e `abandoned` valem para as outras tipologias.
+- `house_two_pillars` usa o pórtico com a casa `townhouse` (a `single_storey_a` segura a laje nas divisórias) e, na sala, derruba os pilares seguintes até a laje cair: com o desenhista ligado, dois pilares deixam os outros a 0,95 de tensão e a laje a 0,45 e nada cai. As checagens são as do time; só o roteiro de golpes foi estendido.
+- Contagens de ticks de dano diferem do mundo do time; só os eventos de sentido e as checagens são comparados.
+- Pós-fix, a tank d'água vaza 500 L para 496 L em 40 s com um tiro de 600 J (calibre 9).
+
+**Gate:**
+
+| Etapa | build | typecheck | testes do pacote | lint | browser |
+|---|---|---|---|---|---|
+| todas | ok | ok | 138 (floorplan-three) | ok | `floorplan-test-area/test.mjs` 22 PASS (pt-BR e en), `interactables-test-area/test.mjs` 22 PASS |
+
+**Perguntas para o dono:**
+1. Dois pilares do pórtico: o time derruba a laje; na sala (com o desenhista de destruição ligado) nenhum par de pilares a derruba e só o solver puro a derruba. Ajustamos a carga ou a capacidade dos pilares em `game-destruction`, ou o roteiro estendido (mais pilares) vale?
+2. A `single_storey_a` segura a laje nas divisórias (o pórtico do time não tem divisórias portantes): a divisória portante é a regra certa do kit?
+3. Os andares de cima devem ser andados (altura de piso no jogador da sala) ou o teletransporte basta?
+4. Nome da área (pergunta 4 da T2.4): usado `floorplan-test-area`, como manda a regra.

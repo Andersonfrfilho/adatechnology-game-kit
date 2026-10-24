@@ -195,6 +195,7 @@ Módulo que já segue `game-contracts` (`room.loadModule(HouseArea.module({local
 - 6 cenários com expectativas: `house_one_pillar` (um pilar de canto: laje fica), `house_two_pillars` (dois pilares: laje e telhado caem), `house_partition` (parede de vedação cai sozinha, laje fica),
   `house_window_glass` (vidro: primeiro tiro fura, quebra em N tiros, paredes inteiras), `house_tank_leak` (caixa furada vaza: L antes e depois), `house_gas_explodes` (botijão explode e danifica as peças ao redor).
 - Esses cenários são os testes goldens naturais do porte (R2 da spec).
+- **Entrou (T2.6):** `packages/game-floorplan-three/src/test-area/{module,scenarios,specimens,text,types}.ts`; o golden gravado da página está em `packages/game-floorplan-three/tests/fixtures/team-golden/vc3-house-area.json`. Diferença conhecida: o pórtico do time derruba a laje com dois pilares; na sala o nosso solver pede mais pilares (pergunta 1 do evidence T2.6).
 
 ### 1.4b Destruição de parede: ARS, OFI e AC no SDK (T2.3a–b, 2026-10-24)
 
@@ -443,7 +444,7 @@ Legenda de "melhor": **T** = time (ZombiAdA), **S** = SDK, **=** equivalentes, *
 | 41 | Multi-andar andável | `AndaresSDK` (ML L7372–7560): grade de 10 cm por andar, escada, retorno em U | **nenhum** | **T** | sem isso o jogador não sobe a escada de um sobrado | **Portar** (decidir pacote, ver 4.4) |
 | 42 | Colisão e interação na casa | Casa3D `colideDe`, `alvoDe`, `alternaPorta` (L41807–41883) | `game-interactables` cuida dos objetos, não de paredes/portas da planta | **T** | porta fechada para o jogador (R70), pegadas orientadas, E abre | **Portar** |
 | 43 | LOD por orçamento de draw calls | `planejaLOD` (L42670) | **nenhum** | **T** | distribui 3 níveis entre várias casas por distância | **Portar** |
-| 44 | Área de teste de casas | `HouseArea` (AC L3789–3882), 5 itens, 6 cenários | `game-test-room` `frame()`; `examples/*-test-area` sem casa | **T** | já é um `TestableModule`; os cenários são os goldens de dano estrutural | **Portar** (vira `examples/floorplan-test-area`) |
+| 44 | Área de teste de casas | `HouseArea` (AC L3789–3882), 5 itens, 6 cenários | `game-test-room` `frame()`; `examples/*-test-area` sem casa | **T** | já é um `TestableModule`; os cenários são os goldens de dano estrutural | **Portado (T2.6, 2026-10-24)**: `createFloorplanTestModule` em `packages/game-floorplan-three/src/test-area/` (módulo, 5 espécimes, 6 cenários com os ids e as checagens do time, mais `floorplan_typologies`), carregado por `examples/floorplan-test-area` e por `examples/interactables-test-area`; paridade com o golden do VC3 em `tests/team-golden-house-area.test.ts` |
 | 45 | Zoneamento e casas do Jardim das Palmeiras | ML L71900+ | zonas `zr_ap` etc. | **S** (regras) / **T** (conteúdo de lote) | | manter SDK; lotes e posições como conteúdo ZombiAdA |
 | 46 | Duplicação da galeria no jogo | JA L53469, ML L66711 (gerado por `porta_galeria.py`) | — | — | 3 cópias do mesmo código | resolvido quando a galeria sair do SDK (R4) |
 | 47 | Checklist do Mapa e Revisão da Casa A | CHK, RC | `game-devtools` | **n/a** | ferramentas de QA pessoais do dono, dados 100% ZombiAdA | **Não migrar**; opcional: checklist genérico no devtools |
