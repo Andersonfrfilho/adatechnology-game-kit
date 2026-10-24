@@ -1118,5 +1118,15 @@
       0.7
     ],
     "scale": 0.1
+  },
+  {
+    "id": "flint_striker",
+    "teamId": "pederneira",
+    "teamBox": [
+      1.1,
+      0.202,
+      0.152
+    ],
+    "scale": 0.1
   }
 ]
