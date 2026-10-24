@@ -1,5 +1,13 @@
 # @adatechnology/game-weapons-three
 
+## 0.7.2
+
+### Patch Changes
+
+- Updated dependencies [e29f38d]
+  - @adatechnology/game-props3d@0.3.0
+  - @adatechnology/game-interactables-three@0.1.7
+
 ## 0.7.1
 
 ### Patch Changes

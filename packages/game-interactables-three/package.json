@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-interactables-three",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "license": "MIT",
   "description": "three.js adapter for @adatechnology/game-interactables: merged-by-material mesh api with animated parts, pose sync, cloth sway with matching shadows, pooled effects, screens, mirrors and cords.",
   "keywords": [
