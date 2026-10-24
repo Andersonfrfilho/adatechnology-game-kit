@@ -215,6 +215,22 @@ Estado do porte do **comportamento** (o motor segue em joules, A2; a tabela de p
 
 Falta: abrir a abertura na malha da parede e as fiadas de tijolo instanciadas (T2.4c), `wallDetail` panels/units e `buildWallSpecimen` (T2.2d).
 
+### 1.1b Estrutura das casas no SDK (T2.2c–e, 2026-10-24)
+
+Pacote novo `game-floorplan-structure` (`result.structure`, `result.roof`, `result.construction`, `result.waterTank`, `result.structureExtras`). Golden `coarse` igual à página do time em 900 plantas dos 12 modelos.
+
+| Peça do time | Fonte | Onde entrou | Teste |
+|---|---|---|---|
+| `construcaoPadrao`, `JUNTA_SIS`, `MATERIAIS`/`DENSIDADE`, `TELHA_MAT`/`TELHA_JUNTA` | VC3 L10311–10358 | `game-floorplan-structure/src/{registry,presets,density,construction}.ts` | `team-golden-vc3-structure.test.ts` |
+| `montarEstrutura` (fundação, paredes, pratos, pilares, alpendre, sacada, degraus, escada, telhado, forro) | VC3 L10360–10632 | `src/structure/*.ts` | idem + `structure.test.ts` (toda planta tem estrutura) |
+| `montarEstruturaLona`, `estruturaExtras` (caixa d'água, chaminé, poço) | VC3 L10633–10701 | `src/structure/{canvas,tank-parts,extras}.ts` | `structure.test.ts` |
+| `montarCaixaDagua` | VC3 L9279 | `src/water-tank.ts` | golden (`caixaDagua`) |
+| `ROLE_DES`, `cargasProjeto`, `specDe` | VC3 L42681–42729 | `src/{loads,to-destructible-spec}.ts` | golden (`specDe` coarse e `vedacao`) |
+| Cenários estruturais do AC (pilar de canto, dois pilares) e a ênfase do dono (varanda, madeira, tronco, pórtico) | AC L3833–3868, design §8 | `tests/load-path.test.ts` no mundo de `game-destruction` | `load-path.test.ts` |
+| Detalhe de parede, corpo de prova, instalações | | T2.2d–e (mesma fase) | |
+
+Falta para os modelos rurais (T2.2f) registrarem a própria construção e extras com `registerConstruction`.
+
 ### 1.5 Revisão da Casa A (RC)
 
 Página de checklist pessoal (localStorage, exportar/importar JSON) sobre 72 itens R01–R72: **57 corrigidos, 3 aguardando decisão, 11 prontos no SDK, 1 aberto** (L2 do cabeçalho; só 8 itens aparecem no texto extraído).

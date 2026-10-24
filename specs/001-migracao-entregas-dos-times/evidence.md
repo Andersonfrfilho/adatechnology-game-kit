@@ -857,3 +857,43 @@ Regras R do VC3 portadas: `playerRadius` 0,24 (grade de 10 cm que descarta célu
 | `game-floorplan` / `-residential` / `-commercial` / `-post-apocalyptic` (Node 24 e 22) | 17 / 16 / 9 / 106 passaram nos dois |
 
 Modelo da execução: `sonnet`.
+
+## T2.2c–e — `game-floorplan-structure`: estrutura, detalhe de parede, instalações
+
+Modelo: `sonnet`. Branch `work/spec001-t2-c` (sobre `feat/spec-001-fase-2`, depois de T2.2a–b e T2.3a–b), grupo A+B da Fase 2: estrutura das casas e o caminho de carga (desenho `design/T2.1-casas-estrutura-e-destruicao.md` §1, §2, §3, §8, §9).
+
+### T2.2c — pacote novo, sistemas construtivos, `buildStructure`, `toDestructibleSpec`, telhado, visor 2D
+
+**Fidelidade com a página do time (golden `coarse`):** 12 modelos x 25 sementes x 3 estados = **900 de 900 plantas iguais** em todas as listas gravadas: peças (`pecas`), apoios, partes e juntas do `specDe` coarse e `vedacao`
+(capacidades incluídas, a 3 casas), e em `niveis`/`elevacao`, `construcao`, `telhado` e `caixaDagua`. O teste traduz o SDK de volta para o vocabulário do time (`tests/team-vocabulary.ts`, ids e chaves em português) e confere os hashes gravados
+(`tests/fixtures/team-golden/vc3-structure.json`, movido de `specs/.../goldens/`). Os 5 modelos rurais ficam de fora (T2.2f) e o teste lista exatamente eles como ausentes.
+
+**O que entrou:**
+
+| Peça | Onde |
+|---|---|
+| `JUNTA_SIS`, `construcaoPadrao`, `TELHA_MAT`/`TELHA_JUNTA` | `registry.ts` (`registerConstructionSystem`, `registerRoofCovering`), `presets.ts` (`masonryConstruction` e os dados dos 5 modelos rurais como funções: `woodFrameConstruction`, `chaletConstruction`, `logCabinConstruction`, `shackConstruction`, `campConstruction`), `construction.ts` (`options.construction`, `TemplateDef.construction`) |
+| `montarEstrutura` (L10360–10632) | `structure/*.ts` (fundação, paredes, pratos e pilares, varanda/alpendre, laje do andar, sacadas, degraus, escadas, telhado, barrotes do forro) com ids em inglês (`MIGRATION.md`) |
+| `montarEstruturaLona` | `structure/canvas.ts` |
+| `estruturaExtras` (caixa d'água, chaminé, poço) | `structure/tank-parts.ts`, `structure/extras.ts`; a caixa d'água do plano (`montarCaixaDagua`, L9279) em `water-tank.ts` (veio na T2.2c porque a estrutura a carrega; golden igual) |
+| `specDe` e `cargasProjeto` | `to-destructible-spec.ts`, `loads.ts` |
+| camada "estrutura" do visor 2D | `viewer-layer.ts` + `viewer.html` (a legenda passa a ser traduzida pelo visor) |
+
+**Caminho de carga (testado no mundo de `game-destruction`, `tests/load-path.test.ts`):**
+
+| Cenário | Resultado |
+|---|---|
+| varanda, pilares tirados (alvenaria com pilar de concreto, casa wood frame e cabana de tronco, com pilar de madeira) | cai só a cobertura da varanda; casa, telhado principal e piso ficam |
+| um de três pilares da varanda | a cobertura fica nos outros dois |
+| `coarse` (como o time): cobertura da varanda também apoiada na parede da casa | fica de pé (por isso a diferença de propósito abaixo) |
+| laje plana, pilares de canto (pórtico) | um pilar: a laje fica; dois: a laje cai |
+| sobrado em pórtico, dois pilares do térreo | laje de cima e as duas águas caem; com um pilar nada cai |
+| mercado (prédio em pórtico por padrão) | um pilar: o telhado fica; todos: cai |
+| wood frame, serrar os montantes da parede da frente | caem a parede, o prato e a água do telhado em cima dela (caibros e `roof_a`); a outra água e as outras paredes ficam |
+| barraco | a parede de chapa cai sozinha, o telhado fica nos prumos |
+
+**Diferenças de propósito (só fora do `coarse`):** (1) o telhado de duas águas vira caibros por lado e cumeeira em vez de tesouras inteiras: sem isso a tesoura apoiada nos dois pratos nunca cai com uma parede só; a massa do telhado é igual (a menos de 2%); (2) a cobertura da varanda se apoia só nos pilares dela (a amarra com a parede não carrega); (3) prédio em pórtico (apartamento, comercial ou 3+ andares) carrega pelos pilares e vigas (`structure.framed`, `portico` padrão).
+
+**Desvios do desenho:** `sizeStructure` do `game-destruction` dá as mesmas capacidades do `specDe` (a 1e-16) nas casas de parede portante, e **difere nas vigas de prédio em pórtico**: a regra N-1 do `sizeStructure` vale para todas as peças, a do time só para pilar e parede portante. Para o golden ficar igual, `toDestructibleSpec` dimensiona com a própria carga em repouso (`loads.ts`, 50 linhas, mesma regra do mundo); um teste confere que as duas regras concordam nas casas de parede portante. A caixa d'água do plano (L9279) entrou aqui, não na T2.2e.
+
+**Escolhas de negócio (padrão reversível, para o PR):** tipo de cômodo do alpendre `porch`, porta de degraus `type: 'steps'`, zíper `'zipper'`, tenda `kind: 'dome' | 'tunnel'`, escada do porão `type: 'basement_stairs'` (o pacote rural da T2.2f confirma ou muda); camada de estrutura no visor começa desligada; `framed` por heurística (apartamento, comercial, 3+ andares); capacidades de caixa d'água por estilo (budget 500, mid 1000, mansion 3000, resto 2000) configuráveis por `tankCapacities`.

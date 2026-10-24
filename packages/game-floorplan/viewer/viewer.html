@@ -51,6 +51,7 @@
   GameFloorplanResidential.register(engine, { region: 'br' })
   GameFloorplanCommercial.register(engine, { region: 'br' })
   GameFloorplanPostApocalyptic.register(engine)
+  GameFloorplanStructure.register(engine)
 
   var state = { locale: 'en', template: null, seed: 1, st: '', style: '', zone: '', floor: 0, opts: {}, auto: true, w: 0, d: 0, show: { labels: true, items: true, state: true, lot: true, grid: false } }
   engine.viewerLayers.forEach(function (l) { state.show['layer:' + l.id] = !!l.defaultOn })
@@ -163,7 +164,7 @@
   function layerLabel(l) { var t = engine.translate('ui', l.label, state.locale); return t === l.label ? l.label : t }
   function layerLegend() {
     return engine.viewerLayers.filter(function (l) { return l.legend && state.show['layer:' + l.id] && plan }).map(function (l) {
-      return '<div class="legend">' + l.legend(plan).map(function (e) { return '<div><i class="sw ' + e.shape + '" style="--c:' + esc(e.color) + '"></i>' + esc(e.label) + '</div>' }).join('') + '</div>'
+      return '<div class="legend">' + l.legend(plan).map(function (e) { return '<div><i class="sw ' + e.shape + '" style="--c:' + esc(e.color) + '"></i>' + esc(engine.translate('ui', e.label, state.locale)) + '</div>' }).join('') + '</div>'
     }).join('')
   }
   function draw() {

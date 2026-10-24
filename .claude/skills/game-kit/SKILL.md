@@ -34,7 +34,7 @@ no núcleo (catálogo por registro, números por opção, comportamento por plug
 | `game-fluids` / `game-fluids-three` | Recipientes com nível, temperatura e inclinação; derramar, vazar, manchas |
 | `game-interactables` (+ `-household`, `-three`) | Objetos que funcionam: portas, gavetas, energia, gás, água; os móveis da casa |
 | `game-props3d` | Objetos de cenário low poly (decoração, móveis modernos, quintal) |
-| `game-floorplan` (+ `-residential`, `-commercial`, `-post-apocalyptic`) | Plantas de casa e lote geradas por semente: cômodos, paredes, portas, janelas, zonas |
+| `game-floorplan` (+ `-residential`, `-commercial`, `-post-apocalyptic`, `-structure`) | Plantas de casa e lote geradas por semente: cômodos, paredes, portas, janelas, zonas; `-structure` dá a estrutura (pilares, vigas, telhado) e o caminho de carga da destruição |
 | `game-vehicles` / `game-vehicles-fleet` | Motor de veículos procedurais e a frota de 69 modelos, com dano por zona |
 | `game-vegetation` / `game-vegetation-species` | Árvores, palmeiras, cactos, flores e grama; cerca de 90 espécies |
 | `game-infection` | Contágio por regiões (horas), determinístico |
@@ -47,7 +47,7 @@ no núcleo (catálogo por registro, números por opção, comportamento por plug
 `game-characters` e `game-characters-undead` (corpo, andar, dano por região, os 13 tipos de zumbi), um gerador de histórias e ficha de
 personagem, `game-crowd` (multidão: horda, civis, manada, revoada), `game-animals`, `game-items` (catálogo único), `game-vfx` (+ `-three`,
 explosão do Laboratório), `game-weather` (chuva a eventos extremos), `game-audio`, `game-urban` (ruas, postes, bairro),
-`game-floorplan-structure`, `game-floorplan-rural`, `game-floorplan-three`, `game-player`. Decisões em
+`game-floorplan-rural`, `game-floorplan-three`, `game-player` (`game-floorplan-structure` já existe). Decisões em
 `specs/001-migracao-entregas-dos-times/consolidado.md`.
 
 ## Como se compõem (exemplos)
