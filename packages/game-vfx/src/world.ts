@@ -6,7 +6,7 @@ import { DEFAULT_GRAVITY, DEFAULT_WIND } from './constants'
 import type { RandomMode, VfxCore } from './core'
 import { addFire, createFirePool, updateFires } from './emitters/fire'
 import type { Fire } from './emitters/fire'
-import { WORKSHOP_EFFECTS } from './effects/catalog'
+import { GAME_EFFECTS } from './effects/catalog'
 import { createEffectPlayer } from './effects/player'
 import type { EffectPlayer, PlayOptions } from './effects/player'
 import type { EffectDef } from './effects/types'
@@ -57,7 +57,7 @@ export interface VfxOptions {
   /** The catalogue by id (default the Lab's 16 and `generic`); build another with `patchExplosions(EXPLOSIONS, ...)`. */
   readonly explosions?: Readonly<Record<string, ExplosionDef>>
   readonly aliases?: Readonly<Record<string, string>>
-  /** The Workshop's recipes by id for `play` (default `WORKSHOP_EFFECTS`; build another with `patchEffects`). */
+  /** The Workshop's recipes by id for `play` (default `GAME_EFFECTS`; build another with `patchEffects`). */
   readonly effects?: Readonly<Record<string, EffectDef>>
   readonly reducedMotion?: boolean
   /** Hears everything that spawns, in order (the goldens use it). */
@@ -230,7 +230,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
 
   let engine: WorkshopEngine | undefined
   let player: EffectPlayer | undefined
-  const effects = options.effects ?? WORKSHOP_EFFECTS
+  const effects = options.effects ?? GAME_EFFECTS
   const view = { get position(): Vec3Tuple { return [camera.x, camera.y, camera.z] }, forward: (local: readonly number[]): Vec3Tuple => [local[0] ?? 0, local[1] ?? 0, local[2] ?? 0] }
 
   function workshop(): WorkshopEngine {
