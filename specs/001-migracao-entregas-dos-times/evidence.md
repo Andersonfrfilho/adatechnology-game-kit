@@ -295,4 +295,16 @@ Resultado: **o SDK bate com a página em todos os passos** (calor arredondado e 
 
 ### Portões
 
-Preenchidos ao fim da execução (ver abaixo).
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm --filter @adatechnology/game-weapons test` | 99 passaram (66 de antes + 29 de `rules.test.ts` + 4 de `team-golden.test.ts`) |
+| `pnpm --filter @adatechnology/weapons-catalog-tool test` | 14 passaram |
+| `pnpm --filter @adatechnology/game-test-room test` | 94 passaram (92 + 2 de `host-events.test.ts`) |
+| `pnpm --filter @adatechnology/game-weapons-three test` | 5 passaram |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro) | exit 0, nenhum arquivo de teste falhou |
+| `node examples/weapons-test-area/build.mjs && test.mjs` | `ok: bundle` |
+
+Modelo da execução: `sonnet`.
