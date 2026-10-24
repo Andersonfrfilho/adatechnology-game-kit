@@ -44,7 +44,10 @@ ferramenta do host) e `fx.update(dt)` a cada quadro.
 | `createWeaponsTestModule(options?)` | `TestableModule` com `id: 'weapons_area'`; expõe também `audio` e `fx`. Opções: `locale` (padrão `pt-BR`), `arsenal`, `sound` |
 | `weaponsLayout(weaponItemIds)` | posições dos balcões, armas e alvos (aço, compensado, concreto) |
 | `createWeaponFx(options)` | arma na mão, movimento de tiro e recarga, cápsulas e pentes; `handle`, `update`, `inHand`, `casings`, `magazines`, `dispose` |
-| `createWeaponAudio(volume?)` | `shot(energyJ, category)`, `click`, `reloadStart/End`, `cycle`, `clink`, `thud`, `setVolume`, `dispose` |
+| `createWeaponAudio(volume?, options?)` | `shot(energyJ, category, extras?)` (extras: `distance`, `volume`, `suppressed`, `indoors`, `caliber`), `shotSound(input)`, `mechanical(id)`, `event(weaponEvent)`, `play(soundClass, volume?, distance?)`, `click`, `reloadStart/End`, `cycle`, `clink`, `thud`, `setVolume`, `dispose`. Opções: `seed`, `classes`, `distance`, `energy`, `referenceEnergy`, `classOf`, `bands`, `suppressor`, `indoors`, `mechanical`, `createContext` |
+| `computeShotSound(input, options?)` | parâmetros do tiro sem WebAudio (puro): `soundClass`, `audible`, `cutoff`, `gain`, `duration`, `crack`, `body`; entrada `{ caliber? \| energyJ?, category?, distance?, volume?, suppressed?, indoors? }` |
+| `MECHANICAL_SOUNDS`, `mechanicalSoundOf(event)` | sons por id (`magazine_out`, `bolt_open`, `dry_fire`, `jam`, `safety_on`... os ids de `RELOAD_STAGES` e dos eventos da regra) e o id que um `WeaponEvent` pede |
+| `GAME_SOUND_CLASSES`, `GAME_DISTANCE_CURVE`, `DEFAULT_ENERGY_CURVE`, `CLASS_REFERENCE_ENERGY` | a tabela `[corte Hz, volume, segundos]` e o abafamento do jogo, e a curva de energia do calibre; todos substituíveis por opção |
 | `buildWeaponModel(THREE, def)` / `buildProp` / `weaponProp` | modelo e spec (`DestructibleSpec` de caixas) de uma arma |
 | `BODY_ACTIONS` | ids sem modelo próprio (`hand`, `kick`, `shove`, `fists`) |
 | `WEAPON_ITEM_PREFIX`, `COUNTER_ITEM_ID` | prefixo `weapon_` dos itens e id do balcão |
@@ -66,10 +69,13 @@ carrega e abre a área. As áreas da página do kit abrem por `?area=`. Os teste
 - Cápsulas e pentes têm teto (120 cápsulas, 12 pentes, 25 s de vida); revólver não ejeta cápsula a cada tiro e arma de ferrolho ou pump toca o som do ciclo.
 - As peças do prop deitado se tocam sem se sobrepor; sobrepor faz a física separar e a arma deslizar. Armas no balcão nascem `asleep`.
 - Itens não podem ter id começando por `weapon_` se não forem arma: a sala distingue pelo prefixo (por isso o balcão é `counter_weapons`).
-- O som foi feito em 2026-10-23 sem base nas entregas dos times.
+- Som do tiro (T1.4, S2): classe e abafamento por distância portados do jogo (`jogo.js` L62089-L62110, calibre → classe na L68697) e a energia do calibre
+  escala volume, duração e brilho em torno da classe; nos calibres do jogo (9x19, 12ga, 7,62×39, 7,62×51) o resultado é exatamente o do jogo.
+  Tudo sai de `computeShotSound` (puro, sem `Math.random`; o ruído usa o `createRng` do kit com `seed`). Os sons mecânicos (etapas de recarga, ferrolho,
+  pane, desobstruir, tiro em vazio, trava) vêm por id; a Galeria não tem som, então os metálicos são do SDK e só `recarga`/`vazio` são do jogo.
 
 ## O que vem pela migração (spec 001)
 - O modelo atual é low-poly procedural; a Galeria 3D do Arsenal (armas com medida real, tiro, recarga por tipo, pane) deve ser **portada, não reescrita** (regra do projeto).
 - Animação padrão cumprindo o contrato de fases do `game-weapons` (A5): a da Galeria, substituível por qualquer renderizador.
-- Sons: juntar a classe e o abafamento por distância do jogo com a energia do calibre (S2), sobre o `game-audio` genérico (S1); golden compara os parâmetros gerados, não o áudio.
+- Sons: o tiro e os sons mecânicos estão feitos (T1.4); falta mover a síntese para o `game-audio` genérico (S1) e o golden de parâmetros (S3).
 - Efeitos de boca e explosivos passam a vir do `game-vfx-three` (E4).
