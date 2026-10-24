@@ -438,5 +438,15 @@
       0.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "fresh_fish",
+    "teamId": "peixe_fresco",
+    "teamBox": [
+      3,
+      0.6,
+      1.01
+    ],
+    "scale": 0.1
   }
 ]
