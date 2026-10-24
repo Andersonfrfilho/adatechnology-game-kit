@@ -1,4 +1,6 @@
 import { createBodySpec } from './body/body-spec'
+import { createCorpseLedger } from './corpses'
+import type { CorpseLedger } from './corpses'
 import type { BodySpec } from './body/body-spec'
 import { createCharacterCore, resolveSpec } from './character'
 import { createDamageCharacter } from './damage/damage-character'
@@ -26,6 +28,8 @@ export type CharacterKit = {
   readonly calibers: ReadonlyMap<string, CaliberEntry>
   /** A new character: the preset (`spec.preset`, else the one named `spec.kind`) under the spec. */
   create(spec: CharacterSpec): DamageCharacter
+  /** The bodies left on the ground, capped and timed by the kit's `corpses` option. */
+  createCorpses<TData>(): CorpseLedger<TData>
   /** A shot through a line of bodies with the kit's penetration model and calibre table. */
   penetrateLine(shot: LineShot, targets: readonly LineTarget[]): LineResult
 }
@@ -75,6 +79,7 @@ export const createCharacters = (options: CharactersOptions = {}): CharacterKit 
       const core = createCharacterCore({ spec: resolved, bodySpec: body, hitPointsOf: (kind) => damage.segments[kind].hitPoints })
       return createDamageCharacter(core, setup)
     },
+    createCorpses: () => createCorpseLedger({ ...DEFAULT_CORPSES, ...options.corpses }),
     penetrateLine: (shot, targets) => penetrateLine({ model: penetration.id === 'team-game' ? 'team-game' : 'physical', shot, targets, calibers }),
   }
 }

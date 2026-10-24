@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 import { ARCHETYPE_MODELS, COUNTER_ITEM_ID, createWeaponsTestModule, MOUNTED_M134_ITEM_ID, weaponsLayout, WEAPON_ITEM_PREFIX } from '../src'
+
+// Building every weapon model takes seconds on a busy machine; the default 5 s limit made this file flaky under load.
+vi.setConfig({ testTimeout: 30_000 })
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')

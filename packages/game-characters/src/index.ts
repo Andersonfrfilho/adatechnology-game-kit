@@ -16,6 +16,12 @@ export { BODY_REGIONS, LIMB_REGIONS, REGION_HIT_POINTS, REGION_SEGMENTS, isBodyR
 export type { LimbRegion } from './body/regions'
 export { BODY_MATERIAL, describeBody } from './body/describe'
 export { mergeById, applyPatches, removeIds } from './registry'
+export * from './gait'
+export { createConditionTimeline } from './condition/timeline'
+export type { ConditionOptions, ConditionPhase, ConditionSample, ConditionTimeline } from './condition/timeline'
+export { createCorpseLedger } from './corpses'
+export type { CorpseEntry, CorpseLedger } from './corpses'
+export * from './appearance'
 export type { DamageCharacter } from './damage/damage-character'
 export {
   ARSENAL_RULES,
