@@ -27,14 +27,15 @@ export type ToolAnimationStep =
   /** The rule says the phase is over: the clip jumps to its end if it is still running. */
   | { readonly type: 'finish'; readonly clip: ToolClipId }
 
-/** The move a host event asks of the tool in hand, or null when it has no motion (a shot of zero projectiles is a misfire). */
+/** The move a host event asks of the tool in hand, or null when it has no motion. */
 export const toolAnimationStep = (event: HostEvent): ToolAnimationStep | null => {
   switch (event.type) {
     case 'tool':
       return { type: 'play', clip: TOOL_CLIP.DRAW, ...(event.duration === undefined ? {} : { duration: event.duration }) }
     case 'shot':
-      if (event.shots === 0) return { type: 'play', clip: TOOL_CLIP.MISFIRE }
       return { type: 'play', clip: TOOL_CLIP.SHOT, repeat: Math.max(1, event.rounds ?? 1) }
+    case 'misfire':
+      return { type: 'play', clip: TOOL_CLIP.MISFIRE }
     case 'empty':
       return { type: 'play', clip: TOOL_CLIP.EMPTY }
     case 'mode':

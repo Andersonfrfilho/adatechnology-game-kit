@@ -118,7 +118,8 @@ metrics: () => [{ id: 'particles', name: 'Particles', max: 400, read: () => fx.p
 ```
 
 Tool events are named after a tool's cycle, not a firearm: `mode`, `fault`, `clear` (start / end) and `safety`, and `shot` carries `rounds`
-(cartridges spent) next to `shots` (projectiles) and the `mode`. `HostTool` may report `mode`, `fault`, `safety` and `heat` (0..1).
+(cartridges spent) next to `shots` (projectiles, always 1 or more) and the `mode`; a dud round is its own `misfire` event, not a `shot` of zero. `HostTool` may report `mode`, `fault`, `safety` and `heat` (0..1).
+`host.configureTool(settings)` takes a `Record<string, string>` keyed by the id of the module's own control; the test room applies `condition` and `ammo_quality` and ignores other ids.
 
 ## API
 

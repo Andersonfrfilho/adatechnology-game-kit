@@ -4,7 +4,7 @@ import { toHostEvent } from '../src/host-events'
 describe('toHostEvent', () => {
   it('turns the weapon events a module follows into host events', () => {
     expect(toHostEvent('glock_17', { type: 'shot', shots: 1, rounds: 1, mode: 'semi', at: 0 }, { recoil: [1, 2] })).toEqual({ type: 'shot', weapon: 'glock_17', shots: 1, recoil: [1, 2], rounds: 1, mode: 'semi' })
-    expect(toHostEvent('sw_686', { type: 'misfire', at: 0 })).toEqual({ type: 'shot', weapon: 'sw_686', shots: 0, recoil: [0, 0], rounds: 1 })
+    expect(toHostEvent('sw_686', { type: 'misfire', at: 0 })).toEqual({ type: 'misfire', weapon: 'sw_686' })
     expect(toHostEvent('glock_17', { type: 'draw', phase: 'start', at: 0 })).toEqual({ type: 'tool', weapon: 'glock_17' })
     expect(toHostEvent('glock_17', { type: 'reload', phase: 'end', kind: 'tactical', at: 1 })).toEqual({ type: 'reload', weapon: 'glock_17', phase: 'end' })
     expect(toHostEvent('glock_17', { type: 'fault', fault: 'stovepipe', at: 0 })).toEqual({ type: 'fault', weapon: 'glock_17', fault: 'stovepipe' })

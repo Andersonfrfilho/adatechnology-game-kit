@@ -209,6 +209,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let toolIndex = Math.max(0, loadout.indexOf('hand'))
   let toolId = loadout[toolIndex] ?? 'hand'
   const toolSettings: { condition?: string; ammoQuality?: string } = {}
+  const SETTING_IDS = { condition: 'condition', ammoQuality: 'ammo_quality' } as const
   const toolState = (id: string): WeaponState => {
     let s = tools.get(id)
     if (!s) {
@@ -1753,11 +1754,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       heat: tool.heatLevel,
     }),
     configureTool(settings) {
-      if (settings.condition !== undefined) toolSettings.condition = settings.condition
-      if (settings.ammoQuality !== undefined) toolSettings.ammoQuality = settings.ammoQuality
+      const condition = settings[SETTING_IDS.condition]
+      const ammoQuality = settings[SETTING_IDS.ammoQuality]
+      if (condition !== undefined) toolSettings.condition = condition
+      if (ammoQuality !== undefined) toolSettings.ammoQuality = ammoQuality
       for (const state of tools.values()) {
-        if (settings.condition !== undefined) state.setCondition(settings.condition)
-        if (settings.ammoQuality !== undefined) state.setAmmoQuality(settings.ammoQuality)
+        if (condition !== undefined) state.setCondition(condition)
+        if (ammoQuality !== undefined) state.setAmmoQuality(ammoQuality)
       }
     },
     on(listener) {

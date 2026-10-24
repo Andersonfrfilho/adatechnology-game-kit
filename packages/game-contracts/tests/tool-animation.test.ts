@@ -27,7 +27,7 @@ describe('toolAnimationStep', () => {
   it('maps each event of the tool cycle to a move, with the duration the rule gave', () => {
     expect(step({ type: 'tool', weapon: 'w', duration: 0.35 })).toEqual({ type: 'play', clip: TOOL_CLIP.DRAW, duration: 0.35 })
     expect(step({ type: 'shot', weapon: 'w', shots: 1, recoil: [0, 0], rounds: 3 })).toEqual({ type: 'play', clip: TOOL_CLIP.SHOT, repeat: 3 })
-    expect(step({ type: 'shot', weapon: 'w', shots: 0, recoil: [0, 0], rounds: 1 })).toEqual({ type: 'play', clip: TOOL_CLIP.MISFIRE })
+    expect(step({ type: 'misfire', weapon: 'w' })).toEqual({ type: 'play', clip: TOOL_CLIP.MISFIRE })
     expect(step({ type: 'reload', weapon: 'w', phase: 'start', kind: 'empty', duration: 2.5 })).toEqual({ type: 'play', clip: TOOL_CLIP.RELOAD, variant: 'empty', duration: 2.5 })
     expect(step({ type: 'reload', weapon: 'w', phase: 'end' })).toEqual({ type: 'finish', clip: TOOL_CLIP.RELOAD })
     expect(step({ type: 'cycle', weapon: 'w', phase: 'start', duration: 0.5 })).toEqual({ type: 'play', clip: TOOL_CLIP.CYCLE, duration: 0.5 })

@@ -295,7 +295,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
           if (change.id === 'condition') {
             created.setCondition(change.value)
             lent.configureTool?.({ condition: change.value })
-          } else if (change.id === 'ammo_quality') lent.configureTool?.({ ammoQuality: change.value })
+          } else if (change.id === 'ammo_quality') lent.configureTool?.({ ammo_quality: change.value })
         } else if (change.kind === 'control' && change.id === 'sound_distance' && typeof change.value === 'number') soundDistance = change.value
       })
       const offEvents = lent.on((event) => {

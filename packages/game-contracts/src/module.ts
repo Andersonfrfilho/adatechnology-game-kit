@@ -72,6 +72,8 @@ export type HostEvent =
   | { type: 'tool'; weapon: string; duration?: number }
   /** `shots` are projectiles (a shotgun shell is many), `rounds` the cartridges spent (a burst is several). */
   | { type: 'shot'; weapon: string; shots: number; recoil: [number, number]; rounds?: number; mode?: string }
+  /** The trigger was pulled, the round was spent and nothing left the tool (a dud cartridge): no projectile, no recoil. */
+  | { type: 'misfire'; weapon: string }
   /** `kind` is how the rule reloads (`tactical`, `empty`, `one_by_one`); `duration` the seconds of the whole reload, on `start`. */
   | { type: 'reload'; weapon: string; phase: 'start' | 'end'; kind?: string; duration?: number }
   | { type: 'empty'; weapon: string }
@@ -122,8 +124,11 @@ export interface ModuleHost {
   onFrame(update: (dt: number) => void): () => void
   /** Write a line to the host's behaviour log. */
   log(text: string, data?: Record<string, unknown>): void
-  /** Sets how worn the tools are and how good what they load is (ids of the host's rules): the tool in hand changes at once and the ones taken later start that way. */
-  configureTool?(settings: { condition?: string; ammoQuality?: string }): void
+  /**
+   * Sets what the host lets a module tune on its tools, keyed by the id of the module's own control (`ModuleControl.id`) with the id of the option as the value; the tool in hand changes at once and the
+   * ones taken later start that way. A host applies the ids it knows and ignores the rest. The test room knows `condition` (how worn the tools are) and `ammo_quality` (how good what they load is).
+   */
+  configureTool?(settings: Readonly<Record<string, string>>): void
   /** Lent only to a module that declares controls, layers or metrics. */
   bench?: ModuleBench
 }

@@ -209,7 +209,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       if (event.type === 'tool') equip(event.weapon)
       if (!session || !player || event.weapon !== session.id) return
       const current = session
-      if (event.type === 'shot' && event.shots > 0) handleShot(current)
+      if (event.type === 'shot') handleShot(current)
       else if (event.type === 'reload' && event.phase === 'start') current.nextChamber = 0
       else if (event.type === 'clear' && event.phase === 'end') current.stuckCase = null
       const mechanical = weaponEventOf(event)

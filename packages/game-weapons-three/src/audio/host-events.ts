@@ -7,8 +7,8 @@ import type { HostEvent } from '@adatechnology/game-contracts'
  */
 export const weaponEventOf = (event: HostEvent): WeaponEvent | undefined => {
   switch (event.type) {
-    case 'shot':
-      return event.shots === 0 ? { type: 'misfire', at: 0 } : undefined
+    case 'misfire':
+      return { type: 'misfire', at: 0 }
     case 'stage':
       return { type: 'reload_stage', stage: event.stage as ReloadStageId, at: 0 }
     case 'empty':

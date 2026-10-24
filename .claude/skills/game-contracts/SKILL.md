@@ -49,7 +49,7 @@ O módulo de teste completo (com `area` e `attach`) está na skill `game-test-ro
 | `AnimationClipSpec`, `ItemAnimationContract` | Animações de item |
 | `TestableModule`, `TestableItem`, `ModuleItemFluid`, `ModuleScenario` | O que um módulo entrega à sala |
 | `ModuleArea`, `AreaPlacement` | Como a sala monta a área do módulo (posições, `surface`, `asleep`, `view`) |
-| `ModuleHost`, `HostTool`, `HostEvent` | O que a sala empresta ao módulo em `attach` (eventos de ferramenta: `tool`, `shot` com `rounds`/`mode`, `reload` com `kind`/`duration`, `empty`, `mode`, `fault`, `clear`, `safety`, `cycle`, `stage`, `feed`; `duration` é o tempo que a regra deu à fase) |
+| `ModuleHost`, `HostTool`, `HostEvent` | O que a sala empresta ao módulo em `attach` (eventos de ferramenta: `tool`, `shot` com `rounds`/`mode` (sempre 1+ projétil), `misfire` (cartucho falhou, sem projétil), `reload` com `kind`/`duration`, `empty`, `mode`, `fault`, `clear`, `safety`, `cycle`, `stage`, `feed`; `duration` é o tempo que a regra deu à fase; `host.configureTool({ condition, ammo_quality })` recebe `Record<string,string>` pelos ids dos controles do módulo) |
 | `toolAnimationStep(event)`, `TOOL_CLIP`, `ToolAnimationStep` | Mapa do evento da ferramenta para o movimento (`play` de um clipe, `sync` com uma etapa, `finish`) |
 | `createToolClipPlayer({ clips, rig, onEvent })`, `ToolRig`, `ToolAnimator`, `ToolClipSet` | Tocador de clipes sem renderizador: escala o clipe à duração da regra, aplica as poses na `ToolRig` e dispara os eventos do clipe |
 | `scaleClip`, `sampleClip`, `checkToolClips`, `STAGE_EVENT` | Escala e amostra um clipe; valida o conjunto de clipes de uma ferramenta |

@@ -71,7 +71,7 @@ ferramenta do host) e `fx.update(dt)` a cada quadro. `tool: () => HostTool` dá 
 ## Bancada da área (`weapons_area`)
 | Id | Tipo | O que faz |
 |---|---|---|
-| `condition` | escolha | nova, usada, gasta, enferrujada: `setCondition` na regra (`host.configureTool`) e nos materiais do modelo |
+| `condition` | escolha | nova, usada, gasta, enferrujada: `setCondition` na regra (`host.configureTool({ condition })`; a munição vai em `ammo_quality`) e nos materiais do modelo |
 | `ammo_quality` | escolha | de fábrica ou recarregada (`setAmmoQuality` na regra) |
 | `sound_distance` | número 0 a 200 m | distância do ouvinte: prévia do abafamento do tiro |
 | `muzzle_flash`, `casings`, `magazines` | camadas | ligam e desligam o clarão, as cápsulas e os pentes |

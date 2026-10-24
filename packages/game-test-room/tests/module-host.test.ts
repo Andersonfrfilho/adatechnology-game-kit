@@ -72,7 +72,7 @@ describe('module host', () => {
     let lent: ModuleHost | null = null
     room.loadModule(benchModule((host) => (lent = host)))
     room.setTool('pistol_9mm')
-    lent!.configureTool?.({ condition: 'rusty', ammoQuality: 'reloaded' })
+    lent!.configureTool?.({ condition: 'rusty', ammo_quality: 'reloaded' })
     expect(room.tool.condition).toBe('rusty')
     expect(room.tool.ammoQuality).toBe('reloaded')
     room.setTool('rifle_5_56')

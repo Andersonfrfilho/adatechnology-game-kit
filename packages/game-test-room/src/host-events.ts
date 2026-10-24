@@ -21,7 +21,7 @@ export const toHostEvent = (weapon: string, event: WeaponEvent, options: HostEve
     case 'shot':
       return { type: 'shot', weapon, shots: Math.max(1, event.shots), recoil, rounds: event.rounds, mode: event.mode }
     case 'misfire':
-      return { type: 'shot', weapon, shots: 0, recoil: NO_RECOIL, rounds: 1 }
+      return { type: 'misfire', weapon }
     case 'reload':
       return { type: 'reload', weapon, phase: event.phase, ...(event.phase === 'start' ? { kind: event.kind, ...durationOf(phase, 'reload') } : {}) }
     case 'reload_stage':
