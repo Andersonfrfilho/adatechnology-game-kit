@@ -27,3 +27,16 @@ export const getUndeadOutfit = (id: string): UndeadOutfit | undefined => UNDEAD_
 
 /** Ids of the types a child can turn into: every type except the ones marked `childEligible: false` (brute, bloater). */
 export const childTypeIds = (): string[] => UNDEAD_TYPES.filter((type) => type.childEligible !== false).map((type) => type.id)
+
+export { createUndead, createUndeadPack } from './kit'
+export type { AssignOptions, Undead, UndeadOptions, UndeadSpawn } from './kit'
+export { DEFAULT_SPEED_OVERRIDES, DEFAULT_UNDEAD_RULES } from './rules'
+export type { UndeadRules } from './rules'
+export { baseSpeedsOf, speedFor } from './speed'
+export type { SpeedContext, SpeedMoment, SpeedSet } from './speed'
+export { drawSpawn, drawType, pickByProbability } from './spawn'
+export type { DrawnSpawn, SpawnContext, SpawnTables, UndeadLook, UndeadTraits } from './spawn'
+export { createInfectionCase, createInfectionTimeline, infectionPhases, pickWound, woundInfects } from './infection'
+export type { InfectionCase, InfectionClock } from './infection'
+export { deathEffects, doorDamageFactor, headAreaFactor, isFireImmune, waterHealthLoss } from './hooks'
+export type { UndeadEffect } from './hooks'
