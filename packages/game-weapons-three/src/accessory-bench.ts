@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { BenchChange, ChoiceOption, HostTool, HostToolAttachment, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ToolCommand } from '@adatechnology/game-contracts'
 import type { Arsenal, FittedAttachment, MountKind } from '@adatechnology/game-weapons'
+import { attachmentsKey } from './attachments-key'
 import type { AccessoryText } from './accessory-text'
 
 /** The places of a weapon the bench offers accessories for, in the order the panel lists them. */
@@ -9,12 +10,14 @@ export const ACCESSORY_MOUNTS: readonly MountKind[] = ['muzzle', 'rail_top', 'ra
 export const ACCESSORY_KEYS = { light: 'KeyL', laser: 'KeyK', stock: 'KeyV', underbarrel: 'KeyU' } as const
 const FIT_PREFIX = 'fit_'
 const NONE = 'none'
+export const SUPPORTED_CONTROL_ID = 'supported_stance'
 const ACTION_IDS = { light: 'toggle_light', laser: 'toggle_laser', stock: 'toggle_stock', underbarrel: 'switch_underbarrel' } as const
 const SECONDARY_BUTTON = 2
 const TEXT_FIELDS = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
 
 export const accessoryControls = (text: AccessoryText): ModuleControl[] => [
   ...ACCESSORY_MOUNTS.map((mount): ModuleControl => ({ kind: 'choice', id: `${FIT_PREFIX}${mount}`, name: text.mounts[mount] ?? mount, options: [{ id: NONE, name: text.none }], default: NONE })),
+  { kind: 'boolean', id: SUPPORTED_CONTROL_ID, name: text.supported.name, hint: text.supported.hint, default: false },
   ...(Object.keys(ACTION_IDS) as Array<keyof typeof ACTION_IDS>).map((key): ModuleControl => ({ kind: 'action', id: ACTION_IDS[key], name: text.actions[key].name, hint: text.actions[key].hint })),
 ]
 
@@ -78,7 +81,7 @@ export function createAccessoryBench(options: AccessoryBenchOptions): AccessoryB
 
   const refresh = (): void => {
     const tool = host.tool()
-    const next = `${tool.weapon}|${JSON.stringify(tool.attachments ?? [])}`
+    const next = `${tool.weapon}|${attachmentsKey(tool.attachments)}`
     if (next === signature) return
     signature = next
     const def = arsenal.weapons.get(tool.weapon)
@@ -174,8 +177,10 @@ export function createAccessoryBench(options: AccessoryBenchOptions): AccessoryB
     event.preventDefault()
     event.stopImmediatePropagation()
   }
+  // only the room's own surface aims: a click on a panel, an input or an overlay is left alone
+  const isOnRoom = (event: MouseEvent): boolean => Boolean(document.pointerLockElement) || event.target instanceof HTMLCanvasElement
   const onMouseDown = (event: MouseEvent): void => {
-    if (event.button !== SECONDARY_BUTTON || !isFirearm(host.tool())) return
+    if (event.button !== SECONDARY_BUTTON || !isOnRoom(event) || !isFirearm(host.tool())) return
     event.preventDefault()
     event.stopImmediatePropagation()
     setAim(true)
@@ -203,12 +208,17 @@ export function createAccessoryBench(options: AccessoryBenchOptions): AccessoryB
     if (event.type !== 'tool') return
     pending.clear()
     setAim(false)
+    bench?.patch(SUPPORTED_CONTROL_ID, { value: false })
     signature = ''
   })
 
   return {
     handleChange(change) {
       if (change.kind === 'action') return act(change.id)
+      if (change.kind === 'control' && change.id === SUPPORTED_CONTROL_ID && typeof change.value === 'boolean') {
+        host.command?.({ type: 'stance', supported: change.value })
+        return true
+      }
       if (change.kind !== 'control' || !change.id.startsWith(FIT_PREFIX) || typeof change.value !== 'string') return false
       const mount = change.id.slice(FIT_PREFIX.length) as MountKind
       pending.set(mount, change.value)

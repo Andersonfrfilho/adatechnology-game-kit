@@ -4,6 +4,7 @@ export interface AccessoryText {
   mounts: Record<string, string>
   actions: Record<'light' | 'laser' | 'stock' | 'underbarrel', { name: string; hint: string }>
   layers: Record<'attachments' | 'beams', string>
+  supported: { name: string; hint: string }
   metrics: Record<'mass' | 'aim' | 'fitted' | 'suppressed', string>
   yes: string
   no: string
@@ -29,6 +30,7 @@ export const ACCESSORY_TEXT: Record<string, AccessoryText> = {
       underbarrel: { name: 'Launcher under the barrel (U)', hint: 'Switches the trigger and the reload between the weapon and the launcher under its barrel' },
     },
     layers: { attachments: 'Accessory models', beams: 'Light cone and laser beam' },
+    supported: { name: 'Supported (deployed / prone)', hint: 'The weapon rests on something: a bipod then takes its recoil and spread effect' },
     metrics: { mass: 'Weapon mass', aim: 'Time to the sights', fitted: 'Accessories on the weapon', suppressed: 'Suppressed' },
     yes: 'yes',
     no: 'no',
@@ -52,6 +54,7 @@ export const ACCESSORY_TEXT: Record<string, AccessoryText> = {
       underbarrel: { name: 'Lança-granada sob o cano (U)', hint: 'Passa o gatilho e a recarga entre a arma e o lança-granada sob o cano' },
     },
     layers: { attachments: 'Modelos dos acessórios', beams: 'Cone da lanterna e feixe do laser' },
+    supported: { name: 'Apoiado (bipé aberto / deitado)', hint: 'A arma está apoiada: o bipé passa a valer no recuo e na dispersão' },
     metrics: { mass: 'Massa da arma', aim: 'Tempo até a mira', fitted: 'Acessórios na arma', suppressed: 'Silenciada' },
     yes: 'sim',
     no: 'não',
