@@ -34,3 +34,4 @@ export type {
   Uv,
   WaterAtlas,
 } from './types'
+export { mergeByMaterial } from './merge-by-material'

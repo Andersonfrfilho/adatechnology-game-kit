@@ -1,0 +1,23 @@
+{
+  "name": "@adatechnology/items-catalog-tool",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Items catalog tool: reads the team deliveries (Itens do Vale Cinzento page and data, the game, the 3D house viewer) and writes the reconciled game-items-goods data as plain JSON, with a --check that fails when the generated files are stale and --game-out for the slice that belongs to the game.",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "catalog": "node dist/cli.js",
+    "catalog:check": "node dist/cli.js --check"
+  },
+  "devDependencies": {
+    "@adatechnology/game-items": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

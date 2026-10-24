@@ -1,0 +1,242 @@
+[
+  {
+    "id": "canned_beans",
+    "teamId": "feijao_lata",
+    "teamBox": [
+      0.67,
+      0.57,
+      0.66
+    ],
+    "scale": 0.119403
+  },
+  {
+    "id": "water_bottle",
+    "teamId": "agua_500",
+    "teamBox": [
+      0.452,
+      1.25,
+      0.452
+    ],
+    "scale": 0.146018
+  },
+  {
+    "id": "rice",
+    "teamId": "arroz",
+    "teamBox": [
+      0.72,
+      1.055,
+      0.3
+    ],
+    "scale": 0.236967
+  },
+  {
+    "id": "military_ration",
+    "teamId": "racao_militar",
+    "teamBox": [
+      0.77,
+      1.03,
+      0.235
+    ],
+    "scale": 0.252427
+  },
+  {
+    "id": "cachaca",
+    "teamId": "cachaca",
+    "teamBox": [
+      0.552,
+      1.31,
+      0.552
+    ],
+    "scale": 0.163043
+  },
+  {
+    "id": "first_aid_kit",
+    "teamId": "kit_ps",
+    "teamBox": [
+      1.07,
+      0.915,
+      0.41
+    ],
+    "scale": 0.233645
+  },
+  {
+    "id": "bandage",
+    "teamId": "atadura",
+    "teamBox": [
+      0.9851,
+      0.7575,
+      0.43
+    ],
+    "scale": 0.102528
+  },
+  {
+    "id": "amoxicillin",
+    "teamId": "amoxicilina",
+    "teamBox": [
+      0.8859,
+      0.47,
+      0.607
+    ],
+    "scale": 0.11288
+  },
+  {
+    "id": "crowbar",
+    "teamId": "pe_cabra",
+    "teamBox": [
+      0.428,
+      1.7087,
+      0.11
+    ],
+    "scale": 0.43893
+  },
+  {
+    "id": "hammer",
+    "teamId": "martelo",
+    "teamBox": [
+      0.6487,
+      1.3477,
+      0.19
+    ],
+    "scale": 0.244862
+  },
+  {
+    "id": "machete",
+    "teamId": "facao",
+    "teamBox": [
+      1.8759,
+      0.2906,
+      0.12
+    ],
+    "scale": 0.293193
+  },
+  {
+    "id": "axe",
+    "teamId": "machado",
+    "teamBox": [
+      0.5952,
+      1.6693,
+      0.14
+    ],
+    "scale": 0.419337
+  },
+  {
+    "id": "nail_bat",
+    "teamId": "taco_pregos",
+    "teamBox": [
+      0.4384,
+      1.69,
+      0.4352
+    ],
+    "scale": 0.508876
+  },
+  {
+    "id": "hiking_backpack_40l",
+    "teamId": "mochila_trilha",
+    "teamBox": [
+      0.8,
+      1.07,
+      0.62
+    ],
+    "scale": 0.514019
+  },
+  {
+    "id": "flashlight",
+    "teamId": "lanterna",
+    "teamBox": [
+      0.38,
+      1.08,
+      0.38
+    ],
+    "scale": 0.148148
+  },
+  {
+    "id": "portable_radio",
+    "teamId": "radio_portatil",
+    "teamBox": [
+      1.1041,
+      1.4821,
+      0.35
+    ],
+    "scale": 0.199257
+  },
+  {
+    "id": "house_key",
+    "teamId": "chave_casa",
+    "teamBox": [
+      1.5433,
+      0.8305,
+      0.08
+    ],
+    "scale": 0.055077
+  },
+  {
+    "id": "survivor_diary",
+    "teamId": "diario",
+    "teamBox": [
+      0.8,
+      1.04,
+      0.27
+    ],
+    "scale": 0.201923
+  },
+  {
+    "id": "motorcycle_helmet",
+    "teamId": "capacete_moto",
+    "teamBox": [
+      1.11,
+      1.0825,
+      1.17
+    ],
+    "scale": 0.234234
+  },
+  {
+    "id": "lpg_cylinder_13kg",
+    "teamId": "botijao",
+    "teamBox": [
+      0.9257,
+      1.285,
+      0.94
+    ],
+    "scale": 0.381323
+  },
+  {
+    "id": "fuel_jerrycan",
+    "teamId": "galao",
+    "teamBox": [
+      0.8788,
+      1.342,
+      0.44
+    ],
+    "scale": 0.350224
+  },
+  {
+    "id": "walkie_talkies",
+    "teamId": "walkie",
+    "teamBox": [
+      0.465,
+      1.47,
+      0.22
+    ],
+    "scale": 0.14966
+  },
+  {
+    "id": "batteries",
+    "teamId": "pilha_aa",
+    "teamBox": [
+      0.744,
+      1.005,
+      0.344
+    ],
+    "scale": 0.050249
+  },
+  {
+    "id": "wooden_plank",
+    "teamId": "tabua",
+    "teamBox": [
+      1.5203,
+      0.4741,
+      0.5377
+    ],
+    "scale": 0.526212
+  }
+]

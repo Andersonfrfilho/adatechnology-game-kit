@@ -1,0 +1,201 @@
+[
+  {
+    "id": "tactical_knife",
+    "name": "Tactical knife",
+    "category": "melee_blade",
+    "action": {
+      "kind": "melee",
+      "damage": "slash",
+      "energy": 45,
+      "radius": 0.03,
+      "reach": 0.6,
+      "rpm": 100,
+      "noise": 1
+    },
+    "mass": 0.3
+  },
+  {
+    "id": "meat_cleaver",
+    "name": "Meat cleaver",
+    "category": "melee_blade",
+    "action": {
+      "kind": "melee",
+      "damage": "slash",
+      "energy": 120,
+      "radius": 0.05,
+      "reach": 0.6,
+      "rpm": 70,
+      "noise": 2
+    },
+    "mass": 0.6
+  },
+  {
+    "id": "hatchet",
+    "name": "Hatchet",
+    "category": "melee_blade",
+    "action": {
+      "kind": "melee",
+      "damage": "slash",
+      "energy": 180,
+      "radius": 0.06,
+      "reach": 0.7,
+      "rpm": 55,
+      "noise": 2
+    },
+    "mass": 0.8
+  },
+  {
+    "id": "nail_bat",
+    "name": "Nail bat",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 170,
+      "radius": 0.1,
+      "reach": 1,
+      "rpm": 60,
+      "noise": 3
+    },
+    "mass": 1.2
+  },
+  {
+    "id": "iron_pipe",
+    "name": "Iron pipe",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 140,
+      "radius": 0.06,
+      "reach": 1,
+      "rpm": 60,
+      "noise": 4
+    },
+    "mass": 1.2
+  },
+  {
+    "id": "pickaxe",
+    "name": "Pickaxe",
+    "category": "melee_blade",
+    "action": {
+      "kind": "melee",
+      "damage": "slash",
+      "energy": 260,
+      "radius": 0.05,
+      "reach": 1,
+      "rpm": 40,
+      "noise": 4
+    },
+    "mass": 2.8,
+    "tags": [
+      "heavy"
+    ]
+  },
+  {
+    "id": "sickle",
+    "name": "Sickle",
+    "category": "melee_blade",
+    "action": {
+      "kind": "melee",
+      "damage": "slash",
+      "energy": 70,
+      "radius": 0.05,
+      "reach": 1.1,
+      "rpm": 70,
+      "noise": 2
+    },
+    "mass": 1.2
+  },
+  {
+    "id": "police_baton",
+    "name": "Police baton",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 70,
+      "radius": 0.04,
+      "reach": 0.7,
+      "rpm": 90,
+      "noise": 3
+    },
+    "mass": 0.6
+  },
+  {
+    "id": "cast_iron_skillet",
+    "name": "Cast iron skillet",
+    "category": "melee_blunt",
+    "action": {
+      "kind": "melee",
+      "damage": "blunt",
+      "energy": 110,
+      "radius": 0.12,
+      "reach": 0.6,
+      "rpm": 60,
+      "noise": 8
+    },
+    "mass": 1.2
+  },
+  {
+    "id": "improvised_spear",
+    "name": "Improvised spear",
+    "category": "melee_blade",
+    "action": {
+      "kind": "melee",
+      "damage": "slash",
+      "energy": 90,
+      "radius": 0.02,
+      "reach": 1.6,
+      "rpm": 50,
+      "noise": 1
+    },
+    "mass": 1.1
+  },
+  {
+    "id": "chainsaw",
+    "name": "Chainsaw",
+    "category": "melee_blade",
+    "action": {
+      "kind": "melee",
+      "damage": "slash",
+      "energy": 400,
+      "radius": 0.1,
+      "reach": 0.9,
+      "rpm": 300,
+      "noise": 120
+    },
+    "mass": 6,
+    "tags": [
+      "heavy"
+    ]
+  },
+  {
+    "id": "recurve_bow",
+    "name": "Recurve bow",
+    "category": "bow",
+    "action": {
+      "kind": "firearm",
+      "caliber": "arrow",
+      "rpm": 20,
+      "modes": [
+        "single"
+      ],
+      "magazine": 1,
+      "reload": 1.5,
+      "barrel": 1,
+      "spreadDeg": 0.4,
+      "bloomDeg": 0.4,
+      "recoveryDegPerS": 2,
+      "recoil": [
+        0.3,
+        0.1
+      ],
+      "range": 40
+    },
+    "mass": 1.2,
+    "tags": [
+      "silent"
+    ]
+  }
+]

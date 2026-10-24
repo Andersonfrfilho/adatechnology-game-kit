@@ -1,0 +1,18 @@
+{
+  "name": "@adatechnology/items-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Items area for the shared test room: every item of the goods catalog on shelves by category at its real size (the 24 models of the Itens do Vale Cinzento where the team drew one, the simple shape of its category elsewhere), a stand where the 24 models turn, a 1.55 m ruler and a 1.80 m human figure to judge the scale, and a table where the finds of a container and the result of a recipe are laid. The bench sets the category shown, the wear, the age and storage of the food (a fridge slows it, a power cut does not), the place, container, state of the place, outbreak day and seed of the finds, and the recipe to craft; layers show labels, the size boxes and the items that are still simple shapes.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-items": "workspace:*",
+    "@adatechnology/game-items-goods": "workspace:*",
+    "@adatechnology/game-items-three": "workspace:*"
+  }
+}

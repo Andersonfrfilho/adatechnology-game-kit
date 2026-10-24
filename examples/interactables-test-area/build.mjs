@@ -1,4 +1,4 @@
-// Bundles the furniture area (and the kit packages it needs, the weapons module among them) into dist/furniture-area.js (IIFE, global `FurnitureArea`) and, when the
+// Bundles the furniture area (and the kit packages it needs, the weapons and items modules among them) into dist/furniture-area.js (IIFE, global `FurnitureArea`) and, when the
 // shared test room page is found (ROOM_HTML, default the kit's own examples/test-room build), writes dist/sala-moveis.html: the room page
 // with the area loaded into it, one file, no network.
 import { createRequire } from 'node:module'
@@ -21,7 +21,7 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-weapons', 'game-weapons-three']) {
+for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three']) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -43,6 +43,11 @@ const result = await esbuild.build({
     // the weapons module (with its accessories) rides along: furniture is shot, burned and blown up by real weapons
     '@adatechnology/game-weapons': join(pkg('game-weapons'), 'dist/index.js'),
     '@adatechnology/game-weapons-three': join(pkg('game-weapons-three'), 'dist/index.js'),
+    // the items module and the goods catalog ride along: the containers of the furniture hold real items
+    '@adatechnology/game-contracts': join(pkg('game-contracts'), 'dist/index.js'),
+    '@adatechnology/game-items': join(pkg('game-items'), 'dist/index.js'),
+    '@adatechnology/game-items-goods': join(pkg('game-items-goods'), 'dist/index.js'),
+    '@adatechnology/game-items-three': join(pkg('game-items-three'), 'dist/index.js'),
   },
 })
 mkdirSync(join(here, 'dist'), { recursive: true })

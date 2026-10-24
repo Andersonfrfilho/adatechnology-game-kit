@@ -1,5 +1,5 @@
 import { CAR_CLEARANCE, DOOR_CLEARANCE, DOOR_EDGE_CLEARANCE, OVERHEAD_TOP, PLAYER_RADIUS, WALL_THICKNESS, WINDOW_EDGE_CLEARANCE } from './constants'
-import { findsFor } from './extensions'
+import { findsAnswer, findsFor } from './extensions'
 import { generate, limitsOf, listTemplates, slots, validate } from './generate'
 import { registerGroundItems } from './ground-items'
 import { listLocales, registerLocale, translate } from './locale'
@@ -80,6 +80,7 @@ export const engine = {
   registerResultExtension,
   registerFindsProvider,
   findsFor,
+  findsAnswer,
   registerViewerLayer,
   viewerLayers: VIEWER_LAYERS,
   blocksWindow,
@@ -136,6 +137,7 @@ export {
   registerResultExtension,
   registerFindsProvider,
   findsFor,
+  findsAnswer,
   registerViewerLayer,
   blocksWindow,
   translate,

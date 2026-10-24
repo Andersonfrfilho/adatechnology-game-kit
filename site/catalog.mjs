@@ -64,6 +64,17 @@ export const EXAMPLES = [
     areas: [],
   },
   {
+    name: 'items-test-area',
+    title: 'Área de itens',
+    summary: 'Os 327 itens do catálogo em prateleiras por categoria, todos no tamanho real: os 24 modelos do time de itens (lata de feijão, facão, rádio, botijão...) onde ele desenhou e a forma simples da categoria nos demais. No pedestal os 24 modelos giram, e uma régua de 1,55 m e uma silhueta humana de 1,80 m mostram a escala. A bancada mostra uma categoria por vez, gasta os itens (novo, usado, estragado), envelhece a comida por dias e armazenamento (a geladeira atrasa, a falta de energia não), sorteia o que um recipiente guarda por lugar, estado, dia do surto e semente (as pilhas vão para a mesa de achados) e fabrica receitas com o que elas pedem. Camadas: rótulos, caixas de tamanho e destaque das formas que ainda não têm modelo. Contadores de itens, chamadas de desenho e triângulos.',
+    controls: 'Mesmos controles da sala de testes · a bancada escolhe a categoria, o desgaste, a idade e o armazenamento, o lugar, o recipiente, o estado, o dia do surto e a semente · "Sortear achados" põe as pilhas na mesa à direita · "Fabricar" faz a receita escolhida',
+    url: 'items-test-area/',
+    ready: 'window.__testRoom && window.__itemsReport',
+    // the stand with the 24 models turning, the shelves behind it
+    setup: `(() => { const r = window.__testRoom; r.openArea('items_area'); for (let t = 0; t < 1.2; t += 0.02) r.update(0.02); r.look([0, 2.4, 14.5], [0, 0.6, 7]); r.update(0.02) })()`,
+    areas: [],
+  },
+  {
     name: 'interactables-test-area',
     title: 'Área de móveis na sala de testes',
     summary: 'Os móveis da casa carregados na sala de testes como um módulo: um objeto destrutível de cada tipo, com animações, líquidos e cenários prontos. A página leva também o módulo de armas, com os acessórios, para atirar, queimar e explodir os móveis com as armas de verdade.',
@@ -79,6 +90,7 @@ export const FAMILIES = [
   { id: 'destruction', title: 'Destruição e armas', what: 'Como cada material amassa, queima, derrete e quebra, e as armas reais que causam isso', packages: ['game-destruction', 'game-destruction-three', 'game-weapons', 'game-weapons-three'], thumb: 'weapons-test-area', seeIn: 'weapons-test-area' },
   { id: 'interactables', title: 'Objetos interativos', what: 'Portas, gavetas, energia, gás e água dos objetos da casa', packages: ['game-interactables', 'game-interactables-household', 'game-interactables-three'], thumb: 'interactables-showroom-kitchen', seeIn: 'interactables-showroom' },
   { id: 'floorplan', title: 'Plantas de casas', what: 'Cômodos, paredes, portas e janelas gerados por semente, com pacotes residencial, comercial, rural e pós-apocalíptico, e a estrutura (pilares, vigas, telhado) que segura cada planta', packages: ['game-floorplan', 'game-floorplan-residential', 'game-floorplan-commercial', 'game-floorplan-rural', 'game-floorplan-post-apocalyptic', 'game-floorplan-structure'], thumb: 'interactables-showroom-living', seeIn: 'interactables-showroom' },
+  { id: 'items', title: 'Itens', what: 'Comida, remédio, ferramenta, mochila, chave: o catálogo de itens com peso, validade, achados e receitas, o conteúdo pronto de 257 itens do time e o desenho de cada um no tamanho real', packages: ['game-items', 'game-items-goods', 'game-items-three'], thumb: 'items-test-area', seeIn: 'items-test-area' },
   { id: 'fluids', title: 'Líquidos', what: 'Recipientes com nível, temperatura e inclinação: encher, despejar, beber, derramar e vazar', packages: ['game-fluids', 'game-fluids-three'], thumb: 'test-room-containers', seeIn: 'test-room' },
   { id: 'vegetation', title: 'Vegetação', what: 'Árvores, palmeiras, cactos, flores e grama em low-poly, com cerca de 90 espécies prontas', packages: ['game-vegetation', 'game-vegetation-species'], thumb: 'test-room-plants', seeIn: 'test-room' },
   { id: 'vehicles', title: 'Veículos', what: 'Motor de veículos procedurais e uma frota de 69 modelos, de moto a caminhão', packages: ['game-vehicles', 'game-vehicles-fleet'], thumb: 'test-room-vehicles', seeIn: 'test-room' },
