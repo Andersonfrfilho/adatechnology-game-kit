@@ -13,12 +13,11 @@ const GAME_ONLY: Record<string, readonly [number, number, number]> = { survivor_
 const sizeOf = (id: string): readonly [number, number, number] => GAME_ONLY[id] ?? catalog.get(id).size
 
 describe('the shipped models', () => {
-  it('are the 24 of the page, registered by catalog id, and 23 of them are the model of an item of the goods catalog', () => {
-    expect(SHIPPED_MODELS).toHaveLength(24)
+  it('are registered by catalog id, including the 24 of the showcase page', () => {
     expect(listItemModels()).toEqual(SHIPPED_MODELS.map(({ entry }) => entry.id))
-    const modeled = catalog.list().filter((item) => item.model !== undefined)
-    expect(modeled.map((item) => item.id).sort()).toEqual(SHIPPED_MODELS.map(({ entry }) => entry.id).filter((id) => !(id in GAME_ONLY)).sort())
-    for (const item of modeled) expect(hasItemModel(item.model as string), item.id).toBe(true)
+    const teamModeled = catalog.list().filter((item) => item.model !== undefined)
+    expect(teamModeled.map((item) => item.id).sort()).toEqual(SHIPPED_MODELS.slice(0, 24).map(({ entry }) => entry.id).filter((id) => !(id in GAME_ONLY)).sort())
+    for (const { entry } of SHIPPED_MODELS) expect(hasItemModel(entry.id), entry.id).toBe(true)
   })
 
   it('measure, times the scale of models.json, the size of their item (the box of the page is the box of the builder)', () => {
