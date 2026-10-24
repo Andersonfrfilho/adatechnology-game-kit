@@ -1368,5 +1368,15 @@
       3
     ],
     "scale": 0.1
+  },
+  {
+    "id": "glass_shards",
+    "teamId": "cacos",
+    "teamBox": [
+      1.2,
+      0.5,
+      1
+    ],
+    "scale": 0.1
   }
 ]
