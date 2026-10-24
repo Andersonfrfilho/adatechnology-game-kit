@@ -32,7 +32,7 @@ Browser without a bundler (the global is `GameContracts`):
 | Destruction | `DestructibleSpec`, `PartSpec`, `Hit`, `DestructionEvent`, `ObjectState`, `PartState`, `JointSpec`... | the vocabulary of parts, joints, hits, events and state |
 | Impact | `IMPACT_CONTRACT`, `checkHit(hit)` | the fields a weapon or hazard must put in a `Hit`, per damage type |
 | Own destruction | `DestructibleImpl`, `checkDestructible(impl, { materials })` | a module that owns its destruction (a car with its own panel rule) |
-| Weapons | `Shot`, `Use`, `shotToHit(shot, point, normal?)` | what a weapon produces, and the `Hit` a shot makes at a point |
+| Weapons | `Shot`, `Use`, `shotToHit(shot, point, normal?)`, `shotExtras(shot, distance?)` | what a weapon produces, and the `Hit` a shot makes at a point |
 | Fluids | `ContainerSpec`, `LiquidId`, `ItemUseDef` | what an item says about the liquid it holds and how it is used |
 | Animation | `AnimationClipSpec`, `ItemAnimationContract`, `checkAnimation(clip, partIds)` | use animations an item brings (a door `open`, a pistol `reload`) |
 | Module | `TestableModule`, `TestableItem`, `ModuleScenario` | what a module hands the test room |
@@ -140,6 +140,12 @@ store that implements the bus, and `DEFAULT_ENVIRONMENT` is the calm dry day.
 ## API
 
 Everything is exported from the package root; see `src/*.ts` for the doc comments. Units: metres, seconds, joules, millimetres (calibre), degrees Celsius.
+
+## Ignition of a leak
+
+`Hit.ignition` (`{ spark, flame }`), `Hit.incendiary` and `Hit.tracer` say what a round brings to a leak of flammable fluid; `IgnitionRules` / `DEFAULT_IGNITION_RULES` are the numbers
+of the container side (the `fillCurve`, the `sparkTarget` of the wall, `fireNear`), `ignitionChance(hit, { sparkTarget, fill, fluid? }, rules?)` is the chance that one round that went through
+lights the leak, `fillFactor(fill, curve?)` the curve and `sparkTargetFactor(materialId, isMetal, rules?)` the wall. `game-destruction` and `game-vehicles` use them; a plain bullet only leaks.
 
 ## Português
 

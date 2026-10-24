@@ -1,7 +1,6 @@
 export type * from './types'
 export { createDestruction, SHELTER_DEFAULTS, FRAGMENT_HIT_DEFAULTS, CONFINEMENT_DEFAULTS } from './world'
 export { explosivePart, FIRE_PRIME_C } from './chain'
-export { PIERCING_BY_KIND, PIERCING_BY_CALIBER, piercingOf } from './piercing'
 export type { ChainTrigger, ExplosivePartOptions, WorldExplosive } from './chain'
 export { MATERIALS, JOINT_DEFAULTS, JOINT_BY_MATERIALS, inferJoints, guessMaterial, partVolume, partMass, partThickness, partCapacity, fragility } from './materials'
 export { ASSEMBLIES, registerAssembly, getAssembly, assemblyPart, assemblyDepth } from './assemblies'

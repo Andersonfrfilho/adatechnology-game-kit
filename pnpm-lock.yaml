@@ -1369,6 +1369,9 @@ importers:
         specifier: workspace:*
         version: link:../game-contracts
     devDependencies:
+      '@adatechnology/game-weapons':
+        specifier: workspace:*
+        version: link:../game-weapons
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5

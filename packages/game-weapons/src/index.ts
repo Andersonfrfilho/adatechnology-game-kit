@@ -1,4 +1,5 @@
 export { createRng } from './rng'
+export { AMMO, ammoId, ammoIgnition, resolveLoad } from './ammo'
 export { createArsenal, CALIBERS, WEAPONS, EXPLOSIVES, ATTACHMENTS, ARCHETYPE_IDS, DEFAULT_LOADOUT, muzzleEnergy, checkArsenal } from './arsenal'
 export { DEFAULT_RULES } from './rules'
 export { canFit, canInstallWith } from './attachments'

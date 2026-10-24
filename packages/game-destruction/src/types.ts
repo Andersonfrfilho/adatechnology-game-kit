@@ -11,6 +11,7 @@
  */
 
 import type {
+  BallisticExtras,
   BlastOptions,
   DamageType,
   DebrisKind,
@@ -19,6 +20,7 @@ import type {
   DestructionEvent,
   DestructionEventType,
   FractureStyle,
+  IgnitionRules,
   JointState,
   MaterialId,
   ObjectState,
@@ -34,6 +36,8 @@ import type {
 
 // The contract types live in @adatechnology/game-contracts; they are re-exported so that no import from this package breaks.
 export type {
+  BallisticExtras,
+  HitIgnition,
   ChainDelay,
   Crack,
   DamageStage,
@@ -112,6 +116,16 @@ export interface MaterialDef {
    * through and keeps the rest; one that carries less stops (dent, crack or lodge).
    */
   penetration: number
+  /**
+   * Which entry of `Hit.penetration` this material is measured by (`steel`, `concrete`, `brick`, `wood`; default its own id). A structural steel beam is
+   * `steel`, an aluminium sheet is `steel` too, softwood is `wood`.
+   */
+  penetrationClass?: string
+  /**
+   * Millimetres of this material a round goes through for every millimetre of its `penetrationClass` reference in the table (default 1). Structural
+   * steel (S235) is softer than the RHA the tables use, so 1.3; softwood against hardwood 1.5; aluminium against steel 3.
+   */
+  penetrationScale?: number
   /** 0 = brittle (glass), 1 = very ductile (soft steel). Ductile parts dent and bend before they break; brittle parts crack and shatter. */
   ductility: number
   /** How the part fails when its hp reaches 0. */
@@ -166,18 +180,32 @@ export interface DestructionOptions {
   maxHoles?: number
   /** Distance at which a burning part heats parts of other objects, in metres (default 0.6). */
   fireSpread?: number
+  /**
+   * The structure solver. A slab or beam is held by the sum of the capacities of what it rests on: its load is shared among the supports that are
+   * left, so losing columns moves the load to the rest and the structure falls when the capacity left (the sum) is less than the load.
+   * The capacity of each part is `structure.capacity`, else the material's `compressive` (kg/m², in `MaterialDef`) times its section.
+   */
+  structure?: {
+    /**
+     * Multiplies every load before it is compared with the capacities: stress = `load * safetyFactor / capacity` (default 1). Above 1 the whole
+     * structure is loaded harder than its capacities were sized for (a worn building, a weaker material); below 1 it has extra margin. It does not
+     * change the capacities; to size them use `sizeStructure({ safety })`.
+     */
+    safetyFactor?: number
+  }
+  /**
+   * What lights the flammable fluid that leaks from a container (a fuel tank, a jerrycan, a gas bottle). A round that goes through only makes a
+   * leak; it lights it only when `Hit.ignition` (a spark on metal), `Hit.incendiary` or `Hit.tracer` say so, by the chance of the round weighed by
+   * how full the container is; a burning part within `fireNear.radius` or a blast also lights it. See `IgnitionRules` of the contracts for every
+   * number and its default.
+   */
+  ignition?: Partial<IgnitionRules>
   /** Breach of staged parts (see `PartSpec.breach`). */
   breach?: {
     /** Metres around a hit within which through damage adds up (default 0.55). */
     radius?: number
     /** Multiplier of the breach area a blast makes over a blow of the same damage: a blast loads the whole crater (default 6). */
     blastFactor?: number
-    /**
-     * Metres of reach per cube root of kilojoule: a blast only opens a breach in a part within `blastReach * cbrt(energy / 1000)` of the centre
-     * (a hand grenade of 200 kJ: 0.7 m; 2 MJ: 1.5 m). Farther away it still damages, dents and cracks. Without it a falloff that is gentle over a
-     * large radius let a grenade at 1 m cut a reinforced column in two. Default `Infinity` (off, so the goldens stay as they were); 0.12 is the value that matches real charges.
-     */
-    blastReach?: number
   }
   /**
    * Speed of the blast front in m/s. A glass part at distance `d` from an explosion breaks `d / blastFrontSpeed` seconds later, in `update`
@@ -263,7 +291,7 @@ export interface DestructionWorld {
   /** Raycast against every part shape (world space). */
   raycast(origin: Vec3, direction: Vec3, maxDistance?: number): RayHit | null
   /** Ballistic shot: raycast, hit, and continue through with the exit energy (up to 4 objects/parts). */
-  shoot(origin: Vec3, direction: Vec3, energy: number, caliber: number, source?: string, piercing?: number): HitResult[]
+  shoot(origin: Vec3, direction: Vec3, energy: number, caliber: number, source?: string, round?: number | BallisticExtras): HitResult[]
   /**
    * Work on a joint with a tool for `dt` seconds (call every frame while the player holds the button). Returns the progress 0..1, or -1 when the
    * tool cannot undo this joint. At 1 the joint opens (`detach` with `by: 'tool'`).
@@ -316,6 +344,8 @@ export interface PartRuntime {
   shockT: number
   /** A leaking flammable fluid is burning on this part. */
   jet: boolean
+  /** A spark, a flame or a blast reached the flammable fluid that leaks from this part: it burns (or goes off) at the next update. */
+  lit?: boolean
   /** Seconds left before the next `stress` event. */
   stressT?: number
   /** World time at which a primed explosive part goes off (`explodes.chain`). */

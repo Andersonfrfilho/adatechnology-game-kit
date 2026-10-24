@@ -6439,51 +6439,6 @@
    }
   },
   {
-   "type": "fracture",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "part": "window",
-    "style": "shatter",
-    "fragments": {
-     "count": 4,
-     "mass": 15,
-     "marks": 0,
-     "first": {
-      "center": [
-       -0.3638,
-       0.91,
-       1.95
-      ],
-      "size": [
-       0.2274,
-       0.2143,
-       0.006
-      ]
-     }
-    }
-   }
-  },
-  {
-   "type": "debris",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "part": "window",
-    "kind": "shards",
-    "count": 5
-   }
-  },
-  {
-   "type": "stage",
-   "data": {
-    "scenario": "gas_explodes",
-    "time": 0.1,
-    "part": "window",
-    "stage": 3
-   }
-  },
-  {
    "type": "dent",
    "data": {
     "scenario": "gas_explodes",

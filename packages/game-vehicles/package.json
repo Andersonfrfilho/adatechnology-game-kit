@@ -48,6 +48,7 @@
     "three": ">=0.128.0"
   },
   "devDependencies": {
+    "@adatechnology/game-weapons": "workspace:*",
     "@types/node": "^22.10.7",
     "@types/three": "0.128.0",
     "happy-dom": "^17.4.4",

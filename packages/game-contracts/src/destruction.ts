@@ -296,6 +296,20 @@ export interface BlastReport {
   fragmentHits: number
 }
 
+/**
+ * How likely a round is to set flammable vapour or fuel alight when it hits a container of it, as the weapons module resolves them for the round
+ * (core, jacket, incendiary or tracer composition, each with a configured chance). 0..1 each, per hit.
+ */
+export interface HitIgnition {
+  /** Sparks from a hard core or jacket striking metal: counts only when the struck part is metal. */
+  spark: number
+  /** A flame the round carries (incendiary, tracer): counts whatever it hits. */
+  flame: number
+}
+
+/** The ballistic fields of a `Hit` that come from the round and not from the shot geometry (see `shotExtras`). */
+export type BallisticExtras = Pick<Hit, 'piercing' | 'penetration' | 'incendiary' | 'tracer' | 'ignition'>
+
 export interface Hit {
   type: DamageType
   /** Point of the hit (world space unless `space: 'local'`). For `explosive` it is the centre of the blast. */
@@ -327,6 +341,19 @@ export interface Hit {
    * less steel than its joules say, an armour-piercing core more: the energy that counts against the penetration of a hard material (metal, masonry) is `energy * piercing`; wood, glass and soft materials take the energy as it is.
    */
   piercing?: number
+  /**
+   * Ballistic: how far the projectile goes through, in millimetres, by material class (`steel`, `concrete`, `brick`, `wood`, or a material id). The world
+   * takes the entry of the struck material (its `penetrationClass`, else its id, scaled by its `penetrationScale`) and the bullet goes through when it is
+   * at least as thick as the part; a material with no entry falls back to the energy rule (`energy` and `piercing`). The engine reads no calibre
+   * names: the weapons put the numbers here (`ammo.penetration` of `@adatechnology/game-weapons`, scaled by the energy left at the hit).
+   */
+  penetration?: Readonly<Record<string, number>>
+  /** Ballistic: the round carries an incendiary composition (it can light flammable vapour and fuel whatever it hits). */
+  incendiary?: boolean
+  /** Ballistic: the round is a tracer (a burning pyrotechnic in the base). */
+  tracer?: boolean
+  /** Ballistic: chances that the round lights flammable vapour or fuel (see `HitIgnition`). Absent: it never does. */
+  ignition?: HitIgnition
   /** Explosive: pressure multiplier the host knows (a room volume); the energy is then `energy * confinement` and the ray estimate is skipped. */
   confinement?: number
   /** Explosive: per-call blast options (see `BlastOptions`). */

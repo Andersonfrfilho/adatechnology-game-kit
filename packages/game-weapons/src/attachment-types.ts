@@ -133,5 +133,6 @@ export interface WeaponSnapshot {
   readonly mode: FireMode
   readonly condition: string
   readonly ammoQuality: string
+  readonly ammoKind?: string
   readonly underbarrel?: WeaponSnapshot
 }

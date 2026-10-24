@@ -1,11 +1,13 @@
 import type { AttachmentDef, AttachmentId } from './attachment-types'
-import type { CaliberDef, CaliberId, ExplosiveDef, ExplosiveId, FirearmAction, WeaponDef, WeaponId, WeaponRules } from './types'
+import type { AmmoDef, CaliberDef, CaliberId, ExplosiveDef, ExplosiveId, FirearmAction, WeaponDef, WeaponId, WeaponRules } from './types'
 
 export interface ArsenalParts {
   readonly weapons: ReadonlyMap<WeaponId, WeaponDef>
   readonly calibers: ReadonlyMap<CaliberId, CaliberDef>
   readonly explosives: ReadonlyMap<ExplosiveId, ExplosiveDef>
   readonly attachments?: ReadonlyMap<AttachmentId, AttachmentDef>
+  /** When given, every ammo entry must name a calibre of the arsenal, and every calibre's own kind must have its entry. */
+  readonly ammo?: ReadonlyMap<string, AmmoDef>
   /** When given, the default condition and ammunition quality must be ones the rules define. */
   readonly rules?: Pick<WeaponRules, 'conditions' | 'defaultCondition' | 'ammoQualities' | 'defaultAmmoQuality'>
 }
@@ -101,10 +103,28 @@ const checkRuleDefaults = (rules: ArsenalParts['rules']): string[] => {
   return problems
 }
 
+const PENETRATION_KEYS = ['steel', 'concrete', 'brick', 'wood'] as const
+
+const checkAmmo = (ammo: ArsenalParts['ammo'], calibers: ArsenalParts['calibers']): string[] => {
+  if (!ammo) return []
+  const problems: string[] = []
+  for (const load of ammo.values()) {
+    const label = `ammo "${load.id}"`
+    if (load.id !== `${load.caliber}:${load.kind}`) problems.push(`${label} should be called "${load.caliber}:${load.kind}"`)
+    if (!calibers.has(load.caliber)) problems.push(`${label} is for unknown calibre "${load.caliber}"`)
+    if (load.bulletGrams !== undefined && !(load.bulletGrams > 0)) problems.push(`${label} weighs ${load.bulletGrams} g`)
+    if (load.muzzleSpeed !== undefined && !(load.muzzleSpeed > 0)) problems.push(`${label} leaves at ${load.muzzleSpeed} m/s`)
+    for (const key of PENETRATION_KEYS) if (!(load.penetration?.[key] >= 0)) problems.push(`${label} has no penetration for ${key}`)
+  }
+  for (const caliber of calibers.values()) if (caliber.kind !== undefined && !ammo.has(`${caliber.id}:${caliber.kind}`)) problems.push(`calibre "${caliber.id}" has no ammo "${caliber.id}:${caliber.kind}" in the table`)
+  return problems
+}
+
 /** Every problem found in an arsenal, so a game sees them all at once instead of one per run. Empty when it is consistent. */
-export const checkArsenal = ({ weapons, calibers, explosives, attachments, rules }: ArsenalParts): string[] => [
+export const checkArsenal = ({ weapons, calibers, explosives, attachments, ammo, rules }: ArsenalParts): string[] => [
   ...[...weapons.values()].flatMap((def) => [...checkFirearm(def, calibers), ...checkTimings(def), ...checkExplosiveReference(def, explosives), ...checkFitted(def, attachments)]),
   ...[...(attachments?.values() ?? [])].flatMap((attachment) => checkAttachment(attachment, weapons)),
   ...[...explosives.values()].flatMap(checkExplosiveNumbers),
+  ...checkAmmo(ammo, calibers),
   ...checkRuleDefaults(rules),
 ]
