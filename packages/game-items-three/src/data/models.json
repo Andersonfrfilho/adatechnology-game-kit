@@ -658,5 +658,15 @@
       0.6
     ],
     "scale": 0.1
+  },
+  {
+    "id": "dirty_water",
+    "teamId": "agua_suja",
+    "teamBox": [
+      0.66,
+      1.83,
+      0.66
+    ],
+    "scale": 0.1
   }
 ]
