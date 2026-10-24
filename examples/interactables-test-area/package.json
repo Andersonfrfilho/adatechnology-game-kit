@@ -3,13 +3,15 @@
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
-  "description": "Furniture and interactive objects area for the shared destruction test room: a TestableModule with one destructible item per household type, animations, fluids and scenarios.",
+  "description": "Furniture and interactive objects area for the shared destruction test room: a TestableModule with one destructible item per household type, animations, fluids and scenarios. The page also carries the weapons module (with accessories) to shoot, burn and blow the furniture up with real weapons.",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
     "test": "node test.mjs"
   },
   "devDependencies": {
-    "@adatechnology/game-contracts": "workspace:*"
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-weapons": "workspace:*",
+    "@adatechnology/game-weapons-three": "workspace:*"
   }
 }

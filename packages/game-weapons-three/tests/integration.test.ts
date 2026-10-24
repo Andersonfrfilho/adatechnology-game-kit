@@ -93,9 +93,13 @@ describe('bench of the weapons module', () => {
   it('declares the layers, the controls and the metrics, and the room accepts them', () => {
     const { room } = areaRoom()
     const bench = room.bench('weapons_area')
-    expect(bench?.controls().map((control) => control.id)).toEqual(['condition', 'ammo_quality', 'sound_distance', 'fuse_length'])
-    expect(bench?.layers().map((layer) => layer.id)).toEqual(['muzzle_flash', 'casings', 'magazines'])
-    expect(Object.keys(room.metrics().module).sort()).toEqual(['casings_live', 'heat', 'magazines_live'])
+    expect(bench?.controls().map((control) => control.id)).toEqual([
+      'condition', 'ammo_quality', 'sound_distance', 'fuse_length',
+      'fit_muzzle', 'fit_rail_top', 'fit_rail_left', 'fit_rail_right', 'fit_rail_bottom', 'fit_underbarrel', 'fit_magazine', 'fit_feed', 'fit_sling', 'fit_barrel',
+      'toggle_light', 'toggle_laser', 'toggle_stock', 'switch_underbarrel',
+    ])
+    expect(bench?.layers().map((layer) => layer.id)).toEqual(['muzzle_flash', 'casings', 'magazines', 'attachments', 'beams'])
+    expect(Object.keys(room.metrics().module).sort()).toEqual(['accessories_fitted', 'aim_time', 'casings_live', 'heat', 'magazines_live', 'suppressed', 'weapon_mass'])
   })
 
   it('weapon condition and ammo quality reach the rule, and the metal shows the wear', () => {

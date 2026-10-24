@@ -1,12 +1,15 @@
 import type * as THREE_NS from 'three'
-import type { AreaPlacement, BenchChange, DestructibleSpec, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
+import type { AreaPlacement, BenchChange, DestructibleSpec, HostTool, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
+import { createAccessoryBench, accessoryControls, accessoryLayers, accessoryMetrics } from './accessory-bench'
+import { accessoryTextOf } from './accessory-text'
 import { createWeaponAudio } from './audio'
 import type { WeaponAudio } from './audio'
 import { createWeaponFx } from './fx'
 import type { WeaponFx } from './fx'
 import { ARCHETYPE_MODELS, hasWeaponModel } from './models'
+import type { AttachmentModelRegistry, LaserRaycast } from './models/attachments/types'
 import { BODY_ACTIONS, buildModeledProp, buildProp, buildTripodMountedProp, modeledPropSpec, weaponProp } from './props'
 import type { WeaponProp } from './props'
 import { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
@@ -22,6 +25,8 @@ export interface WeaponsTestModuleOptions {
   condition?: string
   /** Seed of the scatter of casings and smoke (default 1). */
   seed?: number
+  /** Builders of accessory models that replace or add to the ones the kit ships (by the `model` of the accessory). */
+  attachmentModels?: AttachmentModelRegistry
 }
 
 /** Prefix of the item ids of the weapon props (`weapon_pistol_9mm`). */
@@ -61,6 +66,29 @@ const TARGETS: Array<{ id: string; at: Vec3 }> = [
   { id: 'target_plywood', at: [0, 0, -7] },
   { id: 'target_concrete', at: [1.5, 0, -7] },
 ]
+
+const EMPTY_TOOL: HostTool = { weapon: '', category: '', ammo: 0, capacity: 0, reserve: 0, reloading: false }
+
+/** The ray of a laser sight against what is in the scene, ignoring the weapon in the hands, what is see-through and what is not a surface (particles, sprites). */
+const laserRaycast = (THREE: typeof THREE_NS, scene: THREE_NS.Scene, camera: THREE_NS.Camera): LaserRaycast => {
+  const raycaster = new THREE.Raycaster()
+  // the smoke is made of sprites, which need the camera to be tested at all
+  raycaster.camera = camera
+  const isHeld = (object: THREE_NS.Object3D): boolean => {
+    for (let node: THREE_NS.Object3D | null = object; node; node = node.parent) if (node.name === 'weapon-viewmodel' || node.name === 'weapon-in-hand') return true
+    return false
+  }
+  return (origin, direction, maxDistance) => {
+    raycaster.set(origin, direction)
+    raycaster.far = maxDistance
+    const hit = raycaster.intersectObjects(scene.children, true).find((entry) => {
+      const mesh = entry.object as THREE_NS.Mesh
+      const material = mesh.material as THREE_NS.Material | undefined
+      return mesh.isMesh && mesh.visible && material?.transparent !== true && !isHeld(mesh)
+    })
+    return hit ? hit.distance : null
+  }
+}
 
 interface Text {
   group: string
@@ -239,6 +267,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   const locale = options.locale ?? 'pt-BR'
   const arsenal = options.arsenal ?? createArsenal({ locale })
   const text = textOf(locale)
+  const accessoryText = accessoryTextOf(locale)
   const audio = options.sound === false ? null : createWeaponAudio(undefined, options.seed === undefined ? {} : { seed: options.seed })
   const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id))
   // An archetype wearing the model of a brand weapon is the same thing twice on the counters: it stays in the catalogue (the hands still take it) but is not laid out.
@@ -297,12 +326,14 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       },
       { kind: 'number', id: 'sound_distance', name: text.soundDistance, hint: text.soundDistanceHint, unit: 'm', min: 0, max: SOUND_DISTANCE_MAX, step: 5, default: 0 },
       { kind: 'number', id: 'fuse_length', name: text.fuseLength, hint: text.fuseLengthHint, unit: 'm', min: 0.01, max: FUSE_LENGTH_MAX, step: 0.01, default: arsenal.explosives.get('dynamite')?.fuseLength ?? DEFAULT_FUSE_LENGTH },
+      ...accessoryControls(accessoryText),
     ],
-    layers: (): ModuleLayer[] => (['muzzle_flash', 'casings', 'magazines'] as const).map((id) => ({ id, name: text.layers[id] })),
+    layers: (): ModuleLayer[] => [...(['muzzle_flash', 'casings', 'magazines'] as const).map((id) => ({ id, name: text.layers[id] })), ...accessoryLayers(accessoryText)],
     metrics: (): ModuleMetric[] => [
       { id: 'casings_live', name: text.metrics.casings_live, read: () => fx?.casings ?? 0 },
       { id: 'magazines_live', name: text.metrics.magazines_live, read: () => fx?.magazines ?? 0 },
       { id: 'heat', name: text.metrics.heat, unit: '%', max: 100, digits: 0, read: heatPercent },
+      ...accessoryMetrics(accessoryText, () => host?.tool() ?? EMPTY_TOOL),
     ],
     attach(lent) {
       host = lent
@@ -315,14 +346,20 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         audio,
         tool: lent.tool,
         soundDistance: () => soundDistance,
+        raycast: laserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera),
+        ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
         ...(options.condition ? { condition: options.condition } : {}),
         ...(options.seed === undefined ? {} : { seed: options.seed }),
       })
       fx = created
       const camera = lent.camera as THREE_NS.Camera
+      const accessories = createAccessoryBench({ arsenal, host: lent, text: accessoryText })
       const offBench = lent.bench?.onChange((change: BenchChange) => {
+        if (accessories.handleChange(change)) return
         if (change.kind === 'layer') {
-          if (change.id === 'muzzle_flash') created.layers.muzzleFlash = change.on
+          if (change.id === 'attachments') created.layers.attachments = change.on
+          else if (change.id === 'beams') created.layers.beams = change.on
+          else if (change.id === 'muzzle_flash') created.layers.muzzleFlash = change.on
           else if (change.id === 'casings') created.layers.casings = change.on
           else if (change.id === 'magazines') created.layers.magazines = change.on
         } else if (change.kind === 'control' && typeof change.value === 'string') {
@@ -346,6 +383,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       const offFrame = lent.onFrame((dt) => created.update(dt))
       created.handle({ type: 'tool', weapon: lent.tool().weapon }, lent.tool())
       return () => {
+        accessories.dispose()
         offBench?.()
         offEvents()
         offFrame()

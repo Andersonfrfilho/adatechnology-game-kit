@@ -77,6 +77,21 @@ for (const lang of ['pt-BR', 'en']) {
   })
   check(`[${lang}] every furniture scenario is green`, report.failed === 0 && report.passed >= 14, report)
 
+  // the weapons module rides along (owner rule: this area shows what every phase adds): loaded, with its accessory bench, and a suppressor goes on an M4 here too
+  const weapons = await page.evaluate(() => {
+    const room = window.__testRoom
+    const loaded = window.__furnitureReport.weapons
+    room.setTool('colt_m4a1')
+    for (let i = 0; i < 40; i++) room.update(0.02)
+    const bench = room.bench('weapons_area')
+    const accepted = bench ? bench.set('fit_muzzle', 'suppressor') : false
+    for (let i = 0; i < 800; i++) room.update(0.02)
+    const result = { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, controls: bench ? bench.controls().map((c) => c.id).filter((id) => id.startsWith('fit_')).length : 0, accepted, suppressed: room.tool.suppressed }
+    room.setTool('hand')
+    return result
+  })
+  check(`[${lang}] the weapons module is loaded too, its accessory bench works (suppressor on an M4)`, weapons.module === 'weapons_area' && weapons.ok && weapons.problems.length === 0 && weapons.items > 100 && weapons.controls === 10 && weapons.accepted && weapons.suppressed, weapons)
+
   if (lang === 'pt-BR') {
     await page.close()
     const p = await open('?lang=pt-BR&ui=0')
