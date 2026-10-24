@@ -1508,5 +1508,15 @@
       0.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "raffia_sack",
+    "teamId": "saco_areia",
+    "teamBox": [
+      4.002,
+      0.202,
+      3
+    ],
+    "scale": 0.1
   }
 ]
