@@ -1268,5 +1268,15 @@
       3.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "cast_iron_skillet",
+    "teamId": "frigideira",
+    "teamBox": [
+      4.3,
+      0.5,
+      2.5
+    ],
+    "scale": 0.1
   }
 ]
