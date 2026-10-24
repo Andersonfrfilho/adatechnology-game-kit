@@ -1,7 +1,7 @@
 import { createSchedule } from '../schedule'
 import type { ScreenState } from '../types'
 import type { Placement, WorkshopEngine } from '../workshop/engine'
-import type { DebrisSpawn, SpriteSpawn, Vec3Tuple } from '../workshop/types'
+import type { DebrisSpawn, MeshSpawn, SpriteSpawn, Vec3Tuple } from '../workshop/types'
 import type { Behavior, BehaviorHost } from './behavior'
 import type { ExprContext } from './expression'
 import { resolve } from './expression'
@@ -169,6 +169,7 @@ export class EffectInstance {
       case 'burst': return engine.burst(step.system, this.value(step.count) as number, this.value(step.spawn) as SpriteSpawn)
       case 'spawn': return engine.spawn(step.system, this.value(step.spawn) as SpriteSpawn)
       case 'emit': return engine.emit(step.key, step.system, this.value(step.rate) as number, this.dt, () => this.value(step.spawn) as SpriteSpawn)
+      case 'mesh': { engine.mesh(this.value(step.spawn) as MeshSpawn); return }
       case 'debris': return engine.debrisPiece(this.value(step.spawn) as DebrisSpawn)
       case 'decal': return engine.decal(this.value(step.args) as Parameters<WorkshopEngine['decal']>[0])
       case 'ring': return engine.ring(this.value(step.args) as Parameters<WorkshopEngine['ring']>[0])

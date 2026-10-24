@@ -1053,6 +1053,12 @@ importers:
       '@adatechnology/game-props3d':
         specifier: workspace:*
         version: link:../game-props3d
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:*
+        version: link:../game-vfx-three
       '@adatechnology/game-weapons':
         specifier: workspace:*
         version: link:../game-weapons
@@ -1063,9 +1069,6 @@ importers:
       '@adatechnology/game-test-room':
         specifier: workspace:*
         version: link:../game-test-room
-      '@adatechnology/game-vfx':
-        specifier: workspace:*
-        version: link:../game-vfx
       '@adatechnology/golden-tool':
         specifier: workspace:*
         version: link:../../tools/golden

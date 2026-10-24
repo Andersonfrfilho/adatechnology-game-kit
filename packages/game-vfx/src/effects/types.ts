@@ -23,6 +23,7 @@ export type EffectStep =
   | { readonly op: 'spawn'; readonly system: 'add' | 'normal' | 'streak'; readonly spawn: Computed }
   | { readonly op: 'emit'; readonly key: string; readonly system: 'add' | 'normal' | 'streak'; readonly rate: Computed; readonly spawn: Computed }
   | { readonly op: 'debris'; readonly spawn: Computed }
+  | { readonly op: 'mesh'; readonly spawn: Computed }
   | { readonly op: 'decal' | 'ring' | 'flash' | 'lens'; readonly args: readonly Computed[] }
   | { readonly op: 'screen'; readonly add?: Readonly<Partial<Record<ScreenKey, Computed>>>; readonly set?: Readonly<Partial<Record<ScreenKey, Computed>>>; readonly max?: Readonly<Partial<Record<ScreenKey, Computed>>> }
   | { readonly op: 'fire_light'; readonly slot: 0 | 1; readonly point: Computed; readonly intensity: Computed; readonly time: Computed }

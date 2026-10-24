@@ -48,8 +48,10 @@
     "@adatechnology/game-audio": "workspace:*",
     "@adatechnology/game-contracts": "workspace:*",
     "@adatechnology/game-interactables-three": "workspace:*",
-    "@adatechnology/game-weapons": "workspace:*",
-    "@adatechnology/game-props3d": "workspace:*"
+    "@adatechnology/game-props3d": "workspace:*",
+    "@adatechnology/game-vfx": "workspace:*",
+    "@adatechnology/game-vfx-three": "workspace:*",
+    "@adatechnology/game-weapons": "workspace:*"
   },
   "peerDependencies": {
     "three": "^0.160.0"
@@ -57,7 +59,6 @@
   "devDependencies": {
     "@adatechnology/game-destruction": "workspace:*",
     "@adatechnology/game-test-room": "workspace:*",
-    "@adatechnology/game-vfx": "workspace:*",
     "@adatechnology/golden-tool": "workspace:*",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",

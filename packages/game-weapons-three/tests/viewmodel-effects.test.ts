@@ -5,7 +5,7 @@ import type { TestRoom } from '@adatechnology/game-test-room'
 import { createArsenal } from '@adatechnology/game-weapons'
 import { VIEWMODEL_EFFECTS } from '@adatechnology/game-vfx'
 import { VIEWMODEL_EFFECT_IDS, createEffects } from '../src/fx/effects'
-import { createWeaponsTestModule } from '../src'
+import { createWeaponFx, createWeaponsTestModule } from '../src'
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')
@@ -26,7 +26,7 @@ const run = (room: TestRoom, seconds: number): void => {
 }
 const alive = (room: TestRoom): number => {
   const engine = room.vfx.peekWorkshop()
-  return engine ? engine.add.count + engine.normal.count : 0
+  return engine ? engine.meshes.count : 0
 }
 
 describe('the effects of the weapon in the hands go through the host sink', () => {
@@ -41,11 +41,13 @@ describe('the effects of the weapon in the hands go through the host sink', () =
     const quaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
     effects.muzzleFlash(new THREE.Vector3(1, 2, 3), quaternion, 1.6)
     effects.smoke(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0.01, 0.1, 0.02), 0.007, 1.6, 0.3)
-    effects.backblast(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, -1))
-    effects.flameJet(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, -1), 1 / 60, 0.6)
+    effects.backblast(new THREE.Vector3(0, 1, 0), quaternion)
+    effects.flameJet(new THREE.Vector3(0, 1, 0), quaternion, 1 / 60, 0.6)
     expect(played.map((request) => request.effect)).toEqual(['viewmodel_muzzle_flash', 'weapon_smoke_puff', 'launcher_backblast', 'flame_jet'])
     expect(played[0]!.values).toEqual({ size: 1.6 })
     expect((played[0]!.direction as number[])[2]).toBeCloseTo(-1, 10)
+    expect(played[0]!.orientation).toEqual([quaternion.x, quaternion.y, quaternion.z, quaternion.w])
+    expect(played[2]!.orientation).toEqual(played[0]!.orientation)
     expect(played[1]!.values).toEqual({ vx: 0.01, vy: 0.1, vz: 0.02, radius: 0.007, life: 1.6, opacity: 0.3 })
     expect(played[3]!.values).toEqual({ dt: 1 / 60, scale: 0.6 })
   })
@@ -89,5 +91,36 @@ describe('the effects of the weapon in the hands go through the host sink', () =
       run(room, 0.1)
     }
     expect(alive(room)).toBeGreaterThan(40)
+  })
+
+  it('a viewer with no effect sink makes a world of its own and still shows the flash, the smoke and the light', () => {
+    const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
+    const scene = new THREE.Scene()
+    const camera = new THREE.PerspectiveCamera()
+    const weapon = 'glock_17'
+    const tool = { weapon, category: 'handgun', ammo: 10, capacity: 17, reserve: 40, reloading: false }
+    const fx = createWeaponFx({ THREE, scene, camera, arsenal, groundAt: () => 0, audio: null, tool: () => tool })
+    fx.handle({ type: 'tool', weapon }, tool)
+    for (let frame = 0; frame < 30; frame++) fx.update(1 / 60)
+    const meshes = (): THREE.Object3D[] => scene.getObjectByName('workshop-meshes')?.children ?? []
+    expect(meshes()).toHaveLength(0)
+    fx.handle({ type: 'shot', weapon, shots: 1, recoil: [0, 0] }, tool)
+    for (let frame = 0; frame < 2; frame++) fx.update(1 / 60)
+    expect(meshes().length).toBe(12)
+    const seen = (): { cones: number; lit: number } => {
+      let cones = 0
+      let lit = 0
+      scene.traverse((node) => {
+        if ((node as THREE.Mesh).geometry?.type === 'ConeGeometry') cones++
+        if ((node as THREE.PointLight).isPointLight && (node as THREE.PointLight).intensity > 0) lit++
+      })
+      return { cones, lit }
+    }
+    expect(seen()).toEqual({ cones: 5, lit: 1 })
+    for (let frame = 0; frame < 10; frame++) fx.update(1 / 60)
+    expect(seen()).toEqual({ cones: 0, lit: 0 })
+    expect(meshes()).toHaveLength(6)
+    fx.dispose()
+    expect(scene.getObjectByName('workshop-meshes')).toBeUndefined()
   })
 })

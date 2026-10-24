@@ -5,9 +5,11 @@ import type { ScreenState, VfxProfile } from '../types'
 import { DebrisPool } from './debris'
 import { DecalPool } from './decals'
 import { RainField } from './rain'
+import { MeshPool } from './meshes'
+import type { MeshParticle, Quaternion } from './meshes'
 import { SpritePool } from './sprites'
 import { StreakPool } from './streaks'
-import type { DebrisSpawn, DecalOptions, SpriteSpawn, SpriteSystem, Vec3Tuple, WorkshopContext, WorkshopTrace } from './types'
+import type { DebrisSpawn, DecalOptions, MeshSpawn, SpriteSpawn, SpriteSystem, Vec3Tuple, WorkshopContext, WorkshopTrace } from './types'
 import { FlashLightPool, WaveRingPool } from './waves'
 
 const QUALITY_MULTIPLIERS = [1, 0.5, 0.2] as const
@@ -40,12 +42,24 @@ export interface PostProcess {
 
 /**
  * Where an effect is put when it is played at a point instead of on the Workshop's set: what the recipe wrote at `anchor` lands at `origin`, turned
- * about the vertical axis by `yaw`. Positions are moved and turned, directions and velocities only turned.
+ * about the vertical axis by `yaw`. Positions are moved and turned, directions and velocities only turned. With an `orientation` (a unit quaternion) the turn is
+ * that one, pitch and roll included, and `yaw` is not used.
  */
 export interface Placement {
   readonly origin: Vec3Tuple
   readonly anchor: Vec3Tuple
   readonly yaw: number
+  readonly orientation?: Quaternion
+}
+
+/** The vector turned by the unit quaternion (three.js's `applyQuaternion`). */
+function rotate(q: Quaternion, v: Vec3Tuple): Vec3Tuple {
+  const [qx, qy, qz, qw] = q
+  const ix = qw * v[0] + qy * v[2] - qz * v[1]
+  const iy = qw * v[1] + qz * v[0] - qx * v[2]
+  const iz = qw * v[2] + qx * v[1] - qy * v[0]
+  const iw = -qx * v[0] - qy * v[1] - qz * v[2]
+  return [ix * qw + iw * -qx + iy * -qz - iz * -qy, iy * qw + iw * -qy + iz * -qx - ix * -qz, iz * qw + iw * -qz + ix * -qy - iy * -qx]
 }
 
 export interface WorkshopOptions {
@@ -74,6 +88,7 @@ export class WorkshopEngine {
   readonly rings = new WaveRingPool()
   readonly lights: FlashLightPool
   readonly rain = new RainField(this)
+  readonly meshes = new MeshPool()
   readonly screen: ScreenState = createScreenState()
   readonly lens: LensBlob[] = []
   post: PostProcess = {}
@@ -114,7 +129,11 @@ export class WorkshopEngine {
   place(point: Vec3Tuple): Vec3Tuple {
     const placement = this.placement
     if (!placement) return point
-    const { anchor, origin, yaw } = placement
+    const { anchor, origin, yaw, orientation } = placement
+    if (orientation) {
+      const turned = rotate(orientation, [point[0] - anchor[0], point[1] - anchor[1], point[2] - anchor[2]])
+      return [origin[0] + turned[0], origin[1] + turned[1], origin[2] + turned[2]]
+    }
     const x = point[0] - anchor[0]
     const z = point[2] - anchor[2]
     const cos = Math.cos(yaw)
@@ -126,6 +145,7 @@ export class WorkshopEngine {
   turn(vector: Vec3Tuple): Vec3Tuple {
     const placement = this.placement
     if (!placement) return vector
+    if (placement.orientation) return rotate(placement.orientation, vector)
     const cos = Math.cos(placement.yaw)
     const sin = Math.sin(placement.yaw)
     return [cos * vector[0] + sin * vector[2], vector[1], -sin * vector[0] + cos * vector[2]]
@@ -159,6 +179,16 @@ export class WorkshopEngine {
     this.accumulators.set(key, carried)
   }
 
+  /** A solid particle (a cone, a sphere): the group sits at `p` turned by the placement, `v` is turned with it and `wv` is not. */
+  mesh(recipe: MeshSpawn): MeshParticle {
+    const placement = this.placement
+    const options: MeshSpawn = placement ? { ...recipe, p: this.place(recipe.p), ...(recipe.v ? { v: this.turn(recipe.v) } : {}) } : recipe
+    this.context.trace?.('mesh', [options])
+    // a piece of a group (`at`, `roll`) is turned with the placement; a free one (smoke, a flame) keeps its own turn in the world
+    const grouped = recipe.at !== undefined || recipe.roll !== undefined
+    return this.meshes.spawn(options, placement && grouped ? (placement.orientation ?? ([0, Math.sin(placement.yaw / 2), 0, Math.cos(placement.yaw / 2)] as const)) : undefined)
+  }
+
   debrisPiece(recipe: DebrisSpawn): void {
     const options = this.placed(recipe)
     this.context.trace?.('debris', [options])
@@ -182,10 +212,11 @@ export class WorkshopEngine {
     this.rings.add(args[0], args[1], args[2], args[3], args[4], args[5], args[6])
   }
 
-  flash(recipe: readonly [Vec3Tuple, number, number, number, number?, (boolean | 'boom')?]): void {
-    const args = this.placement ? ([this.place(recipe[0]), recipe[1], recipe[2], recipe[3], recipe[4], recipe[5]] as const) : recipe
-    this.context.trace?.('flash', args)
-    this.lights.flash(args[0], args[1], args[2], args[3], args[4], args[5])
+  /** `steady` (a seventh number): the light holds its intensity for its duration and goes out, where the Workshop's fades with the square of its age. */
+  flash(recipe: readonly [Vec3Tuple, number, number, number, number?, (boolean | 'boom')?, boolean?]): void {
+    const args = this.placement ? ([this.place(recipe[0]), recipe[1], recipe[2], recipe[3], recipe[4], recipe[5], recipe[6]] as const) : recipe
+    this.context.trace?.('flash', args.slice(0, 6))
+    this.lights.flash(args[0], args[1], args[2], args[3], args[4], args[5], args[6])
   }
 
   /** `fireLight` (W400): sways with the clock and flickers with one draw. */
@@ -213,6 +244,7 @@ export class WorkshopEngine {
     this.debris.update(dt)
     this.decals.update(dt)
     this.rings.update(dt)
+    this.meshes.update(dt)
     this.lights.update(dt)
     updateScreen(this.screen, dt)
     for (let index = this.lens.length - 1; index >= 0; index--) {
@@ -230,6 +262,7 @@ export class WorkshopEngine {
     this.debris.clear()
     this.decals.clear()
     this.rings.clear()
+    this.meshes.clear()
     this.lights.clear()
     this.rain.clear()
     this.accumulators.clear()

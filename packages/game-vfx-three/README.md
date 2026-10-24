@@ -10,6 +10,7 @@ The three.js renderer of [`@adatechnology/game-vfx`](../game-vfx). It draws a `V
   and marks agree. `createGroundPatch(THREE, { field })` is the Lab's 60 m patch as a mesh that follows a `GroundField`.
 - **Screen**: `overlay` puts the Lab's white flash (`mix-blend-mode: screen`) and the Workshop's white, red edge, sides and gas tint inside your container.
   `applyCamera()` shakes the camera for the render that follows and answers the function that puts it back.
+- **Solid particles**: the Workshop's `MeshPool` (cones, spheres, icosahedra: the first-person muzzle flash and smoke) is drawn as one three.js mesh each (`workshop-meshes`), with the geometry, flat or lit material, blending, turn and scale the particle says; the geometry and the material go with the mesh.
 - **Workshop layers**: what `world.play` fills is drawn too, made when the first recipe plays: the two sprite systems with the page's soft-point shader, streaks,
   500 instanced debris boxes, the decals (wet and dry), the expanding rings and the flash and fire lights. The Workshop's rain (`engine.rain`, up to 4 000 streaks, `workshop-rain` line segments) is drawn too; `game-weather-three` drives it. The Workshop's screen state joins the overlay (the
   stronger value of each field). The lens blobs and the post-processing the page paints on a 2D canvas are not drawn yet.

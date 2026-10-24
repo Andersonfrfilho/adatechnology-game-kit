@@ -1,55 +1,85 @@
-import { add, cos, exp, floor, INDEX, lt, min, mul, neg, pick, rand, rnd, sin, variable } from '../dsl'
-import { flash, repeat, set, spawn, when } from '../steps'
+import { add, cos, DIRECTION, div, eq, floor, INDEX, lt, min, mul, neg, pick, rand, sin, sub, variable, vx, vz } from '../dsl'
+import { append, flash, mesh, repeat, set, when } from '../steps'
 import type { EffectDef, EffectStep } from '../types'
 
 /**
  * The weapon in the player's hands (the Arsenal gallery's first-person effects: the muzzle flash and smoke of `createEffects`, the backblast of a launched rocket, the rocket's
- * trail and the flame jet of a flamethrower) as recipes of the Workshop engine. The gallery draws them as meshes in metres; these spawn sprites into the pools every other
- * effect uses, with the gallery's numbers. The gallery's axes (x along the barrel, y up, z to the right) become the recipe's: forward is -z, up is y, right is +x. A player
- * says how big (`values`) and where the weapon points (`direction`, turned about the vertical axis only).
- *
- * What a sprite cannot copy: a mesh grows by `1 + 2.1 dt` a frame, which is exponential, and a sprite grows linearly from its first size to its last, so each puff gets the last
- * size the mesh reaches in its life (`exp(2.1 life)`); a cone, a spike and a sphere become one round sprite each; a sprite fades out over its life, the flash mesh does not.
+ * trail and the flame jet of a flamethrower) as recipes of the Workshop engine, drawn as the gallery draws them: as solids (cones, spheres, icosahedra) with the gallery's sizes,
+ * segment counts, materials, timing and growth, not as sprites. They are written in the weapon's own axes, the gallery's: x along the barrel, y up, z to the right. A player
+ * says how big (`values`), where the weapon points (`direction`, the barrel in the world) and how it is turned (`orientation`, the quaternion, pitch and roll included), and
+ * seeds the numbers the effect draws, which it draws in the order the gallery drew them.
  */
-const SMOKE_GROWTH = 2.1
-const FLAME_GROWTH = 2.2
-const SMOKE_COLOR = 0x8a8a86
-/** The flash lasts 55 ms and its group grows from 0.6 to 1.5 times its size. */
+const PI = Math.PI
+/** The gallery's `smoke`: a sphere of 10 by 8 segments, a grey that rises, slows and grows by 2.1 a second while it fades. */
+const SMOKE = { color: 0x8a8a86, width: 10, height: 8, gravity: -0.08, drag: 2.2, growth: 2.1 }
+/** The flash lasts 55 ms and its group grows from 0.6 to 1.5 times its size (`0.6 + min(1, age / 0.055) * 0.9`). */
 const FLASH_SECONDS = 0.055
-const FLASH_FROM = 0.6
-const FLASH_GROWTH = 1.5 / 0.6
+const FLASH_RAMP = [0.6, 0.9] as const
+const FLASH_OPACITY = 0.95
 /** The gallery's palette for flame bits: orange, yellow and dark red, and a pale additive core. */
 const FLAME_COLORS = [0xff7a22, 0xffc040, 0xc8361a, 0xfff0b0]
 const FLAME_ADDITIVE = 3
 const ORIGIN = [0, 0, 0] as const
 
 const SIZE = variable('size')
-const LIFE = variable('life')
-const ahead = (distance: unknown): unknown => [0, 0, neg(distance)]
-const wide = (width: number): unknown => rnd(-width / 2, width / 2)
+const wide = (width: number): unknown => mul(sub(rand(), 0.5), width)
 
-/** A puff of smoke: a sphere of `radius` (a sprite of twice that), fading linearly from `opacity`, rising and slowing, grown to what the mesh reaches in `life`. */
-const puff = (point: unknown, velocity: unknown, radius: unknown, life: unknown, opacity: unknown): EffectStep[] => [
-  set('life', life),
-  spawn('normal', { p: point, v: velocity, sp: 0, life: LIFE, size: mul(2, radius), grow: exp(mul(SMOKE_GROWTH, LIFE)), c0: SMOKE_COLOR, a: opacity, g: -0.08, drag: 2.2, fi: 0 }),
+/** The gallery's `smoke(position, velocity, size, life, opacity)`; the keys are in the order the gallery drew its numbers. `world` is a velocity that is not turned with the weapon. */
+const puff = (point: unknown, velocity: unknown, world: unknown, radius: unknown, life: unknown, opacity: unknown): EffectStep =>
+  mesh({
+    shape: 'sphere',
+    p: point,
+    v: velocity,
+    wv: world,
+    r: radius,
+    seg: SMOKE.width,
+    seg2: SMOKE.height,
+    life,
+    c0: SMOKE.color,
+    a: opacity,
+    fade: true,
+    lit: true,
+    g: SMOKE.gravity,
+    drag: SMOKE.drag,
+    grow: SMOKE.growth,
+  })
+
+/** The gallery's `flameBit`: an icosahedron of one of four colours, tumbling, thrown, rising, growing and slowing. The numbers are drawn in the gallery's order, the colour after the life. */
+const flameBit = (point: unknown, velocity: unknown, world: unknown, radius: unknown, life: unknown): EffectStep[] => [
+  set('bitPoint', point),
+  set('bitVelocity', velocity),
+  set('bitWorld', world),
+  set('bitRadius', radius),
+  set('bitLife', life),
+  set('bitColour', floor(mul(rand(), FLAME_COLORS.length))),
+  mesh({
+    shape: 'icosahedron',
+    p: variable('bitPoint'),
+    v: variable('bitVelocity'),
+    wv: variable('bitWorld'),
+    r: variable('bitRadius'),
+    seg: 1,
+    rot: [mul(rand(), 3), mul(rand(), 3), 0],
+    spin: [3, 4, 2],
+    life: variable('bitLife'),
+    c0: pick(FLAME_COLORS, variable('bitColour')),
+    add: eq(variable('bitColour'), FLAME_ADDITIVE),
+    a: 0.9,
+    fade: true,
+    g: -1.4,
+    drag: 1.4,
+    grow: 2.2,
+  }),
 ]
 
-/** A bit of flame: one of the four colours, thrown, rising, growing and slowing. */
-const flameBit = (point: unknown, velocity: unknown, radius: unknown, life: unknown): EffectStep[] => {
-  const shared = { p: point, v: velocity, sp: 0, life: LIFE, size: mul(2, radius), grow: exp(mul(FLAME_GROWTH, LIFE)), a: 0.9, g: -1.4, drag: 1.4, fi: 0 }
-  return [
-    set('life', life),
-    set('colour', floor(mul(rand(), FLAME_COLORS.length))),
-    when(
-      lt(variable('colour'), FLAME_ADDITIVE),
-      [spawn('normal', { ...shared, c0: pick(FLAME_COLORS, variable('colour')) })],
-      [spawn('add', { ...shared, c0: FLAME_COLORS[FLAME_ADDITIVE] })],
-    ),
-  ]
-}
+/** One piece of the flash: additive, 55 ms, in the group that grows and is rolled by `roll`. */
+const flashPiece = (shape: 'cone' | 'cone_open' | 'sphere', radius: unknown, height: unknown, width: number, at: unknown, rot: unknown, color: number): EffectStep =>
+  mesh({ shape, r: radius, ...(height === undefined ? {} : { h: height }), seg: width, seg2: shape === 'sphere' ? 8 : 1, p: ORIGIN, at, rot, roll: variable('roll'), ramp: FLASH_RAMP, life: FLASH_SECONDS, c0: color, a: FLASH_OPACITY, add: true })
 
-
-/** `muzzleFlash` of the gallery (size `k`): a cone, four spikes and a core, additive for 55 ms and growing, a short orange light, and six puffs of smoke. */
+/**
+ * `muzzleFlash` of the gallery (size `k`): an open cone, four small cones and a sphere, additive for 55 ms and growing, a short orange light that holds its strength, and six
+ * puffs of smoke. It draws the four angles of the small cones, the roll of the group, then the velocity and life of each puff.
+ */
 const MUZZLE_FLASH: EffectDef = {
   id: 'viewmodel_muzzle_flash',
   pageId: 'event:viewmodel_muzzle_flash',
@@ -57,29 +87,42 @@ const MUZZLE_FLASH: EffectDef = {
   budget: { particles: 12, lights: 1 },
   loop: 0.1,
   timeline: [
-    flash(ORIGIN, 0xffb060, mul(4, SIZE), FLASH_SECONDS, mul(2, SIZE)),
-    spawn('add', { p: ahead(mul(0.042, SIZE)), sp: 0, life: FLASH_SECONDS, size: mul(FLASH_FROM, 0.085, SIZE), grow: FLASH_GROWTH, c0: 0xffb347, fi: 0 }),
+    set('angles', []),
+    repeat(4, append('angles', add(div(mul(INDEX, PI), 2), mul(rand(), 0.6)))),
+    set('roll', mul(rand(), PI)),
+    flash(ORIGIN, 0xffb060, mul(4, SIZE), FLASH_SECONDS, mul(2, SIZE), true, true),
+    flashPiece('cone_open', mul(0.013, SIZE), mul(0.085, SIZE), 10, [mul(0.042, SIZE), 0, 0], [0, 0, -PI / 2], 0xffb347),
     repeat(
       4,
-      set('angle', add(mul(INDEX, Math.PI / 2), mul(rand(), 0.6))),
-      spawn('add', {
-        p: [mul(sin(variable('angle')), 0.016, SIZE), mul(cos(variable('angle')), 0.016, SIZE), neg(mul(0.012, SIZE))],
-        sp: 0,
-        life: FLASH_SECONDS,
-        size: mul(FLASH_FROM, 0.04, SIZE),
-        grow: FLASH_GROWTH,
-        c0: 0xffb347,
-        fi: 0,
-      }),
+      set('angle', pick(variable('angles'), INDEX)),
+      flashPiece(
+        'cone',
+        mul(0.005, SIZE),
+        mul(0.04, SIZE),
+        6,
+        [mul(0.012, SIZE), mul(cos(variable('angle')), 0.016, SIZE), mul(sin(variable('angle')), 0.016, SIZE)],
+        [variable('angle'), 0, -PI / 2],
+        0xffb347,
+      ),
     ),
-    spawn('add', { p: ahead(mul(0.008, SIZE)), sp: 0, life: FLASH_SECONDS, size: mul(FLASH_FROM, 0.032, SIZE), grow: FLASH_GROWTH, c0: 0xfff1c0, fi: 0 }),
-    repeat(6, ...puff(ORIGIN, [wide(0.14), rnd(0.03, 0.15), neg(rnd(0.15, 0.5))], mul(0.013, SIZE), rnd(1.3, 1.9), 0.45)),
+    flashPiece('sphere', mul(0.016, SIZE), undefined, 12, [mul(0.008, SIZE), 0, 0], [0, 0, 0], 0xfff1c0),
+    repeat(
+      6,
+      puff(
+        ORIGIN,
+        [add(0.15, mul(rand(), 0.35)), add(0.03, mul(rand(), 0.12)), mul(sub(rand(), 0.5), 0.14)],
+        [0, 0, 0],
+        mul(0.013, SIZE),
+        add(1.3, mul(rand(), 0.6)),
+        0.45,
+      ),
+    ),
   ],
 }
 
 /**
  * One puff of smoke the gallery's `smoke(position, velocity, size, life, opacity)` throws: a hot barrel's, a rocket's trail, the smoke of a flame on the ground. The numbers come as
- * `values` (`vx`, `vy`, `vz` in the world, `radius`, `life`, `opacity`), so the weapon keeps its own random draws. Play it without a `direction`.
+ * `values` (`vx`, `vy`, `vz` in the world, `radius`, `life`, `opacity`), so the weapon keeps its own random draws.
  */
 const SMOKE_PUFF: EffectDef = {
   id: 'weapon_smoke_puff',
@@ -87,10 +130,10 @@ const SMOKE_PUFF: EffectDef = {
   team: 'weapons',
   budget: { particles: 1 },
   loop: 0.1,
-  timeline: [...puff(ORIGIN, [variable('vx'), variable('vy'), variable('vz')], variable('radius'), variable('life'), variable('opacity'))],
+  timeline: [puff(ORIGIN, undefined, [variable('vx'), variable('vy'), variable('vz')], variable('radius'), variable('life'), variable('opacity'))],
 }
 
-/** A rocket leaving the tube, seen from the rear of it: 26 puffs thrown back and 14 bits of fire. The weapon points ahead (-z), so back is +z. */
+/** A rocket leaving the tube, from the rear of it: 26 puffs thrown back (-x) and 14 bits of fire. */
 const BACKBLAST: EffectDef = {
   id: 'launcher_backblast',
   pageId: 'event:launcher_backblast',
@@ -98,14 +141,14 @@ const BACKBLAST: EffectDef = {
   budget: { particles: 40 },
   loop: 0.1,
   timeline: [
-    repeat(26, ...puff(ORIGIN, [wide(1.4), wide(0.8), add(rnd(1.5, 4.5), wide(1.4))], rnd(0.03, 0.06), rnd(1.8, 3.2), 0.5)),
-    repeat(14, ...flameBit(ORIGIN, [wide(1), wide(0.6), add(rnd(2, 4), wide(1))], 0.02, 0.25)),
+    repeat(26, puff(ORIGIN, [neg(add(1.5, mul(rand(), 3))), 0, 0], [wide(1.4), wide(0.8), wide(1.4)], add(0.03, mul(rand(), 0.03)), add(1.8, mul(rand(), 1.4)), 0.5)),
+    repeat(14, ...flameBit(ORIGIN, [neg(add(2, mul(rand(), 2))), 0, 0], [wide(1), wide(0.6), wide(1)], 0.02, 0.25)),
   ],
 }
 
 /**
- * A frame of a flamethrower's jet: `floor(420 dt scale)` bits of fire thrown ahead and up (`dt` and `scale` are the values), and a puff of smoke downwind half the time.
- * It is played every frame the nozzle burns.
+ * A frame of a flamethrower's jet: `floor(420 dt scale)` bits of fire thrown along the barrel and up (`dt` and `scale` are the values), and a puff of smoke downwind half the time.
+ * It is played every frame the nozzle burns. It needs the `direction` of the barrel for the wind of the smoke.
  */
 const FLAME_JET: EffectDef = {
   id: 'flame_jet',
@@ -116,15 +159,18 @@ const FLAME_JET: EffectDef = {
   timeline: [
     repeat(
       floor(mul(420, variable('dt'), variable('scale'))),
-      set('speed', mul(rnd(2.2, 3.3), variable('scale'))),
+      set('speed', mul(add(2.2, mul(rand(), 1.1)), variable('scale'))),
       ...flameBit(
-        [0, 0, neg(mul(rand(), variable('speed'), min(variable('dt'), 0.3)))],
-        [wide(0.35), rnd(-0.09, 0.21), add(neg(variable('speed')), wide(0.35))],
-        rnd(0.02, 0.042),
-        rnd(0.4, 0.75),
+        [mul(rand(), variable('speed'), min(variable('dt'), 0.3)), 0, 0],
+        [variable('speed'), 0, 0],
+        [wide(0.35), mul(sub(rand(), 0.3), 0.3), wide(0.35)],
+        add(0.02, mul(rand(), 0.022)),
+        add(0.4, mul(rand(), 0.35)),
       ),
     ),
-    when(lt(rand(), 0.5), puff([0, 0, neg(add(mul(1.1, variable('scale')), rnd(0, 0.4)))], [0, 0.35, -0.6], 0.03, 1.6, 0.4)),
+    when(lt(rand(), 0.5), [
+      puff([add(mul(1.1, variable('scale')), mul(rand(), 0.4)), 0, 0], undefined, [mul(vx(DIRECTION), 0.6), 0.35, mul(vz(DIRECTION), 0.6)], 0.03, 1.6, 0.4),
+    ]),
   ],
 }
 

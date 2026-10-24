@@ -55,6 +55,8 @@ const { puffs, sparks, chunks, glows, shocks, lights, marks } = vfx.pools()
 - `effectForEvent(evento)` (`data/event-effects.json`): `spall` -> `impact_<material>`, estágios -> `stage_crack` / `breach_dust` / `collapse_dust`, `expose` -> `rebar_expose`, vidro -> `glass_burst`; `muzzle_*` e `casing_*` são fatias da receita de clarão e cápsula.
 - Textos de cada receita (nome, custo, quando, visual, orçamento, rede) em `locales` (`en`, `pt-BR`).
 
+As receitas também podem lançar **sólidos** (passo `mesh`, `MeshSpawn`, `workshop().meshes`) e ser giradas pelo quaternion inteiro (`PlayOptions.orientation`) com números nomeados (`values`); `VIEWMODEL_EFFECTS` (`viewmodel_muzzle_flash`, `weapon_smoke_puff`, `launcher_backblast`, `flame_jet`) são o clarão e a fumaça da arma na mão como a galeria do Arsenal os desenha, nos eixos da arma (x no cano).
+
 ## Ambiente de teste
 `examples/vfx-test-area` carrega o módulo de bancada do `game-vfx-three` na sala de testes (também dentro de `interactables-test-area`): escolha de explosão ou receita por grupo, variante, repetir, repetição automática, distância, faixa de LOD, qualidade, camadas, medidores contra o orçamento, a ficha com a linha do tempo e três cenários (todas as explosões, todas as receitas, o teto de luzes).
 

@@ -41,7 +41,7 @@ export function launchRocket(context: HeavyContext): void {
   const forward = context.forward()
   const muzzle = context.positionOf(parts.muzzle as THREE_NS.Object3D)
   const rear = context.positionOf(parts.rear as THREE_NS.Object3D)
-  context.effects.backblast(rear, forward)
+  context.effects.backblast(rear, context.orientation())
   const rocket = parts.makeRound ? parts.makeRound() : buildFlyingRocket(kit, parts.launcherType)
   if (parts.round) parts.round.visible = false
   rocket.quaternion.copy(context.orientation())
@@ -78,7 +78,7 @@ export function flameJet(context: HeavyContext, dt: number, scale: number): void
   const { THREE } = kit
   const forward = context.forward()
   const muzzle = context.positionOf(parts.muzzle as THREE_NS.Object3D)
-  context.effects.flameJet(muzzle, forward, dt, scale)
+  context.effects.flameJet(muzzle, context.orientation(), dt, scale)
   if (random() < 0.18) {
     const droplet = new THREE.Mesh(new THREE.SphereGeometry(0.006, 6, 4), new THREE.MeshBasicMaterial({ color: 0xff7a22 }))
     droplet.position.copy(muzzle).addScaledVector(forward, 0.3 + random() * 0.5)

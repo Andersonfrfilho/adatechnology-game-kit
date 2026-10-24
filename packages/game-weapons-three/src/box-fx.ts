@@ -32,7 +32,7 @@ export interface WeaponFxOptions {
   attachmentModels?: AttachmentModelRegistry
   /** How far a laser beam goes from a point along a direction (metres), or null when it hits nothing: the dot lands where it ends. */
   raycast?: LaserRaycast
-  /** The host's effects: the muzzle flash, smoke, backblast and flame jet of the gallery models are recipes it plays; without it they are not shown. */
+  /** The host's effects: the muzzle flash, smoke, backblast and flame jet of the gallery models are recipes it plays; without it the viewmodel makes a world of its own for them. */
   effects?: EffectSink
 }
 

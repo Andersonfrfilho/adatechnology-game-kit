@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { Decal, WorkshopEngine } from '@adatechnology/game-vfx'
+import { createMeshLayer } from './mesh-layer'
 import { WORKSHOP_SPRITE_FRAGMENT, WORKSHOP_SPRITE_VERTEX } from './shaders/workshop-sprite'
 import type { ThreeLib } from './types'
 
@@ -335,6 +336,8 @@ export function createWorkshopLayers(THREE: ThreeLib, engine: WorkshopEngine, po
     ringLayer(THREE, engine.rings),
   ]
   for (const layer of layers) group.add(layer.object)
+  const meshes = createMeshLayer(THREE, engine.meshes)
+  group.add(meshes.group)
   const flashLights = engine.lights.lights.map(() => new THREE.PointLight(0xffc070, 0, 14))
   const fireLights = engine.lights.fire.map(() => new THREE.PointLight(FIRE_LIGHT_COLOR, 0, FIRE_LIGHT_DISTANCE))
   for (const light of [...flashLights, ...fireLights]) group.add(light)
@@ -343,6 +346,7 @@ export function createWorkshopLayers(THREE: ThreeLib, engine: WorkshopEngine, po
     sync() {
       let drawCalls = 0
       for (const layer of layers) if (layer.sync()) drawCalls++
+      drawCalls += meshes.sync()
       engine.lights.lights.forEach((source, index) => {
         const light = flashLights[index]!
         light.position.set(source.x, source.y, source.z)
@@ -359,6 +363,7 @@ export function createWorkshopLayers(THREE: ThreeLib, engine: WorkshopEngine, po
     },
     dispose() {
       for (const layer of layers) layer.dispose()
+      meshes.dispose()
       group.clear()
     },
   }
