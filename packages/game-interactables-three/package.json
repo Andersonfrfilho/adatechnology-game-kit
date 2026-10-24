@@ -45,13 +45,15 @@
   },
   "dependencies": {
     "@adatechnology/game-interactables": "workspace:*",
-    "@adatechnology/game-props3d": "workspace:*"
+    "@adatechnology/game-props3d": "workspace:*",
+    "@adatechnology/game-shapes": "workspace:*"
   },
   "peerDependencies": {
     "three": "^0.160.0"
   },
   "devDependencies": {
     "@adatechnology/game-interactables-household": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "three": "^0.160.1",

@@ -43,6 +43,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
+  "dependencies": {
+    "@adatechnology/game-shapes": "workspace:*",
+    "@adatechnology/game-shapes-three": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",

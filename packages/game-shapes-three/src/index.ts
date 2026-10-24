@@ -1,0 +1,7 @@
+export { toGeometry } from './geometry'
+export type { Three, ToGeometryOptions } from './geometry'
+export { SHAPE_GEOMETRY_TYPES, shapeGeometries } from './namespace'
+export type { ShapeGeometriesOptions } from './namespace'
+export { createMaterials, toObject3D } from './object'
+export type { ShapeObject, ToObjectOptions } from './object'
+export { mergeByMaterial } from './merge-by-material'

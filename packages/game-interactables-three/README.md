@@ -48,7 +48,9 @@ Every function also exists unbound and takes `THREE` first: `createMeshApi(THREE
 
 ### Mesh api
 
-`createMeshApi(THREE, { materials, quality, shadows })` returns `{ api, finish, materials }`.
+`createMeshApi(THREE, { materials, quality, shadows })` returns `{ api, finish, materials }`. The builders draw into a
+[`game-shapes`](../game-shapes) schema (`createShapeRecorder` of game-props3d) and `finish` bakes it with `generate`; the bytes are the
+ones this api made with its own templates before the move (`tests/exact-golden.test.ts`, 222 cases).
 
 - Implements `box`, `cylinder` (shapes `cyl`, `cyl6`, `cone`, `sphere`), `leaf`, `plane` (with atlas `uv`), `light` and `part`.
 - Static primitives are baked (vertex colors) into **one `BufferGeometry` per material**: the draw calls of the static body are the number
