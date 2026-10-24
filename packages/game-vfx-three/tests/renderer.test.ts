@@ -110,6 +110,30 @@ describe('createVfxRenderer', () => {
   })
 })
 
+describe('sprite kinds', () => {
+  it('draws the bursts of the world as two point layers and counts them as draw calls', () => {
+    const { scene, renderer } = setup()
+    const before = renderer.stats().drawCalls
+    renderer.world.burst('sparks', [0, 1, 0], [0, 1, 0], 12, 3)
+    renderer.world.burst('dust', [0, 1, 0], [0, 1, 0], 9, 1)
+    renderer.update(1 / 60)
+    const additive = scene.getObjectByName('vfx-sprites-additive') as THREE.Points
+    const normal = scene.getObjectByName('vfx-sprites') as THREE.Points
+    expect(additive.geometry.drawRange.count).toBe(12)
+    expect(normal.geometry.drawRange.count).toBe(9)
+    expect(additive.geometry.getAttribute('pcolor')).toBeDefined()
+    expect(renderer.stats().drawCalls - before).toBe(2)
+    renderer.dispose()
+    expect(scene.getObjectByName('vfx-sprites')).toBeUndefined()
+  })
+
+  it('has the soft point shader the destruction renderer had', async () => {
+    const { SPRITE_FRAGMENT, SPRITE_VERTEX } = await import('../src')
+    expect(SPRITE_VERTEX).toContain('gl_PointSize = min(size * uScale / max(0.1, -mv.z), 256.0);')
+    expect(SPRITE_FRAGMENT).toContain('smoothstep(0.35, 1.0, d)')
+  })
+})
+
 describe('createGroundPatch', () => {
   it('follows the height field and only redraws when it changed', () => {
     const field = createGroundField()

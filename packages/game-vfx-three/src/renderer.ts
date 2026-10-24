@@ -8,6 +8,7 @@ import { createLightLayer } from './lights'
 import { createMarkLayer } from './marks'
 import { createScreenOverlay } from './screen-overlay'
 import { createShockLayer } from './shocks'
+import { createSpriteLayer } from './sprites'
 import type { ThreeLib, VfxRenderer, VfxRendererOptions } from './types'
 
 const LAB_LIGHT_DIRECTION = [-14, 26, 12] as const
@@ -53,14 +54,15 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
   const plateGeometry = new THREE.BoxGeometry(1, 1, 1)
   const chunks = createChunkLayer(THREE, pools.chunks, { rock: rockGeometry, plate: plateGeometry }, colorOfChunk)
   const shocks = createShockLayer(THREE, pools.shocks)
+  const sprites = createSpriteLayer(THREE, world.sprites(), options.pointScale ?? 700)
   const lights = createLightLayer(THREE, pools.lights, options.lightScale ?? Math.PI)
   const marks = createMarkLayer(THREE, { ground: pools.ground, createCanvas: options.createCanvas, rockGeometry, plateGeometry })
-  root.add(puffs.mesh, sparks.mesh, glows.mesh, chunks.rocks, chunks.plates, shocks.group, lights.group, marks.group)
+  root.add(puffs.mesh, sparks.mesh, glows.mesh, chunks.rocks, chunks.plates, shocks.group, lights.group, sprites.additive, sprites.normal, marks.group)
   const stopMarks = world.onMarks((event) => marks.handle(event))
   const overlay = options.overlay ? createScreenOverlay(options.overlay) : undefined
   let drawCalls = 0
   let clock = 0
-  const lastDrawn = { puffs: 0, sparks: 0, glows: 0, chunks: 0, shocks: 0 }
+  const lastDrawn = { puffs: 0, sparks: 0, glows: 0, chunks: 0, shocks: 0, sprites: 0 }
 
   function followCamera(): void {
     const position = options.camera.position
@@ -73,12 +75,13 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
     lastDrawn.glows = glows.sync()
     lastDrawn.chunks = chunks.sync()
     lastDrawn.shocks = shocks.sync()
+    lastDrawn.sprites = sprites.sync()
     lights.sync()
     const glow = pools.lights.glow
     uniforms.uGlowPos.value.set(glow.x, glow.y, glow.z)
     uniforms.uGlowCol.value.set(glow.color[0], glow.color[1], glow.color[2])
     uniforms.uGlowI.value = glow.intensity
-    drawCalls = Number(lastDrawn.puffs > 0) + Number(lastDrawn.sparks > 0) + Number(lastDrawn.glows > 0) + Number(chunks.rocks.count > 0) + Number(chunks.plates.count > 0) + lastDrawn.shocks * 2 + marks.count()
+    drawCalls = Number(lastDrawn.puffs > 0) + Number(lastDrawn.sparks > 0) + Number(lastDrawn.glows > 0) + Number(chunks.rocks.count > 0) + Number(chunks.plates.count > 0) + Number(sprites.additive.geometry.drawRange.count > 0) + Number(sprites.normal.geometry.drawRange.count > 0) + lastDrawn.shocks * 2 + marks.count()
   }
 
   return {
@@ -125,7 +128,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
     dispose() {
       stopMarks()
       overlay?.dispose()
-      for (const layer of [puffs, sparks, glows, chunks, shocks, lights, marks]) layer.dispose()
+      for (const layer of [puffs, sparks, glows, chunks, shocks, lights, marks, sprites]) layer.dispose()
       rockGeometry.dispose()
       plateGeometry.dispose()
       options.scene.remove(root)

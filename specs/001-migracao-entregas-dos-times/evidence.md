@@ -1445,14 +1445,12 @@ Branch `work/spec001-t5-c` (de `feat/spec-001-fase-5`, com `game-vfx`/`game-vfx-
 
 ### O que **não** trocou, e por quê
 
-O contrato manda detritos, fogo de contato, gotas e vazamentos para `vfx.burst`/`vfx.spawn` (`SpriteKind`) e apagar `particles.ts`. **Esse pool de sprites não existe no `game-vfx` desta branch**: o
-`VfxWorld` da T5.1b/d não tem `burst`, `spawn` nem `SpriteKind` (a tabela de perfis lista a coluna de sprites, mas o compositor só tem puffs, faíscas, brilhos, pedaços, choques e anéis), e o desenho (§2.3) põe esse
-pool e o executor de receitas na T5.2a, que roda em outro worktree. Para não duplicar nem colidir com ela, **não criei o pool aqui**. Ficam, então, no mesmo estado e sem regressão:
+O contrato manda detritos, fogo de contato, gotas e vazamentos para `vfx.burst`/`vfx.spawn` (`SpriteKind`) e apagar `particles.ts`. Na T5.1b/d o `VfxWorld` ainda não tinha esse pool; ele entrou com a T5.2a (a bancada de receitas) e a T5.1f foi **fechada depois dela**, na ordem dos commits desta branch:
 
-- `game-destruction-three/src/particles.ts` e `ParticleKind` (detritos, faíscas de ricochete, cinzas, vapor, gotas, vazamentos, `emit`): trocar é uma edição de uma linha por chamada quando o pool chegar, e então apagar o arquivo.
-- `game-fluids-three/src/particles.ts` (`ParticlePool` de respingo e vapor): mesmo motivo (`drips` e `steam` são do pool de sprites).
-- `game-weapons-three`: o clarão do viewmodel e a fumaça da Galeria ficam (como manda o desenho). `muzzle_*`, `impact_*`, penetração e cápsulas de jogador remoto são **receitas** da Oficina (T5.2a); o catálogo de `game-vfx` hoje só tem explosões, então `host.effects.play` não tem o que tocar. Fumaça `muzzle_smoke`: pendente da receita e de conferir o golden T1.3.
-- `renderer.emit('fire'|'smoke'|'foam'|'sparks', ...)` da sala (chama de zona de fogo, lança-chamas, extintor): são tipos do pool de sprites.
+- **`game-vfx`**: `src/sprites/` (`SpriteKindPool`, `SpriteKindSystem`, `SPRITE_KINDS`, `patchSpriteKinds`) e `data/sprite-kinds.json` com os 14 tipos do `particles.ts` **com os números iguais** (a conta do `burst`, do chão e da vida é a mesma, com o mesmo gerador mulberry32). `VfxWorld` ganhou `burst`, `spawn`, `onLand(owner, ...)` (quem escuta onde a gota caiu, por dono, para um mundo compartilhado entre renderizadores), `sprites()`, a opção `sprites: { capacity, density, kinds }` e `push` agora empurra também os sprites.
+- **`game-vfx-three`**: `shaders/sprite.ts` (o shader de pontos, movido sem mudar) e `createSpriteLayer`: duas camadas `vfx-sprites-additive` e `vfx-sprites`, antes do grupo de marcas. Opção `pointScale`.
+- **`game-destruction-three`**: `particles.ts` apagado; detritos, faíscas, cinzas, vapor, gotas e vazamentos vão para `vfx.burst/spawn`; `ParticleKind` é alias de `SpriteKind`; as gotas que caem avisam o próprio renderizador (dono `destruction-<n>`). Eventos da Fase 2 por `RendererOptions.eventEffects` (padrão `EVENT_EFFECTS_MAP`): `spall` toca `impact_<material>` (pelas tags `metal`, `glass`, `wood`; o resto é `concrete`), `stage` toca o efeito do estágio (o 2 **troca** o puff de poeira que já havia, que continua como reserva quando não há efeito), `expose` toca `rebar_expose`, `collapse` toca `collapse_dust`. Os efeitos de oficina só aparecem na tela com os desenhistas da T5.2d.
+- O que sobra do pool antigo de fluidos e de armas continua descrito abaixo (T5.1g).
 
 ### Testes mudados
 

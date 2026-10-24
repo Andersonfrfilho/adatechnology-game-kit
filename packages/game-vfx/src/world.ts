@@ -34,6 +34,10 @@ import { lehmer, streamFor } from './random'
 import type { MutableVec3, RandomStream } from './random'
 import { createSchedule } from './schedule'
 import { createScreenState, resetScreenState, updateScreen } from './screen'
+import { SpriteKindSystem } from './sprites/system'
+import type { LandListener } from './sprites/system'
+import type { SpriteSpawnOptions } from './sprites/kind-pool'
+import type { SpriteKind, SpriteKindDef } from './sprites/kinds'
 import type { VfxTrace } from './trace'
 import { WorkshopEngine } from './workshop/engine'
 import type { Vec3Tuple } from './workshop/types'
@@ -59,6 +63,8 @@ export interface VfxOptions {
   readonly aliases?: Readonly<Record<string, string>>
   /** The Workshop's recipes by id for `play` (default `GAME_EFFECTS`; build another with `patchEffects`). */
   readonly effects?: Readonly<Record<string, EffectDef>>
+  /** The sprites of fixed kinds (`burst`, `spawn`): pool size and count multiplier (default 2500 and 1; a `low` profile halves the pool and uses 0.6) and the kinds by id. */
+  readonly sprites?: { readonly capacity?: number; readonly density?: number; readonly kinds?: Readonly<Record<string, SpriteKindDef>> }
   readonly reducedMotion?: boolean
   /** Hears everything that spawns, in order (the goldens use it). */
   readonly trace?: VfxTrace
@@ -120,6 +126,14 @@ export interface VfxWorld {
   workshop(): WorkshopEngine
   /** The ids `play` accepts. */
   effectIds(): readonly string[]
+  /** `count` sprites of a kind leaving `point` around `normal` at about `speed` m/s (debris, sparks, smoke, steam, drips...). */
+  burst(kind: SpriteKind | string, point: Vec3Like, normal: Vec3Like, count: number, speed?: number, options?: SpriteSpawnOptions): void
+  /** One sprite of a kind with an explicit velocity. */
+  spawn(kind: SpriteKind | string, point: Vec3Like, velocity: Vec3Like, options?: SpriteSpawnOptions): void
+  /** Hears where the sprites of `owner` that land (drips spawned with `{ owner, tag }`) touch the ground. Returns the function that stops listening. */
+  onLand(owner: string, listener: LandListener): () => void
+  /** The sprite pools as the renderer reads them. */
+  sprites(): SpriteKindSystem
   /** Pushes the smoke and dust within `radius` of `point` outwards, as fast as `speed` at the centre. */
   push(point: Vec3Like, radius: number, speed: number): void
   stop(handle: number): void
@@ -184,6 +198,15 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
   const ground = options.ground
   const groundAt = options.groundAt ?? (ground ? (x: number, z: number) => ground.heightAt(x, z) : () => 0)
   const handles = { next: 0, events: 0 }
+  const low = options.profile === 'low'
+  const spriteSystem = new SpriteKindSystem({
+    capacity: options.sprites?.capacity ?? (low ? 1250 : 2500),
+    density: options.sprites?.density ?? (low ? 0.6 : 1),
+    seed: 0x9e3779b1 + (options.seed ?? 0),
+    groundAt,
+    gravity: options.gravity ?? DEFAULT_GRAVITY,
+    ...(options.sprites?.kinds ? { kinds: options.sprites.kinds } : {}),
+  })
   const core: VfxCore = {
     profile,
     puffs: createPuffPool(profile.puffs),
@@ -247,6 +270,10 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
       const seed = playOptions.seed ?? (randomMode === 'shared' ? undefined : Math.imul(++handles.events, AUTO_SEED) + (options.seed ?? 0))
       return effectPlayer().play(id, [point[0], point[1], point[2]], { ...playOptions, ...(seed !== undefined ? { seed } : {}) })
     },
+    burst: (kind, point, normal, count, speed, spriteOptions) => spriteSystem.burst(kind, point, normal, count, speed, spriteOptions),
+    spawn: (kind, point, velocity, spriteOptions) => spriteSystem.spawn(kind, point, velocity, spriteOptions),
+    onLand: (owner, listener) => spriteSystem.onLand(owner, listener),
+    sprites: () => spriteSystem,
     workshop,
     effectIds: () => Object.keys(effects),
     explosion(id, point, explosionOptions = {}) {
@@ -270,6 +297,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
       return handle
     },
     push(point, radius, speed) {
+      spriteSystem.push(point, radius, speed)
       for (const puff of core.puffs.items) {
         const dx = puff.x - point[0]
         const dy = puff.y - point[1]
@@ -311,6 +339,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
       updateFires(core, dt)
       updateLights(core.lights, { dt, flashLayer: layers.flash ? 1 : 0, clock: core.clock.time, fires: core.fires.items })
       updateScreen(core.screen, dt)
+      spriteSystem.update(dt)
       if (engine) {
         engine.post = {}
         player?.update(dt)
@@ -350,6 +379,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
       ground?.reset()
       resetLightPool(core.lights)
       resetScreenState(core.screen)
+      spriteSystem.clear()
       player?.clear()
       engine?.clear()
       core.clock.time = 0

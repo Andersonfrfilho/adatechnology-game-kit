@@ -6,6 +6,8 @@ import type { ScreenState, VfxOptions, VfxProfileName, VfxWorld } from '@adatech
 export type ThreeLib = Pick<
   typeof THREE_NS,
   | 'AdditiveBlending'
+  | 'BufferAttribute'
+  | 'BufferGeometry'
   | 'BoxGeometry'
   | 'CanvasTexture'
   | 'CircleGeometry'
@@ -23,7 +25,9 @@ export type ThreeLib = Pick<
   | 'Matrix4'
   | 'Mesh'
   | 'MeshStandardMaterial'
+  | 'NormalBlending'
   | 'PlaneGeometry'
+  | 'Points'
   | 'PointLight'
   | 'Quaternion'
   | 'RepeatWrapping'
@@ -74,6 +78,8 @@ export interface VfxRendererOptions {
   createCanvas?: () => CanvasLike
   /** Direction towards the light the puffs are shaded with. Default the Lab's moon. */
   lightDirection?: readonly [number, number, number]
+  /** Pixels of point size per metre at a distance of one metre for the sprite kinds; roughly `viewportHeight / (2 * tan(fov / 2))`. Default 700. */
+  pointScale?: number
   /** Multiplies the blast and fire lights. Default `Math.PI`: three.js r155+ lights are physical, the Lab's were not (r128). */
   lightScale?: number
 }

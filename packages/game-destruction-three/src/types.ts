@@ -41,6 +41,8 @@ export interface RendererOptions {
    * `VfxRenderer.update`, once per frame); without it the renderer makes its own world and its own three layer and steps them in `update`.
    */
   vfx?: VfxWorld
+  /** Which effect each destruction event plays (default `EVENT_EFFECTS_MAP` of `@adatechnology/game-vfx`): `spall`, `stage`, `expose`, `collapse`. Add, change or take out entries to tune it. */
+  eventEffects?: Readonly<Record<string, string | Readonly<Record<string, string>>>>
   /** Camera of the own effects world (distance LOD, shake); only read when `vfx` is not given. Default: a camera at the origin. */
   camera?: THREE_NS.Camera
   /**
