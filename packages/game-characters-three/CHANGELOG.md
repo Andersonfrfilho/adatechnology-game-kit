@@ -1,5 +1,12 @@
 # @adatechnology/game-characters-three
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [b6e8131]
+  - @adatechnology/game-characters@0.1.6
+
 ## 0.2.0
 
 ### Minor Changes
