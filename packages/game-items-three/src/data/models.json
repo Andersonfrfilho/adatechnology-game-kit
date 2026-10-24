@@ -448,5 +448,15 @@
       1.01
     ],
     "scale": 0.1
+  },
+  {
+    "id": "salted_fish",
+    "teamId": "peixe_salgado",
+    "teamBox": [
+      2.5,
+      0.3,
+      1
+    ],
+    "scale": 0.1
   }
 ]
