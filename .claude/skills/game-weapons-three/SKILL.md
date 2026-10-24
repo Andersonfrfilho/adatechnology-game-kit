@@ -67,6 +67,7 @@ ferramenta do host) e `fx.update(dt)` a cada quadro. `tool: () => HostTool` dá 
 | `GAME_SOUND_CLASSES`, `GAME_DISTANCE_CURVE`, `DEFAULT_ENERGY_CURVE`, `CLASS_REFERENCE_ENERGY` | a tabela `[corte Hz, volume, segundos]` e o abafamento do jogo, e a curva de energia do calibre; todos substituíveis por opção |
 | `buildWeaponModel(THREE, def)` / `buildProp` / `weaponProp` | modelo e spec (`DestructibleSpec` de caixas) de uma arma |
 | `BODY_ACTIONS` | ids sem modelo próprio (`hand`, `kick`, `shove`, `fists`) |
+| `WEAPON_THUMBNAILS`, `weaponThumbnailUrl(id, base?)`, `DEFAULT_THUMBNAIL_BASE` | miniatura SVG por arma (e por explosivo de mundo: `fuel_barrel`, `propane_p13`, `car_fuel_tank`), do `assets/weapon-svg/manifest.json`: o arquivo do Commons quando há, senão o gerado do modelo 3D. `createWeaponsTestModule({ thumbnailBase })` (padrão `weapon-svg/`, `false` desliga) preenche `TestableItem.thumbnail` de toda arma; a página serve a pasta (o site copia `assets/weapon-svg` para `site/dist/weapon-svg`) |
 | `WEAPON_ITEM_PREFIX`, `COUNTER_ITEM_ID` | prefixo `weapon_` dos itens e id do balcão |
 | `fitAttachmentModels(model, fitted, kit, { catalogue, overrides?, raycast?, isDrawn?, areBeamsOn? })` | desenha os acessórios de `fitted` no modelo e devolve o `AttachmentRig` (`sync(fitted)`, `update()`, `drawn`, `dispose()`): o que a arma já traz (`parts.fittings`) aparece e some com a lista, o resto vem do registro no quadro do encaixe, filho do invólucro (`root`, não do `inner`, que estica) |
 | `ATTACHMENT_MODELS`, `AttachmentModelBuilder`, `AttachmentModelRegistry` | o construtor de cada acessório pelo `model` da definição; um jogo troca ou acrescenta com `createWeaponsTestModule({ attachmentModels })` ou `createWeaponFx({ attachmentModels })`. Sem construtor (não desenhados): `sawn_off_barrel`, `long_barrel` e as miras integradas que a arma já desenha |
@@ -113,6 +114,11 @@ Teclas: H equipa a arma mirada, clique atira ou arremessa, R recarrega, Q muda o
   Tudo sai de `computeShotSound` (puro, sem `Math.random`; o ruído usa o `createRng` do kit com `seed`). Os sons mecânicos (etapas de recarga, ferrolho,
   pane, desobstruir, tiro em vazio, trava) vêm por id; a Galeria não tem som, então os metálicos são do SDK e só `recarga`/`vazio` são do jogo.
   Na mão, `weaponEventOf(hostEvent)` (interno) converte o evento do host no da regra e `audio.event` toca `mechanicalSoundOf`; o tiro leva `{ caliber, distance }`.
+
+## Miniaturas das armas (`assets/weapon-svg`)
+- `generated/<id>.svg`: silhueta lateral do modelo 3D (vista de cima para o que é só prop de caixas deitado), viewBox 800x200, `currentColor`, aço mais claro (`fill-opacity`) sob o polímero e a madeira; feita por `tools/weapon-thumbnails` (`pnpm --filter @adatechnology/weapon-thumbnails-tool build && node tools/weapon-thumbnails/dist/cli.js generate`), mesmos bytes a cada execução; o teste da ferramenta compara com o disco, então mexer em modelo exige regerar.
+- `commons/<id>.svg`: contorno traçado de um desenho do Wikimedia Commons (Domínio público, CC0, CC BY ou CC BY-SA), com autor e licença em `CREDITS.md`/`manifest.json`; a licença é a do original e **não é MIT** (`LICENSE-NOTE.md`). O resolvedor prefere `commons/`.
+- Arma nova: rodar `generate` (um SVG novo e o manifesto). Trocar por um desenho do Commons: `tools/weapon-thumbnails/scripts/commons-*.mjs` (busca, folha de contato, importação); nunca publicar o SVG baixado, só o contorno traçado.
 
 ## Clipes e golden
 - `src/animation/`: os tweens da Galeria (`tw`) viram `AnimationClipSpec` (`clip-builder.ts`: amostra a curva `ease` em 10 passos), por mecanismo: `shot-clips`, `cycle-clips` (ciclo e destravar), `reload-clips` (as sete recargas) e `magazine-clips`.

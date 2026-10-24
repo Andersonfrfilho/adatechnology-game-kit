@@ -937,3 +937,64 @@ Script em `scratchpad/check/browser-check.mjs` (fora do repositório), sobre a s
 | `docker build -f site/Dockerfile .` | exit 0 |
 
 Modelo da execução: `sonnet`.
+
+## Miniaturas das armas
+
+Pedido do dono: miniaturas realistas de perfil nos menus de item, em vez de só o nome. Desenho livre do Wikimedia Commons onde existir; senão, o perfil lateral do nosso modelo 3D.
+
+### Passo 1: perfil gerado do modelo (`tools/weapon-thumbnails`)
+
+| Item | Resultado |
+|---|---|
+| Ferramenta | monta o modelo (galeria, arquétipo emprestado, ou o prop de caixas dos balcões, visto de cima por estar deitado), projeta ortogonalmente com z-buffer por software, traça o contorno (arestas de célula, giro à direita nos cantos) e simplifica (Douglas-Peucker). Sem dependência de geometria: o traçador tem 60 linhas e o resultado é o mesmo a cada execução |
+| Saída | 148 SVG em `packages/game-weapons-three/assets/weapon-svg/generated/`: 145 armas (todas menos `hand`, `kick`, `shove`, `fists`) e os 3 explosivos de mundo (`fuel_barrel`, `propane_p13`, `car_fuel_tank`) |
+| Forma | viewBox 800x200 (4:1), margem de 12, `currentColor`, aço mais claro (`fill-opacity=".6"`) sob polímero e madeira |
+| Tamanho | 320 KB no total, média de 2 KB, maior 6,6 KB (limite de 12 KB, imposto na geração e no teste) |
+| Determinismo | `generate` duas vezes: mesmo hash do diretório (`md5sum` de todos os arquivos); o teste compara cada arquivo com o que a ferramenta escreve hoje |
+| Limite conhecido | as 31 armas sem modelo da galeria saem do prop de caixas (silhueta retangular de uma peça); só o modelo 3D real ganha perfil detalhado |
+
+### Campo `thumbnail` e menu
+
+- `TestableItem.thumbnail?` (contrato) e `TestRoomItem.thumbnail` / `InspectInfo.thumbnail` (sala): URL de imagem ou `<svg…>` em linha.
+- A sala desenha a miniatura como `mask` CSS sobre a cor do texto: SVG de uma cor segue o tema e os tons vão em `fill-opacity`. Aparece no catálogo, nos resultados da busca e no inspetor do item mirado. Aspas na fonte não saem do `url()` (teste).
+- `createWeaponsTestModule({ thumbnailBase })` (padrão `weapon-svg/`) preenche o campo de toda arma, dos explosivos de mundo e da M134 no tripé. `build-site.mjs` copia `assets/weapon-svg` para `site/dist/weapon-svg` e as páginas das áreas apontam para `../weapon-svg/`.
+- Limite: a máscara por URL exige mesma origem (ou CORS); numa página `file://` (a `sala-armas.html` solta) a miniatura por URL não carrega e o item segue só com o nome. Quem precisar passa o SVG em linha.
+
+### Passo 2: Wikimedia Commons
+
+Busca pela API do MediaWiki com User-Agent descritivo (sem e-mail), 0,55 s entre pedidos, 3 buscas por arma (limite de 10), progresso gravado em disco a cada arma (`search/<id>.json`), 114 temas pesquisados e 73 com candidato licenciado. Depois, duas varreduras amplas (silhuetas de armas e `game-icons`) para achar séries que o filtro por título não pegava. Escolha a olho numa folha de contato (perfil lateral **daquele** modelo). Só `image/svg+xml` com Domínio público, CC0, CC BY ou CC BY-SA; autor, licença, página e arquivo original vêm do `extmetadata`.
+
+Segurança do download: cada arquivo foi saneado (sem script, `on*`, `foreignObject`, `href` externo, DOCTYPE/entidade, instrução de folha de estilo), desenhado no Chromium como `<img>` com rede bloqueada e **reduzido a um contorno traçado** pelo mesmo traçador. O markup baixado nunca entra no repositório: cada arquivo de `commons/` é a raiz e um ou dois caminhos (teste confere o formato com uma expressão regular).
+
+| Resultado | Quantidade |
+|---|---|
+| Miniaturas do Commons adotadas | **18** (AK-47, Barrett M82A1, Benelli M4, Beretta 92FS, M4A1, M16A2, M1911, Desert Eagle, Glock 19, MP5A3, MP5K, MAC-10, Sako TRG-42, Steyr AUG A1, SVD, Uzi, faca de estilete, Skorpion vz. 61) |
+| Licenças | CC BY-SA 4.0: 9 · CC BY 3.0: 5 · CC0: 2 · CC BY-SA 3.0: 1 · Domínio público: 1 |
+| Geradas (as outras) | 130 |
+| Tamanho dos 18 | 81 KB, maior 9,6 KB |
+
+Rejeitadas de propósito: sinalização, mapas, logotipos, diagramas e fotos que o filtro por título trouxe; desenhos diagonais de ícone (taco, martelo, FN FAL, Winchester, Thompson) que ficariam pequenos no 4:1; o MP7 (16 KB, limite de 12); e o Glock 17 (o único livre era o 19X, outro modelo). Os ícones `game-icons` (CC BY 3.0, Skoll) aceitos são os de perfil horizontal claro (M1911, Desert Eagle, MP5K, MAC-10, Skorpion).
+
+`LICENSE-NOTE.md`: os arquivos de `commons/` mantêm a licença do original e são **obra derivada** (CC BY-SA continua CC BY-SA); `CREDITS.md` e `manifest.json` saem de `commons-sources.json`. O resolvedor prefere `commons/` e cai para `generated/`.
+
+### Verificação no navegador
+
+Chromium headless (Playwright, GL por software) contra `site/dist` servido por HTTP (`/weapons-test-area/?lang=en`): 149 botões do catálogo com miniatura (o resto são alvos e balcão), os 148 SVG responderam 200, **nenhum erro de console**, a busca por `ak-47` mostra o botão com `url("../weapon-svg/commons/ak_47.svg")`, e ao mirar no AK-47 o inspetor traz a miniatura (140x28) acima de `AK-47 › body`. Captura: `scratchpad/menu-final.png` (fora do repositório).
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 (sem achados) |
+| `pnpm -r test` (inteiro) | exit 0 |
+| `game-test-room` | 128 (eram 121: +7 de `thumbnail.test.ts`) |
+| `game-weapons-three` | 164 (eram 157: +7 de `thumbnails.test.ts`) |
+| `tools/weapon-thumbnails` | 23 (novos: traçador, z-buffer, bitmap, determinismo, tamanho de todos os assuntos, manifesto, os arquivos do disco são os que a ferramenta escreve) |
+| `game-contracts` / `game-weapons` / `tools/weapons-catalog` | 29 / 351 / 35, sem mudança |
+| `examples/weapons-test-area` | build e `test.mjs` ok (confere `../weapon-svg/` no bundle) |
+| `examples/interactables-test-area` | build ok; `test.mjs` 10/12: as 2 falhas (`furniture_trash_bin_crushed`, marreta na lixeira) são **anteriores**, iguais no commit-base (conferido com `git stash` e reconstrução) |
+| `docker build -f site/Dockerfile .` | exit 0; a imagem serve `/srv/weapon-svg` com `generated/` (148), `commons/` (18), `manifest.json`, `CREDITS.md` e `LICENSE-NOTE.md` |
+
+Modelo da execução: `sonnet`.
