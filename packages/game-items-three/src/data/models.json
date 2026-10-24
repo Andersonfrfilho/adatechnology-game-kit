@@ -1188,5 +1188,15 @@
       0.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "crossbow",
+    "teamId": "besta",
+    "teamBox": [
+      7,
+      1.2,
+      8
+    ],
+    "scale": 0.1
   }
 ]
