@@ -66,6 +66,12 @@ const plan = urban.neighbourhoods.get('suburb').compose(b, { x: 0, z: 0 }, {
 urban.neighbourhoods.composeSampleSheet(b)   // the ground and the ten cells, in the order the page builds them
 ```
 
+## Terrain
+
+`urban.terrain(options)` is a ground made of layers, as the Galeria's Vale: a rolling base (waves), masked relief (mountains, hills: `mask · (level + waves)`), cities levelled flat, rivers carved to a bed, lakes carved to a level, a forest density, and a colour for every point by ordered rules (low ground, ellipses such as a bog, city rectangles, high rock, forest, then open fields picked by a hash of the map cell). It answers `heightAt(px, py)`, `forestAt`, `colorAt`, `nearRiver` and `toWorld`/`fromWorld` (the frame maps the plan to metres: `world = plan · scale + origin`), and hands a drawer `grid(segments)`: the 32-bit coordinates, heights and colours of the square mesh, rows along z. `urban.drawTerrain(b, terrain)` adds the mesh part and the water plane. `custom(px, py, h)` has the last word on a height.
+
+The numbers of a place are the game's: the Vale Cinzento (4 rivers, 4 lakes, 5 cities, the Serra, the Mata Funda) is `game-slice/urban/valley-terrain.json` in the spec folder, and a copy of it is the fixture of the tests.
+
 ## Same seed, same city
 
-The page keeps one generator for everything it draws and draws from it in call order. The builder does the same: the facade colour, the shop signs, the lit windows and the heights come from `b.random`, in the page's order, so a scene drawn with the same seed and the same calls has the same parts. The golden test in `game-urban-three` compares 34 parts and the whole sample sheet (1029 objects, the lists of instances and windows, the light budget left, the next number of the random and the map markers) with the page's scene hash, the lists the page keeps before its flush and the surface of each material.
+The page keeps one generator for everything it draws and draws from it in call order. The builder does the same: the facade colour, the shop signs, the lit windows and the heights come from `b.random`, in the page's order, so a scene drawn with the same seed and the same calls has the same parts. The golden test in `game-urban-three` compares 34 parts, the terrain mesh (181 x 181 vertices, heights and colours) and the whole sample sheet (1029 objects, the lists of instances and windows, the light budget left, the next number of the random and the map markers) with the page's scene hash, the lists the page keeps before its flush and the surface of each material.

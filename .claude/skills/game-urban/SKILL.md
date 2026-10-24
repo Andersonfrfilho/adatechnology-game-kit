@@ -37,6 +37,9 @@ const scene = b.scene()   // { parts, items, windows: { lit, dark } }
 ## Padrões de bairro
 `urban.neighbourhoods`: `downtown`, `suburb`, `working_class`, `historic_street`, `industrial_port`, `railway_village`, `mountain_resort`, `stilt_village`, `military`, `rural`. Cada padrão é dado (`streetWidth`, `walkWidth`, `typologies`, `pole`, `lightColor`, `spacing`, `lit`, `marker`, `text` em pt-BR e en, `params` do compositor) mais a chave `compose` no registro de compositores. `get(id).compose(b, { x, z }, { locale?, providers? })` desenha a rua e o letreiro e devolve o plano (`houses`, `buildings`, `poles`, `vehicles`, `plants`). Provedores: `house` (padrão: silhuetas do `game-floorplan`), `vehicle` (padrão: nenhum), `plant` (padrão: pinheiro e árvore dos adereços). `composeSampleSheet(b)` desenha as dez células na ordem da página. `packs`, `patch`, `remove` e `composers` mudam o catálogo.
 
+## Terreno
+`urban.terrain(options)`: relevo por camadas (base ondulada, serra e mata funda com máscara, cidades niveladas, rios e lagos escavados), densidade de floresta e cor por regras em ordem. Responde `heightAt(px, py)`, `forestAt`, `colorAt`, `nearRiver`, `toWorld`/`fromWorld` e `grid(segmentos)` (coordenadas, alturas e cores da malha quadrada). `urban.drawTerrain(b, terrain)` põe a malha e o plano d'água. Os números do Vale Cinzento ficam em `game-slice/urban/valley-terrain.json` (repositório do jogo); o SDK só os usa como fixture de teste.
+
 ## Compõe com
 `game-floorplan` (vocabulário das silhuetas, `createCityBuilding`, `boxRadius`, gerador `createSilhouetteRandom`), `game-contracts` (`mergeById`, `applyPatches`, `removeIds`), `game-urban-three` (desenho).
 

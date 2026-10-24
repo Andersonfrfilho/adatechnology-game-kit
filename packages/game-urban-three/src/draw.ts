@@ -141,6 +141,30 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
         shadows(mesh, part.style, true, false)
         return [mesh]
       }
+      case 'terrain': {
+        const { grid } = part
+        const geometry = new THREE.PlaneGeometry(grid.size, grid.size, grid.segments, grid.segments)
+        geometry.rotateX(-Math.PI / 2)
+        const position = geometry.attributes.position
+        const colors = new Float32Array(position.count * 3)
+        const color = new THREE.Color()
+        for (let index = 0; index < position.count; index++) {
+          position.setXYZ(index, grid.x[index], grid.heights[index], grid.z[index])
+          color.setHex(grid.colors[index] as number)
+          colors[index * 3] = color.r
+          colors[index * 3 + 1] = color.g
+          colors[index * 3 + 2] = color.b
+        }
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+        geometry.computeVertexNormals()
+        disposables.push(geometry)
+        const material = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 })
+        disposables.push(material)
+        const mesh = new THREE.Mesh(geometry, material)
+        mesh.userData.own = true
+        shadows(mesh, part.style, true, true)
+        return [mesh]
+      }
       case 'vault': {
         const geometry = new THREE.CylinderGeometry(part.radius, part.radius, part.length, part.segments, 1, false, 0, part.arc)
         disposables.push(geometry)

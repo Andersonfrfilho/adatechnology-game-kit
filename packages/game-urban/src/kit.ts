@@ -15,6 +15,8 @@ import { COMPOSERS } from './neighbourhoods/composers'
 import { DEFAULT_PATTERNS, SAMPLE_CELLS } from './neighbourhoods/patterns'
 import type { ComposeOptions, Composer, Locale, NeighbourhoodPattern, UrbanKitCore, UrbanPlan } from './neighbourhoods/types'
 import { createUrbanBuilder } from './scene'
+import { createTerrain, drawTerrain } from './terrain'
+import type { Terrain, TerrainOptions } from './terrain'
 import type { UrbanBuilder } from './scene'
 import { drawGround, drawRoad, drawStreetGrid, drawWalk } from './streets'
 import type { StreetOptions } from './streets'
@@ -137,5 +139,7 @@ export function createUrban(options: UrbanOptions = {}) {
       return { plans, markers: plans.map((plan) => neighbourhoods.get(plan.id).marker(plan.origin, o.locale)) }
     },
   }
-  return { ...core, poles, builder, neighbourhoods }
+  /** A ground from its layers (see TerrainOptions): the numbers of the place are the game's. */
+  const terrain = (o: TerrainOptions): Terrain => createTerrain(o)
+  return { ...core, poles, builder, neighbourhoods, terrain, drawTerrain }
 }

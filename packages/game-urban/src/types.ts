@@ -1,5 +1,7 @@
 import type { RandomSource, Silhouette, SilhouettePart, SilhouetteWindow } from '@adatechnology/game-floorplan'
 
+import type { TerrainGrid } from './terrain/types'
+
 export type { RandomSource, Silhouette, SilhouettePart, SilhouetteWindow }
 
 /** How a drawer treats a part when the default (standard material, rough 0.9, shadows on) is not what the team's page does. */
@@ -34,6 +36,8 @@ export type VaultPart = {
   scale: { x: number; y: number; z: number }
   style?: PartStyle
 }
+/** The ground: a square mesh of the grid's vertices with a colour each, flat shaded, that casts and receives shadows. */
+export type TerrainPart = { shape: 'terrain'; parent: number; grid: TerrainGrid; style?: PartStyle }
 /** A flat rectangle lying on the ground (`y` is its height). */
 export type PlanePart = { shape: 'plane'; parent: number; x: number; y: number; z: number; width: number; depth: number; color: number; style?: PartStyle }
 /** Text over one or more lines on a canvas texture (street names, strip labels). */
@@ -75,7 +79,7 @@ export type LightPart =
     }
 
 /** The parts of an urban scene: the silhouette vocabulary of game-floorplan plus what streets and poles need. */
-export type UrbanPart = Styled<SilhouettePart> | ConePart | CrownPart | PlanePart | VaultPart | LabelPart | LightPart
+export type UrbanPart = Styled<SilhouettePart> | ConePart | CrownPart | PlanePart | VaultPart | TerrainPart | LabelPart | LightPart
 
 /** One small box drawn as an instance of a single mesh (dashes of a road, sandbags). `y` is the base. */
 export type ItemBox = { x: number; y: number; z: number; width: number; height: number; depth: number; color: number; rx: number; ry: number; rz: number }
