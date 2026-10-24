@@ -20,6 +20,7 @@ import type {
   DestructionEvent,
   DestructionEventType,
   FractureStyle,
+  IgnitionRules,
   JointState,
   MaterialId,
   ObjectState,
@@ -192,6 +193,13 @@ export interface DestructionOptions {
      */
     safetyFactor?: number
   }
+  /**
+   * What lights the flammable fluid that leaks from a container (a fuel tank, a jerrycan, a gas bottle). A round that goes through only makes a
+   * leak; it lights it only when `Hit.ignition` (a spark on metal), `Hit.incendiary` or `Hit.tracer` say so, by the chance of the round weighed by
+   * how full the container is; a burning part within `fireNear.radius` or a blast also lights it. See `IgnitionRules` of the contracts for every
+   * number and its default.
+   */
+  ignition?: Partial<IgnitionRules>
   /** Breach of staged parts (see `PartSpec.breach`). */
   breach?: {
     /** Metres around a hit within which through damage adds up (default 0.55). */
@@ -336,6 +344,8 @@ export interface PartRuntime {
   shockT: number
   /** A leaking flammable fluid is burning on this part. */
   jet: boolean
+  /** A spark, a flame or a blast reached the flammable fluid that leaks from this part: it burns (or goes off) at the next update. */
+  lit?: boolean
   /** Seconds left before the next `stress` event. */
   stressT?: number
   /** World time at which a primed explosive part goes off (`explodes.chain`). */

@@ -1,4 +1,4 @@
-import { resolveLoad } from './ammo'
+import { ammoIgnition, resolveLoad } from './ammo'
 import { isDudWithoutJam, rollFault } from './faults'
 import { manualCycleSeconds, planRounds, weaponNoise, weaponSpeed } from './fire'
 import { burstNoise, heatPerRound } from './heat'
@@ -148,6 +148,7 @@ export abstract class WeaponFirearm extends WeaponAttachments {
         shot.penetration = { ...load.penetration }
         if (load.def.incendiary) shot.incendiary = true
         if (load.def.tracer) shot.tracer = true
+        shot.ignition = ammoIgnition(load.def, this.rules.ignition)
       }
       res.shots.push(shot)
     }

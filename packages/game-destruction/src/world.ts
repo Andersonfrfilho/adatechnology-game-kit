@@ -17,6 +17,7 @@ import type {
   BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
   BallisticExtras,
 } from './types'
+import { ignitionChance, resolveIgnitionRules, sparkTargetFactor } from '@adatechnology/game-contracts'
 
 /** Hit points removed per joule (before the material's `damageScale`). */
 const DMG_PER_J = 0.02
@@ -182,6 +183,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const fireSpread = options.fireSpread ?? 0.6
   const breachRadius = options.breach?.radius ?? BREACH_RADIUS
   const structureSafety = options.structure?.safetyFactor ?? 1
+  const ignitionRules = resolveIgnitionRules(options.ignition)
   const breachBlastFactor = options.breach?.blastFactor ?? BREACH_BLAST_FACTOR
   const rng = createRng(options.seed ?? 1)
   const rnd = () => rng.next()
@@ -1010,6 +1012,40 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   // Hits
   // -------------------------------------------------------------------------------------------------------------------------------------------
 
+  /** A container of flammable fluid with a hole that goes through: it leaks. */
+  const leaksFlammable = (p: PartRT): boolean => {
+    const c = p.spec.contains
+    return !!c && FLAMMABLE_FLUIDS.includes(c.fluid) && (p.st.liters ?? 0) > 0 && p.st.holes.some((h) => h.through)
+  }
+
+  /**
+   * A round that went through the wall of a container of flammable fluid lights the leak or does not: the spark of a hard round on metal and the
+   * flame of an incendiary or tracer (`Hit.ignition`, `Hit.incendiary`, `Hit.tracer`), weighed by how full the container is (`options.ignition`).
+   * A plain bullet carries neither and only leaks. The part burns or goes off at the next `update` (`rt.lit`).
+   */
+  const rollIgnition = (o: ObjRT, p: PartRT, round: BallisticExtras) => {
+    const c = p.spec.contains
+    if (!c || !FLAMMABLE_FLUIDS.includes(c.fluid) || p.rt.jet || p.rt.lit) return
+    const fill = c.liters > 0 ? (p.st.liters ?? 0) / c.liters : 0
+    const chance = ignitionChance(round, { sparkTarget: sparkTargetFactor(p.mat.id, !!p.mat.tags?.includes('metal'), ignitionRules), fill, fluid: c.fluid }, ignitionRules)
+    if (chance > 0 && rnd() < chance) {
+      p.rt.lit = true
+      o.active = true
+    }
+  }
+
+  /** What is lit by a fire or a blast near: the leaks of flammable fluid within `radius` of `centre` (object parts only). */
+  const lightLeaksNear = (centre: Vec3, radius: number) => {
+    for (const o of objects.values()) {
+      for (const q of o.parts) {
+        if (isLost(q) || q.rt.lit || q.rt.jet || !leaksFlammable(q)) continue
+        if (vec.distance(partXf(o, q).c, centre) - q.bound > radius) continue
+        q.rt.lit = true
+        o.active = true
+      }
+    }
+  }
+
   interface BallisticOut { penetrated: boolean; exitEnergy: number; exitPoint?: Vec3; damage: number }
 
   const ballistic = (o: ObjRT, p: PartRT, entry: Vec3, n: Vec3, d: Vec3, E: number, caliber: number, pathLen: number, src?: string, round: BallisticExtras = {}): BallisticOut => {
@@ -1061,6 +1097,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           ...base(o, src), type: 'leak', part: id, fluid: p.spec.contains.fluid, point: entry, direction: n, rate: holeRate(hole, !!p.spec.contains.pressurized),
           pressurized: !!p.spec.contains.pressurized,
         })
+        rollIgnition(o, p, round)
       }
     } else if (mat.ductility >= 0.5) {
       addDent(o, p, entry, n, Math.max((caliber * 3) / 1000, 0.012), clamp(Math.min(Math.max(p.thickness * 3, 0.003), ratio * 0.01), 0.001, 0.05), src)
@@ -1474,8 +1511,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const blastWorld = (point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT): HitResult[] => {
     const cfg = blastCfg(call)
-    if (!cfg.shelter && !cfg.frag && cfg.conf === null) return blastPlain(point, energy, radius, src)
-    return blastScene(point, energy, radius, src, cfg, only)
+    const res = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlain(point, energy, radius, src) : blastScene(point, energy, radius, src, cfg, only)
+    // a blast is a flame: a container that leaks flammable fluid inside it catches
+    lightLeaksNear(point, radius)
+    return res
   }
 
   const heatObject = (o: ObjRT, point: Vec3, T: number, radius: number, duration: number, src?: string): HitResult => {
@@ -1680,7 +1719,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (rate > 0) {
           s.liters = Math.max(0, (s.liters ?? 0) - rate * dt)
           hot = true
-          if (FLAMMABLE_FLUIDS.includes(cont.fluid) && s.temperature >= 350 && !p.rt.jet) {
+          if (FLAMMABLE_FLUIDS.includes(cont.fluid) && (s.temperature >= 350 || p.rt.lit) && !p.rt.jet) {
+            p.rt.lit = false
             if (ex && chainDelayOf(p.spec, 'fire') !== undefined) {
               prime(o, p, 'fire')
               continue
@@ -1695,6 +1735,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           }
         }
       }
+      if ((s.liters ?? 0) <= 0) p.rt.lit = false
       if (p.rt.jet && (s.liters ?? 0) <= 0) {
         p.rt.jet = false
         s.burning = false
@@ -1744,6 +1785,27 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (o.maxStress > 0.8) hot = true
     }
     o.active = hot
+  }
+
+  /** A leak of flammable fluid within `ignition.fireNear.radius` of a burning part (or of a jet) lights at `chancePerSecond`. */
+  const igniteLeaksNearFire = (sources: Array<{ o: ObjRT; p: PartRT; flame: number }>, dt: number) => {
+    const { radius, chancePerSecond } = ignitionRules.fireNear
+    if (chancePerSecond <= 0) return
+    const chance = 1 - Math.exp(-chancePerSecond * dt)
+    for (const src of sources) {
+      if (!src.p.st.burning && !src.p.rt.jet) continue
+      const sc = partXf(src.o, src.p).c
+      for (const o of objects.values()) {
+        for (const q of o.parts) {
+          if (q === src.p || isLost(q) || q.rt.lit || q.rt.jet || !leaksFlammable(q)) continue
+          if (vec.distance(partXf(o, q).c, sc) - q.bound - src.p.bound > radius) continue
+          if (rnd() < chance) {
+            q.rt.lit = true
+            o.active = true
+          }
+        }
+      }
+    }
   }
 
   const spread = (sources: Array<{ o: ObjRT; p: PartRT; flame: number }>, dt: number) => {
@@ -2086,7 +2148,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         time += dt
         const sources: Array<{ o: ObjRT; p: PartRT; flame: number }> = []
         for (const o of [...objects.values()]) if (o.active) stepObject(o, dt, sources)
-        if (sources.length) spread(sources, dt)
+        if (sources.length) {
+          spread(sources, dt)
+          igniteLeaksNearFire(sources, dt)
+        }
         detonatePrimed(time)
         releaseFront()
         for (const im of [...impls.values()]) {

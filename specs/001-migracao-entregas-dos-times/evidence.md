@@ -2374,6 +2374,23 @@ Controles: clima (os 10 estados, nomes em pt-BR e en), transição (de uma vez o
 
 ### Decisões do dono de 2026-10-24 (física)
 
+**1. Tanque de combustível realista.** Dono: "depende, na vida real se receber um tiro quais possibilidades de explodi-lo". Bala comum que fura tanque de veículo ou recipiente inflamável (`contains` com `gas` ou
+`fuel`: galão, botijão) **vaza e não explode sozinha**. Para acender precisa de uma fonte: faísca de munição dura em metal, incendiária ou traçante, fogo perto ou explosão. Aceso, corre o fogo e a explosão de sempre.
+- Antes: `game-vehicles/src/destructible/impl.ts` aquecia o tanque ao ponto de ignição com qualquer acerto de energia acima de 1500 J (linha `E > 1500`, removida); o mundo genérico só acendia por calor (350 °C).
+- Contratos (`game-contracts/src/ignition.ts`): `IgnitionRules` (lado do recipiente) e `ignitionChance`. Padrões: curva de enchimento `[0,0.6] [0.1,1] [0.35,0.6] [0.65,0.3] [0.9,0.15] [1,0.12]`
+  (cheio fica rico demais para queimar e só vaza; quase vazio acende mais; a chama sente metade da curva, `flameFillInfluence 0.5`), faísca por material (aço e ferro 1, alumínio 0,25, outro metal 0,5, não metal 0),
+  diesel com 0,15 da faísca (ponto de fulgor de 52 °C ou mais), fogo perto a 1,5 m com 0,5 por segundo, chama padrão de quem manda só a marca (incendiária 0,7, traçante 0,2).
+- Munição (`game-weapons`, `rules.ignition`, lido de `ammo.json`): faísca = 1 - (1 - núcleo)(1 - jaqueta). Núcleo: chumbo 0,005, chumbo com ponta de aço 0,04, aço 0,12, aço temperado 0,25, carbeto de tungstênio 0,25, cobre 0,01.
+  Jaqueta: metal dourado 0,005, cobre 0,005, latão 0,01, aço 0,08. Chama: incendiária 0,7, traçante 0,2. Resultado: 7.62x51 M80 (chumbo, metal dourado) 1%; 7.62x39 M43 e 5.45x39 7N6 (aço e aço) 19%; M993 e M2 AP 25%.
+  Fonte: não existe tabela pública de ignição por cartucho; são números do kit (modelo), na ordem de grandeza da literatura de vulnerabilidade de tanques (bala comum raramente acende, perfurante incendiária acende), para o jogo ajustar.
+- Medido com 500 tiros semeados no tanque de 55 L do `proto` (`game-vehicles/tests/tank-ignition.test.ts`), % que acende, cheio / meio / 10%: M80 0 / 0,2 / 1; 7.62x39 M43 2,2 / 9 / 19; 5.45x39 7N6 2,2 / 9 / 19; M993 AP 3,2 / 11,4 / 24,8;
+  7.62x51 traçante 11,4 / 14,8 / 20,8; .50 BMG M8 API 40 / 56 / 80. A incendiária cheia dá 40% e não 70% por causa da curva (0,7 x (1 - 0,5 x 0,88)); vazio a 10% dá 80%.
+- Testes: 100 tiros M80 num tanque cheio de aço vazam e acendem no máximo 2 vezes; núcleo de aço e AP acendem mais que M80; tanque quase vazio acende mais de 2 vezes o cheio; incendiária acende na taxa configurada; vazamento ao lado de um pneu
+  em chamas acende em menos de 4 s (o tanque inteiro, sem vazamento, só esquenta bem depois: 18 s); explosão perto acende. Mesmo roteiro no mundo genérico (`game-destruction/tests/ignition.test.ts`, galão de aço e de plástico: plástico nunca faísca).
+- Efeitos (`game-vfx`): `vehicle_leak` agora é só a poça e o pingar (passos `decal` e `emit` da Garagem sem o fogo e a explosão) e a sequência inteira (faísca, fogo pela poça, explosão aos 7,2 s) é `vehicle_leak_ignited`, pedida
+  pelo `game-vehicles-three` quando o tanque pega fogo (`defaultEffectIds.leakIgnited`). Nível do tanque: opção nova `fuel` (0 a 1) do `createVehicleDestructible`.
+- Goldens: nenhum arquivo de golden mudou por este item.
+
 **3. Correção da granada sempre ligada.** Dono: "Correção da granada já ligada não deveria nem ter dois caminhos já que é correção." A opção
 `breach.blastReach` e o padrão `Infinity` saíram; os 0,12 m por raiz cúbica de kJ são a física (constante nomeada `BREACH_BLAST_REACH` em `world.ts`).
 Golden regravado com `UPDATE_GOLDEN=1 vitest run tests/wall-golden.test.ts`: só mudou o cenário `gas_explodes` de `house-scenarios.json` (3 eventos a menos:

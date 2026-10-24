@@ -169,6 +169,22 @@ from published orders of magnitude, muzzle energy and construction, each marked 
 | .50 BMG M17 tracer | tracer | 42 | 925 | 17968 | lead / gilding_metal | 9 | 300 | 520 | 580 | estimated |
 | 12 ga incendiary shell (one pellet, magnesium) | incendiary | 3.5 | 414 | 300 | none / none | 0.1 | 3 | 8 | 15 | estimated |
 
+## Ignition: what a round does to a fuel tank
+
+A normal bullet that goes through a fuel tank, a jerrycan or a gas bottle makes a **leak** and does not set it alight by itself. `rules.ignition` gives each round the
+chances that it supplies a flame, built from its construction in the ammo table, and they travel in `Shot.ignition` and `Hit.ignition` (`{ spark, flame }`, plus the
+flags `incendiary` and `tracer`); the damage model rolls them against the container (see "Ignition of a leak" in `game-destruction`).
+
+- **Spark** (only against steel): the chance of the `core` and the chance of the `jacket` are independent, `spark = 1 - (1 - core) x (1 - jacket)`.
+  Defaults, `rules.ignition.core`: lead 0.005, lead_steel (steel tip or insert) 0.04, steel 0.12, hardened_steel 0.25, tungsten_carbide 0.25, copper 0.01, none 0;
+  `rules.ignition.jacket`: gilding_metal 0.005, copper 0.005, brass 0.01, steel 0.08, none 0. So a lead round in a copper jacket (7.62x51 M80) gives about 1 percent, a
+  steel core in a steel jacket (7.62x39 M43, 5.45x39 7N6) about 19 percent and an armour-piercing core (M993, M2 AP) about 25 percent: all of that before the fill of the tank
+  weighs on it (a full tank keeps 12 percent of it).
+- **Flame** (any wall): `rules.ignition.flame.incendiary` 0.7 and `.tracer` 0.2. An incendiary composition or a burning tracer base lights the vapour without a spark.
+- `ammoIgnition(ammoDef, rules.ignition)` computes the pair for any load; `createArsenal({ rules: { ignition: { core: { steel: 0.3 }, flame: { tracer: 0 } } } })` changes any number.
+- No public per-cartridge table of the ignition of a fuel tank exists: the numbers are the kit's model (owner decision, 2026-10-24), with the order of magnitude of the
+  fuel-tank vulnerability literature (ball ammunition rarely lights a tank, armour-piercing incendiary does), meant to be tuned per game.
+
 ## Explosives, launchers and flamethrowers
 
 A trigger pull on a launcher returns a `throw` use (the rocket: `explosive`, `trigger: 'impact'`, `armDistance`, speed in `velocity`) and, when the launcher has one, a

@@ -94,6 +94,22 @@ melts anything. Melting emits `melt` and `drip`; a melted part is lost and its j
 when the part has `explodes`). `contains` parts leak through punctures: the `leak` event carries the hole's world point, the outward normal as
 `direction` and the rate in litres per second, and `PartState.liters` drops in `update` (`setLiters` fills or empties a container).
 
+### Ignition of a leak
+
+A round that goes through a `contains` part with a flammable fluid (`gas`, `fuel`: a tank, a jerrycan, a gas bottle) **leaks and does not light by itself**. The leak lights
+(a jet that burns, or the explosion of a part with `explodes`) when:
+
+- the round carries a **spark** and hits **metal**: `Hit.ignition.spark` (the weapons build it from the core and the jacket of the round) times the factor of the struck
+  material (`ignition.sparkTarget`: steel and iron 1, aluminium 0.25, other metals `sparkMetalDefault` 0.5, a part that is not metal never sparks);
+- the round carries a **flame**: `Hit.ignition.flame`, or the flags `Hit.incendiary` / `Hit.tracer` (0.7 and 0.2 when the host sends only the flags), whatever the wall;
+- a **fire is near**: a burning part or a jet within `ignition.fireNear.radius` (1.5 m) lights the leak at `chancePerSecond` (0.5); or
+- a **blast** (`explode`) goes off within its radius of the leaking container.
+
+Both chances are weighed by how full the container is, `ignition.fillCurve` (points `[filled, factor]`; a full container is too rich to burn and mostly leaks, a nearly empty one lights
+easiest; default 0.6 empty, 1 at 10 percent, 0.6 at 35, 0.3 at 65, 0.15 at 90, 0.12 full; the flame feels half of it, `flameFillInfluence` 0.5) and rolled with the seeded generator of the
+world. `createDestruction({ ignition })` changes any number (`IgnitionRules` and `DEFAULT_IGNITION_RULES` of `@adatechnology/game-contracts`, which also export `ignitionChance` and
+`fillFactor`). A round without `ignition`, `incendiary` and `tracer` never lights a leak; a part heated to 350 degrees C still does, as before.
+
 ### Chain reaction
 
 A part with `explodes.chain` (fuel barrel, gas bottle, car tank, gas pump, station tank) answers to what happens around it: `shot` (a bullet, once it has taken off

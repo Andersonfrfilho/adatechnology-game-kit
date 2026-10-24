@@ -1,4 +1,6 @@
+import type { HitIgnition } from '@adatechnology/game-contracts'
 import ammoJson from './data/ammo.json'
+import type { WeaponRules } from './rule-types'
 import type { AmmoDef, AmmoKind, AmmoLoad, CaliberDef } from './types'
 
 /**
@@ -19,4 +21,15 @@ export const resolveLoad = (caliber: CaliberDef, ammo: ReadonlyMap<string, AmmoD
   const grams = def.bulletGrams ?? caliber.bulletGrams
   const speed = def.muzzleSpeed ?? caliber.muzzleSpeed
   return { def, kind: k, grams, speed, energy: 0.5 * (grams / 1000) * speed * speed, penetration: def.penetration }
+}
+
+/**
+ * Chances that a round lights flammable fluid, from its construction and `rules.ignition`: the spark of the hard core and jacket on steel (they are
+ * independent, 1 - (1 - core) x (1 - jacket)) and the flame of an incendiary or tracer. A lead round with a copper jacket gives about 1 percent.
+ */
+export const ammoIgnition = (def: AmmoDef, rules: WeaponRules['ignition']): HitIgnition => {
+  const core = rules.core[def.core] ?? 0
+  const jacket = rules.jacket[def.jacket] ?? 0
+  const flame = Math.max(def.incendiary ? rules.flame.incendiary : 0, def.tracer ? rules.flame.tracer : 0)
+  return { spark: 1 - (1 - core) * (1 - jacket), flame }
 }

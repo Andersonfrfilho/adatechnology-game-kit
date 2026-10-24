@@ -41,6 +41,7 @@ O módulo de teste completo (com `area` e `attach`) está na skill `game-test-ro
 | `checkDestructible(impl, { materials? })` | Valida um `DestructibleImpl` (`{ ok, problems }`) |
 | `checkAnimation(clip, partIds)` | Valida um `AnimationClipSpec` contra os ids de peça |
 | `shotToHit(shot, point, normal?)` | Transforma um `Shot` balístico em `Hit` |
+| `shotExtras(shot, distance?)`, `ignitionChance(hit, alvo, regras?)`, `fillFactor`, `sparkTargetFactor`, `DEFAULT_IGNITION_RULES` | o que a munição leva para o Hit (penetração por classe, `ignition`, `incendiary`, `tracer`) e a chance de acender um vazamento, ponderada pelo enchimento |
 | `IMPACT_CONTRACT` | Campos obrigatórios/opcionais do `Hit` por `DamageType` |
 | `DestructibleSpec`, `PartSpec`, `Hit`, `DestructionEvent`, `ObjectState` | Dados da destruição |
 | `SurfaceLayer`, `Reinforcement`, `PartUnits`, `PartBreach`, `DamageStage`, `FragmentMark` | Parede em camadas (reboco lasca antes do núcleo), vergalhão, alvenaria por peças, brecha e estágios 0 a 3 (todos opcionais em `PartSpec`; `PartState.stage/stripped/opening`; eventos `spall`, `stage`, `expose`) |

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { AMMO, CALIBERS, createArsenal, checkArsenal } from '../src'
+import { AMMO, CALIBERS, DEFAULT_RULES, ammoIgnition, createArsenal, checkArsenal } from '../src'
 import type { Vec3, WeaponState } from '../src'
 
 const ORIGIN: Vec3 = [0, 1.5, 0]
@@ -82,5 +82,46 @@ describe('the ammo table', () => {
     expect(shootOnce(custom.create('rifle_bolt_308')).penetration!.steel).toBe(20)
     expect(shootOnce(custom.create('rifle_bolt_308', { ammoKind: 'incendiary' })).incendiary).toBe(true)
     expect(() => createArsenal({ remove: { ammo: ['9x19:fmj'] } })).toThrow(/9x19/)
+  })
+})
+
+describe('ignition of the rounds', () => {
+  const get = (id: string) => AMMO.find((a) => a.id === id)!
+  const chance = (id: string) => ammoIgnition(get(id), DEFAULT_RULES.ignition)
+
+  it('builds the spark from the core and the jacket: lead under copper almost never, steel core and steel jacket more, armour piercing most', () => {
+    const ball = chance('7_62x51:fmj').spark
+    expect(ball).toBeLessThan(0.02)
+    expect(chance('7_62x39:fmj').spark).toBeGreaterThan(ball * 10)
+    expect(chance('5_45x39:fmj').spark).toBeGreaterThan(ball * 10)
+    expect(chance('7_62x51:ap').spark).toBeGreaterThan(chance('7_62x39:fmj').spark)
+    expect(chance('5_56x45:ap').spark).toBeGreaterThan(chance('5_56x45:fmj').spark)
+    // independent chances of the core and the jacket
+    const { core, jacket } = DEFAULT_RULES.ignition
+    expect(chance('7_62x39:fmj').spark).toBeCloseTo(1 - (1 - core.steel) * (1 - jacket.steel))
+  })
+
+  it('gives the flame to incendiary and tracer rounds only', () => {
+    expect(chance('7_62x51:fmj').flame).toBe(0)
+    expect(chance('7_62x51:ap').flame).toBe(0)
+    expect(chance('50bmg:incendiary').flame).toBe(DEFAULT_RULES.ignition.flame.incendiary)
+    expect(chance('7_62x51:tracer').flame).toBe(DEFAULT_RULES.ignition.flame.tracer)
+    expect(chance('12ga_00buck:incendiary').flame).toBeGreaterThan(0)
+  })
+
+  it('reads the numbers from the rules, so a game can change them', () => {
+    const rules = { ...DEFAULT_RULES.ignition, flame: { incendiary: 0.9, tracer: 0 } }
+    expect(ammoIgnition(get('50bmg:incendiary'), rules).flame).toBe(0.9)
+    expect(ammoIgnition(get('7_62x51:tracer'), rules).flame).toBe(0)
+  })
+
+  it('puts the chances in the shot of a loaded weapon, and a game can change the rules', () => {
+    const ball = shootOnce(arsenal.create('rifle_bolt_308', { seed: 1 }))
+    expect(ball.ignition?.spark).toBeLessThan(0.02)
+    expect(ball.ignition?.flame).toBe(0)
+    const api = shootOnce(arsenal.create('ak_47', { seed: 1, ammoKind: 'incendiary' }))
+    expect(api.ignition?.flame).toBe(DEFAULT_RULES.ignition.flame.incendiary)
+    const custom = createArsenal({ rules: { faults: false, ignition: { flame: { incendiary: 0.25, tracer: 0 } } } })
+    expect(shootOnce(custom.create('ak_47', { seed: 1, ammoKind: 'incendiary' })).ignition?.flame).toBe(0.25)
   })
 })
