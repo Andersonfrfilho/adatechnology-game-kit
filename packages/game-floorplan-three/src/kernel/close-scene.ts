@@ -5,6 +5,7 @@ export function installKernelCloseScene(K: Kernel, shared: Shared): void {
   const { THREE, NO_SHADOW, ORDER, PARTS, applyPart, cursor } = K;
   const assembleCars = (...a: any[]): any => K.assembleCars(...a);
   const assembleMirrors = (...a: any[]): any => K.assembleMirrors(...a);
+  const assembleVegetation = (...a: any[]): any => K.assembleVegetation(...a);
   // builds the meshes per group (THREE.Group) from the accumulators and resets
   // userData of the merged mesh: destructionMaterial (predominant material), destructionPart + structuralRole (when the mesh is a single piece),
   // destructionParts (ids) and ranges [{id, v0, v1, i0, i1}] = where each piece sits in the vertices and indices (hit -> piece: house.structure.pieceId(mesh, faceIndex))
@@ -41,7 +42,7 @@ export function installKernelCloseScene(K: Kernel, shared: Shared): void {
       if (P.meta.id) (shared.ctx.parts || (shared.ctx.parts = {}))[P.meta.id] = g;
     }
     PARTS.length = 0;
-    assembleMirrors(groups); assembleCars(groups);
+    assembleMirrors(groups); assembleCars(groups); assembleVegetation(groups);
     return groups;
   }
   Object.assign(K, { markMesh, closeScene });

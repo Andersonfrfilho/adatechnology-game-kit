@@ -41,12 +41,17 @@ import { installFurniturePlants } from './furniture/plants.js'
 import { installFurnitureYard } from './furniture/yard.js'
 import { installFurnitureExtraTypes } from './furniture/extra-types.js'
 import { installFurniturePlaceItems } from './furniture/place-items.js'
+import { installVegetationBridge } from './vegetation/bridge.js'
 import { installInteractionState } from './interaction/state.js'
 import { installInteractionCollision } from './interaction/collision.js'
 import { installInteractionItems } from './interaction/items.js'
 import { installInteractionFittings } from './interaction/fittings.js'
 import { installInteractionDoors } from './interaction/doors.js'
+import { installInteractionTarget } from './interaction/target.js'
+import { installInteractablesBridge } from './interactables/bridge.js'
+import { installAnimationClotheslines } from './animation/clotheslines.js'
 import { installBuildInstance } from './build/instance.js'
+import { installInteractablesKit } from './interactables/kit.js'
 import { installLightsRoomLight } from './lights/room-light.js'
 import { installDestructionPieces } from './destruction/pieces.js'
 import { installDestructionBreach } from './destruction/breach.js'
@@ -116,12 +121,17 @@ export function create(THREE: any, options: HouseRendererOptions = {}): HouseRen
   installFurnitureYard(K, shared)
   installFurnitureExtraTypes(K, shared)
   installFurniturePlaceItems(K, shared)
+  installVegetationBridge(K, shared)
   installInteractionState(K, shared)
   installInteractionCollision(K, shared)
   installInteractionItems(K, shared)
   installInteractionFittings(K, shared)
   installInteractionDoors(K, shared)
+  installInteractionTarget(K, shared)
+  installInteractablesBridge(K, shared)
+  installAnimationClotheslines(K, shared)
   installBuildInstance(K, shared)
+  installInteractablesKit(K, shared)
   installLightsRoomLight(K, shared)
   installDestructionPieces(K, shared)
   installDestructionBreach(K, shared)

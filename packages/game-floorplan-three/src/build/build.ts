@@ -18,12 +18,13 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         shared.ctx.apartment = r.template === 'apartment_modern'; shared.ctx.pa = Math.max(3, Math.min(20, pr.floors != null ? pr.floors : 5)); shared.ctx.pf = Math.max(1, Math.min(shared.ctx.pa, pr.floor != null ? pr.floor : 3)); shared.ctx.pu = Math.max(0, pr.unit != null ? pr.unit : 0);
         shared.ctx.showBuilding = shared.ctx.apartment && (pr.showIt == null ? true : !!pr.showIt);
         shared.ctx.limits = { x0: -2, z0: -2, x1: r.w + 2, z1: r.d + 2 };
-        shared.ctx.vegInfo = null;
+        shared.ctx.veg = VEG ? { G: VEG.G, S: VEG.S, mats: vegMaterials, groups: new Map(), ok: new Map(), opts: shared.quality === 'game' ? { quality: 'game' } : { lod: 0, triangleBudget: 60000 } } : null; shared.ctx.vegInfo = null;
         terrain();
         if (r.lot) { if (!opts.noPerimeter) { perimeter(); gatesInteractive(); } paths(); } // GAME HOOK (stage 2): opts.noPerimeter:true does not draw the lot wall/fence/gates (the game has its own destructible wall on the Jardim Aurora lots)
         walls(); baseboardAndSidewalk(); shared.ctx.wallColliders = shared.ctx.colliders.length; doors(); windows(); floorsAndSlabs(); outbuildings(); buildStairs(); elevator();
         const water = createWater(r, h.state);
         shared.ctx.iv = null; h.IV = null;
+        if (IVK) { try { h.IV = shared.ctx.iv = ivBuild(h, water); } catch (e) { console.warn('interactables', e); shared.ctx.iv = h.IV = null; } } // interactables kit: plans, draws and wires (see 75)
         const noModel = houseItems(); placeSwitches(); waterPipes(); electricalStructure();
         roofs(); solar();
         if (shared.ctx.showBuilding) building();
@@ -34,6 +35,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           for (const gd of fo.groups) { const g = gs[gd.name]; if (!g) continue; delete gs[gd.name]; g.position.set(...gd.pos); parent.add(g); fo.gs.push(g); }
           applyLeaf(fo);
         }
+        if (shared.ctx.iv) ivAssemble(shared.ctx.iv, gs);
         assembleInteractive(gs); linkDoorLeaves(); mailboxInteractive();
         const root = new THREE.Group(), house = new THREE.Group(); root.name = 'house3d'; root.add(house); shared.mirrors.house = house;
         if (shared.ctx.apartment) { const u = r.building.units[Math.min(shared.ctx.pu, r.building.units.length - 1)]; house.position.set(u.u, shared.ctx.showBuilding ? 0 : -r.floors[0].y0, u.v); house.rotation.y = u.ry; shared.ctx.unitRy = u.ry; }
@@ -67,6 +69,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           const dn = cab ? tagDamage('wood') : gate ? tagDamage('metal') : null; if (dn) def.damageable = dn;
           mark(def.outer, def.name); parts[def.name] = { id: def.name, type: gate ? 'gate' : def.kind, group: def.outer, internal: def.inner, damageable: dn, opens: t => setOpen(def, t), get t() { return def.t; }, def };
         }
+        if (shared.ctx.iv) ivParts(shared.ctx.iv, parts, tagDamage);
         const cars = []; // lot/garage cars: the fleet's damageables (boxes in the car space) become virtual parts in the house space
         CARS.forEach((C, i) => {
           const mod = carModel(C.k, C.seed); if (!mod) return;
@@ -144,11 +147,11 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           colliders, parts, cars, interactables, doors: shared.ctx.leaves, stairs: shared.ctx.stairs, labels: shared.ctx.labels, noModel,
           lights: (() => { const by = {}; for (const l of shared.ctx.lights) { const k = l.roomId != null ? l.roomId : l.room; (by[k] || (by[k] = [])).push(l); } return { list: shared.ctx.lights, byRoom: by }; })(),
           limits: shared.ctx.limits, apartment: shared.ctx.apartment, showBuilding: shared.ctx.showBuilding, buildingConfig: { floors: shared.ctx.pa, floor: shared.ctx.pf, unit: shared.ctx.pu }, unitRy: shared.ctx.unitRy || 0, night: shared.ctx.night, cut: shared.ctx.cut,
-          interactives: null,
+          interactives: h.IV ? ivPublish(h) : null,
           state: h.state, stats, vegetation: shared.ctx.vegInfo || null, solar: shared.ctx.solarInfo || null, water, electrical: shared.ctx.electricalInfo || null, gutters: shared.ctx.gutterInfo || null,
           // per frame: doors, parts, wind-blown laundry and (with a focus) distance LOD; dt in seconds, time in ms (rAF); focus = {x,y,z} in world coordinates
           update(dt, time, focus) {
-            enter(h); animateDoors(dt); animateInteractive(dt); water.step(dt); if (destruction.active || destruction.statistics().falling || destruction.statistics().fragments) destruction.animate(dt);  if (shared.vegMaterials) { shared.vegMaterials.update((time != null ? time : performance.now()) / 1000); shared.vegMaterials.setActors(focus ? [{ x: focus.x, y: focus.y, z: focus.z, radius: 0.9 }] : []); }
+            enter(h); animateDoors(dt); animateInteractive(dt); water.step(dt); if (destruction.active || destruction.statistics().falling || destruction.statistics().fragments) destruction.animate(dt); if (h.IV) ivUpdate(h, dt, time, focus); if (time != null) animateClotheslines(time); if (shared.vegMaterials) { shared.vegMaterials.update((time != null ? time : performance.now()) / 1000); shared.vegMaterials.setActors(focus ? [{ x: focus.x, y: focus.y, z: focus.z, radius: 0.9 }] : []); }
             if (focus && cfg.lod !== false) { const L = Object.assign({ interior: 45, hide: 220 }, cfg.lod), d = distance(focus), at = h.lodCurrent; let n = d > L.hide ? 2 : d > L.interior ? 1 : 0; if (n < at) n = d < (at === 2 ? L.hide : L.interior) * 0.92 ? n : at; applyLod(Math.max(n, h.lodMin)); }
           },
           show(o) { // visibility per floor: {floor: -1 all, cut: bool, lot: bool}
@@ -163,6 +166,8 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
               g.visible = v;
             }
           },
+          target(o, opt) { enter(h); return targetOf(o, opt); },
+          interact(o, opt) { enter(h); const a = targetOf(o, opt); if (!a) return false; return actOn(a.target && a.target.pub ? a.target.pub : { id: a.target && a.target.id || a.text, type: a.target && a.target.kit ? a.target.type : 'door', label: a.text, ref: a.target, _action: a.action }, a); },
           message() { return shared.inter.msg && performance.now() < shared.inter.msg.until ? shared.inter.msg.text : null; },
           toggleDoor(fo) { enter(h); toggleDoor(typeof fo === 'string' ? shared.ctx.leaves.find(f => f.id === fo) : fo); },
           lightOn(roomId) { enter(h); return lightOn(roomId); },
@@ -179,7 +184,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           structure, destruction,
           partOf(obj) { for (let n = obj; n; n = n.parent) { const id = n.userData && n.userData.partId; if (id && parts[id]) return parts[id]; const pc = n.userData && n.userData.piece; if (pc && parts[pc.name]) return parts[pc.name]; } return null; },
           partAt(p, tol) { tol = tol || 0.05; let m = null; for (const k in parts) { const a = parts[k].aabb; if (a && p.x >= a[0] - tol && p.x <= a[3] + tol && p.y >= a[1] - tol && p.y <= a[4] + tol && p.z >= a[2] - tol && p.z <= a[5] + tol) { m = parts[k]; break; } } return m; },
-          dispose() { enter(h); destruction.deactivate();   root.traverse(o => { if (o.isMesh && o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.type === 'Reflector' && o.dispose) o.dispose(); }); root.removeFromParent(); },
+          dispose() { enter(h); destruction.deactivate(); if (h.IV) ivDispose(h);  root.traverse(o => { if (o.isMesh && o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.type === 'Reflector' && o.dispose) o.dispose(); }); root.removeFromParent(); },
           internal: { h, ctx: shared.ctx, inter: shared.inter, partState: shared.partState, doorState: shared.doorState, mirrors: shared.mirrors },
         };
         return res;

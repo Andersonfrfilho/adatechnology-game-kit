@@ -34,6 +34,10 @@ export interface HouseRendererOptions {
   destruction?: any
   /** `createDestructionRenderer(THREE, { scene, world })` of `@adatechnology/game-destruction-three`: draws fracture, collapse, fragments, spalls and the rebar cage on the house's meshes. */
   destructionRenderer?: any
+  /** The interactables kit, injected: `{ GameInteractables, GameInteractablesHousehold, GameInteractablesThree, adapter, locale, region, items, effects, camera, onEvent, onSeat }`. */
+  interactives?: any
+  /** The vegetation packages, injected: `{ GameVegetation, GameVegetationSpecies }`. */
+  vegetation?: any
   /** Maps an id of the plan to the key its seeded random draws use, to reproduce a scene drawn with other ids (golden tests). */
   seedKey?: (id: string) => string | null | undefined
   /** Distance (m) beyond which the interior (`interior`) and the house (`hide`) are drawn no more, or `false` to switch distance LOD off. */
@@ -43,6 +47,7 @@ export interface HouseRendererOptions {
   onCollider?: (collider: any) => void
   onDamage?: (part: any, point: { x: number; y: number; z: number } | null, type: string) => void
   onWreck?: (event: any, house: any) => void
+  onInteract?: (target: any, action: any) => boolean | void
   onLight?: (light: any) => void
   onMessage?: (text: string) => void
 }
@@ -93,8 +98,11 @@ export interface House {
   stats: any
   structure: any
   destruction: any
+  interactives: any
   update(dt: number, time?: number, focus?: { x: number; y: number; z: number }): void
   show(options: { floor?: number; cut?: boolean; lot?: boolean }): void
+  target(eye: any, options?: any): any
+  interact(target: any): any
   toggleDoor(id: string): any
   toggleLight(room?: string): any
   lightOn(room: string): boolean
