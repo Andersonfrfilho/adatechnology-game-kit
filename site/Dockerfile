@@ -59,6 +59,7 @@ COPY tools/weapons-catalog/package.json tools/weapons-catalog/
 COPY examples/audio-test-area/package.json examples/audio-test-area/
 COPY examples/animals-test-area/package.json examples/animals-test-area/
 COPY examples/characters-test-area/package.json examples/characters-test-area/
+COPY examples/floorplan-test-area/package.json examples/floorplan-test-area/
 COPY examples/interactables-showroom/package.json examples/interactables-showroom/
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
 COPY examples/items-test-area/package.json examples/items-test-area/
