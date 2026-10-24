@@ -1,0 +1,64 @@
+[
+  {
+    "id": "civilian",
+    "name": {
+      "pt-BR": "Civil"
+    },
+    "probability": 0.87,
+    "color": null,
+    "protection": []
+  },
+  {
+    "id": "police",
+    "name": {
+      "pt-BR": "Policial"
+    },
+    "probability": 0.08,
+    "color": "1F2A44",
+    "protection": [
+      "vest_police"
+    ],
+    "vest": {
+      "pistol": 0.3,
+      "rifle": 0.8
+    },
+    "loot": {
+      "caliber": "9x19",
+      "chance": 0.4
+    }
+  },
+  {
+    "id": "military",
+    "name": {
+      "pt-BR": "Militar"
+    },
+    "probability": 0.03,
+    "color": "4A5236",
+    "protection": [
+      "vest_military",
+      "helmet_combat"
+    ],
+    "vest": {
+      "pistol": 0.5,
+      "rifle": 0.5
+    },
+    "helmet": true,
+    "loot": {
+      "caliber": "5_56x45",
+      "chance": 0.3
+    }
+  },
+  {
+    "id": "firefighter",
+    "name": {
+      "pt-BR": "Bombeiro"
+    },
+    "probability": 0.02,
+    "color": "6B4A1C",
+    "protection": [
+      "turnout_gear"
+    ],
+    "fire": 0.25,
+    "limbs": 0.8
+  }
+]

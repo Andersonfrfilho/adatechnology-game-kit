@@ -20,6 +20,10 @@
     "./team-audio": {
       "types": "./dist/team-audio.d.ts",
       "import": "./dist/team-audio.js"
+    },
+    "./record-page": {
+      "types": "./dist/record-page.d.ts",
+      "import": "./dist/record-page.js"
     }
   },
   "scripts": {

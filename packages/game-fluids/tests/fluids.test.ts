@@ -22,7 +22,7 @@ const run = (world: FluidWorld, seconds: number, dt = 0.05): FluidEvent[] => {
 describe('data', () => {
   it('ships the liquids and item uses', () => {
     const ids = LIQUIDS.map((l) => l.id)
-    for (const id of ['water', 'coffee', 'tea', 'milk', 'soda', 'juice', 'beer', 'wine', 'spirits', 'fuel', 'diesel', 'motor_oil', 'cooking_oil', 'blood', 'sap', 'acid', 'paint', 'bleach', 'honey'])
+    for (const id of ['water', 'coffee', 'tea', 'milk', 'soda', 'juice', 'beer', 'wine', 'spirits', 'fuel', 'diesel', 'motor_oil', 'cooking_oil', 'blood', 'old_blood', 'bile', 'sap', 'acid', 'paint', 'bleach', 'honey'])
       expect(ids).toContain(id)
     expect(LIQUIDS.find((l) => l.id === 'coffee')!.drink!.effects).toContain('caffeine')
     expect(LIQUIDS.find((l) => l.id === 'beer')!.drink!.effects).toContain('alcohol')
@@ -163,6 +163,7 @@ describe('leaks', () => {
     const events = run(world, 1)
     expect(events.some((e) => e.type === 'leak')).toBe(true)
     expect(world.streams().filter((s) => s.cause === 'leak')).toHaveLength(1)
+    expect(world.stains().length).toBeGreaterThan(0)
     run(world, 120)
     expect(world.streams()).toHaveLength(0)
     const left = world.container('can')!.liters
@@ -170,7 +171,6 @@ describe('leaks', () => {
     expect(left).toBeCloseTo((0.03 / 0.4) * 18, 1)
     run(world, 30)
     expect(world.container('can')!.liters).toBeCloseTo(left, 6)
-    expect(world.stains().length).toBeGreaterThan(0)
   })
 })
 
@@ -229,7 +229,7 @@ describe('stains', () => {
     world.splash('coffee', [1, 0.01, 0], 0.1)
     run(world, 0.5)
     expect(world.stains().every((s) => s.wetness === 1 && s.wetRadius === 1)).toBe(true)
-    run(world, 200, 1)
+    run(world, 100, 1)
     const mid = world.stains()
     expect(mid).toHaveLength(2)
     for (const s of mid) {
@@ -396,5 +396,49 @@ describe('taps', () => {
     expect(b.serialize()).toEqual(world.serialize())
     b.setTap('sink', false)
     expect(b.streams()).toHaveLength(0)
+  })
+})
+
+describe('the team defaults', () => {
+  const liquid = (id: string) => LIQUIDS.find((l) => l.id === id)!
+
+  it('ships blood, old blood and bile with the Padrão de Fluidos colours and drying times', () => {
+    expect(liquid('blood')).toMatchObject({ stainColor: 0x3b1d14, dryTime: 600 })
+    expect(liquid('old_blood')).toMatchObject({ color: 0x6c1c16, stainColor: 0x2a160e, dryTime: 360, leavesMark: true })
+    expect(liquid('bile')).toMatchObject({ color: 0x8a9a2a, stainColor: 0x3e4220, dryTime: 900, leavesMark: true })
+  })
+
+  it('fuel evaporates in 60 s without a mark, water dries in 180 s and motor oil never dries', () => {
+    expect(liquid('fuel')).toMatchObject({ dryTime: 60, leavesMark: false })
+    expect(liquid('water').dryTime).toBe(180)
+    expect(liquid('motor_oil').dryTime).toBe(0)
+  })
+
+  it('a game replaces a liquid by id and gets its old values back', () => {
+    const world = createFluids({ liquids: [{ ...liquid('blood'), dryTime: 1200, stainColor: 0x4a0506 }] })
+    expect(world.liquids.get('blood')).toMatchObject({ dryTime: 1200, stainColor: 0x4a0506 })
+  })
+
+  it('a splash can carry its own tint, and the latest one wins', () => {
+    const world = createFluids({ seed: 3 })
+    world.addSurface(FLOOR)
+    world.splash('blood', [0, 0, 0], 0.01, [0, -1, 0], { tint: { fresh: 0x6c1c16, dry: 0x2a160e } })
+    expect(world.stains()[0]!.tint).toEqual({ fresh: 0x6c1c16, dry: 0x2a160e })
+    world.splash('blood', [0.02, 0, 0], 0.01, [0, -1, 0], { tint: { fresh: 0x7a0a0e, dry: 0x3b1d14 } })
+    expect(world.stains()).toHaveLength(1)
+    expect(world.stains()[0]!.tint).toEqual({ fresh: 0x7a0a0e, dry: 0x3b1d14 })
+    const plain = createFluids({ seed: 3 })
+    plain.addSurface(FLOOR)
+    plain.splash('blood', [0, 0, 0], 0.01)
+    expect(plain.stains()[0]!.tint).toBeUndefined()
+  })
+
+  it('a tint survives serialize and load', () => {
+    const world = createFluids({ seed: 3 })
+    world.addSurface(FLOOR)
+    world.splash('bile', [0, 0, 0], 0.02, [0, -1, 0], { tint: { fresh: 1, dry: 2 } })
+    const restored = createFluids({ seed: 3 })
+    restored.load(world.serialize())
+    expect(restored.stains()[0]!.tint).toEqual({ fresh: 1, dry: 2 })
   })
 })

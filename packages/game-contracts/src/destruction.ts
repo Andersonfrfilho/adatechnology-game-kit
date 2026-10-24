@@ -89,6 +89,8 @@ export interface PartSpec {
      * Each part goes off once. Without `chain`, it explodes only when destroyed (or at `atC`).
      */
     chain?: ExplosionChain
+    /** Id of the effect the host plays for the blast (`explosion_fuel_barrel`); without it the host picks a generic one by `energy` and `radius`. */
+    effect?: string
   }
   /** Fixed to the world (a wall-mounted cabinet, a tree trunk in the ground). Groups that keep an anchored part stay in place. */
   anchored?: boolean
@@ -240,6 +242,12 @@ export interface Hit {
   space?: 'world' | 'local'
   /** Who caused it (passed through to events). */
   source?: string
+  /** Projectile mass in grams (ballistic): the penetration of a body needs it, the energy alone does not say how much a bullet pushes. */
+  mass?: number
+  /** 0..1, how much of the blow is an edge that cuts through (slash 0.85, blunt 0, explosive 1; a bullet carries its own). */
+  cut?: number
+  /** A part the caller already resolved, by id (a crowd raycast against capsules); the impl then skips its own part search. */
+  part?: string
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -351,6 +359,8 @@ export interface ObjectState {
   groups: string[][]
   /** Every part is broken, melted or ash. */
   destroyed: boolean
+  /** Only objects that are a living body (a character, an animal): the summary the crowd and the HUD read. */
+  body?: { alive: boolean; vitality: number; missing: number; limp: boolean; crawl: boolean }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -405,7 +415,7 @@ export type DestructionEvent =
   | (EventBase & { type: 'melt'; part: string; melt: number })
   | (EventBase & { type: 'drip'; part: string; point: Vec3; material: MaterialId })
   | (EventBase & { type: 'leak'; part: string; fluid: FluidKind; point: Vec3; direction: Vec3; rate: number; pressurized: boolean })
-  | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number })
+  | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number; effect?: string })
   /** An explosive part was set off by a bullet, fire or a nearby blast and will explode `delay` seconds from now (`explodes.chain`). */
   | (EventBase & { type: 'primed'; part: string; point: Vec3; trigger: 'shot' | 'fire' | 'explosion'; delay: number })
   /** A structural part is overloaded (`stress` > 1); throttled to once per 0.5 s per part. Brittle parts also `crack` at stress > 0.8. */
@@ -421,6 +431,15 @@ export type DestructionEvent =
   | (EventBase & { type: 'stage'; part: string; stage: DamageStage; opening?: { center: Vec3; radius: number }; fragments?: readonly Fragment[] })
   /** Rebar of a reinforced part is bare: segments in world space. Empty `bars` means the cage is gone. */
   | (EventBase & { type: 'expose'; part: string; bars: readonly [Vec3, Vec3][] })
+  /** A living body changed: a wound, a broken or severed limb, a destroyed segment, a split torso, limp, crawl, stun or death. `below` lists the parts that fall with a severed one. */
+  | (EventBase & {
+      type: 'body'
+      part?: string
+      change: 'wound' | 'broken' | 'severed' | 'destroyed' | 'split' | 'limp' | 'crawl' | 'stunned' | 'killed'
+      cause?: 'head' | 'vitality' | 'bleed' | 'explosion'
+      below?: string[]
+      exit?: Vec3
+    })
   | (EventBase & { type: 'destroyed' })
 
 export type DestructionEventType = DestructionEvent['type']

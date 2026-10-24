@@ -1,5 +1,21 @@
 # @adatechnology/game-weapons-three
 
+## 0.4.1
+
+### Patch Changes
+
+- 32a00c6: `mergeByMaterial` now comes from `@adatechnology/game-props3d` (new dependency); nothing changes for callers of the package. The thumbnails of the twelve melee weapons added for the goods catalog were generated (`weapon-svg/generated`, manifest and credits), and the weapons area test allows eight counters.
+- Updated dependencies [76d15b6]
+- Updated dependencies [50eee43]
+- Updated dependencies [afffd1b]
+- Updated dependencies [cc182c7]
+- Updated dependencies [32a00c6]
+- Updated dependencies [9e58b50]
+  - @adatechnology/game-contracts@0.8.0
+  - @adatechnology/game-weapons@0.4.0
+  - @adatechnology/game-props3d@0.2.0
+  - @adatechnology/game-interactables-three@0.1.1
+
 ## 0.4.0
 
 ### Minor Changes

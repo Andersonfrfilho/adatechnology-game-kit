@@ -1,0 +1,304 @@
+{
+  "dog": [
+    [
+      400,
+      390,
+      70,
+      "Santa Aurora"
+    ],
+    [
+      35,
+      590,
+      10,
+      "Fazenda Santa Clara"
+    ],
+    [
+      165,
+      145,
+      12,
+      "canil da Mansão Valverde"
+    ],
+    [
+      320,
+      92,
+      24,
+      "Vila do Corvo"
+    ],
+    [
+      668,
+      428,
+      34,
+      "Três Pontes"
+    ],
+    [
+      480,
+      722,
+      32,
+      "Porto Turvo"
+    ],
+    [
+      130,
+      560,
+      34,
+      "Campo Largo"
+    ]
+  ],
+  "cat": [
+    [
+      400,
+      390,
+      48,
+      "Santa Aurora"
+    ],
+    [
+      668,
+      428,
+      22,
+      "Três Pontes"
+    ],
+    [
+      480,
+      722,
+      22,
+      "Porto Turvo"
+    ]
+  ],
+  "chicken": [
+    [
+      215,
+      560,
+      34,
+      "sítios da BR-101 oeste"
+    ],
+    [
+      35,
+      590,
+      10,
+      "Fazenda Santa Clara"
+    ],
+    [
+      95,
+      615,
+      30,
+      "Campo Largo sul"
+    ],
+    [
+      585,
+      560,
+      26,
+      "sítios do Parque"
+    ],
+    [
+      705,
+      330,
+      24,
+      "fazendas de Três Pontes"
+    ]
+  ],
+  "cow": [
+    [
+      200,
+      610,
+      62,
+      "pastos de Campo Largo"
+    ],
+    [
+      35,
+      590,
+      10,
+      "Fazenda Santa Clara (carcaças)"
+    ],
+    [
+      90,
+      420,
+      46,
+      "campos do oeste"
+    ],
+    [
+      575,
+      560,
+      40,
+      "pastos do Rio Claro"
+    ]
+  ],
+  "horse": [
+    [
+      105,
+      600,
+      26,
+      "haras do aeroclube"
+    ]
+  ],
+  "pig": [
+    [
+      235,
+      535,
+      26,
+      "sítios da BR-101 oeste"
+    ],
+    [
+      35,
+      590,
+      10,
+      "Fazenda Santa Clara (infectados)"
+    ],
+    [
+      620,
+      525,
+      22,
+      "sítios do Rio Claro"
+    ]
+  ],
+  "wild_boar": [
+    [
+      718,
+      640,
+      72,
+      "Mata Funda"
+    ],
+    [
+      170,
+      700,
+      40,
+      "milharais de Campo Largo"
+    ]
+  ],
+  "capybara": [
+    [
+      300,
+      640,
+      40,
+      "Lagoa Escura"
+    ],
+    [
+      262,
+      668,
+      28,
+      "Brejo do Sapo"
+    ],
+    [
+      345,
+      470,
+      22,
+      "Rio Turvo"
+    ],
+    [
+      545,
+      605,
+      26,
+      "Rio Claro"
+    ],
+    [
+      150,
+      660,
+      16,
+      "Açude da Cooperativa"
+    ]
+  ],
+  "jaguar": [
+    [
+      745,
+      720,
+      30,
+      "Lapa da Onça"
+    ],
+    [
+      710,
+      640,
+      46,
+      "Mata Funda"
+    ]
+  ],
+  "vulture": [
+    [
+      560,
+      385,
+      26,
+      "Engavetamento da BR-101"
+    ],
+    [
+      35,
+      590,
+      12,
+      "Fazenda Santa Clara"
+    ],
+    [
+      520,
+      451,
+      18,
+      "Trem descarrilado"
+    ],
+    [
+      400,
+      390,
+      30,
+      "centro de Santa Aurora"
+    ],
+    [
+      718,
+      612,
+      28,
+      "Área queimada"
+    ]
+  ],
+  "southern_lapwing": [
+    [
+      95,
+      535,
+      34,
+      "aeroclube"
+    ],
+    [
+      455,
+      560,
+      32,
+      "campos do Parque"
+    ],
+    [
+      230,
+      470,
+      26,
+      "beira da BR-101"
+    ]
+  ],
+  "lancehead": [
+    [
+      262,
+      668,
+      32,
+      "Brejo do Sapo"
+    ],
+    [
+      735,
+      665,
+      48,
+      "Mata Funda"
+    ],
+    [
+      130,
+      95,
+      20,
+      "Gruta do Corvo"
+    ]
+  ],
+  "rat": [
+    [
+      400,
+      395,
+      34,
+      "galerias pluviais"
+    ],
+    [
+      480,
+      735,
+      20,
+      "cais de Porto Turvo"
+    ],
+    [
+      150,
+      605,
+      16,
+      "silos da cooperativa"
+    ]
+  ]
+}

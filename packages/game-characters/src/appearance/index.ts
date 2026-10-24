@@ -1,0 +1,5 @@
+export { drawBodyVariance, variantCountFor, variantDecay, variantSeed } from './variance'
+export type { BodyVariance, BuildClass, VarianceScale } from './variance'
+export { BLOOD_SEED_OFFSET, createBloodStream, drawAppearance } from './traits'
+export type { AppearanceParams, AppearanceTraits, DrawnAppearance, HairStyle, OutfitLook } from './traits'
+export * as AppearancePalette from './palette'

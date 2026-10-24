@@ -1,0 +1,20 @@
+{
+  "name": "@adatechnology/animals-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Animals area for the shared test room: the 13 species of the Bichos do Vale in a row, drawn by the real builders with the alive, infected and dead looks, the gait and its speed, the joints and split views, rings for how far each sound carries and how far a carcass lures, the outbreak rule on or off, a bite clock that runs the incubation accelerated, and a field of 40 animals drawn as node skins. Six scenarios check the rules.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-animals": "workspace:*",
+    "@adatechnology/game-animals-species": "workspace:*",
+    "@adatechnology/game-animals-three": "workspace:*",
+    "@adatechnology/game-characters-undead": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-props3d": "workspace:*"
+  }
+}

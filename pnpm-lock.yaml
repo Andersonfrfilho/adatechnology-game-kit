@@ -27,6 +27,86 @@ importers:
         specifier: ^8.20.0
         version: 8.72.0(eslint@9.39.5)(typescript@5.9.3)
 
+  packages/game-animals:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-animals-species:
+    dependencies:
+      '@adatechnology/game-animals':
+        specifier: workspace:*
+        version: link:../game-animals
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-animals-three:
+    dependencies:
+      '@adatechnology/game-animals':
+        specifier: workspace:*
+        version: link:../game-animals
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+      '@adatechnology/game-props3d':
+        specifier: workspace:*
+        version: link:../game-props3d
+    devDependencies:
+      '@adatechnology/game-animals-species':
+        specifier: workspace:*
+        version: link:../game-animals-species
+      '@adatechnology/game-characters-undead':
+        specifier: workspace:*
+        version: link:../game-characters-undead
+      '@adatechnology/game-test-room':
+        specifier: workspace:*
+        version: link:../game-test-room
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      '@types/three':
+        specifier: ^0.160.0
+        version: 0.160.0
+      happy-dom:
+        specifier: ^17.4.4
+        version: 17.6.3
+      three:
+        specifier: ^0.160.1
+        version: 0.160.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
   packages/game-audio:
     dependencies:
       '@adatechnology/game-contracts':
@@ -60,6 +140,137 @@ importers:
       three:
         specifier: ^0.160.1
         version: 0.160.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-characters:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+    devDependencies:
+      '@adatechnology/game-destruction':
+        specifier: workspace:*
+        version: link:../game-destruction
+      '@adatechnology/game-weapons':
+        specifier: workspace:*
+        version: link:../game-weapons
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-characters-people:
+    dependencies:
+      '@adatechnology/game-characters':
+        specifier: workspace:*
+        version: link:../game-characters
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-characters-three:
+    dependencies:
+      '@adatechnology/game-characters':
+        specifier: workspace:*
+        version: link:../game-characters
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+    devDependencies:
+      '@adatechnology/game-characters-people':
+        specifier: workspace:*
+        version: link:../game-characters-people
+      '@adatechnology/game-characters-undead':
+        specifier: workspace:*
+        version: link:../game-characters-undead
+      '@adatechnology/game-test-room':
+        specifier: workspace:*
+        version: link:../game-test-room
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      '@types/three':
+        specifier: ^0.160.0
+        version: 0.160.0
+      happy-dom:
+        specifier: ^17.4.4
+        version: 17.6.3
+      three:
+        specifier: ^0.160.1
+        version: 0.160.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-characters-undead:
+    dependencies:
+      '@adatechnology/game-characters':
+        specifier: workspace:*
+        version: link:../game-characters
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+    devDependencies:
+      '@adatechnology/game-animals-species':
+        specifier: workspace:*
+        version: link:../game-animals-species
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-characters-uniformed:
+    dependencies:
+      '@adatechnology/game-characters':
+        specifier: workspace:*
+        version: link:../game-characters
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
@@ -121,6 +332,12 @@ importers:
       '@adatechnology/game-destruction':
         specifier: workspace:*
         version: link:../game-destruction
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:*
+        version: link:../game-vfx-three
     devDependencies:
       '@adatechnology/golden-tool':
         specifier: workspace:*
@@ -331,6 +548,9 @@ importers:
         specifier: workspace:*
         version: link:../game-contracts
     devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -349,6 +569,12 @@ importers:
       '@adatechnology/game-fluids':
         specifier: workspace:*
         version: link:../game-fluids
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:*
+        version: link:../game-vfx-three
     devDependencies:
       '@types/node':
         specifier: ^22.10.7
@@ -602,6 +828,12 @@ importers:
       '@adatechnology/game-fluids-three':
         specifier: workspace:*
         version: link:../game-fluids-three
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:*
+        version: link:../game-vfx-three
       '@adatechnology/game-weapons':
         specifier: workspace:*
         version: link:../game-weapons
@@ -726,6 +958,62 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
+  packages/game-vfx:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+    devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-vfx-three:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+    devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      '@types/three':
+        specifier: ^0.160.0
+        version: 0.160.0
+      happy-dom:
+        specifier: ^17.4.4
+        version: 17.6.3
+      three:
+        specifier: ^0.160.1
+        version: 0.160.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
   packages/game-weapons:
     dependencies:
       '@adatechnology/game-contracts':
@@ -803,6 +1091,45 @@ importers:
       '@adatechnology/golden-tool':
         specifier: workspace:*
         version: link:../../tools/golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  tools/animals-catalog:
+    devDependencies:
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  tools/characters-catalog:
+    devDependencies:
+      '@adatechnology/game-weapons':
+        specifier: workspace:*
+        version: link:../../packages/game-weapons
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../golden
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5

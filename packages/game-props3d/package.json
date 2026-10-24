@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-props3d",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "description": "Procedural low-poly 3D props (decor, modern furniture, yard, house-state). Builders only describe primitives through an api passed by the host, so any renderer can draw them.",
   "keywords": [
@@ -45,11 +45,11 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "three": "^0.160.1",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",
-    "vitest": "^3.2.4",
-    "@types/three": "^0.160.0",
-    "three": "^0.160.1"
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "three": "^0.160.0"

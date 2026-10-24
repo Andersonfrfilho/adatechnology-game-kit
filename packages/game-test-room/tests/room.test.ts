@@ -351,7 +351,7 @@ describe('pause and walk', () => {
 })
 
 describe('grenade blast', () => {
-  it('draws fire, flash and smoke: live additive and normal particles with alpha above zero are in the scene', () => {
+  it('draws fire, flash and smoke: live puffs, sparks and glows of the effects layer, and a blast light, are in the scene', () => {
     const room = makeRoom()
     room.setTool('frag_grenade')
     room.update(0.4)
@@ -360,16 +360,19 @@ describe('grenade blast', () => {
     for (let i = 0; i < 600 && room.log.entries({ type: 'explode' }).length === 0; i++) room.update(1 / 60)
     expect(room.log.entries({ type: 'explode' })).toHaveLength(1)
     room.update(1 / 60)
-    const liveCount = (name: string): number => {
-      const points = room.scene.getObjectByName(name) as THREE.Points
-      expect(points).toBeDefined()
-      const alpha = points.geometry.getAttribute('alpha').array as Float32Array
-      let live = 0
-      for (let i = 0; i < points.geometry.drawRange.count; i++) if (alpha[i] > 0) live++
-      return live
+    // the effects world's instanced layers replaced the two `destruction-particles` point clouds
+    const liveInstances = (name: string): number => {
+      const mesh = room.scene.getObjectByName(name) as THREE.Mesh
+      expect(mesh).toBeDefined()
+      return (mesh.geometry as THREE.InstancedBufferGeometry).instanceCount
     }
-    expect(liveCount('destruction-particles-additive')).toBeGreaterThan(30)
-    expect(liveCount('destruction-particles')).toBeGreaterThan(30)
-    expect(room.scene.children.some((c) => c instanceof THREE.PointLight && c.name === 'destruction-explosion-light')).toBe(true)
+    expect(liveInstances('vfx-sparks')).toBeGreaterThan(30)
+    expect(liveInstances('vfx-puffs')).toBeGreaterThan(30)
+    expect(liveInstances('vfx-glows')).toBeGreaterThan(0)
+    let lit = false
+    room.scene.traverse((object) => {
+      if (object instanceof THREE.PointLight && object.intensity > 0) lit = true
+    })
+    expect(lit).toBe(true)
   })
 })

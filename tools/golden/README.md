@@ -104,6 +104,37 @@ capture beside it: `packages/game-vehicles-fleet/tests/team-golden.test.ts` and 
 Keep the capture and the SDK test symmetric: the same states, the same events, the same seed. Content that only the game adds
 (for example blood) is left out of the page capture with `--param`, as `gameOnlyFlags` does, because it lives in the game repository.
 
+## Captures of the effects pages (spec 001, T5.0)
+
+All three use `--expose` (see the flag above), the three.js r128 build and OrbitControls from `node_modules/.pnpm/three@0.128.0/node_modules/three`
+(`--three $T/build/three.min.js --addon $T/examples/js/controls/OrbitControls.js`), and silence `renderer.render`, so a run takes seconds.
+Fixtures are staged in `specs/001-migracao-entregas-dos-times/goldens/` until the package that consumes them exists, then the task that
+builds the package moves them to `packages/<package>/tests/fixtures/team-golden/`. Every one was recorded twice on Node 22 and Node 24 and
+came out identical byte for byte.
+
+| Capture | Page | Fixture (consumer) | `--expose` |
+|---|---|---|---|
+| `explosion-lab.js` | Laboratório de Explosões (`artefatos/XHSLUfNEdzAqGrqVQCWifG.html`) | `explosion-lab.json` (`game-vfx`, `game-vfx-three`) | `blast,PROF,P,S,GL,CH,FIRES,SHOCKS,RINGS,XL,FL,layers,clearAll,seed,simT,clock,xlIdx,decalY,camera,lodNow,renderFicha,profOf,ORDER,SC,applyCam,stage,WINDOWS,U,pA,pD,pC,puffGeo,evCount,shakeAmp,flashV,flashDecay,puff,spark,glow,chunk,fire,shock,boomLight,scorch,crater,mushroom,updateRings,updatePuffs,updateSparks,updateGlows,updateShocks,updateChunks,updateBodies,updateFires,updateBlood,updateZombies,updateLights` |
+| `vfx-workshop.js` (`--param mode=effects`) | Oficina de VFX (`artefatos/LhJANM9RPMxWKS1ZXCzQ56.html`) | `packages/game-vfx/tests/fixtures/team-golden/vfx-workshop.json` (`game-vfx` recipes, `tests/workshop-golden.test.ts`) | `FX,select,pr,auto,renderer,addP,norP,streak,DB,DC,RG,LP,S,debris,decal,ring,flash,fLaunch,fh,fdry` |
+| `vfx-workshop.js` (`--param mode=fluids`) | same | `packages/game-fluids/tests/fixtures/team-golden/vfx-workshop-fluids.json` (film, `WORKSHOP_LAYOUT`) | same, plus `H` for `mode=trace` |
+| `vfx-workshop.js` (`--param mode=trace`) | same | `.../vfx-workshop-fluids-trace.json`: the dripping arm's world position per frame (the page animates the zombie) and the `Math.random` call count per frame | same |
+| `fluid-standard.js` | Padrão de Fluidos (`artefatos/XnjUUwx8fq5oQdDGvEq4Nv.html`) | `packages/game-fluids/tests/fixtures/team-golden/fluid-standard.json` (film, `PADRAO_LAYOUT`) | `h,dry,renderer,speed,sk,runN,setFluid,runScene,launch,SKEYS,FKEYS` |
+
+What each one records:
+
+- **Lab**: per scene, a camera at the scene's own position, the page seed `1000 + index * 97`, `blast` called directly (the throw physics, the
+  zombies and the building windows are left out, so the random stream only carries the explosion), 480 frames of 1/60 s with the page's update
+  functions in the page's order. Events: `scene` (camera, the sheet's `#mPv` number), `after_blast` (LOD, counts, shake, flash, seed), `spawns`
+  (the first 400 spawner calls, `frame kind numbers`, rounded to 4 decimals), `frames` (live counts per frame), `layers` (first and last frame each
+  layer is alive), `instant` at 0.08, 0.25, 0.5, 1, 2 and 4 s (hash of every pool state, the shock meshes, the lights, a hash of the persistent
+  meshes, the first and sixth (or last) puff buffer rows written that frame) and `end`.
+- **Workshop**: every catalogue effect except rain, fog, headlights and the film (36 entries in the page) once per parameter option, with
+  `Math.random` replaced by a counted stream seeded from the id and option. Events: `spawns` (the first 300 spawner calls with the number of
+  random draws made so far), `frames` (pool counts per frame) and `instant` (pool hashes and the screen state at 0.1, 0.5, 1, 2 s and the end of the loop).
+  The film capture records the thickness and dryness hashes, wet cells and launches at 0.5, 1, 2, 5 and 10 s for the 4 fluids.
+- **Fluid Standard**: 5 scenes x 5 fluids with the page's seed formula (`runN` = 0) at speed x20: hashes of `h` and `dry`, wet cells and
+  launches at 0.5, 1, 2, 5 and 10 s.
+
 ## Hashes must not depend on the Node version
 
 A hash that passes on Node 22 and fails on Node 24 is a bug in the golden, not in the SDK. What changed between them is the last bit of
@@ -120,10 +151,33 @@ three.js centripetal curves call `pow`, and a closed `TubeGeometry` on a nearly 
 - Before committing a regenerated fixture, run its tests on two Node versions (CI runs the goldens on 22 and 24). Keep a 1 mm test: a
   vertex or a transform moved by 0.001 must still change the hash (`scene-hash.test.ts`, `game-vehicles-fleet/tests/digest.test.ts`).
 
+## Record a page that keeps its code private (`@adatechnology/golden-tool/record-page`)
+
+Most team pages wrap their code in an IIFE, so a capture cannot reach `hit` or `buildPerson`. `writePatchedPage(page, patches)` writes a copy of the page with code
+inserted inside its closure (`globalThis.__team = { hit, sever }`), and `recordPage(options)` runs `bin/record.mjs` on it (three r128 and the `examples/js` addons
+served from this package's `node_modules`). The page runs as it always did; the capture reads `globalThis.__team` (`--ready "globalThis.__team"`). For code that
+comes from the game (three r160), the capture runs on a blank page and receives the cut code as `globalThis.__SLICES`. Real uses:
+`tools/characters-catalog/src/golden/chrome-goldens.ts` and `tools/characters-catalog/captures/`.
+
+## Cut pure logic out of a team page (`@adatechnology/golden-tool/cut-source`)
+
+Node only. For logic that needs no browser (damage rules, spawn, gait math) the catalog tools cut it from the team source and run it in an
+empty `node:vm` context, with the seeded RNG passed in as a global, so the SDK draws in the same order and the match is exact.
+
+| Function | Cuts |
+|---|---|
+| `cutLiteral(source, name)` / `extractLiteral(source, name, scope?)` | `const <name> = <literal>;`, the literal only (and evaluates it) |
+| `cutDeclaration(source, name)` | the whole `const <name> = ...;` statement (an IIFE, an arrow function) |
+| `cutFunction(source, name)` | `function <name>(...) {...}`, `async function` or `class` |
+| `cutBetween(source, start, end)` / `cutLines(source, from, to)` | a marker range or a line range (anchors drift: prefer a named cut) |
+| `evaluateSlice(code, exports, scope?)` | runs a slice with `scope` as its only globals and returns the names listed in `exports` |
+
+Brackets inside strings, templates, regular expressions and comments do not count.
+
 ## Tests
 
 `pnpm --filter @adatechnology/golden-tool test` covers the seeded PRNG, the determinism installer, the scene hash (stable across runs,
-changes with a vertex, a color, a transform or a name) and the event recorder and diff.
+changes with a vertex, a color, a transform or a name), the event recorder and diff, and the source cutter.
 
 ## Audio traces (spec 001, Phase 6)
 

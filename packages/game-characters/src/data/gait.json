@@ -1,0 +1,163 @@
+{
+  "cascade": {
+    "hip": 16,
+    "spine": 11,
+    "shoulder": 9,
+    "elbow": 7,
+    "leg": 14,
+    "knee": 11,
+    "head": 6
+  },
+  "moves": {
+    "idle": {
+      "gait": 0,
+      "freq": 0,
+      "amp": 0,
+      "knee": 0,
+      "bob": 0,
+      "lean": 0,
+      "arm": 0,
+      "elb": 0.12,
+      "crouch": 0,
+      "aim": 0,
+      "turn": 0,
+      "grip": 0.35
+    },
+    "walk": {
+      "gait": 1,
+      "freq": 5.6,
+      "amp": 0.42,
+      "knee": 0.85,
+      "bob": 0.035,
+      "lean": 0.05,
+      "arm": 0.42,
+      "elb": 0.3,
+      "crouch": 0,
+      "aim": 0,
+      "turn": 0,
+      "grip": 0.4
+    },
+    "run": {
+      "gait": 1,
+      "freq": 9.2,
+      "amp": 0.72,
+      "knee": 1.5,
+      "bob": 0.06,
+      "lean": 0.3,
+      "arm": 0.85,
+      "elb": 1.35,
+      "crouch": 0,
+      "aim": 0,
+      "turn": 0,
+      "grip": 1.1
+    },
+    "crouch": {
+      "gait": 1,
+      "freq": 3.8,
+      "amp": 0.3,
+      "knee": 0.6,
+      "bob": 0.02,
+      "lean": 0.42,
+      "arm": 0.15,
+      "elb": 0.7,
+      "crouch": 1,
+      "aim": 0,
+      "turn": 0,
+      "grip": 0.8
+    },
+    "aim": {
+      "gait": 0,
+      "freq": 0,
+      "amp": 0,
+      "knee": 0,
+      "bob": 0,
+      "lean": 0.06,
+      "arm": 0,
+      "elb": 0.2,
+      "crouch": 0.25,
+      "aim": 1,
+      "turn": 0,
+      "grip": 1.2
+    },
+    "turn": {
+      "gait": 0.5,
+      "freq": 4.2,
+      "amp": 0.14,
+      "knee": 0.7,
+      "bob": 0.012,
+      "lean": 0.03,
+      "arm": 0.12,
+      "elb": 0.25,
+      "crouch": 0,
+      "aim": 0,
+      "turn": 1,
+      "grip": 0.4
+    }
+  },
+  "poses": [
+    {
+      "index": 0,
+      "id": "walk",
+      "name": {
+        "pt-BR": "anda"
+      }
+    },
+    {
+      "index": 1,
+      "id": "crawl",
+      "name": {
+        "pt-BR": "rasteja"
+      }
+    },
+    {
+      "index": 2,
+      "id": "fallen",
+      "name": {
+        "pt-BR": "caído"
+      }
+    },
+    {
+      "index": 3,
+      "id": "attack",
+      "name": {
+        "pt-BR": "ataca"
+      }
+    },
+    {
+      "index": 4,
+      "id": "scream",
+      "name": {
+        "pt-BR": "grito"
+      }
+    },
+    {
+      "index": 5,
+      "id": "crouch",
+      "name": {
+        "pt-BR": "agachado"
+      }
+    },
+    {
+      "index": 6,
+      "id": "leap",
+      "name": {
+        "pt-BR": "salto"
+      }
+    },
+    {
+      "index": 7,
+      "id": "eat",
+      "name": {
+        "pt-BR": "comendo"
+      }
+    }
+  ],
+  "walk": {
+    "cadenceBase": 0.5,
+    "cadencePerSpeed": 0.3,
+    "stopBelowSpeed": 0.05,
+    "maxSine": 0.9,
+    "strideFactor": 4,
+    "legLengthFactor": 0.9
+  }
+}

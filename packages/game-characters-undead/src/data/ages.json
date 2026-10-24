@@ -1,0 +1,87 @@
+{
+  "ages": [
+    {
+      "id": "fresh",
+      "name": {
+        "pt-BR": "Fresco"
+      },
+      "probability": 0.8,
+      "blood": 1,
+      "speed": 1.1,
+      "health": 1,
+      "limbDamage": 0.8,
+      "freshBloodColor": "8A0A0A",
+      "dryBloodColor": "3B1D14",
+      "perception": {}
+    },
+    {
+      "id": "recent",
+      "name": {
+        "pt-BR": "Recente"
+      },
+      "probability": 0.15,
+      "blood": 0.6,
+      "speed": 1,
+      "health": 1,
+      "limbDamage": 1,
+      "freshBloodColor": "5A0C10",
+      "dryBloodColor": "2E1810",
+      "perception": {}
+    },
+    {
+      "id": "old",
+      "name": {
+        "pt-BR": "Antigo"
+      },
+      "probability": 0.04,
+      "blood": 0.25,
+      "speed": 0.9,
+      "health": 0.85,
+      "limbDamage": 1.3,
+      "freshBloodColor": "3A1C12",
+      "dryBloodColor": "2A160E",
+      "perception": {
+        "hearing": -0.1
+      }
+    },
+    {
+      "id": "decrepit",
+      "name": {
+        "pt-BR": "Decrépito"
+      },
+      "probability": 0.01,
+      "blood": 0,
+      "speed": 0.75,
+      "health": 0.65,
+      "limbDamage": 1.8,
+      "freshBloodColor": "1A1612",
+      "dryBloodColor": "1A1612",
+      "perception": {
+        "sight": -0.4,
+        "smell": -0.3
+      }
+    }
+  ],
+  "skinTones": [
+    "CDBBA8",
+    "94A084",
+    "7B744A",
+    "8C7C5E"
+  ],
+  "bloodTones": [
+    "9E1B12",
+    "6E1410",
+    "4A2A18",
+    "1C1612"
+  ],
+  "clothTones": [
+    "4A6F96",
+    "8E3B3B",
+    "5D4A3A",
+    "4F7A43",
+    "6B6F78",
+    "3F5F3A",
+    "5A4A6E",
+    "8A6A3A"
+  ]
+}

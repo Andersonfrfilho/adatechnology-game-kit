@@ -1,0 +1,4 @@
+{
+  "ages": { "child": "Child", "young": "Young", "adult": "Adult", "elder": "Elder" },
+  "slots": { "hair": "Hair style", "hat": "Hat", "face": "Face feature", "worn": "Worn on the body", "hand": "Held in the hand" }
+}

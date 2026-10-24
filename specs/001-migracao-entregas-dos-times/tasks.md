@@ -67,9 +67,9 @@ Ordem: armas → casas → itens → personagens → efeitos → som e clima →
 ## Fase 5 — Efeitos
 > 🤖 Modelo: `sonnet`
 
-- T5.1 `game-vfx` + `-three`: explosão do Laboratório com o teto e o LOD do jogo (E1); destruição, fluidos e armas passam a usá-lo.
-- T5.2 Oficina de VFX como módulo da bancada de efeitos (E5, T0.2), modelada no Laboratório.
-- T5.3 `game-fluids`: filme que escorre, respingo por ângulo, bile e sangue antigo, com os valores do time como padrão configurável (E2).
+- T5.1 ✅ `game-vfx` + `-three`: explosão do Laboratório com o teto e o LOD do jogo (E1); destruição, fluidos e armas passam a usá-lo.
+- T5.2 ✅ Oficina de VFX como módulo da bancada de efeitos (E5, T0.2), modelada no Laboratório.
+- T5.3 ✅ `game-fluids`: filme que escorre, respingo por ângulo, bile e sangue antigo, com os valores do time como padrão configurável (E2). (A ligação do `body` dos personagens ao filme espera o evento `body`.)
 
 ## Fase 6 — Som e clima
 > 🤖 Modelo: `sonnet`

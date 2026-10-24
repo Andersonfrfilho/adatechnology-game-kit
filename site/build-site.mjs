@@ -27,7 +27,7 @@ rmSync(out, { recursive: true, force: true })
 mkdirSync(out, { recursive: true })
 
 const examples = []
-// test-room goes first: other examples (interactables-test-area) load their area into its page
+// test-room goes first: other examples (interactables-test-area, vfx-test-area, weapons-test-area) load their area into its page
 const exampleNames = dirs(join(root, 'examples')).sort((a, b) => (b === 'test-room') - (a === 'test-room'))
 for (const name of exampleNames) {
   const dir = join(root, 'examples', name)

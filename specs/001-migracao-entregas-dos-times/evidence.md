@@ -1263,6 +1263,44 @@ Modelo: `sonnet`. Branch `work/spec001-t2-f` (sobre `feat/spec-001-fase-2` com a
 
 1. Com 200 sementes (`FULL=1`) os modelos rurais têm raras plantas que a própria página também gera (idênticas): alpendre da cabana com centro inalcançável (sementes 53, 68, 123, 167, 173), pouso de escada bloqueado por vaso no chalé (187), quarto do barraco com 29% de área alcançável (200) e estado abandonado sem cadeira caída no barraco (90). Mantive o porte fiel (suíte padrão, 25 sementes, passa); corrijo na página e no porte juntos se quiser.
 2. A laje com andares: a escada na margem esquerda tapa a porta lateral da cozinha por cima? (ela passa acima de 2,6 m; confirma o desenho?)
+## Fase 5 — grupos A e B
+
+Branch `feat/spec-001-fase-5` (de `main`), worktree `spec001-fase-5`. Contrato: `design/T5-efeitos.md`. Cada task é um commit isolado, na ordem do prompt (T5.0, T5.1a, T5.3b, T5.1b, T5.1c, T5.1d, T5.1e). Os grupos C (destruição, fluidos, armas e sala de testes passam a usar o mundo de efeitos), D (Oficina de VFX e bancada) e E (filme de fluidos) não foram começados.
+
+### T5.0 — capturas e fixtures
+
+- `--expose` no gravador: mesma implementação da T2.2a (`feat/spec-001-fase-2`, commit `822cbdb`), trazida com `git checkout feat/spec-001-fase-2 -- tools/golden/{bin,src,tests}` (`expose-in-page.mjs`, `hashText`, o teste), para as duas branches convergirem no merge. A linha do README é a mesma.
+- Capturas: `explosion-lab.js` (16 cenas), `vfx-workshop.js` (modo `effects` e modo `fluids`), `fluid-standard.js` (5 cenas x 5 fluidos). Cada gravação saiu idêntica byte a byte repetida e entre Node 22.23.4 e 24.22.0 (o gravador roda o V8 do Chrome; o Node só roda o script).
+- Desvios do contrato, todos de método:
+  - O Laboratório não é guiado por `frame` da página (tem `IntersectionObserver` e renderiza): a captura chama as funções `update*` da página, na ordem do `frame`, a 1/60 s. `blast` é chamado direto, sem os zumbis, as janelas (`WINDOWS.length = 0`) nem a física de arremesso; o estado global que a página guarda entre cenas (`clock`, `xlIdx`, `decalY`, `flashDecay`, `lodNow`) é zerado por cena para a cena poder ser reproduzida sozinha.
+  - Hashes de pool são de estado em `number` (4 casas), não dos buffers `pA/pD/pC` em float32 (o arredondamento de float32 vira fronteira de hash). Os buffers entram como amostra com tolerância (primeira e sexta linha escritas no quadro, `puffGeo.instanceCount`: puffs nascidos depois do `updatePuffs` do mesmo quadro ainda não estão no buffer).
+  - A Oficina tem 40 definições; sem chuva, neblina, faróis e o filme sobram 36 (o contrato diz 34), por opção de parâmetro: 54 execuções. O filme dos 4 fluidos é a captura `mode=fluids`.
+  - `renderer.render` é silenciado nas páginas da Oficina e do Padrão de Fluidos: a gravação leva segundos.
+- Fixtures: Lab 770 KB, Oficina 1,9 MB, filme da Oficina 4 KB, Padrão de Fluidos 24 KB. O do Laboratório foi para `packages/game-vfx/tests/fixtures/team-golden/` na T5.1e; os outros ficam em `specs/.../goldens/` até a T5.2c e a T5.3d.
+
+### T5.1a e T5.3b
+
+- Contratos: `effects.ts`, `ModuleHost.effects`, `explosive` no `explosion`, `explodes.effect` e `explode.effect`, `ChoiceOption.group` (o `checkBench` recusa grupo vazio ou partido), `ModuleBench.sheet` e `BenchSheet`. Tudo aditivo.
+- Fluidos: valores do time por padrão (sangue 0x3B1D14 e 600 s, combustível 60 s sem marca, água 180 s), `old_blood` e `bile` novos, `splash` com `tint`. Valores antigos (sangue 0x4A0506 e 1200 s, combustível 120 s com marca, água 600 s) listados no changeset. Dois testes que dependiam dos tempos antigos foram ajustados. Decisão minha: viscosidade/densidade/brilho de `old_blood` (4/1060/0,7) e `bile` (6/1020/0,75) e efeitos de beber (`disgust`) não vêm do time; ficam como padrão configurável.
+
+### T5.1b a T5.1d — `game-vfx` e `game-vfx-three`
+
+- Porte literal do Laboratório: compositor de camadas na ordem do `blast`, com os sorteios na mesma ordem (cada função de camada declara a ordem dos `rr`), laços de simulação na ordem do `frame`, luzes, fogo, cogumelo, crateras com `GroundField` em float32 (o `dent` sorteia por célula, então o chão tem de viver no núcleo puro).
+- Piscinas de registros reaproveitados em ordem de entrada (`OrderedPool`): sem alocação por quadro; a mais antiga sai quando cheia (detritos: um parado primeiro); halo de detrito vira posição fixa quando o detrito sai.
+- Teto de área (40 m no plano, 4 s, 6, 0,3), `LOD_GAME` e `LOD_LAB`, `PROFILES`, `estimateCost` igual à ficha do Laboratório nos 16 perfis, agenda do último para o primeiro.
+- Os 16 perfis em `explosions.json` por id de explosivo de `game-weapons` (+ `generic` e os dois apelidos), gerados do `PROF` da fonte, com `sources` (linha). Todos os 18 explosivos de `game-weapons` respondem.
+- Renderizador three: shaders verbatim (`encodings_fragment` virou `colorspace_fragment`; `extensions.derivatives` saiu), luzes com cores cruas do r128 e `lightScale` π (luzes físicas do r160), marcas criadas no instante do evento (acompanham o chão daquele momento), `EffectSink`, `applyCamera`, sobreposição de tela.
+- Achado pelo golden: o renderizador deve seguir a câmera também em `play` (antes do primeiro `update` o LOD usava a câmera na origem); corrigido e com teste.
+
+### T5.1e — fidelidade do Laboratório
+
+| Teste | Resultado |
+|---|---|
+| `game-vfx/tests/team-golden.test.ts` (puro: `randomMode: 'shared'`, `LOD_LAB`, `profile: 'high'`, `areaCap: false`) | 16/16 cenas: detonação (LOD, contagens, tela, fluxo), 400 primeiros spawns, contagens por quadro, camadas, estado das piscinas em 0,08, 0,25, 0,5, 1, 2 e 4 s, fluxo final |
+| `game-vfx-three/tests/team-golden.test.ts` | 16/16: hash da cena das marcas (malhas conformadas, pedras da borda), casca e anel do choque, buffers dos puffs (float32, tolerância 2e-3) |
+| Node 22.23.4 e 24.22.0 | iguais (`installPortableMath` no setup; `Math.hypot` e `Math.atan2` do chão dão o mesmo nas duas) |
+
+Fidelidade do Laboratório: **16/16**.
 
 ### Portões
 
@@ -1577,6 +1615,186 @@ Node 22.23.4: `tools/items-catalog` 27, `game-items` 18, `tools/golden` 42, `cat
 - **Contagem:** o pedido falava em 298 itens; são 327 porque a T3.1c criou 28 itens e desfez uma junção (ver T3.1c).
 
 **Portões (Node 24.22.0)**
+## Fase 4 — grupo A
+
+Tarefas T4.0 (só o que não toca o `game-items`), T4.1a, T4.1b e T4.1c do desenho `design/T4-personagens-e-animais.md`. Branch `feat/spec-001-fase-4`, a partir da `main`. Nada foi enviado ao remoto.
+
+### T4.0 — contratos do corpo vivo
+
+| Mudança | Onde | Teste |
+|---|---|---|
+| `BodySlot`, `SegmentKind`, `BodyRegion`, `MISSING_BITS` (os dez bits que o shader lê) | `packages/game-contracts/src/body.ts` | `contracts.test.ts`: os valores 1, 2, 4 ... 512 |
+| `Hit.mass` (g), `Hit.cut` (0..1), `Hit.part` | `destruction.ts` | tipos |
+| Evento `body` (`change`, `cause`, `below`, `exit`) e `ObjectState.body` | `destruction.ts`; `game-destruction/src/locale.ts` ganhou o rótulo em `en` e `pt-BR` (o `Record` do evento exige) | `pnpm -r typecheck` |
+| `Shot.mass` e `shotToHit` copia | `weapons.ts`; `game-weapons/src/weapon-firearm.ts` preenche `bulletGrams` (do chumbo na espingarda) | `contracts.test.ts`, `game-weapons/tests/weapons.test.ts` |
+
+**Pendente da Fase 3** (o `game-items` está em outra branch e não foi tocado): `protection.ballistic` (`{ resistance, blunt, pass?, consumable? }`) e o reexport de `BodySlot` em `game-items`. Os ids de proteção que os presets citam (`vest_police`, `vest_military`, `helmet_combat`, `turnout_gear`) são os que o `game-items` deve receber.
+
+### T4.1a — `tools/characters-catalog`
+
+Lê o jogo, o Bestiário, o Elenco, os Retratos, Os Vivos do Vale, o corpo da Galeria do Arsenal e a Bancada de Hordas; escreve (cada arquivo com a origem do número em `decisions.json`, `{ value, source, reason }`):
+
+- `packages/game-characters-undead/src/data/{types,ages,outfits,infection,moments}.json`;
+- `packages/game-characters/src/presets/{team-game,physical}.json` e `src/data/{body,segments,gait,appearance}.json`;
+- `--game-out`: `specs/001-migracao-entregas-dos-times/game-slice/characters/` com README (vai para o repositório zombiada): 44 pessoas, 18 grupos, relações, 47 eventos, 7 facções com o 7º BIS, simulação de vida, tabela de pontos, `ZONES` e os NPCs do quarteirão (Cícero e Sandra).
+
+As pastas dos pacotes são escritas antes de os pacotes existirem (o `package.json` vem nas tasks seguintes). `catalog:check` e o `catalog:check` da fatia passam; o teste `catalog-up-to-date` é o mesmo.
+
+**Calibração P7** (`tests/calibration.test.ts`, contra os calibres do `game-weapons`, fórmula refeita no teste sem usar o código da ferramenta):
+
+| Calibre | Força P | Corpos | Alvo | Energia que fica no 1º corpo | Bestiário |
+|---|---|---|---|---|---|
+| 9×19 | 7,67 | 2 | 2 | 0,51 | 0,50 |
+| 5,56×45 | 16,56 | 3 | 3 | 0,69 | 0,65 |
+| .308 (7,62×51) | 26,67 | 4 | 4 | 0,78 | 0,75 |
+| 7,62×39 | 18,52 | 3 | 3 (PEN 3,0 do jogo) | 0,71 | — |
+| 00 buck (chumbo) | 4,35 | 1 | 1 (PEN 0,5 do jogo) | 0,37 | — |
+
+Contagens exatas, energia dentro de ±0,05. O preset `team-game` (PEN do jogo, custo 0,7 / 1 / 2 / 0,5, 75% por corpo) cruza 2, 1, 3 e 4 corpos, igual. Pontos padrão `3,5·E^0,37`: 35 (9×19), 59 (7,62×39) e **71,7** (.308): o desenho diz 71, arredondado para baixo; o teste aceita o valor real.
+
+**Divergências entre as fontes que o catálogo registra** (o teste lista cada uma):
+
+| Assunto | Fonte A | Fonte B | O que o catálogo adota |
+|---|---|---|---|
+| Cor do olho do Devorador | página v0.1 `#b0103a` | jogo v17 `0xB0122A` | v17 (P4); é a única diferença entre a página e o jogo |
+| Multiplicadores do Devorador | página 1,0·1,0·1,0 | jogo 1·0,9·0,9 | jogo |
+| Sangue por idade | Bestiário 100 / 70 / 35 / 10% | jogo 1 / 0,6 / 0,25 / 0 | jogo (velocidade, vida e dano de membro dos dois são iguais) |
+
+### T4.1b — `tools/animals-catalog`
+
+Lê `SPECIES`, `SPEC` (a página põe funções e texturas de canvas dentro do dado: viram `hasExtraBuilder` e marcadores `{ kind: 'spots' | 'stripes' }`), `GAIT`, `ORDER`, `ZONES` e `TER`. Escreve `packages/game-animals/src/data/gaits.json`, `packages/game-animals-species/src/data/species.json` (13 espécies; desfecho `turns` 6, `dies` 3, `immune` 4; surto como dado; alcance do som) e, com `--game-out`, `game-slice/animals/` com README (textos do Vale, zonas, terreno). Cada número da regra de infecção e do som tem na `decisions.json` o trecho da fonte que o prova, e o teste confere o trecho.
+
+### T4.1c — goldens gravados
+
+Gravados do código do próprio time (mecanismo da seção 3 do desenho): a lógica pura é cortada de `jogo.js` com `cut-source` (novo em `@adatechnology/golden-tool/cut-source`) e roda em `node:vm` com o RNG semeado por personagem; as cenas rodam no Chrome (`record.mjs`) na página do time com um trecho que expõe o fechamento (`writePatchedPage`), ou, para código do jogo, numa página em branco com o `three.module.js` r160 do próprio jogo (idêntico ao `three@0.160.1` do repositório). Os fixtures ficam onde os pacotes vão lê-los, `packages/<pacote>/tests/fixtures/team-golden/` (as pastas existem antes dos pacotes).
+
+| Golden | Fixture | Como | Eventos / cenas |
+|---|---|---|---|
+| G-spawn | `game-characters-undead/game-spawn.json` | vm, `zSpawn` real | 650 spawns (13 tipos × sementes 1 a 50) + 200 sorteios de tipo |
+| G-damage-regions | `game-characters/game-damage-regions.json` | vm, `zDamage` real, efeitos e `zKill` em stub | 18 sequências (capacete + 9 mm, colete + 7,62, perna até mancar e rastejar, 12 ga a 3 m na cabeça, corte do braço...) + 20 sorteios de mandíbula |
+| G-penetration | `game-characters/game-penetration.json` | vm, `shootRay` + `zDamage` reais; mundo e lista de corpos em stub | 10 linhas de 5 corpos: os 4 calibres contra 5 lentos, brutamonte na frente e em segundo, tipos mistos, membros, cabeças e alvos longe |
+| G-gait (puro) | `game-characters/game-walk-gait.json` | vm, `walkCad`, `walkGait` | 100 pontos (0 a 6 m/s, 4 alturas) |
+| G-instanced (fonte) | `game-characters-three/game-body-chunk.json` | vm, `bodyChunk` | sha256 do trecho de shader |
+| G-damage-segments | `game-characters/arsenal-damage-segments.json` | Chrome, Galeria do Arsenal | 214 eventos: 11 segmentos × 4 armas (com e sem ponto de impacto) e a granada a 0,5 a 2 m |
+| G-cut-hierarchy | `game-characters/elenco-cut-hierarchy.json` | Chrome, Elenco | 225 eventos: 6 armas × 13 segmentos |
+| G-body | `game-characters-three/game-best-body.json` | Chrome, r160 | 780 cenas (13 tipos × decay 0 a 3 × sementes 1 a 5 × LOD 1, 0,5, 0,28) e 60 `bakeBody` das variantes ZVAR |
+| G-instanced | `game-characters-three/game-instanced-body.json` | Chrome, r160 | `buildBody(16/10/5)`: 6048 / 2856 / 1485 vértices |
+| G-people | `game-characters-three/portraits-people.json` | Chrome, Retratos | 44 cenas (só o hash) |
+| G-gait (rig) | `game-characters-three/bestiary-gait.json` | Chrome, Bestiário | 117 poses (13 tipos × t = 0 a 2 s) |
+| G-animals | `game-animals-three/animals-page.json` | Chrome, Bichos do Vale | 65 cenas (13 espécies × vivo, mordido, andar, trote, galope) |
+| G-animals (pele) | `game-props3d/game-animal-skin.json` | Chrome, r160 | 26 peles de GPU (13 espécies, sã e mordida) |
+
+**Regravados duas vezes, byte a byte iguais**: `golden:vm:check` (cada vm golden duas vezes no mesmo processo e contra o fixture) e `golden:chrome:check` (cada captura do Chrome duas vezes em pasta de rascunho, comparadas entre si e com o fixture): todos iguais. Os vm goldens também passam no teste do pacote em **Node 22 e Node 24**, e `catalog:check` nos dois.
+
+**Para quem compara depois** (T4.1d a T4.1i): o RNG de cada golden. G-spawn: fluxo `createSeededRandom(semente)` por personagem, semente = 1 a 50 (e 1 a 200 no sorteio de tipo); G-damage-regions: a semente de cada sequência está no evento `start`; G-penetration: semente 1 por linha; G-damage-segments: `Math.random = createSeededRandom(semente × 100000 + n)`, `n` crescendo na ordem das capturas; G-cut-hierarchy: o mesmo esquema, um sorteio por golpe. O hash de vetores é FNV-1a 32 sobre `round(valor × 1e4)` (declarado no primeiro evento de cada golden que o usa).
+
+**Desvios e limites assumidos**
+
+- **Orçamento de triângulos** (a 1000 corpos, T4.4a): o `buildBody` do jogo tem 2016 / 952 / 495 triângulos nos três LODs e o corpo do Bestiário assado 9014 no LOD 0, acima do orçamento 2500 / 800 / 250 que o desenho tira da Bancada. O teste de orçamento de T4.4a precisa de decisão do dono (medir o que o jogo tem, ou reduzir os LODs).
+- **Mandíbula**: no jogo só se chega ao `miss |= 512` com golpe de cabeça não letal acima de 25; nenhum projétil faz isso (o crânio morre a partir de 20). A sequência `jaw_roll_*` é sintética (12 ga a 12 m com dano 30) para gravar a regra e o sorteio de 30%.
+- **`zKill` em stub e `corpseAdd` fora**: o jogo remove o zumbi (e `corpseAdd` sorteia mais um `R()`); o golden deixa o corpo no lugar, então o fluxo de sorteios depois de uma morte não é o do jogo (as sequências terminam na morte).
+- **`ZVAR_OF`** do G-spawn usa a própria expressão `nv` do bloco ZVAR cortada do jogo; o bloco inteiro precisa de WebGL para assar os corpos.
+- **MOVES do Elenco** (mistura contínua) fica só como dado (`gait.json`): a mistura roda no `tick` da página, preso ao relógio dela. O golden de passada do rig é do Bestiário (`animate0`, sem sorteio).
+- **G-body** e as páginas r128 (Bestiário, Elenco, Retratos, Arsenal, Bichos) gravam com three r128 (cor sem conversão sRGB); o que vem do jogo grava com r160, a mesma versão do SDK. Os desvios r128 contra r160 que o porte vir a ter entram em `KNOWN_DEVIATIONS`.
+- **`record.mjs`** (ferramenta de golden): uma resposta do CDP que chegava depois de o Chrome parar deixava o processo vivo por 30 s e terminava com erro mesmo com o golden gravado; agora a resposta tardia é ignorada e o processo sai ao fim.
+- **`tools/golden`** ganhou dois módulos de Node, fora do bundle da página: `cut-source` (corta e roda código do time em `vm`) e `record-page` (copia a página com o trecho que a expõe e chama o gravador). Os testes de `cut-source` estão em `tools/golden/tests/cut-source.test.ts`.
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0, nenhuma falha |
+| `game-vfx` e `game-vfx-three` em Node 22.23.4 | 161 e 59 testes passam |
+| `docker build -f site/Dockerfile .` | exit 0 |
+
+Modelo da execução: `sonnet` (nenhum portão falhou duas vezes, sem escalada).
+
+## T5.3a–d — filme de fluidos (grupo E)
+
+Branch `work/spec001-t5-e` (de `feat/spec-001-fase-5`, com a T5.3b). Contrato: `design/T5-efeitos.md` §1 (Padrão de Fluidos e fluidos da Oficina), §3, §4, §6 e §7. Um commit por task: T5.3a (`game-fluids/src/film`), T5.3d (goldens), T5.3c (renderizador three, abaixo).
+
+### T5.3a — `game-fluids` film
+
+- Porte literal de F60-114 em `film/deposit.ts` (`dep`, `blob`, `stroke`, `splat`), `film/simulate.ts` (`bbox`, `mob`, `step`, `age`; passo de 180 Hz limitado à caixa molhada, no máximo 6 por quadro ou `maxSteps`, 9 na Oficina), `film/drops.ts` (F250-278: anel de gotas, voo, `land`), `film/sources.ts` (pingo F282, fonte F288, arrasto F291) e `film/layout.ts` (F12-42: grade dobrada sobre parede, calçada, meio-fio e rua; `PADRAO_LAYOUT` e `WORKSHOP_LAYOUT` são dois ajustes de `createFoldedLayout`). `layoutFromSurfaces({ floor, wall?, curb?, center })` monta a dobra a partir de `SurfaceSpec` (a grade 160 x 160 de 2 x 2 m por padrão); `curb` é a superfície mais baixa para onde o meio-fio desce.
+- Perfis em `data/film-profiles.json` (sangue, sangue antigo, bile, óleo de motor, combustível; F46-55 e W583-586), com `spikes` (bile 0,3, W578), `landsAsBlob` (óleo e combustível, W691) e `maxAmount` (teto da espessura do centro: 2,6; bile 4 na Oficina). Padrão = a Oficina; o Padrão de Fluidos roda a bile com `{ spikes: 1, maxAmount: 2.6 }` e óleo e combustível com `{ landsAsBlob: false }` (o contrato só nomeava `spikes` e `landsAsBlob`; `maxAmount` é a terceira diferença da Oficina, W691).
+- O relógio de secagem é em segundos de simulação (`update({ dt, dryingSeconds })`; o jogo escala). Sem `Math.random`: o host passa `random`. `createFilmLcg` é o gerador do Padrão (F17-18).
+- `FilmSimulator` (interface do passo e da secagem; o CPU é o golden de referência) e `film.setWeather({ rain })`: chuva 1 para a secagem e espalha 1,5 vezes (gancho; sem efeito até o `game-weather`).
+- Regras que diferem entre as duas páginas ficam em `layout.rules` (anel de 600 ou 400 gotas, gota que passa a borda cai no meio-fio só no Padrão, caixa de fuga, fórmulas do pingo), não em condicionais espalhadas.
+
+### T5.3d — fidelidade do filme
+
+| Teste | Resultado |
+|---|---|
+| `game-fluids/tests/film-golden.test.ts`: Padrão de Fluidos, 5 cenas x 5 fluidos, hash de `h` e `dry`, células molhadas e lançamentos em 0,5, 1, 2, 5 e 10 s | 25/25 |
+| `game-fluids/tests/film-workshop-golden.test.ts`: `fluidos` da Oficina, 4 fluidos, mesmos instantes | 4/4 |
+| Node 22.23.4 e 24.22.0 | iguais (`installPortableMath` nos dois testes) |
+
+Fidelidade do filme: **29/29**, bit a bit (hash do campo inteiro, 4 casas).
+
+- O Padrão roda as 25 combinações num filme só, como a página: o cursor do anel de gotas e o resto de tempo do passo atravessam as cenas (`clear` não os zera, igual a `clearAll`). A Oficina zera o resto de tempo a cada opção (`setup`) e mantém o cursor.
+- O relógio do teste repete o do gravador (`elapsed += 1000/60`, `dt = (agora - antes) / 1000`): o resto do passo de 1/180 s cai na fronteira do `>=` e só bate com os mesmos bits.
+- **Oficina: a página usa o fluxo de `Math.random` com outros consumidores** (os 3 sorteios do tremor de câmera por quadro, as partículas do `burst` e da neblina, 8 sorteios cada). Para a Oficina o teste reproduz essa intercalação e a confere contra uma gravação nova, `vfx-workshop-fluids-trace.json` (`--param mode=trace` em `vfx-workshop.js`): contagem acumulada de `Math.random` no início de cada quadro, em todas as 4 opções (a igualdade é a primeira asserção do teste), e a posição do braço do zumbi que pinga (a página anima o zumbi; não há como reconstruí-la sem ele), uma por quadro, em texto para não perder bits. A gravação `mode=fluids` refeita com `H` exposto saiu idêntica byte a byte à da T5.0.
+- Verificação de sensibilidade: trocar `spikes` da bile no teste do Padrão quebra as combinações de bile, óleo e gasolina que seguem (o estado atravessa as cenas).
+
+### Perf do filme (CPU, Node 24, máquina de desenvolvimento)
+
+| Cenário | Média por quadro |
+|---|---|
+| Padrão, grade 256 x 396, cena "tiro na parede" (356 gotas), 600 quadros | 1,4 ms (pior quadro 13 ms: as 330 gotas do disparo) |
+| Grade 160 x 160 com 6 respingos, 300 quadros | 0,54 ms |
+
+
+## T5.1f–g
+
+Branch `work/spec001-t5-c` (de `feat/spec-001-fase-5`, com `game-vfx`/`game-vfx-three` prontos e Laboratório 16/16). Dois commits, um por task.
+
+### O que trocou
+
+| Onde | Antes | Agora |
+|---|---|---|
+| `game-destruction-three` `onExplode` | cinco jatos de `ParticleSystem` + `PointLight` própria | `vfx.explosion(ev.effect ?? 'generic', p, ...)`, escala `raio/15` só no `generic`; id fora do catálogo cai no `generic`; fica o empurrão nas peças e fragmentos e o som |
+| fogo de peça (`emitFire`) | acumuladores de `spawn('fire'/'smoke')` por quadro | um `vfx.fire` por peça queimando, seguindo a caixa da peça, parado quando a peça deixa de queimar (`extinguish`, `burnout`, `restore`, `clear`); peça preparada por tiro ou fogo ganha uma chama de `delay` segundos |
+| `RendererOptions` | `explosionLight` | `vfx` (mundo compartilhado; o hospedeiro o passa) e `camera`; sem `vfx` o renderizador cria mundo e camada três próprios e os passa no `update` |
+| `renderer.explode` | 3 parâmetros | `explode(ponto, energia, raio, { effect, direction, visual })`; `visual: false` deixa só empurrão e som |
+| `game-destruction` | explosão atinge o vidro na hora | opção `blastFrontSpeed` (padrão desligado; 340 = som): o vidro quebra `distância/velocidade` depois, em `update`; evento `explode` leva `effect` |
+| sala de testes | `renderer.explode` desenhava | **um** `createVfxRenderer` (sobreposição no contêiner), mundo passado à destruição, `host.effects` a todo módulo, `explosives.ts` com `vfx.world.explosion(explosivo, ponto, { direction })`, `explosive` no evento `explosion` (granada e peça que explode), `applyCamera` em volta do `gl.render` (e `TestRoom.applyCamera()`), métrica `particles` soma as piscinas, opção `craters` (remendo deformável no lugar do piso) |
+| `game-weapons-three` | explosivo do mundo sem efeito | `explodes.effect` = id do explosivo (barril, botijão, tanque do carro) |
+
+### O que **não** trocou, e por quê
+
+O contrato manda detritos, fogo de contato, gotas e vazamentos para `vfx.burst`/`vfx.spawn` (`SpriteKind`) e apagar `particles.ts`. Na T5.1b/d o `VfxWorld` ainda não tinha esse pool; ele entrou com a T5.2a (a bancada de receitas) e a T5.1f foi **fechada depois dela**, na ordem dos commits desta branch:
+
+- **`game-vfx`**: `src/sprites/` (`SpriteKindPool`, `SpriteKindSystem`, `SPRITE_KINDS`, `patchSpriteKinds`) e `data/sprite-kinds.json` com os 14 tipos do `particles.ts` **com os números iguais** (a conta do `burst`, do chão e da vida é a mesma, com o mesmo gerador mulberry32). `VfxWorld` ganhou `burst`, `spawn`, `onLand(owner, ...)` (quem escuta onde a gota caiu, por dono, para um mundo compartilhado entre renderizadores), `sprites()`, a opção `sprites: { capacity, density, kinds }` e `push` agora empurra também os sprites.
+- **`game-vfx-three`**: `shaders/sprite.ts` (o shader de pontos, movido sem mudar) e `createSpriteLayer`: duas camadas `vfx-sprites-additive` e `vfx-sprites`, antes do grupo de marcas. Opção `pointScale`.
+- **`game-destruction-three`**: `particles.ts` apagado; detritos, faíscas, cinzas, vapor, gotas e vazamentos vão para `vfx.burst/spawn`; `ParticleKind` é alias de `SpriteKind`; as gotas que caem avisam o próprio renderizador (dono `destruction-<n>`). Eventos da Fase 2 por `RendererOptions.eventEffects` (padrão `EVENT_EFFECTS_MAP`): `spall` toca `impact_<material>` (pelas tags `metal`, `glass`, `wood`; o resto é `concrete`), `stage` toca o efeito do estágio (o 2 **troca** o puff de poeira que já havia, que continua como reserva quando não há efeito), `expose` toca `rebar_expose`, `collapse` toca `collapse_dust`. Os efeitos de oficina só aparecem na tela com os desenhistas da T5.2d.
+- O que sobra do pool antigo de fluidos e de armas continua descrito abaixo (T5.1g).
+
+**T5.1g.**
+
+- **`game-fluids-three`**: `particles.ts` (`ParticlePool`) apagado; `sprites.ts` (`FluidSprites`) faz as gotas do respingo e o vapor com os tipos `drips` e `steam` do mundo de efeitos (`options.vfx`; sem ele o renderizador cria o seu e o passa em `update`). Duas opções de `SpriteSpawnOptions` nasceram para isso e valem para qualquer jogo: `floor` (a altura onde a gota para, em vez do chão) e `rise` (multiplicador da subida do vapor). As gotas e o vapor mudam de números (tamanho, vida e subida são o tipo escalado para os valores antigos), não de comportamento.
+- **`game-weapons-three`**: o clarão do viewmodel e a fumaça da Galeria **ficam** (goldens da T1.3). Para tiro visto de fora, `HostEvent` `shot` ganhou `origin` e `direction` opcionais; com `origin`, o módulo toca pelo `host.effects` o clarão do cano e a cápsula (`muzzle_glock|ak|r870|barrett`, `casing_brass|shell|50`, fatias literais de `muzzle`/`casing` da Oficina em `game-vfx`) escolhidos pelo tipo de cápsula do calibre (`data/world-effects.json`, configurável por `createWorldEffects({ ids })`). Sem `origin` (o tiro em primeira pessoa) nada é tocado, então nada dobra.
+- **`game-vfx-three`**: `play` do `EffectSink` cai para as receitas da Oficina quando o id não é uma explosão (com `param` por índice ou id) e o catálogo lista os dois.
+- **`game-test-room`**: o filme e as gotas de fluidos usam o mundo único da sala (`vfx: vfx.world`) e o `pointScale` da sala vai para a camada de sprites; `host.effects` já era emprestado na T5.1e.
+- **Pendências para a T5.2d**: nenhum desenhista de pools da Oficina ainda existe em `game-vfx-three`, então `play` de receitas toca no motor (`world.workshop()`) mas só aparece na tela depois dela. A fumaça `muzzle_smoke` da Galeria não foi trocada (o hash do golden T1.3 inclui a fumaça).
+
+### Perguntas para o dono
+
+- Não há `HostEvent` de acerto (`hit`) com ponto, normal e material, então `impact_<material>`, `penetration` e a sangria por idade não têm de onde sair no módulo de armas. Criar o evento `hit` no contrato (quem emite é o hospedeiro que faz o raio) ou deixar o jogo tocar `impact_*` pelo `host.effects`?
+
+### Testes mudados
+
+| Teste | Mudança e motivo |
+|---|---|
+| `game-test-room` `room.test.ts` "grenade blast" | olhava as camadas `destruction-particles-additive` e `destruction-particles` e a luz `destruction-explosion-light`; a explosão agora vem das malhas instanciadas do mundo de efeitos (`vfx-sparks`, `vfx-puffs`, `vfx-glows`, nomeadas nesta task) e das luzes dele. Mesma exigência: mais de 30 instâncias vivas de faísca e de puff, brilho, luz acesa |
+| `game-destruction-three` `renderer.test.ts` "explodes" e "explode without an exploding part" | mesma troca de camadas; acrescentados efeito nomeado, fallback para `generic`, mundo compartilhado não é passado pelo renderizador, `visual: false`, fogo que segue a peça |
+| mesmo arquivo, "fire and smoke while burning" | contava > 10 partículas do pool antigo; o fogo do mundo de efeitos dá 6 em 30 quadros para uma peça de 0,5 m: o limite virou > 3 |
+| mesmo arquivo, "clear and dispose", e `vertex-range.test.ts` | liam `scene.children` e esperavam só o que o hospedeiro pôs; o mundo próprio acrescenta um grupo, então passam mundo compartilhado (`createVfx()`), que não acrescenta nada; o mundo próprio tem teste à parte |
+| `game-weapons-three` `integration.test.ts` (explosivos do mundo) | acrescentou a conferência de `effect` nos três explosivos |
+| Novos | `game-destruction/tests/blast-front.test.ts`, `game-test-room/tests/effects.test.ts` |
+
+### Decisões
+
+- `game-vfx-three`: texturas de marca em branco quando não há `document` (senão o renderizador próprio não existe em Node) e nomes nas três malhas instanciadas. Mudança mínima, coberta pelos testes do pacote.
+- `blastFrontSpeed` fica desligado por padrão e a sala não o liga: o desenho pede a opção, não a mudança de comportamento da sala.
+- O pedido `crater` do mundo de efeitos já cava o campo de altura (o núcleo faz isso); a sala só redesenha o remendo a cada quadro quando a versão do campo muda.
+- `explosionLight` saiu de `RendererOptions` (a luz é do mundo de efeitos). Estava sem uso em todo o repositório.
+
+### Portões
 
 | Comando | Resultado |
 |---|---|
@@ -1759,6 +1977,219 @@ Pacote novo (IIFE `GameItemsThree`, three peer `^0.160`, `@adatechnology/golden-
 4. `largeFrom` 0,6 m: é a regra que o time quer para "item grande"?
 5. O `survivor_diary` tem modelo no SDK mas o item é só do jogo: deixo o modelo no SDK (reaproveitável) ou movo para o repositório do jogo?
 6. Falta o Node 24 neste ambiente: os goldens do items-showcase foram gravados e conferidos só no Node 22.22.0. Rodar também no 24 antes do PR.
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0; nenhum arquivo falhou |
+| `game-contracts` / `game-weapons` / `game-destruction` | 29 / 278 / 97 passaram |
+| `tools/golden` / `tools/characters-catalog` / `tools/animals-catalog` / `tools/weapons-catalog` | 44 / 60 / 8 / 17 passaram |
+| Golden tools em **Node 22.23** (`vitest` dos catálogos, `golden:vm:check`, `catalog:check`) | 60 / 8 passaram; vm goldens iguais aos fixtures gravados no Node 24.22 |
+| `golden:vm:check` e `golden:chrome:check` | 5 vm e 8 Chrome: cada um gravado duas vezes, byte a byte iguais e iguais ao fixture |
+| `catalog:check` (characters, animals) e `catalog:check` das duas fatias do jogo | up to date |
+| `docker build -f site/Dockerfile .` | exit 0 (manifestos das duas ferramentas novas no Dockerfile) |
+
+Commits (todos terminam com o `Co-Authored-By` de Opus 5.5): `feat(contracts,weapons)` contrato do corpo; `feat(golden)` cut-source; `feat(characters-catalog)`; `feat(animals-catalog)`; `feat(characters-catalog,golden)` goldens da Fase 4; `docs(spec-001)` evidência e inventário do grupo A.
+
+Modelo da execução: `sonnet`.
+
+## T4.1d–e — `game-characters`: esqueleto e modelo de dano
+
+Tarefas T4.1d e T4.1e 🧠 do desenho `design/T4-personagens-e-animais.md` (§2, §3, §5, §6). Branch `feat/spec-001-fase-4`; nada enviado ao remoto.
+
+### O que entrou
+
+- **T4.1d** — pacote novo `@adatechnology/game-characters` (ESM + IIFE `GameCharacters`, manifesto no `site/Dockerfile`, changeset 0.1.0, skill `.claude/skills/game-characters`): `GUIDE` (guia do Elenco: 1,80 m, ombros 0,61 m a 1,475 m) e `TEAM_GAME` (o `J` do jogo, como está), rig de 17 juntas com os ossos 0–11 do corpo instanciado (`GAME_BONES`), árvore de 17 segmentos (os 11 tipos do Arsenal, dois lados) com as 6 regiões do jogo e `MISSING_BITS`, registros (`packs`/`patch`/`remove`), `createCharacters`, `describe()`/`state()` no contrato de destruição e `setDetail` (segmentos → regiões sem perda, o inverso com perda).
+- **T4.1e** — o personagem é `DestructibleImpl`. Pipeline (`src/damage/pipeline.ts`), nas 8 etapas do desenho: 1) resolve (`hit.part` segmento ou região, senão a parte mais próxima); 2) proteção (camadas por `BodySlot`; mordida/arranhão `1 − Π(1 − b·c)`, teto 90 %; presets que reproduzem `ROUPAS`); 3) penetração `physical` (P = √(E·m/A), R por caminho, `P/(P+R)` de energia) e `team-game` (PEN do jogo, ×0,75 por corpo); 4) pontos `3,5·E^0,37`, ou a tabela por calibre, ou `Hit.points`; 5) multiplicadores (`MULT` × tipo × idade × roupa); 6) gravidade por segmento (destruído/arrancado/quebrado, cascata de `segmentsBelow`, manca, rasteja, partido ao meio, regra da cabeça com capacete e mandíbula); 7) `deathRule` `vitality-or-head` (padrão) ou `head-only`; 8) sangramento por segmento (`BLEED`, × `bloodFactor`) em eventos `leak`. `penetrateLine` para uma bala atravessando vários corpos. Presets de regra: `kit` (padrão), `arsenal` e `elenco` (repetem as páginas).
+- O motor fica em joules (A2). Um fluxo de sorteios por personagem: `createRng(seed ^ contador de golpes)`; `spec.random` o substitui para repetir um jogo gravado. Nada de regra só de zumbi no pacote: tipo, idade, roupa e atordoamento do brutamonte entram como números do spec (`multipliers`, `limbFactor`, `bloodFactor`, `bodyCount`, `stunSeconds`, `crawling`), que o `-undead` (T4.2b) vai preencher.
+
+### Fidelidade por golden
+
+| Golden | Lado do SDK | Comparado | Resultado |
+|---|---|---|---|
+| G-damage-regions (`game-damage-regions.json`) | `detail: 'regions'`, modelo `team-game`; zumbi com os números do catálogo (`types`/`ages`/`outfits` do `-undead`) e a vida do `start` | por golpe: vida, cabeça, braços, pernas, `missing`, manca, rasteja, capacete, atordoamento, morreu, headshot | **exato**, 38/38 sequências (125 eventos) |
+| G-penetration (`game-penetration.json`) | `kit.penetrateLine` com `team-game` | por corpo: alcançado, dano, vida, morte; corpos atingidos e onde para | **exato**, 10/10 linhas |
+| G-damage-segments (`arsenal-damage-segments.json`) | `detail: 'segments'`, preset `arsenal`, corpo com os pivôs do `buildZombie` da página (para a granada) | por golpe/granada: vida, vivo, estado, lado do manco, causa, presos, hp dos 17, sangramentos (taxa, duração, jorro) em ordem | **exato**, 97/97 cenários (214 eventos) |
+| G-cut-hierarchy (`elenco-cut-hierarchy.json`) | preset `elenco`, o sorteio do golpe no mesmo lugar do fluxo da página | estados dos 13 segmentos, hp, morte, rasteja, manca por perna, pêndulos (junta e braço) | **exato**, 78/78 cenários (225 eventos); ângulo inicial e `v` do pêndulo ficam para o `-three` (T4.1i) |
+| P7 (`calibration.test.ts`, contra `game-weapons` `CALIBERS`) | `penetrationForce`, `penetrateLine` `physical` | corpos atingidos, energia mantida, pontos | contagens **exatas** (2/3/4/3/1); energia 0,51/0,69/0,78 contra 0,50/0,65/0,75 (±0,05); pontos 35/59/71,7 |
+
+**Como o RNG casa.** G-damage-regions: só a mandíbula sorteia; o teste refaz a posição do fluxo do jogo depois do `zSpawn` (escolha de idade e de roupa, 13 sorteios, mais 1 da cor civil quando a roupa sorteada é civil) — confere com os 20 sorteios de mandíbula (5 levam o bit 512). G-cut-hierarchy: o `build` da página gasta 1284 sorteios e cada golpe gasta 1 + `burst` (8 + 7 por partícula, 8 + round(dano/6) partículas); achado no fixture, constante por arma, e o SDK recebe só o sorteio do golpe.
+
+### Desvios e decisões (padrões reversíveis)
+
+1. **Lado esquerdo em +x**, de frente para +z (Elenco e Arsenal concordam). O `TEAM_GAME` guarda o `J` como está; as juntas que o `J` não tem saem dos ossos do jogo (coluna no quadril, cabeça no pescoço) ou um antebraço/canela abaixo (punho, tornozelo); a mandíbula é sintética.
+2. **Regra `kit` (padrão dos segmentos)**: membro tira 0,3 do dano da vitalidade (Arsenal); nas regiões, 0,5 (jogo). Golpe não letal na cabeça tira da vitalidade (jogo); tiro letal sem tirar a cabeça deixa o segmento `broken`. Destruído quando o golpe chega a 2× o segmento (desenho); o preset `arsenal` mantém o `-hp > max` da página.
+3. **Regra de crânio no `physical`**: letal quando P passa a resistência da cabeça (5,25) e os pontos chegam a 20. Sem tabela de calibre: classe `rifle` acima de 1000 J, `buckshot` com `pellets > 1`; massa padrão 8 g quando o `Hit` não traz `mass`.
+4. **Elenco**: o tronco a 0 mata (o golden marca `dead`), então o preset `elenco` usa `vitality-or-head`. Com `head-only`, a vitalidade não mata e o partido ao meio passa a rastejar.
+5. **`big` do tiro direto** = pontos acima de 120 (o `bigPoints` da granada): reproduz o `.50` da página sem precisar do id da arma.
+6. **`BodyHit.woundAtPoint: false`**: golpe sem ponto de superfície (a aba do Arsenal sem ponto, raycast da multidão em cápsula) não abre ferida no ponto.
+7. **Atordoamento**: nas regiões usa os pontos do golpe antes do colete (o jogo atordoa pelo `dano`); na regra `kit`, depois da proteção. Capacete com `pass: 1` (fuzil passa sem efeito, como no jogo).
+8. **`limbEffect`** do golden (o `fxLimb` repete a cada golpe num membro já perdido) não é comparado: o SDK emite o evento `body` uma vez por bit novo, e os bits de `missing` são comparados. O estado de alerta (`st` 1) é de IA, fora do dano.
+9. **`leak`** em litros por segundo (0,27 ml por gota); `bleeders()` guarda a taxa do Arsenal (gotas/s). Nas regiões não há sangramento (multidão: o sangue é efeito visual).
+10. **Fogo/calor**: `burnPointsPerSecond` 3 × segundos × fator de fogo da roupa, só na vitalidade.
+11. **Mundo de destruição**: o `DestructionWorld.shoot` dá 50 % de energia de saída a qualquer impl com `hole.through`; o corpo calcula `P/(P+R)` (`lastHit.exitEnergy`, `penetrateLine`), mas o mundo não lê. Não mexi no `game-destruction` (fora do escopo).
+12. **Linha `team-game`**: depois de uma morte o raio recomeça 0,3 m além do corpo e as distâncias seguintes contam dali (recursão do `shootRay`); mantido.
+13. Os presets de proteção estão em `src/damage/defaults.ts` espelhando `decisions.json` `protectionPresets` (um teste confere); `protection.ballistic` no `game-items` continua pendente da Fase 3.
+14. Corpo morto continua apanhando (desmembrar cadáver); `killed` sai uma vez.
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 (nos dois commits) |
+| `pnpm -r typecheck` | exit 0 (nos dois commits) |
+| `pnpm lint` | exit 0 |
+| `game-characters` (vitest, Node 24.22 e **Node 22.23**) | T4.1d: 14 passaram; T4.1e: 274 passaram em 9 arquivos |
+| `pnpm -r test` (inteiro, em segundo plano) | 1ª rodada: exit 1 — um teste do `game-weapons-three` (`weapons-area.test.ts`, área de armas) estourou o limite de 5 s com a máquina carregada; o pacote não depende do `game-characters` e passa sozinho (94/94). 2ª rodada: **exit 0**, 28 pacotes, 5126 testes |
+| `docker build -f site/Dockerfile .` | exit 0 (manifesto do `game-characters` no Dockerfile) |
+
+Commits (todos com o `Co-Authored-By` de Opus 5.5): `feat(characters)` esqueleto do game-characters (T4.1d); `feat(characters)` modelo de dano do corpo (T4.1e); `docs(spec-001)` esta evidência.
+
+Modelo da execução: `opus`.
+
+## T4.1h–T4.4d — Fase 4: construtores 3D, motor de zumbis, bichos e ambientes de teste
+
+Commits em `int/p4`: T4.1h `4ecce49`, T4.3b `68dfb3c`, T4.1i `048cf2a`, T4.2b `64d45c0`, T4.3c `28d3ca6`, correção de altura `3864ea4`, T4.4a `35ab596`, T4.4b `9d6c18b`, T4.4c `954ab3e`, T4.4d (este).
+
+### O que entrou
+
+- **T4.1h**: construtor rico do Bestiário v17 e pessoas (62 acessórios), porte literal.
+- **T4.3b**: Bichos do Vale em `game-animals-three` e `createNodeSkin` no `game-props3d`.
+- **T4.1i**: animador, ferimentos, olhos e ponte de fluidos.
+- **T4.2b**: motor de zumbis; **T4.3c**: regra de surto dos bichos.
+- **Correção**: `kit.ts` do `game-characters-undead` usava o fator de variância como metros; agora altura = corpo base vezes o fator (teste "size of a drawn zombie").
+- **T4.4a/b**: módulos de teste `createCharactersTestModule` (11 cenários) e `createAnimalsTestModule` (6 cenários), com `examples/characters-test-area` e `examples/animals-test-area`.
+- **T4.4c**: os dois módulos entram no `examples/interactables-test-area`; cenário `zombie_behind_door` (tiro atravessa porta do guarda-roupa, MDF e coxa do zumbi); catálogo, Dockerfile e miniaturas do site.
+- **T4.4d**: skills (`game-animals-three` novo; `game-animals`, `game-characters-three`, `game-characters-undead` atualizadas), changesets e este inventário.
+
+### Decisões e desvios
+
+1. O contrato de teste é só o genérico (`TestableModule`); os módulos vivem nos pacotes `-three`.
+2. O material `flesh` é registrado por `registerBodyMaterial(room.world)`; a sala não o conhece.
+3. Osso quebrado no cenário: 3 golpes de 20 pontos (um golpe de 60 pontos corta o membro).
+4. A geladeira não serve de camada no cenário da porta (o `world.shoot` segue no máximo 4 partes); usado o guarda-roupa.
+5. Orçamento de triângulos do nível longe (250) não é atingido (383 assado); o cenário `benchmark_1000` reporta, não falha.
+6. Corpos sem pai são removidos do ambiente de teste no quadro seguinte (sondas dos checks da sala).
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 em cada commit |
+| `pnpm -r typecheck` | exit 0 em cada commit |
+| Testes por pacote (`game-characters-three`, `game-characters-undead`, `game-animals-three`, `game-props3d`) | passaram |
+| Exemplos `characters-test-area`, `animals-test-area` | passaram |
+| `examples/interactables-test-area` (Chromium) | 14 de 14 |
+| `pnpm lint` | exit 0 |
+
+### Perguntas para o dono
+
+1. O orçamento de 250 triângulos do nível longe do corpo é meta ou só referência? Hoje o baked tem 383.
+2. `protection.ballistic` e o reexport de `BodySlot` no `game-items` seguem pendentes do merge da Fase 3.
+3. Os 62 acessórios de pessoa e o catálogo de profissões ficam no pacote `-three` ou migram para um pacote de conteúdo (`-people`)? Hoje o módulo de teste lê o conteúdo do host.
+
+Modelo da execução: `sonnet`.
+
+| testes dos pacotes afetados | `game-vfx` 163, `game-vfx-three` 59, `game-destruction` 101, `game-destruction-three` 52, `game-test-room` 128, `game-weapons-three` 162, `game-fluids-three` 11, todos passam |
+| exemplos (`test-room`, `interactables-test-area`, `weapons-test-area`: build e teste, Playwright por `NODE_PATH`) | passam (`test-room` OK; furniture 12/12; weapons ok). Imagens e logs gerados não foram commitados |
+| `pnpm -r test` inteiro (segundo plano) | ver abaixo |
+| `docker build -f site/Dockerfile .` | exit 0 |
+
+Modelo da execução: `sonnet`; nenhum portão falhou duas vezes, sem escalada.
+
+## T5.2a–c — receitas da Oficina de VFX em `game-vfx`
+
+Fonte: `sources/efeitos__oficina-vfx.js` (W168–1295) e a gravação `vfx-workshop.json` (54 execuções, 36 `pageId`; chuva, neblina, faróis e o filme dos fluidos ficam de fora: o filme é a T5.3).
+
+- **T5.2a.** `src/workshop/` é o motor dos pools da página (sprites aditivo e normal em arrays tipados, riscos, detritos, decalques, anéis, luzes de clarão e de fogo, estado de tela, bolhas de lente, pós-processo `P0`, qualidade 0/1/2) com a ordem de sorteio da página. `src/effects/` guarda as receitas como **dados** (DSL de expressões e passos: `burst`, `spawn`, `emit`, `debris`, `decal`, `ring`, `flash`, `lens`, `screen`, `fire_light`, `cue`, `call`, `after`, `when`, `repeat`, `set`, `append`, `camera`, `post`, `behavior`), as macros (`blood_hit`, `impact`, `fire_emit`, `explode`, `muzzle`, `casing`, `chips`, `spark_at`, `rust_at`) e os adereços que a página anima à mão e que mexem em posições ou sorteios (andadores, rachaduras, blocos, placa, cilindro, carro). `EffectInstance` roda um efeito (timers do último ao primeiro, como a página), `EffectRunner` é a visão de um efeito por vez da bancada e `EffectPlayer` toca vários ao mesmo tempo, cada um com relógio, variáveis e adereços próprios, posição, direção (`anchor`/`heading` da receita), semente (LAN) e `follow`. `VfxWorld` ganhou `play`, `workshop()` e `effectIds()`; `patchEffects` ajusta o catálogo como `patchExplosions`.
+- **T5.2b.** As 20 receitas restantes (destruição, veículos, mundo, tela), `data/event-effects.json` com `effectForEvent` e `src/effects/events.ts`, e os textos das fichas (`quando`, `visual`, `orçamento`, `rede`, rótulo do parâmetro) em `locales/en.ts` e `locales/pt-BR.ts` (o pt-BR é o texto da página, extraído por script; o en é tradução).
+- **T5.2c.** O golden da Oficina sai de `specs/.../goldens/` para `packages/game-vfx/tests/fixtures/team-golden/` e `tests/workshop-golden.test.ts` o reproduz: para cada execução, a lista de spawns (quadro, tipo, contagem de sorteios, opções) igual à gravada, a contagem de tudo vivo em cada quadro e os hashes dos instantes. 162 asserções, todas passam. Cada receita foi escrita contra esse teste; o que a página sorteia sem querer entrou como dado (`cue(..., draws)` para os 4 `Math.random` por objeto do uuid do three r128 e o `FRESH` da primeira montagem de garrafa e granada).
+
+### Decisões
+
+- Os efeitos de evento (`stage_crack`, `breach_dust`, `collapse_dust`, `rebar_expose`, `glass_burst`, `impact_<material>`) **não são páginas da Oficina**: o desenho os cita com linhas da página, então cada um é uma fatia literal de uma receita já portada (mesmos números, centrada no ponto do evento) ou do ajudante `chips`/`rust_at`. Não têm golden próprio; o teste só confere que tocam e deixam algo vivo.
+- O movimento de adereços que a página anima por quadro (a porta que cai, os blocos da parede, a placa que amassa) fica com o dono do objeto, que recebe os `cue` (`door_fall`, `slab_gone`, `glass_pane_gone`...). O motor só reproduz o que afeta onde e quando as partículas nascem.
+- `world.play` sem `setCamera` com orientação usa a câmera na identidade para as receitas de tela (`forward(local)` devolve o vetor local).
+
+### Perguntas para o dono
+
+- `rebar_expose` o desenho descreve só como "poeira + lascas"; usei o ajudante `chips` (lascas e poeira, W849) mais `rust_at` (ferrugem, W899). Se o time tinha outra intenção, a receita é um arquivo de dados.
+- `stage 1 -> stage_crack` e `collapse -> collapse_dust`: o desenho dá os nomes, as fatias são minhas escolhas entre as seções que a página tem (porta e desabamento). Confirmar.
+
+## T5.2d — desenhistas da Oficina e bancada de efeitos
+
+- **`game-vfx-three/src/workshop-layers.ts`** desenha os pools do motor da Oficina (o que `world.play` enche): sprites aditivo e normal com o shader da página (tamanho em metros preso a 1..512 px, suavidade 1 e 0,55), riscos (`LineSegments` com cor por vértice), detritos (500 caixas instanciadas), decalques (duas malhas instanciadas, brilhante e fosca, círculo de borda irregular que cresce, espalha, seca e evapora pelos campos do decalque), anéis (instanciados, cor por `hold` ou `1-k`) e as 4 luzes de clarão e 2 de fogo. Criados sob demanda: só quando algo já criou o motor (`VfxWorld.peekWorkshop()`). A tela (`screen`) da Oficina e a do Lab entram no overlay pelo maior valor de cada campo.
+- **`createVfxTestModule`** (`game-vfx-three/src/bench/`): módulo `vfx`, grupo `effects`. Efeito (16 explosões do Lab e as receitas por time, em grupos), variante (o `params` da receita, trocado com `bench.patch`), repetir, repetição automática, distância, faixa de LOD, qualidade, 6 camadas (`show_*`), 8 contadores (nuvens, faíscas, destroços com teto 40, luzes com teto 6, partículas do efeito com teto 400, escala de LOD, tempo desde a repetição, tempo desde a explosão) e a ficha com a linha do tempo. Toca por `host.effects`; sem ele, cria um renderizador próprio.
+- **Anfitrião (`game-test-room`)**: `ModuleBench.sheet` (cartão da ficha no painel, com linha do tempo e cabeça de leitura que segue o contador `metric`), `ChoiceOption.group` (`optgroup` no seletor; opções agrupadas nunca viram botões), `MetricRow.value` numérico.
+- `EffectSink.configure` do renderizador entende `quality` (`high`/`medium`/`low`, níveis 0/1/2 do pool) e `layer_<id>`.
+
+### Decisões
+
+- `generic` (perfil de reserva do Lab) não é listado na bancada; as 16 explosões são as da página.
+- Receita com o mesmo id de uma explosão (`molotov`) não aparece na lista: o `EffectSink` tenta a explosão primeiro, então a receita nunca seria alcançada por esse id.
+
+### Perguntas para o dono
+
+- As bolhas de lente (`engine.lens`) e o `engine.post` da Oficina têm dados no motor, mas ainda não são desenhados (a página os pinta num canvas 2D sobre a cena). Quer a lente e o pós-processo no overlay agora ou junto da câmera do jogo?
+- Os nomes das explosões na bancada vêm do id (`m67` -> `m67`), porque o Lab não tem textos por explosão. Há nomes traduzidos que o time de armas queira usar?
+
+## T5.2e — área de efeitos na sala de testes
+
+- `examples/vfx-test-area` (`build.mjs`, `src/{entry,area,scenarios}.js`, `test.mjs`): bundle IIFE `VfxArea` e a página `dist/sala-efeitos.html` (a sala de testes com a bancada de efeitos carregada e a área `vfx` aberta). Três cenários: todas as explosões do Lab desenham nuvens e faíscas, todas as receitas da Oficina tocam, e quatro granadas seguidas ficam dentro do teto de 6 luzes.
+- `examples/interactables-test-area` passa a carregar também a bancada de efeitos (alias de `game-vfx` e `game-vfx-three` no `build.mjs`, `loadInto` devolve `vfx` no relatório) e o teste confere os 7 controles e as 6 camadas.
+- Site: `site/Dockerfile` (COPY do `package.json` do exemplo, em ordem alfabética), `site/build-site.mjs` (comentário da ordem: a sala de testes primeiro) e `site/catalog.mjs` (o exemplo e a família "Efeitos"); `ci.yml` constrói e testa o exemplo.
+- Teste de navegador (Chromium, sem rede): 6 verificações passam nos dois idiomas, incluindo as capturas da granada e do sangue.
+
+## T5.3c — renderizador do filme em `game-fluids-three`
+
+- `src/film/shader.ts`: o fragmento da página (F131-209) linha por linha. Diferenças, todas pelo mesmo motivo (a página pintava a cena inteira; o filme agora cobre a superfície do jogo): `baseCol` (parede, calçada, meio-fio, rua) vira a cor chapada `uBase`; a saída leva **alfa = cobertura** (`max(m, gw*.55)`: o molhado e, no combustível, o chão que escureceu); o tamanho da grade e o vão são uniformes (`uGrid`, `uSpan`; a página fixa 256 x 396 e 4,95); a tangente vem da geometria (`aT`; a da página era o eixo x); duas linhas que espelham a parede da própria página no reflexo ficam de fora (descrevem a cena dela); a saída passa as cores da página (espaço de exibição) para linear e usa `#include <colorspace_fragment>` do r160.
+- `strips.ts`: uma faixa por região do layout (u = coluna, v = linha / altura, `aB` = para onde o filme escorre). `material` com `DoubleSide`, porque os eixos de um layout podem ter qualquer mão.
+- `drops.ts`: gotas em voo (icosfera instanciada, esticada pela velocidade, F258-262) e o bulbo do pingo (F282).
+- `grid.ts`: `FilmGrid` = filme + textura RGBA8 (r: espessura em raiz, g: seca, b: umidade, como o `upload` da página F360) + faixas + gotas. Devolve o retângulo sujo (união dos limites molhados do quadro anterior e do atual) e mede o quanto ficou parado (`idle`: nada chegando e a área molhada variando menos de 0,5%).
+- `manager.ts`: `FilmManager` guarda **no máximo 6 grades de 2 x 2 m** (160 x 160 células de 1,25 cm), **só a até 30 m** do jogador, simula dentro de um **orçamento em ms por quadro** (as mais próximas primeiro; as que não cabem esperam o quadro seguinte) e **envia à GPU só o retângulo sujo**: uma textura de apoio do tamanho do retângulo e `renderer.copyTextureToTexture` (a primeira vez sobe inteira, quando o three avisa por `texture.onUpdate`; sem `gpu` sobe sempre inteira). A grade que fica longe (mais de 30 m x 1,25), parada (20 s sem mudar) ou espremida por uma nova **vira decalque**: `fluids.splash(líquido, centro de massa, litros, undefined, { tint })`, com os litros = soma das espessuras em mm x área da célula e o `tint` {fresco: `thin`, seco: `dry`} do perfil, e a grade é liberada. `onBake` também recebe o motivo (`range`, `settled`, `budget`, `clear`).
+- API: `launch({ fluid, point, velocity?, radius?, surfaces? })` (cria a grade sob o ponto), `drip({ fluid, point, every, radius? })`, `setWeather({ rain })` (repassa a todas as grades; o gancho da Fase 6), `update(dt)`, `stats()`, `clear(bake?)`. `surfaceAt(ponto)` dá o chão, a parede e o meio-fio (`layoutFromSurfaces`); sem ele, um chão em `groundAt`.
+- Conferido num Chromium com GL por software: o shader compila e os 4 líquidos aparecem (sangue, bile, óleo com irisação, combustível).
+
+### Decisões
+
+- Decalque sem `fluids` no gerenciador: só `onBake` (o anfitrião decide).
+- A GPU entra por `FilmGpu` (`copyTextureToTexture`); o mesmo vale para o `WebGLRenderer` direto.
+
+### Perguntas para o dono
+
+- O filme é só CPU perto do jogador (decisão do desenho). Os fluidos longe viram decalque estático. Quer o filme em GPU (ping-pong) depois da Fase 5, atrás da mesma interface `FilmSimulator`?
+
+## T5.3e — pontes do filme
+
+- **`createFilmBridge({ fluids, manager, random })`** (`game-fluids-three/src/film/bridge.ts`): um `leak` de líquido que tem filme (`blood`, `old_blood`, `bile`, `motor_oil`, `fuel`; `liquids` mapeia outros, p. ex. `diesel -> fuel`) passa a jogar gotas do furo, com a velocidade e a vazão que o mundo dá (`dropLiters`, 0,15 mL por gota, no máximo 6 por quadro), até o `stream_end`. As gotas caem na grade sob o furo (o gerenciador cria) e, fora de alcance, o mundo de fluidos segue com o jato e a mancha dele. Líquido sem filme (água) fica só com o mundo.
+- **`bridge.splat({ fluid, point, direction?, speed?, radius?, count?, tint? })`**: é o que o `body` vai usar. Com `tint` ({ fresco, seco }) a grade é desenhada nessas cores (`tinted(perfil, tint)`: fino e gotas no fresco, o miolo grosso 55% mais escuro, seco no seco); grades de tintas diferentes ficam separadas e o decalque da grade parada guarda a mesma `tint`.
+- **Gancho da chuva**: `bridge.setWeather({ rain })` -> `manager.setWeather` -> `film.setWeather` de cada grade (para a secagem e espalha 1,5 vez mais). Sem efeito até o `game-weather` (Fase 6) mandar o valor.
+- **Sala de testes**: o gerenciador e a ponte entram na sala (grade só quando algo pinga; `clear` libera; o `gpu` é o `WebGLRenderer` quando ele sabe `copyTextureToTexture`). Teste: uma lata de combustível furada pinga numa grade do chão.
+
+### Pendente
+
+- **`body` (T4.0) -> `splat` com `tint`**: o evento `body` ainda **não existe** no contrato desta branch (`game-contracts` não tem `type: 'body'`), então a ligação `wound -> bridge.splat({ fluid: 'blood' | 'old_blood', tint })` não foi feita. A ponte já recebe a chamada; falta só o `characters-three` (ou o anfitrião) escutar o `body` e chamar `splat` com as cores da idade da infecção (`ages.json`).
+
+### Perguntas para o dono
+
+- A vazão por gota (0,15 mL) e o teto de 6 gotas por quadro são meus: o time só mostra pingo, fonte e arrasto. Quer outra conta para um furo grande (um jato em vez de gotas)?
+
+## T5.4 — comparação das explosões (coluna SDK novo)
+
+- `comparacoes/explosoes/capturar-sdk-novo.mjs` e os 6 quadros `quadros/sdk-novo-*.jpg` (0,08 · 0,25 · 0,5 · 1 · 2 · 4 s depois da detonação, câmera do Laboratório); `index.html` ganha a linha "SDK novo (Fase 5)" e a antiga vira "SDK antes da Fase 5". Os quadros do Laboratório e do jogo não foram refeitos (as páginas do time não mudaram).
+- A captura roda a sala de testes num Chromium do Playwright com GL por software e anda a simulação em passos de 1/60 s (a captura antiga usava o relógio da parede com a página servida em `localhost:4801`, que não existe neste ambiente).
+- `consolidado.md` §8 e §9: partículas do SDK que não apareciam (item 1 de §9 e o de §8), lixo de memória por quadro (2), fluido na CPU (8) e o README de `game-fluids` (11) marcados como feitos, cada um com a task.
+- O que ainda difere do Laboratório nos quadros é o cenário (chão liso da sala em vez da rua, dos corpos e da luz noturna da página).
+
+## T5.5 — Documentação, changesets e portões finais da Fase 5
+
+- READMEs e SKILL.md de `game-vfx`, `game-vfx-three`, `game-fluids-three` e `game-test-room` atualizados; changesets de T5.1f/g, T5.2a–e, T5.3c e T5.3e; inventário `efeitos-destruicao.md` ganhou a seção "Fase 5: o que entrou (R5)"; `tasks.md` marca T5.1, T5.2 e T5.3.
+- Portões (`pnpm install`, `build`, `-r typecheck`, `lint`): exit 0. Testes por pacote (um de cada vez): game-contracts 36, game-vfx 348, game-vfx-three 67, game-fluids 70, game-fluids-three 27, game-destruction 159, game-destruction-three 60, game-test-room 139, game-floorplan 38: todos passam.
+- `game-weapons-three`: 1 teste estoura os 5000 ms padrão quando a máquina está carregada (load average ~20, outros agentes rodando); os outros 174 passam. Não toca código da Fase 5.
+- `game-floorplan-structure`: 11 falhas (`Unknown construction "canvas"` em `triage_tent` e `expected 0 to be greater than 0` em utilities de vários prédios). Reproduzidas no commit-base 1c10405, antes de qualquer commit da Fase 5; nenhum commit da Fase 5 altera `game-floorplan*` ou `game-destruction`. Pendência da Fase 2, não da 5.
+
+### Perguntas para o dono
+- Evento `hit` do HostEvent para impactos (T5.1g) ainda não existe no contrato; o evento `body` depende de T4.0.
+- Fatias rebar_expose / stage / collapse das destruições sem receita na Oficina.
+- Borrões de lente e pós-processamento não são desenhados.
+- Nomes de explosão derivados dos ids (sem texto de locale do time).
+- Filme na GPU real (hoje validado em swiftshader), volume de vazamento por gota e teto de gotas.
 | `pnpm -r test` (inteiro, em segundo plano) | exit 0 (a primeira rodada estourou os 5 s do teste que regrava as 85 fixtures da Cena com o workspace inteiro em paralelo; o teste ganhou 120 s) |
 | `game-weather` / `golden-tool` / `game-contracts` | 56 / 63 / 34 testes; os goldens e os traces também em Node 22.23.4 |
 | `game-weapons-three` `audio-trace.test.ts` | 5 testes (trace gravado antes de qualquer mudança no som) |

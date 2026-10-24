@@ -4,6 +4,7 @@
  * An `ItemDef` is a real-world thing (a can of beans, a hammer, a jacket) with its true size and weight; the rest of the fields are optional groups that
  * only the categories that need them fill (nutrition for food, protection for clothing, carry for bags). Units: metres, kilograms, litres, days.
  */
+import type { BodySlot } from '@adatechnology/game-contracts'
 import type { ItemDef as BaseItemDef } from '@adatechnology/game-interactables'
 
 import type { RecipeDef } from './recipe-types'
@@ -14,8 +15,9 @@ export type { BaseItemDef }
 export const RARITIES = ['common', 'uncommon', 'rare', 'very_rare', 'legendary', 'unique'] as const
 export type Rarity = (typeof RARITIES)[number]
 
-export const BODY_SLOTS = ['head', 'eyes', 'torso', 'arms', 'hands', 'legs', 'feet'] as const
-export type BodySlot = (typeof BODY_SLOTS)[number]
+/** The body slots an item covers: the vocabulary is `BodySlot` of game-contracts (`over` is a layer worn over the others, such as a coat or a vest). */
+export type { BodySlot } from '@adatechnology/game-contracts'
+export const BODY_SLOTS: readonly BodySlot[] = ['head', 'eyes', 'torso', 'arms', 'hands', 'legs', 'feet', 'over']
 
 export const DURABILITY_KINDS = ['uses', 'portions', 'doses', 'hits', 'cuts', 'shots', 'condition', 'charges', 'seconds', 'days', 'infinite', 'container'] as const
 export type DurabilityKind = (typeof DURABILITY_KINDS)[number]
@@ -85,7 +87,14 @@ export interface ItemDef extends BaseItemDef {
   cookable?: boolean
   nutrition?: { satiety?: number; hydration?: number }
   /** Fractions 0..1 per attack, per body slot covered. */
-  protection?: { slots: readonly BodySlot[]; bite?: number; scratch?: number; warmth?: number }
+  protection?: {
+    slots: readonly BodySlot[]
+    bite?: number
+    scratch?: number
+    warmth?: number
+    /** Against projectiles (read by game-characters): `resistance` in penetration units; a stopped projectile does `blunt` of its damage, one that goes through `pass`. */
+    ballistic?: { resistance: number; blunt?: number; pass?: number; consumable?: boolean }
+  }
   carry?: { capacityKg: number; weightReduction: number; quickSlots: number; wheels?: boolean }
   /** Id of the weapon in the arsenal when the item is also one. */
   weapon?: string

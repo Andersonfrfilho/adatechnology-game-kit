@@ -1,0 +1,50 @@
+{
+  "name": "@adatechnology/game-animals",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Engine-agnostic animals for games: the body spec of quadrupeds, birds and snakes (proportions, legs, neck, head, ears, tail, colours), the three gait phase tables (walk, trot, gallop), the alive / infected / dead visual states, the layout math (leg heights, body height, size) and a species registry with packs, patch and remove. No three.js, no game.",
+  "keywords": [
+    "game",
+    "animals",
+    "quadruped",
+    "bird",
+    "snake",
+    "gait"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-animals"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

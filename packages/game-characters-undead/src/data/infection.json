@@ -1,0 +1,73 @@
+{
+  "wounds": {
+    "scratch": {
+      "share": 0.6,
+      "infectionChance": 0.06
+    },
+    "laceration": {
+      "share": 0.3,
+      "infectionChance": 0.22
+    },
+    "bite": {
+      "share": 0.1,
+      "infectionChance": 1
+    }
+  },
+  "accelerated": {
+    "feverSeconds": 30,
+    "deliriumSeconds": 70,
+    "deathSeconds": 120,
+    "reanimateSeconds": 8
+  },
+  "stages": [
+    {
+      "name": {
+        "pt-BR": "Saudável"
+      },
+      "skin": 0,
+      "hunch": 0,
+      "arms": 0
+    },
+    {
+      "name": {
+        "pt-BR": "Mal-estar (2 a 12 h)"
+      },
+      "fromHours": 2,
+      "toHours": 12,
+      "skin": 0.18,
+      "hunch": 0.04,
+      "arms": 0
+    },
+    {
+      "name": {
+        "pt-BR": "Febre alta (12 a 30 h)"
+      },
+      "fromHours": 12,
+      "toHours": 30,
+      "skin": 0.42,
+      "hunch": 0.12,
+      "arms": 0.1
+    },
+    {
+      "name": {
+        "pt-BR": "Delírio (30 a 48 h)"
+      },
+      "fromHours": 30,
+      "toHours": 48,
+      "skin": 0.68,
+      "hunch": 0.22,
+      "arms": 0.25
+    },
+    {
+      "name": {
+        "pt-BR": "Reanimado: corredor"
+      },
+      "skin": 1,
+      "hunch": 0.38,
+      "arms": 1
+    }
+  ],
+  "alternatives": {
+    "bestiaryScratchChance": 0.2
+  }
+}

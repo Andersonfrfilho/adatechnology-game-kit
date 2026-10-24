@@ -1,0 +1,5 @@
+---
+'@adatechnology/game-vfx': minor
+---
+
+The Workshop of VFX as data (T5.2a-c, spec 001). `vfx.play(id, point, { direction?, normal?, seed?, param? })` plays one of the 36 recipes (blood by infection age, headshot, dismemberment, bloater cloud, scream, muzzle flashes and casings by weapon, impact by material, glass, doors, collapses, fires, cars, the screen effects) into the Workshop pools (`vfx.workshop()`, `vfx.peekWorkshop()`: sprites, streaks, debris, decals, rings, lights, screen state, quality 0-2). The recipes are `EffectDef` data (`WORKSHOP_EFFECTS`, `GAME_EFFECTS`, `patchEffects`) run by `EffectInstance`, `EffectRunner` and `EffectPlayer` in the page's own order of random draws; `effectForEvent` and `data/event-effects.json` map the destruction events to effects (`impact_<material>`, `stage_crack`, `breach_dust`, `collapse_dust`, `rebar_expose`, `glass_burst`). Texts of every recipe in `en` and `pt-BR` (`locales`, with a group name for explosions). The goldens replay the recording of the page: 162 assertions over 54 runs and 36 page ids. Additive: nothing existing changes.

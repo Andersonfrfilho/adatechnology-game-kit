@@ -1,5 +1,20 @@
 # @adatechnology/game-destruction
 
+## 0.5.0
+
+### Minor Changes
+
+- 9e58b50: Contratos de parede em camadas e estágios de dano (todos opcionais): `PartSpec.layers` (`SurfaceLayer`), `reinforcement` (`Reinforcement`), `units` (`PartUnits`) e `breach` (`PartBreach`); `PartState.stage` (`DamageStage` 0 a 3), `stripped` e `opening`; `Fragment.marks` (`FragmentMark`); eventos `spall`, `stage` (com `opening` e `fragments`) e `expose`. `checkSpec` valida os campos novos. Módulos existentes compilam sem mudança.
+- 95c4bdd: Paredes em camadas, estágios e armadura. Registro de montagens (`ASSEMBLIES`, `registerAssembly`, `assemblyPart`) com as 8 paredes de medida real (tijolo rebocado, bloco, concreto armado, drywall, madeira, tronco, chapa e vidro). Penetração soma `penetration x espessura` de cada camada, a camada de fora lasca primeiro (`spall`). Estágios 0 a 3 com brecha (0,25 m² dentro de 0,55 m: fragmentos do tamanho da peça, abertura, a peça fica; `stage`), gaiola de armadura (`expose`, `stripped`, capacidade residual, colapso progressivo por sobrecarga, corte com maçarico ou serra) e furos que ficam nos fragmentos (`Fragment.marks`). `sizeStructure` ganha `redundancyRoles` e `safetyByRole`. `DestructionOptions.breach` (`radius`, `blastFactor`). Goldens próprios em Node 22 e 24 (`@adatechnology/golden-tool` como devDependency).
+
+### Patch Changes
+
+- 76d15b6: Contrato do corpo vivo (fase 4): `body.ts` com `BodySlot`, `SegmentKind`, `BodyRegion` e `MISSING_BITS`; `Hit.mass`, `Hit.cut` e `Hit.part`; evento `body`; `ObjectState.body`. `Shot.mass` (gramas do projétil) sai das armas e `shotToHit` copia para o `Hit`. O `game-destruction` ganha o rótulo do evento `body` nos dois idiomas.
+- Updated dependencies [76d15b6]
+- Updated dependencies [cc182c7]
+- Updated dependencies [9e58b50]
+  - @adatechnology/game-contracts@0.8.0
+
 ## 0.4.2
 
 ### Patch Changes

@@ -167,6 +167,11 @@ export interface DestructionOptions {
     /** Multiplier of the breach area a blast makes over a blow of the same damage: a blast loads the whole crater (default 6). */
     blastFactor?: number
   }
+  /**
+   * Speed of the blast front in m/s. A glass part at distance `d` from an explosion breaks `d / blastFrontSpeed` seconds later, in `update`
+   * (the speed of sound is 340). Default off: every part takes the blast at once.
+   */
+  blastFrontSpeed?: number
 }
 
 export interface SizeStructureOptions {

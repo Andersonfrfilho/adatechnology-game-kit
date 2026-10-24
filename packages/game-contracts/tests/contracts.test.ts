@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { IMPACT_CONTRACT, checkAnimation, checkDestructible, checkHit, shotToHit } from '../src'
+import { IMPACT_CONTRACT, MISSING_BITS, checkAnimation, checkDestructible, checkHit, shotToHit } from '../src'
 import type { AnimationClipSpec, DestructibleImpl, DestructionEvent, Hit, ObjectState, Shot, TestableModule } from '../src'
 
 /** A tiny module-owned destructible: one panel that dents by its own rule. */
@@ -70,6 +70,19 @@ describe('weapon contract', () => {
     expect(checkHit(h)).toEqual([])
     expect(shotToHit(shot(), [0, 1, 0], [0, 0, 1]).source).toBe('pistol_9mm')
     expect(shotToHit(shot(), [0, 1, 0]).energy).toBe(500)
+  })
+
+  it('shotToHit copies the projectile mass and leaves the field out when the shot has none', () => {
+    expect(shotToHit(shot({ mass: 7.5 }), [0, 1, -5]).mass).toBe(7.5)
+    expect('mass' in shotToHit(shot(), [0, 1, -5])).toBe(false)
+  })
+})
+
+describe('body contract', () => {
+  it('MISSING_BITS is the mask the instanced body shader reads: ten distinct bits', () => {
+    const values = Object.values(MISSING_BITS)
+    expect(values).toEqual([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
+    expect(new Set(values).size).toBe(values.length)
   })
 })
 
