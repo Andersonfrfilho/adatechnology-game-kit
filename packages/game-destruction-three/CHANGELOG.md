@@ -1,5 +1,23 @@
 # @adatechnology/game-destruction-three
 
+## 0.3.1
+
+### Patch Changes
+
+- 76ae86f: Chain reaction of explosives (A11). A part with `explodes.chain` is set off by a bullet, fire or a blast within reach and explodes after the delay of that trigger (fixed or drawn from the seed); the world emits `primed` and then `explode`, a part goes off once, blasts resolve in order of time and the delays count from the blast that armed the part, so the timeline does not depend on the `dt` of `update`. `explosivePart(explosive, part)` builds the part from an `ExplosiveDef` of `game-weapons` (fuel barrel, car tank, propane, pump, station tank). A bullet or a blast that would have destroyed such a part now arms it instead. `game-destruction-three` draws the fire of a part primed by a shot or fire.
+- Updated dependencies [04929d4]
+- Updated dependencies [76ae86f]
+- Updated dependencies [d10c7f7]
+- Updated dependencies [a569662]
+- Updated dependencies [b3a5d99]
+- Updated dependencies [9666008]
+- Updated dependencies [9666008]
+- Updated dependencies [f4da1a6]
+- Updated dependencies [c0fcb62]
+- Updated dependencies [85ac930]
+  - @adatechnology/game-destruction@0.4.0
+  - @adatechnology/game-contracts@0.5.0
+
 ## 0.3.0
 
 ### Minor Changes
