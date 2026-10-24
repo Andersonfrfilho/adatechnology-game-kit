@@ -828,5 +828,15 @@
       0.458
     ],
     "scale": 0.1
+  },
+  {
+    "id": "rehydration_salts",
+    "teamId": "sais_reidrat",
+    "teamBox": [
+      0.9,
+      1.2,
+      0.1
+    ],
+    "scale": 0.1
   }
 ]
