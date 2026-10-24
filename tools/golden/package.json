@@ -12,6 +12,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./cut-source": {
+      "types": "./dist/cut-source.d.ts",
+      "import": "./dist/cut-source.js"
     }
   },
   "scripts": {
