@@ -1,4 +1,4 @@
-| **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
+# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
 Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **157 de 257 itens têm modelo 3D; faltam 100.**
@@ -9,20 +9,20 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 
 | Categoria | Têm | Faltam |
 |---|---|---|
-| Comida | 3500 | -3464 |
-| Bebida | 1248 | -1236 |
-| Medicina e primeiros socorros | 2691 | -2665 |
-| Ferramentas | 2858 | -2828 |
-| Armas brancas e de disparo silencioso | 1916 | -1896 |
-| Materiais de construção e crafting | 2245 | -2222 |
-| Roupas e proteção | 2461 | -2438 |
-| Mochilas e contêineres | 1630 | -1615 |
-| Eletrônicos, rádio e luz | 2135 | -2115 |
-| Combustível e energia | 1000 | -991 |
-| Campo, pesca e caça | 1249 | -1238 |
-| Livros e revistas | 666 | -661 |
-| História e colecionáveis | 1668 | -1652 |
-| Chaves e acesso | 1207 | -1196 |
+| Comida | 36 | 0 |
+| Bebida | 12 | 0 |
+| Medicina e primeiros socorros | 26 | 0 |
+| Ferramentas | 30 | 0 |
+| Armas brancas e de disparo silencioso | 20 | 0 |
+| Materiais de construção e crafting | 23 | 0 |
+| Roupas e proteção | 1 | 22 |
+| Mochilas e contêineres | 1 | 14 |
+| Eletrônicos, rádio e luz | 4 | 16 |
+| Combustível e energia | 2 | 7 |
+| Campo, pesca e caça | 0 | 11 |
+| Livros e revistas | 0 | 5 |
+| História e colecionáveis | 1 | 15 |
+| Chaves e acesso | 1 | 10 |
 | **Total** | **157** | **100** |
 
 ## Comida (36 de 36)
