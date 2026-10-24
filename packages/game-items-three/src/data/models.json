@@ -558,5 +558,15 @@
       0.65
     ],
     "scale": 0.1
+  },
+  {
+    "id": "cooking_oil",
+    "teamId": "oleo_cozinha",
+    "teamBox": [
+      0.704,
+      2.6,
+      0.704
+    ],
+    "scale": 0.1
   }
 ]
