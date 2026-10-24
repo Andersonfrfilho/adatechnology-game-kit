@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **36 de 257 itens têm modelo 3D; faltam 221.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **37 de 257 itens têm modelo 3D; faltam 220.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,9 +23,9 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **36** | **221** |
+| **Total** | **37** | **220** |
 
-## Comida (15 de 36)
+## Comida (16 de 36)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -44,7 +44,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Dúzia de ovos (kit) | `ovos` | `eggs` | 0,7 kg | comum | 250 x 70 x 100 mm |
 | [x] | Farinha de mandioca (1 kg) (kit) | `farinha_mandioca` | `cassava_flour` | 1,0 kg | comum | 150 x 250 x 60 mm |
 | [x] | Feijão seco (1 kg) (kit) | `feijao_seco` | `beans` | 1,0 kg | comum | 100 x 200 x 60 mm |
-| [ ] | Frango congelado | `frango` | `frozen_chicken` | 1,2 kg | comum | 260 x 100 x 170 mm |
+| [x] | Frango congelado (kit) | `frango` | `frozen_chicken` | 1,2 kg | comum | 260 x 100 x 170 mm |
 | [ ] | Laranja | `laranja` | `orange` | 0,2 kg | comum | 75 x 75 x 75 mm |
 | [ ] | Leite condensado | `leite_condensado` | `condensed_milk` | 0,4 kg | incomum | 73 x 100 x 73 mm |
 | [ ] | Macarrão (500 g) | `macarrao` | `pasta` | 0,5 kg | comum | 100 x 250 x 40 mm |

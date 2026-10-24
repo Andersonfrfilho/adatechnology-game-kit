@@ -358,5 +358,15 @@
       0.61
     ],
     "scale": 0.1
+  },
+  {
+    "id": "frozen_chicken",
+    "teamId": "frango",
+    "teamBox": [
+      2.6,
+      1.002,
+      1.702
+    ],
+    "scale": 0.1
   }
 ]
