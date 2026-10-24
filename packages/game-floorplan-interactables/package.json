@@ -1,0 +1,61 @@
+{
+  "name": "@adatechnology/game-floorplan-interactables",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Bridge between a game-floorplan plan and the interactables kit: turns the furniture, sockets, switches, lamps, gas, plumbing and fixtures of a plan into objects of game-interactables-household, wires the world (power, water, gas) and fits the doors against the walls.",
+  "keywords": [
+    "game",
+    "floorplan",
+    "interactables",
+    "household",
+    "house",
+    "adapter"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-floorplan-interactables"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist",
+    "MIGRATION.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@adatechnology/game-floorplan": "workspace:*",
+    "@adatechnology/game-floorplan-commercial": "workspace:*",
+    "@adatechnology/game-floorplan-residential": "workspace:*",
+    "@adatechnology/game-floorplan-rural": "workspace:*",
+    "@adatechnology/game-floorplan-post-apocalyptic": "workspace:*",
+    "@adatechnology/game-floorplan-structure": "workspace:*",
+    "@adatechnology/game-interactables": "workspace:*",
+    "@adatechnology/game-interactables-household": "workspace:*",
+    "@adatechnology/game-items": "workspace:*",
+    "@adatechnology/game-items-goods": "workspace:*",
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

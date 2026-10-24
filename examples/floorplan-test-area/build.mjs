@@ -25,11 +25,17 @@ const packages = [
   'game-destruction',
   'game-floorplan',
   'game-floorplan-commercial',
+  'game-floorplan-interactables',
   'game-floorplan-post-apocalyptic',
   'game-floorplan-residential',
   'game-floorplan-rural',
   'game-floorplan-structure',
   'game-floorplan-three',
+  'game-interactables',
+  'game-interactables-household',
+  'game-interactables-three',
+  'game-items',
+  'game-items-goods',
   'game-props3d',
 ]
 for (const p of packages) {

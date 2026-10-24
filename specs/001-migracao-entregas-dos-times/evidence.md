@@ -2882,3 +2882,72 @@ node examples/interactables-test-area/build.mjs && test.mjs -> 28/28
 - **Merge de `origin/main` e integração pendentes:** o coordenador pediu o merge de `origin/main` antes do último commit e que `game-crowd` e
   `game-player` usem o que está lá (ruas e veículos do `game-urban`, vegetação para manada e revoada). O merge foi recusado pela verificação de
   permissão da sessão e não foi tentado de novo; a integração espera essa permissão.
+
+## AdaptadorInterativos no kit (`game-floorplan-interactables`)
+
+Resposta do dono à pergunta 5 da T2.4/T2.6 (2026-10-24): o `AdaptadorInterativos` entra no kit, genérico e configurável, e passa a ser o padrão da opção
+`interactives` do `game-floorplan-three`. Branch `work/adapter`, a partir de `origin/main`.
+
+**Fonte:** IIFE de `site/pages/sala-de-testes/area-casas.html` (L36290, 1040 linhas, v0.3.0). As cópias de `pages/jogo/visor-casas-3d.html` e
+`pages/jogo/zombiada-modo-livre.html` são idênticas (conferido com `diff`). A cópia literal está em
+`packages/game-floorplan-interactables/tests/fixtures/team-golden/adaptador-interativos.js` (sha256 `0cc377e6248bbbad3b49c82e7b8b864f3449442923a0c32a2d53f4129d72d7c4`).
+
+**Pacote escolhido, pelo grafo de dependências:** pacote novo e puro, `packages/game-floorplan-interactables`.
+- Depende só de contratos: recebe `GameInteractables` e `GameInteractablesHousehold` por opção (sem dependência de runtime), e lê a planta do motor (`game-floorplan`).
+- Não pode ir em `game-floorplan` (o motor da planta não conhece o kit de interativos; seria dependência nova do núcleo), nem em `game-interactables-household` (o household não conhece planta), nem em `game-floorplan-three` (three.js só no adaptador `-three`; o adaptador não usa three.js).
+- O `game-floorplan-three` passa a depender dele (é o padrão de `interactives`); o inverso não existe, então não há ciclo. Mesmo molde de `-fleet`, `-species`, `-household`.
+
+**O que mudou na tradução (tabela completa em `packages/game-floorplan-interactables/MIGRATION.md`):**
+
+| Original | Novo |
+|---|---|
+| `criar`, `planejar`, `criarMundo`, `adicionar`, `bloqueadoDe`, `pontoDe`, `especProprio` | `create`, `plan`, `createWorld`, `add`, `blockedOf`, `pointOf`, `ownSpec` |
+| `MAPA_TIPOS` (88 tipos), tabela de conteúdo (114), cadeiras, pontos de água, preferência, substitutos | `TYPE_MAP`, `CONTENT_MAP`, `CONTENT_BY_GROUP`, `CHAIR_TABLES`, `FIXTURES_OF_POINT`, `PREFERENCE`, `OBJECT_SUBSTITUTES`: registros; chave `null` tira a entrada |
+| `regiao` (`br`), `locale` (`pt-BR`) | `region`, `locale`, com os valores do time como padrão |
+| frases dos avisos | `messages` (`en` e `pt-BR`; o `pt-BR` é a frase do time) |
+| ids criados (`entrada_energia`, `quadro`, `medidor`, `gas_encanado`, `#aereo`, `#armario`, `#cadeiraN`) | `service_entrance`, `panel`, `meter`, `piped_gas`, `#overhead`, `#cabinet`, `#chairN` |
+
+Nada do ZombiAdA está no código: os valores do time são o padrão das opções. Sem `Math.random` (todo sorteio sai da semente).
+
+**Verificação contra o código do time:** `tests/team-golden.test.ts` roda o IIFE original num `vm` sobre uma planta com a forma do `PlantasSDK`, reconstruída da planta do kit (tradutor
+inverso nos testes), e compara a resposta, depois de renomeada, com `toEqual`:
+- `plan`: 17 tipologias x 3 sementes, mais os estados fortified e abandoned, `night`, `floor`, origem e `inw` (espelhado);
+- `world.serialize()` e o resultado de `add` (dobradiças viradas, objetos afastados) em 7 casas;
+- `blockedOf` numa grade de pontos;
+- chaminé (lareira, fogão a lenha, por id) e os conteúdos vindos do catálogo de bens.
+Os testes de registro (`tests/adapter.test.ts`) cobrem `typeMap` com `null` e com troca, `contentMap`, fallback por grupo, `preference`, cadeiras, `seedKey`, textos e erro de kit faltando.
+
+**Ligação no `game-floorplan-three`:** `interactives.adapter` ficou opcional (padrão `FloorplanInteractables`); aceita objeto com `plan/add/createWorld/blockedOf` ou fábrica com `create`.
+Novas opções: `interactives.adapterOptions` (vai para `create`), `locale` do renderizador e `seedKey` do renderizador repassados. O aviso de `interactives` incompleto continua (sem `GameInteractables`, `GameInteractablesHousehold` ou `GameInteractablesThree`).
+Foram corrigidos erros de tradução da ponte (`bridge.ts`): `ent.floorKind` virou `ent.floorY`, `plane.picture` virou `plane.panel`, `mats.floorKind` virou `mats.floor`.
+Esses três nomes estavam errados na ponte (o plano usa `floorY`, `panel` e o material `floor`), e só apareceriam com um adaptador de verdade.
+Área de teste: `examples/floorplan-test-area` agora entrega as três bibliotecas e a casa nasce com objetos do kit, sem adaptador injetado pela página; a `interactables-test-area` herda (carrega o módulo das casas).
+
+**Desvios:**
+- O adaptador do time lê o resultado do `PlantasSDK`; o porte lê a planta do kit (nomes em inglês, `contents` como pilhas do catálogo, `utilities`). É porte literal com troca de chaves, provado pelo teste diferencial.
+- Conteúdo: `nome_pt` some (o item tem nome próprio) e `data` da pilha não leva idade nem estado; a correspondência de 31 ids da tabela padrão da estrutura para o household foi derivada pelo nome.
+- `FROZEN_ITEMS` substitui a checagem do time pelo nome "congel".
+- A chaminé não tem vínculo com item no tipo `Chimney` do kit: a regra (id `chimney.fireplace` / `chimney.stove`, senão a primeira lareira ou fogão a lenha pelo `kind`) foi inferida; nenhum modelo rural emite chaminé hoje.
+- Gás de acampamento: liga o primeiro `camp_stove` ao primeiro `gas_canister`.
+- As sementes dos objetos que o adaptador cria diferem das do time (ids renomeados); `seedKey` reproduz as antigas, e os testes usam `teamSeedKey`.
+- O modo de luz vem de `electrical.mode`.
+
+**Comandos e resultados**
+
+```text
+pnpm build                                                    -> ok
+pnpm typecheck                                                -> ok
+pnpm lint                                                     -> ok
+pnpm --filter @adatechnology/game-floorplan-interactables test -> 93 passed (golden contra o IIFE do time 70 + 4, registros 19)
+pnpm --filter @adatechnology/game-floorplan-three test         -> 142 passed (4 novos: adaptador padrão, adapterOptions, adaptador injetado)
+game-interactables 153, game-interactables-household 1911, game-interactables-three 82 -> passed
+game-test-room                                                 -> 145 passed; 1 (dinamite com pavio) estourou o tempo com a máquina carregada e passou sozinho
+node examples/test-room/build.mjs && floorplan-test-area/build.mjs && interactables-test-area/build.mjs -> ok
+node examples/floorplan-test-area/test.mjs                     -> 24/24 (pt-BR e en; a casa nasce com 83 objetos do kit, 9 lâmpadas, sem aviso)
+node examples/interactables-test-area/test.mjs                 -> sem falhas (EXIT 0)
+```
+
+**Perguntas para o dono:**
+1. A renomeação dos ids criados pelo adaptador (`service_entrance`, `panel`...) muda as sementes de uma cena salva com os ids do time. Aceita, ou o jogo passa `seedKey`?
+2. A regra da chaminé e a do gás de acampamento foram inferidas; o time não dá o vínculo na planta. O `Chimney` do `game-floorplan` deve ganhar o id do item que ele serve?
+3. Os 31 ids de conteúdo da tabela padrão da estrutura foram casados com o household pelo nome; a lista está em `MIGRATION.md`. Alguém do time de itens confere?

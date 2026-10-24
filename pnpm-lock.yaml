@@ -537,6 +537,51 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
+  packages/game-floorplan-interactables:
+    devDependencies:
+      '@adatechnology/game-floorplan':
+        specifier: workspace:*
+        version: link:../game-floorplan
+      '@adatechnology/game-floorplan-commercial':
+        specifier: workspace:*
+        version: link:../game-floorplan-commercial
+      '@adatechnology/game-floorplan-post-apocalyptic':
+        specifier: workspace:*
+        version: link:../game-floorplan-post-apocalyptic
+      '@adatechnology/game-floorplan-residential':
+        specifier: workspace:*
+        version: link:../game-floorplan-residential
+      '@adatechnology/game-floorplan-rural':
+        specifier: workspace:*
+        version: link:../game-floorplan-rural
+      '@adatechnology/game-floorplan-structure':
+        specifier: workspace:*
+        version: link:../game-floorplan-structure
+      '@adatechnology/game-interactables':
+        specifier: workspace:*
+        version: link:../game-interactables
+      '@adatechnology/game-interactables-household':
+        specifier: workspace:*
+        version: link:../game-interactables-household
+      '@adatechnology/game-items':
+        specifier: workspace:*
+        version: link:../game-items
+      '@adatechnology/game-items-goods':
+        specifier: workspace:*
+        version: link:../game-items-goods
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
   packages/game-floorplan-post-apocalyptic:
     devDependencies:
       '@adatechnology/game-floorplan':
@@ -657,6 +702,9 @@ importers:
       '@adatechnology/game-destruction':
         specifier: workspace:*
         version: link:../game-destruction
+      '@adatechnology/game-floorplan-interactables':
+        specifier: workspace:*
+        version: link:../game-floorplan-interactables
       '@adatechnology/game-floorplan-structure':
         specifier: workspace:*
         version: link:../game-floorplan-structure
@@ -682,6 +730,15 @@ importers:
       '@adatechnology/game-floorplan-rural':
         specifier: workspace:*
         version: link:../game-floorplan-rural
+      '@adatechnology/game-interactables':
+        specifier: workspace:*
+        version: link:../game-interactables
+      '@adatechnology/game-interactables-household':
+        specifier: workspace:*
+        version: link:../game-interactables-household
+      '@adatechnology/game-interactables-three':
+        specifier: workspace:*
+        version: link:../game-interactables-three
       '@adatechnology/game-vegetation':
         specifier: workspace:*
         version: link:../game-vegetation

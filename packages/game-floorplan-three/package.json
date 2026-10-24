@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-floorplan-three",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "MIT",
   "description": "three.js renderer for @adatechnology/game-floorplan: walls, doors, windows, floors, stairs, roofs, lot, furniture, lights, mirrors and cars of a plan, bound to the destruction of its structure, plus the floor navigator.",
   "keywords": [
@@ -45,6 +45,7 @@
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:*",
     "@adatechnology/game-destruction": "workspace:*",
+    "@adatechnology/game-floorplan-interactables": "workspace:*",
     "@adatechnology/game-floorplan-structure": "workspace:*",
     "@adatechnology/game-props3d": "workspace:*"
   },
@@ -60,6 +61,9 @@
     "typescript": "^5.7.3",
     "vitest": "^3.2.4",
     "@adatechnology/game-floorplan": "workspace:*",
+    "@adatechnology/game-interactables": "workspace:*",
+    "@adatechnology/game-interactables-household": "workspace:*",
+    "@adatechnology/game-interactables-three": "workspace:*",
     "@adatechnology/game-floorplan-residential": "workspace:*",
     "@adatechnology/game-floorplan-commercial": "workspace:*",
     "@adatechnology/golden-tool": "workspace:*",

@@ -46,7 +46,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     const wants = roomId => lightBase(roomId); // initial intent of the lamp: the room's stored state, otherwise night
     const entById = new Map<any, any>(plane.items.map(e => [e.id, e]));
     const entByItem = new Map(plane.items.map(e => [e.item, e]));
-    IV.mats = { plain: shared.mats.plain, metal: shared.mats.metal, wood: shared.mats.wood, glass: shared.mats.glass, fabric: shared.mats.fabric, plant: shared.mats.plant, water: shared.mats.water, emissive: shared.mats.emissive, atlas_picture: shared.mats.picture, atlas_floor: shared.mats.floorKind };
+    IV.mats = { plain: shared.mats.plain, metal: shared.mats.metal, wood: shared.mats.wood, glass: shared.mats.glass, fabric: shared.mats.fabric, plant: shared.mats.plant, water: shared.mats.water, emissive: shared.mats.emissive, atlas_picture: shared.mats.picture, atlas_floor: shared.mats.floor };
     const ev = e => ivEvent(h, e);
     const world = IV.world = A.createWorld(r, { water, seed: r.seed, onEvent: ev });
     const add0 = world.add;
@@ -61,9 +61,9 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
       else if (e && e.type === 'wall_switch') { const l = (e.connections.controls || [])[0], roomId = l && IV.lampRoom.get(l); if (roomId) for (const p of spec.parts || []) if (p.id === 'rocker') p.t0 = wants(roomId) ? 1 : 0; }
       return add0(id, spec, tr);
     };
-    const exitPoint = A.add(world, plane, { isBlocked: A.blockedOf(r), build: (type, item) => ivDraw(IV, entByItem.get(item), type, item) });
+    const added = A.add(world, plane, { isBlocked: A.blockedOf(r), build: (type, item) => ivDraw(IV, entByItem.get(item), type, item) });
     world.add = add0;
-    IV.warnings = exitPoint.warnings; IV.exitPoint = exitPoint;
+    IV.warnings = added.warnings; IV.added = added;
     if (h.state.iv) { // rebuild (night/cut): doors, drawers, breakers, appliances come back; the lamps follow the per-room intent
       try {
         const st = JSON.parse(JSON.stringify(h.state.iv));
@@ -89,7 +89,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     const out = mesh.finish(spec);
     for (const l of out.lights) l.removeFromParent(); // the house decides the real lights (per-room lighting)
     const group = ivGroup(ent), g0 = cursor.group, root = new THREE.Group(); root.name = 'iv:' + ent.id;
-    root.position.set(item.x, ent.floorKind, item.z); root.rotation.y = item.ry; root.userData.iv = ent.id;
+    root.position.set(item.x, ent.floorY, item.z); root.rotation.y = item.ry; root.userData.iv = ent.id;
     const screen = spec.devices && spec.devices.some(d => d.kind === 'screen');
     let body = null;
     cursor.group = group; const pieceBefore = cursor.pc;
@@ -101,7 +101,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
       for (const m of out.group.children.slice()) {
         if (m.isMesh && m.name.startsWith('static:')) {
           if (screen && m.userData.material === 'emissive') { body = m; root.add(m); continue; } // the TV screen swaps material: stays as a mesh of its own
-          ivAccumulate(IV_MATERIAL[m.userData.material] || 'plain', m.geometry, item.x, ent.floorKind, item.z, item.ry, null); m.geometry.dispose();
+          ivAccumulate(IV_MATERIAL[m.userData.material] || 'plain', m.geometry, item.x, ent.floorY, item.z, item.ry, null); m.geometry.dispose();
         } else root.add(m);
       }
     } finally { cursor.group = g0; cursor.pc = pieceBefore; }
@@ -110,7 +110,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
       if (o.castShadow) { if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); if (o.geometry.boundingSphere.radius < 0.07) o.castShadow = false; } // tiny pieces (keys, breakers, pulls) cast no shadow: less drawing in the sun pass
       for (const m of Array.isArray(o.material) ? o.material : [o.material]) if (m && !base.has(m) && m.userData && m.userData.roomLightMask && m.onBeforeCompile === THREE.Material.prototype.onBeforeCompile) { m.userData.roomLightMask = false; roomLightMask(m); } // copies made by mergeParts lose the light mask hook
     });
-    const E = { id: ent.id, type, entry: ent, floor: ent.floor, group, root, parts: out.parts, spec, screen: body, pos: [item.x, ent.floorKind, item.z], ry: item.ry, origin: ent.origin };
+    const E = { id: ent.id, type, entry: ent, floor: ent.floor, group, root, parts: out.parts, spec, screen: body, pos: [item.x, ent.floorY, item.z], ry: item.ry, origin: ent.origin };
     IV.entries.set(ent.id, E);
     if (root.children.length) IV.roots.push(E);
     return spec;
@@ -287,7 +287,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
       sit: com((object, seatInfo) => !!w.sit(object, seatInfo, 'player')),
       stand: com(() => w.stand('player')),
       opens: com((mid, target) => { for (const E of IV.entries.values()) if (E.origin === mid) for (const p of E.spec.parts || []) if (IV_DOOR.test(p.id)) w.setPart(E.id, p.id, target ? 1 : 0); }), // opens or closes all the doors and drawers of a piece of furniture
-      breaker: com((circuit, on) => { if (on === undefined) return w.power.breaker(circuit); w.power.setBreaker(circuit, !!on); const q = IV.plane.picture && IV.entries.get(IV.plane.picture); if (q && q.parts['breaker_' + circuit]) w.setPart(q.id, 'breaker_' + circuit, on ? 1 : 0); IV.dirty = true; return !!on; }),
+      breaker: com((circuit, on) => { if (on === undefined) return w.power.breaker(circuit); w.power.setBreaker(circuit, !!on); const q = IV.plane.panel && IV.entries.get(IV.plane.panel); if (q && q.parts['breaker_' + circuit]) w.setPart(q.id, 'breaker_' + circuit, on ? 1 : 0); IV.dirty = true; return !!on; }),
       lightOn: roomId => { const S = IV.roomStates.get(roomId); return S ? S.ef : null; },
       light: com((roomId, on) => { ivRoomLight(IV, roomId, !!on); }),
       animate: com(() => IV.anim.size > 0),
