@@ -19,7 +19,8 @@
     "version:changeset": "changeset version",
     "publish:changesets": "pnpm build && changeset publish",
     "site:dev": "docker compose -p adatechnology-game-kit watch",
-    "site:thumbs": "node site/capture-thumbs.mjs"
+    "site:thumbs": "node site/capture-thumbs.mjs",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.0",
