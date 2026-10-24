@@ -1143,3 +1143,7 @@ Testes: 56 em 5 arquivos (dados com os números das fontes; escalonador: 2 a 6 h
 | `pnpm build` | exit 0 |
 | `pnpm -r typecheck` | exit 0 |
 | `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0 (a primeira rodada estourou os 5 s do teste que regrava as 85 fixtures da Cena com o workspace inteiro em paralelo; o teste ganhou 120 s) |
+| `game-weather` / `golden-tool` / `game-contracts` | 56 / 63 / 34 testes; os goldens e os traces também em Node 22.23.4 |
+| `game-weapons-three` `audio-trace.test.ts` | 5 testes (trace gravado antes de qualquer mudança no som) |
+| `docker build -f site/Dockerfile .` | exit 0 (com o manifesto de `game-weather`) |
