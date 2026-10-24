@@ -49,7 +49,7 @@ loads one round per `reload` seconds and the trigger interrupts it. `trigger(dt)
 counting `dt` twice.
 
 Non-firearms: `flame`/`heat` drain `fuelPerSecond × dt` of fuel (`no_fuel` when dry), `tool` ticks with `duration: dt`, `extinguisher` spends its
-charge in seconds, `throwable` throws once per pull (`velocity = direction × throwSpeed` plus a small upward arc, three by default), `melee` swings at
+charge in seconds, `throwable` throws (`velocity = direction × throwSpeed` plus a small upward arc, three by default; a timer one is cooked, see below), `melee` swings at
 its rpm, `hand` produces one `hand` use per pull.
 
 ### Handling: events, faults and heat
@@ -110,14 +110,30 @@ returns `armed`, `impact`, `dud` and `detonate` events; `trigger('wire' | 'remot
 the lethal or the injury zone (with the cone of a directional charge and the stun of a flashbang) and `backblastEffect(use, point)` the danger behind a tube.
 The world explosives (`propane_p13`, `fuel_barrel`, `car_fuel_tank`, `fuel_pump`, `fuel_station_tank`) carry `chain`, the delays of the chain reaction `game-destruction` uses.
 
+### Cooking a grenade, safety fuses, the flashbang and trip wires
+
+A throwable with a timer fuse is **cooked** (owner decision, 2026-10-24): the pull takes the pin out and the fuse starts to count (`cook` event, `start`); keep calling
+`trigger(..., held)` each frame and, on the frame the trigger goes up, call `release(origin, direction)`: it returns the throw with the fuse that is left
+(`use.fuse`, and `use.cooked` for the seconds held; `cook` event `throw`). Holding past the fuse sets it off in the hand: the `trigger` (or the `release`) returns a `throw` use with
+`inHand: true`, `fuse: 0` and no velocity (`cook` event `burst`). Impact throwables (molotov, launchers) and the ones set down (C4, Claymore, a long-fuse dynamite) act on the pull, as before.
+
+`ExplosiveDef` has four ways to say how long the fuse is: `fuse` (fixed seconds), `fuseRange: [min, max]` (sampled per throw; the flashbang is the real M84 delay of 1.0 to 2.3 s from the lever),
+and `fuseLength` (metres) with `burnRate` (s/m) and `burnTolerance` (a fraction): the dynamite is 0.03 m of safety fuse at 131 s/m ±10%, about 4 s. The sampling uses a stream of its own
+(`seed ^ 0xbb67ae85`), so the spread of the shots does not move. `weapon.setFuseLength(metres)` (the test area's `fuse_length` control) or
+`patch.explosives.dynamite.fuseLength` makes a longer fuse; when the fuse reaches `rules.explosives.placeFuseFrom` (10 s) the explosive is set down lit (`place` use with the `timer` trigger)
+instead of thrown, which builds a delayed trap. `nominalFuse(explosive)` and `sampleFuse(explosive, random)` are exported.
+
+An explosive with the `wire` trigger (the Claymore) carries `tripwire: { length, angleDeg?, height? }` (default `rules.explosives.tripwire`: 10 m ahead, 0.15 m above the charge, derived: no source
+gives the length of the M18A1 kit). The `place` use has it, and `tripwireSegment(use)` gives the segment `{ from, to }` the host stretches and tests bodies against; when a body crosses it the host calls `body.trigger('wire')`.
+
 ## API
 
 - `createArsenal(options?)` returns an `Arsenal`: `calibers`, `weapons`, `explosives` (maps), `rules`, `create(id, { seed?, reserve?, condition?, ammoQuality? })` (unknown id throws),
   `muzzleEnergy(caliberId, barrel?)`, `energy(weaponId)`, `name(id)` (weapon, explosive, fire mode, category, fault, condition or calibre, translated), `list(category?)`.
   Options: `calibers`, `weapons`, `explosives`, `patch`, `remove`, `include`, `rules`, `strings`, `seed`, `locale`.
 - `WeaponState`: `def`, `caliber`, `ammo`, `capacity`, `reserve`, `mode`, `reloading`, `locked`, `phase`, `fault`, `clearing`, `safety`, `heat`, `heatLevel`, `condition`,
-  `ammoQuality`, `spread`, `trigger(origin, direction, dt, held?, source?)`, `release()`, `draw()`, `reload(kind?)`, `cycleMode()`, `setSafety(on)`, `clearFault()`,
-  `setCondition(id)`, `setAmmoQuality(id)`, `update(dt)`, `refill()`, `drain()`.
+  `ammoQuality`, `spread`, `trigger(origin, direction, dt, held?, source?)`, `release(origin?, direction?)`, `draw()`, `reload(kind?)`, `cycleMode()`, `setSafety(on)`, `clearFault()`,
+  `setCondition(id)`, `setAmmoQuality(id)`, `setFuseLength(metres)`, `cooking`, `update(dt)`, `refill()`, `drain()`. `release(origin?, direction?)` returns the throw of a cooked grenade (null for anything else).
 - `Shot`: `origin`, `direction`, `energy` (J), `caliber` (mm), `caliberId`, `speed`, `energyAt(distance)` (energy × speed factor², drag per 100 m), `pellet`, `weapon`, `source`.
 - `Use`: `melee`, `flame`, `heat`, `throw`, `tool`, `extinguish`, `hand`. `TriggerResult`: `shots`, `uses`, `status` (`ok`, `empty`, `reloading`, `cooldown`, `no_fuel`, `safe`, `drawing`, `fault`, `misfire`, `clearing`), `recoil`, `noise`, `rounds`, `roundTimes`, `fault?`.
 - `muzzleEnergy(caliber, barrel?)`, `CALIBERS`, `WEAPONS`, `EXPLOSIVES`, `ARCHETYPE_IDS`, `DEFAULT_LOADOUT`, `DEFAULT_RULES`, `RELOAD_STAGES`, `checkArsenal`, `locales`, `resolveStrings`.

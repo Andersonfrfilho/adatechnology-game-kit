@@ -72,7 +72,7 @@ Sem `area`, os itens vão em fileiras. `openArea` de um grupo sem módulo també
 | `room.loadModule(module)` | Junta itens ao catálogo, roda `checkDestructible`/`checkAnimation`, registra cenários e chama `attach`; devolve `ModuleReport` |
 | `room.openArea(group)` | Limpa a sala e monta a área do módulo (ou fileiras do grupo); aba do catálogo aberta |
 | `room.spawn / clear / resetAll / spawned` | Objetos da cena |
-| `room.setTool / use / grab / throwHeld / look / walk / update` | Dirigir a sala por script (`setTool` toca o saque da regra: o gatilho responde `drawing` até acabar) |
+| `room.setTool / use / grab / throwHeld / look / walk / update` | Dirigir a sala por script (`setTool` toca o saque da regra: o gatilho responde `drawing` até acabar). `use(hold)` segura o gatilho por `hold` s e solta: granada de espoleta é cozinhada (sai no soltar com a espoleta que sobrou; `hold` além dela explode na mão). A Claymore dispara quando um corpo cruza o fio, e a carga posta ganha um marcador (`charge_marker`, e `charge_wire` no fio) |
 | `room.waitUntilReady(maxSeconds?)` | Avança quadros até a ferramenta na mão não ter fase (saque, recarga, ciclo) e devolve os segundos esperados; use depois de `setTool` antes de `use` |
 | `room.playAnimation(clipId)` / `room.animations()` | Clipes dos itens |
 | `room.bench(moduleId?)` | Bancada do módulo ativo (ou do id): `controls`, `layers`, `value`, `set`, `setLayer`, `act`, `encode` |

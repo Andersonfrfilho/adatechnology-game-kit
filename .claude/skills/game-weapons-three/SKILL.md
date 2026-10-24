@@ -74,6 +74,7 @@ ferramenta do host) e `fx.update(dt)` a cada quadro. `tool: () => HostTool` dá 
 | `condition` | escolha | nova, usada, gasta, enferrujada: `setCondition` na regra (`host.configureTool({ condition })`; a munição vai em `ammo_quality`) e nos materiais do modelo |
 | `ammo_quality` | escolha | de fábrica ou recarregada (`setAmmoQuality` na regra) |
 | `sound_distance` | número 0 a 200 m | distância do ouvinte: prévia do abafamento do tiro |
+| `fuse_length` | número 0,01 a 1 m | pavio da dinamite (131 s/m): `host.configureTool({ fuse_length })`; um longo põe a dinamite no chão acesa |
 | `muzzle_flash`, `casings`, `magazines` | camadas | ligam e desligam o clarão, as cápsulas e os pentes |
 | `casings_live`, `magazines_live`, `heat` | métricas | o que está na cena e o calor do cano (máximo 100) |
 Atirar, rajada e destravar ficam nas teclas (entrada do jogador). O som da explosão sai do evento `explosion` do host, pela distância da câmera.
@@ -88,7 +89,7 @@ Atirar, rajada e destravar ficam nas teclas (entrada do jogador). O som da explo
 `examples/weapons-test-area`: `node build.mjs` empacota o módulo em `dist/weapons-area.js` (global `WeaponsArea`) e gera `dist/sala-armas.html`
 (sala de testes com a área carregada e aberta, um arquivo, sem rede). `node test.mjs` testa. No arquivo `src/entry.js`, `WeaponsArea.loadInto(room)`
 carrega e abre a área. As áreas da página do kit abrem por `?area=`. Os testes do pacote ficam em `tests/weapons-area.test.ts` e `tests/integration.test.ts` (som, bancada, modelos dos arquétipos e a cadeia dos barris).
-Teclas: H equipa a arma mirada, clique atira ou arremessa, R recarrega, Q muda o modo, X destrava, B trava, Y detona cargas postas (Claymore, C4), E pega, G arremessa o que está na mão.
+Teclas: H equipa a arma mirada, clique atira ou arremessa, R recarrega, Q muda o modo, X destrava, B trava, Y detona as cargas postas de detonador remoto (C4); a Claymore dispara sozinha quando um corpo cruza o fio; segurar o clique com granada cozinha, soltar arremessa, E pega, G arremessa o que está na mão.
 
 ## Cuidados
 - `three` é peer (`^0.160.0`): passe o seu `THREE`.
@@ -112,4 +113,5 @@ Teclas: H equipa a arma mirada, clique atira ou arremessa, R recarrega, Q muda o
 ## O que ainda vem pela migração (spec 001)
 - Sons: o tiro (classe e abafamento do jogo + energia do calibre, S2) e os sons mecânicos estão feitos (T1.4); falta mover a síntese para o `game-audio` genérico (S1) e o golden de parâmetros (S3).
 - Efeitos de boca e explosivos passam a vir do `game-vfx-three` (E4).
+- Decisões do dono de 2026-10-24: o modelo do revólver desenha as câmaras da capacidade (686: 7; `options.chambers`, gerado pela ferramenta; arquétipo emprestado fica com 6) e a bancada ganhou `fuse_length`.
 - Fase 1 fechada (T1.6): o som do tiro e os mecânicos tocam na mão e na área, a bancada e os explosivos do mundo estão na área, e cada arma do catálogo tem golden da regra (`game-weapons/tests/weapon-goldens.test.ts`).

@@ -42,7 +42,7 @@ Panes: `result.fault` (ou `status` `fault`/`misfire`); `weapon.clearFault()` des
 | Função / tipo | Para que serve |
 |---|---|
 | `createArsenal(options?)` | `Arsenal`: `create(id, { seed?, reserve?, condition?, ammoQuality? })`, `muzzleEnergy`, `energy`, `name`, `list(category?)`, mapas `calibers`, `weapons`, `explosives`, `rules`; opções `weapons`, `calibers`, `explosives`, `patch`, `remove`, `include`, `rules`, `strings` |
-| `WeaponState` | `ammo`, `capacity`, `reserve`, `mode`, `reloading`, `locked`, `phase`, `fault`, `safety`, `heat`, `heatLevel`, `spread`, `trigger`, `release`, `draw`, `reload(kind?)`, `cycleMode`, `setSafety`, `clearFault`, `setCondition`, `setAmmoQuality`, `update`, `refill`, `drain` |
+| `WeaponState` | `ammo`, `capacity`, `reserve`, `mode`, `reloading`, `locked`, `phase`, `fault`, `safety`, `heat`, `heatLevel`, `spread`, `trigger`, `release` (devolve o arremesso da granada cozida), `cooking`, `setFuseLength`, `draw`, `reload(kind?)`, `cycleMode`, `setSafety`, `clearFault`, `setCondition`, `setAmmoQuality`, `update`, `refill`, `drain` |
 | `Shot` | `origin`, `direction`, `energy` (J), `caliber` (mm), `caliberId`, `speed`, `energyAt(distância)`, `pellet`, `weapon`, `source` |
 | `Use` | `melee`, `flame`, `heat`, `throw` (com `explosive`, `trigger`, `armDistance`), `place` (mina, C4), `backblast`, `tool`, `extinguish`, `hand` |
 | `createExplosiveBody(use, arsenal.explosives, arsenal.rules.explosives)` | `ExplosiveBody` de um `throw`/`place`: `step(dt, probe?)` voa com gravidade, quica, conta a espoleta e devolve eventos `armed`, `impact`, `dud`, `detonate`; `trigger('wire'\|'remote'\|…)` dispara a carga posta |
@@ -62,8 +62,12 @@ for (const event of body.step(dt, (from, to) => raycast(from, to))) {   // probe
   if (event.type === 'detonate') for (const target of targets) apply(blastEffect(event.detonation, target.position))
 }
 mine.trigger(pos, dir, 0)                                // claymore/c4: use `place`; body.trigger('wire') / body.trigger('remote')
+const wire = tripwireSegment(placeUse)                   // claymore: { from, to } do fio; quando um corpo cruza, body.trigger('wire')
 ```
 - Foguete é projétil físico (velocidade do lançador, gravidade 9,8, jogo.js 68303); abaixo de `armDistance` (10 m) bate sem explodir (`dud`).
+- Cozinhar (dono, 2026-10-24): `trigger` num arremessável de espoleta tira o pino (`cook` start), `release(origin, dir)` DEVOLVE o arremesso com a espoleta que sobrou (`use.fuse`, `use.cooked`); segurar além da espoleta explode na mão (`use.inHand`, `cook` burst). Impacto (molotov, lançadores) e postos (C4, Claymore, dinamite de pavio longo) agem no puxão.
+- Espoleta: `fuse` fixo, `fuseRange` sorteado por arremesso em fluxo próprio (flashbang 1,0 a 2,3 s da M84), ou `fuseLength` × `burnRate` ± `burnTolerance` (dinamite 0,03 m a 131 s/m ±10%, cerca de 4 s); `setFuseLength` ou `patch.explosives` alongam; a partir de `rules.explosives.placeFuseFrom` (10 s) vira carga posta acesa.
+- Claymore dispara por fio (`tripwire`: 10 m, 0°, 0,15 m, derivado; configurável por explosivo ou em `rules.explosives.tripwire`), não pelo jogador; o detonador (`remote`) é do C4.
 - Granada: espoleta conta do arremesso (M67 4 s); molotov explode no primeiro choque e deixa fogo de 4 m por 9 s; flashbang atordoa 4 s até 10 m; Claymore só atinge o cone de 60° (letal 15 m, ferimento 50 m); C4 só responde ao detonador (`remote`).
 - Quique do jogo (`rules.explosives`): chão devolve 35% da queda e 60% do que anda; parede 40%.
 - Cada explosivo do mundo (`propane_p13`, `fuel_barrel`, `car_fuel_tank`, `fuel_pump`, `fuel_station_tank`) traz `chain` (tempos entre tiro, fogo ou explosão vizinha e a explosão); `game-destruction` usa em `explosivePart`.
@@ -85,7 +89,7 @@ Os testes do pacote estão em `packages/game-weapons/tests/` (`weapons`, `rules`
 - Espingarda gera **um `Shot` por chumbo** (`12ga_00buck` 9, `12ga_birdshot` 90); a energia é por chumbo.
 - O sorteio vem da semente: mesma semente, mesmos tiros em qualquer máquina. Cada portador cria o seu `WeaponState`.
 - `create` com id desconhecido lança erro. Locale desconhecido cai em `en`; rótulos de calibre não são traduzidos.
-- `flame`/`heat` gastam `fuelPerSecond × dt`; `throwable` arremessa uma vez por puxada, com leve arco para cima. Molotov, M67 e companhia seguem o `ExplosiveDef` (espoleta, fogo, energia): trocar o explosivo troca o arremessável.
+- `flame`/`heat` gastam `fuelPerSecond × dt`; `throwable` arremessa com leve arco para cima (o de espoleta de tempo no `release`, ver acima). Molotov, M67 e companhia seguem o `ExplosiveDef` (espoleta, fogo, energia): trocar o explosivo troca o arremessável.
 - O alcance (`range`) não corta o tiro: a energia só decai (`energyAt`); quem corta é o host.
 - Panes vêm ligadas por padrão (condição `new`, 0,3% por cartucho); sala de teste e jogo que não tratam `fault` passam `rules: { faults: false }`. O sorteio da pane usa outra sequência (`seed ^ 0x6a09e667`): a dispersão de uma semente não muda.
 - Arco e besta não têm estojo: não esquentam e nunca engasgam. O cartucho na câmara (`chamber`) é só dado; `capacity` é o carregador.
