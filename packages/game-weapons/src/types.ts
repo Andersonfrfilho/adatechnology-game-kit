@@ -14,7 +14,7 @@ import type { Shot, Use, Vec3 } from '@adatechnology/game-contracts'
 
 import type { ExplosiveDef, ExplosiveId } from './explosive-types'
 import type { WeaponsStrings } from './locale'
-import type { WeaponRules } from './rule-types'
+import type { WeaponEvent, WeaponRules } from './rule-types'
 
 // `Shot` and `Use` are contracts: they live in @adatechnology/game-contracts and are re-exported here so that no import breaks.
 export type { Shot, Use, Vec3 }
@@ -61,6 +61,9 @@ export interface CartridgeDims {
   readonly caseLength: number
   readonly projectileDiameter: number
 }
+
+/** What a `firearm` action holds. */
+export type FirearmAction = Extract<WeaponAction, { kind: 'firearm' }>
 
 export type FireMode = 'single' | 'semi' | 'burst' | 'auto' | 'pump' | 'bolt' | 'lever' | 'break' | 'volley'
 
@@ -222,11 +225,24 @@ export interface TriggerResult {
   /** Uses this call (everything else). */
   uses: Use[]
   /** `ok`, or why nothing happened. */
-  status: 'ok' | 'empty' | 'reloading' | 'cooldown' | 'no_fuel' | 'safe'
+  status: 'ok' | 'empty' | 'reloading' | 'cooldown' | 'no_fuel' | 'safe' | 'drawing'
   /** Camera kick to apply, degrees [pitch, yaw]. */
   recoil: [number, number]
   /** Audible radius of what happened, metres (0 when nothing). */
   noise: number
+  /** Cartridges spent by this call: a shotgun shell is one, a burst is several. */
+  rounds: number
+  /** Seconds after the start of the call at which each round left the barrel. */
+  roundTimes: number[]
+}
+
+export type ReloadRequest = 'auto' | 'full' | 'one_by_one'
+
+/** What the weapon is busy with right now, and between which seconds of its own clock. */
+export interface WeaponPhase {
+  readonly id: 'draw' | 'cycle' | 'reload' | 'clear' | 'mode'
+  readonly start: number
+  readonly end: number
 }
 
 export interface WeaponState {
@@ -239,6 +255,9 @@ export interface WeaponState {
   reserve: number
   mode: FireMode
   readonly reloading: boolean
+  /** True after a pistol fires its last round: the slide stays back until the magazine is changed. */
+  readonly locked: boolean
+  readonly phase: WeaponPhase | null
   /** Current spread in degrees (base + bloom). */
   readonly spread: number
   /**
@@ -247,12 +266,20 @@ export interface WeaponState {
    */
   trigger(origin: Vec3, direction: Vec3, dt: number, held?: boolean, source?: string): TriggerResult
   release(): void
-  reload(): boolean
+  /** Start putting the weapon in hand; the trigger answers `drawing` until it is ready. */
+  draw(): void
+  /**
+   * Start a reload; false when there is nothing to do. `auto` picks by the weapon (one by one when it loads that way, a magazine swap
+   * otherwise); `full` loads a revolver all at once (speed loader); `one_by_one` forces round by round.
+   */
+  reload(kind?: ReloadRequest): boolean
   cycleMode(): FireMode
   /** Advance reload, cooldown and spread recovery. */
   update(dt: number): void
   /** Fill the magazine and reserve (test rooms). */
   refill(): void
+  /** What happened since the last call (for animation and sound), in order of time; empties the list. */
+  drain(): WeaponEvent[]
 }
 
 /** Recursively optional; arrays and functions are replaced as a whole, objects are merged. */

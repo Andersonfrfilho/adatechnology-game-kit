@@ -1,13 +1,21 @@
+import { drawSeconds, manualCycleSeconds, planRounds, weaponNoise, weaponSpeed } from './fire'
+import { isReloadable, planReload, reloadStages } from './reload'
 import { createRng, normalize, sampleCone } from './rng'
 import type {
   CaliberDef,
   FireMode,
+  FirearmAction,
+  ReloadKind,
+  ReloadRequest,
   Shot,
   TriggerResult,
   Use,
   Vec3,
   WeaponAction,
   WeaponDef,
+  WeaponEvent,
+  WeaponPhase,
+  WeaponRules,
   WeaponState,
 } from './types'
 
@@ -29,6 +37,14 @@ export interface WeaponStateInit {
   caliber: CaliberDef | null
   seed: number
   reserve?: number
+  rules: WeaponRules
+}
+
+/** Something that happens at a later time of the weapon clock. */
+interface Scheduled {
+  readonly at: number
+  readonly tag?: 'reload'
+  readonly event: WeaponEvent
 }
 
 const result = (status: TriggerResult['status'], extra: Partial<TriggerResult> = {}): TriggerResult => ({
@@ -37,6 +53,8 @@ const result = (status: TriggerResult['status'], extra: Partial<TriggerResult> =
   status,
   recoil: [0, 0],
   noise: 0,
+  rounds: 0,
+  roundTimes: [],
   ...extra,
 })
 
@@ -51,6 +69,7 @@ export class WeaponRuntime implements WeaponState {
   private readonly action: WeaponAction
   private readonly rng: () => number
   private readonly initialReserve: number
+  private readonly rules: WeaponRules
 
   private clock = 0
   /** Time already advanced by the other of update / trigger in the same frame (so calling both does not count `dt` twice). */
@@ -60,6 +79,14 @@ export class WeaponRuntime implements WeaponState {
 
   private _reloading = false
   private reloadEnd = 0
+  /** Seconds per round while a one-by-one reload runs; null when the magazine goes in at once. */
+  private loadStep: number | null = null
+  private _locked = false
+  private reloadKind: ReloadKind = 'tactical'
+  private drawEnd = 0
+  private _phase: WeaponPhase | null = null
+  private events: WeaponEvent[] = []
+  private scheduled: Scheduled[] = []
 
   /** Bloom degrees at `extraClock`. */
   private extra = 0
@@ -69,6 +96,7 @@ export class WeaponRuntime implements WeaponState {
     this.def = init.def
     this.caliber = init.caliber
     this.action = init.def.action
+    this.rules = init.rules
     this.rng = createRng(init.seed)
     const a = this.action
     this.mode = a.kind === 'firearm' ? a.modes[0] ?? 'single' : 'single'
@@ -104,6 +132,13 @@ export class WeaponRuntime implements WeaponState {
   get reloading(): boolean {
     return this._reloading
   }
+  get locked(): boolean {
+    return this._locked
+  }
+  get phase(): WeaponPhase | null {
+    const phase = this._phase
+    return phase && this.clock < phase.end - EPS ? phase : null
+  }
   get spread(): number {
     if (this.action.kind !== 'firearm') return 0
     return this.action.spreadDeg + this.extraAt(this.clock)
@@ -130,25 +165,57 @@ export class WeaponRuntime implements WeaponState {
     this.settle(this.clock)
   }
 
-  /** Complete the reload steps that finish at or before `t`. */
+  private emit(event: WeaponEvent): void {
+    this.events.push(event)
+  }
+
+  private schedule(item: Scheduled): void {
+    const index = this.scheduled.findIndex((other) => other.at > item.at)
+    if (index < 0) this.scheduled.push(item)
+    else this.scheduled.splice(index, 0, item)
+  }
+
+  drain(): WeaponEvent[] {
+    const drained = this.events.sort((a, b) => a.at - b.at)
+    this.events = []
+    return drained
+  }
+
+  /** Complete what falls at or before `t`: scheduled events and the reload steps. */
   private settle(t: number): void {
+    while (this.scheduled[0] && this.scheduled[0].at <= t + EPS) this.emit((this.scheduled.shift() as Scheduled).event)
     const a = this.action
-    if (a.kind !== 'firearm') return
+    if (!isReloadable(a)) return
     while (this._reloading && this.reloadEnd <= t + EPS) {
-      if (a.perRound) {
+      const doneAt = this.reloadEnd
+      if (this.loadStep !== null) {
         if (this.reserve > 0 && this._ammo < this._capacity) {
           this._ammo += 1
           this.reserve -= 1
+          this.emit({ type: 'feed', at: doneAt })
         }
-        if (this._ammo >= this._capacity || this.reserve <= 0) this._reloading = false
-        else this.reloadEnd += a.reload
+        if (this._ammo >= this._capacity || this.reserve <= 0) this.finishReload(doneAt)
+        else this.reloadEnd += this.loadStep
       } else {
         const take = Math.min(this._capacity - this._ammo, this.reserve)
         this._ammo += take
         this.reserve -= take
-        this._reloading = false
+        this.finishReload(doneAt)
       }
     }
+  }
+
+  private finishReload(at: number): void {
+    this._reloading = false
+    this._locked = false
+    this.emit({ type: 'reload', phase: 'end', kind: this.reloadKind, at })
+  }
+
+  private stopReload(at: number): void {
+    this._reloading = false
+    this._phase = null
+    this.scheduled = this.scheduled.filter((item) => item.tag !== 'reload')
+    this.emit({ type: 'reload', phase: 'end', kind: this.reloadKind, at })
   }
 
   // --- commands -------------------------------------------------------------------------------------------------------------------
@@ -157,7 +224,15 @@ export class WeaponRuntime implements WeaponState {
     this.latched = false
   }
 
-  reload(): boolean {
+  draw(): void {
+    const seconds = drawSeconds(this.action, this.rules)
+    this.drawEnd = this.clock + seconds
+    this._phase = { id: 'draw', start: this.clock, end: this.drawEnd }
+    this.emit({ type: 'draw', phase: 'start', at: this.clock })
+    this.schedule({ at: this.drawEnd, event: { type: 'draw', phase: 'end', at: this.drawEnd } })
+  }
+
+  reload(request: ReloadRequest = 'auto'): boolean {
     const a = this.action
     if (a.kind === 'throwable') {
       if (this._ammo >= this._capacity || this.reserve <= 0) return false
@@ -165,10 +240,16 @@ export class WeaponRuntime implements WeaponState {
       this.reserve -= 1
       return true
     }
-    if (a.kind !== 'firearm' || this._reloading) return false
-    if (this._ammo >= this._capacity || this.reserve <= 0) return false
+    if (!isReloadable(a) || this._reloading || this.clock < this.drawEnd - EPS) return false
+    if ((this._ammo >= this._capacity && !this._locked) || this.reserve <= 0) return false
+    const plan = planReload(a, this._ammo, this._capacity, this.reserve, request)
     this._reloading = true
-    this.reloadEnd = this.clock + a.reload
+    this.loadStep = plan.step
+    this.reloadKind = plan.kind
+    this.reloadEnd = this.clock + plan.first
+    this._phase = { id: 'reload', start: this.clock, end: this.clock + plan.total }
+    this.emit({ type: 'reload', phase: 'start', kind: plan.kind, at: this.clock })
+    for (const { stage, at } of reloadStages(a, plan, this.clock)) this.schedule({ at, tag: 'reload', event: { type: 'reload_stage', stage, at } })
     return true
   }
 
@@ -177,6 +258,7 @@ export class WeaponRuntime implements WeaponState {
     const modes = this.action.modes
     const i = modes.indexOf(this.mode)
     this.mode = modes[(i + 1) % modes.length] ?? this.mode
+    this.emit({ type: 'mode', mode: this.mode, at: this.clock })
     return this.mode
   }
 
@@ -184,6 +266,9 @@ export class WeaponRuntime implements WeaponState {
     this._ammo = this._capacity
     this.reserve = this.initialReserve
     this._reloading = false
+    this._locked = false
+    this._phase = null
+    this.scheduled = []
     this.readyAt = this.clock
     this.latched = false
     this.extra = 0
@@ -203,6 +288,7 @@ export class WeaponRuntime implements WeaponState {
     const start = this.clock - overlap
     const end = start + d
     this.settle(start)
+    if (start < this.drawEnd - EPS) return result('drawing')
 
     const dir = normalize(direction)
     let res: TriggerResult
@@ -249,39 +335,48 @@ export class WeaponRuntime implements WeaponState {
     return true
   }
 
-  private fireFirearm(a: Extract<WeaponAction, { kind: 'firearm' }>, origin: Vec3, dir: Vec3, start: number, end: number, held: boolean, source?: string): TriggerResult {
+  private fireFirearm(a: FirearmAction, origin: Vec3, dir: Vec3, start: number, end: number, held: boolean, source?: string): TriggerResult {
     if (this._reloading) {
-      if (a.perRound && this._ammo > 0) this._reloading = false // a tube reload is interrupted by the trigger
+      if (this.loadStep !== null && this._ammo > 0) this.stopReload(start) // a tube reload is interrupted by the trigger
       else return result('reloading')
     }
-    const auto = this.mode === 'auto'
-    if (!auto && !this.oncePerPull(held)) return result('cooldown')
-    if (this._ammo <= 0) return result('empty')
+    if (this.mode !== 'auto' && !this.oncePerPull(held)) return result('cooldown')
+    if (this._ammo <= 0) {
+      this.emit({ type: 'empty', at: start })
+      return result('empty')
+    }
 
-    const iv = 60 / a.rpm
     const t0 = Math.max(start, this.readyAt)
     if (t0 > end + EPS) return result('cooldown')
 
     const res = result('ok')
-    const fire = (t: number): void => {
+    const times = planRounds(a, this.mode, this._ammo, t0, end)
+    for (const t of times) {
       this.fireOne(a, origin, dir, t, res, source)
+      res.roundTimes.push(t - start)
+      res.rounds += 1
     }
-    if (auto) {
-      for (let t = t0, n = 0; this._ammo > 0 && (n === 0 ? t <= end + EPS : t < end - EPS); t += iv, n++) fire(t)
-    } else if (this.mode === 'burst') {
-      const count = Math.min(a.burst ?? 3, this._ammo)
-      for (let k = 0; k < count; k++) fire(t0 + k * iv)
-    } else {
-      fire(t0)
-    }
+    this.afterRounds(a, times[times.length - 1] ?? t0)
+    this.emit({ type: 'shot', shots: res.shots.length, rounds: res.rounds, mode: this.mode, at: t0 })
     return res
   }
 
-  private fireOne(a: Extract<WeaponAction, { kind: 'firearm' }>, origin: Vec3, dir: Vec3, t: number, res: TriggerResult, source?: string): void {
+  /** Cooldown, the cycle of a manual action and the pistol slide that stays back on the last round. */
+  private afterRounds(a: FirearmAction, lastAt: number): void {
+    const cycle = manualCycleSeconds(a, this.mode)
+    if (cycle > 0) {
+      this.readyAt = Math.max(this.readyAt, lastAt + cycle)
+      this._phase = { id: 'cycle', start: lastAt, end: lastAt + cycle }
+      this.emit({ type: 'cycle', phase: 'start', at: lastAt })
+      this.schedule({ at: lastAt + cycle, event: { type: 'cycle', phase: 'end', at: lastAt + cycle } })
+    }
+    if (this._ammo === 0 && a.family === 'pistol') this._locked = true
+  }
+
+  private fireOne(a: FirearmAction, origin: Vec3, dir: Vec3, t: number, res: TriggerResult, source?: string): void {
     const cal = this.caliber as CaliberDef
-    const barrel = a.barrel ?? 1
-    const speed = cal.muzzleSpeed * barrel
-    const energy = muzzleEnergy(cal, barrel)
+    const speed = weaponSpeed(a, cal)
+    const energy = 0.5 * (cal.bulletGrams / 1000) * speed * speed
     const drag = cal.dragPer100m ?? 0.1
     const energyAt = (distance: number): number => {
       const f = Math.pow(1 - drag, Math.max(0, distance) / 100)
@@ -312,7 +407,7 @@ export class WeaponRuntime implements WeaponState {
     this.extra = Math.min(bloomNow + (a.bloomDeg ?? 0), a.spreadDeg * (BLOOM_CAP - 1))
     this.extraClock = t
     res.recoil = [res.recoil[0] + a.recoil[0], res.recoil[1] + (this.rng() * 2 - 1) * a.recoil[1]]
-    res.noise = a.noise ?? cal.noise ?? 0
+    res.noise = weaponNoise(a, cal)
   }
 
   private fireMelee(a: Extract<WeaponAction, { kind: 'melee' }>, origin: Vec3, dir: Vec3, start: number, end: number): TriggerResult {

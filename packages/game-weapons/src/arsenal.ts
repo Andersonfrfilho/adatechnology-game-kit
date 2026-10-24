@@ -73,7 +73,7 @@ export const createArsenal = (options: ArsenalOptions = {}): Arsenal => {
     const caliber = def.action.kind === 'firearm' ? calibers.get(def.action.caliber) ?? null : null
     counter += 1
     const seed = opts.seed ?? (baseSeed + Math.imul(counter, 0x9e3779b1)) >>> 0
-    return new WeaponRuntime({ def, caliber, seed, reserve: opts.reserve })
+    return new WeaponRuntime({ def, caliber, seed, reserve: opts.reserve, rules })
   }
 
   return {
