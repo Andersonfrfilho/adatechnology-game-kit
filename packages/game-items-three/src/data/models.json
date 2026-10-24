@@ -888,5 +888,15 @@
       0.3
     ],
     "scale": 0.1
+  },
+  {
+    "id": "alcohol_70",
+    "teamId": "alcool70",
+    "teamBox": [
+      0.7,
+      2.025,
+      0.506
+    ],
+    "scale": 0.1
   }
 ]
