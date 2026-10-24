@@ -120,6 +120,25 @@ describe('the M4 with an M203', () => {
     expect(state.underbarrel?.ammo).toBe(0)
   })
 
+  it('keeps the launcher per accessory: taking it off and fitting it again brings back the rounds it had (no free grenades)', () => {
+    const state = withLauncher('colt_m4a1', 'm203')
+    switched(state, true)
+    state.trigger(ORIGIN, AIM, 0, false)
+    state.update(1)
+    switched(state, false)
+    expect(state.underbarrel?.ammo).toBe(0)
+    const result = state.remove('m203', { install: 'bench' })
+    expect(result.ok).toBe(true)
+    state.update(60)
+    expect(state.underbarrel).toBeNull()
+    expect(state.underbarrelActive).toBe(false)
+    expect(state.fit('m203', { install: 'bench' }).ok).toBe(true)
+    state.update(60)
+    expect(state.underbarrel?.def.id).toBe('m203')
+    expect(state.underbarrel?.ammo).toBe(0)
+    expect(state.underbarrel?.reserve).toBe(3)
+  })
+
   it('cannot switch while the launcher reloads, and the idle launcher keeps the clock of the weapon', () => {
     const state = withLauncher('colt_m4a1', 'm203')
     switched(state, true)

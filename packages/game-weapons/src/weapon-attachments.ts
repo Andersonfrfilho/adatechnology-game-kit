@@ -26,6 +26,10 @@ export abstract class WeaponAttachments extends WeaponCommands {
   protected readonly isCompatible: WeaponStateInit['isCompatible']
   protected readonly breakRng: () => number
   protected under: WeaponState | null = null
+  /** The accessory the launcher state belongs to. */
+  private underOwner: AttachmentId | null = null
+  /** Launchers whose accessory is off the weapon, by accessory id, with the clock they were put away at: the same accessory brings its own rounds back (grenades are conserved). */
+  private readonly shelvedLaunchers = new Map<AttachmentId, { readonly state: WeaponState; readonly at: number }>()
   protected underActive = false
   /** Seconds the weapon has run since the launcher under the barrel was last brought up to its clock (it idles while the rifle is in use). */
   protected underBehind = 0
@@ -88,18 +92,29 @@ export abstract class WeaponAttachments extends WeaponCommands {
     this._ammo = capacity
   }
 
-  /** Makes the launcher state when a fitted accessory is one (and drops it when none is). */
+  /** Makes the launcher state when a fitted accessory is one; when it comes off the state is kept for that accessory, and a re-fit gets it back as it was. */
   private syncUnderbarrel(snapshot?: WeaponSnapshot): void {
-    const launcher = this.fitted.map((part) => this.catalogue.get(part.id)?.launcher).find((id) => id !== undefined)
-    if (launcher === undefined || !this.makeUnderbarrel) {
-      this.under = null
+    const owner = this.fitted.find((part) => this.catalogue.get(part.id)?.launcher !== undefined)
+    const launcher = owner ? this.catalogue.get(owner.id)?.launcher : undefined
+    if (!owner || launcher === undefined || !this.makeUnderbarrel) {
+      this.shelveUnderbarrel()
       this.underActive = false
       return
     }
-    if (this.under?.def.id === launcher) return
-    this.under = this.makeUnderbarrel(launcher, (this.seed ^ UNDERBARREL_SEED_SALT) >>> 0, snapshot)
-    this.underBehind = this.clock
+    if (this.underOwner === owner.id) return
+    this.shelveUnderbarrel()
+    const kept = this.shelvedLaunchers.get(owner.id)
+    this.shelvedLaunchers.delete(owner.id)
+    this.under = kept?.state ?? this.makeUnderbarrel(launcher, (this.seed ^ UNDERBARREL_SEED_SALT) >>> 0, snapshot)
+    this.underOwner = owner.id
+    this.underBehind = this.clock - (kept?.at ?? 0)
     this.flushUnderbarrel()
+  }
+
+  private shelveUnderbarrel(): void {
+    if (this.under && this.underOwner !== null) this.shelvedLaunchers.set(this.underOwner, { state: this.under, at: this.clock })
+    this.under = null
+    this.underOwner = null
   }
 
   /** Brings the idle launcher up to the clock of the weapon (its phases and events keep the same time). */
@@ -254,8 +269,11 @@ export abstract class WeaponAttachments extends WeaponCommands {
   }
 
   setStance(stance: WeaponStance): void {
-    this.aiming = stance.aiming ?? this.aiming
-    this.supportedStance = stance.supported ?? this.supportedStance
+    const aiming = stance.aiming ?? this.aiming
+    const supported = stance.supported ?? this.supportedStance
+    if (aiming === this.aiming && supported === this.supportedStance) return
+    this.aiming = aiming
+    this.supportedStance = supported
     this.applyLoad()
   }
 
@@ -276,6 +294,7 @@ export abstract class WeaponAttachments extends WeaponCommands {
 
   /** A home-made accessory wears out with the shots: when the drawn number is spent it breaks and comes off. */
   protected wearAttachments(at: number): void {
+    if (!this.fitted.some((part) => part.shotsLeft !== undefined)) return
     let broke = false
     this.fitted = this.fitted.flatMap((part) => {
       if (part.shotsLeft === undefined) return [part]
