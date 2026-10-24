@@ -8,8 +8,9 @@ import { createWeaponAudio } from './audio'
 import type { WeaponAudio } from './audio'
 import { createWeaponFx } from './fx'
 import type { WeaponFx } from './fx'
+import { createLaserRaycast } from './laser-raycast'
 import { ARCHETYPE_MODELS, hasWeaponModel } from './models'
-import type { AttachmentModelRegistry, LaserRaycast } from './models/attachments/types'
+import type { AttachmentModelRegistry } from './models/attachments/types'
 import { BODY_ACTIONS, buildModeledProp, buildProp, buildTripodMountedProp, modeledPropSpec, weaponProp } from './props'
 import type { WeaponProp } from './props'
 import { DEFAULT_THUMBNAIL_BASE, weaponThumbnailUrl } from './thumbnails'
@@ -71,27 +72,6 @@ const TARGETS: Array<{ id: string; at: Vec3 }> = [
 ]
 
 const EMPTY_TOOL: HostTool = { weapon: '', category: '', ammo: 0, capacity: 0, reserve: 0, reloading: false }
-
-/** The ray of a laser sight against what is in the scene, ignoring the weapon in the hands, what is see-through and what is not a surface (particles, sprites). */
-const laserRaycast = (THREE: typeof THREE_NS, scene: THREE_NS.Scene, camera: THREE_NS.Camera): LaserRaycast => {
-  const raycaster = new THREE.Raycaster()
-  // the smoke is made of sprites, which need the camera to be tested at all
-  raycaster.camera = camera
-  const isHeld = (object: THREE_NS.Object3D): boolean => {
-    for (let node: THREE_NS.Object3D | null = object; node; node = node.parent) if (node.name === 'weapon-viewmodel' || node.name === 'weapon-in-hand') return true
-    return false
-  }
-  return (origin, direction, maxDistance) => {
-    raycaster.set(origin, direction)
-    raycaster.far = maxDistance
-    const hit = raycaster.intersectObjects(scene.children, true).find((entry) => {
-      const mesh = entry.object as THREE_NS.Mesh
-      const material = mesh.material as THREE_NS.Material | undefined
-      return mesh.isMesh && mesh.visible && material?.transparent !== true && !isHeld(mesh)
-    })
-    return hit ? hit.distance : null
-  }
-}
 
 interface Text {
   group: string
@@ -354,7 +334,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         audio,
         tool: lent.tool,
         soundDistance: () => soundDistance,
-        raycast: laserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera),
+        raycast: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera),
         ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
         ...(options.condition ? { condition: options.condition } : {}),
         ...(options.seed === undefined ? {} : { seed: options.seed }),

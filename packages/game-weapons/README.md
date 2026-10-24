@@ -166,6 +166,11 @@ first round of a pull until the barrels are at speed and keeps them spinning for
 The hip: `rules.aim.hipSpread` times the spread when not aiming. The SDK default is **1** (neutral); the Arsenal says ×6 (§08) and ZombiAdA turns it on with `rules: { aim: { hipSpread: 6 } }`. A laser takes
 half of the excess (`hipSpreadExcess` ×0.5). The ammunition backpack (`feed` mount, `belt`) sets the capacity to 500 rounds by default (`patch.attachments.ammo_backpack`); a tripod counts as support.
 
+**In the weapons test area** (`@adatechnology/game-weapons-three`): L, K, V and U work the light, the laser, the stock and the launcher; the **right mouse button aims** with a firearm in hand (the camera zooms by the
+optic that is fitted over `aimSeconds`), and only when the click lands on the room's canvas or the pointer is locked: a click on a panel, an input or an overlay is never taken, and a tool that does not fire (the hand,
+a throwable) leaves the button to the room, which grabs with it. The bench's **Supported** switch (`supported_stance`) puts the weapon in the supported stance (deployed or prone), so the bipod effect can be exercised;
+it goes back off when another tool is taken. The laser measures its distance at most 30 times a second and ignores hidden nodes (a hidden ancestor counts) and the weapon in the hands.
+
 ## API
 
 - `createArsenal(options?)` returns an `Arsenal`: `calibers`, `weapons`, `explosives` (maps), `rules`, `create(id, { seed?, reserve?, condition?, ammoQuality? })` (unknown id throws), `attachments`, `canFit(weapon, attachment, options?)`, `restore(snapshot, options?)`,

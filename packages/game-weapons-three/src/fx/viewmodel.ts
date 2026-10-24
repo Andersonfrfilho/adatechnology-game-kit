@@ -12,6 +12,8 @@ import { fitAttachmentModels } from '../models/attachments/fit'
 import type { AttachmentModelRegistry, LaserRaycast } from '../models/attachments/types'
 import { rigUnderbarrel } from '../models/attachments/rig-underbarrel'
 import { rigStock } from '../models/rig-stock'
+import { attachmentsKey } from '../attachments-key'
+import { VIEWMODEL_NODE_NAME } from '../laser-raycast'
 import { applyCondition } from '../models/condition'
 import { cartridgeShape } from '../models/cartridge'
 import { modelKit } from '../models/kit'
@@ -103,7 +105,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   particles.onBounce = (kind) => (kind === 'casing' ? audio?.clink() : kind === 'magazine' ? audio?.thud() : undefined)
   const effects = createEffects(kit, scene, particles, random)
   const hand = new THREE.Group()
-  hand.name = 'weapon-viewmodel'
+  hand.name = VIEWMODEL_NODE_NAME
   scene.add(hand)
   const holder = new THREE.Group()
   holder.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), PI / 2)
@@ -184,7 +186,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     const onTool = hostTool?.weapon === weapon ? hostTool : undefined
     const fitted = onTool?.attachments ? fittedOf(onTool.attachments) : [...(def.fitted ?? [])]
     session.attachments = fitAttachmentModels(model, fitted, kit, { catalogue: arsenal.attachments, isDrawn: () => layers.attachments, areBeamsOn: () => layers.beams, ...(options.attachmentModels ? { overrides: options.attachmentModels } : {}), ...(options.raycast ? { raycast: options.raycast } : {}) })
-    session.attachmentsSignature = JSON.stringify(onTool?.attachments ?? null)
+    session.attachmentsSignature = attachmentsKey(onTool?.attachments)
     const action = def.action
     const reloadFamily = action.kind === 'firearm' || action.kind === 'flame' || action.kind === 'launcher' ? action.family : undefined
     const rpm = action.kind === 'firearm' ? action.rpm : 0
@@ -203,7 +205,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
 
   const syncAttachments = (current: Session, tool: HostTool | undefined): void => {
     if (!current.attachments || tool?.weapon !== current.id || !tool.attachments) return
-    const signature = JSON.stringify(tool.attachments)
+    const signature = attachmentsKey(tool.attachments)
     if (signature === current.attachmentsSignature) return
     current.attachmentsSignature = signature
     current.attachments.sync(fittedOf(tool.attachments))

@@ -6,6 +6,7 @@ import type { WeaponAudio } from './audio'
 import { createLayers } from './fx/layers'
 import type { FxLayers } from './fx/layers'
 import type { AttachmentModelRegistry, LaserRaycast } from './models/attachments/types'
+import { IN_HAND_NODE_NAME } from './laser-raycast'
 import { BODY_ACTIONS, buildWeaponModel } from './props'
 
 export interface WeaponFxOptions {
@@ -84,7 +85,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   const shell = new THREE.MeshStandardMaterial({ color: 0xa8322b, roughness: 0.6 })
   const steel = new THREE.MeshStandardMaterial({ color: 0x2f3237, metalness: 0.5, roughness: 0.5 })
   const hand = new THREE.Group()
-  hand.name = 'weapon-in-hand'
+  hand.name = IN_HAND_NODE_NAME
   scene.add(hand)
   let model: THREE_NS.Object3D | null = null
   let inHand: string | null = null

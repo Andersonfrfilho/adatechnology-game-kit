@@ -5444,7 +5444,7 @@
             "reason": "M134: cano de 559 mm. https://en.wikipedia.org/wiki/M134_Minigun"
           },
           "emptyMass": {
-            "source": "reference",
+            "source": "owner",
             "reason": "M134: 85 lb (38,6 kg); decisão do dono: 39 kg. https://en.wikipedia.org/wiki/M134_Minigun"
           },
           "rpm": {

@@ -112,6 +112,7 @@ export abstract class WeaponFirearm extends WeaponAttachments {
 
   protected fireOne(a: FirearmAction, origin: Vec3, dir: Vec3, t: number, res: TriggerResult, source?: string): void {
     const cal = this.caliber as CaliberDef
+    const isFirstRound = res.shots.length === 0
     const speed = weaponSpeed(a, cal)
     const energy = 0.5 * (cal.bulletGrams / 1000) * speed * speed
     const drag = cal.dragPer100m ?? 0.1
@@ -149,7 +150,8 @@ export abstract class WeaponFirearm extends WeaponAttachments {
     this.recentShots = this.recentShots.filter((shotAt) => shotAt > t - window)
     res.noise = burstNoise(weaponNoise(a, cal), this.recentShots.length, this.rules.noiseBurst)
     this.recentShots.push(t)
-    if (this.load.suppressed) res.suppressed = true
+    if (!this.load.suppressed) delete res.suppressed
+    else if (isFirstRound) res.suppressed = true
     this.wearAttachments(t)
   }
 

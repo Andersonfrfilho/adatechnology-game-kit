@@ -6,7 +6,11 @@ const LENS_GLOW = 3
 const DEFAULT_CONE_DEG = 30
 const DEFAULT_RANGE = 60
 
-/** The weapon light: a body with a lens on its rail, and a real `SpotLight` along the barrel with the cone and the range of the data. Off until it is turned on. */
+/**
+ * The weapon light: a body with a lens on its rail, and a real `SpotLight` along the barrel with the cone and the range of the data. Off until it is turned on.
+ * The spot stays in the scene (visible, at intensity 0) while the light is fitted: toggling it changes the intensity only, because a change in the number of lights makes three.js
+ * recompile every lit material. The one recompile happens when the accessory is fitted or removed, which is rare and already takes seconds of work.
+ */
 export const buildLight: AttachmentModelBuilder = ({ kit, attachment, frame }): AttachmentModel => {
   const { THREE, M, box, cylinderX } = kit
   const length = attachment.dims?.length ?? 0.1
@@ -21,7 +25,7 @@ export const buildLight: AttachmentModelBuilder = ({ kit, attachment, frame }): 
   const cone = (attachment.light?.coneDeg ?? DEFAULT_CONE_DEG) * (Math.PI / 180)
   const spot = new THREE.SpotLight(0xfff1d0, LIGHT_INTENSITY, attachment.light?.range ?? DEFAULT_RANGE, cone / 2, 0.35, 1.2)
   spot.position.set(length / 2 + 0.01, offset.y, offset.z)
-  spot.visible = false
+  spot.intensity = 0
   const target = new THREE.Object3D()
   target.position.set(length / 2 + 1, offset.y, offset.z)
   group.add(spot, target)
@@ -29,7 +33,7 @@ export const buildLight: AttachmentModelBuilder = ({ kit, attachment, frame }): 
   return {
     object: group,
     setOn(on) {
-      spot.visible = on
+      spot.intensity = on ? LIGHT_INTENSITY : 0
       lens.emissiveIntensity = on ? LENS_GLOW : 0
     },
     dispose() {

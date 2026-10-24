@@ -217,6 +217,7 @@ export const DEMO_MODULE = {
         run({ room, step, expect }) {
           const { id, z } = car(room)
           room.setTool('pistol_9mm')
+          room.waitUntilReady()
           room.look([0, 1.1, z + 3.5], [0, 1.1, z + 0.8])
           room.use()
           step(0.3)

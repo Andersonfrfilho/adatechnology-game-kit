@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { createArsenal } from '../src'
+import type { Loadout } from '../src/attachment-effects'
 import type { AttachmentDef, FireMode, Vec3, WeaponState } from '../src'
 
 const ORIGIN: Vec3 = [0, 1.5, 0]
@@ -32,6 +33,9 @@ const firstShotNoise = (weapon: WeaponState): number => {
 
 const arsenal = createArsenal({ rules: NO_FAULTS })
 
+/** Every number the accessories on the weapon resolve to (the loadout is internal to the weapon). */
+const loadOf = (weapon: WeaponState): Loadout => (weapon as unknown as { load: Loadout }).load
+
 describe('weapons as they ship', () => {
   it('carry exactly the numbers of their def, with or without factory parts', () => {
     for (const def of arsenal.weapons.values()) {
@@ -54,19 +58,34 @@ describe('weapons as they ship', () => {
 })
 
 describe('fit and remove', () => {
-  it('returns every removable factory part to the numbers of the def when it is put back (round trip)', () => {
+  it('returns every removable factory part to the numbers of the def when it is put back (round trip), every field of the loadout and the very action object', () => {
     for (const def of arsenal.weapons.values()) {
       for (const part of def.fitted ?? []) {
         if (part.integral) continue
         const state = arsenal.create(def.id, { seed: 5 })
-        const before = { capacity: state.capacity, mass: state.mass, aim: state.aimSeconds, spread: state.spread, attachments: state.attachments }
+        const before = { load: loadOf(state), capacity: state.capacity, spread: state.spread, attachments: state.attachments }
+        expect(before.load.action, `${def.id} ${part.id}`).toBe(def.action)
         removed(state, part.id)
         expect(state.attachments.some((other) => other.id === part.id), `${def.id} ${part.id}`).toBe(false)
         fitted(state, part.id)
-        expect({ capacity: state.capacity, mass: state.mass, aim: state.aimSeconds, spread: state.spread }, `${def.id} ${part.id}`).toEqual({ capacity: before.capacity, mass: before.mass, aim: before.aim, spread: before.spread })
+        const after = loadOf(state)
+        expect(after.action, `${def.id} ${part.id}`).toBe(def.action)
+        expect(after, `${def.id} ${part.id}`).toEqual(before.load)
+        expect({ capacity: state.capacity, spread: state.spread }, `${def.id} ${part.id}`).toEqual({ capacity: before.capacity, spread: before.spread })
         expect(state.attachments.map((other) => other.id).sort(), `${def.id} ${part.id}`).toEqual(before.attachments.map((other) => other.id).sort())
       }
     }
+  })
+
+  it('cancels the factory parts exactly whatever order the parts are in', () => {
+    const state = arsenal.create('barrett_mrad', { seed: 5 })
+    const shipped = (state.def.fitted ?? []).filter((part) => !part.integral).map((part) => part.id)
+    expect(shipped.length).toBe(3)
+    const before = loadOf(state)
+    for (const id of shipped) removed(state, id)
+    for (const id of [...shipped].reverse()) fitted(state, id)
+    expect(loadOf(state)).toEqual(before)
+    expect(loadOf(state).action).toBe(state.def.action)
   })
 
   it('takes the factory muzzle brake out: recoil goes up by what the brake took and the noise down', () => {

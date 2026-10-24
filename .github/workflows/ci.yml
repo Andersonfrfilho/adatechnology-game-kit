@@ -124,10 +124,47 @@ jobs:
       - name: Fleet goldens that depend on the Node version
         run: pnpm --filter @adatechnology/game-vehicles-fleet exec vitest run tests/golden-cars-2.test.ts tests/golden-cars-1.test.ts tests/team-golden.test.ts tests/digest.test.ts
 
+  # The three example pages in headless Chromium (software GL): the checks that exercise the room, the furniture area and the weapons area end to end.
+  # Measured locally: build 18 s, the three checks 31 s; on a runner the job should stay under 5 min with the Chromium download.
+  examples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      # the checks load Playwright from NODE_PATH; it is not a dependency of the workspace
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --prefix "$RUNNER_TEMP/playwright" playwright@1.58.2
+          "$RUNNER_TEMP/playwright/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/playwright/node_modules" >> "$GITHUB_ENV"
+
+      # the test room goes first: the furniture and weapons pages are built over its page
+      - name: Build the examples
+        run: |
+          node examples/test-room/build.mjs
+          node examples/interactables-test-area/build.mjs
+          node examples/weapons-test-area/build.mjs
+
+      - name: Check the examples
+        run: |
+          node examples/test-room/test.mjs
+          node examples/interactables-test-area/test.mjs
+          node examples/weapons-test-area/test.mjs
+
   # One stable required check; Release waits on the whole "CI" workflow.
   ci-ok:
     if: always()
-    needs: [lint, typecheck, test, goldens-node-24]
+    needs: [lint, typecheck, test, goldens-node-24, examples]
     runs-on: ubuntu-latest
     steps:
       - name: Check results

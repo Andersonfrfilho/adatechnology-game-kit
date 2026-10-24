@@ -1,9 +1,12 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 import { createArsenal } from '@adatechnology/game-weapons'
+import type { ModuleHost } from '@adatechnology/game-contracts'
 import { createWeaponsTestModule } from '../src'
+import { createAccessoryBench } from '../src/accessory-bench'
+import { ACCESSORY_TEXT } from '../src/accessory-text'
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')
@@ -155,20 +158,21 @@ describe('accessory bench: fit and remove per mount', () => {
     run(room, 3)
     expect(room.tool.attachments.map((part) => part.id)).toEqual(expect.arrayContaining(['weapon_light', 'laser_sight']))
     const spot = hands(room).getObjectByProperty('isSpotLight', true) as THREE.SpotLight
-    expect(spot.visible).toBe(false)
+    expect(spot.intensity).toBe(0)
     expect(key('KeyL').defaultPrevented).toBe(true)
     run(room, 0.2)
-    expect(spot.visible).toBe(true)
+    expect(spot.intensity).toBeGreaterThan(0)
     expect(room.tool.attachments.find((part) => part.id === 'weapon_light')?.on).toBe(true)
     key('KeyK')
     run(room, 0.2)
     expect(room.tool.attachments.find((part) => part.id === 'laser_sight')?.on).toBe(true)
     key('KeyL')
     run(room, 0.2)
-    expect(spot.visible).toBe(false)
+    expect(spot.intensity).toBe(0)
+    expect(spot.visible).toBe(true)
     expect(bench(room).setLayer('beams', false)).toBe(true)
     run(room, 0.1)
-    expect(spot.visible).toBe(false)
+    expect(spot.intensity).toBe(0)
   })
 
   it('the layer for the accessory models hides what the rig drew and the metrics follow the weapon', () => {
@@ -191,9 +195,12 @@ describe('accessory bench: fit and remove per mount', () => {
 })
 
 describe('accessory bench: aiming with the right mouse button', () => {
-  const mouse = (type: 'mousedown' | 'mouseup', button: number): MouseEvent => {
-    const event = new MouseEvent(type, { button, cancelable: true })
-    window.dispatchEvent(event)
+  const canvas = document.createElement('canvas')
+  beforeAll(() => document.body.append(canvas))
+  afterAll(() => canvas.remove())
+  const mouse = (type: 'mousedown' | 'mouseup', button: number, target: Element = canvas): MouseEvent => {
+    const event = new MouseEvent(type, { button, cancelable: true, bubbles: true })
+    target.dispatchEvent(event)
     return event
   }
 
@@ -220,6 +227,57 @@ describe('accessory bench: aiming with the right mouse button', () => {
     expect(mouse('mousedown', 2).defaultPrevented).toBe(false)
     equip(room, 'colt_m4a1')
     expect(mouse('mousedown', 0).defaultPrevented).toBe(false)
+  })
+})
+
+describe('accessory bench: the right button only aims on the room', () => {
+  it('leaves a click on a panel or an overlay alone, and aims anywhere while the pointer is locked', () => {
+    const { room } = areaRoom()
+    equip(room, 'colt_m4a1')
+    const camera = room.camera as THREE.PerspectiveCamera
+    const fov = camera.fov
+    const outside = document.createElement('button')
+    document.body.append(outside)
+    const press = new MouseEvent('mousedown', { button: 2, cancelable: true, bubbles: true })
+    outside.dispatchEvent(press)
+    run(room, 2)
+    expect(press.defaultPrevented).toBe(false)
+    expect(camera.fov).toBe(fov)
+    Object.defineProperty(document, 'pointerLockElement', { value: document.body, configurable: true })
+    try {
+      const locked = new MouseEvent('mousedown', { button: 2, cancelable: true, bubbles: true })
+      outside.dispatchEvent(locked)
+      run(room, 2)
+      expect(locked.defaultPrevented).toBe(true)
+      expect(camera.fov).toBeLessThan(fov)
+    } finally {
+      Reflect.deleteProperty(document, 'pointerLockElement')
+      window.dispatchEvent(new MouseEvent('mouseup', { button: 2 }))
+      outside.remove()
+    }
+  })
+})
+
+describe('accessory bench: supported', () => {
+  it('declares a supported toggle and sends it to the tool as the stance, so a bipod can be exercised', () => {
+    const { room } = areaRoom()
+    equip(room, 'barrett_mrad')
+    const control = bench(room).controls().find((entry) => entry.id === 'supported_stance')
+    expect(control).toMatchObject({ kind: 'boolean', default: false })
+    const commands: unknown[] = []
+    const host = {
+      camera: new THREE.PerspectiveCamera(),
+      bench: undefined,
+      tool: () => ({ weapon: 'barrett_mrad', category: 'snp', ammo: 0, capacity: 0, reserve: 0, reloading: false }),
+      command: (request: unknown) => (commands.push(request), { ok: true }),
+      onFrame: () => () => undefined,
+      on: () => () => undefined,
+      log: () => undefined,
+    }
+    const standalone = createAccessoryBench({ arsenal: createArsenal({ rules: { faults: false } }), host: host as unknown as ModuleHost, text: ACCESSORY_TEXT.en! })
+    expect(standalone.handleChange({ kind: 'control', id: 'supported_stance', value: true })).toBe(true)
+    expect(commands).toEqual([{ type: 'stance', supported: true }])
+    standalone.dispose()
   })
 })
 
