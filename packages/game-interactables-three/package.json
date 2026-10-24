@@ -45,7 +45,8 @@
   },
   "dependencies": {
     "@adatechnology/game-interactables": "workspace:*",
-    "@adatechnology/game-props3d": "workspace:*"
+    "@adatechnology/game-props3d": "workspace:*",
+    "@adatechnology/game-shapes": "workspace:*"
   },
   "peerDependencies": {
     "three": "^0.160.0"

@@ -833,6 +833,9 @@ importers:
       '@adatechnology/game-props3d':
         specifier: workspace:*
         version: link:../game-props3d
+      '@adatechnology/game-shapes':
+        specifier: workspace:*
+        version: link:../game-shapes
     devDependencies:
       '@adatechnology/game-interactables-household':
         specifier: workspace:*
@@ -923,9 +926,9 @@ importers:
       '@adatechnology/game-items':
         specifier: workspace:*
         version: link:../game-items
-      '@adatechnology/game-props3d':
+      '@adatechnology/game-shapes-three':
         specifier: workspace:*
-        version: link:../game-props3d
+        version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-items-goods':
         specifier: workspace:*
@@ -981,6 +984,13 @@ importers:
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
   packages/game-props3d:
+    dependencies:
+      '@adatechnology/game-shapes':
+        specifier: workspace:*
+        version: link:../game-shapes
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:*
+        version: link:../game-shapes-three
     devDependencies:
       '@types/node':
         specifier: ^22.10.7
@@ -1028,9 +1038,6 @@ importers:
         specifier: workspace:*
         version: link:../game-shapes
     devDependencies:
-      '@adatechnology/game-props3d':
-        specifier: workspace:*
-        version: link:../game-props3d
       '@adatechnology/golden-tool':
         specifier: workspace:*
         version: link:../../tools/golden

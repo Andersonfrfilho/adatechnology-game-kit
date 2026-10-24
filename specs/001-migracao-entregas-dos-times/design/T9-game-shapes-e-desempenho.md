@@ -425,6 +425,20 @@ migrates (§7).
 | `createNodeSkin` | props3d, animals | Reads three materials and textures (colour sampled at the uv) to bake per-vertex surface data; it is a bake of an existing tree, not generation |
 | `ShapeGeometry`, `ExtrudeGeometry` with curves, Dodecahedron / Icosahedron / Tetrahedron, Capsule | characters, vehicles, urban, vfx | Not used by the first three migrations; added when their package migrates |
 | Lathe and Extrude under three r128 | urban, vegetation, vehicles | r128's lathe normals and index order and extrude uvs differ from r160's (measured); see §11 q3 |
+| `MeshApiOptions` with a three whose `Color.setHex` is neither raw sRGB nor r160's linear | interactables | `createMeshApi` checks the 256 channel values once per three and throws: game-shapes knows those two spaces only |
+| The items area's own furniture (shelves, stand, ruler, table, mannequin in `area.ts`) | items | Drawn with the host's three, not the kit: room furniture, not an item; it moves with the test room, not with the items |
+
+### 7.4 Migrated (T9e)
+
+Every row is guarded by an exact golden recorded on the old path in its own commit before the move (`exactSnapshot` of the golden tool: every
+byte of every attribute and index, attribute order and array types, transforms, user data, materials by identity, lights), and none changed.
+
+| Package | What moved | Golden | Bench (before → after, ms, same machine) |
+|---|---|---|---|
+| `game-props3d` | `createShapeRecorder()`: the props api (and parts) as a game-shapes schema with the mesh api's arithmetic; `mergeByMaterial` is the one of `game-shapes-three` (re-exported) | `tests/shape-recorder.test.ts`; the props cases of the interactables golden | — (builders only describe primitives) |
+| `game-interactables-three` | `createMeshApi`: the builders draw into the recorder, `finish` calls `generate` (materials, fallback `plain`, shared instances as `materialAlias`, the colour space of the given three) and makes the same meshes, parts, lights, merges and destruction tags | `tests/exact-golden.test.ts`: 222 cases (57 props and 51 household objects in both qualities, five option sets) | props3d 13.0 → 10.5; household 31.1 → 30.5 |
+| `game-items-three` | the kit's `T` is `shapeGeometries(THREE)` (box, cylinder, cone, sphere, plane, lathe, torus, straight extrude from game-shapes; tube from three); `mergeItem` on `game-shapes-three` | `tests/exact-golden.test.ts`: 147 cases (24 models and 25 shapes alone, merged, half detail, LOD) and the team golden `items-showcase.json` | items 4.7 → 3.1 |
+| `game-weapons-three` (merge only) | `buildProp`'s `mergeByMaterial` now comes through props3d from `game-shapes-three` | its team goldens | — |
 
 ## 8. Performance plan
 

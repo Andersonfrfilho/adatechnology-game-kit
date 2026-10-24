@@ -49,7 +49,6 @@
     "three": "^0.160.0"
   },
   "devDependencies": {
-    "@adatechnology/game-props3d": "workspace:*",
     "@adatechnology/golden-tool": "workspace:*",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",

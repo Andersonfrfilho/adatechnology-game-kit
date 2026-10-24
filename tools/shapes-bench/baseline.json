@@ -61,632 +61,632 @@
       "ms": 3.1291
     },
     "household/armchair": {
-      "ratio": 0.3158,
-      "ms": 0.1937
+      "ratio": 0.2696,
+      "ms": 0.1672
     },
     "household/bathroom_cabinet": {
-      "ratio": 1.2159,
-      "ms": 0.7458
+      "ratio": 0.9947,
+      "ms": 0.6167
     },
     "household/bbq": {
-      "ratio": 2.1846,
-      "ms": 1.34
+      "ratio": 1.7359,
+      "ms": 1.0763
     },
     "household/bed_double": {
-      "ratio": 0.2648,
-      "ms": 0.1624
+      "ratio": 0.2399,
+      "ms": 0.1487
     },
     "household/bed_single": {
-      "ratio": 0.3214,
-      "ms": 0.1972
+      "ratio": 0.2369,
+      "ms": 0.1469
     },
     "household/bench": {
-      "ratio": 0.2083,
-      "ms": 0.1278
+      "ratio": 0.2529,
+      "ms": 0.1568
     },
     "household/blinds": {
-      "ratio": 1.3572,
-      "ms": 0.8325
+      "ratio": 1.9382,
+      "ms": 1.2017
     },
     "household/bunk_bed": {
-      "ratio": 0.2638,
-      "ms": 0.1618
+      "ratio": 0.2492,
+      "ms": 0.1545
     },
     "household/camp_chair": {
-      "ratio": 0.4565,
-      "ms": 0.28
+      "ratio": 0.3517,
+      "ms": 0.2181
     },
     "household/camp_stove": {
-      "ratio": 0.3628,
-      "ms": 0.2226
+      "ratio": 0.3693,
+      "ms": 0.229
     },
     "household/camp_table": {
-      "ratio": 0.2704,
-      "ms": 0.1659
+      "ratio": 0.2161,
+      "ms": 0.134
     },
     "household/campfire": {
-      "ratio": 0.4705,
-      "ms": 0.2886
+      "ratio": 0.4801,
+      "ms": 0.2977
     },
     "household/clothesline": {
-      "ratio": 3.5044,
-      "ms": 2.1495
+      "ratio": 2.9355,
+      "ms": 1.8201
     },
     "household/conduit_run": {
-      "ratio": 0.0283,
-      "ms": 0.0174
+      "ratio": 0.0368,
+      "ms": 0.0228
     },
     "household/cooler": {
-      "ratio": 0.3471,
-      "ms": 0.2129
+      "ratio": 0.4247,
+      "ms": 0.2633
     },
     "household/curtain": {
-      "ratio": 1.1264,
-      "ms": 0.6909
+      "ratio": 0.997,
+      "ms": 0.6181
     },
     "household/dining_chair": {
-      "ratio": 0.2056,
-      "ms": 0.1261
+      "ratio": 0.1441,
+      "ms": 0.0893
     },
     "household/dog_house": {
-      "ratio": 0.6661,
-      "ms": 0.4086
+      "ratio": 0.5196,
+      "ms": 0.3222
     },
     "household/dresser": {
-      "ratio": 2.039,
-      "ms": 1.2507
+      "ratio": 2.2801,
+      "ms": 1.4137
     },
     "household/electrical_panel": {
-      "ratio": 0.5167,
-      "ms": 0.317
+      "ratio": 0.6574,
+      "ms": 0.4076
     },
     "household/fireplace": {
-      "ratio": 0.7758,
-      "ms": 0.4759
+      "ratio": 0.7764,
+      "ms": 0.4814
     },
     "household/fridge": {
-      "ratio": 2.0311,
-      "ms": 1.2458
+      "ratio": 2.2083,
+      "ms": 1.3692
     },
     "household/fridge_compact": {
-      "ratio": 1.0283,
-      "ms": 0.6308
+      "ratio": 0.9717,
+      "ms": 0.6025
     },
     "household/gas_bottle": {
-      "ratio": 0.4818,
-      "ms": 0.2955
+      "ratio": 0.296,
+      "ms": 0.1835
     },
     "household/gas_canister": {
-      "ratio": 0.3853,
-      "ms": 0.2363
+      "ratio": 0.2581,
+      "ms": 0.16
     },
     "household/kitchen_cabinet_base": {
-      "ratio": 1.7664,
-      "ms": 1.0835
+      "ratio": 1.8793,
+      "ms": 1.1652
     },
     "household/kitchen_cabinet_wall": {
-      "ratio": 1.7226,
-      "ms": 1.0566
+      "ratio": 1.6545,
+      "ms": 1.0258
     },
     "household/lantern_lamp": {
-      "ratio": 0.6203,
-      "ms": 0.3805
-    },
-    "household/mailbox": {
-      "ratio": 0.498,
-      "ms": 0.3054
-    },
-    "household/microwave": {
-      "ratio": 1.153,
-      "ms": 0.7072
-    },
-    "household/nightstand": {
-      "ratio": 1.404,
-      "ms": 0.8612
-    },
-    "household/outhouse": {
-      "ratio": 1.8725,
-      "ms": 1.1486
-    },
-    "household/pantry": {
-      "ratio": 1.5034,
-      "ms": 0.9221
-    },
-    "household/power_meter": {
-      "ratio": 0.6479,
-      "ms": 0.3974
-    },
-    "household/service_entrance": {
-      "ratio": 0.8032,
-      "ms": 0.4927
-    },
-    "household/shower": {
-      "ratio": 0.5873,
-      "ms": 0.3602
-    },
-    "household/sink_bathroom": {
-      "ratio": 1.1768,
-      "ms": 0.7218
-    },
-    "household/sink_kitchen": {
-      "ratio": 1.7738,
-      "ms": 1.088
-    },
-    "household/sofa": {
-      "ratio": 0.352,
-      "ms": 0.2159
-    },
-    "household/stove": {
-      "ratio": 1.6549,
-      "ms": 1.0151
-    },
-    "household/toilet": {
-      "ratio": 0.8299,
-      "ms": 0.509
-    },
-    "household/trash_bin": {
-      "ratio": 0.2925,
-      "ms": 0.1794
-    },
-    "household/tv": {
-      "ratio": 0.2713,
-      "ms": 0.1664
-    },
-    "household/utility_sink": {
-      "ratio": 0.4327,
-      "ms": 0.2654
-    },
-    "household/wall_socket": {
-      "ratio": 0.203,
-      "ms": 0.1245
-    },
-    "household/wall_switch": {
-      "ratio": 0.1102,
-      "ms": 0.0676
-    },
-    "household/wardrobe": {
-      "ratio": 6.9403,
-      "ms": 4.2571
-    },
-    "household/washing_machine": {
-      "ratio": 0.5693,
-      "ms": 0.3492
-    },
-    "household/well": {
-      "ratio": 0.9207,
-      "ms": 0.5648
-    },
-    "household/wheelie_bin": {
-      "ratio": 0.9331,
-      "ms": 0.5723
-    },
-    "household/wood_stove": {
-      "ratio": 0.7894,
-      "ms": 0.4842
-    },
-    "items/model:amoxicillin": {
-      "ratio": 0.2451,
-      "ms": 0.1503
-    },
-    "items/model:axe": {
-      "ratio": 0.1807,
-      "ms": 0.1108
-    },
-    "items/model:bandage": {
-      "ratio": 0.1321,
-      "ms": 0.081
-    },
-    "items/model:batteries": {
-      "ratio": 0.2028,
-      "ms": 0.1244
-    },
-    "items/model:cachaca": {
-      "ratio": 0.2747,
-      "ms": 0.1685
-    },
-    "items/model:canned_beans": {
-      "ratio": 0.1968,
-      "ms": 0.1207
-    },
-    "items/model:crowbar": {
-      "ratio": 0.3094,
-      "ms": 0.1898
-    },
-    "items/model:first_aid_kit": {
-      "ratio": 0.246,
-      "ms": 0.1509
-    },
-    "items/model:flashlight": {
-      "ratio": 0.3201,
-      "ms": 0.1963
-    },
-    "items/model:fuel_jerrycan": {
-      "ratio": 0.151,
-      "ms": 0.0926
-    },
-    "items/model:hammer": {
-      "ratio": 0.2303,
-      "ms": 0.1413
-    },
-    "items/model:hiking_backpack_40l": {
-      "ratio": 0.2012,
-      "ms": 0.1234
-    },
-    "items/model:house_key": {
-      "ratio": 0.29,
-      "ms": 0.1779
-    },
-    "items/model:lpg_cylinder_13kg": {
-      "ratio": 0.2836,
-      "ms": 0.1739
-    },
-    "items/model:machete": {
-      "ratio": 0.2156,
-      "ms": 0.1322
-    },
-    "items/model:military_ration": {
-      "ratio": 0.1221,
-      "ms": 0.0749
-    },
-    "items/model:motorcycle_helmet": {
-      "ratio": 0.2554,
-      "ms": 0.1567
-    },
-    "items/model:nail_bat": {
-      "ratio": 0.2778,
-      "ms": 0.1704
-    },
-    "items/model:portable_radio": {
-      "ratio": 0.1992,
-      "ms": 0.1222
-    },
-    "items/model:rice": {
-      "ratio": 0.101,
-      "ms": 0.062
-    },
-    "items/model:survivor_diary": {
-      "ratio": 0.1575,
-      "ms": 0.0966
-    },
-    "items/model:walkie_talkies": {
-      "ratio": 0.1507,
-      "ms": 0.0924
-    },
-    "items/model:water_bottle": {
-      "ratio": 0.2017,
-      "ms": 0.1237
-    },
-    "items/model:wooden_plank": {
-      "ratio": 0.1758,
-      "ms": 0.1078
-    },
-    "items/shape:backpack": {
-      "ratio": 0.165,
-      "ms": 0.1012
-    },
-    "items/shape:bag": {
-      "ratio": 0.0753,
-      "ms": 0.0462
-    },
-    "items/shape:battery": {
-      "ratio": 0.108,
-      "ms": 0.0662
-    },
-    "items/shape:blade": {
-      "ratio": 0.1015,
-      "ms": 0.0622
-    },
-    "items/shape:book": {
-      "ratio": 0.0927,
-      "ms": 0.0569
-    },
-    "items/shape:bottle": {
-      "ratio": 0.1157,
-      "ms": 0.071
-    },
-    "items/shape:box": {
-      "ratio": 0.0546,
-      "ms": 0.0335
-    },
-    "items/shape:can": {
-      "ratio": 0.1526,
-      "ms": 0.0936
-    },
-    "items/shape:cloth": {
-      "ratio": 0.0636,
-      "ms": 0.039
-    },
-    "items/shape:cup": {
-      "ratio": 0.0864,
-      "ms": 0.053
-    },
-    "items/shape:device": {
-      "ratio": 0.0849,
-      "ms": 0.052
-    },
-    "items/shape:dish": {
-      "ratio": 0.0708,
-      "ms": 0.0434
-    },
-    "items/shape:fruit": {
-      "ratio": 0.1114,
-      "ms": 0.0683
-    },
-    "items/shape:garment": {
-      "ratio": 0.0625,
-      "ms": 0.0383
-    },
-    "items/shape:jar": {
-      "ratio": 0.1339,
-      "ms": 0.0822
-    },
-    "items/shape:jerrycan": {
-      "ratio": 0.093,
-      "ms": 0.057
-    },
-    "items/shape:key": {
-      "ratio": 0.1495,
-      "ms": 0.0917
-    },
-    "items/shape:long_tool": {
-      "ratio": 0.0895,
-      "ms": 0.0549
-    },
-    "items/shape:paper": {
-      "ratio": 0.08,
-      "ms": 0.0491
-    },
-    "items/shape:plank": {
-      "ratio": 0.0895,
-      "ms": 0.0549
-    },
-    "items/shape:roll": {
-      "ratio": 0.1088,
-      "ms": 0.0667
-    },
-    "items/shape:shoe": {
-      "ratio": 0.0866,
-      "ms": 0.0531
-    },
-    "items/shape:tank": {
-      "ratio": 0.1658,
-      "ms": 0.1017
-    },
-    "items/shape:tool": {
-      "ratio": 0.0642,
-      "ms": 0.0394
-    },
-    "items/shape:tube": {
-      "ratio": 0.1416,
-      "ms": 0.0868
-    },
-    "props3d/ac_condenser": {
-      "ratio": 0.3786,
-      "ms": 0.2323
-    },
-    "props3d/barbed_wire": {
-      "ratio": 1.1953,
-      "ms": 0.7332
-    },
-    "props3d/barricade": {
-      "ratio": 0.4052,
-      "ms": 0.2486
-    },
-    "props3d/bbq_simple": {
-      "ratio": 0.6337,
-      "ms": 0.3887
-    },
-    "props3d/blinds": {
-      "ratio": 0.2123,
-      "ms": 0.1302
-    },
-    "props3d/blood_stains": {
-      "ratio": 0.4973,
-      "ms": 0.305
-    },
-    "props3d/breakfast_bar": {
-      "ratio": 0.8145,
-      "ms": 0.4996
-    },
-    "props3d/candles": {
-      "ratio": 0.4818,
-      "ms": 0.2955
-    },
-    "props3d/canned_food": {
-      "ratio": 0.71,
-      "ms": 0.4355
-    },
-    "props3d/ceiling_light": {
-      "ratio": 0.2041,
-      "ms": 0.1252
-    },
-    "props3d/chandelier": {
-      "ratio": 0.7389,
-      "ms": 0.4532
-    },
-    "props3d/closet": {
-      "ratio": 0.5569,
-      "ms": 0.3416
-    },
-    "props3d/clothes_on_floor": {
-      "ratio": 0.2121,
-      "ms": 0.1301
-    },
-    "props3d/concrete": {
-      "ratio": 0.0488,
-      "ms": 0.03
-    },
-    "props3d/curtain": {
-      "ratio": 0.3849,
+      "ratio": 0.3808,
       "ms": 0.2361
     },
-    "props3d/deck": {
-      "ratio": 0.1564,
-      "ms": 0.0959
+    "household/mailbox": {
+      "ratio": 0.6469,
+      "ms": 0.4011
     },
-    "props3d/deck_floor": {
-      "ratio": 0.0582,
-      "ms": 0.0357
+    "household/microwave": {
+      "ratio": 1.0036,
+      "ms": 0.6223
     },
-    "props3d/dirt": {
-      "ratio": 0.0442,
-      "ms": 0.0271
+    "household/nightstand": {
+      "ratio": 1.2477,
+      "ms": 0.7736
     },
-    "props3d/double_bed_modern": {
-      "ratio": 0.4267,
-      "ms": 0.2617
+    "household/outhouse": {
+      "ratio": 2.5441,
+      "ms": 1.5774
     },
-    "props3d/fallen_chair": {
-      "ratio": 0.202,
-      "ms": 0.1239
+    "household/pantry": {
+      "ratio": 1.5794,
+      "ms": 0.9792
     },
-    "props3d/flat_tv": {
-      "ratio": 0.1556,
-      "ms": 0.0954
+    "household/power_meter": {
+      "ratio": 0.8233,
+      "ms": 0.5105
     },
-    "props3d/floor_mattress": {
-      "ratio": 0.1054,
-      "ms": 0.0647
+    "household/service_entrance": {
+      "ratio": 0.8246,
+      "ms": 0.5113
     },
-    "props3d/floor_plant": {
-      "ratio": 0.2246,
-      "ms": 0.1378
+    "household/shower": {
+      "ratio": 0.5543,
+      "ms": 0.3437
     },
-    "props3d/fruit_tree": {
-      "ratio": 1.1501,
-      "ms": 0.7055
+    "household/sink_bathroom": {
+      "ratio": 1.3482,
+      "ms": 0.8359
     },
-    "props3d/garage_car": {
-      "ratio": 0.4446,
-      "ms": 0.2727
+    "household/sink_kitchen": {
+      "ratio": 2.0116,
+      "ms": 1.2472
     },
-    "props3d/garden_bed": {
-      "ratio": 1.2838,
-      "ms": 0.7874
+    "household/sofa": {
+      "ratio": 0.3081,
+      "ms": 0.191
     },
-    "props3d/gourmet_counter": {
-      "ratio": 0.8438,
-      "ms": 0.5176
+    "household/stove": {
+      "ratio": 1.9386,
+      "ms": 1.202
     },
-    "props3d/hanging_plant": {
-      "ratio": 0.2257,
-      "ms": 0.1385
+    "household/toilet": {
+      "ratio": 0.5384,
+      "ms": 0.3338
     },
-    "props3d/home_office": {
-      "ratio": 0.4743,
-      "ms": 0.291
+    "household/trash_bin": {
+      "ratio": 0.3547,
+      "ms": 0.2199
     },
-    "props3d/lantern": {
-      "ratio": 0.2434,
-      "ms": 0.1493
+    "household/tv": {
+      "ratio": 0.1732,
+      "ms": 0.1074
     },
-    "props3d/lawn": {
-      "ratio": 0.0738,
-      "ms": 0.0453
+    "household/utility_sink": {
+      "ratio": 0.3139,
+      "ms": 0.1946
     },
-    "props3d/mirror": {
-      "ratio": 0.0803,
-      "ms": 0.0493
+    "household/wall_socket": {
+      "ratio": 0.2096,
+      "ms": 0.13
     },
-    "props3d/open_door": {
-      "ratio": 0.2146,
-      "ms": 0.1316
+    "household/wall_switch": {
+      "ratio": 0.1325,
+      "ms": 0.0821
     },
-    "props3d/open_suitcases": {
-      "ratio": 0.2193,
-      "ms": 0.1345
+    "household/wardrobe": {
+      "ratio": 7.8504,
+      "ms": 4.8674
     },
-    "props3d/palm_tree": {
-      "ratio": 0.479,
-      "ms": 0.2938
+    "household/washing_machine": {
+      "ratio": 0.6854,
+      "ms": 0.425
     },
-    "props3d/pendant": {
-      "ratio": 0.3103,
-      "ms": 0.1903
+    "household/well": {
+      "ratio": 1.0351,
+      "ms": 0.6418
     },
-    "props3d/pergola": {
-      "ratio": 0.2342,
-      "ms": 0.1436
+    "household/wheelie_bin": {
+      "ratio": 0.8602,
+      "ms": 0.5333
     },
-    "props3d/picture_large": {
-      "ratio": 0.0967,
-      "ms": 0.0593
+    "household/wood_stove": {
+      "ratio": 0.6667,
+      "ms": 0.4134
     },
-    "props3d/picture_small": {
-      "ratio": 0.0861,
-      "ms": 0.0528
+    "items/model:amoxicillin": {
+      "ratio": 0.1256,
+      "ms": 0.0779
     },
-    "props3d/pool": {
-      "ratio": 0.2797,
-      "ms": 0.1716
+    "items/model:axe": {
+      "ratio": 0.1583,
+      "ms": 0.0981
     },
-    "props3d/razor_wire": {
-      "ratio": 0.8132,
-      "ms": 0.4988
+    "items/model:bandage": {
+      "ratio": 0.0815,
+      "ms": 0.0505
     },
-    "props3d/sandbags": {
-      "ratio": 0.1898,
-      "ms": 0.1164
+    "items/model:batteries": {
+      "ratio": 0.1457,
+      "ms": 0.0903
     },
-    "props3d/sauna": {
-      "ratio": 0.6736,
-      "ms": 0.4132
+    "items/model:cachaca": {
+      "ratio": 0.09,
+      "ms": 0.0558
     },
-    "props3d/slide": {
-      "ratio": 0.1912,
-      "ms": 0.1173
+    "items/model:canned_beans": {
+      "ratio": 0.1185,
+      "ms": 0.0735
     },
-    "props3d/soaking_tub": {
-      "ratio": 0.367,
-      "ms": 0.2251
+    "items/model:crowbar": {
+      "ratio": 0.3147,
+      "ms": 0.1951
     },
-    "props3d/sofa_l": {
-      "ratio": 0.1917,
-      "ms": 0.1176
+    "items/model:first_aid_kit": {
+      "ratio": 0.0947,
+      "ms": 0.0587
     },
-    "props3d/sun_lounger": {
-      "ratio": 0.3108,
-      "ms": 0.1906
+    "items/model:flashlight": {
+      "ratio": 0.1798,
+      "ms": 0.1115
     },
-    "props3d/swing": {
-      "ratio": 0.1346,
-      "ms": 0.0825
+    "items/model:fuel_jerrycan": {
+      "ratio": 0.1001,
+      "ms": 0.0621
     },
-    "props3d/table_plant": {
-      "ratio": 0.1414,
-      "ms": 0.0867
+    "items/model:hammer": {
+      "ratio": 0.1123,
+      "ms": 0.0696
     },
-    "props3d/tile_floor": {
-      "ratio": 0.1289,
-      "ms": 0.079
+    "items/model:hiking_backpack_40l": {
+      "ratio": 0.1119,
+      "ms": 0.0694
     },
-    "props3d/track_spot": {
-      "ratio": 0.2917,
-      "ms": 0.1789
+    "items/model:house_key": {
+      "ratio": 0.4,
+      "ms": 0.248
     },
-    "props3d/tv_stand": {
-      "ratio": 0.208,
-      "ms": 0.1276
+    "items/model:lpg_cylinder_13kg": {
+      "ratio": 0.1478,
+      "ms": 0.0916
     },
-    "props3d/vanity": {
-      "ratio": 0.3012,
-      "ms": 0.1847
+    "items/model:machete": {
+      "ratio": 0.2025,
+      "ms": 0.1255
     },
-    "props3d/wall_ac": {
-      "ratio": 0.2012,
-      "ms": 0.1234
+    "items/model:military_ration": {
+      "ratio": 0.0714,
+      "ms": 0.0443
     },
-    "props3d/water_bottle_crates": {
-      "ratio": 0.7556,
-      "ms": 0.4634
+    "items/model:motorcycle_helmet": {
+      "ratio": 0.1223,
+      "ms": 0.0758
     },
-    "props3d/water_jug": {
-      "ratio": 0.2276,
+    "items/model:nail_bat": {
+      "ratio": 0.2251,
       "ms": 0.1396
     },
+    "items/model:portable_radio": {
+      "ratio": 0.1368,
+      "ms": 0.0848
+    },
+    "items/model:rice": {
+      "ratio": 0.0836,
+      "ms": 0.0519
+    },
+    "items/model:survivor_diary": {
+      "ratio": 0.129,
+      "ms": 0.08
+    },
+    "items/model:walkie_talkies": {
+      "ratio": 0.1625,
+      "ms": 0.1008
+    },
+    "items/model:water_bottle": {
+      "ratio": 0.1174,
+      "ms": 0.0728
+    },
+    "items/model:wooden_plank": {
+      "ratio": 0.0939,
+      "ms": 0.0582
+    },
+    "items/shape:backpack": {
+      "ratio": 0.0905,
+      "ms": 0.0561
+    },
+    "items/shape:bag": {
+      "ratio": 0.0516,
+      "ms": 0.032
+    },
+    "items/shape:battery": {
+      "ratio": 0.0458,
+      "ms": 0.0284
+    },
+    "items/shape:blade": {
+      "ratio": 0.1135,
+      "ms": 0.0704
+    },
+    "items/shape:book": {
+      "ratio": 0.0755,
+      "ms": 0.0468
+    },
+    "items/shape:bottle": {
+      "ratio": 0.0543,
+      "ms": 0.0337
+    },
+    "items/shape:box": {
+      "ratio": 0.0555,
+      "ms": 0.0344
+    },
+    "items/shape:can": {
+      "ratio": 0.0739,
+      "ms": 0.0458
+    },
+    "items/shape:cloth": {
+      "ratio": 0.0482,
+      "ms": 0.0299
+    },
+    "items/shape:cup": {
+      "ratio": 0.0308,
+      "ms": 0.0191
+    },
+    "items/shape:device": {
+      "ratio": 0.0601,
+      "ms": 0.0373
+    },
+    "items/shape:dish": {
+      "ratio": 0.0341,
+      "ms": 0.0211
+    },
+    "items/shape:fruit": {
+      "ratio": 0.0461,
+      "ms": 0.0286
+    },
+    "items/shape:garment": {
+      "ratio": 0.0518,
+      "ms": 0.0321
+    },
+    "items/shape:jar": {
+      "ratio": 0.0506,
+      "ms": 0.0314
+    },
+    "items/shape:jerrycan": {
+      "ratio": 0.0703,
+      "ms": 0.0436
+    },
+    "items/shape:key": {
+      "ratio": 0.0698,
+      "ms": 0.0433
+    },
+    "items/shape:long_tool": {
+      "ratio": 0.0487,
+      "ms": 0.0302
+    },
+    "items/shape:paper": {
+      "ratio": 0.0545,
+      "ms": 0.0338
+    },
+    "items/shape:plank": {
+      "ratio": 0.0608,
+      "ms": 0.0377
+    },
+    "items/shape:roll": {
+      "ratio": 0.0501,
+      "ms": 0.0311
+    },
+    "items/shape:shoe": {
+      "ratio": 0.0606,
+      "ms": 0.0376
+    },
+    "items/shape:tank": {
+      "ratio": 0.0824,
+      "ms": 0.0511
+    },
+    "items/shape:tool": {
+      "ratio": 0.0447,
+      "ms": 0.0277
+    },
+    "items/shape:tube": {
+      "ratio": 0.0635,
+      "ms": 0.0394
+    },
+    "props3d/ac_condenser": {
+      "ratio": 0.2304,
+      "ms": 0.1429
+    },
+    "props3d/barbed_wire": {
+      "ratio": 0.7493,
+      "ms": 0.4646
+    },
+    "props3d/barricade": {
+      "ratio": 0.256,
+      "ms": 0.1587
+    },
+    "props3d/bbq_simple": {
+      "ratio": 0.6202,
+      "ms": 0.3845
+    },
+    "props3d/blinds": {
+      "ratio": 0.1921,
+      "ms": 0.1191
+    },
+    "props3d/blood_stains": {
+      "ratio": 0.3445,
+      "ms": 0.2136
+    },
+    "props3d/breakfast_bar": {
+      "ratio": 0.579,
+      "ms": 0.359
+    },
+    "props3d/candles": {
+      "ratio": 0.3117,
+      "ms": 0.1933
+    },
+    "props3d/canned_food": {
+      "ratio": 0.7422,
+      "ms": 0.4602
+    },
+    "props3d/ceiling_light": {
+      "ratio": 0.1395,
+      "ms": 0.0865
+    },
+    "props3d/chandelier": {
+      "ratio": 0.6744,
+      "ms": 0.4182
+    },
+    "props3d/closet": {
+      "ratio": 0.4056,
+      "ms": 0.2515
+    },
+    "props3d/clothes_on_floor": {
+      "ratio": 0.1793,
+      "ms": 0.1112
+    },
+    "props3d/concrete": {
+      "ratio": 0.0685,
+      "ms": 0.0425
+    },
+    "props3d/curtain": {
+      "ratio": 0.2224,
+      "ms": 0.1379
+    },
+    "props3d/deck": {
+      "ratio": 0.17,
+      "ms": 0.1054
+    },
+    "props3d/deck_floor": {
+      "ratio": 0.0905,
+      "ms": 0.0561
+    },
+    "props3d/dirt": {
+      "ratio": 0.0724,
+      "ms": 0.0449
+    },
+    "props3d/double_bed_modern": {
+      "ratio": 0.3559,
+      "ms": 0.2206
+    },
+    "props3d/fallen_chair": {
+      "ratio": 0.079,
+      "ms": 0.049
+    },
+    "props3d/flat_tv": {
+      "ratio": 0.0843,
+      "ms": 0.0523
+    },
+    "props3d/floor_mattress": {
+      "ratio": 0.1243,
+      "ms": 0.0771
+    },
+    "props3d/floor_plant": {
+      "ratio": 0.2082,
+      "ms": 0.1291
+    },
+    "props3d/fruit_tree": {
+      "ratio": 0.7872,
+      "ms": 0.4881
+    },
+    "props3d/garage_car": {
+      "ratio": 0.4454,
+      "ms": 0.2761
+    },
+    "props3d/garden_bed": {
+      "ratio": 1.1088,
+      "ms": 0.6875
+    },
+    "props3d/gourmet_counter": {
+      "ratio": 0.5316,
+      "ms": 0.3296
+    },
+    "props3d/hanging_plant": {
+      "ratio": 0.2001,
+      "ms": 0.1241
+    },
+    "props3d/home_office": {
+      "ratio": 0.4813,
+      "ms": 0.2984
+    },
+    "props3d/lantern": {
+      "ratio": 0.2879,
+      "ms": 0.1785
+    },
+    "props3d/lawn": {
+      "ratio": 0.0825,
+      "ms": 0.0511
+    },
+    "props3d/mirror": {
+      "ratio": 0.0772,
+      "ms": 0.0479
+    },
+    "props3d/open_door": {
+      "ratio": 0.1213,
+      "ms": 0.0752
+    },
+    "props3d/open_suitcases": {
+      "ratio": 0.2138,
+      "ms": 0.1325
+    },
+    "props3d/palm_tree": {
+      "ratio": 0.5928,
+      "ms": 0.3675
+    },
+    "props3d/pendant": {
+      "ratio": 0.1701,
+      "ms": 0.1054
+    },
+    "props3d/pergola": {
+      "ratio": 0.2718,
+      "ms": 0.1685
+    },
+    "props3d/picture_large": {
+      "ratio": 0.1009,
+      "ms": 0.0625
+    },
+    "props3d/picture_small": {
+      "ratio": 0.126,
+      "ms": 0.0781
+    },
+    "props3d/pool": {
+      "ratio": 0.2733,
+      "ms": 0.1694
+    },
+    "props3d/razor_wire": {
+      "ratio": 0.7798,
+      "ms": 0.4835
+    },
+    "props3d/sandbags": {
+      "ratio": 0.143,
+      "ms": 0.0886
+    },
+    "props3d/sauna": {
+      "ratio": 0.4388,
+      "ms": 0.2721
+    },
+    "props3d/slide": {
+      "ratio": 0.1724,
+      "ms": 0.1069
+    },
+    "props3d/soaking_tub": {
+      "ratio": 0.2524,
+      "ms": 0.1565
+    },
+    "props3d/sofa_l": {
+      "ratio": 0.1557,
+      "ms": 0.0965
+    },
+    "props3d/sun_lounger": {
+      "ratio": 0.2206,
+      "ms": 0.1368
+    },
+    "props3d/swing": {
+      "ratio": 0.1535,
+      "ms": 0.0952
+    },
+    "props3d/table_plant": {
+      "ratio": 0.1381,
+      "ms": 0.0856
+    },
+    "props3d/tile_floor": {
+      "ratio": 0.1147,
+      "ms": 0.0711
+    },
+    "props3d/track_spot": {
+      "ratio": 0.2409,
+      "ms": 0.1494
+    },
+    "props3d/tv_stand": {
+      "ratio": 0.1784,
+      "ms": 0.1106
+    },
+    "props3d/vanity": {
+      "ratio": 0.2207,
+      "ms": 0.1368
+    },
+    "props3d/wall_ac": {
+      "ratio": 0.0989,
+      "ms": 0.0613
+    },
+    "props3d/water_bottle_crates": {
+      "ratio": 0.5499,
+      "ms": 0.3409
+    },
+    "props3d/water_jug": {
+      "ratio": 0.1679,
+      "ms": 0.1041
+    },
     "props3d/window_boards": {
-      "ratio": 0.4977,
-      "ms": 0.3053
+      "ratio": 0.4212,
+      "ms": 0.2611
     },
     "shapes/generate:cabinet": {
       "ratio": 0.9986,
@@ -880,6 +880,10 @@
       "ratio": 0.4257,
       "ms": 0.2611
     },
+    "weapons/hk416": {
+      "ratio": 1.9925,
+      "ms": 1.2221
+    },
     "weapons/hk_g36": {
       "ratio": 0.6439,
       "ms": 0.395
@@ -916,17 +920,13 @@
       "ratio": 1.1399,
       "ms": 0.6992
     },
-    "weapons/hk_ump_45": {
-      "ratio": 0.5644,
-      "ms": 0.3462
-    },
     "weapons/hk_ump9": {
       "ratio": 0.5372,
       "ms": 0.3295
     },
-    "weapons/hk416": {
-      "ratio": 1.9925,
-      "ms": 1.2221
+    "weapons/hk_ump_45": {
+      "ratio": 0.5644,
+      "ms": 0.3462
     },
     "weapons/hunting_rifle_30_06": {
       "ratio": 1.1526,
@@ -960,13 +960,13 @@
       "ratio": 2.1377,
       "ms": 1.3112
     },
-    "weapons/m2_flamethrower": {
-      "ratio": 1.8539,
-      "ms": 1.1372
-    },
     "weapons/m24_sws": {
       "ratio": 1.1821,
       "ms": 0.725
+    },
+    "weapons/m2_flamethrower": {
+      "ratio": 1.8539,
+      "ms": 1.1372
     },
     "weapons/m60": {
       "ratio": 0.8358,

@@ -1,5 +1,5 @@
 import { snapshotScene } from '@adatechnology/golden-tool'
-import { mergeByMaterial as legacyMergeByMaterial } from '@adatechnology/game-props3d'
+import { mergeByMaterial as legacyMergeByMaterial } from './fixtures/legacy-merge-by-material'
 import { generate } from '@adatechnology/game-shapes'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
