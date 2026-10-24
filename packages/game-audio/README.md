@@ -62,6 +62,17 @@ const plan = planSound(scream, { random: createRng(7), distance: 12 }) // null w
 - `order` names the node-creation order the realizer uses, each taken from the team routine it reproduces (`layered` is the art scene's and the
   default; `burst`, `scream`, `groan`, `boom`, `static`, `chord`, `calls` are the game's; `siren` is the art scene's siren).
 
+## Shipped data
+
+| Data | What it is | Source |
+|---|---|---|
+| `GAME_SFX_CLASSES`, `GAME_SFX_FALLBACK`, `noiseClassRecipe`, `GAME_SFX_BANK` (`src/data/game-sfx.json`) | The game's 12 noise classes (pistol to explosion) and its fallback, as rows and as `burst` recipes `sfx_<id>` | jogo L62089–62107 |
+| `MIX_PROFILES` (`src/data/mix-profiles.json`), `DEFAULT_MIX` | `game` (master 0.5, noise 1.5 s made on demand) and `art_scene` (compressor −12 dB ratio 5, master 0.85, reverb 2.2 s with decay 3.4 and wet 0.4, noise 2 s made with the chain). The kit default is `art_scene` (Q1) | jogo L62077–62088, cena L1305–1313 |
+| `VOICE_GROUPS` (`src/data/voice-groups.json`) | `undead_voice`: five at once, one every 0.25 s, nearer than 40 m | cena L1342, jogo L66986, L70472 |
+| `LIBRARY_BANK` (`src/library/*.json`) | Sounds whose subject has no package yet (Q12): loops `engine_saw`, `rotor_blades`, `crowd_rumble`; sounds `horn`, `radio_static`, `siren` | jogo L62109–62127, L69998–70004, L70272–70276; cena L1369 |
+
+The subject banks (weapons, destruction, characters, animals, weather) live in their own packages.
+
 ## Português
 
 Som como dados: a receita diz quais nós o som tem e quais números o movem; `planSound` sorteia tudo com semente na ordem em que a receita está

@@ -1,3 +1,4 @@
+import voiceGroupsJson from './data/voice-groups.json'
 import type { BusId } from './recipe'
 
 /**
@@ -11,7 +12,11 @@ export type VoiceGroup = {
   readonly cooldown?: number
   readonly maxDistance?: number
   readonly steal?: boolean
+  readonly sources?: readonly string[]
 }
+
+/** `undead_voice`: the art scene's five at once with the game's 0.25 s cooldown and 40 m. */
+export const VOICE_GROUPS: Readonly<Record<string, VoiceGroup>> = voiceGroupsJson
 
 /** Q7: weapons > voices > world > ambience; the interface above all, weather with the ambience. */
 export const BUS_PRIORITY: Readonly<Record<BusId, number>> = { ui: 5, weapons: 4, voices: 3, world: 2, weather: 1, ambience: 1 }
@@ -50,6 +55,7 @@ export type VoiceManager = {
 }
 
 export type VoiceManagerOptions = {
+  /** Default `VOICE_GROUPS`. */
   readonly groups?: Readonly<Record<string, VoiceGroup>>
   readonly maxVoices?: number
 }
@@ -58,7 +64,7 @@ type ActiveVoice = { readonly id: number; readonly group?: string; readonly scor
 
 /** The voice limiter: per-group rules, a global cap and priority dropping. Pure and time-driven (`advance`), so goldens script it frame by frame. */
 export function createVoiceManager(options: VoiceManagerOptions = {}): VoiceManager {
-  const groups = new Map(Object.entries(options.groups ?? {}))
+  const groups = new Map(Object.entries(options.groups ?? VOICE_GROUPS))
   const maxVoices = options.maxVoices ?? DEFAULT_MAX_VOICES
   const budgets = new Map<string, number>()
   let voices: ActiveVoice[] = []

@@ -169,7 +169,8 @@ export type LoopRecipe = {
   readonly id: string
   readonly bus: BusId
   readonly order?: LoopOrder
-  readonly source: (NoiseSource & { readonly loop: true }) | (OscSource & { readonly loop: true })
+  /** An oscillator loop may leave the frequency out: it starts at the default and `set({ frequency })` glides it (the game's motor). */
+  readonly source: (NoiseSource & { readonly loop: true }) | { readonly kind: 'osc'; readonly wave: OscillatorType; readonly frequency?: Automation; readonly loop: true }
   readonly filters?: FilterBank
   readonly modulators?: readonly Modulator[]
   /** `setTargetAtTime` time constants (jogo L62125–62126: 0.15 for the volume, 0.08 for the frequency). */

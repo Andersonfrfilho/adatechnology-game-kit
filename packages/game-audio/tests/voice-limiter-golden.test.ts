@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
-import { createVoiceManager } from '../src'
+import { VOICE_GROUPS, createVoiceManager } from '../src'
 import type { VoiceGroup } from '../src'
 import { FRAME_SECONDS, FRAMES, scriptGroans, teamAccepted } from './support/team-voice-limit'
 import type { GroanAttempt, LimitRule } from './support/team-voice-limit'
@@ -18,7 +18,8 @@ const RULES: readonly LimitRule[] = ['game', 'art_scene', 'both']
 const GROUPS: Readonly<Record<LimitRule, VoiceGroup>> = {
   game: { cooldown: 0.25, maxDistance: 40 },
   art_scene: { maxConcurrent: 5 },
-  both: { maxConcurrent: 5, cooldown: 0.25, maxDistance: 40 },
+  // the shipped group is the two rules together
+  both: VOICE_GROUPS.undead_voice as VoiceGroup,
 }
 
 type LimiterFixture = Record<string, { readonly attempts: number; readonly accepted: readonly number[] }>

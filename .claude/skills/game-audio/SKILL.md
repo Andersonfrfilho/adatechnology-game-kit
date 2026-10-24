@@ -31,6 +31,10 @@ const plano = planSound(receita, { random: createRng(7), distance: 12 }) // null
 | `createVoiceManager({ groups, maxVoices })` | Limite de vozes: grupos (concorrência, recarga, distância, roubo) e teto global 32 |
 | `createLoopState(receita)` | Laço do jogo: nós a partir de 0.002, suavização 0.15 / 0.08 |
 | `createSoundRegistry(bancos)`, `resolveMix` | Catálogo com `register`, `patch`, `remove`; perfil de mixagem |
+| `GAME_SFX_CLASSES`, `noiseClassRecipe`, `GAME_SFX_BANK` | As 12 classes de ruído do jogo (tabela `P`) e a receita `burst` de cada uma |
+| `MIX_PROFILES`, `DEFAULT_MIX` | `game` (mestre 0.5) e `art_scene` (compressor, reverb; padrão do kit, Q1) |
+| `VOICE_GROUPS` | `undead_voice`: 5 ao mesmo tempo, um a cada 0,25 s, só a menos de 40 m |
+| `LIBRARY_BANK` | Casa temporária (Q12): laços `engine_saw`, `rotor_blades`, `crowd_rumble`; `horn`, `radio_static`, `siren` |
 
 ## Compõe com
 `game-contracts` (`AudioSink`, `ModuleHost.audio`). Os bancos de som virão de `game-weapons-three`, `game-destruction-three`, personagens, bichos e
