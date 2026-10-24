@@ -1448,5 +1448,15 @@
       1.054
     ],
     "scale": 0.1
+  },
+  {
+    "id": "glass_bottle",
+    "teamId": "garrafa_vidro",
+    "teamBox": [
+      0.75,
+      2.6,
+      0.75
+    ],
+    "scale": 0.1
   }
 ]
