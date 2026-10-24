@@ -1498,5 +1498,15 @@
       0.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "nails",
+    "teamId": "pregos",
+    "teamBox": [
+      1.3,
+      0.605,
+      0.5
+    ],
+    "scale": 0.1
   }
 ]
