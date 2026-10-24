@@ -1458,5 +1458,15 @@
       0.75
     ],
     "scale": 0.1
+  },
+  {
+    "id": "empty_can",
+    "teamId": "lata_vazia",
+    "teamBox": [
+      0.664,
+      1.206,
+      0.664
+    ],
+    "scale": 0.1
   }
 ]

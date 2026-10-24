@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **146 de 257 itens têm modelo 3D; faltam 111.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **147 de 257 itens têm modelo 3D; faltam 110.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **146** | **111** |
+| **Total** | **147** | **110** |
 
 ## Comida (36 de 36)
 
@@ -174,7 +174,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Taco de beisebol (kit) | `taco` | `baseball_bat` | 1,0 kg | incomum | 860 x 70 x 70 mm |
 | [x] | Tonfa policial (kit) | `tonfa` | `police_baton` | 0,6 kg | comum | 500 x 100 x 45 mm |
 
-## Materiais de construção e crafting (12 de 23)
+## Materiais de construção e crafting (13 de 23)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -190,7 +190,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Fio de cobre (5 m) (kit) | `fio_cobre` | `copper_wire` | 0,3 kg | comum | 80 x 30 x 80 mm |
 | [x] | Garrafa PET vazia (kit) | `garrafa_pet` | `pet_bottle` | 0,05 kg | comum | 105 x 330 x 105 mm |
 | [x] | Garrafa de vidro vazia (kit) | `garrafa_vidro` | `glass_bottle` | 0,3 kg | comum | 75 x 260 x 75 mm |
-| [ ] | Lata vazia | `lata_vazia` | `empty_can` | 0,05 kg | comum | 66 x 120 x 66 mm |
+| [x] | Lata vazia (kit) | `lata_vazia` | `empty_can` | 0,05 kg | comum | 66 x 120 x 66 mm |
 | [ ] | Lenha | `lenha` | `firewood` | 1,5 kg | comum | 400 x 120 x 160 mm |
 | [ ] | Lona (4 × 4 m) | `lona` | `tarp` | 2,0 kg | comum | 350 x 100 x 250 mm |
 | [ ] | Parafusos (caixa de 50) | `parafusos` | `screws` | 0,4 kg | comum | 90 x 50 x 50 mm |
