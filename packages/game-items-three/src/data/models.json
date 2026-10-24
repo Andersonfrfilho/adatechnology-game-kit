@@ -708,5 +708,15 @@
       0.15
     ],
     "scale": 0.1
+  },
+  {
+    "id": "ceftriaxone",
+    "teamId": "ceftriaxona",
+    "teamBox": [
+      1.002,
+      0.6,
+      0.302
+    ],
+    "scale": 0.1
   }
 ]
