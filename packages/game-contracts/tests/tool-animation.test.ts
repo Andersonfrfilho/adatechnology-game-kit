@@ -116,7 +116,7 @@ describe('createToolClipPlayer', () => {
       const player = createToolClipPlayer({ clips: { shot: rise }, rig, repeatInterval: () => 0.1 })
       player.apply({ type: 'play', clip: TOOL_CLIP.SHOT, repeat: 2 })
       for (const dt of steps) player.update(dt)
-      return poses.get('mag')?.position[1] ?? -1
+      return poses.get('mag')?.position?.[1] ?? -1
     }
     expect(pose([0.25])).toBeCloseTo(0.15, 9)
     expect(pose([0.05, 0.2])).toBeCloseTo(pose([0.25]), 9)
