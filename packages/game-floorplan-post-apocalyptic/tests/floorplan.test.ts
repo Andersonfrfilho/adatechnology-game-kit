@@ -14,6 +14,8 @@ const FILTER = process.env.TPL ? new RegExp(process.env.TPL) : null
 describe('generated plans (seeds x states x variants)', () => {
   for (const [name, id, extra] of variants()) {
     if (FILTER && !FILTER.test(name)) continue
+    // The triage tent is not a house: fortified and abandoned would barricade doors and stock rooms it does not have. tests/triage.test.ts covers it in every state.
+    if (id === 'triage_tent') continue
     const seen = new Set<string>()
     for (const state of STATES) {
       it(`${name}/${state}: ${N} seeds hold every property`, () => {
