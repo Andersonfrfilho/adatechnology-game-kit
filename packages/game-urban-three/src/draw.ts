@@ -141,6 +141,16 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
         shadows(mesh, part.style, true, false)
         return [mesh]
       }
+      case 'vault': {
+        const geometry = new THREE.CylinderGeometry(part.radius, part.radius, part.length, part.segments, 1, false, 0, part.arc)
+        disposables.push(geometry)
+        const mesh = new THREE.Mesh(geometry, standard(part.color, part.style))
+        mesh.rotation.set(part.rotation.x, part.rotation.y, part.rotation.z)
+        mesh.position.set(part.x, part.y, part.z)
+        mesh.scale.set(part.scale.x, part.scale.y, part.scale.z)
+        shadows(mesh, part.style, true, false)
+        return [mesh]
+      }
       case 'plane': {
         const geometry = new THREE.PlaneGeometry(part.width, part.depth).rotateX(-Math.PI / 2)
         disposables.push(geometry)

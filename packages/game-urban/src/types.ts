@@ -18,6 +18,22 @@ type Styled<TPart> = TPart & { style?: PartStyle }
 export type ConePart = { shape: 'cone'; parent: number; x: number; y: number; z: number; radius: number; height: number; color: number; segments: number; style?: PartStyle }
 /** A rough ball of leaves (a dodecahedron of the given radius). Casts shadows only. */
 export type CrownPart = { shape: 'crown'; parent: number; x: number; y: number; z: number; radius: number; color: number; style?: PartStyle }
+/** Half (or any arc) of a cylinder lying down, for a barrel-vault roof. Casts shadows only. `rotation` and `scale` are the mesh's own. */
+export type VaultPart = {
+  shape: 'vault'
+  parent: number
+  x: number
+  y: number
+  z: number
+  radius: number
+  length: number
+  arc: number
+  segments: number
+  color: number
+  rotation: { x: number; y: number; z: number }
+  scale: { x: number; y: number; z: number }
+  style?: PartStyle
+}
 /** A flat rectangle lying on the ground (`y` is its height). */
 export type PlanePart = { shape: 'plane'; parent: number; x: number; y: number; z: number; width: number; depth: number; color: number; style?: PartStyle }
 /** Text over one or more lines on a canvas texture (street names, strip labels). */
@@ -59,7 +75,7 @@ export type LightPart =
     }
 
 /** The parts of an urban scene: the silhouette vocabulary of game-floorplan plus what streets and poles need. */
-export type UrbanPart = Styled<SilhouettePart> | ConePart | CrownPart | PlanePart | LabelPart | LightPart
+export type UrbanPart = Styled<SilhouettePart> | ConePart | CrownPart | PlanePart | VaultPart | LabelPart | LightPart
 
 /** One small box drawn as an instance of a single mesh (dashes of a road, sandbags). `y` is the base. */
 export type ItemBox = { x: number; y: number; z: number; width: number; height: number; depth: number; color: number; rx: number; ry: number; rz: number }

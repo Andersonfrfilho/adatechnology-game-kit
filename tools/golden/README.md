@@ -63,6 +63,7 @@ Captures for the houses (spec 001, T2.2a), with where their goldens go:
 | `house-area.js` | Sala de testes, area "Casas e prédios" (the 6 scenarios on the page's destruction world, every world event) | `specs/.../goldens/house-area.json`, staged until the destruction work (T2.3b) consumes it |
 | `gallery-silhouettes.js` | Galeria do Vale Cinzento, with `--expose` (house and building silhouettes, scene hash) | `specs/.../goldens/gallery-silhouettes.json`, staged for `game-floorplan-three` (T2.5a) |
 | `urban-parts.js` | Galeria do Vale Cinzento, with `--expose` (the five poles with the light budget, roads, walks, street grid, block, props; scene hash plus the instance lists and the surface of each material as events) | `packages/game-urban-three/tests/fixtures/team-golden/urban-parts.json` (T7.3a) |
+| `urban-patterns.js` | Galeria do Vale Cinzento, with `--expose` (`buildPadraoRuas` with `env` and `car` stubbed; scene hash, instance lists, surface and map pins) | `packages/game-urban-three/tests/fixtures/team-golden/urban-patterns.json` (T7.3b) |
 
 Capture for the items (spec 001, T3.2b):
 

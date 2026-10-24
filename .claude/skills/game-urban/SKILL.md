@@ -34,10 +34,14 @@ const scene = b.scene()   // { parts, items, windows: { lit, dark } }
 ## Postes
 `led_double` (9 m, luz branca 1,3 / 24 m), `concrete_arm` (8 m, sódio 1,3 / 20 m, `dir` e `transformer`), `cast_iron` (4 m, 1 / 14 m), `wood_crossarm` (7 m, 0,9 / 16 m), `flood_tower` (12 m, 1,6 / 34 m). Poste ligado tem lente brilhante e, enquanto o orçamento dura, uma luz real.
 
+## Padrões de bairro
+`urban.neighbourhoods`: `downtown`, `suburb`, `working_class`, `historic_street`, `industrial_port`, `railway_village`, `mountain_resort`, `stilt_village`, `military`, `rural`. Cada padrão é dado (`streetWidth`, `walkWidth`, `typologies`, `pole`, `lightColor`, `spacing`, `lit`, `marker`, `text` em pt-BR e en, `params` do compositor) mais a chave `compose` no registro de compositores. `get(id).compose(b, { x, z }, { locale?, providers? })` desenha a rua e o letreiro e devolve o plano (`houses`, `buildings`, `poles`, `vehicles`, `plants`). Provedores: `house` (padrão: silhuetas do `game-floorplan`), `vehicle` (padrão: nenhum), `plant` (padrão: pinheiro e árvore dos adereços). `composeSampleSheet(b)` desenha as dez células na ordem da página. `packs`, `patch`, `remove` e `composers` mudam o catálogo.
+
 ## Compõe com
 `game-floorplan` (vocabulário das silhuetas, `createCityBuilding`, `boxRadius`, gerador `createSilhouetteRandom`), `game-contracts` (`mergeById`, `applyPatches`, `removeIds`), `game-urban-three` (desenho).
 
 ## Cuidados
+- O compositor de cada padrão sorteia na ordem da página; trocar um provedor muda a sequência dali em diante.
 - O gerador é um só e é sorteado na ordem da página: pôr `b.random` em outro lugar muda o quarteirão inteiro.
 - `lights.left` fica negativo de propósito (como o `LB` da página).
 - Um poste de forma nova precisa do construtor em `shapes`; sem ele `poles.get` avisa.

@@ -49,6 +49,23 @@ createUrban({
 - `block.fill(b, { cx, cz, size, minHeight, maxHeight, k, gap, lit, shop })`: a `k x k` split of the block less 2 m of street; a building a little smaller than its lot, as tall as `lerp(min, max, random^1.6)` (more low buildings than tall ones), drawn by `createCityBuilding` of game-floorplan with the shared generator. Returns the buildings for the game's bookkeeping. `block.building` places one.
 - `props`: `fence`, `tent`, `pine`, `tree`, `container`, `watchtower` (with a searchlight whose beam circles the ground), `sandbags` (instances), `label` (two lines on a 22 x 4.4 m board) and `wires`.
 
+## Neighbourhood patterns
+
+`urban.neighbourhoods` has the ten patterns of the Galeria's sample sheet: `downtown`, `suburb`, `working_class`, `historic_street`, `industrial_port`, `railway_village`, `mountain_resort`, `stilt_village`, `military` and `rural`. A pattern is data (`streetWidth`, `walkWidth`, `typologies`, `pole`, `lightColor`, `spacing`, `lit` = the share of lamps on and the rest burnt out, `marker`, `text` in `pt-BR` and `en`, and the `params` of its composer) plus a `compose` key into the registry of composers, which draw the street. A game changes a number with `patch`, adds a pattern with `packs` and a composer with `composers`, or takes one out with `remove`.
+
+```ts
+const plan = urban.neighbourhoods.get('suburb').compose(b, { x: 0, z: 0 }, {
+  locale: 'en',
+  providers: {
+    house: (typology, request, b) => myHouse(typology, request, b),   // default: the far-away silhouettes of game-floorplan
+    vehicle: (request, b) => myCar(request, b),                      // default: none (the page's box car is not shipped)
+    plant: (request, b) => myTree(request, b),                       // default: the cone pine and the ball tree of the props
+  },
+})
+// plan: { id, origin, houses, buildings, poles, vehicles, plants }  (what was put where)
+urban.neighbourhoods.composeSampleSheet(b)   // the ground and the ten cells, in the order the page builds them
+```
+
 ## Same seed, same city
 
-The page keeps one generator for everything it draws and draws from it in call order. The builder does the same: the facade colour, the shop signs, the lit windows and the heights come from `b.random`, in the page's order, so a scene drawn with the same seed and the same calls has the same parts. The golden test in `game-urban-three` compares 34 cases with the page's scene hash, the lists the page keeps before its flush and the surface of each material.
+The page keeps one generator for everything it draws and draws from it in call order. The builder does the same: the facade colour, the shop signs, the lit windows and the heights come from `b.random`, in the page's order, so a scene drawn with the same seed and the same calls has the same parts. The golden test in `game-urban-three` compares 34 parts and the whole sample sheet (1029 objects, the lists of instances and windows, the light budget left, the next number of the random and the map markers) with the page's scene hash, the lists the page keeps before its flush and the surface of each material.

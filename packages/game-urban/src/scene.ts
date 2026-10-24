@@ -46,8 +46,13 @@ export function createUrbanBuilder(random: RandomSource, options: UrbanBuilderOp
   const prism = (x: number, y: number, z: number, width: number, height: number, depth: number, color: number, parent = ROOT, ry = 0): void => {
     parts.push({ shape: 'prism', parent, x, y, z, width, height, depth, color, ry })
   }
-  const plane = (x: number, y: number, z: number, width: number, depth: number, color: number, parent = ROOT): void => {
-    parts.push({ shape: 'plane', parent, x, y, z, width, depth, color })
+  const plane = (x: number, y: number, z: number, width: number, depth: number, color: number, style?: PartStyle, parent = ROOT): void => {
+    const part: UrbanPart = { shape: 'plane', parent, x, y, z, width, depth, color }
+    if (style) part.style = style
+    parts.push(part)
+  }
+  const vault = (part: Omit<Extract<UrbanPart, { shape: 'vault' }>, 'shape' | 'parent'> & { parent?: number }): void => {
+    parts.push({ shape: 'vault', ...part, parent: part.parent ?? ROOT })
   }
   const crown = (x: number, y: number, z: number, radius: number, color: number, parent = ROOT): void => {
     parts.push({ shape: 'crown', parent, x, y, z, radius, color })
@@ -83,7 +88,7 @@ export function createUrbanBuilder(random: RandomSource, options: UrbanBuilderOp
     for (const window of silhouette.windows) (window.isLit ? windows.lit : windows.dark).push(window)
   }
   const scene = (): UrbanScene => ({ parts, items, windows })
-  return { random, pick, lights, parts, items, windows, group, box, cylinder, cone, prism, plane, crown, line, label, light, spot, item, fence, add, scene }
+  return { random, pick, lights, parts, items, windows, group, box, cylinder, cone, prism, plane, vault, crown, line, label, light, spot, item, fence, add, scene }
 }
 
 export type UrbanBuilder = ReturnType<typeof createUrbanBuilder>

@@ -25,4 +25,5 @@ export { DEFAULT_PROP_COLORS, drawContainer, drawFence, drawPine, drawSandbags, 
 export type { PropColors } from './props'
 export { createUrban, DEFAULT_LIGHT_BUDGET, DEFAULT_URBAN_SEED } from './kit'
 export type { BuilderOptions, Pole, UrbanKit, UrbanOptions } from './kit'
-export type { ConePart, CrownPart, ItemBox, LabelPart, LightBudget, LightPart, PartStyle, PlanePart, RandomSource, Silhouette, SilhouettePart, SilhouetteWindow, UrbanPart, UrbanScene } from './types'
+export type { ConePart, CrownPart, ItemBox, LabelPart, LightBudget, LightPart, PartStyle, PlanePart, VaultPart, RandomSource, Silhouette, SilhouettePart, SilhouetteWindow, UrbanPart, UrbanScene } from './types'
+export * from './neighbourhoods'

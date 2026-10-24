@@ -9,6 +9,11 @@ import { DEFAULT_POLES, POLE_SHAPES } from './poles'
 import type { PoleDef, PoleOptions, PoleShapeBuilder } from './poles'
 import { drawContainer, drawFence, drawPine, drawSandbags, drawStripLabel, drawTent, drawTree, drawWatchtower, drawWires, DEFAULT_PROP_COLORS } from './props'
 import type { PropColors } from './props'
+import { composePattern, patternMarker, SAMPLE_GROUND } from './neighbourhoods/compose'
+import type { Origin, SampleSheetOptions } from './neighbourhoods/compose'
+import { COMPOSERS } from './neighbourhoods/composers'
+import { DEFAULT_PATTERNS, SAMPLE_CELLS } from './neighbourhoods/patterns'
+import type { ComposeOptions, Composer, Locale, NeighbourhoodPattern, UrbanKitCore, UrbanPlan } from './neighbourhoods/types'
 import { createUrbanBuilder } from './scene'
 import type { UrbanBuilder } from './scene'
 import { drawGround, drawRoad, drawStreetGrid, drawWalk } from './streets'
@@ -22,13 +27,15 @@ export const DEFAULT_URBAN_SEED = 7
 
 export type UrbanOptions = {
   /** Entries added to the catalogues (an entry with an existing id replaces it). */
-  packs?: { poles?: readonly PoleDef[] }
+  packs?: { poles?: readonly PoleDef[]; neighbourhoods?: readonly NeighbourhoodPattern<any>[] }
   /** Numbers changed on shipped entries, by id (objects merge, arrays replace). */
-  patch?: { poles?: Record<string, DeepPartial<PoleDef>> }
+  patch?: { poles?: Record<string, DeepPartial<PoleDef>>; neighbourhoods?: Record<string, DeepPartial<NeighbourhoodPattern<any>>> }
   /** Ids taken out of the catalogues. */
-  remove?: { poles?: readonly string[] }
+  remove?: { poles?: readonly string[]; neighbourhoods?: readonly string[] }
   /** Shape builders for the poles a pack adds; the five of the Galeria are always there. */
   shapes?: Readonly<Record<string, PoleShapeBuilder>>
+  /** Composers for the patterns a pack adds; the ten of the Galeria are always there. */
+  composers?: Readonly<Record<string, Composer>>
   lights?: { budget?: number }
   streets?: StreetOptions
   /** Facade colours of the city buildings. */
@@ -54,6 +61,10 @@ export function createUrban(options: UrbanOptions = {}) {
   applyPatches(entries, options.patch?.poles)
   removeIds(entries, options.remove?.poles)
   const shapes: Record<string, PoleShapeBuilder> = { ...POLE_SHAPES, ...options.shapes }
+  const patterns = mergeById(DEFAULT_PATTERNS, options.packs?.neighbourhoods)
+  applyPatches(patterns, options.patch?.neighbourhoods)
+  removeIds(patterns, options.remove?.neighbourhoods)
+  const composers: Record<string, Composer> = { ...COMPOSERS, ...options.composers }
   const lightBudget = options.lights?.budget ?? DEFAULT_LIGHT_BUDGET
   const facades = options.facades ?? DEFAULT_FACADES
   const propColors: PropColors = { ...DEFAULT_PROP_COLORS, ...options.props }
@@ -70,11 +81,8 @@ export function createUrban(options: UrbanOptions = {}) {
     },
   }
 
-  return {
+  const core: UrbanKitCore = {
     poles,
-    /** A builder with its own seeded generator and light budget. */
-    builder: (o: BuilderOptions = {}): UrbanBuilder =>
-      createUrbanBuilder(o.random ?? createSilhouetteRandom(o.seed ?? DEFAULT_URBAN_SEED), { budget: createLightBudget(o.budget ?? lightBudget) }),
     streets: {
       road: (b: UrbanBuilder, x: number, z: number, w: number, l: number, along: 'x' | 'z') => drawRoad(b, x, z, w, l, along, options.streets),
       walk: (b: UrbanBuilder, x: number, z: number, w: number, d: number) => drawWalk(b, x, z, w, d, options.streets),
@@ -99,4 +107,35 @@ export function createUrban(options: UrbanOptions = {}) {
       wires: (b: UrbanBuilder, points: readonly (readonly [number, number])[], y: number, color?: number) => drawWires(b, points, y, color, propColors),
     },
   }
+  /** A builder with its own seeded generator and light budget. */
+  const builder = (o: BuilderOptions = {}): UrbanBuilder =>
+      createUrbanBuilder(o.random ?? createSilhouetteRandom(o.seed ?? DEFAULT_URBAN_SEED), { budget: createLightBudget(o.budget ?? lightBudget) })
+  const neighbourhoods = {
+    ids: (): string[] => [...patterns.keys()],
+    get(id: string) {
+      const pattern = patterns.get(id)
+      if (!pattern) throw new Error(`Unknown neighbourhood pattern "${id}"`)
+      const composer = composers[pattern.compose]
+      if (!composer) throw new Error(`Pattern "${id}" needs the composer "${pattern.compose}", which is not registered`)
+      return {
+        pattern,
+        /** Draws the pattern at `origin` and gives back what it put there. */
+        compose: (b: UrbanBuilder, origin: Origin, o?: ComposeOptions): UrbanPlan => composePattern(core, pattern, composer, b, origin, o),
+        marker: (origin: Origin, locale?: Locale) => patternMarker(pattern, origin, locale),
+      }
+    },
+    /** The Galeria's sample sheet: the ground, then each pattern in its cell, in the order the page builds them. */
+    composeSampleSheet(b: UrbanBuilder, o: SampleSheetOptions = {}) {
+      if (o.ground !== false) drawGround(b, (o.ground ?? SAMPLE_GROUND).color, (o.ground ?? SAMPLE_GROUND).size)
+      const cells = { ...SAMPLE_CELLS, ...o.cells }
+      const plans: UrbanPlan[] = []
+      for (const id of o.ids ?? [...patterns.keys()]) {
+        const cell = cells[id]
+        if (!cell) throw new Error(`The sample sheet has no cell for "${id}"`)
+        plans.push(neighbourhoods.get(id).compose(b, cell, o))
+      }
+      return { plans, markers: plans.map((plan) => neighbourhoods.get(plan.id).marker(plan.origin, o.locale)) }
+    },
+  }
+  return { ...core, poles, builder, neighbourhoods }
 }
