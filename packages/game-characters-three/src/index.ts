@@ -1,0 +1,20 @@
+/**
+ * @adatechnology/game-characters-three: the three.js presentation of the living bodies. The instanced crowd body (GPU pose, LOD, baking,
+ * variants, torn-off limbs) and the rich bodies (Bestiário v17 builder, survivors, animator, wounds). three.js is passed in by the host.
+ */
+export type { Three } from './three'
+export { BODY_CHUNK, createBodyChunk } from './instanced/body-chunk'
+export type { BodyChunkOptions } from './instanced/body-chunk'
+export { buildInstancedBody, jointsOf } from './instanced/body-geometry'
+export type { BodyJoints, BuildInstancedBodyParams } from './instanced/body-geometry'
+export { createBodyMaterial } from './instanced/body-material'
+export type { BodyMaterialParams } from './instanced/body-material'
+export { createBodyBatch } from './instanced/body-batch'
+export type { BodyBatch, BodyBatchOptions, BodyInstance } from './instanced/body-batch'
+export { LOD_BAKE, LOD_BATCH_CAPACITY, LOD_CASTS_SHADOW, LOD_DISTANCES, LOD_SEGMENTS, lodAt } from './instanced/lod'
+export { BAKE_NEUTRAL_POSE, bakeBody } from './instanced/bake'
+export type { BakeBuilders, BakeSpec, BakedBody } from './instanced/bake'
+export { bakeVariants, createVariantBatches } from './instanced/variants'
+export type { BodyVariant, VariantType } from './instanced/variants'
+export { createFlyingLimbs } from './instanced/flying-limbs'
+export type { FlyingLimb, FlyingLimbs, FlyingLimbsOptions, LimbEffects, LimbLaunch } from './instanced/flying-limbs'
