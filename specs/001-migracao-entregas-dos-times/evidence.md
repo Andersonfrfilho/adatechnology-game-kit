@@ -2392,3 +2392,48 @@ Módulo de teste das casas, exemplo e goldens contra o VC3 (T2.6a-c). Branch `wo
 6. Mais de um alvo: o jogo persegue só o jogador; a multidão recebe uma lista e escolhe o mais perto.
 7. Marcos de habilidade da ficha que citam horda e zumbi ficam literais no conjunto genérico.
 8. Infecção do jogador desligada por padrão; a regra zumbi usa `INFEC`/`FERIDA` do jogo.
+
+## T8.3 — `game-player` (jogador: fôlego, ferida, infecção individual, agarrão)
+
+> 🤖 Modelo: `sonnet` (feito nesta sessão pelo opus)
+
+**O que foi feito**
+
+- `packages/game-player` (puro, sem three, IIFE `GamePlayer`): porte literal de G 68427-68640 (`player`, `playerUpdate`, `frontZombies`, `shove`,
+  `knife`) com `FICHA`, `DERIV`, `INFEC`, `FERIDA`.
+  - Mundo, multidão e entrada viram argumentos: `PlayerWorld` (`cellKind`, `solidAt`, `blocked`, `inWater`, `busy`, `canVault`, `afterMove`),
+    `PlayerCrowd` (`hold`, `stun`, `chase`, `damage`) e `PlayerInput` (teclas seguradas e `pressed` só no quadro, como o `wasPressed` do jogo).
+  - Todo número está em `src/data/defaults.json` com a linha de origem; derivados como fórmulas lineares em dado.
+  - Infecção individual **desligada por padrão** (mundo normal primeiro); `infection: true` liga a regra do jogo, com o sorteio na mesma ordem.
+  - Saídas por evento (`noise`, `sound` no formato de `SoundRequest`, `message` por id, `hurt`, `died`, `turned`...); frases do jogo em `pt-BR` e `en`.
+- Golden `packages/game-player/tests/fixtures/team-golden/game-player.json`: `tools/characters-catalog/src/golden/vm-player.ts` corta do jogo `player`,
+  `playerUpdate`, `frontZombies`, `shove`, `knife`, a grade (`GC`, `occ`, `cellOf`, `solidAt`, `fillRect`, `solidAtA`), `POOL`/`inWater` e a tabela `Z`, e roda
+  **18 roteiros** em `node:vm` (andar, correr até esgotar, agachar e mirar, feridas, mordida até a morte pela infecção, agarrão com 6 empurrões, com faca,
+  com mordida no fim, sem mandíbula, afogado, água e fogo, pular muro baixo, paredes, empurrão e faca, ser empurrado pela multidão e pânico, derrubada).
+  O teste do pacote refaz os 18 com o SDK e compara evento por evento e estado a cada N quadros: **18 de 18 iguais**.
+- Bancada `createPlayerTestModule` (`player_area`, só contratos genéricos): a câmera da sala é o jogador; golpe, mordida, agarrão, empurrão, faca,
+  curativo, derrubada, agachar, infecção, agilidade, vigor, semente; 6 cenários (`player_*`); passos e carne em `host.audio`.
+- `examples/player-test-area` (`sala-jogador.html`) e carregada também em `examples/interactables-test-area`.
+- Site (`catalog.mjs`: exemplo e família `player`; miniatura `site/thumbs/player-test-area.jpg`), `site/Dockerfile`, CI (job `examples`), README,
+  skill `.claude/skills/game-player/SKILL.md`, `game-kit` skill, changeset, inventário (`veiculos-moveis-vegetacao-jogo.md` §3.4).
+
+**Comandos e resultados**
+
+```text
+pnpm build                                              -> ok
+pnpm -r typecheck                                       -> ok
+pnpm lint                                               -> ok
+pnpm --filter @adatechnology/game-player test           -> 31 passed (golden 18/18, ficha, feridas, bancada)
+characters-catalog-tool vitest --testTimeout=60000      -> 69 passed (game-player regravado 2x idêntico ao fixture)
+node dist/record-golden-vm.js --check                   -> os 6 goldens vm idênticos
+node examples/test-room/build.mjs                       -> ok
+node examples/player-test-area/build.mjs && test.mjs    -> 7 PASS (pt-BR e en: relatório limpo, 6 cenários, golpe e mordida, 6 empurrões soltam)
+node examples/interactables-test-area/build.mjs && test.mjs -> 24/24 (inclui "the player module is loaded too (6 scenarios pass)")
+```
+
+**Desvios e dúvidas**
+
+- Fora do porte (ficam no jogo ou em outro pacote): carro (`carUpdate`), assento (`c3AssentoUpdate`), telhado (`ROOF`), andares (`ANDARES`),
+  arremesso (`throwItem`: só sai o evento `throw`), o corpo visível (`PB`) e a mira (`view`). O jogo os liga por `busy`, `canVault`, `blocked`, `afterMove`.
+- A reanimação do jogo usa `setTimeout` e sorteia o tipo do zumbi; aqui o tempo é de jogo (`turned` depois de `reanimateSeconds`) e o tipo é do jogo.
+- As frases "O AFOGADO TE PUXA…", "Não há cura" e "Morto pela horda" são do jogo e ficam literais no `pt-BR`; um jogo troca o texto por id.

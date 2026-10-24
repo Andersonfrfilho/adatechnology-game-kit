@@ -160,6 +160,7 @@ jobs:
           node examples/animals-test-area/build.mjs
           node examples/audio-test-area/build.mjs
           node examples/weather-test-area/build.mjs
+          node examples/player-test-area/build.mjs
 
       - name: Check the examples
         run: |
@@ -172,6 +173,7 @@ jobs:
           node examples/animals-test-area/test.mjs
           node examples/audio-test-area/test.mjs
           node examples/weather-test-area/test.mjs
+          node examples/player-test-area/test.mjs
 
   # One stable required check; Release waits on the whole "CI" workflow.
   ci-ok:

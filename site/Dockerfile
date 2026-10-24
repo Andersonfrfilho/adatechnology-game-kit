@@ -39,6 +39,7 @@ COPY packages/game-interactables-three/package.json packages/game-interactables-
 COPY packages/game-items/package.json packages/game-items/
 COPY packages/game-items-goods/package.json packages/game-items-goods/
 COPY packages/game-items-three/package.json packages/game-items-three/
+COPY packages/game-player/package.json packages/game-player/
 COPY packages/game-props3d/package.json packages/game-props3d/
 COPY packages/game-test-room/package.json packages/game-test-room/
 COPY packages/game-vegetation/package.json packages/game-vegetation/
@@ -63,6 +64,7 @@ COPY examples/floorplan-test-area/package.json examples/floorplan-test-area/
 COPY examples/interactables-showroom/package.json examples/interactables-showroom/
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
 COPY examples/items-test-area/package.json examples/items-test-area/
+COPY examples/player-test-area/package.json examples/player-test-area/
 COPY examples/test-room/package.json examples/test-room/
 COPY examples/vfx-test-area/package.json examples/vfx-test-area/
 COPY examples/weapons-test-area/package.json examples/weapons-test-area/

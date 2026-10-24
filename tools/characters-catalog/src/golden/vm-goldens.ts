@@ -4,6 +4,7 @@ import { recordBodyChunkGolden } from './vm-body-chunk'
 import { recordDamageRegionsGolden } from './vm-damage'
 import { recordWalkGaitGolden } from './vm-gait'
 import { recordPenetrationGolden } from './vm-penetration'
+import { recordPlayerGolden } from './vm-player'
 import { recordSpawnGolden } from './vm-spawn'
 
 export const VM_GOLDENS = [
@@ -12,4 +13,5 @@ export const VM_GOLDENS = [
   { id: 'game-penetration', path: fixturePath('game-characters', 'game-penetration.json'), record: recordPenetrationGolden },
   { id: 'game-walk-gait', path: fixturePath('game-characters', 'game-walk-gait.json'), record: recordWalkGaitGolden },
   { id: 'game-body-chunk', path: fixturePath('game-characters-three', 'game-body-chunk.json'), record: recordBodyChunkGolden },
+  { id: 'game-player', path: fixturePath('game-player', 'game-player.json'), record: recordPlayerGolden },
 ] as const

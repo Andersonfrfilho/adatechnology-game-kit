@@ -145,6 +145,16 @@ for (const lang of ['pt-BR', 'en']) {
   })
   check(`[${lang}] the sound and weather modules are loaded too: a storm writes host.environment, a sound plays on the room engine, the furniture scene keeps its fog off`, sky.weather && sky.sound && sky.rain > 10 && sky.visibility < 120 && sky.peak >= 1 && sky.fog, sky)
 
+  // the player area rides along: its report is clean and its six scenarios pass in this room too
+  const body = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const loaded = window.__furnitureReport.player
+    const scenarios = room.scenarios.filter((s) => s.id.startsWith('player_'))
+    const result = await room.runScenarios(scenarios)
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], scenarios: scenarios.length, failed: result.failed }
+  })
+  check(`[${lang}] the player module is loaded too (6 scenarios pass)`, body.module === 'player_area' && body.ok && body.problems.length === 0 && body.scenarios === 6 && body.failed === 0, body)
+
   if (lang === 'pt-BR') {
     await page.close()
     const p = await open('?lang=pt-BR&ui=0')

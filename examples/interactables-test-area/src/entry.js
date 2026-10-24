@@ -5,6 +5,7 @@
 // It carries the characters and the animals modules as well (owner rule: this area shows what every phase adds), so a shot can cross a wardrobe door and reach a zombie behind it.
 // And the houses area (owner rule): any typology of the residential, commercial, rural and post-apocalyptic packages, built in the room's destruction world next to the furniture.
 // And the effects bench (explosions and recipes of the Workshop), to see the smoke, sparks and blood the furniture's destruction plays.
+// And the player area (game-player): the room's camera is the player body, with stamina, wounds, the grab and the individual infection (off by default).
 import { createAudioTestModule } from '@adatechnology/game-audio'
 import { rng } from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
@@ -19,6 +20,7 @@ import { registerBodyMaterial } from '@adatechnology/game-characters-three'
 import { createModule as createAnimalsModule } from '../../animals-test-area/src/entry.js'
 import { createModule as createCharactersModule } from '../../characters-test-area/src/entry.js'
 import { createModule as createFloorplanModule } from '../../floorplan-test-area/src/entry.js'
+import { createModule as createPlayerModule } from '../../player-test-area/src/entry.js'
 import { createFurnitureArea as create } from './area.js'
 
 /** The pool of the goods catalog each household piece draws its contents from (the key of the house pools, or a container of the catalog). */
@@ -75,14 +77,14 @@ export function createFurnitureArea(options = {}) {
   return create({ GameInteractablesHousehold, GameInteractablesThree, fillContainers: createItemContents(), ...options })
 }
 
-export { createVfxTestModule, createWeaponsTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createAudioTestModule, createWeatherTestModule, createFloorplanModule }
+export { createVfxTestModule, createWeaponsTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createAudioTestModule, createWeatherTestModule, createFloorplanModule, createPlayerModule }
 
 // the site copies the weapon thumbnails to site/dist/weapon-svg, next to the folder of each example page
 const SITE_THUMBNAIL_BASE = '../weapon-svg/'
 
 /**
- * Creates the module for the room's locale (`?lang=en` or pt-BR) and loads it, after the weapons, items, characters, animals, effects, sound, weather and houses modules (the furniture bench stays the one the panel shows).
- * Returns the room's report of the furniture module, with the other modules' reports under `weapons`, `itemsArea`, `characters`, `animals`, `vfx`, `audio`, `weather` and `floorplan`.
+ * Creates the module for the room's locale (`?lang=en` or pt-BR) and loads it, after the weapons, items, characters, animals, effects, sound, weather, houses and player modules (the furniture bench stays the one the panel shows).
+ * Returns the room's report of the furniture module, with the other modules' reports under `weapons`, `itemsArea`, `characters`, `animals`, `vfx`, `audio`, `weather`, `floorplan` and `player`.
  */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
@@ -98,6 +100,8 @@ export function loadInto(room, options = {}) {
   const weather = options.weather === false ? undefined : room.loadModule(createWeatherTestModule({ locale: lang, fog: false }))
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   const floorplan = options.floorplan === false ? undefined : room.loadModule(createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
+  // the player body rides along: the room's camera is the player, so walking here spends stamina and makes footstep noise
+  const player = options.player === false ? undefined : room.loadModule(createPlayerModule({ locale: lang }))
   const report = room.loadModule(createFurnitureArea({ ...options, locale: lang }))
-  return { ...report, ...(weapons ? { weapons } : {}), ...(itemsArea ? { itemsArea } : {}), ...(characters ? { characters } : {}), ...(animals ? { animals } : {}), ...(vfx ? { vfx } : {}), ...(audio ? { audio } : {}), ...(weather ? { weather } : {}), ...(floorplan ? { floorplan } : {}) }
+  return { ...report, ...(weapons ? { weapons } : {}), ...(itemsArea ? { itemsArea } : {}), ...(characters ? { characters } : {}), ...(animals ? { animals } : {}), ...(vfx ? { vfx } : {}), ...(audio ? { audio } : {}), ...(weather ? { weather } : {}), ...(floorplan ? { floorplan } : {}), ...(player ? { player } : {}) }
 }
