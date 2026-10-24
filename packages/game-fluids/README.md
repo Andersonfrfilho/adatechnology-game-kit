@@ -141,6 +141,29 @@ While the current key has `action: 'drink'` the player calls `world.drink(rate �
 hand ∘ pose; otherwise the host animates its own viewmodel from `pose()`. `def.liquids` restricts the use to some liquids. Write your own
 `ItemUseDef` to add `eat`, `wipe` and so on.
 
+### Running film (the Fluid Standard)
+
+The stain above is an outline. The film is the other model, a literal port of the Fluid Standard's film (F60-114): a grid of 1.25 cm cells
+that holds a thickness in mm and a dryness per cell. A drop lands as an impact stretched by `1 / sin(angle)` with spikes, satellites and
+tails; a 180 Hz thin-film step (at most 6 per frame, limited to the wet box) makes rivulets with a bulb at the tip, runs down the slope and
+over the curb; it dries from the thin edge in. Drips, continuous sources and drag smears are included. It never calls `Math.random`: give it
+the stream, so a LAN client with the same seed draws the same film.
+
+```ts
+import { PADRAO_LAYOUT, createFilm, createFilmLcg, filmProfileOf } from '@adatechnology/game-fluids'
+
+const film = createFilm({ layout: PADRAO_LAYOUT, profile: filmProfileOf('blood')!, random: createFilmLcg(1) })
+film.launch([-0.25, 1.3, 0.75], [0.5, 0.2, -6], 2) // position, velocity (m/s), radius in mm
+film.sources.push({ row: 250, column: 120, rate: 240, elapsed: 0, duration: 20, radius: 3 })
+// every frame; dryingSeconds is the simulation clock (a game scales it)
+film.update({ dt, dryingSeconds: dt })
+film.setWeather({ rain: 1 }) // drying stops, spread x1.5 (a no-op until game-weather drives it)
+```
+
+- **Layouts:** `PADRAO_LAYOUT` (256 x 396, wall, sidewalk, curb, road), `WORKSHOP_LAYOUT` (160 x 448), `createFoldedLayout` for your own, and `layoutFromSurfaces({ floor, wall?, curb?, center })`, which builds the fold from your `SurfaceSpec`s (a 160 x 160 patch of 2 x 2 m by default).
+- **Profiles** (`data/film-profiles.json`, `FILM_PROFILES`, `filmProfileOf(id, overrides)`): `blood`, `old_blood`, `bile`, `motor_oil`, `fuel`. `spikes` (bile 0.3: short spikes, thick blobs; 1 = the Standard's), `landsAsBlob` (oil and fuel land as one blob) and `maxAmount` are the Workshop's variants and the defaults.
+- **Simulator:** `FilmSimulator` is the interface of the flow and drying step. The CPU version (`createCpuSimulator`) is the reference the goldens are recorded from; pass `options.simulator` to swap in a GPU one.
+
 ## API
 
 | Export | What it is |
@@ -149,6 +172,7 @@ hand ∘ pose; otherwise the host animates its own viewmodel from `pose()`. `def
 | `LIQUIDS` | The 21 built-in `LiquidDef`s (`id`, `color`, `opacity`, `stainColor`, `viscosity`, `density`, `dryTime`, `leavesMark`, `gloss`, `drink`...) |
 | `ITEM_USES` | The built-in `ItemUseDef`s |
 | `createItemUse(world, containerId, def, getHandTransform?)` | Returns an `ItemUsePlayer` (`pose()`, `update(dt)`, `cancel()`, `time`, `done`) |
+| `createFilm(options)`, `createFilmLcg(seed)`, `PADRAO_LAYOUT`, `WORKSHOP_LAYOUT`, `layoutFromSurfaces`, `createFoldedLayout`, `FILM_PROFILES`, `filmProfileOf` | The running film (see above) |
 | `sampleStream(stream, gravity, t)` | Point of a stream's path at time `t` (0 to `flightTime`) |
 | `stainDirection(stain, i)`, `STAIN_SAMPLES` | World direction of the front sample `i` of a stain (16 samples) |
 | `describeEvent(strings, event)`, `resolveStrings(locale)`, `locales` | Localised event text and liquid names |
@@ -163,6 +187,8 @@ Notes: liquid ids and event types are snake_case data ids and part of the public
 integers; density is in kg/m³ and viscosity is relative to water. The surface id `ground` is reserved for the implicit ground (`groundAt`).
 
 ## Português
+
+> Filme que escorre (Padrão de Fluidos): `createFilm({ layout, profile, random })` simula uma película com espessura em células de 1,25 cm (respingo por ângulo, escorrer, pingar, fontes, arrasto, secar pela borda), com `PADRAO_LAYOUT`, `WORKSHOP_LAYOUT` e `layoutFromSurfaces`. Veja a seção "Running film" acima; `film.setWeather({ rain })` é o gancho do clima.
 
 Líquidos sem renderizador, para qualquer engine: copos, garrafas, galões e tanques com nível calculado pelo formato e pela inclinação,
 temperatura (esfria e solta vapor), beber, despejar, derramar ao inclinar e vazar por furos (ligue os eventos `leak` do

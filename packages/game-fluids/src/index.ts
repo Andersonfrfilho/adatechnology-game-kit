@@ -6,6 +6,7 @@ export { describeEvent, locales, resolveStrings } from './locale'
 export type { FluidLocale, FluidStrings } from './locale'
 export { ballistic, sampleStream } from './landing'
 export { SAMPLES as STAIN_SAMPLES, stainDirection } from './stains'
+export * from './film/index'
 export type {
   ContainerSpec,
   ContainerState,
