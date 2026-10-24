@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **117 de 257 itens têm modelo 3D; faltam 140.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **118 de 257 itens têm modelo 3D; faltam 139.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **117** | **140** |
+| **Total** | **118** | **139** |
 
 ## Comida (36 de 36)
 
@@ -114,7 +114,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Termômetro (kit) | `termometro` | `thermometer` | 0,02 kg | comum | 120 x 20 x 30 mm |
 | [x] | Álcool 70% (500 ml) (kit) | `alcool70` | `alcohol_70` | 0,5 kg | comum | 70 x 200 x 50 mm |
 
-## Ferramentas (29 de 30)
+## Ferramentas (30 de 30)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -147,7 +147,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Pá (kit) | `pa` | `shovel` | 2,0 kg | comum | 1,1 x 0,07 x 0,22 m |
 | [x] | Serra de arco (kit) | `serra_arco` | `hacksaw` | 0,4 kg | incomum | 420 x 30 x 120 mm |
 | [x] | Serrote (kit) | `serrote` | `handsaw` | 0,5 kg | comum | 500 x 35 x 130 mm |
-| [ ] | Tesoura | `tesoura` | `scissors` | 0,1 kg | comum | 180 x 15 x 70 mm |
+| [x] | Tesoura (kit) | `tesoura` | `scissors` | 0,1 kg | comum | 180 x 15 x 70 mm |
 
 ## Armas brancas e de disparo silencioso (3 de 20)
 
