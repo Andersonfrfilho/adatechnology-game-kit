@@ -6,7 +6,7 @@ const PLAIN_ENTITY = /^(amp|lt|gt|quot|apos)$/
 const EXTERNAL_URL = /url\(\s*(['"]?)(?!#)[^)]*\)/gi
 
 export function sanitizeSvg(text: string): string {
-  let svg = text.replace(/^﻿/, '')
+  let svg = text.replace(/^\uFEFF/, '')
   // Illustrator files name their namespaces with entities declared in the DOCTYPE: substitute the plain ones, then drop the whole DOCTYPE
   const entities = new Map([...svg.matchAll(/<!ENTITY\s+([\w.-]+)\s+"([^"<&]*)"\s*>/g)].map((match) => [match[1], match[2]]))
   svg = svg
