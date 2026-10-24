@@ -75,7 +75,10 @@ Ordem: armas → casas → itens → personagens → efeitos → som e clima →
 > 🤖 Modelo: `sonnet`
 
 - T6.1 `game-audio` (S1): síntese, mixagem, distância, limite de vozes, sons contínuos; os sons do jogo e da Cena de Arte.
+  Feitas: T6.1c (motor WebAudio), T6.1e e T6.1e2 (armas), T6.1f (destruição), T6.1h (`audio-test-area`). Falta T6.1g (personagens e bichos, esperam a Fase 4).
 - T6.2 `game-weather` (E6): chuva leve e forte, neblina, relâmpago, vento, ciclone, tufão, calor intenso, ligados a fluidos e som.
+  Feitas: T6.2a (núcleo) e T6.2d (`weather-test-area`). Faltam T6.2b e T6.2c (visual, som e pontes; esperam as Fases 4 e 5).
+- T6.3 A sala empresta `host.audio` e `host.environment`; as áreas de som e clima entram no `interactables-test-area` (feita). T6.4 `site/` com os exemplos e miniaturas (feita nas partes de som e clima).
 
 ## Fase 7 — Veículos e cidade
 > 🤖 Modelo: `sonnet`

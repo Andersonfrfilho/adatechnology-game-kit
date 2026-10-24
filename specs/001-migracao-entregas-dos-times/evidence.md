@@ -1784,3 +1784,57 @@ Os passos novos `scene_tone` e `scene_noise` de `SoundStep` são o `sTone` e o `
 **Prova:** `tests/audio-scene.test.ts` roda cada som no motor com a mixagem `art_scene` e compara com o traço do próprio código da Cena (`tools/golden/fixtures/audio/art-scene-audio.json`, casos `empty`, `magOut`, `magIn`, `bolt`, `shell`): diferenças vazias, tolerância 1e-9. O `casing` da Cena é posicional (3,2 / 12,-9 / 40,25) e o `clink` toca no ouvinte, então ele é conferido por faixas (frequência, atraso, rampa a 3800).
 
 **Fixture regravada de propósito:** `packages/game-weapons-three/tests/fixtures/audio-trace.json` (`UPDATE_GOLDEN=1`). Só mudam os casos com recarga, vazio e `clink`; o resto do traço (tiros, classes, `thud`, volume, `dispose`) é o mesmo da T6.1e. `tests/audio.test.ts` (T1.4) ficou com uma só mudança: o piso de osciladores passa de 5 para 4, porque o `clink` agora é um toque. Reverter: desfazer este commit (Q5).
+
+## Fase 6 — grupo C (camada WebAudio, bancadas e sala)
+
+Branch `int/p6`; nada foi enviado ao remoto. Fica de fora, por esperar as Fases 4 e 5: T6.1g (sons de personagens e bichos), T6.2b (visual, som e pontes do clima) e T6.2c.
+
+| Task | Commit | O que entrou |
+|---|---|---|
+| T6.1c | `f0c4664` | `createAudioEngine` e a camada WebAudio: contexto preguiçoso com `unlock`, ruído e impulso de reverb vindos da semente, `realize` na ordem de nós de cada rotina do time, laços nas duas ordens (`game_loop`, `chain_loop`), canais, perfis de mixagem, barramentos e limite de vozes. Os 111 casos do jogo e o encadeamento da Cena dão o mesmo traço dos fixtures dos times (tolerância 1e-9) |
+| T6.1e | `e035414` | `createWeaponAudio` vira adaptador sobre o `game-audio` (ordem `weapon`, `setMaster`, `createAudioSink`, `{ from }` sem rampa). O traço gravado antes da mudança volta idêntico (`audio-trace.test.ts`); a área de armas usa o motor de `host.audio` |
+| T6.1e2 | `1ed74c6` | Sons de recarga da Cena de Arte como padrão de `MECHANICAL_SOUNDS` (seção acima) |
+| T6.1f | `909eae2` | `createDestructionSound`: sons dos materiais da Cena (12) e `explosion_boom` do jogo, com traço igual ao do código do time; `burn_end`, `burn_loop` (laço de fogo); `to: 'from'` |
+| T6.1h | `4d97a3d` | `createAudioTestModule` (`audio_area`) e `examples/audio-test-area` |
+| T6.2d | `2d46daa` | `createWeatherTestModule` (`weather_area`) e `examples/weather-test-area` |
+| T6.3 | `c66fc64` | A sala empresta `host.audio` e `host.environment`; as duas áreas entram em `examples/interactables-test-area` |
+| T6.4 | `c72ecbe` | `site/Dockerfile` (manifestos dos dois exemplos), `site/catalog.mjs` (2 exemplos e 2 famílias, Som e Clima) e as miniaturas |
+
+### T6.1h — a bancada de som
+
+Controles: som, origem (ajustes da bancada ou a sonda posta na área), distância (0, 10, 40, 60, 120, 160 m), direção, volume, mixagem, semente, tocar, tempestade de vozes, laço com nível e altura. Camadas: reverb, compressor, pan, abafamento pela distância (desligar zera o `cutoffK` do som para uma chamada só). Métricas: vozes, pico, derrubadas, laços, contexto, duração, nível e pan do som escolhido e o nível de cada um dos 6 barramentos (analisadores criados quando o barramento nasce). 4 cenários: `panning`, `distance`, `determinism`, `limiter`. O módulo usa o motor de `host.audio` quando a sala empresta, e o seu quando não. `BENCH_BANK` (`bench_ping`, `bench_hiss`) são sons de prova do próprio módulo, feitos pelo kit (`sdk` nas fontes), não entrega de time.
+
+### T6.2d — a bancada de clima
+
+Controles: clima (os 10 estados, nomes em pt-BR e en), transição (de uma vez ou 10 s), hora do dia, sorteio automático (liga: o clima do lugar muda sozinho e o relógio corre a 600×; desliga: o clima fica até trocar, relógio a 72×) e semente. Hora e semente refazem o mundo mantendo o clima atual (o chão molhado volta a 0: é o preço de reiniciar o relógio). Camadas: escrever em `host.environment`, névoa na cena (opção `fog`, ligada por padrão e desligada no `interactables-test-area`, que não é sobre clima). Métricas: clima, hora, mistura, chuva (mm/h), visibilidade, escala de visão e de audição, vento, temperatura, índice de calor, chão molhado e raios. 4 cenários, cada um em mundo próprio, sem tocar o ao vivo: tempestade enxerga e é ouvida menos que o dia limpo e solta raios; mistura de 10 s passa pelo meio e assenta; a mesma semente dá o mesmo dia de 48 h; chuva molha e o chão seca depois. Sem visual (céu, chuva, relâmpago) e sem som: esperam T6.2b e T6.2c.
+
+### T6.3 — a sala empresta som e ambiente
+
+`createTestRoom` cria o motor (opção `audio`, `false` para sala muda), empresta `createAudioSink(motor)` em `host.audio` e põe o ouvinte na câmera a cada quadro (posição e giro); empresta `host.environment` (opção `environment`, `room.environment`). `examples/interactables-test-area` carrega as áreas de armas, itens, som e clima junto da dos móveis (a bancada que o painel mostra segue a dos móveis); o teste do navegador manda `storm` e confere `room.environment` (chuva 60, visibilidade 100) e o pico de vozes no motor da sala. `examples/test-room/build.mjs` passa a nomear `game-audio` na lista de aliases (antes só entrava pelos links do pnpm).
+
+### Testes e gates
+
+| Gate | Resultado |
+|---|---|
+| `pnpm build`, `pnpm -r typecheck`, `pnpm lint` | verdes depois de cada commit |
+| `game-audio` | 169 testes (traços do jogo e da Cena, motor, bancada) |
+| `game-weather` | 62 testes (eram 56; 6 da bancada) |
+| `game-test-room` | 130 testes (1 novo: `host.audio` e `host.environment`) |
+| `game-weapons-three` | 186 testes; novo `tests/audio-host.test.ts` (o módulo toca no motor emprestado e não fecha o contexto dele). Com a máquina carregada (carga ~18 de outras ramas) a rodada inteira do pacote estoura os 5 s em 4 arquivos; cada arquivo roda verde sozinho |
+| `examples/audio-test-area`, `weather-test-area`, `interactables-test-area` | `node test.mjs` no Chromium (pt-BR e en): relatório de contrato limpo, cenários verdes, sem erro de console; o dos móveis 16/16 |
+| `node site/build-site.mjs` | 7 exemplos, 30 pacotes; miniaturas novas capturadas com o Chromium do Playwright |
+| `docker build -f site/Dockerfile .` | não rodei (sem docker aqui); os manifestos dos dois exemplos novos entraram nos COPY, em ordem alfabética |
+
+### Escolhas minhas (padrões reversíveis)
+
+1. A hora do dia da bancada de clima reinicia o relógio do mundo (`createWeather` só aceita `startHour` na criação).
+2. `fog` do módulo de clima é opção para a sala que não é sobre clima não ganhar névoa.
+3. A miniatura da área de clima mostra a tempestade só nos números: a névoa de 100 m quase não aparece a 12 m de distância. O céu e a chuva virão com T6.2b.
+4. Inventário: os relatórios de `inventario/` não têm linhas para S1 nem E6 (som e clima nasceram do desenho `design/T6-som-e-clima.md`), então não havia o que marcar lá; as marcas estão em `tasks.md` (T6.1 e T6.2).
+
+### Perguntas para o dono
+
+1. O ouvinte da sala é a câmera. Em jogo de terceira pessoa o ouvinte deve ser o jogador ou a câmera? (Hoje a sala usa a câmera.)
+2. As miniaturas de Som e Clima não têm o que mostrar de som (e o clima sem visual): aceita uma miniatura da bancada ou prefere esperar a T6.2b?
+3. Falta o docker no ambiente: rodar `docker build -f site/Dockerfile .` antes do PR.
+4. A rodada inteira de `game-weapons-three` precisa de máquina livre; vale subir o `testTimeout` do pacote (hoje 5 s) como foi feito no `golden-tool`?

@@ -34,16 +34,19 @@ const plano = planSound(receita, { random: createRng(7), distance: 12 }) // null
 | `GAME_SFX_CLASSES`, `noiseClassRecipe`, `GAME_SFX_BANK` | As 12 classes de ruído do jogo (tabela `P`) e a receita `burst` de cada uma |
 | `MIX_PROFILES`, `DEFAULT_MIX` | `game` (mestre 0.5) e `art_scene` (compressor, reverb; padrão do kit, Q1) |
 | `VOICE_GROUPS` | `undead_voice`: 5 ao mesmo tempo, um a cada 0,25 s, só a menos de 40 m |
+| `createAudioEngine({ seed, mix, banks, maxVoices, createContext })` | Motor WebAudio preguiçoso (sem `AudioContext` até o primeiro som; no Node tudo menos `plan` é no-op): `play`, `plan`, `loop`, `channel`, `setMix`, `setMaster`, `setBus`, `setListener`, `unlock`, `stats`, `level(bus)`, `dispose` |
+| `createAudioSink(engine)` | `AudioSink` do contrato (`host.audio`) que carrega o motor em `.engine`: quem recebe o sink usa o motor do anfitrião |
+| `createAudioTestModule(options?)` | `TestableModule` `audio_area`: toca qualquer som a uma distância e direção (ou da sonda na área), laços, tempestade de 20 vozes, mixagem e camadas (reverb, compressor, pan, abafamento), nível de cada barramento e o plano do som. `BENCH_BANK` tem os dois sons de prova do próprio módulo |
 | `LIBRARY_BANK` | Casa temporária (Q12): laços `engine_saw`, `rotor_blades`, `crowd_rumble`; `horn`, `radio_static`, `siren` |
 
 ## Compõe com
-`game-contracts` (`AudioSink`, `ModuleHost.audio`). Os bancos de som virão de `game-weapons-three`, `game-destruction-three`, personagens, bichos e
-`game-weather`.
+`game-contracts` (`AudioSink`, `ModuleHost.audio`). Os bancos de som são de cada pacote: `game-weapons-three` (ordem `weapon`, `createWeaponAudio` é adaptador), `game-destruction-three` (`createDestructionSound`, sons dos materiais e laço de fogo); personagens, bichos e `game-weather` virão.
 
 ## Ambiente de teste
-`pnpm --filter @adatechnology/game-audio test` (vitest: plano, curvas, pan, limite de vozes com o golden das regras dos times, laços, banco).
+`examples/audio-test-area` carrega o módulo na sala (`AudioArea.loadInto(room)`, página `sala-som.html`) e tem teste no navegador (4 cenários, tocar, laço). `pnpm --filter @adatechnology/game-audio test` (vitest: plano, curvas, pan, limite de vozes com o golden das regras dos times, laços, banco).
 
 ## Cuidados
 - A ordem dos campos da receita é a ordem do sorteio: trocar dois campos de lugar muda o som de uma semente.
 - `order` escolhe a ordem de criação dos nós do realizador; cada uma é a de uma rotina do time, para o trace bater nó a nó.
+- A ordem de construção `weapon` (camada de ruído filtrado ou oscilador, ganho próprio, direto no barramento) é a das armas; `to: 'from'` e `{ from }` sem `to` reproduzem a Cena (rampa de volta ao início, ou só `setValueAtTime`).
 - `undead_voice` com `maxConcurrent: 5`: a Cena recusa com `AU.groans > 4`, então toca até cinco ao mesmo tempo.

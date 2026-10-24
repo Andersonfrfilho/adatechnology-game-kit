@@ -49,7 +49,7 @@ trovão). As pontes ficam na T6.2b.
 
 ## Ambiente de teste
 `pnpm --filter @adatechnology/game-weather test` (vitest: dados, escalonador, relâmpago, solo, efeitos, calor, dia e noite, registro e os goldens de 72 h
-com sementes 1, 7 e 42 nos dois climas; os goldens rodam em Node 22 e 24). A bancada `createWeatherTestModule` vem na T6.2d.
+com sementes 1, 7 e 42 nos dois climas; os goldens rodam em Node 22 e 24). A bancada `createWeatherTestModule` (`weather_area`, só contratos genéricos) faz o clima andar a cada quadro, escreve em `host.environment` (e na névoa da cena, camada `fog`) e mostra chuva, visibilidade, escalas de visão e audição, vento, índice de calor, chão molhado e raios; `examples/weather-test-area` a carrega na sala (`WeatherArea.loadInto(room)`, `sala-clima.html`). O visual, o som e as pontes vêm na T6.2b e T6.2c.
 
 ## Cuidados
 - O tempo do escalonador é **de jogo** (`timeScale` 72 = dia de 20 min); o solo (180 s para secar), o relâmpago (3,5 a 6 s) e `force(id, segundos)` são em segundos **reais**.

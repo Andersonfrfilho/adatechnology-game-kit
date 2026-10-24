@@ -27,7 +27,7 @@ const renderer = createDestructionRenderer(THREE, {
   world,
   quality: 'medium',
   onPiece: (piece) => grabbable.push(piece),
-  onSound: (key, point, volume) => audio.play(key, point, volume),
+  onSound: (key, point, volume) => audio.play(key, point, volume), // ou createDestructionSound(engine).onSound, que traduz as chaves para as receitas do game-audio
 })
 
 scene.add(chairModel)
