@@ -2546,3 +2546,61 @@ node examples/interactables-test-area/build.mjs && test.mjs -> 24/24
 - Os textos do jogo (mordida, reanimou, latido "zumbi a N m", quero-quero) viram ids e distância; o jogo escreve as frases.
 - O líder do grupo e a distância da criança (`davi` segue a `helena` a 1,2 m) viram `leader` e `followDistance` da pessoa.
 - **Dúvida:** comportamento dos civis por estágio do surto (pergunta 1 do desenho) segue sem código dos times; `bindInfection` não muda a rotina.
+
+## T8.1c — `game-crowd-three` (o desenho da multidão e a área de teste)
+
+> 🤖 Modelo: `sonnet` (feito nesta sessão pelo opus)
+
+**O que foi feito**
+
+- `createCrowdInstances` (`packages/game-crowd-three/src/instances.ts`): porte literal de `hordeRender` (`jogo.js` G 67098-67136) e `npcRender`
+  (G 70177-70184), sem three.js. Corte pela vista (passado √30 m, atrás da vista mais que `0,35·d + 3` m; nada além de 200 m), LOD 18/55 m com
+  histerese de 1,5 m guardada em `store.lod`, pose de ataque que entra a 1,6 m e sai a 2,2 m guardada em `store.attackPose` (a simulação a lê, como
+  no jogo), pose por estado (`INSTANCE_POSES` do `game-characters`), inchaço do Inchado, olho apagado sem crânio ou dormente, corpos no chão na
+  própria variante (perto até 18 m) que escurecem 70% e encolhem nos últimos 60 s, corpo de quem não era agente no lote simples, e os civis (criança
+  0,66 × 0,75, mordida aparecendo). Números em `src/data/render.json` com a linha de origem; poses por opção.
+- `createCrowdRenderer`: os tipos assados como em `ZVAR` (G 67079: `variantDecay`, `variantSeed`, detalhe 1, 0,5 e 0,28, lotes 160/700/2600) com
+  `bakeBody`, `createVariantBatches`, `createBodyBatch` e `buildInstancedBody` do `game-characters-three`; um tipo é assado na primeira vez que
+  aparece. Corpos de civis assados a 0,8 em lotes de 4 (G 68469 `PB`), o corpo dado pelo host. `lodCounts` contado depois dos corpos, como o jogo.
+- `createHerdView`: os bichos do `createHerd` com os rigs do `game-animals-three` (posição, rumo, `animate` com o clip; G 66697-66699) e os urubus do
+  `createFlock` planando com as asas de G 66707.
+- `CROWD_SOUND_BANK`: o grito rouco e os gemidos (`grito`, `voz`, G 62128-62155) e os chamados dos bichos (`bichoSom`, G 66625-66639) como receitas
+  do `game-audio`, as mesmas que o `game-audio` confere contra os traços dos times; `HERD_SOUND_IDS` liga `bark`/`cluck`/`lapwing`/`moo` a elas.
+- `createCrowdTestModule` (`crowd_area`, só contratos genéricos): horda do pacote que o host passa, desenhada pelo renderizador, caçando a câmera da
+  sala como corpo do `game-player`; civis, bichos, região do `game-infection`; sons por `host.audio` (o banco é registrado lá), efeitos por
+  `host.effects` (`CROWD_EFFECTS`). Nove cenários. `examples/crowd-test-area` (300 agentes, conteúdo do kit) e a `interactables-test-area` (vazia).
+- Golden `game-crowd-render.json`: o harness de `vm-crowd.ts` corta do jogo `hordeRender`, `npcRender`, `walkGait`, `ZB`, `CB`, `_c1`, `LOD_D`,
+  `NPC_COL` e troca `BodyBatch` e `THREE.Color` por registradores; desenha todo quadro (a pose de ataque volta à simulação) e grava, a cada batida,
+  o que o desenho leu (números exatos como texto) e cada instância. As 11 cenas da horda e dos civis: **11 de 11 iguais**, instância por instância.
+  Mutações (`agePer`, `corpseDarken`, `civilianSkinStep`, `behindMargin`) quebram o teste; a histerese (1,5 → 1,4) não é exercida pelas cenas e fica
+  coberta pelo cenário `crowd_lod` e pelo teste unitário.
+
+**Comandos e resultados**
+
+```text
+pnpm build                                              -> ok
+pnpm -r typecheck                                       -> ok
+pnpm lint                                               -> ok
+pnpm --filter @adatechnology/game-crowd-three test      -> 22 passed (golden 11 cenas, instâncias, renderizador, banco, área)
+pnpm --filter @adatechnology/game-crowd test            -> 32 passed
+pnpm --filter @adatechnology/game-audio test            -> 169 passed
+characters-catalog-tool vitest --testTimeout=60000      -> 73 passed
+node dist/record-golden-vm.js --check                   -> os 10 goldens vm idênticos duas vezes e iguais ao fixture
+node examples/test-room/build.mjs                       -> ok
+node examples/crowd-test-area/build.mjs && test.mjs     -> 9/9
+node examples/interactables-test-area/build.mjs && test.mjs -> 26/26
+```
+
+**Desvios e dúvidas**
+
+- O golden de cena por hash das matrizes (tabela 5 do desenho) virou o golden das instâncias do `hordeRender`: compara os 12 números do shader, a
+  cor, o olho e a altura de cada corpo, que é o que vira matriz.
+- `s` e `bulk` das variantes no golden são números fixos: o assar já é conferido pelo golden do `game-characters-three` (os 60 `bakeBody` de `ZVAR`).
+- O `PB` do jogo tem cinco lotes e prende os civis além do quarto no último; o harness usa um lote por civil (os números da instância são os mesmos).
+- Os andares do jogo (`ANDARES`) seguem fora: `frame.hidden(i)` deixa um agente de fora.
+- O laço `crowd_rumble` continua na biblioteca do `game-audio` (a horda do jogo não o toca no `hordeRender`).
+- O `game-audio` mantém a cópia das receitas de grito, gemido e chamados nos testes para não depender do `game-crowd-three`.
+- A miniatura do site precisou de 60 s no swiftshader para a primeira imagem (a página assa os tipos que aparecem).
+- **Dúvida 11 do desenho:** efeitos da multidão na sala (padrão `CROWD_EFFECTS`).
+- **Dúvida 12 do desenho:** corpo de cada civil (padrão: o host dá; a área usa os três corpos sem retrato de G 68469).
+

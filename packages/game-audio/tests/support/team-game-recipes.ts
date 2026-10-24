@@ -1,6 +1,6 @@
-// Recipes for the game routines whose subject package does not exist yet (scream and groan go to characters-three, the animal calls to
-// animals-three, the boom to destruction-three, the rain loop to game-weather). They live here only to check the realizer against the team
-// traces; the subject banks take them over in their own tasks.
+// Recipes for the game routines whose subject package ships them (the scream, the groans and the animal calls are `CROWD_SOUND_BANK` of
+// game-crowd-three, the boom is destruction-three's, the rain loop goes to game-weather). This copy stays here to check the realizer against the
+// team traces without game-audio depending on the subject packages.
 import { DISTANCE_CURVES } from '../../src'
 import type { Layer, LoopRecipe, SoundBank, SoundRecipe } from '../../src'
 

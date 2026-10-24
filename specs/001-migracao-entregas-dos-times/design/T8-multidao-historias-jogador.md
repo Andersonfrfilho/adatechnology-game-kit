@@ -241,6 +241,11 @@ export type CharacterSheet = {
    (blind 3.0 vs 1.6, charred 2.2 vs 1.6, drowned 2.5 vs 1.2, devourer 3.0 vs 2.4), the drowned weight (0 vs 1) and the decrepit smell. Default:
    `undeadCrowdPack()` uses the game's, since it is the behaviour the golden checks.
 10. **One target in T8.1a.** Question 6 stays open: the core keeps the game's single `target`; the civilians (T8.1b) hunt through `setHunt`.
+11. **The crowd's effects in the room** (found in T8.1c). The game's `fxSpark`, `fxDust`, `fxBlood`, `fxLimb` and `fxCloud` are its own pools; the kit's
+    effects are the Oficina de VFX recipes. Default: `CROWD_EFFECTS` maps blood to `blood_hit`, a limb to `dismember`, the cloud to `bloater_cloud`,
+    the spark to `impact` (metal) and the dust to `impact` (concrete); a game passes its own map.
+12. **A civilian's body** (found in T8.1c). The game bakes five bodies for the player and the four named survivors (two with portraits). Default: the
+    renderer takes each civilian's body from the host; the kit's area uses the three bodies of G 68469 without a portrait, in turn.
 
 ## Root Cause
 

@@ -12,7 +12,7 @@ quem toca, desenha e mostra é o jogo.
 
 ## Quando usar e quando não usar
 - Use para qualquer grupo de agentes que anda, percebe e persegue: horda, população de uma cidade, civis com rotina, bichos, revoada.
-- Não use para desenhar (`game-crowd-three`, T8.1c), para o jogador (`game-player`) nem para o contágio entre regiões (`game-infection`).
+- Não use para desenhar (`game-crowd-three`), para o jogador (`game-player`) nem para o contágio entre regiões (`game-infection`).
 - Mundo normal primeiro: sem `target` ninguém persegue; os tipos só ganham habilidade pelos `traits`.
 
 ## Como usar
@@ -50,8 +50,8 @@ crowd.updateTrail(dt); crowd.update(dt, { nightFactor, viewYaw }); crowd.updateP
 `pnpm --filter @adatechnology/game-crowd test`: o golden `game-crowd.json` (8 cenas do código do jogo em `node:vm`: perseguição e vagas, noite e
 olfato, pirâmide no muro, porta, habilidades, corpos e rastro, dano por região, calibre e roupa, população e migração, gravadas por
 `pnpm --filter @adatechnology/characters-catalog-tool golden:vm`) é refeito quadro a quadro, mais testes da grade, das portas e da API.
-Os goldens `game-crowd-civilians.json` (3 cenas) e `game-crowd-herd.json` refazem os civis e os bichos com a horda. A bancada e
-`examples/crowd-test-area` chegam no T8.1c.
+Os goldens `game-crowd-civilians.json` (3 cenas) e `game-crowd-herd.json` refazem os civis e os bichos com a horda. A bancada
+(`createCrowdTestModule`) está no `game-crowd-three` e abre em `examples/crowd-test-area`.
 
 ## Cuidados
 - Os efeitos do jogo (`fxSpark`, `fxBlood`...) sorteavam do mesmo `R()`; aqui eles saem como evento e não gastam o `random` da simulação.

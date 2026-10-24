@@ -485,7 +485,62 @@ const meshStub = () => {
   return { visible: true, position, rotation, castShadow: false }
 }
 
-const createCrowdHarness = (scenario: CrowdScenario) => {
+/** One instance the game's `BodyBatch.push` took: the batch (variant and level; -1 the plain corpse batch, -2-k the k-th survivor batch), the 12 shader numbers, the colour as hex and shade, the eye and the height. */
+type RenderPush = { v: number; l: number; n: number[]; color: number; shade: number; eye: number | null; y: number }
+
+/**
+ * The drawing side of a frame (G 67098 `hordeRender`, G 70177 `npcRender`) with the meshes stubbed: `BodyBatch` keeps what each `push` gets and `THREE.Color` keeps
+ * the hex and the shade it is multiplied by. A variant's `s` and `bulk` are fixed numbers (the bake is the drawing's; the SDK test gives the same ones).
+ */
+const renderTail = (source: string, horde: string, civilians: boolean): string[] => [
+  cutFunction(source, 'walkGait'),
+  'class BodyBatch { constructor(geo, max) { this.geo = geo; this.max = max; this.n = 0; } begin() { this.n = 0; } push(...a) { if (this.n >= this.max) return; this.n++; __push(this.geo, a); } end() {} }',
+  'const BODY_LOD = [{ v: -1, l: 0 }, { v: -1, l: 1 }, { v: -1, l: 2 }];',
+  'const ZVAR = ZVAR_OF.flat().map((g) => ({ s: __variantS(g), bulk: __variantBulk(g), B: [0, 1, 2].map((l) => new BodyBatch({ v: g, l }, [160, 700, 2600][l])) }));',
+  cutDeclaration(horde, 'ZB'),
+  cutDeclaration(horde, 'CB'),
+  cutDeclaration(horde, '_c1'),
+  cutDeclaration(horde, 'LOD_D'),
+  cutDeclaration(horde, 'lodCounts'),
+  cutFunction(horde, 'hordeRender'),
+  ...(civilians
+    ? [
+        // one batch per survivor (the game has five portraits and caps `use` at the last one; the instance numbers are the same)
+        'const PB = (() => { const B = Array.from({ length: 16 }, (_, k) => new BodyBatch({ v: -2 - k, l: 0 }, 4)); let cur = 0; return { use(k) { cur = Math.min(k, B.length - 1); }, begin() { B.forEach((b) => b.begin()); cur = 0; }, end() {}, push(...a) { B[cur].push(...a); } }; })();',
+        cutDeclaration(source, 'NPC_COL'),
+        cutFunction(source, 'npcRender'),
+      ]
+    : []),
+  `function __render() { ${civilians ? 'PB.begin(); PB.use(0); ' : ''}hordeRender(); ${civilians ? 'npcRender(); PB.end(); ' : ''}}`,
+]
+
+/** The fixed `s` and `bulk` of variant `g` in the render golden. */
+export const RENDER_VARIANT = (g: number): { s: number; bulk: number } => ({ s: 1.6 + (g % 5) * 0.03, bulk: 0.9 + (g % 3) * 0.05 })
+
+/** THREE.Color as the render golden reads it: the hex it was set to and the shade it was multiplied by. */
+class ColorStub {
+  hex = 0
+  k = 1
+  constructor(value?: number) {
+    if (value !== undefined) this.set(value)
+  }
+  set(value: number | ColorStub): this {
+    if (typeof value === 'number') {
+      this.hex = value
+      this.k = 1
+    } else {
+      this.hex = value.hex
+      this.k = value.k
+    }
+    return this
+  }
+  multiplyScalar(k: number): this {
+    this.k *= k
+    return this
+  }
+}
+
+const createCrowdHarness = (scenario: CrowdScenario, render = false) => {
   const source = readSource(SOURCE_PATHS.game)
   const horde = fromMarker(source, HORDE_MARKER)
   const worldSection = fromMarker(source, WORLD_MARKER)
@@ -524,6 +579,7 @@ const createCrowdHarness = (scenario: CrowdScenario) => {
   const view = { yaw: scenario.viewYaw }
   let hour = scenario.civilians?.hour[0] ?? 12
   const effect = (kind: string, payload: Record<string, EventValue>) => recorder.record('effect', { effect: kind, ...payload })
+  const pushes: RenderPush[] = []
   const tail = [
     cutDeclaration(source, 'WORLD'),
     cutDeclaration(worldSection, 'GC'),
@@ -591,6 +647,7 @@ const createCrowdHarness = (scenario: CrowdScenario) => {
     `function __tick(dt, population) { groanBudget -= dt; trailUpdate(dt); ${scenario.civilians ? 'npcUpdate(dt); ' : ''}${scenario.herd ? 'bichosUpdate(dt); ' : ''}hordeUpdate(dt); if (population) populationUpdate(dt); corpsesUpdate(dt); }`,
     'function __pileCount() { return pileN; }',
     'function __setNight(v) { nightF = v; }',
+    ...(render ? renderTail(source, horde, !!scenario.civilians) : []),
   ].join('\n')
   const camera = { position: { x: scenario.target.x, z: scenario.target.z } }
   const scope = {
@@ -617,6 +674,18 @@ const createCrowdHarness = (scenario: CrowdScenario) => {
     fxDust: () => effect('dust', {}),
     ...(scenario.herd ? herdScope(scenario.herd, (type, payload) => recorder.record(type, payload)) : {}),
     ...(scenario.civilians ? civilianScope(scenario.civilians, () => hour, (type, payload) => recorder.record(type, payload)) : { zChaseNpc: () => false }),
+    ...(render
+      ? {
+          THREE: { Color: ColorStub },
+          __variantS: (g: number) => RENDER_VARIANT(g).s,
+          __variantBulk: (g: number) => RENDER_VARIANT(g).bulk,
+          __push: (geo: { v: number; l: number }, a: unknown[]) => {
+            const col = a[12] as ColorStub
+            const eye = a[13] as ColorStub | null
+            pushes.push({ v: geo.v, l: geo.l, n: (a.slice(0, 12) as number[]).map(Number), color: col.hex, shade: col.k, eye: eye ? eye.hex : null, y: (a[14] as number | undefined) ?? 0 })
+          },
+        }
+      : {}),
   }
   const context = evaluateGameSlice<CrowdContext & { __setNight: (v: number) => void }>({
     functions: [
@@ -652,7 +721,7 @@ const createCrowdHarness = (scenario: CrowdScenario) => {
       'zFrame',
       ...(scenario.civilians ? ['solidAtA', 'pontos', 'rota', 'npcExposed', 'npcZombies', 'zChaseNpc', 'npcMorre', 'npcVira', 'npcMove', 'npcUpdate'] : []),
     ],
-    exports: [...(scenario.civilians ? ['NPC'] : []), ...(scenario.herd ? ['BICHO', 'URUBUS', '__addBicho'] : []), 'Z', 'zSpawn', 'zDamage', 'emitNoise', 'fillRect', 'addDoor', 'DOORS', 'CP', 'TRAIL', 'stats', 'ROUPAS', 'CALIBRES', 'POOL', '__tick', '__pileCount', '__setNight'],
+    exports: [...(render ? ['__render'] : []), ...(scenario.civilians ? ['NPC'] : []), ...(scenario.herd ? ['BICHO', 'URUBUS', '__addBicho'] : []), 'Z', 'zSpawn', 'zDamage', 'emitNoise', 'fillRect', 'addDoor', 'DOORS', 'CP', 'TRAIL', 'stats', 'ROUPAS', 'CALIBRES', 'POOL', '__tick', '__pileCount', '__setNight'],
     scope,
     tail,
     capacity: CAPACITY,
@@ -687,12 +756,18 @@ const createCrowdHarness = (scenario: CrowdScenario) => {
       ;(context as unknown as { __addBicho: (e: unknown) => void }).__addBicho(E)
     }
   }
-  return { context, target, setHour: (next: number) => void (hour = next), setRecorder: (next: EventRecorder) => void (recorder = next), setSeed: (seed: number) => void (stream = createSeededRandom(seed)) }
+  return { context, target, camera, view, pushes, setHour: (next: number) => void (hour = next), setRecorder: (next: EventRecorder) => void (recorder = next), setSeed: (seed: number) => void (stream = createSeededRandom(seed)) }
 }
 
 type Civ = { id: string; x: number; z: number; vx: number; vz: number; yaw: number; hp: number; st: string; bitT: number; pi: number; ph: number; path: unknown; zi?: number }
 
-const recordScenes = (name: string, scenes: readonly CrowdScenario[], withCalibres: boolean): GoldenRecord => {
+/** The game's survivor states in the codes the render golden packs (the SDK's order of `CIVILIAN_STATE_OF`). */
+const CIVILIAN_CODE: Readonly<Record<string, number>> = { casa: 0, andando: 1, grupo: 2, fugindo: 3, partiu: 4, morto: 5, zumbi: 6 }
+/** The fields of an agent `hordeRender` reads, in the order the render golden packs them (exact numbers, as text: the 4-decimal rounding would move the start). */
+export const RENDER_AGENT_FIELDS = ['x', 'z', 'ry', 'ph', 'h', 'b', 'rs', 'st', 'stT', 'miss', 'age', 'arm', 'skin', 'col', 'cat', 'y', 'crawl', 'vr', 'lod', 'ap'] as const
+export const RENDER_CORPSE_FIELDS = ['x', 'z', 'yaw', 'seed', 'h', 'b', 't', 'miss', 'skin', 'col', 'vr'] as const
+
+const recordScenes = (name: string, scenes: readonly CrowdScenario[], withCalibres: boolean, render = false): GoldenRecord => {
   const recorder = createEventRecorder()
   if (withCalibres) {
     // the game's calibres as the crowd reads them (class and skull distance), for the SDK replay
@@ -702,15 +777,17 @@ const recordScenes = (name: string, scenes: readonly CrowdScenario[], withCalibr
     recorder.record('calibres', calibres)
   }
   for (const scenario of scenes) {
-    const harness = createCrowdHarness(scenario)
+    const harness = createCrowdHarness(scenario, render)
     const { context, target } = harness
     const { Z } = context
-    harness.setRecorder(recorder)
+    // the render golden keeps only what the drawing got; the horde's own events are in the other goldens
+    harness.setRecorder(render ? createEventRecorder() : recorder)
     const pool = scenario.pool ?? FAR_POOL
     Object.assign(context.POOL, { x0: pool[0], z0: pool[1], x1: pool[2], z1: pool[3] })
     for (const wall of scenario.walls ?? []) context.fillRect(...wall)
     for (const [x, z, axis, w] of scenario.doors ?? []) context.addDoor(x, z, axis, w, null)
-    recorder.record('scenario', { scenario: scenario as unknown as EventValue })
+    if (render) recorder.record('scene', { id: scenario.id, fps: scenario.fps })
+    else recorder.record('scenario', { scenario: scenario as unknown as EventValue })
     for (const agent of scenario.agents) {
       const i = context.zSpawn(agent.x, agent.z, agent.type)
       if (agent.st !== undefined) Z.st![i] = agent.st
@@ -766,6 +843,29 @@ const recordScenes = (name: string, scenes: readonly CrowdScenario[], withCalibr
         for (const n of context.NPC as Civ[])
           recorder.record('civilian_state', { frame, id: n.id, x: r6(n.x), z: r6(n.z), vx: r6(n.vx), vz: r6(n.vz), yaw: r6(n.yaw), hp: r6(n.hp), state: CIVILIAN_STATE_OF[n.st] ?? n.st, biteTimer: r6(n.bitT), pathIndex: n.pi, phase: r6(n.ph) })
     }
+    // the game draws every frame (the attack pose it sets is read back by the horde); a frame on the beat is written with what the drawing read
+    const drawFrame = (write: boolean) => {
+      const pack = (rows: number, fields: readonly string[], of: Readonly<Record<string, Field>>) =>
+        Array.from({ length: rows }, (_, i) => fields.map((f) => String(of[f]![i]!)).join(',')).join(';')
+      const agents = write ? pack(Z.n, RENDER_AGENT_FIELDS, Z) : ''
+      const corpses = write ? pack(context.CP.n, RENDER_CORPSE_FIELDS, context.CP) : ''
+      const people = scenario.civilians && write ? (context.NPC as (Civ & { crianca?: number; k: number; y?: number; cor: number })[]).map((n) => [n.x, n.z, n.yaw, n.ph, n.vx, n.vz, n.crianca ? 1 : 0, n.bitT, n.k, CIVILIAN_CODE[n.st] ?? -1, n.y ?? 0, n.cor].map(String).join(',')).join(';') : ''
+      harness.pushes.length = 0
+      ;(context as unknown as { __render: () => void }).__render()
+      if (!write) return
+      recorder.record('render', {
+        frame,
+        camera: `${harness.camera.position.x},${harness.camera.position.z}`,
+        viewYaw: String(harness.view.yaw),
+        target: `${target.x},${target.z},${target.alive ? 1 : 0}`,
+        agents,
+        corpses,
+        ...(scenario.civilians ? { civilians: people } : {}),
+        out: harness.pushes.map((p) => ({ ...p })) as unknown as EventValue,
+        lod: Array.from({ length: Z.n }, (_, i) => Z.lod![i]!).join(','),
+        ap: Array.from({ length: Z.n }, (_, i) => Z.ap![i]!).join(','),
+      })
+    }
     const dt = 1 / scenario.fps
     for (let k = 0; k < scenario.frames; k++) {
       for (const [at, x, z, r] of scenario.noises ?? []) if (at === k) context.emitNoise(x, z, r)
@@ -790,9 +890,10 @@ const recordScenes = (name: string, scenes: readonly CrowdScenario[], withCalibr
       }
       context.__tick(dt, scenario.population !== undefined)
       frame++
-      if (frame % scenario.every === 0) snapshot()
+      if (render) drawFrame(frame % scenario.every === 0 || k === scenario.frames - 1)
+      else if (frame % scenario.every === 0) snapshot()
     }
-    if (frame % scenario.every !== 0) snapshot()
+    if (!render && frame % scenario.every !== 0) snapshot()
   }
   return createGoldenRecord({ name, seed: 20261022, events: recorder.events() })
 }
@@ -805,3 +906,10 @@ export const recordCrowdCiviliansGolden = (): GoldenRecord => recordScenes('game
 
 /** G-crowd-herd: the animals (`bichoLivre`, `zumbiPerto`, `bichosUpdate`) and the vultures with the horde. */
 export const recordCrowdHerdGolden = (): GoldenRecord => recordScenes('game-crowd-herd', HERD_SCENARIOS, false)
+
+/** G-crowd-render: the game's drawing of the horde, its bodies on the ground and the survivors (`hordeRender`, `npcRender`) on the scenes of the horde and the survivors. */
+export const recordCrowdRenderGolden = (): GoldenRecord => {
+  const horde = recordScenes('game-crowd-render', CROWD_SCENARIOS, false, true)
+  const civilians = recordScenes('game-crowd-render', CIVILIAN_SCENARIOS, false, true)
+  return { ...horde, events: [...horde.events, ...civilians.events] }
+}

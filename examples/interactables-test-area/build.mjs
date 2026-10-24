@@ -24,7 +24,9 @@ const esbuild = createRequire(import.meta.url)(findEsbuild())
   const people = ['game-characters', 'game-characters-three', 'game-characters-people', 'game-characters-undead', 'game-animals', 'game-animals-species', 'game-animals-three']
   // the houses: the plans of every package, their structure and the drawing in three.js
   const houses = ['game-destruction', 'game-floorplan', 'game-floorplan-commercial', 'game-floorplan-post-apocalyptic', 'game-floorplan-residential', 'game-floorplan-rural', 'game-floorplan-structure', 'game-floorplan-three']
-  for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-vfx', 'game-vfx-three', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', 'game-audio', 'game-weather', 'game-player', ...people, ...houses]) {
+  // the crowd: the horde, its drawing on the baked variants and the region model it comes from
+  const crowd = ['game-crowd', 'game-crowd-three', 'game-infection']
+  for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-vfx', 'game-vfx-three', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', 'game-audio', 'game-weather', 'game-player', ...people, ...houses, ...crowd]) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -63,6 +65,8 @@ const result = await esbuild.build({
     ...Object.fromEntries(people.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
     // the houses area rides along too: the plans of every package, their structure and the drawing, built in the same room as the furniture
     ...Object.fromEntries(houses.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
+    // the crowd area rides along too: a horde on the instanced path that hunts the player body
+    ...Object.fromEntries(crowd.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
   },
 })
 mkdirSync(join(here, 'dist'), { recursive: true })

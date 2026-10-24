@@ -1,7 +1,7 @@
 import { fixturePath } from '../paths'
 
 import { recordBodyChunkGolden } from './vm-body-chunk'
-import { recordCrowdCiviliansGolden, recordCrowdGolden, recordCrowdHerdGolden } from './vm-crowd'
+import { recordCrowdCiviliansGolden, recordCrowdGolden, recordCrowdHerdGolden, recordCrowdRenderGolden } from './vm-crowd'
 import { recordDamageRegionsGolden } from './vm-damage'
 import { recordWalkGaitGolden } from './vm-gait'
 import { recordPenetrationGolden } from './vm-penetration'
@@ -18,4 +18,5 @@ export const VM_GOLDENS = [
   { id: 'game-crowd', path: fixturePath('game-crowd', 'game-crowd.json'), record: recordCrowdGolden },
   { id: 'game-crowd-civilians', path: fixturePath('game-crowd', 'game-crowd-civilians.json'), record: recordCrowdCiviliansGolden },
   { id: 'game-crowd-herd', path: fixturePath('game-crowd', 'game-crowd-herd.json'), record: recordCrowdHerdGolden },
+  { id: 'game-crowd-render', path: fixturePath('game-crowd-three', 'game-crowd-render.json'), record: recordCrowdRenderGolden },
 ] as const

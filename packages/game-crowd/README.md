@@ -92,5 +92,5 @@ with the horde: `game-crowd-civilians.json` (3 scenes) and `game-crowd-herd.json
 
 ## What is not here yet
 
-The three.js renderer and the test area (T8.1c). The game's multi-floor houses (`ANDARES`) and the roof (`ROOF`) are not ported: the crowd walks one
+The drawing and the test area are in `@adatechnology/game-crowd-three`. The game's multi-floor houses (`ANDARES`) and the roof (`ROOF`) are not ported: the crowd walks one
 ground grid (`floor` is kept on each agent for a game that adds floors).
