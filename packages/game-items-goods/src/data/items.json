@@ -33,7 +33,8 @@
         "church",
         "train"
       ]
-    }
+    },
+    "model": "canned_beans"
   },
   {
     "id": "canned_sardines",
@@ -203,7 +204,8 @@
         "military_base",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "military_ration"
   },
   {
     "id": "rice",
@@ -240,7 +242,8 @@
         "church",
         "school"
       ]
-    }
+    },
+    "model": "rice"
   },
   {
     "id": "beans",
@@ -1267,7 +1270,8 @@
         "mall",
         "car"
       ]
-    }
+    },
+    "model": "water_bottle"
   },
   {
     "id": "water_jug_5l",
@@ -1582,7 +1586,8 @@
         "farm",
         "lodge"
       ]
-    }
+    },
+    "model": "cachaca"
   },
   {
     "id": "communion_wine",
@@ -1638,7 +1643,8 @@
         "school",
         "car"
       ]
-    }
+    },
+    "model": "bandage"
   },
   {
     "id": "sterile_gauze",
@@ -1916,7 +1922,8 @@
         "pharmacy",
         "hospital"
       ]
-    }
+    },
+    "model": "amoxicillin"
   },
   {
     "id": "ceftriaxone",
@@ -2043,7 +2050,8 @@
         "warehouse",
         "gas_station"
       ]
-    }
+    },
+    "model": "first_aid_kit"
   },
   {
     "id": "exam_gloves",
@@ -2298,7 +2306,8 @@
         "farm",
         "school"
       ]
-    }
+    },
+    "model": "hammer"
   },
   {
     "id": "screwdriver",
@@ -2353,7 +2362,8 @@
         "train",
         "house"
       ]
-    }
+    },
+    "model": "crowbar"
   },
   {
     "id": "handsaw",
@@ -3124,7 +3134,8 @@
         "house",
         "warehouse"
       ]
-    }
+    },
+    "model": "machete"
   },
   {
     "id": "meat_cleaver",
@@ -3200,7 +3211,8 @@
         "lodge",
         "warehouse"
       ]
-    }
+    },
+    "model": "axe"
   },
   {
     "id": "baseball_bat",
@@ -3248,7 +3260,8 @@
       "kind": "hits",
       "amount": 90
     },
-    "weapon": "nail_bat"
+    "weapon": "nail_bat",
+    "model": "nail_bat"
   },
   {
     "id": "iron_pipe",
@@ -3571,7 +3584,8 @@
         "farm",
         "train"
       ]
-    }
+    },
+    "model": "wooden_plank"
   },
   {
     "id": "nails",
@@ -4534,7 +4548,8 @@
         "zombie_corpse",
         "road"
       ]
-    }
+    },
+    "model": "motorcycle_helmet"
   },
   {
     "id": "hard_hat",
@@ -5066,7 +5081,8 @@
         "lodge",
         "gun_shop"
       ]
-    }
+    },
+    "model": "hiking_backpack_40l"
   },
   {
     "id": "military_backpack",
@@ -5330,7 +5346,8 @@
         "police_station",
         "school"
       ]
-    }
+    },
+    "model": "flashlight"
   },
   {
     "id": "headlamp",
@@ -5390,7 +5407,8 @@
     },
     "charge": {
       "lossPerMonth": 0.1
-    }
+    },
+    "model": "batteries"
   },
   {
     "id": "battery_9v",
@@ -5491,7 +5509,8 @@
         "mall",
         "church"
       ]
-    }
+    },
+    "model": "portable_radio"
   },
   {
     "id": "walkie_talkies",
@@ -5518,7 +5537,8 @@
         "warehouse",
         "military_base"
       ]
-    }
+    },
+    "model": "walkie_talkies"
   },
   {
     "id": "cb_radio",
@@ -5841,7 +5861,8 @@
         "farm",
         "car"
       ]
-    }
+    },
+    "model": "fuel_jerrycan"
   },
   {
     "id": "gasoline",
@@ -5924,7 +5945,8 @@
         "apartment",
         "supermarket"
       ]
-    }
+    },
+    "model": "lpg_cylinder_13kg"
   },
   {
     "id": "gas_cartridge",
@@ -6624,7 +6646,8 @@
         "house",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "house_key"
   },
   {
     "id": "car_key",

@@ -30,6 +30,8 @@ export type ItemRecord = {
   finds?: { places: string[] }
   charge?: { lossPerMonth: number }
   agingFault?: { afterDays: number; chance: number }
+  /** Key of the showcase model in `game-items-three` (`models.json`), for the items the team modeled in 3D. */
+  model?: string
 }
 
 export type SizeSource = DimensionSource
@@ -201,5 +203,6 @@ export const buildItems = (sources: Sources, resolve: (reference: string) => str
   const provenance = Object.fromEntries(all.map(({ record, provenance: row }) => [record.id, row]))
   withViewerAliases(provenance, sources, resolve)
   withGameIds(provenance, sources)
-  return { items: all.map(({ record }) => record), provenance }
+  const modeled = (record: ItemRecord): ItemRecord => (sources.decisions.dimensions[record.id]?.modelScaleRef ? { ...record, model: record.id } : record)
+  return { items: all.map(({ record }) => modeled(record)), provenance }
 }

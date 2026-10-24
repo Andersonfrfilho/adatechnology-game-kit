@@ -16,3 +16,6 @@ Gravados por `tools/golden/bin/record.mjs` a partir de `artefatos/site__*.html` 
 
 Cada gravação foi repetida e saiu idêntica byte a byte. O golden de estrutura guarda um hash por lista (peças, apoios, partes e juntas do
 `specDe` coarse e `vedacao`) e um por instalação; o `-detail` traz o JSON canônico das peças da semente 1 para ler a diferença.
+
+Os goldens das fases seguintes ficam direto no pacote que os consome: `packages/game-items-three/tests/fixtures/team-golden/items-showcase.json` (T3.2b; a captura
+`tools/golden/captures/items-showcase.js` e o comando estão no README do `tools/golden`).

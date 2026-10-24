@@ -13,3 +13,5 @@ export { checkBudget, countDrawCalls, countTriangles, cullDistanceOf, ITEM_BUDGE
 export type { BudgetReport, ItemBudgets, ItemSizeClass, Vec3Like } from './budgets'
 export { hasItemModel, itemModelBuilder, itemModelEntry, listItemModels, registerItemModel, unregisterItemModel } from './models/registry'
 export type { ItemModelBuilder, ItemModelEntry } from './models/registry'
+export { SHIPPED_MODELS } from './models/shipped'
+export { MODEL_BUDGET_DEVIATIONS } from './models/deviations'

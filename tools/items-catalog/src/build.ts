@@ -8,10 +8,11 @@ import type { GeneratedFiles } from './build-game-slice'
 import { buildHousePools } from './build-house-pools'
 import { buildItems } from './build-items'
 import { buildLocale } from './build-locale'
+import { buildModels } from './build-models'
 import { buildCategories, buildDepletion, buildMelee, buildPlaces, buildRarities, buildSpawn, buildStorage } from './build-tables'
 import { buildUseEffects } from './build-use-effects'
 import { buildIdIndex, resolveReference } from './item-ids'
-import { outputPath } from './paths'
+import { MODELS_OUTPUT_PATH, outputPath } from './paths'
 import { parseRecipe } from './parse-recipe'
 import { loadSources } from './sources'
 
@@ -44,6 +45,7 @@ export const buildCatalog = ({ gameOutput }: BuildOptions = {}): CatalogFiles =>
     [outputPath('melee')]: serialize(buildMelee(sources, resolve)),
     [outputPath('provenance')]: serialize(provenance),
     [outputPath('locales/pt-BR')]: serialize(buildLocale(items, provenance, containers, sources)),
+    [MODELS_OUTPUT_PATH]: serialize(buildModels(sources)),
   }
   return gameOutput ? { ...files, ...buildGameSlice(sources, gameOutput, resolve) } : files
 }

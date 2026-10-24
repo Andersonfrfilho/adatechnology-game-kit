@@ -41,12 +41,8 @@ export interface ItemKit {
   glass(color: number, opacity: number): THREE_NS.MeshStandardMaterial
 }
 
-/** sRGB floats of a colour made from a hex, the way r128 (the team's three.js) stores them: as given, with no conversion. */
-const srgbOf = (color: THREE_NS.Color): readonly [number, number, number] => {
-  const out = { r: 0, g: 0, b: 0 }
-  color.getRGB(out, 'srgb')
-  return [out.r, out.g, out.b]
-}
+/** The channels of a hex as r128 (the team's three.js) stores them: each one over 255, as given, with no conversion. */
+const channelsOf = (hex: number): readonly [number, number, number] => [((hex >> 16) & 255) / 255, ((hex >> 8) & 255) / 255, (hex & 255) / 255]
 
 /** The helpers of the showcase page on a given three.js; every kit has its own list of materials. */
 export function createItemKit(T: Three): ItemKit {
@@ -54,7 +50,7 @@ export function createItemKit(T: Three): ItemKit {
   const M: ItemKit['M'] = (color, tag, options = {}) => {
     const material = new T.MeshStandardMaterial(Object.assign({ color, roughness: 0.78, metalness: 0 }, options))
     const base = new T.Color(color)
-    const data: ItemMaterialData = { base, baseRgb: srgbOf(base), tag, rough: material.roughness }
+    const data: ItemMaterialData = { base, baseRgb: channelsOf(color), tag, rough: material.roughness }
     material.userData = data
     materials.push(material)
     return material

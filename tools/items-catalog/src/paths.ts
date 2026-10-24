@@ -40,4 +40,7 @@ export const OUTPUT_FILE_NAMES = [
 export type OutputName = (typeof OUTPUT_FILE_NAMES)[number]
 export const outputPath = (name: OutputName): string => join(GOODS_DATA, `${name}.json`)
 
+/** `models.json` of the 3D package: the scale of each model of the showcase. */
+export const MODELS_OUTPUT_PATH = join(REPO_ROOT, 'packages', 'game-items-three', 'src', 'data', 'models.json')
+
 export const WEAPONS_CALIBERS_PATH = join(REPO_ROOT, 'packages', 'game-weapons', 'src', 'data', 'calibers.json')

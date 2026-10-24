@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 
 import type { ItemKit } from '../kit'
+import { SHIPPED_MODELS } from './shipped'
 
 /** One model of the showcase as `data/models.json` keeps it: the item it draws, the id the team gave it, the box it has in the units of the page and the scale to metres. */
 export interface ItemModelEntry {
@@ -17,8 +18,8 @@ export interface ItemModelEntry {
 /** A builder of the showcase, ported as it is: it draws in the page's units and returns the group. */
 export type ItemModelBuilder = (kit: ItemKit) => THREE_NS.Group
 
-const entries = new Map<string, ItemModelEntry>()
-const builders = new Map<string, ItemModelBuilder>()
+const entries = new Map<string, ItemModelEntry>(SHIPPED_MODELS.map(({ entry }) => [entry.id, entry]))
+const builders = new Map<string, ItemModelBuilder>(SHIPPED_MODELS.map(({ entry, builder }) => [entry.id, builder]))
 
 /** Adds (or replaces) the model of an item: `entry.id` is the catalog id the item's `model` field names. */
 export function registerItemModel(entry: ItemModelEntry, builder: ItemModelBuilder): void {
