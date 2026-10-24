@@ -1,7 +1,10 @@
 import type {
   DecorPass,
+  FindsProvider,
+  ResultExtensionOptions,
+  ResultExtensionRun,
   GroundOverlayRule,
-  ItemDef,
+  FurnitureDef,
   ItemInput,
   Json,
   RoomColorDef,
@@ -10,11 +13,12 @@ import type {
   StatePlugin,
   StyleDef,
   TemplateDef,
+  ViewerLayer,
 } from './types'
 import type { PaletteStyleDef } from './palette'
 
 /** All content registries of the engine. Content packs fill them through the `register*` functions. */
-export const CATALOG: Record<string, ItemDef> = {}
+export const CATALOG: Record<string, FurnitureDef> = {}
 export const LIBRARIES: Record<string, SlotLibrary> = {}
 export const LIBRARY_ALIAS: Record<string, string> = {}
 export const TEMPLATES: Record<string, TemplateDef> = {}
@@ -30,9 +34,9 @@ export const WALL_TOP_HEIGHTS: Record<string, number> = { none: 0 }
 export const SEED_KEYS: { rooms: Record<string, string>; items: Record<string, string> } = { rooms: {}, items: {} }
 export const stateDistribution: { weights: Record<string, number> | null; seedKey: string } = { weights: null, seedKey: 'state' }
 
-export function registerItem(def: ItemInput): ItemDef {
+export function registerItem(def: ItemInput): FurnitureDef {
   const h = def.h
-  const item: ItemDef = Object.assign({ front: '+z', window: h <= 0.95, low: h <= 0.5, flat: false, deck: false, rim: 0 }, def) as ItemDef
+  const item: FurnitureDef = Object.assign({ front: '+z', window: h <= 0.95, low: h <= 0.5, flat: false, deck: false, rim: 0 }, def) as FurnitureDef
   CATALOG[def.type] = item
   return item
 }
@@ -108,3 +112,33 @@ export function styleOf(id: string): StyleDef {
 }
 
 export type { StateContext }
+
+export interface ResultExtension {
+  name: string
+  run: ResultExtensionRun
+  after: string[]
+  seedKey: string
+}
+export const RESULT_EXTENSIONS: ResultExtension[] = []
+export const FINDS_PROVIDERS: FindsProvider[] = []
+
+/** Adds a named piece to every result, after the state and before the zoning report; its output lands in `result[name]`. */
+export function registerResultExtension(name: string, run: ResultExtensionRun, options: ResultExtensionOptions = {}): void {
+  const entry: ResultExtension = { name, run, after: options.after || [], seedKey: options.seedKey ?? name }
+  const i = RESULT_EXTENSIONS.findIndex((x) => x.name === name)
+  if (i >= 0) RESULT_EXTENSIONS[i] = entry
+  else RESULT_EXTENSIONS.push(entry)
+}
+
+/** Registers who answers what a container holds (the item packs, from phase 3 on). */
+export function registerFindsProvider(provider: FindsProvider): void {
+  FINDS_PROVIDERS.push(provider)
+}
+
+export const VIEWER_LAYERS: ViewerLayer[] = []
+/** Adds (or replaces, by id) a layer of the 2D viewer; drawn after the items, before the labels. */
+export function registerViewerLayer(layer: ViewerLayer): void {
+  const i = VIEWER_LAYERS.findIndex((x) => x.id === layer.id)
+  if (i >= 0) VIEWER_LAYERS[i] = layer
+  else VIEWER_LAYERS.push(layer)
+}

@@ -9,14 +9,14 @@ export const singleStoreyA: TemplateDef = {
       { id: 'living', type: 'living', label: 'living', rect: [0, 0, w, 5] },
       { id: 'kitchen', type: 'kitchen', label: 'kitchen', rect: [0, 5, uc, d] },
       { id: 'bedroom', type: 'bedroom', label: 'bedroom', rect: [uc, vb, w, d], parts: [[uc, 5, ub, vb]] },
-      { id: 'bathroom', type: 'bathroom', label: 'bathroom', rect: [ub, 5, w, vb] },
+      { id: 'bathroom', type: 'bathroom', label: 'bathroom', rect: [ub, 5, w, vb], overrides: { washbasin: { side: 'back', pos: 0 } } },
     ]; },
     doors: (w, _d) => [
       { a: 'living', b: 'outside', side: 'front', at: w / 2, width: 1.0 },
       { a: 'kitchen', b: 'outside', side: 'back', at: 0.95, width: 0.9 },
       { a: 'living', b: 'kitchen', at: Math.min(w * 0.3, 2.3), width: 0.9, opensTo: 'kitchen' },
       { a: 'kitchen', b: 'bedroom', at: 5.9, width: 0.85, opensTo: 'bedroom' },
-      { a: 'bathroom', b: 'bedroom', at: w - 1.45, width: 0.7, opensTo: 'bathroom' },
+      { a: 'living', b: 'bathroom', at: w - 1.45, width: 0.7, opensTo: 'bathroom', clearance: 0.12 },
     ],
     windows: (w, _d) => [
       { room: 'living', side: 'front', at: 1.35, width: 1.2 }, { room: 'living', side: 'front', at: w - 1.35, width: 1.2 },

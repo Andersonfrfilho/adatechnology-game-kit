@@ -331,6 +331,38 @@ The palette recipes per style are data supplied by the packs (`registerPaletteSt
 - Everything the old SDK held in Portuguese (names, labels, reasons, messages) is now a key plus a locale entry (`en`, `pt-BR`). Register more with `engine.registerLocale('xx', table)`.
 - Randomness is drawn from the same named streams as before so seeds reproduce. Those stream names are the only Portuguese left in the code, in each pack's `legacy-seeds.ts` (for example `'fachada'`, `'lote'`, `'c:sala'`, `'estado:protegida'`). Do not translate them: changing a stream name changes every plan generated from an existing seed.
 
+## Rules from the Visor de casas 3D (spec 001, T2.2b)
+
+The team page (PlantasSDK of the Visor de casas 3D, VC3) kept changing the generator after this port was made (86 regions, rules R01-R72). The engine now follows it; with the id
+tables of the four MIGRATION files, the 12 residential and commercial templates give the same rooms, walls, openings, items, state items and lot as the page
+(900 plans recorded in `game-floorplan-post-apocalyptic/tests/fixtures/team-golden/vc3-plans.json`, plus 4500 more checked once). **The old VP-equality claim above no longer holds**:
+plans differ from the earlier port on purpose. The five rural templates are still to come (T2.2f).
+
+| VC3 | Engine | Effect |
+|---|---|---|
+| `RAIO_JOG` 0.24 | option `playerRadius` (default 0.24, `engine.constants.PLAYER_RADIUS`) | walkability grid has 10 cm cells indoors and drops cells closer than the radius to a wall body; furniture may not close the way for that disc (relaxed pass: 0.12) |
+| `PORTA_FOLGA`, `folga` | `DoorDef.clearance`, `TemplateDef.clearance.door` (default 0.12) | door never closer to a corner or junction than this |
+| `JAN_FOLGA` 0.3, R10 | `TemplateDef.clearance.window`; windows are spread over the wall stretch they fall in (one centred, several with equal gaps, never near a corner, junction or door; bathroom windows small and high) | window positions differ from the earlier port |
+| R43 `SEM_JANELA` | `WINDOWLESS_ROOM_TYPES`: any other room with an exterior wall gets a window in its longest free stretch | |
+| `bloqueiaJanela`, `hjan`, `aereo`, `H_AEREO` 2.15 | `blocksWindow(item, window, overheadOff?)`, `FurnitureDef.windowHeight`, `FurnitureDef.overhead` | a wall cabinet and a shower enclosure block a window; a second pass drops the cabinet (`item.overhead = false`) |
+| R30 `FOLGA_CARRO`, `candidatosCarro` | `parking.ts` (`carCandidates`), option `carClearance` (driver 0.8, side 0.6, end 0.6); the item gets `driver` and `carClearance` | the driver door of a parked car opens |
+| `partesUteis` | `usableParts` | inset only where there is a real wall |
+| `corposParedes` | the grid reads the wall bodies | |
+| R07 | `paths.ts`: every ground-floor exterior door gets a paved path to the pedestrian gate or the nearest path (`path_<door id>`, `entrance_path` for the template's `doorTarget`); a building at the street line has `from: null` | |
+| R23 | the yard water tank slot has `chance: 0` (the tank sits on the slab, T2.2e) | |
+| R20 | `mailbox` item on the front wall beside the pedestrian gate | |
+| R64 | `table_lamp` on a nightstand, dresser or console table (stream `abajur:<room legacy key>`) | |
+| R66 | `single_storey_a`: the bathroom opens from the living room, washbasin on the back wall | |
+| state | fortified: at least one window boarded, the barricade must cover the door zone, a mattress search on a fixed grid in tight houses; abandoned: clothes and stains retry until 2 | |
+| hooks for the rural pack | `TemplateDef.noWalls`, `cumulativeCeilings`, `reservations`, `paths`, `place`; `DoorDef.edge`, `model`, `type`, `steps`; `LotConfig.extraZones`; `StyleDef.fenceHeight`; slot `floorFree`; `FurnitureDef.exactOnly` | |
+
+New vocabulary (VC3 names to SDK): door `tipo` is `type` (`porta` is `door`), `degraus` is `steps`, item `aereo` is `overhead`, `hjan` is `windowHeight`, `so` is `exactOnly`.
+
+New API: `registerResultExtension(name, run, { after?, seedKey? })` (output in `result[name]`, runs after the state and before the zoning report, `rng = createRng(seed, seedKey ?? name)`, so a pack can
+reproduce a team stream and the structure pack puts `result.structure` in the plan), `registerFindsProvider(provider)` and `findsFor(query)` (stub for phase 3: `FindsQuery { place, container, state, rng, day?, region?, footprint?, key? }`,
+`FindStack { itemId, count, data? }`), `registerViewerLayer(layer)` (a pack adds a checkbox and a drawing to the 2D viewer; `engine.viewerLayers`). Furniture extension fields live on `FurnitureDef` (the former `ItemDef` of this package,
+renamed so it does not collide with the item catalogue's `ItemDef`).
+
 ## Zoning (new)
 
 Urban zoning is a generic layer in the engine; the zones themselves are content (see the residential and commercial `regions/br`).

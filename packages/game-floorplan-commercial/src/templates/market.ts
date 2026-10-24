@@ -2,7 +2,7 @@ import type { TemplateDef } from '@adatechnology/game-floorplan'
 
 export const market: TemplateDef = {
   id: 'market', use: 'commercial', partyWalls: ['left', 'right'], style: 'commercial', limits: { w: [12, 20], d: [13, 18] }, defaults: { w: 14, d: 15 },
-  lot: (w, _d) => ({ frontSetback: 0, marginLeft: 0, marginRight: 0, backyardDepth: 4.5, cargo: { u: (w - 5.4) / 2, width: 3.0 }, libraries: { backyard: 'backyard_service' } }),
+  lot: (w, _d) => ({ frontSetback: 0, marginLeft: 0, marginRight: 0, backyardDepth: 4.5, cargo: { u: (w - 5.4) / 2, width: 3.0 }, doorTarget: { a: 'counter', side: 'front' }, libraries: { backyard: 'backyard_service' } }),
   facade: { steelDoor: true },
   floors: [{
     label: 'ground_floor', ceiling: 3.2, openPairs: [['counter', 'shop']],

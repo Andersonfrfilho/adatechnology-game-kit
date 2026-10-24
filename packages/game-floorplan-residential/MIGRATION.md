@@ -302,6 +302,8 @@ Palette style recipes use the same ids; their legacy stream names (`popular`, `m
 | `escorregador` | `slide` | `brinquedo` | `playground` |
 | `balanco` | `swing` | `brinquedo` | `playground` |
 | `banqueta` | `stool` | `banqueta` | `stool` |
+| `abajur` | `table_lamp` | `luz_mesa` | `table_light` |
+| `caixa_correio` | `mailbox` | `correio` | `mailbox` |
 
 Several types are Brazilian in flavour and kept as they were: `churrasqueira` is `bbq_grill`, `edicula` is `outbuilding`, `tanque` is `laundry_tub`, `varal` is `clothesline`, `caixa_dagua` is `water_tank`, `botijao` is `gas_cylinder`, `bancada_gourmet` is `gourmet_counter`. They come with the residential pack and can be replaced per region.
 
