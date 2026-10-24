@@ -196,6 +196,7 @@
     },
     "scale": 1.42,
     "bodyCount": 2,
+    "childEligible": false,
     "posture": {
       "s": 1.42,
       "bulk": 1.32,
@@ -392,6 +393,7 @@
       "color": "5FE08A"
     },
     "build": 1.35,
+    "childEligible": false,
     "posture": {
       "bloat": true,
       "s": 1.03,

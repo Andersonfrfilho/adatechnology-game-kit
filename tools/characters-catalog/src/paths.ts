@@ -33,6 +33,8 @@ export const GAME_SLICE_DIR = join(SPEC_DIR, 'game-slice', 'characters')
 export const WEAPONS_CALIBERS_PATH = join(REPO_ROOT, 'packages', 'game-weapons', 'src', 'data', 'calibers.json')
 
 const UNDEAD_DATA = join(REPO_ROOT, 'packages', 'game-characters-undead', 'src', 'data')
+const PEOPLE_DATA = join(REPO_ROOT, 'packages', 'game-characters-people', 'src', 'data')
+const UNIFORMED_DATA = join(REPO_ROOT, 'packages', 'game-characters-uniformed', 'src', 'data')
 const CHARACTERS_SRC = join(REPO_ROOT, 'packages', 'game-characters', 'src')
 export const OUTPUT_PATHS = {
   undeadTypes: join(UNDEAD_DATA, 'types.json'),
@@ -40,6 +42,14 @@ export const OUTPUT_PATHS = {
   undeadOutfits: join(UNDEAD_DATA, 'outfits.json'),
   undeadInfection: join(UNDEAD_DATA, 'infection.json'),
   undeadMoments: join(UNDEAD_DATA, 'moments.json'),
+  peopleProfessions: join(PEOPLE_DATA, 'professions.json'),
+  peopleAges: join(PEOPLE_DATA, 'ages.json'),
+  peopleAppearance: join(PEOPLE_DATA, 'appearance.json'),
+  peopleAccessories: join(PEOPLE_DATA, 'accessories.json'),
+  uniformedForces: join(UNIFORMED_DATA, 'forces.json'),
+  uniformedRanks: join(UNIFORMED_DATA, 'ranks.json'),
+  uniformedLoadouts: join(UNIFORMED_DATA, 'loadouts.json'),
+  uniformedLootPools: join(UNIFORMED_DATA, 'loot-pools.json'),
   presetTeamGame: join(CHARACTERS_SRC, 'presets', 'team-game.json'),
   presetPhysical: join(CHARACTERS_SRC, 'presets', 'physical.json'),
   body: join(CHARACTERS_SRC, 'data', 'body.json'),

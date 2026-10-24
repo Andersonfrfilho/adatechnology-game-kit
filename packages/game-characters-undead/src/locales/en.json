@@ -1,0 +1,106 @@
+{
+  "typeText": {
+    "walker": {
+      "role": "The mass of the horde: surrounds and pins.",
+      "ai": "Sight 15 m (90 degree cone), hearing 40 m, smell 10 m. Follows the sound of the others. Grabs, then bites.",
+      "counter": "Chokepoints, a shove plus a head blow, distance.",
+      "voice": "Long low groan"
+    },
+    "runner": {
+      "role": "Predator that breaks the group's formation.",
+      "ai": "Sight 30 m, hearing 50 m. Straight line, vaults low obstacles. A charge that knocks down and bites.",
+      "counter": "Shoot the legs, closed doors, sound decoys.",
+      "voice": "Short growl, a scream on sighting"
+    },
+    "crawler": {
+      "role": "Ambush on the ground.",
+      "ai": "Sight 5 m, hearing 20 m. Hides in brush and under cars. Bites the ankle without grabbing.",
+      "counter": "Flashlight, look at the ground, a stomp (40 on the head).",
+      "voice": "Gurgle, nails scraping"
+    },
+    "brute": {
+      "role": "A tank that breaks barricades.",
+      "ai": "Sight 20 m, hearing 30 m. Damage x3 on doors. An arc blow that knocks down 2 m, with a 0.8 s warning. Head lowered: -40% headshot area.",
+      "counter": "Shoot when it lifts its head after the blow (1.2 s), fire, explosives.",
+      "voice": "Sub-bass roar"
+    },
+    "sniffer": {
+      "role": "A hunter that follows a trail.",
+      "ai": "Smell 60 m, follows blood trails (wounded player, fresh zombies) and pulls up to 8 Walkers behind it. Sight 10 m.",
+      "counter": "A bandage to stop the bleeding, crossing water, a meat decoy.",
+      "voice": "Sniffing, low growl"
+    },
+    "leaper": {
+      "role": "Jumps over the group and knocks down whoever is behind cover.",
+      "ai": "Sight 25 m, hearing 40 m. Leaps 6 m horizontally and 3 m up (hoods, low walls, roofs). The leap knocks the target down for 1.5 s. 5 s cooldown.",
+      "counter": "Shoot it in mid-air (it does not dodge), stay by a tall wall, a shove on landing.",
+      "voice": "High hiss before the leap"
+    },
+    "bloater": {
+      "role": "An area hazard.",
+      "ai": "Sight 10 m, smell 25 m. On death it bursts into a 4 m cloud: blinds for 5 s, doubles your scent trail and makes you cough.",
+      "counter": "Shoot from afar, burst it in the middle of the horde, a mask.",
+      "voice": "Bubbling and gas"
+    },
+    "stalker": {
+      "role": "Terror of interiors.",
+      "ai": "Plays dead among the bodies. Wakes if someone passes within 3 m or with their back turned. A 4 m/s pounce for 3 s, grabs from behind.",
+      "counter": "Confirmation shots into the bodies; a real corpse has dull eyes. Enter in pairs.",
+      "voice": "Silent; a joint click under 8 m"
+    },
+    "blind": {
+      "role": "Hunts only by sound.",
+      "ai": "Cannot see. Hears shots at 80 m and steps at 6 m (crouched, 2 m). Goes straight to the source of the sound and attacks whatever it finds, even other zombies.",
+      "counter": "Walk crouched, throw a bottle to divert it, do not shoot without a suppressor nearby.",
+      "voice": "Tongue clicks, like a bat"
+    },
+    "screamer": {
+      "role": "The living alarm.",
+      "ai": "Hearing 60 m, sight 25 m. On seeing someone it screams: calls everyone within 150 m and gives +20% speed for 30 s. Repeats every 20 s and flees combat.",
+      "counter": "Kill it first and in silence (bow, suppressor), cut the line of sight.",
+      "voice": "A 3 s scream heard at 100 m"
+    },
+    "charred": {
+      "role": "A walking ember.",
+      "ai": "Immune to fire. Its melee burns (3 damage per second for 4 s). At night it lights its surroundings and gives itself away. Water puts out the embers and takes 30% of its health.",
+      "counter": "Shoot from a distance, water, a fire extinguisher.",
+      "voice": "Crackling and hissing"
+    },
+    "drowned": {
+      "role": "Ambush in the water.",
+      "ai": "Stays submerged in rivers, lakes and floods. Grabs whoever crosses and pulls them down: 3 s to break free or drowning starts. Slow out of the water.",
+      "counter": "Bridges, a boat, shooting at the bubbles in the water.",
+      "voice": "Waterlogged gurgle"
+    },
+    "devourer": {
+      "role": "Gets stronger by eating.",
+      "ai": "Looks for bodies that stay 15 min on the ground and eats: each gives +20 health and +5% size, up to 3 times. While eating it only sees 5 m. Defends its food.",
+      "counter": "Burn or collect the bodies, attack while it eats.",
+      "voice": "Wet chewing, growl"
+    }
+  },
+  "ages": {
+    "fresh": "Fresh",
+    "recent": "Recent",
+    "old": "Old",
+    "decrepit": "Decrepit"
+  },
+  "outfits": {
+    "civilian": "Civilian",
+    "police": "Police officer",
+    "military": "Soldier",
+    "firefighter": "Firefighter"
+  },
+  "stages": [
+    "Healthy",
+    "Malaise (2 to 12 h)",
+    "High fever (12 to 30 h)",
+    "Delirium (30 to 48 h)",
+    "Reanimated: runner"
+  ],
+  "wounds": {
+    "scratch": "Scratch",
+    "laceration": "Laceration",
+    "bite": "Bite"
+  }
+}

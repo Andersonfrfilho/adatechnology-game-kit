@@ -27,6 +27,40 @@ importers:
         specifier: ^8.20.0
         version: 8.72.0(eslint@9.39.5)(typescript@5.9.3)
 
+  packages/game-animals:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-animals-species:
+    dependencies:
+      '@adatechnology/game-animals':
+        specifier: workspace:*
+        version: link:../game-animals
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
   packages/game-camera:
     devDependencies:
       '@types/node':
@@ -73,6 +107,25 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
+  packages/game-characters-people:
+    dependencies:
+      '@adatechnology/game-characters':
+        specifier: workspace:*
+        version: link:../game-characters
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
   packages/game-characters-three:
     dependencies:
       '@adatechnology/game-characters':
@@ -97,6 +150,40 @@ importers:
       three:
         specifier: ^0.160.1
         version: 0.160.1
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-characters-undead:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  packages/game-characters-uniformed:
+    dependencies:
+      '@adatechnology/game-characters':
+        specifier: workspace:*
+        version: link:../game-characters
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)

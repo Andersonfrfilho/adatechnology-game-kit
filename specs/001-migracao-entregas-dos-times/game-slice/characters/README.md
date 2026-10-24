@@ -16,6 +16,10 @@ people and groups, 7º BIS, the life simulation, the calibre points table). The 
 | `life-simulation.source.js` | `life`, `world`, `apply`, `simulate` and their tables, verbatim (a game rule; not yet ported) | Os Vivos do Vale |
 | `points-table.json` | Damage points per calibre of the game (the SDK default is `3.5 * E^0.37`) | jogo.js `CALIBRES` |
 | `zones.json` | Where the game spawns its zones | jogo.js `ZONES` |
+| `sdk-mapping.json` | Which SDK id each faction (`eb`, `pm`...) and each LOOT row became in `game-characters-uniformed`; `null` for the unique quest items the game keeps | decisions |
 | `block-characters.json` | The characters of the starting block, including Seu Cícero and Sandra (Phase 8 roles) | jogo.js `NPC` |
+
+How it lands in the zombiada repository: copy this folder to `content/characters/`; the game loads the SDK packs for the generic part and layers `forces.json`
+(7º BIS and the named units) over them with `sdk-mapping.json`. `profiles.json` and `people.json` feed the portrait builder (`game-characters-three`) by id.
 
 Cícero Tavares and Sandra Monteiro do not exist in the Retratos or in Os Vivos: they come from the game and become story roles (decision P9).

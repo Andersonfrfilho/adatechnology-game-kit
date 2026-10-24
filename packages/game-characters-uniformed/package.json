@@ -1,0 +1,54 @@
+{
+  "name": "@adatechnology/game-characters-uniformed",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Content pack for @adatechnology/game-characters: 7 generic uniformed forces with real Brazilian names (army, military police, civil police, highway police, prison police, special forces, tactical units), rank ladders with the command rule (highest rank alive takes command; opinion below -20 allows disobedience), loadouts as item and weapon ids and loot pools shaped like a FindsProvider. The valley, its 7th BIS and named people stay in the game.",
+  "keywords": [
+    "game",
+    "characters",
+    "police",
+    "military",
+    "ranks",
+    "loot",
+    "content-pack"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-characters-uniformed"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-characters": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

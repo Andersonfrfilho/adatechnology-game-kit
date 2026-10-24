@@ -57,6 +57,7 @@ export const buildTypes = ({ game, bestiary, bench, decisions }: CatalogInputs):
       ...(category.porte === undefined ? {} : { build: category.porte }),
       ...(category.corpos === undefined ? {} : { bodyCount: category.corpos }),
       ...(category.crawl ? { crawls: true } : {}),
+      ...(decisions.childTypePool.value.exclude.includes(id) ? { childEligible: false } : {}),
       posture: game.bestTypes[category.nome] ?? {},
       gait: bestiary.gaits[category.nome] ?? {},
       abilities: withoutEvidence(decisions.abilities.value[id]),
