@@ -538,5 +538,15 @@
       0.602
     ],
     "scale": 0.1
+  },
+  {
+    "id": "canned_sausages",
+    "teamId": "salsicha_lata",
+    "teamBox": [
+      0.734,
+      0.85,
+      0.734
+    ],
+    "scale": 0.1
   }
 ]
