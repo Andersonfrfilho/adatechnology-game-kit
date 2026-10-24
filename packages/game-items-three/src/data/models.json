@@ -668,5 +668,15 @@
       0.66
     ],
     "scale": 0.1
+  },
+  {
+    "id": "painkillers",
+    "teamId": "analgesico",
+    "teamBox": [
+      0.6,
+      0.2,
+      0.4
+    ],
+    "scale": 0.1
   }
 ]
