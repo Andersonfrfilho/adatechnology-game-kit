@@ -14,11 +14,15 @@
     "@adatechnology/game-destruction": "workspace:*",
     "@adatechnology/game-floorplan": "workspace:*",
     "@adatechnology/game-floorplan-commercial": "workspace:*",
+    "@adatechnology/game-floorplan-interactables": "workspace:*",
     "@adatechnology/game-floorplan-post-apocalyptic": "workspace:*",
     "@adatechnology/game-floorplan-residential": "workspace:*",
     "@adatechnology/game-floorplan-rural": "workspace:*",
     "@adatechnology/game-floorplan-structure": "workspace:*",
     "@adatechnology/game-floorplan-three": "workspace:*",
+    "@adatechnology/game-interactables": "workspace:*",
+    "@adatechnology/game-interactables-household": "workspace:*",
+    "@adatechnology/game-interactables-three": "workspace:*",
     "@adatechnology/game-props3d": "workspace:*"
   }
 }

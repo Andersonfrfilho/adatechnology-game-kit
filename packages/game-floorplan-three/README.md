@@ -81,7 +81,7 @@ navigator.blocked(x, z, floor) // 1 blocked, 0 free, -1 use the ground grid
 | `fleet` | cars (`game-vehicles-fleet`) |
 | `reflector` | `THREE.Reflector` for the mirrors |
 | `props` | `game-props3d` (default: the package's dependency) |
-| `interactives` | `{ GameInteractables, GameInteractablesHousehold, GameInteractablesThree, adapter }`: the interactable kit in place of the static furniture. The adapter (plan to kit objects) is game code, not part of this package. |
+| `interactives` | `{ GameInteractables, GameInteractablesHousehold, GameInteractablesThree, adapter?, adapterOptions? }`: the interactable kit in place of the static furniture. The adapter (plan to kit objects) is `@adatechnology/game-floorplan-interactables` by default; `adapter` injects a game's own (an object with `plan`/`add`/`createWorld`/`blockedOf`, or a factory with `create()`), `adapterOptions` goes to `create()` (registries, `seedKey`, texts). |
 | `vegetation` | `{ GameVegetation: { ...core, ...three }, GameVegetationSpecies }` |
 | `textures`, `atlas`, `materials` | the app's replacements |
 | `seedKey` | maps an id of the plan to the key its seeded draws use (to reproduce a scene drawn with other ids) |

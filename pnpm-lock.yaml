@@ -702,6 +702,9 @@ importers:
       '@adatechnology/game-destruction':
         specifier: workspace:*
         version: link:../game-destruction
+      '@adatechnology/game-floorplan-interactables':
+        specifier: workspace:*
+        version: link:../game-floorplan-interactables
       '@adatechnology/game-floorplan-structure':
         specifier: workspace:*
         version: link:../game-floorplan-structure
@@ -727,6 +730,15 @@ importers:
       '@adatechnology/game-floorplan-rural':
         specifier: workspace:*
         version: link:../game-floorplan-rural
+      '@adatechnology/game-interactables':
+        specifier: workspace:*
+        version: link:../game-interactables
+      '@adatechnology/game-interactables-household':
+        specifier: workspace:*
+        version: link:../game-interactables-household
+      '@adatechnology/game-interactables-three':
+        specifier: workspace:*
+        version: link:../game-interactables-three
       '@adatechnology/game-vegetation':
         specifier: workspace:*
         version: link:../game-vegetation

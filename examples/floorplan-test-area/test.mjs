@@ -62,6 +62,14 @@ if (!playwright || !existsSync(page)) {
     })
     check(`[${lang}] contract report is clean: 5 specimens, 7 scenarios, every check passed`, loaded.ok && loaded.problems.length === 0 && loaded.items.length === 5 && loaded.scenarios.length === 7 && loaded.failedChecks.length === 0 && loaded.checks > 0, loaded)
     check(`[${lang}] the first house stands in the room's world (one house, over 100 parts)`, loaded.houses === 1 && Number(loaded.parts) > 100, { houses: loaded.houses, parts: loaded.parts })
+    // the houses are drawn with the interactables kit through the default adapter (game-floorplan-interactables), with no adapter injected by the page
+    const kit = await tab.evaluate(() => {
+      const iv = window.__floorplanReport.area.houses[0].house.interactives
+      if (!iv || !iv.active) return { active: false }
+      const types = new Set([...iv.entries.values()].map((e) => e.type))
+      return { active: true, entries: iv.entries.size, interactables: iv.interactables().length, types: ['fridge', 'wall_socket', 'wall_switch'].filter((t) => types.has(t)), lamps: iv.plane.items.filter((e) => e.type === 'lamp').length, warnings: iv.warnings, adapter: iv.kit.A.version }
+    })
+    check(`[${lang}] the first house is made of kit objects: fridge, sockets, switches and the lamps of the rooms, built by the package's default adapter`, kit.active && kit.entries > 30 && kit.interactables > 10 && kit.types.length === 3 && kit.lamps > 0 && kit.warnings.length === 0 && kit.adapter === '0.3.0', kit)
     check(`[${lang}] the bench lists the package, the typology, the state, the seed and the actions`, ['package', 'template', 'state', 'seed', 'houses', 'budget', 'build', 'enter', 'up', 'down', 'door', 'strike'].every((id) => loaded.bench.includes(id)), loaded.bench)
 
     // the four packages: pick a typology of each and build it
