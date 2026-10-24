@@ -25,6 +25,9 @@ const allEvents = eventsOf(goldenFile)
 const LISTS = ['pieces', 'supports', 'coarseParts', 'coarseJoints', 'enclosureParts', 'enclosureJoints'] as const
 const SINGLES = ['levels', 'construction', 'roof', 'waterTank'] as const
 
+/** Five seeds at a time, so no test holds the worker for long. */
+const chunksOf = (templates: string[]): [string, number, number][] => templates.flatMap((template) => [1, 6, 11, 16, 21].map((from): [string, number, number] => [template, from, from + 4]))
+
 function generate(event: StructureEvent) {
   return engine.generate(sdkTemplateOf.get(event.template) as string, { seed: event.seed, state: sdkStateOf.get(event.state), wallDetail: 'coarse' })
 }
@@ -48,10 +51,10 @@ function explain(event: StructureEvent, list: string, lists: TeamStructureLists)
 describe('structure against the Visor de casas 3D (VC3), coarse detail', () => {
   const comparable = [...new Set(allEvents.map((event) => event.template))].filter((template) => sdkTemplateOf.has(template))
 
-  for (const template of comparable) {
-    it(`${template}: pieces, supports and the coarse spec of 75 plans have the team's hash`, () => {
+  for (const [template, from, to] of chunksOf(comparable)) {
+    it(`${template}: pieces, supports and the coarse spec of seeds ${from}-${to} (x 3 states) have the team's hash`, () => {
       const mismatches: string[] = []
-      for (const event of allEvents.filter((x) => x.template === template)) {
+      for (const event of allEvents.filter((x) => x.template === template && x.seed >= from && x.seed <= to)) {
         const result = generate(event)
         const lists = teamLists(result.structure)
         for (const list of LISTS) {
@@ -77,10 +80,10 @@ const INSTALLATIONS = ['gas', 'gasBottles', 'electrical', 'solar', 'plumbing', '
 describe('installations against the Visor de casas 3D (VC3)', () => {
   const comparable = [...new Set(allEvents.map((event) => event.template))].filter((template) => sdkTemplateOf.has(template))
 
-  for (const template of comparable) {
-    it(`${template}: gas, electricity, solar, plumbing and outbuildings of 75 plans have the team's hash`, () => {
+  for (const [template, from, to] of chunksOf(comparable)) {
+    it(`${template}: gas, electricity, solar, plumbing and outbuildings of seeds ${from}-${to} (x 3 states) have the team's hash`, () => {
       const mismatches: string[] = []
-      for (const event of allEvents.filter((x) => x.template === template)) {
+      for (const event of allEvents.filter((x) => x.template === template && x.seed >= from && x.seed <= to)) {
         const key = `${event.template}#${event.seed}/${event.state}`
         const result = generate(event)
         const team = teamUtilities(result, itemIds.get(key) as string[])
