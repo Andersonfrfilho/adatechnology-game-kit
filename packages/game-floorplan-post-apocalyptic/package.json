@@ -52,6 +52,8 @@
     "vitest": "^3.2.4",
     "@adatechnology/game-floorplan": "workspace:*",
     "@adatechnology/game-floorplan-residential": "workspace:*",
-    "@adatechnology/game-floorplan-commercial": "workspace:*"
+    "@adatechnology/game-floorplan-commercial": "workspace:*",
+    "@adatechnology/game-floorplan-rural": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*"
   }
 }

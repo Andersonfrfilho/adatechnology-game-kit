@@ -146,11 +146,40 @@ without any `structure` behave exactly as before.
   `splitGroup`.
 - `buildFrame({ spanX, spanZ, columnsX, columnsZ, height, floors, walls, roof, columnCapacity, ... })` returns a test structure: columns on
   foundations (`rebar`), beams, a slab per floor, optional brick walls (`mortar`) with a door opening, and a roof that rests (`resting`) on the top beams.
-- `sizeStructure(spec, { safety?, redundancy? })` returns a copy of the spec with `structure.capacity` set from the loads the world itself solves
+- `sizeStructure(spec, { safety?, redundancy?, redundancyRoles?, safetyByRole? })` returns a copy of the spec with `structure.capacity` set from the loads the world itself solves
   for the intact spec, so every structural part rests at stress `safety` (default 0.65). With `redundancy` (e.g. 0.97) the capacities are also
   raised where needed so that losing any single `column` keeps every other part at or below that stress: the structure stands with one column
   gone and, without help, falls with two neighbours gone. Raw material capacities are rarely a sensible design (a 54 t roof on 20 cm columns is
   already over 1 at rest); size the structure instead of hand-tuning. Parts without `structure` or with role `none` are untouched.
+  `redundancyRoles` (default `['column']`) says which parts the N-1 check removes one at a time: a house uses `['column', 'wall']` so it also
+  stands with a bearing wall gone. `safetyByRole` overrides `safety` per role: `{ beam: 0.45, slab: 0.45, roof: 0.45, stair: 0.45 }` keeps the
+  floors well under their limit so they outlast the member that fails.
+
+## Walls: layers, stages, breach and reinforcement
+A wall is one part that opts in with `layers`, `units`, `reinforcement` or `breach` (`PartSpec`, all optional; parts without them behave as before).
+`assemblyPart(id, { id, width, height, position, structure? })` builds one from the eight built-in **assemblies** (`ASSEMBLIES`, data in
+`src/data/assemblies.json`; add or replace with `registerAssembly`): `brick_wall_plastered` (0.09 m brick, 2 x 0.02 m plaster, 0.23 x 0.075 x 0.11 m
+bricks in running bond), `concrete_block_wall` (0.39 x 0.19 x 0.14 m hollow blocks), `reinforced_concrete` (0.2 m, rebar every 0.18 m, 0.6 x 0.42 m
+panels), `drywall`, `wood_frame_wall`, `log_wall`, `sheet_metal_shack`, `glass_pane`.
+
+- **Layers and spall.** A bullet spends `penetration x thickness` of every coat still on the faces it crosses, plus the core's. The outermost coat at the
+  impact comes off first (`spall` event, `area`), and a patch that spalled no longer stops anything: the same round that stops at fresh plaster can
+  go through once it has come off. A coat only spalls once per patch. Blunt hits spall the coat too.
+- **Stages** (`PartState.stage`, `stage` event). 0 intact; 1 at the first hole, crack or spall; 2 when through damage within 0.55 m adds up to
+  `breach.area` (0.25 m²): the units around the hit come out as fragments the size of one unit (`stage.fragments`, laid in the assembly's bond), the part
+  stays with an `opening` (shots and rays pass through it, its mass and capacity drop) and nothing is hidden; 3 when the part fractures or collapses.
+  Through damage is the area of through holes plus, for blunt, slash and explosive damage, the volume the damage takes out (`damage / (hpPerKg x
+  density)`) over the thickness it crosses, times `breach.blastFactor` (6) for blasts. An opening as wide as the part cuts it instead (a pilaster, a column):
+  that is a fracture. So a 9 mm burst never leaves stage 1 on plastered brick (it does not even go through), a rifle never breaches reinforced
+  concrete, a sledgehammer opens plastered brick after ~47 swings and a C4 or RPG opens reinforced concrete at once. The engine stays in joules: the
+  game tunes energies, `breach: { radius, blastFactor }` and each assembly's `breach.area`.
+- **Reinforced concrete.** At 0 hp the concrete crumbles (`fracture`, in panels when `units` is set) but the part does not go: it becomes its rebar cage
+  (`PartState.stripped`, `expose` with the bars in world space, stage 3), still part of the structure with `capacity x residualCapacity` (default 0.15).
+  A bare cage under load is overloaded in seconds (`overloadRate`), so the frame fails progressively: `expose`, `stress`, the cage is lost (`expose` with
+  no bars), then the neighbours and the slab (`collapse`). Bullets pass through a cage. The `rebar` joints of a reinforced part are not worn by blows:
+  only the cutting torch or a saw cuts them (or the cage giving way). A breach at stage 2 exposes only the bars inside the opening.
+- **Holes stay on the pieces.** Every `fracture` and breach fragment carries `marks` (`FragmentMark`: point, normal and diameter in the fragment's own
+  axes) for the holes that fell inside it, at most 12 per fragment.
 
 ## Contracts: implement your own or use the default world
 
@@ -186,7 +215,7 @@ valid (unique ids, known materials, joints reference parts), a 500 J ballistic h
 ## Events
 
 `damage`, `dent`, `hole`, `crack`, `ricochet`, `debris`, `fracture` (with oriented `fragments` in world space), `detach`, `disassemble_progress`,
-`ignite`, `extinguish`, `burnout`, `melt`, `drip`, `leak`, `explode`, `primed`, `stress`, `collapse`, `destroyed`. All points are in world space. Subscribe with
+`ignite`, `extinguish`, `burnout`, `melt`, `drip`, `leak`, `explode`, `primed`, `stress`, `collapse`, `spall`, `stage`, `expose`, `destroyed`. All points are in world space. Subscribe with
 `world.on(type | '*', fn)` or the `onEvent` option; `hit` and `update` also return their events.
 
 ## Determinism and LAN
@@ -201,7 +230,7 @@ world continues with the same events as the original. The loading world must use
 `raycast`, `shoot`, `disassemble`, `workableJoints`, `nearestJoint`, `extinguish`, `setLiters`, `update`, `state`, `part`, `reset`, `on`,
 `register`, `serialize`, `load`, `time`. `state()` and `part()` return live views; do not mutate them.
 
-Also exported: `buildFrame`, `sizeStructure`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
+Also exported: `buildFrame`, `sizeStructure`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
 helpers `vec`, `quat`, `quatFromEuler`, `rotateVec`, `toLocal`, `toWorld`, the locale (`locales`, `resolveStrings`, `DestructionStrings`) and all types.
 
 The locale table has `en` and `pt-BR` strings for material names, part statuses, joint kinds, tools, damage types, event labels and fracture styles:

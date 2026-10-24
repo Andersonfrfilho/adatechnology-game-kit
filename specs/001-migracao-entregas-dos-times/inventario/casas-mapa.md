@@ -65,19 +65,19 @@ API pública (L10702–10816 e retorno em L11180): `gerar`, `slots`, `validar`, 
 | `sobrado` | 7975 | sim (`townhouse`) |
 | `mercado`, `farmacia` | 8034, 8060 | sim (`market`, `pharmacy`) |
 | `apartamento` (1 unidade por andar) | 8086 | sim (`apartment_basic`) |
-| `popular_laje`, `popular_geminada` | 8154, 8181 | sim (`budget_slab_house`, `budget_semi_detached`) |
+| `popular_laje`, `popular_geminada` | 8154, 8181 | sim (`budget_slab_house`, `budget_semi_detached`); a laje ganhou 1 a 3 andares na T2.2g (`floors`, `randomFloors`; o time só tem o térreo, andares de cima são padrão reversível) |
 | `media_terrea_moderna`, `sobrado_medio_moderno` | 8207, 8241 | sim |
 | `alto_padrao_contemporanea` | 8309 | sim (`high_end_contemporary`) |
 | `mansao` (1 a 3 andares, elevador opcional) | 8408 | sim (`mansion`) |
 | `apartamento_novo` (médio/alto, prédio 3–20 andares) | 8503 | sim (`apartment_modern`) |
-| **`casa_madeira_americana`** (wood frame, 1–2 andares; w 11–16,5, d 12,4–15,5; padrão 12,6×13; telhado asfáltico 28°) | 8794 | **não** |
-| **`chale_madeira`** (A-frame 52°, pé-direito duplo com lareira e mezanino; w 7,5–9,5, d 10–12) | 8862 | **não** |
-| **`cabana_tronco`** (troncos, 1–2 cômodos, fogão a lenha, alpendre, caixa d'água em cavalete; w 5,2–7,6, d 5,6–8,8) | 8948 | **não** |
-| **`barraco`** (sucata, zinco 12° preso com "pregos e pedras", gato de luz; w 3,6–5,2, d 4,4–6,6) | 9027 | **não** |
-| **`barraca_camping`** (1 a 4 barracas iglu/túnel, fogueira, fogareiro, coolers, varal; sistema `lona`) | 9124 | **não** |
+| **`casa_madeira_americana`** (wood frame, 1–2 andares; w 11–16,5, d 12,4–15,5; padrão 12,6×13; telhado asfáltico 28°) | 8794 | **sim** (`wood_frame_house`, `game-floorplan-rural`, T2.2f) |
+| **`chale_madeira`** (A-frame 52°, pé-direito duplo com lareira e mezanino; w 7,5–9,5, d 10–12) | 8862 | **sim** (`a_frame_chalet`, T2.2f) |
+| **`cabana_tronco`** (troncos, 1–2 cômodos, fogão a lenha, alpendre, caixa d'água em cavalete; w 5,2–7,6, d 5,6–8,8) | 8948 | **sim** (`log_cabin`, T2.2f) |
+| **`barraco`** (sucata, zinco 12° preso com "pregos e pedras", gato de luz; w 3,6–5,2, d 4,4–6,6) | 9027 | **sim** (`shack`, T2.2f; `power: 'tap'` do gato na T2.2g) |
+| **`barraca_camping`** (1 a 4 barracas iglu/túnel, fogueira, fogareiro, coolers, varal; sistema `lona`) | 9124 | **sim** (`campsite`, T2.2f) |
 
 Estilos: `popular`, `medio`, `alto` (= `nobre`), `comercial` e **`rural`** (cerca baixa 1,1 m, fachada de tábua/tronco, telha asfáltica ou zinco; L7922–7940 e
-paleta `rural`). O SDK não tem estilo `rural`.
+paleta `rural`). O estilo `rural` entrou em `game-floorplan-rural` (T2.2f), com a paleta, o perfil de decoração e as 375 plantas conferidas.
 
 Mudanças de regra de colocação e validação que o time fez **depois** do porte do SDK (comparando VP × VC3; todas marcadas "R##" nos comentários):
 
@@ -195,6 +195,25 @@ Módulo que já segue `game-contracts` (`room.loadModule(HouseArea.module({local
 - 6 cenários com expectativas: `house_one_pillar` (um pilar de canto: laje fica), `house_two_pillars` (dois pilares: laje e telhado caem), `house_partition` (parede de vedação cai sozinha, laje fica),
   `house_window_glass` (vidro: primeiro tiro fura, quebra em N tiros, paredes inteiras), `house_tank_leak` (caixa furada vaza: L antes e depois), `house_gas_explodes` (botijão explode e danifica as peças ao redor).
 - Esses cenários são os testes goldens naturais do porte (R2 da spec).
+
+### 1.4b Destruição de parede: ARS, OFI e AC no SDK (T2.3a–b, 2026-10-24)
+
+Estado do porte do **comportamento** (o motor segue em joules, A2; a tabela de pontos do ARS e os modelos estáticos de parede não vêm, ficam no ZombiAdA). Desenho: `design/T2.1-casas-estrutura-e-destruicao.md` §3.
+
+| Peça do time | Fonte | Onde entrou | Teste |
+|---|---|---|---|
+| Vidro, madeira, tijolo, concreto armado (`WMAT`) | ARS L609 | `game-destruction/src/data/assemblies.json`: `glass_pane`, `wood_frame_wall`, `brick_wall_plastered`, `reinforced_concrete` (+ `concrete_block_wall`, `drywall`, `log_wall`, `sheet_metal_shack`) | `assemblies.test.ts` |
+| Tijolo 0,23×0,075×0,11 m em amarração, painéis 0,6×0,42×0,2 m em grade 4×5 | ARS L618–619 | `units` das montagens; `breach.ts` (`unitGrid`); fratura do concreto armado dá 20 painéis | `walls.test.ts`, `reinforcement.test.ts` |
+| Estágios `WST`: 0 intacta, 1 marcas e trincas, 2 rompida no meio (passa e atira), 3 desabada | ARS L615, 631–640 | `PartState.stage`, eventos `stage`/`fracture`/`collapse`; estágio 2 com `opening` e fragmentos, a peça fica | `walls.test.ts` |
+| Vergalhão do estágio 2: Ø 7 mm, 0,18 m | ARS L640 | `rebar.ts` (`rebarBars`, 0,18 m, Ø 8 mm por padrão); evento `expose`; `game-destruction-three/src/rebar.ts` (cilindros instanciados) | `reinforcement.test.ts`, `wall-events.test.ts` |
+| Concreto armado só rompe com C4, AT4, RPG-7 | ARS `WMAT` | não portado como tabela: 7,62 nunca abre (3300 J < 18 J/mm × 200 mm), C4 (345,6 kJ) e RPG (200 kJ) abrem, por energia | `walls.test.ts`, `reinforcement.test.ts` |
+| Furos e lascas ficam nos blocos | OFI L894–913 | `Fragment.marks`; `FragmentSystem.addMarks` | `walls.test.ts` (holes stay), `wall-events.test.ts` |
+| Laje caindo (entulho e poeira) | OFI L875–887 | evento `collapse` já existia; poeira que tapa a visão fica para a Fase 5 (E1) | `reinforcement.test.ts` (colapso progressivo com tempo) |
+| 6 cenários estruturais | AC L3833–3868 | `tests/house-scenarios.test.ts` (spec equivalente em `tests/wall-helpers.ts`), mesmos assuntos | `house-scenarios.test.ts`, golden `house-scenarios.json` |
+| N-1 em pilares e paredes portantes, `fsOutros` 0,45 | `specDe` L42685–42729 | `sizeStructure({ redundancyRoles, safetyByRole })` | `size-roles.test.ts` |
+| Reboco só rótulo no VC3 | VC3 L10344 | passa a ser camada que lasca e soma penetração (`layers`) | `walls.test.ts` |
+
+Falta: abrir a abertura na malha da parede e as fiadas de tijolo instanciadas (T2.4c), `wallDetail` panels/units e `buildWallSpecimen` (T2.2d).
 
 ### 1.5 Revisão da Casa A (RC)
 
@@ -326,7 +345,7 @@ Não há README do PlantasSDK/Casa3DSDK em `sources/` (o cabeçalho de VC3 manda
 | `game-test-room` | contrato `TestableModule`, sala genérica; item de casa **provisório**: `frame()` com `buildFrame` (2×2 colunas, vigas, laje, `columnCapacity: 4400`) em `items.ts:166` | — |
 
 Lacunas confirmadas (nada no SDK): renderizador three.js de casa (paredes com vão, porta, janela, piso, teto, telhado, lote); estrutura de uma planta real (grafo de peças e apoios) e construção por material; instalações (elétrica, hidráulica, gás, solar, caixa d'água, edícula);
-templates rurais e estilo `rural`; ponte planta → interativos; builders estáticos de ~100 tipos do catálogo de planta (o catálogo do floorplan tem 164 tipos; `game-props3d` desenha 57 e `-household` 51); multi-andar andável (AndaresSDK); ruas, postes e padrões urbanos; dados de terreno.
+ponte planta → interativos; builders estáticos de ~100 tipos do catálogo de planta (o catálogo do floorplan tem 164 tipos; `game-props3d` desenha 57 e `-household` 51); multi-andar andável (AndaresSDK); ruas, postes e padrões urbanos; dados de terreno.
 
 ---
 
@@ -336,13 +355,13 @@ Legenda de "melhor": **T** = time (ZombiAdA), **S** = SDK, **=** equivalentes, *
 
 | # | Assunto | ZombiAdA (onde) | SDK (onde) | Melhor | Por quê | Ação |
 |---|---|---|---|---|---|---|
-| 1 | Gerador de planta e lote (motor) | PlantasSDK VC3 L7374–11190 | `game-floorplan` `src/*` | **T+S** | Mesmo algoritmo (porte com 0 diferença na versão antiga). SDK: registro por pacote, locale en/pt-BR, zoneamento, zero dependência, 2D viewer, suíte de propriedades. Time: regras de jogabilidade novas (R-itens, linha 1) | **Mesclar**: levar as regras R-itens ao motor do SDK (`fill.ts`, `plan.ts`, `queries.ts`) e rerodar a comparação numérica contra VC3 |
-| 2 | Passagem mínima entre móveis | `RAIO_JOG = 0.24` (L7378) | `inflation` 0,12/0,15 (`fill.ts:64`) | **T** | disco de 24 cm = jogador de verdade; 12 cm deixa vão que o personagem não atravessa | **Portar** (parâmetro `playerRadius` no motor; default 0,24) |
-| 3 | Folga de porta e janela | `PORTA_FOLGA` 0,12 + `folga` do template, `JAN_FOLGA` 0,3, reposicionamento (L1833, 1842–1863) | 0,12 e 0,3 fixos (`plan.ts:61, 96`) | **T** (pouco) | template pode pedir mais folga; janelas distribuídas por regra | **Portar** |
-| 4 | Móvel tapando janela | `bloqueiaJanela` com `hjan`, `aereo`, `H_AEREO` 2,15 (L9482) | `blocksWindow` (`queries.ts:39`) | **T** | cobre armário aéreo e box de vidro (R04); SDK só compara 1,0 e `y0 - 0,05` | **Portar** (campos `windowHeight`, `overhead` no `ItemDef`) |
-| 5 | Vaga de carro | `FOLGA_CARRO` e `candidatosCarro` (L9704) | sem equivalente | **T** | lado do motorista livre (0,8) e pontas (0,6) | **Portar** |
+| 1 | Gerador de planta e lote (motor) | PlantasSDK VC3 L7374–11190 | `game-floorplan` `src/*` | **T+S** | Mesmo algoritmo (porte com 0 diferença na versão antiga). SDK: registro por pacote, locale en/pt-BR, zoneamento, zero dependência, 2D viewer, suíte de propriedades. Time: regras de jogabilidade novas (R-itens, linha 1) | **Mesclar**: levar as regras R-itens ao motor do SDK (`fill.ts`, `plan.ts`, `queries.ts`) e rerodar a comparação numérica contra VC3 — **entrou na T2.2b** (`game-floorplan`; conferido com 900 plantas do VC3) |
+| 2 | Passagem mínima entre móveis | `RAIO_JOG = 0.24` (L7378) | `inflation` 0,12/0,15 (`fill.ts:64`) | **T** | disco de 24 cm = jogador de verdade; 12 cm deixa vão que o personagem não atravessa | **Portar** (parâmetro `playerRadius` no motor; default 0,24) — **entrou na T2.2b** (`game-floorplan`; conferido com 900 plantas do VC3) |
+| 3 | Folga de porta e janela | `PORTA_FOLGA` 0,12 + `folga` do template, `JAN_FOLGA` 0,3, reposicionamento (L1833, 1842–1863) | 0,12 e 0,3 fixos (`plan.ts:61, 96`) | **T** (pouco) | template pode pedir mais folga; janelas distribuídas por regra | **Portar** — **entrou na T2.2b** (`game-floorplan`; conferido com 900 plantas do VC3) |
+| 4 | Móvel tapando janela | `bloqueiaJanela` com `hjan`, `aereo`, `H_AEREO` 2,15 (L9482) | `blocksWindow` (`queries.ts:39`) | **T** | cobre armário aéreo e box de vidro (R04); SDK só compara 1,0 e `y0 - 0,05` | **Portar** (campos `windowHeight`, `overhead` no `ItemDef`) — **entrou na T2.2b** (`game-floorplan`; conferido com 900 plantas do VC3) |
+| 5 | Vaga de carro | `FOLGA_CARRO` e `candidatosCarro` (L9704) | sem equivalente | **T** | lado do motorista livre (0,8) e pontas (0,6) | **Portar** — **entrou na T2.2b** (`game-floorplan`; conferido com 900 plantas do VC3) |
 | 6 | Templates residenciais e comerciais | 12 (+1 duplicado) | 12 | **=** | mesmos ids após o mapa de nomes | manter SDK |
-| 7 | Templates rurais (madeira, chalé, cabana, barraco, camping) | L8794–9124 | **nenhum** | **T** | só o time tem; incluem wood_frame, tronco, improvisado, lona | **Portar** para pacote de conteúdo rural |
+| 7 | Templates rurais (madeira, chalé, cabana, barraco, camping) | L8794–9124 | `game-floorplan-rural` (5 modelos) | **T** | só o time tem; incluem wood_frame, tronco, improvisado, lona | **Portar** para pacote de conteúdo rural — **entrou na T2.2f** (375 plantas do VC3 conferem lista por lista; estrutura na T2.2c–e) |
 | 8 | Zoneamento | `ZONAS` ZR1 e ZR-AP, `zonaAssert` (ML L67798) | `defineZone`, `checkLot`, 6 zonas `br`, ajuste automático e relatório | **S** | gabarito, recuo, taxa de ocupação, coeficiente, permeabilidade, uso por template; o do jogo é 2 zonas fixas com `throw` | manter SDK; trocar `zonaAssert` do jogo por `engine.validate` |
 | 9 | Estados da casa (protegida/abandonada) | `aplicaEstado` L10163 | `game-floorplan-post-apocalyptic` | **=** (não verificado se `aplicaEstado` mudou depois do porte) | mesma distribuição e itens | conferir diff de `aplicaEstado` (VP × VC3) |
 | 10 | Conteúdo dos móveis por estado | `CONTEUDO`, `sorteiaConteudo` (L10824–10878) | `-household` `loot.json` (por contêiner, no motor de interativos) | **T+S** | time sorteia o conteúdo na planta, por semente e estado; SDK tem as tabelas de loot por tipo, sem a regra de estado | **Mesclar**: regra de estado no pacote post-apocalyptic, tabelas no household |
@@ -368,9 +387,9 @@ Legenda de "melhor": **T** = time (ZombiAdA), **S** = SDK, **=** equivalentes, *
 | 30 | Tendas (`tent`, `tfTent`, triagem) | GAL L182, 2044 | `barraca_camping` só na planta do time; household tem mesa/cadeira/fogareiro/fogueira, **sem barraca** | **T** | iglu, túnel, prisma | **Portar** (builder + template camping) |
 | 31 | Árvores e pinheiros | `pine`, `tree`, `tfPines` (GAL L183–184, 1928) | `game-vegetation` + `-species` | **S** | espécies e variações; galeria é cone e dodecaedro | manter SDK |
 | 32 | Carros e ônibus de cena | GAL L169–176 | `game-vehicles` + `-fleet` | **S** | frota com goldens | manter SDK; ônibus tombado vira conteúdo de cena |
-| 33 | Tipologias de casa/prédio (`sobrado`, `laje`, `colonial`, `chalet`, `companyHouse`, `stilt`, `farmhouse`, `building`) | GAL L187, 1136–1142 | planta completa existe só para `townhouse`, `budget_slab_house`, `apartment_modern`; `colonial` existe apenas como tipo de telhado; `companyHouse`, `stilt` (palafita), `farmhouse` e o chalé (`chale_madeira`) não têm equivalente no SDK | **S** onde existe planta; **T** onde não | galeria são massas sem interior: `laje` 5,6×10 bate com `budget_slab_house` (w 5–7,2 / d 9,2–10,4), mas a galeria faz 1–3 andares enquanto o SDK tem 1 | **Mesclar**: massa de galeria serve de **LOD distante** e de prédio fechado; sobrado/laje usam o template; colonial, vila operária, palafita, casa sede, chalé viram templates novos (ver 7) |
+| 33 | Tipologias de casa/prédio (`sobrado`, `laje`, `colonial`, `chalet`, `companyHouse`, `stilt`, `farmhouse`, `building`) | GAL L187, 1136–1142 | planta completa existe só para `townhouse`, `budget_slab_house`, `apartment_modern`; `colonial` existe apenas como tipo de telhado; `companyHouse`, `stilt` (palafita), `farmhouse` e o chalé (`chale_madeira`) não têm equivalente no SDK | **S** onde existe planta; **T** onde não | galeria são massas sem interior: `laje` 5,6×10 bate com `budget_slab_house` (w 5–7,2 / d 9,2–10,4), mas a galeria faz 1–3 andares enquanto o SDK tem 1 | **Mesclar**: massa de galeria serve de **LOD distante** e de prédio fechado; sobrado/laje usam o template; colonial, vila operária, palafita, casa sede, chalé viram templates novos (ver 7) **✅ T2.5a (2026-10-24):** as 9 massas (`sobrado`, `laje`, `colonial`, `chalet`, `companyHouse`, `stilt`, `farmhouse`, `house`, `building`) são geradores de dados em `game-floorplan/src/silhouettes`, sem three; os 16 casos conferem com o golden da galeria (hash de cena). |
 | 34 | `building` e `windowsOn` | GAL L185–187 | `apartment_modern` (3–20 andares) | **T** (visual) / **S** (planta) | galeria: janelas por andar com probabilidade de luz, letreiros, cobertura; SDK: unidade enterável | **Mesclar**: fachada de prédio como geometria do `-three` |
-| 35 | Interiores dos 13 cenários (mercado, farmácia, delegacia...) | GAL L691–1117 | `market`, `pharmacy` (planta procedural) | **T** (programa de espaços) / **S** (reuso) | galeria mercado 18×13: açougue, padaria, câmara fria, gôndola caída, cofre, armadilha; SDK market 14×15 (12–20 × 13–18): caixas, loja, estoque, banheiro, escritório | **Mesclar**: levar os ambientes ausentes ao `market`/`pharmacy` e criar templates `police_station`, `school`, `church`, `gas_station`, `hospital_er`, `factory`, `farm`, `gun_shop` conforme pedido do dono; pins viram conteúdo |
+| 35 | Interiores dos 13 cenários (mercado, farmácia, delegacia...) | GAL L691–1117 | `market`, `pharmacy` (planta procedural) | **T** (programa de espaços) / **S** (reuso) | galeria mercado 18×13: açougue, padaria, câmara fria, gôndola caída, cofre, armadilha; SDK market 14×15 (12–20 × 13–18): caixas, loja, estoque, banheiro, escritório | **Mesclar**: levar os ambientes ausentes ao `market`/`pharmacy` e criar templates `police_station`, `school`, `church`, `gas_station`, `hospital_er`, `factory`, `farm`, `gun_shop` conforme pedido do dono; pins viram conteúdo **✅ T2.5b–e (2026-10-24):** 10 modelos em `game-floorplan-commercial` (`supermarket`, `drugstore`, `gun_shop`, `police_station`, `emergency_room`, `school`, `gas_station`, `church`, `metalworks`, `farm`) e `triage_tent` em `game-floorplan-post-apocalyptic`; `market` e `pharmacy` ficam como o comércio de esquina. Programa conferido por teste (cômodos, medidas, equipamentos, pinos de achado como `interiorFindsHints`). |
 | 36 | Casa de subúrbio (`buildCasa`) | GAL L694 (14×10×2,8) | `single_storey_a`, `townhouse` | **S** | planta procedural, validada, com estados e lote | manter SDK; cenas de pin como conteúdo |
 | 37 | Pins de design (loot, perigo, quebra, cena; 251) | GAL (`pin(...)`) | `game-devtools` `marks.ts` (marcas), loot tables no household | **T** (conteúdo) | texto de design com posição | **Portar** como dado de conteúdo (ZombiAdA) |
 | 38 | Padrão de ruas (9 bairros + militar) | GAL L1143–1205 | **nenhum** | **T** | dados de largura de rua, poste, cor de luz e espaçamento por bairro | **Portar** (pacote urbano genérico + conteúdo) |

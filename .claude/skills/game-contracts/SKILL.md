@@ -43,6 +43,7 @@ O módulo de teste completo (com `area` e `attach`) está na skill `game-test-ro
 | `shotToHit(shot, point, normal?)` | Transforma um `Shot` balístico em `Hit` |
 | `IMPACT_CONTRACT` | Campos obrigatórios/opcionais do `Hit` por `DamageType` |
 | `DestructibleSpec`, `PartSpec`, `Hit`, `DestructionEvent`, `ObjectState` | Dados da destruição |
+| `SurfaceLayer`, `Reinforcement`, `PartUnits`, `PartBreach`, `DamageStage`, `FragmentMark` | Parede em camadas (reboco lasca antes do núcleo), vergalhão, alvenaria por peças, brecha e estágios 0 a 3 (todos opcionais em `PartSpec`; `PartState.stage/stripped/opening`; eventos `spall`, `stage`, `expose`) |
 | `DestructibleImpl` | Destruição própria de um módulo (`describe`, `hit`, `state`, ...) |
 | `Shot`, `Use` | Tiro balístico e uso de arma não-balística |
 | `ContainerSpec`, `ItemUseDef`, `LiquidId`, `FluidKind` | Fluidos |

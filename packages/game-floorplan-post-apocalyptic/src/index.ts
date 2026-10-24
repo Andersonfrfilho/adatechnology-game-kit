@@ -4,6 +4,7 @@ import { LEGACY_STREAMS } from './legacy-seeds'
 import enLocale from './locales/en.json'
 import ptBrLocale from './locales/pt-BR.json'
 import { abandonedState, fortifiedState } from './state'
+import { createTriageLibraries, registerTriageStyle, triageFindsHints, triageItems, triageTent } from './triage-tent'
 
 export interface PostApocalypticOptions {
   /**
@@ -21,11 +22,12 @@ export const defaultDistribution: Record<string, number> = { fortified: 0.35, ab
 /** State names this pack adds. */
 export const postApocalypticStates = ['fortified', 'abandoned'] as const
 
-/** Registers the `fortified` and `abandoned` states, their items and the default seed distribution. */
+/** Registers the `fortified` and `abandoned` states, the triage tent, their items and the default seed distribution. */
 export function register(engine: FloorplanEngine, options: PostApocalypticOptions = {}): void {
   engine.registerLocale('en', enLocale)
   engine.registerLocale('pt-BR', ptBrLocale)
   engine.registerItems(postApocalypticItems)
+  registerTriageTent(engine)
   engine.registerWallTop('barbed_wire', 0.3)
   engine.registerState('fortified', fortifiedState)
   engine.registerState('abandoned', abandonedState)
@@ -33,4 +35,12 @@ export function register(engine: FloorplanEngine, options: PostApocalypticOption
   engine.setStateDistribution(distribution, LEGACY_STREAMS.distribution)
 }
 
-export { postApocalypticItems, fortifiedState, abandonedState, enLocale, ptBrLocale }
+function registerTriageTent(engine: FloorplanEngine): void {
+  registerTriageStyle(engine)
+  engine.registerItems(triageItems)
+  for (const [id, library] of Object.entries(createTriageLibraries(engine.slotKit))) engine.registerLibrary(id, library)
+  engine.registerTemplate(triageTent)
+}
+
+export { postApocalypticItems, fortifiedState, abandonedState, triageFindsHints, enLocale, ptBrLocale }
+export type { TriageFindsHint } from './triage-tent'

@@ -50,10 +50,18 @@ Opções: `seed` (número ou string), `w`, `d`, `style` (`budget`, `mid`, `high`
 | `registerItem(s)`, `registerLibrary`, `registerLibraryAlias`, `registerTemplate`, `registerStyle`, `registerPaletteStyle`, `registerRoomColors`, `registerDecorProfile`, `registerPass`, `registerGroundOverlay`, `registerWallTop`, `registerSeedKeys` | Registro de conteúdo |
 | `registerState(name, { apply(ctx), adjustPalette?, seedKey? })`, `setStateDistribution(weights)` | Estados como plugin e sorteio do estado padrão |
 | `defineZone`, `getZone`, `listZones`, `checkLot`, `registerPermeableGround` | Zoneamento |
+| `registerResultExtension(name, run, { after?, seedKey? })` | Acrescenta `result[name]` depois do estado (ex.: `result.structure`); `rng` da extensão = `createRng(seed, seedKey ?? name)` |
+| `registerFindsProvider`, `findsFor(FindsQuery)` | Gancho do que há dentro de cada recipiente (stub da Fase 3) |
+| `registerViewerLayer({ id, label, draw, legend? })`, `engine.viewerLayers` | Camada do visor 2D (a estrutura desenha pilares e vigas) |
+| `blocksWindow`, `engine.constants` | Regra de janela e constantes (`PLAYER_RADIUS` 0,24, folgas, `CAR_CLEARANCE`) |
 | `registerLocale`, `translate`, `listLocales` | Textos (`en`, `pt-BR`) |
-| `createRng`, `mulberry32`, `hashString`, `overlaps`, `windowZone`, `openingZones`, `slotKit` | Utilitários |
+| `createRng`, `mulberry32`, `hashString`, `overlaps`, `windowZone`, `openingZones`, `slotKit`, `paletteStyles` | Utilitários (`paletteStyles`: as receitas de paleta registradas, para um pacote partir de uma) |
 
 Resultado: `template, name, use, seed, style, state, w, d, floors, rooms, walls, doors, windows, openPairs, facade, lot, items, stateItems, colors, building, missing, partyWalls` e, com zona, `zoning`. Cada item tem `id, type, category, x, z, ry, w, d, h, y, room, floor, outdoor, aabb` (frente em `frontU/frontV`).
+
+Configuração do plano (T2.2f): `TemplateDef.config(options, w, d)` vai para `result.config` (`power` `grid`/`offgrid`/`tap`, `solar`, fundação, escada lateral...); `plan.options` dá as opções ao `reservations` e ao `paths` do modelo; plano `offgrid` ganha lampiões no lugar da luz de teto (passe do residencial).
+
+Regras do VC3 (T2.2b): opções `playerRadius` (0,24) e `carClearance`; `TemplateDef.clearance { door, window }`, `DoorDef.clearance`; `FurnitureDef.windowHeight/overhead/exactOnly` (o tipo de mobília se chama `FurnitureDef`, não `ItemDef`); janelas distribuídas no trecho de parede; toda porta externa do térreo tem caminho (`path_<porta>`, `entrance_path`); vaga de carro com folga do motorista; `mailbox`, `table_lamp`. O que mudou frente ao porte antigo está no `MIGRATION.md`. Os 12 modelos conferem com a página do time (900 plantas gravadas); os 5 rurais vêm na T2.2f.
 
 ## Compõe com
 - Usado por `game-floorplan-residential`, `-commercial` e `-post-apocalyptic` (conteúdo e estados). O comercial exige o residencial registrado antes.

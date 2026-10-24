@@ -1,16 +1,16 @@
 ---
 name: game-floorplan-commercial
-description: Use quando precisar de loja, mercadinho ou farmácia gerados para o game-floorplan (gôndola, freezer, caixa, balcão, depósito, zona comercial zc e industrial zi). Traz os modelos market e pharmacy e o catálogo de itens de loja.
+description: Use quando precisar de loja, prédio público ou de cidade gerado para o game-floorplan (mercadinho, supermercado, farmácia, loja de armas, delegacia, pronto-socorro, escola, posto, igreja, metalúrgica, fazenda; gôndola, freezer, caixa, balcão, zonas zc, zi e za). Traz os modelos e o catálogo de itens de loja.
 ---
 
 # @adatechnology/game-floorplan-commercial
 
 ## Objetivo
-Conteúdo comercial para o `game-floorplan`: os modelos `market` (mercadinho) e `pharmacy` (farmácia), o catálogo de itens de loja (gôndolas, freezers, caixas, vitrines), bibliotecas de slots, estilo e paleta `commercial` e as zonas comercial (`zc`) e industrial (`zi`) da região `br`.
+Conteúdo comercial e de prédios de cidade para o `game-floorplan`: `market` e `pharmacy` (comércio de esquina) e os interiores completos da spec 001 (T2.5): `supermarket`, `drugstore`, `gun_shop`, `police_station`, `emergency_room`, `school`, `gas_station`, `church`, `metalworks` e `farm`, o catálogo de itens de loja, bibliotecas de slots, estilos e paletas `commercial` e `farm` e as zonas comercial (`zc`), industrial (`zi`) e agrícola (`za`) da região `br`.
 
 ## Quando usar e quando não usar
 - Use para comércio de rua gerado por semente.
-- Não use para casas (`game-floorplan-residential`). Delegacia, escola, posto, igreja, pronto-socorro e os outros prédios de cidade vão entrar aqui (decisão C5 da spec 001); até lá, só `market` e `pharmacy` existem.
+- Não use para casas (`game-floorplan-residential`). O que é só de apocalipse (tenda de triagem militar) fica em `game-floorplan-post-apocalyptic`.
 
 ## Como usar
 ```ts
@@ -29,7 +29,8 @@ engine.validate(shop)
 | Função/tipo | Para que serve |
 |---|---|
 | `register(engine, { region? })` | Registra itens, bibliotecas, modelos, estilo, paleta, zonas e locales |
-| `commercialTemplateIds` | `['market', 'pharmacy']` |
+| `commercialTemplateIds` | `market`, `pharmacy` e os dez interiores |
+| `interiorTemplateIds`, `interiorFindsHints` | Ids dos interiores e o que cada lugar pode guardar (pinos de achado da galeria), por id de modelo |
 | `commercialItems`, `commercialStyles`, `commercialRoomColors`, `commercialDecorProfile` | Dados exportados |
 | `createCommercialLibraries(slotKit)` | Bibliotecas de slots (`shop_market`, `counter_market`; aliases `shop` e `counter`) |
 | `regions`, `CommercialRegion` | Dados de região |
@@ -39,8 +40,19 @@ engine.validate(shop)
 |---|---|---|
 | `market` | `commercial` | caixas, salão, depósito, banheiro, escritório; porta de aço e portão de carga, sem jardim, parede-meia nos dois lados |
 | `pharmacy` | `commercial` | balcão, salão, consultório; mesma casca |
+| `supermarket` | `commercial` | 18 x 13 m: caixas, salão com 4 gôndolas, padaria, açougue com câmara fria, estoque, escritório com cofre |
+| `drugstore` | `commercial` | 11 x 9 m: salão, balcão de dispensação, sala de manipulação, depósito de controlados com geladeira de vacinas e cofre |
+| `gun_shop` | `commercial` | 20 x 9 m: armas longas, vitrine, bancada de recarga, troféus, depósito blindado e estande de 4 raias |
+| `police_station` | `institutional` | 16 x 11 m: recepção, sala do delegado, salão, duas celas, arsenal, vestiário, evidências; pátio de viaturas na frente |
+| `emergency_room` | `institutional` | 18 x 11 m: pronto-socorro (macas, carrinho, oxigênio), alas A e B, UTI |
+| `school` | `institutional` | 18 x 15 m: biblioteca, refeitório, cozinha, armários, sala de aula com 16 carteiras, quadra |
+| `gas_station` | `commercial` | prédio 22 x 7 m (conveniência, banheiro externo, depósito, troca de óleo) e pista com 3 ilhas de bombas |
+| `church` | `institutional` | 12 x 20 m, pé-direito 7 m: salão paroquial, nave com 14 bancos, altar, sacristia, torre do sino no lote |
+| `metalworks` | `industrial` | 30 x 20 m, pé-direito 8 m: prensas, linha de produção, forno, porta-pallets, empilhadeira, refeitório, vestiário, mezanino |
+| `farm` | `agricultural` | casa sede 12 x 9 m (estilo `farm`) e, no lote, varanda, poço, galinheiro, curral, celeiro, silo, galpão de máquinas, tratores e fardos |
 
-Zonas `br`: `zc` (central, até 24 andares e 80 m, aceita misto e multifamiliar) e `zi` (industrial, 4 andares, 20 m, lotes grandes).
+Cada interior declara `place` e `construction` (`masonry`); os equipamentos de cada cena são obrigatórios (mesma contagem em toda semente), então as plantas variam só pelo tamanho, pelo estado e pela decoração. Medidas e contagens saem da cena da Galeria do Vale Cinzento; os desvios estão em `specs/001-migracao-entregas-dos-times/evidence.md`, seção T2.5.
+Zonas `br`: `zc` (central, até 24 andares e 80 m, aceita institucional, misto e multifamiliar), `zi` (industrial, 4 andares, 20 m, lotes grandes) e `za` (agrícola, lotes grandes).
 
 ## Compõe com
 - Depende de `game-floorplan` e, na prática, de `game-floorplan-residential` registrado antes (ambos são `peerDependencies`; além disso a ordem de registro importa).
@@ -55,5 +67,5 @@ Sem exemplo próprio; use o visualizador 2D do `game-floorplan` e a suíte em `g
 - Ids antigos: `mercado` é `market`, `farmacia` é `pharmacy` (tabelas em `MIGRATION.md`).
 
 ## O que vem pela migração (spec 001)
-- C5: interiores (delegacia, escola, igreja, posto, hospital...) viram modelos de planta com interior completo (estrutura, móveis e itens de achado por lugar), ligados ao catálogo único de itens (A9); a lista de lugares vai crescer. Todos entram neste pacote (decisão do dono em 2026-10-23), como prédios de cidade genéricos; o que é só de apocalipse zumbi vira estado ou conteúdo do jogo.
+- C5 (feito na T2.5): interiores completos com estrutura e móveis; os achados entram pelo gancho `registerFindsProvider` do motor (fase 3) usando `place` e `interiorFindsHints`. A lista de lugares vai crescer.
 - A9: itens de loja passam a vir do catálogo único com peso, volume, raridade e onde aparece.

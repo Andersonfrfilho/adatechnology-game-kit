@@ -1,0 +1,71 @@
+{
+  "templates": {
+    "church": "Igreja",
+    "drugstore": "Farmácia com manipulação",
+    "emergency_room": "Pronto-socorro",
+    "farm": "Fazenda",
+    "gas_station": "Posto de gasolina",
+    "gun_shop": "Loja de armas",
+    "metalworks": "Metalúrgica",
+    "police_station": "Delegacia",
+    "school": "Escola",
+    "supermarket": "Supermercado"
+  },
+  "labels": {
+    "arsenal": "Arsenal",
+    "bakery": "Padaria",
+    "bullpen": "Sala dos policiais",
+    "butcher": "Açougue e câmara fria",
+    "cafeteria": "Refeitório",
+    "canteen": "Refeitório",
+    "cell_1": "Cela 1",
+    "cell_2": "Cela 2",
+    "checkouts": "Caixas",
+    "chief_office": "Sala do delegado",
+    "classroom": "Sala de aula",
+    "compounding_room": "Sala de manipulação",
+    "controlled_storage": "Depósito de controlados",
+    "convenience_store": "Loja de conveniência",
+    "dispensing": "Balcão de dispensação",
+    "emergency_room": "Pronto-socorro",
+    "evidence_depot": "Depósito de evidências",
+    "farm_kitchen": "Cozinha da casa sede",
+    "icu": "UTI",
+    "library": "Biblioteca",
+    "living_room": "Sala",
+    "locker_room": "Vestiário",
+    "manager_office": "Escritório do gerente",
+    "nave": "Nave",
+    "office_mezzanine": "Escritório no mezanino",
+    "oil_bay": "Troca de óleo",
+    "pallet_storage": "Porta-pallets",
+    "parish_hall": "Salão paroquial",
+    "production_floor": "Chão de fábrica",
+    "reception": "Recepção",
+    "restroom": "Banheiro externo",
+    "sacristy": "Sacristia",
+    "sales_floor": "Salão de vendas",
+    "sanctuary": "Altar",
+    "school_kitchen": "Cozinha da merenda",
+    "service_corridor": "Corredor de serviço",
+    "shipping_bay": "Doca de expedição",
+    "shooting_range": "Estande de tiro",
+    "sports_court": "Quadra",
+    "utility": "Depósito de ferramentas",
+    "vault": "Depósito blindado",
+    "ward_a": "Ala de internação A",
+    "ward_b": "Ala de internação B"
+  },
+  "facadeColors": {
+    "barn_red": "Vermelho de celeiro",
+    "farm_cream": "Creme de fazenda",
+    "ochre": "Ocre",
+    "whitewash": "Caiação"
+  },
+  "styles": {
+    "farm": "Fazenda"
+  },
+  "zones": {
+    "za": "ZA – Agrícola"
+  }
+}

@@ -1,6 +1,6 @@
-import { EPS, MARGIN } from './constants'
+import { EPS, MARGIN, OVERHEAD_TOP } from './constants'
 import { eq, inRect } from './geometry'
-import type { ItemDef, Json, Plan, Rect, Room } from './types'
+import type { FurnitureDef, Json, Plan, Rect, Room } from './types'
 
 /** Door and path zones of a storey (storey -1 is the lot). */
 export function zonesOfFloor(plan: Plan, floorIndex: number): Rect[] {
@@ -11,6 +11,7 @@ export function zonesOfFloor(plan: Plan, floorIndex: number): Rect[] {
     for (const p of plan.doors) if (p.floor === 0 && p.exterior) out.push(...p.zones)
     for (const g of plan.gates) out.push(...g.zones)
     for (const c of plan.paths) out.push(...c.rects)
+    out.push(...plan.reservations)
   }
   return out
 }
@@ -36,7 +37,11 @@ export function windowZone(j: Json, outside?: boolean): Rect {
   return n[0] > 0 ? [u - MARGIN, v - h, u + depth, v + h] : [u - depth, v - h, u + MARGIN, v + h]
 }
 
-export const blocksWindow = (it: Pick<ItemDef, 'window'> & { h: number }, win: Json): boolean => !it.window || it.h > 1.0 + EPS || it.h > win.y0 - 0.05
+/** `overheadOff`: the counter sits under the window without its wall cabinet. */
+export function blocksWindow(it: Pick<FurnitureDef, 'window' | 'overhead' | 'windowHeight'> & { h: number }, win: Json, overheadOff?: boolean): boolean {
+  const height = Math.max(it.h, it.windowHeight || 0, it.overhead && !overheadOff ? OVERHEAD_TOP : 0)
+  return !it.window || it.h > 1.0 + EPS || height > win.y0 - 0.05 + EPS
+}
 
 export function windowsOfRoom(plan: Plan, room: Room): Json[] {
   if (!room.outdoor) return plan.windows.filter((j) => j.room === room.id)

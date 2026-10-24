@@ -1,0 +1,354 @@
+{
+ "schema": 1,
+ "name": "gallery-silhouettes",
+ "seed": 1,
+ "events": [
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "sobrado"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "sobrado_rotated"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "laje_1"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "laje_2"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "laje_3"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "colonial"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "colonial_door"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "chalet"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "chalet_rotated"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "company_house"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "stilt"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "farmhouse"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "house"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "house_boarded"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "building"
+   }
+  },
+  {
+   "type": "silhouette",
+   "data": {
+    "label": "building_shop"
+   }
+  }
+ ],
+ "scenes": {
+  "sobrado": {
+   "objects": 10,
+   "hash": "67f49cf6",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,3,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:2d596d48 i576 bbox-4,-3,-4.5,4,3,4.5 mat:MeshStandardMaterial:c8bca8:1",
+    "Mesh p0,6,0 q0,0,0,1 s1,1,1 geo:ExtrudeGeometry v24:be34ed5d bbox-4.2,0,-4.7,4.2,1.4,4.7 mat:MeshStandardMaterial:5a3a2a:1",
+    "Mesh p0,3.175,5 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:81f15adc i576 bbox-2.4,-0.075,-0.5,2.4,0.075,0.5 mat:MeshStandardMaterial:6a6a66:1",
+    "Mesh p-2.08,1.7,4.53 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:eda1eca5 i36 bbox-0.55,-0.6,-0.02,0.55,0.6,0.02 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p2.08,1.7,4.53 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:eda1eca5 i36 bbox-0.55,-0.6,-0.02,0.55,0.6,0.02 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p-2.08,4.7,4.53 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:eda1eca5 i36 bbox-0.55,-0.6,-0.02,0.55,0.6,0.02 mat:MeshStandardMaterial:10151b:1",
+    "Mesh p2.08,4.7,4.53 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:eda1eca5 i36 bbox-0.55,-0.6,-0.02,0.55,0.6,0.02 mat:MeshStandardMaterial:10151b:1",
+    "Mesh p0,1.05,4.52 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:5bc3b6cd i36 bbox-0.5,-1.05,-0.025,0.5,1.05,0.025 mat:MeshStandardMaterial:2a1d14:1"
+   ]
+  },
+  "sobrado_rotated": {
+   "objects": 10,
+   "hash": "a3a411db",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p3,0,-2 q0,0.2955,0,0.9553 s1,1,1",
+    "Mesh p0,3,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:386d4818 i576 bbox-3.5,-3,-4,3.5,3,4 mat:MeshStandardMaterial:b0a48c:1",
+    "Mesh p0,6,0 q0,0,0,1 s1,1,1 geo:ExtrudeGeometry v24:34978ead bbox-3.7,0,-4.2,3.7,1.4,4.2 mat:MeshStandardMaterial:5a3a2a:1",
+    "Mesh p0,3.175,4.5 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:926cf0c i576 bbox-2.1,-0.075,-0.5,2.1,0.075,0.5 mat:MeshStandardMaterial:6a6a66:1",
+    "Mesh p-1.82,1.7,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:eda1eca5 i36 bbox-0.55,-0.6,-0.02,0.55,0.6,0.02 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p1.82,1.7,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:eda1eca5 i36 bbox-0.55,-0.6,-0.02,0.55,0.6,0.02 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p-1.82,4.7,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:eda1eca5 i36 bbox-0.55,-0.6,-0.02,0.55,0.6,0.02 mat:MeshStandardMaterial:10151b:1",
+    "Mesh p1.82,4.7,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:eda1eca5 i36 bbox-0.55,-0.6,-0.02,0.55,0.6,0.02 mat:MeshStandardMaterial:10151b:1",
+    "Mesh p0,1.05,4.02 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:5bc3b6cd i36 bbox-0.5,-1.05,-0.025,0.5,1.05,0.025 mat:MeshStandardMaterial:2a1d14:1"
+   ]
+  },
+  "laje_1": {
+   "objects": 6,
+   "hash": "4a96033c",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,1.45,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f4745698 i576 bbox-3.5,-1.45,-4,3.5,1.45,4 mat:MeshStandardMaterial:9a6a50:1",
+    "Mesh p0,1.6,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:356ee0a5 i36 bbox-0.5,-0.5,-0.02,0.5,0.5,0.02 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p1.75,3.35,-1.6 q0,0,0,1 s1,1,1 geo:CylinderGeometry v64:d65f104d i120 bbox-0.5231,-0.45,-0.55,0.5231,0.45,0.55 mat:MeshStandardMaterial:2a5aa0:1",
+    "Mesh p3.9,0.09,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:8dce1bfc i576 bbox-0.4,-0.09,-0.6,0.4,0.09,0.6 mat:MeshStandardMaterial:7a7a74:1"
+   ]
+  },
+  "laje_2": {
+   "objects": 9,
+   "hash": "c65349d5",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,1.45,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f4745698 i576 bbox-3.5,-1.45,-4,3.5,1.45,4 mat:MeshStandardMaterial:a8a49c:1",
+    "Mesh p0,1.6,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:356ee0a5 i36 bbox-0.5,-0.5,-0.02,0.5,0.5,0.02 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p0,4.35,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f4745698 i576 bbox-3.5,-1.45,-4,3.5,1.45,4 mat:MeshStandardMaterial:9a6a50:1",
+    "Mesh p0,4.5,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:356ee0a5 i36 bbox-0.5,-0.5,-0.02,0.5,0.5,0.02 mat:MeshStandardMaterial:10151b:1",
+    "Mesh p1.75,6.25,-1.6 q0,0,0,1 s1,1,1 geo:CylinderGeometry v64:d65f104d i120 bbox-0.5231,-0.45,-0.55,0.5231,0.45,0.55 mat:MeshStandardMaterial:2a5aa0:1",
+    "Mesh p3.9,0.09,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:8dce1bfc i576 bbox-0.4,-0.09,-0.6,0.4,0.09,0.6 mat:MeshStandardMaterial:7a7a74:1",
+    "Mesh p3.9,2.99,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:8dce1bfc i576 bbox-0.4,-0.09,-0.6,0.4,0.09,0.6 mat:MeshStandardMaterial:7a7a74:1"
+   ]
+  },
+  "laje_3": {
+   "objects": 16,
+   "hash": "4ea59d45",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,1.45,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f4745698 i576 bbox-3.5,-1.45,-4,3.5,1.45,4 mat:MeshStandardMaterial:a8a49c:1",
+    "Mesh p0,1.6,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:356ee0a5 i36 bbox-0.5,-0.5,-0.02,0.5,0.5,0.02 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p0,4.35,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f4745698 i576 bbox-3.5,-1.45,-4,3.5,1.45,4 mat:MeshStandardMaterial:a8a49c:1",
+    "Mesh p0,4.5,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:356ee0a5 i36 bbox-0.5,-0.5,-0.02,0.5,0.5,0.02 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p0,7.25,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:f4745698 i576 bbox-3.5,-1.45,-4,3.5,1.45,4 mat:MeshStandardMaterial:a8a49c:1",
+    "Mesh p0,7.4,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:356ee0a5 i36 bbox-0.5,-0.5,-0.02,0.5,0.5,0.02 mat:MeshStandardMaterial:10151b:1",
+    "Mesh p1.75,9.15,-1.6 q0,0,0,1 s1,1,1 geo:CylinderGeometry v64:d65f104d i120 bbox-0.5231,-0.45,-0.55,0.5231,0.45,0.55 mat:MeshStandardMaterial:2a5aa0:1",
+    "Mesh p3.9,0.09,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:8dce1bfc i576 bbox-0.4,-0.09,-0.6,0.4,0.09,0.6 mat:MeshStandardMaterial:7a7a74:1",
+    "Mesh p3.9,2.99,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:8dce1bfc i576 bbox-0.4,-0.09,-0.6,0.4,0.09,0.6 mat:MeshStandardMaterial:7a7a74:1",
+    "Mesh p3.9,5.89,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:8dce1bfc i576 bbox-0.4,-0.09,-0.6,0.4,0.09,0.6 mat:MeshStandardMaterial:7a7a74:1",
+    "Mesh p-2.1,9.2,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:9795ad65 i36 bbox-0.01,-0.5,-0.01,0.01,0.5,0.01 mat:MeshStandardMaterial:8a8a8a:1",
+    "Mesh p-1.7,9.2,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:9795ad65 i36 bbox-0.01,-0.5,-0.01,0.01,0.5,0.01 mat:MeshStandardMaterial:8a8a8a:1",
+    "Mesh p-1.3,9.2,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:9795ad65 i36 bbox-0.01,-0.5,-0.01,0.01,0.5,0.01 mat:MeshStandardMaterial:8a8a8a:1",
+    "Mesh p-0.9,9.2,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:9795ad65 i36 bbox-0.01,-0.5,-0.01,0.01,0.5,0.01 mat:MeshStandardMaterial:8a8a8a:1"
+   ]
+  },
+  "colonial": {
+   "objects": 8,
+   "hash": "2d3910bc",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,2.1,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:67655588 i576 bbox-3.5,-2.1,-5,3.5,2.1,5 mat:MeshStandardMaterial:d0c4a8:1",
+    "Mesh p0,4.6,4.6 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:97b14390 i576 bbox-3.5,-0.4,-0.125,3.5,0.4,0.125 mat:MeshStandardMaterial:d0c4a8:1",
+    "Mesh p0,4.2,-0.4 q0,0,0,1 s1,1,1 geo:ExtrudeGeometry v24:768c36ad bbox-3.5,0,-4.8,3.5,1.4,4.8 mat:MeshStandardMaterial:7a4a32:1",
+    "Mesh p-2.2,2,5.02 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:925837fd i36 bbox-0.45,-1,-0.025,0.45,1,0.025 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p0,2,5.02 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:925837fd i36 bbox-0.45,-1,-0.025,0.45,1,0.025 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p2.2,2,5.02 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:925837fd i36 bbox-0.45,-1,-0.025,0.45,1,0.025 mat:MeshStandardMaterial:2a3a4a:1"
+   ]
+  },
+  "colonial_door": {
+   "objects": 9,
+   "hash": "aeb2e029",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,2.1,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:4755ffe8 i576 bbox-4.5,-2.1,-5,4.5,2.1,5 mat:MeshStandardMaterial:d0c4a8:1",
+    "Mesh p0,4.6,4.6 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:c931a2d0 i576 bbox-4.5,-0.4,-0.125,4.5,0.4,0.125 mat:MeshStandardMaterial:d0c4a8:1",
+    "Mesh p0,4.2,-0.4 q0,0,0,1 s1,1,1 geo:ExtrudeGeometry v24:102a016d bbox-4.5,0,-4.8,4.5,1.4,4.8 mat:MeshStandardMaterial:7a4a32:1",
+    "Mesh p-3.3,2,5.02 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:925837fd i36 bbox-0.45,-1,-0.025,0.45,1,0.025 mat:MeshStandardMaterial:3a2416:1",
+    "Mesh p-1.1,2,5.02 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:925837fd i36 bbox-0.45,-1,-0.025,0.45,1,0.025 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p1.1,2,5.02 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:925837fd i36 bbox-0.45,-1,-0.025,0.45,1,0.025 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p3.3,2,5.02 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:925837fd i36 bbox-0.45,-1,-0.025,0.45,1,0.025 mat:MeshStandardMaterial:2a3a4a:1"
+   ]
+  },
+  "chalet": {
+   "objects": 8,
+   "hash": "a357bf00",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,0.4,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:7f69aea8 i576 bbox-3.5,-0.4,-4.5,3.5,0.4,4.5 mat:MeshStandardMaterial:5a5650:1",
+    "Mesh p0,2.9,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:4cf7a8b8 i576 bbox-3.5,-2.1,-4.5,3.5,2.1,4.5 mat:MeshStandardMaterial:6b4a30:1",
+    "Mesh p0,5,0 q0,0,0,1 s1,1,1 geo:ExtrudeGeometry v24:b80acd8d bbox-3.8,0,-4.8,3.8,4,4.8 mat:MeshStandardMaterial:2c2a28:1",
+    "Mesh p2.2,7.1,-1 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:827c1d68 i576 bbox-0.4,-2.1,-0.4,0.4,2.1,0.4 mat:MeshStandardMaterial:5a5650:1",
+    "Mesh p0,2.25,4.52 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:cc8905e5 i36 bbox-0.65,-0.65,-0.02,0.65,0.65,0.02 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p0,6.7,4.6 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:356ee0a5 i36 bbox-0.5,-0.5,-0.02,0.5,0.5,0.02 mat:MeshStandardMaterial:10151b:1"
+   ]
+  },
+  "chalet_rotated": {
+   "objects": 8,
+   "hash": "724bd027",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p2,0,5 q0,0.5646,0,0.8253 s1,1,1",
+    "Mesh p0,0.4,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:7f69aea8 i576 bbox-3.5,-0.4,-4.5,3.5,0.4,4.5 mat:MeshStandardMaterial:5a5650:1",
+    "Mesh p0,2.9,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:4cf7a8b8 i576 bbox-3.5,-2.1,-4.5,3.5,2.1,4.5 mat:MeshStandardMaterial:7a5a3a:1",
+    "Mesh p0,5,0 q0,0,0,1 s1,1,1 geo:ExtrudeGeometry v24:b80acd8d bbox-3.8,0,-4.8,3.8,4,4.8 mat:MeshStandardMaterial:2c2a28:1",
+    "Mesh p2.2,7.1,-1 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:827c1d68 i576 bbox-0.4,-2.1,-0.4,0.4,2.1,0.4 mat:MeshStandardMaterial:5a5650:1",
+    "Mesh p0,2.25,4.52 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:cc8905e5 i36 bbox-0.65,-0.65,-0.02,0.65,0.65,0.02 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p0,6.7,4.6 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:356ee0a5 i36 bbox-0.5,-0.5,-0.02,0.5,0.5,0.02 mat:MeshStandardMaterial:10151b:1"
+   ]
+  },
+  "company_house": {
+   "objects": 13,
+   "hash": "37a23bdd",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,1.5,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:9c368ad8 i576 bbox-3,-1.5,-4.5,3,1.5,4.5 mat:MeshStandardMaterial:d8d0c0:1",
+    "Mesh p0,3,0 q0,0,0,1 s1,1,1 geo:ExtrudeGeometry v24:8de5cfd bbox-3.2,0,-4.7,3.2,1.6,4.7 mat:MeshStandardMaterial:8a4a32:1",
+    "Mesh p0,1.05,4.52 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:5232ba0d i36 bbox-0.45,-1.05,-0.025,0.45,1.05,0.025 mat:MeshStandardMaterial:3a2a1c:1",
+    "Mesh p1.8,1.6,4.52 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:356ee0a5 i36 bbox-0.5,-0.5,-0.02,0.5,0.5,0.02 mat:MeshStandardMaterial:10151b:1",
+    "Mesh p-3.2,0.45,6.5 q0,0,0,1 s1,1,1 geo:CylinderGeometry v34:9c1dffc8 i60 bbox-0.0476,-0.45,-0.0405,0.0476,0.45,0.05 mat:MeshStandardMaterial:e0d8c8:1",
+    "Mesh p-1.0667,0.45,6.5 q0,0,0,1 s1,1,1 geo:CylinderGeometry v34:9c1dffc8 i60 bbox-0.0476,-0.45,-0.0405,0.0476,0.45,0.05 mat:MeshStandardMaterial:e0d8c8:1",
+    "Mesh p1.0667,0.45,6.5 q0,0,0,1 s1,1,1 geo:CylinderGeometry v34:9c1dffc8 i60 bbox-0.0476,-0.45,-0.0405,0.0476,0.45,0.05 mat:MeshStandardMaterial:e0d8c8:1",
+    "Mesh p3.2,0.45,6.5 q0,0,0,1 s1,1,1 geo:CylinderGeometry v34:9c1dffc8 i60 bbox-0.0476,-0.45,-0.0405,0.0476,0.45,0.05 mat:MeshStandardMaterial:e0d8c8:1",
+    "Line p0,0,0 q0,0,0,1 s1,1,1 geo:BufferGeometry v2:b95a0430 bbox-3.2,0.315,6.5,3.2,0.315,6.5 mat:LineBasicMaterial:8a8c8e:1",
+    "Line p0,0,0 q0,0,0,1 s1,1,1 geo:BufferGeometry v2:85ae72f0 bbox-3.2,0.585,6.5,3.2,0.585,6.5 mat:LineBasicMaterial:8a8c8e:1",
+    "Line p0,0,0 q0,0,0,1 s1,1,1 geo:BufferGeometry v2:2bd68300 bbox-3.2,0.882,6.5,3.2,0.882,6.5 mat:LineBasicMaterial:8a8c8e:1"
+   ]
+  },
+  "stilt": {
+   "objects": 10,
+   "hash": "b82f2d1",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p-2,0.05,-3 q0,0,0,1 s1,1,1 geo:CylinderGeometry v40:150d1afd i72 bbox-0.1039,-1.55,-0.12,0.1039,1.55,0.12 mat:MeshStandardMaterial:3a2a1c:1",
+    "Mesh p-2,0.05,3 q0,0,0,1 s1,1,1 geo:CylinderGeometry v40:150d1afd i72 bbox-0.1039,-1.55,-0.12,0.1039,1.55,0.12 mat:MeshStandardMaterial:3a2a1c:1",
+    "Mesh p2,0.05,-3 q0,0,0,1 s1,1,1 geo:CylinderGeometry v40:150d1afd i72 bbox-0.1039,-1.55,-0.12,0.1039,1.55,0.12 mat:MeshStandardMaterial:3a2a1c:1",
+    "Mesh p2,0.05,3 q0,0,0,1 s1,1,1 geo:CylinderGeometry v40:150d1afd i72 bbox-0.1039,-1.55,-0.12,0.1039,1.55,0.12 mat:MeshStandardMaterial:3a2a1c:1",
+    "Mesh p0,1.6,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:5e2b390 i576 bbox-2.5,-0.1,-3.5,2.5,0.1,3.5 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p0,3,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:2174cc48 i576 bbox-2.3,-1.3,-3.2,2.3,1.3,3.2 mat:MeshStandardMaterial:6a5a46:1",
+    "Mesh p0,4.3,0 q0,0,0,1 s1,1,1 geo:ExtrudeGeometry v24:93c59c3d bbox-2.6,0,-3.5,2.6,1.1,3.5 mat:MeshStandardMaterial:7a7a78:1",
+    "Mesh p0,1.575,5 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:107fe09c i576 bbox-0.6,-0.075,-2,0.6,0.075,2 mat:MeshStandardMaterial:5a4630:1"
+   ]
+  },
+  "farmhouse": {
+   "objects": 12,
+   "hash": "b7e69713",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,1.6,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:a2ed7474 i576 bbox-7.5,-1.6,-5.5,7.5,1.6,5.5 mat:MeshStandardMaterial:d8cfb8:1",
+    "Mesh p0,3.2,0 q0,0,0,1 s1,1,1 geo:ExtrudeGeometry v24:bcafc01d bbox-8.5,0,-6.5,8.5,2.2,6.5 mat:MeshStandardMaterial:8a4a32:1",
+    "Mesh p0,0.125,6.8 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:28a63544 i576 bbox-7.5,-0.125,-1.3,7.5,0.125,1.3 mat:MeshStandardMaterial:6a5a46:1",
+    "Mesh p-7,1.6,7.8 q0,0,0,1 s1,1,1 geo:CylinderGeometry v40:736e38bd i72 bbox-0.0866,-1.6,-0.1,0.0866,1.6,0.1 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p-4.2,1.6,7.8 q0,0,0,1 s1,1,1 geo:CylinderGeometry v40:736e38bd i72 bbox-0.0866,-1.6,-0.1,0.0866,1.6,0.1 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p-1.4,1.6,7.8 q0,0,0,1 s1,1,1 geo:CylinderGeometry v40:736e38bd i72 bbox-0.0866,-1.6,-0.1,0.0866,1.6,0.1 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p1.4,1.6,7.8 q0,0,0,1 s1,1,1 geo:CylinderGeometry v40:736e38bd i72 bbox-0.0866,-1.6,-0.1,0.0866,1.6,0.1 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p4.2,1.6,7.8 q0,0,0,1 s1,1,1 geo:CylinderGeometry v40:736e38bd i72 bbox-0.0866,-1.6,-0.1,0.0866,1.6,0.1 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p7,1.6,7.8 q0,0,0,1 s1,1,1 geo:CylinderGeometry v40:736e38bd i72 bbox-0.0866,-1.6,-0.1,0.0866,1.6,0.1 mat:MeshStandardMaterial:5a4630:1",
+    "Mesh p-3,1.6,5.52 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:d6b95ba5 i36 bbox-0.6,-0.6,-0.02,0.6,0.6,0.02 mat:MeshBasicMaterial:ffb45e:1"
+   ]
+  },
+  "house": {
+   "objects": 9,
+   "hash": "8a338bb3",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,1.5,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:3c2183c8 i576 bbox-3.5,-1.5,-4,3.5,1.5,4 mat:MeshStandardMaterial:c8b898:1",
+    "Mesh p0,3,0 q0,0,0,1 s1,1,1 geo:ExtrudeGeometry v24:ec0df44d bbox-3.75,0,-4.25,3.75,1.6,4.25 mat:MeshStandardMaterial:5a3a2a:1",
+    "Mesh p0,1.05,4.02 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:5bc3b6cd i36 bbox-0.5,-1.05,-0.025,0.5,1.05,0.025 mat:MeshStandardMaterial:2a1d14:1",
+    "Mesh p-1.96,1.65,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:63cabc05 i36 bbox-0.55,-0.55,-0.02,0.55,0.55,0.02 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p-1.96,1.32,4.08 q0,0,-0.0749,0.9972 s1,1,1 geo:BoxGeometry v24:9b5790c5 i36 bbox-0.65,-0.07,-0.02,0.65,0.07,0.02 mat:MeshStandardMaterial:6b4a2a:1",
+    "Mesh p-1.96,1.82,4.08 q0,0,0.0749,0.9972 s1,1,1 geo:BoxGeometry v24:9b5790c5 i36 bbox-0.65,-0.07,-0.02,0.65,0.07,0.02 mat:MeshStandardMaterial:6b4a2a:1",
+    "Mesh p1.96,1.65,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:63cabc05 i36 bbox-0.55,-0.55,-0.02,0.55,0.55,0.02 mat:MeshStandardMaterial:10151b:1"
+   ]
+  },
+  "house_boarded": {
+   "objects": 11,
+   "hash": "9a085d8c",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,1.5,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:3c2183c8 i576 bbox-3.5,-1.5,-4,3.5,1.5,4 mat:MeshStandardMaterial:c8b898:1",
+    "Mesh p0,3,0 q0,0,0,1 s1,1,1 geo:ExtrudeGeometry v24:ec0df44d bbox-3.75,0,-4.25,3.75,1.6,4.25 mat:MeshStandardMaterial:5a3a2a:1",
+    "Mesh p0,1.05,4.02 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:5bc3b6cd i36 bbox-0.5,-1.05,-0.025,0.5,1.05,0.025 mat:MeshStandardMaterial:2a1d14:1",
+    "Mesh p-1.96,1.65,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:63cabc05 i36 bbox-0.55,-0.55,-0.02,0.55,0.55,0.02 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p-1.96,1.32,4.08 q0,0,-0.0749,0.9972 s1,1,1 geo:BoxGeometry v24:9b5790c5 i36 bbox-0.65,-0.07,-0.02,0.65,0.07,0.02 mat:MeshStandardMaterial:6b4a2a:1",
+    "Mesh p-1.96,1.82,4.08 q0,0,0.0749,0.9972 s1,1,1 geo:BoxGeometry v24:9b5790c5 i36 bbox-0.65,-0.07,-0.02,0.65,0.07,0.02 mat:MeshStandardMaterial:6b4a2a:1",
+    "Mesh p1.96,1.65,4.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:63cabc05 i36 bbox-0.55,-0.55,-0.02,0.55,0.55,0.02 mat:MeshBasicMaterial:ffb45e:1",
+    "Mesh p1.96,1.32,4.08 q0,0,-0.0749,0.9972 s1,1,1 geo:BoxGeometry v24:9b5790c5 i36 bbox-0.65,-0.07,-0.02,0.65,0.07,0.02 mat:MeshStandardMaterial:6b4a2a:1",
+    "Mesh p1.96,1.82,4.08 q0,0,0.0749,0.9972 s1,1,1 geo:BoxGeometry v24:9b5790c5 i36 bbox-0.65,-0.07,-0.02,0.65,0.07,0.02 mat:MeshStandardMaterial:6b4a2a:1"
+   ]
+  },
+  "building": {
+   "objects": 4,
+   "hash": "22d3a6e3",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,10,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:a5feda8 i576 bbox-6,-10,-7,6,10,7 mat:MeshStandardMaterial:8a8a86:1",
+    "Mesh p0,20.175,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:5c38d94 i576 bbox-6.15,-0.175,-7.15,6.15,0.175,7.15 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p-3.9424,21.05,5.246 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:990389ad i168 bbox-0.7799,-0.7,-0.8,0.7799,0.7,0.8 mat:MeshStandardMaterial:4b4540:1"
+   ]
+  },
+  "building_shop": {
+   "objects": 10,
+   "hash": "51be4be8",
+   "lines": [
+    "Group p0,0,0 q0,0,0,1 s1,1,1",
+    "Mesh p0,10,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:a5feda8 i576 bbox-6,-10,-7,6,10,7 mat:MeshStandardMaterial:8a8a86:1",
+    "Mesh p0,20.175,0 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:5c38d94 i576 bbox-6.15,-0.175,-7.15,6.15,0.175,7.15 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p-3.9424,21.05,5.246 q0,0,0,1 s1,1,1 geo:CylinderGeometry v88:990389ad i168 bbox-0.7799,-0.7,-0.8,0.7799,0.7,0.8 mat:MeshStandardMaterial:4b4540:1",
+    "Mesh p0,4.6,7.8 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:9347480 i576 bbox-6,-0.1,-0.8,6,0.1,0.8 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p0,1.75,7.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:b284dfbd i36 bbox-3.6,-1.75,-0.025,3.6,1.75,0.025 mat:MeshStandardMaterial:4a4c4e:1",
+    "Mesh p0,5.3,7.12 q0,0,0,1 s1,1,1 geo:PlaneGeometry v4:a77501ad i6 bbox-4,-0.5,0,4,0.5,0 mat:MeshBasicMaterial:ffffff:1",
+    "Mesh p0,4.6,-7.8 q0,0,0,1 s1,1,1 geo:BoxGeometry v150:9347480 i576 bbox-6,-0.1,-0.8,6,0.1,0.8 mat:MeshStandardMaterial:2a2a2c:1",
+    "Mesh p0,1.75,-7.03 q0,0,0,1 s1,1,1 geo:BoxGeometry v24:b284dfbd i36 bbox-3.6,-1.75,-0.025,3.6,1.75,0.025 mat:MeshStandardMaterial:4a4c4e:1",
+    "Mesh p0,5.3,-7.12 q0,1,0,0 s1,1,1 geo:PlaneGeometry v4:a77501ad i6 bbox-4,-0.5,0,4,0.5,0 mat:MeshBasicMaterial:ffffff:1"
+   ]
+  }
+ }
+}

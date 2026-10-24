@@ -40,3 +40,28 @@ describe('checkSpec', () => {
     expect(lost.warnings[0]).toMatch(/"b".*cannot reach an anchored part/)
   })
 })
+
+describe('checkSpec: layers, reinforcement, units, breach', () => {
+  const wall = (over: Partial<PartSpec>) => ({ parts: [part('w', over)] })
+  it('accepts well-formed staged fields', () => {
+    const r = ok(wall({
+      layers: [{ material: 'steel', thickness: 0.02, faces: 'both' }],
+      reinforcement: { material: 'steel', spacing: 0.18, diameter: 0.008, residualCapacity: 0.15 },
+      units: { size: [0.23, 0.075, 0.11], bond: 'running', mortar: 'steel' },
+      breach: { area: 0.25 },
+    }))
+    expect(r).toEqual({ ok: true, problems: [], warnings: [] })
+  })
+
+  it('reports unknown materials, bad sizes and bad enums', () => {
+    const text = ok(wall({
+      layers: [{ material: 'nope', thickness: 0, faces: 'left' as never }],
+      reinforcement: { material: 'steel', spacing: -1, diameter: 0.008, residualCapacity: 2 },
+      units: { size: [1, 0, 1], bond: 'spiral' as never, mortar: 'nope' },
+      breach: { area: 0 },
+    })).problems.join('\n')
+    for (const m of [/layer 0 has unknown material/, /layer 0 thickness/, /invalid faces "left"/, /spacing and diameter/, /residualCapacity/, /units mortar/, /units size/, /invalid bond "spiral"/, /breach area/]) {
+      expect(text).toMatch(m)
+    }
+  })
+})

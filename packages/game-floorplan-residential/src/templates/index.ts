@@ -1,7 +1,7 @@
 export { singleStoreyA } from './single-storey-a'
 export { townhouse } from './townhouse'
 export { apartmentBasic } from './apartment-basic'
-export { budgetSlabHouse } from './budget-slab-house'
+export { createBudgetSlabHouse } from './budget-slab-house'
 export { budgetSemiDetached } from './budget-semi-detached'
 export { midModernSingleStorey } from './mid-modern-single-storey'
 export { midModernTownhouse } from './mid-modern-townhouse'

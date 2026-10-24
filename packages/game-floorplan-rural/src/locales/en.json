@@ -1,0 +1,42 @@
+{
+  "labels": {
+    "porch": "Porch",
+    "covered_deck": "Covered deck",
+    "bedroom_4": "Bedroom 4",
+    "study_room": "Study room",
+    "loft_bedroom": "Mezzanine bedroom",
+    "cabin": "Cabin",
+    "living_kitchen": "Living room and kitchen",
+    "shack": "Shack",
+    "pantry": "Pantry",
+    "mezzanine": "Mezzanine",
+    "campsite": "Campsite",
+    "clearing": "Clearing",
+    "tent_dome_1": "Dome tent, 1 person",
+    "tent_tunnel_1": "Tunnel tent, 1 person",
+    "tent_dome_2": "Dome tent, 2 people",
+    "tent_tunnel_2": "Tunnel tent, 2 people",
+    "tent_dome_3": "Dome tent, 3 people",
+    "tent_tunnel_3": "Tunnel tent, 3 people",
+    "tent_dome_4": "Dome tent, 4 people",
+    "tent_tunnel_4": "Tunnel tent, 4 people"
+  },
+  "templates": {
+    "wood_frame_house": "American wood frame house",
+    "a_frame_chalet": "Mountain wood chalet",
+    "log_cabin": "Log cabin",
+    "shack": "Shack",
+    "campsite": "Campsite with tents"
+  },
+  "styles": {
+    "rural": "Rural"
+  },
+  "facadeColors": {
+    "natural_wood": "Natural wood",
+    "worn_white": "Worn white",
+    "moss_green": "Moss green",
+    "bluish_grey": "Bluish grey",
+    "barn_red": "Barn red",
+    "wood_grey": "Wood grey"
+  }
+}

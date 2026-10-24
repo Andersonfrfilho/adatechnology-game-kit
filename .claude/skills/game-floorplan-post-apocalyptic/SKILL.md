@@ -1,12 +1,12 @@
 ---
 name: game-floorplan-post-apocalyptic
-description: Use quando a casa gerada precisa estar fortificada (janelas tapadas, barricada, sacos de areia) ou abandonada (saqueada, portas abertas, sangue, roupas no chão) no game-floorplan. Pacote de gênero com os estados fortified e abandoned e a distribuição de sorteio por semente.
+description: Use quando a casa gerada precisa estar fortificada (janelas tapadas, barricada, sacos de areia) ou abandonada (saqueada, portas abertas, sangue, roupas no chão) no game-floorplan, ou quando precisar da tenda de triagem militar. Pacote de gênero com os estados fortified e abandoned, a distribuição de sorteio por semente e o modelo triage_tent.
 ---
 
 # @adatechnology/game-floorplan-post-apocalyptic
 
 ## Objetivo
-Pacote de gênero do `game-floorplan`: os estados `fortified` e `abandoned` como plugin de estado, com seus tipos de item e marcas, e uma distribuição configurável do estado padrão sorteado pela semente (35% fortified, 45% abandoned, 20% normal).
+Pacote de gênero do `game-floorplan`: os estados `fortified` e `abandoned` como plugin de estado, com seus tipos de item e marcas, e uma distribuição configurável do estado padrão sorteado pela semente (35% fortified, 45% abandoned, 20% normal). Também traz o modelo `triage_tent` (tenda de triagem militar da spec 001, T2.5e).
 
 ## Quando usar e quando não usar
 - Use quando a planta deve parecer tomada pelo apocalipse (casa de qualquer pacote de conteúdo).
@@ -33,6 +33,7 @@ engine.generate('townhouse', { seed: 3, state: 'abandoned' }).stateItems
 | `defaultDistribution` | `{ fortified: 0.35, abandoned: 0.45, normal: 0.2 }` |
 | `postApocalypticStates` | `['fortified', 'abandoned']` |
 | `postApocalypticItems`, `fortifiedState`, `abandonedState` | Dados e plugins exportados |
+| `triageFindsHints` | O que a tenda de triagem pode guardar (pinos de achado da galeria): caixas médicas no lado MORDIDO, fuzis no cavalete do lado LIMPO |
 | `enLocale`, `ptBrLocale` | Nomes traduzidos dos estados |
 
 | Estado | Marcas | Itens em `stateItems` |
@@ -41,6 +42,9 @@ engine.generate('townhouse', { seed: 3, state: 'abandoned' }).stateItems
 | `abandoned` | portas e portões `open`, itens `ransacked`, `doorOpen` | `open_doors`, `ransacked_drawers`, `open_suitcases`, `clothes_on_floor`, `fallen_chair`, `blood_stains`, `open_gates` |
 
 A barricada marca também o item movido (`barricade`, `moved`) e a porta (`blocked`). O estado `abandoned` dessatura e escurece a paleta.
+
+## Tenda de triagem
+`triage_tent`: 16 x 10 m, pé-direito 3,4 m, `place: 'triage'`, construção `canvas`, estilo `military_camp` (paleta própria). Lado LIMPO e lado MORDIDO (8 x 10 m), 6 catres em cada, 6 caixas médicas e o cavalete de fuzis. É modelo, não estado (o estado altera um prédio existente; a tenda não tem hospedeiro). A suíte de propriedades das casas a pula; `tests/triage.test.ts` a confere em todos os estados.
 
 ## Compõe com
 - Depende só do tipo do motor `game-floorplan`; os estados se aplicam a qualquer modelo registrado por `-residential` e `-commercial`.

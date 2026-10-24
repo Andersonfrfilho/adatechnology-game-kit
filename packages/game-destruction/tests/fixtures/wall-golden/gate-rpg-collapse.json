@@ -1,0 +1,1727 @@
+{
+ "schema": 1,
+ "name": "gate-rpg-collapse",
+ "seed": 107,
+ "events": [
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "c0",
+    "at": [
+     -1.5,
+     1.5,
+     0.15
+    ],
+    "rays": 9,
+    "length": 1
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "time": 0,
+    "part": "c0",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "c0",
+    "kind": "chips",
+    "count": 12
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "c0",
+    "amount": 480,
+    "hp": 8214,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "fracture",
+   "data": {
+    "time": 0,
+    "part": "c0",
+    "style": "crumble",
+    "fragments": {
+     "count": 24,
+     "mass": 621,
+     "marks": 0,
+     "first": {
+      "center": [
+       -1.5937,
+       0.1217,
+       0
+      ],
+      "size": [
+       0.1126,
+       0.2434,
+       0.3
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "c0",
+    "kind": "dust",
+    "count": 19
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "time": 0,
+    "part": "c0",
+    "stage": 3
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "time": 0,
+    "part": "c0",
+    "bars": 4,
+    "first": [
+     [
+      -1.59,
+      0.02,
+      -0.09
+     ],
+     [
+      -1.59,
+      2.98,
+      -0.09
+     ]
+    ]
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 0.1,
+    "part": "c0",
+    "stress": 3.5053,
+    "load": 2609.0719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0.1,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 8172.36,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0.2,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 7650.72,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0.3,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 7129.08,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0.4,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 6607.44,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0.5,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 6085.8,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0.6,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 5564.16,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 0.7,
+    "part": "c0",
+    "stress": 3.5053,
+    "load": 2609.0719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0.7,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 5042.52,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0.8,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 4520.88,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0.9,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 3999.24,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 3477.6,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1.1,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 2955.96,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1.2,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 2434.32,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 1.3,
+    "part": "c0",
+    "stress": 3.5053,
+    "load": 2609.0719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1.3,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 1912.68,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1.4,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 1391.04,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1.5,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 869.4,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1.6,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 347.76,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1.7,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "time": 1.7,
+    "part": "c0",
+    "bars": 0,
+    "first": null
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 1.7,
+    "part": "c0",
+    "kind": "sparks",
+    "count": 6
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "time": 1.7,
+    "joint": "c0~f_c0",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "time": 1.7,
+    "joint": "slab~c0",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 1.7,
+    "part": "f_c1",
+    "stress": 1.1116,
+    "load": 6271.4
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1.7,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 6052.9914,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 1.7,
+    "part": "c1",
+    "stress": 1.1749,
+    "load": 5829.8
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1.7,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 8468.0584,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1.8,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 5923.5829,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1.8,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 8242.1169,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1.9,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 5794.1743,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 1.9,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 8016.1753,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 5664.7657,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 7790.2337,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.1,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 5535.3571,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.1,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 7564.2921,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.2,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 5405.9486,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.2,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 7338.3506,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 2.3,
+    "part": "f_c1",
+    "stress": 1.1116,
+    "load": 6271.4
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.3,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 5276.54,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 2.3,
+    "part": "c1",
+    "stress": 1.1749,
+    "load": 5829.8
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.3,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 7112.409,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.4,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 5147.1314,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.4,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 6886.4674,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.5,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 5017.7228,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.5,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 6660.5259,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.6,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 4888.3143,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.6,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 6434.5843,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.7,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 4758.9057,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.7,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 6208.6427,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.8,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 4629.4971,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.8,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 5982.7011,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 2.9,
+    "part": "f_c1",
+    "stress": 1.1116,
+    "load": 6271.4
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.9,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 4500.0885,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 2.9,
+    "part": "c1",
+    "stress": 1.1749,
+    "load": 5829.8
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 2.9,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 5756.7596,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 4370.68,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 5530.818,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.1,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 4241.2714,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.1,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 5304.8764,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.2,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 4111.8628,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.2,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 5078.9349,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.3,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 3982.4542,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.3,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 4852.9933,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.4,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 3853.0457,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.4,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 4627.0517,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 3.5,
+    "part": "f_c1",
+    "stress": 1.1116,
+    "load": 6271.4
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.5,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 3723.6371,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 3.5,
+    "part": "c1",
+    "stress": 1.1749,
+    "load": 5829.8
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.5,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 4401.1101,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.6,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 3594.2285,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.6,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 4175.1686,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.7,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 3464.8199,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.7,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 3949.227,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.8,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 3335.4114,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.8,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 3723.2854,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.9,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 3206.0028,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 3.9,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 3497.3438,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 3076.5942,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 3271.4023,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 4.1,
+    "part": "f_c1",
+    "stress": 1.1116,
+    "load": 6271.4
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.1,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 2947.1857,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 4.1,
+    "part": "c1",
+    "stress": 1.1749,
+    "load": 5829.8
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.1,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 3045.4607,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.2,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 2817.7771,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.2,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 2819.5191,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.3,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 2688.3685,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.3,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 2593.5776,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.4,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 2558.9599,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.4,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 2367.636,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.5,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 2429.5514,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.5,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 2141.6944,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.6,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 2300.1428,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.6,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 1915.7528,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 4.7,
+    "part": "f_c1",
+    "stress": 1.1116,
+    "load": 6271.4
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.7,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 2170.7342,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 4.7,
+    "part": "c1",
+    "stress": 1.1749,
+    "load": 5829.8
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.7,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 1689.8113,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.8,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 2041.3256,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.8,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 1463.8697,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.9,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 1911.9171,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 4.9,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 1237.9281,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 1782.5085,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 1011.9866,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.1,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 1653.0999,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.1,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 786.045,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.2,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 1523.6913,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.2,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 560.1034,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 5.3,
+    "part": "f_c1",
+    "stress": 1.1116,
+    "load": 6271.4
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.3,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 1394.2828,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 5.3,
+    "part": "c1",
+    "stress": 1.1749,
+    "load": 5829.8
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.3,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 334.1618,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.4,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 1264.8742,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.4,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 108.2203,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.5,
+    "part": "f_c1",
+    "amount": 129.4086,
+    "hp": 1135.4656,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.5,
+    "part": "c1",
+    "amount": 225.9416,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "fracture",
+   "data": {
+    "time": 5.5,
+    "part": "c1",
+    "style": "crumble",
+    "fragments": {
+     "count": 24,
+     "mass": 621,
+     "marks": 0,
+     "first": {
+      "center": [
+       1.5,
+       0.0983,
+       0
+      ],
+      "size": [
+       0.3,
+       0.1965,
+       0.3
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 5.5,
+    "part": "c1",
+    "kind": "dust",
+    "count": 19
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "time": 5.5,
+    "part": "c1",
+    "stage": 3
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "time": 5.5,
+    "part": "c1",
+    "bars": 4,
+    "first": [
+     [
+      1.41,
+      0.02,
+      -0.09
+     ],
+     [
+      1.41,
+      2.98,
+      -0.09
+     ]
+    ]
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.6,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 1060.0903,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.6,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 8172.36,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.7,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 984.7151,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.7,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 7650.72,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.8,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 909.3398,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.8,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 7129.08,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 5.9,
+    "part": "f_c1",
+    "stress": 1.0024,
+    "load": 5655.0719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.9,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 833.9645,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 5.9,
+    "part": "c1",
+    "stress": 7.0043,
+    "load": 5213.4719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 5.9,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 6607.44,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 758.5893,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 6085.8,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.1,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 683.214,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.1,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 5564.16,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.2,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 607.8387,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.2,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 5042.52,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.3,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 532.4635,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.3,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 4520.88,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.4,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 457.0882,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.4,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 3999.24,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 6.5,
+    "part": "f_c1",
+    "stress": 1.0024,
+    "load": 5655.0719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.5,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 381.7129,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 6.5,
+    "part": "c1",
+    "stress": 7.0043,
+    "load": 5213.4719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.5,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 3477.6,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.6,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 306.3376,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.6,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 2955.96,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.7,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 230.9624,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.7,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 2434.32,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.8,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 155.5871,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.8,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 1912.68,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.9,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 80.2118,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 6.9,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 1391.04,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 7,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 4.8366,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 7,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 869.4,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "time": 7.1,
+    "part": "f_c1",
+    "stress": 1.0024,
+    "load": 5655.0719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 7.1,
+    "part": "f_c1",
+    "amount": 75.3753,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "fracture",
+   "data": {
+    "time": 7.1,
+    "part": "f_c1",
+    "style": "crumble",
+    "fragments": {
+     "count": 24,
+     "mass": 441.6,
+     "marks": 0,
+     "first": {
+      "center": [
+       1.1979,
+       -0.2073,
+       -0.2535
+      ],
+      "size": [
+       0.1959,
+       0.1854,
+       0.293
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 7.1,
+    "part": "f_c1",
+    "kind": "dust",
+    "count": 17
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "time": 7.1,
+    "joint": "c1~f_c1",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "time": 7.1,
+    "part": "slab",
+    "stage": 3
+   }
+  },
+  {
+   "type": "collapse",
+   "data": {
+    "time": 7.1,
+    "parts": [
+     "c1",
+     "slab",
+     "roof"
+    ],
+    "mass": 5213.4719
+   }
+  }
+ ],
+ "scenes": {}
+}

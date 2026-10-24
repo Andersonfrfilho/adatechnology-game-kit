@@ -1,12 +1,18 @@
 import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from './chain'
 import type { ChainTrigger } from './chain'
 import { planFragments } from './fracture'
+import type { PlannedFragment } from './fracture'
+import { cellsOutside, cellsWithin, marksInBox, planeAxes, unitGrid } from './breach'
+import type { LocalHole, UnitCell } from './breach'
+import { layersEnergy, layersThickness, MAX_SPALLS, outerLayer, resolveLayer, thinAxisOf } from './layers'
+import type { LayerRT } from './layers'
+import { clipBarsToDisc, rebarBars, rebarMass } from './rebar'
 import { JOINT_DEFAULTS, inferJoints, MATERIALS, partCapacity, partMass, partThickness, partVolume, fragility } from './materials'
 import { aabbOf, createRng, distanceToShape, quat, quatFromEuler, rayShape, rotateVec, shapeArea, shapeBound, shapeDims, surfacePoint, toLocal, toWorld, vec } from './math'
 import type { DestructibleImpl } from './contracts'
 import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
-  DestructionWorld, Fragment, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec,
+  DamageStage, DestructionWorld, Fragment, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec,
   PartState, Quat, RayHit, ToolKind, Vec3,
 } from './types'
 
@@ -15,6 +21,14 @@ const DMG_PER_J = 0.02
 /** Fraction of a blast's energy that reaches a part at distance 0. */
 const BLAST_COUPLING = 0.1
 const FLAMMABLE_FLUIDS = ['gas', 'fuel']
+/** Staged parts: default breach radius (m), blast multiplier on the breach area, area a part must lose to open (m²), and the share of capacity the bare cage keeps. */
+const BREACH_RADIUS = 0.55
+const BREACH_BLAST_FACTOR = 6
+const BREACH_AREA = 0.25
+const RESIDUAL_CAPACITY = 0.15
+/** Unit-sized fragments of a whole wall: at most this many times `maxFragments`. A breach picks its units from a grid of up to `BREACH_GRID_CAP`. */
+const UNIT_FRAGMENT_FACTOR = 4
+const BREACH_GRID_CAP = 4096
 
 /** A cut only goes through a slice of the part, so a part longer than `CUT_SLICE` costs no more to cut than a 1 m piece of the same section. */
 const CUT_SLICE = 1
@@ -40,6 +54,11 @@ interface PartRT {
   structural: boolean
   anchored: boolean
   cap: number
+  /** The part has layers, units, reinforcement or a breach: it goes through damage stages. */
+  staged: boolean
+  /** Axis the part is thinnest along (the wall's depth). */
+  thin: number
+  layers: LayerRT[]
 }
 
 interface JointRT {
@@ -109,6 +128,11 @@ interface Blast {
 }
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
+/** Share of its capacity a structural part still has: a bare rebar cage keeps the reinforcement's residual, a breached part loses what left it. */
+const capacityScale = (p: PartRT): number => {
+  if (p.st.stripped) return p.spec.reinforcement?.residualCapacity ?? RESIDUAL_CAPACITY
+  return p.rt.removed ? Math.max(0.05, 1 - p.rt.removed / p.mass0) : 1
+}
 const isLost = (p: PartRT) => p.st.status === 'broken' || p.st.status === 'melted' || p.st.status === 'ashes'
 const clone = <T>(v: T): T => structuredClone(v)
 /**
@@ -137,6 +161,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const maxDents = options.maxDents ?? 24
   const maxHoles = options.maxHoles ?? 32
   const fireSpread = options.fireSpread ?? 0.6
+  const breachRadius = options.breach?.radius ?? BREACH_RADIUS
+  const breachBlastFactor = options.breach?.blastFactor ?? BREACH_BLAST_FACTOR
   const rng = createRng(options.seed ?? 1)
   const rnd = () => rng.next()
 
@@ -235,15 +261,23 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const maxHp = Math.max(1, ps.hp ?? mass0 * mat.hpPerKg)
       const fuel0 = mat.thermal.ignitionC !== undefined ? mass0 * (mat.thermal.fuelFraction ?? 0) : 0
       const c = carry?.parts.get(ps.id)
+      const staged = !!(ps.layers?.length || ps.reinforcement || ps.units || ps.breach)
+      const layers = (ps.layers ?? []).map((l, i) => {
+        const lm = materials.get(l.material)
+        if (!lm) throw new Error(`unknown material "${l.material}" on layer ${i} of part "${ps.id}"`)
+        return resolveLayer(l, i, lm)
+      })
+      if (ps.reinforcement && !materials.has(ps.reinforcement.material)) throw new Error(`unknown material "${ps.reinforcement.material}" on the reinforcement of part "${ps.id}"`)
       const pst: PartState = c?.st ?? {
         id: ps.id, material: ps.material, status: 'intact', hp: maxHp, maxHp, mass: mass0, temperature: ambient, burning: false, fuel: fuel0, char: 0, melt: 0,
-        dents: [], holes: [], cracks: [], group: 0,
+        dents: [], holes: [], cracks: [], group: 0, ...(staged ? { stage: 0 as DamageStage } : {}),
       }
       if (!c && ps.contains) pst.liters = ps.contains.liters
       const p: PartRT = {
         spec: ps, mat, st: pst, q: quatFromEuler(...(ps.rotation ?? [0, 0, 0])), pos: [ps.position[0], ps.position[1], ps.position[2]], mass0, fuel0, area: shapeArea(ps.shape), thickness: partThickness(ps), cutFactor: cutFactorOf(ps.shape),
         dims: shapeDims(ps.shape), bound: shapeBound(ps.shape), rt: c?.rt ?? { ...freshRuntime(), prevTemp: pst.temperature },
         structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat) : 0,
+        staged, thin: thinAxisOf(shapeDims(ps.shape)), layers,
       }
       if (p.structural) o.hasStructure = true
       if (p.rt.chainDue !== undefined && !isLost(p)) primed.set(p, o)
@@ -390,7 +424,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         o.unsup[i] = o.anyAnchor && !isLost(p)
         continue
       }
-      p.st.stress = p.st.load! / p.cap
+      p.st.stress = p.st.load! / (p.cap * capacityScale(p))
       if (p.st.stress > o.maxStress) o.maxStress = p.st.stress
     }
     if (o.maxStress > 0.8) o.active = true
@@ -416,6 +450,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         for (const p of ps) {
           o.collapsed.add(p.spec.id)
           p.st.status = 'collapsed'
+          setStage(o, p, 3, {}, src)
         }
         emit({ ...base(o, src), type: 'collapse', parts: ps.map((p) => p.spec.id), mass: ps.reduce((sum, p) => sum + p.st.mass, 0) })
       }
@@ -479,6 +514,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (isLost(p) || ignore?.has(`${o.id}\0${p.spec.id}`)) continue
         const r = rayPart(o, p, origin, d)
         if (!r || r.t0 < 0 || r.t0 > maxDist) continue
+        if (p.st.opening && insideOpening(o, p, vec.madd(origin, d, r.t0))) continue
         if (!best || r.t0 < best.distance) best = { object: o.id, part: p.spec.id, point: vec.madd(origin, d, r.t0), normal: r.n, distance: r.t0, pathLen: r.t1 - r.t0 }
       }
     }
@@ -599,6 +635,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (p.st.holes.length > maxHoles) p.st.holes.shift()
     markDamaged(p)
     emit({ ...base(o, src), type: 'hole', part: p.spec.id, hole, worldPoint: wp, ...(exit ? { exitPoint: exit } : {}) })
+    setStage(o, p, 1, {}, src)
     return hole
   }
 
@@ -608,6 +645,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (p.st.cracks.length > 16) p.st.cracks.shift()
     markDamaged(p)
     emit({ ...base(o, src), type: 'crack', part: p.spec.id, crack, worldPoint: wp })
+    setStage(o, p, 1, {}, src)
   }
 
   const debris = (o: ObjRT, p: PartRT, kind: DebrisKind, point: Vec3, normal: Vec3, count: number, speed: number, src?: string) =>
@@ -674,6 +712,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (split && mine.length) amount /= mine.length
     for (const j of mine) {
       if (j.st.open) continue
+      // the rebar of a reinforced part is its cage: blows do not wear it, only a torch or a saw cuts it (or the cage itself giving way)
+      if (j.spec.kind === 'rebar' && (o.parts[j.ia].spec.reinforcement || o.parts[j.ib].spec.reinforcement)) continue
       if (near && jointReach(o, j, near) > Math.max(radius, jointReachLimit(o, j))) continue
       j.st.hp -= amount
       if (j.st.hp <= 0) {
@@ -688,17 +728,188 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
   }
 
+  // -------------------------------------------------------------------------------------------------------------------------------------------
+  // Damage stages: spall, breach, reinforcement cage
+  // -------------------------------------------------------------------------------------------------------------------------------------------
+
+  const setStage = (o: ObjRT, p: PartRT, stage: DamageStage, extra: { opening?: { center: Vec3; radius: number }; fragments?: Fragment[] } = {}, src?: string) => {
+    if (!p.staged || (p.st.stage ?? 0) >= stage) return
+    p.st.stage = stage
+    emit({ ...base(o, src), type: 'stage', part: p.spec.id, stage, ...extra })
+  }
+
+  /** `1` when the outward normal points along the part's local +thin axis, else `-1`. */
+  const faceOf = (o: ObjRT, p: PartRT, worldNormal: Vec3): number => (rotateVec(quat.conjugate(partXf(o, p).q), worldNormal)[p.thin] >= 0 ? 1 : -1)
+
+  const spallOuter = (o: ObjRT, p: PartRT, wp: Vec3, face: number, normal: Vec3, radius: number, src?: string) => {
+    if (p.layers.length === 0) return
+    const lp = objLocal(o, wp)
+    const layer = outerLayer(p.layers, p.rt.spalls, face, lp)
+    if (!layer) return
+    const spalls = (p.rt.spalls ??= [])
+    spalls.push([layer.index, face, lp[0], lp[1], lp[2], radius])
+    if (spalls.length > MAX_SPALLS) spalls.shift()
+    markDamaged(p)
+    emit({ ...base(o, src), type: 'spall', part: p.spec.id, layer: layer.index, point: wp, area: Math.PI * radius * radius })
+    debris(o, p, layer.mat.hitDebris, wp, normal, 5, 2, src)
+    setStage(o, p, 1, {}, src)
+  }
+
+  const insideOpening = (o: ObjRT, p: PartRT, objectPoint: Vec3): boolean => {
+    const op = p.st.opening
+    if (!op) return false
+    const [u, v] = planeAxes(p.thin)
+    const lp = toLocal(p.pos, p.q, objectPoint)
+    const lc = toLocal(p.pos, p.q, op.center)
+    return Math.hypot(lp[u] - lc[u], lp[v] - lc[v]) <= op.radius
+  }
+
+  /** Square metres of wall a blow removes: the volume its damage takes out, over the thickness it crosses. */
+  const breachAreaOf = (p: PartRT, damage: number, blast: boolean): number =>
+    (damage / (p.mat.hpPerKg * p.mat.density) / Math.max(p.thickness, 0.005)) * (blast ? breachBlastFactor : 1)
+
+  const localHolesOf = (p: PartRT): LocalHole[] =>
+    p.st.holes.map((h) => ({ point: toLocal(p.pos, p.q, h.point), normal: rotateVec(quat.conjugate(p.q), h.normal), diameter: h.diameter }))
+
+  const unitsOf = (p: PartRT) => p.spec.units ?? { size: [p.mat.fragmentSize?.[1] ?? 0.2, p.mat.fragmentSize?.[1] ?? 0.2, p.thickness] as Vec3, bond: 'stack' as const }
+
+  const FRAGMENT_SHAPE = { shatter: 'shard', splinter: 'splinter', tear: 'scrap' } as const
+
+  /** Unit-sized fragments of `cells` (part-local), thrown from `hitW`; the holes that fell on a unit stay on it as `marks`. */
+  const cellFragments = (o: ObjRT, p: PartRT, cells: readonly UnitCell[], hitW: Vec3, dir: Vec3 | null, speed: number, mass: number, tag: string): Fragment[] => {
+    const { c, q } = partXf(o, p)
+    const holes = p.st.holes.length > 0 ? localHolesOf(p) : []
+    const [u, v] = planeAxes(p.thin)
+    const faceArea = (cell: UnitCell) => cell.size[u] * cell.size[v]
+    const total = cells.reduce((sum, cell) => sum + faceArea(cell), 0) || 1
+    const shape = p.spec.units ? 'chunk' : FRAGMENT_SHAPE[p.mat.fracture as keyof typeof FRAGMENT_SHAPE] ?? 'chunk'
+    return cells.map((cell, i) => {
+      const cw = toWorld(c, q, cell.center)
+      const out = vec.normalize(vec.sub(cw, hitW), [0, 1, 0])
+      const dv = dir ? vec.normalize(vec.madd(out, dir, 0.6)) : out
+      const k = speed * (0.6 + 0.8 * rnd())
+      const marks = marksInBox(cell.center, cell.size, undefined, holes)
+      return {
+        id: `${p.spec.id}#${tag}${i}`, part: p.spec.id, material: p.spec.material, shape, center: cw, size: [cell.size[0], cell.size[1], cell.size[2]], rotation: q,
+        velocity: [dv[0] * k, dv[1] * k + 0.5 * rnd(), dv[2] * k], angularVelocity: [(rnd() - 0.5) * 8, (rnd() - 0.5) * 8, (rnd() - 0.5) * 8],
+        mass: (mass * faceArea(cell)) / total, ...(marks.length > 0 ? { marks } : {}),
+      }
+    })
+  }
+
+  const worldBars = (o: ObjRT, p: PartRT, bars: ReadonlyArray<readonly [Vec3, Vec3]>): Array<[Vec3, Vec3]> => {
+    const { c, q } = partXf(o, p)
+    return bars.map(([a, b]) => [toWorld(c, q, a), toWorld(c, q, b)])
+  }
+
+  /** A blow that made through damage of `area` m² at `wp` (world): adds up with the earlier ones within the breach radius, and opens the part past its threshold. */
+  const addBreach = (o: ObjRT, p: PartRT, wp: Vec3, area: number, energy: number, dir: Vec3 | null, src?: string) => {
+    if (!p.staged || area <= 0 || (p.st.stage ?? 0) >= 2 || p.st.stripped || isLost(p)) return
+    const lp = objLocal(o, wp)
+    const list = (p.rt.breach ??= [])
+    list.push([lp[0], lp[1], lp[2], area])
+    if (list.length > MAX_SPALLS) list.shift()
+    let total = 0
+    const sum: Vec3 = [0, 0, 0]
+    for (const [x, y, z, a] of list) {
+      if (vec.distance([x, y, z], lp) > breachRadius) continue
+      total += a
+      sum[0] += x * a
+      sum[1] += y * a
+      sum[2] += z * a
+    }
+    if (total < (p.spec.breach?.area ?? BREACH_AREA)) return
+    openBreach(o, p, [sum[0] / total, sum[1] / total, sum[2] / total], total, energy, dir, src)
+  }
+
+  /**
+   * Stage 2: the units around `center` (object-local) come out as fragments the size of one unit, the part keeps an opening and its mass drops. An
+   * opening as wide as the part cuts it in two (a column, a lintel): that is a fracture instead.
+   */
+  const openBreach = (o: ObjRT, p: PartRT, center: Vec3, total: number, energy: number, dir: Vec3 | null, src?: string) => {
+    const [u, v] = planeAxes(p.thin)
+    const radius = clamp(Math.sqrt(total / Math.PI), Math.sqrt((p.spec.breach?.area ?? BREACH_AREA) / Math.PI), breachRadius)
+    const lc = toLocal(p.pos, p.q, center)
+    lc[p.thin] = 0
+    const { c, q } = partXf(o, p)
+    const worldCenter = toWorld(c, q, lc)
+    if (2 * radius >= Math.min(p.dims[u], p.dims[v])) {
+      failPart(o, p, worldCenter, dir, energy, 12, src)
+      return
+    }
+    const cells = cellsWithin(unitGrid(p.dims, p.thin, unitsOf(p), BREACH_GRID_CAP), p.thin, lc, radius)
+    const removed = (p.st.mass * cells.reduce((sum, cell) => sum + cell.size[u] * cell.size[v], 0)) / (p.dims[u] * p.dims[v])
+    const speed = clamp(Math.sqrt((2 * energy * 0.1) / Math.max(removed, 0.05)), 0.5, 8)
+    const fragments = cellFragments(o, p, cells, worldCenter, dir, speed, removed, 'b')
+    const holes = localHolesOf(p)
+    p.st.holes = p.st.holes.filter((_, i) => !cells.some((cell) => marksInBox(cell.center, cell.size, undefined, [holes[i]!]).length > 0))
+    p.st.mass = Math.max(0, p.st.mass - removed)
+    p.rt.removed = (p.rt.removed ?? 0) + removed
+    p.st.opening = { center: objLocal(o, worldCenter), radius }
+    markDamaged(p)
+    setStage(o, p, 1, {}, src)
+    setStage(o, p, 2, { opening: { center: worldCenter, radius }, fragments }, src)
+    debris(o, p, p.mat.breakDebris, worldCenter, vec.scale(dir ?? [0, 1, 0], -1), 14, 3, src)
+    const reinforcement = p.spec.reinforcement
+    if (reinforcement) {
+      const bars = worldBars(o, p, clipBarsToDisc(rebarBars(p.dims, p.thin, reinforcement.spacing), u, v, [lc[u], lc[v]], radius + 0.05))
+      if (bars.length > 0) emit({ ...base(o, src), type: 'expose', part: p.spec.id, bars })
+    }
+    if (p.structural) solveStructure(o)
+  }
+
+  /** The concrete of a reinforced part is gone: the part stays as its rebar cage, with the capacity the reinforcement leaves it. */
+  const stripPart = (o: ObjRT, p: PartRT, reinforcement: NonNullable<PartSpec['reinforcement']>, src?: string) => {
+    const bars = rebarBars(p.dims, p.thin, reinforcement.spacing)
+    p.st.stripped = true
+    p.st.hp = p.st.maxHp
+    p.st.mass = rebarMass(bars, reinforcement.diameter, materials.get(reinforcement.material)?.density)
+    p.st.holes = []
+    p.st.burning = false
+    p.rt.jet = false
+    markDamaged(p)
+    emit({ ...base(o, src), type: 'expose', part: p.spec.id, bars: worldBars(o, p, bars) })
+    solveStructure(o)
+    collapseCheck(o, src)
+  }
+
+  /** The units of the part that are still there (the opening of a breach is already gone), as a fragment plan. */
+  const unitFragmentPlan = (p: PartRT, cap: number): PlannedFragment[] => {
+    const grid = unitGrid(p.dims, p.thin, unitsOf(p), cap)
+    const op = p.st.opening
+    const cells = op ? cellsOutside(grid, p.thin, toLocal(p.pos, p.q, op.center), op.radius) : grid
+    const [u, v] = planeAxes(p.thin)
+    return cells.map((cell) => ({ center: cell.center, size: cell.size, q: quat.identity(), shape: 'chunk' as const, weight: cell.size[u] * cell.size[v] }))
+  }
+
+  /** The bare cage gives way (overload, a blast, a cut that finishes): the part is lost for good. */
+  const loseCage = (o: ObjRT, p: PartRT, src?: string) => {
+    p.st.status = 'broken'
+    p.st.hp = 0
+    p.st.mass = 0
+    emit({ ...base(o, src), type: 'expose', part: p.spec.id, bars: [] })
+    debris(o, p, 'sparks', partXf(o, p).c, [0, 1, 0], 6, 3, src)
+    partLost(o, p, src)
+  }
+
   /** Part hit points reached 0 (or it was forced to explode): fragments, debris, joints open. */
   const failPart = (o: ObjRT, p: PartRT, origin: Vec3 | null, dir: Vec3 | null, fragEnergy: number, cap: number, src?: string) => {
     if (isLost(p)) return
+    if (p.st.stripped) {
+      loseCage(o, p, src)
+      return
+    }
     const ex = p.spec.explodes
     const style = p.mat.fracture === 'none' ? 'snap' : p.mat.fracture
     const { c, q } = partXf(o, p)
     const hitW = origin ?? c
     const grain = p.spec.grain ? AXIS[p.spec.grain] : undefined
-    const plan = planFragments({
-      style, dims: p.dims, thickness: p.thickness, grain, hit: toLocal(c, q, hitW), fragmentSize: p.mat.fragmentSize ?? [0.04, 0.2], maxFragments, rnd,
+    const hitLocal = toLocal(c, q, hitW)
+    const unitPlan = p.spec.units ? unitFragmentPlan(p, maxFragments * UNIT_FRAGMENT_FACTOR) : []
+    const plan = unitPlan.length > 0 ? unitPlan : planFragments({
+      style, dims: p.dims, thickness: p.thickness, grain, hit: hitLocal, fragmentSize: p.mat.fragmentSize ?? [0.04, 0.2], maxFragments, rnd,
     })
+    const holes = p.st.holes.length > 0 ? localHolesOf(p) : []
     const mass = p.st.mass
     const totW = plan.reduce((s, f) => s + f.weight, 0) || 1
     const energy = ex ? ex.energy * 0.2 : fragEnergy
@@ -708,20 +919,29 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const out = vec.normalize(vec.sub(cw, hitW), [0, 1, 0])
       const dv = dir ? vec.normalize(vec.madd(out, dir, 0.6)) : out
       const k = speed * (0.6 + 0.8 * rnd())
+      const marks = marksInBox(f.center, f.size, f.q, holes)
       return {
         id: `${p.spec.id}#${i}`, part: p.spec.id, material: p.spec.material, shape: f.shape, center: cw, size: f.size, rotation: quat.mul(q, f.q),
         velocity: [dv[0] * k, dv[1] * k + 0.5 * rnd(), dv[2] * k],
         angularVelocity: [(rnd() - 0.5) * 12, (rnd() - 0.5) * 12, (rnd() - 0.5) * 12],
-        mass: (mass * f.weight) / totW,
+        mass: (mass * f.weight) / totW, ...(marks.length > 0 ? { marks } : {}),
       }
     })
-    p.st.status = 'broken'
-    p.st.hp = 0
-    p.st.mass = 0
-    p.st.burning = false
-    p.rt.jet = false
+    const reinforcement = p.spec.reinforcement
+    if (!reinforcement) {
+      p.st.status = 'broken'
+      p.st.hp = 0
+      p.st.mass = 0
+      p.st.burning = false
+      p.rt.jet = false
+    }
     emit({ ...base(o, src), type: 'fracture', part: p.spec.id, style, fragments, point: hitW })
     debris(o, p, p.mat.breakDebris, c, [0, 1, 0], clamp(Math.round(Math.cbrt(partVolume(p.spec.shape)) * 30), 3, 20), 2, src)
+    setStage(o, p, 3, {}, src)
+    if (reinforcement) {
+      stripPart(o, p, reinforcement, src)
+      return
+    }
     if (ex) {
       emit({ ...base(o, src), type: 'explode', part: p.spec.id, point: c, energy: ex.energy, radius: ex.radius })
       blasts.push({ point: c, energy: ex.energy, radius: ex.radius, source: src })
@@ -771,10 +991,19 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const ballistic = (o: ObjRT, p: PartRT, entry: Vec3, n: Vec3, d: Vec3, E: number, caliber: number, pathLen: number, src?: string): BallisticOut => {
     const mat = p.mat
+    // a bare cage and an opening do not stop a bullet
+    if (p.st.stripped || (p.st.opening && insideOpening(o, p, objLocal(o, entry)))) {
+      return { penetrated: true, exitEnergy: E, exitPoint: vec.madd(entry, d, Math.min(pathLen, p.thickness)), damage: 0 }
+    }
     const sin = Math.min(1, Math.abs(vec.dot(d, n)))
     const angle = (Math.asin(sin) * 180) / Math.PI
-    const effM = p.thickness / Math.max(sin, 0.3)
-    const thr = mat.penetration * effM * 1000
+    const slant = Math.max(sin, 0.3)
+    const effM = p.thickness / slant
+    const face = p.layers.length > 0 ? faceOf(o, p, n) : 1
+    const exitLocal = objLocal(o, vec.madd(entry, d, Math.min(pathLen, effM)))
+    const coats = p.layers.length > 0 ? layersEnergy(p.layers, p.rt.spalls, face, objLocal(o, entry)) + layersEnergy(p.layers, p.rt.spalls, -face, exitLocal) : 0
+    // each coat adds penetration x thickness to the core's; a part without layers keeps the plain formula
+    const thr = coats > 0 ? (mat.penetration * p.thickness * 1000 + coats) / slant : mat.penetration * effM * 1000
     const penetrated = E > thr
     // a thin brittle shell that shatters (a pane, a bottle) is lost to one bullet that a thick block of the same glass shrugs off: the same
     // fragility factor that melee uses for blunt hits (1 for ductile materials and for shells 2 cm or thicker, up to x118 for 3 mm glass)
@@ -787,13 +1016,16 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const dmg = applyDamage(o, p, E * DMG_PER_J * scale * 0.2, 'ballistic', entry, d, E * 0.1, 12, src)
       return { penetrated: false, exitEnergy: 0, damage: dmg }
     }
+    if (p.layers.length > 0) spallOuter(o, p, entry, face, n, Math.max(0.03, (caliber / 1000) * 4), src)
     const brittle = mat.ductility < 0.3
     const ratio = E / Math.max(thr, 1e-6)
     const crackLen = clamp(0.03 + ratio * 0.2, 0.03, 0.8)
     let exitPoint: Vec3 | undefined
     if (penetrated) {
-      exitPoint = vec.madd(entry, d, Math.min(pathLen, effM))
+      exitPoint = vec.madd(entry, d, Math.min(pathLen, effM + layersThickness(p.layers, face) / slant + layersThickness(p.layers, -face) / slant))
       const hole = addHole(o, p, entry, n, (caliber / 1000) * (mat.ductility >= 0.3 ? 1 : 1.5), true, exitPoint, src)
+      if (p.layers.length > 0) spallOuter(o, p, exitPoint, -face, vec.scale(n, -1), Math.max(0.03, (caliber / 1000) * 4), src)
+      addBreach(o, p, entry, Math.PI * (hole.diameter / 2) * (hole.diameter / 2), E, d, src)
       if (brittle && mat.fracture === 'shatter') addCrack(o, p, entry, n, crackLen, src)
       if (p.spec.contains && (p.st.liters ?? 0) > 0) {
         emit({
@@ -835,8 +1067,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     if (kind === 'blunt') wearJoints(o, p, E * 0.3, undefined, 0, src)
     else wearJoints(o, p, E * 0.3, point, 0.06, src)
+    if (kind === 'blunt' && E > 0 && p.layers.length > 0) spallOuter(o, p, point, faceOf(o, p, n), n, Math.max(contactR, 0.05), src)
     const scale = mat.damageScale?.[kind] ?? 1
-    return applyDamage(o, p, Ec * DMG_PER_J * scale * (kind === 'slash' ? p.cutFactor : 1), kind, point, d, E * 0.1, 12, src)
+    const done = applyDamage(o, p, Ec * DMG_PER_J * scale * (kind === 'slash' ? p.cutFactor : 1), kind, point, d, E * 0.1, 12, src)
+    addBreach(o, p, point, breachAreaOf(p, done, false), E, d, src)
+    return done
   }
 
   const blastObject = (o: ObjRT, point: Vec3, energy: number, radius: number, src?: string): HitResult => {
@@ -873,7 +1108,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         }
       }
       wearJoints(o, p, Ein * 0.5, undefined, 0, src)
-      res.damage += applyDamage(o, p, Ein * DMG_PER_J * (mat.damageScale?.explosive ?? 1), 'explosive', point, null, Ein * 0.3, 40, src)
+      if (Ein > 20 && p.layers.length > 0) spallOuter(o, p, wp, faceOf(o, p, wn), wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), src)
+      const dealt = applyDamage(o, p, Ein * DMG_PER_J * (mat.damageScale?.explosive ?? 1), 'explosive', point, null, Ein * 0.3, 40, src)
+      res.damage += dealt
+      addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
     }
     res.events = cur.slice(start)
     return res
@@ -1517,7 +1755,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         counter,
         objects: [...objects.values()].map((o) => {
           const runtime: ObjectRuntime = { parts: {}, joints: {}, collapsed: [...o.collapsed] }
-          for (const p of o.parts) runtime.parts[p.spec.id] = { ...p.rt }
+          for (const p of o.parts) runtime.parts[p.spec.id] = clone(p.rt)
           for (const j of o.joints) runtime.joints[j.spec.id] = j.step
           return { id: o.id, spec: clone(o.spec), state: clone(o.st), runtime }
         }),
@@ -1536,7 +1774,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         const state = clone(e.state)
         const carry: Carry = {
           parts: new Map(
-            state.parts.map((st) => [st.id, { st, rt: e.runtime?.parts[st.id] ? { ...e.runtime.parts[st.id] } : { ...freshRuntime(), prevTemp: st.temperature } }]),
+            state.parts.map((st) => [st.id, { st, rt: e.runtime?.parts[st.id] ? clone(e.runtime.parts[st.id]) : { ...freshRuntime(), prevTemp: st.temperature } }]),
           ),
           joints: new Map(state.joints.map((st) => [st.id, { st, step: e.runtime?.joints[st.id] ?? 0 }])),
           collapsed: e.runtime?.collapsed,
