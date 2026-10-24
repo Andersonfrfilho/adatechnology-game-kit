@@ -914,3 +914,27 @@ Node 22.23.4: `tools/items-catalog` 27, `game-items` 18, `tools/golden` 42, `cat
 | `catalog:check` (items e weapons, também com `--game-out`) | up to date |
 
 Node 22.23.4: `tools/items-catalog` 35, `game-items` 18, `tools/golden` 42, `catalog:check` up to date. Sem golden novo (os hashes da T3.1k/T3.2b); o teste de densidade falhou **0 vezes** depois de os 7 desvios acima serem tratados na tabela (a primeira rodada de rascunho tinha 7 itens fora da faixa; nenhum gate falhou 2x). Modelo da execução: `sonnet` (o pedido recomendava `haiku` com escalada para `sonnet`; as medidas exigiram escolha por objeto).
+
+### T3.1e — Motor do `game-items`: envelhecimento, carga, proteção, uso, receitas, achados e ponte do arsenal (grupo C)
+
+**O que entrou** (`packages/game-items`, três commits isolados: `17a8b74` envelhecimento/carga/proteção/uso/receitas, `15aa34d` achados, este com `itemsFromArsenal` e a documentação)
+- `decay.ts`: `advanceAge` (`ageDays += (now - since) x multiplicador`, preguiçoso e puro), `moveToStorage`, `storageMultiplier`, `freshness` (fresh/stale/spoiled/rotten em 0,5/1/1,5), freezer sem luz vira fresco com 2 dias de prazo, caixa térmica x0,5 por 2 dias (contado desde a entrada) depois x1, `chargeLevel` (-10%/mês), `failsToStart` (gasolina > 180 d falha 10%).
+- `protection.ts` (`1-PROD(1-b·c)`, teto 90%, -8/-3, rasgado 25%, conserto até 100-10), `carry.ts` (`(8+2,5·FOR)·1,2`, 100%/150%, vagas e peso), `use-effect.ts` (`resolveUse` puro sobre `use-effects.json`; comida passada/estragada/podre e cozida como regras `rules.use`), `recipes.ts` (`canCraft`/`craft`; habilidade e `unlockedBy` só se o host passa `skills`/`unlocked`; saída em efeito é do host).
+- `finds/`: `category-roll.ts` (porte do `rollItems`), `explicit-pool.ts` (porte do `sorteiaConteudo`), `depletion.ts` (`max(piso, 1-queda·dias)`, nada no dia 0), `spawn-state.ts` (idade = dias de surto + U(0;0,6)·validade, condição por raridade, loja nova no dia 0, carga, enchimento), `provider.ts` (`createFindsProvider`, `findsFor` igual à forma do `FindsProvider` da planta, lida de `feat/spec-001-fase-2`), `place-finds.ts` (`fitsSize`), `loot-tables.ts` (`toLootTables`).
+- `arsenal-items.ts`: `itemsFromArsenal(arsenal, { records })`: `ammo_<calibre>` (28), `firearm_<id>`, `throwable_<id>` a partir de `mass` e `dimensions.length`; caixa do jogo vem de `ammo-boxes.json` (`records`), o resto é estimado (REF). Estrutural (`ArsenalLike`); `game-weapons` só como devDependency de teste.
+- Registro: `ItemPack`/`createItems` ganharam `pools`, `poolAliases`, `useEffects`, `recipes`; `ContainerDef` fixou `count`, `categories`, `categoriesByPlace`, `places`. `DEFAULT_RULES` ganhou `aging`, `inventory`, `use`, `spawn.*`, `finds.*` (os números de `depletion.json` e `spawn.json`, provados por teste de integração que lê o JSON do goods).
+
+**Ordem de sorteio (contrato dos goldens G-b e G-c, T3.1k), documentada no código**
+- `rollByCategory`: 1 para a contagem; por pilha 1 para a categoria e 1 para o item (nenhuma se a categoria não tem o que sortear). O estado (idade, condição...) é sorteado depois de todas as escolhas.
+- `rollExplicitPool`: 1 (contagem `base`); abandonada +1; ordem ponderada completa (1 por entrada, antes do corte); 1 por entrada mantida (quantidade); só abandonada e vazia +1 (lixo).
+
+**Desvios e escolhas reversíveis**
+- Planta: não registrei nada no `game-floorplan` (T3.1h pulada); **a ligação na planta fica pendente** (`registerFindsProvider`, `TemplateDef.place`). O stub só existe em `feat/spec-001-fase-2`; repliquei `FindsQuery`/`FindStack`/`FindsProvider { findsFor }` estruturalmente.
+- `createFindsProvider({ pools: 'team' })` usa os pools registrados no catálogo (`ItemPack.pools`), não dados embutidos (o motor não tem conteúdo).
+- `rollByCategory` não rola `legendary`/`unique` (página do time, L276) nem `rules.finds.rollExcluded` (`ammo_7_62x39`, que o jogo exclui); o jogo daria peso 1 aos de raridade só-fixo. A ordem dos itens do goods pode diferir da do ITE: o G-b deve comparar por ids.
+- Contagem escalada por dia/região depois de sorteada (dia 0 = jogo). Item removido do catálogo some dos achados depois do sorteio.
+- `ItemRules.storage/carry/protection` não mudaram de forma (teste de fonte do items-catalog compara por `toEqual`); o que é novo foi para `aging`, `inventory`, `use`.
+- Condição vai de 0 a 100 e conserto até 90 (`dur` de condição não é lido como máximo). `carry.capacityKg` de bolsa vira vagas (`cap` do jogo). Saciedade -30% vale também para estragada; podre não se come. `very_rare`/`legendary`/`unique` usam a faixa de condição 50–100. Lojas do dia 0: `retailPlaces` e `retailContainers` com os lugares/recipientes de loja do time.
+- Sem golden G-b/G-c nesta task.
+
+**Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` exit 0; `pnpm -r test` verde (`game-items` 139 em 13 arquivos, eram 18; `items-catalog` 35); `catalog:check` de items e weapons up to date. **Node 22.23.4**: `game-items` 139, `tools/items-catalog` 35, `tools/golden` 42 passaram. Nenhum gate falhou 2x. Modelo da execução: `sonnet`.
