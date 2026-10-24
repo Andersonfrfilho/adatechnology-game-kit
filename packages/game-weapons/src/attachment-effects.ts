@@ -58,6 +58,18 @@ interface StatSources {
   readonly shippedActive?: ReadonlySet<Condition>
 }
 
+/** Takes out of both lists the very same modifier objects (one for one), so a factory part that is still on cancels exactly whatever order the parts are in. */
+const cancelShipped = (current: readonly StatModifier[], shipped: readonly StatModifier[]): [StatModifier[], StatModifier[]] => {
+  const added = [...current]
+  const taken: StatModifier[] = []
+  for (const modifier of shipped) {
+    const index = added.indexOf(modifier)
+    if (index === -1) taken.push(modifier)
+    else added.splice(index, 1)
+  }
+  return [added, taken]
+}
+
 /**
  * One number of the weapon with everything on it: every `set` first (the last wins), then the sum of the `add`s, then the product of the `mul`s.
  * The factory parts' effects that always count are in `base` already, so they are taken back out: with the same parts on, the result is `base`
@@ -65,10 +77,10 @@ interface StatSources {
  */
 const stat = (name: WeaponStat, base: number, sources: StatSources, active: ReadonlySet<Condition>): number => {
   const current = modifiersOf(name, sources.now, active)
-  const shipped = modifiersOf(name, sources.shipped, sources.shippedActive ?? new Set<Condition>())
   const lastSet = [...current].reverse().find((modifier) => modifier.set !== undefined)?.set
   if (lastSet !== undefined) return (lastSet + sum(current)) * product(current)
-  return (base + (sum(current) - sum(shipped))) * (product(current) / product(shipped))
+  const [added, taken] = cancelShipped(current, modifiersOf(name, sources.shipped, sources.shippedActive ?? new Set<Condition>()))
+  return (base + (sum(added) - sum(taken))) * (product(added) / product(taken))
 }
 
 const baseSpeedOf = (action: FirearmAction, caliber: CaliberDef | null): number => action.muzzleSpeed ?? (caliber?.muzzleSpeed ?? 0) * (action.barrel ?? 1)
