@@ -38,6 +38,7 @@ no núcleo (catálogo por registro, números por opção, comportamento por plug
 | `game-vehicles` / `game-vehicles-fleet` | Motor de veículos procedurais e a frota de 69 modelos, com dano por zona |
 | `game-vegetation` / `game-vegetation-species` | Árvores, palmeiras, cactos, flores e grama; cerca de 90 espécies |
 | `game-infection` | Contágio por regiões (horas), determinístico |
+| `game-audio` | Som como dados: receita com semente vira plano, curvas de distância dos times, pan, limite de vozes, laços e as mixagens do jogo e da Cena de Arte |
 | `game-weather` | Clima por semente: chuva, tempestade, neblina, vento, ciclone, calor, relâmpago, solo molhado, dia e noite, efeitos para visão e audição |
 | `game-camera` | Câmera de ombro, terceira e primeira pessoa |
 | `game-test-room` | Sala de testes genérica: carrega módulos, abre uma área por grupo, registra o comportamento |
@@ -47,7 +48,7 @@ no núcleo (catálogo por registro, números por opção, comportamento por plug
 
 `game-characters` e `game-characters-undead` (corpo, andar, dano por região, os 13 tipos de zumbi), um gerador de histórias e ficha de
 personagem, `game-crowd` (multidão: horda, civis, manada, revoada), `game-animals`, `game-items` (catálogo único), `game-vfx` (+ `-three`,
-explosão do Laboratório), `game-audio`, `game-urban` (ruas, postes, bairro),
+explosão do Laboratório), `game-urban` (ruas, postes, bairro),
 `game-floorplan-structure`, `game-floorplan-rural`, `game-floorplan-three`, `game-player`. Decisões em
 `specs/001-migracao-entregas-dos-times/consolidado.md`.
 

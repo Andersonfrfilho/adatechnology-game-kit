@@ -19,6 +19,7 @@ concatenates plain scripts can use them without a bundler.
 | [`@adatechnology/game-fluids-three`](packages/game-fluids-three) | `GameFluidsThree` | three.js renderer for the fluids world |
 | [`@adatechnology/game-devtools`](packages/game-devtools) | `GameDevtools` | Free-fly mode, position HUD, notes and marks, control panel, scenarios runner and entity labels |
 | [`@adatechnology/game-infection`](packages/game-infection) | `GameInfection` | Deterministic abstract epidemic model by regions (zombies, plague, rumours) |
+| [`@adatechnology/game-audio`](packages/game-audio) | `GameAudio` | Sound as data: seeded recipes planned into sound plans, the teams' distance curves, pan, a voice limiter, loops and the game and art scene mixing chains |
 | [`@adatechnology/game-weather`](packages/game-weather) | `GameWeather` | Pure seeded weather: states from clear to typhoon, climates in game time, lightning with thunder delay, ground wetness, sight and hearing effects, heat index, day and night |
 | [`@adatechnology/game-props3d`](packages/game-props3d) | `GameProps3d` | Procedural low-poly props (decor, furniture, yard, house state) that only describe primitives through a host-provided api |
 | [`@adatechnology/game-vehicles`](packages/game-vehicles) | `GameVehicles` | Procedural vehicle engine for three.js: bodies, glass, lights, interiors, zone-based damage in five bands, fluids, rollover, explosions and a damage-map UI; fleets and texts come from plugins |
