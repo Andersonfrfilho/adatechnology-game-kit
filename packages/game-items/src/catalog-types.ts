@@ -3,7 +3,7 @@ import type { DeepPartial } from '@adatechnology/game-contracts'
 import type { RecipeDef } from './recipe-types'
 import type { ItemRules } from './rules-types'
 import type { UseEffectDef } from './use-types'
-import type { CategoryDef, ContainerDef, ItemCategory, ItemDef, ItemPack, PlaceDef, PlaceTag } from './types'
+import type { CategoryDef, ContainerDef, ItemCategory, ItemDef, ItemPack, PlaceDef, PlaceTag, PoolEntry } from './types'
 
 export interface ItemsOptions {
   /** Content bundles, merged in order (a later item replaces one with the same id). */
@@ -20,6 +20,8 @@ export interface ItemsOptions {
   containers?: readonly ContainerDef[]
   useEffects?: readonly UseEffectDef[]
   recipes?: readonly RecipeDef[]
+  pools?: ItemPack['pools']
+  poolAliases?: ItemPack['poolAliases']
   rules?: DeepPartial<ItemRules>
 }
 
@@ -28,6 +30,8 @@ export interface ItemsCatalog {
   readonly categories: ReadonlyMap<ItemCategory, CategoryDef>
   readonly places: ReadonlyMap<PlaceTag, PlaceDef>
   readonly containers: ReadonlyMap<string, ContainerDef>
+  /** Explicit pools by key, with the aliases already resolved. */
+  readonly pools: ReadonlyMap<string, readonly PoolEntry[]>
   readonly useEffects: readonly UseEffectDef[]
   readonly recipes: ReadonlyMap<string, RecipeDef>
   readonly rules: ItemRules

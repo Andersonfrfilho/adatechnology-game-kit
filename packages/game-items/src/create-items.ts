@@ -5,13 +5,28 @@ import type { ItemsCatalog, ItemsOptions } from './catalog-types'
 import { checkItems, findDuplicateIds } from './check-items'
 import { DEFAULT_RULES } from './rules'
 import type { RecipeDef } from './recipe-types'
-import type { ContainerDef, ItemDef, PlaceDef } from './types'
+import type { ContainerDef, ItemDef, PlaceDef, PoolEntry } from './types'
 import type { UseEffectDef } from './use-types'
 
 const LITRES_PER_CUBIC_METRE = 1000
 
 /** Fills what a pack leaves out: the volume comes from the size. */
 const withDerivedFields = (item: ItemDef): ItemDef => (item.volume === undefined ? { ...item, volume: item.size[0] * item.size[1] * item.size[2] * LITRES_PER_CUBIC_METRE } : item)
+
+const buildPools = (options: ItemsOptions, packs: NonNullable<ItemsOptions['packs']>): Map<string, readonly PoolEntry[]> => {
+  const pools = new Map<string, readonly PoolEntry[]>()
+  for (const source of [...packs, options]) for (const [key, entries] of Object.entries(source.pools ?? {})) pools.set(key, entries)
+  const problems: string[] = []
+  for (const source of [...packs, options]) {
+    for (const [alias, key] of Object.entries(source.poolAliases ?? {})) {
+      const entries = pools.get(key)
+      if (entries) pools.set(alias, entries)
+      else problems.push(`pool alias "${alias}" points to unknown pool "${key}"`)
+    }
+  }
+  if (problems.length > 0) throw new Error(`game-items: the catalog is not consistent:\n${problems.map((problem) => `  - ${problem}`).join('\n')}`)
+  return pools
+}
 
 const groupBy = (items: Iterable<ItemDef>, keysOf: (item: ItemDef) => readonly string[]): Map<string, ItemDef[]> => {
   const groups = new Map<string, ItemDef[]>()
@@ -36,6 +51,7 @@ export const createItems = (options: ItemsOptions = {}): ItemsCatalog => {
   const containers = mergeById<ContainerDef>([], [...packs.flatMap((pack) => pack.containers ?? []), ...(options.containers ?? [])])
   const useEffects = [...mergeById<UseEffectDef>([], [...packs.flatMap((pack) => pack.useEffects ?? []), ...(options.useEffects ?? [])]).values()]
   const recipes = mergeById<RecipeDef>([], [...packs.flatMap((pack) => pack.recipes ?? []), ...(options.recipes ?? [])])
+  const pools = buildPools(options, packs)
   const rules = deepMerge(DEFAULT_RULES, options.rules)
 
   const problems = [
@@ -58,6 +74,7 @@ export const createItems = (options: ItemsOptions = {}): ItemsCatalog => {
     categories,
     places,
     containers,
+    pools,
     useEffects,
     recipes,
     rules,

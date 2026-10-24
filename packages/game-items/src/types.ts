@@ -46,16 +46,29 @@ export interface PlaceDef {
 }
 
 /**
- * Where items are found inside a place (a fridge, a drawer, a locker): which categories it draws from and how many stacks. Provisional shape: the
- * finds logic (T3.1e) fixes the fields it needs.
+ * Where items are found inside a place (a fridge, a drawer, a locker): which categories it draws from and how many stacks. The finds roll reads `count`,
+ * `categories` (or `categoriesByPlace`, with `*` for any other place) and `places`; other fields of a pack's container are kept and ignored.
  */
 export interface ContainerDef {
   id: string
   name?: string
+  /** Places the container turns up in (`toLootTables` only); empty or missing means any. */
+  places?: readonly PlaceTag[]
   /** Weight of each category when a stack is drawn for this container. */
   categories?: Readonly<Record<ItemCategory, number>>
+  /** When `categories` is missing: the weights by place (a shop shelf stocks what the shop sells). */
+  categoriesByPlace?: Readonly<Record<PlaceTag, Readonly<Record<ItemCategory, number>>>>
   /** Range of stacks a container holds when it is filled. */
   count?: readonly [number, number]
+}
+
+/** One thing an explicit pool can hold (a fridge: water bottle, milk, eggs...): `item` is the catalog id, `weight` the odds, `qty` the range. */
+export interface PoolEntry {
+  item: string
+  weight: number
+  qty: readonly [number, number]
+  /** Supplies (food, water, medicine, tools) are what a fortified house stocks up on. */
+  isSupply?: boolean
 }
 
 export interface ItemDef extends BaseItemDef {
@@ -98,4 +111,8 @@ export interface ItemPack {
   /** What using an item does, in priority order (`resolveUse`). */
   useEffects?: readonly UseEffectDef[]
   recipes?: readonly RecipeDef[]
+  /** Explicit pools of what a kind of furniture holds, by key (`fridge`, `sink`...); they win over the category roll of a container. */
+  pools?: Readonly<Record<string, readonly PoolEntry[]>>
+  /** Keys that share another key's pool (`garage_wardrobe` -> `wardrobe`). */
+  poolAliases?: Readonly<Record<string, string>>
 }

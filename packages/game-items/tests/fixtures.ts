@@ -11,3 +11,15 @@ export const sequence = (...values: number[]): (() => number) => {
   let index = 0
   return () => values[Math.min(index++, values.length - 1)] as number
 }
+
+/** Returns the given numbers in order and records how many draws were made; throws if the code draws more than scripted. */
+export const scripted = (...values: number[]): { random: () => number; draws: () => number } => {
+  let index = 0
+  return {
+    random: () => {
+      if (index >= values.length) throw new Error(`drew ${index + 1} numbers, only ${values.length} were scripted`)
+      return values[index++] as number
+    },
+    draws: () => index,
+  }
+}
