@@ -1338,5 +1338,15 @@
       0.704
     ],
     "scale": 0.1
+  },
+  {
+    "id": "police_baton",
+    "teamId": "tonfa",
+    "teamBox": [
+      5,
+      1,
+      0.45
+    ],
+    "scale": 0.1
   }
 ]
