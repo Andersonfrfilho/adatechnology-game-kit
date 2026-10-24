@@ -81,7 +81,7 @@ Opções `blast` (no mundo, em `world.explode(..., opções)` ou no `Hit` explos
 alvo deixam passar `exp(-hp por m² / k)` da energia; a que quebra na mesma explosão deixa passar mais), `fragmentHits` (fragmentos viram golpes
 `blunt` de `0,5·m·v²/2` no que está atrás, no máximo 24, semeados) e `confinement` (26 raios, multiplicador de 1 a 3, ou o número do host).
 O retorno traz `HitResult.blast` e o evento `blast`; o renderizador empurra as peças com `renderer.explode(..., { report })`. Para balas:
-`Hit.piercing` / `piercingOf(calibre, tipo)` (chumbo mole não fura aço só pela energia) ; a explosão só abre brecha perto (0,12 m por raiz cúbica de kJ, sempre ligado, sem opção).
+`Hit.penetration` (mm por classe de material: aço, concreto, tijolo, madeira) que o `game-weapons` passa no Hit (`shotToHit`/`shotExtras`); a tabela por calibre e munição mora em `game-weapons` (`ammo.json`), o motor não lê nome de calibre; o material diz a classe e a escala (`penetrationClass`, `penetrationScale`); sem tabela vale a energia com `Hit.piercing` ; a explosão só abre brecha perto (0,12 m por raiz cúbica de kJ, sempre ligado, sem opção).
 Detalhes e números no README do pacote; exemplos de pilares e vigas em `tests/beams-and-columns.test.ts`. Não existe entrega de time para isso:
 é modelo novo do kit, aprovado pelo dono em 2026-10-24.
 

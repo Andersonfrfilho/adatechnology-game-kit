@@ -231,13 +231,16 @@ the results for the push on pieces: `renderer.explode(point, energy, radius, { r
 
 ### Bullets and blasts against beams and columns
 
-`tests/beams-and-columns.test.ts` documents calibres of `@adatechnology/game-weapons` against a reinforced concrete column and beam, a steel
-I-beam, a hardwood beam and a brick pillar. Two corrections came out of it:
+`tests/beams-and-columns.test.ts` fires the loads of the ammo table of `@adatechnology/game-weapons` against a reinforced concrete column and beam, a steel
+I-beam, a hardwood beam and a brick pillar (it prints the results table with `PRINT_TABLE=1`). Two corrections came out of it:
 
-- `Hit.piercing` (6th argument of `shoot`): how well the bullet cuts through for its energy; the energy compared with the penetration of a hard
-  material (metal, masonry) is `energy * piercing`. `PIERCING_BY_KIND` (fmj 1, hp 0.6, ap 1.6, buck 0.5, slug 0.25) and `PIERCING_BY_CALIBER`
-  (5.56, 5.45 and .22 0.5) give the numbers from `CaliberDef.kind` (`piercingOf(id, kind)`). Without it a 12 ga slug (3000 J) went through 8.5 mm of
-  steel.
+- `Hit.penetration` (the 6th argument of `shoot` is `{ penetration }` or a bare piercing factor): millimetres the round goes through, by material class
+  (`steel`, `concrete`, `brick`, `wood`). The weapons put it in the `Hit` (`shotToHit` / `shotExtras` of the contracts); the world reads no calibre names. The
+  material says which entry measures it (`MaterialDef.penetrationClass`, default its id) and how much more or less it resists
+  (`penetrationScale`: structural steel 1.3 against the RHA of the tables, softwood 1.5 against hardwood, aluminium 3 against steel). The round goes through when its
+  millimetres times that scale exceed the thickness of the part (slant counts); a material with no entry falls back to the energy rule, where `Hit.piercing`
+  (default 1) multiplies the energy against hard materials. M80 ball does not pierce an 8.5 mm structural flange, M993 AP does, and the .50 BMG M33 ball
+  pierces a 30 cm reinforced column. `PIERCING_BY_KIND`, `PIERCING_BY_CALIBER` and `piercingOf` are gone: the table lives in game-weapons.
 - Blast reach of a breach (no option, it is the physics): a blast only opens a breach within 0.12 m per cube root of kilojoule of the part
   (`BREACH_BLAST_REACH`). A hand grenade (200 kJ) at 1 m does not cut a reinforced column in two (at 0.2 m it strips it). Farther away the blast still
   damages, dents and cracks. The old `breach.blastReach` option (default `Infinity`) is gone: it was a second path for a correction.
@@ -289,9 +292,9 @@ world continues with the same events as the original. The loading world must use
 
 `createDestruction(options)` returns a `DestructionWorld`: `add`, `remove`, `has`, `ids`, `setTransform`, `splitGroup`, `hit`, `hitPart`, `explode`,
 `raycast`, `shoot`, `disassemble`, `workableJoints`, `nearestJoint`, `extinguish`, `setLiters`, `update`, `state`, `part`, `reset`, `on`,
-`register`, `serialize`, `load`, `time`. `explode(point, energy, radius, source?, blastOptions?)`; `shoot(origin, direction, energy, caliber, source?, piercing?)`. `state()` and `part()` return live views; do not mutate them.
+`register`, `serialize`, `load`, `time`. `explode(point, energy, radius, source?, blastOptions?)`; `shoot(origin, direction, energy, caliber, source?, round?)` (`round`: `Hit.penetration`, `piercing`, `incendiary`, `tracer`, `ignition` or a bare piercing factor). `state()` and `part()` return live views; do not mutate them.
 
-Also exported: `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS`, `CONFINEMENT_DEFAULTS`, `PIERCING_BY_KIND`, `PIERCING_BY_CALIBER`, `piercingOf`, `buildFrame`, `sizeStructure`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
+Also exported: `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS`, `CONFINEMENT_DEFAULTS`, `buildFrame`, `sizeStructure`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
 helpers `vec`, `quat`, `quatFromEuler`, `rotateVec`, `toLocal`, `toWorld`, the locale (`locales`, `resolveStrings`, `DestructionStrings`) and all types.
 
 The locale table has `en` and `pt-BR` strings for material names, part statuses, joint kinds, tools, damage types, event labels and fracture styles:

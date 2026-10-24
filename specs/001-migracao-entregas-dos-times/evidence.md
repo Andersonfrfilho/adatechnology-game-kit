@@ -2393,6 +2393,90 @@ e o caso "sem a opção".
   que some). Com os dois pilares do time a laje e o telhado caem na sala real (`floorplan-test-area/test.mjs`, pt-BR e en). O roteiro estendido do módulo saiu.
 - Goldens: nenhum mudou por este item (o solver não mudou; a opção nova vale 1). O golden `vc3-house-area.json` do time compara só ids, checagens e eventos de sentido.
 
+**4. Tabela de penetração por calibre em `game-weapons`.** O dono pediu que cada calibre e tipo de munição traga massa, energia e penetração em aço, concreto, tijolo e madeira, e que o motor
+de destruição não conheça nomes de calibre.
+- Onde: `packages/game-weapons/src/data/ammo.json` (50 cargas, id `<calibre>:<tipo>`), `arsenal.loadOf(calibre, tipo?)`, `weapon.setAmmoKind(tipo)`, opções `ammo`/`patch.ammo`/`remove.ammo`.
+  O `Shot` leva `ammo`, `mass`, `penetration`, `incendiary`, `tracer`; `shotToHit`/`shotExtras` (contratos) escalam a penetração pela energia que sobra e põem em `Hit.penetration`.
+- Motor: lê `Hit.penetration` por classe de material (`MaterialDef.penetrationClass`/`penetrationScale`, em `materials.json`: aço estrutural 1,3 contra o RHA das tabelas, madeira mole 1,5,
+  alumínio 3...); sem tabela vale a regra da energia com `Hit.piercing`. `PIERCING_BY_KIND`, `PIERCING_BY_CALIBER` e `piercingOf` saíram do `game-destruction`.
+- Fonte dos números: **um** valor publicado (7,62x51 M993 AP: 18 mm RHA a 100 m, 7 mm a 500 m; página do produto da Nammo); o resto é **estimativa** minha a partir de ordens de grandeza
+  publicadas (bola 4 a 6 mm de RHA, núcleo de aço 6 a 8, AP 10 a 22, .50 BMG bola cerca de 14), da energia e da construção. Cada carga diz `basis: 'published' | 'estimated'` e as notas
+  do arquivo explicam. Concreto, tijolo e madeira não têm fonte citada: pergunta ao dono abaixo.
+- Tabela do arquivo (`ammo.json`):
+
+| Load | kind | g | m/s | J | core / jacket | steel mm | concrete mm | brick mm | wood mm | basis |
+|---|---|---|---|---|---|---|---|---|---|---|
+| .22 LR lead round nose | rimfire | 2.6 | 350 | 159 | lead / none | 1.4 | 12 | 25 | 60 | estimated |
+| .380 ACP FMJ | fmj | 6.2 | 295 | 270 | lead / gilding_metal | 2.2 | 20 | 40 | 80 | estimated |
+| 9x18 Makarov FMJ | fmj | 6.1 | 315 | 303 | lead / steel | 2.6 | 22 | 45 | 85 | estimated |
+| 9x19 FMJ 124 gr | fmj | 7.5 | 365 | 500 | lead / gilding_metal | 3 | 25 | 50 | 80 | estimated |
+| 9x19 JHP | hp | 7.5 | 365 | 500 | lead / gilding_metal | 2 | 15 | 35 | 55 | estimated |
+| .40 S&W FMJ | fmj | 11.7 | 310 | 562 | lead / gilding_metal | 3 | 28 | 55 | 85 | estimated |
+| .45 ACP FMJ 230 gr | fmj | 14.9 | 254 | 481 | lead / gilding_metal | 2.8 | 28 | 55 | 85 | estimated |
+| .45 ACP JHP | hp | 14.9 | 254 | 481 | lead / gilding_metal | 1.8 | 18 | 40 | 60 | estimated |
+| 5.7x28 SS190 | fmj | 2 | 715 | 511 | lead_steel / gilding_metal | 4 | 25 | 50 | 100 | estimated |
+| .38 Special lead round nose | fmj | 10.2 | 247 | 311 | lead / none | 2 | 20 | 40 | 70 | estimated |
+| .357 Magnum JHP | hp | 10.2 | 396 | 800 | lead / gilding_metal | 3 | 25 | 45 | 90 | estimated |
+| .44 Magnum FMJ | fmj | 15.6 | 440 | 1510 | lead / gilding_metal | 4 | 40 | 70 | 150 | estimated |
+| .50 AE FMJ | fmj | 19.4 | 470 | 2143 | lead / gilding_metal | 4 | 38 | 65 | 130 | estimated |
+| 12 ga 00 buck (one pellet) | buck | 3.5 | 414 | 300 | lead / none | 0.8 | 10 | 25 | 60 | estimated |
+| 12 ga rifled slug | slug | 28 | 463 | 3001 | lead / none | 4 | 60 | 100 | 250 | estimated |
+| 12 ga birdshot (one pellet) | birdshot | 0.2 | 400 | 16 | lead / none | 0.2 | 3 | 8 | 20 | estimated |
+| 20 ga buck (one pellet) | buck | 1.3 | 400 | 104 | lead / none | 0.6 | 8 | 20 | 50 | estimated |
+| 5.56x45 M855 (steel tip, lead core) | fmj | 4 | 935 | 1748 | lead_steel / gilding_metal | 4.5 | 90 | 180 | 280 | estimated |
+| 5.45x39 7N6 (steel core) | fmj | 3.4 | 900 | 1377 | steel / steel | 5.5 | 90 | 180 | 280 | estimated |
+| 7.62x39 M43 (steel core) | fmj | 8 | 725 | 2102 | steel / steel | 6.5 | 110 | 220 | 300 | estimated |
+| .30-30 Winchester flat nose | fmj | 9.7 | 670 | 2177 | lead / gilding_metal | 3 | 80 | 160 | 250 | estimated |
+| 7.62x51 M80 ball | fmj | 9.7 | 850 | 3504 | lead / gilding_metal | 5 | 120 | 250 | 330 | estimated |
+| 7.62x54R LPS (steel core) | fmj | 9.6 | 865 | 3591 | steel / steel | 6.5 | 130 | 260 | 330 | estimated |
+| .30-06 M1 ball | fmj | 9.7 | 880 | 3756 | lead / gilding_metal | 5.5 | 130 | 260 | 340 | estimated |
+| .300 Win Mag FMJ | fmj | 11.7 | 900 | 4738 | lead / gilding_metal | 6.5 | 150 | 290 | 360 | estimated |
+| .338 Lapua Magnum FMJ | fmj | 16.2 | 903 | 6605 | lead / gilding_metal | 8 | 190 | 360 | 450 | estimated |
+| .408 CheyTac solid | fmj | 27.2 | 900 | 11016 | copper / none | 12 | 250 | 450 | 550 | estimated |
+| Arrow (steel broadhead) | arrow | 25 | 90 | 101 | steel / none | 0.5 | 5 | 15 | 100 | estimated |
+| Crossbow bolt | bolt | 20 | 122 | 149 | steel / none | 0.8 | 8 | 20 | 120 | estimated |
+| 4.6x30 DM11 | fmj | 2 | 735 | 540 | steel / gilding_metal | 3.5 | 25 | 50 | 100 | estimated |
+| .32 ACP FMJ | fmj | 4.6 | 276 | 175 | lead / gilding_metal | 1.8 | 15 | 30 | 60 | estimated |
+| 9x19 tracer | tracer | 7.5 | 365 | 500 | lead / gilding_metal | 2.8 | 22 | 45 | 75 | estimated |
+| 5.56x45 M995 AP (tungsten carbide) | ap | 3.6 | 1013 | 1847 | tungsten_carbide / gilding_metal | 10 | 110 | 210 | 300 | estimated |
+| 5.56x45 M856 tracer | tracer | 3.95 | 914 | 1650 | lead / gilding_metal | 3.5 | 80 | 160 | 260 | estimated |
+| 5.45x39 7T3M tracer | tracer | 3.4 | 900 | 1377 | lead / steel | 4 | 80 | 160 | 260 | estimated |
+| 7.62x39 BZ API | incendiary | 7.7 | 720 | 1996 | hardened_steel / steel | 8 | 110 | 220 | 300 | estimated |
+| 7.62x39 T-45 tracer | tracer | 8 | 725 | 2102 | lead / steel | 4.5 | 100 | 200 | 280 | estimated |
+| 7.62x51 M993 AP (tungsten carbide) | ap | 8.2 | 930 | 3546 | tungsten_carbide / gilding_metal | 18 | 160 | 300 | 360 | published |
+| 7.62x51 M62 tracer | tracer | 9.7 | 850 | 3504 | lead / gilding_metal | 4 | 110 | 230 | 320 | estimated |
+| 7.62x54R 7N37 AP | ap | 9.6 | 865 | 3591 | hardened_steel / steel | 11 | 140 | 270 | 340 | estimated |
+| 7.62x54R B-32 API | incendiary | 10 | 830 | 3445 | hardened_steel / steel | 10 | 130 | 260 | 330 | estimated |
+| 7.62x54R T-46 tracer | tracer | 9.6 | 865 | 3591 | lead / steel | 4.5 | 110 | 220 | 300 | estimated |
+| .30-06 M2 AP (hardened steel) | ap | 10.8 | 860 | 3994 | hardened_steel / gilding_metal | 10 | 140 | 270 | 340 | estimated |
+| .30-06 M25 tracer | tracer | 9.7 | 880 | 3756 | lead / gilding_metal | 4 | 110 | 230 | 320 | estimated |
+| .338 Lapua AP (tungsten) | ap | 16.2 | 903 | 6605 | tungsten_carbide / gilding_metal | 16 | 200 | 380 | 470 | estimated |
+| .50 BMG M33 ball | fmj | 42 | 925 | 17968 | lead_steel / gilding_metal | 14 | 330 | 560 | 600 | estimated |
+| .50 BMG M2 AP (hardened steel) | ap | 42 | 925 | 17968 | hardened_steel / gilding_metal | 22 | 350 | 580 | 600 | estimated |
+| .50 BMG M8 API | incendiary | 42 | 925 | 17968 | hardened_steel / gilding_metal | 18 | 340 | 570 | 600 | estimated |
+| .50 BMG M17 tracer | tracer | 42 | 925 | 17968 | lead / gilding_metal | 9 | 300 | 520 | 580 | estimated |
+| 12 ga incendiary shell (one pellet, magnesium) | incendiary | 3.5 | 414 | 300 | none / none | 0.1 | 3 | 8 | 15 | estimated |
+
+- Resultado contra vigas e pilares (`tests/beams-and-columns.test.ts`, "results table", lê a tabela acima; `PRINT_TABLE=1` imprime). Um tiro no meio de cada elemento, a 3 m:
+
+| Munição | Energia (J) | aço (mm) | concreto (mm) | tijolo (mm) | madeira (mm) | pilar CA 30 cm | viga CA | viga I aço 8,5 mm | viga madeira 10 cm | pilar tijolo 40 cm |
+|---|---|---|---|---|---|---|---|---|---|---|
+| .22 LR lead round nose | 159 | 1.4 | 12 | 25 | 60 | não | não | não | não | não |
+| 9x19 FMJ 124 gr | 500 | 3 | 25 | 50 | 80 | não | não | não | não | não |
+| .45 ACP FMJ 230 gr | 481 | 2.8 | 28 | 55 | 85 | não | não | não | não | não |
+| 5.56x45 M855 (steel tip, lead core) | 1748 | 4.5 | 90 | 180 | 280 | não | não | não | sim | não |
+| 5.56x45 M995 AP (tungsten carbide) | 1847 | 10 | 110 | 210 | 300 | não | não | sim | sim | não |
+| 7.62x39 M43 (steel core) | 2103 | 6.5 | 110 | 220 | 300 | não | não | não | sim | não |
+| 7.62x51 M80 ball | 3504 | 5 | 120 | 250 | 330 | não | não | não | sim | não |
+| 7.62x51 M993 AP (tungsten carbide) | 3546 | 18 | 160 | 300 | 360 | não | não | sim | sim | não |
+| .50 BMG M33 ball | 17968 | 14 | 330 | 560 | 600 | sim | sim | sim | sim | sim |
+| .50 BMG M2 AP (hardened steel) | 17968 | 22 | 350 | 580 | 600 | sim | sim | sim | sim | sim |
+| 12 ga rifled slug | 3001 | 4 | 60 | 100 | 250 | não | não | não | sim | não |
+| 12 ga 00 buck (one pellet) | 300 | 0.8 | 10 | 25 | 60 | não | não | não | não | não |
+
+  Lê-se: a bola M80 (7,62x51) não fura a mesa de 8,5 mm da viga I e a M993 AP fura; a .50 BMG M33 (bola) fura o pilar de concreto armado de 30 cm; 5,56 e 7,62 de bola furam a
+  viga de madeira de 10 cm e não furam o tijolo de 40 cm nem o concreto. Os goldens do mundo (`wall-golden`, `house-scenarios`) não mudam: nenhum usa `Hit.penetration`.
+
 ## T2.4
 
 Porte literal do Casa3DSDK (`construir`, `planejaLOD`) e do AndaresSDK da página do time (`visor-casas-3d`, L39443-42734; `zombiada-modo-livre`, L7372-7557) para o pacote novo `@adatechnology/game-floorplan-three`. Cinco commits, na ordem do brief.

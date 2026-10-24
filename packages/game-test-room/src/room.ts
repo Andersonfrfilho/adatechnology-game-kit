@@ -13,7 +13,7 @@ import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adate
 import { createGroundField, createVfx } from '@adatechnology/game-vfx'
 import { createGroundPatch, createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus } from '@adatechnology/game-contracts'
+import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, shotExtras } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createArena } from './arena'
 import type { Arena } from './arena'
@@ -845,7 +845,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     withoutHeld(() => {
       for (const s of shots) {
         energy = Math.max(energy, s.energy)
-        const results = world.shoot(s.origin, s.direction, s.energy, s.caliber, 'player')
+        const results = world.shoot(s.origin, s.direction, s.energy, s.caliber, 'player', shotExtras(s))
         const r0 = results.find((r) => r.part && r.point)
         let end: Vec3 = [s.origin[0] + s.direction[0] * 40, s.origin[1] + s.direction[1] * 40, s.origin[2] + s.direction[2] * 40]
         if (r0?.point && r0.part) {

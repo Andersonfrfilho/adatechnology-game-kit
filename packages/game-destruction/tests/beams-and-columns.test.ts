@@ -1,24 +1,27 @@
-import { CALIBERS } from '@adatechnology/game-weapons'
+import { createArsenal } from '@adatechnology/game-weapons'
 import { describe, expect, it } from 'vitest'
-import { buildFrame, createDestruction, piercingOf, sizeStructure } from '../src'
+import { buildFrame, createDestruction, sizeStructure } from '../src'
 import type { DestructibleSpec, DestructionEvent, DestructionOptions, PartSpec } from '../src'
 
 /**
- * What the beams and columns of a building do under bullets and blasts. The calibers are the ones of `@adatechnology/game-weapons` (energy
- * `m v^2 / 2` from its mass and muzzle speed, `piercing` from its kind); the elements are sized like real ones:
+ * What the beams and columns of a building do under bullets and blasts. The rounds are the loads of the ammo table of `@adatechnology/game-weapons`
+ * (mass and speed of the load, so the energy `m v^2 / 2`, and the millimetres of steel, concrete, brick and wood it goes through, which the weapons
+ * pass in `Hit.penetration`: the destruction world reads no calibre names); the elements are sized like real ones:
  * - reinforced concrete column 30 x 30 cm, 3 m, bars every 15 cm of 16 mm; reinforced concrete beam 25 x 40 cm, 4 m
  * - steel I-beam IPE 200 (22 kg/m, flange 8.5 mm), 4 m, as a box with the real mass and thickness
  * - hardwood beam 10 x 20 cm, 4 m; brick pillar 40 x 40 cm, 3 m
  */
 
-const caliber = (id: string) => {
-  const c = CALIBERS.find((x) => x.id === id)
-  if (!c) throw new Error(`no caliber ${id}`)
-  return { id, mm: c.diameter, grams: c.bulletGrams, pellets: c.pellets ?? 1, energy: 0.5 * (c.bulletGrams / 1000) * c.muzzleSpeed ** 2, piercing: piercingOf(id, c.kind) }
+const arsenal = createArsenal()
+const round = (caliber: string, kind: string | undefined) => {
+  const c = arsenal.calibers.get(caliber)!
+  const load = arsenal.loadOf(caliber, kind as never)
+  return { mm: c.diameter, pellets: c.pellets ?? 1, energy: load.energy, penetration: load.penetration, label: load.def.label }
 }
 const SHOTS = {
-  '.22 LR': caliber('22lr'), '9x19': caliber('9x19'), '.45 ACP': caliber('45acp'), '5.56x45': caliber('5_56x45'), '7.62x51': caliber('7_62x51'),
-  '.50 BMG': caliber('50bmg'), '12ga slug': caliber('12ga_slug'), '12ga 00 buck': caliber('12ga_00buck'),
+  '.22 LR': round('22lr', undefined), '9x19': round('9x19', 'fmj'), '.45 ACP': round('45acp', 'fmj'), '5.56x45': round('5_56x45', 'fmj'), '5.56x45 AP': round('5_56x45', 'ap'),
+  '7.62x39': round('7_62x39', 'fmj'), '7.62x51': round('7_62x51', 'fmj'), '7.62x51 AP': round('7_62x51', 'ap'),
+  '.50 BMG': round('50bmg', 'fmj'), '.50 BMG AP': round('50bmg', 'ap'), '12ga slug': round('12ga_slug', undefined), '12ga 00 buck': round('12ga_00buck', undefined),
 } as const
 type ShotName = keyof typeof SHOTS
 
@@ -41,7 +44,7 @@ const fire = (world: ReturnType<typeof createDestruction>, name: ElementName, sh
   for (let k = 0; k < n; k++) {
     for (let i = 0; i < s.pellets; i++) {
       const y = 1.5 + (i + k * 0.37) * 0.004 - 0.016
-      const r = world.shoot([3, y, isBeam(name) ? 0.2 : 0], [-1, 0, 0], s.energy, s.mm, 'test', s.piercing)
+      const r = world.shoot([3, y, isBeam(name) ? 0.2 : 0], [-1, 0, 0], s.energy, s.mm, 'test', { penetration: s.penetration })
       if (r[0]?.penetrated) through++
       for (const x of r) out.push(...x.events)
     }
@@ -57,6 +60,32 @@ const single = (name: ElementName, options: DestructionOptions = {}) => {
 }
 const types = (events: readonly DestructionEvent[]) => new Set(events.map((e) => e.type))
 const hpShare = (p: { hp: number; maxHp: number }) => p.hp / p.maxHp
+
+/**
+ * The results table: one round at the middle of each element, from the table of the weapons (`PRINT_TABLE=1 vitest run tests/beams-and-columns.test.ts`
+ * prints it as markdown for evidence.md). `P` = goes through, `.` = stops in the part.
+ */
+const TABLE_ELEMENTS = ['rc_column', 'rc_beam', 'steel_ibeam', 'wood_beam', 'brick_pillar'] as const
+const outcomes = (shot: ShotName): string[] => TABLE_ELEMENTS.map((name) => (fire(single(name).world, name, shot, 1).through > 0 ? 'P' : '.'))
+
+describe('results table: rounds of the weapons table against beams and columns', () => {
+  /** rc column | rc beam | steel I-beam flange 8.5 mm | hardwood beam | brick pillar */
+  const EXPECTED: Record<ShotName, string> = {
+    '.22 LR': '.....', '9x19': '.....', '.45 ACP': '.....', '5.56x45': '...P.', '5.56x45 AP': '..PP.', '7.62x39': '...P.', '7.62x51': '...P.', '7.62x51 AP': '..PP.',
+    '.50 BMG': 'PPPPP', '.50 BMG AP': 'PPPPP', '12ga slug': '...P.', '12ga 00 buck': '.....',
+  }
+  it('matches the table', () => {
+    const got = Object.fromEntries((Object.keys(SHOTS) as ShotName[]).map((n) => [n, outcomes(n).join('')]))
+    if (process.env.PRINT_TABLE) {
+      const rows = (Object.keys(SHOTS) as ShotName[]).map((n) => {
+        const r = SHOTS[n]
+        return `| ${r.label} | ${r.energy.toFixed(0)} | ${r.penetration.steel} | ${r.penetration.concrete} | ${r.penetration.brick} | ${r.penetration.wood} | ${outcomes(n).map((c) => (c === 'P' ? 'sim' : 'não')).join(' | ')} |`
+      })
+      console.log(['| Munição | Energia (J) | aço (mm) | concreto (mm) | tijolo (mm) | madeira (mm) | pilar CA 30 cm | viga CA | viga I aço 8,5 mm | viga madeira 10 cm | pilar tijolo 40 cm |', '|---|---|---|---|---|---|---|---|---|---|---|', ...rows].join('\n'))
+    }
+    expect(got).toEqual(EXPECTED)
+  })
+})
 
 describe('shots: reinforced concrete', () => {
   it.each(['rc_column', 'rc_beam'] as const)('%s: a pistol only chips and cracks the surface, forty rounds do not expose the bars', (name) => {
@@ -139,11 +168,19 @@ describe('shots: steel I-beam', () => {
     expect(s.part().status).not.toBe('broken')
   })
 
-  it('without the piercing factor a slug would go through (the old energy-only rule)', () => {
+  it('a round with no penetration table falls back to the energy rule (a 12 ga slug of 3000 J goes through 8.5 mm of steel)', () => {
     const s = single('steel_ibeam')
     const slug = SHOTS['12ga slug']
     const r = s.world.shoot([3, 1.5, 0.2], [-1, 0, 0], slug.energy, slug.mm)
     expect(r[0]!.penetrated).toBe(true)
+  })
+
+  it('M80 ball does not pierce the 8.5 mm flange, M993 AP does, the .50 BMG M33 ball does', () => {
+    const through = (shot: ShotName) => fire(single('steel_ibeam').world, 'steel_ibeam', shot, 1).through
+    expect(through('7.62x51')).toBe(0)
+    expect(through('7.62x51 AP')).toBe(1)
+    expect(through('.50 BMG')).toBe(1)
+    expect(through('7.62x39')).toBe(0)
   })
 
   it('a grenade or C4 at 1 m dents it and leaves it standing', () => {
@@ -258,7 +295,7 @@ describe('a framed building', () => {
 
   it('rifle fire at a column does not bring the building down', () => {
     const f = frame()
-    for (let i = 0; i < 60; i++) f.world.hitPart(f.id, 'column_0_1_1', { type: 'ballistic', point: [0.15, 1.5, 0.1], direction: [-1, 0, 0], energy: SHOTS['7.62x51'].energy, caliber: 7.8, piercing: 1 })
+    for (let i = 0; i < 60; i++) f.world.hitPart(f.id, 'column_0_1_1', { type: 'ballistic', point: [0.15, 1.5, 0.1], direction: [-1, 0, 0], energy: SHOTS['7.62x51'].energy, caliber: 7.8, penetration: SHOTS['7.62x51'].penetration })
     f.run(10)
     expect(f.world.part(f.id, 'column_0_1_1')!.status).not.toBe('broken')
     expect(f.events.some((e) => e.type === 'collapse')).toBe(false)

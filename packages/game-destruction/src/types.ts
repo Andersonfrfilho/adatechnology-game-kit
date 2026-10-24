@@ -11,6 +11,7 @@
  */
 
 import type {
+  BallisticExtras,
   BlastOptions,
   DamageType,
   DebrisKind,
@@ -34,6 +35,8 @@ import type {
 
 // The contract types live in @adatechnology/game-contracts; they are re-exported so that no import from this package breaks.
 export type {
+  BallisticExtras,
+  HitIgnition,
   ChainDelay,
   Crack,
   DamageStage,
@@ -112,6 +115,16 @@ export interface MaterialDef {
    * through and keeps the rest; one that carries less stops (dent, crack or lodge).
    */
   penetration: number
+  /**
+   * Which entry of `Hit.penetration` this material is measured by (`steel`, `concrete`, `brick`, `wood`; default its own id). A structural steel beam is
+   * `steel`, an aluminium sheet is `steel` too, softwood is `wood`.
+   */
+  penetrationClass?: string
+  /**
+   * Millimetres of this material a round goes through for every millimetre of its `penetrationClass` reference in the table (default 1). Structural
+   * steel (S235) is softer than the RHA the tables use, so 1.3; softwood against hardwood 1.5; aluminium against steel 3.
+   */
+  penetrationScale?: number
   /** 0 = brittle (glass), 1 = very ductile (soft steel). Ductile parts dent and bend before they break; brittle parts crack and shatter. */
   ductility: number
   /** How the part fails when its hp reaches 0. */
@@ -270,7 +283,7 @@ export interface DestructionWorld {
   /** Raycast against every part shape (world space). */
   raycast(origin: Vec3, direction: Vec3, maxDistance?: number): RayHit | null
   /** Ballistic shot: raycast, hit, and continue through with the exit energy (up to 4 objects/parts). */
-  shoot(origin: Vec3, direction: Vec3, energy: number, caliber: number, source?: string, piercing?: number): HitResult[]
+  shoot(origin: Vec3, direction: Vec3, energy: number, caliber: number, source?: string, round?: number | BallisticExtras): HitResult[]
   /**
    * Work on a joint with a tool for `dt` seconds (call every frame while the player holds the button). Returns the progress 0..1, or -1 when the
    * tool cannot undo this joint. At 1 the joint opens (`detach` with `by: 'tool'`).

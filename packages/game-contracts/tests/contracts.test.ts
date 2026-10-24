@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { IMPACT_CONTRACT, MISSING_BITS, checkAnimation, checkDestructible, checkHit, shotToHit } from '../src'
+import { IMPACT_CONTRACT, MISSING_BITS, checkAnimation, checkDestructible, checkHit, shotExtras, shotToHit } from '../src'
 import type { AnimationClipSpec, DestructibleImpl, DestructionEvent, Hit, ObjectState, Shot, TestableModule } from '../src'
 
 /** A tiny module-owned destructible: one panel that dents by its own rule. */
@@ -70,6 +70,20 @@ describe('weapon contract', () => {
     expect(checkHit(h)).toEqual([])
     expect(shotToHit(shot(), [0, 1, 0], [0, 0, 1]).source).toBe('pistol_9mm')
     expect(shotToHit(shot(), [0, 1, 0]).energy).toBe(500)
+  })
+
+  it('shotToHit carries the round: penetration scaled by the energy left, the flags and the ignition chances', () => {
+    const round = { penetration: { steel: 10, concrete: 100 }, incendiary: true, tracer: true, ignition: { spark: 0.05, flame: 0.5 }, ammo: 'incendiary' }
+    const s = shot({ ...round })
+    const near = shotToHit(s, [0, 1, 0])
+    expect(near.penetration).toEqual({ steel: 10, concrete: 100 })
+    expect(near).toMatchObject({ incendiary: true, tracer: true, ignition: { spark: 0.05, flame: 0.5 } })
+    const far = shotToHit(s, [0, 1, -50])
+    expect(far.penetration!.steel).toBeCloseTo(9, 5) // 450 J of 500 J
+    expect(shotExtras(s, 50).penetration).toEqual(far.penetration)
+    expect(shotToHit(shot(), [0, 1, 0]).penetration).toBeUndefined()
+    expect(shotToHit(shot(), [0, 1, 0]).incendiary).toBeUndefined()
+    expect(checkHit(far)).toEqual([])
   })
 
   it('shotToHit copies the projectile mass and leaves the field out when the shot has none', () => {

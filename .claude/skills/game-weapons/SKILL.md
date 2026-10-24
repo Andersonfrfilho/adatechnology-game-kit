@@ -50,6 +50,7 @@ Panes: `result.fault` (ou `status` `fault`/`misfire`); `weapon.clearFault()` des
 | `TriggerResult` | `shots`, `uses`, `status` (`ok`, `empty`, `reloading`, `cooldown`, `no_fuel`, `safe`, `drawing`, `fault`, `misfire`, `clearing`), `recoil`, `noise`, `rounds`, `roundTimes`, `fault?` |
 | `CALIBERS`, `WEAPONS`, `EXPLOSIVES`, `ARCHETYPE_IDS`, `DEFAULT_LOADOUT` | dados embutidos (28 calibres, 79 armas reais + 42 arquétipos, 17 explosivos, kit inicial) |
 | `DEFAULT_RULES`, `RELOAD_STAGES`, `checkArsenal` | números das regras (panes, calor, ruído, tempos), ordem das etapas de recarga e verificação de consistência |
+| `AMMO`, `arsenal.loadOf(calibre, tipo?)`, `weapon.setAmmoKind(tipo)` | tabela de munição (50 cargas: núcleo, jaqueta, traçante, incendiária, massa, velocidade e penetração em mm de aço, concreto, tijolo e madeira); o `Shot` leva `ammo`, `penetration`, `incendiary`, `tracer`; configurável por `ammo`/`patch.ammo`/`remove.ammo` |
 | `muzzleEnergy(calibre, cano?)` | energia de um projétil (ou de um chumbo) |
 | `resolveStrings`, `locales` | nomes em `en` e `pt-BR` |
 
