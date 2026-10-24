@@ -908,5 +908,15 @@
       0.25
     ],
     "scale": 0.1
+  },
+  {
+    "id": "pliers",
+    "teamId": "alicate",
+    "teamBox": [
+      2,
+      0.302,
+      0.7
+    ],
+    "scale": 0.1
   }
 ]

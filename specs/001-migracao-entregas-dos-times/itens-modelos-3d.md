@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **91 de 257 itens têm modelo 3D; faltam 166.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **92 de 257 itens têm modelo 3D; faltam 165.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **91** | **166** |
+| **Total** | **92** | **165** |
 
 ## Comida (36 de 36)
 
@@ -114,14 +114,14 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Termômetro (kit) | `termometro` | `thermometer` | 0,02 kg | comum | 120 x 20 x 30 mm |
 | [x] | Álcool 70% (500 ml) (kit) | `alcool70` | `alcohol_70` | 0,5 kg | comum | 70 x 200 x 50 mm |
 
-## Ferramentas (3 de 30)
+## Ferramentas (4 de 30)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Martelo | `martelo` | `hammer` | 0,6 kg | comum | 159 x 330 x 47 mm |
 | [x] | Pé de cabra | `pe_cabra` | `crowbar` | 1,5 kg | incomum | 188 x 750 x 48 mm |
 | [x] | Abridor de lata (kit) | `abridor` | `can_opener` | 0,05 kg | comum | 140 x 40 x 25 mm |
-| [ ] | Alicate | `alicate` | `pliers` | 0,3 kg | comum | 200 x 30 x 70 mm |
+| [x] | Alicate (kit) | `alicate` | `pliers` | 0,3 kg | comum | 200 x 30 x 70 mm |
 | [ ] | Alicate corta-vergalhão | `corta_vergalhao` | `bolt_cutters` | 3,5 kg | raro | 600 x 60 x 150 mm |
 | [ ] | Balde | `balde` | `bucket` | 0,5 kg | comum | 280 x 270 x 280 mm |
 | [ ] | Binóculo | `binoculo` | `binoculars` | 0,6 kg | incomum | 180 x 150 x 120 mm |
