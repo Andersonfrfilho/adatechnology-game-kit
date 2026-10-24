@@ -1408,5 +1408,15 @@
       0.3
     ],
     "scale": 0.1
+  },
+  {
+    "id": "electronic_components",
+    "teamId": "componentes",
+    "teamBox": [
+      1,
+      0.2,
+      0.8
+    ],
+    "scale": 0.1
   }
 ]
