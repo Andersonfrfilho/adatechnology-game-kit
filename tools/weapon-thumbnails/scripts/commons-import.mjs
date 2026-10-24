@@ -5,12 +5,11 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
-import { sanitizeSvg } from './commons-sanitize.mjs'
 import { openRenderer } from './commons-render.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const folder = join(here, '../../../packages/game-weapons-three/assets/weapon-svg')
-const { bitmapSilhouetteSvg, MAX_SVG_BYTES } = await import(pathToFileURL(join(here, '../dist/index.js')).href)
+const { bitmapSilhouetteSvg, sanitizeSvg, MAX_SVG_BYTES } = await import(pathToFileURL(join(here, '../dist/index.js')).href)
 const work = process.argv[2]
 if (!work) throw new Error('usage: node scripts/commons-import.mjs <work folder>')
 const picks = JSON.parse(readFileSync(join(work, 'picks.json'), 'utf8'))
