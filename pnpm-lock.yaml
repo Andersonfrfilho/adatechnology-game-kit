@@ -203,6 +203,9 @@ importers:
         specifier: workspace:*
         version: link:../game-contracts
     devDependencies:
+      '@adatechnology/game-animals-species':
+        specifier: workspace:*
+        version: link:../game-animals-species
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5

@@ -40,3 +40,5 @@ export { createInfectionCase, createInfectionTimeline, infectionPhases, pickWoun
 export type { InfectionCase, InfectionClock } from './infection'
 export { deathEffects, doorDamageFactor, headAreaFactor, isFireImmune, waterHealthLoss } from './hooks'
 export type { UndeadEffect } from './hooks'
+export { createAnimalOutbreak } from './animals/outbreak'
+export type { AnimalFate, AnimalFateState, AnimalOutbreak, Carcass, OutbreakOptions, OutbreakSpecies } from './animals/outbreak'
