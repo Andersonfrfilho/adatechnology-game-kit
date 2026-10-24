@@ -32,6 +32,7 @@ COPY packages/game-vehicles/package.json packages/game-vehicles/
 COPY packages/game-vehicles-fleet/package.json packages/game-vehicles-fleet/
 COPY packages/game-weapons/package.json packages/game-weapons/
 COPY packages/game-weapons-three/package.json packages/game-weapons-three/
+COPY tools/golden/package.json tools/golden/
 COPY examples/interactables-showroom/package.json examples/interactables-showroom/
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
 COPY examples/test-room/package.json examples/test-room/
