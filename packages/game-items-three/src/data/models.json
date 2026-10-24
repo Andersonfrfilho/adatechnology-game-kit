@@ -288,5 +288,15 @@
       0.61
     ],
     "scale": 0.1
+  },
+  {
+    "id": "raw_beef",
+    "teamId": "carne_bovina",
+    "teamBox": [
+      2,
+      0.495,
+      1.5
+    ],
+    "scale": 0.1
   }
 ]
