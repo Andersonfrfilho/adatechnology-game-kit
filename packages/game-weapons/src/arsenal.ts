@@ -67,13 +67,14 @@ export const createArsenal = (options: ArsenalOptions = {}): Arsenal => {
   const baseSeed = options.seed ?? 1
   let counter = 0
 
-  const create = (id: WeaponId, opts: { seed?: number; reserve?: number } = {}): WeaponState => {
+  const create = (id: WeaponId, opts: { seed?: number; reserve?: number; condition?: string; ammoQuality?: string } = {}): WeaponState => {
     const def = weapons.get(id)
     if (!def) throw new Error(`game-weapons: unknown weapon "${id}"`)
     const caliber = def.action.kind === 'firearm' ? calibers.get(def.action.caliber) ?? null : null
     counter += 1
     const seed = opts.seed ?? (baseSeed + Math.imul(counter, 0x9e3779b1)) >>> 0
-    return new WeaponRuntime({ def, caliber, seed, reserve: opts.reserve, rules })
+    const explosive = def.action.kind === 'launcher' ? explosives.get(def.action.projectile) ?? null : null
+    return new WeaponRuntime({ def, caliber, seed, reserve: opts.reserve, rules, explosive, condition: opts.condition, ammoQuality: opts.ammoQuality })
   }
 
   return {

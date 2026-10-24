@@ -1,8 +1,14 @@
-import { drawSeconds, manualCycleSeconds, planRounds, weaponNoise, weaponSpeed } from './fire'
+import { isDudWithoutJam, rollFault } from './faults'
+import { clearSeconds, drawSeconds, manualCycleSeconds, planRounds, weaponNoise, weaponSpeed } from './fire'
+import { burstNoise, decayHeat, heatPerRound } from './heat'
 import { isReloadable, planReload, reloadStages } from './reload'
 import { createRng, normalize, sampleCone } from './rng'
 import type {
+  AmmoQualityDef,
   CaliberDef,
+  ConditionDef,
+  ExplosiveDef,
+  FaultId,
   FireMode,
   FirearmAction,
   ReloadKind,
@@ -38,6 +44,10 @@ export interface WeaponStateInit {
   seed: number
   reserve?: number
   rules: WeaponRules
+  /** What a launcher shoots. */
+  explosive?: ExplosiveDef | null
+  condition?: string
+  ammoQuality?: string
 }
 
 /** Something that happens at a later time of the weapon clock. */
@@ -45,6 +55,15 @@ interface Scheduled {
   readonly at: number
   readonly tag?: 'reload'
   readonly event: WeaponEvent
+  readonly apply?: () => void
+}
+
+const FAULT_RNG_SALT = 0x6a09e667
+
+const findById = <TEntry extends { readonly id: string }>(entries: readonly TEntry[], id: string, label: string): TEntry => {
+  const found = entries.find((entry) => entry.id === id)
+  if (!found) throw new Error(`game-weapons: unknown ${label} "${id}"`)
+  return found
 }
 
 const result = (status: TriggerResult['status'], extra: Partial<TriggerResult> = {}): TriggerResult => ({
@@ -70,6 +89,8 @@ export class WeaponRuntime implements WeaponState {
   private readonly rng: () => number
   private readonly initialReserve: number
   private readonly rules: WeaponRules
+  private readonly faultRng: () => number
+  private readonly explosive: ExplosiveDef | null
 
   private clock = 0
   /** Time already advanced by the other of update / trigger in the same frame (so calling both does not count `dt` twice). */
@@ -85,6 +106,14 @@ export class WeaponRuntime implements WeaponState {
   private reloadKind: ReloadKind = 'tactical'
   private drawEnd = 0
   private _phase: WeaponPhase | null = null
+  private _fault: FaultId | null = null
+  private _clearing = false
+  private _safety: boolean
+  private _heat = 0
+  private _condition: ConditionDef
+  private _ammoQuality: AmmoQualityDef
+  /** Times of the shots that still count for the noise of a burst. */
+  private recentShots: number[] = []
   private events: WeaponEvent[] = []
   private scheduled: Scheduled[] = []
 
@@ -98,6 +127,11 @@ export class WeaponRuntime implements WeaponState {
     this.action = init.def.action
     this.rules = init.rules
     this.rng = createRng(init.seed)
+    this.faultRng = createRng((init.seed ^ FAULT_RNG_SALT) >>> 0)
+    this.explosive = init.explosive ?? null
+    this._safety = init.rules.startSafe
+    this._condition = findById(init.rules.conditions, init.condition ?? init.rules.defaultCondition, 'condition')
+    this._ammoQuality = findById(init.rules.ammoQualities, init.ammoQuality ?? init.rules.defaultAmmoQuality, 'ammo quality')
     const a = this.action
     this.mode = a.kind === 'firearm' ? a.modes[0] ?? 'single' : 'single'
     switch (a.kind) {
@@ -119,7 +153,7 @@ export class WeaponRuntime implements WeaponState {
         this._capacity = 0
     }
     this._ammo = this._capacity
-    this.initialReserve = init.reserve ?? (a.kind === 'firearm' ? a.magazine * 3 : 0)
+    this.initialReserve = init.reserve ?? (isReloadable(a) ? a.magazine * 3 : 0)
     this.reserve = this.initialReserve
   }
 
@@ -138,6 +172,27 @@ export class WeaponRuntime implements WeaponState {
   get phase(): WeaponPhase | null {
     const phase = this._phase
     return phase && this.clock < phase.end - EPS ? phase : null
+  }
+  get fault(): FaultId | null {
+    return this._fault
+  }
+  get clearing(): boolean {
+    return this._clearing
+  }
+  get safety(): boolean {
+    return this._safety
+  }
+  get heat(): number {
+    return this._heat
+  }
+  get heatLevel(): number {
+    return Math.min(1, this._heat / this.rules.heat.displayMax)
+  }
+  get condition(): string {
+    return this._condition.id
+  }
+  get ammoQuality(): string {
+    return this._ammoQuality.id
   }
   get spread(): number {
     if (this.action.kind !== 'firearm') return 0
@@ -161,7 +216,7 @@ export class WeaponRuntime implements WeaponState {
     } else {
       this.pend = { src: 'update', amt: d }
     }
-    this.clock += eff
+    this.advance(eff)
     this.settle(this.clock)
   }
 
@@ -181,9 +236,19 @@ export class WeaponRuntime implements WeaponState {
     return drained
   }
 
+  private advance(seconds: number): void {
+    if (seconds <= 0) return
+    this._heat = decayHeat(this._heat, seconds, this.rules.heat)
+    this.clock += seconds
+  }
+
   /** Complete what falls at or before `t`: scheduled events and the reload steps. */
   private settle(t: number): void {
-    while (this.scheduled[0] && this.scheduled[0].at <= t + EPS) this.emit((this.scheduled.shift() as Scheduled).event)
+    while (this.scheduled[0] && this.scheduled[0].at <= t + EPS) {
+      const item = this.scheduled.shift() as Scheduled
+      item.apply?.()
+      this.emit(item.event)
+    }
     const a = this.action
     if (!isReloadable(a)) return
     while (this._reloading && this.reloadEnd <= t + EPS) {
@@ -224,6 +289,37 @@ export class WeaponRuntime implements WeaponState {
     this.latched = false
   }
 
+  setSafety(on: boolean): boolean {
+    if (!isReloadable(this.action) || on === this._safety) return this._safety
+    this._safety = on
+    this.emit({ type: 'safety', on, at: this.clock })
+    return on
+  }
+
+  clearFault(): boolean {
+    const fault = this._fault
+    if (!fault || this._clearing) return false
+    const endAt = this.clock + clearSeconds(this.action, this.rules)
+    this._clearing = true
+    this._phase = { id: 'clear', start: this.clock, end: endAt }
+    this.emit({ type: 'clear', fault, phase: 'start', at: this.clock })
+    const finish = (): void => {
+      this._fault = null
+      this._clearing = false
+      if (fault === 'misfire') this._ammo = Math.max(0, this._ammo - 1) // the dud is ejected
+    }
+    this.schedule({ at: endAt, event: { type: 'clear', fault, phase: 'end', at: endAt }, apply: finish })
+    return true
+  }
+
+  setCondition(id: string): void {
+    this._condition = findById(this.rules.conditions, id, 'condition')
+  }
+
+  setAmmoQuality(id: string): void {
+    this._ammoQuality = findById(this.rules.ammoQualities, id, 'ammo quality')
+  }
+
   draw(): void {
     const seconds = drawSeconds(this.action, this.rules)
     this.drawEnd = this.clock + seconds
@@ -240,7 +336,7 @@ export class WeaponRuntime implements WeaponState {
       this.reserve -= 1
       return true
     }
-    if (!isReloadable(a) || this._reloading || this.clock < this.drawEnd - EPS) return false
+    if (!isReloadable(a) || this._reloading || this._fault || this._clearing || this.clock < this.drawEnd - EPS) return false
     if ((this._ammo >= this._capacity && !this._locked) || this.reserve <= 0) return false
     const plan = planReload(a, this._ammo, this._capacity, this.reserve, request)
     this._reloading = true
@@ -267,6 +363,8 @@ export class WeaponRuntime implements WeaponState {
     this.reserve = this.initialReserve
     this._reloading = false
     this._locked = false
+    this._fault = null
+    this._clearing = false
     this._phase = null
     this.scheduled = []
     this.readyAt = this.clock
@@ -288,12 +386,12 @@ export class WeaponRuntime implements WeaponState {
     const start = this.clock - overlap
     const end = start + d
     this.settle(start)
-    if (start < this.drawEnd - EPS) return result('drawing')
-
     const dir = normalize(direction)
     let res: TriggerResult
     const a = this.action
-    switch (a.kind) {
+    const gate = this.gateStatus(start)
+    if (gate) res = gate
+    else switch (a.kind) {
       case 'firearm':
         res = this.fireFirearm(a, origin, dir, start, end, held, source)
         break
@@ -311,7 +409,7 @@ export class WeaponRuntime implements WeaponState {
         res = this.fireThrowable(a, origin, dir, held)
         break
       case 'launcher':
-        res = result('empty')
+        res = this.fireLauncher(a, origin, dir, start, held)
         break
       case 'tool':
         res = d > 0 ? result('ok', { uses: [{ kind: 'tool', tool: a.tool, reach: a.reach, duration: d, origin, direction: dir }], noise: a.noise }) : result('ok')
@@ -322,9 +420,19 @@ export class WeaponRuntime implements WeaponState {
           : result('cooldown')
         break
     }
-    this.clock = Math.max(this.clock, end)
+    this.advance(Math.max(0, end - this.clock))
     this.settle(this.clock)
     return res
+  }
+
+  /** Why the trigger does nothing before the action even looks at it. */
+  private gateStatus(start: number): TriggerResult | null {
+    if (start < this.drawEnd - EPS) return result('drawing')
+    if (!isReloadable(this.action)) return null
+    if (this._safety) return result('safe')
+    if (this._clearing) return result('clearing')
+    if (this._fault) return result('fault', { fault: this._fault })
+    return null
   }
 
   /** Semi-style gating: a held trigger that already fired does nothing until `release()` or a new pull (`held` false). */
@@ -351,14 +459,44 @@ export class WeaponRuntime implements WeaponState {
 
     const res = result('ok')
     const times = planRounds(a, this.mode, this._ammo, t0, end)
+    let lastAt = t0
     for (const t of times) {
+      const fault = rollFault({ def: this.def, caliber: this.caliber, condition: this._condition, ammoQuality: this._ammoQuality, heat: this._heat, rules: this.rules, random: this.faultRng })
+      if (fault === 'misfire') {
+        this.misfire(a, t, start, res)
+        lastAt = t
+        break
+      }
       this.fireOne(a, origin, dir, t, res, source)
       res.roundTimes.push(t - start)
       res.rounds += 1
+      lastAt = t
+      if (fault) {
+        this.jam(fault, t, res)
+        break
+      }
     }
-    this.afterRounds(a, times[times.length - 1] ?? t0)
-    this.emit({ type: 'shot', shots: res.shots.length, rounds: res.rounds, mode: this.mode, at: t0 })
+    if (res.rounds > 0) this.afterRounds(a, lastAt)
+    if (res.shots.length === 0) res.status = res.fault ? 'fault' : 'misfire'
+    else this.emit({ type: 'shot', shots: res.shots.length, rounds: res.rounds, mode: this.mode, at: t0 })
     return res
+  }
+
+  private jam(fault: FaultId, at: number, res: TriggerResult): void {
+    this._fault = fault
+    res.fault = fault
+    this.emit({ type: 'fault', fault, at })
+  }
+
+  private misfire(a: FirearmAction, at: number, start: number, res: TriggerResult): void {
+    if (!isDudWithoutJam(a, 'misfire')) {
+      this.jam('misfire', at, res)
+      return
+    }
+    this._ammo -= 1
+    res.rounds += 1
+    res.roundTimes.push(at - start)
+    this.emit({ type: 'misfire', at })
   }
 
   /** Cooldown, the cycle of a manual action and the pistol slide that stays back on the last round. */
@@ -403,11 +541,31 @@ export class WeaponRuntime implements WeaponState {
       res.shots.push(shot)
     }
     this._ammo -= 1
+    this._heat = Math.min(this.rules.heat.cap, this._heat + heatPerRound(a, cal, this.rules.heat))
     this.readyAt = t + 60 / a.rpm
     this.extra = Math.min(bloomNow + (a.bloomDeg ?? 0), a.spreadDeg * (BLOOM_CAP - 1))
     this.extraClock = t
     res.recoil = [res.recoil[0] + a.recoil[0], res.recoil[1] + (this.rng() * 2 - 1) * a.recoil[1]]
-    res.noise = weaponNoise(a, cal)
+    const { window } = this.rules.noiseBurst
+    this.recentShots = this.recentShots.filter((shotAt) => shotAt > t - window)
+    res.noise = burstNoise(weaponNoise(a, cal), this.recentShots.length, this.rules.noiseBurst)
+    this.recentShots.push(t)
+  }
+
+  private fireLauncher(a: Extract<WeaponAction, { kind: 'launcher' }>, origin: Vec3, dir: Vec3, start: number, held: boolean): TriggerResult {
+    if (this._reloading) return result('reloading')
+    if (!this.oncePerPull(held)) return result('cooldown')
+    if (this._ammo <= 0) {
+      this.emit({ type: 'empty', at: start })
+      return result('empty')
+    }
+    const t = Math.max(start, this.readyAt)
+    this._ammo -= 1
+    this._heat = Math.min(this.rules.heat.cap, this._heat + heatPerRound(a, null, this.rules.heat))
+    const velocity: Vec3 = [dir[0] * a.speed, dir[1] * a.speed, dir[2] * a.speed]
+    const use: Use = { kind: 'throw', energy: this.explosive?.energy ?? 0, radius: this.explosive?.lethalRadius ?? 0, fuse: 0, velocity, origin }
+    this.emit({ type: 'shot', shots: 0, rounds: 1, mode: this.mode, at: t })
+    return result('ok', { uses: [use], recoil: [a.recoil[0], a.recoil[1]], noise: a.noise ?? 0, rounds: 1, roundTimes: [t - start] })
   }
 
   private fireMelee(a: Extract<WeaponAction, { kind: 'melee' }>, origin: Vec3, dir: Vec3, start: number, end: number): TriggerResult {

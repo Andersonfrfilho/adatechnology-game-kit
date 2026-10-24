@@ -14,7 +14,7 @@ import type { Shot, Use, Vec3 } from '@adatechnology/game-contracts'
 
 import type { ExplosiveDef, ExplosiveId } from './explosive-types'
 import type { WeaponsStrings } from './locale'
-import type { WeaponEvent, WeaponRules } from './rule-types'
+import type { FaultId, WeaponEvent, WeaponRules } from './rule-types'
 
 // `Shot` and `Use` are contracts: they live in @adatechnology/game-contracts and are re-exported here so that no import breaks.
 export type { Shot, Use, Vec3 }
@@ -225,7 +225,7 @@ export interface TriggerResult {
   /** Uses this call (everything else). */
   uses: Use[]
   /** `ok`, or why nothing happened. */
-  status: 'ok' | 'empty' | 'reloading' | 'cooldown' | 'no_fuel' | 'safe' | 'drawing'
+  status: 'ok' | 'empty' | 'reloading' | 'cooldown' | 'no_fuel' | 'safe' | 'drawing' | 'fault' | 'misfire' | 'clearing'
   /** Camera kick to apply, degrees [pitch, yaw]. */
   recoil: [number, number]
   /** Audible radius of what happened, metres (0 when nothing). */
@@ -234,6 +234,8 @@ export interface TriggerResult {
   rounds: number
   /** Seconds after the start of the call at which each round left the barrel. */
   roundTimes: number[]
+  /** The fault that stopped the weapon during this call, if any. */
+  fault?: FaultId
 }
 
 export type ReloadRequest = 'auto' | 'full' | 'one_by_one'
@@ -258,6 +260,17 @@ export interface WeaponState {
   /** True after a pistol fires its last round: the slide stays back until the magazine is changed. */
   readonly locked: boolean
   readonly phase: WeaponPhase | null
+  /** The fault the weapon is stuck with until it is cleared. */
+  readonly fault: FaultId | null
+  readonly clearing: boolean
+  /** With the safety on the trigger does nothing. */
+  readonly safety: boolean
+  /** Heat of the barrel, 0 to `rules.heat.cap`. */
+  readonly heat: number
+  /** 0 to 1: the heat against what the display shows as full. */
+  readonly heatLevel: number
+  readonly condition: string
+  readonly ammoQuality: string
   /** Current spread in degrees (base + bloom). */
   readonly spread: number
   /**
@@ -266,6 +279,14 @@ export interface WeaponState {
    */
   trigger(origin: Vec3, direction: Vec3, dt: number, held?: boolean, source?: string): TriggerResult
   release(): void
+  /** Turns the safety on or off; returns the state it is in now. */
+  setSafety(on: boolean): boolean
+  /** Starts clearing the fault (it takes `timings.clear` seconds); false when there is nothing to clear. */
+  clearFault(): boolean
+  /** Wear of the weapon, by `rules.conditions` id; it sets how likely a round jams. */
+  setCondition(id: string): void
+  /** Quality of the rounds, by `rules.ammoQualities` id. */
+  setAmmoQuality(id: string): void
   /** Start putting the weapon in hand; the trigger answers `drawing` until it is ready. */
   draw(): void
   /**
@@ -323,7 +344,7 @@ export interface Arsenal {
   readonly explosives: ReadonlyMap<ExplosiveId, ExplosiveDef>
   readonly rules: WeaponRules
   /** Make a runtime state for a weapon (each holder gets its own). Unknown id throws. */
-  create(id: WeaponId, options?: { seed?: number; reserve?: number }): WeaponState
+  create(id: WeaponId, options?: { seed?: number; reserve?: number; condition?: string; ammoQuality?: string }): WeaponState
   /** Muzzle energy of a calibre (optionally with a barrel factor). */
   muzzleEnergy(caliber: CaliberId, barrel?: number): number
   /** Joules of what one use of a weapon delivers: one projectile (or one pellet), a blast, or a melee blow. */
