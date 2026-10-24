@@ -55,6 +55,17 @@ describe('snapshotScene', () => {
     expect(snapshotScene(asNode(moved)).hash).not.toBe(baseline)
   })
 
+  it('catches a 1 mm move of one vertex and of one transform', () => {
+    const baseline = snapshotScene(asNode(buildScene())).hash
+    const vertex = buildScene()
+    const positions = (vertex.getObjectByName('body') as THREE.Mesh).geometry.attributes.position as THREE.BufferAttribute
+    positions.setX(0, positions.getX(0) + 0.001)
+    expect(snapshotScene(asNode(vertex)).hash).not.toBe(baseline)
+    const transform = buildScene()
+    transform.getObjectByName('wheel')?.position.addScalar(0.001)
+    expect(snapshotScene(asNode(transform)).hash).not.toBe(baseline)
+  })
+
   it('changes when a node is renamed, unless names are ignored', () => {
     const renamed = buildScene()
     renamed.getObjectByName('wheel')!.name = 'tyre'
