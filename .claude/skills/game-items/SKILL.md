@@ -45,7 +45,7 @@ Só testes unitários em `packages/game-items/tests/` (registro, validação, re
 - Categoria é registro: id desconhecido num item lança erro, mas `categories` acrescenta. Lugar só é conferido quando algum lugar foi registrado.
 - Os multiplicadores de armazenamento foram lidos à mão do HTML do time; o teste de fonte do `tools/items-catalog` (T3.1b) é que os prova.
 - `ContainerDef` é provisório: a T3.1e fixa os campos que o sorteio precisa.
-- `unique` tem peso 0 e está em `fixedOnly`: nunca sai de um sorteio, só de posição fixa.
+- `legendary` e `unique` estão em `fixedOnly` (a página do time: "Lendário e único nunca são sorteados"): nunca saem de um sorteio, só de posição fixa. `legendary` mantém o peso 0,5 da tabela.
 
 ## O que vem pela migração
 Já entrou (T3.1a): tipos, `createItems`, regras padrão. Falta: `tools/items-catalog` e dados (T3.1b a d), envelhecimento, carga, proteção, receitas, achados e `itemsFromArsenal` (T3.1e),

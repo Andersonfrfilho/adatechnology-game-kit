@@ -1,0 +1,89 @@
+[
+  {
+    "id": "eat_and_drink",
+    "effect": "consume_nutrition",
+    "category": [
+      "food",
+      "drink"
+    ],
+    "consumes": true
+  },
+  {
+    "id": "dress_wound",
+    "effect": "stop_bleeding",
+    "consumes": true,
+    "items": [
+      "curativo",
+      "bandage",
+      "gaze",
+      "esparadrapo"
+    ]
+  },
+  {
+    "id": "painkiller",
+    "effect": "heal",
+    "params": {
+      "amount": 15
+    },
+    "consumes": true,
+    "items": [
+      "painkillers",
+      "ibuprofeno",
+      "opioide"
+    ]
+  },
+  {
+    "id": "calm_down",
+    "effect": "calm",
+    "consumes": true,
+    "items": [
+      "calmante"
+    ]
+  },
+  {
+    "id": "clean_wound",
+    "effect": "clean_wound",
+    "consumes": true,
+    "items": [
+      "alcohol_70",
+      "pvpi"
+    ]
+  },
+  {
+    "id": "assemble_molotov",
+    "effect": "assemble_molotov",
+    "params": {
+      "output": "molotov"
+    },
+    "consumes": true,
+    "items": [
+      "garrafa_vidro",
+      "gasolina",
+      "cachaca"
+    ]
+  },
+  {
+    "id": "toggle_light",
+    "effect": "toggle_light",
+    "consumes": false,
+    "items": [
+      "flashlight"
+    ]
+  },
+  {
+    "id": "swap_bag",
+    "effect": "swap_bag",
+    "category": [
+      "bags"
+    ],
+    "consumes": true
+  },
+  {
+    "id": "equip_melee",
+    "effect": "equip_melee",
+    "category": [
+      "melee"
+    ],
+    "consumes": false
+  }
+]

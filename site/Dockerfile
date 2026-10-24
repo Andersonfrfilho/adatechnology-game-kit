@@ -25,6 +25,7 @@ COPY packages/game-interactables/package.json packages/game-interactables/
 COPY packages/game-interactables-household/package.json packages/game-interactables-household/
 COPY packages/game-interactables-three/package.json packages/game-interactables-three/
 COPY packages/game-items/package.json packages/game-items/
+COPY packages/game-items-goods/package.json packages/game-items-goods/
 COPY packages/game-props3d/package.json packages/game-props3d/
 COPY packages/game-test-room/package.json packages/game-test-room/
 COPY packages/game-vegetation/package.json packages/game-vegetation/
@@ -34,6 +35,7 @@ COPY packages/game-vehicles-fleet/package.json packages/game-vehicles-fleet/
 COPY packages/game-weapons/package.json packages/game-weapons/
 COPY packages/game-weapons-three/package.json packages/game-weapons-three/
 COPY tools/golden/package.json tools/golden/
+COPY tools/items-catalog/package.json tools/items-catalog/
 COPY tools/weapons-catalog/package.json tools/weapons-catalog/
 COPY examples/interactables-showroom/package.json examples/interactables-showroom/
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/

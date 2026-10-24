@@ -1,0 +1,7653 @@
+[
+  {
+    "id": "feijao_lata",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.079,
+      0.079,
+      0.079
+    ],
+    "weight": 0.45,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 730,
+    "portions": 1,
+    "nutrition": {
+      "satiety": 25,
+      "hydration": -5
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "supermarket",
+        "church",
+        "train"
+      ]
+    }
+  },
+  {
+    "id": "sardinha",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.052,
+      0.052,
+      0.052
+    ],
+    "weight": 0.13,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 1095,
+    "portions": 1,
+    "nutrition": {
+      "satiety": 12,
+      "hydration": -4
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "docks",
+        "road"
+      ]
+    }
+  },
+  {
+    "id": "milho_lata",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.069,
+      0.069,
+      0.069
+    ],
+    "weight": 0.3,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 730,
+    "portions": 1,
+    "nutrition": {
+      "satiety": 12,
+      "hydration": 2
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "train"
+      ]
+    }
+  },
+  {
+    "id": "salsicha_lata",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.069,
+      0.069,
+      0.069
+    ],
+    "weight": 0.3,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 730,
+    "portions": 1,
+    "nutrition": {
+      "satiety": 18,
+      "hydration": -3
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "house",
+        "road"
+      ]
+    }
+  },
+  {
+    "id": "leite_condensado",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.076,
+      0.076,
+      0.076
+    ],
+    "weight": 0.4,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "portions",
+      "amount": 2
+    },
+    "shelfLife": 365,
+    "portions": 2,
+    "nutrition": {
+      "satiety": 20,
+      "hydration": -6
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "racao_militar",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.1,
+      0.1,
+      0.1
+    ],
+    "weight": 0.9,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 3,
+      "per": "refeições"
+    },
+    "shelfLife": 1095,
+    "portions": 3,
+    "nutrition": {
+      "satiety": 60,
+      "hydration": 10
+    },
+    "finds": {
+      "places": [
+        "military_base",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "rice",
+    "category": "food",
+    "tags": [
+      "food",
+      "perishable"
+    ],
+    "size": [
+      0.1,
+      0.2,
+      0.06
+    ],
+    "weight": 1,
+    "stack": 4,
+    "shape": "bag",
+    "color": 15261888,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 4
+    },
+    "shelfLife": 540,
+    "portions": 4,
+    "cookable": true,
+    "nutrition": {
+      "satiety": 20,
+      "hydration": 0
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "church",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "beans",
+    "category": "food",
+    "tags": [
+      "food",
+      "perishable"
+    ],
+    "size": [
+      0.1,
+      0.2,
+      0.06
+    ],
+    "weight": 1,
+    "stack": 4,
+    "shape": "bag",
+    "color": 6961698,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 4
+    },
+    "shelfLife": 540,
+    "portions": 4,
+    "cookable": true,
+    "nutrition": {
+      "satiety": 22,
+      "hydration": 0
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "farm",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "pasta",
+    "category": "food",
+    "tags": [
+      "food",
+      "perishable"
+    ],
+    "size": [
+      0.1,
+      0.25,
+      0.04
+    ],
+    "weight": 0.5,
+    "stack": 4,
+    "shape": "bag",
+    "color": 15253584,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 3
+    },
+    "shelfLife": 540,
+    "portions": 3,
+    "cookable": true,
+    "nutrition": {
+      "satiety": 18,
+      "hydration": 0
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "macarrao_inst",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.045,
+      0.045,
+      0.045
+    ],
+    "weight": 0.08,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 240,
+    "portions": 1,
+    "nutrition": {
+      "satiety": 12,
+      "hydration": -5
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "supermarket",
+        "gas_station",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "farinha_mandioca",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.104,
+      0.104,
+      0.104
+    ],
+    "weight": 1,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 5
+    },
+    "shelfLife": 365,
+    "portions": 5,
+    "nutrition": {
+      "satiety": 12,
+      "hydration": -6
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "biscuits",
+    "category": "food",
+    "tags": [
+      "food",
+      "perishable"
+    ],
+    "size": [
+      0.2,
+      0.05,
+      0.1
+    ],
+    "weight": 0.2,
+    "stack": 4,
+    "shape": "box",
+    "color": 12089920,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 2
+    },
+    "shelfLife": 180,
+    "portions": 2,
+    "nutrition": {
+      "satiety": 10,
+      "hydration": -4
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "gas_station",
+        "school",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "salgadinho",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.048,
+      0.048,
+      0.048
+    ],
+    "weight": 0.1,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 120,
+    "portions": 1,
+    "nutrition": {
+      "satiety": 6,
+      "hydration": -6
+    },
+    "finds": {
+      "places": [
+        "gas_station",
+        "supermarket",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "chocolate",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.046,
+      0.046,
+      0.046
+    ],
+    "weight": 0.09,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 270,
+    "portions": 1,
+    "nutrition": {
+      "satiety": 8,
+      "hydration": -2
+    },
+    "finds": {
+      "places": [
+        "gas_station",
+        "supermarket",
+        "mall",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "rapadura",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.082,
+      0.082,
+      0.082
+    ],
+    "weight": 0.5,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "portions",
+      "amount": 4
+    },
+    "shelfLife": 365,
+    "portions": 4,
+    "nutrition": {
+      "satiety": 10,
+      "hydration": -5
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "supermarket",
+        "lodge"
+      ]
+    }
+  },
+  {
+    "id": "mel",
+    "category": "food",
+    "size": [
+      0.082,
+      0.082,
+      0.082
+    ],
+    "weight": 0.5,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "portions",
+      "amount": 6
+    },
+    "portions": 6,
+    "nutrition": {
+      "satiety": 8,
+      "hydration": -2
+    },
+    "finds": {
+      "places": [
+        "lodge",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "bread",
+    "category": "food",
+    "tags": [
+      "food",
+      "perishable"
+    ],
+    "size": [
+      0.3,
+      0.1,
+      0.1
+    ],
+    "weight": 0.5,
+    "stack": 2,
+    "shape": "bag",
+    "color": 13146714,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 4
+    },
+    "shelfLife": 7,
+    "portions": 4,
+    "nutrition": {
+      "satiety": 8,
+      "hydration": -2
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "cheese",
+    "category": "food",
+    "tags": [
+      "food",
+      "perishable"
+    ],
+    "size": [
+      0.15,
+      0.04,
+      0.1
+    ],
+    "weight": 0.5,
+    "stack": 2,
+    "shape": "box",
+    "color": 15781984,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "portions",
+      "amount": 4
+    },
+    "shelfLife": 4,
+    "portions": 4,
+    "nutrition": {
+      "satiety": 10,
+      "hydration": -3
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "mortadela",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.076,
+      0.076,
+      0.076
+    ],
+    "weight": 0.4,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 4
+    },
+    "shelfLife": 3,
+    "portions": 4,
+    "nutrition": {
+      "satiety": 9,
+      "hydration": -4
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "house",
+        "train"
+      ]
+    }
+  },
+  {
+    "id": "carne_bovina",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.104,
+      0.104,
+      0.104
+    ],
+    "weight": 1,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 4
+    },
+    "shelfLife": 2,
+    "portions": 4,
+    "cookable": true,
+    "nutrition": {
+      "satiety": 14,
+      "hydration": 0
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "house",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "frango",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.11,
+      0.11,
+      0.11
+    ],
+    "weight": 1.2,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 4
+    },
+    "shelfLife": 2,
+    "portions": 4,
+    "cookable": true,
+    "nutrition": {
+      "satiety": 13,
+      "hydration": 0
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "apartment",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "eggs",
+    "category": "food",
+    "tags": [
+      "food",
+      "perishable"
+    ],
+    "size": [
+      0.25,
+      0.07,
+      0.1
+    ],
+    "weight": 0.7,
+    "stack": 2,
+    "shape": "box",
+    "color": 15261904,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 12,
+      "per": "unidades"
+    },
+    "shelfLife": 21,
+    "portions": 12,
+    "cookable": true,
+    "nutrition": {
+      "satiety": 5,
+      "hydration": 0
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "farm",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "banana",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.104,
+      0.104,
+      0.104
+    ],
+    "weight": 1,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 6,
+      "per": "unidades"
+    },
+    "shelfLife": 5,
+    "portions": 6,
+    "nutrition": {
+      "satiety": 6,
+      "hydration": 1
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "farm",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "laranja",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.061,
+      0.061,
+      0.061
+    ],
+    "weight": 0.2,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 14,
+    "portions": 1,
+    "nutrition": {
+      "satiety": 5,
+      "hydration": 8
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "batata",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.104,
+      0.104,
+      0.104
+    ],
+    "weight": 1,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 4
+    },
+    "shelfLife": 30,
+    "portions": 4,
+    "cookable": true,
+    "nutrition": {
+      "satiety": 12,
+      "hydration": 0
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "house",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "mandioca",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.119,
+      0.119,
+      0.119
+    ],
+    "weight": 1.5,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 4
+    },
+    "shelfLife": 10,
+    "portions": 4,
+    "cookable": true,
+    "nutrition": {
+      "satiety": 14,
+      "hydration": 0
+    },
+    "finds": {
+      "places": [
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "peixe_fresco",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.087,
+      0.087,
+      0.087
+    ],
+    "weight": 0.6,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 2
+    },
+    "shelfLife": 1,
+    "portions": 2,
+    "cookable": true,
+    "nutrition": {
+      "satiety": 12,
+      "hydration": 0
+    },
+    "finds": {
+      "places": [
+        "docks"
+      ]
+    }
+  },
+  {
+    "id": "peixe_salgado",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.076,
+      0.076,
+      0.076
+    ],
+    "weight": 0.4,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "portions",
+      "amount": 2
+    },
+    "shelfLife": 90,
+    "portions": 2,
+    "nutrition": {
+      "satiety": 11,
+      "hydration": -10
+    },
+    "finds": {
+      "places": [
+        "docks"
+      ]
+    }
+  },
+  {
+    "id": "charque",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.082,
+      0.082,
+      0.082
+    ],
+    "weight": 0.5,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "portions",
+      "amount": 3
+    },
+    "shelfLife": 120,
+    "portions": 3,
+    "nutrition": {
+      "satiety": 10,
+      "hydration": -8
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "carne_caca",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.119,
+      0.119,
+      0.119
+    ],
+    "weight": 1.5,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 5
+    },
+    "shelfLife": 2,
+    "portions": 5,
+    "cookable": true,
+    "nutrition": {
+      "satiety": 12,
+      "hydration": 0
+    },
+    "finds": {
+      "places": [
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "conserva",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.087,
+      0.087,
+      0.087
+    ],
+    "weight": 0.6,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "portions",
+      "amount": 3
+    },
+    "shelfLife": 365,
+    "portions": 3,
+    "nutrition": {
+      "satiety": 8,
+      "hydration": 1
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "house",
+        "lodge"
+      ]
+    }
+  },
+  {
+    "id": "racao_cao",
+    "category": "food",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.104,
+      0.104,
+      0.104
+    ],
+    "weight": 1,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 5
+    },
+    "shelfLife": 365,
+    "portions": 5,
+    "nutrition": {
+      "satiety": 6,
+      "hydration": -4
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "sugar",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.1,
+      0.2,
+      0.06
+    ],
+    "weight": 1,
+    "stack": 4,
+    "shape": "bag",
+    "color": 15790320,
+    "rarity": "common",
+    "durability": {
+      "kind": "portions",
+      "amount": 10
+    },
+    "portions": 10,
+    "nutrition": {
+      "satiety": 3,
+      "hydration": -2
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "salt",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.07,
+      0.16,
+      0.07
+    ],
+    "weight": 1,
+    "stack": 2,
+    "shape": "box",
+    "color": 15263984,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 20
+    },
+    "portions": 20,
+    "nutrition": {
+      "satiety": 0,
+      "hydration": -2
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "docks"
+      ]
+    }
+  },
+  {
+    "id": "cooking_oil",
+    "category": "food",
+    "tags": [
+      "food",
+      "perishable"
+    ],
+    "size": [
+      0.07,
+      0.26,
+      0.07
+    ],
+    "weight": 0.9,
+    "stack": 3,
+    "shape": "bottle",
+    "color": 15255600,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 9
+    },
+    "shelfLife": 540,
+    "portions": 9,
+    "nutrition": {
+      "satiety": 0,
+      "hydration": 0
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "coffee",
+    "category": "food",
+    "tags": [
+      "food",
+      "perishable"
+    ],
+    "size": [
+      0.08,
+      0.15,
+      0.06
+    ],
+    "weight": 0.5,
+    "stack": 4,
+    "shape": "bag",
+    "color": 5913124,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 20
+    },
+    "shelfLife": 365,
+    "portions": 20,
+    "nutrition": {
+      "satiety": 0,
+      "hydration": 0
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "school",
+        "police_station"
+      ]
+    }
+  },
+  {
+    "id": "water_bottle",
+    "category": "drink",
+    "tags": [
+      "drink"
+    ],
+    "size": [
+      0.07,
+      0.28,
+      0.07
+    ],
+    "weight": 0.52,
+    "stack": 4,
+    "shape": "bottle",
+    "color": 10146024,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "nutrition": {
+      "hydration": 25
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "gas_station",
+        "mall",
+        "car"
+      ]
+    }
+  },
+  {
+    "id": "galao_agua",
+    "category": "drink",
+    "size": [
+      0.173,
+      0.173,
+      0.173
+    ],
+    "weight": 5.2,
+    "stack": 4,
+    "shape": "bottle",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "doses",
+      "amount": 10
+    },
+    "nutrition": {
+      "hydration": 25
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "apartment",
+        "school",
+        "church"
+      ]
+    }
+  },
+  {
+    "id": "agua_suja",
+    "category": "drink",
+    "size": [
+      0.079,
+      0.079,
+      0.079
+    ],
+    "weight": 0.5,
+    "stack": 4,
+    "shape": "bottle",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "nutrition": {
+      "hydration": 25
+    },
+    "finds": {
+      "places": [
+        "road"
+      ]
+    }
+  },
+  {
+    "id": "soda_can",
+    "category": "drink",
+    "tags": [
+      "drink",
+      "perishable"
+    ],
+    "size": [
+      0.066,
+      0.12,
+      0.066
+    ],
+    "weight": 0.35,
+    "stack": 6,
+    "shape": "can",
+    "color": 13119536,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 270,
+    "nutrition": {
+      "satiety": 4,
+      "hydration": 18
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "gas_station",
+        "mall",
+        "house",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "juice_box",
+    "category": "drink",
+    "tags": [
+      "drink",
+      "perishable"
+    ],
+    "size": [
+      0.07,
+      0.2,
+      0.07
+    ],
+    "weight": 0.2,
+    "stack": 4,
+    "shape": "box",
+    "color": 15239728,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 180,
+    "nutrition": {
+      "satiety": 3,
+      "hydration": 12
+    },
+    "finds": {
+      "places": [
+        "school",
+        "supermarket",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "milk_carton",
+    "category": "drink",
+    "tags": [
+      "drink",
+      "perishable"
+    ],
+    "size": [
+      0.07,
+      0.2,
+      0.07
+    ],
+    "weight": 1.05,
+    "stack": 4,
+    "shape": "box",
+    "color": 15790324,
+    "rarity": "common",
+    "durability": {
+      "kind": "doses",
+      "amount": 4
+    },
+    "shelfLife": 120,
+    "nutrition": {
+      "satiety": 8,
+      "hydration": 20
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "isotonico",
+    "category": "drink",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.08,
+      0.08,
+      0.08
+    ],
+    "weight": 0.52,
+    "stack": 4,
+    "shape": "bottle",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 270,
+    "nutrition": {
+      "hydration": 30
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "gas_station",
+        "mall"
+      ]
+    }
+  },
+  {
+    "id": "energetico",
+    "category": "drink",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.065,
+      0.065,
+      0.065
+    ],
+    "weight": 0.27,
+    "stack": 4,
+    "shape": "bottle",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 365,
+    "nutrition": {
+      "hydration": 10
+    },
+    "finds": {
+      "places": [
+        "gas_station",
+        "supermarket",
+        "mall"
+      ]
+    }
+  },
+  {
+    "id": "agua_coco",
+    "category": "drink",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.074,
+      0.074,
+      0.074
+    ],
+    "weight": 0.4,
+    "stack": 4,
+    "shape": "bottle",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 3,
+    "nutrition": {
+      "hydration": 22
+    },
+    "finds": {
+      "places": [
+        "road",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "cerveja",
+    "category": "drink",
+    "tags": [
+      "perishable"
+    ],
+    "size": [
+      0.07,
+      0.07,
+      0.07
+    ],
+    "weight": 0.35,
+    "stack": 4,
+    "shape": "bottle",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "shelfLife": 180,
+    "nutrition": {
+      "hydration": 8
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "gas_station"
+      ]
+    }
+  },
+  {
+    "id": "cachaca",
+    "category": "drink",
+    "size": [
+      0.1,
+      0.1,
+      0.1
+    ],
+    "weight": 1,
+    "stack": 4,
+    "shape": "bottle",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "doses",
+      "amount": 10
+    },
+    "nutrition": {
+      "hydration": -5
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "farm",
+        "lodge"
+      ]
+    }
+  },
+  {
+    "id": "vinho",
+    "category": "drink",
+    "size": [
+      0.091,
+      0.091,
+      0.091
+    ],
+    "weight": 0.75,
+    "stack": 4,
+    "shape": "bottle",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "doses",
+      "amount": 5
+    },
+    "nutrition": {
+      "hydration": 4
+    },
+    "finds": {
+      "places": [
+        "church"
+      ]
+    }
+  },
+  {
+    "id": "bandage",
+    "category": "medical",
+    "tags": [
+      "medical"
+    ],
+    "size": [
+      0.1,
+      0.03,
+      0.05
+    ],
+    "weight": 0.05,
+    "stack": 4,
+    "shape": "box",
+    "color": 15786184,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "finds": {
+      "places": [
+        "house",
+        "pharmacy",
+        "hospital",
+        "school",
+        "car"
+      ]
+    }
+  },
+  {
+    "id": "gaze",
+    "category": "medical",
+    "size": [
+      0.037,
+      0.037,
+      0.037
+    ],
+    "weight": 0.02,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "finds": {
+      "places": [
+        "pharmacy",
+        "hospital"
+      ]
+    }
+  },
+  {
+    "id": "curativo",
+    "category": "medical",
+    "size": [
+      0.042,
+      0.042,
+      0.042
+    ],
+    "weight": 0.03,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 10
+    },
+    "finds": {
+      "places": [
+        "house",
+        "pharmacy",
+        "school",
+        "mall"
+      ]
+    }
+  },
+  {
+    "id": "esparadrapo",
+    "category": "medical",
+    "size": [
+      0.046,
+      0.046,
+      0.046
+    ],
+    "weight": 0.04,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 8
+    },
+    "finds": {
+      "places": [
+        "pharmacy",
+        "hospital",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "alcohol_70",
+    "category": "medical",
+    "tags": [
+      "medical"
+    ],
+    "size": [
+      0.07,
+      0.2,
+      0.05
+    ],
+    "weight": 0.5,
+    "stack": 3,
+    "shape": "bottle",
+    "color": 15266040,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 10
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "pharmacy",
+        "hospital"
+      ]
+    }
+  },
+  {
+    "id": "pvpi",
+    "category": "medical",
+    "size": [
+      0.063,
+      0.063,
+      0.063
+    ],
+    "weight": 0.1,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 8
+    },
+    "finds": {
+      "places": [
+        "pharmacy",
+        "hospital"
+      ]
+    }
+  },
+  {
+    "id": "soro",
+    "category": "medical",
+    "size": [
+      0.111,
+      0.111,
+      0.111
+    ],
+    "weight": 0.55,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "finds": {
+      "places": [
+        "hospital"
+      ]
+    }
+  },
+  {
+    "id": "painkillers",
+    "category": "medical",
+    "tags": [
+      "medical"
+    ],
+    "size": [
+      0.06,
+      0.02,
+      0.04
+    ],
+    "weight": 0.03,
+    "stack": 4,
+    "shape": "box",
+    "color": 15263976,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 10
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "pharmacy",
+        "hospital",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "ibuprofeno",
+    "category": "medical",
+    "size": [
+      0.042,
+      0.042,
+      0.042
+    ],
+    "weight": 0.03,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 10
+    },
+    "finds": {
+      "places": [
+        "house",
+        "pharmacy"
+      ]
+    }
+  },
+  {
+    "id": "opioide",
+    "category": "medical",
+    "size": [
+      0.042,
+      0.042,
+      0.042
+    ],
+    "weight": 0.03,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "uses",
+      "amount": 6
+    },
+    "finds": {
+      "places": [
+        "pharmacy",
+        "hospital"
+      ]
+    }
+  },
+  {
+    "id": "calmante",
+    "category": "medical",
+    "size": [
+      0.037,
+      0.037,
+      0.037
+    ],
+    "weight": 0.02,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "uses",
+      "amount": 10
+    },
+    "finds": {
+      "places": [
+        "pharmacy",
+        "hospital",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "amoxicilina",
+    "category": "medical",
+    "size": [
+      0.05,
+      0.05,
+      0.05
+    ],
+    "weight": 0.05,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 9
+    },
+    "finds": {
+      "places": [
+        "pharmacy",
+        "hospital"
+      ]
+    }
+  },
+  {
+    "id": "ceftriaxona",
+    "category": "medical",
+    "size": [
+      0.063,
+      0.063,
+      0.063
+    ],
+    "weight": 0.1,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "uses",
+      "amount": 3
+    },
+    "finds": {
+      "places": [
+        "hospital",
+        "military_base"
+      ]
+    }
+  },
+  {
+    "id": "seringa",
+    "category": "medical",
+    "size": [
+      0.029,
+      0.029,
+      0.029
+    ],
+    "weight": 0.01,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "finds": {
+      "places": [
+        "pharmacy",
+        "hospital"
+      ]
+    }
+  },
+  {
+    "id": "kit_sutura",
+    "category": "medical",
+    "size": [
+      0.072,
+      0.072,
+      0.072
+    ],
+    "weight": 0.15,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "uses",
+      "amount": 4
+    },
+    "finds": {
+      "places": [
+        "hospital",
+        "military_base"
+      ]
+    }
+  },
+  {
+    "id": "tala",
+    "category": "medical",
+    "size": [
+      0.091,
+      0.091,
+      0.091
+    ],
+    "weight": 0.3,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "finds": {
+      "places": [
+        "hospital",
+        "school",
+        "police_station"
+      ]
+    }
+  },
+  {
+    "id": "first_aid_kit",
+    "category": "medical",
+    "tags": [
+      "medical"
+    ],
+    "size": [
+      0.25,
+      0.09,
+      0.17
+    ],
+    "weight": 0.9,
+    "stack": 1,
+    "shape": "box",
+    "color": 13119536,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "container"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "school",
+        "car",
+        "police_station",
+        "warehouse",
+        "gas_station"
+      ]
+    }
+  },
+  {
+    "id": "luva_proc",
+    "category": "medical",
+    "size": [
+      0.037,
+      0.037,
+      0.037
+    ],
+    "weight": 0.02,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 1,
+      "per": "par"
+    },
+    "finds": {
+      "places": [
+        "pharmacy",
+        "hospital"
+      ]
+    }
+  },
+  {
+    "id": "n95",
+    "category": "medical",
+    "size": [
+      0.037,
+      0.037,
+      0.037
+    ],
+    "weight": 0.02,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "days",
+      "amount": 2,
+      "per": "dias de uso"
+    },
+    "finds": {
+      "places": [
+        "pharmacy",
+        "hospital",
+        "warehouse",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "carvao_ativado",
+    "category": "medical",
+    "size": [
+      0.05,
+      0.05,
+      0.05
+    ],
+    "weight": 0.05,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 4
+    },
+    "finds": {
+      "places": [
+        "pharmacy",
+        "hospital"
+      ]
+    }
+  },
+  {
+    "id": "sais_reidrat",
+    "category": "medical",
+    "size": [
+      0.042,
+      0.042,
+      0.042
+    ],
+    "weight": 0.03,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 5
+    },
+    "finds": {
+      "places": [
+        "pharmacy",
+        "hospital",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "antialergico",
+    "category": "medical",
+    "size": [
+      0.037,
+      0.037,
+      0.037
+    ],
+    "weight": 0.02,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 10
+    },
+    "finds": {
+      "places": [
+        "pharmacy",
+        "lodge"
+      ]
+    }
+  },
+  {
+    "id": "antiofidico",
+    "category": "medical",
+    "size": [
+      0.079,
+      0.079,
+      0.079
+    ],
+    "weight": 0.2,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "very_rare",
+    "durability": {
+      "kind": "uses",
+      "amount": 1
+    },
+    "finds": {
+      "places": [
+        "hospital",
+        "lodge"
+      ]
+    }
+  },
+  {
+    "id": "thermometer",
+    "category": "medical",
+    "tags": [
+      "medical"
+    ],
+    "size": [
+      0.12,
+      0.02,
+      0.03
+    ],
+    "weight": 0.02,
+    "stack": 1,
+    "shape": "tool",
+    "color": 13685976,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "pharmacy",
+        "hospital"
+      ]
+    }
+  },
+  {
+    "id": "remedio_continuo",
+    "category": "medical",
+    "size": [
+      0.05,
+      0.05,
+      0.05
+    ],
+    "weight": 0.05,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "days",
+      "amount": 30
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "pharmacy"
+      ]
+    }
+  },
+  {
+    "id": "vitamina",
+    "category": "medical",
+    "size": [
+      0.05,
+      0.05,
+      0.05
+    ],
+    "weight": 0.05,
+    "stack": 6,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 30
+    },
+    "finds": {
+      "places": [
+        "house",
+        "pharmacy"
+      ]
+    }
+  },
+  {
+    "id": "hammer",
+    "category": "tools",
+    "tags": [
+      "garage"
+    ],
+    "size": [
+      0.3,
+      0.03,
+      0.1
+    ],
+    "weight": 0.6,
+    "stack": 1,
+    "shape": "tool",
+    "color": 6965802,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 500
+    },
+    "finds": {
+      "places": [
+        "house",
+        "warehouse",
+        "workshop",
+        "farm",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "screwdriver",
+    "category": "tools",
+    "tags": [
+      "garage"
+    ],
+    "size": [
+      0.22,
+      0.04,
+      0.04
+    ],
+    "weight": 0.15,
+    "stack": 1,
+    "shape": "tool",
+    "color": 13119536,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 300
+    },
+    "finds": {
+      "places": [
+        "house",
+        "warehouse",
+        "workshop"
+      ]
+    }
+  },
+  {
+    "id": "pe_cabra",
+    "category": "tools",
+    "size": [
+      0.123,
+      0.123,
+      0.123
+    ],
+    "weight": 1.5,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 400
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "workshop",
+        "police_station",
+        "train",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "serrote",
+    "category": "tools",
+    "size": [
+      0.085,
+      0.085,
+      0.085
+    ],
+    "weight": 0.5,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 200
+    },
+    "finds": {
+      "places": [
+        "house",
+        "warehouse",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "serra_arco",
+    "category": "tools",
+    "size": [
+      0.079,
+      0.079,
+      0.079
+    ],
+    "weight": 0.4,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "cuts",
+      "amount": 60
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "workshop"
+      ]
+    }
+  },
+  {
+    "id": "corta_vergalhao",
+    "category": "tools",
+    "size": [
+      0.164,
+      0.164,
+      0.164
+    ],
+    "weight": 3.5,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "cuts",
+      "amount": 80
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "police_station",
+        "prison",
+        "mine"
+      ]
+    }
+  },
+  {
+    "id": "alicate",
+    "category": "tools",
+    "size": [
+      0.072,
+      0.072,
+      0.072
+    ],
+    "weight": 0.3,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 300
+    },
+    "finds": {
+      "places": [
+        "house",
+        "warehouse",
+        "workshop"
+      ]
+    }
+  },
+  {
+    "id": "chave_inglesa",
+    "category": "tools",
+    "size": [
+      0.085,
+      0.085,
+      0.085
+    ],
+    "weight": 0.5,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 500
+    },
+    "finds": {
+      "places": [
+        "workshop",
+        "warehouse",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "kit_mecanico",
+    "category": "tools",
+    "size": [
+      0.196,
+      0.196,
+      0.196
+    ],
+    "weight": 6,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "uses",
+      "amount": 1000
+    },
+    "finds": {
+      "places": [
+        "workshop",
+        "warehouse"
+      ]
+    }
+  },
+  {
+    "id": "macaco",
+    "category": "tools",
+    "size": [
+      0.171,
+      0.171,
+      0.171
+    ],
+    "weight": 4,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "car",
+        "workshop"
+      ]
+    }
+  },
+  {
+    "id": "macarico",
+    "category": "tools",
+    "size": [
+      0.155,
+      0.155,
+      0.155
+    ],
+    "weight": 3,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "seconds",
+      "amount": 1200,
+      "per": "min por cartucho"
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "workshop"
+      ]
+    }
+  },
+  {
+    "id": "solda",
+    "category": "tools",
+    "size": [
+      0.196,
+      0.196,
+      0.196
+    ],
+    "weight": 6,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "uses",
+      "amount": 1000
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "workshop"
+      ]
+    }
+  },
+  {
+    "id": "parafusadeira",
+    "category": "tools",
+    "size": [
+      0.123,
+      0.123,
+      0.123
+    ],
+    "weight": 1.5,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "charges",
+      "amount": 80,
+      "per": "parafusos por carga"
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "house",
+        "mall"
+      ]
+    }
+  },
+  {
+    "id": "pa",
+    "category": "tools",
+    "size": [
+      0.136,
+      0.136,
+      0.136
+    ],
+    "weight": 2,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 400
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "warehouse",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "enxada",
+    "category": "tools",
+    "size": [
+      0.131,
+      0.131,
+      0.131
+    ],
+    "weight": 1.8,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 400
+    },
+    "finds": {
+      "places": [
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "canivete",
+    "category": "tools",
+    "size": [
+      0.057,
+      0.057,
+      0.057
+    ],
+    "weight": 0.15,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 300
+    },
+    "finds": {
+      "places": [
+        "house",
+        "mall",
+        "gun_shop",
+        "lodge"
+      ]
+    }
+  },
+  {
+    "id": "abridor",
+    "category": "tools",
+    "size": [
+      0.04,
+      0.04,
+      0.04
+    ],
+    "weight": 0.05,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "scissors",
+    "category": "tools",
+    "tags": [
+      "kitchen"
+    ],
+    "size": [
+      0.18,
+      0.015,
+      0.07
+    ],
+    "weight": 0.1,
+    "stack": 1,
+    "shape": "tool",
+    "color": 12083242,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "school",
+        "pharmacy"
+      ]
+    }
+  },
+  {
+    "id": "duct_tape",
+    "category": "tools",
+    "tags": [
+      "garage"
+    ],
+    "size": [
+      0.1,
+      0.05,
+      0.1
+    ],
+    "weight": 0.2,
+    "stack": 2,
+    "shape": "roll",
+    "color": 9080466,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 10
+    },
+    "finds": {
+      "places": [
+        "house",
+        "warehouse",
+        "workshop",
+        "mall"
+      ]
+    }
+  },
+  {
+    "id": "pot",
+    "category": "tools",
+    "tags": [
+      "kitchen"
+    ],
+    "size": [
+      0.25,
+      0.15,
+      0.25
+    ],
+    "weight": 1,
+    "stack": 1,
+    "shape": "dish",
+    "color": 9080466,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "church",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "fogareiro",
+    "category": "tools",
+    "size": [
+      0.1,
+      0.1,
+      0.1
+    ],
+    "weight": 0.8,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "seconds",
+      "amount": 7200,
+      "per": "h por cartucho"
+    },
+    "finds": {
+      "places": [
+        "mall",
+        "lodge",
+        "gun_shop"
+      ]
+    }
+  },
+  {
+    "id": "kit_costura",
+    "category": "tools",
+    "size": [
+      0.04,
+      0.04,
+      0.04
+    ],
+    "weight": 0.05,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 20
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "church"
+      ]
+    }
+  },
+  {
+    "id": "kit_chaveiro",
+    "category": "tools",
+    "size": [
+      0.05,
+      0.05,
+      0.05
+    ],
+    "weight": 0.1,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "very_rare",
+    "durability": {
+      "kind": "uses",
+      "amount": 40
+    },
+    "finds": {
+      "places": [
+        "police_station",
+        "prison",
+        "warehouse"
+      ]
+    }
+  },
+  {
+    "id": "lighter",
+    "category": "tools",
+    "tags": [
+      "tool"
+    ],
+    "size": [
+      0.025,
+      0.08,
+      0.012
+    ],
+    "weight": 0.02,
+    "stack": 1,
+    "shape": "tool",
+    "color": 14170682,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 300,
+      "per": "acendimentos"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "gas_station",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "matches",
+    "category": "tools",
+    "tags": [
+      "tool"
+    ],
+    "size": [
+      0.05,
+      0.015,
+      0.035
+    ],
+    "weight": 0.02,
+    "stack": 4,
+    "shape": "box",
+    "color": 13119536,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 40,
+      "per": "acendimentos"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "church"
+      ]
+    }
+  },
+  {
+    "id": "pederneira",
+    "category": "tools",
+    "size": [
+      0.046,
+      0.046,
+      0.046
+    ],
+    "weight": 0.08,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "gun_shop",
+        "lodge",
+        "military_base"
+      ]
+    }
+  },
+  {
+    "id": "balde",
+    "category": "tools",
+    "size": [
+      0.085,
+      0.085,
+      0.085
+    ],
+    "weight": 0.5,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "farm",
+        "warehouse"
+      ]
+    }
+  },
+  {
+    "id": "binoculo",
+    "category": "tools",
+    "size": [
+      0.091,
+      0.091,
+      0.091
+    ],
+    "weight": 0.6,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "gun_shop",
+        "police_station",
+        "military_base",
+        "lodge"
+      ]
+    }
+  },
+  {
+    "id": "extintor",
+    "category": "tools",
+    "size": [
+      0.171,
+      0.171,
+      0.171
+    ],
+    "weight": 4,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "seconds",
+      "amount": 12,
+      "per": "s de jato"
+    },
+    "finds": {
+      "places": [
+        "apartment",
+        "school",
+        "mall",
+        "hospital",
+        "gas_station"
+      ]
+    }
+  },
+  {
+    "id": "amolador",
+    "category": "tools",
+    "size": [
+      0.072,
+      0.072,
+      0.072
+    ],
+    "weight": 0.3,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 50
+    },
+    "finds": {
+      "places": [
+        "house",
+        "farm",
+        "gun_shop"
+      ]
+    }
+  },
+  {
+    "id": "knife",
+    "category": "melee",
+    "tags": [
+      "kitchen"
+    ],
+    "size": [
+      0.25,
+      0.03,
+      0.04
+    ],
+    "weight": 0.2,
+    "stack": 1,
+    "shape": "tool",
+    "color": 11843772,
+    "rarity": "common",
+    "durability": {
+      "kind": "hits",
+      "amount": 60
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "faca_tatica",
+    "category": "melee",
+    "size": [
+      0.072,
+      0.072,
+      0.072
+    ],
+    "weight": 0.3,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "hits",
+      "amount": 200
+    },
+    "finds": {
+      "places": [
+        "gun_shop",
+        "military_base",
+        "police_station"
+      ]
+    }
+  },
+  {
+    "id": "facao",
+    "category": "melee",
+    "size": [
+      0.096,
+      0.096,
+      0.096
+    ],
+    "weight": 0.7,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "hits",
+      "amount": 150
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "house",
+        "warehouse"
+      ]
+    }
+  },
+  {
+    "id": "cutelo",
+    "category": "melee",
+    "size": [
+      0.091,
+      0.091,
+      0.091
+    ],
+    "weight": 0.6,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "hits",
+      "amount": 120
+    },
+    "finds": {
+      "places": [
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "machadinha",
+    "category": "melee",
+    "size": [
+      0.1,
+      0.1,
+      0.1
+    ],
+    "weight": 0.8,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "hits",
+      "amount": 180
+    },
+    "finds": {
+      "places": [
+        "gun_shop",
+        "lodge",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "machado",
+    "category": "melee",
+    "size": [
+      0.126,
+      0.126,
+      0.126
+    ],
+    "weight": 1.6,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "hits",
+      "amount": 250
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "lodge",
+        "warehouse"
+      ]
+    }
+  },
+  {
+    "id": "taco",
+    "category": "melee",
+    "size": [
+      0.108,
+      0.108,
+      0.108
+    ],
+    "weight": 1,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "hits",
+      "amount": 120
+    },
+    "finds": {
+      "places": [
+        "mall",
+        "house",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "taco_pregos",
+    "category": "melee",
+    "tags": [
+      "craft_only"
+    ],
+    "size": [
+      0.114,
+      0.114,
+      0.114
+    ],
+    "weight": 1.2,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "hits",
+      "amount": 90
+    }
+  },
+  {
+    "id": "cano",
+    "category": "melee",
+    "size": [
+      0.114,
+      0.114,
+      0.114
+    ],
+    "weight": 1.2,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "hits",
+      "amount": 300
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "workshop",
+        "train",
+        "prison"
+      ]
+    }
+  },
+  {
+    "id": "marreta",
+    "category": "melee",
+    "size": [
+      0.184,
+      0.184,
+      0.184
+    ],
+    "weight": 5,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "hits",
+      "amount": 300
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "mine",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "picareta",
+    "category": "melee",
+    "size": [
+      0.152,
+      0.152,
+      0.152
+    ],
+    "weight": 2.8,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "hits",
+      "amount": 300
+    },
+    "finds": {
+      "places": [
+        "mine"
+      ]
+    }
+  },
+  {
+    "id": "foice",
+    "category": "melee",
+    "size": [
+      0.114,
+      0.114,
+      0.114
+    ],
+    "weight": 1.2,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "hits",
+      "amount": 150
+    },
+    "finds": {
+      "places": [
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "tonfa",
+    "category": "melee",
+    "size": [
+      0.091,
+      0.091,
+      0.091
+    ],
+    "weight": 0.6,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "hits",
+      "amount": 500
+    },
+    "finds": {
+      "places": [
+        "police_station",
+        "prison"
+      ]
+    }
+  },
+  {
+    "id": "frigideira",
+    "category": "melee",
+    "size": [
+      0.114,
+      0.114,
+      0.114
+    ],
+    "weight": 1.2,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "hits",
+      "amount": 400
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "lanca",
+    "category": "melee",
+    "tags": [
+      "craft_only"
+    ],
+    "size": [
+      0.111,
+      0.111,
+      0.111
+    ],
+    "weight": 1.1,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "hits",
+      "amount": 80
+    }
+  },
+  {
+    "id": "motosserra",
+    "category": "melee",
+    "size": [
+      0.196,
+      0.196,
+      0.196
+    ],
+    "weight": 6,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "very_rare",
+    "durability": {
+      "kind": "seconds",
+      "amount": 1800,
+      "per": "min por litro"
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "warehouse"
+      ]
+    }
+  },
+  {
+    "id": "estilingue",
+    "category": "melee",
+    "size": [
+      0.057,
+      0.057,
+      0.057
+    ],
+    "weight": 0.15,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "shots",
+      "amount": 300
+    },
+    "finds": {
+      "places": [
+        "house",
+        "farm",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "arco",
+    "category": "melee",
+    "size": [
+      0.114,
+      0.114,
+      0.114
+    ],
+    "weight": 1.2,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "shots",
+      "amount": 400
+    },
+    "finds": {
+      "places": [
+        "gun_shop",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "besta",
+    "category": "melee",
+    "size": [
+      0.159,
+      0.159,
+      0.159
+    ],
+    "weight": 3.2,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "very_rare",
+    "durability": {
+      "kind": "shots",
+      "amount": 300
+    },
+    "finds": {
+      "places": [
+        "gun_shop"
+      ]
+    }
+  },
+  {
+    "id": "flecha",
+    "category": "melee",
+    "size": [
+      0.072,
+      0.072,
+      0.072
+    ],
+    "weight": 0.3,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "condition",
+      "per": "recuperáveis"
+    },
+    "finds": {
+      "places": [
+        "gun_shop",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "tabua",
+    "category": "materials",
+    "size": [
+      0.136,
+      0.136,
+      0.136
+    ],
+    "weight": 2,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "per": "vida 100 na janela"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "warehouse",
+        "farm",
+        "train"
+      ]
+    }
+  },
+  {
+    "id": "pregos",
+    "category": "materials",
+    "size": [
+      0.085,
+      0.085,
+      0.085
+    ],
+    "weight": 0.5,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 100
+    },
+    "finds": {
+      "places": [
+        "house",
+        "warehouse",
+        "workshop",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "parafusos",
+    "category": "materials",
+    "size": [
+      0.079,
+      0.079,
+      0.079
+    ],
+    "weight": 0.4,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 50
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "workshop",
+        "mall"
+      ]
+    }
+  },
+  {
+    "id": "chapa",
+    "category": "materials",
+    "size": [
+      0.196,
+      0.196,
+      0.196
+    ],
+    "weight": 6,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "condition",
+      "per": "vida 500"
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "workshop",
+        "train",
+        "docks"
+      ]
+    }
+  },
+  {
+    "id": "sucata",
+    "category": "materials",
+    "size": [
+      0.108,
+      0.108,
+      0.108
+    ],
+    "weight": 1,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "warehouse",
+        "workshop",
+        "car",
+        "road"
+      ]
+    }
+  },
+  {
+    "id": "arame",
+    "category": "materials",
+    "size": [
+      0.085,
+      0.085,
+      0.085
+    ],
+    "weight": 0.5,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "per": "10 m"
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "warehouse",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "arame_farpado",
+    "category": "materials",
+    "size": [
+      0.171,
+      0.171,
+      0.171
+    ],
+    "weight": 4,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "condition",
+      "per": "vida 150"
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "military_base"
+      ]
+    }
+  },
+  {
+    "id": "rope",
+    "category": "materials",
+    "tags": [
+      "garage"
+    ],
+    "size": [
+      0.15,
+      0.08,
+      0.15
+    ],
+    "weight": 1,
+    "stack": 1,
+    "shape": "roll",
+    "color": 13152384,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "farm",
+        "docks",
+        "lodge"
+      ]
+    }
+  },
+  {
+    "id": "lona",
+    "category": "materials",
+    "size": [
+      0.136,
+      0.136,
+      0.136
+    ],
+    "weight": 2,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "farm",
+        "road"
+      ]
+    }
+  },
+  {
+    "id": "saco_areia",
+    "category": "materials",
+    "size": [
+      0.063,
+      0.063,
+      0.063
+    ],
+    "weight": 0.2,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "per": "vida 400 cheio"
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "military_base",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "tijolo",
+    "category": "materials",
+    "size": [
+      0.315,
+      0.315,
+      0.315
+    ],
+    "weight": 25,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "per": "vida 300 por bloco"
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "cimento",
+    "category": "materials",
+    "size": [
+      0.315,
+      0.315,
+      0.315
+    ],
+    "weight": 25,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "condition",
+      "per": "rende 20 blocos"
+    },
+    "finds": {
+      "places": [
+        "warehouse"
+      ]
+    }
+  },
+  {
+    "id": "trapo",
+    "category": "materials",
+    "size": [
+      0.04,
+      0.04,
+      0.04
+    ],
+    "weight": 0.05,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "garrafa_vidro",
+    "category": "materials",
+    "size": [
+      0.072,
+      0.072,
+      0.072
+    ],
+    "weight": 0.3,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "church",
+        "road"
+      ]
+    }
+  },
+  {
+    "id": "garrafa_pet",
+    "category": "materials",
+    "size": [
+      0.04,
+      0.04,
+      0.04
+    ],
+    "weight": 0.05,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "road",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "empty_can",
+    "category": "materials",
+    "tags": [
+      "trash"
+    ],
+    "size": [
+      0.066,
+      0.12,
+      0.066
+    ],
+    "weight": 0.05,
+    "stack": 6,
+    "shape": "can",
+    "color": 10527912,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "road"
+      ]
+    }
+  },
+  {
+    "id": "cacos",
+    "category": "materials",
+    "size": [
+      0.063,
+      0.063,
+      0.063
+    ],
+    "weight": 0.2,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "cola",
+    "category": "materials",
+    "size": [
+      0.05,
+      0.05,
+      0.05
+    ],
+    "weight": 0.1,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 5
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "mall",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "componentes",
+    "category": "materials",
+    "size": [
+      0.05,
+      0.05,
+      0.05
+    ],
+    "weight": 0.1,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "finds": {
+      "places": [
+        "warehouse",
+        "dam",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "fio_cobre",
+    "category": "materials",
+    "size": [
+      0.072,
+      0.072,
+      0.072
+    ],
+    "weight": 0.3,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "warehouse",
+        "dam",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "lenha",
+    "category": "materials",
+    "size": [
+      0.123,
+      0.123,
+      0.123
+    ],
+    "weight": 1.5,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "seconds",
+      "amount": 3600,
+      "per": "h de fogo"
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "lodge"
+      ]
+    }
+  },
+  {
+    "id": "vergalhao",
+    "category": "materials",
+    "size": [
+      0.136,
+      0.136,
+      0.136
+    ],
+    "weight": 2,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "warehouse",
+        "road"
+      ]
+    }
+  },
+  {
+    "id": "lubrificante",
+    "category": "materials",
+    "size": [
+      0.068,
+      0.068,
+      0.068
+    ],
+    "weight": 0.25,
+    "stack": 8,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 15
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "workshop",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "tshirt",
+    "category": "clothing",
+    "tags": [
+      "clothing"
+    ],
+    "size": [
+      0.3,
+      0.04,
+      0.22
+    ],
+    "weight": 0.15,
+    "stack": 4,
+    "shape": "cloth",
+    "color": 3828400,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 40
+    },
+    "protection": {
+      "slots": [
+        "torso",
+        "arms"
+      ],
+      "bite": 0,
+      "scratch": 0.1,
+      "warmth": 0.1
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "mall",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "moletom",
+    "category": "clothing",
+    "size": [
+      0.159,
+      0.159,
+      0.159
+    ],
+    "weight": 0.6,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 60
+    },
+    "protection": {
+      "slots": [
+        "torso",
+        "arms"
+      ],
+      "bite": 0.1,
+      "scratch": 0.3,
+      "warmth": 0.4
+    },
+    "finds": {
+      "places": [
+        "house",
+        "mall",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "jacket",
+    "category": "clothing",
+    "tags": [
+      "clothing"
+    ],
+    "size": [
+      0.4,
+      0.1,
+      0.22
+    ],
+    "weight": 1,
+    "stack": 2,
+    "shape": "cloth",
+    "color": 4868690,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 90
+    },
+    "protection": {
+      "slots": [
+        "torso",
+        "arms"
+      ],
+      "bite": 0.25,
+      "scratch": 0.5,
+      "warmth": 0.3
+    },
+    "finds": {
+      "places": [
+        "house",
+        "mall"
+      ]
+    }
+  },
+  {
+    "id": "jaqueta_couro",
+    "category": "clothing",
+    "size": [
+      0.229,
+      0.229,
+      0.229
+    ],
+    "weight": 1.8,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "condition",
+      "amount": 150
+    },
+    "protection": {
+      "slots": [
+        "torso",
+        "arms"
+      ],
+      "bite": 0.45,
+      "scratch": 0.75,
+      "warmth": 0.6
+    },
+    "finds": {
+      "places": [
+        "house",
+        "mall",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "jeans",
+    "category": "clothing",
+    "tags": [
+      "clothing"
+    ],
+    "size": [
+      0.35,
+      0.06,
+      0.22
+    ],
+    "weight": 0.8,
+    "stack": 3,
+    "shape": "cloth",
+    "color": 2771578,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 90
+    },
+    "protection": {
+      "slots": [
+        "legs"
+      ],
+      "bite": 0.2,
+      "scratch": 0.45,
+      "warmth": 0.2
+    },
+    "finds": {
+      "places": [
+        "house",
+        "mall",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "calca_couro",
+    "category": "clothing",
+    "size": [
+      0.22,
+      0.22,
+      0.22
+    ],
+    "weight": 1.6,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "condition",
+      "amount": 150
+    },
+    "protection": {
+      "slots": [
+        "legs"
+      ],
+      "bite": 0.4,
+      "scratch": 0.7,
+      "warmth": 0.5
+    },
+    "finds": {
+      "places": [
+        "mall",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "farda_eb",
+    "category": "clothing",
+    "size": [
+      0.215,
+      0.215,
+      0.215
+    ],
+    "weight": 1.5,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 120
+    },
+    "protection": {
+      "slots": [
+        "torso",
+        "arms",
+        "legs"
+      ],
+      "bite": 0.25,
+      "scratch": 0.5,
+      "warmth": 0.3
+    },
+    "finds": {
+      "places": [
+        "military_base",
+        "zombie_corpse",
+        "gun_shop"
+      ]
+    }
+  },
+  {
+    "id": "macacao",
+    "category": "clothing",
+    "size": [
+      0.2,
+      0.2,
+      0.2
+    ],
+    "weight": 1.2,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 110
+    },
+    "protection": {
+      "slots": [
+        "torso",
+        "arms",
+        "legs"
+      ],
+      "bite": 0.15,
+      "scratch": 0.4,
+      "warmth": 0.3
+    },
+    "finds": {
+      "places": [
+        "workshop",
+        "warehouse"
+      ]
+    }
+  },
+  {
+    "id": "bombeiro",
+    "category": "clothing",
+    "size": [
+      0.299,
+      0.299,
+      0.299
+    ],
+    "weight": 4,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "condition",
+      "amount": 200
+    },
+    "protection": {
+      "slots": [
+        "torso",
+        "arms",
+        "legs"
+      ],
+      "bite": 0.55,
+      "scratch": 0.8,
+      "warmth": 0.8
+    },
+    "finds": {
+      "places": [
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "apicultor",
+    "category": "clothing",
+    "size": [
+      0.211,
+      0.211,
+      0.211
+    ],
+    "weight": 1.4,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "very_rare",
+    "durability": {
+      "kind": "condition",
+      "amount": 70
+    },
+    "protection": {
+      "slots": [
+        "head",
+        "torso",
+        "arms",
+        "hands",
+        "legs",
+        "feet"
+      ],
+      "bite": 0.15,
+      "scratch": 0.6,
+      "warmth": 0.4
+    },
+    "finds": {
+      "places": [
+        "lodge",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "capa_chuva",
+    "category": "clothing",
+    "size": [
+      0.139,
+      0.139,
+      0.139
+    ],
+    "weight": 0.4,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 50
+    },
+    "protection": {
+      "slots": [
+        "torso",
+        "arms",
+        "legs"
+      ],
+      "bite": 0,
+      "scratch": 0.05,
+      "warmth": 0.1
+    },
+    "finds": {
+      "places": [
+        "house",
+        "gas_station",
+        "docks"
+      ]
+    }
+  },
+  {
+    "id": "casaco_frio",
+    "category": "clothing",
+    "size": [
+      0.205,
+      0.205,
+      0.205
+    ],
+    "weight": 1.3,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "condition",
+      "amount": 80
+    },
+    "protection": {
+      "slots": [
+        "torso",
+        "arms"
+      ],
+      "bite": 0.2,
+      "scratch": 0.4,
+      "warmth": 0.9
+    },
+    "finds": {
+      "places": [
+        "lodge",
+        "mall"
+      ]
+    }
+  },
+  {
+    "id": "capacete_moto",
+    "category": "clothing",
+    "size": [
+      0.211,
+      0.211,
+      0.211
+    ],
+    "weight": 1.4,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "condition",
+      "amount": 180
+    },
+    "protection": {
+      "slots": [
+        "head"
+      ],
+      "bite": 0.9,
+      "scratch": 0.95,
+      "warmth": 0.2
+    },
+    "finds": {
+      "places": [
+        "house",
+        "car",
+        "zombie_corpse",
+        "road"
+      ]
+    }
+  },
+  {
+    "id": "capacete_obra",
+    "category": "clothing",
+    "size": [
+      0.139,
+      0.139,
+      0.139
+    ],
+    "weight": 0.4,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 120
+    },
+    "protection": {
+      "slots": [
+        "head"
+      ],
+      "bite": 0,
+      "scratch": 0.2,
+      "warmth": 0.1
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "mine"
+      ]
+    }
+  },
+  {
+    "id": "oculos",
+    "category": "clothing",
+    "size": [
+      0.069,
+      0.069,
+      0.069
+    ],
+    "weight": 0.05,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 80
+    },
+    "protection": {
+      "slots": [
+        "eyes"
+      ],
+      "bite": 0,
+      "scratch": 0,
+      "warmth": 0
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "school",
+        "workshop"
+      ]
+    }
+  },
+  {
+    "id": "luva_couro",
+    "category": "clothing",
+    "size": [
+      0.11,
+      0.11,
+      0.11
+    ],
+    "weight": 0.2,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 80
+    },
+    "protection": {
+      "slots": [
+        "hands"
+      ],
+      "bite": 0.3,
+      "scratch": 0.6,
+      "warmth": 0.1
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "farm",
+        "workshop"
+      ]
+    }
+  },
+  {
+    "id": "coturno",
+    "category": "clothing",
+    "size": [
+      0.22,
+      0.22,
+      0.22
+    ],
+    "weight": 1.6,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "condition",
+      "amount": 200
+    },
+    "protection": {
+      "slots": [
+        "feet"
+      ],
+      "bite": 0.6,
+      "scratch": 0.8,
+      "warmth": 0.2
+    },
+    "finds": {
+      "places": [
+        "military_base",
+        "police_station",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "bota_borracha",
+    "category": "clothing",
+    "size": [
+      0.2,
+      0.2,
+      0.2
+    ],
+    "weight": 1.2,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 120
+    },
+    "protection": {
+      "slots": [
+        "feet"
+      ],
+      "bite": 0.35,
+      "scratch": 0.6,
+      "warmth": 0.1
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "docks"
+      ]
+    }
+  },
+  {
+    "id": "sneakers",
+    "category": "clothing",
+    "tags": [
+      "clothing"
+    ],
+    "size": [
+      0.3,
+      0.12,
+      0.12
+    ],
+    "weight": 0.7,
+    "stack": 1,
+    "shape": "shoe",
+    "color": 15263976,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 80
+    },
+    "protection": {
+      "slots": [
+        "feet"
+      ],
+      "bite": 0.05,
+      "scratch": 0.2,
+      "warmth": 0.1
+    },
+    "finds": {
+      "places": [
+        "house",
+        "mall"
+      ]
+    }
+  },
+  {
+    "id": "chinelo",
+    "category": "clothing",
+    "size": [
+      0.11,
+      0.11,
+      0.11
+    ],
+    "weight": 0.2,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 30
+    },
+    "protection": {
+      "slots": [
+        "feet"
+      ],
+      "bite": 0,
+      "scratch": 0,
+      "warmth": 0
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "braco_revista",
+    "category": "clothing",
+    "tags": [
+      "craft_only"
+    ],
+    "size": [
+      0.139,
+      0.139,
+      0.139
+    ],
+    "weight": 0.4,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "condition",
+      "amount": 40
+    },
+    "protection": {
+      "slots": [
+        "arms"
+      ],
+      "bite": 0.35,
+      "scratch": 0.5,
+      "warmth": 0
+    }
+  },
+  {
+    "id": "braco_chapa",
+    "category": "clothing",
+    "tags": [
+      "craft_only"
+    ],
+    "size": [
+      0.215,
+      0.215,
+      0.215
+    ],
+    "weight": 1.5,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "condition",
+      "amount": 150
+    },
+    "protection": {
+      "slots": [
+        "arms"
+      ],
+      "bite": 0.7,
+      "scratch": 0.9,
+      "warmth": 0
+    }
+  },
+  {
+    "id": "colete",
+    "category": "clothing",
+    "size": [
+      0.271,
+      0.271,
+      0.271
+    ],
+    "weight": 3,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "condition",
+      "per": "ver Arsenal"
+    },
+    "protection": {
+      "slots": [
+        "torso"
+      ],
+      "bite": 0.6,
+      "scratch": 0.85,
+      "warmth": 0.3
+    },
+    "finds": {
+      "places": [
+        "police_station",
+        "military_base",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "sacola",
+    "category": "bags",
+    "size": [
+      0.058,
+      0.058,
+      0.058
+    ],
+    "weight": 0.02,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "per": "10% de rasgar correndo cheia"
+    },
+    "carry": {
+      "capacityKg": 4,
+      "weightReduction": 0,
+      "quickSlots": 0
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "saco_lixo",
+    "category": "bags",
+    "size": [
+      0.079,
+      0.079,
+      0.079
+    ],
+    "weight": 0.05,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "per": "rasga em cacos"
+    },
+    "carry": {
+      "capacityKg": 8,
+      "weightReduction": 0,
+      "quickSlots": 0
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "pochete",
+    "category": "bags",
+    "size": [
+      0.114,
+      0.114,
+      0.114
+    ],
+    "weight": 0.15,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 200
+    },
+    "carry": {
+      "capacityKg": 1.5,
+      "weightReduction": 0,
+      "quickSlots": 3
+    },
+    "finds": {
+      "places": [
+        "mall",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "bolsa",
+    "category": "bags",
+    "size": [
+      0.144,
+      0.144,
+      0.144
+    ],
+    "weight": 0.3,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 150
+    },
+    "carry": {
+      "capacityKg": 4,
+      "weightReduction": 0.1,
+      "quickSlots": 2
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "mall"
+      ]
+    }
+  },
+  {
+    "id": "backpack",
+    "category": "bags",
+    "tags": [
+      "clothing"
+    ],
+    "size": [
+      0.3,
+      0.3,
+      0.2
+    ],
+    "weight": 0.5,
+    "stack": 1,
+    "shape": "bag",
+    "color": 3820090,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 200
+    },
+    "carry": {
+      "capacityKg": 10,
+      "weightReduction": 0.15,
+      "quickSlots": 0
+    },
+    "finds": {
+      "places": [
+        "school",
+        "house",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "bag_entregador",
+    "category": "bags",
+    "size": [
+      0.229,
+      0.229,
+      0.229
+    ],
+    "weight": 1.2,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "condition",
+      "amount": 250
+    },
+    "carry": {
+      "capacityKg": 14,
+      "weightReduction": 0.2,
+      "quickSlots": 0
+    },
+    "finds": {
+      "places": [
+        "zombie_corpse",
+        "road",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "mochila_trilha",
+    "category": "bags",
+    "size": [
+      0.235,
+      0.235,
+      0.235
+    ],
+    "weight": 1.3,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "condition",
+      "amount": 300
+    },
+    "carry": {
+      "capacityKg": 18,
+      "weightReduction": 0.3,
+      "quickSlots": 1
+    },
+    "finds": {
+      "places": [
+        "mall",
+        "lodge",
+        "gun_shop"
+      ]
+    }
+  },
+  {
+    "id": "mochila_militar",
+    "category": "bags",
+    "size": [
+      0.262,
+      0.262,
+      0.262
+    ],
+    "weight": 1.8,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "condition",
+      "amount": 400
+    },
+    "carry": {
+      "capacityKg": 24,
+      "weightReduction": 0.35,
+      "quickSlots": 4
+    },
+    "finds": {
+      "places": [
+        "military_base",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "cargueira",
+    "category": "bags",
+    "size": [
+      0.28,
+      0.28,
+      0.28
+    ],
+    "weight": 2.2,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "very_rare",
+    "durability": {
+      "kind": "condition",
+      "amount": 350
+    },
+    "carry": {
+      "capacityKg": 28,
+      "weightReduction": 0.4,
+      "quickSlots": 1
+    },
+    "finds": {
+      "places": [
+        "mall",
+        "lodge"
+      ]
+    }
+  },
+  {
+    "id": "mala",
+    "category": "bags",
+    "size": [
+      0.311,
+      0.311,
+      0.311
+    ],
+    "weight": 3,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 150
+    },
+    "carry": {
+      "capacityKg": 25,
+      "weightReduction": 0.5,
+      "quickSlots": 0
+    },
+    "finds": {
+      "places": [
+        "apartment",
+        "house",
+        "train",
+        "road"
+      ]
+    }
+  },
+  {
+    "id": "colete_tatico",
+    "category": "bags",
+    "size": [
+      0.229,
+      0.229,
+      0.229
+    ],
+    "weight": 1.2,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "condition",
+      "amount": 300
+    },
+    "carry": {
+      "capacityKg": 3,
+      "weightReduction": 0,
+      "quickSlots": 6
+    },
+    "finds": {
+      "places": [
+        "police_station",
+        "military_base"
+      ]
+    }
+  },
+  {
+    "id": "cinto_ferramentas",
+    "category": "bags",
+    "size": [
+      0.159,
+      0.159,
+      0.159
+    ],
+    "weight": 0.4,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "amount": 200
+    },
+    "carry": {
+      "capacityKg": 4,
+      "weightReduction": 0.2,
+      "quickSlots": 4
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "workshop"
+      ]
+    }
+  },
+  {
+    "id": "caixa_termica",
+    "category": "bags",
+    "size": [
+      0.215,
+      0.215,
+      0.215
+    ],
+    "weight": 1,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "carry": {
+      "capacityKg": 10,
+      "weightReduction": 0,
+      "quickSlots": 0
+    },
+    "finds": {
+      "places": [
+        "house",
+        "docks",
+        "gas_station"
+      ]
+    }
+  },
+  {
+    "id": "carrinho_merc",
+    "category": "bags",
+    "size": [
+      0.493,
+      0.493,
+      0.493
+    ],
+    "weight": 12,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "carry": {
+      "capacityKg": 40,
+      "weightReduction": 1,
+      "quickSlots": 0,
+      "wheels": true
+    },
+    "finds": {
+      "places": [
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "carrinho_mao",
+    "category": "bags",
+    "size": [
+      0.531,
+      0.531,
+      0.531
+    ],
+    "weight": 15,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "carry": {
+      "capacityKg": 60,
+      "weightReduction": 1,
+      "quickSlots": 0,
+      "wheels": true
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "warehouse"
+      ]
+    }
+  },
+  {
+    "id": "flashlight",
+    "category": "electronics",
+    "tags": [
+      "tool"
+    ],
+    "size": [
+      0.04,
+      0.04,
+      0.16
+    ],
+    "weight": 0.2,
+    "stack": 1,
+    "shape": "tool",
+    "color": 2763310,
+    "rarity": "common",
+    "durability": {
+      "kind": "seconds",
+      "amount": 28800,
+      "per": "h"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "mall",
+        "car",
+        "police_station",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "lanterna_cabeca",
+    "category": "electronics",
+    "size": [
+      0.058,
+      0.058,
+      0.058
+    ],
+    "weight": 0.1,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "seconds",
+      "amount": 43200,
+      "per": "h"
+    },
+    "finds": {
+      "places": [
+        "mall",
+        "lodge",
+        "mine",
+        "gun_shop"
+      ]
+    }
+  },
+  {
+    "id": "batteries",
+    "category": "electronics",
+    "tags": [
+      "tool"
+    ],
+    "size": [
+      0.06,
+      0.02,
+      0.05
+    ],
+    "weight": 0.05,
+    "stack": 4,
+    "shape": "box",
+    "color": 13148192,
+    "rarity": "common",
+    "durability": {
+      "kind": "seconds",
+      "amount": 28800,
+      "per": "h de lanterna"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "gas_station",
+        "mall"
+      ]
+    },
+    "charge": {
+      "lossPerMonth": 0.1
+    }
+  },
+  {
+    "id": "bateria_9v",
+    "category": "electronics",
+    "size": [
+      0.046,
+      0.046,
+      0.046
+    ],
+    "weight": 0.05,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "school"
+      ]
+    },
+    "charge": {
+      "lossPerMonth": 0.1
+    }
+  },
+  {
+    "id": "power_bank",
+    "category": "electronics",
+    "size": [
+      0.084,
+      0.084,
+      0.084
+    ],
+    "weight": 0.3,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "charges",
+      "amount": 3,
+      "per": "recargas"
+    },
+    "finds": {
+      "places": [
+        "apartment",
+        "mall",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "painel_solar",
+    "category": "electronics",
+    "size": [
+      0.144,
+      0.144,
+      0.144
+    ],
+    "weight": 1.5,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "mall",
+        "lodge",
+        "gun_shop"
+      ]
+    }
+  },
+  {
+    "id": "radio_portatil",
+    "category": "electronics",
+    "size": [
+      0.1,
+      0.1,
+      0.1
+    ],
+    "weight": 0.5,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "seconds",
+      "amount": 72000,
+      "per": "h"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "mall",
+        "church"
+      ]
+    }
+  },
+  {
+    "id": "walkie",
+    "category": "electronics",
+    "size": [
+      0.106,
+      0.106,
+      0.106
+    ],
+    "weight": 0.6,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "seconds",
+      "amount": 43200,
+      "per": "h"
+    },
+    "finds": {
+      "places": [
+        "police_station",
+        "mall",
+        "warehouse",
+        "military_base"
+      ]
+    }
+  },
+  {
+    "id": "radio_px",
+    "category": "electronics",
+    "size": [
+      0.182,
+      0.182,
+      0.182
+    ],
+    "weight": 3,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "condition",
+      "per": "bateria 12 V"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "dam",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "radio_militar",
+    "category": "electronics",
+    "size": [
+      0.229,
+      0.229,
+      0.229
+    ],
+    "weight": 6,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "legendary",
+    "durability": {
+      "kind": "condition",
+      "per": "bateria própria"
+    },
+    "finds": {
+      "places": [
+        "military_base"
+      ]
+    }
+  },
+  {
+    "id": "gerador",
+    "category": "electronics",
+    "size": [
+      0.368,
+      0.368,
+      0.368
+    ],
+    "weight": 25,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "seconds",
+      "amount": 14400,
+      "per": "h por litro"
+    },
+    "finds": {
+      "places": [
+        "warehouse",
+        "hospital",
+        "farm",
+        "workshop"
+      ]
+    }
+  },
+  {
+    "id": "lampiao_led",
+    "category": "electronics",
+    "size": [
+      0.093,
+      0.093,
+      0.093
+    ],
+    "weight": 0.4,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "seconds",
+      "amount": 108000,
+      "per": "h"
+    },
+    "finds": {
+      "places": [
+        "mall",
+        "lodge",
+        "gun_shop"
+      ]
+    }
+  },
+  {
+    "id": "celular",
+    "category": "electronics",
+    "size": [
+      0.074,
+      0.074,
+      0.074
+    ],
+    "weight": 0.2,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "days",
+      "amount": 2,
+      "per": "dias de bateria"
+    },
+    "finds": {
+      "places": [
+        "zombie_corpse",
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "laptop",
+    "category": "electronics",
+    "size": [
+      0.159,
+      0.159,
+      0.159
+    ],
+    "weight": 2,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "seconds",
+      "amount": 14400,
+      "per": "h"
+    },
+    "finds": {
+      "places": [
+        "apartment",
+        "school",
+        "hospital",
+        "police_station"
+      ]
+    }
+  },
+  {
+    "id": "despertador",
+    "category": "electronics",
+    "size": [
+      0.084,
+      0.084,
+      0.084
+    ],
+    "weight": 0.3,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "controle_alarme",
+    "category": "electronics",
+    "size": [
+      0.039,
+      0.039,
+      0.039
+    ],
+    "weight": 0.03,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "per": "pilha"
+    },
+    "finds": {
+      "places": [
+        "zombie_corpse",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "eletrificador",
+    "category": "electronics",
+    "size": [
+      0.182,
+      0.182,
+      0.182
+    ],
+    "weight": 3,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "condition",
+      "per": "bateria 12 V"
+    },
+    "finds": {
+      "places": [
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "extensao",
+    "category": "electronics",
+    "size": [
+      0.144,
+      0.144,
+      0.144
+    ],
+    "weight": 1.5,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "warehouse"
+      ]
+    }
+  },
+  {
+    "id": "candles",
+    "category": "electronics",
+    "tags": [
+      "tool"
+    ],
+    "size": [
+      0.06,
+      0.12,
+      0.06
+    ],
+    "weight": 0.05,
+    "stack": 4,
+    "shape": "tool",
+    "color": 15788232,
+    "rarity": "common",
+    "durability": {
+      "kind": "seconds",
+      "amount": 14400,
+      "per": "h"
+    },
+    "finds": {
+      "places": [
+        "church",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "nvg",
+    "category": "electronics",
+    "size": [
+      0.106,
+      0.106,
+      0.106
+    ],
+    "weight": 0.6,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "very_rare",
+    "durability": {
+      "kind": "condition",
+      "per": "ver Arsenal"
+    },
+    "finds": {
+      "places": [
+        "military_base"
+      ]
+    }
+  },
+  {
+    "id": "galao",
+    "category": "fuel",
+    "size": [
+      0.114,
+      0.114,
+      0.114
+    ],
+    "weight": 1.2,
+    "stack": 1,
+    "shape": "jar",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "gas_station",
+        "workshop",
+        "farm",
+        "car"
+      ]
+    }
+  },
+  {
+    "id": "gasolina",
+    "category": "fuel",
+    "size": [
+      0.098,
+      0.098,
+      0.098
+    ],
+    "weight": 0.75,
+    "stack": 1,
+    "shape": "jar",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "days",
+      "amount": 180,
+      "per": "meses"
+    },
+    "finds": {
+      "places": [
+        "gas_station",
+        "car",
+        "warehouse"
+      ]
+    },
+    "agingFault": {
+      "afterDays": 180,
+      "chance": 0.1
+    }
+  },
+  {
+    "id": "diesel",
+    "category": "fuel",
+    "size": [
+      0.102,
+      0.102,
+      0.102
+    ],
+    "weight": 0.85,
+    "stack": 1,
+    "shape": "jar",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "days",
+      "amount": 365,
+      "per": "ano"
+    },
+    "finds": {
+      "places": [
+        "gas_station",
+        "farm",
+        "docks",
+        "mine"
+      ]
+    }
+  },
+  {
+    "id": "botijao",
+    "category": "fuel",
+    "size": [
+      0.331,
+      0.331,
+      0.331
+    ],
+    "weight": 29,
+    "stack": 1,
+    "shape": "jar",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "days",
+      "amount": 30,
+      "per": "dias de fogão"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "cartucho_gas",
+    "category": "fuel",
+    "size": [
+      0.076,
+      0.076,
+      0.076
+    ],
+    "weight": 0.35,
+    "stack": 1,
+    "shape": "jar",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "seconds",
+      "amount": 7200,
+      "per": "h"
+    },
+    "finds": {
+      "places": [
+        "mall",
+        "gun_shop",
+        "lodge",
+        "warehouse"
+      ]
+    }
+  },
+  {
+    "id": "querosene",
+    "category": "fuel",
+    "size": [
+      0.1,
+      0.1,
+      0.1
+    ],
+    "weight": 0.8,
+    "stack": 1,
+    "shape": "jar",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "seconds",
+      "amount": 72000,
+      "per": "h de lamparina"
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "lodge",
+        "church"
+      ]
+    }
+  },
+  {
+    "id": "charcoal_bag",
+    "category": "fuel",
+    "tags": [
+      "bbq"
+    ],
+    "size": [
+      0.3,
+      0.12,
+      0.4
+    ],
+    "weight": 3,
+    "stack": 1,
+    "shape": "bag",
+    "color": 2763310,
+    "rarity": "common",
+    "durability": {
+      "kind": "seconds",
+      "amount": 10800,
+      "per": "h"
+    },
+    "finds": {
+      "places": [
+        "supermarket",
+        "gas_station",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "bateria_12v",
+    "category": "fuel",
+    "size": [
+      0.26,
+      0.26,
+      0.26
+    ],
+    "weight": 14,
+    "stack": 1,
+    "shape": "jar",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "condition",
+      "per": "ver Frota"
+    },
+    "finds": {
+      "places": [
+        "car",
+        "workshop",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "oleo_motor",
+    "category": "fuel",
+    "size": [
+      0.108,
+      0.108,
+      0.108
+    ],
+    "weight": 1,
+    "stack": 1,
+    "shape": "jar",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "condition",
+      "per": "ver Frota"
+    },
+    "finds": {
+      "places": [
+        "gas_station",
+        "workshop"
+      ]
+    }
+  },
+  {
+    "id": "sem_feijao",
+    "category": "outdoors",
+    "size": [
+      0.058,
+      0.058,
+      0.058
+    ],
+    "weight": 0.1,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 8,
+      "per": "covas"
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "sem_milho",
+    "category": "outdoors",
+    "size": [
+      0.058,
+      0.058,
+      0.058
+    ],
+    "weight": 0.1,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 8,
+      "per": "covas"
+    },
+    "finds": {
+      "places": [
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "sem_abobora",
+    "category": "outdoors",
+    "size": [
+      0.046,
+      0.046,
+      0.046
+    ],
+    "weight": 0.05,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 4,
+      "per": "covas"
+    },
+    "finds": {
+      "places": [
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "sem_couve",
+    "category": "outdoors",
+    "size": [
+      0.046,
+      0.046,
+      0.046
+    ],
+    "weight": 0.05,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 10,
+      "per": "covas"
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "maniva",
+    "category": "outdoors",
+    "size": [
+      0.159,
+      0.159,
+      0.159
+    ],
+    "weight": 2,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 10,
+      "per": "covas"
+    },
+    "finds": {
+      "places": [
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "adubo",
+    "category": "outdoors",
+    "size": [
+      0.271,
+      0.271,
+      0.271
+    ],
+    "weight": 10,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "uses",
+      "amount": 8,
+      "per": "canteiros"
+    },
+    "finds": {
+      "places": [
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "regador",
+    "category": "outdoors",
+    "size": [
+      0.1,
+      0.1,
+      0.1
+    ],
+    "weight": 0.5,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "infinite"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "vara_pesca",
+    "category": "outdoors",
+    "size": [
+      0.126,
+      0.126,
+      0.126
+    ],
+    "weight": 1,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 200,
+      "per": "lances"
+    },
+    "finds": {
+      "places": [
+        "docks",
+        "house",
+        "gun_shop"
+      ]
+    }
+  },
+  {
+    "id": "kit_pesca",
+    "category": "outdoors",
+    "size": [
+      0.106,
+      0.106,
+      0.106
+    ],
+    "weight": 0.6,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 40,
+      "per": "iscas"
+    },
+    "finds": {
+      "places": [
+        "docks",
+        "gun_shop"
+      ]
+    }
+  },
+  {
+    "id": "rede_pesca",
+    "category": "outdoors",
+    "size": [
+      0.182,
+      0.182,
+      0.182
+    ],
+    "weight": 3,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "days",
+      "amount": 30
+    },
+    "finds": {
+      "places": [
+        "docks"
+      ]
+    }
+  },
+  {
+    "id": "armadilha_laco",
+    "category": "outdoors",
+    "tags": [
+      "craft_only"
+    ],
+    "size": [
+      0.084,
+      0.084,
+      0.084
+    ],
+    "weight": 0.3,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 5,
+      "per": "capturas"
+    }
+  },
+  {
+    "id": "livro_hab",
+    "category": "books",
+    "size": [
+      0.1,
+      0.1,
+      0.1
+    ],
+    "weight": 0.6,
+    "stack": 2,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 1,
+      "per": "leitura"
+    },
+    "finds": {
+      "places": [
+        "school",
+        "house",
+        "apartment",
+        "mall"
+      ]
+    }
+  },
+  {
+    "id": "livro_tecnico",
+    "category": "books",
+    "size": [
+      0.11,
+      0.11,
+      0.11
+    ],
+    "weight": 0.8,
+    "stack": 2,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "rare",
+    "durability": {
+      "kind": "uses",
+      "amount": 1,
+      "per": "leitura"
+    },
+    "finds": {
+      "places": [
+        "school",
+        "warehouse",
+        "workshop",
+        "hospital",
+        "military_base"
+      ]
+    }
+  },
+  {
+    "id": "revista_receita",
+    "category": "books",
+    "size": [
+      0.069,
+      0.069,
+      0.069
+    ],
+    "weight": 0.2,
+    "stack": 2,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 1,
+      "per": "leitura"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "gas_station",
+        "mall"
+      ]
+    }
+  },
+  {
+    "id": "revista_passa",
+    "category": "books",
+    "size": [
+      0.069,
+      0.069,
+      0.069
+    ],
+    "weight": 0.2,
+    "stack": 2,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 3,
+      "per": "leituras"
+    },
+    "finds": {
+      "places": [
+        "house",
+        "school",
+        "gas_station"
+      ]
+    }
+  },
+  {
+    "id": "almanaque",
+    "category": "books",
+    "size": [
+      0.079,
+      0.079,
+      0.079
+    ],
+    "weight": 0.3,
+    "stack": 2,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "durability": {
+      "kind": "uses",
+      "amount": 1,
+      "per": "leitura"
+    },
+    "finds": {
+      "places": [
+        "farm",
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "note",
+    "category": "collectibles",
+    "size": [
+      0.032,
+      0.032,
+      0.032
+    ],
+    "weight": 0.01,
+    "stack": 10,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "church",
+        "train",
+        "car"
+      ]
+    }
+  },
+  {
+    "id": "photo",
+    "category": "collectibles",
+    "size": [
+      0.032,
+      0.032,
+      0.032
+    ],
+    "weight": 0.01,
+    "stack": 10,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "zombie_corpse",
+        "car"
+      ]
+    }
+  },
+  {
+    "id": "city_map",
+    "category": "collectibles",
+    "size": [
+      0.055,
+      0.055,
+      0.055
+    ],
+    "weight": 0.05,
+    "stack": 10,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "rare",
+    "finds": {
+      "places": [
+        "police_station"
+      ]
+    }
+  },
+  {
+    "id": "road_map",
+    "category": "collectibles",
+    "size": [
+      0.055,
+      0.055,
+      0.055
+    ],
+    "weight": 0.05,
+    "stack": 10,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "gas_station",
+        "car"
+      ]
+    }
+  },
+  {
+    "id": "dog_tag",
+    "category": "collectibles",
+    "size": [
+      0.032,
+      0.032,
+      0.032
+    ],
+    "weight": 0.01,
+    "stack": 10,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "zombie_corpse",
+        "military_base"
+      ]
+    }
+  },
+  {
+    "id": "cash",
+    "category": "collectibles",
+    "size": [
+      0.055,
+      0.055,
+      0.055
+    ],
+    "weight": 0.05,
+    "stack": 10,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "supermarket",
+        "zombie_corpse",
+        "car"
+      ]
+    }
+  },
+  {
+    "id": "cigarettes",
+    "category": "collectibles",
+    "size": [
+      0.046,
+      0.046,
+      0.046
+    ],
+    "weight": 0.03,
+    "stack": 10,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "common",
+    "durability": {
+      "kind": "uses",
+      "amount": 20
+    },
+    "finds": {
+      "places": [
+        "gas_station",
+        "supermarket",
+        "prison",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "house_key",
+    "category": "keys",
+    "size": [
+      0.027,
+      0.027,
+      0.027
+    ],
+    "weight": 0.02,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "car_key",
+    "category": "keys",
+    "size": [
+      0.027,
+      0.027,
+      0.027
+    ],
+    "weight": 0.02,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "zombie_corpse",
+        "car"
+      ]
+    }
+  },
+  {
+    "id": "master_key",
+    "category": "keys",
+    "size": [
+      0.037,
+      0.037,
+      0.037
+    ],
+    "weight": 0.05,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "finds": {
+      "places": [
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "janitor_keys",
+    "category": "keys",
+    "size": [
+      0.053,
+      0.053,
+      0.053
+    ],
+    "weight": 0.15,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "finds": {
+      "places": [
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "generator_key",
+    "category": "keys",
+    "size": [
+      0.037,
+      0.037,
+      0.037
+    ],
+    "weight": 0.05,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "unique",
+    "finds": {
+      "places": [
+        "hospital"
+      ]
+    }
+  },
+  {
+    "id": "safe_key",
+    "category": "keys",
+    "size": [
+      0.037,
+      0.037,
+      0.037
+    ],
+    "weight": 0.05,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "unique",
+    "finds": {
+      "places": [
+        "police_station"
+      ]
+    }
+  },
+  {
+    "id": "padlock_key",
+    "category": "keys",
+    "size": [
+      0.067,
+      0.067,
+      0.067
+    ],
+    "weight": 0.3,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "warehouse",
+        "farm",
+        "house"
+      ]
+    }
+  },
+  {
+    "id": "cell_key",
+    "category": "keys",
+    "size": [
+      0.037,
+      0.037,
+      0.037
+    ],
+    "weight": 0.05,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "rare",
+    "finds": {
+      "places": [
+        "prison",
+        "zombie_corpse"
+      ]
+    }
+  },
+  {
+    "id": "canned_food",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.075,
+      0.11,
+      0.075
+    ],
+    "weight": 0.4,
+    "stack": 6,
+    "shape": "can",
+    "color": 13148218,
+    "rarity": "common"
+  },
+  {
+    "id": "flour",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.1,
+      0.22,
+      0.06
+    ],
+    "weight": 1,
+    "stack": 4,
+    "shape": "bag",
+    "color": 16052452,
+    "rarity": "common"
+  },
+  {
+    "id": "cereal_box",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.2,
+      0.3,
+      0.08
+    ],
+    "weight": 0.4,
+    "stack": 2,
+    "shape": "box",
+    "color": 14182960,
+    "rarity": "common"
+  },
+  {
+    "id": "butter",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.1,
+      0.04,
+      0.06
+    ],
+    "weight": 0.2,
+    "stack": 2,
+    "shape": "box",
+    "color": 16050336,
+    "rarity": "common"
+  },
+  {
+    "id": "ketchup",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.06,
+      0.2,
+      0.06
+    ],
+    "weight": 0.4,
+    "stack": 2,
+    "shape": "bottle",
+    "color": 13117984,
+    "rarity": "common"
+  },
+  {
+    "id": "ham",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.15,
+      0.03,
+      0.1
+    ],
+    "weight": 0.2,
+    "stack": 2,
+    "shape": "box",
+    "color": 15245472,
+    "rarity": "common"
+  },
+  {
+    "id": "yogurt",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.07,
+      0.09,
+      0.07
+    ],
+    "weight": 0.17,
+    "stack": 6,
+    "shape": "jar",
+    "color": 15786216,
+    "rarity": "common"
+  },
+  {
+    "id": "apple",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.08,
+      0.08,
+      0.08
+    ],
+    "weight": 0.18,
+    "stack": 6,
+    "shape": "fruit",
+    "color": 13122096,
+    "rarity": "common"
+  },
+  {
+    "id": "tomato",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.07,
+      0.07,
+      0.07
+    ],
+    "weight": 0.15,
+    "stack": 6,
+    "shape": "fruit",
+    "color": 14172202,
+    "rarity": "common"
+  },
+  {
+    "id": "frozen_meat",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.2,
+      0.05,
+      0.15
+    ],
+    "weight": 0.8,
+    "stack": 2,
+    "shape": "box",
+    "color": 12081754,
+    "rarity": "common"
+  },
+  {
+    "id": "ice_cream",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.13,
+      0.1,
+      0.13
+    ],
+    "weight": 0.9,
+    "stack": 2,
+    "shape": "jar",
+    "color": 15784160,
+    "rarity": "common"
+  },
+  {
+    "id": "frozen_pizza",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.3,
+      0.03,
+      0.3
+    ],
+    "weight": 0.5,
+    "stack": 2,
+    "shape": "box",
+    "color": 14195264,
+    "rarity": "common"
+  },
+  {
+    "id": "frozen_vegetables",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.15,
+      0.2,
+      0.05
+    ],
+    "weight": 0.5,
+    "stack": 3,
+    "shape": "bag",
+    "color": 4889168,
+    "rarity": "common"
+  },
+  {
+    "id": "plate",
+    "category": "tools",
+    "tags": [
+      "kitchen"
+    ],
+    "size": [
+      0.25,
+      0.03,
+      0.25
+    ],
+    "weight": 0.4,
+    "stack": 6,
+    "shape": "dish",
+    "color": 15790320,
+    "rarity": "common"
+  },
+  {
+    "id": "bowl",
+    "category": "tools",
+    "tags": [
+      "kitchen"
+    ],
+    "size": [
+      0.15,
+      0.07,
+      0.15
+    ],
+    "weight": 0.3,
+    "stack": 6,
+    "shape": "dish",
+    "color": 15262936,
+    "rarity": "common"
+  },
+  {
+    "id": "cup",
+    "category": "tools",
+    "tags": [
+      "kitchen"
+    ],
+    "size": [
+      0.08,
+      0.09,
+      0.08
+    ],
+    "weight": 0.25,
+    "stack": 6,
+    "shape": "cup",
+    "color": 14215408,
+    "rarity": "common"
+  },
+  {
+    "id": "cutlery",
+    "category": "tools",
+    "tags": [
+      "kitchen"
+    ],
+    "size": [
+      0.2,
+      0.03,
+      0.08
+    ],
+    "weight": 0.4,
+    "stack": 2,
+    "shape": "tool",
+    "color": 12633288,
+    "rarity": "common"
+  },
+  {
+    "id": "pan",
+    "category": "tools",
+    "tags": [
+      "kitchen"
+    ],
+    "size": [
+      0.28,
+      0.08,
+      0.28
+    ],
+    "weight": 0.9,
+    "stack": 1,
+    "shape": "dish",
+    "color": 2763310,
+    "rarity": "common"
+  },
+  {
+    "id": "soap",
+    "category": "medical",
+    "tags": [
+      "hygiene"
+    ],
+    "size": [
+      0.09,
+      0.03,
+      0.05
+    ],
+    "weight": 0.1,
+    "stack": 6,
+    "shape": "box",
+    "color": 15790304,
+    "rarity": "common"
+  },
+  {
+    "id": "shampoo",
+    "category": "medical",
+    "tags": [
+      "hygiene"
+    ],
+    "size": [
+      0.06,
+      0.2,
+      0.04
+    ],
+    "weight": 0.35,
+    "stack": 3,
+    "shape": "bottle",
+    "color": 4885200,
+    "rarity": "common"
+  },
+  {
+    "id": "toothpaste",
+    "category": "medical",
+    "tags": [
+      "hygiene"
+    ],
+    "size": [
+      0.04,
+      0.18,
+      0.03
+    ],
+    "weight": 0.1,
+    "stack": 3,
+    "shape": "tube",
+    "color": 15790320,
+    "rarity": "common"
+  },
+  {
+    "id": "toothbrush",
+    "category": "medical",
+    "tags": [
+      "hygiene"
+    ],
+    "size": [
+      0.02,
+      0.18,
+      0.02
+    ],
+    "weight": 0.02,
+    "stack": 3,
+    "shape": "tool",
+    "color": 3840720,
+    "rarity": "common"
+  },
+  {
+    "id": "deodorant",
+    "category": "medical",
+    "tags": [
+      "hygiene"
+    ],
+    "size": [
+      0.05,
+      0.15,
+      0.04
+    ],
+    "weight": 0.15,
+    "stack": 2,
+    "shape": "bottle",
+    "color": 11061480,
+    "rarity": "common"
+  },
+  {
+    "id": "toilet_paper",
+    "category": "medical",
+    "tags": [
+      "hygiene"
+    ],
+    "size": [
+      0.11,
+      0.1,
+      0.11
+    ],
+    "weight": 0.1,
+    "stack": 8,
+    "shape": "roll",
+    "color": 16316664,
+    "rarity": "common"
+  },
+  {
+    "id": "towel",
+    "category": "medical",
+    "tags": [
+      "hygiene"
+    ],
+    "size": [
+      0.3,
+      0.05,
+      0.2
+    ],
+    "weight": 0.5,
+    "stack": 3,
+    "shape": "cloth",
+    "color": 4885160,
+    "rarity": "common"
+  },
+  {
+    "id": "detergent",
+    "category": "materials",
+    "tags": [
+      "cleaning"
+    ],
+    "size": [
+      0.07,
+      0.25,
+      0.05
+    ],
+    "weight": 0.5,
+    "stack": 3,
+    "shape": "bottle",
+    "color": 7000224,
+    "rarity": "common"
+  },
+  {
+    "id": "bleach",
+    "category": "materials",
+    "tags": [
+      "cleaning"
+    ],
+    "size": [
+      0.1,
+      0.3,
+      0.08
+    ],
+    "weight": 1,
+    "stack": 2,
+    "shape": "bottle",
+    "color": 15263988,
+    "rarity": "common"
+  },
+  {
+    "id": "sponge",
+    "category": "materials",
+    "tags": [
+      "cleaning"
+    ],
+    "size": [
+      0.1,
+      0.03,
+      0.07
+    ],
+    "weight": 0.03,
+    "stack": 4,
+    "shape": "box",
+    "color": 15257648,
+    "rarity": "common"
+  },
+  {
+    "id": "socks",
+    "category": "clothing",
+    "tags": [
+      "clothing"
+    ],
+    "size": [
+      0.1,
+      0.03,
+      0.08
+    ],
+    "weight": 0.05,
+    "stack": 6,
+    "shape": "cloth",
+    "color": 14211288,
+    "rarity": "common"
+  },
+  {
+    "id": "underwear",
+    "category": "clothing",
+    "tags": [
+      "clothing"
+    ],
+    "size": [
+      0.12,
+      0.03,
+      0.1
+    ],
+    "weight": 0.05,
+    "stack": 6,
+    "shape": "cloth",
+    "color": 9079450,
+    "rarity": "common"
+  },
+  {
+    "id": "hat",
+    "category": "clothing",
+    "tags": [
+      "clothing"
+    ],
+    "size": [
+      0.25,
+      0.1,
+      0.22
+    ],
+    "weight": 0.15,
+    "stack": 1,
+    "shape": "cloth",
+    "color": 9071162,
+    "rarity": "common"
+  },
+  {
+    "id": "scarf",
+    "category": "clothing",
+    "tags": [
+      "clothing"
+    ],
+    "size": [
+      0.2,
+      0.04,
+      0.2
+    ],
+    "weight": 0.2,
+    "stack": 2,
+    "shape": "cloth",
+    "color": 12073530,
+    "rarity": "common"
+  },
+  {
+    "id": "blanket",
+    "category": "clothing",
+    "tags": [
+      "clothing"
+    ],
+    "size": [
+      0.45,
+      0.1,
+      0.22
+    ],
+    "weight": 1.2,
+    "stack": 2,
+    "shape": "cloth",
+    "color": 9067082,
+    "rarity": "common"
+  },
+  {
+    "id": "pillow",
+    "category": "clothing",
+    "tags": [
+      "clothing"
+    ],
+    "size": [
+      0.45,
+      0.12,
+      0.23
+    ],
+    "weight": 0.5,
+    "stack": 2,
+    "shape": "cloth",
+    "color": 15789800,
+    "rarity": "common"
+  },
+  {
+    "id": "documents",
+    "category": "collectibles",
+    "tags": [
+      "office"
+    ],
+    "size": [
+      0.22,
+      0.03,
+      0.3
+    ],
+    "weight": 0.2,
+    "stack": 1,
+    "shape": "paper",
+    "color": 15262928,
+    "rarity": "common"
+  },
+  {
+    "id": "wallet",
+    "category": "collectibles",
+    "tags": [
+      "office"
+    ],
+    "size": [
+      0.11,
+      0.02,
+      0.09
+    ],
+    "weight": 0.1,
+    "stack": 1,
+    "shape": "box",
+    "color": 4864554,
+    "rarity": "common"
+  },
+  {
+    "id": "phone_charger",
+    "category": "collectibles",
+    "tags": [
+      "office"
+    ],
+    "size": [
+      0.06,
+      0.02,
+      0.06
+    ],
+    "weight": 0.08,
+    "stack": 1,
+    "shape": "tool",
+    "color": 15790320,
+    "rarity": "common"
+  },
+  {
+    "id": "notebook",
+    "category": "collectibles",
+    "tags": [
+      "office"
+    ],
+    "size": [
+      0.15,
+      0.02,
+      0.21
+    ],
+    "weight": 0.3,
+    "stack": 1,
+    "shape": "paper",
+    "color": 3824266,
+    "rarity": "common"
+  },
+  {
+    "id": "pen",
+    "category": "collectibles",
+    "tags": [
+      "office"
+    ],
+    "size": [
+      0.015,
+      0.015,
+      0.14
+    ],
+    "weight": 0.01,
+    "stack": 6,
+    "shape": "tool",
+    "color": 2771616,
+    "rarity": "common"
+  },
+  {
+    "id": "crumpled_paper",
+    "category": "materials",
+    "tags": [
+      "trash"
+    ],
+    "size": [
+      0.1,
+      0.1,
+      0.1
+    ],
+    "weight": 0.02,
+    "stack": 6,
+    "shape": "paper",
+    "color": 15262940,
+    "rarity": "common"
+  },
+  {
+    "id": "empty_bottle",
+    "category": "materials",
+    "tags": [
+      "trash"
+    ],
+    "size": [
+      0.07,
+      0.25,
+      0.07
+    ],
+    "weight": 0.03,
+    "stack": 4,
+    "shape": "bottle",
+    "color": 11063488,
+    "rarity": "common"
+  },
+  {
+    "id": "food_scraps",
+    "category": "materials",
+    "tags": [
+      "trash"
+    ],
+    "size": [
+      0.15,
+      0.06,
+      0.15
+    ],
+    "weight": 0.2,
+    "stack": 2,
+    "shape": "bag",
+    "color": 8022586,
+    "rarity": "common"
+  },
+  {
+    "id": "plastic_bag",
+    "category": "materials",
+    "tags": [
+      "trash"
+    ],
+    "size": [
+      0.2,
+      0.2,
+      0.1
+    ],
+    "weight": 0.02,
+    "stack": 4,
+    "shape": "bag",
+    "color": 15263976,
+    "rarity": "common"
+  },
+  {
+    "id": "bill",
+    "category": "collectibles",
+    "tags": [
+      "mail"
+    ],
+    "size": [
+      0.22,
+      0.005,
+      0.1
+    ],
+    "weight": 0.01,
+    "stack": 1,
+    "shape": "paper",
+    "color": 15790312,
+    "rarity": "common"
+  },
+  {
+    "id": "letter",
+    "category": "collectibles",
+    "tags": [
+      "mail"
+    ],
+    "size": [
+      0.16,
+      0.005,
+      0.1
+    ],
+    "weight": 0.01,
+    "stack": 1,
+    "shape": "paper",
+    "color": 16183516,
+    "rarity": "common"
+  },
+  {
+    "id": "flyer",
+    "category": "collectibles",
+    "tags": [
+      "mail"
+    ],
+    "size": [
+      0.21,
+      0.005,
+      0.14
+    ],
+    "weight": 0.01,
+    "stack": 1,
+    "shape": "paper",
+    "color": 15253568,
+    "rarity": "common"
+  },
+  {
+    "id": "postcard",
+    "category": "collectibles",
+    "tags": [
+      "mail"
+    ],
+    "size": [
+      0.15,
+      0.003,
+      0.1
+    ],
+    "weight": 0.01,
+    "stack": 1,
+    "shape": "paper",
+    "color": 8040664,
+    "rarity": "common"
+  },
+  {
+    "id": "tongs",
+    "category": "outdoors",
+    "tags": [
+      "bbq"
+    ],
+    "size": [
+      0.4,
+      0.03,
+      0.05
+    ],
+    "weight": 0.2,
+    "stack": 1,
+    "shape": "tool",
+    "color": 11843772,
+    "rarity": "common"
+  },
+  {
+    "id": "skewers",
+    "category": "outdoors",
+    "tags": [
+      "bbq"
+    ],
+    "size": [
+      0.3,
+      0.02,
+      0.1
+    ],
+    "weight": 0.3,
+    "stack": 2,
+    "shape": "tool",
+    "color": 11843772,
+    "rarity": "common"
+  },
+  {
+    "id": "firelighter",
+    "category": "outdoors",
+    "tags": [
+      "bbq"
+    ],
+    "size": [
+      0.08,
+      0.04,
+      0.08
+    ],
+    "weight": 0.1,
+    "stack": 4,
+    "shape": "box",
+    "color": 15261888,
+    "rarity": "common"
+  },
+  {
+    "id": "paint_can",
+    "category": "tools",
+    "tags": [
+      "garage"
+    ],
+    "size": [
+      0.18,
+      0.2,
+      0.18
+    ],
+    "weight": 3,
+    "stack": 1,
+    "shape": "can",
+    "color": 15261904,
+    "rarity": "common"
+  },
+  {
+    "id": "ice_pack",
+    "category": "drink",
+    "tags": [
+      "drink"
+    ],
+    "size": [
+      0.16,
+      0.03,
+      0.12
+    ],
+    "weight": 0.4,
+    "stack": 3,
+    "shape": "box",
+    "color": 9356776,
+    "rarity": "common"
+  },
+  {
+    "id": "sandwich",
+    "category": "food",
+    "tags": [
+      "food"
+    ],
+    "size": [
+      0.12,
+      0.05,
+      0.12
+    ],
+    "weight": 0.2,
+    "stack": 2,
+    "shape": "box",
+    "color": 14268282,
+    "rarity": "common"
+  }
+]

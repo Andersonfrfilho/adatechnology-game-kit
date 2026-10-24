@@ -1,0 +1,1068 @@
+[
+  {
+    "id": "window_barricade",
+    "inputs": [
+      {
+        "item": "tabua",
+        "label": "tábuas",
+        "qty": 2
+      },
+      {
+        "item": "pregos",
+        "label": "pregos",
+        "qty": 8
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "hammer"
+        ],
+        "label": "martelo"
+      }
+    ],
+    "seconds": 8,
+    "output": {
+      "effect": "window_barricade",
+      "params": {},
+      "text": "Janela com vida 200. Martelada faz ruído de 20 m."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "carpentry",
+      "level": 0
+    }
+  },
+  {
+    "id": "sheet_metal_window",
+    "inputs": [
+      {
+        "item": "chapa",
+        "label": "chapa",
+        "qty": 1
+      },
+      {
+        "item": "parafusos",
+        "label": "parafusos",
+        "qty": 6
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "parafusadeira",
+          "solda"
+        ],
+        "label": "parafusadeira ou máquina de solda"
+      }
+    ],
+    "seconds": 20,
+    "output": {
+      "effect": "sheet_metal_window",
+      "params": {},
+      "text": "Vida 500. Com solda, precisa de gerador."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "metalworking",
+      "level": 2
+    }
+  },
+  {
+    "id": "furniture_planks",
+    "inputs": [
+      {
+        "any": [
+          "table",
+          "door",
+          "cabinet"
+        ],
+        "label": "mesa, porta ou armário",
+        "qty": 1
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "serrote",
+          "machado"
+        ],
+        "label": "serrote ou machado"
+      }
+    ],
+    "seconds": 15,
+    "output": {
+      "item": "tabua",
+      "qty": [
+        2,
+        4
+      ],
+      "label": "tábuas",
+      "note": ", conforme o móvel"
+    },
+    "unresolved": [
+      "cabinet",
+      "door",
+      "table"
+    ]
+  },
+  {
+    "id": "rags",
+    "inputs": [
+      {
+        "item": "garment",
+        "label": "roupa",
+        "qty": 1
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [],
+        "label": "mãos (tesoura 2× mais rápido)"
+      }
+    ],
+    "seconds": 4,
+    "output": {
+      "item": "trapo",
+      "qty": [
+        2,
+        4
+      ],
+      "label": "trapos"
+    },
+    "unresolved": [
+      "garment"
+    ]
+  },
+  {
+    "id": "clean_bandage",
+    "inputs": [
+      {
+        "item": "trapo",
+        "label": "trapos",
+        "qty": 2
+      },
+      {
+        "item": "water",
+        "label": "água",
+        "liters": 0.5
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "pot"
+        ],
+        "label": "panela"
+      },
+      {
+        "anyOf": [
+          "fire"
+        ],
+        "label": "fogo"
+      }
+    ],
+    "seconds": 300,
+    "output": {
+      "effect": "clean_bandage",
+      "params": {},
+      "text": "Esteriliza como gaze."
+    },
+    "unresolved": [
+      "fire",
+      "water"
+    ],
+    "skill": {
+      "id": "first_aid",
+      "level": 1
+    }
+  },
+  {
+    "id": "improvised_suture",
+    "inputs": [
+      {
+        "item": "kit_costura",
+        "label": "kit de costura"
+      },
+      {
+        "any": [
+          "alcohol_70",
+          "cachaca"
+        ],
+        "label": "álcool 70 ou cachaça"
+      }
+    ],
+    "tools": [],
+    "seconds": 40,
+    "output": {
+      "effect": "improvised_suture",
+      "params": {},
+      "text": "Igual ao kit de sutura, com 10% de chance de infecção."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "first_aid",
+      "level": 4
+    }
+  },
+  {
+    "id": "improvised_splint",
+    "inputs": [
+      {
+        "any": [
+          "tabua",
+          "branch"
+        ],
+        "label": "tábuas ou galhos",
+        "qty": 2
+      },
+      {
+        "item": "bandage",
+        "label": "ataduras",
+        "qty": 2
+      }
+    ],
+    "tools": [],
+    "seconds": 20,
+    "output": {
+      "effect": "improvised_splint",
+      "params": {},
+      "text": "Como a tala, mas cura em 14 dias."
+    },
+    "unresolved": [
+      "branch"
+    ],
+    "skill": {
+      "id": "first_aid",
+      "level": 1
+    }
+  },
+  {
+    "id": "boiled_water",
+    "inputs": [
+      {
+        "item": "agua_suja",
+        "label": "água suja"
+      },
+      {
+        "item": "pot",
+        "label": "panela"
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "fire"
+        ],
+        "label": "fogo"
+      }
+    ],
+    "seconds": 300,
+    "output": {
+      "effect": "boiled_water",
+      "params": {},
+      "text": "Sem risco de diarreia."
+    },
+    "unresolved": [
+      "fire"
+    ]
+  },
+  {
+    "id": "treated_water",
+    "inputs": [
+      {
+        "item": "agua_suja",
+        "label": "água suja"
+      },
+      {
+        "item": "bleach",
+        "label": "água sanitária"
+      }
+    ],
+    "tools": [],
+    "seconds": 1800,
+    "timeSuffix": "parada",
+    "output": {
+      "effect": "treated_water",
+      "params": {},
+      "text": "2 gotas por litro."
+    },
+    "unresolved": []
+  },
+  {
+    "id": "rain_collector",
+    "inputs": [
+      {
+        "item": "lona",
+        "label": "lona",
+        "qty": 1
+      },
+      {
+        "any": [
+          "balde",
+          "barrel"
+        ],
+        "label": "balde ou barril",
+        "qty": 1
+      }
+    ],
+    "tools": [],
+    "seconds": 60,
+    "output": {
+      "effect": "rain_collector",
+      "params": {},
+      "text": "Enche 10 L a cada chuva."
+    },
+    "unresolved": [
+      "barrel"
+    ],
+    "skill": {
+      "id": "carpentry",
+      "level": 1
+    }
+  },
+  {
+    "id": "stew",
+    "inputs": [
+      {
+        "item": "pot",
+        "label": "panela"
+      },
+      {
+        "item": "water",
+        "label": "água"
+      },
+      {
+        "item": "ingredient",
+        "label": "ingredientes",
+        "qty": 2
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "fire"
+        ],
+        "label": "fogo"
+      }
+    ],
+    "seconds": 1200,
+    "output": {
+      "effect": "stew",
+      "params": {},
+      "text": "Fome +8 sobre a soma dos ingredientes; moral +10."
+    },
+    "unresolved": [
+      "fire",
+      "ingredient",
+      "water"
+    ],
+    "skill": {
+      "id": "cooking",
+      "level": 0
+    }
+  },
+  {
+    "id": "jerky",
+    "inputs": [
+      {
+        "item": "carne_bovina",
+        "label": "carne crua"
+      },
+      {
+        "item": "salt",
+        "label": "sal"
+      }
+    ],
+    "tools": [],
+    "seconds": 86400,
+    "timeSuffix": "secando",
+    "output": {
+      "effect": "jerky",
+      "params": {},
+      "text": "Validade 120 dias."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "cooking",
+      "level": 2
+    }
+  },
+  {
+    "id": "salted_fish",
+    "inputs": [
+      {
+        "item": "peixe_fresco",
+        "label": "peixe fresco"
+      },
+      {
+        "item": "salt",
+        "label": "sal"
+      }
+    ],
+    "tools": [],
+    "seconds": 86400,
+    "timeSuffix": "secando",
+    "output": {
+      "effect": "salted_fish",
+      "params": {},
+      "text": "Validade 90 dias."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "cooking",
+      "level": 1
+    }
+  },
+  {
+    "id": "preserves",
+    "inputs": [
+      {
+        "item": "glass_jar",
+        "label": "pote de vidro"
+      },
+      {
+        "item": "vegetable",
+        "label": "legume"
+      },
+      {
+        "any": [
+          "salt",
+          "sugar"
+        ],
+        "label": "sal ou açúcar"
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "pot"
+        ],
+        "label": "panela"
+      },
+      {
+        "anyOf": [
+          "fire"
+        ],
+        "label": "fogo"
+      }
+    ],
+    "seconds": 2400,
+    "output": {
+      "effect": "preserves",
+      "params": {},
+      "text": "Validade 365 dias, sem risco de botulismo."
+    },
+    "unresolved": [
+      "fire",
+      "glass_jar",
+      "vegetable"
+    ],
+    "skill": {
+      "id": "cooking",
+      "level": 3
+    }
+  },
+  {
+    "id": "spear",
+    "inputs": [
+      {
+        "item": "knife",
+        "label": "faca de cozinha"
+      },
+      {
+        "item": "broomstick",
+        "label": "cabo de vassoura"
+      },
+      {
+        "item": "duct_tape",
+        "label": "silver tape"
+      }
+    ],
+    "tools": [],
+    "seconds": 30,
+    "output": {
+      "effect": "spear",
+      "params": {},
+      "text": "Alcance 1,6 m."
+    },
+    "unresolved": [
+      "broomstick"
+    ],
+    "skill": {
+      "id": "bladed_weapons",
+      "level": 0
+    }
+  },
+  {
+    "id": "nail_bat",
+    "inputs": [
+      {
+        "item": "taco",
+        "label": "taco de beisebol"
+      },
+      {
+        "item": "pregos",
+        "label": "pregos",
+        "qty": 6
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "hammer"
+        ],
+        "label": "martelo"
+      }
+    ],
+    "seconds": 40,
+    "output": {
+      "effect": "nail_bat",
+      "params": {},
+      "text": "Dano 30 → 40."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "carpentry",
+      "level": 1
+    }
+  },
+  {
+    "id": "magazine_arm_guard",
+    "inputs": [
+      {
+        "item": "revista_passa",
+        "label": "revistas",
+        "qty": 2
+      },
+      {
+        "item": "duct_tape",
+        "label": "silver tape"
+      }
+    ],
+    "tools": [],
+    "seconds": 20,
+    "output": {
+      "effect": "magazine_arm_guard",
+      "params": {},
+      "text": "Bloqueia 35% das mordidas no braço."
+    },
+    "unresolved": []
+  },
+  {
+    "id": "sheet_metal_arm_guard",
+    "inputs": [
+      {
+        "item": "chapa",
+        "label": "chapa",
+        "qty": 1
+      },
+      {
+        "item": "duct_tape",
+        "label": "silver tape"
+      },
+      {
+        "item": "alicate",
+        "label": "alicate"
+      }
+    ],
+    "tools": [],
+    "seconds": 120,
+    "output": {
+      "effect": "sheet_metal_arm_guard",
+      "params": {},
+      "text": "Bloqueia 70% das mordidas no braço."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "metalworking",
+      "level": 1
+    }
+  },
+  {
+    "id": "molotov_cocktail",
+    "inputs": [
+      {
+        "item": "garrafa_vidro",
+        "label": "garrafa de vidro"
+      },
+      {
+        "item": "gasolina",
+        "label": "gasolina",
+        "liters": 0.5
+      },
+      {
+        "item": "trapo",
+        "label": "trapo"
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "lighter"
+        ],
+        "label": "isqueiro para acender"
+      }
+    ],
+    "seconds": 10,
+    "output": {
+      "effect": "molotov_cocktail",
+      "params": {},
+      "text": "Fogo de 3 m por 20 s (ver Laboratório de Explosões)."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "throwing",
+      "level": 0
+    }
+  },
+  {
+    "id": "noise_bomb",
+    "inputs": [
+      {
+        "item": "despertador",
+        "label": "despertador"
+      },
+      {
+        "item": "empty_can",
+        "label": "lata vazia"
+      },
+      {
+        "item": "pregos",
+        "label": "pregos"
+      }
+    ],
+    "tools": [],
+    "seconds": 60,
+    "output": {
+      "effect": "noise_bomb",
+      "params": {},
+      "text": "Toca na hora marcada: atrai a 80 m por 60 s."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "electrics",
+      "level": 1
+    }
+  },
+  {
+    "id": "can_alarm",
+    "inputs": [
+      {
+        "item": "empty_can",
+        "label": "latas vazias",
+        "qty": 4
+      },
+      {
+        "item": "arame",
+        "label": "arame"
+      }
+    ],
+    "tools": [],
+    "seconds": 60,
+    "output": {
+      "effect": "can_alarm",
+      "params": {},
+      "text": "Esticado na porta ou no mato: chocalha a 25 m."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "hunting_and_trapping",
+      "level": 1
+    }
+  },
+  {
+    "id": "window_barbed_wire",
+    "inputs": [
+      {
+        "item": "arame_farpado",
+        "label": "rolo de arame farpado",
+        "qty": 1
+      },
+      {
+        "item": "pregos",
+        "label": "pregos",
+        "qty": 4
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "hammer"
+        ],
+        "label": "martelo"
+      },
+      {
+        "anyOf": [
+          "luva_couro"
+        ],
+        "label": "luvas de couro"
+      }
+    ],
+    "seconds": 60,
+    "output": {
+      "effect": "window_barbed_wire",
+      "params": {},
+      "text": "Zumbi preso 2 s e 10 de dano por segundo."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "carpentry",
+      "level": 1
+    }
+  },
+  {
+    "id": "electric_fence",
+    "inputs": [
+      {
+        "item": "eletrificador",
+        "label": "eletrificador"
+      },
+      {
+        "item": "bateria_12v",
+        "label": "bateria 12 V"
+      },
+      {
+        "item": "arame",
+        "label": "arame",
+        "meters": 20
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "alicate"
+        ],
+        "label": "alicate"
+      }
+    ],
+    "seconds": 600,
+    "output": {
+      "effect": "electric_fence",
+      "params": {},
+      "text": "Zumbi para 1,5 s a cada toque."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "electrics",
+      "level": 4
+    }
+  },
+  {
+    "id": "oil_lamp",
+    "inputs": [
+      {
+        "item": "empty_can",
+        "label": "lata vazia"
+      },
+      {
+        "any": [
+          "cooking_oil",
+          "querosene"
+        ],
+        "label": "óleo ou querosene"
+      },
+      {
+        "item": "trapo",
+        "label": "trapo"
+      }
+    ],
+    "tools": [],
+    "seconds": 20,
+    "output": {
+      "effect": "oil_lamp",
+      "params": {},
+      "text": "6 h de luz fraca."
+    },
+    "unresolved": []
+  },
+  {
+    "id": "torch",
+    "inputs": [
+      {
+        "item": "branch",
+        "label": "galho"
+      },
+      {
+        "item": "trapo",
+        "label": "trapo"
+      },
+      {
+        "item": "alcohol_70",
+        "label": "álcool"
+      }
+    ],
+    "tools": [],
+    "seconds": 10,
+    "output": {
+      "effect": "torch",
+      "params": {},
+      "text": "20 min de luz forte; vê-se a 150 m."
+    },
+    "unresolved": [
+      "branch"
+    ]
+  },
+  {
+    "id": "campfire",
+    "inputs": [
+      {
+        "any": [
+          "lenha",
+          "tabua"
+        ],
+        "label": "lenhas ou 3 tábuas",
+        "qty": 3
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "lighter",
+          "matches",
+          "pederneira"
+        ],
+        "label": "isqueiro, fósforo ou pederneira"
+      }
+    ],
+    "seconds": 30,
+    "output": {
+      "effect": "campfire",
+      "params": {},
+      "text": "Cozinha e aquece. Fumaça visível a 1 km de dia."
+    },
+    "unresolved": []
+  },
+  {
+    "id": "sandbag",
+    "inputs": [
+      {
+        "item": "raffia_sack",
+        "label": "saco de ráfia"
+      },
+      {
+        "item": "soil",
+        "label": "terra"
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "pa"
+        ],
+        "label": "pá"
+      }
+    ],
+    "seconds": 20,
+    "output": {
+      "effect": "sandbag",
+      "params": {},
+      "text": "Barricada baixa de vida 400."
+    },
+    "unresolved": [
+      "raffia_sack",
+      "soil"
+    ]
+  },
+  {
+    "id": "bindle_pack",
+    "inputs": [
+      {
+        "item": "saco_lixo",
+        "label": "saco de lixo"
+      },
+      {
+        "item": "rope",
+        "label": "corda"
+      }
+    ],
+    "tools": [],
+    "seconds": 30,
+    "output": {
+      "effect": "bindle_pack",
+      "params": {},
+      "text": "6 kg nas costas, sem redução."
+    },
+    "unresolved": []
+  },
+  {
+    "id": "improvised_antenna",
+    "inputs": [
+      {
+        "item": "fio_cobre",
+        "label": "fio de cobre",
+        "meters": 5
+      },
+      {
+        "item": "radio_portatil",
+        "label": "rádio"
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "alicate"
+        ],
+        "label": "alicate"
+      }
+    ],
+    "seconds": 120,
+    "output": {
+      "effect": "improvised_antenna",
+      "params": {},
+      "text": "Alcance do walkie-talkie e do rádio PX ×2 no lugar alto."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "electrics",
+      "level": 2
+    }
+  },
+  {
+    "id": "dismantle_electronics",
+    "inputs": [
+      {
+        "any": [
+          "celular",
+          "laptop",
+          "radio_portatil"
+        ],
+        "label": "celular, notebook ou rádio"
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "screwdriver"
+        ],
+        "label": "chave de fenda"
+      }
+    ],
+    "seconds": 60,
+    "output": {
+      "effect": "dismantle_electronics",
+      "params": {},
+      "text": "Componentes eletrônicos e fio de cobre."
+    },
+    "unresolved": [],
+    "skill": {
+      "id": "electrics",
+      "level": 2
+    }
+  },
+  {
+    "id": "snare_trap",
+    "inputs": [
+      {
+        "item": "arame",
+        "label": "arame"
+      },
+      {
+        "item": "branch",
+        "label": "galho"
+      }
+    ],
+    "tools": [],
+    "seconds": 40,
+    "output": {
+      "effect": "snare_trap",
+      "params": {},
+      "text": "Pega animal pequeno de noite."
+    },
+    "unresolved": [
+      "branch"
+    ],
+    "skill": {
+      "id": "hunting_and_trapping",
+      "level": 1
+    }
+  },
+  {
+    "id": "arrows",
+    "inputs": [
+      {
+        "item": "stick",
+        "label": "vareta"
+      },
+      {
+        "item": "pregos",
+        "label": "prego"
+      },
+      {
+        "item": "feather",
+        "label": "pena"
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "knife"
+        ],
+        "label": "faca"
+      }
+    ],
+    "seconds": 60,
+    "output": {
+      "item": "flecha",
+      "qty": [
+        3,
+        3
+      ],
+      "label": "flechas"
+    },
+    "unresolved": [
+      "feather",
+      "stick"
+    ],
+    "skill": {
+      "id": "hunting_and_trapping",
+      "level": 2
+    }
+  },
+  {
+    "id": "homemade_antibiotic",
+    "inputs": [
+      {
+        "item": "bread_mold",
+        "label": "mofo de pão"
+      },
+      {
+        "item": "alcohol_70",
+        "label": "álcool"
+      },
+      {
+        "item": "clean_glass",
+        "label": "vidro limpo"
+      }
+    ],
+    "tools": [
+      {
+        "anyOf": [
+          "pot"
+        ],
+        "label": "panela"
+      },
+      {
+        "anyOf": [
+          "fire"
+        ],
+        "label": "fogo"
+      }
+    ],
+    "seconds": 259200,
+    "output": {
+      "effect": "homemade_antibiotic",
+      "params": {},
+      "text": "Metade do efeito da amoxicilina."
+    },
+    "unresolved": [
+      "bread_mold",
+      "clean_glass",
+      "fire"
+    ],
+    "skill": {
+      "id": "chemistry",
+      "level": 5
+    }
+  }
+]

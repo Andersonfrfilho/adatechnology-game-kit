@@ -368,6 +368,8 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
+  packages/game-items-goods: {}
+
   packages/game-props3d:
     devDependencies:
       '@types/node':
@@ -594,6 +596,27 @@ importers:
       three:
         specifier: 0.128.0
         version: 0.128.0
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
+  tools/items-catalog:
+    devDependencies:
+      '@adatechnology/game-items':
+        specifier: workspace:*
+        version: link:../../packages/game-items
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)

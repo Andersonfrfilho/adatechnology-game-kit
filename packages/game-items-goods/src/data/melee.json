@@ -1,0 +1,102 @@
+[
+  {
+    "id": "knife",
+    "reach": 0.6,
+    "noise": 1
+  },
+  {
+    "id": "faca_tatica",
+    "reach": 0.6,
+    "noise": 1
+  },
+  {
+    "id": "facao",
+    "reach": 0.9,
+    "noise": 2
+  },
+  {
+    "id": "cutelo",
+    "reach": 0.6,
+    "noise": 2
+  },
+  {
+    "id": "machadinha",
+    "reach": 0.7,
+    "noise": 2
+  },
+  {
+    "id": "machado",
+    "reach": 1,
+    "noise": 3
+  },
+  {
+    "id": "taco",
+    "reach": 1,
+    "noise": 3
+  },
+  {
+    "id": "taco_pregos",
+    "reach": 1,
+    "noise": 3
+  },
+  {
+    "id": "cano",
+    "reach": 1,
+    "noise": 4
+  },
+  {
+    "id": "marreta",
+    "reach": 1.1,
+    "noise": 6
+  },
+  {
+    "id": "picareta",
+    "reach": 1,
+    "noise": 4
+  },
+  {
+    "id": "foice",
+    "reach": 1.1,
+    "noise": 2
+  },
+  {
+    "id": "tonfa",
+    "reach": 0.7,
+    "noise": 3
+  },
+  {
+    "id": "frigideira",
+    "reach": 0.6,
+    "noise": 8
+  },
+  {
+    "id": "lanca",
+    "reach": 1.6,
+    "noise": 1
+  },
+  {
+    "id": "motosserra",
+    "reach": 0.9,
+    "noise": 120
+  },
+  {
+    "id": "estilingue",
+    "reach": 25,
+    "noise": 1
+  },
+  {
+    "id": "arco",
+    "reach": 40,
+    "noise": 1
+  },
+  {
+    "id": "besta",
+    "reach": 60,
+    "noise": 1
+  },
+  {
+    "id": "flecha",
+    "reach": 0,
+    "noise": 0
+  }
+]

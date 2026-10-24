@@ -1,0 +1,78 @@
+[
+  {
+    "id": "ammo_9x19",
+    "teamId": "mun_9x19",
+    "kind": "ammo_box",
+    "caliber": "9x19",
+    "rounds": 20,
+    "weight": 0.24,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "ammo_12ga_00buck",
+    "teamId": "mun_12ga",
+    "kind": "ammo_box",
+    "caliber": "12ga_00buck",
+    "rounds": 10,
+    "weight": 0.4,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "ammo_7_62x39",
+    "teamId": "mun_762",
+    "kind": "ammo_box",
+    "caliber": "7_62x39",
+    "rounds": 30,
+    "weight": 0.54,
+    "rarity": "rare"
+  },
+  {
+    "id": "ammo_7_62x51",
+    "teamId": "mun_308",
+    "kind": "ammo_box",
+    "caliber": "7_62x51",
+    "rounds": 10,
+    "weight": 0.25,
+    "rarity": "rare"
+  },
+  {
+    "id": "firearm_remington_870",
+    "teamId": "arma_r870",
+    "kind": "firearm",
+    "weapon": "remington_870",
+    "weight": 3.6,
+    "rarity": "unique"
+  },
+  {
+    "id": "firearm_ak_47",
+    "teamId": "arma_ak47",
+    "kind": "firearm",
+    "weapon": "ak_47",
+    "weight": 4.3,
+    "rarity": "unique"
+  },
+  {
+    "id": "firearm_remington_700",
+    "teamId": "arma_r700",
+    "kind": "firearm",
+    "weapon": "remington_700",
+    "weight": 4,
+    "rarity": "unique"
+  },
+  {
+    "id": "throwable_m67",
+    "teamId": "granada_m67",
+    "kind": "throwable",
+    "weapon": "m67",
+    "weight": 0.4,
+    "rarity": "unique"
+  },
+  {
+    "id": "throwable_molotov",
+    "teamId": "molotov",
+    "kind": "throwable",
+    "weapon": "molotov",
+    "weight": 0.8,
+    "rarity": "unique"
+  }
+]

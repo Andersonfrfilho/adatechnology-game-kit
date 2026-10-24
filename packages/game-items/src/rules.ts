@@ -2,12 +2,12 @@ import type { ItemRules } from './rules-types'
 
 /**
  * The numbers of the rules, from the team's Vale Cinzento delivery. `storage` was read by hand from its table (Validade e apodrecimento) so the
- * skeleton runs; the source test of the catalog tool proves it against the HTML. Every field is an option of `createItems({ rules })`.
+ * skeleton runs; the source test of the catalog tool proves it against the HTML (legendary and unique are never rolled: L276). Every field is an option of `createItems({ rules })`.
  */
 export const DEFAULT_RULES: ItemRules = {
   rarity: {
     weights: { common: 60, uncommon: 28, rare: 9, very_rare: 2.5, legendary: 0.5, unique: 0 },
-    fixedOnly: ['unique'],
+    fixedOnly: ['legendary', 'unique'],
   },
   freshness: { stale: 0.5, spoiled: 1, rotten: 1.5 },
   storage: {

@@ -1,0 +1,54 @@
+[
+  {
+    "places": [
+      "pharmacy",
+      "gun_shop",
+      "police_station"
+    ],
+    "perDay": 0.05,
+    "floor": 0.3
+  },
+  {
+    "places": [
+      "supermarket",
+      "gas_station"
+    ],
+    "perDay": 0.04,
+    "floor": 0.35
+  },
+  {
+    "places": [
+      "mall",
+      "hospital"
+    ],
+    "perDay": 0.025,
+    "floor": 0.5
+  },
+  {
+    "places": [
+      "house",
+      "apartment"
+    ],
+    "perDay": 0.01,
+    "floor": 0.7
+  },
+  {
+    "places": [
+      "farm",
+      "warehouse",
+      "mine",
+      "dam",
+      "lodge",
+      "church"
+    ],
+    "perDay": 0.005,
+    "floor": 0.85
+  },
+  {
+    "places": [
+      "military_base"
+    ],
+    "perDay": 0,
+    "floor": 1
+  }
+]

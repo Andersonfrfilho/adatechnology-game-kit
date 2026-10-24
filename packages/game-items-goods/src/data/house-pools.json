@@ -1,0 +1,1429 @@
+{
+  "pools": {
+    "geladeira": [
+      {
+        "type": "agua_garrafa",
+        "item": "water_bottle",
+        "name": "Garrafa de água",
+        "qty": [
+          1,
+          3
+        ],
+        "viewerCategory": "agua",
+        "isTakeable": true,
+        "weight": 3,
+        "isSupply": true
+      },
+      {
+        "type": "leite",
+        "item": "milk_carton",
+        "name": "Caixa de leite",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": true
+      },
+      {
+        "type": "ovos",
+        "item": "eggs",
+        "name": "Dúzia de ovos",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": true
+      },
+      {
+        "type": "carne",
+        "item": "carne_bovina",
+        "name": "Carne embalada",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": true
+      },
+      {
+        "type": "fruta",
+        "item": "apple",
+        "name": "Frutas",
+        "qty": [
+          1,
+          4
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": true
+      },
+      {
+        "type": "iogurte",
+        "item": "yogurt",
+        "name": "Iogurte",
+        "qty": [
+          1,
+          3
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      },
+      {
+        "type": "refrigerante",
+        "item": "soda_can",
+        "name": "Refrigerante",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "agua",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      },
+      {
+        "type": "queijo",
+        "item": "cheese",
+        "name": "Queijo",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      },
+      {
+        "type": "insulina",
+        "item": null,
+        "name": "Remédio refrigerado",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "remedio",
+        "isTakeable": true,
+        "weight": 0.4,
+        "isSupply": true
+      },
+      {
+        "type": "sobras",
+        "item": null,
+        "name": "Marmita",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      }
+    ],
+    "refrig_exp": [
+      {
+        "type": "refrigerante",
+        "item": "soda_can",
+        "name": "Refrigerante",
+        "qty": [
+          2,
+          6
+        ],
+        "viewerCategory": "agua",
+        "isTakeable": true,
+        "weight": 3,
+        "isSupply": true
+      },
+      {
+        "type": "agua_garrafa",
+        "item": "water_bottle",
+        "name": "Garrafa de água",
+        "qty": [
+          2,
+          6
+        ],
+        "viewerCategory": "agua",
+        "isTakeable": true,
+        "weight": 3,
+        "isSupply": true
+      },
+      {
+        "type": "iogurte",
+        "item": "yogurt",
+        "name": "Iogurte",
+        "qty": [
+          2,
+          5
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": true
+      }
+    ],
+    "freezer": [
+      {
+        "type": "carne",
+        "item": "carne_bovina",
+        "name": "Carne congelada",
+        "qty": [
+          2,
+          5
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 3,
+        "isSupply": true
+      },
+      {
+        "type": "sorvete",
+        "item": "ice_cream",
+        "name": "Pote de sorvete",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      }
+    ],
+    "pia": [
+      {
+        "type": "panela",
+        "item": "pot",
+        "name": "Panela",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": true
+      },
+      {
+        "type": "faca",
+        "item": "knife",
+        "name": "Faca de cozinha",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": false
+      },
+      {
+        "type": "detergente",
+        "item": "detergent",
+        "name": "Detergente",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "esponja",
+        "item": "sponge",
+        "name": "Esponja",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": false
+      },
+      {
+        "type": "arroz",
+        "item": "rice",
+        "name": "Pacote de arroz",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": true
+      },
+      {
+        "type": "feijao",
+        "item": "beans",
+        "name": "Pacote de feijão",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": true
+      },
+      {
+        "type": "macarrao",
+        "item": "pasta",
+        "name": "Macarrão",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      },
+      {
+        "type": "oleo",
+        "item": "cooking_oil",
+        "name": "Óleo de cozinha",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      },
+      {
+        "type": "lata_atum",
+        "item": "canned_food",
+        "name": "Lata de atum",
+        "qty": [
+          1,
+          3
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": true
+      },
+      {
+        "type": "desinfetante",
+        "item": null,
+        "name": "Desinfetante",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": false
+      },
+      {
+        "type": "saco_lixo",
+        "item": "saco_lixo",
+        "name": "Saco de lixo",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "lixo",
+        "isTakeable": true,
+        "weight": 0.7,
+        "isSupply": false
+      }
+    ],
+    "aereo": [
+      {
+        "type": "prato",
+        "item": "plate",
+        "name": "Pratos",
+        "qty": [
+          4,
+          8
+        ],
+        "viewerCategory": "utensilio",
+        "isTakeable": false,
+        "weight": 3,
+        "isSupply": false
+      },
+      {
+        "type": "copo",
+        "item": "cup",
+        "name": "Copos",
+        "qty": [
+          3,
+          6
+        ],
+        "viewerCategory": "utensilio",
+        "isTakeable": false,
+        "weight": 3,
+        "isSupply": false
+      },
+      {
+        "type": "caneca",
+        "item": "cup",
+        "name": "Caneca",
+        "qty": [
+          1,
+          3
+        ],
+        "viewerCategory": "utensilio",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": false
+      },
+      {
+        "type": "cafe",
+        "item": "coffee",
+        "name": "Pó de café",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": true
+      },
+      {
+        "type": "lata_milho",
+        "item": "milho_lata",
+        "name": "Lata de milho",
+        "qty": [
+          1,
+          3
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": true
+      },
+      {
+        "type": "tempero",
+        "item": null,
+        "name": "Temperos",
+        "qty": [
+          1,
+          3
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      }
+    ],
+    "pia_b": [
+      {
+        "type": "paracetamol",
+        "item": "painkillers",
+        "name": "Analgésico",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "remedio",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": true
+      },
+      {
+        "type": "curativo",
+        "item": "curativo",
+        "name": "Caixa de curativos",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "remedio",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": true
+      },
+      {
+        "type": "sabonete",
+        "item": "soap",
+        "name": "Sabonete",
+        "qty": [
+          1,
+          3
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "papel_higienico",
+        "item": "toilet_paper",
+        "name": "Papel higiênico",
+        "qty": [
+          1,
+          4
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "shampoo",
+        "item": "shampoo",
+        "name": "Shampoo",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": false
+      },
+      {
+        "type": "escova_dente",
+        "item": "toothbrush",
+        "name": "Escova de dentes",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": false
+      },
+      {
+        "type": "tesoura",
+        "item": "scissors",
+        "name": "Tesoura",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 0.5,
+        "isSupply": false
+      },
+      {
+        "type": "alcool",
+        "item": "alcohol_70",
+        "name": "Álcool 70%",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "remedio",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      }
+    ],
+    "guarda": [
+      {
+        "type": "camisa",
+        "item": "tshirt",
+        "name": "Camisas",
+        "qty": [
+          2,
+          6
+        ],
+        "viewerCategory": "roupa",
+        "isTakeable": true,
+        "weight": 3,
+        "isSupply": false
+      },
+      {
+        "type": "calca",
+        "item": "jeans",
+        "name": "Calças",
+        "qty": [
+          1,
+          4
+        ],
+        "viewerCategory": "roupa",
+        "isTakeable": true,
+        "weight": 3,
+        "isSupply": false
+      },
+      {
+        "type": "casaco",
+        "item": "jacket",
+        "name": "Casaco",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "roupa",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": false
+      },
+      {
+        "type": "tenis",
+        "item": "sneakers",
+        "name": "Par de tênis",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "roupa",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": false
+      },
+      {
+        "type": "sapato",
+        "item": "sneakers",
+        "name": "Sapato",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "roupa",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": false
+      },
+      {
+        "type": "cobertor",
+        "item": "blanket",
+        "name": "Cobertor",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "roupa",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": false
+      },
+      {
+        "type": "mochila",
+        "item": "backpack",
+        "name": "Mochila",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 0.8,
+        "isSupply": true
+      }
+    ],
+    "comoda": [
+      {
+        "type": "roupa_intima",
+        "item": "underwear",
+        "name": "Roupas íntimas",
+        "qty": [
+          2,
+          6
+        ],
+        "viewerCategory": "roupa",
+        "isTakeable": true,
+        "weight": 3,
+        "isSupply": false
+      },
+      {
+        "type": "meias",
+        "item": "socks",
+        "name": "Meias",
+        "qty": [
+          2,
+          6
+        ],
+        "viewerCategory": "roupa",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "camiseta",
+        "item": "tshirt",
+        "name": "Camisetas",
+        "qty": [
+          1,
+          4
+        ],
+        "viewerCategory": "roupa",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "documento",
+        "item": "documents",
+        "name": "Documentos",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "documento",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": false
+      },
+      {
+        "type": "lanterna",
+        "item": "flashlight",
+        "name": "Lanterna",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 0.7,
+        "isSupply": true
+      },
+      {
+        "type": "pilhas",
+        "item": "batteries",
+        "name": "Pilhas",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 0.7,
+        "isSupply": true
+      }
+    ],
+    "criado": [
+      {
+        "type": "remedio",
+        "item": "remedio_continuo",
+        "name": "Remédio",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "remedio",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": true
+      },
+      {
+        "type": "livro",
+        "item": "livro_hab",
+        "name": "Livro",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "documento",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": false
+      },
+      {
+        "type": "carregador",
+        "item": "phone_charger",
+        "name": "Carregador",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      },
+      {
+        "type": "lanterna",
+        "item": "flashlight",
+        "name": "Lanterna",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 0.7,
+        "isSupply": true
+      },
+      {
+        "type": "oculos",
+        "item": "oculos",
+        "name": "Óculos",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 0.7,
+        "isSupply": true
+      }
+    ],
+    "gaveteiro": [
+      {
+        "type": "documento",
+        "item": "documents",
+        "name": "Documentos",
+        "qty": [
+          1,
+          4
+        ],
+        "viewerCategory": "documento",
+        "isTakeable": true,
+        "weight": 3,
+        "isSupply": false
+      },
+      {
+        "type": "caneta",
+        "item": "pen",
+        "name": "Caneta",
+        "qty": [
+          1,
+          3
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": true
+      },
+      {
+        "type": "chaves",
+        "item": "house_key",
+        "name": "Chaves",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      },
+      {
+        "type": "grampeador",
+        "item": null,
+        "name": "Grampeador",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 0.5,
+        "isSupply": false
+      }
+    ],
+    "despensa": [
+      {
+        "type": "arroz",
+        "item": "rice",
+        "name": "Pacote de arroz",
+        "qty": [
+          2,
+          4
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": true
+      },
+      {
+        "type": "feijao",
+        "item": "beans",
+        "name": "Pacote de feijão",
+        "qty": [
+          2,
+          4
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": true
+      },
+      {
+        "type": "lata_atum",
+        "item": "canned_food",
+        "name": "Lata de atum",
+        "qty": [
+          2,
+          5
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": true
+      },
+      {
+        "type": "agua_galao",
+        "item": "galao_agua",
+        "name": "Galão de água",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "agua",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": true
+      },
+      {
+        "type": "farinha",
+        "item": "flour",
+        "name": "Farinha",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      },
+      {
+        "type": "acucar",
+        "item": "sugar",
+        "name": "Açúcar",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      },
+      {
+        "type": "oleo",
+        "item": "cooking_oil",
+        "name": "Óleo de cozinha",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      },
+      {
+        "type": "biscoito",
+        "item": "biscuits",
+        "name": "Biscoito",
+        "qty": [
+          1,
+          4
+        ],
+        "viewerCategory": "comida",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": true
+      }
+    ],
+    "rack": [
+      {
+        "type": "controle_remoto",
+        "item": null,
+        "name": "Controle remoto",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": true
+      },
+      {
+        "type": "dvd",
+        "item": null,
+        "name": "DVDs",
+        "qty": [
+          1,
+          4
+        ],
+        "viewerCategory": "documento",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": false
+      },
+      {
+        "type": "cabos",
+        "item": null,
+        "name": "Cabos",
+        "qty": [
+          1,
+          3
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": true
+      },
+      {
+        "type": "pilhas",
+        "item": "batteries",
+        "name": "Pilhas",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      }
+    ],
+    "sapateira": [
+      {
+        "type": "tenis",
+        "item": "sneakers",
+        "name": "Par de tênis",
+        "qty": [
+          1,
+          3
+        ],
+        "viewerCategory": "roupa",
+        "isTakeable": true,
+        "weight": 3,
+        "isSupply": false
+      },
+      {
+        "type": "chinelo",
+        "item": "chinelo",
+        "name": "Chinelo",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "roupa",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "sapato",
+        "item": "sneakers",
+        "name": "Sapato",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "roupa",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": false
+      },
+      {
+        "type": "graxa",
+        "item": null,
+        "name": "Graxa de sapato",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 0.5,
+        "isSupply": false
+      }
+    ],
+    "armario_lav": [
+      {
+        "type": "sabao_po",
+        "item": null,
+        "name": "Sabão em pó",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 3,
+        "isSupply": false
+      },
+      {
+        "type": "agua_sanitaria",
+        "item": "bleach",
+        "name": "Água sanitária",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "desinfetante",
+        "item": null,
+        "name": "Desinfetante",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "balde",
+        "item": "balde",
+        "name": "Balde",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      },
+      {
+        "type": "vassoura",
+        "item": null,
+        "name": "Vassoura",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": false
+      },
+      {
+        "type": "luvas",
+        "item": null,
+        "name": "Luvas de borracha",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": false
+      }
+    ],
+    "estante_lav": [
+      {
+        "type": "sabao_po",
+        "item": null,
+        "name": "Sabão em pó",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "amaciante",
+        "item": null,
+        "name": "Amaciante",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "limpeza",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "cesto_pregadores",
+        "item": null,
+        "name": "Pregadores",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      }
+    ],
+    "bancada": [
+      {
+        "type": "martelo",
+        "item": "hammer",
+        "name": "Martelo",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "chave_fenda",
+        "item": "screwdriver",
+        "name": "Chave de fenda",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": true
+      },
+      {
+        "type": "alicate",
+        "item": "alicate",
+        "name": "Alicate",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": true
+      },
+      {
+        "type": "fita_isolante",
+        "item": null,
+        "name": "Fita isolante",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      },
+      {
+        "type": "parafusos",
+        "item": "parafusos",
+        "name": "Caixa de parafusos",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      }
+    ],
+    "estante_ferr": [
+      {
+        "type": "martelo",
+        "item": "hammer",
+        "name": "Martelo",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": false
+      },
+      {
+        "type": "serrote",
+        "item": "serrote",
+        "name": "Serrote",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "arma_improvisada",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": false
+      },
+      {
+        "type": "lata_tinta",
+        "item": "paint_can",
+        "name": "Lata de tinta",
+        "qty": [
+          1,
+          3
+        ],
+        "viewerCategory": "lixo",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": false
+      },
+      {
+        "type": "corda",
+        "item": "rope",
+        "name": "Corda",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": true
+      },
+      {
+        "type": "pregos",
+        "item": "pregos",
+        "name": "Caixa de pregos",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "ferramenta",
+        "isTakeable": true,
+        "weight": 1.5,
+        "isSupply": true
+      }
+    ],
+    "correio": [
+      {
+        "type": "carta",
+        "item": "letter",
+        "name": "Carta",
+        "qty": [
+          1,
+          4
+        ],
+        "viewerCategory": "documento",
+        "isTakeable": true,
+        "weight": 3,
+        "isSupply": false
+      },
+      {
+        "type": "conta",
+        "item": "bill",
+        "name": "Conta de luz",
+        "qty": [
+          1,
+          2
+        ],
+        "viewerCategory": "documento",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "panfleto",
+        "item": "flyer",
+        "name": "Panfleto",
+        "qty": [
+          1,
+          4
+        ],
+        "viewerCategory": "lixo",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      }
+    ],
+    "lixeira": [
+      {
+        "type": "saco_lixo_cheio",
+        "item": null,
+        "name": "Saco de lixo",
+        "qty": [
+          1,
+          1
+        ],
+        "viewerCategory": "lixo",
+        "isTakeable": false,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "embalagem",
+        "item": null,
+        "name": "Embalagens",
+        "qty": [
+          1,
+          4
+        ],
+        "viewerCategory": "lixo",
+        "isTakeable": true,
+        "weight": 3,
+        "isSupply": false
+      },
+      {
+        "type": "lata_vazia",
+        "item": "empty_can",
+        "name": "Lata vazia",
+        "qty": [
+          1,
+          3
+        ],
+        "viewerCategory": "lixo",
+        "isTakeable": true,
+        "weight": 2,
+        "isSupply": false
+      },
+      {
+        "type": "papel_amassado",
+        "item": "crumpled_paper",
+        "name": "Papel amassado",
+        "qty": [
+          1,
+          3
+        ],
+        "viewerCategory": "lixo",
+        "isTakeable": true,
+        "weight": 1,
+        "isSupply": false
+      }
+    ],
+    "cristaleira": [
+      {
+        "type": "prato",
+        "item": "plate",
+        "name": "Pratos de louça",
+        "qty": [
+          3,
+          6
+        ],
+        "viewerCategory": "utensilio",
+        "isTakeable": false,
+        "weight": 3,
+        "isSupply": false
+      },
+      {
+        "type": "taca",
+        "item": null,
+        "name": "Taças",
+        "qty": [
+          2,
+          5
+        ],
+        "viewerCategory": "utensilio",
+        "isTakeable": false,
+        "weight": 2,
+        "isSupply": false
+      }
+    ]
+  },
+  "aliasOf": {
+    "guarda_g": "guarda",
+    "lixeira_ext": "lixeira",
+    "geladeira_med": "geladeira",
+    "aparador_c": "comoda",
+    "arquivo": "gaveteiro"
+  }
+}

@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { DEFAULT_RULES, RARITIES } from '../src'
 
 describe('DEFAULT_RULES', () => {
-  it('weights rarities 60/28/9/2.5/0.5 and keeps unique for fixed spots', () => {
+  it('weights rarities 60/28/9/2.5/0.5 and keeps legendary and unique for fixed spots', () => {
     expect(RARITIES.map((rarity) => DEFAULT_RULES.rarity.weights[rarity])).toEqual([60, 28, 9, 2.5, 0.5, 0])
-    expect(DEFAULT_RULES.rarity.fixedOnly).toEqual(['unique'])
+    expect(DEFAULT_RULES.rarity.fixedOnly).toEqual(['legendary', 'unique'])
   })
 
   it('keeps the freshness, carry and protection numbers of the team', () => {
