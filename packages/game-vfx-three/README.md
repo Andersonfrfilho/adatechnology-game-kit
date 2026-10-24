@@ -10,6 +10,13 @@ The three.js renderer of [`@adatechnology/game-vfx`](../game-vfx). It draws a `V
   and marks agree. `createGroundPatch(THREE, { field })` is the Lab's 60 m patch as a mesh that follows a `GroundField`.
 - **Screen**: `overlay` puts the Lab's white flash (`mix-blend-mode: screen`) and the Workshop's white, red edge, sides and gas tint inside your container.
   `applyCamera()` shakes the camera for the render that follows and answers the function that puts it back.
+- **Workshop layers**: what `world.play` fills is drawn too, made when the first recipe plays: the two sprite systems with the page's soft-point shader, streaks,
+  500 instanced debris boxes, the decals (wet and dry), the expanding rings and the flash and fire lights. The Workshop's screen state joins the overlay (the
+  stronger value of each field). The lens blobs and the post-processing the page paints on a 2D canvas are not drawn yet.
+- **Bench module**: `createVfxTestModule({ locale })` (id `vfx`, group `effects`) for `game-test-room`: pick an explosion or a recipe (listed by team), its variant,
+  replay or auto replay, distance, LOD band, quality and six layers (`show_puffs`, `show_sparks`, `show_glows`, `show_debris`, `show_shock`, `show_sprites`),
+  with the sheet of the effect, a timeline whose playhead follows the effect's clock, and the counters against the budget (particles 400, debris 40, lights 6).
+  It plays through `host.effects`, or into a renderer of its own when the host lends none.
 - Lights use the raw colours of the Lab and are multiplied by `lightScale` (default `Math.PI`: r155+ lights are physical, the Lab's r128 ones were not).
 
 ```ts
@@ -27,7 +34,7 @@ restore()
 ```
 
 Pass a `VfxWorld` as `vfx` to share one world between renderers (the test room does): the renderer that owns the loop calls `update`, nobody else.
-`configure({ lod_band: 'auto' | 'near' | 'middle' | 'far' })` forces the scale. In Node (tests) pass `createCanvas` so the marks can draw their textures.
+`configure({ lod_band: 'auto' | 'near' | 'middle' | 'far' })` forces the scale, `configure({ quality: 'high' | 'medium' | 'low' })` thins the recipes and `configure({ layer_puffs: false })` hides a layer (`puffs`, `sparks`, `glows`, `debris`, `shock`, `sprites`). In Node (tests) pass `createCanvas` so the marks can draw their textures.
 
 ## Install
 

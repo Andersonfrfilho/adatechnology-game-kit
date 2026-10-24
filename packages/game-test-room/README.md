@@ -80,7 +80,7 @@ profile of their explosive (`explosive` is on the `explosion` host event), the c
 A module that declares `controls`, `layers` or `metrics` (see `@adatechnology/game-contracts`) gets a bench: `loadModule` checks it with
 `checkBench` (a `✓ ... bench ok` / `✗ ... bench broken` line), lends `host.bench` to `attach`, then sends one change per control and layer. The
 panel between the animations and the tests shows the active module (the one of the last `openArea`; else the first loaded with a bench, a later module never takes the panel from the one on screen): a
-range per number, a checkbox per boolean, buttons (up to four options) or a select per choice, a button per action, the layers, and the
+range per number, a checkbox per boolean, buttons (up to four options, no groups) or a select per choice (options with a `group` sit under `optgroup`s), a button per action, the layers, and the
 module counters at 4 Hz with a bar when they have a budget (`warn` from 80 %, `bad` past it). A compact line on top shows the room counters
 (`fps`, `frame_ms`, `draw_calls`, `triangles`, `objects`, `fragments`, `particles`, `decals`); `fps` uses the real frame time, so slow motion
 does not change it.
@@ -90,6 +90,9 @@ const room = createTestRoom({ ..., metrics: ['fps', 'draw_calls'], bench: { stat
 room.bench()?.set('size', 2) // clamped and snapped; false for an unknown id, a wrong type or an option not offered
 room.metrics() // { room: { fps, draw_calls, ... }, module: { particles: 120 } }
 ```
+
+A module can put a **sheet** on the panel (`host.bench.sheet(sheet)`, `BenchSheet` of the contracts): a card with a kicker, a title, a text, facts, steps, colour swatches and a timeline of named segments whose playhead follows one of the module's numeric metrics.
+The room also runs the film of the liquids that have one (`createFilmManager` of `game-fluids-three`): a leak of fuel, oil or blood drips into grids on the floor near the camera.
 
 The state is `id=value;id=value` (`encodeBenchState` / `decodeBenchState`); decoding treats it as hostile input. `bench.state` is keyed by
 module id, so two modules can share a control id; a module loaded again keeps its live values. The room never touches

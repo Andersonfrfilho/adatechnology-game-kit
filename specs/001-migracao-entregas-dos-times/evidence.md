@@ -1579,3 +1579,17 @@ Fonte: `sources/efeitos__oficina-vfx.js` (W168–1295) e a gravação `vfx-works
 - A captura roda a sala de testes num Chromium do Playwright com GL por software e anda a simulação em passos de 1/60 s (a captura antiga usava o relógio da parede com a página servida em `localhost:4801`, que não existe neste ambiente).
 - `consolidado.md` §8 e §9: partículas do SDK que não apareciam (item 1 de §9 e o de §8), lixo de memória por quadro (2), fluido na CPU (8) e o README de `game-fluids` (11) marcados como feitos, cada um com a task.
 - O que ainda difere do Laboratório nos quadros é o cenário (chão liso da sala em vez da rua, dos corpos e da luz noturna da página).
+
+## T5.5 — Documentação, changesets e portões finais da Fase 5
+
+- READMEs e SKILL.md de `game-vfx`, `game-vfx-three`, `game-fluids-three` e `game-test-room` atualizados; changesets de T5.1f/g, T5.2a–e, T5.3c e T5.3e; inventário `efeitos-destruicao.md` ganhou a seção "Fase 5: o que entrou (R5)"; `tasks.md` marca T5.1, T5.2 e T5.3.
+- Portões (`pnpm install`, `build`, `-r typecheck`, `lint`): exit 0. Testes por pacote (um de cada vez): game-contracts 36, game-vfx 348, game-vfx-three 67, game-fluids 70, game-fluids-three 27, game-destruction 159, game-destruction-three 60, game-test-room 139, game-floorplan 38: todos passam.
+- `game-weapons-three`: 1 teste estoura os 5000 ms padrão quando a máquina está carregada (load average ~20, outros agentes rodando); os outros 174 passam. Não toca código da Fase 5.
+- `game-floorplan-structure`: 11 falhas (`Unknown construction "canvas"` em `triage_tent` e `expected 0 to be greater than 0` em utilities de vários prédios). Reproduzidas no commit-base 1c10405, antes de qualquer commit da Fase 5; nenhum commit da Fase 5 altera `game-floorplan*` ou `game-destruction`. Pendência da Fase 2, não da 5.
+
+### Perguntas para o dono
+- Evento `hit` do HostEvent para impactos (T5.1g) ainda não existe no contrato; o evento `body` depende de T4.0.
+- Fatias rebar_expose / stage / collapse das destruições sem receita na Oficina.
+- Borrões de lente e pós-processamento não são desenhados.
+- Nomes de explosão derivados dos ids (sem texto de locale do time).
+- Filme na GPU real (hoje validado em swiftshader), volume de vazamento por gota e teto de gotas.

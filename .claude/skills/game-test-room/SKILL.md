@@ -107,6 +107,8 @@ Query strings do exemplo: `?area=`, `?items=`, `?scenario=all|<id>`, `?lang=`, `
 - `attach` roda uma vez no `loadModule`; devolva o desfazer. Recarregar o módulo chama o desfazer anterior antes do novo `attach`.
   `ModuleHost.onFrame` roda a cada quadro simulado.
 - Os efeitos são **um** mundo só (`game-vfx`): a sala o cria, o passa à destruição e o empresta como `host.effects` a todo módulo (`play({ effect, point })`); granada e foguete tocam o perfil do próprio explosivo e o evento `explosion` leva `explosive`. A tremida da câmera e o clarão de tela vêm dele (`TestRoom.applyCamera()` para quem renderiza por conta própria); `craters: true` troca o piso por um remendo deformável. O contador `particles` soma as piscinas dele.
+- A bancada também mostra uma **ficha** (`host.bench.sheet(ficha)`: cartão com fatos, passos, cores e uma linha do tempo cuja cabeça de leitura segue um contador do módulo) e lista as opções com `group` sob `optgroup`; opções agrupadas nunca viram botões.
+- A sala roda o filme dos líquidos (`createFilmManager` e `createFilmBridge` de `game-fluids-three`): um vazamento de combustível, óleo ou sangue pinga em grades perto da câmera; `clear` as libera.
 - A bancada é emprestada (`host.bench`) só a módulo que declara controles, camadas ou contadores e passa no `checkBench`. As mudanças iniciais
   chegam logo depois do `attach`, já com o estado restaurado (o vivo, se o módulo está sendo recarregado; senão `options.bench.state[moduleId]`). Leitura de contador que lança mostra `n/a` e entra uma vez no log; ouvinte que lança não derruba os outros. A sala nunca mexe em `location`.
 - Teclas da ferramenta: R recarrega, Q muda o modo de tiro (`mode`), **X destrava** a pane (`clear`) e **B liga ou desliga a trava** (`safety`). Pegar uma ferramenta chama `draw()`: o gatilho responde `drawing` pelo tempo da regra (0,35 s) e o host recebe `tool` com `duration`. O arsenal da sala tem as panes ligadas (a regra padrão); `arsenal` nas opções troca isso.
@@ -114,5 +116,5 @@ Query strings do exemplo: `?area=`, `?items=`, `?scenario=all|<id>`, `?lang=`, `
 - Sem `renderer` injetado a sala é dona do canvas e do laço.
 
 ## O que vem pela migração (spec 001)
-Decisão E5: o contrato do módulo já tem bancada (T0.2); falta a Oficina de efeitos virar módulo do `game-vfx` carregado aqui. V5: módulos de veículos e vegetação viram `examples/vehicles-test-area` e `vegetation-test-area`. Cada área da página do kit abre o seu
+Decisão E5: o contrato do módulo já tem bancada (T0.2); a Oficina de efeitos é o módulo `vfx` do `game-vfx-three` (`examples/vfx-test-area`, T5.2). V5: módulos de veículos e vegetação viram `examples/vehicles-test-area` e `vegetation-test-area`. Cada área da página do kit abre o seu
 ambiente via `?area=`. Nada disso existe ainda no pacote.

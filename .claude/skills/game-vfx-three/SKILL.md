@@ -29,6 +29,7 @@ const restore = vfx.applyCamera(); gl.render(scene, camera); restore()
 | Função / tipo | Para que serve |
 |---|---|
 | `createVfxRenderer(THREE, options)` | `VfxRenderer`: `world`, `play`, `stop`, `configure`, `catalog`, `update`, `applyCamera`, `stats`, `screen`, `dispose`; opções `scene`, `camera`, `vfx` (mundo ou opções), `quality`, `overlay`, `reducedMotion`, `createCanvas`, `lightDirection`, `lightScale` |
+| `createVfxTestModule({ locale })`, `VFX_LAYERS` | módulo de bancada `vfx` (grupo `effects`) para a sala de testes: efeito por grupo, variante, repetir, distância, LOD, qualidade, 6 camadas `show_*`, medidores, ficha e linha do tempo |
 | `createGroundPatch(THREE, { field })` | malha do chão de 60 m que segue um `GroundField` (`sync()` redesenha quando mudou) |
 | `createScreenOverlay(container)` | clarão e bordas de tela dentro do contêiner do host |
 | `createMarkLayer`, `PUFF_*`, `SPARK_*`, `GLOW_*`, `SHELL_*`, `RING_*` | camada de marcas e os shaders |
@@ -36,8 +37,11 @@ const restore = vfx.applyCamera(); gl.render(scene, camera); restore()
 ## Compõe com
 - `game-vfx` (a simulação), `game-contracts` (`EffectSink`), `game-test-room` (cria um renderizador e empresta o mundo e o sink; T5.1g), `game-destruction-three` e `game-fluids-three` (usarão o mesmo mundo).
 
+## Receitas da Oficina na tela
+O que `world.play` enche também é desenhado, criado quando a primeira receita toca: sprites aditivo e normal com o shader da página, riscos, 500 detritos instanciados, decalques (molhado e seco), anéis e as luzes de clarão e de fogo. A tela da Oficina entra no overlay (o maior valor de cada campo). A bolha de lente e o pós-processo (a página pinta num canvas 2D) ainda não são desenhados. `configure({ quality, lod_band, layer_<id>: false })`.
+
 ## Ambiente de teste
-`vfx-test-area` (T5.2e): módulo de bancada com a lista de explosões e a ficha. Em Node, passe `createCanvas` para as texturas das marcas.
+`examples/vfx-test-area` (e a área de móveis): o módulo `vfx` na sala de testes. Em Node, passe `createCanvas` para as texturas das marcas.
 
 ## Cuidados
 - Shaders são os do Laboratório (r128) com um ajuste só: `colorspace_fragment`. Não "melhore" o código GLSL: o golden confere a cena.
@@ -46,4 +50,4 @@ const restore = vfx.applyCamera(); gl.render(scene, camera); restore()
 - Marcas de chão são criadas no instante do evento (acompanham o chão daquele momento); não as reconstrua depois.
 
 ## O que vem pela migração
-Goldens da cena (T5.1e), troca de `game-destruction-three`, `game-fluids-three`, `game-weapons-three` e da sala de testes para o mundo compartilhado (T5.1f e T5.1g), pontos de sprite da Oficina, módulo de bancada e `vfx-test-area` (T5.2).
+Feito na Fase 5: goldens da cena (T5.1e), troca de `game-destruction-three`, `game-fluids-three`, `game-weapons-three` e da sala de testes para o mundo compartilhado (T5.1f e T5.1g), desenhistas da Oficina, módulo de bancada e `vfx-test-area` (T5.2). Falta: lente e pós-processo na tela, chuva e neblina (Fase 6).

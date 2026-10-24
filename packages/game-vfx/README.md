@@ -46,6 +46,24 @@ render(vfx.pools(), vfx.screen())
 `explosion` answers a handle (or `null` for an unknown id), `stop(handle)` ends a fire, `clear()` takes everything away and restarts the clock, `stats()`
 reports what is alive, what the last explosion made, the scale it was made at and the seconds since.
 
+
+## Workshop recipes, sprites and event effects
+
+`vfx.play(id, point, { direction?, normal?, seed?, param? })` plays one of the **36 recipes of the Workshop of VFX** (blood by infection age, headshot,
+dismemberment, bloater cloud, scream, muzzle flashes by weapon, impact by material, glass, doors, collapses, fires, cars, the screen effects) into the
+Workshop pools (`vfx.workshop()`: additive and normal sprites, streaks, physics debris, decals, rings, flash and fire lights, screen state). The recipes
+are **data** (`WORKSHOP_EFFECTS`, `EffectDef`: a small language of expressions and steps) that a runner executes in the page's own order of random draws,
+so the goldens (`tests/workshop-golden.test.ts`, 162 assertions over 54 runs) replay the recording of the page. `param` picks the variant of a recipe by
+index or id (`'fresh'`, `'ak'`, `'concrete'`); `anchor` and `heading` of the recipe place and turn it at `point` and `direction`; `seed` makes it
+repeatable on a LAN client. `patchEffects(base, changes)` tunes, adds or removes recipes like `patchExplosions` does.
+
+`vfx.burst(kind, point, normal, count, speed?)` and `vfx.spawn(kind, point, velocity)` are the **sprite kinds** that destruction, fluids and weapons share
+(debris, sparks, ash, steam, drips, leaks...: `data/sprite-kinds.json`, `patchSpriteKinds`), with `onLand(owner, ...)` to hear where a drop touched the ground.
+
+`effectForEvent(event)` maps the destruction events to effects (`data/event-effects.json`): `spall` plays `impact_<material>`, the stages `stage_crack`,
+`breach_dust` and `collapse_dust`, `expose` `rebar_expose`, a fracture of glass `glass_burst`; `muzzle_*` and `casing_*` are the weapon slices. `GAME_EFFECTS`
+is the recipes plus these, what a world plays by default. Texts of every recipe (name, cost, when, look, budget, network) are in `locales` (`en`, `pt-BR`).
+
 ## Install
 
 ```sh

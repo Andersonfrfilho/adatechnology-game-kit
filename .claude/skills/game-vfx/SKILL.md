@@ -48,8 +48,15 @@ const { puffs, sparks, chunks, glows, shocks, lights, marks } = vfx.pools()
 - `game-vfx-three`: desenha as piscinas (shaders do Laboratório, marcas, luzes, tela).
 - `game-weapons`: os ids dos explosivos são as chaves do catálogo; `game-destruction` manda `explode` com o id do efeito; `game-fluids` ficará com o sangue e os respingos (T5.3).
 
+## Receitas da Oficina, sprites e efeitos de evento
+- `vfx.play(id, ponto, { direction?, normal?, seed?, param? })` toca uma das 36 receitas da Oficina de VFX (sangue por idade, tiro na cabeça, desmembramento, nuvem do inchado, clarão de boca, impacto por material, vidro, portas, desabamento, fogo, carro, efeitos de tela) nas piscinas da Oficina (`vfx.workshop()`: sprites aditivo e normal, riscos, detritos, decalques, anéis, luzes, tela). `param` escolhe a variante por índice ou id. Devolve handle ou `null`.
+- As receitas são **dados** (`WORKSHOP_EFFECTS`, `EffectDef`: expressões e passos `burst`, `emit`, `debris`, `decal`, `ring`, `flash`, `screen`, `after`, `when`, `repeat`, `behavior`...), a mesma ordem de sorteios da página; `patchEffects(base, mudanças)` ajusta, acrescenta ou tira. `GAME_EFFECTS` = receitas + efeitos de evento.
+- `vfx.burst(tipo, ponto, normal, n, velocidade?)` / `vfx.spawn(tipo, ponto, velocidade)`: sprites por tipo (`data/sprite-kinds.json`, 14 tipos: detritos, faíscas, cinza, vapor, gotas...) que destruição, fluidos e armas compartilham; `onLand(dono, fn)` avisa onde a gota tocou o chão.
+- `effectForEvent(evento)` (`data/event-effects.json`): `spall` -> `impact_<material>`, estágios -> `stage_crack` / `breach_dust` / `collapse_dust`, `expose` -> `rebar_expose`, vidro -> `glass_burst`; `muzzle_*` e `casing_*` são fatias da receita de clarão e cápsula.
+- Textos de cada receita (nome, custo, quando, visual, orçamento, rede) em `locales` (`en`, `pt-BR`).
+
 ## Ambiente de teste
-O ambiente `vfx-test-area` (T5.2e) carrega o módulo de bancada do `game-vfx-three` na sala de testes: escolha da explosão por grupo, detonar de novo, distância, faixa de LOD, camadas, medidores e a ficha.
+`examples/vfx-test-area` carrega o módulo de bancada do `game-vfx-three` na sala de testes (também dentro de `interactables-test-area`): escolha de explosão ou receita por grupo, variante, repetir, repetição automática, distância, faixa de LOD, qualidade, camadas, medidores contra o orçamento, a ficha com a linha do tempo e três cenários (todas as explosões, todas as receitas, o teto de luzes).
 
 ## Cuidados
 - Ordem dos sorteios é contrato: mudar a ordem de um `random.next()` quebra os goldens (`tests/team-golden.test.ts`). Não reordene ao refatorar.
