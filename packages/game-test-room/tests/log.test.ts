@@ -189,3 +189,19 @@ describe('download inside a claude.ai Artifact', () => {
     }
   })
 })
+
+describe('a long run trims the log', () => {
+  it('keeps only the last entries, so a position in the list goes stale but the sequence number stays a valid mark', () => {
+    const log = createLog()
+    log.add({ channel: 'action', type: 'mark', text: 'start' })
+    const mark = log.entries().at(-1)!.seq
+    for (let i = 0; i < 6000; i++) log.add({ channel: 'event', type: 'noise', text: `n${i}` })
+    log.add({ channel: 'event', type: 'after', text: 'after the mark' })
+    const all = log.entries()
+    expect(all.length).toBeLessThan(6002)
+    // slicing by the old length finds nothing; filtering by sequence finds the entries made since the mark
+    expect(all.slice(1)).not.toEqual([])
+    expect(all.filter((e) => e.seq > mark).at(-1)?.type).toBe('after')
+    expect(all.map((e) => e.seq)).toEqual([...all.map((e) => e.seq)].sort((a, b) => a - b))
+  })
+})

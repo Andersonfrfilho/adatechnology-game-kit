@@ -49,21 +49,6 @@ await page.goto(`${url}?scenario=all`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoomReport, null, { timeout: 600000 })
 const report = await page.evaluate(() => window.__testRoomReport)
 
-// A scenario that fails after the other 100+ ran in the same room may depend on what ran before it (tool in hand, lit fires, ammo): run it again alone on a fresh page, and only
-// a failure there counts. The ones that only fail in the sequence are listed so they can be fixed.
-const sequenceOnly = []
-for (const r of report.results.filter((x) => !x.ok)) {
-  await page.goto(`${pathToFileURL(dist).href}?scenario=${r.id}`, { timeout: 180000 })
-  await page.waitForFunction(() => window.__testRoomReport, null, { timeout: 120000 })
-  const alone = await page.evaluate(() => window.__testRoomReport.results[0].ok)
-  if (alone) {
-    sequenceOnly.push(r.id)
-    r.ok = true
-    report.failed--
-    report.passed++
-  }
-}
-if (sequenceOnly.length) console.log(`note: passes alone but fails after the rest ran (order-dependent): ${sequenceOnly.join(', ')}`)
 
 console.log(`\nscenarios: ${report.passed} passed, ${report.failed} failed`)
 for (const r of report.results) {

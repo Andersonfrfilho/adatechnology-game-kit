@@ -2959,3 +2959,20 @@ O dono perguntou se os itens de `/test-room/` eram os do jogo: não eram (19 ite
 - `game-test-room` perdeu `demoItems`/`DEMO_ITEMS`/`DEMO_MATERIALS`, os cenários embutidos (`SCENARIOS`, `scenariosFor`, `makeScenarios`, que usavam esses ids e a ferramenta `pistol_9mm`) e os textos deles. Fica só `brickWallSpec` (parede-alvo da arena). Os cenários de destruição, fluido e fogo que eles cobriam já existem nos testes de `game-destruction`/`game-fluids` e nos cenários de módulo dos pacotes de conteúdo; nenhum foi portado porque nenhum tinha item real equivalente sem cenário próprio (pendência: cenário de módulo para o extintor apagando fogo e para o fogo em estofado, se quisermos manter essa cobertura).
 - `examples/test-room` carrega o mesmo conjunto de `examples/interactables-test-area` (o `entry.js` dele é embutido na página; a sala "nua" sem itens fica em `examples/test-room/base/` e é sobre ela que as outras áreas se constroem). `demo-module.js` foi removido.
 - Os testes do pacote usam `tests/fixtures/demo-items.ts` (não exportado).
+
+### 2026-10-24 · Cobertura dos cenários removidos da sala, reescrita com itens reais
+
+Cada cenário embutido que a sala trazia foi para o módulo do pacote dono do item real, ou já tinha equivalente:
+
+| Cenário removido | Onde está agora |
+|---|---|
+| `steel_through_hole`, `concrete_stops_bullet`, `shotgun_splinters_crate`, `hammer_dents_drum`, `torch_melts_steel` | `game-weapons-three` (`src/scenarios.ts`, alvos `target_steel_plate`/`target_plywood`/`target_concrete`, `pistol_9mm`, `rifle_7_62x39`, `shotgun_pump_12`, `hammer`, `cutting_torch`). O 9 mm só amassa a chapa de 10 mm (realista); o furo que atravessa é do 7,62x39. A escopeta fura o compensado com vários chumbos, não estilhaça. |
+| `extinguisher_puts_out_fire`, `throw_chair_at_wall`, `wrong_tool_refused` | área de móveis (`examples/interactables-test-area/src/scenarios.js`): `sofa_fire_extinguished`, `chair_thrown_at_wall`, `wrong_tool_refused` (chave inglesa na dobradiça da geladeira) |
+| `glass_shatters` | já existiam `tv_screen_shatters` e `shower_glass_shatters` |
+| `kick_chair_leg`, `kick_detaches_leg_via_tool` | já existiam `chair_kicked_apart` e `camp_chair_kicked` |
+| `lighter_burns_crate` | já existe `sofa_burns` |
+| `one_column_roof_stands`, `two_columns_roof_collapses` | já cobertos pelos cenários de desabamento de `game-floorplan-three` |
+| `gas_bottle_explodes` | já existe com o mesmo nome |
+| `screwdriver_shelf_board`, `bucket_melts_drips`, `bottle_drop_shatters`, `coffee_three_sips`, `tilt_cup_spills`, `jerrycan_leaks_fuel`, `fuel_stain_burns` | **sem item real equivalente**: dependem de recipiente com líquido (xícara, garrafa, balde, galão) ou de prateleira de tábuas, que não existem como item destrutível com `fluid` no SDK. Pendência: quando os itens de recipiente entrarem, escrever os cenários no pacote que os entregar. |
+
+Também: `zombie_behind_door` falhava só depois de ~45 cenários na mesma sala porque marcava o ponto do log pelo tamanho da lista, e o log guarda só os últimos 5000 registros; passou a marcar pelo `seq`.
