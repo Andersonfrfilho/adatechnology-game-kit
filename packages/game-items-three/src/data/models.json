@@ -1428,5 +1428,15 @@
       1.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "copper_wire",
+    "teamId": "fio_cobre",
+    "teamBox": [
+      0.8,
+      0.302,
+      0.8
+    ],
+    "scale": 0.1
   }
 ]
