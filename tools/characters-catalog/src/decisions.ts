@@ -69,6 +69,12 @@ export type Decisions = {
   readonly professionCarries: Decision<Readonly<Record<string, string>>>
   readonly ageGroups: Decision<readonly { readonly id: string; readonly maxYears: number }[]>
   readonly professionProtection: Decision<Readonly<Record<string, readonly string[]>>>
+  readonly uniformedForces: Decision<Readonly<Record<string, { readonly id: string; readonly region: string; readonly name: Readonly<Record<string, string>> }>>>
+  readonly uniformedRanks: Decision<Readonly<Record<string, readonly { readonly id: string; readonly name: Readonly<Record<string, string>> }[]>>>
+  readonly uniformedRankLadder: Decision<Readonly<Record<string, string>>>
+  readonly uniformedLootItems: Decision<Readonly<Record<string, { readonly id: string; readonly kind: string; readonly name: string }>>>
+  readonly uniformedLootChance: Decision<Readonly<Record<string, number>>>
+  readonly uniformedLoadouts: Decision<Readonly<Record<string, Readonly<Record<string, unknown>>>>>
   readonly accessorySlots: Decision<Readonly<Record<string, string>>>
 }
 

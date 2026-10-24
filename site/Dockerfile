@@ -13,6 +13,7 @@ COPY packages/game-camera/package.json packages/game-camera/
 COPY packages/game-characters/package.json packages/game-characters/
 COPY packages/game-characters-people/package.json packages/game-characters-people/
 COPY packages/game-characters-undead/package.json packages/game-characters-undead/
+COPY packages/game-characters-uniformed/package.json packages/game-characters-uniformed/
 COPY packages/game-contracts/package.json packages/game-contracts/
 COPY packages/game-destruction/package.json packages/game-destruction/
 COPY packages/game-destruction-three/package.json packages/game-destruction-three/

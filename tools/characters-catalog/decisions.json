@@ -301,5 +301,696 @@
     },
     "source": "elenco:14-39 PROFS .parts (\"Colete balístico preto\", \"Roupa de aproximação caqui\")",
     "reason": "Only the two professions whose listed gear is protection wear it; ids are the ones decisions.protectionPresets gives game-items."
+  },
+  "uniformedForces": {
+    "value": {
+      "eb": {
+        "id": "army",
+        "region": "br",
+        "name": {
+          "en": "Brazilian Army",
+          "pt-BR": "Exército Brasileiro"
+        }
+      },
+      "pm": {
+        "id": "military_police",
+        "region": "br",
+        "name": {
+          "en": "Military Police (PM)",
+          "pt-BR": "Polícia Militar"
+        }
+      },
+      "pc": {
+        "id": "civil_police",
+        "region": "br",
+        "name": {
+          "en": "Civil Police",
+          "pt-BR": "Polícia Civil"
+        }
+      },
+      "prf": {
+        "id": "highway_police",
+        "region": "br",
+        "name": {
+          "en": "Federal Highway Police (PRF)",
+          "pt-BR": "Polícia Rodoviária Federal"
+        }
+      },
+      "pp": {
+        "id": "prison_police",
+        "region": "br",
+        "name": {
+          "en": "Prison Police",
+          "pt-BR": "Polícia Penal"
+        }
+      },
+      "fe": {
+        "id": "special_forces",
+        "region": "br",
+        "name": {
+          "en": "Special forces",
+          "pt-BR": "Forças especiais"
+        }
+      },
+      "tat": {
+        "id": "tactical_unit",
+        "region": "br",
+        "name": {
+          "en": "Tactical units (BOPE, COT, GATE)",
+          "pt-BR": "Unidades táticas (BOPE, COT, GATE)"
+        }
+      }
+    },
+    "source": "os-vivos:499-529 FACT .k/.n; design T4 §2",
+    "reason": "Seven generic forces with region br and the real Brazilian names; the valley's 7º BIS, the places, the people and the phases stay in the game slice."
+  },
+  "uniformedRanks": {
+    "value": {
+      "army": [
+        {
+          "id": "private",
+          "name": {
+            "en": "Private",
+            "pt-BR": "Soldado"
+          }
+        },
+        {
+          "id": "corporal",
+          "name": {
+            "en": "Corporal",
+            "pt-BR": "Cabo"
+          }
+        },
+        {
+          "id": "sergeant_3rd",
+          "name": {
+            "en": "3rd Sergeant",
+            "pt-BR": "3º Sargento"
+          }
+        },
+        {
+          "id": "sergeant_2nd",
+          "name": {
+            "en": "2nd Sergeant",
+            "pt-BR": "2º Sargento"
+          }
+        },
+        {
+          "id": "sergeant_1st",
+          "name": {
+            "en": "1st Sergeant",
+            "pt-BR": "1º Sargento"
+          }
+        },
+        {
+          "id": "sub_lieutenant",
+          "name": {
+            "en": "Sub-lieutenant",
+            "pt-BR": "Subtenente"
+          }
+        },
+        {
+          "id": "cadet_officer",
+          "name": {
+            "en": "Cadet officer",
+            "pt-BR": "Aspirante"
+          }
+        },
+        {
+          "id": "lieutenant_2nd",
+          "name": {
+            "en": "2nd Lieutenant",
+            "pt-BR": "2º Tenente"
+          }
+        },
+        {
+          "id": "lieutenant_1st",
+          "name": {
+            "en": "1st Lieutenant",
+            "pt-BR": "1º Tenente"
+          }
+        },
+        {
+          "id": "captain",
+          "name": {
+            "en": "Captain",
+            "pt-BR": "Capitão"
+          }
+        },
+        {
+          "id": "major",
+          "name": {
+            "en": "Major",
+            "pt-BR": "Major"
+          }
+        },
+        {
+          "id": "lieutenant_colonel",
+          "name": {
+            "en": "Lieutenant Colonel",
+            "pt-BR": "Tenente-Coronel"
+          }
+        },
+        {
+          "id": "colonel",
+          "name": {
+            "en": "Colonel",
+            "pt-BR": "Coronel"
+          }
+        }
+      ],
+      "military_police": [
+        {
+          "id": "private",
+          "name": {
+            "en": "Private",
+            "pt-BR": "Soldado"
+          }
+        },
+        {
+          "id": "corporal",
+          "name": {
+            "en": "Corporal",
+            "pt-BR": "Cabo"
+          }
+        },
+        {
+          "id": "sergeant_3rd",
+          "name": {
+            "en": "3rd Sergeant",
+            "pt-BR": "3º Sargento"
+          }
+        },
+        {
+          "id": "sergeant_2nd",
+          "name": {
+            "en": "2nd Sergeant",
+            "pt-BR": "2º Sargento"
+          }
+        },
+        {
+          "id": "sergeant_1st",
+          "name": {
+            "en": "1st Sergeant",
+            "pt-BR": "1º Sargento"
+          }
+        },
+        {
+          "id": "sub_lieutenant",
+          "name": {
+            "en": "Sub-lieutenant",
+            "pt-BR": "Subtenente"
+          }
+        },
+        {
+          "id": "cadet_officer",
+          "name": {
+            "en": "Cadet officer",
+            "pt-BR": "Aspirante"
+          }
+        },
+        {
+          "id": "lieutenant_2nd",
+          "name": {
+            "en": "2nd Lieutenant",
+            "pt-BR": "2º Tenente"
+          }
+        },
+        {
+          "id": "lieutenant_1st",
+          "name": {
+            "en": "1st Lieutenant",
+            "pt-BR": "1º Tenente"
+          }
+        },
+        {
+          "id": "captain",
+          "name": {
+            "en": "Captain",
+            "pt-BR": "Capitão"
+          }
+        },
+        {
+          "id": "major",
+          "name": {
+            "en": "Major",
+            "pt-BR": "Major"
+          }
+        },
+        {
+          "id": "lieutenant_colonel",
+          "name": {
+            "en": "Lieutenant Colonel",
+            "pt-BR": "Tenente-Coronel"
+          }
+        },
+        {
+          "id": "colonel",
+          "name": {
+            "en": "Colonel",
+            "pt-BR": "Coronel"
+          }
+        }
+      ],
+      "civil_police": [
+        {
+          "id": "agent",
+          "name": {
+            "en": "Agent",
+            "pt-BR": "Agente"
+          }
+        },
+        {
+          "id": "clerk",
+          "name": {
+            "en": "Clerk",
+            "pt-BR": "Escrivão"
+          }
+        },
+        {
+          "id": "investigator",
+          "name": {
+            "en": "Investigator",
+            "pt-BR": "Investigador"
+          }
+        },
+        {
+          "id": "chief_of_police",
+          "name": {
+            "en": "Chief of police",
+            "pt-BR": "Delegado"
+          }
+        }
+      ],
+      "highway_police": [
+        {
+          "id": "highway_officer",
+          "name": {
+            "en": "Federal highway officer",
+            "pt-BR": "Policial rodoviário federal"
+          }
+        },
+        {
+          "id": "post_chief",
+          "name": {
+            "en": "Post chief (by function)",
+            "pt-BR": "Chefe de posto"
+          }
+        }
+      ],
+      "prison_police": [
+        {
+          "id": "prison_officer",
+          "name": {
+            "en": "Prison officer",
+            "pt-BR": "Policial penal"
+          }
+        },
+        {
+          "id": "shift_chief",
+          "name": {
+            "en": "Shift chief",
+            "pt-BR": "Chefe de plantão"
+          }
+        },
+        {
+          "id": "director",
+          "name": {
+            "en": "Director",
+            "pt-BR": "Diretor"
+          }
+        }
+      ]
+    },
+    "source": "os-vivos:530-536 RANKS",
+    "reason": "Ladders in the order of the page ('Soldado → Cabo → 3º, 2º e 1º Sargento → ...'); the names of the people are the game's."
+  },
+  "uniformedRankLadder": {
+    "value": {
+      "special_forces": "army",
+      "tactical_unit": "military_police"
+    },
+    "source": "os-vivos:530-536 RANKS examples (Lince, Capitão, is special forces)",
+    "reason": "Special forces use the army ladder and the tactical units the military police one; the page has no ladder of their own."
+  },
+  "uniformedLootItems": {
+    "value": {
+      "farda_eb": {
+        "id": "army_fatigues",
+        "kind": "item",
+        "name": "Camouflage fatigues"
+      },
+      "capacete_bal": {
+        "id": "helmet_combat",
+        "kind": "item",
+        "name": "Ballistic helmet"
+      },
+      "colete_iii": {
+        "id": "vest_military",
+        "kind": "item",
+        "name": "Plate vest, level III"
+      },
+      "ia2": {
+        "id": "imbel_ia2",
+        "kind": "weapon",
+        "name": "IMBEL IA2 5.56"
+      },
+      "fal": {
+        "id": "fn_fal",
+        "kind": "weapon",
+        "name": "FN FAL / ParaFAL 7.62"
+      },
+      "minimi": {
+        "id": "fn_minimi",
+        "kind": "weapon",
+        "name": "FN Minimi"
+      },
+      "m67": {
+        "id": "m67",
+        "kind": "weapon",
+        "name": "M67 grenade"
+      },
+      "fumaca": {
+        "id": "smoke_grenade",
+        "kind": "item",
+        "name": "Smoke grenade"
+      },
+      "racao_militar": {
+        "id": "field_ration",
+        "kind": "item",
+        "name": "Field ration"
+      },
+      "aph": {
+        "id": "trauma_kit",
+        "kind": "item",
+        "name": "Individual first-aid kit (tourniquet, hemostatic gauze)"
+      },
+      "ht": {
+        "id": "handheld_radio",
+        "kind": "item",
+        "name": "Handheld radio"
+      },
+      "plaqueta": {
+        "id": "identity_tag",
+        "kind": "item",
+        "name": "Identity tag"
+      },
+      "mapa_topo": {
+        "id": "topographic_map",
+        "kind": "item",
+        "name": "Marked topographic map"
+      },
+      "binoculo_mil": {
+        "id": "binoculars_7x50",
+        "kind": "item",
+        "name": "Military binoculars 7x50"
+      },
+      "colete_iia": {
+        "id": "vest_police",
+        "kind": "item",
+        "name": "Police vest, level II-A"
+      },
+      "pt100": {
+        "id": "taurus_pt100",
+        "kind": "weapon",
+        "name": "Taurus PT100 .40"
+      },
+      "smt9": {
+        "id": "taurus_smt9",
+        "kind": "weapon",
+        "name": "Taurus SMT9 9x19"
+      },
+      "pump": {
+        "id": "cbc_pump_military_3_0",
+        "kind": "weapon",
+        "name": "CBC Pump Military 3.0"
+      },
+      "t4": {
+        "id": "taurus_t4",
+        "kind": "weapon",
+        "name": "Taurus T4 5.56"
+      },
+      "algemas": {
+        "id": "handcuffs",
+        "kind": "item",
+        "name": "Handcuffs"
+      },
+      "tonfa": {
+        "id": "tonfa",
+        "kind": "item",
+        "name": "Tonfa"
+      },
+      "lanterna_tat": {
+        "id": "tactical_flashlight",
+        "kind": "item",
+        "name": "Tactical flashlight"
+      },
+      "escudo": {
+        "id": "ballistic_shield",
+        "kind": "item",
+        "name": "Riot ballistic shield"
+      },
+      "capacete_choque": {
+        "id": "helmet_riot",
+        "kind": "item",
+        "name": "Riot helmet with visor"
+      },
+      "gas": {
+        "id": "tear_gas_grenade",
+        "kind": "item",
+        "name": "Tear gas grenade"
+      },
+      "chave_viatura": {
+        "id": "patrol_car_key",
+        "kind": "item",
+        "name": "Patrol car key"
+      },
+      "distintivo": {
+        "id": "police_badge",
+        "kind": "item",
+        "name": "Civil police badge"
+      },
+      "colete_refl": {
+        "id": "vest_high_visibility",
+        "kind": "item",
+        "name": "High-visibility vest"
+      },
+      "pente_pregos": {
+        "id": "spike_strip",
+        "kind": "item",
+        "name": "Spike strip and cones"
+      },
+      "mapa_rod": {
+        "id": "road_map",
+        "kind": "item",
+        "name": "Road map with roadblocks marked"
+      },
+      "kit_desenc": {
+        "id": "extrication_kit",
+        "kind": "item",
+        "name": "Extrication kit"
+      },
+      "estoque": {
+        "id": "shiv",
+        "kind": "item",
+        "name": "Improvised blade"
+      },
+      "celular_contrabando": {
+        "id": "contraband_phone",
+        "kind": "item",
+        "name": "Smuggled phone with solar charger"
+      },
+      "cigarro": {
+        "id": "cigarette_pack",
+        "kind": "item",
+        "name": "Pack of cigarettes"
+      },
+      "sabao": {
+        "id": "prison_soap",
+        "kind": "item",
+        "name": "Prison soap"
+      },
+      "hk416": {
+        "id": "hk416",
+        "kind": "weapon",
+        "name": "HK416 suppressed"
+      },
+      "nvg": {
+        "id": "night_vision_goggles",
+        "kind": "item",
+        "name": "Night vision goggles"
+      },
+      "gps": {
+        "id": "military_gps",
+        "kind": "item",
+        "name": "Military GPS"
+      },
+      "c4": {
+        "id": "c4",
+        "kind": "weapon",
+        "name": "Demolition charge"
+      },
+      "kit_med": {
+        "id": "advanced_medical_kit",
+        "kind": "item",
+        "name": "Advanced medical kit"
+      },
+      "colete_iiia": {
+        "id": "vest_tactical_iiia",
+        "kind": "item",
+        "name": "Tactical vest level III-A with magazine pouches"
+      },
+      "mp5": {
+        "id": "hk_mp5a3",
+        "kind": "weapon",
+        "name": "HK MP5A3"
+      }
+    },
+    "source": "os-vivos:539-591 LOOT",
+    "reason": "Item and weapon ids of the SDK for each LOOT row (weapons are ids of game-weapons); the game-items ids are pending the Phase 3 merge. Unique quest items (keys, documents, the satellite radio, the sample case) stay in the game slice."
+  },
+  "uniformedLootChance": {
+    "value": {
+      "comum": 0.5,
+      "incomum": 0.3,
+      "raro": 0.12,
+      "muito raro": 0.05,
+      "lendário": 0.03
+    },
+    "source": "os-vivos:539-591 LOOT rarity column",
+    "reason": "The page has only a rarity word; the chance per draw is a default for the pools (reversible, one line)."
+  },
+  "uniformedLoadouts": {
+    "value": {
+      "army_soldier": {
+        "force": "army",
+        "name": {
+          "en": "Army soldier",
+          "pt-BR": "Soldado do Exército"
+        },
+        "weapons": [
+          "imbel_ia2",
+          "fn_fal"
+        ],
+        "weaponChoice": "one",
+        "magazines": 3,
+        "items": [
+          "helmet_combat",
+          "vest_police",
+          "field_ration",
+          "identity_tag",
+          "handheld_radio"
+        ],
+        "radioPerPair": true
+      },
+      "military_police_patrol": {
+        "force": "military_police",
+        "name": {
+          "en": "Military police patrol officer",
+          "pt-BR": "PM de patrulha"
+        },
+        "weapons": [
+          "taurus_pt100",
+          "taurus_smt9",
+          "cbc_pump_military_3_0"
+        ],
+        "weaponChoice": "one",
+        "items": [
+          "vest_police",
+          "handcuffs",
+          "handheld_radio",
+          "patrol_car_key"
+        ]
+      },
+      "riot_police": {
+        "force": "military_police",
+        "name": {
+          "en": "Riot police officer",
+          "pt-BR": "PM do Choque"
+        },
+        "weapons": [
+          "cbc_pump_military_3_0"
+        ],
+        "weaponChoice": "all",
+        "items": [
+          "ballistic_shield",
+          "helmet_riot",
+          "vest_police",
+          "tonfa",
+          "tear_gas_grenade"
+        ]
+      },
+      "tactical_operator": {
+        "force": "tactical_unit",
+        "name": {
+          "en": "Tactical escort operator (BOPE, COT, GATE)",
+          "pt-BR": "Escolta tática (BOPE, COT ou GATE)"
+        },
+        "weapons": [
+          "hk_mp5a3",
+          "taurus_t4"
+        ],
+        "weaponChoice": "one",
+        "items": [
+          "vest_tactical_iiia",
+          "helmet_combat",
+          "tactical_flashlight",
+          "handcuffs"
+        ]
+      },
+      "highway_police_officer": {
+        "force": "highway_police",
+        "name": {
+          "en": "Highway police officer",
+          "pt-BR": "Policial rodoviário"
+        },
+        "weapons": [
+          "cbc_pump_military_3_0",
+          "taurus_t4"
+        ],
+        "weaponChoice": "one",
+        "items": [
+          "vest_police",
+          "vest_high_visibility",
+          "handheld_radio",
+          "extrication_kit"
+        ]
+      },
+      "prison_officer": {
+        "force": "prison_police",
+        "name": {
+          "en": "Prison officer",
+          "pt-BR": "Policial penal"
+        },
+        "weapons": [
+          "cbc_pump_military_3_0"
+        ],
+        "weaponChoice": "all",
+        "items": [
+          "tear_gas_grenade",
+          "handcuffs"
+        ]
+      },
+      "special_forces_operator": {
+        "force": "special_forces",
+        "name": {
+          "en": "Special forces operator",
+          "pt-BR": "Operador das forças especiais"
+        },
+        "weapons": [
+          "hk416"
+        ],
+        "weaponChoice": "all",
+        "items": [
+          "night_vision_goggles",
+          "military_gps",
+          "trauma_kit",
+          "c4"
+        ],
+        "suppressed": true
+      }
+    },
+    "source": "os-vivos:593-603 GENT",
+    "reason": "The live generic troopers of GENT as item and weapon ids; the zombie variants are the undead outfits, the inmate is not uniformed and the game's behaviour text is left out."
   }
 }

@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path'
 import { buildAppearance, buildBody, buildGait, buildPhysical, buildSegments, buildTeamGame } from './build-characters'
 import { buildAccessories, buildAgePresets, buildAppearance as buildPeopleAppearance, buildProfessions } from './build-people'
 import type { PeopleInputs } from './build-people'
+import { buildForces, buildLoadouts, buildLootPools, buildRanks } from './build-uniformed'
 import { buildSlice } from './build-slice'
 import { buildAges, buildInfection, buildMoments, buildOutfits, buildTypes } from './build-undead'
 import type { CatalogInputs } from './build-undead'
@@ -40,6 +41,7 @@ export const buildPeopleInputs = (inputs: CatalogInputs): PeopleInputs => ({
 export const buildCatalog = (): CatalogFiles => {
   const inputs = buildInputs()
   const people = buildPeopleInputs(inputs)
+  const uniformed = { living: extractLiving(), decisions: inputs.decisions }
   const arsenal = extractArsenalBody()
   return {
     [OUTPUT_PATHS.undeadTypes]: serialize(buildTypes(inputs)),
@@ -51,6 +53,10 @@ export const buildCatalog = (): CatalogFiles => {
     [OUTPUT_PATHS.peopleAges]: serialize(buildAgePresets(people)),
     [OUTPUT_PATHS.peopleAppearance]: serialize(buildPeopleAppearance(people)),
     [OUTPUT_PATHS.peopleAccessories]: serialize(buildAccessories(people)),
+    [OUTPUT_PATHS.uniformedForces]: serialize(buildForces(uniformed)),
+    [OUTPUT_PATHS.uniformedRanks]: serialize(buildRanks(uniformed)),
+    [OUTPUT_PATHS.uniformedLoadouts]: serialize(buildLoadouts(uniformed)),
+    [OUTPUT_PATHS.uniformedLootPools]: serialize(buildLootPools(uniformed)),
     [OUTPUT_PATHS.presetTeamGame]: serialize(buildTeamGame(inputs)),
     [OUTPUT_PATHS.presetPhysical]: serialize(buildPhysical(inputs)),
     [OUTPUT_PATHS.body]: serialize(buildBody(inputs)),
