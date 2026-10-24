@@ -1,5 +1,15 @@
 # @adatechnology/game-interactables-three
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [50eee43]
+- Updated dependencies [cc182c7]
+- Updated dependencies [32a00c6]
+  - @adatechnology/game-props3d@0.2.0
+  - @adatechnology/game-interactables@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,5 +1,20 @@
 # @adatechnology/game-weapons
 
+## 0.4.0
+
+### Minor Changes
+
+- 76d15b6: Contrato do corpo vivo (fase 4): `body.ts` com `BodySlot`, `SegmentKind`, `BodyRegion` e `MISSING_BITS`; `Hit.mass`, `Hit.cut` e `Hit.part`; evento `body`; `ObjectState.body`. `Shot.mass` (gramas do projétil) sai das armas e `shotToHit` copia para o `Hit`. O `game-destruction` ganha o rótulo do evento `body` nos dois idiomas.
+- afffd1b: Twelve generic weapons for the melee items of the real-world catalog: tactical knife, meat cleaver, hatchet, nail bat, iron pipe, pickaxe, sickle, police baton, cast iron skillet, improvised spear, chainsaw and recurve bow, with reach, noise and mass of the item. They come after the existing weapons, so the order and the recorded scenarios of the shipped ones are unchanged.
+
+### Patch Changes
+
+- cc182c7: Contracts: `Thumbnail` (`svg` or `render`, with `yaw`, `pitch`, `distance` and `wear`) and `TestableItem.thumbnail`; the registry helpers `mergeById`, `applyPatches`, `removeIds`, `deepMerge` and the `DeepPartial` type now live here so every catalog package merges packs the same way. Interactables: `ItemDef.thumbnail` and a dependency on the contracts. Weapons: imports the helpers from the contracts (public API unchanged).
+- Updated dependencies [76d15b6]
+- Updated dependencies [cc182c7]
+- Updated dependencies [9e58b50]
+  - @adatechnology/game-contracts@0.8.0
+
 ## 0.3.1
 
 ### Patch Changes

@@ -1,5 +1,22 @@
 # @adatechnology/game-test-room
 
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [76d15b6]
+- Updated dependencies [afffd1b]
+- Updated dependencies [cc182c7]
+- Updated dependencies [9e58b50]
+- Updated dependencies [95c4bdd]
+- Updated dependencies [86179cc]
+  - @adatechnology/game-contracts@0.8.0
+  - @adatechnology/game-weapons@0.4.0
+  - @adatechnology/game-destruction@0.5.0
+  - @adatechnology/game-destruction-three@0.4.0
+  - @adatechnology/game-fluids@0.1.8
+  - @adatechnology/game-fluids-three@0.1.8
+
 ## 0.6.0
 
 ### Minor Changes

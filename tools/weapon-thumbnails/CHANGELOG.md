@@ -1,5 +1,16 @@
 # @adatechnology/weapon-thumbnails-tool
 
+## 0.0.2
+
+### Patch Changes
+
+- Updated dependencies [76d15b6]
+- Updated dependencies [afffd1b]
+- Updated dependencies [cc182c7]
+- Updated dependencies [32a00c6]
+  - @adatechnology/game-weapons@0.4.0
+  - @adatechnology/game-weapons-three@0.4.1
+
 ## 0.0.1
 
 ### Patch Changes

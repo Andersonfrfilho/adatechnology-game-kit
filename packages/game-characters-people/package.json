@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-characters-people",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "MIT",
   "description": "Content pack for @adatechnology/game-characters: 12 generic professions as character presets (nurse, police officer, firefighter, mechanic, builder, cook, sport shooter, farmer, electrician, courier, teacher, unemployed), age presets, appearance pools and the ids of about 100 accessories, with en and pt-BR names. Named people stay in the game.",
   "keywords": [
