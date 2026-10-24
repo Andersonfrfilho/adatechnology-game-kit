@@ -1,5 +1,13 @@
 # @adatechnology/game-floorplan-three
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [e29f38d]
+  - @adatechnology/game-props3d@0.3.0
+  - @adatechnology/game-floorplan-interactables@0.1.0
+
 ## 0.2.0
 
 ### Minor Changes

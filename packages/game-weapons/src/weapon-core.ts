@@ -1,7 +1,7 @@
 import { decayHeat } from './heat'
 import { isReloadable } from './reload'
 import { createRng } from './rng'
-import type { AmmoQualityDef, CaliberDef, ConditionDef, ExplosiveDef, FaultId, FireMode, ReloadKind, Vec3, WeaponAction, WeaponDef, WeaponEvent, WeaponPhase, WeaponRules } from './types'
+import type { AmmoDef, AmmoKind, AmmoQualityDef, CaliberDef, ConditionDef, ExplosiveDef, FaultId, FireMode, ReloadKind, Vec3, WeaponAction, WeaponDef, WeaponEvent, WeaponPhase, WeaponRules } from './types'
 import { EPS, FAULT_RNG_SALT, FUSE_RNG_SALT, findById } from './weapon-shared'
 import type { Scheduled, WeaponStateInit } from './weapon-shared'
 
@@ -48,6 +48,9 @@ export abstract class WeaponCore {
   protected _heat = 0
   protected _condition: ConditionDef
   protected _ammoQuality: AmmoQualityDef
+  /** Kind of round loaded; undefined = the calibre's own. */
+  protected _ammoKind: AmmoKind | undefined
+  protected readonly ammoTable: ReadonlyMap<string, AmmoDef> | undefined
   /** Times of the shots that still count for the noise of a burst. */
   protected recentShots: number[] = []
   protected events: WeaponEvent[] = []
@@ -66,6 +69,8 @@ export abstract class WeaponCore {
     this.faultRng = createRng((init.seed ^ FAULT_RNG_SALT) >>> 0)
     this.fuseRng = createRng((init.seed ^ FUSE_RNG_SALT) >>> 0)
     this.explosive = init.explosive ?? null
+    this.ammoTable = init.ammo
+    this._ammoKind = init.ammoKind ?? (init.snapshot?.ammoKind as AmmoKind | undefined)
     this._safety = init.rules.startSafe
     this._condition = findById(init.rules.conditions, init.condition ?? init.rules.defaultCondition, 'condition')
     this._ammoQuality = findById(init.rules.ammoQualities, init.ammoQuality ?? init.rules.defaultAmmoQuality, 'ammo quality')
@@ -131,6 +136,9 @@ export abstract class WeaponCore {
   }
   get condition(): string {
     return this._condition.id
+  }
+  get ammoKind(): AmmoKind | undefined {
+    return this._ammoKind ?? this.caliber?.kind
   }
   get ammoQuality(): string {
     return this._ammoQuality.id

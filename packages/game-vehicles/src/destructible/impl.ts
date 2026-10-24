@@ -19,6 +19,7 @@ import type {
   ToolKind,
   Vec3,
 } from '@adatechnology/game-contracts'
+import { ignitionChance, resolveIgnitionRules, sparkTargetFactor, type IgnitionRules } from '@adatechnology/game-contracts'
 import type { VehicleContext, VehicleKit } from '../api'
 import { clamp, rng, strHash } from '../util'
 import { buildVehicleModel, kindOf, type JointDef, type PartDef, type PartRole, type VehicleModel } from './model'
@@ -38,6 +39,15 @@ export interface VehicleDestructibleOptions {
   headless?: boolean
   /** Extra seed for the choices that are random in the real world (which way a broken steering pulls). */
   seed?: number
+  /** How full the fuel tank starts, 0 to 1 (default 1). A nearly empty tank leaks little and lights easily (see `ignition`). */
+  fuel?: number
+  /**
+   * What lights the fuel that leaks from a pierced tank: a plain bullet only leaks; a spark of a hard round on steel, an incendiary or tracer
+   * round, a fire within `fireNear.radius` (a burning part or a burning fuel stain) or a blast lights it, and then the usual fire and explosion
+   * follow. The chance of the round is in `Hit.ignition`; this is the target side (how full the tank is, what the wall is, the fire near).
+   * Defaults and meaning of every number: `IgnitionRules` of `@adatechnology/game-contracts`.
+   */
+  ignition?: Partial<IgnitionRules>
 }
 
 /** What the vehicle can do now, from the state of its hidden mechanics. */
@@ -150,6 +160,10 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   const headless = !!options.headless
   const seedBase = strHash(`${c.key}|${id}|${options.seed ?? 0}`)
   let rand = rng(seedBase)
+  const ignitionRules = resolveIgnitionRules(options.ignition)
+  const fuelFraction = clamp(options.fuel ?? 1, 0, 1)
+  // the rolls of ignition have their own stream so that a spark never changes what the other random choices of the vehicle give
+  let igniteRand = rng(strHash(`${c.key}|${id}|ignition|${options.seed ?? 0}`))
   let clock = 0
 
   let model: VehicleModel
@@ -221,7 +235,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
         dents: [],
         holes: [],
         cracks: [],
-        liters: d.contains?.liters,
+        liters: d.contains ? (d.role === 'fuel_tank' ? d.contains.liters * fuelFraction : d.contains.liters) : undefined,
         lost: false,
         status: 'intact',
         flat: false,
@@ -239,6 +253,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     wasLit = true
     deadEngine = false
     rand = rng(seedBase)
+    igniteRand = rng(strHash(`${c.key}|${id}|ignition|${options.seed ?? 0}`))
     steerSign = rand() < 0.5 ? -1 : 1
     vis = headless ? null : new VehicleVisuals(kit, c, model)
     recomputeGroups()
@@ -547,7 +562,19 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       if (!p.burning && p.temp > AMBIENT) p.temp = Math.max(AMBIENT, p.temp - dt * 6)
     }
     for (const f of flames) heat(centreOf(f.def), 0.8, 500, dt * 0.5, out, 0)
+    fireNearLeak(flames, dt, out)
     thermal(out)
+  }
+  /** A leaking tank with a burning part (or its own fuel stain on fire) within reach lights: the vapour of the leak meets the flame. */
+  const fireNearLeak = (flames: PState[], dt: number, out: DestructionEvent[]): void => {
+    const tank = tankPart()
+    const leak = tank ? leaks.get(tank.def.id) : undefined
+    if (!tank || !leak || tank.lost || tank.burning || exploded || (leak.fluid !== 'fuel' && leak.fluid !== 'diesel')) return
+    if (leak.pud?.fire) return light(tank, out)
+    const { radius, chancePerSecond } = ignitionRules.fireNear
+    if (chancePerSecond <= 0) return
+    const near = flames.some((f) => f !== tank && distToBox(tank.def, centreOf(f.def)) - Math.max(...f.def.box.size) / 2 <= radius)
+    if (near && igniteRand() < 1 - Math.exp(-chancePerSecond * dt)) light(tank, out)
   }
 
   // ---- hits ----------------------------------------------------------------------------------------------------------------------------
@@ -619,9 +646,26 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
         // a pierced battery or alternator is finished
         if (through && (d.role === 'battery' || d.role === 'alternator')) amount = Math.max(amount, p.hp * 0.65)
         damage(p, amount, 'ballistic', h.source, out, worldPoint)
-        if (d.role === 'fuel_tank' && E > 1500 && (p.liters ?? 0) > 1) p.temp = Math.max(p.temp, d.ignitionC ?? 260)
+        if (through && d.role === 'fuel_tank') rollIgnition(p, h, metal, out)
       }
     }
+  }
+
+  /** The tank is lit: it burns now, and the usual fire (the flames heat it to its explosion point, then the blast of a petrol tank) takes over. */
+  const light = (tank: PState, out: DestructionEvent[]): void => {
+    tank.temp = Math.max(tank.temp, (tank.def.ignitionC ?? 260) + 1)
+    if ((tank.liters ?? 0) > 0.5) ignite(tank, out)
+  }
+  /**
+   * A round went through the wall of the tank: does the fuel that leaks catch? Only if the round carries a spark that works on this wall or a flame,
+   * weighed by how full the tank is (a full tank leaks, a nearly empty one lights). A plain bullet only leaks.
+   */
+  const rollIgnition = (tank: PState, h: Hit, metal: boolean, out: DestructionEvent[]): void => {
+    const d = tank.def
+    if (!d.contains || tank.burning || (tank.liters ?? 0) <= 0.05) return
+    const fill = d.contains.liters > 0 ? (tank.liters ?? 0) / d.contains.liters : 0
+    const chance = ignitionChance(h, { sparkTarget: sparkTargetFactor(d.material, metal, ignitionRules), fill, fluid: d.contains.fluid }, ignitionRules)
+    if (chance > 0 && igniteRand() < chance) light(tank, out)
   }
 
   const blunt = (h: Hit, out: DestructionEvent[]): void => {
@@ -688,7 +732,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
         const verdict = kit.blastDamage(c, E / (1 + dist * dist * 4) / 50)
         if (verdict === 'explosion') explode(tank, h.source, out)
         else if (verdict === 'fire') {
-          tank.temp = Math.max(tank.temp, tank.def.ignitionC ?? 260)
+          light(tank, out)
           startLeak(tank, centreOf(tank.def).setY(tank.def.box.center[1] - tank.def.box.size[1] / 2 + 0.05), 12, out, dir)
         }
       }

@@ -1,6 +1,6 @@
 import type { AttachmentId, AttachmentInstall, MountKind, StatModifier, StockDef, StockState } from './attachment-types'
 import type { ExplosiveTripwire } from './explosive-types'
-import type { CaseType, FireMode, WeaponDef } from './types'
+import type { AmmoCore, AmmoJacket, CaseType, FireMode, WeaponDef } from './types'
 
 export type FaultId = 'misfire' | 'stovepipe' | 'double_feed' | 'failure_to_extract'
 
@@ -72,6 +72,22 @@ export interface WeaponRules {
   readonly aim: { readonly base: number; readonly perKg: number; readonly hipSpread: number }
   /** Folding or sliding in the stock: the seconds it takes and what it does to the weapon while it is in. */
   readonly stock: { readonly seconds: number; readonly collapsed: readonly StatModifier[] }
+  /**
+   * What a round does to flammable fluid it leaks into (a fuel tank, a jerrycan, a gas bottle): it goes into `Shot.ignition` and `Hit.ignition`, and
+   * the damage model rolls it against the container (see `IgnitionRules` of `@adatechnology/game-contracts` for the target side: how full it is, the
+   * wall, a fire nearby). A plain bullet that goes through only makes a leak.
+   */
+  readonly ignition: {
+    /**
+     * Chance, 0 to 1, that the hard part of the round throws a spark that lights the vapour when it goes through STEEL (nothing sparks against a
+     * part that is not metal). Built from construction: the chance of the core and the chance of the jacket are independent, so
+     * spark = 1 - (1 - core) x (1 - jacket).
+     */
+    readonly core: Readonly<Record<AmmoCore, number>>
+    readonly jacket: Readonly<Record<AmmoJacket, number>>
+    /** Chance, 0 to 1, that the flame of the round lights the fluid (any wall): an incendiary composition, a tracer pyrotechnic. */
+    readonly flame: { readonly incendiary: number; readonly tracer: number }
+  }
   readonly draw: number
   readonly clear: number
   readonly startSafe: boolean

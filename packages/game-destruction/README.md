@@ -94,6 +94,22 @@ melts anything. Melting emits `melt` and `drip`; a melted part is lost and its j
 when the part has `explodes`). `contains` parts leak through punctures: the `leak` event carries the hole's world point, the outward normal as
 `direction` and the rate in litres per second, and `PartState.liters` drops in `update` (`setLiters` fills or empties a container).
 
+### Ignition of a leak
+
+A round that goes through a `contains` part with a flammable fluid (`gas`, `fuel`: a tank, a jerrycan, a gas bottle) **leaks and does not light by itself**. The leak lights
+(a jet that burns, or the explosion of a part with `explodes`) when:
+
+- the round carries a **spark** and hits **metal**: `Hit.ignition.spark` (the weapons build it from the core and the jacket of the round) times the factor of the struck
+  material (`ignition.sparkTarget`: steel and iron 1, aluminium 0.25, other metals `sparkMetalDefault` 0.5, a part that is not metal never sparks);
+- the round carries a **flame**: `Hit.ignition.flame`, or the flags `Hit.incendiary` / `Hit.tracer` (0.7 and 0.2 when the host sends only the flags), whatever the wall;
+- a **fire is near**: a burning part or a jet within `ignition.fireNear.radius` (1.5 m) lights the leak at `chancePerSecond` (0.5); or
+- a **blast** (`explode`) goes off within its radius of the leaking container.
+
+Both chances are weighed by how full the container is, `ignition.fillCurve` (points `[filled, factor]`; a full container is too rich to burn and mostly leaks, a nearly empty one lights
+easiest; default 0.6 empty, 1 at 10 percent, 0.6 at 35, 0.3 at 65, 0.15 at 90, 0.12 full; the flame feels half of it, `flameFillInfluence` 0.5) and rolled with the seeded generator of the
+world. `createDestruction({ ignition })` changes any number (`IgnitionRules` and `DEFAULT_IGNITION_RULES` of `@adatechnology/game-contracts`, which also export `ignitionChance` and
+`fillFactor`). A round without `ignition`, `incendiary` and `tracer` never lights a leak; a part heated to 350 degrees C still does, as before.
+
 ### Chain reaction
 
 A part with `explodes.chain` (fuel barrel, gas bottle, car tank, gas pump, station tank) answers to what happens around it: `shot` (a bullet, once it has taken off
@@ -132,6 +148,13 @@ solves loads: each structural part carries its own mass plus what rests on it, d
 `PartState.load` is in kg and `PartState.stress` is `load / capacity`. Parts without a role (windows, doors, furniture) carry nothing. Objects
 without any `structure` behave exactly as before.
 
+- **A slab or beam is held by the sum of its supports.** Its load is shared among the supports it rests on that are still there (columns, bearing
+  walls, beams), so a slab on four columns puts a quarter on each; lose one and the other three carry the load of the four, lose two and the
+  two left carry twice their share. The structure falls when the capacity that is left (the sum over the supports) is less than the load.
+  Everything is config: the capacity of a part is `structure.capacity` or `material.compressive` times its section (set `compressive` on a
+  `MaterialDef` passed in `materials`), `sizeStructure({ safety, redundancy })` sizes them (`safety` 0.72 with `redundancy` 0.97 on four columns:
+  rest 0.72, one lost 0.96, two lost 1.44), and the world option `structure: { safetyFactor }` (default 1) multiplies every load before it meets
+  the capacities (stress = `load * safetyFactor / capacity`): above 1 the whole building is loaded harder than it was sized for.
 - **Capacity** defaults to `material.compressive` (kg per m²: concrete 444 000, brick 40 000, softwood 100 000, steel 2 000 000) times the section:
   the two smallest dimensions for columns, beams, roofs and stairs (foundations x10), thickness times longest side for slabs, thickness times
   horizontal length for walls. A 0.3 m concrete column carries 40 t, a 0.2 m brick wall 8 t per metre, a 0.1 x 0.2 m softwood beam 2 t.
@@ -224,15 +247,19 @@ the results for the push on pieces: `renderer.explode(point, energy, radius, { r
 
 ### Bullets and blasts against beams and columns
 
-`tests/beams-and-columns.test.ts` documents calibres of `@adatechnology/game-weapons` against a reinforced concrete column and beam, a steel
-I-beam, a hardwood beam and a brick pillar. Two options came out of it, both off or neutral by default:
+`tests/beams-and-columns.test.ts` fires the loads of the ammo table of `@adatechnology/game-weapons` against a reinforced concrete column and beam, a steel
+I-beam, a hardwood beam and a brick pillar (it prints the results table with `PRINT_TABLE=1`). Two corrections came out of it:
 
-- `Hit.piercing` (6th argument of `shoot`): how well the bullet cuts through for its energy; the energy compared with the penetration of a hard
-  material (metal, masonry) is `energy * piercing`. `PIERCING_BY_KIND` (fmj 1, hp 0.6, ap 1.6, buck 0.5, slug 0.25) and `PIERCING_BY_CALIBER`
-  (5.56, 5.45 and .22 0.5) give the numbers from `CaliberDef.kind` (`piercingOf(id, kind)`). Without it a 12 ga slug (3000 J) went through 8.5 mm of
-  steel.
-- `breach.blastReach` (default `Infinity`, 0.12 recommended): a blast only opens a breach within `blastReach * cbrt(energy / 1000)` metres of the
-  part. With 0.12 a hand grenade (200 kJ) at 1 m no longer cuts a reinforced column in two (at 0.2 m it strips it).
+- `Hit.penetration` (the 6th argument of `shoot` is `{ penetration }` or a bare piercing factor): millimetres the round goes through, by material class
+  (`steel`, `concrete`, `brick`, `wood`). The weapons put it in the `Hit` (`shotToHit` / `shotExtras` of the contracts); the world reads no calibre names. The
+  material says which entry measures it (`MaterialDef.penetrationClass`, default its id) and how much more or less it resists
+  (`penetrationScale`: structural steel 1.3 against the RHA of the tables, softwood 1.5 against hardwood, aluminium 3 against steel). The round goes through when its
+  millimetres times that scale exceed the thickness of the part (slant counts); a material with no entry falls back to the energy rule, where `Hit.piercing`
+  (default 1) multiplies the energy against hard materials. M80 ball does not pierce an 8.5 mm structural flange, M993 AP does, and the .50 BMG M33 ball
+  pierces a 30 cm reinforced column. `PIERCING_BY_KIND`, `PIERCING_BY_CALIBER` and `piercingOf` are gone: the table lives in game-weapons.
+- Blast reach of a breach (no option, it is the physics): a blast only opens a breach within 0.12 m per cube root of kilojoule of the part
+  (`BREACH_BLAST_REACH`). A hand grenade (200 kJ) at 1 m does not cut a reinforced column in two (at 0.2 m it strips it). Farther away the blast still
+  damages, dents and cracks. The old `breach.blastReach` option (default `Infinity`) is gone: it was a second path for a correction.
 
 ## Contracts: implement your own or use the default world
 
@@ -281,9 +308,9 @@ world continues with the same events as the original. The loading world must use
 
 `createDestruction(options)` returns a `DestructionWorld`: `add`, `remove`, `has`, `ids`, `setTransform`, `splitGroup`, `hit`, `hitPart`, `explode`,
 `raycast`, `shoot`, `disassemble`, `workableJoints`, `nearestJoint`, `extinguish`, `setLiters`, `update`, `state`, `part`, `reset`, `on`,
-`register`, `serialize`, `load`, `time`. `explode(point, energy, radius, source?, blastOptions?)`; `shoot(origin, direction, energy, caliber, source?, piercing?)`. `state()` and `part()` return live views; do not mutate them.
+`register`, `serialize`, `load`, `time`. `explode(point, energy, radius, source?, blastOptions?)`; `shoot(origin, direction, energy, caliber, source?, round?)` (`round`: `Hit.penetration`, `piercing`, `incendiary`, `tracer`, `ignition` or a bare piercing factor). `state()` and `part()` return live views; do not mutate them.
 
-Also exported: `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS`, `CONFINEMENT_DEFAULTS`, `PIERCING_BY_KIND`, `PIERCING_BY_CALIBER`, `piercingOf`, `buildFrame`, `sizeStructure`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
+Also exported: `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS`, `CONFINEMENT_DEFAULTS`, `buildFrame`, `sizeStructure`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
 helpers `vec`, `quat`, `quatFromEuler`, `rotateVec`, `toLocal`, `toWorld`, the locale (`locales`, `resolveStrings`, `DestructionStrings`) and all types.
 
 The locale table has `en` and `pt-BR` strings for material names, part statuses, joint kinds, tools, damage types, event labels and fracture styles:

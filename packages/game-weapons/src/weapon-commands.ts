@@ -1,6 +1,7 @@
+import { ammoId } from './ammo'
 import { clearSeconds, drawSeconds } from './fire'
 import { isReloadable, planReload, reloadStages } from './reload'
-import type { FireMode, ReloadRequest } from './types'
+import type { AmmoKind, FireMode, ReloadRequest } from './types'
 import { WeaponCore } from './weapon-core'
 import { EPS, findById } from './weapon-shared'
 
@@ -35,6 +36,13 @@ export abstract class WeaponCommands extends WeaponCore {
 
   setAmmoQuality(id: string): void {
     this._ammoQuality = findById(this.rules.ammoQualities, id, 'ammo quality')
+  }
+
+  setAmmoKind(kind: AmmoKind): void {
+    const cal = this.caliber
+    if (!cal) throw new Error(`game-weapons: "${this.def.id}" has no calibre to load`)
+    if (!this.ammoTable?.has(ammoId(cal.id, kind))) throw new Error(`game-weapons: no ammo "${ammoId(cal.id, kind)}" in the table`)
+    this._ammoKind = kind
   }
 
   setFuseLength(metres: number | undefined): void {

@@ -25,6 +25,11 @@ export interface SpecimenDef {
   state?: string
   /** The bearing walls only close: a frame of pillars and beams carries the building. */
   portico?: boolean
+  /**
+   * How the structure is sized (`toDestructibleSpec`): `safety` is the share of its capacity a pillar uses at rest, `redundancy` the most it uses after one other pillar is lost.
+   * A slab on four pillars is held by the sum of the four: with `safety` 0.72 and `redundancy` 0.97 it holds one loss (0.96) and falls with two.
+   */
+  sizing?: { safety?: number; redundancy?: number; safetyOthers?: number }
   /** Name by locale; the text of the area when absent. */
   name?: Record<string, string>
 }

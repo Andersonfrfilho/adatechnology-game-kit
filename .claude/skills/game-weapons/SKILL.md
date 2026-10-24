@@ -50,6 +50,8 @@ Panes: `result.fault` (ou `status` `fault`/`misfire`); `weapon.clearFault()` des
 | `TriggerResult` | `shots`, `uses`, `status` (`ok`, `empty`, `reloading`, `cooldown`, `no_fuel`, `safe`, `drawing`, `fault`, `misfire`, `clearing`), `recoil`, `noise`, `rounds`, `roundTimes`, `fault?` |
 | `CALIBERS`, `WEAPONS`, `EXPLOSIVES`, `ARCHETYPE_IDS`, `DEFAULT_LOADOUT` | dados embutidos (28 calibres, 79 armas reais + 42 arquétipos, 17 explosivos, kit inicial) |
 | `DEFAULT_RULES`, `RELOAD_STAGES`, `checkArsenal` | números das regras (panes, calor, ruído, tempos), ordem das etapas de recarga e verificação de consistência |
+| `AMMO`, `arsenal.loadOf(calibre, tipo?)`, `weapon.setAmmoKind(tipo)` | tabela de munição (50 cargas: núcleo, jaqueta, traçante, incendiária, massa, velocidade e penetração em mm de aço, concreto, tijolo e madeira); o `Shot` leva `ammo`, `penetration`, `incendiary`, `tracer`; configurável por `ammo`/`patch.ammo`/`remove.ammo` |
+| `rules.ignition`, `ammoIgnition(ammoDef, rules.ignition)` | o que a munição faz num tanque furado: `spark` = 1 - (1 - núcleo)(1 - jaqueta) (chumbo e cobre ~1%, núcleo de aço e jaqueta de aço ~19%, perfurante ~25%, só contra aço) e `flame` (incendiária 0,7, traçante 0,2); vão em `Shot.ignition` e `Hit.ignition`; bala comum só vaza |
 | `muzzleEnergy(calibre, cano?)` | energia de um projétil (ou de um chumbo) |
 | `resolveStrings`, `locales` | nomes em `en` e `pt-BR` |
 
