@@ -1328,5 +1328,15 @@
       3.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "baseball_bat",
+    "teamId": "taco",
+    "teamBox": [
+      8.6,
+      0.704,
+      0.704
+    ],
+    "scale": 0.1
   }
 ]
