@@ -6,6 +6,7 @@ import type { ModelKit } from '../models/kit'
 import type { Effects } from './effects'
 import type { Particles } from './particles'
 import type { WeaponAudio } from '../audio'
+import type { FxLayers } from './layers'
 
 /** What the viewmodel shares with the handlers of the clip events. */
 export interface FxWorld {
@@ -15,6 +16,7 @@ export interface FxWorld {
   readonly effects: Effects
   readonly random: () => number
   readonly audio: WeaponAudio | null
+  readonly layers: FxLayers
   groundAt(x: number, z: number): number
   /** Runs `step(e)` for `seconds` from `delay` seconds on, with `e` the eased progress, then `done`. */
   schedule(delay: number, seconds: number, step: (eased: number) => void, done?: () => void): void

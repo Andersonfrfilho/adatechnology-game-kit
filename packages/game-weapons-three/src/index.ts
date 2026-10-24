@@ -5,8 +5,9 @@
  */
 export { createWeaponsTestModule, weaponsLayout, WEAPON_ITEM_PREFIX, COUNTER_ITEM_ID } from './area'
 export type { WeaponsTestModuleOptions } from './area'
+export { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
 export { createWeaponFx } from './fx'
-export type { WeaponFx, WeaponFxOptions } from './fx'
+export type { FxLayers, WeaponFx, WeaponFxOptions } from './fx'
 export {
   createWeaponAudio,
   computeShotSound,
@@ -33,7 +34,7 @@ export type {
 } from './audio'
 export { buildWeaponModel, buildProp, weaponProp, BODY_ACTIONS } from './props'
 export type { WeaponProp } from './props'
-export { MODEL_ENTRIES, buildWeaponModelById, hasWeaponModel } from './models'
+export { MODEL_ENTRIES, ARCHETYPE_MODELS, buildWeaponModelById, hasWeaponModel } from './models'
 export type { ModelEntry, ModelFamily, ModelOptions, ModelParts, WeaponModel } from './models'
 export { buildCartridge, buildCasing, buildRound, cartridgeShape } from './models/cartridge'
 export { applyCondition } from './models/condition'

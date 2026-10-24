@@ -226,10 +226,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const tools = new Map<string, WeaponState>()
   let toolIndex = Math.max(0, loadout.indexOf('hand'))
   let toolId = loadout[toolIndex] ?? 'hand'
+  const toolSettings: { condition?: string; ammoQuality?: string } = {}
   const toolState = (id: string): WeaponState => {
     let s = tools.get(id)
     if (!s) {
-      s = arsenal.create(id, { seed: 7, reserve: 999 })
+      s = arsenal.create(id, { seed: 7, reserve: 999, ...toolSettings })
       s.refill()
       tools.set(id, s)
     }
@@ -1956,6 +1957,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       safety: tool.safety,
       heat: tool.heatLevel,
     }),
+    configureTool(settings) {
+      if (settings.condition !== undefined) toolSettings.condition = settings.condition
+      if (settings.ammoQuality !== undefined) toolSettings.ammoQuality = settings.ammoQuality
+      for (const state of tools.values()) {
+        if (settings.condition !== undefined) state.setCondition(settings.condition)
+        if (settings.ammoQuality !== undefined) state.setAmmoQuality(settings.ammoQuality)
+      }
+    },
     on(listener) {
       hostListeners.add(listener)
       return () => hostListeners.delete(listener)

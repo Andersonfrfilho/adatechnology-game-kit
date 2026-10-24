@@ -22,7 +22,7 @@ export function createClipEventHandler(world: FxWorld, session: Session): (event
   const reach = Math.max(0.55, Math.min(1.2, session.lengthMetres))
 
   const throwCase = (mark: THREE_NS.Object3D, velocity: THREE_NS.Vector3, spin: THREE_NS.Vector3, tilt = 0): void => {
-    if (!session.cartridge) return
+    if (!session.cartridge || !world.layers.casings) return
     const casing = buildCasing(kit, session.cartridge.dims, session.cartridge.shape)
     casing.group.position.copy(positionOf(mark))
     casing.group.rotation.set(0, random() * 0.6 - 0.3, tilt)
@@ -85,7 +85,7 @@ export function createClipEventHandler(world: FxWorld, session: Session): (event
   }
 
   const dropMagazine = (up: boolean): void => {
-    if (!parts.mag) return
+    if (!parts.mag || !world.layers.magazines) return
     root.updateWorldMatrix(true, true)
     const copy = parts.mag.clone(true)
     parts.mag.matrixWorld.decompose(copy.position, copy.quaternion, copy.scale)
@@ -121,7 +121,7 @@ export function createClipEventHandler(world: FxWorld, session: Session): (event
     const data = event.data ?? {}
     switch (event.type) {
       case 'muzzle_flash':
-        if (parts.muzzle) effects.muzzleFlash(positionOf(parts.muzzle), root.getWorldQuaternion(new THREE.Quaternion()), session.def.action.kind === 'launcher' ? 2.2 : FLASH_BY_CASE[session.caseType])
+        if (parts.muzzle && world.layers.muzzleFlash) effects.muzzleFlash(positionOf(parts.muzzle), root.getWorldQuaternion(new THREE.Quaternion()), session.def.action.kind === 'launcher' ? 2.2 : FLASH_BY_CASE[session.caseType])
         break
       case 'eject_casing':
         if (data.from === 'chambers') ejectAll(parts.chambers, () => ({ velocity: vector(-0.5 - random() * 0.3, -0.1 + random() * 0.3, (random() - 0.5) * 0.25), spin: vector(10, 20, 5), tilt: 0 }))

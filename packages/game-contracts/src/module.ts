@@ -122,6 +122,8 @@ export interface ModuleHost {
   onFrame(update: (dt: number) => void): () => void
   /** Write a line to the host's behaviour log. */
   log(text: string, data?: Record<string, unknown>): void
+  /** Sets how worn the tools are and how good what they load is (ids of the host's rules): the tool in hand changes at once and the ones taken later start that way. */
+  configureTool?(settings: { condition?: string; ammoQuality?: string }): void
   /** Lent only to a module that declares controls, layers or metrics. */
   bench?: ModuleBench
 }

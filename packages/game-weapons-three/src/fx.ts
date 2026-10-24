@@ -2,9 +2,12 @@ import type { HostEvent, HostTool } from '@adatechnology/game-contracts'
 import { createBoxFx } from './box-fx'
 import type { WeaponFxOptions } from './box-fx'
 import { hasWeaponModel } from './models'
+import { createLayers } from './fx/layers'
+import type { FxLayers } from './fx/layers'
 import { createViewmodel } from './fx/viewmodel'
 
 export type { WeaponFxOptions } from './box-fx'
+export type { FxLayers } from './fx/layers'
 
 /** The weapon in the hands, its fire and reload motion, ejected casings and dropped magazines, and their sounds. */
 export interface WeaponFx {
@@ -13,6 +16,8 @@ export interface WeaponFx {
   update(dt: number): void
   /** Dresses the weapon for its wear (`new`, `used`, `worn`, `rusty`); the gallery models show it in their metal. */
   setCondition(condition: string): void
+  /** What is drawn (casings, magazines, muzzle flash): change a field and the next event follows it. */
+  readonly layers: FxLayers
   /** Weapon shown in the hands, or null. */
   readonly inHand: string | null
   /** Casings and magazines currently on the floor or in the air. */
@@ -26,8 +31,11 @@ export interface WeaponFx {
  * (fire, cycle, jam, clear, safety, the seven reloads); the generic archetypes keep their low-poly prop.
  */
 export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
-  const box = createBoxFx(options)
+  const layers = options.layers ?? createLayers()
+  const box = createBoxFx({ ...options, layers })
   const model = createViewmodel({
+    layers,
+    ...(options.soundDistance ? { soundDistance: options.soundDistance } : {}),
     THREE: options.THREE,
     scene: options.scene,
     camera: options.camera,
@@ -40,6 +48,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
   })
   return {
     handle(event, tool) {
+      if (event.type === 'explosion') return
       if (event.type === 'tool') {
         if (hasWeaponModel(event.weapon)) box.unequip()
         else model.unequip()
@@ -52,6 +61,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
       model.update(dt)
     },
     setCondition: (condition) => model.setCondition(condition),
+    layers,
     get inHand() {
       return model.inHand ?? box.inHand
     },

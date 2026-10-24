@@ -1,14 +1,18 @@
 import type * as THREE_NS from 'three'
 import { createToolClipPlayer, toolAnimationStep } from '@adatechnology/game-contracts'
 import type { HostEvent, HostTool, ToolClipPlayer } from '@adatechnology/game-contracts'
+import { muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, CaliberDef, WeaponDef } from '@adatechnology/game-weapons'
 import { buildToolClips } from '../animation/clip-set'
 import type { WeaponAudio } from '../audio'
+import { weaponEventOf } from '../audio/host-events'
 import { buildWeaponModelById } from '../models'
 import { applyCondition } from '../models/condition'
 import { cartridgeShape } from '../models/cartridge'
 import { modelKit } from '../models/kit'
 import { createEffects } from './effects'
+import { createLayers } from './layers'
+import type { FxLayers } from './layers'
 import { flameJet, launchRocket } from './heavy'
 import type { HeavyContext } from './heavy'
 import { createParticles } from './particles'
@@ -22,6 +26,8 @@ const PI = Math.PI
 // where the weapon sits against the camera: right, down and ahead; long guns are drawn smaller so they do not fill the view
 const HAND_OFFSET: [number, number, number] = [0.2, -0.2, -0.42]
 const HEAT_DISPLAY_MAX_FALLBACK = 120
+// the launcher has no calibre: its shot is the game's `explosao` class, at the volume of a mid-sized blast
+const LAUNCH_VOLUME = 0.6
 
 export interface ViewmodelOptions {
   THREE: typeof THREE_NS
@@ -36,6 +42,10 @@ export interface ViewmodelOptions {
   tool?: () => HostTool
   /** Wear of the weapon (`new`, `used`, `worn`, `rusty`). */
   condition?: string
+  /** What is drawn: read at the moment of each event, so the bench can change it live. */
+  layers?: FxLayers
+  /** Metres between the shooter and the listener, for the distance muffling of the shot sound (default 0). */
+  soundDistance?: () => number
 }
 
 /** The weapon in the hands for the models the gallery drew: it follows the camera, plays the clips of the rule's events, and throws casings, magazines and smoke. */
@@ -69,6 +79,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const { THREE, scene, camera, arsenal, groundAt, audio } = options
   const kit = modelKit(THREE)
   const random = createRandom(options.seed ?? 1)
+  const layers = options.layers ?? createLayers()
+  const distance = (): number => options.soundDistance?.() ?? 0
   const particles = createParticles(THREE, scene, groundAt)
   particles.onBounce = (kind) => (kind === 'casing' ? audio?.clink() : kind === 'magazine' ? audio?.thud() : undefined)
   const effects = createEffects(kit, scene, particles, random)
@@ -92,6 +104,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     effects,
     random,
     audio,
+    layers,
     groundAt,
     schedule: (delay, seconds, step, done) => void tasks.push({ delay, seconds, elapsed: 0, step: (progress) => step(ease(progress)), done }),
   }
@@ -178,32 +191,29 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
 
   const handleShot = (current: Session): void => {
     const action = current.def.action
-    if (action.kind === 'launcher') launchRocket(heavy(current))
-    if (action.kind === 'firearm') {
-      const caliber = caliberOf(arsenal, current.def)
-      const energy = caliber ? 0.5 * (caliber.bulletGrams / 1000) * caliber.muzzleSpeed ** 2 * (caliber.pellets ?? 1) : 300
-      audio?.shot(energy, current.def.category)
+    if (action.kind === 'launcher') {
+      launchRocket(heavy(current))
+      audio?.play('explosion', LAUNCH_VOLUME, distance())
     }
+    if (action.kind !== 'firearm') return
+    const caliber = caliberOf(arsenal, current.def)
+    if (!caliber) return
+    audio?.shot(muzzleEnergy(caliber) * (caliber.pellets ?? 1), current.def.category, { caliber, distance: distance() })
   }
 
   return {
     equip,
     unequip: release,
     handle(event, tool) {
+      if (event.type === 'explosion') return
       if (event.type === 'tool') equip(event.weapon)
       if (!session || !player || event.weapon !== session.id) return
       const current = session
-      if (event.type === 'shot') {
-        if (event.shots > 0) handleShot(current)
-        else audio?.click()
-      } else if (event.type === 'empty') audio?.click()
-      else if (event.type === 'cycle' && event.phase === 'start') audio?.cycle()
-      else if (event.type === 'reload') {
-        if (event.phase === 'start') {
-          current.nextChamber = 0
-          audio?.reloadStart(current.def.category)
-        } else audio?.reloadEnd(current.def.category)
-      } else if (event.type === 'clear' && event.phase === 'end') current.stuckCase = null
+      if (event.type === 'shot' && event.shots > 0) handleShot(current)
+      else if (event.type === 'reload' && event.phase === 'start') current.nextChamber = 0
+      else if (event.type === 'clear' && event.phase === 'end') current.stuckCase = null
+      const mechanical = weaponEventOf(event)
+      if (mechanical) audio?.event(mechanical)
       const step = toolAnimationStep(event)
       if (!step) return
       const last = step.type === 'play' && step.clip === 'shot' && current.model.parts.family === 'pistol' && tool.ammo === 0

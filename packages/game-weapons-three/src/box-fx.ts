@@ -1,7 +1,10 @@
 import type * as THREE_NS from 'three'
 import type { HostEvent, HostTool } from '@adatechnology/game-contracts'
+import { muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import type { WeaponAudio } from './audio'
+import { createLayers } from './fx/layers'
+import type { FxLayers } from './fx/layers'
 import { createRandom } from './fx/random'
 import { BODY_ACTIONS, buildWeaponModel } from './props'
 
@@ -20,6 +23,10 @@ export interface WeaponFxOptions {
   tool?: () => HostTool
   /** Wear of the weapon: `new`, `used`, `worn` or `rusty`. */
   condition?: string
+  /** What is drawn: read at the moment of each event, so the bench can change it live. */
+  layers?: FxLayers
+  /** Metres between the shooter and the listener, for the distance muffling of the shot sound (default 0). */
+  soundDistance?: () => number
 }
 
 /** The weapon in the hands, its fire and reload motion, ejected casings and dropped magazines, and their sounds. */
@@ -43,6 +50,8 @@ const EJECTS_ON_SHOT = new Set(['pistol', 'smg', 'carbine', 'rifle', 'sniper', '
 const DROPS_MAGAZINE = new Set(['pistol', 'smg', 'carbine', 'rifle', 'sniper'])
 /** Manual actions that cycle (pump, bolt) after each shot: the sound of the cycle. */
 const CYCLES = new Set(['shotgun_pump_12', 'rifle_bolt_308'])
+// a bow, a crossbow or a tool has no calibre: about a small handgun round
+const FALLBACK_ENERGY = 300
 const MAX_CASINGS = 120
 const MAX_MAGAZINES = 12
 const LIFETIME_S = 25
@@ -65,6 +74,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   const { THREE, scene, camera, arsenal, groundAt } = options
   const audio = options.audio ?? null
   const random = createRandom(options.seed ?? 1)
+  const layers = options.layers ?? createLayers()
   const bodies: Body[] = []
   const brass = new THREE.MeshStandardMaterial({ color: 0xc9a24a, metalness: 0.8, roughness: 0.35 })
   const shell = new THREE.MeshStandardMaterial({ color: 0xa8322b, roughness: 0.6 })
@@ -102,6 +112,10 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
     out.set(HAND_OFFSET[0] + x, HAND_OFFSET[1] + y, HAND_OFFSET[2] + z).applyQuaternion(camera.quaternion).add(camera.position)
 
   const throwBody = (kind: Body['kind'], mesh: THREE_NS.Mesh, from: THREE_NS.Vector3, velocity: THREE_NS.Vector3, radius: number): void => {
+    if (!(kind === 'casing' ? layers.casings : layers.magazines)) {
+      mesh.geometry.dispose()
+      return
+    }
     const limit = kind === 'casing' ? MAX_CASINGS : MAX_MAGAZINES
     const same = bodies.filter((b) => b.kind === kind)
     if (same.length >= limit) removeBody(same[0])
@@ -149,8 +163,8 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   const onShot = (weapon: WeaponDef): void => {
     kick = 1
     const caliber = weapon.action.kind === 'firearm' ? arsenal.calibers.get(weapon.action.caliber) : undefined
-    const energy = caliber ? 0.5 * (caliber.bulletGrams / 1000) * caliber.muzzleSpeed ** 2 * (caliber.pellets ?? 1) : 300
-    audio?.shot(energy, weapon.category)
+    const energy = caliber ? muzzleEnergy(caliber) * (caliber.pellets ?? 1) : FALLBACK_ENERGY
+    audio?.shot(energy, weapon.category, { ...(caliber ? { caliber } : {}), distance: options.soundDistance?.() ?? 0 })
     if (CYCLES.has(weapon.id)) audio?.cycle()
     if (EJECTS_ON_SHOT.has(weapon.category) && weapon.id !== 'shotgun_double_12') ejectCasing(caliberOf(weapon), weapon.category === 'shotgun', false)
   }
@@ -199,6 +213,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
       inHand = null
     },
     handle(event, tool) {
+      if (event.type === 'explosion') return
       const weapon = arsenal.weapons.get(event.weapon)
       if (event.type === 'tool') equip(event.weapon)
       if (!weapon) return
