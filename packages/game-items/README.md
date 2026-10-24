@@ -78,3 +78,7 @@ const { contents, leftover } = placeFinds(stacks, slots, items)                 
 | `RARITIES`, `BODY_SLOTS`, `DURABILITY_KINDS` | the closed vocabularies |
 
 Places are a registry too: none ships, the pack or the game declares them; `finds.places` is checked only when at least one place is registered.
+
+## Goldens against the team's code
+
+`tests/team-golden.test.ts` compares the two ports with what the team's own code answers: `rollByCategory` with the game's `rollItems` (2400 cases) and `rollExplicitPool` with the 3D house viewer's `sorteiaConteudo` (1875 cases), same result and same number of random draws. The fixtures in `tests/fixtures/team-golden/` are recorded once by `pnpm --filter @adatechnology/game-items record:team-golden`, which cuts the functions out of the delivered sources and runs them in a `vm` with a seeded random stream.

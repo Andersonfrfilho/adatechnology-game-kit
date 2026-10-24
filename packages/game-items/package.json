@@ -39,7 +39,8 @@
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "record:team-golden": "node scripts/record-team-golden.mjs"
   },
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:*",
@@ -47,6 +48,7 @@
   },
   "devDependencies": {
     "@adatechnology/game-weapons": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*",
     "@types/node": "^22.10.7",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",

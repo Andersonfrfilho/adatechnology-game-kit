@@ -993,3 +993,20 @@ Node 22.23.4: `tools/items-catalog` 35, `game-items` 18, `tools/golden` 42, `cat
 - `recurve_bow` é arma de fogo de calibre `arrow` porque é assim que o arsenal modela arco; o `alc` 40 virou `range`.
 
 **Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` exit 0; `pnpm -r test` verde (`game-weapons` 290 em 10 arquivos, `game-items-goods` 17, `items-catalog` 39); `catalog:check` de items e weapons up to date. **Node 22.23.4**: `game-weapons` 290, `game-items-goods` 17 passaram. Nenhum gate falhou 2x. Modelo da execução: `sonnet`.
+
+### T3.1k — Goldens G-b e G-c dos achados (grupo E)
+
+**O que entrou** (`packages/game-items`)
+- `scripts/record-team-golden.mjs` (`pnpm --filter @adatechnology/game-items record:team-golden`): recorta do original com `cutLiteral` (`ITENS`, `EXTRA`, `RAR_W`, `CONT_TAB`, `FIXOS`) e por texto as funções (`rollItems` do `jogo.js` L68796-68812; `mulberry32`/`hashStr`/`criaRng`/`ordemPonderada`, `LT`/`CONTEUDO`/`COMIDA_SUP` e `sorteiaConteudo` do `visor-casas-3d.js`), avalia em `vm` e grava **uma vez** `tests/fixtures/team-golden/roll-items.json` (222 KB) e `house-contents.json` (672 KB). `installPortableMath` ligado; `package.json` do `game-items` ganhou `@adatechnology/golden-tool` (devDependency) e o script.
+- G-b: o `R()` do jogo foi trocado pelo `createSeededRandom(semente)` do golden-tool; 10 recipientes (`CONT_TAB`) x 24 lugares x sementes 1-10 = **2400 casos**, `nome = ''` e sem `extra` (as posições fixas e extras não são sorteio). Cada caso guarda os ids sorteados e o número de sorteios.
+- G-c: `sorteiaConteudo` com o `criaRng(sem, chave)` do próprio visor (não substituído: já é semeado); 25 chaves de recipiente (20 pools + 5 aliases) x 3 estados (normal/protegida/abandonada) x sementes 1-25 = **1875 casos**, 5 áreas de móvel diferentes. Cada caso guarda as escolhas `{tipo, qtd}` e os sorteios que o original consumiu.
+- `tests/team-golden.test.ts` (4 testes): G-b compara ids, ordem e **contagem de sorteios** do `rollByCategory` sobre um catálogo reduzido ao pool do jogo; G-c alimenta o `rollExplicitPool` com os sorteios gravados e confere escolhas, quantidades e que consumiu exatamente os mesmos.
+
+**Resultado**: 2400/2400 e 1875/1875 iguais, nas duas, sem mudar o porte (a ordem de sorteio do `category-roll` e do `explicit-pool` já era a das fontes). O fixture gravado com Node 22 e com Node 24 é **idêntico** (md5), e os testes passam nos dois.
+
+**Escolhas e ressalvas**
+- O pool do G-b é o do jogo: os 146 `ITENS` (ids com `provenance.game`) mais as caixas de munição do `EXTRA` (`ammo-boxes.json`); o que o catálogo acrescenta sozinho (os outros itens do time, os do household, os criados, os outros 19 calibres do `itemsFromArsenal`) fica de fora por `include`, senão o sorteio ponderado percorreria outra lista. Nos itens do jogo só há raridade `c/i/r`, então a regra "lendário/único só em ponto fixo" não muda o resultado; a ordem dos itens do goods dentro da categoria é a do ITE e bate com a do jogo.
+- A ressalva do T3.1e ("comparar por ids") não foi preciso: a ordem bateu, então a comparação é por sequência exata.
+- Sem `recurso` do Math.random nas fontes: o jogo usa `R()` (substituído) e o visor `criaRng` (semeado), nenhuma chamada a `Math.random` fica no recorte.
+
+**Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` exit 0; `game-items` 143 testes em 14 arquivos (eram 139 em 13); **Node 22.23.4**: `game-items` 143 passaram. Modelo da execução: `sonnet`.
