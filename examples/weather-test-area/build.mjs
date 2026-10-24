@@ -38,6 +38,7 @@ const result = await esbuild.build({
   alias: {
     '@adatechnology/game-weather': join(pkg('game-weather'), 'dist/index.js'),
     '@adatechnology/game-contracts': join(pkg('game-contracts'), 'dist/index.js'),
+    '@adatechnology/game-audio': join(pkg('game-audio'), 'dist/index.js'),
   },
 })
 mkdirSync(join(here, 'dist'), { recursive: true })

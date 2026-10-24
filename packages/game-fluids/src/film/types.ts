@@ -204,6 +204,8 @@ export interface FilmDropState {
 export interface FilmWeather {
   /** 0..1. While it rains drying stops and the film spreads 1.5 times faster. */
   rain: number
+  /** Multiplies how fast the film dries (default 1): hot weather above 1. */
+  drying?: number
 }
 
 export interface FilmOptions {
@@ -241,6 +243,8 @@ export interface Film {
   update(input: FilmAdvanceInput): void
   setWeather(weather: Partial<FilmWeather>): void
   weather(): FilmWeather
+  /** Rain washes the fresh film away: clears the cells that are less than `maxDryness` dry (default 0.5, the visor's L13494). Returns how many cells it cleared. */
+  wash(maxDryness?: number): number
   /** Empties the film, drops, drip, sources and drags. The ring cursor and the leftover step time stay, as in the pages. */
   clear(): void
   /** Number of cells above the visible thickness (0.035 mm). */

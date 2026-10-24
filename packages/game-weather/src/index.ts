@@ -1,7 +1,7 @@
 /**
  * @adatechnology/game-weather: pure, seeded weather. States (clear to typhoon) with the numbers of the teams' pages, climates that move between
  * them in game time (2 to 6 hours each, fronts from the west), lightning with the thunder delay, ground wetness, what the weather means for
- * sight, hearing and footsteps, the heat index and the day-night formula. No three.js, no audio, no game content: renderers and sound read it.
+ * sight, hearing and footsteps, the heat index and the day-night formula, plus the bridges that push it to fluids, interactables, vegetation, vfx, the environment bus and the sound (rain, wind and thunder recipes of game-audio). No three.js, no game content: renderers read it.
  */
 export { createWeather, createTimeline, DEFAULT_START_HOUR } from './weather'
 export type { TimelineOptions, Weather, WeatherOptions, WeatherTimeline } from './weather'
@@ -32,6 +32,12 @@ export type {
   WeatherSample,
   WeatherState,
 } from './types'
+
+export { createWeatherBridges, environmentOf, DEFAULT_BRIDGE_RULES } from './bridges'
+export type { FilmTarget, InteractablesTarget, VegetationTarget, VfxTarget, WeatherBridgeOptions, WeatherBridgeRules, WeatherBridges, WeatherTargets } from './bridges'
+export { RAIN_HISS_GAME, RAIN_LOOP, THUNDER, WEATHER_BANK, WEATHER_LOOPS, WEATHER_SOUNDS, WIND_LOOP } from './audio/recipes'
+export { DEFAULT_RAIN_SOUND, DEFAULT_WIND_SOUND, createWeatherSound, rainVolume, strikePosition, windVolume } from './audio/sound'
+export type { WeatherSound, WeatherSoundOptions, WeatherSoundStyle } from './audio/sound'
 
 export { createWeatherTestModule } from './bench/module'
 export type { WeatherScenarioLike, WeatherTestModule, WeatherTestModuleOptions } from './bench/module'

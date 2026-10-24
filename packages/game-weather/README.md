@@ -1,8 +1,9 @@
 # @adatechnology/game-weather
 
 Pure, seeded weather for games: states from clear to typhoon, climates that move between them in game time, lightning with the thunder delay,
-ground wetness, what the weather means for sight, hearing and footsteps, the heat index and the day-night formula. No three.js, no audio, no
-game content; renderers and sound engines read it. Zero runtime dependencies; works in the browser and in Node.
+ground wetness, what the weather means for sight, hearing and footsteps, the heat index and the day-night formula, and the bridges that push it to
+the fluid film, the interactables, the vegetation, the effects world, the environment bus and the sound. No three.js and no game content; renderers
+read it. Depends on `game-contracts` and `game-audio` (the rain, wind and thunder recipes); works in the browser and in Node.
 
 The numbers come from the teams' pages (each state lists its `sources`): the rain, fog and lightning of the VFX Workshop, the dry and wet fog and
 the day of the game, the wind and fog of the Art Scene, the rain rules of the Vale Cinzento gallery. Cyclone, typhoon and extreme heat have no team
@@ -93,3 +94,32 @@ Arte, Galeria do Vale Cinzento); ciclone, tufão e calor intenso não têm fonte
 - Relâmpago com fluxo próprio de semente (o servidor manda a semente e todos veem o mesmo clarão); trovão `distância / 343` s depois.
 - O solo seca 180 s depois que a chuva para; `effects` entrega `sightScale`, `hearingScale`, `footstepScale`, índice de calor e estresse de calor.
 - Catálogo por registro: acrescente, troque (`patch`) ou tire estados e climas sem mexer no núcleo.
+
+## Bridges
+
+`createWeatherBridges(targets, options)` pushes one weather to whatever you give it. Every target is optional and an interface of its own, so the
+weather imports none of the packages it drives:
+
+```ts
+import { createWeatherBridges } from '@adatechnology/game-weather'
+
+const bridges = createWeatherBridges({
+  film: room.film, // game-fluids-three FilmBridge: setWeather({ rain, drying }), wash()
+  interactables: world, // game-interactables: water.setRain(mm/h), setWind(x, z)
+  vegetation, // game-vegetation: setWind({ direction, strength, gust })
+  vfx: vfxWorld, // game-vfx: setWind([x, 0, z])
+  environment: host.environment, // the EnvironmentBus
+  audio: host.audio, // rain and wind loops, thunder
+})
+bridges.bind(weather)
+// every frame, after weather.advance(dt)
+bridges.update(dt)
+```
+
+The rules are numbers you can change (`filmRainFullAt`, `washFrom`, `washBelow`, `washEvery`, `windFull`): light rain (2.5 mm/h) stops the drying and
+does not wash; heavy rain (15 mm/h) and stronger washes the fresh stain (less than half dry) once a second; extreme heat dries twice as fast; the
+vegetation's `strength` is `min(1, speed / 20)`.
+
+Sound: `WEATHER_BANK` holds `rain_loop` and `wind_loop` (art scene), `rain_hiss_game` (game) and `thunder`. `createWeatherSound` sets the rain loop
+from 0.035 (light rain) to 0.06 (heavy), the wind loop at 0.05 in the breeze and in proportion to the speed, and plays the thunder at the strike's
+bearing when it arrives (`distance / 343` s after the flash). `options.sound` changes the style (`art_scene` or `game`), the levels and the listener.

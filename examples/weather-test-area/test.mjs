@@ -56,10 +56,13 @@ if (!playwright || !existsSync(page)) {
       bench.set('state', 'storm')
       for (let i = 0; i < 400; i++) room.update(0.1)
       const after = room.metrics().module
-      return { ok: report.ok, problems: report.problems, scenarios: scenarios.length, passed: result.passed, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id), before, after }
+      const wind = room.vfx.wind()
+      const loops = room.audio ? room.audio.stats().loops : -1
+      return { wind, loops, thunder: room.audio ? room.audio.registry.sound('thunder') !== undefined : false, ok: report.ok, problems: report.problems, scenarios: scenarios.length, passed: result.passed, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id), before, after }
     })
     check(`[${lang}] contract report is clean, 4 scenarios pass`, state.ok && state.problems.length === 0 && state.scenarios === 4 && state.failed === 0, state)
     check(`[${lang}] the storm is seen in the metrics: rain, less visibility, strikes`, state.after.rain > 10 && state.after.visibility < state.before.visibility && state.after.strikes > 0, { before: state.before, after: state.after })
+    check(`[${lang}] the bridges reach the room: the storm's wind goes to the effects world, the rain and wind loops open on its engine`, Math.abs(state.wind[0] - 4.5) < 1e-9 && state.wind[2] === 0 && state.loops >= 1 && state.thunder, { wind: state.wind, loops: state.loops, thunder: state.thunder })
     await context.close()
   }
   check('no console errors', errors.length === 0, errors.slice(0, 3))

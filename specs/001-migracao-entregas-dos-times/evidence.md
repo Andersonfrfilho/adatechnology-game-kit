@@ -2311,3 +2311,34 @@ Ramo `int/p6b`, depois da Fase 4 (corpo e `body`) na `main`.
 ### Perguntas para o dono
 - Os 8 tipos sem som no time (Rastejante, Inchado, Espreitador, Cego, Carbonizado, Afogado, Farejador, Devorador) e as 9 espécies sem chamado (cavalo, porco, javali, capivara, onça, gato, urubu, jararaca, rato) ficam com o gemido da regra, o som "extra" ou silêncio. Quer que o time de som entregue vozes novas, ou aceita as escolhas acima?
 - O Espreitador fica calado enquanto finge morto: aceita?
+
+## T6.2b — as pontes do clima e o som de chuva, vento e trovão
+
+Ramo `int/p6b`, depois de T5.3e e T6.1g.
+
+| O que | Onde |
+|---|---|
+| `createWeatherBridges(targets, options)`: cada alvo é opcional e uma interface pequena (o clima não importa nenhum dos pacotes que move). `film`, `interactables`, `vegetation`, `vfx`, `environment` (`EnvironmentBus`), `audio` (`AudioSink`); `bind(weather)` e `update(dt)` | `game-weather/src/bridges.ts` |
+| Filme de fluidos: `Film.setWeather({ rain, drying })` (`drying` multiplica a secagem; o calor intenso passa `dryingScale` 2) e `Film.wash(maxDryness = 0,5)` (o `ZG.wipe(c, "chuva")` do visor L13489-L13494: só a mancha com menos da metade seca; sangue e sangue velho, óleo e combustível não), com `FilmManager.wash`, `FilmGrid.wash` (reenvia o retângulo lavado), `FilmBridge.wash` e a opção `washable` | `game-fluids/src/film/{film,types,simulate}.ts`, `game-fluids-three/src/film/{manager,grid,bridge}.ts` |
+| Vento do vfx: `VfxWorld.setWind([x, y, z])` e `wind()` (`VfxOptions.wind` só dava o início) | `game-vfx/src/world.ts` |
+| Receitas: `rain_loop` (Cena L1314, passa-alta 600 e passa-baixa 6000), `wind_loop` (Cena L1315, passa-baixa 320, LFO 0,07 Hz de 0,035), `rain_hiss_game` (jogo L62116) e `thunder` | `game-weather/src/audio/recipes.ts` |
+| `createWeatherSound(audio)`: chuva 0,035 (chuva leve, 2,5 mm/h, a âncora do jogo) a 0,06 (forte, 15 mm/h, a âncora da Cena); vento 0,05 na brisa de 3,8 m/s e proporcional à velocidade, no máximo 0,12; o trovão toca no rumo do raio (graus no sentido horário a partir do norte, -z) quando o `thunder` do clima chega (o clima já espera `distância / 343` s) | `game-weather/src/audio/sound.ts` |
+| A bancada do clima recebe `targets` e `sound` e liga as pontes ao `host.audio`; `room.vfx` expõe o mundo de efeitos da sala; as áreas `weather-test-area` e `interactables-test-area` passam `room.film` e `room.vfx` | `bench/module.ts`, `game-test-room`, `examples/*/src/entry.js` |
+
+**Prova**: `game-weather/tests/sound.test.ts` roda os laços no motor sobre o `AudioContext` falso e compara com os traços do código dos times (Cena `chain` com chuva 0,06, vento 0,05 e fogo 0; jogo `loop.chuva` a 0,001, 0,035 e 0,3; tolerância 1e-9). `tests/bridges.test.ts` (8) cobre o que cada alvo recebe, só o que mudou, chuva leve sem lavar e forte lavando a cada segundo, calor, regras trocadas, troca de clima e trovão. `game-fluids` (secagem em dobro e lavagem pela metade), `game-fluids-three` (óleo não lava) e `game-vfx` (o fumo anda para o lado do vento) têm testes novos; no navegador, as duas áreas conferem que o vento da tempestade (4,5; 0) chega ao `room.vfx`, volta à brisa (3,5; 1,5) e que os laços abrem no motor da sala.
+
+### Escolhas minhas (padrões reversíveis)
+
+1. **Trovão**: o time não tem trovão. É o `boom` do jogo (seno de 70 a 28 Hz em 1,2 s) mais um ribombo de ruído passa-baixa que desce de 260 a 50 Hz em 3,2 s com envio de reverb. A curva é `1,4 / (1 + d² × 0,00001)`: com a do boom (0,002) um raio a 200 m, o mais perto que o clima sorteia, já chegaria a 0,017 e um a 4 km, a nada.
+2. **Chuva do filme**: `rain = min(1, mm/h / 2,5)`, ou seja, a chuva leve já para a secagem por completo (a regra da folha: "não seca enquanto chove"); lavar só de 15 mm/h (chuva forte) em diante, a cada 1 s (decisão 9 da T6: a chuva leve não lava).
+3. **Vegetação**: `strength = min(1, vento / 20)` (como na spec) e `gust = min(1, rajada / 20)` na mesma escala; a spec não diz a conta da rajada. Sem vento a direção não é enviada (o renderizador normaliza e um vetor zero a estragaria).
+4. **Vento do vfx**: passa a ser o do clima (a brisa do `clear` é 3,5; 1,5 m/s, bem mais forte que o 0,55; 0,2 de partida do `game-vfx`); só muda onde o anfitrião liga a ponte (as duas áreas de teste).
+5. **Vento da Cena**: o laço abre a 0,05 na Cena e o volume segue a velocidade a partir dali; a escala (0,05 a 3,8 m/s, teto 0,12) é do kit.
+
+### Não migrado
+- **A prateleira do showroom** (`interactables-showroom`) ainda liga chuva (60 mm/h) e vento (3,5; 1,5) à mão, com malha de chuva própria. As pontes aceitam o mundo de interativos e o `effects` do showroom, mas trocar os botões por estados do clima muda o comportamento da página (a chuva dela é uma malha); fica para quando a T6.2c entregar a chuva desenhada.
+
+### Perguntas para o dono
+- O trovão é do kit (ribombo e curva): quer outra conta, ou um som do time de áudio?
+- Chuva leve lava o sangue? Hoje não (decisão 9); a folha diz "chuva lava", sem separar leve de forte.
+- Vento do `vfx` com o vento do clima em todo anfitrião que ligar a ponte: aceita a brisa de 3,5; 1,5 m/s no lugar de 0,55; 0,2?

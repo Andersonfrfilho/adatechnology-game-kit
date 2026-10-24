@@ -73,6 +73,22 @@ describe('film bridge', () => {
     expect(grids.find((grid) => grid.tint === fresh)!.profile.dry).toBe(0x3a1a10)
   })
 
+  it('passes the drying scale on, and the rain washes the fresh blood but not the oil', () => {
+    const { manager, bridge, step } = setup()
+    bridge.splat({ fluid: 'blood', point: [0, 0.6, 0], count: 4 })
+    bridge.splat({ fluid: 'motor_oil', point: [1.5, 0.6, 1.5], count: 4 })
+    step(1)
+    bridge.setWeather({ rain: 0, drying: 2 })
+    expect(manager.list()[0]!.film.weather()).toEqual({ rain: 0, drying: 2 })
+    const [blood, oil] = [manager.list().find((grid) => grid.profile.id === 'blood')!, manager.list().find((grid) => grid.profile.id === 'motor_oil')!]
+    const oilBefore = oil.film.wetCells()
+    expect(blood.film.wetCells()).toBeGreaterThan(0)
+    expect(bridge.wash()).toBeGreaterThan(0)
+    expect(blood.film.wetCells()).toBe(0)
+    expect(oil.film.wetCells()).toBe(oilBefore)
+    expect(bridge.wash()).toBe(0)
+  })
+
   it('passes the rain on, and stops feeding after dispose', () => {
     const { manager, bridge, fluids, step } = setup()
     bridge.splat({ fluid: 'blood', point: [0, 0.6, 0] })

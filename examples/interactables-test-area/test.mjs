@@ -159,12 +159,15 @@ for (const lang of ['pt-BR', 'en']) {
     for (let i = 0; i < 400; i++) room.update(0.1)
     const environment = room.environment.get()
     const stats = room.audio.stats()
-    const result = { weather: report.weather?.ok && report.weather.problems.length === 0, sound: report.audio?.ok && report.audio.problems.length === 0, rain: environment.rain, visibility: environment.visibility, peak: stats.peak, fog: room.scene.fog === null }
+    // the weather bridges: the storm's wind reaches the room's effects world, and its rain and wind loops open on the room's engine
+    const result = { weather: report.weather?.ok && report.weather.problems.length === 0, sound: report.audio?.ok && report.audio.problems.length === 0, rain: environment.rain, visibility: environment.visibility, peak: stats.peak, fog: room.scene.fog === null, wind: room.vfx.wind(), loops: stats.loops, thunder: room.audio.registry.sound('thunder') !== undefined }
     weather.set('state', 'clear')
     for (let i = 0; i < 20; i++) room.update(0.1)
+    result.windAfter = room.vfx.wind()
     return result
   })
   check(`[${lang}] the sound and weather modules are loaded too: a storm writes host.environment, a sound plays on the room engine, the furniture scene keeps its fog off`, sky.weather && sky.sound && sky.rain > 10 && sky.visibility < 120 && sky.peak >= 1 && sky.fog, sky)
+  check(`[${lang}] the weather bridges: the storm's wind (4.5, 0) goes to the effects world and back to the breeze, the rain and wind loops are open, the thunder is in the room engine`, Math.abs(sky.wind[0] - 4.5) < 1e-9 && sky.wind[2] === 0 && Math.abs(sky.windAfter[0] - 3.5) < 1e-9 && Math.abs(sky.windAfter[2] - 1.5) < 1e-9 && sky.loops >= 1 && sky.thunder, sky)
 
   if (lang === 'pt-BR') {
     await page.close()

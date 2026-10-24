@@ -93,7 +93,7 @@ export function loadInto(room, options = {}) {
   const vfx = options.vfx === false ? undefined : room.loadModule(createVfxTestModule({ locale: lang }))
   // the sound and the weather ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here
   const audio = options.audio === false ? undefined : room.loadModule(createAudioTestModule({ locale: lang }))
-  const weather = options.weather === false ? undefined : room.loadModule(createWeatherTestModule({ locale: lang, fog: false }))
+  const weather = options.weather === false ? undefined : room.loadModule(createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx } }))
   const report = room.loadModule(createFurnitureArea({ ...options, locale: lang }))
   return { ...report, ...(weapons ? { weapons } : {}), ...(itemsArea ? { itemsArea } : {}), ...(characters ? { characters } : {}), ...(animals ? { animals } : {}), ...(vfx ? { vfx } : {}), ...(audio ? { audio } : {}), ...(weather ? { weather } : {}) }
 }

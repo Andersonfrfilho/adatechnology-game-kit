@@ -1,8 +1,11 @@
-import type { BenchChange, EnvironmentBus, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableModule } from '@adatechnology/game-contracts'
+import type { BenchChange, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableModule } from '@adatechnology/game-contracts'
 
+import { createWeatherBridges, environmentOf } from '../bridges'
+import type { WeatherBridges, WeatherTargets } from '../bridges'
+import type { WeatherSoundOptions } from '../audio/sound'
 import { createWeather } from '../weather'
 import type { Weather, WeatherOptions } from '../weather'
-import type { Strike, WeatherSample } from '../types'
+import type { Strike } from '../types'
 import { weatherBenchTextOf } from './locale'
 import type { WeatherBenchText } from './locale'
 
@@ -14,6 +17,10 @@ export type WeatherTestModuleOptions = WeatherOptions & {
   weather?: Weather
   /** Whether the scene fog follows the weather at first (default true; the layer can be switched either way). A room that is not about weather starts it off. */
   fog?: boolean
+  /** The packages the weather drives besides the host's environment bus and sound (fluids film, interactables, vegetation, vfx), from the example. */
+  targets?: Omit<WeatherTargets, 'environment' | 'audio'>
+  /** The rain, wind and thunder on the host's `audio`; `false` keeps the area silent. */
+  sound?: WeatherSoundOptions | false
 }
 
 /** What the scenarios use of the context the test room passes. */
@@ -44,9 +51,11 @@ type ThreeLike = { Fog?: FogLike }
 export function createWeatherTestModule(options: WeatherTestModuleOptions = {}): WeatherTestModule {
   const locale = options.locale ?? 'pt-BR'
   const text: WeatherBenchText = weatherBenchTextOf(locale)
-  const { locale: _locale, translate, weather: given, fog: _fog, ...weatherOptions } = options
+  const { locale: _locale, translate, weather: given, fog: _fog, targets: _targets, sound: _sound, ...weatherOptions } = options
   void _locale
   void _fog
+  void _targets
+  void _sound
   const state = {
     seed: options.seed ?? 1,
     hour: options.startHour ?? 8,
@@ -58,6 +67,7 @@ export function createWeatherTestModule(options: WeatherTestModuleOptions = {}):
   let host: ModuleHost | null = null
   let strikes = 0
   let offStrike: (() => void) | undefined
+  let bridges: WeatherBridges | undefined
   let weather: Weather = given ?? createWeather({ ...weatherOptions, autoSchedule: state.auto, ...(state.auto ? { timeScale: FAST_SCALE } : {}) })
 
   const watch = (): void => {
@@ -74,20 +84,8 @@ export function createWeatherTestModule(options: WeatherTestModuleOptions = {}):
     weather = createWeather({ ...weatherOptions, seed: state.seed, start: current, startHour: state.hour, autoSchedule: state.auto, timeScale: state.auto ? FAST_SCALE : NORMAL_SCALE })
     strikes = 0
     watch()
+    bridges?.bind(weather)
   }
-
-  const toEnvironment = (sample: WeatherSample): Parameters<EnvironmentBus['set']>[0] => ({
-    rain: sample.rain,
-    windX: sample.windX,
-    windZ: sample.windZ,
-    windSpeed: sample.windSpeed,
-    gust: sample.gust,
-    fogFar: sample.fogFar,
-    visibility: sample.effects.visibility,
-    nightFactor: sample.nightFactor,
-    temperatureC: sample.temperatureC,
-    wetness: sample.groundWetness,
-  })
 
   const applyFog = (far: number): void => {
     const scene = host?.scene as SceneLike | undefined
@@ -100,7 +98,7 @@ export function createWeatherTestModule(options: WeatherTestModuleOptions = {}):
 
   const publish = (): void => {
     const sample = weather.sample()
-    if (state.environment) host?.environment?.set(toEnvironment(sample))
+    if (state.environment) host?.environment?.set(environmentOf(sample))
     if (state.fog) applyFog(sample.fogFar)
   }
 
@@ -240,14 +238,19 @@ export function createWeatherTestModule(options: WeatherTestModuleOptions = {}):
     attach(lent) {
       host = lent
       const off = lent.bench?.onChange(onChange)
+      bridges = createWeatherBridges({ ...options.targets, ...(lent.audio ? { audio: lent.audio } : {}) }, { sound: options.sound ?? {} })
+      bridges.bind(weather)
       publish()
       const offFrame = lent.onFrame((dt) => {
         weather.advance(dt)
         publish()
+        bridges?.update(dt)
       })
       return () => {
         off?.()
         offFrame()
+        bridges?.dispose()
+        bridges = undefined
         host = null
       }
     },
