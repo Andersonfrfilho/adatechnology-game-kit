@@ -44,6 +44,7 @@ node tools/golden/bin/record.mjs \
 | `--ready` | expression that becomes truthy when the page has built what the capture needs |
 | `--three` | local three.js file served in place of the CDN URL; every other external request is refused, so recording is offline |
 | `--addon` | a three.js `examples/js` script (OrbitControls, RoundedBoxGeometry...) served in place of its jsDelivr URL; repeat for each one the page loads |
+| `--expose a,b,c` | for a page that keeps its functions inside an IIFE: the recorder adds, at the end of the page's last inline IIFE, accessors on `globalThis.GoldenExposed` (the getter reads the binding, the setter writes it, so a capture can also swap a `let`, for example the page's seeded random). A `const` can be read but not assigned. Use it in the `--ready` expression too (`GoldenExposed.sobrado`) |
 
 Before any page script runs, the recorder installs the seeded environment: `Math.random` is seeded, `Date.now` and `performance.now`
 are frozen and only move through `advance`, and `requestAnimationFrame` is queued and only runs when the capture calls
@@ -52,6 +53,18 @@ are frozen and only move through `advance`, and `requestAnimationFrame` is queue
 `setInterval` timers, `crypto.getRandomValues` / `crypto.randomUUID`, `requestIdleCallback`, and anything the network or the GPU decides
 (the recorder refuses external requests, but a page that reacts to a failed one still differs). `Math.random`, `Date.now`,
 `performance.now` and `requestAnimationFrame` are the ones the recorder controls.
+
+Captures for the houses (spec 001, T2.2a), with where their goldens go:
+
+| Capture | Page | Golden |
+|---|---|---|
+| `floorplan-plans.js` | Visor de casas 3D (`PlantasSDK.gerar`, every template x seeds 1-25 x 3 states; one event per plan with a hash per list) | `packages/game-floorplan/tests/fixtures/team-golden/vc3-plans.json` (+ `vc3-plans-detail.json`, the readable rows of seed 1) |
+| `floorplan-structure.js` | same (`estrutura`, `Casa3DSDK.specDe` coarse and `vedacao`, utilities) | `specs/001-migracao-entregas-dos-times/goldens/vc3-structure.json` (+ detail), staged until `game-floorplan-structure` exists |
+| `house-area.js` | Sala de testes, area "Casas e prédios" (the 6 scenarios on the page's destruction world, every world event) | `specs/.../goldens/house-area.json`, staged until the destruction work (T2.3b) consumes it |
+| `gallery-silhouettes.js` | Galeria do Vale Cinzento, with `--expose` (house and building silhouettes, scene hash) | `specs/.../goldens/gallery-silhouettes.json`, staged for `game-floorplan-three` (T2.5a) |
+
+`specs/001-migracao-entregas-dos-times/goldens/README.md` has the exact command of each one. `GoldenTool.hashText` (FNV-1a) is what a capture and a package test use to put a
+whole list in one event value.
 
 A capture file may use `GoldenTool.createEventRecorder()` to log events and
 `GoldenTool.createGoldenRecord({ name, seed, events, scenes })` to return the result.

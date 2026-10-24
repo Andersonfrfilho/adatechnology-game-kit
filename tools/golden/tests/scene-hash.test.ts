@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
-import { describeScene, snapshotScene } from '../src'
+import { describeScene, hashText, snapshotScene } from '../src'
 import type { SceneNodeLike } from '../src'
 
 function buildScene(): THREE.Group {
@@ -79,5 +79,13 @@ describe('snapshotScene', () => {
     expect(lines[1]).toContain('geo:BoxGeometry v24')
     expect(lines[1]).toContain('bbox-1,-0.5,-2,1,0.5,2')
     expect(lines[1]).toContain('MeshStandardMaterial:9a2424:1')
+  })
+})
+
+describe('hashText', () => {
+  it('is FNV-1a: stable, hex, and sensitive to one character', () => {
+    expect(hashText('')).toBe('811c9dc5')
+    expect(hashText('a')).toBe('e40c292c')
+    expect(hashText('rooms')).not.toBe(hashText('rooms '))
   })
 })
