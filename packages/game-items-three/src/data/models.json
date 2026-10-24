@@ -1398,5 +1398,15 @@
       3
     ],
     "scale": 0.1
+  },
+  {
+    "id": "epoxy_glue",
+    "teamId": "cola",
+    "teamBox": [
+      1,
+      0.6,
+      0.3
+    ],
+    "scale": 0.1
   }
 ]
