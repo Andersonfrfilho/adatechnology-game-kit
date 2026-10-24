@@ -52,6 +52,8 @@ export interface TestRoomItem {
   impl?: (root: THREE_NS.Object3D, id: string) => DestructibleImpl
   /** Use animations the item brings (see `TestRoom.playAnimation`). Part poses move the child of the built object named after the part id. */
   animations?: AnimationClipSpec[]
+  /** Picture for the catalogue, the search results and the aimed-item label: an image URL or inline `<svg…>` markup (see `TestableItem.thumbnail`). */
+  thumbnail?: string
 }
 
 export interface TestRoomOptions {

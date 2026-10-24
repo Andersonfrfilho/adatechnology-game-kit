@@ -1441,6 +1441,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       stress: ext.stress,
       joints,
       note: e?.item?.note,
+      thumbnail: e?.item?.thumbnail,
       distance: r.distance,
     }
   }
@@ -1875,6 +1876,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         weapon: ti.weapon,
         impl: ti.impl as TestRoomItem['impl'],
         animations: ti.animations,
+        thumbnail: ti.thumbnail,
       }
       catalogMap.set(item.id, item)
       const at = catalog.findIndex((c) => c.id === item.id)
