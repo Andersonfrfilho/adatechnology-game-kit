@@ -758,5 +758,15 @@
       0.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "sterile_gauze",
+    "teamId": "gaze",
+    "teamBox": [
+      1,
+      1,
+      0.15
+    ],
+    "scale": 0.1
   }
 ]
