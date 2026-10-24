@@ -11,6 +11,7 @@
  */
 
 import type {
+  BlastOptions,
   DamageType,
   DebrisKind,
   DestructibleImpl,
@@ -43,7 +44,12 @@ export type {
   DestructibleSpec,
   DestructionEvent,
   DestructionEventType,
+  BlastOptions,
+  BlastReport,
+  ConfinementOptions,
   ExplosionChain,
+  FragmentHitOptions,
+  ShelterOptions,
   FluidKind,
   Fragment,
   FragmentMark,
@@ -112,8 +118,8 @@ export interface MaterialDef {
   fracture: FractureStyle
   /** Fragment size range in metres (default `[0.04, 0.2]`). */
   fragmentSize?: [number, number]
-  /** Damage multipliers per damage type (default 1). */
-  damageScale?: Partial<Record<DamageType, number>>
+  /** Damage multipliers per damage type (default 1); `shelter` multiplies the resistance the material adds between a blast and a target (`blast.shelter`). */
+  damageScale?: Partial<Record<DamageType | 'shelter', number>>
   /** Debris emitted on a hit that does not break the part. */
   hitDebris: DebrisKind
   /** Debris emitted when the part fractures. */
@@ -172,6 +178,11 @@ export interface DestructionOptions {
    * (the speed of sound is 340). Default off: every part takes the blast at once.
    */
   blastFrontSpeed?: number
+  /**
+   * Defaults of every blast (`explode`, an explosive `hit`, a part that explodes); each call can override them. All off by default, and a world
+   * with all of them off gives the results it always gave. See `ShelterOptions`, `FragmentHitOptions` and `ConfinementOptions`.
+   */
+  blast?: BlastOptions
 }
 
 export interface SizeStructureOptions {
@@ -237,8 +248,12 @@ export interface DestructionWorld {
   hit(objectId: string, hit: Hit): HitResult
   /** Apply a hit to a known part (e.g. after the host's own raycast). */
   hitPart(objectId: string, partId: string, hit: Hit): HitResult
-  /** A blast in world space against every object in range. */
-  explode(point: Vec3, energy: number, radius: number, source?: string): HitResult[]
+  /**
+   * A blast in world space against every object in range. With `options` (else `DestructionOptions.blast`) the blast can be sheltered by what
+   * stands in the way, throw the fragments of what it breaks and gain pressure in an enclosed volume; each `HitResult.blast` says what it did to
+   * that target, and a `blast` event sums it up.
+   */
+  explode(point: Vec3, energy: number, radius: number, source?: string, options?: BlastOptions): HitResult[]
   /** Raycast against every part shape (world space). */
   raycast(origin: Vec3, direction: Vec3, maxDistance?: number): RayHit | null
   /** Ballistic shot: raycast, hit, and continue through with the exit energy (up to 4 objects/parts). */
