@@ -24,6 +24,10 @@ const { state, events } = driver.step({ throttle: 1, brake: 0, steer: 0.5, handb
 | `createArcadeDriver(opções)` | motorista arcade; `spec` com todos os números do jogo (aceleração 5,5, freio 12, ré 3, máxima 17 m/s, esterço 0,55) |
 | `vehicleCorners(spec, x, z, yaw)` | os oito pontos que o jogo testa contra paredes |
 | `runOver(velocidade, regras)` | `push`, `knock` ou `kill` (3 e 8 m/s) |
+| `createSemiSimDriver(spec)` | semissimulação: suspensão por roda, pneu, câmbio, freio de mão, superfícies, dano que muda a direção, consumo |
+| `createSurfaces`, `surfaceGrip` | registro de superfícies (com packs, patch e remove) e aderência com aquaplanagem |
+| `semiSpecFromStats(stats, corpo)` | spec a partir das notas da ficha de projeto (`fleetStats`) |
+| `impactEnergy`, `bodyDamage`, `vehicleDamageFromImpact`, `speedLoss` | fórmulas de atropelamento do documento (seção 08) |
 | tipos `DriveInput`, `DriverState`, `DrivingWorld`, `DrivingEvent` | o contrato |
 
 ## Compõe com
@@ -36,3 +40,4 @@ const { state, events } = driver.step({ throttle: 1, brake: 0, steer: 0.5, handb
 - Unidades em metros, segundos e radianos; guinada 0 aponta para +x e a frente é `(cos yaw, -sin yaw)`.
 - O motorista só emite eventos: dano, sangue, som e câmera são do anfitrião.
 - Sem `Math.random`.
+- A semissimulação não tem código do time: os números do documento da Frota são os testes; o passo interno é de 1/240 s.
