@@ -220,7 +220,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
       inHand = null
     },
     handle(event, tool) {
-      if (event.type === 'explosion') return
+      if (event.type === 'explosion' || event.type === 'player') return
       const weapon = arsenal.weapons.get(event.weapon)
       if (event.type === 'tool') equip(event.weapon)
       if (!weapon) return

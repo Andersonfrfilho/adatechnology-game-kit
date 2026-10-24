@@ -2003,6 +2003,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       flushEvents(toolId, tool)
       return result
     },
+    player: () => ({
+      position: player.position,
+      yaw: player.yaw,
+      pitch: player.pitch,
+      crouching: false,
+      speed: player.speed,
+      running: player.running,
+      cameraMode: 'first',
+    }),
     configureTool(settings) {
       const condition = settings[SETTING_IDS.condition]
       const ammoQuality = settings[SETTING_IDS.ammoQuality]

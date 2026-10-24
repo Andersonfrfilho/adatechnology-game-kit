@@ -6,7 +6,7 @@ Leia `spec.md` e `plan.md`. As fontes estão em `specs/001-migracao-entregas-dos
 ## Fase 0 — Contrato
 > 🤖 Modelo: `sonnet`
 
-- T0.1 `game-contracts`: `PlayerState` (`position`, `yaw`, `pitch`, `crouching`, `speed`, `running`, `cameraMode`) no
+- ✅ T0.1 `game-contracts`: `PlayerState` (`position`, `yaw`, `pitch`, `crouching`, `speed`, `running`, `cameraMode`) no
   `ModuleHost` (`host.player()`) e `HostEvent` `{ type: 'player' }` ao mudar agachar ou modo. Só genérico. Testes de tipo e de
   evento.
 
