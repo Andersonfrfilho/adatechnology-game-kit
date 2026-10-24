@@ -106,6 +106,7 @@ export abstract class WeaponFirearm extends WeaponCommands {
         caliber: cal.diameter,
         caliberId: cal.id,
         speed,
+        mass: cal.bulletGrams,
         energyAt,
         pellet: p,
         weapon: this.def.id,

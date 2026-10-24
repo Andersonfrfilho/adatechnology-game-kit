@@ -42,9 +42,10 @@ O módulo de teste completo (com `area` e `attach`) está na skill `game-test-ro
 | `checkAnimation(clip, partIds)` | Valida um `AnimationClipSpec` contra os ids de peça |
 | `shotToHit(shot, point, normal?)` | Transforma um `Shot` balístico em `Hit` |
 | `IMPACT_CONTRACT` | Campos obrigatórios/opcionais do `Hit` por `DamageType` |
-| `DestructibleSpec`, `PartSpec`, `Hit`, `DestructionEvent`, `ObjectState` | Dados da destruição |
+| `DestructibleSpec`, `PartSpec`, `Hit`, `DestructionEvent`, `ObjectState` | Dados da destruição. `Hit` ganhou `mass` (g do projétil), `cut` (0..1, quanto do golpe é gume) e `part` (parte já resolvida por um raycast de multidão); o evento `body` (`change`: `wound`, `broken`, `severed`, `destroyed`, `split`, `limp`, `crawl`, `stunned`, `killed`) e `ObjectState.body` (`alive`, `vitality`, `missing`, `limp`, `crawl`) são de corpos vivos |
+| `BodySlot`, `SegmentKind`, `BodyRegion`, `MISSING_BITS` | Vocabulário do corpo: os 8 espaços de vestir, os 11 segmentos, as 6 regiões da multidão e a máscara de partes faltando que o shader do corpo instanciado lê (valores fixos) |
 | `DestructibleImpl` | Destruição própria de um módulo (`describe`, `hit`, `state`, ...) |
-| `Shot`, `Use` | Tiro balístico e uso de arma não-balística |
+| `Shot`, `Use` | Tiro balístico (com `mass` em gramas, que `shotToHit` copia para o `Hit`) e uso de arma não-balística |
 | `ContainerSpec`, `ItemUseDef`, `LiquidId`, `FluidKind` | Fluidos |
 | `AnimationClipSpec`, `ItemAnimationContract` | Animações de item |
 | `TestableModule`, `TestableItem`, `ModuleItemFluid`, `ModuleScenario` | O que um módulo entrega à sala |
