@@ -488,5 +488,15 @@
       1
     ],
     "scale": 0.1
+  },
+  {
+    "id": "cheese",
+    "teamId": "queijo",
+    "teamBox": [
+      1.502,
+      0.402,
+      1
+    ],
+    "scale": 0.1
   }
 ]
