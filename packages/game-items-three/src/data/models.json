@@ -1228,5 +1228,15 @@
       0.252
     ],
     "scale": 0.1
+  },
+  {
+    "id": "knife",
+    "teamId": "faca_cozinha",
+    "teamBox": [
+      2.5,
+      0.302,
+      0.4
+    ],
+    "scale": 0.1
   }
 ]
