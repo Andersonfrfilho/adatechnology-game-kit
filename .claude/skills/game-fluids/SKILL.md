@@ -8,7 +8,7 @@ description: Use quando precisar de líquidos num jogo, sem engine, como copo, g
 ## Objetivo
 Líquidos sem renderizador, independentes de engine. **Recipientes** com nível calculado pelo formato e pela inclinação, temperatura (esfria, solta vapor)
 e abertura; **jatos** balísticos que terminam na primeira superfície; **manchas** que crescem de uma frente de fluxo, escorrem, são absorvidas por
-superfícies porosas e secam da borda para dentro. 19 líquidos embutidos, usos de item prontos (`sip`, `drink`, `pour`...) e torneiras.
+superfícies porosas e secam da borda para dentro. 21 líquidos embutidos (sangue, sangue antigo e bile com os valores do Padrão de Fluidos; `splash` aceita `tint`), usos de item prontos (`sip`, `drink`, `pour`...) e torneiras.
 Determinístico por semente, serializável. Unidades: metros, litros, segundos, °C.
 
 ## Quando usar e quando não usar
@@ -57,7 +57,7 @@ Vazar por tiro: mapeie o evento `leak` do `game-destruction` em `fluids.puncture
 | `update(dt)` | avança tudo e devolve os eventos |
 | `container / containers / streams / stains` | estado (cópias) para desenhar: **desenhe pelo estado, não pelos eventos** |
 | `serialize / load / on / describe` | JSON, ouvintes, frase localizada |
-| `LIQUIDS`, `ITEM_USES`, `createItemUse` | 19 líquidos, 7 usos (`sip`, `drink`, `chug`, `pour`, `pour_out`, `open`, `close`), jogador de keyframes |
+| `LIQUIDS`, `ITEM_USES`, `createItemUse` | 21 líquidos, 7 usos (`sip`, `drink`, `chug`, `pour`, `pour_out`, `open`, `close`), jogador de keyframes |
 | `ballistic`, `sampleStream`, `stainDirection`, `STAIN_SAMPLES` | caminho do jato e direções da frente da mancha (16 amostras) |
 | `describeEvent`, `resolveStrings`, `locales` | textos `en` e `pt-BR` |
 

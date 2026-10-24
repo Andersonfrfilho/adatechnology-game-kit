@@ -90,7 +90,7 @@ came out identical byte for byte.
 
 | Capture | Page | Fixture (consumer) | `--expose` |
 |---|---|---|---|
-| `explosion-lab.js` | Laboratório de Explosões (`artefatos/XHSLUfNEdzAqGrqVQCWifG.html`) | `explosion-lab.json` (`game-vfx`, `game-vfx-three`) | `blast,PROF,P,S,GL,CH,FIRES,SHOCKS,RINGS,XL,FL,layers,clearAll,seed,simT,clock,xlIdx,decalY,camera,lodNow,renderFicha,profOf,ORDER,SC,applyCam,stage,WINDOWS,U,pA,pD,pC,evCount,shakeAmp,flashV,flashDecay,puff,spark,glow,chunk,fire,shock,boomLight,scorch,crater,mushroom,updateRings,updatePuffs,updateSparks,updateGlows,updateShocks,updateChunks,updateBodies,updateFires,updateBlood,updateZombies,updateLights` |
+| `explosion-lab.js` | Laboratório de Explosões (`artefatos/XHSLUfNEdzAqGrqVQCWifG.html`) | `explosion-lab.json` (`game-vfx`, `game-vfx-three`) | `blast,PROF,P,S,GL,CH,FIRES,SHOCKS,RINGS,XL,FL,layers,clearAll,seed,simT,clock,xlIdx,decalY,camera,lodNow,renderFicha,profOf,ORDER,SC,applyCam,stage,WINDOWS,U,pA,pD,pC,puffGeo,evCount,shakeAmp,flashV,flashDecay,puff,spark,glow,chunk,fire,shock,boomLight,scorch,crater,mushroom,updateRings,updatePuffs,updateSparks,updateGlows,updateShocks,updateChunks,updateBodies,updateFires,updateBlood,updateZombies,updateLights` |
 | `vfx-workshop.js` (`--param mode=effects`) | Oficina de VFX (`artefatos/LhJANM9RPMxWKS1ZXCzQ56.html`) | `vfx-workshop.json` (`game-vfx` recipes) | `FX,select,pr,auto,renderer,addP,norP,streak,DB,DC,RG,LP,S,debris,decal,ring,flash,fLaunch,fh,fdry` |
 | `vfx-workshop.js` (`--param mode=fluids`) | same | `vfx-workshop-fluids.json` (`game-fluids` film, `WORKSHOP_LAYOUT`) | same |
 | `fluid-standard.js` | Padrão de Fluidos (`artefatos/XnjUUwx8fq5oQdDGvEq4Nv.html`) | `fluid-standard.json` (`game-fluids` film, `PADRAO_LAYOUT`) | `h,dry,renderer,speed,sk,runN,setFluid,runScene,launch,SKEYS,FKEYS` |
@@ -102,7 +102,7 @@ What each one records:
   functions in the page's order. Events: `scene` (camera, the sheet's `#mPv` number), `after_blast` (LOD, counts, shake, flash, seed), `spawns`
   (the first 400 spawner calls, `frame kind numbers`, rounded to 4 decimals), `frames` (live counts per frame), `layers` (first and last frame each
   layer is alive), `instant` at 0.08, 0.25, 0.5, 1, 2 and 4 s (hash of every pool state, the shock meshes, the lights, a hash of the persistent
-  meshes, the first and last puff buffer rows) and `end`.
+  meshes, the first and sixth (or last) puff buffer rows written that frame) and `end`.
 - **Workshop**: every catalogue effect except rain, fog, headlights and the film (36 entries in the page) once per parameter option, with
   `Math.random` replaced by a counted stream seeded from the id and option. Events: `spawns` (the first 300 spawner calls with the number of
   random draws made so far), `frames` (pool counts per frame) and `instant` (pool hashes and the screen state at 0.1, 0.5, 1, 2 s and the end of the loop).

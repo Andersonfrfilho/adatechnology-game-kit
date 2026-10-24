@@ -100,12 +100,13 @@
       lights: line(lights),
       stage: GoldenTool.snapshotScene ? GoldenTool.snapshotScene(stageRoot()).hash : '',
       // the first and last live instance values of the buffers the shaders read (float32, compared with a tolerance by the renderer test)
-      puffBuffer: X.P.length > 0 ? bufferSample(X.pA, X.pD, X.pC, X.P.length) : '',
+      puffBuffer: X.puffGeo.instanceCount > 0 ? bufferSample(X.pA, X.pD, X.pC, X.puffGeo.instanceCount) : '',
     })
   }
   function bufferSample(positions, state, colors, count) {
-    const pick = (index) => [...positions.subarray(index * 4, index * 4 + 4), ...state.subarray(index * 4, index * 4 + 4), ...colors.subarray(index * 3, index * 3 + 3)]
-    return `${line(pick(0))} | ${line(pick(count - 1))}`
+    // `count` is what the page wrote this frame (puffs spawned later in the frame are not in the buffer yet); the rows are the first and the sixth (or the last)
+    const pick = (index) => [index, ...positions.subarray(index * 4, index * 4 + 4), ...state.subarray(index * 4, index * 4 + 4), ...colors.subarray(index * 3, index * 3 + 3)]
+    return `${line(pick(0))} | ${line(pick(Math.min(5, count - 1)))}`
   }
 
   const keys = [...X.ORDER]

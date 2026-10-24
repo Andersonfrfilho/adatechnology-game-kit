@@ -1007,3 +1007,55 @@ As correções não mexem no caminho de desenho (o valor é o mesmo). O aumento 
 | `docker build -f site/Dockerfile .` | exit 0 |
 
 Modelo da execução: `sonnet`.
+
+## Fase 5 — grupos A e B
+
+Branch `feat/spec-001-fase-5` (de `main`), worktree `spec001-fase-5`. Contrato: `design/T5-efeitos.md`. Cada task é um commit isolado, na ordem do prompt (T5.0, T5.1a, T5.3b, T5.1b, T5.1c, T5.1d, T5.1e). Os grupos C (destruição, fluidos, armas e sala de testes passam a usar o mundo de efeitos), D (Oficina de VFX e bancada) e E (filme de fluidos) não foram começados.
+
+### T5.0 — capturas e fixtures
+
+- `--expose` no gravador: mesma implementação da T2.2a (`feat/spec-001-fase-2`, commit `822cbdb`), trazida com `git checkout feat/spec-001-fase-2 -- tools/golden/{bin,src,tests}` (`expose-in-page.mjs`, `hashText`, o teste), para as duas branches convergirem no merge. A linha do README é a mesma.
+- Capturas: `explosion-lab.js` (16 cenas), `vfx-workshop.js` (modo `effects` e modo `fluids`), `fluid-standard.js` (5 cenas x 5 fluidos). Cada gravação saiu idêntica byte a byte repetida e entre Node 22.23.4 e 24.22.0 (o gravador roda o V8 do Chrome; o Node só roda o script).
+- Desvios do contrato, todos de método:
+  - O Laboratório não é guiado por `frame` da página (tem `IntersectionObserver` e renderiza): a captura chama as funções `update*` da página, na ordem do `frame`, a 1/60 s. `blast` é chamado direto, sem os zumbis, as janelas (`WINDOWS.length = 0`) nem a física de arremesso; o estado global que a página guarda entre cenas (`clock`, `xlIdx`, `decalY`, `flashDecay`, `lodNow`) é zerado por cena para a cena poder ser reproduzida sozinha.
+  - Hashes de pool são de estado em `number` (4 casas), não dos buffers `pA/pD/pC` em float32 (o arredondamento de float32 vira fronteira de hash). Os buffers entram como amostra com tolerância (primeira e sexta linha escritas no quadro, `puffGeo.instanceCount`: puffs nascidos depois do `updatePuffs` do mesmo quadro ainda não estão no buffer).
+  - A Oficina tem 40 definições; sem chuva, neblina, faróis e o filme sobram 36 (o contrato diz 34), por opção de parâmetro: 54 execuções. O filme dos 4 fluidos é a captura `mode=fluids`.
+  - `renderer.render` é silenciado nas páginas da Oficina e do Padrão de Fluidos: a gravação leva segundos.
+- Fixtures: Lab 770 KB, Oficina 1,9 MB, filme da Oficina 4 KB, Padrão de Fluidos 24 KB. O do Laboratório foi para `packages/game-vfx/tests/fixtures/team-golden/` na T5.1e; os outros ficam em `specs/.../goldens/` até a T5.2c e a T5.3d.
+
+### T5.1a e T5.3b
+
+- Contratos: `effects.ts`, `ModuleHost.effects`, `explosive` no `explosion`, `explodes.effect` e `explode.effect`, `ChoiceOption.group` (o `checkBench` recusa grupo vazio ou partido), `ModuleBench.sheet` e `BenchSheet`. Tudo aditivo.
+- Fluidos: valores do time por padrão (sangue 0x3B1D14 e 600 s, combustível 60 s sem marca, água 180 s), `old_blood` e `bile` novos, `splash` com `tint`. Valores antigos (sangue 0x4A0506 e 1200 s, combustível 120 s com marca, água 600 s) listados no changeset. Dois testes que dependiam dos tempos antigos foram ajustados. Decisão minha: viscosidade/densidade/brilho de `old_blood` (4/1060/0,7) e `bile` (6/1020/0,75) e efeitos de beber (`disgust`) não vêm do time; ficam como padrão configurável.
+
+### T5.1b a T5.1d — `game-vfx` e `game-vfx-three`
+
+- Porte literal do Laboratório: compositor de camadas na ordem do `blast`, com os sorteios na mesma ordem (cada função de camada declara a ordem dos `rr`), laços de simulação na ordem do `frame`, luzes, fogo, cogumelo, crateras com `GroundField` em float32 (o `dent` sorteia por célula, então o chão tem de viver no núcleo puro).
+- Piscinas de registros reaproveitados em ordem de entrada (`OrderedPool`): sem alocação por quadro; a mais antiga sai quando cheia (detritos: um parado primeiro); halo de detrito vira posição fixa quando o detrito sai.
+- Teto de área (40 m no plano, 4 s, 6, 0,3), `LOD_GAME` e `LOD_LAB`, `PROFILES`, `estimateCost` igual à ficha do Laboratório nos 16 perfis, agenda do último para o primeiro.
+- Os 16 perfis em `explosions.json` por id de explosivo de `game-weapons` (+ `generic` e os dois apelidos), gerados do `PROF` da fonte, com `sources` (linha). Todos os 18 explosivos de `game-weapons` respondem.
+- Renderizador three: shaders verbatim (`encodings_fragment` virou `colorspace_fragment`; `extensions.derivatives` saiu), luzes com cores cruas do r128 e `lightScale` π (luzes físicas do r160), marcas criadas no instante do evento (acompanham o chão daquele momento), `EffectSink`, `applyCamera`, sobreposição de tela.
+- Achado pelo golden: o renderizador deve seguir a câmera também em `play` (antes do primeiro `update` o LOD usava a câmera na origem); corrigido e com teste.
+
+### T5.1e — fidelidade do Laboratório
+
+| Teste | Resultado |
+|---|---|
+| `game-vfx/tests/team-golden.test.ts` (puro: `randomMode: 'shared'`, `LOD_LAB`, `profile: 'high'`, `areaCap: false`) | 16/16 cenas: detonação (LOD, contagens, tela, fluxo), 400 primeiros spawns, contagens por quadro, camadas, estado das piscinas em 0,08, 0,25, 0,5, 1, 2 e 4 s, fluxo final |
+| `game-vfx-three/tests/team-golden.test.ts` | 16/16: hash da cena das marcas (malhas conformadas, pedras da borda), casca e anel do choque, buffers dos puffs (float32, tolerância 2e-3) |
+| Node 22.23.4 e 24.22.0 | iguais (`installPortableMath` no setup; `Math.hypot` e `Math.atan2` do chão dão o mesmo nas duas) |
+
+Fidelidade do Laboratório: **16/16**.
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0, nenhuma falha |
+| `game-vfx` e `game-vfx-three` em Node 22.23.4 | 161 e 59 testes passam |
+| `docker build -f site/Dockerfile .` | exit 0 |
+
+Modelo da execução: `sonnet` (nenhum portão falhou duas vezes, sem escalada).

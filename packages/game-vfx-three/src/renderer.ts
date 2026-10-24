@@ -62,6 +62,11 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
   let clock = 0
   const lastDrawn = { puffs: 0, sparks: 0, glows: 0, chunks: 0, shocks: 0 }
 
+  function followCamera(): void {
+    const position = options.camera.position
+    world.setCamera([position.x, position.y, position.z])
+  }
+
   function syncAll(): void {
     lastDrawn.puffs = puffs.sync()
     lastDrawn.sparks = sparks.sync()
@@ -79,6 +84,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
   return {
     world,
     play(request) {
+      followCamera()
       return world.explosion(request.effect, request.point, {
         ...(request.direction ? { direction: request.direction } : {}),
         ...(request.seed !== undefined ? { seed: request.seed } : {}),
@@ -94,8 +100,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
     update(dt) {
       clock += dt
       uniforms.uTime.value = clock
-      const camera = options.camera.position
-      world.setCamera([camera.x, camera.y, camera.z])
+      followCamera()
       world.update(dt)
       marks.update(dt)
       syncAll()

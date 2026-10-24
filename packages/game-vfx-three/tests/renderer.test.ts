@@ -61,6 +61,13 @@ describe('createVfxRenderer', () => {
     expect(renderer.world.stats().lod).toBe(1)
   })
 
+  it('uses where the camera is for an effect played before the first update', () => {
+    const { camera, renderer } = setup()
+    camera.position.set(0, 1.6, 150)
+    renderer.play({ effect: 'm67', point: [0, 0.1, 0] })
+    expect(renderer.world.stats().lod).toBe(0.08)
+  })
+
   it('shakes the camera around the render and puts it back', () => {
     const { camera, renderer } = setup()
     renderer.play({ effect: 'c4', point: [4, 0.1, 4] })
