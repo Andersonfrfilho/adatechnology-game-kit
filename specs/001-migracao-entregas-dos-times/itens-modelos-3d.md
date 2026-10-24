@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **57 de 257 itens têm modelo 3D; faltam 200.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **58 de 257 itens têm modelo 3D; faltam 199.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **57** | **200** |
+| **Total** | **58** | **199** |
 
 ## Comida (36 de 36)
 
@@ -66,13 +66,13 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Sardinha em lata (kit) | `sardinha` | `canned_sardines` | 0,13 kg | comum | 112 x 26 x 65 mm |
 | [x] | Óleo de cozinha (900 ml) (kit) | `oleo_cozinha` | `cooking_oil` | 0,9 kg | comum | 70 x 260 x 70 mm |
 
-## Bebida (2 de 12)
+## Bebida (3 de 12)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Cachaça (garrafa) | `cachaca` | `cachaca` | 1,0 kg | incomum | 90 x 214 x 90 mm |
 | [x] | Água mineral (500 ml) | `agua_500` | `water_bottle` | 0,52 kg | comum | 66 x 183 x 66 mm |
-| [ ] | Cerveja (lata) | `cerveja` | `beer_can` | 0,35 kg | comum | 66 x 120 x 66 mm |
+| [x] | Cerveja (lata) (kit) | `cerveja` | `beer_can` | 0,35 kg | comum | 66 x 120 x 66 mm |
 | [ ] | Energético (lata) | `energetico` | `energy_drink` | 0,27 kg | incomum | 58 x 135 x 58 mm |
 | [ ] | Galão de água (5 L) | `galao_agua` | `water_jug_5l` | 5,2 kg | incomum | 190 x 330 x 150 mm |
 | [ ] | Isotônico | `isotonico` | `sports_drink` | 0,52 kg | incomum | 66 x 183 x 66 mm |
