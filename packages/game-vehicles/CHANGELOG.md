@@ -1,5 +1,12 @@
 # @adatechnology/game-vehicles
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [71fb367]
+  - @adatechnology/game-contracts@0.4.0
+
 ## 0.1.2
 
 ### Patch Changes
