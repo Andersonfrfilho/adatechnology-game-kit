@@ -1557,3 +1557,18 @@ Fonte: `sources/efeitos__oficina-vfx.js` (W168–1295) e a gravação `vfx-works
 ### Perguntas para o dono
 
 - O filme é só CPU perto do jogador (decisão do desenho). Os fluidos longe viram decalque estático. Quer o filme em GPU (ping-pong) depois da Fase 5, atrás da mesma interface `FilmSimulator`?
+
+## T5.3e — pontes do filme
+
+- **`createFilmBridge({ fluids, manager, random })`** (`game-fluids-three/src/film/bridge.ts`): um `leak` de líquido que tem filme (`blood`, `old_blood`, `bile`, `motor_oil`, `fuel`; `liquids` mapeia outros, p. ex. `diesel -> fuel`) passa a jogar gotas do furo, com a velocidade e a vazão que o mundo dá (`dropLiters`, 0,15 mL por gota, no máximo 6 por quadro), até o `stream_end`. As gotas caem na grade sob o furo (o gerenciador cria) e, fora de alcance, o mundo de fluidos segue com o jato e a mancha dele. Líquido sem filme (água) fica só com o mundo.
+- **`bridge.splat({ fluid, point, direction?, speed?, radius?, count?, tint? })`**: é o que o `body` vai usar. Com `tint` ({ fresco, seco }) a grade é desenhada nessas cores (`tinted(perfil, tint)`: fino e gotas no fresco, o miolo grosso 55% mais escuro, seco no seco); grades de tintas diferentes ficam separadas e o decalque da grade parada guarda a mesma `tint`.
+- **Gancho da chuva**: `bridge.setWeather({ rain })` -> `manager.setWeather` -> `film.setWeather` de cada grade (para a secagem e espalha 1,5 vez mais). Sem efeito até o `game-weather` (Fase 6) mandar o valor.
+- **Sala de testes**: o gerenciador e a ponte entram na sala (grade só quando algo pinga; `clear` libera; o `gpu` é o `WebGLRenderer` quando ele sabe `copyTextureToTexture`). Teste: uma lata de combustível furada pinga numa grade do chão.
+
+### Pendente
+
+- **`body` (T4.0) -> `splat` com `tint`**: o evento `body` ainda **não existe** no contrato desta branch (`game-contracts` não tem `type: 'body'`), então a ligação `wound -> bridge.splat({ fluid: 'blood' | 'old_blood', tint })` não foi feita. A ponte já recebe a chamada; falta só o `characters-three` (ou o anfitrião) escutar o `body` e chamar `splat` com as cores da idade da infecção (`ages.json`).
+
+### Perguntas para o dono
+
+- A vazão por gota (0,15 mL) e o teto de 6 gotas por quadro são meus: o time só mostra pingo, fonte e arrasto. Quer outra conta para um furo grande (um jato em vez de gotas)?

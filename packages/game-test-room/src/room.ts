@@ -5,9 +5,9 @@ import { createDestructionRenderer, specFromObject3D } from '@adatechnology/game
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
-import { createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
+import { createFilmLcg, createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
-import { createFluidRenderer } from '@adatechnology/game-fluids-three'
+import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
 import { createGroundField, createVfx } from '@adatechnology/game-vfx'
 import { createGroundPatch, createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
@@ -223,6 +223,17 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
   })
   const fluidView: FluidRenderer = createFluidRenderer(THREE, { scene, fluids, quality, pointScale, vfx: vfx.world })
+  // the running film of the liquids that have one (blood, fuel, oil): grids near the player, fed by the leaks of the fluid world
+  const filmRandom = createFilmLcg(1)
+  const film = createFilmManager(THREE, {
+    scene,
+    camera,
+    random: filmRandom,
+    fluids,
+    groundAt,
+    ...(typeof (gl as Partial<THREE_NS.WebGLRenderer>).copyTextureToTexture === 'function' ? { gpu: gl as THREE_NS.WebGLRenderer } : {}),
+  })
+  const filmBridge = createFilmBridge({ fluids, manager: film, random: filmRandom })
   const specs = new Map<string, DestructibleSpec>()
   const loose: Piece[] = []
 
@@ -573,6 +584,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     vfx.world.clear()
     fluids.clearStains([0, 0, 0], 1e4)
     fluidView.clear()
+    film.clear()
     fluids.setTap(TAP_ID, false)
   }
 
@@ -1540,6 +1552,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     craterPatch?.sync()
     updateImpacts()
     fluidView.update(dt)
+    filmBridge.update(dt)
+    film.update(dt)
     for (const [id, s] of tools) {
       s.update(dt)
       flushEvents(id, s)
@@ -2202,6 +2216,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       vfx.dispose()
       craterPatch?.dispose()
       fluidView.dispose()
+      filmBridge.dispose()
+      film.dispose()
       for (const tr of tracers) tr.line.removeFromParent()
       explosives.clear()
       if (ownRenderer) {

@@ -23,6 +23,8 @@ const FALL_SPEED = 2
 const VISIBLE_THICKNESS = 0.035
 const DEFAULT_HALF = 50
 const FREE_AFTER_EMPTY = 2
+/** How much darker the thick middle of a tinted film is than its thin edge. */
+const THICK_FACTOR = 0.55
 
 /** The surfaces a grid is laid over: the floor, and optionally a wall the film folds up and a curb it folds down. */
 export interface FilmSurfaces {
@@ -110,6 +112,8 @@ export interface FilmLaunch {
   /** Millimetres (default 3). */
   radius?: number
   surfaces?: FilmSurfaces
+  /** The colours of this splash (an infection age: fresh red, dry brown): the film is drawn with them instead of the liquid's own. */
+  tint?: StainTint
 }
 
 export interface FilmDripSpec {
@@ -119,6 +123,17 @@ export interface FilmDripSpec {
   every: number
   radius?: number
   surfaces?: FilmSurfaces
+  tint?: StainTint
+}
+
+const sameTint = (a: StainTint | undefined, b: StainTint | undefined): boolean => a?.fresh === b?.fresh && a?.dry === b?.dry
+
+const scaleColor = (hex: number, factor: number): number =>
+  (Math.round(((hex >> 16) & 255) * factor) << 16) | (Math.round(((hex >> 8) & 255) * factor) << 8) | Math.round((hex & 255) * factor)
+
+/** A profile drawn in the colours of a splash: the thin film and the drops take the fresh colour, the thick middle a darker one, and the dried film the dry colour. */
+export function tinted(profile: FilmProfile, tint: StainTint): FilmProfile {
+  return { ...profile, thin: tint.fresh, thick: scaleColor(tint.fresh, THICK_FACTOR), dry: tint.dry, dryThin: tint.dry, dropColor: tint.fresh }
 }
 
 const distance = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
@@ -167,7 +182,7 @@ export class FilmManager {
 
   /** Throws a drop of a liquid: it lands in the grid under it (made on the spot) and leaves the impact splash. Null when it is out of range or has no surface. */
   launch(request: FilmLaunch): FilmGrid | null {
-    const grid = this.gridFor(request.fluid, request.point, request.surfaces)
+    const grid = this.gridFor(request.fluid, request.point, request.surfaces, request.tint)
     if (!grid) return null
     const velocity = request.velocity ?? [0, -FALL_SPEED, 0]
     grid.film.launch(request.point, velocity, request.radius ?? DEFAULT_DROP_RADIUS)
@@ -176,25 +191,26 @@ export class FilmManager {
 
   /** A drip: a bead swells at `point`, detaches and falls every `every` seconds on average. Replaces the grid's drip. */
   drip(spec: FilmDripSpec): FilmGrid | null {
-    const grid = this.gridFor(spec.fluid, spec.point, spec.surfaces)
+    const grid = this.gridFor(spec.fluid, spec.point, spec.surfaces, spec.tint)
     if (!grid) return null
     grid.film.drip = { position: [spec.point[0], spec.point[1], spec.point[2]], every: spec.every, base: spec.every, elapsed: 0, radius: spec.radius ?? DEFAULT_DROP_RADIUS }
     return grid
   }
 
   /** The grid of a liquid that covers `point`, made when there is none. Null when `point` is out of range or has no surface under it. */
-  gridFor(fluid: LiquidId, point: Vec3, surfaces?: FilmSurfaces): FilmGrid | null {
+  gridFor(fluid: LiquidId, point: Vec3, surfaces?: FilmSurfaces, tint?: StainTint): FilmGrid | null {
     const viewer = this.viewer()
     if (viewer && distance(viewer.position, point) > (this.options.range ?? DEFAULT_RANGE)) return null
-    const existing = this.grids.find((grid) => grid.profile.id === fluid && this.covers(grid, point))
+    const existing = this.grids.find((grid) => grid.profile.id === fluid && sameTint(grid.tint, tint) && this.covers(grid, point))
     if (existing) return existing
-    const profile = this.profiles[fluid] ?? filmProfileOf(fluid)
-    if (!profile) return null
+    const base = this.profiles[fluid] ?? filmProfileOf(fluid)
+    if (!base) return null
+    const profile = tint ? tinted(base, tint) : base
     const found = surfaces ?? this.surfacesAt(point)
     if (!found) return null
     const layout = layoutFromSurfaces({ ...found, center: point, columns: this.columns(), rows: this.columns(), cellSize: this.options.cellSize ?? DEFAULT_CELL })
     if (this.grids.length >= (this.options.maxGrids ?? DEFAULT_MAX_GRIDS)) this.evict(point)
-    const grid = new FilmGrid(this.THREE, { layout, profile, random: this.options.random, center: point, ...(this.options.base === undefined ? {} : { base: this.options.base }) })
+    const grid = new FilmGrid(this.THREE, { layout, profile, random: this.options.random, center: point, ...(tint ? { tint } : {}), ...(this.options.base === undefined ? {} : { base: this.options.base }) })
     grid.film.setWeather({ rain: this.rain })
     this.grids.push(grid)
     this.group.add(grid.group)
@@ -356,7 +372,7 @@ export class FilmManager {
     let radius = 0
     for (const i of wet) radius = Math.max(radius, distance(grid.film.layout.cellToWorld(Math.floor(i / width) + 0.5, (i % width) + 0.5), point))
     const profile = grid.profile
-    return { fluid: profile.id, point, liters: volume * cellSize * cellSize, tint: { fresh: profile.thin, dry: profile.dry }, radius, reason }
+    return { fluid: profile.id, point, liters: volume * cellSize * cellSize, tint: grid.tint ?? { fresh: profile.thin, dry: profile.dry }, radius, reason }
   }
 
   /** Copies the dirty rectangle to the GPU texture; answers the texels written. */

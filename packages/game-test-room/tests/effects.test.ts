@@ -113,3 +113,17 @@ describe('craters', () => {
   })
 })
 
+
+describe('the room runs the film of the liquids that have one', () => {
+  it('a punctured can of fuel drips into a film grid on the floor, and clearing the room frees it', () => {
+    const room = makeRoom()
+    const fluids = room.fluids
+    fluids.addContainer({ capacity: 18, liquid: 'fuel', liters: 10, shape: { kind: 'box', size: [0.3, 0.4, 0.15] }, opening: 0.02, closed: true }, { id: 'film_can', position: [0, 0.5, -2] })
+    fluids.puncture('film_can', [0.15, 0.2, -2], [1, 0, 0], 0.004)
+    for (let i = 0; i < 180; i++) room.update(1 / 60)
+    expect(room.scene.getObjectByName('film_grid')).toBeDefined()
+    room.clear()
+    expect(room.scene.getObjectByName('film_grid')).toBeUndefined()
+    room.dispose()
+  })
+})

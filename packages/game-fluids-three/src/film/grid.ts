@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import { createFilm } from '@adatechnology/game-fluids'
-import type { Film, FilmBounds, FilmLayout, FilmProfile, FilmRandom, Vec3 } from '@adatechnology/game-fluids'
+import type { Film, FilmBounds, FilmLayout, FilmProfile, FilmRandom, StainTint, Vec3 } from '@adatechnology/game-fluids'
 import type { ThreeLib } from '../types'
 import { createFilmDrops } from './drops'
 import type { FilmDrops } from './drops'
@@ -24,6 +24,8 @@ export interface FilmGridOptions {
   base?: number
   /** World point the grid is about: the distance to the player is measured from it. */
   center: Vec3
+  /** The splash colours the profile was tinted with, kept to tell a grid of another tint apart and to bake with them. */
+  tint?: StainTint
   stepRate?: number
   maxSteps?: number
 }
@@ -45,6 +47,7 @@ export class FilmGrid {
   readonly group: THREE_NS.Group
   readonly texture: THREE_NS.DataTexture
   readonly center: Vec3
+  readonly tint: StainTint | undefined
   readonly data: Uint8Array<ArrayBuffer>
   /** Seconds the grid has been without anything landing, flowing or drying. */
   idle = 0
@@ -64,6 +67,7 @@ export class FilmGrid {
   ) {
     const { layout, profile } = options
     this.center = options.center
+    this.tint = options.tint
     this.film = createFilm({ layout, profile, random: options.random, ...(options.stepRate ? { stepRate: options.stepRate } : {}), ...(options.maxSteps ? { maxSteps: options.maxSteps } : {}) })
     this.data = new Uint8Array(new ArrayBuffer(layout.width * layout.height * 4))
     this.texture = new THREE.DataTexture(this.data, layout.width, layout.height, THREE.RGBAFormat)
