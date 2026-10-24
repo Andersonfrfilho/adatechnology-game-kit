@@ -1,5 +1,32 @@
 # @adatechnology/game-test-room
 
+## 0.3.0
+
+### Minor Changes
+
+- 71fb367: Module bench: a `TestableModule` can declare `controls` (number, boolean, choice, action), `layers` and `metrics` as data, checked by
+  `checkBench`; the host lends a `ModuleBench` (`host.bench`) with the values, the changes, `patch` and `look`. Tool events gain the generic
+  cycle names `mode`, `fault`, `clear` and `safety`, and `shot` carries `rounds` and `mode`; `HostTool` may report `mode`, `fault`, `safety` and
+  `heat`. The test room keeps a bench per module, draws it in a new panel (controls, layers, counters with budget bars, and a line of room
+  counters: fps, frame time, draw calls, triangles, objects, fragments, particles, decals), exposes `room.bench()` and `room.metrics()`, encodes
+  the state for a page URL (`bench` option, `encodeBenchState` / `decodeBenchState`), emits `mode` on Q, and detaches a module before attaching
+  it again.
+
+### Patch Changes
+
+- 1920f22: `DestructionRenderer.explode(point, energy, radius)` draws a blast that has no exploding part (flash, fire, smoke, light, sound and a shove on pieces in range). `world.explode` emits no event, so a grenade used to leave only debris; the test room now calls the new method when a thrown explosive detonates.
+
+  `explode` is a new **required** member of the `DestructionRenderer` interface: any implementer of the interface (a custom renderer, a test double) must add it.
+
+- Updated dependencies [1920f22]
+- Updated dependencies [71fb367]
+  - @adatechnology/game-destruction-three@0.3.0
+  - @adatechnology/game-contracts@0.4.0
+  - @adatechnology/game-destruction@0.3.2
+  - @adatechnology/game-fluids@0.1.4
+  - @adatechnology/game-weapons@0.1.4
+  - @adatechnology/game-fluids-three@0.1.4
+
 ## 0.2.0
 
 ### Minor Changes

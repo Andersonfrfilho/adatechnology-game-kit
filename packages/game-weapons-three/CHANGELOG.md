@@ -1,5 +1,13 @@
 # @adatechnology/game-weapons-three
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [71fb367]
+  - @adatechnology/game-contracts@0.4.0
+  - @adatechnology/game-weapons@0.1.4
+
 ## 0.1.0
 
 ### Minor Changes
