@@ -275,6 +275,12 @@ importers:
       '@adatechnology/game-floorplan-residential':
         specifier: workspace:*
         version: link:../game-floorplan-residential
+      '@adatechnology/game-items':
+        specifier: workspace:*
+        version: link:../game-items
+      '@adatechnology/game-items-goods':
+        specifier: workspace:*
+        version: link:../game-items-goods
       '@adatechnology/golden-tool':
         specifier: workspace:*
         version: link:../../tools/golden

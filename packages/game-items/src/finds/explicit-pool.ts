@@ -63,7 +63,7 @@ export const rollExplicitPool = (pool: readonly PoolEntry[], state: FindState, q
   }
   if (state === 'abandoned') {
     if (picks.length === 0 && query.rng() < settings.junkChance) picks.push({ itemId: settings.junkItem, count: 1 })
-    if (settings.coldContainers.includes(query.key ?? query.container)) picks.push({ itemId: settings.spoiledFoodItem, count: 1 })
+    if (settings.coldContainers.includes(query.container) || (query.key !== undefined && settings.coldContainers.includes(query.key))) picks.push({ itemId: settings.spoiledFoodItem, count: 1 })
   }
   return picks
 }

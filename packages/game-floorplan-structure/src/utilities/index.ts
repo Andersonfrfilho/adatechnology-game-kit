@@ -44,6 +44,9 @@ export interface ContentsContext {
   items: Json[]
   state: string
   place: string
+  /** Outbreak days and region of the world, passed to the finds provider. */
+  day?: number
+  region?: string
   rngFor(key: string): Rng
   findsFor(query: FindsQuery): readonly FindStack[]
 }
@@ -52,7 +55,7 @@ export interface ContentsContext {
 export function planContents(context: ContentsContext): Record<string, readonly FindStack[]> {
   const out: Record<string, readonly FindStack[]> = {}
   const ask = (item: Json, container: string, key: string): readonly FindStack[] =>
-    context.findsFor({ place: context.place, container, state: context.state, rng: context.rngFor(key), footprint: item.w * item.d, key: item.id })
+    context.findsFor({ place: context.place, container, state: context.state, rng: context.rngFor(key), footprint: item.w * item.d, key: item.id, ...(context.day === undefined ? {} : { day: context.day }), ...(context.region === undefined ? {} : { region: context.region }) })
   for (const item of context.items) {
     if (item.decor && item.mount !== 'wall_top') continue
     const container = hasContent(item.type) ? item.type : item.category

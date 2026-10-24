@@ -113,3 +113,12 @@ describe('melee items and the arsenal', () => {
     expect(() => createGoodsItems({ packs: [bridge] })).not.toThrow()
   })
 })
+
+describe('the floorplan bindings', () => {
+  it('bind only furniture categories to pools the catalog has, and only places the catalog has', async () => {
+    const { FLOORPLAN_PLACES, FLOORPLAN_POOL_KEYS, POOL_PLACES } = await import('../src')
+    for (const [category, key] of Object.entries(FLOORPLAN_POOL_KEYS)) expect(catalog.pools.has(key), `${category} -> ${key}`).toBe(true)
+    for (const place of [...Object.values(FLOORPLAN_PLACES), ...POOL_PLACES]) expect(catalog.places.has(place), place).toBe(true)
+    for (const category of Object.keys(FLOORPLAN_POOL_KEYS)) expect(catalog.pools.has(category), category).toBe(true)
+  })
+})

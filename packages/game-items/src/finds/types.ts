@@ -40,7 +40,7 @@ export interface FindsQuery {
   key?: string
 }
 
-/** The shape of the floorplan's `FindsProvider`: answers what a container holds. */
+/** The shape of the floorplan's `FindsProvider`: answers what a container holds; `null` says it does not know the container. */
 export interface FindsProvider {
-  findsFor(query: FindsQuery): readonly FindStack[]
+  findsFor(query: FindsQuery): readonly FindStack[] | null
 }

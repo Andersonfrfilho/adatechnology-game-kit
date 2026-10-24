@@ -149,3 +149,27 @@ describe('day 0 against day N', () => {
     expect(military.findsFor(ask('military_crate', () => 0, { place: 'military_base' }))).toHaveLength(4)
   })
 })
+
+describe('the options of a host that composes the provider (a floorplan)', () => {
+  const catalog = build()
+
+  it('maps the places a host names differently, and the pools only apply in the places that list them', () => {
+    const provider = createFindsProvider(catalog, { placeAliases: { cabin: 'house' }, poolPlaces: ['house'] })
+    expect(provider.findsFor(ask('fridge', rng(3), { place: 'cabin', footprint: 2 })).map((stack) => stack.itemId)).toEqual(['milk'])
+    // outside the listed places the pool is left alone: the container has no table, so it falls to the corpse table
+    expect(provider.findsFor(ask('fridge', rng(3), { place: 'supermarket', footprint: 2 })).map((stack) => stack.itemId)).toEqual(['jacket'])
+  })
+
+  it('answers null for a container it knows nothing about, when asked to pass', () => {
+    const provider = createFindsProvider(catalog, { unknownContainers: 'pass' })
+    expect(provider.findsFor(ask('sofa', rng(1)))).toBeNull()
+    expect(provider.findsFor(ask('kitchen_cabinet', rng(1)))).toHaveLength(3)
+    expect(provider.findsFor(ask('fridge', rng(3), { footprint: 2 }))?.map((stack) => stack.itemId)).toEqual(['milk'])
+  })
+
+  it('keeps the spoiled food of the abandoned state by container id as well as by key', () => {
+    const cold = createFindsProvider(catalog, { rules: { finds: { pool: { coldContainers: ['fridge'] } } } })
+    const stacks = cold.findsFor(ask('fridge', () => 0.99, { key: 'fridge_1', state: 'abandoned', footprint: 1 }))
+    expect(stacks.map((stack) => stack.itemId)).toContain('leftover_meal')
+  })
+})

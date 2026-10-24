@@ -14,3 +14,4 @@ export {
 export type { DepletionRow, HousePools, ItemProvenance, MeleeRow, RarityRow, StorageRow } from './data'
 export { GOODS_STRINGS, goodsText, pickGoodsLocale } from './locale'
 export type { GoodsLocale, GoodsStrings } from './locale'
+export { createGoodsFindsProvider, FLOORPLAN_PLACES, FLOORPLAN_POOL_ALIASES, FLOORPLAN_POOL_KEYS, POOL_PLACES } from './floorplan'
