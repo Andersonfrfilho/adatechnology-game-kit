@@ -1348,5 +1348,15 @@
       0.45
     ],
     "scale": 0.1
+  },
+  {
+    "id": "wire_roll",
+    "teamId": "arame",
+    "teamBox": [
+      1.4,
+      0.502,
+      1.4
+    ],
+    "scale": 0.1
   }
 ]
