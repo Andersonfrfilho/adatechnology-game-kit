@@ -62,6 +62,7 @@ Captures for the houses (spec 001, T2.2a), with where their goldens go:
 | `floorplan-structure.js` | same (`estrutura`, `Casa3DSDK.specDe` coarse and `vedacao`, utilities) | `specs/001-migracao-entregas-dos-times/goldens/vc3-structure.json` (+ detail), staged until `game-floorplan-structure` exists |
 | `house-area.js` | Sala de testes, area "Casas e prédios" (the 6 scenarios on the page's destruction world, every world event) | `specs/.../goldens/house-area.json`, staged until the destruction work (T2.3b) consumes it |
 | `gallery-silhouettes.js` | Galeria do Vale Cinzento, with `--expose` (house and building silhouettes, scene hash) | `specs/.../goldens/gallery-silhouettes.json`, staged for `game-floorplan-three` (T2.5a) |
+| `house-scene.js` | Visor de casas 3D (`Casa3DSDK.construir`: house, lot, roof and floor scenes of six plans, names left out of the hash; then `planejaLOD`) | `packages/game-floorplan-three/tests/fixtures/team-golden/vc3-house-scene.json` (`--param pairs=template:seed,...`) |
 
 `specs/001-migracao-entregas-dos-times/goldens/README.md` has the exact command of each one. `GoldenTool.hashText` (FNV-1a) is what a capture and a package test use to put a
 whole list in one event value.
