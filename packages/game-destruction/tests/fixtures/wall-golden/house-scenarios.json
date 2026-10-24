@@ -1,0 +1,6568 @@
+{
+ "schema": 1,
+ "name": "house-scenarios",
+ "seed": 108,
+ "events": [
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0,
+    "part": "c0",
+    "at": [
+     -2.25,
+     1.5,
+     -1.8
+    ],
+    "rays": 7,
+    "length": 0.6
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0,
+    "part": "c0",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0,
+    "part": "c0",
+    "kind": "chips",
+    "count": 10
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0,
+    "joint": "wall_back~c0",
+    "by": "break"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0,
+    "part": "c0",
+    "amount": 276000,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "fracture",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0,
+    "part": "c0",
+    "style": "crumble",
+    "fragments": {
+     "count": 24,
+     "mass": 621,
+     "marks": 0,
+     "first": {
+      "center": [
+       -2.4,
+       0.0709,
+       -1.8
+      ],
+      "size": [
+       0.3,
+       0.1418,
+       0.3
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0,
+    "part": "c0",
+    "kind": "dust",
+    "count": 19
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0,
+    "part": "c0",
+    "stage": 3
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0,
+    "part": "c0",
+    "bars": 4,
+    "first": [
+     [
+      -2.49,
+      0.02,
+      -1.89
+     ],
+     [
+      -2.49,
+      2.98,
+      -1.89
+     ]
+    ]
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.1,
+    "part": "c0",
+    "stress": 2.6212,
+    "load": 2920.8719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.1,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 8172.36,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.1,
+    "part": "f_c1",
+    "at": [
+     2.1804,
+     0,
+     -1.6722
+    ],
+    "rays": 7,
+    "length": 0.1046
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.1,
+    "part": "c1",
+    "at": [
+     2.3057,
+     0.9621,
+     -1.65
+    ],
+    "rays": 7,
+    "length": 0.1119
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.1,
+    "part": "c1",
+    "stage": 1
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.2,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 7650.72,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.3,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 7129.08,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.4,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 6607.44,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.5,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 6085.8,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.6,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 5564.16,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.7,
+    "part": "c0",
+    "stress": 2.6212,
+    "load": 2920.8719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.7,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 5042.52,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.7,
+    "part": "f_c1",
+    "at": [
+     2.1426,
+     -0.3,
+     -1.7314
+    ],
+    "rays": 9,
+    "length": 0.1046
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.7,
+    "part": "c1",
+    "at": [
+     2.55,
+     2.6387,
+     -1.8329
+    ],
+    "rays": 9,
+    "length": 0.1119
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.8,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 4520.88,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 0.9,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 3999.24,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 3477.6,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.1,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 2955.96,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.2,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 2434.32,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.3,
+    "part": "c0",
+    "stress": 2.6212,
+    "load": 2920.8719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.3,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 1912.68,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.3,
+    "part": "f_c1",
+    "at": [
+     2.6765,
+     0,
+     -1.9703
+    ],
+    "rays": 5,
+    "length": 0.1046
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.3,
+    "part": "c1",
+    "at": [
+     2.55,
+     0.0848,
+     -1.8237
+    ],
+    "rays": 8,
+    "length": 0.1119
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.4,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 1391.04,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.5,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 869.4,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.6,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 347.76,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.7,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.7,
+    "part": "c0",
+    "bars": 0,
+    "first": null
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.7,
+    "part": "c0",
+    "kind": "sparks",
+    "count": 6
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.7,
+    "joint": "c0~f_c0",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.7,
+    "joint": "slab~c0",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.9,
+    "part": "f_c1",
+    "at": [
+     2.2162,
+     -0.3,
+     -1.9477
+    ],
+    "rays": 6,
+    "length": 0.1646
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 1.9,
+    "part": "c1",
+    "at": [
+     2.511,
+     3,
+     -1.7623
+    ],
+    "rays": 8,
+    "length": 0.1774
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 2.5,
+    "part": "f_c1",
+    "at": [
+     2.4769,
+     -0.3,
+     -1.992
+    ],
+    "rays": 7,
+    "length": 0.1646
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 2.5,
+    "part": "c1",
+    "at": [
+     2.25,
+     0.5536,
+     -1.7861
+    ],
+    "rays": 8,
+    "length": 0.1774
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 3.1,
+    "part": "f_c1",
+    "at": [
+     2.6431,
+     -0.3,
+     -1.4828
+    ],
+    "rays": 8,
+    "length": 0.1646
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "one_pillar",
+    "time": 3.1,
+    "part": "c1",
+    "at": [
+     2.464,
+     1.1031,
+     -1.65
+    ],
+    "rays": 6,
+    "length": 0.1774
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c0",
+    "at": [
+     -2.25,
+     1.5,
+     -1.8
+    ],
+    "rays": 7,
+    "length": 0.6
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c0",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c0",
+    "kind": "chips",
+    "count": 10
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "joint": "wall_back~c0",
+    "by": "break"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c0",
+    "amount": 276000,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "fracture",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c0",
+    "style": "crumble",
+    "fragments": {
+     "count": 24,
+     "mass": 621,
+     "marks": 0,
+     "first": {
+      "center": [
+       -2.4,
+       0.0709,
+       -1.8
+      ],
+      "size": [
+       0.3,
+       0.1418,
+       0.3
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c0",
+    "kind": "dust",
+    "count": 19
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c0",
+    "stage": 3
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c0",
+    "bars": 4,
+    "first": [
+     [
+      -2.49,
+      0.02,
+      -1.89
+     ],
+     [
+      -2.49,
+      2.98,
+      -1.89
+     ]
+    ]
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c1",
+    "at": [
+     2.55,
+     1.5,
+     -1.8
+    ],
+    "rays": 6,
+    "length": 0.6
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c1",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c1",
+    "kind": "chips",
+    "count": 10
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "joint": "wall_back~c1",
+    "by": "break"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c1",
+    "amount": 276000,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "fracture",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c1",
+    "style": "crumble",
+    "fragments": {
+     "count": 24,
+     "mass": 621,
+     "marks": 0,
+     "first": {
+      "center": [
+       2.3433,
+       0.1241,
+       -1.8
+      ],
+      "size": [
+       0.1866,
+       0.2482,
+       0.3
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c1",
+    "kind": "dust",
+    "count": 19
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c1",
+    "stage": 3
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "c1",
+    "bars": 4,
+    "first": [
+     [
+      2.31,
+      0.02,
+      -1.89
+     ],
+     [
+      2.31,
+      2.98,
+      -1.89
+     ]
+    ]
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "part": "wall_back",
+    "stage": 3
+   }
+  },
+  {
+   "type": "collapse",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0,
+    "parts": [
+     "wall_back"
+    ],
+    "mass": 2583
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.1,
+    "part": "c0",
+    "stress": 2.6212,
+    "load": 2920.8719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.1,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 8172.36,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.1,
+    "part": "c1",
+    "stress": 2.6212,
+    "load": 2920.8719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.1,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 8172.36,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.2,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 7650.72,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.2,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 7650.72,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.3,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 7129.08,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.3,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 7129.08,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.4,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 6607.44,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.4,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 6607.44,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.5,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 6085.8,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.5,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 6085.8,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.6,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 5564.16,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.6,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 5564.16,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.7,
+    "part": "c0",
+    "stress": 2.6212,
+    "load": 2920.8719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.7,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 5042.52,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.7,
+    "part": "c1",
+    "stress": 2.6212,
+    "load": 2920.8719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.7,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 5042.52,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.8,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 4520.88,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.8,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 4520.88,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.9,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 3999.24,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 0.9,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 3999.24,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 3477.6,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 3477.6,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.1,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 2955.96,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.1,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 2955.96,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.2,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 2434.32,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.2,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 2434.32,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.3,
+    "part": "c0",
+    "stress": 2.6212,
+    "load": 2920.8719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.3,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 1912.68,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.3,
+    "part": "c1",
+    "stress": 2.6212,
+    "load": 2920.8719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.3,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 1912.68,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.4,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 1391.04,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.4,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 1391.04,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.5,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 869.4,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.5,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 869.4,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.6,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 347.76,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.6,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 347.76,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c0",
+    "amount": 521.64,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c0",
+    "bars": 0,
+    "first": null
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c0",
+    "kind": "sparks",
+    "count": 6
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "joint": "c0~f_c0",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "joint": "slab~c0",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c1",
+    "amount": 521.64,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c1",
+    "bars": 0,
+    "first": null
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c1",
+    "kind": "sparks",
+    "count": 6
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "joint": "c1~f_c1",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "joint": "slab~c1",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "f_c2",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 6103.4321,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c2",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 8560.0742,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "f_c3",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 6103.4321,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c3",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.7,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 8560.0742,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.8,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 6024.4643,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.8,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 8426.1484,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.8,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 6024.4643,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.8,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 8426.1484,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.9,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 5945.4964,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.9,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 8292.2226,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.9,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 5945.4964,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 1.9,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 8292.2226,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 5866.5285,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 8158.2968,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 5866.5285,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 8158.2968,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.1,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 5787.5607,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.1,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 8024.371,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.1,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 5787.5607,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.1,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 8024.371,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.2,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 5708.5928,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.2,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 7890.4452,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.2,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 5708.5928,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.2,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 7890.4452,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.3,
+    "part": "f_c2",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.3,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 5629.625,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.3,
+    "part": "c2",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.3,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 7756.5194,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.3,
+    "part": "f_c3",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.3,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 5629.625,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.3,
+    "part": "c3",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.3,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 7756.5194,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.4,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 5550.6571,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.4,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 7622.5935,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.4,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 5550.6571,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.4,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 7622.5935,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.5,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 5471.6892,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.5,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 7488.6677,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.5,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 5471.6892,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.5,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 7488.6677,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.6,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 5392.7214,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.6,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 7354.7419,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.6,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 5392.7214,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.6,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 7354.7419,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.7,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 5313.7535,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.7,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 7220.8161,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.7,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 5313.7535,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.7,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 7220.8161,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.8,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 5234.7856,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.8,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 7086.8903,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.8,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 5234.7856,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.8,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 7086.8903,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.9,
+    "part": "f_c2",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.9,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 5155.8178,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.9,
+    "part": "c2",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.9,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 6952.9645,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.9,
+    "part": "f_c3",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.9,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 5155.8178,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.9,
+    "part": "c3",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 2.9,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 6952.9645,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 5076.8499,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 6819.0387,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 5076.8499,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 6819.0387,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.1,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 4997.882,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.1,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 6685.1129,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.1,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 4997.882,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.1,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 6685.1129,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.2,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 4918.9142,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.2,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 6551.1871,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.2,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 4918.9142,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.2,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 6551.1871,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.3,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 4839.9463,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.3,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 6417.2613,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.3,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 4839.9463,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.3,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 6417.2613,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.4,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 4760.9785,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.4,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 6283.3355,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.4,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 4760.9785,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.4,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 6283.3355,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.5,
+    "part": "f_c2",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.5,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 4682.0106,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.5,
+    "part": "c2",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.5,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 6149.4097,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.5,
+    "part": "f_c3",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.5,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 4682.0106,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.5,
+    "part": "c3",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.5,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 6149.4097,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.6,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 4603.0427,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.6,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 6015.4839,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.6,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 4603.0427,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.6,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 6015.4839,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.7,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 4524.0749,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.7,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 5881.5581,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.7,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 4524.0749,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.7,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 5881.5581,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.8,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 4445.107,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.8,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 5747.6323,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.8,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 4445.107,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.8,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 5747.6323,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.9,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 4366.1391,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.9,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 5613.7065,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.9,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 4366.1391,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 3.9,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 5613.7065,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 4287.1713,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 5479.7806,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 4287.1713,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 5479.7806,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.1,
+    "part": "f_c2",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.1,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 4208.2034,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.1,
+    "part": "c2",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.1,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 5345.8548,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.1,
+    "part": "f_c3",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.1,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 4208.2034,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.1,
+    "part": "c3",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.1,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 5345.8548,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.2,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 4129.2356,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.2,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 5211.929,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.2,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 4129.2356,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.2,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 5211.929,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.3,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 4050.2677,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.3,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 5078.0032,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.3,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 4050.2677,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.3,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 5078.0032,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.4,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 3971.2998,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.4,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 4944.0774,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.4,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 3971.2998,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.4,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 4944.0774,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.5,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 3892.332,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.5,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 4810.1516,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.5,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 3892.332,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.5,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 4810.1516,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.6,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 3813.3641,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.6,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 4676.2258,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.6,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 3813.3641,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.6,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 4676.2258,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.7,
+    "part": "f_c2",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.7,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 3734.3962,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.7,
+    "part": "c2",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.7,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 4542.3,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.7,
+    "part": "f_c3",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.7,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 3734.3962,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.7,
+    "part": "c3",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.7,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 4542.3,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.8,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 3655.4284,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.8,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 4408.3742,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.8,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 3655.4284,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.8,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 4408.3742,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.9,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 3576.4605,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.9,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 4274.4484,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.9,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 3576.4605,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 4.9,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 4274.4484,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 3497.4926,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 4140.5226,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 3497.4926,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 4140.5226,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.1,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 3418.5248,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.1,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 4006.5968,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.1,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 3418.5248,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.1,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 4006.5968,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.2,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 3339.5569,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.2,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 3872.671,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.2,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 3339.5569,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.2,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 3872.671,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.3,
+    "part": "f_c2",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.3,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 3260.5891,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.3,
+    "part": "c2",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.3,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 3738.7452,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.3,
+    "part": "f_c3",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.3,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 3260.5891,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.3,
+    "part": "c3",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.3,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 3738.7452,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.4,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 3181.6212,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.4,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 3604.8194,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.4,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 3181.6212,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.4,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 3604.8194,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.5,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 3102.6533,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.5,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 3470.8936,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.5,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 3102.6533,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.5,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 3470.8936,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.6,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 3023.6855,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.6,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 3336.9677,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.6,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 3023.6855,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.6,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 3336.9677,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.7,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 2944.7176,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.7,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 3203.0419,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.7,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 2944.7176,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.7,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 3203.0419,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.8,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 2865.7497,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.8,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 3069.1161,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.8,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 2865.7497,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.8,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 3069.1161,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.9,
+    "part": "f_c2",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.9,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 2786.7819,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.9,
+    "part": "c2",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.9,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 2935.1903,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.9,
+    "part": "f_c3",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.9,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 2786.7819,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.9,
+    "part": "c3",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 5.9,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 2935.1903,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 2707.814,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 2801.2645,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 2707.814,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 2801.2645,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.1,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 2628.8461,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.1,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 2667.3387,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.1,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 2628.8461,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.1,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 2667.3387,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.2,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 2549.8783,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.2,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 2533.4129,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.2,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 2549.8783,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.2,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 2533.4129,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.3,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 2470.9104,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.3,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 2399.4871,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.3,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 2470.9104,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.3,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 2399.4871,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.4,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 2391.9426,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.4,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 2265.5613,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.4,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 2391.9426,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.4,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 2265.5613,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.5,
+    "part": "f_c2",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.5,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 2312.9747,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.5,
+    "part": "c2",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.5,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 2131.6355,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.5,
+    "part": "f_c3",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.5,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 2312.9747,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.5,
+    "part": "c3",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.5,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 2131.6355,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.6,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 2234.0068,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.6,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 1997.7097,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.6,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 2234.0068,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.6,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 1997.7097,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.7,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 2155.039,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.7,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 1863.7839,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.7,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 2155.039,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.7,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 1863.7839,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.8,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 2076.0711,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.8,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 1729.8581,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.8,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 2076.0711,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.8,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 1729.8581,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.9,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 1997.1032,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.9,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 1595.9323,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.9,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 1997.1032,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 6.9,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 1595.9323,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 1918.1354,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 1462.0065,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 1918.1354,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 1462.0065,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.1,
+    "part": "f_c2",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.1,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 1839.1675,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.1,
+    "part": "c2",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.1,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 1328.0807,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.1,
+    "part": "f_c3",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.1,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 1839.1675,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.1,
+    "part": "c3",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.1,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 1328.0807,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.2,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 1760.1997,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.2,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 1194.1548,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.2,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 1760.1997,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.2,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 1194.1548,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.3,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 1681.2318,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.3,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 1060.229,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.3,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 1681.2318,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.3,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 1060.229,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.4,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 1602.2639,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.4,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 926.3032,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.4,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 1602.2639,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.4,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 926.3032,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.5,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 1523.2961,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.5,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 792.3774,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.5,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 1523.2961,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.5,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 792.3774,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.6,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 1444.3282,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.6,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 658.4516,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.6,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 1444.3282,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.6,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 658.4516,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.7,
+    "part": "f_c2",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.7,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 1365.3603,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.7,
+    "part": "c2",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.7,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 524.5258,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.7,
+    "part": "f_c3",
+    "stress": 1.0097,
+    "load": 8186.5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.7,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 1365.3603,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.7,
+    "part": "c3",
+    "stress": 1.0426,
+    "load": 7744.9
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.7,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 524.5258,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.8,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 1286.3925,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.8,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 390.6,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.8,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 1286.3925,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.8,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 390.6,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.9,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 1207.4246,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.9,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 256.6742,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.9,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 1207.4246,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 7.9,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 256.6742,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 1128.4567,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 122.7484,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 1128.4567,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 122.7484,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.1,
+    "part": "f_c2",
+    "amount": 78.9679,
+    "hp": 1049.4889,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.1,
+    "part": "c2",
+    "amount": 133.9258,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "fracture",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.1,
+    "part": "c2",
+    "style": "crumble",
+    "fragments": {
+     "count": 24,
+     "mass": 621,
+     "marks": 0,
+     "first": {
+      "center": [
+       -2.4,
+       0.0928,
+       1.8
+      ],
+      "size": [
+       0.3,
+       0.1856,
+       0.3
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.1,
+    "part": "c2",
+    "kind": "dust",
+    "count": 19
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.1,
+    "part": "c2",
+    "stage": 3
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.1,
+    "part": "c2",
+    "bars": 4,
+    "first": [
+     [
+      -2.49,
+      0.02,
+      1.71
+     ],
+     [
+      -2.49,
+      2.98,
+      1.71
+     ]
+    ]
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.1,
+    "part": "f_c3",
+    "amount": 78.9679,
+    "hp": 1049.4889,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.1,
+    "part": "c3",
+    "amount": 133.9258,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "fracture",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.1,
+    "part": "c3",
+    "style": "crumble",
+    "fragments": {
+     "count": 24,
+     "mass": 621,
+     "marks": 0,
+     "first": {
+      "center": [
+       2.4,
+       0.0533,
+       1.8
+      ],
+      "size": [
+       0.3,
+       0.1066,
+       0.3
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.1,
+    "part": "c3",
+    "kind": "dust",
+    "count": 19
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.1,
+    "part": "c3",
+    "stage": 3
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.1,
+    "part": "c3",
+    "bars": 4,
+    "first": [
+     [
+      2.31,
+      0.02,
+      1.71
+     ],
+     [
+      2.31,
+      2.98,
+      1.71
+     ]
+    ]
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.2,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 8172.36,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.2,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 8172.36,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.3,
+    "part": "f_c2",
+    "at": [
+     -2.518,
+     -0.25,
+     2.2
+    ],
+    "rays": 5,
+    "length": 0.1668
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.3,
+    "part": "c2",
+    "stress": 6.3973,
+    "load": 7128.5719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.3,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 7650.72,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.3,
+    "part": "f_c3",
+    "at": [
+     2.1661,
+     0,
+     1.7888
+    ],
+    "rays": 9,
+    "length": 0.1668
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.3,
+    "part": "c3",
+    "stress": 6.3973,
+    "load": 7128.5719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.3,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 7650.72,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.4,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 7129.08,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.4,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 7129.08,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.5,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 6607.44,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.5,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 6607.44,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.6,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 6085.8,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.6,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 6085.8,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.7,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 5564.16,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.7,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 5564.16,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.8,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 5042.52,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.8,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 5042.52,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.9,
+    "part": "f_c2",
+    "at": [
+     -2.1292,
+     -0.3,
+     1.6791
+    ],
+    "rays": 7,
+    "length": 0.1668
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.9,
+    "part": "c2",
+    "stress": 6.3973,
+    "load": 7128.5719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.9,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 4520.88,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.9,
+    "part": "f_c3",
+    "at": [
+     2.5294,
+     0,
+     1.7179
+    ],
+    "rays": 7,
+    "length": 0.1668
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.9,
+    "part": "c3",
+    "stress": 6.3973,
+    "load": 7128.5719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 8.9,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 4520.88,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 3999.24,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 3999.24,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.1,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 3477.6,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.1,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 3477.6,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.2,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 2955.96,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.2,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 2955.96,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.3,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 2434.32,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.3,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 2434.32,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.4,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 1912.68,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.4,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 1912.68,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.5,
+    "part": "f_c2",
+    "at": [
+     -2.5996,
+     -0.3,
+     2.1149
+    ],
+    "rays": 7,
+    "length": 0.1668
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.5,
+    "part": "c2",
+    "stress": 6.3973,
+    "load": 7128.5719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.5,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 1391.04,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.5,
+    "part": "f_c3",
+    "at": [
+     2.4808,
+     0,
+     1.7946
+    ],
+    "rays": 5,
+    "length": 0.1668
+   }
+  },
+  {
+   "type": "stress",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.5,
+    "part": "c3",
+    "stress": 6.3973,
+    "load": 7128.5719
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.5,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 1391.04,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.6,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 869.4,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.6,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 869.4,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.7,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 347.76,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.7,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 347.76,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "part": "c2",
+    "amount": 521.64,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "part": "c2",
+    "bars": 0,
+    "first": null
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "part": "c2",
+    "kind": "sparks",
+    "count": 6
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "joint": "c2~f_c2",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "joint": "slab~c2",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "joint": "wall_front~c2",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "part": "f_c3",
+    "amount": 370.944,
+    "hp": 678.5449,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "part": "c3",
+    "amount": 521.64,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "part": "c3",
+    "bars": 0,
+    "first": null
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "part": "c3",
+    "kind": "sparks",
+    "count": 6
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "joint": "c3~f_c3",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "joint": "slab~c3",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "joint": "wall_front~c3",
+    "by": "part_lost"
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "part": "slab",
+    "stage": 3
+   }
+  },
+  {
+   "type": "collapse",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "parts": [
+     "slab",
+     "roof"
+    ],
+    "mass": 11664.8
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "part": "wall_front",
+    "stage": 3
+   }
+  },
+  {
+   "type": "collapse",
+   "data": {
+    "scenario": "two_pillars",
+    "time": 9.8,
+    "parts": [
+     "wall_front"
+    ],
+    "mass": 2583
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "part": "wall_back",
+    "at": [
+     0,
+     1.5,
+     -1.735
+    ],
+    "rays": 7,
+    "length": 0.6
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "part": "wall_back",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "part": "wall_back",
+    "kind": "chips",
+    "count": 10
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "joint": "wall_back~c0",
+    "by": "break"
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "joint": "wall_back~c1",
+    "by": "break"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "part": "wall_back",
+    "layer": 0,
+    "at": [
+     0,
+     1.5,
+     -1.735
+    ],
+    "area": 0.0079
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "part": "wall_back",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "part": "wall_back",
+    "amount": 260000,
+    "hp": 0,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "fracture",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "part": "wall_back",
+    "style": "crumble",
+    "fragments": {
+     "count": 97,
+     "mass": 2583,
+     "marks": 0,
+     "first": {
+      "center": [
+       -1.905,
+       0.2125,
+       -1.8
+      ],
+      "size": [
+       0.69,
+       0.225,
+       0.13
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "part": "wall_back",
+    "kind": "dust",
+    "count": 20
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "partition",
+    "time": 0,
+    "part": "wall_back",
+    "stage": 3
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "scenario": "window_glass",
+    "time": 0,
+    "part": "window",
+    "at": [
+     0,
+     1.4,
+     1.953
+    ],
+    "diameter": 0.0135,
+    "through": true
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "window_glass",
+    "time": 0,
+    "part": "window",
+    "stage": 1
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "window_glass",
+    "time": 0,
+    "part": "window",
+    "at": [
+     0,
+     1.4,
+     1.953
+    ],
+    "rays": 7,
+    "length": 0.7071
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "window_glass",
+    "time": 0,
+    "part": "window",
+    "kind": "shards",
+    "count": 12
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "window_glass",
+    "time": 0,
+    "part": "window",
+    "amount": 631.1111,
+    "hp": 0,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "fracture",
+   "data": {
+    "scenario": "window_glass",
+    "time": 0,
+    "part": "window",
+    "style": "shatter",
+    "fragments": {
+     "count": 20,
+     "mass": 15,
+     "marks": 6,
+     "first": {
+      "center": [
+       0.0582,
+       1.3967,
+       1.95
+      ],
+      "size": [
+       0.1166,
+       0.1099,
+       0.006
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "window_glass",
+    "time": 0,
+    "part": "window",
+    "kind": "shards",
+    "count": 5
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "window_glass",
+    "time": 0,
+    "part": "window",
+    "stage": 3
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "scenario": "tank_leak",
+    "time": 0,
+    "part": "tank",
+    "at": [
+     0.9,
+     0.6,
+     -0.9
+    ],
+    "diameter": 0.009,
+    "through": true
+   }
+  },
+  {
+   "type": "leak",
+   "data": {
+    "scenario": "tank_leak",
+    "time": 0,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "tank_leak",
+    "time": 0,
+    "part": "tank",
+    "kind": "chips",
+    "count": 12
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "tank_leak",
+    "time": 0,
+    "part": "tank",
+    "amount": 12,
+    "hp": 62191.5345,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "fracture",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "bottle",
+    "style": "snap",
+    "fragments": {
+     "count": 3,
+     "mass": 277.4419,
+     "marks": 0,
+     "first": {
+      "center": [
+       -1.9,
+       0.1115,
+       1.3
+      ],
+      "size": [
+       0.3,
+       0.2229,
+       0.3
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "bottle",
+    "kind": "sparks",
+    "count": 10
+   }
+  },
+  {
+   "type": "explode",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "bottle",
+    "energy": 60000
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "f_c0",
+    "at": [
+     -2,
+     0,
+     -1.4
+    ],
+    "rays": 6,
+    "length": 0.5852
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "f_c0",
+    "kind": "chips",
+    "count": 12
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "f_c0",
+    "amount": 43.2071,
+    "hp": 6139.1929,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c0",
+    "at": [
+     -2.25,
+     0.25,
+     -1.65
+    ],
+    "rays": 8,
+    "length": 0.8147
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c0",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c0",
+    "kind": "chips",
+    "count": 12
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "joint": "wall_back~c0",
+    "by": "break"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c0",
+    "amount": 36.7069,
+    "hp": 8657.2931,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "f_c1",
+    "at": [
+     2,
+     0,
+     -1.4
+    ],
+    "rays": 9,
+    "length": 0.1802
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "f_c1",
+    "kind": "chips",
+    "count": 4
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "f_c1",
+    "amount": 6.25,
+    "hp": 6176.15,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c1",
+    "at": [
+     2.25,
+     0.25,
+     -1.65
+    ],
+    "rays": 9,
+    "length": 0.1188
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c1",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c1",
+    "kind": "chips",
+    "count": 3
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c1",
+    "amount": 3.3003,
+    "hp": 8690.6997,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "f_c2",
+    "at": [
+     -2,
+     0,
+     1.4
+    ],
+    "rays": 6,
+    "length": 0.5852
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "f_c2",
+    "kind": "chips",
+    "count": 12
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "f_c2",
+    "amount": 130.543,
+    "hp": 6051.857,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c2",
+    "at": [
+     -2.25,
+     0.25,
+     1.65
+    ],
+    "rays": 5,
+    "length": 1
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c2",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c2",
+    "kind": "chips",
+    "count": 12
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "joint": "wall_front~c2",
+    "by": "break"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c2",
+    "amount": 121.2212,
+    "hp": 8572.7788,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "f_c3",
+    "at": [
+     2,
+     0,
+     1.4
+    ],
+    "rays": 6,
+    "length": 0.4143
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "f_c3",
+    "kind": "chips",
+    "count": 10
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "f_c3",
+    "amount": 17.4844,
+    "hp": 6164.9156,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c3",
+    "at": [
+     2.25,
+     0.25,
+     1.65
+    ],
+    "rays": 7,
+    "length": 0.3307
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c3",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c3",
+    "kind": "chips",
+    "count": 8
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "c3",
+    "amount": 13.4728,
+    "hp": 8680.5272,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "slab",
+    "at": [
+     -1.9,
+     3,
+     1.3
+    ],
+    "rays": 7,
+    "length": 0.9302
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "slab",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "slab",
+    "kind": "chips",
+    "count": 12
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "joint": "roof~slab",
+    "by": "break"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "slab",
+    "amount": 42.25,
+    "hp": 146016.95,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "roof",
+    "kind": "splinters",
+    "count": 12
+   }
+  },
+  {
+   "type": "ignite",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "roof"
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "roof",
+    "amount": 31.0083,
+    "hp": 110848.9917,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_back",
+    "at": [
+     -1.9,
+     0.25,
+     -1.735
+    ],
+    "rays": 7,
+    "length": 0.7826
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_back",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_back",
+    "kind": "chips",
+    "count": 12
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "joint": "wall_back~c1",
+    "by": "break"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_back",
+    "layer": 0,
+    "at": [
+     -1.9,
+     0.25,
+     -1.735
+    ],
+    "area": 0.0503
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_back",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_back",
+    "amount": 29.3041,
+    "hp": 30966.6959,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_front",
+    "at": [
+     -1.9,
+     0.25,
+     1.735
+    ],
+    "rays": 9,
+    "length": 1
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_front",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_front",
+    "kind": "chips",
+    "count": 12
+   }
+  },
+  {
+   "type": "detach",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "joint": "wall_front~c3",
+    "by": "break"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_front",
+    "layer": 0,
+    "at": [
+     -1.9,
+     0.25,
+     1.735
+    ],
+    "area": 0.1179
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_front",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_front",
+    "amount": 103.2307,
+    "hp": 30892.7693,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_front",
+    "stage": 2,
+    "opening": {
+     "center": [
+      -1.9,
+      0.25,
+      1.8
+     ],
+     "radius": 0.31
+    },
+    "fragments": {
+     "count": 16,
+     "mass": 54.8119,
+     "marks": 0,
+     "first": {
+      "center": [
+       -2.135,
+       0.1375,
+       1.8
+      ],
+      "size": [
+       0.23,
+       0.075,
+       0.13
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_front",
+    "kind": "dust",
+    "count": 14
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "window",
+    "at": [
+     -0.5,
+     0.9,
+     1.947
+    ],
+    "rays": 8,
+    "length": 0.7071
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "window",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "window",
+    "kind": "shards",
+    "count": 12
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "window",
+    "amount": 62.391,
+    "hp": 117.609,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "fracture",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "window",
+    "style": "shatter",
+    "fragments": {
+     "count": 4,
+     "mass": 15,
+     "marks": 0,
+     "first": {
+      "center": [
+       -0.3638,
+       0.91,
+       1.95
+      ],
+      "size": [
+       0.2274,
+       0.2143,
+       0.006
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "window",
+    "kind": "shards",
+    "count": 5
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "window",
+    "stage": 3
+   }
+  },
+  {
+   "type": "dent",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "tank"
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "tank",
+    "kind": "chips",
+    "count": 12
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "tank",
+    "amount": 28.7944,
+    "hp": 62174.7402,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_back",
+    "stage": 3
+   }
+  },
+  {
+   "type": "collapse",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "parts": [
+     "wall_back"
+    ],
+    "mass": 2583
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "part": "wall_front",
+    "stage": 3
+   }
+  },
+  {
+   "type": "collapse",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "parts": [
+     "wall_front"
+    ],
+    "mass": 2528.1881
+   }
+  },
+  {
+   "type": "collapse",
+   "data": {
+    "scenario": "gas_explodes",
+    "time": 0.1,
+    "parts": [
+     "roof"
+    ],
+    "mass": 1232
+   }
+  }
+ ],
+ "scenes": {}
+}

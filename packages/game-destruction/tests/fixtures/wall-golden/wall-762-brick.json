@@ -1,0 +1,1458 @@
+{
+ "schema": 1,
+ "name": "wall-762-brick",
+ "seed": 102,
+ "events": [
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     -0.4,
+     0.8,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "stage": 1
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     -0.4,
+     0.8,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     -0.4,
+     0.8,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 12332.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     -0.2,
+     0.95,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     -0.2,
+     0.95,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     -0.2,
+     0.95,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 12266.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0,
+     1.1,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1.1,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0,
+     1.1,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 12200.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.2,
+     1.25,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0.2,
+     1.25,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.2,
+     1.25,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 12134.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.4,
+     0.8,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0.4,
+     0.8,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.4,
+     0.8,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 12068.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     -0.4,
+     0.8,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 12002.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     -0.2,
+     1.1,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     -0.2,
+     1.1,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     -0.2,
+     1.1,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11936.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0,
+     1.25,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1.25,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0,
+     1.25,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11870.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.2,
+     0.8,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0.2,
+     0.8,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.2,
+     0.8,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11804.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.4,
+     0.95,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0.4,
+     0.95,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.4,
+     0.95,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11738.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     -0.4,
+     0.8,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11672.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     -0.2,
+     1.25,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     -0.2,
+     1.25,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     -0.2,
+     1.25,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11606.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0,
+     0.8,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     0.8,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0,
+     0.8,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11540.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.2,
+     0.95,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0.2,
+     0.95,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.2,
+     0.95,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11474.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.4,
+     1.1,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0.4,
+     1.1,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.4,
+     1.1,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11408.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     -0.4,
+     0.8,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11342.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     -0.2,
+     0.8,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     -0.2,
+     0.8,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     -0.2,
+     0.8,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11276.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0,
+     0.95,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     0.95,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0,
+     0.95,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11210.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.2,
+     1.1,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0.2,
+     1.1,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.2,
+     1.1,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11144.4,
+    "damageType": "ballistic"
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.4,
+     1.25,
+     0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "hole",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0.4,
+     1.25,
+     0.065
+    ],
+    "diameter": 0.0114,
+    "through": true
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0.4,
+     1.25,
+     -0.065
+    ],
+    "area": 0.0029
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 14
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 66,
+    "hp": 11078.4,
+    "damageType": "ballistic"
+   }
+  }
+ ],
+ "scenes": {}
+}
