@@ -648,5 +648,15 @@
       0.764
     ],
     "scale": 0.1
+  },
+  {
+    "id": "coconut_water",
+    "teamId": "agua_coco",
+    "teamBox": [
+      0.6,
+      1.7,
+      0.6
+    ],
+    "scale": 0.1
   }
 ]

@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **65 de 257 itens têm modelo 3D; faltam 192.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **66 de 257 itens têm modelo 3D; faltam 191.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **65** | **192** |
+| **Total** | **66** | **191** |
 
 ## Comida (36 de 36)
 
@@ -66,7 +66,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Sardinha em lata (kit) | `sardinha` | `canned_sardines` | 0,13 kg | comum | 112 x 26 x 65 mm |
 | [x] | Óleo de cozinha (900 ml) (kit) | `oleo_cozinha` | `cooking_oil` | 0,9 kg | comum | 70 x 260 x 70 mm |
 
-## Bebida (10 de 12)
+## Bebida (11 de 12)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -80,7 +80,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Refrigerante (lata) (kit) | `refri_lata` | `soda_can` | 0,35 kg | comum | 66 x 120 x 66 mm |
 | [x] | Suco de caixinha (kit) | `suco_cx` | `juice_box` | 0,2 kg | comum | 52 x 100 x 37 mm |
 | [x] | Vinho de missa (kit) | `vinho` | `communion_wine` | 0,75 kg | incomum | 76 x 300 x 76 mm |
-| [ ] | Água de coco | `agua_coco` | `coconut_water` | 0,4 kg | comum | 60 x 170 x 60 mm |
+| [x] | Água de coco (kit) | `agua_coco` | `coconut_water` | 0,4 kg | comum | 60 x 170 x 60 mm |
 | [ ] | Água de rio ou poça | `agua_suja` | `dirty_water` | 0,5 kg | comum | 66 x 183 x 66 mm |
 
 ## Medicina e primeiros socorros (3 de 26)
