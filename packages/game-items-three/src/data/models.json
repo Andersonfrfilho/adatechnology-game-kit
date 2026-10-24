@@ -608,5 +608,15 @@
       0.664
     ],
     "scale": 0.1
+  },
+  {
+    "id": "milk_carton",
+    "teamId": "leite",
+    "teamBox": [
+      0.702,
+      2,
+      0.702
+    ],
+    "scale": 0.1
   }
 ]
