@@ -87,6 +87,16 @@ for (const lang of ['pt-BR', 'en']) {
   })
   check(`[${lang}] the characters and animals modules are loaded, and zombie_behind_door is green`, people.characters >= 25 && people.animals === 13 && people.scenario.passed === 1 && people.scenario.failed === 0, people)
 
+  // the vehicles module rides along too (owner rule): loaded with its 8 vehicles, and the 7.62 shot at the light-mode sedan leaves the fridge beside it alone
+  const cars = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const r = window.__furnitureReport.vehicles
+    const run = await room.runScenarios(room.scenarios.filter((s) => s.id.includes('car_in_the_yard')))
+    room.clear()
+    return { ok: r?.ok && r.problems.length === 0, items: r?.items?.length ?? 0, scenario: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
+  })
+  check(`[${lang}] the vehicles module is loaded (8 vehicles), and car_in_the_yard is green`, cars.ok && cars.items === 8 && cars.scenario.passed === 1 && cars.scenario.failed === 0, cars)
+
   // the weapons module rides along (owner rule: this area shows what every phase adds): loaded, with its accessory bench, and a suppressor goes on an M4 here too
   const weapons = await page.evaluate(() => {
     const room = window.__testRoom

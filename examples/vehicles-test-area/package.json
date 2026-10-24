@@ -1,0 +1,19 @@
+{
+  "name": "@adatechnology/vehicles-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Vehicles area for the shared test room: the eight vehicles of the Frota test (hatch, sedan, pickup, sport bike, box truck, city bus, battle tank, attack helicopter), each with its own destruction and its door, hood and trunk clips, built full or in the light mode, painted by seed and palette, with the damageable boxes by material, the zones by type and the axes of the output frame, and a car that drives a lane with the arcade or the semi-simulation driver on the chosen surface. Thirteen scenarios: the eleven of the Frota test page and one for each driver.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-vehicles": "workspace:*",
+    "@adatechnology/game-vehicles-driving": "workspace:*",
+    "@adatechnology/game-vehicles-fleet": "workspace:*",
+    "@adatechnology/game-vehicles-three": "workspace:*"
+  }
+}

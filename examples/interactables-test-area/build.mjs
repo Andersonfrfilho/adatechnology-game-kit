@@ -22,7 +22,8 @@ function findEsbuild() {
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
 const people = ['game-characters', 'game-characters-three', 'game-characters-people', 'game-characters-undead', 'game-animals', 'game-animals-species', 'game-animals-three']
-for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', ...people]) {
+const vehicles = ['game-vehicles', 'game-vehicles-fleet', 'game-vehicles-three', 'game-vehicles-driving']
+for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', ...people, ...vehicles]) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -51,6 +52,8 @@ const result = await esbuild.build({
     '@adatechnology/game-items-three': join(pkg('game-items-three'), 'dist/index.js'),
     // the characters and the animals modules ride along too: a shot crosses a wardrobe door and reaches a zombie behind it
     ...Object.fromEntries(people.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
+    // the vehicles module rides along too: a car stands in the yard next to the furniture
+    ...Object.fromEntries(vehicles.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
   },
 })
 mkdirSync(join(here, 'dist'), { recursive: true })

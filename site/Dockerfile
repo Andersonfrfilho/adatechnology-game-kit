@@ -60,6 +60,7 @@ COPY examples/interactables-showroom/package.json examples/interactables-showroo
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
 COPY examples/items-test-area/package.json examples/items-test-area/
 COPY examples/test-room/package.json examples/test-room/
+COPY examples/vehicles-test-area/package.json examples/vehicles-test-area/
 COPY examples/weapons-test-area/package.json examples/weapons-test-area/
 RUN pnpm install --frozen-lockfile
 

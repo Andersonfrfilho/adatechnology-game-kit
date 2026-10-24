@@ -30,7 +30,7 @@ cena.add(carro.group); carro.damageables                  // [{ material, zone, 
 `game-vehicles` (`kit.build(..., { lod: true })`, `kit.damageables`), `game-vehicles-fleet` (`colorFromSeed`, `fleetDims`), `game-urban-three` (carros da rua pelo provedor de veículos).
 
 ## Ambiente de teste
-O módulo `createVehiclesTestModule` (T7.1f) e `examples/vehicles-test-area` (`?area=vehicles`).
+`createVehiclesTestModule({ locale, document?, three?, vehicles?, effects? })` (e `loadVehiclesTestModule(room, options)`, que aprende o three.js da sala sozinho para trazer os clipes de porta, capô e porta-malas) entra na sala com `room.loadModule` (`examples/vehicles-test-area`, global `VehiclesArea`). Itens: os oito da Frota (`hatch`, `sedan`, `pickup`, `sport_bike`, `box_truck`, `city_bus`, `battle_tank`, `attack_helicopter`), cada um com a própria destruição. Treze cenários: os onze da página do time, literais (`vehicles_9mm_windshield` ... `vehicles_melt`, com os ids da página em `PAGE_SCENARIO_ALIASES`), mais `vehicles_drive_arcade` e `vehicles_drive_semi`. Bancada: qualidade (alta ou leve, vale para os veículos postos depois), pintura pela semente e paleta, direção arcade ou semi, piso, ações repintar e percorrer a pista. Camadas: caixas danificáveis por material, zonas por tipo, eixos do quadro de saída. O módulo não desenha partículas: fogo, explosão, vidro, faíscas, vazamento e escapamento são pedidos por id a `host.effects` (`defaultEffectIds`), quando a sala tem. `tests/team-golden-module.test.ts` roda o `MODULO_VEICULOS` da página contra a sala do kit e confere os 11 cenários (checks e linhas do log).
 
 ## Cuidados
 - O modo leve deixa de fora os interiores, o motor e as peças com menos de 3 cm; a placa mantém a textura.

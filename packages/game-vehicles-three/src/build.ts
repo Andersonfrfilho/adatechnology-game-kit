@@ -71,7 +71,7 @@ function count(root: any): { triangles: number; drawCalls: number } {
 }
 
 /** The material most triangles are painted with: the body colour. */
-function primaryPaint(c: any): any {
+export function primaryPaint(c: any): any {
   let best: any = null
   let bestCount = -1
   const counts = new Map<any, number>()

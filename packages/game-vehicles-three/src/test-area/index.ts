@@ -1,0 +1,5 @@
+export { createVehiclesTestModule, DEFAULT_TEST_VEHICLES, loadVehiclesTestModule, VEHICLES_AREA_ID } from './module'
+export { PAGE_ITEM_ALIASES, PAGE_SCENARIO_ALIASES, VEHICLE_SCENARIO_IDS } from './text'
+export { defaultEffectIds } from './types'
+export type { ModuleRoomLike } from './module'
+export type { DocumentLike, EffectsLike, VehicleEffectIds, VehiclesContext, VehiclesRoom, VehiclesTestOptions } from './types'

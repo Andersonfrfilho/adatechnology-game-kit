@@ -936,6 +936,9 @@ importers:
       '@adatechnology/game-vehicles':
         specifier: workspace:*
         version: link:../game-vehicles
+      '@adatechnology/game-vehicles-driving':
+        specifier: workspace:*
+        version: link:../game-vehicles-driving
       '@adatechnology/game-vehicles-fleet':
         specifier: workspace:*
         version: link:../game-vehicles-fleet
