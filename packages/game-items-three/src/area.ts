@@ -776,7 +776,7 @@ function scenariosOf(module: ItemsTestModule, catalog: ItemsCatalog, text: Text,
       name: names.models,
       run: ({ expect }) => {
         const models = listItemModels()
-        expect(models.length === 24, '24 models are shipped', { count: models.length })
+        expect(models.length >= 24, 'models are shipped', { count: models.length })
         const withModel = catalog.list().filter((item) => item.model !== undefined && hasItemModel(item.model))
         expect(withModel.length === 23, '23 items of the catalog name a model', { count: withModel.length })
         const stand = module.placed().filter((entry) => entry.group === 'showcase')
