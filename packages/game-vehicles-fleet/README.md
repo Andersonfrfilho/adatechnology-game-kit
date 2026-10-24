@@ -122,3 +122,7 @@ const carro = kit.build('compact_hatch', 'damaged')
 Todo o texto em português fica em `src/locales/pt-BR.json`, exatamente como no original. Os ids antigos continuam semeando o visual e o dano, então cada
 veículo sai idêntico ao original (os testes comparam hashes gerados pelo código original). O que é do jogo (zumbis, horda, sangue, placa ZMB) ficou de fora;
 veja "Left for the game adapter". A tabela completa de nomes antigos e novos está em [MIGRATION.md](MIGRATION.md).
+
+## Measurements, paint and design cards
+
+`fleetDims(id)` (length, width, height in metres as the team measured them), `paintPalettes` and `paletteOf(group)` (13 civil colours and 5 military), `colorFromSeed(seed, palette)` (the same seed gives the same colour; number or text), `fleetStats(id)` (six 0-10 ratings, noise radius, top speed) and `fleetCard(id)` (the design card texts, Brazilian Portuguese). The data are JSON files in `src/data/` written by `tools/vehicles-catalog` from the team's Frota Leve and Frota pages.
