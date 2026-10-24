@@ -12,6 +12,7 @@
 
 import type { Shot, Use, Vec3 } from '@adatechnology/game-contracts'
 
+import type { ExplosiveBody } from './explosive-body'
 import type { ExplosiveDef, ExplosiveId } from './explosive-types'
 import type { WeaponsStrings } from './locale'
 import type { FaultId, WeaponEvent, WeaponRules } from './rule-types'
@@ -189,6 +190,8 @@ export type WeaponAction =
       minArmDistance: number
       /** Radius in metres of the blast behind the launcher. */
       backblast: number
+      /** Half-angle in degrees of the cone behind the launcher where the blast is dangerous (default 180: the whole sphere of `backblast`). */
+      backblastHalfAngleDeg?: number
       recoil: [number, number]
       noise?: number
     }
@@ -347,6 +350,8 @@ export interface Arsenal {
   create(id: WeaponId, options?: { seed?: number; reserve?: number; condition?: string; ammoQuality?: string }): WeaponState
   /** Muzzle energy of a calibre (optionally with a barrel factor). */
   muzzleEnergy(caliber: CaliberId, barrel?: number): number
+  /** The explosive a `throw` or `place` use carries, ready to fly (`step`) or wait for its trigger; undefined when the use carries none. */
+  explosiveBody(use: Use): ExplosiveBody | undefined
   /** Joules of what one use of a weapon delivers: one projectile (or one pellet), a blast, or a melee blow. */
   energy(id: WeaponId): number
   /** Translated name of a weapon, explosive, fire mode, category, fault, condition or calibre. */

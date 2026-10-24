@@ -500,6 +500,15 @@ class Renderer implements DestructionRenderer {
         this.sound('ignite', ev.point, 0.7)
         this.sound('burn_loop', ev.point, 0.5)
         break
+      case 'primed':
+        // a bullet or fire sets the part burning until its delay runs out; a blast nearby only waits for the explosion
+        if (ev.trigger !== 'explosion') {
+          this.fires.set(`${ev.object}|${ev.part}`, { object: ev.object, part: ev.part, point: ev.point, accFire: 0, accSmoke: 0 })
+          this.activate(ev.object, ev.part)
+          this.particles.burst('fire', ev.point, [0, 1, 0], 6, 1)
+          this.sound('ignite', ev.point, 0.7)
+        }
+        break
       case 'extinguish': {
         const f = this.fires.get(`${ev.object}|${ev.part}`)
         if (f) {

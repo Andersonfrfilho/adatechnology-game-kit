@@ -32,6 +32,7 @@ import type {
 
 // The contract types live in @adatechnology/game-contracts; they are re-exported so that no import from this package breaks.
 export type {
+  ChainDelay,
   Crack,
   DamageType,
   DebrisKind,
@@ -40,6 +41,7 @@ export type {
   DestructibleSpec,
   DestructionEvent,
   DestructionEventType,
+  ExplosionChain,
   FluidKind,
   Fragment,
   FractureStyle,
@@ -272,6 +274,8 @@ export interface PartRuntime {
   jet: boolean
   /** Seconds left before the next `stress` event. */
   stressT?: number
+  /** World time at which a primed explosive part goes off (`explodes.chain`). */
+  chainDue?: number
 }
 
 /** Opaque bookkeeping of an object (see `PartRuntime`). `joints` holds the last disassembly step reported per joint id. */

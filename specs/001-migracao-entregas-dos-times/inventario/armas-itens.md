@@ -381,11 +381,29 @@ Atualizado em 2026-10-23. O que do inventário acima já entrou, e onde. O resta
 | Pane/engasgo (`QUAL`, `jamRoll`, `clearJam`, `rel`) | Sim: 4 tipos, 4 condições, `faultFactor`, desobstruir 1,2 s, qualidade da munição (Arsenal §05) | `src/faults.ts`, `src/weapon.ts`, `src/rules.ts` |
 | Calor do cano (`heat`, `heatPer`, `stepWeapon`) | Sim, igual à Galeria (golden de calor e munição) | `src/heat.ts`; `tests/team-golden.test.ts` |
 | Tiro, rajada, salva, ciclo manual | Sim (`roundTimes`, `volley`, `timings.cycle`) | `src/fire.ts`, `src/weapon.ts` |
-| Lançadores (`launcher`) | Mínimo: um cartucho gera `Use` `throw` com velocidade e explosivo; a regra completa fica na T1.5 | `src/weapon.ts` `fireLauncher` |
+| Lançadores (`launcher`) | Sim (T1.5): projétil físico com gravidade, distância de armar de 10 m (antes disso `dud`), sopro de 5 m em cone de 19°, tubo descartável | `src/explosive-use.ts`, `src/explosive-body.ts`, `src/explosive-effect.ts` |
 | Explosivos (D14): raios letal e de ferimento, energia, ruído | Sim, 17 | `src/data/explosives.json` |
 | Modelos 3D, animação por família, ejeção, carregador, cartucho 3D | Não (T1.2 a T1.4); só o construtor da Galeria foi extraído para `models.json` | `packages/game-weapons-three/src/data/models.json` |
 | Área de armas com todas as armas | Não: mostra só os 42 arquétipos até a T1.3 | `packages/game-weapons-three/src/area.ts` |
 | Dano em pontos, PEN, dano por região, raridade (D4, D6) | Não, de propósito (calibragem do jogo) | |
 | Acessórios, supressor, durabilidade 0-100 (D13) | Não; o supressor é a sobrescrita `noise` da arma | |
 
-Perguntas novas para o dono: ver `evidence.md`, "T1.1 (parte B)".
+## 8. Situação depois da T1.5
+
+Atualizado em 2026-10-23.
+
+| Item do inventário | Entrou? | Onde |
+|---|---|---|
+| Granada M67 (espoleta 4 s, quique), molotov (fogo de 4 m por 9 s), bomba de cano, flashbang (atordoa 4 s), dinamite | Sim, pelo `ExplosiveDef` | `ExplosiveBody`, `throwableUse` em `game-weapons`; `explosive-weapons.json` |
+| Claymore (cone de 60°, fio) e C4 (detonador) | Sim: uso `place`, `body.trigger('wire' \| 'remote')`, `blastEffect` com o cone | idem |
+| Lança-chamas (alcance, combustível em segundos, fogo) | Já estava (T1.1); testes de alcance e combustível | `launchers.json`; `tests/explosives.test.ts` |
+| Botijão, barril, tanque do carro, bomba e tanque do posto em cadeia (A11) | Sim: `ExplosiveDef.chain` (dado) e `explodes.chain` (regra) | `explosives.json`; `game-destruction` `chain.ts`, `world.ts` |
+| Explosão do Laboratório com teto por área (E1) | Não: é visual, fica para o `game-vfx` | |
+| Cozinhar a granada (segurar antes de arremessar) | Não: pergunta aberta | |
+| Dano no centro (300, 220, 350... do Arsenal) | Não, de propósito (calibragem do jogo): vale a energia por Hopkinson | |
+
+Perguntas novas para o dono: ver `evidence.md`, "T1.5".
+
+---
+
+Perguntas anteriores para o dono: ver `evidence.md`, "T1.1 (parte B)".

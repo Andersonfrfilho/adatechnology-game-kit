@@ -1,5 +1,7 @@
 export type * from './types'
 export { createDestruction } from './world'
+export { explosivePart, FIRE_PRIME_C } from './chain'
+export type { ChainTrigger, ExplosivePartOptions, WorldExplosive } from './chain'
 export { MATERIALS, JOINT_DEFAULTS, JOINT_BY_MATERIALS, inferJoints, guessMaterial, partVolume, partMass, partThickness, partCapacity, fragility } from './materials'
 export { buildFrame } from './frame'
 export type { FrameOptions } from './frame'

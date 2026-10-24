@@ -3,11 +3,13 @@
  * Types plus tiny pure checkers, no runtime dependencies. The default destruction world, the renderers and the test room are optional.
  */
 export type {
+  ChainDelay,
   Crack,
   DamageType,
   DebrisKind,
   Dent,
   DestructibleSpec,
+  ExplosionChain,
   DestructionEvent,
   DestructionEventType,
   FluidKind,

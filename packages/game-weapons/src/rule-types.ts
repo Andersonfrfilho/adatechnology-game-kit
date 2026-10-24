@@ -42,6 +42,17 @@ export interface WeaponRules {
   }
   /** Each shot in the last `window` seconds raises the noise radius by `step`, up to `cap`. */
   readonly noiseBurst: { readonly step: number; readonly window: number; readonly cap: number }
+  /** How thrown and launched explosives fly and bounce. */
+  readonly explosives: {
+    /** m/s². */
+    readonly gravity: number
+    /** Fraction of the speed along the surface normal kept (and reversed) in a bounce off the ground. */
+    readonly groundRestitution: number
+    /** Fraction of the speed along the ground kept after a bounce off the ground. */
+    readonly groundFriction: number
+    /** Fraction of the speed kept (and reversed) in a bounce off a wall. */
+    readonly wallRestitution: number
+  }
   readonly draw: number
   readonly clear: number
   readonly startSafe: boolean

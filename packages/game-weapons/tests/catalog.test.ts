@@ -95,6 +95,26 @@ describe('explosives', () => {
     expect(action?.kind === 'throwable' && [action.explosive, action.energy, action.noise, action.radius]).toEqual(['pipe_bomb', pipe?.energy, pipe?.noise, pipe?.lethalRadius])
   })
 
+  it('carry the chain reaction of the world explosives: the game exploDamage (jogo.js 68173-68190) and the Laboratório gas station (SC.posto)', () => {
+    const chainOf = (id: string) => arsenal.explosives.get(id)?.chain
+    expect(chainOf('propane_p13')).toEqual({ shot: 1.4, fire: 1.4, explosion: [0.25, 0.6] })
+    expect(chainOf('fuel_barrel')).toEqual({ shot: 1.2, fire: 1.2, explosion: [0.2, 0.4] })
+    expect(chainOf('car_fuel_tank')).toEqual({ shot: [3, 8], fire: [3, 8], explosion: 0.6, shotDamageFraction: 0.5 })
+    expect(chainOf('fuel_pump')).toEqual({ shot: 1, fire: 1, explosion: 0.4 })
+    expect(chainOf('fuel_station_tank')).toEqual({ fire: 2, explosion: 2 })
+    for (const id of ['propane_p13', 'fuel_barrel', 'car_fuel_tank', 'fuel_pump', 'fuel_station_tank']) expect(arsenal.explosives.get(id)?.triggers, id).toContain('explosion')
+    for (const explosive of EXPLOSIVES) if (!explosive.triggers?.includes('explosion')) expect(explosive.chain, explosive.id).toBeUndefined()
+  })
+
+  it('give every launcher the backblast of the Arsenal §13 (5 m) except the M79, and every explosive with a timer a fuse', () => {
+    for (const def of WEAPONS) {
+      if (def.action.kind !== 'launcher') continue
+      expect(def.action.backblast, def.id).toBe(def.id === 'm79' ? 0 : 5)
+      expect(def.action.minArmDistance, def.id).toBe(10)
+    }
+    for (const explosive of EXPLOSIVES) if (explosive.triggers?.includes('timer')) expect(explosive.fuse, explosive.id).toBeGreaterThan(0)
+  })
+
   it('name every projectile of every launcher', () => {
     for (const def of WEAPONS) if (def.action.kind === 'launcher') expect(arsenal.explosives.has(def.action.projectile), def.id).toBe(true)
   })

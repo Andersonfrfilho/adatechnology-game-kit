@@ -28,7 +28,43 @@ export type Use =
   | { kind: 'melee'; damage: 'blunt' | 'slash'; energy: number; radius: number; reach: number; origin: Vec3; direction: Vec3 }
   | { kind: 'flame'; temperature: number; radius: number; range: number; cone: boolean; duration: number; origin: Vec3; direction: Vec3 }
   | { kind: 'heat'; temperature: number; radius: number; range: number; duration: number; origin: Vec3; direction: Vec3 }
-  | { kind: 'throw'; energy: number; radius: number; fuse: number; velocity: Vec3; origin: Vec3; fire?: { temperature: number; radius: number; seconds: number } }
+  | {
+      kind: 'throw'
+      energy: number
+      radius: number
+      fuse: number
+      velocity: Vec3
+      origin: Vec3
+      fire?: { temperature: number; radius: number; seconds: number }
+      /** Explosive id (`m67`, `molotov`, `pg7v`...): the host looks the numbers up in the arsenal. Absent on a plain thrown object. */
+      explosive?: string
+      /** What sets it off: `timer` after `fuse` seconds, `impact` on the first hit once armed. */
+      trigger?: 'timer' | 'impact'
+      /** Metres the projectile must fly before an impact sets it off; closer, it hits without exploding (rocket launchers). */
+      armDistance?: number
+      /** Radius in metres of the wounding area (`radius` is the lethal one). */
+      injuryRadius?: number
+      /** Seconds the blast stuns whoever is inside the injury radius (flashbang). */
+      stunSeconds?: number
+    }
+  /** An explosive set down where the trigger is pulled (mine, C4, charge): it waits for its trigger instead of flying. */
+  | {
+      kind: 'place'
+      explosive: string
+      /** `wire`: something trips it; `remote`: the player fires it; `timer`: after `fuse` seconds. */
+      triggers: readonly ('timer' | 'wire' | 'remote')[]
+      energy: number
+      /** Lethal radius in metres. */
+      radius: number
+      injuryRadius: number
+      /** Cone the blast goes through, in front of `direction` (mine); absent for a blast in every direction. */
+      cone?: { halfAngleDeg: number; length: number }
+      fuse?: number
+      origin: Vec3
+      direction: Vec3
+    }
+  /** The blast behind a rocket launcher: dangerous inside `radius` metres, in the cone around `direction` (pointing away from the target). */
+  | { kind: 'backblast'; radius: number; halfAngleDeg: number; origin: Vec3; direction: Vec3 }
   | { kind: 'tool'; tool: string; reach: number; duration: number; origin: Vec3; direction: Vec3 }
   | { kind: 'extinguish'; range: number; coolC: number; duration: number; origin: Vec3; direction: Vec3 }
   | { kind: 'hand'; reach: number; origin: Vec3; direction: Vec3 }

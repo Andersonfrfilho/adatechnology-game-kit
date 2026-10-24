@@ -43,7 +43,8 @@ Quem possui as transformações (renderizador ou física) chama `setTransform`; 
 | `createDestruction(options)` | cria o `DestructionWorld` (`seed`, `materials`, `onEvent`) |
 | `world.add / remove / register` | adiciona objeto por spec, ou hospeda um `DestructibleImpl` de um módulo |
 | `world.hit / hitPart / explode / shoot / raycast` | aplica dano (`ballistic`, `blunt`, `slash`, `explosive`, `fire`, `heat`) |
-| `world.update(dt)` | avança fogo, calor, derretimento, vazamento, sobrecarga estrutural; devolve eventos |
+| `world.update(dt)` | avança fogo, calor, derretimento, vazamento, sobrecarga estrutural e a espera das peças explosivas armadas (reação em cadeia); devolve eventos |
+| `explosivePart(explosive, parte, { atC? })` | peça `explodes` com a energia, o alcance (raio de ferimento) e a `chain` de um `ExplosiveDef` do `game-weapons` (barril, tanque do carro, botijão, bomba, tanque do posto) |
 | `world.disassemble / workableJoints / nearestJoint` | desmontar juntas com a ferramenta certa |
 | `world.setLiters / extinguish / reset / splitGroup / setTransform / setPartPose` | recipientes, apagar fogo, reparar, separar pedaço, sincronizar pose |
 | `world.state / part / snapshot / serialize / load` | estado vivo (só leitura), cópia, JSON de ida e volta |
@@ -54,7 +55,7 @@ Quem possui as transformações (renderizador ou física) chama `setTransform`; 
 | `resolveStrings(locale)`, `locales` | nomes em `en` e `pt-BR` |
 
 Eventos: `damage`, `dent`, `hole`, `crack`, `ricochet`, `debris`, `fracture`, `detach`, `disassemble_progress`, `ignite`, `extinguish`, `burnout`, `melt`,
-`drip`, `leak`, `explode`, `stress`, `collapse`, `destroyed`.
+`drip`, `leak`, `explode`, `primed`, `stress`, `collapse`, `destroyed`.
 
 ## Compõe com
 - `@adatechnology/game-contracts`: dono dos tipos de golpe, evento e `DestructibleImpl` (este pacote os reexporta).
@@ -67,6 +68,7 @@ Não há `examples/` próprio. A "Sala de testes de destruição" do kit é uma 
 `dist/test-room.html`, um arquivo só). A área abre com `?area=` na sala.
 
 ## Cuidados
+- Reação em cadeia (A11): peça com `explodes.chain` é **armada** por tiro (`shot`, depois de `shotDamageFraction` do hp), fogo (`fire`, a `atC` ou 300 °C) ou explosão no alcance (`explosion`) e explode depois do atraso daquele gatilho (número ou `[mín, máx]` sorteado da semente). Evento `primed` ao armar, `explode` no fim. Cada peça explode uma vez; tiro e explosão armam em vez de despedaçar na hora; a ordem é por tempo, depois por objeto e peça. O atraso conta do instante da explosão que armou, então a linha do tempo não depende do `dt` de `update`. Sem `update`, nada explode.
 - Um golpe tira `energy * 0.02 * damageScale` de vida. Passa por `energy > penetração (J/mm) * espessura (mm)`; ângulo raso conta caminho maior e pode ricochetear.
 - Vidro e cerâmica (`shatter`) levam dano multiplicado por `fragility`: 9 mm quebra um vidro de 3 mm em um tiro.
 - Fogo só leva a peça até a temperatura da fonte: fogueira (800 °C) nunca derrete aço (1450 °C).
@@ -78,7 +80,7 @@ Não há `examples/` próprio. A "Sala de testes de destruição" do kit é uma 
 
 ## O que vem pela migração (spec 001)
 - Concreto armado e tijolo como material e estrutura (apontado pelo dono em 2026-10-23), a verificar no artefato da Sala de destruição (V8: juntar as duas versões).
-- Reação em cadeia de explosivos aqui (A11) e explosão do Laboratório com teto por área (E1).
+- Explosão do Laboratório com teto por área (E1). A reação em cadeia (A11) já está aqui (T1.5, ver Cuidados).
 - Dois raios de explosão, letal e de ferimento (E3): dados em `game-weapons`, dano em `game-characters`.
 - Carro e parede da Galeria não são portados: usam este pacote (A8).
 - Destruição passa a usar o futuro `game-vfx` para os efeitos (E4).

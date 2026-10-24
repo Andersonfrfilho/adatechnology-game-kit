@@ -253,7 +253,8 @@ describe('non-firearms', () => {
 
   it('molotov carries fire', () => {
     const u = createArsenal().create('molotov').trigger(O, D, 0.016, false).uses[0]
-    expect(u.kind === 'throw' && u.fire).toEqual({ temperature: 700, radius: 1.5, seconds: 12 })
+    // area e duração do fogo vêm do explosivo (jogo.js fogoRes [4, 9], 68068), não do arquétipo antigo do SDK (1,5 m, 12 s)
+    expect(u.kind === 'throw' && u.fire).toEqual({ temperature: 700, radius: 4, seconds: 9 })
   })
 
   it('melee respects its cooldown', () => {

@@ -1,3 +1,5 @@
+import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from './chain'
+import type { ChainTrigger } from './chain'
 import { planFragments } from './fracture'
 import { JOINT_DEFAULTS, inferJoints, MATERIALS, partCapacity, partMass, partThickness, partVolume, fragility } from './materials'
 import { aabbOf, createRng, distanceToShape, quat, quatFromEuler, rayShape, rotateVec, shapeArea, shapeBound, shapeDims, surfacePoint, toLocal, toWorld, vec } from './math'
@@ -13,6 +15,8 @@ const DMG_PER_J = 0.02
 /** Fraction of a blast's energy that reaches a part at distance 0. */
 const BLAST_COUPLING = 0.1
 const FLAMMABLE_FLUIDS = ['gas', 'fuel']
+/** Most blasts one call resolves; the rest stay queued for the next call. */
+const MAX_BLASTS_PER_DRAIN = 64
 
 /** A cut only goes through a slice of the part, so a part longer than `CUT_SLICE` costs no more to cut than a 1 m piece of the same section. */
 const CUT_SLICE = 1
@@ -73,6 +77,8 @@ interface ObjRT {
   /** Structural parts with no support path to an anchored part (they fall). */
   unsup: boolean[]
   anyAnchor: boolean
+  /** Creation order of the object in this world: breaks ties between parts that go off at the same time. */
+  order: number
 }
 
 interface Carry {
@@ -142,6 +148,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const listeners = new Map<string, Set<(e: DestructionEvent) => void>>()
   let cur: DestructionEvent[] = []
   const blasts: Blast[] = []
+  /** Explosive parts that were primed and wait for their delay. */
+  const primed = new Map<PartRT, ObjRT>()
+  let orderCounter = 0
   const impls = new Map<string, ImplRT>()
   const taken = (id: string) => objects.has(id) || impls.has(id)
 
@@ -163,6 +172,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const pendingCollapse = new Map<ObjRT, string | undefined>()
   let runDepth = 0
 
+  /** Blasts queued by parts that exploded; each can prime or set off more parts. Capped per call so a runaway chain cannot freeze a frame. */
+  const drainBlasts = () => {
+    let guard = 0
+    while (blasts.length && guard++ < MAX_BLASTS_PER_DRAIN) {
+      const b = blasts.shift()!
+      blastWorld(b.point, b.energy, b.radius, b.source)
+    }
+  }
+
   const run = <T>(fn: () => T): { value: T; events: DestructionEvent[] } => {
     const prev = cur
     const mine: DestructionEvent[] = []
@@ -170,11 +188,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     runDepth++
     try {
       const value = fn()
-      let guard = 0
-      while (blasts.length && guard++ < 64) {
-        const b = blasts.shift()!
-        blastWorld(b.point, b.energy, b.radius, b.source)
-      }
+      drainBlasts()
       if (runDepth === 1) flushCollapse()
       return { value, events: mine }
     } finally {
@@ -217,7 +231,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const st: ObjectState = { id, position: [pos[0], pos[1], pos[2]], rotation: [rot[0], rot[1], rot[2], rot[3]], parts: [], joints: [], groups: [], destroyed: false }
     if (spec.name !== undefined) st.name = spec.name
     const o: ObjRT = {
-      id, spec, st, parts: [], byId: new Map(), idx: new Map(), joints: [], jointMap: new Map(), byPart: new Map(), bc: [0, 0, 0], br: 0, active: false, tmp: [], hasStructure: false, dirty: false, maxStress: 0, collapsed: new Set(carry?.collapsed ?? []), unsup: [], anyAnchor: false,
+      id, spec, st, parts: [], byId: new Map(), idx: new Map(), joints: [], jointMap: new Map(), byPart: new Map(), bc: [0, 0, 0], br: 0, active: false, tmp: [], hasStructure: false, dirty: false, maxStress: 0, collapsed: new Set(carry?.collapsed ?? []), unsup: [], anyAnchor: false, order: ++orderCounter,
     }
     for (const ps of spec.parts) {
       if (o.byId.has(ps.id)) throw new Error(`duplicate part id "${ps.id}"`)
@@ -238,6 +252,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat) : 0,
       }
       if (p.structural) o.hasStructure = true
+      if (p.rt.chainDue !== undefined && !isLost(p)) primed.set(p, o)
       o.idx.set(ps.id, o.parts.length)
       o.parts.push(p)
       o.byId.set(ps.id, p)
@@ -720,16 +735,37 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     partLost(o, p, src)
   }
 
+  /**
+   * Sets an explosive part off from outside (`explodes.chain`): it will explode after the delay of `trigger`, once. The delay is one draw
+   * from the world seed, so the same inputs give the same order of blasts.
+   */
+  const prime = (o: ObjRT, p: PartRT, trigger: ChainTrigger, src?: string) => {
+    const spec = chainDelayOf(p.spec, trigger)
+    if (spec === undefined || isLost(p) || p.rt.chainDue !== undefined) return
+    const delay = drawChainDelay(spec, rnd)
+    p.rt.chainDue = time + delay
+    primed.set(p, o)
+    o.active = true
+    emit({ ...base(o, src), type: 'primed', part: p.spec.id, point: partXf(o, p).c, trigger, delay })
+  }
+
+  const CHAIN_TRIGGER_OF: Partial<Record<DamageType, ChainTrigger>> = { ballistic: 'shot', explosive: 'explosion' }
+
   /** Remove hit points. Returns the amount actually removed. */
   const applyDamage = (o: ObjRT, p: PartRT, amount: number, type: DamageType, origin: Vec3 | null, dir: Vec3 | null, fragEnergy: number, cap: number, src?: string): number => {
     if (isLost(p) || amount <= 0) return 0
     const prev = p.st.hp
     p.st.hp -= amount
     markDamaged(p)
+    const trigger = CHAIN_TRIGGER_OF[type]
+    const chained = trigger !== undefined && chainDelayOf(p.spec, trigger) !== undefined
+    // a bullet or a blast sets a chained part off after its delay instead of tearing it apart on the spot
+    if (chained && p.st.hp <= 0 && p.rt.chainDue === undefined) p.st.hp = Math.min(prev, 1)
     if (p.st.hp <= 0 && p.mat.fracture === 'none' && !p.spec.explodes) p.st.hp = Math.min(prev, 1)
     const done = prev - p.st.hp
     if (done > 0) emit({ ...base(o, src), type: 'damage', part: p.spec.id, amount: done, hp: Math.max(0, p.st.hp), damageType: type })
     if (p.st.hp <= 0) failPart(o, p, origin, dir, fragEnergy, cap, src)
+    else if (chained && (trigger === 'explosion' || 1 - p.st.hp / p.st.maxHp >= shotDamageFractionOf(p.spec))) prime(o, p, trigger, src)
     return done
   }
 
@@ -1050,7 +1086,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (isLost(p)) continue
       checkIgnite(o, p)
       const ex = p.spec.explodes
-      if (ex && ex.atC !== undefined && s.temperature >= ex.atC) {
+      if (ex && chainDelayOf(p.spec, 'fire') !== undefined) {
+        if (s.temperature >= (ex.atC ?? FIRE_PRIME_C)) prime(o, p, 'fire')
+      } else if (ex && ex.atC !== undefined && s.temperature >= ex.atC) {
         failPart(o, p, null, null, 0, 40)
         continue
       }
@@ -1063,6 +1101,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           s.liters = Math.max(0, (s.liters ?? 0) - rate * dt)
           hot = true
           if (FLAMMABLE_FLUIDS.includes(cont.fluid) && s.temperature >= 350 && !p.rt.jet) {
+            if (ex && chainDelayOf(p.spec, 'fire') !== undefined) {
+              prime(o, p, 'fire')
+              continue
+            }
             if (ex) {
               failPart(o, p, null, null, 0, 40)
               continue
@@ -1154,6 +1196,41 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   // -------------------------------------------------------------------------------------------------------------------------------------------
 
   /** Collapse events are produced after the whole operation: make sure the result of the operation carries them. */
+  /** The primed part that goes off first: earliest due time, then the older object, then the part listed first. */
+  const nextPrimed = (until: number): { o: ObjRT; p: PartRT } | null => {
+    let best: { o: ObjRT; p: PartRT } | null = null
+    for (const [p, o] of primed) {
+      if (objects.get(o.id) !== o || isLost(p)) {
+        primed.delete(p)
+        continue
+      }
+      const due = p.rt.chainDue as number
+      if (due > until) continue
+      if (!best) best = { o, p }
+      else {
+        const bestDue = best.p.rt.chainDue as number
+        if (due < bestDue || (due === bestDue && (o.order < best.o.order || (o.order === best.o.order && (o.idx.get(p.spec.id) ?? 0) < (best.o.idx.get(best.p.spec.id) ?? 0))))) best = { o, p }
+      }
+    }
+    return best
+  }
+
+  /**
+   * Explodes the primed parts whose delay ran out by `until`, one at a time in order of time; each blast is resolved before the next part goes off,
+   * so a part it primes counts its delay from that moment, not from the end of the frame.
+   */
+  const detonatePrimed = (until: number) => {
+    const end = time
+    for (let next = nextPrimed(until); next; next = nextPrimed(until)) {
+      primed.delete(next.p)
+      time = Math.max(0, Math.min(end, next.p.rt.chainDue as number))
+      next.p.rt.chainDue = undefined
+      failPart(next.o, next.p, null, null, 0, 40)
+      drainBlasts()
+    }
+    time = end
+  }
+
   const withCollapses = (r: { value: HitResult[]; events: DestructionEvent[] }): HitResult[] => {
     const last = r.value[r.value.length - 1]
     if (!last) return r.value
@@ -1408,6 +1485,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         const sources: Array<{ o: ObjRT; p: PartRT; flame: number }> = []
         for (const o of [...objects.values()]) if (o.active) stepObject(o, dt, sources)
         if (sources.length) spread(sources, dt)
+        detonatePrimed(time)
         for (const im of [...impls.values()]) {
           if (!im.impl.update) continue
           for (const e of im.impl.update(dt) ?? []) emit(e.time === undefined ? { ...e, time } : e)
