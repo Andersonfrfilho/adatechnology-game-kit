@@ -2,7 +2,7 @@ import { valueOf } from './decisions'
 import type { IteItem } from './extract-ite'
 import type { Sources } from './sources'
 
-export type IdSource = 'household' | 'merge' | 'decision' | 'provisional'
+export type IdSource = 'household' | 'merge' | 'decision'
 
 /** The team's items that stay in the SDK; the story items only the game has are `scope: 'game'` in decisions.json. */
 export const sdkIteItems = ({ ite, decisions }: Sources): IteItem[] => ite.itens.filter((item) => !decisions.scope[item.id])
@@ -13,9 +13,7 @@ export const gameIteItems = ({ ite, decisions }: Sources): IteItem[] => ite.iten
 export const finalIdOf = (item: IteItem, { decisions }: Sources): { id: string; idSource: IdSource } => {
   const merged = decisions.merge[item.id]
   if (merged) return { id: merged.value, idSource: 'merge' }
-  const decided = decisions.ids[item.id]
-  if (decided) return { id: decided.value, idSource: 'decision' }
-  return { id: item.id, idSource: 'provisional' }
+  return { id: valueOf(decisions.ids, item.id, 'team item id'), idSource: 'decision' }
 }
 
 export type IdIndex = {
@@ -27,6 +25,7 @@ export const buildIdIndex = (sources: Sources): IdIndex => {
   const iteToFinal = new Map(sdkIteItems(sources).map((item) => [item.id, finalIdOf(item, sources).id]))
   const finalIds = new Set(iteToFinal.values())
   for (const id of Object.keys(sources.household)) finalIds.add(id)
+  for (const id of Object.keys(sources.decisions.extraItems)) finalIds.add(id)
   return { iteToFinal, finalIds }
 }
 

@@ -18,6 +18,9 @@ const rarityIdOf = (name: string, sources: Sources): string => {
 
 const regionIdOf = (code: string, sources: Sources): string => valueOf(sources.decisions.regionIds, code, 'region')
 
+/** English id of the two `EXTRA` story items only the game has (the other extras are the arsenal, named by `build-ammo-boxes`). */
+const gameOnlyExtraId = (teamId: string, sources: Sources): string => valueOf(sources.decisions.ids, teamId, 'game-only extra')
+
 const buildDocuments = (sources: Sources) => {
   const stories = gameIteItems(sources).map((item) => ({
     id: finalIdOf(item, sources).id,
@@ -32,7 +35,7 @@ const buildDocuments = (sources: Sources) => {
   }))
   const extras = sources.game.extra
     .filter((item) => sources.decisions.gameOnlyExtras[item.id])
-    .map((item) => ({ id: item.id, teamId: item.id, name: item.n, category: categoryIdOf(item.cat, sources), weight: item.kg, rarity: valueOf(sources.decisions.rarityMap, item.rar, 'rarity'), use: item.uso }))
+    .map((item) => ({ id: gameOnlyExtraId(item.id, sources), teamId: item.id, name: item.n, category: categoryIdOf(item.cat, sources), weight: item.kg, rarity: valueOf(sources.decisions.rarityMap, item.rar, 'rarity'), use: item.uso }))
   return [...stories, ...extras]
 }
 
@@ -44,7 +47,7 @@ const buildRegions = (sources: Sources) => ({
 
 const buildUses = (sources: Sources) => ({
   ...Object.fromEntries(sources.ite.itens.map((item) => [finalIdOf(item, sources).id, item.uso])),
-  ...Object.fromEntries(sources.game.extra.filter((item) => item.uso).map((item) => [item.id, item.uso])),
+  ...Object.fromEntries(sources.game.extra.filter((item) => item.uso).map((item) => [sources.decisions.gameOnlyExtras[item.id] ? gameOnlyExtraId(item.id, sources) : item.id, item.uso])),
 })
 
 const buildDamagePoints = (sources: Sources) =>
@@ -71,7 +74,8 @@ const buildSupplyEvents = ({ html }: Sources) => {
 
 export const buildGameSlice = (sources: Sources, outputDirectory: string, resolveIte: (reference: string) => string): GeneratedFiles => {
   const ammoIds = new Map(buildAmmoBoxes(sources).map((box) => [box.teamId, box.id]))
-  const resolveGameItem = (teamId: string): string => ammoIds.get(teamId) ?? resolveIte(teamId)
+  const isGameOnly = (teamId: string): boolean => Boolean(sources.decisions.scope[teamId] ?? sources.decisions.gameOnlyExtras[teamId])
+  const resolveGameItem = (teamId: string): string => ammoIds.get(teamId) ?? (isGameOnly(teamId) ? valueOf(sources.decisions.ids, teamId, 'game-only item') : resolveIte(teamId))
   const file = (name: string): string => join(outputDirectory, `${name}.json`)
   return {
     [file('documents')]: serialize(buildDocuments(sources)),

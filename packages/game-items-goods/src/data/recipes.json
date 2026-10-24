@@ -3,12 +3,12 @@
     "id": "window_barricade",
     "inputs": [
       {
-        "item": "tabua",
+        "item": "wooden_plank",
         "label": "tábuas",
         "qty": 2
       },
       {
-        "item": "pregos",
+        "item": "nails",
         "label": "pregos",
         "qty": 8
       }
@@ -37,12 +37,12 @@
     "id": "sheet_metal_window",
     "inputs": [
       {
-        "item": "chapa",
+        "item": "sheet_metal",
         "label": "chapa",
         "qty": 1
       },
       {
-        "item": "parafusos",
+        "item": "screws",
         "label": "parafusos",
         "qty": 6
       }
@@ -50,8 +50,8 @@
     "tools": [
       {
         "anyOf": [
-          "parafusadeira",
-          "solda"
+          "cordless_drill",
+          "inverter_welder"
         ],
         "label": "parafusadeira ou máquina de solda"
       }
@@ -72,7 +72,7 @@
     "id": "furniture_planks",
     "inputs": [
       {
-        "any": [
+        "world": [
           "table",
           "door",
           "cabinet"
@@ -84,15 +84,15 @@
     "tools": [
       {
         "anyOf": [
-          "serrote",
-          "machado"
+          "handsaw",
+          "axe"
         ],
         "label": "serrote ou machado"
       }
     ],
     "seconds": 15,
     "output": {
-      "item": "tabua",
+      "item": "wooden_plank",
       "qty": [
         2,
         4
@@ -100,17 +100,15 @@
       "label": "tábuas",
       "note": ", conforme o móvel"
     },
-    "unresolved": [
-      "cabinet",
-      "door",
-      "table"
-    ]
+    "unresolved": []
   },
   {
     "id": "rags",
     "inputs": [
       {
-        "item": "garment",
+        "match": {
+          "category": "clothing"
+        },
         "label": "roupa",
         "qty": 1
       }
@@ -123,27 +121,25 @@
     ],
     "seconds": 4,
     "output": {
-      "item": "trapo",
+      "item": "rag",
       "qty": [
         2,
         4
       ],
       "label": "trapos"
     },
-    "unresolved": [
-      "garment"
-    ]
+    "unresolved": []
   },
   {
     "id": "clean_bandage",
     "inputs": [
       {
-        "item": "trapo",
+        "item": "rag",
         "label": "trapos",
         "qty": 2
       },
       {
-        "item": "water",
+        "fluid": "water",
         "label": "água",
         "liters": 0.5
       }
@@ -156,7 +152,8 @@
         "label": "panela"
       },
       {
-        "anyOf": [
+        "anyOf": [],
+        "world": [
           "fire"
         ],
         "label": "fogo"
@@ -168,10 +165,7 @@
       "params": {},
       "text": "Esteriliza como gaze."
     },
-    "unresolved": [
-      "fire",
-      "water"
-    ],
+    "unresolved": [],
     "skill": {
       "id": "first_aid",
       "level": 1
@@ -181,7 +175,7 @@
     "id": "improvised_suture",
     "inputs": [
       {
-        "item": "kit_costura",
+        "item": "sewing_kit",
         "label": "kit de costura"
       },
       {
@@ -210,7 +204,7 @@
     "inputs": [
       {
         "any": [
-          "tabua",
+          "wooden_plank",
           "branch"
         ],
         "label": "tábuas ou galhos",
@@ -229,9 +223,7 @@
       "params": {},
       "text": "Como a tala, mas cura em 14 dias."
     },
-    "unresolved": [
-      "branch"
-    ],
+    "unresolved": [],
     "skill": {
       "id": "first_aid",
       "level": 1
@@ -241,7 +233,7 @@
     "id": "boiled_water",
     "inputs": [
       {
-        "item": "agua_suja",
+        "item": "dirty_water",
         "label": "água suja"
       },
       {
@@ -251,7 +243,8 @@
     ],
     "tools": [
       {
-        "anyOf": [
+        "anyOf": [],
+        "world": [
           "fire"
         ],
         "label": "fogo"
@@ -263,15 +256,13 @@
       "params": {},
       "text": "Sem risco de diarreia."
     },
-    "unresolved": [
-      "fire"
-    ]
+    "unresolved": []
   },
   {
     "id": "treated_water",
     "inputs": [
       {
-        "item": "agua_suja",
+        "item": "dirty_water",
         "label": "água suja"
       },
       {
@@ -293,13 +284,13 @@
     "id": "rain_collector",
     "inputs": [
       {
-        "item": "lona",
+        "item": "tarp",
         "label": "lona",
         "qty": 1
       },
       {
         "any": [
-          "balde",
+          "bucket",
           "barrel"
         ],
         "label": "balde ou barril",
@@ -313,9 +304,7 @@
       "params": {},
       "text": "Enche 10 L a cada chuva."
     },
-    "unresolved": [
-      "barrel"
-    ],
+    "unresolved": [],
     "skill": {
       "id": "carpentry",
       "level": 1
@@ -329,18 +318,21 @@
         "label": "panela"
       },
       {
-        "item": "water",
+        "fluid": "water",
         "label": "água"
       },
       {
-        "item": "ingredient",
+        "match": {
+          "cookable": true
+        },
         "label": "ingredientes",
         "qty": 2
       }
     ],
     "tools": [
       {
-        "anyOf": [
+        "anyOf": [],
+        "world": [
           "fire"
         ],
         "label": "fogo"
@@ -352,11 +344,7 @@
       "params": {},
       "text": "Fome +8 sobre a soma dos ingredientes; moral +10."
     },
-    "unresolved": [
-      "fire",
-      "ingredient",
-      "water"
-    ],
+    "unresolved": [],
     "skill": {
       "id": "cooking",
       "level": 0
@@ -366,7 +354,7 @@
     "id": "jerky",
     "inputs": [
       {
-        "item": "carne_bovina",
+        "item": "raw_beef",
         "label": "carne crua"
       },
       {
@@ -392,7 +380,7 @@
     "id": "salted_fish",
     "inputs": [
       {
-        "item": "peixe_fresco",
+        "item": "fresh_fish",
         "label": "peixe fresco"
       },
       {
@@ -422,7 +410,11 @@
         "label": "pote de vidro"
       },
       {
-        "item": "vegetable",
+        "any": [
+          "potatoes",
+          "cassava_root",
+          "tomato"
+        ],
         "label": "legume"
       },
       {
@@ -441,7 +433,8 @@
         "label": "panela"
       },
       {
-        "anyOf": [
+        "anyOf": [],
+        "world": [
           "fire"
         ],
         "label": "fogo"
@@ -453,11 +446,7 @@
       "params": {},
       "text": "Validade 365 dias, sem risco de botulismo."
     },
-    "unresolved": [
-      "fire",
-      "glass_jar",
-      "vegetable"
-    ],
+    "unresolved": [],
     "skill": {
       "id": "cooking",
       "level": 3
@@ -486,9 +475,7 @@
       "params": {},
       "text": "Alcance 1,6 m."
     },
-    "unresolved": [
-      "broomstick"
-    ],
+    "unresolved": [],
     "skill": {
       "id": "bladed_weapons",
       "level": 0
@@ -498,11 +485,11 @@
     "id": "nail_bat",
     "inputs": [
       {
-        "item": "taco",
+        "item": "baseball_bat",
         "label": "taco de beisebol"
       },
       {
-        "item": "pregos",
+        "item": "nails",
         "label": "pregos",
         "qty": 6
       }
@@ -531,7 +518,7 @@
     "id": "magazine_arm_guard",
     "inputs": [
       {
-        "item": "revista_passa",
+        "item": "magazines_and_comics",
         "label": "revistas",
         "qty": 2
       },
@@ -553,7 +540,7 @@
     "id": "sheet_metal_arm_guard",
     "inputs": [
       {
-        "item": "chapa",
+        "item": "sheet_metal",
         "label": "chapa",
         "qty": 1
       },
@@ -562,7 +549,7 @@
         "label": "silver tape"
       },
       {
-        "item": "alicate",
+        "item": "pliers",
         "label": "alicate"
       }
     ],
@@ -583,16 +570,16 @@
     "id": "molotov_cocktail",
     "inputs": [
       {
-        "item": "garrafa_vidro",
+        "item": "glass_bottle",
         "label": "garrafa de vidro"
       },
       {
-        "item": "gasolina",
+        "item": "gasoline",
         "label": "gasolina",
         "liters": 0.5
       },
       {
-        "item": "trapo",
+        "item": "rag",
         "label": "trapo"
       }
     ],
@@ -620,7 +607,7 @@
     "id": "noise_bomb",
     "inputs": [
       {
-        "item": "despertador",
+        "item": "windup_alarm_clock",
         "label": "despertador"
       },
       {
@@ -628,7 +615,7 @@
         "label": "lata vazia"
       },
       {
-        "item": "pregos",
+        "item": "nails",
         "label": "pregos"
       }
     ],
@@ -654,7 +641,7 @@
         "qty": 4
       },
       {
-        "item": "arame",
+        "item": "wire_roll",
         "label": "arame"
       }
     ],
@@ -675,12 +662,12 @@
     "id": "window_barbed_wire",
     "inputs": [
       {
-        "item": "arame_farpado",
+        "item": "barbed_wire",
         "label": "rolo de arame farpado",
         "qty": 1
       },
       {
-        "item": "pregos",
+        "item": "nails",
         "label": "pregos",
         "qty": 4
       }
@@ -694,7 +681,7 @@
       },
       {
         "anyOf": [
-          "luva_couro"
+          "leather_work_gloves"
         ],
         "label": "luvas de couro"
       }
@@ -715,15 +702,15 @@
     "id": "electric_fence",
     "inputs": [
       {
-        "item": "eletrificador",
+        "item": "electric_fence_energizer",
         "label": "eletrificador"
       },
       {
-        "item": "bateria_12v",
+        "item": "car_battery_12v",
         "label": "bateria 12 V"
       },
       {
-        "item": "arame",
+        "item": "wire_roll",
         "label": "arame",
         "meters": 20
       }
@@ -731,7 +718,7 @@
     "tools": [
       {
         "anyOf": [
-          "alicate"
+          "pliers"
         ],
         "label": "alicate"
       }
@@ -758,12 +745,12 @@
       {
         "any": [
           "cooking_oil",
-          "querosene"
+          "kerosene"
         ],
         "label": "óleo ou querosene"
       },
       {
-        "item": "trapo",
+        "item": "rag",
         "label": "trapo"
       }
     ],
@@ -784,7 +771,7 @@
         "label": "galho"
       },
       {
-        "item": "trapo",
+        "item": "rag",
         "label": "trapo"
       },
       {
@@ -799,17 +786,15 @@
       "params": {},
       "text": "20 min de luz forte; vê-se a 150 m."
     },
-    "unresolved": [
-      "branch"
-    ]
+    "unresolved": []
   },
   {
     "id": "campfire",
     "inputs": [
       {
         "any": [
-          "lenha",
-          "tabua"
+          "firewood",
+          "wooden_plank"
         ],
         "label": "lenhas ou 3 tábuas",
         "qty": 3
@@ -820,7 +805,7 @@
         "anyOf": [
           "lighter",
           "matches",
-          "pederneira"
+          "flint_striker"
         ],
         "label": "isqueiro, fósforo ou pederneira"
       }
@@ -841,14 +826,16 @@
         "label": "saco de ráfia"
       },
       {
-        "item": "soil",
+        "world": [
+          "soil"
+        ],
         "label": "terra"
       }
     ],
     "tools": [
       {
         "anyOf": [
-          "pa"
+          "shovel"
         ],
         "label": "pá"
       }
@@ -859,16 +846,13 @@
       "params": {},
       "text": "Barricada baixa de vida 400."
     },
-    "unresolved": [
-      "raffia_sack",
-      "soil"
-    ]
+    "unresolved": []
   },
   {
     "id": "bindle_pack",
     "inputs": [
       {
-        "item": "saco_lixo",
+        "item": "trash_bag",
         "label": "saco de lixo"
       },
       {
@@ -889,19 +873,19 @@
     "id": "improvised_antenna",
     "inputs": [
       {
-        "item": "fio_cobre",
+        "item": "copper_wire",
         "label": "fio de cobre",
         "meters": 5
       },
       {
-        "item": "radio_portatil",
+        "item": "portable_radio",
         "label": "rádio"
       }
     ],
     "tools": [
       {
         "anyOf": [
-          "alicate"
+          "pliers"
         ],
         "label": "alicate"
       }
@@ -923,9 +907,9 @@
     "inputs": [
       {
         "any": [
-          "celular",
+          "mobile_phone",
           "laptop",
-          "radio_portatil"
+          "portable_radio"
         ],
         "label": "celular, notebook ou rádio"
       }
@@ -954,7 +938,7 @@
     "id": "snare_trap",
     "inputs": [
       {
-        "item": "arame",
+        "item": "wire_roll",
         "label": "arame"
       },
       {
@@ -969,9 +953,7 @@
       "params": {},
       "text": "Pega animal pequeno de noite."
     },
-    "unresolved": [
-      "branch"
-    ],
+    "unresolved": [],
     "skill": {
       "id": "hunting_and_trapping",
       "level": 1
@@ -985,7 +967,7 @@
         "label": "vareta"
       },
       {
-        "item": "pregos",
+        "item": "nails",
         "label": "prego"
       },
       {
@@ -1003,17 +985,14 @@
     ],
     "seconds": 60,
     "output": {
-      "item": "flecha",
+      "item": "arrows_and_bolts",
       "qty": [
         3,
         3
       ],
       "label": "flechas"
     },
-    "unresolved": [
-      "feather",
-      "stick"
-    ],
+    "unresolved": [],
     "skill": {
       "id": "hunting_and_trapping",
       "level": 2
@@ -1031,7 +1010,10 @@
         "label": "álcool"
       },
       {
-        "item": "clean_glass",
+        "any": [
+          "glass_jar",
+          "glass_bottle"
+        ],
         "label": "vidro limpo"
       }
     ],
@@ -1043,7 +1025,8 @@
         "label": "panela"
       },
       {
-        "anyOf": [
+        "anyOf": [],
+        "world": [
           "fire"
         ],
         "label": "fogo"
@@ -1055,11 +1038,7 @@
       "params": {},
       "text": "Metade do efeito da amoxicilina."
     },
-    "unresolved": [
-      "bread_mold",
-      "clean_glass",
-      "fire"
-    ],
+    "unresolved": [],
     "skill": {
       "id": "chemistry",
       "level": 5

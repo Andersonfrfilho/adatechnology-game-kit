@@ -16,8 +16,36 @@ export type DecisionTable<TValue> = Readonly<Record<string, Decision<TValue>>>
 
 export type NamedId = { readonly id: string; readonly name: string }
 
-/** What a recipe phrase stands for: one item, the empty hands, or nothing yet (an id that T3.1c has to create). */
-export type TermTarget = { readonly item?: string; readonly none?: true }
+/** Traits that pick any item of the catalog ("1 roupa" is any clothing, "ingredientes" is anything cookable). */
+export type TermMatch = { readonly category?: string; readonly cookable?: true }
+
+/**
+ * What a recipe phrase stands for: an item, one of a family of items (`items`), a fluid counted in litres, a thing of the world that is never carried
+ * (furniture, a fire, the ground), any item with some traits (`match`), or the empty hands.
+ */
+export type TermTarget = {
+  readonly item?: string
+  readonly items?: readonly string[]
+  readonly fluid?: string
+  readonly world?: string
+  readonly match?: TermMatch
+  readonly none?: true
+}
+
+/** An item the sources do not have and the catalog needs (a pool entry, a recipe term): size comes from `dimensions`, the rest is here. */
+export type ExtraItem = {
+  readonly category: string
+  readonly tags?: readonly string[]
+  readonly weight: number
+  readonly rarity: Rarity
+  readonly stack?: number
+  readonly shape?: string
+  readonly color?: number
+  readonly shelfLife?: number
+  readonly portions?: number
+  readonly nutrition?: { readonly satiety?: number; readonly hydration?: number }
+  readonly places?: readonly string[]
+}
 
 export type DimensionDecision = { readonly size: readonly [number, number, number]; readonly source: 'household' | 'REF' | 'model' }
 
@@ -25,21 +53,29 @@ export type Decisions = {
   readonly categoryMap: DecisionTable<NamedId>
   readonly gameCategoryMap: DecisionTable<NamedId>
   readonly householdCategoryMap: DecisionTable<{ readonly category: string; readonly tag: string }>
+  /** Household item id -> category of the 14, when its household category would put it in the wrong one. */
+  readonly householdItemCategory: DecisionTable<string>
   readonly placeMap: DecisionTable<NamedId>
   readonly rarityMap: DecisionTable<Rarity>
   readonly regionIds: DecisionTable<string>
   /** Team id -> household id, for the exact equivalents. */
   readonly merge: DecisionTable<string>
+  /** Team id -> household id of a pair that looks alike and is NOT merged (kept so nobody proposes it again). */
+  readonly mergeRejected: DecisionTable<string>
   /** Team id -> English id. */
   readonly ids: DecisionTable<string>
   /** Team id -> 'game': the story items only the game has. */
   readonly scope: DecisionTable<'game'>
   readonly gameOnlyExtras: DecisionTable<'game'>
+  /** Final item id -> an item that exists only because the catalog needs it. */
+  readonly extraItems: DecisionTable<ExtraItem>
   readonly householdRarity: Decision<Rarity>
   /** Final item id -> measure. */
   readonly dimensions: DecisionTable<DimensionDecision>
   readonly densityByCategory: Decision<Readonly<Record<string, number>>>
   readonly stackByCategory: DecisionTable<number>
+  /** Final item id -> stack, for what the category default gets wrong (a brick is not stacked by eight). */
+  readonly stackOverrides: DecisionTable<number>
   readonly shapeByCategory: DecisionTable<string>
   readonly slotMap: DecisionTable<readonly BodySlot[]>
   readonly warmthScale: Decision<number>

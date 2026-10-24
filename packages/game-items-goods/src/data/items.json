@@ -1,6 +1,6 @@
 [
   {
-    "id": "feijao_lata",
+    "id": "canned_beans",
     "category": "food",
     "tags": [
       "perishable"
@@ -36,7 +36,7 @@
     }
   },
   {
-    "id": "sardinha",
+    "id": "canned_sardines",
     "category": "food",
     "tags": [
       "perishable"
@@ -71,7 +71,7 @@
     }
   },
   {
-    "id": "milho_lata",
+    "id": "canned_corn_and_peas",
     "category": "food",
     "tags": [
       "perishable"
@@ -105,7 +105,7 @@
     }
   },
   {
-    "id": "salsicha_lata",
+    "id": "canned_sausages",
     "category": "food",
     "tags": [
       "perishable"
@@ -139,7 +139,7 @@
     }
   },
   {
-    "id": "leite_condensado",
+    "id": "condensed_milk",
     "category": "food",
     "tags": [
       "perishable"
@@ -172,7 +172,7 @@
     }
   },
   {
-    "id": "racao_militar",
+    "id": "military_ration",
     "category": "food",
     "tags": [
       "perishable"
@@ -316,7 +316,7 @@
     }
   },
   {
-    "id": "macarrao_inst",
+    "id": "instant_noodles",
     "category": "food",
     "tags": [
       "perishable"
@@ -352,7 +352,7 @@
     }
   },
   {
-    "id": "farinha_mandioca",
+    "id": "cassava_flour",
     "category": "food",
     "tags": [
       "perishable"
@@ -423,7 +423,7 @@
     }
   },
   {
-    "id": "salgadinho",
+    "id": "snack_chips",
     "category": "food",
     "tags": [
       "perishable"
@@ -457,7 +457,7 @@
     }
   },
   {
-    "id": "chocolate",
+    "id": "chocolate_bar",
     "category": "food",
     "tags": [
       "perishable"
@@ -526,7 +526,7 @@
     }
   },
   {
-    "id": "mel",
+    "id": "honey_jar",
     "category": "food",
     "size": [
       0.082,
@@ -625,7 +625,7 @@
     }
   },
   {
-    "id": "mortadela",
+    "id": "mortadella",
     "category": "food",
     "tags": [
       "perishable"
@@ -659,7 +659,7 @@
     }
   },
   {
-    "id": "carne_bovina",
+    "id": "raw_beef",
     "category": "food",
     "tags": [
       "perishable"
@@ -694,7 +694,7 @@
     }
   },
   {
-    "id": "frango",
+    "id": "frozen_chicken",
     "category": "food",
     "tags": [
       "perishable"
@@ -766,7 +766,7 @@
     }
   },
   {
-    "id": "banana",
+    "id": "banana_bunch",
     "category": "food",
     "tags": [
       "perishable"
@@ -801,7 +801,7 @@
     }
   },
   {
-    "id": "laranja",
+    "id": "orange",
     "category": "food",
     "tags": [
       "perishable"
@@ -834,7 +834,7 @@
     }
   },
   {
-    "id": "batata",
+    "id": "potatoes",
     "category": "food",
     "tags": [
       "perishable"
@@ -869,7 +869,7 @@
     }
   },
   {
-    "id": "mandioca",
+    "id": "cassava_root",
     "category": "food",
     "tags": [
       "perishable"
@@ -902,7 +902,7 @@
     }
   },
   {
-    "id": "peixe_fresco",
+    "id": "fresh_fish",
     "category": "food",
     "tags": [
       "perishable"
@@ -935,7 +935,7 @@
     }
   },
   {
-    "id": "peixe_salgado",
+    "id": "salted_fish",
     "category": "food",
     "tags": [
       "perishable"
@@ -967,7 +967,7 @@
     }
   },
   {
-    "id": "charque",
+    "id": "jerked_beef",
     "category": "food",
     "tags": [
       "perishable"
@@ -1000,7 +1000,7 @@
     }
   },
   {
-    "id": "carne_caca",
+    "id": "game_meat",
     "category": "food",
     "tags": [
       "perishable"
@@ -1033,7 +1033,7 @@
     }
   },
   {
-    "id": "conserva",
+    "id": "home_preserves",
     "category": "food",
     "tags": [
       "perishable"
@@ -1067,7 +1067,7 @@
     }
   },
   {
-    "id": "racao_cao",
+    "id": "dog_food",
     "category": "food",
     "tags": [
       "perishable"
@@ -1270,7 +1270,7 @@
     }
   },
   {
-    "id": "galao_agua",
+    "id": "water_jug_5l",
     "category": "drink",
     "size": [
       0.173,
@@ -1278,7 +1278,7 @@
       0.173
     ],
     "weight": 5.2,
-    "stack": 4,
+    "stack": 1,
     "shape": "bottle",
     "color": 8421504,
     "rarity": "uncommon",
@@ -1299,7 +1299,7 @@
     }
   },
   {
-    "id": "agua_suja",
+    "id": "dirty_water",
     "category": "drink",
     "size": [
       0.079,
@@ -1429,7 +1429,7 @@
     }
   },
   {
-    "id": "isotonico",
+    "id": "sports_drink",
     "category": "drink",
     "tags": [
       "perishable"
@@ -1461,7 +1461,7 @@
     }
   },
   {
-    "id": "energetico",
+    "id": "energy_drink",
     "category": "drink",
     "tags": [
       "perishable"
@@ -1493,7 +1493,7 @@
     }
   },
   {
-    "id": "agua_coco",
+    "id": "coconut_water",
     "category": "drink",
     "tags": [
       "perishable"
@@ -1524,7 +1524,7 @@
     }
   },
   {
-    "id": "cerveja",
+    "id": "beer_can",
     "category": "drink",
     "tags": [
       "perishable"
@@ -1585,7 +1585,7 @@
     }
   },
   {
-    "id": "vinho",
+    "id": "communion_wine",
     "category": "drink",
     "size": [
       0.091,
@@ -1641,7 +1641,7 @@
     }
   },
   {
-    "id": "gaze",
+    "id": "sterile_gauze",
     "category": "medical",
     "size": [
       0.037,
@@ -1665,7 +1665,7 @@
     }
   },
   {
-    "id": "curativo",
+    "id": "adhesive_bandages",
     "category": "medical",
     "size": [
       0.042,
@@ -1691,7 +1691,7 @@
     }
   },
   {
-    "id": "esparadrapo",
+    "id": "medical_tape",
     "category": "medical",
     "size": [
       0.046,
@@ -1745,7 +1745,7 @@
     }
   },
   {
-    "id": "pvpi",
+    "id": "povidone_iodine",
     "category": "medical",
     "size": [
       0.063,
@@ -1769,7 +1769,7 @@
     }
   },
   {
-    "id": "soro",
+    "id": "saline_iv_bag",
     "category": "medical",
     "size": [
       0.111,
@@ -1822,7 +1822,7 @@
     }
   },
   {
-    "id": "ibuprofeno",
+    "id": "ibuprofen",
     "category": "medical",
     "size": [
       0.042,
@@ -1846,7 +1846,7 @@
     }
   },
   {
-    "id": "opioide",
+    "id": "tramadol",
     "category": "medical",
     "size": [
       0.042,
@@ -1870,7 +1870,7 @@
     }
   },
   {
-    "id": "calmante",
+    "id": "clonazepam",
     "category": "medical",
     "size": [
       0.037,
@@ -1895,7 +1895,7 @@
     }
   },
   {
-    "id": "amoxicilina",
+    "id": "amoxicillin",
     "category": "medical",
     "size": [
       0.05,
@@ -1919,7 +1919,7 @@
     }
   },
   {
-    "id": "ceftriaxona",
+    "id": "ceftriaxone",
     "category": "medical",
     "size": [
       0.063,
@@ -1943,7 +1943,7 @@
     }
   },
   {
-    "id": "seringa",
+    "id": "syringe",
     "category": "medical",
     "size": [
       0.029,
@@ -1967,7 +1967,7 @@
     }
   },
   {
-    "id": "kit_sutura",
+    "id": "suture_kit",
     "category": "medical",
     "size": [
       0.072,
@@ -1991,7 +1991,7 @@
     }
   },
   {
-    "id": "tala",
+    "id": "splint",
     "category": "medical",
     "size": [
       0.091,
@@ -2046,7 +2046,7 @@
     }
   },
   {
-    "id": "luva_proc",
+    "id": "exam_gloves",
     "category": "medical",
     "size": [
       0.037,
@@ -2071,7 +2071,7 @@
     }
   },
   {
-    "id": "n95",
+    "id": "n95_mask",
     "category": "medical",
     "size": [
       0.037,
@@ -2098,7 +2098,7 @@
     }
   },
   {
-    "id": "carvao_ativado",
+    "id": "activated_charcoal",
     "category": "medical",
     "size": [
       0.05,
@@ -2122,7 +2122,7 @@
     }
   },
   {
-    "id": "sais_reidrat",
+    "id": "rehydration_salts",
     "category": "medical",
     "size": [
       0.042,
@@ -2147,7 +2147,7 @@
     }
   },
   {
-    "id": "antialergico",
+    "id": "antihistamine",
     "category": "medical",
     "size": [
       0.037,
@@ -2171,7 +2171,7 @@
     }
   },
   {
-    "id": "antiofidico",
+    "id": "antivenom",
     "category": "medical",
     "size": [
       0.079,
@@ -2222,7 +2222,7 @@
     }
   },
   {
-    "id": "remedio_continuo",
+    "id": "maintenance_medication",
     "category": "medical",
     "size": [
       0.05,
@@ -2247,7 +2247,7 @@
     }
   },
   {
-    "id": "vitamina",
+    "id": "multivitamin",
     "category": "medical",
     "size": [
       0.05,
@@ -2329,7 +2329,7 @@
     }
   },
   {
-    "id": "pe_cabra",
+    "id": "crowbar",
     "category": "tools",
     "size": [
       0.123,
@@ -2356,7 +2356,7 @@
     }
   },
   {
-    "id": "serrote",
+    "id": "handsaw",
     "category": "tools",
     "size": [
       0.085,
@@ -2381,7 +2381,7 @@
     }
   },
   {
-    "id": "serra_arco",
+    "id": "hacksaw",
     "category": "tools",
     "size": [
       0.079,
@@ -2405,7 +2405,7 @@
     }
   },
   {
-    "id": "corta_vergalhao",
+    "id": "bolt_cutters",
     "category": "tools",
     "size": [
       0.164,
@@ -2431,7 +2431,7 @@
     }
   },
   {
-    "id": "alicate",
+    "id": "pliers",
     "category": "tools",
     "size": [
       0.072,
@@ -2456,7 +2456,7 @@
     }
   },
   {
-    "id": "chave_inglesa",
+    "id": "adjustable_wrench",
     "category": "tools",
     "size": [
       0.085,
@@ -2481,7 +2481,7 @@
     }
   },
   {
-    "id": "kit_mecanico",
+    "id": "mechanic_toolbox",
     "category": "tools",
     "size": [
       0.196,
@@ -2505,7 +2505,7 @@
     }
   },
   {
-    "id": "macaco",
+    "id": "car_jack",
     "category": "tools",
     "size": [
       0.171,
@@ -2528,7 +2528,7 @@
     }
   },
   {
-    "id": "macarico",
+    "id": "gas_torch",
     "category": "tools",
     "size": [
       0.155,
@@ -2553,7 +2553,7 @@
     }
   },
   {
-    "id": "solda",
+    "id": "inverter_welder",
     "category": "tools",
     "size": [
       0.196,
@@ -2577,7 +2577,7 @@
     }
   },
   {
-    "id": "parafusadeira",
+    "id": "cordless_drill",
     "category": "tools",
     "size": [
       0.123,
@@ -2603,7 +2603,7 @@
     }
   },
   {
-    "id": "pa",
+    "id": "shovel",
     "category": "tools",
     "size": [
       0.136,
@@ -2628,7 +2628,7 @@
     }
   },
   {
-    "id": "enxada",
+    "id": "hoe",
     "category": "tools",
     "size": [
       0.131,
@@ -2651,7 +2651,7 @@
     }
   },
   {
-    "id": "canivete",
+    "id": "pocket_knife",
     "category": "tools",
     "size": [
       0.057,
@@ -2677,7 +2677,7 @@
     }
   },
   {
-    "id": "abridor",
+    "id": "can_opener",
     "category": "tools",
     "size": [
       0.04,
@@ -2785,7 +2785,7 @@
     }
   },
   {
-    "id": "fogareiro",
+    "id": "camp_stove",
     "category": "tools",
     "size": [
       0.1,
@@ -2811,7 +2811,7 @@
     }
   },
   {
-    "id": "kit_costura",
+    "id": "sewing_kit",
     "category": "tools",
     "size": [
       0.04,
@@ -2836,7 +2836,7 @@
     }
   },
   {
-    "id": "kit_chaveiro",
+    "id": "lockpick_kit",
     "category": "tools",
     "size": [
       0.05,
@@ -2920,7 +2920,7 @@
     }
   },
   {
-    "id": "pederneira",
+    "id": "flint_striker",
     "category": "tools",
     "size": [
       0.046,
@@ -2944,7 +2944,7 @@
     }
   },
   {
-    "id": "balde",
+    "id": "bucket",
     "category": "tools",
     "size": [
       0.085,
@@ -2968,7 +2968,7 @@
     }
   },
   {
-    "id": "binoculo",
+    "id": "binoculars",
     "category": "tools",
     "size": [
       0.091,
@@ -2993,7 +2993,7 @@
     }
   },
   {
-    "id": "extintor",
+    "id": "fire_extinguisher",
     "category": "tools",
     "size": [
       0.171,
@@ -3021,7 +3021,7 @@
     }
   },
   {
-    "id": "amolador",
+    "id": "sharpening_stone",
     "category": "tools",
     "size": [
       0.072,
@@ -3074,7 +3074,7 @@
     }
   },
   {
-    "id": "faca_tatica",
+    "id": "tactical_knife",
     "category": "melee",
     "size": [
       0.072,
@@ -3099,7 +3099,7 @@
     }
   },
   {
-    "id": "facao",
+    "id": "machete",
     "category": "melee",
     "size": [
       0.096,
@@ -3124,7 +3124,7 @@
     }
   },
   {
-    "id": "cutelo",
+    "id": "meat_cleaver",
     "category": "melee",
     "size": [
       0.091,
@@ -3147,7 +3147,7 @@
     }
   },
   {
-    "id": "machadinha",
+    "id": "hatchet",
     "category": "melee",
     "size": [
       0.1,
@@ -3172,7 +3172,7 @@
     }
   },
   {
-    "id": "machado",
+    "id": "axe",
     "category": "melee",
     "size": [
       0.126,
@@ -3197,7 +3197,7 @@
     }
   },
   {
-    "id": "taco",
+    "id": "baseball_bat",
     "category": "melee",
     "size": [
       0.108,
@@ -3222,7 +3222,7 @@
     }
   },
   {
-    "id": "taco_pregos",
+    "id": "nail_bat",
     "category": "melee",
     "tags": [
       "craft_only"
@@ -3243,7 +3243,7 @@
     }
   },
   {
-    "id": "cano",
+    "id": "iron_pipe",
     "category": "melee",
     "size": [
       0.114,
@@ -3269,7 +3269,7 @@
     }
   },
   {
-    "id": "marreta",
+    "id": "sledgehammer",
     "category": "melee",
     "size": [
       0.184,
@@ -3294,7 +3294,7 @@
     }
   },
   {
-    "id": "picareta",
+    "id": "pickaxe",
     "category": "melee",
     "size": [
       0.152,
@@ -3317,7 +3317,7 @@
     }
   },
   {
-    "id": "foice",
+    "id": "sickle",
     "category": "melee",
     "size": [
       0.114,
@@ -3340,7 +3340,7 @@
     }
   },
   {
-    "id": "tonfa",
+    "id": "police_baton",
     "category": "melee",
     "size": [
       0.091,
@@ -3364,7 +3364,7 @@
     }
   },
   {
-    "id": "frigideira",
+    "id": "cast_iron_skillet",
     "category": "melee",
     "size": [
       0.114,
@@ -3388,7 +3388,7 @@
     }
   },
   {
-    "id": "lanca",
+    "id": "improvised_spear",
     "category": "melee",
     "tags": [
       "craft_only"
@@ -3409,7 +3409,7 @@
     }
   },
   {
-    "id": "motosserra",
+    "id": "chainsaw",
     "category": "melee",
     "size": [
       0.196,
@@ -3434,7 +3434,7 @@
     }
   },
   {
-    "id": "estilingue",
+    "id": "slingshot",
     "category": "melee",
     "size": [
       0.057,
@@ -3459,7 +3459,7 @@
     }
   },
   {
-    "id": "arco",
+    "id": "recurve_bow",
     "category": "melee",
     "size": [
       0.114,
@@ -3483,7 +3483,7 @@
     }
   },
   {
-    "id": "besta",
+    "id": "crossbow",
     "category": "melee",
     "size": [
       0.159,
@@ -3506,7 +3506,7 @@
     }
   },
   {
-    "id": "flecha",
+    "id": "arrows_and_bolts",
     "category": "melee",
     "size": [
       0.072,
@@ -3530,7 +3530,7 @@
     }
   },
   {
-    "id": "tabua",
+    "id": "wooden_plank",
     "category": "materials",
     "size": [
       0.136,
@@ -3538,7 +3538,7 @@
       0.136
     ],
     "weight": 2,
-    "stack": 8,
+    "stack": 2,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -3556,7 +3556,7 @@
     }
   },
   {
-    "id": "pregos",
+    "id": "nails",
     "category": "materials",
     "size": [
       0.085,
@@ -3564,7 +3564,7 @@
       0.085
     ],
     "weight": 0.5,
-    "stack": 8,
+    "stack": 6,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -3582,7 +3582,7 @@
     }
   },
   {
-    "id": "parafusos",
+    "id": "screws",
     "category": "materials",
     "size": [
       0.079,
@@ -3590,7 +3590,7 @@
       0.079
     ],
     "weight": 0.4,
-    "stack": 8,
+    "stack": 6,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -3607,7 +3607,7 @@
     }
   },
   {
-    "id": "chapa",
+    "id": "sheet_metal",
     "category": "materials",
     "size": [
       0.196,
@@ -3615,7 +3615,7 @@
       0.196
     ],
     "weight": 6,
-    "stack": 8,
+    "stack": 2,
     "shape": "box",
     "color": 8421504,
     "rarity": "uncommon",
@@ -3633,7 +3633,7 @@
     }
   },
   {
-    "id": "sucata",
+    "id": "scrap_metal",
     "category": "materials",
     "size": [
       0.108,
@@ -3641,7 +3641,7 @@
       0.108
     ],
     "weight": 1,
-    "stack": 8,
+    "stack": 4,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -3655,7 +3655,7 @@
     }
   },
   {
-    "id": "arame",
+    "id": "wire_roll",
     "category": "materials",
     "size": [
       0.085,
@@ -3663,7 +3663,7 @@
       0.085
     ],
     "weight": 0.5,
-    "stack": 8,
+    "stack": 4,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -3680,7 +3680,7 @@
     }
   },
   {
-    "id": "arame_farpado",
+    "id": "barbed_wire",
     "category": "materials",
     "size": [
       0.171,
@@ -3688,7 +3688,7 @@
       0.171
     ],
     "weight": 4,
-    "stack": 8,
+    "stack": 2,
     "shape": "box",
     "color": 8421504,
     "rarity": "uncommon",
@@ -3732,7 +3732,7 @@
     }
   },
   {
-    "id": "lona",
+    "id": "tarp",
     "category": "materials",
     "size": [
       0.136,
@@ -3740,7 +3740,7 @@
       0.136
     ],
     "weight": 2,
-    "stack": 8,
+    "stack": 2,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -3756,7 +3756,7 @@
     }
   },
   {
-    "id": "saco_areia",
+    "id": "raffia_sack",
     "category": "materials",
     "size": [
       0.063,
@@ -3764,7 +3764,7 @@
       0.063
     ],
     "weight": 0.2,
-    "stack": 8,
+    "stack": 4,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -3781,7 +3781,7 @@
     }
   },
   {
-    "id": "tijolo",
+    "id": "bricks",
     "category": "materials",
     "size": [
       0.315,
@@ -3789,7 +3789,7 @@
       0.315
     ],
     "weight": 25,
-    "stack": 8,
+    "stack": 1,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -3805,7 +3805,7 @@
     }
   },
   {
-    "id": "cimento",
+    "id": "cement_bag",
     "category": "materials",
     "size": [
       0.315,
@@ -3813,7 +3813,7 @@
       0.315
     ],
     "weight": 25,
-    "stack": 8,
+    "stack": 1,
     "shape": "box",
     "color": 8421504,
     "rarity": "uncommon",
@@ -3828,7 +3828,7 @@
     }
   },
   {
-    "id": "trapo",
+    "id": "rag",
     "category": "materials",
     "size": [
       0.04,
@@ -3836,7 +3836,7 @@
       0.04
     ],
     "weight": 0.05,
-    "stack": 8,
+    "stack": 4,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -3848,7 +3848,7 @@
     }
   },
   {
-    "id": "garrafa_vidro",
+    "id": "glass_bottle",
     "category": "materials",
     "size": [
       0.072,
@@ -3856,7 +3856,7 @@
       0.072
     ],
     "weight": 0.3,
-    "stack": 8,
+    "stack": 4,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -3870,7 +3870,7 @@
     }
   },
   {
-    "id": "garrafa_pet",
+    "id": "pet_bottle",
     "category": "materials",
     "size": [
       0.04,
@@ -3878,7 +3878,7 @@
       0.04
     ],
     "weight": 0.05,
-    "stack": 8,
+    "stack": 4,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -3914,7 +3914,7 @@
     }
   },
   {
-    "id": "cacos",
+    "id": "glass_shards",
     "category": "materials",
     "size": [
       0.063,
@@ -3922,7 +3922,7 @@
       0.063
     ],
     "weight": 0.2,
-    "stack": 8,
+    "stack": 4,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -3934,7 +3934,7 @@
     }
   },
   {
-    "id": "cola",
+    "id": "epoxy_glue",
     "category": "materials",
     "size": [
       0.05,
@@ -3942,7 +3942,7 @@
       0.05
     ],
     "weight": 0.1,
-    "stack": 8,
+    "stack": 4,
     "shape": "box",
     "color": 8421504,
     "rarity": "uncommon",
@@ -3959,7 +3959,7 @@
     }
   },
   {
-    "id": "componentes",
+    "id": "electronic_components",
     "category": "materials",
     "size": [
       0.05,
@@ -3967,7 +3967,7 @@
       0.05
     ],
     "weight": 0.1,
-    "stack": 8,
+    "stack": 4,
     "shape": "box",
     "color": 8421504,
     "rarity": "uncommon",
@@ -3980,7 +3980,7 @@
     }
   },
   {
-    "id": "fio_cobre",
+    "id": "copper_wire",
     "category": "materials",
     "size": [
       0.072,
@@ -3988,7 +3988,7 @@
       0.072
     ],
     "weight": 0.3,
-    "stack": 8,
+    "stack": 4,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -4001,7 +4001,7 @@
     }
   },
   {
-    "id": "lenha",
+    "id": "firewood",
     "category": "materials",
     "size": [
       0.123,
@@ -4009,7 +4009,7 @@
       0.123
     ],
     "weight": 1.5,
-    "stack": 8,
+    "stack": 2,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -4026,7 +4026,7 @@
     }
   },
   {
-    "id": "vergalhao",
+    "id": "rebar",
     "category": "materials",
     "size": [
       0.136,
@@ -4034,7 +4034,7 @@
       0.136
     ],
     "weight": 2,
-    "stack": 8,
+    "stack": 2,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -4046,7 +4046,7 @@
     }
   },
   {
-    "id": "lubrificante",
+    "id": "lubricant_spray",
     "category": "materials",
     "size": [
       0.068,
@@ -4054,7 +4054,7 @@
       0.068
     ],
     "weight": 0.25,
-    "stack": 8,
+    "stack": 4,
     "shape": "box",
     "color": 8421504,
     "rarity": "common",
@@ -4109,7 +4109,7 @@
     }
   },
   {
-    "id": "moletom",
+    "id": "hoodie",
     "category": "clothing",
     "size": [
       0.159,
@@ -4143,20 +4143,17 @@
     }
   },
   {
-    "id": "jacket",
+    "id": "denim_jacket",
     "category": "clothing",
-    "tags": [
-      "clothing"
-    ],
     "size": [
-      0.4,
-      0.1,
-      0.22
+      0.188,
+      0.188,
+      0.188
     ],
     "weight": 1,
-    "stack": 2,
+    "stack": 1,
     "shape": "cloth",
-    "color": 4868690,
+    "color": 8421504,
     "rarity": "common",
     "durability": {
       "kind": "condition",
@@ -4179,7 +4176,7 @@
     }
   },
   {
-    "id": "jaqueta_couro",
+    "id": "leather_motorcycle_jacket",
     "category": "clothing",
     "size": [
       0.229,
@@ -4249,7 +4246,7 @@
     }
   },
   {
-    "id": "calca_couro",
+    "id": "leather_motorcycle_pants",
     "category": "clothing",
     "size": [
       0.22,
@@ -4281,7 +4278,7 @@
     }
   },
   {
-    "id": "farda_eb",
+    "id": "army_camouflage_uniform",
     "category": "clothing",
     "size": [
       0.215,
@@ -4316,7 +4313,7 @@
     }
   },
   {
-    "id": "macacao",
+    "id": "mechanic_coveralls",
     "category": "clothing",
     "size": [
       0.2,
@@ -4350,7 +4347,7 @@
     }
   },
   {
-    "id": "bombeiro",
+    "id": "firefighter_suit",
     "category": "clothing",
     "size": [
       0.299,
@@ -4383,7 +4380,7 @@
     }
   },
   {
-    "id": "apicultor",
+    "id": "beekeeper_suit",
     "category": "clothing",
     "size": [
       0.211,
@@ -4420,7 +4417,7 @@
     }
   },
   {
-    "id": "capa_chuva",
+    "id": "raincoat",
     "category": "clothing",
     "size": [
       0.139,
@@ -4455,7 +4452,7 @@
     }
   },
   {
-    "id": "casaco_frio",
+    "id": "padded_coat",
     "category": "clothing",
     "size": [
       0.205,
@@ -4488,7 +4485,7 @@
     }
   },
   {
-    "id": "capacete_moto",
+    "id": "motorcycle_helmet",
     "category": "clothing",
     "size": [
       0.211,
@@ -4522,7 +4519,7 @@
     }
   },
   {
-    "id": "capacete_obra",
+    "id": "hard_hat",
     "category": "clothing",
     "size": [
       0.139,
@@ -4554,7 +4551,7 @@
     }
   },
   {
-    "id": "oculos",
+    "id": "safety_goggles",
     "category": "clothing",
     "size": [
       0.069,
@@ -4587,7 +4584,7 @@
     }
   },
   {
-    "id": "luva_couro",
+    "id": "leather_work_gloves",
     "category": "clothing",
     "size": [
       0.11,
@@ -4620,7 +4617,7 @@
     }
   },
   {
-    "id": "coturno",
+    "id": "combat_boots",
     "category": "clothing",
     "size": [
       0.22,
@@ -4653,7 +4650,7 @@
     }
   },
   {
-    "id": "bota_borracha",
+    "id": "rubber_boots",
     "category": "clothing",
     "size": [
       0.2,
@@ -4720,7 +4717,7 @@
     }
   },
   {
-    "id": "chinelo",
+    "id": "flip_flops",
     "category": "clothing",
     "size": [
       0.11,
@@ -4752,7 +4749,7 @@
     }
   },
   {
-    "id": "braco_revista",
+    "id": "magazine_arm_guard",
     "category": "clothing",
     "tags": [
       "craft_only"
@@ -4781,7 +4778,7 @@
     }
   },
   {
-    "id": "braco_chapa",
+    "id": "sheet_metal_forearm_guard",
     "category": "clothing",
     "tags": [
       "craft_only"
@@ -4810,7 +4807,7 @@
     }
   },
   {
-    "id": "colete",
+    "id": "ballistic_vest",
     "category": "clothing",
     "size": [
       0.271,
@@ -4843,7 +4840,7 @@
     }
   },
   {
-    "id": "sacola",
+    "id": "shopping_bag",
     "category": "bags",
     "size": [
       0.058,
@@ -4872,7 +4869,7 @@
     }
   },
   {
-    "id": "saco_lixo",
+    "id": "trash_bag",
     "category": "bags",
     "size": [
       0.079,
@@ -4902,7 +4899,7 @@
     }
   },
   {
-    "id": "pochete",
+    "id": "fanny_pack",
     "category": "bags",
     "size": [
       0.114,
@@ -4931,7 +4928,7 @@
     }
   },
   {
-    "id": "bolsa",
+    "id": "crossbody_bag",
     "category": "bags",
     "size": [
       0.144,
@@ -4994,7 +4991,7 @@
     }
   },
   {
-    "id": "bag_entregador",
+    "id": "delivery_bag",
     "category": "bags",
     "size": [
       0.229,
@@ -5024,7 +5021,7 @@
     }
   },
   {
-    "id": "mochila_trilha",
+    "id": "hiking_backpack_40l",
     "category": "bags",
     "size": [
       0.235,
@@ -5054,7 +5051,7 @@
     }
   },
   {
-    "id": "mochila_militar",
+    "id": "military_backpack",
     "category": "bags",
     "size": [
       0.262,
@@ -5083,7 +5080,7 @@
     }
   },
   {
-    "id": "cargueira",
+    "id": "trekking_backpack_70l",
     "category": "bags",
     "size": [
       0.28,
@@ -5112,7 +5109,7 @@
     }
   },
   {
-    "id": "mala",
+    "id": "rolling_suitcase",
     "category": "bags",
     "size": [
       0.311,
@@ -5143,7 +5140,7 @@
     }
   },
   {
-    "id": "colete_tatico",
+    "id": "tactical_vest",
     "category": "bags",
     "size": [
       0.229,
@@ -5172,7 +5169,7 @@
     }
   },
   {
-    "id": "cinto_ferramentas",
+    "id": "tool_belt",
     "category": "bags",
     "size": [
       0.159,
@@ -5201,7 +5198,7 @@
     }
   },
   {
-    "id": "caixa_termica",
+    "id": "cooler_box",
     "category": "bags",
     "size": [
       0.215,
@@ -5230,7 +5227,7 @@
     }
   },
   {
-    "id": "carrinho_merc",
+    "id": "shopping_cart",
     "category": "bags",
     "size": [
       0.493,
@@ -5258,7 +5255,7 @@
     }
   },
   {
-    "id": "carrinho_mao",
+    "id": "wheelbarrow",
     "category": "bags",
     "size": [
       0.531,
@@ -5318,7 +5315,7 @@
     }
   },
   {
-    "id": "lanterna_cabeca",
+    "id": "headlamp",
     "category": "electronics",
     "size": [
       0.058,
@@ -5378,7 +5375,7 @@
     }
   },
   {
-    "id": "bateria_9v",
+    "id": "battery_9v",
     "category": "electronics",
     "size": [
       0.046,
@@ -5428,7 +5425,7 @@
     }
   },
   {
-    "id": "painel_solar",
+    "id": "folding_solar_panel",
     "category": "electronics",
     "size": [
       0.144,
@@ -5452,7 +5449,7 @@
     }
   },
   {
-    "id": "radio_portatil",
+    "id": "portable_radio",
     "category": "electronics",
     "size": [
       0.1,
@@ -5479,7 +5476,7 @@
     }
   },
   {
-    "id": "walkie",
+    "id": "walkie_talkies",
     "category": "electronics",
     "size": [
       0.106,
@@ -5506,7 +5503,7 @@
     }
   },
   {
-    "id": "radio_px",
+    "id": "cb_radio",
     "category": "electronics",
     "size": [
       0.182,
@@ -5514,7 +5511,7 @@
       0.182
     ],
     "weight": 3,
-    "stack": 2,
+    "stack": 1,
     "shape": "box",
     "color": 8421504,
     "rarity": "rare",
@@ -5531,7 +5528,7 @@
     }
   },
   {
-    "id": "radio_militar",
+    "id": "military_radio",
     "category": "electronics",
     "size": [
       0.229,
@@ -5539,7 +5536,7 @@
       0.229
     ],
     "weight": 6,
-    "stack": 2,
+    "stack": 1,
     "shape": "box",
     "color": 8421504,
     "rarity": "legendary",
@@ -5554,7 +5551,7 @@
     }
   },
   {
-    "id": "gerador",
+    "id": "portable_generator",
     "category": "electronics",
     "size": [
       0.368,
@@ -5562,7 +5559,7 @@
       0.368
     ],
     "weight": 25,
-    "stack": 2,
+    "stack": 1,
     "shape": "box",
     "color": 8421504,
     "rarity": "rare",
@@ -5581,7 +5578,7 @@
     }
   },
   {
-    "id": "lampiao_led",
+    "id": "led_camp_lantern",
     "category": "electronics",
     "size": [
       0.093,
@@ -5607,7 +5604,7 @@
     }
   },
   {
-    "id": "celular",
+    "id": "mobile_phone",
     "category": "electronics",
     "size": [
       0.074,
@@ -5660,7 +5657,7 @@
     }
   },
   {
-    "id": "despertador",
+    "id": "windup_alarm_clock",
     "category": "electronics",
     "size": [
       0.084,
@@ -5683,7 +5680,7 @@
     }
   },
   {
-    "id": "controle_alarme",
+    "id": "car_alarm_remote",
     "category": "electronics",
     "size": [
       0.039,
@@ -5707,7 +5704,7 @@
     }
   },
   {
-    "id": "eletrificador",
+    "id": "electric_fence_energizer",
     "category": "electronics",
     "size": [
       0.182,
@@ -5730,7 +5727,7 @@
     }
   },
   {
-    "id": "extensao",
+    "id": "extension_cord",
     "category": "electronics",
     "size": [
       0.144,
@@ -5781,7 +5778,7 @@
     }
   },
   {
-    "id": "nvg",
+    "id": "night_vision_goggles",
     "category": "electronics",
     "size": [
       0.106,
@@ -5804,7 +5801,7 @@
     }
   },
   {
-    "id": "galao",
+    "id": "fuel_jerrycan",
     "category": "fuel",
     "size": [
       0.114,
@@ -5829,7 +5826,7 @@
     }
   },
   {
-    "id": "gasolina",
+    "id": "gasoline",
     "category": "fuel",
     "size": [
       0.098,
@@ -5886,7 +5883,7 @@
     }
   },
   {
-    "id": "botijao",
+    "id": "lpg_cylinder_13kg",
     "category": "fuel",
     "size": [
       0.331,
@@ -5912,7 +5909,7 @@
     }
   },
   {
-    "id": "cartucho_gas",
+    "id": "gas_cartridge",
     "category": "fuel",
     "size": [
       0.076,
@@ -5939,7 +5936,7 @@
     }
   },
   {
-    "id": "querosene",
+    "id": "kerosene",
     "category": "fuel",
     "size": [
       0.1,
@@ -5994,7 +5991,7 @@
     }
   },
   {
-    "id": "bateria_12v",
+    "id": "car_battery_12v",
     "category": "fuel",
     "size": [
       0.26,
@@ -6019,7 +6016,7 @@
     }
   },
   {
-    "id": "oleo_motor",
+    "id": "motor_oil",
     "category": "fuel",
     "size": [
       0.108,
@@ -6043,7 +6040,7 @@
     }
   },
   {
-    "id": "sem_feijao",
+    "id": "bean_seeds",
     "category": "outdoors",
     "size": [
       0.058,
@@ -6051,7 +6048,7 @@
       0.058
     ],
     "weight": 0.1,
-    "stack": 4,
+    "stack": 8,
     "shape": "box",
     "color": 8421504,
     "rarity": "uncommon",
@@ -6068,7 +6065,7 @@
     }
   },
   {
-    "id": "sem_milho",
+    "id": "corn_seeds",
     "category": "outdoors",
     "size": [
       0.058,
@@ -6076,7 +6073,7 @@
       0.058
     ],
     "weight": 0.1,
-    "stack": 4,
+    "stack": 8,
     "shape": "box",
     "color": 8421504,
     "rarity": "uncommon",
@@ -6092,7 +6089,7 @@
     }
   },
   {
-    "id": "sem_abobora",
+    "id": "pumpkin_seeds",
     "category": "outdoors",
     "size": [
       0.046,
@@ -6100,7 +6097,7 @@
       0.046
     ],
     "weight": 0.05,
-    "stack": 4,
+    "stack": 8,
     "shape": "box",
     "color": 8421504,
     "rarity": "uncommon",
@@ -6116,7 +6113,7 @@
     }
   },
   {
-    "id": "sem_couve",
+    "id": "kale_and_lettuce_seeds",
     "category": "outdoors",
     "size": [
       0.046,
@@ -6124,7 +6121,7 @@
       0.046
     ],
     "weight": 0.05,
-    "stack": 4,
+    "stack": 8,
     "shape": "box",
     "color": 8421504,
     "rarity": "uncommon",
@@ -6141,7 +6138,7 @@
     }
   },
   {
-    "id": "maniva",
+    "id": "cassava_cuttings",
     "category": "outdoors",
     "size": [
       0.159,
@@ -6165,7 +6162,7 @@
     }
   },
   {
-    "id": "adubo",
+    "id": "fertilizer_bag",
     "category": "outdoors",
     "size": [
       0.271,
@@ -6173,7 +6170,7 @@
       0.271
     ],
     "weight": 10,
-    "stack": 4,
+    "stack": 1,
     "shape": "box",
     "color": 8421504,
     "rarity": "rare",
@@ -6189,7 +6186,7 @@
     }
   },
   {
-    "id": "regador",
+    "id": "watering_can",
     "category": "outdoors",
     "size": [
       0.1,
@@ -6212,7 +6209,7 @@
     }
   },
   {
-    "id": "vara_pesca",
+    "id": "fishing_rod",
     "category": "outdoors",
     "size": [
       0.126,
@@ -6238,7 +6235,7 @@
     }
   },
   {
-    "id": "kit_pesca",
+    "id": "fishing_tackle_box",
     "category": "outdoors",
     "size": [
       0.106,
@@ -6263,7 +6260,7 @@
     }
   },
   {
-    "id": "rede_pesca",
+    "id": "fishing_net",
     "category": "outdoors",
     "size": [
       0.182,
@@ -6286,7 +6283,7 @@
     }
   },
   {
-    "id": "armadilha_laco",
+    "id": "snare_trap",
     "category": "outdoors",
     "tags": [
       "craft_only"
@@ -6308,7 +6305,7 @@
     }
   },
   {
-    "id": "livro_hab",
+    "id": "skill_book",
     "category": "books",
     "size": [
       0.1,
@@ -6335,7 +6332,7 @@
     }
   },
   {
-    "id": "livro_tecnico",
+    "id": "technical_manual",
     "category": "books",
     "size": [
       0.11,
@@ -6363,7 +6360,7 @@
     }
   },
   {
-    "id": "revista_receita",
+    "id": "diy_magazine",
     "category": "books",
     "size": [
       0.069,
@@ -6390,7 +6387,7 @@
     }
   },
   {
-    "id": "revista_passa",
+    "id": "magazines_and_comics",
     "category": "books",
     "size": [
       0.069,
@@ -6416,7 +6413,7 @@
     }
   },
   {
-    "id": "almanaque",
+    "id": "farmers_almanac",
     "category": "books",
     "size": [
       0.079,
@@ -7159,7 +7156,7 @@
   },
   {
     "id": "towel",
-    "category": "medical",
+    "category": "clothing",
     "tags": [
       "hygiene"
     ],
@@ -7223,6 +7220,23 @@
     "stack": 4,
     "shape": "box",
     "color": 15257648,
+    "rarity": "common"
+  },
+  {
+    "id": "jacket",
+    "category": "clothing",
+    "tags": [
+      "clothing"
+    ],
+    "size": [
+      0.4,
+      0.1,
+      0.22
+    ],
+    "weight": 0.8,
+    "stack": 2,
+    "shape": "cloth",
+    "color": 4868690,
     "rarity": "common"
   },
   {
@@ -7363,7 +7377,7 @@
   },
   {
     "id": "phone_charger",
-    "category": "collectibles",
+    "category": "electronics",
     "tags": [
       "office"
     ],
@@ -7618,7 +7632,7 @@
   },
   {
     "id": "ice_pack",
-    "category": "drink",
+    "category": "tools",
     "tags": [
       "drink"
     ],
@@ -7649,5 +7663,617 @@
     "shape": "box",
     "color": 14268282,
     "rarity": "common"
+  },
+  {
+    "id": "branch",
+    "category": "materials",
+    "tags": [
+      "craft_only"
+    ],
+    "size": [
+      0.085,
+      0.085,
+      0.085
+    ],
+    "weight": 0.5,
+    "stack": 4,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common"
+  },
+  {
+    "id": "stick",
+    "category": "materials",
+    "tags": [
+      "craft_only"
+    ],
+    "size": [
+      0.04,
+      0.04,
+      0.04
+    ],
+    "weight": 0.05,
+    "stack": 8,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common"
+  },
+  {
+    "id": "feather",
+    "category": "materials",
+    "tags": [
+      "craft_only"
+    ],
+    "size": [
+      0.023,
+      0.023,
+      0.023
+    ],
+    "weight": 0.001,
+    "stack": 20,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "common"
+  },
+  {
+    "id": "bread_mold",
+    "category": "materials",
+    "tags": [
+      "craft_only"
+    ],
+    "size": [
+      0.029,
+      0.029,
+      0.029
+    ],
+    "weight": 0.02,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common"
+  },
+  {
+    "id": "glass_jar",
+    "category": "materials",
+    "size": [
+      0.072,
+      0.072,
+      0.072
+    ],
+    "weight": 0.3,
+    "stack": 4,
+    "shape": "jar",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "supermarket",
+        "farm"
+      ]
+    }
+  },
+  {
+    "id": "broomstick",
+    "category": "tools",
+    "tags": [
+      "craft_only"
+    ],
+    "size": [
+      0.072,
+      0.072,
+      0.072
+    ],
+    "weight": 0.3,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common"
+  },
+  {
+    "id": "barrel",
+    "category": "tools",
+    "size": [
+      0.164,
+      0.164,
+      0.164
+    ],
+    "weight": 3.5,
+    "stack": 1,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "farm",
+        "warehouse",
+        "workshop",
+        "docks"
+      ]
+    }
+  },
+  {
+    "id": "access_badge",
+    "category": "keys",
+    "tags": [
+      "access"
+    ],
+    "size": [
+      0.022,
+      0.022,
+      0.022
+    ],
+    "weight": 0.01,
+    "stack": 1,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "uncommon"
+  },
+  {
+    "id": "insulin",
+    "category": "medical",
+    "tags": [
+      "perishable",
+      "refrigerated"
+    ],
+    "size": [
+      0.05,
+      0.05,
+      0.05
+    ],
+    "weight": 0.05,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "uncommon",
+    "shelfLife": 28,
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "pharmacy",
+        "hospital"
+      ]
+    }
+  },
+  {
+    "id": "leftover_meal",
+    "category": "food",
+    "tags": [
+      "perishable",
+      "kitchen"
+    ],
+    "size": [
+      0.082,
+      0.082,
+      0.082
+    ],
+    "weight": 0.5,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "shelfLife": 4,
+    "portions": 1,
+    "nutrition": {
+      "satiety": 20,
+      "hydration": 0
+    },
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "disinfectant",
+    "category": "materials",
+    "tags": [
+      "cleaning"
+    ],
+    "size": [
+      0.109,
+      0.109,
+      0.109
+    ],
+    "weight": 1.05,
+    "stack": 2,
+    "shape": "bottle",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "supermarket",
+        "school",
+        "hospital"
+      ]
+    }
+  },
+  {
+    "id": "seasoning",
+    "category": "food",
+    "tags": [
+      "kitchen"
+    ],
+    "size": [
+      0.048,
+      0.048,
+      0.048
+    ],
+    "weight": 0.1,
+    "stack": 6,
+    "shape": "jar",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "stapler",
+    "category": "collectibles",
+    "tags": [
+      "office"
+    ],
+    "size": [
+      0.094,
+      0.094,
+      0.094
+    ],
+    "weight": 0.25,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "school",
+        "police_station"
+      ]
+    }
+  },
+  {
+    "id": "remote_control",
+    "category": "electronics",
+    "size": [
+      0.058,
+      0.058,
+      0.058
+    ],
+    "weight": 0.1,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "dvd",
+    "category": "collectibles",
+    "tags": [
+      "media"
+    ],
+    "size": [
+      0.067,
+      0.067,
+      0.067
+    ],
+    "weight": 0.09,
+    "stack": 4,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "cable_bundle",
+    "category": "electronics",
+    "size": [
+      0.067,
+      0.067,
+      0.067
+    ],
+    "weight": 0.15,
+    "stack": 4,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "shoe_polish",
+    "category": "materials",
+    "tags": [
+      "cleaning"
+    ],
+    "size": [
+      0.046,
+      0.046,
+      0.046
+    ],
+    "weight": 0.08,
+    "stack": 4,
+    "shape": "can",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "laundry_powder",
+    "category": "materials",
+    "tags": [
+      "cleaning"
+    ],
+    "size": [
+      0.108,
+      0.108,
+      0.108
+    ],
+    "weight": 1,
+    "stack": 2,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "broom",
+    "category": "tools",
+    "tags": [
+      "cleaning"
+    ],
+    "size": [
+      0.091,
+      0.091,
+      0.091
+    ],
+    "weight": 0.6,
+    "stack": 1,
+    "shape": "tool",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "school"
+      ]
+    }
+  },
+  {
+    "id": "rubber_gloves",
+    "category": "clothing",
+    "tags": [
+      "cleaning"
+    ],
+    "size": [
+      0.093,
+      0.093,
+      0.093
+    ],
+    "weight": 0.12,
+    "stack": 2,
+    "shape": "cloth",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "fabric_softener",
+    "category": "materials",
+    "tags": [
+      "cleaning"
+    ],
+    "size": [
+      0.109,
+      0.109,
+      0.109
+    ],
+    "weight": 1.05,
+    "stack": 2,
+    "shape": "bottle",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "supermarket"
+      ]
+    }
+  },
+  {
+    "id": "clothespins",
+    "category": "tools",
+    "size": [
+      0.057,
+      0.057,
+      0.057
+    ],
+    "weight": 0.15,
+    "stack": 4,
+    "shape": "box",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "electrical_tape",
+    "category": "tools",
+    "size": [
+      0.04,
+      0.04,
+      0.04
+    ],
+    "weight": 0.05,
+    "stack": 4,
+    "shape": "roll",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "workshop",
+        "warehouse"
+      ]
+    }
+  },
+  {
+    "id": "full_trash_bag",
+    "category": "materials",
+    "tags": [
+      "trash"
+    ],
+    "size": [
+      0.136,
+      0.136,
+      0.136
+    ],
+    "weight": 2,
+    "stack": 1,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "food_packaging",
+    "category": "materials",
+    "tags": [
+      "trash"
+    ],
+    "size": [
+      0.04,
+      0.04,
+      0.04
+    ],
+    "weight": 0.05,
+    "stack": 4,
+    "shape": "bag",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "wine_glass",
+    "category": "tools",
+    "tags": [
+      "kitchen"
+    ],
+    "size": [
+      0.057,
+      0.057,
+      0.057
+    ],
+    "weight": 0.15,
+    "stack": 4,
+    "shape": "cup",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
+  },
+  {
+    "id": "book",
+    "category": "books",
+    "size": [
+      0.087,
+      0.087,
+      0.087
+    ],
+    "weight": 0.4,
+    "stack": 2,
+    "shape": "paper",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment",
+        "school",
+        "church"
+      ]
+    }
+  },
+  {
+    "id": "eyeglasses",
+    "category": "clothing",
+    "size": [
+      0.058,
+      0.058,
+      0.058
+    ],
+    "weight": 0.03,
+    "stack": 2,
+    "shape": "shoe",
+    "color": 8421504,
+    "rarity": "common",
+    "finds": {
+      "places": [
+        "house",
+        "apartment"
+      ]
+    }
   }
 ]

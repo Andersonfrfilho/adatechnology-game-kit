@@ -1,6 +1,7 @@
 import type { BodySlot, Durability, Rarity } from '@adatechnology/game-items'
 
 import { valueOf } from './decisions'
+import type { Decision, ExtraItem } from './decisions'
 import type { IteItem } from './extract-ite'
 import { finalIdOf, placeIdOf, sdkIteItems } from './item-ids'
 import type { IdSource } from './item-ids'
@@ -33,6 +34,8 @@ export type ItemRecord = {
 export type SizeSource = 'household' | 'decisions' | 'provisional'
 
 export type ProvenanceRecord = {
+  /** Set on an item that exists only because `decisions.json.extraItems` says so. */
+  created?: true
   ite?: string
   household?: string
   vc3?: string[]
@@ -108,7 +111,7 @@ const buildTeamItem = (item: IteItem, sources: Sources): { record: ItemRecord; p
     ...(tags.length > 0 ? { tags } : {}),
     size,
     weight: item.kg,
-    stack: household?.stack ?? valueOf(decisions.stackByCategory, category, 'stack default'),
+    stack: household?.stack ?? decisions.stackOverrides[id]?.value ?? valueOf(decisions.stackByCategory, category, 'stack default'),
     shape: household?.shape ?? valueOf(decisions.shapeByCategory, category, 'shape default'),
     color: household?.color ?? 0x808080,
     rarity: valueOf(decisions.rarityMap, item.rar, 'rarity'),
@@ -132,7 +135,8 @@ const buildTeamItem = (item: IteItem, sources: Sources): { record: ItemRecord; p
 }
 
 const buildHouseholdItem = (household: HouseholdItem, sources: Sources): { record: ItemRecord; provenance: ProvenanceRecord } => {
-  const { category, tag } = valueOf(sources.decisions.householdCategoryMap, household.category, 'household category')
+  const { category: mapped, tag } = valueOf(sources.decisions.householdCategoryMap, household.category, 'household category')
+  const category = sources.decisions.householdItemCategory[household.id]?.value ?? mapped
   const record: ItemRecord = {
     id: household.id,
     category,
@@ -145,6 +149,27 @@ const buildHouseholdItem = (household: HouseholdItem, sources: Sources): { recor
     rarity: sources.decisions.householdRarity.value,
   }
   return { record, provenance: { household: household.id, idSource: 'household', sizeSource: 'household' } }
+}
+
+const buildExtraItem = (id: string, { value }: Decision<ExtraItem>, sources: Sources): { record: ItemRecord; provenance: ProvenanceRecord } => {
+  const { decisions } = sources
+  const { size, sizeSource } = sizeOf(id, value.weight, value.category, undefined, sources)
+  const record: ItemRecord = {
+    id,
+    category: value.category,
+    ...(value.tags ? { tags: [...value.tags] } : {}),
+    size,
+    weight: value.weight,
+    stack: value.stack ?? decisions.stackOverrides[id]?.value ?? valueOf(decisions.stackByCategory, value.category, 'stack default'),
+    shape: value.shape ?? valueOf(decisions.shapeByCategory, value.category, 'shape default'),
+    color: value.color ?? 0x808080,
+    rarity: value.rarity,
+    ...(value.shelfLife === undefined ? {} : { shelfLife: value.shelfLife }),
+    ...(value.portions === undefined ? {} : { portions: value.portions }),
+    ...(value.nutrition ? { nutrition: { ...value.nutrition } } : {}),
+    ...(value.places ? { finds: { places: [...value.places] } } : {}),
+  }
+  return { record, provenance: { created: true, idSource: 'decision', sizeSource } }
 }
 
 const assertUniqueIds = (items: readonly ItemRecord[]): void => {
@@ -176,7 +201,8 @@ export const buildItems = (sources: Sources, resolve: (reference: string) => str
   const householdItems = Object.values(sources.household)
     .filter((household) => !mergedHouseholdIds.has(household.id))
     .map((household) => buildHouseholdItem(household, sources))
-  const all = [...teamItems, ...householdItems]
+  const extraItems = Object.entries(sources.decisions.extraItems).map(([id, decision]) => buildExtraItem(id, decision, sources))
+  const all = [...teamItems, ...householdItems, ...extraItems]
   assertUniqueIds(all.map(({ record }) => record))
   const provenance = Object.fromEntries(all.map(({ record, provenance: row }) => [record.id, row]))
   withViewerAliases(provenance, sources, resolve)

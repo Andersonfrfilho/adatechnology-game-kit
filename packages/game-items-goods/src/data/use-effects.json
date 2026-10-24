@@ -13,10 +13,10 @@
     "effect": "stop_bleeding",
     "consumes": true,
     "items": [
-      "curativo",
+      "adhesive_bandages",
       "bandage",
-      "gaze",
-      "esparadrapo"
+      "sterile_gauze",
+      "medical_tape"
     ]
   },
   {
@@ -28,8 +28,8 @@
     "consumes": true,
     "items": [
       "painkillers",
-      "ibuprofeno",
-      "opioide"
+      "ibuprofen",
+      "tramadol"
     ]
   },
   {
@@ -37,7 +37,7 @@
     "effect": "calm",
     "consumes": true,
     "items": [
-      "calmante"
+      "clonazepam"
     ]
   },
   {
@@ -46,7 +46,7 @@
     "consumes": true,
     "items": [
       "alcohol_70",
-      "pvpi"
+      "povidone_iodine"
     ]
   },
   {
@@ -57,8 +57,8 @@
     },
     "consumes": true,
     "items": [
-      "garrafa_vidro",
-      "gasolina",
+      "glass_bottle",
+      "gasoline",
       "cachaca"
     ]
   },

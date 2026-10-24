@@ -5,97 +5,97 @@
     "noise": 1
   },
   {
-    "id": "faca_tatica",
+    "id": "tactical_knife",
     "reach": 0.6,
     "noise": 1
   },
   {
-    "id": "facao",
+    "id": "machete",
     "reach": 0.9,
     "noise": 2
   },
   {
-    "id": "cutelo",
+    "id": "meat_cleaver",
     "reach": 0.6,
     "noise": 2
   },
   {
-    "id": "machadinha",
+    "id": "hatchet",
     "reach": 0.7,
     "noise": 2
   },
   {
-    "id": "machado",
+    "id": "axe",
     "reach": 1,
     "noise": 3
   },
   {
-    "id": "taco",
+    "id": "baseball_bat",
     "reach": 1,
     "noise": 3
   },
   {
-    "id": "taco_pregos",
+    "id": "nail_bat",
     "reach": 1,
     "noise": 3
   },
   {
-    "id": "cano",
+    "id": "iron_pipe",
     "reach": 1,
     "noise": 4
   },
   {
-    "id": "marreta",
+    "id": "sledgehammer",
     "reach": 1.1,
     "noise": 6
   },
   {
-    "id": "picareta",
+    "id": "pickaxe",
     "reach": 1,
     "noise": 4
   },
   {
-    "id": "foice",
+    "id": "sickle",
     "reach": 1.1,
     "noise": 2
   },
   {
-    "id": "tonfa",
+    "id": "police_baton",
     "reach": 0.7,
     "noise": 3
   },
   {
-    "id": "frigideira",
+    "id": "cast_iron_skillet",
     "reach": 0.6,
     "noise": 8
   },
   {
-    "id": "lanca",
+    "id": "improvised_spear",
     "reach": 1.6,
     "noise": 1
   },
   {
-    "id": "motosserra",
+    "id": "chainsaw",
     "reach": 0.9,
     "noise": 120
   },
   {
-    "id": "estilingue",
+    "id": "slingshot",
     "reach": 25,
     "noise": 1
   },
   {
-    "id": "arco",
+    "id": "recurve_bow",
     "reach": 40,
     "noise": 1
   },
   {
-    "id": "besta",
+    "id": "crossbow",
     "reach": 60,
     "noise": 1
   },
   {
-    "id": "flecha",
+    "id": "arrows_and_bolts",
     "reach": 0,
     "noise": 0
   }

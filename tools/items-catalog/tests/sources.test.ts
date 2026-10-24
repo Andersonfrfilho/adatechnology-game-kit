@@ -82,8 +82,27 @@ describe('items against the team catalog', () => {
     const merged = new Set(Object.values(sources.decisions.merge).map((decision) => decision.value))
     for (const id of Object.keys(sources.household)) expect(items.has(id), id).toBe(true)
     for (const id of merged) expect(sources.household[id], id).toBeDefined()
-    expect(items.size).toBe(sdkIteItems(sources).length + Object.keys(sources.household).length - merged.size)
+    expect(items.size).toBe(sdkIteItems(sources).length + Object.keys(sources.household).length - merged.size + Object.keys(sources.decisions.extraItems).length)
     expect(Object.keys(provenance).sort()).toEqual([...items.keys()].sort())
+  })
+
+  it('gives every item a definitive English id: snake_case, none left as the team slug, extras do not shadow a team id', () => {
+    for (const id of items.keys()) expect(id, id).toMatch(/^[a-z][a-z0-9]*(_[a-z0-9]+)*$/)
+    expect(Object.values(provenance).filter((row) => !['household', 'merge', 'decision'].includes(row.idSource))).toEqual([])
+    const teamIds = new Set(sources.ite.itens.map((item) => item.id))
+    for (const id of Object.keys(sources.decisions.extraItems)) expect(teamIds.has(id) || sources.household[id] !== undefined, `extra ${id}`).toBe(false)
+    for (const teamId of Object.keys(sources.decisions.ids)) expect(sources.ite.itens.some((item) => item.id === teamId) || sources.game.extra.some((item) => item.id === teamId), teamId).toBe(true)
+    expect(sources.decisions.ids.notebook?.value).toBe('laptop')
+  })
+
+  it('keeps the merges with the household one to one, and the rejected pairs out of them', () => {
+    const merged = Object.values(sources.decisions.merge).map((entry) => entry.value)
+    expect(new Set(merged).size).toBe(merged.length)
+    for (const teamId of Object.keys(sources.decisions.merge)) expect(sources.ite.itens.some((item) => item.id === teamId), teamId).toBe(true)
+    for (const [teamId, entry] of Object.entries(sources.decisions.mergeRejected)) {
+      expect(sources.decisions.merge[teamId], teamId).toBeUndefined()
+      expect(sources.household[entry.value], entry.value).toBeDefined()
+    }
   })
 
   it('loads as a catalog of game-items without a single inconsistency', () => {
@@ -113,8 +132,20 @@ describe('recipes', () => {
     }
   })
 
-  it('names as unresolved only ids the catalog really does not have', () => {
-    for (const recipe of readOutput<Recipe[]>('recipes')) for (const id of recipe.unresolved) expect(items.has(id), id).toBe(false)
+  it('resolves every item a recipe names: the 18 terms without an item became items, fluids, things of the world or traits', () => {
+    for (const recipe of readOutput<Recipe[]>('recipes')) {
+      expect(recipe.unresolved, recipe.id).toEqual([])
+      const named = [...recipe.inputs.flatMap((input) => [...(input.item ? [input.item] : []), ...(input.any ?? [])]), ...recipe.tools.flatMap((tool) => tool.anyOf), ...('item' in recipe.output ? [recipe.output.item] : [])]
+      for (const id of named) expect(items.has(id), `${recipe.id}: ${id}`).toBe(true)
+    }
+  })
+
+  it('keeps what is not an item out of the item lists of a recipe', () => {
+    const recipes = readOutput<Recipe[]>('recipes')
+    const inputs = recipes.flatMap((recipe) => recipe.inputs)
+    expect(inputs.flatMap((input) => input.world ?? []).sort()).toEqual(['cabinet', 'door', 'soil', 'table'])
+    expect(inputs.filter((input) => input.fluid).map((input) => input.fluid)).toEqual(['water', 'water'])
+    expect(recipes.flatMap((recipe) => recipe.tools.flatMap((tool) => tool.world ?? [])).every((station) => station === 'fire')).toBe(true)
   })
 })
 
@@ -199,7 +230,7 @@ describe('house pools of the viewer', () => {
     expect(types.size).toBe(89)
     for (const type of types) expect(sources.decisions.aliases[type], type).toBeDefined()
     const { pools } = readOutput<HousePoolsRecord>('house-pools')
-    for (const entry of Object.values(pools).flat()) expect(entry.item === null || items.has(entry.item), entry.type).toBe(true)
+    for (const entry of Object.values(pools).flat()) expect(entry.item !== null && items.has(entry.item), entry.type).toBe(true)
   })
 
   it('keeps the pool shape of the viewer: 25 containers, five sharing another pool', () => {

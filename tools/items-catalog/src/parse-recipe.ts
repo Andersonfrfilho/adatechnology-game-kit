@@ -1,19 +1,25 @@
-import type { Decisions } from './decisions'
+import type { Decisions, TermMatch } from './decisions'
 import { valueOf } from './decisions'
 import type { IteRecipe } from './extract-ite'
 
-/** What the recipe consumes: one item or one of several (`any`), counted in units, litres or metres; `label` keeps the words of the source. */
+/**
+ * What the recipe consumes: one item or one of several (`any`), a fluid (`fluid`, in `liters`), one thing of the world (`world`: furniture, ground),
+ * or any item with some traits (`match`); counted in units, litres or metres. `label` keeps the words of the source.
+ */
 export type RecipeInput = {
   item?: string
   any?: string[]
+  fluid?: string
+  world?: string[]
+  match?: TermMatch
   qty?: number
   liters?: number
   meters?: number
   label: string
 }
 
-/** A tool requirement: one of `anyOf` (empty for bare hands). All the requirements of a recipe must hold. */
-export type RecipeTool = { anyOf: string[]; label: string }
+/** A tool requirement: one of `anyOf` items, or a station of the world (`world`: a fire); `anyOf` empty and no `world` is bare hands. All the requirements must hold. */
+export type RecipeTool = { anyOf: string[]; world?: string[]; label: string }
 
 export type RecipeOutput =
   | { item: string; qty: [number, number]; label: string; note?: string }
@@ -44,19 +50,44 @@ const QUANTITY = /^(\d+(?:,\d+)?)(?: (L|m) de)? /
 const toNumber = (text: string): number => Number(text.replace(',', '.'))
 const toText = (value: number): string => String(value).replace('.', ',')
 
-const lookup = (phrase: string, context: RecipeContext, unresolved: Set<string>): string[] => {
+type Reference = { item: string } | { fluid: string } | { world: string } | { match: TermMatch }
+
+const lookup = (phrase: string, context: RecipeContext, unresolved: Set<string>): Reference[] => {
   const target = valueOf(context.decisions.recipeTerms, phrase, 'recipe phrase')
-  if (target.none || !target.item) return []
-  const { id, isKnown } = context.resolveItem(target.item)
-  if (!isKnown) unresolved.add(id)
-  return [id]
+  if (target.none) return []
+  if (target.world) return [{ world: target.world }]
+  if (target.fluid) return [{ fluid: target.fluid }]
+  if (target.match) return [{ match: target.match }]
+  const references = target.items ?? (target.item ? [target.item] : [])
+  return references.map((reference) => {
+    const { id, isKnown } = context.resolveItem(reference)
+    if (!isKnown) unresolved.add(id)
+    return { item: id }
+  })
+}
+
+const itemIds = (references: readonly Reference[]): string[] => references.flatMap((reference) => ('item' in reference ? [reference.item] : []))
+const worldIds = (references: readonly Reference[]): string[] => references.flatMap((reference) => ('world' in reference ? [reference.world] : []))
+
+const inputFromReferences = (references: readonly Reference[], label: string): RecipeInput => {
+  const [first] = references
+  if (references.length === 1 && first) {
+    if ('item' in first) return { item: first.item, label }
+    if ('fluid' in first) return { fluid: first.fluid, label }
+    if ('match' in first) return { match: first.match, label }
+  }
+  const items = itemIds(references)
+  const world = worldIds(references)
+  if (items.length > 0 && world.length > 0) throw new Error(`items-catalog: the recipe input "${label}" mixes items and things of the world`)
+  if (references.length !== items.length + world.length) throw new Error(`items-catalog: the recipe input "${label}" mixes fluids or traits with alternatives`)
+  return world.length > 0 ? { world, label } : { any: items, label }
 }
 
 const parseInput = (term: string, context: RecipeContext, unresolved: Set<string>): RecipeInput => {
   const quantity = QUANTITY.exec(term)
   const label = quantity ? term.slice(quantity[0].length) : term
-  const ids = label.split(ALTERNATIVE_SEPARATOR).flatMap((alternative) => lookup(alternative.replace(/^\d+ /, ''), context, unresolved))
-  const input: RecipeInput = ids.length === 1 ? { item: ids[0] ?? '', label } : { any: ids, label }
+  const references = label.split(ALTERNATIVE_SEPARATOR).flatMap((alternative) => lookup(alternative.replace(/^\d+ /, ''), context, unresolved))
+  const input = inputFromReferences(references, label)
   if (!quantity) return input
   const amount = toNumber(quantity[1] ?? '')
   if (quantity[2] === 'L') input.liters = amount
@@ -65,10 +96,11 @@ const parseInput = (term: string, context: RecipeContext, unresolved: Set<string
   return input
 }
 
-const parseTool = (group: string, context: RecipeContext, unresolved: Set<string>): RecipeTool => ({
-  anyOf: group.split(ALTERNATIVE_SEPARATOR).flatMap((alternative) => lookup(alternative, context, unresolved)),
-  label: group,
-})
+const parseTool = (group: string, context: RecipeContext, unresolved: Set<string>): RecipeTool => {
+  const references = group.split(ALTERNATIVE_SEPARATOR).flatMap((alternative) => lookup(alternative, context, unresolved))
+  const world = worldIds(references)
+  return { anyOf: itemIds(references), ...(world.length > 0 ? { world } : {}), label: group }
+}
 
 const parseTime = (text: string): Pick<Recipe, 'seconds' | 'timeSuffix'> => {
   const match = /^(\d+) (s|min|dias?)(?: (.+))?$/.exec(text)
@@ -81,7 +113,7 @@ const parseOutput = (text: string, recipeId: string, context: RecipeContext, unr
   const match = /^(\d+)(?: a (\d+))? ([^,.]+)(,[^.]*)?\.$/.exec(text)
   const label = match?.[3] ?? ''
   if (!match || !context.decisions.recipeTerms[label]) return { effect: recipeId, params: {}, text }
-  const [item] = lookup(label, context, unresolved)
+  const [item] = itemIds(lookup(label, context, unresolved))
   if (!item) return { effect: recipeId, params: {}, text }
   const low = Number(match[1])
   const output: RecipeOutput = { item, qty: [low, match[2] === undefined ? low : Number(match[2])], label }

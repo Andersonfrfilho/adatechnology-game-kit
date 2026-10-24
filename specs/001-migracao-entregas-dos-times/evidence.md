@@ -857,3 +857,32 @@ Node 22.23.4: `game-items` 18, `tools/golden` 42, `game-interactables` 153 passa
 | `pnpm --filter @adatechnology/weapons-catalog-tool catalog:check` | up to date |
 
 Node 22.23.4: `tools/items-catalog` 24, `game-items` 18, `tools/golden` 42 passaram. Sem golden novo (os hashes da T3.1k/T3.2b); nada do `game-weapons` mudou. Modelo da execução: `sonnet`.
+
+### T3.1c — `decisions.json`: ids, junções, escopo, pilhas, aliases e termos de receita (grupo B)
+
+**O que entrou** (tudo em `tools/items-catalog/decisions.json`; dados regenerados em `packages/game-items-goods/src/data/`)
+- **Ids em inglês definitivos:** os 245 itens do SDK têm id snake_case (38 do household por junção, 207 por decisão); nenhum slug provisório sobra (`finalIdOf` agora falha se faltar decisão, e o tipo `IdSource` perdeu `provisional`). Os 12 itens `scope: 'game'` e os 2 extras só do jogo (`chave_casa_d`, `sinalizador`) também ganham id em inglês (`survivor_diary`, `military_map`, `evacuation_order`, `patient_zero_record`, `prisoner_files`, `mine_logbook`, `radio_tape`, `valley_postcard`, `npc_marked_item`, `bunker_code`, `cable_car_key`, `dam_badge`, `house_d_key`, `signal_flare`); a fatia do jogo usa esses ids.
+- **Junções com o household: 39 propostas → 38 confirmadas.** Cada uma tem `reason` com a conferência (mesmo objeto; o id do household fica, valores do time vencem em peso, raridade, durabilidade e validade). **Corrigida:** `jaqueta_jeans`→`jacket` (a jaqueta jeans é um tipo de jaqueta; juntar faria a `jacket` genérica das tabelas do household virar jeans) agora é `denim_jacket`. Novo `mergeRejected` guarda 11 pares parecidos que ficam separados, com razão (`frigideira`/`pan`, `garrafa_pet`/`empty_bottle`, `sacola`/`plastic_bag`, `notebook`/`notebook`, `carne_bovina`/`frozen_meat`...), para ninguém propor de novo; teste confere que nenhum deles está em `merge`. Genéricos como `canned_food` ficam separados.
+- **Categorias do household:** `householdCategoryMap` com razão por categoria (mesmo mapa da T3.1b, confirmado) e `householdItemCategory` (3 exceções por item: `phone_charger`→electronics, `ice_pack`→tools, `towel`→clothing).
+- **Escopo:** 12 itens de história `scope: 'game'` (lista do pedido, confirmada); o SDK mantém as formas neutras (`safe_key`, `generator_key`, `cell_key`, `master_key`, `padlock_key`, `dog_tag`, `photo`, `note`, `city_map`, `road_map`, `cash`, `cigarettes`) e ganha `access_badge`, criado (o time só tem o crachá da represa, só do jogo).
+- **Itens criados (`extraItems`, 28):** o motor não inventa item; o que as fontes não têm vira decisão com razão. Termos de receita: `branch`, `stick`, `feather`, `bread_mold`, `glass_jar`, `broomstick`, `barrel`. Tipos de pool do VC3 sem item: `insulin`, `leftover_meal`, `disinfectant`, `seasoning`, `stapler`, `remote_control`, `dvd`, `cable_bundle`, `shoe_polish`, `laundry_powder`, `broom`, `rubber_gloves`, `fabric_softener`, `clothespins`, `electrical_tape`, `full_trash_bag`, `food_packaging`, `wine_glass`. Dois aliases estavam errados e viraram itens: `livro` apontava para o livro de habilidade (raro) e `oculos` para o óculos de proteção; agora `book` e `eyeglasses`. `provenance.json` marca `created: true`.
+- **Pools VC3:** os 20 `item: null` (18 tipos) agora resolvem; os 89 aliases foram revistos (ids finais, razão por alias; os aproximados dizem por quê). Teste exige `item` diferente de `null`.
+- **Termos de receita (18 sem item → 0):** 7 viraram itens criados (acima); `saco de ráfia` já existia (`raffia_sack`, o item `saco_areia`); `legume` = `potatoes`/`cassava_root`/`tomato` (família); `vidro limpo` = `glass_jar` ou `glass_bottle`; `mesa`/`porta`/`armário`/`terra` = **coisa do mundo** (`world`, nunca carregada); `fogo` = estação do mundo em `tools[].world`; `água` = **fluido** (`fluid: 'water'`, em litros, id do `game-fluids`); `roupa` = qualquer item da categoria `clothing`; `ingredientes` = qualquer item `cookable` (`match`). O tipo `TermTarget` ganhou `items`, `fluid`, `world`, `match`; `RecipeInput` ganhou `fluid`, `world`, `match`; `RecipeTool.world`. `unresolved` fica `[]` em todas as receitas (teste novo) e a ida e volta pt-BR continua exata nas 33.
+- **Pilhas:** `stackByCategory` revista com razão por categoria (medical 6, materials 8→4, demais mantidas) e `stackOverrides` (28 itens): pesados e volumosos 1 a 2 (`bricks`, `cement_bag`, `portable_generator`...), embalados por caixa/pacote (sementes 8, `nails`/`screws` 6, `wire_roll` 4). Juntados continuam com a pilha do household.
+
+**Contagens:** 327 itens = 245 do time + 54 do household sem par (92 − 38) + 28 criados; ids: 38 `merge`, 235 `decision`, 54 `household`; receitas 33 (0 `unresolved`); pools 25 recipientes, 106 entradas, 0 `item: null`.
+
+**Desvios do desenho e escolhas reversíveis:** (1) o desenho previa "~30 junções" e `access_badge` sem dizer de onde vinha: 38 junções, `access_badge` criado. (2) O desenho dizia 307 itens no SDK (~12 documentos no jogo): são 327, porque os 28 itens criados vêm da exigência de resolver pools e receitas. (3) Termos de receita que não são item são dado (`world`/`fluid`/`match`), não buraco: quem consome (T3.1e) trata cada um. (4) Opção reversível: cada item criado, cada exceção de categoria e cada override de pilha é uma linha; apagar a linha de `extraItems` exige trocar o alias/termo que a usa (o teste avisa).
+
+**Portões (Node 24.22.0)**
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 (ESLint: No issues found) |
+| `items-catalog` testes | 27 (3 arquivos; eram 24) |
+| `game-items` 18, `golden-tool` 42 | verdes |
+| `catalog:check` | up to date |
+
+Node 22.23.4: `tools/items-catalog` 27, `game-items` 18, `tools/golden` 42, `catalog:check` up to date. Sem golden novo (os hashes da T3.1k/T3.2b). Modelo da execução: `sonnet` (o pedido recomendava `haiku`; houve decisões de modelagem: extras, termos de receita).

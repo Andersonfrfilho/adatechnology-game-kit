@@ -42,7 +42,7 @@
       },
       {
         "type": "carne",
-        "item": "carne_bovina",
+        "item": "raw_beef",
         "name": "Carne embalada",
         "qty": [
           1,
@@ -107,7 +107,7 @@
       },
       {
         "type": "insulina",
-        "item": null,
+        "item": "insulin",
         "name": "Remédio refrigerado",
         "qty": [
           1,
@@ -120,7 +120,7 @@
       },
       {
         "type": "sobras",
-        "item": null,
+        "item": "leftover_meal",
         "name": "Marmita",
         "qty": [
           1,
@@ -176,7 +176,7 @@
     "freezer": [
       {
         "type": "carne",
-        "item": "carne_bovina",
+        "item": "raw_beef",
         "name": "Carne congelada",
         "qty": [
           2,
@@ -321,7 +321,7 @@
       },
       {
         "type": "desinfetante",
-        "item": null,
+        "item": "disinfectant",
         "name": "Desinfetante",
         "qty": [
           1,
@@ -334,7 +334,7 @@
       },
       {
         "type": "saco_lixo",
-        "item": "saco_lixo",
+        "item": "trash_bag",
         "name": "Saco de lixo",
         "qty": [
           1,
@@ -401,7 +401,7 @@
       },
       {
         "type": "lata_milho",
-        "item": "milho_lata",
+        "item": "canned_corn_and_peas",
         "name": "Lata de milho",
         "qty": [
           1,
@@ -414,7 +414,7 @@
       },
       {
         "type": "tempero",
-        "item": null,
+        "item": "seasoning",
         "name": "Temperos",
         "qty": [
           1,
@@ -442,7 +442,7 @@
       },
       {
         "type": "curativo",
-        "item": "curativo",
+        "item": "adhesive_bandages",
         "name": "Caixa de curativos",
         "qty": [
           1,
@@ -708,7 +708,7 @@
     "criado": [
       {
         "type": "remedio",
-        "item": "remedio_continuo",
+        "item": "maintenance_medication",
         "name": "Remédio",
         "qty": [
           1,
@@ -721,7 +721,7 @@
       },
       {
         "type": "livro",
-        "item": "livro_hab",
+        "item": "book",
         "name": "Livro",
         "qty": [
           1,
@@ -760,7 +760,7 @@
       },
       {
         "type": "oculos",
-        "item": "oculos",
+        "item": "eyeglasses",
         "name": "Óculos",
         "qty": [
           1,
@@ -814,7 +814,7 @@
       },
       {
         "type": "grampeador",
-        "item": null,
+        "item": "stapler",
         "name": "Grampeador",
         "qty": [
           1,
@@ -868,7 +868,7 @@
       },
       {
         "type": "agua_galao",
-        "item": "galao_agua",
+        "item": "water_jug_5l",
         "name": "Galão de água",
         "qty": [
           1,
@@ -935,7 +935,7 @@
     "rack": [
       {
         "type": "controle_remoto",
-        "item": null,
+        "item": "remote_control",
         "name": "Controle remoto",
         "qty": [
           1,
@@ -948,7 +948,7 @@
       },
       {
         "type": "dvd",
-        "item": null,
+        "item": "dvd",
         "name": "DVDs",
         "qty": [
           1,
@@ -961,7 +961,7 @@
       },
       {
         "type": "cabos",
-        "item": null,
+        "item": "cable_bundle",
         "name": "Cabos",
         "qty": [
           1,
@@ -1002,7 +1002,7 @@
       },
       {
         "type": "chinelo",
-        "item": "chinelo",
+        "item": "flip_flops",
         "name": "Chinelo",
         "qty": [
           1,
@@ -1028,7 +1028,7 @@
       },
       {
         "type": "graxa",
-        "item": null,
+        "item": "shoe_polish",
         "name": "Graxa de sapato",
         "qty": [
           1,
@@ -1043,7 +1043,7 @@
     "armario_lav": [
       {
         "type": "sabao_po",
-        "item": null,
+        "item": "laundry_powder",
         "name": "Sabão em pó",
         "qty": [
           1,
@@ -1069,7 +1069,7 @@
       },
       {
         "type": "desinfetante",
-        "item": null,
+        "item": "disinfectant",
         "name": "Desinfetante",
         "qty": [
           1,
@@ -1082,7 +1082,7 @@
       },
       {
         "type": "balde",
-        "item": "balde",
+        "item": "bucket",
         "name": "Balde",
         "qty": [
           1,
@@ -1095,7 +1095,7 @@
       },
       {
         "type": "vassoura",
-        "item": null,
+        "item": "broom",
         "name": "Vassoura",
         "qty": [
           1,
@@ -1108,7 +1108,7 @@
       },
       {
         "type": "luvas",
-        "item": null,
+        "item": "rubber_gloves",
         "name": "Luvas de borracha",
         "qty": [
           1,
@@ -1123,7 +1123,7 @@
     "estante_lav": [
       {
         "type": "sabao_po",
-        "item": null,
+        "item": "laundry_powder",
         "name": "Sabão em pó",
         "qty": [
           1,
@@ -1136,7 +1136,7 @@
       },
       {
         "type": "amaciante",
-        "item": null,
+        "item": "fabric_softener",
         "name": "Amaciante",
         "qty": [
           1,
@@ -1149,7 +1149,7 @@
       },
       {
         "type": "cesto_pregadores",
-        "item": null,
+        "item": "clothespins",
         "name": "Pregadores",
         "qty": [
           1,
@@ -1190,7 +1190,7 @@
       },
       {
         "type": "alicate",
-        "item": "alicate",
+        "item": "pliers",
         "name": "Alicate",
         "qty": [
           1,
@@ -1203,7 +1203,7 @@
       },
       {
         "type": "fita_isolante",
-        "item": null,
+        "item": "electrical_tape",
         "name": "Fita isolante",
         "qty": [
           1,
@@ -1216,7 +1216,7 @@
       },
       {
         "type": "parafusos",
-        "item": "parafusos",
+        "item": "screws",
         "name": "Caixa de parafusos",
         "qty": [
           1,
@@ -1244,7 +1244,7 @@
       },
       {
         "type": "serrote",
-        "item": "serrote",
+        "item": "handsaw",
         "name": "Serrote",
         "qty": [
           1,
@@ -1283,7 +1283,7 @@
       },
       {
         "type": "pregos",
-        "item": "pregos",
+        "item": "nails",
         "name": "Caixa de pregos",
         "qty": [
           1,
@@ -1339,7 +1339,7 @@
     "lixeira": [
       {
         "type": "saco_lixo_cheio",
-        "item": null,
+        "item": "full_trash_bag",
         "name": "Saco de lixo",
         "qty": [
           1,
@@ -1352,7 +1352,7 @@
       },
       {
         "type": "embalagem",
-        "item": null,
+        "item": "food_packaging",
         "name": "Embalagens",
         "qty": [
           1,
@@ -1406,7 +1406,7 @@
       },
       {
         "type": "taca",
-        "item": null,
+        "item": "wine_glass",
         "name": "Taças",
         "qty": [
           2,

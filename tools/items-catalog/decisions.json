@@ -145,104 +145,121 @@
         "category": "food",
         "tag": "food"
       },
-      "source": "design",
-      "reason": "The household category becomes a tag; the category is one of the 14 (provisional, T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Household food stays food."
     },
     "drink": {
       "value": {
         "category": "drink",
         "tag": "drink"
       },
-      "source": "design",
-      "reason": "The household category becomes a tag; the category is one of the 14 (provisional, T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Household drinks stay drink."
     },
     "kitchen": {
       "value": {
         "category": "tools",
         "tag": "kitchen"
       },
-      "source": "design",
-      "reason": "The household category becomes a tag; the category is one of the 14 (provisional, T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Plates, bowls, cups, cutlery, pots and pans are utensils: tools (the team has no kitchenware category)."
     },
     "hygiene": {
       "value": {
         "category": "medical",
         "tag": "hygiene"
       },
-      "source": "design",
-      "reason": "The household category becomes a tag; the category is one of the 14 (provisional, T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Soap, toothpaste, shampoo and toilet paper are personal care, which the team files under medicine and first aid."
     },
     "cleaning": {
       "value": {
         "category": "materials",
         "tag": "cleaning"
       },
-      "source": "design",
-      "reason": "The household category becomes a tag; the category is one of the 14 (provisional, T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Detergent, bleach and sponge are consumable supplies: materials."
     },
     "medical": {
       "value": {
         "category": "medical",
         "tag": "medical"
       },
-      "source": "design",
-      "reason": "The household category becomes a tag; the category is one of the 14 (provisional, T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Household medicine stays medical."
     },
     "clothing": {
       "value": {
         "category": "clothing",
         "tag": "clothing"
       },
-      "source": "design",
-      "reason": "The household category becomes a tag; the category is one of the 14 (provisional, T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Household clothing stays clothing."
     },
     "tool": {
       "value": {
         "category": "tools",
         "tag": "tool"
       },
-      "source": "design",
-      "reason": "The household category becomes a tag; the category is one of the 14 (provisional, T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Flashlight, batteries, candles, matches and lighter: tools (the team files the merged ones under electronics, fuel and tools)."
     },
     "office": {
       "value": {
         "category": "collectibles",
         "tag": "office"
       },
-      "source": "design",
-      "reason": "The household category becomes a tag; the category is one of the 14 (provisional, T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Documents, wallet, pen and notebook are personal papers and small belongings: collectibles."
     },
     "trash": {
       "value": {
         "category": "materials",
         "tag": "trash"
       },
-      "source": "design",
-      "reason": "The household category becomes a tag; the category is one of the 14 (provisional, T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Rubbish is scrap material: materials."
     },
     "mail": {
       "value": {
         "category": "collectibles",
         "tag": "mail"
       },
-      "source": "design",
-      "reason": "The household category becomes a tag; the category is one of the 14 (provisional, T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Bills, letters, flyers and postcards are paper keepsakes: collectibles."
     },
     "bbq": {
       "value": {
         "category": "outdoors",
         "tag": "bbq"
       },
-      "source": "design",
-      "reason": "The household category becomes a tag; the category is one of the 14 (provisional, T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Barbecue gear is outdoor equipment: outdoors."
     },
     "garage": {
       "value": {
         "category": "tools",
         "tag": "garage"
       },
-      "source": "design",
-      "reason": "The household category becomes a tag; the category is one of the 14 (provisional, T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Paint, tape, hammer, screwdriver and rope are workshop things: tools."
+    }
+  },
+  "householdItemCategory": {
+    "ice_pack": {
+      "value": "tools",
+      "source": "T3.1c",
+      "reason": "An ice pack is a cooler accessory, not a drink (its household category is drink); it keeps the tag `drink` so the household tables still find it."
+    },
+    "phone_charger": {
+      "value": "electronics",
+      "source": "T3.1c",
+      "reason": "A phone charger is an electronic accessory, not office paper (its household category is office)."
+    },
+    "towel": {
+      "value": "clothing",
+      "source": "T3.1c",
+      "reason": "A towel is cloth you carry and wear against the cold, not medicine (its household category is hygiene)."
     }
   },
   "placeMap": {
@@ -526,354 +543,1917 @@
   "merge": {
     "arroz": {
       "value": "rice",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"rice\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Arroz (1 kg)\" is the household `rice`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "feijao_seco": {
       "value": "beans",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"beans\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Feijão seco (1 kg)\" is the household `beans`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "macarrao": {
       "value": "pasta",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"pasta\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "A 500 g pack of dried pasta is the household `pasta` (a box); the box is mostly air, so it is in the `hollow` density list."
     },
     "sal": {
       "value": "salt",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"salt\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Sal (1 kg)\" is the household `salt`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "acucar": {
       "value": "sugar",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"sugar\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Açúcar (1 kg)\" is the household `sugar`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "cafe_po": {
       "value": "coffee",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"coffee\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Café em pó (500 g)\" is the household `coffee`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "oleo_cozinha": {
       "value": "cooking_oil",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"cooking_oil\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Óleo de cozinha (900 ml)\" is the household `cooking_oil`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "biscoito": {
       "value": "biscuits",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"biscuits\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "A pack of cream-cracker style biscuits; the household `biscuits` is the same pack."
     },
     "pao_forma": {
       "value": "bread",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"bread\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "Sliced bread is the household `bread` (a loaf in a bag)."
     },
     "leite": {
       "value": "milk_carton",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"milk_carton\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Leite longa vida (1 L)\" is the household `milk_carton`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "agua_500": {
       "value": "water_bottle",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"water_bottle\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Água mineral (500 ml)\" is the household `water_bottle`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "suco_cx": {
       "value": "juice_box",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"juice_box\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Suco de caixinha\" is the household `juice_box`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "refri_lata": {
       "value": "soda_can",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"soda_can\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Refrigerante (lata)\" is the household `soda_can`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "ovos": {
       "value": "eggs",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"eggs\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Dúzia de ovos\" is the household `eggs`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "queijo": {
       "value": "cheese",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"cheese\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "A piece of minas cheese is the household `cheese`."
     },
     "faca_cozinha": {
       "value": "knife",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"knife\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Faca de cozinha\" is the household `knife`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "tesoura": {
       "value": "scissors",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"scissors\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Tesoura\" is the household `scissors`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "panela": {
       "value": "pot",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"pot\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Panela\" is the household `pot`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "atadura": {
       "value": "bandage",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"bandage\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Atadura de crepe\" is the household `bandage`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "analgesico": {
       "value": "painkillers",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"painkillers\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Analgésico (dipirona, 10 comp.)\" is the household `painkillers`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "alcool70": {
       "value": "alcohol_70",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"alcohol_70\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Álcool 70% (500 ml)\" is the household `alcohol_70`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "kit_ps": {
       "value": "first_aid_kit",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"first_aid_kit\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "The first aid kit is the household `first_aid_kit`; the team marks it as a container (durability)."
     },
     "termometro": {
       "value": "thermometer",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"thermometer\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Termômetro\" is the household `thermometer`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "camiseta": {
       "value": "tshirt",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"tshirt\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Camiseta\" is the household `tshirt`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "calca_jeans": {
       "value": "jeans",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"jeans\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
-    },
-    "jaqueta_jeans": {
-      "value": "jacket",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"jacket\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Calça jeans\" is the household `jeans`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "tenis": {
       "value": "sneakers",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"sneakers\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Tenis de corrida\" is a running shoe: the household `sneakers`."
     },
     "mochila_escolar": {
       "value": "backpack",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"backpack\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "The school backpack (0.5 kg, 10 kg carry) is the household `backpack`; its household category was clothing, the team puts it in bags."
     },
     "lanterna": {
       "value": "flashlight",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"flashlight\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Lanterna (2 pilhas AA)\" is the household `flashlight`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "pilha_aa": {
       "value": "batteries",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"batteries\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "A pair of AA cells is the household `batteries`; the household id stays."
     },
     "fosforo": {
       "value": "matches",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"matches\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Caixa de fósforos\" is the household `matches`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "isqueiro": {
       "value": "lighter",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"lighter\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Isqueiro\" is the household `lighter`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "vela": {
       "value": "candles",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"candles\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "The team `vela` (0.05 kg) and the household `candles` are one candle; the plural id of the household stays because the household loot tables publish it."
     },
     "silver_tape": {
       "value": "duct_tape",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"duct_tape\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Fita silver tape\" is the household `duct_tape`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "martelo": {
       "value": "hammer",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"hammer\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Martelo\" is the household `hammer`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "chave_fenda": {
       "value": "screwdriver",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"screwdriver\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Chave de fenda\" is the household `screwdriver`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "corda": {
       "value": "rope",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"rope\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "\"Corda (15 m)\" is the household `rope`: same object; the household id stays (published API), the team wins on weight, rarity, durability and shelf life, the household on size, shape and color."
     },
     "carvao": {
       "value": "charcoal_bag",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"charcoal_bag\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "A bag of charcoal is the household `charcoal_bag` (barbecue); the team weight (3 kg) and category (fuel) win."
     },
     "lata_vazia": {
       "value": "empty_can",
-      "source": "design",
-      "reason": "Exact equivalent of the household item \"empty_can\": the household id is kept (published API), the team's values win on weight, rarity, durability and shelf life."
+      "source": "T3.1c",
+      "reason": "An empty can is the household `empty_can` (trash); the team uses it as crafting material."
+    }
+  },
+  "mergeRejected": {
+    "bilhete": {
+      "value": "letter",
+      "source": "T3.1c",
+      "reason": "The story note (`note`) stays the SDK generic; `letter` is household mail scenery with no use."
+    },
+    "carne_bovina": {
+      "value": "frozen_meat",
+      "source": "T3.1c",
+      "reason": "1 kg of raw beef is not the household 0.8 kg frozen meat tray."
+    },
+    "dinheiro": {
+      "value": "bill",
+      "source": "T3.1c",
+      "reason": "A wad of cash is not a utility bill."
+    },
+    "frango": {
+      "value": "frozen_meat",
+      "source": "T3.1c",
+      "reason": "A 1.2 kg frozen chicken is not the household 0.8 kg frozen meat tray."
+    },
+    "frigideira": {
+      "value": "pan",
+      "source": "T3.1c",
+      "reason": "The cast-iron skillet (1.2 kg, melee, 400 hits) and the household `pan` (0.9 kg, kitchen) differ in weight and role."
+    },
+    "garrafa_pet": {
+      "value": "empty_bottle",
+      "source": "T3.1c",
+      "reason": "`empty_bottle` is a 0.03 kg 500 ml bottle; `garrafa_pet` is 0.05 kg (a 2 L PET). Different objects."
+    },
+    "garrafa_vidro": {
+      "value": "empty_bottle",
+      "source": "T3.1c",
+      "reason": "A glass bottle (0.3 kg) is ten times the weight of the household empty bottle (plastic); the molotov recipe needs the glass one."
+    },
+    "jaqueta_jeans": {
+      "value": "jacket",
+      "source": "T3.1c",
+      "reason": "A denim jacket is one kind of jacket; merging would turn the generic household `jacket` (used by the household loot tables and the pool aliases) into a denim one. Kept apart as `denim_jacket`."
+    },
+    "notebook": {
+      "value": "notebook",
+      "source": "T3.1c",
+      "reason": "The team notebook is a computer (2 kg, 4 h of battery); the household `notebook` is a paper one. The team item is `laptop`."
+    },
+    "saco_lixo": {
+      "value": "plastic_bag",
+      "source": "T3.1c",
+      "reason": "The trash bag (8 kg carry, tears into shards) is not the small household plastic bag."
+    },
+    "sacola": {
+      "value": "plastic_bag",
+      "source": "T3.1c",
+      "reason": "The shopping bag has a 4 kg carry capacity and tears when run with; the household `plastic_bag` is house trash."
     }
   },
   "ids": {
     "chave_cofre": {
       "value": "safe_key",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic safe key the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "chave_gerador": {
       "value": "generator_key",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic generator key the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "chave_cela": {
       "value": "cell_key",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic cell key the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "chave_mestra": {
       "value": "master_key",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic master key the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "cadeado_chave": {
       "value": "padlock_key",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic padlock key the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "plaqueta": {
       "value": "dog_tag",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic dog tag the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "foto": {
       "value": "photo",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic photo the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "bilhete": {
       "value": "note",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic note the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "mapa_cidade": {
       "value": "city_map",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic city map the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "mapa_rodoviario": {
       "value": "road_map",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic road map the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "dinheiro": {
       "value": "cash",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic cash the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "cigarro": {
       "value": "cigarettes",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic cigarettes the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "chave_casa": {
       "value": "house_key",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic house key the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "chave_carro": {
       "value": "car_key",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic car key the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "molho_zelador": {
       "value": "janitor_keys",
-      "source": "design",
-      "reason": "Neutral English name of the generic form of a story item (T3-itens.md section 2); every other id is still the team's id as a provisional slug until T3.1c."
+      "source": "T3.1c",
+      "reason": "Neutral English name of the generic janitor key ring the SDK keeps (T3-itens.md section 2); the game applies its own story name and text in the game slice."
     },
     "notebook": {
       "value": "laptop",
-      "source": "design",
-      "reason": "The team's notebook is a computer; the household \"notebook\" is a paper one, so the id is taken."
+      "source": "T3.1c",
+      "reason": "The team notebook is a computer, named `laptop` because the household `notebook` (paper) already owns that id."
+    },
+    "feijao_lata": {
+      "value": "canned_beans",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Feijão em lata\"."
+    },
+    "sardinha": {
+      "value": "canned_sardines",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Sardinha em lata\"."
+    },
+    "milho_lata": {
+      "value": "canned_corn_and_peas",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Milho e ervilha em lata\"."
+    },
+    "salsicha_lata": {
+      "value": "canned_sausages",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Salsicha em lata\"."
+    },
+    "leite_condensado": {
+      "value": "condensed_milk",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Leite condensado\"."
+    },
+    "racao_militar": {
+      "value": "military_ration",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Ração operacional do Exército\"."
+    },
+    "macarrao_inst": {
+      "value": "instant_noodles",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Macarrão instantâneo\"."
+    },
+    "farinha_mandioca": {
+      "value": "cassava_flour",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Farinha de mandioca (1 kg)\"."
+    },
+    "salgadinho": {
+      "value": "snack_chips",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Salgadinho de pacote\"."
+    },
+    "chocolate": {
+      "value": "chocolate_bar",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Barra de chocolate\"."
+    },
+    "rapadura": {
+      "value": "rapadura",
+      "source": "T3.1c",
+      "reason": "Rapadura (a block of unrefined cane sugar) has no English name; the id stays."
+    },
+    "mel": {
+      "value": "honey_jar",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Pote de mel\"."
+    },
+    "mortadela": {
+      "value": "mortadella",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Mortadela (peça)\"."
+    },
+    "carne_bovina": {
+      "value": "raw_beef",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Carne bovina crua (1 kg)\"."
+    },
+    "frango": {
+      "value": "frozen_chicken",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Frango congelado\"."
+    },
+    "banana": {
+      "value": "banana_bunch",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Penca de banana\"."
+    },
+    "laranja": {
+      "value": "orange",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Laranja\"."
+    },
+    "batata": {
+      "value": "potatoes",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Batata (1 kg)\"."
+    },
+    "mandioca": {
+      "value": "cassava_root",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Mandioca (raiz)\"."
+    },
+    "peixe_fresco": {
+      "value": "fresh_fish",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Peixe fresco\"."
+    },
+    "peixe_salgado": {
+      "value": "salted_fish",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Peixe salgado\"."
+    },
+    "charque": {
+      "value": "jerked_beef",
+      "source": "T3.1c",
+      "reason": "Charque is Brazilian jerked beef (salted and sun dried), so the id says so."
+    },
+    "carne_caca": {
+      "value": "game_meat",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Carne de caça (capivara, javali)\"."
+    },
+    "conserva": {
+      "value": "home_preserves",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Conserva caseira (pote)\"."
+    },
+    "racao_cao": {
+      "value": "dog_food",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Ração de cachorro (1 kg)\"."
+    },
+    "galao_agua": {
+      "value": "water_jug_5l",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Galão de água (5 L)\"."
+    },
+    "agua_suja": {
+      "value": "dirty_water",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Água de rio ou poça\"."
+    },
+    "isotonico": {
+      "value": "sports_drink",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Isotônico\"."
+    },
+    "energetico": {
+      "value": "energy_drink",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Energético (lata)\"."
+    },
+    "agua_coco": {
+      "value": "coconut_water",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Água de coco\"."
+    },
+    "cerveja": {
+      "value": "beer_can",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Cerveja (lata)\"."
+    },
+    "cachaca": {
+      "value": "cachaca",
+      "source": "T3.1c",
+      "reason": "Cachaca is the name of the spirit in English too; the id stays."
+    },
+    "vinho": {
+      "value": "communion_wine",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Vinho de missa\"."
+    },
+    "gaze": {
+      "value": "sterile_gauze",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Gaze estéril\"."
+    },
+    "curativo": {
+      "value": "adhesive_bandages",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Curativo adesivo (caixa)\"."
+    },
+    "esparadrapo": {
+      "value": "medical_tape",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Esparadrapo\"."
+    },
+    "pvpi": {
+      "value": "povidone_iodine",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Iodopovidona\"."
+    },
+    "soro": {
+      "value": "saline_iv_bag",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Soro fisiológico com equipo\"."
+    },
+    "ibuprofeno": {
+      "value": "ibuprofen",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Anti-inflamatório (ibuprofeno)\"."
+    },
+    "opioide": {
+      "value": "tramadol",
+      "source": "T3.1c",
+      "reason": "The item is tramadol (\"Analgesico forte (tramadol)\"); the id names the drug, not the class, so a patch can swap the drug."
+    },
+    "calmante": {
+      "value": "clonazepam",
+      "source": "T3.1c",
+      "reason": "The item is clonazepam (\"Calmante (clonazepam)\"); the id names the drug."
+    },
+    "amoxicilina": {
+      "value": "amoxicillin",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Antibiótico (amoxicilina)\"."
+    },
+    "ceftriaxona": {
+      "value": "ceftriaxone",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Antibiótico injetável (ceftriaxona)\"."
+    },
+    "seringa": {
+      "value": "syringe",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Seringa descartável\"."
+    },
+    "kit_sutura": {
+      "value": "suture_kit",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Kit de sutura\"."
+    },
+    "tala": {
+      "value": "splint",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Tala imobilizadora\"."
+    },
+    "luva_proc": {
+      "value": "exam_gloves",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Luvas de procedimento\"."
+    },
+    "n95": {
+      "value": "n95_mask",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Máscara N95\"."
+    },
+    "carvao_ativado": {
+      "value": "activated_charcoal",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Carvão ativado\"."
+    },
+    "sais_reidrat": {
+      "value": "rehydration_salts",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Sais de reidratação\"."
+    },
+    "antialergico": {
+      "value": "antihistamine",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Antialérgico\"."
+    },
+    "antiofidico": {
+      "value": "antivenom",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Soro antiofídico\"."
+    },
+    "remedio_continuo": {
+      "value": "maintenance_medication",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Remédio de uso contínuo\"."
+    },
+    "vitamina": {
+      "value": "multivitamin",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Polivitamínico\"."
+    },
+    "pe_cabra": {
+      "value": "crowbar",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Pé de cabra\"."
+    },
+    "serrote": {
+      "value": "handsaw",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Serrote\"."
+    },
+    "serra_arco": {
+      "value": "hacksaw",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Serra de arco\"."
+    },
+    "corta_vergalhao": {
+      "value": "bolt_cutters",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Alicate corta-vergalhão\"."
+    },
+    "alicate": {
+      "value": "pliers",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Alicate\"."
+    },
+    "chave_inglesa": {
+      "value": "adjustable_wrench",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Chave inglesa\"."
+    },
+    "kit_mecanico": {
+      "value": "mechanic_toolbox",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Maleta de ferramentas do mecânico\"."
+    },
+    "macaco": {
+      "value": "car_jack",
+      "source": "T3.1c",
+      "reason": "\"Macaco e chave de roda\" is a car jack with its wheel wrench: `car_jack`."
+    },
+    "macarico": {
+      "value": "gas_torch",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Maçarico a gás\"."
+    },
+    "solda": {
+      "value": "inverter_welder",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Máquina de solda inversora\"."
+    },
+    "parafusadeira": {
+      "value": "cordless_drill",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Parafusadeira a bateria\"."
+    },
+    "pa": {
+      "value": "shovel",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Pá\"."
+    },
+    "enxada": {
+      "value": "hoe",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Enxada\"."
+    },
+    "canivete": {
+      "value": "pocket_knife",
+      "source": "T3.1c",
+      "reason": "\"Canivete multifuncional\" is a folding multi-tool knife; `pocket_knife`."
+    },
+    "abridor": {
+      "value": "can_opener",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Abridor de lata\"."
+    },
+    "kit_costura": {
+      "value": "sewing_kit",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Kit de costura\"."
+    },
+    "kit_chaveiro": {
+      "value": "lockpick_kit",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Kit de chaveiro (gazuas)\"."
+    },
+    "pederneira": {
+      "value": "flint_striker",
+      "source": "T3.1c",
+      "reason": "A ferro rod and striker for lighting fires; `flint_striker`."
+    },
+    "balde": {
+      "value": "bucket",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Balde\"."
+    },
+    "binoculo": {
+      "value": "binoculars",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Binóculo\"."
+    },
+    "extintor": {
+      "value": "fire_extinguisher",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Extintor de pó\"."
+    },
+    "amolador": {
+      "value": "sharpening_stone",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Pedra de amolar\"."
+    },
+    "fogareiro": {
+      "value": "camp_stove",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Fogareiro de camping\"."
+    },
+    "faca_tatica": {
+      "value": "tactical_knife",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Faca tática\"."
+    },
+    "facao": {
+      "value": "machete",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Facão\"."
+    },
+    "cutelo": {
+      "value": "meat_cleaver",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Cutelo de açougue\"."
+    },
+    "machadinha": {
+      "value": "hatchet",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Machadinha\"."
+    },
+    "machado": {
+      "value": "axe",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Machado\"."
+    },
+    "taco": {
+      "value": "baseball_bat",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Taco de beisebol\"."
+    },
+    "taco_pregos": {
+      "value": "nail_bat",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Taco com pregos\"."
+    },
+    "cano": {
+      "value": "iron_pipe",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Cano de ferro\"."
+    },
+    "marreta": {
+      "value": "sledgehammer",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Marreta\"."
+    },
+    "picareta": {
+      "value": "pickaxe",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Picareta\"."
+    },
+    "foice": {
+      "value": "sickle",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Foice\"."
+    },
+    "tonfa": {
+      "value": "police_baton",
+      "source": "T3.1c",
+      "reason": "A police side-handle baton; `police_baton`."
+    },
+    "frigideira": {
+      "value": "cast_iron_skillet",
+      "source": "T3.1c",
+      "reason": "Not merged with the household `pan` (see mergeRejected)."
+    },
+    "lanca": {
+      "value": "improvised_spear",
+      "source": "T3.1c",
+      "reason": "\"Lanca improvisada\": a crafted spear, `improvised_spear`."
+    },
+    "motosserra": {
+      "value": "chainsaw",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Motosserra\"."
+    },
+    "estilingue": {
+      "value": "slingshot",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Estilingue\"."
+    },
+    "arco": {
+      "value": "recurve_bow",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Arco recurvo\"."
+    },
+    "besta": {
+      "value": "crossbow",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Besta\"."
+    },
+    "flecha": {
+      "value": "arrows_and_bolts",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Flechas e virotes (6)\"."
+    },
+    "tabua": {
+      "value": "wooden_plank",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Tábua\"."
+    },
+    "pregos": {
+      "value": "nails",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Pregos (caixa de 100)\"."
+    },
+    "parafusos": {
+      "value": "screws",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Parafusos (caixa de 50)\"."
+    },
+    "chapa": {
+      "value": "sheet_metal",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Chapa de metal\"."
+    },
+    "sucata": {
+      "value": "scrap_metal",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Sucata de metal\"."
+    },
+    "arame": {
+      "value": "wire_roll",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Arame (rolo de 10 m)\"."
+    },
+    "arame_farpado": {
+      "value": "barbed_wire",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Arame farpado (rolo de 25 m)\"."
+    },
+    "lona": {
+      "value": "tarp",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Lona (4 × 4 m)\"."
+    },
+    "saco_areia": {
+      "value": "raffia_sack",
+      "source": "T3.1c",
+      "reason": "The item is the raffia sack (\"Saco de rafia\") the sandbag recipe fills; named after what it is, not after the recipe result."
+    },
+    "tijolo": {
+      "value": "bricks",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Tijolos (10)\"."
+    },
+    "cimento": {
+      "value": "cement_bag",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Cimento (saco de 25 kg)\"."
+    },
+    "trapo": {
+      "value": "rag",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Trapo\"."
+    },
+    "garrafa_vidro": {
+      "value": "glass_bottle",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Garrafa de vidro vazia\"."
+    },
+    "garrafa_pet": {
+      "value": "pet_bottle",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Garrafa PET vazia\"."
+    },
+    "cacos": {
+      "value": "glass_shards",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Cacos de vidro\"."
+    },
+    "cola": {
+      "value": "epoxy_glue",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Cola epóxi\"."
+    },
+    "componentes": {
+      "value": "electronic_components",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Componentes eletrônicos\"."
+    },
+    "fio_cobre": {
+      "value": "copper_wire",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Fio de cobre (5 m)\"."
+    },
+    "lenha": {
+      "value": "firewood",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Lenha\"."
+    },
+    "vergalhao": {
+      "value": "rebar",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Vergalhão\"."
+    },
+    "lubrificante": {
+      "value": "lubricant_spray",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Óleo lubrificante spray\"."
+    },
+    "moletom": {
+      "value": "hoodie",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Moletom\"."
+    },
+    "jaqueta_jeans": {
+      "value": "denim_jacket",
+      "source": "T3.1c",
+      "reason": "Not merged with the household `jacket` (see mergeRejected): a denim jacket is one kind of jacket, not the generic one."
+    },
+    "jaqueta_couro": {
+      "value": "leather_motorcycle_jacket",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Jaqueta de motociclista (couro)\"."
+    },
+    "calca_couro": {
+      "value": "leather_motorcycle_pants",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Calça de motociclista\"."
+    },
+    "farda_eb": {
+      "value": "army_camouflage_uniform",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Farda camuflada do Exército\"."
+    },
+    "macacao": {
+      "value": "mechanic_coveralls",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Macacão de mecânico\"."
+    },
+    "bombeiro": {
+      "value": "firefighter_suit",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Roupa de bombeiro\"."
+    },
+    "apicultor": {
+      "value": "beekeeper_suit",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Roupa de apicultor\"."
+    },
+    "capa_chuva": {
+      "value": "raincoat",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Capa de chuva\"."
+    },
+    "casaco_frio": {
+      "value": "padded_coat",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Casaco acolchoado\"."
+    },
+    "capacete_moto": {
+      "value": "motorcycle_helmet",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Capacete de moto fechado\"."
+    },
+    "capacete_obra": {
+      "value": "hard_hat",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Capacete de obra (EPI)\"."
+    },
+    "oculos": {
+      "value": "safety_goggles",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Óculos de proteção\"."
+    },
+    "luva_couro": {
+      "value": "leather_work_gloves",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Luvas de couro (raspa)\"."
+    },
+    "coturno": {
+      "value": "combat_boots",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Coturno\"."
+    },
+    "bota_borracha": {
+      "value": "rubber_boots",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Bota de borracha\"."
+    },
+    "chinelo": {
+      "value": "flip_flops",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Chinelo de dedo\"."
+    },
+    "braco_revista": {
+      "value": "magazine_arm_guard",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Braçadeira de revista\"."
+    },
+    "braco_chapa": {
+      "value": "sheet_metal_forearm_guard",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Protetor de antebraço de chapa\"."
+    },
+    "colete": {
+      "value": "ballistic_vest",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Coletes balísticos (II-A, III-A, III)\"."
+    },
+    "sacola": {
+      "value": "shopping_bag",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Sacola de mercado\"."
+    },
+    "saco_lixo": {
+      "value": "trash_bag",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Saco de lixo\"."
+    },
+    "pochete": {
+      "value": "fanny_pack",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Pochete\"."
+    },
+    "bolsa": {
+      "value": "crossbody_bag",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Bolsa transversal\"."
+    },
+    "bag_entregador": {
+      "value": "delivery_bag",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Bag de entregador\"."
+    },
+    "mochila_trilha": {
+      "value": "hiking_backpack_40l",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Mochila de trilha 40 L\"."
+    },
+    "mochila_militar": {
+      "value": "military_backpack",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Mochila militar\"."
+    },
+    "cargueira": {
+      "value": "trekking_backpack_70l",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Mochila cargueira 70 L\"."
+    },
+    "mala": {
+      "value": "rolling_suitcase",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Mala de rodinha\"."
+    },
+    "colete_tatico": {
+      "value": "tactical_vest",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Colete tático\"."
+    },
+    "cinto_ferramentas": {
+      "value": "tool_belt",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Cinto de ferramentas\"."
+    },
+    "caixa_termica": {
+      "value": "cooler_box",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Caixa térmica\"."
+    },
+    "carrinho_merc": {
+      "value": "shopping_cart",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Carrinho de mercado\"."
+    },
+    "carrinho_mao": {
+      "value": "wheelbarrow",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Carrinho de mão\"."
+    },
+    "lanterna_cabeca": {
+      "value": "headlamp",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Lanterna de cabeça\"."
+    },
+    "bateria_9v": {
+      "value": "battery_9v",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Bateria 9 V\"."
+    },
+    "power_bank": {
+      "value": "power_bank",
+      "source": "T3.1c",
+      "reason": "Same word in both languages; the id stays."
+    },
+    "painel_solar": {
+      "value": "folding_solar_panel",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Painel solar dobrável\"."
+    },
+    "radio_portatil": {
+      "value": "portable_radio",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Rádio AM/FM a pilha\"."
+    },
+    "walkie": {
+      "value": "walkie_talkies",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Walkie-talkie (par)\"."
+    },
+    "radio_px": {
+      "value": "cb_radio",
+      "source": "T3.1c",
+      "reason": "PX is the Brazilian citizen-band radio: `cb_radio`."
+    },
+    "radio_militar": {
+      "value": "military_radio",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Rádio militar de longo alcance\"."
+    },
+    "gerador": {
+      "value": "portable_generator",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Gerador portátil a gasolina\"."
+    },
+    "lampiao_led": {
+      "value": "led_camp_lantern",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Lampião LED de camping\"."
+    },
+    "celular": {
+      "value": "mobile_phone",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Celular\"."
+    },
+    "despertador": {
+      "value": "windup_alarm_clock",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Despertador de corda\"."
+    },
+    "controle_alarme": {
+      "value": "car_alarm_remote",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Controle de alarme de carro\"."
+    },
+    "eletrificador": {
+      "value": "electric_fence_energizer",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Eletrificador de cerca rural\"."
+    },
+    "extensao": {
+      "value": "extension_cord",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Extensão elétrica 20 m\"."
+    },
+    "nvg": {
+      "value": "night_vision_goggles",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Óculos de visão noturna\"."
+    },
+    "galao": {
+      "value": "fuel_jerrycan",
+      "source": "T3.1c",
+      "reason": "The 20 L fuel jerrycan; the 5 L water jug is `water_jug_5l`."
+    },
+    "gasolina": {
+      "value": "gasoline",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Gasolina (litro)\"."
+    },
+    "diesel": {
+      "value": "diesel",
+      "source": "T3.1c",
+      "reason": "Same word in both languages; the id stays."
+    },
+    "botijao": {
+      "value": "lpg_cylinder_13kg",
+      "source": "T3.1c",
+      "reason": "P13 is the 13 kg LPG cylinder."
+    },
+    "cartucho_gas": {
+      "value": "gas_cartridge",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Cartucho de gás\"."
+    },
+    "querosene": {
+      "value": "kerosene",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Querosene (1 L)\"."
+    },
+    "bateria_12v": {
+      "value": "car_battery_12v",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Bateria 12 V\"."
+    },
+    "oleo_motor": {
+      "value": "motor_oil",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Óleo de motor\"."
+    },
+    "sem_feijao": {
+      "value": "bean_seeds",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Sementes de feijão\"."
+    },
+    "sem_milho": {
+      "value": "corn_seeds",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Sementes de milho\"."
+    },
+    "sem_abobora": {
+      "value": "pumpkin_seeds",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Sementes de abóbora\"."
+    },
+    "sem_couve": {
+      "value": "kale_and_lettuce_seeds",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Sementes de couve e alface\"."
+    },
+    "maniva": {
+      "value": "cassava_cuttings",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Rama de mandioca (maniva)\"."
+    },
+    "adubo": {
+      "value": "fertilizer_bag",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Adubo (saco de 10 kg)\"."
+    },
+    "regador": {
+      "value": "watering_can",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Regador\"."
+    },
+    "vara_pesca": {
+      "value": "fishing_rod",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Vara de pesca\"."
+    },
+    "kit_pesca": {
+      "value": "fishing_tackle_box",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Caixa de pesca (anzol, linha, isca)\"."
+    },
+    "rede_pesca": {
+      "value": "fishing_net",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Rede de pesca\"."
+    },
+    "armadilha_laco": {
+      "value": "snare_trap",
+      "source": "T3.1c",
+      "reason": "A snare. The recipe of the same name is a recipe id, a separate namespace."
+    },
+    "livro_hab": {
+      "value": "skill_book",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Livro de habilidade (volumes 1 a 5)\"."
+    },
+    "livro_tecnico": {
+      "value": "technical_manual",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Manual técnico\"."
+    },
+    "revista_receita": {
+      "value": "diy_magazine",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Revista Faça Você Mesmo\"."
+    },
+    "revista_passa": {
+      "value": "magazines_and_comics",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Revista e gibi\"."
+    },
+    "almanaque": {
+      "value": "farmers_almanac",
+      "source": "T3.1c",
+      "reason": "Plain English name of \"Almanaque do agricultor\"."
+    },
+    "diario": {
+      "value": "survivor_diary",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Diário de sobrevivente\"; it goes to the game slice, never to the SDK."
+    },
+    "mapa_militar": {
+      "value": "military_map",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Mapa militar\"; it goes to the game slice, never to the SDK."
+    },
+    "ordem_evac": {
+      "value": "evacuation_order",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Ordem de evacuação do 7º BIS\"; it goes to the game slice, never to the SDK."
+    },
+    "prontuario": {
+      "value": "patient_zero_record",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Prontuário do paciente zero\"; it goes to the game slice, never to the SDK."
+    },
+    "fichas_presos": {
+      "value": "prisoner_files",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Fichas da penitenciária\"; it goes to the game slice, never to the SDK."
+    },
+    "registro_mina": {
+      "value": "mine_logbook",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Livro de registro da Mina São Jorge\"; it goes to the game slice, never to the SDK."
+    },
+    "fita_radio": {
+      "value": "radio_tape",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Fita da Rádio Vale FM (12)\"; it goes to the game slice, never to the SDK."
+    },
+    "postal": {
+      "value": "valley_postcard",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Cartão-postal do Vale (19)\"; it goes to the game slice, never to the SDK."
+    },
+    "item_marcado": {
+      "value": "npc_marked_item",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Item marcado de NPC (31)\"; it goes to the game slice, never to the SDK."
+    },
+    "codigo_bunker": {
+      "value": "bunker_code",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Código do bunker (3 pedaços)\"; it goes to the game slice, never to the SDK."
+    },
+    "chave_teleferico": {
+      "value": "cable_car_key",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Chave do teleférico\"; it goes to the game slice, never to the SDK."
+    },
+    "cracha_rep": {
+      "value": "dam_badge",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Crachá da hidrelétrica\"; it goes to the game slice, never to the SDK."
+    },
+    "chave_casa_d": {
+      "value": "house_d_key",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Chave da Casa D\"; it goes to the game slice, never to the SDK."
+    },
+    "sinalizador": {
+      "value": "signal_flare",
+      "source": "T3.1c",
+      "reason": "English id of the game-only story item \"Sinalizador\"; it goes to the game slice, never to the SDK."
     }
   },
   "scope": {
     "diario": {
       "value": "game",
-      "source": "design",
-      "reason": "Only the game has this story item (T3-itens.md section 2); it goes to the game slice, not to the SDK."
+      "source": "T3.1c",
+      "reason": "Story item only the ZombiAdA game has (\"Diário de sobrevivente\"): it goes to the game slice, not to the SDK (the SDK keeps the neutral generic forms). Moving it is one line here."
     },
     "mapa_militar": {
       "value": "game",
-      "source": "design",
-      "reason": "Only the game has this story item (T3-itens.md section 2); it goes to the game slice, not to the SDK."
+      "source": "T3.1c",
+      "reason": "Story item only the ZombiAdA game has (\"Mapa militar\"): it goes to the game slice, not to the SDK (the SDK keeps the neutral generic forms). Moving it is one line here."
     },
     "ordem_evac": {
       "value": "game",
-      "source": "design",
-      "reason": "Only the game has this story item (T3-itens.md section 2); it goes to the game slice, not to the SDK."
+      "source": "T3.1c",
+      "reason": "Story item only the ZombiAdA game has (\"Ordem de evacuação do 7º BIS\"): it goes to the game slice, not to the SDK (the SDK keeps the neutral generic forms). Moving it is one line here."
     },
     "prontuario": {
       "value": "game",
-      "source": "design",
-      "reason": "Only the game has this story item (T3-itens.md section 2); it goes to the game slice, not to the SDK."
+      "source": "T3.1c",
+      "reason": "Story item only the ZombiAdA game has (\"Prontuário do paciente zero\"): it goes to the game slice, not to the SDK (the SDK keeps the neutral generic forms). Moving it is one line here."
     },
     "fichas_presos": {
       "value": "game",
-      "source": "design",
-      "reason": "Only the game has this story item (T3-itens.md section 2); it goes to the game slice, not to the SDK."
+      "source": "T3.1c",
+      "reason": "Story item only the ZombiAdA game has (\"Fichas da penitenciária\"): it goes to the game slice, not to the SDK (the SDK keeps the neutral generic forms). Moving it is one line here."
     },
     "registro_mina": {
       "value": "game",
-      "source": "design",
-      "reason": "Only the game has this story item (T3-itens.md section 2); it goes to the game slice, not to the SDK."
+      "source": "T3.1c",
+      "reason": "Story item only the ZombiAdA game has (\"Livro de registro da Mina São Jorge\"): it goes to the game slice, not to the SDK (the SDK keeps the neutral generic forms). Moving it is one line here."
     },
     "fita_radio": {
       "value": "game",
-      "source": "design",
-      "reason": "Only the game has this story item (T3-itens.md section 2); it goes to the game slice, not to the SDK."
+      "source": "T3.1c",
+      "reason": "Story item only the ZombiAdA game has (\"Fita da Rádio Vale FM (12)\"): it goes to the game slice, not to the SDK (the SDK keeps the neutral generic forms). Moving it is one line here."
     },
     "postal": {
       "value": "game",
-      "source": "design",
-      "reason": "Only the game has this story item (T3-itens.md section 2); it goes to the game slice, not to the SDK."
+      "source": "T3.1c",
+      "reason": "Story item only the ZombiAdA game has (\"Cartão-postal do Vale (19)\"): it goes to the game slice, not to the SDK (the SDK keeps the neutral generic forms). Moving it is one line here."
     },
     "item_marcado": {
       "value": "game",
-      "source": "design",
-      "reason": "Only the game has this story item (T3-itens.md section 2); it goes to the game slice, not to the SDK."
+      "source": "T3.1c",
+      "reason": "Story item only the ZombiAdA game has (\"Item marcado de NPC (31)\"): it goes to the game slice, not to the SDK (the SDK keeps the neutral generic forms). Moving it is one line here."
     },
     "codigo_bunker": {
       "value": "game",
-      "source": "design",
-      "reason": "Only the game has this story item (T3-itens.md section 2); it goes to the game slice, not to the SDK."
+      "source": "T3.1c",
+      "reason": "Story item only the ZombiAdA game has (\"Código do bunker (3 pedaços)\"): it goes to the game slice, not to the SDK (the SDK keeps the neutral generic forms). Moving it is one line here."
     },
     "chave_teleferico": {
       "value": "game",
-      "source": "design",
-      "reason": "Only the game has this story item (T3-itens.md section 2); it goes to the game slice, not to the SDK."
+      "source": "T3.1c",
+      "reason": "Story item only the ZombiAdA game has (\"Chave do teleférico\"): it goes to the game slice, not to the SDK (the SDK keeps the neutral generic forms). Moving it is one line here."
     },
     "cracha_rep": {
       "value": "game",
-      "source": "design",
-      "reason": "Only the game has this story item (T3-itens.md section 2); it goes to the game slice, not to the SDK."
+      "source": "T3.1c",
+      "reason": "Story item only the ZombiAdA game has (\"Crachá da hidrelétrica\"): it goes to the game slice, not to the SDK (the SDK keeps the neutral generic forms). Moving it is one line here."
     }
   },
   "gameOnlyExtras": {
     "chave_casa_d": {
       "value": "game",
-      "source": "design",
+      "source": "T3.1c",
       "reason": "Belongs to the game (Casa D key, Casa 8 flare), not to the SDK (T3-itens.md section 1)."
     },
     "sinalizador": {
       "value": "game",
-      "source": "design",
+      "source": "T3.1c",
       "reason": "Belongs to the game (Casa D key, Casa 8 flare), not to the SDK (T3-itens.md section 1)."
+    }
+  },
+  "extraItems": {
+    "branch": {
+      "value": {
+        "category": "materials",
+        "tags": [
+          "craft_only"
+        ],
+        "weight": 0.5,
+        "rarity": "common",
+        "stack": 4,
+        "shape": "tool"
+      },
+      "source": "T3.1c",
+      "reason": "Recipe term \"galho(s)\" (splint, torch, snare): a branch picked up outdoors, so craft-only (no place lists it)."
+    },
+    "stick": {
+      "value": {
+        "category": "materials",
+        "tags": [
+          "craft_only"
+        ],
+        "weight": 0.05,
+        "rarity": "common",
+        "stack": 8,
+        "shape": "tool"
+      },
+      "source": "T3.1c",
+      "reason": "Recipe term \"vareta\" (arrows): a thin stick picked up outdoors, craft-only."
+    },
+    "feather": {
+      "value": {
+        "category": "materials",
+        "tags": [
+          "craft_only"
+        ],
+        "weight": 0.001,
+        "rarity": "common",
+        "stack": 20,
+        "shape": "paper"
+      },
+      "source": "T3.1c",
+      "reason": "Recipe term \"pena\" (arrows): a feather from a hunted bird, craft-only."
+    },
+    "bread_mold": {
+      "value": {
+        "category": "materials",
+        "tags": [
+          "craft_only"
+        ],
+        "weight": 0.02,
+        "rarity": "common",
+        "stack": 4,
+        "shape": "box"
+      },
+      "source": "T3.1c",
+      "reason": "Recipe term \"mofo de pao\" (homemade antibiotic): the host may hand it out when sliced bread rots; as an item it also works as a plain crafting input."
+    },
+    "glass_jar": {
+      "value": {
+        "category": "materials",
+        "weight": 0.3,
+        "rarity": "common",
+        "stack": 4,
+        "shape": "jar",
+        "places": [
+          "house",
+          "apartment",
+          "supermarket",
+          "farm"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Recipe term \"pote de vidro\" (preserves): an empty 500 ml jar with lid."
+    },
+    "broomstick": {
+      "value": {
+        "category": "tools",
+        "tags": [
+          "craft_only"
+        ],
+        "weight": 0.3,
+        "rarity": "common",
+        "stack": 1,
+        "shape": "tool"
+      },
+      "source": "T3.1c",
+      "reason": "Recipe term \"cabo de vassoura\" (spear): the wooden handle of a broom, craft-only."
+    },
+    "barrel": {
+      "value": {
+        "category": "tools",
+        "weight": 3.5,
+        "rarity": "common",
+        "stack": 1,
+        "shape": "box",
+        "places": [
+          "farm",
+          "warehouse",
+          "workshop",
+          "docks"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Recipe term \"barril\" (rain collector): an empty 60 L plastic drum."
+    },
+    "access_badge": {
+      "value": {
+        "category": "keys",
+        "tags": [
+          "access"
+        ],
+        "weight": 0.01,
+        "rarity": "uncommon",
+        "stack": 1,
+        "shape": "paper"
+      },
+      "source": "T3.1c",
+      "reason": "The SDK keeps generic forms of neutral name for story items (T3-itens.md section 2); the team only has the dam badge (`cracha_rep`, game-only), so the generic badge is created."
+    },
+    "insulin": {
+      "value": {
+        "category": "medical",
+        "tags": [
+          "perishable",
+          "refrigerated"
+        ],
+        "weight": 0.05,
+        "rarity": "uncommon",
+        "stack": 4,
+        "shape": "box",
+        "shelfLife": 28,
+        "places": [
+          "house",
+          "apartment",
+          "pharmacy",
+          "hospital"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"insulina\" (refrigerated medicine): an insulin pen in its box; 28 days is the in-use life of an opened pen."
+    },
+    "leftover_meal": {
+      "value": {
+        "category": "food",
+        "tags": [
+          "perishable",
+          "kitchen"
+        ],
+        "weight": 0.5,
+        "rarity": "common",
+        "stack": 2,
+        "shape": "box",
+        "shelfLife": 4,
+        "portions": 1,
+        "nutrition": {
+          "satiety": 20,
+          "hydration": 0
+        },
+        "places": [
+          "house",
+          "apartment"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"sobras\" (a boxed meal): cooked leftovers last about four days; satiety 20 is the team scale of a hearty dish (canned beans 25, rice 20)."
+    },
+    "disinfectant": {
+      "value": {
+        "category": "materials",
+        "tags": [
+          "cleaning"
+        ],
+        "weight": 1.05,
+        "rarity": "common",
+        "stack": 2,
+        "shape": "bottle",
+        "places": [
+          "house",
+          "apartment",
+          "supermarket",
+          "school",
+          "hospital"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"desinfetante\": a 1 L bottle of household disinfectant."
+    },
+    "seasoning": {
+      "value": {
+        "category": "food",
+        "tags": [
+          "kitchen"
+        ],
+        "weight": 0.1,
+        "rarity": "common",
+        "stack": 6,
+        "shape": "jar",
+        "places": [
+          "house",
+          "apartment",
+          "supermarket"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"tempero\": a jar of ground spice."
+    },
+    "stapler": {
+      "value": {
+        "category": "collectibles",
+        "tags": [
+          "office"
+        ],
+        "weight": 0.25,
+        "rarity": "common",
+        "stack": 1,
+        "shape": "tool",
+        "places": [
+          "house",
+          "apartment",
+          "school",
+          "police_station"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"grampeador\": a desk stapler (the viewer lists it as an improvised weapon)."
+    },
+    "remote_control": {
+      "value": {
+        "category": "electronics",
+        "weight": 0.1,
+        "rarity": "common",
+        "stack": 1,
+        "shape": "tool",
+        "places": [
+          "house",
+          "apartment"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"controle_remoto\": a TV remote with batteries."
+    },
+    "dvd": {
+      "value": {
+        "category": "collectibles",
+        "tags": [
+          "media"
+        ],
+        "weight": 0.09,
+        "rarity": "common",
+        "stack": 4,
+        "shape": "paper",
+        "places": [
+          "house",
+          "apartment"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"dvd\": a disc in its case."
+    },
+    "cable_bundle": {
+      "value": {
+        "category": "electronics",
+        "weight": 0.15,
+        "rarity": "common",
+        "stack": 4,
+        "shape": "tool",
+        "places": [
+          "house",
+          "apartment"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"cabos\": a coil of USB/HDMI cables."
+    },
+    "shoe_polish": {
+      "value": {
+        "category": "materials",
+        "tags": [
+          "cleaning"
+        ],
+        "weight": 0.08,
+        "rarity": "common",
+        "stack": 4,
+        "shape": "can",
+        "places": [
+          "house",
+          "apartment"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"graxa\": a tin of shoe polish."
+    },
+    "laundry_powder": {
+      "value": {
+        "category": "materials",
+        "tags": [
+          "cleaning"
+        ],
+        "weight": 1,
+        "rarity": "common",
+        "stack": 2,
+        "shape": "box",
+        "places": [
+          "house",
+          "apartment",
+          "supermarket"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"sabao_po\": a 1 kg box of washing powder."
+    },
+    "broom": {
+      "value": {
+        "category": "tools",
+        "tags": [
+          "cleaning"
+        ],
+        "weight": 0.6,
+        "rarity": "common",
+        "stack": 1,
+        "shape": "tool",
+        "places": [
+          "house",
+          "apartment",
+          "school"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"vassoura\": a household broom."
+    },
+    "rubber_gloves": {
+      "value": {
+        "category": "clothing",
+        "tags": [
+          "cleaning"
+        ],
+        "weight": 0.12,
+        "rarity": "common",
+        "stack": 2,
+        "shape": "cloth",
+        "places": [
+          "house",
+          "apartment"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"luvas\": a pair of cleaning gloves (not the leather work gloves, which protect)."
+    },
+    "fabric_softener": {
+      "value": {
+        "category": "materials",
+        "tags": [
+          "cleaning"
+        ],
+        "weight": 1.05,
+        "rarity": "common",
+        "stack": 2,
+        "shape": "bottle",
+        "places": [
+          "house",
+          "apartment",
+          "supermarket"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"amaciante\": a 1 L bottle."
+    },
+    "clothespins": {
+      "value": {
+        "category": "tools",
+        "weight": 0.15,
+        "rarity": "common",
+        "stack": 4,
+        "shape": "box",
+        "places": [
+          "house",
+          "apartment"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"cesto_pregadores\" (pegs): a bag of wooden clothespins."
+    },
+    "electrical_tape": {
+      "value": {
+        "category": "tools",
+        "weight": 0.05,
+        "rarity": "common",
+        "stack": 4,
+        "shape": "roll",
+        "places": [
+          "house",
+          "apartment",
+          "workshop",
+          "warehouse"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"fita_isolante\": a roll of insulating tape (not the silver tape)."
+    },
+    "full_trash_bag": {
+      "value": {
+        "category": "materials",
+        "tags": [
+          "trash"
+        ],
+        "weight": 2,
+        "rarity": "common",
+        "stack": 1,
+        "shape": "bag",
+        "places": [
+          "house",
+          "apartment"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"saco_lixo_cheio\": a bag of household rubbish; the viewer marks it as not takeable."
+    },
+    "food_packaging": {
+      "value": {
+        "category": "materials",
+        "tags": [
+          "trash"
+        ],
+        "weight": 0.05,
+        "rarity": "common",
+        "stack": 4,
+        "shape": "bag",
+        "places": [
+          "house",
+          "apartment"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"embalagem\": empty wrappers and boxes."
+    },
+    "wine_glass": {
+      "value": {
+        "category": "tools",
+        "tags": [
+          "kitchen"
+        ],
+        "weight": 0.15,
+        "rarity": "common",
+        "stack": 4,
+        "shape": "cup",
+        "places": [
+          "house",
+          "apartment"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"taca\": a wine glass; the viewer marks it as not takeable."
+    },
+    "book": {
+      "value": {
+        "category": "books",
+        "weight": 0.4,
+        "rarity": "common",
+        "stack": 2,
+        "shape": "paper",
+        "places": [
+          "house",
+          "apartment",
+          "school",
+          "church"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"livro\": an ordinary book. The old alias pointed at the rare skill book, which would put skill volumes on every shelf."
+    },
+    "eyeglasses": {
+      "value": {
+        "category": "clothing",
+        "weight": 0.03,
+        "rarity": "common",
+        "stack": 2,
+        "shape": "shoe",
+        "places": [
+          "house",
+          "apartment"
+        ]
+      },
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"oculos\": prescription glasses. The old alias pointed at the safety goggles (a protective item)."
     }
   },
   "householdRarity": {
@@ -905,73 +2485,215 @@
   "stackByCategory": {
     "food": {
       "value": 4,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Household food stacks run 2 to 6; 4 is the middle."
     },
     "drink": {
       "value": 4,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Household bottles and cans stack 4 to 6."
     },
     "medical": {
       "value": 6,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Blister packs and small boxes: 6 (household bandage and painkillers are 4; a pill strip is lighter)."
     },
     "tools": {
       "value": 1,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "A tool is carried alone (household tools and utensils 1 to 2)."
     },
     "melee": {
       "value": 1,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "One weapon per slot."
     },
     "materials": {
-      "value": 8,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "value": 4,
+      "source": "T3.1c",
+      "reason": "Bulk materials come in boxes and bags; heavy ones are listed in stackOverrides."
     },
     "clothing": {
       "value": 1,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "A garment takes a slot (household small clothes like socks stack 6 through their own value)."
     },
     "bags": {
       "value": 1,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "A bag takes a slot."
     },
     "electronics": {
       "value": 2,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Devices stack 2; small ones (batteries) carry their household value."
     },
     "fuel": {
       "value": 1,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Containers of fuel take a slot."
     },
     "outdoors": {
       "value": 4,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Seeds, tackle and fertilizer: 4."
     },
     "books": {
       "value": 2,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Books and magazines stack 2."
     },
     "collectibles": {
       "value": 10,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Paper and small keepsakes: 10 (household letters 1, bills 1 are kept as their own value)."
     },
     "keys": {
       "value": 1,
-      "source": "provisional",
-      "reason": "Default stack when the item has no household value (T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "A key ring takes a slot."
+    }
+  },
+  "stackOverrides": {
+    "barbed_wire": {
+      "value": 2,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Arame farpado (rolo de 25 m)\", 4 kg): one or two per slot."
+    },
+    "bean_seeds": {
+      "value": 8,
+      "source": "T3.1c",
+      "reason": "Small items bought by the box or the packet (\"Sementes de feijão\"): more than the category default."
+    },
+    "bricks": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Tijolos (10)\", 25 kg): one or two per slot."
+    },
+    "car_battery_12v": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Bateria 12 V\", 14 kg): one or two per slot."
+    },
+    "car_jack": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Macaco e chave de roda\", 4 kg): one or two per slot."
+    },
+    "cb_radio": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Rádio amador PX\", 3 kg): one or two per slot."
+    },
+    "cement_bag": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Cimento (saco de 25 kg)\", 25 kg): one or two per slot."
+    },
+    "chainsaw": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Motosserra\", 6 kg): one or two per slot."
+    },
+    "corn_seeds": {
+      "value": 8,
+      "source": "T3.1c",
+      "reason": "Small items bought by the box or the packet (\"Sementes de milho\"): more than the category default."
+    },
+    "fertilizer_bag": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Adubo (saco de 10 kg)\", 10 kg): one or two per slot."
+    },
+    "fire_extinguisher": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Extintor de pó\", 4 kg): one or two per slot."
+    },
+    "firewood": {
+      "value": 2,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Lenha\", 1.5 kg): one or two per slot."
+    },
+    "inverter_welder": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Máquina de solda inversora\", 6 kg): one or two per slot."
+    },
+    "kale_and_lettuce_seeds": {
+      "value": 8,
+      "source": "T3.1c",
+      "reason": "Small items bought by the box or the packet (\"Sementes de couve e alface\"): more than the category default."
+    },
+    "lpg_cylinder_13kg": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Botijão de gás P13\", 29 kg): one or two per slot."
+    },
+    "mechanic_toolbox": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Maleta de ferramentas do mecânico\", 6 kg): one or two per slot."
+    },
+    "military_radio": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Rádio militar de longo alcance\", 6 kg): one or two per slot."
+    },
+    "nails": {
+      "value": 6,
+      "source": "T3.1c",
+      "reason": "Small items bought by the box or the packet (\"Pregos (caixa de 100)\"): more than the category default."
+    },
+    "portable_generator": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Gerador portátil a gasolina\", 25 kg): one or two per slot."
+    },
+    "pumpkin_seeds": {
+      "value": 8,
+      "source": "T3.1c",
+      "reason": "Small items bought by the box or the packet (\"Sementes de abóbora\"): more than the category default."
+    },
+    "rebar": {
+      "value": 2,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Vergalhão\", 2 kg): one or two per slot."
+    },
+    "screws": {
+      "value": 6,
+      "source": "T3.1c",
+      "reason": "Small items bought by the box or the packet (\"Parafusos (caixa de 50)\"): more than the category default."
+    },
+    "sheet_metal": {
+      "value": 2,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Chapa de metal\", 6 kg): one or two per slot."
+    },
+    "sledgehammer": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Marreta\", 5 kg): one or two per slot."
+    },
+    "tarp": {
+      "value": 2,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Lona (4 × 4 m)\", 2 kg): one or two per slot."
+    },
+    "water_jug_5l": {
+      "value": 1,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Galão de água (5 L)\", 5.2 kg): one or two per slot."
+    },
+    "wire_roll": {
+      "value": 4,
+      "source": "T3.1c",
+      "reason": "Small items bought by the box or the packet (\"Arame (rolo de 10 m)\"): more than the category default."
+    },
+    "wooden_plank": {
+      "value": 2,
+      "source": "T3.1c",
+      "reason": "Heavy or bulky (\"Tábua\", 2 kg): one or two per slot."
     }
   },
   "shapeByCategory": {
@@ -1636,1010 +3358,1021 @@
   "recipeTerms": {
     "tábuas": {
       "value": {
-        "item": "tabua"
+        "item": "wooden_plank"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `wooden_plank`."
     },
     "tábua": {
       "value": {
-        "item": "tabua"
+        "item": "wooden_plank"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `wooden_plank`."
     },
     "pregos": {
       "value": {
-        "item": "pregos"
+        "item": "nails"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `nails`."
     },
     "prego": {
       "value": {
-        "item": "pregos"
+        "item": "nails"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `nails`."
     },
     "chapa": {
       "value": {
-        "item": "chapa"
+        "item": "sheet_metal"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `sheet_metal`."
     },
     "parafusos": {
       "value": {
-        "item": "parafusos"
+        "item": "screws"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `screws`."
     },
     "mesa": {
       "value": {
-        "item": "table"
+        "world": "table"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Furniture the player takes apart: a thing of the world (an interactable of game-interactables), never carried."
     },
     "porta": {
       "value": {
-        "item": "door"
+        "world": "door"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Furniture the player takes apart: a thing of the world, never carried."
     },
     "armário": {
       "value": {
-        "item": "cabinet"
+        "world": "cabinet"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Furniture the player takes apart: a thing of the world, never carried."
     },
     "roupa": {
       "value": {
-        "item": "garment"
+        "match": {
+          "category": "clothing"
+        }
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "\"1 roupa\" is any garment: every item of the clothing category."
     },
     "trapos": {
       "value": {
-        "item": "trapo"
+        "item": "rag"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `rag`."
     },
     "trapo": {
       "value": {
-        "item": "trapo"
+        "item": "rag"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `rag`."
     },
     "água": {
       "value": {
-        "item": "water"
+        "fluid": "water"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Water is a fluid counted in litres (\"0,5 L de agua\"), a `fluid` of game-fluids and not an item (`dirty_water` is a different thing, the jug of river water)."
     },
     "kit de costura": {
       "value": {
-        "item": "kit_costura"
+        "item": "sewing_kit"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `sewing_kit`."
     },
     "álcool 70": {
       "value": {
         "item": "alcohol_70"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `alcohol_70`."
     },
     "cachaça": {
       "value": {
         "item": "cachaca"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `cachaca`."
     },
     "álcool": {
       "value": {
         "item": "alcohol_70"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `alcohol_70`."
     },
     "corda": {
       "value": {
         "item": "rope"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `rope`."
     },
     "galhos": {
       "value": {
         "item": "branch"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Created item `branch` (see extraItems)."
     },
     "galho": {
       "value": {
         "item": "branch"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Created item `branch` (see extraItems)."
     },
     "ataduras": {
       "value": {
         "item": "bandage"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `bandage`."
     },
     "água suja": {
       "value": {
-        "item": "agua_suja"
+        "item": "dirty_water"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `dirty_water`."
     },
     "panela": {
       "value": {
         "item": "pot"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `pot`."
     },
     "fogo": {
       "value": {
-        "item": "fire"
+        "world": "fire"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "A fire is a station of the world (campfire, stove), not an item; the campfire recipe makes one."
     },
     "lona": {
       "value": {
-        "item": "lona"
+        "item": "tarp"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `tarp`."
     },
     "balde": {
       "value": {
-        "item": "balde"
+        "item": "bucket"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `bucket`."
     },
     "barril": {
       "value": {
         "item": "barrel"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Created item `barrel` (see extraItems)."
     },
     "carne crua": {
       "value": {
-        "item": "carne_bovina"
+        "item": "raw_beef"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `raw_beef`."
     },
     "sal": {
       "value": {
         "item": "salt"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `salt`."
     },
     "peixe fresco": {
       "value": {
-        "item": "peixe_fresco"
+        "item": "fresh_fish"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `fresh_fish`."
     },
     "pote de vidro": {
       "value": {
         "item": "glass_jar"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Created item `glass_jar` (see extraItems)."
     },
     "legume": {
       "value": {
-        "item": "vegetable"
+        "items": [
+          "potatoes",
+          "cassava_root",
+          "tomato"
+        ]
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "\"Legume\" is a family: the vegetables of the catalog (potatoes, cassava root, tomato). Reversible: add an id here."
     },
     "açúcar": {
       "value": {
         "item": "sugar"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `sugar`."
     },
     "faca de cozinha": {
       "value": {
         "item": "knife"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `knife`."
     },
     "cabo de vassoura": {
       "value": {
         "item": "broomstick"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Created item `broomstick` (see extraItems)."
     },
     "silver tape": {
       "value": {
         "item": "duct_tape"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `duct_tape`."
     },
     "taco de beisebol": {
       "value": {
-        "item": "taco"
+        "item": "baseball_bat"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `baseball_bat`."
     },
     "revistas": {
       "value": {
-        "item": "revista_passa"
+        "item": "magazines_and_comics"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `magazines_and_comics`."
     },
     "alicate": {
       "value": {
-        "item": "alicate"
+        "item": "pliers"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `pliers`."
     },
     "garrafa de vidro": {
       "value": {
-        "item": "garrafa_vidro"
+        "item": "glass_bottle"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `glass_bottle`."
     },
     "gasolina": {
       "value": {
-        "item": "gasolina"
+        "item": "gasoline"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `gasoline`."
     },
     "despertador": {
       "value": {
-        "item": "despertador"
+        "item": "windup_alarm_clock"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `windup_alarm_clock`."
     },
     "lata vazia": {
       "value": {
         "item": "empty_can"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `empty_can`."
     },
     "latas vazias": {
       "value": {
         "item": "empty_can"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `empty_can`."
     },
     "arame": {
       "value": {
-        "item": "arame"
+        "item": "wire_roll"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `wire_roll`."
     },
     "rolo de arame farpado": {
       "value": {
-        "item": "arame_farpado"
+        "item": "barbed_wire"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `barbed_wire`."
     },
     "eletrificador": {
       "value": {
-        "item": "eletrificador"
+        "item": "electric_fence_energizer"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `electric_fence_energizer`."
     },
     "bateria 12 V": {
       "value": {
-        "item": "bateria_12v"
+        "item": "car_battery_12v"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `car_battery_12v`."
     },
     "óleo": {
       "value": {
         "item": "cooking_oil"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `cooking_oil`."
     },
     "querosene": {
       "value": {
-        "item": "querosene"
+        "item": "kerosene"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `kerosene`."
     },
     "lenhas": {
       "value": {
-        "item": "lenha"
+        "item": "firewood"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `firewood`."
     },
     "saco de ráfia": {
       "value": {
         "item": "raffia_sack"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The existing item \"Saco de rafia\" (`raffia_sack`, id of the team `saco_areia`)."
     },
     "terra": {
       "value": {
-        "item": "soil"
+        "world": "soil"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Soil is the ground the player digs with a shovel: a thing of the world, never carried."
     },
     "fio de cobre": {
       "value": {
-        "item": "fio_cobre"
+        "item": "copper_wire"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `copper_wire`."
     },
     "rádio": {
       "value": {
-        "item": "radio_portatil"
+        "item": "portable_radio"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `portable_radio`."
     },
     "celular": {
       "value": {
-        "item": "celular"
+        "item": "mobile_phone"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `mobile_phone`."
     },
     "notebook": {
       "value": {
-        "item": "notebook"
+        "item": "laptop"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `laptop`."
     },
     "vareta": {
       "value": {
         "item": "stick"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Created item `stick` (see extraItems)."
     },
     "pena": {
       "value": {
         "item": "feather"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Created item `feather` (see extraItems)."
     },
     "mofo de pão": {
       "value": {
         "item": "bread_mold"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Created item `bread_mold` (see extraItems)."
     },
     "vidro limpo": {
       "value": {
-        "item": "clean_glass"
+        "items": [
+          "glass_jar",
+          "glass_bottle"
+        ]
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Cleanliness is not tracked; any empty glass container counts (jar or bottle). Reversible."
     },
     "água sanitária": {
       "value": {
         "item": "bleach"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `bleach`."
     },
     "ingredientes": {
       "value": {
-        "item": "ingredient"
+        "match": {
+          "cookable": true
+        }
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "\"Ingredientes\" is anything cookable: every item with the `cookable` flag."
     },
     "saco de lixo": {
       "value": {
-        "item": "saco_lixo"
+        "item": "trash_bag"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `trash_bag`."
     },
     "martelo": {
       "value": {
         "item": "hammer"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `hammer`."
     },
     "parafusadeira": {
       "value": {
-        "item": "parafusadeira"
+        "item": "cordless_drill"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `cordless_drill`."
     },
     "máquina de solda": {
       "value": {
-        "item": "solda"
+        "item": "inverter_welder"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `inverter_welder`."
     },
     "serrote": {
       "value": {
-        "item": "serrote"
+        "item": "handsaw"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `handsaw`."
     },
     "machado": {
       "value": {
-        "item": "machado"
+        "item": "axe"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `axe`."
     },
     "mãos (tesoura 2× mais rápido)": {
       "value": {
         "none": true
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "Bare hands: no tool item (the recipe is only faster with scissors)."
     },
     "isqueiro para acender": {
       "value": {
         "item": "lighter"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `lighter`."
     },
     "isqueiro": {
       "value": {
         "item": "lighter"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `lighter`."
     },
     "fósforo": {
       "value": {
         "item": "matches"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `matches`."
     },
     "pederneira": {
       "value": {
-        "item": "pederneira"
+        "item": "flint_striker"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `flint_striker`."
     },
     "pá": {
       "value": {
-        "item": "pa"
+        "item": "shovel"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `shovel`."
     },
     "chave de fenda": {
       "value": {
         "item": "screwdriver"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `screwdriver`."
     },
     "faca": {
       "value": {
         "item": "knife"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `knife`."
     },
     "luvas de couro": {
       "value": {
-        "item": "luva_couro"
+        "item": "leather_work_gloves"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `leather_work_gloves`."
     },
     "flechas": {
       "value": {
-        "item": "flecha"
+        "item": "arrows_and_bolts"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `arrows_and_bolts`."
     },
     "componentes": {
       "value": {
-        "item": "componentes"
+        "item": "electronic_components"
       },
-      "source": "T3.1b",
-      "reason": "Phrase of the recipe text to item ids (the extractor reads the phrases, this table gives the ids; an id that is not in the catalog yet is reported as unresolved for T3.1c)."
+      "source": "T3.1c",
+      "reason": "The phrase of the recipe text is the catalog item `electronic_components`."
     }
   },
   "aliases": {
     "agua_garrafa": {
       "value": "water_bottle",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"agua_garrafa\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `water_bottle`."
     },
     "leite": {
       "value": "milk_carton",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"leite\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `milk_carton`."
     },
     "ovos": {
       "value": "eggs",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"ovos\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `eggs`."
     },
     "carne": {
-      "value": "carne_bovina",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"carne\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "raw_beef",
+      "source": "T3.1c",
+      "reason": "The viewer fridge \"carne\" is raw meat; the team raw beef is the closest (the household frozen meat is a tray for the freezer)."
     },
     "fruta": {
       "value": "apple",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"fruta\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Any fruit in a fridge: the household apple."
     },
     "iogurte": {
       "value": "yogurt",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"iogurte\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `yogurt`."
     },
     "refrigerante": {
       "value": "soda_can",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"refrigerante\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `soda_can`."
     },
     "queijo": {
       "value": "cheese",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"queijo\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `cheese`."
     },
     "insulina": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "insulin",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"insulina\" (refrigerated medicine): an insulin pen in its box; 28 days is the in-use life of an opened pen."
     },
     "sobras": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "leftover_meal",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"sobras\" (a boxed meal): cooked leftovers last about four days; satiety 20 is the team scale of a hearty dish (canned beans 25, rice 20)."
     },
     "sorvete": {
       "value": "ice_cream",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"sorvete\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Ice cream."
     },
     "panela": {
       "value": "pot",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"panela\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "A pot."
     },
     "faca": {
       "value": "knife",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"faca\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "A kitchen knife."
     },
     "detergente": {
       "value": "detergent",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"detergente\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `detergent`."
     },
     "esponja": {
       "value": "sponge",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"esponja\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `sponge`."
     },
     "arroz": {
       "value": "rice",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"arroz\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `rice`."
     },
     "feijao": {
       "value": "beans",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"feijao\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `beans`."
     },
     "macarrao": {
       "value": "pasta",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"macarrao\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `pasta`."
     },
     "oleo": {
       "value": "cooking_oil",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"oleo\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `cooking_oil`."
     },
     "lata_atum": {
       "value": "canned_food",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"lata_atum\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "There is no tuna item; the generic household canned food is the closest."
     },
     "desinfetante": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "disinfectant",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"desinfetante\": a 1 L bottle of household disinfectant."
     },
     "saco_lixo": {
-      "value": "saco_lixo",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"saco_lixo\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "trash_bag",
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `trash_bag`."
     },
     "prato": {
       "value": "plate",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"prato\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `plate`."
     },
     "copo": {
       "value": "cup",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"copo\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "A cup."
     },
     "caneca": {
       "value": "cup",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"caneca\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "A mug is a cup."
     },
     "cafe": {
       "value": "coffee",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"cafe\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `coffee`."
     },
     "lata_milho": {
-      "value": "milho_lata",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"lata_milho\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "canned_corn_and_peas",
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `canned_corn_and_peas`."
     },
     "tempero": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "seasoning",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"tempero\": a jar of ground spice."
     },
     "paracetamol": {
       "value": "painkillers",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"paracetamol\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Paracetamol is a painkiller; the catalog has dipirona (painkillers) and no separate paracetamol."
     },
     "curativo": {
-      "value": "curativo",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"curativo\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "adhesive_bandages",
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `adhesive_bandages`."
     },
     "sabonete": {
       "value": "soap",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"sabonete\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "A bar of soap."
     },
     "papel_higienico": {
       "value": "toilet_paper",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"papel_higienico\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `toilet_paper`."
     },
     "shampoo": {
       "value": "shampoo",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"shampoo\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `shampoo`."
     },
     "escova_dente": {
       "value": "toothbrush",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"escova_dente\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `toothbrush`."
     },
     "tesoura": {
       "value": "scissors",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"tesoura\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Scissors."
     },
     "alcool": {
       "value": "alcohol_70",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"alcool\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Rubbing alcohol is the 70% alcohol."
     },
     "camisa": {
       "value": "tshirt",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"camisa\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "A shirt is a t-shirt for the catalog (no separate shirt)."
     },
     "calca": {
       "value": "jeans",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"calca\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Trousers are jeans (the only trousers in the household set)."
     },
     "casaco": {
       "value": "jacket",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"casaco\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "A coat is the generic household jacket."
     },
     "tenis": {
       "value": "sneakers",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"tenis\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Trainers are sneakers."
     },
     "sapato": {
       "value": "sneakers",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"sapato\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "No dress shoes in the catalog; the sneakers stand in."
     },
     "cobertor": {
       "value": "blanket",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"cobertor\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `blanket`."
     },
     "mochila": {
       "value": "backpack",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"mochila\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `backpack`."
     },
     "roupa_intima": {
       "value": "underwear",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"roupa_intima\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `underwear`."
     },
     "meias": {
       "value": "socks",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"meias\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `socks`."
     },
     "camiseta": {
       "value": "tshirt",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"camiseta\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "A t-shirt."
     },
     "documento": {
       "value": "documents",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"documento\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `documents`."
     },
     "lanterna": {
       "value": "flashlight",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"lanterna\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "The flashlight."
     },
     "pilhas": {
       "value": "batteries",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"pilhas\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "AA cells."
     },
     "remedio": {
-      "value": "remedio_continuo",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"remedio\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "maintenance_medication",
+      "source": "T3.1c",
+      "reason": "A generic medicine in a house: the maintenance medication."
     },
     "livro": {
-      "value": "livro_hab",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"livro\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "book",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"livro\": an ordinary book. The old alias pointed at the rare skill book, which would put skill volumes on every shelf."
     },
     "carregador": {
       "value": "phone_charger",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"carregador\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `phone_charger`."
     },
     "oculos": {
-      "value": "oculos",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"oculos\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "eyeglasses",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"oculos\": prescription glasses. The old alias pointed at the safety goggles (a protective item)."
     },
     "caneta": {
       "value": "pen",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"caneta\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `pen`."
     },
     "chaves": {
-      "value": "chave_casa",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"chaves\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "house_key",
+      "source": "T3.1c",
+      "reason": "A bunch of keys in a house: the house key."
     },
     "grampeador": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "stapler",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"grampeador\": a desk stapler (the viewer lists it as an improvised weapon)."
     },
     "agua_galao": {
-      "value": "galao_agua",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"agua_galao\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "water_jug_5l",
+      "source": "T3.1c",
+      "reason": "The 5 L water jug."
     },
     "farinha": {
       "value": "flour",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"farinha\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `flour`."
     },
     "acucar": {
       "value": "sugar",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"acucar\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `sugar`."
     },
     "biscoito": {
       "value": "biscuits",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"biscoito\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `biscuits`."
     },
     "controle_remoto": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "remote_control",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"controle_remoto\": a TV remote with batteries."
     },
     "dvd": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "dvd",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"dvd\": a disc in its case."
     },
     "cabos": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "cable_bundle",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"cabos\": a coil of USB/HDMI cables."
     },
     "chinelo": {
-      "value": "chinelo",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"chinelo\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "flip_flops",
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `flip_flops`."
     },
     "graxa": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "shoe_polish",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"graxa\": a tin of shoe polish."
     },
     "sabao_po": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "laundry_powder",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"sabao_po\": a 1 kg box of washing powder."
     },
     "agua_sanitaria": {
       "value": "bleach",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"agua_sanitaria\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Bleach."
     },
     "balde": {
-      "value": "balde",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"balde\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "bucket",
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `bucket`."
     },
     "vassoura": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "broom",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"vassoura\": a household broom."
     },
     "luvas": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "rubber_gloves",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"luvas\": a pair of cleaning gloves (not the leather work gloves, which protect)."
     },
     "amaciante": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "fabric_softener",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"amaciante\": a 1 L bottle."
     },
     "cesto_pregadores": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "clothespins",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"cesto_pregadores\" (pegs): a bag of wooden clothespins."
     },
     "martelo": {
       "value": "hammer",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"martelo\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `hammer`."
     },
     "chave_fenda": {
       "value": "screwdriver",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"chave_fenda\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `screwdriver`."
     },
     "alicate": {
-      "value": "alicate",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"alicate\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "pliers",
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `pliers`."
     },
     "fita_isolante": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "electrical_tape",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"fita_isolante\": a roll of insulating tape (not the silver tape)."
     },
     "parafusos": {
-      "value": "parafusos",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"parafusos\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "screws",
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `screws`."
     },
     "serrote": {
-      "value": "serrote",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"serrote\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "handsaw",
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `handsaw`."
     },
     "lata_tinta": {
       "value": "paint_can",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"lata_tinta\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `paint_can`."
     },
     "corda": {
       "value": "rope",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"corda\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `rope`."
     },
     "pregos": {
-      "value": "pregos",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"pregos\" (an item id of the team or of the household; T3.1c refines)."
+      "value": "nails",
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `nails`."
     },
     "carta": {
       "value": "letter",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"carta\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `letter`."
     },
     "conta": {
       "value": "bill",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"conta\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `bill`."
     },
     "panfleto": {
       "value": "flyer",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"panfleto\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `flyer`."
     },
     "saco_lixo_cheio": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "full_trash_bag",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"saco_lixo_cheio\": a bag of household rubbish; the viewer marks it as not takeable."
     },
     "embalagem": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "food_packaging",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"embalagem\": empty wrappers and boxes."
     },
     "lata_vazia": {
       "value": "empty_can",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"lata_vazia\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `empty_can`."
     },
     "papel_amassado": {
       "value": "crumpled_paper",
-      "source": "T3.1b",
-      "reason": "Closest item of the catalog for the viewer's \"papel_amassado\" (an item id of the team or of the household; T3.1c refines)."
+      "source": "T3.1c",
+      "reason": "Same thing as the catalog item `crumpled_paper`."
     },
     "taca": {
-      "value": null,
-      "source": "T3.1b",
-      "reason": "No equivalent item in the catalog yet; the pool entry is kept without an item (T3.1c decides)."
+      "value": "wine_glass",
+      "source": "T3.1c",
+      "reason": "Viewer pool type \"taca\": a wine glass; the viewer marks it as not takeable."
     }
   },
   "caliberMap": {
