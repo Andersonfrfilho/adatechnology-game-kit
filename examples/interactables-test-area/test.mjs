@@ -107,6 +107,16 @@ for (const lang of ['pt-BR', 'en']) {
   })
   check(`[${lang}] the vegetation module is loaded (18 plants, 13 scenarios), and the axe and the grass walk are green`, plants.ok && plants.items === 18 && plants.scenarios === 13 && plants.run.passed === 2 && plants.run.failed === 0, plants)
 
+  // the urban module rides along too (owner rule): loaded with its 17 items and 8 scenarios, and the light budget and the dashes of a road are green here as well
+  const city = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const r = window.__furnitureReport.urban
+    const run = await room.runScenarios(room.scenarios.filter((s) => s.id === 'urban_light_budget' || s.id === 'urban_road_dashes'))
+    room.clear()
+    return { ok: r?.ok && r.problems.length === 0, items: r?.items?.length ?? 0, scenarios: r?.scenarios?.length ?? 0, run: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
+  })
+  check(`[${lang}] the urban module is loaded (17 items, 8 scenarios), and the light budget and the road dashes are green`, city.ok && city.items === 17 && city.scenarios === 8 && city.run.passed === 2 && city.run.failed === 0, city)
+
   // the weapons module rides along (owner rule: this area shows what every phase adds): loaded, with its accessory bench, and a suppressor goes on an M4 here too
   const weapons = await page.evaluate(() => {
     const room = window.__testRoom

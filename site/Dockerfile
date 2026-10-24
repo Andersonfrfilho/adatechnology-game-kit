@@ -63,6 +63,7 @@ COPY examples/interactables-showroom/package.json examples/interactables-showroo
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
 COPY examples/items-test-area/package.json examples/items-test-area/
 COPY examples/test-room/package.json examples/test-room/
+COPY examples/urban-test-area/package.json examples/urban-test-area/
 COPY examples/vegetation-test-area/package.json examples/vegetation-test-area/
 COPY examples/vehicles-test-area/package.json examples/vehicles-test-area/
 COPY examples/weapons-test-area/package.json examples/weapons-test-area/

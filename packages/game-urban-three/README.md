@@ -27,3 +27,13 @@ scene.add(drawn.root)
 - `draw(scene, { root })` draws into a group of yours. Works on three r128 and later.
 
 The scene hash, the lists of instances and the surface of each material (shadows, roughness, metalness, flat shading) of 34 cases are tested against the page.
+
+## Test area
+
+`createUrbanTestModule(options)` and `loadUrbanTestModule(room, options)` put the city in the shared test room (`?area=urban` in `examples/urban-test-area`; the module also loads in `examples/interactables-test-area`).
+
+- Items (17): the five poles of the kit in a row, a street grid with a filled block, a patch of terrain (a rolling plain with a river and a lake; `terrain` replaces it) and the ten neighbourhoods of the sample sheet in the Galeria's cells. Everything is drawn by the kit and this package, so a game that passes `urban: { packs, patch, remove }` sees its own catalogues in the area. Each item is scenery: one anchored slab of concrete as large as the sample.
+- Bench: the neighbourhood, the seed, the share of lamps on (the pattern's own, all, half, none), the budget of real lights and, when asked, the species of the region and the vehicles of the fleet (a game gives `vehicles: (THREE) => createVehiclesThree(...)`; without it the bench parks no cars). Actions draw and take away the neighbourhood in front of the player; changing a setting draws it again.
+- Layers: the reach of every real light and the box of each sample. Metrics: samples, draw calls, triangles, real lights, instances, objects of the bench and the light budget left.
+- Eight scenarios, with no object of the room: pole heights, the light budget (the counter goes below zero as the page's), the dash every 5 m, block heights, the seed, burnt-out lamps, the terrain (vertex height, river bed, lake level) and the providers (vehicles of the fleet, species of the region).
+- The room's camera sees 140 m and the sample sheet is 240 m wide, so the module lends the camera a 600 m view while it is loaded and gives the old one back when it detaches.

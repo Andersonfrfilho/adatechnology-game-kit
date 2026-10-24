@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
-  "description": "Furniture and interactive objects area for the shared destruction test room: a TestableModule with one destructible item per household type, animations, fluids and scenarios. The page also carries the weapons module (with accessories) to shoot, burn and blow the furniture up with real weapons, and the items module: the containers of the furniture (fridge, cabinets, wardrobe) hold real items from the goods catalog at their real size. It also carries the characters and animals modules: a 7.62 shot crosses a wardrobe door and then the zombie behind it. And the vehicles module: a car stands in the yard next to the furniture and a 7.62 goes through its door while the fridge beside it feels nothing. And the vegetation module: the 18 plants of the Viveiro with separable pieces, to cut with the axe and the saw, shoot and burn next to the house.",
+  "description": "Furniture and interactive objects area for the shared destruction test room: a TestableModule with one destructible item per household type, animations, fluids and scenarios. The page also carries the weapons module (with accessories) to shoot, burn and blow the furniture up with real weapons, and the items module: the containers of the furniture (fridge, cabinets, wardrobe) hold real items from the goods catalog at their real size. It also carries the characters and animals modules: a 7.62 shot crosses a wardrobe door and then the zombie behind it. And the vehicles module: a car stands in the yard next to the furniture and a 7.62 goes through its door while the fridge beside it feels nothing. And the vegetation module: the 18 plants of the Viveiro with separable pieces, to cut with the axe and the saw, shoot and burn next to the house. And the urban module: the five street poles, the ten neighbourhoods of the sample sheet and a terrain patch, with their eight scenarios.",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
@@ -22,6 +22,8 @@
     "@adatechnology/game-items-goods": "workspace:*",
     "@adatechnology/game-items-three": "workspace:*",
     "@adatechnology/game-props3d": "workspace:*",
+    "@adatechnology/game-urban": "workspace:*",
+    "@adatechnology/game-urban-three": "workspace:*",
     "@adatechnology/game-vegetation": "workspace:*",
     "@adatechnology/game-vegetation-species": "workspace:*",
     "@adatechnology/game-vegetation-three": "workspace:*",

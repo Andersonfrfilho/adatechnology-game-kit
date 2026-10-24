@@ -3,7 +3,8 @@
 // The page also carries the weapons module (arms and accessories), so what the furniture does under fire can be tried with the real weapons: `loadInto` loads it too.
 // And the items module (`ItemsArea`: every item of the goods catalog at real size): the containers of the furniture hold real items, drawn by game-items-three at their real size.
 // It carries the characters and the animals modules as well (owner rule: this area shows what every phase adds), so a shot can cross a wardrobe door and reach a zombie behind it,
-// the vehicles module, so a car can stand in the yard next to the furniture (`car_in_the_yard`), and the vegetation module, so the plants of the Viveiro can be cut, shot and burnt in the same world.
+// the vehicles module, so a car can stand in the yard next to the furniture (`car_in_the_yard`), the vegetation module, so the plants of the Viveiro can be cut, shot and burnt in the same world,
+// and the urban module, so the street poles, the neighbourhoods and the terrain are in the same room.
 import { rng } from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
@@ -14,6 +15,7 @@ import { createWeaponsTestModule } from '@adatechnology/game-weapons-three'
 import { registerBodyMaterial } from '@adatechnology/game-characters-three'
 import { createModule as createAnimalsModule } from '../../animals-test-area/src/entry.js'
 import { createModule as createCharactersModule } from '../../characters-test-area/src/entry.js'
+import { createModule as createUrbanModule } from '../../urban-test-area/src/entry.js'
 import { loadVegetationTestModule } from '../../vegetation-test-area/src/entry.js'
 import { loadVehiclesTestModule } from '../../vehicles-test-area/src/entry.js'
 import { createFurnitureArea as create } from './area.js'
@@ -72,14 +74,14 @@ export function createFurnitureArea(options = {}) {
   return create({ GameInteractablesHousehold, GameInteractablesThree, fillContainers: createItemContents(), ...options })
 }
 
-export { createWeaponsTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, loadVehiclesTestModule, loadVegetationTestModule }
+export { createWeaponsTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createUrbanModule, loadVehiclesTestModule, loadVegetationTestModule }
 
 // the site copies the weapon thumbnails to site/dist/weapon-svg, next to the folder of each example page
 const SITE_THUMBNAIL_BASE = '../weapon-svg/'
 
 /**
- * Creates the module for the room's locale (`?lang=en` or pt-BR) and loads it, after the weapons, items, characters, animals, vehicles and vegetation modules (the furniture bench stays the one the panel shows).
- * Returns the room's report of the furniture module, with the other modules' reports under `weapons`, `itemsArea`, `characters`, `animals`, `vehicles` and `vegetation`.
+ * Creates the module for the room's locale (`?lang=en` or pt-BR) and loads it, after the weapons, items, characters, animals, vehicles, vegetation and urban modules (the furniture bench stays the one the panel shows).
+ * Returns the room's report of the furniture module, with the other modules' reports under `weapons`, `itemsArea`, `characters`, `animals`, `vehicles`, `vegetation` and `urban`.
  */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
@@ -93,6 +95,8 @@ export function loadInto(room, options = {}) {
   const vehicles = options.vehicles === false ? undefined : loadVehiclesTestModule(room, { locale: lang })
   // the plants of the Viveiro: cut, shot and burnt next to the house (the module only loads here; its own area is `?area=vegetation`)
   const vegetation = options.vegetation === false ? undefined : loadVegetationTestModule(room, { locale: lang })
+  // the street poles, the ten neighbourhoods and the terrain patch (the module only loads here; its own area is `?area=urban`)
+  const urban = options.urban === false ? undefined : room.loadModule(createUrbanModule({ locale: lang }))
   const report = room.loadModule(createFurnitureArea({ ...options, locale: lang }))
-  return { ...report, ...(weapons ? { weapons } : {}), ...(itemsArea ? { itemsArea } : {}), ...(characters ? { characters } : {}), ...(animals ? { animals } : {}), ...(vehicles ? { vehicles } : {}), ...(vegetation ? { vegetation } : {}) }
+  return { ...report, ...(weapons ? { weapons } : {}), ...(itemsArea ? { itemsArea } : {}), ...(characters ? { characters } : {}), ...(animals ? { animals } : {}), ...(vehicles ? { vehicles } : {}), ...(vegetation ? { vegetation } : {}), ...(urban ? { urban } : {}) }
 }
