@@ -1278,5 +1278,15 @@
       2.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "improvised_spear",
+    "teamId": "lanca",
+    "teamBox": [
+      16,
+      0.35,
+      0.35
+    ],
+    "scale": 0.1
   }
 ]
