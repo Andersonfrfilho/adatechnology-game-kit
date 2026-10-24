@@ -1572,3 +1572,10 @@ Fonte: `sources/efeitos__oficina-vfx.js` (W168–1295) e a gravação `vfx-works
 ### Perguntas para o dono
 
 - A vazão por gota (0,15 mL) e o teto de 6 gotas por quadro são meus: o time só mostra pingo, fonte e arrasto. Quer outra conta para um furo grande (um jato em vez de gotas)?
+
+## T5.4 — comparação das explosões (coluna SDK novo)
+
+- `comparacoes/explosoes/capturar-sdk-novo.mjs` e os 6 quadros `quadros/sdk-novo-*.jpg` (0,08 · 0,25 · 0,5 · 1 · 2 · 4 s depois da detonação, câmera do Laboratório); `index.html` ganha a linha "SDK novo (Fase 5)" e a antiga vira "SDK antes da Fase 5". Os quadros do Laboratório e do jogo não foram refeitos (as páginas do time não mudaram).
+- A captura roda a sala de testes num Chromium do Playwright com GL por software e anda a simulação em passos de 1/60 s (a captura antiga usava o relógio da parede com a página servida em `localhost:4801`, que não existe neste ambiente).
+- `consolidado.md` §8 e §9: partículas do SDK que não apareciam (item 1 de §9 e o de §8), lixo de memória por quadro (2), fluido na CPU (8) e o README de `game-fluids` (11) marcados como feitos, cada um com a task.
+- O que ainda difere do Laboratório nos quadros é o cenário (chão liso da sala em vez da rua, dos corpos e da luz noturna da página).
