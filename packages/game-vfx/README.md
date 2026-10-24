@@ -49,13 +49,20 @@ reports what is alive, what the last explosion made, the scale it was made at an
 
 ## Workshop recipes, sprites and event effects
 
-`vfx.play(id, point, { direction?, normal?, seed?, param? })` plays one of the **36 recipes of the Workshop of VFX** (blood by infection age, headshot,
+`vfx.play(id, point, { direction?, normal?, seed?, param? })` plays one of the **39 recipes of the Workshop of VFX** (the 36 of the first pass and the weather ones: `rain_and_puddles` three intensities, `fog_and_ash`, `headlights_in_rain`; the rain lives in `workshop().rain`, a `RainField` that `game-weather-three` also drives) (blood by infection age, headshot,
 dismemberment, bloater cloud, scream, muzzle flashes by weapon, impact by material, glass, doors, collapses, fires, cars, the screen effects) into the
 Workshop pools (`vfx.workshop()`: additive and normal sprites, streaks, physics debris, decals, rings, flash and fire lights, screen state). The recipes
 are **data** (`WORKSHOP_EFFECTS`, `EffectDef`: a small language of expressions and steps) that a runner executes in the page's own order of random draws,
 so the goldens (`tests/workshop-golden.test.ts`, 162 assertions over 54 runs) replay the recording of the page. `param` picks the variant of a recipe by
 index or id (`'fresh'`, `'ak'`, `'concrete'`); `anchor` and `heading` of the recipe place and turn it at `point` and `direction`; `seed` makes it
 repeatable on a LAN client. `patchEffects(base, changes)` tunes, adds or removes recipes like `patchExplosions` does.
+
+The Workshop also keeps **solids**, not only sprites: the `mesh` step spawns a `MeshSpawn` (cone, open cone, sphere or icosahedron with its segments, additive or lit
+material, a place and a turn inside a group, a scale ramp, growth, drag, gravity, spin and a fading opacity) into `workshop().meshes` (`MeshPool`), aged each frame in
+the order of the gallery's `Particles`. `play` can also take the thing's whole turn (`orientation`, a unit quaternion, pitch and roll included, instead of the turn
+about the vertical axis `direction` gives) and named numbers (`values`, read with `variable(name)`). `VIEWMODEL_EFFECTS` use all three: the first-person muzzle flash
+(`viewmodel_muzzle_flash`: an open cone, four small cones and a core for 55 ms, a light that holds, six spheres of smoke), `weapon_smoke_puff`, `launcher_backblast` and
+`flame_jet`, written in the weapon's own axes (x along the barrel) with the Arsenal gallery's numbers and the order it drew them in.
 
 `vfx.burst(kind, point, normal, count, speed?)` and `vfx.spawn(kind, point, velocity)` are the **sprite kinds** that destruction, fluids and weapons share
 (debris, sparks, ash, steam, drips, leaks...: `data/sprite-kinds.json`, `patchSpriteKinds`), with `onLand(owner, ...)` to hear where a drop touched the ground.

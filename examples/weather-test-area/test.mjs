@@ -56,10 +56,50 @@ if (!playwright || !existsSync(page)) {
       bench.set('state', 'storm')
       for (let i = 0; i < 400; i++) room.update(0.1)
       const after = room.metrics().module
-      return { ok: report.ok, problems: report.problems, scenarios: scenarios.length, passed: result.passed, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id), before, after }
+      const wind = room.vfx.wind()
+      const loops = room.audio ? room.audio.stats().loops : -1
+      return { wind, loops, thunder: room.audio ? room.audio.registry.sound('thunder') !== undefined : false, ok: report.ok, problems: report.problems, scenarios: scenarios.length, passed: result.passed, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id), before, after }
     })
     check(`[${lang}] contract report is clean, 4 scenarios pass`, state.ok && state.problems.length === 0 && state.scenarios === 4 && state.failed === 0, state)
     check(`[${lang}] the storm is seen in the metrics: rain, less visibility, strikes`, state.after.rain > 10 && state.after.visibility < state.before.visibility && state.after.strikes > 0, { before: state.before, after: state.after })
+    // the picture: the storm draws the rain curtain, the near rain, the linear fog and a lit lamp rig; the fog weather the exponential fog, mist and ash
+    const picture = await tab.evaluate(() => {
+      const room = window.__testRoom
+      const bench = room.bench('weather_area')
+      const run = (seconds) => { for (let t = 0; t < seconds; t += 0.05) room.update(0.05) }
+      const names = () => room.bench('weather_area').layers().map((layer) => layer.id)
+      bench.set('state', 'storm')
+      run(8)
+      room.look([0, 1.7, 4], [0, 1.2, -8])
+      room.update(0.02)
+      const curtain = room.scene.getObjectByName('weather-rain-curtain')
+      const rig = room.scene.getObjectByName('weather-lamp-rig')
+      const lamps = rig.children.filter((child) => child.isSpotLight)
+      const storm = { layers: names(), curtain: curtain.visible, drawn: curtain.geometry.drawRange.count, near: room.vfx.peekWorkshop().rain.count, fog: room.scene.fog.isFog === true, far: room.scene.fog.far, lamp: lamps.map((lamp) => lamp.intensity), screen: room.vfx.workshop().screen.white }
+      window.__stormShot = true
+      return { storm }
+    })
+    await tab.waitForTimeout(200)
+    await tab.screenshot({ path: join(shots, `weather-storm-${lang}.png`) })
+    const mist = await tab.evaluate(() => {
+      const room = window.__testRoom
+      const bench = room.bench('weather_area')
+      for (let t = 0; t < 12; t += 0.05) room.update(0.05)
+      bench.set('state', 'fog')
+      for (let t = 0; t < 30; t += 0.05) room.update(0.05)
+      const engine = room.vfx.workshop()
+      const fog = room.scene.fog
+      const heat = (() => { bench.set('state', 'extreme_heat'); for (let t = 0; t < 2; t += 0.05) room.update(0.05); return room.scene.getObjectByName('weather-heat-haze').visible })()
+      bench.set('state', 'fog')
+      for (let t = 0; t < 20; t += 0.05) room.update(0.05)
+      return { exp2: fog.isFogExp2 === true || room.scene.fog.isFogExp2 === true, density: room.scene.fog.density, sprites: engine.normal.count, curtain: room.scene.getObjectByName('weather-rain-curtain').visible, heat }
+    })
+    await tab.waitForTimeout(200)
+    await tab.screenshot({ path: join(shots, `weather-fog-${lang}.png`) })
+    check(`[${lang}] the storm is drawn: 14 000-point curtain, 4 000 near streaks, linear fog of 110 m, the lamp rig lit`, picture.storm.curtain && picture.storm.drawn === 14000 && picture.storm.near === 4000 && picture.storm.fog && picture.storm.far === 110 && picture.storm.lamp.length === 2 && picture.storm.lamp.every((i) => i === 2.4), picture)
+    check(`[${lang}] the weather layers are in the bench`, ['far_rain', 'near_rain', 'mist', 'sky', 'lightning', 'headlights', 'haze'].every((id) => picture.storm.layers.includes(id)), picture.storm.layers)
+    check(`[${lang}] the fog weather: exponential-squared fog 0.075, mist and ash in the sprite pool, no rain curtain; extreme heat shows the haze`, mist.exp2 && Math.abs(mist.density - 0.075) < 1e-9 && mist.sprites > 0 && !mist.curtain && mist.heat, mist)
+    check(`[${lang}] the bridges reach the room: the storm's wind goes to the effects world, the rain and wind loops open on its engine`, Math.abs(state.wind[0] - 4.5) < 1e-9 && state.wind[2] === 0 && state.loops >= 1 && state.thunder, { wind: state.wind, loops: state.loops, thunder: state.thunder })
     await context.close()
   }
   check('no console errors', errors.length === 0, errors.slice(0, 3))

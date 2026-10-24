@@ -384,3 +384,29 @@ então o método de geração está validado) e tratar a página como referênci
    ou resto de build que pode sair?
 10. **Qual das duas versões do jogo vale como referência** de integração: `zombiada-jardim-aurora` (53054-58955) ou `zombiada-modo-livre` (66287-75272)? O
     modo livre é mais novo e inclui andares, bichos, Jardim das Palmeiras e o adaptador de câmera; o jardim-aurora é a fatia v7 descrita na revisão final.
+
+
+## Status ao fim da Fase 7 (T7.5)
+
+Atualizado em 2026-10-24. O que deste inventário (veículos, vegetação e câmera do jogo) já entrou, e onde. A parte do jogo que sobra
+(horda, contágio, jogador, ciclo de dia, áudio) é das Fases 5, 6 e 8.
+
+| Item | Entrou? | Onde |
+|---|---|---|
+| Garagem v4/v5 (69 veículos, dano por zona) × SDK | **Já era igual** (207 comparações, 0 diferenças; as 10 que diferem no golden antigo são do próprio golden) | `comparacoes/veiculos/` (`tools/vehicles-catalog compare`), `game-vehicles-fleet` sem mudança de dado |
+| Modo leve (`LOD`, 13 ganchos `[LOD]`, `skipJogo`) | Sim | `game-vehicles` (`kit.lod`, `build(..., { lod })`), cópias da frota em `game-vehicles-fleet` |
+| Fusão em 6 malhas, poda de 3 cm, quadro de saída (+z), cor por semente | Sim | `game-vehicles-three` (`createVehiclesThree`, `quality: 'lite'`) |
+| `DIMS` dos 69, `PALETA` e `PALETA_MIL`, `corDaSemente`, cartões de projeto da Frota | Sim (dado gerado por `tools/vehicles-catalog`, com `--check`) | `game-vehicles-fleet` (`fleetDims`, `paintPalettes`, `colorFromSeed`, `fleetStats`) |
+| `coletarDanificaveis` | Sim | `game-vehicles` (`kit.damageables`) |
+| Condução arcade do jogo (`CAR`, `carUpdate`), atropelamento, barulho | Sim | `game-vehicles-driving` (`createArcadeDriver`, `runOver`) |
+| Semissimulação do documento da Frota | Sim, sem código do time: os números do documento são os testes | `game-vehicles-driving` (`createSemiSimDriver`, registro de superfícies) |
+| Plugin do jogo (sangue de zumbi, marca horda, placa `ZMB4D23`, `SCENARIOS` de horda) | Fatia do jogo, não entra no SDK | `game-slice/vehicles/` |
+| Módulo de teste de veículos (8 itens, 11 cenários da página + 2) | Sim | `packages/game-vehicles-three/src/test-area/`, `examples/vehicles-test-area/` (`?area=vehicles`) |
+| Aplicativo da Garagem (palco, folha de contatos, `hitAt`) | **Não** como aplicativo: o visor é a `vehicles-test-area`; a folha de contatos com cache em `localStorage` ficou sem destino (dúvida 3 abaixo) | - |
+| Viveiro (artefato, V8): geometria das peças de madeira | Sim | `game-vegetation` (`radius`, `length`, `axis`, `base` em `PlantPiece`, `LotPiece` e `userData.destructionPart`) |
+| `rulesFor` e `AREAS` do Viveiro | Sim | `game-vegetation-species` (`scatterRulesFor`), `game-vegetation-three` (`AREAS`, `scatterLot`) |
+| Módulo do Viveiro (18 plantas, 13 cenários `veg_*`), canteiro de 12 x 20 m com o caminhante | Sim | `packages/game-vegetation-three/src/test-area/`, `examples/vegetation-test-area/` (`?area=vegetation`) |
+| Câmera de ombro do jogo (`cameraUpdate`): amortecimento, FOV por zoom, sensibilidade, órbita da morte, balanço da febre e do pânico | Sim | `game-camera` (`smoothing` lido, `aim`, `wallRecovery`, `deathOrbit`, `look`, `shake`, `rig.look`) |
+| Os três módulos na `interactables-test-area` | Sim (22 de 22 no Chromium) | `examples/interactables-test-area/` |
+| Coreografia do carro explodindo, fumaça do motor por condição, faísca de raspagem, para-brisa em 4 estágios | **Não**: os módulos pedem os efeitos por id a `host.effects`; as receitas são do `game-vfx` (Fase 5) | ver `evidence.md`, Fase 7, "Dependência do vfx" |
+| Horda, contágio, jogador, ciclo de dia, áudio | Fases 5, 6 e 8 | - |

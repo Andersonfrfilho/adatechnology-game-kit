@@ -14,6 +14,8 @@ const DEFAULT_MAX_STAGING = 16
 const DEFAULT_GRID_METRES = 2
 const DEFAULT_CELL = 0.0125
 const BAKE_RANGE_FACTOR = 1.25
+/** The liquids the rain washes (the visor marks blood `wipeable`; oil and fuel are not). */
+const DEFAULT_WASHABLE: readonly string[] = ['blood', 'old_blood']
 const EDGE_MARGIN = 0.35
 const FLOOR_REACH = 0.3
 /** A drop thrown from higher than this above a strip is not counted as over it. */
@@ -74,6 +76,8 @@ export interface FilmManagerOptions {
   /** Colour of the surface under the film (default the page's grey). */
   base?: number
   maxGrids?: number
+  /** The liquids rain washes while fresh (`wash`). Default `blood` and `old_blood`. */
+  washable?: readonly string[]
   /** Metres from the player past which a grid is not simulated and is baked. */
   range?: number
   /** Milliseconds of film simulation per frame; the grids left out wait for the next frame. */
@@ -150,6 +154,7 @@ export class FilmManager {
   private readonly staging = new Map<string, THREE_NS.DataTexture>()
   private readonly now: () => number
   private rain = 0
+  private drying = 1
   private time = 0
   private bakedCount = 0
   private last: FilmStats = { grids: 0, drops: 0, wetCells: 0, simMs: 0, starved: 0, baked: 0, uploadedTexels: 0 }
@@ -175,9 +180,21 @@ export class FilmManager {
     return this.grids
   }
 
-  setWeather(weather: { rain: number }): void {
+  setWeather(weather: { rain: number; drying?: number }): void {
     this.rain = Math.min(1, Math.max(0, weather.rain))
-    for (const grid of this.grids) grid.film.setWeather({ rain: this.rain })
+    if (weather.drying !== undefined) this.drying = Math.max(0, weather.drying)
+    for (const grid of this.grids) grid.film.setWeather({ rain: this.rain, drying: this.drying })
+  }
+
+  /**
+   * Rain washes the fresh stain away (the visor's `ZG.wipe` with mode "chuva"): in the grids of the washable liquids (default blood and old blood), the
+   * cells that are less than `maxDryness` dry (default 0.5) are cleared. Returns how many cells it cleared.
+   */
+  wash(maxDryness?: number): number {
+    const washable = this.options.washable ?? DEFAULT_WASHABLE
+    let cleared = 0
+    for (const grid of this.grids) if (washable.includes(grid.profile.id)) cleared += grid.wash(maxDryness)
+    return cleared
   }
 
   /** Throws a drop of a liquid: it lands in the grid under it (made on the spot) and leaves the impact splash. Null when it is out of range or has no surface. */
@@ -211,7 +228,7 @@ export class FilmManager {
     const layout = layoutFromSurfaces({ ...found, center: point, columns: this.columns(), rows: this.columns(), cellSize: this.options.cellSize ?? DEFAULT_CELL })
     if (this.grids.length >= (this.options.maxGrids ?? DEFAULT_MAX_GRIDS)) this.evict(point)
     const grid = new FilmGrid(this.THREE, { layout, profile, random: this.options.random, center: point, ...(tint ? { tint } : {}), ...(this.options.base === undefined ? {} : { base: this.options.base }) })
-    grid.film.setWeather({ rain: this.rain })
+    grid.film.setWeather({ rain: this.rain, drying: this.drying })
     this.grids.push(grid)
     this.group.add(grid.group)
     return grid

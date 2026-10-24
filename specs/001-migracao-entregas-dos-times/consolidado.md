@@ -128,7 +128,7 @@ teste e da bancada de móveis é do three.js embutido, sem uso.
 
 | # | Decisão | Recomendação | Situação |
 |---|---|---|---|
-| S1 | Pacote | `game-audio` genérico: síntese (ruído filtrado, osciladores, formantes), mixagem com compressor e reverb, atenuação por distância, limite de vozes e sons contínuos. Os sons de cada assunto ficam no pacote do assunto: armas no `game-weapons-three`, vozes no `game-characters-three`, bichos no `game-animals-three`, motor e rotor no `game-vehicles-three`, chuva no futuro clima | ✅ 2026-10-23 (decidido por mim): `game-audio` genérico; sons de cada assunto no pacote do assunto |
+| S1 | Pacote | `game-audio` genérico: síntese (ruído filtrado, osciladores, formantes), mixagem com compressor e reverb, atenuação por distância, limite de vozes e sons contínuos. Os sons de cada assunto ficam no pacote do assunto: armas no `game-weapons-three`, vozes no `game-characters-three`, bichos no `game-animals-three`, motor e rotor no `game-vehicles-three`, chuva no futuro clima | ✅ 2026-10-23 (decidido por mim): `game-audio` genérico; sons de cada assunto no pacote do assunto. Entrou: `game-audio` (motor e síntese), armas (T6.1e, T6.1e2), destruição (T6.1f), vozes dos 13 tipos e chamados dos bichos (T6.1g), chuva, vento e trovão do `game-weather` (T6.2b); motor e rotor seguem com `game-vehicles-three` (Fase 7) |
 | S2 | Som de tiro | — | ✅ 2026-10-23: juntar a classe e o abafamento por distância do jogo com a energia do calibre do SDK |
 | S3 | Igual ao original | O golden do som compara os parâmetros gerados (frequência, volume, duração, filtros) para cada evento com semente fixa, já que não dá para comparar áudio por hash | 🔁 G3 |
 

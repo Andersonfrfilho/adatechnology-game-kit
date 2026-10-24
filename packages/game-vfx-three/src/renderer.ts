@@ -137,8 +137,10 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
       return world.play(request.effect, request.point, {
         ...(request.direction ? { direction: request.direction } : {}),
         ...(request.normal ? { normal: request.normal } : {}),
+        ...(request.orientation ? { orientation: request.orientation } : {}),
         ...(request.seed !== undefined ? { seed: request.seed } : {}),
         ...(request.param !== undefined ? { param: request.param } : {}),
+        ...(request.values ? { values: request.values } : {}),
       })
     },
     stop: (handle) => world.stop(handle),

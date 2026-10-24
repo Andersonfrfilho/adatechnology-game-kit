@@ -2,7 +2,8 @@
 // Capture for the Oficina de VFX: every catalogue effect (minus rain, fog and headlights, which belong to the weather phase, and the
 // living-fluids film, recorded by `vfx-workshop-fluids.js`) once per option of its parameter. The page's own `frame` runs, with the
 // renderer silenced, so the timers, ticks and updates run in the page's order. `Math.random` is a counted stream seeded per effect and option.
-// Params: mode = effects (default) | fluids | trace.
+// Params: mode = effects (default) | fluids | trace | weather (only rain, fog and headlights: `chuva` in its 3 options, `neblina` and `farol`, with the
+// rain streaks and the hemisphere light, which the lightning of the storm moves).
 (() => {
   const X = GoldenExposed
   const { mode = 'effects' } = globalThis.__GOLDEN_PARAMS
@@ -74,6 +75,7 @@
 
   const screenState = () => Object.values(X.S).map(round4).join(' ')
   const counts = () => [X.addP.n, X.norP.n, X.streak.n, X.DB.filter((d) => d.on).length, X.DC.filter((d) => d.on).length, X.RG.filter((d) => d.on).length, X.LP.filter((l) => l.L.intensity > 0).length]
+  const weatherFields = () => (mode === 'weather' ? { rain: X.RN.on ? GoldenTool.hashText(`${X.RN.n}:${hashArray(X.rainPos, X.RN.n * 6)}`) : 'off', drops: X.RN.n, hemi: round4(X.hemi.intensity) } : {})
   const instantOf = (id, option, seconds) => {
     recorder.record('instant', {
       id,
@@ -86,6 +88,7 @@
       debris: GoldenTool.hashText(X.DB.filter((d) => d.on).map((d) => [d.x, d.y, d.z, d.sx, d.life, d.rest ? 1 : 0].map(round4).join(',')).join('|')),
       decals: GoldenTool.hashText(X.DC.filter((d) => d.on).map((d) => [d.x, d.y, d.z, d.sx, d.sy, d.t, d.life].map(round4).join(',')).join('|')),
       screen: screenState(),
+      ...weatherFields(),
     })
   }
 
@@ -160,6 +163,12 @@
     for (let option = 0; option < 4; option++) recordTrace(option)
   } else if (mode === 'fluids') {
     for (let option = 0; option < 4; option++) recordFilm(option)
+  } else if (mode === 'weather') {
+    for (const id of ['chuva', 'neblina', 'farol']) {
+      const effect = X.FX.find((entry) => entry.id === id)
+      const options = effect.param ? effect.param.opts.length : 1
+      for (let option = 0; option < options; option++) recordEffect(effect, option)
+    }
   } else {
     for (const effect of X.FX) {
       if (SKIPPED.has(effect.id)) continue
@@ -170,5 +179,5 @@
   for (const [name, fn] of Object.entries(original)) X[name] = fn
   for (const restore of restores) restore()
   Math.random = nativeRandom
-  return GoldenTool.createGoldenRecord({ name: mode === 'trace' ? 'vfx-workshop-fluids-trace' : mode === 'fluids' ? 'vfx-workshop-fluids' : 'vfx-workshop', seed: 0, events: recorder.events(), scenes: {} })
+  return GoldenTool.createGoldenRecord({ name: mode === 'trace' ? 'vfx-workshop-fluids-trace' : mode === 'fluids' ? 'vfx-workshop-fluids' : mode === 'weather' ? 'vfx-workshop-weather' : 'vfx-workshop', seed: 0, events: recorder.events(), scenes: {} })
 })()

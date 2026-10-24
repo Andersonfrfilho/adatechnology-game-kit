@@ -2086,6 +2086,88 @@ Commits em `int/p4`: T4.1h `4ecce49`, T4.3b `68dfb3c`, T4.1i `048cf2a`, T4.2b `6
 
 Modelo da execução: `sonnet`.
 
+
+
+## Fase 7 — veículos, vegetação, cidade e câmera (T7.0 a T7.5)
+
+Commits em `int/p7`: T7.0 `222a95f`, T7.1a `1ea43bd`, T7.1b `5718964`, T7.1c `537b5b0`, T7.1d `5304161`, T7.1e `4ed1cc7`, T7.1f `35c2caa`, T7.2a `0b3c030`, T7.2b `54419e4`, T7.2c `2645d90`, T7.3a `528db5a`, T7.3b `b22ecfe`, T7.3c `34a560e`, T7.3d `d8b89c2`, T7.3e `8762b85`, T7.4 `841c4cd`, T7.5 (este). O desenho da fase é `design/T7-veiculos-e-cidade.md`.
+
+### O que entrou
+
+- **T7.0** `tools/vehicles-catalog`: extratores de `DIMS`, paletas e dos 69 cartões da Frota (`--check`), o plugin do jogo como fatia (`game-slice/vehicles/`) e o `compare`, que roda o artefato da Garagem, a página v4 e o SDK em Node: 69 veículos x 3 estados, 207 comparações, 0 diferenças. A premissa de V2 (frotas novas de aviões, barcos, helicópteros e militares) **não vale**: o `game-vehicles-fleet` já registra os mesmos 69 veículos em 10 arquivos.
+- **T7.1a-b** `game-vehicles`: modo leve (`kit.lod`, ganchos `[LOD]` do núcleo e das cópias da frota, `skipLite`), `kit.damageables`; `game-vehicles-fleet`: `fleetDims`, `paintPalettes`, `colorFromSeed`, `fleetStats`. Desligado por padrão: os goldens da frota e do motor seguem idênticos.
+- **T7.1c** `game-vehicles-three` (novo): fusão em seis malhas, poda de 3 cm, quadro de saída (+z), cor por semente, medidas e caixas danificáveis. Golden contra a página (three r160, semente 7) em 12 veículos; 193.908 triângulos do hatch em alta; `DIMS` dos 69 ao milímetro.
+- **T7.1d-e** `game-vehicles-driving` (novo, sem three): motorista arcade do jogo (`CAR`, `carUpdate`, oito pontos de colisão, atropelamento a 3 e 8 m/s, barulho, buzina) com golden de seis roteiros quadro a quadro; semissimulação do documento da Frota (mola e amortecedor por roda, pneu com força longitudinal e lateral, câmbio automático com RPM, freio de mão, superfícies, dano que muda a direção, consumo), com os números do documento como testes (não há código do time).
+- **T7.1f** módulo de teste de veículos (8 itens, 13 cenários: os 11 da página, literais, e `vehicles_drive_arcade` e `vehicles_drive_semi`), `examples/vehicles-test-area`, `car_in_the_yard` na `interactables-test-area`.
+- **T7.2a-c** `game-vegetation`: geometria das peças de madeira do artefato do Viveiro (`radius`, `length`, `axis`, `base`), 40 de 40 peças iguais; `game-vegetation-species`: `scatterRulesFor` (48 casos iguais ao `rulesFor` da página); `game-vegetation-three` (novo): 18 plantas, 13 cenários `veg_*`, canteiro de 12 x 20 m e caminhante, `examples/vegetation-test-area`.
+- **T7.3a-b** `game-urban` e `game-urban-three` (novos): cinco postes com orçamento de luzes, ruas, calçadas, grade, quarteirão, adereços e os dez padrões de bairro (G-poles: 34 casos; G-padrao: a folha de amostra inteira, 1029 objetos).
+- **T7.3c** terreno por camadas (G-terrain: malha de 181 x 181 vértices, alturas e cores iguais às da página; `hW` e `forestF` a 1e-9); números do Vale em `game-slice/urban/`.
+- **T7.3d** parte `placement` (`b.place`), `createVehicleProvider` (frota) e `createPlantProvider` (tabela regional) em `game-urban`; `createVehicleResolver` (modo leve) e `createPlantResolver` em `game-urban-three`.
+- **T7.3e** módulo de teste da cidade (17 itens, 8 cenários `urban_*`), `examples/urban-test-area`, os três módulos na `interactables-test-area`.
+- **T7.4** `game-camera`: o `smoothing` passa a ser lido; `aim`, `wallRecovery`, `deathOrbit`, `look`, `shake`, `rig.look`; G-camera com 640 quadros roteirizados iguais ao `cameraUpdate` do jogo a 1e-9.
+- **T7.5** inventário (R5), esta seção, skills, changesets e READMEs.
+
+### Goldens da fase
+
+| Golden | Contra | Resultado |
+|---|---|---|
+| G-garage | Garagem (artefato), site v4 e SDK, 69 x 3 estados | 207 comparações, 0 diferenças |
+| G-fleet-regression | `golden.json` da frota (868 testes) | idêntico depois da T7.1a |
+| G-lite, G-dims, G-damageables, G-lod-high | `FrotaLeve` em Node (three r160) | triângulos, chamadas, vértices por classe, caixas e `DIMS` iguais |
+| G-colour, G-stats | `corDaSemente`, `PALETA`, `fleet` da Frota | sementes 0-499 e 40 textos; 69 cartões iguais |
+| G-arcade | `carUpdate` cortado do jogo | seis roteiros, estado e eventos iguais |
+| G-veh-module | `MODULO_VEICULOS` da página contra a sala do kit | os 11 cenários com os mesmos checks e linhas de log |
+| G-veg-pieces, G-veg-module, G-nursery, G-rules | bundle e módulo do artefato do Viveiro, `buildLotVeg` e `rulesFor` da página | 40 de 40 peças; 18 specs e 13 cenários; 8 sementes; 48 casos |
+| G-poles, G-padrao, G-terrain | Galeria do Vale Cinzento no Chrome (`--expose`) | 34 casos; folha inteira de 1029 objetos; malha e `hW`/`forestF` |
+| G-camera | `cameraUpdate` cortado do jogo | 640 quadros, posição, olhar, FOV, yaw e pitch a 1e-9 |
+
+G-semi não tem golden (não há código do time): os números do documento são testes.
+
+### Decisões e desvios
+
+1. A Garagem do artefato é a página v4 do site, byte a byte no código (V2): nada foi portado por V2 além do que realmente faltava (modo leve, `DIMS`, paletas, `damageables`).
+2. O contrato de teste é só o genérico; os três módulos vivem nos pacotes `-three` e os exemplos só os carregam.
+3. Os módulos **não desenham partículas e não pedem efeitos por conta própria**. Veículos pedem a `host.effects` por id; vegetação e cidade não pedem nada (ver "Dependência do vfx").
+4. Recorte de `Math.random`: `colorFromSeed`, o atropelamento e as escolhas dos provedores usam semente ou o lugar; o `rig.look` recebe o sorteio do host e nunca chama `Math.random`.
+5. **O padrão do `smoothing` mudou de "não lido" para 12** (V7): quem dependia do salto instantâneo passa `smoothing: 0`. É o único comportamento que muda por padrão na fase; dois testes antigos do `game-camera` passaram a pedir `smoothing: 0`.
+6. A escolha do veículo e da planta pelos provedores depende do lugar (hash de x, z), não do sorteio da cena: assim a ordem de sorteio da página, que o golden confere, não se mexe quando um jogo liga um provedor.
+7. O carro de caixas da amostra da Galeria **não foi entregue** (substituto de caixas é proibido pelo CLAUDE.md §1): o provedor de veículos padrão não estaciona nada e o jogo liga `createVehicleProvider`.
+8. O módulo de teste da cidade estende a câmera da sala para 600 m enquanto está carregado (a folha de amostra tem 240 m e a sala vê 140 m) e devolve a antiga ao descarregar.
+9. A sala atual dá tempo de saque a toda ferramenta, que as páginas dos times não conheciam: os cenários de tiro esperam a ferramenta ficar pronta (`waitUntilReady`), e os goldens fazem o mesmo na sala da página.
+10. Cada item da área urbana é cenário: um bloco de concreto ancorado do tamanho da amostra (a sala exige um corpo); a destruição de prédios e casas é do `game-floorplan` e do `game-destruction`.
+
+### Dependência do vfx e receitas que faltam
+
+`game-vfx` não está em `int/p7` (a Fase 5 anda em outro ramo) e a fase não o traz. O que cada módulo pede:
+
+- **Veículos** pedem a `host.effects` (quando o host tem) os ids `vehicle.fire`, `vehicle.explosion`, `vehicle.glass`, `vehicle.sparks`, `vehicle.leak` e `vehicle.exhaust` (`defaultEffectIds`, trocáveis por `effects`). São as receitas que o `game-vfx` precisa registrar: o fogo do motor, a explosão com a coreografia do carro (pula, capô, portas e roda voam em brasa, carcaça queimando), o estilhaço do vidro, a faísca de raspagem, a poça do vazamento e a fumaça do escapamento por condição (100/60/30/10).
+- **Vegetação** não pede efeitos: o mundo de destruição padrão não entrega seus eventos (folhas, seiva, fogo) ao módulo, então o módulo não os vê. Um host com `game-vfx-three` liga os efeitos aos eventos do mundo.
+- **Cidade** não pede efeitos.
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm install --prefer-offline` | ok em cada commit |
+| `pnpm build` | exit 0 em cada commit |
+| `pnpm -r typecheck` | exit 0 em cada commit |
+| Testes por pacote (um de cada vez) | game-vehicles 247, game-vehicles-fleet 879, game-vehicles-three 127, game-vehicles-driving 32, game-vegetation 241, game-vegetation-species 135, game-vegetation-three 46, game-urban 43, game-urban-three 64, game-camera 26: todos passaram |
+| `examples/urban-test-area` e `vegetation-test-area` e `vehicles-test-area` (Chromium) | `urban`: 8 de 8 cenários; `vegetation`: 13 de 13; `vehicles`: 13 de 13 |
+| `examples/interactables-test-area` (Chromium) | 22 de 22 (pt-BR e en), com os módulos de veículos, vegetação e cidade |
+| `pnpm lint` | exit 0 em cada commit |
+
+### Perguntas para o dono
+
+1. **Efeitos dos módulos de vegetação e cidade.** O mundo de destruição padrão não entrega seus eventos a um módulo (`ModuleHost` não tem `effects` para a vegetação). Aceita que o `game-vfx-three` ligue os efeitos aos eventos do mundo, ou o módulo deve passar a ouvir o mundo?
+2. **A bancada da vegetação não escolhe a espécie** (só o canteiro por semente, qualidade, detalhe, condição e estação). Vale um controle de espécie?
+3. **Métrica de triângulos por LOD** na vegetação: hoje só as plantas do canteiro por LOD; não há triângulos por LOD das 18 plantas da fila.
+4. **Folha de contatos da Garagem** (miniaturas com cache em `localStorage`): sem destino. Vira recurso da `vehicles-test-area` ou fica de fora?
+5. **Peças que o `buildWorld` espalha** e que não entraram em `game-urban`: árvores e vilas pelo mapa, estradas, trilhas e trilhos, túneis, pontes, linhas de transmissão, muros, decoração do vale e marcadores do mapa. Entram como "características" genéricas com ganchos de decoração (e a decoração do Vale na fatia do jogo), ou ficam só no repositório do jogo?
+6. **`smoothing` padrão 12** no `game-camera` (decisão 5 acima): manter ou voltar a 0 e deixar o 12 como predefinição do jogo?
+7. **Carro de caixas da amostra**: o padrão é não estacionar nada; o jogo liga `createVehicleProvider`. Prefere que a `urban-test-area` já ligue o provedor?
+8. **Marcadores do mapa e decoração do Vale** ficam no repositório do jogo (`game-slice/urban/`): confirma?
+
+Modelo da execução: `sonnet`.
 | testes dos pacotes afetados | `game-vfx` 163, `game-vfx-three` 59, `game-destruction` 101, `game-destruction-three` 52, `game-test-room` 128, `game-weapons-three` 162, `game-fluids-three` 11, todos passam |
 | exemplos (`test-room`, `interactables-test-area`, `weapons-test-area`: build e teste, Playwright por `NODE_PATH`) | passam (`test-room` OK; furniture 12/12; weapons ok). Imagens e logs gerados não foram commitados |
 | `pnpm -r test` inteiro (segundo plano) | ver abaixo |
@@ -2164,7 +2246,7 @@ Fonte: `sources/efeitos__oficina-vfx.js` (W168–1295) e a gravação `vfx-works
 
 ### Pendente
 
-- **`body` (T4.0) -> `splat` com `tint`**: o evento `body` ainda **não existe** no contrato desta branch (`game-contracts` não tem `type: 'body'`), então a ligação `wound -> bridge.splat({ fluid: 'blood' | 'old_blood', tint })` não foi feita. A ponte já recebe a chamada; falta só o `characters-three` (ou o anfitrião) escutar o `body` e chamar `splat` com as cores da idade da infecção (`ages.json`).
+- ~~`body` (T4.0) -> `splat` com `tint`~~: feito na T5.3e-body (seção abaixo, Fase 6 parte 2), depois que a Fase 4 entrou na `main`.
 
 ### Perguntas para o dono
 
@@ -2369,6 +2451,149 @@ Módulo de teste das casas, exemplo e goldens contra o VC3 (T2.6a-c). Branch `wo
 2. A `single_storey_a` segura a laje nas divisórias (o pórtico do time não tem divisórias portantes): a divisória portante é a regra certa do kit?
 3. Os andares de cima devem ser andados (altura de piso no jogador da sala) ou o teletransporte basta?
 4. Nome da área (pergunta 4 da T2.4): usado `floorplan-test-area`, como manda a regra.
+## T5.3e (body) — o evento `body` dos personagens chega ao filme de fluidos
+
+Ramo `int/p6b`, a partir da `main` com as Fases 0 a 6 (parte 1). O evento `body` (T4.0) já está no contrato; o que faltava era a ponte.
+
+- **Onde mora a ponte**: no `createFluidsBridge` do `game-characters-three` (o pacote dos personagens não importa os pacotes de fluidos: recebe um `FilmSink` com o `splat` do `createFilmBridge`). `wounds.handle` já lia o `body`; agora, além do `sink.splash` de litros que existia, ele chama `bridge.wound(...)` no `wound` e `bridge.burst(change, ponto, look, direção)` no corte (`severed`), no estouro (`destroyed`) e na divisão (`split`).
+- **Gotas**: `wound` joga 3 gotas de 3,2 mm a 2,5 m/s (`spray`); corte, estouro e divisão jogam 4, 7 e 10 (`burstDrops`), na direção de saída do evento (`exit`) ou do lado do membro; sem direção, caem retas. Os números são meus: o time só mostra gotas, a ponte do filme não tem conta por ferimento.
+- **Cor da idade**: `WoundBody.blood` (`BloodLook`: `liquid?`, `tint { fresh, dry }`, `amount`). `bloodLookOfAge(idade)` lê o `ages.json` (`freshBloodColor`, `dryBloodColor`, `blood`): sangue fresco 0x8A0A0A / 0x3B1D14, recente 0x5A0C10 / 0x2E1810, antigo 0x3A1C12 / 0x2A160E, decrépito 0x1A1612. O fator `blood` escala as gotas (decrépito, 0, não joga nenhuma) e as idades com `blood < 0,3` sangram `old_blood` (limiar e líquido por opção). A área de personagens recebe `film` e `bloodOf(idade)` e põe o olhar no corpo do zumbi pela idade de `traitsOf(...).age`.
+- **A sala**: `room.film` é a ponte do filme (`splat`, `setWeather`, `leaks`); `characters-test-area` e `interactables-test-area` passam `film: room.film`.
+- **Testes**: `game-characters-three/tests/film-blood.test.ts` (6: cores de `ages.json`, ferida com cor e direção, ferida sem olhar, corte/estouro/divisão com 2/4/6 gotas a 60% de sangue, sangue antigo e corpo seco, sem filme só o mundo); `game-test-room` (`room.film.splat` cria uma grade); no navegador, `interactables-test-area` ferve um zumbi com um golpe de corte e confere o `splat` de sangue com `tint` e a grade `film_grid`.
+
+### Perguntas para o dono
+- Quantas gotas por ferimento (3, 4, 7, 10) e a regra do sangue antigo (`blood < 0,3`) são minhas. Quer outra conta (por energia do golpe, por exemplo)?
+
+## T6.1g — vozes dos personagens e chamados dos bichos no `game-audio`
+
+Ramo `int/p6b`, depois da Fase 4 (corpo e `body`) na `main`.
+
+| O que | Onde |
+|---|---|
+| As primitivas da Cena (`sNoise`, `sTone`, `voice`) como camadas de receita, que antes moravam dentro do `destruction-three`: `sceneNoise`, `sceneTone`, `sceneVoice`, `sceneMany`, `sceneRecipe`. O `destruction-three` passou a importá-las (as receitas e os 12 traços dos materiais não mudaram) | `game-audio/src/recipes/scene.ts` |
+| Banco dos corpos: 16 receitas. Do jogo (movidas dos suportes de teste do `game-audio`, onde esperavam o dono): `scream_hoarse` (`grito`, L62128), `groan` e `runner_groan` (`voz`, L62143). Da Cena: `groan_walker`, `groan_runner`, `groan_brute` (L1345), `scream` (L1347), `inhale` (L1348), `leap` (L1349), `grab`, `bite`, `hurt` (L1350-L1352, no ouvinte), `flesh`, `flesh_head` (L1353), `sever` (L1355), `gore` (L1356). Cada uma com a linha do time em `sources` | `game-characters-three/src/audio/recipes.ts` |
+| Tabela de quem fala o quê nos 13 tipos | `game-characters-three/src/audio/voices.json` (`UNDEAD_VOICES`) |
+| `createCharacterSound(host.audio)`: `voice`, `body`, `player`, `update`; estilo `art_scene` (padrão) ou `game`; vozes e regras de corpo trocáveis | `src/audio/sound.ts` |
+| Os quatro chamados do `bichoSom` (L66625) e `createAnimalSound` com a recarga da página por bicho (6, 8, 30 e 3 s) | `game-animals-three/src/audio/{recipes.ts,calls.json,sound.ts}` |
+| `createWounds({ sound })` toca ferimento, corte, estouro e divisão onde o segmento estava; a área de personagens ganhou as ações `voice` e `special_call` e a de bichos `call`, todas no motor que a sala empresta | `wounds.ts`, `test-area/module.ts` |
+
+**Prova ("igual ao original")**: `game-characters-three/tests/audio.test.ts` (46 casos) roda cada receita no motor sobre o `AudioContext` falso, com a semente do fixture, e compara com o traço do código do time em `tools/golden/fixtures/audio`: `grito` a 5 distâncias, `voz('gemido')` a 4, `voz('corredor')` a 3, `groan` Lento/Corredor/Brutamonte, `scream`, `inhale`, `leap` em 3 posições, `grab`, `bite`, `hurt`, `flesh`, `flesh_head`, `sever` e `gore` (tolerância 1e-9). `game-animals-three/tests/audio.test.ts` faz o mesmo com os 4 chamados a 4 distâncias (16 casos). O limitador de vozes fica de fora dos traços (`groups` vazio no teste: o grupo `undead_voice` tem teste próprio, e o golden do limitador está no `game-audio`). Os casos `grito`, `voz` e `bichoSom` saíram do `team-trace.test.ts` do `game-audio` porque o dono agora é o pacote do assunto; o resto do arquivo ficou.
+
+### Escolhas minhas (padrões reversíveis)
+
+1. **A regra de classe da Cena vale para os 13 tipos**: Brutamonte tem o seu, velocidade de perseguição acima de 3,4 é gemido de corredor, o resto é de lento. Pelos números do `types.json`, farejador (3,5), saltador (4,5) e espreitador (4) gemem como corredor.
+2. **Tipos sem som próprio no time** (Rastejante, Inchado, Espreitador, Cego, Carbonizado, Afogado, Farejador, Devorador): usam o gemido pela regra acima (`origin: 'rule'`). Dois ganharam um som extra da página mais perto da linha de voz do `types.json` (`origin: 'extra'`): Farejador inspira antes de rosnar (`inhale`, "Fungadas") e Devorador morde (`bite`, "Mastigar molhado"). O Espreitador fica calado parado ("Silencioso") e geme ao acordar. Nada foi sintetizado do zero.
+3. **Grupo `undead_voice` só nos gemidos** (cinco ao mesmo tempo, um a cada 0,25 s, a menos de 40 m). Grito, inspirar e salto da Cena ficam fora do limite (o `grito` do jogo é chamado direto, `screamAt`, sem o orçamento). A Cena conta também o grito e o salto nos cinco do `AU.groans`; aqui só contam os gemidos.
+4. **Alerta**: no estilo do jogo, todo corpo que percebe o jogador responde com `voz('corredor')` (L67275, L67328); no da Cena, com o gemido da sua classe.
+5. **Gritador**: a sequência é inspirar, depois de 1,5 s (`windUpSeconds`) gritar; no estilo do jogo só o `grito`.
+6. **Corpo ferido**: `wound` = `flesh` (`flesh_head` em cabeça e mandíbula), `severed` = `sever`, `destroyed` e `split` = `gore`; no estilo do jogo o `wound` é a classe `sfx_flesh`. A Cena chama `flesh`/`sever`/`gore` nas funções de dano (L1084, L1101, L1127, L1132, L1143), a ligação com os eventos `body` é do kit.
+7. **Chamados dos bichos**: espécie -> chamado pelo gatilho do jogo (galinha, quero-quero, vaca, cachorro). O som do quero-quero dispara pela proximidade do jogador (`alarme`) no jogo; o kit só toca quando o anfitrião manda.
+
+### Perguntas para o dono
+- Os 8 tipos sem som no time (Rastejante, Inchado, Espreitador, Cego, Carbonizado, Afogado, Farejador, Devorador) e as 9 espécies sem chamado (cavalo, porco, javali, capivara, onça, gato, urubu, jararaca, rato) ficam com o gemido da regra, o som "extra" ou silêncio. Quer que o time de som entregue vozes novas, ou aceita as escolhas acima?
+- O Espreitador fica calado enquanto finge morto: aceita?
+
+## T6.2b — as pontes do clima e o som de chuva, vento e trovão
+
+Ramo `int/p6b`, depois de T5.3e e T6.1g.
+
+| O que | Onde |
+|---|---|
+| `createWeatherBridges(targets, options)`: cada alvo é opcional e uma interface pequena (o clima não importa nenhum dos pacotes que move). `film`, `interactables`, `vegetation`, `vfx`, `environment` (`EnvironmentBus`), `audio` (`AudioSink`); `bind(weather)` e `update(dt)` | `game-weather/src/bridges.ts` |
+| Filme de fluidos: `Film.setWeather({ rain, drying })` (`drying` multiplica a secagem; o calor intenso passa `dryingScale` 2) e `Film.wash(maxDryness = 0,5)` (o `ZG.wipe(c, "chuva")` do visor L13489-L13494: só a mancha com menos da metade seca; sangue e sangue velho, óleo e combustível não), com `FilmManager.wash`, `FilmGrid.wash` (reenvia o retângulo lavado), `FilmBridge.wash` e a opção `washable` | `game-fluids/src/film/{film,types,simulate}.ts`, `game-fluids-three/src/film/{manager,grid,bridge}.ts` |
+| Vento do vfx: `VfxWorld.setWind([x, y, z])` e `wind()` (`VfxOptions.wind` só dava o início) | `game-vfx/src/world.ts` |
+| Receitas: `rain_loop` (Cena L1314, passa-alta 600 e passa-baixa 6000), `wind_loop` (Cena L1315, passa-baixa 320, LFO 0,07 Hz de 0,035), `rain_hiss_game` (jogo L62116) e `thunder` | `game-weather/src/audio/recipes.ts` |
+| `createWeatherSound(audio)`: chuva 0,035 (chuva leve, 2,5 mm/h, a âncora do jogo) a 0,06 (forte, 15 mm/h, a âncora da Cena); vento 0,05 na brisa de 3,8 m/s e proporcional à velocidade, no máximo 0,12; o trovão toca no rumo do raio (graus no sentido horário a partir do norte, -z) quando o `thunder` do clima chega (o clima já espera `distância / 343` s) | `game-weather/src/audio/sound.ts` |
+| A bancada do clima recebe `targets` e `sound` e liga as pontes ao `host.audio`; `room.vfx` expõe o mundo de efeitos da sala; as áreas `weather-test-area` e `interactables-test-area` passam `room.film` e `room.vfx` | `bench/module.ts`, `game-test-room`, `examples/*/src/entry.js` |
+
+**Prova**: `game-weather/tests/sound.test.ts` roda os laços no motor sobre o `AudioContext` falso e compara com os traços do código dos times (Cena `chain` com chuva 0,06, vento 0,05 e fogo 0; jogo `loop.chuva` a 0,001, 0,035 e 0,3; tolerância 1e-9). `tests/bridges.test.ts` (8) cobre o que cada alvo recebe, só o que mudou, chuva leve sem lavar e forte lavando a cada segundo, calor, regras trocadas, troca de clima e trovão. `game-fluids` (secagem em dobro e lavagem pela metade), `game-fluids-three` (óleo não lava) e `game-vfx` (o fumo anda para o lado do vento) têm testes novos; no navegador, as duas áreas conferem que o vento da tempestade (4,5; 0) chega ao `room.vfx`, volta à brisa (3,5; 1,5) e que os laços abrem no motor da sala.
+
+### Escolhas minhas (padrões reversíveis)
+
+1. **Trovão**: o time não tem trovão. É o `boom` do jogo (seno de 70 a 28 Hz em 1,2 s) mais um ribombo de ruído passa-baixa que desce de 260 a 50 Hz em 3,2 s com envio de reverb. A curva é `1,4 / (1 + d² × 0,00001)`: com a do boom (0,002) um raio a 200 m, o mais perto que o clima sorteia, já chegaria a 0,017 e um a 4 km, a nada.
+2. **Chuva do filme**: `rain = min(1, mm/h / 2,5)`, ou seja, a chuva leve já para a secagem por completo (a regra da folha: "não seca enquanto chove"); lavar só de 15 mm/h (chuva forte) em diante, a cada 1 s (decisão 9 da T6: a chuva leve não lava).
+3. **Vegetação**: `strength = min(1, vento / 20)` (como na spec) e `gust = min(1, rajada / 20)` na mesma escala; a spec não diz a conta da rajada. Sem vento a direção não é enviada (o renderizador normaliza e um vetor zero a estragaria).
+4. **Vento do vfx**: passa a ser o do clima (a brisa do `clear` é 3,5; 1,5 m/s, bem mais forte que o 0,55; 0,2 de partida do `game-vfx`); só muda onde o anfitrião liga a ponte (as duas áreas de teste).
+5. **Vento da Cena**: o laço abre a 0,05 na Cena e o volume segue a velocidade a partir dali; a escala (0,05 a 3,8 m/s, teto 0,12) é do kit.
+
+### Não migrado
+- **A prateleira do showroom** (`interactables-showroom`) ainda liga chuva (60 mm/h) e vento (3,5; 1,5) à mão, com malha de chuva própria. As pontes aceitam o mundo de interativos e o `effects` do showroom, mas trocar os botões por estados do clima muda o comportamento da página (a chuva dela é uma malha); fica para quando a T6.2c entregar a chuva desenhada.
+
+### Perguntas para o dono
+- O trovão é do kit (ribombo e curva): quer outra conta, ou um som do time de áudio?
+- Chuva leve lava o sangue? Hoje não (decisão 9); a folha diz "chuva lava", sem separar leve de forte.
+- Vento do `vfx` com o vento do clima em todo anfitrião que ligar a ponte: aceita a brisa de 3,5; 1,5 m/s no lugar de 0,55; 0,2?
+
+## T6.2c — o clima desenhado (`game-weather-three`) e a chuva, a neblina e os faróis da Oficina
+
+Ramo `int/p6b`, depois de T6.2b.
+
+| O que | Onde |
+|---|---|
+| Chuva da Oficina (W312-331): `RainField` em `engine.rain`, até 4 000 riscos num `Float32Array`, sorteios na ordem da página (`rnd(-15,15)`, `rnd(0,16)`, `rnd(-6,16)`; ao cair, 35 % de respingo a menos de `12/(1+qualidade)` m, 50 % de sprite e anel só em poça; volta em `rnd(14,17)`). A página não diz o que fazer com a caixa fora da origem: `drive(count, wind, centerX, centerZ)` é do kit e o golden nunca o chama | `game-vfx/src/workshop/rain.ts`, `effects/behaviors/rain.ts` |
+| Os três efeitos da Oficina que a T5 deixou de fora: `chuva` (`rain_and_puddles`, 3 intensidades, 4 poças, relâmpago duplo no temporal), `neblina` (`fog_and_ash`, 3 zumbis, névoa 5/s e cinza 14/s) e `farol` (`headlights_in_rain`, 1 800 gotas, 6 zumbis na luz, 600 gotas acesas/s no feixe); a consulta `car.point` | `game-vfx/src/effects/{world/rain,world/fog-and-ash,vehicles/headlights}.ts`, `behaviors/car.ts` |
+| Golden dos três na captura `vfx-workshop.js` (`mode=weather`): sequência de eventos, contagem de sorteios, contagem por quadro e hash do pool de chuva; 16 testes | `game-vfx/tests/weather-golden.test.ts`, `tests/fixtures/team-golden/vfx-workshop-weather.json` |
+| `game-vfx-three` desenha o campo de chuva (`workshop-rain`, `LineSegments` 0x9fb3cf, opacidade 0,35) | `game-vfx-three/src/workshop-layers.ts` |
+| Pacote novo `game-weather-three`: cortina de chuva do jogo (14 000 pontos, caixa de 70 m x 25 m, 13 m/s, shaders do `jogo.js` letra por letra), chuva perto (`createNearRain`, liga o `engine.rain` ao clima), névoa e cinza (`emitAirborne`), neblina linear e exp2 com zona (`fogOf`), céu (`createSky`), relâmpago (`createLightning`), faróis (`createHeadlights`), névoa de calor (`createHeatHaze`) e `createWeatherRenderer` | `packages/game-weather-three` |
+| A bancada do clima aceita `visual` (`WeatherVisualFactory`); `createWeatherVisual` dá 7 camadas (pt-BR e en) e um suporte de lanternas diante da câmera; as duas áreas de teste ligam o visual (no `interactables-test-area`, com o céu da sala) | `game-weather/src/bench/module.ts`, `game-weather-three/src/bench`, `examples/*/src/entry.js` |
+| Miniatura do clima: tempestade às 20 h, com chuva, céu escuro e os faróis do suporte | `site/thumbs/weather-test-area.jpg`, `site/catalog.mjs` |
+
+**Prova**: `tools/golden/bin/record-weather-visual.mjs` corta o bloco da chuva do `jogo.js` (`const RAIN = 14000` até `skyUpdate`) e o roda num `vm` com três.js falso sob `Math.random` semeado; `fixtures/weather/game-rain-curtain.json` guarda o SHA-256 dos 42 000 floats, os shaders e as linhas de céu, neblina e zona. `tests/rain-curtain-golden.test.ts` (9) compara pontos bit a bit, shaders letra por letra e os números de céu, neblina, relâmpago, faróis, névoa e cinza com o texto das páginas; `tests/renderer.test.ts` (15) e `tests/bench-visual.test.ts` (2) cobrem neblina, céu, cortina por perfil, chuva perto (inclusive desenhada pelo `game-vfx-three`), relâmpago, faróis a 40 m, névoa de calor, camadas e a bancada. No navegador: `weather-test-area/test.mjs` confere a tempestade (cortina 14 000, 4 000 riscos, neblina linear de 110 m, suporte aceso), a neblina exp2 de 0,075 com névoa e cinza e o calor com a névoa; `interactables-test-area/test.mjs` confere a cortina e os 4 000 riscos sobre os móveis e o céu da sala intacto.
+
+### Escolhas minhas (padrões reversíveis)
+
+1. **Cortina por `drops`**: a cortina toda (14 000) aparece a 4 000 gotas (a tempestade); a chuva forte (2 200) desenha 55 % e a leve (900), 22 %; perfis `low` 0,35, `medium` 0,7, `high` 1. O jogo só tem chuva ou não; a escala é do kit (`fullAt`).
+2. **Céu**: o `0,8` do jogo na chuva vira `skyScale` do estado (1 limpo, 0,9 chuva leve, 0,8 chuva forte, 0,7 temporal); o dia 0..1 é `sample.sun`.
+3. **Neblina exp2**: onde o estado tem densidade (`fog` 0,075, `overcast` 0,03) usa `FogExp2`; a zona entra por uma densidade equivalente a `far` (`sqrt(ln 50) / far`). O jogo só tem neblina linear.
+4. **Relâmpago**: o `hemi.intensity` e o fundo da Oficina são absolutos (0,6 + I x 3,2); aqui são acréscimos, para valer sobre o céu do dia (o fundo só muda com a camada `sky` ligada).
+5. **Respingo**: a chuva da Oficina só respinga a partir da "chuva" (a garoa não); aqui, de 5 mm/h. Anéis só onde `puddleAt` ou `puddles` dizem que há poça (nenhuma por padrão; a Oficina tem 4 elipses fixas).
+6. **Faróis**: acendem à noite (fator de noite > 0,3), com chuva, com neblina densa ou visibilidade menor que 150 m; luz de verdade só a menos de 40 m da câmera (texto `b` da página).
+7. **Suporte de lanternas** da bancada: dois faróis e um bloco com as lentes `hlMat`. Não é carro: o time de veículos entrega os carros e o `game-vehicles-three` ainda não existe; quando existir, o `headlights.attach(carro, lente)` já serve.
+
+### Não migrado
+- **Névoa de calor com distorção**: nenhum time entregou; a camada é uma faixa quente que sobe na parte de baixo da tela. Distorcer a imagem pede um alvo de render, que só o anfitrião tem.
+- **A prateleira do showroom** (`interactables-showroom`) segue com a chuva de malha própria (ver T6.2b); trocá-la pela cortina muda a página.
+
+### Perguntas para o dono
+- A cortina com 22 % a 55 % da chuva na chuva leve e na forte (e 100 % só no temporal) está certa, ou a chuva do jogo (14 000 sempre) vale para todo estado com chuva?
+- Névoa de calor: quer o time de efeitos para a distorção de verdade, ou a faixa quente basta?
+- Faróis: a regra "noite, chuva ou neblina" liga os faróis de qualquer carro do mundo. O jogo decide por veículo (o motorista), ou o clima pode ligar todos?
+
+## T5 (restante) — clarão, fumaça, sopro do lançador e jato de chama da arma na mão sobre o `game-vfx`
+
+Ramo `int/p6b`, depois de T6.2c. Feito em duas passadas: f49e466 trouxe as receitas com sprites; a segunda passada (pedido do coordenador: "proibido reescrever parecido") trocou os sprites pelos sólidos da galeria.
+
+| O que | Onde |
+|---|---|
+| O `createEffects` da galeria (clarão: um cone aberto de 10 lados, quatro cones de 6 lados e uma esfera de 12 por 8, aditivos, `0,6 + min(1, idade/0,055) x 0,9` de escala; luz laranja de `4 k` a `2 k` m; seis esferas de fumaça de 10 por 8) vira a receita `viewmodel_muzzle_flash`; a `smoke(posição, velocidade, tamanho, vida, opacidade)` vira `weapon_smoke_puff`; o sopro de trás do lançador (26 esferas de fumaça e 14 icosaedros de fogo, `launchRocket`) vira `launcher_backblast`; os icosaedros e a fumaça do `flameJet` (`floor(dt x 420 x escala)` por quadro) viram `flame_jet`. As receitas estão nos eixos da arma (x no cano, y para cima, z à direita), como a galeria | `game-vfx/src/effects/weapons/viewmodel.ts` |
+| Primitiva nova: partícula de sólido (`MeshSpawn`: cone, cone aberto, esfera, icosaedro, com segmentos, material aditivo ou iluminado, `at`/`rot`/`roll` de grupo, `ramp`, `grow`, `drag`, gravidade, giro, opacidade que some), com o mesmo passo por quadro do `Particles` da galeria (idade, opacidade, gravidade, arrasto, movimento, giro, crescimento) | `game-vfx/src/workshop/meshes.ts` (`MeshPool`), passo `mesh` em `effects/steps.ts`, desenho em `game-vfx-three/src/mesh-layer.ts` (uma `Mesh` por partícula, geometria e material dela) |
+| A orientação inteira da arma (o quaternion, com a inclinação e o rolar) chega à receita: `EffectRequest.orientation` no contrato, `PlayOptions.orientation`, `Placement.orientation` (posições e velocidades giram com ele; sem ele, só pelo eixo vertical como antes) | `game-contracts/src/effects.ts`, `game-vfx/src/effects/player.ts`, `workshop/engine.ts` |
+| A luz do clarão segura a força nos 55 ms e apaga (`flash(..., force, steady)`), como a luz da galeria; antes a luz do Workshop caía com o quadrado da idade | `game-vfx/src/workshop/waves.ts` |
+| Números nomeados: `PlayOptions.values` (lidos com `variable(nome)`) e `EffectRequest.values`; a expressão `exp` | `game-vfx/src/effects/{player,instance,expression,dsl}.ts` |
+| Sorteios na ordem da galeria, de um fluxo próprio da receita: cada `play` tira uma semente do fluxo do viewmodel (uma tirada) e a receita sorteia da semente na ordem em que a galeria sorteava (ângulo dos quatro cones, rolar do grupo, velocidade e vida de cada fumaça; no lançador e no jato, a ordem de `heavy.ts`) | receitas e `game-weapons-three/src/fx/effects.ts` |
+| `game-weapons-three` toca as receitas pelo `host.effects` (`createWeaponFx({ effects })`); sem `host.effects` (visualizador sozinho) cria um mundo de efeitos próprio (`createVfxRenderer`, como a `destruction-three`), atualizado e apagado junto com o viewmodel. Ficam como malha: cápsulas, pentes, o foguete em voo (e o cone e a luz do escape), as gotas em chamas e as três chamas no chão | `game-weapons-three/src/fx/{effects,heavy,viewmodel}.ts`, `box-fx.ts`, `fx.ts`, `area.ts` |
+
+**Prova**
+- `tools/golden/bin/record-viewmodel-flash.mjs` roda `fx/effects.ts` e `fx/particles.ts` do commit d15e990 (antes de f49e466), sem mudar uma linha (só transpilados), no three.js de verdade e com um fluxo sorteado de semente fixa, e grava `tools/golden/fixtures/weapons/viewmodel-flash.json`: em três cenários (cano reto, inclinado e girado, 100 e 60 quadros por segundo) e 13 quadros cada, as peças do clarão (geometria e seus números, material, posição e giro no mundo, escala), a luz (intensidade, distância, decaimento, cor, posição) e as esferas de fumaça (raio, segmentos, posição, escala, opacidade).
+- `game-vfx-three/tests/viewmodel-flash.test.ts` toca a receita pelo `createVfxRenderer` com a mesma semente e compara tudo com 9 casas. Passa nos 39 quadros.
+- `game-vfx/tests/viewmodel-effects.test.ts` (10) confere a ordem dos sorteios do clarão, o passo por quadro da fumaça e, número a número, o sopro do lançador e o jato de chama contra o laço de `heavy.ts` (reescrito no teste com o mesmo fluxo de sementes), com o cano reto e com o cano inclinado.
+- `game-weapons-three/tests/viewmodel-effects.test.ts` (7) confere o que a arma pede ao `host.effects` (ids, quaternion e números), o tiro, o lançador e o lança-chamas na sala de testes, e o visualizador sem `host.effects` (peças do clarão e luz nos dois primeiros quadros, só a fumaça depois). Os goldens do `game-weapons-three` seguem os mesmos; nenhum foi regravado.
+
+### Diferenças que sobram em relação à galeria
+1. **A luz não precisa de divisão por π**: o coordenador pediu `intensidade / π`, supondo que o `game-vfx-three` multiplica as luzes do Workshop por π. Quem multiplica é a camada de luzes do Laboratório (`lightScale`, padrão π). A camada do Workshop, onde a receita toca, usa escala 1 (`createWorkshopLayers(..., 1)`), então a receita pede `4 k` e a luz sai com `4 k`, igual à da galeria (o teste compara a intensidade quadro a quadro com a gravada). Dividir por π a deixaria π vezes mais fraca.
+2. **O sorteio sai do fluxo do viewmodel**: o clarão não tira mais 29 números do fluxo do viewmodel, tira um (a semente). Os números que a receita sorteia são os mesmos que a galeria sortearia com o fluxo `lehmer(semente)` (o teste prova); o que muda é o que o viewmodel sorteia depois (cápsulas, giro), que deixa de depender do clarão. Nenhum golden depende disso.
+3. **Sem `host.effects`, o mundo próprio usa o perfil `medium`** e a câmera que o viewmodel recebeu; as luzes do Workshop do mundo próprio são quatro, e a do clarão é forçada (aparece mesmo com a qualidade baixa do hospedeiro).
+
+### Perguntas para o dono
+- Sem `host.effects` o visualizador cria o próprio mundo de efeitos (um `VfxWorld` por viewmodel). Quer que vários viewmodels no mesmo cenário dividam um só (uma opção `vfx`), ou um por arma está bem?
+- O sopro do lançador e o jato de chama agora giram com o cano inteiro; a faísca e o fogo do foguete em voo (cone e luz do escape) seguem como malha da `game-weapons-three`. Quer o escape do foguete também como receita (precisa de um passo que acompanhe a malha do foguete)?
+
+### Fase 7: efeitos e som dos veículos, depois do merge das fases 2 a 6 (T7.6 a T7.8)
+
+- Merge de `origin/main` em `int/p7` (5a697df), conflitos resolvidos mantendo os dois lados; o `interactables-test-area` carrega efeitos, som, clima, casas, veículos, vegetação e urbano (36/36 no navegador).
+- Efeitos dos veículos (T7.6): o módulo pede ao `host.effects` no formato do `EffectSink` os ids `car_fuel_tank` (explosão da Garagem, do catálogo), `glass_burst`, `impact_metal` e `vehicle_fire`, `vehicle_exhaust`, `vehicle_leak`. Estes três são apelidos ancorados no carro da Oficina de `engine_smoke` e `fuel_leak`, com os valores do time; nada de partícula nos pacotes de veículos. No navegador os cenários pedem `vehicle_fire` 17x, `glass_burst` 13x, `impact_metal` 3x, `vehicle_leak` 3x e `car_fuel_tank` 1x.
+- Vegetação e urbano (T7.7): folhas, fibras, lascas, fogo, cinza e faíscas já saem do renderizador de destruição no mundo de efeitos da sala (`burst:leaves` 18x, `fibers` 14x, `fire`, `sparks`), e o teste de vegetação trava isso. Seiva não tem receita nem valor de time; os postes do urbano são lajes ancoradas (sem destruição), então não há faísca de poste.
+- Som dos veículos (T7.8): `host.audio` com o banco da biblioteca (`engine_saw` com volume 0,035 + v x 0,003 e frequência 38 + v x 7, `horn`, `sfx_impact`); vidro, impacto e explosão já tocam pelo som de destruição da sala. Vegetação e urbano: nenhum som de time além de `leaves_rustle`, que não existe no banco.
 
 ## T8.0 — Desenho da Fase 8 (multidão, histórias e jogador)
 

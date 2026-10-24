@@ -7,6 +7,8 @@ import type { Film, FilmField, FilmOptions, FilmProfile, FilmWeather } from './t
 
 const DEFAULT_STEP_RATE = 180
 const DEFAULT_MAX_STEPS = 6
+/** The visor's `ZG.wipe`: rain removes only the stain that is less than half dry. */
+const WASH_BELOW_DRYNESS = 0.5
 
 /**
  * A running film of one liquid over one layout: drops land as impacts, a drip, sources and drag smears add to it, and a 180 Hz
@@ -22,7 +24,7 @@ export function createFilm(options: FilmOptions): Film {
     dryness: new Float32Array(cellCount),
     dampness: new Float32Array(cellCount),
   }
-  let weatherState: FilmWeather = { rain: 0 }
+  let weatherState: FilmWeather = { rain: 0, drying: 1 }
   let currentProfile: FilmProfile = options.profile
   const context: DepositContext = { field, random, profile: () => currentProfile }
   const drops = createDropPool(layout, context)
@@ -61,9 +63,30 @@ export function createFilm(options: FilmOptions): Film {
       simulator.advance({ dt, dryingSeconds })
     },
     setWeather(weather) {
-      weatherState = { rain: Math.min(1, Math.max(0, weather.rain ?? weatherState.rain)) }
+      weatherState = {
+        rain: Math.min(1, Math.max(0, weather.rain ?? weatherState.rain)),
+        drying: Math.max(0, weather.drying ?? weatherState.drying ?? 1),
+      }
     },
     weather: () => ({ ...weatherState }),
+    wash(maxDryness = WASH_BELOW_DRYNESS) {
+      simulator.refreshBounds()
+      const { firstRow, lastRow, firstColumn, lastColumn } = simulator.bounds
+      let cleared = 0
+      for (let row = firstRow; row <= lastRow; row++) {
+        for (let column = firstColumn; column <= lastColumn; column++) {
+          const index = row * layout.width + column
+          if (field.thickness[index]! > 0 && field.dryness[index]! < maxDryness) {
+            field.thickness[index] = 0
+            field.dryness[index] = 0
+            field.dampness[index] = 0
+            cleared++
+          }
+        }
+      }
+      // the bounds shrink on the next advance, which the grid's upload rectangle (union with the previous one) already covers
+      return cleared
+    },
     clear() {
       field.thickness.fill(0)
       field.dryness.fill(0)

@@ -1,5 +1,57 @@
 # @adatechnology/game-test-room
 
+## 0.11.1
+
+### Patch Changes
+
+- Updated dependencies [0aafb73]
+  - @adatechnology/game-vfx@0.3.0
+  - @adatechnology/game-destruction-three@0.7.3
+  - @adatechnology/game-fluids-three@0.3.1
+  - @adatechnology/game-vfx-three@0.2.1
+
+## 0.11.0
+
+### Minor Changes
+
+- cca7380: The `body` events reach the running film of the liquids (T5.3e). `createFluidsBridge` takes a `film` sink (the `splat` of `createFilmBridge`): a `wound` throws 3 drops of blood, a `severed`, `destroyed` or `split` segment throws 4, 7 or 10 (options `spray`, `burstDrops`), thrown along the way out, in the colours of the body's `BloodLook` (`WoundBody.blood`). `bloodLookOfAge(age)` reads `ages.json` (fresh and dry colours, `blood` as the amount; ages thinner than 0.3 bleed `old_blood`), and the characters area takes `film` and `bloodOf(age)`. The test room exposes the film bridge as `room.film`.
+- 485acc7: The weather reaches the other packages (T6.2b). `game-weather` gets `createWeatherBridges(targets, options)`: every target is optional and a small interface of its own (so the weather imports none of them) - the fluids film (`setWeather({ rain, drying })`, with `wash()` every second while the rain is heavy or stronger), `interactables.water.setRain(mm/h)` and `setWind(x, z)`, the vegetation `setWind({ direction, strength: min(1, speed / 20), gust })`, the vfx `setWind`, the environment bus (`environmentOf(sample)`) and the sound. The rain, wind and thunder are recipes of `game-audio` (`WEATHER_BANK`: `rain_loop` and `wind_loop` from the art scene L1314-L1315, `rain_hiss_game` from the game L62116, `thunder` from the game's boom plus a rumble), played by `createWeatherSound` (rain 0.035 in a light rain to 0.06 in a heavy one, wind 0.05 at the breeze and in proportion, the thunder at its bearing when `thunder` arrives). `createWeatherTestModule` takes `targets` and `sound`. `game-fluids` films take `drying` (an extra scale on the drying; extreme heat is 2) and `wash(maxDryness = 0.5)`; `game-fluids-three` passes both on (`FilmBridge.setWeather({ rain, drying })`, `wash`, option `washable`, default blood and old blood); `VfxWorld` gets `setWind` and `wind`; the test room exposes `room.vfx`. `@adatechnology/game-weather` now depends on `@adatechnology/game-audio`.
+
+### Patch Changes
+
+- Updated dependencies [a41fcb7]
+- Updated dependencies [485acc7]
+- Updated dependencies [d15e990]
+- Updated dependencies [f49e466]
+  - @adatechnology/game-audio@0.2.0
+  - @adatechnology/game-destruction-three@0.7.2
+  - @adatechnology/game-fluids@0.3.0
+  - @adatechnology/game-fluids-three@0.3.0
+  - @adatechnology/game-vfx@0.2.0
+  - @adatechnology/game-vfx-three@0.2.0
+  - @adatechnology/game-contracts@0.13.0
+  - @adatechnology/game-destruction@0.7.2
+  - @adatechnology/game-weapons@0.4.5
+
+## 0.10.0
+
+### Minor Changes
+
+- 98ae206: `ModuleHost.addBlocker(blocked)`: a module with walls of its own (a house) keeps the walking player out of them; the function is asked on every step with the player's radius and may follow a door that opens. `ModuleHost.onClear(listener)`: a module that put things in the world on its own follows the room clearing its area (`clear()`, opening an area, scenarios) to take them away. Both optional; the room lends them.
+
+### Patch Changes
+
+- Updated dependencies [98ae206]
+  - @adatechnology/game-contracts@0.12.0
+  - @adatechnology/game-audio@0.1.2
+  - @adatechnology/game-destruction@0.7.1
+  - @adatechnology/game-destruction-three@0.7.1
+  - @adatechnology/game-fluids@0.2.3
+  - @adatechnology/game-vfx@0.1.3
+  - @adatechnology/game-vfx-three@0.1.3
+  - @adatechnology/game-weapons@0.4.4
+  - @adatechnology/game-fluids-three@0.2.3
+
 ## 0.9.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createVfx, effectForEvent, EVENT_EFFECTS, GAME_EFFECTS, locales, WORKSHOP_EFFECTS } from '../src'
+import { createVfx, effectForEvent, EVENT_EFFECTS, GAME_EFFECTS, locales, VIEWMODEL_EFFECTS, WORKSHOP_EFFECTS } from '../src'
 
 describe('event effects', () => {
   it('picks the effect of each Phase 2 event', () => {
@@ -37,8 +37,8 @@ describe('event effects', () => {
   })
 
   it('keeps the Workshop recipes apart from the event ones', () => {
-    expect(Object.keys(WORKSHOP_EFFECTS)).toHaveLength(36)
-    expect(Object.keys(GAME_EFFECTS).length).toBe(36 + EVENT_EFFECTS.length)
+    expect(Object.keys(WORKSHOP_EFFECTS)).toHaveLength(39)
+    expect(Object.keys(GAME_EFFECTS).length).toBe(39 + EVENT_EFFECTS.length + Object.keys(VIEWMODEL_EFFECTS).length + 3)
   })
 })
 

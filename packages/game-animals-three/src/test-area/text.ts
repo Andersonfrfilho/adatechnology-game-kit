@@ -4,7 +4,7 @@ export type AnimalsText = {
   controls: Record<'visual_state' | 'gait' | 'speed' | 'outbreak' | 'time_scale', string>
   hints: Record<'visual_state' | 'gait' | 'outbreak' | 'time_scale', string>
   options: { visual_state: Record<string, string>; gait: Record<string, string> }
-  actions: Record<'bite_all' | 'recover' | 'skin_40' | 'clear_skins', string>
+  actions: Record<'bite_all' | 'recover' | 'call' | 'skin_40' | 'clear_skins', string>
   layers: Record<'joints' | 'split' | 'sound_range' | 'carcass_lure', string>
   metrics: Record<'animals' | 'draw_calls' | 'triangles' | 'nodes_per_skin' | 'incubating' | 'turned' | 'dead', string>
   scenarios: Record<string, string>
@@ -22,7 +22,7 @@ export const TEXT: Record<string, AnimalsText> = {
       time_scale: 'Game seconds per real second for the bite timers (60: ten minutes pass in ten seconds)',
     },
     options: { visual_state: { alive: 'Alive', infected: 'Infected', dead: 'Dead' }, gait: { idle: 'Idle', walk: 'Walk', run: 'Run' } },
-    actions: { bite_all: 'Bite every animal', recover: 'Heal every animal', skin_40: 'Add 40 animals as node skins', clear_skins: 'Remove the skins' },
+    actions: { bite_all: 'Bite every animal', recover: 'Heal every animal', call: 'Make the animals with a call call (hen, lapwing, cow, dog)', skin_40: 'Add 40 animals as node skins', clear_skins: 'Remove the skins' },
     layers: { joints: 'Joints', split: 'Split view', sound_range: 'Sound range', carcass_lure: 'Carcass lure radius' },
     metrics: { animals: 'Animals', draw_calls: 'Draw calls', triangles: 'Triangles', nodes_per_skin: 'Nodes per skin', incubating: 'Incubating', turned: 'Turned', dead: 'Dead' },
     scenarios: {
@@ -45,7 +45,7 @@ export const TEXT: Record<string, AnimalsText> = {
       time_scale: 'Segundos de jogo por segundo real nos prazos da mordida (60: dez minutos passam em dez segundos)',
     },
     options: { visual_state: { alive: 'Vivo', infected: 'Infectado', dead: 'Morto' }, gait: { idle: 'Parado', walk: 'Andando', run: 'Correndo' } },
-    actions: { bite_all: 'Morder todos os bichos', recover: 'Curar todos os bichos', skin_40: 'Pôr 40 bichos como pele de nós', clear_skins: 'Tirar as peles' },
+    actions: { bite_all: 'Morder todos os bichos', recover: 'Curar todos os bichos', call: 'Fazer os bichos com chamado chamarem (galinha, quero-quero, vaca, cachorro)', skin_40: 'Pôr 40 bichos como pele de nós', clear_skins: 'Tirar as peles' },
     layers: { joints: 'Juntas', split: 'Vista aberta', sound_range: 'Alcance do som', carcass_lure: 'Raio de atração da carcaça' },
     metrics: { animals: 'Bichos', draw_calls: 'Chamadas de desenho', triangles: 'Triângulos', nodes_per_skin: 'Nós por pele', incubating: 'Incubando', turned: 'Viraram', dead: 'Morreram' },
     scenarios: {

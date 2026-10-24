@@ -1,0 +1,93 @@
+{
+  "seed": 1,
+  "cuts": {
+    "rain": "b3c12b87cbee7a348242fe25e1cc2dfbb7ba6ee52eab3af2c9f9c8a2baa780cb",
+    "sky": "cc063d785437eba6322bcbcda030417a0f21ae2d9332271582856ce72985bdaa",
+    "zone": "f29499a6bb755c411b175d2ba7e4490a0568f1c87244f5080a815bff1b877407",
+    "palette": "cede8adc3c8b61d7cf6334ae58af016af91523f9b450c1b6c741d92d4548bd36",
+    "fog": "582341efef6997e8cd028c9bf1d63d020a77bf8374fe5379dd5bf3744d9efe0d"
+  },
+  "rain": {
+    "count": 14000,
+    "floats": 42000,
+    "positionsSha256": "3c9ca3b96567f276d51ebbcb6976c4d79d5972ad2fb6530c3f6fea674a38edd7",
+    "head": [
+      8.89517593383789,
+      0.0683930292725563,
+      1.921292781829834,
+      33.67356872558594,
+      24.209447860717773,
+      -15.322754859924316,
+      7.8987202644348145,
+      18.018577575683594,
+      -5.194213390350342,
+      34.63760757446289,
+      11.3817777633667,
+      -0.7848177552223206
+    ],
+    "tail": [
+      15.560067176818848,
+      18.14380645751953,
+      -7.820431709289551,
+      12.252166748046875,
+      16.690221786499023,
+      10.867847442626953
+    ],
+    "vertexShader": "uniform float uTime; uniform vec3 uCam; void main(){ vec3 p = position; p.y = mod(p.y - uTime*13., 25.); p.xz = uCam.xz + mod(p.xz - uCam.xz + 35., 70.) - 35.; gl_Position = projectionMatrix*viewMatrix*vec4(p,1.); gl_PointSize = 1.6; }",
+    "fragmentShader": "uniform float uDay; void main(){ gl_FragColor = vec4(vec3(.68,.72,.78)*(0.25+0.75*uDay), .22+.1*uDay); }",
+    "transparent": true,
+    "depthWrite": false,
+    "frustumCulled": false,
+    "uniforms": [
+      "uTime",
+      "uCam",
+      "uDay"
+    ]
+  },
+  "lines": {
+    "sky": [
+      "function skyUpdate(dt, cycle) {",
+      "if (cycle) dayT = (dayT + dt / 1200) % 1; // dia de 20 min na fatia",
+      "const s = clamp(Math.sin(dayT * Math.PI * 2 - Math.PI / 2) * 0.5 + 0.5, 0, 1);",
+      "nightF = 1 - clamp(s * 2.2, 0, 1);",
+      "// noite com luar azulado: o corpo e a roupa continuam legíveis",
+      "sun.intensity = 1.0 + s * 2.2; hemi.intensity = 1.5 + s * 0.4; amb.intensity = 0;",
+      "hemi.color.lerpColors(_hSkyN, _hSkyD, s); hemi.groundColor.lerpColors(_hGndN, _hGndD, s);",
+      "sodiumUpdate();",
+      "sun.color.lerpColors(_lua, _solC, s);",
+      "WORLD_MESH.lampPools.visible = nightF > 0.3; WORLD_MESH.lampPools.material.opacity = clamp((nightF - 0.3) * 2, 0, 1);",
+      "WORLD_MESH.windows.material.userData.night.value = nightF;",
+      "sky.lerpColors(_skyN, _skyD, s);",
+      "if (rainOn) sky.multiplyScalar(0.8);",
+      "if (ZONA_NEBLINA.peso > 0) sky.lerp(_zn.copy(ZONA_NEBLINA.cor).multiplyScalar(0.35 + s * 0.65), ZONA_NEBLINA.peso);",
+      "scene.fog.color.copy(sky); scene.background.copy(sky);",
+      "scene.fog.far = lerp(rainOn ? 140 : 220, ZONA_NEBLINA.longe, ZONA_NEBLINA.peso); scene.fog.near = lerp(25, 4, ZONA_NEBLINA.peso);",
+      "WORLD_MESH.bulbs.visible = nightF > 0.3;",
+      "// sombra estável: direção do sol muda em degraus de 10 min de jogo e o centro anda em passos de um texel do mapa de sombra",
+      "const dq = Math.round(dayT * 144) / 144, sq = Math.round(s * 40) / 40;",
+      "_sunD.set(Math.cos(dq * 6.28) * 60, 15 + sq * 60, 35);",
+      "// dentro de casa a sombra só precisa do lote: frustum de 32 m em vez de 80 (corta metade dos draw calls de sombra e deixa a sombra mais nítida)",
+      "let dentro = false; for (const b of FLOORS) if (player.x > b.x - 2 && player.x < b.x + b.w + 2 && player.z > b.z - 2 && player.z < b.z + b.d + 2) { dentro = true; break; }",
+      "const ext = dentro ? 16 : 40, sc = sun.shadow.camera;",
+      "if (sc.right !== ext) { sc.left = sc.bottom = -ext; sc.right = sc.top = ext; sc.updateProjectionMatrix(); }",
+      "const tex = ext * 2 / 2048, ax = _sunR.set(_sunD.z, 0, -_sunD.x).normalize(), ay = _sunU.crossVectors(_sunD, ax).normalize();",
+      "const u = Math.round((player.x * ax.x + player.z * ax.z) / tex) * tex, v = Math.round((player.x * ay.x + player.z * ay.z) / tex) * tex;",
+      "// reconstrói o ponto no chão a partir das coordenadas no plano da luz (sem o componente na direção da luz)",
+      "const w = player.x * _sunD.x / _sunD.length() + player.z * _sunD.z / _sunD.length(), dn = _sunN.copy(_sunD).normalize();",
+      "_sunC.set(0, 0, 0).addScaledVector(ax, u).addScaledVector(ay, v).addScaledVector(dn, w);",
+      "sun.target.position.copy(_sunC); sun.position.copy(_sunC).add(_sunD);",
+      "rainMat.uniforms.uDay.value = s; rain.visible = rainOn; rainMat.uniforms.uCam.value.copy(camera.position);",
+      "const hh = Math.floor(dayT * 24), mm = Math.floor((dayT * 24 % 1) * 60);",
+      ""
+    ],
+    "zone": "const ZONA_NEBLINA = { cor: new THREE.Color(0x3a4a3a), longe: 60, peso: 0 };",
+    "palette": [
+      "const sky = new THREE.Color(), _lua = new THREE.Color().setHex(0x9db4d8, THREE.LinearSRGBColorSpace), _solC = new THREE.Color().setHex(0xffe2b8, THREE.LinearSRGBColorSpace);",
+      "// paleta das prévias (Laboratório de Explosões, Retratos do Vale), convertida para luz física (× π); as prévias (r128) liam o hex da luz como linear, então aqui também",
+      "const _hSkyN = new THREE.Color().setHex(0x51607a, THREE.LinearSRGBColorSpace), _hGndN = new THREE.Color().setHex(0x15120f, THREE.LinearSRGBColorSpace), _hSkyD = new THREE.Color().setHex(0xb4c4d8, THREE.LinearSRGBColorSpace), _hGndD = new THREE.Color().setHex(0x4a4032, THREE.LinearSRGBColorSpace);",
+      "const _skyN = new THREE.Color(0x0b0f18), _skyD = new THREE.Color(0x8796a6);",
+      ""
+    ],
+    "fog": "scene.fog = new THREE.Fog(0x2a2f33, 25, 200)"
+  }
+}

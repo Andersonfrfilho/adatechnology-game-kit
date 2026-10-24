@@ -33,6 +33,8 @@ import { installZoneAuto } from './zone-auto'
 import { installZoneApply } from './zone-apply'
 import { installScenarios } from './scenarios'
 import { installUi } from './ui'
+import { createLod, installLod, wrapThreeForLod } from './lod'
+import { installDamageables } from './damageables'
 
 /**
  * Creates a vehicle kit bound to a three.js namespace and a locale.
@@ -40,14 +42,17 @@ import { installUi } from './ui'
  */
 export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
   const opts: any = options || {}
-  const THREE = opts.THREE
-  if (!THREE || !THREE.Vector3) throw new Error('createVehicleKit: options.THREE (the three.js namespace) is required')
+  if (!opts.THREE || !opts.THREE.Vector3) throw new Error('createVehicleKit: options.THREE (the three.js namespace) is required')
+  /* the light mode settings, and the three.js namespace whose generators obey them */
+  const lod = createLod(opts.lod)
+  const THREE = wrapThreeForLod(opts.THREE, lod)
   const strings = resolveStrings(opts.locale)
   const t = createTranslate(strings)
   const doc = opts.document || (typeof document !== 'undefined' ? document : undefined)
 
   const kit: Kit = {
     THREE,
+    lod,
     V3: THREE.Vector3,
     PI: Math.PI,
     document: doc,
@@ -127,6 +132,8 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
   installZoneApply(kit)
   installScenarios(kit)
   installUi(kit)
+  installLod(kit)
+  installDamageables(kit)
 
   const I = kit._
 
@@ -231,9 +238,18 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
    * `zoneState` (optional) = `{ health: { zoneId: 0..100 }, flags: { flipped, burnt, abandoned, ...plugin flags } }` applies the damage zones.
    * Without it, `'damaged'` uses the scenario `config.damagedScenario` when a plugin registered one.
    */
-  kit.build = function (key: string, state?: string, zoneState?: any) {
+  kit.build = function (key: string, state?: string, zoneState?: any, options?: { lod?: boolean }) {
     const spec = kit.find(key)
     if (!spec) throw new Error('Unknown vehicle: ' + key)
+    const lodBefore = lod.on
+    if (options && options.lod != null) lod.on = !!options.lod
+    try {
+      return buildVehicle(spec, key, state, zoneState)
+    } finally {
+      lod.on = lodBefore
+    }
+  }
+  function buildVehicle(spec: any, key: string, state?: string, zoneState?: any) {
     const st = state || 'intact'
     /* a vehicle renamed after the first release keeps its old key as the seed of every random stream */
     const seedKey = spec.seedKey || key
@@ -306,8 +322,9 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
   }
 
   /* options that are configuration (everything except THREE, locale and document) */
-  const { THREE: _three, locale: _locale, document: _document, plugins, ...config } = opts
+  const { THREE: _three, lod: _lod, locale: _locale, document: _document, plugins, ...config } = opts
   void _three
+  void _lod
   void _locale
   void _document
   kit.configure(config)

@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { Decal, WorkshopEngine } from '@adatechnology/game-vfx'
+import { createMeshLayer } from './mesh-layer'
 import { WORKSHOP_SPRITE_FRAGMENT, WORKSHOP_SPRITE_VERTEX } from './shaders/workshop-sprite'
 import type { ThreeLib } from './types'
 
@@ -83,6 +84,32 @@ function streakLayer(THREE: ThreeLib, pool: WorkshopEngine['streaks']): Drawn {
       geometry.setDrawRange(0, pool.count * 2)
       position.needsUpdate = color.needsUpdate = true
       return pool.count > 0
+    },
+    dispose() {
+      geometry.dispose()
+      material.dispose()
+    },
+  }
+}
+
+/** The Workshop's rain (W317-320): one line segment per streak, pale blue, 35% opaque. */
+function rainLayer(THREE: ThreeLib, rain: WorkshopEngine['rain']): Drawn {
+  const geometry = new THREE.BufferGeometry()
+  const position = new THREE.BufferAttribute(rain.positions, 3).setUsage(THREE.DynamicDrawUsage)
+  geometry.setAttribute('position', position)
+  geometry.setDrawRange(0, 0)
+  const material = new THREE.LineBasicMaterial({ color: 0x9fb3cf, transparent: true, opacity: 0.35, depthWrite: false })
+  const lines = new THREE.LineSegments(geometry, material)
+  lines.frustumCulled = false
+  lines.name = 'workshop-rain'
+  return {
+    object: lines,
+    sync() {
+      const drawn = rain.on && rain.count > 0
+      lines.visible = drawn
+      geometry.setDrawRange(0, drawn ? rain.count * 2 : 0)
+      position.needsUpdate = true
+      return drawn
     },
     dispose() {
       geometry.dispose()
@@ -303,11 +330,14 @@ export function createWorkshopLayers(THREE: ThreeLib, engine: WorkshopEngine, po
     spriteLayer(THREE, engine.add, true, 1, pointScale),
     spriteLayer(THREE, engine.normal, false, 0.55, pointScale),
     streakLayer(THREE, engine.streaks),
+    rainLayer(THREE, engine.rain),
     debrisLayer(THREE, engine.debris),
     decalLayer(THREE, engine.decals),
     ringLayer(THREE, engine.rings),
   ]
   for (const layer of layers) group.add(layer.object)
+  const meshes = createMeshLayer(THREE, engine.meshes)
+  group.add(meshes.group)
   const flashLights = engine.lights.lights.map(() => new THREE.PointLight(0xffc070, 0, 14))
   const fireLights = engine.lights.fire.map(() => new THREE.PointLight(FIRE_LIGHT_COLOR, 0, FIRE_LIGHT_DISTANCE))
   for (const light of [...flashLights, ...fireLights]) group.add(light)
@@ -316,6 +346,7 @@ export function createWorkshopLayers(THREE: ThreeLib, engine: WorkshopEngine, po
     sync() {
       let drawCalls = 0
       for (const layer of layers) if (layer.sync()) drawCalls++
+      drawCalls += meshes.sync()
       engine.lights.lights.forEach((source, index) => {
         const light = flashLights[index]!
         light.position.set(source.x, source.y, source.z)
@@ -332,6 +363,7 @@ export function createWorkshopLayers(THREE: ThreeLib, engine: WorkshopEngine, po
     },
     dispose() {
       for (const layer of layers) layer.dispose()
+      meshes.dispose()
       group.clear()
     },
   }

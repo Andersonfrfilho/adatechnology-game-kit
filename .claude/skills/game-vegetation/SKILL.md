@@ -59,6 +59,8 @@ O arquivo roda no Node com o `dist` gerado (conferido: `generate`, `scatter`, `b
 Opções: `condition` `healthy | dry | dead | overgrown`; `season` `spring | summer | autumn | winter` (padrão `spring`: ipê aparece florido, use `summer` para verde);
 `lod` 0, 1 ou 2.
 
+As peças de madeira (`trunk`, `branch`, `stem`, `arm`, `pad`) trazem `radius` (o corpo da peça, sem o alargamento da raiz e o afilamento da ponta), `length`, `axis` (unitário) e `base` (espaço da planta, na escala dela), também em `userData.destructionPart` e no `pieceTable` (V8 do Viveiro). O arquétipo que sabe melhor chama `ctx.pieceGeom(id, { radius, length, axis, base })` (as raquetes do cacto). `scripts/compare-viveiro.mjs` regera `comparacoes/vegetacao/` (site, artefato e SDK).
+
 ## Compõe com
 - `@adatechnology/game-vegetation-species`: catálogo (`toSpec`) e mixes regionais (`pickForContext`) que alimentam `scatter` e `buildLot`.
 - `game-destruction`: cada malha leva um id de material (`green_wood`, `foliage`, `flesh_fruit`, `ceramic`, `soil`, `cactus`; strings, sem dependência do pacote).

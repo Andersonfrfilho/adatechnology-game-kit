@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-audio",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "MIT",
   "description": "Sound as data for games: recipes planned into resolved, seeded sound plans, a WebAudio layer that builds them, distance curves, pan, a voice limiter, loops and mixing profiles taken from the teams (the game and the art scene). Knows nothing about any game.",
   "keywords": [

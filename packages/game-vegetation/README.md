@@ -44,7 +44,11 @@ scene.add(createLotObject(THREE, lot, mats))
 - `createRng`, `hashString`, `pointInPolygon`, `polygonArea`
 - three adapter: `createVegetationMaterials`, `createPlantObject`, `createLotObject`, `createInstancedPlants`, `lodObject`, `toBufferGeometry`. Wind and actor bend (up to 4 actors) run in the vertex shader; every mesh has `userData.damageable = { material: 'wood' | 'foliage' | 'cactus' }`.
 
+Wood pieces (trunk, branch, stem, arm, pad) also carry the fit of a straight tube: `radius` (the body of the piece, away from the root flare and the tip taper), `length`, `axis` (unit vector) and `base` (plant space, scaled with the plant). A destruction rule uses them for how thick a trunk is (how many axe blows), how long a branch is and which way it falls; `userData.destructionPart` and the lot's `pieceTable` carry them too. An archetype can set its own with `ctx.pieceGeom(id, { radius, length, axis, base })` (the cactus pads do).
+
 LOD triangle counts (mango tree 6031 / 1654 / 299, mandacaru 1540 / 740 / 470, hibiscus 2398 / 360 / 125). A 20-plant yard in `game` quality is about 9.4k triangles in 3 draw calls.
+
+Compare with the team's engine: `pnpm build && node scripts/compare-viveiro.mjs` (not published) writes the table in `specs/.../comparacoes/vegetacao/`.
 
 Visual check: `pnpm build && node scripts/render-contact-sheet.mjs out.png` (not published; needs Chromium via Playwright).
 

@@ -60,7 +60,7 @@ export function generatePotted(spec: PottedSpec, ctx: Ctx): ArchResult {
     const tags = new Array<string>(mesh.triangleCount).fill('')
     for (const pc of inner.pieces) {
       if (pc.part !== part) continue
-      if (!ctx.pieceMeta.has(pc.id)) ctx.pieceMeta.set(pc.id, { kind: pc.kind, parent: pc.parent, pivot: [pc.pivot[0], pc.pivot[1] + yOff, pc.pivot[2]] })
+      if (!ctx.pieceMeta.has(pc.id)) ctx.pieceMeta.set(pc.id, { kind: pc.kind, parent: pc.parent, pivot: [pc.pivot[0], pc.pivot[1] + yOff, pc.pivot[2]], ...(pc.radius === undefined || pc.length === undefined || !pc.axis || !pc.base ? {} : { geom: { radius: pc.radius, length: pc.length, axis: pc.axis, base: [pc.base[0], pc.base[1] + yOff, pc.base[2]] as Vec3 } }) })
       for (let t = pc.indexStart / 3; t < (pc.indexStart + pc.indexCount) / 3; t++) tags[t] = pc.id
     }
     return (t) => tags[t]

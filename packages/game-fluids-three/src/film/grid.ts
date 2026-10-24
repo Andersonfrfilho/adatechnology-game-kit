@@ -139,6 +139,20 @@ export class FilmGrid {
     return this.takePending()
   }
 
+  /** Clears the cells less than `maxDryness` dry and sends the rectangle that held them up with the next update. Returns how many it cleared. */
+  wash(maxDryness?: number): number {
+    const cleared = this.film.wash(maxDryness)
+    if (cleared > 0) {
+      const bounds: FilmBounds = this.film.simulator.bounds
+      if (bounds.lastRow >= 0) {
+        const rect: CellRect = { firstRow: bounds.firstRow, lastRow: bounds.lastRow, firstColumn: bounds.firstColumn, lastColumn: bounds.lastColumn }
+        this.encode(rect)
+        this.pending = this.union(this.pending, rect)
+      }
+    }
+    return cleared
+  }
+
   private takePending(): CellRect | null {
     const rect = this.pending
     this.pending = null

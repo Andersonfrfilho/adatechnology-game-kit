@@ -61,6 +61,29 @@ describe('film', () => {
     expect(rainy.wetCells()).toBeGreaterThan(dry.wetCells())
   })
 
+  it('dries faster in heat (`drying`) and washes only the stain that is less than half dry', () => {
+    const normal = makeFilm()
+    const hot = makeFilm()
+    hot.setWeather({ drying: 2 })
+    expect(hot.weather()).toEqual({ rain: 0, drying: 2 })
+    for (const film of [normal, hot]) film.blob(200, 100, 6, 6, 1, 0, 2, 0.1)
+    for (let frame = 0; frame < 30; frame++) for (const film of [normal, hot]) film.update({ dt: 1 / 60, dryingSeconds: 1 })
+    expect(Math.max(...hot.field.dryness)).toBeGreaterThan(Math.max(...normal.field.dryness))
+
+    const film = makeFilm()
+    film.blob(200, 100, 6, 6, 1, 0, 2, 0.1)
+    film.blob(100, 40, 6, 6, 1, 0, 2, 0.1)
+    for (let cell = 0; cell < film.field.dryness.length; cell++) if (film.field.thickness[cell]! > 0 && Math.floor(cell / film.layout.width) < 150) film.field.dryness[cell] = 0.8
+    const wet = film.wetCells()
+    const cleared = film.wash()
+    expect(cleared).toBeGreaterThan(0)
+    expect(film.wetCells()).toBe(wet - cleared)
+    // the half that is more than half dry stays; washing again finds nothing fresh
+    expect(film.wetCells()).toBeGreaterThan(0)
+    expect(film.wash()).toBe(0)
+    expect(film.wash(0.9)).toBeGreaterThan(0)
+  })
+
   it('lands a launched drop on the wall and lets the replacement simulator run', () => {
     const calls: string[] = []
     const simulator: FilmSimulator = {

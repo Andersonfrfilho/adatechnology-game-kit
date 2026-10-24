@@ -142,8 +142,8 @@ describe('update() math', () => {
     close(looked.y, 2.5)
   })
 
-  it('third person: aiming pulls the camera closer and crouching lowers it', () => {
-    const rig = create(THREE, { storageKey: null })
+  it('third person: aiming pulls the camera closer and crouching lowers it (smoothing 0: at once)', () => {
+    const rig = create(THREE, { storageKey: null, smoothing: 0 })
     rig.setMode('third')
     const { cam, position } = fakeCamera()
     rig.update(cam, { x: 0, y: 0, z: 0, yaw: 0, pitch: 0, aiming: true, crouching: true }, 0.016)
@@ -151,13 +151,13 @@ describe('update() math', () => {
     close(position.y, 1.9 + 0.1)
   })
 
-  it('shoulder: offsets sideways, and flipSide mirrors it', () => {
-    const rig = create(THREE, { storageKey: null })
+  it('shoulder: offsets sideways, and flipSide mirrors it (smoothing 0: at once)', () => {
+    const rig = create(THREE, { storageKey: null, smoothing: 0 })
     const { cam, position } = fakeCamera()
     rig.update(cam, { x: 0, y: 0, z: 0, yaw: 0, pitch: 0 }, 0.016)
     const right = position.x
     expect(Math.abs(right)).toBeCloseTo(0.9, 9)
-    const mirror = create(THREE, { storageKey: null })
+    const mirror = create(THREE, { storageKey: null, smoothing: 0 })
     mirror.flipSide()
     const b = fakeCamera()
     mirror.update(b.cam, { x: 0, y: 0, z: 0, yaw: 0, pitch: 0 }, 0.016)
@@ -212,5 +212,111 @@ describe('viewmodel()', () => {
     close(group.position.z, -3 - 0.38)
     const expected = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI - 0.16)
     expect(group.quaternion.angleTo(expected)).toBeLessThan(1e-9)
+  })
+})
+
+describe('smoothing, zoom, death orbit and look', () => {
+  const stand = { x: 0, y: 0, z: 0, yaw: 0, pitch: 0 }
+
+  it('eases the boom, the shoulder and the height towards what the target asks, and the first frame starts from standing', () => {
+    const rig = create(THREE, { storageKey: null })
+    const { cam, position } = fakeCamera()
+    rig.update(cam, { ...stand, aiming: true, crouching: true }, 1 / 60)
+    // one frame closes 1 - exp(-12/60) of the gap from (3.8, 0.9, 1.95) to (1.7, 0.9, 1.4)
+    const k = 1 - Math.exp(-12 / 60)
+    close(position.z, 3.8 + (1.7 - 3.8) * k)
+    close(position.y, 1.95 + (1.4 - 1.95) * k + 0.1)
+    for (let i = 0; i < 240; i++) rig.update(cam, { ...stand, aiming: true, crouching: true }, 1 / 60)
+    close(position.z, 1.7, 1e-6)
+    close(position.y, 1.4 + 0.1, 1e-6)
+  })
+
+  it('smoothing 0 jumps at once, as before the rig read it', () => {
+    const rig = create(THREE, { storageKey: null, smoothing: 0 })
+    const { cam, position } = fakeCamera()
+    rig.update(cam, stand, 1 / 60)
+    rig.update(cam, { ...stand, aiming: true }, 1 / 60)
+    close(position.z, 1.7, 1e-9)
+  })
+
+  it('swapping shoulders eases the side across', () => {
+    const rig = create(THREE, { storageKey: null })
+    const { cam, position } = fakeCamera()
+    rig.update(cam, stand, 1 / 60)
+    const before = position.x
+    rig.flipSide()
+    rig.update(cam, stand, 1 / 60)
+    expect(Math.sign(position.x)).toBe(Math.sign(before))
+    expect(Math.abs(position.x)).toBeLessThan(Math.abs(before))
+    for (let i = 0; i < 180; i++) rig.update(cam, stand, 1 / 60)
+    expect(position.x).toBeCloseTo(-before, 3)
+  })
+
+  it('drives the field of view with the zoom: 65 / zoom while aiming, 65 otherwise, smoothed', () => {
+    const rig = create(THREE, { storageKey: null })
+    const cam = new THREE.PerspectiveCamera(65, 1, 0.1, 100)
+    rig.update(cam as never, { ...stand, aiming: true, zoom: 4 }, 1 / 60)
+    close(cam.fov, 65 + (65 / 4 - 65) * Math.min(1, 12 / 60))
+    for (let i = 0; i < 240; i++) rig.update(cam as never, { ...stand, aiming: true, zoom: 4 }, 1 / 60)
+    expect(Math.abs(cam.fov - 16.25)).toBeLessThan(0.1)
+    for (let i = 0; i < 240; i++) rig.update(cam as never, { ...stand, aiming: false, zoom: 4 }, 1 / 60)
+    expect(Math.abs(cam.fov - 65)).toBeLessThan(0.1)
+    // a camera without fov, or a target without zoom, is left alone
+    const fixed = new THREE.PerspectiveCamera(50, 1, 0.1, 100)
+    rig.update(fixed as never, stand, 1 / 60)
+    expect(fixed.fov).toBe(50)
+  })
+
+  it('circles the body once it is dead: radius 6, height 3.5, 0.2 rad per second of deathT', () => {
+    const rig = create(THREE, { storageKey: null })
+    const { cam, position, looked } = fakeCamera()
+    rig.update(cam, { ...stand, x: 10, z: -4, alive: false, deathT: 5 }, 1 / 60)
+    close(position.x, 10 + Math.sin(1) * 6)
+    close(position.y, 3.5)
+    close(position.z, -4 + Math.cos(1) * 6)
+    close(looked.x, 10)
+    close(looked.y, 1)
+    close(looked.z, -4)
+  })
+
+  it('the look: sensitivity 0.0022, slower aiming by the square root of the zoom, pitch kept in range', () => {
+    const rig = create(THREE, { storageKey: null })
+    close(rig.lookSensitivity(), 0.0022)
+    close(rig.lookSensitivity(4, true), 0.0022 / 2)
+    close(rig.lookSensitivity(4, false), 0.0022)
+    const state = { yaw: 0, pitch: 0 }
+    rig.look(state, { dx: 100, dy: 10000 })
+    close(state.yaw, -0.22)
+    expect(state.pitch).toBe(1.2)
+    rig.look(state, { dx: 0, dy: -100000 })
+    expect(state.pitch).toBe(-0.55)
+  })
+
+  it('fever sways the look and panic jitters it with the host\'s random numbers only', () => {
+    const rig = create(THREE, { storageKey: null })
+    const fever = rig.lookShake({ time: 2, fever: true })
+    close(fever.yaw, Math.sin(2 * 1.3) * 0.0015)
+    close(fever.pitch, Math.cos(2 * 1.7) * 0.001)
+    expect(rig.lookShake({ time: 2, panic: true })).toEqual({ yaw: 0, pitch: 0 })
+    close(rig.lookShake({ panic: true, random: () => 0.75 }).yaw, 0.25 * 0.002)
+    const calls: number[] = []
+    const original = Math.random
+    Math.random = () => {
+      calls.push(1)
+      return 0.5
+    }
+    try {
+      rig.look({ yaw: 0, pitch: 0 }, { dx: 1, dy: 1, panic: true, fever: true, time: 1 })
+    } finally {
+      Math.random = original
+    }
+    expect(calls).toHaveLength(0)
+  })
+
+  it('the numbers are options: a game changes the orbit, the aim and the wall recovery', () => {
+    const rig = create(THREE, { storageKey: null, deathOrbit: { radius: 10, height: 5 }, aim: { sensitivity: 0.001 }, wallRecovery: 1 })
+    expect(rig.config.deathOrbit).toEqual({ radius: 10, height: 5, speed: 0.2, lookHeight: 1 })
+    close(rig.lookSensitivity(), 0.001)
+    expect(rig.config.wallRecovery).toBe(1)
   })
 })

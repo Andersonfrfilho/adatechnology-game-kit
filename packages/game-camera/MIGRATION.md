@@ -35,7 +35,7 @@ implementations on the same inputs: identical camera positions, look-at points a
 | `viewmodel` | `viewmodel` (unchanged word) |
 | `viewmodel.x`, `.y`, `.z` | `viewmodel.x`, `.y`, `.z` |
 | `viewmodel.giro` | `viewmodel.twist` |
-| `suavidade` | `smoothing` (still not read by the rig, kept for compatibility) |
+| `suavidade` | `smoothing` (read since spec 001: the rate of the easing; `0` is instant) |
 | `folgaParede` | `wallClearance` |
 | `minimo` | `minDistance` |
 | `chave` | `storageKey` |

@@ -37,7 +37,7 @@ export interface DestructionOptions {
 export interface PlantObjectOptions extends DestructionOptions {
   /**
    * Build one child Mesh per `plant.pieces` entry instead of one per part. Each child is positioned at the piece pivot (so it can
-   * fall / rotate about it), carries `userData.destructionPart = { id, kind, parent, material, materialKey }` and
+   * fall / rotate about it), carries `userData.destructionPart = { id, kind, parent, material, materialKey }` (wood pieces add `radius`, `length`, `axis`, `base`) and
    * `userData.destructionMaterial`. Default false.
    */
   separable?: boolean
@@ -104,7 +104,7 @@ export function createPlantObject(THREE: ThreeNS, plant: PlantMesh, materials?: 
       mesh.position.set(pc.pivot[0], pc.pivot[1], pc.pivot[2])
       const id = ids[pc.material]
       mesh.userData.destructionMaterial = id
-      mesh.userData.destructionPart = { id: pc.id, kind: pc.kind, parent: pc.parent, material: id, materialKey: pc.material }
+      mesh.userData.destructionPart = { id: pc.id, kind: pc.kind, parent: pc.parent, material: id, materialKey: pc.material, ...(pc.radius === undefined ? {} : { radius: pc.radius, length: pc.length, axis: pc.axis, base: pc.base }) }
       g.add(mesh)
     }
     g.userData = { collider: plant.collider, bendable: plant.bendable, thorny: plant.thorny, species: plant.species, bounds: plant.bounds, pieces: plant.pieces, separable: true }

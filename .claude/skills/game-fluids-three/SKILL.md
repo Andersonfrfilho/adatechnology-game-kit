@@ -59,7 +59,7 @@ Orçamentos (baixo, médio, alto): manchas 24 / 48 / 96, jatos 12 / 24 / 48, par
 ## Filme que escorre (`film/*`)
 - `createFilmManager(THREE, { scene, camera, random, fluids?, gpu?, surfaceAt?, groundAt?, budgetMs?, range?, maxGrids? })`: desenha o filme de `game-fluids` (sangue, sangue antigo, bile, óleo, combustível) com o shader do Padrão de Fluidos, **transparente sobre a superfície do jogo**. Guarda no máximo 6 grades de 2 x 2 m (160 x 160 células), só a 30 m do jogador, simula dentro de um orçamento em ms por quadro e sobe só o retângulo sujo (`gpu` = o `WebGLRenderer`, `copyTextureToTexture`). A grade longe, parada (20 s) ou espremida vira decalque (`fluids.splash` com `tint`) e é liberada.
 - `launch({ fluid, point, velocity?, radius?, tint? })` (cria a grade sob a gota), `drip({ fluid, point, every })`, `setWeather({ rain })` (gancho da Fase 6), `update(dt)`, `stats()`, `clear(bake?)`.
-- `createFilmBridge({ fluids, manager, random })`: o `leak` de líquido com filme joga gotas do furo até o fim do jato; `splat({ fluid, point, direction, tint })` é o que o `body` dos personagens vai chamar (o evento `body` ainda não existe no contrato).
+- `createFilmBridge({ fluids, manager, random })`: o `leak` de líquido com filme joga gotas do furo até o fim do jato; `splat({ fluid, point, direction, tint })` é o que o `body` dos personagens chama (T5.3e: `createFluidsBridge({ film })` do `game-characters-three` repassa o `wound`, o corte, o estouro e a divisão com as cores da idade da infecção; a sala empresta a ponte em `room.film`).
 
 ## Compõe com
 - `game-fluids` (dependência): fonte do estado; o global de navegador `GameFluidsThree` embute só os poucos helpers usados, então carregue também `GameFluids` para criar o mundo.

@@ -12,6 +12,7 @@ export type ThreeLib = Pick<
   | 'CanvasTexture'
   | 'CircleGeometry'
   | 'Color'
+  | 'ConeGeometry'
   | 'DodecahedronGeometry'
   | 'DynamicDrawUsage'
   | 'Euler'

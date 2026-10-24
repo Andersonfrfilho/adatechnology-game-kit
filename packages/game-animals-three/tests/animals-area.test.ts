@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
 import { SPECIES } from '@adatechnology/game-animals-species'
 import { createAnimalOutbreak } from '@adatechnology/game-characters-undead'
+import { createAudioEngine } from '@adatechnology/game-audio'
+import { createAudioRecorder } from '@adatechnology/golden-tool'
 import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 
@@ -17,10 +19,10 @@ const stubRenderer = (): THREE.WebGLRenderer => {
   return { domElement: dom, shadowMap: { enabled: false, type: 0 }, setSize: () => undefined, setPixelRatio: () => undefined, render: () => undefined, dispose: () => undefined } as unknown as THREE.WebGLRenderer
 }
 
-const roomWithAnimals = (): { room: TestRoom; module: ReturnType<typeof createAnimalsTestModule> } => {
+const roomWithAnimals = (audio?: ReturnType<typeof createAudioEngine>): { room: TestRoom; module: ReturnType<typeof createAnimalsTestModule> } => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: demoItems('pt-BR'), renderer: stubRenderer(), ui: false })
+  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: demoItems('pt-BR'), renderer: stubRenderer(), ui: false, ...(audio ? { audio } : {}) })
   const module = createAnimalsTestModule({
     locale: 'pt-BR',
     species: SPECIES,
@@ -70,5 +72,28 @@ describe('animals test area', () => {
     const failed = report.results.filter((result) => !result.ok).map((result) => `${result.id}: ${result.checks.filter((check) => !check.ok).map((check) => check.label).join('; ')}`)
     expect(report.results).toHaveLength(ids.length)
     expect(failed).toEqual([])
+  })
+})
+
+describe('the calls of the animals on the room engine', () => {
+  it('the call action makes the species with a call call, once per cooldown', () => {
+    const recorder = createAudioRecorder()
+    const engine = createAudioEngine({ seed: 3, mix: 'art_scene', createContext: () => recorder.context })
+    engine.unlock()
+    const starts = (): number => recorder.trace().entries.filter((entry) => entry.op === 'start').length
+    const { room } = roomWithAnimals(engine)
+    room.openArea(ANIMALS_AREA_ID)
+    for (let i = 0; i < 10; i++) room.update(1 / 60)
+    expect(engine.registry.sound('cow_moo')).toBeDefined()
+    const bench = room.bench(ANIMALS_AREA_ID)!
+    expect(bench.act('call')).toBe(true)
+    const first = starts()
+    expect(first).toBeGreaterThan(0)
+    expect(bench.act('call')).toBe(true)
+    expect(starts()).toBe(first)
+    for (let i = 0; i < 60 * 31; i++) room.update(1 / 60)
+    expect(bench.act('call')).toBe(true)
+    expect(starts()).toBeGreaterThan(first)
+    room.dispose()
   })
 })

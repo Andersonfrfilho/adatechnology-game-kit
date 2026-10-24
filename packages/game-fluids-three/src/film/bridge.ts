@@ -41,7 +41,9 @@ export interface FilmBridge {
   /** Throws drops of a splash into the film. Returns how many found a grid. */
   splat(splat: FilmSplat): number
   /** Weather of the film (the Phase 6 hook): while it rains the film does not dry and spreads 1.5 times faster. */
-  setWeather(weather: { rain: number }): void
+  setWeather(weather: { rain: number; drying?: number }): void
+  /** Rain washes the fresh film of the washable liquids (less than half dry, or `maxDryness`). Returns the cells it cleared. */
+  wash(maxDryness?: number): number
   /** Streams of the world that feed the film right now. */
   readonly leaks: number
   /** Feeds the leaks: call it each frame with the frame's seconds, before or after `manager.update`. */
@@ -98,6 +100,7 @@ export function createFilmBridge(options: FilmBridgeOptions): FilmBridge {
       return landed
     },
     setWeather: (weather) => manager.setWeather(weather),
+    wash: (maxDryness) => manager.wash(maxDryness),
     update(dt) {
       if (leaks.size === 0) return
       const streams = new Map(fluids.streams().map((stream) => [stream.id, stream]))

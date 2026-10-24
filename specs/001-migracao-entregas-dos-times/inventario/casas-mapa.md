@@ -531,3 +531,21 @@ no PlantasSDK estendido, estrutura e construção L10307–10701 (≈ 395 linhas
 12. **Item de casa provisório do `game-test-room`** (`frame()` com `buildFrame`, `items.ts:166`) é um substituto de caixas. Trocar pelo `HouseArea` quando o pacote de estrutura existir?
 13. **`MAPA_TIPOS` e `tabelaTipos`**: o catálogo de planta do SDK tem 164 tipos com nomes em inglês; os do time estão em português (121 e ~85). O mapa tipo→builder deve usar os ids novos (`MIGRATION.md` tem a tabela antigo→novo) ou os dois?
 14. **Dados dependentes do kit:** `HP` de vidro 20, madeira 60 etc. em `cfg.hp` e `danificavel.hp` ("dano legado") são do jogo e coexistem com o dano do núcleo. O novo renderizador mantém o `hp` legado ou passa a ler o hp do `game-destruction` direto?
+
+
+## Status ao fim da Fase 7 (urbano, T7.5)
+
+Atualizado em 2026-10-24. As linhas 27, 31, 38 e 40 da tabela e as peças urbanas da Galeria do Vale Cinzento (seção 1.6).
+
+| Item | Entrou? | Onde |
+|---|---|---|
+| 27 Postes (`poleLED`, `poleConcrete`, `poleIron`, `poleWood`, `floodTower`) com altura, luz real com orçamento `LB`, pisca, transformador | Sim | `game-urban` (`kit.poles`, `createLightBudget`, 16 luzes por cena, o contador passa de zero como o `LB`) |
+| `road` (faixa a cada 5 m), `walk`, `ground`, `streetGrid`, `fillBlock`, `building` | Sim, pelo mesmo sorteio da página | `game-urban` (`kit.streets`, `kit.block`); os prédios vêm do `game-floorplan` |
+| Adereços da amostra: `fence`, `tent`, `pine`, `tree`, `container`, `watchtower`, `sandbags`, letreiro, fios | Sim | `game-urban` (`kit.props`) |
+| 38 Padrão de ruas (9 bairros + militar), `buildPadraoRuas` | Sim, os 10 como dado + compositor | `game-urban` (`kit.neighbourhoods`, `composeSampleSheet`, textos pt-BR e en, marcadores) |
+| 40 Relevo (`hW`, `forestF`, `nearRiver`, `inBrejo`, `inQueimada`, `W2`, `buildWorld`): terreno por camadas, rios, lagos, mata, cor por vértice | Sim, o motor genérico; os números do Vale (4 rios, 4 lagos, 5 cidades, a Serra, a Mata Funda) ficam no jogo | `game-urban` (`kit.terrain`, `drawTerrain`), `game-slice/urban/valley-terrain.json` (fixture de teste copiada) |
+| 31 Árvores e pinheiros da galeria | Os dois (cone e bola) seguem como adereço padrão; o provedor de plantas (`createPlantProvider`) usa as espécies do `game-vegetation-species` | `game-urban`, `game-urban-three` (`createPlantResolver`) |
+| Carro e ônibus de caixas da amostra | **Não** (decisão: substituto de caixas é proibido); o provedor de veículos (`createVehicleProvider`) estaciona veículos da frota | `game-urban`, `game-urban-three` (`createVehicleResolver`, modo leve) |
+| Casas da amostra (sobrado, laje, colonial, chalé, vila operária, palafita, sede, prédio) | Sim, as silhuetas de longe do `game-floorplan` como provedor padrão | `game-urban` (`createSilhouetteHouses`) |
+| Partes que o `buildWorld` espalha (árvores e vilas pelo mapa, estradas, trilhas e trilhos, túneis, pontes, linhas de transmissão, muros, decoração do vale, marcadores do mapa) | **Não**: ficam como pendência (ver `evidence.md`, Fase 7, "Perguntas para o dono") | - |
+| Ambiente de teste da cidade (`?area=urban`) | Sim | `packages/game-urban-three/src/test-area/`, `examples/urban-test-area/` |

@@ -142,6 +142,9 @@ export interface VfxWorld {
   setLayer(layer: VfxLayer, on: boolean): void
   layer(layer: VfxLayer): boolean
   setCamera(position: Vec3Like): void
+  /** The wind that carries the smoke and dust, in m/s (`VfxOptions.wind` is where it starts). The weather moves it. */
+  setWind(wind: Vec3Like): void
+  wind(): Vec3Tuple
   /** Forces the scale of every explosion from now on (`null`: back to the distance bands and the cap). */
   forceLod(scale: number | null): void
   update(dt: number): void
@@ -327,6 +330,12 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
       camera.y = position[1]
       camera.z = position[2]
     },
+    setWind(next) {
+      wind.x = next[0]
+      wind.y = next[1]
+      wind.z = next[2]
+    },
+    wind: () => [wind.x, wind.y, wind.z],
     forceLod(scale) {
       core.clock.forcedLod = scale
     },

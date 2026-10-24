@@ -356,8 +356,8 @@ export function installCarsExtra(fx: FleetContext): void {
       L2 = wrap > 0 ? (R * PI) / 2 : 0,
       tot = L1 + L2 + wrap,
       which = E > 0 ? 'F' : 'R'
-    const nu = o.nu || Math.max(6, Math.ceil((tot * (full ? 2 : 1)) / (o.du || 0.022))),
-      nv = o.nv || Math.max(2, Math.ceil((o.y1 - o.y0) / (o.dv || 0.025)))
+    const nu = o.nu || Math.max(6, Math.ceil((tot * (full ? 2 : 1)) / ((o.du || 0.022) * (kit.lod.on ? kit.lod.gridFactor : 1)))),
+      nv = o.nv || Math.max(2, Math.ceil((o.y1 - o.y0) / ((o.dv || 0.025) * (kit.lod.on ? kit.lod.gridFactor : 1))))
     const P: any = [],
       N: any = []
     for (let i = 0; i <= nu; i++) {
@@ -1257,8 +1257,8 @@ export function installCarsExtra(fx: FleetContext): void {
   }
   /* side grille (u along x, from x0 to x1) */
   function sideGrid(S: any, sd: any, o: any) {
-    const nu = Math.max(4, Math.ceil(Math.abs(o.x1 - o.x0) / 0.04)),
-      nv = Math.max(2, Math.ceil((o.y1 - o.y0) / 0.03)),
+    const nu = Math.max(4, Math.ceil(Math.abs(o.x1 - o.x0) / (0.04 * (kit.lod.on ? kit.lod.gridFactor : 1)))),
+      nv = Math.max(2, Math.ceil((o.y1 - o.y0) / (0.03 * (kit.lod.on ? kit.lod.gridFactor : 1)))),
       P: any = [],
       N: any = []
     for (let i = 0; i <= nu; i++) {

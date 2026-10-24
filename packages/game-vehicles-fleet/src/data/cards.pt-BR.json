@@ -1,0 +1,1037 @@
+{
+  "compact_hatch": {
+    "name": "Ônyx",
+    "kind": "Hatch compacto",
+    "description": "O carro mais comum da cidade. Econômico, ágil e frágil. Peça de reposição em qualquer garagem.",
+    "inspiredBy": "Chevrolet Onix",
+    "seats": "5",
+    "tank": "44 L",
+    "efficiency": "13,9 km/L (G) · 9,8 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "610 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Chevrolet Onix"
+    ]
+  },
+  "taxi": {
+    "name": "Ônyx Plus Táxi",
+    "kind": "Sedã compacto (táxi)",
+    "description": "Sedã branco com luminoso no teto e rádio da cooperativa. Porta-malas grande para mantimentos.",
+    "inspiredBy": "Chevrolet Onix Plus",
+    "seats": "5",
+    "tank": "44 L",
+    "efficiency": "13,4 km/L (G) · 9,4 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "590 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Chevrolet Onix Plus"
+    ]
+  },
+  "entry_hatch": {
+    "name": "Kwyd",
+    "kind": "Hatch de entrada",
+    "description": "Leve, alto do chão e barato de manter. Cabe em qualquer beco, mas a lataria fina amassa fácil.",
+    "inspiredBy": "Renault Kwid",
+    "seats": "5",
+    "tank": "38 L",
+    "efficiency": "15,3 km/L (G) · 10,8 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "580 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Renault Kwid"
+    ]
+  },
+  "electric_hatch": {
+    "name": "Dolfin",
+    "kind": "Hatch elétrico",
+    "description": "Silencioso o bastante para passar por uma horda dormindo. Precisa de energia para recarregar; bateria batida pega fogo.",
+    "inspiredBy": "BYD Dolphin",
+    "seats": "5",
+    "tank": "44,9 kWh",
+    "efficiency": "6,5 km/kWh",
+    "fuel": "Elétrico",
+    "autonomy": "291 km",
+    "tags": [
+      "Elétrico",
+      "Inspirado no BYD Dolphin"
+    ]
+  },
+  "midsize_sedan": {
+    "name": "Corola",
+    "kind": "Sedã médio",
+    "description": "Equilíbrio entre conforto, porta-malas e velocidade. Confiável até o fim do mundo.",
+    "inspiredBy": "Toyota Corolla",
+    "seats": "5",
+    "tank": "50 L",
+    "efficiency": "11,8 km/L (G) · 8,2 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "590 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Toyota Corolla"
+    ]
+  },
+  "police_sedan": {
+    "name": "Cruzi Patrulha",
+    "kind": "Sedã policial",
+    "description": "Motor turbo, giroflex, sirene e grade separando o banco de trás. Rádio e armário de armas vazios. A sirene atrai a horda num raio de 250 m.",
+    "inspiredBy": "Chevrolet Cruze da PM",
+    "seats": "4 + 1 detido",
+    "tank": "52 L",
+    "efficiency": "11,5 km/L (G) · 8,1 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "600 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Chevrolet Cruze da PM"
+    ]
+  },
+  "highway_police_sedan": {
+    "name": "Cruzi Rodoviária",
+    "kind": "Sedã policial rodoviário",
+    "description": "A mesma viatura com a pintura da polícia rodoviária: branca com faixas azul e amarela. Achada parada em postos de fiscalização à beira da estrada. A sirene atrai a horda num raio de 250 m.",
+    "inspiredBy": "Chevrolet Cruze da PRF",
+    "seats": "4 + 1 detido",
+    "tank": "52 L",
+    "efficiency": "11,5 km/L (G) · 8,1 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "600 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Chevrolet Cruze da PRF"
+    ]
+  },
+  "bicycle": {
+    "name": "Monarca Barra Circular",
+    "kind": "Bicicleta",
+    "description": "A clássica bicicleta de barra dupla curva, de aço, com bagageiro. Silenciosa, sem combustível e totalmente exposta.",
+    "inspiredBy": "Monark Barra Circular",
+    "seats": "1 (+1 no bagageiro)",
+    "tank": "—",
+    "efficiency": "—",
+    "fuel": "Nenhum",
+    "autonomy": "Fôlego do ciclista",
+    "tags": [
+      "Nenhum",
+      "Inspirado no Monark Barra Circular"
+    ]
+  },
+  "scooter": {
+    "name": "PXC 160",
+    "kind": "Scooter 160 cc",
+    "description": "Câmbio automático, assoalho plano e baú sob o banco. Fácil de pilotar no meio do engarrafamento abandonado; rodas pequenas sofrem na terra.",
+    "inspiredBy": "Honda PCX 160",
+    "seats": "2",
+    "tank": "8,1 L",
+    "efficiency": "40 km/L",
+    "fuel": "Gasolina",
+    "autonomy": "320 km",
+    "tags": [
+      "Gasolina",
+      "Inspirado no Honda PCX 160"
+    ]
+  },
+  "commuter_motorcycle": {
+    "name": "Titã 160",
+    "kind": "Moto urbana 160 cc",
+    "description": "A moto mais vendida do país: passa entre carros parados e se conserta com qualquer peça. Uma queda no meio da horda pode ser fatal.",
+    "inspiredBy": "Honda CG 160 Titan",
+    "seats": "2",
+    "tank": "16,1 L",
+    "efficiency": "40 km/L (G) · 28 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "640 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Honda CG 160 Titan"
+    ]
+  },
+  "trail_bike": {
+    "name": "Brós 160",
+    "kind": "Moto trail 160 cc",
+    "description": "Suspensão longa e pneus de cravo: sobe barranco, atravessa lama e foge da horda por trilha onde carro não passa.",
+    "inspiredBy": "Honda NXR 160 Bros",
+    "seats": "2",
+    "tank": "12 L",
+    "efficiency": "38 km/L (G) · 26 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "450 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Honda NXR 160 Bros"
+    ]
+  },
+  "adventure_bike": {
+    "name": "GZ 1250 Aventura",
+    "kind": "Big trail 1250 cc",
+    "description": "Motor boxer, tanque de 30 litros e malas de alumínio. Atravessa o país sem parar em posto, mas pesa muito para levantar sozinho.",
+    "inspiredBy": "BMW R 1250 GS Adventure",
+    "seats": "2",
+    "tank": "30 L",
+    "efficiency": "20 km/L",
+    "fuel": "Gasolina",
+    "autonomy": "600 km",
+    "tags": [
+      "Gasolina",
+      "Inspirado no BMW R 1250 GS Adventure"
+    ]
+  },
+  "highway_police_bike": {
+    "name": "GZ 1250 Rodoviária",
+    "kind": "Big trail policial",
+    "description": "A big trail da polícia rodoviária: branca e azul, malas com faixas, sirene e luzes no protetor do motor. Feita para rodar centenas de quilômetros por dia na rodovia.",
+    "inspiredBy": "BMW R 1250 GS da PRF",
+    "seats": "2",
+    "tank": "30 L",
+    "efficiency": "20 km/L",
+    "fuel": "Gasolina",
+    "autonomy": "600 km",
+    "tags": [
+      "Gasolina",
+      "Inspirado no BMW R 1250 GS da PRF"
+    ]
+  },
+  "quad_bike": {
+    "name": "Grizzli 700",
+    "kind": "Quadriciclo 4x4",
+    "description": "Tração 4x4 e bagageiros na frente e atrás. Bom em fazenda e mato; instável em alta velocidade e sem nenhuma proteção.",
+    "inspiredBy": "Yamaha Grizzly 700",
+    "seats": "1 (+1 improvisado)",
+    "tank": "18 L",
+    "efficiency": "13 km/L",
+    "fuel": "Gasolina",
+    "autonomy": "230 km",
+    "tags": [
+      "Gasolina",
+      "Inspirado no Yamaha Grizzly 700"
+    ]
+  },
+  "beetle": {
+    "name": "Fusquinha 1300",
+    "kind": "Sedã clássico (motor traseiro)",
+    "description": "Motor a ar atrás, sem radiador para furar. Mecânica simples: qualquer um conserta com chave e arame. Barulhento e lento, mas não morre.",
+    "inspiredBy": "Volkswagen Fusca",
+    "seats": "5 (apertados)",
+    "tank": "40 L",
+    "efficiency": "11 km/L",
+    "fuel": "Gasolina",
+    "autonomy": "440 km",
+    "tags": [
+      "Gasolina",
+      "Inspirado no Volkswagen Fusca"
+    ]
+  },
+  "compact_suv": {
+    "name": "T-Crux",
+    "kind": "SUV compacto",
+    "description": "SUV compacto de cidade: alto o bastante para pular meio-fio, curto para manobrar entre carros abandonados. Turbo flex bebe o que achar.",
+    "inspiredBy": "Volkswagen T-Cross",
+    "seats": "5",
+    "tank": "52 L",
+    "efficiency": "11,8 km/L (G) · 8,2 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "610 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Volkswagen T-Cross"
+    ]
+  },
+  "hybrid_suv": {
+    "name": "Corola Crux Híbrido",
+    "kind": "SUV híbrido flex",
+    "description": "Anda no modo elétrico em silêncio pela cidade e liga o motor flex na estrada. Bateria híbrida batida pode pegar fogo.",
+    "inspiredBy": "Toyota Corolla Cross Hybrid",
+    "seats": "5",
+    "tank": "36 L + bateria de 1,3 kWh",
+    "efficiency": "17,0 km/L (G) · 11,8 km/L (E)",
+    "fuel": "Híbrido",
+    "autonomy": "610 km",
+    "tags": [
+      "Híbrido",
+      "Inspirado no Toyota Corolla Cross Hybrid"
+    ]
+  },
+  "midsize_suv": {
+    "name": "Compas Longitude",
+    "kind": "SUV médio 4x4 diesel",
+    "description": "Grade de sete fendas, teto preto e tração 4x4 com diesel. Confortável na estrada e firme na terra.",
+    "inspiredBy": "Jeep Compass",
+    "seats": "5",
+    "tank": "60 L",
+    "efficiency": "10,3 km/L (cidade) · 13,5 km/L (estrada)",
+    "fuel": "Diesel",
+    "autonomy": "800 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Jeep Compass"
+    ]
+  },
+  "large_suv": {
+    "name": "Hylux SW-4",
+    "kind": "SUV 4x4 de 7 lugares",
+    "description": "Alta, pesada e com chassi de picape. Sete lugares, reduzida e diesel: leva a família inteira para fora da cidade.",
+    "inspiredBy": "Toyota SW4",
+    "seats": "7",
+    "tank": "80 L",
+    "efficiency": "9,8 km/L (cidade) · 11,2 km/L (estrada)",
+    "fuel": "Diesel",
+    "autonomy": "800 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Toyota SW4"
+    ]
+  },
+  "compact_pickup": {
+    "name": "Estrada Cabine Dupla",
+    "kind": "Picape compacta",
+    "description": "A picape mais vendida do país: leve, econômica e com caçamba para 650 kg. Não tem 4x4, mas acha peça em qualquer cidade.",
+    "inspiredBy": "Fiat Strada",
+    "seats": "5",
+    "tank": "55 L",
+    "efficiency": "12,5 km/L (G) · 8,9 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "690 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Fiat Strada"
+    ]
+  },
+  "crossover_pickup": {
+    "name": "Touro Ultra",
+    "kind": "Picape média 4x4 diesel",
+    "description": "Picape com jeito de SUV: farol dividido em dois andares, tampa traseira que abre como porta e diesel 4x4.",
+    "inspiredBy": "Fiat Toro",
+    "seats": "5",
+    "tank": "60 L",
+    "efficiency": "10,1 km/L (cidade) · 12,6 km/L (estrada)",
+    "fuel": "Diesel",
+    "autonomy": "610 a 750 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Fiat Toro"
+    ]
+  },
+  "midsize_pickup": {
+    "name": "Hylux Cabine Dupla",
+    "kind": "Picape média 4x4 diesel",
+    "description": "A favorita dos sobreviventes: chassi forte, reduzida, santo-antônio e caçamba para uma tonelada.",
+    "inspiredBy": "Toyota Hilux",
+    "seats": "5",
+    "tank": "80 L",
+    "efficiency": "10,1 km/L (cidade) · 11,3 km/L (estrada)",
+    "fuel": "Diesel",
+    "autonomy": "800 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Toyota Hilux"
+    ]
+  },
+  "monster_truck": {
+    "name": "Bigfut",
+    "kind": "Monster truck",
+    "description": "Carroceria de picape antiga em cima de pneus de 1,68 m. Passa por cima de carros, muros e hordas. O V8 com blower acorda a cidade inteira.",
+    "inspiredBy": "monster truck Bigfoot",
+    "seats": "1",
+    "tank": "120 L",
+    "efficiency": "0,7 km/L",
+    "fuel": "Etanol",
+    "autonomy": "80 km",
+    "tags": [
+      "Etanol",
+      "Inspirado no monster truck Bigfoot"
+    ]
+  },
+  "cargo_van": {
+    "name": "Sprinta Furgão",
+    "kind": "Furgão de carga teto alto",
+    "description": "Teto alto, porta lateral corrediça e 1,9 tonelada de carga. Sem tração para lama, mas cabe um acampamento inteiro no baú.",
+    "inspiredBy": "Mercedes-Benz Sprinter",
+    "seats": "3",
+    "tank": "71 L",
+    "efficiency": "10,3 km/L (cidade) · 11,8 km/L (estrada)",
+    "fuel": "Diesel",
+    "autonomy": "730 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Mercedes-Benz Sprinter"
+    ]
+  },
+  "ambulance": {
+    "name": "Ducatto Resgate",
+    "kind": "Ambulância de resgate",
+    "description": "Furgão com maca, cilindro de oxigênio e armário de remédios. Ótimo para levar feridos; a sirene atrai zumbis de longe.",
+    "inspiredBy": "Fiat Ducato ambulância",
+    "seats": "3 na cabine + 2 atrás + 1 maca",
+    "tank": "90 L",
+    "efficiency": "8,6 km/L",
+    "fuel": "Diesel",
+    "autonomy": "770 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Fiat Ducato ambulância"
+    ]
+  },
+  "box_truck": {
+    "name": "Delivéri 11.180 Baú",
+    "kind": "Caminhão leve com baú",
+    "description": "Cabine avançada estreita, faróis em cunha e baú de 5,5 m. Atravessa horda média sem parar e guarda suprimentos trancados. A cabine bascula para mostrar o diesel de 4 cilindros.",
+    "inspiredBy": "Volkswagen Delivery 11.180",
+    "seats": "3",
+    "tank": "150 L",
+    "efficiency": "5,5 km/L",
+    "fuel": "Diesel",
+    "autonomy": "820 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Volkswagen Delivery 11.180"
+    ]
+  },
+  "tanker_truck": {
+    "name": "Constelação 24.280 Tanque",
+    "kind": "Caminhão-tanque 6x2",
+    "description": "Cabine alta com grade preta e tanque elíptico de 20 mil litros de gasolina. Um tiro no tanque e a rua explode. A cabine bascula para mostrar o diesel de 6 cilindros.",
+    "inspiredBy": "Volkswagen Constellation 24.280",
+    "seats": "2",
+    "tank": "275 L (+20.000 L de carga)",
+    "efficiency": "2,9 km/L",
+    "fuel": "Diesel",
+    "autonomy": "790 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Volkswagen Constellation 24.280"
+    ]
+  },
+  "school_bus": {
+    "name": "ON Escolar",
+    "kind": "Ônibus escolar rural",
+    "description": "O ônibus amarelo das escolas do interior: alto, robusto e com motor dianteiro. Porta dupla atrás da roda, 44 alunos sentados e nenhuma discrição. A tampa da frente abre para o motor.",
+    "inspiredBy": "Volksbus ORE 2 (Caminho da Escola)",
+    "seats": "44 alunos (ou 31 adultos) + motorista",
+    "tank": "210 L",
+    "efficiency": "3,8 km/L",
+    "fuel": "Diesel",
+    "autonomy": "800 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Volksbus ORE 2 (Caminho da Escola)"
+    ]
+  },
+  "city_bus": {
+    "name": "Marcopólo Torino",
+    "kind": "Ônibus urbano de piso baixo",
+    "description": "O ônibus de linha das capitais: para-brisa gigante, letreiro de LED e duas portas largas. Piso baixo, catraca e motor traseiro com tampa que abre.",
+    "inspiredBy": "Marcopolo Torino",
+    "seats": "37 sentados + 43 em pé",
+    "tank": "275 L",
+    "efficiency": "2,3 km/L",
+    "fuel": "Diesel",
+    "autonomy": "630 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Marcopolo Torino"
+    ]
+  },
+  "armored_truck": {
+    "name": "Atego Forte",
+    "kind": "Carro-forte blindado",
+    "description": "Cabine avançada blindada e cofre de aço com seteiras. Vidros à prova de tiro e de mordida. Pesado e beberrão, mas ninguém entra. A cabine bascula para o diesel.",
+    "inspiredBy": "Mercedes-Benz Atego (carro-forte)",
+    "seats": "4 (motorista + 3 vigilantes)",
+    "tank": "210 L",
+    "efficiency": "3,6 km/L",
+    "fuel": "Diesel",
+    "autonomy": "750 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Mercedes-Benz Atego (carro-forte)"
+    ]
+  },
+  "tractor": {
+    "name": "Massei 275",
+    "kind": "Trator agrícola",
+    "description": "O trator vermelho de toda fazenda: capô comprido, rodões traseiros e arco de proteção com toldo. Lento, mas não atola nunca e empurra carros parados. O capô abre para mostrar o diesel de quatro cilindros.",
+    "inspiredBy": "Massey Ferguson 275",
+    "seats": "1",
+    "tank": "68 L",
+    "efficiency": "5,5 L/h",
+    "fuel": "Diesel",
+    "autonomy": "12 h de uso",
+    "tags": [
+      "Diesel",
+      "Inspirado no Massey Ferguson 275"
+    ]
+  },
+  "light_4x4": {
+    "name": "Maruá AM2",
+    "kind": "Viatura leve 4x4",
+    "description": "Jipe militar de duas portas, capota de lona e para-brisa que rebate. Sobe barranco, atravessa riacho de 60 cm e leva seis com equipamento.",
+    "inspiredBy": "Agrale Marruá AM2",
+    "seats": "2 + 4 combatentes",
+    "tank": "100 L + 20 L de reserva",
+    "efficiency": "9,5 km/L",
+    "fuel": "Diesel",
+    "autonomy": "1.000 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Agrale Marruá AM2"
+    ]
+  },
+  "troop_truck": {
+    "name": "Worqer 15.210 Militar",
+    "kind": "Caminhão de tropa 4x4",
+    "description": "Cabine avançada que bascula, tração 4x4 e carroceria com lona e dois bancos de madeira. Leva um pelotão inteiro ou cinco toneladas de suprimentos.",
+    "inspiredBy": "Volkswagen Worker 15.210 4x4 militar",
+    "seats": "3 + 20 combatentes",
+    "tank": "275 L",
+    "efficiency": "3,6 km/L",
+    "fuel": "Diesel",
+    "autonomy": "950 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Volkswagen Worker 15.210 4x4 militar"
+    ]
+  },
+  "apc_6x6": {
+    "name": "Guaraní 6x6",
+    "kind": "Blindado de transporte de tropa 6x6",
+    "description": "Casco em cunha com laterais inclinadas, seis rodas e estação de armas no teto. Flutua, leva onze e aguenta tiro de fuzil por todos os lados.",
+    "inspiredBy": "VBTP-MR Guarani",
+    "seats": "3 + 8 combatentes",
+    "tank": "550 L",
+    "efficiency": "1,1 km/L",
+    "fuel": "Diesel",
+    "autonomy": "600 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no VBTP-MR Guarani"
+    ]
+  },
+  "armored_car_6x6": {
+    "name": "Cascável EE-9",
+    "kind": "Blindado de reconhecimento 6x6",
+    "description": "Proa em cunha, bogie traseiro de balancim e torre com canhão de 90 mm. Rápido no asfalto, abre caminho em barricada e a tripulação vê tudo pelos periscópios.",
+    "inspiredBy": "Engesa EE-9 Cascavel",
+    "seats": "3",
+    "tank": "360 L",
+    "efficiency": "2,2 km/L",
+    "fuel": "Diesel",
+    "autonomy": "750 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Engesa EE-9 Cascavel"
+    ]
+  },
+  "battle_tank": {
+    "name": "Leopardo 1A5",
+    "kind": "Carro de combate sobre lagartas",
+    "description": "Quarenta toneladas sobre lagartas, torre em cunha e canhão de 105 mm. Passa por cima de carro, muro e horda. Bebe diesel como ninguém e é ouvido de longe.",
+    "inspiredBy": "Leopard 1A5 BR",
+    "seats": "4",
+    "tank": "955 L",
+    "efficiency": "0,6 km/L (≈ 160 L/100 km)",
+    "fuel": "Diesel",
+    "autonomy": "600 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no Leopard 1A5 BR"
+    ]
+  },
+  "transport_helicopter": {
+    "name": "Falcão Negro HM-2",
+    "kind": "Helicóptero de assalto e transporte",
+    "description": "Dois turboeixos, rotor de quatro pás e portas corrediças largas. Tira onze soldados de um telhado cercado e aguenta tiro de fuzil nas pás.",
+    "inspiredBy": "Sikorsky UH-60 Black Hawk",
+    "seats": "2 pilotos + 2 artilheiros + 11 soldados",
+    "tank": "1.360 L",
+    "efficiency": "≈ 600 L/h",
+    "fuel": "Querosene de aviação",
+    "autonomy": "590 km",
+    "tags": [
+      "Querosene de aviação",
+      "Inspirado no Sikorsky UH-60 Black Hawk"
+    ]
+  },
+  "river_skiff": {
+    "name": "Levfort Marajó",
+    "kind": "Barco de alumínio com motor de popa",
+    "description": "Barco de alumínio de fundo semichato, o táxi dos rios. Leve, rápido e barulhento.",
+    "inspiredBy": "Levefort Marajó",
+    "seats": "5",
+    "tank": "25 L (tanque portátil)",
+    "efficiency": "≈ 9 L/h (30 hp)",
+    "fuel": "Gasolina",
+    "autonomy": "≈ 70 km",
+    "tags": [
+      "Gasolina",
+      "Inspirado no Levefort Marajó"
+    ]
+  },
+  "speedboat": {
+    "name": "Foker 240",
+    "kind": "Lancha de 24 pés com proa aberta",
+    "description": "Casco em V fundo e um motor de popa de 250 hp. Rota de fuga pela represa com a família inteira.",
+    "inspiredBy": "Focker 240",
+    "seats": "10",
+    "tank": "140 L",
+    "efficiency": "≈ 50 L/h (cruzeiro)",
+    "fuel": "Gasolina",
+    "autonomy": "≈ 110 km",
+    "tags": [
+      "Gasolina",
+      "Inspirado no Focker 240"
+    ]
+  },
+  "fishing_boat": {
+    "name": "Traineira Esperança",
+    "kind": "Traineira de madeira",
+    "description": "Casco de madeira com casaria a ré e pneus de defensa. Dá para morar nele, longe da margem.",
+    "inspiredBy": "barco de pesca artesanal",
+    "seats": "10",
+    "tank": "1.200 L",
+    "efficiency": "≈ 14 L/h",
+    "fuel": "Diesel",
+    "autonomy": "≈ 900 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no barco de pesca artesanal"
+    ]
+  },
+  "single_engine_plane": {
+    "name": "Sesna 172",
+    "kind": "Monomotor de asa alta, 4 lugares",
+    "description": "Avião de aeroclube. Asa alta, trem fixo e quatro lugares. Precisa de pista livre de zumbis e de gasolina de aviação.",
+    "inspiredBy": "Cessna 172 Skyhawk",
+    "seats": "4",
+    "tank": "212 L (201 L utilizáveis)",
+    "efficiency": "36 L/h",
+    "fuel": "Gasolina de aviação",
+    "autonomy": "1.185 km",
+    "tags": [
+      "Gasolina de aviação",
+      "Inspirado no Cessna 172 Skyhawk"
+    ]
+  },
+  "crop_duster": {
+    "name": "Ipanemá EMB-203",
+    "kind": "Monomotor agrícola a etanol",
+    "description": "Avião de lavoura movido a etanol. Pousa em pista de terra e a barra de pulverização pode espalhar isca ou fogo.",
+    "inspiredBy": "Embraer Ipanema",
+    "seats": "1",
+    "tank": "264 L",
+    "efficiency": "≈ 75 L/h de etanol",
+    "fuel": "Etanol",
+    "autonomy": "940 km",
+    "tags": [
+      "Etanol",
+      "Inspirado no Embraer Ipanema"
+    ]
+  },
+  "piston_helicopter": {
+    "name": "Robinsom R44",
+    "kind": "Helicóptero leve a pistão",
+    "description": "Quatro lugares, rotor bipá e motor a pistão. Leve o bastante para pousar em telhado de prédio.",
+    "inspiredBy": "Robinson R44",
+    "seats": "4",
+    "tank": "185 L",
+    "efficiency": "≈ 57 L/h",
+    "fuel": "Gasolina de aviação",
+    "autonomy": "560 km",
+    "tags": [
+      "Gasolina de aviação",
+      "Inspirado no Robinson R44"
+    ]
+  },
+  "rescue_helicopter": {
+    "name": "Esquillo AS350",
+    "kind": "Helicóptero a turbina, 6 lugares",
+    "description": "Turbina, rotor de três pás, holofote e guincho de resgate. Tira gente de telhado cercado.",
+    "inspiredBy": "Helibras AS350 Esquilo",
+    "seats": "6 (piloto + 5)",
+    "tank": "540 L",
+    "efficiency": "≈ 180 L/h",
+    "fuel": "Querosene de aviação",
+    "autonomy": "650 km",
+    "tags": [
+      "Querosene de aviação",
+      "Inspirado no Helibras AS350 Esquilo"
+    ]
+  },
+  "step_through_scooter": {
+    "name": "Bis 125",
+    "kind": "Cub 125 cc (motoneta)",
+    "description": "A motoneta de passagem baixa: sobe-se nela de saia, cabe capacete sob o banco e roda quase 50 km com um litro. Rodas pequenas e pouca proteção na horda.",
+    "inspiredBy": "Honda Biz 125",
+    "seats": "2",
+    "tank": "5,1 L",
+    "efficiency": "50 km/L (G) · 35 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "255 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Honda Biz 125"
+    ]
+  },
+  "naked_bike": {
+    "name": "Fazê 250",
+    "kind": "Naked 250 cc",
+    "description": "Naked de 250 cc com farol de LED e tanque musculoso. Mais fôlego que as 160 para fugir na estrada, sem perder o jeito de moto de cidade.",
+    "inspiredBy": "Yamaha FZ25 Fazer 250",
+    "seats": "2",
+    "tank": "14 L",
+    "efficiency": "30 km/L (G) · 21 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "420 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Yamaha FZ25 Fazer 250"
+    ]
+  },
+  "sport_bike": {
+    "name": "Ninjá 400",
+    "kind": "Esportiva 400 cc",
+    "description": "Esportiva bicilíndrica leve: passa dos 180 km/h na estrada vazia. Posição de corrida e carenagem de plástico, que racha na primeira queda.",
+    "inspiredBy": "Kawasaki Ninja 400",
+    "seats": "2",
+    "tank": "14 L",
+    "efficiency": "25 km/L",
+    "fuel": "Gasolina",
+    "autonomy": "350 km",
+    "tags": [
+      "Gasolina",
+      "Inspirado no Kawasaki Ninja 400"
+    ]
+  },
+  "cruiser": {
+    "name": "Fat Boi 114",
+    "kind": "Custom V2 1868 cc",
+    "description": "Custom pesada de rodas fechadas e motor V2 de 1,9 litro. O ronco chama zumbi de longe, mas o torque arrasta qualquer obstáculo.",
+    "inspiredBy": "Harley-Davidson Fat Boy 114",
+    "seats": "2",
+    "tank": "18,9 L",
+    "efficiency": "18 km/L",
+    "fuel": "Gasolina",
+    "autonomy": "340 km",
+    "tags": [
+      "Gasolina",
+      "Inspirado no Harley-Davidson Fat Boy 114"
+    ]
+  },
+  "delivery_bike": {
+    "name": "Titã 160 Cargo",
+    "kind": "Moto de entrega 160 cc",
+    "description": "A moto de motoboy: banco só do piloto, bagageiro de aço e baú de entrega. O baú leva remédio, comida e munição pela cidade tomada.",
+    "inspiredBy": "Honda CG 160 Cargo",
+    "seats": "1 (sem garupa)",
+    "tank": "16,1 L + baú de 90 L (20 kg)",
+    "efficiency": "38 km/L (G) · 27 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "610 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Honda CG 160 Cargo"
+    ]
+  },
+  "boxy_hatch": {
+    "name": "Unno Mille",
+    "kind": "Hatch popular quadrado",
+    "description": "O quadradinho que sobreviveu a tudo. Leve, alto do chão e com peça em qualquer ferro-velho. Este veio com a escada do eletricista no teto: serve para subir em muro e telhado.",
+    "inspiredBy": "Fiat Uno Mille",
+    "seats": "5",
+    "tank": "50 L",
+    "efficiency": "12,8 km/L (G) · 9,0 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "640 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Fiat Uno Mille"
+    ]
+  },
+  "family_hatch": {
+    "name": "Gól G5",
+    "kind": "Hatch compacto",
+    "description": "O carro mais vendido de uma década inteira. Mecânica conhecida, suspensão firme e porta-malas pequeno. Fácil de achar parado em qualquer rua.",
+    "inspiredBy": "Volkswagen Gol G5",
+    "seats": "5",
+    "tank": "55 L",
+    "efficiency": "12,9 km/L (G) · 8,9 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "700 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Volkswagen Gol G5"
+    ]
+  },
+  "rideshare_hatch": {
+    "name": "HB-21",
+    "kind": "Hatch compacto",
+    "description": "Hatch moderno de frota de aplicativo. Econômico, confortável e cheio de eletrônica que ninguém mais sabe consertar.",
+    "inspiredBy": "Hyundai HB20",
+    "seats": "5",
+    "tank": "50 L",
+    "efficiency": "13,9 km/L (G) · 9,9 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "690 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Hyundai HB20"
+    ]
+  },
+  "turbo_hatch": {
+    "name": "Pólo",
+    "kind": "Hatch compacto",
+    "description": "Motor turbo pequeno e bem firme na estrada. Rápido para fugir, econômico para viajar, mas a eletrônica sofre com a falta de oficina.",
+    "inspiredBy": "Volkswagen Polo",
+    "seats": "5",
+    "tank": "52 L",
+    "efficiency": "15,0 km/L (G) · 10,4 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "780 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Volkswagen Polo"
+    ]
+  },
+  "fastback_sedan": {
+    "name": "Cívico",
+    "kind": "Sedã médio fastback",
+    "description": "Sedã baixo e largo, de motor que gira alto. Corre muito na estrada, mas raspa o para-choque em qualquer lombada ou monte de entulho.",
+    "inspiredBy": "Honda Civic G10",
+    "seats": "5",
+    "tank": "56 L",
+    "efficiency": "12,1 km/L (G) · 8,5 km/L (E)",
+    "fuel": "Flex",
+    "autonomy": "680 km",
+    "tags": [
+      "Flex",
+      "Inspirado no Honda Civic G10"
+    ]
+  },
+  "classic_six_sedan": {
+    "name": "Opalla Comodoro",
+    "kind": "Sedã clássico (seis cilindros)",
+    "description": "Seis cilindros em linha, tração traseira e lataria grossa de chapa antiga. Bebe muito, mas aguenta pancada e empurra carro parado da rua.",
+    "inspiredBy": "Chevrolet Opala Comodoro",
+    "seats": "5 (6 apertados)",
+    "tank": "84 L",
+    "efficiency": "7,6 km/L",
+    "fuel": "Gasolina",
+    "autonomy": "640 km",
+    "tags": [
+      "Gasolina",
+      "Inspirado no Chevrolet Opala Comodoro"
+    ]
+  },
+  "v8_coupe": {
+    "name": "Mustangue GT",
+    "kind": "Cupê esportivo V8",
+    "description": "V8 de cinco litros e tração traseira. O mais rápido da garagem em reta, mas o ronco acorda a horda de quarteirões inteiros e o tanque some rápido.",
+    "inspiredBy": "Ford Mustang GT",
+    "seats": "4 (2 + 2 apertados)",
+    "tank": "61 L",
+    "efficiency": "7,2 km/L",
+    "fuel": "Gasolina",
+    "autonomy": "440 km",
+    "tags": [
+      "Gasolina",
+      "Inspirado no Ford Mustang GT"
+    ]
+  },
+  "jet_ski": {
+    "name": "Si-Dú Spark",
+    "kind": "Moto aquática de 3 lugares",
+    "description": "Pequeno, leve e nervoso, com turbina em vez de hélice. Pula marola e foge por canal raso.",
+    "inspiredBy": "Sea-Doo Spark",
+    "seats": "3",
+    "tank": "30 L",
+    "efficiency": "≈ 10 L/h (cruzeiro) · 17 L/h (máx.)",
+    "fuel": "Gasolina",
+    "autonomy": "≈ 2,5 h · ≈ 100 km",
+    "tags": [
+      "Gasolina",
+      "Inspirado no Sea-Doo Spark"
+    ]
+  },
+  "sailboat": {
+    "name": "Veleiro Delta 26",
+    "kind": "Veleiro de oceano de 26 pés (vela e motor diesel auxiliar)",
+    "description": "Vela de dia, motor de 10 hp quando o vento some. Lento, mas cruza até o horizonte sem posto de gasolina.",
+    "inspiredBy": "veleiro de oceano de 26 pés",
+    "seats": "6 (4 pernoites)",
+    "tank": "40 L diesel · 80 L água",
+    "efficiency": "≈ 1,5 L/h no motor · zero na vela",
+    "fuel": "Diesel",
+    "autonomy": "≈ 250 km no motor · ilimitada na vela",
+    "tags": [
+      "Diesel",
+      "Inspirado no veleiro de oceano de 26 pés"
+    ]
+  },
+  "rescue_dinghy": {
+    "name": "Zodiaque de resgate",
+    "kind": "Bote inflável de resgate com motor de popa",
+    "description": "Boias de borracha que não afundam nem com furo em um gomo. Entra na enchente e sai com gente pendurada no cabo.",
+    "inspiredBy": "bote inflável Zodiac FC 470",
+    "seats": "10",
+    "tank": "25 L (tanque portátil)",
+    "efficiency": "≈ 14 L/h (40 hp)",
+    "fuel": "Gasolina",
+    "autonomy": "≈ 90 km",
+    "tags": [
+      "Gasolina",
+      "Inspirado no bote inflável Zodiac FC 470"
+    ]
+  },
+  "patrol_boat": {
+    "name": "Lancha Patrulha",
+    "kind": "Lancha de patrulha fluvial armada",
+    "description": "Casco de alumínio, dois jatos d'água e metralhadora na proa. Entra em rio raso e sai de ré sem leme.",
+    "inspiredBy": "lancha de patrulha fluvial LPR-40",
+    "seats": "4 tripulantes + 8",
+    "tank": "≈ 1.600 L",
+    "efficiency": "≈ 120 L/h (cruzeiro de 20 nós)",
+    "fuel": "Diesel",
+    "autonomy": "≈ 450 km",
+    "tags": [
+      "Diesel",
+      "Inspirado no lancha de patrulha fluvial LPR-40"
+    ]
+  },
+  "tandem_trainer": {
+    "name": "Paipa Cub",
+    "kind": "Monomotor de treinamento, asa alta, 2 lugares em tandem",
+    "description": "O amarelinho de aeroclube. Pousa em pasto, estrada de terra e clareira, e decola em 150 m. Pouco combustível e quase nenhuma proteção.",
+    "inspiredBy": "Piper J-3 Cub",
+    "seats": "2 (em tandem)",
+    "tank": "45 L",
+    "efficiency": "≈ 15 L/h",
+    "fuel": "Gasolina de aviação",
+    "autonomy": "350 km",
+    "tags": [
+      "Gasolina de aviação",
+      "Inspirado no Piper J-3 Cub"
+    ]
+  },
+  "regional_turboprop": {
+    "name": "Bandeirantte EMB-110",
+    "kind": "Bimotor turboélice regional, 2 + 16 lugares",
+    "description": "O avião que ligou o interior do Brasil. Pousa em pista de terra curta, leva dezesseis pessoas e carga, e tem dois motores: perde um e ainda volta.",
+    "inspiredBy": "Embraer EMB-110 Bandeirante",
+    "seats": "2 pilotos + 16 passageiros",
+    "tank": "1.720 L",
+    "efficiency": "≈ 300 L/h (dois motores)",
+    "fuel": "Querosene de aviação",
+    "autonomy": "1.960 km",
+    "tags": [
+      "Querosene de aviação",
+      "Inspirado no Embraer EMB-110 Bandeirante"
+    ]
+  },
+  "amphibian_turboprop": {
+    "name": "Caravana Anfíbio",
+    "kind": "Monomotor turboélice anfíbio, 10 lugares",
+    "description": "Pousa em rio, represa e pista. Na Amazônia vira ônibus, ambulância e caminhão. Os flutuadores aguentam o tranco, mas atolar na margem é um risco.",
+    "inspiredBy": "Cessna 208 Caravan anfíbio (flutuadores Wipline)",
+    "seats": "1 piloto + 9 passageiros",
+    "tank": "1.257 L",
+    "efficiency": "≈ 200 L/h",
+    "fuel": "Querosene de aviação",
+    "autonomy": "1.500 km",
+    "tags": [
+      "Querosene de aviação",
+      "Inspirado no Cessna 208 Caravan anfíbio (flutuadores Wipline)"
+    ]
+  },
+  "light_jet": {
+    "name": "Fenom 100",
+    "kind": "Jato executivo leve, 2 + 4 lugares",
+    "description": "Jatinho de empresário. Rápido, alto e pressurizado: tira gente de uma cidade perdida em uma hora, se houver pista de asfalto inteira.",
+    "inspiredBy": "Embraer Phenom 100",
+    "seats": "2 pilotos + 4 passageiros (até 6)",
+    "tank": "1.590 L",
+    "efficiency": "≈ 380 L/h",
+    "fuel": "Querosene de aviação",
+    "autonomy": "2.180 km",
+    "tags": [
+      "Querosene de aviação",
+      "Inspirado no Embraer Phenom 100"
+    ]
+  },
+  "light_attack_turboprop": {
+    "name": "Super Tucanno",
+    "kind": "Turboélice de ataque leve, 2 lugares em tandem",
+    "description": "Turboélice de ataque leve e treinamento avançado. Voa baixo e devagar o bastante para ver a horda, com duas .50 nas asas e foguetes nos pilones.",
+    "inspiredBy": "Embraer EMB-314 Super Tucano (A-29)",
+    "seats": "2 (piloto e operador em tandem)",
+    "tank": "695 L internos (+ tanques externos)",
+    "efficiency": "≈ 260 L/h",
+    "fuel": "Querosene de aviação",
+    "autonomy": "1.330 km",
+    "tags": [
+      "Querosene de aviação",
+      "Inspirado no Embraer EMB-314 Super Tucano (A-29)"
+    ]
+  },
+  "trainer_helicopter": {
+    "name": "Robinsom R22",
+    "kind": "Helicóptero leve de 2 lugares a pistão",
+    "description": "O helicóptero de escola. Leve, barato e nervoso no comando. Pousa em qualquer laje, mas leva só duas pessoas e quase nenhuma carga.",
+    "inspiredBy": "Robinson R22 Beta II",
+    "seats": "2",
+    "tank": "112 L (72 L + 40 L)",
+    "efficiency": "≈ 30 L/h",
+    "fuel": "Gasolina de aviação",
+    "autonomy": "390 km",
+    "tags": [
+      "Gasolina de aviação",
+      "Inspirado no Robinson R22 Beta II"
+    ]
+  },
+  "turbine_helicopter": {
+    "name": "Bel 206 Jato",
+    "kind": "Helicóptero leve a turbina, 5 lugares",
+    "description": "Turbina pequena, cinco lugares e fama de indestrutível. Táxi aéreo, reportagem e polícia: tem um em cada heliponto de cidade grande.",
+    "inspiredBy": "Bell 206B-3 JetRanger III",
+    "seats": "1 piloto + 4",
+    "tank": "344 L",
+    "efficiency": "≈ 100 L/h",
+    "fuel": "Querosene de aviação",
+    "autonomy": "690 km",
+    "tags": [
+      "Querosene de aviação",
+      "Inspirado no Bell 206B-3 JetRanger III"
+    ]
+  },
+  "police_helicopter": {
+    "name": "H-145 Águia",
+    "kind": "Helicóptero bimotor policial, 2 + 6 lugares",
+    "description": "O helicóptero da polícia. Dois motores, câmera térmica, holofote e guincho: acha gente presa no telhado de noite e ainda desce corda.",
+    "inspiredBy": "Airbus H145 policial",
+    "seats": "2 pilotos + 6 tripulantes",
+    "tank": "≈ 905 L",
+    "efficiency": "≈ 270 L/h",
+    "fuel": "Querosene de aviação",
+    "autonomy": "650 km",
+    "tags": [
+      "Querosene de aviação",
+      "Inspirado no Airbus H145 policial"
+    ]
+  },
+  "attack_helicopter": {
+    "name": "Sabre AH-2",
+    "kind": "Helicóptero de ataque e transporte",
+    "description": "Tanque voador: blindado, armado com canhão duplo e foguetes, e ainda leva oito soldados no meio. Barulhento e sedento, mas abre caminho em qualquer horda.",
+    "inspiredBy": "Mil Mi-35M (AH-2 Sabre da FAB)",
+    "seats": "2 tripulantes + 8 soldados",
+    "tank": "≈ 2.100 L internos",
+    "efficiency": "≈ 700 L/h",
+    "fuel": "Querosene de aviação",
+    "autonomy": "460 km",
+    "tags": [
+      "Querosene de aviação",
+      "Inspirado no Mil Mi-35M (AH-2 Sabre da FAB)"
+    ]
+  }
+}

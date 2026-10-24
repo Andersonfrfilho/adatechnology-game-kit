@@ -1,0 +1,40 @@
+{
+  "sources": [
+    "cena:L1345 groan(z): the Brutamonte has its own, a chase speed above 3.4 is a runner's, every other body groans like a walker",
+    "cena:L1238, L1248, L1249 the scream and the inhale belong to the Gritador, the leap to the Saltador",
+    "cena:L1226 the groan when a body wakes (FEIGN to CHASE) and the game L67275/L67328 voz('corredor') when one notices the player",
+    "jogo:L66986 the groan of the game: 'corredor' for the runner category, 'gemido' for the rest; jogo:L66989 screamAt plays 'grito'",
+    "types.json: the voice line of each Bestiario type"
+  ],
+  "types": {
+    "walker": { "origin": "team", "groan": "groan_walker", "gameGroan": "groan" },
+    "runner": { "origin": "team", "groan": "groan_runner", "gameGroan": "runner_groan" },
+    "crawler": { "origin": "rule", "groan": "groan_walker", "gameGroan": "groan" },
+    "brute": { "origin": "team", "groan": "groan_brute", "gameGroan": "groan" },
+    "sniffer": {
+      "origin": "extra",
+      "groan": "groan_runner",
+      "gameGroan": "groan",
+      "idle": [{ "sound": "inhale" }, { "sound": "groan_runner", "delay": 0.6 }]
+    },
+    "leaper": { "origin": "team", "groan": "groan_runner", "gameGroan": "groan", "special": [{ "sound": "leap" }] },
+    "bloater": { "origin": "rule", "groan": "groan_walker", "gameGroan": "groan" },
+    "stalker": { "origin": "rule", "groan": "groan_runner", "gameGroan": "groan", "idle": [] },
+    "blind": { "origin": "rule", "groan": "groan_walker", "gameGroan": "groan" },
+    "screamer": {
+      "origin": "team",
+      "groan": "groan_walker",
+      "gameGroan": "groan",
+      "special": [{ "sound": "inhale" }, { "sound": "scream", "delay": 1.5 }],
+      "gameSpecial": [{ "sound": "scream_hoarse" }]
+    },
+    "charred": { "origin": "rule", "groan": "groan_walker", "gameGroan": "groan" },
+    "drowned": { "origin": "rule", "groan": "groan_walker", "gameGroan": "groan" },
+    "devourer": {
+      "origin": "extra",
+      "groan": "groan_walker",
+      "gameGroan": "groan",
+      "idle": [{ "sound": "groan_walker" }, { "sound": "bite", "delay": 0.4 }]
+    }
+  }
+}

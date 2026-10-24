@@ -2,6 +2,8 @@
  * Public types of `@adatechnology/game-vehicles`.
  * three.js objects are typed `any` on purpose: the host passes its own `THREE` namespace at runtime, so the package does not bind to one version.
  */
+import type { LodSettings } from './lod'
+import type { DamageableKind, DamageableMaterial, DamageableSide } from './damageables'
 import type { LocaleStrings, PartialLocaleStrings, Translate } from './locale'
 
 /** A three.js `Vector3`, `Object3D`, `Mesh`, ... of the host's `THREE`. */
@@ -255,9 +257,27 @@ export interface Plugin {
   install?(kit: VehicleKit): void
 }
 
+export interface BuildOptions {
+  /** Build this vehicle in light mode (fewer triangles; interiors tagged `skipLite`). */
+  lod?: boolean
+}
+
+export interface Damageable {
+  material: DamageableMaterial
+  /** Id of the zone. */
+  zone: string
+  /** `door`, `hood`, `lid`, `bumper`, `window`, `windshield`, `headlight`, `taillight`, `wheel`, `fuel_tank`. */
+  part: string
+  side: DamageableSide
+  /** A `THREE.Box3`. */
+  box: ThreeObject
+}
+
 export interface VehicleKitOptions extends KitConfiguration {
   /** The three.js namespace (`import * as THREE from 'three'` or `window.THREE`). */
   THREE: any
+  /** Light mode settings (every number of `defaultLodSettings` can be overridden). */
+  lod?: Partial<LodSettings>
   /** A registered locale code (`'en'`, `'pt-BR'`), or a partial string table overriding English. Default `'en'`. */
   locale?: string | PartialLocaleStrings
   /** Document used for canvas textures and the UI. Defaults to the global `document`. */
@@ -327,6 +347,10 @@ type Builder = (...args: any[]) => any
 
 export interface VehicleKit {
   readonly THREE: any
+  /** The light mode settings (live: change a number and the next build uses it). */
+  readonly lod: LodSettings
+  /** Zone type to material and part of `damageables`; add or replace entries. */
+  readonly damageableKinds: Record<string, DamageableKind>
   /** Translated strings in use. */
   readonly strings: LocaleStrings
   /** Looks up a locale key (`'zones.hood'`) and fills variables. */
@@ -364,7 +388,9 @@ export interface VehicleKit {
   hook(event: string, ...args: any[]): void
 
   /* build and lifecycle */
-  build(key: string, state?: BuildState, zoneState?: Partial<ZoneState>): VehicleContext
+  build(key: string, state?: BuildState, zoneState?: Partial<ZoneState>, options?: BuildOptions): VehicleContext
+  /** The damageable parts of a built vehicle as boxes (optionally in the frame of `matrix`). */
+  damageables(c: VehicleContext, matrix?: ThreeObject): Damageable[]
   dispose(c: VehicleContext): void
   /** Advances particles, fluids, hood, blast and rollover animations by `dt` seconds. */
   tick(c: VehicleContext, dt: number): void

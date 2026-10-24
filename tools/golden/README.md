@@ -62,6 +62,9 @@ Captures for the houses (spec 001, T2.2a), with where their goldens go:
 | `floorplan-structure.js` | same (`estrutura`, `Casa3DSDK.specDe` coarse and `vedacao`, utilities) | `specs/001-migracao-entregas-dos-times/goldens/vc3-structure.json` (+ detail), staged until `game-floorplan-structure` exists |
 | `house-area.js` | Sala de testes, area "Casas e prédios" (the 6 scenarios on the page's destruction world, every world event) | `specs/.../goldens/house-area.json`, staged until the destruction work (T2.3b) consumes it |
 | `gallery-silhouettes.js` | Galeria do Vale Cinzento, with `--expose` (house and building silhouettes, scene hash) | `specs/.../goldens/gallery-silhouettes.json`, staged for `game-floorplan-three` (T2.5a) |
+| `urban-parts.js` | Galeria do Vale Cinzento, with `--expose` (the five poles with the light budget, roads, walks, street grid, block, props; scene hash plus the instance lists and the surface of each material as events) | `packages/game-urban-three/tests/fixtures/team-golden/urban-parts.json` (T7.3a) |
+| `urban-patterns.js` | Galeria do Vale Cinzento, with `--expose` (`buildPadraoRuas` with `env` and `car` stubbed; scene hash, instance lists, surface and map pins) | `packages/game-urban-three/tests/fixtures/team-golden/urban-patterns.json` (T7.3b) |
+| `urban-terrain.js` | Galeria do Vale Cinzento, with `--expose` (`buildWorld` with `env` and `pin` stubbed; hash of the terrain mesh positions and colours, `hW` and `forestF` on a 9 x 9 grid) | `packages/game-urban-three/tests/fixtures/team-golden/urban-terrain.json` (T7.3c) |
 | `house-scene.js` | Visor de casas 3D (`Casa3DSDK.construir`: house, lot, roof and floor scenes of six plans, names left out of the hash; then `planejaLOD`) | `packages/game-floorplan-three/tests/fixtures/team-golden/vc3-house-scene.json` (`--param pairs=template:seed,...`) |
 
 Capture for the items (spec 001, T3.2b):
@@ -200,6 +203,7 @@ pnpm build && node tools/golden/bin/record-audio.mjs [--seed 1]   # writes tools
 |---|---|---|
 | `fixtures/audio/game-audio.json` | `artefatos/2UG1Mhe9LqJkQKKVsJkTWR/jogo.js` (`audioInit`, `noise`, `sfx`, `loopSet`, `grito`, `voz`, `bichoSom`, `boom`, `chiado`, `buzina`) | 12 classes at 0/10/60/120/160 m, the four loops at three levels, `grito`, `voz`, the four animal calls, `boom`, `chiado`, `buzina` (111) |
 | `fixtures/audio/art-scene-audio.json` | `sources/arte__cena-de-arte.js` L1303-1372 (`initAudio` chain and the 31 `sfx.*`) | the chain, then each sound at three positions (85) |
+| `fixtures/weather/game-rain-curtain.json` | `artefatos/2UG1Mhe9LqJkQKKVsJkTWR/jogo.js` (`const RAIN = 14000` up to `skyUpdate`, cut and run in a vm with three.js stubs; `node tools/golden/bin/record-weather-visual.mjs`) | the SHA-256 and the first and last floats of the 14 000 rain points under seed 1, the shader texts, the material flags and the sky, zone fog and fog lines of the page (`game-weather-three`) |
 
 Each case holds `setup` (run first), `call`, the `seed` and the `trace`; the header holds the SHA-256 of every cut, so a changed source is noticed. A
 case runs in its own context with the seed, so the order of random draws is part of the trace: the noise buffer is filled first (one draw per sample),

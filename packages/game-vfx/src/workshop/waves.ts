@@ -62,6 +62,8 @@ export interface FlashLight {
   duration: number
   t: number
   intensity: number
+  /** Holds `peak` until `duration` is over. */
+  steady: boolean
 }
 
 export interface FireLightSlot {
@@ -73,7 +75,7 @@ export interface FireLightSlot {
 
 /** The four short flashes of the Workshop (W333-337), taken in turn, and its two fire lights. */
 export class FlashLightPool {
-  readonly lights: FlashLight[] = Array.from({ length: LIGHT_CAPACITY }, () => ({ x: 0, y: 0, z: 0, color: 0xffc070, distance: DEFAULT_LIGHT_DISTANCE, peak: 0, duration: 1, t: 0, intensity: 0 }))
+  readonly lights: FlashLight[] = Array.from({ length: LIGHT_CAPACITY }, () => ({ x: 0, y: 0, z: 0, color: 0xffc070, distance: DEFAULT_LIGHT_DISTANCE, peak: 0, duration: 1, t: 0, intensity: 0, steady: false }))
   readonly fire: FireLightSlot[] = [
     { x: 0, y: 0, z: 0, intensity: 0 },
     { x: 0, y: 0, z: 0, intensity: 0 },
@@ -86,7 +88,7 @@ export class FlashLightPool {
     return this.lights.filter((light) => light.intensity > 0).length
   }
 
-  flash(point: Vec3Tuple, color: number, intensity: number, duration: number, distance?: number, force?: boolean | 'boom'): void {
+  flash(point: Vec3Tuple, color: number, intensity: number, duration: number, distance?: number, force?: boolean | 'boom', steady?: boolean): void {
     const { level } = this.context.quality
     if (level >= 1 && !force) return
     if (level >= 2 && force !== 'boom') return
@@ -99,6 +101,7 @@ export class FlashLightPool {
     light.peak = intensity
     light.duration = duration
     light.t = 0
+    light.steady = steady === true
     light.intensity = intensity
   }
 
@@ -112,7 +115,7 @@ export class FlashLightPool {
       if (light.intensity <= 0) continue
       light.t += dt
       const age = light.t / light.duration
-      light.intensity = age >= 1 ? 0 : light.peak * (1 - age) * (1 - age)
+      light.intensity = age >= 1 ? 0 : light.steady ? light.peak : light.peak * (1 - age) * (1 - age)
     }
   }
 }

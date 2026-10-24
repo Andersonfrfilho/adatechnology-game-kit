@@ -40,6 +40,8 @@ const restore = vfx.applyCamera(); gl.render(scene, camera); restore()
 ## Receitas da Oficina na tela
 O que `world.play` enche também é desenhado, criado quando a primeira receita toca: sprites aditivo e normal com o shader da página, riscos, 500 detritos instanciados, decalques (molhado e seco), anéis e as luzes de clarão e de fogo. A tela da Oficina entra no overlay (o maior valor de cada campo). A bolha de lente e o pós-processo (a página pinta num canvas 2D) ainda não são desenhados. `configure({ quality, lod_band, layer_<id>: false })`.
 
+Também desenha as partículas de sólido do Workshop (`engine.meshes`: cone, cone aberto, esfera, icosaedro; o clarão e a fumaça da arma na mão): uma `Mesh` por partícula no grupo `workshop-meshes`, com a geometria, o material (liso ou iluminado, aditivo ou normal), o giro e a escala que a partícula diz; `EffectRequest.orientation` e `values` chegam à receita.
+
 ## Ambiente de teste
 `examples/vfx-test-area` (e a área de móveis): o módulo `vfx` na sala de testes. Em Node, passe `createCanvas` para as texturas das marcas.
 

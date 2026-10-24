@@ -126,4 +126,12 @@ describe('the room runs the film of the liquids that have one', () => {
     expect(room.scene.getObjectByName('film_grid')).toBeUndefined()
     room.dispose()
   })
+
+  it('lends the film bridge to the modules: a tinted splat of blood makes a grid in those colours', () => {
+    const room = makeRoom()
+    expect(room.film.splat({ fluid: 'blood', point: [0, 0.8, -2], count: 2, tint: { fresh: 0x8a0a0a, dry: 0x3b1d14 } })).toBe(2)
+    for (let i = 0; i < 30; i++) room.update(1 / 60)
+    expect(room.scene.getObjectByName('film_grid')).toBeDefined()
+    room.dispose()
+  })
 })

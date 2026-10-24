@@ -21,6 +21,9 @@ import type { AnimalRig, AnimalsThreeOptions, DocumentLike, Three } from './type
 import { applyVisualState } from './visual-state'
 import { setJointView, setSplit, updateSplit } from './views'
 
+export { ANIMAL_SOUND_BANK, ANIMAL_SOUNDS, COW_MOO, DOG_BARK, HEN_CLUCK, LAPWING_CALL } from './audio/recipes'
+export { ANIMAL_CALLS, ANIMAL_CALL_SOURCES, createAnimalSound } from './audio/sound'
+export type { AnimalCall, AnimalSound, AnimalSoundOptions, AnimalSoundSink } from './audio/sound'
 export type { AnimalLeg, AnimalPivot, AnimalRig, AnimalWing, AnimalsThreeOptions, CanvasLike, DocumentLike, Three } from './types'
 export type { AnimateParams } from './animate-types'
 export type { BirdExtra, BirdParts, ExtraContext, QuadrupedExtra, QuadrupedParts } from './extras'

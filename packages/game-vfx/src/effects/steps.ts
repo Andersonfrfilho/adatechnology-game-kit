@@ -6,6 +6,8 @@ type System = 'add' | 'normal' | 'streak'
 export const burst = (system: System, count: Computed, spawn: Computed): EffectStep => ({ op: 'burst', system, count, spawn })
 export const spawn = (system: System, options: Computed): EffectStep => ({ op: 'spawn', system, spawn: options })
 export const emit = (key: string, system: System, rate: Computed, options: Computed): EffectStep => ({ op: 'emit', key, system, rate, spawn: options })
+/** A solid particle (`MeshSpawn`): a cone, a sphere, an icosahedron. */
+export const mesh = (options: Computed): EffectStep => ({ op: 'mesh', spawn: options })
 export const debris = (options: Computed): EffectStep => ({ op: 'debris', spawn: options })
 export const decal = (...args: readonly Computed[]): EffectStep => ({ op: 'decal', args })
 export const ring = (...args: readonly Computed[]): EffectStep => ({ op: 'ring', args })
