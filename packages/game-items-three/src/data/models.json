@@ -838,5 +838,15 @@
       0.1
     ],
     "scale": 0.1
+  },
+  {
+    "id": "syringe",
+    "teamId": "seringa",
+    "teamBox": [
+      1.5,
+      0.2,
+      0.2
+    ],
+    "scale": 0.1
   }
 ]
