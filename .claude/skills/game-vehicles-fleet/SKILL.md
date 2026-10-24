@@ -52,9 +52,17 @@ Sem `examples/` próprio: a verificação é a suíte `packages/game-vehicles-fl
 Rodar: `pnpm --filter @adatechnology/game-vehicles-fleet test` (demora, uns 2 minutos). `examples/vehicles-test-area` está previsto (V5).
 
 ## Cuidados
-- **Goldens regenerados (V1, T0.3)**: `tests/fixtures/golden.json` foi atualizado com a versão de hoje para `entry_hatch` (`popular`, cenário `rollover`),
-  `midsize_sedan` (`seda`, os três estados e os cinco cenários) e `fastback_sedan` (`civico`, cenário `rollover`); só os `hash` mudaram. A suíte inteira passa
-  (868 testes). Mudou a geometria de propósito? Regenere só o que falha, com as funções de `tests/helpers/` (`digest`, `legacyZoneId`), e anote em `evidence.md`.
+- **Hash de golden não pode depender da versão do Node.** `Math.pow` (e `**`) mudou o último bit entre Node 22 (V8 12) e Node 24 (V8 13); `sin`, `cos`, `exp`,
+  `log`, `atan2` etc. não mudaram. O `CatmullRomCurve3` centrípeto do three usa `pow`, e um `TubeGeometry` fechado sobre caminho quase reto (o aro de 9 mm de
+  `midsize_sedan`) amplifica esse bit até 8e-4 de torção do anel, o que vira outro hash. Por isso `tests/setup.ts` chama `installPortableMath()` (do
+  `@adatechnology/golden-tool`), que troca `Math.pow` por uma versão feita só de `+ - * /`, `exp` e `log`. Nunca use `**` com expoente fracionário em
+  código que entra num golden, e não troque `installPortableMath` por arredondar mais grosso: arredondar não absorve uma torção de 8e-4. Se um golden falhar só
+  numa versão do Node, rode o canário (`pnpm --filter @adatechnology/golden-tool test`): ele diz qual função do `Math` mudou. CI roda o fleet no Node 22 e as
+  suítes de golden também no Node 24 (job `goldens-node-24`); localmente use `.nvmrc` (22) ou confira nas duas versões antes de regenerar.
+- **Goldens regenerados (hotfix, 2026-10-23)**: com `Math.pow` portátil, `tests/fixtures/golden.json` mudou em 22 hashes (`midsize_sedan` 8, `taxi` 8 e um
+  em cada: `rideshare_hatch`, `light_4x4`, `fastback_sedan`, `family_hatch`, `entry_hatch`, `electric_hatch`, `classic_six_sedan`) e `team-golden/garage-seda.json`
+  foi gravado de novo da página (só a linha do tubo fechado mudou). O golden não estava defasado: dependia do Node (ver `evidence.md`). Mudou a geometria de
+  propósito? Regenere só o que falha, com as funções de `tests/helpers/` (`digest`, `legacyZoneId`), nas duas versões do Node, e anote em `evidence.md`.
 - `src/legacy-seeds.ts`: **não renomeie** os valores; eles seguram o visual idêntico ao original.
 - O README mostra `kit.build(...).group` num exemplo de navegador; o contexto real tem `c.root`.
 - Ficou fora de propósito (vai no adaptador do jogo via `kit.configure`): textos de 14 chaves de efeito de zona (`panel`, `door`, `glass`...),

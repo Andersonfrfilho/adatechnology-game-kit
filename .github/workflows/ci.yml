@@ -104,10 +104,30 @@ jobs:
             pnpm --filter "${{ matrix.pkg }}" test
           fi
 
+  # The goldens must give the same hashes on a newer Node (V8 changed Math.pow's last bit between Node 22 and 24); one cheap job, not the whole matrix.
+  goldens-node-24:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter "@adatechnology/game-vehicles-fleet..." run build
+
+      - run: pnpm --filter @adatechnology/golden-tool test
+
+      - name: Fleet goldens that depend on the Node version
+        run: pnpm --filter @adatechnology/game-vehicles-fleet exec vitest run tests/golden-cars-2.test.ts tests/golden-cars-1.test.ts tests/team-golden.test.ts tests/digest.test.ts
+
   # One stable required check; Release waits on the whole "CI" workflow.
   ci-ok:
     if: always()
-    needs: [lint, typecheck, test]
+    needs: [lint, typecheck, test, goldens-node-24]
     runs-on: ubuntu-latest
     steps:
       - name: Check results
