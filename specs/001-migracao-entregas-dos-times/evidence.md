@@ -1538,3 +1538,22 @@ Fonte: `sources/efeitos__oficina-vfx.js` (W168–1295) e a gravação `vfx-works
 - `examples/interactables-test-area` passa a carregar também a bancada de efeitos (alias de `game-vfx` e `game-vfx-three` no `build.mjs`, `loadInto` devolve `vfx` no relatório) e o teste confere os 7 controles e as 6 camadas.
 - Site: `site/Dockerfile` (COPY do `package.json` do exemplo, em ordem alfabética), `site/build-site.mjs` (comentário da ordem: a sala de testes primeiro) e `site/catalog.mjs` (o exemplo e a família "Efeitos"); `ci.yml` constrói e testa o exemplo.
 - Teste de navegador (Chromium, sem rede): 6 verificações passam nos dois idiomas, incluindo as capturas da granada e do sangue.
+
+## T5.3c — renderizador do filme em `game-fluids-three`
+
+- `src/film/shader.ts`: o fragmento da página (F131-209) linha por linha. Diferenças, todas pelo mesmo motivo (a página pintava a cena inteira; o filme agora cobre a superfície do jogo): `baseCol` (parede, calçada, meio-fio, rua) vira a cor chapada `uBase`; a saída leva **alfa = cobertura** (`max(m, gw*.55)`: o molhado e, no combustível, o chão que escureceu); o tamanho da grade e o vão são uniformes (`uGrid`, `uSpan`; a página fixa 256 x 396 e 4,95); a tangente vem da geometria (`aT`; a da página era o eixo x); duas linhas que espelham a parede da própria página no reflexo ficam de fora (descrevem a cena dela); a saída passa as cores da página (espaço de exibição) para linear e usa `#include <colorspace_fragment>` do r160.
+- `strips.ts`: uma faixa por região do layout (u = coluna, v = linha / altura, `aB` = para onde o filme escorre). `material` com `DoubleSide`, porque os eixos de um layout podem ter qualquer mão.
+- `drops.ts`: gotas em voo (icosfera instanciada, esticada pela velocidade, F258-262) e o bulbo do pingo (F282).
+- `grid.ts`: `FilmGrid` = filme + textura RGBA8 (r: espessura em raiz, g: seca, b: umidade, como o `upload` da página F360) + faixas + gotas. Devolve o retângulo sujo (união dos limites molhados do quadro anterior e do atual) e mede o quanto ficou parado (`idle`: nada chegando e a área molhada variando menos de 0,5%).
+- `manager.ts`: `FilmManager` guarda **no máximo 6 grades de 2 x 2 m** (160 x 160 células de 1,25 cm), **só a até 30 m** do jogador, simula dentro de um **orçamento em ms por quadro** (as mais próximas primeiro; as que não cabem esperam o quadro seguinte) e **envia à GPU só o retângulo sujo**: uma textura de apoio do tamanho do retângulo e `renderer.copyTextureToTexture` (a primeira vez sobe inteira, quando o three avisa por `texture.onUpdate`; sem `gpu` sobe sempre inteira). A grade que fica longe (mais de 30 m x 1,25), parada (20 s sem mudar) ou espremida por uma nova **vira decalque**: `fluids.splash(líquido, centro de massa, litros, undefined, { tint })`, com os litros = soma das espessuras em mm x área da célula e o `tint` {fresco: `thin`, seco: `dry`} do perfil, e a grade é liberada. `onBake` também recebe o motivo (`range`, `settled`, `budget`, `clear`).
+- API: `launch({ fluid, point, velocity?, radius?, surfaces? })` (cria a grade sob o ponto), `drip({ fluid, point, every, radius? })`, `setWeather({ rain })` (repassa a todas as grades; o gancho da Fase 6), `update(dt)`, `stats()`, `clear(bake?)`. `surfaceAt(ponto)` dá o chão, a parede e o meio-fio (`layoutFromSurfaces`); sem ele, um chão em `groundAt`.
+- Conferido num Chromium com GL por software: o shader compila e os 4 líquidos aparecem (sangue, bile, óleo com irisação, combustível).
+
+### Decisões
+
+- Decalque sem `fluids` no gerenciador: só `onBake` (o anfitrião decide).
+- A GPU entra por `FilmGpu` (`copyTextureToTexture`); o mesmo vale para o `WebGLRenderer` direto.
+
+### Perguntas para o dono
+
+- O filme é só CPU perto do jogador (decisão do desenho). Os fluidos longe viram decalque estático. Quer o filme em GPU (ping-pong) depois da Fase 5, atrás da mesma interface `FilmSimulator`?
