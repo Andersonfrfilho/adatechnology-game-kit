@@ -1558,5 +1558,15 @@
       0.16
     ],
     "scale": 0.1
+  },
+  {
+    "id": "lubricant_spray",
+    "teamId": "lubrificante",
+    "teamBox": [
+      0.502,
+      1.7,
+      0.5
+    ],
+    "scale": 0.1
   }
 ]

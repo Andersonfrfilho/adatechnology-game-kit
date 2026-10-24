@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **156 de 257 itens têm modelo 3D; faltam 101.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **157 de 257 itens têm modelo 3D; faltam 100.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **156** | **101** |
+| **Total** | **157** | **100** |
 
 ## Comida (36 de 36)
 
@@ -174,7 +174,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Taco de beisebol (kit) | `taco` | `baseball_bat` | 1,0 kg | incomum | 860 x 70 x 70 mm |
 | [x] | Tonfa policial (kit) | `tonfa` | `police_baton` | 0,6 kg | comum | 500 x 100 x 45 mm |
 
-## Materiais de construção e crafting (22 de 23)
+## Materiais de construção e crafting (23 de 23)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -200,7 +200,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Tijolos (10) (kit) | `tijolo` | `bricks` | 25,0 kg | comum | 190 x 180 x 290 mm |
 | [x] | Trapo (kit) | `trapo` | `rag` | 0,05 kg | comum | 220 x 25 x 180 mm |
 | [x] | Vergalhão (kit) | `vergalhao` | `rebar` | 2,0 kg | comum | 1,27 x 0,02 x 0,02 m |
-| [ ] | Óleo lubrificante spray | `lubrificante` | `lubricant_spray` | 0,25 kg | comum | 50 x 170 x 50 mm |
+| [x] | Óleo lubrificante spray (kit) | `lubrificante` | `lubricant_spray` | 0,25 kg | comum | 50 x 170 x 50 mm |
 
 ## Roupas e proteção (1 de 23)
 
