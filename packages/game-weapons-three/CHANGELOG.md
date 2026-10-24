@@ -1,5 +1,24 @@
 # @adatechnology/game-weapons-three
 
+## 0.3.0
+
+### Minor Changes
+
+- 86b68d7: 21 new weapons (data from `decisions.creations`, each number with its source and reason): `hk_mp5sd3` (integral suppressor), `fn_parafal`, `taurus_t4_civil`, `taurus_th380`, `mossberg_500_cruiser`, `hk_mp5k`, `hk_ump9`, `mini_uzi`, `hk_mp7a1`, `hk_g36`, `hk_g36k`, `hk_g36c` (integral 3x optic on the first two), `fn_m249`, `fn_minimi_para`, `fn_mag`, `rpk`, `sig_mpx`, `mg3`, `pp19_bizon`, `vz61` and `m134`, and the calibres `4_6x30` and `32acp`. The M134 has three modes (hand-held with a belt box, with the ammunition backpack, on a tripod), a rate range (`rpmRange`, 2000 to 6000, 3000 by default) and a barrel spin-up (`spin`). The GP-25 fits only AK weapons (not the SKS). A factory part that is subsonic with its parts on (the MP5SD3) has the subsonic effect in its base numbers. `game-weapons-three` draws them (two new builders: the M134 rotary barrels that turn with each shot, and the Bizon helical magazine), keeps the 77 gallery hashes and has its own golden for the new models; the weapons area has four columns of counters and the M134 on its tripod.
+- bd41a66: Accessories in the hands (T1.7.6 and T1.7.7). `game-contracts`: `ModuleHost.command(ToolCommand)` asks the tool in hand to fit or remove an accessory, toggle a light or laser, fold the stock, switch to the launcher under the barrel or change the stance, and answers `{ ok, reason?, seconds? }`; `HostTool` gains `attachments`, `stock`, `suppressed`, `underbarrelActive`, `mass` and `aimSeconds`, and the `shot` event carries `suppressed`. All additive. `game-test-room` runs the command by the rule of `game-weapons` (the room is the bench: any accessory goes on) and reports what the tool carries.
+
+  `game-weapons-three`: the model records where accessories go (`parts.frames`), what ships on the weapon (`parts.fittings`) and the stock meshes, without changing the default scene (the 77 gallery hashes stay). `rigStock` and `rigUnderbarrel` add the stock pivot (folds by `foldAxis` or slides in by `length - lengthCollapsed`) and the launcher pivot after the build. `fitAttachmentModels(model, fitted, kit, { catalogue, overrides, raycast })` draws the accessories on the wrapper: ports of the gallery (optics, rail, bipod, brakes, drum, belt box) and creations (suppressors, compensator, grip, light with a real `SpotLight`, laser with beam and dot, M203/GP-25/AG36, ammunition backpack, tripod, sling, magazines); `createWeaponsTestModule({ attachmentModels })` and `createWeaponFx({ attachmentModels })` replace or add builders. New clips (`stock_*`, `toggle`, `reload_ugl`, `shot_ugl`) and sounds (`stock_fold`, `light_click`, `attach`); suppressed shots use `computeShotSound({ suppressed })`. `FxLayers` gains `attachments` and `beams`. New dependency: `@adatechnology/game-interactables-three` (the cord of the sling and the belt).
+
+  The weapons area has an accessory bench: one choice per mount of the weapon in hand (only what the rule accepts), the keys L (light), K (laser), V (stock; the room's kick where the weapon has no stock that moves) and U (launcher under the barrel), and the right mouse button aims through the optic where the weapon fires. The interactables test page also carries the weapons module.
+
+### Patch Changes
+
+- Updated dependencies [86b68d7]
+- Updated dependencies [bd41a66]
+- Updated dependencies [16c1453]
+  - @adatechnology/game-weapons@0.3.0
+  - @adatechnology/game-contracts@0.6.0
+
 ## 0.2.0
 
 ### Minor Changes
