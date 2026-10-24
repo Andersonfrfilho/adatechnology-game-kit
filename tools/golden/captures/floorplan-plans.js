@@ -1,6 +1,7 @@
 /* global GoldenTool, PlantasSDK */
 // Capture for the Visor de casas 3D (PlantasSDK global, v3 with the R rules): one event per generated plan.
 // Params: seedFrom (1), seedTo (25), states (comma list, default every state), templates (comma list, default all), rows (1 adds the readable rows).
+// Items the installations add (the gas bottle) and the paths to outbuildings belong to the structure capture (floorplan-structure.js), not to these lists.
 // Each list is hashed from rows of rounded cells, so a package test builds the same rows from its own result and compares one value per list.
 (() => {
   const { seed, seedFrom = '1', seedTo = '25', states = '', templates = '', rows: withRows = '0' } = globalThis.__GOLDEN_PARAMS
@@ -24,7 +25,7 @@
         ...res.janelas.map((win) => row(['window', win.andar, win.eixo, win.u, win.v, win.pos, win.c, win.larg, win.y0, win.y1, win.comodo, win.lado, win.tabuas])),
         ...res.abertos.map((open) => row(['open', cell(open)])),
       ],
-      items: res.moveis.map(itemRow),
+      items: res.moveis.filter((item) => item.tipo !== 'botijao_gas').map(itemRow),
       stateItems: res.estadoItens.map((item) => row([itemRow(item), item.montagem, item.estado])),
       lot: lot
         ? [
@@ -32,7 +33,7 @@
             ...lot.zonas.map((zone) => row(['zone', zone.id, zone.tipo, zone.partes, zone.piso])),
             ...lot.perimetro.map((segment) => row(['perimeter', segment.id, segment.lado, segment.u0, segment.v0, segment.u1, segment.v1, segment.tipo, segment.material, segment.altura, segment.topo, segment.alturaTotal, segment.esp])),
             ...lot.portoes.map((gate) => row(['gate', gate.id, gate.tipo, gate.modelo, gate.u, gate.v, gate.eixo, gate.larg, gate.altura, gate.lado, gate.para, gate.material, gate.aberto])),
-            ...lot.caminhos.map((path) => row(['path', path.id, path.tipo, path.de, path.para, path.larg, path.rects, path.ponto])),
+            ...lot.caminhos.filter((path) => !/\.edicula\./.test(path.para)).map((path) => row(['path', path.id, path.tipo, path.de, path.para, path.larg, path.rects, path.ponto])),
           ]
         : [],
     }

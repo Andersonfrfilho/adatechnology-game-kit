@@ -29,7 +29,7 @@
         const lists = { pieces: structure.pecas, supports: structure.apoios, coarseParts: coarse.parts, coarseJoints: coarse.joints, enclosureParts: enclosure.parts, enclosureJoints: enclosure.joints }
         const counts = Object.fromEntries(Object.entries(lists).map(([name, list]) => [name, list.length]))
         const hashes = Object.fromEntries(Object.entries(lists).map(([name, list]) => [name, hashRows(list)]))
-        const singles = { levels: [structure.niveis, structure.elevacao], construction: res.construcao, roof: res.telhado, waterTank: res.caixaDagua, outbuildings: res.edificacoes, gas: res.gas, electrical: res.eletrica, solar: res.paineisSolares, plumbing: res.hidraulica }
+        const singles = { levels: [structure.niveis, structure.elevacao], construction: res.construcao, roof: res.telhado, waterTank: res.caixaDagua, outbuildings: res.edificacoes, outbuildingPaths: res.lote ? res.lote.caminhos.filter((path) => /\.edicula\./.test(path.para)) : [], gas: res.gas, gasBottles: res.moveis.filter((item) => item.tipo === 'botijao_gas'), electrical: res.eletrica, solar: res.paineisSolares, plumbing: res.hidraulica }
         const utilities = Object.fromEntries(Object.entries(singles).map(([name, value]) => [name, hashOf(value)]))
         recorder.record('structure', {
           template, seed: planSeed, state, counts, hashes, utilities,

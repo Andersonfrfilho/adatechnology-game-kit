@@ -184,6 +184,9 @@ importers:
       '@adatechnology/game-floorplan-residential':
         specifier: workspace:*
         version: link:../game-floorplan-residential
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5

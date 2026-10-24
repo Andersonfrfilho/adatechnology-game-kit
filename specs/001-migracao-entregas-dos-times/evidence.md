@@ -757,3 +757,45 @@ Respostas do dono às perguntas abertas da T1.1B, T1.3, T1.5, T1.6 e da Revisão
 Commits (todos terminam com o `Co-Authored-By` de Opus 5.5): `feat(weapons-three,weapons-catalog)` câmaras, Taurus e destravar; `feat(weapons,weapons-three,test-room)` espoletas; `feat(weapons,contracts,test-room)` cozinhar a granada; `feat(weapons,contracts,test-room)` fio de tropeço e marcador; e o de documentação (README, skills, changesets, evidência).
 
 Modelo da execução: `sonnet`.
+
+## T2.2a–b — goldens das casas e regras do Visor de casas 3D no `game-floorplan`
+
+### T2.2a (`tools/golden`)
+
+- **Gravador:** flag `--expose a,b,c` (`bin/expose-in-page.mjs`, com teste): no fim do último IIFE inline da página publica `globalThis.GoldenExposed` com leitura e escrita de cada nome (dá para trocar um `let`, como o `R` da Galeria). Também: `GoldenTool.hashText` (FNV-1a) e correção de um atraso de 30 s por execução (um `Fetch.continueRequest` sem resposta segurava o processo e depois derrubava com rejeição não tratada).
+- **Páginas:** as fontes do VC3, da Galeria e da área de casas não estavam em `artefatos/` (o VC3 só existia em `site/pages/` do repositório do time); copiadas para `artefatos/site__visor-casas-3d.html`, `site__galeria-vale-cinzento.html` e `site__area-casas.html` (mesma versão das fontes em `sources/`).
+- **Capturas:** `floorplan-plans.js` (17 modelos x sementes 1–25 x 3 estados = 1275 plantas; um evento por planta com contagem e hash `fnv` de cada lista: cômodos, paredes, aberturas, móveis, itens de estado, lote), `floorplan-structure.js` (peças, apoios, `specDe` coarse e `vedacao`, partes e juntas, mais um hash por instalação), `house-area.js` (6 cenários da área de casas na própria sala da página, com todos os eventos do mundo: 2734 eventos, os 6 passam) e `gallery-silhouettes.js` (16 silhuetas, hash de cena). O gás (`botijao_gas`) e os caminhos da edícula ficam fora das listas de planta e entram no golden de estrutura (T2.2c/e).
+- **Onde ficaram:** plantas em `packages/game-floorplan-post-apocalyptic/tests/fixtures/team-golden/vc3-plans(.-detail).json` (desvio do desenho: o pacote do motor não pode depender dos pacotes de conteúdo sem ciclo, e o teste precisa dos quatro); estrutura, área de casas e silhuetas em `specs/001-migracao-entregas-dos-times/goldens/` (README com o comando de cada um) até os pacotes consumidores existirem.
+- **Repetição:** cada gravação rodou duas vezes e saiu idêntica byte a byte.
+
+### T2.2b (motor e conteúdo)
+
+Regras R do VC3 portadas: `playerRadius` 0,24 (grade de 10 cm que descarta células a menos do raio de uma parede, passada relaxada a 0,12), folga de porta e janela por modelo, janelas distribuídas no trecho de parede (R10) e janela obrigatória (R43), `blocksWindow` com `windowHeight`/`overhead` e `OVERHEAD_TOP` 2,15, vaga de carro (`parking.ts`), `partesUteis`, caminho de toda porta externa (`paths.ts`, R07), caixa de correio (R20), abajur (R64), `single_storey_a` R66, caixa d'água fora do quintal (R23), estados (janela tapada garantida, barricada cobre a zona da porta, colchão em casa apertada, roupas e manchas). Detalhes e tabela no `MIGRATION.md` do motor. Ganchos novos: `registerResultExtension` (`after`, `seedKey`; roda depois do estado e antes do relatório de zonas), stub `registerFindsProvider`/`findsFor`, `registerViewerLayer` (camada do visor 2D com caixa de seleção e legenda, para a estrutura da T2.2c) e ganchos genéricos para o pacote rural (`noWalls`, `cumulativeCeilings`, `reservations`, `paths`, `DoorDef.edge`, `LotConfig.extraZones`, `StyleDef.fenceHeight`, `floorFree`, `exactOnly`).
+
+**Ajustes pedidos pelo coordenador:** o tipo de mobília do motor passou a `FurnitureDef` (antigo `ItemDef`, sem exportar um segundo), com `windowHeight`/`overhead`; `FindsQuery { place, container, state, rng, day?, region?, footprint?, key? }`, `FindStack { itemId, count, data? }`, `TemplateDef.place`. **Estrutura na planta:** a extensão de resultado já cobre `result.structure` (ordem, fluxo semeado) e o visor ganhou a API de camada; a estrutura em si é T2.2c.
+
+**Fidelidade com a página do time:** 12 modelos x 25 sementes x 3 estados = **900 de 900 plantas iguais em todas as listas** (cômodos, paredes, aberturas, móveis, itens de estado, lote), traduzindo ids pelas tabelas dos `MIGRATION.md` (`vc3-id-map.json`, gerado por `build-vc3-id-map.mjs`). Conferência extra, não gravada: sementes 26–150, 4500 plantas, 0 diferenças. Fora: os 5 modelos rurais (375 plantas gravadas), que o teste lista como pendentes e vai falhar quando a T2.2f os registrar.
+
+**Quebras esperadas (documentadas):** não há mais igualdade com o porte antigo (VP) — não existiam fixtures VP; o `MIGRATION.md` dizia "0 diferenças" e ganhou aviso. A suíte de propriedades mudou em três pontos: caminho pode chegar ao portão por outro caminho ou pela vaga, caminho de prédio colado na rua tem `from` nulo, e a média de itens de quintal do modelo médio caiu de 8 para 7,5 (sem a caixa d'água de quintal).
+
+**Mantido do SDK:** zoneamento, visor 2D, idiomas, `registerPass`, suíte de propriedades.
+
+**Não portado (fora do T2.2b):** caixa d'água/instalações/estrutura (T2.2c–e), cores dos tipos de cômodo rurais, lampiões sem rede, estilo, itens e bibliotecas rurais (T2.2f).
+
+### Perguntas para o dono
+
+1. Os caminhos que ligam a edícula do quintal ao caminho principal (`cam_quintal.edicula.*` na página) ficaram para a T2.2e junto com as edificações; confirma?
+2. Localização do teste de fidelidade das plantas: ficou no pacote `-post-apocalyptic` (único com os três pacotes de conteúdo); se preferir no motor, a alternativa é um ciclo de devDependencies.
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0 |
+| golden-tool (Node 24 / Node 22.23.4) | 43 / 43 passaram |
+| `game-floorplan` / `-residential` / `-commercial` / `-post-apocalyptic` (Node 24 e 22) | 17 / 16 / 9 / 106 passaram nos dois |
+
+Modelo da execução: `sonnet`.

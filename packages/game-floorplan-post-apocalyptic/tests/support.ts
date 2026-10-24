@@ -343,9 +343,17 @@ export function checkPlan(name: string, res: Plan, seed: number, seen: Set<strin
       for (const m of all) if (m.outdoor && c.rects.some((z: Rect) => overlap(rectOf(m), z))) F.add('path blocked', tag + ' ' + c.id + ' by ' + m.id)
       const g = L.gates.find((x: any) => x.id === c.from)
       const pt = res.doors.find((x: any) => x.id === c.to)
-      if (!g || !pt) { F.add('path without ends', tag + c.id); continue }
+      // a building at the street line has no pedestrian gate: its entrance path starts at the door (`from` is null)
+      if ((!g && c.from != null) || !pt) { F.add('path without ends', tag + c.id); continue }
       const inside = (rs: Rect[], u: number, v: number) => rs.some((r) => u >= r[0] - 1e-6 && u <= r[2] + 1e-6 && v >= r[1] - 1e-6 && v <= r[3] + 1e-6)
-      if (!inside(c.rects, g.u, g.v) || !inside(c.rects, pt.u, pt.v)) F.add('path does not join gate and door', tag + ' ' + c.id)
+      // a path of an exterior door may reach its gate through the paths it touches or through the parking zone (they are paved too)
+      const reached: Rect[] = c.rects.slice()
+      const pool: Rect[] = L.paths.filter((o: any) => o !== c).flatMap((o: any) => o.rects).concat(L.zones.filter((z: any) => z.id === 'parking').flatMap((z: any) => z.parts))
+      for (let grew = true; grew; ) {
+        grew = false
+        for (const r of pool) if (!reached.includes(r) && reached.some((a) => a[0] <= r[2] + 1e-6 && a[2] >= r[0] - 1e-6 && a[1] <= r[3] + 1e-6 && a[3] >= r[1] - 1e-6)) { reached.push(r); grew = true }
+      }
+      if ((g && !inside(reached, g.u, g.v)) || !inside(c.rects, pt.u, pt.v)) F.add('path does not join gate and door', tag + ' ' + c.id)
       const joined: Rect[] = [c.rects[0]]
       const rest: Rect[] = c.rects.slice(1)
       let progress = true

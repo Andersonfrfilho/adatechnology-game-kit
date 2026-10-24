@@ -18,17 +18,17 @@
      "rooms": 4,
      "walls": 19,
      "openings": 12,
-     "items": 46,
+     "items": 45,
      "stateItems": 22,
-     "lot": 17
+     "lot": 16
     },
     "hashes": {
      "rooms": "28d3136f",
      "walls": "860d1bc9",
      "openings": "2bc59657",
-     "items": "ee3c26f6",
+     "items": "98378b5f",
      "stateItems": "947a7b6c",
-     "lot": "1b7ce40a"
+     "lot": "45b23c40"
     },
     "rows": {
      "rooms": [
@@ -117,8 +117,7 @@
       "terra|7.2|-3|0|0|10|6|0|0|1|[2.2,-6,12.2,0]|jardim|-1|true|-|0|true|true",
       "terra|5.5|13.75|0|0|13.4|5.5|0|0|1|[-1.2,11,12.2,16.5]|quintal|-1|true|-|0|true|true",
       "cimentado|-0.6|5.5|0|0|1.2|11|0|0|1|[-1.2,0,0,11]|lateral_esq|-1|true|-|0|true|true",
-      "cimentado|11.6|5.5|0|0|1.2|11|0|0|1|[11,0,12.2,11]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|0.25|7.84|0|0|0.36|0.36|0.48|-1|0|[0.07,7.66,0.43,8.02]|cozinha|0|false|-|0|false|false"
+      "cimentado|11.6|5.5|0|0|1.2|11|0|0|1|[11,0,12.2,11]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "tabuas|2.5|0.22|0.95|0|1.3|0.08|1.25|0|1|[1.85,0.18,3.15,0.26]|sala|0|false|-|0|false|false|janela|protegida",
@@ -160,8 +159,7 @@
       "gate|g0|social|pedestre|10.1|-6|u|1|1.8|frente|porta|ferro|false",
       "gate|g1|garagem|basculante|0.5|-6|u|3|1.8|frente|vaga|ferro|false",
       "path|cam_social|pedestre|g0|p0_0|1|[[9.6,-6,10.6,-2.5],[5,-3.5,10.6,-2.5],[5,-3.5,6,0]]|[[10.1,-6],[10.1,-3],[5.5,-3],[5.5,0]]",
-      "path|cam_p0_1|pedestre|g1|p0_1|0.9|[[0.45,11,1.45,12.7],[-1.1,11.8,1.4,12.7],[-1.05,0,-0.15,12.7]]|[[0.95,11],[0.95,12.25],[-0.6,12.25],[-0.6,0]]",
-      "path|cam_quintal.edicula.p0|pedestre|g1|quintal.edicula.p0|1|[[8.13,13.68,9.13,14.68],[0.45,13.68,8.63,14.68],[0.45,11.7,1.45,14.68]]|[[9.13,14.18],[8.13,14.18],[0.95,14.18],[0.95,12.2]]"
+      "path|cam_p0_1|pedestre|g1|p0_1|0.9|[[0.45,11,1.45,12.7],[-1.1,11.8,1.4,12.7],[-1.05,0,-0.15,12.7]]|[[0.95,11],[0.95,12.25],[-0.6,12.25],[-0.6,0]]"
      ]
     }
    }
@@ -181,17 +179,17 @@
      "rooms": 4,
      "walls": 19,
      "openings": 12,
-     "items": 46,
+     "items": 45,
      "stateItems": 12,
-     "lot": 17
+     "lot": 16
     },
     "hashes": {
      "rooms": "28d3136f",
      "walls": "860d1bc9",
      "openings": "ee961a5a",
-     "items": "d7553fde",
+     "items": "d1126ce7",
      "stateItems": "ad058728",
-     "lot": "ebde5562"
+     "lot": "3677b308"
     },
     "rows": {
      "rooms": [
@@ -280,8 +278,7 @@
       "terra|7.2|-3|0|0|10|6|0|0|1|[2.2,-6,12.2,0]|jardim|-1|true|-|0|true|true",
       "terra|5.5|13.75|0|0|13.4|5.5|0|0|1|[-1.2,11,12.2,16.5]|quintal|-1|true|-|0|true|true",
       "cimentado|-0.6|5.5|0|0|1.2|11|0|0|1|[-1.2,0,0,11]|lateral_esq|-1|true|-|0|true|true",
-      "cimentado|11.6|5.5|0|0|1.2|11|0|0|1|[11,0,12.2,11]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|0.25|7.84|0|0|0.36|0.36|0.48|-1|0|[0.07,7.66,0.43,8.02]|cozinha|0|false|-|0|false|false"
+      "cimentado|11.6|5.5|0|0|1.2|11|0|0|1|[11,0,12.2,11]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "portas_abertas|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|abandonada",
@@ -313,8 +310,7 @@
       "gate|g0|social|pedestre|10.1|-6|u|1|1.8|frente|porta|ferro|true",
       "gate|g1|garagem|basculante|0.5|-6|u|3|1.8|frente|vaga|ferro|true",
       "path|cam_social|pedestre|g0|p0_0|1|[[9.6,-6,10.6,-2.5],[5,-3.5,10.6,-2.5],[5,-3.5,6,0]]|[[10.1,-6],[10.1,-3],[5.5,-3],[5.5,0]]",
-      "path|cam_p0_1|pedestre|g1|p0_1|0.9|[[0.45,11,1.45,12.7],[-1.1,11.8,1.4,12.7],[-1.05,0,-0.15,12.7]]|[[0.95,11],[0.95,12.25],[-0.6,12.25],[-0.6,0]]",
-      "path|cam_quintal.edicula.p0|pedestre|g1|quintal.edicula.p0|1|[[8.13,13.68,9.13,14.68],[0.45,13.68,8.63,14.68],[0.45,11.7,1.45,14.68]]|[[9.13,14.18],[8.13,14.18],[0.95,14.18],[0.95,12.2]]"
+      "path|cam_p0_1|pedestre|g1|p0_1|0.9|[[0.45,11,1.45,12.7],[-1.1,11.8,1.4,12.7],[-1.05,0,-0.15,12.7]]|[[0.95,11],[0.95,12.25],[-0.6,12.25],[-0.6,0]]"
      ]
     }
    }
@@ -334,17 +330,17 @@
      "rooms": 4,
      "walls": 19,
      "openings": 12,
-     "items": 46,
+     "items": 45,
      "stateItems": 0,
-     "lot": 17
+     "lot": 16
     },
     "hashes": {
      "rooms": "28d3136f",
      "walls": "860d1bc9",
      "openings": "ee961a5a",
-     "items": "d7553fde",
+     "items": "d1126ce7",
      "stateItems": "811c9dc5",
-     "lot": "265bd970"
+     "lot": "c6b43cf6"
     },
     "rows": {
      "rooms": [
@@ -433,8 +429,7 @@
       "terra|7.2|-3|0|0|10|6|0|0|1|[2.2,-6,12.2,0]|jardim|-1|true|-|0|true|true",
       "terra|5.5|13.75|0|0|13.4|5.5|0|0|1|[-1.2,11,12.2,16.5]|quintal|-1|true|-|0|true|true",
       "cimentado|-0.6|5.5|0|0|1.2|11|0|0|1|[-1.2,0,0,11]|lateral_esq|-1|true|-|0|true|true",
-      "cimentado|11.6|5.5|0|0|1.2|11|0|0|1|[11,0,12.2,11]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|0.25|7.84|0|0|0.36|0.36|0.48|-1|0|[0.07,7.66,0.43,8.02]|cozinha|0|false|-|0|false|false"
+      "cimentado|11.6|5.5|0|0|1.2|11|0|0|1|[11,0,12.2,11]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [],
      "lot": [
@@ -453,8 +448,7 @@
       "gate|g0|social|pedestre|10.1|-6|u|1|1.8|frente|porta|ferro|false",
       "gate|g1|garagem|basculante|0.5|-6|u|3|1.8|frente|vaga|ferro|false",
       "path|cam_social|pedestre|g0|p0_0|1|[[9.6,-6,10.6,-2.5],[5,-3.5,10.6,-2.5],[5,-3.5,6,0]]|[[10.1,-6],[10.1,-3],[5.5,-3],[5.5,0]]",
-      "path|cam_p0_1|pedestre|g1|p0_1|0.9|[[0.45,11,1.45,12.7],[-1.1,11.8,1.4,12.7],[-1.05,0,-0.15,12.7]]|[[0.95,11],[0.95,12.25],[-0.6,12.25],[-0.6,0]]",
-      "path|cam_quintal.edicula.p0|pedestre|g1|quintal.edicula.p0|1|[[8.13,13.68,9.13,14.68],[0.45,13.68,8.63,14.68],[0.45,11.7,1.45,14.68]]|[[9.13,14.18],[8.13,14.18],[0.95,14.18],[0.95,12.2]]"
+      "path|cam_p0_1|pedestre|g1|p0_1|0.9|[[0.45,11,1.45,12.7],[-1.1,11.8,1.4,12.7],[-1.05,0,-0.15,12.7]]|[[0.95,11],[0.95,12.25],[-0.6,12.25],[-0.6,0]]"
      ]
     }
    }
@@ -474,7 +468,7 @@
      "rooms": 13,
      "walls": 57,
      "openings": 26,
-     "items": 82,
+     "items": 81,
      "stateItems": 26,
      "lot": 16
     },
@@ -482,7 +476,7 @@
      "rooms": "1e55b14a",
      "walls": "9304e0d1",
      "openings": "1752cc03",
-     "items": "745e57ee",
+     "items": "ab30ef0b",
      "stateItems": "1d58c0bc",
      "lot": "1889934a"
     },
@@ -670,8 +664,7 @@
       "terra|4|14.5|0|0|10|5|0|0|1|[-1,12,9,17]|quintal|-1|true|-|0|true|true",
       "cimentado|-0.5|6|0|0|1|12|0|0|1|[-1,0,0,12]|lateral_esq|-1|true|-|0|true|true",
       "cimentado|8.5|6|0|0|1|12|0|0|1|[8,0,9,12]|lateral_dir|-1|true|-|0|true|true",
-      "guarda|6.7|11.58|0|3.14|1.6|0.6|2|0|-1|[5.9,11.27,7.5,11.88]|circ|0|false|-|0|false|false",
-      "botijao_gas|-0.3|7.64|0|0|0.36|0.36|0.48|-1|0|[-0.48,7.46,-0.12,7.82]|cozinha|-1|true|-|0|false|false"
+      "guarda|6.7|11.58|0|3.14|1.6|0.6|2|0|-1|[5.9,11.27,7.5,11.88]|circ|0|false|-|0|false|false"
      ],
      "stateItems": [
       "tabuas|1.75|0.22|0.95|0|1.3|0.08|1.25|0|1|[1.1,0.18,2.4,0.26]|sala|0|false|-|0|false|false|janela|protegida",
@@ -737,7 +730,7 @@
      "rooms": 13,
      "walls": 57,
      "openings": 26,
-     "items": 81,
+     "items": 80,
      "stateItems": 17,
      "lot": 16
     },
@@ -745,7 +738,7 @@
      "rooms": "1e55b14a",
      "walls": "9304e0d1",
      "openings": "190d8b98",
-     "items": "adc71c2b",
+     "items": "99209bb2",
      "stateItems": "6611af23",
      "lot": "734357d8"
     },
@@ -932,8 +925,7 @@
       "terra|5.7|-3|0|0|6.6|6|0|0|1|[2.4,-6,9,0]|jardim|-1|true|-|0|true|true",
       "terra|4|14.5|0|0|10|5|0|0|1|[-1,12,9,17]|quintal|-1|true|-|0|true|true",
       "cimentado|-0.5|6|0|0|1|12|0|0|1|[-1,0,0,12]|lateral_esq|-1|true|-|0|true|true",
-      "cimentado|8.5|6|0|0|1|12|0|0|1|[8,0,9,12]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|-0.3|7.64|0|0|0.36|0.36|0.48|-1|0|[-0.48,7.46,-0.12,7.82]|cozinha|-1|true|-|0|false|false"
+      "cimentado|8.5|6|0|0|1|12|0|0|1|[8,0,9,12]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "portas_abertas|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|abandonada",
@@ -990,7 +982,7 @@
      "rooms": 13,
      "walls": 57,
      "openings": 26,
-     "items": 81,
+     "items": 80,
      "stateItems": 0,
      "lot": 16
     },
@@ -998,7 +990,7 @@
      "rooms": "1e55b14a",
      "walls": "9304e0d1",
      "openings": "190d8b98",
-     "items": "adc71c2b",
+     "items": "99209bb2",
      "stateItems": "811c9dc5",
      "lot": "e1dfbfe5"
     },
@@ -1185,8 +1177,7 @@
       "terra|5.7|-3|0|0|6.6|6|0|0|1|[2.4,-6,9,0]|jardim|-1|true|-|0|true|true",
       "terra|4|14.5|0|0|10|5|0|0|1|[-1,12,9,17]|quintal|-1|true|-|0|true|true",
       "cimentado|-0.5|6|0|0|1|12|0|0|1|[-1,0,0,12]|lateral_esq|-1|true|-|0|true|true",
-      "cimentado|8.5|6|0|0|1|12|0|0|1|[8,0,9,12]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|-0.3|7.64|0|0|0.36|0.36|0.48|-1|0|[-0.48,7.46,-0.12,7.82]|cozinha|-1|true|-|0|false|false"
+      "cimentado|8.5|6|0|0|1|12|0|0|1|[8,0,9,12]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [],
      "lot": [
@@ -2083,7 +2074,7 @@
      "rooms": 7,
      "walls": 29,
      "openings": 15,
-     "items": 40,
+     "items": 39,
      "stateItems": 14,
      "lot": 0
     },
@@ -2091,7 +2082,7 @@
      "rooms": "cc1a3ed1",
      "walls": "1dd02290",
      "openings": "2cbd3db2",
-     "items": "b91ecbda",
+     "items": "daf41f62",
      "stateItems": "97a35ee4",
      "lot": "811c9dc5"
     },
@@ -2192,8 +2183,7 @@
       "vaso_chao|7.88|11.73|0|0|0.4|0.4|0.9|0|1|[7.68,11.53,8.08,11.93]|quarto2|0|false|-|0|false|false",
       "abajur|5.12|11.66|0.6|1.57|0.36|0.36|0.5|1|0|[4.94,11.48,5.3,11.84]|quarto2|0|false|-|0|false|true",
       "cortina|8.87|10.15|0.05|-1.57|1.5|0.12|2.4|-1|0|[8.81,9.4,8.93,10.9]|quarto2|0|false|-|0|false|false",
-      "cortina|6.9|11.87|0.05|3.14|1.5|0.12|2.4|0|-1|[6.15,11.81,7.65,11.93]|quarto2|0|false|-|0|false|false",
-      "botijao_gas|0.25|6.32|0|0|0.36|0.36|0.48|-1|0|[0.07,6.14,0.43,6.5]|cozinha|0|false|-|0|false|false"
+      "cortina|6.9|11.87|0.05|3.14|1.5|0.12|2.4|0|-1|[6.15,11.81,7.65,11.93]|quarto2|0|false|-|0|false|false"
      ],
      "stateItems": [
       "tabuas|0.22|2.3|0.95|1.57|1.7|0.08|1.25|1|0|[0.18,1.45,0.26,3.15]|sala|0|false|-|0|false|false|janela|protegida",
@@ -2230,7 +2220,7 @@
      "rooms": 7,
      "walls": 29,
      "openings": 15,
-     "items": 40,
+     "items": 39,
      "stateItems": 12,
      "lot": 0
     },
@@ -2238,7 +2228,7 @@
      "rooms": "cc1a3ed1",
      "walls": "1dd02290",
      "openings": "3d7fea61",
-     "items": "873e6ef3",
+     "items": "53807ef5",
      "stateItems": "a8edfeb1",
      "lot": "811c9dc5"
     },
@@ -2339,8 +2329,7 @@
       "vaso_chao|7.88|11.73|0|0|0.4|0.4|0.9|0|1|[7.68,11.53,8.08,11.93]|quarto2|0|false|-|0|false|false",
       "abajur|5.12|11.66|0.6|1.57|0.36|0.36|0.5|1|0|[4.94,11.48,5.3,11.84]|quarto2|0|false|-|0|false|true",
       "cortina|8.87|10.15|0.05|-1.57|1.5|0.12|2.4|-1|0|[8.81,9.4,8.93,10.9]|quarto2|0|false|-|0|false|false",
-      "cortina|6.9|11.87|0.05|3.14|1.5|0.12|2.4|0|-1|[6.15,11.81,7.65,11.93]|quarto2|0|false|-|0|false|false",
-      "botijao_gas|0.25|6.32|0|0|0.36|0.36|0.48|-1|0|[0.07,6.14,0.43,6.5]|cozinha|0|false|-|0|false|false"
+      "cortina|6.9|11.87|0.05|3.14|1.5|0.12|2.4|0|-1|[6.15,11.81,7.65,11.93]|quarto2|0|false|-|0|false|false"
      ],
      "stateItems": [
       "portas_abertas|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|abandonada",
@@ -2375,7 +2364,7 @@
      "rooms": 7,
      "walls": 29,
      "openings": 15,
-     "items": 40,
+     "items": 39,
      "stateItems": 0,
      "lot": 0
     },
@@ -2383,7 +2372,7 @@
      "rooms": "cc1a3ed1",
      "walls": "1dd02290",
      "openings": "3d7fea61",
-     "items": "873e6ef3",
+     "items": "53807ef5",
      "stateItems": "811c9dc5",
      "lot": "811c9dc5"
     },
@@ -2484,8 +2473,7 @@
       "vaso_chao|7.88|11.73|0|0|0.4|0.4|0.9|0|1|[7.68,11.53,8.08,11.93]|quarto2|0|false|-|0|false|false",
       "abajur|5.12|11.66|0.6|1.57|0.36|0.36|0.5|1|0|[4.94,11.48,5.3,11.84]|quarto2|0|false|-|0|false|true",
       "cortina|8.87|10.15|0.05|-1.57|1.5|0.12|2.4|-1|0|[8.81,9.4,8.93,10.9]|quarto2|0|false|-|0|false|false",
-      "cortina|6.9|11.87|0.05|3.14|1.5|0.12|2.4|0|-1|[6.15,11.81,7.65,11.93]|quarto2|0|false|-|0|false|false",
-      "botijao_gas|0.25|6.32|0|0|0.36|0.36|0.48|-1|0|[0.07,6.14,0.43,6.5]|cozinha|0|false|-|0|false|false"
+      "cortina|6.9|11.87|0.05|3.14|1.5|0.12|2.4|0|-1|[6.15,11.81,7.65,11.93]|quarto2|0|false|-|0|false|false"
      ],
      "stateItems": [],
      "lot": []
@@ -2507,7 +2495,7 @@
      "rooms": 4,
      "walls": 16,
      "openings": 9,
-     "items": 42,
+     "items": 41,
      "stateItems": 16,
      "lot": 12
     },
@@ -2515,7 +2503,7 @@
      "rooms": "a31e77f5",
      "walls": "5e1b1cc9",
      "openings": "8004f5de",
-     "items": "6045b200",
+     "items": "c7f6b2e7",
      "stateItems": "5f7b82cd",
      "lot": "fcb5f02b"
     },
@@ -2596,8 +2584,7 @@
       "caixa_correio|1.85|-2.2|1.1|3.14|0.35|0.3|0.3|0|-1|[1.68,-2.35,2.03,-2.05]|jardim|-1|true|-|0|false|true",
       "gramado|2.6|-1.1|0|0|6.8|2.2|0|0|1|[-0.8,-2.2,6,0]|jardim|-1|true|-|0|true|true",
       "cimentado|2.6|16.2|0|0|6.8|13.2|0|0|1|[-0.8,9.6,6,22.8]|quintal|-1|true|-|0|true|true",
-      "cimentado|-0.4|4.8|0|0|0.8|9.6|0|0|1|[-0.8,0,0,9.6]|lateral_esq|-1|true|-|0|true|true",
-      "botijao_gas|1.93|5.92|0|0|0.36|0.36|0.48|-1|0|[1.75,5.74,2.11,6.1]|cozinha|0|false|-|0|false|false"
+      "cimentado|-0.4|4.8|0|0|0.8|9.6|0|0|1|[-0.8,0,0,9.6]|lateral_esq|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "tabuas|3.73|0.22|0.95|0|1.3|0.08|1.25|0|1|[3.08,0.18,4.38,0.26]|sala|0|false|-|0|false|false|janela|protegida",
@@ -2649,7 +2636,7 @@
      "rooms": 4,
      "walls": 16,
      "openings": 9,
-     "items": 42,
+     "items": 41,
      "stateItems": 11,
      "lot": 12
     },
@@ -2657,7 +2644,7 @@
      "rooms": "a31e77f5",
      "walls": "5e1b1cc9",
      "openings": "889b6ae9",
-     "items": "22c53fd5",
+     "items": "152a9f64",
      "stateItems": "280bd5da",
      "lot": "472641a9"
     },
@@ -2738,8 +2725,7 @@
       "caixa_correio|1.85|-2.2|1.1|3.14|0.35|0.3|0.3|0|-1|[1.68,-2.35,2.03,-2.05]|jardim|-1|true|-|0|false|true",
       "gramado|2.6|-1.1|0|0|6.8|2.2|0|0|1|[-0.8,-2.2,6,0]|jardim|-1|true|-|0|true|true",
       "cimentado|2.6|16.2|0|0|6.8|13.2|0|0|1|[-0.8,9.6,6,22.8]|quintal|-1|true|-|0|true|true",
-      "cimentado|-0.4|4.8|0|0|0.8|9.6|0|0|1|[-0.8,0,0,9.6]|lateral_esq|-1|true|-|0|true|true",
-      "botijao_gas|1.93|5.92|0|0|0.36|0.36|0.48|-1|0|[1.75,5.74,2.11,6.1]|cozinha|0|false|-|0|false|false"
+      "cimentado|-0.4|4.8|0|0|0.8|9.6|0|0|1|[-0.8,0,0,9.6]|lateral_esq|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "portas_abertas|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|abandonada",
@@ -2786,7 +2772,7 @@
      "rooms": 4,
      "walls": 16,
      "openings": 9,
-     "items": 42,
+     "items": 41,
      "stateItems": 0,
      "lot": 12
     },
@@ -2794,7 +2780,7 @@
      "rooms": "a31e77f5",
      "walls": "5e1b1cc9",
      "openings": "889b6ae9",
-     "items": "22c53fd5",
+     "items": "152a9f64",
      "stateItems": "811c9dc5",
      "lot": "73b78940"
     },
@@ -2875,8 +2861,7 @@
       "caixa_correio|1.85|-2.2|1.1|3.14|0.35|0.3|0.3|0|-1|[1.68,-2.35,2.03,-2.05]|jardim|-1|true|-|0|false|true",
       "gramado|2.6|-1.1|0|0|6.8|2.2|0|0|1|[-0.8,-2.2,6,0]|jardim|-1|true|-|0|true|true",
       "cimentado|2.6|16.2|0|0|6.8|13.2|0|0|1|[-0.8,9.6,6,22.8]|quintal|-1|true|-|0|true|true",
-      "cimentado|-0.4|4.8|0|0|0.8|9.6|0|0|1|[-0.8,0,0,9.6]|lateral_esq|-1|true|-|0|true|true",
-      "botijao_gas|1.93|5.92|0|0|0.36|0.36|0.48|-1|0|[1.75,5.74,2.11,6.1]|cozinha|0|false|-|0|false|false"
+      "cimentado|-0.4|4.8|0|0|0.8|9.6|0|0|1|[-0.8,0,0,9.6]|lateral_esq|-1|true|-|0|true|true"
      ],
      "stateItems": [],
      "lot": [
@@ -2911,7 +2896,7 @@
      "rooms": 6,
      "walls": 24,
      "openings": 12,
-     "items": 50,
+     "items": 49,
      "stateItems": 19,
      "lot": 15
     },
@@ -2919,7 +2904,7 @@
      "rooms": "99370753",
      "walls": "7e73df7b",
      "openings": "fd6d4370",
-     "items": "46dcc636",
+     "items": "36438e66",
      "stateItems": "516bda9c",
      "lot": "c1003134"
     },
@@ -3021,8 +3006,7 @@
       "cimentado|1.7|-2.6|0|0|3.4|5.2|0|0|1|[0,-5.2,3.4,0]|vaga|-1|true|-|0|true|true",
       "terra|5.1|-2.6|0|0|3.4|5.2|0|0|1|[3.4,-5.2,6.8,0]|jardim|-1|true|-|0|true|true",
       "terra|3.4|16|0|0|6.8|7.6|0|0|1|[0,12.2,6.8,19.8]|quintal|-1|true|-|0|true|true",
-      "cimentado|6.2|6.1|0|0|1.2|12.2|0|0|1|[5.6,0,6.8,12.2]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|-0.3|5.09|0|0|0.36|0.36|0.48|-1|0|[-0.48,4.91,-0.12,5.27]|cozinha|-1|true|-|0|false|false"
+      "cimentado|6.2|6.1|0|0|1.2|12.2|0|0|1|[5.6,0,6.8,12.2]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "tabuas|2.07|0.22|0.95|0|1.3|0.08|1.25|0|1|[1.42,0.18,2.72,0.26]|sala|0|false|-|0|false|false|janela|protegida",
@@ -3080,7 +3064,7 @@
      "rooms": 6,
      "walls": 24,
      "openings": 12,
-     "items": 50,
+     "items": 49,
      "stateItems": 14,
      "lot": 15
     },
@@ -3088,7 +3072,7 @@
      "rooms": "99370753",
      "walls": "7e73df7b",
      "openings": "26fc3eba",
-     "items": "49145fc2",
+     "items": "1dc2352",
      "stateItems": "e695b04e",
      "lot": "5ed6bac8"
     },
@@ -3190,8 +3174,7 @@
       "cimentado|1.7|-2.6|0|0|3.4|5.2|0|0|1|[0,-5.2,3.4,0]|vaga|-1|true|-|0|true|true",
       "terra|5.1|-2.6|0|0|3.4|5.2|0|0|1|[3.4,-5.2,6.8,0]|jardim|-1|true|-|0|true|true",
       "terra|3.4|16|0|0|6.8|7.6|0|0|1|[0,12.2,6.8,19.8]|quintal|-1|true|-|0|true|true",
-      "cimentado|6.2|6.1|0|0|1.2|12.2|0|0|1|[5.6,0,6.8,12.2]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|-0.3|5.09|0|0|0.36|0.36|0.48|-1|0|[-0.48,4.91,-0.12,5.27]|cozinha|-1|true|-|0|false|false"
+      "cimentado|6.2|6.1|0|0|1.2|12.2|0|0|1|[5.6,0,6.8,12.2]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "portas_abertas|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|abandonada",
@@ -3244,7 +3227,7 @@
      "rooms": 6,
      "walls": 24,
      "openings": 12,
-     "items": 50,
+     "items": 49,
      "stateItems": 0,
      "lot": 15
     },
@@ -3252,7 +3235,7 @@
      "rooms": "99370753",
      "walls": "7e73df7b",
      "openings": "26fc3eba",
-     "items": "49145fc2",
+     "items": "1dc2352",
      "stateItems": "811c9dc5",
      "lot": "309ce935"
     },
@@ -3354,8 +3337,7 @@
       "cimentado|1.7|-2.6|0|0|3.4|5.2|0|0|1|[0,-5.2,3.4,0]|vaga|-1|true|-|0|true|true",
       "terra|5.1|-2.6|0|0|3.4|5.2|0|0|1|[3.4,-5.2,6.8,0]|jardim|-1|true|-|0|true|true",
       "terra|3.4|16|0|0|6.8|7.6|0|0|1|[0,12.2,6.8,19.8]|quintal|-1|true|-|0|true|true",
-      "cimentado|6.2|6.1|0|0|1.2|12.2|0|0|1|[5.6,0,6.8,12.2]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|-0.3|5.09|0|0|0.36|0.36|0.48|-1|0|[-0.48,4.91,-0.12,5.27]|cozinha|-1|true|-|0|false|false"
+      "cimentado|6.2|6.1|0|0|1.2|12.2|0|0|1|[5.6,0,6.8,12.2]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [],
      "lot": [
@@ -3393,7 +3375,7 @@
      "rooms": 9,
      "walls": 38,
      "openings": 23,
-     "items": 87,
+     "items": 86,
      "stateItems": 27,
      "lot": 17
     },
@@ -3401,7 +3383,7 @@
      "rooms": "fae42d12",
      "walls": "bd5f5767",
      "openings": "c4558cc9",
-     "items": "39cc2eb2",
+     "items": "12dc7e43",
      "stateItems": "81e283dd",
      "lot": "bc4a352"
     },
@@ -3568,8 +3550,7 @@
       "gramado|5.5|18.85|0|0|13|11.3|0|0|1|[-1,13.2,12,24.5]|quintal|-1|true|-|0|true|true",
       "cimentado|-0.5|6.6|0|0|1|13.2|0|0|1|[-1,0,0,13.2]|lateral_esq|-1|true|-|0|true|true",
       "cimentado|11.5|6.6|0|0|1|13.2|0|0|1|[11,0,12,13.2]|lateral_dir|-1|true|-|0|true|true",
-      "guarda_peq|5.66|12.8|0|3.14|1|0.55|1.9|0|-1|[5.16,12.52,6.16,13.08]|corredor|0|false|-|0|false|false",
-      "botijao_gas|0.25|6.33|0|0|0.36|0.36|0.48|-1|0|[0.07,6.15,0.43,6.51]|cozinha|0|false|-|0|false|false"
+      "guarda_peq|5.66|12.8|0|3.14|1|0.55|1.9|0|-1|[5.16,12.52,6.16,13.08]|corredor|0|false|-|0|false|false"
      ],
      "stateItems": [
       "tabuas|2.93|0.22|0.95|0|1.7|0.08|1.25|0|1|[2.08,0.18,3.78,0.26]|sala|0|false|-|0|false|false|janela|protegida",
@@ -3637,7 +3618,7 @@
      "rooms": 9,
      "walls": 38,
      "openings": 23,
-     "items": 86,
+     "items": 85,
      "stateItems": 13,
      "lot": 17
     },
@@ -3645,7 +3626,7 @@
      "rooms": "fae42d12",
      "walls": "bd5f5767",
      "openings": "9a13e889",
-     "items": "25af699e",
+     "items": "6f104f97",
      "stateItems": "e43eb05b",
      "lot": "b17a2305"
     },
@@ -3811,8 +3792,7 @@
       "gramado|7.2|-2.75|0|0|9.6|5.5|0|0|1|[2.4,-5.5,12,0]|jardim|-1|true|-|0|true|true",
       "gramado|5.5|18.85|0|0|13|11.3|0|0|1|[-1,13.2,12,24.5]|quintal|-1|true|-|0|true|true",
       "cimentado|-0.5|6.6|0|0|1|13.2|0|0|1|[-1,0,0,13.2]|lateral_esq|-1|true|-|0|true|true",
-      "cimentado|11.5|6.6|0|0|1|13.2|0|0|1|[11,0,12,13.2]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|0.25|6.33|0|0|0.36|0.36|0.48|-1|0|[0.07,6.15,0.43,6.51]|cozinha|0|false|-|0|false|false"
+      "cimentado|11.5|6.6|0|0|1|13.2|0|0|1|[11,0,12,13.2]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "portas_abertas|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|abandonada",
@@ -3866,7 +3846,7 @@
      "rooms": 9,
      "walls": 38,
      "openings": 23,
-     "items": 86,
+     "items": 85,
      "stateItems": 0,
      "lot": 17
     },
@@ -3874,7 +3854,7 @@
      "rooms": "fae42d12",
      "walls": "bd5f5767",
      "openings": "9a13e889",
-     "items": "25af699e",
+     "items": "6f104f97",
      "stateItems": "811c9dc5",
      "lot": "5e3b2e71"
     },
@@ -4040,8 +4020,7 @@
       "gramado|7.2|-2.75|0|0|9.6|5.5|0|0|1|[2.4,-5.5,12,0]|jardim|-1|true|-|0|true|true",
       "gramado|5.5|18.85|0|0|13|11.3|0|0|1|[-1,13.2,12,24.5]|quintal|-1|true|-|0|true|true",
       "cimentado|-0.5|6.6|0|0|1|13.2|0|0|1|[-1,0,0,13.2]|lateral_esq|-1|true|-|0|true|true",
-      "cimentado|11.5|6.6|0|0|1|13.2|0|0|1|[11,0,12,13.2]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|0.25|6.33|0|0|0.36|0.36|0.48|-1|0|[0.07,6.15,0.43,6.51]|cozinha|0|false|-|0|false|false"
+      "cimentado|11.5|6.6|0|0|1|13.2|0|0|1|[11,0,12,13.2]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [],
      "lot": [
@@ -4081,7 +4060,7 @@
      "rooms": 15,
      "walls": 67,
      "openings": 33,
-     "items": 127,
+     "items": 126,
      "stateItems": 27,
      "lot": 16
     },
@@ -4089,7 +4068,7 @@
      "rooms": "a25ce106",
      "walls": "7e307e84",
      "openings": "9b9b5b9",
-     "items": "4616ea0e",
+     "items": "6b3ec32b",
      "stateItems": "163f6b2c",
      "lot": "fd69be51"
     },
@@ -4341,8 +4320,7 @@
       "gramado|5.95|-2.75|0|0|7.1|5.5|0|0|1|[2.4,-5.5,9.5,0]|jardim|-1|true|-|0|true|true",
       "gramado|4.25|19.55|0|0|10.5|9.9|0|0|1|[-1,14.6,9.5,24.5]|quintal|-1|true|-|0|true|true",
       "cimentado|-0.5|7.3|0|0|1|14.6|0|0|1|[-1,0,0,14.6]|lateral_esq|-1|true|-|0|true|true",
-      "cimentado|9|7.3|0|0|1|14.6|0|0|1|[8.5,0,9.5,14.6]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|0.25|10.03|0|0|0.36|0.36|0.48|-1|0|[0.07,9.85,0.43,10.21]|cozinha|0|false|-|0|false|false"
+      "cimentado|9|7.3|0|0|1|14.6|0|0|1|[8.5,0,9.5,14.6]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "tabuas|3.4|0.22|0.95|0|1.7|0.08|1.25|0|1|[2.55,0.18,4.25,0.26]|sala|0|false|-|0|false|false|janela|protegida",
@@ -4409,7 +4387,7 @@
      "rooms": 15,
      "walls": 67,
      "openings": 33,
-     "items": 127,
+     "items": 126,
      "stateItems": 11,
      "lot": 16
     },
@@ -4417,7 +4395,7 @@
      "rooms": "a25ce106",
      "walls": "7e307e84",
      "openings": "27d8ec76",
-     "items": "8c4871a8",
+     "items": "346e76e1",
      "stateItems": "573ef229",
      "lot": "ecdfdf89"
     },
@@ -4669,8 +4647,7 @@
       "gramado|5.95|-2.75|0|0|7.1|5.5|0|0|1|[2.4,-5.5,9.5,0]|jardim|-1|true|-|0|true|true",
       "gramado|4.25|19.55|0|0|10.5|9.9|0|0|1|[-1,14.6,9.5,24.5]|quintal|-1|true|-|0|true|true",
       "cimentado|-0.5|7.3|0|0|1|14.6|0|0|1|[-1,0,0,14.6]|lateral_esq|-1|true|-|0|true|true",
-      "cimentado|9|7.3|0|0|1|14.6|0|0|1|[8.5,0,9.5,14.6]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|0.25|10.03|0|0|0.36|0.36|0.48|-1|0|[0.07,9.85,0.43,10.21]|cozinha|0|false|-|0|false|false"
+      "cimentado|9|7.3|0|0|1|14.6|0|0|1|[8.5,0,9.5,14.6]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "portas_abertas|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|abandonada",
@@ -4721,7 +4698,7 @@
      "rooms": 15,
      "walls": 67,
      "openings": 33,
-     "items": 127,
+     "items": 126,
      "stateItems": 0,
      "lot": 16
     },
@@ -4729,7 +4706,7 @@
      "rooms": "a25ce106",
      "walls": "7e307e84",
      "openings": "27d8ec76",
-     "items": "8c4871a8",
+     "items": "346e76e1",
      "stateItems": "811c9dc5",
      "lot": "8a4b0078"
     },
@@ -4981,8 +4958,7 @@
       "gramado|5.95|-2.75|0|0|7.1|5.5|0|0|1|[2.4,-5.5,9.5,0]|jardim|-1|true|-|0|true|true",
       "gramado|4.25|19.55|0|0|10.5|9.9|0|0|1|[-1,14.6,9.5,24.5]|quintal|-1|true|-|0|true|true",
       "cimentado|-0.5|7.3|0|0|1|14.6|0|0|1|[-1,0,0,14.6]|lateral_esq|-1|true|-|0|true|true",
-      "cimentado|9|7.3|0|0|1|14.6|0|0|1|[8.5,0,9.5,14.6]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|0.25|10.03|0|0|0.36|0.36|0.48|-1|0|[0.07,9.85,0.43,10.21]|cozinha|0|false|-|0|false|false"
+      "cimentado|9|7.3|0|0|1|14.6|0|0|1|[8.5,0,9.5,14.6]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [],
      "lot": [
@@ -5021,7 +4997,7 @@
      "rooms": 26,
      "walls": 102,
      "openings": 45,
-     "items": 264,
+     "items": 263,
      "stateItems": 29,
      "lot": 19
     },
@@ -5029,7 +5005,7 @@
      "rooms": "d6d1f189",
      "walls": "727cba96",
      "openings": "b63c195f",
-     "items": "7db6af62",
+     "items": "682b9b08",
      "stateItems": "8c43f49f",
      "lot": "2379c2b1"
     },
@@ -5476,8 +5452,7 @@
       "gramado|-1.25|9.75|0|0|2.5|19.5|0|0|1|[-2.5,0,0,19.5]|lateral_esq|-1|true|-|0|true|true",
       "gramado|22.25|9.75|0|0|2.5|19.5|0|0|1|[21,0,23.5,19.5]|lateral_dir|-1|true|-|0|true|true",
       "guarda|11.1|0.43|0|0|1.6|0.6|2|0|1|[10.3,0.13,11.9,0.73]|hall|0|false|-|0|false|false",
-      "guarda|20.58|8.1|0|-1.57|1.6|0.6|2|-1|0|[20.27,7.3,20.88,8.9]|lavanderia|0|false|-|0|false|false",
-      "botijao_gas|10.06|9.58|0|0|0.36|0.36|0.48|-1|0|[9.88,9.4,10.24,9.76]|cozinha|0|false|-|0|false|false"
+      "guarda|20.58|8.1|0|-1.57|1.6|0.6|2|-1|0|[20.27,7.3,20.88,8.9]|lavanderia|0|false|-|0|false|false"
      ],
      "stateItems": [
       "tabuas|4.9|0.22|0.05|0|8.5|0.08|4.8|0|1|[0.65,0.18,9.15,0.26]|sala|0|false|-|0|false|false|janela|protegida",
@@ -5549,7 +5524,7 @@
      "rooms": 26,
      "walls": 102,
      "openings": 45,
-     "items": 262,
+     "items": 261,
      "stateItems": 16,
      "lot": 19
     },
@@ -5557,7 +5532,7 @@
      "rooms": "d6d1f189",
      "walls": "727cba96",
      "openings": "5ae92715",
-     "items": "5b79db66",
+     "items": "95c648ec",
      "stateItems": "afab3bcd",
      "lot": "ee7db029"
     },
@@ -6002,8 +5977,7 @@
       "gramado|10.5|28.75|0|0|26|7.5|0|0|1|[-2.5,25,23.5,32.5]|quintal|-1|true|-|0|true|true",
       "deck_madeira|10.5|27.87|0|0|8.4|5.4|0|0|1|[6.3,25.17,14.7,30.57]|quintal|-1|true|-|0|true|true",
       "gramado|-1.25|9.75|0|0|2.5|19.5|0|0|1|[-2.5,0,0,19.5]|lateral_esq|-1|true|-|0|true|true",
-      "gramado|22.25|9.75|0|0|2.5|19.5|0|0|1|[21,0,23.5,19.5]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|10.06|9.58|0|0|0.36|0.36|0.48|-1|0|[9.88,9.4,10.24,9.76]|cozinha|0|false|-|0|false|false"
+      "gramado|22.25|9.75|0|0|2.5|19.5|0|0|1|[21,0,23.5,19.5]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "portas_abertas|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|abandonada",
@@ -6062,7 +6036,7 @@
      "rooms": 26,
      "walls": 102,
      "openings": 45,
-     "items": 262,
+     "items": 261,
      "stateItems": 0,
      "lot": 19
     },
@@ -6070,7 +6044,7 @@
      "rooms": "d6d1f189",
      "walls": "727cba96",
      "openings": "5ae92715",
-     "items": "5b79db66",
+     "items": "95c648ec",
      "stateItems": "811c9dc5",
      "lot": "b61219dc"
     },
@@ -6515,8 +6489,7 @@
       "gramado|10.5|28.75|0|0|26|7.5|0|0|1|[-2.5,25,23.5,32.5]|quintal|-1|true|-|0|true|true",
       "deck_madeira|10.5|27.87|0|0|8.4|5.4|0|0|1|[6.3,25.17,14.7,30.57]|quintal|-1|true|-|0|true|true",
       "gramado|-1.25|9.75|0|0|2.5|19.5|0|0|1|[-2.5,0,0,19.5]|lateral_esq|-1|true|-|0|true|true",
-      "gramado|22.25|9.75|0|0|2.5|19.5|0|0|1|[21,0,23.5,19.5]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|10.06|9.58|0|0|0.36|0.36|0.48|-1|0|[9.88,9.4,10.24,9.76]|cozinha|0|false|-|0|false|false"
+      "gramado|22.25|9.75|0|0|2.5|19.5|0|0|1|[21,0,23.5,19.5]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [],
      "lot": [
@@ -6558,7 +6531,7 @@
      "rooms": 28,
      "walls": 115,
      "openings": 52,
-     "items": 302,
+     "items": 301,
      "stateItems": 35,
      "lot": 18
     },
@@ -6566,7 +6539,7 @@
      "rooms": "edff5f08",
      "walls": "221eba52",
      "openings": "29484bce",
-     "items": "48d5749b",
+     "items": "6215109",
      "stateItems": "183be418",
      "lot": "d39257eb"
     },
@@ -7073,8 +7046,7 @@
       "gramado|-1.5|8|0|0|3|16|0|0|1|[-3,0,0,16]|lateral_esq|-1|true|-|0|true|true",
       "gramado|21.5|8|0|0|3|16|0|0|1|[20,0,23,16]|lateral_dir|-1|true|-|0|true|true",
       "guarda|10|0.43|0|0|1.6|0.6|2|0|1|[9.2,0.13,10.8,0.73]|hall|0|false|-|0|false|false",
-      "estante|1.3|15.68|0|3.14|1.4|0.4|1.8|0|-1|[0.6,15.48,2,15.88]|lavanderia|0|false|-|0|false|false",
-      "botijao_gas|0.25|9.77|0|0|0.36|0.36|0.48|-1|0|[0.07,9.59,0.43,9.95]|cozinha|0|false|-|0|false|false"
+      "estante|1.3|15.68|0|3.14|1.4|0.4|1.8|0|-1|[0.6,15.48,2,15.88]|lavanderia|0|false|-|0|false|false"
      ],
      "stateItems": [
       "tabuas|1.77|0.22|0.95|0|1.5|0.08|1.25|0|1|[1.02,0.18,2.52,0.26]|sala_estar|0|false|-|0|false|false|janela|protegida",
@@ -7151,7 +7123,7 @@
      "rooms": 28,
      "walls": 115,
      "openings": 52,
-     "items": 300,
+     "items": 299,
      "stateItems": 13,
      "lot": 18
     },
@@ -7159,7 +7131,7 @@
      "rooms": "edff5f08",
      "walls": "221eba52",
      "openings": "e8286be0",
-     "items": "58817c50",
+     "items": "510df96a",
      "stateItems": "6a072e13",
      "lot": "9915c94f"
     },
@@ -7664,8 +7636,7 @@
       "gramado|10|23|0|0|26|14|0|0|1|[-3,16,23,30]|quintal|-1|true|-|0|true|true",
       "deck_madeira|10|23|0|0|11.4|6.9|0|0|1|[4.3,19.55,15.7,26.45]|quintal|-1|true|-|0|true|true",
       "gramado|-1.5|8|0|0|3|16|0|0|1|[-3,0,0,16]|lateral_esq|-1|true|-|0|true|true",
-      "gramado|21.5|8|0|0|3|16|0|0|1|[20,0,23,16]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|0.25|9.77|0|0|0.36|0.36|0.48|-1|0|[0.07,9.59,0.43,9.95]|cozinha|0|false|-|0|false|false"
+      "gramado|21.5|8|0|0|3|16|0|0|1|[20,0,23,16]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "portas_abertas|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|abandonada",
@@ -7720,7 +7691,7 @@
      "rooms": 28,
      "walls": 115,
      "openings": 52,
-     "items": 300,
+     "items": 299,
      "stateItems": 0,
      "lot": 18
     },
@@ -7728,7 +7699,7 @@
      "rooms": "edff5f08",
      "walls": "221eba52",
      "openings": "e8286be0",
-     "items": "58817c50",
+     "items": "510df96a",
      "stateItems": "811c9dc5",
      "lot": "e7684f1e"
     },
@@ -8233,8 +8204,7 @@
       "gramado|10|23|0|0|26|14|0|0|1|[-3,16,23,30]|quintal|-1|true|-|0|true|true",
       "deck_madeira|10|23|0|0|11.4|6.9|0|0|1|[4.3,19.55,15.7,26.45]|quintal|-1|true|-|0|true|true",
       "gramado|-1.5|8|0|0|3|16|0|0|1|[-3,0,0,16]|lateral_esq|-1|true|-|0|true|true",
-      "gramado|21.5|8|0|0|3|16|0|0|1|[20,0,23,16]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|0.25|9.77|0|0|0.36|0.36|0.48|-1|0|[0.07,9.59,0.43,9.95]|cozinha|0|false|-|0|false|false"
+      "gramado|21.5|8|0|0|3|16|0|0|1|[20,0,23,16]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [],
      "lot": [
@@ -8275,7 +8245,7 @@
      "rooms": 8,
      "walls": 33,
      "openings": 16,
-     "items": 64,
+     "items": 63,
      "stateItems": 13,
      "lot": 0
     },
@@ -8283,7 +8253,7 @@
      "rooms": "a5a7f84b",
      "walls": "74071ab3",
      "openings": "848c95a9",
-     "items": "764f723d",
+     "items": "7413961",
      "stateItems": "70ab305",
      "lot": "811c9dc5"
     },
@@ -8414,8 +8384,7 @@
       "pendente_planta|8.48|10.98|1.6|0|0.3|0.3|0.7|0|1|[8.33,10.83,8.63,11.13]|sala|0|false|-|0|false|false",
       "cortina|0.14|9.05|0.05|1.57|1.9|0.12|2.4|1|0|[0.08,8.1,0.2,10]|sala|0|false|-|0|false|false",
       "cortina|8.87|9.05|0.05|-1.57|1.9|0.12|2.4|-1|0|[8.81,8.1,8.93,10]|sala|0|false|-|0|false|false",
-      "guarda_peq|4.05|0.4|0|0|1|0.55|1.9|0|1|[3.55,0.13,4.55,0.68]|corredor|0|false|-|0|false|false",
-      "botijao_gas|0.25|1.53|0|0|0.36|0.36|0.48|-1|0|[0.07,1.35,0.43,1.71]|cozinha|0|false|-|0|false|false"
+      "guarda_peq|4.05|0.4|0|0|1|0.55|1.9|0|1|[3.55,0.13,4.55,0.68]|corredor|0|false|-|0|false|false"
      ],
      "stateItems": [
       "tabuas|8.79|1.65|0.95|-1.57|1.3|0.08|1.25|-1|0|[8.75,1,8.82,2.3]|quarto1|0|false|-|0|false|false|janela|protegida",
@@ -8451,7 +8420,7 @@
      "rooms": 8,
      "walls": 33,
      "openings": 16,
-     "items": 63,
+     "items": 62,
      "stateItems": 11,
      "lot": 0
     },
@@ -8459,7 +8428,7 @@
      "rooms": "a5a7f84b",
      "walls": "74071ab3",
      "openings": "2b107520",
-     "items": "6a8c12d0",
+     "items": "ff787acc",
      "stateItems": "9533975b",
      "lot": "811c9dc5"
     },
@@ -8589,8 +8558,7 @@
       "vaso_mesa|5.88|11.23|0.5|0|0.2|0.2|0.3|0|1|[5.78,11.13,5.98,11.33]|sala|0|false|-|0|false|true",
       "pendente_planta|8.48|10.98|1.6|0|0.3|0.3|0.7|0|1|[8.33,10.83,8.63,11.13]|sala|0|false|-|0|false|false",
       "cortina|0.14|9.05|0.05|1.57|1.9|0.12|2.4|1|0|[0.08,8.1,0.2,10]|sala|0|false|-|0|false|false",
-      "cortina|8.87|9.05|0.05|-1.57|1.9|0.12|2.4|-1|0|[8.81,8.1,8.93,10]|sala|0|false|-|0|false|false",
-      "botijao_gas|0.25|1.53|0|0|0.36|0.36|0.48|-1|0|[0.07,1.35,0.43,1.71]|cozinha|0|false|-|0|false|false"
+      "cortina|8.87|9.05|0.05|-1.57|1.9|0.12|2.4|-1|0|[8.81,8.1,8.93,10]|sala|0|false|-|0|false|false"
      ],
      "stateItems": [
       "portas_abertas|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|abandonada",
@@ -8624,7 +8592,7 @@
      "rooms": 8,
      "walls": 33,
      "openings": 16,
-     "items": 63,
+     "items": 62,
      "stateItems": 0,
      "lot": 0
     },
@@ -8632,7 +8600,7 @@
      "rooms": "a5a7f84b",
      "walls": "74071ab3",
      "openings": "2b107520",
-     "items": "6a8c12d0",
+     "items": "ff787acc",
      "stateItems": "811c9dc5",
      "lot": "811c9dc5"
     },
@@ -8762,8 +8730,7 @@
       "vaso_mesa|5.88|11.23|0.5|0|0.2|0.2|0.3|0|1|[5.78,11.13,5.98,11.33]|sala|0|false|-|0|false|true",
       "pendente_planta|8.48|10.98|1.6|0|0.3|0.3|0.7|0|1|[8.33,10.83,8.63,11.13]|sala|0|false|-|0|false|false",
       "cortina|0.14|9.05|0.05|1.57|1.9|0.12|2.4|1|0|[0.08,8.1,0.2,10]|sala|0|false|-|0|false|false",
-      "cortina|8.87|9.05|0.05|-1.57|1.9|0.12|2.4|-1|0|[8.81,8.1,8.93,10]|sala|0|false|-|0|false|false",
-      "botijao_gas|0.25|1.53|0|0|0.36|0.36|0.48|-1|0|[0.07,1.35,0.43,1.71]|cozinha|0|false|-|0|false|false"
+      "cortina|8.87|9.05|0.05|-1.57|1.9|0.12|2.4|-1|0|[8.81,8.1,8.93,10]|sala|0|false|-|0|false|false"
      ],
      "stateItems": [],
      "lot": []
@@ -8785,7 +8752,7 @@
      "rooms": 12,
      "walls": 49,
      "openings": 21,
-     "items": 83,
+     "items": 82,
      "stateItems": 23,
      "lot": 18
     },
@@ -8793,7 +8760,7 @@
      "rooms": "4a3d78a4",
      "walls": "9af20251",
      "openings": "1223a980",
-     "items": "201fdbdc",
+     "items": "62cab751",
      "stateItems": "84cda076",
      "lot": "2471c211"
     },
@@ -8968,8 +8935,7 @@
       "gramado|-1.1|7.4|0|0|2.2|14.8|0|0|1|[-2.2,0,0,14.8]|lateral_esq|-1|true|-|0|true|true",
       "gramado|15.9|7.4|0|0|2.6|14.8|0|0|1|[14.6,0,17.2,14.8]|lateral_dir|-1|true|-|0|true|true",
       "guarda|5.5|0.43|0|0|1.6|0.6|2|0|1|[4.7,0.13,6.3,0.73]|alpendre|0|false|-|0|false|false",
-      "estante_peq|14.3|10.4|0|-1.57|1|0.35|1.5|-1|0|[14.12,9.9,14.48,10.9]|corredor_a|0|false|-|0|false|false",
-      "botijao_gas|3.86|6.86|0|0|0.36|0.36|0.48|-1|0|[3.68,6.68,4.04,7.04]|cozinha|0|false|-|0|false|false"
+      "estante_peq|14.3|10.4|0|-1.57|1|0.35|1.5|-1|0|[14.12,9.9,14.48,10.9]|corredor_a|0|false|-|0|false|false"
      ],
      "stateItems": [
       "tabuas|14.39|4.2|0.95|-1.57|1.1|0.08|1.25|-1|0|[14.35,3.65,14.43,4.75]|sala|0|false|-|0|false|false|janela|protegida",
@@ -9034,7 +9000,7 @@
      "rooms": 12,
      "walls": 49,
      "openings": 21,
-     "items": 81,
+     "items": 80,
      "stateItems": 15,
      "lot": 18
     },
@@ -9042,7 +9008,7 @@
      "rooms": "4a3d78a4",
      "walls": "9af20251",
      "openings": "479a8bc0",
-     "items": "b44b9d06",
+     "items": "6064aca7",
      "stateItems": "f9d836a6",
      "lot": "413e270a"
     },
@@ -9215,8 +9181,7 @@
       "gramado|-1.05|-3.5|0|0|2.3|7|0|0|1|[-2.2,-7,0.1,0]|jardim|-1|true|-|0|true|true",
       "terra|7.5|18.9|0|0|19.4|8.2|0|0|1|[-2.2,14.8,17.2,23]|quintal|-1|true|-|0|true|true",
       "gramado|-1.1|7.4|0|0|2.2|14.8|0|0|1|[-2.2,0,0,14.8]|lateral_esq|-1|true|-|0|true|true",
-      "gramado|15.9|7.4|0|0|2.6|14.8|0|0|1|[14.6,0,17.2,14.8]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|3.86|6.86|0|0|0.36|0.36|0.48|-1|0|[3.68,6.68,4.04,7.04]|cozinha|0|false|-|0|false|false"
+      "gramado|15.9|7.4|0|0|2.6|14.8|0|0|1|[14.6,0,17.2,14.8]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "portas_abertas|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|abandonada",
@@ -9273,7 +9238,7 @@
      "rooms": 12,
      "walls": 49,
      "openings": 21,
-     "items": 81,
+     "items": 80,
      "stateItems": 0,
      "lot": 18
     },
@@ -9281,7 +9246,7 @@
      "rooms": "4a3d78a4",
      "walls": "9af20251",
      "openings": "479a8bc0",
-     "items": "b44b9d06",
+     "items": "6064aca7",
      "stateItems": "811c9dc5",
      "lot": "45c474ba"
     },
@@ -9454,8 +9419,7 @@
       "gramado|-1.05|-3.5|0|0|2.3|7|0|0|1|[-2.2,-7,0.1,0]|jardim|-1|true|-|0|true|true",
       "terra|7.5|18.9|0|0|19.4|8.2|0|0|1|[-2.2,14.8,17.2,23]|quintal|-1|true|-|0|true|true",
       "gramado|-1.1|7.4|0|0|2.2|14.8|0|0|1|[-2.2,0,0,14.8]|lateral_esq|-1|true|-|0|true|true",
-      "gramado|15.9|7.4|0|0|2.6|14.8|0|0|1|[14.6,0,17.2,14.8]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|3.86|6.86|0|0|0.36|0.36|0.48|-1|0|[3.68,6.68,4.04,7.04]|cozinha|0|false|-|0|false|false"
+      "gramado|15.9|7.4|0|0|2.6|14.8|0|0|1|[14.6,0,17.2,14.8]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [],
      "lot": [
@@ -9496,7 +9460,7 @@
      "rooms": 9,
      "walls": 32,
      "openings": 14,
-     "items": 64,
+     "items": 63,
      "stateItems": 21,
      "lot": 16
     },
@@ -9504,7 +9468,7 @@
      "rooms": "c98e0e69",
      "walls": "61eb4b05",
      "openings": "6f4fe127",
-     "items": "eb0cf198",
+     "items": "eecccdc3",
      "stateItems": "ff00035e",
      "lot": "eadfaf6a"
     },
@@ -9633,8 +9597,7 @@
       "gramado|-1.6|5.5|0|0|3.2|11|0|0|1|[-3.2,0,0,11]|lateral_esq|-1|true|-|0|true|true",
       "gramado|10.1|5.5|0|0|3.2|11|0|0|1|[8.5,0,11.7,11]|lateral_dir|-1|true|-|0|true|true",
       "guarda|2.55|0.43|0|0|1.6|0.6|2|0|1|[1.75,0.13,3.35,0.73]|alpendre|0|false|-|0|false|false",
-      "guarda|5.26|10.58|0|3.14|1.6|0.6|2|0|-1|[4.46,10.27,6.06,10.88]|despensa|0|false|-|0|false|false",
-      "botijao_gas|-0.3|8.71|0|0|0.36|0.36|0.48|-1|0|[-0.48,8.53,-0.12,8.89]|cozinha|-1|true|-|0|false|false"
+      "guarda|5.26|10.58|0|3.14|1.6|0.6|2|0|-1|[4.46,10.27,6.06,10.88]|despensa|0|false|-|0|false|false"
      ],
      "stateItems": [
       "tabuas|0.22|3.03|0.85|1.57|1.1|0.08|2.5|1|0|[0.18,2.48,0.26,3.58]|sala|0|false|-|0|false|false|janela|protegida",
@@ -9695,7 +9658,7 @@
      "rooms": 9,
      "walls": 32,
      "openings": 14,
-     "items": 62,
+     "items": 61,
      "stateItems": 15,
      "lot": 16
     },
@@ -9703,7 +9666,7 @@
      "rooms": "c98e0e69",
      "walls": "61eb4b05",
      "openings": "cb5fbc2c",
-     "items": "20b94312",
+     "items": "db7ac3c1",
      "stateItems": "d07a6678",
      "lot": "73fe0923"
     },
@@ -9830,8 +9793,7 @@
       "gramado|6.2|-4|0|0|11|8|0|0|1|[0.7,-8,11.7,0]|jardim|-1|true|-|0|true|true",
       "terra|4.25|15.5|0|0|14.9|9|0|0|1|[-3.2,11,11.7,20]|quintal|-1|true|-|0|true|true",
       "gramado|-1.6|5.5|0|0|3.2|11|0|0|1|[-3.2,0,0,11]|lateral_esq|-1|true|-|0|true|true",
-      "gramado|10.1|5.5|0|0|3.2|11|0|0|1|[8.5,0,11.7,11]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|-0.3|8.71|0|0|0.36|0.36|0.48|-1|0|[-0.48,8.53,-0.12,8.89]|cozinha|-1|true|-|0|false|false"
+      "gramado|10.1|5.5|0|0|3.2|11|0|0|1|[8.5,0,11.7,11]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "portas_abertas|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|abandonada",
@@ -9886,7 +9848,7 @@
      "rooms": 9,
      "walls": 32,
      "openings": 14,
-     "items": 62,
+     "items": 61,
      "stateItems": 0,
      "lot": 16
     },
@@ -9894,7 +9856,7 @@
      "rooms": "c98e0e69",
      "walls": "61eb4b05",
      "openings": "cb5fbc2c",
-     "items": "20b94312",
+     "items": "db7ac3c1",
      "stateItems": "811c9dc5",
      "lot": "a4cf3645"
     },
@@ -10021,8 +9983,7 @@
       "gramado|6.2|-4|0|0|11|8|0|0|1|[0.7,-8,11.7,0]|jardim|-1|true|-|0|true|true",
       "terra|4.25|15.5|0|0|14.9|9|0|0|1|[-3.2,11,11.7,20]|quintal|-1|true|-|0|true|true",
       "gramado|-1.6|5.5|0|0|3.2|11|0|0|1|[-3.2,0,0,11]|lateral_esq|-1|true|-|0|true|true",
-      "gramado|10.1|5.5|0|0|3.2|11|0|0|1|[8.5,0,11.7,11]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|-0.3|8.71|0|0|0.36|0.36|0.48|-1|0|[-0.48,8.53,-0.12,8.89]|cozinha|-1|true|-|0|false|false"
+      "gramado|10.1|5.5|0|0|3.2|11|0|0|1|[8.5,0,11.7,11]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [],
      "lot": [
@@ -10410,7 +10371,7 @@
      "rooms": 2,
      "walls": 9,
      "openings": 4,
-     "items": 29,
+     "items": 28,
      "stateItems": 15,
      "lot": 12
     },
@@ -10418,7 +10379,7 @@
      "rooms": "fefc6d35",
      "walls": "905d2008",
      "openings": "652a0161",
-     "items": "9c4cbc36",
+     "items": "ceb3d640",
      "stateItems": "a44d0a8b",
      "lot": "59b33d2a"
     },
@@ -10472,8 +10433,7 @@
       "terra|2.5|-1.3|0|0|7|2.6|0|0|1|[-1,-2.6,6,0]|jardim|-1|true|-|0|true|true",
       "gramado|2.5|9|0|0|7|6|0|0|1|[-1,6,6,12]|quintal|-1|true|-|0|true|true",
       "gramado|-0.5|3|0|0|1|6|0|0|1|[-1,0,0,6]|lateral_esq|-1|true|-|0|true|true",
-      "terra|5.2|3|0|0|1.6|6|0|0|1|[4.4,0,6,6]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|-0.3|1.61|0|0|0.36|0.36|0.48|-1|0|[-0.48,1.43,-0.12,1.79]|sala|-1|true|-|0|false|false"
+      "terra|5.2|3|0|0|1.6|6|0|0|1|[4.4,0,6,6]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "tabuas|4.19|1.5|1.05|-1.57|0.7|0.08|0.7|-1|0|[4.15,1.15,4.23,1.85]|sala|0|false|-|0|false|false|janela|protegida",
@@ -10524,7 +10484,7 @@
      "rooms": 2,
      "walls": 9,
      "openings": 4,
-     "items": 29,
+     "items": 28,
      "stateItems": 11,
      "lot": 12
     },
@@ -10532,7 +10492,7 @@
      "rooms": "fefc6d35",
      "walls": "905d2008",
      "openings": "77d00344",
-     "items": "46413425",
+     "items": "ac94c531",
      "stateItems": "788173ed",
      "lot": "8afb0ae2"
     },
@@ -10586,8 +10546,7 @@
       "terra|2.5|-1.3|0|0|7|2.6|0|0|1|[-1,-2.6,6,0]|jardim|-1|true|-|0|true|true",
       "gramado|2.5|9|0|0|7|6|0|0|1|[-1,6,6,12]|quintal|-1|true|-|0|true|true",
       "gramado|-0.5|3|0|0|1|6|0|0|1|[-1,0,0,6]|lateral_esq|-1|true|-|0|true|true",
-      "terra|5.2|3|0|0|1.6|6|0|0|1|[4.4,0,6,6]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|-0.3|1.61|0|0|0.36|0.36|0.48|-1|0|[-0.48,1.43,-0.12,1.79]|sala|-1|true|-|0|false|false"
+      "terra|5.2|3|0|0|1.6|6|0|0|1|[4.4,0,6,6]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [
       "portas_abertas|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|abandonada",
@@ -10634,7 +10593,7 @@
      "rooms": 2,
      "walls": 9,
      "openings": 4,
-     "items": 29,
+     "items": 28,
      "stateItems": 0,
      "lot": 12
     },
@@ -10642,7 +10601,7 @@
      "rooms": "fefc6d35",
      "walls": "905d2008",
      "openings": "77d00344",
-     "items": "46413425",
+     "items": "ac94c531",
      "stateItems": "811c9dc5",
      "lot": "8d9a62b"
     },
@@ -10696,8 +10655,7 @@
       "terra|2.5|-1.3|0|0|7|2.6|0|0|1|[-1,-2.6,6,0]|jardim|-1|true|-|0|true|true",
       "gramado|2.5|9|0|0|7|6|0|0|1|[-1,6,6,12]|quintal|-1|true|-|0|true|true",
       "gramado|-0.5|3|0|0|1|6|0|0|1|[-1,0,0,6]|lateral_esq|-1|true|-|0|true|true",
-      "terra|5.2|3|0|0|1.6|6|0|0|1|[4.4,0,6,6]|lateral_dir|-1|true|-|0|true|true",
-      "botijao_gas|-0.3|1.61|0|0|0.36|0.36|0.48|-1|0|[-0.48,1.43,-0.12,1.79]|sala|-1|true|-|0|false|false"
+      "terra|5.2|3|0|0|1.6|6|0|0|1|[4.4,0,6,6]|lateral_dir|-1|true|-|0|true|true"
      ],
      "stateItems": [],
      "lot": [

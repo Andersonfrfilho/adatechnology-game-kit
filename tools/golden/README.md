@@ -58,7 +58,7 @@ Captures for the houses (spec 001, T2.2a), with where their goldens go:
 
 | Capture | Page | Golden |
 |---|---|---|
-| `floorplan-plans.js` | Visor de casas 3D (`PlantasSDK.gerar`, every template x seeds 1-25 x 3 states; one event per plan with a hash per list) | `packages/game-floorplan/tests/fixtures/team-golden/vc3-plans.json` (+ `vc3-plans-detail.json`, the readable rows of seed 1) |
+| `floorplan-plans.js` | Visor de casas 3D (`PlantasSDK.gerar`, every template x seeds 1-25 x 3 states; one event per plan with a hash per list) | `packages/game-floorplan-post-apocalyptic/tests/fixtures/team-golden/vc3-plans.json` (+ `vc3-plans-detail.json`, the readable rows of seed 1); it lives with the stack test because the engine package cannot depend on its content packs |
 | `floorplan-structure.js` | same (`estrutura`, `Casa3DSDK.specDe` coarse and `vedacao`, utilities) | `specs/001-migracao-entregas-dos-times/goldens/vc3-structure.json` (+ detail), staged until `game-floorplan-structure` exists |
 | `house-area.js` | Sala de testes, area "Casas e prédios" (the 6 scenarios on the page's destruction world, every world event) | `specs/.../goldens/house-area.json`, staged until the destruction work (T2.3b) consumes it |
 | `gallery-silhouettes.js` | Galeria do Vale Cinzento, with `--expose` (house and building silhouettes, scene hash) | `specs/.../goldens/gallery-silhouettes.json`, staged for `game-floorplan-three` (T2.5a) |

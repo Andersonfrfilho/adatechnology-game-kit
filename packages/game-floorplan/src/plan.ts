@@ -1,10 +1,11 @@
-import { MARGIN, TOL, WALL_THICKNESS } from './constants'
+import { CAR_CLEARANCE, DOOR_EDGE_CLEARANCE, MARGIN, PLAYER_RADIUS, TOL, WALL_THICKNESS, WINDOWLESS_ROOM_TYPES, WINDOW_EDGE_CLEARANCE } from './constants'
 import { buildWalls, clamp, eq, exteriorEdge, inRect, normalizeRoom, openingDepth, openingZones, r2, sharedEdge } from './geometry'
 import { STREAM } from './legacy-seeds'
 import { createRng, pickWeighted } from './rng'
 import { STYLES, WALL_TOP_HEIGHTS, resolveStyleId, styleOf } from './registry'
+import { addExteriorDoorPaths } from './paths'
 import { clampLotToZone, enforcePermeability } from './zoning'
-import type { FloorDef, FloorplanOptions, Json, LotConfig, Plan, Rect, Room, StyleDef, TemplateDef, ZoneAdjustment, ZoneDef } from './types'
+import type { FloorDef, FloorplanOptions, Json, LotConfig, Plan, Rect, Room, StyleDef, TemplateDef, WindowDef, ZoneAdjustment, ZoneDef } from './types'
 
 export const floorsOf = (tpl: TemplateDef, op?: FloorplanOptions): FloorDef[] => (tpl.floorsFn ? tpl.floorsFn(op || {}) : (tpl.floors as FloorDef[]))
 
@@ -27,14 +28,18 @@ export function buildPlan(tpl: TemplateDef, wIn: number | undefined, dIn: number
   const styleId = resolveStyleId(op.style || (typeof tpl.style === 'function' ? tpl.style(op) : tpl.style) || 'budget')
   const FLOOR_DEFS = floorsOf(tpl, op)
   const style = styleOf(styleId)
-  const plan: Plan = { w, d, tpl, floorDefs: FLOOR_DEFS, style: styleId, floors: [], rooms: [], zones: [], doors: [], windows: [], walls: [], gates: [], paths: [], lot: null, openPairs: {} }
+  const plan: Plan = {
+    w, d, tpl, floorDefs: FLOOR_DEFS, style: styleId, floors: [], rooms: [], zones: [], doors: [], windows: [], walls: [], gates: [], paths: [], lot: null, openPairs: {}, reservations: [],
+    playerRadius: op.playerRadius ?? PLAYER_RADIUS,
+    carClearance: Object.assign({}, CAR_CLEARANCE, op.carClearance),
+  }
   FLOOR_DEFS.forEach((A, floorIndex) => {
     const floorNumber = tpl.singleFloor ? op.floor || 3 : floorIndex + 1
     plan.floors.push({
       index: floorIndex,
       name: tpl.singleFloor ? 'floor_n' : A.label,
       number: tpl.singleFloor ? floorNumber : undefined,
-      y0: tpl.singleFloor ? (floorNumber - 1) * A.ceiling : floorIndex * A.ceiling,
+      y0: tpl.singleFloor ? (floorNumber - 1) * A.ceiling : tpl.cumulativeCeilings ? FLOOR_DEFS.slice(0, floorIndex).reduce((t, q) => t + q.ceiling, 0) : floorIndex * A.ceiling,
       ceiling: A.ceiling,
     })
     plan.openPairs[floorIndex] = A.openPairs || []
@@ -50,7 +55,8 @@ export function buildPlan(tpl: TemplateDef, wIn: number | undefined, dIn: number
       const a = byId[sp.a]
       if (!a) throw new Error('Door references a missing room: ' + sp.a)
       let edge
-      if (sp.b === 'outside') edge = exteriorEdge(a, sp.side as string, w, d, sp.at)
+      if (sp.edge) edge = sp.edge
+      else if (sp.b === 'outside') edge = exteriorEdge(a, sp.side as string, w, d, sp.at)
       else {
         const b = byId[sp.b]
         if (!b) throw new Error('Door references a missing room: ' + sp.b)
@@ -58,7 +64,7 @@ export function buildPlan(tpl: TemplateDef, wIn: number | undefined, dIn: number
       }
       if (!edge) throw new Error('Door without a wall: ' + sp.a + ' / ' + sp.b)
       const width = sp.width
-      const margin = width / 2 + 0.12
+      const margin = width / 2 + (sp.clearance ?? tpl.clearance?.door ?? DOOR_EDGE_CLEARANCE)
       if (edge.a1 - edge.a0 < width + 0.24) throw new Error('Wall too short for the door: ' + sp.a + ' / ' + sp.b)
       const c = clamp(sp.at != null ? sp.at : (edge.a0 + edge.a1) / 2, edge.a0 + margin, edge.a1 - margin)
       const exterior = sp.b === 'outside'
@@ -80,50 +86,127 @@ export function buildPlan(tpl: TemplateDef, wIn: number | undefined, dIn: number
         exterior,
         side: sp.side || null,
         leaves: exterior && sp.steel ? 0 : width > 1.1 ? 2 : 1,
-        model: sp.steel ? 'steel' : width > 1.1 ? 'double' : 'single',
+        model: sp.model || (sp.steel ? 'steel' : width > 1.1 ? 'double' : 'single'),
+        type: sp.type || 'door',
+        steps: sp.steps || 0,
         hinge: 'start',
         zones: openingZones(u, v, edge.axis, width, openingDepth(width, leaf)),
       })
     })
     plan.doors.push(...floorDoors)
-    const windowsOut: Json[] = []
-    ;(A.windows(w, d, op) || []).forEach((windowDef) => {
-      const a = byId[windowDef.room]
-      if (!a) throw new Error('Window references a missing room: ' + windowDef.room)
-      const edge = exteriorEdge(a, windowDef.side, w, d, windowDef.at)
-      if (!edge) return
-      const width = windowDef.width
-      const m0 = edge.a0 + width / 2 + 0.3
-      const m1 = edge.a1 - width / 2 - 0.3
-      if (m1 < m0 - TOL) return
-      const centers = windowDef.n ? Array.from({ length: windowDef.n }, (_, i) => edge.a0 + ((edge.a1 - edge.a0) * (i + 1)) / (windowDef.n! + 1)) : [windowDef.at as number]
-      for (const c0 of centers) {
-        const c = clamp(c0, m0, m1)
-        const u = edge.axis === 'u' ? c : edge.pos
-        const v = edge.axis === 'u' ? edge.pos : c
-        if (floorDoors.some((p) => p.axis === edge.axis && eq(p.pos, edge.pos) && Math.abs(p.at - c) < (p.width + width) / 2 + 0.15)) continue
-        if (windowsOut.some((j) => j.axis === edge.axis && eq(j.pos, edge.pos) && Math.abs(j.at - c) < (j.width + width) / 2 + 0.2)) continue
-        windowsOut.push({
-          id: 'w' + floorIndex + '_' + windowsOut.length,
-          floor: floorIndex,
-          u: r2(u),
-          v: r2(v),
-          axis: edge.axis,
-          pos: edge.pos,
-          at: r2(c),
-          width,
-          y0: windowDef.y0 || 1.0,
-          y1: windowDef.y1 || 2.15,
-          room: windowDef.room,
-          side: windowDef.side,
-        })
-      }
-    })
+    const floorWalls = (tpl.noWalls ? [] : buildWalls(list, floorDoors, A.openPairs || [], floorIndex)).map((p) => Object.assign(p, { h: p.h || A.ceiling }))
+    const windowsOut = placeWindows({ list, byId, floorWalls, windowDefs: A.windows(w, d, op) || [], floorIndex, ceiling: A.ceiling, w, d, clearance: tpl.clearance?.window ?? WINDOW_EDGE_CLEARANCE })
     plan.windows.push(...windowsOut)
-    plan.walls.push(...buildWalls(list, floorDoors, A.openPairs || [], floorIndex).map((p) => Object.assign(p, { h: p.h || A.ceiling })))
+    plan.walls.push(...floorWalls)
   })
+  if (tpl.reservations) tpl.reservations(plan)
   buildLot(plan, tpl, w, d, op, style, styleId, bc)
   return plan
+}
+
+interface WindowGroup {
+  wall: Json
+  edge: { axis: 'u' | 'v'; pos: number }
+  start: number
+  end: number
+  def: Json
+  entries: { def: Json; centre: number; order: number }[]
+}
+interface WindowParams {
+  list: Room[]
+  byId: Record<string, Room>
+  floorWalls: Json[]
+  windowDefs: WindowDef[]
+  floorIndex: number
+  ceiling: number
+  w: number
+  d: number
+  clearance: number
+}
+
+/**
+ * Each window lands on a stretch of exterior wall (between corners, junctions and doors) and is spread over it: a single window is centred,
+ * several get equal gaps, and none comes closer than `clearance` to a corner, a junction or a door. A room that needs light but got no window gets one.
+ */
+function placeWindows(params: WindowParams): Json[] {
+  const { list, byId, floorWalls, windowDefs, floorIndex, ceiling, w, d, clearance } = params
+  const stretches = floorWalls.filter((p) => p.exterior && p.type === 'wall')
+  const found: Json[] = []
+  const groups: WindowGroup[] = []
+  let order = 0
+  for (const def of windowDefs) {
+    const room = byId[def.room]
+    if (!room) throw new Error('Window references a missing room: ' + def.room)
+    const edge = exteriorEdge(room, def.side, w, d, def.at)
+    if (!edge) continue
+    const centres = def.n ? Array.from({ length: def.n }, (_, i) => edge.a0 + ((edge.a1 - edge.a0) * (i + 1)) / (def.n! + 1)) : [def.at as number]
+    for (const centre of centres) {
+      const onEdge = stretches.filter((t) => t.axis === edge.axis && eq(edge.axis === 'u' ? t.v0 : t.u0, edge.pos) && t.sides.includes(def.room))
+      const start = (t: Json) => (edge.axis === 'u' ? t.u0 : t.v0)
+      const end = (t: Json) => (edge.axis === 'u' ? t.u1 : t.v1)
+      const gap = (t: Json) => Math.min(Math.abs(centre - start(t)), Math.abs(centre - end(t)))
+      const target = onEdge.find((t) => centre >= start(t) - TOL && centre <= end(t) + TOL) || onEdge.slice().sort((x, y) => gap(x) - gap(y))[0]
+      if (!target) continue
+      let group = groups.find((x) => x.wall === target && x.def.room === def.room)
+      if (!group) groups.push((group = { wall: target, edge, start: start(target), end: end(target), def, entries: [] }))
+      group.entries.push({ def, centre, order: order++ })
+    }
+  }
+  for (const g of groups) {
+    const room = byId[g.def.room]
+    const bath = room.type === 'bathroom'
+    const length = g.end - g.start
+    const its = g.entries
+      .slice()
+      .sort((x, y) => x.centre - y.centre)
+      .map((x) => ({ def: x.def, order: x.order, width: bath ? Math.min(x.def.width, 0.6) : x.def.width }))
+    const fits = (l: typeof its) => l.reduce((t, x) => t + x.width, 0) + (l.length + 1) * clearance <= length + TOL
+    while (its.length && !fits(its)) {
+      const k = its.reduce((m, x, i, arr) => (x.width > arr[m].width ? i : m), 0)
+      if (its[k].width > 0.6 + TOL) its[k] = Object.assign({}, its[k], { width: Math.max(0.6, r2(its[k].width - 0.1)) })
+      else its.pop()
+    }
+    if (!its.length) continue
+    const space = (length - its.reduce((t, x) => t + x.width, 0)) / (its.length + 1)
+    let pos = g.start + space
+    for (const x of its) {
+      const c = pos + x.width / 2
+      pos += x.width + space
+      const u = g.edge.axis === 'u' ? c : g.edge.pos
+      const v = g.edge.axis === 'u' ? g.edge.pos : c
+      let y0 = x.def.y0 || 1.0
+      let y1 = x.def.y1 || 2.15
+      if (bath) {
+        y0 = Math.max(y0, 2.1)
+        y1 = Math.min(Math.max(y1, y0 + 0.4), ceiling - 0.25)
+      }
+      found.push({ id: '', floor: floorIndex, u: r2(u), v: r2(v), axis: g.edge.axis, pos: g.edge.pos, at: r2(c), width: x.width, y0: r2(y0), y1: r2(y1), room: x.def.room, side: x.def.side, _order: x.order })
+    }
+  }
+  for (const room of list) {
+    if (WINDOWLESS_ROOM_TYPES.has(room.type) || found.some((j) => j.room === room.id)) continue
+    let best: { length: number; window: Json } | null = null
+    for (const t of stretches) {
+      if (!t.sides.includes(room.id)) continue
+      const i0 = t.axis === 'u' ? t.u0 : t.v0
+      const i1 = t.axis === 'u' ? t.u1 : t.v1
+      const length = i1 - i0
+      const width = Math.min(room.type === 'bathroom' ? 0.6 : 1.2, length - 2 * clearance)
+      if (width < 0.6 - TOL || (best && best.length >= length)) continue
+      const side = t.axis === 'u' ? (t.sides[0] === 'outside' ? 'front' : 'back') : t.sides[0] === 'outside' ? 'left' : 'right'
+      const c = (i0 + i1) / 2
+      const pos = t.axis === 'u' ? t.v0 : t.u0
+      const bath = room.type === 'bathroom'
+      best = { length, window: { id: '', floor: floorIndex, u: r2(t.axis === 'u' ? c : pos), v: r2(t.axis === 'u' ? pos : c), axis: t.axis, pos, at: r2(c), width: r2(width), y0: bath ? 2.1 : 1.0, y1: bath ? Math.min(2.5, ceiling - 0.25) : 2.15, room: room.id, side, _order: 1e6 + found.length } }
+    }
+    if (best) found.push(best.window)
+  }
+  found.sort((x, y) => x._order - y._order)
+  found.forEach((j, i) => {
+    delete j._order
+    j.id = 'w' + floorIndex + '_' + i
+  })
+  return found
 }
 
 /** Facade and lot: zones, gates, paths and perimeter. */
@@ -187,9 +270,11 @@ function buildLot(plan: Plan, tpl: TemplateDef, w: number, d: number, op: Floorp
     parts.sort((a, b) => b[2] - b[0] - (a[2] - a[0]))
     addZone('garden', 'garden', 'garden', parts, libs.garden)
   }
-  if (backDepth > 0 && cfg.yardZones) {
-    for (const q of cfg.yardZones) addZone(q.id, q.type, q.label || q.id, [[-marginL, d + q.v0, w + marginR, d + Math.min(backDepth, q.v1)]], q.library)
+  const yard = cfg.yardZones
+  if (backDepth > 0 && yard) {
+    for (const q of yard) addZone(q.id, q.type, q.label || q.id, [[-marginL, d + q.v0, w + marginR, d + Math.min(backDepth, q.v1)]], q.library)
   } else if (backDepth > 0) addZone('backyard', 'backyard', 'backyard', [[-marginL, d, w + marginR, d + backDepth]], libs.backyard)
+  for (const q of cfg.extraZones || []) addZone(q.id, q.type, q.label || q.id, q.parts, q.library)
   if (marginL > 0.5) addZone('side_left', 'side_yard', 'side_left', [[-marginL, 0, 0, d]], libs.sideYard)
   if (marginR > 0.5) addZone('side_right', 'side_yard', 'side_right', [[w, 0, w + marginR, d]], libs.sideYard)
   const gates: Json[] = []
@@ -247,12 +332,14 @@ function buildLot(plan: Plan, tpl: TemplateDef, w: number, d: number, op: Floorp
       paths.push({ id: 'cargo_path', type: 'vehicle', from: g.id, to: pt.id, width: hw * 2, rects: [[g.u - hw, d, g.u + hw, d + backDepth].map(r2)], points: [[g.u, d + backDepth], [g.u, d]] })
     }
   }
+  if (tpl.paths) paths.push(...tpl.paths(plan, { gates, setback, marginLeft: marginL, marginRight: marginR, backyard: backDepth, w, d }))
+  else addExteriorDoorPaths(plan, { gates, paths, zones: ZONES, setback, marginLeft: marginL, marginRight: marginR, backyard: backDepth, w, target: cfg.doorTarget })
   plan.paths = paths
   lot.paths = paths
   const boundary = (rule: { type: Record<string, number>; top: Record<string, number> }) => {
     const type = pickWeighted(rLot, rule.type)
     const top = type === 'railing' ? 'none' : pickWeighted(rLot, rule.top)
-    const wallHeight = type === 'railing' ? 1.2 : type === 'fence' ? 2.0 : style.height
+    const wallHeight = type === 'railing' ? 1.2 : type === 'fence' ? (style.fenceHeight ?? 2.0) : style.height
     return { type, material: type === 'wall' ? 'block' : type === 'fence' ? 'wire_mesh' : 'iron', height: wallHeight, top, totalHeight: r2(wallHeight + WALL_TOP_HEIGHTS[top]), thickness: WALL_THICKNESS }
   }
   const A: Record<string, Json> = { front: boundary(style.front), left: boundary(style.sideYard), right: boundary(style.sideYard), back: boundary(style.back) }

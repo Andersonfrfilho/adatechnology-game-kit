@@ -31,7 +31,9 @@
      "roof": "feaf6be2",
      "waterTank": "6234d75",
      "outbuildings": "b947e8e",
+     "outbuildingPaths": "36b23f9",
      "gas": "e728ef82",
+     "gasBottles": "77343e2c",
      "electrical": "899b909f",
      "solar": "77074ba4",
      "plumbing": "70dbf91b"
@@ -219,7 +221,9 @@
      "roof": "8ee39a67",
      "waterTank": "67c6f439",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "e728ef82",
+     "gasBottles": "4f485dfb",
      "electrical": "8bf3664f",
      "solar": "77074ba4",
      "plumbing": "dfb32c56"
@@ -554,7 +558,9 @@
      "roof": "ca7890ca",
      "waterTank": "77074ba4",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "77074ba4",
+     "gasBottles": "741638a5",
      "electrical": "a553a118",
      "solar": "77074ba4",
      "plumbing": "ec2b0f2"
@@ -733,7 +739,9 @@
      "roof": "2b03cca8",
      "waterTank": "77074ba4",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "77074ba4",
+     "gasBottles": "741638a5",
      "electrical": "7ff57f99",
      "solar": "77074ba4",
      "plumbing": "7f12825a"
@@ -903,7 +911,9 @@
      "roof": "caa44697",
      "waterTank": "77074ba4",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "e728ef82",
+     "gasBottles": "bbc49480",
      "electrical": "aab3073e",
      "solar": "77074ba4",
      "plumbing": "613b970d"
@@ -1079,7 +1089,9 @@
      "roof": "d84d7edc",
      "waterTank": "f8682954",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "e728ef82",
+     "gasBottles": "75fcda29",
      "electrical": "78168ca8",
      "solar": "77074ba4",
      "plumbing": "a5b84687"
@@ -1204,7 +1216,9 @@
      "roof": "bea3443b",
      "waterTank": "64803a35",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "e728ef82",
+     "gasBottles": "f8955c57",
      "electrical": "8d87469e",
      "solar": "77074ba4",
      "plumbing": "456858bf"
@@ -1410,7 +1424,9 @@
      "roof": "31d69af4",
      "waterTank": "d0be291b",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "e728ef82",
+     "gasBottles": "e4ca71b1",
      "electrical": "697bad6c",
      "solar": "ffd769d0",
      "plumbing": "1e4fc005"
@@ -1658,7 +1674,9 @@
      "roof": "9cd8c087",
      "waterTank": "7158b28a",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "e728ef82",
+     "gasBottles": "9b6de548",
      "electrical": "29ece2e7",
      "solar": "865f19fa",
      "plumbing": "77d72e7d"
@@ -2035,7 +2053,9 @@
      "roof": "1b212bcd",
      "waterTank": "39ca4f9b",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "e728ef82",
+     "gasBottles": "c034d77b",
      "electrical": "be555d5b",
      "solar": "e07b1704",
      "plumbing": "84f85f99"
@@ -2544,7 +2564,9 @@
      "roof": "efa85358",
      "waterTank": "2dc82003",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "e728ef82",
+     "gasBottles": "8b30eec0",
      "electrical": "c0422084",
      "solar": "d3d57686",
      "plumbing": "fecb5b59"
@@ -3098,7 +3120,9 @@
      "roof": "2d58f7a7",
      "waterTank": "77074ba4",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "e728ef82",
+     "gasBottles": "63de6723",
      "electrical": "614ccf35",
      "solar": "77074ba4",
      "plumbing": "c8cda357"
@@ -3295,7 +3319,9 @@
      "roof": "e4a1139b",
      "waterTank": "2a58e974",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "e728ef82",
+     "gasBottles": "100ef537",
      "electrical": "75326d7b",
      "solar": "d2f6067",
      "plumbing": "c21de567"
@@ -3672,7 +3698,9 @@
      "roof": "f953276b",
      "waterTank": "c4a4bf05",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "e728ef82",
+     "gasBottles": "dc0bd225",
      "electrical": "f725920f",
      "solar": "353b4358",
      "plumbing": "b986bc5d"
@@ -4190,7 +4218,9 @@
      "roof": "7030c593",
      "waterTank": "a8fb16d8",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "77074ba4",
+     "gasBottles": "741638a5",
      "electrical": "1419905a",
      "solar": "77074ba4",
      "plumbing": "a9c67856"
@@ -4477,7 +4507,9 @@
      "roof": "760826cc",
      "waterTank": "6ece1741",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "e728ef82",
+     "gasBottles": "40878858",
      "electrical": "8736db30",
      "solar": "77074ba4",
      "plumbing": "4aa87925"
@@ -4683,7 +4715,9 @@
      "roof": "ff3f65ad",
      "waterTank": "77074ba4",
      "outbuildings": "741638a5",
+     "outbuildingPaths": "741638a5",
      "gas": "c9a0cc0a",
+     "gasBottles": "741638a5",
      "electrical": "ab416b55",
      "solar": "77074ba4",
      "plumbing": "6914f9cb"

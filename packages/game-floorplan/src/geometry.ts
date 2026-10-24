@@ -119,24 +119,44 @@ export function normalizeRoom(c: Partial<RoomDef> & { id: string; type: string; 
   }
 }
 
-/** Usable parts: inset only on sides with a real wall (sides open to another part of the same room are not inset). */
+/**
+ * Usable parts: each part inset by half a wall on every side, plus, for each stretch where it touches another part of the same room
+ * (more than 0.3 m), a strip that reaches the shared edge. The inset stays at the ends of the stretch, where a real wall or corner stands.
+ */
 export function usableParts(room: Room, extra?: number): Rect[] {
-  return room.parts.map((p) => {
-    const isOpen = (k: number) =>
-      room.parts.some(
-        (q) =>
-          q !== p &&
-          (k === 0
-            ? eq(q[2], p[0]) && Math.min(q[3], p[3]) - Math.max(q[1], p[1]) > 0.3
-            : k === 2
-              ? eq(q[0], p[2]) && Math.min(q[3], p[3]) - Math.max(q[1], p[1]) > 0.3
-              : k === 1
-                ? eq(q[3], p[1]) && Math.min(q[2], p[2]) - Math.max(q[0], p[0]) > 0.3
-                : eq(q[1], p[3]) && Math.min(q[2], p[2]) - Math.max(q[0], p[0]) > 0.3),
-      )
-    const m = MARGIN + (extra || 0)
-    return [p[0] + (isOpen(0) ? 0 : m), p[1] + (isOpen(1) ? 0 : m), p[2] - (isOpen(2) ? 0 : m), p[3] - (isOpen(3) ? 0 : m)] as Rect
-  })
+  const m = MARGIN + (extra || 0)
+  const out: Rect[] = []
+  for (const p of room.parts) {
+    out.push([p[0] + m, p[1] + m, p[2] - m, p[3] - m])
+    for (let k = 0; k < 4; k++) {
+      const spans: [number, number][] = []
+      for (const q of room.parts) {
+        if (q === p) continue
+        if (k === 0 && eq(q[2], p[0])) spans.push([Math.max(q[1], p[1]), Math.min(q[3], p[3])])
+        else if (k === 2 && eq(q[0], p[2])) spans.push([Math.max(q[1], p[1]), Math.min(q[3], p[3])])
+        else if (k === 1 && eq(q[3], p[1])) spans.push([Math.max(q[0], p[0]), Math.min(q[2], p[2])])
+        else if (k === 3 && eq(q[1], p[3])) spans.push([Math.max(q[0], p[0]), Math.min(q[2], p[2])])
+      }
+      spans.sort((x, y) => x[0] - y[0])
+      const merged: [number, number][] = []
+      for (const span of spans) {
+        const last = merged[merged.length - 1]
+        if (last && span[0] <= last[1] + TOL) last[1] = Math.max(last[1], span[1])
+        else merged.push([span[0], span[1]])
+      }
+      for (const [a, b] of merged) {
+        if (b - a <= 0.3) continue
+        const x0 = a + m
+        const x1 = b - m
+        if (x1 <= x0) continue
+        if (k === 0) out.push([p[0], x0, p[0] + m, x1])
+        else if (k === 2) out.push([p[2] - m, x0, p[2], x1])
+        else if (k === 1) out.push([x0, p[1], x1, p[1] + m])
+        else out.push([x0, p[3] - m, x1, p[3]])
+      }
+    }
+  }
+  return out
 }
 
 export const inRect = (room: Room, u: number, v: number): boolean => room.parts.some((p) => u > p[0] + EPS && u < p[2] - EPS && v > p[1] + EPS && v < p[3] - EPS)
@@ -201,7 +221,7 @@ export function buildWalls(rooms: Room[], doors: WallBuildDoor[], openPairs: [st
         pieces = n
       }
       for (const [x, y] of pieces) {
-        const isOpen = (t: string) => t === 'balcony' || t === 'terrace'
+        const isOpen = (t: string) => t === 'balcony' || t === 'terrace' || t === 'porch'
         const isVoid = typeOf[s.A] === 'void' || typeOf[s.B] === 'void'
         if (isVoid && (s.A === 'outside' || s.B === 'outside')) continue
         const railing = isVoid || (isOpen(typeOf[s.A]) && s.B === 'outside') || (isOpen(typeOf[s.B]) && s.A === 'outside')

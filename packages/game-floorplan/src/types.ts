@@ -14,7 +14,7 @@ export type Mount = 'ceiling' | 'wall' | 'window' | 'support' | 'floor' | 'roof'
 /** How an item is coloured: a palette role, a fixed colour, or a seeded pick from a list. */
 export type ItemColor = { role: string } | { hex: number } | { pick: number[] }
 
-export interface ItemDef {
+export interface FurnitureDef {
   type: string
   category: string
   w: number
@@ -32,11 +32,19 @@ export interface ItemDef {
   /** Keep-out margin around the item (pools). */
   rim: number
   decor?: boolean
+  /** Hangs a wall cabinet over the counter (y 1.55 to 2.15 m): it blocks a window unless the fill dropped the cabinet. */
+  overhead?: boolean
+  /** Effective height that blocks a window when taller than `h` (a shower enclosure is 0.1 m tray plus 1.95 m glass). */
+  windowHeight?: number
+  /** Plugs into a socket (lamps, appliances). */
+  powered?: boolean
+  /** Only picked when a slot names its exact type (`=type`), never through its category. */
+  exactOnly?: boolean
   mount?: Mount
   equip?: string[]
   color?: ItemColor
 }
-export type ItemInput = Pick<ItemDef, 'type' | 'category' | 'w' | 'd' | 'h'> & Partial<ItemDef>
+export type ItemInput = Pick<FurnitureDef, 'type' | 'category' | 'w' | 'd' | 'h'> & Partial<FurnitureDef>
 
 export type Anchor = 'wall' | 'corner' | 'center' | 'window' | 'on' | 'inside'
 export type Side = 'left' | 'right' | 'front' | 'back' | 'any'
@@ -106,6 +114,13 @@ export interface DoorDef {
   width: number
   opensTo?: string
   steel?: boolean
+  /** Clear wall from the opening to a corner or junction; defaults to the template's `clearance.door`, else 0.12 m. */
+  clearance?: number
+  /** Explicit position instead of a wall edge (a tent flap in the middle of the lot). */
+  edge?: { axis: 'u' | 'v'; pos: number; a0: number; a1: number }
+  model?: string
+  type?: string
+  steps?: number
   [extra: string]: Json
 }
 export interface WindowDef {
@@ -144,6 +159,8 @@ export interface LotConfig {
   cargo?: GateCfg
   doorTarget?: { a: string; side: string }
   libraries?: Record<string, string>
+  /** Lot zones over the building area (a camp). */
+  extraZones?: { id: string; type: string; label?: string; parts: Rect[]; library?: string }[]
   yardZones?: { id: string; type: string; label?: string; v0: number; v1: number; library?: string }[]
   grounds?: Record<string, string>
   pool?: boolean
@@ -168,6 +185,22 @@ export interface TemplateDef {
   facadeExtra?: (facade: Json, rng: Rng, w: number, d: number, o: FloorplanOptions) => void
   building?: (w: number, d: number, o: FloorplanOptions) => Json
   singleFloor?: boolean
+  /** Place tag of the building for finds (`house`, `pharmacy`...). */
+  place?: string
+  /** Building system the structure pack builds (a reference registered there). */
+  construction?: string
+  /** Region of the content (`br`...), chosen by the pack that registered the template. */
+  region?: string
+  /** Clear wall around openings: from a door to a corner or junction, and from a window to a corner, junction or door. */
+  clearance?: { door?: number; window?: number }
+  /** No walls are built (a tent): rooms and openings stay. */
+  noWalls?: boolean
+  /** Storey heights add up (a mezzanine with a different ceiling) instead of `index * ceiling`. */
+  cumulativeCeilings?: boolean
+  /** Marks lot areas taken by the building (chimney, tank, tents) as keep-out zones for the lot fill. */
+  reservations?: (plan: Plan) => void
+  /** Own paths from the doors that sit away from the building edge (tents); replaces the generated ones. */
+  paths?: (plan: Plan, context: { gates: Json[]; setback: number; marginLeft: number; marginRight: number; backyard: number; w: number; d: number }) => Json[]
   /** Sides built against a neighbour (`left` / `right`): exempt from the side setback. */
   partyWalls?: ('left' | 'right')[]
   options?: Json
@@ -185,6 +218,8 @@ export interface StyleDef {
   /** Name of the legacy palette RNG stream (kept so old seeds still reproduce). */
   seedKey?: string
   height: number
+  /** Height of a fence boundary (default 2.0 m). */
+  fenceHeight?: number
   front: BoundaryRule
   sideYard: BoundaryRule
   back: BoundaryRule
@@ -196,7 +231,68 @@ export interface StyleDef {
   grounds: Record<string, Weights>
 }
 
+export interface CarClearance {
+  /** Clear space beside the driver door (m). */
+  driver: number
+  /** Clear space on the passenger side (m). */
+  side: number
+  /** Clear space in front of and behind the car (m). */
+  end: number
+}
+
+// ---- result extensions and finds ----
+export interface ResultExtensionContext {
+  plan: Plan
+  /** The result built so far: the plan, the items, the state items and the extensions that ran before. */
+  result: Json
+  seed: number | string
+  /** Seeded stream of the extension: `createRng(seed, seedKey ?? name)`. */
+  rng: Rng
+  options: FloorplanOptions
+}
+export type ResultExtensionRun = (context: ResultExtensionContext) => Json
+export interface ResultExtensionOptions {
+  /** Extensions that must run first. */
+  after?: string[]
+  /** Name of the seeded stream; defaults to the extension name. A pack sets the name of the team's own flow to reproduce its seeds. */
+  seedKey?: string
+}
+
+export interface FindStack {
+  readonly itemId: string
+  readonly count: number
+  readonly data?: { readonly ageDays?: number; readonly condition?: number; readonly charge?: number; readonly fill?: number }
+}
+export interface FindsQuery {
+  /** Kind of place (`TemplateDef.place`, a room type, a lot zone type). */
+  place: string
+  /** Kind of container (a furniture category). */
+  container: string
+  state: string
+  rng: Rng
+  /** Outbreak days; 0 is the normal world. */
+  day?: number
+  region?: string
+  /** Footprint of the place in m². */
+  footprint?: number
+  key?: string
+}
+/** Answers what a container holds. Registered by an item pack; the engine only keeps the registry. */
+export interface FindsProvider {
+  findsFor(query: FindsQuery): readonly FindStack[]
+}
+
 export interface FloorplanOptions {
+  /** Number of storeys, for templates that accept it. */
+  floors?: number
+  /** Building system of the structure pack (`masonry`, `wood_frame`, ...). */
+  construction?: string
+  /** How finely the structure pack splits the walls (`coarse`, `panels`, `units`). */
+  wallDetail?: 'coarse' | 'panels' | 'units'
+  /** Radius of the player body (m, default 0.24): a disc this wide must pass between doors and rooms once the furniture is placed. */
+  playerRadius?: number
+  /** Space a parked car keeps from walls (default driver 0.8, side 0.6, end 0.6). */
+  carClearance?: Partial<CarClearance>
   seed?: number | string
   w?: number
   d?: number
@@ -249,6 +345,12 @@ export interface Plan {
   facade?: Json
   openPairs: Record<number, [string, string][]>
   zoning?: ZoningReport
+  /** Lot areas the building keeps out of the fill (set by `TemplateDef.reservations`). */
+  reservations: Rect[]
+  /** Cache of the wall bodies per storey, filled by the walkability grid. */
+  wallBodies?: Record<number, Rect[]>
+  playerRadius: number
+  carClearance: CarClearance
 }
 
 export interface Slot {
@@ -332,7 +434,7 @@ export interface StateContext {
   /** Placement helpers shared with the decor passes. */
   ctx: PlacementContext
   kit: PlacementKit
-  catalog: Record<string, ItemDef>
+  catalog: Record<string, FurnitureDef>
   wallTopHeights: Record<string, number>
 }
 export interface StatePlugin {
@@ -378,10 +480,13 @@ export interface PlacementKit {
   createGrid(plan: Plan, room: Room, ignored?: Set<string> | null): Json
   clearRect(r: Rect, f: Vec2, clearance: number): Rect
   pickWeighted(rng: Rng, w: Weights): string
+  createRng(seed: number | string, key: string): Rng
+  /** Name of the room in seeded streams: the legacy key when the room id was renamed, else the id. */
+  roomSeedKey(room: Room): string
   shuffle<T>(a: T[], rng: Rng): T[]
   facingRotation(f: Vec2, type: string): number
   cutIntervals(intervals: [number, number][], a: number, b: number): [number, number][]
-  blocksWindow(it: ItemDef, j: Json): boolean
+  blocksWindow(it: FurnitureDef, j: Json, overheadOff?: boolean): boolean
 }
 
 export interface DecorPassContext {
@@ -391,7 +496,7 @@ export interface DecorPassContext {
   rng: Rng
   ctx: PlacementContext
   kit: PlacementKit
-  catalog: Record<string, ItemDef>
+  catalog: Record<string, FurnitureDef>
   /** Decor profiles registered per style id. */
   profiles: Record<string, Json>
 }
@@ -436,4 +541,36 @@ export interface FloorplanLocale {
   reasons?: Record<string, string>
   messages?: Record<string, string>
   ui?: Record<string, string>
+}
+
+// ---- 2D viewer layers ----
+export interface ViewerLayerContext {
+  /** Canvas 2D context, already in CSS pixels. */
+  g: CanvasRenderingContext2D
+  plan: Json
+  /** Storey being drawn (0 when `all`). */
+  floor: number
+  /** All storeys at once (the lot view). */
+  all: boolean
+  /** Metres to pixels. */
+  scale: number
+  X(u: number): number
+  Z(v: number): number
+  rect(r: Rect, fill?: string | null, stroke?: string | null, lineWidth?: number): void
+  /** Tooltip area (metres) with its text. */
+  hit(r: Rect, text: string): void
+}
+export interface ViewerLayerLegendEntry {
+  label: string
+  color: string
+  shape: 'filled' | 'hollow' | 'dashed' | 'line'
+}
+/** A layer a pack adds to the 2D viewer (the structure pack draws pillars and beams); the viewer shows a checkbox for it. */
+export interface ViewerLayer {
+  id: string
+  /** Checkbox text, or a key of the `ui` locale table. */
+  label: string
+  defaultOn?: boolean
+  draw(context: ViewerLayerContext): void
+  legend?(plan: Json): ViewerLayerLegendEntry[]
 }

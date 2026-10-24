@@ -17,7 +17,7 @@ import { rotationFor } from './fill'
 import { createGrid, reachable } from './grid'
 import { STREAM } from './legacy-seeds'
 import { blocksWindow, roomAt, windowZone, windowsOfRoom, zonesOfFloor } from './queries'
-import { CATALOG, DECOR_PROFILES, GROUND_OVERLAYS, PASSES } from './registry'
+import { CATALOG, DECOR_PROFILES, GROUND_OVERLAYS, PASSES, SEED_KEYS } from './registry'
 import { createRng, pickWeighted, shuffle } from './rng'
 import type { Rng } from './rng'
 import type { Json, PlacedItem, Plan, PlacementContext, PlacementKit, Rect, Room, Vec2 } from './types'
@@ -44,6 +44,8 @@ export const placementKit: PlacementKit = {
   createGrid: createGrid as PlacementKit['createGrid'],
   clearRect,
   pickWeighted,
+  createRng,
+  roomSeedKey: (room: Room) => room.seedKey ?? SEED_KEYS.rooms[room.id] ?? room.id,
   shuffle,
   facingRotation: (f: Vec2, type: string) => rotationFor(f, CATALOG[type].front),
   cutIntervals,
@@ -115,6 +117,15 @@ export function createPlacementContext(plan: Plan, items: PlacedItem[]): Placeme
     const zones = zonesOfFloor(plan, room.floor)
     const occupied = itemsOfRoom(room)
     const windowZones = windowsOfRoom(plan, room).map((j) => ({ z: windowZone(j, room.outdoor), j }))
+    // the 1 m landing in front of a staircase stays free
+    const landings: Rect[] = it0.flat
+      ? []
+      : items
+          .filter((m) => m.type === 'stairs' && m.floor === room.floor && m.aabb)
+          .map((m) => {
+            const r = m.aabb
+            return (m.frontV === 1 ? [r[0], r[3], r[2], r[3] + 1] : m.frontV === -1 ? [r[0], r[1] - 1, r[2], r[1]] : m.frontU === 1 ? [r[2], r[1], r[2] + 1, r[3]] : [r[0] - 1, r[1], r[0], r[3]]) as Rect
+          })
     const cand: Rect[] = opts.cands ? opts.cands.slice() : []
     if (!opts.cands)
       for (const p of inners) {
@@ -129,9 +140,9 @@ export function createPlacementContext(plan: Plan, items: PlacedItem[]): Placeme
           cand.push([x, z, x + extentU, z + extentV])
         }
       }
-    for (const r of shuffle(cand, rng2)) {
+    for (const r of opts.ordered ? cand : shuffle(cand, rng2)) {
       if (!insideUnion(r, inners)) continue
-      if (zones.some((z) => overlaps(r, z))) continue
+      if (zones.some((z) => overlaps(r, z)) || landings.some((z) => overlaps(r, z))) continue
       if (windowZones.some(({ z, j }) => blocksWindow(it, j) && overlaps(r, z))) continue
       if (solidList.some((o) => overlaps(r, o))) continue
       if (opts.flat) {
@@ -140,7 +151,7 @@ export function createPlacementContext(plan: Plan, items: PlacedItem[]): Placeme
       }
       if (occupied.some((m) => !m.low && !m.flat && !m.on && !m.decor && m.clearance > 0 && overlaps(r, clearRect(m._r as Rect, [m.frontU, m.frontV], m.clearance)))) continue
       if (opts.without && opts.without(r)) continue
-      if (!reachable(opts.railing || gridOf(room), solidList.concat([r]), 0.16)) continue
+      if (!reachable(opts.railing || gridOf(room), solidList.concat([r]), room.outdoor ? 0.16 : plan.playerRadius)) continue
       return r
     }
     return null

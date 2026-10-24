@@ -1,7 +1,7 @@
 import type { DecorPass, DecorPassContext, PlacedItem, Rect, Room, Vec2 } from '@adatechnology/game-floorplan'
 import type { DecorProfile } from './decor-profiles'
 
-const NO_CEILING_TYPES = new Set(['void', 'elevator', 'balcony', 'terrace'])
+const NO_CEILING_TYPES = new Set(['void', 'elevator', 'balcony', 'terrace', 'porch', 'tent'])
 const PICTURE_BASE: Record<string, number> = { living: 1, dining: 0.8, bedroom: 0.8, hall: 0.8, office: 0.5, corridor: 0.4, cinema: 0.5, bathroom: 0.4, kitchen: 0.3 }
 const SUPPORT_CATEGORIES = new Set(['coffee_table', 'sideboard', 'console_table', 'tv_unit', 'dining_table', 'dining_table_large', 'dresser', 'nightstand', 'buffet', 'desk', 'office_desk', 'bench'])
 
@@ -20,8 +20,8 @@ interface WallRun {
  * mirrors, plants and curtains. Runs after the slot fill and before the ground cover.
  */
 export const decorPass: DecorPass = (c: DecorPassContext) => {
-  const { plan, items, rng, ctx, kit, catalog: CATALOG, profiles } = c
-  const { MARGIN, r2, clamp, overlaps, inner, inflate, topOf, zonesOfFloor, roomAt, reachable, pickWeighted, cutIntervals } = kit
+  const { plan, items, rng, ctx, kit, catalog: CATALOG, profiles, seed } = c
+  const { MARGIN, r2, clamp, overlaps, inner, inflate, topOf, zonesOfFloor, roomAt, reachable, pickWeighted, cutIntervals, createRng, roomSeedKey } = kit
   const density: DecorProfile = profiles[plan.style] || profiles.mid
   const isBudget = density === profiles.budget
   const isHigh = density === profiles.high
@@ -192,8 +192,28 @@ export const decorPass: DecorPass = (c: DecorPassContext) => {
           const r = placeOnFloor(room, 'floor_plant', rng)
           if (r) add(make(room, 'floor_plant', r, [0, 1]))
         }
+        // a table lamp on a nightstand or a low dresser, with its real footprint (0.36 m shade) kept off the walls
+        const lit = new Set<string>()
+        if (['bedroom', 'living'].includes(room.type)) {
+          const lampRng = createRng(seed, 'abajur:' + roomSeedKey(room))
+          const lampChance = isBudget ? 0.35 : density === profiles.mid ? 0.75 : 1
+          for (const m of itemsOfRoom(room).filter((m) => ['nightstand', 'dresser', 'console_table'].includes(m.category) && !m.decor && !m.flat && m.h <= 0.8 && !m.on)) {
+            if (lampRng() >= lampChance) continue
+            const A = m.aabb
+            const it = CATALOG.table_lamp
+            const R = inner(room.parts.find((q) => A[0] >= q[0] - 1e-3 && A[2] <= q[2] + 1e-3 && A[1] >= q[1] - 1e-3 && A[3] <= q[3] + 1e-3) || room.parts[0])
+            if (A[2] - A[0] < it.w - 1e-6 || A[3] - A[1] < it.d - 1e-6) continue
+            const slackU = (A[2] - A[0] - it.w) / 2
+            const slackV = (A[3] - A[1] - it.d) / 2
+            const cx = m.x + (A[0] - R[0] < R[2] - A[2] ? slackU : -slackU)
+            const cz = m.z + (A[1] - R[1] < R[3] - A[3] ? slackV : -slackV)
+            add(make(room, 'table_lamp', [cx - it.w / 2, cz - it.d / 2, cx + it.w / 2, cz + it.d / 2], [m.frontU, m.frontV], { y: r2(topOf(m)), supportId: m.id }))
+            lit.add(m.id)
+            break
+          }
+        }
         let count = 0
-        for (const m of itemsOfRoom(room).filter((m) => SUPPORT_CATEGORIES.has(m.category) && !m.decor && !m.flat)) {
+        for (const m of itemsOfRoom(room).filter((m) => SUPPORT_CATEGORIES.has(m.category) && !m.decor && !m.flat && !lit.has(m.id) && !itemsOfRoom(room).some((o) => o.supportId === m.id && o.category === 'oil_lamp'))) {
           if (count >= 2 || rng() >= density.tablePlantChance || m.w < 0.35 || m.d < 0.3) continue
           if (itemsOfRoom(room).some((o) => o.on && o.aabb[0] === m.aabb[0] && o.aabb[1] === m.aabb[1] && o.aabb[2] === m.aabb[2])) continue
           const dx = (rng() - 0.5) * Math.max(0, m.aabb[2] - m.aabb[0] - 0.3)
@@ -227,5 +247,21 @@ export const decorPass: DecorPass = (c: DecorPassContext) => {
         add(make(room, type, r, n, { w, h, y: type === 'curtain' ? 0.05 : r2(j.y0 - 0.1), window: j.id }))
       }
     }
+  }
+  // mailbox on the front wall, beside the pedestrian gate
+  if (plan.lot && plan.style !== 'commercial') {
+    const gate = plan.gates.find((x) => x.type === 'pedestrian')
+    const it = CATALOG.mailbox
+    const setback = plan.lot.setback
+    if (gate)
+      for (const dir of [1, -1]) {
+        const u = gate.u + dir * (gate.width / 2 + 0.35)
+        const segment = plan.lot.perimeter.find((q: { side: string; u0: number; u1: number }) => q.side === 'front' && Math.min(q.u0, q.u1) <= u - it.w / 2 + 1e-6 && Math.max(q.u0, q.u1) >= u + it.w / 2 - 1e-6)
+        const zone = plan.zones.find((z) => z.parts.some((q) => u >= q[0] && u <= q[2] && -setback + 0.1 >= q[1] && -setback + 0.1 <= q[3]))
+        if (!segment || !zone) continue
+        const box = make(zone, 'mailbox', [u - it.w / 2, -setback - it.d / 2, u + it.w / 2, -setback + it.d / 2], [0, -1])
+        add(Object.assign(box, { y: 1.1, slot: 'mailbox', perimeter: segment.id, side: 'front', gate: gate.id }))
+        break
+      }
   }
 }
