@@ -1,4 +1,5 @@
 export { createSilhouetteRandom } from './random'
+export { boxRadius } from './builder'
 export { createCityBuilding } from './building'
 export type { CityBuildingParams } from './building'
 export {

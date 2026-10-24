@@ -62,6 +62,7 @@ Captures for the houses (spec 001, T2.2a), with where their goldens go:
 | `floorplan-structure.js` | same (`estrutura`, `Casa3DSDK.specDe` coarse and `vedacao`, utilities) | `specs/001-migracao-entregas-dos-times/goldens/vc3-structure.json` (+ detail), staged until `game-floorplan-structure` exists |
 | `house-area.js` | Sala de testes, area "Casas e prédios" (the 6 scenarios on the page's destruction world, every world event) | `specs/.../goldens/house-area.json`, staged until the destruction work (T2.3b) consumes it |
 | `gallery-silhouettes.js` | Galeria do Vale Cinzento, with `--expose` (house and building silhouettes, scene hash) | `specs/.../goldens/gallery-silhouettes.json`, staged for `game-floorplan-three` (T2.5a) |
+| `urban-parts.js` | Galeria do Vale Cinzento, with `--expose` (the five poles with the light budget, roads, walks, street grid, block, props; scene hash plus the instance lists and the surface of each material as events) | `packages/game-urban-three/tests/fixtures/team-golden/urban-parts.json` (T7.3a) |
 
 Capture for the items (spec 001, T3.2b):
 

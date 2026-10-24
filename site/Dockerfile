@@ -42,6 +42,8 @@ COPY packages/game-test-room/package.json packages/game-test-room/
 COPY packages/game-vegetation/package.json packages/game-vegetation/
 COPY packages/game-vegetation-species/package.json packages/game-vegetation-species/
 COPY packages/game-vegetation-three/package.json packages/game-vegetation-three/
+COPY packages/game-urban/package.json packages/game-urban/
+COPY packages/game-urban-three/package.json packages/game-urban-three/
 COPY packages/game-vehicles/package.json packages/game-vehicles/
 COPY packages/game-vehicles-fleet/package.json packages/game-vehicles-fleet/
 COPY packages/game-vehicles-three/package.json packages/game-vehicles-three/
