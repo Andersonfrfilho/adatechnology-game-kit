@@ -8,7 +8,7 @@ description: Use quando precisar desenhar personagens no three.js, como corpo in
 ## Objetivo
 Desenhar os corpos do `game-characters` no three.js. O três é passado pelo host (`createX(THREE, ...)`), nunca importado, então serve em bundler e em `<script>`.
 Caminho **instanciado** (porte literal do corpo do jogo): `buildInstancedBody` (16/10/5 segmentos), `BODY_CHUNK` (a pose dos 12 ossos na GPU, byte a byte do jogo), `createBodyMaterial`, `createBodyBatch`, `bakeBody`/`bakeVariants` (regra ZVAR), `createFlyingLimbs` (40 pedaços).
-Caminho **rico** (de perto): `createBestBuilder` (Bestiário v17, 13 tipos), `createPersonBuilder` (sobreviventes com 62 acessórios, chapéus, rosto e mãos), `createRigAnimator` (andar, cascata, pose), `createWounds` (corte, osso quebrado que balança, membro que voa, estouro, decalque de entrada e saída), `findEyes` (olhos que apagam) e `createFluidsBridge` (o sangue vai para o `game-fluids`).
+Caminho **rico** (de perto): `createBestBuilder` (Bestiário v17, 13 tipos), `createPersonBuilder` (sobreviventes com 62 acessórios, chapéus, rosto e mãos), `createRigAnimator` (andar, cascata, pose), `createWounds` (corte, osso quebrado que balança, membro que voa, estouro, decalque de entrada e saída), `findEyes` (olhos que apagam) e `createFluidsBridge` (o sangue vai para o `game-fluids`; com `film` os eventos `body` `wound`, `severed`, `destroyed` e `split` jogam gotas no filme que escorre, nas cores do `BloodLook` do corpo; `bloodLookOfAge(idade)` lê `ages.json`, e `old_blood` para as idades de pouco sangue; `body.blood` guarda o olhar de cada corpo).
 
 ## Quando usar e quando não usar
 - Use para: horda de dezenas a milhares de corpos em poucas chamadas; membros arrancados; corpos assados por variante.
@@ -38,7 +38,7 @@ limbs.launch({ x, z, kind: 'leg', color, blood: { color, dried, bleeds: true } }
 | `createFlyingLimbs(THREE, { random, effects })` | membros que voam, quicam e ficam; `onLaunch`/`onSplat` ligam o sangue |
 
 ## Ambiente de teste
-`createCharactersTestModule({ packs, undeadTypes, professions, createUndead, fluids? })` (`examples/characters-test-area`, `?area=characters`, global `CharactersArea`): os 13 tipos e as profissões como `DestructibleImpl` que a sala atinge, fileira de tiro com 5, multidão instanciada.
+`createCharactersTestModule({ packs, undeadTypes, professions, createUndead, fluids?, film?, bloodOf? })` (`examples/characters-test-area`, `?area=characters`, global `CharactersArea`): os 13 tipos e as profissões como `DestructibleImpl` que a sala atinge, fileira de tiro com 5, multidão instanciada.
 Antes de carregar, `registerBodyMaterial(room.world)` põe o material `flesh` no mundo. Bancada: decomposição, faixa de idade, modelo de penetração, regra de morte, detalhe, momento, pose, cascata, golpe, proteção; ações: disparar o golpe, curar, matar, morder (acelerado), pôr 100 ou 1000 na multidão; camadas: cápsulas, juntas, sangramento, só olhos, vetores de velocidade; 11 cenários.
 
 ## Notas

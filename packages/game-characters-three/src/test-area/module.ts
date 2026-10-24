@@ -169,6 +169,9 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
       if (Math.abs(scale - 1) > 0.01) object.scale.setScalar(scale)
       const entry: Entry = { id, kind: made.kind, cardId: made.cardId, root: object, body: woundBodyOf(object), eyes: three ? findEyes(three, object) : null, built: made.built, character, walk: 0, tilt: 0 }
       entry.character = wrap(entry, character)
+      const age = made.kind === 'zombie' ? undead?.traitsOf(character)?.age : undefined
+      const blood = age !== undefined ? options.bloodOf?.(age) : undefined
+      if (entry.body && blood) entry.body.blood = blood
       entries.set(id, entry)
       selected ??= entry
       trackEntry(entry)
@@ -403,7 +406,7 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
       host = lent
       ensureBuilders(lent.THREE as Three)
       const scene = lent.scene as THREE_NS.Object3D
-      const bridge = options.fluids ? createFluidsBridge({ sink: options.fluids }) : undefined
+      const bridge = options.fluids ? createFluidsBridge({ sink: options.fluids, ...(options.film ? { film: options.film } : {}) }) : undefined
       wounds = createWounds(lent.THREE as Three, { random, scene, groundAt: (x, z) => lent.groundAt(x, z), ...(bridge ? { bridge } : {}) })
       for (const entry of entries.values()) trackEntry(entry)
       const stopChange = lent.bench?.onChange(onChange)

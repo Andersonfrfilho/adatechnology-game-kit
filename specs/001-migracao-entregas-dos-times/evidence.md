@@ -2164,7 +2164,7 @@ Fonte: `sources/efeitos__oficina-vfx.js` (W168–1295) e a gravação `vfx-works
 
 ### Pendente
 
-- **`body` (T4.0) -> `splat` com `tint`**: o evento `body` ainda **não existe** no contrato desta branch (`game-contracts` não tem `type: 'body'`), então a ligação `wound -> bridge.splat({ fluid: 'blood' | 'old_blood', tint })` não foi feita. A ponte já recebe a chamada; falta só o `characters-three` (ou o anfitrião) escutar o `body` e chamar `splat` com as cores da idade da infecção (`ages.json`).
+- ~~`body` (T4.0) -> `splat` com `tint`~~: feito na T5.3e-body (seção abaixo, Fase 6 parte 2), depois que a Fase 4 entrou na `main`.
 
 ### Perguntas para o dono
 
@@ -2269,3 +2269,16 @@ Controles: clima (os 10 estados, nomes em pt-BR e en), transição (de uma vez o
 2. As miniaturas de Som e Clima não têm o que mostrar de som (e o clima sem visual): aceita uma miniatura da bancada ou prefere esperar a T6.2b?
 3. Falta o docker no ambiente: rodar `docker build -f site/Dockerfile .` antes do PR.
 4. A rodada inteira de `game-weapons-three` precisa de máquina livre; vale subir o `testTimeout` do pacote (hoje 5 s) como foi feito no `golden-tool`?
+
+## T5.3e (body) — o evento `body` dos personagens chega ao filme de fluidos
+
+Ramo `int/p6b`, a partir da `main` com as Fases 0 a 6 (parte 1). O evento `body` (T4.0) já está no contrato; o que faltava era a ponte.
+
+- **Onde mora a ponte**: no `createFluidsBridge` do `game-characters-three` (o pacote dos personagens não importa os pacotes de fluidos: recebe um `FilmSink` com o `splat` do `createFilmBridge`). `wounds.handle` já lia o `body`; agora, além do `sink.splash` de litros que existia, ele chama `bridge.wound(...)` no `wound` e `bridge.burst(change, ponto, look, direção)` no corte (`severed`), no estouro (`destroyed`) e na divisão (`split`).
+- **Gotas**: `wound` joga 3 gotas de 3,2 mm a 2,5 m/s (`spray`); corte, estouro e divisão jogam 4, 7 e 10 (`burstDrops`), na direção de saída do evento (`exit`) ou do lado do membro; sem direção, caem retas. Os números são meus: o time só mostra gotas, a ponte do filme não tem conta por ferimento.
+- **Cor da idade**: `WoundBody.blood` (`BloodLook`: `liquid?`, `tint { fresh, dry }`, `amount`). `bloodLookOfAge(idade)` lê o `ages.json` (`freshBloodColor`, `dryBloodColor`, `blood`): sangue fresco 0x8A0A0A / 0x3B1D14, recente 0x5A0C10 / 0x2E1810, antigo 0x3A1C12 / 0x2A160E, decrépito 0x1A1612. O fator `blood` escala as gotas (decrépito, 0, não joga nenhuma) e as idades com `blood < 0,3` sangram `old_blood` (limiar e líquido por opção). A área de personagens recebe `film` e `bloodOf(idade)` e põe o olhar no corpo do zumbi pela idade de `traitsOf(...).age`.
+- **A sala**: `room.film` é a ponte do filme (`splat`, `setWeather`, `leaks`); `characters-test-area` e `interactables-test-area` passam `film: room.film`.
+- **Testes**: `game-characters-three/tests/film-blood.test.ts` (6: cores de `ages.json`, ferida com cor e direção, ferida sem olhar, corte/estouro/divisão com 2/4/6 gotas a 60% de sangue, sangue antigo e corpo seco, sem filme só o mundo); `game-test-room` (`room.film.splat` cria uma grade); no navegador, `interactables-test-area` ferve um zumbi com um golpe de corte e confere o `splat` de sangue com `tint` e a grade `film_grid`.
+
+### Perguntas para o dono
+- Quantas gotas por ferimento (3, 4, 7, 10) e a regra do sangue antigo (`blood < 0,3`) são minhas. Quer outra conta (por energia do golpe, por exemplo)?

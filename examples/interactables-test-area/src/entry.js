@@ -88,7 +88,7 @@ export function loadInto(room, options = {}) {
   const itemsArea = options.items === false ? undefined : room.loadModule(createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang }))
   // the bodies of the characters module are DestructibleImpls with the 'flesh' material, which the room's world has to know before the module is checked
   registerBodyMaterial(room.world)
-  const characters = options.characters === false ? undefined : room.loadModule(createCharactersModule({ fluids: room.fluids, locale: lang }))
+  const characters = options.characters === false ? undefined : room.loadModule(createCharactersModule({ fluids: room.fluids, film: room.film, locale: lang }))
   const animals = options.animals === false ? undefined : room.loadModule(createAnimalsModule({ locale: lang }))
   const vfx = options.vfx === false ? undefined : room.loadModule(createVfxTestModule({ locale: lang }))
   // the sound and the weather ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here

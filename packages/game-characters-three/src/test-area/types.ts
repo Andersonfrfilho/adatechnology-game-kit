@@ -1,7 +1,7 @@
 import type { CharacterKit, CharacterPack, CharacterSpec, DamageCharacter, GaitProfile } from '@adatechnology/game-characters'
 import type { Vec3 } from '@adatechnology/game-contracts'
 
-import type { BloodSink } from '../wounds/fluids-bridge'
+import type { BloodLook, BloodSink, FilmSink } from '../wounds/fluids-bridge'
 
 /** One undead type as the area needs it: the content pack's own record has all of these fields. */
 export type UndeadCard = {
@@ -34,7 +34,7 @@ export type ProfessionCard = {
 export type UndeadLike = {
   create(spec: Pick<CharacterSpec, 'seed'> & Partial<CharacterSpec>, options?: { readonly type?: string }): DamageCharacter
   turn(person: DamageCharacter, options?: { readonly type?: string }): DamageCharacter
-  traitsOf(character: DamageCharacter): { readonly type: string; readonly speeds: Readonly<Record<string, number>> } | undefined
+  traitsOf(character: DamageCharacter): { readonly type: string; readonly age?: string; readonly speeds: Readonly<Record<string, number>> } | undefined
   speedFor(traits: { readonly type: string; readonly speeds: Readonly<Record<string, number>> }, context: { readonly moment: string; readonly limp?: boolean; readonly crawling?: boolean }): number
   onDeath?(character: DamageCharacter): readonly { readonly kind: string }[]
   infect?(wound: 'bite' | 'scratch' | 'laceration' | undefined, random: () => number): { advance(seconds: number): unknown; readonly reanimated: boolean } | undefined
@@ -52,6 +52,10 @@ export type CharactersTestOptions = {
   readonly professions?: readonly ProfessionCard[]
   /** Where the blood of the wounds goes (the room's fluid world: `room.fluids`). Without it the wounds draw no blood on the ground. */
   readonly fluids?: BloodSink
+  /** The running film of the liquids (the room's `room.film`): wounds throw drops of blood into it, in the colours `bloodOf` gives. Without it only the fluid world gets blood. */
+  readonly film?: FilmSink
+  /** The blood of a body by its infection age (`bloodLookOfAge` over the content's ages). Bodies without an age, and games without this option, bleed the liquid's own colours. */
+  readonly bloodOf?: (age: string) => BloodLook | undefined
   /** Seed of the draws of the area (default 1). */
   readonly seed?: number
   /** Crowd types to bake for the instanced field, by undead id (default walker and runner). */
