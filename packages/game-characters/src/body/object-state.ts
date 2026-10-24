@@ -1,6 +1,7 @@
 import type { DestructibleSpec, JointState, ObjectState, PartState, PartStatus, Quat, Vec3 } from '@adatechnology/game-contracts'
 
 import type { SegmentStatus } from '../types'
+import { missingFromSegments } from './body-state'
 import type { BodyState } from './body-state'
 
 const PART_STATUS: Readonly<Record<SegmentStatus, PartStatus>> = { ok: 'intact', wounded: 'damaged', broken: 'damaged', severed: 'collapsed', destroyed: 'broken' }
@@ -58,6 +59,6 @@ export const toObjectState = ({ id, name, position, rotation, body, spec }: ToOb
     joints,
     groups,
     destroyed: false,
-    body: { alive: body.alive, vitality: body.vitality, missing: body.missing, limp: body.limping.length > 0, crawl: body.crawl },
+    body: { alive: body.alive, vitality: body.vitality, missing: body.detail === 'segments' ? body.missing | missingFromSegments(body) : body.missing, limp: body.limping.length > 0, crawl: body.crawl },
   }
 }

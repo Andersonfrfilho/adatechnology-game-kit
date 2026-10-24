@@ -79,7 +79,7 @@ export type CreateCharacterCoreParams = { readonly spec: ResolvedCharacterSpec; 
 export const createCharacterCore = ({ spec, bodySpec, hitPointsOf }: CreateCharacterCoreParams): CharacterCore => {
   const rig = createRig({ body: bodySpec, height: spec.height, build: spec.build })
   const parts = describeBody({ rig, body: bodySpec, build: spec.build, name: spec.kind })
-  const fresh = (): BodyState => createBodyState({ vitality: spec.vitality, detail: spec.detail, hitPointsOf: hitPointsOf ?? ((kind) => SEGMENT_NUMBERS[kind].hitPoints) })
+  const fresh = (): BodyState => createBodyState({ vitality: spec.vitality, detail: spec.detail, crawling: spec.crawling ?? false, hitPointsOf: hitPointsOf ?? ((kind) => SEGMENT_NUMBERS[kind].hitPoints) })
   const body = fresh()
   return { spec, rig, body, position: [0, 0, 0], rotation: [0, 0, 0, 1], describe: () => parts, resetBody: () => void Object.assign(body, fresh()) }
 }

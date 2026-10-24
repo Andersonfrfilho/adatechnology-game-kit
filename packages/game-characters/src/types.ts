@@ -2,6 +2,8 @@ import type { BodyRegion, SegmentKind } from '@adatechnology/game-contracts'
 
 import type { BodySpec } from './body/body-spec'
 import type { SegmentId, SegmentSide } from './body/segment-tree'
+import type { DAMAGE_PRESETS } from './damage/defaults'
+import type { BlastRules, CaliberEntry, DamageRules, PenetrationModel, ProtectionLayer, SeverityRules } from './damage/types'
 
 export type AgeGroup = 'child' | 'young' | 'adult' | 'elder'
 
@@ -58,15 +60,34 @@ export type CharacterSpec = {
   /** Seconds a heavy hit stuns (default 0.45). */
   readonly stunSeconds?: number
   readonly detail?: Detail
+  /** Starts crawling (a crawler). */
+  readonly crawling?: boolean
+  /**
+   * A random stream to draw from instead of the per-hit stream (`seed ^ hit counter`). For replaying a recorded game: the goldens pass the
+   * team's own stream here.
+   */
+  readonly random?: () => number
 }
 
 /** A named starting point for specs (a profession, a force, an undead type). */
-export type CharacterPreset = { readonly id: string } & Partial<Omit<CharacterSpec, 'seed' | 'id' | 'preset'>>
+export type CharacterPreset = { readonly id: string } & Partial<Omit<CharacterSpec, 'seed' | 'id' | 'preset' | 'random'>>
 
 /** Content added by a pack (people, uniformed, undead...). */
 export type CharacterPack = {
   readonly id: string
   readonly presets?: readonly CharacterPreset[]
+  /** Protection layers by id (vests, helmets, coats). */
+  readonly protection?: readonly ProtectionLayer[]
+  /** Calibre entries by id (a game's own points table). */
+  readonly calibers?: readonly CaliberEntry[]
+}
+
+/** Damage rules: a preset (`kit` by default, or a team page replayed: `arsenal`, `elenco`) with fields replaced. */
+export type DamageOptions = Partial<Omit<DamageRules, 'severity' | 'blast' | 'segments'>> & {
+  readonly preset?: keyof typeof DAMAGE_PRESETS
+  readonly severity?: Partial<SeverityRules>
+  readonly blast?: Partial<BlastRules>
+  readonly segments?: Partial<DamageRules['segments']>
 }
 
 export type CorpseOptions = { readonly max: number; readonly seconds: number }
@@ -81,4 +102,11 @@ export type CharactersOptions = {
   readonly body?: Partial<BodySpec>
   /** Corpse cap and lifetime (default 400 bodies, 900 s). */
   readonly corpses?: Partial<CorpseOptions>
+  readonly damage?: DamageOptions
+  /** `physical` (P = √(E·m/A), default), `team-game` (the game's points; for the goldens) or a model of your own. */
+  readonly penetration?: PenetrationModel | 'physical' | 'team-game'
+  /** Protection layers added to (or replacing, by id) the presets `vest_police`, `vest_military`, `helmet_combat`, `turnout_gear`. */
+  readonly protection?: readonly ProtectionLayer[]
+  /** Calibre entries (points, class, skull range...) by calibre id. */
+  readonly calibers?: readonly CaliberEntry[]
 }
