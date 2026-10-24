@@ -250,3 +250,40 @@ describe('tool cycle events', () => {
     room.dispose()
   })
 })
+
+describe('clearing', () => {
+  it('tells the modules that follow it when the area is cleared, and stops after the unsubscribe', () => {
+    const room = makeRoom()
+    let cleared = 0
+    let stop: (() => void) | undefined
+    room.loadModule(benchModule((host) => { stop = host.onClear?.(() => cleared++) }))
+    room.clear()
+    expect(cleared).toBe(1)
+    room.openArea('bench_module')
+    expect(cleared).toBe(2)
+    stop?.()
+    room.clear()
+    expect(cleared).toBe(2)
+    room.dispose()
+  })
+})
+
+describe('blockers', () => {
+  it('a module can keep the walking player out of a place, and take it away', () => {
+    const room = makeRoom()
+    let remove: (() => void) | undefined
+    room.loadModule(benchModule((host) => { remove = host.addBlocker?.((x, z) => x > 0.8 && x < 1.2 && z > -2 && z < 6) }))
+    expect(remove).toBeTypeOf('function')
+    room.look([0, 1.6, 4], [1, 1.6, 4])
+    // the walk ends on a point inside the blocked place: the player stops at its edge
+    room.walk([1, 0, 4], 2)
+    for (let i = 0; i < 40; i++) room.update(0.05)
+    expect(room.camera.position.x).toBeLessThan(0.9)
+    remove?.()
+    room.look([0, 1.6, 4], [1, 1.6, 4])
+    room.walk([2, 0, 4], 2)
+    for (let i = 0; i < 40; i++) room.update(0.05)
+    expect(room.camera.position.x).toBeGreaterThan(1.8)
+    room.dispose()
+  })
+})

@@ -15,6 +15,8 @@ export interface PlayerOptions {
   dom: HTMLElement
   /** `[minX, minZ, maxX, maxZ]` boxes to stay out of. */
   colliders: Array<[number, number, number, number]>
+  /** Extra places to stay out of, asked on every step (a module's walls): `(x, z, radius) => blocked`. The set may change while the player walks. */
+  blockers?: ReadonlySet<(x: number, z: number, radius: number) => boolean>
   /** Half size of the arena. */
   limit: number
   start: Vec3
@@ -76,6 +78,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   const blocked = (x: number, z: number): boolean => {
     if (Math.abs(x) > o.limit - PLAYER_RADIUS || Math.abs(z) > o.limit - PLAYER_RADIUS) return true
     for (const c of o.colliders) if (x > c[0] - PLAYER_RADIUS && x < c[2] + PLAYER_RADIUS && z > c[1] - PLAYER_RADIUS && z < c[3] + PLAYER_RADIUS) return true
+    if (o.blockers) for (const blocked of o.blockers) if (blocked(x, z, PLAYER_RADIUS)) return true
     return false
   }
   const move = (dx: number, dz: number): void => {
