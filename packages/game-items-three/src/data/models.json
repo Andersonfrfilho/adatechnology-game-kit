@@ -588,5 +588,15 @@
       0.584
     ],
     "scale": 0.1
+  },
+  {
+    "id": "water_jug_5l",
+    "teamId": "galao_agua",
+    "teamBox": [
+      1.9,
+      3.3,
+      1.5
+    ],
+    "scale": 0.1
   }
 ]
