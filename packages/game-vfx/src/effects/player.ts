@@ -24,6 +24,8 @@ export interface PlayOptions {
   readonly seed?: number
   /** The recipe's parameter (age, material, weapon...). */
   readonly param?: number | string
+  /** Named numbers the recipe reads with `variable(name)` (a size, a length of time): set before its `setup` runs, and again whenever its loop starts over. */
+  readonly values?: Readonly<Record<string, number>>
   /** Moves with a thing: the effect sits at its position plus the point it was played at. */
   readonly follow?: Follow
   /** Stops after this many seconds (default: the recipe's loop). */
@@ -154,6 +156,7 @@ export function createEffectPlayer(options: EffectPlayerOptions): EffectPlayer {
           placement: placementOf(entry),
           ...(playOptions.direction ? { direction: playOptions.direction } : {}),
           ...(playOptions.normal ? { normal: playOptions.normal } : {}),
+          ...(playOptions.values ? { values: playOptions.values } : {}),
         }),
       )
       return entry.handle

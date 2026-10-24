@@ -2377,3 +2377,28 @@ Ramo `int/p6b`, depois de T6.2b.
 - A cortina com 22 % a 55 % da chuva na chuva leve e na forte (e 100 % só no temporal) está certa, ou a chuva do jogo (14 000 sempre) vale para todo estado com chuva?
 - Névoa de calor: quer o time de efeitos para a distorção de verdade, ou a faixa quente basta?
 - Faróis: a regra "noite, chuva ou neblina" liga os faróis de qualquer carro do mundo. O jogo decide por veículo (o motorista), ou o clima pode ligar todos?
+
+## T5 (restante) — clarão, fumaça, sopro do lançador e jato de chama da arma na mão sobre o `game-vfx`
+
+Ramo `int/p6b`, depois de T6.2c.
+
+| O que | Onde |
+|---|---|
+| O `createEffects` da galeria (clarão: um cone, quatro espinhos e um núcleo aditivos por 55 ms, crescendo de 0,6 a 1,5 vez; luz laranja de 4 k a 2 k m; seis baforadas de fumaça) vira a receita `viewmodel_muzzle_flash`; a `smoke(posição, velocidade, tamanho, vida, opacidade)` vira `weapon_smoke_puff` (mesmos cinco números, por `values`); o sopro de trás do lançador (26 baforadas e 14 pedaços de fogo, `launchRocket`) vira `launcher_backblast`; os pedaços de chama e a fumaça do `flameJet` (`floor(dt x 420 x escala)` por quadro, fumaça em metade dos quadros) viram `flame_jet` | `game-vfx/src/effects/weapons/viewmodel.ts` |
+| Números nomeados para a receita: `PlayOptions.values` (lidos com `variable(nome)`) e `EffectRequest.values` no contrato; a expressão `exp` | `game-vfx/src/effects/{player,instance,expression,dsl}.ts`, `game-contracts/src/effects.ts`, `game-vfx-three/src/renderer.ts` |
+| `game-weapons-three` toca as receitas pelo `host.effects` (`createWeaponFx({ effects })`); some a malha do clarão e das baforadas. Ficam como malha: cápsulas, pentes, o foguete em voo (e o cone e a luz do escape), as gotas em chamas e as três chamas no chão | `game-weapons-three/src/fx/{effects,heavy,viewmodel}.ts`, `box-fx.ts`, `fx.ts`, `area.ts` |
+
+**Prova**: `game-vfx/tests/viewmodel-effects.test.ts` (7) confere, nos pools do Workshop, os seis sprites aditivos de 55 ms, a luz (4 k, 2 k m), as seis baforadas (vida de 1,3 a 1,9 s, opacidade 0,45, raio 0,013 k, gravidade -0,08, arrasto 2,2, crescimento `exp(2,1 x vida)`), a direção do cano, as 26 + 14 do lançador e `floor(420 dt escala)` do jato; `game-weapons-three/tests/viewmodel-effects.test.ts` (6) confere o que a arma pede ao `host.effects` (ids e números) e que, na sala de testes, um tiro de pistola, o lançador e o lança-chamas enchem os pools do Workshop e a camada `muzzle_flash` os desliga. Os goldens do `game-weapons-three` (hashes dos modelos da galeria, tração de áudio, cena de áudio) seguem os mesmos: nenhum foi regravado.
+
+### Escolhas minhas (padrões reversíveis)
+
+1. **Sprite no lugar da malha**: cada cone, espinho, núcleo e esfera vira um sprite redondo (a malha da galeria é em metros; o sprite do Workshop é um disco). O raio vira o dobro como tamanho do sprite. O clarão some em 55 ms, o que a malha não faz (a página só some com o grupo).
+2. **Crescimento**: a malha da fumaça cresce `x (1 + 2,1 dt)` por quadro (exponencial); o sprite cresce em linha reta até o último tamanho, então cada baforada recebe `exp(2,1 x vida)`, o tamanho que a malha alcança no fim da vida. O formato da curva é outro, o tamanho final é o mesmo. Idem para os pedaços de chama (2,2).
+3. **Direção só pela vertical**: o `play` do Workshop vira a receita em torno do eixo vertical; a inclinação do cano (apontar para cima ou para baixo) não chega à receita.
+4. **Sorteios**: cada receita sorteia da própria semente (uma por chamada, tirada do fluxo do viewmodel), então a sequência de números das baforadas difere da malha; a distribuição é a mesma.
+5. **Luz**: a receita pede `4 k` de intensidade, como a galeria; o renderizador do `game-vfx-three` multiplica por π (`lightScale`, porque as luzes do r160 são físicas), então a luz fica π vezes mais forte que a da galeria.
+
+### Perguntas para o dono
+- A luz do clarão em primeira pessoa fica π vezes mais forte que a da galeria (a escala do `game-vfx-three` é para as luzes do Laboratório). Quer a da galeria (a receita passa a pedir `4 k / π`) ou a do Laboratório?
+- Cone, espinho e esfera virando discos é aceitável, ou o clarão em primeira pessoa precisa de malha (um tipo de efeito de malha no `game-vfx-three`)?
+- O sopro do lançador e o jato de chama saem de um cano que a receita supõe horizontal. Aceita, ou a receita deve receber a inclinação do cano (um `direction` de verdade, com o passo)?

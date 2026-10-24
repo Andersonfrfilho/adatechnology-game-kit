@@ -39,6 +39,8 @@ export interface InstanceSetup {
   readonly direction?: Vec3Tuple
   /** The surface it hit (`normal` in a recipe). */
   readonly normal?: Vec3Tuple
+  /** Named numbers the recipe reads with `variable(name)`; they are in place before its first step. */
+  readonly values?: Readonly<Record<string, number>>
 }
 
 /**
@@ -104,6 +106,7 @@ export class EffectInstance {
     if (!def) return
     this.schedule.clear()
     this.variables.clear()
+    for (const [name, value] of Object.entries(this.setup.values ?? {})) this.variables.set(name, value)
     for (const behavior of this.deps.behaviors()) behavior.reset(this.host)
     this.time = 0
     this.within(() => {

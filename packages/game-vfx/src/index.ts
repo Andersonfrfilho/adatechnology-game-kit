@@ -7,6 +7,7 @@ export type { ExplosionOptions, FireOptions, VfxOptions, VfxPoolsView, VfxWorld 
 export { EXPLOSIONS, EXPLOSION_ALIASES, patchExplosions } from './catalog'
 export { GAME_EFFECTS, WORKSHOP_EFFECTS, patchEffects } from './effects/catalog'
 export { EVENT_EFFECTS } from './effects/events'
+export { VIEWMODEL_EFFECTS } from './effects/weapons/viewmodel'
 export { EVENT_EFFECTS_MAP, effectForEvent } from './effects/event-map'
 export type { GameEvent } from './effects/event-map'
 export { locales, resolveStrings } from './locale'

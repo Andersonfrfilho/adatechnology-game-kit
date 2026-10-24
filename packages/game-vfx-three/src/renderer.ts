@@ -139,6 +139,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
         ...(request.normal ? { normal: request.normal } : {}),
         ...(request.seed !== undefined ? { seed: request.seed } : {}),
         ...(request.param !== undefined ? { param: request.param } : {}),
+        ...(request.values ? { values: request.values } : {}),
       })
     },
     stop: (handle) => world.stop(handle),

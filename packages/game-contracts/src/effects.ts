@@ -16,6 +16,8 @@ export interface EffectRequest {
   readonly param?: number | string
   /** Multiplies the effect's size and amount. */
   readonly scale?: number
+  /** Named numbers the effect reads (a size, a length of time, a rate): which ones belong to the effect, and an effect that does not read one ignores it. */
+  readonly values?: Readonly<Record<string, number>>
 }
 
 /** Identifies a running effect so it can be stopped. */

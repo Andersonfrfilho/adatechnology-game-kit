@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import { createToolClipPlayer, toolAnimationStep } from '@adatechnology/game-contracts'
-import type { AnimationPose, HostEvent, HostTool, HostToolAttachment, ToolAnimationStep, ToolClipPlayer } from '@adatechnology/game-contracts'
+import type { AnimationPose, EffectSink, HostEvent, HostTool, HostToolAttachment, ToolAnimationStep, ToolClipPlayer } from '@adatechnology/game-contracts'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, CaliberDef, FittedAttachment, MountKind, WeaponDef } from '@adatechnology/game-weapons'
 import { ease } from '../animation/clip-builder'
@@ -56,6 +56,8 @@ export interface ViewmodelOptions {
   attachmentModels?: AttachmentModelRegistry
   /** How far a laser beam goes (metres) from a point along a direction, or null when it hits nothing. */
   raycast?: LaserRaycast
+  /** The host's effects (`host.effects`): the muzzle flash, the smoke, the backblast and the flame jet are recipes it plays. Without it they are not shown. */
+  effects?: EffectSink
 }
 
 /** The weapon in the hands for the models the gallery drew: it follows the camera, plays the clips of the rule's events, and throws casings, magazines and smoke. */
@@ -103,7 +105,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const distance = (): number => options.soundDistance?.() ?? 0
   const particles = createParticles(THREE, scene, groundAt)
   particles.onBounce = (kind) => (kind === 'casing' ? audio?.clink() : kind === 'magazine' ? audio?.thud() : undefined)
-  const effects = createEffects(kit, scene, particles, random)
+  const effects = createEffects(THREE, options.effects, random)
   const hand = new THREE.Group()
   hand.name = VIEWMODEL_NODE_NAME
   scene.add(hand)
@@ -294,7 +296,6 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
           tasks = tasks.filter((other) => other !== task)
         }
       }
-      effects.update(dt)
       particles.update(dt)
     },
     setCondition(next) {
@@ -313,7 +314,6 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     dispose() {
       release()
       particles.dispose()
-      effects.dispose()
       hand.removeFromParent()
     },
   }

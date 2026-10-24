@@ -58,6 +58,7 @@ function evaluateCall(name: string, args: readonly unknown[]): unknown {
     case 'neg': return -asNumber(first)
     case 'abs': return Math.abs(asNumber(first))
     case 'sqrt': return Math.sqrt(asNumber(first))
+    case 'exp': return Math.exp(asNumber(first))
     case 'sin': return Math.sin(asNumber(first))
     case 'cos': return Math.cos(asNumber(first))
     case 'atan2': return Math.atan2(asNumber(first), asNumber(second))

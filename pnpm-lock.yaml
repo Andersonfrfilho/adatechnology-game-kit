@@ -1063,6 +1063,9 @@ importers:
       '@adatechnology/game-test-room':
         specifier: workspace:*
         version: link:../game-test-room
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
       '@adatechnology/golden-tool':
         specifier: workspace:*
         version: link:../../tools/golden

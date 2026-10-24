@@ -2,6 +2,8 @@
 
 three.js presentation for `@adatechnology/game-weapons`: the real models of the arsenal, the weapon in the hands, ejected casings, sounds (recipes on `@adatechnology/game-audio`; `createWeaponAudio(volume, { engine })` plays on a shared engine) and the weapons test area.
 
+The muzzle flash, the smoke, the backblast of a launched rocket and the flame jet of the weapon in the hands are not drawn here: `createWeaponFx({ effects })` (the test area passes `host.effects`) asks the host's effect sink for the recipes `viewmodel_muzzle_flash`, `weapon_smoke_puff`, `launcher_backblast` and `flame_jet` of `@adatechnology/game-vfx`, with the gallery's numbers (a 55 ms flash growing from 0.6 to 1.5 times its size, six puffs of 1.3 to 1.9 s at 0.45 opacity, 26 puffs and 14 bits of fire behind a rocket, `floor(420 dt scale)` bits a frame from a flame jet). A host without a sink shows none of them. Casings, magazines, the rocket itself and the burning droplets stay meshes of this package.
+
 ## Licenses
 
 The code is MIT. The `assets/weapon-svg/` thumbnails are not code and have their own licenses, which is why the `license` field is an expression:
