@@ -375,7 +375,18 @@ Modelo da execução: `sonnet`.
 
 ### Portões
 
-Na mesma branch da T1.3: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` e `pnpm -r test` verdes (ver a seção T1.3).
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm --filter @adatechnology/game-contracts test` | 24 passaram (16 + 8 de `tool-animation.test.ts`) |
+| `pnpm --filter @adatechnology/game-weapons test` | 99 passaram |
+| `pnpm --filter @adatechnology/game-weapons-three test` | 5 passaram |
+| `pnpm --filter @adatechnology/game-test-room test` | 96 passaram (95 + 1 de ciclo e recarga; `host-events.test.ts` reescrito) |
+| `pnpm lint` | exit 0 |
+| `node examples/weapons-test-area/build.mjs && test.mjs` | `ok: bundle and room page` |
+
+Modelo da execução: `sonnet`.
 
 ## T1.5
 
@@ -435,12 +446,19 @@ Tudo isso mora em `tools/weapons-catalog/decisions.json` (fonte, razão) e foi r
 8. **Cozinhar a granada**: quer que segurar o gatilho encurte a espoleta e o arremesso saia ao soltar? Muda a semântica de `held` das granadas.
 9. **Tanque subterrâneo do posto**: só responde a fogo e a explosão (não a tiro); ok?
 
-| `pnpm --filter @adatechnology/game-contracts test` | 24 passaram (16 + 8 de `tool-animation.test.ts`) |
-| `pnpm --filter @adatechnology/game-weapons test` | 99 passaram |
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm --filter @adatechnology/game-weapons test` | 119 passaram (99 + 18 de `explosives.test.ts` + 2 de `catalog.test.ts`) |
+| `pnpm --filter @adatechnology/weapons-catalog-tool test` / `catalog:check` | 14 passaram / atualizado |
+| `pnpm --filter @adatechnology/game-destruction test` | 96 passaram (84 + 12 de `chain.test.ts`) |
+| `pnpm --filter @adatechnology/game-destruction-three test` | 47 passaram (46 + 1) |
+| `pnpm --filter @adatechnology/game-test-room test` | 94 passaram |
 | `pnpm --filter @adatechnology/game-weapons-three test` | 5 passaram |
-| `pnpm --filter @adatechnology/game-test-room test` | 96 passaram (95 + 1 de ciclo e recarga; `host-events.test.ts` reescrito) |
 | `pnpm lint` | exit 0 |
-| `node examples/weapons-test-area/build.mjs && test.mjs` | `ok: bundle and room page` |
 
 Modelo da execução: `sonnet`.
 
@@ -513,13 +531,14 @@ Steyr AUG, FN P90, Boito, Browning M2, RPG-7 e lança-chamas M2) e `gallery-mode
 |---|---|
 | `pnpm build` | exit 0 |
 | `pnpm -r typecheck` | exit 0 |
-| `pnpm --filter @adatechnology/game-weapons test` | 119 passaram (99 + 18 de `explosives.test.ts` + 2 de `catalog.test.ts`) |
-| `pnpm --filter @adatechnology/weapons-catalog-tool test` / `catalog:check` | 14 passaram / atualizado |
-| `pnpm --filter @adatechnology/game-destruction test` | 96 passaram (84 + 12 de `chain.test.ts`) |
-| `pnpm --filter @adatechnology/game-destruction-three test` | 47 passaram (46 + 1) |
-| `pnpm --filter @adatechnology/game-test-room test` | 94 passaram |
-| `pnpm --filter @adatechnology/game-weapons-three test` | 5 passaram |
+| `pnpm --filter @adatechnology/game-contracts test` | 24 passaram |
+| `pnpm --filter @adatechnology/game-weapons test` | 99 passaram |
+| `pnpm --filter @adatechnology/game-weapons-three test` | 53 passaram (5 de antes, 33 do golden, 10 da arma na mão, 4 dos clipes, e a área ganhou 1) |
+| `pnpm --filter @adatechnology/game-test-room test` | 99 passaram (96 + 2 de X/B e saque + 1 de lançador) |
 | `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro) | exit 0, nenhum arquivo falhou |
+| `node examples/weapons-test-area/build.mjs && node examples/weapons-test-area/test.mjs` | `ok: bundle and room page` |
+| Chrome real (headless): `dist/sala-armas.html`, AK-47 na mão atirando | sem erro de execução; 49 meshes na mão; 126 posicionamentos |
 
 Modelo da execução: `sonnet`.
 
@@ -557,14 +576,5 @@ CI: `.nvmrc` (22) e o job `goldens-node-24` (golden-tool e as suítes sensíveis
 | `pnpm -r typecheck` | exit 0 | (não repetido) |
 | `pnpm lint` | exit 0 | (não repetido) |
 | `pnpm -r test` | todos passam (fleet 875 em 18 arquivos, tools/golden 39) | fleet 875 em 18 arquivos; tools/golden 39 |
-
-| `pnpm --filter @adatechnology/game-contracts test` | 24 passaram |
-| `pnpm --filter @adatechnology/game-weapons test` | 99 passaram |
-| `pnpm --filter @adatechnology/game-weapons-three test` | 53 passaram (5 de antes, 33 do golden, 10 da arma na mão, 4 dos clipes, e a área ganhou 1) |
-| `pnpm --filter @adatechnology/game-test-room test` | 99 passaram (96 + 2 de X/B e saque + 1 de lançador) |
-| `pnpm lint` | exit 0 |
-| `pnpm -r test` (inteiro) | exit 0, nenhum arquivo falhou |
-| `node examples/weapons-test-area/build.mjs && node examples/weapons-test-area/test.mjs` | `ok: bundle and room page` |
-| Chrome real (headless): `dist/sala-armas.html`, AK-47 na mão atirando | sem erro de execução; 49 meshes na mão; 126 posicionamentos |
 
 Modelo da execução: `sonnet`.
