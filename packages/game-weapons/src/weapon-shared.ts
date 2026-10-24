@@ -38,6 +38,8 @@ export interface Scheduled {
 }
 
 export const FAULT_RNG_SALT = 0x6a09e667
+/** Stream of the fuse sampling: separate from the spread and the faults, so a sampled fuse never shifts a shot. */
+export const FUSE_RNG_SALT = 0xbb67ae85
 
 export const findById = <TEntry extends { readonly id: string }>(entries: readonly TEntry[], id: string, label: string): TEntry => {
   const found = entries.find((entry) => entry.id === id)

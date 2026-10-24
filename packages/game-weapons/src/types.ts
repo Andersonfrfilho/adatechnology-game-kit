@@ -290,6 +290,8 @@ export interface WeaponState {
   setCondition(id: string): void
   /** Quality of the rounds, by `rules.ammoQualities` id. */
   setAmmoQuality(id: string): void
+  /** Metres of safety fuse for explosives that burn one (dynamite): replaces the explosive's `fuseLength`; `undefined` goes back to it. */
+  setFuseLength(metres: number | undefined): void
   /** Start putting the weapon in hand; the trigger answers `drawing` until it is ready. */
   draw(): void
   /**

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { explosivePart } from '@adatechnology/game-destruction'
 import type { DestructibleSpec } from '@adatechnology/game-destruction'
-import type { HostEvent } from '@adatechnology/game-contracts'
+import type { HostEvent, ModuleHost } from '@adatechnology/game-contracts'
 import { makeRoom } from './helpers'
 import type { TestRoom } from '../src'
 
@@ -139,5 +139,27 @@ describe('explosives of the room go through the rule of game-weapons', () => {
     run(room, 6)
     expect(explosions).toMatchObject([{ type: 'explosion', cause: 'timer', energy: action.energy, radius: action.radius }])
     expect(room.log.entries({ type: 'explode' })).toHaveLength(1)
+  })
+})
+
+describe('dynamite with a safety fuse', () => {
+  it('is thrown with the short fuse (about 4 s), and the bench sets a longer one that is set down lit and goes off late', () => {
+    const room = makeRoom()
+    const explosions = explosionsOf(room)
+    let lent: ModuleHost | null = null
+    room.loadModule({ id: 'cfg', name: 'cfg', group: 'cfg', items: () => [], attach: (host) => void (lent = host) })
+    equip(room, 'dynamite')
+    room.look([0, 1.7, 5], [0, 0.6, -3])
+    room.use()
+    run(room, 6)
+    expect(explosions).toHaveLength(1)
+    lent!.configureTool?.({ fuse_length: '0.3' })
+    room.tool.refill()
+    room.use()
+    expect(room.log.entries({ type: 'place_charge' })).toHaveLength(1)
+    run(room, 20)
+    expect(explosions).toHaveLength(1)
+    run(room, 25)
+    expect(explosions).toMatchObject([{ cause: 'timer' }, { cause: 'timer' }])
   })
 })

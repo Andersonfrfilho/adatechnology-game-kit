@@ -52,6 +52,8 @@ export interface WeaponRules {
     readonly groundFriction: number
     /** Fraction of the speed kept (and reversed) in a bounce off a wall. */
     readonly wallRestitution: number
+    /** A timer explosive whose fuse is at least this many seconds is set down lit instead of thrown (a long safety fuse: a delayed trap). */
+    readonly placeFuseFrom: number
   }
   readonly draw: number
   readonly clear: number

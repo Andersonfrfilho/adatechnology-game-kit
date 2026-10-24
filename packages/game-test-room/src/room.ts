@@ -209,11 +209,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let toolIndex = Math.max(0, loadout.indexOf('hand'))
   let toolId = loadout[toolIndex] ?? 'hand'
   const toolSettings: { condition?: string; ammoQuality?: string } = {}
-  const SETTING_IDS = { condition: 'condition', ammoQuality: 'ammo_quality' } as const
+  let fuseLength: number | undefined
+  const SETTING_IDS = { condition: 'condition', ammoQuality: 'ammo_quality', fuseLength: 'fuse_length' } as const
   const toolState = (id: string): WeaponState => {
     let s = tools.get(id)
     if (!s) {
       s = arsenal.create(id, { seed: 7, reserve: 999, ...toolSettings })
+      s.setFuseLength(fuseLength)
       s.refill()
       tools.set(id, s)
     }
@@ -1758,9 +1760,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const ammoQuality = settings[SETTING_IDS.ammoQuality]
       if (condition !== undefined) toolSettings.condition = condition
       if (ammoQuality !== undefined) toolSettings.ammoQuality = ammoQuality
+      const fuseMetres = settings[SETTING_IDS.fuseLength] === undefined ? undefined : Number(settings[SETTING_IDS.fuseLength])
+      if (fuseMetres !== undefined && fuseMetres > 0) fuseLength = fuseMetres
       for (const state of tools.values()) {
         if (condition !== undefined) state.setCondition(condition)
         if (ammoQuality !== undefined) state.setAmmoQuality(ammoQuality)
+        if (fuseMetres !== undefined && fuseMetres > 0) state.setFuseLength(fuseMetres)
       }
     },
     on(listener) {

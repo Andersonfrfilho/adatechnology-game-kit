@@ -196,10 +196,13 @@ describe('placed charges', () => {
     expect(event?.type === 'detonate' && event.detonation).toMatchObject({ cause: 'remote', energy: 345600, lethalRadius: 6, injuryRadius: 18, destructionLevel: 3 })
   })
 
-  it('dynamite is thrown with a fuse', () => {
+  it('dynamite is thrown with a short safety fuse, about 4 s (0.03 m at 131 s/m, ±10%)', () => {
     const use = useOf('dynamite')
-    expect(use).toMatchObject({ kind: 'throw', trigger: 'timer', fuse: 4 })
-    expect(detonationOf(run(bodyOf(use), GROUND))?.at).toBeCloseTo(4, 6)
+    expect(use).toMatchObject({ kind: 'throw', trigger: 'timer' })
+    const fuse = use.kind === 'throw' ? use.fuse : 0
+    expect(fuse).toBeGreaterThanOrEqual(0.03 * 131 * 0.9)
+    expect(fuse).toBeLessThanOrEqual(0.03 * 131 * 1.1)
+    expect(detonationOf(run(bodyOf(use), GROUND))?.at).toBeCloseTo(fuse, 6)
   })
 })
 

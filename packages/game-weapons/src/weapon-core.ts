@@ -2,7 +2,7 @@ import { decayHeat } from './heat'
 import { isReloadable } from './reload'
 import { createRng } from './rng'
 import type { AmmoQualityDef, CaliberDef, ConditionDef, ExplosiveDef, FaultId, FireMode, ReloadKind, WeaponAction, WeaponDef, WeaponEvent, WeaponPhase, WeaponRules } from './types'
-import { EPS, FAULT_RNG_SALT, findById } from './weapon-shared'
+import { EPS, FAULT_RNG_SALT, FUSE_RNG_SALT, findById } from './weapon-shared'
 import type { Scheduled, WeaponStateInit } from './weapon-shared'
 
 const DEFAULT_THROWABLES = 3
@@ -20,6 +20,9 @@ export abstract class WeaponCore {
   protected readonly initialReserve: number
   protected readonly rules: WeaponRules
   protected readonly faultRng: () => number
+  protected readonly fuseRng: () => number
+  /** Metres of safety fuse set by the host; replaces the `fuseLength` of the explosive. */
+  protected fuseLengthOverride: number | undefined
   protected readonly explosive: ExplosiveDef | null
 
   protected clock = 0
@@ -58,6 +61,7 @@ export abstract class WeaponCore {
     this.rules = init.rules
     this.rng = createRng(init.seed)
     this.faultRng = createRng((init.seed ^ FAULT_RNG_SALT) >>> 0)
+    this.fuseRng = createRng((init.seed ^ FUSE_RNG_SALT) >>> 0)
     this.explosive = init.explosive ?? null
     this._safety = init.rules.startSafe
     this._condition = findById(init.rules.conditions, init.condition ?? init.rules.defaultCondition, 'condition')

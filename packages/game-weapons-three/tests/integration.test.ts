@@ -93,7 +93,7 @@ describe('bench of the weapons module', () => {
   it('declares the layers, the controls and the metrics, and the room accepts them', () => {
     const { room } = areaRoom()
     const bench = room.bench('weapons_area')
-    expect(bench?.controls().map((control) => control.id)).toEqual(['condition', 'ammo_quality', 'sound_distance'])
+    expect(bench?.controls().map((control) => control.id)).toEqual(['condition', 'ammo_quality', 'sound_distance', 'fuse_length'])
     expect(bench?.layers().map((layer) => layer.id)).toEqual(['muzzle_flash', 'casings', 'magazines'])
     expect(Object.keys(room.metrics().module).sort()).toEqual(['casings_live', 'heat', 'magazines_live'])
   })

@@ -1,4 +1,5 @@
 import { launcherUses, throwableUse } from './explosive-use'
+import { sampleFuse } from './fuse'
 import { heatPerRound } from './heat'
 import { isReloadable } from './reload'
 import { normalize } from './rng'
@@ -124,6 +125,7 @@ export class WeaponRuntime extends WeaponFirearm implements WeaponState {
     if (!this.oncePerPull(held)) return result('cooldown')
     if (this._ammo <= 0) return result('empty')
     this._ammo -= 1
-    return result('ok', { uses: [throwableUse(a, this.explosive, origin, dir)], noise: a.noise })
+    const fuse = (this.explosive ? sampleFuse(this.explosive, this.fuseRng, this.fuseLengthOverride) : undefined) ?? a.fuse
+    return result('ok', { uses: [throwableUse({ action: a, explosive: this.explosive, origin, direction: dir, fuse, rules: this.rules.explosives })], noise: a.noise })
   }
 }

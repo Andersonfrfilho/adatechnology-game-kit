@@ -37,6 +37,10 @@ export abstract class WeaponCommands extends WeaponCore {
     this._ammoQuality = findById(this.rules.ammoQualities, id, 'ammo quality')
   }
 
+  setFuseLength(metres: number | undefined): void {
+    this.fuseLengthOverride = metres
+  }
+
   draw(): void {
     const seconds = drawSeconds(this.action, this.rules)
     this.drawEnd = this.clock + seconds

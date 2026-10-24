@@ -60,13 +60,18 @@ const buildOne = (id: string, decision: ExplosiveDecision, inputs: ExplosiveInpu
   record.destructionLevel = arsenal?.destructionLevel ?? world?.destructionLevel
   record.noise = arsenal?.noise ?? world?.noise
   if (extras?.fuse !== undefined) record.fuse = extras.fuse
+  if (extras?.fuseRange) record.fuseRange = extras.fuseRange
+  if (extras?.fuseLength !== undefined) record.fuseLength = extras.fuseLength
+  if (extras?.burnRate !== undefined) record.burnRate = extras.burnRate
+  if (extras?.burnTolerance !== undefined) record.burnTolerance = extras.burnTolerance
   if (extras?.stunSeconds !== undefined) record.stunSeconds = extras.stunSeconds
   const fire = fireOf(decision, inputs)
   if (fire) record.fire = fire
   record.triggers = decision.triggers.value
   if (extras?.chain) record.chain = extras.chain
   if (extras?.mass !== undefined) record.mass = extras.mass
-  const origins = [arsenal ? 'arsenal' : undefined, 'lab', names.game ? 'game' : undefined, names.gallery ? 'gallery' : undefined, world || decision.copyOf ? 'derived' : undefined]
+  const isReferenced = extras?.fuseRange !== undefined || extras?.burnRate !== undefined
+  const origins = [arsenal ? 'arsenal' : undefined, 'lab', names.game ? 'game' : undefined, names.gallery ? 'gallery' : undefined, isReferenced ? 'reference' : undefined, world || decision.copyOf ? 'derived' : undefined]
   record.sources = origins.filter((origin) => origin !== undefined)
   return record as ExplosiveRecord
 }

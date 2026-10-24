@@ -56,6 +56,10 @@ export type ExplosiveChainDecision = {
 export type ExplosiveExtras = {
   readonly chain?: ExplosiveChainDecision
   readonly fuse?: number
+  readonly fuseRange?: readonly [number, number]
+  readonly fuseLength?: number
+  readonly burnRate?: number
+  readonly burnTolerance?: number
   readonly mass?: number
   readonly stunSeconds?: number
   readonly cone?: boolean

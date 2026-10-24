@@ -1395,10 +1395,12 @@
       },
       "extras": {
         "value": {
-          "fuse": 4
+          "fuseLength": 0.03,
+          "burnRate": 131,
+          "burnTolerance": 0.1
         },
-        "source": "derived",
-        "reason": "Q7: a Galeria diz \"feixe de 3 bananas com pavio\" e o Laboratório não dá tempo (só a cena de demonstração); sem número nas fontes, usa a espoleta da M67 (4 s, Arsenal §13) até o dono decidir."
+        "source": "reference",
+        "reason": "Dono (2026-10-24), Q7: a espoleta da dinamite é pavio de segurança, que queima cerca de 131 s/m com ±10% (Chemring Safety Fuze, https://www.chemring.com/~/media/Files/C/Chemring-V3/documents/energetics/heds/safety-fuze-apr22.pdf; Primetake 9504, https://www.primetake.com/wp-content/uploads/sites/5/2016/03/9504.pdf; 30 CFR 57.6502). Pavio padrão de 0,03 m (cerca de 4 s); o jogo pode pôr um mais longo para armadilhas com atraso."
       }
     },
     "c4": {
@@ -1506,10 +1508,13 @@
       "extras": {
         "value": {
           "stunSeconds": 4,
-          "fuse": 4
+          "fuseRange": [
+            1.0,
+            2.3
+          ]
         },
-        "source": "arsenal",
-        "reason": "Atordoa por 4 s (Arsenal §13). Q7: espoleta sem número nas fontes (o Laboratório usa 2,1 s só na demonstração); usa a da M67 (4 s) até o dono decidir."
+        "source": "reference",
+        "reason": "Atordoa por 4 s (Arsenal §13). Dono (2026-10-24), Q7: atraso real da M84 de 1,0 a 2,3 s depois de soltar a alavanca, sorteado por arremesso com a semente da regra (https://en.wikipedia.org/wiki/M84_stun_grenade ; pesquisa de mercado SAM.gov https://sam.gov/opp/ec681d45302a4afb8e4c4b6f4ea50cd1/view ; GlobalSecurity XM84)."
       }
     },
     "m79_40mm": {

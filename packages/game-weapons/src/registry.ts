@@ -1,3 +1,4 @@
+import { nominalFuse } from './fuse'
 import { deepMerge } from './merge'
 import type { DeepPartial, ExplosiveDef, WeaponDef } from './types'
 
@@ -22,7 +23,7 @@ export const removeIds = (entries: Map<string, unknown>, ids: readonly string[] 
   for (const id of ids ?? []) entries.delete(id)
 }
 
-/** A throwable that names an explosive takes its energy, noise, lethal radius, fuse and fire from it, so changing the explosive changes the throwable. */
+/** A throwable that names an explosive takes its energy, noise, lethal radius, fuse (the nominal one, when it is sampled per throw) and fire from it, so changing the explosive changes the throwable. */
 export const resolveThrowables = (weapons: Map<string, WeaponDef>, explosives: ReadonlyMap<string, ExplosiveDef>): void => {
   for (const [id, def] of weapons) {
     if (def.action.kind !== 'throwable' || def.action.explosive === undefined) continue
@@ -30,6 +31,6 @@ export const resolveThrowables = (weapons: Map<string, WeaponDef>, explosives: R
     if (!explosive) continue
     const radius = explosive.lethalRadius > 0 ? explosive.lethalRadius : def.action.radius
     const fire = explosive.fire ? { ...explosive.fire } : def.action.fire
-    weapons.set(id, { ...def, action: { ...def.action, energy: explosive.energy, noise: explosive.noise, radius, fuse: explosive.fuse ?? def.action.fuse, ...(fire ? { fire } : {}) } })
+    weapons.set(id, { ...def, action: { ...def.action, energy: explosive.energy, noise: explosive.noise, radius, fuse: nominalFuse(explosive) ?? def.action.fuse, ...(fire ? { fire } : {}) } })
   }
 }

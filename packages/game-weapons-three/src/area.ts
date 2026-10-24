@@ -33,6 +33,9 @@ export const COUNTER_ITEM_ID = 'counter_weapons'
 const EXPLOSION_VOLUME_BASE = 0.4
 const EXPLOSION_VOLUME_PER_METRE = 0.04
 const SOUND_DISTANCE_MAX = 200
+/** Longest safety fuse the bench offers, metres: one metre burns 131 s, enough to see a delayed trap. */
+const FUSE_LENGTH_MAX = 1
+const DEFAULT_FUSE_LENGTH = 0.03
 const COUNTER = { length: 4.8, depth: 1.6, height: 0.9 }
 // three columns on the free left side of the room, in two rows: counters fill in this order
 const COUNTER_X = [-6.5, -9, -11.5]
@@ -72,6 +75,8 @@ interface Text {
   ammoQualities: Record<string, string>
   soundDistance: string
   soundDistanceHint: string
+  fuseLength: string
+  fuseLengthHint: string
   layers: Record<'muzzle_flash' | 'casings' | 'magazines', string>
   metrics: Record<'casings_live' | 'magazines_live' | 'heat', string>
 }
@@ -93,6 +98,8 @@ const TEXT: Record<string, Text> = {
     ammoQualities: { factory: 'Factory', reloaded: 'Reloaded' },
     soundDistance: 'Sound distance',
     soundDistanceHint: 'How far the listener is from the shot: farther is quieter and duller',
+    fuseLength: 'Dynamite fuse length',
+    fuseLengthHint: 'Metres of safety fuse (131 s per metre): a long one is set down lit, for a delayed trap',
     layers: { muzzle_flash: 'Muzzle flash', casings: 'Ejected casings', magazines: 'Dropped magazines' },
     metrics: { casings_live: 'Casings in the scene', magazines_live: 'Magazines in the scene', heat: 'Barrel heat' },
   },
@@ -112,6 +119,8 @@ const TEXT: Record<string, Text> = {
     ammoQualities: { factory: 'De fábrica', reloaded: 'Recarregada' },
     soundDistance: 'Distância do som',
     soundDistanceHint: 'Quão longe o ouvinte está do tiro: mais longe soa mais baixo e abafado',
+    fuseLength: 'Pavio da dinamite',
+    fuseLengthHint: 'Metros de pavio de segurança (131 s por metro): um longo é posto no chão aceso, para armadilha com atraso',
     layers: { muzzle_flash: 'Clarão do cano', casings: 'Cápsulas ejetadas', magazines: 'Pentes que caem' },
     metrics: { casings_live: 'Cápsulas na cena', magazines_live: 'Pentes na cena', heat: 'Calor do cano' },
   },
@@ -265,6 +274,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         default: arsenal.rules.defaultAmmoQuality,
       },
       { kind: 'number', id: 'sound_distance', name: text.soundDistance, hint: text.soundDistanceHint, unit: 'm', min: 0, max: SOUND_DISTANCE_MAX, step: 5, default: 0 },
+      { kind: 'number', id: 'fuse_length', name: text.fuseLength, hint: text.fuseLengthHint, unit: 'm', min: 0.01, max: FUSE_LENGTH_MAX, step: 0.01, default: arsenal.explosives.get('dynamite')?.fuseLength ?? DEFAULT_FUSE_LENGTH },
     ],
     layers: (): ModuleLayer[] => (['muzzle_flash', 'casings', 'magazines'] as const).map((id) => ({ id, name: text.layers[id] })),
     metrics: (): ModuleMetric[] => [
@@ -299,6 +309,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
             lent.configureTool?.({ condition: change.value })
           } else if (change.id === 'ammo_quality') lent.configureTool?.({ ammo_quality: change.value })
         } else if (change.kind === 'control' && change.id === 'sound_distance' && typeof change.value === 'number') soundDistance = change.value
+        else if (change.kind === 'control' && change.id === 'fuse_length' && typeof change.value === 'number') lent.configureTool?.({ fuse_length: String(change.value) })
       })
       const offEvents = lent.on((event) => {
         if (event.type === 'explosion') {

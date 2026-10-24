@@ -106,14 +106,17 @@
     "energy": 102400,
     "destructionLevel": 3,
     "noise": 600,
-    "fuse": 4,
+    "fuseLength": 0.03,
+    "burnRate": 131,
+    "burnTolerance": 0.1,
     "triggers": [
       "timer"
     ],
     "sources": [
       "arsenal",
       "lab",
-      "gallery"
+      "gallery",
+      "reference"
     ]
   },
   {
@@ -166,7 +169,10 @@
     "energy": 0,
     "destructionLevel": 0,
     "noise": 400,
-    "fuse": 4,
+    "fuseRange": [
+      1,
+      2.3
+    ],
     "stunSeconds": 4,
     "triggers": [
       "timer"
@@ -174,7 +180,8 @@
     "sources": [
       "arsenal",
       "lab",
-      "gallery"
+      "gallery",
+      "reference"
     ]
   },
   {

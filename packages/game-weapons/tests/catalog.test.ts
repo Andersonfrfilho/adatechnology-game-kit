@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { ARCHETYPE_IDS, CALIBERS, DEFAULT_LOADOUT, EXPLOSIVES, WEAPONS, checkArsenal, createArsenal } from '../src'
+import { ARCHETYPE_IDS, CALIBERS, DEFAULT_LOADOUT, EXPLOSIVES, WEAPONS, checkArsenal, createArsenal, nominalFuse } from '../src'
 import type { WeaponDef } from '../src'
 
 const arsenal = createArsenal()
@@ -112,7 +112,7 @@ describe('explosives', () => {
       expect(def.action.backblast, def.id).toBe(def.id === 'm79' ? 0 : 5)
       expect(def.action.minArmDistance, def.id).toBe(10)
     }
-    for (const explosive of EXPLOSIVES) if (explosive.triggers?.includes('timer')) expect(explosive.fuse, explosive.id).toBeGreaterThan(0)
+    for (const explosive of EXPLOSIVES) if (explosive.triggers?.includes('timer')) expect(nominalFuse(explosive), explosive.id).toBeGreaterThan(0)
   })
 
   it('name every projectile of every launcher', () => {
