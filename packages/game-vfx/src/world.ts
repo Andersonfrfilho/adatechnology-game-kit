@@ -6,6 +6,10 @@ import { DEFAULT_GRAVITY, DEFAULT_WIND } from './constants'
 import type { RandomMode, VfxCore } from './core'
 import { addFire, createFirePool, updateFires } from './emitters/fire'
 import type { Fire } from './emitters/fire'
+import { WORKSHOP_EFFECTS } from './effects/catalog'
+import { createEffectPlayer } from './effects/player'
+import type { EffectPlayer, PlayOptions } from './effects/player'
+import type { EffectDef } from './effects/types'
 import { composeExplosion } from './explosion'
 import type { GroundField } from './ground'
 import { createLightPool, resetLightPool, updateLights } from './lights'
@@ -31,6 +35,8 @@ import type { MutableVec3, RandomStream } from './random'
 import { createSchedule } from './schedule'
 import { createScreenState, resetScreenState, updateScreen } from './screen'
 import type { VfxTrace } from './trace'
+import { WorkshopEngine } from './workshop/engine'
+import type { Vec3Tuple } from './workshop/types'
 import type { AreaCap, ExplosionDef, Follow, LodBands, ScreenState, VfxLayer, VfxProfile, VfxProfileName, VfxSideRequest, VfxStats, Vec3Like } from './types'
 import { VFX_LAYERS } from './types'
 
@@ -51,6 +57,8 @@ export interface VfxOptions {
   /** The catalogue by id (default the Lab's 16 and `generic`); build another with `patchExplosions(EXPLOSIONS, ...)`. */
   readonly explosions?: Readonly<Record<string, ExplosionDef>>
   readonly aliases?: Readonly<Record<string, string>>
+  /** The Workshop's recipes by id for `play` (default `WORKSHOP_EFFECTS`; build another with `patchEffects`). */
+  readonly effects?: Readonly<Record<string, EffectDef>>
   readonly reducedMotion?: boolean
   /** Hears everything that spawns, in order (the goldens use it). */
   readonly trace?: VfxTrace
@@ -103,6 +111,15 @@ export interface VfxWorld {
   explosion(id: string, point: Vec3Like, options?: ExplosionOptions): number | null
   /** A lingering area fire (a molotov's pool, a burning part). Returns a handle for `stop`. */
   fire(options: FireOptions): number
+  /**
+   * Plays a recipe of the Workshop (a blood hit, a muzzle flash, a collapse) at `point`, facing `options.direction`, into the world's Workshop pools
+   * (`workshop()`); `null` when the id is unknown. Returns a handle for `stop`.
+   */
+  play(id: string, point: Vec3Like, options?: PlayOptions): number | null
+  /** The Workshop's pools (sprites, streaks, debris, decals, rings, lights, screen): what the renderer draws for `play`. Made on first use. */
+  workshop(): WorkshopEngine
+  /** The ids `play` accepts. */
+  effectIds(): readonly string[]
   /** Pushes the smoke and dust within `radius` of `point` outwards, as fast as `speed` at the centre. */
   push(point: Vec3Like, radius: number, speed: number): void
   stop(handle: number): void
@@ -211,7 +228,27 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
     composeExplosion(core, def, { x: point[0], y: point[1], z: point[2], direction: call.direction, random: call.random, handle: call.handle })
   }
 
+  let engine: WorkshopEngine | undefined
+  let player: EffectPlayer | undefined
+  const effects = options.effects ?? WORKSHOP_EFFECTS
+  const view = { get position(): Vec3Tuple { return [camera.x, camera.y, camera.z] }, forward: (local: readonly number[]): Vec3Tuple => [local[0] ?? 0, local[1] ?? 0, local[2] ?? 0] }
+
+  function workshop(): WorkshopEngine {
+    return (engine ??= new WorkshopEngine({ random: sharedRandom, profile, groundAt }))
+  }
+
+  function effectPlayer(): EffectPlayer {
+    return (player ??= createEffectPlayer({ engine: workshop(), effects, view }))
+  }
+
   return {
+    play(id, point, playOptions = {}) {
+      if (!(id in effects)) return null
+      const seed = playOptions.seed ?? (randomMode === 'shared' ? undefined : Math.imul(++handles.events, AUTO_SEED) + (options.seed ?? 0))
+      return effectPlayer().play(id, [point[0], point[1], point[2]], { ...playOptions, ...(seed !== undefined ? { seed } : {}) })
+    },
+    workshop,
+    effectIds: () => Object.keys(effects),
     explosion(id, point, explosionOptions = {}) {
       const base = definitionOf(id)
       if (!base) return null
@@ -246,6 +283,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
       }
     },
     stop(handle) {
+      player?.stop(handle)
       const fires = core.fires
       for (let index = fires.items.length - 1; index >= 0; index--) if (fires.items[index]!.handle === handle) fires.removeAt(index)
     },
@@ -273,6 +311,11 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
       updateFires(core, dt)
       updateLights(core.lights, { dt, flashLayer: layers.flash ? 1 : 0, clock: core.clock.time, fires: core.fires.items })
       updateScreen(core.screen, dt)
+      if (engine) {
+        engine.post = {}
+        player?.update(dt)
+        engine.update(dt)
+      }
     },
     screen: () => core.screen,
     stats() {
@@ -307,6 +350,8 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
       ground?.reset()
       resetLightPool(core.lights)
       resetScreenState(core.screen)
+      player?.clear()
+      engine?.clear()
       core.clock.time = 0
       core.clock.lastBlast = -1
       core.clock.lod = 1
