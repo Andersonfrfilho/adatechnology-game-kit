@@ -3,7 +3,7 @@ import type { ContainerState, FluidWorld, Vec3 } from '@adatechnology/game-fluid
 import { boxSolid, clipSolid, cylinderSolid } from './clip'
 import type { Solid, V3 } from './clip'
 import type { MaterialCache } from './materials'
-import type { ParticlePool } from './particles'
+import type { FluidSprites } from './sprites'
 import type { QualityProfile } from './quality'
 import type { ThreeLib } from './types'
 
@@ -77,7 +77,7 @@ export class LiquidBody {
     } else this.mesh.geometry = this.geometry
   }
 
-  update(dt: number, world: FluidWorld, materials: MaterialCache, quality: QualityProfile, particles: ParticlePool): void {
+  update(dt: number, world: FluidWorld, materials: MaterialCache, quality: QualityProfile, particles: FluidSprites): void {
     const state = world.container(this.containerId)
     const def = state?.liquid ? world.liquids.get(state.liquid) : undefined
     if (!state || !state.shape || !def || state.liters <= 1e-6) {

@@ -1,0 +1,977 @@
+{
+  "m67": {
+    "id": "m67",
+    "lethal": 5,
+    "injury": 15,
+    "visualRadius": 1.3,
+    "fireballs": 16,
+    "heat": 1,
+    "smoke": {
+      "color": 6972767,
+      "count": 18,
+      "life": 5.5
+    },
+    "dust": {
+      "color": 8221544,
+      "count": 30
+    },
+    "shrapnel": {
+      "count": 150,
+      "kind": 0,
+      "speed": 34
+    },
+    "chunks": {
+      "count": 14,
+      "colors": [
+        3881528,
+        2894634,
+        4867650
+      ],
+      "hot": 0.25
+    },
+    "mark": {
+      "scorch": 1.7,
+      "crater": 0.9,
+      "dent": 0.25
+    },
+    "flash": {
+      "light": 45,
+      "life": 0.45,
+      "color": 16752720,
+      "intensity": 6
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 1.1,
+    "push": 9,
+    "sources": [
+      "lab:L796",
+      "lab:L793"
+    ]
+  },
+  "molotov": {
+    "id": "molotov",
+    "lethal": 0,
+    "injury": 4,
+    "visualRadius": 1.1,
+    "fireballs": 24,
+    "fuel": true,
+    "heat": 0.95,
+    "heatLifeScale": 1.5,
+    "smoke": {
+      "color": 3814449,
+      "count": 3,
+      "life": 3.5
+    },
+    "dust": {
+      "color": 8221544,
+      "count": 0
+    },
+    "shrapnel": {
+      "count": 0,
+      "kind": 0,
+      "speed": 28
+    },
+    "chunks": {
+      "count": 0,
+      "colors": [
+        3881528,
+        2894634,
+        4867650
+      ],
+      "hot": 0.3
+    },
+    "mark": {
+      "scorch": 2.4
+    },
+    "flash": {
+      "light": 22,
+      "life": 1.2,
+      "color": 16747066,
+      "intensity": 6
+    },
+    "shock": false,
+    "shake": 0.25,
+    "push": 0,
+    "ignite": 4.2,
+    "sources": [
+      "lab:L797",
+      "lab:L793"
+    ]
+  },
+  "pipe_bomb": {
+    "id": "pipe_bomb",
+    "lethal": 3,
+    "injury": 10,
+    "visualRadius": 1,
+    "fireballs": 8,
+    "heat": 1,
+    "smoke": {
+      "color": 11841704,
+      "count": 26,
+      "life": 6,
+      "kind": 3
+    },
+    "dust": {
+      "color": 8221544,
+      "count": 22
+    },
+    "shrapnel": {
+      "count": 220,
+      "kind": 1,
+      "speed": 30,
+      "width": 0.03
+    },
+    "chunks": {
+      "count": 8,
+      "colors": [
+        5132886,
+        3816768
+      ],
+      "plate": true,
+      "hot": 0.2
+    },
+    "mark": {
+      "scorch": 1.3,
+      "crater": 0.7,
+      "dent": 0.18
+    },
+    "flash": {
+      "light": 30,
+      "life": 0.45,
+      "color": 16752720,
+      "intensity": 6
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 1,
+    "push": 7,
+    "sources": [
+      "lab:L798",
+      "lab:L793"
+    ]
+  },
+  "propane_p13": {
+    "id": "propane_p13",
+    "lethal": 5,
+    "injury": 14,
+    "visualRadius": 2.2,
+    "fireballs": 34,
+    "fuel": true,
+    "heat": 1,
+    "smoke": {
+      "color": 3814449,
+      "count": 10,
+      "life": 8
+    },
+    "dust": {
+      "color": 8221544,
+      "count": 26
+    },
+    "shrapnel": {
+      "count": 70,
+      "kind": 0,
+      "speed": 28,
+      "embers": 30
+    },
+    "chunks": {
+      "count": 8,
+      "colors": [
+        3891098,
+        2835824
+      ],
+      "plate": true,
+      "hot": 0.5
+    },
+    "mark": {
+      "scorch": 2.6
+    },
+    "flash": {
+      "light": 70,
+      "life": 1.1,
+      "color": 16751168,
+      "intensity": 6
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 1.4,
+    "push": 8,
+    "mushroom": {
+      "height": 7,
+      "radius": 2.6,
+      "count": 36,
+      "stem": 16,
+      "life": 8
+    },
+    "residualFires": [
+      {
+        "radius": 1.4,
+        "life": 7,
+        "rate": 20
+      }
+    ],
+    "ignite": 5,
+    "hotParts": true,
+    "sources": [
+      "lab:L799",
+      "lab:L793"
+    ]
+  },
+  "dynamite": {
+    "id": "dynamite",
+    "lethal": 4,
+    "injury": 12,
+    "visualRadius": 1.4,
+    "fireballs": 12,
+    "heat": 1,
+    "smoke": {
+      "color": 8019006,
+      "count": 24,
+      "life": 7
+    },
+    "dust": {
+      "color": 8019006,
+      "count": 46
+    },
+    "shrapnel": {
+      "count": 90,
+      "kind": 0,
+      "speed": 28
+    },
+    "chunks": {
+      "count": 26,
+      "colors": [
+        6965806,
+        8018490,
+        4863526
+      ],
+      "hot": 0.15,
+      "speed": 1.2
+    },
+    "mark": {
+      "scorch": 2.4,
+      "crater": 1.8,
+      "dent": 0.7
+    },
+    "flash": {
+      "light": 55,
+      "life": 0.45,
+      "color": 16752720,
+      "intensity": 6
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 1.5,
+    "push": 10,
+    "sources": [
+      "lab:L800",
+      "lab:L793"
+    ]
+  },
+  "c4": {
+    "id": "c4",
+    "lethal": 6,
+    "injury": 18,
+    "visualRadius": 1.6,
+    "fireballs": 20,
+    "heat": 1.25,
+    "smoke": {
+      "color": 6972767,
+      "count": 22,
+      "life": 7
+    },
+    "dust": {
+      "color": 9407106,
+      "count": 50
+    },
+    "shrapnel": {
+      "count": 200,
+      "kind": 0,
+      "speed": 42
+    },
+    "chunks": {
+      "count": 32,
+      "colors": [
+        9078140,
+        7301730,
+        3881528
+      ],
+      "hot": 0.3,
+      "speed": 1.4
+    },
+    "mark": {
+      "scorch": 3,
+      "crater": 2.3,
+      "dent": 0.9
+    },
+    "flash": {
+      "light": 90,
+      "life": 0.35,
+      "color": 16773328,
+      "intensity": 9
+    },
+    "shock": {
+      "duration": 0.28
+    },
+    "shake": 2.2,
+    "push": 13,
+    "sources": [
+      "lab:L801",
+      "lab:L793"
+    ]
+  },
+  "claymore": {
+    "id": "claymore",
+    "lethal": 15,
+    "injury": 50,
+    "visualRadius": 0.7,
+    "fireballs": 6,
+    "heat": 1,
+    "smoke": {
+      "color": 6972767,
+      "count": 8,
+      "life": 4
+    },
+    "dust": {
+      "color": 8221544,
+      "count": 34
+    },
+    "shrapnel": {
+      "count": 700,
+      "kind": 1,
+      "speed": 55,
+      "width": 0.025
+    },
+    "chunks": {
+      "count": 6,
+      "colors": [
+        3881528,
+        2894634,
+        4867650
+      ],
+      "hot": 0.3
+    },
+    "mark": {
+      "scorch": 0.9
+    },
+    "flash": {
+      "light": 28,
+      "life": 0.45,
+      "color": 16752720,
+      "intensity": 6
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 1,
+    "push": 8,
+    "cone": {
+      "angle": 0,
+      "half": 0.5235987755982988,
+      "length": 50
+    },
+    "directionBias": 2,
+    "sources": [
+      "lab:L802",
+      "lab:L793"
+    ]
+  },
+  "flashbang": {
+    "id": "flashbang",
+    "lethal": 0,
+    "injury": 10,
+    "visualRadius": 0.5,
+    "fireballs": 0,
+    "heat": 1,
+    "smoke": {
+      "color": 11841704,
+      "count": 10,
+      "life": 5,
+      "kind": 3
+    },
+    "dust": {
+      "color": 8221544,
+      "count": 0
+    },
+    "shrapnel": {
+      "count": 60,
+      "kind": 2,
+      "speed": 12
+    },
+    "chunks": {
+      "count": 0,
+      "colors": [
+        3881528,
+        2894634,
+        4867650
+      ],
+      "hot": 0.3
+    },
+    "mark": {
+      "scorch": 0.4
+    },
+    "flash": {
+      "light": 160,
+      "life": 0.2,
+      "color": 16054015,
+      "intensity": 14,
+      "blinding": true
+    },
+    "shock": false,
+    "shake": 0.4,
+    "push": 0,
+    "sources": [
+      "lab:L803",
+      "lab:L793"
+    ]
+  },
+  "m79_40mm": {
+    "id": "m79_40mm",
+    "lethal": 4,
+    "injury": 12,
+    "visualRadius": 1.1,
+    "fireballs": 14,
+    "heat": 1,
+    "smoke": {
+      "color": 6972767,
+      "count": 14,
+      "life": 5
+    },
+    "dust": {
+      "color": 8221544,
+      "count": 24
+    },
+    "shrapnel": {
+      "count": 130,
+      "kind": 0,
+      "speed": 28
+    },
+    "chunks": {
+      "count": 12,
+      "colors": [
+        3881528,
+        2894634,
+        4867650
+      ],
+      "hot": 0.3
+    },
+    "mark": {
+      "scorch": 1.5,
+      "crater": 0.8,
+      "dent": 0.22
+    },
+    "flash": {
+      "light": 40,
+      "life": 0.45,
+      "color": 16752720,
+      "intensity": 6
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 1,
+    "push": 8,
+    "sources": [
+      "lab:L804",
+      "lab:L793"
+    ]
+  },
+  "m72_66mm": {
+    "id": "m72_66mm",
+    "lethal": 5,
+    "injury": 15,
+    "visualRadius": 1.5,
+    "fireballs": 22,
+    "heat": 1,
+    "smoke": {
+      "color": 6972767,
+      "count": 16,
+      "life": 6
+    },
+    "dust": {
+      "color": 9407106,
+      "count": 30
+    },
+    "shrapnel": {
+      "count": 180,
+      "kind": 0,
+      "speed": 40
+    },
+    "chunks": {
+      "count": 24,
+      "colors": [
+        9078140,
+        7301730
+      ],
+      "hot": 0.3
+    },
+    "mark": {
+      "scorch": 2
+    },
+    "flash": {
+      "light": 60,
+      "life": 0.45,
+      "color": 16752720,
+      "intensity": 6
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 1.5,
+    "push": 11,
+    "directionBias": 1.4,
+    "sources": [
+      "lab:L805",
+      "lab:L793"
+    ]
+  },
+  "at4_84mm": {
+    "id": "at4_84mm",
+    "lethal": 5,
+    "injury": 16,
+    "visualRadius": 1.7,
+    "fireballs": 26,
+    "heat": 1.15,
+    "smoke": {
+      "color": 6972767,
+      "count": 18,
+      "life": 6.5
+    },
+    "dust": {
+      "color": 9407106,
+      "count": 34
+    },
+    "shrapnel": {
+      "count": 220,
+      "kind": 0,
+      "speed": 46
+    },
+    "chunks": {
+      "count": 30,
+      "colors": [
+        9078140,
+        7301730
+      ],
+      "hot": 0.35
+    },
+    "mark": {
+      "scorch": 2.2,
+      "crater": 1.4,
+      "dent": 0.5
+    },
+    "flash": {
+      "light": 70,
+      "life": 0.45,
+      "color": 16752720,
+      "intensity": 6
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 1.7,
+    "push": 12,
+    "directionBias": 1.6,
+    "sources": [
+      "lab:L806",
+      "lab:L793"
+    ]
+  },
+  "pg7v": {
+    "id": "pg7v",
+    "lethal": 5,
+    "injury": 16,
+    "visualRadius": 1.8,
+    "fireballs": 28,
+    "heat": 1,
+    "smoke": {
+      "color": 6972767,
+      "count": 18,
+      "life": 7
+    },
+    "dust": {
+      "color": 9407106,
+      "count": 34
+    },
+    "shrapnel": {
+      "count": 200,
+      "kind": 0,
+      "speed": 42,
+      "embers": 20
+    },
+    "chunks": {
+      "count": 28,
+      "colors": [
+        9078140,
+        7301730
+      ],
+      "hot": 0.4
+    },
+    "mark": {
+      "scorch": 2.2
+    },
+    "flash": {
+      "light": 70,
+      "life": 0.45,
+      "color": 16752720,
+      "intensity": 6
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 1.7,
+    "push": 12,
+    "directionBias": 1.2,
+    "sources": [
+      "lab:L807",
+      "lab:L793"
+    ]
+  },
+  "fuel_barrel": {
+    "id": "fuel_barrel",
+    "lethal": 4,
+    "injury": 12,
+    "visualRadius": 1.9,
+    "fireballs": 28,
+    "fuel": true,
+    "heat": 1,
+    "smoke": {
+      "color": 3814449,
+      "count": 8,
+      "life": 8
+    },
+    "dust": {
+      "color": 8221544,
+      "count": 22
+    },
+    "shrapnel": {
+      "count": 60,
+      "kind": 0,
+      "speed": 28,
+      "embers": 24
+    },
+    "chunks": {
+      "count": 10,
+      "colors": [
+        10165272,
+        5902864
+      ],
+      "plate": true,
+      "hot": 0.6
+    },
+    "mark": {
+      "scorch": 2.4
+    },
+    "flash": {
+      "light": 60,
+      "life": 1,
+      "color": 16748608,
+      "intensity": 6
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 1.2,
+    "push": 8,
+    "mushroom": {
+      "height": 6,
+      "radius": 2.1,
+      "count": 30,
+      "stem": 14,
+      "life": 8
+    },
+    "residualFires": [
+      {
+        "dx": 1.6,
+        "dz": 0.4,
+        "radius": 0.9,
+        "life": 6
+      },
+      {
+        "dx": -1.1,
+        "dz": 1.2,
+        "radius": 0.7,
+        "life": 5.5
+      },
+      {
+        "dx": -0.4,
+        "dz": -1.5,
+        "radius": 0.8,
+        "life": 6.5
+      }
+    ],
+    "ignite": 4,
+    "hotParts": true,
+    "sources": [
+      "lab:L808",
+      "lab:L793"
+    ]
+  },
+  "car_fuel_tank": {
+    "id": "car_fuel_tank",
+    "lethal": 5,
+    "injury": 14,
+    "visualRadius": 2.3,
+    "fireballs": 36,
+    "fuel": true,
+    "heat": 1,
+    "smoke": {
+      "color": 3814449,
+      "count": 12,
+      "life": 9
+    },
+    "dust": {
+      "color": 8221544,
+      "count": 30
+    },
+    "shrapnel": {
+      "count": 90,
+      "kind": 0,
+      "speed": 28,
+      "embers": 36
+    },
+    "chunks": {
+      "count": 14,
+      "colors": [
+        3881528,
+        2894634,
+        4867650
+      ],
+      "plate": true,
+      "hot": 0.5
+    },
+    "mark": {
+      "scorch": 3.2
+    },
+    "flash": {
+      "light": 80,
+      "life": 1.2,
+      "color": 16748608,
+      "intensity": 6
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 1.8,
+    "push": 9,
+    "mushroom": {
+      "height": 7.5,
+      "radius": 2.8,
+      "count": 40,
+      "stem": 16,
+      "life": 9
+    },
+    "ignite": 5,
+    "hotParts": true,
+    "sources": [
+      "lab:L809",
+      "lab:L793"
+    ]
+  },
+  "fuel_pump": {
+    "id": "fuel_pump",
+    "lethal": 4,
+    "injury": 12,
+    "visualRadius": 1.7,
+    "fireballs": 24,
+    "fuel": true,
+    "heat": 1,
+    "smoke": {
+      "color": 3814449,
+      "count": 6,
+      "life": 7
+    },
+    "dust": {
+      "color": 8221544,
+      "count": 16
+    },
+    "shrapnel": {
+      "count": 60,
+      "kind": 0,
+      "speed": 28,
+      "embers": 16
+    },
+    "chunks": {
+      "count": 12,
+      "colors": [
+        14209732,
+        2058810,
+        9407106
+      ],
+      "plate": true,
+      "hot": 0.5
+    },
+    "mark": {
+      "scorch": 2.4
+    },
+    "flash": {
+      "light": 55,
+      "life": 0.9,
+      "color": 16748608,
+      "intensity": 6
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 1.2,
+    "push": 8,
+    "mushroom": {
+      "height": 5,
+      "radius": 1.8,
+      "count": 22,
+      "stem": 10,
+      "life": 7
+    },
+    "residualFires": [
+      {
+        "radius": 1.1,
+        "life": 14,
+        "rate": 22
+      }
+    ],
+    "ignite": 4,
+    "hotParts": true,
+    "sources": [
+      "lab:L810",
+      "lab:L793"
+    ]
+  },
+  "fuel_station_tank": {
+    "id": "fuel_station_tank",
+    "lethal": 12,
+    "injury": 30,
+    "visualRadius": 4.5,
+    "fireballs": 44,
+    "fuel": true,
+    "heat": 1,
+    "smoke": {
+      "color": 3814449,
+      "count": 20,
+      "life": 11
+    },
+    "dust": {
+      "color": 8221544,
+      "count": 46
+    },
+    "shrapnel": {
+      "count": 160,
+      "kind": 0,
+      "speed": 40,
+      "embers": 60
+    },
+    "chunks": {
+      "count": 30,
+      "colors": [
+        9407106,
+        3881528,
+        2058810
+      ],
+      "hot": 0.5
+    },
+    "mark": {
+      "scorch": 6,
+      "crater": 4,
+      "dent": 1.6
+    },
+    "flash": {
+      "light": 140,
+      "life": 1.8,
+      "color": 16748608,
+      "intensity": 8
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 3,
+    "push": 14,
+    "mushroom": {
+      "height": 16,
+      "radius": 5.5,
+      "count": 60,
+      "stem": 26,
+      "life": 12,
+      "riseRate": 0.42
+    },
+    "residualFires": [
+      {
+        "radius": 3.2,
+        "life": 20,
+        "rate": 26,
+        "smoke": 1.4
+      },
+      {
+        "dx": 4,
+        "dz": 3,
+        "radius": 1.4,
+        "life": 16
+      },
+      {
+        "dx": -4,
+        "dz": 2,
+        "radius": 1.2,
+        "life": 15
+      }
+    ],
+    "ignite": 12,
+    "hotParts": true,
+    "sources": [
+      "lab:L811",
+      "lab:L793"
+    ]
+  },
+  "generic": {
+    "id": "generic",
+    "lethal": 5,
+    "injury": 15,
+    "visualRadius": 1.3,
+    "fireballs": 16,
+    "heat": 1,
+    "smoke": {
+      "color": 6972767,
+      "count": 18,
+      "life": 5.5
+    },
+    "dust": {
+      "color": 8221544,
+      "count": 30
+    },
+    "shrapnel": {
+      "count": 150,
+      "kind": 0,
+      "speed": 34
+    },
+    "chunks": {
+      "count": 14,
+      "colors": [
+        3881528,
+        2894634,
+        4867650
+      ],
+      "hot": 0.25
+    },
+    "mark": {
+      "scorch": 1.7,
+      "crater": 0.9,
+      "dent": 0.25
+    },
+    "flash": {
+      "light": 45,
+      "life": 0.45,
+      "color": 16752720,
+      "intensity": 6
+    },
+    "shock": {
+      "duration": 0.32
+    },
+    "shake": 1.1,
+    "push": 9,
+    "sources": [
+      "lab:L796",
+      "lab:L793",
+      "derived: the M67 profile, for a part with no explosive id; the caller scales it by injury / 15"
+    ]
+  }
+}

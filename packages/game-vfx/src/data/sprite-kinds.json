@@ -1,0 +1,315 @@
+{
+  "fire": {
+    "id": "fire",
+    "additive": true,
+    "life": [
+      0.45,
+      0.9
+    ],
+    "size": [
+      0.1,
+      0.2
+    ],
+    "grow": 0.3,
+    "gravity": 0,
+    "rise": 2.4,
+    "drag": 1.2,
+    "c0": 16760896,
+    "c1": 12591104,
+    "alpha": 0.9,
+    "fadeIn": 0.12,
+    "cone": 0.7,
+    "ground": "none",
+    "flicker": 0.35
+  },
+  "smoke": {
+    "id": "smoke",
+    "additive": false,
+    "life": [
+      1.8,
+      3.2
+    ],
+    "size": [
+      0.14,
+      0.24
+    ],
+    "grow": 3.2,
+    "gravity": 0,
+    "rise": 0.7,
+    "drag": 0.8,
+    "c0": 6710886,
+    "c1": 10132122,
+    "alpha": 0.35,
+    "fadeIn": 0.15,
+    "cone": 0.6,
+    "ground": "none"
+  },
+  "sparks": {
+    "id": "sparks",
+    "additive": true,
+    "life": [
+      0.25,
+      0.6
+    ],
+    "size": [
+      0.018,
+      0.03
+    ],
+    "grow": 0.5,
+    "gravity": 1,
+    "rise": 0,
+    "drag": 0.3,
+    "c0": 16773792,
+    "c1": 16738832,
+    "alpha": 1,
+    "fadeIn": 0.02,
+    "cone": 0.55,
+    "ground": "bounce"
+  },
+  "dust": {
+    "id": "dust",
+    "additive": false,
+    "life": [
+      1,
+      2
+    ],
+    "size": [
+      0.08,
+      0.14
+    ],
+    "grow": 2.5,
+    "gravity": 0.05,
+    "rise": 0,
+    "drag": 2.5,
+    "c0": 9274745,
+    "c1": 9274745,
+    "alpha": 0.4,
+    "fadeIn": 0.1,
+    "cone": 0.4,
+    "ground": "none"
+  },
+  "shards": {
+    "id": "shards",
+    "additive": true,
+    "life": [
+      0.8,
+      1.4
+    ],
+    "size": [
+      0.02,
+      0.035
+    ],
+    "grow": 0.8,
+    "gravity": 1,
+    "rise": 0,
+    "drag": 0.2,
+    "c0": 14677247,
+    "c1": 10473727,
+    "alpha": 0.9,
+    "fadeIn": 0.03,
+    "cone": 0.5,
+    "ground": "bounce",
+    "flicker": 0.5
+  },
+  "splinters": {
+    "id": "splinters",
+    "additive": false,
+    "life": [
+      0.8,
+      1.5
+    ],
+    "size": [
+      0.02,
+      0.035
+    ],
+    "grow": 1,
+    "gravity": 1,
+    "rise": 0,
+    "drag": 0.3,
+    "c0": 10516042,
+    "c1": 8017200,
+    "alpha": 1,
+    "fadeIn": 0.02,
+    "cone": 0.5,
+    "ground": "bounce"
+  },
+  "chips": {
+    "id": "chips",
+    "additive": false,
+    "life": [
+      0.8,
+      1.5
+    ],
+    "size": [
+      0.025,
+      0.04
+    ],
+    "grow": 1,
+    "gravity": 1,
+    "rise": 0,
+    "drag": 0.3,
+    "c0": 9077624,
+    "c1": 7235679,
+    "alpha": 1,
+    "fadeIn": 0.02,
+    "cone": 0.5,
+    "ground": "bounce"
+  },
+  "fibers": {
+    "id": "fibers",
+    "additive": false,
+    "life": [
+      1.5,
+      2.5
+    ],
+    "size": [
+      0.02,
+      0.03
+    ],
+    "grow": 1,
+    "gravity": 0.15,
+    "rise": 0,
+    "drag": 2,
+    "c0": 12101768,
+    "c1": 12101768,
+    "alpha": 0.9,
+    "fadeIn": 0.05,
+    "cone": 0.4,
+    "ground": "stop",
+    "flutter": 2.5
+  },
+  "leaves": {
+    "id": "leaves",
+    "additive": false,
+    "life": [
+      1.5,
+      2.8
+    ],
+    "size": [
+      0.03,
+      0.05
+    ],
+    "grow": 1,
+    "gravity": 0.15,
+    "rise": 0,
+    "drag": 2,
+    "c0": 6003260,
+    "c1": 4882224,
+    "alpha": 0.95,
+    "fadeIn": 0.05,
+    "cone": 0.4,
+    "ground": "stop",
+    "flutter": 2.8
+  },
+  "drips": {
+    "id": "drips",
+    "additive": false,
+    "life": [
+      2,
+      3
+    ],
+    "size": [
+      0.025,
+      0.035
+    ],
+    "grow": 1,
+    "gravity": 1,
+    "rise": 0,
+    "drag": 0,
+    "c0": 6974058,
+    "c1": 6974058,
+    "alpha": 1,
+    "fadeIn": 0.01,
+    "cone": 0.2,
+    "ground": "land"
+  },
+  "ash": {
+    "id": "ash",
+    "additive": false,
+    "life": [
+      2,
+      4
+    ],
+    "size": [
+      0.02,
+      0.04
+    ],
+    "grow": 1.2,
+    "gravity": 0.08,
+    "rise": 0,
+    "drag": 1.5,
+    "c0": 2762275,
+    "c1": 1710102,
+    "alpha": 0.8,
+    "fadeIn": 0.1,
+    "cone": 0.5,
+    "ground": "stop",
+    "flutter": 0.6
+  },
+  "steam": {
+    "id": "steam",
+    "additive": false,
+    "life": [
+      1,
+      2
+    ],
+    "size": [
+      0.12,
+      0.2
+    ],
+    "grow": 3,
+    "gravity": 0,
+    "rise": 0.9,
+    "drag": 1,
+    "c0": 16777215,
+    "c1": 14739694,
+    "alpha": 0.35,
+    "fadeIn": 0.15,
+    "cone": 0.6,
+    "ground": "none"
+  },
+  "flash": {
+    "id": "flash",
+    "additive": true,
+    "life": [
+      0.12,
+      0.2
+    ],
+    "size": [
+      1.2,
+      1.8
+    ],
+    "grow": 1.6,
+    "gravity": 0,
+    "rise": 0,
+    "drag": 0,
+    "c0": 16774080,
+    "c1": 16748592,
+    "alpha": 1,
+    "fadeIn": 0.1,
+    "cone": 0,
+    "ground": "none"
+  },
+  "foam": {
+    "id": "foam",
+    "additive": false,
+    "life": [
+      1,
+      1.8
+    ],
+    "size": [
+      0.06,
+      0.1
+    ],
+    "grow": 1.5,
+    "gravity": 0.6,
+    "rise": 0,
+    "drag": 1.5,
+    "c0": 16054527,
+    "c1": 14542576,
+    "alpha": 0.8,
+    "fadeIn": 0.05,
+    "cone": 0.5,
+    "ground": "stop"
+  }
+}

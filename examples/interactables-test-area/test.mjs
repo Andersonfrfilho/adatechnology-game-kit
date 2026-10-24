@@ -113,6 +113,12 @@ for (const lang of ['pt-BR', 'en']) {
     return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, inFridge: found.length }
   })
   check(`[${lang}] the items module is loaded too and the fridge holds real items`, items.module === 'items_area' && items.ok && items.problems.length === 0 && items.items > 300 && items.inFridge > 0, items)
+  const effects = await page.evaluate(() => {
+    const loaded = window.__furnitureReport.vfx
+    const bench = window.__testRoom.bench('vfx')
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], controls: bench ? bench.controls().length : 0, layers: bench ? bench.layers().length : 0 }
+  })
+  check(`[${lang}] the effects bench is loaded too (7 controls, 6 layers)`, effects.module === 'vfx' && effects.ok && effects.problems.length === 0 && effects.controls === 7 && effects.layers === 6, effects)
 
   if (lang === 'pt-BR') {
     await page.close()

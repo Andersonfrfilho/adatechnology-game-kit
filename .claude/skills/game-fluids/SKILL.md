@@ -8,7 +8,7 @@ description: Use quando precisar de líquidos num jogo, sem engine, como copo, g
 ## Objetivo
 Líquidos sem renderizador, independentes de engine. **Recipientes** com nível calculado pelo formato e pela inclinação, temperatura (esfria, solta vapor)
 e abertura; **jatos** balísticos que terminam na primeira superfície; **manchas** que crescem de uma frente de fluxo, escorrem, são absorvidas por
-superfícies porosas e secam da borda para dentro. 19 líquidos embutidos, usos de item prontos (`sip`, `drink`, `pour`...) e torneiras.
+superfícies porosas e secam da borda para dentro. 21 líquidos embutidos (sangue, sangue antigo e bile com os valores do Padrão de Fluidos; `splash` aceita `tint`), usos de item prontos (`sip`, `drink`, `pour`...) e torneiras.
 Determinístico por semente, serializável. Unidades: metros, litros, segundos, °C.
 
 ## Quando usar e quando não usar
@@ -57,11 +57,18 @@ Vazar por tiro: mapeie o evento `leak` do `game-destruction` em `fluids.puncture
 | `update(dt)` | avança tudo e devolve os eventos |
 | `container / containers / streams / stains` | estado (cópias) para desenhar: **desenhe pelo estado, não pelos eventos** |
 | `serialize / load / on / describe` | JSON, ouvintes, frase localizada |
-| `LIQUIDS`, `ITEM_USES`, `createItemUse` | 19 líquidos, 7 usos (`sip`, `drink`, `chug`, `pour`, `pour_out`, `open`, `close`), jogador de keyframes |
+| `LIQUIDS`, `ITEM_USES`, `createItemUse` | 21 líquidos, 7 usos (`sip`, `drink`, `chug`, `pour`, `pour_out`, `open`, `close`), jogador de keyframes |
 | `ballistic`, `sampleStream`, `stainDirection`, `STAIN_SAMPLES` | caminho do jato e direções da frente da mancha (16 amostras) |
 | `describeEvent`, `resolveStrings`, `locales` | textos `en` e `pt-BR` |
 
 Eventos: `fill`, `pour`, `spill`, `leak`, `drink`, `empty`, `stream_end`, `splash`, `stain`, `dried`, `steam`, `mix`, `tap`.
+
+## Filme que escorre (`film/*`)
+- `createFilm({ layout, profile, random, maxSteps? })`: grade de espessura (mm) e secagem por célula; `launch`, `splat`, `blob`, `stroke`, `drip`, `sources`, `drags`, `update({ dt, dryingSeconds })`, `setWeather({ rain })`, `clear`. Porte literal do Padrão de Fluidos F60-114 (passo de 180 Hz limitado à caixa molhada, no máximo 6 por quadro).
+- Layouts: `PADRAO_LAYOUT`, `WORKSHOP_LAYOUT`, `createFoldedLayout`, `layoutFromSurfaces({ floor, wall?, curb?, center })` a partir dos `SurfaceSpec` do host.
+- Perfis em `data/film-profiles.json` (`blood`, `old_blood`, `bile`, `motor_oil`, `fuel`); `spikes` (bile 0,3), `landsAsBlob` (óleo e gasolina) e `maxAmount` são as variantes da Oficina e o padrão. Quem quer o Padrão de Fluidos exato passa `filmProfileOf(id, { spikes: 1, ... })`.
+- Sem `Math.random`: o host passa `random` (`createFilmLcg(seed)` é o gerador do Padrão). O relógio de secagem é em segundos de simulação (o jogo escala).
+- Interface `FilmSimulator` para uma versão GPU futura; o CPU é o golden de referência. Goldens em `tests/film-golden.test.ts` (25 combinações) e `tests/film-workshop-golden.test.ts` (4).
 
 ## Compõe com
 - `@adatechnology/game-contracts`: dono de `ContainerSpec`, `ItemUseDef` e `LiquidId` (reexportados aqui).

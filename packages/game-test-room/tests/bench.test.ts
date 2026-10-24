@@ -278,6 +278,39 @@ describe('bench panel', () => {
     room.dispose()
   })
 
+  it('lists grouped choices under optgroups and shows the module sheet with a playhead that follows its metric', () => {
+    const probe = newProbe()
+    const { room, container } = roomWithUi()
+    let seconds = 0
+    room.loadModule(
+      benchedModule(probe, {
+        controls: () => [{ kind: 'choice', id: 'effect', name: 'Effect', default: 'a', options: [{ id: 'a', name: 'A', group: 'First' }, { id: 'b', name: 'B', group: 'First' }, { id: 'c', name: 'C', group: 'Second' }] }],
+        layers: () => [],
+        metrics: () => [{ id: 'phase', name: 'Phase', unit: 's', digits: 2, read: () => seconds }],
+        attach(host) {
+          host.bench?.sheet?.({
+            kicker: 'Weapons',
+            title: 'Sheet',
+            facts: [{ label: 'Cost', value: '70' }],
+            steps: [{ at: '0 s', text: 'starts' }],
+            swatches: [{ color: '#ff0000', name: 'red' }],
+            timeline: { segments: [{ name: 'burst', start: 0, end: 2, color: '#fa0' }], ticks: [1], metric: 'phase' },
+          })
+          return () => host.bench?.sheet?.(null)
+        },
+      }),
+    )
+    const panel = container.querySelector('.tr-bench') as HTMLElement
+    expect([...panel.querySelectorAll('optgroup')].map((group) => group.label)).toEqual(['First', 'Second'])
+    expect(panel.querySelectorAll('optgroup')[0]!.querySelectorAll('option')).toHaveLength(2)
+    expect(panel.querySelector('.tr-sheet h4')!.textContent).toBe('Sheet')
+    expect(panel.querySelector('.tr-facts dd')!.textContent).toBe('70')
+    seconds = 1
+    room.update(0.3)
+    expect((panel.querySelector('.tr-playhead') as HTMLElement).style.left).toBe('50%')
+    room.dispose()
+  })
+
   it('updates the counter text at 4 Hz, and shows no module rows for a module that declares nothing', () => {
     const probe = newProbe()
     const { room, container } = roomWithUi()

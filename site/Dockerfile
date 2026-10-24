@@ -43,6 +43,8 @@ COPY packages/game-vegetation/package.json packages/game-vegetation/
 COPY packages/game-vegetation-species/package.json packages/game-vegetation-species/
 COPY packages/game-vehicles/package.json packages/game-vehicles/
 COPY packages/game-vehicles-fleet/package.json packages/game-vehicles-fleet/
+COPY packages/game-vfx/package.json packages/game-vfx/
+COPY packages/game-vfx-three/package.json packages/game-vfx-three/
 COPY packages/game-weapons/package.json packages/game-weapons/
 COPY packages/game-weapons-three/package.json packages/game-weapons-three/
 COPY tools/animals-catalog/package.json tools/animals-catalog/
@@ -57,6 +59,7 @@ COPY examples/interactables-showroom/package.json examples/interactables-showroo
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
 COPY examples/items-test-area/package.json examples/items-test-area/
 COPY examples/test-room/package.json examples/test-room/
+COPY examples/vfx-test-area/package.json examples/vfx-test-area/
 COPY examples/weapons-test-area/package.json examples/weapons-test-area/
 RUN pnpm install --frozen-lockfile
 

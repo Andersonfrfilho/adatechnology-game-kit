@@ -104,6 +104,16 @@ export const EXAMPLES = [
     setup: `(() => { const r = window.__testRoom; r.openArea('furniture_area'); r.look([0, 1.6, 4.2], [0, 0.6, -1]) })()`,
     areas: [],
   },
+  {
+    name: 'vfx-test-area',
+    title: 'Área de efeitos',
+    summary: 'Todas as explosões do Lab e as receitas da Oficina de VFX numa bancada: sangue por idade de infecção, tiro na cabeça, desmembramento, clarão de boca e cápsulas por arma, impactos por material, vidro, portas, desabamento, incêndio, carro e os efeitos de tela. A bancada troca a variante da receita, repete sozinha, muda a distância, a faixa de LOD e a qualidade, liga e desliga as camadas e mostra a ficha e a linha do tempo do efeito, com os contadores de partículas, destroços e luzes contra o orçamento.',
+    controls: 'A bancada escolhe o efeito, a variante, a distância, o LOD e a qualidade · Repetir toca de novo · Repetição automática · as camadas ligam fumaça, faíscas, brilhos, destroços, onda de choque e gotas',
+    url: 'vfx-test-area/',
+    ready: 'window.__testRoom && window.__vfxReport',
+    setup: `(() => { const r = window.__testRoom; r.bench('vfx').set('effect', 'm67'); for (let t = 0; t < 0.5; t += 0.02) r.update(0.02) })()`,
+    areas: [],
+  },
 ]
 
 export const FAMILIES = [
@@ -117,6 +127,7 @@ export const FAMILIES = [
   { id: 'vegetation', title: 'Vegetação', what: 'Árvores, palmeiras, cactos, flores e grama em low-poly, com cerca de 90 espécies prontas', packages: ['game-vegetation', 'game-vegetation-species'], thumb: 'test-room-plants', seeIn: 'test-room' },
   { id: 'vehicles', title: 'Veículos', what: 'Motor de veículos procedurais e uma frota de 69 modelos, de moto a caminhão', packages: ['game-vehicles', 'game-vehicles-fleet'], thumb: 'test-room-vehicles', seeIn: 'test-room' },
   { id: 'props', title: 'Objetos de cenário', what: 'Decoração, móveis modernos, quintal e estados da casa em low-poly', packages: ['game-props3d'], thumb: 'interactables-showroom-yard', seeIn: 'interactables-showroom' },
+  { id: 'effects', title: 'Efeitos', what: 'Explosões, sangue, tiros, impactos, destruição, fogo e efeitos de tela, tocados por id e sorteados por semente', packages: ['game-vfx', 'game-vfx-three'], thumb: null, seeIn: 'vfx-test-area' },
   { id: 'camera', title: 'Câmera', what: 'Câmera de ombro, terceira e primeira pessoa, com a arma na mão', packages: ['game-camera'], thumb: 'test-room', seeIn: 'test-room' },
   { id: 'infection', title: 'Contágio', what: 'Modelo de epidemia por regiões, determinístico: zumbis, pragas, boatos', packages: ['game-infection'], thumb: null, seeIn: null },
   { id: 'base', title: 'Base e ferramentas', what: 'Contratos entre módulos, sala de testes reutilizável e ferramentas de teste dentro do jogo', packages: ['game-contracts', 'game-test-room', 'game-devtools'], thumb: 'test-room-furniture', seeIn: 'test-room' },

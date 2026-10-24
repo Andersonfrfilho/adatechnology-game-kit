@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createFluids } from '@adatechnology/game-fluids'
+import { createVfx } from '@adatechnology/game-vfx'
 import type { FluidWorld, Quat } from '@adatechnology/game-fluids'
 import { createFluidRenderer, smoothOutline } from '../src'
 
@@ -301,5 +302,42 @@ describe('outline smoothing', () => {
     expect(out).toHaveLength(64)
     expect(Math.min(...out)).toBeGreaterThan(0)
     expect(out[0]).toBeCloseTo(0.1, 9)
+  })
+})
+
+describe('sprites of the shared effects world', () => {
+  it('puts the steam of a hot drink in the world it was lent, and does not step it', () => {
+    const world = createFluids()
+    world.addContainer({ capacity: 0.25, liquid: 'coffee', liters: 0.2, temperature: 90, shape: { kind: 'cylinder', radius: 0.04, height: 0.1 }, opening: 0.04 }, { id: 'cup', position: [0, 1, 0] })
+    const scene = new THREE.Scene()
+    const cup = new THREE.Group()
+    cup.position.set(0, 1, 0)
+    scene.add(cup)
+    const vfx = createVfx({ seed: 1 })
+    const renderer = createFluidRenderer(THREE, { scene, fluids: world, quality: 'high', vfx })
+    renderer.bindContainer('cup', cup)
+    for (let t = 0; t < 1; t += 0.05) {
+      world.update(0.05)
+      renderer.update(0.05)
+    }
+    expect(vfx.sprites().normal.live).toBeGreaterThan(3)
+    expect(vfx.time()).toBe(0)
+    expect(scene.getObjectByName('vfx-sprites')).toBeUndefined()
+    renderer.dispose()
+  })
+
+  it('droplets from a splash stop at the height they were thrown from', () => {
+    const world = createFluids()
+    const scene = new THREE.Scene()
+    const vfx = createVfx({ seed: 1 })
+    const renderer = createFluidRenderer(THREE, { scene, fluids: world, vfx })
+    world.addSurface(FLOOR)
+    world.splash('water', [0, 0.01, 0], 0.1)
+    world.update(0.05)
+    renderer.update(0.05)
+    expect(vfx.sprites().normal.live).toBeGreaterThanOrEqual(2)
+    for (let t = 0; t < 2; t += 1 / 60) vfx.update(1 / 60)
+    expect(vfx.sprites().live).toBe(0)
+    renderer.dispose()
   })
 })

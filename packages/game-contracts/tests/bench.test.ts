@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { checkBench } from '../src'
-import type { BenchDeclaration, HostEvent, ModuleControl, ModuleLayer, ModuleMetric, TestableModule } from '../src'
+import type { BenchDeclaration, BenchSheet, HostEvent, ModuleControl, ModuleLayer, ModuleMetric, TestableModule } from '../src'
 
 const controls: ModuleControl[] = [
   { kind: 'number', id: 'size', name: 'Size', min: 0.5, max: 4, step: 0.5, unit: 'm', default: 1 },
@@ -51,5 +51,31 @@ describe('bench contract', () => {
       { type: 'safety', weapon: 'nail_gun', on: true },
     ]
     expect(events.map((e) => e.type)).toEqual(['shot', 'shot', 'mode', 'fault', 'clear', 'safety'])
+  })
+
+  it('options may be grouped, each group in one run', () => {
+    const grouped = (options: { id: string; group?: string }[]): BenchDeclaration => ({
+      controls: [{ kind: 'choice', id: 'effect', name: 'Effect', options: options.map((o) => ({ ...o, name: o.id })), default: options[0]?.id ?? '' }],
+    })
+    expect(checkBench(grouped([{ id: 'a', group: 'Throw' }, { id: 'b', group: 'Throw' }, { id: 'c', group: 'Charges' }, { id: 'd' }])).ok).toBe(true)
+    expect(problemsOf(grouped([{ id: 'a', group: 'Throw' }, { id: 'c', group: 'Charges' }, { id: 'b', group: 'Throw' }]))).toEqual(['control "effect" group "Throw" is split: its options must be next to each other'])
+    expect(problemsOf(grouped([{ id: 'a', group: '' }]))).toEqual(['control "effect" option "a" has an empty group'])
+  })
+
+  it('a bench may show a sheet and a host may leave it out', () => {
+    const sheet: BenchSheet = {
+      title: 'Granada',
+      facts: [{ label: 'Lethal', value: '5 m' }],
+      steps: [{ at: '0 s', text: 'flash' }],
+      swatches: [{ color: '#FFF4D6', name: 'flash' }],
+      timeline: { segments: [{ name: 'Flash', start: 0, end: 0.05, color: '#fff4d6' }], ticks: [0, 1], metric: 'blast_time' },
+    }
+    const shown: (BenchSheet | null)[] = []
+    const withSheet = { sheet: (value: BenchSheet | null) => shown.push(value) }
+    const withoutSheet: { sheet?: (value: BenchSheet | null) => void } = {}
+    withSheet.sheet(sheet)
+    withSheet.sheet(null)
+    withoutSheet.sheet?.(sheet)
+    expect(shown).toEqual([sheet, null])
   })
 })

@@ -1,4 +1,4 @@
-import type { BenchChange, ControlPatch, ControlValue, ModuleControl, ModuleLayer, ModuleMetric, TestableModule } from '@adatechnology/game-contracts'
+import type { BenchChange, BenchSheet, ControlPatch, ControlValue, ModuleControl, ModuleLayer, ModuleMetric, TestableModule } from '@adatechnology/game-contracts'
 import type { BenchControl, BenchHandle, BenchLayer } from './types'
 
 /** What the room keeps per module bench: the declarations, the module's patches, the values and the layers. Pure: no DOM, no three.js. */
@@ -11,6 +11,9 @@ export interface BenchStore extends BenchHandle {
   /** Any change of state, the module's patches included (the panel and the URL follow it). */
   watch(listener: () => void): () => void
   patch(id: string, patch: ControlPatch): void
+  /** The sheet the module put on the panel, if any. */
+  sheet(): BenchSheet | null
+  setSheet(sheet: BenchSheet | null): void
   /** One change per control (not actions) and per layer, in declaration order. */
   sendInitial(): void
   /** Apply an encoded state without emitting. */
@@ -96,6 +99,7 @@ export function createBenchStore(module: TestableModule<unknown>, locale: string
   const changed = (): void => {
     for (const watcher of watchers) watcher()
   }
+  let sheet: BenchSheet | null = null
   const controlOf = (id: string): ControlState | undefined => controls.find((control) => control.id === id)
 
   const store: BenchStore = {
@@ -137,6 +141,11 @@ export function createBenchStore(module: TestableModule<unknown>, locale: string
     watch(listener) {
       watchers.add(listener)
       return () => watchers.delete(listener)
+    },
+    sheet: () => sheet,
+    setSheet(next) {
+      sheet = next
+      changed()
     },
     patch(id, patch) {
       const index = controls.findIndex((control) => control.id === id)
