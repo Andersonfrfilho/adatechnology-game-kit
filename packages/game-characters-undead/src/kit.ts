@@ -149,7 +149,7 @@ export const createUndead = (kit: CharacterKit, options: UndeadOptions = {}): Un
       kind: type.id,
       ...spec,
       vitality: spec.vitality ?? traits.health,
-      height: spec.height ?? traits.variance.height,
+      height: spec.height ?? kit.body.heightMetres * traits.variance.height,
       build: spec.build ?? traits.variance.build,
       multipliers: { ...type.multipliers, ...spec.multipliers },
       limbFactor: spec.limbFactor ?? limbFactor,

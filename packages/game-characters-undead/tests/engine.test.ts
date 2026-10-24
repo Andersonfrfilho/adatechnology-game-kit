@@ -170,6 +170,17 @@ describe('damage hooks', () => {
   })
 })
 
+describe('size of a drawn zombie', () => {
+  it('is the body spec\'s height times the drawn factor, in metres (not the factor itself)', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const zombie = game.create({ seed }, { type: 'walker' })
+      const factor = game.traitsOf(zombie)!.variance.height
+      expect(zombie.spec.height).toBeCloseTo(kit.body.heightMetres * factor, 9)
+      expect(zombie.spec.height).toBeGreaterThan(1.3)
+    }
+  })
+})
+
 describe('turning a person (P6)', () => {
   it('keeps the body of the person: seed, size, age group and a missing limb; health is the type\'s', () => {
     const person = kit.create({ seed: 12, kind: 'person', age: 'adult', height: 1.74, build: 1.02 })
