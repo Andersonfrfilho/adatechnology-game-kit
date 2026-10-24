@@ -408,5 +408,15 @@
       0.3
     ],
     "scale": 0.1
+  },
+  {
+    "id": "cassava_root",
+    "teamId": "mandioca",
+    "teamBox": [
+      4,
+      0.7,
+      0.7
+    ],
+    "scale": 0.1
   }
 ]
