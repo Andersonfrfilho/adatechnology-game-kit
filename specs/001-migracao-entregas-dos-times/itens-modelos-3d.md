@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **105 de 257 itens têm modelo 3D; faltam 152.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **106 de 257 itens têm modelo 3D; faltam 151.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **105** | **152** |
+| **Total** | **106** | **151** |
 
 ## Comida (36 de 36)
 
@@ -114,7 +114,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Termômetro (kit) | `termometro` | `thermometer` | 0,02 kg | comum | 120 x 20 x 30 mm |
 | [x] | Álcool 70% (500 ml) (kit) | `alcool70` | `alcohol_70` | 0,5 kg | comum | 70 x 200 x 50 mm |
 
-## Ferramentas (17 de 30)
+## Ferramentas (18 de 30)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -135,7 +135,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Fogareiro de camping (kit) | `fogareiro` | `camp_stove` | 0,8 kg | incomum | 180 x 100 x 110 mm |
 | [x] | Isqueiro (kit) | `isqueiro` | `lighter` | 0,02 kg | comum | 25 x 80 x 12 mm |
 | [x] | Kit de chaveiro (gazuas) (kit) | `kit_chaveiro` | `lockpick_kit` | 0,1 kg | muito raro | 100 x 70 x 20 mm |
-| [ ] | Kit de costura | `kit_costura` | `sewing_kit` | 0,05 kg | comum | 90 x 50 x 30 mm |
+| [x] | Kit de costura (kit) | `kit_costura` | `sewing_kit` | 0,05 kg | comum | 90 x 50 x 30 mm |
 | [ ] | Macaco e chave de roda | `macaco` | `car_jack` | 4,0 kg | comum | 300 x 110 x 110 mm |
 | [ ] | Maleta de ferramentas do mecânico | `kit_mecanico` | `mechanic_toolbox` | 6,0 kg | raro | 400 x 200 x 200 mm |
 | [ ] | Maçarico a gás | `macarico` | `gas_torch` | 3,0 kg | raro | 150 x 420 x 150 mm |
