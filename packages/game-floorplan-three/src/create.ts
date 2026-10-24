@@ -15,11 +15,39 @@ import { installHouseWindows } from './house/windows.js'
 import { installHouseFloors } from './house/floors.js'
 import { installHouseStairs } from './house/stairs.js'
 import { installLightsFixtures } from './lights/fixtures.js'
+import { installLightsDecor } from './lights/decor.js'
+import { installLotTerrain } from './lot/terrain.js'
+import { installLotPerimeter } from './lot/perimeter.js'
+import { installLotGates } from './lot/gates.js'
+import { installRoofRoofs } from './roof/roofs.js'
+import { installRoofGutters } from './roof/gutters.js'
+import { installRoofSlabs } from './roof/slabs.js'
+import { installRoofTiles } from './roof/tiles.js'
+import { installRoofRect } from './roof/rect.js'
+import { installMirrors } from './mirrors.js'
+import { installCars } from './cars.js'
+import { installHouseBuilding } from './house/building.js'
+import { installUtilitiesWater } from './utilities/water.js'
+import { installUtilitiesElectrical } from './utilities/electrical.js'
 import { installHouseBaseboard } from './house/baseboard.js'
+import { installUtilitiesSolar } from './utilities/solar.js'
+import { installHouseOutbuildings } from './house/outbuildings.js'
 import { installFurnitureApi } from './furniture/api.js'
+import { installFurnitureBuilders } from './furniture/builders.js'
+import { installFurnitureTypeTable } from './furniture/type-table.js'
+import { installFurnitureTaps } from './furniture/taps.js'
+import { installFurnitureFixtures } from './furniture/fixtures.js'
+import { installFurniturePlants } from './furniture/plants.js'
+import { installFurnitureYard } from './furniture/yard.js'
+import { installFurnitureExtraTypes } from './furniture/extra-types.js'
+import { installFurniturePlaceItems } from './furniture/place-items.js'
 import { installInteractionState } from './interaction/state.js'
+import { installInteractionCollision } from './interaction/collision.js'
+import { installInteractionItems } from './interaction/items.js'
+import { installInteractionFittings } from './interaction/fittings.js'
 import { installInteractionDoors } from './interaction/doors.js'
 import { installBuildInstance } from './build/instance.js'
+import { installLightsRoomLight } from './lights/room-light.js'
 import { installBuildBuild } from './build/build.js'
 import { buildApi } from './build/api.js'
 
@@ -38,8 +66,8 @@ export function create(THREE: any, options: HouseRendererOptions = {}): HouseRen
   const cfg = Object.assign({}, options || {})
   const DOC = cfg.document || (typeof document !== 'undefined' ? document : null)
   const PROPS = cfg.props || props3d
-  const Reflector = null
-  const FLEET = null
+  const Reflector = cfg.reflector || null // THREE.Reflector (three/examples/jsm/objects/Reflector.js); without it the mirrors use only the environment map
+  const FLEET = cfg.fleet || null // fleet of cars: build(kind, { quality, seed }) -> { group, damageable, release() }; without it there are no cars
   const HP = Object.assign({ glass: 20, wood: 60, water: 80, metal: 200, masonry: 500, rubber: 40, fuel: 60, gas: 40 }, cfg.hp)
   const invalidate = () => { if (cfg.onChange) cfg.onChange({ shadow: false }) }
   const invalidateShadow = () => { if (cfg.onChange) cfg.onChange({ shadow: true }) }
@@ -59,11 +87,39 @@ export function create(THREE: any, options: HouseRendererOptions = {}): HouseRen
   installHouseFloors(K, shared)
   installHouseStairs(K, shared)
   installLightsFixtures(K, shared)
+  installLightsDecor(K, shared)
+  installLotTerrain(K, shared)
+  installLotPerimeter(K, shared)
+  installLotGates(K, shared)
+  installRoofRoofs(K, shared)
+  installRoofGutters(K, shared)
+  installRoofSlabs(K, shared)
+  installRoofTiles(K, shared)
+  installRoofRect(K, shared)
+  installMirrors(K, shared)
+  installCars(K, shared)
+  installHouseBuilding(K, shared)
+  installUtilitiesWater(K, shared)
+  installUtilitiesElectrical(K, shared)
   installHouseBaseboard(K, shared)
+  installUtilitiesSolar(K, shared)
+  installHouseOutbuildings(K, shared)
   installFurnitureApi(K, shared)
+  installFurnitureBuilders(K, shared)
+  installFurnitureTypeTable(K, shared)
+  installFurnitureTaps(K, shared)
+  installFurnitureFixtures(K, shared)
+  installFurniturePlants(K, shared)
+  installFurnitureYard(K, shared)
+  installFurnitureExtraTypes(K, shared)
+  installFurniturePlaceItems(K, shared)
   installInteractionState(K, shared)
+  installInteractionCollision(K, shared)
+  installInteractionItems(K, shared)
+  installInteractionFittings(K, shared)
   installInteractionDoors(K, shared)
   installBuildInstance(K, shared)
+  installLightsRoomLight(K, shared)
   installBuildBuild(K, shared)
   return buildApi(K, shared) as HouseRenderer
 }

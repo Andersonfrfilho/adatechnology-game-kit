@@ -5,9 +5,9 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
   const { THREE, cfg, rectsOf, invalidateShadow, colliderChanged, VERSION, CARS, EPS, LIGHTS, MIRRORS, Y0, animateClotheslines, animateDoors, animateInteractive, applyLeaf, applyOutbuildings, applyPart, applyPiece, assembleInteractive, baseboardAndSidewalk, buildStairs, building, carModel, chooseMirror, closeScene, collideAt, createWater, cursor, doorText, doors, electricalStructure, elevator, floorsAndSlabs, gatesInteractive, houseItems, ivAssemble, ivBuild, ivDispose, ivParts, ivPublish, ivUpdate, lightOn, linkDoorLeaves, mailboxInteractive, newInteractiveState, newMirrorState, outbuildings, paths, perimeter, placeSwitches, roofs, roomAt, solar, targetOf, terrain, toggleDoor, toggleLight, walls, waterPipes, windows, props, TYPES, IVK, VEG, vegMaterials, markGroups, assembleStructure, createHouseDestruction, newState, enter, tagDamage } = K;
   function build(r0, opts) {
         opts = opts || {};
-        const r = r0;
+        const r = applyOutbuildings(r0); // R43: the outbuilding (res.outbuildings) enters the plan the SDK draws as a room, walls, door, windows and items; res.r stays the original plan
         const t0 = performance.now();
-        const h: any = { ctx: { mv: props, types: TYPES }, inter: newInteractiveState(), state: opts.state || newState(), quality: opts.quality === 'game' || opts.quality === 'high' ? opts.quality : (cfg.quality === 'game' ? 'game' : 'high'), lodCurrent: 0, lodMin: 0 };
+        const h: any = { ctx: { mv: props, types: TYPES }, inter: newInteractiveState(), state: opts.state || newState(), mirrors: newMirrorState(), quality: opts.quality === 'game' || opts.quality === 'high' ? opts.quality : (cfg.quality === 'game' ? 'game' : 'high'), lodCurrent: 0, lodMin: 0 };
         enter(h);
         cursor.accs.clear(); LIGHTS.length = 0;
         const pr = opts.building || {};
@@ -19,11 +19,14 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         shared.ctx.showBuilding = shared.ctx.apartment && (pr.showIt == null ? true : !!pr.showIt);
         shared.ctx.limits = { x0: -2, z0: -2, x1: r.w + 2, z1: r.d + 2 };
         shared.ctx.vegInfo = null;
-        K.PARTS.length = 0; shared.partCount = 0; shared.ctx.parts = {}; shared.tapCount = 0; shared.ctx.clotheslines = [];
-        walls(); baseboardAndSidewalk(); shared.ctx.wallColliders = shared.ctx.colliders.length; doors(); windows(); floorsAndSlabs(); buildStairs(); elevator();
-        const water: any = { step() { } }; // the tank, the pipes and the leak come with the utilities
+        terrain();
+        if (r.lot) { if (!opts.noPerimeter) { perimeter(); gatesInteractive(); } paths(); } // GAME HOOK (stage 2): opts.noPerimeter:true does not draw the lot wall/fence/gates (the game has its own destructible wall on the Jardim Aurora lots)
+        walls(); baseboardAndSidewalk(); shared.ctx.wallColliders = shared.ctx.colliders.length; doors(); windows(); floorsAndSlabs(); outbuildings(); buildStairs(); elevator();
+        const water = createWater(r, h.state);
         shared.ctx.iv = null; h.IV = null;
-        const noModel = [];
+        const noModel = houseItems(); placeSwitches(); waterPipes(); electricalStructure();
+        roofs(); solar();
+        if (shared.ctx.showBuilding) building();
         for (const c of r.rooms) { if (c.type === 'void') continue; const [a, b, c2, d] = rectsOf(c)[0]; shared.ctx.labels.push({ pos: new THREE.Vector3((a + c2) / 2, Y0(c.floor) + 1.1, (b + d) / 2), text: c.name, group: 'f' + c.floor, type: 'room', floor: c.floor }); }
         const mirrorsCopy = MIRRORS.map((E, i) => Object.assign({ i }, E)), gs = closeScene(shared.mats);
         for (const fo of shared.ctx.leaves) { // door leaves: loose groups with the origin at the hinge, inside the floor group
@@ -31,8 +34,8 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           for (const gd of fo.groups) { const g = gs[gd.name]; if (!g) continue; delete gs[gd.name]; g.position.set(...gd.pos); parent.add(g); fo.gs.push(g); }
           applyLeaf(fo);
         }
-        assembleInteractive(gs); linkDoorLeaves();
-        const root = new THREE.Group(), house = new THREE.Group(); root.name = 'house3d'; root.add(house);
+        assembleInteractive(gs); linkDoorLeaves(); mailboxInteractive();
+        const root = new THREE.Group(), house = new THREE.Group(); root.name = 'house3d'; root.add(house); shared.mirrors.house = house;
         if (shared.ctx.apartment) { const u = r.building.units[Math.min(shared.ctx.pu, r.building.units.length - 1)]; house.position.set(u.u, shared.ctx.showBuilding ? 0 : -r.floors[0].y0, u.v); house.rotation.y = u.ry; shared.ctx.unitRy = u.ry; }
         house.updateMatrixWorld(true); shared.ctx.unitInverse = house.matrixWorld.clone().invert();
         for (const [k, g] of Object.entries<any>(gs)) { g.name = k; (k === 'floor' || k === 'building' ? root : house).add(g); }
@@ -65,6 +68,18 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           mark(def.outer, def.name); parts[def.name] = { id: def.name, type: gate ? 'gate' : def.kind, group: def.outer, internal: def.inner, damageable: dn, opens: t => setOpen(def, t), get t() { return def.t; }, def };
         }
         const cars = []; // lot/garage cars: the fleet's damageables (boxes in the car space) become virtual parts in the house space
+        CARS.forEach((C, i) => {
+          const mod = carModel(C.k, C.seed); if (!mod) return;
+          const s = Math.min(1, C.d / mod.L, Math.max(0.5, C.w - 0.05) / mod.W), co = Math.cos(C.ry || 0), si = Math.sin(C.ry || 0), ids = [];
+          (mod.damageables || []).forEach((d, j) => {
+            const b = d.box; let x0 = 1e9, y0 = 1e9, z0 = 1e9, x1 = -1e9, y1 = -1e9, z1 = -1e9;
+            for (const px of [b.min.x, b.max.x]) for (const pz of [b.min.z, b.max.z]) { const lx = (px - mod.off[0]) * s, lz = (pz - mod.off[2]) * s, wx = C.x + lx * co + lz * si, wz = C.z - lx * si + lz * co; x0 = Math.min(x0, wx); x1 = Math.max(x1, wx); z0 = Math.min(z0, wz); z1 = Math.max(z1, wz); }
+            y0 = C.y + (b.min.y - mod.off[1]) * s; y1 = C.y + (b.max.y - mod.off[1]) * s;
+            const id = 'car:' + i + ':' + d.zone + ':' + j; ids.push(id);
+            parts[id] = { id, type: 'car', part: d.part, side: d.side, zone: d.zone, group: null, virtual: true, floor: -1, car: i, aabb: [x0, y0, z0, x1, y1, z1], damageable: tagDamage(d.type), opens: () => { }, t: 0 };
+          });
+          cars.push({ i, k: C.k, seed: C.seed, pos: [C.x, C.y, C.z], ry: C.ry || 0, scale: s, parts: ids });
+        });
         const wallAt = (f, axis, L) => r.walls.find(w => w.floor === f && w.axis === axis && Math.abs((axis === 'u' ? w.v0 : w.u0) - L) < EPS);
         for (const j of r.windows) { // windows live inside the wall geometry (virtual): a box for the shot test; the separate glass joins at the damage stage
           const alongU = j.axis === 'u', y0 = Y0(j.floor), a = j.at - j.width / 2, b = j.at + j.width / 2, w = wallAt(j.floor, j.axis, j.pos), th = w ? w.thickness || 0.15 : 0.15, L = j.pos, id = 'window:' + j.id;
@@ -151,8 +166,10 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           toggleDoor(fo) { enter(h); toggleDoor(typeof fo === 'string' ? shared.ctx.leaves.find(f => f.id === fo) : fo); },
           lightOn(roomId) { enter(h); return lightOn(roomId); },
           toggleLight(roomId) { enter(h); toggleLight(roomId); },
+          collide(x, z, floor, opt) { enter(h); return collideAt(x, z, floor, opt); },
           roomAt(f, u, v) { enter(h); return roomAt(f, u, v); },
           y0(f) { enter(h); return Y0(f); },
+          chooseMirror(camera) { enter(h); chooseMirror(camera); },
           // manual LOD: 0 full; 1 without the small interior pieces (lamps, drawers, furniture doors, curtains, switches, handles); 2 house hidden
           setLod(n) { enter(h); applyLod(Math.max(n, h.lodMin)); }, get lod() { return h.lodCurrent; },
           center, distance,

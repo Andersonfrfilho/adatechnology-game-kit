@@ -17,6 +17,12 @@ export interface HouseRendererOptions {
   locale?: string | Partial<Messages>
   /** `@adatechnology/game-props3d` (default: the package's own dependency). */
   props?: any
+  /** `THREE.Reflector` (three/examples/jsm/objects/Reflector.js); without it the mirrors use only the environment map. */
+  reflector?: any
+  /** Cars of the lot and garage: `build(kind, { quality, seed })` -> `{ group, damageable, release() }`. Without it there are no cars. */
+  fleet?: { build(kind: string, options: { quality: string; seed: number }): any } | null
+  /** Car kinds (fleet ids) per lot style (`budget`, `mid`, `high`); replaces the list of a style. */
+  carKinds?: Record<string, string[]>
   /** Hit points per damage class (glass, wood, water, metal, masonry, rubber, fuel, gas). */
   hp?: Record<string, number>
   /** Textures from the app that replace the procedural ones. */
@@ -45,9 +51,14 @@ export interface BuildOptions {
   cut?: boolean
   /** A state returned by `newState()`: pass the same one to rebuild without closing every door. */
   state?: any
+  /** `false`: the app already has ground, street and lawn. */
+  terrain?: boolean
+  /** `true`: no lot wall, fence or gates (the game has its own). */
+  noPerimeter?: boolean
   /** `'meshes'`: one mesh per structural piece instead of one per group and material. */
   pieces?: 'meshes'
   drawCallBudget?: number
+  building?: { floors?: number; floor?: number; unit?: number; showBuilding?: boolean }
 }
 
 /** The house the renderer built. The three.js groups are ready to add to a scene. */
@@ -80,6 +91,7 @@ export interface House {
   toggleDoor(id: string): any
   toggleLight(room?: string): any
   lightOn(room: string): boolean
+  collide(x: number, z: number, floor: number, options?: any): any
   roomAt(floor: number, x: number, z: number): any
   setLod(level: number): void
   readonly lod: number
@@ -102,6 +114,9 @@ export interface HouseRenderer {
   mv: any
   applyPart(group: any, t: number): void
   materials: Record<string, any>
+  roomLightMask(material: any): void
+  lighting(options?: any): any
   setNight(night: boolean): void
+  cars: { model(kind: string, seed?: number): any; group(...args: any[]): any; info(kind: string, seed?: number): any }
   dispose(): void
 }

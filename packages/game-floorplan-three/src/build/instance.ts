@@ -1,10 +1,10 @@
 import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installBuildInstance(K: Kernel, shared: Shared): void {
-  const { PROPS, THREE, DOC, cfg, HP, createInteractiveMaterials, createMaterials, } = K;
+  const { PROPS, THREE, DOC, cfg, HP, createInteractiveMaterials, createMaterials, typeTable } = K;
       // ====================== instance: tables and materials ======================
   const props = PROPS.create(THREE, { document: DOC, emit: () => { } });
-  const TYPES = {};
+  const TYPES = typeTable(props);
   shared.mats = createMaterials(props);
   createInteractiveMaterials(shared.mats);
   if (cfg.materials) for (const k of Object.keys(cfg.materials)) { const v = cfg.materials[k]; shared.mats[k] = typeof v === 'function' ? (v(shared.mats[k], k) || shared.mats[k]) : v; }
