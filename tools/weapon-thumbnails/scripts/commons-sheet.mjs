@@ -7,7 +7,7 @@ import { createRequire } from 'node:module'
 import { sanitizeSvg, sizedSvg } from './commons-sanitize.mjs'
 
 const require = createRequire(import.meta.url)
-const { chromium } = (() => { try { return require('playwright') } catch { return require('playwright-core') } })()
+const { chromium } = require('playwright-core')
 const [work, out, first = '0', count = '12', only] = process.argv.slice(2)
 const wanted = only ? new Set(JSON.parse(readFileSync(only, 'utf8'))) : undefined
 const cells = []
@@ -20,7 +20,7 @@ for (const file of readdirSync(join(work, 'search')).sort()) {
 }
 const slice = cells.slice(Number(first), Number(first) + Number(count))
 console.log(`${cells.length} candidates in total, ${slice.length} on this sheet`)
-const browser = await chromium.launch({ args: ['--no-sandbox'] })
+const browser = await chromium.launch({ args: process.env.WEAPON_THUMBNAILS_NO_SANDBOX === '1' ? ['--no-sandbox'] : [] })
 const context = await browser.newContext({ viewport: { width: 1500, height: 900 } })
 await context.route('**/*', (route) => (/^(data|about):/.test(route.request().url()) ? route.continue() : route.abort()))
 const page = await context.newPage()

@@ -6,13 +6,15 @@ import { sizedSvg } from './commons-sanitize.mjs'
 
 const require = createRequire(import.meta.url)
 const loadPlaywright = () => {
-  for (const id of ['playwright', 'playwright-core']) {
-    try {
-      return require(id)
-    } catch {}
+  try {
+    return require('playwright-core')
+  } catch {
+    throw new Error('playwright-core not found: run pnpm install (and `npx playwright-core install chromium` once)')
   }
-  throw new Error('playwright not found: set NODE_PATH to a node_modules that has playwright or playwright-core')
 }
+
+// Chromium's sandbox stays on. Only a root user in a container, where it cannot start, needs WEAPON_THUMBNAILS_NO_SANDBOX=1; the file is drawn as an <img> with the network blocked either way.
+const launchArgs = () => (process.env.WEAPON_THUMBNAILS_NO_SANDBOX === '1' ? ['--no-sandbox'] : [])
 
 export const LONG_SIDE = 3200
 const EMPTY_ABOVE = 238
@@ -20,7 +22,7 @@ const SOLID_BELOW = 110
 
 export async function openRenderer() {
   const { chromium } = loadPlaywright()
-  const browser = await chromium.launch({ args: ['--no-sandbox'] })
+  const browser = await chromium.launch({ args: launchArgs() })
   const context = await browser.newContext()
   await context.route('**/*', (route) => (/^(data|blob|about):/.test(route.request().url()) ? route.continue() : route.abort()))
   const page = await context.newPage()

@@ -30,3 +30,5 @@ Every weapon keeps its generated file, including the ones that have a Commons fi
 | `commons-import.mjs <work>` | for each weapon in `<work>/picks.json`: sanitizes the download, draws it in Chromium (as an `<img>`: no script, no network), reduces it to tones, traces it with the same tracer and writes `commons/<id>.svg` and `commons-sources.json` |
 
 Downloads are untrusted: the markup of a download is never published, only the traced outline (two paths). The licence of the original still applies to the traced file (see `LICENSE-NOTE.md`).
+
+The scripts draw with `playwright-core` (a devDependency pinned to the version CI uses; `npx playwright-core install chromium` downloads the browser once). Chromium runs with its sandbox; set `WEAPON_THUMBNAILS_NO_SANDBOX=1` only where it cannot start (root in a container). `commons-search` refuses a work folder inside the repository.
