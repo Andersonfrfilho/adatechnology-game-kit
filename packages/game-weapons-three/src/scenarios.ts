@@ -32,8 +32,8 @@ export function weaponsScenarios(locale: string): Array<ModuleScenario<ScenarioC
 
   return [
     {
-      id: 'target_steel_rifle_through_hole',
-      name: T('Alvo de aço: um 7,62x39 faz furo que atravessa a chapa e o 9 mm só amassa', 'Steel target: a 7.62x39 makes a hole through the plate and the 9 mm only dents it'),
+      id: 'target_steel_heavy_through_hole',
+      name: T('Alvo de aço: um .50 BMG do Barrett M82A1 atravessa a chapa e o 9 mm só amassa', 'Steel target: the .50 BMG of the Barrett M82A1 goes through the plate and the 9 mm only dents it'),
       run: ({ room, step, expect }) => {
         const id = room.spawn('target_steel_plate', [0, 0, TARGET_Z]).objectId
         room.setTool('pistol_9mm')
@@ -43,14 +43,14 @@ export function weaponsScenarios(locale: string): Array<ModuleScenario<ScenarioC
         step(0.3)
         const pistol = room.world.part(id, 'face')
         expect((pistol?.dents.length ?? 0) > 0 && !pistol?.holes.some((h) => h.through), T(`9 mm na chapa de 10 mm: amassados ${pistol?.dents.length ?? 0}, furos que atravessam ${pistol?.holes.filter((h) => h.through).length ?? 0} (esperado: amassa e não atravessa)`, `9 mm on the 10 mm plate: dents ${pistol?.dents.length ?? 0}, through holes ${pistol?.holes.filter((h) => h.through).length ?? 0} (expected: dents it, no through hole)`))
-        room.setTool('rifle_7_62x39')
+        room.setTool('barrett_m82a1')
         room.waitUntilReady()
         aimAt(room, 'target_steel_plate')
         room.use()
         step(0.3)
         const rifle = room.world.part(id, 'face')
         const hole = rifle?.holes.find((h) => h.through)
-        expect(!!hole, T(`7,62x39 na chapa: furo que atravessa ${hole ? 'sim' : 'não'} (furos: ${rifle?.holes.length ?? 0})`, `7.62x39 on the plate: through hole ${hole ? 'yes' : 'no'} (holes: ${rifle?.holes.length ?? 0})`), { holes: rifle?.holes.length })
+        expect(!!hole, T(`.50 BMG na chapa: furo que atravessa ${hole ? 'sim' : 'não'} (furos: ${rifle?.holes.length ?? 0})`, `.50 BMG on the plate: through hole ${hole ? 'yes' : 'no'} (holes: ${rifle?.holes.length ?? 0})`), { holes: rifle?.holes.length })
       },
     },
     {
