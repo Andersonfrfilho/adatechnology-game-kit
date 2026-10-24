@@ -97,6 +97,17 @@ Ordem: armas → casas → itens → personagens → efeitos → som e clima →
   decisões e histórias.
 - T8.3 `game-player` (V6): fôlego, ferida, infecção individual, agarrão.
 
+Desenho: `design/T8-multidao-historias-jogador.md`. Subtarefas, nesta ordem:
+
+| # | Commit | Modelo |
+|---|---|---|
+| T8.0 | desenho, tasks e evidência | `opus` |
+| T8.3 | `game-player` (núcleo, `defaults.json` com fontes, golden vm, módulo de teste, `examples/player-test-area`) | `sonnet` |
+| T8.1a | `game-crowd` núcleo (horda SoA do jogo: grade, portas, flow, spawn, update, alertas, ataque, dano, corpos, população, habilidades) e golden | `sonnet` |
+| T8.1b | civis, manada, revoada, `bindInfection`; `undeadCrowdTypes()` no `game-characters-undead`; goldens | `sonnet` |
+| T8.1c | `game-crowd-three` (renderizador instanciado, módulo de teste), `examples/crowd-test-area` | `sonnet` |
+| T8.2 🧠 | `game-stories` (elenco por sorteio, histórias como dados, crônica, ficha, simulação da vida); nomes e regras da ficha no `game-characters-people`; `game-slice/stories/`; golden; `examples/stories-test-area` | `opus` |
+
 ## Gates de cada task
 
 `pnpm build`, `pnpm -r typecheck`, testes do pacote (goldens incluídos), `pnpm lint`, skill do pacote atualizada em

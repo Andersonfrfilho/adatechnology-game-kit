@@ -2369,3 +2369,26 @@ Módulo de teste das casas, exemplo e goldens contra o VC3 (T2.6a-c). Branch `wo
 2. A `single_storey_a` segura a laje nas divisórias (o pórtico do time não tem divisórias portantes): a divisória portante é a regra certa do kit?
 3. Os andares de cima devem ser andados (altura de piso no jogador da sala) ou o teletransporte basta?
 4. Nome da área (pergunta 4 da T2.4): usado `floorplan-test-area`, como manda a regra.
+
+## T8.0 — Desenho da Fase 8 (multidão, histórias e jogador)
+
+> 🤖 Modelo: `opus`
+
+**O que foi feito**
+
+- `design/T8-multidao-historias-jogador.md`: mapa de fontes linha a linha (jogo `2UG1Mhe9LqJkQKKVsJkTWR/jogo.js`: horda 66717–67400, bichos
+  66592–66715, jogador 68427–68640, civis 70042–70170; Bancada de Hordas 53053–53300 e mapa vivo 53483–53643; Personagens; Os Vivos do Vale
+  6–757), o que o SDK já tem, pacotes (`game-player`, `game-crowd`, `game-crowd-three`, `game-stories`, conteúdo no `game-characters-people`),
+  contratos, goldens, áreas de teste e subtarefas com modelo.
+- `tasks.md`: tabela de subtarefas da Fase 8.
+
+**Dúvidas para o dono** (cada uma com padrão reversível, §8 do desenho)
+
+1. Comportamento dos civis por estágio do surto: não há código, só o texto "Multidão civil".
+2. Histórias de demonstração do kit: só existem as do ZombiAdA.
+3. Nomes dos pacotes (`game-crowd`, `game-crowd-three`, `game-player`, `game-stories`).
+4. Vozes de 7 tipos de zumbi (T6.1g ainda aberta).
+5. Andares e telhados do jogo (`ANDARES`, `ROOF`) não portados; a multidão recebe callbacks.
+6. Mais de um alvo: o jogo persegue só o jogador; a multidão recebe uma lista e escolhe o mais perto.
+7. Marcos de habilidade da ficha que citam horda e zumbi ficam literais no conjunto genérico.
+8. Infecção do jogador desligada por padrão; a regra zumbi usa `INFEC`/`FERIDA` do jogo.
