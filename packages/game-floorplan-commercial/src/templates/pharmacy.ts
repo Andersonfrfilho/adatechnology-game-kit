@@ -1,7 +1,7 @@
 import type { TemplateDef } from '@adatechnology/game-floorplan'
 
 export const pharmacy: TemplateDef = {
-  id: 'pharmacy', use: 'commercial', partyWalls: ['left', 'right'], style: 'commercial', limits: { w: [9, 14], d: [10, 14] }, defaults: { w: 10, d: 12 },
+  id: 'pharmacy', use: 'commercial', place: 'pharmacy', construction: 'masonry', partyWalls: ['left', 'right'], style: 'commercial', limits: { w: [9, 14], d: [10, 14] }, defaults: { w: 10, d: 12 },
   lot: (w, _d) => ({ frontSetback: 0, marginLeft: 0, marginRight: 0, backyardDepth: 4.0, cargo: { u: w - 6, width: 3.0 }, doorTarget: { a: 'shop', side: 'front' }, libraries: { backyard: 'backyard_service' } }),
   facade: { steelDoor: true },
   floors: [{

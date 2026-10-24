@@ -1,0 +1,20 @@
+{
+  "templates": {
+    "drugstore": "Drugstore",
+    "gun_shop": "Gun shop",
+    "supermarket": "Supermarket"
+  },
+  "labels": {
+    "bakery": "Bakery",
+    "butcher": "Butcher and cold room",
+    "checkouts": "Checkouts",
+    "compounding_room": "Compounding room",
+    "controlled_storage": "Controlled drugs store",
+    "dispensing": "Dispensing",
+    "manager_office": "Manager's office",
+    "sales_floor": "Sales floor",
+    "service_corridor": "Service corridor",
+    "shooting_range": "Shooting range",
+    "vault": "Armored vault"
+  }
+}

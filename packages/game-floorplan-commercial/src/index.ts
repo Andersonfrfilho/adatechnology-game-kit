@@ -1,10 +1,13 @@
-import type { FloorplanEngine } from '@adatechnology/game-floorplan'
+import type { FloorplanEngine, SlotLibrary } from '@adatechnology/game-floorplan'
 import { commercialItems } from './catalog'
 import { commercialDecorProfile } from './decor-profiles'
 import { legacySeedKeys } from './legacy-seeds'
 import { createCommercialLibraries } from './libraries'
+import enInteriorLocale from './locales/interiors-en.json'
+import ptBrInteriorLocale from './locales/interiors-pt-BR.json'
 import enLocale from './locales/en.json'
 import ptBrLocale from './locales/pt-BR.json'
+import { interiorFindsHints, interiorModules, interiorTemplateIds, sharedInteriorLibraries } from './interiors'
 import { createCommercialPalette } from './palette'
 import { regions, resolveRegion } from './regions'
 import type { CommercialRegion } from './regions'
@@ -22,17 +25,20 @@ export interface CommercialOptions {
 export const version = '0.1.0'
 
 /** Commercial template ids. */
-export const commercialTemplateIds = ['market', 'pharmacy'] as const
+export const commercialTemplateIds = ['market', 'pharmacy', ...interiorTemplateIds] as const
 
 /** Fills the engine with the commercial content: items, libraries, templates, style, palette, zones and locales. */
 export function register(engine: FloorplanEngine, options: CommercialOptions = {}): void {
   const region = resolveRegion(options.region)
   engine.registerLocale('en', enLocale)
   engine.registerLocale('pt-BR', ptBrLocale)
+  engine.registerLocale('en', enInteriorLocale)
+  engine.registerLocale('pt-BR', ptBrInteriorLocale)
   engine.registerSeedKeys(legacySeedKeys)
   engine.registerItems(commercialItems)
   engine.registerItems(sharedItems.filter((i) => !engine.catalog[i.type]))
-  const libs = createCommercialLibraries(engine.slotKit)
+  for (const module of interiorModules) engine.registerItems([...module.items])
+  const libs: Record<string, SlotLibrary> = Object.assign(createCommercialLibraries(engine.slotKit), sharedInteriorLibraries, ...interiorModules.map((module) => module.libraries(engine.slotKit)))
   for (const [id, lib] of Object.entries(libs)) engine.registerLibrary(id, lib)
   engine.registerLibraryAlias('shop', 'shop_market')
   engine.registerLibraryAlias('counter', 'counter_market')
@@ -46,8 +52,11 @@ export function register(engine: FloorplanEngine, options: CommercialOptions = {
   engine.registerRoomColors(commercialRoomColors)
   engine.registerTemplate(market)
   engine.registerTemplate(pharmacy)
+  for (const module of interiorModules) engine.registerTemplate(module.template)
   for (const zone of region.zones) engine.defineZone(zone)
 }
 
+export { interiorFindsHints, interiorTemplateIds }
+export type { FindsHint } from './interiors'
 export { commercialItems, commercialStyles, commercialRoomColors, commercialDecorProfile, regions, createCommercialLibraries, enLocale, ptBrLocale }
 export type { CommercialRegion }

@@ -1,0 +1,20 @@
+{
+  "templates": {
+    "drugstore": "Farmácia com manipulação",
+    "gun_shop": "Loja de armas",
+    "supermarket": "Supermercado"
+  },
+  "labels": {
+    "bakery": "Padaria",
+    "butcher": "Açougue e câmara fria",
+    "checkouts": "Caixas",
+    "compounding_room": "Sala de manipulação",
+    "controlled_storage": "Depósito de controlados",
+    "dispensing": "Balcão de dispensação",
+    "manager_office": "Escritório do gerente",
+    "sales_floor": "Salão de vendas",
+    "service_corridor": "Corredor de serviço",
+    "shooting_range": "Estande de tiro",
+    "vault": "Depósito blindado"
+  }
+}

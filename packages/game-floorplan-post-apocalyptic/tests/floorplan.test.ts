@@ -3,6 +3,7 @@
  * Default: 25 seeds per variant and per state. FULL=1 runs the original 200.
  */
 import { afterEach, describe, expect, it } from 'vitest'
+import { interiorTemplateIds } from '@adatechnology/game-floorplan-commercial'
 import { FULL, N, STATES, checkPlan, createFailures, engine, sizes, variants } from './support'
 
 // The suite is CPU-bound and synchronous; yield a macrotask between tests so the worker can report progress.
@@ -37,6 +38,8 @@ describe('generated plans (seeds x states x variants)', () => {
         expect(F.report()).toEqual([])
       })
     }
+    // The interior buildings are authored scenes (fixed rooms and fixtures); only the size and the state make them differ.
+    if (interiorTemplateIds.includes(id)) continue
     it(`${name}: layouts vary across seeds`, () => {
       // Runs after the three state tests above, which fill `seen`.
       expect(seen.size).toBeGreaterThanOrEqual(Math.min(50, N * 0.9))
