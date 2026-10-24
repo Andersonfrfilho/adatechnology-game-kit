@@ -33,13 +33,15 @@ Para controle total: `createItems({ packs: [goodsPack, ...], remove, include })`
 | `GOODS_HOUSE_POOLS` | pools por tipo de móvel do visor 3D e as chaves que repartem pool |
 | `GOODS_TABLES` | raridades, armazenamento, esgotamento, surgimento e corpo a corpo, como lidos |
 | `GOODS_ARSENAL_RECORDS` | caixas de munição e armas como item, para `itemsFromArsenal` |
+| `createGoodsFindsProvider(catalog)`, `FLOORPLAN_POOL_KEYS`, `FLOORPLAN_PLACES`, `POOL_PLACES` | provedor de achados para `engine.registerFindsProvider` da planta: as categorias de móvel (`fridge`, `kitchen_cabinet`, `wardrobe`...) ligadas aos pools das casas, os lugares da planta (`shack`, `cabin`, `camp`...) ligados aos do catálogo; pool só em casa/apartamento/cabana |
 | `GOODS_PROVENANCE` | origem do item (time, household, tipos do visor, ids do jogo, de onde vêm o id e a medida) |
 | `GOODS_STRINGS`, `goodsText`, `pickGoodsLocale` | chaves `item.<id>`, `category.<id>`, `place.<id>`, `rarity.<id>`, `container.<id>`, `recipe.<id>` |
 
 ## Compõe com
 - `@adatechnology/game-items`: dependência; define os tipos e consome o pacote.
 - `@adatechnology/game-interactables-household`: pega daqui os itens e os textos `item.*` (T3.1g).
-- `game-items-three` (T3.2): desenha por `size`; o `model` dos 24 modelados é dele.
+- `@adatechnology/game-items-three`: desenha por `size`; o `model` dos 23 itens modelados (`items.json`) é a chave do modelo dele.
+- `@adatechnology/game-floorplan` (por `createGoodsFindsProvider`): o que há nos móveis da casa.
 
 ## Ambiente de teste
 `packages/game-items-goods/tests/`: o pacote valida em `createItems`, ids únicos em inglês, referências existentes, rastreabilidade completa, texto nos dois idiomas. O `tools/items-catalog` prova os dados contra as fontes e tem o `--check`.
@@ -51,4 +53,4 @@ Para controle total: `createItems({ packs: [goodsPack, ...], remove, include })`
 - Itens de história (diário, ordem de evacuação...) não estão aqui: vão na fatia do jogo.
 
 ## O que vem pela migração
-Entrou: T3.1f (pacote, textos, testes). Falta: household usando o goods (T3.1g), medidas e modelos 3D (`game-items-three`, T3.2), ligação das armas corpo a corpo (`weapon`, T3.1i), fatia do jogo (T3.1j).
+Entrou: T3.1f (pacote, textos, testes), household usando o goods (T3.1g), provedor de achados da planta (T3.1h), armas corpo a corpo (`weapon`, T3.1i), fatia do jogo (T3.1j), a chave `model` dos 23 itens modelados e o desenho no `game-items-three` (T3.2). Falta: os 233 modelos que o time ainda não entregou.

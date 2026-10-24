@@ -9,7 +9,7 @@ description: Use quando precisar do catálogo de itens de um jogo, sem engine e 
 Motor genérico do catálogo de itens: o tipo `ItemDef` (estende o `ItemDef` do `game-interactables`), o registro `createItems`, as regras padrão e a lógica pura sobre elas:
 envelhecimento preguiçoso, carga, proteção da roupa, efeitos de uso, receitas, achados (sorteio de conteúdo de recipientes) e a ponte do arsenal. Não traz itens (isso é o
 `game-items-goods`) nem desenha nada (`game-items-three`). Unidades: metros, quilos, litros, dias. Tudo é puro: o estado é do host.
-Estado: motor completo (T3.1a e T3.1e da spec 001). A ligação do `createFindsProvider` na planta (`registerFindsProvider`, T3.1h) fica para depois da Fase 2.
+Estado: motor completo (T3.1a, T3.1e e T3.1h da spec 001). O `createFindsProvider` liga na planta (`registerFindsProvider`) pelo `createGoodsFindsProvider` do `game-items-goods`.
 
 ## Quando usar e quando não usar
 - Use para: montar o catálogo de um jogo, calcular frescor/carga/proteção, resolver o efeito de usar um item, ver se uma receita sai, sortear o que há num recipiente, pôr isso em
@@ -44,7 +44,7 @@ Ordem do registro: pacotes, `patch`, `remove`, `include`. Pacotes também trazem
 | `maxLoadKg`, `carriedKg`, `loadState`, `bagOption`, `canTake` | carga `(8 + 2,5*FOR)*1,2`, limiares 100% (corrida -25%) e 150% (não corre), vagas (10) e peso |
 | `resolveUse(item, effects, context?)` | efeito de usar, como dado (`consume_nutrition`, `stop_bleeding`, `heal`, ...); comida passada/estragada/podre e cozida pelas regras `use` |
 | `canCraft(recipe, ctx)`, `craft(recipe, ctx, rng)` | receitas; ignora habilidade se o host não passa `skills` e `unlockedBy` se não passa `unlocked`; saída em efeito é do host |
-| `createFindsProvider(items, o?)` | `findsFor(query)`; recipiente com pool explícito usa o porte do `sorteiaConteudo`, senão o porte do `rollItems` |
+| `createFindsProvider(items, o?)` | `findsFor(query)`; recipiente com pool explícito usa o porte do `sorteiaConteudo`, senão o porte do `rollItems`. Opções `placeAliases`, `poolPlaces` e `unknownContainers: 'pass'` (devolve `null`: "não é meu", a planta usa o padrão dela) |
 | `rollByCategory`, `rollExplicitPool` | os dois portes soltos (ordem de sorteio documentada no código, base dos goldens G-b e G-c) |
 | `placeFinds(stacks, slots, items)`, `toLootTables(items, q)` | pilhas em vagas pelo `fitsSize`; achados como loot tables do `game-interactables` |
 | `spawnData`, `spawnAgeDays`, `depletionFactor`, `scaleCount` | estado ao surgir (idade, condição, carga, enchimento) e esgotamento `max(piso, 1 - queda x dias)` |
@@ -55,13 +55,13 @@ Ordem do registro: pacotes, `patch`, `remove`, `include`. Pacotes também trazem
 ## Compõe com
 - `@adatechnology/game-interactables`: dono do `ItemDef` base, do `rng` e do `fitsSize` (`placeFinds`); `toLootTables` devolve `LootTables` dele.
 - `@adatechnology/game-contracts`: `Thumbnail` e os helpers de registro (`mergeById`, `applyPatches`, `removeIds`, `deepMerge`).
-- `@adatechnology/game-floorplan` (Fase 2): `FindsQuery`, `FindStack` e `FindsProvider` daqui são estruturalmente os dela (`findsFor`); nenhum pacote importa o outro.
+- `@adatechnology/game-floorplan`: `FindsQuery`, `FindStack` e `FindsProvider` daqui são estruturalmente os dela (`findsFor`); nenhum pacote importa o outro. `null` = "não é meu"; `[]` é uma resposta (recipiente vazio).
 - `@adatechnology/game-weapons`: só como forma (`ArsenalLike`); `itemsFromArsenal` aceita o `Arsenal` real.
 - `game-items-goods` (dados) e `game-items-three` (modelos): outros pacotes.
 
 ## Ambiente de teste
 Testes unitários em `packages/game-items/tests/` com itens mínimos; `goods-integration.test.ts` e os de uso/receitas/arsenal leem os JSON de `game-items-goods` por caminho relativo. A área
-de teste visual (`items-test-area`) vem na T3.3.
+de teste visual é a `examples/items-test-area` (módulo `createItemsTestModule` do `game-items-three`), que sorteia achados e fabrica receitas com este motor.
 
 ## Cuidados
 - O sorteio é ordenado: primeiro todas as escolhas, depois o estado (idade, condição, carga, enchimento) com o mesmo `rng`. Não reordene: os goldens G-b e G-c dependem disso.

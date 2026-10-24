@@ -1614,3 +1614,66 @@ Node 22.23.4: `tools/items-catalog` 35, `game-items` 18, `tools/golden` 42, `cat
 - Nenhuma edição em arquivo gerado nem no repositório `zombiada`.
 
 **Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` e `pnpm -r test` verdes (`items-catalog` 39); `catalog:check` de items e weapons up to date. **Node 22.23.4**: `items-catalog` 39 passou. Modelo da execução: `sonnet`.
+
+### T3.1h — Achados do catálogo ligados à planta (grupo E) — commit `6314632`
+
+**O que entrou**
+- `game-floorplan`: `FloorplanOptions` ganha `day` e `region`; `FindsProvider.findsFor` pode devolver `null` ("não é meu": o próximo provedor ou o padrão do pacote responde) e **`[]` passa a ser uma resposta** (recipiente vazio). Novo `engine.findsAnswer(query)` (devolve `null` se ninguém respondeu); `engine.findsFor` devolve `answer ?? []`.
+- `game-floorplan-structure`: a extensão de conteúdo passa `day`, `region`, `place`, `footprint` e `key` na consulta e só cai no `contentOf` padrão quando `findsAnswer` é `null`.
+- `game-items`: `createFindsProvider` aceita `placeAliases`, `poolPlaces` e `unknownContainers: 'pass'` (sobrecarga mantém o tipo sem `null` quando a opção não é `pass`); `coldContainers` também olha `query.key`.
+- `game-items-goods` (`src/floorplan.ts`): `createGoodsFindsProvider`, `FLOORPLAN_POOL_KEYS` (fridge→geladeira, kitchen_cabinet→pia, overhead_cabinet→aereo, washbasin→pia_b, wardrobe→guarda...), `FLOORPLAN_PLACES` (shack→house, cabin→lodge, camp→military_base, triage e emergency_room→hospital, market→supermarket, metalworks→workshop) e `POOL_PLACES` (house, apartment, lodge); `fridge` e `display_fridge` entram nos recipientes frios.
+- Testes: `finds-goods.test.ts` (7, novo), null x [] no motor, provedor que devolve `null` nas utilidades, 3 no provedor de `game-items`. **Os goldens do VC3 da Fase 2 passam iguais.** Changeset `floorplan-finds-provider.md`.
+
+**Mudança de semântica (avisar quem implementa provedor):** antes `[]` e "não sei" eram a mesma coisa; agora `[]` é "o recipiente está vazio" e `null` é "não é meu".
+
+### Correção de passagem — miniaturas das 12 armas corpo a corpo — commit `3829f91`
+
+Dois testes de `game-weapons-three` estavam vermelhos por herança da T3.1i: faltavam as miniaturas das 12 armas novas e a área de armas passou a ter sete balcões. Rodei `node tools/weapon-thumbnails/dist/cli.js generate` (12 SVGs novos em `assets/weapon-svg/generated/`, `manifest.json`, `CREDITS.md`, `credits.html`; os arquivos existentes saíram idênticos byte a byte) e subi o teto de balcões de 6 para 8 em `weapons-area.test.ts`.
+
+### T3.2a — Esqueleto do `game-items-three` — commit `feb701a`
+
+Pacote novo (IIFE `GameItemsThree`, three peer `^0.160`, `@adatechnology/golden-tool` devDependency): `createItemKit` (materiais por tag com `baseRgb` do hex), `setWear` (0 novo, 1 usado, 2 estragado, mistura em sRGB), 25 formas simples (`shapeOf`, `drawShape`), `buildItem`, `mergeItem`, `buildItemLod` (3 níveis, corte a 30 m / 60 m), `ITEM_BUDGETS` (30 chamadas, 400/1200 triângulos) e registro de modelos. `mergeByMaterial` **mudou do `game-weapons-three` para o `game-props3d`** (`git mv`; o weapons-three passa a depender do props3d). 38 testes.
+
+### T3.2b — Captura `items-showcase` e porte literal dos 24 modelos — commit `06377c6`
+
+- `tools/golden/captures/items-showcase.js` recorta da página `const mats = []` até `MODELS` e `STAGE_TARGET`/`AMT`/`setStage`, avalia no three r128 e grava `tests/fixtures/team-golden/items-showcase.json`: 96 eventos (24 `model` + 72 `wear`), 24 cenas. Duas gravações idênticas byte a byte.
+- Os 24 construtores estão em `src/models/*.ts` **literais** (cada um com o cabeçalho da linha da fonte); `models.json` (id, teamId, caixa, escala) é gerado por `tools/items-catalog` (`build-models.ts`); 23 itens do goods ganham `model: <id>`.
+- `tests/team-golden.test.ts` (27): hash nó a nó, hash das 24 cenas e tabelas de desgaste com tolerância 0,0011 (r128 trunca o hex, r160 converte para linear). `KNOWN_DEVIATIONS` está vazio: **os 24 bateram**. `tests/models.test.ts`: caixa x escala = tamanho em 2%.
+- **Desvios de orçamento (conhecidos, do time):** 7 modelos passam do teto de triângulos e ficam em `MODEL_BUDGET_DEVIATIONS`: `canned_beans` 744, `amoxicillin` 596, `flashlight` 1060, `portable_radio` 504, `house_key` 472, `motorcycle_helmet` 840, `lpg_cylinder_13kg` 712 (o teste aceita só até o valor medido).
+- O `diario` (`survivor_diary`) é item só do jogo: o modelo vem no SDK, o item não está no goods.
+
+### T3.2c — Miniaturas e checklist 3D — commit `9631f99`
+
+`shapeThumbnailSvg` (25 formas, 64x64, sem script nem referência), `itemThumbnail` (modelado → `{ render: true }`, demais → `{ svg }`), `thumbnailPatch` para `createItems`, `composeThumbnailScene`/`renderItemThumbnail` (enquadra a caixa inteira; testado com renderer falso). `itens-modelos-3d.md` passa a ser **gerado** (`build-checklist.ts`, coluna "tamanho real") e o `catalog:check` o confere. 7 testes novos.
+
+### T3.3a — `examples/items-test-area` — commit `66d18ee`
+
+`createItemsTestModule({ catalog, locale, translate, seed, wear, provider })` em `game-items-three/src/area.ts`; o módulo não conhece conteúdo (recebe o catálogo). 14 prateleiras por categoria com os 327 itens em tamanho real (`AreaPlacement.surface`, `shelvesLayout` puro: sem sobreposição, dentro da arena de 28 m), pedestal com os 24 modelos girando, régua de 1,55 m, silhueta de 1,80 m e mesa de achados. Bancada: categoria (todas + 14), desgaste, idade 0–400 + armazenamento (7) + energia, lugar (24), recipiente, estado, dia do surto 0–60, semente, "sortear achados", receita e "fabricar". Camadas: rótulos, caixas, destaque das formas simples. Contadores: itens, chamadas de desenho, triângulos, modelados/total (351 itens à mostra, **23/327 modelados**). 7 cenários em pt-BR e en. 14 testes de área com a sala de testes de verdade. A forma `backpack` foi corrigida para ocupar a altura inteira (estava 11% abaixo).
+
+### T3.3b — Site e móveis com conteúdo real — commit `d52d6df`
+
+`interactables-test-area` carrega também o `ItemsArea`; geladeira, armários, despensa, guarda-roupa, cômoda, criado e armário do banheiro mostram itens reais sorteados pelo goods (fotos `shots/` refeitas). `site/catalog.mjs` (exemplo + família "Itens"), miniatura `site/thumbs/items-test-area.jpg` (`capture-thumbs --only=items-test-area`), `site/Dockerfile` (COPY de `game-items-three` e `examples/items-test-area`; os de `game-items`, `game-items-goods` e `tools/items-catalog` já existiam). `site/build-site.mjs` já constrói o `test-room` primeiro e os demais em ordem alfabética, então `items-test-area` vem depois dele sem mudança de código. Navegador (Chromium): `items-test-area/test.mjs` 5 verificações e `interactables-test-area/test.mjs` 14/14 passam.
+
+### T3.3c — Documentação, changesets e portões
+
+- `inventario/armas-itens.md` (8 linhas de itens marcadas `[migrado: onde]`), `tasks.md` (Fase 3 ✅), `.claude/skills/game-items-three/SKILL.md` (novo) e atualizados `game-items`, `game-items-goods`, `game-props3d`, `game-floorplan`, `game-floorplan-structure`.
+- Changesets novos: `game-items-three-package.md` (minor → 0.1.0), `props3d-merge-by-material.md` (minor), `weapons-three-merge-by-material-moved.md` (patch); já existiam os de `game-items`, `game-items-goods`, household (minor), contracts/interactables (minor), weapons (minor) e floorplan/structure.
+
+**Portões (Node 22.22.0; o Node 24 não existe neste ambiente)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` exit 0. Testes: `game-items-three` 92, `game-items` 146, `game-items-goods` 18, `items-catalog` 42 (`catalog:check` up to date), `game-props3d` 300, `game-floorplan` 38, `game-interactables-household` 1911, `game-contracts` 35, `game-test-room` 128; `weapons-three` e a área de armas verdes com `--testTimeout=90000`. **`game-floorplan-structure`: 11 falhas que já existiam sem as minhas mudanças** (conferido revertendo meus arquivos): as plantas comerciais e pós-apocalípticas (supermercado, farmácia, loja de armas, delegacia...) não têm pontos de encanamento e `triage_tent` dá "Unknown construction canvas". Os goldens VC3 passam.
+
+### Escolhas e desvios reversíveis (T3.1h–T3.3)
+
+- `largeFrom` = 0,6 m (item grande: 1200 triângulos, corte a 60 m) é a minha leitura da página; mudar em `ITEM_BUDGETS`.
+- Os 233 itens sem modelo usam a medida REF e uma cor padrão cinza; o time corrige ao entregar o modelo.
+- A área calcula a idade da comida por `freshness` com o armazenamento escolhido e usa o pior entre o desgaste da bancada e o da idade.
+- O conteúdo dos móveis do `interactables-test-area` usa um mapa tipo-de-móvel → pool escrito no `entry.js` do exemplo (glue de exemplo, não do SDK).
+- Não usei `RoundedBoxGeometry` (G6): nenhum dos 24 modelos precisou.
+
+### Perguntas para o dono
+
+1. `[]` agora é resposta do `FindsProvider` e `null` é "não é meu". Algum provedor do jogo (zombiada) depende de `[]` como "não sei"?
+2. As 11 falhas do `game-floorplan-structure` (encanamento dos comerciais/pós-apocalípticos e `triage_tent`) são da Fase 2 e estão vermelhas na `int/p3`. Quem corrige?
+3. Os 7 modelos do time acima do orçamento de triângulos (`flashlight` 1060, `motorcycle_helmet` 840...): aceitar como desvio ou pedir ao time versões mais leves?
+4. `largeFrom` 0,6 m: é a regra que o time quer para "item grande"?
+5. O `survivor_diary` tem modelo no SDK mas o item é só do jogo: deixo o modelo no SDK (reaproveitável) ou movo para o repositório do jogo?
+6. Falta o Node 24 neste ambiente: os goldens do items-showcase foram gravados e conferidos só no Node 22.22.0. Rodar também no 24 antes do PR.
