@@ -4,6 +4,7 @@
  */
 export { createVfx } from './world'
 export type { ExplosionOptions, FireOptions, VfxOptions, VfxPoolsView, VfxWorld } from './world'
+export { EXPLOSIONS, EXPLOSION_ALIASES, patchExplosions } from './catalog'
 export { composeExplosion } from './explosion'
 export type { ExplosionCall } from './explosion'
 export { lehmer, lcg, streamFor } from './random'

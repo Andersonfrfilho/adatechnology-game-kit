@@ -1,5 +1,6 @@
 import { AREA_CAP_GAME, createAreaCap } from './area-cap'
 import { PROFILES } from './budget'
+import { EXPLOSIONS, EXPLOSION_ALIASES } from './catalog'
 import { hexToLinearRgb } from './color'
 import { DEFAULT_GRAVITY, DEFAULT_WIND } from './constants'
 import type { RandomMode, VfxCore } from './core'
@@ -45,6 +46,7 @@ export interface VfxOptions {
   readonly ground?: GroundField
   readonly wind?: Vec3Like
   readonly gravity?: number
+  /** The catalogue by id (default the Lab's 16 and `generic`); build another with `patchExplosions(EXPLOSIONS, ...)`. */
   readonly explosions?: Readonly<Record<string, ExplosionDef>>
   readonly aliases?: Readonly<Record<string, string>>
   readonly reducedMotion?: boolean
@@ -145,8 +147,8 @@ function scaleDefinition(def: ExplosionDef, factor: number): ExplosionDef {
 export function createVfx(options: VfxOptions = {}): VfxWorld {
   const profile = resolveProfile(options.profile)
   const sharedRandom = lehmer(options.seed ?? 1)
-  const explosions = options.explosions ?? {}
-  const aliases = options.aliases ?? {}
+  const explosions = options.explosions ?? EXPLOSIONS
+  const aliases = options.aliases ?? EXPLOSION_ALIASES
   const randomMode = options.randomMode ?? 'per_event'
   const wind: MutableVec3 = { x: DEFAULT_WIND.x, y: DEFAULT_WIND.y, z: DEFAULT_WIND.z }
   if (options.wind) [wind.x, wind.y, wind.z] = options.wind
