@@ -174,7 +174,8 @@
           "t": 4.4,
           "type": "impact",
           "data": {
-            "kind": "bite"
+            "kind": "bite",
+            "source": "bite.visible=T>4.4 in the scene's step()"
           }
         }
       ]

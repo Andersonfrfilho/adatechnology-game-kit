@@ -32,3 +32,16 @@ import { POSE_CLIPS, createPoseClipRegistry, samplePoseClip } from '@adatechnolo
 const clips = createPoseClipRegistry(POSE_CLIPS)
 samplePoseClip(clips.get('grabbed_bitten_human')!, 2.5) // { lean, headY, armL, ... }
 ```
+
+**Clip format (JSON).** A team can add clips, attacks included, as data and register them; the core has no clip of its own beyond the two Bestiário ones.
+
+```json
+{
+  "id": "my_clip", "duration": 1.2, "loop": false, "channels": "upper",
+  "keys": [{ "t": 0, "pose": { "armR": -0.1 } }, { "t": 0.4, "pose": { "armR": -1.6, "lean": 0.3 } }, { "t": 1.2, "pose": { "armR": -0.1 } }],
+  "events": [{ "t": 0.4, "type": "impact", "data": { "kind": "blow" } }]
+}
+```
+
+Event types: `impact` is the moment the blow, bite or hit lands (the game applies the damage when it fires); `phase` carries `data.label`, a locale key. Any other type is the game's.
+`clipEventsBetween` returns an event once, for the interval it falls in `(t0, t1]`.
