@@ -1,0 +1,24 @@
+{
+  "name": "@adatechnology/characters-catalog-tool",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Characters catalog tool: reads the team deliveries (game, Besti\u00e1rio, Elenco, Retratos, Os Vivos, Arsenal body) and writes the reconciled data of game-characters and game-characters-undead as plain JSON, the golden captures of the characters, and the game slice for the zombiada repository, with a --check that fails when the generated files are stale.",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "catalog": "node dist/cli.js",
+    "catalog:check": "node dist/cli.js --check",
+    "catalog:game": "node dist/cli.js --game-out"
+  },
+  "devDependencies": {
+    "@adatechnology/game-weapons": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

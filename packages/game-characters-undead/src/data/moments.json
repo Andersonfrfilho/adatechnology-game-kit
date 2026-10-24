@@ -1,0 +1,12 @@
+{
+  "wander": 1,
+  "alert": 1.3,
+  "scream": 1.2,
+  "injured": 0.5,
+  "crawlCap": 0.4,
+  "water": {
+    "drowned": 3,
+    "others": 0.6
+  },
+  "night": 1
+}

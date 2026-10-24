@@ -1,0 +1,1663 @@
+[
+  {
+    "id": "zilda",
+    "n": "Dona Zilda Ramos",
+    "a": "67 · enfermeira aposentada",
+    "g": "igreja",
+    "it": "Terço no pulso, crucifixo e bolsa de enfermagem",
+    "b": {
+      "fem": 1,
+      "skin": 8014899,
+      "h": 0.94,
+      "hunch": 0.08,
+      "hair": {
+        "s": "bun",
+        "c": 12565684
+      },
+      "face": [
+        "glasses"
+      ],
+      "top": {
+        "c": 9071264,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 3814464,
+        "skirt": 1
+      },
+      "shoes": 2761248,
+      "ex": [
+        [
+          "blouse",
+          14998992
+        ],
+        [
+          "cross",
+          14200896
+        ],
+        [
+          "rosary",
+          6964264
+        ]
+      ],
+      "hand": "medbag"
+    }
+  },
+  {
+    "id": "arnaldo",
+    "n": "Seu Arnaldo Ramos",
+    "a": "70 · ferroviário (zumbi acorrentado)",
+    "g": "igreja",
+    "it": "Relógio de bolso da ferrovia",
+    "already": 1,
+    "b": {
+      "skin": 12882032,
+      "hair": {
+        "s": "bald",
+        "c": 11053216
+      },
+      "face": [
+        "stubble"
+      ],
+      "top": {
+        "c": 4872810,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 2764083
+      },
+      "shoes": 1775380,
+      "ex": [
+        [
+          "watch"
+        ],
+        [
+          "chain",
+          6974058
+        ]
+      ]
+    }
+  },
+  {
+    "id": "val",
+    "n": "Seu Valdir “Val” Cardoso",
+    "a": "58 · sacristão e coveiro",
+    "g": "igreja",
+    "it": "Pá com o cabo de fita vermelha",
+    "b": {
+      "skin": 9067068,
+      "hair": {
+        "s": "short",
+        "c": 11578532
+      },
+      "face": [
+        "mustache"
+      ],
+      "top": {
+        "c": 5918784,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 3814184
+      },
+      "shoes": 2760728,
+      "hand": "shovel"
+    }
+  },
+  {
+    "id": "mariana",
+    "n": "Mariana",
+    "a": "8 · órfã, diabética",
+    "g": "igreja",
+    "it": "Mochila de unicórnio",
+    "kid": 1,
+    "b": {
+      "fem": 1,
+      "h": 0.62,
+      "bulk": 0.74,
+      "skin": 14198920,
+      "hair": {
+        "s": "pony",
+        "c": 5913122
+      },
+      "top": {
+        "c": 14191272,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 4876954
+      },
+      "shoes": 14737632,
+      "ex": [
+        [
+          "unicorn",
+          15784168
+        ]
+      ]
+    }
+  },
+  {
+    "id": "criancas",
+    "n": "Theo, Duda e Pedrinho",
+    "a": "11, 9 e 6 · órfãos",
+    "g": "igreja",
+    "it": "Boné do Theo, do time da cidade",
+    "kid": 1,
+    "wide": 1,
+    "kids": [
+      {
+        "x": -0.55,
+        "h": 0.7,
+        "bulk": 0.76,
+        "skin": 13144176,
+        "hair": {
+          "s": "short",
+          "c": 2760728
+        },
+        "hat": {
+          "k": "cap",
+          "c": 11545130
+        },
+        "top": {
+          "c": 2763306,
+          "sl": "short"
+        },
+        "pants": {
+          "c": 3820138
+        },
+        "shoes": 14737632,
+        "ex": [
+          [
+            "stripes",
+            11545130
+          ]
+        ]
+      },
+      {
+        "x": 0.05,
+        "fem": 1,
+        "h": 0.63,
+        "bulk": 0.72,
+        "skin": 9067066,
+        "hair": {
+          "s": "pony",
+          "c": 1118481
+        },
+        "top": {
+          "c": 15255626,
+          "sl": "short"
+        },
+        "pants": {
+          "c": 6961754
+        },
+        "shoes": 14211280
+      },
+      {
+        "x": 0.58,
+        "h": 0.55,
+        "bulk": 0.7,
+        "skin": 14200976,
+        "hair": {
+          "s": "short",
+          "c": 6965802
+        },
+        "top": {
+          "c": 4898954,
+          "sl": "short"
+        },
+        "pants": {
+          "c": 2767450
+        },
+        "shoes": 3828362
+      }
+    ]
+  },
+  {
+    "id": "brasa",
+    "n": "Tenente “Brasa” Valença",
+    "a": "41 · ex-PM",
+    "g": "deleg",
+    "it": "Boina preta do batalhão",
+    "b": {
+      "skin": 11827794,
+      "h": 1.07,
+      "bulk": 1.18,
+      "hair": {
+        "s": "bald",
+        "c": 1118481
+      },
+      "face": [
+        "stubble",
+        "cig"
+      ],
+      "hat": {
+        "k": "beret",
+        "c": 921104
+      },
+      "top": {
+        "c": 2830122,
+        "sl": "short"
+      },
+      "pants": {
+        "c": 2764856
+      },
+      "shoes": 1118481,
+      "ex": [
+        [
+          "vest",
+          1776928
+        ],
+        [
+          "pouches",
+          2369578
+        ],
+        [
+          "belt",
+          1381914
+        ],
+        [
+          "holster"
+        ],
+        [
+          "armband",
+          10103328
+        ]
+      ],
+      "back": "shotgun"
+    }
+  },
+  {
+    "id": "bigode",
+    "n": "Sargento “Bigode” Nunes",
+    "a": "48 · PM",
+    "g": "deleg",
+    "it": "Óculos espelhados",
+    "b": {
+      "skin": 13013106,
+      "h": 1.02,
+      "bulk": 1.14,
+      "hair": {
+        "s": "short",
+        "c": 1709072
+      },
+      "face": [
+        "mustache",
+        "mirror"
+      ],
+      "top": {
+        "c": 6123130,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 2764856
+      },
+      "shoes": 1118481,
+      "ex": [
+        [
+          "vest",
+          1776928
+        ],
+        [
+          "belt",
+          1381914
+        ],
+        [
+          "holster"
+        ],
+        [
+          "radio"
+        ]
+      ],
+      "hand": "baton"
+    }
+  },
+  {
+    "id": "italo",
+    "n": "Soldado Ítalo Prates",
+    "a": "22 · PM recém-formado",
+    "g": "deleg",
+    "it": "Apito de metal no pescoço",
+    "b": {
+      "skin": 8014384,
+      "bulk": 0.94,
+      "hair": {
+        "s": "buzz",
+        "c": 1118481
+      },
+      "top": {
+        "c": 6123130,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 2764856
+      },
+      "shoes": 1118481,
+      "ex": [
+        [
+          "belt",
+          1381914
+        ],
+        [
+          "holster"
+        ],
+        [
+          "whistle"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "rafa",
+    "n": "Rafaela “Rafa” Duarte",
+    "a": "36 · escrivã",
+    "g": "deleg",
+    "it": "Caneta presa no coque",
+    "b": {
+      "fem": 1,
+      "skin": 13803646,
+      "hair": {
+        "s": "bun",
+        "c": 4861468
+      },
+      "top": {
+        "c": 8022666,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 2763312
+      },
+      "shoes": 2761248,
+      "ex": [
+        [
+          "pen"
+        ]
+      ],
+      "lhand": "book"
+    }
+  },
+  {
+    "id": "jessica",
+    "n": "Jéssica Monteiro",
+    "a": "27 · locutora",
+    "g": "radio",
+    "it": "Fone vermelho no pescoço",
+    "b": {
+      "fem": 1,
+      "skin": 5912614,
+      "hair": {
+        "s": "afro",
+        "c": 1708816
+      },
+      "face": [
+        "earrings"
+      ],
+      "top": {
+        "c": 4876954,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 1974050
+      },
+      "shoes": 12071466,
+      "ex": [
+        [
+          "shirtpeek",
+          14725168
+        ],
+        [
+          "headphones",
+          14165546
+        ]
+      ],
+      "hand": "mic"
+    }
+  },
+  {
+    "id": "nelson",
+    "n": "Seu Nelson Kubo",
+    "a": "63 · radioamador",
+    "g": "radio",
+    "it": "Rádio amador com antena remendada",
+    "b": {
+      "skin": 14200976,
+      "hair": {
+        "s": "short",
+        "c": 12104876
+      },
+      "face": [
+        "glasses"
+      ],
+      "top": {
+        "c": 11051152,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 3815994
+      },
+      "shoes": 2763306,
+      "ex": [
+        [
+          "sweatervest",
+          6974034
+        ]
+      ],
+      "hand": "radio_h"
+    }
+  },
+  {
+    "id": "rosa",
+    "n": "Rosa Tavares",
+    "a": "34 · mecânica",
+    "g": "oficina",
+    "it": "Macacão azul amarrado e bandana vermelha",
+    "b": {
+      "fem": 1,
+      "skin": 11040079,
+      "hair": {
+        "s": "long",
+        "c": 2759184
+      },
+      "hat": {
+        "k": "bandana",
+        "c": 12071466
+      },
+      "face": [
+        "goggles"
+      ],
+      "top": {
+        "c": 14210248,
+        "sl": "tank"
+      },
+      "pants": {
+        "c": 2964047
+      },
+      "shoes": 2760728,
+      "ex": [
+        [
+          "tiedsleeves",
+          2964047
+        ],
+        [
+          "stains"
+        ]
+      ],
+      "hand": "wrench"
+    }
+  },
+  {
+    "id": "gil",
+    "n": "Gilmar “Gil” Batista",
+    "a": "44 · caminhoneiro",
+    "g": "oficina",
+    "it": "Boné de transportadora e foto das filhas",
+    "b": {
+      "skin": 12618344,
+      "bulk": 1.1,
+      "hair": {
+        "s": "short",
+        "c": 2760728
+      },
+      "hat": {
+        "k": "cap",
+        "c": 14735552
+      },
+      "top": {
+        "c": 8010282,
+        "sl": "short",
+        "plaid": 4857880
+      },
+      "pants": {
+        "c": 3425886
+      },
+      "shoes": 3811870,
+      "ex": [
+        [
+          "photo"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "otavio",
+    "n": "Otávio Lins",
+    "a": "52 · professor de química",
+    "g": "colegio",
+    "it": "Óculos de proteção na testa e garrafa",
+    "b": {
+      "skin": 13805701,
+      "h": 0.97,
+      "hunch": 0.12,
+      "hair": {
+        "s": "bald",
+        "c": 5917242
+      },
+      "face": [
+        "glasses",
+        "mustache",
+        "labgoggles"
+      ],
+      "top": {
+        "c": 6978186,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 4867132
+      },
+      "shoes": 3811870,
+      "ex": [
+        [
+          "labcoat",
+          14210764
+        ],
+        [
+          "stains_y"
+        ]
+      ],
+      "hand": "bottle"
+    }
+  },
+  {
+    "id": "bianca",
+    "n": "Bianca Rocha",
+    "a": "16 · estudante",
+    "g": "colegio",
+    "it": "Jaqueta do colégio com bottons",
+    "b": {
+      "fem": 1,
+      "h": 0.95,
+      "bulk": 0.92,
+      "skin": 10119752,
+      "hair": {
+        "s": "long",
+        "c": 3810326
+      },
+      "top": {
+        "c": 2771594,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 2763312
+      },
+      "shoes": 14737632,
+      "ex": [
+        [
+          "stripes",
+          15263976
+        ],
+        [
+          "pins"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "sato",
+    "n": "Dr. Henrique Sato",
+    "a": "45 · infectologista",
+    "g": "hospital",
+    "it": "Gravador de fita no bolso do jaleco",
+    "b": {
+      "skin": 14201998,
+      "hair": {
+        "s": "short",
+        "c": 1118481
+      },
+      "face": [
+        "glasses",
+        "mask"
+      ],
+      "top": {
+        "c": 3824234,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 2764856
+      },
+      "shoes": 1118481,
+      "ex": [
+        [
+          "labcoat",
+          15526626
+        ],
+        [
+          "gloves",
+          6986448
+        ],
+        [
+          "blood"
+        ],
+        [
+          "recorder"
+        ]
+      ],
+      "lhand": "clipboard"
+    }
+  },
+  {
+    "id": "livia",
+    "n": "Lívia Ferreira",
+    "a": "14 · irmã do Kauã",
+    "g": "hospital",
+    "it": "Pulseira de miçangas",
+    "b": {
+      "fem": 1,
+      "h": 0.88,
+      "bulk": 0.86,
+      "skin": 5912614,
+      "hair": {
+        "s": "pony",
+        "c": 1118481
+      },
+      "top": {
+        "c": 14737624,
+        "sl": "short"
+      },
+      "pants": {
+        "c": 2767450
+      },
+      "shoes": 14737632,
+      "ex": [
+        [
+          "stripes",
+          2771594
+        ],
+        [
+          "beads"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "diego",
+    "n": "Diego Paiva",
+    "a": "24 · técnico de enfermagem",
+    "g": "hospital",
+    "it": "Crachá do pronto-socorro",
+    "b": {
+      "skin": 8014382,
+      "hair": {
+        "s": "short",
+        "c": 1118481
+      },
+      "top": {
+        "c": 4881002,
+        "sl": "short"
+      },
+      "pants": {
+        "c": 4881002
+      },
+      "shoes": 14211280,
+      "ex": [
+        [
+          "badge"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "nicole",
+    "n": "Nicole Andrade",
+    "a": "20 · estudante de medicina",
+    "g": "hospital",
+    "it": "Estetoscópio cor-de-rosa",
+    "zcat": "corredor",
+    "b": {
+      "fem": 1,
+      "skin": 14727320,
+      "hair": {
+        "s": "long",
+        "c": 11043914
+      },
+      "top": {
+        "c": 9083560,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 2764083
+      },
+      "shoes": 14211280,
+      "ex": [
+        [
+          "labcoat",
+          15263456
+        ],
+        [
+          "stethc",
+          15235752
+        ]
+      ]
+    }
+  },
+  {
+    "id": "kauan",
+    "n": "Kauã Ferreira",
+    "a": "19 · motoboy",
+    "g": "nomade",
+    "it": "Capacete de moto com adesivo, preso na mochila",
+    "zcat": "corredor",
+    "b": {
+      "skin": 5912614,
+      "h": 0.98,
+      "bulk": 0.88,
+      "hair": {
+        "s": "short",
+        "c": 1118481
+      },
+      "hat": {
+        "k": "cap",
+        "c": 1919594
+      },
+      "top": {
+        "c": 1974050,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 4869976
+      },
+      "shoes": 14737632,
+      "ex": [
+        [
+          "hood",
+          1974050
+        ],
+        [
+          "backpack",
+          3824186
+        ],
+        [
+          "helmetpack",
+          1908514
+        ],
+        [
+          "radio"
+        ]
+      ],
+      "hand": "machete"
+    }
+  },
+  {
+    "id": "biel",
+    "n": "Gabriel “Biel” Souza",
+    "a": "17 · moleque das lajes",
+    "g": "vila",
+    "it": "Estilingue de borracha de câmara",
+    "zcat": "corredor",
+    "b": {
+      "skin": 5911584,
+      "bulk": 0.9,
+      "h": 0.97,
+      "hair": {
+        "s": "buzz",
+        "c": 1118481
+      },
+      "top": {
+        "c": 14204992,
+        "sl": "tank"
+      },
+      "pants": {
+        "c": 3820138
+      },
+      "shoes": 3828362,
+      "hand": "slingshot"
+    }
+  },
+  {
+    "id": "neide",
+    "n": "Pastora Neide Santos",
+    "a": "50 · pastora",
+    "g": "vila",
+    "it": "Bíblia com capa de couro gasta",
+    "b": {
+      "fem": 1,
+      "skin": 6963240,
+      "hair": {
+        "s": "bun",
+        "c": 1118481
+      },
+      "top": {
+        "c": 6961754,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 6961754,
+        "skirt": 1
+      },
+      "shoes": 2761248,
+      "lhand": "bible"
+    }
+  },
+  {
+    "id": "helena",
+    "n": "Helena Vieira",
+    "a": "31 · arquiteta, com Davi (6)",
+    "g": "aurora",
+    "it": "Sinalizador laranja de carro",
+    "wide": 1,
+    "b": {
+      "fem": 1,
+      "skin": 14200976,
+      "hair": {
+        "s": "long",
+        "c": 4861468
+      },
+      "top": {
+        "c": 9079418,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 3816004
+      },
+      "shoes": 2763306,
+      "hand": "flare"
+    },
+    "kids": [
+      {
+        "x": 0.62,
+        "h": 0.52,
+        "bulk": 0.68,
+        "skin": 14200976,
+        "hair": {
+          "s": "short",
+          "c": 4861468
+        },
+        "top": {
+          "c": 4885184,
+          "sl": "short"
+        },
+        "pants": {
+          "c": 3816004
+        },
+        "shoes": 14737632
+      }
+    ]
+  },
+  {
+    "id": "chico",
+    "n": "Chico Maranhão",
+    "a": "39 · metalúrgico",
+    "g": "fabril",
+    "it": "Capacete amarelo de EPI",
+    "b": {
+      "skin": 9067066,
+      "bulk": 1.06,
+      "hair": {
+        "s": "short",
+        "c": 1118481
+      },
+      "hat": {
+        "k": "hardhat",
+        "c": 15253536
+      },
+      "top": {
+        "c": 5922402,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 5922402
+      },
+      "shoes": 2760728,
+      "ex": [
+        [
+          "stripes",
+          14213216
+        ],
+        [
+          "legstripes",
+          14213216
+        ]
+      ]
+    }
+  },
+  {
+    "id": "armando",
+    "n": "Armando Kessler",
+    "a": "60 · dono da loja de armas",
+    "g": "armas",
+    "it": "Colete de caça com cartucheira",
+    "zcat": "brutamonte",
+    "b": {
+      "skin": 14727320,
+      "bulk": 1.12,
+      "hair": {
+        "s": "short",
+        "c": 14736596
+      },
+      "face": [
+        "beard_g"
+      ],
+      "top": {
+        "c": 9075290,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 3815984
+      },
+      "shoes": 3811870,
+      "ex": [
+        [
+          "vest",
+          6974010
+        ],
+        [
+          "bandolier"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "dito",
+    "n": "Seu Benedito “Dito” Alves",
+    "a": "71 · agricultor, com Trovão",
+    "g": "oeste",
+    "it": "Chapéu de palha e o cachorro Trovão",
+    "wide": 1,
+    "b": {
+      "skin": 7029808,
+      "h": 0.95,
+      "hunch": 0.1,
+      "hair": {
+        "s": "bald",
+        "c": 14211280
+      },
+      "face": [
+        "mustache_w"
+      ],
+      "hat": {
+        "k": "straw",
+        "c": 13217898
+      },
+      "top": {
+        "c": 5925434,
+        "sl": "long",
+        "plaid": 2765848
+      },
+      "pants": {
+        "c": 5917234
+      },
+      "shoes": 4863268,
+      "ex": [
+        [
+          "suspenders",
+          3811866
+        ]
+      ],
+      "back": "shotgun",
+      "dog": 1
+    }
+  },
+  {
+    "id": "ivone",
+    "n": "Ivone Moreira",
+    "a": "49 · fazendeira",
+    "g": "oeste",
+    "it": "Espingarda de dois canos remendada",
+    "b": {
+      "fem": 1,
+      "skin": 13672576,
+      "hair": {
+        "s": "pony",
+        "c": 8022618
+      },
+      "top": {
+        "c": 8018490,
+        "sl": "long",
+        "plaid": 3810328
+      },
+      "pants": {
+        "c": 3425886
+      },
+      "shoes": 4863268,
+      "ex": [
+        [
+          "dbl_front"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "tadeu",
+    "n": "Tadeu Moreira",
+    "a": "22 · filho dos Moreira",
+    "g": "oeste",
+    "it": "Lenço vermelho no pescoço",
+    "b": {
+      "skin": 13144176,
+      "hair": {
+        "s": "short",
+        "c": 5913122
+      },
+      "top": {
+        "c": 6978186,
+        "sl": "short"
+      },
+      "pants": {
+        "c": 3425886
+      },
+      "shoes": 4863268,
+      "ex": [
+        [
+          "scarf",
+          12855338
+        ]
+      ]
+    }
+  },
+  {
+    "id": "profeta",
+    "n": "Wesley “Profeta” Lacerda",
+    "a": "36 · líder dos Corvos",
+    "g": "serra",
+    "it": "Pena preta presa no boné",
+    "b": {
+      "skin": 11565653,
+      "bulk": 1.04,
+      "hair": {
+        "s": "short",
+        "c": 1118481
+      },
+      "face": [
+        "beard"
+      ],
+      "hat": {
+        "k": "cap",
+        "c": 1118740
+      },
+      "top": {
+        "c": 1973794,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 1973794
+      },
+      "shoes": 1118481,
+      "ex": [
+        [
+          "vest",
+          2763302
+        ],
+        [
+          "feather"
+        ],
+        [
+          "rifle_front"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "cida",
+    "n": "Dona Cida Moura",
+    "a": "74 · raizeira",
+    "g": "serra",
+    "it": "Patuá de couro no pescoço",
+    "b": {
+      "fem": 1,
+      "h": 0.9,
+      "hunch": 0.08,
+      "skin": 6963240,
+      "hair": {
+        "s": "bun",
+        "c": 14736596
+      },
+      "hat": {
+        "k": "bandana",
+        "c": 9067130
+      },
+      "top": {
+        "c": 5925450,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 5925450,
+        "skirt": 1
+      },
+      "shoes": 2761248,
+      "ex": [
+        [
+          "amulet"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "renata",
+    "n": "Cabo Renata Lobo",
+    "a": "29 · atiradora do Exército",
+    "g": "base",
+    "it": "Fuzil com fita camuflada",
+    "b": {
+      "fem": 1,
+      "skin": 11038800,
+      "hair": {
+        "s": "bun",
+        "c": 1118481
+      },
+      "top": {
+        "c": 4872762,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 4872762
+      },
+      "shoes": 1118481,
+      "ex": [
+        [
+          "vest",
+          3820078
+        ],
+        [
+          "rifle_tape"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "taina",
+    "n": "Tainá Costa",
+    "a": "23 · cozinheira, grávida",
+    "g": "igreja",
+    "it": "Lenço amarelo na cabeça e a barriga de sete meses",
+    "b": {
+      "fem": 1,
+      "skin": 7029808,
+      "hair": {
+        "s": "long",
+        "c": 1708816
+      },
+      "hat": {
+        "k": "bandana",
+        "c": 15253552
+      },
+      "top": {
+        "c": 13134410,
+        "sl": "short"
+      },
+      "pants": {
+        "c": 3816004
+      },
+      "shoes": 2761248,
+      "ex": [
+        [
+          "belly"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "lucas",
+    "n": "Lucas “Gaúcho” Kraemer",
+    "a": "33 · caminhoneiro",
+    "g": "oficina",
+    "it": "Cuia de chimarrão no cinto e boné de transportadora",
+    "b": {
+      "skin": 14725264,
+      "bulk": 1.06,
+      "hair": {
+        "s": "short",
+        "c": 9067050
+      },
+      "face": [
+        "stubble"
+      ],
+      "hat": {
+        "k": "cap",
+        "c": 14711328
+      },
+      "top": {
+        "c": 3820122,
+        "sl": "short",
+        "plaid": 1975856
+      },
+      "pants": {
+        "c": 3425886
+      },
+      "shoes": 3811870,
+      "ex": [
+        [
+          "belt",
+          3811866
+        ],
+        [
+          "cuia"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "caio",
+    "n": "Tenente Caio Albuquerque",
+    "a": "27 · 2º tenente do Exército",
+    "g": "bloqueio",
+    "it": "Boina verde-oliva e mapa topográfico no bolso",
+    "b": {
+      "skin": 12159590,
+      "hair": {
+        "s": "buzz",
+        "c": 2759956
+      },
+      "hat": {
+        "k": "beret",
+        "c": 4082214
+      },
+      "top": {
+        "c": 5200444,
+        "sl": "long",
+        "plaid": 3423526
+      },
+      "pants": {
+        "c": 5200444
+      },
+      "shoes": 1709586,
+      "ex": [
+        [
+          "plate",
+          3818544
+        ],
+        [
+          "mapfold"
+        ],
+        [
+          "rifle_front"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "ferraz",
+    "n": "Sargento Edvaldo Ferraz",
+    "a": "44 · 1º sargento do Exército",
+    "g": "bloqueio",
+    "it": "Capacete com fita laranja e binóculo no peito",
+    "zcat": "brutamonte",
+    "b": {
+      "skin": 7029808,
+      "bulk": 1.1,
+      "hair": {
+        "s": "buzz",
+        "c": 1118481
+      },
+      "face": [
+        "mustache"
+      ],
+      "hat": {
+        "k": "helmet",
+        "c": 4871482,
+        "tape": 15234602
+      },
+      "top": {
+        "c": 5200444,
+        "sl": "long",
+        "plaid": 3423526
+      },
+      "pants": {
+        "c": 5200444
+      },
+      "shoes": 1709586,
+      "ex": [
+        [
+          "plate",
+          3818544
+        ],
+        [
+          "binoc"
+        ],
+        [
+          "rifle_front"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "vinicius",
+    "n": "Soldado Vinícius Lopes",
+    "a": "19 · recruta do Exército",
+    "g": "bloqueio",
+    "it": "Foto da mãe presa no capacete",
+    "b": {
+      "skin": 9263675,
+      "h": 0.97,
+      "bulk": 0.9,
+      "hair": {
+        "s": "buzz",
+        "c": 1118481
+      },
+      "hat": {
+        "k": "helmet",
+        "c": 4871482,
+        "photo": 1
+      },
+      "top": {
+        "c": 5200444,
+        "sl": "long",
+        "plaid": 3423526
+      },
+      "pants": {
+        "c": 5200444
+      },
+      "shoes": 1709586,
+      "ex": [
+        [
+          "plate",
+          3818544
+        ],
+        [
+          "rifle_front"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "lucia",
+    "n": "Lúcia Bento",
+    "a": "38 · policial rodoviária federal",
+    "g": "prf",
+    "it": "Colete refletivo da PRF por cima do balístico",
+    "b": {
+      "fem": 1,
+      "skin": 11040079,
+      "hair": {
+        "s": "bun",
+        "c": 2759184
+      },
+      "hat": {
+        "k": "cap",
+        "c": 1976906
+      },
+      "top": {
+        "c": 2765904,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 1975350
+      },
+      "shoes": 1118481,
+      "ex": [
+        [
+          "refl",
+          14213168
+        ],
+        [
+          "belt",
+          1381914
+        ],
+        [
+          "holster"
+        ]
+      ],
+      "hand": "pump"
+    }
+  },
+  {
+    "id": "douglas",
+    "n": "Douglas Prado",
+    "a": "29 · PRF, motociclista",
+    "g": "prf",
+    "it": "Capacete de moto branco com faixa amarela",
+    "b": {
+      "skin": 12884596,
+      "hair": {
+        "s": "buzz",
+        "c": 2759956
+      },
+      "hat": {
+        "k": "moto",
+        "c": 15658730
+      },
+      "top": {
+        "c": 2765904,
+        "sl": "long"
+      },
+      "pants": {
+        "c": 1975350
+      },
+      "shoes": 1118481,
+      "ex": [
+        [
+          "motoband"
+        ],
+        [
+          "refl",
+          14213168
+        ],
+        [
+          "belt",
+          1381914
+        ],
+        [
+          "holster"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "josue",
+    "n": "Josué Freitas",
+    "a": "46 · policial penal",
+    "g": "penit",
+    "it": "Chaveiro grande das celas no pescoço",
+    "b": {
+      "skin": 8014899,
+      "bulk": 1.08,
+      "hair": {
+        "s": "bald",
+        "c": 1118481
+      },
+      "face": [
+        "mustache"
+      ],
+      "top": {
+        "c": 1974306,
+        "sl": "short"
+      },
+      "pants": {
+        "c": 1974306
+      },
+      "shoes": 1118481,
+      "ex": [
+        [
+          "vest",
+          2763822
+        ],
+        [
+          "keyring"
+        ],
+        [
+          "belt",
+          1381914
+        ]
+      ],
+      "hand": "baton"
+    }
+  },
+  {
+    "id": "jacare",
+    "n": "Reinaldo “Jacaré” Lima",
+    "a": "41 · preso, liderança do bloco C",
+    "g": "penit",
+    "it": "Bandana vermelha e camiseta bege da unidade",
+    "b": {
+      "skin": 5912614,
+      "bulk": 1.04,
+      "hair": {
+        "s": "buzz",
+        "c": 1118481
+      },
+      "face": [
+        "beard"
+      ],
+      "hat": {
+        "k": "bandana",
+        "c": 12855338
+      },
+      "top": {
+        "c": 13154448,
+        "sl": "short"
+      },
+      "pants": {
+        "c": 11049072
+      },
+      "shoes": 2763306
+    }
+  },
+  {
+    "id": "lince",
+    "n": "Capitão Rodrigo Sá “Lince”",
+    "a": "36 · forças especiais",
+    "g": "falcao",
+    "it": "Capacete com visão noturna e fuzil com supressor",
+    "b": {
+      "skin": 12884596,
+      "bulk": 1.06,
+      "hair": {
+        "s": "short",
+        "c": 2759956
+      },
+      "face": [
+        "beard"
+      ],
+      "hat": {
+        "k": "helmet",
+        "c": 5920836,
+        "nvg": 1
+      },
+      "top": {
+        "c": 5920836,
+        "sl": "long",
+        "plaid": 4539183
+      },
+      "pants": {
+        "c": 5920836
+      },
+      "shoes": 2761240,
+      "ex": [
+        [
+          "plate",
+          6972488
+        ],
+        [
+          "gloves",
+          2763300
+        ],
+        [
+          "rifle_sup"
+        ]
+      ]
+    }
+  },
+  {
+    "id": "paula",
+    "n": "Sargento Paula Neves",
+    "a": "32 · sargento de saúde, forças especiais",
+    "g": "falcao",
+    "it": "Bolsa médica com cruz vermelha e torniquete no ombro",
+    "b": {
+      "fem": 1,
+      "skin": 9263675,
+      "hair": {
+        "s": "bun",
+        "c": 1118481
+      },
+      "hat": {
+        "k": "cap",
+        "c": 5920836
+      },
+      "top": {
+        "c": 5920836,
+        "sl": "long",
+        "plaid": 4539183
+      },
+      "pants": {
+        "c": 5920836
+      },
+      "shoes": 2761240,
+      "ex": [
+        [
+          "plate",
+          6972488
+        ],
+        [
+          "tq"
+        ]
+      ],
+      "hand": "medbag"
+    }
+  },
+  {
+    "id": "kevin",
+    "n": "Cabo Kevin Araújo",
+    "a": "24 · comunicações, forças especiais",
+    "g": "falcao",
+    "it": "Rádio de satélite nas costas com antena",
+    "b": {
+      "skin": 11040079,
+      "h": 0.97,
+      "hair": {
+        "s": "buzz",
+        "c": 1118481
+      },
+      "top": {
+        "c": 5920836,
+        "sl": "long",
+        "plaid": 4539183
+      },
+      "pants": {
+        "c": 5920836
+      },
+      "shoes": 2761240,
+      "ex": [
+        [
+          "plate",
+          6972488
+        ],
+        [
+          "satradio",
+          3816752
+        ],
+        [
+          "headphones",
+          2763306
+        ]
+      ],
+      "hand": "radio_h"
+    }
+  },
+  {
+    "id": "azevedo",
+    "n": "Major Hélio Azevedo",
+    "a": "52 · subcomandante do 7º BIS (zumbi no bunker)",
+    "g": "base",
+    "it": "Cartão de acesso vermelho no cordão e boina de oficial",
+    "already": 1,
+    "zcat": "brutamonte",
+    "b": {
+      "skin": 13672576,
+      "bulk": 1.15,
+      "hair": {
+        "s": "short",
+        "c": 9078400
+      },
+      "hat": {
+        "k": "beret",
+        "c": 3029534
+      },
+      "top": {
+        "c": 5200444,
+        "sl": "long",
+        "plaid": 3423526
+      },
+      "pants": {
+        "c": 5200444
+      },
+      "shoes": 1709586,
+      "ex": [
+        [
+          "plate",
+          3818544
+        ],
+        [
+          "card"
+        ]
+      ]
+    }
+  }
+]
