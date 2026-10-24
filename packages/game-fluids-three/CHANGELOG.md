@@ -1,5 +1,13 @@
 # @adatechnology/game-fluids-three
 
+## 0.2.3
+
+### Patch Changes
+
+- @adatechnology/game-fluids@0.2.3
+- @adatechnology/game-vfx@0.1.3
+- @adatechnology/game-vfx-three@0.1.3
+
 ## 0.2.2
 
 ### Patch Changes

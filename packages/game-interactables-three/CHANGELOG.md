@@ -1,5 +1,11 @@
 # @adatechnology/game-interactables-three
 
+## 0.1.5
+
+### Patch Changes
+
+- @adatechnology/game-interactables@0.2.4
+
 ## 0.1.4
 
 ### Patch Changes

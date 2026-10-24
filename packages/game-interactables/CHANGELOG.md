@@ -1,5 +1,12 @@
 # @adatechnology/game-interactables
 
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies [98ae206]
+  - @adatechnology/game-contracts@0.12.0
+
 ## 0.2.3
 
 ### Patch Changes

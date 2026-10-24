@@ -1,5 +1,14 @@
 # @adatechnology/game-items-three
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [98ae206]
+  - @adatechnology/game-contracts@0.12.0
+  - @adatechnology/game-interactables@0.2.4
+  - @adatechnology/game-items@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-destruction-three",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "license": "MIT",
   "description": "three.js renderer for @adatechnology/game-destruction: dents, holes, char, heat glow, melting, fragments, loose pieces and pooled particles (fire, smoke, sparks, dust, shards, splinters).",
   "keywords": [
