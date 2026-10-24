@@ -1,0 +1,24 @@
+# @adatechnology/game-characters-three
+
+three.js presentation for `@adatechnology/game-characters`. three.js is passed in by the host (`import * as THREE from 'three'`), so the same code runs from a bundler or from a plain script (`dist/index.global.js` exposes the `GameCharactersThree` global).
+
+**Instanced crowd body** (literal port of the game's, G 65336-65541):
+
+- `buildInstancedBody(THREE, { segments, body? })`: the merged geometry (torso, head, hair, jaw, eyes, arms, legs) tagged with bone, pivot and material; 16, 10 and 5 segments are the three levels of detail. `body` defaults to `TEAM_GAME`; any `BodySpec` moves the joints.
+- `BODY_CHUNK` / `createBodyChunk`: the GPU pose chunk, byte for byte from the game (only the hip joint is a parameter). `createBodyMaterial` adds the tints and glowing eyes.
+- `createBodyBatch`: `begin`, `push` per body, `end`; one draw call for a whole variant.
+- `bakeBody` and `bakeVariants`: bake a rich body into an instanceable geometry; the three variants rule of the game (`7000 + c·101 + v·13`).
+- `createFlyingLimbs`: 40 torn-off pieces that fly, bounce and stay, with injected blood effects.
+
+```ts
+import * as THREE from 'three'
+import { buildInstancedBody, createBodyBatch } from '@adatechnology/game-characters-three'
+
+const time = { value: 0 }
+const batch = createBodyBatch(THREE, buildInstancedBody(THREE, { segments: 10 }), { max: 700, time })
+scene.add(batch.mesh)
+batch.begin()
+batch.push({ a: [x, z, yaw, phase], b: [1.8, 1, stride, 0], c: [missingMask, infection, 1, skinTone], color: { r: 0.3, g: 0.4, b: 0.5 }, eye: { r: 1, g: 0.2, b: 0.1 } })
+batch.end()
+time.value += dt
+```

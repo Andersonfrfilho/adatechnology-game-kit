@@ -6,6 +6,11 @@ import { engine } from './support'
 const SEEDS = Number(process.env.SEEDS) || 8
 const TEMPLATES = engine.listTemplates().map((entry: { id: string }) => entry.id) as string[]
 
+/** Fixtures that take water (the VC3 rule: one point for each, `src/utilities/plumbing.ts`). */
+const WET_CATEGORIES = ['kitchen_cabinet', 'washbasin', 'shower', 'toilet', 'laundry_tub', 'washing_machine']
+/** Buildings the teams drew without a single wet fixture (gallery scenes of the shops, school, church, workshop, farm, police, ER and the triage tent): no fixture, no point. */
+const NO_WET_FIXTURES = new Set(['supermarket', 'drugstore', 'gun_shop', 'police_station', 'emergency_room', 'school', 'church', 'metalworks', 'farm', 'triage_tent'])
+
 const plan = (template: string, seed: number, state = 'normal', extra: Record<string, unknown> = {}): any => engine.generate(template, { seed, state, ...extra })
 
 describe('every plan has its installations', () => {
@@ -16,7 +21,10 @@ describe('every plan has its installations', () => {
           const result = plan(template, seed, state)
           const where = `${template}#${seed}/${state}`
           expect(result.utilities.electrical.panel?.id ?? null, where).not.toBeUndefined()
-          expect(result.utilities.plumbing.points.length, where).toBeGreaterThan(0)
+          const fixtures = result.items.filter((m: any) => WET_CATEGORIES.includes(m.category) && !m.decor).length
+          expect(result.utilities.plumbing.points.length, where).toBe(fixtures)
+          if (NO_WET_FIXTURES.has(template)) expect(fixtures, where).toBe(0)
+          else expect(fixtures, where).toBeGreaterThan(0)
           expect(engine.validate(result), where).toEqual([])
         }
       }
@@ -200,7 +208,7 @@ describe('what the containers hold', () => {
   })
 
   it('a registered provider answers before the default, and a registered state rule changes the default', () => {
-    engine.registerFindsProvider({ findsFor: (query) => (query.container === 'mailbox' ? [{ itemId: 'custom_letter', count: 9 }] : []) })
+    engine.registerFindsProvider({ findsFor: (query) => (query.container === 'mailbox' ? [{ itemId: 'custom_letter', count: 9 }] : null) })
     const mailbox = (): any[] => {
       const result = plan('townhouse', 4)
       const item = result.items.find((m: any) => m.category === 'mailbox')

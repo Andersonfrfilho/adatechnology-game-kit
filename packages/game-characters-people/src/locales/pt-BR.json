@@ -1,0 +1,4 @@
+{
+  "ages": { "child": "Criança", "young": "Jovem", "adult": "Adulto", "elder": "Idoso" },
+  "slots": { "hair": "Penteado", "hat": "Chapéu", "face": "Detalhe do rosto", "worn": "Vestido no corpo", "hand": "Item na mão" }
+}

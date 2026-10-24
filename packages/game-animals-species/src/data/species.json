@@ -1,0 +1,973 @@
+[
+  {
+    "id": "cow",
+    "order": 0,
+    "name": {
+      "en": "Cow",
+      "pt-BR": "Vaca"
+    },
+    "scientificName": "Bos indicus",
+    "group": "farm",
+    "phase": "mvp",
+    "outcome": "dies",
+    "outbreak": {
+      "deathHours": {
+        "min": 2,
+        "max": 6
+      },
+      "carcass": {
+        "lureRadiusMetres": 200,
+        "lureDays": 1,
+        "vulturesArriveMinutes": 10
+      }
+    },
+    "soundRangeMetres": 80,
+    "body": {
+      "kind": "quadruped",
+      "L": 1.65,
+      "R": 0.37,
+      "sx": 0.95,
+      "sy": 1.12,
+      "span": 0.7,
+      "up": 0.15,
+      "prof": [
+        0.55,
+        0.85,
+        0.97,
+        1,
+        0.98,
+        0.95,
+        0.97,
+        0.9,
+        0.55
+      ],
+      "c": {
+        "main": 13947078,
+        "belly": 14868438,
+        "dark": 2828326,
+        "nose": 3814450
+      },
+      "leg": {
+        "fu": 0.42,
+        "fl": 0.44,
+        "hu": 0.44,
+        "hl": 0.47,
+        "r": 0.075,
+        "hoof": 1
+      },
+      "neck": {
+        "len": 0.36,
+        "r": 0.19,
+        "r2": 0.14,
+        "ang": 1.15,
+        "y": 0.2,
+        "z": 0.74
+      },
+      "head": {
+        "r": 0.15,
+        "s": [
+          0.95,
+          1,
+          1.05
+        ],
+        "sl": 0.3,
+        "sr1": 0.13,
+        "sr2": 0.11,
+        "down": 0.55,
+        "sy": -0.3,
+        "muzzle": 10130572
+      },
+      "ears": {
+        "t": "flop",
+        "s": 0.09
+      },
+      "tail": {
+        "n": 3,
+        "len": 0.75,
+        "r": 0.03,
+        "ang": 0.22,
+        "y": 0.55,
+        "tuft": 1
+      },
+      "hasExtraBuilder": true
+    },
+    "walkHz": 1,
+    "runHz": 2,
+    "gallop": true
+  },
+  {
+    "id": "horse",
+    "order": 1,
+    "name": {
+      "en": "Horse",
+      "pt-BR": "Cavalo"
+    },
+    "scientificName": "Equus caballus",
+    "group": "farm",
+    "phase": "phase_2",
+    "outcome": "dies",
+    "outbreak": {
+      "deathHours": {
+        "min": 2,
+        "max": 6
+      },
+      "carcass": {
+        "lureRadiusMetres": 200,
+        "lureDays": 1,
+        "vulturesArriveMinutes": 10
+      }
+    },
+    "soundRangeMetres": 50,
+    "body": {
+      "kind": "quadruped",
+      "L": 1.45,
+      "R": 0.3,
+      "sx": 0.92,
+      "sy": 1.15,
+      "span": 0.68,
+      "up": 0.05,
+      "prof": [
+        0.55,
+        0.88,
+        0.97,
+        0.95,
+        0.9,
+        0.93,
+        1,
+        0.92,
+        0.55
+      ],
+      "c": {
+        "main": 8014376,
+        "belly": 6962722,
+        "dark": 1708558,
+        "nose": 2759702
+      },
+      "leg": {
+        "fu": 0.5,
+        "fl": 0.52,
+        "hu": 0.52,
+        "hl": 0.56,
+        "r": 0.065,
+        "hoof": 1
+      },
+      "neck": {
+        "len": 0.6,
+        "r": 0.19,
+        "r2": 0.11,
+        "ang": 0.6,
+        "y": 0.3,
+        "z": 0.72
+      },
+      "head": {
+        "r": 0.12,
+        "s": [
+          0.85,
+          1,
+          1.1
+        ],
+        "sl": 0.42,
+        "sr1": 0.1,
+        "sr2": 0.085,
+        "down": 1.25,
+        "sy": -0.1
+      },
+      "ears": {
+        "t": "cone",
+        "s": 0.1,
+        "tilt": 0.15
+      },
+      "tail": {
+        "n": 3,
+        "len": 0.25,
+        "r": 0.05,
+        "ang": 0.5,
+        "y": 0.45,
+        "bushy": 0
+      },
+      "hasExtraBuilder": true
+    },
+    "walkHz": 1,
+    "runHz": 2.1,
+    "gallop": true
+  },
+  {
+    "id": "pig",
+    "order": 2,
+    "name": {
+      "en": "Pig",
+      "pt-BR": "Porco"
+    },
+    "scientificName": "Sus domesticus",
+    "group": "farm",
+    "phase": "phase_2",
+    "outcome": "turns",
+    "outbreak": {
+      "turnMinutes": {
+        "min": 10,
+        "max": 30
+      }
+    },
+    "body": {
+      "kind": "quadruped",
+      "L": 1,
+      "R": 0.28,
+      "sx": 1.05,
+      "sy": 1.02,
+      "span": 0.66,
+      "prof": [
+        0.65,
+        0.95,
+        1,
+        1,
+        1,
+        1,
+        0.98,
+        0.9,
+        0.6
+      ],
+      "c": {
+        "main": 14394774,
+        "belly": 15054246,
+        "dark": 5913140,
+        "nose": 13141114
+      },
+      "leg": {
+        "fu": 0.19,
+        "fl": 0.19,
+        "hu": 0.2,
+        "hl": 0.21,
+        "r": 0.05,
+        "hoof": 1
+      },
+      "neck": {
+        "len": 0.08,
+        "r": 0.2,
+        "r2": 0.18,
+        "ang": 1.35,
+        "y": 0.15,
+        "z": 0.8
+      },
+      "head": {
+        "r": 0.16,
+        "s": [
+          1,
+          0.95,
+          1
+        ],
+        "sl": 0.15,
+        "sr1": 0.1,
+        "sr2": 0.085,
+        "down": 0.2,
+        "sy": -0.25
+      },
+      "ears": {
+        "t": "cone",
+        "s": 0.1,
+        "tilt": 0.5,
+        "fwd": 0.9
+      },
+      "tail": {
+        "n": 4,
+        "len": 0.14,
+        "r": 0.012,
+        "ang": 1.2,
+        "curl": 1.4
+      }
+    },
+    "walkHz": 1.4,
+    "runHz": 2.6
+  },
+  {
+    "id": "wild_boar",
+    "order": 3,
+    "name": {
+      "en": "Wild boar",
+      "pt-BR": "Javali"
+    },
+    "scientificName": "Sus scrofa",
+    "group": "wild",
+    "phase": "phase_2",
+    "outcome": "turns",
+    "outbreak": {
+      "turnMinutes": {
+        "min": 10,
+        "max": 30
+      }
+    },
+    "soundRangeMetres": 40,
+    "body": {
+      "kind": "quadruped",
+      "L": 1.05,
+      "R": 0.27,
+      "sx": 0.88,
+      "sy": 1.15,
+      "span": 0.66,
+      "prof": [
+        0.55,
+        0.8,
+        0.85,
+        0.9,
+        0.95,
+        1.05,
+        1.1,
+        1,
+        0.6
+      ],
+      "c": {
+        "main": 4076074,
+        "belly": 4865074,
+        "dark": 1709072,
+        "nose": 2760216
+      },
+      "leg": {
+        "fu": 0.24,
+        "fl": 0.25,
+        "hu": 0.24,
+        "hl": 0.26,
+        "r": 0.045,
+        "hoof": 1
+      },
+      "neck": {
+        "len": 0.1,
+        "r": 0.21,
+        "r2": 0.19,
+        "ang": 1.4,
+        "y": 0.1,
+        "z": 0.8
+      },
+      "head": {
+        "r": 0.16,
+        "s": [
+          0.9,
+          1,
+          1.1
+        ],
+        "sl": 0.24,
+        "sr1": 0.1,
+        "sr2": 0.07,
+        "down": 0.35,
+        "sy": -0.25
+      },
+      "ears": {
+        "t": "cone",
+        "s": 0.08,
+        "tilt": 0.4
+      },
+      "tail": {
+        "n": 3,
+        "len": 0.2,
+        "r": 0.012,
+        "ang": 0.6,
+        "tuft": 1
+      },
+      "hasExtraBuilder": true
+    },
+    "walkHz": 1.5,
+    "runHz": 3,
+    "gallop": true
+  },
+  {
+    "id": "capybara",
+    "order": 4,
+    "name": {
+      "en": "Capybara",
+      "pt-BR": "Capivara"
+    },
+    "scientificName": "Hydrochoerus hydrochaeris",
+    "group": "wild",
+    "phase": "mvp",
+    "outcome": "dies",
+    "outbreak": {
+      "deathHours": {
+        "min": 2,
+        "max": 6
+      },
+      "carcass": {
+        "lureRadiusMetres": 200,
+        "lureDays": 1,
+        "vulturesArriveMinutes": 10
+      }
+    },
+    "body": {
+      "kind": "quadruped",
+      "L": 0.95,
+      "R": 0.26,
+      "sx": 0.95,
+      "sy": 1.05,
+      "span": 0.62,
+      "up": 0.1,
+      "prof": [
+        0.75,
+        0.98,
+        1.02,
+        1,
+        0.98,
+        0.96,
+        0.92,
+        0.85,
+        0.6
+      ],
+      "c": {
+        "main": 8018490,
+        "belly": 9202248,
+        "dark": 2760214,
+        "nose": 2760214
+      },
+      "leg": {
+        "fu": 0.16,
+        "fl": 0.17,
+        "hu": 0.17,
+        "hl": 0.17,
+        "r": 0.045,
+        "dark": 1
+      },
+      "neck": {
+        "len": 0.07,
+        "r": 0.17,
+        "r2": 0.16,
+        "ang": 1.3,
+        "y": 0.25,
+        "z": 0.8
+      },
+      "head": {
+        "r": 0.14,
+        "s": [
+          0.9,
+          1.1,
+          1.25
+        ],
+        "sl": 0.14,
+        "sr1": 0.12,
+        "sr2": 0.11,
+        "down": 0.15,
+        "sy": -0.05,
+        "sq": 1.3
+      },
+      "ears": {
+        "t": "round",
+        "s": 0.035
+      },
+      "tail": null
+    },
+    "walkHz": 1.2,
+    "runHz": 2.6,
+    "gallop": true
+  },
+  {
+    "id": "jaguar",
+    "order": 5,
+    "name": {
+      "en": "Jaguar",
+      "pt-BR": "Onça"
+    },
+    "scientificName": "Panthera onca",
+    "group": "wild",
+    "phase": "phase_3",
+    "outcome": "turns",
+    "outbreak": {
+      "turnMinutes": {
+        "min": 60,
+        "max": 60
+      }
+    },
+    "body": {
+      "kind": "quadruped",
+      "L": 1.1,
+      "R": 0.19,
+      "sx": 0.95,
+      "sy": 1.1,
+      "span": 0.7,
+      "prof": [
+        0.6,
+        0.88,
+        0.92,
+        0.88,
+        0.85,
+        0.95,
+        1.02,
+        0.9,
+        0.55
+      ],
+      "c": {
+        "main": 13212232,
+        "belly": 15392712,
+        "dark": 2365196,
+        "nose": 5913136
+      },
+      "leg": {
+        "fu": 0.27,
+        "fl": 0.27,
+        "hu": 0.28,
+        "hl": 0.3,
+        "r": 0.05
+      },
+      "neck": {
+        "len": 0.18,
+        "r": 0.1,
+        "r2": 0.095,
+        "ang": 0.95
+      },
+      "head": {
+        "r": 0.12,
+        "s": [
+          1.1,
+          0.95,
+          1
+        ],
+        "sl": 0.07,
+        "sr1": 0.07,
+        "sr2": 0.065,
+        "down": 0.2,
+        "sy": -0.25
+      },
+      "ears": {
+        "t": "round",
+        "s": 0.035
+      },
+      "tail": {
+        "n": 6,
+        "len": 0.72,
+        "r": 0.03,
+        "ang": 0.55,
+        "curl": -0.12,
+        "dark": 1
+      },
+      "texture": {
+        "kind": "spots",
+        "base": "#c99a48",
+        "spot": "#24170c"
+      }
+    },
+    "walkHz": 1.1,
+    "runHz": 2.6,
+    "gallop": true
+  },
+  {
+    "id": "dog",
+    "order": 6,
+    "name": {
+      "en": "Dog",
+      "pt-BR": "Cão"
+    },
+    "scientificName": "Canis familiaris",
+    "group": "domestic",
+    "phase": "mvp",
+    "outcome": "turns",
+    "outbreak": {
+      "turnMinutes": {
+        "min": 10,
+        "max": 30
+      }
+    },
+    "soundRangeMetres": 60,
+    "body": {
+      "kind": "quadruped",
+      "L": 0.62,
+      "R": 0.12,
+      "sx": 0.95,
+      "sy": 1.05,
+      "span": 0.72,
+      "prof": [
+        0.45,
+        0.85,
+        0.95,
+        0.9,
+        0.88,
+        1,
+        1.05,
+        0.9,
+        0.55
+      ],
+      "c": {
+        "main": 11565630,
+        "belly": 14200954,
+        "dark": 2759698,
+        "nose": 1445904
+      },
+      "leg": {
+        "fu": 0.21,
+        "fl": 0.22,
+        "hu": 0.22,
+        "hl": 0.24,
+        "r": 0.04
+      },
+      "neck": {
+        "len": 0.12,
+        "r": 0.07,
+        "r2": 0.06,
+        "ang": 0.95
+      },
+      "head": {
+        "r": 0.085,
+        "s": [
+          1,
+          0.95,
+          1.08
+        ],
+        "sl": 0.11,
+        "sr1": 0.05,
+        "sr2": 0.04,
+        "down": 0.15,
+        "sy": -0.15
+      },
+      "ears": {
+        "t": "cone",
+        "s": 0.06,
+        "tilt": 0.35,
+        "fwd": 0.3
+      },
+      "tail": {
+        "n": 3,
+        "len": 0.26,
+        "r": 0.02,
+        "ang": 2.1,
+        "curl": -0.25
+      }
+    },
+    "walkHz": 1.6,
+    "runHz": 2.9,
+    "gallop": true
+  },
+  {
+    "id": "cat",
+    "order": 7,
+    "name": {
+      "en": "Cat",
+      "pt-BR": "Gato"
+    },
+    "scientificName": "Felis catus",
+    "group": "domestic",
+    "phase": "phase_2",
+    "outcome": "turns",
+    "outbreak": {
+      "turnMinutes": {
+        "min": 10,
+        "max": 30
+      }
+    },
+    "body": {
+      "kind": "quadruped",
+      "L": 0.36,
+      "R": 0.065,
+      "sy": 1.05,
+      "span": 0.72,
+      "prof": [
+        0.6,
+        0.9,
+        0.95,
+        0.9,
+        0.85,
+        0.92,
+        0.95,
+        0.8,
+        0.5
+      ],
+      "c": {
+        "main": 7827562,
+        "belly": 13156530,
+        "dark": 2762274,
+        "nose": 11563114
+      },
+      "leg": {
+        "fu": 0.11,
+        "fl": 0.12,
+        "hu": 0.12,
+        "hl": 0.13,
+        "r": 0.018
+      },
+      "neck": {
+        "len": 0.06,
+        "r": 0.035,
+        "ang": 0.9
+      },
+      "head": {
+        "r": 0.055,
+        "s": [
+          1.08,
+          0.95,
+          1
+        ],
+        "sl": 0.03,
+        "sr1": 0.03,
+        "sr2": 0.025,
+        "down": 0.1,
+        "sy": -0.25
+      },
+      "ears": {
+        "t": "cone",
+        "s": 0.045,
+        "tilt": 0.2
+      },
+      "tail": {
+        "n": 5,
+        "len": 0.28,
+        "r": 0.012,
+        "ang": 2.5,
+        "curl": -0.18
+      },
+      "texture": {
+        "kind": "stripes",
+        "base": "#77706a",
+        "stripe": "#3e3a36"
+      }
+    },
+    "walkHz": 1.9,
+    "runHz": 3.4,
+    "gallop": true
+  },
+  {
+    "id": "chicken",
+    "order": 8,
+    "name": {
+      "en": "Chicken",
+      "pt-BR": "Galinha"
+    },
+    "scientificName": "Gallus gallus",
+    "group": "farm",
+    "phase": "mvp",
+    "outcome": "immune",
+    "soundRangeMetres": 30,
+    "body": {
+      "kind": "bird",
+      "r": 0.12,
+      "s": [
+        0.85,
+        0.9,
+        1.15
+      ],
+      "tars": 0.1,
+      "shank": 0.09,
+      "pitch": -0.12,
+      "tailA": -0.95,
+      "tailW": 0.1,
+      "tailL": 0.16,
+      "wi": 0.1,
+      "wo": 0.1,
+      "wc": 0.16,
+      "nr": 0.04,
+      "nl": 0.08,
+      "neckA": 0.35,
+      "headA": 0.25,
+      "hr": 0.045,
+      "br": 0.015,
+      "bl": 0.035,
+      "c": {
+        "main": 11033138,
+        "dark": 5909528,
+        "leg": 14200896,
+        "beak": 14200896,
+        "belly": 12085306
+      },
+      "tailM": 2759186,
+      "hasExtraBuilder": true
+    },
+    "walkHz": 2.2,
+    "runHz": 4
+  },
+  {
+    "id": "southern_lapwing",
+    "order": 9,
+    "name": {
+      "en": "Southern lapwing",
+      "pt-BR": "Quero-quero"
+    },
+    "scientificName": "Vanellus chilensis",
+    "group": "environment",
+    "phase": "mvp",
+    "outcome": "immune",
+    "soundRangeMetres": 40,
+    "body": {
+      "kind": "bird",
+      "r": 0.075,
+      "s": [
+        0.85,
+        0.85,
+        1.35
+      ],
+      "tars": 0.12,
+      "shank": 0.08,
+      "pitch": -0.05,
+      "tailA": -0.1,
+      "tailW": 0.06,
+      "tailL": 0.08,
+      "wi": 0.08,
+      "wo": 0.1,
+      "wc": 0.1,
+      "spur": 1,
+      "nr": 0.025,
+      "nl": 0.07,
+      "neckA": 0.15,
+      "headA": 0,
+      "hr": 0.03,
+      "br": 0.008,
+      "bl": 0.03,
+      "eyeC": 12591130,
+      "c": {
+        "main": 9080710,
+        "dark": 2763306,
+        "leg": 12618368,
+        "beak": 12618368,
+        "belly": 15263456
+      },
+      "neckM": 10133142,
+      "hasExtraBuilder": true
+    },
+    "walkHz": 2.5,
+    "runHz": 1.6
+  },
+  {
+    "id": "vulture",
+    "order": 10,
+    "name": {
+      "en": "Vulture",
+      "pt-BR": "Urubu"
+    },
+    "scientificName": "Coragyps atratus",
+    "group": "environment",
+    "phase": "mvp",
+    "outcome": "immune",
+    "body": {
+      "kind": "bird",
+      "r": 0.16,
+      "s": [
+        0.85,
+        0.8,
+        1.35
+      ],
+      "tars": 0.09,
+      "shank": 0.1,
+      "pitch": -0.25,
+      "tailA": -0.25,
+      "tailW": 0.18,
+      "tailL": 0.2,
+      "wi": 0.28,
+      "wo": 0.38,
+      "wc": 0.26,
+      "fingers": 1,
+      "nr": 0.04,
+      "nl": 0.1,
+      "neckA": 0.6,
+      "headA": 0.35,
+      "hr": 0.05,
+      "hs": [
+        0.9,
+        0.9,
+        1.25
+      ],
+      "br": 0.018,
+      "bl": 0.06,
+      "hook": 0.25,
+      "c": {
+        "main": 1447446,
+        "dark": 1052688,
+        "leg": 9078400,
+        "beak": 4868680
+      },
+      "neckM": 3815992,
+      "headM": 3026219
+    },
+    "walkHz": 1.4,
+    "runHz": 1
+  },
+  {
+    "id": "lancehead",
+    "order": 11,
+    "name": {
+      "en": "Lancehead",
+      "pt-BR": "Jararaca"
+    },
+    "scientificName": "Bothrops jararaca",
+    "group": "wild",
+    "phase": "phase_3",
+    "outcome": "immune",
+    "body": {
+      "kind": "snake"
+    },
+    "walkHz": 1,
+    "runHz": 1
+  },
+  {
+    "id": "rat",
+    "order": 12,
+    "name": {
+      "en": "Rat",
+      "pt-BR": "Rato"
+    },
+    "scientificName": "Rattus norvegicus",
+    "group": "environment",
+    "phase": "phase_2",
+    "outcome": "turns",
+    "outbreak": {
+      "turnMinutes": {
+        "min": 2,
+        "max": 2
+      },
+      "biteInfectionChance": 0.05
+    },
+    "body": {
+      "kind": "quadruped",
+      "L": 0.17,
+      "R": 0.036,
+      "sy": 1,
+      "span": 0.6,
+      "prof": [
+        0.65,
+        0.95,
+        1.05,
+        1,
+        0.92,
+        0.82,
+        0.7,
+        0.5,
+        0.25
+      ],
+      "c": {
+        "main": 5195328,
+        "belly": 9076338,
+        "dark": 2761760,
+        "nose": 13144200
+      },
+      "leg": {
+        "fu": 0.022,
+        "fl": 0.024,
+        "hu": 0.026,
+        "hl": 0.028,
+        "r": 0.008
+      },
+      "neck": {
+        "len": 0.015,
+        "r": 0.022,
+        "ang": 1.3,
+        "y": 0.2,
+        "z": 0.85
+      },
+      "head": {
+        "r": 0.026,
+        "s": [
+          0.95,
+          0.9,
+          1.1
+        ],
+        "sl": 0.03,
+        "sr1": 0.018,
+        "sr2": 0.008,
+        "down": 0.15,
+        "sy": -0.1
+      },
+      "ears": {
+        "t": "round",
+        "s": 0.012
+      },
+      "tail": {
+        "n": 6,
+        "len": 0.17,
+        "r": 0.005,
+        "ang": 1.45,
+        "curl": -0.08
+      }
+    },
+    "walkHz": 4,
+    "runHz": 7
+  }
+]

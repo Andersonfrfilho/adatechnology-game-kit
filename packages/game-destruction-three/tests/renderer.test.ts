@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it, vi } from 'vitest'
+import { createVfx } from '@adatechnology/game-vfx'
 import { createDestructionRenderer } from '../src/renderer'
 import type { Piece, RendererOptions } from '../src/types'
 import { FakeWorld, partState } from './fake-world'
@@ -31,6 +32,15 @@ const frag = (id: string, over: Record<string, unknown> = {}) => ({
   mass: 0.2,
   ...over,
 })
+
+/** Whether any light in the scene (the effects world's blast lights are nested in its group) is on. */
+function blastLit(scene: THREE.Scene): boolean {
+  let lit = false
+  scene.traverse((object) => {
+    if (object instanceof THREE.PointLight && object.intensity > 0) lit = true
+  })
+  return lit
+}
 
 describe('dents', () => {
   it('displaces only vertices within the radius and restore() puts them back', () => {
@@ -300,6 +310,24 @@ describe('hard landing', () => {
 })
 
 describe('fire, heat and melt', () => {
+  it('sends burn_loop when a part starts to burn and burn_end when it burns out or is put out', () => {
+    const { world, renderer, sounds } = setup()
+    world.addObject('o1', [partState('plank', 'wood'), partState('beam', 'wood')])
+    const root = new THREE.Group()
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), new THREE.MeshStandardMaterial())
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), new THREE.MeshStandardMaterial())
+    root.add(plank, beam)
+    renderer.bind('o1', root, { parts: { plank, beam } })
+    world.emit({ type: 'ignite', object: 'o1', part: 'plank', point: [0, 0.05, 0] })
+    world.emit({ type: 'primed', object: 'o1', part: 'beam', point: [0, 0.05, 0], trigger: 'shot', delay: 1 })
+    world.emit({ type: 'burnout', object: 'o1', part: 'plank', point: [0, 0.05, 0] })
+    world.emit({ type: 'extinguish', object: 'o1', part: 'beam' })
+    // a part that is not burning (any more) is put out without a second burn_end
+    world.emit({ type: 'extinguish', object: 'o1', part: 'beam' })
+    renderer.update(1 / 60)
+    expect(sounds.filter((key) => key.startsWith('burn_'))).toEqual(['burn_loop', 'burn_loop', 'burn_end', 'burn_end'])
+  })
+
   it('chars a cloned material and emits fire and smoke while burning', () => {
     const { world, renderer } = setup()
     const st = world.addObject('o1', [partState('plank', 'wood')])
@@ -314,7 +342,8 @@ describe('fire, heat and melt', () => {
     ps.temperature = 600
     world.emit({ type: 'ignite', object: 'o1', part: 'plank', point: [0, 0.05, 0] })
     for (let i = 0; i < 30; i++) renderer.update(1 / 60)
-    expect(renderer.stats().particles).toBeGreaterThan(10)
+    // the flames and smoke now come from the effects world's fire, at the Lab's rate for a 0.5 m part
+    expect(renderer.stats().particles).toBeGreaterThan(3)
     expect(mesh.material).not.toBe(orig)
     expect(orig.color.getHex()).toBe(0xaa7744)
     const c = (mesh.material as THREE.MeshStandardMaterial).color
@@ -342,6 +371,29 @@ describe('fire, heat and melt', () => {
     for (let i = 0; i < 30; i++) renderer.update(1 / 60)
     expect(quiet).toBe(0)
     expect(renderer.stats().particles).toBeGreaterThan(0)
+  })
+
+  it('keeps one effects-world fire on a burning part, moves it with the part and puts it out with the part', () => {
+    const vfx = createVfx({ areaCap: false })
+    const { world, renderer } = setup({ vfx })
+    const st = world.addObject('o1', [partState('plank', 'wood')])
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.5), new THREE.MeshStandardMaterial({ color: 0xaa7744 }))
+    const root = new THREE.Group()
+    root.add(mesh)
+    renderer.bind('o1', root, { parts: { plank: mesh } })
+    st.parts[0].burning = true
+    world.emit({ type: 'ignite', object: 'o1', part: 'plank', point: [0, 0.05, 0] })
+    for (let i = 0; i < 5; i++) renderer.update(1 / 60)
+    expect(vfx.fires()).toHaveLength(1)
+    root.position.set(2, 0, 0)
+    root.updateMatrixWorld(true)
+    for (let i = 0; i < 5; i++) renderer.update(1 / 60)
+    expect(vfx.fires()[0]?.follow).toMatchObject({ x: 2 })
+    world.emit({ type: 'extinguish', object: 'o1', part: 'plank' })
+    expect(vfx.fires()).toHaveLength(1)
+    renderer.update(1 / 60)
+    vfx.update(1 / 60)
+    expect(vfx.fires()).toHaveLength(0)
   })
 
   it('glows when a metal part is hot, and cools back', () => {
@@ -451,10 +503,33 @@ describe('particles and explosions', () => {
     world.emit({ type: 'explode', object: 'bomb', part: 'tank', point: [0, 0.3, 0], energy: 200000, radius: 4 })
     renderer.update(1 / 60)
     expect(sounds).toContain('explode')
-    expect(scene.children.some((c) => c instanceof THREE.PointLight)).toBe(true)
+    expect(blastLit(scene)).toBe(true)
     expect(piece.sleeping).toBe(false)
     expect(piece.velocity[0]).toBeGreaterThan(1)
-    expect(renderer.stats().particles).toBeGreaterThan(50)
+    expect(renderer.stats().particles).toBeGreaterThan(30)
+  })
+
+  it('plays the effect the explode event names, and the generic one when the catalogue does not know it', () => {
+    const vfx = createVfx({ areaCap: false })
+    const { world, renderer } = setup({ vfx })
+    world.emit({ type: 'explode', object: 'b', part: 't', point: [0, 0.3, 0], energy: 1000, radius: 4, effect: 'fuel_barrel' })
+    renderer.update(1 / 60)
+    const named = vfx.stats().lastBlast.puffs
+    expect(named).toBeGreaterThan(0)
+    vfx.clear()
+    world.emit({ type: 'explode', object: 'b', part: 't', point: [0, 0.3, 0], energy: 1000, radius: 4, effect: 'not_in_the_catalogue' })
+    renderer.update(1 / 60)
+    expect(vfx.stats().lastBlast.puffs).toBeGreaterThan(0)
+  })
+
+  it('leaves the stepping of a shared effects world to the host', () => {
+    const vfx = createVfx({ areaCap: false })
+    const { world, renderer } = setup({ vfx })
+    world.emit({ type: 'explode', object: 'b', part: 't', point: [0, 0.3, 0], energy: 1000, radius: 4 })
+    renderer.update(0.05)
+    expect(vfx.time()).toBe(0)
+    expect(vfx.stats().puffs).toBeGreaterThan(0)
+    expect(renderer.stats().particles).toBe(0)
   })
 })
 
@@ -464,18 +539,26 @@ describe('explode without an exploding part', () => {
     renderer.explode([0, 0.3, 0], 200000, 4)
     renderer.update(1 / 60)
     expect(sounds).toContain('explode')
-    expect(scene.children.some((c) => c instanceof THREE.PointLight)).toBe(true)
-    const additive = scene.getObjectByName('destruction-particles-additive') as THREE.Points
-    const normal = scene.getObjectByName('destruction-particles') as THREE.Points
-    const alphaOf = (points: THREE.Points): Float32Array => points.geometry.getAttribute('alpha').array as Float32Array
-    expect(alphaOf(additive).some((a) => a > 0.5)).toBe(true)
-    expect(alphaOf(normal).some((a) => a > 0)).toBe(true)
+    expect(blastLit(scene)).toBe(true)
+    // the effects layer (instanced puffs, sparks, glows) replaced the two `destruction-particles` layers
+    expect(renderer.stats().particles).toBeGreaterThan(30)
+  })
+
+  it('keeps only the shove and the sound when the host drew the blast itself', () => {
+    const vfx = createVfx({ areaCap: false })
+    const { world, renderer, sounds } = setup({ vfx })
+    void world
+    renderer.explode([0, 0.3, 0], 200000, 4, { visual: false })
+    renderer.update(1 / 60)
+    expect(sounds).toContain('explode')
+    expect(vfx.stats().puffs).toBe(0)
   })
 })
 
 describe('clear and dispose', () => {
   it('leaves the scene with only what the host added', () => {
-    const { scene, world, renderer, hostMesh } = setup()
+    // a shared effects world adds nothing to the scene; the own layer has its own test below
+    const { scene, world, renderer, hostMesh } = setup({ vfx: createVfx() })
     world.addObject('o1', [partState('plate', 'steel'), partState('top', 'glass'), partState('leg', 'wood')], [['plate', 'top'], ['leg']])
     const plate = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1, 6, 6, 6), new THREE.MeshStandardMaterial())
     const top = new THREE.Mesh(new THREE.BoxGeometry(1, 0.05, 1))
@@ -505,6 +588,13 @@ describe('clear and dispose', () => {
     renderer.dispose()
     expect(scene.children).toEqual(hostChildren)
     expect(hostMesh.parent).toBe(scene)
+  })
+
+  it('takes its own effects layer out of the scene on dispose', () => {
+    const { scene, renderer } = setup()
+    expect(scene.children.length).toBe(2)
+    renderer.dispose()
+    expect(scene.children.length).toBe(1)
   })
 
   it('stops listening after dispose', () => {

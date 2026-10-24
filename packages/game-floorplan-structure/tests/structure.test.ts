@@ -36,7 +36,8 @@ describe('every generated plan has a structure', () => {
           expect(ungrounded(plan.structure), where).toEqual([])
           const roles = new Set(plan.structure.parts.map((p: any) => p.role))
           expect(roles.has('roof') || plan.roof.shape === 'slab', where).toBe(true)
-          expect(roles.has('wall') || roles.has('partition'), where).toBe(true)
+          // canvas on poles has no walls (the camp of the VC3 and the triage tent of the gallery)
+          expect(roles.has('wall') || roles.has('partition') || plan.construction.system === 'canvas', where).toBe(true)
         }
       }
     })

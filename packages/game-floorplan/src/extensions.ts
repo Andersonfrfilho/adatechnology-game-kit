@@ -29,11 +29,20 @@ export function runResultExtensions(plan: Plan, result: Json, seed: number | str
   }
 }
 
-/** What a container holds, from the first registered provider that has an answer; none registered means nothing. */
+/** What a container holds, from the first registered provider that answers (`null` passes to the next); none answering means nothing. */
 export function findsFor(query: FindsQuery): readonly FindStack[] {
+  return answerOf(query) ?? []
+}
+
+/** Like `findsFor`, but `null` when no provider answered, so a pack can fall back to its own default. */
+export function findsAnswer(query: FindsQuery): readonly FindStack[] | null {
+  return answerOf(query)
+}
+
+function answerOf(query: FindsQuery): readonly FindStack[] | null {
   for (const provider of FINDS_PROVIDERS) {
     const stacks = provider.findsFor(query)
-    if (stacks.length > 0) return stacks
+    if (stacks !== null) return stacks
   }
-  return []
+  return null
 }

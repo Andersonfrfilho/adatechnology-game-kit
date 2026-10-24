@@ -1,0 +1,97 @@
+[
+  {
+    "id": "helena",
+    "n": "Helena Vieira",
+    "curto": "Helena",
+    "idade": 31,
+    "casa": "Casa 5",
+    "cor": 4090506,
+    "item": "Sinalizador laranja de carro",
+    "loot": [
+      "sinalizador"
+    ],
+    "fala": [
+      "\"Graças a Deus. Eu chamei no rádio toda noite.\"",
+      "\"Desenhei a planta de cada casa da rua. Sei onde tem arma e onde tem chave.\""
+    ],
+    "vale": "helena"
+  },
+  {
+    "id": "davi",
+    "n": "Davi Vieira",
+    "curto": "Davi",
+    "idade": 6,
+    "casa": "Casa 5",
+    "cor": 13672496,
+    "crianca": 1,
+    "item": "Carrinho de plástico",
+    "loot": [],
+    "fala": [
+      "\"Minha mãe disse que você ia vir.\""
+    ]
+  },
+  {
+    "id": "cicero",
+    "n": "Cícero Tavares",
+    "curto": "Seu Cícero",
+    "idade": 58,
+    "casa": "Casa 2",
+    "cor": 6969914,
+    "item": "Trena de pedreiro no cinto",
+    "loot": [
+      "trena_cicero"
+    ],
+    "bond": "rosa",
+    "rel": "irmão",
+    "fala": [
+      "\"Sou irmão da Rosa, da oficina. Ela tá consertando um ônibus pra tirar todo mundo daqui.\"",
+      "\"Às sete eu vou no Mercadinho buscar água. Se ouvir tiro, não sai.\""
+    ],
+    "rotina": [
+      [
+        19,
+        "Mercadinho"
+      ],
+      [
+        20,
+        "Casa 2"
+      ],
+      [
+        6.5,
+        "Casa 2"
+      ]
+    ]
+  },
+  {
+    "id": "sandra",
+    "n": "Sandra Monteiro",
+    "curto": "Sandra",
+    "idade": 34,
+    "casa": "Casa 4",
+    "cor": 9058906,
+    "item": "Fones de ouvido emprestados da prima",
+    "loot": [
+      "fones_sandra"
+    ],
+    "bond": "jessica",
+    "rel": "prima",
+    "fala": [
+      "\"A Jéssica é minha prima. Toda noite às oito ela fala no rádio, escuta.\"",
+      "\"Eu era técnica de enfermagem. Se te morderem, não tem o que fazer.\""
+    ],
+    "rotina": [
+      [
+        18,
+        "Casa 2"
+      ],
+      [
+        19.5,
+        "Casa 4"
+      ],
+      [
+        7,
+        "Farmácia"
+      ]
+    ]
+  }
+]

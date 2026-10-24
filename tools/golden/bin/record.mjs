@@ -127,22 +127,24 @@ async function waitFor(client, expression) {
 
 // Offline and repeatable: the page's three.js CDN URL is answered from disk and every other external request is refused.
 function answerRequests(client, origin) {
+  // an answer can arrive after Chrome was stopped; it must not become an unhandled rejection that fails a finished recording
+  const answer = (method, params) => void client.send(method, params).catch(() => {})
   const threeSource = values.three ? readFileSync(resolve(values.three)).toString('base64') : undefined
   const addons = new Map(values.addon.map((file) => [basename(file), readFileSync(resolve(file)).toString('base64')]))
   return (message) => {
     if (message.method !== 'Fetch.requestPaused') return
     const { requestId, request } = message.params
-    if (request.url.startsWith(origin)) return void client.send('Fetch.continueRequest', { requestId }).catch(() => {})
+    if (request.url.startsWith(origin)) return answer('Fetch.continueRequest', { requestId })
     const addon = addons.get(THREE_ADDON_URL.exec(request.url)?.[1] ?? '')
     if (addon) {
       const headers = [{ name: 'content-type', value: 'text/javascript' }]
-      return void client.send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: headers, body: addon }).catch(() => {})
+      return answer('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: headers, body: addon })
     }
     if (threeSource && THREE_URL.test(request.url)) {
       const headers = [{ name: 'content-type', value: 'text/javascript' }]
-      return void client.send('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: headers, body: threeSource }).catch(() => {})
+      return answer('Fetch.fulfillRequest', { requestId, responseCode: 200, responseHeaders: headers, body: threeSource })
     }
-    void client.send('Fetch.failRequest', { requestId, errorReason: 'BlockedByClient' }).catch(() => {})
+    answer('Fetch.failRequest', { requestId, errorReason: 'BlockedByClient' })
   }
 }
 
@@ -181,3 +183,5 @@ async function record() {
 }
 
 await record()
+// pending CDP timers (answers that never came back after Chrome stopped) would keep the process alive
+process.exit(0)

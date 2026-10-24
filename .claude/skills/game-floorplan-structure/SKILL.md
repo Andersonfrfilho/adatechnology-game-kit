@@ -58,7 +58,7 @@ const specimen = buildWallSpecimen({ assembly: 'reinforced_concrete', w: 2.4, h:
 | `masonryConstruction`, `woodFrameConstruction`, `chaletConstruction`, `logCabinConstruction`, `shackConstruction`, `campConstruction` | Construções prontas (dados do Visor de casas 3D) para os modelos registrarem |
 | `planWaterTank(result, rng, options?)` | Caixa d'água: na laje, no sótão ou em plataforma sobre o telhado; `custom` e `location` por modelo |
 | `result.utilities` | `gas` (cilindro ao lado, em nicho externo, sob a bancada, ou encanado com medidor), `electrical` (poste, ramal, medidor, quadro, tomadas, interruptores, circuitos, eletrodutos; modos `grid`, `tap` (gato, sem medidor), `offgrid`), `solar`, `plumbing` (pontos e trechos). Os botijões entram em `result.items` (`cooking_gas_cylinder`); `TemplateDef.energy(options, w, d)` decide o modo do modelo |
-| `result.outbuildings`, `result.contents` | Edícula (paredes com vão, porta de 0,85 m, 2 janelas, móveis do uso sorteado, caminho em `lot.paths`) e o conteúdo de cada recipiente por estado (`engine.findsFor`; padrão em `utilities/content`, `registerContentState`) |
+| `result.outbuildings`, `result.contents` | Edícula (paredes com vão, porta de 0,85 m, 2 janelas, móveis do uso sorteado, caminho em `lot.paths`) e o conteúdo de cada recipiente por estado (`engine.findsAnswer`/`findsFor` com `day`, `region`, `place`, `footprint` e `key`; o padrão de `utilities/content` só responde quando nenhum provedor respondeu; `registerContentState`) |
 | `structureLayer` | Camada do visor 2D (pilares cheios no concreto e vazados na madeira, vigas tracejadas, tesouras, legenda) |
 
 ## Compõe com

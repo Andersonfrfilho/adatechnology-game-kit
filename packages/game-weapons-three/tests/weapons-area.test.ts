@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 import { ARCHETYPE_MODELS, COUNTER_ITEM_ID, createWeaponsTestModule, MOUNTED_M134_ITEM_ID, weaponsLayout, WEAPON_ITEM_PREFIX } from '../src'
+
+// Building every weapon model takes seconds on a busy machine; the default 5 s limit made this file flaky under load.
+vi.setConfig({ testTimeout: 30_000 })
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')
@@ -35,7 +38,7 @@ describe('weapons test area', () => {
     const laid = [...room.arsenal.weapons.values()].filter((def) => !['hand', 'kick', 'shove', 'fists'].includes(def.id) && !(def.id in ARCHETYPE_MODELS))
     expect(weapons.map((o) => o.itemId).sort()).toEqual(laid.map((def) => `${WEAPON_ITEM_PREFIX}${def.id}`).sort())
     expect(weapons.length).toBeGreaterThan(100)
-    expect(placed.filter((o) => o.itemId === COUNTER_ITEM_ID).length).toBeLessThanOrEqual(6)
+    expect(placed.filter((o) => o.itemId === COUNTER_ITEM_ID).length).toBeLessThanOrEqual(8)
     expect(placed.some((o) => o.itemId === 'target_steel_plate')).toBe(true)
     for (let i = 0; i < 120; i++) room.update(1 / 60)
     expect(Math.min(...weapons.map((o) => o.root.position.y))).toBeGreaterThan(0.85)

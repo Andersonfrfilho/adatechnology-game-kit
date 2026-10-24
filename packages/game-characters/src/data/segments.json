@@ -1,0 +1,246 @@
+{
+  "segments": [
+    {
+      "id": "head",
+      "region": "head",
+      "hitPoints": 40,
+      "multiplier": 3,
+      "bleed": 40
+    },
+    {
+      "id": "jaw",
+      "region": "head",
+      "hitPoints": 12,
+      "multiplier": 2,
+      "bleed": 8
+    },
+    {
+      "id": "neck",
+      "region": "head",
+      "hitPoints": 25,
+      "multiplier": 2,
+      "bleed": 46
+    },
+    {
+      "id": "torso",
+      "region": "torso",
+      "hitPoints": 150,
+      "multiplier": 1,
+      "bleed": 10
+    },
+    {
+      "id": "pelvis",
+      "region": "torso",
+      "hitPoints": 90,
+      "multiplier": 1,
+      "bleed": 12
+    },
+    {
+      "id": "upperArm",
+      "region": "arm",
+      "hitPoints": 45,
+      "multiplier": 0.6,
+      "bleed": 15
+    },
+    {
+      "id": "forearm",
+      "region": "arm",
+      "hitPoints": 30,
+      "multiplier": 0.6,
+      "bleed": 8
+    },
+    {
+      "id": "hand",
+      "region": "arm",
+      "hitPoints": 12,
+      "multiplier": 0.6,
+      "bleed": 3
+    },
+    {
+      "id": "thigh",
+      "region": "leg",
+      "hitPoints": 55,
+      "multiplier": 0.7,
+      "bleed": 19
+    },
+    {
+      "id": "shin",
+      "region": "leg",
+      "hitPoints": 40,
+      "multiplier": 0.7,
+      "bleed": 9
+    },
+    {
+      "id": "foot",
+      "region": "leg",
+      "hitPoints": 15,
+      "multiplier": 0.7,
+      "bleed": 3
+    }
+  ],
+  "regions": {
+    "head": {
+      "hitPoints": 40,
+      "segmentSum": 77,
+      "scale": 0.5195
+    },
+    "arm": {
+      "hitPoints": 60,
+      "segmentSum": 87,
+      "scale": 0.6897
+    },
+    "leg": {
+      "hitPoints": 80,
+      "segmentSum": 110,
+      "scale": 0.7273
+    }
+  },
+  "arsenalWeapons": {
+    "pistola": {
+      "n": "Pistola 9×19",
+      "dmg": 35,
+      "pel": 1
+    },
+    "fuzil": {
+      "n": "Fuzil 7,62×39",
+      "dmg": 55,
+      "pel": 1
+    },
+    "escopeta": {
+      "n": "Escopeta 12 ga",
+      "dmg": 12,
+      "pel": 9
+    },
+    "cinquenta": {
+      "n": ".50 BMG",
+      "dmg": 180,
+      "pel": 1
+    },
+    "granada": {
+      "n": "Granada",
+      "dmg": 300,
+      "pel": 0
+    }
+  },
+  "elenco": {
+    "segments": {
+      "head": {
+        "hp": 40,
+        "radius": 0.07
+      },
+      "torso": {
+        "hp": 120
+      },
+      "pelvis": {
+        "hp": 90
+      },
+      "upperArm": {
+        "hp": 60,
+        "radius": 0.085
+      },
+      "forearm": {
+        "hp": 45,
+        "radius": 0.065
+      },
+      "hand": {
+        "hp": 25,
+        "radius": 0.05
+      },
+      "thigh": {
+        "hp": 80,
+        "radius": 0.1
+      },
+      "shin": {
+        "hp": 55,
+        "radius": 0.08
+      }
+    },
+    "below": {
+      "upperArm": [
+        "forearm",
+        "hand"
+      ],
+      "forearm": [
+        "hand"
+      ],
+      "thigh": [
+        "shin"
+      ]
+    },
+    "falls": {
+      "upperArm": "o braço inteiro",
+      "forearm": "o antebraço com a mão",
+      "hand": "a mão",
+      "thigh": "a perna inteira",
+      "shin": "a canela com o pé",
+      "head": "a cabeça"
+    },
+    "cutWeapons": [
+      {
+        "id": "faca",
+        "n": "Faca",
+        "dmg": 22,
+        "cut": 0.7
+      },
+      {
+        "id": "facao",
+        "n": "Facão",
+        "dmg": 55,
+        "cut": 1
+      },
+      {
+        "id": "machado",
+        "n": "Machado",
+        "dmg": 85,
+        "cut": 1
+      },
+      {
+        "id": "p9",
+        "n": "Pistola 9 mm",
+        "dmg": 30,
+        "cut": 0.15
+      },
+      {
+        "id": "e12",
+        "n": "Espingarda 12",
+        "dmg": 95,
+        "cut": 0.75
+      },
+      {
+        "id": "f762",
+        "n": "Fuzil 7,62",
+        "dmg": 65,
+        "cut": 0.45
+      }
+    ]
+  },
+  "severity": {
+    "severAtCut": 0.5,
+    "severAtDamageFraction": 0.9,
+    "destroyAtDamageMultiple": 2,
+    "limpAtHpFraction": 0.5,
+    "splitAtDamage": 150,
+    "headKillDamage": 20,
+    "jawChance": 0.3,
+    "jawDamage": 25,
+    "headBitDamage": 60,
+    "headBitShotgunMetres": 5
+  },
+  "defaultCut": {
+    "slash": 0.85,
+    "blunt": 0,
+    "explosive": 1,
+    "ballistic": {
+      "pistol": 0.15,
+      "buckshot": 0.75,
+      "rifle": 0.45
+    }
+  },
+  "deathRule": {
+    "default": "vitality-or-head",
+    "options": [
+      "vitality-or-head",
+      "head-only"
+    ]
+  }
+}

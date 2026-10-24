@@ -1,10 +1,12 @@
 // Weapon sounds synthesized with WebAudio: no sound files, so the kit stays offline and small. Every call is a no-op where there is no
 // AudioContext (tests, workers), and the context is only created on the first sound, which comes from a click or a key (browsers allow it).
 // The numbers live in ./audio/*: `computeShotSound` is pure and this file only turns its result into nodes.
-import { createRng } from '@adatechnology/game-weapons'
+import { MIX_PROFILES, createAudioEngine } from '@adatechnology/game-audio'
+import type { AudioEngine } from '@adatechnology/game-audio'
 import type { WeaponEvent } from '@adatechnology/game-weapons'
 
 import { MECHANICAL_SOUNDS, mechanicalSoundOf } from './audio/mechanical-sounds'
+import { BURST_IDS, SCENE_NOISE_IDS, SCENE_TONE_IDS, TONE_IDS, classBurstId, weaponRecipes } from './audio/recipes'
 import type { MechanicalSoundId, SoundStep } from './audio/mechanical-sounds'
 import { computeShotSound, FALLBACK_SOUND_CLASS, GAME_DISTANCE_CURVE, GAME_SOUND_CLASSES } from './audio/shot-sound'
 import type { ShotSound, ShotSoundInput, ShotSoundOptions, SoundClassDef } from './audio/shot-sound'
@@ -22,8 +24,14 @@ export interface WeaponAudioOptions extends ShotSoundOptions {
   readonly seed?: number
   /** Replaces or adds mechanical sounds by id. */
   readonly mechanical?: Readonly<Partial<Record<MechanicalSoundId, readonly SoundStep[]>>>
-  /** Where the AudioContext comes from (default: the global one); lets a host or a test lend its own. */
+  /** Where the AudioContext comes from (default: the global one); lets a host or a test lend its own. Not used with `engine`. */
   readonly createContext?: () => AudioContext
+  /**
+   * A sound engine the host already has (one shared engine mixes, limits and pans every module the same way). The weapon sounds are registered in it
+   * and play on its `weapons` bus; `seed` gives them their own random stream, the master volume and the context stay the engine's. Without it the
+   * weapon audio makes its own engine with the game mix, no voice limit, and the master at `volume`.
+   */
+  readonly engine?: AudioEngine
 }
 
 /** Sounds the weapon presentation plays. */
@@ -55,96 +63,48 @@ export interface WeaponAudio {
   dispose(): void
 }
 
-type AudioContextCtor = new () => AudioContext
-
 const NOISE_SECONDS = 1.5
+const DEFAULT_SEED = 1
 
-const globalContext = (): AudioContext | null => {
-  const scope = globalThis as { AudioContext?: AudioContextCtor; webkitAudioContext?: AudioContextCtor }
-  const Ctor = scope.AudioContext ?? scope.webkitAudioContext
-  return Ctor ? new Ctor() : null
-}
+type Tone = { at?: number; seconds: number; gain: number; frequency: number; to?: number; type?: OscillatorType }
+type Burst = { at?: number; seconds: number; gain: number; filter: BiquadFilterType; frequency: number; q?: number }
 
 export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}): WeaponAudio {
-  const makeContext = options.createContext ?? globalContext
-  const rng = createRng(options.seed ?? 1)
+  const seed = options.seed ?? DEFAULT_SEED
   const classes: Readonly<Record<string, SoundClassDef>> = { ...GAME_SOUND_CLASSES, ...options.classes }
   const distanceCurve = { ...GAME_DISTANCE_CURVE, ...options.distance }
   const mechanicalTable = { ...MECHANICAL_SOUNDS, ...options.mechanical }
-  let ctx: AudioContext | null = null
-  let master: GainNode | null = null
-  let noise: AudioBuffer | null = null
-  let level = volume
-
-  const ready = (): AudioContext | null => {
-    if (!ctx) {
-      const created = makeContext()
-      if (!created) return null
-      ctx = created
-      master = ctx.createGain()
-      master.gain.value = level
-      master.connect(ctx.destination)
-      noise = ctx.createBuffer(1, Math.floor(ctx.sampleRate * NOISE_SECONDS), ctx.sampleRate)
-      const data = noise.getChannelData(0)
-      for (let i = 0; i < data.length; i++) data[i] = rng() * 2 - 1
-    }
-    if (ctx.state === 'suspended') void ctx.resume()
-    return ctx
-  }
+  const shared = options.engine
+  // own engine: the game mix at the given volume, noise made with the chain, and no voice limit (these sounds are short and the old audio had none)
+  const engine: AudioEngine =
+    shared ??
+    createAudioEngine({
+      seed,
+      mix: { ...MIX_PROFILES.game!, master: volume, noise: { seconds: NOISE_SECONDS, create: 'eager' } },
+      maxVoices: Number.POSITIVE_INFINITY,
+      ...(options.createContext ? { createContext: options.createContext } : {}),
+    })
+  // an own engine draws everything from its one stream (noise first, then the start points), as the old audio did; a shared one gets a stream per module
+  const channel = shared && options.seed !== undefined ? shared.channel({ seed }) : engine.channel({})
+  engine.register({ id: `weapons_three@${classBurstId(distanceCurve)}`, sounds: weaponRecipes(distanceCurve) })
+  const classBurst = classBurstId(distanceCurve)
 
   // a filtered noise burst with a fast attack and an exponential tail
-  const burst = (config: { at?: number; seconds: number; gain: number; filter: BiquadFilterType; frequency: number; q?: number }): void => {
-    const audio = ready()
-    if (!audio || !noise || !master) return
-    const start = audio.currentTime + (config.at ?? 0)
-    const source = audio.createBufferSource()
-    source.buffer = noise
-    const filter = audio.createBiquadFilter()
-    filter.type = config.filter
-    filter.frequency.value = config.frequency
-    filter.Q.value = config.q ?? 0.8
-    const gain = audio.createGain()
-    gain.gain.setValueAtTime(0.0001, start)
-    gain.gain.exponentialRampToValueAtTime(Math.max(config.gain, 0.0002), start + 0.004)
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + config.seconds)
-    source.connect(filter).connect(gain).connect(master)
-    source.start(start, rng() * Math.max(0, NOISE_SECONDS - config.seconds))
-    source.stop(start + config.seconds + 0.05)
+  const burst = (config: Burst): void => {
+    const id = config.filter === 'highpass' ? BURST_IDS.highpass : BURST_IDS.lowpass
+    const params = { frequency: config.frequency, q: config.q ?? 0.8, gain: Math.max(config.gain, 0.0002), seconds: config.seconds }
+    channel.play(id, { params, ...(config.at ? { delay: config.at } : {}) })
   }
 
   // the game `sfx`: lowpass noise, gain set at once and an exponential fall to 0.001 (jogo.js L62097-L62110)
-  const classBurst = (at: number, cutoff: number, gain: number, seconds: number): void => {
-    const audio = ready()
-    if (!audio || !noise || !master) return
-    const start = audio.currentTime + at
-    const source = audio.createBufferSource()
-    source.buffer = noise
-    const filter = audio.createBiquadFilter()
-    filter.type = 'lowpass'
-    filter.frequency.value = cutoff
-    const envelope = audio.createGain()
-    envelope.gain.setValueAtTime(gain, start)
-    envelope.gain.exponentialRampToValueAtTime(0.001, start + seconds)
-    source.connect(filter).connect(envelope).connect(master)
-    source.start(start, rng() * Math.max(0, NOISE_SECONDS - seconds))
-    source.stop(start + seconds + 0.05)
+  const classBurstAt = (at: number, cutoff: number, gain: number, seconds: number): void => {
+    channel.play(classBurst, { params: { cutoff, gain, seconds }, ...(at ? { delay: at } : {}) })
   }
 
-  const tone = (config: { at?: number; seconds: number; gain: number; frequency: number; to?: number; type?: OscillatorType }): void => {
-    const audio = ready()
-    if (!audio || !master) return
-    const start = audio.currentTime + (config.at ?? 0)
-    const osc = audio.createOscillator()
-    osc.type = config.type ?? 'sine'
-    osc.frequency.setValueAtTime(config.frequency, start)
-    if (config.to) osc.frequency.exponentialRampToValueAtTime(config.to, start + config.seconds)
-    const gain = audio.createGain()
-    gain.gain.setValueAtTime(0.0001, start)
-    gain.gain.exponentialRampToValueAtTime(Math.max(config.gain, 0.0002), start + 0.003)
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + config.seconds)
-    osc.connect(gain).connect(master)
-    osc.start(start)
-    osc.stop(start + config.seconds + 0.05)
+  const tone = (config: Tone): void => {
+    const id = config.to ? TONE_IDS.sine_sweep : config.type === 'square' ? TONE_IDS.square : TONE_IDS.sine
+    const params = { frequency: config.frequency, gain: Math.max(config.gain, 0.0002), seconds: config.seconds, ...(config.to ? { to: config.to } : {}) }
+    channel.play(id, { params, ...(config.at ? { delay: config.at } : {}) })
   }
 
   const metal = (at: number, frequency: number, gain: number): void => {
@@ -153,14 +113,25 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
   }
 
   const play = (soundClass: string, classVolume = 1, distance = 0, at = 0): void => {
-    const attenuation = classVolume / (1 + distance * distance * distanceCurve.gainFalloff)
-    if (attenuation < distanceCurve.minGain) return
     const [cutoff, gain, seconds] = classes[soundClass] ?? FALLBACK_SOUND_CLASS
-    classBurst(at, cutoff / (1 + distance * distanceCurve.cutoffFalloff), gain * attenuation, seconds)
+    // the distance goes through the engine's curve (gain / (1 + d² k), cutoff / (1 + d c), silent below minGain)
+    channel.play(classBurst, { volume: classVolume, distance, params: { cutoff, gain, seconds }, ...(at ? { delay: at } : {}) })
+  }
+
+  // the art scene's sTone and sNoise, heard at the listener
+  const sceneTone = (entry: Extract<SoundStep, { layer: 'scene_tone' }>): void => {
+    channel.play(SCENE_TONE_IDS[entry.wave], { params: { f: entry.f, f2: entry.f2 ?? entry.f, d: entry.d, vol: entry.vol }, ...(entry.at ? { delay: entry.at } : {}) })
+  }
+  const sceneNoise = (entry: Extract<SoundStep, { layer: 'scene_noise' }>): void => {
+    const slide = entry.f2 !== undefined
+    const id = slide ? `${SCENE_NOISE_IDS[entry.type]}_slide` : SCENE_NOISE_IDS[entry.type]
+    channel.play(id, { params: { f: entry.f, ...(slide ? { f2: entry.f2 } : {}), q: entry.q, d: entry.d, vol: entry.vol }, ...(entry.at ? { delay: entry.at } : {}) })
   }
 
   const step = (entry: SoundStep): void => {
     if (entry.layer === 'metal') metal(entry.at, entry.frequency, entry.gain)
+    else if (entry.layer === 'scene_tone') sceneTone(entry)
+    else if (entry.layer === 'scene_noise') sceneNoise(entry)
     else if (entry.layer === 'class') play(entry.soundClass, entry.volume, 0, entry.at)
     else burst({ at: entry.at, seconds: 0.09, gain: entry.gain, filter: 'lowpass', frequency: entry.frequency })
   }
@@ -175,7 +146,7 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
     shot(energyJ, category, extras = {}) {
       const sound = shotSound({ ...extras, energyJ, category })
       if (!sound.audible) return
-      classBurst(0, sound.cutoff, sound.gain, sound.duration)
+      classBurstAt(0, sound.cutoff, sound.gain, sound.duration)
       if (sound.crack.gain > 0) burst({ seconds: sound.crack.duration, gain: sound.crack.gain, filter: 'highpass', frequency: sound.crack.cutoff })
       tone({ seconds: sound.body.duration, gain: sound.body.gain, frequency: sound.body.frequency, to: sound.body.to })
     },
@@ -203,22 +174,22 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
       mechanical('cycle')
     },
     clink() {
-      const f = 3200 + rng() * 2000
-      tone({ seconds: 0.09, gain: 0.12, frequency: f })
-      tone({ seconds: 0.06, gain: 0.06, frequency: f * 2.7 })
+      // the art scene's `casing` (cena L1344): one ring at 4200-5700 Hz sliding to 3800, 0.25-0.45 s after the case leaves
+      const f = 4200 + channel.random() * 1500
+      const at = 0.25 + channel.random() * 0.2
+      sceneTone({ layer: 'scene_tone', at, wave: 'sine', f, f2: 3800, d: 0.06, vol: 0.06 })
     },
     thud() {
       burst({ seconds: 0.09, gain: 0.35, filter: 'lowpass', frequency: 380 })
     },
     setVolume(next) {
-      level = Math.max(0, Math.min(1, next))
-      if (master) master.gain.value = level
+      const level = Math.max(0, Math.min(1, next))
+      // a shared engine keeps its master: the weapons bus takes the volume
+      if (shared) shared.setBus('weapons', { gain: level })
+      else engine.setMaster(level)
     },
     dispose() {
-      void ctx?.close()
-      ctx = null
-      master = null
-      noise = null
+      if (!shared) engine.dispose()
     },
   }
 }

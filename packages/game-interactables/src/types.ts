@@ -11,6 +11,8 @@
  * (front = +z, origin at the center of the footprint on the floor, meters). `World` converts them with the object's `Transform`.
  */
 
+import type { Thumbnail } from '@adatechnology/game-contracts'
+
 export type Vec3 = [number, number, number]
 
 /** Placement of an object in the host's space. Rotation is around +y (radians). */
@@ -133,6 +135,8 @@ export interface ItemDef {
   /** Hint for the host's renderer: which simple shape to draw (`can`, `box`, `bottle`, `jar`, `bag`, `cloth`, `paper`, `tool`...). */
   shape?: string
   color?: number
+  /** Picture for catalogues and inventories. */
+  thumbnail?: Thumbnail
 }
 
 export type ItemCatalog = Record<string, ItemDef>

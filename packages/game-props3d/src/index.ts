@@ -1,4 +1,6 @@
 export { create, listTypes, DEFS, MATERIALS, TYPE_DEFS } from './create'
+export { collectReferencedNodes, createNodeSkin } from './node-skin'
+export type { NodeSkin, NodeSkinOptions } from './node-skin'
 export { createRecorder } from './recorder'
 export { hex, mix, rng, seedOf, shade } from './colors'
 export { FLOORS } from './atlas'
@@ -34,3 +36,4 @@ export type {
   Uv,
   WaterAtlas,
 } from './types'
+export { mergeByMaterial } from './merge-by-material'

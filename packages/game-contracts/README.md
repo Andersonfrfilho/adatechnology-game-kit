@@ -107,6 +107,15 @@ A module can also declare a bench as data: `controls` (number, boolean, choice, 
 `ModuleBench` in `attach` (`host.bench`): `value(id)`, `layer(id)`, `onChange(listener)` (right after `attach` it gets one change per control and
 layer, in order), `patch(id, { hidden, disabled, options, value })` (no echo) and `look(eye, target)`. `checkBench({ controls, layers, metrics })`
 checks the declaration (snake_case ids unique across the three, `min < max`, `step > 0`, defaults in range and among the options, `max > 0`).
+A choice's options may carry a `group` (the host lists them under that heading; the options of a group sit next to each other, and `checkBench` says
+so when they do not). `ModuleBench.sheet(sheet)` puts a card on the host's panel (`BenchSheet`: kicker, title, body, facts, steps, colour swatches, note and a
+timeline of segments whose playhead follows a module metric); a host with no sheet area leaves it out.
+
+### Effects the host lends
+
+`ModuleHost.effects` is an `EffectSink`: `play({ effect, point, direction?, normal?, seed?, param?, scale? })` starts an effect of the host's catalogue by id
+and answers a handle (or `null` when the host does not know it), `stop(handle)` ends a looping one, and `configure`, `stats` and `catalog` are optional. The
+`explosion` host event carries `explosive` (the id of the explosive), `PartSpec.explodes.effect` and the `explode` event name the effect of a part's blast.
 
 ```ts
 controls: () => [
@@ -120,6 +129,13 @@ metrics: () => [{ id: 'particles', name: 'Particles', max: 400, read: () => fx.p
 Tool events are named after a tool's cycle, not a firearm: `mode`, `fault`, `clear` (start / end) and `safety`, and `shot` carries `rounds`
 (cartridges spent) next to `shots` (projectiles, always 1 or more) and the `mode`; a dud round is its own `misfire` event, not a `shot` of zero. `HostTool` may report `mode`, `fault`, `safety` and `heat` (0..1).
 `host.configureTool(settings)` takes a `Record<string, string>` keyed by the id of the module's own control; the test room applies `condition` and `ammo_quality` and ignores other ids.
+
+### Sound and weather the host lends
+
+`ModuleHost.audio?` is an `AudioSink` (`play(SoundRequest)`, `stop(handle)`, and optionally `loop`, `setListener`, `register`): one shared sound engine, so every module is mixed,
+limited and panned the same way. `ModuleHost.environment?` is an `EnvironmentBus` (`get`, `set(patch)`, `on`) holding an `EnvironmentState` (`rain` mm/h, wind, `fogFar`, `visibility`,
+`nightFactor`, `temperatureC`, `wetness`): the weather module writes it, the others read it. Both are optional, additive and generic; `createEnvironmentBus(initial?)` is a plain
+store that implements the bus, and `DEFAULT_ENVIRONMENT` is the calm dry day.
 
 ## API
 
@@ -137,6 +153,7 @@ antes definiam, então `import { Hit } from '@adatechnology/game-destruction'` c
 - **Impacto**: `IMPACT_CONTRACT` e `checkHit(hit)` dizem quais campos cada tipo de dano exige.
 - **Armas**: `Shot`, `Use` e `shotToHit(shot, ponto)`.
 - **Fluidos**: `ContainerSpec`, `LiquidId` e `ItemUseDef`.
+- **Som e clima**: `ModuleHost.audio?` (`AudioSink`) e `ModuleHost.environment?` (`EnvironmentBus` com `EnvironmentState`), emprestados pela sala; `createEnvironmentBus()` e `DEFAULT_ENVIRONMENT` (o dia seco e calmo).
 - **Animações**: `AnimationClipSpec` e `checkAnimation(clipe, idsDasPeças)` (uma porta `open`, uma pistola `reload`).
 - **Módulo**: `TestableModule` entrega itens, animações e cenários à sala de testes; `room.loadModule(modulo)` roda as verificações e escreve linhas
   ✓ / ✗ no log. Assim o módulo de um carro de aluguel já nasce com as suas animações e o seu jeito de quebrar.

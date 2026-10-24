@@ -1,0 +1,26 @@
+{
+  "armyDrop": {
+    "fromDay": 3,
+    "toDay": 10,
+    "crates": 3,
+    "noiseRadius": 500,
+    "line": 304
+  },
+  "freightTrain": {
+    "everyDays": [
+      10,
+      15
+    ],
+    "whistleSeconds": 20,
+    "line": 305
+  },
+  "powerSchedule": {
+    "untilDay": 3,
+    "litHousesShare": 0.7,
+    "line": 208
+  },
+  "floorItemsPerCell": {
+    "value": 400,
+    "line": 314
+  }
+}

@@ -109,6 +109,10 @@
    "source": "generated",
    "file": "generated/carl_gustaf_m4.svg"
   },
+  "cast_iron_skillet": {
+   "source": "generated",
+   "file": "generated/cast_iron_skillet.svg"
+  },
   "cbc_122": {
    "source": "generated",
    "file": "generated/cbc_122.svg"
@@ -120,6 +124,10 @@
   "cbc_pump_military_3_0": {
    "source": "generated",
    "file": "generated/cbc_pump_military_3_0.svg"
+  },
+  "chainsaw": {
+   "source": "generated",
+   "file": "generated/chainsaw.svg"
   },
   "cheytac_m200": {
    "source": "generated",
@@ -277,6 +285,10 @@
    "source": "generated",
    "file": "generated/hammer.svg"
   },
+  "hatchet": {
+   "source": "generated",
+   "file": "generated/hatchet.svg"
+  },
   "hk416": {
    "source": "generated",
    "file": "generated/hk416.svg"
@@ -344,6 +356,14 @@
   "improvised_flamethrower": {
    "source": "generated",
    "file": "generated/improvised_flamethrower.svg"
+  },
+  "improvised_spear": {
+   "source": "generated",
+   "file": "generated/improvised_spear.svg"
+  },
+  "iron_pipe": {
+   "source": "generated",
+   "file": "generated/iron_pipe.svg"
   },
   "kel_tec_ksg": {
    "source": "generated",
@@ -413,6 +433,10 @@
    "source": "generated",
    "file": "generated/makarov_pm.svg"
   },
+  "meat_cleaver": {
+   "source": "generated",
+   "file": "generated/meat_cleaver.svg"
+  },
   "mg3": {
    "source": "generated",
    "file": "generated/mg3.svg"
@@ -437,6 +461,14 @@
    "source": "generated",
    "file": "generated/mossberg_500_cruiser.svg"
   },
+  "nail_bat": {
+   "source": "generated",
+   "file": "generated/nail_bat.svg"
+  },
+  "pickaxe": {
+   "source": "generated",
+   "file": "generated/pickaxe.svg"
+  },
   "pipe_bomb": {
    "source": "generated",
    "file": "generated/pipe_bomb.svg"
@@ -457,6 +489,10 @@
    "source": "generated",
    "file": "generated/pkm.svg"
   },
+  "police_baton": {
+   "source": "generated",
+   "file": "generated/police_baton.svg"
+  },
   "pp19_bizon": {
    "source": "generated",
    "file": "generated/pp19_bizon.svg"
@@ -468,6 +504,10 @@
   "pry_bar": {
    "source": "generated",
    "file": "generated/pry_bar.svg"
+  },
+  "recurve_bow": {
+   "source": "generated",
+   "file": "generated/recurve_bow.svg"
   },
   "remington_700": {
    "source": "generated",
@@ -545,6 +585,10 @@
    "source": "generated",
    "file": "generated/shotgun_semi_12.svg"
   },
+  "sickle": {
+   "source": "generated",
+   "file": "generated/sickle.svg"
+  },
   "sig_mpx": {
    "source": "generated",
    "file": "generated/sig_mpx.svg"
@@ -596,6 +640,10 @@
   "sw_model_29": {
    "source": "generated",
    "file": "generated/sw_model_29.svg"
+  },
+  "tactical_knife": {
+   "source": "generated",
+   "file": "generated/tactical_knife.svg"
   },
   "taurus_82": {
    "source": "generated",

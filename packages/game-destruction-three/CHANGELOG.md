@@ -1,5 +1,20 @@
 # @adatechnology/game-destruction-three
 
+## 0.4.0
+
+### Minor Changes
+
+- 86179cc: Desenha os eventos de parede: `spall` (remendo da cor do núcleo), `stage` 2 (fragmentos do tamanho da peça com os furos de `Fragment.marks` presos neles, a peça continua desenhada) e `expose` (vergalhão em cilindros instanciados, `renderer.rebarCount()`). A abertura cortada na malha fica para o renderizador de casas.
+
+### Patch Changes
+
+- Updated dependencies [76d15b6]
+- Updated dependencies [cc182c7]
+- Updated dependencies [9e58b50]
+- Updated dependencies [95c4bdd]
+  - @adatechnology/game-contracts@0.8.0
+  - @adatechnology/game-destruction@0.5.0
+
 ## 0.3.3
 
 ### Patch Changes

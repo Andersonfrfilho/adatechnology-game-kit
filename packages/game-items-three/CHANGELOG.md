@@ -1,0 +1,23 @@
+# @adatechnology/game-items-three
+
+## 0.1.0
+
+### Minor Changes
+
+- 32a00c6: New package: the three.js side of `game-items`. Every item of a catalog is drawn at its real size (metres, y up, origin at the bottom centre): the 24 builders of the Itens do Vale Cinzento showcase ported as they are (a golden against the team's three r128 scenes covers each node and the three wear stages), 25 simple shapes for every other item, `setWear` (new, used, spoiled in sRGB), `mergeItem`, `buildItemLod` and the budgets of the page (30 draw calls, 400 / 1200 triangles; 7 models of the team are known deviations). `itemThumbnail`, `shapeThumbnailSvg`, `thumbnailPatch` and `renderItemThumbnail` give every item a picture. `createItemsTestModule` is the items area for the test room: 14 shelves by category at real size, a stand with the 24 models, a 1.55 m ruler and a 1.80 m figure, a finds table, a bench (wear, age and storage of the food, place, container, state, outbreak day, seed, roll finds, recipe, craft), layers, counters and seven scenarios. three is a peer dependency (`^0.160`); the IIFE global is `GameItemsThree`.
+
+### Patch Changes
+
+- Updated dependencies [76d15b6]
+- Updated dependencies [6314632]
+- Updated dependencies [50eee43]
+- Updated dependencies [3bf868b]
+- Updated dependencies [e48ea53]
+- Updated dependencies [8d2caad]
+- Updated dependencies [cc182c7]
+- Updated dependencies [32a00c6]
+- Updated dependencies [9e58b50]
+  - @adatechnology/game-contracts@0.8.0
+  - @adatechnology/game-items@0.1.0
+  - @adatechnology/game-props3d@0.2.0
+  - @adatechnology/game-interactables@0.2.0

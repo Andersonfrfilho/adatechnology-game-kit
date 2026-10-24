@@ -24,14 +24,14 @@ export const WORLD_EXPLOSIVE_IDS: readonly string[] = Object.keys(SHAPES)
 // A hollow steel shell: thin and light, so a bullet or a blast breaks it (the weight of a solid steel part would hold it together).
 const SHELL = { thickness: 0.001, fill: 0.03 }
 
-/** The part of a world explosive: the energy, the reach and the chain of the explosive def, which is what `explosivePart` of game-destruction builds. */
+/** The part of a world explosive: the energy, the reach, the chain and the effect (the explosive's id in the host's catalogue) of the explosive def, which is what `explosivePart` of game-destruction builds. */
 const explosivePart = (def: ExplosiveDef, shape: WorldShape): PartSpec => ({
   id: 'tank',
   material: 'steel',
   shape: shape.shape,
   position: shape.position,
   ...SHELL,
-  explodes: { energy: def.energy, radius: def.injuryRadius, ...(def.chain ? { chain: { ...def.chain } } : {}) },
+  explodes: { energy: def.energy, radius: def.injuryRadius, effect: def.id, ...(def.chain ? { chain: { ...def.chain } } : {}) },
 })
 
 const meshOf = (THREE: typeof THREE_NS, shape: WorldShape): THREE_NS.Mesh => {

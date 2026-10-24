@@ -1,0 +1,32 @@
+[
+  {
+    "id": "common",
+    "weight": 60,
+    "isFixedOnly": false
+  },
+  {
+    "id": "uncommon",
+    "weight": 28,
+    "isFixedOnly": false
+  },
+  {
+    "id": "rare",
+    "weight": 9,
+    "isFixedOnly": false
+  },
+  {
+    "id": "very_rare",
+    "weight": 2.5,
+    "isFixedOnly": false
+  },
+  {
+    "id": "legendary",
+    "weight": 0.5,
+    "isFixedOnly": true
+  },
+  {
+    "id": "unique",
+    "weight": 0,
+    "isFixedOnly": true
+  }
+]

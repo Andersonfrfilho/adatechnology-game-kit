@@ -1,0 +1,10 @@
+{
+  "id": "crowd_rumble",
+  "bus": "ambience",
+  "order": "game_loop",
+  "source": { "kind": "noise", "loop": true },
+  "filters": { "mode": "serial", "bank": [{ "type": "lowpass", "frequency": { "set": 160 } }] },
+  "smoothing": { "volume": 0.15, "frequency": 0.08 },
+  "startAbove": 0.002,
+  "sources": ["jogo:L62116 horda: noise through a 160 Hz lowpass", "jogo:L70424 level min(0.16, near × 0.0016)", "temporary home until the crowd package (Q12)"]
+}

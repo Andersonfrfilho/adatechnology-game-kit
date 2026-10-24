@@ -303,5 +303,44 @@ export function buildScenarios(locale, analysisOf) {
       const fluid = room.fluids.container(`${id}_fluid`)
       expect(!!fluid && fluid.liters > 0, T(`Bacia com água: ${n1(fluid?.liters ?? 0)} L`, `Basin holds water: ${n1(fluid?.liters ?? 0)} L`), { liters: fluid?.liters })
     }),
+
+    // Cross-phase scenario (owner rule): the characters module is a DestructibleImpl in the very world that holds the furniture, so one shot crosses both.
+    // The wardrobe, not the fridge: the world follows a shot through four parts and a fridge has four layers of its own (door, liner and two back skins), so nothing behind it is ever reached.
+    {
+      id: 'zombie_behind_door',
+      name: T('Zumbi atrás da porta: um 7,62 atravessa a porta do guarda-roupa e depois o zumbi, na ordem', 'Zombie behind the door: a 7.62 crosses the wardrobe door and then the zombie, in that order'),
+      run: ({ room, step, expect }) => {
+        const wardrobe = spawn(room, 'wardrobe')
+        const back = analysisOf('wardrobe').destructible.parts.reduce((m, p) => Math.min(m, p.position[2] - p.shape.size[2] / 2), 0)
+        let zombie
+        try {
+          // right behind the back of the wardrobe, facing the shooter; standing still so the aim holds
+          zombie = room.spawn('zombie_walker', [AT[0], 0, AT[2] + back - 0.35], 0).objectId
+        } catch (e) {
+          expect(false, T(`O módulo de personagens não está carregado: ${e.message}`, `The characters module is not loaded: ${e.message}`))
+          return
+        }
+        room.bench('characters_area')?.set('pose', 'stand')
+        step(0.2)
+        const hp = () => (room.world.state(zombie)?.parts ?? []).reduce((sum, p) => sum + p.hp, 0)
+        const before = hp()
+        const from = room.log.entries().length
+        // 0.7 m high, a hand off the middle: the door, the liner and the back of the wardrobe are three layers, and the left thigh of the zombie is the fourth
+        room.setTool('rifle_7_62x39')
+        room.waitUntilReady()
+        room.look([AT[0] + 0.1, 0.7, AT[2] + 2.5], [AT[0] + 0.1, 0.7, AT[2]])
+        room.use()
+        step(0.6)
+        const events = room.log.entries().slice(from).filter((e) => e.channel === 'event')
+        const first = (id) => events.findIndex((e) => e.objectId === id)
+        const onDoor = first(wardrobe)
+        const onZombie = first(zombie)
+        const seen = events.map((e) => `${e.objectId}:${e.type}`)
+        expect(onDoor >= 0, T('O tiro marcou o guarda-roupa', 'The shot marked the wardrobe'), { events: seen })
+        expect(onZombie >= 0, T('O tiro chegou ao zumbi', 'The shot reached the zombie'), { events: seen })
+        expect(onDoor >= 0 && onZombie > onDoor, T(`Ordem dos eventos: guarda-roupa (${onDoor}) antes do zumbi (${onZombie})`, `Event order: wardrobe (${onDoor}) before the zombie (${onZombie})`), { onDoor, onZombie })
+        expect(hp() < before, T(`O zumbi perdeu pontos: ${n1(before)} para ${n1(hp())}`, `The zombie lost points: ${n1(before)} to ${n1(hp())}`), { before, after: hp() })
+      },
+    },
   ]
 }

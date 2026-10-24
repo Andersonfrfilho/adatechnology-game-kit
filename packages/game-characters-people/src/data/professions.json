@@ -1,0 +1,527 @@
+[
+  {
+    "id": "nurse",
+    "name": {
+      "en": "Nurse",
+      "pt-BR": "Enfermeira(o)"
+    },
+    "female": true,
+    "points": -2,
+    "protection": [],
+    "look": {
+      "skin": "8D5A3B",
+      "hair": {
+        "style": "bun",
+        "color": "1A1310"
+      },
+      "top": {
+        "color": "3F8F8A",
+        "sleeve": "short"
+      },
+      "pants": {
+        "color": "3F8F8A"
+      },
+      "shoes": "D8D8D0"
+    },
+    "accessories": [
+      {
+        "id": "steth"
+      },
+      {
+        "id": "mask_chin",
+        "color": "AED0DE"
+      }
+    ],
+    "hand": "medbag",
+    "carries": {
+      "en": "First-aid kit, gloves",
+      "pt-BR": "kit de primeiros socorros, luvas"
+    }
+  },
+  {
+    "id": "police_officer",
+    "name": {
+      "en": "Police officer",
+      "pt-BR": "Policial militar"
+    },
+    "points": -4,
+    "protection": [
+      "vest_police"
+    ],
+    "look": {
+      "skin": "C49A74",
+      "hair": {
+        "style": "buzz",
+        "color": "2A1D14"
+      },
+      "hat": {
+        "kind": "beret",
+        "color": "23272C"
+      },
+      "top": {
+        "color": "5D6E7A",
+        "sleeve": "long"
+      },
+      "pants": {
+        "color": "2A3038"
+      },
+      "shoes": "111111"
+    },
+    "accessories": [
+      {
+        "id": "vest",
+        "color": "1B1D20"
+      },
+      {
+        "id": "belt",
+        "color": "15161A"
+      },
+      {
+        "id": "holster"
+      },
+      {
+        "id": "radio"
+      }
+    ],
+    "hand": "baton",
+    "carries": {
+      "en": ".38 revolver with 6 rounds, baton",
+      "pt-BR": "revólver .38 com 6 balas, cassetete"
+    }
+  },
+  {
+    "id": "firefighter",
+    "name": {
+      "en": "Firefighter",
+      "pt-BR": "Bombeiro(a)"
+    },
+    "points": -3,
+    "protection": [
+      "turnout_gear"
+    ],
+    "look": {
+      "skin": "6B4430",
+      "hair": {
+        "style": "buzz",
+        "color": "111111"
+      },
+      "hat": {
+        "kind": "fire",
+        "color": "9A2A20"
+      },
+      "top": {
+        "color": "8A7A52",
+        "sleeve": "long"
+      },
+      "pants": {
+        "color": "8A7A52"
+      },
+      "shoes": "111111"
+    },
+    "accessories": [
+      {
+        "id": "stripes",
+        "color": "D8E04A"
+      },
+      {
+        "id": "legstripes",
+        "color": "D8E04A"
+      }
+    ],
+    "hand": "axe",
+    "carries": {
+      "en": "Fire axe",
+      "pt-BR": "machado de bombeiro"
+    }
+  },
+  {
+    "id": "mechanic",
+    "name": {
+      "en": "Mechanic",
+      "pt-BR": "Mecânico(a)"
+    },
+    "points": -1,
+    "protection": [],
+    "look": {
+      "skin": "A8754F",
+      "hair": {
+        "style": "short",
+        "color": "1D140E"
+      },
+      "hat": {
+        "kind": "cap",
+        "color": "2D3A4F"
+      },
+      "top": {
+        "color": "2D3A4F",
+        "sleeve": "long"
+      },
+      "pants": {
+        "color": "2D3A4F"
+      },
+      "shoes": "2A2018"
+    },
+    "accessories": [
+      {
+        "id": "stains"
+      },
+      {
+        "id": "rag",
+        "color": "B33A2A"
+      }
+    ],
+    "hand": "wrench",
+    "leftHand": "toolbox",
+    "carries": {
+      "en": "Toolbox",
+      "pt-BR": "caixa de ferramentas"
+    }
+  },
+  {
+    "id": "builder",
+    "name": {
+      "en": "Construction worker",
+      "pt-BR": "Pedreiro / obras"
+    },
+    "points": -1,
+    "protection": [],
+    "look": {
+      "skin": "7A4C33",
+      "hair": {
+        "style": "buzz",
+        "color": "111111"
+      },
+      "hat": {
+        "kind": "hardhat",
+        "color": "E0B020"
+      },
+      "top": {
+        "color": "C8662A",
+        "sleeve": "short"
+      },
+      "pants": {
+        "color": "3B4A63"
+      },
+      "shoes": "4A3524"
+    },
+    "accessories": [
+      {
+        "id": "belt",
+        "color": "5A4026"
+      },
+      {
+        "id": "pouches",
+        "color": "5A4026"
+      }
+    ],
+    "hand": "hammer",
+    "carries": {
+      "en": "Hammer, nails",
+      "pt-BR": "martelo, pregos"
+    }
+  },
+  {
+    "id": "cook",
+    "name": {
+      "en": "Cook",
+      "pt-BR": "Cozinheiro(a)"
+    },
+    "points": 0,
+    "protection": [],
+    "look": {
+      "skin": "D2A885",
+      "hair": {
+        "style": "short",
+        "color": "5A3A22"
+      },
+      "hat": {
+        "kind": "bandana",
+        "color": "2B2B2B"
+      },
+      "top": {
+        "color": "E6E2D6",
+        "sleeve": "long"
+      },
+      "pants": {
+        "color": "4A4A4A"
+      },
+      "shoes": "111111"
+    },
+    "accessories": [
+      {
+        "id": "apron",
+        "color": "3A3A3A"
+      },
+      {
+        "id": "buttons"
+      }
+    ],
+    "hand": "knife",
+    "carries": {
+      "en": "Chef knife",
+      "pt-BR": "faca de chef"
+    }
+  },
+  {
+    "id": "sport_shooter",
+    "name": {
+      "en": "Sport shooter",
+      "pt-BR": "Atirador esportivo"
+    },
+    "points": -4,
+    "protection": [],
+    "look": {
+      "skin": "C9A07C",
+      "hair": {
+        "style": "short",
+        "color": "3B2A1C"
+      },
+      "hat": {
+        "kind": "cap",
+        "color": "4B5236"
+      },
+      "face": [
+        "glasses_y"
+      ],
+      "top": {
+        "color": "4B5236",
+        "sleeve": "long"
+      },
+      "pants": {
+        "color": "5F5A4A"
+      },
+      "shoes": "3A2E22"
+    },
+    "accessories": [
+      {
+        "id": "earpro",
+        "color": "2A2A2A"
+      },
+      {
+        "id": "holster"
+      },
+      {
+        "id": "belt",
+        "color": "2A2A2A"
+      }
+    ],
+    "hand": "pistol",
+    "carries": {
+      "en": "9 mm pistol, no ammunition",
+      "pt-BR": "pistola 9 mm sem munição"
+    }
+  },
+  {
+    "id": "farmer",
+    "name": {
+      "en": "Farmer",
+      "pt-BR": "Agricultor(a)"
+    },
+    "points": 0,
+    "protection": [],
+    "look": {
+      "skin": "9A6644",
+      "hair": {
+        "style": "short",
+        "color": "2A2018"
+      },
+      "hat": {
+        "kind": "straw",
+        "color": "C9B06A"
+      },
+      "top": {
+        "color": "8A2F2A",
+        "sleeve": "long",
+        "plaid": "3A1612"
+      },
+      "pants": {
+        "color": "3B4A63"
+      },
+      "shoes": "4A3524"
+    },
+    "accessories": [],
+    "hand": "hoe",
+    "carries": {
+      "en": "Seeds, hoe",
+      "pt-BR": "sementes, enxada"
+    }
+  },
+  {
+    "id": "electrician",
+    "name": {
+      "en": "Electrician",
+      "pt-BR": "Eletricista"
+    },
+    "points": -1,
+    "protection": [],
+    "look": {
+      "skin": "B7835C",
+      "hair": {
+        "style": "short",
+        "color": "111111"
+      },
+      "hat": {
+        "kind": "hardhat",
+        "color": "E8E8E2"
+      },
+      "top": {
+        "color": "6F7377",
+        "sleeve": "long"
+      },
+      "pants": {
+        "color": "2A3038"
+      },
+      "shoes": "111111"
+    },
+    "accessories": [
+      {
+        "id": "belt",
+        "color": "5A4026"
+      },
+      {
+        "id": "pouches",
+        "color": "5A4026"
+      },
+      {
+        "id": "coil",
+        "color": "C06A2A"
+      }
+    ],
+    "hand": "pliers",
+    "carries": {
+      "en": "Pliers, insulating tape",
+      "pt-BR": "alicate, fita isolante"
+    }
+  },
+  {
+    "id": "courier",
+    "name": {
+      "en": "Courier",
+      "pt-BR": "Motoboy"
+    },
+    "points": 0,
+    "protection": [],
+    "look": {
+      "skin": "8D5A3B",
+      "hair": {
+        "style": "buzz",
+        "color": "111111"
+      },
+      "hat": {
+        "kind": "moto",
+        "color": "1D1F22"
+      },
+      "top": {
+        "color": "2A2C30",
+        "sleeve": "long"
+      },
+      "pants": {
+        "color": "3B4A63"
+      },
+      "shoes": "E0E0E0"
+    },
+    "accessories": [
+      {
+        "id": "stripes",
+        "color": "9FD0A0"
+      },
+      {
+        "id": "deliverybox",
+        "color": "B8322A"
+      }
+    ],
+    "carries": {
+      "en": "Helmet, motorbike with no fuel",
+      "pt-BR": "capacete, moto sem gasolina"
+    }
+  },
+  {
+    "id": "teacher",
+    "name": {
+      "en": "Teacher",
+      "pt-BR": "Professor(a)"
+    },
+    "points": 2,
+    "protection": [],
+    "look": {
+      "skin": "D2A885",
+      "hair": {
+        "style": "bald",
+        "color": "6A6A66"
+      },
+      "face": [
+        "glasses",
+        "beard_g"
+      ],
+      "top": {
+        "color": "7A6A4E",
+        "sleeve": "long"
+      },
+      "pants": {
+        "color": "4A443C"
+      },
+      "shoes": "3A2A1E"
+    },
+    "accessories": [
+      {
+        "id": "sweatervest",
+        "color": "4A5A3E"
+      },
+      {
+        "id": "collar",
+        "color": "D8D4C8"
+      },
+      {
+        "id": "satchel",
+        "color": "6A4A2A"
+      }
+    ],
+    "leftHand": "book",
+    "carries": {
+      "en": "Chemistry book, volume 1",
+      "pt-BR": "livro de química vol. 1"
+    }
+  },
+  {
+    "id": "unemployed",
+    "name": {
+      "en": "Unemployed",
+      "pt-BR": "Desempregado(a)"
+    },
+    "points": 8,
+    "protection": [],
+    "look": {
+      "skin": "C49A74",
+      "hair": {
+        "style": "short",
+        "color": "2A1D14"
+      },
+      "hat": {
+        "kind": "capback",
+        "color": "8A2A2A"
+      },
+      "top": {
+        "color": "6A6E70",
+        "sleeve": "long"
+      },
+      "pants": {
+        "color": "3B4A63"
+      },
+      "shoes": "2A2A2A"
+    },
+    "accessories": [
+      {
+        "id": "hood",
+        "color": "6A6E70"
+      },
+      {
+        "id": "pocket",
+        "color": "5C6062"
+      }
+    ],
+    "carries": {
+      "en": "Nothing",
+      "pt-BR": "nada"
+    }
+  }
+]

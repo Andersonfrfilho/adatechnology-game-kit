@@ -1,4 +1,4 @@
-// Bundles the furniture area (and the kit packages it needs, the weapons module among them) into dist/furniture-area.js (IIFE, global `FurnitureArea`) and, when the
+// Bundles the furniture area (and the kit packages it needs, the weapons and items modules among them) into dist/furniture-area.js (IIFE, global `FurnitureArea`) and, when the
 // shared test room page is found (ROOM_HTML, default the kit's own examples/test-room build), writes dist/sala-moveis.html: the room page
 // with the area loaded into it, one file, no network.
 import { createRequire } from 'node:module'
@@ -21,7 +21,8 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-weapons', 'game-weapons-three']) {
+  const people = ['game-characters', 'game-characters-three', 'game-characters-people', 'game-characters-undead', 'game-animals', 'game-animals-species', 'game-animals-three']
+  for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-vfx', 'game-vfx-three', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', 'game-audio', 'game-weather', ...people]) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -40,9 +41,22 @@ const result = await esbuild.build({
     '@adatechnology/game-interactables-household': join(pkg('game-interactables-household'), 'dist/index.js'),
     '@adatechnology/game-interactables-three': join(pkg('game-interactables-three'), 'dist/index.js'),
     '@adatechnology/game-props3d': join(pkg('game-props3d'), 'dist/index.js'),
+    // the effects bench rides along: the smoke, sparks and blood of what the furniture goes through
+    '@adatechnology/game-vfx': join(pkg('game-vfx'), 'dist/index.js'),
+    '@adatechnology/game-vfx-three': join(pkg('game-vfx-three'), 'dist/index.js'),
     // the weapons module (with its accessories) rides along: furniture is shot, burned and blown up by real weapons
     '@adatechnology/game-weapons': join(pkg('game-weapons'), 'dist/index.js'),
     '@adatechnology/game-weapons-three': join(pkg('game-weapons-three'), 'dist/index.js'),
+    // the items module and the goods catalog ride along: the containers of the furniture hold real items
+    '@adatechnology/game-contracts': join(pkg('game-contracts'), 'dist/index.js'),
+    // the sound and weather modules ride along: both use what the room lends (host.audio, host.environment)
+    '@adatechnology/game-audio': join(pkg('game-audio'), 'dist/index.js'),
+    '@adatechnology/game-weather': join(pkg('game-weather'), 'dist/index.js'),
+    '@adatechnology/game-items': join(pkg('game-items'), 'dist/index.js'),
+    '@adatechnology/game-items-goods': join(pkg('game-items-goods'), 'dist/index.js'),
+    '@adatechnology/game-items-three': join(pkg('game-items-three'), 'dist/index.js'),
+    // the characters and the animals modules ride along too: a shot crosses a wardrobe door and reaches a zombie behind it
+    ...Object.fromEntries(people.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
   },
 })
 mkdirSync(join(here, 'dist'), { recursive: true })

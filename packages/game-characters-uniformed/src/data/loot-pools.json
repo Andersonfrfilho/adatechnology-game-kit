@@ -1,0 +1,478 @@
+{
+  "army": [
+    {
+      "itemId": "army_fatigues",
+      "kind": "item",
+      "name": {
+        "en": "Camouflage fatigues",
+        "pt-BR": "Farda camuflada do Exército"
+      },
+      "category": "protection",
+      "rarity": "comum",
+      "chance": 0.5
+    },
+    {
+      "itemId": "helmet_combat",
+      "kind": "item",
+      "name": {
+        "en": "Ballistic helmet",
+        "pt-BR": "Capacete balístico"
+      },
+      "category": "protection",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "vest_military",
+      "kind": "item",
+      "name": {
+        "en": "Plate vest, level III",
+        "pt-BR": "Colete com placa nível III"
+      },
+      "category": "protection",
+      "rarity": "raro",
+      "chance": 0.12
+    },
+    {
+      "itemId": "imbel_ia2",
+      "kind": "weapon",
+      "name": {
+        "en": "IMBEL IA2 5.56",
+        "pt-BR": "Fuzil IMBEL IA2 5,56"
+      },
+      "category": "weapon",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "fn_fal",
+      "kind": "weapon",
+      "name": {
+        "en": "FN FAL / ParaFAL 7.62",
+        "pt-BR": "FN FAL / ParaFAL 7,62"
+      },
+      "category": "weapon",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "fn_minimi",
+      "kind": "weapon",
+      "name": {
+        "en": "FN Minimi",
+        "pt-BR": "FN Minimi"
+      },
+      "category": "weapon",
+      "rarity": "lendário",
+      "chance": 0.03
+    },
+    {
+      "itemId": "m67",
+      "kind": "weapon",
+      "name": {
+        "en": "M67 grenade",
+        "pt-BR": "Granada M67"
+      },
+      "category": "weapon",
+      "rarity": "raro",
+      "chance": 0.12
+    },
+    {
+      "itemId": "smoke_grenade",
+      "kind": "item",
+      "name": {
+        "en": "Smoke grenade",
+        "pt-BR": "Granada de fumaça"
+      },
+      "category": "equipment",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "field_ration",
+      "kind": "item",
+      "name": {
+        "en": "Field ration",
+        "pt-BR": "Ração operacional"
+      },
+      "category": "consumable",
+      "rarity": "comum",
+      "chance": 0.5
+    },
+    {
+      "itemId": "trauma_kit",
+      "kind": "item",
+      "name": {
+        "en": "Individual first-aid kit (tourniquet, hemostatic gauze)",
+        "pt-BR": "Kit individual de primeiros socorros (APH)"
+      },
+      "category": "consumable",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "handheld_radio",
+      "kind": "item",
+      "name": {
+        "en": "Handheld radio",
+        "pt-BR": "Rádio portátil (HT)"
+      },
+      "category": "equipment",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "identity_tag",
+      "kind": "item",
+      "name": {
+        "en": "Identity tag",
+        "pt-BR": "Plaqueta de identificação"
+      },
+      "category": "document",
+      "rarity": "comum",
+      "chance": 0.5
+    },
+    {
+      "itemId": "topographic_map",
+      "kind": "item",
+      "name": {
+        "en": "Marked topographic map",
+        "pt-BR": "Mapa topográfico marcado"
+      },
+      "category": "document",
+      "rarity": "raro",
+      "chance": 0.12
+    },
+    {
+      "itemId": "binoculars_7x50",
+      "kind": "item",
+      "name": {
+        "en": "Military binoculars 7x50",
+        "pt-BR": "Binóculo militar 7×50"
+      },
+      "category": "equipment",
+      "rarity": "incomum",
+      "chance": 0.3
+    }
+  ],
+  "military_police": [
+    {
+      "itemId": "vest_police",
+      "kind": "item",
+      "name": {
+        "en": "Police vest, level II-A",
+        "pt-BR": "Colete policial nível II-A"
+      },
+      "category": "protection",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "taurus_pt100",
+      "kind": "weapon",
+      "name": {
+        "en": "Taurus PT100 .40",
+        "pt-BR": "Taurus PT100 .40"
+      },
+      "category": "weapon",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "taurus_smt9",
+      "kind": "weapon",
+      "name": {
+        "en": "Taurus SMT9 9x19",
+        "pt-BR": "Taurus SMT9 9×19"
+      },
+      "category": "weapon",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "cbc_pump_military_3_0",
+      "kind": "weapon",
+      "name": {
+        "en": "CBC Pump Military 3.0",
+        "pt-BR": "CBC Pump Military 3.0"
+      },
+      "category": "weapon",
+      "rarity": "comum",
+      "chance": 0.5
+    },
+    {
+      "itemId": "taurus_t4",
+      "kind": "weapon",
+      "name": {
+        "en": "Taurus T4 5.56",
+        "pt-BR": "Taurus T4 5,56"
+      },
+      "category": "weapon",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "handcuffs",
+      "kind": "item",
+      "name": {
+        "en": "Handcuffs",
+        "pt-BR": "Algemas"
+      },
+      "category": "equipment",
+      "rarity": "comum",
+      "chance": 0.5
+    },
+    {
+      "itemId": "tonfa",
+      "kind": "item",
+      "name": {
+        "en": "Tonfa",
+        "pt-BR": "Tonfa"
+      },
+      "category": "weapon",
+      "rarity": "comum",
+      "chance": 0.5
+    },
+    {
+      "itemId": "tactical_flashlight",
+      "kind": "item",
+      "name": {
+        "en": "Tactical flashlight",
+        "pt-BR": "Lanterna tática"
+      },
+      "category": "equipment",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "ballistic_shield",
+      "kind": "item",
+      "name": {
+        "en": "Riot ballistic shield",
+        "pt-BR": "Escudo balístico do Choque"
+      },
+      "category": "protection",
+      "rarity": "raro",
+      "chance": 0.12
+    },
+    {
+      "itemId": "helmet_riot",
+      "kind": "item",
+      "name": {
+        "en": "Riot helmet with visor",
+        "pt-BR": "Capacete do Choque com viseira"
+      },
+      "category": "protection",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "tear_gas_grenade",
+      "kind": "item",
+      "name": {
+        "en": "Tear gas grenade",
+        "pt-BR": "Granada de gás lacrimogêneo"
+      },
+      "category": "weapon",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "patrol_car_key",
+      "kind": "item",
+      "name": {
+        "en": "Patrol car key",
+        "pt-BR": "Chave de viatura"
+      },
+      "category": "key",
+      "rarity": "incomum",
+      "chance": 0.3
+    }
+  ],
+  "civil_police": [
+    {
+      "itemId": "police_badge",
+      "kind": "item",
+      "name": {
+        "en": "Civil police badge",
+        "pt-BR": "Distintivo da Polícia Civil"
+      },
+      "category": "document",
+      "rarity": "raro",
+      "chance": 0.12
+    }
+  ],
+  "highway_police": [
+    {
+      "itemId": "vest_high_visibility",
+      "kind": "item",
+      "name": {
+        "en": "High-visibility vest",
+        "pt-BR": "Colete refletivo da PRF"
+      },
+      "category": "protection",
+      "rarity": "comum",
+      "chance": 0.5
+    },
+    {
+      "itemId": "spike_strip",
+      "kind": "item",
+      "name": {
+        "en": "Spike strip and cones",
+        "pt-BR": "Pente de pregos e cones"
+      },
+      "category": "equipment",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "road_map",
+      "kind": "item",
+      "name": {
+        "en": "Road map with roadblocks marked",
+        "pt-BR": "Mapa rodoviário com bloqueios marcados"
+      },
+      "category": "document",
+      "rarity": "incomum",
+      "chance": 0.3
+    },
+    {
+      "itemId": "extrication_kit",
+      "kind": "item",
+      "name": {
+        "en": "Extrication kit",
+        "pt-BR": "Kit de desencarceramento"
+      },
+      "category": "equipment",
+      "rarity": "incomum",
+      "chance": 0.3
+    }
+  ],
+  "prison_police": [
+    {
+      "itemId": "shiv",
+      "kind": "item",
+      "name": {
+        "en": "Improvised blade",
+        "pt-BR": "Estoque (faca artesanal)"
+      },
+      "category": "weapon",
+      "rarity": "comum",
+      "chance": 0.5
+    },
+    {
+      "itemId": "contraband_phone",
+      "kind": "item",
+      "name": {
+        "en": "Smuggled phone with solar charger",
+        "pt-BR": "Celular contrabandeado com carregador solar"
+      },
+      "category": "equipment",
+      "rarity": "raro",
+      "chance": 0.12
+    },
+    {
+      "itemId": "cigarette_pack",
+      "kind": "item",
+      "name": {
+        "en": "Pack of cigarettes",
+        "pt-BR": "Maço de cigarro"
+      },
+      "category": "trade",
+      "rarity": "comum",
+      "chance": 0.5
+    },
+    {
+      "itemId": "prison_soap",
+      "kind": "item",
+      "name": {
+        "en": "Prison soap",
+        "pt-BR": "Sabão de cadeia"
+      },
+      "category": "trade",
+      "rarity": "comum",
+      "chance": 0.5
+    }
+  ],
+  "special_forces": [
+    {
+      "itemId": "hk416",
+      "kind": "weapon",
+      "name": {
+        "en": "HK416 suppressed",
+        "pt-BR": "HK416 com supressor"
+      },
+      "category": "weapon",
+      "rarity": "muito raro",
+      "chance": 0.05
+    },
+    {
+      "itemId": "night_vision_goggles",
+      "kind": "item",
+      "name": {
+        "en": "Night vision goggles",
+        "pt-BR": "Óculos de visão noturna"
+      },
+      "category": "equipment",
+      "rarity": "muito raro",
+      "chance": 0.05
+    },
+    {
+      "itemId": "military_gps",
+      "kind": "item",
+      "name": {
+        "en": "Military GPS",
+        "pt-BR": "GPS militar"
+      },
+      "category": "equipment",
+      "rarity": "raro",
+      "chance": 0.12
+    },
+    {
+      "itemId": "c4",
+      "kind": "weapon",
+      "name": {
+        "en": "Demolition charge",
+        "pt-BR": "Carga de demolição"
+      },
+      "category": "weapon",
+      "rarity": "muito raro",
+      "chance": 0.05
+    },
+    {
+      "itemId": "advanced_medical_kit",
+      "kind": "item",
+      "name": {
+        "en": "Advanced medical kit",
+        "pt-BR": "Kit médico avançado"
+      },
+      "category": "consumable",
+      "rarity": "raro",
+      "chance": 0.12
+    }
+  ],
+  "tactical_unit": [
+    {
+      "itemId": "vest_tactical_iiia",
+      "kind": "item",
+      "name": {
+        "en": "Tactical vest level III-A with magazine pouches",
+        "pt-BR": "Colete tático III-A com porta-carregadores"
+      },
+      "category": "protection",
+      "rarity": "raro",
+      "chance": 0.12
+    },
+    {
+      "itemId": "hk_mp5a3",
+      "kind": "weapon",
+      "name": {
+        "en": "HK MP5A3",
+        "pt-BR": "HK MP5A3"
+      },
+      "category": "weapon",
+      "rarity": "incomum",
+      "chance": 0.3
+    }
+  ]
+}

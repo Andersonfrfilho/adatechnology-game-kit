@@ -1,0 +1,105 @@
+[
+  {
+    "id": "clear",
+    "sources": ["jogo:L69141 (fog far 220 dry)", "showroom.js:L1693-1710 (breeze 3.5, 1.5 m/s)"],
+    "rain": 0, "drops": 0, "sheets": 0,
+    "windX": 3.5, "windZ": 1.5, "gust": 5,
+    "fogFar": 220, "fogDensity": 0, "skyScale": 1, "visibility": 220,
+    "humidity": 0.5, "temperatureDeltaC": 0, "wetness": 0,
+    "hearingScale": 1, "footstepScale": 1, "dryingScale": 1, "debrisPush": 0,
+    "haze": 0, "mistPerSecond": 0, "ashPerSecond": 0
+  },
+  {
+    "id": "overcast",
+    "sources": ["cena-de-arte:L413 (wind .35, .12)", "cena-de-arte:L36 (FogExp2 .03)", "design:T6 sky x0.9"],
+    "rain": 0, "drops": 0, "sheets": 0,
+    "windX": 0.35, "windZ": 0.12, "gust": 0.6,
+    "fogFar": 220, "fogDensity": 0.03, "skyScale": 0.9, "visibility": 200,
+    "humidity": 0.65, "temperatureDeltaC": -1, "wetness": 0,
+    "hearingScale": 1, "footstepScale": 1, "dryingScale": 1, "debrisPush": 0,
+    "haze": 0, "mistPerSecond": 0, "ashPerSecond": 0
+  },
+  {
+    "id": "light_rain",
+    "sources": ["oficina-vfx:W1065 (Garoa: 900 drops, slant .3)", "jogo:L70416-70427 (rain level .035)", "design:T6 2.5 mm/h, wetness .35, visibility 160, hearing x0.8 (Q4)"],
+    "rain": 2.5, "drops": 900, "sheets": 0,
+    "windX": 0.3, "windZ": 0, "gust": 0.6,
+    "fogFar": 180, "fogDensity": 0, "skyScale": 0.9, "visibility": 160,
+    "humidity": 0.85, "temperatureDeltaC": -2, "wetness": 0.35,
+    "hearingScale": 0.8, "footstepScale": 0.85, "dryingScale": 1, "debrisPush": 0,
+    "haze": 0, "mistPerSecond": 0, "ashPerSecond": 0
+  },
+  {
+    "id": "heavy_rain",
+    "sources": ["oficina-vfx:W1065 (Chuva: 2200 drops, slant 1.2)", "cena-de-arte:L1314 (rain gain .06)", "jogo:L69141 (fog far 140, sky x0.8)", "galeria-vale-cinzento:L1393 (vision 120 m, quieter steps)", "design:T6 15 mm/h, hearing x0.6 (Q4)"],
+    "rain": 15, "drops": 2200, "sheets": 0,
+    "windX": 1.2, "windZ": 0, "gust": 2,
+    "fogFar": 140, "fogDensity": 0, "skyScale": 0.8, "visibility": 120,
+    "humidity": 0.9, "temperatureDeltaC": -4, "wetness": 0.8,
+    "hearingScale": 0.6, "footstepScale": 0.7, "dryingScale": 1, "debrisPush": 0,
+    "haze": 0, "mistPerSecond": 0, "ashPerSecond": 0
+  },
+  {
+    "id": "storm",
+    "sources": ["oficina-vfx:W1065-1069 (Temporal: 4000 drops, slant 4.5, lightning 3.5-6 s, first at 2-4 s, sheets)", "showroom.js (60 mm/h)", "design:T6 hearing x0.5 (Q4)"],
+    "rain": 60, "drops": 4000, "sheets": 1,
+    "windX": 4.5, "windZ": 0, "gust": 6,
+    "fogFar": 110, "fogDensity": 0, "skyScale": 0.7, "visibility": 100,
+    "humidity": 0.92, "temperatureDeltaC": -5, "wetness": 1,
+    "hearingScale": 0.5, "footstepScale": 0.6, "dryingScale": 1, "debrisPush": 0,
+    "haze": 0, "mistPerSecond": 0, "ashPerSecond": 0,
+    "lightning": { "interval": [3.5, 6], "first": [2, 4], "distance": [200, 4000], "reveal": 0.2 }
+  },
+  {
+    "id": "fog",
+    "sources": ["oficina-vfx:W1073-1080 (density .075, ground mist 5/s, ash 14/s)", "jogo:L69101 (zone fog far 60)"],
+    "rain": 0, "drops": 0, "sheets": 0,
+    "windX": 0.3, "windZ": 0.1, "gust": 0.5,
+    "fogFar": 60, "fogDensity": 0.075, "skyScale": 0.85, "visibility": 40,
+    "humidity": 0.95, "temperatureDeltaC": -3, "wetness": 0.15,
+    "hearingScale": 1, "footstepScale": 1, "dryingScale": 1, "debrisPush": 0,
+    "haze": 0, "mistPerSecond": 5, "ashPerSecond": 14
+  },
+  {
+    "id": "windy",
+    "sources": ["cena-de-arte:L1315 (wind loop)", "design:T6 Q3 8 m/s, gust 12"],
+    "rain": 0, "drops": 0, "sheets": 0,
+    "windX": 8, "windZ": 0, "gust": 12,
+    "fogFar": 220, "fogDensity": 0, "skyScale": 1, "visibility": 220,
+    "humidity": 0.45, "temperatureDeltaC": -1, "wetness": 0,
+    "hearingScale": 0.85, "footstepScale": 0.9, "dryingScale": 1, "debrisPush": 0,
+    "haze": 0, "mistPerSecond": 0, "ashPerSecond": 0
+  },
+  {
+    "id": "cyclone",
+    "sources": ["design:T6 Q3 physics preset, no team source: tropical cyclone 33 m/s sustained, gust x1.3, storm rain, debris push"],
+    "rain": 60, "drops": 4000, "sheets": 1,
+    "windX": 33, "windZ": 0, "gust": 42.9,
+    "fogFar": 80, "fogDensity": 0, "skyScale": 0.6, "visibility": 60,
+    "humidity": 0.9, "temperatureDeltaC": 0, "wetness": 1,
+    "hearingScale": 0.3, "footstepScale": 0.5, "dryingScale": 1, "debrisPush": 8,
+    "haze": 0, "mistPerSecond": 0, "ashPerSecond": 0,
+    "lightning": { "interval": [3.5, 6], "first": [2, 4], "distance": [200, 4000], "reveal": 0.2 }
+  },
+  {
+    "id": "typhoon",
+    "sources": ["design:T6 Q3 physics preset, no team source: typhoon 50 m/s sustained, gust x1.3, storm rain, debris push"],
+    "rain": 60, "drops": 4000, "sheets": 1,
+    "windX": 50, "windZ": 0, "gust": 65,
+    "fogFar": 60, "fogDensity": 0, "skyScale": 0.5, "visibility": 40,
+    "humidity": 0.9, "temperatureDeltaC": 0, "wetness": 1,
+    "hearingScale": 0.25, "footstepScale": 0.4, "dryingScale": 1, "debrisPush": 18,
+    "haze": 0, "mistPerSecond": 0, "ashPerSecond": 0,
+    "lightning": { "interval": [3.5, 6], "first": [2, 4], "distance": [200, 4000], "reveal": 0.2 }
+  },
+  {
+    "id": "extreme_heat",
+    "sources": ["design:T6 Q3 no team source: 38 C at the tropical noon (+6 over the climate), 60 % humidity, haze, drying x2"],
+    "rain": 0, "drops": 0, "sheets": 0,
+    "windX": 0.8, "windZ": 0.3, "gust": 1.5,
+    "fogFar": 220, "fogDensity": 0, "skyScale": 1, "visibility": 200,
+    "humidity": 0.6, "temperatureDeltaC": 6, "wetness": 0,
+    "hearingScale": 1, "footstepScale": 1, "dryingScale": 2, "debrisPush": 0,
+    "haze": 1, "mistPerSecond": 0, "ashPerSecond": 0
+  }
+]

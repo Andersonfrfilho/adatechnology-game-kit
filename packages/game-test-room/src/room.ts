@@ -1,15 +1,19 @@
 import type * as THREE_NS from 'three'
 import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
 import type { DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
-import { createDestructionRenderer, specFromObject3D } from '@adatechnology/game-destruction-three'
+import { createAudioEngine, createAudioSink } from '@adatechnology/game-audio'
+import type { AudioEngine } from '@adatechnology/game-audio'
+import { createDestructionRenderer, createDestructionSound, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
 import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
-import { createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
+import { createFilmLcg, createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
-import { createFluidRenderer } from '@adatechnology/game-fluids-three'
+import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
+import { createGroundField, createVfx } from '@adatechnology/game-vfx'
+import { createGroundPatch, createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkBench, checkDestructible, checkSpec } from '@adatechnology/game-contracts'
+import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createArena } from './arena'
 import type { Arena } from './arena'
@@ -170,13 +174,43 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const log = createLog({ exportCancelled: () => t('log.export_cancelled') })
   log.setClock(() => simTime)
 
+  // sound: one engine for the room (no AudioContext until the first sound), and the destruction renderer's sound keys play on it
+  const ownAudio = options.audio === undefined
+  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine())
+  const destructionSound = audio ? createDestructionSound(audio) : null
+  const playSound = (key: string, point: Vec3, volume: number): void => {
+    destructionSound?.onSound(key, point, volume)
+    options.onSound?.(key, point, volume)
+  }
+
+  // one effects world for the whole room: the destruction and fluid renderers and every module draw into it, and the room steps it once per frame
+  const craterField = options.craters ? createGroundField() : undefined
+  const craterPatch = craterField ? createGroundPatch(THREE, { field: craterField, material: new THREE.MeshStandardMaterial({ color: 0x8e8e8a, roughness: 0.95 }) }) : undefined
+  if (craterPatch) {
+    const floor = arena.group.getObjectByName('floor')
+    if (floor) floor.visible = false
+    scene.add(craterPatch.mesh)
+  }
+  const vfx = createVfxRenderer(THREE, {
+    scene,
+    camera,
+    overlay: container,
+    quality,
+    pointScale,
+    vfx: createVfx({
+      profile: quality,
+      groundAt: (x, z) => groundAt(x, z) + (craterField?.heightAt(x, z) ?? 0),
+      ...(craterField ? { ground: craterField } : {}),
+    }),
+  })
   const renderer = createDestructionRenderer(THREE, {
     scene,
     world,
+    vfx: vfx.world,
     quality,
     groundAt,
     pointScale,
-    onSound: options.onSound,
+    onSound: playSound,
     onPiece: (piece) => {
       rendererPieces.set(piece.objectId, piece)
       loose.push(piece)
@@ -199,7 +233,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (best) splitOf.set(piece.objectId, best)
     },
   })
-  const fluidView: FluidRenderer = createFluidRenderer(THREE, { scene, fluids, quality, pointScale })
+  const fluidView: FluidRenderer = createFluidRenderer(THREE, { scene, fluids, quality, pointScale, vfx: vfx.world })
+  // the running film of the liquids that have one (blood, fuel, oil): grids near the player, fed by the leaks of the fluid world
+  const filmRandom = createFilmLcg(1)
+  const film = createFilmManager(THREE, {
+    scene,
+    camera,
+    random: filmRandom,
+    fluids,
+    groundAt,
+    ...(typeof (gl as Partial<THREE_NS.WebGLRenderer>).copyTextureToTexture === 'function' ? { gpu: gl as THREE_NS.WebGLRenderer } : {}),
+  })
+  const filmBridge = createFilmBridge({ fluids, manager: film, random: filmRandom })
   const specs = new Map<string, DestructibleSpec>()
   const loose: Piece[] = []
 
@@ -330,7 +375,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const ev of batch) {
       if (ev.type === 'leak') puncture(ev)
       else if (ev.type === 'ignite') igniteNear(ev.point, 0.9)
-      else if (ev.type === 'explode') emitHost({ type: 'explosion', source: ev.object, point: ev.point, energy: ev.energy, radius: ev.radius, cause: 'part' })
+      else if (ev.type === 'explode') emitHost({ type: 'explosion', source: ev.object, point: ev.point, energy: ev.energy, radius: ev.radius, cause: 'part', ...(ev.effect !== undefined ? { explosive: ev.effect } : {}) })
       fire('event', ev)
       options.onEvent?.(ev)
     }
@@ -547,8 +592,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       renderer.restore(e.so.objectId)
     }
     renderer.clear()
+    vfx.world.clear()
     fluids.clearStains([0, 0, 0], 1e4)
     fluidView.clear()
+    film.clear()
     fluids.setTap(TAP_ID, false)
   }
 
@@ -983,6 +1030,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     camera,
     world,
     renderer,
+    effects: vfx.world,
     arsenal,
     objects: () => [...entries.values()].filter((e) => !e.arena).map((e) => e.so.root),
     bodies: crossingBodies,
@@ -1457,7 +1505,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // when the room runs its own loop it feeds the counters the unclamped real delta; otherwise update(dt) is the only source
   let ownsLoop = false
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
-  const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, ids: roomMetricIds })
+  const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds })
   let qualityName: 'low' | 'medium' | 'high' = quality
 
   const syncContainers = (sdt: number): void => {
@@ -1511,11 +1559,20 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     syncLiters()
     renderer.update(dt)
+    vfx.update(dt)
+    craterPatch?.sync()
     updateImpacts()
     fluidView.update(dt)
+    filmBridge.update(dt)
+    film.update(dt)
     for (const [id, s] of tools) {
       s.update(dt)
       flushEvents(id, s)
+    }
+    if (audio) {
+      // the listener is the camera: where it stands and which way it looks (yaw 0 faces -z)
+      const look = camera.getWorldDirection(listenerDirection)
+      audio.setListener({ position: [camera.position.x, camera.position.y, camera.position.z], yaw: Math.atan2(-look.x, -look.z) })
     }
     for (const update of frameListeners) update(dt)
     for (const tr of tracers) {
@@ -1639,7 +1696,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         const ev = evs[pl.fired++]
         action('animation_event', t('act.anim_event', { name: pl.entry.name, clip: pl.clip.id, type: ev.type }), { objectId: pl.entry.so.objectId, itemId: pl.entry.so.itemId, data: { clip: pl.clip.id, type: ev.type, at: ev.t, ...(ev.data ?? {}) } })
         const key = ev.type === 'sound' ? ev.data?.key : undefined
-        if (typeof key === 'string') options.onSound?.(key, v3(pl.entry.so.root.getWorldPosition(tmpV)), 1)
+        if (typeof key === 'string') playSound(key, v3(pl.entry.so.root.getWorldPosition(tmpV)), 1)
       }
       if (pl.t >= pl.clip.duration) {
         playing.splice(i, 1)
@@ -1693,7 +1750,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const benchView = (): BenchView | null => {
     const store = activeBench ? benches.get(activeBench) : undefined
     if (!store) return null
-    return { title: modules.get(store.moduleId)?.name ?? store.moduleId, controls: store.controls(), layers: store.layers() }
+    return { title: modules.get(store.moduleId)?.name ?? store.moduleId, controls: store.controls(), layers: store.layers(), sheet: store.sheet() }
   }
   const METRIC_UNAVAILABLE = 'n/a'
   const metricText = (value: number | string | undefined, digits: number, unit?: string): string =>
@@ -1730,7 +1787,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const module = declared.map((metric) => {
       const value = values[metric.id]
       const ratio = metric.max && typeof value === 'number' ? value / metric.max : undefined
-      return { id: metric.id, name: metric.name, text: metricText(value, metric.digits ?? 0, metric.unit), ...(ratio === undefined ? {} : { ratio }) }
+      return { id: metric.id, name: metric.name, text: metricText(value, metric.digits ?? 0, metric.unit), ...(typeof value === 'number' ? { value } : {}), ...(ratio === undefined ? {} : { ratio }) }
     })
     return { room, module }
   }
@@ -1741,6 +1798,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const hostListeners = new Set<(event: HostEvent) => void>()
   const frameListeners = new Set<(dt: number) => void>()
+  const listenerDirection = new THREE.Vector3()
+  const environment = options.environment ?? createEnvironmentBus()
+  const audioSink = audio ? createAudioSink(audio) : undefined
   function emitHost(event: HostEvent): void {
     for (const listener of hostListeners) listener(event)
   }
@@ -1791,7 +1851,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     scene,
     camera,
     locale,
+    ...(audioSink ? { audio: audioSink } : {}),
+    environment,
     groundAt,
+    effects: vfx,
     tool: () => ({
       weapon: toolId,
       category: tool.def.category,
@@ -1845,6 +1908,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     layer: store.layer,
     onChange: store.onChange,
     patch: store.patch,
+    sheet: store.setSheet,
     look: (eye, target) => room.look(eye, target),
   })
   const checkModuleBench = (mod: TestableModule<ScenarioContext>, fail: (problem: string) => void): BenchStore | null => {
@@ -2067,6 +2131,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     arsenal,
     fluids,
     fluidRenderer: fluidView,
+    audio,
+    environment,
     log,
     get tool() {
       return tool
@@ -2156,10 +2222,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const id = moduleId ?? activeBench
       return (id ? benches.get(id) : undefined) ?? null
     },
+    applyCamera: () => vfx.applyCamera(),
     metrics() {
       return { room: roomMetrics.sample(), module: moduleMetrics() }
     },
     dispose() {
+      destructionSound?.dispose()
+      if (ownAudio) audio?.dispose()
       for (const detach of detachers.values()) detach()
       detachers.clear()
       for (const store of benches.values()) store.dispose()
@@ -2169,7 +2238,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       player.dispose()
       ui?.dispose()
       renderer.dispose()
+      vfx.dispose()
+      craterPatch?.dispose()
       fluidView.dispose()
+      filmBridge.dispose()
+      film.dispose()
       for (const tr of tracers) tr.line.removeFromParent()
       explosives.clear()
       if (ownRenderer) {
@@ -2264,7 +2337,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const dt = Math.min(0.05, realDelta)
       last = now
       if (!scenarioRunning) update(dt)
+      const restoreCamera = vfx.applyCamera()
       gl.render(scene, camera)
+      restoreCamera()
       roomMetrics.rendered()
     }
     raf = requestAnimationFrame(loop)

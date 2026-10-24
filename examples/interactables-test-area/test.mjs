@@ -77,6 +77,16 @@ for (const lang of ['pt-BR', 'en']) {
   })
   check(`[${lang}] every furniture scenario is green`, report.failed === 0 && report.passed >= 14, report)
 
+  // the characters and animals modules ride along too (owner rule): loaded, and one shot crosses a fridge door and then the zombie behind it
+  const people = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const r = window.__furnitureReport
+    const run = await room.runScenarios(room.scenarios.filter((s) => s.id.includes('zombie_behind_door')))
+    room.clear()
+    return { characters: r.characters?.ok && r.characters.problems.length === 0 && r.characters.items.length, animals: r.animals?.ok && r.animals.problems.length === 0 && r.animals.items.length, scenario: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
+  })
+  check(`[${lang}] the characters and animals modules are loaded, and zombie_behind_door is green`, people.characters >= 25 && people.animals === 13 && people.scenario.passed === 1 && people.scenario.failed === 0, people)
+
   // the weapons module rides along (owner rule: this area shows what every phase adds): loaded, with its accessory bench, and a suppressor goes on an M4 here too
   const weapons = await page.evaluate(() => {
     const room = window.__testRoom
@@ -91,6 +101,43 @@ for (const lang of ['pt-BR', 'en']) {
     return result
   })
   check(`[${lang}] the weapons module is loaded too, its accessory bench works (suppressor on an M4)`, weapons.module === 'weapons_area' && weapons.ok && weapons.problems.length === 0 && weapons.items > 100 && weapons.controls === 10 && weapons.accepted && weapons.suppressed, weapons)
+
+  // the items module rides along too, and the containers of the furniture hold real items (a fridge shows the cans and bottles of the goods catalog at their real size)
+  const items = await page.evaluate(() => {
+    const room = window.__testRoom
+    const loaded = window.__furnitureReport.itemsArea
+    const so = room.spawn('fridge', [0, 0, -5], 0)
+    const found = []
+    so.root.traverse((o) => o.userData?.contents && found.push(o.userData.contents.item))
+    room.clear()
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, inFridge: found.length }
+  })
+  check(`[${lang}] the items module is loaded too and the fridge holds real items`, items.module === 'items_area' && items.ok && items.problems.length === 0 && items.items > 300 && items.inFridge > 0, items)
+  const effects = await page.evaluate(() => {
+    const loaded = window.__furnitureReport.vfx
+    const bench = window.__testRoom.bench('vfx')
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], controls: bench ? bench.controls().length : 0, layers: bench ? bench.layers().length : 0 }
+  })
+  check(`[${lang}] the effects bench is loaded too (7 controls, 6 layers)`, effects.module === 'vfx' && effects.ok && effects.problems.length === 0 && effects.controls === 7 && effects.layers === 6, effects)
+
+  // the sound and weather modules ride along: both on what the room lends (host.audio, host.environment); a storm writes the room's environment and a sound plays on the room's engine
+  const sky = await page.evaluate(() => {
+    const room = window.__testRoom
+    const report = window.__furnitureReport
+    const weather = room.bench('weather_area')
+    const audio = room.bench('audio_area')
+    weather.set('state', 'storm')
+    audio.set('sound', 'bench_ping')
+    audio.act('play')
+    for (let i = 0; i < 400; i++) room.update(0.1)
+    const environment = room.environment.get()
+    const stats = room.audio.stats()
+    const result = { weather: report.weather?.ok && report.weather.problems.length === 0, sound: report.audio?.ok && report.audio.problems.length === 0, rain: environment.rain, visibility: environment.visibility, peak: stats.peak, fog: room.scene.fog === null }
+    weather.set('state', 'clear')
+    for (let i = 0; i < 20; i++) room.update(0.1)
+    return result
+  })
+  check(`[${lang}] the sound and weather modules are loaded too: a storm writes host.environment, a sound plays on the room engine, the furniture scene keeps its fog off`, sky.weather && sky.sound && sky.rain > 10 && sky.visibility < 120 && sky.peak >= 1 && sky.fog, sky)
 
   if (lang === 'pt-BR') {
     await page.close()

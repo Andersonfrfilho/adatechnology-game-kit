@@ -33,9 +33,9 @@ Conferido: `parts` traz `door_fridge` e `door_freezer`; `primitives` traz o corp
 |---|---|
 | `createHousehold({ locale?, region? })` | `locale` `en`/`pt-BR`; `region` `br`/`us` (padrão `br` para pt-BR); região desconhecida lança erro |
 | `hh.types` | `[{ id, name, group, w, d, h, y, solid }]` (nome localizado; `solid: false` para item de parede e fio) |
-| `hh.items` | `ItemCatalog` com 92 itens (tamanho, peso, empilhável, forma, cor, categoria) |
+| `hh.items` | `ItemCatalog` com os 92 itens (mesmos ids), vindos do `game-items-goods`: tamanho, peso, empilhável, forma, cor, `category` (uma das 14 do `game-items`; a categoria antiga fica em `tags`). `HOUSEHOLD_ITEM_IDS` lista os ids |
 | `hh.loot` | Tabelas: `fridge`, `freezer`, `kitchen_cabinet`, `kitchen_drawer`, `pantry`, `wardrobe`, `dresser`, `nightstand`, `bathroom_cabinet`, `under_sink`, `trash`, `mailbox`, `bbq_counter`, `garage_shelf` |
-| `hh.strings`, `hh.region` | Textos (`type.<id>`, `item.<id>`, `prompt.*`) e dados da região (botijão, padrão de tomada, caixa de correio, varal) |
+| `hh.strings`, `hh.region` | Textos (`type.<id>`, `item.<id>` vindo do goods, `prompt.*`) e dados da região (botijão, padrão de tomada, caixa de correio, varal) |
 | `hh.build(type, item, api)` | Desenha e devolve o `ObjectSpec`; determinístico para o mesmo `item.seed` |
 | `createRecorder()` | `{ api, primitives, parts }` para teste e prévia |
 | `HOUSEHOLD_TYPES`, `HOUSEHOLD_REGIONS` | Ids dos tipos e regiões |
@@ -60,8 +60,9 @@ Grupos: storage (fridge, fridge_compact, kitchen_cabinet_base/wall, pantry, ward
 - Vidro do chuveiro e do vidro fixo são painéis macios, nunca colisores.
 - `variant: 'gato'` em `service_entrance` é ligação clandestina: só fio, sem poste, subida nem caixa de medidor.
 - Tipo desconhecido em `build` lança erro.
+- Os itens vêm do goods: para mudar medida, peso ou nome, mexa em `tools/items-catalog/decisions.json` (ou use `patch` no `createItems`), não aqui. Oito itens mudaram de medida na fusão (`rice`, `water_bottle`, `juice_box`, `bandage`, `first_aid_kit`, `flashlight`, `batteries`, `hammer`; o martelo agora está em pé, na pose do modelo do time) e 18 mudaram de peso (vale o do time).
 
 ## O que vem pela migração (spec 001)
-- A9: o catálogo único de itens (257 do time, 14 categorias, receitas, onde aparece) estende o `ItemDef`; os 92 itens domésticos daqui se fundem com ele (item repetido vira um só).
+- A9 (feito, T3.1f/g): o catálogo único de itens (`game-items-goods`: 327 itens, 14 categorias, receitas, onde aparece) estende o `ItemDef`; os 92 itens domésticos se fundiram com ele (38 viraram o item do time com o id daqui) e `items.json` e as chaves `item.*` do locale saíram deste pacote. O pacote passa a depender do `game-items-goods`.
 - C5/C8: interiores de lugares e o barraco com "gato" de luz usam estes tipos (o `service_entrance` com `variant: 'gato'` já existe).
 - Os 57 tipos de móvel do time já são os do `game-props3d`; nada a portar além dos itens.
