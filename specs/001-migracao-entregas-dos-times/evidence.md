@@ -1348,3 +1348,48 @@ média de loja também liga numa tomada, e o sorteio da edícula usa o nome de f
 Testes de comportamento (`tests/utilities.test.ts`): todo modelo tem instalações e passa no `engine.validate` (12 modelos x 8 sementes x 3 estados); gás em pelo menos duas posições; botijão externo fora da casa e o de baixo da bancada escondido; aparelho com tomada a até 1,2 m e chuveiro com tomada própria a 1,10 m; chave no lado do trinco; barraco (`tap`) sem medidor e com ligação a 2,6 m; cabana `offgrid` sem instalação, só a fonte (`solar` ou `lamp`); solar no telhado ou em rack de laje; edícula com porta de 0,85 m, 2 janelas, móveis dentro e caminho; geladeira com mais mantimento fortificada do que normal e normal mais do que abandonada, comida estragada na abandonada; um provedor registrado responde antes do padrão.
 
 **Escolhas de negócio (padrão reversível):** as regras de estado (`fortified`, `abandoned`) do conteúdo ficam em `CONTENT_STATES` neste pacote até o catálogo de itens (Fase 3) e o pacote do gênero (G7: multiplicadores do estado em `-post-apocalyptic`) assumirem; ids de item de conteúdo em inglês (`water_bottle`, `canned_tuna`, `spoiled_food`...) são provisórios para o catálogo da Fase 3; `gaveteiro` e `sapateira` do time não têm categoria equivalente no SDK e ficam sem conteúdo; o botijão de cozinha é um tipo novo (`cooking_gas_cylinder`, 0,36 x 0,36 x 0,48) ao lado do `gas_cylinder` externo do residencial.
+
+## T2.4
+
+Porte literal do Casa3DSDK (`construir`, `planejaLOD`) e do AndaresSDK da página do time (`visor-casas-3d`, L39443-42734; `zombiada-modo-livre`, L7372-7557) para o pacote novo `@adatechnology/game-floorplan-three`. Cinco commits, na ordem do brief.
+
+| Etapa | O que entrou |
+|---|---|
+| T2.4a | fecho `K` com 54 instaladores de módulo, acumuladores de geometria por grupo/material, materiais e texturas, locale (en, pt-BR), paredes + rodapé, portas, janelas, pisos, lajes, escadas, `build`/`dispose`; `userData.ranges` (faixa de vértices de cada peça) |
+| T2.4b | lote (terreno, calçada, muro, portão), telhados e calhas, ladrilhos, espelhos (Reflector injetado), luzes, carros (frota injetada), fachadas, utilidades, edícula, tabela de tipos e construtores de mobília, torneiras, fixtures, plantas, quintal, colisão/itens/acessórios |
+| T2.4c | ligação com a destruição: faixa de vértices por peça, fiadas de tijolo no LOD0 (`destruction/breach.ts`), marca de lascamento (spall), gaiola de vergalhão (via `game-destruction-three`) |
+| T2.4d | alvo do olhar, navegação (AndaresSDK: grade de 10 cm, `blocked`/`FREE`, escadas), interação, mapa de móveis, varal, pontes de interativos e vegetação |
+| T2.4e | golden de cena `vc3-house-scene` com 6 pares exatos (casaA 3, sobrado 3, apartamento 1, media_terrea_moderna 3, mercado 3, farmacia 2) e o plano de LOD |
+
+**Efeitos:** o pacote não tem sistema de partículas próprio. Poeira, estilhaços, fagulhas, fogo e vazamento vêm do mundo de efeitos do `game-destruction-three` (fiadas, vergalhão, marcas) e do kit de interativos injetado; o vazamento da caixa d'água é só o estado (`water.leak(taxa)`, litros por segundo), sem desenho. Nada faltou em `game-vfx`, então nenhuma receita nova.
+
+**Desvios:**
+- Props: o `game-props3d` usa mulberry32 em vez do LCG do time; construtores como `bbq_simple`, atlas de quadros, cores do piso do lote e props de canteiro/plantas diferem da página. Os 6 pares do golden são exatos; outros não (casaA 1/2, sobrado 1/2, apartamento 2, popular_laje 1, popular_geminada 1, media_terrea_moderna 1/2, sobrado_medio_moderno 1-3, alto_padrao_contemporanea 1-3, mansao 1-3, apartamento_novo 1/2).
+- Carros, interativos e Reflector ficam fora do golden (o `criar` da página não os recebe).
+- `cfg.seedKey` mapeia ids novos para os ids legados nos sais do sorteio (ids `lp_`, `sw_`, `lamp_*_` mantidos) para o golden reproduzir.
+- `AdaptadorInterativos` é código de jogo (diz o próprio cabeçalho): não portado; o adaptador é injetado.
+- `breach.ts` (fiadas no LOD0) é desenho inferido: a spec só dizia "Falta para a T2.4c".
+- A spec da estrutura é melhorada neste pacote (montagem nas paredes, vergalhão em laje/viga/pilar/escada de concreto): decisão minha.
+- Sólidos da navegação: só colisores de parede/tabuleiro (vãos de porta ficam livres).
+- `wallDetail` `panels`/`units` para a malha 3D e os botões do visor não foram portados.
+- O Chrome do golden roda a three r160 da página; o `golden-tool` tem three 0.128 como devDependency.
+- Node 24 indisponível: testado em 20 e 22.
+- Partição das etapas difere do brief: construtores de mobília, colisão/itens/acessórios, edículas e utilidades caem em T2.4b porque luzes, espelhos e carros nascem dos construtores.
+- Docs (README, MIGRATION, skill, catálogo, inventário) num commit à parte.
+
+**Gate:**
+
+| Etapa | build | typecheck | testes do pacote | lint |
+|---|---|---|---|---|
+| a | ok | ok | 39 | ok |
+| b | ok | ok | 56 | ok |
+| c | ok | ok | 70 | ok |
+| d | ok | ok | 103 | ok |
+| e | ok | ok | 118 | ok |
+
+**Perguntas para o dono:**
+1. Aceita a diferença do PRNG do `game-props3d` (mulberry32) nos pares fora do golden, ou o `game-props3d` passa a oferecer o LCG do time como opção?
+2. O `flag userData.without` (original `userData.sem`) tem uso desconhecido: manter?
+3. O AndaresSDK fica em `-three` como pediu o brief; o inventário 4.4/5.5 sugeria função pura em `game-floorplan` ou `game-navigation`. Qual?
+4. Nome da área de teste: tasks.md diz `buildings-test-area`, a regra diz `examples/floorplan-test-area`.
+5. O `AdaptadorInterativos` entra em algum pacote ou fica no jogo?

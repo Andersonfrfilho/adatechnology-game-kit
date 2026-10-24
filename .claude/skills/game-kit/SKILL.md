@@ -47,7 +47,7 @@ no núcleo (catálogo por registro, números por opção, comportamento por plug
 `game-characters` e `game-characters-undead` (corpo, andar, dano por região, os 13 tipos de zumbi), um gerador de histórias e ficha de
 personagem, `game-crowd` (multidão: horda, civis, manada, revoada), `game-animals`, `game-items` (catálogo único), `game-vfx` (+ `-three`,
 explosão do Laboratório), `game-weather` (chuva a eventos extremos), `game-audio`, `game-urban` (ruas, postes, bairro),
-`game-floorplan-rural`, `game-floorplan-three`, `game-player` (`game-floorplan-structure` já existe). Decisões em
+`game-floorplan-rural`, `game-player` (`game-floorplan-structure` e `game-floorplan-three` já existem). Decisões em
 `specs/001-migracao-entregas-dos-times/consolidado.md`.
 
 ## Como se compõem (exemplos)

@@ -29,6 +29,7 @@ concatenates plain scripts can use them without a bundler.
 | [`@adatechnology/game-floorplan-commercial`](packages/game-floorplan-commercial) | `GameFloorplanCommercial` | Commercial content for the floor plan engine: market and pharmacy, commercial and industrial zones |
 | [`@adatechnology/game-floorplan-post-apocalyptic`](packages/game-floorplan-post-apocalyptic) | `GameFloorplanPostApocalyptic` | Fortified and abandoned house states as a state plugin, with a configurable seed distribution |
 | [`@adatechnology/game-floorplan-structure`](packages/game-floorplan-structure) | `GameFloorplanStructure` | Structure of every floor plan: construction systems, load path (roof, trusses, beams, pillars, walls, foundation, porches), destructible spec |
+| [`@adatechnology/game-floorplan-three`](packages/game-floorplan-three) | `GameFloorplanThree` | three.js renderer of a floor plan (walls, doors, floors, stairs, roofs, lot, furniture, lights, mirrors, cars) bound to the destruction of its structure, plus the multi-floor navigator |
 | [`@adatechnology/game-test-room`](packages/game-test-room) | `GameTestRoom` | First-person test room with a behaviour log and scenarios to verify destruction, weapons and fluids on your own catalogue |
 
 Each package has its own README (English, with a short Portuguese section) and a `MIGRATION.md` mapping the old Portuguese names to the new
