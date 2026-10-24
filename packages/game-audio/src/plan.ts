@@ -148,7 +148,8 @@ function drawAutomation(automation: Automation, scope: Scope): PendingAutomation
 }
 
 function finishAutomation(pending: PendingAutomation, duration: number): PlannedAutomation {
-  if (pending.from !== undefined) return { from: pending.from, to: pending.to ?? pending.from, curve: pending.curve ?? 'linear', at: timeOf(pending.over ?? 'duration', duration) }
+  if (pending.from !== undefined && pending.to === undefined) return { from: pending.from }
+  if (pending.from !== undefined) return { from: pending.from, to: pending.to, curve: pending.curve ?? 'linear', at: timeOf(pending.over ?? 'duration', duration) }
   if (pending.to === undefined || pending.over === undefined) return { value: pending.value }
   return { value: pending.value, to: pending.to, curve: pending.curve ?? 'linear', at: timeOf(pending.over, duration) }
 }

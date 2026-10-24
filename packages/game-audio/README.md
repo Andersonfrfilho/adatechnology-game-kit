@@ -62,6 +62,13 @@ const plan = planSound(scream, { random: createRng(7), distance: 12 }) // null w
 - `order` names the node-creation order the realizer uses, each taken from the team routine it reproduces (`layered` is the art scene's and the
   default; `burst`, `scream`, `groan`, `boom`, `static`, `chord`, `calls` are the game's; `siren` is the art scene's siren).
 
+## Engine
+
+`createAudioEngine({ seed, mix, banks, maxVoices, distance, occlusion, createContext })` plans a recipe, admits it through the voice limiter and builds it
+on a lazily created `AudioContext` through one of the team chains (`game` or `art_scene`). Without a context (Node, workers) every call but `plan` does
+nothing. `channel({ seed })` gives a subject its own random stream; `createAudioSink(engine)` lends the engine as a host's `audio` (`@adatechnology/game-contracts`).
+`weapons-three` plays on it (`createWeaponAudio(volume, { engine })`) with the `weapon` build order.
+
 ## Shipped data
 
 | Data | What it is | Source |

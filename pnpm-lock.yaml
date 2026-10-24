@@ -738,6 +738,9 @@ importers:
 
   packages/game-weapons-three:
     dependencies:
+      '@adatechnology/game-audio':
+        specifier: workspace:*
+        version: link:../game-audio
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts

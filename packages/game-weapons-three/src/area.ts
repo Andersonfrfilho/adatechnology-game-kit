@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { AreaPlacement, BenchChange, DestructibleSpec, HostTool, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
+import type { EngineSink } from '@adatechnology/game-audio'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import { createAccessoryBench, accessoryControls, accessoryLayers, accessoryMetrics } from './accessory-bench'
@@ -251,7 +252,9 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   const arsenal = options.arsenal ?? createArsenal({ locale })
   const text = textOf(locale)
   const accessoryText = accessoryTextOf(locale)
-  const audio = options.sound === false ? null : createWeaponAudio(undefined, options.seed === undefined ? {} : { seed: options.seed })
+  const seedOption = options.seed === undefined ? {} : { seed: options.seed }
+  // the module's own audio (it makes no context until the first sound); when the host lends a sound engine, `attach` swaps it for one on that engine
+  let audio: WeaponAudio | null = options.sound === false ? null : createWeaponAudio(undefined, seedOption)
   const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id))
   const thumbnailBase = options.thumbnailBase ?? DEFAULT_THUMBNAIL_BASE
   const withThumbnail = (item: TestableItem, key: string): TestableItem => {
@@ -279,7 +282,9 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
     id: 'weapons_area',
     name: text.name,
     group: text.group,
-    audio,
+    get audio() {
+      return audio
+    },
     get fx() {
       return fx
     },
@@ -327,6 +332,11 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
     ],
     attach(lent) {
       host = lent
+      const lentEngine = (lent.audio as EngineSink | undefined)?.engine
+      if (audio && lentEngine) {
+        audio.dispose()
+        audio = createWeaponAudio(undefined, { ...seedOption, engine: lentEngine })
+      }
       const created = createWeaponFx({
         THREE: lent.THREE as typeof THREE_NS,
         scene: lent.scene as THREE_NS.Scene,

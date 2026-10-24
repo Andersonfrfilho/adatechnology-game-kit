@@ -82,6 +82,8 @@ export type AudioEngine = {
   setListener(listener: Listener): void
   setBus(id: BusId, setting: BusSetting): void
   setMix(mix: string | MixProfile): void
+  /** The master volume of the current chain and of any later one (0 to 1). */
+  setMaster(gain: number): void
   /** Creates the context and the mixing chain if needed and resumes it; call from a click or a key. */
   unlock(): void
   stats(): AudioStats
@@ -193,13 +195,16 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
 
   const playWith = (id: string, playOptions: PlayOptions, random: () => number, store: NoiseStore): VoiceHandle | null => {
     const recipe = registry.sound(id)
-    const audio = recipe ? ready() : null
-    if (!recipe || !audio || busSettings.get(recipe.bus)?.muted) return null
-    advance()
+    if (!recipe || busSettings.get(recipe.bus)?.muted) return null
     const distance = playOptions.distance ?? (playOptions.position ? listenerDistance(listener, playOptions.position, options.distance) : 0)
     const level = falloffGain(recipe.falloff, playOptions.volume ?? 1, distance)
     const silent = isSilent(recipe.falloff, level)
+    // a sound too quiet to play does not even start the context (the team routines return before touching it)
     if (silent && !recipe.keepSilent) return null
+    const audio = ready()
+    if (!audio) return null
+    unlockContext(audio)
+    advance()
     const voiceId = silent ? undefined : admit(recipe, level, distance)
     if (voiceId === null) return null
     if (!silent && usesNoise(recipe)) prepareNoise(store, audio, mix.noise.seconds)
@@ -278,6 +283,10 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       for (const loop of loops) loop.rewire()
       old.disconnect()
     },
+    setMaster(gain) {
+      mix = { ...mix, master: gain }
+      if (chain) chain.master.gain.value = gain
+    },
     unlock() {
       const audio = ready()
       if (audio) unlockContext(audio)
@@ -295,7 +304,8 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       }
     },
     dispose() {
-      for (const voice of active.values()) voice.stop()
+      // closing the context ends every voice; they only leave the limiter
+      for (const id of active.keys()) voices.release(id)
       for (const loop of [...loops]) loop.stop()
       active.clear()
       void context?.close()

@@ -25,7 +25,7 @@ export type Curve = 'linear' | 'exp'
  */
 export type Automation =
   | { readonly set: Range; readonly to?: Range; readonly curve?: Curve; readonly over?: Time }
-  | { readonly from: Range; readonly to?: Range; readonly curve: Curve; readonly over: Time }
+  | { readonly from: Range; readonly to?: Range; readonly curve?: Curve; readonly over?: Time }
 
 /**
  * One gain point: time (seconds, or `'0.6d'`), value and how it is reached (`set` = `setValueAtTime`, or a ramp). The value is multiplied by the
@@ -127,10 +127,11 @@ export type Falloff =
  * - `static`: the game's `chiado` (L69998);
  * - `chord`: the game's `buzina` (L70272);
  * - `calls`: the game's `bichoSom` (L66625);
- * - `siren`: the art scene's `siren` (L1369).
+ * - `siren`: the art scene's `siren` (L1369);
+ * - `weapon`: the weapon audio of the kit (`weapons-three`): per layer a filtered noise burst or an oscillator, then its own gain, chained to the bus.
  * Every order but `layered` puts the level into the envelope and connects straight to the bus.
  */
-export const BUILD_ORDERS = ['layered', 'burst', 'scream', 'groan', 'boom', 'static', 'chord', 'calls', 'siren'] as const
+export const BUILD_ORDERS = ['layered', 'burst', 'scream', 'groan', 'boom', 'static', 'chord', 'calls', 'siren', 'weapon'] as const
 export type BuildOrder = (typeof BUILD_ORDERS)[number]
 
 export type SoundRecipe = {
