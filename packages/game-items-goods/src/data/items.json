@@ -3065,6 +3065,7 @@
       "kind": "hits",
       "amount": 60
     },
+    "weapon": "knife",
     "finds": {
       "places": [
         "house",
@@ -3090,6 +3091,7 @@
       "kind": "hits",
       "amount": 200
     },
+    "weapon": "tactical_knife",
     "finds": {
       "places": [
         "gun_shop",
@@ -3115,6 +3117,7 @@
       "kind": "hits",
       "amount": 150
     },
+    "weapon": "machete",
     "finds": {
       "places": [
         "farm",
@@ -3140,6 +3143,7 @@
       "kind": "hits",
       "amount": 120
     },
+    "weapon": "meat_cleaver",
     "finds": {
       "places": [
         "supermarket"
@@ -3163,6 +3167,7 @@
       "kind": "hits",
       "amount": 180
     },
+    "weapon": "hatchet",
     "finds": {
       "places": [
         "gun_shop",
@@ -3188,6 +3193,7 @@
       "kind": "hits",
       "amount": 250
     },
+    "weapon": "axe",
     "finds": {
       "places": [
         "farm",
@@ -3213,6 +3219,7 @@
       "kind": "hits",
       "amount": 120
     },
+    "weapon": "baseball_bat",
     "finds": {
       "places": [
         "mall",
@@ -3240,7 +3247,8 @@
     "durability": {
       "kind": "hits",
       "amount": 90
-    }
+    },
+    "weapon": "nail_bat"
   },
   {
     "id": "iron_pipe",
@@ -3259,6 +3267,7 @@
       "kind": "hits",
       "amount": 300
     },
+    "weapon": "iron_pipe",
     "finds": {
       "places": [
         "warehouse",
@@ -3285,6 +3294,7 @@
       "kind": "hits",
       "amount": 300
     },
+    "weapon": "sledgehammer",
     "finds": {
       "places": [
         "warehouse",
@@ -3310,6 +3320,7 @@
       "kind": "hits",
       "amount": 300
     },
+    "weapon": "pickaxe",
     "finds": {
       "places": [
         "mine"
@@ -3333,6 +3344,7 @@
       "kind": "hits",
       "amount": 150
     },
+    "weapon": "sickle",
     "finds": {
       "places": [
         "farm"
@@ -3356,6 +3368,7 @@
       "kind": "hits",
       "amount": 500
     },
+    "weapon": "police_baton",
     "finds": {
       "places": [
         "police_station",
@@ -3380,6 +3393,7 @@
       "kind": "hits",
       "amount": 400
     },
+    "weapon": "cast_iron_skillet",
     "finds": {
       "places": [
         "house",
@@ -3406,7 +3420,8 @@
     "durability": {
       "kind": "hits",
       "amount": 80
-    }
+    },
+    "weapon": "improvised_spear"
   },
   {
     "id": "chainsaw",
@@ -3426,6 +3441,7 @@
       "amount": 1800,
       "per": "min por litro"
     },
+    "weapon": "chainsaw",
     "finds": {
       "places": [
         "farm",
@@ -3475,6 +3491,7 @@
       "kind": "shots",
       "amount": 400
     },
+    "weapon": "recurve_bow",
     "finds": {
       "places": [
         "gun_shop",
@@ -3499,6 +3516,7 @@
       "kind": "shots",
       "amount": 300
     },
+    "weapon": "crossbow",
     "finds": {
       "places": [
         "gun_shop"

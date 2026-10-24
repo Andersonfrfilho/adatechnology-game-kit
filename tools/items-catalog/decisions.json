@@ -8111,6 +8111,110 @@
       "reason": "The weapons, grenade and molotov the game lists as items (EXTRA), in the ids of game-weapons."
     }
   },
+  "meleeWeapons": {
+    "knife": {
+      "value": "knife",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "tactical_knife": {
+      "value": "tactical_knife",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "machete": {
+      "value": "machete",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "meat_cleaver": {
+      "value": "meat_cleaver",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "hatchet": {
+      "value": "hatchet",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "axe": {
+      "value": "axe",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "baseball_bat": {
+      "value": "baseball_bat",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "nail_bat": {
+      "value": "nail_bat",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "iron_pipe": {
+      "value": "iron_pipe",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "sledgehammer": {
+      "value": "sledgehammer",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "pickaxe": {
+      "value": "pickaxe",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "sickle": {
+      "value": "sickle",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "police_baton": {
+      "value": "police_baton",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "cast_iron_skillet": {
+      "value": "cast_iron_skillet",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "improvised_spear": {
+      "value": "improvised_spear",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "chainsaw": {
+      "value": "chainsaw",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "recurve_bow": {
+      "value": "recurve_bow",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    },
+    "crossbow": {
+      "value": "crossbow",
+      "source": "T3.1i",
+      "reason": "The goods melee item and the arsenal weapon it is: an existing generic weapon, or a generic one added in T3.1i with the item's reach (alc), noise (ru) and mass."
+    }
+  },
+  "meleeWithoutWeapon": {
+    "slingshot": {
+      "value": "no weapon",
+      "source": "T3.1i",
+      "reason": "The arsenal has no stone or pellet calibre and adding one would change the generated calibres; left without a weapon until a calibre exists."
+    },
+    "arrows_and_bolts": {
+      "value": "no weapon",
+      "source": "T3.1i",
+      "reason": "Ammunition, not a weapon: the arsenal's arrow and crossbow_bolt calibres reach the items as ammo_arrow and ammo_crossbow_bolt (itemsFromArsenal)."
+    }
+  },
   "chargeItems": {
     "value": [
       "pilha_aa",

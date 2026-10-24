@@ -26,6 +26,7 @@ export type ItemRecord = {
   nutrition?: { satiety?: number; hydration?: number }
   protection?: { slots: BodySlot[]; bite?: number; scratch?: number; warmth?: number }
   carry?: { capacityKg: number; weightReduction: number; quickSlots: number; wheels?: boolean }
+  weapon?: string
   finds?: { places: string[] }
   charge?: { lossPerMonth: number }
   agingFault?: { afterDays: number; chance: number }
@@ -117,6 +118,8 @@ const buildTeamItem = (item: IteItem, sources: Sources): { record: ItemRecord; p
   if (nutrition) record.nutrition = nutrition
   if (protection) record.protection = protection
   if (carry) record.carry = carry
+  const weapon = decisions.meleeWeapons[id]
+  if (weapon) record.weapon = weapon.value
   if (item.onde.length > 0) record.finds = { places: item.onde.map((code) => placeIdOf(code, sources)) }
   if (decisions.chargeItems.value.includes(item.id)) record.charge = { lossPerMonth: sources.html.rules.batteryLossPerMonth.value }
   if (decisions.fuelItems.value.includes(item.id)) {

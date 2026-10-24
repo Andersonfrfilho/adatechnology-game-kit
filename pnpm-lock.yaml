@@ -386,6 +386,9 @@ importers:
       '@adatechnology/game-interactables':
         specifier: workspace:*
         version: link:../game-interactables
+      '@adatechnology/game-weapons':
+        specifier: workspace:*
+        version: link:../game-weapons
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5

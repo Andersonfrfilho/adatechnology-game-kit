@@ -975,3 +975,21 @@ Node 22.23.4: `tools/items-catalog` 35, `game-items` 18, `tools/golden` 42, `cat
 - O desenho dizia "re-exporte `ITEMS`/helpers que já eram públicos": o household nunca exportou `ITEMS`; o público era `hh.items`, preservado.
 
 **Portões (Node 24.22.0)**: ver a seção T3.1f para o conjunto; nesta task `pnpm build`, `pnpm -r typecheck`, `pnpm lint` e `pnpm -r test` (household 1911, interactables 153, floorplan-* , test-room 118, goods 13, items 139, golden 42) verdes e `catalog:check` up to date; Node 22.23.4: household 1911 e goods 13 passaram (items 139 e golden 42 não mudaram desde a T3.1f). `examples/interactables-showroom` builda com o IIFE novo; `interactables-test-area` pede o build prévio do `test-room` (igual antes da task). Sem golden novo. Modelo da execução: `sonnet`.
+
+### T3.1i — Ligações corpo a corpo e armas genéricas (grupo E)
+
+**O que entrou**
+- `decisions.json`: tabela `meleeWeapons` (id do item -> id no arsenal, 18 itens) e `meleeWithoutWeapon` (os 2 que ficam sem arma e por quê). `build-items.ts` grava `weapon` nos itens; `items.json` regenerado (18 linhas novas, nada mais mudou).
+- Já existiam no arsenal e foram só ligados: `knife`, `machete`, `axe`, `baseball_bat`, `sledgehammer`, `crossbow`.
+- `game-weapons`: `src/data/melee-weapons.json` (arquivo à mão, anexado **depois** das armas existentes em `WEAPONS`): `tactical_knife`, `meat_cleaver`, `hatchet`, `nail_bat`, `iron_pipe`, `pickaxe`, `sickle`, `police_baton`, `cast_iron_skillet`, `improvised_spear`, `chainsaw` (corpo a corpo, alcance `alc` m, ruído `ru` m e massa `kg` do item) e `recurve_bow` (arco: calibre `arrow`, alcance 40 m, como o `bow_compound`). Energia, raio e cadência são números genéricos plausíveis (REF), não do time.
+- Testes: `game-items-goods` (todo `weapon` resolve no `createArsenal`, só `melee` carrega `weapon`, só `slingshot` e `arrows_and_bolts` ficam sem, alcance/ruído/massa das 11 defs novas = item, `checkArsenal` sem problemas e `itemsFromArsenal` + goods valem em `createItems`); `game-weapons/tests/catalog.test.ts` (as 12 defs). `game-items-goods` ganhou `game-weapons` como devDependency.
+- Changeset `game-weapons` minor. Os pontos `dano`/`cr` ficam na fatia do jogo (`damage-points.json`, T3.1j), não no SDK.
+
+**Fidelidade e goldens de armas**: o golden por arma (`weapon-scenarios.json`) cresceu **só por acréscimo** (+66 linhas, 0 removidas; as 12 armas novas no fim, mesma ordem das anteriores); `catalog:check` de armas e de itens up to date; nenhum hash de modelo 3D mudou.
+
+**Desvios e escolhas reversíveis**
+- Os "20 itens melee" ficam em **18 com `weapon`**: `slingshot` (o arsenal não tem calibre de pedra e acrescentar um mudaria o `calibers.json` gerado) e `arrows_and_bolts` (munição, não arma: já chega por `ammo_arrow`/`ammo_crossbow_bolt` do `itemsFromArsenal`). Reverter = acrescentar o calibre/arma e uma linha em `meleeWeapons`.
+- Os existentes (`knife` 0,4 m etc.) mantêm o alcance/ruído do arsenal; o do time só vale nas defs novas. O `improvised_spear` é `slash` porque o tipo de dano do arsenal só tem `blunt|slash`.
+- `recurve_bow` é arma de fogo de calibre `arrow` porque é assim que o arsenal modela arco; o `alc` 40 virou `range`.
+
+**Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` exit 0; `pnpm -r test` verde (`game-weapons` 290 em 10 arquivos, `game-items-goods` 17, `items-catalog` 39); `catalog:check` de items e weapons up to date. **Node 22.23.4**: `game-weapons` 290, `game-items-goods` 17 passaram. Nenhum gate falhou 2x. Modelo da execução: `sonnet`.

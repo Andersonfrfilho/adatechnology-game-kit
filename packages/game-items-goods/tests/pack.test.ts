@@ -1,4 +1,5 @@
-import { createItems, RARITIES } from '@adatechnology/game-items'
+import { createItems, itemsFromArsenal, RARITIES } from '@adatechnology/game-items'
+import { checkArsenal, createArsenal } from '@adatechnology/game-weapons'
 import { describe, expect, it } from 'vitest'
 
 import { createGoodsItems, GOODS_ARSENAL_RECORDS, GOODS_CATEGORIES, GOODS_CONTAINERS, GOODS_HOUSE_POOLS, GOODS_ITEMS, GOODS_PLACES, GOODS_PROVENANCE, GOODS_RECIPES, GOODS_TABLES, GOODS_USE_EFFECTS, goodsPack } from '../src'
@@ -73,5 +74,42 @@ describe('provenance', () => {
 
   it('gives every item one origin: the team, the household or a decision', () => {
     for (const [id, origin] of Object.entries(GOODS_PROVENANCE)) expect(Boolean(origin.ite ?? origin.household ?? origin.created), id).toBe(true)
+  })
+})
+
+describe('melee items and the arsenal', () => {
+  const arsenal = createArsenal()
+  const melee = GOODS_ITEMS.filter((item) => item.category === 'melee')
+
+  it('resolves every `weapon` in the arsenal, and only melee items carry one', () => {
+    const withWeapon = GOODS_ITEMS.filter((item) => item.weapon !== undefined)
+    expect(withWeapon).toHaveLength(18)
+    for (const item of withWeapon) {
+      expect(item.category, item.id).toBe('melee')
+      expect(arsenal.weapons.has(item.weapon ?? ''), `${item.id}: ${item.weapon}`).toBe(true)
+    }
+  })
+
+  it('leaves without a weapon only the two melee items the decisions explain', () => {
+    expect(melee.filter((item) => item.weapon === undefined).map((item) => item.id).sort()).toEqual(['arrows_and_bolts', 'slingshot'])
+  })
+
+  it('gives each generic melee weapon added for an item the reach, noise and mass of that item', () => {
+    const added = ['tactical_knife', 'meat_cleaver', 'hatchet', 'nail_bat', 'iron_pipe', 'pickaxe', 'sickle', 'police_baton', 'cast_iron_skillet', 'improvised_spear', 'chainsaw']
+    for (const id of added) {
+      const row = GOODS_TABLES.melee.find((candidate) => candidate.id === id)
+      const def = arsenal.weapons.get(catalog.get(id).weapon ?? '')
+      expect(def?.action.kind, id).toBe('melee')
+      if (def?.action.kind !== 'melee') continue
+      expect(def.action.reach, id).toBe(row?.reach)
+      expect(def.action.noise, id).toBe(row?.noise)
+      expect(def.mass, id).toBe(catalog.get(id).weight)
+    }
+  })
+
+  it('keeps the arsenal consistent and itemsFromArsenal valid next to the goods', () => {
+    expect(checkArsenal({ weapons: arsenal.weapons, calibers: arsenal.calibers, explosives: arsenal.explosives })).toEqual([])
+    const bridge = itemsFromArsenal(arsenal, { records: GOODS_ARSENAL_RECORDS })
+    expect(() => createGoodsItems({ packs: [bridge] })).not.toThrow()
   })
 })

@@ -115,6 +115,10 @@ export type Decisions = {
   readonly aliases: DecisionTable<string | null>
   readonly caliberMap: DecisionTable<string>
   readonly gameWeaponMap: DecisionTable<string>
+  /** Final id of a melee item -> weapon id in the arsenal. */
+  readonly meleeWeapons: DecisionTable<string>
+  /** Melee item with no weapon (and why), so nobody reads the absence as an oversight. */
+  readonly meleeWithoutWeapon: DecisionTable<string>
   readonly chargeItems: Decision<readonly string[]>
   readonly fuelItems: Decision<readonly string[]>
 }

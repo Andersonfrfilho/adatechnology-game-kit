@@ -119,3 +119,21 @@ describe('explosives', () => {
     for (const def of WEAPONS) if (def.action.kind === 'launcher') expect(arsenal.explosives.has(def.action.projectile), def.id).toBe(true)
   })
 })
+
+describe('generic melee weapons for the goods items', () => {
+  const ids = ['tactical_knife', 'meat_cleaver', 'hatchet', 'nail_bat', 'iron_pipe', 'pickaxe', 'sickle', 'police_baton', 'cast_iron_skillet', 'improvised_spear', 'chainsaw']
+
+  it('are melee weapons with a positive reach, energy and mass, and a drawable recurve bow', () => {
+    for (const id of ids) {
+      const def = arsenal.weapons.get(id)
+      expect(def?.action.kind, id).toBe('melee')
+      expect(def?.mass, id).toBeGreaterThan(0)
+      if (def?.action.kind === 'melee') {
+        expect(def.action.reach, id).toBeGreaterThan(0)
+        expect(def.action.energy, id).toBeGreaterThan(0)
+      }
+    }
+    const bow = arsenal.weapons.get('recurve_bow')
+    expect(bow?.action.kind === 'firearm' && bow.action.caliber).toBe('arrow')
+  })
+})

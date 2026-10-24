@@ -5,6 +5,7 @@ import explosivesJson from './data/explosives.json'
 import explosiveWeaponsJson from './data/explosive-weapons.json'
 import firearmsJson from './data/firearms.json'
 import launchersJson from './data/launchers.json'
+import meleeWeaponsJson from './data/melee-weapons.json'
 import { checkArsenal, findDuplicateIds } from './check-arsenal'
 import { resolveStrings } from './locale'
 import { resolveThrowables } from './registry'
@@ -18,7 +19,7 @@ export const EXPLOSIVES = explosivesJson as unknown as ExplosiveDef[]
 /** The generic weapons: handling numbers (spread, bloom, range, recoil) by type, which the real models point to through `archetype`. */
 const ARCHETYPES = archetypesJson as unknown as WeaponDef[]
 export const ARCHETYPE_IDS: readonly WeaponId[] = ARCHETYPES.map((def) => def.id)
-export const WEAPONS: WeaponDef[] = [...ARCHETYPES, ...(firearmsJson as unknown as WeaponDef[]), ...(launchersJson as unknown as WeaponDef[]), ...(explosiveWeaponsJson as unknown as WeaponDef[])]
+export const WEAPONS: WeaponDef[] = [...ARCHETYPES, ...(firearmsJson as unknown as WeaponDef[]), ...(launchersJson as unknown as WeaponDef[]), ...(explosiveWeaponsJson as unknown as WeaponDef[]), ...(meleeWeaponsJson as unknown as WeaponDef[])]
 
 /** A reasonable starting kit for a test room or a sandbox. */
 export const DEFAULT_LOADOUT: WeaponId[] = [
