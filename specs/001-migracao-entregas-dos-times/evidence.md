@@ -2437,3 +2437,66 @@ node examples/interactables-test-area/build.mjs && test.mjs -> 24/24 (inclui "th
   arremesso (`throwItem`: só sai o evento `throw`), o corpo visível (`PB`) e a mira (`view`). O jogo os liga por `busy`, `canVault`, `blocked`, `afterMove`.
 - A reanimação do jogo usa `setTimeout` e sorteia o tipo do zumbi; aqui o tempo é de jogo (`turned` depois de `reanimateSeconds`) e o tipo é do jogo.
 - As frases "O AFOGADO TE PUXA…", "Não há cura" e "Morto pela horda" são do jogo e ficam literais no `pt-BR`; um jogo troca o texto por id.
+
+## T8.1a — `game-crowd` núcleo (a horda do jogo como multidão genérica)
+
+> 🤖 Modelo: `sonnet` (feito nesta sessão pelo opus)
+
+**O que foi feito**
+
+- `packages/game-crowd` (puro, sem three, IIFE `GameCrowd`): porte literal de `jogo.js` G 66714-67430 (`Z`, `zSpawn`, `zRemove`, `flowStart`,
+  `flowStep`, `losClear`, `hordeUpdate`, `groan`, `screamAt`, `zAttack`, `zDamage`, `zKill`, `inchadoBurst`, `corpseAdd`, `corpsesUpdate`, `spawnAway`,
+  `populationUpdate`, `groundAt`, `zBlockedAt`, `tryStep`, `stepRelease`, `pileBlast`, `trailUpdate`, `zSpecialSpawn`, `zAbility`, `zChaseSpeed`,
+  `zHurtOther`, `killQ`, `zFrame`) e das portas (G 63796-63816 `DOORS`/`addDoor`/`setDoor`, G 64044 `doorHit`).
+  - `createNavGrid` (a grade de 0,5 m com códigos e alturas, `losClear`, `blocked`), `createDoors`, `createStore` (os campos do jogo em inglês, com os
+    mesmos tipos de array para os floats arredondarem igual).
+  - Os 13 tipos viram **traços** (`vaultsLow`, `pounce`, `heavySwing`, `doorDamage`, `hitStun`, `soundSeeker`, `caller`, `burns`, `waterWeak`,
+    `submerged`, `ambush`, `burst`, `eatsCorpses`, `tracker`, `maxAge`, `voice`, `panicWeight`, `drownGrab`, `color`/`skin`): o núcleo não conhece
+    nenhum tipo pelo nome; `plugins` acrescentam movimentos.
+  - Todo número em `src/data/defaults.json` com a linha de origem; o tempo do flow lê `flow.clock` (padrão `performance.now`, `() => 0` termina cada
+    campo num quadro, como no golden).
+  - Alvo no formato `CrowdTarget` (o `Player` do `game-player` serve como está) e `asPlayerCrowd()` para o `PlayerCrowd` do jogador.
+  - Sem alvo ninguém persegue (mundo normal primeiro). Sons (`groan`, `runner_groan`, `scream_hoarse`, `step`, `impact`, `flesh`, `wood`), efeitos
+    (`spark`, `blood`, `limb`, `cloud`, `dust`) e mensagens por id saem como evento, para o jogo levar a `host.audio` e `host.effects`.
+- `game-characters-undead`: `undeadCrowdPack()` (`src/data/crowd.json`, escrito à mão do jogo com as fontes) com os 13 tipos, idades, roupas, segmentos e
+  paleta da horda, e cada habilidade como traço. `game-characters`: o livro de corpos ganhou `remove(index)` (o Devorador come um corpo).
+- Golden `packages/game-crowd/tests/fixtures/team-golden/game-crowd.json`: `tools/characters-catalog/src/golden/vm-crowd.ts` corta tudo isso do jogo (mais
+  a grade, `BANDS`, `CORPOS_MAX`, `walkCad`, as portas, `POOL`) e roda **8 cenas** em `node:vm` com o laço na ordem do jogo (orçamento do gemido, rastro,
+  horda, população, corpos): perseguição, alerta em cadeia e vagas; noite, agachado e olfato; pirâmide num muro de 60 m; porta derrubada pelo
+  Brutamonte; saltador, inchado, gritador, espreitador, afogado na piscina, cego com ruído, carbonizado; corpos, Devorador, rastro e Farejador
+  levando Lentos; dano por região, calibre e roupa (capacete, colete, mandíbula, desmembramento); população com sobra removida e migração.
+  O teste do pacote refaz as 8 com o SDK e compara evento por evento (alvo, som, mensagem, efeito) e o estado de cada agente a cada N quadros:
+  **8 de 8 iguais**. Uma mutação (`separationPush` 2,2 → 2,3) derruba 6 das 8.
+- `evaluateGameSlice` ganhou `capacity` (a tabela `Z` do golden da multidão tem 400 vagas; os outros goldens seguem com 8 e não mudaram).
+- README, skill `.claude/skills/game-crowd/SKILL.md`, linhas no README raiz e na skill `game-kit`, skill e README do `game-characters-undead`, changeset,
+  inventário (`veiculos-moveis-vegetacao-jogo.md` §3.4).
+
+**Comandos e resultados**
+
+```text
+pnpm build                                              -> ok
+pnpm -r typecheck                                       -> ok
+pnpm lint                                               -> ok
+pnpm --filter @adatechnology/game-crowd test            -> 19 passed (golden 8/8, grade, portas, API)
+pnpm --filter @adatechnology/game-characters-undead test -> passou (inclui undeadCrowdPack)
+pnpm --filter @adatechnology/game-characters test       -> passou (inclui remove do livro de corpos)
+characters-catalog-tool vitest --testTimeout=60000      -> passou (game-crowd regravado idêntico ao fixture)
+node dist/record-golden-vm.js --check                   -> os 7 goldens vm idênticos
+node examples/test-room/build.mjs                       -> ok
+node examples/interactables-test-area/build.mjs && test.mjs -> 24/24
+```
+
+**Desvios e dúvidas**
+
+- Os efeitos do jogo (`fxSpark` sorteia 24 vezes, `fxBlood`, `fxCloud`, `fxLimb`) gastavam o mesmo `R()` da simulação; aqui saem como evento e não
+  gastam o `random` da multidão. O golden grava a simulação com os efeitos como registro, sem sorteio: num jogo com os efeitos do time a sequência
+  global de `R()` muda, a da multidão não.
+- `undeadCrowdPack()` usa os números do jogo (`CATS`), que diferem da tabela do Bestiário em `types.json` em quatro velocidades de perseguição (cego 3,0
+  contra 1,6; carbonizado 2,2 contra 1,6; afogado 2,5 contra 1,2; devorador 3,0 contra 2,4) e no peso do afogado (0 contra 1). Os sentidos por idade
+  seguem o jogo (visão 0,6 no decrépito, audição 0,9 a partir de antigo); `ages.json` tira também 30% do olfato do decrépito, o jogo não.
+  **Dúvida:** qual tabela vale para o jogo final?
+- Um alvo só (`target`), como o jogo; a lista de alvos da pergunta 6 do desenho fica para os civis (T8.1b, `setHunt`).
+- Andares (`ANDARES`) e telhado (`ROOF`) não portados (pergunta 5); `floor` fica em cada agente. A cena com o jogador no telhado, em que a parede da
+  casa vira muro escalável, não existe aqui.
+- `popTarget` vinha de `?pop=` na URL; aqui é opção de `updatePopulation`, e a migração (ponto de entrada, largura, destino, 120 a cada 90 s) também.
+- Bancada, `game-crowd-three` e `examples/crowd-test-area` entram no T8.1c.

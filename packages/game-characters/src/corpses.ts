@@ -13,6 +13,8 @@ export type CorpseLedger<TData> = {
   add(data: TData): TData | undefined
   /** Ages every corpse by `dt` seconds and removes the ones past their life (swap with the last, like the game). Returns the removed data. */
   update(dt: number): TData[]
+  /** Takes one corpse away (eaten, searched and dragged off): the last one moves into its place, like the game's `CP`. Returns its data. */
+  remove(index: number): TData | undefined
   clear(): void
 }
 
@@ -47,6 +49,13 @@ export const createCorpseLedger = <TData>(options: CorpseOptions): CorpseLedger<
         index--
       }
       return removed
+    },
+    remove(index) {
+      const entry = entries[index]
+      if (!entry) return undefined
+      entries[index] = entries[entries.length - 1] as CorpseEntry<TData>
+      entries.pop()
+      return entry.data
     },
     clear() {
       entries.length = 0

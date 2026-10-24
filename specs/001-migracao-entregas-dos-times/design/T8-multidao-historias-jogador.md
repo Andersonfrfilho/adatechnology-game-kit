@@ -237,6 +237,10 @@ export type CharacterSheet = {
    Reverse: move those milestone strings into the game slice.
 8. **The infection rule of the player** is off by default. The zombie rule (`zombieInfection()`) uses the game numbers (`INFEC`, `FERIDA`).
    It draws `R` exactly like the game, including the draw when the chance is 1.
+9. **Which undead table for the crowd** (found in T8.1a). The game's `CATS` and the Bestiário table in `types.json` differ in four chase speeds
+   (blind 3.0 vs 1.6, charred 2.2 vs 1.6, drowned 2.5 vs 1.2, devourer 3.0 vs 2.4), the drowned weight (0 vs 1) and the decrepit smell. Default:
+   `undeadCrowdPack()` uses the game's, since it is the behaviour the golden checks.
+10. **One target in T8.1a.** Question 6 stays open: the core keeps the game's single `target`; the civilians (T8.1b) hunt through `setHunt`.
 
 ## Root Cause
 

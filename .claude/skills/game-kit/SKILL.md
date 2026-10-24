@@ -41,6 +41,7 @@ no núcleo (catálogo por registro, números por opção, comportamento por plug
 | `game-audio` | Som como dados: receita com semente vira plano, curvas de distância dos times, pan, limite de vozes, laços e as mixagens do jogo e da Cena de Arte |
 | `game-weather` | Clima por semente: chuva, tempestade, neblina, vento, ciclone, calor, relâmpago, solo molhado, dia e noite, efeitos para visão e audição |
 | `game-player` | Corpo do jogador: ficha e derivados, fôlego, feridas e curativo, agarrão, derrubada, ruído de passos, pânico, empurrão e golpe; infecção individual opcional (desligada) |
+| `game-crowd` | Multidão como estrutura de arrays: faixas de relevância, visão, audição e olfato, campo de fluxo, vagas de ataque, alerta em cadeia, portas, pilha no muro, habilidades por traço, corpos, população e migração |
 | `game-camera` | Câmera de ombro, terceira e primeira pessoa |
 | `game-test-room` | Sala de testes genérica: carrega módulos, abre uma área por grupo, registra o comportamento |
 | `game-devtools` | Ferramentas de teste dentro do jogo |
@@ -48,9 +49,9 @@ no núcleo (catálogo por registro, números por opção, comportamento por plug
 ## Pacotes que a migração vai criar (spec 001)
 
 `game-characters` e `game-characters-undead` (corpo, andar, dano por região, os 13 tipos de zumbi), um gerador de histórias e ficha de
-personagem, `game-crowd` (multidão: horda, civis, manada, revoada), `game-animals`, `game-items` (catálogo único), `game-vfx` (+ `-three`,
+personagem, civis, manada e revoada em `game-crowd`, `game-animals`, `game-items` (catálogo único), `game-vfx` (+ `-three`,
 explosão do Laboratório), `game-weather` (chuva a eventos extremos), `game-audio`, `game-urban` (ruas, postes, bairro),
-`game-floorplan-rural` (`game-player`, `game-floorplan-structure` e `game-floorplan-three` já existem). Decisões em
+`game-floorplan-rural` (`game-player`, `game-crowd`, `game-floorplan-structure` e `game-floorplan-three` já existem). Decisões em
 `specs/001-migracao-entregas-dos-times/consolidado.md`.
 
 ## Como se compõem (exemplos)
