@@ -100,7 +100,59 @@ export interface PartSpec {
    * or furniture is not part of the structure. Objects without any structural part behave as before.
    */
   structure?: { role: StructureRole; capacity?: number }
+  /**
+   * Coats over the core, outermost first (plaster, tile, the paper of a drywall board). `thickness` of the part is the core only; each coat adds
+   * `material.penetration x thickness` to what a bullet must get through, and a hit spalls the outer coat at the impact (`spall` event) before it
+   * reaches the core.
+   */
+  layers?: readonly SurfaceLayer[]
+  /** Steel inside a concrete part: when the part reaches 0 hp the concrete crumbles but the cage stays (`expose`, `PartState.stripped`). */
+  reinforcement?: Reinforcement
+  /** Masonry made of units (bricks, blocks, panels): fragments of a breach or a fracture are the size of one unit, laid in `bond`. */
+  units?: PartUnits
+  /**
+   * Opts the part into damage stages (`PartState.stage`, `stage` events). Through damage (through holes, blunt and explosive damage) within
+   * `radius` metres of a point that adds up to `area` square metres opens the part: stage 2, the part stays with an opening.
+   */
+  breach?: PartBreach
 }
+
+/** A coat over a part's core. `faces` says on which side(s) of the part's thinnest axis it lies (`'+'` and `'-'` are the local +/- directions). */
+export interface SurfaceLayer {
+  material: MaterialId
+  /** Metres. */
+  thickness: number
+  faces: 'both' | '+' | '-'
+}
+
+/** Rebar of a concrete part. Plates get two perpendicular grids at mid thickness, long members (columns, beams) bars along their length. */
+export interface Reinforcement {
+  material: MaterialId
+  /** Metres between bars (0.18). */
+  spacing: number
+  /** Bar diameter in metres (0.007 to 0.010). */
+  diameter: number
+  /** Fraction of the part's structural capacity the bare cage keeps (default 0.15). */
+  residualCapacity?: number
+}
+
+/** Size of one masonry unit in the part's axes (`size[2]` is along the part's thinnest axis, clamped to it) and how rows are laid. */
+export interface PartUnits {
+  size: Vec3
+  bond: 'running' | 'stack'
+  mortar: MaterialId
+}
+
+export interface PartBreach {
+  /** Square metres of through damage inside the breach radius that open the part (default 0.25). */
+  area?: number
+}
+
+/**
+ * Damage stage of a part with `breach`/`layers`/`units`/`reinforcement`: 0 intact, 1 marked (first hole or crack), 2 breached (an opening you can
+ * pass through), 3 gone (fractured or collapsed).
+ */
+export type DamageStage = 0 | 1 | 2 | 3
 
 /**
  * Role of a part in the structure of a building. `partition` is a non-load-bearing wall: it is supported by other parts and carries nothing, so
@@ -260,6 +312,12 @@ export interface PartState {
    */
   load?: number
   stress?: number
+  /** Damage stage; only present on parts that opted in (see `PartSpec.breach`). */
+  stage?: DamageStage
+  /** Reinforced part whose concrete is gone: only the rebar cage is left (capacity x `residualCapacity`); it is still part of the structure. */
+  stripped?: boolean
+  /** Opening a breach left, in object-local space (stage 2). Raycasts and shots pass through it. */
+  opening?: { center: Vec3; radius: number }
   /** Index into `ObjectState.groups` of the piece this part belongs to (-1 when the part is broken, melted or ash). */
   group: number
 }
@@ -312,6 +370,15 @@ export interface Fragment {
   velocity: Vec3
   angularVelocity: Vec3
   mass: number
+  /** Holes the part had where this fragment came from, in the fragment's own axes: the renderer keeps them on the debris. */
+  marks?: readonly FragmentMark[]
+}
+
+export interface FragmentMark {
+  /** Relative to the fragment's centre, in the fragment's axes. */
+  point: Vec3
+  normal: Vec3
+  diameter: number
 }
 
 interface EventBase {
@@ -345,6 +412,15 @@ export type DestructionEvent =
   | (EventBase & { type: 'stress'; part: string; stress: number; load: number })
   /** A group with structural parts lost every anchored part (an anchored part exists in the object): it falls. Reported once per group. */
   | (EventBase & { type: 'collapse'; parts: string[]; mass: number })
+  /** The outer coat of a layered part came off at `point` (`layer` indexes `PartSpec.layers`; `area` in m²). */
+  | (EventBase & { type: 'spall'; part: string; layer: number; point: Vec3; area: number })
+  /**
+   * A staged part changed stage. At stage 2 `opening` is where the breach is and `fragments` the unit-sized pieces that came out (the part is not
+   * removed: draw the fragments and cut the opening, do not hide the part). Stage 3 follows a `fracture` or a `collapse`.
+   */
+  | (EventBase & { type: 'stage'; part: string; stage: DamageStage; opening?: { center: Vec3; radius: number }; fragments?: readonly Fragment[] })
+  /** Rebar of a reinforced part is bare: segments in world space. Empty `bars` means the cage is gone. */
+  | (EventBase & { type: 'expose'; part: string; bars: readonly [Vec3, Vec3][] })
   | (EventBase & { type: 'destroyed' })
 
 export type DestructionEventType = DestructionEvent['type']
