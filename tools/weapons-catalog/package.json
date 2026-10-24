@@ -13,6 +13,7 @@
     "catalog:check": "node dist/cli.js --check"
   },
   "devDependencies": {
+    "@adatechnology/game-weapons": "workspace:*",
     "@types/node": "^22.10.7",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",

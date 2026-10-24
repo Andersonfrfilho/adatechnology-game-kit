@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs'
 
 import { beforeAll, describe, expect, it } from 'vitest'
 
+import { DEFAULT_RULES } from '@adatechnology/game-weapons'
+
 import { loadDecisions } from '../src/decisions'
 import type { Decisions } from '../src/decisions'
 import { extractArsenal } from '../src/extract-arsenal'
@@ -12,25 +14,57 @@ import { extractGame } from '../src/extract-game'
 import type { GameData } from '../src/extract-game'
 import { extractLab } from '../src/extract-lab'
 import type { LabProfile } from '../src/extract-lab'
-import { OUTPUT_PATHS } from '../src/paths'
+import { OUTPUT_PATHS, SOURCE_PATHS } from '../src/paths'
 import { slugOf } from '../src/weapon-rules'
-import { DEFAULT_RULES } from '../../../packages/game-weapons/src/rules'
 
-type Json = Record<string, any>
+type Timings = { readonly reload?: number; readonly reloadEmpty?: number; readonly perRound?: number; readonly draw?: number }
+type WeaponRow = {
+  readonly id: string
+  readonly category: string
+  readonly mass: number
+  readonly dimensions: { readonly length: number; readonly barrel: number; readonly emptyMass: number; readonly lengthCollapsed?: number }
+  readonly action: {
+    readonly family: string
+    readonly magazine: number
+    readonly chamber?: number
+    readonly rpm?: number
+    readonly faultFactor?: number
+    readonly muzzleSpeed?: number
+    readonly moa?: number
+    readonly patternCm?: number
+    readonly timings: Timings
+    readonly perRound?: boolean
+  }
+}
+type CaliberRow = {
+  readonly id: string
+  readonly diameter: number
+  readonly caseType: string
+  readonly noise: number
+  readonly cartridge: { readonly caseDiameter: number; readonly overallLength: number; readonly caseLength: number; readonly projectileDiameter: number }
+}
+type ExplosiveRow = { readonly id: string; readonly noise: number; readonly destructionLevel: number; readonly lethalRadius?: number; readonly injuryRadius?: number }
 
-const readOutput = (path: string): Json[] => JSON.parse(readFileSync(path, 'utf8')) as Json[]
+const hasId = (value: unknown): value is { id: string } => typeof value === 'object' && value !== null && typeof (value as { id?: unknown }).id === 'string'
+
+/** The rows of a generated file, checked to be a list of objects with an id; the fields are the ones the tests read. */
+const readOutput = <TRow extends { id: string }>(path: string): TRow[] => {
+  const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'))
+  if (!Array.isArray(parsed) || !parsed.every(hasId)) throw new Error(`${path} is not a list of rows with an id`)
+  return parsed as TRow[]
+}
 
 let gallery: GalleryData
 let arsenal: ArsenalData
 let lab: Readonly<Record<string, LabProfile>>
 let game: GameData
 let decisions: Decisions
-let weapons: Map<string, Json>
-let calibers: Map<string, Json>
-let explosives: Map<string, Json>
+let weapons: Map<string, WeaponRow>
+let calibers: Map<string, CaliberRow>
+let explosives: Map<string, ExplosiveRow>
 
 const idOf = (row: GalleryWeaponRow): string => decisions.weaponIds[row[0]]?.value ?? slugOf(row[0])
-const weaponOf = (row: GalleryWeaponRow): Json => {
+const weaponOf = (row: GalleryWeaponRow): WeaponRow => {
   const weapon = weapons.get(idOf(row))
   if (!weapon) throw new Error(`no generated weapon for ${row[0]}`)
   return weapon
@@ -59,9 +93,9 @@ beforeAll(() => {
   lab = extractLab()
   game = extractGame()
   decisions = loadDecisions()
-  weapons = new Map([...readOutput(OUTPUT_PATHS.firearms), ...readOutput(OUTPUT_PATHS.launchers)].map((weapon) => [weapon.id, weapon]))
-  calibers = new Map(readOutput(OUTPUT_PATHS.calibers).map((caliber) => [caliber.id, caliber]))
-  explosives = new Map(readOutput(OUTPUT_PATHS.explosives).map((explosive) => [explosive.id, explosive]))
+  weapons = new Map([...readOutput<WeaponRow>(OUTPUT_PATHS.firearms), ...readOutput<WeaponRow>(OUTPUT_PATHS.launchers)].map((weapon) => [weapon.id, weapon]))
+  calibers = new Map(readOutput<CaliberRow>(OUTPUT_PATHS.calibers).map((caliber) => [caliber.id, caliber]))
+  explosives = new Map(readOutput<ExplosiveRow>(OUTPUT_PATHS.explosives).map((explosive) => [explosive.id, explosive]))
 })
 
 describe('Gallery WEAP', () => {
@@ -103,7 +137,8 @@ describe('Gallery AMMO', () => {
       const entry = Object.entries(decisions.calibers).filter(([, decision]) => decision.ammoRow?.value === row[0])
       expect(entry.length, row[0]).toBeGreaterThan(0)
       for (const [id] of entry) {
-        const caliber = calibers.get(id) as Json
+        const caliber = calibers.get(id)
+        if (!caliber) throw new Error(`no generated caliber ${id}`)
         const deviated = (field: string): boolean => KNOWN_DEVIATIONS.some((deviation) => deviation.caliber === id && deviation.field === field)
         expect(caliber.cartridge.caseDiameter, id).toBe(row[1])
         expect(caliber.cartridge.overallLength, id).toBe(row[2])
@@ -125,9 +160,11 @@ describe('Gallery AMMO', () => {
 
 describe('Arsenal tables', () => {
   it('§06: reload times and loaded mass match the generated weapons', () => {
+    let matched = 0
     for (const row of gallery.weapons) {
       const entry = arsenalCatalogOf(row)
       if (!entry) continue
+      matched += 1
       const { timings } = weaponOf(row).action
       const { reload } = entry
       if (row[1] === 'rev') expect(timings.reload, row[0]).toBe(reload.reload)
@@ -136,6 +173,7 @@ describe('Arsenal tables', () => {
       if (reload.reloadEmpty !== undefined) expect(timings.reloadEmpty, row[0]).toBe(reload.reloadEmpty)
       expect(weaponOf(row).mass, row[0]).toBe(entry.loadedMass)
     }
+    expect(matched).toBe(67)
   })
 
   it('§07: length, barrel, empty mass, muzzle speed and accuracy match the gallery and the generated weapons', () => {
@@ -172,7 +210,8 @@ describe('Arsenal tables', () => {
       const name = decision.sources.value.arsenal
       if (!name) continue
       const row = arsenal.explosives.find((entry) => entry.name === name)
-      const explosive = explosives.get(id) as Json
+      const explosive = explosives.get(id)
+      if (!explosive) throw new Error(`no generated explosive ${id}`)
       expect(row, id).toBeDefined()
       expect(explosive.noise, id).toBe(row?.noise)
       expect(explosive.destructionLevel, id).toBe(row?.destructionLevel)
@@ -187,7 +226,9 @@ describe('game and Laboratory', () => {
     const ids: Record<string, string> = { glock: 'glock_17', r870: 'remington_870', ak47: 'ak_47', r700: 'remington_700' }
     expect(game.weapons).toHaveLength(4)
     for (const gameWeapon of game.weapons) {
-      const { timings, perRound } = weapons.get(ids[gameWeapon.id] ?? '')?.action ?? {}
+      const action = weapons.get(ids[gameWeapon.id] ?? '')?.action
+      if (!action) throw new Error(`no generated weapon for ${gameWeapon.id}`)
+      const { timings, perRound } = action
       if (gameWeapon.porCartucho) expect(timings.perRound, gameWeapon.id).toBe(gameWeapon.rec)
       else expect(timings.reload, gameWeapon.id).toBe(gameWeapon.rec)
       if (gameWeapon.recVazio !== undefined) expect(timings.reloadEmpty, gameWeapon.id).toBe(gameWeapon.recVazio)
@@ -202,7 +243,8 @@ describe('game and Laboratory', () => {
   it('Laboratory and game blast radii equal the explosives', () => {
     const KNOWN_DEVIATIONS = [{ explosive: 'molotov', field: 'injury', source: 'game', reason: 'the game EXP has no wounding radius for the molotov (fire only); Laboratory and Arsenal say 4 m' }]
     for (const [id, decision] of Object.entries(decisions.explosives)) {
-      const explosive = explosives.get(id) as Json
+      const explosive = explosives.get(id)
+      if (!explosive) throw new Error(`no generated explosive ${id}`)
       const labProfile = lab[decision.sources.value.lab ?? '']
       const gameExplosive = game.explosives[decision.sources.value.game ?? '']
       if (labProfile && !decision.copyOf) {
@@ -222,5 +264,19 @@ describe('game and Laboratory', () => {
       const condition = DEFAULT_RULES.conditions.find((entry) => entry.id === id)
       expect(condition?.faultChance, id).toBeCloseTo((gallery.conditions[galleryKey]?.p ?? -1) / 100, 9)
     }
+  })
+})
+
+describe('raw text of the sources', () => {
+  it('the Gallery WEAP row of the Glock 17 reads the same as the source line', () => {
+    const source = readFileSync(SOURCE_PATHS.gallery, 'utf8')
+    expect(source).toContain("['Glock 17','pis','9×19','17',202,114,.63,'pistol',{st:'glock',rel:.7}]")
+    expect(gallery.weapons.find((row) => row[0] === 'Glock 17')).toEqual(['Glock 17', 'pis', '9×19', '17', 202, 114, 0.63, 'pistol', { st: 'glock', rel: 0.7 }])
+  })
+
+  it('the Arsenal §06 row of the AK-47 reads the same as the source cells', () => {
+    const html = readFileSync(SOURCE_PATHS.arsenal, 'utf8')
+    expect(html).toContain('<td class="n">600 rpm</td><td class="n">2,6 s / 3,4 s vazio</td><td class="n">4,3 kg</td>')
+    expect(arsenal.catalog.find((entry) => entry.name === 'AK-47')).toMatchObject({ cadence: '600 rpm', reload: { reload: 2.6, reloadEmpty: 3.4, isOneByOne: false }, loadedMass: 4.3 })
   })
 })

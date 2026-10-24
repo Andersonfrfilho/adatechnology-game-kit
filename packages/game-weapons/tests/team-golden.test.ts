@@ -39,6 +39,8 @@ describe('Galeria 3D do Arsenal: heat and ammunition', () => {
     it(`${name} heats and spends rounds like the page after Atirar and Rajada`, () => {
       const weapon = arsenal.create(id, { reserve: 0 })
       const recorded = entries.filter((entry) => entry.data.weapon === name)
+      expect(recorded.length, `${name} has no recorded steps: the name in IDS drifted from the fixture`).toBeGreaterThan(1)
+      expect(recorded[0]?.type).toBe('selected')
       const start = recorded[0]?.data.ammo ?? 0
       for (const entry of recorded) {
         if (entry.type === 'fire') {

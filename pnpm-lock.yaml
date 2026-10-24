@@ -580,6 +580,9 @@ importers:
 
   tools/weapons-catalog:
     devDependencies:
+      '@adatechnology/game-weapons':
+        specifier: workspace:*
+        version: link:../../packages/game-weapons
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
