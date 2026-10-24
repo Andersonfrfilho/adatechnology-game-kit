@@ -1208,5 +1208,15 @@
       0.354
     ],
     "scale": 0.1
+  },
+  {
+    "id": "meat_cleaver",
+    "teamId": "cutelo",
+    "teamBox": [
+      3.3,
+      0.302,
+      1.2
+    ],
+    "scale": 0.1
   }
 ]
