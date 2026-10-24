@@ -68,6 +68,12 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           spec: o => {
             const spec = toDestructibleSpec(structure, { wallDetail: 'coarse', ...o });
             if (o && o.wallDetail && o.wallDetail !== 'coarse') return spec;
+            // what a part holds, what makes it explode and how thin its wall is (the water tank, the gas cylinder) comes from the piece; the structure package's spec does not carry it
+            spec.parts = spec.parts.map(sp => {
+              const pc0 = byId.get(sp.id); if (!pc0) return sp;
+              const extra: any = {}; for (const k of ['contains', 'explodes', 'thickness', 'fill', 'tags']) if (pc0[k] != null && sp[k] == null) extra[k] = pc0[k];
+              return Object.keys(extra).length ? { ...sp, ...extra } : sp;
+            });
             spec.parts = spec.parts.map(sp => {
               const pc = byId.get(sp.id); if (!pc || pc.unit) return sp;
               // Concrete slabs, beams, pillars and stairs are not walls: they keep their box and take the rebar of reinforced concrete (the renderer draws the cage when the concrete spalls).

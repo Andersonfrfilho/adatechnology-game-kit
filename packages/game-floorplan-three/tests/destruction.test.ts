@@ -44,6 +44,17 @@ describe('registration in the world', () => {
     expect(d.spec.parts.some((p: any) => /_pier_|_sill_|_lintel_/.test(p.id) && house.structure.byId.has(p.id.replace(/_(pier|sill|lintel|spandrel)_\d+$/, '')))).toBe(false)
   })
 
+  it('gives the water tank what it holds and the gas cylinder what makes it explode, with the thin wall of each', () => {
+    const { d } = setup({ template: 'single_storey_a', seed: 1 })
+    const tank = d.spec.parts.find((p: any) => p.id === 'water_tank')
+    const gas = d.spec.parts.find((p: any) => /^gas_cylinder/.test(p.id))
+    expect(tank.contains).toEqual({ fluid: 'water', liters: 500 })
+    expect(tank.thickness).toBeLessThan(0.01)
+    expect(gas.contains.pressurized).toBe(true)
+    expect(gas.explodes.energy).toBeGreaterThan(0)
+    expect(gas.thickness).toBeLessThan(0.01)
+  })
+
   it('gives the concrete that is drawn the rebar of reinforced concrete', () => {
     const { d } = setup()
     const slab = d.spec.parts.find((p: any) => p.id === 'slab_1')
