@@ -1318,5 +1318,15 @@
       2.3
     ],
     "scale": 0.1
+  },
+  {
+    "id": "pickaxe",
+    "teamId": "picareta",
+    "teamBox": [
+      9,
+      0.4,
+      3.5
+    ],
+    "scale": 0.1
   }
 ]

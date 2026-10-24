@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **132 de 257 itens têm modelo 3D; faltam 125.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **133 de 257 itens têm modelo 3D; faltam 124.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **132** | **125** |
+| **Total** | **133** | **124** |
 
 ## Comida (36 de 36)
 
@@ -149,7 +149,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Serrote (kit) | `serrote` | `handsaw` | 0,5 kg | comum | 500 x 35 x 130 mm |
 | [x] | Tesoura (kit) | `tesoura` | `scissors` | 0,1 kg | comum | 180 x 15 x 70 mm |
 
-## Armas brancas e de disparo silencioso (17 de 20)
+## Armas brancas e de disparo silencioso (18 de 20)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -170,7 +170,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Machadinha (kit) | `machadinha` | `hatchet` | 0,8 kg | incomum | 350 x 50 x 130 mm |
 | [x] | Marreta (kit) | `marreta` | `sledgehammer` | 5,0 kg | raro | 900 x 120 x 250 mm |
 | [x] | Motosserra (kit) | `motosserra` | `chainsaw` | 6,0 kg | muito raro | 450 x 260 x 230 mm |
-| [ ] | Picareta | `picareta` | `pickaxe` | 2,8 kg | raro | 900 x 40 x 350 mm |
+| [x] | Picareta (kit) | `picareta` | `pickaxe` | 2,8 kg | raro | 900 x 40 x 350 mm |
 | [ ] | Taco de beisebol | `taco` | `baseball_bat` | 1,0 kg | incomum | 860 x 70 x 70 mm |
 | [ ] | Tonfa policial | `tonfa` | `police_baton` | 0,6 kg | comum | 500 x 100 x 45 mm |
 
