@@ -19,6 +19,7 @@ export const OUTPUT_PATHS = {
   firearms: join(WEAPONS_SRC, 'firearms.json'),
   launchers: join(WEAPONS_SRC, 'launchers.json'),
   explosives: join(WEAPONS_SRC, 'explosives.json'),
+  attachments: join(WEAPONS_SRC, 'attachments.json'),
   models: join(REPO_ROOT, 'packages', 'game-weapons-three', 'src', 'data', 'models.json'),
 } as const
 export const ARCHETYPES_PATH = join(WEAPONS_SRC, 'archetypes.json')

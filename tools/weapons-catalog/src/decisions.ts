@@ -90,7 +90,47 @@ export type LauncherDecision = {
   readonly reloadSource: string
 }
 
+export type StockKind = 'fixed' | 'fold' | 'retract' | 'fold_retract' | 'none'
+
+export type StockDecision = {
+  readonly kind?: StockKind
+  readonly foldAxis?: 'right' | 'left' | 'under' | 'over'
+  /** Metres with the stock folded or slid in, when the Arsenal sheet has none. */
+  readonly lengthCollapsed?: number
+}
+
+export type MountChoice = { readonly kind: string; readonly interfaces: readonly string[]; readonly length?: number }
+
+export type IntegralChoice = { readonly id: string; readonly mount: string; readonly interfaces: readonly string[] }
+
+export type EffectChoice = {
+  readonly stat: string
+  readonly mul?: number
+  readonly add?: number
+  readonly set?: number
+  readonly when?: string
+  /** Text of the Arsenal §11 line this number comes from; checked against the source, left out of the output. */
+  readonly from?: string
+}
+
+export type AttachmentChoice = Readonly<Record<string, unknown>> & {
+  readonly effects: readonly EffectChoice[]
+  readonly sources: readonly DataSource[]
+  /** The name of the Arsenal §11 line it implements. */
+  readonly arsenal?: string
+}
+
 export type Decisions = {
+  /** Thread of the muzzle by weapon id: what a suppressor or a brake screws on. */
+  readonly threads: Readonly<Record<string, Decision<{ readonly interface: string }>>>
+  /** Places the Gallery options do not show, by weapon id (§06 notes, §17 slots, grenade launcher mounts). */
+  readonly mountNotes: Readonly<Record<string, Decision<{ readonly mounts: readonly MountChoice[] }>>>
+  readonly stocks: Readonly<Record<string, Decision<StockDecision>>>
+  readonly attachments: Readonly<Record<string, Decision<AttachmentChoice>>>
+  /** Accessories that are part of the weapon and cannot come off. */
+  readonly integral: Readonly<Record<string, Decision<readonly IntegralChoice[]>>>
+  /** Lines of Arsenal §11 that are not accessories, with where they live instead. */
+  readonly arsenalFeatures: Decision<Readonly<Record<string, string>>>
   readonly weaponIds: Readonly<Record<string, Decision<string>>>
   readonly englishNames: Readonly<Record<string, Decision<string>>>
   readonly makers: Decision<readonly string[]>

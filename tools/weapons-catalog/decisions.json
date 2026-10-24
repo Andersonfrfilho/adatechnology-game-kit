@@ -2323,5 +2323,1562 @@
       "source": "owner",
       "reason": "Dono (2026-10-24): o Taurus 82 não é especialmente confiável; fica o faultFactor 1 da Galeria (sem \"nunca engasga\" do Arsenal §06)."
     }
+  },
+  "threads": {
+    "ak_47": {
+      "value": {
+        "interface": "thread_14x1lh"
+      },
+      "source": "reference",
+      "reason": "Rosca de boca do AK-47/AKM: M14×1 de passo à esquerda (LH). Bate com o slot `boca_rosca_14x1` do exemplo do Arsenal §17. https://en.wikipedia.org/wiki/AK-47"
+    },
+    "akm": {
+      "value": {
+        "interface": "thread_14x1lh"
+      },
+      "source": "reference",
+      "reason": "Rosca de boca do AKM: M14×1 LH, a mesma do AK-47 (slot `boca_rosca_14x1`, Arsenal §17). https://en.wikipedia.org/wiki/AKM"
+    },
+    "ak_74": {
+      "value": {
+        "interface": "thread_24x1.5"
+      },
+      "source": "reference",
+      "reason": "Rosca de boca do AK-74: M24×1,5 LH (freio de boca de fábrica). https://en.wikipedia.org/wiki/AK-74"
+    },
+    "ak_12": {
+      "value": {
+        "interface": "thread_24x1.5"
+      },
+      "source": "reference",
+      "reason": "Rosca de boca do AK-12: M24×1,5 LH como a do AK-74M. https://en.wikipedia.org/wiki/AK-12"
+    },
+    "colt_m4a1": {
+      "value": {
+        "interface": "thread_1/2x28"
+      },
+      "source": "reference",
+      "reason": "Rosca de boca do padrão AR-15/M4: 1/2×28 UNEF. https://en.wikipedia.org/wiki/M4_carbine"
+    },
+    "colt_m16a2": {
+      "value": {
+        "interface": "thread_1/2x28"
+      },
+      "source": "reference",
+      "reason": "Rosca de boca do M16A2: 1/2×28 (apagador de chama de fábrica). https://en.wikipedia.org/wiki/M16_rifle"
+    },
+    "hk416": {
+      "value": {
+        "interface": "thread_1/2x28"
+      },
+      "source": "reference",
+      "reason": "Rosca de boca do HK416 de 14,5\": 1/2×28 (o apagador de chama de fábrica sai). https://en.wikipedia.org/wiki/Heckler_%26_Koch_HK416"
+    },
+    "taurus_t4": {
+      "value": {
+        "interface": "thread_1/2x28"
+      },
+      "source": "derived",
+      "reason": "Taurus T4 é padrão AR-15; assumida a rosca 1/2×28 do padrão. Sem página do fabricante conferida: confirmar com o dono."
+    },
+    "imbel_ia2": {
+      "value": {
+        "interface": "thread_1/2x28"
+      },
+      "source": "derived",
+      "reason": "IA2 5,56 usa freio/apagador no padrão da família AR; assumida a rosca 1/2×28. Sem fonte conferida: confirmar com o dono."
+    },
+    "fn_scar_h": {
+      "value": {
+        "interface": "thread_5/8x24"
+      },
+      "source": "reference",
+      "reason": "Rosca de boca do SCAR-H (7,62×51): 5/8×24. https://en.wikipedia.org/wiki/FN_SCAR"
+    },
+    "hk_mp5a3": {
+      "value": {
+        "interface": "hk_3lug"
+      },
+      "source": "reference",
+      "reason": "O MP5 usa cano com três ressaltos (3-lug) para apagador e supressor. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+    },
+    "hk_ump_45": {
+      "value": {
+        "interface": "thread_5/8x24"
+      },
+      "source": "derived",
+      "reason": "Sem rosca conferida para o UMP-45; assumida a 5/8×24, a mais comum em .45 ACP. Confirmar com o dono."
+    }
+  },
+  "mountNotes": {
+    "ak_47": {
+      "value": {
+        "mounts": [
+          {
+            "kind": "rail_left",
+            "interfaces": [
+              "ak_side"
+            ]
+          }
+        ]
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §17 (exemplo do AK-47): slots `trilho_lateral_ak` e `boca_rosca_14x1`; o trilho lateral de AK é o `ak_side`."
+    },
+    "akm": {
+      "value": {
+        "mounts": [
+          {
+            "kind": "rail_left",
+            "interfaces": [
+              "ak_side"
+            ]
+          },
+          {
+            "kind": "underbarrel",
+            "interfaces": [
+              "gp25"
+            ]
+          }
+        ]
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §06: \"AK mais leve, aceita trilho lateral\" (`ak_side`). Encaixe do GP-25 sob o cano: https://en.wikipedia.org/wiki/GP-25"
+    },
+    "ak_74": {
+      "value": {
+        "mounts": [
+          {
+            "kind": "underbarrel",
+            "interfaces": [
+              "gp25"
+            ]
+          }
+        ]
+      },
+      "source": "reference",
+      "reason": "O GP-25 é o lança-granadas sob o cano do AK-74 e do AKM. https://en.wikipedia.org/wiki/GP-25"
+    },
+    "ak_12": {
+      "value": {
+        "mounts": [
+          {
+            "kind": "rail_top",
+            "interfaces": [
+              "picatinny"
+            ]
+          },
+          {
+            "kind": "rail_left",
+            "interfaces": [
+              "picatinny"
+            ]
+          },
+          {
+            "kind": "rail_right",
+            "interfaces": [
+              "picatinny"
+            ]
+          },
+          {
+            "kind": "rail_bottom",
+            "interfaces": [
+              "picatinny"
+            ]
+          },
+          {
+            "kind": "underbarrel",
+            "interfaces": [
+              "gp25"
+            ]
+          }
+        ]
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §06: \"AK moderna com trilhos completos\" (cima, laterais e baixo). GP-25: https://en.wikipedia.org/wiki/GP-25"
+    },
+    "colt_m4a1": {
+      "value": {
+        "mounts": [
+          {
+            "kind": "rail_top",
+            "interfaces": [
+              "picatinny",
+              "mlok"
+            ]
+          },
+          {
+            "kind": "rail_left",
+            "interfaces": [
+              "picatinny",
+              "mlok"
+            ]
+          },
+          {
+            "kind": "rail_right",
+            "interfaces": [
+              "picatinny",
+              "mlok"
+            ]
+          },
+          {
+            "kind": "rail_bottom",
+            "interfaces": [
+              "picatinny",
+              "mlok"
+            ]
+          },
+          {
+            "kind": "underbarrel",
+            "interfaces": [
+              "m203"
+            ]
+          }
+        ]
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §06: \"Mais trilhos: aceita quase todos os acessórios\" (Picatinny e M-LOK, §11) e o M203 do §11."
+    },
+    "colt_m16a2": {
+      "value": {
+        "mounts": [
+          {
+            "kind": "underbarrel",
+            "interfaces": [
+              "m203"
+            ]
+          }
+        ]
+      },
+      "source": "reference",
+      "reason": "O M203 foi feito para o M16 e o M4. https://en.wikipedia.org/wiki/M203_grenade_launcher"
+    },
+    "hk416": {
+      "value": {
+        "mounts": [
+          {
+            "kind": "underbarrel",
+            "interfaces": [
+              "ag36"
+            ]
+          }
+        ]
+      },
+      "source": "reference",
+      "reason": "O HK416 usa o lança-granadas AG36 (família G36/HK416). https://en.wikipedia.org/wiki/AG36"
+    }
+  },
+  "stocks": {
+    "uzi": {
+      "value": {
+        "foldAxis": "under"
+      },
+      "source": "reference",
+      "reason": "A coronha de arame do Uzi dobra por baixo do corpo. https://en.wikipedia.org/wiki/Uzi"
+    },
+    "franchi_spas_12": {
+      "value": {
+        "foldAxis": "over",
+        "lengthCollapsed": 0.82
+      },
+      "source": "reference",
+      "reason": "SPAS-12: coronha dobra por cima; 1041 mm estendida e 820 mm dobrada. https://en.wikipedia.org/wiki/Franchi_SPAS-12"
+    },
+    "cz_scorpion_evo_3": {
+      "value": {
+        "foldAxis": "right"
+      },
+      "source": "reference",
+      "reason": "Scorpion EVO 3: coronha dobra para a direita. https://en.wikipedia.org/wiki/CZ_Scorpion_Evo_3"
+    },
+    "fn_scar_h": {
+      "value": {
+        "foldAxis": "right"
+      },
+      "source": "reference",
+      "reason": "SCAR: coronha dobra para a direita. https://en.wikipedia.org/wiki/FN_SCAR"
+    },
+    "imbel_ia2": {
+      "value": {
+        "foldAxis": "right",
+        "lengthCollapsed": 0.6
+      },
+      "source": "reference",
+      "reason": "IA2 5,56: 850 mm com a coronha aberta e 600 mm dobrada, para a direita. https://en.wikipedia.org/wiki/IMBEL_IA2"
+    },
+    "barrett_mrad": {
+      "value": {
+        "foldAxis": "right",
+        "lengthCollapsed": 1.055
+      },
+      "source": "reference",
+      "reason": "MRAD: coronha dobra para a direita; 1258 mm para 1055 mm dobrada (a Galeria tem 1260 mm). https://www.all4shooters.com/en/shooting/pro-zone/barrett-mrad-sniper-rifle/"
+    },
+    "hk_ump_45": {
+      "value": {
+        "kind": "fold",
+        "foldAxis": "right"
+      },
+      "source": "reference",
+      "reason": "A Galeria desenha coronha de esqueleto; o UMP real dobra para o lado direito. https://en.wikipedia.org/wiki/Heckler_%26_Koch_UMP"
+    },
+    "mac_10": {
+      "value": {
+        "kind": "retract"
+      },
+      "source": "reference",
+      "reason": "A Galeria desenha coronha dobrável; a do MAC-10 real é de arame, que recolhe. https://en.wikipedia.org/wiki/MAC-10"
+    },
+    "kriss_vector": {
+      "value": {
+        "kind": "fold_retract",
+        "foldAxis": "right"
+      },
+      "source": "reference",
+      "reason": "A Galeria desenha coronha retrátil; a do Vector real também dobra para o lado. https://en.wikipedia.org/wiki/KRISS_Vector"
+    },
+    "taurus_t4": {
+      "value": {
+        "lengthCollapsed": 0.767
+      },
+      "source": "reference",
+      "reason": "Taurus T4 de cano de 14,5\": 870 mm aberta e 767 mm recolhida. https://en.wikipedia.org/wiki/Taurus_T4"
+    },
+    "benelli_m4": {
+      "value": {
+        "lengthCollapsed": 0.889
+      },
+      "source": "reference",
+      "reason": "Benelli M4: 1010 mm aberta e 889 mm recolhida. https://en.wikipedia.org/wiki/Benelli_M4"
+    },
+    "cheytac_m200": {
+      "value": {
+        "lengthCollapsed": 1.187
+      },
+      "source": "reference",
+      "reason": "CheyTac M200: 1300 mm aberta e 1187 mm recolhida. https://en.wikipedia.org/wiki/CheyTac_Intervention"
+    },
+    "m14_ebr": {
+      "value": {
+        "lengthCollapsed": 0.81
+      },
+      "source": "derived",
+      "reason": "Sem número do fabricante: 889 mm do Mk 14 Mod 0 (https://en.wikipedia.org/wiki/Mk_14_Enhanced_Battle_Rifle) menos 79 mm de curso da coronha (adaptador VLTOR de 12,375 a 15,5 pol, https://www.vltor.com/?p=203). Confirmar com o dono."
+    }
+  },
+  "integral": {
+    "steyr_aug_a1": {
+      "value": [
+        {
+          "id": "integral_optic_1_5x",
+          "mount": "rail_top",
+          "interfaces": [
+            "integral"
+          ]
+        }
+      ],
+      "source": "reference",
+      "reason": "A mira de 1,5× é parte da alça de transporte do AUG A1. https://en.wikipedia.org/wiki/Steyr_AUG"
+    },
+    "svd_dragunov": {
+      "value": [
+        {
+          "id": "pso_1",
+          "mount": "rail_top",
+          "interfaces": [
+            "pso_1_side"
+          ]
+        }
+      ],
+      "source": "reference",
+      "reason": "O SVD sai com a luneta PSO-1 de 4× presa ao trilho lateral. https://en.wikipedia.org/wiki/Dragunov_sniper_rifle"
+    },
+    "m24_sws": {
+      "value": [
+        {
+          "id": "fixed_scope_10x",
+          "mount": "rail_top",
+          "interfaces": [
+            "integral"
+          ]
+        }
+      ],
+      "source": "reference",
+      "reason": "O M24 SWS leva a luneta Leupold Mark 4 de 10× fixa. https://en.wikipedia.org/wiki/M24_Sniper_Weapon_System"
+    },
+    "browning_m2": {
+      "value": [
+        {
+          "id": "tripod",
+          "mount": "underbarrel",
+          "interfaces": [
+            "tripod"
+          ]
+        }
+      ],
+      "source": "reference",
+      "reason": "A M2 .50 é montada em tripé: o apoio já está nos números da arma. https://en.wikipedia.org/wiki/M2_Browning"
+    }
+  },
+  "arsenalFeatures": {
+    "value": {
+      "Coronha retrátil": "A coronha é dado da arma (`stock`, `rules.stock`), não um acessório"
+    },
+    "source": "design",
+    "reason": "Design T1.7 §2: a coronha retrátil/dobrável é regra da arma (`WeaponDef.stock`), com efeitos em `rules.stock.collapsed`."
+  },
+  "attachments": {
+    "suppressor": {
+      "value": {
+        "name": "Suppressor",
+        "kind": "suppressor",
+        "mounts": [
+          "muzzle"
+        ],
+        "interfaces": [
+          "thread_1/2x28",
+          "thread_5/8x24",
+          "thread_14x1lh",
+          "thread_24x1.5",
+          "hk_3lug"
+        ],
+        "mass": 0.45,
+        "install": "tool",
+        "effects": [
+          {
+            "stat": "noise",
+            "mul": 0.4,
+            "from": "ruído −60%"
+          },
+          {
+            "stat": "noise",
+            "mul": 0.625,
+            "when": "subsonic",
+            "from": "com subsônica −75%"
+          },
+          {
+            "stat": "muzzleSpeed",
+            "mul": 0.97468,
+            "from": "dano −5%"
+          },
+          {
+            "stat": "heatPerShot",
+            "mul": 1.5
+          }
+        ],
+        "model": "suppressor",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "calibers": {
+          "maxDiameter": 12.7,
+          "maxEnergy": 6500
+        },
+        "dims": {
+          "length": 0.2,
+          "diameter": 0.045
+        },
+        "removable": true,
+        "arsenal": "Supressor"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: ruído −60% (−75% com subsônica: o fator da subsônica é 0,625 para dar ×0,25 no total) e dano −5% (velocidade × √0,95, pois a energia vai com o quadrado). Calor ×1,5 aprovado pelo dono (2026-10-24); a massa e o diâmetro máximo (12,7 mm, .50 BMG) são derivados."
+    },
+    "oil_filter_suppressor": {
+      "value": {
+        "name": "Improvised oil filter suppressor",
+        "kind": "suppressor",
+        "mounts": [
+          "muzzle"
+        ],
+        "interfaces": [
+          "thread_1/2x28",
+          "thread_5/8x24",
+          "thread_14x1lh",
+          "thread_24x1.5",
+          "hk_3lug"
+        ],
+        "mass": 0.35,
+        "install": "tool",
+        "effects": [
+          {
+            "stat": "noise",
+            "mul": 0.6,
+            "from": "ruído −40%"
+          },
+          {
+            "stat": "heatPerShot",
+            "mul": 1.5
+          }
+        ],
+        "model": "oil_filter_suppressor",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "calibers": {
+          "maxDiameter": 9.0,
+          "maxEnergy": 2500
+        },
+        "dims": {
+          "length": 0.17,
+          "diameter": 0.07
+        },
+        "durability": {
+          "shots": [
+            30,
+            60
+          ]
+        },
+        "arsenal": "Supressor caseiro"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: ruído −40% e quebra depois de 30 a 60 tiros. Limite de calibre (até 9 mm e 2500 J) e massa derivados: o filtro de óleo não segura calibre de fuzil."
+    },
+    "muzzle_brake": {
+      "value": {
+        "name": "Muzzle brake",
+        "kind": "muzzle_device",
+        "mounts": [
+          "muzzle"
+        ],
+        "interfaces": [
+          "thread_1/2x28",
+          "thread_5/8x24",
+          "thread_14x1lh",
+          "thread_24x1.5",
+          "hk_3lug",
+          "fixed_muzzle_device"
+        ],
+        "mass": 0.15,
+        "install": "tool",
+        "effects": [
+          {
+            "stat": "recoilVertical",
+            "mul": 0.75,
+            "from": "recuo −25%"
+          },
+          {
+            "stat": "recoilHorizontal",
+            "mul": 0.75
+          },
+          {
+            "stat": "noise",
+            "mul": 1.1,
+            "from": "ruído +10%"
+          }
+        ],
+        "model": "muzzle_brake",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "arsenal": "Freio de boca / compensador"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: recuo −25% (vertical e horizontal) e ruído +10%. É o `brake:1` da Galeria; a massa é derivada."
+    },
+    "muzzle_brake_heavy": {
+      "value": {
+        "name": "Heavy muzzle brake",
+        "kind": "muzzle_device",
+        "mounts": [
+          "muzzle"
+        ],
+        "interfaces": [
+          "thread_1/2x28",
+          "thread_5/8x24",
+          "thread_14x1lh",
+          "thread_24x1.5",
+          "hk_3lug",
+          "fixed_muzzle_device"
+        ],
+        "mass": 0.35,
+        "install": "tool",
+        "effects": [
+          {
+            "stat": "recoilVertical",
+            "mul": 0.75,
+            "from": "recuo −25%"
+          },
+          {
+            "stat": "recoilHorizontal",
+            "mul": 0.75
+          },
+          {
+            "stat": "noise",
+            "mul": 1.1,
+            "from": "ruído +10%"
+          }
+        ],
+        "model": "muzzle_brake_heavy",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "arsenal": "Freio de boca / compensador"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11 (mesmos números do freio); é o `brake:2` da Galeria (maior, 12 cm). Massa derivada."
+    },
+    "compensator": {
+      "value": {
+        "name": "Compensator",
+        "kind": "muzzle_device",
+        "mounts": [
+          "muzzle"
+        ],
+        "interfaces": [
+          "thread_1/2x28",
+          "thread_5/8x24",
+          "thread_14x1lh",
+          "thread_24x1.5",
+          "hk_3lug",
+          "fixed_muzzle_device"
+        ],
+        "mass": 0.1,
+        "install": "tool",
+        "effects": [
+          {
+            "stat": "recoilVertical",
+            "mul": 0.75,
+            "from": "recuo −25%"
+          },
+          {
+            "stat": "recoilHorizontal",
+            "mul": 0.75
+          },
+          {
+            "stat": "noise",
+            "mul": 1.1,
+            "from": "ruído +10%"
+          }
+        ],
+        "model": "compensator",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "arsenal": "Freio de boca / compensador"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11 (\"Freio de boca / compensador\"): mesmos números do freio; peça curta de pistola e fuzil. Modelo e massa derivados."
+    },
+    "red_dot": {
+      "value": {
+        "name": "Red dot sight",
+        "kind": "optic",
+        "mounts": [
+          "rail_top",
+          "rail_left"
+        ],
+        "interfaces": [
+          "picatinny",
+          "ak_side"
+        ],
+        "mass": 0.15,
+        "install": "tool",
+        "effects": [
+          {
+            "stat": "aim",
+            "mul": 0.8
+          }
+        ],
+        "model": "red_dot",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "optic": {
+          "zoom": [
+            1,
+            1
+          ],
+          "reticle": "dot"
+        },
+        "arsenal": "Red dot / holográfica"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: \"aquisição rápida, mira com olhos abertos\". O tempo de mira ×0,8 é padrão aprovado pelo dono (2026-10-24); a massa é derivada."
+    },
+    "holographic_sight": {
+      "value": {
+        "name": "Holographic sight",
+        "kind": "optic",
+        "mounts": [
+          "rail_top",
+          "rail_left"
+        ],
+        "interfaces": [
+          "picatinny",
+          "ak_side"
+        ],
+        "mass": 0.3,
+        "install": "tool",
+        "effects": [
+          {
+            "stat": "aim",
+            "mul": 0.8
+          }
+        ],
+        "model": "holographic_sight",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "optic": {
+          "zoom": [
+            1,
+            1
+          ],
+          "reticle": "holo"
+        },
+        "arsenal": "Red dot / holográfica"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11 (red dot / holográfica): mesmo efeito do red dot, retículo holográfico. Massa derivada."
+    },
+    "acog_4x": {
+      "value": {
+        "name": "ACOG 4x",
+        "kind": "optic",
+        "mounts": [
+          "rail_top",
+          "rail_left"
+        ],
+        "interfaces": [
+          "picatinny",
+          "ak_side"
+        ],
+        "mass": 0.4,
+        "install": "tool",
+        "effects": [
+          {
+            "stat": "aim",
+            "mul": 1.1
+          }
+        ],
+        "model": "acog_4x",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "optic": {
+          "zoom": [
+            4,
+            4
+          ],
+          "reticle": "chevron"
+        },
+        "arsenal": "ACOG 4×"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: \"ACOG 4×: médio alcance\". Tempo de mira ×1,1 e massa derivados (padrão do dono para o red dot, escalado)."
+    },
+    "scope_3_9x": {
+      "value": {
+        "name": "Rifle scope 3-9x",
+        "kind": "optic",
+        "mounts": [
+          "rail_top",
+          "rail_left"
+        ],
+        "interfaces": [
+          "picatinny",
+          "ak_side",
+          "dovetail"
+        ],
+        "mass": 0.6,
+        "install": "tool",
+        "effects": [
+          {
+            "stat": "aim",
+            "mul": 1.15
+          }
+        ],
+        "model": "scope_3_9x",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "optic": {
+          "zoom": [
+            3,
+            9
+          ],
+          "reticle": "duplex"
+        },
+        "arsenal": "Luneta 3–9× e 6–24×"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: \"Luneta 3–9×: sniper; balanço da mira ao respirar\". O balanço é do host (`rules.aim`); tempo de mira ×1,15 e massa derivados."
+    },
+    "scope_6_24x": {
+      "value": {
+        "name": "Rifle scope 6-24x",
+        "kind": "optic",
+        "mounts": [
+          "rail_top",
+          "rail_left"
+        ],
+        "interfaces": [
+          "picatinny",
+          "ak_side",
+          "dovetail"
+        ],
+        "mass": 1.1,
+        "install": "tool",
+        "effects": [
+          {
+            "stat": "aim",
+            "mul": 1.25
+          }
+        ],
+        "model": "scope_6_24x",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "optic": {
+          "zoom": [
+            6,
+            24
+          ],
+          "reticle": "mildot"
+        },
+        "arsenal": "Luneta 3–9× e 6–24×"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: \"6–24×\" da luneta sniper. Tempo de mira ×1,25 e massa derivados."
+    },
+    "night_vision_scope": {
+      "value": {
+        "name": "Night vision scope",
+        "kind": "optic",
+        "mounts": [
+          "rail_top",
+          "rail_left"
+        ],
+        "interfaces": [
+          "picatinny",
+          "ak_side",
+          "dovetail"
+        ],
+        "mass": 0.9,
+        "install": "tool",
+        "effects": [
+          {
+            "stat": "aim",
+            "mul": 1.2
+          }
+        ],
+        "model": "night_vision_scope",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "optic": {
+          "zoom": [
+            1,
+            4
+          ],
+          "reticle": "duplex",
+          "vision": "night",
+          "batteryHours": 40
+        },
+        "arsenal": "Visão noturna / térmica"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: \"muito rara, usa bateria\". Bateria de 40 h, zoom e massa derivados."
+    },
+    "thermal_scope": {
+      "value": {
+        "name": "Thermal scope",
+        "kind": "optic",
+        "mounts": [
+          "rail_top",
+          "rail_left"
+        ],
+        "interfaces": [
+          "picatinny",
+          "ak_side",
+          "dovetail"
+        ],
+        "mass": 1.2,
+        "install": "tool",
+        "effects": [
+          {
+            "stat": "aim",
+            "mul": 1.2
+          }
+        ],
+        "model": "thermal_scope",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "optic": {
+          "zoom": [
+            1,
+            4
+          ],
+          "reticle": "duplex",
+          "vision": "thermal",
+          "batteryHours": 8
+        },
+        "arsenal": "Visão noturna / térmica"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: \"muito rara, usa bateria\". Bateria de 8 h (térmica gasta mais), zoom e massa derivados."
+    },
+    "integral_optic_1_5x": {
+      "value": {
+        "name": "Integral 1.5x optic of the AUG",
+        "kind": "optic",
+        "mounts": [
+          "rail_top"
+        ],
+        "interfaces": [
+          "integral",
+          "pso_1_side"
+        ],
+        "mass": 0.2,
+        "install": "bench",
+        "effects": [],
+        "model": "integral_optic_1_5x",
+        "sources": [
+          "gallery",
+          "reference"
+        ],
+        "optic": {
+          "zoom": [
+            1.5,
+            1.5
+          ],
+          "reticle": "duplex"
+        },
+        "removable": false
+      },
+      "source": "reference",
+      "reason": "Mira de 1,5× do AUG A1, parte do corpo (a Galeria não a desenha; o desenho T1.7 a lista como integrada). https://en.wikipedia.org/wiki/Steyr_AUG"
+    },
+    "pso_1": {
+      "value": {
+        "name": "PSO-1 scope",
+        "kind": "optic",
+        "mounts": [
+          "rail_top"
+        ],
+        "interfaces": [
+          "integral",
+          "pso_1_side"
+        ],
+        "mass": 0.6,
+        "install": "bench",
+        "effects": [],
+        "model": "pso_1",
+        "sources": [
+          "gallery",
+          "reference"
+        ],
+        "optic": {
+          "zoom": [
+            4,
+            4
+          ],
+          "reticle": "chevron"
+        },
+        "removable": false
+      },
+      "source": "reference",
+      "reason": "Luneta PSO-1 do SVD, 4× (a Galeria desenha `scope:4`). https://en.wikipedia.org/wiki/Dragunov_sniper_rifle"
+    },
+    "fixed_scope_10x": {
+      "value": {
+        "name": "Fixed 10x scope of the M24",
+        "kind": "optic",
+        "mounts": [
+          "rail_top"
+        ],
+        "interfaces": [
+          "integral",
+          "pso_1_side"
+        ],
+        "mass": 0.8,
+        "install": "bench",
+        "effects": [],
+        "model": "fixed_scope_10x",
+        "sources": [
+          "gallery",
+          "reference"
+        ],
+        "optic": {
+          "zoom": [
+            10,
+            10
+          ],
+          "reticle": "mildot"
+        },
+        "removable": false
+      },
+      "source": "reference",
+      "reason": "Leupold Mark 4 de 10× fixa do M24 SWS (a Galeria desenha `scope:3`). https://en.wikipedia.org/wiki/M24_Sniper_Weapon_System"
+    },
+    "vertical_grip": {
+      "value": {
+        "name": "Vertical foregrip",
+        "kind": "grip",
+        "mounts": [
+          "rail_bottom"
+        ],
+        "interfaces": [
+          "picatinny",
+          "mlok"
+        ],
+        "mass": 0.15,
+        "install": "field",
+        "effects": [
+          {
+            "stat": "recoilVertical",
+            "mul": 0.85,
+            "from": "recuo vertical −15%"
+          }
+        ],
+        "model": "vertical_grip",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "dims": {
+          "length": 0.1
+        },
+        "arsenal": "Empunhadura vertical"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: recuo vertical −15%. Massa derivada."
+    },
+    "bipod": {
+      "value": {
+        "name": "Bipod",
+        "kind": "bipod",
+        "mounts": [
+          "rail_bottom"
+        ],
+        "interfaces": [
+          "picatinny",
+          "bipod_stud"
+        ],
+        "mass": 0.4,
+        "install": "field",
+        "effects": [
+          {
+            "stat": "recoilVertical",
+            "mul": 0.4,
+            "when": "supported",
+            "from": "recuo −60% deitado ou apoiado"
+          },
+          {
+            "stat": "recoilHorizontal",
+            "mul": 0.4,
+            "when": "supported"
+          }
+        ],
+        "model": "bipod",
+        "sources": [
+          "gallery",
+          "arsenal",
+          "derived"
+        ],
+        "arsenal": "Bipé"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: recuo −60% deitado ou apoiado (`supported`); Galeria `bipod()`. Massa derivada."
+    },
+    "m203": {
+      "value": {
+        "name": "M203 grenade launcher",
+        "kind": "underbarrel",
+        "mounts": [
+          "underbarrel"
+        ],
+        "interfaces": [
+          "m203"
+        ],
+        "mass": 1.36,
+        "install": "bench",
+        "effects": [],
+        "model": "m203",
+        "sources": [
+          "arsenal",
+          "reference"
+        ],
+        "blocks": [
+          "rail_bottom"
+        ],
+        "categories": [
+          "rifle",
+          "carbine",
+          "dmr"
+        ],
+        "launcher": "m203",
+        "dims": {
+          "length": 0.38
+        },
+        "arsenal": "Lança-granadas M203"
+      },
+      "source": "reference",
+      "reason": "Arsenal §11: \"Lança-granadas M203: lendário, só base militar\". Massa 1,36 kg e comprimento 380 mm do manual TM 9-1010-221-10 (https://en.wikipedia.org/wiki/M203_grenade_launcher)."
+    },
+    "gp_25": {
+      "value": {
+        "name": "GP-25 grenade launcher",
+        "kind": "underbarrel",
+        "mounts": [
+          "underbarrel"
+        ],
+        "interfaces": [
+          "gp25"
+        ],
+        "mass": 1.5,
+        "install": "bench",
+        "effects": [],
+        "model": "gp_25",
+        "sources": [
+          "reference"
+        ],
+        "blocks": [
+          "rail_bottom"
+        ],
+        "categories": [
+          "rifle",
+          "carbine",
+          "dmr"
+        ],
+        "launcher": "gp_25",
+        "dims": {
+          "length": 0.323
+        }
+      },
+      "source": "reference",
+      "reason": "Criação: lança-granadas sob o cano dos AK (a baioneta da Galeria, `bayo:1`, marca onde ele prende). 323 mm e 1,5 kg: https://en.wikipedia.org/wiki/GP-25"
+    },
+    "ag36": {
+      "value": {
+        "name": "AG36 grenade launcher",
+        "kind": "underbarrel",
+        "mounts": [
+          "underbarrel"
+        ],
+        "interfaces": [
+          "ag36"
+        ],
+        "mass": 1.5,
+        "install": "bench",
+        "effects": [],
+        "model": "ag36",
+        "sources": [
+          "reference"
+        ],
+        "blocks": [
+          "rail_bottom"
+        ],
+        "categories": [
+          "rifle",
+          "carbine",
+          "dmr"
+        ],
+        "launcher": "ag36",
+        "dims": {
+          "length": 0.35
+        }
+      },
+      "source": "reference",
+      "reason": "Criação: lança-granadas do HK416 e do G36. Cerca de 350 mm e 1,5 kg: https://en.wikipedia.org/wiki/AG36"
+    },
+    "weapon_light": {
+      "value": {
+        "name": "Weapon light",
+        "kind": "light",
+        "mounts": [
+          "rail_left",
+          "rail_right",
+          "rail_bottom"
+        ],
+        "interfaces": [
+          "picatinny",
+          "mlok"
+        ],
+        "mass": 0.12,
+        "install": "field",
+        "effects": [],
+        "model": "weapon_light",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "light": {
+          "coneDeg": 30,
+          "range": 60,
+          "visibleFrom": 40,
+          "batteryHours": 20
+        },
+        "dims": {
+          "length": 0.1,
+          "diameter": 0.03
+        },
+        "arsenal": "Lanterna"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: \"essencial à noite, mas zumbis veem a luz a 40 m\" (`visibleFrom` 40). Cone de 30° e alcance de 60 m aprovados pelo dono (2026-10-24); bateria e massa derivadas."
+    },
+    "laser_sight": {
+      "value": {
+        "name": "Laser sight",
+        "kind": "laser",
+        "mounts": [
+          "rail_left",
+          "rail_right",
+          "rail_bottom"
+        ],
+        "interfaces": [
+          "picatinny",
+          "mlok"
+        ],
+        "mass": 0.1,
+        "install": "field",
+        "effects": [
+          {
+            "stat": "hipSpreadExcess",
+            "mul": 0.5,
+            "when": "hip"
+          }
+        ],
+        "model": "laser_sight",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "laser": {
+          "color": 16711680,
+          "range": 120,
+          "visibleFrom": 30
+        },
+        "dims": {
+          "length": 0.08,
+          "diameter": 0.025
+        },
+        "arsenal": "Laser"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: \"menos dispersão atirando sem mirar\"; ×0,5 no excesso de dispersão do quadril aprovado pelo dono. Cor, alcance, `visibleFrom` e massa derivados."
+    },
+    "extended_magazine": {
+      "value": {
+        "name": "Extended magazine",
+        "kind": "magazine",
+        "mounts": [
+          "magazine"
+        ],
+        "interfaces": [
+          "mag_box",
+          "mag_curved",
+          "mag_pistol"
+        ],
+        "mass": 0.15,
+        "install": "field",
+        "effects": [
+          {
+            "stat": "capacity",
+            "mul": 1.5,
+            "from": "+50% de capacidade"
+          },
+          {
+            "stat": "reload",
+            "mul": 1.15,
+            "from": "recarga +15% mais lenta"
+          }
+        ],
+        "model": "extended_magazine",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "arsenal": "Estendido",
+        "categories": [
+          "pistol",
+          "smg",
+          "rifle",
+          "carbine",
+          "dmr",
+          "machine_gun"
+        ]
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: +50% de capacidade e recarga +15% mais lenta (reloadEmpty acompanha). Massa derivada."
+    },
+    "drum_magazine": {
+      "value": {
+        "name": "Drum magazine",
+        "kind": "magazine",
+        "mounts": [
+          "magazine"
+        ],
+        "interfaces": [
+          "mag_box",
+          "mag_curved"
+        ],
+        "mass": 1.2,
+        "install": "field",
+        "effects": [
+          {
+            "stat": "capacity",
+            "set": 75,
+            "from": "50 a 100 tiros"
+          },
+          {
+            "stat": "faultChance",
+            "mul": 1.5
+          },
+          {
+            "stat": "reload",
+            "mul": 1.3
+          }
+        ],
+        "model": "drum_magazine",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "arsenal": "Tambor",
+        "categories": [
+          "smg",
+          "rifle",
+          "carbine",
+          "dmr",
+          "machine_gun"
+        ]
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: \"50 a 100 tiros, peso e chance de engasgo maiores\". 75 tiros, pane ×1,5 (aprovado pelo dono), recarga ×1,3 e massa derivados."
+    },
+    "dual_coupler": {
+      "value": {
+        "name": "Dual magazine coupler",
+        "kind": "magazine",
+        "mounts": [
+          "magazine"
+        ],
+        "interfaces": [
+          "mag_box",
+          "mag_curved"
+        ],
+        "mass": 0.1,
+        "install": "field",
+        "effects": [
+          {
+            "stat": "reload",
+            "mul": 0.5
+          }
+        ],
+        "model": "dual_coupler",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "arsenal": "Acoplador duplo",
+        "secondReload": true,
+        "categories": [
+          "smg",
+          "rifle",
+          "carbine",
+          "dmr",
+          "machine_gun"
+        ]
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: \"segunda recarga muito mais rápida\"; ×0,5 na segunda recarga aprovado pelo dono (a primeira, com o carregador do encaixe, não muda). Massa derivada."
+    },
+    "sawn_off_barrel": {
+      "value": {
+        "name": "Sawn-off barrel",
+        "kind": "barrel",
+        "mounts": [
+          "barrel"
+        ],
+        "interfaces": [
+          "barrel_swap"
+        ],
+        "mass": -0.4,
+        "install": "bench",
+        "effects": [
+          {
+            "stat": "spread",
+            "mul": 1.6,
+            "from": "dispersão maior"
+          },
+          {
+            "stat": "range",
+            "mul": 0.6
+          },
+          {
+            "stat": "draw",
+            "mul": 0.8
+          }
+        ],
+        "model": "sawn_off_barrel",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "categories": [
+          "shotgun"
+        ],
+        "arsenal": "Cano serrado"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: \"dispersão maior, arma vira de mão\". Fatores 1,6 (dispersão), 0,6 (alcance) e 0,8 (saque), e a massa tirada, são derivados."
+    },
+    "long_barrel": {
+      "value": {
+        "name": "Long barrel",
+        "kind": "barrel",
+        "mounts": [
+          "barrel"
+        ],
+        "interfaces": [
+          "barrel_swap"
+        ],
+        "mass": 0.4,
+        "install": "bench",
+        "effects": [
+          {
+            "stat": "range",
+            "mul": 1.2,
+            "from": "alcance +20%"
+          },
+          {
+            "stat": "muzzleSpeed",
+            "mul": 1.03
+          }
+        ],
+        "model": "long_barrel",
+        "sources": [
+          "arsenal",
+          "derived"
+        ],
+        "categories": [
+          "shotgun"
+        ],
+        "arsenal": "Cano longo"
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §11: alcance +20% e mais pesada. Velocidade ×1,03 e massa derivadas."
+    },
+    "sling": {
+      "value": {
+        "name": "Sling",
+        "kind": "sling",
+        "mounts": [
+          "sling"
+        ],
+        "interfaces": [
+          "swivel"
+        ],
+        "mass": 0.15,
+        "install": "field",
+        "effects": [
+          {
+            "stat": "draw",
+            "mul": 0.85
+          }
+        ],
+        "model": "sling",
+        "sources": [
+          "derived"
+        ],
+        "stowable": true,
+        "categories": [
+          "smg",
+          "rifle",
+          "carbine",
+          "sniper",
+          "dmr",
+          "hunting",
+          "machine_gun",
+          "shotgun"
+        ]
+      },
+      "source": "derived",
+      "reason": "Criação (design T1.7): bandoleira em armas longas; deixa a arma às costas (`stowable`, para o `game-items`). Saque ×0,85 e massa derivados."
+    },
+    "ammo_backpack": {
+      "value": {
+        "name": "Ammunition backpack",
+        "kind": "feed",
+        "mounts": [
+          "feed"
+        ],
+        "interfaces": [
+          "belt"
+        ],
+        "mass": 1.5,
+        "install": "field",
+        "effects": [
+          {
+            "stat": "capacity",
+            "set": 500
+          }
+        ],
+        "model": "ammo_backpack",
+        "sources": [
+          "derived"
+        ],
+        "carry": "back",
+        "categories": [
+          "machine_gun",
+          "rifle"
+        ]
+      },
+      "source": "derived",
+      "reason": "Criação (decisão do dono, 2026-10-24): mochila de munição de 500 cartuchos por padrão, configurável, para metralhadoras de fita e a M134. Massa da mochila derivada."
+    },
+    "tripod": {
+      "value": {
+        "name": "Tripod mount",
+        "kind": "mount",
+        "mounts": [
+          "underbarrel"
+        ],
+        "interfaces": [
+          "tripod"
+        ],
+        "mass": 6.0,
+        "install": "bench",
+        "effects": [
+          {
+            "stat": "recoilVertical",
+            "mul": 0.4
+          },
+          {
+            "stat": "recoilHorizontal",
+            "mul": 0.4
+          },
+          {
+            "stat": "spread",
+            "mul": 0.7
+          }
+        ],
+        "model": "tripod",
+        "sources": [
+          "derived"
+        ],
+        "categories": [
+          "machine_gun"
+        ]
+      },
+      "source": "derived",
+      "reason": "Criação (decisão do dono, 2026-10-24): M134 e metralhadoras montadas em tripé ou veículo. Apoio (`supported`) e números de recuo derivados do bipé do §11 (×0,4)."
+    }
   }
 }

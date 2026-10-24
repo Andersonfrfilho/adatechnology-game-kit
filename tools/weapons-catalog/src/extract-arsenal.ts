@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 
-import { numberBefore, parseNumber, sectionRows } from './arsenal-html'
+import { cellText, numberBefore, parseNumber, sectionRows } from './arsenal-html'
 import { SOURCE_PATHS } from './paths'
 
 export type ArsenalCatalogRow = {
@@ -43,7 +43,15 @@ export type ArsenalExplosiveRow = {
   readonly noise: number
 }
 
+/** A line of §11 "Modificações e acessórios": the card it is under, the name in bold and the effect after the colon. */
+export type ArsenalAccessoryRow = {
+  readonly group: string
+  readonly name: string
+  readonly effect: string
+}
+
 export type ArsenalData = {
+  readonly accessories: readonly ArsenalAccessoryRow[]
   readonly catalog: readonly ArsenalCatalogRow[]
   readonly sheet: readonly ArsenalSheetRow[]
   readonly noise: readonly ArsenalNoiseRow[]
@@ -101,11 +109,25 @@ const explosiveRow = (cells: string[]): ArsenalExplosiveRow => {
 
 const isDataRow = (cells: string[], columns: number): boolean => cells.length === columns
 
+/** The `<b>Name</b>: effect` lines of the cards of §11. */
+export const parseAccessories = (html: string): ArsenalAccessoryRow[] => {
+  const section = /<section id="mods">([\s\S]*?)<\/section>/.exec(html)
+  if (!section) throw new Error('weapons-catalog: Arsenal section 11 (mods) not found')
+  const rows: ArsenalAccessoryRow[] = []
+  for (const card of (section[1] ?? '').matchAll(/<div class="card"><h4>(.*?)<\/h4>([\s\S]*?)<\/div>/g)) {
+    for (const line of (card[2] ?? '').matchAll(/<p><b>(.*?)<\/b>[^:<]*:\s*([\s\S]*?)<\/p>/g)) {
+      rows.push({ group: cellText(card[1] ?? ''), name: cellText(line[1] ?? ''), effect: cellText(line[2] ?? '') })
+    }
+  }
+  return rows
+}
+
 export const extractArsenal = (): ArsenalData => {
   const html = readFileSync(SOURCE_PATHS.arsenal, 'utf8')
   const dataRows = (code: string, columns: number): string[][] =>
     sectionRows(html, code).filter((cells) => isDataRow(cells, columns) && cells[0] !== 'Arma' && cells[0] !== 'Fonte' && cells[0] !== 'Explosivo')
   return {
+    accessories: parseAccessories(html),
     catalog: dataRows('06', 8).map(catalogRow),
     sheet: dataRows('07', 7).map(sheetRow),
     noise: dataRows('12', 3).map((cells) => ({ source: cells[0] ?? '', radius: numberBefore(cells[1] ?? '', 'm') ?? 0 })),

@@ -42,7 +42,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "glock_18",
@@ -91,7 +103,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "glock_19",
@@ -136,7 +160,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "taurus_g2c",
@@ -181,7 +217,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "taurus_ts9",
@@ -226,7 +274,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "beretta_92fs",
@@ -271,7 +331,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "sig_sauer_p226",
@@ -316,7 +388,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "cz_75",
@@ -361,7 +445,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "taurus_pt100",
@@ -406,7 +502,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "colt_m1911",
@@ -451,7 +559,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "makarov_pm",
@@ -495,7 +615,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "fn_five_seven",
@@ -540,7 +672,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "desert_eagle_mark_xix",
@@ -584,7 +728,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_pistol"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "taurus_82",
@@ -629,7 +785,9 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [],
+    "fitted": []
   },
   {
     "id": "sw_686",
@@ -677,7 +835,9 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [],
+    "fitted": []
   },
   {
     "id": "sw_model_29",
@@ -722,7 +882,9 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [],
+    "fitted": []
   },
   {
     "id": "hk_mp5a3",
@@ -768,7 +930,40 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "hk_3lug"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_curved"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [],
+    "stock": {
+      "kind": "retract"
+    }
   },
   {
     "id": "taurus_smt9",
@@ -814,7 +1009,67 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_right",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [],
+    "stock": {
+      "kind": "retract"
+    }
   },
   {
     "id": "hk_ump_45",
@@ -860,7 +1115,50 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "thread_5/8x24"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "right"
+    }
   },
   {
     "id": "uzi",
@@ -905,7 +1203,32 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "under"
+    }
   },
   {
     "id": "fn_p90",
@@ -950,7 +1273,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "kriss_vector",
@@ -996,7 +1331,73 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_right",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "red_dot",
+        "mount": "rail_top"
+      }
+    ],
+    "stock": {
+      "kind": "fold_retract",
+      "foldAxis": "right"
+    }
   },
   {
     "id": "thompson_m1a1",
@@ -1041,7 +1442,28 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "cz_scorpion_evo_3",
@@ -1087,7 +1509,73 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_right",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "red_dot",
+        "mount": "rail_top"
+      }
+    ],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "right"
+    }
   },
   {
     "id": "mac_10",
@@ -1133,7 +1621,45 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "fixed_muzzle_device"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake_heavy",
+        "mount": "muzzle"
+      }
+    ],
+    "stock": {
+      "kind": "retract"
+    }
   },
   {
     "id": "remington_870",
@@ -1182,7 +1708,28 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "barrel",
+        "interfaces": [
+          "barrel_swap"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "mossberg_500",
@@ -1231,7 +1778,28 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "barrel",
+        "interfaces": [
+          "barrel_swap"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "cbc_pump_military_3_0",
@@ -1280,7 +1848,37 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "barrel",
+        "interfaces": [
+          "barrel_swap"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "benelli_m4",
@@ -1321,14 +1919,53 @@
     "dimensions": {
       "length": 1.01,
       "barrel": 0.47,
-      "emptyMass": 3.82
+      "emptyMass": 3.82,
+      "lengthCollapsed": 0.889
     },
     "archetype": "shotgun_semi_12",
     "sources": [
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "barrel",
+        "interfaces": [
+          "barrel_swap"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "red_dot",
+        "mount": "rail_top"
+      }
+    ],
+    "stock": {
+      "kind": "retract"
+    }
   },
   {
     "id": "franchi_spas_12",
@@ -1371,14 +2008,40 @@
     "dimensions": {
       "length": 1.041,
       "barrel": 0.546,
-      "emptyMass": 4.4
+      "emptyMass": 4.4,
+      "lengthCollapsed": 0.82
     },
     "archetype": "shotgun_pump_12",
     "sources": [
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "barrel",
+        "interfaces": [
+          "barrel_swap"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "over"
+    }
   },
   {
     "id": "kel_tec_ksg",
@@ -1428,7 +2091,28 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "barrel",
+        "interfaces": [
+          "barrel_swap"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "saiga_12",
@@ -1476,7 +2160,37 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "barrel",
+        "interfaces": [
+          "barrel_swap"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "aa_12",
@@ -1524,7 +2238,37 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_drum"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "barrel",
+        "interfaces": [
+          "barrel_swap"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "boito_double_barrel",
@@ -1569,7 +2313,28 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "barrel",
+        "interfaces": [
+          "barrel_swap"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "ak_47",
@@ -1615,7 +2380,55 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "thread_14x1lh"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "ak_side"
+        ],
+        "sources": [
+          "arsenal"
+        ]
+      },
+      {
+        "kind": "underbarrel",
+        "interfaces": [
+          "gp25"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_curved"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "akm",
@@ -1661,7 +2474,55 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "thread_14x1lh"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "ak_side"
+        ],
+        "sources": [
+          "arsenal"
+        ]
+      },
+      {
+        "kind": "underbarrel",
+        "interfaces": [
+          "gp25"
+        ],
+        "sources": [
+          "arsenal"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_curved"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "ak_74",
@@ -1706,6 +2567,50 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "thread_24x1.5"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "underbarrel",
+        "interfaces": [
+          "gp25"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_curved"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake",
+        "mount": "muzzle"
+      }
     ]
   },
   {
@@ -1752,7 +2657,98 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "thread_24x1.5"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery",
+          "arsenal"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery",
+          "arsenal"
+        ]
+      },
+      {
+        "kind": "rail_right",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery",
+          "arsenal"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery",
+          "arsenal"
+        ]
+      },
+      {
+        "kind": "underbarrel",
+        "interfaces": [
+          "gp25"
+        ],
+        "sources": [
+          "arsenal"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_curved"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake",
+        "mount": "muzzle"
+      },
+      {
+        "id": "red_dot",
+        "mount": "rail_top"
+      }
+    ],
+    "stock": {
+      "kind": "retract"
+    }
   },
   {
     "id": "imbel_ia2",
@@ -1791,14 +2787,58 @@
     "dimensions": {
       "length": 0.85,
       "barrel": 0.33,
-      "emptyMass": 3.4
+      "emptyMass": 3.4,
+      "lengthCollapsed": 0.6
     },
     "archetype": "rifle_5_56",
     "sources": [
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "thread_1/2x28"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "right"
+    }
   },
   {
     "id": "taurus_t4",
@@ -1837,14 +2877,89 @@
     "dimensions": {
       "length": 0.84,
       "barrel": 0.368,
-      "emptyMass": 3
+      "emptyMass": 3,
+      "lengthCollapsed": 0.767
     },
     "archetype": "rifle_5_56",
     "sources": [
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "thread_1/2x28"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_right",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "red_dot",
+        "mount": "rail_top"
+      }
+    ],
+    "stock": {
+      "kind": "retract"
+    }
   },
   {
     "id": "colt_m4a1",
@@ -1891,7 +3006,98 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "thread_1/2x28"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny",
+          "mlok"
+        ],
+        "sources": [
+          "gallery",
+          "arsenal"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "picatinny",
+          "mlok"
+        ],
+        "sources": [
+          "gallery",
+          "arsenal"
+        ]
+      },
+      {
+        "kind": "rail_right",
+        "interfaces": [
+          "picatinny",
+          "mlok"
+        ],
+        "sources": [
+          "gallery",
+          "arsenal"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "picatinny",
+          "mlok"
+        ],
+        "sources": [
+          "gallery",
+          "arsenal"
+        ]
+      },
+      {
+        "kind": "underbarrel",
+        "interfaces": [
+          "m203"
+        ],
+        "sources": [
+          "arsenal"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "acog_4x",
+        "mount": "rail_top"
+      }
+    ],
+    "stock": {
+      "kind": "retract"
+    }
   },
   {
     "id": "colt_m16a2",
@@ -1938,7 +3144,46 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "thread_1/2x28"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "underbarrel",
+        "interfaces": [
+          "m203"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "hk416",
@@ -1984,7 +3229,90 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "thread_1/2x28"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_right",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "underbarrel",
+        "interfaces": [
+          "ag36"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "red_dot",
+        "mount": "rail_top"
+      }
+    ],
+    "stock": {
+      "kind": "retract"
+    }
   },
   {
     "id": "steyr_aug_a1",
@@ -2030,6 +3358,42 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "integral"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "integral_optic_1_5x",
+        "mount": "rail_top",
+        "integral": true
+      }
     ]
   },
   {
@@ -2076,6 +3440,41 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "fixed_muzzle_device"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake",
+        "mount": "muzzle"
+      }
     ]
   },
   {
@@ -2122,7 +3521,28 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "sks",
@@ -2165,7 +3585,28 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "underbarrel",
+        "interfaces": [
+          "gp25"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "m14_ebr",
@@ -2201,14 +3642,80 @@
     "dimensions": {
       "length": 1,
       "barrel": 0.457,
-      "emptyMass": 5.1
+      "emptyMass": 5.1,
+      "lengthCollapsed": 0.81
     },
     "archetype": "rifle_bolt_308",
     "sources": [
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_right",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "scope_3_9x",
+        "mount": "rail_top"
+      }
+    ],
+    "stock": {
+      "kind": "retract"
+    }
   },
   {
     "id": "svd_dragunov",
@@ -2251,6 +3758,55 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "fixed_muzzle_device"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "pso_1_side"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake",
+        "mount": "muzzle"
+      },
+      {
+        "id": "pso_1",
+        "mount": "rail_top",
+        "integral": true
+      }
     ]
   },
   {
@@ -2297,7 +3853,82 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "thread_5/8x24"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_right",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "acog_4x",
+        "mount": "rail_top"
+      }
+    ],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "right"
+    }
   },
   {
     "id": "knights_sr_25_mk11",
@@ -2341,6 +3972,73 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_right",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "picatinny",
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "scope_3_9x",
+        "mount": "rail_top"
+      },
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      }
     ]
   },
   {
@@ -2388,6 +4086,41 @@
       "gallery",
       "sdk",
       "derived"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "dovetail"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "scope_3_9x",
+        "mount": "rail_top"
+      }
     ]
   },
   {
@@ -2434,6 +4167,32 @@
       "gallery",
       "sdk",
       "derived"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "dovetail"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "scope_3_9x",
+        "mount": "rail_top"
+      }
     ]
   },
   {
@@ -2470,14 +4229,99 @@
     "dimensions": {
       "length": 1.26,
       "barrel": 0.686,
-      "emptyMass": 6.9
+      "emptyMass": 6.9,
+      "lengthCollapsed": 1.055
     },
     "archetype": "sniper_338",
     "sources": [
       "gallery",
       "sdk",
       "derived"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "fixed_muzzle_device"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_left",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_right",
+        "interfaces": [
+          "picatinny"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "picatinny",
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake",
+        "mount": "muzzle"
+      },
+      {
+        "id": "scope_3_9x",
+        "mount": "rail_top"
+      },
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      }
+    ],
+    "stock": {
+      "kind": "fold",
+      "foldAxis": "right"
+    }
   },
   {
     "id": "cheytac_m200",
@@ -2513,14 +4357,79 @@
     "dimensions": {
       "length": 1.397,
       "barrel": 0.737,
-      "emptyMass": 14
+      "emptyMass": 14,
+      "lengthCollapsed": 1.187
     },
     "archetype": "sniper_338",
     "sources": [
       "gallery",
       "sdk",
       "derived"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "fixed_muzzle_device"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "dovetail"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake",
+        "mount": "muzzle"
+      },
+      {
+        "id": "scope_6_24x",
+        "mount": "rail_top"
+      },
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      }
+    ],
+    "stock": {
+      "kind": "retract"
+    }
   },
   {
     "id": "remington_700",
@@ -2567,6 +4476,32 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "dovetail"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "scope_3_9x",
+        "mount": "rail_top"
+      }
     ]
   },
   {
@@ -2613,6 +4548,46 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "integral"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      },
+      {
+        "id": "fixed_scope_10x",
+        "mount": "rail_top",
+        "integral": true
+      }
     ]
   },
   {
@@ -2657,7 +4632,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "accuracy_awm",
@@ -2702,6 +4689,67 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "fixed_muzzle_device"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "dovetail"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake",
+        "mount": "muzzle"
+      },
+      {
+        "id": "scope_3_9x",
+        "mount": "rail_top"
+      },
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      }
     ]
   },
   {
@@ -2747,6 +4795,67 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "fixed_muzzle_device"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "dovetail"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake",
+        "mount": "muzzle"
+      },
+      {
+        "id": "scope_3_9x",
+        "mount": "rail_top"
+      },
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      }
     ]
   },
   {
@@ -2791,6 +4900,67 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "muzzle",
+        "interfaces": [
+          "fixed_muzzle_device"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "dovetail"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "magazine",
+        "interfaces": [
+          "mag_box"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "muzzle_brake_heavy",
+        "mount": "muzzle"
+      },
+      {
+        "id": "scope_3_9x",
+        "mount": "rail_top"
+      },
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      }
     ]
   },
   {
@@ -2838,7 +5008,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "cbc_7022",
@@ -2882,7 +5064,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "cbc_122",
@@ -2927,7 +5121,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "winchester_1894",
@@ -2974,7 +5180,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "rossi_puma",
@@ -3024,7 +5242,19 @@
       "gallery",
       "arsenal",
       "sdk"
-    ]
+    ],
+    "mounts": [
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": []
   },
   {
     "id": "hunting_rifle_30_06",
@@ -3070,6 +5300,32 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "dovetail"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "scope_3_9x",
+        "mount": "rail_top"
+      }
     ]
   },
   {
@@ -3114,6 +5370,41 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "feed",
+        "interfaces": [
+          "belt"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      }
     ]
   },
   {
@@ -3157,6 +5448,41 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "feed",
+        "interfaces": [
+          "belt"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      }
     ]
   },
   {
@@ -3201,6 +5527,41 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_bottom",
+        "interfaces": [
+          "bipod_stud"
+        ],
+        "sources": [
+          "gallery"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "feed",
+        "interfaces": [
+          "belt"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "bipod",
+        "mount": "rail_bottom"
+      }
     ]
   },
   {
@@ -3245,6 +5606,42 @@
       "gallery",
       "arsenal",
       "sdk"
+    ],
+    "mounts": [
+      {
+        "kind": "underbarrel",
+        "interfaces": [
+          "tripod"
+        ],
+        "sources": [
+          "reference"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "feed",
+        "interfaces": [
+          "belt"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "tripod",
+        "mount": "underbarrel",
+        "integral": true
+      }
     ]
   },
   {
@@ -3293,6 +5690,32 @@
       "arsenal",
       "sdk",
       "derived"
+    ],
+    "mounts": [
+      {
+        "kind": "rail_top",
+        "interfaces": [
+          "dovetail"
+        ],
+        "sources": [
+          "derived"
+        ]
+      },
+      {
+        "kind": "sling",
+        "interfaces": [
+          "swivel"
+        ],
+        "sources": [
+          "derived"
+        ]
+      }
+    ],
+    "fitted": [
+      {
+        "id": "scope_3_9x",
+        "mount": "rail_top"
+      }
     ]
   },
   {

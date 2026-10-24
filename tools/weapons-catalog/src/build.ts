@@ -1,14 +1,18 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 
+import { buildAttachments } from './build-attachments'
 import { buildCalibers } from './build-calibers'
 import type { CaliberRecord } from './build-calibers'
 import { buildExplosives } from './build-explosives'
 import { buildFirearm, caliberOf, firearmId } from './build-firearms'
 import type { WeaponRecord } from './build-firearms'
 import { buildFlamethrower, buildGrenadeLauncher, buildRocketLauncher } from './build-launchers'
+import { buildMounts } from './build-mounts'
 import { buildModels } from './build-models'
 import { loadDecisions } from './decisions'
+import type { Decisions } from './decisions'
+import type { ModelRecord } from './build-models'
 import { extractArsenal } from './extract-arsenal'
 import { extractGallery } from './extract-gallery'
 import { extractGame } from './extract-game'
@@ -28,6 +32,24 @@ const assertUniqueIds = (records: readonly { readonly id: string }[]): void => {
   for (const { id } of records) {
     if (seen.has(id)) throw new Error(`weapons-catalog: duplicate weapon id "${id}"`)
     seen.add(id)
+  }
+}
+
+type Dimensions = Readonly<Record<string, unknown>>
+
+/** The firearm with its places, what it carries, its stock and, when the Arsenal sheet has none, the length with the stock in. A weapon with no Gallery model (the M79) has none. */
+const withMounts = (firearm: WeaponRecord, models: Readonly<Record<string, ModelRecord>>, decisions: Decisions): WeaponRecord => {
+  const model = models[firearm.id]
+  if (!model) return firearm
+  const { mounts, fitted, stock, lengthCollapsed } = buildMounts(firearm, model, decisions)
+  const dimensions = firearm.dimensions as Dimensions | undefined
+  const hasCollapsed = dimensions?.lengthCollapsed !== undefined
+  return {
+    ...firearm,
+    ...(lengthCollapsed === undefined || hasCollapsed || !dimensions ? {} : { dimensions: { ...dimensions, lengthCollapsed } }),
+    mounts,
+    fitted,
+    ...(stock ? { stock } : {}),
   }
 }
 
@@ -64,12 +86,15 @@ export const buildCatalog = (): CatalogFiles => {
   const allFirearms = [...firearms, ...variants, buildGrenadeLauncher(context)]
   assertUniqueIds([...archetypes, ...allFirearms, ...launchers])
   const variantNames = new Map(Object.values(decisions.variants).map((decision) => [decision.value.id, decision.value.of]))
+  const models = buildModels({ rows: gallery.weapons, variantIds: variantNames, firearms: allFirearms }, context)
+  const mountedFirearms = allFirearms.map((firearm) => withMounts(firearm, models, decisions))
   return {
     [OUTPUT_PATHS.calibers]: serialize(calibers),
-    [OUTPUT_PATHS.firearms]: serialize(allFirearms),
+    [OUTPUT_PATHS.firearms]: serialize(mountedFirearms),
     [OUTPUT_PATHS.launchers]: serialize(launchers),
     [OUTPUT_PATHS.explosives]: serialize(explosives),
-    [OUTPUT_PATHS.models]: serialize(buildModels({ rows: gallery.weapons, variantIds: variantNames, firearms: allFirearms }, context)),
+    [OUTPUT_PATHS.models]: serialize(models),
+    [OUTPUT_PATHS.attachments]: serialize(buildAttachments(arsenal.accessories, decisions)),
   }
 }
 

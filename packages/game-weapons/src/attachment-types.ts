@@ -96,6 +96,10 @@ export interface AttachmentDef {
   readonly durability?: { readonly shots: readonly [number, number] }
   /** Carried on the back (an ammunition backpack). */
   readonly carry?: 'back'
+  /** Can be slung, which lets the weapon be stowed on the body (a sling). */
+  readonly stowable?: boolean
+  /** The effects count on every second reload only: the spare magazine is already coupled (a dual coupler). */
+  readonly secondReload?: boolean
   /** Name of the model the renderer draws it with. */
   readonly model: string
   readonly sources: readonly DataSource[]
