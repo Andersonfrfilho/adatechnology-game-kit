@@ -2500,3 +2500,49 @@ node examples/interactables-test-area/build.mjs && test.mjs -> 24/24
   casa vira muro escalável, não existe aqui.
 - `popTarget` vinha de `?pop=` na URL; aqui é opção de `updatePopulation`, e a migração (ponto de entrada, largura, destino, 120 a cada 90 s) também.
 - Bancada, `game-crowd-three` e `examples/crowd-test-area` entram no T8.1c.
+
+## T8.1b — civis, bichos, revoada e a ponte com o `game-infection`
+
+> 🤖 Modelo: `sonnet` (feito nesta sessão pelo opus)
+
+**O que foi feito**
+
+- `createCivilians` (`packages/game-crowd/src/behaviours/civilians.ts`): porte literal de `jogo.js` G 69960-70175 (`pontos`, `rota`, `npcZombies`,
+  `zChaseNpc`, `npcMorre`, `npcVira`, `npcMove`, `npcUpdate`). Rotina por hora, medo (3,4 m/s com agente a menos de 6 m, criança ×0,85, mordido ×0,8),
+  grupo que segue o líder ou o alvo, fuga por um caminho (`gone` no fim), portas abertas no caminho, agentes que caçam quem está a menos de 10 m e mais
+  perto que o alvo, golpe a cada 1,5 s, mordida (×1,5 da chance do tipo) e a virada depois de 120 s (o agente leva o índice do civil em `named` e
+  patrulha a rua). O núcleo não tem nome, fala, rádio nem diário: saem os eventos `bitten`, `died`, `turned`, `gone`, e o jogo escreve as linhas.
+- `createHerd` e `HERD_ROLES` (`behaviours/herd.ts`): `bichoLivre`, `zumbiPerto`, `bichosUpdate` (G 66601-66700) sem o rig. Vagar e descansar 4 a 11 s,
+  fugir do alvo e dos agentes, companheiro 2,2 m atrás, cacarejo (30 m), alarme do quero-quero (12 m, 40 m, voa 4 s), mugido (80 m), latido (60 m sob
+  12 m) e rosnado; os chamados são ruídos que a multidão ouve. Os papéis de cada espécie vêm de `bichosPovoar` (G 66607-66623). A velocidade usa
+  `walkHz`/`runHz` do `game-animals-species` e o tamanho do `game-animals` (`quadrupedLayout`, `birdSize`).
+- `createFlock` e `carrionCenter` (`behaviours/flock.ts`): os urubus do jogo (G 66700-66708: centro dos corpos com 3 ou mais, senão a carcaça) e o anel
+  de 40 pássaros do mapa vivo da Bancada de Hordas (G 53609-53615), pelas fórmulas literais.
+- `bindInfection` (`behaviours/infection.ts`): sem código dos times (decisão P12); `materialize` vira agentes no lugar que o jogo dá, a morte de um deles
+  volta à região como `removed`, os de longe voltam com `giveBack`, a mordida de civil vira `infect`. Testado com o `game-infection` de verdade.
+- `undeadCrowdTypes()` do desenho já entrou no T8.1a como `undeadCrowdPack()`.
+- Goldens `game-crowd-civilians.json` (3 cenas: rotina com porta e caça, grupo que segue e depois foge, mordida que vira) e `game-crowd-herd.json`
+  (quintal e fazenda com cão companheiro, gato, galinhas, quero-quero, vacas, cavalo, porco, capivara, vaca morta e 3 urubus, com a horda). O harness
+  de `vm-crowd.ts` corta do jogo o código dos civis e dos bichos e roda na ordem do laço (rastro, civis, bichos, horda, corpos). **4 de 4 iguais**.
+
+**Comandos e resultados**
+
+```text
+pnpm build                                              -> ok
+pnpm -r typecheck                                       -> ok
+pnpm lint                                               -> ok
+pnpm --filter @adatechnology/game-crowd test            -> 32 passed (goldens 8 + 3 + 1, comportamentos, ponte)
+characters-catalog-tool vitest --testTimeout=60000      -> passou
+node dist/record-golden-vm.js --check                   -> os 9 goldens vm idênticos
+node examples/test-room/build.mjs                       -> ok
+node examples/interactables-test-area/build.mjs && test.mjs -> 24/24
+```
+
+**Desvios e dúvidas**
+
+- O `bichoNovo` do jogo monta o rig antes (que sorteia a fase da animação) e depois sorteia rumo e descanso; o SDK sorteia só rumo e descanso, como
+  o golden: a fase é do desenho (`game-animals-three`).
+- O corpo de um civil morto entra no livro de corpos pelo `add` (que troca o mais velho quando cheio); o jogo escrevia na vaga 0 quando cheio.
+- Os textos do jogo (mordida, reanimou, latido "zumbi a N m", quero-quero) viram ids e distância; o jogo escreve as frases.
+- O líder do grupo e a distância da criança (`davi` segue a `helena` a 1,2 m) viram `leader` e `followDistance` da pessoa.
+- **Dúvida:** comportamento dos civis por estágio do surto (pergunta 1 do desenho) segue sem código dos times; `bindInfection` não muda a rotina.

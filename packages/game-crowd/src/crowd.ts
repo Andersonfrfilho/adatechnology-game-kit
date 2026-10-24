@@ -91,6 +91,12 @@ export type Crowd = {
   /** Global variant index of each type's variants (G 67079 `ZVAR_OF`). */
   readonly variantsOf: readonly (readonly number[])[]
   target: CrowdTarget | null
+  /** The stream every draw takes (the behaviours share it, in the game's order). */
+  readonly random: () => number
+  /** Emits a `sound` event, as the crowd's own (for the behaviours). */
+  sound(id: string, volume: number, x: number, y: number, z: number, distance: number): void
+  /** Emits an `effect` event, as the crowd's own (for the behaviours). */
+  effect(payload: CrowdEventMap['effect']): void
   typeIndex(id: string): number
   spawn(x: number, z: number, type?: number): number
   remove(i: number): void
@@ -109,6 +115,8 @@ export type Crowd = {
   pileBlast(x: number, z: number, radius: number): void
   /** The agent hunts something else than the target (a civilian): `game-crowd` civilians set it. */
   setHunt(hunt: ((i: number, tdt: number) => boolean) | null): void
+  /** The chase speed of agent `i` now (the stalker's sprint, the drowned in water; G 67343 `zChaseSpeed`). */
+  chaseSpeed(i: number): number
   /** The interface `game-player` uses to push, cut and be held by the agents. */
   asPlayerCrowd(): PlayerCrowdLike
   on<K extends CrowdEventName>(event: K, listener: (event: CrowdEventMap[K]) => void): () => void
@@ -1320,6 +1328,9 @@ export function createCrowd(options: CrowdOptions): Crowd {
     set target(next) {
       target = next
     },
+    random,
+    sound,
+    effect,
     typeIndex: (id) => typeIndexById.get(id) ?? -1,
     spawn: (x, z, type = -1) => spawn(x, z, type),
     remove,
@@ -1335,6 +1346,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
     setHunt(next) {
       hunt = next
     },
+    chaseSpeed,
     asPlayerCrowd: () => ({
       count: () => Z.n,
       active: (i) => Z.band[i] === 0,

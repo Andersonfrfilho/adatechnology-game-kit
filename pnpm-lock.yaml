@@ -305,9 +305,18 @@ importers:
         specifier: workspace:*
         version: link:../game-contracts
     devDependencies:
+      '@adatechnology/game-animals':
+        specifier: workspace:*
+        version: link:../game-animals
+      '@adatechnology/game-animals-species':
+        specifier: workspace:*
+        version: link:../game-animals-species
       '@adatechnology/game-characters-undead':
         specifier: workspace:*
         version: link:../game-characters-undead
+      '@adatechnology/game-infection':
+        specifier: workspace:*
+        version: link:../game-infection
       '@adatechnology/golden-tool':
         specifier: workspace:*
         version: link:../../tools/golden

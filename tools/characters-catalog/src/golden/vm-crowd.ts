@@ -1,4 +1,4 @@
-import { cutDeclaration, cutFunction } from '@adatechnology/golden-tool/cut-source'
+import { cutBetween, cutDeclaration, cutFunction } from '@adatechnology/golden-tool/cut-source'
 import { createEventRecorder, createGoldenRecord, createSeededRandom } from '@adatechnology/golden-tool'
 import type { EventRecorder, EventValue, GoldenRecord } from '@adatechnology/golden-tool'
 
@@ -9,6 +9,7 @@ import { evaluateGameSlice } from './game-context'
 const HORDE_MARKER = '// ===== Horda: simulação com relevância (R0..R3), percepção, combate, corpos ====='
 const WORLD_MARKER = '// ===== Mundo: quarteirão do Jardim Aurora (brief da fatia vertical) e arredores ====='
 const BANDS_MARKER = '// Relevância (revisão, seção 4)'
+const CORE_MARKER = '// ===== Núcleo: render, entrada, som, utilidades ====='
 /** Room for a population run: 170 agents and a migration of 120. */
 const CAPACITY = 400
 
@@ -39,6 +40,43 @@ export type CrowdScenario = {
   readonly hits?: readonly CrowdScenarioHit[]
   /** Runs the population (refill toward `target`, excess removal, the migration). */
   readonly population?: number
+  /** Survivors on the block (the game's `NPC`, `npcUpdate`): buildings, people, the hour, and when they join the group or leave. */
+  readonly civilians?: CivilianScenario
+  /** Animals (the game's `BICHO`, `bichosUpdate`) and the vultures. */
+  readonly herd?: HerdScenario
+}
+
+/** One animal: the game's species id (the code reads `cao` and `galinha`), the SDK's, the gait rates and size, and `bichoNovo`'s options. */
+export type HerdScenarioAnimal = {
+  readonly game: string
+  readonly species: string
+  readonly x: number
+  readonly z: number
+  readonly walkHz: number
+  readonly runHz: number
+  readonly size: number
+  readonly o: { readonly raio?: number; readonly medo?: number; readonly alarme?: number; readonly mugido?: number; readonly companheiro?: number; readonly ceu?: number }
+  readonly dead?: boolean
+}
+export type HerdScenario = { readonly animals: readonly HerdScenarioAnimal[]; readonly buildings?: readonly (readonly [number, number, number, number])[] }
+
+export type CivilianScenarioBuilding = { readonly x: number; readonly z: number; readonly w: number; readonly d: number; readonly house?: boolean; readonly front: -1 | 1 }
+export type CivilianScenarioPerson = {
+  readonly id: string
+  readonly home: string
+  readonly child?: boolean
+  readonly color?: number
+  readonly routine?: readonly (readonly [number, string])[]
+  readonly leader?: string
+  readonly followDistance?: number
+}
+export type CivilianScenario = {
+  readonly buildings: Readonly<Record<string, CivilianScenarioBuilding>>
+  readonly people: readonly CivilianScenarioPerson[]
+  /** The hour at the start and how many hours pass per second. */
+  readonly hour: readonly [start: number, perSecond: number]
+  readonly join?: readonly (readonly [frame: number, id: string])[]
+  readonly flee?: readonly (readonly [frame: number, id: string, path: readonly (readonly [number, number])[]])[]
 }
 
 const FAR_POOL = [1000, 1000, 1001, 1001] as const
@@ -209,8 +247,130 @@ export const CROWD_SCENARIOS: readonly CrowdScenario[] = [
   },
 ]
 
+const BLOCK: CivilianScenario['buildings'] = {
+  'Casa 2': { x: 6, z: -20, w: 8, d: 10, house: true, front: -1 },
+  'Casa 5': { x: -6, z: 10, w: 8, d: 10, house: true, front: 1 },
+  Mercadinho: { x: 20, z: 10, w: 10, d: 10, front: 1 },
+}
+
+/** The survivors' scenes: routines through a door with agents around, a group that follows and then leaves, a bitten survivor that turns. */
+export const CIVILIAN_SCENARIOS: readonly CrowdScenario[] = [
+  {
+    id: 'routine_door_and_hunt',
+    seed: 201,
+    fps: 20,
+    frames: 900,
+    every: 45,
+    target: { x: 0, z: 40 },
+    viewYaw: 0,
+    doors: [[10, -10, 'x', 1.2]],
+    agents: [
+      { x: 18, z: 2, type: 0 },
+      { x: 16, z: 4, type: 0 },
+      { x: 30, z: 3, type: 0 },
+      { x: -3, z: 4, type: 0 },
+    ],
+    civilians: {
+      buildings: BLOCK,
+      people: [
+        { id: 'cicero', home: 'Casa 2', color: 0x6a5a3a, routine: [[19, 'Mercadinho']] },
+        { id: 'sandra', home: 'Casa 5', color: 0x8a3a5a, routine: [[19.5, 'Mercadinho']] },
+      ],
+      hour: [18.95, 0.02],
+    },
+  },
+  {
+    id: 'group_follow_and_flee',
+    seed: 202,
+    fps: 20,
+    frames: 600,
+    every: 30,
+    target: { x: -2, z: 6, walk: [1, 0] },
+    viewYaw: 0,
+    agents: [
+      { x: 30, z: 0, type: 1 },
+      { x: 26, z: -3, type: 0 },
+    ],
+    civilians: {
+      buildings: BLOCK,
+      people: [
+        { id: 'helena', home: 'Casa 5', color: 0x3e6a8a },
+        { id: 'davi', home: 'Casa 5', child: true, color: 0xd0a030, leader: 'helena', followDistance: 1.2 },
+      ],
+      hour: [9, 0],
+      join: [
+        [0, 'helena'],
+        [0, 'davi'],
+      ],
+      flee: [[300, 'helena', [[10, 6], [30, 6], [40, 20]]]],
+    },
+  },
+  {
+    id: 'bitten_turns',
+    seed: 203,
+    fps: 5,
+    frames: 800,
+    every: 40,
+    target: { x: 0, z: -60 },
+    viewYaw: 0,
+    agents: [
+      { x: 0, z: 7, type: 0, st: 1 },
+      { x: 2, z: 7, type: 0, st: 1 },
+      { x: -2, z: 6, type: 0, st: 1 },
+      { x: 4, z: 8, type: 0, st: 1 },
+    ],
+    civilians: {
+      buildings: BLOCK,
+      people: [{ id: 'sandra', home: 'Casa 5', color: 0x8a3a5a, routine: [[12, 'Mercadinho']] }],
+      hour: [12, 0],
+    },
+  },
+]
+
+/** The animals' scenes: a yard and a farm with a companion dog, hens, a lapwing, cows, a horse, a pig, capybaras, a dead cow and vultures. */
+export const HERD_SCENARIOS: readonly CrowdScenario[] = [
+  {
+    id: 'yard_farm_and_vultures',
+    seed: 301,
+    fps: 20,
+    frames: 700,
+    every: 35,
+    target: { x: 0, z: 0, walk: [0.4, 0.2] },
+    viewYaw: 0,
+    agents: [
+      { x: 22, z: 2, type: 0 },
+      { x: -16, z: 9, type: 0 },
+      { x: 9, z: -14, type: 1 },
+    ],
+    herd: {
+      buildings: [[-30, 20, 8, 8]],
+      animals: [
+        { game: 'cao', species: 'dog', x: 2, z: 3, walkHz: 1.6, runHz: 2.9, size: 0.8, o: { companheiro: 1, raio: 6, medo: 0 } },
+        { game: 'gato', species: 'cat', x: 12, z: -6, walkHz: 1.9, runHz: 3.4, size: 0.45, o: { raio: 6, medo: 5 } },
+        { game: 'galinha', species: 'chicken', x: -8, z: 4, walkHz: 2.2, runHz: 4, size: 0.4, o: { raio: 4, medo: 4 } },
+        { game: 'galinha', species: 'chicken', x: -8.5, z: 5, walkHz: 2.2, runHz: 4, size: 0.4, o: { raio: 4, medo: 4 } },
+        { game: 'galinha', species: 'chicken', x: -7.5, z: 4.6, walkHz: 2.2, runHz: 4, size: 0.4, o: { raio: 4, medo: 4 } },
+        { game: 'queroquero', species: 'southern_lapwing', x: 8, z: 5, walkHz: 2.5, runHz: 1.6, size: 0.35, o: { raio: 5, medo: 0, alarme: 12 } },
+        { game: 'vaca', species: 'cow', x: -20, z: -10, walkHz: 1, runHz: 2, size: 1.7, o: { raio: 10, medo: 6, mugido: 1 } },
+        { game: 'vaca', species: 'cow', x: -24, z: -12, walkHz: 1, runHz: 2, size: 1.7, o: { raio: 10, medo: 6, mugido: 1 } },
+        { game: 'cavalo', species: 'horse', x: -26, z: -4, walkHz: 1, runHz: 2.1, size: 1.9, o: { raio: 10, medo: 7 } },
+        { game: 'porco', species: 'pig', x: -14, z: -16, walkHz: 1.4, runHz: 2.6, size: 0.9, o: { raio: 5, medo: 3 } },
+        { game: 'capivara', species: 'capybara', x: 18, z: 14, walkHz: 1.2, runHz: 2.6, size: 0.9, o: { raio: 8, medo: 15 } },
+        { game: 'vaca', species: 'cow', x: -18, z: -24, walkHz: 1, runHz: 2, size: 1.7, o: { raio: 0 }, dead: true },
+        { game: 'urubu', species: 'vulture', x: 0, z: 0, walkHz: 1.4, runHz: 1, size: 0.6, o: { ceu: 1 } },
+        { game: 'urubu', species: 'vulture', x: 0, z: 0, walkHz: 1.4, runHz: 1, size: 0.6, o: { ceu: 1 } },
+        { game: 'urubu', species: 'vulture', x: 0, z: 0, walkHz: 1.4, runHz: 1, size: 0.6, o: { ceu: 1 } },
+      ],
+    },
+    hits: [
+      [400, 0, 0, 35, '9x19', 10, 0],
+    ],
+  },
+]
+
 type Field = { [index: number]: number }
 type CrowdContext = {
+  readonly NPC?: unknown
   readonly Z: { n: number } & Readonly<Record<string, Field>>
   readonly zSpawn: (x: number, z: number, type?: number) => number
   readonly zDamage: (i: number, region: number, amount: number, caliber: string | null, distance: number, cut: number) => unknown
@@ -239,6 +399,9 @@ const MESSAGE_OF: readonly (readonly [RegExp, string])[] = [
   [/Saltador te derrubou/, 'pounce_knock'],
   [/horda está migrando/, 'migration'],
   [/porta cedeu/, 'door_broken'],
+  [/Quero-quero gritando/, 'alarm'],
+  [/Caramelo latindo/, 'bark'],
+  [/Caramelo rosnando/, 'growl'],
 ]
 
 /** The agent fields of a snapshot: the game's name and the SDK's. */
@@ -272,7 +435,55 @@ export const CROWD_FIELDS = [
   ['ph', 'phase'],
   ['arm', 'arms'],
   ['eat', 'eaten'],
+  ['npc', 'hunts'],
+  ['named', 'named'],
 ] as const
+
+/** The game's survivor states in the SDK's names. */
+export const CIVILIAN_STATE_OF: Readonly<Record<string, string>> = { casa: 'home', andando: 'walking', grupo: 'group', fugindo: 'fleeing', partiu: 'gone', morto: 'dead', zumbi: 'undead' }
+
+/**
+ * What the survivors' code reads from the rest of the game: the people as the game's `NPC` rows (no lines, items or radio), the buildings by name
+ * (`casaDe`), the hour, and the diary and the news as records of what happened.
+ */
+const civilianScope = (civilians: CivilianScenario, hourOf: () => number, record: (type: string, payload: Record<string, EventValue>) => void): Record<string, unknown> => {
+  const buildings = Object.fromEntries(Object.entries(civilians.buildings).map(([name, b]) => [name, { x: b.x, z: b.z, w: b.w, d: b.d, tipo: b.house ? 'casa' : 'loja', frente: b.front, nome: name }]))
+  const people = civilians.people.map((p) => ({ id: p.id, n: p.id, curto: p.id, casa: p.home, cor: p.color ?? 0x808080, item: 'Item', loot: [], fala: [], ...(p.child ? { crianca: 1 } : {}), ...(p.routine ? { rotina: p.routine.map((r) => [...r]) } : {}) }))
+  return {
+    __civ: people,
+    casaDe: (name: string) => buildings[name],
+    hourNow: () => hourOf(),
+    valeClock: () => undefined,
+    radioTick: () => undefined,
+    noticia: () => undefined,
+    diario: (text: string, fonte: string) => {
+      const bitten = / foi mordid/.exec(text)
+      if (bitten) record('civilian', { event: 'bitten', id: text.slice(0, bitten.index), near: fonte === 'vista' })
+    },
+    morteNoticia: (n: { id: string; zi?: number }, what: string) =>
+      record('civilian', what.includes('mortos') ? { event: 'turned', id: n.id, agent: n.zi ?? -1 } : { event: 'died', id: n.id, cause: 'attacked' }),
+  }
+}
+
+const BICHO_SOUND_OF: Readonly<Record<string, string>> = { latido: 'bark', cacarejo: 'cluck', queroquero: 'lapwing', mugido: 'moo' }
+
+/** What the animals' code reads from the rest of the game: no rig and no skin (the drawing), the buildings as rectangles, the calls as records. */
+const herdScope = (herd: HerdScenario, record: (type: string, payload: Record<string, EventValue>) => void): Record<string, unknown> => ({
+  BICHOS: { st: {}, animSnake: () => undefined, animBird: () => undefined, animQuad: () => undefined },
+  bichoOssos: () => undefined,
+  bichoSom: (kind: string, dist: number) => record('sound', { sound: BICHO_SOUND_OF[kind] ?? kind, distance: Math.round(dist * 1e4) / 1e4 }),
+  wasPressed: () => false,
+  BUILDINGS: (herd.buildings ?? []).map(([x, z, w, d]) => ({ x, z, w, d })),
+  state: 'play',
+  __noise: (x: number, z: number, radius: number) => record('noise', { x: Math.round(x * 1e4) / 1e4, z: Math.round(z * 1e4) / 1e4, radius }),
+})
+
+/** A mesh stand-in that keeps what `bichosUpdate` writes (the vultures' place is read back from it). */
+const meshStub = () => {
+  const position = { x: 0, y: 0, z: 0, set(x: number, y: number, z: number) { Object.assign(position, { x, y, z }) } }
+  const rotation = { x: 0, y: 0, z: 0, set(x: number, y: number, z: number) { Object.assign(rotation, { x, y, z }) } }
+  return { visible: true, position, rotation, castShadow: false }
+}
 
 const createCrowdHarness = (scenario: CrowdScenario) => {
   const source = readSource(SOURCE_PATHS.game)
@@ -285,6 +496,7 @@ const createCrowdHarness = (scenario: CrowdScenario) => {
     z: scenario.target.z,
     y: 0,
     andar: 0,
+    yaw: 0,
     alive: true,
     turned: false,
     crouch: scenario.target.crouch ?? false,
@@ -310,6 +522,7 @@ const createCrowdHarness = (scenario: CrowdScenario) => {
     },
   }
   const view = { yaw: scenario.viewYaw }
+  let hour = scenario.civilians?.hour[0] ?? 12
   const effect = (kind: string, payload: Record<string, EventValue>) => recorder.record('effect', { effect: kind, ...payload })
   const tail = [
     cutDeclaration(source, 'WORLD'),
@@ -352,7 +565,30 @@ const createCrowdHarness = (scenario: CrowdScenario) => {
     cutDeclaration(horde, 'trailLast'),
     cutDeclaration(horde, 'killQ'),
     // the game loop's order: the groan budget, the trail, the horde, the population, the corpses (G 69xxx `loop`)
-    'function __tick(dt, population) { groanBudget -= dt; trailUpdate(dt); hordeUpdate(dt); if (population) populationUpdate(dt); corpsesUpdate(dt); }',
+    ...(scenario.civilians
+      ? [
+          cutDeclaration(source, 'INFEC'),
+          cutDeclaration(fromMarker(source, CORE_MARKER), 'lerp'),
+          'const NPC = __civ;',
+          cutBetween(source, 'for (const n of NPC) {\n  const b = casaDe', 'const nIdx'),
+        ]
+      : []),
+    ...(scenario.herd
+      ? [
+          cutDeclaration(source, 'BICHO'),
+          cutDeclaration(source, 'bichosProntos'),
+          cutDeclaration(source, 'URUBUS'),
+          cutDeclaration(source, 'bichoT'),
+          cutFunction(source, 'bichoLivre'),
+          cutFunction(source, 'zumbiPerto'),
+          cutFunction(source, 'bichosUpdate'),
+          'bichosProntos = true;',
+          "function __addBicho(E) { BICHO.push(E); if (E.ceu) URUBUS.push(E); if (E.companheiro && E.id === 'cao') caramelo = E; }",
+          // the noises the animals make reach the horde as in the game; the golden notes each one
+          'const __emitNoise0 = emitNoise; emitNoise = function (x, z, r) { __noise(x, z, r); __emitNoise0(x, z, r); };',
+        ]
+      : []),
+    `function __tick(dt, population) { groanBudget -= dt; trailUpdate(dt); ${scenario.civilians ? 'npcUpdate(dt); ' : ''}${scenario.herd ? 'bichosUpdate(dt); ' : ''}hordeUpdate(dt); if (population) populationUpdate(dt); corpsesUpdate(dt); }`,
     'function __pileCount() { return pileN; }',
     'function __setNight(v) { nightF = v; }',
   ].join('\n')
@@ -370,13 +606,17 @@ const createCrowdHarness = (scenario: CrowdScenario) => {
     ANDARES: { lista: [], andarP: 0, casaP: null, casaEm: () => null },
     voz: (kind: string, d: number) => recorder.record('sound', { sound: CROWD_SOUND_OF[kind] ?? kind, volume: 1, distance: Math.round(d * 1e4) / 1e4 }),
     sfx: (kind: string, volume: number, d: number) => recorder.record('sound', { sound: CROWD_SOUND_OF[kind] ?? kind, volume, distance: Math.round(d * 1e4) / 1e4 }),
-    hudMsg: (text: string, seconds: number) => recorder.record('message', { id: MESSAGE_OF.find(([pattern]) => pattern.test(text))?.[1] ?? text, seconds }),
+    hudMsg: (text: string, seconds: number) => {
+      if (/ foi mordid| reanimou\./.test(text)) return // a survivor's line: recorded from the diary and the news
+      recorder.record('message', { id: MESSAGE_OF.find(([pattern]) => pattern.test(text))?.[1] ?? text, seconds })
+    },
     fxSpark: () => effect('spark', {}),
     fxBlood: (_x: number, _y: number, _z: number, _age: unknown, amount: number, died: boolean) => effect('blood', { amount, died: !!died }),
     fxLimb: (_i: number, region: number, severed: boolean) => effect('limb', { region, severed: !!severed }),
     fxCloud: (_x: number, _z: number, radius: number, color: number) => effect('cloud', { radius, color }),
     fxDust: () => effect('dust', {}),
-    zChaseNpc: () => false,
+    ...(scenario.herd ? herdScope(scenario.herd, (type, payload) => recorder.record(type, payload)) : {}),
+    ...(scenario.civilians ? civilianScope(scenario.civilians, () => hour, (type, payload) => recorder.record(type, payload)) : { zChaseNpc: () => false }),
   }
   const context = evaluateGameSlice<CrowdContext & { __setNight: (v: number) => void }>({
     functions: [
@@ -410,27 +650,58 @@ const createCrowdHarness = (scenario: CrowdScenario) => {
       'zDeferKill',
       'killQFlush',
       'zFrame',
+      ...(scenario.civilians ? ['solidAtA', 'pontos', 'rota', 'npcExposed', 'npcZombies', 'zChaseNpc', 'npcMorre', 'npcVira', 'npcMove', 'npcUpdate'] : []),
     ],
-    exports: ['Z', 'zSpawn', 'zDamage', 'emitNoise', 'fillRect', 'addDoor', 'DOORS', 'CP', 'TRAIL', 'stats', 'ROUPAS', 'CALIBRES', 'POOL', '__tick', '__pileCount', '__setNight'],
+    exports: [...(scenario.civilians ? ['NPC'] : []), ...(scenario.herd ? ['BICHO', 'URUBUS', '__addBicho'] : []), 'Z', 'zSpawn', 'zDamage', 'emitNoise', 'fillRect', 'addDoor', 'DOORS', 'CP', 'TRAIL', 'stats', 'ROUPAS', 'CALIBRES', 'POOL', '__tick', '__pileCount', '__setNight'],
     scope,
     tail,
     capacity: CAPACITY,
   })
   context.__setNight(scenario.night ?? 0)
-  return { context, target, setRecorder: (next: EventRecorder) => void (recorder = next), setSeed: (seed: number) => void (stream = createSeededRandom(seed)) }
+  if (scenario.herd) {
+    // bichoNovo without the rig: the heading and the first rest are drawn in its order (the rig's own draw is the drawing's)
+    for (const a of scenario.herd.animals) {
+      const E: Record<string, unknown> = {
+        A: { ph: 0, wings: [], legs: [] },
+        pele: { mesh: meshStub() },
+        id: a.game,
+        sp: { walkHz: a.walkHz, runHz: a.runHz },
+        x: a.x,
+        z: a.z,
+        yaw: stream() * 6.28,
+        hx: a.x,
+        hz: a.z,
+        raio: 8,
+        clip: 'idle',
+        t: stream() * 4,
+        tx: a.x,
+        tz: a.z,
+        medo: 5,
+        voa: 0,
+        cool: 0,
+        vAnda: a.walkHz * a.size * 1.05 + 0.25,
+        vCorre: a.runHz * a.size * 2.2 + 0.8,
+        ...a.o,
+      }
+      if (a.dead) E.morto = 1
+      ;(context as unknown as { __addBicho: (e: unknown) => void }).__addBicho(E)
+    }
+  }
+  return { context, target, setHour: (next: number) => void (hour = next), setRecorder: (next: EventRecorder) => void (recorder = next), setSeed: (seed: number) => void (stream = createSeededRandom(seed)) }
 }
 
-/** G-crowd: the game's horde (`hordeUpdate` and everything it calls, doors, corpses, the trail and the population) on scripted scenes. */
-export const recordCrowdGolden = (): GoldenRecord => {
+type Civ = { id: string; x: number; z: number; vx: number; vz: number; yaw: number; hp: number; st: string; bitT: number; pi: number; ph: number; path: unknown; zi?: number }
+
+const recordScenes = (name: string, scenes: readonly CrowdScenario[], withCalibres: boolean): GoldenRecord => {
   const recorder = createEventRecorder()
-  {
+  if (withCalibres) {
     // the game's calibres as the crowd reads them (class and skull distance), for the SDK replay
     const { context } = createCrowdHarness(CROWD_SCENARIOS[0]!)
     const calibres: Record<string, EventValue> = {}
     for (const [id, c] of Object.entries(context.CALIBRES)) calibres[id] = { id, class: c.classe === 'pistola' ? 'pistol' : 'rifle', skull: c.cranio }
     recorder.record('calibres', calibres)
   }
-  for (const scenario of CROWD_SCENARIOS) {
+  for (const scenario of scenes) {
     const harness = createCrowdHarness(scenario)
     const { context, target } = harness
     const { Z } = context
@@ -479,6 +750,21 @@ export const recordCrowdGolden = (): GoldenRecord => {
         target: { grabbedBy: target.grabbedBy, blind: r6(target.blind), scent: r6(target.scentT), boost: r6(target.screamBoost), burn: r6(target.burnT) },
         agents,
       })
+      if (scenario.herd) {
+        const herd = (context as unknown as { BICHO: Record<string, number & string>[] }).BICHO
+        herd.forEach((E, index) => {
+          if (E.ceu) return
+          recorder.record('animal', { frame, index, x: r6(E.x), z: r6(E.z), yaw: r6(E.yaw), clip: E.clip, timer: r6(E.t), cooldown: r6(E.cool), fly: r6(E.voa), targetX: r6(E.tx), targetZ: r6(E.tz) })
+        })
+        const vultures = (context as unknown as { URUBUS: { pele: { mesh: ReturnType<typeof meshStub> } }[] }).URUBUS
+        vultures.forEach((U, i) => {
+          const m = U.pele.mesh
+          recorder.record('vulture', { frame, i, x: r6(m.position.x), y: r6(m.position.y), z: r6(m.position.z), yaw: r6(m.rotation.y), visible: m.visible })
+        })
+      }
+      if (scenario.civilians)
+        for (const n of context.NPC as Civ[])
+          recorder.record('civilian_state', { frame, id: n.id, x: r6(n.x), z: r6(n.z), vx: r6(n.vx), vz: r6(n.vz), yaw: r6(n.yaw), hp: r6(n.hp), state: CIVILIAN_STATE_OF[n.st] ?? n.st, biteTimer: r6(n.bitT), pathIndex: n.pi, phase: r6(n.ph) })
     }
     const dt = 1 / scenario.fps
     for (let k = 0; k < scenario.frames; k++) {
@@ -488,11 +774,34 @@ export const recordCrowdGolden = (): GoldenRecord => {
         target.x += scenario.target.walk[0] * dt
         target.z += scenario.target.walk[1] * dt
       }
+      if (scenario.civilians) {
+        const civ = scenario.civilians
+        harness.setHour(civ.hour[0] + k * dt * civ.hour[1])
+        const people = context.NPC as Civ[]
+        for (const [at, id] of civ.join ?? []) if (at === k) for (const n of people) if (n.id === id) n.st = 'grupo' // helenaGrupo
+        for (const [at, id, path] of civ.flee ?? [])
+          if (at === k)
+            for (const n of people)
+              if (n.id === id) {
+                n.st = 'fugindo' // helenaSai
+                n.path = path.map((q) => [...q])
+                n.pi = 0
+              }
+      }
       context.__tick(dt, scenario.population !== undefined)
       frame++
       if (frame % scenario.every === 0) snapshot()
     }
     if (frame % scenario.every !== 0) snapshot()
   }
-  return createGoldenRecord({ name: 'game-crowd', seed: 20261022, events: recorder.events() })
+  return createGoldenRecord({ name, seed: 20261022, events: recorder.events() })
 }
+
+/** G-crowd: the game's horde (`hordeUpdate` and everything it calls, doors, corpses, the trail and the population) on scripted scenes. */
+export const recordCrowdGolden = (): GoldenRecord => recordScenes('game-crowd', CROWD_SCENARIOS, true)
+
+/** G-crowd-civilians: the survivors of the block (`npcUpdate`, `npcMove`, `npcZombies`, `zChaseNpc`, `npcMorre`, `npcVira`) with the horde. */
+export const recordCrowdCiviliansGolden = (): GoldenRecord => recordScenes('game-crowd-civilians', CIVILIAN_SCENARIOS, false)
+
+/** G-crowd-herd: the animals (`bichoLivre`, `zumbiPerto`, `bichosUpdate`) and the vultures with the horde. */
+export const recordCrowdHerdGolden = (): GoldenRecord => recordScenes('game-crowd-herd', HERD_SCENARIOS, false)

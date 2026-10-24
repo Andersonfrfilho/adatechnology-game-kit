@@ -6,8 +6,8 @@ import { createEventRecorder, createGoldenRecord, createSeededRandom } from '@ad
 import type { EventValue, GoldenRecord } from '@adatechnology/golden-tool'
 import { describe, expect, it } from 'vitest'
 
-import { createCrowd, createNavGrid } from '../src'
-import type { CrowdCaliber, CrowdPack, CrowdStore, CrowdTarget, Region } from '../src'
+import { HERD_ROLES, carrionCenter, createCivilians, createCrowd, createFlock, createHerd, createNavGrid } from '../src'
+import type { CivilianBuilding, CivilianSpec, CrowdCaliber, CrowdPack, CrowdStore, CrowdTarget, Region } from '../src'
 
 type Scenario = {
   id: string
@@ -27,20 +27,34 @@ type Scenario = {
   noises?: [number, number, number, number][]
   hits?: [number, number, number, number, string | null, number, number][]
   population?: number
+  civilians?: {
+    buildings: Record<string, CivilianBuilding>
+    people: CivilianSpec[]
+    hour: [number, number]
+    join?: [number, string][]
+    flee?: [number, string, [number, number][]][]
+  }
+  herd?: {
+    buildings?: [number, number, number, number][]
+    animals: { game: string; species: string; x: number; z: number; walkHz: number; runHz: number; size: number; o: { raio?: number; medo?: number; alarme?: number; mugido?: number; companheiro?: number; ceu?: number }; dead?: boolean }[]
+  }
 }
 
-const golden = JSON.parse(readFileSync(join(__dirname, 'fixtures/team-golden/game-crowd.json'), 'utf8')) as GoldenRecord
-const scenarios = golden.events.filter((event) => event.type === 'scenario').map((event) => (event.data as { scenario: Scenario }).scenario)
+const readGolden = (file: string): GoldenRecord => JSON.parse(readFileSync(join(__dirname, 'fixtures/team-golden', file), 'utf8')) as GoldenRecord
+const scenesOf = (golden: GoldenRecord): Scenario[] => golden.events.filter((event) => event.type === 'scenario').map((event) => (event.data as { scenario: Scenario }).scenario)
+const golden = readGolden('game-crowd.json')
+const civiliansGolden = readGolden('game-crowd-civilians.json')
+const herdGolden = readGolden('game-crowd-herd.json')
 const calibres = golden.events.find((event) => event.type === 'calibres')!.data as unknown as Record<string, CrowdCaliber>
 
 /** The snapshot fields, in the order the game golden writes them. */
-const FIELDS = ['x', 'z', 'y', 'vx', 'vz', 'yaw', 'renderYaw', 'state', 'stateTimer', 'band', 'hp', 'hpMax', 'missing', 'crawl', 'limp', 'attackTimer', 'cooldown', 'abilityTimer', 'lost', 'height', 'build', 'type', 'age', 'outfit', 'color', 'variant', 'phase', 'arms', 'eaten'] as const
+const FIELDS = ['x', 'z', 'y', 'vx', 'vz', 'yaw', 'renderYaw', 'state', 'stateTimer', 'band', 'hp', 'hpMax', 'missing', 'crawl', 'limp', 'attackTimer', 'cooldown', 'abilityTimer', 'lost', 'height', 'build', 'type', 'age', 'outfit', 'color', 'variant', 'phase', 'arms', 'eaten', 'hunts', 'named'] as const
 const r6 = (value: number): number => Math.round(value * 1e6) / 1e6
 const r4 = (value: number): number => Math.round(value * 1e4) / 1e4
 // The migration of the game (G 67166-67175): 120 agents every 90 s on the north avenue, walking to the centre.
 const MIGRATION = { every: 90, count: 120, x: 68, z: -120, width: 6, depth: 30, goal: [0, 0] as const }
 
-const replay = (scenario: Scenario): GoldenRecord['events'] => {
+const replay = (scenario: Scenario, name: string): GoldenRecord['events'] => {
   const recorder = createEventRecorder()
   recorder.record('scenario', { scenario: scenario as unknown as EventValue })
   const random = createSeededRandom(scenario.seed)
@@ -94,6 +108,38 @@ const replay = (scenario: Scenario): GoldenRecord['events'] => {
     else recorder.record('effect', { effect: e.effect })
   })
   const Z: CrowdStore = crowd.store
+  // the animals come first, as in the game (they are born before the horde of the scene)
+  const herdScene = scenario.herd
+  const herd = herdScene
+    ? createHerd(crowd, {
+        view: () => ({ x: scenario.target.x, z: scenario.target.z }),
+        blocked: (x, z) => (herdScene.buildings ?? []).some(([bx, bz, bw, bd]) => x > bx - 1 && x < bx + bw + 1 && z > bz - 1 && z < bz + bd + 1),
+      })
+    : null
+  for (const a of herdScene?.animals ?? [])
+    herd!.add({
+      ...HERD_ROLES[a.species],
+      species: a.species,
+      x: a.x,
+      z: a.z,
+      walkHz: a.walkHz,
+      runHz: a.runHz,
+      size: a.size,
+      ...(a.o.raio === undefined ? {} : { range: a.o.raio }),
+      ...(a.o.medo === undefined ? {} : { fear: a.o.medo }),
+      companion: !!a.o.companheiro,
+      sky: !!a.o.ceu,
+      dead: !!a.dead,
+    })
+  const vultures = herd ? createFlock({ count: herd.list.filter((E) => E.spec.sky).length, mode: 'carrion' }) : null
+  herd?.on('noise', (e) => recorder.record('noise', { x: r4(e.x), z: r4(e.z), radius: e.radius }))
+  herd?.on('sound', (e) => recorder.record('sound', { sound: e.sound, distance: r4(e.distance) }))
+  herd?.on('message', (e) => recorder.record('message', { id: e.id, seconds: e.seconds }))
+  let hour = scenario.civilians?.hour[0] ?? 12
+  const civilians = scenario.civilians ? createCivilians(crowd, { people: scenario.civilians.people, buildings: scenario.civilians.buildings, hour: () => hour, turnInto: 0 }) : null
+  civilians?.on('bitten', (e) => recorder.record('civilian', { event: 'bitten', id: e.id, near: e.near }))
+  civilians?.on('turned', (e) => recorder.record('civilian', { event: 'turned', id: e.id, agent: e.agent }))
+  civilians?.on('died', (e) => recorder.record('civilian', { event: 'died', id: e.id, cause: e.cause }))
   for (const agent of scenario.agents) {
     const i = crowd.spawn(agent.x, agent.z, agent.type)
     if (agent.st !== undefined) Z.state[i] = agent.st
@@ -134,6 +180,15 @@ const replay = (scenario: Scenario): GoldenRecord['events'] => {
       target: { grabbedBy: state.grabbedBy, blind: r6(state.blind), scent: r6(state.scentTimer), boost: r6(state.screamBoost), burn: r6(state.burnTimer) },
       agents,
     })
+    if (herd && vultures) {
+      for (const E of herd.list) {
+        if (E.spec.sky) continue
+        recorder.record('animal', { frame, index: E.index, x: r6(E.x), z: r6(E.z), yaw: r6(E.yaw), clip: E.clip, timer: r6(E.timer), cooldown: r6(E.cooldown), fly: r6(E.fly), targetX: r6(E.targetX), targetZ: r6(E.targetZ) })
+      }
+      vultures.birds.forEach((U, i) => recorder.record('vulture', { frame, i, x: r6(U.x), y: r6(U.y), z: r6(U.z), yaw: r6(U.yaw), visible: U.visible }))
+    }
+    for (const n of civilians?.list ?? [])
+      recorder.record('civilian_state', { frame, id: n.id, x: r6(n.x), z: r6(n.z), vx: r6(n.vx), vz: r6(n.vz), yaw: r6(n.yaw), hp: r6(n.hp), state: n.state, biteTimer: r6(n.biteTimer), pathIndex: n.pathIndex, phase: r6(n.phase) })
   }
   const dt = 1 / scenario.fps
   for (let k = 0; k < scenario.frames; k++) {
@@ -144,7 +199,19 @@ const replay = (scenario: Scenario): GoldenRecord['events'] => {
       state.x += scenario.target.walk[0] * dt
       state.z += scenario.target.walk[1] * dt
     }
+    if (scenario.civilians && civilians) {
+      const civ = scenario.civilians
+      hour = civ.hour[0] + k * dt * civ.hour[1]
+      for (const [at, id] of civ.join ?? []) if (at === k) civilians.join(id)
+      for (const [at, id, path] of civ.flee ?? []) if (at === k) civilians.flee(id, path)
+    }
     crowd.updateTrail(dt)
+    civilians?.update(dt)
+    if (herd && vultures) {
+      herd.update(dt)
+      const carcass = herd.list.find((E) => E.dead)
+      vultures.update(herd.time, dt, carrionCenter(crowd.corpses.entries.map((e) => e.data), carcass ? [carcass.x, carcass.z] : null), [scenario.target.x, scenario.target.z])
+    }
     crowd.update(dt, { viewYaw: scenario.viewYaw, nightFactor: scenario.night ?? 0 })
     if (scenario.population !== undefined) crowd.updatePopulation(dt, view, { target: scenario.population, migration: MIGRATION })
     crowd.updateCorpses(dt)
@@ -152,23 +219,38 @@ const replay = (scenario: Scenario): GoldenRecord['events'] => {
     if (frame % scenario.every === 0) snapshot()
   }
   if (frame % scenario.every !== 0) snapshot()
-  return createGoldenRecord({ name: 'game-crowd', seed: 20261022, events: recorder.events() }).events
+  return createGoldenRecord({ name, seed: 20261022, events: recorder.events() }).events
+}
+
+const compare = (record: GoldenRecord, scenario: Scenario): void => {
+  const start = record.events.findIndex((event) => event.type === 'scenario' && (event.data as { scenario: Scenario }).scenario.id === scenario.id)
+  const expected = record.events.slice(start)
+  const next = expected.findIndex((event, index) => index > 0 && event.type === 'scenario')
+  const want = next < 0 ? expected : expected.slice(0, next)
+  const events = replay(scenario, record.name)
+  // the first difference, to read a failure
+  const at = events.findIndex((event, index) => JSON.stringify(event) !== JSON.stringify(want[index]))
+  if (at >= 0) expect({ at, got: events[at] }).toEqual({ at, got: want[at] })
+  expect(events).toEqual(want)
 }
 
 describe('G-crowd: the SDK crowd replays the game horde frame by frame', () => {
   it('has the 8 scripted scenes of the fixture', () => {
-    expect(scenarios).toHaveLength(8)
+    expect(scenesOf(golden)).toHaveLength(8)
   })
+  it.each(scenesOf(golden).map((scenario) => [scenario.id, scenario] as const))('%s', (_id, scenario) => compare(golden, scenario))
+})
 
-  it.each(scenarios.map((scenario) => [scenario.id, scenario] as const))('%s', (id, scenario) => {
-    const start = golden.events.findIndex((event) => event.type === 'scenario' && (event.data as { scenario: Scenario }).scenario.id === id)
-    const expected = golden.events.slice(start)
-    const next = expected.findIndex((event, index) => index > 0 && event.type === 'scenario')
-    const events = replay(scenario)
-    const want = next < 0 ? expected : expected.slice(0, next)
-    // first difference, to read the failure
-    const at = events.findIndex((event, index) => JSON.stringify(event) !== JSON.stringify(want[index]))
-    if (at >= 0) expect({ at, got: events[at], want: want[at] }).toEqual({ at, got: want[at], want: want[at] })
-    expect(events).toEqual(want)
+describe('G-crowd-civilians: the SDK civilians replay the game survivors with the horde', () => {
+  it('has the 3 scripted scenes of the fixture', () => {
+    expect(scenesOf(civiliansGolden)).toHaveLength(3)
   })
+  it.each(scenesOf(civiliansGolden).map((scenario) => [scenario.id, scenario] as const))('%s', (_id, scenario) => compare(civiliansGolden, scenario))
+})
+
+describe('G-crowd-herd: the SDK herd and the vultures replay the game animals with the horde', () => {
+  it('has the scripted scene of the fixture', () => {
+    expect(scenesOf(herdGolden)).toHaveLength(1)
+  })
+  it.each(scenesOf(herdGolden).map((scenario) => [scenario.id, scenario] as const))('%s', (_id, scenario) => compare(herdGolden, scenario))
 })

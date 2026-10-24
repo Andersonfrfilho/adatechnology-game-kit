@@ -48,11 +48,14 @@
     "@adatechnology/game-contracts": "workspace:*"
   },
   "devDependencies": {
+    "@adatechnology/game-animals": "workspace:*",
+    "@adatechnology/game-animals-species": "workspace:*",
+    "@adatechnology/game-characters-undead": "workspace:*",
+    "@adatechnology/game-infection": "workspace:*",
     "@adatechnology/golden-tool": "workspace:*",
     "@types/node": "^22.10.7",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",
-    "vitest": "^3.2.4",
-    "@adatechnology/game-characters-undead": "workspace:*"
+    "vitest": "^3.2.4"
   }
 }

@@ -59,7 +59,38 @@ crowd.damage(i, { region: 0, amount: 35, distance: 12, caliber: { id: '9x19', cl
 crowd.store.x[i] // the struct of arrays: x, z, y, yaw, state, hp, missing, band, variant...
 ```
 
+## Civilians, herds, flocks and the region model
+
+```ts
+import { HERD_ROLES, bindInfection, carrionCenter, createCivilians, createFlock, createHerd } from '@adatechnology/game-crowd'
+
+// people with a routine by the hour; agents that are closer to them than to the target hunt them
+const civilians = createCivilians(crowd, { people: [{ id: 'ana', home: 'house_2', routine: [[19, 'market']] }], buildings, hour: () => clock.hour })
+civilians.on('bitten', ({ id, near }) => diary(id, near))
+civilians.join('ana') // follows the target
+civilians.flee('ana', path) // leaves; `gone` at the end
+
+// animals: wander, rest, flee, call; their calls are noises the crowd hears
+const herd = createHerd(crowd, { blocked: insideABuilding })
+herd.add({ ...HERD_ROLES.cow, species: 'cow', x, z, walkHz: cow.walkHz, runHz: cow.runHz, size: quadrupedLayout(cow.body).size })
+const vultures = createFlock({ count: 3, mode: 'carrion' })
+// every frame, after crowd.updateTrail and before crowd.update
+civilians.update(dt)
+herd.update(dt)
+vultures.update(herd.time, dt, carrionCenter(crowd.corpses.entries.map((e) => e.data), carcass), [camera.x, camera.z])
+
+// the region model of game-infection: numbers become agents near the player and go back when far
+const binding = bindInfection(crowd, infection, { place: (region, seed, k) => spotIn(region, seed, k), civilians, regionOf })
+binding.materialize('downtown', 40)
+binding.giveBack()
+```
+
+Civilians are a literal port of the game's survivors on the block (`jogo.js` G 69960-70175: `pontos`, `rota`, `npcZombies`, `zChaseNpc`, `npcMorre`,
+`npcVira`, `npcMove`, `npcUpdate`) without their names, lines, radio and diary; the herd of `bichoLivre`, `zumbiPerto` and `bichosUpdate` (G 66601-66700)
+without the rig; the vultures of G 66700-66708 and the live map's ring of birds of the Bancada de Hordas (G 53609-53615). Two goldens replay them
+with the horde: `game-crowd-civilians.json` (3 scenes) and `game-crowd-herd.json`.
+
 ## What is not here yet
 
-Civilians, herds and flocks (T8.1b), the three.js renderer and the test area (T8.1c). The game's multi-floor houses (`ANDARES`) and the roof
-(`ROOF`) are not ported: the crowd walks one ground grid (`floor` is kept on each agent for a game that adds floors).
+The three.js renderer and the test area (T8.1c). The game's multi-floor houses (`ANDARES`) and the roof (`ROOF`) are not ported: the crowd walks one
+ground grid (`floor` is kept on each agent for a game that adds floors).

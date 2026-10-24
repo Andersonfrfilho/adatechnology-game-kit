@@ -11,7 +11,7 @@ G 63796-64050). Todo número está em `src/data/defaults.json` com a linha de or
 quem toca, desenha e mostra é o jogo.
 
 ## Quando usar e quando não usar
-- Use para qualquer grupo de agentes que anda, percebe e persegue: horda, população de uma cidade, manada.
+- Use para qualquer grupo de agentes que anda, percebe e persegue: horda, população de uma cidade, civis com rotina, bichos, revoada.
 - Não use para desenhar (`game-crowd-three`, T8.1c), para o jogador (`game-player`) nem para o contágio entre regiões (`game-infection`).
 - Mundo normal primeiro: sem `target` ninguém persegue; os tipos só ganham habilidade pelos `traits`.
 
@@ -37,6 +37,10 @@ crowd.updateTrail(dt); crowd.update(dt, { nightFactor, viewYaw }); crowd.updateP
 | `CrowdPack`, `CrowdType`, `CrowdTraits` | O que se sorteia: tipos, idades, roupas, segmentos, paleta; as habilidades como traços |
 | `CrowdTarget` | Quem a multidão caça (`state` e `grab`, `hurt`, `knock`, `release`); o `Player` do `game-player` serve como está |
 | `STATE`, `MISSING` | Os estados (0 vagando ... 12 indo ao som) e os bits das partes perdidas |
+| `createCivilians(crowd, { people, buildings, hour, turnInto, waypoints, numbers })` | Civis: rotina por hora, medo (3,4 m/s com agente a 6 m), grupo que segue o líder ou o alvo, fuga por caminho, abrem portas; agentes a 10 m caçam, mordem (mordida ×1,5) e o mordido vira depois de 120 s. Eventos `bitten`, `died`, `turned`, `gone` |
+| `createHerd(crowd, { view, blocked, numbers })`, `HERD_ROLES` | Bichos: vagar e descansar 4-11 s, fugir do alvo e dos agentes, companheiro 2,2 m atrás, cacarejo, alarme do quero-quero, mugido, latido e rosnado (ruídos que a multidão ouve) |
+| `createFlock({ count, mode })`, `carrionCenter` | Urubus em volta dos corpos (`carrion`) e o anel de pássaros do mapa vivo (`orbit`), pelas fórmulas das entregas |
+| `bindInfection(crowd, infection, { place, typeFor, civilians, regionOf })` | Ponte com o `game-infection`: `materialize` vira agentes, a morte volta como removido, os de longe voltam com `giveBack`, a mordida de civil é `infect` |
 
 ## Compõe com
 `game-characters-undead` (`undeadCrowdPack()`, os 13 tipos com os números da horda), `game-characters` (o livro de corpos `createCorpseLedger`),
@@ -46,7 +50,8 @@ crowd.updateTrail(dt); crowd.update(dt, { nightFactor, viewYaw }); crowd.updateP
 `pnpm --filter @adatechnology/game-crowd test`: o golden `game-crowd.json` (8 cenas do código do jogo em `node:vm`: perseguição e vagas, noite e
 olfato, pirâmide no muro, porta, habilidades, corpos e rastro, dano por região, calibre e roupa, população e migração, gravadas por
 `pnpm --filter @adatechnology/characters-catalog-tool golden:vm`) é refeito quadro a quadro, mais testes da grade, das portas e da API.
-A bancada e `examples/crowd-test-area` chegam no T8.1c.
+Os goldens `game-crowd-civilians.json` (3 cenas) e `game-crowd-herd.json` refazem os civis e os bichos com a horda. A bancada e
+`examples/crowd-test-area` chegam no T8.1c.
 
 ## Cuidados
 - Os efeitos do jogo (`fxSpark`, `fxBlood`...) sorteavam do mesmo `R()`; aqui eles saem como evento e não gastam o `random` da simulação.
