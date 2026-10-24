@@ -1038,5 +1038,15 @@
       0.12
     ],
     "scale": 0.1
+  },
+  {
+    "id": "lockpick_kit",
+    "teamId": "kit_chaveiro",
+    "teamBox": [
+      1,
+      0.7,
+      0.2
+    ],
+    "scale": 0.1
   }
 ]
