@@ -87,6 +87,8 @@ Sem `area`, os itens vão em fileiras. `openArea` de um grupo sem módulo també
 
 A tela já traz busca no catálogo (todas as abas, sem acento) e busca de testes.
 
+Miniatura do item: `TestRoomItem.thumbnail` / `TestableItem.thumbnail` (URL ou `<svg…>` em linha) aparece acima do nome em cada botão do catálogo e dos resultados da busca, e no inspetor do item mirado (`InspectInfo.thumbnail`). A sala a desenha como `mask` CSS sobre a cor do texto: SVG de uma cor, tons em `fill-opacity`; uma URL precisa ser da mesma origem da página (ou ter CORS), e uma página `file://` não carrega miniatura por URL (use o SVG em linha). Item sem miniatura segue só com o nome.
+
 ## Compõe com
 `game-contracts` (contrato do módulo), `game-destruction` e `-three`, `game-weapons`, `game-fluids` e `-three` (a sala os usa por dentro).
 Libs de conteúdo (`-fleet`, `-household`, `-species`) entregam módulos; não importam a sala.

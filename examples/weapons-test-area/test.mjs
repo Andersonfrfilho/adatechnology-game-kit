@@ -11,5 +11,6 @@ if (!readFileSync(bundle, 'utf8').includes('weapons_area')) throw new Error('the
 for (const id of ['toggle_light', 'toggle_laser', 'toggle_stock', 'switch_underbarrel']) {
   if (!readFileSync(bundle, 'utf8').includes(id)) throw new Error(`the bundle does not carry the accessory bench control "${id}"`)
 }
+if (!readFileSync(bundle, 'utf8').includes('../weapon-svg/')) throw new Error('the bundle does not point the weapon thumbnails to ../weapon-svg/')
 if (existsSync(page) && !readFileSync(page, 'utf8').includes('WeaponsArea.loadInto(window.__testRoom)')) throw new Error('dist/sala-armas.html does not boot the area')
 console.log(`ok: ${existsSync(page) ? 'bundle and room page' : 'bundle (no room page: build examples/test-room first)'}`)

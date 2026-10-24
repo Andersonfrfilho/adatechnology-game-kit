@@ -13,6 +13,7 @@ import { ARCHETYPE_MODELS, hasWeaponModel } from './models'
 import type { AttachmentModelRegistry } from './models/attachments/types'
 import { BODY_ACTIONS, buildModeledProp, buildProp, buildTripodMountedProp, modeledPropSpec, weaponProp } from './props'
 import type { WeaponProp } from './props'
+import { DEFAULT_THUMBNAIL_BASE, weaponThumbnailCredit, weaponThumbnailUrl } from './thumbnails'
 import { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
 
 export interface WeaponsTestModuleOptions {
@@ -28,6 +29,8 @@ export interface WeaponsTestModuleOptions {
   seed?: number
   /** Builders of accessory models that replace or add to the ones the kit ships (by the `model` of the accessory). */
   attachmentModels?: AttachmentModelRegistry
+  /** Folder (ending with a slash) the weapon thumbnails are served from, relative to the page (default `weapon-svg/`); `false` leaves the items without a thumbnail. */
+  thumbnailBase?: string | false
 }
 
 /** Prefix of the item ids of the weapon props (`weapon_pistol_9mm`). */
@@ -250,6 +253,13 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   const accessoryText = accessoryTextOf(locale)
   const audio = options.sound === false ? null : createWeaponAudio(undefined, options.seed === undefined ? {} : { seed: options.seed })
   const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id))
+  const thumbnailBase = options.thumbnailBase ?? DEFAULT_THUMBNAIL_BASE
+  const withThumbnail = (item: TestableItem, key: string): TestableItem => {
+    const thumbnail = thumbnailBase === false ? undefined : weaponThumbnailUrl(key, thumbnailBase)
+    if (!thumbnail) return item
+    const thumbnailCredit = weaponThumbnailCredit(key)
+    return thumbnailCredit ? { ...item, thumbnail, thumbnailCredit } : { ...item, thumbnail }
+  }
   // An archetype wearing the model of a brand weapon is the same thing twice on the counters: it stays in the catalogue (the hands still take it) but is not laid out.
   const weaponIds = weaponDefs.filter((def) => !(def.id in ARCHETYPE_MODELS)).map((def) => `${WEAPON_ITEM_PREFIX}${def.id}`)
   const pitchOf = (itemId: string): number => PITCH_BY_ID[itemId.slice(WEAPON_ITEM_PREFIX.length)] ?? DEFAULT_PITCH
@@ -274,11 +284,11 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       return fx
     },
     items: () => [
-      ...weaponDefs.map((def) => weaponItem(def, arsenal.name(def.id))),
+      ...weaponDefs.map((def) => withThumbnail(weaponItem(def, arsenal.name(def.id)), def.id)),
       asItem(COUNTER_ITEM_ID, text.counter, counterProp(text.counter), { movable: false }),
       ...TARGETS.map((target) => asItem(target.id, text.targets[target.id] ?? target.id, targetProp(target.id, text.targets[target.id] ?? target.id), { movable: false })),
-      ...worldExplosives,
-      ...mountedM134,
+      ...worldExplosives.map((item) => withThumbnail(item, item.id.slice(WORLD_EXPLOSIVE_PREFIX.length))),
+      ...mountedM134.map((item) => withThumbnail(item, MOUNTED_M134.weaponId)),
     ],
     area: (): ModuleArea => ({
       placements: [

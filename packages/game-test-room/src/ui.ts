@@ -27,6 +27,10 @@ export interface InspectInfo {
   stress?: number
   joints: Array<{ id: string; kind: string; tools: string[]; open: boolean; progress: number }>
   note?: string
+  /** Thumbnail of the aimed item (`TestRoomItem.thumbnail`). */
+  thumbnail?: string
+  /** Author and licence of the thumbnail (`TestRoomItem.thumbnailCredit`). */
+  thumbnailCredit?: string
   distance: number
 }
 
@@ -103,6 +107,10 @@ const CSS = `
 .tr-search{width:100%;margin:0 0 6px;padding:5px 8px;border-radius:5px;border:1px solid #3a404c;background:#0f1116;color:#e8eaee;font:inherit}
 .tr-search::placeholder{color:#7d8594}
 .tr-item small{color:#7d8594;margin-left:4px}
+.tr-thumb{display:block;width:100%;height:26px;background:currentColor;-webkit-mask:var(--tr-thumb) center/contain no-repeat;mask:var(--tr-thumb) center/contain no-repeat}
+.tr-item{min-width:0}
+.tr-item .tr-btn.has-thumb{display:flex;flex-direction:column;gap:3px;min-width:0}.tr-item .tr-btn.has-thumb .tr-name{overflow:hidden;text-overflow:ellipsis}
+.tr-insp .tr-thumb{width:140px;height:28px;margin-bottom:3px}
 .tr-empty{color:#9aa3b2;padding:4px 2px;grid-column:1/-1}
 .tr-cross{position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px}
 .tr-cross:before,.tr-cross:after{content:"";position:absolute;background:#fff;opacity:.85;box-shadow:0 0 2px #000}
@@ -169,6 +177,19 @@ const mk = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   const e = document.createElement(tag)
   if (cls) e.className = cls
   if (text !== undefined) e.textContent = text
+  return e
+}
+
+// An SVG given as markup becomes a data URI; either way the picture is a mask over the text colour, so a one-colour silhouette follows the theme.
+const thumbSource = (thumbnail: string): string => {
+  const source = thumbnail.trim().startsWith('<') ? `data:image/svg+xml,${encodeURIComponent(thumbnail.trim())}` : thumbnail.trim()
+  return source.replace(/["\\\n\r]/g, (char) => encodeURIComponent(char))
+}
+const thumb = (thumbnail: string, credit?: string): HTMLElement => {
+  const e = mk('span', 'tr-thumb')
+  if (credit) e.title = credit
+  else e.setAttribute('aria-hidden', 'true')
+  e.style.setProperty('--tr-thumb', `url("${thumbSource(thumbnail)}")`)
   return e
 }
 
@@ -341,7 +362,8 @@ export function createUi(o: UiOptions): RoomUi {
     if (!found.length) items.appendChild(mk('div', 'tr-empty', t('ui.no_results')))
     for (const { item: it, group } of found) {
       const wrap = mk('div', 'tr-item')
-      const b = mk('button', 'tr-btn', it.name)
+      const b = mk('button', it.thumbnail ? 'tr-btn has-thumb' : 'tr-btn', it.thumbnail ? undefined : it.name)
+      if (it.thumbnail) b.append(thumb(it.thumbnail), mk('span', 'tr-name', it.name))
       if (searching) b.appendChild(mk('small', undefined, group))
       b.type = 'button'
       b.title = it.note ?? it.name
@@ -508,6 +530,7 @@ export function createUi(o: UiOptions): RoomUi {
       insp.appendChild(mk('div', undefined, t('ui.aim_at_something')))
       return
     }
+    if (i.thumbnail) insp.appendChild(thumb(i.thumbnail, i.thumbnailCredit))
     insp.appendChild(mk('div', 't', `${i.object} › ${i.part}`))
     insp.appendChild(row(t('ins.material'), i.material))
     insp.appendChild(row(t('ins.status'), i.status + (i.burning ? ` · ${t('ins.burning')}` : '')))

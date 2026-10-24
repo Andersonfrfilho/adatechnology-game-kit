@@ -167,7 +167,7 @@ export function renderLanding({ examples, packages, hasThumb }) {
   </section>
   <p class="empty hide" id="empty">Nada encontrado com esse filtro.</p>
 </main>
-<footer class="wrap">Licença MIT · Miniaturas capturadas dos próprios exemplos (<code>node site/capture-thumbs.mjs</code>).</footer>
+<footer class="wrap">Licença MIT · Miniaturas capturadas dos próprios exemplos (<code>node site/capture-thumbs.mjs</code>) · <a href="weapon-svg/credits.html">Miniaturas das armas: créditos e licenças</a>.</footer>
 <script>
   const q = document.getElementById('q')
   const chips = [...document.querySelectorAll('.chip')]
