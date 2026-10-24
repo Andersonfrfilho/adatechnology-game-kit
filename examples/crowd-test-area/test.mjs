@@ -46,7 +46,7 @@ if (!playwright || !existsSync(page)) {
       return room.metrics().module
     })
     await tab.waitForTimeout(300)
-    await tab.screenshot({ path: join(shots, `crowd-${lang}.png`) })
+    await tab.screenshot({ path: join(shots, `crowd-${lang}.png`), timeout: 120000 }) // software GL with 300 agents is slow to settle a frame
     const state = await tab.evaluate(async () => {
       const room = window.__testRoom
       const report = window.__crowdReport
