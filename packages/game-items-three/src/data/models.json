@@ -1088,5 +1088,15 @@
       1.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "inverter_welder",
+    "teamId": "solda",
+    "teamBox": [
+      3,
+      2.2,
+      1.3
+    ],
+    "scale": 0.1
   }
 ]
