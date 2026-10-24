@@ -2,7 +2,7 @@
 // Capture for the Oficina de VFX: every catalogue effect (minus rain, fog and headlights, which belong to the weather phase, and the
 // living-fluids film, recorded by `vfx-workshop-fluids.js`) once per option of its parameter. The page's own `frame` runs, with the
 // renderer silenced, so the timers, ticks and updates run in the page's order. `Math.random` is a counted stream seeded per effect and option.
-// Params: mode = effects (default) | fluids.
+// Params: mode = effects (default) | fluids | trace.
 (() => {
   const X = GoldenExposed
   const { mode = 'effects' } = globalThis.__GOLDEN_PARAMS
@@ -134,7 +134,31 @@
     X.fLaunch = original.fLaunch
   }
 
-  if (mode === 'fluids') {
+  // `trace`: what the film test needs from the page and cannot rebuild without it: the dripping arm's world position for each frame (the
+  // zombie is animated by the page) and the running count of `Math.random` calls, to check the replay draws the same numbers in the same order.
+  const recordTrace = (option) => {
+    seededFor('fluidos', option)
+    X.pr = option
+    X.select('fluidos', true)
+    const Vector3 = X.H[0].g.position.constructor
+    const sources = []
+    const draws = []
+    for (let frameIndex = 0; frameIndex < 600; frameIndex++) {
+      if (option === 0 || option === 3) {
+        X.H[0].g.updateMatrixWorld()
+        const point = new Vector3(0, -0.04, 0.68).applyMatrix4(X.H[0].arms[1].matrixWorld)
+        sources.push(`${point.x},${point.y},${point.z}`)
+      }
+      draws.push(randomCalls)
+      GoldenTool.stepFrames(1, FRAME_MS)
+    }
+    draws.push(randomCalls)
+    recorder.record('trace', { option, sources: sources.join(' '), draws: draws.join(' ') })
+  }
+
+  if (mode === 'trace') {
+    for (let option = 0; option < 4; option++) recordTrace(option)
+  } else if (mode === 'fluids') {
     for (let option = 0; option < 4; option++) recordFilm(option)
   } else {
     for (const effect of X.FX) {
@@ -146,5 +170,5 @@
   for (const [name, fn] of Object.entries(original)) X[name] = fn
   for (const restore of restores) restore()
   Math.random = nativeRandom
-  return GoldenTool.createGoldenRecord({ name: mode === 'fluids' ? 'vfx-workshop-fluids' : 'vfx-workshop', seed: 0, events: recorder.events(), scenes: {} })
+  return GoldenTool.createGoldenRecord({ name: mode === 'trace' ? 'vfx-workshop-fluids-trace' : mode === 'fluids' ? 'vfx-workshop-fluids' : 'vfx-workshop', seed: 0, events: recorder.events(), scenes: {} })
 })()
