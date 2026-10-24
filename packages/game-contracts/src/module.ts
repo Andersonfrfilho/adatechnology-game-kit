@@ -13,6 +13,12 @@ export interface ModuleItemFluid {
   offset?: Vec3
 }
 
+/** A picture of an item for catalogues and inventories: a hand-made `svg`, or `render` to have the host draw the 3D model (camera angles in radians, `wear` 0 new, 1 worn, 2 ruined). */
+export interface Thumbnail {
+  svg?: string
+  render?: true | { yaw?: number; pitch?: number; distance?: number; wear?: 0 | 1 | 2 }
+}
+
 /** One thing a module can put in the test room (or any viewer): a toy car, a chair, a pistol on a table. */
 export interface TestableItem {
   /** snake_case id, unique inside the module. */
@@ -35,6 +41,8 @@ export interface TestableItem {
   animations?: AnimationClipSpec[]
   /** Can be grabbed and thrown. */
   movable?: boolean
+  /** Picture for catalogues and inventories. */
+  thumbnail?: Thumbnail
 }
 
 /** A scripted check a module brings: the host calls `run` with its own context (the test room passes a `ScenarioContext`). */

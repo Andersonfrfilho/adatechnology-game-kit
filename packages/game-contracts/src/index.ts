@@ -44,7 +44,9 @@ export { checkAnimation } from './animation'
 export type { AnimationClipSpec, AnimationEventSpec, AnimationKey, AnimationPose, ItemAnimationContract } from './animation'
 export { STAGE_EVENT, TOOL_CLIP, checkToolClips, createToolClipPlayer, sampleClip, scaleClip, toolAnimationStep } from './tool-animation'
 export type { ToolAnimationStep, ToolAnimator, ToolClipId, ToolClipPlayer, ToolClipPlayerOptions, ToolClipSet, ToolRig } from './tool-animation'
-export type { AreaPlacement, HostEvent, HostTool, ModuleArea, ModuleHost, ModuleItemFluid, ModuleScenario, TestableItem, TestableModule } from './module'
+export type { AreaPlacement, HostEvent, HostTool, ModuleArea, ModuleHost, ModuleItemFluid, ModuleScenario, TestableItem, TestableModule, Thumbnail } from './module'
+export { applyPatches, deepMerge, mergeById, removeIds } from './registry'
+export type { DeepPartial } from './registry'
 export { checkBench } from './bench'
 export type {
   ActionControl,

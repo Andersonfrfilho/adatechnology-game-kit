@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 
-import { extractLiteral } from './cut-literal'
+import { extractLiteral } from '@adatechnology/golden-tool'
 import { SOURCE_PATHS } from './paths'
 
 export type GalleryOptions = Readonly<Record<string, string | number | boolean | undefined>>

@@ -757,3 +757,34 @@ Respostas do dono às perguntas abertas da T1.1B, T1.3, T1.5, T1.6 e da Revisão
 Commits (todos terminam com o `Co-Authored-By` de Opus 5.5): `feat(weapons-three,weapons-catalog)` câmaras, Taurus e destravar; `feat(weapons,weapons-three,test-room)` espoletas; `feat(weapons,contracts,test-room)` cozinhar a granada; `feat(weapons,contracts,test-room)` fio de tropeço e marcador; e o de documentação (README, skills, changesets, evidência).
 
 Modelo da execução: `sonnet`.
+
+## Fase 3
+
+Desenho: `design/T3-itens.md`. Execução em `sonnet` (o desenho recomendava `haiku` para a T3.0 e `sonnet` para a T3.1a; a ordem da orquestração foi dada sem troca de modelo).
+
+### T3.0 — `Thumbnail`, helpers de registro e `cut-literal` (grupo A)
+
+**O que entrou**
+- `game-contracts`: `Thumbnail` (`{ svg?, render?: true | { yaw?, pitch?, distance?, wear?: 0|1|2 } }`) em `src/module.ts` e `TestableItem.thumbnail?`. Novo `src/registry.ts` com `mergeById`, `applyPatches`, `removeIds`, `deepMerge` e o tipo `DeepPartial`, movidos de `game-weapons/src/registry.ts:7-24` e `merge.ts`; exportados pelo index.
+- `game-weapons`: `arsenal.ts` e `locale.ts` importam os helpers do contracts; `merge.ts` apagado; `registry.ts` ficou só com `resolveThrowables`. API pública igual: `DeepPartial` continua exportado por `export type { DeepPartial }` em `types.ts` (os helpers nunca foram exportados pelo index do weapons, então nada a reexportar).
+- `game-interactables`: `ItemDef.thumbnail?: Thumbnail` (é o `BaseItemDef` do desenho) e dependência `@adatechnology/game-contracts` (`workspace:*`, só tipo; `pnpm-lock.yaml` atualizado). O Dockerfile já copia os dois manifestos.
+- `cut-literal`: `tools/weapons-catalog/src/cut-literal.ts` foi com `git mv` para `tools/golden/src/cut-literal.ts` e é exportado pelo index do `@adatechnology/golden-tool` (`cutLiteral`, `evaluateLiteral`, `extractLiteral`). `extract-game/lab/gallery.ts` importam de lá; `golden-tool` é devDependency do `weapons-catalog` (o `tsup` o embute no CLI). Mensagens de erro agora começam com `golden-tool:`. Não havia teste do `cut-literal`; criado `tools/golden/tests/cut-literal.test.ts` (3 testes).
+
+**Desvios do desenho e por quê**
+- O `cut-literal` importa `node:vm`, e o `dist/index.global.js` do golden-tool é injetado na página pelo gravador: com o arquivo no mesmo bundle a página quebraria ao carregar (`__require("vm")` no topo). Por isso `tools/golden/src/browser.ts` (tudo menos o `cut-literal`) é a entrada do IIFE, e `src/index.ts` = `browser.ts` + `cut-literal`. Conferido: o IIFE novo não contém `vm`.
+- Teste novo no contracts (`tests/registry.test.ts`, 4 testes) para os helpers que agora moram lá; antes só eram cobertos por `createArsenal`.
+- A tarefa paralela das armas (branch `work/spec001-thumbs`) também põe `thumbnail` no `TestableItem`. Esta task usa o tipo `Thumbnail` do desenho; **a tarefa das armas adotará/mesclará este tipo** (ao rebasear, ficar com um só `Thumbnail` em `module.ts` e um só campo `TestableItem.thumbnail`).
+
+**Changeset:** `.changeset/items-thumbnail-registry-helpers.md` (contracts minor, interactables minor, weapons patch).
+
+**Portões (Node 24.22.0)**
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro) | exit 0; contracts 31, weapons 277, interactables 153, household 1907, golden 42, weapons-catalog 17, weapons-three 94, test-room 118, fleet 875 |
+| `pnpm --filter @adatechnology/weapons-catalog-tool catalog:check` | up to date |
+
+Node 22.23.4 (npm em pasta de rascunho): `tools/golden` 42, `game-weapons` 277, `game-contracts` 31, `tools/weapons-catalog` 17, `game-weapons-three` 94 passaram (os hashes de golden usam `installPortableMath`, sem mudança).

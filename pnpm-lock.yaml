@@ -275,6 +275,10 @@ importers:
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
   packages/game-interactables:
+    dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
     devDependencies:
       '@types/node':
         specifier: ^22.10.7
@@ -583,6 +587,9 @@ importers:
       '@adatechnology/game-weapons':
         specifier: workspace:*
         version: link:../../packages/game-weapons
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../golden
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5

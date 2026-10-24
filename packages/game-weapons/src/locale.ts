@@ -1,5 +1,5 @@
-import { deepMerge } from './merge'
-import type { DeepPartial } from './types'
+import { deepMerge } from '@adatechnology/game-contracts'
+import type { DeepPartial } from '@adatechnology/game-contracts'
 
 /** Locales shipped with the package. Unknown locales fall back to `en`. */
 export type WeaponsLocale = 'en' | 'pt-BR'
