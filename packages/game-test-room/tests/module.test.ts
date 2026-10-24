@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createAudioEngine } from '@adatechnology/game-audio'
-import type { AnimationClipSpec, DestructibleImpl, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, DestructibleImpl, ModuleHost, TestableModule } from '@adatechnology/game-contracts'
 import type { ScenarioContext } from '../src'
 import { makeRoom } from './helpers'
 
@@ -181,6 +181,24 @@ describe('animations', () => {
     expect(played[0]!.position).toBeDefined()
     expect(makeRoom({ audio: false }).audio).toBeNull()
     expect(makeRoom().audio).not.toBeNull()
+  })
+
+  it('lends host.audio (over the room engine, the listener following the camera) and host.environment to modules', () => {
+    const engine = createAudioEngine({ createContext: () => null })
+    const room = makeRoom({ audio: engine })
+    let lent: ModuleHost | undefined
+    room.loadModule({ id: 'lender', name: 'Lender', group: 'Lender', items: () => [], attach: (host) => ((lent = host), () => undefined) })
+    expect((lent?.audio as { engine?: unknown } | undefined)?.engine).toBe(engine)
+    expect(lent?.environment).toBe(room.environment)
+    expect(lent?.environment?.get().rain).toBe(0)
+    lent?.environment?.set({ rain: 12 })
+    expect(room.environment.get().rain).toBe(12)
+    expect(() => room.update(1 / 60)).not.toThrow()
+    expect(makeRoom({ audio: false }).environment.get().rain).toBe(0)
+    let silent: ModuleHost | undefined
+    makeRoom({ audio: false }).loadModule({ id: 'quiet', name: 'Quiet', group: 'Quiet', items: () => [], attach: (host) => ((silent = host), () => undefined) })
+    expect(silent?.audio).toBeUndefined()
+    expect(silent?.environment).toBeDefined()
   })
 
   it('the collision shape follows the animation: after the clip the shot hits the open pose, not the closed one', () => {

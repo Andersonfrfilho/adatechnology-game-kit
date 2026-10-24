@@ -10,11 +10,13 @@
     "test": "node test.mjs"
   },
   "devDependencies": {
+    "@adatechnology/game-audio": "workspace:*",
     "@adatechnology/game-contracts": "workspace:*",
     "@adatechnology/game-items": "workspace:*",
     "@adatechnology/game-items-goods": "workspace:*",
     "@adatechnology/game-items-three": "workspace:*",
     "@adatechnology/game-weapons": "workspace:*",
-    "@adatechnology/game-weapons-three": "workspace:*"
+    "@adatechnology/game-weapons-three": "workspace:*",
+    "@adatechnology/game-weather": "workspace:*"
   }
 }

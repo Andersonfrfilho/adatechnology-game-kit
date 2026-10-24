@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
 import type { DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
-import { createAudioEngine } from '@adatechnology/game-audio'
+import { createAudioEngine, createAudioSink } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { createDestructionRenderer, createDestructionSound, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
@@ -11,7 +11,7 @@ import { createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidS
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFluidRenderer } from '@adatechnology/game-fluids-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkBench, checkDestructible, checkSpec } from '@adatechnology/game-contracts'
+import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createArena } from './arena'
 import type { Arena } from './arena'
@@ -1528,6 +1528,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       s.update(dt)
       flushEvents(id, s)
     }
+    if (audio) {
+      // the listener is the camera: where it stands and which way it looks (yaw 0 faces -z)
+      const look = camera.getWorldDirection(listenerDirection)
+      audio.setListener({ position: [camera.position.x, camera.position.y, camera.position.z], yaw: Math.atan2(-look.x, -look.z) })
+    }
     for (const update of frameListeners) update(dt)
     for (const tr of tracers) {
       if (tr.life > 0) {
@@ -1752,6 +1757,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const hostListeners = new Set<(event: HostEvent) => void>()
   const frameListeners = new Set<(dt: number) => void>()
+  const listenerDirection = new THREE.Vector3()
+  const environment = options.environment ?? createEnvironmentBus()
+  const audioSink = audio ? createAudioSink(audio) : undefined
   function emitHost(event: HostEvent): void {
     for (const listener of hostListeners) listener(event)
   }
@@ -1802,6 +1810,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     scene,
     camera,
     locale,
+    ...(audioSink ? { audio: audioSink } : {}),
+    environment,
     groundAt,
     tool: () => ({
       weapon: toolId,
@@ -2079,6 +2089,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     fluids,
     fluidRenderer: fluidView,
     audio,
+    environment,
     log,
     get tool() {
       return tool

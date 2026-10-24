@@ -97,6 +97,15 @@ describe('the weather bench module', () => {
     expect(module.weather.state()).toBe('heavy_rain')
   })
 
+  it('leaves the scene without fog when the room asks for the fog layer off', () => {
+    const module = createWeatherTestModule({ locale: 'en', fog: false })
+    expect(module.layers?.('en').find((layer) => layer.id === 'fog')?.default).toBe(false)
+    const { host, scene, frame } = fakeHost()
+    module.attach?.(host)
+    frame(2)
+    expect(scene.fog).toBeUndefined()
+  })
+
   it('stays silent about the host when none lends the environment or a scene', () => {
     const module = createWeatherTestModule({ locale: 'en' })
     const { host, frame } = fakeHost({ environment: undefined, scene: undefined, THREE: undefined } as Partial<ModuleHost>)

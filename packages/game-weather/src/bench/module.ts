@@ -12,6 +12,8 @@ export type WeatherTestModuleOptions = WeatherOptions & {
   translate?: (key: string, locale: string) => string | undefined
   /** The weather to test (default a new one built from the other options). */
   weather?: Weather
+  /** Whether the scene fog follows the weather at first (default true; the layer can be switched either way). A room that is not about weather starts it off. */
+  fog?: boolean
 }
 
 /** What the scenarios use of the context the test room passes. */
@@ -42,15 +44,16 @@ type ThreeLike = { Fog?: FogLike }
 export function createWeatherTestModule(options: WeatherTestModuleOptions = {}): WeatherTestModule {
   const locale = options.locale ?? 'pt-BR'
   const text: WeatherBenchText = weatherBenchTextOf(locale)
-  const { locale: _locale, translate, weather: given, ...weatherOptions } = options
+  const { locale: _locale, translate, weather: given, fog: _fog, ...weatherOptions } = options
   void _locale
+  void _fog
   const state = {
     seed: options.seed ?? 1,
     hour: options.startHour ?? 8,
     transition: 0,
     auto: options.autoSchedule ?? false,
     environment: true,
-    fog: true,
+    fog: options.fog ?? true,
   }
   let host: ModuleHost | null = null
   let strikes = 0
@@ -143,7 +146,7 @@ export function createWeatherTestModule(options: WeatherTestModuleOptions = {}):
 
   const layers = (): ModuleLayer[] => [
     { id: 'environment', name: text.layers.environment },
-    { id: 'fog', name: text.layers.fog },
+    { id: 'fog', name: text.layers.fog, default: state.fog },
   ]
 
   const metrics = (): ModuleMetric[] => [

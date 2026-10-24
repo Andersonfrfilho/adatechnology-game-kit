@@ -15,7 +15,7 @@ import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adate
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
-import type { AnimationClipSpec, ControlValue, DestructibleImpl, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, ControlValue, DestructibleImpl, EnvironmentBus, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -102,6 +102,8 @@ export interface TestRoomOptions {
    * Default: a new engine of the room's own (it makes no AudioContext until the first sound); `false` for a silent room.
    */
   audio?: AudioEngine | false
+  /** The environment store modules get as `host.environment` (the weather module writes it, the others read it). Default: a new one with a calm dry day. */
+  environment?: EnvironmentBus
   /** Show the built-in HUD and panels (default true). */
   ui?: boolean
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
@@ -146,6 +148,8 @@ export interface SpawnedObject {
 export interface TestRoom {
   /** The room's sound engine, or `null` in a silent room. */
   readonly audio: AudioEngine | null
+  /** The environment store lent to modules as `host.environment`. */
+  readonly environment: EnvironmentBus
   readonly world: DestructionWorld
   readonly renderer: DestructionRenderer
   readonly scene: THREE_NS.Scene

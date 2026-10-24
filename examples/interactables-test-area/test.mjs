@@ -104,6 +104,25 @@ for (const lang of ['pt-BR', 'en']) {
   })
   check(`[${lang}] the items module is loaded too and the fridge holds real items`, items.module === 'items_area' && items.ok && items.problems.length === 0 && items.items > 300 && items.inFridge > 0, items)
 
+  // the sound and weather modules ride along: both on what the room lends (host.audio, host.environment); a storm writes the room's environment and a sound plays on the room's engine
+  const sky = await page.evaluate(() => {
+    const room = window.__testRoom
+    const report = window.__furnitureReport
+    const weather = room.bench('weather_area')
+    const audio = room.bench('audio_area')
+    weather.set('state', 'storm')
+    audio.set('sound', 'bench_ping')
+    audio.act('play')
+    for (let i = 0; i < 400; i++) room.update(0.1)
+    const environment = room.environment.get()
+    const stats = room.audio.stats()
+    const result = { weather: report.weather?.ok && report.weather.problems.length === 0, sound: report.audio?.ok && report.audio.problems.length === 0, rain: environment.rain, visibility: environment.visibility, peak: stats.peak, fog: room.scene.fog === null }
+    weather.set('state', 'clear')
+    for (let i = 0; i < 20; i++) room.update(0.1)
+    return result
+  })
+  check(`[${lang}] the sound and weather modules are loaded too: a storm writes host.environment, a sound plays on the room engine, the furniture scene keeps its fog off`, sky.weather && sky.sound && sky.rain > 10 && sky.visibility < 120 && sky.peak >= 1 && sky.fog, sky)
+
   if (lang === 'pt-BR') {
     await page.close()
     const p = await open('?lang=pt-BR&ui=0')
