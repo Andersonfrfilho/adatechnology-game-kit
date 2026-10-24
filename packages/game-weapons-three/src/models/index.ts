@@ -85,6 +85,7 @@ export function buildWeaponModelById(THREE: typeof THREE_NS, id: string): Weapon
   if (!entry) return undefined
   const kit = modelKit(THREE)
   const options: ModelOptions = { L: entry.length, B: entry.barrel, cal: entry.caliber, ...entry.options }
+  if (id in ARCHETYPE_MODELS) delete options.chambers // a generic weapon holds the default six, not the brand's capacity
   const built = BUILDERS[entry.builder](kit, options)
   nameParts(built.parts)
   let root: THREE_NS.Group

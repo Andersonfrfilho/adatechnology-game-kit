@@ -3,13 +3,15 @@ import { heatify } from './kit'
 import type { BuiltModel, ModelOptions, ModelParts } from './types'
 
 const PI = Math.PI
+const DEFAULT_CHAMBERS = 6
 
-/** Port of the gallery's `revolver`: frame, swing-out crane with the six-chamber cylinder, barrel, hammer, grip and trigger. */
+/** Port of the gallery's `revolver`: frame, swing-out crane with the cylinder (six chambers, or as many as the weapon holds), barrel, hammer, grip and trigger. */
 export function buildRevolver(kit: ModelKit, options: ModelOptions): BuiltModel {
   const { M, box, cylinderX } = kit
   const group = kit.group()
   const parts: ModelParts = { family: 'revolver', kick: options.cal === '.44 Magnum' ? 1.5 : 0.9, glow: [] }
   const barrel = (options.B ?? 0) / 1000
+  const chambers = options.chambers ?? DEFAULT_CHAMBERS
   const metal = options.steel ? M.steel : M.metal
   box(group, 0.08, 0.044, 0.024, metal, 0.07, 0, 0)
   box(group, 0.036, 0.012, 0.022, metal, 0.096, 0.022, 0)
@@ -19,13 +21,13 @@ export function buildRevolver(kit: ModelKit, options: ModelOptions): BuiltModel 
   const cylinder = kit.pivot(crane, 0, 0.022, 0)
   parts.cylinder = cylinder
   cylinderX(cylinder, 0.0215, 0.042, metal, 0, 0, 0, 24)
-  for (let i = 0; i < 6; i++) {
-    const angle = (i * PI) / 3
+  for (let i = 0; i < chambers; i++) {
+    const angle = (i * 2 * PI) / chambers
     box(cylinder, 0.026, 0.005, 0.005, M.dark, 0, Math.cos(angle) * 0.0205, Math.sin(angle) * 0.0205, 0, 0, angle)
   }
   parts.chambers = []
-  for (let i = 0; i < 6; i++) {
-    const angle = (i * PI) / 3 + PI / 6
+  for (let i = 0; i < chambers; i++) {
+    const angle = (i * 2 * PI) / chambers + PI / chambers
     parts.chambers.push(kit.mark(cylinder, -0.022, Math.cos(angle) * 0.013, Math.sin(angle) * 0.013))
     cylinderX(cylinder, 0.0046, 0.002, M.brass, -0.0215, Math.cos(angle) * 0.013, Math.sin(angle) * 0.013, 12)
   }

@@ -116,6 +116,16 @@ describe('Gallery WEAP', () => {
     }
   })
 
+  it('keeps the Taurus 82 as reliable as the page says (owner decision: not especially reliable) and gives the revolver model the chambers of the data', () => {
+    const taurus = gallery.weapons.find((row) => row[0] === 'Taurus 82')
+    if (!taurus) throw new Error('no Taurus 82')
+    expect(weaponOf(taurus).action.faultFactor ?? 1).toBe(decisions.reliability['Taurus 82']?.value)
+    expect(decisions.reliability['Taurus 82']?.value).toBe(1)
+    const models = JSON.parse(readFileSync(OUTPUT_PATHS.models, 'utf8')) as Record<string, { options: { chambers?: number } }>
+    expect(models.sw_686?.options.chambers).toBe(7)
+    expect(models.taurus_82?.options.chambers).toBeUndefined()
+  })
+
   it('maps the gallery categories', () => {
     const expected: Record<string, string> = { pis: 'pistol', rev: 'revolver', smg: 'smg', esc: 'shotgun', fuz: 'rifle', dmr: 'dmr', snp: 'sniper', cac: 'hunting', mtr: 'machine_gun', lan: 'launcher' }
     expect(Object.keys(gallery.categories).sort()).toEqual(Object.keys(expected).sort())

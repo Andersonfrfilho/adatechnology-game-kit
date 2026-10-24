@@ -73,7 +73,7 @@ describe('weapon in the hands: the gallery model and its clips', () => {
     expect(room.tool.reloading).toBe(false)
   })
 
-  it('a revolver opens the crane to reload, drops its six cases and loads the cylinder', () => {
+  it('a revolver opens the crane to reload, drops as many cases as it holds (7 on the 686, owner decision) and loads the cylinder', () => {
     const { room, module } = roomWith()
     equip(room, 'sw_686')
     while (room.tool.ammo > 0) {
@@ -86,7 +86,7 @@ describe('weapon in the hands: the gallery model and its clips', () => {
     run(room, 0.8)
     expect(Math.abs(crane.rotation.x)).toBeGreaterThan(0.5)
     run(room, 2)
-    expect(module.fx?.casings).toBe(6)
+    expect(module.fx?.casings).toBe(7)
     run(room, 12)
     expect(crane.rotation.x).toBeCloseTo(0, 3)
   })

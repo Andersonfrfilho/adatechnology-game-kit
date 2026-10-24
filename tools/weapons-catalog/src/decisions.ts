@@ -127,6 +127,8 @@ export type Decisions = {
   readonly variants: Readonly<Record<string, Decision<{ of: string; id: string; name: string; caliber: string; capacity: number }>>>
   readonly recoil: Decision<{ rounding: number }>
   readonly conditions: Decision<Readonly<Record<string, string>>>
+  readonly modelChambers: Decision<{ readonly default: number }>
+  readonly reliability: Readonly<Record<string, Decision<number>>>
 }
 
 export const loadDecisions = (): Decisions => JSON.parse(readFileSync(DECISIONS_PATH, 'utf8')) as Decisions

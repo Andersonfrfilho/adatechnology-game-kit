@@ -38,6 +38,9 @@ const sceneOf = (id: string): SceneNodeLike => {
   return asGalleryNode(model.root)
 }
 
+// Owner decision (2026-10-24): the data wins over the page. The S&W 686 holds 7 rounds, so its cylinder draws 7 chambers where the page draws 6 for every revolver.
+const OWNER_DEVIATIONS: ReadonlySet<string> = new Set(['sw_686'])
+
 type Recorded = { type: string; data: { index: number; name: string; caliber?: string; length?: number; barrel?: number } }
 
 describe('Galeria 3D do Arsenal: weapon models', () => {
@@ -46,6 +49,7 @@ describe('Galeria 3D do Arsenal: weapon models', () => {
 
   for (const { data } of representatives) {
     const id = ids[data.index] as string
+    if (OWNER_DEVIATIONS.has(id)) continue
     it(`${data.name} (${id}) is the same model node by node: shapes, colours, transforms`, () => {
       expect(MODEL_ENTRIES[id]).toMatchObject({ caliber: data.caliber, length: data.length, barrel: data.barrel })
       const label = `weapon_${String(data.index).padStart(2, '0')}`
@@ -62,11 +66,21 @@ describe('Galeria 3D do Arsenal: weapon models', () => {
       .forEach(({ data }) => {
         const id = ids[data.index] as string
         expect(MODEL_ENTRIES[id]).toMatchObject({ caliber: data.caliber, length: data.length, barrel: data.barrel })
+        if (OWNER_DEVIATIONS.has(id)) return
         const snapshot = snapshotScene(sceneOf(id), { ignoreNames: true })
         const expected = recorded.scenes[`weapon_${String(data.index).padStart(2, '0')}`]
         if (snapshot.hash !== expected?.hash || snapshot.objects !== expected.objects) mismatches.push(`${id}: ${expected?.hash}/${expected?.objects} -> ${snapshot.hash}/${snapshot.objects}`)
       })
     expect(mismatches).toEqual([])
+  })
+
+  it('a revolver draws as many chambers as the weapon holds: 7 on the S&W 686 (owner decision), 6 on the others', () => {
+    const chambersOf = (id: string): number => buildWeaponModelById(THREE, id)?.parts.chambers?.length ?? 0
+    expect(arsenal.weapons.get('sw_686')?.action).toMatchObject({ magazine: 7 })
+    expect(chambersOf('sw_686')).toBe(7)
+    for (const id of ['taurus_82', 'sw_model_29']) expect(chambersOf(id), id).toBe(6)
+    const model = buildWeaponModelById(THREE, 'sw_686')
+    expect(snapshotScene(asGalleryNode(model!.root), { ignoreNames: true }).hash).not.toBe(goldenHashes.scenes.weapon_14?.hash)
   })
 
   it('the variant of a weapon is built like the weapon', () => {

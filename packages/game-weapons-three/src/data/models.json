@@ -161,7 +161,8 @@
     "length": 244,
     "barrel": 102,
     "options": {
-      "steel": 1
+      "steel": 1,
+      "chambers": 7
     }
   },
   "sw_model_29": {

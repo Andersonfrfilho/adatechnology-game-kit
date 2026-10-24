@@ -58,6 +58,8 @@ export interface ModelOptions {
   tube?: number
   pump?: number
   heat?: number
+  /** Chambers of the revolver cylinder (default 6): the capacity of the weapon. */
+  chambers?: number
   bayo?: number
   rod?: number
   bands?: number

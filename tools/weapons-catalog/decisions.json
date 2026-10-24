@@ -2024,7 +2024,7 @@
     "clear": {
       "value": 1.2,
       "source": "arsenal",
-      "reason": "Arsenal §10: animação de destravar de 1,2 s."
+      "reason": "Arsenal §10: animação de destravar de 1,2 s. Dono (2026-10-24): continua 1,2 s na regra; a animação da Galeria (0,4 a 0,6 s) estica até esse tempo."
     },
     "oneByOne": {
       "value": 1,
@@ -2299,5 +2299,19 @@
     },
     "source": "gallery",
     "reason": "Q3: curva de pane = QUAL da Galeria (nova 0,3%, usada 1,5%, gasta 5%, enferrujada 12%); a curva de durabilidade do Arsenal fica disponível pelo plugin rules.faultChance. O teste compara DEFAULT_RULES com o QUAL."
+  },
+  "modelChambers": {
+    "value": {
+      "default": 6
+    },
+    "source": "owner",
+    "reason": "Dono (2026-10-24): o dado vence. O modelo do revólver desenha tantas câmaras quanto a capacidade da arma (S&W 686 e outros de 7 tiros: 7); o padrão de 6 fica para os de 6 tiros. Desvio da Galeria, que desenha 6 para todos."
+  },
+  "reliability": {
+    "Taurus 82": {
+      "value": 1,
+      "source": "owner",
+      "reason": "Dono (2026-10-24): o Taurus 82 não é especialmente confiável; fica o faultFactor 1 da Galeria (sem \"nunca engasga\" do Arsenal §06)."
+    }
   }
 }

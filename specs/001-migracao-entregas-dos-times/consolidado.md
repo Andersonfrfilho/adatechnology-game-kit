@@ -47,6 +47,9 @@ Desde 2026-10-23 o dono delegou: **decido o resto pela recomendação e aponto a
 | A10 | Itens sem modelo 3D (233 de 257) | Só 24 têm forma | — | ✅ 2026-10-23: checklist em `itens-modelos-3d.md` (24 de 257 têm modelo) para cobrar o time de itens; até o modelo chegar, forma simples no tamanho real |
 | A11 | Explosivos e lançadores | Regra no Arsenal e no jogo; efeito no Laboratório | Regra em `game-weapons`, efeito em `game-vfx`, reação em cadeia em `game-destruction` | 🔁 |
 | A12 | O jogo passa a atirar pelo SDK | Hoje embute `game-weapons` mas atira com tabelas próprias (4 armas) | Sim, depois do porte | 🔁 |
+| A13 | Capacidade do S&W 686 e dos revólveres de 7 tiros | A Galeria desenha 6 câmaras para todos; o Arsenal e a regra dão 7 ao 686 | — | ✅ 2026-10-24 (dono): **o dado vence**. O modelo do revólver desenha tantas câmaras quanto a capacidade da arma (7 no 686); o padrão de 6 fica para os de 6 tiros (`decisions.json` `modelChambers`, opção `chambers` do modelo). Desvio assumido da página: o golden da Galeria exclui o `sw_686` e um teste próprio confere as 7 câmaras |
+| A14 | Confiabilidade do Taurus 82 | O Arsenal §06 diz "nunca engasga"; a Galeria não dá `rel` | — | ✅ 2026-10-24 (dono): **não é especialmente confiável**; fica `faultFactor` 1 (sem "nunca engasga"; `decisions.json` `reliability`) |
+| A15 | Tempo de destravar | Arsenal §10: 1,2 s; Galeria: 0,4 a 0,6 s | — | ✅ 2026-10-24 (dono): **1,2 s na regra**; a animação estica até esse tempo. Sem mudança de código |
 
 ## 3. Personagens, sobreviventes e animais (Fase 4, 5 e 7)
 

@@ -69,7 +69,7 @@ export const buildCatalog = (): CatalogFiles => {
     [OUTPUT_PATHS.firearms]: serialize(allFirearms),
     [OUTPUT_PATHS.launchers]: serialize(launchers),
     [OUTPUT_PATHS.explosives]: serialize(explosives),
-    [OUTPUT_PATHS.models]: serialize(buildModels(gallery.weapons, variantNames, context)),
+    [OUTPUT_PATHS.models]: serialize(buildModels({ rows: gallery.weapons, variantIds: variantNames, firearms: allFirearms }, context)),
   }
 }
 
