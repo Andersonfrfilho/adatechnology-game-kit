@@ -44,6 +44,7 @@ COPY packages/game-items-three/package.json packages/game-items-three/
 COPY packages/game-player/package.json packages/game-player/
 COPY packages/game-props3d/package.json packages/game-props3d/
 COPY packages/game-shapes/package.json packages/game-shapes/
+COPY packages/game-shapes-three/package.json packages/game-shapes-three/
 COPY packages/game-stories/package.json packages/game-stories/
 COPY packages/game-test-room/package.json packages/game-test-room/
 COPY packages/game-vegetation/package.json packages/game-vegetation/

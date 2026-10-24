@@ -35,6 +35,7 @@ no núcleo (catálogo por registro, números por opção, comportamento por plug
 | `game-interactables` (+ `-household`, `-three`) | Objetos que funcionam: portas, gavetas, energia, gás, água; os móveis da casa |
 | `game-props3d` | Objetos de cenário low poly (decoração, móveis modernos, quintal) |
 | `game-shapes` | O gerador único de 3D: forma em JSON vira buffers por material, igual bit a bit ao three, com peças, LOD, instâncias, cache e worker |
+| `game-shapes-three` | Desenho three.js das formas (malhas, peças, instâncias, LOD), o `T` com as geometrias do game-shapes e o `mergeByMaterial` |
 | `game-floorplan` (+ `-residential`, `-commercial`, `-post-apocalyptic`, `-structure`) | Plantas de casa e lote geradas por semente: cômodos, paredes, portas, janelas, zonas; `-structure` dá a estrutura (pilares, vigas, telhado) e o caminho de carga da destruição |
 | `game-vehicles` / `game-vehicles-fleet` | Motor de veículos procedurais e a frota de 69 modelos, com dano por zona |
 | `game-vegetation` / `game-vegetation-species` | Árvores, palmeiras, cactos, flores e grama; cerca de 90 espécies |
