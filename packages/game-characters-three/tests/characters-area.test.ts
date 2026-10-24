@@ -5,7 +5,7 @@ import { PROFESSIONS, createPeoplePack } from '@adatechnology/game-characters-pe
 import { UNDEAD_TYPES, createUndead, createUndeadPack } from '@adatechnology/game-characters-undead'
 import { createAudioEngine } from '@adatechnology/game-audio'
 import { createAudioRecorder } from '@adatechnology/golden-tool'
-import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
+import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 
 import { CHARACTERS_AREA_ID, PERSON_ITEM_PREFIX, ZOMBIE_ITEM_PREFIX, createCharactersTestModule, registerBodyMaterial } from '../src'
@@ -21,7 +21,7 @@ const stubRenderer = (): THREE.WebGLRenderer => {
 const roomWithCharacters = (audio?: ReturnType<typeof createAudioEngine>): { room: TestRoom; module: ReturnType<typeof createCharactersTestModule> } => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: demoItems('pt-BR'), renderer: stubRenderer(), ui: false, ...(audio ? { audio } : {}) })
+  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false, ...(audio ? { audio } : {}) })
   registerBodyMaterial(room.world as never)
   const module = createCharactersTestModule({
     locale: 'pt-BR',
@@ -85,7 +85,7 @@ describe('characters test area', () => {
   it('works without packs: no types, no professions, nothing breaks', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, renderer: stubRenderer(), ui: false, catalog: demoItems('en') })
+    const room = createTestRoom({ THREE, container, renderer: stubRenderer(), ui: false, catalog: [] })
   registerBodyMaterial(room.world as never)
     const module = createCharactersTestModule({ locale: 'en', createKit: () => createCharacters() })
     expect(module.items('en')).toEqual([])

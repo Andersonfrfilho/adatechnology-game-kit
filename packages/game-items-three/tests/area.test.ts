@@ -1,5 +1,5 @@
 import { createGoodsItems, goodsText } from '@adatechnology/game-items-goods'
-import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
+import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
@@ -17,7 +17,7 @@ function stubRenderer(): THREE.WebGLRenderer {
 function roomWithItems(locale = 'pt-BR'): { room: TestRoom; module: ReturnType<typeof createItemsTestModule> } {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale, catalog: demoItems(locale as 'pt-BR'), renderer: stubRenderer(), ui: false })
+  const room = createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
   const module = createItemsTestModule({ catalog, locale, translate })
   const report = room.loadModule(module)
   expect(report.problems).toEqual([])
