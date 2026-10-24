@@ -12,12 +12,55 @@ const catalog = createGoodsItems()
 const GAME_ONLY: Record<string, readonly [number, number, number]> = { survivor_diary: [0.16154, 0.21, 0.05452] }
 const sizeOf = (id: string): readonly [number, number, number] => GAME_ONLY[id] ?? catalog.get(id).size
 
+const SHOWCASE_IDS = [
+  'canned_beans',
+  'water_bottle',
+  'rice',
+  'military_ration',
+  'cachaca',
+  'first_aid_kit',
+  'bandage',
+  'amoxicillin',
+  'crowbar',
+  'hammer',
+  'machete',
+  'axe',
+  'nail_bat',
+  'hiking_backpack_40l',
+  'flashlight',
+  'portable_radio',
+  'house_key',
+  'survivor_diary',
+  'motorcycle_helmet',
+  'lpg_cylinder_13kg',
+  'fuel_jerrycan',
+  'walkie_talkies',
+  'batteries',
+  'wooden_plank',
+] as const
+
 describe('the shipped models', () => {
-  it('are registered by catalog id, including the 24 of the showcase page', () => {
+  it('are the 24 of the page, registered by catalog id, and 23 of them are the model of an item of the goods catalog', () => {
+    expect(SHIPPED_MODELS.slice(0, 24).map(({ entry }) => entry.id)).toEqual(SHOWCASE_IDS)
     expect(listItemModels()).toEqual(SHIPPED_MODELS.map(({ entry }) => entry.id))
-    const teamModeled = catalog.list().filter((item) => item.model !== undefined)
-    expect(teamModeled.map((item) => item.id).sort()).toEqual(SHIPPED_MODELS.slice(0, 24).map(({ entry }) => entry.id).filter((id) => !(id in GAME_ONLY)).sort())
-    for (const { entry } of SHIPPED_MODELS) expect(hasItemModel(entry.id), entry.id).toBe(true)
+    const modeled = catalog.list().filter((item) => item.model !== undefined)
+    expect(modeled.map((item) => item.id).sort()).toEqual(SHOWCASE_IDS.filter((id) => !(id in GAME_ONLY)).sort())
+    for (const item of modeled) expect(hasItemModel(item.model as string), item.id).toBe(true)
+  })
+
+  it('every model beyond the first 24 has a goods catalog item and measures its real size within 5%', () => {
+    const beyondShowcase = SHIPPED_MODELS.slice(24)
+    expect(beyondShowcase.length).toBe(SHIPPED_MODELS.length - 24)
+    for (const { entry, builder } of beyondShowcase) {
+      expect(catalog.has(entry.id), `${entry.id} exists in goods catalog`).toBe(true)
+      const item = catalog.get(entry.id)
+      const box = new THREE.Box3().setFromObject(builder(createItemKit(THREE))).getSize(new THREE.Vector3())
+      box.toArray().forEach((side, axis) => {
+        const measured = side * entry.scale
+        const expected = item.size[axis]!
+        expect(Math.abs(measured - expected) / expected, `${entry.id} real size axis ${axis}`).toBeLessThan(0.05)
+      })
+    }
   })
 
   it('measure, times the scale of models.json, the size of their item (the box of the page is the box of the builder)', () => {
