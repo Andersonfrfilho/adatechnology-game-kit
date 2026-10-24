@@ -1,0 +1,40 @@
+import type { AttachmentModel, AttachmentModelBuilder } from './types'
+
+// candela of the spot: bright enough to read against the room lights at the range of the data
+const LIGHT_INTENSITY = 150
+const LENS_GLOW = 3
+const DEFAULT_CONE_DEG = 30
+const DEFAULT_RANGE = 60
+
+/** The weapon light: a body with a lens on its rail, and a real `SpotLight` along the barrel with the cone and the range of the data. Off until it is turned on. */
+export const buildLight: AttachmentModelBuilder = ({ kit, attachment, frame }): AttachmentModel => {
+  const { THREE, M, box, cylinderX } = kit
+  const length = attachment.dims?.length ?? 0.1
+  const radius = (attachment.dims?.diameter ?? 0.03) / 2
+  const group = kit.group()
+  const offset = frame.side === 0 ? { y: -(radius + 0.004), z: 0 } : { y: 0, z: frame.side * (radius + 0.004) }
+  box(group, 0.035, 0.012, 0.03, M.dark, 0, frame.side === 0 ? -0.002 : 0, 0)
+  cylinderX(group, radius, length, M.dark, 0, offset.y, offset.z, 14)
+  cylinderX(group, radius * 1.08, 0.012, M.metal, length / 2 - 0.006, offset.y, offset.z, 14)
+  const lens = new THREE.MeshStandardMaterial({ color: 0xfff2c8, roughness: 0.1, metalness: 0.2, emissive: 0xfff2c8, emissiveIntensity: 0 })
+  cylinderX(group, radius * 0.82, 0.004, lens, length / 2 + 0.001, offset.y, offset.z, 14)
+  const cone = (attachment.light?.coneDeg ?? DEFAULT_CONE_DEG) * (Math.PI / 180)
+  const spot = new THREE.SpotLight(0xfff1d0, LIGHT_INTENSITY, attachment.light?.range ?? DEFAULT_RANGE, cone / 2, 0.35, 1.2)
+  spot.position.set(length / 2 + 0.01, offset.y, offset.z)
+  spot.visible = false
+  const target = new THREE.Object3D()
+  target.position.set(length / 2 + 1, offset.y, offset.z)
+  group.add(spot, target)
+  spot.target = target
+  return {
+    object: group,
+    setOn(on) {
+      spot.visible = on
+      lens.emissiveIntensity = on ? LENS_GLOW : 0
+    },
+    dispose() {
+      lens.dispose()
+      spot.dispose()
+    },
+  }
+}

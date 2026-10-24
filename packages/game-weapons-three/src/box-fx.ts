@@ -5,6 +5,7 @@ import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import type { WeaponAudio } from './audio'
 import { createLayers } from './fx/layers'
 import type { FxLayers } from './fx/layers'
+import type { AttachmentModelRegistry, LaserRaycast } from './models/attachments/types'
 import { BODY_ACTIONS, buildWeaponModel } from './props'
 
 export interface WeaponFxOptions {
@@ -26,6 +27,10 @@ export interface WeaponFxOptions {
   layers?: FxLayers
   /** Metres between the shooter and the listener, for the distance muffling of the shot sound (default 0). */
   soundDistance?: () => number
+  /** Builders of accessory models that replace or add to the ones the kit ships (by the `model` of the accessory). */
+  attachmentModels?: AttachmentModelRegistry
+  /** How far a laser beam goes from a point along a direction (metres), or null when it hits nothing: the dot lands where it ends. */
+  raycast?: LaserRaycast
 }
 
 /** The weapon in the hands, its fire and reload motion, ejected casings and dropped magazines, and their sounds. */

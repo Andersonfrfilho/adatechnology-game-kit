@@ -1,13 +1,17 @@
 import type * as THREE_NS from 'three'
 import { createToolClipPlayer, toolAnimationStep } from '@adatechnology/game-contracts'
-import type { HostEvent, HostTool, ToolClipPlayer } from '@adatechnology/game-contracts'
+import type { AnimationPose, HostEvent, HostTool, HostToolAttachment, ToolAnimationStep, ToolClipPlayer } from '@adatechnology/game-contracts'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
-import type { Arsenal, CaliberDef, WeaponDef } from '@adatechnology/game-weapons'
+import type { Arsenal, CaliberDef, FittedAttachment, MountKind, WeaponDef } from '@adatechnology/game-weapons'
 import { ease } from '../animation/clip-builder'
 import { buildToolClips } from '../animation/clip-set'
 import type { WeaponAudio } from '../audio'
 import { weaponEventOf } from '../audio/host-events'
 import { buildWeaponModelById } from '../models'
+import { fitAttachmentModels } from '../models/attachments/fit'
+import type { AttachmentModelRegistry, LaserRaycast } from '../models/attachments/types'
+import { rigUnderbarrel } from '../models/attachments/rig-underbarrel'
+import { rigStock } from '../models/rig-stock'
 import { applyCondition } from '../models/condition'
 import { cartridgeShape } from '../models/cartridge'
 import { modelKit } from '../models/kit'
@@ -46,6 +50,10 @@ export interface ViewmodelOptions {
   layers?: FxLayers
   /** Metres between the shooter and the listener, for the distance muffling of the shot sound (default 0). */
   soundDistance?: () => number
+  /** Builders of accessory models that replace or add to the ones the kit ships. */
+  attachmentModels?: AttachmentModelRegistry
+  /** How far a laser beam goes (metres) from a point along a direction, or null when it hits nothing. */
+  raycast?: LaserRaycast
 }
 
 /** The weapon in the hands for the models the gallery drew: it follows the camera, plays the clips of the rule's events, and throws casings, magazines and smoke. */
@@ -70,6 +78,18 @@ interface Task {
   step: (progress: number, dt: number) => void
   done: (() => void) | undefined
 }
+
+const fittedOf = (parts: readonly HostToolAttachment[]): FittedAttachment[] =>
+  parts.map((part) => ({ id: part.id, mount: part.mount as MountKind, ...(part.integral ? { integral: true } : {}), ...(part.on === undefined ? {} : { on: part.on }) }))
+
+/** The pose the stock pivot holds when the stock is collapsed: a half turn about its axis, or the slide along the weapon. */
+const collapsedStockPose = (move: NonNullable<Session['model']['parts']['stockMove']>): AnimationPose => {
+  if (move.kind === 'retract') return { position: [move.travel, 0, 0] }
+  return { rotation: [move.axis === 'x' ? PI : 0, move.axis === 'y' ? PI : 0, move.axis === 'z' ? PI : 0] }
+}
+
+// the shot of the launcher under the barrel and its reload have clips of their own; the rest of the weapon's clips play as they are
+const underbarrelStep = (step: ToolAnimationStep, tool: HostTool): ToolAnimationStep => (tool.underbarrelActive && step.type === 'play' && (step.clip === 'shot' || step.clip === 'reload') ? { ...step, variant: 'ugl' } : step)
 
 const caliberOf = (arsenal: Arsenal, def: WeaponDef): CaliberDef | undefined => (def.action.kind === 'firearm' ? arsenal.calibers.get(def.action.caliber) : undefined)
 
@@ -111,6 +131,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
 
   const release = (): void => {
     if (!session) return
+    session.attachments?.dispose()
     session.model.root.removeFromParent()
     player = null
     session = null
@@ -136,6 +157,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     const model = def ? buildWeaponModelById(THREE, weapon) : undefined
     if (!def || !model) return false
     release()
+    rigStock(THREE, model, def)
+    rigUnderbarrel(THREE, model, def)
     const length = new THREE.Box3().setFromObject(model.root).getSize(new THREE.Vector3()).x
     const scale = length > 0.8 ? 0.55 : length > 0.4 ? 0.75 : 1
     holder.scale.setScalar(scale)
@@ -154,19 +177,36 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       cartridge: caliber && dims ? { dims, shape: cartridgeShape(caliber, dims) } : null,
       stuckCase: null,
       nextChamber: 0,
+      attachments: null,
+      attachmentsSignature: '',
     }
+    const hostTool = options.tool?.()
+    const onTool = hostTool?.weapon === weapon ? hostTool : undefined
+    const fitted = onTool?.attachments ? fittedOf(onTool.attachments) : [...(def.fitted ?? [])]
+    session.attachments = fitAttachmentModels(model, fitted, kit, { catalogue: arsenal.attachments, isDrawn: () => layers.attachments, areBeamsOn: () => layers.beams, ...(options.attachmentModels ? { overrides: options.attachmentModels } : {}), ...(options.raycast ? { raycast: options.raycast } : {}) })
+    session.attachmentsSignature = JSON.stringify(onTool?.attachments ?? null)
     const action = def.action
     const reloadFamily = action.kind === 'firearm' || action.kind === 'flame' || action.kind === 'launcher' ? action.family : undefined
     const rpm = action.kind === 'firearm' ? action.rpm : 0
+    const rig = createModelRig(model)
     player = createToolClipPlayer({
       clips: buildToolClips({ parts: model.parts, family: model.parts.family, caseType: session.caseType, reloadFamily }),
-      rig: createModelRig(model),
+      rig,
       onEvent: createClipEventHandler(world, session),
       repeatInterval: () => (rpm > 0 ? 60 / rpm : 0.1),
     })
+    if (model.parts.stockMove && onTool?.stock === 'collapsed') rig.setPartPose('stock', collapsedStockPose(model.parts.stockMove))
     applyCondition(kit, model, condition)
     lastAmmo = options.tool?.().ammo ?? 0
     return true
+  }
+
+  const syncAttachments = (current: Session, tool: HostTool | undefined): void => {
+    if (!current.attachments || tool?.weapon !== current.id || !tool.attachments) return
+    const signature = JSON.stringify(tool.attachments)
+    if (signature === current.attachmentsSignature) return
+    current.attachmentsSignature = signature
+    current.attachments.sync(fittedOf(tool.attachments))
   }
 
   const place = (): void => {
@@ -187,7 +227,11 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     }
   }
 
-  const handleShot = (current: Session): void => {
+  const handleShot = (current: Session, event: Extract<HostEvent, { type: 'shot' }>, tool: HostTool): void => {
+    if (tool.underbarrelActive && current.model.parts.uglMuzzle) {
+      audio?.play('explosion', LAUNCH_VOLUME, distance())
+      return
+    }
     const action = current.def.action
     if (action.kind === 'launcher') {
       launchRocket(heavy(current))
@@ -196,7 +240,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     if (action.kind !== 'firearm') return
     const caliber = caliberOf(arsenal, current.def)
     if (!caliber) return
-    audio?.shot(muzzleEnergy(caliber) * (caliber.pellets ?? 1), current.def.category, { caliber, distance: distance() })
+    audio?.shot(muzzleEnergy(caliber) * (caliber.pellets ?? 1), current.def.category, { caliber, distance: distance(), ...(event.suppressed === true ? { suppressed: true } : {}) })
   }
 
   return {
@@ -207,7 +251,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       if (event.type === 'tool') equip(event.weapon)
       if (!session || !player || event.weapon !== session.id) return
       const current = session
-      if (event.type === 'shot') handleShot(current)
+      if (event.type === 'shot') handleShot(current, event, tool)
       else if (event.type === 'reload' && event.phase === 'start') current.nextChamber = 0
       else if (event.type === 'clear' && event.phase === 'end') current.stuckCase = null
       const mechanical = weaponEventOf(event)
@@ -215,13 +259,15 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       const step = toolAnimationStep(event)
       if (!step) return
       const last = step.type === 'play' && step.clip === 'shot' && current.model.parts.family === 'pistol' && tool.ammo === 0
-      player.apply(last ? { ...step, variant: 'last' } : step)
+      player.apply(last ? { ...step, variant: 'last' } : underbarrelStep(step, tool))
     },
     update(dt) {
       if (session) {
         place()
         player?.update(dt)
         const tool = options.tool?.()
+        syncAttachments(session, tool)
+        session.attachments?.update()
         glow(tool)
         if (tool && session.def.action.kind === 'flame') {
           if (tool.ammo < lastAmmo) flameJet(heavy(session), dt, session.model.parts.launcherType === 'flame' ? 1 : 0.6)

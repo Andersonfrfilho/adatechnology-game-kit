@@ -76,6 +76,21 @@ export function buildM134(kit: ModelKit): BuiltModel {
   buildHousing(kit, parts, group)
   buildBarrelCluster(kit, parts, group)
   buildFeed(kit, parts, group)
+  parts.frames = {
+    length: BARREL_END,
+    barrelY: 0,
+    barrelRadius: BARREL_RADIUS,
+    receiverStart: 0.06,
+    receiverEnd: 0.48,
+    receiverHeight: 0.14,
+    receiverWidth: 0.15,
+    handguardEnd: 0.6,
+    magazineX: 0.2,
+    gripX: 0.06,
+    hasRail: false,
+    // the tripod head, where the gun balances (the tripod of the counters joins here too)
+    underbarrel: [0.4, -0.1],
+  }
   parts.muzzle = kit.mark(group, BARREL_END + 0.01, 0, 0)
   parts.eject = kit.mark(group, 0.3, -0.07, 0.08)
   return { group, parts }

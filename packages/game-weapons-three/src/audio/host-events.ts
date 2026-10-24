@@ -1,4 +1,4 @@
-import type { FaultId, FireMode, ReloadStageId, WeaponEvent } from '@adatechnology/game-weapons'
+import type { FaultId, FireMode, MountKind, ReloadStageId, StockDef, WeaponEvent } from '@adatechnology/game-weapons'
 import type { HostEvent } from '@adatechnology/game-contracts'
 
 /**
@@ -24,6 +24,14 @@ export const weaponEventOf = (event: HostEvent): WeaponEvent | undefined => {
       return { type: 'clear', fault: event.fault as FaultId, phase: event.phase, at: 0 }
     case 'safety':
       return { type: 'safety', on: event.on, at: 0 }
+    case 'attachment':
+      return { type: 'attachment', action: event.action, id: event.attachment, mount: event.mount as MountKind, at: 0 }
+    case 'toggle':
+      return { type: 'toggle', id: event.attachment, on: event.on, at: 0 }
+    case 'stock':
+      return { type: 'stock', state: event.state, kind: (event.kind ?? 'fold') as StockDef['kind'], at: 0 }
+    case 'underbarrel':
+      return { type: 'underbarrel', on: event.on, at: 0 }
     default:
       return undefined
   }

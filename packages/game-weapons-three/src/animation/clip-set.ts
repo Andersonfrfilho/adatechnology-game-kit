@@ -1,5 +1,6 @@
 import type { AnimationClipSpec, ToolClipSet } from '@adatechnology/game-contracts'
 import type { ClipContext } from './context'
+import { launcherClips, stockClips, toggleClip } from './accessory-clips'
 import { clearClips, cycleClip } from './cycle-clips'
 import { feedClip, reloadClips } from './reload-clips'
 import { drawClip, emptyClip, faultClips, misfireClip, safetyClips, shotClips } from './shot-clips'
@@ -17,6 +18,9 @@ export function buildToolClips(context: ClipContext): ToolClipSet {
     ...clearClips(context),
     ...safetyClips(context),
     drawClip(),
+    ...stockClips(context),
+    toggleClip(),
+    ...launcherClips(context),
   ]
   const set: Record<string, AnimationClipSpec> = {}
   for (const clip of clips) if (clip) set[clip.id] = clip

@@ -2,6 +2,7 @@ import type * as THREE_NS from 'three'
 import { WEAPONS } from '@adatechnology/game-weapons'
 import data from '../data/models.json'
 import { buildBreakAction } from './break-action'
+import { deriveFrames } from './attachments/mount-frames'
 import { buildBullpup } from './bullpup'
 import { modelKit } from './kit'
 import type { ModelKit } from './kit'
@@ -97,5 +98,7 @@ export function buildWeaponModelById(THREE: typeof THREE_NS, id: string): Weapon
     built.group.position.x = -new THREE.Box3().setFromObject(built.group).min.x
   } else root = fitLength(kit, built.group, entry.length / 1000)
   root.name = id
-  return { id, root, inner: built.group, parts: built.parts }
+  const model: WeaponModel = { id, root, inner: built.group, parts: built.parts }
+  if (!built.parts.frames) built.parts.frames = deriveFrames(THREE, model)
+  return model
 }

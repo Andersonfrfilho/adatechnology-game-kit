@@ -1,4 +1,6 @@
 import type * as THREE from 'three'
+import { buildBeltBox } from './attachments/belt-box'
+import { buildDrum } from './attachments/drum'
 import { buildHelicalMagazine } from './helical-magazine'
 import type { RifleContext } from './rifle-context'
 
@@ -24,7 +26,7 @@ export function buildGrip(context: RifleContext): number {
 /** The magazine of the kind the options name (curved, box, drum, internal, belt), and the cover and belt box of a belt-fed gun. Returns the x of the well. */
 export function buildMagazine(context: RifleContext, gx: number): number {
   const { kit, group, parts, options: o, receiverStart: x0, receiverHeight: hR, receiverWidth: wR, receiverLength: RL } = context
-  const { M, box, cylinderX, cylinderZ } = kit
+  const { M, box } = kit
   if (o.mag === 'helical') return buildHelicalMagazine(context)
   const mx = o.magAt != null ? x0 + o.magAt : gx + 0.075
   const scale = o.magLen || 1
@@ -66,9 +68,7 @@ export function buildMagazine(context: RifleContext, gx: number): number {
     box(magazine, 0.056, 0.007, 0.028, material, px, py - 0.002, 0, angle)
     parts.magDrop = length + 0.03
   } else if (o.mag === 'drum') {
-    cylinderZ(magazine, 0.075, 0.07, M.dark, 0.02, -0.085, 0, 22)
-    cylinderZ(magazine, 0.05, 0.074, M.metal, 0.02, -0.085, 0, 18)
-    box(magazine, 0.05, 0.04, 0.03, M.dark, 0, -0.02, 0)
+    buildDrum(kit, magazine)
     parts.magDrop = 0.2
   } else if (o.mag === 'internal') {
     box(group, 0.08, 0.025, 0.03, context.isTraditional ? context.furniture : M.metal, mx, -hR / 2 - 0.012, 0)
@@ -77,12 +77,7 @@ export function buildMagazine(context: RifleContext, gx: number): number {
   if (o.mag === 'belt') {
     const belt = kit.pivot(group, mx + 0.02, -hR / 2 - 0.05, -0.045)
     parts.belt = belt
-    box(belt, 0.11, 0.1, 0.08, M.olive, 0, 0, 0)
-    box(belt, 0.112, 0.012, 0.082, M.dark, 0, 0.046, 0)
-    for (let i = 0; i < 7; i++) {
-      cylinderX(belt, 0.0042, 0.034, M.brass, -0.04 + i * 0.012, 0.07, 0.035, 10)
-      box(belt, 0.006, 0.006, 0.012, M.metal, -0.04 + i * 0.012, 0.066, 0.035)
-    }
+    buildBeltBox(kit, belt)
     const cover = kit.pivot(group, x0 + 0.01, hR / 2, 0)
     parts.cover = cover
     box(cover, RL - 0.03, 0.014, wR * 1.05, M.metal, (RL - 0.03) / 2, 0.007, 0)

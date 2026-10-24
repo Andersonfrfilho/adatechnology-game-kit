@@ -18,6 +18,6 @@ export default defineConfig([
     globalName: 'GameWeaponsThree',
     sourcemap: true,
     target: 'es2020',
-    noExternal: ['@adatechnology/game-weapons'],
+    noExternal: ['@adatechnology/game-weapons', '@adatechnology/game-interactables-three', '@adatechnology/game-interactables', '@adatechnology/game-props3d'],
   },
 ])

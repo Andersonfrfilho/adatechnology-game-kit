@@ -1,5 +1,7 @@
 import { heatify } from './kit'
 import type { ModelKit } from './kit'
+import { buildBrake } from './attachments/muzzle-brake'
+import { captured, recordFitting } from './capture'
 import { rail } from './details'
 import { buildFittings } from './rifle-fittings'
 import { buildForend } from './rifle-forend'
@@ -65,16 +67,16 @@ function buildBarrel(context: RifleContext): void {
   }
   if (o.gas) cylinderX(group, r * 0.75, (L - x1) * 0.55, M.metal, x1 + (L - x1) * 0.3, by + r * 2.2, 0, 14)
   if (o.brake) {
-    const scale = o.brake === 2 ? 3.2 : 2.0
-    const brakeLength = o.brake === 2 ? 0.12 : 0.06
-    heatify(parts.glow, cylinderX(group, r * scale, brakeLength, M.dark, L - brakeLength / 2, by, 0, o.brake === 2 ? 8 : 16))
-    for (let i = 0; i < 3; i++) box(group, brakeLength * 0.16, r * scale * 1.3, r * scale * 2.2, M.hole, L - brakeLength * 0.25 - i * brakeLength * 0.25, by, 0)
+    const kind = o.brake === 2 ? 2 : 1
+    recordFitting(parts, kind === 2 ? 'muzzle_brake_heavy' : 'muzzle_brake', group, () => buildBrake(kit, group, kind, L, by, r, (body) => void heatify(parts.glow, body)))
   } else if (!o.noFH) {
-    heatify(parts.glow, cylinderX(group, r * 1.45, 0.042, M.dark, L - 0.021, by, 0, 16))
-    for (let i = 0; i < 4; i++) {
-      const angle = (i * PI) / 2 + PI / 4
-      box(group, 0.026, 0.0025, 0.004, M.hole, L - 0.02, by + Math.cos(angle) * r * 1.42, Math.sin(angle) * r * 1.42, 0, 0, angle)
-    }
+    recordFitting(parts, 'muzzle_default', group, () => {
+      heatify(parts.glow, cylinderX(group, r * 1.45, 0.042, M.dark, L - 0.021, by, 0, 16))
+      for (let i = 0; i < 4; i++) {
+        const angle = (i * PI) / 2 + PI / 4
+        box(group, 0.026, 0.0025, 0.004, M.hole, L - 0.02, by + Math.cos(angle) * r * 1.42, Math.sin(angle) * r * 1.42, 0, 0, angle)
+      }
+    })
   }
   cylinderX(group, r * 0.55, 0.004, M.hole, L + 0.0005, by, 0, 12)
 }
@@ -123,8 +125,23 @@ export function buildRifle(kit: ModelKit, options: ModelOptions): BuiltModel {
   buildForend(context)
   const gripX = buildGrip(context)
   const magazineX = buildMagazine(context, gripX)
-  buildStock(context, magazineX)
+  parts.stockMeshes = context.isTraditional ? [] : captured(group, () => buildStock(context, magazineX))
+  if (context.isTraditional) buildStock(context, magazineX)
   buildFittings(context, gripX)
+  const hasHandguard = !context.isTraditional && options.hg !== 'none'
+  parts.frames = {
+    length,
+    barrelY: context.barrelY,
+    barrelRadius: context.barrelRadius,
+    receiverStart,
+    receiverEnd,
+    receiverHeight,
+    receiverWidth: context.receiverWidth,
+    handguardEnd: receiverEnd + (length - receiverEnd) * (hasHandguard ? options.hgFrac || 0.5 : 0.4),
+    magazineX,
+    gripX,
+    hasRail: Boolean(options.rail),
+  }
   const { barrelY: by, receiverWidth: wR } = context
   const ejectX = receiverEnd - (options.ejectBack || 0.07)
   const ejectY = options.ar ? receiverHeight * 0.2 : by

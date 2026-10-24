@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-interactables-three": "workspace:*",
     "@adatechnology/game-weapons": "workspace:*"
   },
   "peerDependencies": {

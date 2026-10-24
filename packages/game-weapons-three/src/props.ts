@@ -3,6 +3,7 @@ import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology
 import type { WeaponDef } from '@adatechnology/game-weapons'
 import { mergeByMaterial } from './merge-by-material'
 import { buildWeaponModelById } from './models'
+import { buildTripodLegs } from './models/attachments/tripod'
 import { modelKit } from './models/kit'
 
 /** A low-poly prop: its destruction spec (box parts only) and one colour per part. */
@@ -128,20 +129,14 @@ export function buildModeledProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'i
   return group
 }
 
-// where the tripod joins the gun (along it, under it) and how its legs spread
+// where the tripod joins the gun (along it, under it)
 const TRIPOD_HEAD = { x: 0.4, y: -0.1 }
-const TRIPOD_LEG = { length: 0.62, width: 0.012 }
 
-/** A modeled weapon on a tripod of three steel legs under its middle (the creation of the kit that the `tripod` accessory will draw as its own piece). */
+/** A modeled weapon on a tripod of three steel legs under its middle (the same legs the `tripod` accessory draws in the hands). */
 export function buildTripodMountedProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, name: string): THREE_NS.Group | undefined {
   return buildModeledProp(THREE, def, name, (root) => {
     const kit = modelKit(THREE)
-    const tripod = kit.pivot(root, TRIPOD_HEAD.x, TRIPOD_HEAD.y, 0)
-    const { length, width } = TRIPOD_LEG
-    kit.box(tripod, 0.03, 0.06, 0.03, kit.M.metal, 0, 0, 0)
-    kit.box(tripod, width, length, width, kit.M.metal, -0.2, -0.25, 0, 0.75)
-    kit.box(tripod, width, length, width, kit.M.metal, 0.22, -0.25, 0.16, -0.75, 0, 0.3)
-    kit.box(tripod, width, length, width, kit.M.metal, 0.22, -0.25, -0.16, -0.75, 0, -0.3)
+    buildTripodLegs(kit, kit.pivot(root, TRIPOD_HEAD.x, TRIPOD_HEAD.y, 0))
   })
 }
 
