@@ -42,3 +42,9 @@ player.play('grabbed_bitten_human', { onEvent: (event) => event.type === 'impact
 Crouch, down and the aimed arms are derived literally from the game's GPU pose code (`BODY_CHUNK`, lines quoted in `src/player/avatar.ts`): crouch is thigh `-0.95`, knee `1.9`, trunk `+0.25`, hip `-0.35`;
 down turns the body about the hip (`±1.5` rad, face up or down by the phase) with the limbs of pose 2; `armed` follows `(pitch + 1) / 3`. `play` overlays a `PoseClip` of `@adatechnology/game-characters`
 (`channels: 'upper'` leaves the legs to the gait) with a 0.12 s blend, and fires its events (`impact`, `phase`) once through `onEvent` and `on('event')`. `hand('R')` is the weapon hand (the puppet's right, at -x).
+
+**In the test room.** `room.setAvatar(toRoomAvatar(player))` shows the body at the player's feet (`toRoomAvatar` only flips the pitch: the room counts a look up as positive, the team game a look down) and V switches between the first and the third person of
+`@adatechnology/game-test-room`. `createAvatarTestModule({ avatar, camera, state })` is the module of the area `avatar_area` (`AVATAR_AREA_ID`): bench buttons for the view (1st/3rd person), crouch, stand, fall, get up, armed on/off,
+one button per registered clip (`Tocar: grabbed_bitten_human`, `grab_bite_zombie`) and stop; the entries Soco, Empurrão, Chute and Tiro (corpo), shown disabled with the note that the animation is pending delivery by the Elenco team and that the rule is
+already in the Player area; metrics for the camera, the clip playing, the last clip event and the joints. Every action is a JSON line in the room log (`{"type":"avatar","action":"play_clip","clip":...}`), clip events included.
+The module takes the body, the view (`camera: { mode, set }`) and the state (`state: { set }`) by option and imports only `@adatechnology/game-contracts`.

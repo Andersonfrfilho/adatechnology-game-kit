@@ -54,3 +54,7 @@ export { BODY_SOUNDS, PLAYER_SOUNDS, UNDEAD_VOICES, UNDEAD_VOICE_SOURCES, create
 export type { BodySoundRule, CharacterSound, CharacterSoundOptions, CharacterSoundSink, CharacterSoundStyle, UndeadVoice, VoiceMoment, VoiceStep } from './audio/sound'
 export { createPlayerAvatar } from './player/avatar'
 export type { AvatarEvent, AvatarUpdate, PlayPoseOptions, PlayerAvatar, PlayerAvatarOptions, PlayerAvatarSpec } from './player/avatar'
+export { toRoomAvatar } from './player/room-avatar'
+export type { RoomAvatarLike } from './player/room-avatar'
+export { AVATAR_AREA_ID, createAvatarTestModule } from './player/test-module'
+export type { AvatarTestOptions } from './player/test-module'
