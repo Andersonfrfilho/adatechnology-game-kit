@@ -1,5 +1,12 @@
 # @adatechnology/game-weather
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [968d7df]
+  - @adatechnology/game-contracts@0.11.0
+
 ## 0.1.0
 
 ### Minor Changes

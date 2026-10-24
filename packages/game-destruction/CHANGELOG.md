@@ -1,5 +1,16 @@
 # @adatechnology/game-destruction
 
+## 0.7.0
+
+### Minor Changes
+
+- 968d7df: Shelter, fragment hits and confinement for blasts (`DestructionOptions.blast`, `explode(..., options)`, explosive `Hit`), all off by default and with every number an option; `Hit.piercing` and `piercingOf` (soft lead does not go through steel on energy alone); `breach.blastReach`; glass `damageScale.shelter`. `tests/beams-and-columns.test.ts` documents real calibres against beams and columns.
+
+### Patch Changes
+
+- Updated dependencies [968d7df]
+  - @adatechnology/game-contracts@0.11.0
+
 ## 0.6.1
 
 ### Patch Changes

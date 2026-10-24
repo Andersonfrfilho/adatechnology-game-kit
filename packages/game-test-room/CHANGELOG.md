@@ -1,5 +1,26 @@
 # @adatechnology/game-test-room
 
+## 0.9.0
+
+### Minor Changes
+
+- 968d7df: The room's explosions take blast options (`blast` option, `blast()` / `setBlast()`, three HUD toggles in pt-BR and en) and show the last blast in new metrics `blast_shelter`, `blast_confinement` and `blast_fragments` and in the log.
+
+### Patch Changes
+
+- Updated dependencies [968d7df]
+- Updated dependencies [968d7df]
+- Updated dependencies [968d7df]
+  - @adatechnology/game-contracts@0.11.0
+  - @adatechnology/game-destruction-three@0.7.0
+  - @adatechnology/game-destruction@0.7.0
+  - @adatechnology/game-audio@0.1.1
+  - @adatechnology/game-fluids@0.2.2
+  - @adatechnology/game-vfx@0.1.2
+  - @adatechnology/game-vfx-three@0.1.2
+  - @adatechnology/game-weapons@0.4.3
+  - @adatechnology/game-fluids-three@0.2.2
+
 ## 0.8.0
 
 ### Minor Changes

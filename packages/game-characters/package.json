@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-characters",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "license": "MIT",
   "description": "Engine-agnostic living bodies for games: body proportions, rig, an 11-kind segment tree with 6 crowd regions, and a damage model (protection, penetration, severity, dismemberment, death, bleeding) as a DestructibleImpl. Deterministic. Knows nothing about any game.",
   "keywords": [

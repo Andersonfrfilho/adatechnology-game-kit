@@ -1,5 +1,21 @@
 # @adatechnology/game-destruction-three
 
+## 0.7.0
+
+### Minor Changes
+
+- 968d7df: `renderer.explode(point, energy, radius, { report })` pushes each piece with the energy that reached its object (shelter and confinement of the `world.explode` results); without a report the old formula.
+
+### Patch Changes
+
+- Updated dependencies [968d7df]
+- Updated dependencies [968d7df]
+  - @adatechnology/game-contracts@0.11.0
+  - @adatechnology/game-destruction@0.7.0
+  - @adatechnology/game-audio@0.1.1
+  - @adatechnology/game-vfx@0.1.2
+  - @adatechnology/game-vfx-three@0.1.2
+
 ## 0.6.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # @adatechnology/game-weapons-three
 
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [968d7df]
+  - @adatechnology/game-contracts@0.11.0
+  - @adatechnology/game-audio@0.1.1
+  - @adatechnology/game-weapons@0.4.3
+  - @adatechnology/game-interactables-three@0.1.4
+
 ## 0.6.0
 
 ### Minor Changes

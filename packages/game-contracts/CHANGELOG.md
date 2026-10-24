@@ -1,5 +1,11 @@
 # @adatechnology/game-contracts
 
+## 0.11.0
+
+### Minor Changes
+
+- 968d7df: Blast contracts, additive: `BlastOptions` (`shelter`, `fragmentHits`, `confinement`), `ShelterOptions`, `FragmentHitOptions`, `ConfinementOptions`, `BlastReport`; `Hit.blast`, `Hit.confinement`, `Hit.shelter`, `Hit.piercing`; `HitResult.blast`; the `blast` and `fragment_hit` events.
+
 ## 0.10.0
 
 ### Minor Changes
