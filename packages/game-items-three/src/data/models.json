@@ -628,5 +628,15 @@
       0.664
     ],
     "scale": 0.1
+  },
+  {
+    "id": "juice_box",
+    "teamId": "suco_cx",
+    "teamBox": [
+      0.52,
+      1,
+      0.37
+    ],
+    "scale": 0.1
   }
 ]
