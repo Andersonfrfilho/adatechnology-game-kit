@@ -92,6 +92,18 @@ for (const lang of ['pt-BR', 'en']) {
   })
   check(`[${lang}] the weapons module is loaded too, its accessory bench works (suppressor on an M4)`, weapons.module === 'weapons_area' && weapons.ok && weapons.problems.length === 0 && weapons.items > 100 && weapons.controls === 10 && weapons.accepted && weapons.suppressed, weapons)
 
+  // the items module rides along too, and the containers of the furniture hold real items (a fridge shows the cans and bottles of the goods catalog at their real size)
+  const items = await page.evaluate(() => {
+    const room = window.__testRoom
+    const loaded = window.__furnitureReport.itemsArea
+    const so = room.spawn('fridge', [0, 0, -5], 0)
+    const found = []
+    so.root.traverse((o) => o.userData?.contents && found.push(o.userData.contents.item))
+    room.clear()
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, inFridge: found.length }
+  })
+  check(`[${lang}] the items module is loaded too and the fridge holds real items`, items.module === 'items_area' && items.ok && items.problems.length === 0 && items.items > 300 && items.inFridge > 0, items)
+
   if (lang === 'pt-BR') {
     await page.close()
     const p = await open('?lang=pt-BR&ui=0')

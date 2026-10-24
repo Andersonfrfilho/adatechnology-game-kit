@@ -28,6 +28,7 @@ COPY packages/game-interactables-household/package.json packages/game-interactab
 COPY packages/game-interactables-three/package.json packages/game-interactables-three/
 COPY packages/game-items/package.json packages/game-items/
 COPY packages/game-items-goods/package.json packages/game-items-goods/
+COPY packages/game-items-three/package.json packages/game-items-three/
 COPY packages/game-props3d/package.json packages/game-props3d/
 COPY packages/game-test-room/package.json packages/game-test-room/
 COPY packages/game-vegetation/package.json packages/game-vegetation/
@@ -42,6 +43,7 @@ COPY tools/items-catalog/package.json tools/items-catalog/
 COPY tools/weapons-catalog/package.json tools/weapons-catalog/
 COPY examples/interactables-showroom/package.json examples/interactables-showroom/
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
+COPY examples/items-test-area/package.json examples/items-test-area/
 COPY examples/test-room/package.json examples/test-room/
 COPY examples/weapons-test-area/package.json examples/weapons-test-area/
 RUN pnpm install --frozen-lockfile
