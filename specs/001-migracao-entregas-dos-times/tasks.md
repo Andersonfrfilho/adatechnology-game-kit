@@ -44,7 +44,7 @@ Ordem: armas → casas → itens → personagens → efeitos → som e clima →
 - T2.4 `game-floorplan-three`: desenho 3D (Casa3DSDK), andares andáveis (C6), ponte para os móveis.
 - T2.5 Interiores com interior completo (C5): delegacia, escola, igreja, posto, pronto-socorro, metalúrgica, loja de armas, fazenda,
   triagem, mercado completo; silhuetas da Galeria como versão de longe (C4).
-- T2.6 Goldens contra o VC3 e a área de casas; `floorplan-test-area`.
+- T2.6 ✅ Goldens contra o VC3 e a área de casas; `floorplan-test-area`. (a: módulo e exemplo; b: também na `interactables-test-area`; c: site, Dockerfile, CI, miniatura; ver evidence.md `## T2.6`)
 
 ## Fase 3 — Itens
 > 🤖 Modelo: `sonnet`

@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-items",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "license": "MIT",
   "description": "Engine-agnostic item catalog engine: item definitions (category, size, weight, rarity, durability, shelf life, protection, carry), an extensible registry with patch/remove/include, and the default rules for finds, freshness, storage, carry weight and protection. No content and no renderer.",
   "keywords": [

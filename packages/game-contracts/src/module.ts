@@ -204,6 +204,11 @@ export interface ModuleHost {
   on(listener: (event: HostEvent) => void): () => void
   /** Run every simulated frame with the frame's seconds. Returns the unsubscribe function. */
   onFrame(update: (dt: number) => void): () => void
+  /**
+   * Follow the host clearing its area (`clear()`, opening an area, running scenarios): everything the module put in the world on its own (not as items) is to be taken away or put back. Returns the
+   * unsubscribe function. A host that never clears leaves it out.
+   */
+  onClear?(listener: () => void): () => void
   /** Write a line to the host's behaviour log. */
   log(text: string, data?: Record<string, unknown>): void
   /**
@@ -211,6 +216,11 @@ export interface ModuleHost {
    * ones taken later start that way. A host applies the ids it knows and ignores the rest. The test room knows `condition` (how worn the tools are) and `ammo_quality` (how good what they load is).
    */
   configureTool?(settings: Readonly<Record<string, string>>): void
+  /**
+   * Adds a place the walking player cannot enter: `blocked(x, z, radius)` answers for a disc of the player's `radius` centred on the world point (x, z). A module with walls of its own (a house) uses it so the
+   * player stops at them; the function is asked on every step, so it may follow a door that opens. Returns the function that takes it away. A host without a walking player leaves it out.
+   */
+  addBlocker?(blocked: (x: number, z: number, radius: number) => boolean): () => void
   /** Asks the tool in hand to do something (see `ToolCommand`). A host without accessories leaves it out. */
   command?(command: ToolCommand): ToolCommandResult
   /** Lent only to a module that declares controls, layers or metrics. */

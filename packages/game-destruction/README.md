@@ -181,6 +181,59 @@ panels), `drywall`, `wood_frame_wall`, `log_wall`, `sheet_metal_shack`, `glass_p
 - **Holes stay on the pieces.** Every `fracture` and breach fragment carries `marks` (`FragmentMark`: point, normal and diameter in the fragment's own
   axes) for the holes that fell inside it, at most 12 per fragment.
 
+## Blasts: shelter, fragment hits and confinement
+
+All three are options, **off by default** (a blast then does exactly what it always did, goldens included). Set them for the world with
+`createDestruction({ blast: { shelter: true, ... } })`, or per call: `world.explode(point, energy, radius, source, { shelter: true })`, or on the
+explosive `Hit` (`hit.blast`, `hit.confinement`). A call overrides the world default (`shelter: false` turns it off). Every number below is an
+option; the defaults are exported as `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS` and `CONFINEMENT_DEFAULTS`. This is the kit's own model (no team
+delivery has it), approved by the owner on 2026-10-24.
+
+**Shelter.** For each part (or impl) in range, a segment from the centre to the nearest point of the target is cut against every other part of
+every object, skipping parts already lost and the target itself. A part crossed along a path `p` lets through `exp(-r / k)` of the energy, with
+`r = hpPerKg * density * p * damageScale.shelter` (the hit points of the slab it crosses, per m²) and `k = 2800`. The energy that reaches the target
+is `E * product(t_i)`, and it is used for both the damage and the push. Parts are served from the nearest to the farthest, so a wall takes the blast
+(damage, dents, maybe breaking) before what is behind it. A blocker the same blast destroys or breaches lets `brokenTransmission` (0.5) of what it
+held back go through: `t' = t + (1 - t) * 0.5`. An opening (a breach, a bare rebar cage) from before the blast lets everything through. Impls
+(characters, animals) get one hit with the energy-weighted mean of the share that reaches their parts, and `Hit.shelter` carries it. Impls do not
+shelter anything (they have no material).
+
+| Blocker | Path | Lets through |
+|---|---|---|
+| glass pane | 6 mm | 83% (`damageScale.shelter: 3` in the material) |
+| wooden door (softwood) | 4 cm | 53% |
+| brick wall | 20 cm | 19% |
+| reinforced concrete column | 30 cm | 3% |
+
+**Fragment hits.** The fragments of a part the blast fractures or breaches (the `fracture` and `stage` events) become hits on the first part or impl
+along their flight, in order of energy, at most `max` (24) per blast. Each is a `blunt` hit (or `ballistic` with its mass in grams and a calibre from
+its size) of `energyFactor * m * v² / 2` (0.5), thrown up to `min(range 6 m, speed * flightTime 0.4 s)` within a seeded `spread` (10°) of its
+direction. With `shelter` on, a fragment of a blocker whose line to a target is within `aim` (40°) of its flight goes for that target. The flights
+depend only on the world seed, the blast and the fragment, never on what the world did before. Fragments of what a fragment breaks are not thrown
+again. Events: `fragment_hit` (before the target's own events).
+
+**Confinement.** `confinement: true` shoots `rays` (26) seeded rays from the centre as far as `radius * reach` (1.5) against the world's parts (impls
+do not count; open doors, windows and breaches are absent parts). With `c` the share of rays that hit and `d` their mean distance:
+`multiplier = min(max, 1 + gain * c^power * clamp(radius / d, 0, 2))` with `gain` 1.5, `power` 2, `max` 3. The energy of the whole blast is
+multiplied. Open ground gives 1, a closed room of 6 m about 3, the same room with one wall missing about 2. A number (`confinement: 2.5`, or
+`Hit.confinement`) is the multiplier itself, for a host that knows the room volume.
+
+**What comes back.** `HitResult.blast = { shelter, parts?, confinement, fragmentHits }` per target (`shelter` is the most exposed part's share),
+and one `blast` event per blast (`energy` after confinement, `shelter` per target, `fragmentHits`). `@adatechnology/game-destruction-three` takes
+the results for the push on pieces: `renderer.explode(point, energy, radius, { report: results })`.
+
+### Bullets and blasts against beams and columns
+
+`tests/beams-and-columns.test.ts` documents calibres of `@adatechnology/game-weapons` against a reinforced concrete column and beam, a steel
+I-beam, a hardwood beam and a brick pillar. Two options came out of it, both off or neutral by default:
+
+- `Hit.piercing` (6th argument of `shoot`): how well the bullet cuts through for its energy; the energy compared with the penetration of a hard
+  material (metal, masonry) is `energy * piercing`. `PIERCING_BY_KIND` (fmj 1, hp 0.6, ap 1.6, buck 0.5, slug 0.25) and `PIERCING_BY_CALIBER`
+  (5.56, 5.45 and .22 0.5) give the numbers from `CaliberDef.kind` (`piercingOf(id, kind)`). Without it a 12 ga slug (3000 J) went through 8.5 mm of
+  steel.
+- `breach.blastReach` (default `Infinity`, 0.12 recommended): a blast only opens a breach within `blastReach * cbrt(energy / 1000)` metres of the
+  part. With 0.12 a hand grenade (200 kJ) at 1 m no longer cuts a reinforced column in two (at 0.2 m it strips it).
+
 ## Contracts: implement your own or use the default world
 
 The kit defines contracts; each game module implements them for the objects it owns, and the world in this package is the optional default
@@ -228,9 +281,9 @@ world continues with the same events as the original. The loading world must use
 
 `createDestruction(options)` returns a `DestructionWorld`: `add`, `remove`, `has`, `ids`, `setTransform`, `splitGroup`, `hit`, `hitPart`, `explode`,
 `raycast`, `shoot`, `disassemble`, `workableJoints`, `nearestJoint`, `extinguish`, `setLiters`, `update`, `state`, `part`, `reset`, `on`,
-`register`, `serialize`, `load`, `time`. `state()` and `part()` return live views; do not mutate them.
+`register`, `serialize`, `load`, `time`. `explode(point, energy, radius, source?, blastOptions?)`; `shoot(origin, direction, energy, caliber, source?, piercing?)`. `state()` and `part()` return live views; do not mutate them.
 
-Also exported: `buildFrame`, `sizeStructure`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
+Also exported: `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS`, `CONFINEMENT_DEFAULTS`, `PIERCING_BY_KIND`, `PIERCING_BY_CALIBER`, `piercingOf`, `buildFrame`, `sizeStructure`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
 helpers `vec`, `quat`, `quatFromEuler`, `rotateVec`, `toLocal`, `toWorld`, the locale (`locales`, `resolveStrings`, `DestructionStrings`) and all types.
 
 The locale table has `en` and `pt-BR` strings for material names, part statuses, joint kinds, tools, damage types, event labels and fracture styles:
@@ -244,3 +297,5 @@ plástico derretem e pingam. As juntas cedem com impacto, quando a peça é dest
 parafuso, chave inglesa para porca e parafuso, maçarico para solda). O mundo devolve tudo como eventos para o renderizador desenhar. É
 determinístico (semente fixa) e serializável, então um host de LAN pode rodar o mundo e enviar só as entradas. Os nomes em português
 (materiais, ferramentas, juntas, eventos) estão em `resolveStrings('pt-BR')`.
+
+Explosões: `blast.shelter` (paredes e portas entre a explosão e o alvo ficam com a sua parte: tijolo de 20 cm deixa passar ~19%, porta de madeira ~53%, vidro ~83%; a parede que quebra na mesma explosão deixa passar metade do que segurou), `blast.fragmentHits` (os pedaços do que quebra viram golpes de baixa energia no que está atrás) e `blast.confinement` (pressão num ambiente fechado, de 1 a 3 vezes). Tudo desligado por padrão, por opção do mundo ou da chamada, com os números em `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS` e `CONFINEMENT_DEFAULTS`.

@@ -1,5 +1,49 @@
 # @adatechnology/game-destruction-three
 
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies [98ae206]
+  - @adatechnology/game-contracts@0.12.0
+  - @adatechnology/game-audio@0.1.2
+  - @adatechnology/game-destruction@0.7.1
+  - @adatechnology/game-vfx@0.1.3
+  - @adatechnology/game-vfx-three@0.1.3
+
+## 0.7.0
+
+### Minor Changes
+
+- 968d7df: `renderer.explode(point, energy, radius, { report })` pushes each piece with the energy that reached its object (shelter and confinement of the `world.explode` results); without a report the old formula.
+
+### Patch Changes
+
+- Updated dependencies [968d7df]
+- Updated dependencies [968d7df]
+  - @adatechnology/game-contracts@0.11.0
+  - @adatechnology/game-destruction@0.7.0
+  - @adatechnology/game-audio@0.1.1
+  - @adatechnology/game-vfx@0.1.2
+  - @adatechnology/game-vfx-three@0.1.2
+
+## 0.6.0
+
+### Minor Changes
+
+- 0f9e616: `createDestructionSound(engine)` registers the material sounds of the art scene (`glass`, `wood`, `thunk`, `ping`, `clang`, `chip`, `crumble`, `thud`, `hiss`, `boom`, `burst`, `crack`) and the game's `explosion_boom` in `@adatechnology/game-audio`, and maps the renderer's `onSound` keys through a replaceable table (`art_scene` or `game` style). The renderer sends `burn_end` when a part goes out or finishes burning, and `burn_loop` is the fire loop that rises with the parts in flames. `game-audio` is a dependency.
+
+### Patch Changes
+
+- Updated dependencies [7fd46fb]
+- Updated dependencies [0f9e616]
+- Updated dependencies [3a8cc95]
+  - @adatechnology/game-contracts@0.10.0
+  - @adatechnology/game-audio@0.1.0
+  - @adatechnology/game-destruction@0.6.1
+  - @adatechnology/game-vfx@0.1.1
+  - @adatechnology/game-vfx-three@0.1.1
+
 ## 0.5.0
 
 ### Minor Changes

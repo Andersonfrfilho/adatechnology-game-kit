@@ -6,7 +6,7 @@
  * drips), fragments with light physics, loose pieces after a `detach`, and pooled particles.
  */
 import type * as THREE_NS from 'three'
-import type { DebrisKind, DestructibleSpec, DestructionWorld, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
+import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 
 export type ThreeNamespace = typeof THREE_NS
@@ -105,6 +105,11 @@ export interface ExplodeOptions {
   readonly direction?: Vec3
   /** `false`: the host drew the blast, only the shove and the sound are left. Default `true`. */
   readonly visual?: boolean
+  /**
+   * What `world.explode` returned for this blast. When its results carry a `blast` report (`shelter`, `confinement`), the shove on each piece uses
+   * the energy that reached it (`energy * confinement * shelter` of the piece's object) instead of the raw energy. Without it the old formula.
+   */
+  readonly report?: readonly HitResult[]
 }
 
 export interface DestructionRenderer {

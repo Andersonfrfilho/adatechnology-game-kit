@@ -1,5 +1,67 @@
 # @adatechnology/game-test-room
 
+## 0.10.0
+
+### Minor Changes
+
+- 98ae206: `ModuleHost.addBlocker(blocked)`: a module with walls of its own (a house) keeps the walking player out of them; the function is asked on every step with the player's radius and may follow a door that opens. `ModuleHost.onClear(listener)`: a module that put things in the world on its own follows the room clearing its area (`clear()`, opening an area, scenarios) to take them away. Both optional; the room lends them.
+
+### Patch Changes
+
+- Updated dependencies [98ae206]
+  - @adatechnology/game-contracts@0.12.0
+  - @adatechnology/game-audio@0.1.2
+  - @adatechnology/game-destruction@0.7.1
+  - @adatechnology/game-destruction-three@0.7.1
+  - @adatechnology/game-fluids@0.2.3
+  - @adatechnology/game-vfx@0.1.3
+  - @adatechnology/game-vfx-three@0.1.3
+  - @adatechnology/game-weapons@0.4.4
+  - @adatechnology/game-fluids-three@0.2.3
+
+## 0.9.0
+
+### Minor Changes
+
+- 968d7df: The room's explosions take blast options (`blast` option, `blast()` / `setBlast()`, three HUD toggles in pt-BR and en) and show the last blast in new metrics `blast_shelter`, `blast_confinement` and `blast_fragments` and in the log.
+
+### Patch Changes
+
+- Updated dependencies [968d7df]
+- Updated dependencies [968d7df]
+- Updated dependencies [968d7df]
+  - @adatechnology/game-contracts@0.11.0
+  - @adatechnology/game-destruction-three@0.7.0
+  - @adatechnology/game-destruction@0.7.0
+  - @adatechnology/game-audio@0.1.1
+  - @adatechnology/game-fluids@0.2.2
+  - @adatechnology/game-vfx@0.1.2
+  - @adatechnology/game-vfx-three@0.1.2
+  - @adatechnology/game-weapons@0.4.3
+  - @adatechnology/game-fluids-three@0.2.2
+
+## 0.8.0
+
+### Minor Changes
+
+- 0f9e616: The room lends `host.audio` (a sink over the room's sound engine, the listener following the camera every frame) and `host.environment` (a bus; calm dry day by default) to the modules it loads. New options `audio` (an engine, or `false` for a silent room) and `environment`, and `room.audio` and `room.environment`. The destruction renderer's sound keys play on the room engine.
+
+### Patch Changes
+
+- Updated dependencies [7fd46fb]
+- Updated dependencies [0f9e616]
+- Updated dependencies [3a8cc95]
+- Updated dependencies [0f9e616]
+  - @adatechnology/game-contracts@0.10.0
+  - @adatechnology/game-audio@0.1.0
+  - @adatechnology/game-destruction-three@0.6.0
+  - @adatechnology/game-destruction@0.6.1
+  - @adatechnology/game-fluids@0.2.1
+  - @adatechnology/game-vfx@0.1.1
+  - @adatechnology/game-vfx-three@0.1.1
+  - @adatechnology/game-weapons@0.4.2
+  - @adatechnology/game-fluids-three@0.2.1
+
 ## 0.7.0
 
 ### Minor Changes

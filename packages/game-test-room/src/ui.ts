@@ -52,6 +52,8 @@ export interface HudState {
   timeScale: number
   fast: boolean
   tap: boolean
+  /** The room's blast options that are on. */
+  blast: { shelter: boolean; fragmentHits: boolean; confinement: boolean }
   quality: string
   objects: number
 }
@@ -76,6 +78,7 @@ export interface UiOptions {
   onRunAll: () => Promise<ScenarioReport | void>
   onTool: (index: number) => void
   onTap: () => void
+  onBlast: (key: 'shelter' | 'fragmentHits' | 'confinement') => void
   onPlay: (objectId: string, clipId: string) => void
   onResize: () => void
   onControl: (id: string, value: ControlValue) => void
@@ -429,6 +432,8 @@ export function createUi(o: UiOptions): RoomUi {
     o.onFast(fast)
   })
   const tapBtn = ctl(t('ui.tap'), () => o.onTap())
+  const blastBtns = (['shelter', 'fragmentHits', 'confinement'] as const).map((key) => ({ key, b: ctl(t(`ui.blast.${key}`), () => o.onBlast(key)) }))
+  for (const { key, b } of blastBtns) b.title = t(`ui.blast.${key}.hint`)
   const qSel = mk('select')
   for (const q of ['low', 'medium', 'high'] as const) {
     const op = mk('option', undefined, t(`ui.quality.${q}`))
@@ -642,6 +647,7 @@ export function createUi(o: UiOptions): RoomUi {
       }
       slotsEl.forEach((b, i) => b.classList.toggle('on', i === s.slot))
       tapBtn.classList.toggle('on', s.tap)
+      for (const { key, b } of blastBtns) b.classList.toggle('on', s.blast[key])
       count.textContent = t('ui.objects', { n: s.objects })
       const ak = JSON.stringify(s.animations)
       if (ak !== lastAnim) {

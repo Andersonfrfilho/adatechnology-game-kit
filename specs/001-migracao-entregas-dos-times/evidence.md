@@ -2270,6 +2270,105 @@ Controles: clima (os 10 estados, nomes em pt-BR e en), transição (de uma vez o
 3. Falta o docker no ambiente: rodar `docker build -f site/Dockerfile .` antes do PR.
 4. A rodada inteira de `game-weapons-three` precisa de máquina livre; vale subir o `testTimeout` do pacote (hoje 5 s) como foi feito no `golden-tool`?
 
+## Explosões: abrigo, estilhaços como projéteis e confinamento (modelo novo do kit)
+
+> Modelo novo, **sem entrega de time**: conferi o Laboratório de Explosões, a Oficina de VFX, o Arsenal e o jogo e nenhum tem abrigo,
+> estilhaço que acerta quem está atrás nem pressão em ambiente fechado. O dono aprovou criar os três como opções em **2026-10-24**, com a
+> frase: "tem paredes que vão destruir e o personagem vai receber esse impacto, não tão grande, mas recebe parte do empurrão e estilhaços".
+> Por isso não há o que marcar no inventário; a regra do `CLAUDE.md` §1 foi cumprida pela pergunta ao dono antes de inventar.
+
+- `game-destruction`: `DestructionOptions.blast` / `explode(..., options)` / `Hit.blast`: `shelter`, `fragmentHits`, `confinement`, tudo desligado por
+  padrão (resultados e goldens idênticos; a suíte inteira passa sem mudar nenhum golden). Números em `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS` e
+  `CONFINEMENT_DEFAULTS`. Exemplos com os padrões: parede de tijolo de 20 cm deixa passar ~19%, porta de madeira de 4 cm ~53%, vidro de 6 mm ~83%,
+  pilar de concreto de 30 cm ~3%; a parede que quebra na mesma explosão deixa passar mais 50% do que segurou; sala fechada de 6 m x3, a mesma sem
+  uma parede ~x2, chão aberto x1.
+- `game-destruction-three`: `renderer.explode(..., { report })` empurra cada peça com a energia que chegou ao seu objeto.
+- `game-test-room`: opção `blast`, `blast()` / `setBlast()`, três botões no painel (pt-BR e en) e as métricas `blast_shelter`, `blast_confinement`,
+  `blast_fragments`.
+- Vigas e pilares (pedido do dono na mesma sessão): `tests/beams-and-columns.test.ts` cruza calibres reais de `game-weapons` com pilar e viga de
+  concreto armado, viga I de aço, viga de madeira e pilar de tijolo. Correções, todas por opção ou valor e sem tocar nos goldens: `Hit.piercing`
+  (chumbo mole não fura 8,5 mm de aço só pela energia), `breach.blastReach` (padrão **desligado**; o valor realista é 0,12 m por raiz cúbica de kJ:
+  ligado, o `gas_explodes` do golden `house-scenarios` muda, então a decisão de ligar e regravar é do dono) e `damageScale.shelter: 3` no vidro
+  (valor novo no JSON de materiais, sem efeito fora do abrigo).
+
+## T2.4
+
+Porte literal do Casa3DSDK (`construir`, `planejaLOD`) e do AndaresSDK da página do time (`visor-casas-3d`, L39443-42734; `zombiada-modo-livre`, L7372-7557) para o pacote novo `@adatechnology/game-floorplan-three`. Cinco commits, na ordem do brief.
+
+| Etapa | O que entrou |
+|---|---|
+| T2.4a | fecho `K` com 54 instaladores de módulo, acumuladores de geometria por grupo/material, materiais e texturas, locale (en, pt-BR), paredes + rodapé, portas, janelas, pisos, lajes, escadas, `build`/`dispose`; `userData.ranges` (faixa de vértices de cada peça) |
+| T2.4b | lote (terreno, calçada, muro, portão), telhados e calhas, ladrilhos, espelhos (Reflector injetado), luzes, carros (frota injetada), fachadas, utilidades, edícula, tabela de tipos e construtores de mobília, torneiras, fixtures, plantas, quintal, colisão/itens/acessórios |
+| T2.4c | ligação com a destruição: faixa de vértices por peça, fiadas de tijolo no LOD0 (`destruction/breach.ts`), marca de lascamento (spall), gaiola de vergalhão (via `game-destruction-three`) |
+| T2.4d | alvo do olhar, navegação (AndaresSDK: grade de 10 cm, `blocked`/`FREE`, escadas), interação, mapa de móveis, varal, pontes de interativos e vegetação |
+| T2.4e | golden de cena `vc3-house-scene` com 6 pares exatos (casaA 3, sobrado 3, apartamento 1, media_terrea_moderna 3, mercado 3, farmacia 2) e o plano de LOD |
+
+**Efeitos:** o pacote não tem sistema de partículas próprio. Poeira, estilhaços, fagulhas, fogo e vazamento vêm do mundo de efeitos do `game-destruction-three` (fiadas, vergalhão, marcas) e do kit de interativos injetado; o vazamento da caixa d'água é só o estado (`water.leak(taxa)`, litros por segundo), sem desenho. Nada faltou em `game-vfx`, então nenhuma receita nova.
+
+**Desvios:**
+- Props: o `game-props3d` usa mulberry32 em vez do LCG do time; construtores como `bbq_simple`, atlas de quadros, cores do piso do lote e props de canteiro/plantas diferem da página. Os 6 pares do golden são exatos; outros não (casaA 1/2, sobrado 1/2, apartamento 2, popular_laje 1, popular_geminada 1, media_terrea_moderna 1/2, sobrado_medio_moderno 1-3, alto_padrao_contemporanea 1-3, mansao 1-3, apartamento_novo 1/2).
+- Carros, interativos e Reflector ficam fora do golden (o `criar` da página não os recebe).
+- `cfg.seedKey` mapeia ids novos para os ids legados nos sais do sorteio (ids `lp_`, `sw_`, `lamp_*_` mantidos) para o golden reproduzir.
+- `AdaptadorInterativos` é código de jogo (diz o próprio cabeçalho): não portado; o adaptador é injetado.
+- `breach.ts` (fiadas no LOD0) é desenho inferido: a spec só dizia "Falta para a T2.4c".
+- A spec da estrutura é melhorada neste pacote (montagem nas paredes, vergalhão em laje/viga/pilar/escada de concreto): decisão minha.
+- Sólidos da navegação: só colisores de parede/tabuleiro (vãos de porta ficam livres).
+- `wallDetail` `panels`/`units` para a malha 3D e os botões do visor não foram portados.
+- O Chrome do golden roda a three r160 da página; o `golden-tool` tem three 0.128 como devDependency.
+- Node 24 indisponível: testado em 20 e 22.
+- Partição das etapas difere do brief: construtores de mobília, colisão/itens/acessórios, edículas e utilidades caem em T2.4b porque luzes, espelhos e carros nascem dos construtores.
+- Docs (README, MIGRATION, skill, catálogo, inventário) num commit à parte.
+
+**Gate:**
+
+| Etapa | build | typecheck | testes do pacote | lint |
+|---|---|---|---|---|
+| a | ok | ok | 39 | ok |
+| b | ok | ok | 56 | ok |
+| c | ok | ok | 70 | ok |
+| d | ok | ok | 103 | ok |
+| e | ok | ok | 118 | ok |
+
+**Perguntas para o dono:**
+1. Aceita a diferença do PRNG do `game-props3d` (mulberry32) nos pares fora do golden, ou o `game-props3d` passa a oferecer o LCG do time como opção?
+2. O `flag userData.without` (original `userData.sem`) tem uso desconhecido: manter?
+3. O AndaresSDK fica em `-three` como pediu o brief; o inventário 4.4/5.5 sugeria função pura em `game-floorplan` ou `game-navigation`. Qual?
+4. Nome da área de teste: tasks.md diz `buildings-test-area`, a regra diz `examples/floorplan-test-area`.
+5. O `AdaptadorInterativos` entra em algum pacote ou fica no jogo?
+
+## T2.6
+
+Módulo de teste das casas, exemplo e goldens contra o VC3 (T2.6a-c). Branch `work/t2-4`, commits `fix(floorplan-three)` aa2bc27, `feat(contracts,test-room)` 98ae206, T2.6a 4c38dd2, T2.6b a451571, T2.6c b13c881.
+
+| Etapa | O que entrou |
+|---|---|
+| (fix) | `assembleStructure.spec` passa `contains`, `explodes`, `thickness`, `fill` e `tags` das peças para a spec: sem isso a caixa d'água e o botijão não chegavam ao mundo (a caixa nunca vazava). Teste novo em `destruction.test.ts` |
+| (contratos) | `ModuleHost.addBlocker(fn)` e `ModuleHost.onClear(fn)` (opcionais), implementados em `game-test-room` (o jogador consulta os bloqueios com o raio dele; `clear()` avisa os módulos). Testes em `module-host.test.ts` |
+| a | `createFloorplanTestModule` (`packages/game-floorplan-three/src/test-area/`): bancada com pacote (residencial, comercial, rural, pós-apocalíptico), tipologia, estado, semente, qualidade, LOD (manual ou por orçamento), 1 a 5 casas, orçamento, andar, golpe (rajada 9 mm, rajada 7,62, marreta, C4, RPG) e as ações construir, entrar, subir, descer, porta, golpe, restaurar, limpar; camadas telhado, lote e noite; 12 métricas. Cenários: os 6 do time (mesmos ids e checagens) e `floorplan_typologies`. `examples/floorplan-test-area` (build, test em pt-BR e en com Playwright, `?arena=` na sala) |
+| b | `examples/interactables-test-area` carrega o módulo (relatório `floorplan`, checagem de 5 espécimes e 7 cenários no `test.mjs`) |
+| c | `site/catalog.mjs` (entrada e família de plantas), `site/Dockerfile`, miniatura `site/thumbs/floorplan-test-area.jpg`, job `examples` do CI. Golden `house-area.json` movido para `packages/game-floorplan-three/tests/fixtures/team-golden/vc3-house-area.json` e comparado em `tests/team-golden-house-area.test.ts` (ids, número de checagens e booleanos, eventos fracture, collapse, hole, leak e explode) |
+
+**Decisões e desvios:**
+- As casas são do módulo, não itens da sala: ele as constrói com `house.destruction.activate()` no mundo da sala e a sala só as limpa (`onClear`). Os espécimes dos cenários são itens da sala, com malha de caixas nomeada pela peça como a página do time.
+- Sem partículas próprias: poeira de rombo e de desabamento saem do desenhista de destruição da sala (`game-vfx`); o módulo não toca efeitos.
+- `?arena=` (14 a 200) na página da sala: a arena padrão (14 m) é pequena para uma casa de 12 m e uma fileira.
+- Os andares de cima são alcançados por teletransporte do olho (`up`/`down`); o jogador da sala não tem altura de piso e as escadas não são andadas.
+- O grupo pós-apocalíptico lista só `triage_tent`; os estados `fortified` e `abandoned` valem para as outras tipologias.
+- `house_two_pillars` usa o pórtico com a casa `townhouse` (a `single_storey_a` segura a laje nas divisórias) e, na sala, derruba os pilares seguintes até a laje cair: com o desenhista ligado, dois pilares deixam os outros a 0,95 de tensão e a laje a 0,45 e nada cai. As checagens são as do time; só o roteiro de golpes foi estendido.
+- Contagens de ticks de dano diferem do mundo do time; só os eventos de sentido e as checagens são comparados.
+- Pós-fix, a tank d'água vaza 500 L para 496 L em 40 s com um tiro de 600 J (calibre 9).
+
+**Gate:**
+
+| Etapa | build | typecheck | testes do pacote | lint | browser |
+|---|---|---|---|---|---|
+| todas | ok | ok | 138 (floorplan-three) | ok | `floorplan-test-area/test.mjs` 22 PASS (pt-BR e en), `interactables-test-area/test.mjs` 22 PASS |
+
+**Perguntas para o dono:**
+1. Dois pilares do pórtico: o time derruba a laje; na sala (com o desenhista de destruição ligado) nenhum par de pilares a derruba e só o solver puro a derruba. Ajustamos a carga ou a capacidade dos pilares em `game-destruction`, ou o roteiro estendido (mais pilares) vale?
+2. A `single_storey_a` segura a laje nas divisórias (o pórtico do time não tem divisórias portantes): a divisória portante é a regra certa do kit?
+3. Os andares de cima devem ser andados (altura de piso no jogador da sala) ou o teletransporte basta?
+4. Nome da área (pergunta 4 da T2.4): usado `floorplan-test-area`, como manda a regra.
 ## T5.3e (body) — o evento `body` dos personagens chega ao filme de fluidos
 
 Ramo `int/p6b`, a partir da `main` com as Fases 0 a 6 (parte 1). O evento `body` (T4.0) já está no contrato; o que faltava era a ponte.

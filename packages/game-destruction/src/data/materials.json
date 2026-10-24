@@ -267,7 +267,8 @@
    0.25
   ],
   "damageScale": {
-   "blunt": 1.5
+   "blunt": 1.5,
+   "shelter": 3
   },
   "hitDebris": "shards",
   "breakDebris": "shards",
@@ -318,7 +319,10 @@
    "glass",
    "brittle"
   ],
-  "compressive": 200000
+  "compressive": 200000,
+  "damageScale": {
+   "shelter": 3
+  }
  },
  {
   "id": "ceramic",
