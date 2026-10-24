@@ -468,5 +468,15 @@
       1.7
     ],
     "scale": 0.1
+  },
+  {
+    "id": "honey_jar",
+    "teamId": "mel",
+    "teamBox": [
+      0.808,
+      1,
+      0.808
+    ],
+    "scale": 0.1
   }
 ]

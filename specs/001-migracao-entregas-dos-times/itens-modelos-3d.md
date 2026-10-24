@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **47 de 257 itens têm modelo 3D; faltam 210.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **48 de 257 itens têm modelo 3D; faltam 209.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,9 +23,9 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **47** | **210** |
+| **Total** | **48** | **209** |
 
-## Comida (26 de 36)
+## Comida (27 de 36)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -55,7 +55,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Peixe fresco (kit) | `peixe_fresco` | `fresh_fish` | 0,6 kg | comum | 300 x 60 x 100 mm |
 | [x] | Peixe salgado (kit) | `peixe_salgado` | `salted_fish` | 0,4 kg | incomum | 250 x 30 x 100 mm |
 | [x] | Penca de banana (kit) | `banana` | `banana_bunch` | 1,0 kg | comum | 300 x 130 x 170 mm |
-| [ ] | Pote de mel | `mel` | `honey_jar` | 0,5 kg | incomum | 80 x 100 x 80 mm |
+| [x] | Pote de mel (kit) | `mel` | `honey_jar` | 0,5 kg | incomum | 80 x 100 x 80 mm |
 | [ ] | Pão de forma | `pao_forma` | `bread` | 0,5 kg | comum | 300 x 100 x 100 mm |
 | [ ] | Queijo minas | `queijo` | `cheese` | 0,5 kg | incomum | 150 x 40 x 100 mm |
 | [ ] | Rapadura | `rapadura` | `rapadura` | 0,5 kg | incomum | 190 x 100 x 60 mm |
