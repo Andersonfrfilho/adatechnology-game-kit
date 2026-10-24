@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **98 de 257 itens têm modelo 3D; faltam 159.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **99 de 257 itens têm modelo 3D; faltam 158.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **98** | **159** |
+| **Total** | **99** | **158** |
 
 ## Comida (36 de 36)
 
@@ -114,7 +114,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Termômetro (kit) | `termometro` | `thermometer` | 0,02 kg | comum | 120 x 20 x 30 mm |
 | [x] | Álcool 70% (500 ml) (kit) | `alcool70` | `alcohol_70` | 0,5 kg | comum | 70 x 200 x 50 mm |
 
-## Ferramentas (10 de 30)
+## Ferramentas (11 de 30)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -128,7 +128,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Caixa de fósforos (kit) | `fosforo` | `matches` | 0,02 kg | comum | 50 x 15 x 35 mm |
 | [x] | Canivete multifuncional (kit) | `canivete` | `pocket_knife` | 0,15 kg | incomum | 110 x 22 x 32 mm |
 | [x] | Chave de fenda (kit) | `chave_fenda` | `screwdriver` | 0,15 kg | comum | 220 x 40 x 40 mm |
-| [ ] | Chave inglesa | `chave_inglesa` | `adjustable_wrench` | 0,5 kg | comum | 250 x 20 x 60 mm |
+| [x] | Chave inglesa (kit) | `chave_inglesa` | `adjustable_wrench` | 0,5 kg | comum | 250 x 20 x 60 mm |
 | [ ] | Enxada | `enxada` | `hoe` | 1,8 kg | comum | 1,35 x 0,06 x 0,17 m |
 | [ ] | Extintor de pó | `extintor` | `fire_extinguisher` | 4,0 kg | comum | 160 x 480 x 160 mm |
 | [ ] | Fita silver tape | `silver_tape` | `duct_tape` | 0,2 kg | comum | 100 x 50 x 100 mm |

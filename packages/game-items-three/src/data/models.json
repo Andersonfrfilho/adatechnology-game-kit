@@ -978,5 +978,15 @@
       0.4
     ],
     "scale": 0.1
+  },
+  {
+    "id": "adjustable_wrench",
+    "teamId": "chave_inglesa",
+    "teamBox": [
+      2.5,
+      0.2,
+      0.6
+    ],
+    "scale": 0.1
   }
 ]
