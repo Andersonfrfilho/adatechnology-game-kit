@@ -6,7 +6,7 @@ import { createWeaponAudio } from './audio'
 import type { WeaponAudio } from './audio'
 import { createWeaponFx } from './fx'
 import type { WeaponFx } from './fx'
-import { hasWeaponModel } from './models'
+import { ARCHETYPE_MODELS, hasWeaponModel } from './models'
 import { BODY_ACTIONS, buildModeledProp, buildProp, modeledPropSpec, weaponProp } from './props'
 import type { WeaponProp } from './props'
 import { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
@@ -214,7 +214,8 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   const text = textOf(locale)
   const audio = options.sound === false ? null : createWeaponAudio(undefined, options.seed === undefined ? {} : { seed: options.seed })
   const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id))
-  const weaponIds = weaponDefs.map((def) => `${WEAPON_ITEM_PREFIX}${def.id}`)
+  // An archetype wearing the model of a brand weapon is the same thing twice on the counters: it stays in the catalogue (the hands still take it) but is not laid out.
+  const weaponIds = weaponDefs.filter((def) => !(def.id in ARCHETYPE_MODELS)).map((def) => `${WEAPON_ITEM_PREFIX}${def.id}`)
   const pitchOf = (itemId: string): number => PITCH_BY_ID[itemId.slice(WEAPON_ITEM_PREFIX.length)] ?? DEFAULT_PITCH
   const worldExplosives = WORLD_EXPLOSIVE_IDS.flatMap((id) => {
     const def = arsenal.explosives.get(id)

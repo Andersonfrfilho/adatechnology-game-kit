@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology/game-contracts'
 import type { WeaponDef } from '@adatechnology/game-weapons'
+import { mergeByMaterial } from './merge-by-material'
 import { buildWeaponModelById } from './models'
 
 /** A low-poly prop: its destruction spec (box parts only) and one colour per part. */
@@ -101,8 +102,9 @@ export function buildWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'i
 const MODEL_BODY = 'body'
 
 /**
- * The prop of a weapon the gallery drew, for a counter or the floor: its model lying on the side, centred on the footprint with its underside on the floor, every mesh
- * naming the one rigid part (`body`) that moves it. The size of that part is left in `userData.footprint` for `modeledPropSpec`.
+ * The prop of a weapon the gallery drew, for a counter or the floor: its model lying on the side, centred on the footprint with its underside on the floor, joined into one mesh per
+ * material (the hands keep the model with its pivots, `buildWeaponModelById`), every mesh naming the one rigid part (`body`) that moves it. The size of that part is left in
+ * `userData.footprint` for `modeledPropSpec`.
  */
 export function buildModeledProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, name: string): THREE_NS.Group | undefined {
   const model = buildWeaponModelById(THREE, def.id)
@@ -113,9 +115,12 @@ export function buildModeledProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'i
   const center = box.getCenter(new THREE.Vector3())
   model.root.position.set(-center.x, -box.min.y, -center.z)
   group.add(model.root)
-  model.root.traverse((object) => {
-    if ((object as THREE_NS.Mesh).isMesh) object.userData.destructionPart = MODEL_BODY
-  })
+  group.updateMatrixWorld(true)
+  for (const mesh of mergeByMaterial(THREE, model.root, group)) {
+    mesh.userData.destructionPart = MODEL_BODY
+    group.add(mesh)
+  }
+  group.remove(model.root)
   const size = box.getSize(new THREE.Vector3())
   group.userData.footprint = [size.x, size.y, size.z]
   return group
