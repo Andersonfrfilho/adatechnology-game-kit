@@ -2587,3 +2587,10 @@ Ramo `int/p6b`, depois de T6.2c. Feito em duas passadas: f49e466 trouxe as recei
 ### Perguntas para o dono
 - Sem `host.effects` o visualizador cria o próprio mundo de efeitos (um `VfxWorld` por viewmodel). Quer que vários viewmodels no mesmo cenário dividam um só (uma opção `vfx`), ou um por arma está bem?
 - O sopro do lançador e o jato de chama agora giram com o cano inteiro; a faísca e o fogo do foguete em voo (cone e luz do escape) seguem como malha da `game-weapons-three`. Quer o escape do foguete também como receita (precisa de um passo que acompanhe a malha do foguete)?
+
+### Fase 7: efeitos e som dos veículos, depois do merge das fases 2 a 6 (T7.6 a T7.8)
+
+- Merge de `origin/main` em `int/p7` (5a697df), conflitos resolvidos mantendo os dois lados; o `interactables-test-area` carrega efeitos, som, clima, casas, veículos, vegetação e urbano (36/36 no navegador).
+- Efeitos dos veículos (T7.6): o módulo pede ao `host.effects` no formato do `EffectSink` os ids `car_fuel_tank` (explosão da Garagem, do catálogo), `glass_burst`, `impact_metal` e `vehicle_fire`, `vehicle_exhaust`, `vehicle_leak`. Estes três são apelidos ancorados no carro da Oficina de `engine_smoke` e `fuel_leak`, com os valores do time; nada de partícula nos pacotes de veículos. No navegador os cenários pedem `vehicle_fire` 17x, `glass_burst` 13x, `impact_metal` 3x, `vehicle_leak` 3x e `car_fuel_tank` 1x.
+- Vegetação e urbano (T7.7): folhas, fibras, lascas, fogo, cinza e faíscas já saem do renderizador de destruição no mundo de efeitos da sala (`burst:leaves` 18x, `fibers` 14x, `fire`, `sparks`), e o teste de vegetação trava isso. Seiva não tem receita nem valor de time; os postes do urbano são lajes ancoradas (sem destruição), então não há faísca de poste.
+- Som dos veículos (T7.8): `host.audio` com o banco da biblioteca (`engine_saw` com volume 0,035 + v x 0,003 e frequência 38 + v x 7, `horn`, `sfx_impact`); vidro, impacto e explosão já tocam pelo som de destruição da sala. Vegetação e urbano: nenhum som de time além de `leaves_rustle`, que não existe no banco.
