@@ -32,6 +32,13 @@ describe('the game slice for the zombiada repository', () => {
     expect(living.loot).toHaveLength(51)
   })
 
+  it('maps every faction and every LOOT row to its SDK id, with null for the 9 unique items', () => {
+    const mapping = readSlice<{ forces: Record<string, string>; loot: Record<string, string | null> }>('sdk-mapping.json')
+    expect(Object.keys(mapping.forces).sort()).toEqual(living.factions.map((faction) => String(faction.k)).sort())
+    expect(Object.keys(mapping.loot)).toHaveLength(51)
+    expect(Object.values(mapping.loot).filter((id) => id === null)).toHaveLength(9)
+  })
+
   it('keeps the life simulation source verbatim, with the functions the game calls', () => {
     for (const name of ['function life(', 'function simulate(', 'function world(', 'function apply(']) expect(living.lifeSimulationSource).toContain(name)
   })
