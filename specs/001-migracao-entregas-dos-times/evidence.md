@@ -857,3 +857,74 @@ Regras R do VC3 portadas: `playerRadius` 0,24 (grade de 10 cm que descarta célu
 | `game-floorplan` / `-residential` / `-commercial` / `-post-apocalyptic` (Node 24 e 22) | 17 / 16 / 9 / 106 passaram nos dois |
 
 Modelo da execução: `sonnet`.
+
+## T2.5 — silhuetas de longe e interiores completos (grupo E da Fase 2)
+
+Modelo: `sonnet`. Branch `work/spec001-t2-e` (sobre `feat/spec-001-fase-2`). Desenho: `design/T2.1-casas-estrutura-e-destruicao.md` §1 (linhas "Silhuetas / LOD de longe" e "Interiores"), §4, §6, §7 item 3 e §8. Fonte: `sources/mapa__galeria-vale-cinzento.js` (silhuetas L187 e L1136–1142; interiores L771–L1117).
+
+### Commits
+
+| Commit | Conteúdo |
+|---|---|
+| T2.5a | silhuetas como dados de geometria em `game-floorplan/src/silhouettes` |
+| T2.5b | `supermarket`, `drugstore`, `gun_shop` + infraestrutura (`interiors/`, `interiorFindsHints`, locales `interiors-*.json`, `place` e `construction` em `market` e `pharmacy`) |
+| T2.5c | `police_station`, `emergency_room`, `school` (uso `institutional`, zona `zc` o aceita) |
+| T2.5d | `gas_station`, `church`, `metalworks` |
+| T2.5e | `farm` (estilo `farm`, zona `za`) e `triage_tent` em `game-floorplan-post-apocalyptic` |
+| docs | skills, README, inventário, esta seção |
+
+### T2.5a — silhuetas
+
+- **Onde:** `packages/game-floorplan/src/silhouettes/` (`createTwoStoreyHouse`, `createSlabHouse`, `createColonialHouse`, `createChalet`, `createCompanyHouse`, `createStiltHouse`, `createFarmhouse`, `createDetachedHouse`, `createCityBuilding`, `createSilhouetteRandom`). Escolha: o `game-floorplan-three` ainda não existe (outra task) e criar o esqueleto dele aqui colidiria com a T2.4a; o motor é o pacote mais baixo que o `-three` e qualquer outro consumidor já importam, e a geometria é só dado (sem three), então fica em `game-floorplan` e o `-three` só desenha a lista de peças. Mover para `-three/src/lod/silhouettes` depois é troca de caminho.
+- **Formato:** `Silhouette { parts, windows, footprint }`; peças `group`, `box` (com o raio da caixa arredondada da página), `prism`, `cylinder`, `line`, `sign`; janelas são instâncias (`isLit`). Mesmo gerador semeado da página (`mulberry32`), com as mesmas sorteios na mesma ordem.
+- **Teste:** `tests/silhouettes.test.ts` constrói a cena em Node com three ^0.160 (`tests/silhouette-scene.ts`, só de teste), `installPortableMath`, e compara as **16 cenas** do golden com o hash da galeria linha por linha: **16 de 16 iguais**, no Node 22 e no 24. O golden saiu de `specs/.../goldens/` para `packages/game-floorplan/tests/fixtures/team-golden/gallery-silhouettes.json` (README dos goldens atualizado).
+- **Desvio (corrige bug da página):** a cerca da casa de empresa é filha do grupo da casa (a página a põe na raiz com coordenadas locais, então fica na origem se a casa não está na origem). A ordem das linhas do hash não muda, então o golden continua valendo.
+- Dependências novas de desenvolvimento em `game-floorplan`: `three ^0.160.1`, `@types/three ^0.160.0`, `@adatechnology/golden-tool`.
+
+### T2.5b–e — interiores
+
+Cada prédio é um módulo em `packages/game-floorplan-commercial/src/interiors/<prédio>.ts` (modelo, itens, bibliotecas de slots e dicas de achado); `interiors/index.ts` os lista. Tipos de cômodo reusam os da paleta residencial (`shop`, `counter`, `stockroom`, `office`, `hall`, `dining`, `living`, `bedroom`...) para não deslocar o fluxo semeado da paleta de nenhuma planta; o nome do cômodo vem do id e do rótulo (en e pt-BR).
+
+**Como o programa é conferido** (`tests/interiors.test.ts`, 10 prédios x 6 asserções; `game-floorplan-post-apocalyptic/tests/triage.test.ts`): tamanho, pé-direito, uso e `place`; cômodos com largura e profundidade da cena; contagem de cada equipamento **igual em 25 sementes** (equipamento da cena é `required`); `validate()` vazio em 25 sementes; cada pino `loot` da galeria vira uma dica de achado com equipamento daquele cômodo; nomes en e pt-BR. A suíte de propriedades das plantas (`floorplan.test.ts`, tamanhos sorteados, 3 estados) roda todos os modelos novos; ela só deixa de exigir variação de layout entre sementes (`layouts vary across seeds`) dos interiores, que são cenas autorais.
+
+**Fidelidade por prédio** (G = medida da galeria; "estado" = vem do estado pós-apocalíptico, não do modelo; "cena" = zumbi, texto, luz e efeito, que ficam no jogo):
+
+| Prédio | Igual à galeria | Desvios |
+|---|---|---|
+| `supermarket` 18x13x3,4 | 3 caixas 1,2x2 com caixa registradora, 4 gôndolas de 7 m, prateleira de fundo de 12 m (6 módulos), padaria, açougue 5x4,5 com câmara fria, estoque 5x3,6 com prateleira de 4,4 m, 2 freezers (da descrição) | gôndolas correm no sentido da largura (G: da profundidade); balcão de padaria 3,8 (G 4) e de açougue 3,6 (G 4,8) pela folga de porta do motor; escritório 3x1,9 (G 2x1,9) e corredor de serviço 2x1,9 acrescentado; gôndola derrubada, porta travada, corpos: estado e cena |
+| `drugstore` 11x9x3,2 | sala de manipulação 3x2,5, depósito de controlados 3x2,2 com grade, balcão de 6 m (3 módulos), prateleira de fundo (4 módulos de 1,8), prateleira lateral (3 módulos), geladeira de vacinas, cofre | porta de aço de 4 m vira porta de aço de 2,4; sem porta de serviço; carro e porta forçada: estado |
+| `gun_shop` 20x9x3,2 | salão 12x9, estande 8x9 com 4 raias de 2 m e 4 alvos, rack de 9 m, vitrine de 7 m, bancada de recarga 2,2, 3 troféus | depósito blindado 2,4x2 é suposição (G só tem a porta no fundo); porta salão-estande acrescentada; dono, cartuchos, armadilha: cena |
+| `police_station` 16x11x3 | celas 2,5x6,5 (x2), sala do delegado 4,6x3,5, 3 mesas, quadro 3,6, 6 armários, depósito de evidências 1,8x3,5, viatura no pátio da frente | arsenal 2,4x3 e vestiário 2,4x4,5 têm medida inventada (G dá só a porta e os armários); recepção aberta para o salão; zumbis presos, quadro de fotos: cena |
+| `emergency_room` 18x11x3 | pronto-socorro 18x6,5 (3 macas, carrinho, 6 cilindros), alas 8x4,5 com 2 leitos e monitor cada, UTI 2x4,5 | UTI ganha 1 leito e 1 monitor (G não tem); macas empilhadas e fita de quarentena: estado |
+| `school` 18x15x3 | biblioteca 5,5x5,9, cozinha, refeitório com 2 mesas de 3 m, corredor com 9 armários, sala 10x6,5 com lousa de 5 m, mesa do professor e 16 carteiras, quadra 8x15 | porta da sala de aula em x=9,2 (G 5,5: carteiras na frente dela); quadra tem 2 tabelas (G: 25 colchões = estado de abrigo); entrada pela quadra |
+| `gas_station` 22x7x3 | loja 14x7 com 3 corredores de 4 m, balcão, 4 geladeiras, troca de óleo 6x7 com 2 colunas do elevador, prateleira e 4 tambores, pista com 3 ilhas e 4 colunas da cobertura | baia deslocada 1 m; banheiro externo 2x2 (G 1,6x1,6) e depósito de ferramentas 2x5 acrescentado; carro no elevador, fila de carros, placa de giz, cadeia de explosões: estado e cena (a cobertura é estrutura, T2.2c) |
+| `church` 12x20x7 | salão 12x4, nave 12x12,8 com 14 bancos (2 colunas a 2,6 m do eixo), altar com cruz, sacristia 2,6x3,2 com armário e mesa, torre do sino 3x3 no lote, 4 vitrais | armário de doações na parede direita (G na esquerda, onde caem os vitrais); vitrais espaçados igualmente (G em posições fixas); doentes acorrentados, grupo de fé: cena |
+| `metalworks` 30x20x8 | 4 prensas, 3 porta-pallets de 4,5 m, esteira de 16 m, empilhadeira, 6 tambores, 2 mesas de refeitório e geladeira, 6 armários, porta de enrolar de 5 m nos fundos | a G é planta aberta: ganhou paredes (refeitório, recepção, estoque, vestiário); forno 6 m a oeste (G fora da sala); escritório de 8,5x3 no chão (G é mezanino a 3 m de altura); horda dormente, esteira animada: cena |
+| `farm` 12x9x3 + lote | casa sede 12x9, fogão a lenha, mesa de 2x1, rede, 2 pilares da varanda, poço, galinheiro 4x3, curral 22x10, celeiro 10x14, silo de 6 m, galpão 11x9, trator, espantalho, 10 fardos | G é planta aberta com meia parede (aqui sala, cozinha e quarto); cama no quarto (G na sala); layout espelhado e compactado no lote (galpão no quintal dos fundos); segundo trator ao lado do galpão; animais, estrada, horda, casa pregada: estado e cena |
+| `triage_tent` 16x10x3,4 | lados LIMPO e MORDIDO 8x10, 6 catres em cada, 6 caixas médicas, cavalete com fuzis | divisória baixa de 1,6 m vira parede; um fluxo de entrada por lado; formulários no chão: estado |
+
+**`farm` fica em `-commercial`** (§7 item 3): estilo `farm` próprio (`commercialStyles`, cores em `regions/br`, perfil de decoração com cortina em toda janela), uso `agricultural` e zona `za` na região `br`; o comercial não depende do rural.
+
+**`triage_tent` como modelo, não como estado** (padrão reversível; o consolidado C5 diz "estado ou conteúdo do jogo"): um estado transforma um prédio que já existe, e a tenda não tem prédio hospedeiro; o pacote de gênero a registra como modelo com estilo `military_camp` (paleta emprestada do primeiro pacote de conteúdo registrado; sem pacote de conteúdo a tenda não é registrada) e `place: 'triage'`. Trocar por estado é mover os itens da `triageItems` para um plugin sem mudar o programa.
+
+**Achados:** cada pino `loot` da galeria virou uma entrada de `interiorFindsHints[idDoModelo]` (`room`, `container` = categoria do equipamento que existe na planta, `tags` descritivas, nunca id de item: o catálogo de itens é da fase 3); `TemplateDef.place` leva o lugar para o `FindsQuery.place`. Pinos `perigo`, `quebra` e `cena` não são achado e ficam como notas de cena no jogo.
+
+**Estrutura:** todos declaram `construction: 'masonry'` (§8: prédio é pórtico de concreto com vedação; a estrutura em si é da T2.2c), o triage declara `canvas`.
+
+### Escolhas de negócio (padrão reversível, para o PR)
+
+1. `market` e `pharmacy` não mudam de planta (só ganham `place` e `construction`): são o comércio de esquina; o mercado e a farmácia da galeria são os modelos novos `supermarket` e `drugstore`. Juntar os dois pares é trocar os ids nos testes.
+2. Ids em inglês: `emergency_room` (G "Pronto-socorro", o inventário sugeria `hospital_er`), `metalworks` (G "Metalúrgica/Galpão", o inventário sugeria `factory`).
+3. Uso `institutional` (delegacia, pronto-socorro, escola, igreja), `industrial` (metalúrgica), `agricultural` (fazenda); `zc` passou a aceitar `institutional` e a zona `za` é nova.
+4. Equipamentos obrigatórios e posições fixas: a planta varia por tamanho, estado e decoração, não por sorteio de móveis; quem quiser variação troca as bibliotecas (registro).
+5. Itens novos têm categoria própria e `exactOnly` quando a cena dá a medida (um `gondola_run` de 7 m não entra no sorteio de `gondola_shelf`).
+6. Zumbis, corpos, sangue, textos da lousa e luzes não entram nos modelos (cena e estado).
+
+### Portões
+
+- `pnpm build`, `pnpm -r typecheck` e `pnpm lint`: limpos em cada commit.
+- Testes por pacote: `game-floorplan` 37 (20 de silhuetas), `game-floorplan-commercial` 69 (60 de interiores), `game-floorplan-post-apocalyptic` 142 (inclui a suíte de propriedades com todos os modelos novos e `triage.test.ts`).
+- Silhuetas no Node 22 e 24: 20 de 20 passam nos dois.
+- Final: `pnpm -r --no-bail test` sai com 0 (a primeira rodada falhou por tempo em `game-weapons-three`, pacote alheio, com a máquina sob carga 10 a 38; passou na repetição); `docker build -f site/Dockerfile .` passou.
+- Um commit (T2.5c) foi feito antes de eu ler a falha do pronto-socorro na suíte de propriedades (faltava cômodo de tipo `living` para o estoque do estado fortified); corrigido e emendado no mesmo commit antes de qualquer push.
+- `testTimeout` de 30 s no pacote comercial: o teste de zoneamento gera 12 modelos x 7 zonas.
