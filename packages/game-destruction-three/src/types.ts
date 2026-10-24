@@ -110,6 +110,8 @@ export interface DestructionRenderer {
   /** Restore one object (after `world.reset`). */
   restore(objectId: string): void
   stats(): { fragments: number; particles: number; pieces: number; decals: number }
+  /** Bars of exposed rebar drawn now (`expose` events; one instanced mesh per part). */
+  rebarCount(): number
   dispose(): void
 }
 

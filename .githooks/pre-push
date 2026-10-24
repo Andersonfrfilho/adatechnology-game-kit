@@ -1,0 +1,25 @@
+#!/bin/sh
+# Runs what CI runs, before the push leaves the machine: build, typecheck and lint of the whole workspace, then the tests of the packages this
+# branch changed and of the packages that depend on them. Tests run one package at a time, as CI does (in parallel the long golden loops miss
+# vitest's 5 s timeout). Skip once with `git push --no-verify`; `PRE_PUSH_ALL=1 git push` tests every package.
+set -e
+git fetch -q origin main 2>/dev/null || true
+base=$(git merge-base HEAD origin/main 2>/dev/null || echo "")
+
+echo "pre-push: build"; pnpm -s build > /dev/null
+echo "pre-push: typecheck"; pnpm -s -r typecheck > /dev/null
+echo "pre-push: lint"; pnpm -s lint
+
+if [ -n "$PRE_PUSH_ALL" ] || [ -z "$base" ]; then
+  echo "pre-push: tests of every package"
+  pnpm -r --workspace-concurrency=1 run test
+else
+  # The workspace folders touched since the base (pnpm's own `[ref]` filter finds nothing inside a git worktree, so list them here).
+  dirs=$(git diff --name-only "$base" HEAD | grep -E '^(packages|tools|examples)/[^/]+/' | cut -d/ -f1-2 | sort -u)
+  [ -z "$dirs" ] && { echo "pre-push: no package changed"; exit 0; }
+  filters=""
+  for dir in $dirs; do [ -f "$dir/package.json" ] && filters="$filters --filter ...{./$dir}"; done
+  echo "pre-push: tests of the packages changed since $(git rev-parse --short "$base") and their dependents"
+  # shellcheck disable=SC2086
+  pnpm $filters --workspace-concurrency=1 run test
+fi

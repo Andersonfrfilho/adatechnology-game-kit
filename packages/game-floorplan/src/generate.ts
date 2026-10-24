@@ -1,5 +1,6 @@
 import { DOOR_CLEARANCE } from './constants'
 import { createPlacementContext, placementKit, runPostProcess } from './context'
+import { runResultExtensions } from './extensions'
 import { fillRoom } from './fill'
 import { overlaps, openingZones, r2 } from './geometry'
 import { STREAM } from './legacy-seeds'
@@ -177,6 +178,8 @@ export function generate(template: string | TemplateDef, options?: FloorplanOpti
   }
   if (tpl.singleFloor) result.floorNumber = op.floor || 3
   result.partyWalls = tpl.partyWalls || []
+  if (plan.config) result.config = plan.config
+  runResultExtensions(plan, result, seed, op)
   if (zone) {
     const report = { zone: zone.id, adjustments, violations: checkLot(zone, lot, Object.assign({}, result, { rooms: plan.rooms })) }
     result.zoning = report

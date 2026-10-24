@@ -1,0 +1,1632 @@
+{
+ "schema": 1,
+ "name": "wall-sledge-brick",
+ "seed": 104,
+ "events": [
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 9,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "spall",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "layer": 0,
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "area": 0.0079
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 5
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12387.3067,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 9,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12376.2133,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 8,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12365.12,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 6,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12354.0267,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 7,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12342.9333,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 5,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12331.84,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 9,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12320.7467,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 7,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12309.6533,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 5,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12298.56,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 5,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12287.4667,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 9,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12276.3733,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 8,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12265.28,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 8,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12254.1867,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 7,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12243.0933,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 7,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12232,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 9,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12220.9067,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 7,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12209.8133,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 9,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12198.72,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 6,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12187.6267,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 7,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12176.5333,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 8,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12165.44,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 5,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12154.3467,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 8,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12143.2533,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 5,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12132.16,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 8,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12121.0667,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 8,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12109.9733,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 9,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12098.88,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 5,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12087.7867,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 8,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12076.6933,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 9,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12065.6,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 7,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12054.5067,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 6,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12043.4133,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 9,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12032.32,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 7,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12021.2267,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 8,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 12010.1333,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 9,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 11999.04,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 8,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 11987.9467,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 5,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 11976.8533,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 5,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 11965.76,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 7,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 11954.6667,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 5,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 11943.5733,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 5,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 11932.48,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 8,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 11921.3867,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 8,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 11910.2933,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 7,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 11899.2,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 6,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 11888.1067,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.065
+    ],
+    "rays": 5,
+    "length": 0.4837
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 6
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 11.0933,
+    "hp": 11877.0133,
+    "damageType": "blunt"
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "stage": 2,
+    "opening": {
+     "center": [
+      0,
+      1,
+      0
+     ],
+     "radius": 0.2844
+    },
+    "fragments": {
+     "count": 14,
+     "mass": 49.5075,
+     "marks": 0,
+     "first": {
+      "center": [
+       -0.165,
+       0.7875,
+       0
+      ],
+      "size": [
+       0.23,
+       0.075,
+       0.13
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 14
+   }
+  }
+ ],
+ "scenes": {}
+}

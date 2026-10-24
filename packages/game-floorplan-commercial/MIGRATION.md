@@ -111,7 +111,12 @@ Room ids: `caixas` is `checkouts`; names are in the locale (`Mercadinho`, `Caixa
 
 | Zone id | Intent | Uses | Floors | Max height |
 |---|---|---|---|---|
-| `zc` | Commercial / central | `commercial`, `mixed`, `residential_multi` | 24 | 80 m |
+| `zc` | Commercial / central | `commercial`, `institutional`, `mixed`, `residential_multi` | 24 | 80 m |
 | `zi` | Industrial | `industrial`, `commercial` | 4 | 20 m |
+| `za` | Agricultural | `agricultural` | 2 | 12 m |
 
 Open values with `engine.getZone('zc')`. Labels are in the `zones` locale namespace.
+
+## Interior buildings (spec 001, T2.5)
+
+Not a port of the old SDK: ten new templates built from the scenes of the team's gallery (`supermarket`, `drugstore`, `gun_shop`, `police_station`, `emergency_room`, `school`, `gas_station`, `church`, `metalworks`, `farm`). `market` and `pharmacy` keep their plans (they only gain `place` and `construction`). The new templates declare `use` (`commercial`, `institutional`, `industrial`, `agricultural`), `place` and `construction`; `interiorFindsHints[templateId]` lists what each place can hold. The `farm` style, its colours and the `za` zone are new in region `br`; zone `zc` now also allows `institutional`.

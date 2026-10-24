@@ -1,0 +1,18 @@
+# Goldens gravados das páginas dos times (staging)
+
+Gravados por `tools/golden/bin/record.mjs` a partir de `artefatos/site__*.html` (cópias das páginas do repositório `Andersonfrfilho/zombiada`,
+`site/pages/`, mesma versão das fontes em `sources/`). Cada arquivo fica aqui até o pacote que o consome existir; depois a task do pacote
+**move** o arquivo para `packages/<pacote>/tests/fixtures/team-golden/`. Os goldens das plantas estão em
+`packages/game-floorplan-post-apocalyptic/tests/fixtures/team-golden/` (o pacote do motor não pode depender dos pacotes de conteúdo).
+
+| Arquivo | Consumidor | Comando (na raiz, depois de `pnpm build`) |
+|---|---|---|
+| `house-area.json` | `game-destruction` / `examples/floorplan-test-area` (T2.3b, T2.6a): eventos do mundo dos 6 cenários do AC | `... --page .../site__area-casas.html --capture tools/golden/captures/house-area.js --ready "window.__testRoom"` |
+| `../packages/game-floorplan/tests/fixtures/team-golden/gallery-silhouettes.json` | `game-floorplan` `src/silhouettes` (T2.5a, movido) | `... --page .../site__galeria-vale-cinzento.html --capture tools/golden/captures/gallery-silhouettes.js --expose rng,R,root,sobrado,laje,colonial,chalet,companyHouse,stilt,farmhouse,house,building --ready "globalThis.GoldenExposed && typeof GoldenExposed.sobrado === 'function'"` |
+| `gallery-silhouettes.json` | `game-floorplan-three` `lod/silhouettes` (T2.5a) | `... --page .../site__galeria-vale-cinzento.html --capture tools/golden/captures/gallery-silhouettes.js --expose rng,R,root,sobrado,laje,colonial,chalet,companyHouse,stilt,farmhouse,house,building --ready "globalThis.GoldenExposed && typeof GoldenExposed.sobrado === 'function'"` |
+| `../packages/game-floorplan-structure/tests/fixtures/team-golden/vc3-structure.json` (e `-detail`) | `game-floorplan-structure` `tests/team-golden-vc3-structure.test.ts` (movidos pela T2.2c; peças, apoios e `specDe` coarse e `vedacao`) | `... --capture tools/golden/captures/floorplan-structure.js --out packages/game-floorplan-structure/tests/fixtures/team-golden/vc3-structure.json` (`-detail`: `--param seedTo=1 --param states=normal --param rows=1`) |
+| `../packages/game-floorplan-structure/tests/fixtures/team-golden/vc3-item-ids.json` | mesmo teste (T2.2e): os ids dos móveis de cada planta, na ordem, que as instalações citam | `... --capture tools/golden/captures/floorplan-item-ids.js --out packages/game-floorplan-structure/tests/fixtures/team-golden/vc3-item-ids.json --param templates=casaA,sobrado,mercado,farmacia,apartamento,popular_laje,popular_geminada,media_terrea_moderna,sobrado_medio_moderno,alto_padrao_contemporanea,mansao,apartamento_novo` |
+| `../packages/game-floorplan-post-apocalyptic/tests/fixtures/team-golden/vc3-plans.json` | `game-floorplan-post-apocalyptic` `tests/team-golden-vc3.test.ts` | `... --capture tools/golden/captures/floorplan-plans.js --out packages/game-floorplan-post-apocalyptic/tests/fixtures/team-golden/vc3-plans.json` (`-detail`: `--param seedTo=1 --param rows=1`) |
+
+Cada gravação foi repetida e saiu idêntica byte a byte. O golden de estrutura guarda um hash por lista (peças, apoios, partes e juntas do
+`specDe` coarse e `vedacao`) e um por instalação; o `-detail` traz o JSON canônico das peças da semente 1 para ler a diferença.

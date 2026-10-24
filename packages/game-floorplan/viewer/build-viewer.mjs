@@ -1,4 +1,4 @@
-// Builds a self-contained, offline 2D viewer: viewer/viewer.html with the four IIFE builds inlined.
+// Builds a self-contained, offline 2D viewer: viewer/viewer.html with the five IIFE builds inlined.
 // Usage: pnpm build && pnpm --filter @adatechnology/game-floorplan viewer:build
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -10,7 +10,9 @@ const BUNDLES = [
   ['game-floorplan', 'GameFloorplan'],
   ['game-floorplan-residential', 'GameFloorplanResidential'],
   ['game-floorplan-commercial', 'GameFloorplanCommercial'],
+  ['game-floorplan-rural', 'GameFloorplanRural'],
   ['game-floorplan-post-apocalyptic', 'GameFloorplanPostApocalyptic'],
+  ['game-floorplan-structure', 'GameFloorplanStructure'],
 ]
 
 const out = process.argv[2] ? resolve(process.argv[2]) : join(here, 'dist', 'floorplan-viewer.html')

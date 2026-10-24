@@ -3,5 +3,19 @@
     "state_fortified": "Fortified",
     "state_abandoned": "Abandoned",
     "state_normal": "Normal"
+  },
+  "templates": {
+    "triage_tent": "Triage tent"
+  },
+  "labels": {
+    "clean_side": "Clean side",
+    "bitten_side": "Bitten side"
+  },
+  "facadeColors": {
+    "army_green": "Army green",
+    "olive_drab": "Olive drab"
+  },
+  "styles": {
+    "military_camp": "Military camp"
   }
 }

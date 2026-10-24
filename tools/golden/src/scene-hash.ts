@@ -42,7 +42,8 @@ function roundTo(value: number, precision: number): number {
   return Math.round(value * factor) / factor + 0
 }
 
-function fnvOfText(text: string): string {
+/** FNV-1a of a text, as a hex string: the hash a capture and a package test put in an event so long lists compare as one value. */
+export function hashText(text: string): string {
   let hash = FNV_OFFSET
   for (let index = 0; index < text.length; index++) {
     hash ^= text.charCodeAt(index)
@@ -118,5 +119,5 @@ export function describeScene(root: SceneNodeLike, options: DescribeSceneOptions
 
 export function snapshotScene(root: SceneNodeLike, options: DescribeSceneOptions = {}): SceneSnapshot {
   const lines = describeScene(root, options)
-  return { objects: lines.length, hash: fnvOfText(lines.join('\n')), lines }
+  return { objects: lines.length, hash: hashText(lines.join('\n')), lines }
 }

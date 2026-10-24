@@ -3,5 +3,19 @@
     "state_fortified": "Protegida",
     "state_abandoned": "Abandonada",
     "state_normal": "Normal"
+  },
+  "templates": {
+    "triage_tent": "Tenda de triagem"
+  },
+  "labels": {
+    "clean_side": "Lado LIMPO",
+    "bitten_side": "Lado MORDIDO"
+  },
+  "facadeColors": {
+    "army_green": "Verde militar",
+    "olive_drab": "Verde oliva"
+  },
+  "styles": {
+    "military_camp": "Acampamento militar"
   }
 }

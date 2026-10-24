@@ -27,6 +27,7 @@ export class DecalKit {
   private disc: THREE_NS.CircleGeometry | null = null
   private discMat: THREE_NS.MeshBasicMaterial | null = null
   private lineMats = new Map<number, THREE_NS.LineBasicMaterial>()
+  private patchMats = new Map<number, THREE_NS.MeshBasicMaterial>()
   constructor(private readonly THREE: typeof THREE_NS) {}
 
   discGeometry(): THREE_NS.CircleGeometry {
@@ -45,6 +46,16 @@ export class DecalKit {
     }))
   }
 
+  /** Opaque patch in the colour of what shows under a spalled coat. */
+  patchMaterial(color: number): THREE_NS.MeshBasicMaterial {
+    let m = this.patchMats.get(color)
+    if (!m) {
+      m = new this.THREE.MeshBasicMaterial({ color, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 })
+      this.patchMats.set(color, m)
+    }
+    return m
+  }
+
   lineMaterial(color: number): THREE_NS.LineBasicMaterial {
     let m = this.lineMats.get(color)
     if (!m) {
@@ -58,6 +69,8 @@ export class DecalKit {
     this.disc?.dispose()
     this.discMat?.dispose()
     for (const m of this.lineMats.values()) m.dispose()
+    for (const m of this.patchMats.values()) m.dispose()
+    this.patchMats.clear()
     this.disc = null
     this.discMat = null
     this.lineMats.clear()
@@ -374,6 +387,17 @@ export class Visuals {
     disc.quaternion.copy(quat)
     disc.scale.setScalar((Math.max(0.004, diameter) * 0.5 * 1.25) / s)
     disc.renderOrder = 2
+    this.addDecal(mv, { obj: disc })
+  }
+
+  /** A patch where a surface coat came off, in the colour of the core under it; drawn under the bullet holes. */
+  addSpall(mv: MeshVis, worldPoint: THREE_NS.Vector3, worldNormal: THREE_NS.Vector3, radius: number, color: number): void {
+    const { s, pos, quat } = this.decalPose(mv.mesh, worldPoint, worldNormal, 0.0015)
+    const disc = new this.THREE.Mesh(this.kit.discGeometry(), this.kit.patchMaterial(color))
+    disc.position.copy(pos)
+    disc.quaternion.copy(quat)
+    disc.scale.setScalar(Math.max(0.01, radius) / s)
+    disc.renderOrder = 1
     this.addDecal(mv, { obj: disc })
   }
 

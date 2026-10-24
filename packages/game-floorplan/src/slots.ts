@@ -108,7 +108,7 @@ export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<s
     }
     return roomCenter
   }
-  const free = (rect: Rect) => !zones.some((z) => overlaps(rect, z, room.type === 'stairs' ? -0.011 : EPS))
+  const free = (rect: Rect) => !!def.floorFree || !zones.some((z) => overlaps(rect, z, room.type === 'stairs' ? -0.011 : EPS))
   const rule: string = def.facing || 'center'
   let R = inner(room.parts[Math.min(def.part || 0, room.parts.length - 1)])
   if (def.anchor === 'wall' || def.anchor === 'window') {

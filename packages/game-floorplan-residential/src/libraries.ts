@@ -127,7 +127,7 @@ export function createResidentialLibraries(kit: SlotKit): Record<string, SlotLib
     wall('bbq', 'any', 0.5, [1.1, 0.8], { bbq_grill: 1 }, { chance: 0.5, clearance: 0.8 }),
     corner('outbuilding', 'back-right', [3.3, 3.1], { outbuilding: 1 }, { chance: r.d > 4.5 ? 0.45 : 0, clearance: 0.9 }),
     corner('doghouse', 'back-left', [0.9, 0.9], { doghouse: 1 }, { chance: 0.5, clearance: 0 }),
-    wall('water_tank', 'left', 0.5, [1.1, 1.1], { water_tank: 1 }, { chance: 0.4, clearance: 0.6 }),
+    wall('water_tank', 'left', 0.5, [1.1, 1.1], { water_tank: 1 }, { chance: 0, clearance: 0.6 }),
     wall('bin', 'back', 0.5, [0.6, 0.6], { outdoor_bin: 1 }, { chance: 0.4, clearance: 0 }),
     wall('bicycle', 'right', 0.5, [1.8, 0.6], { bicycle: 1 }, { chance: 0.25, clearance: 0 }),
   ],
@@ -203,7 +203,7 @@ export function createResidentialLibraries(kit: SlotKit): Record<string, SlotLib
     backyard_slab: _r => [
     wall('tub', 'front', 0.8, [0.8, 0.7], { laundry_tub: 1 }, { required: true, clearance: 0.7 }),
     center('clothesline', 0.5, 0.3, [3.8, 0.7], { clothesline: 1 }, { required: true, facing: 'v+', clearance: 0 }),
-    wall('water_tank', 'left', 0.6, [1.1, 1.1], { water_tank: 1 }, { chance: 0.5, clearance: 0.5 }),
+    wall('water_tank', 'left', 0.6, [1.1, 1.1], { water_tank: 1 }, { chance: 0, clearance: 0.5 }),
     corner('doghouse', 'back-left', [0.9, 0.9], { doghouse: 1 }, { chance: 0.55, clearance: 0 }),
     wall('garden_bed', 'back', 0.4, [2.0, 0.8], { garden_bed: 1 }, { chance: 0.55, clearance: 0.4 }),
     corner('tree', 'back-right', [2.4, 2.4], { '=fruit_tree': 2, '=palm_tree': 1 }, { chance: 0.65, clearance: 0 }),

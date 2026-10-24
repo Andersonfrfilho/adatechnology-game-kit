@@ -102,6 +102,9 @@ loose meshes. An invalid range (outside the geometry or empty) throws from `bind
 | `ricochet` | sparks along the reflected direction | `ricochet` |
 | `debris` | a burst of the requested kind (`sparks`, `dust`, `shards`, `splinters`, `chips`, `fibers`, `leaves`, `drips`, `ash`, `smoke`, `steam`) | |
 | `fracture` | part hidden; fragments (boxes, thin irregular prisms for shards) with gravity, ground bounce, settling, sleep and shrink-away; debris burst by style | `shatter_glass`, `crumble`, `splinter`, `impact_*` |
+| `spall` | opaque patch (disc decal) in the colour of the part's core material where a coat came off, under the holes; sits on the face of the mesh the point is nearest to (the thin axis of its world box) | |
+| `stage` (2, with `fragments`) | the unit-sized fragments of the breach fly out with the same physics as `fracture` fragments, the holes of `Fragment.marks` ride on them as dark discs, a dust burst; the part stays drawn (cutting the opening in its faces is left to the house renderer) | `crumble`, `impact_*` |
+| `expose` | the bars as instanced cylinders (radius 4 mm), one mesh per part, replaced by each new `expose`; empty `bars` removes the cage; `renderer.rebarCount()` | |
 | `detach` | with `autoSplit`, each loose group becomes its own `Group` (world transforms kept) and a `Piece` (`onPiece`) | `detach` |
 | `disassemble_progress` | | `unscrew` (throttled) |
 | `ignite` / `extinguish` / `burnout` | fire and smoke from the surface while `part.burning`; steam when put out; ash at burnout; char lerps the colour to the material `charColor`; status `ashes` hides the part and leaves an ash pile | `ignite`, `burn_loop`, `extinguish` |
