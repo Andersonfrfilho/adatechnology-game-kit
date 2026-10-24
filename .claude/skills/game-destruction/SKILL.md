@@ -49,13 +49,14 @@ Quem possui as transformações (renderizador ou física) chama `setTransform`; 
 | `world.setLiters / extinguish / reset / splitGroup / setTransform / setPartPose` | recipientes, apagar fogo, reparar, separar pedaço, sincronizar pose |
 | `world.state / part / snapshot / serialize / load` | estado vivo (só leitura), cópia, JSON de ida e volta |
 | `MATERIALS`, `guessMaterial(name)` | 26 materiais embutidos; adivinha o material pelo nome da malha |
-| `buildFrame`, `sizeStructure` | estrutura de teste (colunas, lajes, paredes) e dimensionamento de capacidade |
+| `buildFrame`, `sizeStructure` | estrutura de teste (colunas, lajes, paredes) e dimensionamento de capacidade (`redundancyRoles`, `safetyByRole` para casas) |
+| `assemblyPart(id, { id, width, height, position })`, `ASSEMBLIES`, `registerAssembly`, `getAssembly` | parede pronta a partir de uma das 8 montagens (`brick_wall_plastered`, `concrete_block_wall`, `reinforced_concrete`, `drywall`, `wood_frame_wall`, `log_wall`, `sheet_metal_shack`, `glass_pane`) |
 | `inferJoints`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS` | juntas (screw, bolt, weld, mortar, rebar...) |
 | `checkDestructible`, `checkHit`, `IMPACT_CONTRACT` | validar um `DestructibleImpl` ou um golpe contra o contrato |
 | `resolveStrings(locale)`, `locales` | nomes em `en` e `pt-BR` |
 
 Eventos: `damage`, `dent`, `hole`, `crack`, `ricochet`, `debris`, `fracture`, `detach`, `disassemble_progress`, `ignite`, `extinguish`, `burnout`, `melt`,
-`drip`, `leak`, `explode`, `primed`, `stress`, `collapse`, `destroyed`.
+`drip`, `leak`, `explode`, `primed`, `stress`, `collapse`, `spall`, `stage`, `expose`, `destroyed`.
 
 ## Compõe com
 - `@adatechnology/game-contracts`: dono dos tipos de golpe, evento e `DestructibleImpl` (este pacote os reexporta).
@@ -66,6 +67,13 @@ Eventos: `damage`, `dent`, `hole`, `crack`, `ricochet`, `debris`, `fracture`, `d
 ## Ambiente de teste
 Não há `examples/` próprio. A "Sala de testes de destruição" do kit é uma build deste SDK dentro de `examples/test-room` (`node build.mjs` gera
 `dist/test-room.html`, um arquivo só). A área abre com `?area=` na sala.
+
+## Paredes em camadas, estágios e armadura (T2.3)
+- Peça com `layers` (reboco), `units` (tijolo, bloco, painel), `reinforcement` (vergalhão) ou `breach` entra em **estágios** (`PartState.stage`, evento `stage`): 0 intacta, 1 no primeiro furo, trinca ou lasca, 2 quando o dano passante num raio de 0,55 m soma `breach.area` (0,25 m²), 3 ao fraturar ou desabar. No 2 saem fragmentos do tamanho da peça (`stage.fragments`), a peça **fica** com `opening` (tiro e raio passam) e o evento não manda esconder a peça.
+- Penetração soma `penetration x espessura` de cada camada que o tiro cruza mais a do núcleo; a camada de fora lasca no impacto (`spall`) antes do núcleo, e o remendo lascado não segura mais nada. Rajada de 9 mm em tijolo rebocado: lasca, fura, no máximo estágio 1; 7,62: fura, estágio 1, nunca rompe concreto armado; marreta abre tijolo depois de ~47 golpes; C4 ou RPG abre concreto armado e expõe o vergalhão (`expose`).
+- Concreto armado a 0 hp esfarela mas a peça vira **gaiola** (`stripped`, `expose` com os vergalhões, capacidade x `residualCapacity` 0,15): sobrecarregada, cede em segundos e o colapso é progressivo (pilar, depois laje e telhado, com tempo). Tiro atravessa a gaiola; as juntas `rebar` de peça armada só cedem a maçarico ou serra. Abertura da largura da peça corta a peça (pilar, verga): vira fratura.
+- Furos ficam nos pedaços: todo fragmento de `fracture` ou de brecha leva `marks` (furos que caíram nele, até 12).
+- Casa: `sizeStructure(spec, { redundancy: 0.97, redundancyRoles: ['column', 'wall'], safetyByRole: { beam: 0.45, slab: 0.45, roof: 0.45, stair: 0.45 } })`.
 
 ## Cuidados
 - Reação em cadeia (A11): peça com `explodes.chain` é **armada** por tiro (`shot`, depois de `shotDamageFraction` do hp), fogo (`fire`, a `atC` ou 300 °C) ou explosão no alcance (`explosion`) e explode depois do atraso daquele gatilho (número ou `[mín, máx]` sorteado da semente). Evento `primed` ao armar, `explode` no fim. Cada peça explode uma vez; tiro e explosão armam em vez de despedaçar na hora; a ordem é por tempo, depois por objeto e peça. O atraso conta do instante da explosão que armou, então a linha do tempo não depende do `dt` de `update`. Sem `update`, nada explode.

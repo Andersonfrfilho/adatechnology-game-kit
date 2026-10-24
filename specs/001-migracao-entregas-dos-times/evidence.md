@@ -757,3 +757,68 @@ Respostas do dono às perguntas abertas da T1.1B, T1.3, T1.5, T1.6 e da Revisão
 Commits (todos terminam com o `Co-Authored-By` de Opus 5.5): `feat(weapons-three,weapons-catalog)` câmaras, Taurus e destravar; `feat(weapons,weapons-three,test-room)` espoletas; `feat(weapons,contracts,test-room)` cozinhar a granada; `feat(weapons,contracts,test-room)` fio de tropeço e marcador; e o de documentação (README, skills, changesets, evidência).
 
 Modelo da execução: `sonnet`.
+
+## T2.3a–b
+
+Modelo: `sonnet`. Branch `work/spec001-t2-b` (sobre `feat/spec-001-fase-2`), grupo B da Fase 2: estrutura e destruição das paredes (centro da fase, desenho `design/T2.1-casas-estrutura-e-destruicao.md` §3, §4, §6).
+
+### O que foi feito
+
+| Commit | Conteúdo |
+|---|---|
+| `feat(contracts): camadas, armadura, peças, brecha…` (T2.3a) | `PartSpec.layers/reinforcement/units/breach` (`SurfaceLayer`, `Reinforcement`, `PartUnits`, `PartBreach`), `PartState.stage/stripped/opening`, `DamageStage`, `Fragment.marks` (`FragmentMark`), eventos `spall`, `stage`, `expose`; `checkSpec` valida os campos novos; rótulos `en`/`pt-BR` dos eventos. Tudo opcional: nenhum módulo existente mudou. |
+| `feat(destruction): paredes em camadas…` (T2.3b) | `assemblies.ts` + `data/assemblies.json` (8 montagens), `layers.ts`, `breach.ts`, `rebar.ts`, estágios/brecha/gaiola em `world.ts`, `sizeStructure({ redundancyRoles, safetyByRole })`, `DestructionOptions.breach`, testes e 8 goldens próprios. |
+| `feat(destruction-three): desenha spall, estágio 2…` | `spall` (remendo), `stage` 2 (fragmentos com os furos presos), `expose` (cilindros instanciados), `rebarCount()`. |
+| docs (este) | README e skills, changesets, `inventario/casas-mapa.md` §1.4b, esta seção. |
+
+### Comportamento medido (todos com semente, sem `Math.random`)
+
+| Caso | Resultado |
+|---|---|
+| 9 mm (486 J) em tijolo rebocado, 60 tiros | lasca (`spall`) e fura (nenhum furo passante), no máximo estágio 1 |
+| 7,62 (3300 J) em tijolo rebocado, 40 tiros | fura de lado a lado (lasca entrada e saída), no máximo estágio 1 |
+| 7,62 em concreto armado, 80 tiros | só trinca, nenhum furo passante, eventos `stage` = `[1]`, a parede não abre |
+| mesma carga de 1330 J no tijolo rebocado | para na camada (limiar 1380 J = 1260 do tijolo + 2 × 60 do reboco); depois que o reboco lasca no ponto, passa (1320 J) |
+| marreta (128 J) em tijolo rebocado | estágio 1 no 1º golpe, estágio 2 no **47º** golpe: abertura de raio 0,284 m, fragmentos de no máximo 0,23×0,075 m, a peça fica |
+| C4 (345,6 kJ) e RPG (200 kJ) em concreto armado | estágio 2 de uma vez, `expose` só dos vergalhões dentro da abertura, a parede fica |
+| golpe que zera o hp do concreto armado | `fracture` em **20 painéis** de 0,6×0,42 m (grade 4×5 do ARS), `stage` 3, `expose` com 26 barras (14 + 12, a 0,18 m), a peça fica como gaiola (`stripped`) |
+| RPG num pilar de pórtico (2 pilares, laje, telhado) | `expose` e estágio 3 do pilar em t=0; sobrecarga (tensão 3,5); gaiola cede em 1,7 s; o outro pilar (tensão 1,17) cai em 5,5 s; `collapse` de pilar, laje e telhado em **7,1 s**. Com `residualCapacity` 0,9 nada cai em 60 s |
+| tiro na abertura e na gaiola | atravessa sem evento; raycast passa pela abertura |
+| furos ficam nos pedaços | 12 furos de 9 mm antes da queda: 12 `marks`, todos dentro da caixa do fragmento (máximo 12 por fragmento); furo na região da brecha sai com o fragmento |
+| gaiola sem carga | `workableJoints` lista a junta `rebar` para `cutting_torch` e `saw`; 20 s de maçarico abre (`detach` `by: 'tool'`) |
+| 6 cenários do AC numa spec equivalente | pilar de canto: laje fica; dois pilares: laje e telhado caem (90 s); divisória cai sozinha; vidro fura no 1º tiro e quebra; caixa vaza; botijão explode e danifica a parede ao lado |
+| `sizeStructure` com `redundancyRoles: ['column','wall']` | sem os papéis, perder uma parede portante passa de 1,06; com eles fica em 0,97 |
+
+Goldens próprios (sequência de eventos) em `packages/game-destruction/tests/fixtures/wall-golden/*.json`, gravados no Node 24 e conferidos no Node 22 (`npx -y node@22 … vitest run`: 155 passam). `UPDATE_GOLDEN=1` regrava.
+
+### Desvios do desenho
+
+1. **`stage` leva `fragments`** (opcional, além de `opening`): o contrato dizia só a abertura, mas o evento `fracture` esconde a peça no renderizador, então os fragmentos da brecha precisam de outro canal.
+2. **Brecha em área, sem tabela de pontos**: a área de um golpe é `dano / (hpPerKg × densidade) / espessura do núcleo`; o sopro multiplica por `breach.blastFactor` (padrão **6**, novo; sem isso 345,6 kJ de C4 dão 0,13 m² e nunca passam de 0,25). Abertura da largura da peça (pilar, verga estreita) **corta a peça** (fratura) em vez de abrir. Raio e fator são opções (`DestructionOptions.breach`), a área é por montagem.
+3. **Tamanho da unidade**: `units.size[2]` (0,11 m do tijolo) não é usado; o fragmento leva a profundidade física inteira da parede (0,09 + 2 × 0,02), para não deixar buraco na malha. Argamassa dos tijolos: `plaster` e `concrete` (não existe material `mortar`).
+4. **Juntas `rebar` de peça armada não desgastam** com golpe ou sopro (só maçarico, serra, ou a própria gaiola cedendo). Sem isso a explosão que expõe a gaiola já a soltaria da fundação (a junta tem 1500 de vida e o sopro dá 10 000).
+5. **Gaiola**: `hp` = `maxHp` da peça (sobrecarga a gasta em 1,7 s a 7 s conforme a tensão), tiro atravessa, `expose` com `bars: []` diz que a gaiola acabou (sem campo novo).
+6. **Furos nos fragmentos valem para qualquer peça**, não só as escalonadas: todo `fracture` de peça com furo agora traz `marks` (os testes existentes continuam verdes).
+7. **Drywall e madeira simplificadas**: montante de aço e barrotes não são peças (entram em `buildWallSpecimen`, T2.2d); a massa por m² fica abaixo da real (madeira 18 kg/m²). `log_wall` usa `fill` 0,785 (tora redonda), `concrete_block_wall` 0,55 (bloco vazado).
+8. **Renderizador**: o remendo da lasca usa o eixo fino da caixa do mundo como normal (certo para parede reta); `rebarCount()` é método à parte porque `stats()` é comparado por igualdade em teste. **Falta para a T2.4c**: abrir a abertura na malha da parede (colapsar a faixa de vértices), fiadas de tijolo instanciadas, normal exata do remendo.
+9. **Vidro do AC** ("quebra depois de N tiros"): com a fragilidade do SDK (vidro de 6 mm) o 1º tiro fura **e** quebra; o teste mantém a asserção do AC (furou no 1º, quebrou em até 12).
+10. `PartRuntime` ganhou `spalls`, `breach`, `removed` (opcionais); `serialize`/`load` agora clonam o runtime por peça (antes era cópia rasa).
+
+### Escolhas de negócio (padrão reversível, para o PR)
+
+- Raio de 0,55 m e área de 0,25 m² (do desenho); fator de sopro 6; capacidade residual 0,15 (do desenho); energias de teste: 9 mm 486 J, 7,62×51 3300 J, marreta 128 J (4 kg a 8 m/s), C4 e RPG do `explosives.json`.
+- N da marreta (47 golpes) é consequência do modelo; o dono pode pedir outro valor mexendo no `breach.area` da montagem.
+- `fill` e espessuras das 8 montagens são do desenho quando dadas; o resto (drywall 0,0125 + 0,0125, madeira 0,012 compensado, chapa 0,6 mm, tora 0,2 m, vidro 6 mm) é referência real, sem fonte do time.
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 |
+| `game-contracts` | 29 passaram (27 + 2) |
+| `game-destruction` | 155 passaram (97 + 58), também no Node 22 |
+| `game-destruction-three` | 53 passaram (47 + 6) |
+| `game-test-room` / `game-weapons` | 118 / 277 passaram (cadeia e explosivos verdes) |
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0 |

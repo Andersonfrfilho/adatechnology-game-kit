@@ -26,6 +26,7 @@ import type {
   RayHit,
   HitResult,
   Hit,
+  StructureRole,
   ToolKind,
   Vec3,
 } from '@adatechnology/game-contracts'
@@ -34,6 +35,7 @@ import type {
 export type {
   ChainDelay,
   Crack,
+  DamageStage,
   DamageType,
   DebrisKind,
   Dent,
@@ -44,6 +46,7 @@ export type {
   ExplosionChain,
   FluidKind,
   Fragment,
+  FragmentMark,
   FractureStyle,
   Hit,
   HitResult,
@@ -54,13 +57,17 @@ export type {
   JointState,
   MaterialId,
   ObjectState,
+  PartBreach,
   PartShape,
   PartSpec,
   PartState,
   PartStatus,
+  PartUnits,
   Quat,
   RayHit,
+  Reinforcement,
   StructureRole,
+  SurfaceLayer,
   ToolKind,
   Vec3,
 } from '@adatechnology/game-contracts'
@@ -153,13 +160,24 @@ export interface DestructionOptions {
   maxHoles?: number
   /** Distance at which a burning part heats parts of other objects, in metres (default 0.6). */
   fireSpread?: number
+  /** Breach of staged parts (see `PartSpec.breach`). */
+  breach?: {
+    /** Metres around a hit within which through damage adds up (default 0.55). */
+    radius?: number
+    /** Multiplier of the breach area a blast makes over a blow of the same damage: a blast loads the whole crater (default 6). */
+    blastFactor?: number
+  }
 }
 
 export interface SizeStructureOptions {
   /** Stress every structural part has at rest after sizing (`load / capacity`), 0..1 (default 0.65). */
   safety?: number
+  /** Stress at rest per structural role, over `safety` (a house: beams, slabs, roofs and stairs at 0.45 so they outlast a lost column). */
+  safetyByRole?: Partial<Record<StructureRole, number>>
+  /** Roles whose parts are removed one at a time by the redundancy check (default `['column']`; a house adds `'wall'`). */
+  redundancyRoles?: readonly StructureRole[]
   /**
-   * Redundancy target: when set, the capacity of a part is raised (never lowered) until losing any single `column` leaves every other
+   * Redundancy target: when set, the capacity of a part is raised (never lowered) until losing any single part of `redundancyRoles` leaves every other
    * structural part at this stress or below, e.g. 0.97 (an N-1 design: the building stands with one column gone). Omit to skip the check.
    * Should be above `safety` and, to let the structure fall when a second column goes, below 1.
    */
@@ -276,6 +294,12 @@ export interface PartRuntime {
   stressT?: number
   /** World time at which a primed explosive part goes off (`explodes.chain`). */
   chainDue?: number
+  /** Patches of surface layers that came off (`layers.ts`). */
+  spalls?: Array<[number, number, number, number, number, number]>
+  /** Through damage so far: `[x, y, z, area]` in object space, newest last. */
+  breach?: Array<[number, number, number, number]>
+  /** Mass in kg that left the part in a breach. */
+  removed?: number
 }
 
 /** Opaque bookkeeping of an object (see `PartRuntime`). `joints` holds the last disassembly step reported per joint id. */

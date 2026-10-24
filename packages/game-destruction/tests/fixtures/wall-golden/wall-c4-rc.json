@@ -1,0 +1,111 @@
+{
+ "schema": 1,
+ "name": "wall-c4-rc",
+ "seed": 105,
+ "events": [
+  {
+   "type": "crack",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "at": [
+     0,
+     1,
+     0.1
+    ],
+    "rays": 5,
+    "length": 1
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "stage": 1
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "chips",
+    "count": 12
+   }
+  },
+  {
+   "type": "damage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "amount": 827.5978,
+    "hp": 31630.0022,
+    "damageType": "explosive"
+   }
+  },
+  {
+   "type": "stage",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "stage": 2,
+    "opening": {
+     "center": [
+      0,
+      1,
+      0
+     ],
+     "radius": 0.4954
+    },
+    "fragments": {
+     "count": 4,
+     "mass": 463.68,
+     "marks": 0,
+     "first": {
+      "center": [
+       -0.3,
+       0.63,
+       0
+      ],
+      "size": [
+       0.6,
+       0.42,
+       0.2
+      ]
+     }
+    }
+   }
+  },
+  {
+   "type": "debris",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "kind": "dust",
+    "count": 14
+   }
+  },
+  {
+   "type": "expose",
+   "data": {
+    "time": 0,
+    "part": "wall",
+    "bars": 12,
+    "first": [
+     [
+      -0.3708,
+      0.6,
+      0
+     ],
+     [
+      0.3708,
+      0.6,
+      0
+     ]
+    ]
+   }
+  }
+ ],
+ "scenes": {}
+}

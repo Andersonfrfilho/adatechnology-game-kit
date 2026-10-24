@@ -1,4 +1,4 @@
-import type { DestructibleSpec } from './destruction'
+import type { DestructibleSpec, PartSpec } from './destruction'
 
 export interface CheckSpecOptions {
   /** Known material ids. When given, every part's material must be one of them. */
@@ -20,6 +20,34 @@ const finite = (n: unknown): n is number => typeof n === 'number' && Number.isFi
 const positive = (n: unknown): boolean => finite(n) && n > 0
 const vec3 = (v: unknown): boolean => Array.isArray(v) && v.length === 3 && v.every(finite)
 const nonNegative = (n: unknown): boolean => n === undefined || (finite(n) && n >= 0)
+
+const FACES = ['both', '+', '-']
+const BONDS = ['running', 'stack']
+
+/** Layers, reinforcement, units and breach: known materials, finite positive sizes. */
+const checkStagedFields = (p: PartSpec | undefined, label: string, materials: Set<string> | null, problems: string[]): void => {
+  const known = (m: unknown, what: string): void => {
+    if (materials && !materials.has(m as string)) problems.push(`${label} ${what} has unknown material "${String(m)}"`)
+  }
+  ;(p?.layers ?? []).forEach((l, i) => {
+    known(l?.material, `layer ${i}`)
+    if (!positive(l?.thickness)) problems.push(`${label} layer ${i} thickness must be finite and positive`)
+    if (!FACES.includes(l?.faces)) problems.push(`${label} layer ${i} has an invalid faces "${String(l?.faces)}"`)
+  })
+  const r = p?.reinforcement
+  if (r) {
+    known(r.material, 'reinforcement')
+    if (!positive(r.spacing) || !positive(r.diameter)) problems.push(`${label} reinforcement spacing and diameter must be finite and positive`)
+    if (r.residualCapacity !== undefined && !(finite(r.residualCapacity) && r.residualCapacity >= 0 && r.residualCapacity <= 1)) problems.push(`${label} reinforcement residualCapacity must be between 0 and 1`)
+  }
+  const u = p?.units
+  if (u) {
+    known(u.mortar, 'units mortar')
+    if (!vec3(u.size) || !u.size.every(positive)) problems.push(`${label} units size must be three finite positive numbers`)
+    if (!BONDS.includes(u.bond)) problems.push(`${label} units has an invalid bond "${String(u.bond)}"`)
+  }
+  if (p?.breach && p.breach.area !== undefined && !positive(p.breach.area)) problems.push(`${label} breach area must be finite and positive`)
+}
 
 /**
  * Static checks on a `DestructibleSpec` (no world needed), for items that give a `spec` instead of an `impl`: unique part ids, known materials
@@ -59,6 +87,7 @@ export const checkSpec = (spec: DestructibleSpec, options: CheckSpecOptions = {}
       if (!nonNegative(p.structure.capacity)) problems.push(`${label} structure capacity must be a finite number >= 0`)
     }
     if (p?.contains && !nonNegative(p.contains.liters)) problems.push(`${label} contains.liters must be a finite number >= 0`)
+    checkStagedFields(p, label, materials, problems)
   }
 
   const jointIds = new Set<string>()

@@ -196,6 +196,25 @@ Módulo que já segue `game-contracts` (`room.loadModule(HouseArea.module({local
   `house_window_glass` (vidro: primeiro tiro fura, quebra em N tiros, paredes inteiras), `house_tank_leak` (caixa furada vaza: L antes e depois), `house_gas_explodes` (botijão explode e danifica as peças ao redor).
 - Esses cenários são os testes goldens naturais do porte (R2 da spec).
 
+### 1.4b Destruição de parede: ARS, OFI e AC no SDK (T2.3a–b, 2026-10-24)
+
+Estado do porte do **comportamento** (o motor segue em joules, A2; a tabela de pontos do ARS e os modelos estáticos de parede não vêm, ficam no ZombiAdA). Desenho: `design/T2.1-casas-estrutura-e-destruicao.md` §3.
+
+| Peça do time | Fonte | Onde entrou | Teste |
+|---|---|---|---|
+| Vidro, madeira, tijolo, concreto armado (`WMAT`) | ARS L609 | `game-destruction/src/data/assemblies.json`: `glass_pane`, `wood_frame_wall`, `brick_wall_plastered`, `reinforced_concrete` (+ `concrete_block_wall`, `drywall`, `log_wall`, `sheet_metal_shack`) | `assemblies.test.ts` |
+| Tijolo 0,23×0,075×0,11 m em amarração, painéis 0,6×0,42×0,2 m em grade 4×5 | ARS L618–619 | `units` das montagens; `breach.ts` (`unitGrid`); fratura do concreto armado dá 20 painéis | `walls.test.ts`, `reinforcement.test.ts` |
+| Estágios `WST`: 0 intacta, 1 marcas e trincas, 2 rompida no meio (passa e atira), 3 desabada | ARS L615, 631–640 | `PartState.stage`, eventos `stage`/`fracture`/`collapse`; estágio 2 com `opening` e fragmentos, a peça fica | `walls.test.ts` |
+| Vergalhão do estágio 2: Ø 7 mm, 0,18 m | ARS L640 | `rebar.ts` (`rebarBars`, 0,18 m, Ø 8 mm por padrão); evento `expose`; `game-destruction-three/src/rebar.ts` (cilindros instanciados) | `reinforcement.test.ts`, `wall-events.test.ts` |
+| Concreto armado só rompe com C4, AT4, RPG-7 | ARS `WMAT` | não portado como tabela: 7,62 nunca abre (3300 J < 18 J/mm × 200 mm), C4 (345,6 kJ) e RPG (200 kJ) abrem, por energia | `walls.test.ts`, `reinforcement.test.ts` |
+| Furos e lascas ficam nos blocos | OFI L894–913 | `Fragment.marks`; `FragmentSystem.addMarks` | `walls.test.ts` (holes stay), `wall-events.test.ts` |
+| Laje caindo (entulho e poeira) | OFI L875–887 | evento `collapse` já existia; poeira que tapa a visão fica para a Fase 5 (E1) | `reinforcement.test.ts` (colapso progressivo com tempo) |
+| 6 cenários estruturais | AC L3833–3868 | `tests/house-scenarios.test.ts` (spec equivalente em `tests/wall-helpers.ts`), mesmos assuntos | `house-scenarios.test.ts`, golden `house-scenarios.json` |
+| N-1 em pilares e paredes portantes, `fsOutros` 0,45 | `specDe` L42685–42729 | `sizeStructure({ redundancyRoles, safetyByRole })` | `size-roles.test.ts` |
+| Reboco só rótulo no VC3 | VC3 L10344 | passa a ser camada que lasca e soma penetração (`layers`) | `walls.test.ts` |
+
+Falta: abrir a abertura na malha da parede e as fiadas de tijolo instanciadas (T2.4c), `wallDetail` panels/units e `buildWallSpecimen` (T2.2d).
+
 ### 1.5 Revisão da Casa A (RC)
 
 Página de checklist pessoal (localStorage, exportar/importar JSON) sobre 72 itens R01–R72: **57 corrigidos, 3 aguardando decisão, 11 prontos no SDK, 1 aberto** (L2 do cabeçalho; só 8 itens aparecem no texto extraído).

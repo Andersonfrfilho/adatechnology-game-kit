@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { DebrisKind, DestructionEvent, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import type { DebrisKind, DestructionEvent, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartVis, PieceBody } from './internal'
@@ -7,6 +7,7 @@ import { clamp, createRng, hashNumbers, hashString, mixHex } from './math'
 import { ParticleSystem } from './particles'
 import type { ParticleKind } from './particles'
 import { PieceSystem } from './pieces'
+import { RebarCages } from './rebar'
 import { partHintOf } from './spec'
 import type { DestructionRenderer, BindOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, ThreeNamespace } from './types'
 import { Visuals } from './visual'
@@ -125,6 +126,7 @@ class Renderer implements DestructionRenderer {
   private readonly fragments: FragmentSystem
   private readonly ground: GroundSpots
   private readonly pieceSys: PieceSystem
+  private readonly cages: RebarCages
   private readonly active = new Map<string, { object: string; part: string }>()
   private readonly fires = new Map<string, FireEmitter>()
   private readonly leaks: Leak[] = []
@@ -181,6 +183,7 @@ class Renderer implements DestructionRenderer {
       max: this.maxFragments,
       life: o.fragmentLife ?? 12,
     })
+    this.cages = new RebarCages(THREE, o.scene)
     this.pieceSys = new PieceSystem(THREE, {
       groundAt: this.groundAt,
       gravity: this.gravity,
@@ -509,6 +512,15 @@ class Renderer implements DestructionRenderer {
           this.sound('ignite', ev.point, 0.7)
         }
         break
+      case 'spall':
+        this.onSpall(ev)
+        break
+      case 'stage':
+        this.onStage(ev)
+        break
+      case 'expose':
+        this.cages.set(`${ev.object}|${ev.part}`, ev.bars)
+        break
       case 'extinguish': {
         const f = this.fires.get(`${ev.object}|${ev.part}`)
         if (f) {
@@ -684,6 +696,46 @@ class Renderer implements DestructionRenderer {
       this.visuals.addCrack(mv, wp, this.worldDir(b, ev.crack.normal), ev.crack.rays, ev.crack.length, color, hashNumbers(ev.time, ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2]))
     }
     this.sound(impactKey(def), ev.worldPoint, 0.5)
+  }
+
+  /** Outward normal of the face of `mv` nearest to a world point: the thin axis of its world box (right for a wall; a sloped face is left to the vertex-range binding). */
+  private faceNormal(mv: PartVis['meshes'][number], point: THREE_NS.Vector3): THREE_NS.Vector3 {
+    const box = this.visuals.worldBox(mv, this.box)
+    const size = box.getSize(this.v1)
+    const axis = size.x <= size.y && size.x <= size.z ? 'x' : size.y <= size.z ? 'y' : 'z'
+    const side = point[axis] >= (box.min[axis] + box.max[axis]) / 2 ? 1 : -1
+    return new this.THREE.Vector3(axis === 'x' ? side : 0, axis === 'y' ? side : 0, axis === 'z' ? side : 0)
+  }
+
+  /** A coat came off: a patch in the colour of the core under it, below the bullet holes and cracks. */
+  private onSpall(ev: Ev<'spall'>): void {
+    const pv = this.partVis(ev.object, ev.part)
+    if (!pv) return
+    const wp = new this.THREE.Vector3(ev.point[0], ev.point[1], ev.point[2])
+    const mv = this.nearestMesh(pv, wp)
+    if (!mv) return
+    const def = this.world.materials.get(pv.material)
+    this.visuals.addSpall(mv, wp, this.faceNormal(mv, wp), Math.sqrt(ev.area / Math.PI), fallbackColor(pv.material, def))
+  }
+
+  /**
+   * Stage 2 of a staged part: the unit-sized fragments come out and the part stays drawn (hiding it is what `fracture` does). The opening itself
+   * (cutting the wall's faces) is not drawn yet: it needs the per-vertex binding of the house renderer.
+   */
+  private onStage(ev: Ev<'stage'>): void {
+    if (!ev.fragments || !ev.opening) return
+    const pv = this.partVis(ev.object, ev.part)
+    const def = pv ? this.world.materials.get(pv.material) : undefined
+    const color = (pv ? this.partColor(pv, def) : null) ?? fallbackColor(pv?.material ?? '', def)
+    const maxAlive = this.low ? Math.floor(this.maxFragments / 2) : this.maxFragments
+    const step = this.low ? 2 : 1
+    for (let i = 0; i < ev.fragments.length; i += step) {
+      const fr = ev.fragments[i] as Fragment
+      const fdef = this.world.materials.get(fr.material)
+      this.fragments.spawn(fr, this.fragments.materialFor(fr.material, fdef === def || !fdef ? color : fallbackColor(fr.material, fdef), false), ev.object, maxAlive)
+    }
+    this.particles.burst('dust', ev.opening.center, [0, 1, 0], 14, 1.2, { color })
+    this.sound(impactKey(def), ev.opening.center, 0.8)
   }
 
   private onFracture(ev: Ev<'fracture'>): void {
@@ -1021,6 +1073,7 @@ class Renderer implements DestructionRenderer {
     for (const home of homes) {
       this.fragments.removeHome(home)
       this.ground.removeHome(home)
+      this.cages.removeObject(home)
     }
   }
 
@@ -1060,6 +1113,7 @@ class Renderer implements DestructionRenderer {
     }
     this.fragments.clear()
     this.ground.clear()
+    this.cages.clear()
     this.particles.clear()
     if (this.light) {
       this.light.intensity = 0
@@ -1072,6 +1126,10 @@ class Renderer implements DestructionRenderer {
     return { fragments: this.fragments.count, particles: this.particles.live, pieces: this.pieceSys.list.length, decals: this.visuals.decalCount + this.ground.count }
   }
 
+  rebarCount(): number {
+    return this.cages.count
+  }
+
   dispose(): void {
     if (this.disposed) return
     this.unsubscribe()
@@ -1079,6 +1137,7 @@ class Renderer implements DestructionRenderer {
     for (const id of [...this.bounds.keys()]) this.unbind(id)
     this.fragments.dispose()
     this.ground.dispose()
+    this.cages.dispose()
     this.particles.dispose()
     this.visuals.dispose()
     this.light?.dispose?.()

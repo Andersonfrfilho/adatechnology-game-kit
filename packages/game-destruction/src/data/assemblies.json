@@ -1,0 +1,62 @@
+[
+  {
+    "id": "brick_wall_plastered",
+    "name": "Plastered brick wall",
+    "core": { "material": "brick", "thickness": 0.09 },
+    "layers": [{ "material": "plaster", "thickness": 0.02, "faces": "both" }],
+    "units": { "size": [0.23, 0.075, 0.11], "bond": "running", "mortar": "plaster" },
+    "breach": { "area": 0.25 }
+  },
+  {
+    "id": "concrete_block_wall",
+    "name": "Concrete block wall",
+    "core": { "material": "concrete", "thickness": 0.14 },
+    "fill": 0.55,
+    "units": { "size": [0.39, 0.19, 0.14], "bond": "running", "mortar": "plaster" },
+    "breach": { "area": 0.25 }
+  },
+  {
+    "id": "reinforced_concrete",
+    "name": "Reinforced concrete wall",
+    "core": { "material": "concrete", "thickness": 0.2 },
+    "reinforcement": { "material": "steel", "spacing": 0.18, "diameter": 0.008, "residualCapacity": 0.15 },
+    "units": { "size": [0.6, 0.42, 0.2], "bond": "stack", "mortar": "concrete" },
+    "breach": { "area": 0.25 }
+  },
+  {
+    "id": "drywall",
+    "name": "Drywall partition on steel studs",
+    "core": { "material": "plaster", "thickness": 0.0125 },
+    "layers": [{ "material": "plaster", "thickness": 0.0125, "faces": "+" }],
+    "depth": 0.095,
+    "breach": { "area": 0.25 }
+  },
+  {
+    "id": "wood_frame_wall",
+    "name": "Wood frame wall",
+    "core": { "material": "plywood", "thickness": 0.012 },
+    "layers": [{ "material": "plaster", "thickness": 0.0125, "faces": "-" }],
+    "depth": 0.1135,
+    "breach": { "area": 0.25 }
+  },
+  {
+    "id": "log_wall",
+    "name": "Log wall",
+    "core": { "material": "wood_soft", "thickness": 0.2 },
+    "fill": 0.785,
+    "breach": { "area": 0.25 }
+  },
+  {
+    "id": "sheet_metal_shack",
+    "name": "Corrugated sheet metal wall",
+    "core": { "material": "steel", "thickness": 0.0006 },
+    "depth": 0.02,
+    "breach": { "area": 0.25 }
+  },
+  {
+    "id": "glass_pane",
+    "name": "Glass pane",
+    "core": { "material": "glass", "thickness": 0.006 },
+    "breach": { "area": 0.1 }
+  }
+]
