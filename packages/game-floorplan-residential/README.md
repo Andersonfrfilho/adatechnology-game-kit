@@ -35,7 +35,7 @@ const plan = engine.generate('mid_modern_townhouse', { seed: 12, floors: 3, zone
 | `single_storey_a` | budget | residential_single | 1 |
 | `townhouse` | budget | residential_single | 2 |
 | `apartment_basic` | budget | residential_multi | one unit, 1 per floor |
-| `budget_slab_house` | budget | residential_single | 1 (party wall right) |
+| `budget_slab_house` | budget | residential_single | 1 to 3 (`floors`, or `randomFloors`; side stair; party wall right) |
 | `budget_semi_detached` | budget | residential_single | 1 (party wall left) |
 | `mid_modern_single_storey` | mid | residential_single | 1 |
 | `mid_modern_townhouse` | mid | residential_single | 2 to 3 |

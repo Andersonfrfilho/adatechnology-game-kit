@@ -65,7 +65,7 @@ API pública (L10702–10816 e retorno em L11180): `gerar`, `slots`, `validar`, 
 | `sobrado` | 7975 | sim (`townhouse`) |
 | `mercado`, `farmacia` | 8034, 8060 | sim (`market`, `pharmacy`) |
 | `apartamento` (1 unidade por andar) | 8086 | sim (`apartment_basic`) |
-| `popular_laje`, `popular_geminada` | 8154, 8181 | sim (`budget_slab_house`, `budget_semi_detached`) |
+| `popular_laje`, `popular_geminada` | 8154, 8181 | sim (`budget_slab_house`, `budget_semi_detached`); a laje ganhou 1 a 3 andares na T2.2g (`floors`, `randomFloors`; o time só tem o térreo, andares de cima são padrão reversível) |
 | `media_terrea_moderna`, `sobrado_medio_moderno` | 8207, 8241 | sim |
 | `alto_padrao_contemporanea` | 8309 | sim (`high_end_contemporary`) |
 | `mansao` (1 a 3 andares, elevador opcional) | 8408 | sim (`mansion`) |

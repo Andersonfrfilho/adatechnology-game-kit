@@ -256,8 +256,26 @@ function checkState(tag: string, res: Plan, F: Failures) {
   }
 }
 
+/** Upper floors reached by a stair outside (slab house): every upper floor has the outside door the stair serves, and its rooms connect to it. */
+function checkSideStair(tag: string, res: Plan, F: Failures) {
+  const stair = res.config.sideStair
+  if (stair.flights !== res.floors.length - 1) F.add('side stair flights', tag)
+  if (stair.rect[0] < -res.lot.sideYard.left - 1e-6 || stair.rect[2] > 1e-6) F.add('side stair outside its margin', tag)
+  const adj: Record<string, Set<string>> = {}
+  for (const p of res.doors) if (p.b !== 'outside') for (const [a, b] of [[p.a, p.b], [p.b, p.a]]) (adj[a] = adj[a] || new Set()).add(b)
+  for (const id of stair.doors) {
+    const door = res.doors.find((p: any) => p.id === id)
+    if (!door || !door.exterior || door.side !== 'left') { F.add('side stair door', tag + ' ' + id); continue }
+    const seenRooms = new Set<string>([door.a])
+    const queue = [door.a]
+    for (let h = 0; h < queue.length; h++) for (const n of adj[queue[h]] || []) if (!seenRooms.has(n)) { seenRooms.add(n); queue.push(n) }
+    for (const c of res.rooms.filter((c: any) => c.floor === door.floor)) if (!seenRooms.has(c.id)) F.add('unreachable room from the side stair', tag + ' ' + c.id)
+  }
+}
+
 function checkStairs(tag: string, res: Plan, F: Failures) {
   if (res.floors.length < 2) return
+  if (res.config?.sideStair) return checkSideStair(tag, res, F)
   const stairs = res.items.filter((m: any) => m.type === 'stairs')
   const rooms = res.rooms.filter((c: any) => c.type === 'stairs')
   for (let a = 0; a < res.floors.length - 1; a++) if (!rooms.some((r: any) => r.floor === a)) F.add('floor without stairs', tag + ' floor ' + a)
@@ -408,6 +426,7 @@ export function variants(): [string, string, Record<string, unknown>][] {
     else if (t.id === 'mansion') out.push([t.id + '[3]', t.id, {}], [t.id + '[2]', t.id, { floors: 2 }], [t.id + '[1]', t.id, { floors: 1 }], [t.id + '[3+elevator]', t.id, { floors: 3, elevator: true }])
     else if (t.id === 'high_end_contemporary') out.push([t.id + '[2]', t.id, {}], [t.id + '[3]', t.id, { floors: 3 }])
     else if (t.id === 'mid_modern_townhouse') out.push([t.id + '[2]', t.id, {}], [t.id + '[3]', t.id, { floors: 3 }])
+    else if (t.id === 'budget_slab_house') out.push([t.id + '[1]', t.id, {}], [t.id + '[2]', t.id, { floors: 2 }], [t.id + '[3]', t.id, { floors: 3 }])
     else if (t.id === 'wood_frame_house') out.push([t.id + '[1]', t.id, { floors: 1 }], [t.id + '[2]', t.id, { floors: 2 }], [t.id + '[2+basement+fireplace]', t.id, { floors: 2, basement: 'basement', fireplace: true }], [t.id + '[1+4 bedrooms, no garage]', t.id, { floors: 1, garage: false, bedrooms: 4 }])
     else if (t.id === 'a_frame_chalet') out.push([t.id + '[stilts]', t.id, { foundation: 'stilts' }], [t.id + '[slab]', t.id, { foundation: 'slab' }])
     else if (t.id === 'log_cabin') out.push([t.id + '[1 room, off the grid]', t.id, { rooms: 1, power: 'offgrid' }], [t.id + '[2 rooms, indoor bathroom]', t.id, { rooms: 2, bathroom: 'indoor', power: 'grid' }], [t.id + '[2 rooms, off the grid, well]', t.id, { rooms: 2, power: 'offgrid', water: 'well' }])
