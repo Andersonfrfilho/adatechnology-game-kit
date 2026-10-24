@@ -957,3 +957,21 @@ Node 22.23.4: `tools/items-catalog` 35, `game-items` 18, `tools/golden` 42, `cat
 - Nada de golden novo nesta task.
 
 **Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` exit 0; `pnpm -r test` exit 0 (`game-items-goods` 13, `items-catalog` 39, `game-items` 139, `game-interactables-household` 1907, `game-weapons` 277, `golden` 42...); `catalog:check` de items e weapons up to date. **Node 22.23.4**: `game-items-goods` 13, `game-items` 139, `tools/items-catalog` 39, `tools/golden` 42 passaram e `catalog:check` up to date. Goldens (golden-tool, `game-weapons`) sem mudança. Nenhum gate falhou 2x. Modelo da execução: `sonnet`.
+
+### T3.1g — Household pega os itens do goods (grupo E)
+
+**O que entrou** (`packages/game-interactables-household`, `minor` pelo changeset `household-items-from-goods.md`)
+- `src/data/items.json` apagado; `create.ts` monta `hh.items` com os itens do goods que nasceram household (`GOODS_PROVENANCE[id].household`): 92, mesmos ids (as 38 junções mantêm o id do household), clonados. Nova exportação `HOUSEHOLD_ITEM_IDS`. Categoria antiga virou `tags` (feito pelo extrator na T3.1c); `category` agora é uma das 14.
+- Chaves `item.*` saíram de `locales/en.json` e `locales/pt-BR.json` (332 -> 240 chaves cada); `hh.strings` junta os `item.*` dos 92 vindos de `GOODS_STRINGS` (pt-BR: nome do time nos 38 juntados; en: o que o SDK já tinha). Mesmas chaves nos dois idiomas, como o teste antigo exige.
+- `loot.json` não mudou: todos os ids que ele usa continuam existindo (teste novo `tests/goods-items.test.ts`, que também prova ids = os 92 congelados, definição igual à do goods, categoria entre as 14 e textos do goods). Nenhum teste existente precisou mudar (1907 + 4 passam).
+- `package.json`: dependência `@adatechnology/game-items-goods`, devDependency `@adatechnology/game-items` (só no teste); `tsup.config.ts` virou ESM + IIFE com `noExternal` para os `@adatechnology/*` (agora há import em tempo de execução, e o IIFE `GameInteractablesHousehold` precisa levar o goods junto). README e SKILL atualizados (inclusive a nota de quebra de medidas).
+- Nada mais no repositório importava `items.json` nem o locale do household por caminho (conferido com grep); `interactables-test-area`, `interactables-showroom`, `floorplan-*` e `test-room` usam `createHousehold()`/`hh.items` e seguem verdes.
+
+**Mudanças de dado para quem consome (changeset e SKILL):** 18 itens mudaram de peso (vale o do time) e 8 de medida: `rice`, `water_bottle`, `juice_box`, `bandage`, `first_aid_kit`, `flashlight`, `batteries`, `hammer` (T3.1d); o martelo ficou em pé (pose do modelo do time), 15,9 x 33 x 4,7 cm. Categorias antigas: `hygiene`->`medical`, `cleaning`/`trash`->`materials`, `office`/`mail`->`collectibles`, `kitchen`/`tool`/`garage`->`tools`, `bbq`->`outdoors`, exceções por item na `decisions.json`.
+
+**Desvios e escolhas reversíveis**
+- `hh.items` continua com os **92** (não os 327): o teste do pacote exige tamanho < 1 m e o catálogo do household é o que os móveis e a loot table do pacote usam. Quem quiser tudo usa o `createGoodsItems()`. Reverter = trocar o filtro por todos os itens.
+- A lista dos 92 vem da rastreabilidade do goods (`provenance.household`), não de uma lista escrita no pacote.
+- O desenho dizia "re-exporte `ITEMS`/helpers que já eram públicos": o household nunca exportou `ITEMS`; o público era `hh.items`, preservado.
+
+**Portões (Node 24.22.0)**: ver a seção T3.1f para o conjunto; nesta task `pnpm build`, `pnpm -r typecheck`, `pnpm lint` e `pnpm -r test` (household 1911, interactables 153, floorplan-* , test-room 118, goods 13, items 139, golden 42) verdes e `catalog:check` up to date; Node 22.23.4: household 1911 e goods 13 passaram (items 139 e golden 42 não mudaram desde a T3.1f). `examples/interactables-showroom` builda com o IIFE novo; `interactables-test-area` pede o build prévio do `test-room` (igual antes da task). Sem golden novo. Modelo da execução: `sonnet`.

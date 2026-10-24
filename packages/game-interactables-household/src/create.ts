@@ -1,6 +1,6 @@
 import type { ItemCatalog, LootTables, ObjectSpec, Strings } from '@adatechnology/game-interactables'
+import { GOODS_ITEMS, GOODS_PROVENANCE, GOODS_STRINGS } from '@adatechnology/game-items-goods'
 import { Ctx } from './ctx'
-import itemsJson from './data/items.json'
 import lootJson from './data/loot.json'
 import en from './data/locales/en.json'
 import ptBR from './data/locales/pt-BR.json'
@@ -73,8 +73,13 @@ const BUILDERS: Record<string, BuilderFn> = {
 }
 
 const DEFS = typesJson as HouseholdTypeDef[]
-const STRINGS: Record<'en' | 'pt-BR', Strings> = { en: en as Strings, 'pt-BR': ptBR as Strings }
+const HOUSEHOLD_ITEMS = GOODS_ITEMS.filter((item) => GOODS_PROVENANCE[item.id]?.household !== undefined)
+const itemTexts = (locale: 'en' | 'pt-BR'): Strings => Object.fromEntries(HOUSEHOLD_ITEMS.map((item) => [`item.${item.id}`, GOODS_STRINGS[locale][`item.${item.id}`] ?? item.id]))
+const STRINGS: Record<'en' | 'pt-BR', Strings> = { en: { ...(en as Strings), ...itemTexts('en') }, 'pt-BR': { ...(ptBR as Strings), ...itemTexts('pt-BR') } }
 const REGIONS: Record<string, Region> = { br: br as Region, us: us as Region }
+
+/** Items of the pack: the goods items that started as household items (their ids are kept). */
+export const HOUSEHOLD_ITEM_IDS: string[] = HOUSEHOLD_ITEMS.map((item) => item.id)
 
 /** Ids of every type in the pack. */
 export const HOUSEHOLD_TYPES: string[] = DEFS.map((d) => d.id)
@@ -104,7 +109,7 @@ export function createHousehold(options: HouseholdOptions = {}): Household {
   const defs = new Map(DEFS.map((d) => [d.id, d]))
   return {
     types,
-    items: clone(itemsJson) as unknown as ItemCatalog,
+    items: clone(Object.fromEntries(HOUSEHOLD_ITEMS.map((item) => [item.id, item]))) as ItemCatalog,
     loot: clone(lootJson) as LootTables,
     strings,
     region: clone(region),

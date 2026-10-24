@@ -1,4 +1,4 @@
-export { createHousehold, HOUSEHOLD_TYPES, HOUSEHOLD_REGIONS } from './create'
+export { createHousehold, HOUSEHOLD_ITEM_IDS, HOUSEHOLD_TYPES, HOUSEHOLD_REGIONS } from './create'
 export { createRecorder } from './recorder'
 export type { HouseholdRecorder, RecordedPart } from './recorder'
 export { cornersOf, motionPoint, sweepOf } from './util'
