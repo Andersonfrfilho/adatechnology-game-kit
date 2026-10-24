@@ -320,3 +320,24 @@ describe('createVfx', () => {
     expect(world.fires().length).toBe(1)
   })
 })
+
+describe('the wind', () => {
+  it('starts at the option and is moved by the weather', () => {
+    const { world } = makeWorld({ wind: [1, 0, 0.5] })
+    expect(world.wind()).toEqual([1, 0, 0.5])
+    world.setWind([4.5, 0, -2])
+    expect(world.wind()).toEqual([4.5, 0, -2])
+  })
+
+  it('carries the smoke the other way when the wind turns', () => {
+    const drift = (wind: [number, number, number]): number => {
+      const { world } = makeWorld({ wind })
+      world.explosion('test_blast', ORIGIN)
+      for (let frame = 0; frame < 120; frame++) world.update(1 / 60)
+      let sum = 0
+      for (const puff of world.pools().puffs.items) sum += puff.x
+      return sum
+    }
+    expect(drift([6, 0, 0])).toBeGreaterThan(drift([-6, 0, 0]))
+  })
+})

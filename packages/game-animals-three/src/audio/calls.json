@@ -1,0 +1,14 @@
+{
+  "sources": [
+    "jogo:L66677 galinha: cacarejo, 6 s between calls, noise 30 m",
+    "jogo:L66680 quero-quero: queroquero when the player is near (alarme), 8 s, noise 40 m",
+    "jogo:L66681 vaca: mugido, 30 s, noise 80 m",
+    "jogo:L66683 cachorro: latido when a zombie is within 12 m, 3 s, noise 60 m"
+  ],
+  "species": {
+    "chicken": { "sound": "hen_cluck", "cooldown": 6, "noiseMetres": 30 },
+    "southern_lapwing": { "sound": "lapwing_call", "cooldown": 8, "noiseMetres": 40 },
+    "cow": { "sound": "cow_moo", "cooldown": 30, "noiseMetres": 80 },
+    "dog": { "sound": "dog_bark", "cooldown": 3, "noiseMetres": 60 }
+  }
+}

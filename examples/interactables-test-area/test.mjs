@@ -87,6 +87,34 @@ for (const lang of ['pt-BR', 'en']) {
   })
   check(`[${lang}] the characters and animals modules are loaded, and zombie_behind_door is green`, people.characters >= 25 && people.animals === 13 && people.scenario.passed === 1 && people.scenario.failed === 0, people)
 
+  // a wound on a zombie throws drops of blood into the running film, in the colours of its infection age (the body event reaches the film bridge the room lends)
+  const gore = await page.evaluate(() => {
+    const room = window.__testRoom
+    const so = room.spawn('zombie_walker', [0, 0, -3], 0)
+    const calls = []
+    const splat = room.film.splat
+    room.film.splat = (call) => (calls.push({ fluid: call.fluid, count: call.count, tint: call.tint }), splat.call(room.film, call))
+    room.world.hit(so.objectId, { type: 'slash', point: [0.2, 1.4, -3], direction: [-1, 0, 0], part: 'upperArmL', points: 100, cut: 1 })
+    for (let i = 0; i < 60; i++) room.update(1 / 30)
+    room.film.splat = splat
+    const grids = room.scene.getObjectByName('film_grid') !== undefined
+    room.clear()
+    return { calls: calls.length, tinted: calls.every((call) => call.tint && call.tint.fresh > 0 && call.count > 0), fluid: calls[0]?.fluid, grids }
+  })
+  check(`[${lang}] a wound on a zombie throws tinted blood into the film (the body event reaches the film bridge)`, gore.calls > 0 && gore.tinted && gore.grids, gore)
+
+  // the voices of the bodies and the calls of the animals play on the room's engine (T6.1g): a zombie groans, a cow moos
+  // (the room plays in real time, so earlier voices may end meanwhile: the count only has to show voices playing, not more than before)
+  const voices = await page.evaluate(() => {
+    const room = window.__testRoom
+    const before = room.audio.stats()
+    const groan = room.bench('characters_area').act('voice')
+    const moo = room.bench('animals_area').act('call')
+    const after = room.audio.stats()
+    return { groan, moo, peak: after.peak, voices: after.voices, registered: ['groan_walker', 'scream', 'cow_moo', 'hen_cluck'].every((id) => room.audio.registry.sound(id) !== undefined), before: before.voices }
+  })
+  check(`[${lang}] the voices of the bodies and the calls of the animals play on the room engine`, voices.groan && voices.moo && voices.registered && voices.voices > 0, voices)
+
   // the weapons module rides along (owner rule: this area shows what every phase adds): loaded, with its accessory bench, and a suppressor goes on an M4 here too
   const weapons = await page.evaluate(() => {
     const room = window.__testRoom
@@ -138,12 +166,19 @@ for (const lang of ['pt-BR', 'en']) {
     for (let i = 0; i < 400; i++) room.update(0.1)
     const environment = room.environment.get()
     const stats = room.audio.stats()
-    const result = { weather: report.weather?.ok && report.weather.problems.length === 0, sound: report.audio?.ok && report.audio.problems.length === 0, rain: environment.rain, visibility: environment.visibility, peak: stats.peak, fog: room.scene.fog === null }
+    // the weather bridges: the storm's wind reaches the room's effects world, and its rain and wind loops open on the room's engine
+    const result = { weather: report.weather?.ok && report.weather.problems.length === 0, sound: report.audio?.ok && report.audio.problems.length === 0, rain: environment.rain, visibility: environment.visibility, peak: stats.peak, fog: room.scene.fog === null, wind: room.vfx.wind(), loops: stats.loops, thunder: room.audio.registry.sound('thunder') !== undefined }
+    // the weather picture rides along: the storm draws the rain curtain and the near rain over the furniture; the room's sky and fog stay as they were
+    const curtain = room.scene.getObjectByName('weather-rain-curtain')
+    result.picture = { curtain: curtain?.visible === true, drawn: curtain?.geometry.drawRange.count, near: room.vfx.peekWorkshop()?.rain.count, layers: weather.layers().map((layer) => layer.id).filter((id) => id.endsWith('_rain') || ['mist', 'sky', 'lightning', 'headlights', 'haze'].includes(id)), skyOn: weather.layer('sky'), rig: room.scene.getObjectByName('weather-lamp-rig') !== undefined }
     weather.set('state', 'clear')
     for (let i = 0; i < 20; i++) room.update(0.1)
+    result.windAfter = room.vfx.wind()
     return result
   })
   check(`[${lang}] the sound and weather modules are loaded too: a storm writes host.environment, a sound plays on the room engine, the furniture scene keeps its fog off`, sky.weather && sky.sound && sky.rain > 10 && sky.visibility < 120 && sky.peak >= 1 && sky.fog, sky)
+  check(`[${lang}] the weather picture is loaded too: the storm draws the 14 000-point curtain and 4 000 near streaks over the furniture, seven picture layers, the sky left to the room`, sky.picture.curtain && sky.picture.drawn === 14000 && sky.picture.near === 4000 && sky.picture.layers.length === 7 && sky.picture.skyOn === false && sky.picture.rig, sky.picture)
+  check(`[${lang}] the weather bridges: the storm's wind (4.5, 0) goes to the effects world and back to the breeze, the rain and wind loops are open, the thunder is in the room engine`, Math.abs(sky.wind[0] - 4.5) < 1e-9 && sky.wind[2] === 0 && Math.abs(sky.windAfter[0] - 3.5) < 1e-9 && Math.abs(sky.windAfter[2] - 1.5) < 1e-9 && sky.loops >= 1 && sky.thunder, sky)
 
   if (lang === 'pt-BR') {
     await page.close()

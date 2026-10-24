@@ -8,6 +8,7 @@ import { createWoundMaterials, makeCut, makeStump, ringWound } from './cut'
 import type { WoundMaterials } from './cut'
 import { createFlyingPieces } from './flying'
 import type { FlyingPieces } from './flying'
+import type { CharacterSound } from '../audio/sound'
 import type { FluidsBridge } from './fluids-bridge'
 import { explodeChunks, exitWound, gouge, woundDecal } from './marks'
 import { createPendulum, stepPendulum } from './pendulum'
@@ -21,6 +22,8 @@ export type WoundsOptions = {
   readonly groundAt?: (x: number, z: number) => number
   /** The fluids bridge, when the game has the fluids packages. Without it the wounds draw no blood on the ground. */
   readonly bridge?: FluidsBridge
+  /** The sounds of the bodies (`createCharacterSound`): a wound, a cut and a burst sound where the segment was. Without it the wounds are silent. */
+  readonly sound?: CharacterSound
   readonly materials?: WoundMaterials
   /** Pieces alive at once. Default 40. */
   readonly maxPieces?: number
@@ -64,7 +67,7 @@ const worldPosition = (three: Three, object: THREE_NS.Object3D): THREE_NS.Vector
  * injected so a scene can be repeated.
  */
 export const createWounds = (three: Three, options: WoundsOptions): Wounds => {
-  const { random, scene, bridge } = options
+  const { random, scene, bridge, sound } = options
   const materials = options.materials ?? createWoundMaterials(three)
   const flying = createFlyingPieces(three, { random, ...(options.groundAt ? { groundAt: options.groundAt } : {}), ...(options.maxPieces ? { max: options.maxPieces } : {}) })
   const states = new Map<WoundBody, State>()
@@ -75,9 +78,9 @@ export const createWounds = (three: Three, options: WoundsOptions): Wounds => {
     return found
   }
 
-  const burstBlood = (change: 'severed' | 'destroyed' | 'split', object: THREE_NS.Object3D): void => {
+  const burstBlood = (state: State, change: 'severed' | 'destroyed' | 'split', object: THREE_NS.Object3D, direction?: THREE_NS.Vector3): void => {
     const point = worldPosition(three, object)
-    bridge?.burst(change, [point.x, point.y, point.z])
+    bridge?.burst(change, [point.x, point.y, point.z], state.body.blood, direction ? [direction.x, direction.y, direction.z] : undefined)
   }
 
   const sideOf = (object: THREE_NS.Object3D, body: WoundBody): THREE_NS.Vector3 => new three.Vector3(object.position.x >= 0 ? 1 : -1, 0, 0).applyQuaternion(body.root.quaternion)
@@ -110,7 +113,7 @@ export const createWounds = (three: Three, options: WoundsOptions): Wounds => {
       for (let o: THREE_NS.Object3D | null = pendulum.node as unknown as THREE_NS.Object3D; o; o = o.parent) if (!o.visible) shown = false
       if (!shown) state.pendulums.splice(i, 1)
     }
-    burstBlood('severed', node)
+    burstBlood(state, 'severed', node, direction)
     if (id === 'head') state.dead = true
   }
 
@@ -127,7 +130,7 @@ export const createWounds = (three: Three, options: WoundsOptions): Wounds => {
     makeStump(three, materials, random, node.parent as THREE_NS.Object3D, node.position, radius, flip)
     state.gone.add(id)
     hideBelow(state, id)
-    burstBlood('destroyed', node)
+    burstBlood(state, 'destroyed', node, direction)
     if (id === 'head') state.dead = true
   }
 
@@ -157,7 +160,7 @@ export const createWounds = (three: Three, options: WoundsOptions): Wounds => {
     for (const id of ['torso', 'neck', 'head', 'jaw', 'upperArmL', 'upperArmR', 'forearmL', 'forearmR', 'handL', 'handR'] as SegmentId[]) state.gone.add(id)
     state.pendulums.length = 0
     state.dead = true
-    burstBlood('split', upper)
+    burstBlood(state, 'split', upper, direction)
   }
 
   const direction3 = (v: [number, number, number] | undefined, fallback: THREE_NS.Vector3): THREE_NS.Vector3 => (v ? new three.Vector3(v[0], v[1], v[2]).normalize() : fallback)
@@ -193,6 +196,10 @@ export const createWounds = (three: Three, options: WoundsOptions): Wounds => {
       }
       if (event.type !== 'body') return
       const id = event.part as SegmentId | undefined
+      if (sound) {
+        const heard = worldPosition(three, (id ? body.nodes[id]?.node : undefined) ?? (body.root as THREE_NS.Object3D))
+        sound.body(event, [heard.x, heard.y, heard.z])
+      }
       const fallback = new three.Vector3(0, 0.2, 1)
       const direction = direction3(event.exit, fallback)
       switch (event.change) {
@@ -219,6 +226,8 @@ export const createWounds = (three: Three, options: WoundsOptions): Wounds => {
           break
         case 'wound': {
           const target = id ? body.nodes[id] : undefined
+          const at = worldPosition(three, target?.node ?? (body.root as THREE_NS.Object3D))
+          bridge?.wound([at.x, at.y, at.z], body.blood, event.exit ? [direction.x, direction.y, direction.z] : undefined)
           if (target && event.exit) gouge(three, materials, random, target.node, id!.replace(/[LR]$/, ''), worldPosition(three, target.node), direction.clone().negate(), direction, 60, (chunk, velocity, spin) => {
             scene.add(chunk)
             flying.throwObject(chunk, velocity, spin, id)

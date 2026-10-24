@@ -1,82 +1,10 @@
 // The sounds of materials breaking, as recipes of @adatechnology/game-audio. The art scene's `sfx.*` (cena L1354-L1367) are ported literally: the same
 // filters, frequencies, lengths, volumes and reverb sends, and the same random numbers drawn in the same order, so a recipe leaves the trace of the team
 // code. The game's `boom` (jogo L68278) is here too, as the game's explosion.
-import { DISTANCE_CURVES } from '@adatechnology/game-audio'
-import type { Layer, LoopRecipe, ParamRef, Range, SoundBank, SoundRecipe } from '@adatechnology/game-audio'
+import { DISTANCE_CURVES, sceneMany as many, sceneNoise as noise, sceneRecipe, sceneTone as tone } from '@adatechnology/game-audio'
+import type { Layer, LoopRecipe, SoundBank, SoundRecipe } from '@adatechnology/game-audio'
 
-const ATTACK = 0.002
-
-type Length = number | readonly [number, number] | ParamRef
-
-// the layer is `attack + d` long (the art scene's gain rises over `a` and falls over `d`)
-const lengthOf = (d: Length, attack: number): Range => {
-  if (typeof d === 'number') return attack + d
-  if (Array.isArray(d)) return [attack + d[0], attack + d[1]] as const
-  return { ...(d as ParamRef), add: ((d as ParamRef).add ?? 0) + attack }
-}
-
-const envelope = (attack: number): Layer['envelope'] => [
-  [0, 0.0001, 'set', 'fixed'],
-  [attack, 1, 'exp'],
-  ['1d', 0.0001, 'exp', 'fixed'],
-]
-
-type Noise = {
-  readonly type?: BiquadFilterType
-  readonly f: Range
-  /** The filter slides here over `d` (needs a fixed `d`). */
-  readonly f2?: number
-  readonly q?: number
-  readonly a?: number
-  readonly d: Length
-  readonly vol: Range
-  readonly wet?: number
-  readonly delay?: Range
-}
-
-/** `sNoise` (cena L1323): noise from a random point, a filter (default lowpass, Q 0.7), the gain rising over `a` and falling over `d`. */
-export function noise(o: Noise): Layer {
-  const a = o.a ?? ATTACK
-  const over = typeof o.d === 'number' ? o.d : 0
-  return {
-    filters: {
-      mode: 'serial',
-      bank: [{ type: o.type ?? 'lowpass', frequency: o.f2 === undefined ? { set: o.f } : { set: o.f, to: o.f2, curve: 'exp', over }, q: o.q ?? 0.7 }],
-    },
-    duration: lengthOf(o.d, a),
-    gain: o.vol,
-    ...(o.delay === undefined ? {} : { at: o.delay }),
-    ...(o.wet === undefined ? {} : { wet: o.wet }),
-    source: { kind: 'noise', offset: 'random', offsetScale: 1.5, loop: true },
-    envelope: envelope(a),
-  }
-}
-
-type Tone = { readonly wave?: OscillatorType; readonly f: Range; readonly f2?: number; readonly d: Length; readonly vol: Range; readonly wet?: number; readonly delay?: Range }
-
-/** `sTone` (cena L1324): an oscillator sliding from `f` to `f2` (back to `f` when none), the gain rising over 0.002 s and falling over `d`. */
-export function tone(o: Tone): Layer {
-  return {
-    source: { kind: 'osc', wave: o.wave ?? 'sine', frequency: { from: o.f, to: o.f2 ?? 'from', curve: 'exp', over: 'duration' } },
-    duration: lengthOf(o.d, ATTACK),
-    gain: o.vol,
-    ...(o.delay === undefined ? {} : { at: o.delay }),
-    ...(o.wet === undefined ? {} : { wet: o.wet }),
-    envelope: envelope(ATTACK),
-  }
-}
-
-const many = (count: number, make: () => Layer): Layer[] => Array.from({ length: count }, make)
-
-const scene = (id: string, layers: readonly Layer[], line: string, vars?: SoundRecipe['vars']): SoundRecipe => ({
-  id,
-  bus: 'world',
-  pan: true,
-  layers,
-  falloff: DISTANCE_CURVES.art_scene,
-  ...(vars ? { vars } : {}),
-  sources: [`cena:${line}`],
-})
+const scene = (id: string, layers: readonly Layer[], line: string, vars?: SoundRecipe['vars']): SoundRecipe => sceneRecipe(id, layers, line, vars ? { vars } : {})
 
 const boomLayers = (big: boolean): Layer[] => [
   noise({ f: 1200, f2: 120, d: 1.8, vol: 2, wet: 1.2 }),

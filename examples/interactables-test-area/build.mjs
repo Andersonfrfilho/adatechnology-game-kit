@@ -24,7 +24,7 @@ const esbuild = createRequire(import.meta.url)(findEsbuild())
   const people = ['game-characters', 'game-characters-three', 'game-characters-people', 'game-characters-undead', 'game-animals', 'game-animals-species', 'game-animals-three']
   // the houses: the plans of every package, their structure and the drawing in three.js
   const houses = ['game-destruction', 'game-floorplan', 'game-floorplan-commercial', 'game-floorplan-post-apocalyptic', 'game-floorplan-residential', 'game-floorplan-rural', 'game-floorplan-structure', 'game-floorplan-three']
-  for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-vfx', 'game-vfx-three', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', 'game-audio', 'game-weather', ...people, ...houses]) {
+  for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-vfx', 'game-vfx-three', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', 'game-audio', 'game-weather', 'game-weather-three', ...people, ...houses]) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -54,6 +54,7 @@ const result = await esbuild.build({
     // the sound and weather modules ride along: both use what the room lends (host.audio, host.environment)
     '@adatechnology/game-audio': join(pkg('game-audio'), 'dist/index.js'),
     '@adatechnology/game-weather': join(pkg('game-weather'), 'dist/index.js'),
+    '@adatechnology/game-weather-three': join(pkg('game-weather-three'), 'dist/index.js'),
     '@adatechnology/game-items': join(pkg('game-items'), 'dist/index.js'),
     '@adatechnology/game-items-goods': join(pkg('game-items-goods'), 'dist/index.js'),
     '@adatechnology/game-items-three': join(pkg('game-items-three'), 'dist/index.js'),

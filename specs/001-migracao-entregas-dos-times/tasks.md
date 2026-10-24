@@ -69,15 +69,16 @@ Ordem: armas → casas → itens → personagens → efeitos → som e clima →
 
 - T5.1 ✅ `game-vfx` + `-three`: explosão do Laboratório com o teto e o LOD do jogo (E1); destruição, fluidos e armas passam a usá-lo.
 - T5.2 ✅ Oficina de VFX como módulo da bancada de efeitos (E5, T0.2), modelada no Laboratório.
-- T5.3 ✅ `game-fluids`: filme que escorre, respingo por ângulo, bile e sangue antigo, com os valores do time como padrão configurável (E2). (A ligação do `body` dos personagens ao filme espera o evento `body`.)
+- T5.3 ✅ `game-fluids`: filme que escorre, respingo por ângulo, bile e sangue antigo, com os valores do time como padrão configurável (E2). A ligação do `body` dos personagens ao filme (com a tinta da idade) entrou na T5.3e, depois da Fase 4.
 
 ## Fase 6 — Som e clima
 > 🤖 Modelo: `sonnet`
 
 - T6.1 `game-audio` (S1): síntese, mixagem, distância, limite de vozes, sons contínuos; os sons do jogo e da Cena de Arte.
-  Feitas: T6.1c (motor WebAudio), T6.1e e T6.1e2 (armas), T6.1f (destruição), T6.1h (`audio-test-area`). Falta T6.1g (personagens e bichos, esperam a Fase 4).
+  Feitas: T6.1c (motor WebAudio), T6.1e e T6.1e2 (armas), T6.1f (destruição), T6.1g (personagens e bichos), T6.1h (`audio-test-area`).
 - T6.2 `game-weather` (E6): chuva leve e forte, neblina, relâmpago, vento, ciclone, tufão, calor intenso, ligados a fluidos e som.
-  Feitas: T6.2a (núcleo) e T6.2d (`weather-test-area`). Faltam T6.2b e T6.2c (visual, som e pontes; esperam as Fases 4 e 5).
+  Feitas: T6.2a (núcleo), T6.2b (pontes e som), T6.2c (`game-weather-three`: cortina, chuva perto, neblina, céu, relâmpago, faróis e névoa de calor; os três efeitos da Oficina `chuva`, `neblina` e `farol` no `game-vfx`) e T6.2d (`weather-test-area`).
+  Depois: o clarão, a fumaça, o sopro do lançador e o jato de chama da arma na mão passaram para receitas do `game-vfx` (`VIEWMODEL_EFFECTS`).
 - T6.3 A sala empresta `host.audio` e `host.environment`; as áreas de som e clima entram no `interactables-test-area` (feita). T6.4 `site/` com os exemplos e miniaturas (feita nas partes de som e clima).
 
 ## Fase 7 — Veículos e cidade

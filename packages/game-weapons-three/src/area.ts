@@ -348,6 +348,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         tool: lent.tool,
         soundDistance: () => soundDistance,
         raycast: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera),
+        ...(lent.effects ? { effects: lent.effects } : {}),
         ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
         ...(options.condition ? { condition: options.condition } : {}),
         ...(options.seed === undefined ? {} : { seed: options.seed }),

@@ -51,6 +51,12 @@ export function createCountedStream(): RandomStream & { reseed(seed: number): vo
 const hashArray = (array: ArrayLike<number>, count: number): string => hashText(Array.from({ length: count }, (_, index) => round4(array[index]!)).join(','))
 const hashStrided = (parts: readonly (readonly [string, ArrayLike<number>, number])[], count: number): string => hashText(parts.map(([name, array, stride]) => `${name}:${hashArray(array, count * stride)}`).join('|'))
 
+/** What a replay can add to the checks of one instant, and when a run starts (the page's `clearFX` puts the lights back). */
+export interface WorkshopReplayHooks {
+  readonly fields?: (engine: WorkshopEngine) => Readonly<Record<string, unknown>>
+  readonly onStart?: () => void
+}
+
 export interface WorkshopInstant {
   readonly counts: string
   readonly add: string
@@ -68,7 +74,7 @@ export interface WorkshopRun {
 }
 
 /** Runs the effects one after the other in one engine, as the capture did (the camera and the clock carry over from one run to the next). */
-export function createWorkshopReplay(effects: Readonly<Record<string, EffectDef>>, extra: Pick<EffectRunnerOptions, 'behaviors'> = {}) {
+export function createWorkshopReplay(effects: Readonly<Record<string, EffectDef>>, extra: Pick<EffectRunnerOptions, 'behaviors' | 'onCue'> = {}, hooks: WorkshopReplayHooks = {}) {
   const random = createCountedStream()
   let frame = 0
   let spawns: string[] = []
@@ -93,7 +99,8 @@ export function createWorkshopReplay(effects: Readonly<Record<string, EffectDef>
       debris: hashText(engine.debris.pieces.filter((piece) => piece.on).map((piece) => [piece.x, piece.y, piece.z, piece.sx, piece.life, piece.rest ? 1 : 0].map(round4).join(',')).join('|')),
       decals: hashText(engine.decals.decals.filter((decal) => decal.on).map((decal) => [decal.x, decal.y, decal.z, decal.sx, decal.sy, decal.t, decal.life].map(round4).join(',')).join('|')),
       screen: [screen.shake, screen.white, screen.red, screen.directionLeft, screen.directionRight, screen.chroma, screen.desat, screen.gas, screen.beat].map(round4).join(' '),
-    }
+      ...hooks.fields?.(engine),
+    } as WorkshopInstant
   }
 
   return {
@@ -106,6 +113,7 @@ export function createWorkshopReplay(effects: Readonly<Record<string, EffectDef>
       spawns = []
       // the capture clears its log after `select`: whatever the start itself spawns is in the pools, not in the list
       recording = false
+      hooks.onStart?.()
       runner.start(def.id, option)
       recording = true
       const seconds = def.loop && def.loop > 0 ? def.loop : DEFAULT_SECONDS

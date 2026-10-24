@@ -200,6 +200,7 @@ pnpm build && node tools/golden/bin/record-audio.mjs [--seed 1]   # writes tools
 |---|---|---|
 | `fixtures/audio/game-audio.json` | `artefatos/2UG1Mhe9LqJkQKKVsJkTWR/jogo.js` (`audioInit`, `noise`, `sfx`, `loopSet`, `grito`, `voz`, `bichoSom`, `boom`, `chiado`, `buzina`) | 12 classes at 0/10/60/120/160 m, the four loops at three levels, `grito`, `voz`, the four animal calls, `boom`, `chiado`, `buzina` (111) |
 | `fixtures/audio/art-scene-audio.json` | `sources/arte__cena-de-arte.js` L1303-1372 (`initAudio` chain and the 31 `sfx.*`) | the chain, then each sound at three positions (85) |
+| `fixtures/weather/game-rain-curtain.json` | `artefatos/2UG1Mhe9LqJkQKKVsJkTWR/jogo.js` (`const RAIN = 14000` up to `skyUpdate`, cut and run in a vm with three.js stubs; `node tools/golden/bin/record-weather-visual.mjs`) | the SHA-256 and the first and last floats of the 14 000 rain points under seed 1, the shader texts, the material flags and the sky, zone fog and fog lines of the page (`game-weather-three`) |
 
 Each case holds `setup` (run first), `call`, the `seed` and the `trace`; the header holds the SHA-256 of every cut, so a changed source is noticed. A
 case runs in its own context with the seed, so the order of random draws is part of the trace: the noise buffer is filled first (one draw per sample),

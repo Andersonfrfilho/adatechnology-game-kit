@@ -1,5 +1,6 @@
 import type { AnimalSpecies } from '@adatechnology/game-animals'
 
+import type { AnimalSoundOptions } from '../audio/sound'
 import type { DocumentLike } from '../types'
 
 /** The part of the outbreak rule the area uses (`createAnimalOutbreak` of game-characters-undead has all of it). */
@@ -19,6 +20,8 @@ export type AnimalsTestOptions = {
   /** Builds the outbreak rule for the bench (`createAnimalOutbreak` from game-characters-undead): called again when the clock changes. Without it the bite actions do nothing. */
   readonly createOutbreak?: (options: { readonly species: readonly AnimalSpecies[]; readonly enabled: boolean; readonly timeScale: number }) => OutbreakLike
   readonly document?: DocumentLike
+  /** The calls of the animals on the room's engine (`host.audio`); `false` leaves the area silent. */
+  readonly sound?: false | AnimalSoundOptions
   /** Seed of the draws of the area (default 7, the page's). */
   readonly seed?: number
 }

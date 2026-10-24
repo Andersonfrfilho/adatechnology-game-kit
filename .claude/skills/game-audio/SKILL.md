@@ -37,10 +37,11 @@ const plano = planSound(receita, { random: createRng(7), distance: 12 }) // null
 | `createAudioEngine({ seed, mix, banks, maxVoices, createContext })` | Motor WebAudio preguiçoso (sem `AudioContext` até o primeiro som; no Node tudo menos `plan` é no-op): `play`, `plan`, `loop`, `channel`, `setMix`, `setMaster`, `setBus`, `setListener`, `unlock`, `stats`, `level(bus)`, `dispose` |
 | `createAudioSink(engine)` | `AudioSink` do contrato (`host.audio`) que carrega o motor em `.engine`: quem recebe o sink usa o motor do anfitrião |
 | `createAudioTestModule(options?)` | `TestableModule` `audio_area`: toca qualquer som a uma distância e direção (ou da sonda na área), laços, tempestade de 20 vozes, mixagem e camadas (reverb, compressor, pan, abafamento), nível de cada barramento e o plano do som. `BENCH_BANK` tem os dois sons de prova do próprio módulo |
+| `sceneNoise`, `sceneTone`, `sceneVoice`, `sceneMany`, `sceneRecipe` | As primitivas da Cena de Arte (`sNoise`, `sTone`, `voice`) como camadas de receita, na ordem de sorteio da página: quem porta um `sfx.*` da Cena monta a receita com elas (materiais, vozes, ferimentos) |
 | `LIBRARY_BANK` | Casa temporária (Q12): laços `engine_saw`, `rotor_blades`, `crowd_rumble`; `horn`, `radio_static`, `siren` |
 
 ## Compõe com
-`game-contracts` (`AudioSink`, `ModuleHost.audio`). Os bancos de som são de cada pacote: `game-weapons-three` (ordem `weapon`, `createWeaponAudio` é adaptador), `game-destruction-three` (`createDestructionSound`, sons dos materiais e laço de fogo); personagens, bichos e `game-weather` virão.
+`game-contracts` (`AudioSink`, `ModuleHost.audio`). Os bancos de som são de cada pacote: `game-weapons-three` (ordem `weapon`, `createWeaponAudio` é adaptador), `game-destruction-three` (`createDestructionSound`, sons dos materiais e laço de fogo); `game-characters-three` (`createCharacterSound`: vozes dos 13 tipos, ferimento, o que o jogador ouve) e `game-animals-three` (`createAnimalSound`: os 4 chamados); `game-weather` virá.
 
 ## Ambiente de teste
 `examples/audio-test-area` carrega o módulo na sala (`AudioArea.loadInto(room)`, página `sala-som.html`) e tem teste no navegador (4 cenários, tocar, laço). `pnpm --filter @adatechnology/game-audio test` (vitest: plano, curvas, pan, limite de vozes com o golden das regras dos times, laços, banco).

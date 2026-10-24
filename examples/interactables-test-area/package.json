@@ -35,6 +35,7 @@
     "@adatechnology/game-vfx-three": "workspace:*",
     "@adatechnology/game-weapons": "workspace:*",
     "@adatechnology/game-weapons-three": "workspace:*",
-    "@adatechnology/game-weather": "workspace:*"
+    "@adatechnology/game-weather": "workspace:*",
+    "@adatechnology/game-weather-three": "workspace:*"
   }
 }

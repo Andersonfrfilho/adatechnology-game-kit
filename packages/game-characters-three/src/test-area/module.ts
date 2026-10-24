@@ -2,6 +2,8 @@ import { createCharacters, createRng } from '@adatechnology/game-characters'
 import type { CharacterKit, DamageCharacter, GaitProfile } from '@adatechnology/game-characters'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule } from '@adatechnology/game-contracts'
 
+import { createCharacterSound } from '../audio/sound'
+import type { CharacterSound } from '../audio/sound'
 import { findEyes } from '../eyes'
 import type { Eyes } from '../eyes'
 import { createRigAnimator } from '../rich/animator'
@@ -71,6 +73,7 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
   let best: BestBuilder | null = null
   let people: PersonBuilder | null = null
   let wounds: Wounds | null = null
+  let sound: CharacterSound | null = null
   let crowd: Crowd | null = null
   let selected: Entry | null = null
   let time = 0
@@ -169,6 +172,9 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
       if (Math.abs(scale - 1) > 0.01) object.scale.setScalar(scale)
       const entry: Entry = { id, kind: made.kind, cardId: made.cardId, root: object, body: woundBodyOf(object), eyes: three ? findEyes(three, object) : null, built: made.built, character, walk: 0, tilt: 0 }
       entry.character = wrap(entry, character)
+      const age = made.kind === 'zombie' ? undead?.traitsOf(character)?.age : undefined
+      const blood = age !== undefined ? options.bloodOf?.(age) : undefined
+      if (entry.body && blood) entry.body.blood = blood
       entries.set(id, entry)
       selected ??= entry
       trackEntry(entry)
@@ -295,6 +301,15 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
           if (infection.reanimated) target.character = wrap(target, undead.turn(target.character))
         }
       } else if (change.id === 'fire_preset' && target) fireOn(target)
+      else if ((change.id === 'voice' || change.id === 'special_call') && sound) {
+        // the aimed zombie, or the first one of the area when a survivor is aimed
+        const speaker = target?.kind === 'zombie' ? target : [...entries.values()].find((entry) => entry.kind === 'zombie')
+        if (speaker) {
+          const at = speaker.root.getWorldPosition(new (host!.THREE as Three).Vector3())
+          const hurried = settings.moment === 'alert' || settings.moment === 'chase' || settings.moment === 'sprint'
+          sound.voice(speaker.cardId, change.id === 'special_call' ? 'special' : hurried ? 'alert' : 'idle', [at.x, at.y + 1.5, at.z])
+        }
+      }
       else if (change.id === 'spawn_100' || change.id === 'spawn_1000') {
         ensureBuilders((host?.THREE as Three) ?? (three as Three))
         ensureCrowd().spawn(change.id === 'spawn_100' ? 100 : 1000)
@@ -378,6 +393,8 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
       withHint(choice('hit_preset', HIT_PRESETS.map((preset) => preset.id), '9x19'), text.hints.hit_preset),
       withHint(choice('protection', ['none', 'vest_police', 'vest_military', 'helmet_combat', 'turnout_gear', 'vest_helmet'], 'none'), text.hints.protection),
       { kind: 'action', id: 'fire_preset', name: text.actions.fire_preset },
+      { kind: 'action', id: 'voice', name: text.actions.voice },
+      { kind: 'action', id: 'special_call', name: text.actions.special_call },
       { kind: 'action', id: 'heal', name: text.actions.heal },
       { kind: 'action', id: 'kill', name: text.actions.kill },
       { kind: 'action', id: 'infect', name: text.actions.infect },
@@ -403,8 +420,9 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
       host = lent
       ensureBuilders(lent.THREE as Three)
       const scene = lent.scene as THREE_NS.Object3D
-      const bridge = options.fluids ? createFluidsBridge({ sink: options.fluids }) : undefined
-      wounds = createWounds(lent.THREE as Three, { random, scene, groundAt: (x, z) => lent.groundAt(x, z), ...(bridge ? { bridge } : {}) })
+      const bridge = options.fluids ? createFluidsBridge({ sink: options.fluids, ...(options.film ? { film: options.film } : {}) }) : undefined
+      sound = lent.audio && options.sound !== false ? createCharacterSound(lent.audio, options.sound ?? {}) : null
+      wounds = createWounds(lent.THREE as Three, { random, scene, groundAt: (x, z) => lent.groundAt(x, z), ...(bridge ? { bridge } : {}), ...(sound ? { sound } : {}) })
       for (const entry of entries.values()) trackEntry(entry)
       const stopChange = lent.bench?.onChange(onChange)
       const stopFrame = lent.onFrame((dt) => {
@@ -418,6 +436,7 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
           animate(entry, dt)
         }
         wounds?.update(dt)
+        sound?.update(dt)
         crowd?.update(dt, lent.camera as THREE_NS.Camera)
       })
       return () => {
@@ -426,6 +445,8 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
         clearOverlays()
         wounds?.dispose()
         wounds = null
+        sound?.dispose()
+        sound = null
         if (crowd) {
           crowd.group.parent?.remove(crowd.group)
           crowd = null

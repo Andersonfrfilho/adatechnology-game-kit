@@ -13,7 +13,8 @@ import type { AudioEngine } from '@adatechnology/game-audio'
 import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
-import type { FluidRenderer } from '@adatechnology/game-fluids-three'
+import type { VfxWorld } from '@adatechnology/game-vfx'
+import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { AnimationClipSpec, ControlValue, DestructibleImpl, EnvironmentBus, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
@@ -169,6 +170,10 @@ export interface TestRoom {
   resetAll(): void
   readonly arsenal: Arsenal
   readonly fluids: FluidWorld
+  /** The running film of the liquids (blood, fuel, oil): `splat` throws drops into it (a wound), `setWeather` is the rain hook. */
+  readonly film: FilmBridge
+  /** The room's one effects world (what `host.effects` draws into): the weather moves its wind. */
+  readonly vfx: VfxWorld
   /** Equip a weapon or tool of the loadout (or any arsenal id). */
   setTool(weaponId: string): void
   readonly tool: WeaponState

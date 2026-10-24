@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import { createToolClipPlayer, toolAnimationStep } from '@adatechnology/game-contracts'
-import type { AnimationPose, HostEvent, HostTool, HostToolAttachment, ToolAnimationStep, ToolClipPlayer } from '@adatechnology/game-contracts'
+import type { AnimationPose, EffectSink, HostEvent, HostTool, HostToolAttachment, ToolAnimationStep, ToolClipPlayer } from '@adatechnology/game-contracts'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, CaliberDef, FittedAttachment, MountKind, WeaponDef } from '@adatechnology/game-weapons'
 import { ease } from '../animation/clip-builder'
@@ -17,6 +17,8 @@ import { VIEWMODEL_NODE_NAME } from '../laser-raycast'
 import { applyCondition } from '../models/condition'
 import { cartridgeShape } from '../models/cartridge'
 import { modelKit } from '../models/kit'
+import { createVfxRenderer } from '@adatechnology/game-vfx-three'
+import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import { createEffects } from './effects'
 import { createLayers } from './layers'
 import type { FxLayers } from './layers'
@@ -56,6 +58,8 @@ export interface ViewmodelOptions {
   attachmentModels?: AttachmentModelRegistry
   /** How far a laser beam goes (metres) from a point along a direction, or null when it hits nothing. */
   raycast?: LaserRaycast
+  /** The host's effects (`host.effects`): the muzzle flash, the smoke, the backblast and the flame jet are recipes it plays. Without it the viewmodel makes a world of its own for them. */
+  effects?: EffectSink
 }
 
 /** The weapon in the hands for the models the gallery drew: it follows the camera, plays the clips of the rule's events, and throws casings, magazines and smoke. */
@@ -103,7 +107,9 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const distance = (): number => options.soundDistance?.() ?? 0
   const particles = createParticles(THREE, scene, groundAt)
   particles.onBounce = (kind) => (kind === 'casing' ? audio?.clink() : kind === 'magazine' ? audio?.thud() : undefined)
-  const effects = createEffects(kit, scene, particles, random)
+  // a host that lends no effect sink gets a world of its own for the flash and the smoke, stepped and drawn here (as `destruction-three` does)
+  const ownVfx: VfxRenderer | undefined = options.effects ? undefined : createVfxRenderer(THREE, { scene, camera, vfx: { profile: 'medium' } })
+  const effects = createEffects(THREE, options.effects ?? ownVfx, random)
   const hand = new THREE.Group()
   hand.name = VIEWMODEL_NODE_NAME
   scene.add(hand)
@@ -294,8 +300,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
           tasks = tasks.filter((other) => other !== task)
         }
       }
-      effects.update(dt)
       particles.update(dt)
+      ownVfx?.update(dt)
     },
     setCondition(next) {
       condition = next
@@ -313,7 +319,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     dispose() {
       release()
       particles.dispose()
-      effects.dispose()
+      ownVfx?.dispose()
       hand.removeFromParent()
     },
   }

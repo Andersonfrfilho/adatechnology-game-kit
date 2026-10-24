@@ -18,12 +18,16 @@ const ENDLESS_SECONDS = 60
 export interface PlayOptions {
   /** Which way the effect points in the world (the muzzle's barrel, the spray of a jet). */
   readonly direction?: Vec3Tuple
+  /** Which way the thing it belongs to is turned, as a unit quaternion `[x, y, z, w]`: the effect is placed with this turn, pitch and roll included, in place of the turn about the vertical axis `direction` gives. */
+  readonly orientation?: readonly [number, number, number, number]
   /** The surface it hit. */
   readonly normal?: Vec3Tuple
   /** Repeats the same visual: a LAN client draws the same numbers from the same seed. */
   readonly seed?: number
   /** The recipe's parameter (age, material, weapon...). */
   readonly param?: number | string
+  /** Named numbers the recipe reads with `variable(name)` (a size, a length of time): set before its `setup` runs, and again whenever its loop starts over. */
+  readonly values?: Readonly<Record<string, number>>
   /** Moves with a thing: the effect sits at its position plus the point it was played at. */
   readonly follow?: Follow
   /** Stops after this many seconds (default: the recipe's loop). */
@@ -62,6 +66,7 @@ interface Playing {
   readonly origin: Vec3Tuple
   readonly anchor: Vec3Tuple
   readonly yaw: number
+  readonly orientation: readonly [number, number, number, number] | undefined
   readonly seconds: number
 }
 
@@ -117,7 +122,7 @@ export function createEffectPlayer(options: EffectPlayerOptions): EffectPlayer {
 
   function placementOf(entry: Playing): Placement {
     const origin = entry.follow ? [entry.origin[0] + positionOf(entry.follow)[0], entry.origin[1] + positionOf(entry.follow)[1], entry.origin[2] + positionOf(entry.follow)[2]] as const : entry.origin
-    return { origin, anchor: entry.anchor, yaw: entry.yaw }
+    return { origin, anchor: entry.anchor, yaw: entry.yaw, ...(entry.orientation ? { orientation: entry.orientation } : {}) }
   }
 
   /** Runs `action` drawing from the effect's own stream, if it has one. */
@@ -146,6 +151,7 @@ export function createEffectPlayer(options: EffectPlayerOptions): EffectPlayer {
         origin: point,
         anchor: def.anchor ?? ORIGIN,
         yaw: yawOf(heading, playOptions.direction),
+        orientation: playOptions.orientation,
         seconds: playOptions.seconds ?? (def.loop && def.loop > 0 ? def.loop : ENDLESS_SECONDS),
       }
       playing.push(entry)
@@ -154,6 +160,7 @@ export function createEffectPlayer(options: EffectPlayerOptions): EffectPlayer {
           placement: placementOf(entry),
           ...(playOptions.direction ? { direction: playOptions.direction } : {}),
           ...(playOptions.normal ? { normal: playOptions.normal } : {}),
+          ...(playOptions.values ? { values: playOptions.values } : {}),
         }),
       )
       return entry.handle

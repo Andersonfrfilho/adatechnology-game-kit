@@ -13,6 +13,7 @@ import { placeFinds } from '@adatechnology/game-items'
 import { createGoodsFindsProvider, createGoodsItems, goodsText } from '@adatechnology/game-items-goods'
 import { buildItem, createItemsTestModule } from '@adatechnology/game-items-three'
 import { createWeatherTestModule } from '@adatechnology/game-weather'
+import { createWeatherVisual } from '@adatechnology/game-weather-three'
 import { createVfxTestModule } from '@adatechnology/game-vfx-three'
 import { createWeaponsTestModule } from '@adatechnology/game-weapons-three'
 import { registerBodyMaterial } from '@adatechnology/game-characters-three'
@@ -90,12 +91,12 @@ export function loadInto(room, options = {}) {
   const itemsArea = options.items === false ? undefined : room.loadModule(createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang }))
   // the bodies of the characters module are DestructibleImpls with the 'flesh' material, which the room's world has to know before the module is checked
   registerBodyMaterial(room.world)
-  const characters = options.characters === false ? undefined : room.loadModule(createCharactersModule({ fluids: room.fluids, locale: lang }))
+  const characters = options.characters === false ? undefined : room.loadModule(createCharactersModule({ fluids: room.fluids, film: room.film, locale: lang }))
   const animals = options.animals === false ? undefined : room.loadModule(createAnimalsModule({ locale: lang }))
   const vfx = options.vfx === false ? undefined : room.loadModule(createVfxTestModule({ locale: lang }))
-  // the sound and the weather ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here
+  // the sound and the weather (with its picture: rain curtain, near rain, mist, lightning, headlights, haze; the sky and the fog stay the room's own) ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here
   const audio = options.audio === false ? undefined : room.loadModule(createAudioTestModule({ locale: lang }))
-  const weather = options.weather === false ? undefined : room.loadModule(createWeatherTestModule({ locale: lang, fog: false }))
+  const weather = options.weather === false ? undefined : room.loadModule(createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false } }) }))
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   const floorplan = options.floorplan === false ? undefined : room.loadModule(createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
   const report = room.loadModule(createFurnitureArea({ ...options, locale: lang }))

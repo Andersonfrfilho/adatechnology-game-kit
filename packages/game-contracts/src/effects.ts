@@ -16,6 +16,10 @@ export interface EffectRequest {
   readonly param?: number | string
   /** Multiplies the effect's size and amount. */
   readonly scale?: number
+  /** Which way a thing the effect belongs to is turned, as a unit quaternion `[x, y, z, w]` (the barrel of a weapon, pitch and roll included): an effect written around the thing's own axes follows it. A host that cannot turn an effect fully uses `direction`. */
+  readonly orientation?: readonly [number, number, number, number]
+  /** Named numbers the effect reads (a size, a length of time, a rate): which ones belong to the effect, and an effect that does not read one ignores it. */
+  readonly values?: Readonly<Record<string, number>>
 }
 
 /** Identifies a running effect so it can be stopped. */

@@ -132,7 +132,7 @@ export function createCpuSimulator(field: FilmField, layout: FilmLayout, profile
     if (lastRow < 0) return
     const profile = profileOf()
     const rainScale = 1 - options.weather().rain
-    const seconds = dryingSeconds * rainScale
+    const seconds = dryingSeconds * rainScale * (options.weather().drying ?? 1)
     for (let row = firstRow; row <= lastRow; row++) {
       const offset = row * width
       for (let column = firstColumn; column <= lastColumn; column++) {

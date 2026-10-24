@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest'
 
 import { GAME_SFX_BANK, GAME_SFX_CLASSES, LIBRARY_BANK, createAudioEngine } from '../src'
 import type { AudioEngine } from '../src'
-import { ANIMAL_IDS, GAME_LOOP_IDS, TEAM_ART_SCENE_BANK, TEAM_GAME_BANK } from './support/team-game-recipes'
+import { GAME_LOOP_IDS, TEAM_ART_SCENE_BANK, TEAM_GAME_BANK } from './support/team-game-recipes'
 
 // "Igual ao original" (spec 001, S3): the team routines were run on a fake AudioContext under a seeded Math.random and their log is the fixture;
 // the engine runs the same call on the same fake with the same seed and must leave the same log (generated parameters, not audio).
@@ -60,22 +60,15 @@ describe('the game routines (jogo.js)', () => {
     )
   }
 
-  for (const testCase of game.cases.filter((entry) => /^(grito|voz|bichoSom|boom)/.test(entry.id))) {
-    const [, kind, variant, distance] = /^(\w+)(?:\.(\w+))?@(\d+)$/.exec(testCase.id) as RegExpExecArray
-    const sound =
-      kind === 'grito' ? 'scream_hoarse' : kind === 'boom' ? 'explosion_boom' : kind === 'bichoSom' ? ANIMAL_IDS[variant as string] : variant === 'gemido' ? 'groan' : variant === 'corredor' ? 'runner_groan' : 'scream_hoarse'
-    it(testCase.id, () => run(testCase.id, (engine) => void (sound && engine.play(sound, { distance: Number(distance) }))))
+  // the scream and groans (characters-three) and the animal calls (animals-three) run against the same traces in their own packages
+  for (const testCase of game.cases.filter((entry) => entry.id.startsWith('boom@'))) {
+    const [, distance] = /^boom@(\d+)$/.exec(testCase.id) as RegExpExecArray
+    it(testCase.id, () => run(testCase.id, (engine) => void engine.play('explosion_boom', { distance: Number(distance) })))
   }
 
   it('chiado and buzina', () => {
     run('chiado', (engine) => void engine.play('radio_static'))
     run('buzina', (engine) => void engine.play('horn'))
-  })
-
-  it("voz('grito') hands over to grito at once: its own grito arms are dead code and are not ported", () => {
-    const viaVoz = expectedOf(game, 'voz.grito@0').entries
-    const direct = expectedOf(game, 'grito@0').entries
-    expect(viaVoz).toEqual(direct)
   })
 })
 
