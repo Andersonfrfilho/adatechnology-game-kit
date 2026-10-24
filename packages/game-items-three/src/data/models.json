@@ -638,5 +638,15 @@
       0.37
     ],
     "scale": 0.1
+  },
+  {
+    "id": "communion_wine",
+    "teamId": "vinho",
+    "teamBox": [
+      0.764,
+      3,
+      0.764
+    ],
+    "scale": 0.1
   }
 ]
