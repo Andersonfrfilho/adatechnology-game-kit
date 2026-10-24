@@ -46,6 +46,10 @@ for (const name of exampleNames) {
   examples.push({ name, description: pkg.description ?? '' })
 }
 
+// Weapon thumbnails (SVG, each with its own licence: see CREDITS.md and LICENSE-NOTE.md) are served from /weapon-svg, which the example pages reach as ../weapon-svg/.
+const thumbnailSource = join(root, 'packages/game-weapons-three/assets/weapon-svg')
+if (existsSync(thumbnailSource)) cpSync(thumbnailSource, join(out, 'weapon-svg'), { recursive: true })
+
 const packages = dirs(join(root, 'packages'))
   .filter((d) => existsSync(join(root, 'packages', d, 'package.json')))
   .map((d) => readJson(join(root, 'packages', d, 'package.json')))

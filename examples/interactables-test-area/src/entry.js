@@ -13,13 +13,16 @@ export function createFurnitureArea(options = {}) {
 
 export { createWeaponsTestModule }
 
+// the site copies the weapon thumbnails to site/dist/weapon-svg, next to the folder of each example page
+const SITE_THUMBNAIL_BASE = '../weapon-svg/'
+
 /**
  * Creates the module for the room's locale (`?lang=en` or pt-BR) and loads it, after the weapons module (the furniture bench stays the one the panel shows).
  * Returns the room's report of the furniture module, with the weapons module's report under `weapons`.
  */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
-  const weapons = options.weapons === false ? undefined : room.loadModule(createWeaponsTestModule({ locale: lang }))
+  const weapons = options.weapons === false ? undefined : room.loadModule(createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE }))
   const report = room.loadModule(createFurnitureArea({ ...options, locale: lang }))
   return weapons ? { ...report, weapons } : report
 }

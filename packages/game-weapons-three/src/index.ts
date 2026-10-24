@@ -5,6 +5,8 @@
  */
 export { createWeaponsTestModule, weaponsLayout, WEAPON_ITEM_PREFIX, COUNTER_ITEM_ID, MOUNTED_M134_ITEM_ID } from './area'
 export type { WeaponsTestModuleOptions } from './area'
+export { WEAPON_THUMBNAILS, DEFAULT_THUMBNAIL_BASE, weaponThumbnailUrl } from './thumbnails'
+export type { WeaponThumbnailEntry } from './thumbnails'
 export { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
 export { createWeaponFx } from './fx'
 export type { FxLayers, WeaponFx, WeaponFxOptions } from './fx'

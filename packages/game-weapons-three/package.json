@@ -36,7 +36,8 @@
     "./global": "./dist/index.global.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "assets"
   ],
   "scripts": {
     "build": "tsup",

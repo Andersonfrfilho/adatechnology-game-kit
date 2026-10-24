@@ -8,10 +8,13 @@ import { createWeaponsTestModule } from '@adatechnology/game-weapons-three'
 
 export { createWeaponsTestModule }
 
+// the site copies the weapon thumbnails to site/dist/weapon-svg, next to the folder of each example page
+const SITE_THUMBNAIL_BASE = '../weapon-svg/'
+
 /** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the weapons area. Returns the room's module report. */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
-  const report = room.loadModule(createWeaponsTestModule({ ...options, locale: lang }))
+  const report = room.loadModule(createWeaponsTestModule({ thumbnailBase: SITE_THUMBNAIL_BASE, ...options, locale: lang }))
   room.openArea('weapons_area')
   return report
 }
