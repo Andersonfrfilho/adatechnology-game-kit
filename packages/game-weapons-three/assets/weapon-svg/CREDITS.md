@@ -1,6 +1,25 @@
 # Créditos das miniaturas das armas
 
-148 miniaturas são geradas a partir do modelo 3D do próprio kit (licença MIT do repositório).
-0 vêm do Wikimedia Commons e mantêm a licença do autor (veja `LICENSE-NOTE.md`).
+130 miniaturas são geradas a partir do modelo 3D do próprio kit (licença MIT do repositório).
+18 vêm do Wikimedia Commons e mantêm a licença do autor (veja `LICENSE-NOTE.md`).
 
-Nenhuma miniatura do Commons foi adotada até agora.
+| Arma | Autor | Licença | Página do arquivo | Arquivo original |
+| --- | --- | --- | --- | --- |
+| `ak_47` | Bes-ART | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) | [File:AK-47 silhouette.svg](https://commons.wikimedia.org/wiki/File:AK-47_silhouette.svg) | https://upload.wikimedia.org/wikipedia/commons/d/d9/AK-47_silhouette.svg |
+| `barrett_m82a1` | Bes-ART | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) | [File:Barret M82 silhouette.svg](https://commons.wikimedia.org/wiki/File:Barret_M82_silhouette.svg) | https://upload.wikimedia.org/wikipedia/commons/2/21/Barret_M82_silhouette.svg |
+| `benelli_m4` | Bes-ART | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) | [File:Benelli M4 Super 90 silhouette.svg](https://commons.wikimedia.org/wiki/File:Benelli_M4_Super_90_silhouette.svg) | https://upload.wikimedia.org/wikipedia/commons/a/a2/Benelli_M4_Super_90_silhouette.svg |
+| `beretta_92fs` | Bes-ART | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) | [File:Beretta M9 silhouette.svg](https://commons.wikimedia.org/wiki/File:Beretta_M9_silhouette.svg) | https://upload.wikimedia.org/wikipedia/commons/8/84/Beretta_M9_silhouette.svg |
+| `colt_m16a2` | Anonymous | [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en) | [File:M16-Rifle.svg](https://commons.wikimedia.org/wiki/File:M16-Rifle.svg) | https://upload.wikimedia.org/wikipedia/commons/d/d4/M16-Rifle.svg |
+| `colt_m1911` | Skoll | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0) | [File:Colt-m1911 - game-icons.svg](https://commons.wikimedia.org/wiki/File:Colt-m1911_-_game-icons.svg) | https://upload.wikimedia.org/wikipedia/commons/0/03/Colt-m1911_-_game-icons.svg |
+| `colt_m4a1` | Bes-ART | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) | [File:Colt M4A1 silhouette.svg](https://commons.wikimedia.org/wiki/File:Colt_M4A1_silhouette.svg) | https://upload.wikimedia.org/wikipedia/commons/f/fa/Colt_M4A1_silhouette.svg |
+| `desert_eagle_mark_xix` | Skoll | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0) | [File:Desert-eagle - game-icons.svg](https://commons.wikimedia.org/wiki/File:Desert-eagle_-_game-icons.svg) | https://upload.wikimedia.org/wikipedia/commons/d/d6/Desert-eagle_-_game-icons.svg |
+| `glock_19` | Bes-ART | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) | [File:Glock 19 silhouette.svg](https://commons.wikimedia.org/wiki/File:Glock_19_silhouette.svg) | https://upload.wikimedia.org/wikipedia/commons/e/e8/Glock_19_silhouette.svg |
+| `hk_mp5a3` | Bes-ART | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) | [File:H&K MP5 silhouette.svg](https://commons.wikimedia.org/wiki/File:H%26K_MP5_silhouette.svg) | https://upload.wikimedia.org/wikipedia/commons/f/fb/H%26K_MP5_silhouette.svg |
+| `hk_mp5k` | Skoll | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0) | [File:Mp5k - game-icons.svg](https://commons.wikimedia.org/wiki/File:Mp5k_-_game-icons.svg) | https://upload.wikimedia.org/wikipedia/commons/3/39/Mp5k_-_game-icons.svg |
+| `mac_10` | Skoll | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0) | [File:Mac-10 - game-icons.svg](https://commons.wikimedia.org/wiki/File:Mac-10_-_game-icons.svg) | https://upload.wikimedia.org/wikipedia/commons/7/75/Mac-10_-_game-icons.svg |
+| `sako_trg_42` | Bes-ART | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) | [File:Sako TRG silhouette.svg](https://commons.wikimedia.org/wiki/File:Sako_TRG_silhouette.svg) | https://upload.wikimedia.org/wikipedia/commons/6/64/Sako_TRG_silhouette.svg |
+| `steyr_aug_a1` | Fleshgrinder | [Public domain](https://commons.wikimedia.org/wiki/File:Steyr_AUG_A1_407mm.svg) | [File:Steyr AUG A1 407mm.svg](https://commons.wikimedia.org/wiki/File:Steyr_AUG_A1_407mm.svg) | https://upload.wikimedia.org/wikipedia/commons/e/ed/Steyr_AUG_A1_407mm.svg |
+| `svd_dragunov` | Bes-ART | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) | [File:Dragunov silhouette.svg](https://commons.wikimedia.org/wiki/File:Dragunov_silhouette.svg) | https://upload.wikimedia.org/wikipedia/commons/3/3b/Dragunov_silhouette.svg |
+| `utility_knife` | Lucasbosch | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0) | [File:OLFA 5019 SVR-2 9 mm utility knife with ABB blade.svg](https://commons.wikimedia.org/wiki/File:OLFA_5019_SVR-2_9_mm_utility_knife_with_ABB_blade.svg) | https://upload.wikimedia.org/wikipedia/commons/9/93/OLFA_5019_SVR-2_9_mm_utility_knife_with_ABB_blade.svg |
+| `uzi` | floatingbrainiac | [CC0](http://creativecommons.org/publicdomain/zero/1.0/deed.en) | [File:Uzi silhouette.svg](https://commons.wikimedia.org/wiki/File:Uzi_silhouette.svg) | https://upload.wikimedia.org/wikipedia/commons/b/b1/Uzi_silhouette.svg |
+| `vz61` | Skoll | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0) | [File:Cz-skorpion - game-icons.svg](https://commons.wikimedia.org/wiki/File:Cz-skorpion_-_game-icons.svg) | https://upload.wikimedia.org/wikipedia/commons/e/e2/Cz-skorpion_-_game-icons.svg |

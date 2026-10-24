@@ -18,8 +18,12 @@
    "file": "generated/ak_12.svg"
   },
   "ak_47": {
-   "source": "generated",
-   "file": "generated/ak_47.svg"
+   "source": "commons",
+   "file": "commons/ak_47.svg",
+   "author": "Bes-ART",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:AK-47_silhouette.svg"
   },
   "ak_74": {
    "source": "generated",
@@ -42,8 +46,12 @@
    "file": "generated/axe.svg"
   },
   "barrett_m82a1": {
-   "source": "generated",
-   "file": "generated/barrett_m82a1.svg"
+   "source": "commons",
+   "file": "commons/barrett_m82a1.svg",
+   "author": "Bes-ART",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Barret_M82_silhouette.svg"
   },
   "barrett_mrad": {
    "source": "generated",
@@ -54,12 +62,20 @@
    "file": "generated/baseball_bat.svg"
   },
   "benelli_m4": {
-   "source": "generated",
-   "file": "generated/benelli_m4.svg"
+   "source": "commons",
+   "file": "commons/benelli_m4.svg",
+   "author": "Bes-ART",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Benelli_M4_Super_90_silhouette.svg"
   },
   "beretta_92fs": {
-   "source": "generated",
-   "file": "generated/beretta_92fs.svg"
+   "source": "commons",
+   "file": "commons/beretta_92fs.svg",
+   "author": "Bes-ART",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Beretta_M9_silhouette.svg"
   },
   "blowtorch": {
    "source": "generated",
@@ -118,16 +134,28 @@
    "file": "generated/claymore.svg"
   },
   "colt_m16a2": {
-   "source": "generated",
-   "file": "generated/colt_m16a2.svg"
+   "source": "commons",
+   "file": "commons/colt_m16a2.svg",
+   "author": "Anonymous",
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "page": "https://commons.wikimedia.org/wiki/File:M16-Rifle.svg"
   },
   "colt_m1911": {
-   "source": "generated",
-   "file": "generated/colt_m1911.svg"
+   "source": "commons",
+   "file": "commons/colt_m1911.svg",
+   "author": "Skoll",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Colt-m1911_-_game-icons.svg"
   },
   "colt_m4a1": {
-   "source": "generated",
-   "file": "generated/colt_m4a1.svg"
+   "source": "commons",
+   "file": "commons/colt_m4a1.svg",
+   "author": "Bes-ART",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Colt_M4A1_silhouette.svg"
   },
   "crossbow": {
    "source": "generated",
@@ -150,8 +178,12 @@
    "file": "generated/cz_scorpion_evo_3.svg"
   },
   "desert_eagle_mark_xix": {
-   "source": "generated",
-   "file": "generated/desert_eagle_mark_xix.svg"
+   "source": "commons",
+   "file": "commons/desert_eagle_mark_xix.svg",
+   "author": "Skoll",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Desert-eagle_-_game-icons.svg"
   },
   "dynamite": {
    "source": "generated",
@@ -226,8 +258,12 @@
    "file": "generated/glock_18.svg"
   },
   "glock_19": {
-   "source": "generated",
-   "file": "generated/glock_19.svg"
+   "source": "commons",
+   "file": "commons/glock_19.svg",
+   "author": "Bes-ART",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Glock_19_silhouette.svg"
   },
   "gp_25": {
    "source": "generated",
@@ -262,12 +298,20 @@
    "file": "generated/hk_g3a3.svg"
   },
   "hk_mp5a3": {
-   "source": "generated",
-   "file": "generated/hk_mp5a3.svg"
+   "source": "commons",
+   "file": "commons/hk_mp5a3.svg",
+   "author": "Bes-ART",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:H%26K_MP5_silhouette.svg"
   },
   "hk_mp5k": {
-   "source": "generated",
-   "file": "generated/hk_mp5k.svg"
+   "source": "commons",
+   "file": "commons/hk_mp5k.svg",
+   "author": "Skoll",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Mp5k_-_game-icons.svg"
   },
   "hk_mp5sd3": {
    "source": "generated",
@@ -354,8 +398,12 @@
    "file": "generated/m79.svg"
   },
   "mac_10": {
-   "source": "generated",
-   "file": "generated/mac_10.svg"
+   "source": "commons",
+   "file": "commons/mac_10.svg",
+   "author": "Skoll",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Mac-10_-_game-icons.svg"
   },
   "machete": {
    "source": "generated",
@@ -474,8 +522,12 @@
    "file": "generated/saiga_12.svg"
   },
   "sako_trg_42": {
-   "source": "generated",
-   "file": "generated/sako_trg_42.svg"
+   "source": "commons",
+   "file": "commons/sako_trg_42.svg",
+   "author": "Bes-ART",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Sako_TRG_silhouette.svg"
   },
   "screwdriver": {
    "source": "generated",
@@ -518,16 +570,24 @@
    "file": "generated/sniper_338.svg"
   },
   "steyr_aug_a1": {
-   "source": "generated",
-   "file": "generated/steyr_aug_a1.svg"
+   "source": "commons",
+   "file": "commons/steyr_aug_a1.svg",
+   "author": "Fleshgrinder",
+   "license": "Public domain",
+   "licenseUrl": "https://commons.wikimedia.org/wiki/File:Steyr_AUG_A1_407mm.svg",
+   "page": "https://commons.wikimedia.org/wiki/File:Steyr_AUG_A1_407mm.svg"
   },
   "steyr_ssg_69": {
    "source": "generated",
    "file": "generated/steyr_ssg_69.svg"
   },
   "svd_dragunov": {
-   "source": "generated",
-   "file": "generated/svd_dragunov.svg"
+   "source": "commons",
+   "file": "commons/svd_dragunov.svg",
+   "author": "Bes-ART",
+   "license": "CC BY-SA 4.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Dragunov_silhouette.svg"
   },
   "sw_686": {
    "source": "generated",
@@ -574,16 +634,28 @@
    "file": "generated/thompson_m1a1.svg"
   },
   "utility_knife": {
-   "source": "generated",
-   "file": "generated/utility_knife.svg"
+   "source": "commons",
+   "file": "commons/utility_knife.svg",
+   "author": "Lucasbosch",
+   "license": "CC BY-SA 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:OLFA_5019_SVR-2_9_mm_utility_knife_with_ABB_blade.svg"
   },
   "uzi": {
-   "source": "generated",
-   "file": "generated/uzi.svg"
+   "source": "commons",
+   "file": "commons/uzi.svg",
+   "author": "floatingbrainiac",
+   "license": "CC0",
+   "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "page": "https://commons.wikimedia.org/wiki/File:Uzi_silhouette.svg"
   },
   "vz61": {
-   "source": "generated",
-   "file": "generated/vz61.svg"
+   "source": "commons",
+   "file": "commons/vz61.svg",
+   "author": "Skoll",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Cz-skorpion_-_game-icons.svg"
   },
   "winchester_1894": {
    "source": "generated",

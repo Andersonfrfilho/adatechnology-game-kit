@@ -25,6 +25,17 @@ describe('weapon thumbnails', () => {
     }
   })
 
+  it('keeps in every file nothing but the root and one or two paths: no markup of a download is ever published', () => {
+    for (const [id, entry] of Object.entries(WEAPON_THUMBNAILS)) expect(readFileSync(join(FOLDER, entry.file), 'utf8'), id).toMatch(/^<svg [^<>]*><path [^<>]*\/>(<path [^<>]*\/>)?<\/svg>\n$/)
+  })
+
+  it('prefers the Commons file when one was kept', () => {
+    const commons = Object.entries(WEAPON_THUMBNAILS).filter(([, entry]) => entry.source === 'commons')
+    expect(commons.length).toBeGreaterThan(0)
+    for (const [id] of commons) expect(existsSync(join(FOLDER, 'generated', `${id}.svg`)), id).toBe(true)
+    for (const [id, entry] of commons) expect(entry.file, id).toBe(`commons/${id}.svg`)
+  })
+
   it('resolves to the folder the site serves, or to the base the host gives', () => {
     expect(weaponThumbnailUrl('glock_17')).toBe(`${DEFAULT_THUMBNAIL_BASE}${WEAPON_THUMBNAILS.glock_17?.file}`)
     expect(weaponThumbnailUrl('glock_17', '../weapon-svg/')).toMatch(/^\.\.\/weapon-svg\/(commons|generated)\/glock_17\.svg$/)
