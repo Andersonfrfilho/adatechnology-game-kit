@@ -1,0 +1,9 @@
+#!/bin/sh
+# Fast check on what is being committed: eslint on the staged JS/TS files. Skip once with `git commit --no-verify`.
+files=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|mjs|cjs)$' | grep -v '^specs/')
+[ -z "$files" ] && exit 0
+echo "pre-commit: eslint on $(echo "$files" | wc -l | tr -d ' ') staged file(s)"
+echo "$files" | xargs pnpm exec eslint --no-warn-ignored || {
+  echo "pre-commit: eslint failed (fix it, or commit with --no-verify to skip)"
+  exit 1
+}
