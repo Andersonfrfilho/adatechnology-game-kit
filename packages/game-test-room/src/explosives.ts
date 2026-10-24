@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { DestructionRenderer } from '@adatechnology/game-destruction-three'
+import type { VfxWorld } from '@adatechnology/game-vfx'
 import { backblastEffect, blastEffect, createExplosiveBody, tripwireSegment } from '@adatechnology/game-weapons'
 import type { Arsenal, Detonation, ExplosiveBody, SurfaceProbe, Use } from '@adatechnology/game-weapons'
 import type { HostEvent } from '@adatechnology/game-contracts'
@@ -46,6 +47,8 @@ export type ExplosivesContext = {
   readonly camera: THREE_NS.Camera
   readonly world: Pick<DestructionWorld, 'raycast' | 'explode'>
   readonly renderer: Pick<DestructionRenderer, 'emit' | 'explode'>
+  /** The effects world that draws the blast of an explosive by its id; the renderer keeps the shove on pieces and the sound. */
+  readonly effects: Pick<VfxWorld, 'explosion'>
   readonly arsenal: Pick<Arsenal, 'explosives' | 'rules'>
   /** The roots of the objects a blast can reach (the arena is not one). */
   readonly objects: () => readonly THREE_NS.Object3D[]
@@ -255,7 +258,10 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     const weaponName = context.toolName(projectile.weapon)
     const reach = Math.max(detonation.injuryRadius, detonation.lethalRadius)
     const reached = detonation.energy <= 0 ? 0 : detonation.cone ? coneBlast(detonation) : world.explode(detonation.point, detonation.energy, reach, 'player').length
-    if (detonation.energy > 0) renderer.explode(detonation.point, detonation.energy, reach)
+    if (detonation.energy > 0) {
+      const isPlayed = context.effects.explosion(detonation.explosive, detonation.point, { direction: detonation.direction }) !== null
+      renderer.explode(detonation.point, detonation.energy, reach, { visual: !isPlayed })
+    }
     if (detonation.stunSeconds !== undefined) renderer.emit('flash', detonation.point, [0, 1, 0], 1, 1)
     const onPlayer = blastEffect(detonation, toArray(camera.position))
     action('explode', translate('act.explode', { weapon: weaponName, energy: format(detonation.energy, 0), radius: format(reach, 1), n: reached }), {
@@ -264,7 +270,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     if (onPlayer.zone !== 'none') {
       action('blast_player', translate('act.blast_player', { weapon: weaponName, zone: translate(`blast.zone.${onPlayer.zone}`), distance: format(onPlayer.distance, 1), stun: format(onPlayer.stunSeconds, 1) }), { data: { ...onPlayer } })
     }
-    context.emitHost({ type: 'explosion', source: projectile.weapon, point: detonation.point, energy: detonation.energy, radius: reach, cause: detonation.cause })
+    context.emitHost({ type: 'explosion', source: projectile.weapon, point: detonation.point, energy: detonation.energy, radius: reach, cause: detonation.cause, explosive: detonation.explosive })
     if (detonation.fire) context.startFire(projectile.weapon, detonation.point, detonation.fire, detonation.cause === 'impact')
   }
 

@@ -81,6 +81,8 @@ export interface TestRoomOptions {
   world?: DestructionWorld
   worldOptions?: DestructionOptions
   quality?: Quality
+  /** Replaces the arena floor with a deformable patch (60 m, 33 cm cells) that the craters of big explosions dig into. Default false. */
+  craters?: boolean
   /** Heaviest object the player can carry (default 60 kg). */
   maxCarryKg?: number
   /** Arena half size in metres (default 14). */
@@ -214,6 +216,11 @@ export interface TestRoom {
   /** The bench of a loaded module (default the active one: the module of the last `openArea`, else the last loaded with a bench), or null. */
   bench(moduleId?: string): BenchHandle | null
   /** Room counters and the active module's metrics, read now. */
+  /**
+   * Shakes the camera for the render that follows, by the shake of the effects world, and answers the function that puts it back. The room's own loop
+   * wraps its render in it; a host that renders by itself calls it around its own `render`.
+   */
+  applyCamera(): () => void
   metrics(): { room: Partial<Record<RoomMetricId, number>>; module: Record<string, number | string> }
   dispose(): void
 }

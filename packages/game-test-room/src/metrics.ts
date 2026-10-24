@@ -12,6 +12,7 @@ export interface RoomMetricsSources {
   readonly gl: unknown
   readonly destruction: { stats(): { fragments: number; particles: number; pieces: number; decals: number } }
   readonly fluids: { stats(): { particles: number; stains: number } }
+  readonly effects: { stats(): { puffs: number; sparks: number; glows: number; chunks: number } }
   readonly ids: readonly RoomMetricId[]
 }
 
@@ -61,9 +62,10 @@ export function createRoomMetrics(sources: RoomMetricsSources): RoomMetrics {
       if (!['objects', 'fragments', 'particles', 'decals'].some((id) => wanted.has(id as RoomMetricId))) return out
       const destruction = sources.destruction.stats()
       const fluids = sources.fluids.stats()
+      const effects = sources.effects.stats()
       put('objects', destruction.pieces)
       put('fragments', destruction.fragments)
-      put('particles', destruction.particles + fluids.particles)
+      put('particles', destruction.particles + fluids.particles + effects.puffs + effects.sparks + effects.glows + effects.chunks)
       put('decals', destruction.decals + fluids.stains)
       return out
     },
