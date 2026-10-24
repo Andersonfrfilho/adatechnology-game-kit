@@ -142,6 +142,8 @@ class Renderer implements DestructionRenderer {
   private readonly cages: RebarCages
   private readonly active = new Map<string, { object: string; part: string }>()
   private readonly fires = new Map<string, FireEmitter>()
+  /** Primed parts burning in the effects world until they go off: their burn loop ends when they are put out. */
+  private readonly primedBurning = new Set<string>()
   private readonly leaks: Leak[] = []
   private readonly homeTags: string[] = []
   private readonly throttles = new Map<string, number>()
@@ -515,6 +517,7 @@ class Renderer implements DestructionRenderer {
         // a bullet or fire sets the part burning until its delay runs out; a blast nearby only waits for the explosion
         if (ev.trigger !== 'explosion') {
           this.vfx.fire({ point: ev.point, radius: PRIMED_FIRE_RADIUS, life: ev.delay })
+          this.primedBurning.add(`${ev.object}|${ev.part}`)
           this.activate(ev.object, ev.part)
           this.sound('ignite', ev.point, 0.7)
           this.sound('burn_loop', ev.point, 0.5)
@@ -535,17 +538,19 @@ class Renderer implements DestructionRenderer {
         break
       case 'extinguish': {
         const f = this.fires.get(`${ev.object}|${ev.part}`)
+        const primed = this.primedBurning.delete(`${ev.object}|${ev.part}`)
         if (f) {
           this.stopFire(`${ev.object}|${ev.part}`)
           this.vfx.burst('steam', f.point, [0, 1, 0], 14, 1.2)
-          this.sound('burn_end', f.point, 0.5)
         }
+        if (f || primed) this.sound('burn_end', f?.point ?? this.rootPoint(ev.object), 0.5)
         this.activate(ev.object, ev.part)
         this.sound('extinguish', f?.point ?? this.rootPoint(ev.object), 0.6)
         break
       }
       case 'burnout': {
         this.stopFire(`${ev.object}|${ev.part}`)
+        this.primedBurning.delete(`${ev.object}|${ev.part}`)
         this.sound('burn_end', ev.point, 0.5)
         this.vfx.burst('ash', ev.point, [0, 1, 0], 16, 1)
         this.vfx.burst('smoke', ev.point, [0, 1, 0], 6, 0.8, { color: SMOKE_TONES.grey })
@@ -588,6 +593,7 @@ class Renderer implements DestructionRenderer {
         break
       }
       case 'explode':
+        this.primedBurning.delete(`${ev.object}|${ev.part}`)
         this.onExplode(ev)
         break
       case 'destroyed':
@@ -1125,6 +1131,7 @@ class Renderer implements DestructionRenderer {
     this.fragments.clear()
     this.ground.clear()
     this.cages.clear()
+    this.primedBurning.clear()
     this.vfx.sprites().clear()
     this.ownVfx?.world.clear()
   }
