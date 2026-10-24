@@ -1531,3 +1531,10 @@ Fonte: `sources/efeitos__oficina-vfx.js` (W168–1295) e a gravação `vfx-works
 
 - As bolhas de lente (`engine.lens`) e o `engine.post` da Oficina têm dados no motor, mas ainda não são desenhados (a página os pinta num canvas 2D sobre a cena). Quer a lente e o pós-processo no overlay agora ou junto da câmera do jogo?
 - Os nomes das explosões na bancada vêm do id (`m67` -> `m67`), porque o Lab não tem textos por explosão. Há nomes traduzidos que o time de armas queira usar?
+
+## T5.2e — área de efeitos na sala de testes
+
+- `examples/vfx-test-area` (`build.mjs`, `src/{entry,area,scenarios}.js`, `test.mjs`): bundle IIFE `VfxArea` e a página `dist/sala-efeitos.html` (a sala de testes com a bancada de efeitos carregada e a área `vfx` aberta). Três cenários: todas as explosões do Lab desenham nuvens e faíscas, todas as receitas da Oficina tocam, e quatro granadas seguidas ficam dentro do teto de 6 luzes.
+- `examples/interactables-test-area` passa a carregar também a bancada de efeitos (alias de `game-vfx` e `game-vfx-three` no `build.mjs`, `loadInto` devolve `vfx` no relatório) e o teste confere os 7 controles e as 6 camadas.
+- Site: `site/Dockerfile` (COPY do `package.json` do exemplo, em ordem alfabética), `site/build-site.mjs` (comentário da ordem: a sala de testes primeiro) e `site/catalog.mjs` (o exemplo e a família "Efeitos"); `ci.yml` constrói e testa o exemplo.
+- Teste de navegador (Chromium, sem rede): 6 verificações passam nos dois idiomas, incluindo as capturas da granada e do sangue.

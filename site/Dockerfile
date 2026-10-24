@@ -42,6 +42,7 @@ COPY tools/weapons-catalog/package.json tools/weapons-catalog/
 COPY examples/interactables-showroom/package.json examples/interactables-showroom/
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
 COPY examples/test-room/package.json examples/test-room/
+COPY examples/vfx-test-area/package.json examples/vfx-test-area/
 COPY examples/weapons-test-area/package.json examples/weapons-test-area/
 RUN pnpm install --frozen-lockfile
 

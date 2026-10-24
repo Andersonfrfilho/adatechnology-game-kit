@@ -1,0 +1,17 @@
+{
+  "name": "@adatechnology/vfx-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Effects area for the shared test room: the bench plays every explosion of the Lab and every recipe of the Workshop (blood by age, headshot, dismemberment, muzzle flashes, impacts, glass, doors, collapses, fires, cars, the screen effects), with the variant of each recipe, its sheet and timeline, the distance, the LOD band, the quality and the layers, and counts particles, debris and lights against the budget. Scenarios play the whole catalogue and check the budget.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-vfx": "workspace:*",
+    "@adatechnology/game-vfx-three": "workspace:*"
+  }
+}
