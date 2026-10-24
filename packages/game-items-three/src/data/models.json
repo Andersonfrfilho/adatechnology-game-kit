@@ -1488,5 +1488,15 @@
       2.502
     ],
     "scale": 0.1
+  },
+  {
+    "id": "screws",
+    "teamId": "parafusos",
+    "teamBox": [
+      0.9,
+      0.51,
+      0.5
+    ],
+    "scale": 0.1
   }
 ]
