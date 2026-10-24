@@ -1108,5 +1108,15 @@
       2.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "cordless_drill",
+    "teamId": "parafusadeira",
+    "teamBox": [
+      2.2,
+      2,
+      0.7
+    ],
+    "scale": 0.1
   }
 ]
