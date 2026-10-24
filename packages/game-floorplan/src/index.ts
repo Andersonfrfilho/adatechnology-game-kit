@@ -153,3 +153,4 @@ export {
 }
 export type * from './types'
 export type { PaletteDraw, PaletteEarly, PaletteStyleDef } from './palette'
+export * from './silhouettes'
