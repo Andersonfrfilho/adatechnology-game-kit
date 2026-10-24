@@ -322,6 +322,32 @@ Nada disto está nas páginas dos times como dado ou modelo (só os cinco "porta
 
 **Regras criadas**: `FirearmAction.spin` e `rpmRange` (canhão rotativo), o fator subsônico já nos números base de uma peça de fábrica subsônica (MP5SD3) e `gp25Mount` (GP-25 só em arma com a opção `ak`).
 
+### 3.6 T1.7.6 e T1.7.7: os modelos dos acessórios, a coronha e a bancada (o que é porte e o que é criação)
+
+Os acessórios do ARS §11 vieram só como texto; a geometria dos que a Galeria desenha é do time, os outros são criação do SDK (desenhados com as primitivas da Galeria e o `game-interactables-three`). Código em `packages/game-weapons-three/src/models/attachments/`; cada modelo é escolhido pelo campo `model` do acessório, e um jogo troca qualquer um por `attachmentModels`.
+
+| Acessório (`model`) | Origem | Como é desenhado | Golden |
+|---|---|---|---|
+| `red_dot`, `holographic_sight`, `acog_4x`, `scope_3_9x`, `scope_6_24x`, `pso_1`, `fixed_scope_10x` | **porte GAL** (`scope(1..4)`, linhas 169-245 da página) | a mesma função que o `rifle` usa, no quadro do trilho superior ou lateral; trilho curto (`rail()`) sob ela onde o topo não tem | do time: os 77 hashes (a arma que traz a óptica usa a função) e o teste que compara o acessório com `scope(kind)` nó a nó |
+| `night_vision_scope`, `thermal_scope` | porte GAL (`scope(3)`) + criação (cor da lente) | luneta longa com a lente verde ou laranja | idem |
+| `bipod` | **porte GAL** (`bipod` do `rifle`) | `buildBipod`, compartilhada com o `rifle` | do time (hashes) |
+| `muzzle_brake`, `muzzle_brake_heavy` | **porte GAL** (`brake` 1 e 2) | `buildBrake`, compartilhada com o `rifle` | do time (hashes) |
+| `drum_magazine` | **porte GAL** (`mag: 'drum'`) | `buildDrum` no pivô do carregador, que esconde o carregador da arma e se move na recarga | do time (hashes) |
+| `ammo_backpack` | **porte GAL** (caixa de fita) + criação | `buildBeltBox` na arma, mochila nas costas e correia de cartuchos em catenária (`catenary`/`createCord` do `game-interactables-three`); esconde a caixa da arma | próprio |
+| `suppressor`, `oil_filter_suppressor`, `integral_suppressor` | criação | tubo com chicanas do tamanho dos dados; o integral termina na boca e o encaixado a leva para a ponta | próprio |
+| `compensator`, `vertical_grip` | criação | tubo com fendas; braçadeira e cabo com nervuras | próprio |
+| `weapon_light` | criação | corpo, lente e um `SpotLight` real (cone e alcance dos dados); apagada até ligar | próprio |
+| `laser_sight` | criação | corpo, emissor, feixe e ponto; o ponto cai onde o raio da cena acaba | próprio |
+| `m203`, `gp_25`, `ag36` | criação (dados do TM 9-1010-221-10 e dos fabricantes) | carcaça e gatilho na arma e tubo de 40 mm no pivô `ugl`, que desliza na recarga | próprio |
+| `tripod` | criação (já desenhado na T1.7.5 para o M134 do balcão) | as mesmas três pernas, agora também nas mãos | próprio |
+| `sling` | criação | duas argolas e a correia numa catenária (cordão do `game-interactables-three`) | próprio |
+| `extended_magazine`, `dual_coupler` | criação | extensão sob o carregador; segundo carregador preso ao lado | próprio |
+| `sawn_off_barrel`, `long_barrel`, `integral_optic_1_5x`, `integral_optic_3x` | **não desenhados** | o cano é uma peça só no construtor e a óptica integral a arma já desenha | -- |
+
+**Coronha (`rigStock`)**: pivô `stock` montado depois da construção; dobra meio giro pelo lado do `foldAxis` (REF dos lados na T1.7.2) ou desliza `length - lengthCollapsed`. Clipes `stock_fold`, `stock_unfold`, `stock_collapse`, `stock_extend` (0,6 s por padrão; a regra dá a duração em jogo): movimento do SDK, a Galeria não anima coronha.
+
+**Bancada (T1.7.7)**: um campo por encaixe com só o que a regra aceita na arma na mão (o lançador só onde há o encaixe), teclas L, K, V e U, botão direito mira com zoom pela óptica encaixada; camadas, métricas e nomes em pt-BR e en. A página `interactables-test-area` carrega também o módulo de armas.
+
 ---
 
 ## 4. Destino por módulo
@@ -397,7 +423,7 @@ Não entra: dano por região do corpo, desmembramento, sangramento, raridade, ta
 3. Regras no motor (`reloadEmpty`, `perRound` no ferrolho, capacidade com câmara, pane, calor, durabilidade) + testes com semente (T1.4).
 4. Animação por família no `-three` (T1.4) e eventos novos no contrato de módulo.
 5. Lançadores e explosivos (T1.5), com os efeitos visuais ligados ao `game-vfx` quando existir.
-6. `weapons-test-area` com os controles novos (T1.7).
+6. `weapons-test-area` com os controles novos (T1.7): feito na T1.7.7 (bancada de acessórios, teclas L, K, V e U e botão direito para mirar).
 7. Itens (T3.x) só depois de responder D8 a D10.
 
 ---
@@ -424,7 +450,7 @@ Atualizado em 2026-10-23. O que do inventário acima já entrou, e onde. O resta
 | Modelos 3D, animação por família, ejeção, carregador, cartucho 3D | Não (T1.2 a T1.4); só o construtor da Galeria foi extraído para `models.json` | `packages/game-weapons-three/src/data/models.json` |
 | Área de armas com todas as armas | Não: mostra só os 42 arquétipos até a T1.3 | `packages/game-weapons-three/src/area.ts` |
 | Dano em pontos, PEN, dano por região, raridade (D4, D6) | Não, de propósito (calibragem do jogo) | |
-| Acessórios, supressor, durabilidade 0-100 (D13) | Não; o supressor é a sobrescrita `noise` da arma | |
+| Acessórios, supressor, durabilidade 0-100 (D13) | Sim (T1.7): acessórios com encaixes, coronha que dobra ou recolhe, supressor com ruído e calor, lança-granada sob o cano, mochila de munição; só o supressor improvisado quebra com os tiros, a durabilidade 0-100 geral continua fora | `src/attachment-*.ts`, `src/weapon-attachments.ts`, `packages/game-weapons-three/src/models/attachments/` |
 
 ## 8. Situação depois da T1.5
 

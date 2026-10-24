@@ -94,7 +94,9 @@ Libs de conteúdo (`-fleet`, `-household`, `-species`) entregam módulos; não i
 ## Ambiente de teste
 `pnpm --filter @adatechnology/game-test-room test` (vitest: `module.test.ts`, `module-host.test.ts`, `room.test.ts`, `scenarios.test.ts`,
 `bench.test.ts`, `metrics.test.ts`).
-Exemplos no repositório: `examples/test-room` (carrega `DEMO_MODULE`), `examples/weapons-test-area`, `examples/interactables-test-area`.
+A sala executa `host.command` pela regra do `game-weapons` na bancada (acessórios de qualquer instalação, no tempo que a regra dá) e mostra o que a ferramenta leva em `host.tool()`.
+
+Exemplos no repositório: `examples/test-room` (carrega `DEMO_MODULE`), `examples/weapons-test-area`, `examples/interactables-test-area` (a página leva também o módulo de armas com os acessórios, para atirar nos móveis).
 Query strings do exemplo: `?area=`, `?items=`, `?scenario=all|<id>`, `?lang=`, `?quality=`, `?ui=0`, `?bench=` (estado da bancada).
 
 ## Cuidados

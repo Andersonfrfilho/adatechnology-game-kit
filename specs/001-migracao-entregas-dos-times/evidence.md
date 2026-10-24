@@ -865,3 +865,75 @@ Modelo: `sonnet`. Branch `feat/spec-001-t1-7`. Armas novas, calibres `4_6x30` e 
 | `examples/weapons-test-area` | build e `test.mjs` ok (com a página `sala-armas.html`) |
 
 Modelo da execução: `sonnet`.
+
+## T1.7.6–7
+
+Modelo: `sonnet`. Branch `feat/spec-001-t1-7`. Os modelos dos acessórios, a coronha com pivô, os clipes e sons novos (T1.7.6) e a bancada de acessórios na área de armas, mais o módulo de armas na página de móveis (T1.7.7). Contrato: `design/T1.7-armas-e-acessorios.md` §2, §3 "Renderizador" e §4.
+
+### O que foi feito
+
+| Task | Commit | Conteúdo |
+|---|---|---|
+| (base) | `feat(contracts,test-room): comando do módulo à ferramenta…` | A sala não tinha caminho para acessório: `ModuleHost.command(ToolCommand)` (`fit`, `remove`, `toggle`, `stock`, `underbarrel`, `stance`), `HostTool` com `attachments`, `stock`, `suppressed`, `underbarrelActive`, `mass`, `aimSeconds`, e `suppressed` no evento `shot`. A sala executa pela regra na bancada. Tudo aditivo. |
+| T1.7.6 | `feat(weapons-three): acessórios no modelo da arma…` | `parts.frames`, `parts.fittings`, `parts.stockMeshes` (só registram; a cena padrão é a mesma); `rigStock` e `rigUnderbarrel` depois da construção; `fitAttachmentModels` com registro `ATTACHMENT_MODELS` substituível por `attachmentModels`; um construtor para cada um dos 28 acessórios com modelo (portes e criações, lista em `inventario/armas-itens.md` §3.6); clipes `stock_*`, `toggle`, `reload_ugl`, `shot_ugl`; sons `stock_fold`, `light_click`, `attach`; o viewmodel segue `tool().attachments`, atira o lançador e usa o som silenciado. |
+| T1.7.7 | `feat(weapons-three,examples): bancada de acessórios…` | `accessory-bench.ts`: um campo por encaixe (só o compatível), botões, teclas L, K, V e U, botão direito mira com zoom pela óptica; camadas `attachments` e `beams`; métricas de massa, mira, acessórios e silenciada; pt-BR e en. `interactables-test-area` carrega o módulo de armas. |
+| site | `feat(site): …` | `catalog.mjs` (resumo e controles das duas áreas) e a miniatura da área de armas (M4 com supressor, lanterna e laser ligados). |
+| docs | `docs(spec-001): T1.7.6–7 …` | skills `game-weapons-three`, `game-contracts` e `game-test-room`, changeset, inventário §3.6 e esta seção. |
+
+### Teclas e mouse da área de armas (conferido nos bindings reais da sala antes de escolher)
+
+| Entrada | Já era | Agora |
+|---|---|---|
+| L, K, U | livres | luz, laser, troca para o lançador sob o cano (U de "under") |
+| V | chute (`kick`) quando não se segura item com uso | dobra ou abre a coronha **onde a arma tem coronha que mexe**; nas outras o evento passa e V segue sendo o chute |
+| botão direito | agarra ou arremessa (`secondary`) | mira **onde a arma atira**; em mão vazia, ferramenta ou arma que não atira, segue agarrando |
+| X | destrava a pane | igual (outra frente de trabalho vai torná-lo sensível ao contexto com o sentar; aqui fica como está) |
+
+Os ouvintes entram na fase de captura da `window` e só consomem o evento quando a arma na mão tem o que fazer com ele.
+
+### Desvios do desenho (e por quê)
+
+1. **Contrato novo na sala** (`command`, campos de `HostTool`): o desenho não dizia como o módulo manda a arma encaixar algo, e a sala é dona do estado. Genérico (nada de arma no nome do tipo além de "ferramenta").
+2. **V e botão direito** têm dono na sala (chute e agarrar); a regra acima os divide pela arma na mão em vez de tirar o que existia.
+3. **`rigStock` e `rigUnderbarrel`** são dois passos pós-construção (o desenho só falava de `rigStock`): o pivô `ugl` precisa existir antes do `createModelRig` para o clipe de recarga do lançador alcançá-lo.
+4. **Sem modelo**: `sawn_off_barrel` e `long_barrel` (o cano é uma peça só nos construtores) e as miras integradas que a arma já desenha (`integral_optic_*`). A regra funciona; só não há o que desenhar.
+5. **Quadros** (`parts.frames`): o `rifle` e o `m134` gravam os números; pistolas, revólveres, bullpup, P90, basculante, M2 e lançadores têm os quadros **medidos do modelo** (`deriveFrames`), então a posição do acessório nesses é aproximada.
+6. **Tempo de encaixe é o da regra** (2, 15 ou 30 s por instalação do acessório); a bancada passa `install: 'bench'` e registra no log "Encaixando X (N s)". Não há animação de encaixe (o contrato não pede): só o som `attach` e o modelo aparecendo no fim da fase.
+7. **Óptica variável** (3–9×, 6–24×, noturna, térmica) dá zoom pelo primeiro número (`zoom[0]`); sem roda do mouse para variar (a roda troca de ferramenta na sala).
+8. **Números derivados**: luz de 150 cd, tempo do clipe da coronha de 0,6 s quando a regra não dá duração, deslize de 5 cm do tubo do lançador, abertura do feixe do laser de 2,5 mm, posição da mochila (55 cm atrás da coronha), extensão do carregador de 50% do comprimento. Nenhum vem de fonte; todos cosméticos.
+9. **Página de móveis**: o módulo de armas carrega **antes** do de móveis para o painel seguir mostrando a bancada de móveis (a sala usa o último módulo com bancada). Lá o botão direito também mira com arma de fogo na mão; E e G seguem agarrando.
+10. Dependência nova em `game-weapons-three`: `game-interactables-three` (o cordão da bandoleira e da correia); entra no IIFE do pacote, que passou a 539 KB.
+11. O teste de integração da bancada (`integration.test.ts`) mudou só nas listas de controles, camadas e métricas, que cresceram.
+
+### Verificação em Chrome de verdade (headless, SwiftShader, página sem rede)
+
+Script em `scratchpad/check/browser-check.mjs` (fora do repositório), sobre a sala com o módulo criado à mão para espiar o áudio. Erros de console: **nenhum**.
+
+| Pedido | Resultado |
+|---|---|
+| Área carrega sem erro, relatório do contrato | `ok: true`, 153 itens, nenhum problema |
+| Supressor no M4 e tiro | encaixou (`suppressed: true`); o tiro chamou `audio.shot` com `{ caliber: '5_56x45', suppressed: true }`; ganho do tiro do calibre 1,078 sem e 0,323 com o supressor |
+| M203 e granada | encaixou, `U` trocou (`underbarrelActive: true`), o tiro gastou a granada (1 para 0) e 5 entradas `explode` no log da sala |
+| Coronha | MP5A3 recolhida (`stock: 'collapsed'`, pivô 0,151 m, os 0,15 m dos dados); G36 dobrada meio giro (3,142 rad) |
+| Luz e laser | ligados por L e K; `SpotLight` visível com ângulo 0,2618 rad (30° de cone); o ponto do laser desenhado na parede |
+| Mira | campo de visão de 72° para 20,59° com o ACOG (4×: 20,6° pela conta) e de volta a 72° ao soltar |
+| Bug achado só no navegador | o raio do laser quebrava com os sprites da fumaça (`raycaster.camera` nulo); corrigido dando a câmera ao `Raycaster`. Sem teste próprio: a cena do happy-dom não tem sprites; o script do navegador é o que cobre |
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 (sem achados) |
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0 |
+| `game-weapons-three` | 157 passaram (eram 123: +23 de `attachment-models.test.ts`, +11 de `accessory-bench.test.ts`) |
+| `game-test-room` | 121 (eram 118: +3: `command`, campos do `HostTool` e `suppressed`) |
+| `game-contracts` / `game-weapons` / `tools/weapons-catalog` | 29 / 351 / 35, sem mudança |
+| Hashes | os 77 da Galeria e os 21 do golden próprio, iguais (`gallery-models.test.ts`, `new-weapon-models.test.ts`) |
+| `examples/weapons-test-area` | build e `test.mjs` ok (confere os controles da bancada no pacote) |
+| `examples/interactables-test-area` | build ok; `test.mjs` 10/12: o módulo de armas carrega e o supressor encaixa nas duas línguas; **as 2 falhas são anteriores** (`furniture_trash_bin_crushed`, marreta na lixeira, nas duas línguas), iguais no commit-base `f11bbae` |
+| `examples/test-room` | `test.mjs` com 1 falha (`load_rental_car_module`, 9 mm no para-brisa), **igual no commit-base** |
+| `docker build -f site/Dockerfile .` | exit 0 |
+
+Modelo da execução: `sonnet`.
