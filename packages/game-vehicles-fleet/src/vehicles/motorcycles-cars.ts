@@ -134,6 +134,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
      x axis: stations [x, top, base, width, p, zc]; y axis: stations [y, xFront, xRear, width, p, zc] */
   /* resamples stations with Catmull-Rom (each parameter), for large smooth shells */
   function resample(st: any, n: any) {
+    if (kit.lod.on) n = Math.max(kit.lod.minStations, Math.round(n * kit.lod.stationFraction))
     const out = [],
       L = st.length
     function P(i: any) {
@@ -182,6 +183,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
   }
   function sloft(st: any, o: any) {
     o = o || {}
+    if (kit.lod.on) o = Object.assign({}, o, { seg: Math.max(kit.lod.minLoftSegments, Math.round((o.seg || 24) * kit.lod.loftSegmentFraction)) })
     if (o.smooth) st = resample(st, o.smooth)
     const seg = o.seg || 24,
       pos: any = [],
@@ -242,8 +244,8 @@ export function installMotorcyclesCars(fx: FleetContext): void {
   /* wheel arch: curved shell over the wheel. cx, cy wheel centre; r inner radius; a0..a1 angles (0 = front); w width; t bulge height */
   function fenderGeo(cx: any, cy: any, r: any, a0: any, a1: any, w: any, t: any, zc: any, o?: any) {
     o = o || {}
-    const na = o.na || 22,
-      nu = 10,
+    const na = kit.lod.on ? 10 : o.na || 22,
+      nu = kit.lod.on ? 5 : 10,
       pos = [],
       idx = [],
       rf =
@@ -514,8 +516,8 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       L2 = wrap > 0 ? (R * PI) / 2 : 0,
       tot = L1 + L2 + wrap,
       which = E > 0 ? 'F' : 'R'
-    const nu = o.nu || Math.max(6, Math.ceil((tot * (full ? 2 : 1)) / (o.du || 0.022))),
-      nv = o.nv || Math.max(2, Math.ceil((o.y1 - o.y0) / (o.dv || 0.025)))
+    const nu = o.nu || Math.max(6, Math.ceil((tot * (full ? 2 : 1)) / ((o.du || 0.022) * (kit.lod.on ? kit.lod.gridFactor : 1)))),
+      nv = o.nv || Math.max(2, Math.ceil((o.y1 - o.y0) / ((o.dv || 0.025) * (kit.lod.on ? kit.lod.gridFactor : 1))))
     const P: any = [],
       N: any = []
     for (let i = 0; i <= nu; i++) {
@@ -1365,8 +1367,8 @@ export function installMotorcyclesCars(fx: FleetContext): void {
   }
   /* side grille (u along x, from x0 to x1) */
   function sideGrid(S: any, sd: any, o: any) {
-    const nu = Math.max(4, Math.ceil(Math.abs(o.x1 - o.x0) / 0.04)),
-      nv = Math.max(2, Math.ceil((o.y1 - o.y0) / 0.03)),
+    const nu = Math.max(4, Math.ceil(Math.abs(o.x1 - o.x0) / (0.04 * (kit.lod.on ? kit.lod.gridFactor : 1)))),
+      nv = Math.max(2, Math.ceil((o.y1 - o.y0) / (0.03 * (kit.lod.on ? kit.lod.gridFactor : 1)))),
       P: any = [],
       N: any = []
     for (let i = 0; i <= nu; i++) {

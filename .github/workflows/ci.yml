@@ -158,6 +158,9 @@ jobs:
           node examples/weapons-test-area/build.mjs
           node examples/characters-test-area/build.mjs
           node examples/animals-test-area/build.mjs
+          node examples/vehicles-test-area/build.mjs
+          node examples/vegetation-test-area/build.mjs
+          node examples/urban-test-area/build.mjs
           node examples/audio-test-area/build.mjs
           node examples/weather-test-area/build.mjs
 
@@ -170,6 +173,9 @@ jobs:
           node examples/weapons-test-area/test.mjs
           node examples/characters-test-area/test.mjs
           node examples/animals-test-area/test.mjs
+          node examples/vehicles-test-area/test.mjs
+          node examples/vegetation-test-area/test.mjs
+          node examples/urban-test-area/test.mjs
           node examples/audio-test-area/test.mjs
           node examples/weather-test-area/test.mjs
 

@@ -63,12 +63,14 @@ própria câmera em primeira pessoa). O `collide` é função do host: ligue-a a
 
 ## Cuidados
 - Convenção: yaw 0 olha para -z; pitch positivo olha para baixo; cano da arma em +z.
-- `config.smoothing` existe, mas o rig **não o lê** hoje; o único amortecimento é a recuperação da haste depois de uma parede (encurta na hora,
-  volta com easing).
+- `config.smoothing` (padrão 12) amortece a haste, o ombro, a altura e o FOV (`1 - exp(-smoothing * dt)`; o FOV `min(1, smoothing * dt)`); `0` é instantâneo, como antes. A primeira quadro parte da haste em pé (3,8 / 0,9 / 1,95) e vai ao que o alvo pede. A parede encurta na hora e a haste volta com `wallRecovery` (4).
+- FOV por zoom: passe `zoom` no alvo (`aim.fov / zoom` mirando, `aim.fov` fora); só mexe em câmera que tem `fov`. Alvo com `alive: false` e `deathT`: a câmera circula o corpo (`deathOrbit`: raio 6, altura 3,5, 0,2 rad/s).
+- `rig.look(state, { dx, dy, zoom, aiming, time, fever, panic, random })` gira yaw e pitch (sensibilidade `0,0022 / zoom^0,5` mirando, pitch -0,55 a 1,2, balanço da febre e do pânico); o `aiming` é o da quadro anterior, como o jogo lê. O pânico sorteia com o `random` do host: o rig nunca chama `Math.random`.
 - Com `storageKey` o modo fica no `localStorage`; falha de acesso é ignorada. Em teste, passe `storageKey: null`.
 - Modo desconhecido em `setMode` é ignorado.
 - `collide` devolve a distância ao obstáculo ou `null`; o rig lança três raios (centro e ±0,2 lateral).
 
 ## O que vem pela migração (spec 001)
-Decisão V7: a câmera de ombro do jogo (amortecimento e FOV por zoom) é melhor que a do pacote e deve ser portada para o `game-camera`, o que
-fará o `smoothing` valer. Ainda não está no código. Detalhes de nomes antigos (`CameraModosSDK`) em `packages/game-camera/MIGRATION.md`.
+Decisão V7 (feita): a câmera de ombro do jogo (amortecimento, FOV por zoom, órbita da morte, sensibilidade e balanço do olhar) está no `game-camera`
+e o `smoothing` vale. `tests/team-golden.test.ts` (G-camera) corta `cameraUpdate` do jogo (jogo.js 69043) e compara 640 quadros roteirizados
+(andar, mirar com duas armas, trocar de ombro, agachar, parede, febre, pânico, morte) com o rig: posição, olhar, FOV, yaw e pitch iguais a 1e-9. Detalhes de nomes antigos (`CameraModosSDK`) em `packages/game-camera/MIGRATION.md`.

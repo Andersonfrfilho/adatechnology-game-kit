@@ -1,0 +1,88 @@
+import type { EffectSink, Vec3 } from '@adatechnology/game-contracts'
+import type { VehicleKit } from '@adatechnology/game-vehicles'
+
+/** What the module needs of a document (canvas textures of the kit): a real `document`, or a stub in Node. */
+export type DocumentLike = { createElement(tag: string): unknown }
+
+/** The host's effects (`host.effects`, an `EffectSink` of the contracts: `game-vfx-three` is one): the module asks by id and writes no particle code. */
+export type EffectsLike = EffectSink
+
+/** The events the module turns into effect requests, and the effect id each one asks for. A game maps its own ids over these. */
+export type VehicleEffectIds = {
+  readonly ignite: string
+  readonly explode: string
+  readonly glass: string
+  readonly sparks: string
+  readonly leak: string
+  readonly exhaust: string
+}
+
+export const defaultEffectIds: VehicleEffectIds = {
+  ignite: 'vehicle_fire',
+  explode: 'car_fuel_tank',
+  glass: 'glass_burst',
+  sparks: 'impact_metal',
+  leak: 'vehicle_leak',
+  exhaust: 'vehicle_exhaust',
+}
+
+/** The sounds the module asks of `host.audio`, by id of the host's banks. `engine` is a loop (the game's saw through a 400 Hz low-pass), `horn` and `crash` one-shots. */
+export type VehicleSoundIds = { readonly engine: string; readonly horn: string; readonly crash: string }
+
+export const defaultSoundIds: VehicleSoundIds = { engine: 'engine_saw', horn: 'horn', crash: 'sfx_impact' }
+
+export type VehiclesTestOptions = {
+  /** `en` or `pt-BR` (default). */
+  readonly locale?: string
+  /** The kit the vehicles are built with, per three.js namespace. Default: `createVehicleKit` with the fleet installed (`installFleet`). */
+  readonly createKit?: (THREE: unknown) => VehicleKit
+  readonly document?: DocumentLike
+  /** The three.js namespace the door, hood and trunk clips are computed with (they are plain numbers, so any copy works). Default: the global `THREE`; without either the items bring no clips. */
+  readonly three?: unknown
+  /** The vehicles to lay out, as fleet ids (default the 8 of the Frota test: hatch, sedan, pickup, sport bike, box truck, city bus, battle tank, attack helicopter). */
+  readonly vehicles?: readonly string[]
+  /** Effect ids requested through `host.effects` (the defaults are ids of `game-vfx`: the Garagem's `car_fuel_tank` blast, the `vehicle_fire`, `vehicle_leak` and `vehicle_exhaust` recipes written around a car from `engine_smoke` and `fuel_leak`, and the point-based `glass_burst` and `impact_metal`). */
+  readonly effects?: Partial<VehicleEffectIds>
+  /** Sound ids requested through `host.audio` (the defaults are the `game-audio` ones: `engine_saw`, `horn`, `sfx_impact`). */
+  readonly sounds?: Partial<VehicleSoundIds>
+}
+
+/** The part of the test room the scenarios use (the room's `ScenarioContext.room` has all of it). */
+export type PartView = {
+  holes: { through?: boolean }[]
+  cracks: unknown[]
+  dents: unknown[]
+  status: string
+  hp: number
+  maxHp: number
+  temperature: number
+  burning: boolean
+  liters: number
+  melt: number
+}
+
+export type SpawnedVehicle = { objectId: string; root: { userData: Record<string, unknown> } }
+
+export type VehiclesRoom = {
+  spawn(item: string, position?: Vec3, rotationY?: number): SpawnedVehicle
+  setTool(weaponId: string): void
+  /** Lets the tool in hand finish its draw time (the room's rule: a weapon cannot fire the moment it is taken). */
+  waitUntilReady(): void
+  look(position: Vec3, target: Vec3): void
+  use(hold?: number): void
+  playAnimation(clipId: string, objectId?: string): boolean
+  world: {
+    part(object: string, part: string): PartView
+    hit(object: string, hit: Record<string, unknown>): unknown
+    disassemble(object: string, joint: string, tool: string, dt: number): number
+    state(object: string): { joints: { id: string; open: boolean }[]; groups: unknown[][] }
+  }
+  log: { entries(filter: { type?: string; objectId?: string }): readonly unknown[] }
+}
+
+/** What a scenario needs of the room: the pass/fail line, time, and the room for the ones that shoot and hit. */
+export type VehiclesContext = {
+  room: VehiclesRoom
+  expect(condition: boolean, label: string, data?: Record<string, unknown>): void
+  step(seconds: number): void
+}

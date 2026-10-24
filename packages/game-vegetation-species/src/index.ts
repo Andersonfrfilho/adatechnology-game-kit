@@ -118,3 +118,6 @@ export function pickForContext(region: Region, context: string, rng: RngLike): s
   }
   return list[list.length - 1].species
 }
+
+export { scatterRulesFor, defaultClassify } from './rules'
+export type { PlantGroup, ScatterRulesOptions, ScatterRulesResult } from './rules'

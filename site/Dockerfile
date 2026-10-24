@@ -43,8 +43,13 @@ COPY packages/game-props3d/package.json packages/game-props3d/
 COPY packages/game-test-room/package.json packages/game-test-room/
 COPY packages/game-vegetation/package.json packages/game-vegetation/
 COPY packages/game-vegetation-species/package.json packages/game-vegetation-species/
+COPY packages/game-vegetation-three/package.json packages/game-vegetation-three/
+COPY packages/game-urban/package.json packages/game-urban/
+COPY packages/game-urban-three/package.json packages/game-urban-three/
 COPY packages/game-vehicles/package.json packages/game-vehicles/
 COPY packages/game-vehicles-fleet/package.json packages/game-vehicles-fleet/
+COPY packages/game-vehicles-three/package.json packages/game-vehicles-three/
+COPY packages/game-vehicles-driving/package.json packages/game-vehicles-driving/
 COPY packages/game-vfx/package.json packages/game-vfx/
 COPY packages/game-vfx-three/package.json packages/game-vfx-three/
 COPY packages/game-weapons/package.json packages/game-weapons/
@@ -57,6 +62,7 @@ COPY tools/golden/package.json tools/golden/
 COPY tools/weapon-thumbnails/package.json tools/weapon-thumbnails/
 COPY tools/items-catalog/package.json tools/items-catalog/
 COPY tools/weapons-catalog/package.json tools/weapons-catalog/
+COPY tools/vehicles-catalog/package.json tools/vehicles-catalog/
 COPY examples/audio-test-area/package.json examples/audio-test-area/
 COPY examples/animals-test-area/package.json examples/animals-test-area/
 COPY examples/characters-test-area/package.json examples/characters-test-area/
@@ -65,6 +71,9 @@ COPY examples/interactables-showroom/package.json examples/interactables-showroo
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
 COPY examples/items-test-area/package.json examples/items-test-area/
 COPY examples/test-room/package.json examples/test-room/
+COPY examples/urban-test-area/package.json examples/urban-test-area/
+COPY examples/vegetation-test-area/package.json examples/vegetation-test-area/
+COPY examples/vehicles-test-area/package.json examples/vehicles-test-area/
 COPY examples/vfx-test-area/package.json examples/vfx-test-area/
 COPY examples/weapons-test-area/package.json examples/weapons-test-area/
 COPY examples/weather-test-area/package.json examples/weather-test-area/

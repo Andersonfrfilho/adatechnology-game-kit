@@ -87,6 +87,35 @@ for (const lang of ['pt-BR', 'en']) {
   })
   check(`[${lang}] the characters and animals modules are loaded, and zombie_behind_door is green`, people.characters >= 25 && people.animals === 13 && people.scenario.passed === 1 && people.scenario.failed === 0, people)
 
+  // the vehicles module rides along too (owner rule): loaded with its 8 vehicles, and the 7.62 shot at the light-mode sedan leaves the fridge beside it alone
+  const cars = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const r = window.__furnitureReport.vehicles
+    const run = await room.runScenarios(room.scenarios.filter((s) => s.id.includes('car_in_the_yard')))
+    room.clear()
+    return { ok: r?.ok && r.problems.length === 0, items: r?.items?.length ?? 0, scenario: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
+  })
+  check(`[${lang}] the vehicles module is loaded (8 vehicles), and car_in_the_yard is green`, cars.ok && cars.items === 8 && cars.scenario.passed === 1 && cars.scenario.failed === 0, cars)
+
+  // the vegetation module rides along too (owner rule): loaded with its 18 plants, and an axe fells the 15 cm trunk here as well
+  const plants = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const r = window.__furnitureReport.vegetation
+    const run = await room.runScenarios(room.scenarios.filter((s) => s.id === 'veg_axe_fells_crown' || s.id === 'veg_walk_on_grass'))
+    room.clear()
+    return { ok: r?.ok && r.problems.length === 0, items: r?.items?.length ?? 0, scenarios: r?.scenarios?.length ?? 0, run: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
+  })
+  check(`[${lang}] the vegetation module is loaded (18 plants, 13 scenarios), and the axe and the grass walk are green`, plants.ok && plants.items === 18 && plants.scenarios === 13 && plants.run.passed === 2 && plants.run.failed === 0, plants)
+
+  // the urban module rides along too (owner rule): loaded with its 17 items and 8 scenarios, and the light budget and the dashes of a road are green here as well
+  const city = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const r = window.__furnitureReport.urban
+    const run = await room.runScenarios(room.scenarios.filter((s) => s.id === 'urban_light_budget' || s.id === 'urban_road_dashes'))
+    room.clear()
+    return { ok: r?.ok && r.problems.length === 0, items: r?.items?.length ?? 0, scenarios: r?.scenarios?.length ?? 0, run: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
+  })
+  check(`[${lang}] the urban module is loaded (17 items, 8 scenarios), and the light budget and the road dashes are green`, city.ok && city.items === 17 && city.scenarios === 8 && city.run.passed === 2 && city.run.failed === 0, city)
   // a wound on a zombie throws drops of blood into the running film, in the colours of its infection age (the body event reaches the film bridge the room lends)
   const gore = await page.evaluate(() => {
     const room = window.__testRoom

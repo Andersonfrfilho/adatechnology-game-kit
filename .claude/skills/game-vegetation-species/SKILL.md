@@ -39,7 +39,8 @@ Conferido no código: `pickForContext(regions.br, 'front_yard', 42)` devolve um 
 | `loadLocale(locale)`, `name(id, locale?)`, `description(id, locale?)` | Textos; locale desconhecido cai no `en` |
 | `regions` (`br`, `default`) | Tabelas `contexts` com `{ species, weight }` |
 | `pickForContext(region, context, seedOuRng)` | Sorteio ponderado; aceita função, `{ next() }`, número ou string |
-| `Species`, `Region`, `Climate`, `SpeciesSize`, `Locale` | Tipos |
+| `scatterRulesFor(region, contexto, semente, opções?)` | Sorteia espécies da tabela do contexto (60 sorteios, sem trepadeiras, sem árvore grande com `noLarge`) e devolve `{ rules, picks }` para o `scatter`: árvores, cercas-vivas, plantas médias e forração, cada grupo com densidade, distância e escala; tudo configurável (`n`, `draws`, `skipArchetypes`, `maxCount`, `treeDensity`, `groupRules`, `classify`) |
+| `Species`, `Region`, `Climate`, `SpeciesSize`, `Locale`, `ScatterRulesOptions` | Tipos |
 
 Contextos: `front_yard`, `backyard`, `sidewalk_tree`, `square`, `vacant_lot`, `indoor`, `semiarid`. `Species` tem `archetype`, `params`, `tags`, `climate`
 (`tropical`, `subtropical`, `arid`, `temperate`), `size` (`s`, `m`, `l`) e `solid` (tem colisor: tronco, cacto, vaso).
@@ -51,7 +52,7 @@ Contextos: `front_yard`, `backyard`, `sidewalk_tree`, `square`, `vacant_lot`, `i
 
 ## Ambiente de teste
 Sem `examples/` próprio; a verificação é `packages/game-vegetation-species/tests/` (`pnpm --filter @adatechnology/game-vegetation-species test`).
-O módulo de teste de vegetação (V5) vai mostrar as espécies; ainda não existe.
+`tests/team-golden-rules.test.ts` corta o `rulesFor` da página do Viveiro e confere `scatterRulesFor` nas quatro áreas do quintal. O módulo de teste de vegetação (`game-vegetation-three`, T7.2c) mostra as espécies.
 
 ## Cuidados
 - A descrição do `package.json` diz "~90 espécies", mas o README e o JSON têm **71**; confie em `species.length`.

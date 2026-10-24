@@ -1,0 +1,1101 @@
+{
+ "ids": [
+  "mango_tree",
+  "coconut_palm",
+  "araucaria",
+  "mandacaru",
+  "prickly_pear",
+  "crown_cactus",
+  "banana_with_bunch",
+  "potted_fern"
+ ],
+ "seeds": [
+  1,
+  2,
+  3,
+  4,
+  5
+ ],
+ "rows": [
+  {
+   "id": "mango_tree",
+   "seed": 1,
+   "site": {
+    "pieces": 46,
+    "triangles": 3826,
+    "body": "397c57200a87",
+    "geometry": "92e73100b1f2",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 46,
+    "triangles": 3826,
+    "body": "397c57200a87",
+    "geometry": "c264f97abfbe",
+    "wood": 7
+   },
+   "sdk": {
+    "pieces": 46,
+    "triangles": 3826,
+    "body": "397c57200a87",
+    "geometry": "c264f97abfbe",
+    "wood": 7
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "mango_tree",
+   "seed": 2,
+   "site": {
+    "pieces": 46,
+    "triangles": 3822,
+    "body": "ed0385f36dd1",
+    "geometry": "92e73100b1f2",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 46,
+    "triangles": 3822,
+    "body": "ed0385f36dd1",
+    "geometry": "0e6ce0fc7205",
+    "wood": 7
+   },
+   "sdk": {
+    "pieces": 46,
+    "triangles": 3822,
+    "body": "ed0385f36dd1",
+    "geometry": "0e6ce0fc7205",
+    "wood": 7
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "mango_tree",
+   "seed": 3,
+   "site": {
+    "pieces": 46,
+    "triangles": 3826,
+    "body": "eb087067e688",
+    "geometry": "92e73100b1f2",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 46,
+    "triangles": 3826,
+    "body": "eb087067e688",
+    "geometry": "5317050f779d",
+    "wood": 7
+   },
+   "sdk": {
+    "pieces": 46,
+    "triangles": 3826,
+    "body": "eb087067e688",
+    "geometry": "5317050f779d",
+    "wood": 7
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "mango_tree",
+   "seed": 4,
+   "site": {
+    "pieces": 46,
+    "triangles": 3822,
+    "body": "46bfdfdc070b",
+    "geometry": "92e73100b1f2",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 46,
+    "triangles": 3822,
+    "body": "46bfdfdc070b",
+    "geometry": "63ddcadc333c",
+    "wood": 7
+   },
+   "sdk": {
+    "pieces": 46,
+    "triangles": 3822,
+    "body": "46bfdfdc070b",
+    "geometry": "63ddcadc333c",
+    "wood": 7
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "mango_tree",
+   "seed": 5,
+   "site": {
+    "pieces": 46,
+    "triangles": 3718,
+    "body": "be3845b31f98",
+    "geometry": "92e73100b1f2",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 46,
+    "triangles": 3718,
+    "body": "be3845b31f98",
+    "geometry": "c1ef269db4af",
+    "wood": 7
+   },
+   "sdk": {
+    "pieces": 46,
+    "triangles": 3718,
+    "body": "be3845b31f98",
+    "geometry": "c1ef269db4af",
+    "wood": 7
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "coconut_palm",
+   "seed": 1,
+   "site": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "4eaba0a52bd9",
+    "geometry": "98f428bb67bb",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "4eaba0a52bd9",
+    "geometry": "44a0dc14caca",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "4eaba0a52bd9",
+    "geometry": "44a0dc14caca",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "coconut_palm",
+   "seed": 2,
+   "site": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "c005c54fc0d8",
+    "geometry": "98f428bb67bb",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "c005c54fc0d8",
+    "geometry": "fab55f2647ef",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "c005c54fc0d8",
+    "geometry": "fab55f2647ef",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "coconut_palm",
+   "seed": 3,
+   "site": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "94ef10662d5c",
+    "geometry": "98f428bb67bb",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "94ef10662d5c",
+    "geometry": "7873861eb430",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "94ef10662d5c",
+    "geometry": "7873861eb430",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "coconut_palm",
+   "seed": 4,
+   "site": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "7cf52f616b19",
+    "geometry": "98f428bb67bb",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "7cf52f616b19",
+    "geometry": "5778f77c3b5b",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "7cf52f616b19",
+    "geometry": "5778f77c3b5b",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "coconut_palm",
+   "seed": 5,
+   "site": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "7a68a8473517",
+    "geometry": "98f428bb67bb",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "7a68a8473517",
+    "geometry": "bf678f8b4d75",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 11,
+    "triangles": 3152,
+    "body": "7a68a8473517",
+    "geometry": "bf678f8b4d75",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "araucaria",
+   "seed": 1,
+   "site": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "ef22797f4fa6",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "ef22797f4fa6",
+    "geometry": "892efa3250c0",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "ef22797f4fa6",
+    "geometry": "892efa3250c0",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "araucaria",
+   "seed": 2,
+   "site": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "12ae3b3302f2",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "12ae3b3302f2",
+    "geometry": "b3f0b84ac47e",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "12ae3b3302f2",
+    "geometry": "b3f0b84ac47e",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "araucaria",
+   "seed": 3,
+   "site": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "944a875775cf",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "944a875775cf",
+    "geometry": "bdc72c4a55e4",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "944a875775cf",
+    "geometry": "bdc72c4a55e4",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "araucaria",
+   "seed": 4,
+   "site": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "c26c599bf9de",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "c26c599bf9de",
+    "geometry": "bd39d0804c6c",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "c26c599bf9de",
+    "geometry": "bd39d0804c6c",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "araucaria",
+   "seed": 5,
+   "site": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "c7a227f98b3a",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "c7a227f98b3a",
+    "geometry": "c3a06ae0343e",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 3,
+    "triangles": 4775,
+    "body": "c7a227f98b3a",
+    "geometry": "c3a06ae0343e",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "mandacaru",
+   "seed": 1,
+   "site": {
+    "pieces": 13,
+    "triangles": 1844,
+    "body": "f501bcb03127",
+    "geometry": "6d438e3b6d31",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 13,
+    "triangles": 1844,
+    "body": "f501bcb03127",
+    "geometry": "fcbce89659ba",
+    "wood": 13
+   },
+   "sdk": {
+    "pieces": 13,
+    "triangles": 1844,
+    "body": "f501bcb03127",
+    "geometry": "fcbce89659ba",
+    "wood": 13
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "mandacaru",
+   "seed": 2,
+   "site": {
+    "pieces": 15,
+    "triangles": 2096,
+    "body": "0a5c69563e6c",
+    "geometry": "67ffec077f50",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 15,
+    "triangles": 2096,
+    "body": "0a5c69563e6c",
+    "geometry": "48845e8f9e52",
+    "wood": 15
+   },
+   "sdk": {
+    "pieces": 15,
+    "triangles": 2096,
+    "body": "0a5c69563e6c",
+    "geometry": "48845e8f9e52",
+    "wood": 15
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "mandacaru",
+   "seed": 3,
+   "site": {
+    "pieces": 15,
+    "triangles": 2148,
+    "body": "117d7336e7de",
+    "geometry": "67ffec077f50",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 15,
+    "triangles": 2148,
+    "body": "117d7336e7de",
+    "geometry": "b94db55421bc",
+    "wood": 15
+   },
+   "sdk": {
+    "pieces": 15,
+    "triangles": 2148,
+    "body": "117d7336e7de",
+    "geometry": "b94db55421bc",
+    "wood": 15
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "mandacaru",
+   "seed": 4,
+   "site": {
+    "pieces": 15,
+    "triangles": 2096,
+    "body": "b20b78ae707d",
+    "geometry": "67ffec077f50",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 15,
+    "triangles": 2096,
+    "body": "b20b78ae707d",
+    "geometry": "4169f379e3d3",
+    "wood": 15
+   },
+   "sdk": {
+    "pieces": 15,
+    "triangles": 2096,
+    "body": "b20b78ae707d",
+    "geometry": "4169f379e3d3",
+    "wood": 15
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "mandacaru",
+   "seed": 5,
+   "site": {
+    "pieces": 15,
+    "triangles": 2096,
+    "body": "e78215e8bc0d",
+    "geometry": "67ffec077f50",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 15,
+    "triangles": 2096,
+    "body": "e78215e8bc0d",
+    "geometry": "37a363668faa",
+    "wood": 15
+   },
+   "sdk": {
+    "pieces": 15,
+    "triangles": 2096,
+    "body": "e78215e8bc0d",
+    "geometry": "37a363668faa",
+    "wood": 15
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "prickly_pear",
+   "seed": 1,
+   "site": {
+    "pieces": 20,
+    "triangles": 872,
+    "body": "1dea0a5dc23b",
+    "geometry": "bd7ae6f7a1df",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 20,
+    "triangles": 872,
+    "body": "1dea0a5dc23b",
+    "geometry": "a974611023a5",
+    "wood": 13
+   },
+   "sdk": {
+    "pieces": 20,
+    "triangles": 872,
+    "body": "1dea0a5dc23b",
+    "geometry": "a974611023a5",
+    "wood": 13
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "prickly_pear",
+   "seed": 2,
+   "site": {
+    "pieces": 32,
+    "triangles": 1452,
+    "body": "9c769fa14192",
+    "geometry": "7657ec3c7b03",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 32,
+    "triangles": 1452,
+    "body": "9c769fa14192",
+    "geometry": "df727a71761a",
+    "wood": 25
+   },
+   "sdk": {
+    "pieces": 32,
+    "triangles": 1452,
+    "body": "9c769fa14192",
+    "geometry": "df727a71761a",
+    "wood": 25
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "prickly_pear",
+   "seed": 3,
+   "site": {
+    "pieces": 19,
+    "triangles": 756,
+    "body": "9c80e1e25897",
+    "geometry": "7de443af4120",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 19,
+    "triangles": 756,
+    "body": "9c80e1e25897",
+    "geometry": "f00f4d496ffc",
+    "wood": 12
+   },
+   "sdk": {
+    "pieces": 19,
+    "triangles": 756,
+    "body": "9c80e1e25897",
+    "geometry": "f00f4d496ffc",
+    "wood": 12
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "prickly_pear",
+   "seed": 4,
+   "site": {
+    "pieces": 32,
+    "triangles": 1452,
+    "body": "75393e1e3f9a",
+    "geometry": "7657ec3c7b03",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 32,
+    "triangles": 1452,
+    "body": "75393e1e3f9a",
+    "geometry": "f826f5bd19c6",
+    "wood": 25
+   },
+   "sdk": {
+    "pieces": 32,
+    "triangles": 1452,
+    "body": "75393e1e3f9a",
+    "geometry": "f826f5bd19c6",
+    "wood": 25
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "prickly_pear",
+   "seed": 5,
+   "site": {
+    "pieces": 26,
+    "triangles": 1104,
+    "body": "af6810f0d75e",
+    "geometry": "34ba47ec28c5",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 26,
+    "triangles": 1104,
+    "body": "af6810f0d75e",
+    "geometry": "270b4cd0d216",
+    "wood": 19
+   },
+   "sdk": {
+    "pieces": 26,
+    "triangles": 1104,
+    "body": "af6810f0d75e",
+    "geometry": "270b4cd0d216",
+    "wood": 19
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "crown_cactus",
+   "seed": 1,
+   "site": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "2b1c725f1ce9",
+    "geometry": "91aec9ded955",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "2b1c725f1ce9",
+    "geometry": "0bb857978f42",
+    "wood": 3
+   },
+   "sdk": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "2b1c725f1ce9",
+    "geometry": "0bb857978f42",
+    "wood": 3
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "crown_cactus",
+   "seed": 2,
+   "site": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "66c133c0c6fe",
+    "geometry": "91aec9ded955",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "66c133c0c6fe",
+    "geometry": "0bb857978f42",
+    "wood": 3
+   },
+   "sdk": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "66c133c0c6fe",
+    "geometry": "0bb857978f42",
+    "wood": 3
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "crown_cactus",
+   "seed": 3,
+   "site": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "07433cc21993",
+    "geometry": "91aec9ded955",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "07433cc21993",
+    "geometry": "0bb857978f42",
+    "wood": 3
+   },
+   "sdk": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "07433cc21993",
+    "geometry": "0bb857978f42",
+    "wood": 3
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "crown_cactus",
+   "seed": 4,
+   "site": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "136303d23bd1",
+    "geometry": "91aec9ded955",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "136303d23bd1",
+    "geometry": "0bb857978f42",
+    "wood": 3
+   },
+   "sdk": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "136303d23bd1",
+    "geometry": "0bb857978f42",
+    "wood": 3
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "crown_cactus",
+   "seed": 5,
+   "site": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "ad4d2b876573",
+    "geometry": "91aec9ded955",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "ad4d2b876573",
+    "geometry": "0bb857978f42",
+    "wood": 3
+   },
+   "sdk": {
+    "pieces": 4,
+    "triangles": 906,
+    "body": "ad4d2b876573",
+    "geometry": "0bb857978f42",
+    "wood": 3
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "banana_with_bunch",
+   "seed": 1,
+   "site": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "7ad7d0818d19",
+    "geometry": "2a52525a97b8",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "7ad7d0818d19",
+    "geometry": "7d4209dc1a3b",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "7ad7d0818d19",
+    "geometry": "7d4209dc1a3b",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "banana_with_bunch",
+   "seed": 2,
+   "site": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "3265334721d5",
+    "geometry": "2a52525a97b8",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "3265334721d5",
+    "geometry": "d7f7553e4a51",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "3265334721d5",
+    "geometry": "d7f7553e4a51",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "banana_with_bunch",
+   "seed": 3,
+   "site": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "5bba22f1726c",
+    "geometry": "2a52525a97b8",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "5bba22f1726c",
+    "geometry": "1bf41aba3ac5",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "5bba22f1726c",
+    "geometry": "1bf41aba3ac5",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "banana_with_bunch",
+   "seed": 4,
+   "site": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "ccc4973bb03a",
+    "geometry": "2a52525a97b8",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "ccc4973bb03a",
+    "geometry": "1919b2bb7cd1",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "ccc4973bb03a",
+    "geometry": "1919b2bb7cd1",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "banana_with_bunch",
+   "seed": 5,
+   "site": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "c4a50c06649d",
+    "geometry": "2a52525a97b8",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "c4a50c06649d",
+    "geometry": "89a790f5b5f3",
+    "wood": 1
+   },
+   "sdk": {
+    "pieces": 5,
+    "triangles": 1517,
+    "body": "c4a50c06649d",
+    "geometry": "89a790f5b5f3",
+    "wood": 1
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "potted_fern",
+   "seed": 1,
+   "site": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "98968d28b886",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "98968d28b886",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "sdk": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "98968d28b886",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "potted_fern",
+   "seed": 2,
+   "site": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "69027cbec964",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "69027cbec964",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "sdk": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "69027cbec964",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "potted_fern",
+   "seed": 3,
+   "site": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "9dc6512ab0b7",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "9dc6512ab0b7",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "sdk": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "9dc6512ab0b7",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "potted_fern",
+   "seed": 4,
+   "site": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "c1f5bedff4d1",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "c1f5bedff4d1",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "sdk": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "c1f5bedff4d1",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  },
+  {
+   "id": "potted_fern",
+   "seed": 5,
+   "site": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "a50a28390f39",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "artifact": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "a50a28390f39",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "sdk": {
+    "pieces": 3,
+    "triangles": 804,
+    "body": "a50a28390f39",
+    "geometry": "3d4528216b00",
+    "wood": 0
+   },
+   "sdkEqualsArtifact": true,
+   "siteEqualsArtifactWithoutGeometry": true
+  }
+ ]
+}
