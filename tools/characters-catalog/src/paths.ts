@@ -26,7 +26,9 @@ export const PAGE_PATHS = {
   animals: join(ARTIFACTS, '6wxuUFgg9EZxQCeAQwx4HN.html'),
 } as const
 
+export const CAPTURES_DIR = join(TOOL_DIR, 'captures')
 export const DECISIONS_PATH = join(TOOL_DIR, 'decisions.json')
+export const ANIMALS_DECISIONS_PATH = join(REPO_ROOT, 'tools', 'animals-catalog', 'decisions.json')
 export const GAME_SLICE_DIR = join(SPEC_DIR, 'game-slice', 'characters')
 export const WEAPONS_CALIBERS_PATH = join(REPO_ROOT, 'packages', 'game-weapons', 'src', 'data', 'calibers.json')
 

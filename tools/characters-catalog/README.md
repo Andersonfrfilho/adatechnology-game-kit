@@ -31,4 +31,36 @@ To change an answer (a type id, a speed state, the penetration constants), edit 
 `tests/damage-sources.test.ts` check the generated data against the sources; `tests/calibration.test.ts` is the P7 calibration (9 mm hits 2 bodies, 5.56 hits 3,
 .308 hits 4, 7.62×39 hits 3, 00 buckshot 1) against the calibres of `game-weapons`; `tests/catalog-up-to-date.test.ts` is the same as `catalog:check`.
 
+## Golden captures ("same as the original")
+
+Every golden is recorded from the team code itself and stored where the future package will read it: `packages/<package>/tests/fixtures/team-golden/`
+(the folders exist before the packages do). Pure logic is cut out of `jogo.js` with `cut-source` (`@adatechnology/golden-tool/cut-source`) and run in `node:vm`
+with a seeded RNG per character; scenes run in headless Chrome through `tools/golden/bin/record.mjs`, on the team page patched to expose its closure
+(`writePatchedPage`) or, for code of the game, on a blank page with the game's own three.js r160.
+
+| Golden | Fixture | How | What it records |
+|---|---|---|---|
+| G-spawn | `game-characters-undead/game-spawn.json` | vm: `zSpawn`, 13 types x seeds 1..50, plus 200 weighted draws | height, build, speeds, health, age, outfit, helmet, crawl, variant |
+| G-damage-regions | `game-characters/game-damage-regions.json` | vm: `zDamage`, 18 scripted sequences + 20 jaw rolls (effects are stubs) | per hit: hp, head/arm/leg hp, missing mask, limp, crawl, kill |
+| G-penetration | `game-characters/game-penetration.json` | vm: `shootRay` against lines of five bodies | per body: damage, health, died; per line: bodies crossed |
+| G-gait (pure) | `game-characters/game-walk-gait.json` | vm: `walkCad`, `walkGait` for 0..6 m/s and four heights | cadence, amplitude |
+| G-instanced (source) | `game-characters-three/game-body-chunk.json` | vm: `bodyChunk` | sha256 of the shader chunk |
+| G-damage-segments | `game-characters/arsenal-damage-segments.json` | Chrome: Galeria 3D do Arsenal, `damage` and `grenadeAt`, 11 segments x 4 weapons | text, hp, state, bleeders (rate, duration, spurt) |
+| G-cut-hierarchy | `game-characters/elenco-cut-hierarchy.json` | Chrome: Elenco `hit`, `sever`, `breakBone`, 6 weapons x 13 segments | segment states, limp, crawl, death, pendulum |
+| G-body | `game-characters-three/game-best-body.json` | Chrome blank page, three r160: `BEST.build` 13 types x decay x seeds x 3 LODs, `bakeBody` of the ZVAR variants | scene hashes, baked attribute hashes |
+| G-instanced | `game-characters-three/game-instanced-body.json` | Chrome blank page, three r160: `buildBody(16/10/5)` | attribute hashes, triangles, scene hash |
+| G-people | `game-characters-three/portraits-people.json` | Chrome: Retratos `buildPerson` for the 44 people | scene hash each (fixture only, not shipped) |
+| G-gait (rig) | `game-characters-three/bestiary-gait.json` | Chrome: Bestiário `animate0`, 13 types at t = 0..2 s | joint rotations |
+| G-animals | `game-animals-three/animals-page.json` | Chrome: Bichos do Vale, 13 species alive, bitten and in three gaits | scene hash with nodes, flags |
+| G-animals (skin) | `game-props3d/game-animal-skin.json` | Chrome blank page, three r160: `bichoPele` of the 13 species | merged attribute hashes, node counts |
+
+```bash
+pnpm --filter @adatechnology/characters-catalog-tool golden:vm            # re-record the vm goldens
+pnpm --filter @adatechnology/characters-catalog-tool golden:chrome [id]   # re-record the Chrome goldens (Chrome and `pnpm build` of golden-tool needed)
+pnpm --filter @adatechnology/characters-catalog-tool golden:vm:check      # each one recorded twice: byte-identical and equal to the fixture
+pnpm --filter @adatechnology/characters-catalog-tool golden:chrome:check
+```
+
+The vm goldens run in the tests (`tests/golden-vm.test.ts`) on Node 22 and 24; the Chrome ones are checked by `golden:chrome:check` and their content by `tests/golden-chrome.test.ts`.
+
 The package folders above are written before the packages exist (`game-characters` and `game-characters-undead` get their `package.json` in the next tasks of Phase 4).

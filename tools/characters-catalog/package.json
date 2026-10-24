@@ -11,7 +11,11 @@
     "test": "vitest run",
     "catalog": "node dist/cli.js",
     "catalog:check": "node dist/cli.js --check",
-    "catalog:game": "node dist/cli.js --game-out"
+    "catalog:game": "node dist/cli.js --game-out",
+    "golden:vm": "node dist/record-golden-vm.js",
+    "golden:chrome": "node dist/record-golden-chrome.js",
+    "golden:vm:check": "node dist/record-golden-vm.js --check",
+    "golden:chrome:check": "node dist/record-golden-chrome.js --check"
   },
   "devDependencies": {
     "@adatechnology/game-weapons": "workspace:*",
