@@ -431,13 +431,20 @@ migrates (§7).
 
 - entries are `{ id: '<package>/<builder>', run() }`; props3d's 57, the 51 household types (both through the interactables mesh api), the 24 item
   models and the 25 item shapes, the weapon models, the 13 animals, a few vehicles in light mode and the `game-shapes` generators themselves;
-- each entry is warmed up, then run until 150 ms or 40 runs, and the **median** is kept;
-- a **calibration loop** (fixed arithmetic and allocation, no kit code) is timed the same way, and every median is stored as a ratio to it, so
-  the numbers mean the same on a laptop and on a CI runner;
-- `baseline.json` holds those ratios; `bench --check` fails when an entry is slower than `baseline × (1 + budget)` (budget 0.5 by default, per-entry
-  overrides for noisy ones) and the entry is above a noise floor (entries under 0.05 ms are reported, never failed); `bench --update` rewrites it.
-  The ceiling is a **regression budget**, not an absolute time;
-- the CI job `shapes-bench` runs `--check` on Node 22 after the build and writes the table to the job summary.
+- each entry is warmed up, then run until 100 ms or 200 runs (at least 5), and the **median** is kept; the whole list runs 3 times, after a
+  collection per entry, and each entry keeps its best round;
+- a **calibration loop** (fixed arithmetic and allocation, no kit code) runs every 20 entries, and every median is stored as a ratio to its
+  best time, so the numbers mean the same on a laptop and on a CI runner;
+- `baseline.json` holds those ratios. `bench --check` fails when an entry is slower than `baseline × (1 + budget)` (budget **1**, per-entry
+  overrides for noisy ones) and above a noise floor (entries under 0.05 ms are reported, never failed), or when a group of 8 or more entries
+  (props3d, household, items, weapons, animals) sums past `baseline × 1.5`; past `× 1.5` an entry is reported as `warn`. Suspects (warned,
+  failed, or in a failing group) are timed 5 more rounds before the verdict. `bench --update` rewrites the baseline, `--baseline-from` makes
+  it from the run the CI job uploads. The ceiling is a **regression budget**, not an absolute time.
+  *Measured while writing it (T9c):* with the per-entry budget at 0.5 of the first draft, 8 to 13 of the 280 entries failed on a rerun of
+  the same code on a loaded machine (load 20 on 4 cores); with best-of-rounds, re-timing and the budgets above, three reruns passed and an
+  injected 1.4× slowdown of the items group and 2.5× of one prop failed. The first CI runs should confirm the budgets, and the baseline be
+  refreshed from the CI artifact (open question 5);
+- the CI job `shapes-bench` runs `--check` on Node 22 after the build, writes the table to the job summary and uploads the run.
 
 ### 8.2 Parallel generation
 
@@ -493,8 +500,10 @@ To add as a new item in §1 or §3 of `CLAUDE.md`:
    re-record their goldens once, or (c) leave lathes and extrusions of those packages on three?
 4. **Booleans.** Only "box minus through-holes" is cheap and exact. Is that enough (walls, windows, doors, shelves), or do you want real CSG
    (holes at an angle, cuts in curved pieces) at the cost of a dependency and non-exact output?
-5. **Bench budget.** A 50 % regression budget per builder against a calibration loop is the proposal. Do you want a tighter budget for the hot
-   builders (houses, vehicles), and should the bench also guard memory (bytes per shape)?
+5. **Bench budget.** The proposal was 50 % per builder; measured on a shared machine that flakes, so the bench ships with ×2 per builder,
+   ×1.5 per group of 8 or more and a warning at ×1.5 (§8.1), and a baseline recorded in this container. Once CI has a few runs: refresh the
+   baseline from the CI artifact and tighten (×1.5 per builder, ×1.25 per group)? A tighter budget for the hot builders (houses,
+   vehicles)? Should the bench also guard memory (bytes per shape)?
 6. **Where the schemas live.** The first migrations generate the schema in code from the existing builders. Should content packs also ship
    schemas as JSON files (so a game can edit a sofa without code), and if so, is a JSON file per item the format you want in the content packages?
 
