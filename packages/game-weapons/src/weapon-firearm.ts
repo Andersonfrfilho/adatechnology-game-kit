@@ -2,12 +2,12 @@ import { isDudWithoutJam, rollFault } from './faults'
 import { manualCycleSeconds, planRounds, weaponNoise, weaponSpeed } from './fire'
 import { burstNoise, heatPerRound } from './heat'
 import { sampleCone } from './rng'
-import type { CaliberDef, FaultId, FirearmAction, Shot, TriggerResult, Vec3 } from './types'
-import { WeaponCommands } from './weapon-commands'
+import type { CaliberDef, FaultId, FirearmAction, Shot, TriggerResult, Vec3, WeaponRules } from './types'
+import { WeaponAttachments } from './weapon-attachments'
 import { BLOOM_CAP, EPS, result } from './weapon-shared'
 
 /** Pulling the trigger of a firearm: rounds, faults, heat, bloom and noise. */
-export abstract class WeaponFirearm extends WeaponCommands {
+export abstract class WeaponFirearm extends WeaponAttachments {
   /** Semi-style gating: a held trigger that already fired does nothing until `release()` or a new pull (`held` false). */
   protected oncePerPull(held: boolean): boolean {
     if (!held) this.latched = false
@@ -34,13 +34,13 @@ export abstract class WeaponFirearm extends WeaponCommands {
     const times = planRounds(a, this.mode, this._ammo, t0, end)
     let lastAt = t0
     for (const t of times) {
-      const fault = rollFault({ def: this.def, caliber: this.caliber, condition: this._condition, ammoQuality: this._ammoQuality, heat: this._heat, rules: this.rules, random: this.faultRng })
+      const fault = rollFault({ def: this.def, caliber: this.caliber, condition: this._condition, ammoQuality: this._ammoQuality, heat: this._heat, rules: this.faultRules(), random: this.faultRng })
       if (fault === 'misfire') {
         this.misfire(a, t, start, res)
         lastAt = t
         break
       }
-      this.fireOne(a, origin, dir, t, res, source)
+      this.fireOne(this.action.kind === 'firearm' ? this.action : a, origin, dir, t, res, source)
       res.roundTimes.push(t - start)
       res.rounds += 1
       lastAt = t
@@ -50,9 +50,16 @@ export abstract class WeaponFirearm extends WeaponCommands {
       }
     }
     if (res.shots.length === 0) res.status = res.fault ? 'fault' : 'misfire'
-    else this.emit({ type: 'shot', shots: res.shots.length, rounds: res.rounds, mode: this.mode, at: t0 })
+    else this.emit({ type: 'shot', shots: res.shots.length, rounds: res.rounds, mode: this.mode, at: t0, ...(res.suppressed ? { suppressed: true } : {}) })
     if (res.rounds > 0) this.afterRounds(a, lastAt)
     return res
+  }
+
+  /** The rules with the chance of a fault scaled by the accessories (a drum magazine jams more); the very rules when nothing scales it. */
+  private faultRules(): WeaponRules {
+    const factor = this.load.faultFactor
+    if (factor === 1) return this.rules
+    return { ...this.rules, faultChance: (context) => this.rules.faultChance(context) * factor }
   }
 
   protected jam(fault: FaultId, at: number, res: TriggerResult): void {
@@ -114,7 +121,7 @@ export abstract class WeaponFirearm extends WeaponCommands {
       res.shots.push(shot)
     }
     this._ammo -= 1
-    this._heat = Math.min(this.rules.heat.cap, this._heat + heatPerRound(a, cal, this.rules.heat))
+    this._heat = Math.min(this.rules.heat.cap, this._heat + heatPerRound(a, cal, this.rules.heat) * this.load.heatFactor)
     this.readyAt = t + 60 / a.rpm
     this.extra = Math.min(bloomNow + (a.bloomDeg ?? 0), a.spreadDeg * (BLOOM_CAP - 1))
     this.extraClock = t
@@ -123,6 +130,8 @@ export abstract class WeaponFirearm extends WeaponCommands {
     this.recentShots = this.recentShots.filter((shotAt) => shotAt > t - window)
     res.noise = burstNoise(weaponNoise(a, cal), this.recentShots.length, this.rules.noiseBurst)
     this.recentShots.push(t)
+    if (this.load.suppressed) res.suppressed = true
+    this.wearAttachments(t)
   }
 
 }

@@ -14,8 +14,9 @@ export abstract class WeaponCore {
   reserve: number
   mode: FireMode
   protected _ammo: number
-  protected readonly _capacity: number
-  protected readonly action: WeaponAction
+  protected _capacity: number
+  /** What the weapon does now: the numbers of the def with the effects of the accessories on it (the def's own action when there are none). */
+  protected action: WeaponAction
   protected readonly rng: () => number
   protected readonly initialReserve: number
   protected readonly rules: WeaponRules
@@ -187,7 +188,7 @@ export abstract class WeaponCore {
     while (this.scheduled[0] && this.scheduled[0].at <= t + EPS) {
       const item = this.scheduled.shift() as Scheduled
       item.apply?.()
-      this.emit(item.event)
+      if (item.event) this.emit(item.event)
     }
     const a = this.action
     if (!isReloadable(a)) return

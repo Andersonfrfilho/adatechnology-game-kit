@@ -67,6 +67,7 @@ export class WeaponRuntime extends WeaponFirearm implements WeaponState {
   /** Why the trigger does nothing before the action even looks at it. */
   protected gateStatus(start: number): TriggerResult | null {
     if (start < this.drawEnd - EPS) return result('drawing')
+    if (this.isWorking()) return result('busy')
     if (!isReloadable(this.action)) return null
     if (this._safety) return result('safe')
     if (this._clearing) return result('clearing')

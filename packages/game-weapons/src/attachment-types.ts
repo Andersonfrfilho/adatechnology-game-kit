@@ -111,6 +111,8 @@ export interface FittedAttachment {
   readonly mount: MountKind
   readonly integral?: boolean
   readonly on?: boolean
+  /** Shots until a home-made accessory breaks (drawn when it goes on). */
+  readonly shotsLeft?: number
 }
 
 export type StockState = 'collapsed' | 'extended'

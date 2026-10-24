@@ -1,4 +1,4 @@
-import type { AttachmentId, MountKind, StockDef, StockState } from './attachment-types'
+import type { AttachmentId, AttachmentInstall, MountKind, StatModifier, StockDef, StockState } from './attachment-types'
 import type { ExplosiveTripwire } from './explosive-types'
 import type { CaseType, FireMode, WeaponDef } from './types'
 
@@ -59,6 +59,19 @@ export interface WeaponRules {
     /** The wire of a charge set down with the `wire` trigger that does not name one. */
     readonly tripwire: Required<ExplosiveTripwire>
   }
+  /** Putting accessories on and taking them off. */
+  readonly attachments: {
+    /** Seconds the work takes, by where it can be done: with the hands, with a tool, at a bench. */
+    readonly fitSeconds: Readonly<Record<AttachmentInstall, number>>
+    /** Seconds to change between the weapon and the launcher under its barrel. */
+    readonly switchSeconds: number
+    /** m/s: a bullet slower than this is subsonic (a suppressor mutes it more). */
+    readonly speedOfSound: number
+  }
+  /** Time to raise the weapon to the sights (`base` + `perKg` × mass) and how much worse the hip is: `hipSpread` times the spread when not aiming (1: no difference). */
+  readonly aim: { readonly base: number; readonly perKg: number; readonly hipSpread: number }
+  /** Folding or sliding in the stock: the seconds it takes and what it does to the weapon while it is in. */
+  readonly stock: { readonly seconds: number; readonly collapsed: readonly StatModifier[] }
   readonly draw: number
   readonly clear: number
   readonly startSafe: boolean

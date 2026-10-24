@@ -1,9 +1,11 @@
+import type { AttachmentDef, AttachmentId } from './attachment-types'
 import type { CaliberDef, CaliberId, ExplosiveDef, ExplosiveId, WeaponDef, WeaponId, WeaponRules } from './types'
 
 export interface ArsenalParts {
   readonly weapons: ReadonlyMap<WeaponId, WeaponDef>
   readonly calibers: ReadonlyMap<CaliberId, CaliberDef>
   readonly explosives: ReadonlyMap<ExplosiveId, ExplosiveDef>
+  readonly attachments?: ReadonlyMap<AttachmentId, AttachmentDef>
   /** When given, the default condition and ammunition quality must be ones the rules define. */
   readonly rules?: Pick<WeaponRules, 'conditions' | 'defaultCondition' | 'ammoQualities' | 'defaultAmmoQuality'>
 }
@@ -54,6 +56,32 @@ const checkExplosiveNumbers = (explosive: ExplosiveDef): string[] => {
   return problems
 }
 
+const STATS: ReadonlySet<string> = new Set(['noise', 'spread', 'hipSpreadExcess', 'recoilVertical', 'recoilHorizontal', 'range', 'muzzleSpeed', 'mass', 'capacity', 'reload', 'reloadEmpty', 'draw', 'aim', 'faultChance', 'heatPerShot'])
+const INSTALLS: ReadonlySet<string> = new Set(['field', 'tool', 'bench'])
+
+const checkAttachment = (attachment: AttachmentDef): string[] => {
+  const problems: string[] = []
+  const label = `attachment "${attachment.id}"`
+  if (!INSTALLS.has(attachment.install)) problems.push(`${label} installs "${attachment.install}"`)
+  if (attachment.mounts.length === 0) problems.push(`${label} has no mount`)
+  if (attachment.interfaces.length === 0) problems.push(`${label} has no interface`)
+  for (const effect of attachment.effects) {
+    if (!STATS.has(effect.stat)) problems.push(`${label} changes the unknown stat "${effect.stat}"`)
+    if (effect.mul !== undefined && !(effect.mul > 0)) problems.push(`${label} multiplies ${effect.stat} by ${effect.mul}`)
+  }
+  return problems
+}
+
+const checkFitted = (def: WeaponDef, attachments: ArsenalParts['attachments']): string[] => {
+  if (!attachments) return []
+  return (def.fitted ?? []).flatMap((part) => {
+    const problems: string[] = []
+    if (!attachments.has(part.id)) problems.push(`weapon "${def.id}" is fitted with unknown attachment "${part.id}"`)
+    if (!(def.mounts ?? []).some((mount) => mount.kind === part.mount)) problems.push(`weapon "${def.id}" has "${part.id}" on "${part.mount}", which it has no mount for`)
+    return problems
+  })
+}
+
 const checkRuleDefaults = (rules: ArsenalParts['rules']): string[] => {
   if (!rules) return []
   const problems: string[] = []
@@ -63,8 +91,9 @@ const checkRuleDefaults = (rules: ArsenalParts['rules']): string[] => {
 }
 
 /** Every problem found in an arsenal, so a game sees them all at once instead of one per run. Empty when it is consistent. */
-export const checkArsenal = ({ weapons, calibers, explosives, rules }: ArsenalParts): string[] => [
-  ...[...weapons.values()].flatMap((def) => [...checkFirearm(def, calibers), ...checkTimings(def), ...checkExplosiveReference(def, explosives)]),
+export const checkArsenal = ({ weapons, calibers, explosives, attachments, rules }: ArsenalParts): string[] => [
+  ...[...weapons.values()].flatMap((def) => [...checkFirearm(def, calibers), ...checkTimings(def), ...checkExplosiveReference(def, explosives), ...checkFitted(def, attachments)]),
+  ...[...(attachments?.values() ?? [])].flatMap(checkAttachment),
   ...[...explosives.values()].flatMap(checkExplosiveNumbers),
   ...checkRuleDefaults(rules),
 ]

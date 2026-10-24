@@ -126,16 +126,43 @@ instead of thrown, which builds a delayed trap. `nominalFuse(explosive)` and `sa
 An explosive with the `wire` trigger (the Claymore) carries `tripwire: { length, angleDeg?, height? }` (default `rules.explosives.tripwire`: 10 m ahead, 0.15 m above the charge, derived: no source
 gives the length of the M18A1 kit). The `place` use has it, and `tripwireSegment(use)` gives the segment `{ from, to }` the host stretches and tests bodies against; when a body crosses it the host calls `body.trigger('wire')`.
 
+## Accessories, stocks and aiming
+
+`arsenal.attachments` is the catalogue of accessories (`data/attachments.json`, generated from the Arsenal §11 lines and `decisions.json`: suppressors, brakes, optics, grips, bipod, light, laser,
+magazines, barrels, sling, ammunition backpack, tripod, grenade launchers). A weapon lists its places (`mounts`: muzzle, rails, underbarrel, magazine, barrel, sling, feed, each with the
+interfaces it takes: `picatinny`, `ak_side`, `thread_14x1lh`...), what it ships with (`fitted`, already in the numbers of `action`; `integral: true` cannot come off) and its stock (`stock`:
+`fixed`, `fold`, `retract`, `fold_retract`, `none`, and the `foldAxis`).
+
+```ts
+weapon.canFit('suppressor')            // { ok: true, mount: 'muzzle' } | { ok: false, reason: 'no_mount' | 'interface' | 'caliber' | 'category' | 'occupied' | 'blocked' | 'rejected' }
+weapon.fit('suppressor', { install: 'tool' })   // phase `fit` (rules.attachments.fitSeconds: field 2 s, tool 15 s, bench 30 s); counts when the phase ends; `trigger` answers `busy` meanwhile
+weapon.remove('vertical_grip')         // a factory part that is `integral` stays; what no longer fits in a smaller magazine goes back to the reserve
+weapon.toggle('weapon_light')          // lights and lasers count only while on (event `toggle`)
+weapon.setStock('collapsed')           // phase `stock` (rules.stock.seconds); then rules.stock.collapsed applies (draw ×0.8, aim ×0.85, vertical recoil ×1.3, spread ×1.15)
+weapon.setStance({ aiming: true, supported: false })
+weapon.aimSeconds                      // rules.aim.base + rules.aim.perKg × mass, with the effects (red dot ×0.8...)
+const snapshot = weapon.snapshot(); arsenal.restore(snapshot, { seed })
+```
+
+Effects are `StatModifier`s (`stat`, then `set`, `add`, `mul`, with a condition: `always`, `aiming`, `hip`, `supported`, `subsonic`, `collapsed`): every `set` first, then the sum of the `add`s,
+then the product of the `mul`s. A factory part is already in the numbers, so taking it off applies its inverse and putting it back returns the numbers of the def exactly. A bullet slower than
+`rules.attachments.speedOfSound` (343 m/s) is subsonic, which a suppressor mutes more (×0.25 in all). A suppressed pull sets `TriggerResult.suppressed` (and on the `shot` event): pass it to the shot sound.
+A home-made suppressor breaks at a shot drawn in `durability.shots` from a stream of its own (`seed ^ 0x3c6ef372`), so spreads and faults do not move (event `attachment`, `action: 'break'`).
+`ArsenalOptions` gains `attachments`, `patch.attachments`, `remove.attachments` and `isCompatible(def, attachment, fitted)` (a game vetoes an accessory); `canFit(def, attachment, fitted, context, mount?)` is exported.
+
+The hip: `rules.aim.hipSpread` times the spread when not aiming. The SDK default is **1** (neutral); the Arsenal says ×6 (§08) and ZombiAdA turns it on with `rules: { aim: { hipSpread: 6 } }`. A laser takes
+half of the excess (`hipSpreadExcess` ×0.5). The ammunition backpack (`feed` mount, `belt`) sets the capacity to 500 rounds by default (`patch.attachments.ammo_backpack`); a tripod counts as support.
+
 ## API
 
-- `createArsenal(options?)` returns an `Arsenal`: `calibers`, `weapons`, `explosives` (maps), `rules`, `create(id, { seed?, reserve?, condition?, ammoQuality? })` (unknown id throws),
+- `createArsenal(options?)` returns an `Arsenal`: `calibers`, `weapons`, `explosives` (maps), `rules`, `create(id, { seed?, reserve?, condition?, ammoQuality? })` (unknown id throws), `attachments`, `canFit(weapon, attachment, options?)`, `restore(snapshot, options?)`,
   `muzzleEnergy(caliberId, barrel?)`, `energy(weaponId)`, `name(id)` (weapon, explosive, fire mode, category, fault, condition or calibre, translated), `list(category?)`.
   Options: `calibers`, `weapons`, `explosives`, `patch`, `remove`, `include`, `rules`, `strings`, `seed`, `locale`.
 - `WeaponState`: `def`, `caliber`, `ammo`, `capacity`, `reserve`, `mode`, `reloading`, `locked`, `phase`, `fault`, `clearing`, `safety`, `heat`, `heatLevel`, `condition`,
   `ammoQuality`, `spread`, `trigger(origin, direction, dt, held?, source?)`, `release(origin?, direction?)`, `draw()`, `reload(kind?)`, `cycleMode()`, `setSafety(on)`, `clearFault()`,
-  `setCondition(id)`, `setAmmoQuality(id)`, `setFuseLength(metres)`, `cooking`, `update(dt)`, `refill()`, `drain()`. `release(origin?, direction?)` returns the throw of a cooked grenade (null for anything else).
+  `setCondition(id)`, `setAmmoQuality(id)`, `setFuseLength(metres)`, `cooking`, `attachments`, `mass`, `aimSeconds`, `suppressed`, `stock`, `canFit`, `fit`, `remove`, `toggle`, `setStock`, `setStance`, `snapshot`, `update(dt)`, `refill()`, `drain()`. `release(origin?, direction?)` returns the throw of a cooked grenade (null for anything else).
 - `Shot`: `origin`, `direction`, `energy` (J), `caliber` (mm), `caliberId`, `speed`, `energyAt(distance)` (energy × speed factor², drag per 100 m), `pellet`, `weapon`, `source`.
-- `Use`: `melee`, `flame`, `heat`, `throw`, `tool`, `extinguish`, `hand`. `TriggerResult`: `shots`, `uses`, `status` (`ok`, `empty`, `reloading`, `cooldown`, `no_fuel`, `safe`, `drawing`, `fault`, `misfire`, `clearing`), `recoil`, `noise`, `rounds`, `roundTimes`, `fault?`.
+- `Use`: `melee`, `flame`, `heat`, `throw`, `tool`, `extinguish`, `hand`. `TriggerResult`: `shots`, `uses`, `status` (`ok`, `empty`, `reloading`, `cooldown`, `no_fuel`, `safe`, `drawing`, `fault`, `misfire`, `clearing`, `busy`), `recoil`, `noise`, `rounds`, `roundTimes`, `fault?`, `suppressed?`.
 - `muzzleEnergy(caliber, barrel?)`, `CALIBERS`, `WEAPONS`, `EXPLOSIVES`, `ARCHETYPE_IDS`, `DEFAULT_LOADOUT`, `DEFAULT_RULES`, `RELOAD_STAGES`, `checkArsenal`, `locales`, `resolveStrings`.
 
 Locales: `en` and `pt-BR` (`locale` option; unknown falls back to `en`). Calibre labels are technical names and are not translated.
