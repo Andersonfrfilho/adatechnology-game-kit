@@ -6,7 +6,7 @@ import type { AudioEngine } from '@adatechnology/game-audio'
 import type { WeaponEvent } from '@adatechnology/game-weapons'
 
 import { MECHANICAL_SOUNDS, mechanicalSoundOf } from './audio/mechanical-sounds'
-import { BURST_IDS, TONE_IDS, classBurstId, weaponRecipes } from './audio/recipes'
+import { BURST_IDS, SCENE_NOISE_IDS, SCENE_TONE_IDS, TONE_IDS, classBurstId, weaponRecipes } from './audio/recipes'
 import type { MechanicalSoundId, SoundStep } from './audio/mechanical-sounds'
 import { computeShotSound, FALLBACK_SOUND_CLASS, GAME_DISTANCE_CURVE, GAME_SOUND_CLASSES } from './audio/shot-sound'
 import type { ShotSound, ShotSoundInput, ShotSoundOptions, SoundClassDef } from './audio/shot-sound'
@@ -85,7 +85,7 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
       ...(options.createContext ? { createContext: options.createContext } : {}),
     })
   // an own engine draws everything from its one stream (noise first, then the start points), as the old audio did; a shared one gets a stream per module
-  const channel = shared ? shared.channel({ seed }) : engine.channel({})
+  const channel = shared && options.seed !== undefined ? shared.channel({ seed }) : engine.channel({})
   engine.register({ id: `weapons_three@${classBurstId(distanceCurve)}`, sounds: weaponRecipes(distanceCurve) })
   const classBurst = classBurstId(distanceCurve)
 
@@ -118,8 +118,20 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
     channel.play(classBurst, { volume: classVolume, distance, params: { cutoff, gain, seconds }, ...(at ? { delay: at } : {}) })
   }
 
+  // the art scene's sTone and sNoise, heard at the listener
+  const sceneTone = (entry: Extract<SoundStep, { layer: 'scene_tone' }>): void => {
+    channel.play(SCENE_TONE_IDS[entry.wave], { params: { f: entry.f, f2: entry.f2 ?? entry.f, d: entry.d, vol: entry.vol }, ...(entry.at ? { delay: entry.at } : {}) })
+  }
+  const sceneNoise = (entry: Extract<SoundStep, { layer: 'scene_noise' }>): void => {
+    const slide = entry.f2 !== undefined
+    const id = slide ? `${SCENE_NOISE_IDS[entry.type]}_slide` : SCENE_NOISE_IDS[entry.type]
+    channel.play(id, { params: { f: entry.f, ...(slide ? { f2: entry.f2 } : {}), q: entry.q, d: entry.d, vol: entry.vol }, ...(entry.at ? { delay: entry.at } : {}) })
+  }
+
   const step = (entry: SoundStep): void => {
     if (entry.layer === 'metal') metal(entry.at, entry.frequency, entry.gain)
+    else if (entry.layer === 'scene_tone') sceneTone(entry)
+    else if (entry.layer === 'scene_noise') sceneNoise(entry)
     else if (entry.layer === 'class') play(entry.soundClass, entry.volume, 0, entry.at)
     else burst({ at: entry.at, seconds: 0.09, gain: entry.gain, filter: 'lowpass', frequency: entry.frequency })
   }
@@ -162,9 +174,10 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
       mechanical('cycle')
     },
     clink() {
-      const f = 3200 + channel.random() * 2000
-      tone({ seconds: 0.09, gain: 0.12, frequency: f })
-      tone({ seconds: 0.06, gain: 0.06, frequency: f * 2.7 })
+      // the art scene's `casing` (cena L1344): one ring at 4200-5700 Hz sliding to 3800, 0.25-0.45 s after the case leaves
+      const f = 4200 + channel.random() * 1500
+      const at = 0.25 + channel.random() * 0.2
+      sceneTone({ layer: 'scene_tone', at, wave: 'sine', f, f2: 3800, d: 0.06, vol: 0.06 })
     },
     thud() {
       burst({ seconds: 0.09, gain: 0.35, filter: 'lowpass', frequency: 380 })

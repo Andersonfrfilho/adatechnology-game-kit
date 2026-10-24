@@ -1,6 +1,7 @@
 // The weapon sounds as recipes of @adatechnology/game-audio, in the `weapon` build order: a filtered noise burst or a tone, each with its own envelope
 // gain. These are the three primitives `createWeaponAudio` was written with (the game's class burst, a free burst and a tone); the numbers that change
 // from sound to sound (cutoff, gain, seconds, frequency) are named params the adapter fills in, so a sound class, a mechanical step or a shot are all data.
+import { DISTANCE_CURVES } from '@adatechnology/game-audio'
 import type { Layer, SoundRecipe } from '@adatechnology/game-audio'
 
 import { GAME_DISTANCE_CURVE } from './shot-sound'
@@ -8,6 +9,8 @@ import type { DistanceCurve } from './shot-sound'
 
 export const CLASS_BURST_ID = 'weapon_class_burst'
 export const BURST_IDS = { lowpass: 'weapon_burst_lowpass', highpass: 'weapon_burst_highpass' } as const
+export const SCENE_NOISE_IDS = { lowpass: 'scene_noise_lowpass', highpass: 'scene_noise_highpass', bandpass: 'scene_noise_bandpass' } as const
+export const SCENE_TONE_IDS = { sine: 'scene_tone_sine', square: 'scene_tone_square' } as const
 export const TONE_IDS = { sine: 'weapon_tone_sine', sine_sweep: 'weapon_tone_sine_sweep', square: 'weapon_tone_square' } as const
 
 const SOURCE_CLASS_BURST = 'jogo:L62097-62110 sfx: lowpass noise, gain set at once, exponential fall to 0.001, stopped 0.05 s later'
@@ -86,6 +89,57 @@ export const toneRecipe = (id: string, wave: OscillatorType, sweep: boolean): So
   sources: [SOURCE_SDK],
 })
 
+const SOURCE_SCENE = 'cena:L1323-L1324 sNoise and sTone, played at the listener (distance 0), through the art scene output stage'
+const SCENE_ATTACK = 0.002
+
+/**
+ * The art scene's `sNoise`: params `f`, `q`, `d` and `vol` (and `f2`, the filter sliding there over `d`); the noise starts at `random × 1.5` in the buffer, the
+ * gain rises to 1 in 0.002 s and falls to 0.0001 over `d`, the source stops 0.05 s later.
+ */
+export const sceneNoiseRecipe = (type: 'lowpass' | 'highpass' | 'bandpass', slide: boolean): SoundRecipe => ({
+  id: slide ? `${SCENE_NOISE_IDS[type]}_slide` : SCENE_NOISE_IDS[type],
+  bus: 'weapons',
+  order: 'layered',
+  duration: { param: 'd', add: SCENE_ATTACK },
+  pan: true,
+  layers: [
+    {
+      gain: { param: 'vol' },
+      source: { kind: 'noise', offset: 'random', offsetScale: 1.5, loop: true },
+      filters: { mode: 'serial', bank: [{ type, frequency: slide ? { set: { param: 'f' }, to: { param: 'f2' }, curve: 'exp', over: { param: 'd' } } : { set: { param: 'f' } }, q: { param: 'q' } }] },
+      envelope: [
+        [0, 0.0001, 'set', 'fixed'],
+        [SCENE_ATTACK, 1, 'exp'],
+        ['1d', 0.0001, 'exp', 'fixed'],
+      ],
+    },
+  ],
+  falloff: DISTANCE_CURVES.art_scene,
+  sources: [SOURCE_SCENE],
+})
+
+/** The art scene's `sTone`: params `f`, `f2`, `d` and `vol`; the frequency is set at the start and ramps to `f2` as the gain falls. */
+export const sceneToneRecipe = (wave: 'sine' | 'square'): SoundRecipe => ({
+  id: SCENE_TONE_IDS[wave],
+  bus: 'weapons',
+  order: 'layered',
+  duration: { param: 'd', add: SCENE_ATTACK },
+  pan: true,
+  layers: [
+    {
+      gain: { param: 'vol' },
+      source: { kind: 'osc', wave, frequency: { from: { param: 'f' }, to: { param: 'f2' }, curve: 'exp', over: 'duration' } },
+      envelope: [
+        [0, 0.0001, 'set', 'fixed'],
+        [SCENE_ATTACK, 1, 'exp'],
+        ['1d', 0.0001, 'exp', 'fixed'],
+      ],
+    },
+  ],
+  falloff: DISTANCE_CURVES.art_scene,
+  sources: [SOURCE_SCENE],
+})
+
 /** The recipes of an adapter: the three primitives, with the class burst on the given distance curve. */
 export function weaponRecipes(curve: DistanceCurve): SoundRecipe[] {
   return [
@@ -95,5 +149,8 @@ export function weaponRecipes(curve: DistanceCurve): SoundRecipe[] {
     toneRecipe(TONE_IDS.sine, 'sine', false),
     toneRecipe(TONE_IDS.sine_sweep, 'sine', true),
     toneRecipe(TONE_IDS.square, 'square', false),
+    ...(['lowpass', 'highpass', 'bandpass'] as const).flatMap((type) => [sceneNoiseRecipe(type, false), sceneNoiseRecipe(type, true)]),
+    sceneToneRecipe('sine'),
+    sceneToneRecipe('square'),
   ]
 }

@@ -1763,3 +1763,24 @@ Pacote novo (IIFE `GameItemsThree`, three peer `^0.160`, `@adatechnology/golden-
 | `game-weather` / `golden-tool` / `game-contracts` | 56 / 63 / 34 testes; os goldens e os traces também em Node 22.23.4 |
 | `game-weapons-three` `audio-trace.test.ts` | 5 testes (trace gravado antes de qualquer mudança no som) |
 | `docker build -f site/Dockerfile .` | exit 0 (com o manifesto de `game-weather`) |
+
+## Fase 6 — grupo C (som das armas)
+
+### T6.1e2 — Sons de recarga da Cena de Arte como padrão em `MECHANICAL_SOUNDS`
+
+A T1.4 (desvio 1) deixou os cliques metálicos de recarga como síntese do SDK porque a Galeria não tem som. A Cena de Arte tem (`sfx.empty`, `magOut`, `magIn`, `bolt`, `shell`, `casing`, L1339-L1344, mais o `click` de L1338 que é a primitiva), então, pela regra 1 do CLAUDE.md, a entrega do time substitui o invento.
+
+| Cena | Vira | Obs. |
+|---|---|---|
+| `empty` (`click(0, 3200, .35)`) | `dry_fire` | mantém a classe `vazio` do jogo e troca o `metal` do SDK |
+| `magOut` (`click 1600` + ruído bandpass 900, Q2, atraso .03) | `magazine_out` | mantém a classe `recarga` do jogo |
+| `magIn` (`click 1100` + tom 320 para 200) | `magazine_in` | idem; `seat` continua nos cilindros, canos e tubos |
+| `bolt` (`click 2200` e `click 2700` a .12) | `charge` | |
+| `shell` (`click 1400` + ruído bandpass 1200, Q3, atraso .02) | `round_in` | |
+| `casing` (tom 4200-5700 para 3800, .06, atraso .25-.45) | `clink()` | um toque só, no lugar dos dois do SDK |
+
+Os passos novos `scene_tone` e `scene_noise` de `SoundStep` são o `sTone` e o `sNoise` da Cena (receitas `layered` com palco de saída: ganho de distância, pan, envio de reverb). O que o time não entregou (`misfire`, trava, ferrolho aberto, cilindro, cobertura, tanque, tubo...) segue com o `metal` do SDK.
+
+**Prova:** `tests/audio-scene.test.ts` roda cada som no motor com a mixagem `art_scene` e compara com o traço do próprio código da Cena (`tools/golden/fixtures/audio/art-scene-audio.json`, casos `empty`, `magOut`, `magIn`, `bolt`, `shell`): diferenças vazias, tolerância 1e-9. O `casing` da Cena é posicional (3,2 / 12,-9 / 40,25) e o `clink` toca no ouvinte, então ele é conferido por faixas (frequência, atraso, rampa a 3800).
+
+**Fixture regravada de propósito:** `packages/game-weapons-three/tests/fixtures/audio-trace.json` (`UPDATE_GOLDEN=1`). Só mudam os casos com recarga, vazio e `clink`; o resto do traço (tiros, classes, `thud`, volume, `dispose`) é o mesmo da T6.1e. `tests/audio.test.ts` (T1.4) ficou com uma só mudança: o piso de osciladores passa de 5 para 4, porque o `clink` agora é um toque. Reverter: desfazer este commit (Q5).
