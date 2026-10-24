@@ -827,3 +827,41 @@ Modelo: `sonnet` (o desenho 🧠 da T1.7 já decidiu a estrutura; aqui só execu
 Commits (todos terminam com o `Co-Authored-By` de Opus 5.5): `feat(weapons,contracts,test-room)` tipos; `feat(weapons-catalog)` dados; `feat(weapons)` regra; `feat(weapons,weapons-catalog)` lançador sob o cano; e o de documentação (README, skill, changeset, evidência).
 
 Modelo da execução: `sonnet`.
+
+## T1.7.5
+
+Modelo: `sonnet`. Branch `feat/spec-001-t1-7`. Armas novas, calibres `4_6x30` e `32acp` e M134 em três modos. A lista completa, com a origem de cada número, está em `inventario/armas-itens.md` §3.5.
+
+### O que entrou
+
+- **5 portadas por citação**: `hk_mp5sd3`, `fn_parafal`, `taurus_t4_civil`, `taurus_th380`, `mossberg_500_cruiser`. **16 criações**: `hk_mp5k`, `hk_ump9`, `mini_uzi`, `hk_mp7a1`, `hk_g36`, `hk_g36k`, `hk_g36c`, `fn_m249`, `fn_minimi_para`, `fn_mag`, `rpk`, `sig_mpx`, `mg3`, `pp19_bizon`, `vz61`, `m134`. Tudo de `decisions.creations` (cada número com `source` e `reason`; REF com URL, conferido por `tests/creations.test.ts`); os JSON gerados não foram editados à mão. Fontes consultadas: páginas da Wikipedia (infobox) de cada arma; a página do fabricante não foi reconferida (nota em cada número).
+- **M134**: na mão com caixa de 200 (padrão), com `ammo_backpack` (500) e no tripé (`tripod`, apoio). Dados reais: 7,62×51, 801 mm, cano 559, 39 kg, 3000 rpm (`rpmRange` 2000 a 6000). Atraso de aceleração dos canos (`spin`: 0,5 s e 1,0 s de manutenção) derivado e configurável.
+- **Modelos**: 21 entradas em `models.json`; construtores novos `m134` (seis canos num pivô `barrels`, que gira um sexto de volta por tiro) e carregador helicoidal do Bizon, com golden próprio (`new-weapon-models`). Os 77 hashes da Galeria não mudaram.
+- **GP-25** só em arma com a opção `ak` (`decisions.gp25Mount`): o SKS saiu (resposta à dúvida 4 da T1.7 1–4).
+- **Área de armas**: 4 colunas de balcão; o M134 no tripé é o item `m134_tripod`, parado, longe dos balcões. Goldens de regra: o fixture só ganhou 244 linhas (nenhuma existente mudou).
+
+### Números derivados para o dono confirmar
+
+1. `taurus_th380`: **nenhum** número tem fonte (a página do fabricante não existiu): 165/90 mm, 0,55 kg, 12+1 são derivados da G2C. A marca é decisão do dono.
+2. `m134`: caixa de 200 cartuchos, `spin` 0,5 s / 1,0 s.
+3. `fn_parafal`: massa 4,0 kg (meio da faixa do desenho), lado da dobra da coronha (direita); `hk_g36*`: lado da dobra (esquerda); G36K/G36C e MP5SD3 (805/610), Minimi Para (893/766) e MP5K (2,0 kg) são valores do desenho T1.7, não reconferidos.
+4. `hk_ump9` fica com 2,3 kg (Wikipedia) em vez dos 2,1 do desenho; `sig_mpx` usa cano de 203 mm (a página não casa cano e comprimento).
+5. `taurus_t4_civil` (878 mm, 805 recolhida), `mossberg_500_cruiser` (720 mm, 2,7 kg), cadência semi de 120.
+6. Velocidade herdada da arma-base do Arsenal §07 quando o calibre é o mesmo (MP5K, Mini Uzi, FN M249, Minimi Para, ParaFAL, T4 civil, Cruiser): o cano mais curto não foi descontado.
+7. Tempos de recarga: todos derivados (arma irmã, Q5); `rpk` herda `rel` 0,4 do AK-47; `fn_mag` 750 rpm e fita de 100.
+8. Calibres: ruído 150 m (classe "médio") e arrasto derivados; `.32 ACP` a 276 m/s; massas dos dois acessórios integrados (`integral_suppressor` 0,45 kg, `integral_optic_3x` 0,3 kg).
+9. Regra: o fator subsônico entra nos números base de peça de fábrica subsônica; o calor ×1,5 do supressor integral não é aplicado (calor sai do calibre).
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 (sem achados) |
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0 |
+| `game-weapons` / `game-weapons-three` / `game-test-room` | 351 / 123 / 118 passaram (eram 337 / 94 antes dos novos testes) |
+| `tools/weapons-catalog` | 35 passaram (eram 29: +6 de `creations.test.ts`); `catalog:check` atualizado |
+| `examples/weapons-test-area` | build e `test.mjs` ok (com a página `sala-armas.html`) |
+
+Modelo da execução: `sonnet`.

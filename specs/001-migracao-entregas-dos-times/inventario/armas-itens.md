@@ -284,6 +284,44 @@ Energia: nenhuma coluna de ARS está em joules; as proporções mostram que dano
 | GAL 856-860 | cabeça 3, mandíbula 2, pescoço 2, tronco/quadril 1, braço/antebraço/mão 0,6, coxa/canela/pé 0,7 | cabeça 40, mandíbula 12, pescoço 25, tronco 150, quadril 90, braço 45, antebraço 30, mão 12, coxa 55, canela 40, pé 15 | 11 segmentos; sangramento por região `BLEED` (pescoço 46, cabeça 40, coxa 19, braço 15...) |
 | JML `zDamage` 71337 | por categoria de zumbi `C.mult[]` (tronco, braço, perna); colete por classe `RO.colete`; capacete anula 1º tiro de pistola | `SEG` 66328: cabeça 40, braço 60, perna 80 | 7 regiões numeradas 0-5 |
 
+### 3.5 T1.7.5: armas, calibres, construtores e peças que o SDK criou (para o dono ver)
+
+Nada disto está nas páginas dos times como dado ou modelo (só os cinco "portados por citação" aparecem em uma linha de texto do ARS). Tudo vem de `tools/weapons-catalog/decisions.json` (`creations`, cada número com `source` e `reason`; REF com URL) e é gerado; nada foi escrito à mão nos JSON.
+
+| id | tipo | calibre | comp./cano (mm), massa (kg), cadência, pente | origem dos números |
+|---|---|---|---|---|
+| `hk_mp5sd3` | portada por citação | `9x19` | 805 / 146, 3.4, 700, 30 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: noise, reload |
+| `fn_parafal` | portada por citação | `7_62x51` | 1020 / 440, 4.0, 650, 20 | REF: barrel, capacity, length, rpm; derivado: emptyMass, muzzleSpeed, reload |
+| `taurus_t4_civil` | portada por citação | `5_56x45` | 878 / 406, 3.0, 120, 30 | REF: barrel, capacity; derivado: emptyMass, length, muzzleSpeed, reload, rpm |
+| `taurus_th380` | portada por citação | `380acp` | 165 / 90, 0.55, semi, 12+1 | REF: -; derivado: barrel, capacity, emptyMass, length, reload |
+| `mossberg_500_cruiser` | portada por citação | `12ga_00buck` | 720 / 470, 2.7, semi, 5+1 | REF: barrel, capacity; derivado: emptyMass, length, muzzleSpeed, reload, rpm |
+| `hk_mp5k` | criação | `9x19` | 325 / 115, 2.0, 900, 30/15 | REF: barrel, capacity, emptyMass, length, rpm; derivado: muzzleSpeed, reload |
+| `hk_ump9` | criação | `9x19` | 690 / 200, 2.3, 700, 30 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `mini_uzi` | criação | `9x19` | 600 / 197, 2.7, 950, 20/25/32 | REF: barrel, capacity, emptyMass, length, rpm; derivado: muzzleSpeed, reload |
+| `hk_mp7a1` | criação | `4_6x30` | 638 / 180, 1.9, 950, 40/20/30 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `hk_g36` | criação | `5_56x45` | 999 / 480, 3.63, 750, 30/100 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `hk_g36k` | criação | `5_56x45` | 860 / 318, 3.3, 750, 30/100 | REF: barrel, capacity, emptyMass, length, rpm; derivado: reload |
+| `hk_g36c` | criação | `5_56x45` | 720 / 228, 2.82, 750, 30/100 | REF: barrel, capacity, emptyMass, length, rpm; derivado: reload |
+| `fn_m249` | criação | `5_56x45` | 1040 / 465, 7.1, 850, 200/30 | REF: barrel, capacity, emptyMass, length; derivado: muzzleSpeed, reload, rpm |
+| `fn_minimi_para` | criação | `5_56x45` | 893 / 349, 7.1, 850, 200/30 | REF: barrel, capacity, length; derivado: emptyMass, muzzleSpeed, reload, rpm |
+| `fn_mag` | criação | `7_62x51` | 1263 / 630, 11.79, 750, 100 | REF: barrel, emptyMass, length, muzzleSpeed; derivado: capacity, reload, rpm |
+| `rpk` | criação | `7_62x39` | 1040 / 590, 4.8, 600, 40/75 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `sig_mpx` | criação | `9x19` | 610 / 203, 2.7, 850, 30/20/35 | REF: capacity, emptyMass, length, rpm; derivado: barrel, muzzleSpeed, reload |
+| `mg3` | criação | `7_62x51` | 1225 / 565, 11.5, 1100, 100 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `pp19_bizon` | criação | `9x18` | 660 / 195, 2.1, 680, 64 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `vz61` | criação | `32acp` | 517 / 115, 1.3, 850, 20/10 | REF: barrel, capacity, emptyMass, length, muzzleSpeed, rpm; derivado: reload |
+| `m134` | criação | `7_62x51` | 801 / 559, 39, 3000, 200 | REF: barrel, emptyMass, length, muzzleSpeed, rpm; derivado: capacity, reload, spin |
+
+**Portadas por citação (5)**: `hk_mp5sd3` (ARS §06 "versão SD"), `fn_parafal` (ARS §06, jogo, Vivos), `taurus_t4_civil` ("AR-15 civil", ARS §16, marca decidida pelo dono), `taurus_th380` (".380", ARS §16, marca decidida pelo dono) e `mossberg_500_cruiser` (ARS §06). **Criações (16)**: `hk_mp5k`, `hk_ump9`, `mini_uzi`, `hk_mp7a1`, `hk_g36`, `hk_g36k`, `hk_g36c`, `fn_m249`, `fn_minimi_para`, `fn_mag`, `rpk`, `sig_mpx`, `mg3`, `pp19_bizon`, `vz61` e `m134`.
+
+**Calibres criados (2)**: `4_6x30` (2,0 g, 735 m/s, estojo 8,0 mm, 30,5 mm, cartucho 38,5 mm, projétil 4,65 mm; REF Wikipedia/MP7A1) e `32acp` (4,6 g a 276 m/s, aro 9,1 mm, estojo 17,3 mm, cartucho 25,0 mm, projétil 7,94 mm; REF Wikipedia). Ruído 150 m nos dois, derivado da classe "médio" do ARS §04.
+
+**Construtores 3D criados (2, sem página de time, com golden próprio)**: o grupo de seis canos rotativos do `m134` (`src/models/m134.ts`; gira um sexto de volta por tiro) e o carregador helicoidal do `pp19_bizon` (`mag: 'helical'`, sob o cano). Mais o tripé do M134 na área de armas (três pernas, do tripé da M2 da Galeria).
+
+**Acessórios criados (2)**: `integral_suppressor` (MP5SD3, não sai) e `integral_optic_3x` (G36 e G36K, não sai).
+
+**Regras criadas**: `FirearmAction.spin` e `rpmRange` (canhão rotativo), o fator subsônico já nos números base de uma peça de fábrica subsônica (MP5SD3) e `gp25Mount` (GP-25 só em arma com a opção `ak`).
+
 ---
 
 ## 4. Destino por módulo
