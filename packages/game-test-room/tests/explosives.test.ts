@@ -21,6 +21,12 @@ const explosionsOf = (room: TestRoom): HostEvent[] => {
   return events
 }
 
+const hostEventsOf = (room: TestRoom, type: HostEvent['type']): HostEvent[] => {
+  const events: HostEvent[] = []
+  room.loadModule({ id: `spy_${type}`, name: 'spy', group: 'spy', items: () => [], attach: (host) => host.on((event) => event.type === type && events.push(event)) })
+  return events
+}
+
 const equip = (room: TestRoom, weapon: string): void => {
   room.setTool(weapon)
   run(room, 0.5)
@@ -147,7 +153,11 @@ describe('dynamite with a safety fuse', () => {
     const room = makeRoom()
     const explosions = explosionsOf(room)
     let lent: ModuleHost | null = null
-    room.loadModule({ id: 'cfg', name: 'cfg', group: 'cfg', items: () => [], attach: (host) => void (lent = host) })
+    room.loadModule({ id: 'cfg', name: 'cfg', group: 'cfg', items: () => [], attach: (host) => {
+        lent = host
+        return () => undefined
+      },
+    })
     equip(room, 'dynamite')
     room.look([0, 1.7, 5], [0, 0.6, -3])
     room.use()
@@ -161,5 +171,46 @@ describe('dynamite with a safety fuse', () => {
     expect(explosions).toHaveLength(1)
     run(room, 25)
     expect(explosions).toMatchObject([{ cause: 'timer' }, { cause: 'timer' }])
+  })
+})
+
+describe('cooking a grenade in the room (hold the trigger)', () => {
+  it('throws on release with the fuse that is left: 2 s held means the blast comes 2 s after the throw, about 4 s after the pull', () => {
+    const room = makeRoom()
+    const explosions = explosionsOf(room)
+    const cooks = hostEventsOf(room, 'cook')
+    equip(room, 'frag_grenade')
+    room.look([0, 1.7, 5], [0, 0.6, -3])
+    room.use(2)
+    expect(cooks).toMatchObject([{ phase: 'start', fuse: 4 }, { phase: 'throw' }])
+    expect(room.log.entries({ type: 'throw_projectile' })).toHaveLength(1)
+    run(room, 1.5)
+    expect(explosions).toHaveLength(0)
+    run(room, 1)
+    expect(explosions).toMatchObject([{ type: 'explosion', cause: 'timer', energy: 200000 }])
+  })
+
+  it('goes off in the hand when held past the fuse, at the player, with no throw left to do', () => {
+    const room = makeRoom()
+    const explosions = explosionsOf(room)
+    const cooks = hostEventsOf(room, 'cook')
+    equip(room, 'frag_grenade')
+    room.look([0, 1.7, 5], [0, 0.6, -3])
+    room.use(5)
+    expect(cooks).toMatchObject([{ phase: 'start' }, { phase: 'burst', fuse: 0 }])
+    run(room, 0.2)
+    expect(explosions).toHaveLength(1)
+    const blast = explosions[0]
+    if (blast?.type !== 'explosion') throw new Error('no explosion')
+    expect(Math.hypot(blast.point[0], blast.point[2] - 5)).toBeLessThan(0.5)
+    expect(room.log.entries({ type: 'blast_player' })).toHaveLength(1)
+  })
+
+  it('a molotov and a rocket are still thrown on the pull, not on the release', () => {
+    const room = makeRoom()
+    equip(room, 'molotov')
+    room.look([0, 1.7, 5], [0, 0.6, -3])
+    room.use()
+    expect(room.log.entries({ type: 'throw_projectile' })).toHaveLength(1)
   })
 })

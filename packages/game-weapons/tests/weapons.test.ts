@@ -234,21 +234,23 @@ describe('non-firearms', () => {
     expect(w.trigger(O, D, 0.5, true).uses[0]).toMatchObject({ kind: 'heat', temperature: 3000, duration: 0.5 })
   })
 
-  it('throwables throw once per pull with an upward arc', () => {
+  it('a throwable with a timer fuse is cooked: the pull pulls the pin and the release throws it with an upward arc', () => {
     const w = createArsenal().create('frag_grenade')
     expect(w.ammo).toBe(3)
-    const r = w.trigger(O, D, 0.016, true)
-    const u = r.uses[0]
-    expect(u.kind).toBe('throw')
-    if (u.kind === 'throw') {
+    expect(w.trigger(O, D, 0.016, false)).toMatchObject({ status: 'ok', uses: [] })
+    expect(w.cooking).toBe(true)
+    expect(w.ammo).toBe(3)
+    const r = w.release(O, D)
+    const u = r?.uses[0]
+    expect(u?.kind).toBe('throw')
+    if (u?.kind === 'throw') {
       expect(u.velocity[2]).toBeCloseTo(-15, 6)
       expect(u.velocity[1]).toBeGreaterThan(0)
-      expect(u.fuse).toBe(4)
+      expect(u.fuse).toBeCloseTo(4 - 0.016, 6)
     }
-    expect(w.trigger(O, D, 0.016, true).uses).toHaveLength(0)
-    w.release()
-    expect(w.trigger(O, D, 0.016, true).uses).toHaveLength(1)
-    expect(w.ammo).toBe(1)
+    expect(w.cooking).toBe(false)
+    expect(w.ammo).toBe(2)
+    expect(w.release()).toBeNull()
   })
 
   it('molotov carries fire', () => {

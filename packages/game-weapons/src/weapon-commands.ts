@@ -90,6 +90,7 @@ export abstract class WeaponCommands extends WeaponCore {
     this.scheduled = []
     this.readyAt = this.clock
     this.latched = false
+    this.cook = null
     this.extra = 0
   }
 }

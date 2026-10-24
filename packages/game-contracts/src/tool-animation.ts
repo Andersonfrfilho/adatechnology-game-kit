@@ -16,6 +16,8 @@ export const TOOL_CLIP = {
   SAFETY_ON: 'safety_on',
   SAFETY_OFF: 'safety_off',
   MODE: 'mode',
+  /** A throwable with the pin out, held until it is thrown. */
+  COOK: 'cook',
 } as const
 export type ToolClipId = (typeof TOOL_CLIP)[keyof typeof TOOL_CLIP]
 
@@ -57,6 +59,9 @@ export const toolAnimationStep = (event: HostEvent): ToolAnimationStep | null =>
       return { type: 'sync', stage: event.stage }
     case 'feed':
       return { type: 'play', clip: TOOL_CLIP.FEED }
+    case 'cook':
+      if (event.phase === 'start') return { type: 'play', clip: TOOL_CLIP.COOK, duration: event.fuse }
+      return { type: 'finish', clip: TOOL_CLIP.COOK }
     default:
       return null
   }

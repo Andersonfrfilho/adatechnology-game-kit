@@ -1,7 +1,7 @@
 import { decayHeat } from './heat'
 import { isReloadable } from './reload'
 import { createRng } from './rng'
-import type { AmmoQualityDef, CaliberDef, ConditionDef, ExplosiveDef, FaultId, FireMode, ReloadKind, WeaponAction, WeaponDef, WeaponEvent, WeaponPhase, WeaponRules } from './types'
+import type { AmmoQualityDef, CaliberDef, ConditionDef, ExplosiveDef, FaultId, FireMode, ReloadKind, Vec3, WeaponAction, WeaponDef, WeaponEvent, WeaponPhase, WeaponRules } from './types'
 import { EPS, FAULT_RNG_SALT, FUSE_RNG_SALT, findById } from './weapon-shared'
 import type { Scheduled, WeaponStateInit } from './weapon-shared'
 
@@ -30,6 +30,8 @@ export abstract class WeaponCore {
   protected pend: { src: 'update' | 'trigger'; amt: number } | null = null
   protected readyAt = 0
   protected latched = false
+  /** A throwable whose pin is pulled: the clock it started at, its whole fuse and the aim of the last frame it was held. */
+  protected cook: { readonly start: number; readonly fuse: number; origin: Vec3; direction: Vec3 } | null = null
 
   protected _reloading = false
   protected reloadEnd = 0
@@ -96,6 +98,10 @@ export abstract class WeaponCore {
   }
   get capacity(): number {
     return this._capacity
+  }
+  /** True while a throwable's pin is pulled and the trigger is held. */
+  get cooking(): boolean {
+    return this.cook !== null
   }
   get reloading(): boolean {
     return this._reloading

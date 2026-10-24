@@ -280,14 +280,14 @@
 ]},
 {"id":"frag_grenade","steps":[
 {"step":"draw","shots":0,"rounds":0,"uses":"","ammo":3,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
-{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"throw×1","ammo":2,"reserve":0,"heat":0,"events":""},
-{"step":"empty","status":"empty","shots":0,"rounds":0,"uses":"throw×2","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"throw×1","ammo":2,"reserve":0,"heat":0,"events":"cook:start@1 cook:throw@1"},
+{"step":"empty","status":"empty","shots":0,"rounds":0,"uses":"throw×2","ammo":0,"reserve":0,"heat":0,"events":"cook:start@4 cook:throw@4 cook:start@4.7 cook:throw@4.7"},
 {"step":"reload:auto:refused","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":""}
 ]},
 {"id":"pipe_bomb","steps":[
 {"step":"draw","shots":0,"rounds":0,"uses":"","ammo":3,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
-{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"throw×1","ammo":2,"reserve":0,"heat":0,"events":""},
-{"step":"empty","status":"empty","shots":0,"rounds":0,"uses":"throw×2","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"throw×1","ammo":2,"reserve":0,"heat":0,"events":"cook:start@1 cook:throw@1"},
+{"step":"empty","status":"empty","shots":0,"rounds":0,"uses":"throw×2","ammo":0,"reserve":0,"heat":0,"events":"cook:start@4 cook:throw@4 cook:start@4.7 cook:throw@4.7"},
 {"step":"reload:auto:refused","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":""}
 ]},
 {"id":"screwdriver","steps":[
@@ -1216,14 +1216,14 @@
 ]},
 {"id":"flashbang","steps":[
 {"step":"draw","shots":0,"rounds":0,"uses":"","ammo":3,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
-{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"throw×1","ammo":2,"reserve":0,"heat":0,"events":""},
-{"step":"empty","status":"empty","shots":0,"rounds":0,"uses":"throw×2","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"throw×1","ammo":2,"reserve":0,"heat":0,"events":"cook:start@1 cook:throw@1"},
+{"step":"empty","status":"empty","shots":0,"rounds":0,"uses":"throw×2","ammo":0,"reserve":0,"heat":0,"events":"cook:start@4 cook:throw@4 cook:start@4.7 cook:throw@4.7"},
 {"step":"reload:auto:refused","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":""}
 ]},
 {"id":"dynamite","steps":[
 {"step":"draw","shots":0,"rounds":0,"uses":"","ammo":3,"reserve":0,"heat":0,"events":"draw:start@0 draw:end@0.35"},
-{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"throw×1","ammo":2,"reserve":0,"heat":0,"events":""},
-{"step":"empty","status":"empty","shots":0,"rounds":0,"uses":"throw×2","ammo":0,"reserve":0,"heat":0,"events":""},
+{"step":"use","status":"ok","shots":0,"rounds":0,"uses":"throw×1","ammo":2,"reserve":0,"heat":0,"events":"cook:start@1 cook:throw@1"},
+{"step":"empty","status":"empty","shots":0,"rounds":0,"uses":"throw×2","ammo":0,"reserve":0,"heat":0,"events":"cook:start@4 cook:throw@4 cook:start@4.7 cook:throw@4.7"},
 {"step":"reload:auto:refused","shots":0,"rounds":0,"uses":"","ammo":0,"reserve":0,"heat":0,"events":""}
 ]},
 {"id":"c4","steps":[

@@ -1,10 +1,11 @@
-import { launcherUses, throwableUse } from './explosive-use'
+import { isPlaced, launcherUses, throwableUse } from './explosive-use'
 import { sampleFuse } from './fuse'
 import { heatPerRound } from './heat'
 import { isReloadable } from './reload'
 import { normalize } from './rng'
 import type { TriggerResult, Use, Vec3, WeaponAction, WeaponState } from './types'
 import { WeaponFirearm } from './weapon-firearm'
+import type { WeaponCore } from './weapon-core'
 import { EPS, result } from './weapon-shared'
 
 export { BLOOM_CAP, muzzleEnergy } from './weapon-shared'
@@ -44,7 +45,7 @@ export class WeaponRuntime extends WeaponFirearm implements WeaponState {
         res = this.fireExtinguisher(a, origin, dir, d)
         break
       case 'throwable':
-        res = this.fireThrowable(a, origin, dir, held)
+        res = this.fireThrowable(a, origin, dir, held, start, end)
         break
       case 'launcher':
         res = this.fireLauncher(a, origin, dir, start, held)
@@ -121,11 +122,59 @@ export class WeaponRuntime extends WeaponFirearm implements WeaponState {
     return result('ok', { uses: [{ kind: 'extinguish', range: a.range, coolC: a.coolC, duration, origin, direction: dir }], noise: a.noise })
   }
 
-  protected fireThrowable(a: Extract<WeaponAction, { kind: 'throwable' }>, origin: Vec3, dir: Vec3, held: boolean): TriggerResult {
+  /** The fuse of this throw: sampled from the explosive when it has a range or a burn, else the fixed one of the action. */
+  protected sampleThrowFuse(a: Extract<WeaponAction, { kind: 'throwable' }>): number {
+    return (this.explosive ? sampleFuse(this.explosive, this.fuseRng, this.fuseLengthOverride) : undefined) ?? a.fuse
+  }
+
+  protected throwUse(a: Extract<WeaponAction, { kind: 'throwable' }>, origin: Vec3, dir: Vec3, fuse: number, extra: { cooked?: number; inHand?: boolean } = {}): TriggerResult {
+    return result('ok', { uses: [throwableUse({ action: a, explosive: this.explosive, origin, direction: dir, fuse, rules: this.rules.explosives, ...extra })], noise: a.noise })
+  }
+
+  /** A timer throwable is cooked from the pull; impact, remote and wire ones (and a long fuse that sets down) act at once. */
+  protected fireThrowable(a: Extract<WeaponAction, { kind: 'throwable' }>, origin: Vec3, dir: Vec3, held: boolean, start: number, end: number): TriggerResult {
+    if (this.cook) return this.cookStep(a, origin, dir, end)
     if (!this.oncePerPull(held)) return result('cooldown')
     if (this._ammo <= 0) return result('empty')
+    const fuse = this.sampleThrowFuse(a)
+    if (fuse <= 0 || isPlaced(this.explosive, fuse, this.rules.explosives)) {
+      this._ammo -= 1
+      return this.throwUse(a, origin, dir, fuse)
+    }
+    this.cook = { start, fuse, origin, direction: dir }
+    this.emit({ type: 'cook', phase: 'start', fuse, at: start })
+    return this.cookStep(a, origin, dir, end)
+  }
+
+  /** The trigger stays down on a cooked throwable: nothing happens until the fuse runs out in the hand. */
+  protected cookStep(a: Extract<WeaponAction, { kind: 'throwable' }>, origin: Vec3, dir: Vec3, now: number): TriggerResult {
+    const cook = this.cook as NonNullable<WeaponCore['cook']>
+    cook.origin = origin
+    cook.direction = dir
+    if (now - cook.start < cook.fuse - EPS) return result('ok')
+    return this.burstInHand(a, cook, origin, dir)
+  }
+
+  protected burstInHand(a: Extract<WeaponAction, { kind: 'throwable' }>, cook: NonNullable<WeaponCore['cook']>, origin: Vec3, dir: Vec3): TriggerResult {
+    this.cook = null
     this._ammo -= 1
-    const fuse = (this.explosive ? sampleFuse(this.explosive, this.fuseRng, this.fuseLengthOverride) : undefined) ?? a.fuse
-    return result('ok', { uses: [throwableUse({ action: a, explosive: this.explosive, origin, direction: dir, fuse, rules: this.rules.explosives })], noise: a.noise })
+    this.emit({ type: 'cook', phase: 'burst', fuse: 0, at: cook.start + cook.fuse })
+    return this.throwUse(a, origin, dir, 0, { cooked: cook.fuse, inHand: true })
+  }
+
+  release(origin?: Vec3, direction?: Vec3): TriggerResult | null {
+    super.release()
+    const cook = this.cook
+    const a = this.action
+    if (!cook || a.kind !== 'throwable') return null
+    const from = origin ?? cook.origin
+    const dir = direction ? normalize(direction) : cook.direction
+    const held = this.clock - cook.start
+    if (held >= cook.fuse - EPS) return this.burstInHand(a, cook, from, dir)
+    this.cook = null
+    this._ammo -= 1
+    const remaining = cook.fuse - held
+    this.emit({ type: 'cook', phase: 'throw', fuse: remaining, at: this.clock })
+    return this.throwUse(a, from, dir, remaining, { cooked: held })
   }
 }

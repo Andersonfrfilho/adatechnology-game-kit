@@ -49,6 +49,10 @@ export type ThrowableUseParams = {
   readonly direction: Vec3
   /** Seconds of fuse of this throw (sampled, or what is left after cooking). */
   readonly fuse: number
+  /** Seconds the thrower held it after pulling the pin. */
+  readonly cooked?: number
+  /** Set off in the hand: no throw, the fuse is spent. */
+  readonly inHand?: boolean
   readonly rules: Pick<WeaponRules['explosives'], 'placeFuseFrom'>
 }
 
@@ -67,10 +71,12 @@ const placedUse = ({ action, explosive, origin, direction, fuse }: ThrowableUseP
 
 /** One throw (or one charge set down) of a throwable: a fuse that counts from the throw, or an impact trigger when the fuse is 0. */
 export const throwableUse = (params: ThrowableUseParams): Use => {
-  const { action, explosive, origin, direction, fuse } = params
+  const { action, explosive, origin, direction, fuse, cooked, inHand } = params
   if (explosive && isPlaced(explosive, fuse, params.rules)) return placedUse({ ...params, explosive })
-  const velocity: Vec3 = [direction[0] * action.throwSpeed, direction[1] * action.throwSpeed + action.throwSpeed * THROW_LIFT, direction[2] * action.throwSpeed]
+  const velocity: Vec3 = inHand ? [0, 0, 0] : [direction[0] * action.throwSpeed, direction[1] * action.throwSpeed + action.throwSpeed * THROW_LIFT, direction[2] * action.throwSpeed]
   const use: Extract<Use, { kind: 'throw' }> = { kind: 'throw', energy: action.energy, radius: action.radius, fuse, velocity, origin }
+  if (cooked !== undefined) use.cooked = cooked
+  if (inHand) use.inHand = true
   if (action.fire) use.fire = { ...action.fire }
   if (!explosive) return use
   return {
@@ -78,7 +84,7 @@ export const throwableUse = (params: ThrowableUseParams): Use => {
     ...blastNumbers(explosive),
     radius: action.radius,
     explosive: explosive.id,
-    trigger: fuse > 0 ? 'timer' : 'impact',
+    trigger: fuse > 0 || inHand ? 'timer' : 'impact',
     armDistance: 0,
     ...(explosive.stunSeconds !== undefined ? { stunSeconds: explosive.stunSeconds } : {}),
   }

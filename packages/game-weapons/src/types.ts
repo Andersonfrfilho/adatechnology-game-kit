@@ -278,10 +278,18 @@ export interface WeaponState {
   readonly spread: number
   /**
    * Pull or hold the trigger for `dt` seconds from `origin` towards `direction`. `held` = the trigger stays down (auto fire, continuous
-   * flame); a new pull with `held: false` fires semi/single once.
+   * flame); a new pull with `held: false` fires semi/single once. A throwable with a timer fuse is cooked: the pull takes the pin out and the
+   * fuse starts to count, `release()` throws it with the fuse that is left, and holding past the fuse sets it off in the hand (a `throw` use with
+   * `inHand`). Impact and remote ones, and the ones set down, act on the pull.
    */
   trigger(origin: Vec3, direction: Vec3, dt: number, held?: boolean, source?: string): TriggerResult
-  release(): void
+  /**
+   * Lets go of the trigger. A throwable being cooked (see `trigger`) is thrown with what is left of its fuse, so this returns the result of that throw
+   * (`origin` and `direction` default to the aim of the last `trigger` call); anything else returns null.
+   */
+  release(origin?: Vec3, direction?: Vec3): TriggerResult | null
+  /** True while a throwable's pin is pulled and the trigger is held. */
+  readonly cooking: boolean
   /** Turns the safety on or off; returns the state it is in now. */
   setSafety(on: boolean): boolean
   /** Starts clearing the fault (it takes `timings.clear` seconds); false when there is nothing to clear. */

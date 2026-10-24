@@ -46,6 +46,10 @@ export type Use =
       injuryRadius?: number
       /** Seconds the blast stuns whoever is inside the injury radius (flashbang). */
       stunSeconds?: number
+      /** Seconds the thrower held it after pulling the pin: `fuse` is what was left of the full fuse when it left the hand. */
+      cooked?: number
+      /** Went off in the thrower's hand (held past the fuse): no velocity, `fuse` is 0 and the blast is at `origin`. */
+      inHand?: boolean
     }
   /** An explosive set down where the trigger is pulled (mine, C4, charge): it waits for its trigger instead of flying. */
   | {

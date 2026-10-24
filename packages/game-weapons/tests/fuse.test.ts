@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { createArsenal, createRng, nominalFuse, sampleFuse } from '../src'
-import type { ExplosiveBody, ExplosiveDef, Use, Vec3 } from '../src'
+import type { ExplosiveBody, ExplosiveDef, Use, Vec3, WeaponState } from '../src'
 
 const ORIGIN: Vec3 = [0, 1.5, 0]
 const AIM: Vec3 = [0, 0, -1]
@@ -13,13 +13,16 @@ const arsenal = createArsenal({ rules: { faults: false } })
 const dynamite = arsenal.explosives.get('dynamite') as ExplosiveDef
 const flashbang = arsenal.explosives.get('flashbang') as ExplosiveDef
 
-/** The use of the first pull of a throwable seeded with `seed`, on a fresh weapon. */
-const useOf = (weaponId: string, seed: number, source = arsenal): Use => {
-  const weapon = source.create(weaponId, { seed })
-  const use = weapon.trigger(ORIGIN, AIM, 0, false).uses[0]
-  if (!use) throw new Error(`${weaponId} gave no use`)
+/** What one pull and release of a throwable gives (the throw comes on the release of a cooked one). */
+const throwOf = (weapon: WeaponState): Use => {
+  const pulled = weapon.trigger(ORIGIN, AIM, 0, false)
+  const use = (weapon.release(ORIGIN, AIM) ?? pulled).uses[0] ?? pulled.uses[0]
+  if (!use) throw new Error('the throwable gave no use')
   return use
 }
+
+/** The use of the first pull of a throwable seeded with `seed`, on a fresh weapon. */
+const useOf = (weaponId: string, seed: number, source = arsenal): Use => throwOf(source.create(weaponId, { seed }))
 
 const fuseOf = (use: Use): number => (use.kind === 'throw' || use.kind === 'place' ? (use.fuse ?? 0) : 0)
 
@@ -52,7 +55,7 @@ describe('fuse of a safety fuse: length times burn rate, scattered by the tolera
   it('a longer fuse set by the host burns longer, and the dynamite is set down lit instead of thrown', () => {
     const weapon = arsenal.create('dynamite', { seed: 3 })
     weapon.setFuseLength(0.3)
-    const use = weapon.trigger(ORIGIN, AIM, 0, false).uses[0]
+    const use = throwOf(weapon)
     expect(use).toMatchObject({ kind: 'place', triggers: ['timer'] })
     const fuse = fuseOf(use as Use)
     expect(fuse).toBeGreaterThanOrEqual(0.3 * 131 * 0.9 - 1e-9)
@@ -72,7 +75,7 @@ describe('fuse of a safety fuse: length times burn rate, scattered by the tolera
     const weapon = arsenal.create('dynamite', { seed: 3 })
     weapon.setFuseLength(0.3)
     weapon.setFuseLength(undefined)
-    expect(weapon.trigger(ORIGIN, AIM, 0, false).uses[0]).toMatchObject({ kind: 'throw' })
+    expect(throwOf(weapon)).toMatchObject({ kind: 'throw' })
   })
 })
 
@@ -91,9 +94,8 @@ describe('flashbang fuse: a seeded range of 1.0 to 2.3 s from the lever (M84)', 
 
   it('the body explodes at the sampled fuse, and the successive throws of one weapon differ', () => {
     const weapon = arsenal.create('flashbang', { seed: 11 })
-    const first = weapon.trigger(ORIGIN, AIM, 0, false).uses[0] as Use
-    weapon.release()
-    const second = weapon.trigger(ORIGIN, AIM, 0, false).uses[0] as Use
+    const first = throwOf(weapon)
+    const second = throwOf(weapon)
     expect(fuseOf(first)).not.toBe(fuseOf(second))
     expect(detonationTime(arsenal.explosiveBody(first) as ExplosiveBody)).toBeCloseTo(fuseOf(first), 1)
   })
@@ -103,7 +105,7 @@ describe('flashbang fuse: a seeded range of 1.0 to 2.3 s from the lever (M84)', 
     expect([...grenadeFuses]).toEqual([4])
     const shot = (withThrows: boolean): Vec3 => {
       const throwing = arsenal.create('flashbang', { seed: 5 })
-      if (withThrows) throwing.trigger(ORIGIN, AIM, 0, false)
+      if (withThrows) throwOf(throwing)
       const rifle = arsenal.create('ak_47', { seed: 5 })
       rifle.draw()
       rifle.update(1)

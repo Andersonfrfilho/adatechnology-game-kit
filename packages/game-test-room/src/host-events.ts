@@ -40,6 +40,8 @@ export const toHostEvent = (weapon: string, event: WeaponEvent, options: HostEve
       return { type: 'clear', weapon, fault: event.fault, phase: event.phase, ...(event.phase === 'start' ? durationOf(phase, 'clear') : {}) }
     case 'safety':
       return { type: 'safety', weapon, on: event.on }
+    case 'cook':
+      return { type: 'cook', weapon, phase: event.phase, fuse: event.fuse }
     default:
       return null
   }

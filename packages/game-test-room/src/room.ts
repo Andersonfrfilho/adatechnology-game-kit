@@ -4,7 +4,7 @@ import type { DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, 
 import { createDestructionRenderer, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
-import type { Shot, Use, WeaponState } from '@adatechnology/game-weapons'
+import type { Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFluidRenderer } from '@adatechnology/game-fluids-three'
@@ -355,7 +355,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       },
       primaryUp: () => {
         useHeld = false
-        tool.release()
+        releaseTrigger()
       },
       secondary: () => {
         if (heldEntry) throwHeld()
@@ -1007,6 +1007,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       else if (res.status === 'safe') say(t('hud.safe'))
       return
     }
+    applyUses(res, dt)
+  }
+
+  const applyUses = (res: TriggerResult, dt: number): void => {
     if (res.shots.length) fireShots(res.shots, res.recoil)
     for (const u of res.uses) {
       switch (u.kind) {
@@ -1040,6 +1044,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
+  /** The trigger goes up: a grenade being cooked leaves the hand now, with the fuse that is left (or has already gone off in it). */
+  const releaseTrigger = (): void => {
+    if (!tool.cooking) {
+      tool.release()
+      return
+    }
+    aim()
+    const res = tool.release([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]])
+    flushEvents(toolId, tool)
+    if (res) applyUses(res, 0)
+  }
+
   /** The V shortcut: a kick with the `kick` tool, whatever tool is selected (it keeps its own cooldown). */
   const kick = (): void => {
     if (!arsenal.weapons.has('kick')) return
@@ -1050,7 +1066,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const setTool = (id: string): void => {
     if (!arsenal.weapons.has(id)) throw new Error(`game-test-room: unknown weapon "${id}"`)
-    tool.release()
+    releaseTrigger()
     toolId = id
     const i = loadout.indexOf(id)
     if (i >= 0) toolIndex = i
@@ -2030,7 +2046,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         stepSim(FIXED_DT)
         t0 += FIXED_DT
       }
-      tool.release()
+      releaseTrigger()
     },
     grab,
     throwHeld,

@@ -87,6 +87,11 @@ export type HostEvent =
   | { type: 'stage'; weapon: string; stage: string }
   /** One more round went into the tool while it loads round by round. */
   | { type: 'feed'; weapon: string }
+  /**
+   * A throwable with a timer fuse is cooked: the trigger pulls the pin (`start`, `fuse` is the whole fuse), releasing throws it with what is left of
+   * the fuse (`throw`), and holding past the fuse sets it off in the hand (`burst`, `fuse` 0).
+   */
+  | { type: 'cook'; weapon: string; phase: 'start' | 'throw' | 'burst'; fuse: number }
   /** Something blew up: a thrown or launched explosive, a charge, or a part of the world (a fuel barrel); `source` is the weapon or the object, `cause` what set it off. */
   | { type: 'explosion'; source: string; point: Vec3; energy: number; radius: number; cause: string }
 

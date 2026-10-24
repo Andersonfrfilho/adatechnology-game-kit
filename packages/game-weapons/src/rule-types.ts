@@ -109,3 +109,5 @@ export type WeaponEvent =
   | { type: 'fault'; fault: FaultId; at: number }
   | { type: 'clear'; fault: FaultId; phase: 'start' | 'end'; at: number }
   | { type: 'safety'; on: boolean; at: number }
+  /** Cooking a throwable: `start` pulls the pin, `throw` releases it with `fuse` seconds left, `burst` is the fuse running out while held (`fuse` 0). */
+  | { type: 'cook'; phase: 'start' | 'throw' | 'burst'; fuse: number; at: number }

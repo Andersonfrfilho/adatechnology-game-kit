@@ -27,7 +27,7 @@ const wallAt =
 const useOf = (weaponId: string, index = 0): Use => {
   const weapon = arsenal.create(weaponId)
   const result = weapon.trigger(ORIGIN, AIM, 0, false)
-  const use = result.uses[index]
+  const use = (weapon.release(ORIGIN, AIM) ?? result).uses[index] ?? result.uses[index]
   if (!use) throw new Error(`${weaponId} gave no use at ${index}`)
   return use
 }

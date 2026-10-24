@@ -44,6 +44,8 @@ const eventLabel = (event: WeaponEvent): string => {
       return `clear:${event.fault}:${event.phase}`
     case 'safety':
       return `safety:${event.on ? 'on' : 'off'}`
+    case 'cook':
+      return `cook:${event.phase}`
     case 'draw':
     case 'cycle':
       return `${event.type}:${event.phase}`
@@ -96,8 +98,7 @@ const wait = (weapon: WeaponState, seconds: number): void => {
 
 const pull = (weapon: WeaponState): TriggerResult => {
   const result = weapon.trigger(ORIGIN, AIM, 0, false)
-  weapon.release()
-  return result
+  return weapon.release(ORIGIN, AIM) ?? result
 }
 
 const hold = (weapon: WeaponState, seconds: number): TriggerResult[] => {
@@ -106,7 +107,8 @@ const hold = (weapon: WeaponState, seconds: number): TriggerResult[] => {
     results.push(weapon.trigger(ORIGIN, AIM, FRAME, true))
     weapon.update(FRAME)
   }
-  weapon.release()
+  const released = weapon.release(ORIGIN, AIM)
+  if (released) results.push(released)
   return results
 }
 
