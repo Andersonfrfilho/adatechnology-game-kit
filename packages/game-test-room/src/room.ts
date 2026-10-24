@@ -80,6 +80,8 @@ interface BurningStain {
 
 const FIXED_DT = 1 / 60
 const METRICS_INTERVAL_S = 0.25
+/** Faster than this (m/s) a change of the player's position is a teleport, not walking: the avatar does not stride for it. The player runs at 6.2. */
+const MAX_STRIDE_SPEED = 10
 
 const v3 = (v: THREE_NS.Vector3): Vec3 => [v.x, v.y, v.z]
 const dist3 = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
@@ -712,8 +714,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const x = player.x
     const z = player.z
     if (dt > 0 && feetPrev) {
+      // a jump of position faster than the player can run is a teleport (`look`, an area opening), not a stride
       const raw = Math.hypot(x - feetPrev[0], z - feetPrev[1]) / dt
-      avatarState.speed += (raw - avatarState.speed) * (1 - Math.exp(-dt * 15))
+      avatarState.speed = raw > MAX_STRIDE_SPEED ? 0 : avatarState.speed + (raw - avatarState.speed) * (1 - Math.exp(-dt * 15))
       if (avatarState.speed < 0.02) avatarState.speed = 0
     }
     feetPrev = [x, z]

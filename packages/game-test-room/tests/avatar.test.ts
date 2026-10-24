@@ -109,6 +109,16 @@ describe('room avatar', () => {
     expect(a.calls.at(-1)!.state.armed).toBe(true)
   })
 
+  it('a teleport is not a stride', () => {
+    const r = room()
+    const a = fakeAvatar()
+    r.setAvatar(a)
+    r.update(1 / 60)
+    r.look([9, 1.7, 9], [9, 1.7, 0])
+    r.update(1 / 60)
+    expect(a.calls.at(-1)!.state.speed).toBe(0)
+  })
+
   it('V toggles the view when a body is set, logs it and tells the listeners; without a body V stays the kick', () => {
     const r = room()
     const seen: unknown[] = []
