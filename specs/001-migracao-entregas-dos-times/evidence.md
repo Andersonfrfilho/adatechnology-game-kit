@@ -2951,3 +2951,11 @@ node examples/interactables-test-area/test.mjs                 -> sem falhas (EX
 1. A renomeação dos ids criados pelo adaptador (`service_entrance`, `panel`...) muda as sementes de uma cena salva com os ids do time. Aceita, ou o jogo passa `seedKey`?
 2. A regra da chaminé e a do gás de acampamento foram inferidas; o time não dá o vínculo na planta. O `Chimney` do `game-floorplan` deve ganhar o id do item que ele serve?
 3. Os 31 ids de conteúdo da tabela padrão da estrutura foram casados com o household pelo nome; a lista está em `MIGRATION.md`. Alguém do time de itens confere?
+
+## 2026-10-24 · A sala de testes abre só com o conteúdo do SDK
+
+O dono perguntou se os itens de `/test-room/` eram os do jogo: não eram (19 itens procedurais de caixa e cilindro, `demoItems`, mais um carro de aluguel de caixas, `DEMO_MODULE`). Decisão do dono: "remover todos esses itens e deixar apenas dos sdk". Feito:
+
+- `game-test-room` perdeu `demoItems`/`DEMO_ITEMS`/`DEMO_MATERIALS`, os cenários embutidos (`SCENARIOS`, `scenariosFor`, `makeScenarios`, que usavam esses ids e a ferramenta `pistol_9mm`) e os textos deles. Fica só `brickWallSpec` (parede-alvo da arena). Os cenários de destruição, fluido e fogo que eles cobriam já existem nos testes de `game-destruction`/`game-fluids` e nos cenários de módulo dos pacotes de conteúdo; nenhum foi portado porque nenhum tinha item real equivalente sem cenário próprio (pendência: cenário de módulo para o extintor apagando fogo e para o fogo em estofado, se quisermos manter essa cobertura).
+- `examples/test-room` carrega o mesmo conjunto de `examples/interactables-test-area` (o `entry.js` dele é embutido na página; a sala "nua" sem itens fica em `examples/test-room/base/` e é sobre ela que as outras áreas se constroem). `demo-module.js` foi removido.
+- Os testes do pacote usam `tests/fixtures/demo-items.ts` (não exportado).

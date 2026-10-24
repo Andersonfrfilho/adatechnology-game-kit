@@ -11,3 +11,4 @@ coverage
 .idea
 .vscode/*
 !.vscode/extensions.json
+examples/test-room/base
