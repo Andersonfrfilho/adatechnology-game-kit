@@ -19,6 +19,7 @@ COPY packages/game-floorplan-commercial/package.json packages/game-floorplan-com
 COPY packages/game-floorplan-post-apocalyptic/package.json packages/game-floorplan-post-apocalyptic/
 COPY packages/game-floorplan-residential/package.json packages/game-floorplan-residential/
 COPY packages/game-floorplan-rural/package.json packages/game-floorplan-rural/
+COPY packages/game-floorplan-structure/package.json packages/game-floorplan-structure/
 COPY packages/game-fluids/package.json packages/game-fluids/
 COPY packages/game-fluids-three/package.json packages/game-fluids-three/
 COPY packages/game-infection/package.json packages/game-infection/

@@ -1275,3 +1275,76 @@ Modelo: `sonnet`. Branch `work/spec001-t2-f` (sobre `feat/spec-001-fase-2` com a
 | post-apocalyptic (golden VC3 + propriedades; Node 24 e 22.23.4) | 175 passaram nos dois |
 | `pnpm -r test` (inteiro, em segundo plano) | todos os pacotes passam; na execução paralela o worker do post-apocalyptic perdeu um RPC do vitest ("Timeout calling onTaskUpdate", 175 passaram), e sozinho dá exit 0 |
 | `docker build -f site/Dockerfile .` | exit 0 |
+## T2.2c–e — `game-floorplan-structure`: estrutura, detalhe de parede, instalações
+
+Modelo: `sonnet`. Branch `work/spec001-t2-c` (sobre `feat/spec-001-fase-2`, depois de T2.2a–b e T2.3a–b), grupo A+B da Fase 2: estrutura das casas e o caminho de carga (desenho `design/T2.1-casas-estrutura-e-destruicao.md` §1, §2, §3, §8, §9).
+
+### T2.2c — pacote novo, sistemas construtivos, `buildStructure`, `toDestructibleSpec`, telhado, visor 2D
+
+**Fidelidade com a página do time (golden `coarse`):** 12 modelos x 25 sementes x 3 estados = **900 de 900 plantas iguais** em todas as listas gravadas: peças (`pecas`), apoios, partes e juntas do `specDe` coarse e `vedacao`
+(capacidades incluídas, a 3 casas), e em `niveis`/`elevacao`, `construcao`, `telhado` e `caixaDagua`. O teste traduz o SDK de volta para o vocabulário do time (`tests/team-vocabulary.ts`, ids e chaves em português) e confere os hashes gravados
+(`tests/fixtures/team-golden/vc3-structure.json`, movido de `specs/.../goldens/`). Os 5 modelos rurais ficam de fora (T2.2f) e o teste lista exatamente eles como ausentes.
+
+**O que entrou:**
+
+| Peça | Onde |
+|---|---|
+| `JUNTA_SIS`, `construcaoPadrao`, `TELHA_MAT`/`TELHA_JUNTA` | `registry.ts` (`registerConstructionSystem`, `registerRoofCovering`), `presets.ts` (`masonryConstruction` e os dados dos 5 modelos rurais como funções: `woodFrameConstruction`, `chaletConstruction`, `logCabinConstruction`, `shackConstruction`, `campConstruction`), `construction.ts` (`options.construction`, `TemplateDef.construction`) |
+| `montarEstrutura` (L10360–10632) | `structure/*.ts` (fundação, paredes, pratos e pilares, varanda/alpendre, laje do andar, sacadas, degraus, escadas, telhado, barrotes do forro) com ids em inglês (`MIGRATION.md`) |
+| `montarEstruturaLona` | `structure/canvas.ts` |
+| `estruturaExtras` (caixa d'água, chaminé, poço) | `structure/tank-parts.ts`, `structure/extras.ts`; a caixa d'água do plano (`montarCaixaDagua`, L9279) em `water-tank.ts` (veio na T2.2c porque a estrutura a carrega; golden igual) |
+| `specDe` e `cargasProjeto` | `to-destructible-spec.ts`, `loads.ts` |
+| camada "estrutura" do visor 2D | `viewer-layer.ts` + `viewer.html` (a legenda passa a ser traduzida pelo visor) |
+
+**Caminho de carga (testado no mundo de `game-destruction`, `tests/load-path.test.ts`):**
+
+| Cenário | Resultado |
+|---|---|
+| varanda, pilares tirados (alvenaria com pilar de concreto, casa wood frame e cabana de tronco, com pilar de madeira) | cai só a cobertura da varanda; casa, telhado principal e piso ficam |
+| um de três pilares da varanda | a cobertura fica nos outros dois |
+| `coarse` (como o time): cobertura da varanda também apoiada na parede da casa | fica de pé (por isso a diferença de propósito abaixo) |
+| laje plana, pilares de canto (pórtico) | um pilar: a laje fica; dois: a laje cai |
+| sobrado em pórtico, dois pilares do térreo | laje de cima e as duas águas caem; com um pilar nada cai |
+| mercado (prédio em pórtico por padrão) | um pilar: o telhado fica; todos: cai |
+| wood frame, serrar os montantes da parede da frente | caem a parede, o prato e a água do telhado em cima dela (caibros e `roof_a`); a outra água e as outras paredes ficam |
+| barraco | a parede de chapa cai sozinha, o telhado fica nos prumos |
+
+**Diferenças de propósito (só fora do `coarse`):** (1) o telhado de duas águas vira caibros por lado e cumeeira em vez de tesouras inteiras: sem isso a tesoura apoiada nos dois pratos nunca cai com uma parede só; a massa do telhado é igual (a menos de 2%); (2) a cobertura da varanda se apoia só nos pilares dela (a amarra com a parede não carrega); (3) prédio em pórtico (apartamento, comercial ou 3+ andares) carrega pelos pilares e vigas (`structure.framed`, `portico` padrão).
+
+**Desvios do desenho:** `sizeStructure` do `game-destruction` dá as mesmas capacidades do `specDe` (a 1e-16) nas casas de parede portante, e **difere nas vigas de prédio em pórtico**: a regra N-1 do `sizeStructure` vale para todas as peças, a do time só para pilar e parede portante. Para o golden ficar igual, `toDestructibleSpec` dimensiona com a própria carga em repouso (`loads.ts`, 50 linhas, mesma regra do mundo); um teste confere que as duas regras concordam nas casas de parede portante. A caixa d'água do plano (L9279) entrou aqui, não na T2.2e.
+
+**Escolhas de negócio (padrão reversível, para o PR):** tipo de cômodo do alpendre `porch`, porta de degraus `type: 'steps'`, zíper `'zipper'`, tenda `kind: 'dome' | 'tunnel'`, escada do porão `type: 'basement_stairs'` (o pacote rural da T2.2f confirma ou muda); camada de estrutura no visor começa desligada; `framed` por heurística (apartamento, comercial, 3+ andares); capacidades de caixa d'água por estilo (budget 500, mid 1000, mansion 3000, resto 2000) configuráveis por `tankCapacities`.
+
+### T2.2d — `wallDetail` panels e units, `buildWallSpecimen`
+
+Comportamento novo (sem original do time); o `coarse` segue o golden da T2.2c.
+
+| Peça | Resultado |
+|---|---|
+| `panels` (padrão) | cada parede cortada nas janelas: pilaretes (papel da parede), peitoril (`partition`), verga de concreto armado (`beam`, 0,2 m de apoio nos pilaretes, `reinforcement` da montagem, vergalhão a 0,18 m) e a parede acima da verga (papel da parede); o vão da porta ganha `lintel_<porta>` (verga de concreto armado; cabeçote de madeira nas casas de madeira) apoiada nas paredes ao lado, que carrega a cinta ou o prato; montagem de `game-destruction` em cada peça (reboco, estágios, brecha) |
+| massa | preservada: a massa da parede é repartida pelas peças por volume. `single_storey_a`, `townhouse`, `high_end_contemporary`, `market`: a soma das peças de cada parede = a massa da parede (< 1%) e o total da casa também; corpos de prova de 7 montagens, inteiros e com porta ou janela, com a mesma massa |
+| `units` | tijolo (0,23 x 0,075), bloco (0,39 x 0,19) e painel de concreto armado (0,6 x 0,42, grade 4 x 5) assentados em amarração, cada unidade sobre as duas de baixo; a capacidade da peça é dividida pela largura da unidade (a casa continua de pé: tensão máxima 0,65). `single_storey_a`: 10 067 unidades; `mansion`: 70 403 em 0,9 s |
+| parede de tronco | fiadas de toras de 0,26 m (10 por parede de 2,6 m) cortadas nas aberturas; cada tora sobre as de baixo. Tirar a tora de baixo derruba as de cima; uma tora do meio tirada, o resto fica |
+| `buildWallSpecimen` | corpo de prova de 2,4 x 2,1 m sobre soleira ancorada: inteiro, com porta (2 pilaretes, verga, parede acima) ou janela (+ peitoril); `units`: 200+ tijolos ou 20 painéis; os dois pilaretes tirados derrubam verga e parede acima, um só não |
+
+Gate extra: o spec detalhado da casa fica de pé por 60 s (nada quebra sozinho) em 3 modelos; `panels` de uma mansão (302 peças) monta em poucos ms.
+
+**Desvios:** a espessura física da peça é a da montagem (0,13 m no tijolo rebocado), não os 0,15 m do plano; o material das peças continua o da estrutura (`brick`) mas o núcleo da montagem de bloco é concreto (massa vem da estrutura, não da montagem); janela e porta do corpo de prova ficam em 0,33 e 0,8 da altura (a altura da porta de verdade não está na planta: 2,1 m, constante `DOOR_HEIGHT`).
+
+### T2.2e — instalações, edícula e conteúdo por estado
+
+**Fidelidade com a página do time:** as sete listas do golden de instalações (`gas`, `gasBottles`, `electrical`, `solar`, `plumbing`, `outbuildings`, `outbuildingPaths`) conferem em **900 de 900 plantas** (12 modelos x 25 sementes x 3 estados). O teste traduz o SDK de volta para o vocabulário do time (`tests/team-utilities.ts`); os ids dos móveis voltam por posição
+(captura nova `tools/golden/captures/floorplan-item-ids.js`, gravada duas vezes com saída idêntica, `tests/fixtures/team-golden/vc3-item-ids.json`, 1,9 MB). Antes de gravar, conferi 36 plantas contra as linhas completas da página (captura de depuração, fora do repositório): zero diferenças depois de dois acertos (a geladeira
+média de loja também liga numa tomada, e o sorteio da edícula usa o nome de fluxo do time `edif:quintal.edicula`, agora em `streamOf`).
+
+| Peça | Onde |
+|---|---|
+| `montarGas` (botijão ao lado, em nicho externo, sob a bancada, ou encanado com medidor) | `utilities/gas.ts`; o botijão entra em `result.items` como `cooking_gas_cylinder` (registrado no catálogo, 13 kg) |
+| `montarEletrica` (tomadas, entrada de energia, quadro, interruptores, circuitos, eletrodutos), modos `rede`, `gato` (barraco), `offgrid` | `utilities/electrical*.ts`, `wall-points.ts`; modo por `TemplateDef.energy(options, w, d)` |
+| `montarSolar`, `montarHidraulica` | `utilities/solar.ts`, `plumbing.ts` |
+| `montarEdificacoes`, `caminhosEdificacoes` | `utilities/outbuildings.ts` (caminhos em `result.lot.paths`) |
+| `CONTEUDO`, `sorteiaConteudo`, `aplicaConteudo` | `utilities/content-tables.ts`, `content.ts`, `result.contents`: pergunta ao `engine.findsFor` e cai nas tabelas do time quando ninguém responde; regras de estado em `CONTENT_STATES` (`registerContentState`) |
+
+Testes de comportamento (`tests/utilities.test.ts`): todo modelo tem instalações e passa no `engine.validate` (12 modelos x 8 sementes x 3 estados); gás em pelo menos duas posições; botijão externo fora da casa e o de baixo da bancada escondido; aparelho com tomada a até 1,2 m e chuveiro com tomada própria a 1,10 m; chave no lado do trinco; barraco (`tap`) sem medidor e com ligação a 2,6 m; cabana `offgrid` sem instalação, só a fonte (`solar` ou `lamp`); solar no telhado ou em rack de laje; edícula com porta de 0,85 m, 2 janelas, móveis dentro e caminho; geladeira com mais mantimento fortificada do que normal e normal mais do que abandonada, comida estragada na abandonada; um provedor registrado responde antes do padrão.
+
+**Escolhas de negócio (padrão reversível):** as regras de estado (`fortified`, `abandoned`) do conteúdo ficam em `CONTENT_STATES` neste pacote até o catálogo de itens (Fase 3) e o pacote do gênero (G7: multiplicadores do estado em `-post-apocalyptic`) assumirem; ids de item de conteúdo em inglês (`water_bottle`, `canned_tuna`, `spoiled_food`...) são provisórios para o catálogo da Fase 3; `gaveteiro` e `sapateira` do time não têm categoria equivalente no SDK e ficam sem conteúdo; o botijão de cozinha é um tipo novo (`cooking_gas_cylinder`, 0,36 x 0,36 x 0,48) ao lado do `gas_cylinder` externo do residencial.

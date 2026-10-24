@@ -1,0 +1,12 @@
+{
+  "ui": {
+    "structure_layer": "Estrutura",
+    "structure_column_concrete": "Pilar de concreto",
+    "structure_column_steel": "Poste de aço",
+    "structure_column_masonry": "Pilar de alvenaria",
+    "structure_column_wood": "Pilar de madeira",
+    "structure_beam_concrete": "Cinta / viga (concreto)",
+    "structure_beam_wood": "Prato / viga (madeira)",
+    "structure_roof_frame": "Tesouras, caibros e cumeeira (vista do telhado)"
+  }
+}

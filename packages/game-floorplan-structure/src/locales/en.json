@@ -1,0 +1,12 @@
+{
+  "ui": {
+    "structure_layer": "Structure",
+    "structure_column_concrete": "Concrete pillar",
+    "structure_column_steel": "Steel post",
+    "structure_column_masonry": "Masonry pillar",
+    "structure_column_wood": "Wood post",
+    "structure_beam_concrete": "Bond beam / beam (concrete)",
+    "structure_beam_wood": "Plate / beam (wood)",
+    "structure_roof_frame": "Trusses, rafters and ridge (roof view)"
+  }
+}
