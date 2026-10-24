@@ -476,9 +476,9 @@ export class WeaponRuntime implements WeaponState {
         break
       }
     }
-    if (res.rounds > 0) this.afterRounds(a, lastAt)
     if (res.shots.length === 0) res.status = res.fault ? 'fault' : 'misfire'
     else this.emit({ type: 'shot', shots: res.shots.length, rounds: res.rounds, mode: this.mode, at: t0 })
+    if (res.rounds > 0) this.afterRounds(a, lastAt)
     return res
   }
 
