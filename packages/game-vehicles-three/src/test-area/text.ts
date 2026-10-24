@@ -6,7 +6,7 @@ export type VehiclesText = {
   controls: Record<'quality' | 'paint_by_seed' | 'color_seed' | 'palette' | 'driving' | 'surface', string>
   hints: Record<'quality' | 'paint_by_seed' | 'palette' | 'driving' | 'surface', string>
   options: { quality: Record<string, string>; palette: Record<string, string>; driving: Record<string, string>; surface: Record<string, string> }
-  actions: Record<'repaint' | 'drive_lane' | 'clear_lane', string>
+  actions: Record<'repaint' | 'drive_lane' | 'clear_lane' | 'honk', string>
   layers: Record<'damageables' | 'zones' | 'axes', string>
   metrics: Record<'vehicles' | 'triangles' | 'draw_calls' | 'size_error_mm' | 'metal' | 'glass' | 'rubber' | 'fuel' | 'speed' | 'lane', string>
   words: { yes: string; no: string; open: string; tight: string; on: string; off: string }
@@ -78,7 +78,7 @@ export const TEXT: Record<string, VehiclesText> = {
       driving: { arcade: 'Arcade', semi: 'Semi-simulation' },
       surface: { dry_asphalt: 'Dry asphalt', wet_asphalt: 'Wet asphalt', dirt: 'Dirt', grass: 'Grass', mud: 'Mud', blood: 'Blood' },
     },
-    actions: { repaint: 'Repaint with the seed', drive_lane: 'Drive the lane', clear_lane: 'Remove the lane car' },
+    actions: { repaint: 'Repaint with the seed', drive_lane: 'Drive the lane', clear_lane: 'Remove the lane car', honk: 'Honk the horn' },
     layers: { damageables: 'Damageable boxes by material', zones: 'Zone boxes by type', axes: 'Output frame axes' },
     metrics: { vehicles: 'Vehicles', triangles: 'Triangles', draw_calls: 'Draw calls', size_error_mm: 'Size against DIMS', metal: 'Metal boxes', glass: 'Glass boxes', rubber: 'Rubber boxes', fuel: 'Fuel boxes', speed: 'Lane speed', lane: 'Lane distance' },
     words: { yes: 'true', no: 'false', open: 'open', tight: 'tight', on: 'on', off: 'off' },
@@ -142,7 +142,7 @@ export const TEXT: Record<string, VehiclesText> = {
       driving: { arcade: 'Arcade', semi: 'Semissimulação' },
       surface: { dry_asphalt: 'Asfalto seco', wet_asphalt: 'Asfalto molhado', dirt: 'Terra', grass: 'Grama', mud: 'Lama', blood: 'Sangue' },
     },
-    actions: { repaint: 'Repintar com a semente', drive_lane: 'Percorrer a pista', clear_lane: 'Tirar o carro da pista' },
+    actions: { repaint: 'Repintar com a semente', drive_lane: 'Percorrer a pista', clear_lane: 'Tirar o carro da pista', honk: 'Buzinar' },
     layers: { damageables: 'Caixas danificáveis por material', zones: 'Caixas das zonas por tipo', axes: 'Eixos do quadro de saída' },
     metrics: { vehicles: 'Veículos', triangles: 'Triângulos', draw_calls: 'Chamadas de desenho', size_error_mm: 'Medida contra DIMS', metal: 'Caixas de metal', glass: 'Caixas de vidro', rubber: 'Caixas de borracha', fuel: 'Caixas de combustível', speed: 'Velocidade na pista', lane: 'Distância na pista' },
     words: { yes: 'sim', no: 'não', open: 'soltos', tight: 'presos', on: 'acesos', off: 'apagados' },

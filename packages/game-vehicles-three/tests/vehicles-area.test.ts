@@ -4,7 +4,7 @@ import * as THREE from 'three160'
 import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 
-import { defaultEffectIds, VEHICLES_AREA_ID, VEHICLE_SCENARIO_IDS, createVehiclesTestModule, loadVehiclesTestModule } from '../src'
+import { defaultEffectIds, defaultSoundIds, VEHICLES_AREA_ID, VEHICLE_SCENARIO_IDS, createVehiclesTestModule, loadVehiclesTestModule } from '../src'
 import { fakeDocument } from './fake-dom'
 
 // the vehicles are long synchronous builds, and the scenarios run seconds of simulation
@@ -28,6 +28,26 @@ const roomWithVehicles = (locale = 'pt-BR'): { room: TestRoom; module: ReturnTyp
 }
 
 describe('vehicles test area', () => {
+  it('asks the room engine for the horn and the engine loop by id (the crash sound waits for a crash), from the library bank of game-audio', () => {
+    const { room } = roomWithVehicles('en')
+    for (const id of [defaultSoundIds.horn, defaultSoundIds.crash]) expect([id, room.audio!.registry.sound(id) !== undefined]).toEqual([id, true])
+    expect(room.audio!.registry.loop(defaultSoundIds.engine)).toBeDefined()
+    const played: string[] = []
+    const loops: string[] = []
+    const audio = room.audio!
+    const play = audio.play.bind(audio)
+    audio.play = ((sound: string, ...rest: unknown[]) => (played.push(sound), (play as (...a: unknown[]) => unknown)(sound, ...rest))) as never
+    const loop = audio.loop.bind(audio)
+    audio.loop = ((sound: string, ...rest: unknown[]) => (loops.push(sound), (loop as (...a: unknown[]) => unknown)(sound, ...rest))) as never
+    const bench = room.bench(VEHICLES_AREA_ID)
+    room.openArea(VEHICLES_AREA_ID)
+    bench?.act('honk')
+    bench?.act('drive_lane')
+    for (let i = 0; i < 600; i++) room.update(1 / 30)
+    expect(played).toContain(defaultSoundIds.horn)
+    expect(loops).toContain(defaultSoundIds.engine)
+  })
+
   it('asks the room effects for ids the game-vfx catalogue knows (no particle code of its own)', () => {
     const { room } = roomWithVehicles('en')
     const known = new Set([...room.vfx.catalog(), ...room.vfx.effectIds()])

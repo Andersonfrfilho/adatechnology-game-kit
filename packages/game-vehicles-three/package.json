@@ -42,6 +42,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@adatechnology/game-audio": "workspace:*",
     "@adatechnology/game-contracts": "workspace:*",
     "@adatechnology/game-vehicles": "workspace:*",
     "@adatechnology/game-vehicles-driving": "workspace:*",

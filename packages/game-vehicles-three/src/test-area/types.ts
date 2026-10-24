@@ -26,6 +26,11 @@ export const defaultEffectIds: VehicleEffectIds = {
   exhaust: 'vehicle_exhaust',
 }
 
+/** The sounds the module asks of `host.audio`, by id of the host's banks. `engine` is a loop (the game's saw through a 400 Hz low-pass), `horn` and `crash` one-shots. */
+export type VehicleSoundIds = { readonly engine: string; readonly horn: string; readonly crash: string }
+
+export const defaultSoundIds: VehicleSoundIds = { engine: 'engine_saw', horn: 'horn', crash: 'sfx_impact' }
+
 export type VehiclesTestOptions = {
   /** `en` or `pt-BR` (default). */
   readonly locale?: string
@@ -38,6 +43,8 @@ export type VehiclesTestOptions = {
   readonly vehicles?: readonly string[]
   /** Effect ids requested through `host.effects` (the defaults are ids of `game-vfx`: the Garagem's `car_fuel_tank` blast, the `vehicle_fire`, `vehicle_leak` and `vehicle_exhaust` recipes written around a car from `engine_smoke` and `fuel_leak`, and the point-based `glass_burst` and `impact_metal`). */
   readonly effects?: Partial<VehicleEffectIds>
+  /** Sound ids requested through `host.audio` (the defaults are the `game-audio` ones: `engine_saw`, `horn`, `sfx_impact`). */
+  readonly sounds?: Partial<VehicleSoundIds>
 }
 
 /** The part of the test room the scenarios use (the room's `ScenarioContext.room` has all of it). */
