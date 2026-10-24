@@ -1,0 +1,51 @@
+{
+  "sources": {
+    "types": "jogo.js G 61950-61964 CATS (the game's values: blind chase 3.0, charred 2.2, drowned 2.5 and weight 0, devourer 3.0 differ from the Bestiário table in types.json)",
+    "ages": "jogo.js G 61968-61973 IDADES; sight 0.6 for the decrepit (G 66872) and hearing 0.9 from old on (G 66883)",
+    "outfits": "jogo.js G 61976-61981 ROUPAS and G 66755 ROUPA_COR",
+    "segments": "jogo.js G 61984 SEG",
+    "palette": "jogo.js G 66756 CIVIL_COR",
+    "variants": "jogo.js G 67079 ZVAR_OF (walker 4, runner 3, crawler and brute 2, others 1)",
+    "traits": "jogo.js G 66905-66912 (vault), 66989-66996 (attack), 67014-67045 (damage), 67247-67252 (spawn), 67266-67340 (zAbility), 67343-67347 (zChaseSpeed), 67377-67402 (zFrame), 68611 (panic)"
+  },
+  "types": [
+    { "id": "walker", "weight": 48, "health": 100, "speed": { "wander": 0.6, "chase": 1.4 }, "damage": 10, "bite": 0.15, "multipliers": { "head": 1, "torso": 1, "arms": 0.8, "legs": 0.8 }, "perception": { "sight": 15, "hearing": 40, "smell": 10 }, "eye": 14926657, "variants": 4 },
+    { "id": "runner", "weight": 14, "health": 70, "speed": { "wander": 1.2, "chase": 5.5 }, "damage": 8, "bite": 0.25, "multipliers": { "head": 1, "torso": 1, "arms": 1.2, "legs": 1.3 }, "perception": { "sight": 30, "hearing": 50, "smell": 0 }, "eye": 15022379, "variants": 3,
+      "traits": { "vaultsLow": { "maxHeight": 1.9, "minRise": 0.3, "clearance": 0.25, "speedFactor": 0.7 }, "maxAge": 1, "voice": "runner_groan", "panicWeight": 2.5 } },
+    { "id": "crawler", "weight": 9, "health": 60, "speed": { "wander": 0.4, "chase": 0.4 }, "damage": 6, "bite": 0.35, "multipliers": { "head": 1, "torso": 1, "arms": 1, "legs": 1 }, "perception": { "sight": 5, "hearing": 20, "smell": 0 }, "eye": 11129162, "crawls": true, "variants": 2 },
+    { "id": "brute", "weight": 5, "health": 220, "speed": { "wander": 0.8, "chase": 2.0 }, "damage": 30, "bite": 0.1, "multipliers": { "head": 1, "torso": 1, "arms": 0.6, "legs": 0.7 }, "perception": { "sight": 20, "hearing": 30, "smell": 0 }, "eye": 15698474, "scale": 1.42, "variants": 2,
+      "traits": { "heavySwing": { "chance": 0.35, "windUp": 0.8, "range": 2.2, "knock": 1.0 }, "doorDamage": 3, "hitStun": 0.25 } },
+    { "id": "sniffer", "weight": 5, "health": 80, "speed": { "wander": 1.0, "chase": 3.5 }, "damage": 9, "bite": 0.2, "multipliers": { "head": 1, "torso": 1, "arms": 1.1, "legs": 1.1 }, "perception": { "sight": 10, "hearing": 0, "smell": 60 }, "eye": 5228246, "variants": 1,
+      "traits": { "tracker": { "range": 60, "leads": "walker", "max": 8, "leadRadius": 12 } } },
+    { "id": "leaper", "weight": 4, "health": 75, "speed": { "wander": 1.0, "chase": 4.5 }, "damage": 14, "bite": 0.3, "multipliers": { "head": 1, "torso": 1, "arms": 1.1, "legs": 1.4 }, "perception": { "sight": 25, "hearing": 40, "smell": 0 }, "eye": 14699176, "variants": 1,
+      "traits": { "vaultsLow": { "maxHeight": 1.9, "minRise": 0.3, "clearance": 0.25, "speedFactor": 0.7 }, "pounce": { "min": 2.5, "max": 7, "cooldown": 5, "time": 1.0, "speedCap": 6.5, "lift": 4.9, "liftHigh": 8.3, "highAbove": 2, "landRange": 1.4, "knock": 1.5 } } },
+    { "id": "bloater", "weight": 3, "health": 120, "speed": { "wander": 0.5, "chase": 1.0 }, "damage": 12, "bite": 0.15, "multipliers": { "head": 1, "torso": 1.5, "arms": 1, "legs": 1 }, "perception": { "sight": 10, "hearing": 0, "smell": 25 }, "eye": 6283402, "build": 1.35, "variants": 1,
+      "traits": { "burst": { "range": 1.8, "swell": 0.5, "radius": 4, "blind": 5, "scent": 60, "noiseNear": 12, "noise": 15, "cloudColor": 9083434, "bloodColor": 9083434, "bloodDry": 4080160 } } },
+    { "id": "stalker", "weight": 3, "health": 90, "speed": { "wander": 1.0, "chase": 4.0 }, "damage": 10, "bite": 0.4, "multipliers": { "head": 1, "torso": 1, "arms": 1, "legs": 1 }, "perception": { "sight": 12, "hearing": 35, "smell": 0 }, "eye": 10181856, "variants": 1,
+      "traits": { "ambush": { "chance": 0.7, "wake": 3, "wakeBehind": 10, "behindCos": -0.3, "sprint": 4.0, "sprintSeconds": 3, "slow": 1.4 } } },
+    { "id": "blind", "weight": 3, "health": 110, "speed": { "wander": 0.8, "chase": 3.0 }, "damage": 12, "bite": 0.35, "multipliers": { "head": 1, "torso": 1, "arms": 0.9, "legs": 0.9 }, "perception": { "sight": 0, "hearing": 80, "smell": 0 }, "eye": 14275784, "variants": 1,
+      "traits": { "soundSeeker": { "arrive": 1, "loseChase": 3, "hitRadius2": 1.1 } } },
+    { "id": "screamer", "weight": 2, "health": 50, "speed": { "wander": 1.0, "chase": 3.0 }, "damage": 4, "bite": 0.05, "multipliers": { "head": 1, "torso": 1.2, "arms": 1.2, "legs": 1.2 }, "perception": { "sight": 25, "hearing": 60, "smell": 0 }, "eye": 15921898, "variants": 1,
+      "traits": { "caller": { "range": 25, "windUp": 1.5, "radius": 150, "cooldown": 45, "boost": 30, "fleeAbove": 33, "fleeRange": 30 } } },
+    { "id": "charred", "weight": 2, "health": 90, "speed": { "wander": 0.9, "chase": 2.2 }, "damage": 10, "bite": 0.15, "multipliers": { "head": 1, "torso": 0.8, "arms": 0.8, "legs": 0.8 }, "perception": { "sight": 15, "hearing": 40, "smell": 0 }, "eye": 16738842, "variants": 1,
+      "traits": { "burns": { "seconds": 4 }, "waterWeak": { "keep": 0.7, "cloud": 10132122 }, "color": 1709072, "skin": 1 } },
+    { "id": "drowned", "weight": 0, "health": 130, "speed": { "wander": 0.6, "chase": 2.5 }, "damage": 10, "bite": 0.25, "multipliers": { "head": 1, "torso": 1, "arms": 1, "legs": 1 }, "perception": { "sight": 10, "hearing": 30, "smell": 0 }, "eye": 4033535, "variants": 1,
+      "traits": { "submerged": { "depth": -1.3, "wake": 5, "swim": 3.0, "surface": -0.4 }, "drownGrab": true, "color": 3820114 } },
+    { "id": "devourer", "weight": 1, "health": 120, "speed": { "wander": 0.9, "chase": 3.0 }, "damage": 16, "bite": 0.3, "multipliers": { "head": 1, "torso": 1, "arms": 0.9, "legs": 0.9 }, "perception": { "sight": 20, "hearing": 40, "smell": 20 }, "eye": 11538986, "variants": 1,
+      "traits": { "eatsCorpses": { "max": 3, "search": 15, "reach": 1.4, "seconds": 6, "grabRange": 2, "health": 20, "grow": 1.05, "rest": 20, "retry": 5, "defend": 5, "approach": 2.2 } } }
+  ],
+  "ages": [
+    { "id": "fresh", "p": 0.8, "blood": 1.0, "speed": 1.1, "health": 1.0, "limb": 0.8, "sight": 1, "hearing": 1, "bloodColor": 9046538, "dryColor": 3874068 },
+    { "id": "recent", "p": 0.15, "blood": 0.6, "speed": 1.0, "health": 1.0, "limb": 1.0, "sight": 1, "hearing": 1, "bloodColor": 5901328, "dryColor": 3020816 },
+    { "id": "old", "p": 0.04, "blood": 0.25, "speed": 0.9, "health": 0.85, "limb": 1.3, "sight": 1, "hearing": 0.9, "bloodColor": 3808274, "dryColor": 2758158 },
+    { "id": "decrepit", "p": 0.01, "blood": 0, "speed": 0.75, "health": 0.65, "limb": 1.8, "sight": 0.6, "hearing": 0.9, "bloodColor": 1709586, "dryColor": 1709586 }
+  ],
+  "outfits": [
+    { "id": "civilian", "p": 0.87, "color": null },
+    { "id": "police", "p": 0.08, "vest": { "pistol": 0.3, "rifle": 0.8 }, "color": 2042436 },
+    { "id": "military", "p": 0.03, "vest": { "pistol": 0.5, "rifle": 0.5 }, "helmet": true, "color": 4870710 },
+    { "id": "firefighter", "p": 0.02, "limb": 0.8, "color": 7031324 }
+  ],
+  "segments": { "head": 40, "arm": 60, "leg": 80 },
+  "palette": [7166538, 5070187, 8010547, 5991242, 9075290, 4082268, 6965866, 10127984, 4210746]
+}

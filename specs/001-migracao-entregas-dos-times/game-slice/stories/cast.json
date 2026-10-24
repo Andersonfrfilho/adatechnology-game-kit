@@ -1,0 +1,617 @@
+[
+  {
+    "id": "zilda",
+    "name": "Dona Zilda Ramos",
+    "age": 67,
+    "female": true,
+    "personality": [
+      55,
+      95,
+      80,
+      5,
+      60
+    ],
+    "base": "igreja"
+  },
+  {
+    "id": "arnaldo",
+    "name": "Seu Arnaldo Ramos",
+    "age": 70,
+    "personality": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "base": "igreja",
+    "start": {
+      "state": "undead",
+      "note": "acorrentado no porão"
+    }
+  },
+  {
+    "id": "val",
+    "name": "Seu Valdir “Val” Cardoso",
+    "age": 58,
+    "personality": [
+      50,
+      70,
+      85,
+      10,
+      55
+    ],
+    "base": "igreja"
+  },
+  {
+    "id": "mariana",
+    "name": "Mariana",
+    "age": 8,
+    "female": true,
+    "personality": [
+      30,
+      80,
+      90,
+      0,
+      40
+    ],
+    "base": "igreja"
+  },
+  {
+    "id": "criancas",
+    "name": "Theo, Duda e Pedrinho",
+    "nick": "as crianças da Zilda",
+    "personality": [
+      45,
+      60,
+      85,
+      5,
+      35
+    ],
+    "base": "igreja"
+  },
+  {
+    "id": "brasa",
+    "name": "Tenente Marcos “Brasa” Valença",
+    "age": 41,
+    "personality": [
+      90,
+      25,
+      65,
+      55,
+      45
+    ],
+    "base": "deleg"
+  },
+  {
+    "id": "bigode",
+    "name": "Sargento Cleber “Bigode” Nunes",
+    "age": 48,
+    "personality": [
+      75,
+      20,
+      90,
+      60,
+      60
+    ],
+    "base": "deleg"
+  },
+  {
+    "id": "italo",
+    "name": "Soldado Ítalo Prates",
+    "age": 22,
+    "personality": [
+      40,
+      75,
+      35,
+      10,
+      30
+    ],
+    "base": "deleg"
+  },
+  {
+    "id": "rafa",
+    "name": "Rafaela “Rafa” Duarte",
+    "age": 36,
+    "female": true,
+    "personality": [
+      45,
+      55,
+      50,
+      20,
+      75
+    ],
+    "base": "deleg"
+  },
+  {
+    "id": "jessica",
+    "name": "Jéssica Monteiro",
+    "age": 27,
+    "female": true,
+    "personality": [
+      65,
+      80,
+      60,
+      15,
+      40
+    ],
+    "base": "radio"
+  },
+  {
+    "id": "nelson",
+    "name": "Seu Nelson Kubo",
+    "age": 63,
+    "personality": [
+      35,
+      60,
+      75,
+      15,
+      70
+    ],
+    "base": "radio"
+  },
+  {
+    "id": "rosa",
+    "name": "Rosa Tavares",
+    "age": 34,
+    "female": true,
+    "personality": [
+      75,
+      50,
+      70,
+      45,
+      80
+    ],
+    "base": "oficina"
+  },
+  {
+    "id": "gil",
+    "name": "Gilmar “Gil” Batista",
+    "age": 44,
+    "personality": [
+      60,
+      65,
+      70,
+      25,
+      50
+    ],
+    "base": "oficina"
+  },
+  {
+    "id": "otavio",
+    "name": "Otávio Lins",
+    "age": 52,
+    "personality": [
+      20,
+      70,
+      55,
+      20,
+      25
+    ],
+    "base": "colegio"
+  },
+  {
+    "id": "bianca",
+    "name": "Bianca Rocha",
+    "age": 16,
+    "female": true,
+    "personality": [
+      55,
+      65,
+      80,
+      10,
+      45
+    ],
+    "base": "colegio"
+  },
+  {
+    "id": "sato",
+    "name": "Dr. Henrique Sato",
+    "nick": "Dr. Sato",
+    "age": 45,
+    "personality": [
+      60,
+      35,
+      30,
+      40,
+      65
+    ],
+    "base": "hospital"
+  },
+  {
+    "id": "livia",
+    "name": "Lívia Ferreira",
+    "age": 14,
+    "female": true,
+    "personality": [
+      50,
+      75,
+      70,
+      5,
+      50
+    ],
+    "base": "hospital"
+  },
+  {
+    "id": "diego",
+    "name": "Diego Paiva",
+    "age": 24,
+    "personality": [
+      65,
+      55,
+      45,
+      25,
+      45
+    ],
+    "base": "hospital"
+  },
+  {
+    "id": "nicole",
+    "name": "Nicole Andrade",
+    "age": 20,
+    "female": true,
+    "personality": [
+      55,
+      60,
+      75,
+      15,
+      60
+    ],
+    "base": "hospital"
+  },
+  {
+    "id": "kauan",
+    "name": "Kauã Ferreira",
+    "age": 19,
+    "personality": [
+      70,
+      60,
+      40,
+      30,
+      50
+    ],
+    "base": "nomade"
+  },
+  {
+    "id": "biel",
+    "name": "Gabriel “Biel” Souza",
+    "age": 17,
+    "personality": [
+      80,
+      55,
+      75,
+      35,
+      55
+    ],
+    "base": "vila"
+  },
+  {
+    "id": "neide",
+    "name": "Pastora Neide Santos",
+    "age": 50,
+    "female": true,
+    "personality": [
+      70,
+      85,
+      80,
+      10,
+      30
+    ],
+    "base": "vila"
+  },
+  {
+    "id": "helena",
+    "name": "Helena Vieira",
+    "age": 31,
+    "female": true,
+    "personality": [
+      50,
+      75,
+      85,
+      10,
+      45
+    ],
+    "base": "aurora"
+  },
+  {
+    "id": "chico",
+    "name": "Francisco “Chico Maranhão”",
+    "age": 39,
+    "personality": [
+      55,
+      40,
+      40,
+      70,
+      60
+    ],
+    "base": "fabril"
+  },
+  {
+    "id": "armando",
+    "name": "Armando Kessler",
+    "nick": "Armando",
+    "age": 60,
+    "personality": [
+      85,
+      30,
+      50,
+      50,
+      55
+    ],
+    "base": "armas"
+  },
+  {
+    "id": "dito",
+    "name": "Seu Benedito “Dito” Alves",
+    "age": 71,
+    "personality": [
+      80,
+      40,
+      90,
+      10,
+      90
+    ],
+    "base": "oeste"
+  },
+  {
+    "id": "ivone",
+    "name": "Ivone Moreira",
+    "age": 49,
+    "female": true,
+    "personality": [
+      75,
+      30,
+      85,
+      30,
+      40
+    ],
+    "base": "oeste"
+  },
+  {
+    "id": "tadeu",
+    "name": "Tadeu Moreira",
+    "age": 22,
+    "personality": [
+      70,
+      60,
+      55,
+      20,
+      55
+    ],
+    "base": "oeste"
+  },
+  {
+    "id": "profeta",
+    "name": "Wesley “Profeta” Lacerda",
+    "nick": "Profeta",
+    "age": 36,
+    "personality": [
+      85,
+      10,
+      60,
+      85,
+      35
+    ],
+    "base": "serra"
+  },
+  {
+    "id": "cida",
+    "name": "Dona Aparecida “Cida” Moura",
+    "age": 74,
+    "female": true,
+    "personality": [
+      60,
+      80,
+      70,
+      5,
+      85
+    ],
+    "base": "serra"
+  },
+  {
+    "id": "taina",
+    "name": "Tainá Costa",
+    "age": 23,
+    "female": true,
+    "personality": [
+      45,
+      75,
+      70,
+      15,
+      50
+    ],
+    "base": "igreja"
+  },
+  {
+    "id": "lucas",
+    "name": "Lucas “Gaúcho” Kraemer",
+    "age": 33,
+    "personality": [
+      60,
+      40,
+      25,
+      70,
+      45
+    ],
+    "base": "oficina"
+  },
+  {
+    "id": "caio",
+    "name": "Tenente Caio Albuquerque",
+    "age": 27,
+    "personality": [
+      70,
+      60,
+      85,
+      10,
+      60
+    ],
+    "base": "bloqueio"
+  },
+  {
+    "id": "ferraz",
+    "name": "Sargento Edvaldo Ferraz",
+    "nick": "Ferraz",
+    "age": 44,
+    "personality": [
+      85,
+      25,
+      60,
+      30,
+      55
+    ],
+    "base": "bloqueio"
+  },
+  {
+    "id": "vinicius",
+    "name": "Soldado Vinícius Lopes",
+    "age": 19,
+    "personality": [
+      35,
+      70,
+      75,
+      10,
+      35
+    ],
+    "base": "bloqueio"
+  },
+  {
+    "id": "lucia",
+    "name": "Lúcia Bento",
+    "age": 38,
+    "female": true,
+    "personality": [
+      70,
+      75,
+      70,
+      10,
+      70
+    ],
+    "base": "prf"
+  },
+  {
+    "id": "douglas",
+    "name": "Douglas Prado",
+    "age": 29,
+    "personality": [
+      75,
+      50,
+      65,
+      20,
+      55
+    ],
+    "base": "prf"
+  },
+  {
+    "id": "josue",
+    "name": "Josué Freitas",
+    "age": 46,
+    "personality": [
+      60,
+      55,
+      70,
+      15,
+      50
+    ],
+    "base": "penit"
+  },
+  {
+    "id": "jacare",
+    "name": "Reinaldo “Jacaré” Lima",
+    "nick": "Jacaré",
+    "age": 41,
+    "personality": [
+      75,
+      35,
+      55,
+      60,
+      70
+    ],
+    "base": "penit"
+  },
+  {
+    "id": "lince",
+    "name": "Capitão Rodrigo Sá “Lince”",
+    "nick": "Lince",
+    "age": 36,
+    "personality": [
+      90,
+      40,
+      95,
+      5,
+      85
+    ],
+    "base": "falcao"
+  },
+  {
+    "id": "paula",
+    "name": "Sargento Paula Neves",
+    "age": 32,
+    "female": true,
+    "personality": [
+      70,
+      85,
+      70,
+      5,
+      70
+    ],
+    "base": "falcao"
+  },
+  {
+    "id": "kevin",
+    "name": "Cabo Kevin Araújo",
+    "age": 24,
+    "personality": [
+      55,
+      65,
+      80,
+      10,
+      50
+    ],
+    "base": "falcao"
+  },
+  {
+    "id": "renata",
+    "name": "Cabo Renata Lobo",
+    "age": 29,
+    "female": true,
+    "personality": [
+      80,
+      45,
+      90,
+      15,
+      50
+    ],
+    "base": "base"
+  },
+  {
+    "id": "azevedo",
+    "name": "Major Hélio Azevedo",
+    "nick": "Major Azevedo",
+    "age": 52,
+    "personality": [
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "base": "base",
+    "start": {
+      "state": "undead",
+      "note": "trancado no bunker de comando"
+    }
+  },
+  {
+    "id": "vitoria",
+    "name": "Vitória Costa",
+    "age": 0,
+    "female": true,
+    "base": "igreja",
+    "start": {
+      "state": "unborn",
+      "note": ""
+    },
+    "extra": true
+  }
+]

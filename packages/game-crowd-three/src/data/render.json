@@ -1,0 +1,50 @@
+{
+  "sources": {
+    "agents": "jogo.js G 67098-67121 hordeRender: view cull (behind beyond 0.35·d + 3 m once past √30 m, nothing past 200 m), LOD [18, 55] m with 1.5 m of hysteresis, attack pose in at 1.6 m and out at 2.2 m, the pose by state, the bloater's swelling, the eye only with the skull and awake",
+    "corpses": "jogo.js G 67122-67131 hordeRender: an agent's body on its variant at the near level within 18 m (else the middle), the fallen pose, the colour darkening 70% over the body's life, the last 60 s shrinking it; a body that was not an agent on the plain body batch",
+    "civilians": "jogo.js G 70177-70184 npcRender: one baked body per survivor, a child 0.66 high and 0.75 wide, the bite showing as 0.3 of age",
+    "batches": "jogo.js G 67079-67094 ZVAR, CB: each variant at 1, 0.5 and 0.28 of detail in batches of 160, 700 and 2600; the plain corpse batch at the middle body (BODY_LOD[1]) for 400; G 68469 PB: survivors baked at 0.8 in batches of 4"
+  },
+  "numbers": {
+    "lodDistances": [18, 55],
+    "lodHysteresis": 1.5,
+    "behindFrom": 30,
+    "behindFactor": 0.35,
+    "behindMargin": 3,
+    "farCull": 200,
+    "gaitMax": 1.4,
+    "attackEnter": 2.56,
+    "attackLeave": 4.84,
+    "swell": 0.9,
+    "swellPivot": 0.5,
+    "ageBase": 0.75,
+    "agePer": 0.08,
+    "armBase": 1,
+    "armPer": 0.4,
+    "corpseNear": 18,
+    "corpseFade": 60,
+    "corpseDarken": 0.7,
+    "corpseRise": 1.8,
+    "corpseAgeBase": 0.8,
+    "corpseAgeDark": 0.2,
+    "childHeight": 0.66,
+    "childBuild": 0.75,
+    "bittenLook": 0.3,
+    "civilianSkinStep": 0.25,
+    "civilianBake": 0.8,
+    "civilianBatch": 4
+  },
+  "poses": {
+    "dormant": "fallen",
+    "airborne": "leap",
+    "eating": "eat",
+    "pileStep": "attack",
+    "swing": "scream",
+    "crawl": "crawl",
+    "grab": "attack",
+    "calling": "scream",
+    "default": "walk",
+    "corpse": "fallen",
+    "civilian": "walk"
+  }
+}

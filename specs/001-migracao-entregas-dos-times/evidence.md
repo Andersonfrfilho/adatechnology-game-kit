@@ -2594,3 +2594,291 @@ Ramo `int/p6b`, depois de T6.2c. Feito em duas passadas: f49e466 trouxe as recei
 - Efeitos dos veículos (T7.6): o módulo pede ao `host.effects` no formato do `EffectSink` os ids `car_fuel_tank` (explosão da Garagem, do catálogo), `glass_burst`, `impact_metal` e `vehicle_fire`, `vehicle_exhaust`, `vehicle_leak`. Estes três são apelidos ancorados no carro da Oficina de `engine_smoke` e `fuel_leak`, com os valores do time; nada de partícula nos pacotes de veículos. No navegador os cenários pedem `vehicle_fire` 17x, `glass_burst` 13x, `impact_metal` 3x, `vehicle_leak` 3x e `car_fuel_tank` 1x.
 - Vegetação e urbano (T7.7): folhas, fibras, lascas, fogo, cinza e faíscas já saem do renderizador de destruição no mundo de efeitos da sala (`burst:leaves` 18x, `fibers` 14x, `fire`, `sparks`), e o teste de vegetação trava isso. Seiva não tem receita nem valor de time; os postes do urbano são lajes ancoradas (sem destruição), então não há faísca de poste.
 - Som dos veículos (T7.8): `host.audio` com o banco da biblioteca (`engine_saw` com volume 0,035 + v x 0,003 e frequência 38 + v x 7, `horn`, `sfx_impact`); vidro, impacto e explosão já tocam pelo som de destruição da sala. Vegetação e urbano: nenhum som de time além de `leaves_rustle`, que não existe no banco.
+
+## T8.0 — Desenho da Fase 8 (multidão, histórias e jogador)
+
+> 🤖 Modelo: `opus`
+
+**O que foi feito**
+
+- `design/T8-multidao-historias-jogador.md`: mapa de fontes linha a linha (jogo `2UG1Mhe9LqJkQKKVsJkTWR/jogo.js`: horda 66717–67400, bichos
+  66592–66715, jogador 68427–68640, civis 70042–70170; Bancada de Hordas 53053–53300 e mapa vivo 53483–53643; Personagens; Os Vivos do Vale
+  6–757), o que o SDK já tem, pacotes (`game-player`, `game-crowd`, `game-crowd-three`, `game-stories`, conteúdo no `game-characters-people`),
+  contratos, goldens, áreas de teste e subtarefas com modelo.
+- `tasks.md`: tabela de subtarefas da Fase 8.
+
+**Dúvidas para o dono** (cada uma com padrão reversível, §8 do desenho)
+
+1. Comportamento dos civis por estágio do surto: não há código, só o texto "Multidão civil".
+2. Histórias de demonstração do kit: só existem as do ZombiAdA.
+3. Nomes dos pacotes (`game-crowd`, `game-crowd-three`, `game-player`, `game-stories`).
+4. Vozes de 7 tipos de zumbi (T6.1g ainda aberta).
+5. Andares e telhados do jogo (`ANDARES`, `ROOF`) não portados; a multidão recebe callbacks.
+6. Mais de um alvo: o jogo persegue só o jogador; a multidão recebe uma lista e escolhe o mais perto.
+7. Marcos de habilidade da ficha que citam horda e zumbi ficam literais no conjunto genérico.
+8. Infecção do jogador desligada por padrão; a regra zumbi usa `INFEC`/`FERIDA` do jogo.
+
+## T8.3 — `game-player` (jogador: fôlego, ferida, infecção individual, agarrão)
+
+> 🤖 Modelo: `sonnet` (feito nesta sessão pelo opus)
+
+**O que foi feito**
+
+- `packages/game-player` (puro, sem three, IIFE `GamePlayer`): porte literal de G 68427-68640 (`player`, `playerUpdate`, `frontZombies`, `shove`,
+  `knife`) com `FICHA`, `DERIV`, `INFEC`, `FERIDA`.
+  - Mundo, multidão e entrada viram argumentos: `PlayerWorld` (`cellKind`, `solidAt`, `blocked`, `inWater`, `busy`, `canVault`, `afterMove`),
+    `PlayerCrowd` (`hold`, `stun`, `chase`, `damage`) e `PlayerInput` (teclas seguradas e `pressed` só no quadro, como o `wasPressed` do jogo).
+  - Todo número está em `src/data/defaults.json` com a linha de origem; derivados como fórmulas lineares em dado.
+  - Infecção individual **desligada por padrão** (mundo normal primeiro); `infection: true` liga a regra do jogo, com o sorteio na mesma ordem.
+  - Saídas por evento (`noise`, `sound` no formato de `SoundRequest`, `message` por id, `hurt`, `died`, `turned`...); frases do jogo em `pt-BR` e `en`.
+- Golden `packages/game-player/tests/fixtures/team-golden/game-player.json`: `tools/characters-catalog/src/golden/vm-player.ts` corta do jogo `player`,
+  `playerUpdate`, `frontZombies`, `shove`, `knife`, a grade (`GC`, `occ`, `cellOf`, `solidAt`, `fillRect`, `solidAtA`), `POOL`/`inWater` e a tabela `Z`, e roda
+  **18 roteiros** em `node:vm` (andar, correr até esgotar, agachar e mirar, feridas, mordida até a morte pela infecção, agarrão com 6 empurrões, com faca,
+  com mordida no fim, sem mandíbula, afogado, água e fogo, pular muro baixo, paredes, empurrão e faca, ser empurrado pela multidão e pânico, derrubada).
+  O teste do pacote refaz os 18 com o SDK e compara evento por evento e estado a cada N quadros: **18 de 18 iguais**.
+- Bancada `createPlayerTestModule` (`player_area`, só contratos genéricos): a câmera da sala é o jogador; golpe, mordida, agarrão, empurrão, faca,
+  curativo, derrubada, agachar, infecção, agilidade, vigor, semente; 6 cenários (`player_*`); passos e carne em `host.audio`.
+- `examples/player-test-area` (`sala-jogador.html`) e carregada também em `examples/interactables-test-area`.
+- Site (`catalog.mjs`: exemplo e família `player`; miniatura `site/thumbs/player-test-area.jpg`), `site/Dockerfile`, CI (job `examples`), README,
+  skill `.claude/skills/game-player/SKILL.md`, `game-kit` skill, changeset, inventário (`veiculos-moveis-vegetacao-jogo.md` §3.4).
+
+**Comandos e resultados**
+
+```text
+pnpm build                                              -> ok
+pnpm -r typecheck                                       -> ok
+pnpm lint                                               -> ok
+pnpm --filter @adatechnology/game-player test           -> 31 passed (golden 18/18, ficha, feridas, bancada)
+characters-catalog-tool vitest --testTimeout=60000      -> 69 passed (game-player regravado 2x idêntico ao fixture)
+node dist/record-golden-vm.js --check                   -> os 6 goldens vm idênticos
+node examples/test-room/build.mjs                       -> ok
+node examples/player-test-area/build.mjs && test.mjs    -> 7 PASS (pt-BR e en: relatório limpo, 6 cenários, golpe e mordida, 6 empurrões soltam)
+node examples/interactables-test-area/build.mjs && test.mjs -> 24/24 (inclui "the player module is loaded too (6 scenarios pass)")
+```
+
+**Desvios e dúvidas**
+
+- Fora do porte (ficam no jogo ou em outro pacote): carro (`carUpdate`), assento (`c3AssentoUpdate`), telhado (`ROOF`), andares (`ANDARES`),
+  arremesso (`throwItem`: só sai o evento `throw`), o corpo visível (`PB`) e a mira (`view`). O jogo os liga por `busy`, `canVault`, `blocked`, `afterMove`.
+- A reanimação do jogo usa `setTimeout` e sorteia o tipo do zumbi; aqui o tempo é de jogo (`turned` depois de `reanimateSeconds`) e o tipo é do jogo.
+- As frases "O AFOGADO TE PUXA…", "Não há cura" e "Morto pela horda" são do jogo e ficam literais no `pt-BR`; um jogo troca o texto por id.
+
+## T8.1a — `game-crowd` núcleo (a horda do jogo como multidão genérica)
+
+> 🤖 Modelo: `sonnet` (feito nesta sessão pelo opus)
+
+**O que foi feito**
+
+- `packages/game-crowd` (puro, sem three, IIFE `GameCrowd`): porte literal de `jogo.js` G 66714-67430 (`Z`, `zSpawn`, `zRemove`, `flowStart`,
+  `flowStep`, `losClear`, `hordeUpdate`, `groan`, `screamAt`, `zAttack`, `zDamage`, `zKill`, `inchadoBurst`, `corpseAdd`, `corpsesUpdate`, `spawnAway`,
+  `populationUpdate`, `groundAt`, `zBlockedAt`, `tryStep`, `stepRelease`, `pileBlast`, `trailUpdate`, `zSpecialSpawn`, `zAbility`, `zChaseSpeed`,
+  `zHurtOther`, `killQ`, `zFrame`) e das portas (G 63796-63816 `DOORS`/`addDoor`/`setDoor`, G 64044 `doorHit`).
+  - `createNavGrid` (a grade de 0,5 m com códigos e alturas, `losClear`, `blocked`), `createDoors`, `createStore` (os campos do jogo em inglês, com os
+    mesmos tipos de array para os floats arredondarem igual).
+  - Os 13 tipos viram **traços** (`vaultsLow`, `pounce`, `heavySwing`, `doorDamage`, `hitStun`, `soundSeeker`, `caller`, `burns`, `waterWeak`,
+    `submerged`, `ambush`, `burst`, `eatsCorpses`, `tracker`, `maxAge`, `voice`, `panicWeight`, `drownGrab`, `color`/`skin`): o núcleo não conhece
+    nenhum tipo pelo nome; `plugins` acrescentam movimentos.
+  - Todo número em `src/data/defaults.json` com a linha de origem; o tempo do flow lê `flow.clock` (padrão `performance.now`, `() => 0` termina cada
+    campo num quadro, como no golden).
+  - Alvo no formato `CrowdTarget` (o `Player` do `game-player` serve como está) e `asPlayerCrowd()` para o `PlayerCrowd` do jogador.
+  - Sem alvo ninguém persegue (mundo normal primeiro). Sons (`groan`, `runner_groan`, `scream_hoarse`, `step`, `impact`, `flesh`, `wood`), efeitos
+    (`spark`, `blood`, `limb`, `cloud`, `dust`) e mensagens por id saem como evento, para o jogo levar a `host.audio` e `host.effects`.
+- `game-characters-undead`: `undeadCrowdPack()` (`src/data/crowd.json`, escrito à mão do jogo com as fontes) com os 13 tipos, idades, roupas, segmentos e
+  paleta da horda, e cada habilidade como traço. `game-characters`: o livro de corpos ganhou `remove(index)` (o Devorador come um corpo).
+- Golden `packages/game-crowd/tests/fixtures/team-golden/game-crowd.json`: `tools/characters-catalog/src/golden/vm-crowd.ts` corta tudo isso do jogo (mais
+  a grade, `BANDS`, `CORPOS_MAX`, `walkCad`, as portas, `POOL`) e roda **8 cenas** em `node:vm` com o laço na ordem do jogo (orçamento do gemido, rastro,
+  horda, população, corpos): perseguição, alerta em cadeia e vagas; noite, agachado e olfato; pirâmide num muro de 60 m; porta derrubada pelo
+  Brutamonte; saltador, inchado, gritador, espreitador, afogado na piscina, cego com ruído, carbonizado; corpos, Devorador, rastro e Farejador
+  levando Lentos; dano por região, calibre e roupa (capacete, colete, mandíbula, desmembramento); população com sobra removida e migração.
+  O teste do pacote refaz as 8 com o SDK e compara evento por evento (alvo, som, mensagem, efeito) e o estado de cada agente a cada N quadros:
+  **8 de 8 iguais**. Uma mutação (`separationPush` 2,2 → 2,3) derruba 6 das 8.
+- `evaluateGameSlice` ganhou `capacity` (a tabela `Z` do golden da multidão tem 400 vagas; os outros goldens seguem com 8 e não mudaram).
+- README, skill `.claude/skills/game-crowd/SKILL.md`, linhas no README raiz e na skill `game-kit`, skill e README do `game-characters-undead`, changeset,
+  inventário (`veiculos-moveis-vegetacao-jogo.md` §3.4).
+
+**Comandos e resultados**
+
+```text
+pnpm build                                              -> ok
+pnpm -r typecheck                                       -> ok
+pnpm lint                                               -> ok
+pnpm --filter @adatechnology/game-crowd test            -> 19 passed (golden 8/8, grade, portas, API)
+pnpm --filter @adatechnology/game-characters-undead test -> passou (inclui undeadCrowdPack)
+pnpm --filter @adatechnology/game-characters test       -> passou (inclui remove do livro de corpos)
+characters-catalog-tool vitest --testTimeout=60000      -> passou (game-crowd regravado idêntico ao fixture)
+node dist/record-golden-vm.js --check                   -> os 7 goldens vm idênticos
+node examples/test-room/build.mjs                       -> ok
+node examples/interactables-test-area/build.mjs && test.mjs -> 24/24
+```
+
+**Desvios e dúvidas**
+
+- Os efeitos do jogo (`fxSpark` sorteia 24 vezes, `fxBlood`, `fxCloud`, `fxLimb`) gastavam o mesmo `R()` da simulação; aqui saem como evento e não
+  gastam o `random` da multidão. O golden grava a simulação com os efeitos como registro, sem sorteio: num jogo com os efeitos do time a sequência
+  global de `R()` muda, a da multidão não.
+- `undeadCrowdPack()` usa os números do jogo (`CATS`), que diferem da tabela do Bestiário em `types.json` em quatro velocidades de perseguição (cego 3,0
+  contra 1,6; carbonizado 2,2 contra 1,6; afogado 2,5 contra 1,2; devorador 3,0 contra 2,4) e no peso do afogado (0 contra 1). Os sentidos por idade
+  seguem o jogo (visão 0,6 no decrépito, audição 0,9 a partir de antigo); `ages.json` tira também 30% do olfato do decrépito, o jogo não.
+  **Dúvida:** qual tabela vale para o jogo final?
+- Um alvo só (`target`), como o jogo; a lista de alvos da pergunta 6 do desenho fica para os civis (T8.1b, `setHunt`).
+- Andares (`ANDARES`) e telhado (`ROOF`) não portados (pergunta 5); `floor` fica em cada agente. A cena com o jogador no telhado, em que a parede da
+  casa vira muro escalável, não existe aqui.
+- `popTarget` vinha de `?pop=` na URL; aqui é opção de `updatePopulation`, e a migração (ponto de entrada, largura, destino, 120 a cada 90 s) também.
+- Bancada, `game-crowd-three` e `examples/crowd-test-area` entram no T8.1c.
+
+## T8.1b — civis, bichos, revoada e a ponte com o `game-infection`
+
+> 🤖 Modelo: `sonnet` (feito nesta sessão pelo opus)
+
+**O que foi feito**
+
+- `createCivilians` (`packages/game-crowd/src/behaviours/civilians.ts`): porte literal de `jogo.js` G 69960-70175 (`pontos`, `rota`, `npcZombies`,
+  `zChaseNpc`, `npcMorre`, `npcVira`, `npcMove`, `npcUpdate`). Rotina por hora, medo (3,4 m/s com agente a menos de 6 m, criança ×0,85, mordido ×0,8),
+  grupo que segue o líder ou o alvo, fuga por um caminho (`gone` no fim), portas abertas no caminho, agentes que caçam quem está a menos de 10 m e mais
+  perto que o alvo, golpe a cada 1,5 s, mordida (×1,5 da chance do tipo) e a virada depois de 120 s (o agente leva o índice do civil em `named` e
+  patrulha a rua). O núcleo não tem nome, fala, rádio nem diário: saem os eventos `bitten`, `died`, `turned`, `gone`, e o jogo escreve as linhas.
+- `createHerd` e `HERD_ROLES` (`behaviours/herd.ts`): `bichoLivre`, `zumbiPerto`, `bichosUpdate` (G 66601-66700) sem o rig. Vagar e descansar 4 a 11 s,
+  fugir do alvo e dos agentes, companheiro 2,2 m atrás, cacarejo (30 m), alarme do quero-quero (12 m, 40 m, voa 4 s), mugido (80 m), latido (60 m sob
+  12 m) e rosnado; os chamados são ruídos que a multidão ouve. Os papéis de cada espécie vêm de `bichosPovoar` (G 66607-66623). A velocidade usa
+  `walkHz`/`runHz` do `game-animals-species` e o tamanho do `game-animals` (`quadrupedLayout`, `birdSize`).
+- `createFlock` e `carrionCenter` (`behaviours/flock.ts`): os urubus do jogo (G 66700-66708: centro dos corpos com 3 ou mais, senão a carcaça) e o anel
+  de 40 pássaros do mapa vivo da Bancada de Hordas (G 53609-53615), pelas fórmulas literais.
+- `bindInfection` (`behaviours/infection.ts`): sem código dos times (decisão P12); `materialize` vira agentes no lugar que o jogo dá, a morte de um deles
+  volta à região como `removed`, os de longe voltam com `giveBack`, a mordida de civil vira `infect`. Testado com o `game-infection` de verdade.
+- `undeadCrowdTypes()` do desenho já entrou no T8.1a como `undeadCrowdPack()`.
+- Goldens `game-crowd-civilians.json` (3 cenas: rotina com porta e caça, grupo que segue e depois foge, mordida que vira) e `game-crowd-herd.json`
+  (quintal e fazenda com cão companheiro, gato, galinhas, quero-quero, vacas, cavalo, porco, capivara, vaca morta e 3 urubus, com a horda). O harness
+  de `vm-crowd.ts` corta do jogo o código dos civis e dos bichos e roda na ordem do laço (rastro, civis, bichos, horda, corpos). **4 de 4 iguais**.
+
+**Comandos e resultados**
+
+```text
+pnpm build                                              -> ok
+pnpm -r typecheck                                       -> ok
+pnpm lint                                               -> ok
+pnpm --filter @adatechnology/game-crowd test            -> 32 passed (goldens 8 + 3 + 1, comportamentos, ponte)
+characters-catalog-tool vitest --testTimeout=60000      -> passou
+node dist/record-golden-vm.js --check                   -> os 9 goldens vm idênticos
+node examples/test-room/build.mjs                       -> ok
+node examples/interactables-test-area/build.mjs && test.mjs -> 24/24
+```
+
+**Desvios e dúvidas**
+
+- O `bichoNovo` do jogo monta o rig antes (que sorteia a fase da animação) e depois sorteia rumo e descanso; o SDK sorteia só rumo e descanso, como
+  o golden: a fase é do desenho (`game-animals-three`).
+- O corpo de um civil morto entra no livro de corpos pelo `add` (que troca o mais velho quando cheio); o jogo escrevia na vaga 0 quando cheio.
+- Os textos do jogo (mordida, reanimou, latido "zumbi a N m", quero-quero) viram ids e distância; o jogo escreve as frases.
+- O líder do grupo e a distância da criança (`davi` segue a `helena` a 1,2 m) viram `leader` e `followDistance` da pessoa.
+- **Dúvida:** comportamento dos civis por estágio do surto (pergunta 1 do desenho) segue sem código dos times; `bindInfection` não muda a rotina.
+
+## T8.1c — `game-crowd-three` (o desenho da multidão e a área de teste)
+
+> 🤖 Modelo: `sonnet` (feito nesta sessão pelo opus)
+
+**O que foi feito**
+
+- `createCrowdInstances` (`packages/game-crowd-three/src/instances.ts`): porte literal de `hordeRender` (`jogo.js` G 67098-67136) e `npcRender`
+  (G 70177-70184), sem three.js. Corte pela vista (passado √30 m, atrás da vista mais que `0,35·d + 3` m; nada além de 200 m), LOD 18/55 m com
+  histerese de 1,5 m guardada em `store.lod`, pose de ataque que entra a 1,6 m e sai a 2,2 m guardada em `store.attackPose` (a simulação a lê, como
+  no jogo), pose por estado (`INSTANCE_POSES` do `game-characters`), inchaço do Inchado, olho apagado sem crânio ou dormente, corpos no chão na
+  própria variante (perto até 18 m) que escurecem 70% e encolhem nos últimos 60 s, corpo de quem não era agente no lote simples, e os civis (criança
+  0,66 × 0,75, mordida aparecendo). Números em `src/data/render.json` com a linha de origem; poses por opção.
+- `createCrowdRenderer`: os tipos assados como em `ZVAR` (G 67079: `variantDecay`, `variantSeed`, detalhe 1, 0,5 e 0,28, lotes 160/700/2600) com
+  `bakeBody`, `createVariantBatches`, `createBodyBatch` e `buildInstancedBody` do `game-characters-three`; um tipo é assado na primeira vez que
+  aparece. Corpos de civis assados a 0,8 em lotes de 4 (G 68469 `PB`), o corpo dado pelo host. `lodCounts` contado depois dos corpos, como o jogo.
+- `createHerdView`: os bichos do `createHerd` com os rigs do `game-animals-three` (posição, rumo, `animate` com o clip; G 66697-66699) e os urubus do
+  `createFlock` planando com as asas de G 66707.
+- `CROWD_SOUND_BANK`: o grito rouco e os gemidos (`grito`, `voz`, G 62128-62155) e os chamados dos bichos (`bichoSom`, G 66625-66639) como receitas
+  do `game-audio`, as mesmas que o `game-audio` confere contra os traços dos times; `HERD_SOUND_IDS` liga `bark`/`cluck`/`lapwing`/`moo` a elas.
+- `createCrowdTestModule` (`crowd_area`, só contratos genéricos): horda do pacote que o host passa, desenhada pelo renderizador, caçando a câmera da
+  sala como corpo do `game-player`; civis, bichos, região do `game-infection`; sons por `host.audio` (o banco é registrado lá), efeitos por
+  `host.effects` (`CROWD_EFFECTS`). Nove cenários. `examples/crowd-test-area` (300 agentes, conteúdo do kit) e a `interactables-test-area` (vazia).
+- Golden `game-crowd-render.json`: o harness de `vm-crowd.ts` corta do jogo `hordeRender`, `npcRender`, `walkGait`, `ZB`, `CB`, `_c1`, `LOD_D`,
+  `NPC_COL` e troca `BodyBatch` e `THREE.Color` por registradores; desenha todo quadro (a pose de ataque volta à simulação) e grava, a cada batida,
+  o que o desenho leu (números exatos como texto) e cada instância. As 11 cenas da horda e dos civis: **11 de 11 iguais**, instância por instância.
+  Mutações (`agePer`, `corpseDarken`, `civilianSkinStep`, `behindMargin`) quebram o teste; a histerese (1,5 → 1,4) não é exercida pelas cenas e fica
+  coberta pelo cenário `crowd_lod` e pelo teste unitário.
+
+**Comandos e resultados**
+
+```text
+pnpm build                                              -> ok
+pnpm -r typecheck                                       -> ok
+pnpm lint                                               -> ok
+pnpm --filter @adatechnology/game-crowd-three test      -> 22 passed (golden 11 cenas, instâncias, renderizador, banco, área)
+pnpm --filter @adatechnology/game-crowd test            -> 32 passed
+pnpm --filter @adatechnology/game-audio test            -> 169 passed
+characters-catalog-tool vitest --testTimeout=60000      -> 73 passed
+node dist/record-golden-vm.js --check                   -> os 10 goldens vm idênticos duas vezes e iguais ao fixture
+node examples/test-room/build.mjs                       -> ok
+node examples/crowd-test-area/build.mjs && test.mjs     -> 9/9
+node examples/interactables-test-area/build.mjs && test.mjs -> 26/26
+```
+
+**Desvios e dúvidas**
+
+- O golden de cena por hash das matrizes (tabela 5 do desenho) virou o golden das instâncias do `hordeRender`: compara os 12 números do shader, a
+  cor, o olho e a altura de cada corpo, que é o que vira matriz.
+- `s` e `bulk` das variantes no golden são números fixos: o assar já é conferido pelo golden do `game-characters-three` (os 60 `bakeBody` de `ZVAR`).
+- O `PB` do jogo tem cinco lotes e prende os civis além do quarto no último; o harness usa um lote por civil (os números da instância são os mesmos).
+- Os andares do jogo (`ANDARES`) seguem fora: `frame.hidden(i)` deixa um agente de fora.
+- O laço `crowd_rumble` continua na biblioteca do `game-audio` (a horda do jogo não o toca no `hordeRender`).
+- O `game-audio` mantém a cópia das receitas de grito, gemido e chamados nos testes para não depender do `game-crowd-three`.
+- A miniatura do site precisou de 60 s no swiftshader para a primeira imagem (a página assa os tipos que aparecem).
+- **Dúvida 11 do desenho:** efeitos da multidão na sala (padrão `CROWD_EFFECTS`).
+- **Dúvida 12 do desenho:** corpo de cada civil (padrão: o host dá; a área usa os três corpos sem retrato de G 68469).
+
+
+## T8.2 — `game-stories` (histórias, escalação, crônica, ficha e vida sorteada)
+
+> 🤖 Modelo: `opus`
+
+**O que foi feito**
+
+- `packages/game-stories` (novo, global `GameStories`): porte literal de Os Vivos do Vale (`life()` 623-739, `world()`, `apply`, `simulate()` 744-756
+  e o motor de `EV`/`ACTS`/`fill`) e da ficha de Personagens. Histórias como dados (momentos com papéis, variantes em que a primeira que vale ganha,
+  condições `all`/`any`/`not`/`action`/`flag`/`state`/`living`/`base`/`value`/`self`/`changed`/`remembers`, pedaços de texto e mudanças), a escalação
+  (P9: pessoa fixa, alguém que serve, ou alguém feito dos pools de nomes, num fluxo próprio `seed ^ 0x9e3779b9`), a crônica, a ficha (P13: compra de
+  pontos, derivados, habilidades e marcos, memória até 30 e opinião de −100 a 100) e a vida sorteada. Números em `src/data/life.json` e
+  `src/data/sheet.json` com a linha de origem; textos da vida em `src/data/life-text.json` (pt-BR literal e en).
+- Mundo normal primeiro: `infection: false` por padrão (a faixa de mordida fere, ninguém reanima); `infection: true` é a regra do time.
+- `game-characters-people`: `SHEET_RULESET` (`ATTRS`, `SKILLS`, `PROFS`, `TRAITS`, `derived`) e `NAME_POOLS` gerados das fontes, conferidos literalmente
+  por `tools/characters-catalog/tests/sheet-sources.test.ts`.
+- Conteúdo do vale para o jogo em `game-slice/stories/` (`cast.json` 45 pessoas, `stories.json` com os 47 `EV` em 13 histórias, `roles.json` com
+  Cícero e Sandra como papéis, `actions.json`, `life.json`), gerado por `catalog:game` (`slice-stories.ts`, `build-slice.ts`).
+- Golden `game-stories-life.json` (`vm-stories.ts` corta do código do time `GROUPS`, a seção da vida e `byId`; e da ficha `ATTRS`, `SKILLS`, `PROFS`,
+  `TRAITS`, `S`, `pool`, `derived`): 7 vidas inteiras linha a linha (estado final, comida, casais, gente gerada, afinidade), 40 vidas por hash, 96
+  conjuntos de ações só com eventos e 48 fichas. **Todas iguais.** Mutações (chance da caravana 0,12 → 0,13; uma palavra de um texto) quebram 1 e 9
+  testes. A adoção não acontece nas vidas do golden e fica num teste unitário.
+- Bancada `createStoriesTestModule` (`stories_area`, só contratos genéricos): semente, dia (até 365), vida sorteada, mordidas, a pessoa da ficha e as
+  ações; contadores do dia; seis cenários (determinismo, escalação, mundo normal, a ficha guarda o vivido, compra de pontos, histórias que se cruzam);
+  a ficha e a crônica no painel da sala. Conteúdo de exemplo do kit (`STORIES_EXAMPLE`, marcado `example`) até o jogo carregar o dele
+  (`module.load(content)`). `examples/stories-test-area` (`sala-historias.html`, com botão de arquivo JSON) e a `interactables-test-area`.
+
+**Comandos e resultados**
+
+```text
+pnpm build                                              -> ok
+pnpm -r typecheck                                       -> ok
+pnpm lint                                               -> ok
+pnpm --filter @adatechnology/game-stories test          -> 24 passed (golden 10, histórias, bancada)
+pnpm --filter @adatechnology/game-characters-people test -> 11 passed
+characters-catalog-tool vitest --testTimeout=60000      -> 80 passed
+node dist/record-golden-vm.js --check                   -> os goldens vm idênticos duas vezes e iguais ao fixture (com game-stories-life)
+node examples/test-room/build.mjs                       -> ok
+node examples/stories-test-area/build.mjs && test.mjs   -> 7/7 (6 cenários, dia 25, a fatia do vale até o dia 90, pt-BR e en)
+node examples/interactables-test-area/build.mjs && test.mjs -> 28/28
+```
+
+**Desvios e dúvidas**
+
+- O motor não conhece o vale: `GROUPS`, `NPCS`, `RELS`, `EV` e as tabelas da vida são opções (`LifeOptions`) e conteúdo do jogo.
+- A base do grupo do jogador é opção (`playerBase`; o vale usa `jogador`).
+- Sem ninguém em idade de vínculo, não há chegada naquele dia (o código do time quebrava; nenhum sorteio é gasto, o golden não muda).
+- Fardados (`FACT`, `RANKS`, `LOOT`, `GENT`) e `JOIN` não entraram no T8.2.
+- **Dúvidas 13 a 19 do desenho:** faixa de mordida sem infecção, decaimento da opinião (1 por dia), que memória sai depois de 30, histórias de exemplo
+  do kit, chegada sem vínculo possível, sorteio da ficha (`drawSheet`), ordem da escalação.
+- **Merge de `origin/main` e integração pendentes:** o coordenador pediu o merge de `origin/main` antes do último commit e que `game-crowd` e
+  `game-player` usem o que está lá (ruas e veículos do `game-urban`, vegetação para manada e revoada). O merge foi recusado pela verificação de
+  permissão da sessão e não foi tentado de novo; a integração espera essa permissão.
