@@ -43,6 +43,7 @@ node tools/golden/bin/record.mjs \
 | `--param k=v` | extra values for the capture, read from `globalThis.__GOLDEN_PARAMS` |
 | `--ready` | expression that becomes truthy when the page has built what the capture needs |
 | `--three` | local three.js file served in place of the CDN URL; every other external request is refused, so recording is offline |
+| `--addon` | a three.js `examples/js` script (OrbitControls, RoundedBoxGeometry...) served in place of its jsDelivr URL; repeat for each one the page loads |
 
 Before any page script runs, the recorder installs the seeded environment: `Math.random` is seeded, `Date.now` and `performance.now`
 are frozen and only move through `advance`, and `requestAnimationFrame` is queued and only runs when the capture calls
