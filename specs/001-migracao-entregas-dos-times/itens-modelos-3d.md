@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **26 de 257 itens têm modelo 3D; faltam 231.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **27 de 257 itens têm modelo 3D; faltam 230.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,9 +23,9 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **26** | **231** |
+| **Total** | **27** | **230** |
 
-## Comida (5 de 36)
+## Comida (6 de 36)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -34,7 +34,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Ração operacional do Exército | `racao_militar` | `military_ration` | 0,9 kg | comum | 194 x 260 x 59 mm |
 | [x] | Açúcar (1 kg) (kit) | `acucar` | `sugar` | 1,0 kg | comum | 100 x 200 x 60 mm |
 | [x] | Barra de chocolate (kit) | `chocolate` | `chocolate_bar` | 0,09 kg | comum | 150 x 70 x 10 mm |
-| [ ] | Batata (1 kg) | `batata` | `potatoes` | 1,0 kg | comum | 200 x 90 x 140 mm |
+| [x] | Batata (1 kg) (kit) | `batata` | `potatoes` | 1,0 kg | comum | 200 x 90 x 140 mm |
 | [ ] | Biscoito de água e sal | `biscoito` | `biscuits` | 0,2 kg | comum | 200 x 50 x 100 mm |
 | [ ] | Café em pó (500 g) | `cafe_po` | `coffee` | 0,5 kg | comum | 80 x 150 x 60 mm |
 | [ ] | Carne bovina crua (1 kg) | `carne_bovina` | `raw_beef` | 1,0 kg | comum | 200 x 50 x 150 mm |
