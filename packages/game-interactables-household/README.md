@@ -59,9 +59,9 @@ volumes (clothes, curtains, glass), `world.emitters()` for flames, smoke, steam 
 |---|---|
 | `createHousehold({ locale?, region? })` | Creates the pack. `locale` is `en` (default) or `pt-BR`; `region` is `br` or `us` (default: `br` for `pt-BR`, else `us`) |
 | `hh.types` | `[{ id, name, group, w, d, h, y, solid }]`, `name` localized. `y` is the default mounting height, `solid: false` marks wall items and wires |
-| `hh.items` | `ItemCatalog`, 90 household items with `size`, `weight`, `stack`, `shape`, `color`, category |
+| `hh.items` | `ItemCatalog`, the 92 household items (same ids as before) with `size`, `weight`, `stack`, `shape`, `color`, `category` (one of the 14 of `game-items`; the old household category is in `tags`) and the rest of the `game-items` `ItemDef`. They come from `@adatechnology/game-items-goods`; `HOUSEHOLD_ITEM_IDS` lists them |
 | `hh.loot` | `LootTables` for `fridge`, `freezer`, `kitchen_cabinet`, `kitchen_drawer`, `pantry`, `wardrobe`, `dresser`, `nightstand`, `bathroom_cabinet`, `under_sink`, `trash`, `mailbox`, `bbq_counter`, `garage_shelf` |
-| `hh.strings` | `{ en, 'pt-BR' }`: `type.<id>`, `item.<id>`, `prompt.<x>` (with `.open` / `.closed` / `.on` / `.off` variants) and `letter.*` texts. Pass it to `createWorld({ strings })` |
+| `hh.strings` | `{ en, 'pt-BR' }`: `type.<id>`, `item.<id>` (from the goods locales), `prompt.<x>` (with `.open` / `.closed` / `.on` / `.off` variants) and `letter.*` texts. Pass it to `createWorld({ strings })` |
 | `hh.region` | Data of the region (`regions/<id>.json`): gas bottle, small gas canister, socket standard and voltage, mailbox style, clothesline style |
 | `hh.build(type, item, api)` | Draws through `api` and returns the `ObjectSpec`. Deterministic for the same `item.seed` |
 | `createRecorder()` | `{ api, primitives, parts }`: records static primitives in `primitives` and the ones drawn inside a part under `parts[id]` (`{ id, pivot, ry, primitives }`), for tests and previews |
@@ -191,8 +191,8 @@ Seats face `+z` of the object (`ry = PI`, because yaw 0 is -z in `game-interacta
 
 ## Data
 
-Everything is plain JSON in `src/data` (bundled): `types.json`, `items.json`, `loot.json`, `locales/en.json`, `locales/pt-BR.json` and
-`regions/br.json`, `regions/us.json`. Region specifics are data, never a type suffix:
+Everything is plain JSON in `src/data` (bundled): `types.json`, `loot.json`, `locales/en.json`, `locales/pt-BR.json` and
+`regions/br.json`, `regions/us.json`. The items are not here: they live in `@adatechnology/game-items-goods` (the catalog that merged these 92 with the team's 257). Region specifics are data, never a type suffix:
 
 ```json
 { "id": "br", "gas": { "kind": "P13", "capacityKg": 13 }, "socket": { "standard": "NBR 14136", "voltage": [127, 220], "hz": 60 }, "mailbox": { "style": "wall" } }

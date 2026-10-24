@@ -49,10 +49,10 @@ Ordem: armas → casas → itens → personagens → efeitos → som e clima →
 ## Fase 3 — Itens
 > 🤖 Modelo: `sonnet`
 
-- T3.1 `game-items`: catálogo único (A9) estendendo o `ItemDef` do SDK, com categorias, atributos, validade pela idade, achados por
+- ✅ T3.1 `game-items`: catálogo único (A9) estendendo o `ItemDef` do SDK, com categorias, atributos, validade pela idade, achados por
   lugar e receitas; os 257 itens, sem duplicar os 92 domésticos.
-- T3.2 Modelos: os 24 da vitrine no tamanho real; os outros 233 com forma simples até o time entregar (`itens-modelos-3d.md`).
-- T3.3 `items-test-area`.
+- ✅ T3.2 Modelos: os 24 da vitrine no tamanho real; os outros 233 com forma simples até o time entregar (`itens-modelos-3d.md`).
+- ✅ T3.3 `items-test-area`. (T3.1a–k, T3.2a–c e T3.3a–c entregues no ramo `int/p3`; prova em `evidence.md`, Fase 3.)
 
 ## Fase 4 — Personagens e animais
 > 🤖 Modelo: `sonnet` (T4.1 é 🧠 → `opus`)

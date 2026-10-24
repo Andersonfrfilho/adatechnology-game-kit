@@ -42,6 +42,7 @@ O item `M`: frente em `+z`, origem no centro da pegada no chão, metros; `M.x`, 
 | `props.atlas('floor' \| 'picture' \| 'water')` | Atlas em canvas (um `CanvasTexture` e um material por atlas) |
 | `props.cover(api, M, kind, opts)` / `{ poly }` | Pisos e coberturas por quadrados de atlas |
 | `createRecorder()` | `{ api, primitives }` |
+| `mergeByMaterial(THREE, root, space)` | Junta as malhas de um objeto three por material (uma malha por material), com a matriz assada no espaço dado; é o que o `game-weapons-three` e o `game-items-three` usam para cortar chamadas de desenho (veio do `game-weapons-three`; `three` é peer opcional) |
 | `hex`, `mix`, `rng`, `seedOf`, `shade`, `FLOORS`, `locales`, `resolveStrings`, `DEFS`, `MATERIALS`, `TYPE_DEFS` | Utilitários e dados |
 
 Grupos: ceiling (`ceiling_light`, `pendant`, `track_spot`, `chandelier`), wall (`wall_ac`, `picture_small/large`, `mirror`, `curtain`, `blinds`, `flat_tv`), plants, furniture (`tv_stand`, `sofa_l`, `double_bed_modern`, `home_office`, `closet`, `vanity`...), floor (`lawn`, `tile_floor`, `concrete`, `deck_floor`, `dirt`), yard (`pool`, `deck`, `sauna`, `fruit_tree`, `palm_tree`, `pergola`, `swing`, `garage_car`...), house_state (`window_boards`, `barricade`, `sandbags`, `barbed_wire`, `blood_stains`, `open_door`...). Materiais: `plain`, `metal`, `wood`, `glass`, `fabric`, `plant`, `water`, `emissive`, `atlas_picture`, `atlas_floor`.

@@ -279,9 +279,12 @@ export interface FindsQuery {
   footprint?: number
   key?: string
 }
-/** Answers what a container holds. Registered by an item pack; the engine only keeps the registry. */
+/**
+ * Answers what a container holds. Registered by an item pack; the engine only keeps the registry. An array is the answer, even an empty one (an abandoned
+ * cupboard that holds nothing); `null` means this provider does not know the container, and the next provider (or the default of the pack) answers.
+ */
 export interface FindsProvider {
-  findsFor(query: FindsQuery): readonly FindStack[]
+  findsFor(query: FindsQuery): readonly FindStack[] | null
 }
 
 export interface FloorplanOptions {
@@ -307,6 +310,10 @@ export interface FloorplanOptions {
   locale?: string
   /** Urban zone id or definition to clamp the plan to. */
   zone?: string | ZoneDef
+  /** Outbreak days for the finds (`FindsQuery.day`); 0 or none is the normal world. */
+  day?: number
+  /** Region of the world for the finds (`FindsQuery.region`), as the item pack names it. */
+  region?: string
   [extra: string]: Json
 }
 

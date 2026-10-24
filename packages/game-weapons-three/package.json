@@ -47,7 +47,8 @@
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:*",
     "@adatechnology/game-interactables-three": "workspace:*",
-    "@adatechnology/game-weapons": "workspace:*"
+    "@adatechnology/game-weapons": "workspace:*",
+    "@adatechnology/game-props3d": "workspace:*"
   },
   "peerDependencies": {
     "three": "^0.160.0"

@@ -10,7 +10,7 @@
  * Every random choice (spread) comes from the state's seed: same inputs, same shots on every machine.
  */
 
-import type { Shot, Use, Vec3 } from '@adatechnology/game-contracts'
+import type { DeepPartial, Shot, Use, Vec3 } from '@adatechnology/game-contracts'
 
 import type { AttachmentDef, AttachmentId, AttachmentInstall, FittedAttachment, MountDef, MountKind, StockDef, StockState, WeaponSnapshot } from './attachment-types'
 import type { CanFit, FitRefusal, IsCompatible } from './attachments'
@@ -375,14 +375,7 @@ export interface WeaponState {
   drain(): WeaponEvent[]
 }
 
-/** Recursively optional; arrays and functions are replaced as a whole, objects are merged. */
-export type DeepPartial<TValue> = TValue extends (...args: never[]) => unknown
-  ? TValue
-  : TValue extends readonly unknown[]
-    ? TValue
-    : TValue extends object
-      ? { [TKey in keyof TValue]?: DeepPartial<TValue[TKey]> }
-      : TValue
+export type { DeepPartial }
 
 /** Changes to a weapon def: `action`, `timings` and `dimensions` merge field by field, anything else replaces. */
 export type WeaponPatch = DeepPartial<Omit<WeaponDef, 'id'>>

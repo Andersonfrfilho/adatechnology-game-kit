@@ -208,7 +208,7 @@ describe('what the containers hold', () => {
   })
 
   it('a registered provider answers before the default, and a registered state rule changes the default', () => {
-    engine.registerFindsProvider({ findsFor: (query) => (query.container === 'mailbox' ? [{ itemId: 'custom_letter', count: 9 }] : []) })
+    engine.registerFindsProvider({ findsFor: (query) => (query.container === 'mailbox' ? [{ itemId: 'custom_letter', count: 9 }] : null) })
     const mailbox = (): any[] => {
       const result = plan('townhouse', 4)
       const item = result.items.find((m: any) => m.category === 'mailbox')

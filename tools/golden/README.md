@@ -63,6 +63,18 @@ Captures for the houses (spec 001, T2.2a), with where their goldens go:
 | `house-area.js` | Sala de testes, area "Casas e prédios" (the 6 scenarios on the page's destruction world, every world event) | `specs/.../goldens/house-area.json`, staged until the destruction work (T2.3b) consumes it |
 | `gallery-silhouettes.js` | Galeria do Vale Cinzento, with `--expose` (house and building silhouettes, scene hash) | `specs/.../goldens/gallery-silhouettes.json`, staged for `game-floorplan-three` (T2.5a) |
 
+Capture for the items (spec 001, T3.2b):
+
+| Capture | Page | Golden |
+|---|---|---|
+| `items-showcase.js` | Itens do Vale Cinzento (`artefatos/NKmkGZ2Lvcd96mp6Nyksds.html`): the 24 builders of `MODELS` hashed as they return (before the page's 1.55 normalisation) and the materials of each at the three wear stages | `packages/game-items-three/tests/fixtures/team-golden/items-showcase.json` |
+
+```bash
+CHROME_BIN=<chrome> node tools/golden/bin/record.mjs --page specs/001-migracao-entregas-dos-times/artefatos/NKmkGZ2Lvcd96mp6Nyksds.html \
+  --capture tools/golden/captures/items-showcase.js --out packages/game-items-three/tests/fixtures/team-golden/items-showcase.json --seed 1 \
+  --three node_modules/.pnpm/three@0.128.0/node_modules/three/build/three.min.js --ready "window.THREE"
+```
+
 `specs/001-migracao-entregas-dos-times/goldens/README.md` has the exact command of each one. `GoldenTool.hashText` (FNV-1a) is what a capture and a package test use to put a
 whole list in one event value.
 

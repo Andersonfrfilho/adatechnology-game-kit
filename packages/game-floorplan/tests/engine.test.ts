@@ -108,8 +108,12 @@ describe('result extensions and finds', () => {
 
   it('asks the registered provider what a container holds', () => {
     expect(engine.findsFor({ place: 'house', container: 'fridge', state: 'normal', rng: engine.createRng(1, 'x') })).toEqual([])
-    engine.registerFindsProvider({ findsFor: ({ container }) => (container === 'fridge' ? [{ itemId: 'milk', count: 2 }] : []) })
+    engine.registerFindsProvider({ findsFor: ({ container }) => (container === 'fridge' ? [{ itemId: 'milk', count: 2 }] : null) })
     expect(engine.findsFor({ place: 'house', container: 'fridge', state: 'normal', rng: engine.createRng(1, 'x') })).toEqual([{ itemId: 'milk', count: 2 }])
+    // null passes to the next provider or to the default of the pack; an empty array is an answer
+    expect(engine.findsAnswer({ place: 'house', container: 'sofa', state: 'normal', rng: engine.createRng(1, 'x') })).toBeNull()
+    engine.registerFindsProvider({ findsFor: () => [] })
+    expect(engine.findsAnswer({ place: 'house', container: 'sofa', state: 'normal', rng: engine.createRng(1, 'x') })).toEqual([])
   })
 })
 

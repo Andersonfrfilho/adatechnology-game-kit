@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology/game-contracts'
 import type { WeaponDef } from '@adatechnology/game-weapons'
-import { mergeByMaterial } from './merge-by-material'
+import { mergeByMaterial } from '@adatechnology/game-props3d'
 import { buildWeaponModelById } from './models'
 import { buildTripodLegs } from './models/attachments/tripod'
 import { modelKit } from './models/kit'

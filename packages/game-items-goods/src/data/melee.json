@@ -1,0 +1,102 @@
+[
+  {
+    "id": "knife",
+    "reach": 0.6,
+    "noise": 1
+  },
+  {
+    "id": "tactical_knife",
+    "reach": 0.6,
+    "noise": 1
+  },
+  {
+    "id": "machete",
+    "reach": 0.9,
+    "noise": 2
+  },
+  {
+    "id": "meat_cleaver",
+    "reach": 0.6,
+    "noise": 2
+  },
+  {
+    "id": "hatchet",
+    "reach": 0.7,
+    "noise": 2
+  },
+  {
+    "id": "axe",
+    "reach": 1,
+    "noise": 3
+  },
+  {
+    "id": "baseball_bat",
+    "reach": 1,
+    "noise": 3
+  },
+  {
+    "id": "nail_bat",
+    "reach": 1,
+    "noise": 3
+  },
+  {
+    "id": "iron_pipe",
+    "reach": 1,
+    "noise": 4
+  },
+  {
+    "id": "sledgehammer",
+    "reach": 1.1,
+    "noise": 6
+  },
+  {
+    "id": "pickaxe",
+    "reach": 1,
+    "noise": 4
+  },
+  {
+    "id": "sickle",
+    "reach": 1.1,
+    "noise": 2
+  },
+  {
+    "id": "police_baton",
+    "reach": 0.7,
+    "noise": 3
+  },
+  {
+    "id": "cast_iron_skillet",
+    "reach": 0.6,
+    "noise": 8
+  },
+  {
+    "id": "improvised_spear",
+    "reach": 1.6,
+    "noise": 1
+  },
+  {
+    "id": "chainsaw",
+    "reach": 0.9,
+    "noise": 120
+  },
+  {
+    "id": "slingshot",
+    "reach": 25,
+    "noise": 1
+  },
+  {
+    "id": "recurve_bow",
+    "reach": 40,
+    "noise": 1
+  },
+  {
+    "id": "crossbow",
+    "reach": 60,
+    "noise": 1
+  },
+  {
+    "id": "arrows_and_bolts",
+    "reach": 0,
+    "noise": 0
+  }
+]

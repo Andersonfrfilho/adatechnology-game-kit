@@ -1,0 +1,45 @@
+{
+  "rarityWeights": {
+    "common": 60,
+    "uncommon": 28,
+    "rare": 9,
+    "very_rare": 2.5
+  },
+  "fixedOnly": [
+    "legendary",
+    "unique"
+  ],
+  "condition": {
+    "common": [
+      30,
+      90
+    ],
+    "uncommon": [
+      40,
+      90
+    ],
+    "rare": [
+      50,
+      100
+    ]
+  },
+  "ageShareOfShelfLife": [
+    0,
+    0.6
+  ],
+  "batteryCharge": [
+    0.2,
+    1
+  ],
+  "jerrycanFill": [
+    0,
+    0.6
+  ],
+  "floorItemsPerCell": 400,
+  "gameRarityWeights": {
+    "c": 60,
+    "i": 28,
+    "r": 9,
+    "mr": 2.5
+  }
+}

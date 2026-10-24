@@ -58,6 +58,8 @@
     "@adatechnology/game-floorplan-residential": "workspace:*",
     "@adatechnology/game-floorplan-commercial": "workspace:*",
     "@adatechnology/game-floorplan-post-apocalyptic": "workspace:*",
-    "@adatechnology/golden-tool": "workspace:*"
+    "@adatechnology/golden-tool": "workspace:*",
+    "@adatechnology/game-items": "workspace:*",
+    "@adatechnology/game-items-goods": "workspace:*"
   }
 }

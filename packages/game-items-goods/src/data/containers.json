@@ -1,0 +1,378 @@
+[
+  {
+    "id": "fridge",
+    "teamName": "Geladeira",
+    "gameKey": "geladeira",
+    "places": [
+      "house",
+      "apartment",
+      "supermarket",
+      "gas_station"
+    ],
+    "count": [
+      0,
+      4
+    ],
+    "teamCount": [
+      0,
+      4
+    ],
+    "categories": {
+      "food": 0.55,
+      "drink": 0.45
+    },
+    "teamCategories": "comida perecível e bebida",
+    "rule": "Sem energia, o perecível de dentro começa a contar como fora da geladeira."
+  },
+  {
+    "id": "kitchen_cabinet",
+    "teamName": "Armário de cozinha",
+    "gameKey": "cozinha",
+    "places": [
+      "house",
+      "apartment",
+      "church",
+      "school"
+    ],
+    "count": [
+      1,
+      4
+    ],
+    "teamCount": [
+      1,
+      4
+    ],
+    "categories": {
+      "food": 0.7,
+      "melee": 0.12,
+      "electronics": 0.1,
+      "tools": 0.08
+    },
+    "teamCategories": "comida seca e enlatada, panela, abridor, isqueiro"
+  },
+  {
+    "id": "bathroom_cabinet",
+    "teamName": "Armário do banheiro",
+    "gameKey": "banheiro",
+    "places": [
+      "house",
+      "apartment",
+      "school"
+    ],
+    "count": [
+      0,
+      3
+    ],
+    "teamCount": [
+      0,
+      3
+    ],
+    "categories": {
+      "medical": 1
+    },
+    "teamCategories": "analgésico, curativo, álcool, remédio de uso contínuo"
+  },
+  {
+    "id": "wardrobe",
+    "teamName": "Guarda-roupa",
+    "gameKey": "guarda",
+    "places": [
+      "house",
+      "apartment"
+    ],
+    "count": [
+      1,
+      5
+    ],
+    "teamCount": [
+      1,
+      5
+    ],
+    "categories": {
+      "clothing": 0.6,
+      "bags": 0.3,
+      "ammo": 0.1
+    },
+    "teamCategories": "roupas, mochila, dinheiro",
+    "rule": "1 em cada 12 casas: arma do Arsenal no armário do casal."
+  },
+  {
+    "id": "nightstand_drawer",
+    "teamName": "Criado-mudo e gaveta",
+    "gameKey": "gaveta",
+    "places": [
+      "house",
+      "apartment"
+    ],
+    "count": [
+      0,
+      3
+    ],
+    "teamCount": [
+      0,
+      3
+    ],
+    "categories": {
+      "keys": 0.25,
+      "electronics": 0.35,
+      "medical": 0.2,
+      "ammo": 0.2
+    },
+    "teamCategories": "chave, celular, foto, bilhete, remédio",
+    "rule": "Lugar mais comum da chave de casa e da chave do carro."
+  },
+  {
+    "id": "bookshelf",
+    "teamName": "Estante",
+    "gameKey": "estante",
+    "places": [
+      "house",
+      "school",
+      "apartment"
+    ],
+    "count": [
+      0,
+      3
+    ],
+    "teamCount": [
+      0,
+      3
+    ],
+    "categories": {
+      "books": 0.6,
+      "electronics": 0.25,
+      "collectibles": 0.15
+    },
+    "teamCategories": "livros, revistas, rádio"
+  },
+  {
+    "id": "workbench",
+    "teamName": "Bancada e caixa de ferramentas",
+    "gameKey": "bancada",
+    "places": [
+      "warehouse",
+      "workshop",
+      "farm"
+    ],
+    "otherPlaces": [
+      "casa (garagem)"
+    ],
+    "count": [
+      1,
+      4
+    ],
+    "teamCount": [
+      1,
+      4
+    ],
+    "categories": {
+      "tools": 0.5,
+      "materials": 0.5
+    },
+    "teamCategories": "ferramentas, materiais, lubrificante"
+  },
+  {
+    "id": "garage_shelf",
+    "teamName": "Prateleira de garagem",
+    "places": [
+      "house",
+      "farm",
+      "workshop"
+    ],
+    "count": [
+      1,
+      4
+    ],
+    "teamCount": [
+      1,
+      4
+    ],
+    "teamCategories": "combustível, galão, materiais, sementes"
+  },
+  {
+    "id": "store_shelf",
+    "teamName": "Prateleira de loja",
+    "gameKey": "prateleira",
+    "places": [
+      "supermarket",
+      "pharmacy",
+      "mall",
+      "gas_station",
+      "gun_shop"
+    ],
+    "count": [
+      3,
+      8
+    ],
+    "teamCount": [
+      3,
+      10
+    ],
+    "categoriesByPlace": {
+      "pharmacy": {
+        "medical": 1
+      },
+      "*": {
+        "food": 0.6,
+        "drink": 0.4
+      }
+    },
+    "teamCategories": "a categoria da loja",
+    "rule": "Saque progressivo: cai com os dias (abaixo)."
+  },
+  {
+    "id": "stockroom",
+    "teamName": "Depósito e estoque",
+    "places": [
+      "supermarket",
+      "pharmacy",
+      "mall",
+      "warehouse"
+    ],
+    "count": [
+      6,
+      20
+    ],
+    "teamCount": [
+      6,
+      20
+    ],
+    "teamCategories": "a categoria da loja, em caixas fechadas",
+    "rule": "Muitas vezes trancado: pé de cabra ou chave."
+  },
+  {
+    "id": "locker",
+    "teamName": "Armário de vestiário",
+    "places": [
+      "warehouse",
+      "school",
+      "hospital",
+      "police_station",
+      "mine"
+    ],
+    "count": [
+      0,
+      3
+    ],
+    "teamCount": [
+      0,
+      3
+    ],
+    "teamCategories": "roupas de trabalho, comida pequena, cigarro, chave do armário"
+  },
+  {
+    "id": "car_trunk",
+    "teamName": "Porta-luvas e porta-malas",
+    "places": [
+      "car"
+    ],
+    "count": [
+      0,
+      3
+    ],
+    "teamCount": [
+      0,
+      3
+    ],
+    "teamCategories": "mapa, lanterna, kit de primeiros socorros, macaco, chave",
+    "rule": "Chave do carro: ver Frota."
+  },
+  {
+    "id": "military_crate",
+    "teamName": "Caixa militar",
+    "places": [
+      "military_base"
+    ],
+    "count": [
+      2,
+      6
+    ],
+    "teamCount": [
+      2,
+      6
+    ],
+    "teamCategories": "ração, munição (Arsenal), roupa militar, rádio",
+    "rule": "Lacrada: abrir faz ruído de 10 m."
+  },
+  {
+    "id": "safe",
+    "teamName": "Cofre",
+    "places": [
+      "police_station",
+      "supermarket"
+    ],
+    "otherPlaces": [
+      "casa rica (classe D)"
+    ],
+    "count": [
+      1,
+      4
+    ],
+    "teamCount": [
+      1,
+      4
+    ],
+    "teamCategories": "raro e muito raro",
+    "rule": "Precisa de chave, código ou maçarico."
+  },
+  {
+    "id": "bin",
+    "teamName": "Lixeira e entulho",
+    "places": [
+      "road"
+    ],
+    "otherPlaces": [
+      "rua"
+    ],
+    "count": [
+      0,
+      2
+    ],
+    "teamCount": [
+      0,
+      2
+    ],
+    "teamCategories": "latas, garrafas, trapos, 5% de chance de algo útil",
+    "rule": "Busca 3+ dobra a chance."
+  },
+  {
+    "id": "zombie_corpse",
+    "teamName": "Corpo de zumbi",
+    "gameKey": "corpo",
+    "places": [],
+    "otherPlaces": [
+      "em todo lugar"
+    ],
+    "count": [
+      0,
+      3
+    ],
+    "teamCount": [
+      0,
+      3
+    ],
+    "categories": {
+      "clothing": 0.25,
+      "electronics": 0.25,
+      "keys": 0.2,
+      "materials": 0.2,
+      "medical": 0.1
+    },
+    "teamCategories": "bolsos da roupa e o que a pessoa levava",
+    "rule": "Jovem: celular e mochila. Idoso: remédio e óculos. Policial: 9 mm 40%. Militar: 5,56 30%."
+  },
+  {
+    "id": "counter",
+    "gameKey": "balcao",
+    "places": [],
+    "count": [
+      1,
+      4
+    ],
+    "categories": {
+      "electronics": 0.4,
+      "medical": 0.3,
+      "drink": 0.3
+    }
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "id": "knife",
+    "damage": 20,
+    "critical": 10
+  },
+  {
+    "id": "tactical_knife",
+    "damage": 25,
+    "critical": 20
+  },
+  {
+    "id": "machete",
+    "damage": 40,
+    "critical": 35
+  },
+  {
+    "id": "meat_cleaver",
+    "damage": 35,
+    "critical": 30
+  },
+  {
+    "id": "hatchet",
+    "damage": 38,
+    "critical": 45
+  },
+  {
+    "id": "axe",
+    "damage": 60,
+    "critical": 70
+  },
+  {
+    "id": "baseball_bat",
+    "damage": 30,
+    "critical": 20
+  },
+  {
+    "id": "nail_bat",
+    "damage": 40,
+    "critical": 30
+  },
+  {
+    "id": "iron_pipe",
+    "damage": 32,
+    "critical": 25
+  },
+  {
+    "id": "sledgehammer",
+    "damage": 70,
+    "critical": 85
+  },
+  {
+    "id": "pickaxe",
+    "damage": 55,
+    "critical": 75
+  },
+  {
+    "id": "sickle",
+    "damage": 38,
+    "critical": 25
+  },
+  {
+    "id": "police_baton",
+    "damage": 18,
+    "critical": 5
+  },
+  {
+    "id": "cast_iron_skillet",
+    "damage": 22,
+    "critical": 15
+  },
+  {
+    "id": "improvised_spear",
+    "damage": 30,
+    "critical": 40
+  },
+  {
+    "id": "chainsaw",
+    "damage": 120,
+    "critical": 95
+  },
+  {
+    "id": "slingshot",
+    "damage": 6,
+    "critical": 0
+  },
+  {
+    "id": "recurve_bow",
+    "damage": 45,
+    "critical": 90
+  },
+  {
+    "id": "crossbow",
+    "damage": 60,
+    "critical": 100
+  },
+  {
+    "id": "arrows_and_bolts",
+    "damage": 0,
+    "critical": 0
+  }
+]

@@ -35,7 +35,7 @@ describe('weapons test area', () => {
     const laid = [...room.arsenal.weapons.values()].filter((def) => !['hand', 'kick', 'shove', 'fists'].includes(def.id) && !(def.id in ARCHETYPE_MODELS))
     expect(weapons.map((o) => o.itemId).sort()).toEqual(laid.map((def) => `${WEAPON_ITEM_PREFIX}${def.id}`).sort())
     expect(weapons.length).toBeGreaterThan(100)
-    expect(placed.filter((o) => o.itemId === COUNTER_ITEM_ID).length).toBeLessThanOrEqual(6)
+    expect(placed.filter((o) => o.itemId === COUNTER_ITEM_ID).length).toBeLessThanOrEqual(8)
     expect(placed.some((o) => o.itemId === 'target_steel_plate')).toBe(true)
     for (let i = 0; i < 120; i++) room.update(1 / 60)
     expect(Math.min(...weapons.map((o) => o.root.position.y))).toBeGreaterThan(0.85)

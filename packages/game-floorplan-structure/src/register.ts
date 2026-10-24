@@ -75,7 +75,7 @@ export function register(engine: FloorplanEngine, options: StructurePackOptions 
   engine.registerResultExtension('roof', (context) => cacheOf(context.result).roof ?? null, { after: ['structure'] })
   engine.registerViewerLayer(structureLayer)
   engine.registerItem(COOKING_CYLINDER)
-  engine.registerResultExtension('contents', (context) => planContents({ items: context.result.items, state: context.result.state, place: context.plan.tpl.place ?? 'house', rngFor: (key) => engine.createRng(context.seed, key), findsFor: (query) => { const answered = engine.findsFor(query); return answered.length ? answered : contentOf({ container: query.container, state: query.state, rng: query.rng, footprint: query.footprint ?? 0.5 }) } }))
+  engine.registerResultExtension('contents', (context) => planContents({ items: context.result.items, state: context.result.state, place: context.plan.tpl.place ?? 'house', ...(typeof context.options.day === 'number' ? { day: context.options.day } : {}), ...(typeof context.options.region === 'string' ? { region: context.options.region } : {}), rngFor: (key) => engine.createRng(context.seed, key), findsFor: (query) => { const answered = engine.findsAnswer(query); return answered ?? contentOf({ container: query.container, state: query.state, rng: query.rng, footprint: query.footprint ?? 0.5 }) } }))
   engine.registerResultExtension('outbuildings', (context) => {
     const outbuildings = planOutbuildings({ plan: context.plan, items: context.result.items, catalog: engine.catalog, rngFor: (key) => engine.createRng(context.seed, key) })
     if (context.result.lot) addOutbuildingPaths(context.result.lot, outbuildings, context.result.items)

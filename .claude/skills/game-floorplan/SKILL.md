@@ -51,7 +51,7 @@ Opções: `seed` (número ou string), `w`, `d`, `style` (`budget`, `mid`, `high`
 | `registerState(name, { apply(ctx), adjustPalette?, seedKey? })`, `setStateDistribution(weights)` | Estados como plugin e sorteio do estado padrão |
 | `defineZone`, `getZone`, `listZones`, `checkLot`, `registerPermeableGround` | Zoneamento |
 | `registerResultExtension(name, run, { after?, seedKey? })` | Acrescenta `result[name]` depois do estado (ex.: `result.structure`); `rng` da extensão = `createRng(seed, seedKey ?? name)` |
-| `registerFindsProvider`, `findsFor(FindsQuery)` | Gancho do que há dentro de cada recipiente (stub da Fase 3) |
+| `registerFindsProvider`, `findsFor(FindsQuery)`, `findsAnswer(FindsQuery)` | Gancho do que há dentro de cada recipiente. A consulta leva `place`, `container`, `state`, `day`, `region`, `footprint` e `key`; o provedor devolve `null` ("não é meu": o próximo provedor ou o padrão do pacote responde) ou uma lista (vazia também é resposta). `findsAnswer` devolve `null` se ninguém respondeu. Provedor pronto: `createGoodsFindsProvider` do `game-items-goods` |
 | `registerViewerLayer({ id, label, draw, legend? })`, `engine.viewerLayers` | Camada do visor 2D (a estrutura desenha pilares e vigas) |
 | `blocksWindow`, `engine.constants` | Regra de janela e constantes (`PLAYER_RADIUS` 0,24, folgas, `CAR_CLEARANCE`) |
 | `registerLocale`, `translate`, `listLocales` | Textos (`en`, `pt-BR`) |
