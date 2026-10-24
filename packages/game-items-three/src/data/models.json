@@ -1308,5 +1308,15 @@
       2.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "chainsaw",
+    "teamId": "motosserra",
+    "teamBox": [
+      4.5,
+      2.6,
+      2.3
+    ],
+    "scale": 0.1
   }
 ]
