@@ -618,5 +618,15 @@
       0.702
     ],
     "scale": 0.1
+  },
+  {
+    "id": "soda_can",
+    "teamId": "refri_lata",
+    "teamBox": [
+      0.664,
+      1.2,
+      0.664
+    ],
+    "scale": 0.1
   }
 ]
