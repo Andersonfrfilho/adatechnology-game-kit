@@ -46,6 +46,7 @@ const room = createTestRoom({
     { id: 'my_crate_breaks', name: 'My crate breaks', run: ({ room, step, expect }) => {
       const o = room.spawn('my_crate', [0, 0, -4])
       room.setTool('pistol_9mm')
+      room.waitUntilReady() // setTool plays the draw: the tool answers `drawing` until the rule's draw time is over
       room.look([0, 1, -2], [0, 0.5, -4])
       room.use()
       step(2)

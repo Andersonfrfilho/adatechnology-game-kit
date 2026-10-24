@@ -166,6 +166,8 @@ export interface TestRoom {
   spawned(): SpawnedObject[]
   /** Advance one frame (only needed when the host owns the loop). */
   update(dt: number): void
+  /** Advance frames until the tool in hand has no phase left (the draw `setTool` plays, a reload, a cycle) or `maxSeconds` pass; plus one frame so the next pull is not inside the phase; returns the seconds waited. */
+  waitUntilReady(maxSeconds?: number): number
   on(type: 'spawn' | 'tool' | 'grab' | 'throw' | 'event', fn: (data: unknown) => void): () => void
   /** Tilt the held item by `rad` radians around its own x axis (hold Z in the room). Pouring and spilling follow from the tilt. */
   tilt(rad: number): void

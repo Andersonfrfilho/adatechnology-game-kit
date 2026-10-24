@@ -2042,6 +2042,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return [...entries.values()].filter((e) => !e.arena).map((e) => e.so)
     },
     update,
+    waitUntilReady(maxSeconds = 5) {
+      let waited = 0
+      while (tool.phase && waited < maxSeconds) {
+        update(FIXED_DT)
+        waited += FIXED_DT
+      }
+      // the trigger judges a frame by where it starts: one more frame, or the first pull of a fresh draw still answers `drawing`
+      update(FIXED_DT)
+      return waited + FIXED_DT
+    },
     on(type, fn) {
       listeners[type].add(fn)
       return () => listeners[type].delete(fn)
