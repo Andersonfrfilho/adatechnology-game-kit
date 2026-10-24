@@ -886,3 +886,31 @@ Node 22.23.4: `tools/items-catalog` 24, `game-items` 18, `tools/golden` 42 passa
 | `catalog:check` | up to date |
 
 Node 22.23.4: `tools/items-catalog` 27, `game-items` 18, `tools/golden` 42, `catalog:check` up to date. Sem golden novo (os hashes da T3.1k/T3.2b). Modelo da execução: `sonnet` (o pedido recomendava `haiku`; houve decisões de modelagem: extras, termos de receita).
+
+### T3.1d — Medidas reais (`decisions.json.dimensions`) e teste de densidade (grupo B)
+
+**O que entrou**
+- `decisions.json.dimensions`: uma entrada por item do catálogo (327) mais `survivor_diary` (o modelo `diario` é do jogo): `{ value: [largura, altura, profundidade] em metros, source, reason, material, modelScaleRef? }`. Fontes: `household` 84 (54 sem par + 30 juntados que ficam com a medida do household), `REF` 208 (medida real razoável do tipo de objeto, com a descrição e as medidas em mm na `reason`), `model` 23 (os modelados do SDK; mais o `diario`), `derived` 12 (cópia de outro item: garrafa de 500 ml, lata de 350 ml, litro de combustível, caixa de comprimidos...). Substitui os 206 tamanhos provisórios derivados de kg: `provisionalSize`, `densityByCategory` e `SizeSource 'provisional'` saíram; item sem medida **derruba o build**.
+- **Os 24 modelados:** os construtores do ITE (L144-168) foram avaliados com `three@0.128.0` (como o golden) e a caixa de cada um medida (`Box3.setFromObject`, nas unidades da página). O tamanho é essa caixa × **uma escala**, tirada de uma medida real de um eixo (`modelScaleRef`: `teamId`, `teamBox`, `axis`, `meters`, `scale`), preservando as proporções do time. Ex.: garrafa de 500 ml = diâmetro 66 mm → 66 x 183 x 66 mm; pé de cabra = 750 mm (30 pol); botijão P13 = 490 mm; galão de 20 L = 470 mm (30,8 x 47 x 15,4 cm); pilha AA = 50,5 mm; martelo = 330 mm; facão = 550 mm; lata = diâmetro 80 mm (a lata do time é achatada, diâmetro maior que a altura: com 73 mm ficaria 62 mm de altura e mais densa que a água; com a altura de 113 mm do exemplo do pedido ficaria 4x o volume de um feijão de 450 g). `diario` (21 cm) fica na tabela para a T3.2b, mas é item do jogo.
+- **Teste de densidade** (`tests/density.test.ts`): kg por litro da caixa dentro de uma faixa por material (14 materiais: `liquid`, `food`, `paper`, `cloth`, `wood`, `metal_solid`, `metal_tool`, `long`, `stone`, `glass`, `plastic`, `electronic`, `battery`, `hollow`); `hollow` é a lista explícita de 45 itens ocos ou cheios de ar (embalagens, bolsas, capacetes, balde, tábua em leque...), cada um com razão. Também testa que cada lado fica entre 1 mm e 2 m e que um dedo escorregado (×10 ou ÷10 num lado) sai da faixa em 80% dos itens (medido: 0,80; as faixas são largas de propósito, o teste pega ordem de grandeza e não arredondamento). `tests/dimensions.test.ts`: uma medida por item (nada além do `diario`), `items.json` = decisão, `sizeSource` = fonte, `household` = valor do household, e os 24 modelados = caixa × escala em 1%, com `teamId` iguais aos 24 `MODELS` lidos do ITE (a conferência de 2% contra o `models.json` é da T3.2b).
+- **Pilha:** nenhuma mudança (valor do household nos juntados, senão padrão por categoria e `stackOverrides`, da T3.1c).
+
+**Desvios do desenho e escolhas reversíveis**
+- **Juntado e modelado ao mesmo tempo (7 itens):** o pedido diz que juntados herdam o tamanho do household, mas os 24 modelados são dimensionados pela caixa do time, e um item não pode ter duas caixas (o teste da T3.2b compara caixa × escala com o `size`). **Padrão adotado: o modelo vence** nos 7 (`water_bottle`, `rice`, `first_aid_kit`, `bandage`, `hammer`, `flashlight`, `batteries`); a `reason` guarda o valor antigo do household. Reverter um deles = apagar a entrada de `dimensions` e pôr `source: 'household'` (e tirar o item do `models.json` na T3.2b). Antes → depois (m): `water_bottle` 0,07x0,28x0,07 → 0,066x0,183x0,066; `rice` 0,1x0,2x0,06 → 0,171x0,25x0,071; `first_aid_kit` 0,25x0,09x0,17 → 0,25x0,214x0,096; `bandage` 0,1x0,03x0,05 → 0,101x0,078x0,044; `hammer` 0,3x0,03x0,1 (deitado) → 0,159x0,33x0,047 (em pé); `flashlight` 0,04x0,04x0,16 → 0,056x0,16x0,056; `batteries` 0,06x0,02x0,05 → 0,037x0,051x0,017. **A T3.1g precisa avisar o household**: as alturas e a orientação mudam nesses 7.
+- **Erro achado pelo teste no household:** `juice_box` (0,07 x 0,2 x 0,07 = 1 L) contradiz o peso do time (0,2 kg, caixinha de 200 ml). Peso do time vence, então a medida passou a REF 52 x 100 x 37 mm (`source: 'REF'`, `reason` explica). Mudança de medida do household, também para a T3.1g.
+- **Orientação:** `size` está no quadro do próprio item: modelados na pose do modelo (y para cima, ferramentas longas em pé), os demais na pose de repouso (y para cima, ferramentas longas deitadas ao longo de x, como o household). A T3.2 desenha pelo `size`, então as duas convivem.
+- **Roupas** medidas dobradas (como `tshirt` e `jeans` do household); sacos e mochilas vazios. Padrões reversíveis: cada medida é uma linha.
+- **Ajustes de dado achados pelo teste, nos itens criados:** `stick` pesa 20 g (eram 50 g para um galho de 12 mm); faixa `hollow` começa em 0,004 kg/L (o saco plástico do household pesa 20 g em 4 L).
+- **Contagem:** o pedido falava em 298 itens; são 327 porque a T3.1c criou 28 itens e desfez uma junção (ver T3.1c).
+
+**Portões (Node 24.22.0)**
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro) | exit 0; `items-catalog` 35 (5 arquivos), `game-items` 18, `golden` 42, `game-weapons` 277, `game-interactables-household` 1907 |
+| `catalog:check` (items e weapons, também com `--game-out`) | up to date |
+
+Node 22.23.4: `tools/items-catalog` 35, `game-items` 18, `tools/golden` 42, `catalog:check` up to date. Sem golden novo (os hashes da T3.1k/T3.2b); o teste de densidade falhou **0 vezes** depois de os 7 desvios acima serem tratados na tabela (a primeira rodada de rascunho tinha 7 itens fora da faixa; nenhum gate falhou 2x). Modelo da execução: `sonnet` (o pedido recomendava `haiku` com escalada para `sonnet`; as medidas exigiram escolha por objeto).

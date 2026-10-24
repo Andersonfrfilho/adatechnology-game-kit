@@ -6,9 +6,9 @@
       "perishable"
     ],
     "size": [
-      0.079,
-      0.079,
-      0.079
+      0.08,
+      0.06806,
+      0.07881
     ],
     "weight": 0.45,
     "stack": 4,
@@ -42,9 +42,9 @@
       "perishable"
     ],
     "size": [
-      0.052,
-      0.052,
-      0.052
+      0.112,
+      0.026,
+      0.065
     ],
     "weight": 0.13,
     "stack": 4,
@@ -77,9 +77,9 @@
       "perishable"
     ],
     "size": [
-      0.069,
-      0.069,
-      0.069
+      0.073,
+      0.085,
+      0.073
     ],
     "weight": 0.3,
     "stack": 4,
@@ -111,9 +111,9 @@
       "perishable"
     ],
     "size": [
-      0.069,
-      0.069,
-      0.069
+      0.073,
+      0.085,
+      0.073
     ],
     "weight": 0.3,
     "stack": 4,
@@ -145,9 +145,9 @@
       "perishable"
     ],
     "size": [
-      0.076,
-      0.076,
-      0.076
+      0.073,
+      0.1,
+      0.073
     ],
     "weight": 0.4,
     "stack": 4,
@@ -178,9 +178,9 @@
       "perishable"
     ],
     "size": [
-      0.1,
-      0.1,
-      0.1
+      0.19437,
+      0.26,
+      0.05932
     ],
     "weight": 0.9,
     "stack": 4,
@@ -213,9 +213,9 @@
       "perishable"
     ],
     "size": [
-      0.1,
-      0.2,
-      0.06
+      0.17062,
+      0.25,
+      0.07109
     ],
     "weight": 1,
     "stack": 4,
@@ -322,9 +322,9 @@
       "perishable"
     ],
     "size": [
-      0.045,
-      0.045,
-      0.045
+      0.12,
+      0.16,
+      0.03
     ],
     "weight": 0.08,
     "stack": 4,
@@ -358,9 +358,9 @@
       "perishable"
     ],
     "size": [
-      0.104,
-      0.104,
-      0.104
+      0.15,
+      0.25,
+      0.06
     ],
     "weight": 1,
     "stack": 4,
@@ -429,9 +429,9 @@
       "perishable"
     ],
     "size": [
-      0.048,
-      0.048,
-      0.048
+      0.2,
+      0.28,
+      0.06
     ],
     "weight": 0.1,
     "stack": 4,
@@ -463,9 +463,9 @@
       "perishable"
     ],
     "size": [
-      0.046,
-      0.046,
-      0.046
+      0.15,
+      0.07,
+      0.01
     ],
     "weight": 0.09,
     "stack": 4,
@@ -498,9 +498,9 @@
       "perishable"
     ],
     "size": [
-      0.082,
-      0.082,
-      0.082
+      0.19,
+      0.1,
+      0.06
     ],
     "weight": 0.5,
     "stack": 4,
@@ -529,9 +529,9 @@
     "id": "honey_jar",
     "category": "food",
     "size": [
-      0.082,
-      0.082,
-      0.082
+      0.08,
+      0.1,
+      0.08
     ],
     "weight": 0.5,
     "stack": 4,
@@ -631,9 +631,9 @@
       "perishable"
     ],
     "size": [
-      0.076,
-      0.076,
-      0.076
+      0.15,
+      0.06,
+      0.05
     ],
     "weight": 0.4,
     "stack": 4,
@@ -665,9 +665,9 @@
       "perishable"
     ],
     "size": [
-      0.104,
-      0.104,
-      0.104
+      0.2,
+      0.05,
+      0.15
     ],
     "weight": 1,
     "stack": 4,
@@ -700,9 +700,9 @@
       "perishable"
     ],
     "size": [
-      0.11,
-      0.11,
-      0.11
+      0.26,
+      0.1,
+      0.17
     ],
     "weight": 1.2,
     "stack": 4,
@@ -772,9 +772,9 @@
       "perishable"
     ],
     "size": [
-      0.104,
-      0.104,
-      0.104
+      0.3,
+      0.13,
+      0.17
     ],
     "weight": 1,
     "stack": 4,
@@ -807,9 +807,9 @@
       "perishable"
     ],
     "size": [
-      0.061,
-      0.061,
-      0.061
+      0.075,
+      0.075,
+      0.075
     ],
     "weight": 0.2,
     "stack": 4,
@@ -840,9 +840,9 @@
       "perishable"
     ],
     "size": [
-      0.104,
-      0.104,
-      0.104
+      0.2,
+      0.09,
+      0.14
     ],
     "weight": 1,
     "stack": 4,
@@ -875,9 +875,9 @@
       "perishable"
     ],
     "size": [
-      0.119,
-      0.119,
-      0.119
+      0.4,
+      0.07,
+      0.07
     ],
     "weight": 1.5,
     "stack": 4,
@@ -908,9 +908,9 @@
       "perishable"
     ],
     "size": [
-      0.087,
-      0.087,
-      0.087
+      0.3,
+      0.06,
+      0.1
     ],
     "weight": 0.6,
     "stack": 4,
@@ -941,9 +941,9 @@
       "perishable"
     ],
     "size": [
-      0.076,
-      0.076,
-      0.076
+      0.25,
+      0.03,
+      0.1
     ],
     "weight": 0.4,
     "stack": 4,
@@ -973,9 +973,9 @@
       "perishable"
     ],
     "size": [
-      0.082,
-      0.082,
-      0.082
+      0.25,
+      0.025,
+      0.15
     ],
     "weight": 0.5,
     "stack": 4,
@@ -1006,9 +1006,9 @@
       "perishable"
     ],
     "size": [
-      0.119,
-      0.119,
-      0.119
+      0.3,
+      0.08,
+      0.2
     ],
     "weight": 1.5,
     "stack": 4,
@@ -1039,9 +1039,9 @@
       "perishable"
     ],
     "size": [
-      0.087,
-      0.087,
-      0.087
+      0.09,
+      0.13,
+      0.09
     ],
     "weight": 0.6,
     "stack": 4,
@@ -1073,9 +1073,9 @@
       "perishable"
     ],
     "size": [
-      0.104,
-      0.104,
-      0.104
+      0.18,
+      0.26,
+      0.07
     ],
     "weight": 1,
     "stack": 4,
@@ -1243,9 +1243,9 @@
       "drink"
     ],
     "size": [
-      0.07,
-      0.28,
-      0.07
+      0.066,
+      0.18252,
+      0.066
     ],
     "weight": 0.52,
     "stack": 4,
@@ -1273,9 +1273,9 @@
     "id": "water_jug_5l",
     "category": "drink",
     "size": [
-      0.173,
-      0.173,
-      0.173
+      0.19,
+      0.33,
+      0.15
     ],
     "weight": 5.2,
     "stack": 1,
@@ -1302,9 +1302,9 @@
     "id": "dirty_water",
     "category": "drink",
     "size": [
-      0.079,
-      0.079,
-      0.079
+      0.066,
+      0.183,
+      0.066
     ],
     "weight": 0.5,
     "stack": 4,
@@ -1368,9 +1368,9 @@
       "perishable"
     ],
     "size": [
-      0.07,
-      0.2,
-      0.07
+      0.052,
+      0.1,
+      0.037
     ],
     "weight": 0.2,
     "stack": 4,
@@ -1435,9 +1435,9 @@
       "perishable"
     ],
     "size": [
-      0.08,
-      0.08,
-      0.08
+      0.066,
+      0.183,
+      0.066
     ],
     "weight": 0.52,
     "stack": 4,
@@ -1467,9 +1467,9 @@
       "perishable"
     ],
     "size": [
-      0.065,
-      0.065,
-      0.065
+      0.058,
+      0.135,
+      0.058
     ],
     "weight": 0.27,
     "stack": 4,
@@ -1499,9 +1499,9 @@
       "perishable"
     ],
     "size": [
-      0.074,
-      0.074,
-      0.074
+      0.06,
+      0.17,
+      0.06
     ],
     "weight": 0.4,
     "stack": 4,
@@ -1530,9 +1530,9 @@
       "perishable"
     ],
     "size": [
-      0.07,
-      0.07,
-      0.07
+      0.066,
+      0.12,
+      0.066
     ],
     "weight": 0.35,
     "stack": 4,
@@ -1559,9 +1559,9 @@
     "id": "cachaca",
     "category": "drink",
     "size": [
-      0.1,
-      0.1,
-      0.1
+      0.09,
+      0.21359,
+      0.09
     ],
     "weight": 1,
     "stack": 4,
@@ -1588,9 +1588,9 @@
     "id": "communion_wine",
     "category": "drink",
     "size": [
-      0.091,
-      0.091,
-      0.091
+      0.076,
+      0.3,
+      0.076
     ],
     "weight": 0.75,
     "stack": 4,
@@ -1617,9 +1617,9 @@
       "medical"
     ],
     "size": [
-      0.1,
-      0.03,
-      0.05
+      0.101,
+      0.07766,
+      0.04409
     ],
     "weight": 0.05,
     "stack": 4,
@@ -1644,9 +1644,9 @@
     "id": "sterile_gauze",
     "category": "medical",
     "size": [
-      0.037,
-      0.037,
-      0.037
+      0.1,
+      0.1,
+      0.015
     ],
     "weight": 0.02,
     "stack": 6,
@@ -1668,9 +1668,9 @@
     "id": "adhesive_bandages",
     "category": "medical",
     "size": [
-      0.042,
-      0.042,
-      0.042
+      0.1,
+      0.06,
+      0.015
     ],
     "weight": 0.03,
     "stack": 6,
@@ -1694,9 +1694,9 @@
     "id": "medical_tape",
     "category": "medical",
     "size": [
-      0.046,
-      0.046,
-      0.046
+      0.05,
+      0.025,
+      0.05
     ],
     "weight": 0.04,
     "stack": 6,
@@ -1748,9 +1748,9 @@
     "id": "povidone_iodine",
     "category": "medical",
     "size": [
-      0.063,
-      0.063,
-      0.063
+      0.045,
+      0.11,
+      0.035
     ],
     "weight": 0.1,
     "stack": 6,
@@ -1772,9 +1772,9 @@
     "id": "saline_iv_bag",
     "category": "medical",
     "size": [
-      0.111,
-      0.111,
-      0.111
+      0.12,
+      0.25,
+      0.045
     ],
     "weight": 0.55,
     "stack": 6,
@@ -1825,9 +1825,9 @@
     "id": "ibuprofen",
     "category": "medical",
     "size": [
-      0.042,
-      0.042,
-      0.042
+      0.095,
+      0.05,
+      0.015
     ],
     "weight": 0.03,
     "stack": 6,
@@ -1849,9 +1849,9 @@
     "id": "tramadol",
     "category": "medical",
     "size": [
-      0.042,
-      0.042,
-      0.042
+      0.095,
+      0.05,
+      0.015
     ],
     "weight": 0.03,
     "stack": 6,
@@ -1873,9 +1873,9 @@
     "id": "clonazepam",
     "category": "medical",
     "size": [
-      0.037,
-      0.037,
-      0.037
+      0.09,
+      0.05,
+      0.015
     ],
     "weight": 0.02,
     "stack": 6,
@@ -1898,9 +1898,9 @@
     "id": "amoxicillin",
     "category": "medical",
     "size": [
-      0.05,
-      0.05,
-      0.05
+      0.1,
+      0.05305,
+      0.06852
     ],
     "weight": 0.05,
     "stack": 6,
@@ -1922,9 +1922,9 @@
     "id": "ceftriaxone",
     "category": "medical",
     "size": [
-      0.063,
-      0.063,
-      0.063
+      0.1,
+      0.06,
+      0.03
     ],
     "weight": 0.1,
     "stack": 6,
@@ -1946,9 +1946,9 @@
     "id": "syringe",
     "category": "medical",
     "size": [
-      0.029,
-      0.029,
-      0.029
+      0.15,
+      0.02,
+      0.02
     ],
     "weight": 0.01,
     "stack": 6,
@@ -1970,9 +1970,9 @@
     "id": "suture_kit",
     "category": "medical",
     "size": [
-      0.072,
-      0.072,
-      0.072
+      0.15,
+      0.08,
+      0.03
     ],
     "weight": 0.15,
     "stack": 6,
@@ -1994,9 +1994,9 @@
     "id": "splint",
     "category": "medical",
     "size": [
-      0.091,
-      0.091,
-      0.091
+      0.46,
+      0.11,
+      0.01
     ],
     "weight": 0.3,
     "stack": 6,
@@ -2023,8 +2023,8 @@
     ],
     "size": [
       0.25,
-      0.09,
-      0.17
+      0.21379,
+      0.09579
     ],
     "weight": 0.9,
     "stack": 1,
@@ -2049,9 +2049,9 @@
     "id": "exam_gloves",
     "category": "medical",
     "size": [
-      0.037,
-      0.037,
-      0.037
+      0.1,
+      0.12,
+      0.01
     ],
     "weight": 0.02,
     "stack": 6,
@@ -2074,9 +2074,9 @@
     "id": "n95_mask",
     "category": "medical",
     "size": [
-      0.037,
-      0.037,
-      0.037
+      0.15,
+      0.11,
+      0.025
     ],
     "weight": 0.02,
     "stack": 6,
@@ -2101,9 +2101,9 @@
     "id": "activated_charcoal",
     "category": "medical",
     "size": [
-      0.05,
-      0.05,
-      0.05
+      0.06,
+      0.095,
+      0.025
     ],
     "weight": 0.05,
     "stack": 6,
@@ -2125,9 +2125,9 @@
     "id": "rehydration_salts",
     "category": "medical",
     "size": [
-      0.042,
-      0.042,
-      0.042
+      0.09,
+      0.12,
+      0.01
     ],
     "weight": 0.03,
     "stack": 6,
@@ -2150,9 +2150,9 @@
     "id": "antihistamine",
     "category": "medical",
     "size": [
-      0.037,
-      0.037,
-      0.037
+      0.08,
+      0.05,
+      0.015
     ],
     "weight": 0.02,
     "stack": 6,
@@ -2174,9 +2174,9 @@
     "id": "antivenom",
     "category": "medical",
     "size": [
-      0.079,
-      0.079,
-      0.079
+      0.15,
+      0.09,
+      0.05
     ],
     "weight": 0.2,
     "stack": 6,
@@ -2225,9 +2225,9 @@
     "id": "maintenance_medication",
     "category": "medical",
     "size": [
-      0.05,
-      0.05,
-      0.05
+      0.045,
+      0.09,
+      0.045
     ],
     "weight": 0.05,
     "stack": 6,
@@ -2251,7 +2251,7 @@
     "category": "medical",
     "size": [
       0.05,
-      0.05,
+      0.09,
       0.05
     ],
     "weight": 0.05,
@@ -2277,9 +2277,9 @@
       "garage"
     ],
     "size": [
-      0.3,
-      0.03,
-      0.1
+      0.15884,
+      0.33,
+      0.04652
     ],
     "weight": 0.6,
     "stack": 1,
@@ -2332,9 +2332,9 @@
     "id": "crowbar",
     "category": "tools",
     "size": [
-      0.123,
-      0.123,
-      0.123
+      0.18786,
+      0.75,
+      0.04828
     ],
     "weight": 1.5,
     "stack": 1,
@@ -2359,9 +2359,9 @@
     "id": "handsaw",
     "category": "tools",
     "size": [
-      0.085,
-      0.085,
-      0.085
+      0.5,
+      0.035,
+      0.13
     ],
     "weight": 0.5,
     "stack": 1,
@@ -2384,9 +2384,9 @@
     "id": "hacksaw",
     "category": "tools",
     "size": [
-      0.079,
-      0.079,
-      0.079
+      0.42,
+      0.03,
+      0.12
     ],
     "weight": 0.4,
     "stack": 1,
@@ -2408,9 +2408,9 @@
     "id": "bolt_cutters",
     "category": "tools",
     "size": [
-      0.164,
-      0.164,
-      0.164
+      0.6,
+      0.06,
+      0.15
     ],
     "weight": 3.5,
     "stack": 1,
@@ -2434,9 +2434,9 @@
     "id": "pliers",
     "category": "tools",
     "size": [
-      0.072,
-      0.072,
-      0.072
+      0.2,
+      0.03,
+      0.07
     ],
     "weight": 0.3,
     "stack": 1,
@@ -2459,9 +2459,9 @@
     "id": "adjustable_wrench",
     "category": "tools",
     "size": [
-      0.085,
-      0.085,
-      0.085
+      0.25,
+      0.02,
+      0.06
     ],
     "weight": 0.5,
     "stack": 1,
@@ -2484,9 +2484,9 @@
     "id": "mechanic_toolbox",
     "category": "tools",
     "size": [
-      0.196,
-      0.196,
-      0.196
+      0.4,
+      0.2,
+      0.2
     ],
     "weight": 6,
     "stack": 1,
@@ -2508,9 +2508,9 @@
     "id": "car_jack",
     "category": "tools",
     "size": [
-      0.171,
-      0.171,
-      0.171
+      0.3,
+      0.11,
+      0.11
     ],
     "weight": 4,
     "stack": 1,
@@ -2531,9 +2531,9 @@
     "id": "gas_torch",
     "category": "tools",
     "size": [
-      0.155,
-      0.155,
-      0.155
+      0.15,
+      0.42,
+      0.15
     ],
     "weight": 3,
     "stack": 1,
@@ -2556,9 +2556,9 @@
     "id": "inverter_welder",
     "category": "tools",
     "size": [
-      0.196,
-      0.196,
-      0.196
+      0.3,
+      0.22,
+      0.13
     ],
     "weight": 6,
     "stack": 1,
@@ -2580,9 +2580,9 @@
     "id": "cordless_drill",
     "category": "tools",
     "size": [
-      0.123,
-      0.123,
-      0.123
+      0.22,
+      0.2,
+      0.07
     ],
     "weight": 1.5,
     "stack": 1,
@@ -2606,9 +2606,9 @@
     "id": "shovel",
     "category": "tools",
     "size": [
-      0.136,
-      0.136,
-      0.136
+      1.1,
+      0.07,
+      0.22
     ],
     "weight": 2,
     "stack": 1,
@@ -2631,9 +2631,9 @@
     "id": "hoe",
     "category": "tools",
     "size": [
-      0.131,
-      0.131,
-      0.131
+      1.35,
+      0.06,
+      0.17
     ],
     "weight": 1.8,
     "stack": 1,
@@ -2654,9 +2654,9 @@
     "id": "pocket_knife",
     "category": "tools",
     "size": [
-      0.057,
-      0.057,
-      0.057
+      0.11,
+      0.022,
+      0.032
     ],
     "weight": 0.15,
     "stack": 1,
@@ -2680,9 +2680,9 @@
     "id": "can_opener",
     "category": "tools",
     "size": [
+      0.14,
       0.04,
-      0.04,
-      0.04
+      0.025
     ],
     "weight": 0.05,
     "stack": 1,
@@ -2788,9 +2788,9 @@
     "id": "camp_stove",
     "category": "tools",
     "size": [
+      0.18,
       0.1,
-      0.1,
-      0.1
+      0.11
     ],
     "weight": 0.8,
     "stack": 1,
@@ -2814,9 +2814,9 @@
     "id": "sewing_kit",
     "category": "tools",
     "size": [
-      0.04,
-      0.04,
-      0.04
+      0.09,
+      0.05,
+      0.03
     ],
     "weight": 0.05,
     "stack": 1,
@@ -2839,9 +2839,9 @@
     "id": "lockpick_kit",
     "category": "tools",
     "size": [
-      0.05,
-      0.05,
-      0.05
+      0.1,
+      0.07,
+      0.02
     ],
     "weight": 0.1,
     "stack": 1,
@@ -2923,9 +2923,9 @@
     "id": "flint_striker",
     "category": "tools",
     "size": [
-      0.046,
-      0.046,
-      0.046
+      0.11,
+      0.02,
+      0.015
     ],
     "weight": 0.08,
     "stack": 1,
@@ -2947,9 +2947,9 @@
     "id": "bucket",
     "category": "tools",
     "size": [
-      0.085,
-      0.085,
-      0.085
+      0.28,
+      0.27,
+      0.28
     ],
     "weight": 0.5,
     "stack": 1,
@@ -2971,9 +2971,9 @@
     "id": "binoculars",
     "category": "tools",
     "size": [
-      0.091,
-      0.091,
-      0.091
+      0.18,
+      0.15,
+      0.12
     ],
     "weight": 0.6,
     "stack": 1,
@@ -2996,9 +2996,9 @@
     "id": "fire_extinguisher",
     "category": "tools",
     "size": [
-      0.171,
-      0.171,
-      0.171
+      0.16,
+      0.48,
+      0.16
     ],
     "weight": 4,
     "stack": 1,
@@ -3024,9 +3024,9 @@
     "id": "sharpening_stone",
     "category": "tools",
     "size": [
-      0.072,
-      0.072,
-      0.072
+      0.2,
+      0.05,
+      0.025
     ],
     "weight": 0.3,
     "stack": 1,
@@ -3077,9 +3077,9 @@
     "id": "tactical_knife",
     "category": "melee",
     "size": [
-      0.072,
-      0.072,
-      0.072
+      0.26,
+      0.028,
+      0.045
     ],
     "weight": 0.3,
     "stack": 1,
@@ -3102,9 +3102,9 @@
     "id": "machete",
     "category": "melee",
     "size": [
-      0.096,
-      0.096,
-      0.096
+      0.55,
+      0.0852,
+      0.03518
     ],
     "weight": 0.7,
     "stack": 1,
@@ -3127,9 +3127,9 @@
     "id": "meat_cleaver",
     "category": "melee",
     "size": [
-      0.091,
-      0.091,
-      0.091
+      0.33,
+      0.03,
+      0.12
     ],
     "weight": 0.6,
     "stack": 1,
@@ -3150,9 +3150,9 @@
     "id": "hatchet",
     "category": "melee",
     "size": [
-      0.1,
-      0.1,
-      0.1
+      0.35,
+      0.05,
+      0.13
     ],
     "weight": 0.8,
     "stack": 1,
@@ -3175,9 +3175,9 @@
     "id": "axe",
     "category": "melee",
     "size": [
-      0.126,
-      0.126,
-      0.126
+      0.24959,
+      0.7,
+      0.05871
     ],
     "weight": 1.6,
     "stack": 1,
@@ -3200,9 +3200,9 @@
     "id": "baseball_bat",
     "category": "melee",
     "size": [
-      0.108,
-      0.108,
-      0.108
+      0.86,
+      0.07,
+      0.07
     ],
     "weight": 1,
     "stack": 1,
@@ -3228,9 +3228,9 @@
       "craft_only"
     ],
     "size": [
-      0.114,
-      0.114,
-      0.114
+      0.22309,
+      0.86,
+      0.22146
     ],
     "weight": 1.2,
     "stack": 1,
@@ -3246,9 +3246,9 @@
     "id": "iron_pipe",
     "category": "melee",
     "size": [
-      0.114,
-      0.114,
-      0.114
+      0.8,
+      0.035,
+      0.035
     ],
     "weight": 1.2,
     "stack": 1,
@@ -3272,9 +3272,9 @@
     "id": "sledgehammer",
     "category": "melee",
     "size": [
-      0.184,
-      0.184,
-      0.184
+      0.9,
+      0.12,
+      0.25
     ],
     "weight": 5,
     "stack": 1,
@@ -3297,9 +3297,9 @@
     "id": "pickaxe",
     "category": "melee",
     "size": [
-      0.152,
-      0.152,
-      0.152
+      0.9,
+      0.04,
+      0.35
     ],
     "weight": 2.8,
     "stack": 1,
@@ -3320,9 +3320,9 @@
     "id": "sickle",
     "category": "melee",
     "size": [
-      0.114,
-      0.114,
-      0.114
+      0.4,
+      0.035,
+      0.35
     ],
     "weight": 1.2,
     "stack": 1,
@@ -3343,9 +3343,9 @@
     "id": "police_baton",
     "category": "melee",
     "size": [
-      0.091,
-      0.091,
-      0.091
+      0.5,
+      0.1,
+      0.045
     ],
     "weight": 0.6,
     "stack": 1,
@@ -3367,9 +3367,9 @@
     "id": "cast_iron_skillet",
     "category": "melee",
     "size": [
-      0.114,
-      0.114,
-      0.114
+      0.43,
+      0.05,
+      0.25
     ],
     "weight": 1.2,
     "stack": 1,
@@ -3394,9 +3394,9 @@
       "craft_only"
     ],
     "size": [
-      0.111,
-      0.111,
-      0.111
+      1.6,
+      0.035,
+      0.035
     ],
     "weight": 1.1,
     "stack": 1,
@@ -3412,9 +3412,9 @@
     "id": "chainsaw",
     "category": "melee",
     "size": [
-      0.196,
-      0.196,
-      0.196
+      0.45,
+      0.26,
+      0.23
     ],
     "weight": 6,
     "stack": 1,
@@ -3437,9 +3437,9 @@
     "id": "slingshot",
     "category": "melee",
     "size": [
-      0.057,
-      0.057,
-      0.057
+      0.13,
+      0.15,
+      0.025
     ],
     "weight": 0.15,
     "stack": 1,
@@ -3462,9 +3462,9 @@
     "id": "recurve_bow",
     "category": "melee",
     "size": [
-      0.114,
-      0.114,
-      0.114
+      1.3,
+      0.2,
+      0.05
     ],
     "weight": 1.2,
     "stack": 1,
@@ -3486,9 +3486,9 @@
     "id": "crossbow",
     "category": "melee",
     "size": [
-      0.159,
-      0.159,
-      0.159
+      0.7,
+      0.12,
+      0.8
     ],
     "weight": 3.2,
     "stack": 1,
@@ -3509,9 +3509,9 @@
     "id": "arrows_and_bolts",
     "category": "melee",
     "size": [
-      0.072,
-      0.072,
-      0.072
+      0.7,
+      0.025,
+      0.04
     ],
     "weight": 0.3,
     "stack": 1,
@@ -3533,9 +3533,9 @@
     "id": "wooden_plank",
     "category": "materials",
     "size": [
-      0.136,
-      0.136,
-      0.136
+      0.8,
+      0.24948,
+      0.28294
     ],
     "weight": 2,
     "stack": 2,
@@ -3559,9 +3559,9 @@
     "id": "nails",
     "category": "materials",
     "size": [
-      0.085,
-      0.085,
-      0.085
+      0.13,
+      0.06,
+      0.05
     ],
     "weight": 0.5,
     "stack": 6,
@@ -3585,9 +3585,9 @@
     "id": "screws",
     "category": "materials",
     "size": [
-      0.079,
-      0.079,
-      0.079
+      0.09,
+      0.05,
+      0.05
     ],
     "weight": 0.4,
     "stack": 6,
@@ -3610,9 +3610,9 @@
     "id": "sheet_metal",
     "category": "materials",
     "size": [
-      0.196,
-      0.196,
-      0.196
+      0.6,
+      0.003,
+      0.45
     ],
     "weight": 6,
     "stack": 2,
@@ -3636,9 +3636,9 @@
     "id": "scrap_metal",
     "category": "materials",
     "size": [
-      0.108,
-      0.108,
-      0.108
+      0.2,
+      0.08,
+      0.15
     ],
     "weight": 1,
     "stack": 4,
@@ -3658,9 +3658,9 @@
     "id": "wire_roll",
     "category": "materials",
     "size": [
-      0.085,
-      0.085,
-      0.085
+      0.14,
+      0.05,
+      0.14
     ],
     "weight": 0.5,
     "stack": 4,
@@ -3683,9 +3683,9 @@
     "id": "barbed_wire",
     "category": "materials",
     "size": [
-      0.171,
-      0.171,
-      0.171
+      0.3,
+      0.12,
+      0.3
     ],
     "weight": 4,
     "stack": 2,
@@ -3735,9 +3735,9 @@
     "id": "tarp",
     "category": "materials",
     "size": [
-      0.136,
-      0.136,
-      0.136
+      0.35,
+      0.1,
+      0.25
     ],
     "weight": 2,
     "stack": 2,
@@ -3759,9 +3759,9 @@
     "id": "raffia_sack",
     "category": "materials",
     "size": [
-      0.063,
-      0.063,
-      0.063
+      0.4,
+      0.02,
+      0.3
     ],
     "weight": 0.2,
     "stack": 4,
@@ -3784,9 +3784,9 @@
     "id": "bricks",
     "category": "materials",
     "size": [
-      0.315,
-      0.315,
-      0.315
+      0.19,
+      0.18,
+      0.29
     ],
     "weight": 25,
     "stack": 1,
@@ -3808,9 +3808,9 @@
     "id": "cement_bag",
     "category": "materials",
     "size": [
-      0.315,
-      0.315,
-      0.315
+      0.5,
+      0.1,
+      0.3
     ],
     "weight": 25,
     "stack": 1,
@@ -3831,9 +3831,9 @@
     "id": "rag",
     "category": "materials",
     "size": [
-      0.04,
-      0.04,
-      0.04
+      0.22,
+      0.025,
+      0.18
     ],
     "weight": 0.05,
     "stack": 4,
@@ -3851,9 +3851,9 @@
     "id": "glass_bottle",
     "category": "materials",
     "size": [
-      0.072,
-      0.072,
-      0.072
+      0.075,
+      0.26,
+      0.075
     ],
     "weight": 0.3,
     "stack": 4,
@@ -3873,9 +3873,9 @@
     "id": "pet_bottle",
     "category": "materials",
     "size": [
-      0.04,
-      0.04,
-      0.04
+      0.105,
+      0.33,
+      0.105
     ],
     "weight": 0.05,
     "stack": 4,
@@ -3917,9 +3917,9 @@
     "id": "glass_shards",
     "category": "materials",
     "size": [
-      0.063,
-      0.063,
-      0.063
+      0.12,
+      0.05,
+      0.1
     ],
     "weight": 0.2,
     "stack": 4,
@@ -3937,9 +3937,9 @@
     "id": "epoxy_glue",
     "category": "materials",
     "size": [
-      0.05,
-      0.05,
-      0.05
+      0.1,
+      0.06,
+      0.03
     ],
     "weight": 0.1,
     "stack": 4,
@@ -3962,9 +3962,9 @@
     "id": "electronic_components",
     "category": "materials",
     "size": [
-      0.05,
-      0.05,
-      0.05
+      0.1,
+      0.02,
+      0.08
     ],
     "weight": 0.1,
     "stack": 4,
@@ -3983,9 +3983,9 @@
     "id": "copper_wire",
     "category": "materials",
     "size": [
-      0.072,
-      0.072,
-      0.072
+      0.08,
+      0.03,
+      0.08
     ],
     "weight": 0.3,
     "stack": 4,
@@ -4004,9 +4004,9 @@
     "id": "firewood",
     "category": "materials",
     "size": [
-      0.123,
-      0.123,
-      0.123
+      0.4,
+      0.12,
+      0.16
     ],
     "weight": 1.5,
     "stack": 2,
@@ -4029,9 +4029,9 @@
     "id": "rebar",
     "category": "materials",
     "size": [
-      0.136,
-      0.136,
-      0.136
+      1.27,
+      0.016,
+      0.016
     ],
     "weight": 2,
     "stack": 2,
@@ -4049,9 +4049,9 @@
     "id": "lubricant_spray",
     "category": "materials",
     "size": [
-      0.068,
-      0.068,
-      0.068
+      0.05,
+      0.17,
+      0.05
     ],
     "weight": 0.25,
     "stack": 4,
@@ -4112,9 +4112,9 @@
     "id": "hoodie",
     "category": "clothing",
     "size": [
-      0.159,
-      0.159,
-      0.159
+      0.38,
+      0.08,
+      0.28
     ],
     "weight": 0.6,
     "stack": 1,
@@ -4146,9 +4146,9 @@
     "id": "denim_jacket",
     "category": "clothing",
     "size": [
-      0.188,
-      0.188,
-      0.188
+      0.4,
+      0.08,
+      0.3
     ],
     "weight": 1,
     "stack": 1,
@@ -4179,9 +4179,9 @@
     "id": "leather_motorcycle_jacket",
     "category": "clothing",
     "size": [
-      0.229,
-      0.229,
-      0.229
+      0.45,
+      0.1,
+      0.35
     ],
     "weight": 1.8,
     "stack": 1,
@@ -4249,9 +4249,9 @@
     "id": "leather_motorcycle_pants",
     "category": "clothing",
     "size": [
-      0.22,
-      0.22,
-      0.22
+      0.4,
+      0.09,
+      0.3
     ],
     "weight": 1.6,
     "stack": 1,
@@ -4281,9 +4281,9 @@
     "id": "army_camouflage_uniform",
     "category": "clothing",
     "size": [
-      0.215,
-      0.215,
-      0.215
+      0.4,
+      0.1,
+      0.32
     ],
     "weight": 1.5,
     "stack": 1,
@@ -4316,9 +4316,9 @@
     "id": "mechanic_coveralls",
     "category": "clothing",
     "size": [
-      0.2,
-      0.2,
-      0.2
+      0.4,
+      0.09,
+      0.3
     ],
     "weight": 1.2,
     "stack": 1,
@@ -4350,9 +4350,9 @@
     "id": "firefighter_suit",
     "category": "clothing",
     "size": [
-      0.299,
-      0.299,
-      0.299
+      0.55,
+      0.2,
+      0.4
     ],
     "weight": 4,
     "stack": 1,
@@ -4383,9 +4383,9 @@
     "id": "beekeeper_suit",
     "category": "clothing",
     "size": [
-      0.211,
-      0.211,
-      0.211
+      0.4,
+      0.1,
+      0.33
     ],
     "weight": 1.4,
     "stack": 1,
@@ -4420,9 +4420,9 @@
     "id": "raincoat",
     "category": "clothing",
     "size": [
-      0.139,
-      0.139,
-      0.139
+      0.3,
+      0.04,
+      0.25
     ],
     "weight": 0.4,
     "stack": 1,
@@ -4455,9 +4455,9 @@
     "id": "padded_coat",
     "category": "clothing",
     "size": [
-      0.205,
-      0.205,
-      0.205
+      0.45,
+      0.15,
+      0.35
     ],
     "weight": 1.3,
     "stack": 1,
@@ -4488,9 +4488,9 @@
     "id": "motorcycle_helmet",
     "category": "clothing",
     "size": [
-      0.211,
-      0.211,
-      0.211
+      0.26,
+      0.25356,
+      0.27405
     ],
     "weight": 1.4,
     "stack": 1,
@@ -4522,9 +4522,9 @@
     "id": "hard_hat",
     "category": "clothing",
     "size": [
-      0.139,
-      0.139,
-      0.139
+      0.25,
+      0.15,
+      0.3
     ],
     "weight": 0.4,
     "stack": 1,
@@ -4554,9 +4554,9 @@
     "id": "safety_goggles",
     "category": "clothing",
     "size": [
-      0.069,
-      0.069,
-      0.069
+      0.16,
+      0.06,
+      0.08
     ],
     "weight": 0.05,
     "stack": 1,
@@ -4587,9 +4587,9 @@
     "id": "leather_work_gloves",
     "category": "clothing",
     "size": [
-      0.11,
-      0.11,
-      0.11
+      0.25,
+      0.03,
+      0.12
     ],
     "weight": 0.2,
     "stack": 1,
@@ -4620,8 +4620,8 @@
     "id": "combat_boots",
     "category": "clothing",
     "size": [
-      0.22,
-      0.22,
+      0.3,
+      0.2,
       0.22
     ],
     "weight": 1.6,
@@ -4653,9 +4653,9 @@
     "id": "rubber_boots",
     "category": "clothing",
     "size": [
-      0.2,
-      0.2,
-      0.2
+      0.3,
+      0.35,
+      0.22
     ],
     "weight": 1.2,
     "stack": 1,
@@ -4720,9 +4720,9 @@
     "id": "flip_flops",
     "category": "clothing",
     "size": [
-      0.11,
-      0.11,
-      0.11
+      0.29,
+      0.03,
+      0.23
     ],
     "weight": 0.2,
     "stack": 1,
@@ -4755,9 +4755,9 @@
       "craft_only"
     ],
     "size": [
-      0.139,
-      0.139,
-      0.139
+      0.3,
+      0.06,
+      0.15
     ],
     "weight": 0.4,
     "stack": 1,
@@ -4784,9 +4784,9 @@
       "craft_only"
     ],
     "size": [
-      0.215,
-      0.215,
-      0.215
+      0.3,
+      0.1,
+      0.12
     ],
     "weight": 1.5,
     "stack": 1,
@@ -4810,9 +4810,9 @@
     "id": "ballistic_vest",
     "category": "clothing",
     "size": [
-      0.271,
-      0.271,
-      0.271
+      0.4,
+      0.07,
+      0.45
     ],
     "weight": 3,
     "stack": 1,
@@ -4843,9 +4843,9 @@
     "id": "shopping_bag",
     "category": "bags",
     "size": [
-      0.058,
-      0.058,
-      0.058
+      0.3,
+      0.02,
+      0.2
     ],
     "weight": 0.02,
     "stack": 1,
@@ -4872,9 +4872,9 @@
     "id": "trash_bag",
     "category": "bags",
     "size": [
-      0.079,
-      0.079,
-      0.079
+      0.25,
+      0.025,
+      0.2
     ],
     "weight": 0.05,
     "stack": 1,
@@ -4902,9 +4902,9 @@
     "id": "fanny_pack",
     "category": "bags",
     "size": [
-      0.114,
-      0.114,
-      0.114
+      0.25,
+      0.1,
+      0.12
     ],
     "weight": 0.15,
     "stack": 1,
@@ -4931,9 +4931,9 @@
     "id": "crossbody_bag",
     "category": "bags",
     "size": [
-      0.144,
-      0.144,
-      0.144
+      0.25,
+      0.2,
+      0.08
     ],
     "weight": 0.3,
     "stack": 1,
@@ -4994,9 +4994,9 @@
     "id": "delivery_bag",
     "category": "bags",
     "size": [
-      0.229,
-      0.229,
-      0.229
+      0.48,
+      0.45,
+      0.42
     ],
     "weight": 1.2,
     "stack": 1,
@@ -5024,9 +5024,9 @@
     "id": "hiking_backpack_40l",
     "category": "bags",
     "size": [
-      0.235,
-      0.235,
-      0.235
+      0.41121,
+      0.55,
+      0.31869
     ],
     "weight": 1.3,
     "stack": 1,
@@ -5054,9 +5054,9 @@
     "id": "military_backpack",
     "category": "bags",
     "size": [
-      0.262,
-      0.262,
-      0.262
+      0.35,
+      0.6,
+      0.3
     ],
     "weight": 1.8,
     "stack": 1,
@@ -5083,9 +5083,9 @@
     "id": "trekking_backpack_70l",
     "category": "bags",
     "size": [
-      0.28,
-      0.28,
-      0.28
+      0.38,
+      0.75,
+      0.3
     ],
     "weight": 2.2,
     "stack": 1,
@@ -5112,9 +5112,9 @@
     "id": "rolling_suitcase",
     "category": "bags",
     "size": [
-      0.311,
-      0.311,
-      0.311
+      0.4,
+      0.65,
+      0.25
     ],
     "weight": 3,
     "stack": 1,
@@ -5143,9 +5143,9 @@
     "id": "tactical_vest",
     "category": "bags",
     "size": [
-      0.229,
-      0.229,
-      0.229
+      0.35,
+      0.1,
+      0.4
     ],
     "weight": 1.2,
     "stack": 1,
@@ -5172,9 +5172,9 @@
     "id": "tool_belt",
     "category": "bags",
     "size": [
-      0.159,
-      0.159,
-      0.159
+      0.35,
+      0.1,
+      0.25
     ],
     "weight": 0.4,
     "stack": 1,
@@ -5201,9 +5201,9 @@
     "id": "cooler_box",
     "category": "bags",
     "size": [
-      0.215,
-      0.215,
-      0.215
+      0.32,
+      0.25,
+      0.23
     ],
     "weight": 1,
     "stack": 1,
@@ -5230,9 +5230,9 @@
     "id": "shopping_cart",
     "category": "bags",
     "size": [
-      0.493,
-      0.493,
-      0.493
+      0.55,
+      0.98,
+      0.95
     ],
     "weight": 12,
     "stack": 1,
@@ -5258,9 +5258,9 @@
     "id": "wheelbarrow",
     "category": "bags",
     "size": [
-      0.531,
-      0.531,
-      0.531
+      0.65,
+      0.65,
+      1.5
     ],
     "weight": 15,
     "stack": 1,
@@ -5290,9 +5290,9 @@
       "tool"
     ],
     "size": [
-      0.04,
-      0.04,
-      0.16
+      0.0563,
+      0.16,
+      0.0563
     ],
     "weight": 0.2,
     "stack": 1,
@@ -5318,9 +5318,9 @@
     "id": "headlamp",
     "category": "electronics",
     "size": [
-      0.058,
-      0.058,
-      0.058
+      0.09,
+      0.06,
+      0.05
     ],
     "weight": 0.1,
     "stack": 2,
@@ -5348,9 +5348,9 @@
       "tool"
     ],
     "size": [
-      0.06,
-      0.02,
-      0.05
+      0.03739,
+      0.0505,
+      0.01729
     ],
     "weight": 0.05,
     "stack": 4,
@@ -5378,9 +5378,9 @@
     "id": "battery_9v",
     "category": "electronics",
     "size": [
-      0.046,
-      0.046,
-      0.046
+      0.026,
+      0.049,
+      0.018
     ],
     "weight": 0.05,
     "stack": 2,
@@ -5402,9 +5402,9 @@
     "id": "power_bank",
     "category": "electronics",
     "size": [
-      0.084,
-      0.084,
-      0.084
+      0.15,
+      0.07,
+      0.016
     ],
     "weight": 0.3,
     "stack": 2,
@@ -5428,9 +5428,9 @@
     "id": "folding_solar_panel",
     "category": "electronics",
     "size": [
-      0.144,
-      0.144,
-      0.144
+      0.4,
+      0.3,
+      0.05
     ],
     "weight": 1.5,
     "stack": 2,
@@ -5452,9 +5452,9 @@
     "id": "portable_radio",
     "category": "electronics",
     "size": [
-      0.1,
-      0.1,
-      0.1
+      0.22,
+      0.29532,
+      0.06974
     ],
     "weight": 0.5,
     "stack": 2,
@@ -5479,9 +5479,9 @@
     "id": "walkie_talkies",
     "category": "electronics",
     "size": [
-      0.106,
-      0.106,
-      0.106
+      0.06959,
+      0.22,
+      0.03293
     ],
     "weight": 0.6,
     "stack": 2,
@@ -5506,9 +5506,9 @@
     "id": "cb_radio",
     "category": "electronics",
     "size": [
-      0.182,
-      0.182,
-      0.182
+      0.25,
+      0.08,
+      0.2
     ],
     "weight": 3,
     "stack": 1,
@@ -5531,9 +5531,9 @@
     "id": "military_radio",
     "category": "electronics",
     "size": [
-      0.229,
-      0.229,
-      0.229
+      0.3,
+      0.2,
+      0.25
     ],
     "weight": 6,
     "stack": 1,
@@ -5554,9 +5554,9 @@
     "id": "portable_generator",
     "category": "electronics",
     "size": [
-      0.368,
-      0.368,
-      0.368
+      0.5,
+      0.42,
+      0.43
     ],
     "weight": 25,
     "stack": 1,
@@ -5581,9 +5581,9 @@
     "id": "led_camp_lantern",
     "category": "electronics",
     "size": [
-      0.093,
-      0.093,
-      0.093
+      0.11,
+      0.2,
+      0.11
     ],
     "weight": 0.4,
     "stack": 2,
@@ -5607,9 +5607,9 @@
     "id": "mobile_phone",
     "category": "electronics",
     "size": [
-      0.074,
-      0.074,
-      0.074
+      0.077,
+      0.16,
+      0.009
     ],
     "weight": 0.2,
     "stack": 2,
@@ -5633,9 +5633,9 @@
     "id": "laptop",
     "category": "electronics",
     "size": [
-      0.159,
-      0.159,
-      0.159
+      0.36,
+      0.025,
+      0.25
     ],
     "weight": 2,
     "stack": 2,
@@ -5660,9 +5660,9 @@
     "id": "windup_alarm_clock",
     "category": "electronics",
     "size": [
-      0.084,
-      0.084,
-      0.084
+      0.11,
+      0.125,
+      0.055
     ],
     "weight": 0.3,
     "stack": 2,
@@ -5683,9 +5683,9 @@
     "id": "car_alarm_remote",
     "category": "electronics",
     "size": [
-      0.039,
-      0.039,
-      0.039
+      0.04,
+      0.07,
+      0.012
     ],
     "weight": 0.03,
     "stack": 2,
@@ -5707,9 +5707,9 @@
     "id": "electric_fence_energizer",
     "category": "electronics",
     "size": [
-      0.182,
-      0.182,
-      0.182
+      0.25,
+      0.2,
+      0.15
     ],
     "weight": 3,
     "stack": 2,
@@ -5730,9 +5730,9 @@
     "id": "extension_cord",
     "category": "electronics",
     "size": [
-      0.144,
-      0.144,
-      0.144
+      0.23,
+      0.08,
+      0.23
     ],
     "weight": 1.5,
     "stack": 2,
@@ -5781,9 +5781,9 @@
     "id": "night_vision_goggles",
     "category": "electronics",
     "size": [
-      0.106,
-      0.106,
-      0.106
+      0.15,
+      0.1,
+      0.11
     ],
     "weight": 0.6,
     "stack": 2,
@@ -5804,9 +5804,9 @@
     "id": "fuel_jerrycan",
     "category": "fuel",
     "size": [
-      0.114,
-      0.114,
-      0.114
+      0.30778,
+      0.47,
+      0.1541
     ],
     "weight": 1.2,
     "stack": 1,
@@ -5829,9 +5829,9 @@
     "id": "gasoline",
     "category": "fuel",
     "size": [
-      0.098,
-      0.098,
-      0.098
+      0.09,
+      0.26,
+      0.09
     ],
     "weight": 0.75,
     "stack": 1,
@@ -5859,9 +5859,9 @@
     "id": "diesel",
     "category": "fuel",
     "size": [
-      0.102,
-      0.102,
-      0.102
+      0.09,
+      0.26,
+      0.09
     ],
     "weight": 0.85,
     "stack": 1,
@@ -5886,9 +5886,9 @@
     "id": "lpg_cylinder_13kg",
     "category": "fuel",
     "size": [
-      0.331,
-      0.331,
-      0.331
+      0.35299,
+      0.49,
+      0.35844
     ],
     "weight": 29,
     "stack": 1,
@@ -5912,9 +5912,9 @@
     "id": "gas_cartridge",
     "category": "fuel",
     "size": [
-      0.076,
-      0.076,
-      0.076
+      0.11,
+      0.165,
+      0.11
     ],
     "weight": 0.35,
     "stack": 1,
@@ -5939,9 +5939,9 @@
     "id": "kerosene",
     "category": "fuel",
     "size": [
-      0.1,
-      0.1,
-      0.1
+      0.09,
+      0.26,
+      0.09
     ],
     "weight": 0.8,
     "stack": 1,
@@ -5994,9 +5994,9 @@
     "id": "car_battery_12v",
     "category": "fuel",
     "size": [
-      0.26,
-      0.26,
-      0.26
+      0.24,
+      0.19,
+      0.175
     ],
     "weight": 14,
     "stack": 1,
@@ -6019,9 +6019,9 @@
     "id": "motor_oil",
     "category": "fuel",
     "size": [
-      0.108,
-      0.108,
-      0.108
+      0.1,
+      0.26,
+      0.07
     ],
     "weight": 1,
     "stack": 1,
@@ -6043,9 +6043,9 @@
     "id": "bean_seeds",
     "category": "outdoors",
     "size": [
-      0.058,
-      0.058,
-      0.058
+      0.1,
+      0.15,
+      0.02
     ],
     "weight": 0.1,
     "stack": 8,
@@ -6068,9 +6068,9 @@
     "id": "corn_seeds",
     "category": "outdoors",
     "size": [
-      0.058,
-      0.058,
-      0.058
+      0.1,
+      0.15,
+      0.02
     ],
     "weight": 0.1,
     "stack": 8,
@@ -6092,9 +6092,9 @@
     "id": "pumpkin_seeds",
     "category": "outdoors",
     "size": [
-      0.046,
-      0.046,
-      0.046
+      0.09,
+      0.13,
+      0.015
     ],
     "weight": 0.05,
     "stack": 8,
@@ -6116,9 +6116,9 @@
     "id": "kale_and_lettuce_seeds",
     "category": "outdoors",
     "size": [
-      0.046,
-      0.046,
-      0.046
+      0.09,
+      0.13,
+      0.015
     ],
     "weight": 0.05,
     "stack": 8,
@@ -6141,9 +6141,9 @@
     "id": "cassava_cuttings",
     "category": "outdoors",
     "size": [
-      0.159,
-      0.159,
-      0.159
+      0.7,
+      0.12,
+      0.12
     ],
     "weight": 2,
     "stack": 4,
@@ -6165,9 +6165,9 @@
     "id": "fertilizer_bag",
     "category": "outdoors",
     "size": [
-      0.271,
-      0.271,
-      0.271
+      0.45,
+      0.13,
+      0.3
     ],
     "weight": 10,
     "stack": 1,
@@ -6189,9 +6189,9 @@
     "id": "watering_can",
     "category": "outdoors",
     "size": [
-      0.1,
-      0.1,
-      0.1
+      0.4,
+      0.26,
+      0.18
     ],
     "weight": 0.5,
     "stack": 4,
@@ -6212,9 +6212,9 @@
     "id": "fishing_rod",
     "category": "outdoors",
     "size": [
-      0.126,
-      0.126,
-      0.126
+      1.8,
+      0.04,
+      0.04
     ],
     "weight": 1,
     "stack": 4,
@@ -6238,9 +6238,9 @@
     "id": "fishing_tackle_box",
     "category": "outdoors",
     "size": [
-      0.106,
-      0.106,
-      0.106
+      0.3,
+      0.1,
+      0.18
     ],
     "weight": 0.6,
     "stack": 4,
@@ -6263,9 +6263,9 @@
     "id": "fishing_net",
     "category": "outdoors",
     "size": [
-      0.182,
-      0.182,
-      0.182
+      0.35,
+      0.15,
+      0.3
     ],
     "weight": 3,
     "stack": 4,
@@ -6289,9 +6289,9 @@
       "craft_only"
     ],
     "size": [
-      0.084,
-      0.084,
-      0.084
+      0.15,
+      0.03,
+      0.15
     ],
     "weight": 0.3,
     "stack": 4,
@@ -6308,9 +6308,9 @@
     "id": "skill_book",
     "category": "books",
     "size": [
-      0.1,
-      0.1,
-      0.1
+      0.16,
+      0.23,
+      0.04
     ],
     "weight": 0.6,
     "stack": 2,
@@ -6335,9 +6335,9 @@
     "id": "technical_manual",
     "category": "books",
     "size": [
-      0.11,
-      0.11,
-      0.11
+      0.21,
+      0.3,
+      0.04
     ],
     "weight": 0.8,
     "stack": 2,
@@ -6363,9 +6363,9 @@
     "id": "diy_magazine",
     "category": "books",
     "size": [
-      0.069,
-      0.069,
-      0.069
+      0.21,
+      0.28,
+      0.008
     ],
     "weight": 0.2,
     "stack": 2,
@@ -6390,9 +6390,9 @@
     "id": "magazines_and_comics",
     "category": "books",
     "size": [
-      0.069,
-      0.069,
-      0.069
+      0.17,
+      0.26,
+      0.01
     ],
     "weight": 0.2,
     "stack": 2,
@@ -6416,9 +6416,9 @@
     "id": "farmers_almanac",
     "category": "books",
     "size": [
-      0.079,
-      0.079,
-      0.079
+      0.15,
+      0.21,
+      0.015
     ],
     "weight": 0.3,
     "stack": 2,
@@ -6441,9 +6441,9 @@
     "id": "note",
     "category": "collectibles",
     "size": [
-      0.032,
-      0.032,
-      0.032
+      0.15,
+      0.002,
+      0.1
     ],
     "weight": 0.01,
     "stack": 10,
@@ -6464,9 +6464,9 @@
     "id": "photo",
     "category": "collectibles",
     "size": [
-      0.032,
-      0.032,
-      0.032
+      0.102,
+      0.002,
+      0.152
     ],
     "weight": 0.01,
     "stack": 10,
@@ -6485,9 +6485,9 @@
     "id": "city_map",
     "category": "collectibles",
     "size": [
-      0.055,
-      0.055,
-      0.055
+      0.11,
+      0.01,
+      0.25
     ],
     "weight": 0.05,
     "stack": 10,
@@ -6504,9 +6504,9 @@
     "id": "road_map",
     "category": "collectibles",
     "size": [
-      0.055,
-      0.055,
-      0.055
+      0.11,
+      0.01,
+      0.25
     ],
     "weight": 0.05,
     "stack": 10,
@@ -6524,9 +6524,9 @@
     "id": "dog_tag",
     "category": "collectibles",
     "size": [
-      0.032,
-      0.032,
-      0.032
+      0.03,
+      0.003,
+      0.05
     ],
     "weight": 0.01,
     "stack": 10,
@@ -6544,9 +6544,9 @@
     "id": "cash",
     "category": "collectibles",
     "size": [
-      0.055,
-      0.055,
-      0.055
+      0.155,
+      0.01,
+      0.065
     ],
     "weight": 0.05,
     "stack": 10,
@@ -6566,9 +6566,9 @@
     "id": "cigarettes",
     "category": "collectibles",
     "size": [
-      0.046,
-      0.046,
-      0.046
+      0.055,
+      0.088,
+      0.022
     ],
     "weight": 0.03,
     "stack": 10,
@@ -6592,9 +6592,9 @@
     "id": "house_key",
     "category": "keys",
     "size": [
-      0.027,
-      0.027,
-      0.027
+      0.085,
+      0.04574,
+      0.00441
     ],
     "weight": 0.02,
     "stack": 1,
@@ -6612,9 +6612,9 @@
     "id": "car_key",
     "category": "keys",
     "size": [
-      0.027,
-      0.027,
-      0.027
+      0.06,
+      0.045,
+      0.015
     ],
     "weight": 0.02,
     "stack": 1,
@@ -6633,9 +6633,9 @@
     "id": "master_key",
     "category": "keys",
     "size": [
-      0.037,
-      0.037,
-      0.037
+      0.09,
+      0.035,
+      0.006
     ],
     "weight": 0.05,
     "stack": 1,
@@ -6652,9 +6652,9 @@
     "id": "janitor_keys",
     "category": "keys",
     "size": [
-      0.053,
-      0.053,
-      0.053
+      0.12,
+      0.1,
+      0.02
     ],
     "weight": 0.15,
     "stack": 1,
@@ -6671,9 +6671,9 @@
     "id": "generator_key",
     "category": "keys",
     "size": [
-      0.037,
-      0.037,
-      0.037
+      0.08,
+      0.03,
+      0.006
     ],
     "weight": 0.05,
     "stack": 1,
@@ -6690,9 +6690,9 @@
     "id": "safe_key",
     "category": "keys",
     "size": [
-      0.037,
-      0.037,
-      0.037
+      0.07,
+      0.025,
+      0.005
     ],
     "weight": 0.05,
     "stack": 1,
@@ -6709,9 +6709,9 @@
     "id": "padlock_key",
     "category": "keys",
     "size": [
-      0.067,
-      0.067,
-      0.067
+      0.05,
+      0.08,
+      0.025
     ],
     "weight": 0.3,
     "stack": 1,
@@ -6730,9 +6730,9 @@
     "id": "cell_key",
     "category": "keys",
     "size": [
-      0.037,
-      0.037,
-      0.037
+      0.12,
+      0.03,
+      0.008
     ],
     "weight": 0.05,
     "stack": 1,
@@ -7671,9 +7671,9 @@
       "craft_only"
     ],
     "size": [
-      0.085,
-      0.085,
-      0.085
+      0.6,
+      0.03,
+      0.03
     ],
     "weight": 0.5,
     "stack": 4,
@@ -7688,11 +7688,11 @@
       "craft_only"
     ],
     "size": [
-      0.04,
-      0.04,
-      0.04
+      0.4,
+      0.012,
+      0.012
     ],
-    "weight": 0.05,
+    "weight": 0.02,
     "stack": 8,
     "shape": "tool",
     "color": 8421504,
@@ -7705,9 +7705,9 @@
       "craft_only"
     ],
     "size": [
-      0.023,
-      0.023,
-      0.023
+      0.15,
+      0.01,
+      0.03
     ],
     "weight": 0.001,
     "stack": 20,
@@ -7722,9 +7722,9 @@
       "craft_only"
     ],
     "size": [
-      0.029,
-      0.029,
-      0.029
+      0.08,
+      0.02,
+      0.06
     ],
     "weight": 0.02,
     "stack": 4,
@@ -7736,9 +7736,9 @@
     "id": "glass_jar",
     "category": "materials",
     "size": [
-      0.072,
-      0.072,
-      0.072
+      0.08,
+      0.11,
+      0.08
     ],
     "weight": 0.3,
     "stack": 4,
@@ -7761,9 +7761,9 @@
       "craft_only"
     ],
     "size": [
-      0.072,
-      0.072,
-      0.072
+      0.03,
+      1.2,
+      0.03
     ],
     "weight": 0.3,
     "stack": 1,
@@ -7775,9 +7775,9 @@
     "id": "barrel",
     "category": "tools",
     "size": [
-      0.164,
-      0.164,
-      0.164
+      0.4,
+      0.55,
+      0.4
     ],
     "weight": 3.5,
     "stack": 1,
@@ -7800,9 +7800,9 @@
       "access"
     ],
     "size": [
-      0.022,
-      0.022,
-      0.022
+      0.054,
+      0.086,
+      0.002
     ],
     "weight": 0.01,
     "stack": 1,
@@ -7818,9 +7818,9 @@
       "refrigerated"
     ],
     "size": [
-      0.05,
-      0.05,
-      0.05
+      0.15,
+      0.04,
+      0.03
     ],
     "weight": 0.05,
     "stack": 4,
@@ -7845,9 +7845,9 @@
       "kitchen"
     ],
     "size": [
-      0.082,
-      0.082,
-      0.082
+      0.17,
+      0.06,
+      0.12
     ],
     "weight": 0.5,
     "stack": 2,
@@ -7874,9 +7874,9 @@
       "cleaning"
     ],
     "size": [
-      0.109,
-      0.109,
-      0.109
+      0.09,
+      0.28,
+      0.06
     ],
     "weight": 1.05,
     "stack": 2,
@@ -7900,9 +7900,9 @@
       "kitchen"
     ],
     "size": [
-      0.048,
-      0.048,
-      0.048
+      0.05,
+      0.1,
+      0.05
     ],
     "weight": 0.1,
     "stack": 6,
@@ -7924,9 +7924,9 @@
       "office"
     ],
     "size": [
-      0.094,
-      0.094,
-      0.094
+      0.16,
+      0.06,
+      0.04
     ],
     "weight": 0.25,
     "stack": 1,
@@ -7946,9 +7946,9 @@
     "id": "remote_control",
     "category": "electronics",
     "size": [
-      0.058,
-      0.058,
-      0.058
+      0.05,
+      0.2,
+      0.02
     ],
     "weight": 0.1,
     "stack": 1,
@@ -7969,9 +7969,9 @@
       "media"
     ],
     "size": [
-      0.067,
-      0.067,
-      0.067
+      0.135,
+      0.19,
+      0.014
     ],
     "weight": 0.09,
     "stack": 4,
@@ -7989,9 +7989,9 @@
     "id": "cable_bundle",
     "category": "electronics",
     "size": [
-      0.067,
-      0.067,
-      0.067
+      0.12,
+      0.05,
+      0.12
     ],
     "weight": 0.15,
     "stack": 4,
@@ -8012,9 +8012,9 @@
       "cleaning"
     ],
     "size": [
-      0.046,
-      0.046,
-      0.046
+      0.06,
+      0.03,
+      0.06
     ],
     "weight": 0.08,
     "stack": 4,
@@ -8035,9 +8035,9 @@
       "cleaning"
     ],
     "size": [
-      0.108,
-      0.108,
-      0.108
+      0.16,
+      0.22,
+      0.06
     ],
     "weight": 1,
     "stack": 2,
@@ -8059,9 +8059,9 @@
       "cleaning"
     ],
     "size": [
-      0.091,
-      0.091,
-      0.091
+      0.3,
+      1.3,
+      0.06
     ],
     "weight": 0.6,
     "stack": 1,
@@ -8083,9 +8083,9 @@
       "cleaning"
     ],
     "size": [
-      0.093,
-      0.093,
-      0.093
+      0.14,
+      0.3,
+      0.02
     ],
     "weight": 0.12,
     "stack": 2,
@@ -8106,9 +8106,9 @@
       "cleaning"
     ],
     "size": [
-      0.109,
-      0.109,
-      0.109
+      0.1,
+      0.22,
+      0.07
     ],
     "weight": 1.05,
     "stack": 2,
@@ -8127,9 +8127,9 @@
     "id": "clothespins",
     "category": "tools",
     "size": [
-      0.057,
-      0.057,
-      0.057
+      0.12,
+      0.1,
+      0.04
     ],
     "weight": 0.15,
     "stack": 4,
@@ -8147,9 +8147,9 @@
     "id": "electrical_tape",
     "category": "tools",
     "size": [
-      0.04,
-      0.04,
-      0.04
+      0.07,
+      0.02,
+      0.07
     ],
     "weight": 0.05,
     "stack": 4,
@@ -8172,9 +8172,9 @@
       "trash"
     ],
     "size": [
-      0.136,
-      0.136,
-      0.136
+      0.35,
+      0.5,
+      0.25
     ],
     "weight": 2,
     "stack": 1,
@@ -8195,9 +8195,9 @@
       "trash"
     ],
     "size": [
-      0.04,
-      0.04,
-      0.04
+      0.2,
+      0.2,
+      0.1
     ],
     "weight": 0.05,
     "stack": 4,
@@ -8218,9 +8218,9 @@
       "kitchen"
     ],
     "size": [
-      0.057,
-      0.057,
-      0.057
+      0.07,
+      0.2,
+      0.07
     ],
     "weight": 0.15,
     "stack": 4,
@@ -8238,9 +8238,9 @@
     "id": "book",
     "category": "books",
     "size": [
-      0.087,
-      0.087,
-      0.087
+      0.15,
+      0.22,
+      0.03
     ],
     "weight": 0.4,
     "stack": 2,
@@ -8260,9 +8260,9 @@
     "id": "eyeglasses",
     "category": "clothing",
     "size": [
-      0.058,
-      0.058,
-      0.058
+      0.14,
+      0.04,
+      0.05
     ],
     "weight": 0.03,
     "stack": 2,

@@ -1991,13 +1991,13 @@
         "tags": [
           "craft_only"
         ],
-        "weight": 0.05,
+        "weight": 0.02,
         "rarity": "common",
         "stack": 8,
         "shape": "tool"
       },
       "source": "T3.1c",
-      "reason": "Recipe term \"vareta\" (arrows): a thin stick picked up outdoors, craft-only."
+      "reason": "Recipe term \"vareta\" (arrows): a thin stick picked up outdoors, craft-only. A 12 mm shaft of 40 cm weighs about 20 g."
     },
     "feather": {
       "value": {
@@ -2461,26 +2461,3551 @@
     "source": "T3.1b",
     "reason": "The household items have no rarity; common keeps them in every roll the way the household loot tables treat them."
   },
-  "dimensions": {},
-  "densityByCategory": {
-    "value": {
-      "food": 0.9,
-      "drink": 1,
-      "medical": 0.4,
-      "tools": 0.8,
-      "melee": 0.8,
-      "materials": 0.8,
-      "clothing": 0.15,
-      "bags": 0.1,
-      "electronics": 0.5,
-      "fuel": 0.8,
-      "outdoors": 0.5,
-      "books": 0.6,
-      "collectibles": 0.3,
-      "keys": 1
+  "dimensions": {
+    "canned_beans": {
+      "value": [
+        0.08,
+        0.06806,
+        0.07881
+      ],
+      "source": "model",
+      "reason": "Team model \"feijao_lata\": box 0.67 x 0.57 x 0.66 (units of the page) times 0.119403, so the x axis is 0.08 m. The team can is squat (diameter .67, height .57 in its units): scaled so its diameter is an 80 mm can; 73 mm would make it 62 mm tall and denser than water.",
+      "material": "food",
+      "modelScaleRef": {
+        "teamId": "feijao_lata",
+        "teamBox": [
+          0.67,
+          0.57,
+          0.66
+        ],
+        "axis": "x",
+        "meters": 0.08,
+        "scale": 0.119403
+      }
     },
-    "source": "provisional",
-    "reason": "kg per litre by category, only to give the 245 items without a measure a placeholder size (a cube of weight / density). T3.1d replaces it with real measures in `dimensions`."
+    "canned_sardines": {
+      "value": [
+        0.112,
+        0.026,
+        0.065
+      ],
+      "source": "REF",
+      "reason": "Oval 125 g sardine can. (112 x 26 x 65 mm).",
+      "material": "food"
+    },
+    "canned_corn_and_peas": {
+      "value": [
+        0.073,
+        0.085,
+        0.073
+      ],
+      "source": "REF",
+      "reason": "300 g can, 73 mm (No. 300 diameter) by 85 mm. (73 x 85 x 73 mm).",
+      "material": "food"
+    },
+    "canned_sausages": {
+      "value": [
+        0.073,
+        0.085,
+        0.073
+      ],
+      "source": "derived",
+      "reason": "300 g can, same can as the corn. (73 x 85 x 73 mm).",
+      "material": "food"
+    },
+    "condensed_milk": {
+      "value": [
+        0.073,
+        0.1,
+        0.073
+      ],
+      "source": "REF",
+      "reason": "395 g can (73 x 100 mm). (73 x 100 x 73 mm).",
+      "material": "food"
+    },
+    "military_ration": {
+      "value": [
+        0.19437,
+        0.26,
+        0.05932
+      ],
+      "source": "model",
+      "reason": "Team model \"racao_militar\": box 0.77 x 1.03 x 0.235 (units of the page) times 0.252427, so the y axis is 0.26 m. Height of a three-meal ration box.",
+      "material": "food",
+      "modelScaleRef": {
+        "teamId": "racao_militar",
+        "teamBox": [
+          0.77,
+          1.03,
+          0.235
+        ],
+        "axis": "y",
+        "meters": 0.26,
+        "scale": 0.252427
+      }
+    },
+    "rice": {
+      "value": [
+        0.17062,
+        0.25,
+        0.07109
+      ],
+      "source": "model",
+      "reason": "Team model \"arroz\": box 0.72 x 1.055 x 0.3 (units of the page) times 0.236967, so the y axis is 0.25 m. Height of a 1 kg rice bag (the household 0.1 x 0.2 x 0.06 is a brick, the model is a pillow bag). Replaces the household size of arroz (merged with it) [0.1, 0.2, 0.06]: the model is the better measured object and the model scale test needs one box.",
+      "material": "food",
+      "modelScaleRef": {
+        "teamId": "arroz",
+        "teamBox": [
+          0.72,
+          1.055,
+          0.3
+        ],
+        "axis": "y",
+        "meters": 0.25,
+        "scale": 0.236967
+      }
+    },
+    "beans": {
+      "value": [
+        0.1,
+        0.2,
+        0.06
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"feijao_seco\": the household size stays (the team gave no measure).",
+      "material": "food"
+    },
+    "pasta": {
+      "value": [
+        0.1,
+        0.25,
+        0.04
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"macarrao\": the household size stays (the team gave no measure).",
+      "material": "food"
+    },
+    "instant_noodles": {
+      "value": [
+        0.12,
+        0.16,
+        0.03
+      ],
+      "source": "REF",
+      "reason": "85 g instant noodle bag, air included. (120 x 160 x 30 mm).",
+      "material": "food"
+    },
+    "cassava_flour": {
+      "value": [
+        0.15,
+        0.25,
+        0.06
+      ],
+      "source": "REF",
+      "reason": "1 kg flour bag, filled brick. (150 x 250 x 60 mm).",
+      "material": "food"
+    },
+    "biscuits": {
+      "value": [
+        0.2,
+        0.05,
+        0.1
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"biscoito\": the household size stays (the team gave no measure).",
+      "material": "food"
+    },
+    "snack_chips": {
+      "value": [
+        0.2,
+        0.28,
+        0.06
+      ],
+      "source": "REF",
+      "reason": "Air-filled snack bag (a 100 g bag is mostly air). (200 x 280 x 60 mm).",
+      "material": "hollow"
+    },
+    "chocolate_bar": {
+      "value": [
+        0.15,
+        0.07,
+        0.01
+      ],
+      "source": "REF",
+      "reason": "90 g bar. (150 x 70 x 10 mm).",
+      "material": "food"
+    },
+    "rapadura": {
+      "value": [
+        0.19,
+        0.1,
+        0.06
+      ],
+      "source": "REF",
+      "reason": "500 g block of rapadura. (190 x 100 x 60 mm).",
+      "material": "food"
+    },
+    "honey_jar": {
+      "value": [
+        0.08,
+        0.1,
+        0.08
+      ],
+      "source": "REF",
+      "reason": "500 g honey jar (about 0.35 L of honey). (80 x 100 x 80 mm).",
+      "material": "food"
+    },
+    "bread": {
+      "value": [
+        0.3,
+        0.1,
+        0.1
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"pao_forma\": the household size stays (the team gave no measure).",
+      "material": "food"
+    },
+    "cheese": {
+      "value": [
+        0.15,
+        0.04,
+        0.1
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"queijo\": the household size stays (the team gave no measure).",
+      "material": "food"
+    },
+    "mortadella": {
+      "value": [
+        0.15,
+        0.06,
+        0.05
+      ],
+      "source": "REF",
+      "reason": "400 g vacuum piece. (150 x 60 x 50 mm).",
+      "material": "food"
+    },
+    "raw_beef": {
+      "value": [
+        0.2,
+        0.05,
+        0.15
+      ],
+      "source": "REF",
+      "reason": "1 kg of beef on a tray. (200 x 50 x 150 mm).",
+      "material": "food"
+    },
+    "frozen_chicken": {
+      "value": [
+        0.26,
+        0.1,
+        0.17
+      ],
+      "source": "REF",
+      "reason": "1.2 kg whole frozen chicken, bagged. (260 x 100 x 170 mm).",
+      "material": "food"
+    },
+    "eggs": {
+      "value": [
+        0.25,
+        0.07,
+        0.1
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"ovos\": the household size stays (the team gave no measure).",
+      "material": "food"
+    },
+    "banana_bunch": {
+      "value": [
+        0.3,
+        0.13,
+        0.17
+      ],
+      "source": "REF",
+      "reason": "Six bananas on the stem. (300 x 130 x 170 mm).",
+      "material": "food"
+    },
+    "orange": {
+      "value": [
+        0.075,
+        0.075,
+        0.075
+      ],
+      "source": "REF",
+      "reason": "One orange, 75 mm. (75 x 75 x 75 mm).",
+      "material": "food"
+    },
+    "potatoes": {
+      "value": [
+        0.2,
+        0.09,
+        0.14
+      ],
+      "source": "REF",
+      "reason": "1 kg of potatoes in a net bag. (200 x 90 x 140 mm).",
+      "material": "food"
+    },
+    "cassava_root": {
+      "value": [
+        0.4,
+        0.07,
+        0.07
+      ],
+      "source": "REF",
+      "reason": "One cassava root, 40 cm. (400 x 70 x 70 mm).",
+      "material": "food"
+    },
+    "fresh_fish": {
+      "value": [
+        0.3,
+        0.06,
+        0.1
+      ],
+      "source": "REF",
+      "reason": "A 600 g fish, 30 cm. (300 x 60 x 100 mm).",
+      "material": "food"
+    },
+    "salted_fish": {
+      "value": [
+        0.25,
+        0.03,
+        0.1
+      ],
+      "source": "REF",
+      "reason": "A 400 g split dried fish. (250 x 30 x 100 mm).",
+      "material": "food"
+    },
+    "jerked_beef": {
+      "value": [
+        0.25,
+        0.025,
+        0.15
+      ],
+      "source": "REF",
+      "reason": "A 500 g slab of charque. (250 x 25 x 150 mm).",
+      "material": "food"
+    },
+    "game_meat": {
+      "value": [
+        0.3,
+        0.08,
+        0.2
+      ],
+      "source": "REF",
+      "reason": "1.5 kg of game meat, a joint. (300 x 80 x 200 mm).",
+      "material": "food"
+    },
+    "home_preserves": {
+      "value": [
+        0.09,
+        0.13,
+        0.09
+      ],
+      "source": "REF",
+      "reason": "A 500 ml jar of preserves. (90 x 130 x 90 mm).",
+      "material": "food"
+    },
+    "dog_food": {
+      "value": [
+        0.18,
+        0.26,
+        0.07
+      ],
+      "source": "REF",
+      "reason": "1 kg bag of dog food. (180 x 260 x 70 mm).",
+      "material": "food"
+    },
+    "sugar": {
+      "value": [
+        0.1,
+        0.2,
+        0.06
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"acucar\": the household size stays (the team gave no measure).",
+      "material": "food"
+    },
+    "salt": {
+      "value": [
+        0.07,
+        0.16,
+        0.07
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"sal\": the household size stays (the team gave no measure).",
+      "material": "food"
+    },
+    "cooking_oil": {
+      "value": [
+        0.07,
+        0.26,
+        0.07
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"oleo_cozinha\": the household size stays (the team gave no measure).",
+      "material": "liquid"
+    },
+    "coffee": {
+      "value": [
+        0.08,
+        0.15,
+        0.06
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"cafe_po\": the household size stays (the team gave no measure).",
+      "material": "food"
+    },
+    "water_bottle": {
+      "value": [
+        0.066,
+        0.18252,
+        0.066
+      ],
+      "source": "model",
+      "reason": "Team model \"agua_500\": box 0.452 x 1.25 x 0.452 (units of the page) times 0.146018, so the x axis is 0.066 m. Diameter of a 500 ml PET bottle (65 to 66 mm); the household water bottle (0.07 x 0.28 x 0.07) was too tall. Replaces the household size of agua_500 (merged with it) [0.07, 0.28, 0.07]: the model is the better measured object and the model scale test needs one box.",
+      "material": "liquid",
+      "modelScaleRef": {
+        "teamId": "agua_500",
+        "teamBox": [
+          0.452,
+          1.25,
+          0.452
+        ],
+        "axis": "x",
+        "meters": 0.066,
+        "scale": 0.146018
+      }
+    },
+    "water_jug_5l": {
+      "value": [
+        0.19,
+        0.33,
+        0.15
+      ],
+      "source": "REF",
+      "reason": "5 L water jug. (190 x 330 x 150 mm).",
+      "material": "liquid"
+    },
+    "dirty_water": {
+      "value": [
+        0.066,
+        0.183,
+        0.066
+      ],
+      "source": "derived",
+      "reason": "A 500 ml bottle filled at the river: the same bottle as the water bottle. (66 x 183 x 66 mm).",
+      "material": "liquid"
+    },
+    "soda_can": {
+      "value": [
+        0.066,
+        0.12,
+        0.066
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"refri_lata\": the household size stays (the team gave no measure).",
+      "material": "liquid"
+    },
+    "juice_box": {
+      "value": [
+        0.052,
+        0.1,
+        0.037
+      ],
+      "source": "REF",
+      "reason": "A 200 ml carton (52 x 100 x 37 mm). The household 0.07 x 0.2 x 0.07 is a 1 L carton, which contradicts the team weight of 0.2 kg, so the household size is replaced. (52 x 100 x 37 mm).",
+      "material": "liquid"
+    },
+    "milk_carton": {
+      "value": [
+        0.07,
+        0.2,
+        0.07
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"leite\": the household size stays (the team gave no measure).",
+      "material": "liquid"
+    },
+    "sports_drink": {
+      "value": [
+        0.066,
+        0.183,
+        0.066
+      ],
+      "source": "derived",
+      "reason": "A 500 ml PET bottle: the same bottle as the water bottle. (66 x 183 x 66 mm).",
+      "material": "liquid"
+    },
+    "energy_drink": {
+      "value": [
+        0.058,
+        0.135,
+        0.058
+      ],
+      "source": "REF",
+      "reason": "269 ml slim can. (58 x 135 x 58 mm).",
+      "material": "liquid"
+    },
+    "coconut_water": {
+      "value": [
+        0.06,
+        0.17,
+        0.06
+      ],
+      "source": "REF",
+      "reason": "330 ml bottle. (60 x 170 x 60 mm).",
+      "material": "liquid"
+    },
+    "beer_can": {
+      "value": [
+        0.066,
+        0.12,
+        0.066
+      ],
+      "source": "derived",
+      "reason": "350 ml can: the same can as the household soda can. (66 x 120 x 66 mm).",
+      "material": "liquid"
+    },
+    "cachaca": {
+      "value": [
+        0.09,
+        0.21359,
+        0.09
+      ],
+      "source": "model",
+      "reason": "Team model \"cachaca\": box 0.552 x 1.31 x 0.552 (units of the page) times 0.163043, so the x axis is 0.09 m. Diameter of a 1 L cachaca bottle; the height follows the team proportions (213 mm).",
+      "material": "liquid",
+      "modelScaleRef": {
+        "teamId": "cachaca",
+        "teamBox": [
+          0.552,
+          1.31,
+          0.552
+        ],
+        "axis": "x",
+        "meters": 0.09,
+        "scale": 0.163043
+      }
+    },
+    "communion_wine": {
+      "value": [
+        0.076,
+        0.3,
+        0.076
+      ],
+      "source": "REF",
+      "reason": "750 ml wine bottle. (76 x 300 x 76 mm).",
+      "material": "liquid"
+    },
+    "bandage": {
+      "value": [
+        0.101,
+        0.07766,
+        0.04409
+      ],
+      "source": "model",
+      "reason": "Team model \"atadura\": box 0.9851 x 0.7575 x 0.43 (units of the page) times 0.102528, so the x axis is 0.101 m. Roll diameter of a large crepe bandage: 70 mm (box x includes the loose tail). Replaces the household size of atadura (merged with it) [0.1, 0.03, 0.05]: the model is the better measured object and the model scale test needs one box.",
+      "material": "cloth",
+      "modelScaleRef": {
+        "teamId": "atadura",
+        "teamBox": [
+          0.9851,
+          0.7575,
+          0.43
+        ],
+        "axis": "x",
+        "meters": 0.101,
+        "scale": 0.102528
+      }
+    },
+    "sterile_gauze": {
+      "value": [
+        0.1,
+        0.1,
+        0.015
+      ],
+      "source": "REF",
+      "reason": "A pack of sterile gauze pads, 10 x 10 cm. (100 x 100 x 15 mm).",
+      "material": "paper"
+    },
+    "adhesive_bandages": {
+      "value": [
+        0.1,
+        0.06,
+        0.015
+      ],
+      "source": "REF",
+      "reason": "A box of 10 adhesive bandages. (100 x 60 x 15 mm).",
+      "material": "paper"
+    },
+    "medical_tape": {
+      "value": [
+        0.05,
+        0.025,
+        0.05
+      ],
+      "source": "REF",
+      "reason": "A 10 m roll of surgical tape. (50 x 25 x 50 mm).",
+      "material": "plastic"
+    },
+    "alcohol_70": {
+      "value": [
+        0.07,
+        0.2,
+        0.05
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"alcool70\": the household size stays (the team gave no measure).",
+      "material": "liquid"
+    },
+    "povidone_iodine": {
+      "value": [
+        0.045,
+        0.11,
+        0.035
+      ],
+      "source": "REF",
+      "reason": "A 100 ml bottle. (45 x 110 x 35 mm).",
+      "material": "liquid"
+    },
+    "saline_iv_bag": {
+      "value": [
+        0.12,
+        0.25,
+        0.045
+      ],
+      "source": "REF",
+      "reason": "A 500 ml saline bag with its line. (120 x 250 x 45 mm).",
+      "material": "liquid"
+    },
+    "painkillers": {
+      "value": [
+        0.06,
+        0.02,
+        0.04
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"analgesico\": the household size stays (the team gave no measure).",
+      "material": "paper"
+    },
+    "ibuprofen": {
+      "value": [
+        0.095,
+        0.05,
+        0.015
+      ],
+      "source": "REF",
+      "reason": "A box of 10 tablets. (95 x 50 x 15 mm).",
+      "material": "paper"
+    },
+    "tramadol": {
+      "value": [
+        0.095,
+        0.05,
+        0.015
+      ],
+      "source": "derived",
+      "reason": "A box of tablets. (95 x 50 x 15 mm).",
+      "material": "paper"
+    },
+    "clonazepam": {
+      "value": [
+        0.09,
+        0.05,
+        0.015
+      ],
+      "source": "derived",
+      "reason": "A box of tablets. (90 x 50 x 15 mm).",
+      "material": "paper"
+    },
+    "amoxicillin": {
+      "value": [
+        0.1,
+        0.05305,
+        0.06852
+      ],
+      "source": "model",
+      "reason": "Team model \"amoxicilina\": box 0.8859 x 0.47 x 0.607 (units of the page) times 0.11288, so the x axis is 0.1 m. Width of a 10 cm medicine box.",
+      "material": "paper",
+      "modelScaleRef": {
+        "teamId": "amoxicilina",
+        "teamBox": [
+          0.8859,
+          0.47,
+          0.607
+        ],
+        "axis": "x",
+        "meters": 0.1,
+        "scale": 0.11288
+      }
+    },
+    "ceftriaxone": {
+      "value": [
+        0.1,
+        0.06,
+        0.03
+      ],
+      "source": "REF",
+      "reason": "A box with the vial and the ampoule. (100 x 60 x 30 mm).",
+      "material": "paper"
+    },
+    "syringe": {
+      "value": [
+        0.15,
+        0.02,
+        0.02
+      ],
+      "source": "REF",
+      "reason": "A 5 ml syringe with needle. (150 x 20 x 20 mm).",
+      "material": "plastic"
+    },
+    "suture_kit": {
+      "value": [
+        0.15,
+        0.08,
+        0.03
+      ],
+      "source": "REF",
+      "reason": "A sterile suture kit tray. (150 x 80 x 30 mm).",
+      "material": "plastic"
+    },
+    "splint": {
+      "value": [
+        0.46,
+        0.11,
+        0.01
+      ],
+      "source": "REF",
+      "reason": "A moldable aluminium splint, flat. (460 x 110 x 10 mm).",
+      "material": "plastic"
+    },
+    "first_aid_kit": {
+      "value": [
+        0.25,
+        0.21379,
+        0.09579
+      ],
+      "source": "model",
+      "reason": "Team model \"kit_ps\": box 1.07 x 0.915 x 0.41 (units of the page) times 0.233645, so the x axis is 0.25 m. Width of the household first aid kit (0.25 m), kept as the real measure; height and depth follow the team model. Replaces the household size of kit_ps (merged with it) [0.25, 0.09, 0.17]: the model is the better measured object and the model scale test needs one box.",
+      "material": "hollow",
+      "modelScaleRef": {
+        "teamId": "kit_ps",
+        "teamBox": [
+          1.07,
+          0.915,
+          0.41
+        ],
+        "axis": "x",
+        "meters": 0.25,
+        "scale": 0.233645
+      }
+    },
+    "exam_gloves": {
+      "value": [
+        0.1,
+        0.12,
+        0.01
+      ],
+      "source": "REF",
+      "reason": "A pair of exam gloves in its sleeve. (100 x 120 x 10 mm).",
+      "material": "paper"
+    },
+    "n95_mask": {
+      "value": [
+        0.15,
+        0.11,
+        0.025
+      ],
+      "source": "REF",
+      "reason": "A folded N95 respirator. (150 x 110 x 25 mm).",
+      "material": "cloth"
+    },
+    "activated_charcoal": {
+      "value": [
+        0.06,
+        0.095,
+        0.025
+      ],
+      "source": "REF",
+      "reason": "A box of charcoal capsules. (60 x 95 x 25 mm).",
+      "material": "paper"
+    },
+    "rehydration_salts": {
+      "value": [
+        0.09,
+        0.12,
+        0.01
+      ],
+      "source": "REF",
+      "reason": "Sachets of oral rehydration salts. (90 x 120 x 10 mm).",
+      "material": "paper"
+    },
+    "antihistamine": {
+      "value": [
+        0.08,
+        0.05,
+        0.015
+      ],
+      "source": "REF",
+      "reason": "A box of tablets. (80 x 50 x 15 mm).",
+      "material": "paper"
+    },
+    "antivenom": {
+      "value": [
+        0.15,
+        0.09,
+        0.05
+      ],
+      "source": "REF",
+      "reason": "A vial box with a syringe. (150 x 90 x 50 mm).",
+      "material": "paper"
+    },
+    "thermometer": {
+      "value": [
+        0.12,
+        0.02,
+        0.03
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"termometro\": the household size stays (the team gave no measure).",
+      "material": "plastic"
+    },
+    "maintenance_medication": {
+      "value": [
+        0.045,
+        0.09,
+        0.045
+      ],
+      "source": "REF",
+      "reason": "A pill bottle (30 days). (45 x 90 x 45 mm).",
+      "material": "paper"
+    },
+    "multivitamin": {
+      "value": [
+        0.05,
+        0.09,
+        0.05
+      ],
+      "source": "REF",
+      "reason": "A bottle of 30 multivitamin tablets. (50 x 90 x 50 mm).",
+      "material": "paper"
+    },
+    "hammer": {
+      "value": [
+        0.15884,
+        0.33,
+        0.04652
+      ],
+      "source": "model",
+      "reason": "Team model \"martelo\": box 0.6487 x 1.3477 x 0.19 (units of the page) times 0.244862, so the y axis is 0.33 m. A 330 mm claw hammer. Replaces the household size of martelo (merged with it) [0.3, 0.03, 0.1]: the model is the better measured object and the model scale test needs one box.",
+      "material": "long",
+      "modelScaleRef": {
+        "teamId": "martelo",
+        "teamBox": [
+          0.6487,
+          1.3477,
+          0.19
+        ],
+        "axis": "y",
+        "meters": 0.33,
+        "scale": 0.244862
+      }
+    },
+    "screwdriver": {
+      "value": [
+        0.22,
+        0.04,
+        0.04
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"chave_fenda\": the household size stays (the team gave no measure).",
+      "material": "metal_tool"
+    },
+    "crowbar": {
+      "value": [
+        0.18786,
+        0.75,
+        0.04828
+      ],
+      "source": "model",
+      "reason": "Team model \"pe_cabra\": box 0.428 x 1.7087 x 0.11 (units of the page) times 0.43893, so the y axis is 0.75 m. A 30 inch crowbar.",
+      "material": "long",
+      "modelScaleRef": {
+        "teamId": "pe_cabra",
+        "teamBox": [
+          0.428,
+          1.7087,
+          0.11
+        ],
+        "axis": "y",
+        "meters": 0.75,
+        "scale": 0.43893
+      }
+    },
+    "handsaw": {
+      "value": [
+        0.5,
+        0.035,
+        0.13
+      ],
+      "source": "REF",
+      "reason": "A 50 cm handsaw. (500 x 35 x 130 mm).",
+      "material": "long"
+    },
+    "hacksaw": {
+      "value": [
+        0.42,
+        0.03,
+        0.12
+      ],
+      "source": "REF",
+      "reason": "A hacksaw frame with blade. (420 x 30 x 120 mm).",
+      "material": "long"
+    },
+    "bolt_cutters": {
+      "value": [
+        0.6,
+        0.06,
+        0.15
+      ],
+      "source": "REF",
+      "reason": "60 cm bolt cutters. (600 x 60 x 150 mm).",
+      "material": "metal_tool"
+    },
+    "pliers": {
+      "value": [
+        0.2,
+        0.03,
+        0.07
+      ],
+      "source": "REF",
+      "reason": "20 cm combination pliers. (200 x 30 x 70 mm).",
+      "material": "metal_tool"
+    },
+    "adjustable_wrench": {
+      "value": [
+        0.25,
+        0.02,
+        0.06
+      ],
+      "source": "REF",
+      "reason": "10 inch adjustable wrench. (250 x 20 x 60 mm).",
+      "material": "metal_tool"
+    },
+    "mechanic_toolbox": {
+      "value": [
+        0.4,
+        0.2,
+        0.2
+      ],
+      "source": "REF",
+      "reason": "A metal toolbox with 1 kg of tools per tray, 6 kg. (400 x 200 x 200 mm).",
+      "material": "metal_tool"
+    },
+    "car_jack": {
+      "value": [
+        0.3,
+        0.11,
+        0.11
+      ],
+      "source": "REF",
+      "reason": "A scissor jack with its wheel wrench. (300 x 110 x 110 mm).",
+      "material": "metal_tool"
+    },
+    "gas_torch": {
+      "value": [
+        0.15,
+        0.42,
+        0.15
+      ],
+      "source": "REF",
+      "reason": "A propane torch on its cylinder. (150 x 420 x 150 mm).",
+      "material": "metal_tool"
+    },
+    "inverter_welder": {
+      "value": [
+        0.3,
+        0.22,
+        0.13
+      ],
+      "source": "REF",
+      "reason": "A 200 A inverter welder. (300 x 220 x 130 mm).",
+      "material": "metal_tool"
+    },
+    "cordless_drill": {
+      "value": [
+        0.22,
+        0.2,
+        0.07
+      ],
+      "source": "REF",
+      "reason": "An 18 V drill with battery. (220 x 200 x 70 mm).",
+      "material": "metal_tool"
+    },
+    "shovel": {
+      "value": [
+        1.1,
+        0.07,
+        0.22
+      ],
+      "source": "REF",
+      "reason": "A 1.1 m shovel lying down. (1100 x 70 x 220 mm).",
+      "material": "long"
+    },
+    "hoe": {
+      "value": [
+        1.35,
+        0.06,
+        0.17
+      ],
+      "source": "REF",
+      "reason": "A 1.35 m hoe. (1350 x 60 x 170 mm).",
+      "material": "long"
+    },
+    "pocket_knife": {
+      "value": [
+        0.11,
+        0.022,
+        0.032
+      ],
+      "source": "REF",
+      "reason": "A folded multi-tool knife. (110 x 22 x 32 mm).",
+      "material": "metal_tool"
+    },
+    "can_opener": {
+      "value": [
+        0.14,
+        0.04,
+        0.025
+      ],
+      "source": "REF",
+      "reason": "A hand can opener. (140 x 40 x 25 mm).",
+      "material": "metal_tool"
+    },
+    "scissors": {
+      "value": [
+        0.18,
+        0.015,
+        0.07
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"tesoura\": the household size stays (the team gave no measure).",
+      "material": "metal_tool"
+    },
+    "duct_tape": {
+      "value": [
+        0.1,
+        0.05,
+        0.1
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"silver_tape\": the household size stays (the team gave no measure).",
+      "material": "plastic"
+    },
+    "pot": {
+      "value": [
+        0.25,
+        0.15,
+        0.25
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"panela\": the household size stays (the team gave no measure).",
+      "material": "hollow"
+    },
+    "camp_stove": {
+      "value": [
+        0.18,
+        0.1,
+        0.11
+      ],
+      "source": "REF",
+      "reason": "A folding camp stove with its canister. (180 x 100 x 110 mm).",
+      "material": "metal_tool"
+    },
+    "sewing_kit": {
+      "value": [
+        0.09,
+        0.05,
+        0.03
+      ],
+      "source": "REF",
+      "reason": "A pocket sewing kit. (90 x 50 x 30 mm).",
+      "material": "plastic"
+    },
+    "lockpick_kit": {
+      "value": [
+        0.1,
+        0.07,
+        0.02
+      ],
+      "source": "REF",
+      "reason": "A lockpick set in its case. (100 x 70 x 20 mm).",
+      "material": "metal_tool"
+    },
+    "lighter": {
+      "value": [
+        0.025,
+        0.08,
+        0.012
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"isqueiro\": the household size stays (the team gave no measure).",
+      "material": "plastic"
+    },
+    "matches": {
+      "value": [
+        0.05,
+        0.015,
+        0.035
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"fosforo\": the household size stays (the team gave no measure).",
+      "material": "paper"
+    },
+    "flint_striker": {
+      "value": [
+        0.11,
+        0.02,
+        0.015
+      ],
+      "source": "REF",
+      "reason": "A ferro rod with its striker. (110 x 20 x 15 mm).",
+      "material": "metal_solid"
+    },
+    "bucket": {
+      "value": [
+        0.28,
+        0.27,
+        0.28
+      ],
+      "source": "REF",
+      "reason": "A 10 L plastic bucket. (280 x 270 x 280 mm).",
+      "material": "hollow"
+    },
+    "binoculars": {
+      "value": [
+        0.18,
+        0.15,
+        0.12
+      ],
+      "source": "REF",
+      "reason": "8x42 binoculars. (180 x 150 x 120 mm).",
+      "material": "metal_tool"
+    },
+    "fire_extinguisher": {
+      "value": [
+        0.16,
+        0.48,
+        0.16
+      ],
+      "source": "REF",
+      "reason": "A 2 kg dry powder extinguisher. (160 x 480 x 160 mm).",
+      "material": "metal_tool"
+    },
+    "sharpening_stone": {
+      "value": [
+        0.2,
+        0.05,
+        0.025
+      ],
+      "source": "REF",
+      "reason": "A whetstone. (200 x 50 x 25 mm).",
+      "material": "stone"
+    },
+    "knife": {
+      "value": [
+        0.25,
+        0.03,
+        0.04
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"faca_cozinha\": the household size stays (the team gave no measure).",
+      "material": "metal_tool"
+    },
+    "tactical_knife": {
+      "value": [
+        0.26,
+        0.028,
+        0.045
+      ],
+      "source": "REF",
+      "reason": "A fixed-blade tactical knife with sheath. (260 x 28 x 45 mm).",
+      "material": "metal_tool"
+    },
+    "machete": {
+      "value": [
+        0.55,
+        0.0852,
+        0.03518
+      ],
+      "source": "model",
+      "reason": "Team model \"facao\": box 1.8759 x 0.2906 x 0.12 (units of the page) times 0.293193, so the x axis is 0.55 m. A 55 cm machete (blade 45 cm plus handle).",
+      "material": "long",
+      "modelScaleRef": {
+        "teamId": "facao",
+        "teamBox": [
+          1.8759,
+          0.2906,
+          0.12
+        ],
+        "axis": "x",
+        "meters": 0.55,
+        "scale": 0.293193
+      }
+    },
+    "meat_cleaver": {
+      "value": [
+        0.33,
+        0.03,
+        0.12
+      ],
+      "source": "REF",
+      "reason": "A butcher cleaver. (330 x 30 x 120 mm).",
+      "material": "metal_tool"
+    },
+    "hatchet": {
+      "value": [
+        0.35,
+        0.05,
+        0.13
+      ],
+      "source": "REF",
+      "reason": "A 35 cm hatchet. (350 x 50 x 130 mm).",
+      "material": "long"
+    },
+    "axe": {
+      "value": [
+        0.24959,
+        0.7,
+        0.05871
+      ],
+      "source": "model",
+      "reason": "Team model \"machado\": box 0.5952 x 1.6693 x 0.14 (units of the page) times 0.419337, so the y axis is 0.7 m. A 70 cm camp axe (1.6 kg).",
+      "material": "long",
+      "modelScaleRef": {
+        "teamId": "machado",
+        "teamBox": [
+          0.5952,
+          1.6693,
+          0.14
+        ],
+        "axis": "y",
+        "meters": 0.7,
+        "scale": 0.419337
+      }
+    },
+    "baseball_bat": {
+      "value": [
+        0.86,
+        0.07,
+        0.07
+      ],
+      "source": "REF",
+      "reason": "A 34 inch wooden bat. (860 x 70 x 70 mm).",
+      "material": "long"
+    },
+    "nail_bat": {
+      "value": [
+        0.22309,
+        0.86,
+        0.22146
+      ],
+      "source": "model",
+      "reason": "Team model \"taco_pregos\": box 0.4384 x 1.69 x 0.4352 (units of the page) times 0.508876, so the y axis is 0.86 m. A 34 inch bat; the nails stick out of the box, so the box is mostly air (hollow).",
+      "material": "hollow",
+      "modelScaleRef": {
+        "teamId": "taco_pregos",
+        "teamBox": [
+          0.4384,
+          1.69,
+          0.4352
+        ],
+        "axis": "y",
+        "meters": 0.86,
+        "scale": 0.508876
+      }
+    },
+    "iron_pipe": {
+      "value": [
+        0.8,
+        0.035,
+        0.035
+      ],
+      "source": "REF",
+      "reason": "80 cm of 3/4 inch iron pipe. (800 x 35 x 35 mm).",
+      "material": "metal_solid"
+    },
+    "sledgehammer": {
+      "value": [
+        0.9,
+        0.12,
+        0.25
+      ],
+      "source": "REF",
+      "reason": "A 90 cm sledgehammer, 5 kg head. (900 x 120 x 250 mm).",
+      "material": "long"
+    },
+    "pickaxe": {
+      "value": [
+        0.9,
+        0.04,
+        0.35
+      ],
+      "source": "REF",
+      "reason": "A pickaxe with 90 cm handle. (900 x 40 x 350 mm).",
+      "material": "long"
+    },
+    "sickle": {
+      "value": [
+        0.4,
+        0.035,
+        0.35
+      ],
+      "source": "REF",
+      "reason": "A sickle with a wooden handle. (400 x 35 x 350 mm).",
+      "material": "long"
+    },
+    "police_baton": {
+      "value": [
+        0.5,
+        0.1,
+        0.045
+      ],
+      "source": "REF",
+      "reason": "A side-handle baton, 50 cm. (500 x 100 x 45 mm).",
+      "material": "long"
+    },
+    "cast_iron_skillet": {
+      "value": [
+        0.43,
+        0.05,
+        0.25
+      ],
+      "source": "REF",
+      "reason": "A 25 cm cast-iron skillet with handle. (430 x 50 x 250 mm).",
+      "material": "metal_tool"
+    },
+    "improvised_spear": {
+      "value": [
+        1.6,
+        0.035,
+        0.035
+      ],
+      "source": "REF",
+      "reason": "A 1.6 m shaft with a knife lashed on. (1600 x 35 x 35 mm).",
+      "material": "long"
+    },
+    "chainsaw": {
+      "value": [
+        0.45,
+        0.26,
+        0.23
+      ],
+      "source": "REF",
+      "reason": "A petrol chainsaw with 40 cm bar. (450 x 260 x 230 mm).",
+      "material": "metal_tool"
+    },
+    "slingshot": {
+      "value": [
+        0.13,
+        0.15,
+        0.025
+      ],
+      "source": "REF",
+      "reason": "A forked slingshot. (130 x 150 x 25 mm).",
+      "material": "plastic"
+    },
+    "recurve_bow": {
+      "value": [
+        1.3,
+        0.2,
+        0.05
+      ],
+      "source": "REF",
+      "reason": "A 1.3 m recurve bow. (1300 x 200 x 50 mm).",
+      "material": "long"
+    },
+    "crossbow": {
+      "value": [
+        0.7,
+        0.12,
+        0.8
+      ],
+      "source": "REF",
+      "reason": "A 70 cm crossbow. (700 x 120 x 800 mm).",
+      "material": "long"
+    },
+    "arrows_and_bolts": {
+      "value": [
+        0.7,
+        0.025,
+        0.04
+      ],
+      "source": "REF",
+      "reason": "Six arrows or bolts bundled. (700 x 25 x 40 mm).",
+      "material": "wood"
+    },
+    "wooden_plank": {
+      "value": [
+        0.8,
+        0.24948,
+        0.28294
+      ],
+      "source": "model",
+      "reason": "Team model \"tabua\": box 1.5203 x 0.4741 x 0.5377 (units of the page) times 0.526212, so the x axis is 0.8 m. An 80 cm plank; the team shows three planks fanned out, so the box is mostly air.",
+      "material": "hollow",
+      "modelScaleRef": {
+        "teamId": "tabua",
+        "teamBox": [
+          1.5203,
+          0.4741,
+          0.5377
+        ],
+        "axis": "x",
+        "meters": 0.8,
+        "scale": 0.526212
+      }
+    },
+    "nails": {
+      "value": [
+        0.13,
+        0.06,
+        0.05
+      ],
+      "source": "REF",
+      "reason": "A box of 100 nails. (130 x 60 x 50 mm).",
+      "material": "metal_tool"
+    },
+    "screws": {
+      "value": [
+        0.09,
+        0.05,
+        0.05
+      ],
+      "source": "REF",
+      "reason": "A box of 50 screws. (90 x 50 x 50 mm).",
+      "material": "metal_tool"
+    },
+    "sheet_metal": {
+      "value": [
+        0.6,
+        0.003,
+        0.45
+      ],
+      "source": "REF",
+      "reason": "A 0.6 x 0.45 m steel sheet, 3 mm. (600 x 3 x 450 mm).",
+      "material": "metal_solid"
+    },
+    "scrap_metal": {
+      "value": [
+        0.2,
+        0.08,
+        0.15
+      ],
+      "source": "REF",
+      "reason": "A handful of scrap metal. (200 x 80 x 150 mm).",
+      "material": "metal_tool"
+    },
+    "wire_roll": {
+      "value": [
+        0.14,
+        0.05,
+        0.14
+      ],
+      "source": "REF",
+      "reason": "A 10 m coil of wire. (140 x 50 x 140 mm).",
+      "material": "metal_tool"
+    },
+    "barbed_wire": {
+      "value": [
+        0.3,
+        0.12,
+        0.3
+      ],
+      "source": "REF",
+      "reason": "A 25 m coil of barbed wire. (300 x 120 x 300 mm).",
+      "material": "metal_tool"
+    },
+    "rope": {
+      "value": [
+        0.15,
+        0.08,
+        0.15
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"corda\": the household size stays (the team gave no measure).",
+      "material": "cloth"
+    },
+    "tarp": {
+      "value": [
+        0.35,
+        0.1,
+        0.25
+      ],
+      "source": "REF",
+      "reason": "A 4 x 4 m tarp, folded. (350 x 100 x 250 mm).",
+      "material": "cloth"
+    },
+    "raffia_sack": {
+      "value": [
+        0.4,
+        0.02,
+        0.3
+      ],
+      "source": "REF",
+      "reason": "A folded raffia sack. (400 x 20 x 300 mm).",
+      "material": "cloth"
+    },
+    "bricks": {
+      "value": [
+        0.19,
+        0.18,
+        0.29
+      ],
+      "source": "REF",
+      "reason": "Ten solid bricks stacked 2 x 5. (190 x 180 x 290 mm).",
+      "material": "stone"
+    },
+    "cement_bag": {
+      "value": [
+        0.5,
+        0.1,
+        0.3
+      ],
+      "source": "REF",
+      "reason": "A 25 kg cement bag. (500 x 100 x 300 mm).",
+      "material": "stone"
+    },
+    "rag": {
+      "value": [
+        0.22,
+        0.025,
+        0.18
+      ],
+      "source": "REF",
+      "reason": "A folded rag. (220 x 25 x 180 mm).",
+      "material": "cloth"
+    },
+    "glass_bottle": {
+      "value": [
+        0.075,
+        0.26,
+        0.075
+      ],
+      "source": "REF",
+      "reason": "An empty 750 ml glass bottle. (75 x 260 x 75 mm).",
+      "material": "hollow"
+    },
+    "pet_bottle": {
+      "value": [
+        0.105,
+        0.33,
+        0.105
+      ],
+      "source": "REF",
+      "reason": "An empty 2 L PET bottle. (105 x 330 x 105 mm).",
+      "material": "hollow"
+    },
+    "empty_can": {
+      "value": [
+        0.066,
+        0.12,
+        0.066
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"lata_vazia\": the household size stays (the team gave no measure).",
+      "material": "hollow"
+    },
+    "glass_shards": {
+      "value": [
+        0.12,
+        0.05,
+        0.1
+      ],
+      "source": "REF",
+      "reason": "A handful of glass shards. (120 x 50 x 100 mm).",
+      "material": "glass"
+    },
+    "epoxy_glue": {
+      "value": [
+        0.1,
+        0.06,
+        0.03
+      ],
+      "source": "REF",
+      "reason": "A two-tube epoxy pack. (100 x 60 x 30 mm).",
+      "material": "plastic"
+    },
+    "electronic_components": {
+      "value": [
+        0.1,
+        0.02,
+        0.08
+      ],
+      "source": "REF",
+      "reason": "A bag of salvaged components. (100 x 20 x 80 mm).",
+      "material": "electronic"
+    },
+    "copper_wire": {
+      "value": [
+        0.08,
+        0.03,
+        0.08
+      ],
+      "source": "REF",
+      "reason": "A 5 m coil of copper wire. (80 x 30 x 80 mm).",
+      "material": "metal_solid"
+    },
+    "firewood": {
+      "value": [
+        0.4,
+        0.12,
+        0.16
+      ],
+      "source": "REF",
+      "reason": "A bundle of split logs. (400 x 120 x 160 mm).",
+      "material": "wood"
+    },
+    "rebar": {
+      "value": [
+        1.27,
+        0.016,
+        0.016
+      ],
+      "source": "REF",
+      "reason": "A 1.27 m length of 16 mm rebar. (1270 x 16 x 16 mm).",
+      "material": "metal_solid"
+    },
+    "lubricant_spray": {
+      "value": [
+        0.05,
+        0.17,
+        0.05
+      ],
+      "source": "REF",
+      "reason": "A 300 ml spray can. (50 x 170 x 50 mm).",
+      "material": "liquid"
+    },
+    "tshirt": {
+      "value": [
+        0.3,
+        0.04,
+        0.22
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"camiseta\": the household size stays (the team gave no measure).",
+      "material": "cloth"
+    },
+    "hoodie": {
+      "value": [
+        0.38,
+        0.08,
+        0.28
+      ],
+      "source": "REF",
+      "reason": "A folded hoodie. (380 x 80 x 280 mm).",
+      "material": "cloth"
+    },
+    "denim_jacket": {
+      "value": [
+        0.4,
+        0.08,
+        0.3
+      ],
+      "source": "REF",
+      "reason": "A folded denim jacket. (400 x 80 x 300 mm).",
+      "material": "cloth"
+    },
+    "leather_motorcycle_jacket": {
+      "value": [
+        0.45,
+        0.1,
+        0.35
+      ],
+      "source": "REF",
+      "reason": "A folded leather jacket. (450 x 100 x 350 mm).",
+      "material": "cloth"
+    },
+    "jeans": {
+      "value": [
+        0.35,
+        0.06,
+        0.22
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"calca_jeans\": the household size stays (the team gave no measure).",
+      "material": "cloth"
+    },
+    "leather_motorcycle_pants": {
+      "value": [
+        0.4,
+        0.09,
+        0.3
+      ],
+      "source": "REF",
+      "reason": "Folded leather trousers. (400 x 90 x 300 mm).",
+      "material": "cloth"
+    },
+    "army_camouflage_uniform": {
+      "value": [
+        0.4,
+        0.1,
+        0.32
+      ],
+      "source": "REF",
+      "reason": "A folded uniform, jacket and trousers. (400 x 100 x 320 mm).",
+      "material": "cloth"
+    },
+    "mechanic_coveralls": {
+      "value": [
+        0.4,
+        0.09,
+        0.3
+      ],
+      "source": "REF",
+      "reason": "Folded coveralls. (400 x 90 x 300 mm).",
+      "material": "cloth"
+    },
+    "firefighter_suit": {
+      "value": [
+        0.55,
+        0.2,
+        0.4
+      ],
+      "source": "REF",
+      "reason": "A folded fire-resistant suit. (550 x 200 x 400 mm).",
+      "material": "cloth"
+    },
+    "beekeeper_suit": {
+      "value": [
+        0.4,
+        0.1,
+        0.33
+      ],
+      "source": "REF",
+      "reason": "A folded beekeeper suit with veil. (400 x 100 x 330 mm).",
+      "material": "cloth"
+    },
+    "raincoat": {
+      "value": [
+        0.3,
+        0.04,
+        0.25
+      ],
+      "source": "REF",
+      "reason": "A folded raincoat. (300 x 40 x 250 mm).",
+      "material": "cloth"
+    },
+    "padded_coat": {
+      "value": [
+        0.45,
+        0.15,
+        0.35
+      ],
+      "source": "REF",
+      "reason": "A folded padded coat. (450 x 150 x 350 mm).",
+      "material": "cloth"
+    },
+    "motorcycle_helmet": {
+      "value": [
+        0.26,
+        0.25356,
+        0.27405
+      ],
+      "source": "model",
+      "reason": "Team model \"capacete_moto\": box 1.11 x 1.0825 x 1.17 (units of the page) times 0.234234, so the x axis is 0.26 m. Width of a full-face helmet (26 cm).",
+      "material": "hollow",
+      "modelScaleRef": {
+        "teamId": "capacete_moto",
+        "teamBox": [
+          1.11,
+          1.0825,
+          1.17
+        ],
+        "axis": "x",
+        "meters": 0.26,
+        "scale": 0.234234
+      }
+    },
+    "hard_hat": {
+      "value": [
+        0.25,
+        0.15,
+        0.3
+      ],
+      "source": "REF",
+      "reason": "A construction hard hat. (250 x 150 x 300 mm).",
+      "material": "hollow"
+    },
+    "safety_goggles": {
+      "value": [
+        0.16,
+        0.06,
+        0.08
+      ],
+      "source": "REF",
+      "reason": "Safety goggles. (160 x 60 x 80 mm).",
+      "material": "hollow"
+    },
+    "leather_work_gloves": {
+      "value": [
+        0.25,
+        0.03,
+        0.12
+      ],
+      "source": "REF",
+      "reason": "A pair of split-leather gloves. (250 x 30 x 120 mm).",
+      "material": "cloth"
+    },
+    "combat_boots": {
+      "value": [
+        0.3,
+        0.2,
+        0.22
+      ],
+      "source": "REF",
+      "reason": "A pair of combat boots side by side. (300 x 200 x 220 mm).",
+      "material": "cloth"
+    },
+    "rubber_boots": {
+      "value": [
+        0.3,
+        0.35,
+        0.22
+      ],
+      "source": "REF",
+      "reason": "A pair of knee-high rubber boots. (300 x 350 x 220 mm).",
+      "material": "cloth"
+    },
+    "sneakers": {
+      "value": [
+        0.3,
+        0.12,
+        0.12
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"tenis\": the household size stays (the team gave no measure).",
+      "material": "cloth"
+    },
+    "flip_flops": {
+      "value": [
+        0.29,
+        0.03,
+        0.23
+      ],
+      "source": "REF",
+      "reason": "A pair of flip-flops. (290 x 30 x 230 mm).",
+      "material": "cloth"
+    },
+    "magazine_arm_guard": {
+      "value": [
+        0.3,
+        0.06,
+        0.15
+      ],
+      "source": "REF",
+      "reason": "A rolled magazine forearm guard. (300 x 60 x 150 mm).",
+      "material": "cloth"
+    },
+    "sheet_metal_forearm_guard": {
+      "value": [
+        0.3,
+        0.1,
+        0.12
+      ],
+      "source": "REF",
+      "reason": "A forearm guard of sheet metal. (300 x 100 x 120 mm).",
+      "material": "metal_tool"
+    },
+    "ballistic_vest": {
+      "value": [
+        0.4,
+        0.07,
+        0.45
+      ],
+      "source": "REF",
+      "reason": "A folded soft ballistic vest. (400 x 70 x 450 mm).",
+      "material": "cloth"
+    },
+    "shopping_bag": {
+      "value": [
+        0.3,
+        0.02,
+        0.2
+      ],
+      "source": "REF",
+      "reason": "An empty folded shopping bag. (300 x 20 x 200 mm).",
+      "material": "hollow"
+    },
+    "trash_bag": {
+      "value": [
+        0.25,
+        0.025,
+        0.2
+      ],
+      "source": "REF",
+      "reason": "A folded 100 L bag. (250 x 25 x 200 mm).",
+      "material": "hollow"
+    },
+    "fanny_pack": {
+      "value": [
+        0.25,
+        0.1,
+        0.12
+      ],
+      "source": "REF",
+      "reason": "A waist pack. (250 x 100 x 120 mm).",
+      "material": "hollow"
+    },
+    "crossbody_bag": {
+      "value": [
+        0.25,
+        0.2,
+        0.08
+      ],
+      "source": "REF",
+      "reason": "A small crossbody bag. (250 x 200 x 80 mm).",
+      "material": "hollow"
+    },
+    "backpack": {
+      "value": [
+        0.3,
+        0.3,
+        0.2
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"mochila_escolar\": the household size stays (the team gave no measure).",
+      "material": "hollow"
+    },
+    "delivery_bag": {
+      "value": [
+        0.48,
+        0.45,
+        0.42
+      ],
+      "source": "REF",
+      "reason": "A 90 L delivery box bag. (480 x 450 x 420 mm).",
+      "material": "hollow"
+    },
+    "hiking_backpack_40l": {
+      "value": [
+        0.41121,
+        0.55,
+        0.31869
+      ],
+      "source": "model",
+      "reason": "Team model \"mochila_trilha\": box 0.8 x 1.07 x 0.62 (units of the page) times 0.514019, so the y axis is 0.55 m. A 40 L hiking pack is about 55 cm tall.",
+      "material": "hollow",
+      "modelScaleRef": {
+        "teamId": "mochila_trilha",
+        "teamBox": [
+          0.8,
+          1.07,
+          0.62
+        ],
+        "axis": "y",
+        "meters": 0.55,
+        "scale": 0.514019
+      }
+    },
+    "military_backpack": {
+      "value": [
+        0.35,
+        0.6,
+        0.3
+      ],
+      "source": "REF",
+      "reason": "A 60 L military pack. (350 x 600 x 300 mm).",
+      "material": "hollow"
+    },
+    "trekking_backpack_70l": {
+      "value": [
+        0.38,
+        0.75,
+        0.3
+      ],
+      "source": "REF",
+      "reason": "A 70 L trekking pack. (380 x 750 x 300 mm).",
+      "material": "hollow"
+    },
+    "rolling_suitcase": {
+      "value": [
+        0.4,
+        0.65,
+        0.25
+      ],
+      "source": "REF",
+      "reason": "A 65 L rolling suitcase. (400 x 650 x 250 mm).",
+      "material": "hollow"
+    },
+    "tactical_vest": {
+      "value": [
+        0.35,
+        0.1,
+        0.4
+      ],
+      "source": "REF",
+      "reason": "A plate-carrier vest, folded. (350 x 100 x 400 mm).",
+      "material": "hollow"
+    },
+    "tool_belt": {
+      "value": [
+        0.35,
+        0.1,
+        0.25
+      ],
+      "source": "REF",
+      "reason": "A coiled tool belt. (350 x 100 x 250 mm).",
+      "material": "hollow"
+    },
+    "cooler_box": {
+      "value": [
+        0.32,
+        0.25,
+        0.23
+      ],
+      "source": "REF",
+      "reason": "A 10 L cooler box. (320 x 250 x 230 mm).",
+      "material": "hollow"
+    },
+    "shopping_cart": {
+      "value": [
+        0.55,
+        0.98,
+        0.95
+      ],
+      "source": "REF",
+      "reason": "A supermarket cart. (550 x 980 x 950 mm).",
+      "material": "hollow"
+    },
+    "wheelbarrow": {
+      "value": [
+        0.65,
+        0.65,
+        1.5
+      ],
+      "source": "REF",
+      "reason": "A builder wheelbarrow. (650 x 650 x 1500 mm).",
+      "material": "hollow"
+    },
+    "flashlight": {
+      "value": [
+        0.0563,
+        0.16,
+        0.0563
+      ],
+      "source": "model",
+      "reason": "Team model \"lanterna\": box 0.38 x 1.08 x 0.38 (units of the page) times 0.148148, so the y axis is 0.16 m. A 2xAA flashlight, 16 cm; the household one (0.04 x 0.04 x 0.16) lay down, the model stands. Replaces the household size of lanterna (merged with it) [0.04, 0.04, 0.16]: the model is the better measured object and the model scale test needs one box.",
+      "material": "metal_tool",
+      "modelScaleRef": {
+        "teamId": "lanterna",
+        "teamBox": [
+          0.38,
+          1.08,
+          0.38
+        ],
+        "axis": "y",
+        "meters": 0.16,
+        "scale": 0.148148
+      }
+    },
+    "headlamp": {
+      "value": [
+        0.09,
+        0.06,
+        0.05
+      ],
+      "source": "REF",
+      "reason": "An LED headlamp with strap. (90 x 60 x 50 mm).",
+      "material": "electronic"
+    },
+    "batteries": {
+      "value": [
+        0.03739,
+        0.0505,
+        0.01729
+      ],
+      "source": "model",
+      "reason": "Team model \"pilha_aa\": box 0.744 x 1.005 x 0.344 (units of the page) times 0.050249, so the y axis is 0.0505 m. An AA cell is 50.5 mm long. Replaces the household size of pilha_aa (merged with it) [0.06, 0.02, 0.05]: the model is the better measured object and the model scale test needs one box.",
+      "material": "battery",
+      "modelScaleRef": {
+        "teamId": "pilha_aa",
+        "teamBox": [
+          0.744,
+          1.005,
+          0.344
+        ],
+        "axis": "y",
+        "meters": 0.0505,
+        "scale": 0.050249
+      }
+    },
+    "battery_9v": {
+      "value": [
+        0.026,
+        0.049,
+        0.018
+      ],
+      "source": "REF",
+      "reason": "A 9 V battery (26.5 x 48.5 x 17.5 mm). (26 x 49 x 18 mm).",
+      "material": "battery"
+    },
+    "power_bank": {
+      "value": [
+        0.15,
+        0.07,
+        0.016
+      ],
+      "source": "REF",
+      "reason": "A 10000 mAh power bank. (150 x 70 x 16 mm).",
+      "material": "electronic"
+    },
+    "folding_solar_panel": {
+      "value": [
+        0.4,
+        0.3,
+        0.05
+      ],
+      "source": "REF",
+      "reason": "A folding 20 W solar panel. (400 x 300 x 50 mm).",
+      "material": "electronic"
+    },
+    "portable_radio": {
+      "value": [
+        0.22,
+        0.29532,
+        0.06974
+      ],
+      "source": "model",
+      "reason": "Team model \"radio_portatil\": box 1.1041 x 1.4821 x 0.35 (units of the page) times 0.199257, so the x axis is 0.22 m. Body width of an AM/FM pocket radio (21 cm plus the antenna).",
+      "material": "electronic",
+      "modelScaleRef": {
+        "teamId": "radio_portatil",
+        "teamBox": [
+          1.1041,
+          1.4821,
+          0.35
+        ],
+        "axis": "x",
+        "meters": 0.22,
+        "scale": 0.199257
+      }
+    },
+    "walkie_talkies": {
+      "value": [
+        0.06959,
+        0.22,
+        0.03293
+      ],
+      "source": "model",
+      "reason": "Team model \"walkie\": box 0.465 x 1.47 x 0.22 (units of the page) times 0.14966, so the y axis is 0.22 m. One handheld radio with antenna, 22 cm (the item is a pair, 0.6 kg).",
+      "material": "electronic",
+      "modelScaleRef": {
+        "teamId": "walkie",
+        "teamBox": [
+          0.465,
+          1.47,
+          0.22
+        ],
+        "axis": "y",
+        "meters": 0.22,
+        "scale": 0.14966
+      }
+    },
+    "cb_radio": {
+      "value": [
+        0.25,
+        0.08,
+        0.2
+      ],
+      "source": "REF",
+      "reason": "A CB transceiver with microphone. (250 x 80 x 200 mm).",
+      "material": "electronic"
+    },
+    "military_radio": {
+      "value": [
+        0.3,
+        0.2,
+        0.25
+      ],
+      "source": "REF",
+      "reason": "A man-pack military transceiver. (300 x 200 x 250 mm).",
+      "material": "electronic"
+    },
+    "portable_generator": {
+      "value": [
+        0.5,
+        0.42,
+        0.43
+      ],
+      "source": "REF",
+      "reason": "A 2 kW petrol generator. (500 x 420 x 430 mm).",
+      "material": "metal_tool"
+    },
+    "led_camp_lantern": {
+      "value": [
+        0.11,
+        0.2,
+        0.11
+      ],
+      "source": "REF",
+      "reason": "A camping LED lantern. (110 x 200 x 110 mm).",
+      "material": "electronic"
+    },
+    "mobile_phone": {
+      "value": [
+        0.077,
+        0.16,
+        0.009
+      ],
+      "source": "REF",
+      "reason": "A smartphone (77 x 160 x 9 mm). (77 x 160 x 9 mm).",
+      "material": "electronic"
+    },
+    "laptop": {
+      "value": [
+        0.36,
+        0.025,
+        0.25
+      ],
+      "source": "REF",
+      "reason": "A 15 inch laptop, closed. (360 x 25 x 250 mm).",
+      "material": "electronic"
+    },
+    "windup_alarm_clock": {
+      "value": [
+        0.11,
+        0.125,
+        0.055
+      ],
+      "source": "REF",
+      "reason": "A twin-bell alarm clock. (110 x 125 x 55 mm).",
+      "material": "electronic"
+    },
+    "car_alarm_remote": {
+      "value": [
+        0.04,
+        0.07,
+        0.012
+      ],
+      "source": "REF",
+      "reason": "A car alarm key fob. (40 x 70 x 12 mm).",
+      "material": "electronic"
+    },
+    "electric_fence_energizer": {
+      "value": [
+        0.25,
+        0.2,
+        0.15
+      ],
+      "source": "REF",
+      "reason": "A rural fence energizer. (250 x 200 x 150 mm).",
+      "material": "electronic"
+    },
+    "extension_cord": {
+      "value": [
+        0.23,
+        0.08,
+        0.23
+      ],
+      "source": "REF",
+      "reason": "A 20 m cord on a reel. (230 x 80 x 230 mm).",
+      "material": "electronic"
+    },
+    "candles": {
+      "value": [
+        0.06,
+        0.12,
+        0.06
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"vela\": the household size stays (the team gave no measure).",
+      "material": "plastic"
+    },
+    "night_vision_goggles": {
+      "value": [
+        0.15,
+        0.1,
+        0.11
+      ],
+      "source": "REF",
+      "reason": "Single-tube night vision goggles. (150 x 100 x 110 mm).",
+      "material": "electronic"
+    },
+    "fuel_jerrycan": {
+      "value": [
+        0.30778,
+        0.47,
+        0.1541
+      ],
+      "source": "model",
+      "reason": "Team model \"galao\": box 0.8788 x 1.342 x 0.44 (units of the page) times 0.350224, so the y axis is 0.47 m. A NATO 20 L jerrycan is 34 x 45 x 16 cm.",
+      "material": "hollow",
+      "modelScaleRef": {
+        "teamId": "galao",
+        "teamBox": [
+          0.8788,
+          1.342,
+          0.44
+        ],
+        "axis": "y",
+        "meters": 0.47,
+        "scale": 0.350224
+      }
+    },
+    "gasoline": {
+      "value": [
+        0.09,
+        0.26,
+        0.09
+      ],
+      "source": "REF",
+      "reason": "A litre of petrol in a bottle. (90 x 260 x 90 mm).",
+      "material": "liquid"
+    },
+    "diesel": {
+      "value": [
+        0.09,
+        0.26,
+        0.09
+      ],
+      "source": "derived",
+      "reason": "A litre of diesel in a bottle. (90 x 260 x 90 mm).",
+      "material": "liquid"
+    },
+    "lpg_cylinder_13kg": {
+      "value": [
+        0.35299,
+        0.49,
+        0.35844
+      ],
+      "source": "model",
+      "reason": "Team model \"botijao\": box 0.9257 x 1.285 x 0.94 (units of the page) times 0.381323, so the y axis is 0.49 m. A P13 cylinder is 47 to 49 cm tall with its valve.",
+      "material": "metal_tool",
+      "modelScaleRef": {
+        "teamId": "botijao",
+        "teamBox": [
+          0.9257,
+          1.285,
+          0.94
+        ],
+        "axis": "y",
+        "meters": 0.49,
+        "scale": 0.381323
+      }
+    },
+    "gas_cartridge": {
+      "value": [
+        0.11,
+        0.165,
+        0.11
+      ],
+      "source": "REF",
+      "reason": "A 230 g camping gas cartridge. (110 x 165 x 110 mm).",
+      "material": "metal_tool"
+    },
+    "kerosene": {
+      "value": [
+        0.09,
+        0.26,
+        0.09
+      ],
+      "source": "derived",
+      "reason": "A litre of kerosene in a bottle. (90 x 260 x 90 mm).",
+      "material": "liquid"
+    },
+    "charcoal_bag": {
+      "value": [
+        0.3,
+        0.12,
+        0.4
+      ],
+      "source": "household",
+      "reason": "Merged with the team item \"carvao\": the household size stays (the team gave no measure).",
+      "material": "wood"
+    },
+    "car_battery_12v": {
+      "value": [
+        0.24,
+        0.19,
+        0.175
+      ],
+      "source": "REF",
+      "reason": "A 12 V 45 Ah car battery. (240 x 190 x 175 mm).",
+      "material": "battery"
+    },
+    "motor_oil": {
+      "value": [
+        0.1,
+        0.26,
+        0.07
+      ],
+      "source": "REF",
+      "reason": "A 1 L oil bottle. (100 x 260 x 70 mm).",
+      "material": "liquid"
+    },
+    "bean_seeds": {
+      "value": [
+        0.1,
+        0.15,
+        0.02
+      ],
+      "source": "REF",
+      "reason": "A packet of seeds. (100 x 150 x 20 mm).",
+      "material": "food"
+    },
+    "corn_seeds": {
+      "value": [
+        0.1,
+        0.15,
+        0.02
+      ],
+      "source": "derived",
+      "reason": "A packet of seeds. (100 x 150 x 20 mm).",
+      "material": "food"
+    },
+    "pumpkin_seeds": {
+      "value": [
+        0.09,
+        0.13,
+        0.015
+      ],
+      "source": "REF",
+      "reason": "A small packet of seeds. (90 x 130 x 15 mm).",
+      "material": "food"
+    },
+    "kale_and_lettuce_seeds": {
+      "value": [
+        0.09,
+        0.13,
+        0.015
+      ],
+      "source": "derived",
+      "reason": "A small packet of seeds. (90 x 130 x 15 mm).",
+      "material": "food"
+    },
+    "cassava_cuttings": {
+      "value": [
+        0.7,
+        0.12,
+        0.12
+      ],
+      "source": "REF",
+      "reason": "A bundle of cassava stem cuttings. (700 x 120 x 120 mm).",
+      "material": "wood"
+    },
+    "fertilizer_bag": {
+      "value": [
+        0.45,
+        0.13,
+        0.3
+      ],
+      "source": "REF",
+      "reason": "A 10 kg fertilizer bag. (450 x 130 x 300 mm).",
+      "material": "plastic"
+    },
+    "watering_can": {
+      "value": [
+        0.4,
+        0.26,
+        0.18
+      ],
+      "source": "REF",
+      "reason": "A 5 L watering can. (400 x 260 x 180 mm).",
+      "material": "hollow"
+    },
+    "fishing_rod": {
+      "value": [
+        1.8,
+        0.04,
+        0.04
+      ],
+      "source": "REF",
+      "reason": "A 1.8 m rod, collapsed. (1800 x 40 x 40 mm).",
+      "material": "long"
+    },
+    "fishing_tackle_box": {
+      "value": [
+        0.3,
+        0.1,
+        0.18
+      ],
+      "source": "REF",
+      "reason": "A tackle box with hooks, line and bait. (300 x 100 x 180 mm).",
+      "material": "hollow"
+    },
+    "fishing_net": {
+      "value": [
+        0.35,
+        0.15,
+        0.3
+      ],
+      "source": "REF",
+      "reason": "A folded cast net. (350 x 150 x 300 mm).",
+      "material": "cloth"
+    },
+    "snare_trap": {
+      "value": [
+        0.15,
+        0.03,
+        0.15
+      ],
+      "source": "REF",
+      "reason": "A wire snare coiled. (150 x 30 x 150 mm).",
+      "material": "plastic"
+    },
+    "skill_book": {
+      "value": [
+        0.16,
+        0.23,
+        0.04
+      ],
+      "source": "REF",
+      "reason": "A hardback volume. (160 x 230 x 40 mm).",
+      "material": "paper"
+    },
+    "technical_manual": {
+      "value": [
+        0.21,
+        0.3,
+        0.04
+      ],
+      "source": "REF",
+      "reason": "An A4 technical manual. (210 x 300 x 40 mm).",
+      "material": "paper"
+    },
+    "diy_magazine": {
+      "value": [
+        0.21,
+        0.28,
+        0.008
+      ],
+      "source": "derived",
+      "reason": "A magazine. (210 x 280 x 8 mm).",
+      "material": "paper"
+    },
+    "magazines_and_comics": {
+      "value": [
+        0.17,
+        0.26,
+        0.01
+      ],
+      "source": "REF",
+      "reason": "A magazine and a comic. (170 x 260 x 10 mm).",
+      "material": "paper"
+    },
+    "farmers_almanac": {
+      "value": [
+        0.15,
+        0.21,
+        0.015
+      ],
+      "source": "REF",
+      "reason": "A paperback almanac. (150 x 210 x 15 mm).",
+      "material": "paper"
+    },
+    "note": {
+      "value": [
+        0.15,
+        0.002,
+        0.1
+      ],
+      "source": "REF",
+      "reason": "A note and a letter folded. (150 x 2 x 100 mm).",
+      "material": "paper"
+    },
+    "photo": {
+      "value": [
+        0.102,
+        0.002,
+        0.152
+      ],
+      "source": "REF",
+      "reason": "A 10 x 15 cm print in a sleeve. (102 x 2 x 152 mm).",
+      "material": "paper"
+    },
+    "city_map": {
+      "value": [
+        0.11,
+        0.01,
+        0.25
+      ],
+      "source": "REF",
+      "reason": "A city map folded. (110 x 10 x 250 mm).",
+      "material": "paper"
+    },
+    "road_map": {
+      "value": [
+        0.11,
+        0.01,
+        0.25
+      ],
+      "source": "derived",
+      "reason": "A road map folded. (110 x 10 x 250 mm).",
+      "material": "paper"
+    },
+    "dog_tag": {
+      "value": [
+        0.03,
+        0.003,
+        0.05
+      ],
+      "source": "REF",
+      "reason": "A steel dog tag with its chain. (30 x 3 x 50 mm).",
+      "material": "metal_solid"
+    },
+    "cash": {
+      "value": [
+        0.155,
+        0.01,
+        0.065
+      ],
+      "source": "REF",
+      "reason": "A wad of banknotes. (155 x 10 x 65 mm).",
+      "material": "paper"
+    },
+    "cigarettes": {
+      "value": [
+        0.055,
+        0.088,
+        0.022
+      ],
+      "source": "REF",
+      "reason": "A 20-cigarette pack. (55 x 88 x 22 mm).",
+      "material": "paper"
+    },
+    "house_key": {
+      "value": [
+        0.085,
+        0.04574,
+        0.00441
+      ],
+      "source": "model",
+      "reason": "Team model \"chave_casa\": box 1.5433 x 0.8305 x 0.08 (units of the page) times 0.055077, so the x axis is 0.085 m. A house key with ring and tag, 8.5 cm.",
+      "material": "metal_solid",
+      "modelScaleRef": {
+        "teamId": "chave_casa",
+        "teamBox": [
+          1.5433,
+          0.8305,
+          0.08
+        ],
+        "axis": "x",
+        "meters": 0.085,
+        "scale": 0.055077
+      }
+    },
+    "car_key": {
+      "value": [
+        0.06,
+        0.045,
+        0.015
+      ],
+      "source": "REF",
+      "reason": "A car key fob. (60 x 45 x 15 mm).",
+      "material": "plastic"
+    },
+    "master_key": {
+      "value": [
+        0.09,
+        0.035,
+        0.006
+      ],
+      "source": "REF",
+      "reason": "A large brass key. (90 x 35 x 6 mm).",
+      "material": "metal_solid"
+    },
+    "janitor_keys": {
+      "value": [
+        0.12,
+        0.1,
+        0.02
+      ],
+      "source": "REF",
+      "reason": "A ring with a dozen keys. (120 x 100 x 20 mm).",
+      "material": "metal_tool"
+    },
+    "generator_key": {
+      "value": [
+        0.08,
+        0.03,
+        0.006
+      ],
+      "source": "REF",
+      "reason": "A steel key. (80 x 30 x 6 mm).",
+      "material": "metal_solid"
+    },
+    "safe_key": {
+      "value": [
+        0.07,
+        0.025,
+        0.005
+      ],
+      "source": "REF",
+      "reason": "A small safe key. (70 x 25 x 5 mm).",
+      "material": "metal_solid"
+    },
+    "padlock_key": {
+      "value": [
+        0.05,
+        0.08,
+        0.025
+      ],
+      "source": "REF",
+      "reason": "A brass padlock with its key. (50 x 80 x 25 mm).",
+      "material": "metal_solid"
+    },
+    "cell_key": {
+      "value": [
+        0.12,
+        0.03,
+        0.008
+      ],
+      "source": "REF",
+      "reason": "A long cell-block key. (120 x 30 x 8 mm).",
+      "material": "metal_solid"
+    },
+    "canned_food": {
+      "value": [
+        0.075,
+        0.11,
+        0.075
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "food"
+    },
+    "flour": {
+      "value": [
+        0.1,
+        0.22,
+        0.06
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "food"
+    },
+    "cereal_box": {
+      "value": [
+        0.2,
+        0.3,
+        0.08
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "hollow"
+    },
+    "butter": {
+      "value": [
+        0.1,
+        0.04,
+        0.06
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "food"
+    },
+    "ketchup": {
+      "value": [
+        0.06,
+        0.2,
+        0.06
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "liquid"
+    },
+    "ham": {
+      "value": [
+        0.15,
+        0.03,
+        0.1
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "food"
+    },
+    "yogurt": {
+      "value": [
+        0.07,
+        0.09,
+        0.07
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "food"
+    },
+    "apple": {
+      "value": [
+        0.08,
+        0.08,
+        0.08
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "food"
+    },
+    "tomato": {
+      "value": [
+        0.07,
+        0.07,
+        0.07
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "food"
+    },
+    "frozen_meat": {
+      "value": [
+        0.2,
+        0.05,
+        0.15
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "food"
+    },
+    "ice_cream": {
+      "value": [
+        0.13,
+        0.1,
+        0.13
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "food"
+    },
+    "frozen_pizza": {
+      "value": [
+        0.3,
+        0.03,
+        0.3
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "food"
+    },
+    "frozen_vegetables": {
+      "value": [
+        0.15,
+        0.2,
+        0.05
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "food"
+    },
+    "plate": {
+      "value": [
+        0.25,
+        0.03,
+        0.25
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "hollow"
+    },
+    "bowl": {
+      "value": [
+        0.15,
+        0.07,
+        0.15
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "hollow"
+    },
+    "cup": {
+      "value": [
+        0.08,
+        0.09,
+        0.08
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "glass"
+    },
+    "cutlery": {
+      "value": [
+        0.2,
+        0.03,
+        0.08
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "metal_tool"
+    },
+    "pan": {
+      "value": [
+        0.28,
+        0.08,
+        0.28
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "hollow"
+    },
+    "soap": {
+      "value": [
+        0.09,
+        0.03,
+        0.05
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "plastic"
+    },
+    "shampoo": {
+      "value": [
+        0.06,
+        0.2,
+        0.04
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "liquid"
+    },
+    "toothpaste": {
+      "value": [
+        0.04,
+        0.18,
+        0.03
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "plastic"
+    },
+    "toothbrush": {
+      "value": [
+        0.02,
+        0.18,
+        0.02
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "plastic"
+    },
+    "deodorant": {
+      "value": [
+        0.05,
+        0.15,
+        0.04
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "liquid"
+    },
+    "toilet_paper": {
+      "value": [
+        0.11,
+        0.1,
+        0.11
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "paper"
+    },
+    "towel": {
+      "value": [
+        0.3,
+        0.05,
+        0.2
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "cloth"
+    },
+    "detergent": {
+      "value": [
+        0.07,
+        0.25,
+        0.05
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "liquid"
+    },
+    "bleach": {
+      "value": [
+        0.1,
+        0.3,
+        0.08
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "liquid"
+    },
+    "sponge": {
+      "value": [
+        0.1,
+        0.03,
+        0.07
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "hollow"
+    },
+    "jacket": {
+      "value": [
+        0.4,
+        0.1,
+        0.22
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "cloth"
+    },
+    "socks": {
+      "value": [
+        0.1,
+        0.03,
+        0.08
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "cloth"
+    },
+    "underwear": {
+      "value": [
+        0.12,
+        0.03,
+        0.1
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "cloth"
+    },
+    "hat": {
+      "value": [
+        0.25,
+        0.1,
+        0.22
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "hollow"
+    },
+    "scarf": {
+      "value": [
+        0.2,
+        0.04,
+        0.2
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "cloth"
+    },
+    "blanket": {
+      "value": [
+        0.45,
+        0.1,
+        0.22
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "cloth"
+    },
+    "pillow": {
+      "value": [
+        0.45,
+        0.12,
+        0.23
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "cloth"
+    },
+    "documents": {
+      "value": [
+        0.22,
+        0.03,
+        0.3
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "paper"
+    },
+    "wallet": {
+      "value": [
+        0.11,
+        0.02,
+        0.09
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "cloth"
+    },
+    "phone_charger": {
+      "value": [
+        0.06,
+        0.02,
+        0.06
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "plastic"
+    },
+    "notebook": {
+      "value": [
+        0.15,
+        0.02,
+        0.21
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "paper"
+    },
+    "pen": {
+      "value": [
+        0.015,
+        0.015,
+        0.14
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "plastic"
+    },
+    "crumpled_paper": {
+      "value": [
+        0.1,
+        0.1,
+        0.1
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "hollow"
+    },
+    "empty_bottle": {
+      "value": [
+        0.07,
+        0.25,
+        0.07
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "hollow"
+    },
+    "food_scraps": {
+      "value": [
+        0.15,
+        0.06,
+        0.15
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "food"
+    },
+    "plastic_bag": {
+      "value": [
+        0.2,
+        0.2,
+        0.1
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "hollow"
+    },
+    "bill": {
+      "value": [
+        0.22,
+        0.005,
+        0.1
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "paper"
+    },
+    "letter": {
+      "value": [
+        0.16,
+        0.005,
+        0.1
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "paper"
+    },
+    "flyer": {
+      "value": [
+        0.21,
+        0.005,
+        0.14
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "paper"
+    },
+    "postcard": {
+      "value": [
+        0.15,
+        0.003,
+        0.1
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "paper"
+    },
+    "tongs": {
+      "value": [
+        0.4,
+        0.03,
+        0.05
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "long"
+    },
+    "skewers": {
+      "value": [
+        0.3,
+        0.02,
+        0.1
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "wood"
+    },
+    "firelighter": {
+      "value": [
+        0.08,
+        0.04,
+        0.08
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "plastic"
+    },
+    "paint_can": {
+      "value": [
+        0.18,
+        0.2,
+        0.18
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "liquid"
+    },
+    "ice_pack": {
+      "value": [
+        0.16,
+        0.03,
+        0.12
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "liquid"
+    },
+    "sandwich": {
+      "value": [
+        0.12,
+        0.05,
+        0.12
+      ],
+      "source": "household",
+      "reason": "Household size kept (the household set is the source; the density test checks it against the weight).",
+      "material": "food"
+    },
+    "branch": {
+      "value": [
+        0.6,
+        0.03,
+        0.03
+      ],
+      "source": "REF",
+      "reason": "A 60 cm branch. (600 x 30 x 30 mm).",
+      "material": "wood"
+    },
+    "stick": {
+      "value": [
+        0.4,
+        0.012,
+        0.012
+      ],
+      "source": "REF",
+      "reason": "A 40 cm arrow shaft blank, 12 mm. (400 x 12 x 12 mm).",
+      "material": "wood"
+    },
+    "feather": {
+      "value": [
+        0.15,
+        0.01,
+        0.03
+      ],
+      "source": "REF",
+      "reason": "One feather. (150 x 10 x 30 mm).",
+      "material": "hollow"
+    },
+    "bread_mold": {
+      "value": [
+        0.08,
+        0.02,
+        0.06
+      ],
+      "source": "REF",
+      "reason": "A scrap of moldy bread. (80 x 20 x 60 mm).",
+      "material": "food"
+    },
+    "glass_jar": {
+      "value": [
+        0.08,
+        0.11,
+        0.08
+      ],
+      "source": "REF",
+      "reason": "An empty 500 ml jar with lid. (80 x 110 x 80 mm).",
+      "material": "glass"
+    },
+    "broomstick": {
+      "value": [
+        0.03,
+        1.2,
+        0.03
+      ],
+      "source": "REF",
+      "reason": "A 1.2 m wooden broom handle. (30 x 1200 x 30 mm).",
+      "material": "wood"
+    },
+    "barrel": {
+      "value": [
+        0.4,
+        0.55,
+        0.4
+      ],
+      "source": "REF",
+      "reason": "An empty 60 L plastic drum. (400 x 550 x 400 mm).",
+      "material": "hollow"
+    },
+    "access_badge": {
+      "value": [
+        0.054,
+        0.086,
+        0.002
+      ],
+      "source": "REF",
+      "reason": "An ID-1 card (85.6 x 54 mm). (54 x 86 x 2 mm).",
+      "material": "plastic"
+    },
+    "insulin": {
+      "value": [
+        0.15,
+        0.04,
+        0.03
+      ],
+      "source": "REF",
+      "reason": "An insulin pen in its box. (150 x 40 x 30 mm).",
+      "material": "paper"
+    },
+    "leftover_meal": {
+      "value": [
+        0.17,
+        0.06,
+        0.12
+      ],
+      "source": "REF",
+      "reason": "A 750 ml lunch box. (170 x 60 x 120 mm).",
+      "material": "food"
+    },
+    "disinfectant": {
+      "value": [
+        0.09,
+        0.28,
+        0.06
+      ],
+      "source": "REF",
+      "reason": "A 1 L bottle. (90 x 280 x 60 mm).",
+      "material": "liquid"
+    },
+    "seasoning": {
+      "value": [
+        0.05,
+        0.1,
+        0.05
+      ],
+      "source": "REF",
+      "reason": "A 100 g spice jar. (50 x 100 x 50 mm).",
+      "material": "food"
+    },
+    "stapler": {
+      "value": [
+        0.16,
+        0.06,
+        0.04
+      ],
+      "source": "REF",
+      "reason": "A desk stapler. (160 x 60 x 40 mm).",
+      "material": "metal_tool"
+    },
+    "remote_control": {
+      "value": [
+        0.05,
+        0.2,
+        0.02
+      ],
+      "source": "REF",
+      "reason": "A TV remote. (50 x 200 x 20 mm).",
+      "material": "electronic"
+    },
+    "dvd": {
+      "value": [
+        0.135,
+        0.19,
+        0.014
+      ],
+      "source": "REF",
+      "reason": "A DVD in its case. (135 x 190 x 14 mm).",
+      "material": "paper"
+    },
+    "cable_bundle": {
+      "value": [
+        0.12,
+        0.05,
+        0.12
+      ],
+      "source": "REF",
+      "reason": "A coil of USB and HDMI cables. (120 x 50 x 120 mm).",
+      "material": "electronic"
+    },
+    "shoe_polish": {
+      "value": [
+        0.06,
+        0.03,
+        0.06
+      ],
+      "source": "REF",
+      "reason": "A tin of shoe polish. (60 x 30 x 60 mm).",
+      "material": "metal_tool"
+    },
+    "laundry_powder": {
+      "value": [
+        0.16,
+        0.22,
+        0.06
+      ],
+      "source": "REF",
+      "reason": "A 1 kg box of washing powder. (160 x 220 x 60 mm).",
+      "material": "food"
+    },
+    "broom": {
+      "value": [
+        0.3,
+        1.3,
+        0.06
+      ],
+      "source": "REF",
+      "reason": "A household broom, standing. (300 x 1300 x 60 mm).",
+      "material": "long"
+    },
+    "rubber_gloves": {
+      "value": [
+        0.14,
+        0.3,
+        0.02
+      ],
+      "source": "REF",
+      "reason": "A pair of cleaning gloves, flat. (140 x 300 x 20 mm).",
+      "material": "cloth"
+    },
+    "fabric_softener": {
+      "value": [
+        0.1,
+        0.22,
+        0.07
+      ],
+      "source": "REF",
+      "reason": "A 1 L bottle. (100 x 220 x 70 mm).",
+      "material": "liquid"
+    },
+    "clothespins": {
+      "value": [
+        0.12,
+        0.1,
+        0.04
+      ],
+      "source": "REF",
+      "reason": "A bag of 24 wooden pegs. (120 x 100 x 40 mm).",
+      "material": "wood"
+    },
+    "electrical_tape": {
+      "value": [
+        0.07,
+        0.02,
+        0.07
+      ],
+      "source": "REF",
+      "reason": "A roll of insulating tape. (70 x 20 x 70 mm).",
+      "material": "plastic"
+    },
+    "full_trash_bag": {
+      "value": [
+        0.35,
+        0.5,
+        0.25
+      ],
+      "source": "REF",
+      "reason": "A tied bag of rubbish. (350 x 500 x 250 mm).",
+      "material": "hollow"
+    },
+    "food_packaging": {
+      "value": [
+        0.2,
+        0.2,
+        0.1
+      ],
+      "source": "REF",
+      "reason": "Empty wrappers and boxes. (200 x 200 x 100 mm).",
+      "material": "hollow"
+    },
+    "wine_glass": {
+      "value": [
+        0.07,
+        0.2,
+        0.07
+      ],
+      "source": "REF",
+      "reason": "A wine glass. (70 x 200 x 70 mm).",
+      "material": "hollow"
+    },
+    "book": {
+      "value": [
+        0.15,
+        0.22,
+        0.03
+      ],
+      "source": "REF",
+      "reason": "A paperback. (150 x 220 x 30 mm).",
+      "material": "paper"
+    },
+    "eyeglasses": {
+      "value": [
+        0.14,
+        0.04,
+        0.05
+      ],
+      "source": "REF",
+      "reason": "Folded glasses. (140 x 40 x 50 mm).",
+      "material": "hollow"
+    },
+    "survivor_diary": {
+      "value": [
+        0.16154,
+        0.21,
+        0.05452
+      ],
+      "source": "model",
+      "reason": "Team model \"diario\": box 0.8 x 1.04 x 0.27 (units of the page) times 0.201923, so the y axis is 0.21 m. A 21 cm diary (game-only item; the model belongs to the game).",
+      "material": "paper",
+      "modelScaleRef": {
+        "teamId": "diario",
+        "teamBox": [
+          0.8,
+          1.04,
+          0.27
+        ],
+        "axis": "y",
+        "meters": 0.21,
+        "scale": 0.201923
+      }
+    }
   },
   "stackByCategory": {
     "food": {

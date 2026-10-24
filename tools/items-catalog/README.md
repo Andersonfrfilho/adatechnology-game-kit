@@ -9,7 +9,7 @@ Writes the reconciled data of the real-world items catalog (`packages/game-items
 | Jogo (`artefatos/2UG1….../jogo.js`) | `CONT_TAB`, `RAR_W`, `EXTRA`, `FIXOS`, `LOOT`, `ITENS` (a drift guard: all inside the team data) and the text of `useItem` (guards the use effects) |
 | Visor de casas 3D (`sources/jogo__visor-casas-3d.js`) | `CONTEUDO` (house container pools) and `COMIDA_SUP` |
 | `base/household-items.sdk.json` | the 92 items of `game-interactables-household`, frozen |
-| `decisions.json` | every reconciliation choice as `{ value, source, reason }` (merges with the household, English ids, created items, scope, categories, places, stacks, measures, recipe terms, viewer aliases) |
+| `decisions.json` | every reconciliation choice as `{ value, source, reason }` (merges with the household, English ids, created items, scope, categories, places, stacks, measures with their material, recipe terms, viewer aliases) |
 
 | Writes | |
 |---|---|
@@ -18,7 +18,7 @@ Writes the reconciled data of the real-world items catalog (`packages/game-items
 
 Every item has a definitive English id (`decisions.json.ids`, the household id for the 38 `merge`d pairs; `mergeRejected` keeps the look-alikes that stay apart). `extraItems` creates the 28 items the sources
 lack (a viewer pool entry or a recipe term needs them; `provenance.json` marks them `created`). A recipe term that is not an item is a fluid, a thing of the world (furniture, fire, soil) or a trait (`match`), never a hole:
-every recipe resolves. `dimensions` is the work of T3.1d; until it lands, sizes are placeholders derived from the weight (`provenance.json` says which).
+every recipe resolves. `dimensions` holds the measure of every item (metres, `[width, height, depth]`): the household value kept (`household`), a real measure of that kind of object (`REF`), the team's model box times one real scale (`model`, with `modelScaleRef`) or a copy of another item (`derived`); each carries a `material` that `tests/density.test.ts` checks against the weight (`hollow` is the explicit list of empty things). A missing measure fails the build.
 
 ```bash
 pnpm --filter @adatechnology/items-catalog-tool build

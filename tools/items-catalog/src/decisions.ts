@@ -47,7 +47,30 @@ export type ExtraItem = {
   readonly places?: readonly string[]
 }
 
-export type DimensionDecision = { readonly size: readonly [number, number, number]; readonly source: 'household' | 'REF' | 'model' }
+export type Vec3 = readonly [number, number, number]
+
+/** `household`: the household value kept; `REF`: a real measure of that kind of object; `model`: the team's model box times a real scale; `derived`: copied from another catalog item. */
+export type DimensionSource = 'household' | 'REF' | 'model' | 'derived'
+
+/** What the item is made of, for the density test: kg per litre of its bounding box has a range per material (`hollow` is the explicit list of empty or air-filled things). */
+export const DENSITY_MATERIALS = ['liquid', 'food', 'paper', 'cloth', 'wood', 'metal_solid', 'metal_tool', 'long', 'stone', 'glass', 'plastic', 'electronic', 'battery', 'hollow'] as const
+export type DensityMaterial = (typeof DENSITY_MATERIALS)[number]
+
+/** A modeled item is sized by the team's model box times one scale, taken from one real measure of the object (`meters` along `axis` of the box). */
+export type ModelScaleReference = {
+  readonly teamId: string
+  readonly teamBox: Vec3
+  readonly axis: 'x' | 'y' | 'z'
+  readonly meters: number
+  readonly scale: number
+}
+
+/** Measures in metres, `[width, height, depth]` in the item's own frame: a modeled item in its model's pose, any other in its resting pose (y up, long tools lying along x). */
+export type DimensionDecision = Decision<Vec3> & {
+  readonly source: DimensionSource
+  readonly material: DensityMaterial
+  readonly modelScaleRef?: ModelScaleReference
+}
 
 export type Decisions = {
   readonly categoryMap: DecisionTable<NamedId>
@@ -70,9 +93,8 @@ export type Decisions = {
   /** Final item id -> an item that exists only because the catalog needs it. */
   readonly extraItems: DecisionTable<ExtraItem>
   readonly householdRarity: Decision<Rarity>
-  /** Final item id -> measure. */
-  readonly dimensions: DecisionTable<DimensionDecision>
-  readonly densityByCategory: Decision<Readonly<Record<string, number>>>
+  /** Final item id (or the id of a game-only item that has a model) -> measure. */
+  readonly dimensions: Readonly<Record<string, DimensionDecision>>
   readonly stackByCategory: DecisionTable<number>
   /** Final item id -> stack, for what the category default gets wrong (a brick is not stacked by eight). */
   readonly stackOverrides: DecisionTable<number>

@@ -1,7 +1,7 @@
 import type { BodySlot, Durability, Rarity } from '@adatechnology/game-items'
 
 import { valueOf } from './decisions'
-import type { Decision, ExtraItem } from './decisions'
+import type { Decision, DimensionSource, ExtraItem } from './decisions'
 import type { IteItem } from './extract-ite'
 import { finalIdOf, placeIdOf, sdkIteItems } from './item-ids'
 import type { IdSource } from './item-ids'
@@ -31,7 +31,7 @@ export type ItemRecord = {
   agingFault?: { afterDays: number; chance: number }
 }
 
-export type SizeSource = 'household' | 'decisions' | 'provisional'
+export type SizeSource = DimensionSource
 
 export type ProvenanceRecord = {
   /** Set on an item that exists only because `decisions.json.extraItems` says so. */
@@ -46,21 +46,12 @@ export type ProvenanceRecord = {
 
 export type BuiltItems = { items: ItemRecord[]; provenance: Record<string, ProvenanceRecord> }
 
-const LITRES_PER_CUBIC_METRE = 1000
 const PERCENT = 100
-const roundTo = (value: number, digits: number): number => Number(value.toFixed(digits))
 
-const provisionalSize = (weight: number, category: string, sources: Sources): [number, number, number] => {
-  const density = sources.decisions.densityByCategory.value[category] ?? 1
-  const side = roundTo(Math.cbrt(Math.max(weight, 0.01) / density / LITRES_PER_CUBIC_METRE), 3)
-  return [side, side, side]
-}
-
-const sizeOf = (id: string, weight: number, category: string, household: HouseholdItem | undefined, sources: Sources): { size: [number, number, number]; sizeSource: SizeSource } => {
+const sizeOf = (id: string, sources: Sources): { size: [number, number, number]; sizeSource: SizeSource } => {
   const decided = sources.decisions.dimensions[id]
-  if (decided) return { size: [...decided.value.size], sizeSource: 'decisions' }
-  if (household) return { size: [...household.size], sizeSource: 'household' }
-  return { size: provisionalSize(weight, category, sources), sizeSource: 'provisional' }
+  if (!decided) throw new Error(`items-catalog: no measure for item "${id}" in decisions.json (dimensions)`)
+  return { size: [...decided.value], sizeSource: decided.source }
 }
 
 const nutritionOf = (item: IteItem): ItemRecord['nutrition'] => {
@@ -102,7 +93,7 @@ const buildTeamItem = (item: IteItem, sources: Sources): { record: ItemRecord; p
   const { id, idSource } = finalIdOf(item, sources)
   const household = decisions.merge[item.id] ? sources.household[decisions.merge[item.id]?.value ?? ''] : undefined
   const category = valueOf(decisions.categoryMap, item.cat, 'category').id
-  const { size, sizeSource } = sizeOf(id, item.kg, category, household, sources)
+  const { size, sizeSource } = sizeOf(id, sources)
   const tags = tagsOf(item, household, sources)
   const durability = parseDurability(item.dur)
   const record: ItemRecord = {
@@ -141,19 +132,19 @@ const buildHouseholdItem = (household: HouseholdItem, sources: Sources): { recor
     id: household.id,
     category,
     tags: [tag],
-    size: [...household.size],
+    size: sizeOf(household.id, sources).size,
     weight: household.weight,
     stack: household.stack,
     shape: household.shape,
     color: household.color,
     rarity: sources.decisions.householdRarity.value,
   }
-  return { record, provenance: { household: household.id, idSource: 'household', sizeSource: 'household' } }
+  return { record, provenance: { household: household.id, idSource: 'household', sizeSource: sizeOf(household.id, sources).sizeSource } }
 }
 
 const buildExtraItem = (id: string, { value }: Decision<ExtraItem>, sources: Sources): { record: ItemRecord; provenance: ProvenanceRecord } => {
   const { decisions } = sources
-  const { size, sizeSource } = sizeOf(id, value.weight, value.category, undefined, sources)
+  const { size, sizeSource } = sizeOf(id, sources)
   const record: ItemRecord = {
     id,
     category: value.category,
