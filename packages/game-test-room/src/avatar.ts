@@ -19,7 +19,7 @@ export interface RoomAvatarState {
   pitch: number
 }
 
-/** A body the room can show. The room puts `root` at the player's feet with the player's yaw (the body faces -z at yaw 0, like the camera). */
+/** A body the room can show. The room puts `root` at the player's feet turned to where the player looks: the body's front is +z (as the catalogue items'), so `rotation.y` is the player's yaw plus pi. */
 export interface RoomAvatar {
   root: THREE_NS.Object3D
   update(dt: number, state: RoomAvatarState): void

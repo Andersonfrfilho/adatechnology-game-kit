@@ -77,6 +77,7 @@ describe('room avatar', () => {
     expect(a.root.position.x).toBeCloseTo(2)
     expect(a.root.position.z).toBeCloseTo(3)
     expect(a.root.position.y).toBe(0)
+    expect(Math.cos(a.root.rotation.y)).toBeCloseTo(-1) // yaw 0 looks down -z, the body's front (+z) turned the other way
     r.setCameraMode('third')
     expect(a.root.visible).toBe(true)
     r.setAvatar(null)
