@@ -1052,6 +1052,36 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
+  tools/vehicles-catalog:
+    devDependencies:
+      '@adatechnology/game-vehicles':
+        specifier: workspace:*
+        version: link:../../packages/game-vehicles
+      '@adatechnology/game-vehicles-fleet':
+        specifier: workspace:*
+        version: link:../../packages/game-vehicles-fleet
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../golden
+      '@types/node':
+        specifier: ^22.10.7
+        version: 22.20.5
+      '@types/three':
+        specifier: 0.128.0
+        version: 0.128.0
+      three:
+        specifier: 0.128.0
+        version: 0.128.0
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
+
   tools/weapon-thumbnails:
     dependencies:
       '@adatechnology/game-weapons':

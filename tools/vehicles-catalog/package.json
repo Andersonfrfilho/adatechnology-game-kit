@@ -1,0 +1,28 @@
+{
+  "name": "@adatechnology/vehicles-catalog-tool",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Vehicles catalog tool: reads the Frota Leve (DIMS, the paint palettes), the Frota design cards and the Garagem plugin from the team delivery and writes the data of game-vehicles-fleet as plain JSON, plus the game slice for the zombiada repository, with a --check that fails when the generated files are stale. The compare command runs the Garagem artifact, the site v4 page and the SDK side by side.",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "catalog": "node dist/cli.js",
+    "catalog:check": "node dist/cli.js --check",
+    "catalog:game": "node dist/cli.js --game-out",
+    "compare": "node dist/compare.js"
+  },
+  "devDependencies": {
+    "@adatechnology/game-vehicles": "workspace:*",
+    "@adatechnology/game-vehicles-fleet": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "@types/three": "0.128.0",
+    "three": "0.128.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}
