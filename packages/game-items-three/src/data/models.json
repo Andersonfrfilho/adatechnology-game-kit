@@ -368,5 +368,15 @@
       1.702
     ],
     "scale": 0.1
+  },
+  {
+    "id": "orange",
+    "teamId": "laranja",
+    "teamBox": [
+      0.75,
+      0.75,
+      0.75
+    ],
+    "scale": 0.1
   }
 ]
