@@ -728,5 +728,15 @@
       0.15
     ],
     "scale": 0.1
+  },
+  {
+    "id": "activated_charcoal",
+    "teamId": "carvao_ativado",
+    "teamBox": [
+      0.6,
+      0.95,
+      0.25
+    ],
+    "scale": 0.1
   }
 ]
