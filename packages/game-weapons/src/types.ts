@@ -173,6 +173,10 @@ export type WeaponAction =
       tubes?: number
       /** Multiplies the fault chance (1 = average, below 1 more reliable). */
       faultFactor?: number
+      /** A rotary gun: seconds the barrels need to reach speed before the first round of a pull, and how long they keep spinning after the last one. */
+      spin?: { readonly upSeconds: number; readonly holdSeconds: number }
+      /** The cyclic rates a rotary gun can be set to; `rpm` is the default and a `patch` may change it inside this range. */
+      rpmRange?: readonly [number, number]
       /** Real accuracy in minutes of angle (data only). */
       moa?: number
       /** Shotgun pattern width at 25 m in centimetres (data only). */

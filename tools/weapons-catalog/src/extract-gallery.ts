@@ -45,7 +45,7 @@ export const galleryFamily = (row: GalleryWeaponRow): string => {
   if (builder === 'bullpup') return options.shot ? 'pump' : 'rifle'
   if (builder === 'p90') return 'p90'
   if (builder === 'break') return 'break'
-  if (builder === 'm2') return 'belt'
+  if (builder === 'm2' || builder === 'm134') return 'belt'
   if (builder === 'launcher') return options.lt === 'flame' || options.lt === 'flameDIY' ? 'flame' : 'rocket'
   if (options.mag === 'belt') return 'belt'
   if (options.pump) return 'pump'

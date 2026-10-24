@@ -39,7 +39,7 @@ describe('weapons as they ship', () => {
       const state = arsenal.create(def.id, { seed: 3 })
       expect(state.capacity, def.id).toBe(def.action.magazine)
       expect(state.attachments, def.id).toEqual(def.fitted ?? [])
-      expect(state.suppressed, def.id).toBe(false)
+      expect(state.suppressed, def.id).toBe(def.fitted?.some((part) => part.id === 'integral_suppressor') ?? false)
       expect(state.stock, def.id).toBe('extended')
       expect(state.spread, def.id).toBe(def.action.spreadDeg)
     }

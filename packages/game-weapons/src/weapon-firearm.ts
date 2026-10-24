@@ -6,9 +6,24 @@ import type { CaliberDef, FaultId, FirearmAction, Shot, TriggerResult, Vec3, Wea
 import { WeaponAttachments } from './weapon-attachments'
 import { BLOOM_CAP, EPS, result } from './weapon-shared'
 
+// frames of one pull follow each other closely; a longer gap means the trigger was let go and the barrels start from rest again
+const SPIN_PULL_GAP = 0.1
+
 /** Pulling the trigger of a firearm: rounds, faults, heat, bloom and noise. */
 export abstract class WeaponFirearm extends WeaponAttachments {
   /** Semi-style gating: a held trigger that already fired does nothing until `release()` or a new pull (`held` false). */
+  private spinSince: number | undefined
+  private spinFrameEnd = Number.NEGATIVE_INFINITY
+  private lastRoundAt = Number.NEGATIVE_INFINITY
+
+  /** When the barrels of a rotary gun are at speed: `upSeconds` after the pull began, and at once while they still spin from the last round. */
+  private spunUpAt(spin: FirearmAction['spin'], start: number, end: number): number {
+    if (!spin || start - this.lastRoundAt <= spin.holdSeconds + EPS) return 0
+    if (this.spinSince === undefined || start - this.spinFrameEnd > SPIN_PULL_GAP) this.spinSince = start
+    this.spinFrameEnd = end
+    return this.spinSince + spin.upSeconds
+  }
+
   protected oncePerPull(held: boolean): boolean {
     if (!held) this.latched = false
     if (this.latched) return false
@@ -27,7 +42,7 @@ export abstract class WeaponFirearm extends WeaponAttachments {
       return result('empty')
     }
 
-    const t0 = Math.max(start, this.readyAt)
+    const t0 = Math.max(start, this.readyAt, this.spunUpAt(a.spin, start, end))
     if (t0 > end + EPS) return result('cooldown')
 
     const res = result('ok')
@@ -51,7 +66,11 @@ export abstract class WeaponFirearm extends WeaponAttachments {
     }
     if (res.shots.length === 0) res.status = res.fault ? 'fault' : 'misfire'
     else this.emit({ type: 'shot', shots: res.shots.length, rounds: res.rounds, mode: this.mode, at: t0, ...(res.suppressed ? { suppressed: true } : {}) })
-    if (res.rounds > 0) this.afterRounds(a, lastAt)
+    if (res.rounds > 0) {
+      this.lastRoundAt = lastAt
+      this.spinSince = undefined
+      this.afterRounds(a, lastAt)
+    }
     return res
   }
 

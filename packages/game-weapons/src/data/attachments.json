@@ -1021,5 +1021,74 @@
         "mul": 0.7
       }
     ]
+  },
+  {
+    "id": "integral_suppressor",
+    "name": "Integral suppressor",
+    "kind": "suppressor",
+    "mounts": [
+      "muzzle"
+    ],
+    "interfaces": [
+      "integral"
+    ],
+    "mass": 0.45,
+    "install": "bench",
+    "model": "integral_suppressor",
+    "sources": [
+      "reference",
+      "derived"
+    ],
+    "dims": {
+      "length": 0.2,
+      "diameter": 0.045
+    },
+    "removable": false,
+    "effects": [
+      {
+        "stat": "noise",
+        "mul": 0.4
+      },
+      {
+        "stat": "noise",
+        "mul": 0.625,
+        "when": "subsonic"
+      },
+      {
+        "stat": "muzzleSpeed",
+        "mul": 0.97468
+      },
+      {
+        "stat": "heatPerShot",
+        "mul": 1.5
+      }
+    ]
+  },
+  {
+    "id": "integral_optic_3x",
+    "name": "Integral 3x optic of the G36",
+    "kind": "optic",
+    "mounts": [
+      "rail_top"
+    ],
+    "interfaces": [
+      "integral"
+    ],
+    "mass": 0.3,
+    "install": "bench",
+    "model": "integral_optic_3x",
+    "sources": [
+      "reference",
+      "derived"
+    ],
+    "optic": {
+      "zoom": [
+        3,
+        3
+      ],
+      "reticle": "duplex"
+    },
+    "removable": false,
+    "effects": []
   }
 ]

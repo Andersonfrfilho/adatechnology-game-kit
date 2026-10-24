@@ -19,7 +19,7 @@ const SCOPES: Readonly<Record<number, string>> = { 1: 'red_dot', 2: 'acog_4x', 3
 const BRAKES: Readonly<Record<number, string>> = { 1: 'muzzle_brake', 2: 'muzzle_brake_heavy' }
 const SLUNG_CATEGORIES: ReadonlySet<string> = new Set(['smg', 'rifle', 'carbine', 'sniper', 'dmr', 'hunting', 'machine_gun', 'shotgun'])
 const SOURCE_OF: Readonly<Record<string, DataSourceId>> = { arsenal: 'arsenal', reference: 'reference', derived: 'derived', design: 'sdk', gallery: 'gallery' }
-const MAGAZINE_FAMILIES: ReadonlySet<string> = new Set(['box', 'curved', 'drum'])
+const MAGAZINE_FAMILIES: ReadonlySet<string> = new Set(['box', 'curved', 'drum', 'helical'])
 
 const sourceOf = (decision: Decision<unknown>): DataSourceId => SOURCE_OF[decision.source] ?? 'derived'
 
@@ -60,16 +60,16 @@ const addRails = (mounts: MountSet, model: ModelRecord, hasIntegralOptic: boolea
   if (model.builder === 'pistol' && options.rail) mounts.add('rail_bottom', ['picatinny'], 'gallery')
 }
 
-const addFeeds = (mounts: MountSet, model: ModelRecord, category: string): void => {
+const addFeeds = (mounts: MountSet, model: ModelRecord, category: string, decisions: Decisions): void => {
   const options = model.options
   const mag = typeof options.mag === 'string' ? options.mag : undefined
   if (mag !== undefined && MAGAZINE_FAMILIES.has(mag)) mounts.add('magazine', [`mag_${mag}`], 'gallery')
   if (model.builder === 'pistol') mounts.add('magazine', ['mag_pistol'], 'derived')
   if (model.builder === 'bullpup' && !options.shot) mounts.add('magazine', ['mag_box'], 'derived')
-  if (mag === 'belt' || model.builder === 'm2') mounts.add('feed', ['belt'], 'derived')
+  if (mag === 'belt' || model.builder === 'm2' || model.builder === 'm134') mounts.add('feed', ['belt'], 'derived')
   if (SLUNG_CATEGORIES.has(category)) mounts.add('sling', ['swivel'], 'derived')
   if (category === 'shotgun') mounts.add('barrel', ['barrel_swap'], 'derived')
-  if (options.bayo) mounts.add('underbarrel', ['gp25'], 'gallery')
+  if (options.bayo && options[decisions.gp25Mount.value.requiresOption]) mounts.add('underbarrel', ['gp25'], 'gallery')
 }
 
 /** What a weapon can carry and what it already carries, from the options of its Gallery model and the decisions (threads, notes, stocks, integral parts). */
@@ -94,7 +94,7 @@ export const buildMounts = (record: WeaponRecord, model: ModelRecord, decisions:
     mounts.add('rail_bottom', ['bipod_stud'], 'gallery')
     fitted.push({ id: 'bipod', mount: 'rail_bottom' })
   }
-  addFeeds(mounts, model, String(record.category))
+  addFeeds(mounts, model, String(record.category), decisions)
   for (const part of integral?.value ?? []) {
     mounts.add(part.mount, part.interfaces, sourceOf(integral as Decision<unknown>))
     fitted.push({ id: part.id, mount: part.mount, integral: true })

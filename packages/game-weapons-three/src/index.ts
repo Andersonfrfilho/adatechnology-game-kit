@@ -3,7 +3,7 @@
  * fire and reload motion, ejected casings and dropped magazines, synthesized sounds, and the weapons test area as a `TestableModule`
  * (any host of @adatechnology/game-contracts, like the test room, loads it with `loadModule`).
  */
-export { createWeaponsTestModule, weaponsLayout, WEAPON_ITEM_PREFIX, COUNTER_ITEM_ID } from './area'
+export { createWeaponsTestModule, weaponsLayout, WEAPON_ITEM_PREFIX, COUNTER_ITEM_ID, MOUNTED_M134_ITEM_ID } from './area'
 export type { WeaponsTestModuleOptions } from './area'
 export { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
 export { createWeaponFx } from './fx'

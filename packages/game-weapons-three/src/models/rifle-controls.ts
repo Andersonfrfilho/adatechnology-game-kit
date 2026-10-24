@@ -1,4 +1,5 @@
 import type * as THREE from 'three'
+import { buildHelicalMagazine } from './helical-magazine'
 import type { RifleContext } from './rifle-context'
 
 /** Grip, trigger group and selector. Returns the x of the grip, which the magazine and the lever hang from. */
@@ -24,6 +25,7 @@ export function buildGrip(context: RifleContext): number {
 export function buildMagazine(context: RifleContext, gx: number): number {
   const { kit, group, parts, options: o, receiverStart: x0, receiverHeight: hR, receiverWidth: wR, receiverLength: RL } = context
   const { M, box, cylinderX, cylinderZ } = kit
+  if (o.mag === 'helical') return buildHelicalMagazine(context)
   const mx = o.magAt != null ? x0 + o.magAt : gx + 0.075
   const scale = o.magLen || 1
   const magazine = kit.pivot(group, mx, -hR / 2, 0)

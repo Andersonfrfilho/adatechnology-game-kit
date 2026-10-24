@@ -18,6 +18,13 @@ export type FirearmSpec = {
   readonly skipSheetSpeed?: boolean
   /** Rounds in the magazine of this variant (the gallery row describes the base weapon). */
   readonly magazineCount?: number
+  /** A weapon with no Arsenal row: the weapon whose reload times it takes, and the numbers the row cannot carry. */
+  readonly reloadFrom?: string
+  readonly muzzleSpeed?: number
+  readonly noise?: number
+  readonly modes?: { readonly modes: readonly string[]; readonly burst?: number }
+  readonly extras?: Readonly<Record<string, unknown>>
+  readonly sources?: readonly string[]
 }
 
 const MM_PER_METRE = 1000
@@ -28,7 +35,9 @@ const copyFrom = (source: Readonly<Record<string, unknown>>, keys: readonly stri
 type TimingsResult = { readonly timings: Readonly<Record<string, number>>; readonly isPerRound: boolean; readonly isDerived: boolean }
 
 const timingsOf = (spec: FirearmSpec, family: string, context: WeaponContext): TimingsResult => {
-  const { reload, isDerived } = reloadOf(spec.timingKey ?? spec.row[0], context)
+  const resolved = reloadOf(spec.reloadFrom ?? spec.timingKey ?? spec.row[0], context)
+  const { reload } = resolved
+  const isDerived = resolved.isDerived || spec.reloadFrom !== undefined
   const { decisions } = context
   const isRevolver = family === 'revolver'
   const isPerRound = !isRevolver && reload.perRound !== undefined
@@ -52,11 +61,11 @@ export const buildFirearm = (spec: FirearmSpec, context: WeaponContext): WeaponR
   const archetypeId = archetypeOf(category, caliberId, family, decisions)
   const archetype = context.archetypes.get(archetypeId) as ArchetypeRecord
   const magazine = { ...magazineOf(row, catalog?.capacity, decisions), ...(spec.magazineCount === undefined ? {} : { magazine: spec.magazineCount }) }
-  const { modes, burst } = modesOf(row, family, decisions)
+  const { modes, burst } = spec.modes ?? modesOf(row, family, decisions)
   const { timings, isPerRound, isDerived } = timingsOf(spec, family, context)
   const emptyMass = row[6]
   const mass = catalog?.loadedMass ?? emptyMass
-  const speed = spec.skipSheetSpeed ? undefined : sheet?.muzzleSpeed
+  const speed = spec.muzzleSpeed ?? (spec.skipSheetSpeed ? undefined : sheet?.muzzleSpeed)
   const recoil = recoilOf({ archetype, caliberId, speed, mass }, context)
   const accepts = decisions.acceptsCalibers[row[0]]?.value
   const faultFactor = row[8].rel
@@ -73,6 +82,8 @@ export const buildFirearm = (spec: FirearmSpec, context: WeaponContext): WeaponR
     reload: timings.reload,
     ...(isPerRound ? { perRound: true } : {}),
     ...(speed === undefined ? {} : { muzzleSpeed: speed }),
+    ...(spec.noise === undefined ? {} : { noise: spec.noise }),
+    ...(spec.extras ?? {}),
     ...copyFrom(archetype.action, ['spreadDeg', 'bloomDeg', 'recoveryDegPerS', 'pelletSpreadDeg']),
     recoil,
     range: archetype.action.range,
@@ -95,7 +106,7 @@ export const buildFirearm = (spec: FirearmSpec, context: WeaponContext): WeaponR
     dimensions,
     archetype: archetypeId,
     ...(spec.variantOf === undefined ? {} : { variantOf: spec.variantOf }),
-    sources: ['gallery', ...(catalog || sheet ? ['arsenal'] : []), 'sdk', ...(isDerived ? ['derived'] : [])],
+    sources: spec.sources ?? ['gallery', ...(catalog || sheet ? ['arsenal'] : []), 'sdk', ...(isDerived ? ['derived'] : [])],
   }
 }
 

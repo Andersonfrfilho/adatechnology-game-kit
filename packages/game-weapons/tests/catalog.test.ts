@@ -13,7 +13,7 @@ describe('shipped catalog', () => {
   })
 
   it('has the calibres, explosives and weapons of the team deliveries', () => {
-    expect(CALIBERS).toHaveLength(28)
+    expect(CALIBERS).toHaveLength(30)
     expect(EXPLOSIVES).toHaveLength(18)
     expect(WEAPONS.filter((def) => def.sources?.includes('gallery'))).toHaveLength(79)
     expect(ARCHETYPE_IDS).toHaveLength(42)
@@ -36,8 +36,10 @@ describe('shipped catalog', () => {
     for (const id of DEFAULT_LOADOUT) expect(arsenal.weapons.has(id), id).toBe(true)
   })
 
-  it('takes firearm noise from the calibre, not from the weapon', () => {
-    for (const def of firearms) expect(def.action.noise, def.id).toBeUndefined()
+  it('takes firearm noise from the calibre, not from the weapon (the integral suppressor of the MP5SD3 is the one weapon that carries its own)', () => {
+    const isSilenced = (def: (typeof firearms)[number]): boolean => def.fitted?.some((part) => part.id === 'integral_suppressor') ?? false
+    for (const def of firearms.filter((entry) => !isSilenced(entry))) expect(def.action.noise, def.id).toBeUndefined()
+    for (const def of firearms.filter(isSilenced)) expect(def.action.noise, def.id).toBeLessThan(arsenal.calibers.get(def.action.caliber)?.noise ?? 0)
     for (const caliber of CALIBERS) expect(caliber.noise, caliber.id).toBeGreaterThan(0)
   })
 

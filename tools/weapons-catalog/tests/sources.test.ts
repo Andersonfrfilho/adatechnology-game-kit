@@ -161,7 +161,7 @@ describe('Gallery AMMO', () => {
   })
 
   it('gives every calibre the shell, rim and noise decided', () => {
-    expect(calibers.size).toBe(28)
+    expect(calibers.size).toBe(30)
     for (const [id, decision] of Object.entries(decisions.calibers)) {
       expect(calibers.get(id)?.noise, id).toBe(decision.noise.value)
     }

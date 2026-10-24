@@ -7,7 +7,7 @@ import type { WeaponAudio } from './audio'
 import { createWeaponFx } from './fx'
 import type { WeaponFx } from './fx'
 import { ARCHETYPE_MODELS, hasWeaponModel } from './models'
-import { BODY_ACTIONS, buildModeledProp, buildProp, modeledPropSpec, weaponProp } from './props'
+import { BODY_ACTIONS, buildModeledProp, buildProp, buildTripodMountedProp, modeledPropSpec, weaponProp } from './props'
 import type { WeaponProp } from './props'
 import { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
 
@@ -37,14 +37,17 @@ const SOUND_DISTANCE_MAX = 200
 const FUSE_LENGTH_MAX = 1
 const DEFAULT_FUSE_LENGTH = 0.03
 const COUNTER = { length: 4.8, depth: 1.6, height: 0.9 }
-// three columns on the free left side of the room, in two rows: counters fill in this order
-const COUNTER_X = [-6.5, -9, -11.5]
+// four columns on the free left side of the room, in two rows: counters fill in this order
+const COUNTER_X = [-6.5, -9, -11.5, -14]
 const COUNTER_Z = [-1, 5.5]
+// the M134 mounted on its tripod stands apart from the counters, in front of the targets and pointing at them
+export const MOUNTED_M134_ITEM_ID = 'm134_tripod'
+const MOUNTED_M134 = { weaponId: 'm134', at: [-3.5, 0, 2] as Vec3, rotationY: Math.PI / 2 }
 // props closer than this to a counter end have nothing next to them on one side
 const END_MARGIN = 0.5
 // the strip of counter a weapon lying across it takes: most are slim, a few are wide (a tripod, two fuel tanks, a bow limb)
 const DEFAULT_PITCH = 0.16
-const PITCH_BY_ID: Readonly<Record<string, number>> = { browning_m2: 0.5, m2_flamethrower: 0.45, bow: 0.3, crossbow: 0.3 }
+const PITCH_BY_ID: Readonly<Record<string, number>> = { browning_m2: 0.5, m134: 0.45, m2_flamethrower: 0.45, bow: 0.3, crossbow: 0.3 }
 // the explosives of the world stand together in the far corner (the player is at the other end, 17 m away): a bullet, fire or blast starts the chain reaction
 const WORLD_EXPLOSIVES: Array<{ id: string; at: Vec3 }> = [
   { id: 'fuel_barrel', at: [10, 0, -8] },
@@ -67,6 +70,7 @@ interface Text {
   reloadStart: string
   reloadEnd: string
   worldExplosives: Record<string, string>
+  mountedM134: string
   condition: string
   conditionHint: string
   conditions: Record<string, string>
@@ -90,6 +94,7 @@ const TEXT: Record<string, Text> = {
     reloadStart: 'Reload started: {weapon} ({ammo}/{capacity})',
     reloadEnd: 'Reload done: {weapon} ({ammo}/{capacity})',
     worldExplosives: { fuel_barrel: 'Fuel barrel', propane_p13: 'Propane cylinder (P13)', car_fuel_tank: 'Car fuel tank' },
+    mountedM134: 'M134 Minigun on its tripod',
     condition: 'Weapon condition',
     conditionHint: 'Wear of the weapon: it jams more and the metal shows it',
     conditions: { new: 'New', used: 'Used', worn: 'Worn', rusty: 'Rusty' },
@@ -111,6 +116,7 @@ const TEXT: Record<string, Text> = {
     reloadStart: 'Recarga iniciada: {weapon} ({ammo}/{capacity})',
     reloadEnd: 'Recarga completa: {weapon} ({ammo}/{capacity})',
     worldExplosives: { fuel_barrel: 'Barril de combustível', propane_p13: 'Botijão de gás (P13)', car_fuel_tank: 'Tanque de combustível do carro' },
+    mountedM134: 'M134 Minigun no tripé',
     condition: 'Estado da arma',
     conditionHint: 'Desgaste da arma: trava mais e o metal mostra',
     conditions: { new: 'Nova', used: 'Usada', worn: 'Gasta', rusty: 'Enferrujada' },
@@ -181,6 +187,16 @@ const weaponItem = (def: WeaponDef, name: string): TestableItem => {
   }
 }
 
+/** The M134 standing on a tripod: the support the `tripod` accessory gives, as a prop of its own (aim at it and press H to take the gun). */
+const mountedM134Item = (def: WeaponDef, name: string): TestableItem => ({
+  id: MOUNTED_M134_ITEM_ID,
+  name,
+  build: (THREE: unknown) => buildTripodMountedProp(THREE as typeof THREE_NS, def, name) as THREE_NS.Group,
+  spec: (root: unknown) => modeledPropSpec(root, def, name),
+  weapon: def.id,
+  movable: false,
+})
+
 const asItem = (id: string, name: string, prop: WeaponProp, extra: Partial<TestableItem> = {}): TestableItem => ({
   id,
   name,
@@ -234,6 +250,8 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
     return item ? [item] : []
   })
   const worldExplosiveIds = new Set(worldExplosives.map((item) => item.id))
+  const mountedM134Def = arsenal.weapons.get(MOUNTED_M134.weaponId)
+  const mountedM134 = mountedM134Def && hasWeaponModel(mountedM134Def.id) ? [mountedM134Item(mountedM134Def, text.mountedM134)] : []
   let fx: WeaponFx | null = null
   let host: ModuleHost | null = null
   let soundDistance = 0
@@ -251,9 +269,13 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       asItem(COUNTER_ITEM_ID, text.counter, counterProp(text.counter), { movable: false }),
       ...TARGETS.map((target) => asItem(target.id, text.targets[target.id] ?? target.id, targetProp(target.id, text.targets[target.id] ?? target.id), { movable: false })),
       ...worldExplosives,
+      ...mountedM134,
     ],
     area: (): ModuleArea => ({
-      placements: weaponsLayout(weaponIds, pitchOf).filter((placement) => !placement.item.startsWith(WORLD_EXPLOSIVE_PREFIX) || worldExplosiveIds.has(placement.item)),
+      placements: [
+        ...weaponsLayout(weaponIds, pitchOf).filter((placement) => !placement.item.startsWith(WORLD_EXPLOSIVE_PREFIX) || worldExplosiveIds.has(placement.item)),
+        ...mountedM134.map((item) => ({ item: item.id, position: MOUNTED_M134.at, rotationY: MOUNTED_M134.rotationY, asleep: true })),
+      ],
       view: { eye: [-3.4, 1.9, 9.2], target: [-9, 0.9, 1.6] },
     }),
     controls: (): ModuleControl[] => [

@@ -21,12 +21,15 @@ const recoil = (context: ClipContext): Tween[] => {
   ]
 }
 
+/** A rotary gun turns its barrels a sixth of a turn with each shot; six barrels look the same every sixth, so the next shot starts over from rest. */
+const spinBarrels = (context: ClipContext): Tween[] => (context.parts.barrels && context.family === 'belt' ? [turn('barrels', 'x', 0, 0.03, 0, Math.PI / 3)] : [])
+
 const hammerFall = (context: ClipContext): Tween[] => (context.parts.hammer && context.family !== 'revolver' ? [turn('hammer', 'z', 0, 0.02, 0, -0.5), turn('hammer', 'z', 0.05, 0.06, -0.5, 0)] : [])
 
 /** What every shot does, then what the mechanism does by family. `locked` leaves the pistol slide back, as after the last round. */
 function shotClip(id: string, context: ClipContext, locked: boolean): AnimationClipSpec {
   const { parts, family } = context
-  const tweens = [...pullTrigger(context), ...recoil(context), ...hammerFall(context)]
+  const tweens = [...pullTrigger(context), ...recoil(context), ...hammerFall(context), ...spinBarrels(context)]
   const events = [cue(0, 'muzzle_flash')]
   if (BLOWBACK.has(family)) {
     const part = blowbackPart(context)

@@ -1,5 +1,5 @@
 import type { AttachmentDef, AttachmentId } from './attachment-types'
-import type { CaliberDef, CaliberId, ExplosiveDef, ExplosiveId, WeaponDef, WeaponId, WeaponRules } from './types'
+import type { CaliberDef, CaliberId, ExplosiveDef, ExplosiveId, FirearmAction, WeaponDef, WeaponId, WeaponRules } from './types'
 
 export interface ArsenalParts {
   readonly weapons: ReadonlyMap<WeaponId, WeaponDef>
@@ -21,6 +21,15 @@ export const findDuplicateIds = (kind: string, entries: readonly { readonly id: 
   return problems
 }
 
+const checkRotary = (id: string, action: FirearmAction): string[] => {
+  const problems: string[] = []
+  const { rpm, rpmRange, spin } = action
+  if (rpmRange && !(rpmRange[0] > 0 && rpmRange[0] <= rpmRange[1])) problems.push(`weapon "${id}" has an empty rate range ${rpmRange[0]}-${rpmRange[1]} rpm`)
+  if (rpmRange && (rpm < rpmRange[0] || rpm > rpmRange[1])) problems.push(`weapon "${id}" fires at ${rpm} rpm, outside its range ${rpmRange[0]}-${rpmRange[1]}`)
+  if (spin && !(spin.upSeconds >= 0 && spin.holdSeconds >= 0)) problems.push(`weapon "${id}" has a negative spin time`)
+  return problems
+}
+
 const checkFirearm = (def: WeaponDef, calibers: ArsenalParts['calibers']): string[] => {
   if (def.action.kind !== 'firearm') return []
   const problems: string[] = []
@@ -30,6 +39,7 @@ const checkFirearm = (def: WeaponDef, calibers: ArsenalParts['calibers']): strin
   if (def.action.modes.length === 0) problems.push(`weapon "${def.id}" has no fire modes`)
   if (!(def.action.rpm > 0)) problems.push(`weapon "${def.id}" has a rate of fire of ${def.action.rpm} rpm`)
   if (!(def.action.reload > 0)) problems.push(`weapon "${def.id}" has a reload time of ${def.action.reload} s`)
+  problems.push(...checkRotary(def.id, def.action))
   return problems
 }
 

@@ -136,7 +136,42 @@ export type UnderbarrelLauncherDecision = {
   readonly reloadFrom: string
 }
 
+export type NumberNote = { readonly source: DataSource | 'owner'; readonly reason: string }
+
+/** A weapon the team pages do not have: a Gallery-style row (measures in mm and kg) built from public data, with where each number comes from. */
+export type NewWeaponDecision = {
+  readonly id: string
+  readonly name: string
+  /** Gallery weapon whose category, builder and model options this one starts from; `options` are laid over them. */
+  readonly of?: string
+  /** Gallery category code (`smg`, `fuz`, `mtr`, `pis`...); defaults to the one of `of`. */
+  readonly category?: string
+  readonly builder?: string
+  readonly caliber: string
+  /** The calibre as the model entry names it (`9×19`). */
+  readonly caliberText: string
+  /** Gallery capacity text: `30/15` is a 30 round magazine with a 15 round option, `12+1` is magazine plus chamber. */
+  readonly capacity: string
+  readonly length: number
+  readonly barrel: number
+  readonly emptyMass: number
+  readonly options?: Readonly<Record<string, string | number | boolean>>
+  /** Weapon whose Arsenal reload times this one takes. */
+  readonly reloadFrom: string
+  readonly muzzleSpeed?: number
+  readonly noise?: number
+  readonly modes?: ModeChoice
+  readonly spin?: { readonly upSeconds: number; readonly holdSeconds: number }
+  readonly rpmRange?: readonly [number, number]
+  /** Where each number of the row comes from (`length`, `barrel`, `emptyMass`, `rpm`, `capacity`, `reload`, and `muzzleSpeed`/`noise`/`spin` when set). */
+  readonly numbers: Readonly<Record<string, NumberNote>>
+}
+
 export type Decisions = {
+  /** Weapons made from public data (or ported from a one-line mention in a team page), by the name of their row. */
+  readonly creations: Readonly<Record<string, Decision<NewWeaponDecision>>>
+  /** The GP-25 goes on AK weapons only: the model option that marks one. */
+  readonly gp25Mount: Decision<{ readonly requiresOption: string }>
   /** Grenade launchers that go under a barrel, by id. */
   readonly underbarrelLaunchers: Readonly<Record<string, Decision<UnderbarrelLauncherDecision>>>
   /** Thread of the muzzle by weapon id: what a suppressor or a brake screws on. */

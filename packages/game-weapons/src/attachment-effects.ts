@@ -54,6 +54,8 @@ interface StatSources {
   readonly now: Effects
   /** The effects of what the weapon ships with: they are in the base numbers already. */
   readonly shipped: Effects
+  /** What already held when the base numbers were made: only `subsonic`, for a weapon that is subsonic with its factory parts on (the MP5SD). */
+  readonly shippedActive?: ReadonlySet<Condition>
 }
 
 /**
@@ -63,7 +65,7 @@ interface StatSources {
  */
 const stat = (name: WeaponStat, base: number, sources: StatSources, active: ReadonlySet<Condition>): number => {
   const current = modifiersOf(name, sources.now, active)
-  const shipped = modifiersOf(name, sources.shipped, new Set<Condition>())
+  const shipped = modifiersOf(name, sources.shipped, sources.shippedActive ?? new Set<Condition>())
   const lastSet = [...current].reverse().find((modifier) => modifier.set !== undefined)?.set
   if (lastSet !== undefined) return (lastSet + sum(current)) * product(current)
   return (base + (sum(current) - sum(shipped))) * (product(current) / product(shipped))
@@ -118,7 +120,12 @@ export const resolveLoadout = (def: WeaponDef, fitted: readonly FittedAttachment
   const factory = activeParts(def.fitted ?? [], catalogue)
   const isRegular = (part: AttachmentDef): boolean => part.secondReload !== true
   const collapsedStock = context.stock === 'collapsed' ? [context.rules.stock.collapsed] : []
-  const sources: StatSources = { now: [...parts.filter(isRegular).map((part) => part.effects), ...collapsedStock], shipped: factory.filter(isRegular).map((part) => part.effects) }
+  const shipsSubsonic = def.action.kind === 'firearm' && baseSpeedOf(def.action, context.caliber) < context.rules.attachments.speedOfSound
+  const sources: StatSources = {
+    now: [...parts.filter(isRegular).map((part) => part.effects), ...collapsedStock],
+    shipped: factory.filter(isRegular).map((part) => part.effects),
+    ...(shipsSubsonic ? { shippedActive: new Set<Condition>(['subsonic']) } : {}),
+  }
   const baseActive = new Set<Condition>([context.aiming ? 'aiming' : 'hip'])
   if (context.supported || parts.some((part) => part.kind === 'mount')) baseActive.add('supported')
   if (context.stock === 'collapsed') baseActive.add('collapsed')

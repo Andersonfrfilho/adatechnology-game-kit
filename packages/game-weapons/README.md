@@ -150,11 +150,18 @@ then the product of the `mul`s. A factory part is already in the numbers, so tak
 A home-made suppressor breaks at a shot drawn in `durability.shots` from a stream of its own (`seed ^ 0x3c6ef372`), so spreads and faults do not move (event `attachment`, `action: 'break'`).
 `ArsenalOptions` gains `attachments`, `patch.attachments`, `remove.attachments` and `isCompatible(def, attachment, fitted)` (a game vetoes an accessory); `canFit(def, attachment, fitted, context, mount?)` is exported.
 
-**A launcher under the barrel.** `m203` (M16, M4), `gp_25` (AK-47, AKM, AK-74, AK-12, and the SKS bayonet lug) and `ag36` (HK416) are accessories whose `launcher` names a weapon of the
+**A launcher under the barrel.** `m203` (M16, M4), `gp_25` (AK-47, AKM, AK-74 and AK-12 only: the SKS has a bayonet lug but not the GP-25 mount) and `ag36` (HK416) are accessories whose `launcher` names a weapon of the
 catalogue (`category: 'launcher'`, `tags: ['underbarrel']`, family `underbarrel`: breech open, grenade in, breech close). Fitting one gives the weapon a second state, `weapon.underbarrel`, with its own
 ammunition (the M79 launcher rule: one grenade, `launcherUses`, explosive `m79_40mm`, or `vog_25` for the GP-25, which has the same radii). `useUnderbarrel(true)` takes `rules.attachments.switchSeconds` (0.8 s,
 phase `switch`, event `underbarrel`); while it is on, `trigger` and `reload` go to the launcher and `drain()` carries its events too. The launcher covers the lower rail (`blocks: ['rail_bottom']`).
 `snapshot()` carries the launcher's snapshot. A shipped launcher accessory leaves the arsenal when its launcher weapon is removed or filtered out.
+
+**Weapons beyond the team pages.** 21 more firearms come from `decisions.creations` of the catalogue tool, each number with its `source` and `reason` (a reference always with a URL): `hk_mp5sd3`, `fn_parafal`,
+`taurus_t4_civil`, `taurus_th380`, `mossberg_500_cruiser`, `hk_mp5k`, `hk_ump9`, `mini_uzi`, `hk_mp7a1`, `hk_g36` (`k`, `c`), `fn_m249`, `fn_minimi_para`, `fn_mag`, `rpk`, `sig_mpx`, `mg3`, `pp19_bizon`, `vz61`
+and `m134`, and the calibres `4_6x30` and `32acp`. The MP5SD3 ships with an integral suppressor (its noise and speed are the suppressed ones; the subsonic factor is already in its base numbers) and the G36 and
+G36K with an integral 3x optic; neither comes off. The M134 is a rotary gun with three modes: hand-held with a 200 round belt box, with the ammunition backpack (500, see above) or on the `tripod` mount
+(supported). `action.rpmRange` (`[2000, 6000]`) bounds the rate a game may set with `patch.weapons.m134.action.rpm` (3000 by default) and `action.spin` (`{ upSeconds: 0.5, holdSeconds: 1 }`, derived) delays the
+first round of a pull until the barrels are at speed and keeps them spinning for a second after the last round (hold the trigger with `held`).
 
 The hip: `rules.aim.hipSpread` times the spread when not aiming. The SDK default is **1** (neutral); the Arsenal says ×6 (§08) and ZombiAdA turns it on with `rules: { aim: { hipSpread: 6 } }`. A laser takes
 half of the excess (`hipSpreadExcess` ×0.5). The ammunition backpack (`feed` mount, `belt`) sets the capacity to 500 rounds by default (`patch.attachments.ammo_backpack`); a tripod counts as support.

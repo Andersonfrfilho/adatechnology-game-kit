@@ -34,11 +34,11 @@ describe('launchers that go under a barrel', () => {
     expect(arsenal.explosives.get('vog_25')?.sources).toEqual(['lab', 'derived'])
   })
 
-  it('fit only where the real mount exists: the M203 on the M16 and the M4, the GP-25 on the AKs (and the SKS bayonet lug), the AG36 on the HK416', () => {
+  it('fit only where the real mount exists: the M203 on the M16 and the M4, the GP-25 on the AKs only (the SKS has the bayonet lug but not the GP-25 mount), the AG36 on the HK416', () => {
     const fits = (launcher: string): string[] =>
       [...arsenal.weapons.values()].filter((def) => def.action.kind === 'firearm' && arsenal.canFit(def.id, launcher).ok).map((def) => def.id).sort()
     expect(fits('m203')).toEqual(['colt_m16a2', 'colt_m4a1'])
-    expect(fits('gp_25')).toEqual(['ak_12', 'ak_47', 'ak_74', 'akm', 'sks'])
+    expect(fits('gp_25')).toEqual(['ak_12', 'ak_47', 'ak_74', 'akm'])
     expect(fits('ag36')).toEqual(['hk416'])
     expect(arsenal.canFit('ak_47', 'm203')).toEqual({ ok: false, reason: 'interface' })
     expect(arsenal.canFit('glock_17', 'm203')).toEqual({ ok: false, reason: 'no_mount' })

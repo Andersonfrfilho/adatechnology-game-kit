@@ -110,6 +110,12 @@ Teclas: H equipa a arma mirada, clique atira ou arremessa, R recarrega, Q muda o
 - Eventos de clipe (`muzzle_flash`, `eject_casing`, `drop_magazine`, `move_in`, `stuck_case`, `fly_jam`, `drop_tube`...) são tratados em `src/fx/viewmodel-events.ts`; o tocador é o `createToolClipPlayer` do `game-contracts`.
 - `tests/gallery-models.test.ts` compara cada arma e cada cartucho, nó a nó, com o que a página produz (`tools/golden/captures/arsenal-models.js`, three r128): as 77 da Galeria batem, só o projétil do .50 BMG (13,0 na página, 12,7 no SDK) difere.
 
+## Armas da T1.7.5 (criações do kit, sem página de time)
+- 21 entradas novas em `models.json` (geradas): variantes e criações montadas com o construtor `rifle`/`pistol` e as opções da Galeria. Dois construtores novos: `m134` (`src/models/m134.ts`: caixa, seis canos e braçadeiras num pivô `parts.barrels`, caixa de fita, tampa e cobertura; família `belt`) e o carregador helicoidal do Bizon (`mag: 'helical'`, `helical-magazine.ts`, sob o cano).
+- Em tiro o clipe `shot` gira `barrels` um sexto de volta (`spinBarrels` em `shot-clips.ts`); só quem tem `parts.barrels` na família `belt` gira (a M2 e as outras não).
+- Golden próprio (não há página): `tests/new-weapon-models.test.ts` e `tests/fixtures/own-golden/new-weapon-models.json` (hash nó a nó dos 21; `UPDATE_GOLDEN=1` regrava e se lê o diff). Os 77 hashes da Galeria seguem intactos.
+- Área: 4 colunas de balcão (8 balcões no máximo) e o M134 montado no tripé como item `m134_tripod` (`MOUNTED_M134_ITEM_ID`, parado, `H` pega a arma), com o tripé de três pernas de `buildTripodMountedProp`; a peça de tripé do acessório `tripod` fica para a T1.7.6.
+
 ## O que ainda vem pela migração (spec 001)
 - Sons: o tiro (classe e abafamento do jogo + energia do calibre, S2) e os sons mecânicos estão feitos (T1.4); falta mover a síntese para o `game-audio` genérico (S1) e o golden de parâmetros (S3).
 - Efeitos de boca e explosivos passam a vir do `game-vfx-three` (E4).

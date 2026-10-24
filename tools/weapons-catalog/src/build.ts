@@ -3,6 +3,7 @@ import { dirname } from 'node:path'
 
 import { buildAttachments } from './build-attachments'
 import { buildCalibers } from './build-calibers'
+import { buildCreations } from './build-creations'
 import type { CaliberRecord } from './build-calibers'
 import { buildExplosives } from './build-explosives'
 import { buildFirearm, caliberOf, firearmId } from './build-firearms'
@@ -83,11 +84,15 @@ export const buildCatalog = (): CatalogFiles => {
     )
   })
   const launchers = launcherRows.map((row) => (row[8].lt === 'flame' || row[8].lt === 'flameDIY' ? buildFlamethrower(row, context) : buildRocketLauncher(row, context)))
-  const allFirearms = [...firearms, ...variants, buildGrenadeLauncher(context)]
+  const creations = buildCreations(gallery.weapons, context)
+  const allFirearms = [...firearms, ...variants, buildGrenadeLauncher(context), ...creations.map((created) => created.firearm)]
   const underbarrel = Object.values(decisions.underbarrelLaunchers).map((decision) => buildUnderbarrelLauncher(decision.value, context))
   assertUniqueIds([...archetypes, ...allFirearms, ...launchers, ...underbarrel])
   const variantNames = new Map(Object.values(decisions.variants).map((decision) => [decision.value.id, decision.value.of]))
-  const models = buildModels({ rows: gallery.weapons, variantIds: variantNames, firearms: allFirearms }, context)
+  const models = {
+    ...buildModels({ rows: gallery.weapons, variantIds: variantNames, firearms: allFirearms }, context),
+    ...Object.fromEntries(creations.map((created) => [created.firearm.id, created.model])),
+  }
   const mountedFirearms = allFirearms.map((firearm) => withMounts(firearm, models, decisions))
   return {
     [OUTPUT_PATHS.calibers]: serialize(calibers),

@@ -1192,6 +1192,102 @@
         "source": "sdk",
         "reason": "Calibre do SDK."
       }
+    },
+    "4_6x30": {
+      "noise": {
+        "value": 150,
+        "source": "derived",
+        "reason": "Classe \"médio\" do Arsenal §04 (150 m no §12), como as outras pistolas e a 5,7×28; sem linha própria."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho); a 5,7×28 também é \"pistol\"."
+      },
+      "rim": {
+        "value": "rimless",
+        "source": "reference",
+        "reason": "Estojo com aro rebaixado (rebated). https://en.wikipedia.org/wiki/HK_4.6%C3%9730mm"
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "derived"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": "4.6×30 mm",
+          "bulletGrams": 2,
+          "muzzleSpeed": 735,
+          "dragPer100m": 0.12,
+          "kind": "fmj",
+          "id": "4_6x30",
+          "diameter": 4.65
+        },
+        "source": "reference",
+        "reason": "Massa de 2,0 g e 735 m/s do MP7A1 (https://en.wikipedia.org/wiki/HK_4.6%C3%9730mm e https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP7); diâmetro do projétil 4,65 mm (CIP). Arrasto de 0,12 igual ao da 5,7×28 (derivado)."
+      },
+      "cartridge": {
+        "value": {
+          "caseDiameter": 8.0,
+          "overallLength": 38.5,
+          "caseLength": 30.5,
+          "projectileDiameter": 4.65
+        },
+        "source": "reference",
+        "reason": "Estojo com 8,0 mm de aro, 30,5 mm de comprimento e 38,5 mm de cartucho. https://en.wikipedia.org/wiki/HK_4.6%C3%9730mm"
+      }
+    },
+    "32acp": {
+      "noise": {
+        "value": 150,
+        "source": "derived",
+        "reason": "Classe \"médio\" do Arsenal §04 (150 m no §12), como a .380 ACP, o calibre mais próximo; sem linha própria."
+      },
+      "caseType": {
+        "value": "pistol",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimmed",
+        "source": "reference",
+        "reason": "Estojo semi-aro (semi-rimmed). https://en.wikipedia.org/wiki/.32_ACP"
+      },
+      "sources": {
+        "value": [
+          "reference",
+          "derived"
+        ],
+        "source": "design",
+        "reason": "Origem dos números do calibre."
+      },
+      "base": {
+        "value": {
+          "label": ".32 ACP",
+          "bulletGrams": 4.6,
+          "muzzleSpeed": 276,
+          "dragPer100m": 0.22,
+          "kind": "fmj",
+          "id": "32acp",
+          "diameter": 7.94
+        },
+        "source": "reference",
+        "reason": "Projétil de 71 gr (4,6 g) a 905 pés/s (276 m/s) e diâmetro .3125 pol (7,94 mm). https://en.wikipedia.org/wiki/.32_ACP. Arrasto de 0,22 igual ao da .380 ACP (derivado)."
+      },
+      "cartridge": {
+        "value": {
+          "caseDiameter": 9.1,
+          "overallLength": 25.0,
+          "caseLength": 17.3,
+          "projectileDiameter": 7.94
+        },
+        "source": "reference",
+        "reason": "Aro de .358 pol (9,1 mm), estojo de .680 pol (17,3 mm) e cartucho de .984 pol (25,0 mm). https://en.wikipedia.org/wiki/.32_ACP"
+      }
     }
   },
   "energyScale": {
@@ -2447,6 +2543,27 @@
       },
       "source": "derived",
       "reason": "Sem rosca conferida para o UMP-45; assumida a 5/8×24, a mais comum em .45 ACP. Confirmar com o dono."
+    },
+    "taurus_t4_civil": {
+      "value": {
+        "interface": "thread_1/2x28"
+      },
+      "source": "derived",
+      "reason": "Mesma rosca derivada da `taurus_t4` (padrão AR-15). Sem página do fabricante conferida: confirmar com o dono."
+    },
+    "hk_mp5k": {
+      "value": {
+        "interface": "hk_3lug"
+      },
+      "source": "reference",
+      "reason": "O MP5 usa cano com três ressaltos (3-lug), o MP5K inclusive. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+    },
+    "rpk": {
+      "value": {
+        "interface": "thread_14x1lh"
+      },
+      "source": "derived",
+      "reason": "O RPK é um AKM de cano longo e usa a rosca do AKM (M14×1 LH); sem página que a confirme para o RPK. CONFIRMAR. https://en.wikipedia.org/wiki/RPK"
     }
   },
   "mountNotes": {
@@ -2605,6 +2722,20 @@
       },
       "source": "reference",
       "reason": "O HK416 usa o lança-granadas AG36 (família G36/HK416). https://en.wikipedia.org/wiki/AG36"
+    },
+    "m134": {
+      "value": {
+        "mounts": [
+          {
+            "kind": "underbarrel",
+            "interfaces": [
+              "tripod"
+            ]
+          }
+        ]
+      },
+      "source": "reference",
+      "reason": "O M134 também vai montado em tripé ou em veículo (helicóptero, jipe): o encaixe `tripod` sob o corpo dá o apoio, como a M2. https://en.wikipedia.org/wiki/M134_Minigun"
     }
   },
   "stocks": {
@@ -2703,6 +2834,106 @@
       },
       "source": "derived",
       "reason": "Sem número do fabricante: 889 mm do Mk 14 Mod 0 (https://en.wikipedia.org/wiki/Mk_14_Enhanced_Battle_Rifle) menos 79 mm de curso da coronha (adaptador VLTOR de 12,375 a 15,5 pol, https://www.vltor.com/?p=203). Confirmar com o dono."
+    },
+    "hk_mp5sd3": {
+      "value": {
+        "lengthCollapsed": 0.61
+      },
+      "source": "reference",
+      "reason": "MP5SD3: 805 mm com a coronha aberta e 610 mm recolhida (valor do desenho T1.7, página do fabricante não reconferida). https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+    },
+    "fn_parafal": {
+      "value": {
+        "foldAxis": "right",
+        "lengthCollapsed": 0.77
+      },
+      "source": "derived",
+      "reason": "Comprimento 770 mm com a coronha dobrada do desenho T1.7 (conferir a IMBEL M964A1); o lado da dobra (direita) é derivado: nenhuma página conferida diz. CONFIRMAR. https://en.wikipedia.org/wiki/FN_FAL"
+    },
+    "taurus_t4_civil": {
+      "value": {
+        "lengthCollapsed": 0.805
+      },
+      "source": "derived",
+      "reason": "Comprimento recolhido da `taurus_t4` (767 mm, https://en.wikipedia.org/wiki/Taurus_T4) mais os 38 mm a mais de cano."
+    },
+    "hk_ump9": {
+      "value": {
+        "kind": "fold",
+        "foldAxis": "right",
+        "lengthCollapsed": 0.45
+      },
+      "source": "reference",
+      "reason": "A Galeria desenha coronha de esqueleto; a UMP real dobra para o lado direito e mede 450 mm dobrada. https://en.wikipedia.org/wiki/Heckler_%26_Koch_UMP"
+    },
+    "mini_uzi": {
+      "value": {
+        "foldAxis": "under",
+        "lengthCollapsed": 0.36
+      },
+      "source": "reference",
+      "reason": "Mini Uzi: 360 mm com a coronha de arame dobrada por baixo do corpo. https://en.wikipedia.org/wiki/Uzi"
+    },
+    "hk_mp7a1": {
+      "value": {
+        "lengthCollapsed": 0.415
+      },
+      "source": "reference",
+      "reason": "MP7A1: 415 mm com a coronha recolhida. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP7"
+    },
+    "hk_g36": {
+      "value": {
+        "foldAxis": "left",
+        "lengthCollapsed": 0.758
+      },
+      "source": "reference",
+      "reason": "G36: 758 mm com a coronha dobrada (https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36). O lado da dobra (esquerda) é derivado: a página não diz. CONFIRMAR."
+    },
+    "hk_g36k": {
+      "value": {
+        "foldAxis": "left",
+        "lengthCollapsed": 0.615
+      },
+      "source": "reference",
+      "reason": "G36K: 615 mm com a coronha dobrada (valor do desenho T1.7). O lado da dobra é o do G36. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+    },
+    "hk_g36c": {
+      "value": {
+        "foldAxis": "left",
+        "lengthCollapsed": 0.5
+      },
+      "source": "reference",
+      "reason": "G36C: 500 mm com a coronha dobrada (valor do desenho T1.7). O lado da dobra é o do G36. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+    },
+    "fn_minimi_para": {
+      "value": {
+        "lengthCollapsed": 0.766
+      },
+      "source": "reference",
+      "reason": "Minimi Para: 893 mm com a coronha aberta e 766 mm recolhida (valor do desenho T1.7, página do fabricante não reconferida). https://en.wikipedia.org/wiki/FN_Minimi"
+    },
+    "sig_mpx": {
+      "value": {
+        "lengthCollapsed": 0.425
+      },
+      "source": "reference",
+      "reason": "MPX: 425 mm com a coronha recolhida. https://en.wikipedia.org/wiki/SIG_MPX"
+    },
+    "pp19_bizon": {
+      "value": {
+        "foldAxis": "left",
+        "lengthCollapsed": 0.425
+      },
+      "source": "reference",
+      "reason": "Bizon: 425 mm com a coronha dobrada, para o lado esquerdo do receptor. https://en.wikipedia.org/wiki/PP-19_Bizon"
+    },
+    "vz61": {
+      "value": {
+        "foldAxis": "over",
+        "lengthCollapsed": 0.27
+      },
+      "source": "reference",
+      "reason": "vz. 61: 270 mm com a coronha de arame dobrada por cima do corpo. https://en.wikipedia.org/wiki/%C5%A0korpion"
     }
   },
   "integral": {
@@ -2757,6 +2988,45 @@
       ],
       "source": "reference",
       "reason": "A M2 .50 é montada em tripé: o apoio já está nos números da arma. https://en.wikipedia.org/wiki/M2_Browning"
+    },
+    "hk_mp5sd3": {
+      "value": [
+        {
+          "id": "integral_suppressor",
+          "mount": "muzzle",
+          "interfaces": [
+            "integral"
+          ]
+        }
+      ],
+      "source": "reference",
+      "reason": "O MP5SD tem supressor integral em volta do cano (introduzido em 1974); não sai. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+    },
+    "hk_g36": {
+      "value": [
+        {
+          "id": "integral_optic_3x",
+          "mount": "rail_top",
+          "interfaces": [
+            "integral"
+          ]
+        }
+      ],
+      "source": "reference",
+      "reason": "A alça de transporte do G36 leva a mira integrada de 3× com ponto vermelho (G36 e G36K de exportação variam). https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+    },
+    "hk_g36k": {
+      "value": [
+        {
+          "id": "integral_optic_3x",
+          "mount": "rail_top",
+          "interfaces": [
+            "integral"
+          ]
+        }
+      ],
+      "source": "reference",
+      "reason": "A alça de transporte do G36K leva a mesma mira integrada do G36. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
     }
   },
   "arsenalFeatures": {
@@ -3918,6 +4188,81 @@
       },
       "source": "derived",
       "reason": "Criação (decisão do dono, 2026-10-24): M134 e metralhadoras montadas em tripé ou veículo. Apoio (`supported`) e números de recuo derivados do bipé do §11 (×0,4)."
+    },
+    "integral_suppressor": {
+      "value": {
+        "name": "Integral suppressor",
+        "kind": "suppressor",
+        "mounts": [
+          "muzzle"
+        ],
+        "interfaces": [
+          "integral"
+        ],
+        "mass": 0.45,
+        "install": "bench",
+        "effects": [
+          {
+            "stat": "noise",
+            "mul": 0.4
+          },
+          {
+            "stat": "noise",
+            "mul": 0.625,
+            "when": "subsonic"
+          },
+          {
+            "stat": "muzzleSpeed",
+            "mul": 0.97468
+          },
+          {
+            "stat": "heatPerShot",
+            "mul": 1.5
+          }
+        ],
+        "model": "integral_suppressor",
+        "sources": [
+          "reference",
+          "derived"
+        ],
+        "dims": {
+          "length": 0.2,
+          "diameter": 0.045
+        },
+        "removable": false
+      },
+      "source": "reference",
+      "reason": "Supressor do MP5SD: já está nos números base da arma (velocidade de 285 m/s e ruído de 37,5 m) e não sai; os efeitos são os do supressor comum, para o fator subsônico valer. Massa e calor derivados do supressor comum. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+    },
+    "integral_optic_3x": {
+      "value": {
+        "name": "Integral 3x optic of the G36",
+        "kind": "optic",
+        "mounts": [
+          "rail_top"
+        ],
+        "interfaces": [
+          "integral"
+        ],
+        "mass": 0.3,
+        "install": "bench",
+        "effects": [],
+        "model": "integral_optic_3x",
+        "sources": [
+          "reference",
+          "derived"
+        ],
+        "optic": {
+          "zoom": [
+            3,
+            3
+          ],
+          "reticle": "duplex"
+        },
+        "removable": false
+      },
+      "source": "reference",
+      "reason": "Mira de 3× da alça de transporte do G36, parte do corpo (a Galeria não a desenha). A massa de 0,3 kg é derivada. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
     }
   },
   "underbarrelLaunchers": {
@@ -3975,5 +4320,1164 @@
       "source": "reference",
       "reason": "AG36: cerca de 350 mm, cano de 280 mm e 1,5 kg (https://en.wikipedia.org/wiki/AG36); munição `m79_40mm` (decisão do dono). Velocidade de 76 m/s, massa carregada (+0,23 kg), recarga e coice do M79 (derivados)."
     }
+  },
+  "creations": {
+    "HK MP5SD3": {
+      "value": {
+        "id": "hk_mp5sd3",
+        "name": "HK MP5SD3",
+        "of": "HK MP5A3",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "30",
+        "length": 805,
+        "barrel": 146,
+        "emptyMass": 3.4,
+        "options": {
+          "jacket": 1,
+          "noFH": 1,
+          "br": 0.0115,
+          "rpm": 700
+        },
+        "reloadFrom": "HK MP5A3",
+        "muzzleSpeed": 285,
+        "noise": 37.5,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão. Família MP5: https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "O MP5SD tem cano de 146 mm com 30 furos sob o supressor integral. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão (cerca de 3,4 kg com o supressor). https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "MP5SD: 700 tiros/min. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Pente de 30 do MP5. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da HK MP5A3 (mesma plataforma)."
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão: 285 m/s (subsônico com o supressor integral); já é o valor com o supressor de fábrica. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+          },
+          "noise": {
+            "source": "derived",
+            "reason": "O supressor de fábrica entra nos números base: calibre 9×19 (150 m) × 0,4 (ruído −60%) × 0,625 (subsônica −75% no total, porque 285 m/s < 343 m/s) = 37,5 m."
+          }
+        }
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §06 cita \"versão SD\" do MP5 (porte por citação): 9×19 com supressor integral. Números do MP5SD3 pelas páginas citadas em cada número."
+    },
+    "FN ParaFAL": {
+      "value": {
+        "id": "fn_parafal",
+        "name": "FN ParaFAL",
+        "of": "FN FAL",
+        "caliber": "7_62x51",
+        "caliberText": "7,62×51",
+        "capacity": "20",
+        "length": 1020,
+        "barrel": 440,
+        "emptyMass": 4.0,
+        "options": {
+          "stock": "fold",
+          "stockLen": 0.25
+        },
+        "reloadFrom": "FN FAL",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão: 1020 mm com a coronha aberta. https://en.wikipedia.org/wiki/FN_FAL"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "FAL 50.63 (paraquedista, coronha dobrável): cano de 440 mm. https://en.wikipedia.org/wiki/FN_FAL"
+          },
+          "emptyMass": {
+            "source": "derived",
+            "reason": "O desenho dá 3,8 a 4,3 kg e pede conferir a IMBEL M964A1; fica o meio da faixa, 4,0 kg."
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "Mesma cadência da FAL (650 tiros/min). https://en.wikipedia.org/wiki/FN_FAL"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Pente de 20 da FAL. https://en.wikipedia.org/wiki/FN_FAL"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da FN FAL / ParaFAL (o Arsenal §06 já lista \"FN FAL / ParaFAL\" numa linha só)."
+          },
+          "muzzleSpeed": {
+            "source": "derived",
+            "reason": "Herdada da FN FAL do Arsenal §07 (mesmo calibre); o cano mais curto não foi descontado."
+          }
+        }
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §06: \"FN FAL / ParaFAL\" (jogo e Vivos do Vale também citam a ParaFAL). Variante da `fn_fal` com coronha dobrável."
+    },
+    "Taurus T4 (civil)": {
+      "value": {
+        "id": "taurus_t4_civil",
+        "name": "Taurus T4 (civil)",
+        "of": "Taurus T4",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "30",
+        "length": 878,
+        "barrel": 406,
+        "emptyMass": 3.0,
+        "options": {
+          "rpm": 120
+        },
+        "modes": {
+          "modes": [
+            "semi"
+          ]
+        },
+        "reloadFrom": "Taurus T4",
+        "numbers": {
+          "length": {
+            "source": "derived",
+            "reason": "Comprimento da `taurus_t4` (840 mm, cano de 368) mais os 38 mm a mais de cano."
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "Versão civil semiautomática com cano de 16 pol (406 mm), o mínimo de cano de um fuzil civil. https://en.wikipedia.org/wiki/Taurus_T4"
+          },
+          "emptyMass": {
+            "source": "derived",
+            "reason": "Mesma massa da `taurus_t4` (o cano mais longo não foi somado)."
+          },
+          "rpm": {
+            "source": "derived",
+            "reason": "Q2: cadência prática do fuzil semiautomático (120 tiros/min); a versão civil não tem rajada."
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Pente de 30 do T4. https://en.wikipedia.org/wiki/Taurus_T4"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da Taurus T4 (mesma arma)."
+          },
+          "muzzleSpeed": {
+            "source": "derived",
+            "reason": "Herdada da `taurus_t4` do Arsenal §07 (mesmo calibre)."
+          }
+        }
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §16 (loot) cita \"AR-15 civil\"; decisão do dono (2026-10-24): é o Taurus T4 semiautomático, trocável."
+    },
+    "Taurus TH380": {
+      "value": {
+        "id": "taurus_th380",
+        "name": "Taurus TH380",
+        "of": "Taurus G2C",
+        "caliber": "380acp",
+        "caliberText": ".380 ACP",
+        "capacity": "12+1",
+        "length": 165,
+        "barrel": 90,
+        "emptyMass": 0.55,
+        "reloadFrom": "Taurus G2C",
+        "numbers": {
+          "length": {
+            "source": "derived",
+            "reason": "Sem página do fabricante (taurususa.com/product-details/th380 respondeu \"não encontrada\" nesta sessão): pistola .380 compacta de porte parecido com a G2C (159 mm). CONFIRMAR."
+          },
+          "barrel": {
+            "source": "derived",
+            "reason": "Idem: um pouco mais longo que o da G2C (81 mm). CONFIRMAR."
+          },
+          "emptyMass": {
+            "source": "derived",
+            "reason": "Idem: mais leve que a G2C (0,62 kg), calibre menor. CONFIRMAR."
+          },
+          "capacity": {
+            "source": "derived",
+            "reason": "Idem: a capacidade da G2C (12+1). CONFIRMAR."
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da Taurus G2C (pistola compacta de polímero)."
+          }
+        }
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §16 (loot) cita \".380\"; decisão do dono (2026-10-24): a pistola .380 da casa é o Taurus TH380 (marca trocável). Todos os números são derivados porque não há página do fabricante conferida."
+    },
+    "Mossberg 500 Cruiser": {
+      "value": {
+        "id": "mossberg_500_cruiser",
+        "name": "Mossberg 500 Cruiser",
+        "of": "Mossberg 500",
+        "caliber": "12ga_00buck",
+        "caliberText": "12 ga",
+        "capacity": "5+1",
+        "length": 720,
+        "barrel": 470,
+        "emptyMass": 2.7,
+        "options": {
+          "stock": "none"
+        },
+        "reloadFrom": "Mossberg 500",
+        "numbers": {
+          "length": {
+            "source": "derived",
+            "reason": "Cano de 470 mm mais cerca de 250 mm de caixa, tubo e empunhadura de pistola; sem página do fabricante conferida."
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "Os modelos com empunhadura de pistola (Cruiser, Persuader) têm cano de 18,5 pol (470 mm). https://en.wikipedia.org/wiki/Mossberg_500"
+          },
+          "emptyMass": {
+            "source": "derived",
+            "reason": "A massa da `mossberg_500` (3,2 kg) menos cerca de 0,5 kg da coronha; a faixa da família é 7 a 7,75 lb (3,2 a 3,5 kg)."
+          },
+          "rpm": {
+            "source": "derived",
+            "reason": "Q2: bomba, o ciclo da arma é o `cycle` da família (mesma regra da `mossberg_500`)."
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "5+1 como a `mossberg_500`; a família vai de 5+1 a 8+1. https://en.wikipedia.org/wiki/Mossberg_500"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da Mossberg 500 (mesma arma)."
+          },
+          "muzzleSpeed": {
+            "source": "derived",
+            "reason": "Herdada da `mossberg_500` do Arsenal §07 (mesmo calibre e cano)."
+          }
+        }
+      },
+      "source": "arsenal",
+      "reason": "Arsenal §06 cita a Mossberg 500 Cruiser. Variante da `mossberg_500`: sem coronha, empunhadura de pistola (a Wikipedia descreve o Cruiser como a versão compacta com empunhadura de pistola: https://en.wikipedia.org/wiki/Mossberg_500)."
+    },
+    "HK MP5K": {
+      "value": {
+        "id": "hk_mp5k",
+        "name": "HK MP5K",
+        "of": "HK MP5A3",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "30/15",
+        "length": 325,
+        "barrel": 115,
+        "emptyMass": 2.0,
+        "options": {
+          "stock": "none",
+          "hgFrac": 0.5,
+          "rpm": 900
+        },
+        "reloadFrom": "HK MP5A3",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "MP5K: 325 mm. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "MP5K: cano de 115 mm. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão: 2,0 kg. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "MP5K: 900 tiros/min. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Pentes de 15 e 30 do MP5. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da HK MP5A3 (mesma plataforma)."
+          },
+          "muzzleSpeed": {
+            "source": "derived",
+            "reason": "Herdada da MP5A3 do Arsenal §07; o cano de 115 mm não foi descontado."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (o MP5K não está nas páginas dos times): MP5 compacta, sem coronha, com empunhadura frontal curta. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP5"
+    },
+    "HK UMP9": {
+      "value": {
+        "id": "hk_ump9",
+        "name": "HK UMP9",
+        "of": "HK UMP-45",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "30",
+        "length": 690,
+        "barrel": 200,
+        "emptyMass": 2.3,
+        "options": {
+          "mag": "curved",
+          "magLen": 1.0,
+          "rpm": 700
+        },
+        "reloadFrom": "HK UMP-45",
+        "muzzleSpeed": 380,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "UMP: 690 mm com a coronha aberta. https://en.wikipedia.org/wiki/Heckler_%26_Koch_UMP"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "UMP: cano de 200 mm. https://en.wikipedia.org/wiki/Heckler_%26_Koch_UMP"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "UMP9 sem pente: 2,3 kg (o desenho dizia cerca de 2,1; fica o da página). https://en.wikipedia.org/wiki/Heckler_%26_Koch_UMP"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "UMP9: 600 a 750 tiros/min; o desenho pede 700. https://en.wikipedia.org/wiki/Heckler_%26_Koch_UMP"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Pente curvo de 30 da UMP9. https://en.wikipedia.org/wiki/Heckler_%26_Koch_UMP"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da HK UMP-45 (mesma plataforma)."
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "UMP9: 380 m/s. https://en.wikipedia.org/wiki/Heckler_%26_Koch_UMP"
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (variante da `hk_ump_45` em 9×19): https://en.wikipedia.org/wiki/Heckler_%26_Koch_UMP"
+    },
+    "Mini Uzi": {
+      "value": {
+        "id": "mini_uzi",
+        "name": "Mini Uzi",
+        "of": "Uzi",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "20/25/32",
+        "length": 600,
+        "barrel": 197,
+        "emptyMass": 2.7,
+        "options": {
+          "magLen": 0.9,
+          "rpm": 950
+        },
+        "reloadFrom": "Uzi",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "Mini Uzi: 600 mm com a coronha aberta. https://en.wikipedia.org/wiki/Uzi"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "Mini Uzi: cano de 197 mm. https://en.wikipedia.org/wiki/Uzi"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão: 2,7 kg. https://en.wikipedia.org/wiki/Uzi"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "Mini Uzi: 950 tiros/min. https://en.wikipedia.org/wiki/Uzi"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Pentes de 20 e 32 (e 25 na Uzi). https://en.wikipedia.org/wiki/Uzi"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da Uzi (mesma plataforma)."
+          },
+          "muzzleSpeed": {
+            "source": "derived",
+            "reason": "Herdada da Uzi do Arsenal §07; o cano mais curto não foi descontado."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (variante da `uzi`): https://en.wikipedia.org/wiki/Uzi"
+    },
+    "HK MP7A1": {
+      "value": {
+        "id": "hk_mp7a1",
+        "name": "HK MP7A1",
+        "category": "smg",
+        "caliber": "4_6x30",
+        "caliberText": "4,6×30",
+        "capacity": "40/20/30",
+        "length": 638,
+        "barrel": 180,
+        "emptyMass": 1.9,
+        "options": {
+          "mag": "box",
+          "magAt": 0.1,
+          "magLen": 0.8,
+          "stock": "retract",
+          "stockLen": 0.2,
+          "hR": 0.07,
+          "hg": "rail",
+          "hgFrac": 0.45,
+          "grip": "none",
+          "rail": 1,
+          "rpm": 950,
+          "sel": 1
+        },
+        "reloadFrom": "HK MP5A3",
+        "muzzleSpeed": 735,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "MP7A1: 638 mm com a coronha aberta. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP7"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "MP7A1: cano de 180 mm. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP7"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "1,90 kg com pente de 20 vazio. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP7"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "MP7: 950 tiros/min. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP7"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Pentes de 20, 30 e 40. https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP7"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da HK MP5A3 (submetralhadora de pente reto)."
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "735 m/s (Fiocchi CPS Black Tip). https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP7"
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (o MP7 não está nas páginas dos times): https://en.wikipedia.org/wiki/Heckler_%26_Koch_MP7"
+    },
+    "HK G36": {
+      "value": {
+        "id": "hk_g36",
+        "name": "HK G36",
+        "category": "fuz",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "30/100",
+        "length": 999,
+        "barrel": 480,
+        "emptyMass": 3.63,
+        "options": {
+          "stock": "fold",
+          "stockLen": 0.24,
+          "mag": "box",
+          "curve": 0.05,
+          "magLen": 1.0,
+          "hg": "poly",
+          "hgFrac": 0.5,
+          "hR": 0.065,
+          "charge": 1,
+          "sel": 1,
+          "rpm": 750,
+          "carry": 1,
+          "scope": 2
+        },
+        "reloadFrom": "Colt M4A1",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "G36: 999 mm com a coronha aberta. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "G36: cano de 480 mm. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "G36: 3,63 kg. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "G36: 750 tiros/min. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Pente de 30 e C-Mag de 100. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da Colt M4A1 (fuzil de pente de caixa)."
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "G36: 920 m/s. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          }
+        },
+        "muzzleSpeed": 920
+      },
+      "source": "reference",
+      "reason": "Criação (o G36 não está nas páginas dos times): https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+    },
+    "HK G36K": {
+      "value": {
+        "id": "hk_g36k",
+        "name": "HK G36K",
+        "category": "fuz",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "30/100",
+        "length": 860,
+        "barrel": 318,
+        "emptyMass": 3.3,
+        "options": {
+          "stock": "fold",
+          "stockLen": 0.24,
+          "mag": "box",
+          "curve": 0.05,
+          "magLen": 1.0,
+          "hg": "poly",
+          "hgFrac": 0.5,
+          "hR": 0.065,
+          "charge": 1,
+          "sel": 1,
+          "rpm": 750,
+          "carry": 1,
+          "scope": 2
+        },
+        "reloadFrom": "Colt M4A1",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "G36: 750 tiros/min. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Pente de 30 e C-Mag de 100. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da Colt M4A1 (fuzil de pente de caixa)."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (G36K, versão curta): https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+    },
+    "HK G36C": {
+      "value": {
+        "id": "hk_g36c",
+        "name": "HK G36C",
+        "category": "fuz",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "30/100",
+        "length": 720,
+        "barrel": 228,
+        "emptyMass": 2.82,
+        "options": {
+          "stock": "fold",
+          "stockLen": 0.24,
+          "mag": "box",
+          "curve": 0.05,
+          "magLen": 1.0,
+          "hg": "poly",
+          "hgFrac": 0.5,
+          "hR": 0.065,
+          "charge": 1,
+          "sel": 1,
+          "rpm": 750,
+          "rail": 1
+        },
+        "reloadFrom": "Colt M4A1",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "G36: 750 tiros/min. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Pente de 30 e C-Mag de 100. https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da Colt M4A1 (fuzil de pente de caixa)."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (G36C, compacta, com trilho no lugar da alça): https://en.wikipedia.org/wiki/Heckler_%26_Koch_G36"
+    },
+    "FN M249": {
+      "value": {
+        "id": "fn_m249",
+        "name": "FN M249",
+        "of": "FN Minimi",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "200/30",
+        "length": 1040,
+        "barrel": 465,
+        "emptyMass": 7.1,
+        "reloadFrom": "FN Minimi",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "M249 é a FN Minimi adotada pelos EUA: 1040 mm. https://en.wikipedia.org/wiki/FN_Minimi"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "Cano de 465 mm. https://en.wikipedia.org/wiki/FN_Minimi"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "7,1 kg. https://en.wikipedia.org/wiki/FN_Minimi"
+          },
+          "rpm": {
+            "source": "derived",
+            "reason": "A cadência da `fn_minimi` do Gallery (850)."
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Fita de 200 na caixa e pente STANAG de 30. https://en.wikipedia.org/wiki/FN_Minimi"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da FN Minimi (mesma arma)."
+          },
+          "muzzleSpeed": {
+            "source": "derived",
+            "reason": "Herdada da FN Minimi do Arsenal §07 (mesma arma)."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (nome americano da `fn_minimi`, com pente STANAG de 30 como opção): https://en.wikipedia.org/wiki/FN_Minimi"
+    },
+    "FN Minimi Para": {
+      "value": {
+        "id": "fn_minimi_para",
+        "name": "FN Minimi Para",
+        "of": "FN Minimi",
+        "caliber": "5_56x45",
+        "caliberText": "5,56×45",
+        "capacity": "200/30",
+        "length": 893,
+        "barrel": 349,
+        "emptyMass": 7.1,
+        "options": {
+          "stock": "retract",
+          "stockLen": 0.22
+        },
+        "reloadFrom": "FN Minimi",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão: 893 mm com a coronha aberta. https://en.wikipedia.org/wiki/FN_Minimi"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "O Para tem cano de 349 mm e coronha retrátil de metal. https://en.wikipedia.org/wiki/FN_Minimi"
+          },
+          "emptyMass": {
+            "source": "derived",
+            "reason": "Mesma massa da `fn_minimi` (a página só dá os 7,1 kg da versão comum; o Para é um pouco mais leve). CONFIRMAR."
+          },
+          "rpm": {
+            "source": "derived",
+            "reason": "A cadência da `fn_minimi` do Gallery (850)."
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Fita de 200 e pente STANAG de 30. https://en.wikipedia.org/wiki/FN_Minimi"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da FN Minimi (mesma arma)."
+          },
+          "muzzleSpeed": {
+            "source": "derived",
+            "reason": "Herdada da FN Minimi do Arsenal §07; o cano de 349 mm não foi descontado."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (variante Para da `fn_minimi`): https://en.wikipedia.org/wiki/FN_Minimi"
+    },
+    "FN MAG": {
+      "value": {
+        "id": "fn_mag",
+        "name": "FN MAG",
+        "category": "mtr",
+        "caliber": "7_62x51",
+        "caliberText": "7,62×51",
+        "capacity": "100",
+        "length": 1263,
+        "barrel": 630,
+        "emptyMass": 11.79,
+        "options": {
+          "stock": "fixed",
+          "mag": "belt",
+          "hg": "poly",
+          "hgFrac": 0.35,
+          "bipod": 1,
+          "carry": 1,
+          "hR": 0.085,
+          "br": 0.011,
+          "charge": 1,
+          "rpm": 750
+        },
+        "reloadFrom": "M60",
+        "muzzleSpeed": 840,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "FN MAG: 1263 mm. https://en.wikipedia.org/wiki/FN_MAG"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "FN MAG: cano de 630 mm. https://en.wikipedia.org/wiki/FN_MAG"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "valor da tabela do desenho T1.7 (architect, 2026-10-24); página do fabricante não reconferida nesta sessão: 11,79 kg. https://en.wikipedia.org/wiki/FN_MAG"
+          },
+          "rpm": {
+            "source": "derived",
+            "reason": "A página dá 650 a 1000 tiros/min; o desenho pede 750, o meio da faixa de uso."
+          },
+          "capacity": {
+            "source": "derived",
+            "reason": "Fita de 100 cartuchos (o desenho pede 100); a página só diz \"fita\"."
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da M60 (metralhadora de fita 7,62×51)."
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "840 m/s. https://en.wikipedia.org/wiki/FN_MAG"
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (o FN MAG não está nas páginas dos times): https://en.wikipedia.org/wiki/FN_MAG"
+    },
+    "RPK": {
+      "value": {
+        "id": "rpk",
+        "name": "RPK",
+        "of": "AK-47",
+        "category": "mtr",
+        "caliber": "7_62x39",
+        "caliberText": "7,62×39",
+        "capacity": "40/75",
+        "length": 1040,
+        "barrel": 590,
+        "emptyMass": 4.8,
+        "options": {
+          "bipod": 1,
+          "magLen": 1.4,
+          "bayo": 0,
+          "rpm": 600
+        },
+        "reloadFrom": "AK-47",
+        "muzzleSpeed": 745,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "RPK: 1040 mm. https://en.wikipedia.org/wiki/RPK"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "RPK: cano de 590 mm. https://en.wikipedia.org/wiki/RPK"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "RPK: 4,8 kg. https://en.wikipedia.org/wiki/RPK"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "RPK: 600 tiros/min. https://en.wikipedia.org/wiki/RPK"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Pente de 40 e tambor de 75 (e de 30). https://en.wikipedia.org/wiki/RPK"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da AK-47 (mesma plataforma)."
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "RPK: 745 m/s. https://en.wikipedia.org/wiki/RPK"
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (o RPK não está nas páginas dos times): AK com cano longo, bipé e pente de 40. https://en.wikipedia.org/wiki/RPK"
+    },
+    "SIG MPX": {
+      "value": {
+        "id": "sig_mpx",
+        "name": "SIG MPX",
+        "category": "smg",
+        "caliber": "9x19",
+        "caliberText": "9×19",
+        "capacity": "30/20/35",
+        "length": 610,
+        "barrel": 203,
+        "emptyMass": 2.7,
+        "options": {
+          "mag": "box",
+          "curve": 0.05,
+          "magLen": 1.0,
+          "stock": "retract",
+          "stockLen": 0.2,
+          "hR": 0.06,
+          "hg": "rail",
+          "hgFrac": 0.7,
+          "rail": 1,
+          "charge": 1,
+          "sel": 1,
+          "rpm": 850
+        },
+        "reloadFrom": "HK MP5A3",
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "MPX: 610 mm com a coronha aberta. https://en.wikipedia.org/wiki/SIG_MPX"
+          },
+          "barrel": {
+            "source": "derived",
+            "reason": "A página lista cano de 114, 165 e 203 mm sem dizer qual casa com os 610 mm; fica o de 203 mm (8 pol). CONFIRMAR."
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "MPX: 2,7 kg. https://en.wikipedia.org/wiki/SIG_MPX"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "MPX: 850 tiros/min. https://en.wikipedia.org/wiki/SIG_MPX"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Pentes de 10, 20, 30 e 35. https://en.wikipedia.org/wiki/SIG_MPX"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da HK MP5A3 (submetralhadora de pente reto)."
+          },
+          "muzzleSpeed": {
+            "source": "derived",
+            "reason": "Sem velocidade na página: a do calibre 9×19 (365 m/s) com o fator de cano da arma."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (o MPX não está nas páginas dos times): https://en.wikipedia.org/wiki/SIG_MPX"
+    },
+    "MG3": {
+      "value": {
+        "id": "mg3",
+        "name": "MG3",
+        "category": "mtr",
+        "caliber": "7_62x51",
+        "caliberText": "7,62×51",
+        "capacity": "100",
+        "length": 1225,
+        "barrel": 565,
+        "emptyMass": 11.5,
+        "options": {
+          "stock": "fixed",
+          "mag": "belt",
+          "hg": "poly",
+          "hgFrac": 0.3,
+          "bipod": 1,
+          "carry": 1,
+          "hR": 0.085,
+          "br": 0.011,
+          "charge": 1,
+          "rpm": 1100
+        },
+        "reloadFrom": "M60",
+        "muzzleSpeed": 820,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "MG3: 1225 mm. https://en.wikipedia.org/wiki/MG3_machine_gun"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "MG3: cano de 565 mm. https://en.wikipedia.org/wiki/MG3_machine_gun"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "MG3: 11,5 kg. https://en.wikipedia.org/wiki/MG3_machine_gun"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "A página dá 1000 a 1200 tiros/min com o ferrolho comum; o desenho pede 1100. https://en.wikipedia.org/wiki/MG3_machine_gun"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Fita de 100 (DM6/M13); há também a de 50 DM1. https://en.wikipedia.org/wiki/MG3_machine_gun"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da M60 (metralhadora de fita 7,62×51)."
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "MG3: 820 m/s. https://en.wikipedia.org/wiki/MG3_machine_gun"
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (o MG3 não está nas páginas dos times): https://en.wikipedia.org/wiki/MG3_machine_gun"
+    },
+    "PP-19 Bizon": {
+      "value": {
+        "id": "pp19_bizon",
+        "name": "PP-19 Bizon",
+        "category": "smg",
+        "caliber": "9x18",
+        "caliberText": "9×18",
+        "capacity": "64",
+        "length": 660,
+        "barrel": 195,
+        "emptyMass": 2.1,
+        "options": {
+          "mag": "helical",
+          "magLen": 1.0,
+          "stock": "fold",
+          "stockLen": 0.2,
+          "hR": 0.06,
+          "hg": "poly",
+          "hgFrac": 0.5,
+          "ak": 1,
+          "charge": 1,
+          "rpm": 680
+        },
+        "reloadFrom": "Taurus SMT9",
+        "muzzleSpeed": 320,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "Bizon: 660 mm com a coronha aberta. https://en.wikipedia.org/wiki/PP-19_Bizon"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "Bizon: cano de 195 mm. https://en.wikipedia.org/wiki/PP-19_Bizon"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "Bizon: 2,1 kg. https://en.wikipedia.org/wiki/PP-19_Bizon"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "Bizon em 9×18: 680 tiros/min. https://en.wikipedia.org/wiki/PP-19_Bizon"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Carregador helicoidal de 64 cartuchos (9×18). https://en.wikipedia.org/wiki/PP-19_Bizon"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da Taurus SMT9 (submetralhadora compacta; o carregador helicoidal é de troca mais lenta, tempo não medido)."
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "Bizon em 9×18: 320 m/s. https://en.wikipedia.org/wiki/PP-19_Bizon"
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (o Bizon não está nas páginas dos times; carregador helicoidal sob o cano): https://en.wikipedia.org/wiki/PP-19_Bizon"
+    },
+    "vz. 61 Škorpion": {
+      "value": {
+        "id": "vz61",
+        "name": "vz. 61 Škorpion",
+        "category": "smg",
+        "caliber": "32acp",
+        "caliberText": ".32 ACP",
+        "capacity": "20/10",
+        "length": 517,
+        "barrel": 115,
+        "emptyMass": 1.3,
+        "options": {
+          "mag": "curved",
+          "magLen": 0.6,
+          "stock": "fold",
+          "stockLen": 0.2,
+          "hR": 0.05,
+          "hg": "none",
+          "rpm": 850,
+          "sel": 1
+        },
+        "reloadFrom": "CZ Scorpion EVO 3",
+        "muzzleSpeed": 320,
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "vz. 61: 517 mm com a coronha aberta. https://en.wikipedia.org/wiki/%C5%A0korpion"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "vz. 61: cano de 115 mm. https://en.wikipedia.org/wiki/%C5%A0korpion"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "vz. 61: 1,30 kg. https://en.wikipedia.org/wiki/%C5%A0korpion"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "vz. 61: 850 tiros/min. https://en.wikipedia.org/wiki/%C5%A0korpion"
+          },
+          "capacity": {
+            "source": "reference",
+            "reason": "Pente curvo de 10 ou 20 em .32 ACP. https://en.wikipedia.org/wiki/%C5%A0korpion"
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da CZ Scorpion EVO 3 (submetralhadora compacta da CZ)."
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "vz. 61: 320 m/s. https://en.wikipedia.org/wiki/%C5%A0korpion"
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (o vz. 61 não está nas páginas dos times): https://en.wikipedia.org/wiki/%C5%A0korpion"
+    },
+    "M134 Minigun": {
+      "value": {
+        "id": "m134",
+        "name": "M134 Minigun",
+        "category": "mtr",
+        "builder": "m134",
+        "caliber": "7_62x51",
+        "caliberText": "7,62×51",
+        "capacity": "200",
+        "length": 801,
+        "barrel": 559,
+        "emptyMass": 39,
+        "options": {
+          "rpm": 3000
+        },
+        "reloadFrom": "M60",
+        "muzzleSpeed": 853,
+        "modes": {
+          "modes": [
+            "auto"
+          ]
+        },
+        "spin": {
+          "upSeconds": 0.5,
+          "holdSeconds": 1.0
+        },
+        "rpmRange": [
+          2000,
+          6000
+        ],
+        "numbers": {
+          "length": {
+            "source": "reference",
+            "reason": "M134: 801 mm. https://en.wikipedia.org/wiki/M134_Minigun"
+          },
+          "barrel": {
+            "source": "reference",
+            "reason": "M134: cano de 559 mm. https://en.wikipedia.org/wiki/M134_Minigun"
+          },
+          "emptyMass": {
+            "source": "reference",
+            "reason": "M134: 85 lb (38,6 kg); decisão do dono: 39 kg. https://en.wikipedia.org/wiki/M134_Minigun"
+          },
+          "rpm": {
+            "source": "reference",
+            "reason": "M134: cadência variável de 2000 a 6000 tiros/min; o dono pede 3000 como padrão, configurável de 2000 a 6000. https://en.wikipedia.org/wiki/M134_Minigun"
+          },
+          "capacity": {
+            "source": "derived",
+            "reason": "Caixa de fita na mão: 200 cartuchos (a mesma da Minimi). Com a mochila de munição vale o padrão do acessório (500, configurável); a página fala em fita de 500 a 5000."
+          },
+          "reload": {
+            "source": "derived",
+            "reason": "Q5: sem linha no Arsenal; recarga da M60 (metralhadora de fita 7,62×51)."
+          },
+          "muzzleSpeed": {
+            "source": "reference",
+            "reason": "M134: 2800 pés/s (853 m/s). https://en.wikipedia.org/wiki/M134_Minigun"
+          },
+          "spin": {
+            "source": "derived",
+            "reason": "Nem o desenho nem os times dizem o tempo de aceleração dos canos: 0,5 s até a velocidade e 1,0 s girando depois do último tiro. Configurável (`spin` da arma, por `patch`)."
+          }
+        }
+      },
+      "source": "reference",
+      "reason": "Criação (o M134 só casa em base64/SVG do jogo): três modos pelo acessório. Na mão com caixa (padrão), na mão com a mochila de munição (500) e montado no tripé (`tripod`, apoio como a M2). https://en.wikipedia.org/wiki/M134_Minigun"
+    }
+  },
+  "gp25Mount": {
+    "value": {
+      "requiresOption": "ak"
+    },
+    "source": "reference",
+    "reason": "O GP-25 só se prende ao AK (suporte no cano e no guarda-mão do AKM/AK-74): o SKS tem baioneta mas não recebe o GP-25. Troca a regra do desenho \"bayo → gp25\" por \"bayo e ak → gp25\". https://en.wikipedia.org/wiki/GP-25"
   }
 }

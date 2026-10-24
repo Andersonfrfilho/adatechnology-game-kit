@@ -604,5 +604,49 @@
     "sources": [
       "sdk"
     ]
+  },
+  {
+    "id": "4_6x30",
+    "label": "4.6×30 mm",
+    "diameter": 4.65,
+    "bulletGrams": 2,
+    "muzzleSpeed": 735,
+    "dragPer100m": 0.12,
+    "kind": "fmj",
+    "noise": 150,
+    "caseType": "pistol",
+    "rim": "rimless",
+    "cartridge": {
+      "caseDiameter": 8,
+      "overallLength": 38.5,
+      "caseLength": 30.5,
+      "projectileDiameter": 4.65
+    },
+    "sources": [
+      "reference",
+      "derived"
+    ]
+  },
+  {
+    "id": "32acp",
+    "label": ".32 ACP",
+    "diameter": 7.94,
+    "bulletGrams": 4.6,
+    "muzzleSpeed": 276,
+    "dragPer100m": 0.22,
+    "kind": "fmj",
+    "noise": 150,
+    "caseType": "pistol",
+    "rim": "rimmed",
+    "cartridge": {
+      "caseDiameter": 9.1,
+      "overallLength": 25,
+      "caseLength": 17.3,
+      "projectileDiameter": 7.94
+    },
+    "sources": [
+      "reference",
+      "derived"
+    ]
   }
 ]
