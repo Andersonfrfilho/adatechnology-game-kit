@@ -40,6 +40,8 @@ export type { Shot, Use } from './weapons'
 export type { ContainerSpec, ItemUseDef, LiquidId } from './fluids'
 export { checkAnimation } from './animation'
 export type { AnimationClipSpec, AnimationEventSpec, AnimationKey, AnimationPose, ItemAnimationContract } from './animation'
+export { STAGE_EVENT, TOOL_CLIP, checkToolClips, createToolClipPlayer, sampleClip, scaleClip, toolAnimationStep } from './tool-animation'
+export type { ToolAnimationStep, ToolAnimator, ToolClipId, ToolClipPlayer, ToolClipPlayerOptions, ToolClipSet, ToolRig } from './tool-animation'
 export type { AreaPlacement, HostEvent, HostTool, ModuleArea, ModuleHost, ModuleItemFluid, ModuleScenario, TestableItem, TestableModule } from './module'
 export { checkBench } from './bench'
 export type {

@@ -1770,8 +1770,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const listener of hostListeners) listener(event)
   }
   function flushEvents(id: string, state: WeaponState, recoil?: [number, number]): void {
+    const phase = state.phase
     for (const event of state.drain()) {
-      const hostEvent = toHostEvent(id, event, recoil)
+      const hostEvent = toHostEvent(id, event, { ...(recoil ? { recoil } : {}), phase })
       if (hostEvent) emitHost(hostEvent)
     }
   }

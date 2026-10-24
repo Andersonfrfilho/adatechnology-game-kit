@@ -308,3 +308,38 @@ Resultado: **o SDK bate com a página em todos os passos** (calor arredondado e 
 | `node examples/weapons-test-area/build.mjs && test.mjs` | `ok: bundle` |
 
 Modelo da execução: `sonnet`.
+
+## T1.2 — Contratos de animação da arma (A5)
+
+### O que entrou
+
+- **`game-contracts/src/tool-animation.ts`**: o contrato genérico (sem arma, sem three.js) pelo qual uma regra dirige qualquer renderizador.
+  `toolAnimationStep(event)` traduz o `HostEvent` em `play` (clipe, variante, duração, repetição), `sync` (etapa) ou `finish`;
+  `createToolClipPlayer({ clips, rig, onEvent })` toca `AnimationClipSpec` escalados à duração que a regra deu, aplica as poses em uma
+  `ToolRig` e dispara os eventos do clipe; `scaleClip`, `sampleClip` e `checkToolClips` são as peças puras. Interface `ToolAnimator` para quem
+  implementar o seu. Os marcadores de etapa são eventos de clipe `stage` com `data.stage`.
+- **`HostEvent`** ganha `cycle`, `stage` e `feed`; `tool`, `reload` e `clear` (início) levam `duration` (segundos da fase, tirados do `phase`
+  `{id,start,end}` da arma) e `reload` leva `kind`.
+- **`game-test-room/src/host-events.ts`**: mapeia `cycle`, `reload_stage` e `feed` (antes `null`) e passa a duração do `phase` ativo; a sala o
+  lê em `flushEvents` logo antes de esvaziar os eventos.
+
+### Desvios do desenho (e por quê)
+
+1. **A regra não foi alterada**: a duração sai de `WeaponState.phase`, não de um campo novo em `WeaponEvent`, para os 99 testes de `game-weapons` ficarem iguais.
+2. **`toHostEvent`** troca o terceiro parâmetro (`recoil`) por `{ recoil, phase }` (quebra para quem chamava direto; só a sala chama).
+3. O tocador fica em `game-contracts` (e não em um pacote novo) porque é puro e sem dependência; o pacote já guardava `checkAnimation`.
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm --filter @adatechnology/game-contracts test` | 24 passaram (16 + 8 de `tool-animation.test.ts`) |
+| `pnpm --filter @adatechnology/game-weapons test` | 99 passaram |
+| `pnpm --filter @adatechnology/game-weapons-three test` | 5 passaram |
+| `pnpm --filter @adatechnology/game-test-room test` | 96 passaram (95 + 1 de ciclo e recarga; `host-events.test.ts` reescrito) |
+| `pnpm lint` | exit 0 |
+| `node examples/weapons-test-area/build.mjs && test.mjs` | `ok: bundle and room page` |
+
+Modelo da execução: `sonnet`.
