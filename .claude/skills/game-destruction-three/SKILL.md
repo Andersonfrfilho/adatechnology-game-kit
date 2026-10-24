@@ -53,7 +53,7 @@ Malha fundida (prédio assado): ligue cada peça por faixa de vértices, `{ mesh
 | `renderer.update(dt)` | integra fragmentos, peças e partículas |
 | `renderer.emit(kind, point, normal, count, speed?)` | partículas diretas (clarão de boca, espuma, faíscas de ferramenta) |
 | `renderer.explode(point, energy, radius)` | desenha uma explosão sem peça que explode (granada, foguete): clarão, fogo, fumaça, luz, som e empurrão nas peças |
-| `renderer.restore / clear / stats / dispose` | restaurar um objeto, limpar tudo, contagens, soltar recursos |
+| `renderer.restore / clear / stats / rebarCount / dispose` | restaurar um objeto, limpar tudo, contagens (`rebarCount`: vergalhões à mostra), soltar recursos |
 | `specFromObject3D(THREE, root, options?)` | gera `{ spec, parts }`: uma peça por malha, material pelo nome, juntas inferidas |
 | `heatColor(temperatureC)` | cor `0xRRGGBB` do brilho: 0 abaixo de ~450 °C, vermelho ~500, laranja ~800, branco de 1400 |
 
@@ -84,4 +84,4 @@ Malha fundida (prédio assado): ligue cada peça por faixa de vértices, `{ mesh
 - A explosão atual desenha (T0.3: a sala de testes passou a chamar `renderer.explode`); a troca para a explosão do Laboratório (E1) segue na Fase 5.
 - Efeitos passam a vir do `game-vfx-three` (E4), com teto de 6 explosões a cada 4 s por área e menos detalhe de longe.
 - Juntar as duas versões da Sala de destruição, mantendo o que cada uma tem a mais (V8).
-- Concreto armado e tijolo ganham aparência de dano aqui quando entrarem em `game-destruction`.
+- Concreto armado e tijolo (T2.3b): `spall` vira remendo da cor do núcleo, `stage` 2 solta os fragmentos do tamanho da peça (furos em `marks` vão junto), `expose` desenha o vergalhão em cilindros instanciados. **Falta para a T2.4c**: abrir a abertura na malha da parede (colapsar a faixa de vértices por peça do `bind`, cortar o buraco nas duas faces), fiadas de tijolo instanciadas no LOD0 e a normal exata do remendo de lasca (hoje o eixo fino da caixa do mundo).
