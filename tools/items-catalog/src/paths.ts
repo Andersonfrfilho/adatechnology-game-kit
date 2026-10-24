@@ -44,3 +44,6 @@ export const outputPath = (name: OutputName): string => join(GOODS_DATA, `${name
 export const MODELS_OUTPUT_PATH = join(REPO_ROOT, 'packages', 'game-items-three', 'src', 'data', 'models.json')
 
 export const WEAPONS_CALIBERS_PATH = join(REPO_ROOT, 'packages', 'game-weapons', 'src', 'data', 'calibers.json')
+
+/** The checklist of which items have a 3D model and the real size of each. */
+export const CHECKLIST_PATH = join(SPEC_DIR, 'itens-modelos-3d.md')

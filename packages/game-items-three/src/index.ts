@@ -15,3 +15,5 @@ export { hasItemModel, itemModelBuilder, itemModelEntry, listItemModels, registe
 export type { ItemModelBuilder, ItemModelEntry } from './models/registry'
 export { SHIPPED_MODELS } from './models/shipped'
 export { MODEL_BUDGET_DEVIATIONS } from './models/deviations'
+export { composeThumbnailScene, itemThumbnail, itemThumbnailSvg, renderItemThumbnail, shapeThumbnailSvg, thumbnailPatch } from './thumbnails'
+export type { ThumbnailRenderer, ThumbnailRenderOptions, ThumbnailScene } from './thumbnails'
