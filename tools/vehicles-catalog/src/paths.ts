@@ -24,3 +24,5 @@ export const OUTPUT_PATHS = {
   stats: join(FLEET_DATA, 'stats.json'),
   cardsPtBr: join(FLEET_DATA, 'cards.pt-BR.json'),
 } as const
+
+export const LITE_GOLDEN_PATH = join(REPO_ROOT, 'packages', 'game-vehicles-three', 'tests', 'fixtures', 'team-golden', 'lite.json')

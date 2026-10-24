@@ -12,7 +12,8 @@
     "catalog": "node dist/cli.js",
     "catalog:check": "node dist/cli.js --check",
     "catalog:game": "node dist/cli.js --game-out",
-    "compare": "node dist/compare.js"
+    "compare": "node dist/compare.js",
+    "record:lite": "node dist/record-lite.js"
   },
   "devDependencies": {
     "@adatechnology/game-vehicles": "workspace:*",
@@ -23,6 +24,7 @@
     "three": "0.128.0",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "three160": "npm:three@0.160.1"
   }
 }
