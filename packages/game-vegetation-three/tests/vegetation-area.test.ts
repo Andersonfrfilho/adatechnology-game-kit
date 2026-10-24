@@ -25,6 +25,18 @@ const makeRoom = (locale = 'pt-BR'): TestRoom => {
 }
 
 describe('vegetation test area', () => {
+  it('leaves, splinters and flames of the plants are drawn by the room effects world, with no particle code in the module', async () => {
+    const room = makeRoom('en')
+    room.loadModule(createVegetationTestModule({ locale: 'en' }) as never)
+    const seen: Record<string, number> = {}
+    const burst = room.vfx.burst.bind(room.vfx)
+    room.vfx.burst = (kind, ...rest) => ((seen[kind as string] = (seen[kind as string] ?? 0) + 1), burst(kind, ...rest))
+    const run = await room.runScenarios(room.scenarios.filter((scenario) => scenario.id === 'veg_shot_strips_leaves' || scenario.id === 'veg_lighter_ignites_foliage'))
+    expect(run.failed).toBe(0)
+    expect(seen.leaves ?? 0).toBeGreaterThan(0)
+    expect(seen.fire ?? 0).toBeGreaterThan(0)
+  })
+
   it('passes the contract checks of the host and lays the 18 plants', () => {
     const room = makeRoom()
     const module = createVegetationTestModule({ locale: 'pt-BR' })
