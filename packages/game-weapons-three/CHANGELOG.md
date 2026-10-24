@@ -1,5 +1,21 @@
 # @adatechnology/game-weapons-three
 
+## 0.6.0
+
+### Minor Changes
+
+- 0f9e616: `createWeaponAudio` now runs on `@adatechnology/game-audio`: the three primitives are recipes and the WebAudio trace is the one recorded before the change. New option `engine` to play on a shared engine (the weapons area uses the one the host lends in `host.audio`), with its own random stream. The reload, dry-fire and bolt sounds of the art scene replace the SDK's clicks as the default `MECHANICAL_SOUNDS` (steps `scene_tone` and `scene_noise`). `game-audio` is a dependency.
+
+### Patch Changes
+
+- Updated dependencies [7fd46fb]
+- Updated dependencies [0f9e616]
+- Updated dependencies [3a8cc95]
+  - @adatechnology/game-contracts@0.10.0
+  - @adatechnology/game-audio@0.1.0
+  - @adatechnology/game-weapons@0.4.2
+  - @adatechnology/game-interactables-three@0.1.3
+
 ## 0.5.0
 
 ### Minor Changes

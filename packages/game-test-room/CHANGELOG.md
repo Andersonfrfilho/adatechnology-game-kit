@@ -1,5 +1,27 @@
 # @adatechnology/game-test-room
 
+## 0.8.0
+
+### Minor Changes
+
+- 0f9e616: The room lends `host.audio` (a sink over the room's sound engine, the listener following the camera every frame) and `host.environment` (a bus; calm dry day by default) to the modules it loads. New options `audio` (an engine, or `false` for a silent room) and `environment`, and `room.audio` and `room.environment`. The destruction renderer's sound keys play on the room engine.
+
+### Patch Changes
+
+- Updated dependencies [7fd46fb]
+- Updated dependencies [0f9e616]
+- Updated dependencies [3a8cc95]
+- Updated dependencies [0f9e616]
+  - @adatechnology/game-contracts@0.10.0
+  - @adatechnology/game-audio@0.1.0
+  - @adatechnology/game-destruction-three@0.6.0
+  - @adatechnology/game-destruction@0.6.1
+  - @adatechnology/game-fluids@0.2.1
+  - @adatechnology/game-vfx@0.1.1
+  - @adatechnology/game-vfx-three@0.1.1
+  - @adatechnology/game-weapons@0.4.2
+  - @adatechnology/game-fluids-three@0.2.1
+
 ## 0.7.0
 
 ### Minor Changes

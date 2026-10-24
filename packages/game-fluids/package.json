@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-fluids",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "MIT",
   "description": "Engine-agnostic liquids for games: containers with level, temperature and tilt (fill, pour, drink, spill, leak through holes), streams, and puddles and stains that spread, soak and dry on surfaces. Deterministic. Knows nothing about any game.",
   "keywords": [
