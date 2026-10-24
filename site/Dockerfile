@@ -31,6 +31,7 @@ COPY packages/game-vegetation-species/package.json packages/game-vegetation-spec
 COPY packages/game-vehicles/package.json packages/game-vehicles/
 COPY packages/game-vehicles-fleet/package.json packages/game-vehicles-fleet/
 COPY packages/game-vfx/package.json packages/game-vfx/
+COPY packages/game-vfx-three/package.json packages/game-vfx-three/
 COPY packages/game-weapons/package.json packages/game-weapons/
 COPY packages/game-weapons-three/package.json packages/game-weapons-three/
 COPY tools/golden/package.json tools/golden/

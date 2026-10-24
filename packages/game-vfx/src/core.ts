@@ -11,6 +11,7 @@ import type { Shock } from './pools/shocks'
 import type { Spark } from './pools/sparks'
 import type { MutableVec3, RandomStream } from './random'
 import type { Schedule } from './schedule'
+import type { VfxTrace } from './trace'
 import type { LodBands, ScreenState, VfxLayer, VfxProfile, VfxSideRequest } from './types'
 
 export type RandomMode = 'per_event' | 'shared'
@@ -40,6 +41,7 @@ export interface VfxCore {
   readonly sharedRandom: RandomStream
   readonly reducedMotion: boolean
   readonly gravity: number
+  readonly trace: VfxTrace | undefined
   /** What the last explosion made: puffs, sparks, chunks, lights (the Lab's `evCount`). */
   readonly spawned: { puffs: number; sparks: number; chunks: number; lights: number }
   readonly clock: { time: number; lastBlast: number; lod: number; forcedLod: number | null }

@@ -4,14 +4,15 @@ import { EXPLOSIONS, EXPLOSION_ALIASES } from './catalog'
 import { hexToLinearRgb } from './color'
 import { DEFAULT_GRAVITY, DEFAULT_WIND } from './constants'
 import type { RandomMode, VfxCore } from './core'
-import { createFirePool, spawnFire, updateFires } from './emitters/fire'
+import { addFire, createFirePool, updateFires } from './emitters/fire'
+import type { Fire } from './emitters/fire'
 import { composeExplosion } from './explosion'
 import type { GroundField } from './ground'
 import { createLightPool, resetLightPool, updateLights } from './lights'
 import type { LightPool } from './lights'
 import { LOD_GAME } from './lod'
 import { createMarkStore } from './marks'
-import type { MarkStore } from './marks'
+import type { MarkEvent, MarkStore } from './marks'
 import type { OrderedPool } from './pool'
 import { updateChunks } from './pools/chunk-motion'
 import { createChunkPool } from './pools/chunks'
@@ -29,6 +30,7 @@ import { lehmer, streamFor } from './random'
 import type { MutableVec3, RandomStream } from './random'
 import { createSchedule } from './schedule'
 import { createScreenState, resetScreenState, updateScreen } from './screen'
+import type { VfxTrace } from './trace'
 import type { AreaCap, ExplosionDef, Follow, LodBands, ScreenState, VfxLayer, VfxProfile, VfxProfileName, VfxSideRequest, VfxStats, Vec3Like } from './types'
 import { VFX_LAYERS } from './types'
 
@@ -50,6 +52,8 @@ export interface VfxOptions {
   readonly explosions?: Readonly<Record<string, ExplosionDef>>
   readonly aliases?: Readonly<Record<string, string>>
   readonly reducedMotion?: boolean
+  /** Hears everything that spawns, in order (the goldens use it). */
+  readonly trace?: VfxTrace
   readonly onRequest?: (request: VfxSideRequest) => void
 }
 
@@ -111,8 +115,14 @@ export interface VfxWorld {
   screen(): Readonly<ScreenState>
   stats(): VfxStats
   pools(): VfxPoolsView
+  /** The live lingering fires, oldest first. */
+  fires(): readonly Fire[]
+  /** Hears every mark the moment it is made, and when they are cleared. Returns the function that stops listening. */
+  onMarks(listener: (event: MarkEvent) => void): () => void
   /** Seconds the world has run since it was created or cleared. */
   time(): number
+  /** The state of the shared stream (`randomMode: 'shared'`): what a golden compares after a run. */
+  randomState(): number
   /** Takes everything away (pools, marks, ground, timers, lights, screen) and restarts the clock. */
   clear(): void
   /** The catalogue ids `explosion` accepts, aliases included. */
@@ -180,6 +190,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
     sharedRandom,
     reducedMotion: options.reducedMotion ?? false,
     gravity: options.gravity ?? DEFAULT_GRAVITY,
+    trace: options.trace,
     spawned: { puffs: 0, sparks: 0, chunks: 0, lights: 0 },
     clock: { time: 0, lastBlast: -1, lod: 1, forcedLod: null },
     groundAt,
@@ -215,7 +226,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
     fire(fireOptions) {
       const handle = ++handles.next
       const { point, offset, seed, radius, smokeColor, ...rest } = fireOptions
-      spawnFire(core.fires, streamOf(seed), {
+      addFire(core, streamOf(seed), {
         ...rest, r: radius, x: point[0], y: point[1], z: point[2], fx: offset?.[0] ?? 0, fy: offset?.[1] ?? 0, fz: offset?.[2] ?? 0,
         ...(smokeColor !== undefined ? { color: hexToLinearRgb(smokeColor) } : {}),
       }, handle)
@@ -284,7 +295,10 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
     pools: () => ({
       puffs: core.puffs, sparks: core.sparks, glows: core.glows, chunks: core.chunks, shocks: core.shocks, rings: core.rings, lights: core.lights, marks: core.marks, ground,
     }),
+    fires: () => core.fires.items,
+    onMarks: (listener) => core.marks.subscribe(listener),
     time: () => core.clock.time,
+    randomState: () => sharedRandom.state,
     clear() {
       for (const pool of [core.puffs, core.sparks, core.glows, core.chunks, core.fires, core.shocks, core.rings] as OrderedPool<object>[]) pool.clear()
       core.marks.clear()

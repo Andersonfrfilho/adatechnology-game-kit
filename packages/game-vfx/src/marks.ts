@@ -46,6 +46,8 @@ export interface BloodMark {
 
 export type Mark = ScorchMark | DirtMark | RockMark | BloodMark
 
+export type MarkEvent = { readonly type: 'add'; readonly mark: Mark } | { readonly type: 'clear' }
+
 export interface MarkStore {
   readonly entries: Mark[]
   /** Goes up on every mark added or cleared. */
@@ -55,6 +57,8 @@ export interface MarkStore {
   lift: number
   add(mark: Mark): void
   clear(): void
+  /** Tells a renderer the moment a mark is made (the ground it conforms to is the ground of that moment) or taken away. */
+  subscribe(listener: (event: MarkEvent) => void): () => void
 }
 
 const BLOOD_LIMIT = 450
@@ -65,6 +69,7 @@ export function createMarkStore(): MarkStore {
   const entries: Mark[] = []
   let version = 0
   let bloodCount = 0
+  const listeners = new Set<(event: MarkEvent) => void>()
   return {
     entries,
     get version() {
@@ -78,12 +83,20 @@ export function createMarkStore(): MarkStore {
       entries.push(mark)
       if (mark.kind === 'blood') bloodCount++
       version++
+      for (const listener of listeners) listener({ type: 'add', mark })
     },
     clear() {
       entries.length = 0
       bloodCount = 0
       this.lift = 0
       version++
+      for (const listener of listeners) listener({ type: 'clear' })
+    },
+    subscribe(listener) {
+      listeners.add(listener)
+      return () => {
+        listeners.delete(listener)
+      }
     },
   }
 }

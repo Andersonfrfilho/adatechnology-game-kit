@@ -292,4 +292,31 @@ describe('createVfx', () => {
     const front = requests.find((request) => request.type === 'blast_front')
     expect(front && 'cone' in front && front.cone?.angle).toBeCloseTo(Math.PI / 2, 12)
   })
+
+  it('tells a listener each mark the moment it is made, and when they are cleared', () => {
+    const { world } = makeWorld({ ground: createGroundField() })
+    const events: string[] = []
+    const stop = world.onMarks((event) => events.push(event.type === 'add' ? event.mark.kind : 'clear'))
+    world.explosion('test_blast', ORIGIN)
+    expect(events[0]).toBe('dirt')
+    expect(events).toContain('scorch')
+    expect(events.filter((kind) => kind === 'rock').length).toBeGreaterThan(5)
+    world.clear()
+    expect(events.at(-1)).toBe('clear')
+    stop()
+    world.explosion('test_blast', ORIGIN)
+    expect(events.at(-1)).toBe('clear')
+  })
+
+  it('a trace hears what spawns, in order, and the shared stream state is readable', () => {
+    const heard: string[] = []
+    const { world } = makeWorld({ randomMode: 'shared', trace: { light: () => heard.push('light'), glow: () => heard.push('glow'), puff: () => heard.push('puff'), shock: () => heard.push('shock') } })
+    const before = world.randomState()
+    world.setCamera([0, 1.6, 1])
+    world.explosion('test_blast', ORIGIN)
+    expect(heard.slice(0, 4)).toEqual(['light', 'glow', 'glow', 'puff'])
+    expect(heard).toContain('shock')
+    expect(world.randomState()).not.toBe(before)
+    expect(world.fires().length).toBe(1)
+  })
 })

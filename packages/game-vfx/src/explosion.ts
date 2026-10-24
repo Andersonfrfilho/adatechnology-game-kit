@@ -1,13 +1,13 @@
 import { hexToLinearRgb, hexToRgb } from './color'
 import { SMOKE_COLORS } from './constants'
 import type { VfxCore } from './core'
-import { spawnFire } from './emitters/fire'
 import { lightBlast } from './lights'
 import { lodScale } from './lod'
 import { addCrater, addScorch } from './marks'
 import { spawnRing } from './pools/rings'
 import { spawnShock } from './pools/shocks'
 import type { RandomStream, MutableVec3 } from './random'
+import { addFire } from './emitters/fire'
 import { addChunk, addGlow, addPuff, addSpark } from './spawn'
 import type { ExplosionDef, MushroomSpec } from './types'
 import { addScaled, createVec3, distanceBetween, normalize } from './vector'
@@ -59,9 +59,9 @@ function composeFlash(context: Context): void {
   const { core, def, x, y, z, size } = context
   if (!core.layers.flash) return
   const flash = def.flash
-  lightBlast(core.lights, {
-    x, y: y + size * 0.6, z, peak: (flash.light || DEFAULT_LIGHT) * 0.7, distance: (def.injury || 10) * 2.4, life: flash.life || DEFAULT_LIGHT_LIFE, color: flash.color || DEFAULT_LIGHT_COLOR,
-  })
+  const light = { x, y: y + size * 0.6, z, peak: (flash.light || DEFAULT_LIGHT) * 0.7, distance: (def.injury || 10) * 2.4, life: flash.life || DEFAULT_LIGHT_LIFE, color: flash.color || DEFAULT_LIGHT_COLOR }
+  core.trace?.light?.(light)
+  lightBlast(core.lights, light)
   core.spawned.lights++
   const blinding = flash.blinding === true
   addGlow(core, { x, y: y + size * 0.4, z, s: size * 1.4, s1: size * 3.2, i: flash.intensity || DEFAULT_FLASH_INTENSITY, life: 0.22, color: [1, 0.92, 0.75], curve: 2.5 })
@@ -125,7 +125,9 @@ function composeShock(context: Context): void {
   const { core, def, x, y, z, size, scale } = context
   if (!core.layers.shock || def.shock === false || !(scale > 0.15)) return
   const duration = def.shock ? def.shock.duration : DEFAULT_SHOCK_DURATION
-  spawnShock(core.shocks, { x, y: y + size * 0.3, z, shellRadius: def.lethal * 0.9, groundRadius: def.injury * 0.6, duration })
+  const spec = { x, y: y + size * 0.3, z, shellRadius: def.lethal * 0.9, groundRadius: def.injury * 0.6, duration }
+  core.trace?.shock?.(spec)
+  spawnShock(core.shocks, spec)
 }
 
 function composeDust(context: Context): void {
@@ -244,6 +246,7 @@ function composeRimDebris(context: Context): void {
 
 function composeMushroom(context: Context, spec: MushroomSpec): void {
   const { core, random, x, y, z } = context
+  core.trace?.mushroom?.(x, y, z, spec)
   const color = spec.color !== undefined ? hexToLinearRgb(spec.color) : SMOKE_COLORS.black
   const ring = spawnRing(core.rings, {
     x, z, y0: y + spec.height * 0.15, rise: spec.height, rk: spec.riseRate ?? 0.55, R0: spec.radius * 0.3, R1: spec.radius, r: spec.radius * 0.42, roll: spec.roll ?? 2.4, life: spec.life || 7,
@@ -281,14 +284,21 @@ function composeAfterEffects(context: Context): void {
   const mark = def.mark
   if (mark.crater && mark.dent && y < 1.2) {
     core.emit({ type: 'crater', x, z, radius: mark.crater, depth: mark.dent })
+    core.trace?.crater?.(x, z, mark.crater, mark.dent)
     addCrater(core.marks, core.ground, random, { x, z, radius: mark.crater, depth: mark.dent, marks: core.layers.mark })
     if (core.layers.shrapnel) composeRimDebris(context)
   }
-  if (mark.scorch && y < 1.2 && core.layers.mark) addScorch(core.marks, random, x, z, mark.scorch)
+  if (mark.scorch && y < 1.2 && core.layers.mark) {
+    core.trace?.scorch?.(x, z, mark.scorch)
+    addScorch(core.marks, random, x, z, mark.scorch)
+  }
   if (def.mushroom && core.layers.fire) composeMushroom(context, def.mushroom)
   if (def.residualFires && core.layers.fire) {
     for (const fire of def.residualFires) {
-      spawnFire(core.fires, random, { x: x + (fire.dx ?? 0), y: 0, z: z + (fire.dz ?? 0), r: fire.radius, life: fire.life, rate: fire.rate, smoke: fire.smoke, startRadius: fire.startRadius, grow: fire.grow, color: fire.smokeColor !== undefined ? hexToLinearRgb(fire.smokeColor) : undefined }, context.call.handle)
+      addFire(core, random, {
+        x: x + (fire.dx ?? 0), y: 0, z: z + (fire.dz ?? 0), r: fire.radius, life: fire.life, rate: fire.rate, smoke: fire.smoke, startRadius: fire.startRadius, grow: fire.grow,
+        color: fire.smokeColor !== undefined ? hexToLinearRgb(fire.smokeColor) : undefined,
+      }, context.call.handle)
     }
   }
 }

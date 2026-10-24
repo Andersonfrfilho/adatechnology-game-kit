@@ -2,9 +2,8 @@ import type { Rgb } from '../color'
 import { SMOKE_COLORS } from '../constants'
 import type { VfxCore } from '../core'
 import { OrderedPool } from '../pool'
-import { spawnPuff } from '../pools/puffs'
-import { spawnSpark } from '../pools/sparks'
 import type { RandomStream } from '../random'
+import { addPuff, addSpark } from '../spawn'
 import type { Follow } from '../types'
 import { lerp } from '../vector'
 
@@ -66,6 +65,12 @@ export function spawnFire(pool: OrderedPool<Fire>, random: RandomStream, init: F
   return fire
 }
 
+export function addFire(core: VfxCore, random: RandomStream, init: FireInit, handle: number): Fire {
+  const fire = spawnFire(core.fires, random, init, handle)
+  core.trace?.fire?.(fire)
+  return fire
+}
+
 function positionOf(follow: Follow): { x: number; y: number; z: number } {
   return 'position' in follow ? follow.position : follow
 }
@@ -77,14 +82,13 @@ function emitFlames(core: VfxCore, fire: Fire, radius: number, dt: number): void
     fire.acc -= 1
     const angle = random.next() * Math.PI * 2
     const distance = Math.sqrt(random.next()) * radius
-    spawnPuff(core.puffs, random, {
+    addPuff(core, random, {
       x: fire.x + Math.cos(angle) * distance, y: fire.y + 0.05, z: fire.z + Math.sin(angle) * distance,
       vx: random.between(-0.2, 0.2), vy: random.between(0.6, 1.4), vz: random.between(-0.2, 0.2),
       s0: 0.1, s1: random.between(0.28, 0.46) * (0.8 + Math.min(radius, 3) * 0.22), sg: -0.08,
       life: random.between(0.45, 0.85), h0: random.between(1, 1.25), hl: random.between(0.35, 0.6),
       drag: 1.5, buoy: 3.2, color: fire.color, kind: 0, wind: 0.4,
     })
-    core.spawned.puffs++
   }
 }
 
@@ -93,24 +97,22 @@ function emitSmoke(core: VfxCore, fire: Fire, radius: number, dt: number): void 
   fire.smokeAcc += dt * fire.smoke * (1 + radius * 0.8) * fire.fade * core.clock.lod
   while (fire.smokeAcc >= 1 && core.layers.smoke) {
     fire.smokeAcc -= 1
-    spawnPuff(core.puffs, random, {
+    addPuff(core, random, {
       x: fire.x + random.between(-radius, radius) * 0.5, y: fire.y + 0.6 + radius * 0.3, z: fire.z + random.between(-radius, radius) * 0.5,
       vy: random.between(0.8, 1.5), s0: 0.25, s1: 0.6 + Math.min(radius, 2) * 0.3, sg: 0.3, life: random.between(4, 6.5),
       h0: 0.25, hl: 0.25, drag: 0.6, buoy: 0.55, color: fire.color, kind: 0,
     })
-    core.spawned.puffs++
   }
 }
 
 function emitEmber(core: VfxCore, fire: Fire, radius: number, dt: number): void {
   const random = fire.rng
   if (!(random.next() < dt * 6 * fire.fade && core.layers.shrapnel)) return
-  spawnSpark(core.sparks, {
+  addSpark(core, {
     x: fire.x + random.between(-radius, radius) * 0.6, y: fire.y + 0.4, z: fire.z + random.between(-radius, radius) * 0.6,
     vx: random.between(-0.4, 0.4), vy: random.between(1.5, 3.2), vz: random.between(-0.4, 0.4),
     life: random.between(0.8, 1.6), w: 0.025, st: 0.02, kind: 4, g: -0.6, drag: 1.2,
   })
-  core.spawned.sparks++
 }
 
 /** `updateFires` (L430-442), walking the list backwards like the Lab. */
