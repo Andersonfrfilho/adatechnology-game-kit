@@ -938,5 +938,15 @@
       2.804
     ],
     "scale": 0.1
+  },
+  {
+    "id": "binoculars",
+    "teamId": "binoculo",
+    "teamBox": [
+      1.8,
+      1.5,
+      1.211
+    ],
+    "scale": 0.1
   }
 ]
