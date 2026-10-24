@@ -1248,5 +1248,15 @@
       0.45
     ],
     "scale": 0.1
+  },
+  {
+    "id": "arrows_and_bolts",
+    "teamId": "flecha",
+    "teamBox": [
+      7,
+      0.252,
+      0.402
+    ],
+    "scale": 0.1
   }
 ]
