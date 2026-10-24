@@ -16,6 +16,9 @@
   "devDependencies": {
     "@adatechnology/game-animals-species": "workspace:*",
     "@adatechnology/game-animals-three": "workspace:*",
+    "@adatechnology/game-characters": "workspace:*",
+    "@adatechnology/game-characters-three": "workspace:*",
+    "@adatechnology/game-characters-undead": "workspace:*",
     "@adatechnology/game-interactables-household": "workspace:*",
     "@adatechnology/game-interactables-three": "workspace:*",
     "@adatechnology/game-items-goods": "workspace:*",

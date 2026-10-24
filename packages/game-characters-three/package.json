@@ -45,7 +45,8 @@
   "dependencies": {
     "@adatechnology/game-audio": "workspace:*",
     "@adatechnology/game-characters": "workspace:*",
-    "@adatechnology/game-contracts": "workspace:*"
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-shapes-three": "workspace:*"
   },
   "peerDependencies": {
     "three": "^0.160.0"

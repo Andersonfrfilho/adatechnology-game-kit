@@ -1,3 +1,4 @@
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 import { createRoundedBoxGeometry } from './rounded-box'
 
@@ -76,10 +77,14 @@ export interface ModelKit {
 
 const kits = new WeakMap<Three, ModelKit>()
 
-/** One kit per three.js namespace: the materials and the geometry cache are shared by every model built with it. */
-export function modelKit(THREE: Three): ModelKit {
-  const cached = kits.get(THREE)
+/**
+ * One kit per three.js namespace: the materials and the geometry cache are shared by every model built with it. The kit's `THREE` is
+ * `shapeGeometries(host)`: box, cylinder, cone, sphere and torus come from game-shapes (the same bytes, the same classes); the rest is the host's.
+ */
+export function modelKit(host: Three): ModelKit {
+  const cached = kits.get(host)
   if (cached) return cached
+  const THREE = shapeGeometries(host)
   const geometries = new Map<string, THREE_NS.BufferGeometry>()
   const shadowed = <TObject extends THREE_NS.Mesh>(mesh: TObject): TObject => {
     mesh.castShadow = true
@@ -138,7 +143,7 @@ export function modelKit(THREE: Three): ModelKit {
       return group
     },
   }
-  kits.set(THREE, kit)
+  kits.set(host, kit)
   return kit
 }
 

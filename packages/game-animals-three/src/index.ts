@@ -5,6 +5,7 @@
 import { GAIT_PHASES } from '@adatechnology/game-animals'
 import type { AnimalSpecies, AnimalVisualState, GaitPhases } from '@adatechnology/game-animals'
 import { collectReferencedNodes, createNodeSkin } from '@adatechnology/game-props3d'
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import type { NodeSkin } from '@adatechnology/game-props3d'
 import type * as THREE_NS from 'three'
 
@@ -60,7 +61,12 @@ const countTriangles = (root: THREE_NS.Object3D): number => {
   return Math.round(triangles)
 }
 
-export const createAnimalsThree = (THREE: Three, options: AnimalsThreeOptions = {}): AnimalsThree => {
+/**
+ * The animals drawn with the host's three.js. The geometry (boxes, cylinders, cones, spheres, circles, tori, the lathe of the bodies) comes from
+ * game-shapes through `shapeGeometries(host)`: the same bytes and classes as three's, from a template cache; everything else is the host's.
+ */
+export const createAnimalsThree = (host: Three, options: AnimalsThreeOptions = {}): AnimalsThree => {
+  const THREE = shapeGeometries(host)
   const random = options.random ?? createStream(options.seed ?? 7)
   const documentOf = (): DocumentLike => {
     const found = options.document ?? (globalThis as { document?: DocumentLike }).document

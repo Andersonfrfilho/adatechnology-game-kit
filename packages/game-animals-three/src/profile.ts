@@ -1,3 +1,4 @@
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 
 import type { Three } from './types'
@@ -13,5 +14,6 @@ export const profileGeometry = (THREE: Three, length: number, profile: readonly 
     outline.push(new THREE.Vector2(Math.max(0.001, point.y), -length / 2 + point.x * length))
   }
   outline.push(new THREE.Vector2(0.001, length / 2))
-  return new THREE.LatheGeometry(outline, segments || 22).rotateX(Math.PI / 2)
+  // the lathe comes from game-shapes (the same bytes as three's); a namespace already wrapped is given back as it is
+  return new (shapeGeometries(THREE).LatheGeometry)(outline, segments || 22).rotateX(Math.PI / 2)
 }

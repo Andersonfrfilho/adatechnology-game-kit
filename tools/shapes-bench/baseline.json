@@ -9,56 +9,172 @@
   "overrides": {},
   "entries": {
     "animals/capybara": {
-      "ratio": 3.4707,
-      "ms": 2.1289
+      "ratio": 0.9713,
+      "ms": 0.757
     },
     "animals/cat": {
-      "ratio": 3.6587,
-      "ms": 2.2442
+      "ratio": 1.2196,
+      "ms": 0.9506
     },
     "animals/chicken": {
-      "ratio": 2.1632,
-      "ms": 1.3269
+      "ratio": 0.5492,
+      "ms": 0.4281
     },
     "animals/cow": {
-      "ratio": 3.812,
-      "ms": 2.3382
+      "ratio": 1.4998,
+      "ms": 1.169
     },
     "animals/dog": {
-      "ratio": 3.7553,
-      "ms": 2.3034
+      "ratio": 1.1862,
+      "ms": 0.9245
     },
     "animals/horse": {
-      "ratio": 4.0224,
-      "ms": 2.4673
+      "ratio": 1.2789,
+      "ms": 0.9967
     },
     "animals/jaguar": {
-      "ratio": 4.9125,
-      "ms": 3.0132
+      "ratio": 1.6332,
+      "ms": 1.2729
     },
     "animals/lancehead": {
-      "ratio": 2.8527,
-      "ms": 1.7498
+      "ratio": 0.81,
+      "ms": 0.6313
     },
     "animals/pig": {
-      "ratio": 3.8107,
-      "ms": 2.3374
+      "ratio": 1.1627,
+      "ms": 0.9062
     },
     "animals/rat": {
-      "ratio": 4.2449,
-      "ms": 2.6037
+      "ratio": 1.3755,
+      "ms": 1.072
     },
     "animals/southern_lapwing": {
-      "ratio": 2.1033,
-      "ms": 1.2901
+      "ratio": 0.5713,
+      "ms": 0.4453
     },
     "animals/vulture": {
-      "ratio": 2.1713,
-      "ms": 1.3319
+      "ratio": 0.5362,
+      "ms": 0.4179
     },
     "animals/wild_boar": {
-      "ratio": 5.1013,
-      "ms": 3.1291
+      "ratio": 1.4899,
+      "ms": 1.1612
+    },
+    "characters/bake:Corredor": {
+      "ratio": 15.454,
+      "ms": 10.0234
+    },
+    "characters/bake:Lento": {
+      "ratio": 20.8149,
+      "ms": 13.5004
+    },
+    "characters/bake:Rastejante": {
+      "ratio": 14.1598,
+      "ms": 9.184
+    },
+    "characters/best:Afogado": {
+      "ratio": 1.2978,
+      "ms": 0.8417
+    },
+    "characters/best:Brutamonte": {
+      "ratio": 1.3045,
+      "ms": 0.8461
+    },
+    "characters/best:Carbonizado": {
+      "ratio": 1.4292,
+      "ms": 0.927
+    },
+    "characters/best:Cego": {
+      "ratio": 1.2102,
+      "ms": 0.7849
+    },
+    "characters/best:Corredor": {
+      "ratio": 0.9635,
+      "ms": 0.6249
+    },
+    "characters/best:Devorador": {
+      "ratio": 1.3755,
+      "ms": 0.8921
+    },
+    "characters/best:Espreitador": {
+      "ratio": 1.2623,
+      "ms": 0.8187
+    },
+    "characters/best:Farejador": {
+      "ratio": 1.1276,
+      "ms": 0.7313
+    },
+    "characters/best:Gritador": {
+      "ratio": 1.3877,
+      "ms": 0.9001
+    },
+    "characters/best:Inchado": {
+      "ratio": 1.5313,
+      "ms": 0.9932
+    },
+    "characters/best:Lento": {
+      "ratio": 1.7856,
+      "ms": 1.1581
+    },
+    "characters/best:Rastejante": {
+      "ratio": 1.0378,
+      "ms": 0.6731
+    },
+    "characters/best:Saltador": {
+      "ratio": 0.9651,
+      "ms": 0.626
+    },
+    "characters/instanced:8": {
+      "ratio": 1.153,
+      "ms": 0.7478
+    },
+    "characters/person:arnaldo": {
+      "ratio": 5.2372,
+      "ms": 3.3968
+    },
+    "characters/person:bigode": {
+      "ratio": 4.6917,
+      "ms": 3.043
+    },
+    "characters/person:brasa": {
+      "ratio": 5.1049,
+      "ms": 3.311
+    },
+    "characters/person:criancas": {
+      "ratio": 15.9601,
+      "ms": 10.3516
+    },
+    "characters/person:italo": {
+      "ratio": 5.2553,
+      "ms": 3.4085
+    },
+    "characters/person:jessica": {
+      "ratio": 4.276,
+      "ms": 2.7734
+    },
+    "characters/person:mariana": {
+      "ratio": 4.7296,
+      "ms": 3.0676
+    },
+    "characters/person:nelson": {
+      "ratio": 5.1034,
+      "ms": 3.31
+    },
+    "characters/person:rafa": {
+      "ratio": 5.7804,
+      "ms": 3.7492
+    },
+    "characters/person:rosa": {
+      "ratio": 6.252,
+      "ms": 4.055
+    },
+    "characters/person:val": {
+      "ratio": 3.9986,
+      "ms": 2.5935
+    },
+    "characters/person:zilda": {
+      "ratio": 5.5018,
+      "ms": 3.5684
     },
     "household/armchair": {
       "ratio": 0.2696,
@@ -733,400 +849,400 @@
       "ms": 9.9029
     },
     "weapons/aa_12": {
-      "ratio": 0.525,
-      "ms": 0.322
+      "ratio": 0.4037,
+      "ms": 0.2778
     },
     "weapons/accuracy_awm": {
-      "ratio": 1.1483,
-      "ms": 0.7044
+      "ratio": 0.9018,
+      "ms": 0.6206
     },
     "weapons/ak_12": {
-      "ratio": 1.4428,
-      "ms": 0.885
+      "ratio": 0.9508,
+      "ms": 0.6543
     },
     "weapons/ak_47": {
-      "ratio": 0.6215,
-      "ms": 0.3812
+      "ratio": 0.5598,
+      "ms": 0.3852
     },
     "weapons/ak_74": {
-      "ratio": 0.5979,
-      "ms": 0.3668
+      "ratio": 0.3922,
+      "ms": 0.2699
     },
     "weapons/akm": {
-      "ratio": 0.5342,
-      "ms": 0.3277
+      "ratio": 0.5354,
+      "ms": 0.3685
     },
     "weapons/at4": {
-      "ratio": 0.2202,
-      "ms": 0.1351
+      "ratio": 0.1282,
+      "ms": 0.0882
     },
     "weapons/barrett_m82a1": {
-      "ratio": 1.2714,
-      "ms": 0.7798
+      "ratio": 1.2586,
+      "ms": 0.8661
     },
     "weapons/barrett_mrad": {
-      "ratio": 2.4754,
-      "ms": 1.5184
+      "ratio": 2.182,
+      "ms": 1.5016
     },
     "weapons/benelli_m4": {
-      "ratio": 0.9381,
-      "ms": 0.5754
+      "ratio": 0.7796,
+      "ms": 0.5365
     },
     "weapons/beretta_92fs": {
-      "ratio": 0.4957,
-      "ms": 0.304
+      "ratio": 0.394,
+      "ms": 0.2711
     },
     "weapons/boito_double_barrel": {
-      "ratio": 0.3786,
-      "ms": 0.2322
+      "ratio": 0.3127,
+      "ms": 0.2152
     },
     "weapons/browning_m2": {
-      "ratio": 0.6672,
-      "ms": 0.4093
+      "ratio": 0.4132,
+      "ms": 0.2843
     },
     "weapons/carl_gustaf_m4": {
-      "ratio": 0.3301,
-      "ms": 0.2025
+      "ratio": 0.1869,
+      "ms": 0.1286
     },
     "weapons/cbc_122": {
-      "ratio": 0.6926,
-      "ms": 0.4248
+      "ratio": 0.308,
+      "ms": 0.212
     },
     "weapons/cbc_7022": {
-      "ratio": 0.4411,
-      "ms": 0.2705
+      "ratio": 0.2837,
+      "ms": 0.1953
     },
     "weapons/cbc_pump_military_3_0": {
-      "ratio": 0.5616,
-      "ms": 0.3445
+      "ratio": 0.3727,
+      "ms": 0.2565
     },
     "weapons/cheytac_m200": {
-      "ratio": 1.4688,
-      "ms": 0.9009
-    },
-    "weapons/colt_m16a2": {
-      "ratio": 0.6715,
-      "ms": 0.4119
-    },
-    "weapons/colt_m1911": {
-      "ratio": 0.549,
-      "ms": 0.3367
-    },
-    "weapons/colt_m4a1": {
-      "ratio": 1.3307,
-      "ms": 0.8162
-    },
-    "weapons/cz_75": {
-      "ratio": 0.3778,
-      "ms": 0.2317
-    },
-    "weapons/cz_scorpion_evo_3": {
-      "ratio": 0.979,
-      "ms": 0.6005
-    },
-    "weapons/desert_eagle_mark_xix": {
-      "ratio": 0.455,
-      "ms": 0.2791
-    },
-    "weapons/fn_fal": {
-      "ratio": 0.6061,
-      "ms": 0.3718
-    },
-    "weapons/fn_five_seven": {
-      "ratio": 0.3417,
-      "ms": 0.2096
-    },
-    "weapons/fn_m249": {
-      "ratio": 0.9854,
-      "ms": 0.6044
-    },
-    "weapons/fn_mag": {
-      "ratio": 0.8965,
-      "ms": 0.5499
-    },
-    "weapons/fn_minimi": {
-      "ratio": 0.9116,
-      "ms": 0.5592
-    },
-    "weapons/fn_minimi_para": {
-      "ratio": 0.8012,
-      "ms": 0.4914
-    },
-    "weapons/fn_p90": {
-      "ratio": 0.474,
-      "ms": 0.2908
-    },
-    "weapons/fn_parafal": {
-      "ratio": 0.4495,
-      "ms": 0.2757
-    },
-    "weapons/fn_scar_h": {
-      "ratio": 1.6884,
-      "ms": 1.0356
-    },
-    "weapons/franchi_spas_12": {
-      "ratio": 0.3948,
-      "ms": 0.2422
-    },
-    "weapons/glock_17": {
-      "ratio": 0.454,
-      "ms": 0.2785
-    },
-    "weapons/glock_18": {
-      "ratio": 0.471,
-      "ms": 0.2889
-    },
-    "weapons/glock_19": {
-      "ratio": 0.4257,
-      "ms": 0.2611
-    },
-    "weapons/hk416": {
-      "ratio": 1.9925,
-      "ms": 1.2221
-    },
-    "weapons/hk_g36": {
-      "ratio": 0.6439,
-      "ms": 0.395
-    },
-    "weapons/hk_g36c": {
-      "ratio": 0.6809,
-      "ms": 0.4177
-    },
-    "weapons/hk_g36k": {
-      "ratio": 0.652,
-      "ms": 0.3999
-    },
-    "weapons/hk_g3a3": {
-      "ratio": 0.5551,
-      "ms": 0.3405
-    },
-    "weapons/hk_mp5a3": {
-      "ratio": 0.4077,
-      "ms": 0.2501
-    },
-    "weapons/hk_mp5k": {
-      "ratio": 0.4516,
-      "ms": 0.277
-    },
-    "weapons/hk_mp5sd3": {
-      "ratio": 0.5012,
-      "ms": 0.3074
-    },
-    "weapons/hk_mp7a1": {
-      "ratio": 0.7111,
-      "ms": 0.4362
-    },
-    "weapons/hk_psg_1": {
-      "ratio": 1.1399,
-      "ms": 0.6992
-    },
-    "weapons/hk_ump9": {
-      "ratio": 0.5372,
-      "ms": 0.3295
-    },
-    "weapons/hk_ump_45": {
-      "ratio": 0.5644,
-      "ms": 0.3462
-    },
-    "weapons/hunting_rifle_30_06": {
-      "ratio": 1.1526,
-      "ms": 0.707
-    },
-    "weapons/imbel_ia2": {
-      "ratio": 0.7359,
-      "ms": 0.4514
-    },
-    "weapons/improvised_flamethrower": {
-      "ratio": 1.214,
-      "ms": 0.7447
-    },
-    "weapons/kel_tec_ksg": {
-      "ratio": 0.4465,
-      "ms": 0.2739
-    },
-    "weapons/knights_sr_25_mk11": {
-      "ratio": 2.2591,
-      "ms": 1.3857
-    },
-    "weapons/kriss_vector": {
-      "ratio": 1.0489,
-      "ms": 0.6434
-    },
-    "weapons/m134": {
-      "ratio": 1.2576,
-      "ms": 0.7714
-    },
-    "weapons/m14_ebr": {
-      "ratio": 2.1377,
-      "ms": 1.3112
-    },
-    "weapons/m24_sws": {
-      "ratio": 1.1821,
-      "ms": 0.725
-    },
-    "weapons/m2_flamethrower": {
-      "ratio": 1.8539,
-      "ms": 1.1372
-    },
-    "weapons/m60": {
-      "ratio": 0.8358,
-      "ms": 0.5127
-    },
-    "weapons/m72_law": {
-      "ratio": 0.2931,
-      "ms": 0.1798
-    },
-    "weapons/mac_10": {
-      "ratio": 0.2325,
-      "ms": 0.1426
-    },
-    "weapons/makarov_pm": {
-      "ratio": 0.3907,
-      "ms": 0.2397
-    },
-    "weapons/mg3": {
-      "ratio": 0.9774,
-      "ms": 0.5995
-    },
-    "weapons/mini_uzi": {
-      "ratio": 0.3295,
-      "ms": 0.2021
-    },
-    "weapons/mosin_nagant_91_30": {
-      "ratio": 0.5228,
-      "ms": 0.3207
-    },
-    "weapons/mossberg_500": {
-      "ratio": 0.3491,
-      "ms": 0.2141
-    },
-    "weapons/mossberg_500_cruiser": {
-      "ratio": 0.3527,
-      "ms": 0.2163
-    },
-    "weapons/pkm": {
-      "ratio": 0.663,
-      "ms": 0.4067
-    },
-    "weapons/pp19_bizon": {
-      "ratio": 0.663,
-      "ms": 0.4067
-    },
-    "weapons/remington_700": {
-      "ratio": 1.2293,
-      "ms": 0.754
-    },
-    "weapons/remington_700_300wm": {
-      "ratio": 0.8799,
-      "ms": 0.5397
-    },
-    "weapons/remington_870": {
-      "ratio": 0.3429,
-      "ms": 0.2103
-    },
-    "weapons/rossi_puma": {
-      "ratio": 0.4555,
-      "ms": 0.2794
-    },
-    "weapons/rpg_7": {
-      "ratio": 0.5822,
-      "ms": 0.3571
-    },
-    "weapons/rpk": {
-      "ratio": 0.5545,
-      "ms": 0.3401
-    },
-    "weapons/ruger_10_22": {
-      "ratio": 0.4565,
-      "ms": 0.28
-    },
-    "weapons/saiga_12": {
-      "ratio": 0.5369,
-      "ms": 0.3293
-    },
-    "weapons/sako_trg_42": {
-      "ratio": 1.1696,
-      "ms": 0.7174
-    },
-    "weapons/sig_mpx": {
-      "ratio": 1.2915,
-      "ms": 0.7922
-    },
-    "weapons/sig_sauer_p226": {
-      "ratio": 0.3085,
-      "ms": 0.1892
-    },
-    "weapons/sks": {
-      "ratio": 0.4953,
-      "ms": 0.3038
-    },
-    "weapons/steyr_aug_a1": {
-      "ratio": 0.5256,
-      "ms": 0.3224
-    },
-    "weapons/steyr_ssg_69": {
-      "ratio": 1.0225,
+      "ratio": 0.9113,
       "ms": 0.6272
     },
+    "weapons/colt_m16a2": {
+      "ratio": 0.465,
+      "ms": 0.32
+    },
+    "weapons/colt_m1911": {
+      "ratio": 0.5453,
+      "ms": 0.3753
+    },
+    "weapons/colt_m4a1": {
+      "ratio": 1.1925,
+      "ms": 0.8207
+    },
+    "weapons/cz_75": {
+      "ratio": 0.2623,
+      "ms": 0.1805
+    },
+    "weapons/cz_scorpion_evo_3": {
+      "ratio": 0.6829,
+      "ms": 0.4699
+    },
+    "weapons/desert_eagle_mark_xix": {
+      "ratio": 0.3715,
+      "ms": 0.2557
+    },
+    "weapons/fn_fal": {
+      "ratio": 0.5378,
+      "ms": 0.3701
+    },
+    "weapons/fn_five_seven": {
+      "ratio": 0.276,
+      "ms": 0.1899
+    },
+    "weapons/fn_m249": {
+      "ratio": 0.7226,
+      "ms": 0.4973
+    },
+    "weapons/fn_mag": {
+      "ratio": 0.6558,
+      "ms": 0.4513
+    },
+    "weapons/fn_minimi": {
+      "ratio": 0.6253,
+      "ms": 0.4304
+    },
+    "weapons/fn_minimi_para": {
+      "ratio": 0.6846,
+      "ms": 0.4711
+    },
+    "weapons/fn_p90": {
+      "ratio": 0.3643,
+      "ms": 0.2507
+    },
+    "weapons/fn_parafal": {
+      "ratio": 0.449,
+      "ms": 0.309
+    },
+    "weapons/fn_scar_h": {
+      "ratio": 1.5189,
+      "ms": 1.0453
+    },
+    "weapons/franchi_spas_12": {
+      "ratio": 0.2822,
+      "ms": 0.1942
+    },
+    "weapons/glock_17": {
+      "ratio": 0.2958,
+      "ms": 0.2035
+    },
+    "weapons/glock_18": {
+      "ratio": 0.3573,
+      "ms": 0.2459
+    },
+    "weapons/glock_19": {
+      "ratio": 0.3796,
+      "ms": 0.2612
+    },
+    "weapons/hk416": {
+      "ratio": 1.2045,
+      "ms": 0.8289
+    },
+    "weapons/hk_g36": {
+      "ratio": 0.6069,
+      "ms": 0.4176
+    },
+    "weapons/hk_g36c": {
+      "ratio": 0.515,
+      "ms": 0.3544
+    },
+    "weapons/hk_g36k": {
+      "ratio": 0.569,
+      "ms": 0.3915
+    },
+    "weapons/hk_g3a3": {
+      "ratio": 0.3459,
+      "ms": 0.2381
+    },
+    "weapons/hk_mp5a3": {
+      "ratio": 0.406,
+      "ms": 0.2794
+    },
+    "weapons/hk_mp5k": {
+      "ratio": 0.3187,
+      "ms": 0.2193
+    },
+    "weapons/hk_mp5sd3": {
+      "ratio": 0.409,
+      "ms": 0.2815
+    },
+    "weapons/hk_mp7a1": {
+      "ratio": 0.6038,
+      "ms": 0.4155
+    },
+    "weapons/hk_psg_1": {
+      "ratio": 0.8413,
+      "ms": 0.579
+    },
+    "weapons/hk_ump9": {
+      "ratio": 0.4252,
+      "ms": 0.2926
+    },
+    "weapons/hk_ump_45": {
+      "ratio": 0.5032,
+      "ms": 0.3463
+    },
+    "weapons/hunting_rifle_30_06": {
+      "ratio": 0.631,
+      "ms": 0.4342
+    },
+    "weapons/imbel_ia2": {
+      "ratio": 0.5376,
+      "ms": 0.37
+    },
+    "weapons/improvised_flamethrower": {
+      "ratio": 0.8542,
+      "ms": 0.5878
+    },
+    "weapons/kel_tec_ksg": {
+      "ratio": 0.3551,
+      "ms": 0.2444
+    },
+    "weapons/knights_sr_25_mk11": {
+      "ratio": 2.0784,
+      "ms": 1.4303
+    },
+    "weapons/kriss_vector": {
+      "ratio": 0.7471,
+      "ms": 0.5141
+    },
+    "weapons/m134": {
+      "ratio": 0.6206,
+      "ms": 0.4271
+    },
+    "weapons/m14_ebr": {
+      "ratio": 1.7736,
+      "ms": 1.2205
+    },
+    "weapons/m24_sws": {
+      "ratio": 0.6587,
+      "ms": 0.4533
+    },
+    "weapons/m2_flamethrower": {
+      "ratio": 2.299,
+      "ms": 1.5821
+    },
+    "weapons/m60": {
+      "ratio": 0.6431,
+      "ms": 0.4426
+    },
+    "weapons/m72_law": {
+      "ratio": 0.174,
+      "ms": 0.1197
+    },
+    "weapons/mac_10": {
+      "ratio": 0.1541,
+      "ms": 0.106
+    },
+    "weapons/makarov_pm": {
+      "ratio": 0.2857,
+      "ms": 0.1966
+    },
+    "weapons/mg3": {
+      "ratio": 0.6691,
+      "ms": 0.4604
+    },
+    "weapons/mini_uzi": {
+      "ratio": 0.2339,
+      "ms": 0.161
+    },
+    "weapons/mosin_nagant_91_30": {
+      "ratio": 0.4253,
+      "ms": 0.2927
+    },
+    "weapons/mossberg_500": {
+      "ratio": 0.2066,
+      "ms": 0.1422
+    },
+    "weapons/mossberg_500_cruiser": {
+      "ratio": 0.2116,
+      "ms": 0.1456
+    },
+    "weapons/pkm": {
+      "ratio": 0.525,
+      "ms": 0.3613
+    },
+    "weapons/pp19_bizon": {
+      "ratio": 0.5361,
+      "ms": 0.3689
+    },
+    "weapons/remington_700": {
+      "ratio": 0.5335,
+      "ms": 0.3671
+    },
+    "weapons/remington_700_300wm": {
+      "ratio": 0.7739,
+      "ms": 0.5326
+    },
+    "weapons/remington_870": {
+      "ratio": 0.211,
+      "ms": 0.1452
+    },
+    "weapons/rossi_puma": {
+      "ratio": 0.2562,
+      "ms": 0.1763
+    },
+    "weapons/rpg_7": {
+      "ratio": 0.4746,
+      "ms": 0.3266
+    },
+    "weapons/rpk": {
+      "ratio": 0.5405,
+      "ms": 0.372
+    },
+    "weapons/ruger_10_22": {
+      "ratio": 0.2971,
+      "ms": 0.2045
+    },
+    "weapons/saiga_12": {
+      "ratio": 0.4453,
+      "ms": 0.3064
+    },
+    "weapons/sako_trg_42": {
+      "ratio": 1.0805,
+      "ms": 0.7436
+    },
+    "weapons/sig_mpx": {
+      "ratio": 0.8272,
+      "ms": 0.5692
+    },
+    "weapons/sig_sauer_p226": {
+      "ratio": 0.2156,
+      "ms": 0.1484
+    },
+    "weapons/sks": {
+      "ratio": 0.3622,
+      "ms": 0.2493
+    },
+    "weapons/steyr_aug_a1": {
+      "ratio": 0.3175,
+      "ms": 0.2185
+    },
+    "weapons/steyr_ssg_69": {
+      "ratio": 0.704,
+      "ms": 0.4844
+    },
     "weapons/svd_dragunov": {
-      "ratio": 1.1006,
-      "ms": 0.6751
+      "ratio": 0.6604,
+      "ms": 0.4545
     },
     "weapons/sw_686": {
-      "ratio": 0.4166,
-      "ms": 0.2555
+      "ratio": 0.3605,
+      "ms": 0.2481
     },
     "weapons/sw_model_29": {
-      "ratio": 0.3478,
-      "ms": 0.2133
+      "ratio": 0.2977,
+      "ms": 0.2049
     },
     "weapons/taurus_82": {
-      "ratio": 0.3625,
-      "ms": 0.2224
+      "ratio": 0.306,
+      "ms": 0.2106
     },
     "weapons/taurus_g2c": {
-      "ratio": 0.4219,
-      "ms": 0.2588
+      "ratio": 0.2227,
+      "ms": 0.1532
     },
     "weapons/taurus_pt100": {
-      "ratio": 0.3942,
-      "ms": 0.2418
+      "ratio": 0.2205,
+      "ms": 0.1517
     },
     "weapons/taurus_smt9": {
-      "ratio": 0.7584,
-      "ms": 0.4652
+      "ratio": 0.8009,
+      "ms": 0.5512
     },
     "weapons/taurus_t4": {
-      "ratio": 1.5486,
-      "ms": 0.9499
+      "ratio": 0.9228,
+      "ms": 0.635
     },
     "weapons/taurus_t4_civil": {
-      "ratio": 1.326,
-      "ms": 0.8133
+      "ratio": 1.3532,
+      "ms": 0.9312
     },
     "weapons/taurus_th380": {
-      "ratio": 0.3269,
-      "ms": 0.2005
+      "ratio": 0.2216,
+      "ms": 0.1525
     },
     "weapons/taurus_ts9": {
-      "ratio": 0.3641,
-      "ms": 0.2233
+      "ratio": 0.2325,
+      "ms": 0.16
     },
     "weapons/thompson_m1a1": {
-      "ratio": 0.6968,
-      "ms": 0.4274
+      "ratio": 0.477,
+      "ms": 0.3283
     },
     "weapons/uzi": {
-      "ratio": 0.3648,
-      "ms": 0.2237
+      "ratio": 0.2242,
+      "ms": 0.1543
     },
     "weapons/vz61": {
-      "ratio": 0.3431,
-      "ms": 0.2105
+      "ratio": 0.2197,
+      "ms": 0.1512
     },
     "weapons/winchester_1894": {
-      "ratio": 0.5183,
-      "ms": 0.3179
+      "ratio": 0.2655,
+      "ms": 0.1827
     }
   }
 }

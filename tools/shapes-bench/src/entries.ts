@@ -1,4 +1,10 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+
 import { createAnimalsThree } from '@adatechnology/game-animals-three'
+import { createRng } from '@adatechnology/game-characters'
+import { bakeBody, buildInstancedBody, createBestBuilder, createPersonBuilder } from '@adatechnology/game-characters-three'
+import { UNDEAD_TYPES } from '@adatechnology/game-characters-undead'
 import { SPECIES } from '@adatechnology/game-animals-species'
 import { createHousehold } from '@adatechnology/game-interactables-household'
 import { createMeshApi } from '@adatechnology/game-interactables-three'
@@ -120,6 +126,29 @@ export function benchEntries(options: EntryOptions = {}): BenchEntry[] {
   installFleet(vehicleKit)
   const vehicles = createVehiclesThree(THREE, { kit: vehicleKit })
   for (const key of BENCH_VEHICLES) entries.push({ id: `vehicles/${key}:lite`, run: () => vehicles.build(key, { quality: 'lite', seed: 7 }) })
+
+  // characters: the first 12 people of the Retratos, the 13 Bestiário bodies (decay 1, full detail), three bakes and the instanced body
+  const people = JSON.parse(readFileSync(fileURLToPath(new URL('../../../specs/001-migracao-entregas-dos-times/game-slice/characters/people.json', import.meta.url)), 'utf8')) as Array<Record<string, unknown>>
+  const createCanvas = (): HTMLCanvasElement => document.createElement('canvas') as HTMLCanvasElement
+  for (const person of people.slice(0, 12)) {
+    entries.push({ id: `characters/person:${String(person.id)}`, run: () => createPersonBuilder(THREE, { random: createRng(77), createCanvas }).buildPerson(person, false) })
+  }
+  const cards = UNDEAD_TYPES.map((type) => ({ name: type.name['pt-BR'], eye: Number.parseInt(type.eye.color, 16) }))
+  const best = createBestBuilder(THREE, { types: cards, random: () => 0.5 })
+  for (const card of cards) {
+    entries.push({
+      id: `characters/best:${card.name}`,
+      run: () => {
+        best.setLOD(1)
+        return best.build({ type: card.name, decay: 1, seed: 2 })
+      },
+    })
+  }
+  for (const card of cards.slice(0, 3)) {
+    const builders = { buildBest: (spec: Record<string, unknown>, lod: number) => (best.setLOD(lod), best.build(spec)), topMaterial: () => best.topM() }
+    entries.push({ id: `characters/bake:${card.name}`, run: () => bakeBody(THREE, builders as never, { type: card.name, decay: 1, seed: 3 }, 1) })
+  }
+  entries.push({ id: 'characters/instanced:8', run: () => buildInstancedBody(THREE, { segments: 8 }) })
 
   // game-shapes: each generator from scratch, the three namespace, and a whole shape
   for (const [name, node] of Object.entries(GENERATOR_NODES)) {

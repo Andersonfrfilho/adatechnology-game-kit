@@ -123,7 +123,8 @@ desempenho). Pedido do dono (2026-10-24): o 3D de tudo sai de um SDK que aceita 
 | T9c | `tools/shapes-bench` e o job `shapes-bench` do CI (teto de regressão) | feito |
 | T9d | pool de workers e cache por chave | feito |
 | T9e | goldens exatos e as primeiras migrações: `game-props3d` (`createShapeRecorder`, `mergeByMaterial` vindo do `game-shapes-three`), `game-interactables-three` (`createMeshApi`), `game-items-three` (kit `T`, `mergeItem`) | feito |
-| T9f | próximas migrações, na ordem do T9 §7.2: weapons, animals, characters e crowd-three, vegetation, urban, floorplan, vehicles | a fazer |
+| T9f | goldens exatos e migração de `game-weapons-three` (modelos, acessórios, cartuchos, props), `game-animals-three`, `game-characters-three`; `game-crowd-three` não tem geometria própria (herda a dos personagens) | feito |
+| T9g | vegetation, urban, floorplan, vehicles (esperam a pergunta 3 do §11, r128) | a fazer |
 
 Inventário da migração (o que entrou e onde): T9 §7.4.
 

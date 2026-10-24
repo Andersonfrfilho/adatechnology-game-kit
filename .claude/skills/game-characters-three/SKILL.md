@@ -49,3 +49,4 @@ Antes de carregar, `registerBodyMaterial(room.world)` põe o material `flesh` no
 ## Notas
 - O lado é decidido pelo sinal de x (osso 2/4/7/9 em x negativo), qualquer que seja o nome no spec.
 - O `buildInstancedBody` com `GUIDE` é um desvio assumido (P1): as juntas seguem o spec, os tamanhos das peças seguem as distâncias entre juntas.
+- Geometria: os construtores desenham com `shapeGeometries(host)` do `game-shapes-three` (os mesmos bytes do three); `tests/exact-golden.test.ts` guarda cada bit das pessoas, acessórios, corpos do Bestiário, bakes e corpo instanciado.

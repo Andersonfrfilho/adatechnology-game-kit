@@ -1,3 +1,4 @@
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import type { Three, THREE_NS } from '../three'
 
 /** The pose a body is baked in: every joint at rest, so the shader's animation starts from a neutral body (G 66017 `BAKE_NEUTRO`). */
@@ -52,7 +53,8 @@ type Part = { readonly g: THREE_NS.BufferGeometry; readonly bone: number; readon
  * Bakes a rich body into one indexable geometry, each vertex with its bone, pivot, parent pivot and colour, so the instanced shader can animate it
  * (G 66019 `bakeBody`). Blood stays a vivid wine red at any decay; eyes are enlarged far away so they read.
  */
-export const bakeBody = (three: Three, builders: BakeBuilders, spec: BakeSpec, lod: number): BakedBody => {
+export const bakeBody = (host: Three, builders: BakeBuilders, spec: BakeSpec, lod: number): BakedBody => {
+  const three = shapeGeometries(host)
   const root = spec.retrato && builders.buildPortrait ? builders.buildPortrait(spec.retrato, lod) : builders.buildBest({ ...spec, pose: { ...BAKE_NEUTRAL_POSE, ...(spec.pose ?? {}) } }, lod)
   const rig = root.userData.rig as Rig
   const P = rig.P
