@@ -32,3 +32,8 @@ export type {
   WeatherSample,
   WeatherState,
 } from './types'
+
+export { createWeatherTestModule } from './bench/module'
+export type { WeatherScenarioLike, WeatherTestModule, WeatherTestModuleOptions } from './bench/module'
+export { weatherBenchTextOf } from './bench/locale'
+export type { WeatherBenchText } from './bench/locale'
