@@ -150,6 +150,12 @@ then the product of the `mul`s. A factory part is already in the numbers, so tak
 A home-made suppressor breaks at a shot drawn in `durability.shots` from a stream of its own (`seed ^ 0x3c6ef372`), so spreads and faults do not move (event `attachment`, `action: 'break'`).
 `ArsenalOptions` gains `attachments`, `patch.attachments`, `remove.attachments` and `isCompatible(def, attachment, fitted)` (a game vetoes an accessory); `canFit(def, attachment, fitted, context, mount?)` is exported.
 
+**A launcher under the barrel.** `m203` (M16, M4), `gp_25` (AK-47, AKM, AK-74, AK-12, and the SKS bayonet lug) and `ag36` (HK416) are accessories whose `launcher` names a weapon of the
+catalogue (`category: 'launcher'`, `tags: ['underbarrel']`, family `underbarrel`: breech open, grenade in, breech close). Fitting one gives the weapon a second state, `weapon.underbarrel`, with its own
+ammunition (the M79 launcher rule: one grenade, `launcherUses`, explosive `m79_40mm`, or `vog_25` for the GP-25, which has the same radii). `useUnderbarrel(true)` takes `rules.attachments.switchSeconds` (0.8 s,
+phase `switch`, event `underbarrel`); while it is on, `trigger` and `reload` go to the launcher and `drain()` carries its events too. The launcher covers the lower rail (`blocks: ['rail_bottom']`).
+`snapshot()` carries the launcher's snapshot. A shipped launcher accessory leaves the arsenal when its launcher weapon is removed or filtered out.
+
 The hip: `rules.aim.hipSpread` times the spread when not aiming. The SDK default is **1** (neutral); the Arsenal says ×6 (§08) and ZombiAdA turns it on with `rules: { aim: { hipSpread: 6 } }`. A laser takes
 half of the excess (`hipSpreadExcess` ×0.5). The ammunition backpack (`feed` mount, `belt`) sets the capacity to 500 rounds by default (`patch.attachments.ammo_backpack`); a tripod counts as support.
 

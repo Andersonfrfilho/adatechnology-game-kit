@@ -73,6 +73,24 @@ const wire = tripwireSegment(placeUse)                   // claymore: { from, to
 - Cada explosivo do mundo (`propane_p13`, `fuel_barrel`, `car_fuel_tank`, `fuel_pump`, `fuel_station_tank`) traz `chain` (tempos entre tiro, fogo ou explosão vizinha e a explosão); `game-destruction` usa em `explosivePart`.
 - Lança-chamas: `flame` com `range` (M2 6 m, caseiro 3,6 m), `fuelPerSecond` e combustível em segundos (M2 9 s, caseiro 5 s); o último tick é cortado ao que sobra.
 
+## Acessórios, coronha e lança-granadas sob o cano (T1.7.1 a 4)
+```ts
+const state = arsenal.create('colt_m4a1')
+state.canFit('suppressor')                       // { ok, mount } | { ok: false, reason: no_mount | interface | caliber | category | occupied | blocked | rejected }
+state.fit('suppressor', { install: 'tool' })     // fase `fit` (campo 2 s, ferramenta 15 s, bancada 30 s: rules.attachments.fitSeconds); vale quando a fase acaba; gatilho responde `busy`
+state.remove('vertical_grip'); state.toggle('weapon_light'); state.setStock('collapsed'); state.setStance({ aiming, supported })
+state.aimSeconds; state.mass; state.suppressed   // result.suppressed vai para computeShotSound({ suppressed })
+state.fit('m203', { install: 'bench' }); state.useUnderbarrel(true)   // gatilho e recarga vão para state.underbarrel (outro WeaponState, munição própria)
+const copy = arsenal.restore(state.snapshot(), { seed })
+```
+- Dados: `attachments.json` (30 acessórios, gerados do §11 do Arsenal + `decisions.json`), `mounts`/`fitted`/`stock` em cada arma (das opções da Galeria + `threads`, `mountNotes`, `stocks`, `integral`). Peça de fábrica (`fitted`) já está nos números da arma; `integral` não sai. Cada número do §11 é conferido contra o texto da linha (`from`) ao gerar.
+- Efeitos: `StatModifier` (`stat`, `set`, `add`, `mul`, condição `always|aiming|hip|supported|subsonic|collapsed`): todos os `set`, depois a soma dos `add`, depois o produto dos `mul`. Tirar uma peça de fábrica aplica o inverso; pôr de volta devolve os números do def exatamente (teste de ida e volta). Arma sem acessório roda igual a antes: os goldens não mudaram.
+- Subsônico = velocidade efetiva < `rules.attachments.speedOfSound` (343): supressor ×0,4, ×0,25 no subsônico, dano −5% (velocidade × √0,95). Supressor caseiro: ×0,6 e quebra num tiro sorteado de 30 a 60 (fluxo `seed ^ 0x3c6ef372`; o evento `attachment` com `action: 'break'`).
+- Quadril: `rules.aim.hipSpread` = **1** no SDK; o Arsenal diz ×6 e o ZombiAdA liga com `rules: { aim: { hipSpread: 6 } }`. Laser ×0,5 no excesso. Mochila de munição: capacidade 500 (configurável por `patch.attachments.ammo_backpack`). Tripé conta como apoio.
+- Coronha (`WeaponDef.stock`): `setStock('collapsed')` roda a fase `stock` (`rules.stock.seconds`) e aplica `rules.stock.collapsed` (saque ×0,8, mira ×0,85, coice vertical ×1,3, dispersão ×1,15; padrões aprovados pelo dono).
+- Lança-granadas: `m203` (M16/M4), `gp_25` (AKs e o encaixe de baioneta do SKS), `ag36` (HK416), família de recarga `underbarrel` (`breech_open`, `round_in`, `breech_close`); explosivo `vog_25` com os raios da `m79_40mm`.
+- Eventos novos: `attachment`, `toggle`, `stock`, `underbarrel` (e no host, `TOOL_CLIP.STOCK` e `TOOL_CLIP.TOGGLE`). Falta (T1.7.5 a 7): armas novas, três.js, bancada.
+
 ## Compõe com
 - `@adatechnology/game-contracts`: dono dos tipos `Shot`, `Use` e `Vec3` (reexportados aqui).
 - `game-destruction`: recebe `shot.energy` e `shot.caliber` direto em `world.shoot`.

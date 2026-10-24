@@ -757,3 +757,73 @@ Respostas do dono às perguntas abertas da T1.1B, T1.3, T1.5, T1.6 e da Revisão
 Commits (todos terminam com o `Co-Authored-By` de Opus 5.5): `feat(weapons-three,weapons-catalog)` câmaras, Taurus e destravar; `feat(weapons,weapons-three,test-room)` espoletas; `feat(weapons,contracts,test-room)` cozinhar a granada; `feat(weapons,contracts,test-room)` fio de tropeço e marcador; e o de documentação (README, skills, changesets, evidência).
 
 Modelo da execução: `sonnet`.
+
+## T1.7 (1–4)
+
+Modelo: `sonnet` (o desenho 🧠 da T1.7 já decidiu a estrutura; aqui só execução e escolhas locais). Branch `feat/spec-001-t1-7`, 4 commits sobre a Fase 1. Ficam para o passo seguinte: T1.7.5 (armas novas, calibres `4_6x30` e `32acp`, M134), T1.7.6 e T1.7.7 (three.js e bancada).
+
+### O que foi feito
+
+| Task | Commit | Conteúdo |
+|---|---|---|
+| T1.7.1 | `feat(weapons,contracts,test-room): tipos aditivos…` | `attachment-types.ts`; `WeaponDef.mounts/fitted/stock`; fases `fit`/`stock`/`switch`; eventos `attachment`, `toggle`, `stock`, `underbarrel`; `TriggerResult.suppressed` (e no evento `shot`); `HostEvent` e `TOOL_CLIP.STOCK`/`TOGGLE` (`toolAnimationStep` mapeia `stock` e `toggle`); `toHostEvent` da sala repassa os quatro. Testes e goldens existentes intactos. |
+| T1.7.2 | `feat(weapons-catalog): acessórios do §11…` | Parser do §11 (18 linhas dos 6 cartões); `build-attachments.ts` → `attachments.json` (30 acessórios); `build-mounts.ts` → `mounts`/`fitted`/`stock` em `firearms.json` das opções do `models.json` e das chaves novas do `decisions.json` (`threads`, `mountNotes`, `stocks`, `attachments`, `integral`, `arsenalFeatures`); REF do comprimento recolhido das 7 armas sem ficha. Cada número do §11 citado em `decisions.attachments` leva `from` (trecho do texto) e a geração falha se o trecho não está na linha; toda linha do §11 tem de ser acessório ou feature listada; todo acessório tem fontes e razão, e `reference` exige URL. `tests/accessories.test.ts` (11 testes). |
+| T1.7.3 | `feat(weapons): regra de acessórios…` | `attachment-effects.ts` (`resolveLoadout`), `attachments.ts` (`canFit`, plugin `isCompatible`), `weapon-attachments.ts` (camada da cadeia: `fit`/`remove`/`toggle`/`setStock`/`setStance`/`aimSeconds`/`snapshot`; `arsenal.restore`), `rules.attachments`/`aim`/`stock`, `ArsenalOptions.attachments`/`patch`/`remove`/`isCompatible`, supressor improvisado (fluxo `seed ^ 0x3c6ef372`), mochila de munição (capacidade 500), tripé (apoio), ruído suprimido. `tests/attachments.test.ts` (23). |
+| T1.7.4 | `feat(weapons,weapons-catalog): lança-granada sob o cano…` | `m203`, `gp_25`, `ag36` em `launchers.json` (decisões `underbarrelLaunchers`, gerados), explosivo `vog_25` (cópia da `m79_40mm`), segundo `WeaponState` (`underbarrel`, `useUnderbarrel`) que reusa a regra do lançador da T1.5. `tests/underbarrel.test.ts` (13) e 1 em `accessories.test.ts`. |
+
+### Goldens de regra do desenho (§3 "Testes")
+
+| Golden | Onde | Resultado |
+|---|---|---|
+| Toda arma sem acessório inalterada | `weapon-goldens.test.ts` (128 cenários) e `attachments.test.ts` ("weapons as they ship") | Nenhuma linha existente do fixture mudou; o fixture ganhou 33 linhas, as 3 armas novas (`m203`, `gp_25`, `ag36`). |
+| UMP-45 + supressor subsônico ×0,25 | `attachments.test.ts` | ruído = base × 0,25 |
+| M4 + supressor ×0,4 e dano −5% | idem | ruído × 0,4; energia × 0,95; `suppressed` no resultado e no evento |
+| AK-47 + estendido: 45 cartuchos, recarga ×1,15 | idem | cápsula 45, fase de recarga = base × 1,15, sobra volta à reserva ao tirar |
+| M4 + M203 atirar / trocar / recarregar | `underbarrel.test.ts` | troca 0,8 s com fase e evento; gatilho vira `throw` de `m79_40mm`; recarga pelas etapas `breech_open`/`round_in`/`breech_close`; munição própria |
+| MP5A3 coronha recolhida | `attachments.test.ts` | saque ×0,8, mira ×0,85, coice vertical ×1,3, dispersão ×1,15, depois da fase |
+| Supressor improvisado quebra no tiro sorteado | idem | quebra entre o 30º e o 60º, mesma semente = mesmo tiro, direções idênticas às da arma sem o supressor |
+| Ida e volta fit/remove | idem (toda peça de fábrica de toda arma) | números do def exatos |
+| Matriz de compatibilidade | `attachments.test.ts`, `underbarrel.test.ts` | M203 só em `colt_m16a2` e `colt_m4a1`; GP-25 em `ak_12`, `ak_47`, `ak_74`, `akm`, `sks`; AG36 só no `hk416` |
+| Catálogo: acessório com fonte, criação com razão | `tools/weapons-catalog/tests/accessories.test.ts` | verde |
+| M134 nos três modos | — | **T1.7.5** (a arma ainda não existe) |
+
+### Desvios do desenho (e por quê)
+
+1. **Campos a mais nos tipos**: `AttachmentDef.secondReload` (acoplador: o desenho não tem como dizer "segunda recarga"; o efeito de recarga ×0,5 vale a cada segunda troca), `AttachmentDef.stowable` (a marca da bandoleira para o `game-items`), `FittedAttachment.shotsLeft` (sobra de tiros do supressor caseiro, para o snapshot refazer o mesmo), `WeaponEvent` `stock` ganha `kind` (a sala escolhe `fold`/`collapse` pelo tipo).
+2. **Recusa `rejected`** (plugin `isCompatible`) e status de gatilho **`busy`** (acessório, coronha ou troca em andamento); o desenho tinha seis recusas e nenhum status para o trabalho em curso.
+3. **O encaixe vale no fim da fase**: `fit`/`remove`/`setStock`/`useUnderbarrel` emitem o evento e abrem a fase na hora (a sala lê a duração dela) e a mudança entra quando a fase acaba. Tempo 0 aplica na hora.
+4. **Família de recarga nova `underbarrel`** (etapas `breech_open`, `round_in`, `breech_close`, as do desenho): reusar `break` mudaria os eventos do M79 e quebraria o golden. A variante de clipe `ugl` fica para a T1.7.6.
+5. **Luz e laser só valem ligados** (`on: true`); de fábrica, desligados.
+6. **O lançador some do arsenal** quando a arma-lançador sai (`remove.weapons`/`include`); sem isso `include` quebraria o arsenal inteiro. Acessório do jogo apontando para lançador inexistente continua erro do `checkArsenal`.
+7. **`rail_adapter` não virou acessório**: é só a geometria `rail()` da Galeria (T1.7.6).
+8. **Encaixe `stock` (buffer_tube) não foi criado**: não há acessório de coronha; a coronha é regra da arma.
+9. **Só armas com rosca levantada têm encaixe de boca** (`decisions.threads`); as com freio de fábrica e sem rosca têm `fixed_muzzle_device` (o freio sai e volta, o supressor não entra). Pistolas não têm encaixe de boca: nenhuma fonte dá cano roscado.
+10. O fixture de goldens ganhou as 3 armas novas e `catalog.test.ts` os novos totais (18 explosivos); nada existente mudou.
+
+### Escolhas que não vinham das fontes (REF/derivadas), para o dono confirmar
+
+1. **Rosca**: UMP-45 (`5/8×24`), Taurus T4 e IMBEL IA2 (`1/2×28`, padrão AR) são `derived`, sem página conferida.
+2. **Comprimento recolhido do M14 EBR** (0,81 m): derivado (889 mm do Mk 14 menos 79 mm de curso do adaptador VLTOR). As outras seis são REF com URL: IA2 0,60, T4 0,767, M4 Benelli 0,889, SPAS-12 0,82, MRAD 1,055, M200 1,187.
+3. **Tipos de coronha**: UMP-45 passa a `fold` (direita), MAC-10 a `retract` e Kriss Vector a `fold_retract` (direita), contra o que a Galeria desenha.
+4. **GP-25 também no SKS**, porque a regra do desenho é "`bayo` → `gp25`" e a Galeria dá `bayo:1` ao SKS; o GP-25 real é de AK. Quer tirar o SKS?
+5. **Tempo da troca para o lançador**: 0,8 s (`rules.attachments.switchSeconds`), sem fonte; a lista aprovada não tem esse número.
+6. **Números derivados que o desenho não aprovou**: limites do supressor (12,7 mm e 6500 J; filtro de óleo 9 mm e 2500 J), mira ×1,1 (ACOG), ×1,15 (3–9×), ×1,25 (6–24×), ×1,2 (noturna e térmica), bateria 40 h e 8 h, tambor de 75 cartuchos com recarga ×1,3, cano serrado (dispersão ×1,6, alcance ×0,6, saque ×0,8), cano longo (velocidade ×1,03), bandoleira (saque ×0,85), tripé (coice ×0,4, dispersão ×0,7), massas de todos os acessórios, cone/`visibleFrom` do laser (120 m, 30 m).
+7. **GP-25**: cano de 260 mm derivado; recarga e coice dos três lançadores sob o cano herdados do M79; AG36 a 76 m/s.
+8. **Browning M2 com tripé integral**: o apoio já está nos números da arma (a M2 é sempre montada).
+9. **Velocidade do som** 343 m/s (constante física, em `rules.attachments.speedOfSound`).
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 (nenhum erro) |
+| `pnpm -r typecheck` | exit 0 (nenhum erro) |
+| `pnpm lint` | `ESLint: No issues found` |
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0; nenhum arquivo falhou |
+| `game-weapons` / `game-contracts` / `game-test-room` / `game-weapons-three` | 316 / 29 / 118 / 94 passaram (eram 277 / 27 / 118 / 94: +39 de regra, +2 de contratos) |
+| `tools/weapons-catalog` | 29 passaram (eram 17: +12 de `accessories.test.ts`); `catalog:check` atualizado |
+| `game-destruction` / `-three` | 97 / 47 passaram |
+
+Commits (todos terminam com o `Co-Authored-By` de Opus 5.5): `feat(weapons,contracts,test-room)` tipos; `feat(weapons-catalog)` dados; `feat(weapons)` regra; `feat(weapons,weapons-catalog)` lançador sob o cano; e o de documentação (README, skill, changeset, evidência).
+
+Modelo da execução: `sonnet`.
