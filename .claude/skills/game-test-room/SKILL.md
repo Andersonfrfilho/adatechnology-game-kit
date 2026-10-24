@@ -104,6 +104,11 @@ Query strings do exemplo: `?area=`, `?items=`, `?scenario=all|<id>`, `?lang=`, `
 ## Som e ambiente emprestados (T6.3)
 A sala cria um motor de `@adatechnology/game-audio` (opção `audio`, `false` para sala muda; `room.audio`) e o empresta em `host.audio` (`createAudioSink`); o ouvinte do motor segue a câmera a cada quadro. Empresta também `host.environment` (opção `environment`, `room.environment`; padrão `createEnvironmentBus()`, o dia seco e calmo). Os sons das chaves do `onSound` da destruição tocam nesse motor.
 
+## Corpo do jogador e câmera em 3ª pessoa
+- `room.setAvatar(corpo | null)` põe um corpo no formato `RoomAvatar` (`root`, `update(dt, state)`, `hand?('R' | 'L')`) nos pés do jogador; `toRoomAvatar(createPlayerAvatar(THREE))` do `game-characters-three` é um deles.
+- `room.setAvatarState({ crouch, down })` leva agachar e cair; `room.setCameraMode('first' | 'third')` troca a câmera (evento `camera`). A tecla **V** alterna 1ª e 3ª pessoa quando há corpo; **Shift+V** chuta com corpo, e sem corpo chuta direto.
+- `examples/test-room` abre em 3ª pessoa com `?cam=third`.
+
 ## Cuidados
 - O `build` recebe `THREE` como `unknown`; nomeie as malhas e ponha `userData.destructionPart` com o id da peça para a destruição achá-las.
 - Item com `impl` (destruição própria) não é movível; o `DestructibleImpl.id` deve ser o id que a sala passa.

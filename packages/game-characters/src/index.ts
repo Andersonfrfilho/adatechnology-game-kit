@@ -76,3 +76,4 @@ export type {
   SegmentState,
   SegmentStatus,
 } from './types'
+export * from './pose-clips'
