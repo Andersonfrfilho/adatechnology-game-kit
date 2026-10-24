@@ -348,5 +348,15 @@
       0.61
     ],
     "scale": 0.1
+  },
+  {
+    "id": "beans",
+    "teamId": "feijao_seco",
+    "teamBox": [
+      1,
+      2,
+      0.61
+    ],
+    "scale": 0.1
   }
 ]
