@@ -66,3 +66,9 @@ kit.penetrateLine(shot, [{ character: a, part: 'torso', distance: 3 }, ...])  //
 - Lado esquerdo em +x (Elenco e Arsenal concordam); o `TEAM_GAME` guarda as juntas do jogo como estão.
 - `setDetail('regions')` soma os segmentos (sem perda); voltar para `segments` espalha a fração da região (com perda).
 - Sem `Math.random`: só a semente do spec.
+
+## Andar, condição, corpos no chão e aparência (T4.1f)
+- **Passada** (`gait/`): `walkCadence`/`walkGait` (a passada que casa com o chão; `strideFor` com `strideFromSpeed` padrão `true`), `animateProfile` (o `animate0` do Bestiário como números: devolve só as juntas que o andar escreve), `CASCADE` + `stepCascade` + `lerpPose`, `MOVES` + `blendMoves` + `humanPose` (a mistura contínua do Elenco), `crawlPose`/`deadPose`, e as 8 poses do corpo instanciado (`INSTANCE_POSES`, `encodePoseHeight`).
+- **`createConditionTimeline`**: fases ordenadas com efeitos (infecção: saudável, febre, delírio, reanimado) em horas ou num relógio acelerado (`unitsPerSecond`).
+- **`kit.createCorpses()`**: corpos no chão (400, 900 s; o mais velho sai quando enche; saída por troca com o último, como o jogo).
+- **Aparência**: `drawBodyVariance` (as 8 sorteios do `zSpawn`), `variantCountFor`/`variantSeed`/`variantDecay` (regra ZVAR) e `drawAppearance` (o `VR` do Bestiário v17, na mesma ordem, devolvendo o fluxo para o construtor continuar).
