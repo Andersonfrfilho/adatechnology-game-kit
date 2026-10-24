@@ -1198,5 +1198,15 @@
       8
     ],
     "scale": 0.1
+  },
+  {
+    "id": "iron_pipe",
+    "teamId": "cano",
+    "teamBox": [
+      8,
+      0.354,
+      0.354
+    ],
+    "scale": 0.1
   }
 ]

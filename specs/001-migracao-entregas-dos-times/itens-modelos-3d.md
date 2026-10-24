@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **120 de 257 itens têm modelo 3D; faltam 137.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **121 de 257 itens têm modelo 3D; faltam 136.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,7 +23,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **120** | **137** |
+| **Total** | **121** | **136** |
 
 ## Comida (36 de 36)
 
@@ -149,7 +149,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Serrote (kit) | `serrote` | `handsaw` | 0,5 kg | comum | 500 x 35 x 130 mm |
 | [x] | Tesoura (kit) | `tesoura` | `scissors` | 0,1 kg | comum | 180 x 15 x 70 mm |
 
-## Armas brancas e de disparo silencioso (5 de 20)
+## Armas brancas e de disparo silencioso (6 de 20)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -158,7 +158,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Taco com pregos | `taco_pregos` | `nail_bat` | 1,2 kg | incomum | 223 x 860 x 221 mm |
 | [x] | Arco recurvo (kit) | `arco` | `recurve_bow` | 1,2 kg | raro | 1,3 x 0,2 x 0,05 m |
 | [x] | Besta (kit) | `besta` | `crossbow` | 3,2 kg | muito raro | 700 x 120 x 800 mm |
-| [ ] | Cano de ferro | `cano` | `iron_pipe` | 1,2 kg | comum | 800 x 35 x 35 mm |
+| [x] | Cano de ferro (kit) | `cano` | `iron_pipe` | 1,2 kg | comum | 800 x 35 x 35 mm |
 | [ ] | Cutelo de açougue | `cutelo` | `meat_cleaver` | 0,6 kg | incomum | 330 x 30 x 120 mm |
 | [ ] | Estilingue | `estilingue` | `slingshot` | 0,15 kg | incomum | 130 x 150 x 25 mm |
 | [ ] | Faca de cozinha | `faca_cozinha` | `knife` | 0,2 kg | comum | 250 x 30 x 40 mm |
