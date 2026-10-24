@@ -1,6 +1,6 @@
 # Créditos das miniaturas das armas
 
-130 miniaturas são geradas a partir do modelo 3D do próprio kit (licença MIT do repositório).
+142 miniaturas são geradas a partir do modelo 3D do próprio kit (licença MIT do repositório).
 18 vêm do Wikimedia Commons e mantêm a licença do autor (veja `LICENSE-NOTE.md`).
 
 | Arma | Autor | Licença | Página do arquivo | Arquivo original | Modificações |
