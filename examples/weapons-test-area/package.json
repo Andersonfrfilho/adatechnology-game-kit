@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
-  "description": "Weapons area for the shared test room: every weapon of the arsenal on counters, targets, the weapon in the hands with fire and reload motion, ejected casings, dropped magazines and sounds.",
+  "description": "Weapons area for the shared test room: every weapon of the arsenal on counters (the real models of the Galeria 3D do Arsenal), targets, and the weapon in the hands with fire, burst, cycle, jam and clear, safety and the seven reloads. Controls: aim at a weapon and press H to equip, click fires, R reloads, Q changes the fire mode, X clears a jam, B turns the safety on, E grabs.",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",

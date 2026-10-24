@@ -1,0 +1,1428 @@
+{
+ "schema": 1,
+ "name": "arsenal-gallery-models",
+ "seed": 1,
+ "events": [
+  {
+   "type": "weapon",
+   "data": {
+    "index": 0,
+    "name": "Glock 17",
+    "caliber": "9×19",
+    "length": 202,
+    "barrel": 114
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 1,
+    "name": "Glock 18",
+    "caliber": "9×19",
+    "length": 202,
+    "barrel": 114
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 2,
+    "name": "Glock 19",
+    "caliber": "9×19",
+    "length": 185,
+    "barrel": 102
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 3,
+    "name": "Taurus G2C",
+    "caliber": "9×19",
+    "length": 159,
+    "barrel": 81
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 4,
+    "name": "Taurus TS9",
+    "caliber": "9×19",
+    "length": 194,
+    "barrel": 104
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 5,
+    "name": "Beretta 92FS",
+    "caliber": "9×19",
+    "length": 217,
+    "barrel": 125
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 6,
+    "name": "SIG Sauer P226",
+    "caliber": "9×19",
+    "length": 196,
+    "barrel": 112
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 7,
+    "name": "CZ 75",
+    "caliber": "9×19",
+    "length": 206,
+    "barrel": 120
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 8,
+    "name": "Taurus PT100",
+    "caliber": ".40 S&W",
+    "length": 216,
+    "barrel": 127
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 9,
+    "name": "Colt M1911",
+    "caliber": ".45 ACP",
+    "length": 216,
+    "barrel": 127
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 10,
+    "name": "Makarov PM",
+    "caliber": "9×18",
+    "length": 161,
+    "barrel": 94
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 11,
+    "name": "FN Five-seveN",
+    "caliber": "5,7×28",
+    "length": 208,
+    "barrel": 122
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 12,
+    "name": "Desert Eagle Mark XIX",
+    "caliber": ".50 AE",
+    "length": 270,
+    "barrel": 152
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 13,
+    "name": "Taurus 82",
+    "caliber": ".38 SPL",
+    "length": 240,
+    "barrel": 102
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 14,
+    "name": "S&W 686",
+    "caliber": ".357 Magnum",
+    "length": 244,
+    "barrel": 102
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 15,
+    "name": "S&W Model 29",
+    "caliber": ".44 Magnum",
+    "length": 302,
+    "barrel": 165
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 16,
+    "name": "HK MP5A3",
+    "caliber": "9×19",
+    "length": 700,
+    "barrel": 225
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 17,
+    "name": "Taurus SMT9",
+    "caliber": "9×19",
+    "length": 660,
+    "barrel": 200
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 18,
+    "name": "HK UMP-45",
+    "caliber": ".45 ACP",
+    "length": 690,
+    "barrel": 200
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 19,
+    "name": "Uzi",
+    "caliber": "9×19",
+    "length": 650,
+    "barrel": 260
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 20,
+    "name": "FN P90",
+    "caliber": "5,7×28",
+    "length": 500,
+    "barrel": 264
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 21,
+    "name": "Kriss Vector",
+    "caliber": ".45 ACP",
+    "length": 622,
+    "barrel": 140
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 22,
+    "name": "Thompson M1A1",
+    "caliber": ".45 ACP",
+    "length": 813,
+    "barrel": 267
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 23,
+    "name": "CZ Scorpion EVO 3",
+    "caliber": "9×19",
+    "length": 670,
+    "barrel": 196
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 24,
+    "name": "MAC-10",
+    "caliber": ".45 ACP",
+    "length": 548,
+    "barrel": 146
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 25,
+    "name": "Remington 870",
+    "caliber": "12 ga",
+    "length": 990,
+    "barrel": 470
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 26,
+    "name": "Mossberg 500",
+    "caliber": "12 ga",
+    "length": 990,
+    "barrel": 470
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 27,
+    "name": "CBC Pump Military 3.0",
+    "caliber": "12 ga",
+    "length": 1000,
+    "barrel": 480
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 28,
+    "name": "Benelli M4",
+    "caliber": "12 ga",
+    "length": 1010,
+    "barrel": 470
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 29,
+    "name": "Franchi SPAS-12",
+    "caliber": "12 ga",
+    "length": 1041,
+    "barrel": 546
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 30,
+    "name": "Kel-Tec KSG",
+    "caliber": "12 ga",
+    "length": 660,
+    "barrel": 470
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 31,
+    "name": "Saiga-12",
+    "caliber": "12 ga",
+    "length": 1000,
+    "barrel": 430
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 32,
+    "name": "AA-12",
+    "caliber": "12 ga",
+    "length": 966,
+    "barrel": 457
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 33,
+    "name": "Boito (2 canos)",
+    "caliber": "12 ga",
+    "length": 1130,
+    "barrel": 710
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 34,
+    "name": "AK-47",
+    "caliber": "7,62×39",
+    "length": 880,
+    "barrel": 415
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 35,
+    "name": "AKM",
+    "caliber": "7,62×39",
+    "length": 880,
+    "barrel": 415
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 36,
+    "name": "AK-74",
+    "caliber": "5,45×39",
+    "length": 943,
+    "barrel": 415
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 37,
+    "name": "AK-12",
+    "caliber": "5,45×39",
+    "length": 945,
+    "barrel": 415
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 38,
+    "name": "IMBEL IA2",
+    "caliber": "5,56×45",
+    "length": 850,
+    "barrel": 330
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 39,
+    "name": "Taurus T4",
+    "caliber": "5,56×45",
+    "length": 840,
+    "barrel": 368
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 40,
+    "name": "Colt M4A1",
+    "caliber": "5,56×45",
+    "length": 840,
+    "barrel": 368
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 41,
+    "name": "Colt M16A2",
+    "caliber": "5,56×45",
+    "length": 1000,
+    "barrel": 508
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 42,
+    "name": "HK416",
+    "caliber": "5,56×45",
+    "length": 900,
+    "barrel": 368
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 43,
+    "name": "Steyr AUG A1",
+    "caliber": "5,56×45",
+    "length": 790,
+    "barrel": 508
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 44,
+    "name": "FN FAL",
+    "caliber": "7,62×51",
+    "length": 1090,
+    "barrel": 533
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 45,
+    "name": "HK G3A3",
+    "caliber": "7,62×51",
+    "length": 1025,
+    "barrel": 450
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 46,
+    "name": "SKS",
+    "caliber": "7,62×39",
+    "length": 1020,
+    "barrel": 520
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 47,
+    "name": "M14 EBR",
+    "caliber": "7,62×51",
+    "length": 1000,
+    "barrel": 457
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 48,
+    "name": "SVD Dragunov",
+    "caliber": "7,62×54R",
+    "length": 1225,
+    "barrel": 620
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 49,
+    "name": "FN SCAR-H",
+    "caliber": "7,62×51",
+    "length": 965,
+    "barrel": 400
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 50,
+    "name": "Knight's SR-25 (Mk 11)",
+    "caliber": "7,62×51",
+    "length": 1156,
+    "barrel": 508
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 51,
+    "name": "HK PSG-1",
+    "caliber": "7,62×51",
+    "length": 1208,
+    "barrel": 650
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 52,
+    "name": "Steyr SSG 69",
+    "caliber": "7,62×51",
+    "length": 1140,
+    "barrel": 650
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 53,
+    "name": "Barrett MRAD",
+    "caliber": ".338 Lapua",
+    "length": 1260,
+    "barrel": 686
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 54,
+    "name": "CheyTac M200",
+    "caliber": ".408 CheyTac",
+    "length": 1397,
+    "barrel": 737
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 55,
+    "name": "Remington 700",
+    "caliber": ".308",
+    "length": 1100,
+    "barrel": 610
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 56,
+    "name": "M24 SWS",
+    "caliber": "7,62×51",
+    "length": 1092,
+    "barrel": 610
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 57,
+    "name": "Mosin-Nagant 91/30",
+    "caliber": "7,62×54R",
+    "length": 1232,
+    "barrel": 730
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 58,
+    "name": "Accuracy AWM",
+    "caliber": ".338 Lapua",
+    "length": 1230,
+    "barrel": 686
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 59,
+    "name": "Sako TRG-42",
+    "caliber": ".338 Lapua",
+    "length": 1200,
+    "barrel": 690
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 60,
+    "name": "Barrett M82A1",
+    "caliber": ".50 BMG",
+    "length": 1448,
+    "barrel": 737
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 61,
+    "name": "Ruger 10/22",
+    "caliber": ".22 LR",
+    "length": 940,
+    "barrel": 470
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 62,
+    "name": "CBC 7022",
+    "caliber": ".22 LR",
+    "length": 1000,
+    "barrel": 530
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 63,
+    "name": "CBC 122",
+    "caliber": ".22 LR",
+    "length": 1030,
+    "barrel": 590
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 64,
+    "name": "Winchester 1894",
+    "caliber": ".30-30",
+    "length": 965,
+    "barrel": 508
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 65,
+    "name": "Rossi Puma",
+    "caliber": ".38 SPL / .357",
+    "length": 950,
+    "barrel": 508
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 66,
+    "name": "Rifle de caça .30-06",
+    "caliber": ".30-06",
+    "length": 1100,
+    "barrel": 560
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 67,
+    "name": "FN Minimi",
+    "caliber": "5,56×45",
+    "length": 1040,
+    "barrel": 465
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 68,
+    "name": "PKM",
+    "caliber": "7,62×54R",
+    "length": 1173,
+    "barrel": 658
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 69,
+    "name": "M60",
+    "caliber": "7,62×51",
+    "length": 1105,
+    "barrel": 560
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 70,
+    "name": "RPG-7",
+    "caliber": "PG-7V 40/85 mm",
+    "length": 950,
+    "barrel": 950
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 71,
+    "name": "M72 LAW",
+    "caliber": "66 mm HEAT",
+    "length": 881,
+    "barrel": 881
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 72,
+    "name": "AT4",
+    "caliber": "84 mm HEAT",
+    "length": 1020,
+    "barrel": 1020
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 73,
+    "name": "Carl Gustaf M4",
+    "caliber": "84 mm (HE / HEAT)",
+    "length": 950,
+    "barrel": 950
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 74,
+    "name": "Lança-chamas M2",
+    "caliber": "Napalm / gasolina gel",
+    "length": 1000,
+    "barrel": 620
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 75,
+    "name": "Lança-chamas caseiro",
+    "caliber": "Gasolina + extintor pressurizado",
+    "length": 800,
+    "barrel": 660
+   }
+  },
+  {
+   "type": "weapon",
+   "data": {
+    "index": 76,
+    "name": "Browning M2 .50",
+    "caliber": ".50 BMG",
+    "length": 1650,
+    "barrel": 1140
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 0,
+    "name": ".22 LR"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 1,
+    "name": ".380 ACP"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 2,
+    "name": "9×18 Makarov"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 3,
+    "name": "9×19 mm"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 4,
+    "name": ".40 S&W"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 5,
+    "name": ".45 ACP"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 6,
+    "name": "5,7×28 mm"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 7,
+    "name": ".38 SPL"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 8,
+    "name": ".357 Magnum"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 9,
+    "name": ".44 Magnum"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 10,
+    "name": ".50 AE"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 11,
+    "name": "12 ga"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 12,
+    "name": "5,56×45 mm"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 13,
+    "name": "5,45×39 mm"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 14,
+    "name": "7,62×39 mm"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 15,
+    "name": ".30-30 Win"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 16,
+    "name": "7,62×51 mm"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 17,
+    "name": "7,62×54R"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 18,
+    "name": ".30-06"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 19,
+    "name": ".300 Win Mag"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 20,
+    "name": ".338 Lapua"
+   }
+  },
+  {
+   "type": "cartridge",
+   "data": {
+    "index": 21,
+    "name": ".50 BMG"
+   }
+  }
+ ],
+ "scenes": {
+  "weapon_00": {
+   "objects": 58,
+   "hash": "d65450e1",
+   "lines": []
+  },
+  "weapon_01": {
+   "objects": 59,
+   "hash": "bc782ee3",
+   "lines": []
+  },
+  "weapon_02": {
+   "objects": 58,
+   "hash": "f9f3c88a",
+   "lines": []
+  },
+  "weapon_03": {
+   "objects": 39,
+   "hash": "a1e62ee",
+   "lines": []
+  },
+  "weapon_04": {
+   "objects": 48,
+   "hash": "c23bc1d8",
+   "lines": []
+  },
+  "weapon_05": {
+   "objects": 53,
+   "hash": "ae6db407",
+   "lines": []
+  },
+  "weapon_06": {
+   "objects": 47,
+   "hash": "cc903c94",
+   "lines": []
+  },
+  "weapon_07": {
+   "objects": 44,
+   "hash": "80db66ba",
+   "lines": []
+  },
+  "weapon_08": {
+   "objects": 42,
+   "hash": "ed12e16b",
+   "lines": []
+  },
+  "weapon_09": {
+   "objects": 54,
+   "hash": "9058b90e",
+   "lines": []
+  },
+  "weapon_10": {
+   "objects": 40,
+   "hash": "dffa8fc0",
+   "lines": []
+  },
+  "weapon_11": {
+   "objects": 47,
+   "hash": "415c1cd6",
+   "lines": []
+  },
+  "weapon_12": {
+   "objects": 47,
+   "hash": "e06e66b6",
+   "lines": []
+  },
+  "weapon_13": {
+   "objects": 40,
+   "hash": "84637dae",
+   "lines": []
+  },
+  "weapon_14": {
+   "objects": 44,
+   "hash": "f94735c5",
+   "lines": []
+  },
+  "weapon_15": {
+   "objects": 40,
+   "hash": "fe3279b7",
+   "lines": []
+  },
+  "weapon_16": {
+   "objects": 64,
+   "hash": "eefde65d",
+   "lines": []
+  },
+  "weapon_17": {
+   "objects": 146,
+   "hash": "32f9b6f8",
+   "lines": []
+  },
+  "weapon_18": {
+   "objects": 92,
+   "hash": "7888759b",
+   "lines": []
+  },
+  "weapon_19": {
+   "objects": 42,
+   "hash": "38c069b4",
+   "lines": []
+  },
+  "weapon_20": {
+   "objects": 31,
+   "hash": "7317a0f5",
+   "lines": []
+  },
+  "weapon_21": {
+   "objects": 139,
+   "hash": "b0dc5b99",
+   "lines": []
+  },
+  "weapon_22": {
+   "objects": 49,
+   "hash": "f61cbf6c",
+   "lines": []
+  },
+  "weapon_23": {
+   "objects": 146,
+   "hash": "4627ea4d",
+   "lines": []
+  },
+  "weapon_24": {
+   "objects": 32,
+   "hash": "2f0b8fa3",
+   "lines": []
+  },
+  "weapon_25": {
+   "objects": 41,
+   "hash": "ade7980c",
+   "lines": []
+  },
+  "weapon_26": {
+   "objects": 40,
+   "hash": "413c2861",
+   "lines": []
+  },
+  "weapon_27": {
+   "objects": 75,
+   "hash": "d4e420b1",
+   "lines": []
+  },
+  "weapon_28": {
+   "objects": 99,
+   "hash": "d97cc939",
+   "lines": []
+  },
+  "weapon_29": {
+   "objects": 50,
+   "hash": "65cefa3a",
+   "lines": []
+  },
+  "weapon_30": {
+   "objects": 56,
+   "hash": "d5881d59",
+   "lines": []
+  },
+  "weapon_31": {
+   "objects": 55,
+   "hash": "297cf792",
+   "lines": []
+  },
+  "weapon_32": {
+   "objects": 60,
+   "hash": "40087610",
+   "lines": []
+  },
+  "weapon_33": {
+   "objects": 27,
+   "hash": "44563006",
+   "lines": []
+  },
+  "weapon_34": {
+   "objects": 58,
+   "hash": "4cfe172f",
+   "lines": []
+  },
+  "weapon_35": {
+   "objects": 57,
+   "hash": "b83f6a41",
+   "lines": []
+  },
+  "weapon_36": {
+   "objects": 55,
+   "hash": "3c4a8977",
+   "lines": []
+  },
+  "weapon_37": {
+   "objects": 176,
+   "hash": "2f300a05",
+   "lines": []
+  },
+  "weapon_38": {
+   "objects": 95,
+   "hash": "912e50cd",
+   "lines": []
+  },
+  "weapon_39": {
+   "objects": 189,
+   "hash": "366a992b",
+   "lines": []
+  },
+  "weapon_40": {
+   "objects": 179,
+   "hash": "6b90ac7d",
+   "lines": []
+  },
+  "weapon_41": {
+   "objects": 71,
+   "hash": "380867bf",
+   "lines": []
+  },
+  "weapon_42": {
+   "objects": 202,
+   "hash": "a83f80e7",
+   "lines": []
+  },
+  "weapon_43": {
+   "objects": 32,
+   "hash": "ae95d65c",
+   "lines": []
+  },
+  "weapon_44": {
+   "objects": 63,
+   "hash": "3ac86bdb",
+   "lines": []
+  },
+  "weapon_45": {
+   "objects": 62,
+   "hash": "104e2598",
+   "lines": []
+  },
+  "weapon_46": {
+   "objects": 36,
+   "hash": "b41998d6",
+   "lines": []
+  },
+  "weapon_47": {
+   "objects": 220,
+   "hash": "d34bb8f5",
+   "lines": []
+  },
+  "weapon_48": {
+   "objects": 61,
+   "hash": "3833d7bd",
+   "lines": []
+  },
+  "weapon_49": {
+   "objects": 198,
+   "hash": "648884ac",
+   "lines": []
+  },
+  "weapon_50": {
+   "objects": 258,
+   "hash": "ea1b3046",
+   "lines": []
+  },
+  "weapon_51": {
+   "objects": 82,
+   "hash": "8695cee2",
+   "lines": []
+  },
+  "weapon_52": {
+   "objects": 49,
+   "hash": "6fd433d9",
+   "lines": []
+  },
+  "weapon_53": {
+   "objects": 249,
+   "hash": "4ba00cb2",
+   "lines": []
+  },
+  "weapon_54": {
+   "objects": 99,
+   "hash": "1f6058",
+   "lines": []
+  },
+  "weapon_55": {
+   "objects": 49,
+   "hash": "ff373a5f",
+   "lines": []
+  },
+  "weapon_56": {
+   "objects": 56,
+   "hash": "1d6fb35d",
+   "lines": []
+  },
+  "weapon_57": {
+   "objects": 39,
+   "hash": "402958b3",
+   "lines": []
+  },
+  "weapon_58": {
+   "objects": 80,
+   "hash": "681fd247",
+   "lines": []
+  },
+  "weapon_59": {
+   "objects": 80,
+   "hash": "cd73222f",
+   "lines": []
+  },
+  "weapon_60": {
+   "objects": 94,
+   "hash": "391c6059",
+   "lines": []
+  },
+  "weapon_61": {
+   "objects": 34,
+   "hash": "9cce227c",
+   "lines": []
+  },
+  "weapon_62": {
+   "objects": 34,
+   "hash": "f2dca213",
+   "lines": []
+  },
+  "weapon_63": {
+   "objects": 37,
+   "hash": "2fb2f02a",
+   "lines": []
+  },
+  "weapon_64": {
+   "objects": 42,
+   "hash": "7fa49ce2",
+   "lines": []
+  },
+  "weapon_65": {
+   "objects": 40,
+   "hash": "1446b001",
+   "lines": []
+  },
+  "weapon_66": {
+   "objects": 49,
+   "hash": "439add4",
+   "lines": []
+  },
+  "weapon_67": {
+   "objects": 78,
+   "hash": "a09460d4",
+   "lines": []
+  },
+  "weapon_68": {
+   "objects": 62,
+   "hash": "55d54720",
+   "lines": []
+  },
+  "weapon_69": {
+   "objects": 75,
+   "hash": "dab8870a",
+   "lines": []
+  },
+  "weapon_70": {
+   "objects": 34,
+   "hash": "f27367b9",
+   "lines": []
+  },
+  "weapon_71": {
+   "objects": 18,
+   "hash": "6105e81f",
+   "lines": []
+  },
+  "weapon_72": {
+   "objects": 17,
+   "hash": "946e5807",
+   "lines": []
+  },
+  "weapon_73": {
+   "objects": 24,
+   "hash": "adbaa3b4",
+   "lines": []
+  },
+  "weapon_74": {
+   "objects": 33,
+   "hash": "72c6ea1e",
+   "lines": []
+  },
+  "weapon_75": {
+   "objects": 25,
+   "hash": "1b58615",
+   "lines": []
+  },
+  "weapon_76": {
+   "objects": 42,
+   "hash": "881053ba",
+   "lines": []
+  },
+  "cartridge_00": {
+   "objects": 5,
+   "hash": "cdce128f",
+   "lines": []
+  },
+  "cartridge_01": {
+   "objects": 4,
+   "hash": "fe6346c1",
+   "lines": []
+  },
+  "cartridge_02": {
+   "objects": 4,
+   "hash": "e1928ce3",
+   "lines": []
+  },
+  "cartridge_03": {
+   "objects": 4,
+   "hash": "b940c5bb",
+   "lines": []
+  },
+  "cartridge_04": {
+   "objects": 4,
+   "hash": "43b52bfd",
+   "lines": []
+  },
+  "cartridge_05": {
+   "objects": 4,
+   "hash": "599f2aa5",
+   "lines": []
+  },
+  "cartridge_06": {
+   "objects": 6,
+   "hash": "e49e5f18",
+   "lines": []
+  },
+  "cartridge_07": {
+   "objects": 5,
+   "hash": "9032944",
+   "lines": []
+  },
+  "cartridge_08": {
+   "objects": 5,
+   "hash": "d89ac363",
+   "lines": []
+  },
+  "cartridge_09": {
+   "objects": 5,
+   "hash": "97a15f2b",
+   "lines": []
+  },
+  "cartridge_10": {
+   "objects": 4,
+   "hash": "2f957522",
+   "lines": []
+  },
+  "cartridge_11": {
+   "objects": 4,
+   "hash": "23ba9e4a",
+   "lines": []
+  },
+  "cartridge_12": {
+   "objects": 6,
+   "hash": "bf6bcd5c",
+   "lines": []
+  },
+  "cartridge_13": {
+   "objects": 6,
+   "hash": "a26f8a94",
+   "lines": []
+  },
+  "cartridge_14": {
+   "objects": 6,
+   "hash": "53acb630",
+   "lines": []
+  },
+  "cartridge_15": {
+   "objects": 7,
+   "hash": "2073517f",
+   "lines": []
+  },
+  "cartridge_16": {
+   "objects": 6,
+   "hash": "f6e85215",
+   "lines": []
+  },
+  "cartridge_17": {
+   "objects": 7,
+   "hash": "a529fde6",
+   "lines": []
+  },
+  "cartridge_18": {
+   "objects": 6,
+   "hash": "e5ec8994",
+   "lines": []
+  },
+  "cartridge_19": {
+   "objects": 6,
+   "hash": "93e4db9",
+   "lines": []
+  },
+  "cartridge_20": {
+   "objects": 6,
+   "hash": "2091d0f2",
+   "lines": []
+  },
+  "cartridge_21": {
+   "objects": 6,
+   "hash": "489e1690",
+   "lines": []
+  }
+ }
+}

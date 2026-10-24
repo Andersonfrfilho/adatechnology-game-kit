@@ -103,7 +103,7 @@ Query strings do exemplo: `?area=`, `?items=`, `?scenario=all|<id>`, `?lang=`, `
   `ModuleHost.onFrame` roda a cada quadro simulado.
 - A bancada é emprestada (`host.bench`) só a módulo que declara controles, camadas ou contadores e passa no `checkBench`. As mudanças iniciais
   chegam logo depois do `attach`, já com o estado restaurado (o vivo, se o módulo está sendo recarregado; senão `options.bench.state[moduleId]`). Leitura de contador que lança mostra `n/a` e entra uma vez no log; ouvinte que lança não derruba os outros. A sala nunca mexe em `location`.
-- Q emite `mode` quando o modo de tiro muda; `fault`, `clear` e `safety` ainda não são emitidos pela sala (Fase 1, T1.3).
+- Teclas da ferramenta: R recarrega, Q muda o modo de tiro (`mode`), **X destrava** a pane (`clear`) e **B liga ou desliga a trava** (`safety`). Pegar uma ferramenta chama `draw()`: o gatilho responde `drawing` pelo tempo da regra (0,35 s) e o host recebe `tool` com `duration`. O arsenal da sala tem as panes ligadas (a regra padrão); `arsenal` nas opções troca isso.
 - Id de módulo/item/clipe em snake_case. Nos cenários avance o tempo com `step(segundos)`, não espere tempo real.
 - Sem `renderer` injetado a sala é dona do canvas e do laço.
 

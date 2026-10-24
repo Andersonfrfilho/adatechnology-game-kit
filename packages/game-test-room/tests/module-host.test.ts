@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import type { DestructibleSpec } from '@adatechnology/game-destruction'
 import type { HostEvent, ModuleHost, TestableModule } from '@adatechnology/game-contracts'
+import { createArsenal } from '@adatechnology/game-weapons'
 import type { ScenarioContext } from '../src'
 import { makeRoom } from './helpers'
 
@@ -81,6 +82,7 @@ describe('module host', () => {
     expect(lent).not.toBeNull()
     expect(lent!.scene).toBeInstanceOf(THREE.Scene)
     room.setTool('pistol_9mm')
+    room.update(0.4)
     room.look([0, 1.7, 5], [0, 1.2, -11])
     room.use()
     while (room.tool.ammo > 0) {
@@ -113,6 +115,7 @@ describe('tool cycle events', () => {
   it('Q reports the new mode, and a burst spends three rounds in that mode', () => {
     const { room, events } = recording()
     room.setTool('rifle_5_56')
+    room.update(0.4)
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyQ' }))
     expect(events.find((e) => e.type === 'mode')).toEqual({ type: 'mode', weapon: 'rifle_5_56', mode: 'burst' })
     room.use()
@@ -124,10 +127,66 @@ describe('tool cycle events', () => {
   it('a shotgun shell is many projectiles and one round', () => {
     const { room, events } = recording()
     room.setTool('shotgun_pump_12')
+    room.update(0.4)
     room.use()
     const shot = events.find((e) => e.type === 'shot')
     expect(shot?.type === 'shot' && shot.shots).toBeGreaterThan(1)
     expect(shot).toMatchObject({ rounds: 1 })
+    room.dispose()
+  })
+
+  it('a manual action reports its cycle with the seconds the rule gave, and a reload its kind, duration, stages and rounds', () => {
+    const { room, events } = recording()
+    room.setTool('remington_870')
+    room.update(0.4)
+    room.use()
+    const cycle = events.find((e) => e.type === 'cycle' && e.phase === 'start')
+    expect(cycle).toMatchObject({ type: 'cycle', weapon: 'remington_870' })
+    expect(cycle?.type === 'cycle' && cycle.duration).toBeGreaterThan(0)
+    for (let i = 0; i < 20; i++) room.update(0.1)
+    expect(events.some((e) => e.type === 'cycle' && e.phase === 'end')).toBe(true)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' }))
+    const reload = events.find((e) => e.type === 'reload' && e.phase === 'start')
+    expect(reload?.type === 'reload' && reload.kind).toBe('one_by_one')
+    expect(reload?.type === 'reload' && reload.duration).toBeGreaterThan(0)
+    for (let i = 0; i < 80; i++) room.update(0.1)
+    expect(events.some((e) => e.type === 'feed')).toBe(true)
+    room.dispose()
+  })
+
+  it('picking up a tool starts its draw: the host hears the seconds, and the trigger waits them out', () => {
+    const { room, events } = recording()
+    room.setTool('glock_17')
+    const tool = events.find((e) => e.type === 'tool' && e.weapon === 'glock_17')
+    expect(tool).toMatchObject({ type: 'tool', weapon: 'glock_17', duration: 0.35 })
+    const before = events.filter((e) => e.type === 'shot').length
+    room.use()
+    expect(events.filter((e) => e.type === 'shot').length).toBe(before)
+    room.update(0.4)
+    room.use()
+    expect(events.filter((e) => e.type === 'shot').length).toBe(before + 1)
+    room.dispose()
+  })
+
+  it('X clears the jam the weapon stopped with, taking the seconds of the rule, and B turns the safety on and off', () => {
+    const room = makeRoom({ arsenal: createArsenal({ seed: 1, rules: { faultChance: () => 1 } }) })
+    const events: HostEvent[] = []
+    room.loadModule(benchModule((host) => host.on((e) => events.push(e))))
+    room.look([0, 1.7, 5], [0, 1.2, -11])
+    room.setTool('glock_17')
+    room.update(0.4)
+    room.use()
+    expect(events.some((e) => e.type === 'fault')).toBe(true)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyX' }))
+    const clear = events.find((e) => e.type === 'clear' && e.phase === 'start')
+    expect(clear).toMatchObject({ type: 'clear', weapon: 'glock_17', duration: 1.2 })
+    room.update(1.3)
+    expect(events.some((e) => e.type === 'clear' && e.phase === 'end')).toBe(true)
+    room.tool.setCondition('new')
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyB' }))
+    expect(events.filter((e) => e.type === 'safety').map((e) => e.type === 'safety' && e.on)).toEqual([true])
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyB' }))
+    expect(events.filter((e) => e.type === 'safety').map((e) => e.type === 'safety' && e.on)).toEqual([true, false])
     room.dispose()
   })
 })

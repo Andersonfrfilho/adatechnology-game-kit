@@ -68,15 +68,23 @@ export interface ModuleArea {
  * names are of a tool's cycle, not of a firearm: a nail gun, a chainsaw or a hose has modes, faults and a safety too.
  */
 export type HostEvent =
-  | { type: 'tool'; weapon: string }
+  /** The tool is put in hand; `duration` is the seconds the rule takes to ready it (absent: no draw time). */
+  | { type: 'tool'; weapon: string; duration?: number }
   /** `shots` are projectiles (a shotgun shell is many), `rounds` the cartridges spent (a burst is several). */
   | { type: 'shot'; weapon: string; shots: number; recoil: [number, number]; rounds?: number; mode?: string }
-  | { type: 'reload'; weapon: string; phase: 'start' | 'end' }
+  /** `kind` is how the rule reloads (`tactical`, `empty`, `one_by_one`); `duration` the seconds of the whole reload, on `start`. */
+  | { type: 'reload'; weapon: string; phase: 'start' | 'end'; kind?: string; duration?: number }
   | { type: 'empty'; weapon: string }
   | { type: 'mode'; weapon: string; mode: string }
   | { type: 'fault'; weapon: string; fault: string }
-  | { type: 'clear'; weapon: string; fault: string; phase: 'start' | 'end' }
+  | { type: 'clear'; weapon: string; fault: string; phase: 'start' | 'end'; duration?: number }
   | { type: 'safety'; weapon: string; on: boolean }
+  /** The action works between shots (a pump, a bolt); `duration` is the seconds of the cycle, on `start`. */
+  | { type: 'cycle'; weapon: string; phase: 'start' | 'end'; duration?: number }
+  /** A step of a longer phase (a reload's magazine out, magazine in, charge), at the moment the rule reaches it. */
+  | { type: 'stage'; weapon: string; stage: string }
+  /** One more round went into the tool while it loads round by round. */
+  | { type: 'feed'; weapon: string }
 
 /** The tool in hand as the host sees it. */
 export interface HostTool {

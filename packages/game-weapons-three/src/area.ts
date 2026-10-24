@@ -1,12 +1,13 @@
 import type * as THREE_NS from 'three'
 import type { AreaPlacement, DestructibleSpec, ModuleArea, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { createArsenal } from '@adatechnology/game-weapons'
-import type { Arsenal } from '@adatechnology/game-weapons'
+import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import { createWeaponAudio } from './audio'
 import type { WeaponAudio } from './audio'
 import { createWeaponFx } from './fx'
 import type { WeaponFx } from './fx'
-import { BODY_ACTIONS, buildProp, weaponProp } from './props'
+import { hasWeaponModel } from './models'
+import { BODY_ACTIONS, buildModeledProp, buildProp, modeledPropSpec, weaponProp } from './props'
 import type { WeaponProp } from './props'
 
 export interface WeaponsTestModuleOptions {
@@ -16,6 +17,10 @@ export interface WeaponsTestModuleOptions {
   arsenal?: Arsenal
   /** Play sounds (default true; silent anyway where there is no AudioContext). */
   sound?: boolean
+  /** Wear of the weapon in the hands, which the gallery models show in their metal: `new` (default), `used`, `worn` or `rusty`. */
+  condition?: string
+  /** Seed of the scatter of casings and smoke (default 1). */
+  seed?: number
 }
 
 /** Prefix of the item ids of the weapon props (`weapon_pistol_9mm`). */
@@ -24,11 +29,14 @@ export const WEAPON_ITEM_PREFIX = 'weapon_'
 export const COUNTER_ITEM_ID = 'counter_weapons'
 
 const COUNTER = { length: 4.8, depth: 1.6, height: 0.9 }
+// three columns on the free left side of the room, in two rows: counters fill in this order
 const COUNTER_X = [-6.5, -9, -11.5]
-const COUNTER_Z = -1
+const COUNTER_Z = [-1, 5.5]
 // props closer than this to a counter end have nothing next to them on one side
-const END_MARGIN = 0.6
-const SLOT_GAP = 0.3
+const END_MARGIN = 0.5
+// the strip of counter a weapon lying across it takes: most are slim, a few are wide (a tripod, two fuel tanks, a bow limb)
+const DEFAULT_PITCH = 0.16
+const PITCH_BY_ID: Readonly<Record<string, number>> = { browning_m2: 0.5, m2_flamethrower: 0.45, bow: 0.3, crossbow: 0.3 }
 // targets in front of the brick wall of the room, at shooting distances
 const TARGETS: Array<{ id: string; at: Vec3 }> = [
   { id: 'target_steel_plate', at: [-1.5, 0, -7] },
@@ -96,6 +104,20 @@ const targetProp = (id: string, name: string): WeaponProp => {
   return { spec, colors: { post: 0x3a3d42, face: color } }
 }
 
+/** A weapon on the counters: the gallery model when it drew one (one rigid body of its measures), the low-poly prop of its category when it did not. */
+const weaponItem = (def: WeaponDef, name: string): TestableItem => {
+  const id = `${WEAPON_ITEM_PREFIX}${def.id}`
+  if (!hasWeaponModel(def.id)) return asItem(id, name, weaponProp(def, name), { weapon: def.id, movable: true })
+  return {
+    id,
+    name,
+    build: (THREE: unknown) => buildModeledProp(THREE as typeof THREE_NS, def, name) as THREE_NS.Group,
+    spec: (root: unknown) => modeledPropSpec(root, def, name),
+    weapon: def.id,
+    movable: true,
+  }
+}
+
 const asItem = (id: string, name: string, prop: WeaponProp, extra: Partial<TestableItem> = {}): TestableItem => ({
   id,
   name,
@@ -104,23 +126,30 @@ const asItem = (id: string, name: string, prop: WeaponProp, extra: Partial<Testa
   ...extra,
 })
 
-/** Where the counters go and where each weapon lies on them: three counters on the free left side of the room, props across them. */
-export function weaponsLayout(weaponItemIds: string[]): AreaPlacement[] {
-  const perCounter = Math.floor((COUNTER.length - 2 * END_MARGIN) / SLOT_GAP) + 1
-  const counters = COUNTER_X.slice(0, Math.max(1, Math.ceil(weaponItemIds.length / perCounter)))
-  const placements: AreaPlacement[] = counters.map((x) => ({ item: COUNTER_ITEM_ID, position: [x, 0, COUNTER_Z], surface: { halfSize: [COUNTER.depth / 2, COUNTER.length / 2], height: COUNTER.height } }))
-  weaponItemIds.forEach((item, index) => {
-    const x = counters[Math.min(counters.length - 1, Math.floor(index / perCounter))]
-    const z = COUNTER_Z - COUNTER.length / 2 + END_MARGIN + (index % perCounter) * SLOT_GAP
-    // long props side by side overlap in the gentle piece separation of the renderer: asleep, they stay until grabbed
-    placements.push({ item, position: [x, COUNTER.height + 0.01, z], asleep: true })
-  })
-  for (const target of TARGETS) placements.push({ item: target.id, position: target.at })
-  return placements
+/** Where the counters go and where each weapon lies on them: weapons side by side across the counters in order, each taking its strip, until the counter is full. */
+export function weaponsLayout(weaponItemIds: string[], pitchOf: (itemId: string) => number = () => DEFAULT_PITCH): AreaPlacement[] {
+  const usable = COUNTER.length - 2 * END_MARGIN
+  const slots = COUNTER_Z.flatMap((z) => COUNTER_X.map((x) => ({ x, z })))
+  const counterOf: Array<{ x: number; z: number; used: number }> = []
+  const placements: AreaPlacement[] = []
+  for (const item of weaponItemIds) {
+    const pitch = pitchOf(item)
+    let counter = counterOf[counterOf.length - 1]
+    if (!counter || counter.used + pitch > usable + 1e-9) {
+      const slot = slots[Math.min(counterOf.length, slots.length - 1)] as { x: number; z: number }
+      counter = { ...slot, used: 0 }
+      counterOf.push(counter)
+    }
+    placements.push({ item, position: [counter.x, COUNTER.height + 0.01, counter.z - COUNTER.length / 2 + END_MARGIN + counter.used + pitch / 2], asleep: true })
+    counter.used += pitch
+  }
+  const counters: AreaPlacement[] = counterOf.map(({ x, z }) => ({ item: COUNTER_ITEM_ID, position: [x, 0, z], surface: { halfSize: [COUNTER.depth / 2, COUNTER.length / 2], height: COUNTER.height } }))
+  const targets: AreaPlacement[] = TARGETS.map((target) => ({ item: target.id, position: target.at }))
+  return [...counters, ...placements, ...targets]
 }
 
 /**
- * The weapons test area as a `TestableModule` of @adatechnology/game-contracts: one prop per weapon of the arsenal on counters (aim at one and
+ * The weapons test area as a `TestableModule` of @adatechnology/game-contracts: every weapon of the arsenal on counters, the real model of each one the gallery drew (aim at one and
  * press H to equip it), targets at shooting distance, and, through `attach`, the weapon in the hands with its fire and reload motion,
  * ejected casings, dropped magazines and sounds, driven by the host's tool events.
  */
@@ -129,9 +158,9 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
   const arsenal = options.arsenal ?? createArsenal({ locale })
   const text = textOf(locale)
   const audio = options.sound === false ? null : createWeaponAudio()
-  // the three counters hold 39 weapons; the real models wait for the layout of T1.3
-  const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id) && def.archetype === undefined)
+  const weaponDefs = [...arsenal.weapons.values()].filter((def) => !BODY_ACTIONS.has(def.id))
   const weaponIds = weaponDefs.map((def) => `${WEAPON_ITEM_PREFIX}${def.id}`)
+  const pitchOf = (itemId: string): number => PITCH_BY_ID[itemId.slice(WEAPON_ITEM_PREFIX.length)] ?? DEFAULT_PITCH
   let fx: WeaponFx | null = null
   return {
     id: 'weapons_area',
@@ -142,11 +171,11 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       return fx
     },
     items: () => [
-      ...weaponDefs.map((def) => asItem(`${WEAPON_ITEM_PREFIX}${def.id}`, arsenal.name(def.id), weaponProp(def, arsenal.name(def.id)), { weapon: def.id, movable: true })),
+      ...weaponDefs.map((def) => weaponItem(def, arsenal.name(def.id))),
       asItem(COUNTER_ITEM_ID, text.counter, counterProp(text.counter), { movable: false }),
       ...TARGETS.map((target) => asItem(target.id, text.targets[target.id], targetProp(target.id, text.targets[target.id]), { movable: false })),
     ],
-    area: (): ModuleArea => ({ placements: weaponsLayout(weaponIds), view: { eye: [-3.4, 1.7, 2.6], target: [-9, 0.9, -1.2] } }),
+    area: (): ModuleArea => ({ placements: weaponsLayout(weaponIds, pitchOf), view: { eye: [-3.4, 1.9, 9.2], target: [-9, 0.9, 1.6] } }),
     attach(host) {
       const created = createWeaponFx({
         THREE: host.THREE as typeof THREE_NS,
@@ -155,6 +184,9 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         arsenal,
         groundAt: host.groundAt,
         audio,
+        tool: host.tool,
+        ...(options.condition ? { condition: options.condition } : {}),
+        ...(options.seed === undefined ? {} : { seed: options.seed }),
       })
       fx = created
       const offEvents = host.on((event) => {

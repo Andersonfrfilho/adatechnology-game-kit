@@ -2,7 +2,7 @@
   "name": "@adatechnology/game-weapons-three",
   "version": "0.1.0",
   "license": "MIT",
-  "description": "three.js presentation for @adatechnology/game-weapons: low-poly weapon models, the weapon in the hands with fire and reload motion, ejected casings and dropped magazines, synthesized sounds, and the weapons test area (counters with every weapon) as a TestableModule.",
+  "description": "three.js presentation for @adatechnology/game-weapons: the real models of the Galeria 3D do Arsenal (78 weapons, a cartridge and a case per calibre), the weapon in the hands playing the tool-animation clips (fire, burst, cycle, jam, clear, safety and the seven reloads), ejected casings and dropped magazines, worn-metal conditions, synthesized sounds, and the weapons test area (counters with every weapon) as a TestableModule.",
   "keywords": [
     "three",
     "threejs",
@@ -53,6 +53,7 @@
   "devDependencies": {
     "@adatechnology/game-destruction": "workspace:*",
     "@adatechnology/game-test-room": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "happy-dom": "^17.4.4",

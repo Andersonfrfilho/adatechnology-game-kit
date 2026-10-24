@@ -1,5 +1,6 @@
 // Bundle entry (IIFE global `WeaponsArea`): the weapons module of @adatechnology/game-weapons-three, ready for any room page:
 // `WeaponsArea.loadInto(room)` loads it and opens its area.
+// Controls: aim at a weapon and press H to equip it, click fires, R reloads, Q changes the fire mode (burst), X clears a jam, B turns the safety on and off, E grabs.
 import { createWeaponsTestModule } from '@adatechnology/game-weapons-three'
 
 export { createWeaponsTestModule }
