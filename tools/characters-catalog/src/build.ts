@@ -2,6 +2,8 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import { buildAppearance, buildBody, buildGait, buildPhysical, buildSegments, buildTeamGame } from './build-characters'
+import { buildAccessories, buildAgePresets, buildAppearance as buildPeopleAppearance, buildProfessions } from './build-people'
+import type { PeopleInputs } from './build-people'
 import { buildSlice } from './build-slice'
 import { buildAges, buildInfection, buildMoments, buildOutfits, buildTypes } from './build-undead'
 import type { CatalogInputs } from './build-undead'
@@ -12,6 +14,7 @@ import { extractBestiary } from './extract-bestiary'
 import { extractElenco } from './extract-elenco'
 import { extractGame } from './extract-game'
 import { extractLiving, extractPortraits } from './extract-living'
+import { extractAccessories, extractPeopleBodies } from './extract-people'
 import { GAME_SLICE_DIR, OUTPUT_PATHS } from './paths'
 
 /** Generated files by absolute path, each with its exact content. */
@@ -27,8 +30,16 @@ export const buildInputs = (): CatalogInputs => ({
   decisions: loadDecisions(),
 })
 
+export const buildPeopleInputs = (inputs: CatalogInputs): PeopleInputs => ({
+  elenco: inputs.elenco,
+  bodies: extractPeopleBodies(),
+  accessories: extractAccessories(),
+  decisions: inputs.decisions,
+})
+
 export const buildCatalog = (): CatalogFiles => {
   const inputs = buildInputs()
+  const people = buildPeopleInputs(inputs)
   const arsenal = extractArsenalBody()
   return {
     [OUTPUT_PATHS.undeadTypes]: serialize(buildTypes(inputs)),
@@ -36,6 +47,10 @@ export const buildCatalog = (): CatalogFiles => {
     [OUTPUT_PATHS.undeadOutfits]: serialize(buildOutfits(inputs)),
     [OUTPUT_PATHS.undeadInfection]: serialize(buildInfection(inputs)),
     [OUTPUT_PATHS.undeadMoments]: serialize(buildMoments(inputs)),
+    [OUTPUT_PATHS.peopleProfessions]: serialize(buildProfessions(people)),
+    [OUTPUT_PATHS.peopleAges]: serialize(buildAgePresets(people)),
+    [OUTPUT_PATHS.peopleAppearance]: serialize(buildPeopleAppearance(people)),
+    [OUTPUT_PATHS.peopleAccessories]: serialize(buildAccessories(people)),
     [OUTPUT_PATHS.presetTeamGame]: serialize(buildTeamGame(inputs)),
     [OUTPUT_PATHS.presetPhysical]: serialize(buildPhysical(inputs)),
     [OUTPUT_PATHS.body]: serialize(buildBody(inputs)),

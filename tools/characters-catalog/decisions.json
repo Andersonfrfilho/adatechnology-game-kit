@@ -202,5 +202,104 @@
     "value": { "lod0": 2500, "lod1": 800, "lod2": 250 },
     "source": "design T4 §1 (Bancada buildZombie)",
     "reason": "The 1000-body benchmark budget."
+  },
+  "professionIds": {
+    "value": [
+      "nurse",
+      "police_officer",
+      "firefighter",
+      "mechanic",
+      "builder",
+      "cook",
+      "sport_shooter",
+      "farmer",
+      "electrician",
+      "courier",
+      "teacher",
+      "unemployed"
+    ],
+    "source": "design T4 §2 (12 professions); elenco:14-39 PROFS",
+    "reason": "English ids in the order of PROFS; named people stay in the game slice."
+  },
+  "professionNames": {
+    "value": {
+      "nurse": "Nurse",
+      "police_officer": "Police officer",
+      "firefighter": "Firefighter",
+      "mechanic": "Mechanic",
+      "builder": "Construction worker",
+      "cook": "Cook",
+      "sport_shooter": "Sport shooter",
+      "farmer": "Farmer",
+      "electrician": "Electrician",
+      "courier": "Courier",
+      "teacher": "Teacher",
+      "unemployed": "Unemployed"
+    },
+    "source": "elenco:14-39 PROFS .n",
+    "reason": "English names; the pt-BR name is the team's."
+  },
+  "professionCarries": {
+    "value": {
+      "nurse": "First-aid kit, gloves",
+      "police_officer": ".38 revolver with 6 rounds, baton",
+      "firefighter": "Fire axe",
+      "mechanic": "Toolbox",
+      "builder": "Hammer, nails",
+      "cook": "Chef knife",
+      "sport_shooter": "9 mm pistol, no ammunition",
+      "farmer": "Seeds, hoe",
+      "electrician": "Pliers, insulating tape",
+      "courier": "Helmet, motorbike with no fuel",
+      "teacher": "Chemistry book, volume 1",
+      "unemployed": "Nothing"
+    },
+    "source": "elenco:14-39 PROFS .kit",
+    "reason": "English text of what the profession carries; pt-BR is the team's."
+  },
+  "ageGroups": {
+    "value": [
+      {
+        "id": "child",
+        "maxYears": 17
+      },
+      {
+        "id": "young",
+        "maxYears": 29
+      },
+      {
+        "id": "adult",
+        "maxYears": 59
+      },
+      {
+        "id": "elder",
+        "maxYears": 200
+      }
+    ],
+    "source": "retratos:344-437 PEOPLE .a (age first)",
+    "reason": "Age groups the named people are bucketed into to read height, build and hunch ranges; people with no h or bulk are the neutral 1."
+  },
+  "accessorySlots": {
+    "value": {
+      "hair": "hair style",
+      "hat": "hat",
+      "face": "face feature",
+      "worn": "worn on the body",
+      "hand": "held in the hand"
+    },
+    "source": "retratos:139-300 build()",
+    "reason": "Where each accessory attaches."
+  },
+  "professionProtection": {
+    "value": {
+      "police_officer": [
+        "vest_police"
+      ],
+      "firefighter": [
+        "turnout_gear"
+      ]
+    },
+    "source": "elenco:14-39 PROFS .parts (\"Colete balístico preto\", \"Roupa de aproximação caqui\")",
+    "reason": "Only the two professions whose listed gear is protection wear it; ids are the ones decisions.protectionPresets gives game-items."
   }
 }

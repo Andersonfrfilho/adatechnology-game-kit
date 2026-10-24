@@ -1,0 +1,577 @@
+[
+  {
+    "id": "short",
+    "slot": "hair",
+    "slotName": "hair style"
+  },
+  {
+    "id": "bun",
+    "slot": "hair",
+    "slotName": "hair style"
+  },
+  {
+    "id": "long",
+    "slot": "hair",
+    "slotName": "hair style"
+  },
+  {
+    "id": "buzz",
+    "slot": "hair",
+    "slotName": "hair style"
+  },
+  {
+    "id": "bald",
+    "slot": "hair",
+    "slotName": "hair style"
+  },
+  {
+    "id": "afro",
+    "slot": "hair",
+    "slotName": "hair style"
+  },
+  {
+    "id": "pony",
+    "slot": "hair",
+    "slotName": "hair style"
+  },
+  {
+    "id": "glasses",
+    "slot": "face",
+    "slotName": "face feature"
+  },
+  {
+    "id": "glasses_y",
+    "slot": "face",
+    "slotName": "face feature"
+  },
+  {
+    "id": "mustache",
+    "slot": "face",
+    "slotName": "face feature"
+  },
+  {
+    "id": "mustache_w",
+    "slot": "face",
+    "slotName": "face feature"
+  },
+  {
+    "id": "beard_g",
+    "slot": "face",
+    "slotName": "face feature"
+  },
+  {
+    "id": "stubble",
+    "slot": "face",
+    "slotName": "face feature"
+  },
+  {
+    "id": "mask",
+    "slot": "face",
+    "slotName": "face feature"
+  },
+  {
+    "id": "goggles",
+    "slot": "face",
+    "slotName": "face feature"
+  },
+  {
+    "id": "earrings",
+    "slot": "face",
+    "slotName": "face feature"
+  },
+  {
+    "id": "cig",
+    "slot": "face",
+    "slotName": "face feature"
+  },
+  {
+    "id": "mirror",
+    "slot": "face",
+    "slotName": "face feature"
+  },
+  {
+    "id": "labgoggles",
+    "slot": "face",
+    "slotName": "face feature"
+  },
+  {
+    "id": "beard",
+    "slot": "face",
+    "slotName": "face feature"
+  },
+  {
+    "id": "cap",
+    "slot": "hat",
+    "slotName": "hat"
+  },
+  {
+    "id": "capback",
+    "slot": "hat",
+    "slotName": "hat"
+  },
+  {
+    "id": "beret",
+    "slot": "hat",
+    "slotName": "hat"
+  },
+  {
+    "id": "hardhat",
+    "slot": "hat",
+    "slotName": "hat"
+  },
+  {
+    "id": "fire",
+    "slot": "hat",
+    "slotName": "hat"
+  },
+  {
+    "id": "straw",
+    "slot": "hat",
+    "slotName": "hat"
+  },
+  {
+    "id": "moto",
+    "slot": "hat",
+    "slotName": "hat"
+  },
+  {
+    "id": "bandana",
+    "slot": "hat",
+    "slotName": "hat"
+  },
+  {
+    "id": "helmet",
+    "slot": "hat",
+    "slotName": "hat"
+  },
+  {
+    "id": "steth",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "mask_chin",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "vest",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "pouches",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "belt",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "holster",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "radio",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "stripes",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "legstripes",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "stains",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "stains_y",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "rag",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "apron",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "buttons",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "earpro",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "headphones",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "coil",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "deliverybox",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "backpack",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "helmetpack",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "hood",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "pocket",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "sweatervest",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "collar",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "satchel",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "blouse",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "cross",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "armband",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "tiedsleeves",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "labcoat",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "rosary",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "watch",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "chain",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "unicorn",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "whistle",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "pen",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "photo",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "pins",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "recorder",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "beads",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "badge",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "stethc",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "bandolier",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "scarf",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "feather",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "amulet",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "rifle_front",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "rifle_tape",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "dbl_front",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "belly",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "refl",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "plate",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "keyring",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "satradio",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "binoc",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "tq",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "cuia",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "card",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "mapfold",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "motoband",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "rifle_sup",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "gloves",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "blood",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "shirtpeek",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "suspenders",
+    "slot": "worn",
+    "slotName": "worn on the body"
+  },
+  {
+    "id": "axe",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "machete",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "wrench",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "hammer",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "hoe",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "baton",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "knife",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "pistol",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "pliers",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "medbag",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "toolbox",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "book",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "bottle",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "clipboard",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "shovel",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "slingshot",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "bible",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "flare",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "radio_h",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "pump",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  },
+  {
+    "id": "mic",
+    "slot": "hand",
+    "slotName": "held in the hand"
+  }
+]

@@ -64,6 +64,12 @@ export type Decisions = {
   readonly abilities: Decision<Readonly<Record<string, Ability>>>
   readonly scope: Decision<Readonly<Record<string, readonly string[]>>>
   readonly triangleBudget: Decision<Readonly<Record<string, number>>>
+  readonly professionIds: Decision<readonly string[]>
+  readonly professionNames: Decision<Readonly<Record<string, string>>>
+  readonly professionCarries: Decision<Readonly<Record<string, string>>>
+  readonly ageGroups: Decision<readonly { readonly id: string; readonly maxYears: number }[]>
+  readonly professionProtection: Decision<Readonly<Record<string, readonly string[]>>>
+  readonly accessorySlots: Decision<Readonly<Record<string, string>>>
 }
 
 export const loadDecisions = (): Decisions => JSON.parse(readFileSync(DECISIONS_PATH, 'utf8')) as Decisions
