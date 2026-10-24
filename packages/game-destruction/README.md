@@ -94,6 +94,15 @@ melts anything. Melting emits `melt` and `drip`; a melted part is lost and its j
 when the part has `explodes`). `contains` parts leak through punctures: the `leak` event carries the hole's world point, the outward normal as
 `direction` and the rate in litres per second, and `PartState.liters` drops in `update` (`setLiters` fills or empties a container).
 
+### Chain reaction
+
+A part with `explodes.chain` (fuel barrel, gas bottle, car tank, gas pump, station tank) answers to what happens around it: `shot` (a bullet, once it has taken off
+`shotDamageFraction` of the hit points), `fire` (the part reaches `explodes.atC`, 300 °C by default) and `explosion` (a blast reaches it). Each gives the seconds until the
+blast, fixed or `[min, max]` drawn from the world seed. The world emits `primed` when it arms a part and `explode` when the delay ends; a bullet or a blast arms the part
+instead of tearing it apart on the spot, and a part goes off once. Blasts resolve in order of time, then object, then part, and the delay counts from the blast that armed the
+part, so the timeline does not depend on the `dt` you pass to `update`. `explosivePart(explosive, part)` builds the part from an `ExplosiveDef` of `@adatechnology/game-weapons`
+(`explosives.get('fuel_barrel')`), so energy, reach and delays come from one place and a game changes them with `patch.explosives`.
+
 ## Joints and tools
 
 | Kind | Strength | Tools | Seconds |
@@ -177,7 +186,7 @@ valid (unique ids, known materials, joints reference parts), a 500 J ballistic h
 ## Events
 
 `damage`, `dent`, `hole`, `crack`, `ricochet`, `debris`, `fracture` (with oriented `fragments` in world space), `detach`, `disassemble_progress`,
-`ignite`, `extinguish`, `burnout`, `melt`, `drip`, `leak`, `explode`, `stress`, `collapse`, `destroyed`. All points are in world space. Subscribe with
+`ignite`, `extinguish`, `burnout`, `melt`, `drip`, `leak`, `explode`, `primed`, `stress`, `collapse`, `destroyed`. All points are in world space. Subscribe with
 `world.on(type | '*', fn)` or the `onEvent` option; `hit` and `update` also return their events.
 
 ## Determinism and LAN
