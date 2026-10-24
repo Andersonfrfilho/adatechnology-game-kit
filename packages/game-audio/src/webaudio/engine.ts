@@ -87,6 +87,8 @@ export type AudioEngine = {
   /** Creates the context and the mixing chain if needed and resumes it; call from a click or a key. */
   unlock(): void
   stats(): AudioStats
+  /** RMS (0 to 1) of what a bus carries now, read from an analyser the first time you ask; sounds started before that do not reach it. 0 without a context. */
+  level(bus: BusId): number
   dispose(): void
 }
 
@@ -105,6 +107,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
   const shared = createNoiseStore(engineRandom)
   const busSettings = new Map<BusId, BusSetting>()
   const busNodes = new Map<BusId, GainNode>()
+  const meters = new Map<BusId, { readonly analyser: AnalyserNode; readonly data: Float32Array<ArrayBuffer> }>()
   const active = new Map<number, RealizedVoice>()
   const loops = new Set<{ rewire(): void; stop(): void; readonly created: boolean }>()
   const named = new Map<string, () => number>()
@@ -116,11 +119,27 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
 
   const outputFor = (bus: BusId): AudioNode => (busNodes.get(bus) ?? chain?.master) as AudioNode
 
+  // a bus somebody asked the level of gets an analyser as soon as it has a node, so sounds started before the first reading are metered too
+  const watched = new Set<BusId>()
+  const meterOf = (bus: BusId): { readonly analyser: AnalyserNode; readonly data: Float32Array<ArrayBuffer> } | undefined => {
+    const existing = meters.get(bus)
+    if (existing) return existing
+    const node = busNodes.get(bus)
+    if (!context || !node || typeof context.createAnalyser !== 'function') return undefined
+    const analyser = context.createAnalyser()
+    analyser.fftSize = 1024
+    node.connect(analyser)
+    const made = { analyser, data: new Float32Array(analyser.fftSize) }
+    meters.set(bus, made)
+    return made
+  }
+
   const ensureBus = (bus: BusId): void => {
     if (!context || !chain || busNodes.has(bus)) return
     const node = context.createGain()
     node.connect(chain.master)
     busNodes.set(bus, node)
+    if (watched.has(bus)) meterOf(bus)
   }
 
   const ready = (): AudioContext | null => {
@@ -291,6 +310,16 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       const audio = ready()
       if (audio) unlockContext(audio)
     },
+    level(bus) {
+      watched.add(bus)
+      ensureBus(bus)
+      const meter = meterOf(bus)
+      if (!meter) return 0
+      meter.analyser.getFloatTimeDomainData(meter.data)
+      let sum = 0
+      for (const sample of meter.data) sum += sample * sample
+      return Math.sqrt(sum / meter.data.length)
+    },
     stats() {
       advance()
       const voiceStats = voices.stats()
@@ -312,6 +341,7 @@ export function createAudioEngine(options: AudioEngineOptions = {}): AudioEngine
       context = null
       chain = null
       busNodes.clear()
+      meters.clear()
       shared.reset()
     },
   }
