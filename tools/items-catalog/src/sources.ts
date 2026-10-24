@@ -10,7 +10,7 @@ import { extractIteHtml } from './extract-ite-html'
 import type { IteHtml } from './extract-ite-html'
 import { extractVc3 } from './extract-vc3'
 import type { HouseData } from './extract-vc3'
-import { HOUSEHOLD_ITEMS_PATH } from './paths'
+import { HOUSEHOLD_ITEMS_PATH, HOUSEHOLD_NAMES_PATH } from './paths'
 
 /** The household item of the SDK, frozen in `base/household-items.sdk.json`. */
 export type HouseholdItem = {
@@ -23,12 +23,16 @@ export type HouseholdItem = {
   readonly color: number
 }
 
+/** The household item names as the SDK shipped them (`item.<id>` keys), frozen in `base/household-item-names.json`. */
+export type HouseholdNames = Readonly<Record<'en' | 'pt-BR', Readonly<Record<string, string>>>>
+
 export type Sources = {
   readonly ite: IteData
   readonly html: IteHtml
   readonly game: GameData
   readonly house: HouseData
   readonly household: Readonly<Record<string, HouseholdItem>>
+  readonly householdNames: HouseholdNames
   readonly decisions: Decisions
 }
 
@@ -38,5 +42,6 @@ export const loadSources = (): Sources => ({
   game: extractGame(),
   house: extractVc3(),
   household: JSON.parse(readFileSync(HOUSEHOLD_ITEMS_PATH, 'utf8')) as Record<string, HouseholdItem>,
+  householdNames: JSON.parse(readFileSync(HOUSEHOLD_NAMES_PATH, 'utf8')) as HouseholdNames,
   decisions: loadDecisions(),
 })

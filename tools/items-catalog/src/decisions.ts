@@ -92,6 +92,8 @@ export type Decisions = {
   readonly gameOnlyExtras: DecisionTable<'game'>
   /** Final item id -> an item that exists only because the catalog needs it. */
   readonly extraItems: DecisionTable<ExtraItem>
+  /** Locale key (`item.<id>`, `category.<id>`, `container.<id>`) -> pt-BR text, for what no source names (created items, the game's categories). */
+  readonly names: DecisionTable<string>
   readonly householdRarity: Decision<Rarity>
   /** Final item id (or the id of a game-only item that has a model) -> measure. */
   readonly dimensions: Readonly<Record<string, DimensionDecision>>

@@ -2456,6 +2456,168 @@
       "reason": "Viewer pool type \"oculos\": prescription glasses. The old alias pointed at the safety goggles (a protective item)."
     }
   },
+  "names": {
+    "item.branch": {
+      "value": "Galho",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.stick": {
+      "value": "Graveto",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.feather": {
+      "value": "Pena",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.bread_mold": {
+      "value": "Bolor de pão",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.glass_jar": {
+      "value": "Pote de vidro",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.broomstick": {
+      "value": "Cabo de vassoura",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.barrel": {
+      "value": "Barril",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.access_badge": {
+      "value": "Crachá de acesso",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.insulin": {
+      "value": "Insulina",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.leftover_meal": {
+      "value": "Sobra de refeição",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.disinfectant": {
+      "value": "Desinfetante",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.seasoning": {
+      "value": "Tempero",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.stapler": {
+      "value": "Grampeador",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.remote_control": {
+      "value": "Controle remoto",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.dvd": {
+      "value": "DVD",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.cable_bundle": {
+      "value": "Feixe de cabos",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.shoe_polish": {
+      "value": "Graxa de sapato",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.laundry_powder": {
+      "value": "Sabão em pó",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.broom": {
+      "value": "Vassoura",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.rubber_gloves": {
+      "value": "Luvas de borracha",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.fabric_softener": {
+      "value": "Amaciante",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.clothespins": {
+      "value": "Prendedores de roupa",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.electrical_tape": {
+      "value": "Fita isolante",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.full_trash_bag": {
+      "value": "Saco de lixo cheio",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.food_packaging": {
+      "value": "Embalagem de comida",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.wine_glass": {
+      "value": "Taça de vinho",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.book": {
+      "value": "Livro",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "item.eyeglasses": {
+      "value": "Óculos",
+      "source": "T3.1f",
+      "reason": "No team name: the item exists only because the catalog needs it (decisions.extraItems), named in pt-BR here."
+    },
+    "category.ammo": {
+      "value": "Munição",
+      "source": "T3.1f",
+      "reason": "Added by the game, not in the team lists: named in pt-BR here."
+    },
+    "category.firearms": {
+      "value": "Armas de fogo",
+      "source": "T3.1f",
+      "reason": "Added by the game, not in the team lists: named in pt-BR here."
+    },
+    "category.throwables": {
+      "value": "Arremessáveis",
+      "source": "T3.1f",
+      "reason": "Added by the game, not in the team lists: named in pt-BR here."
+    },
+    "container.counter": {
+      "value": "Balcão",
+      "source": "T3.1f",
+      "reason": "Added by the game, not in the team lists: named in pt-BR here."
+    }
+  },
   "householdRarity": {
     "value": "common",
     "source": "T3.1b",

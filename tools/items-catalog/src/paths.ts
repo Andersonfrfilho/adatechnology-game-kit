@@ -14,6 +14,7 @@ export const SOURCE_PATHS = {
 
 export const DECISIONS_PATH = join(TOOL_DIR, 'decisions.json')
 export const HOUSEHOLD_ITEMS_PATH = join(TOOL_DIR, 'base', 'household-items.sdk.json')
+export const HOUSEHOLD_NAMES_PATH = join(TOOL_DIR, 'base', 'household-item-names.json')
 
 const GOODS_DATA = join(REPO_ROOT, 'packages', 'game-items-goods', 'src', 'data')
 export const OUTPUT_FILE_NAMES = [
@@ -31,6 +32,7 @@ export const OUTPUT_FILE_NAMES = [
   'use-effects',
   'melee',
   'provenance',
+  'locales/pt-BR',
 ] as const
 export type OutputName = (typeof OUTPUT_FILE_NAMES)[number]
 export const outputPath = (name: OutputName): string => join(GOODS_DATA, `${name}.json`)

@@ -938,3 +938,22 @@ Node 22.23.4: `tools/items-catalog` 35, `game-items` 18, `tools/golden` 42, `cat
 - Sem golden G-b/G-c nesta task.
 
 **Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` exit 0; `pnpm -r test` verde (`game-items` 139 em 13 arquivos, eram 18; `items-catalog` 35); `catalog:check` de items e weapons up to date. **Node 22.23.4**: `game-items` 139, `tools/items-catalog` 35, `tools/golden` 42 passaram. Nenhum gate falhou 2x. Modelo da execução: `sonnet`.
+
+### T3.1f — Pacote `game-items-goods` (grupo B/C)
+
+**O que entrou** (`packages/game-items-goods`, `@adatechnology/game-items-goods` 0.1.0 pelo changeset `game-items-goods-package.md`)
+- `src/data.ts` (JSON gerados importados e tipados: `GOODS_ITEMS` 327, `GOODS_CATEGORIES` 17, `GOODS_PLACES` 24, `GOODS_CONTAINERS` 17, `GOODS_RECIPES` 33, `GOODS_USE_EFFECTS` 9, `GOODS_HOUSE_POOLS` cortado para `PoolEntry`, `GOODS_TABLES` com raridades/armazenamento/esgotamento/surgimento/corpo a corpo, `GOODS_ARSENAL_RECORDS` para `itemsFromArsenal`, `GOODS_PROVENANCE`), `src/pack.ts` (`goodsPack` e `createGoodsItems(options)`: goods primeiro, pacotes e opções do jogo depois e vencem), `src/locale.ts` (`GOODS_STRINGS`, `goodsText`, `pickGoodsLocale`).
+- Textos: `src/data/locales/pt-BR.json` **gerado** pelo `tools/items-catalog` (424 chaves: `item.*` 327, `category.*` 17, `place.*` 24, `rarity.*` 6, `container.*` 17, `recipe.*` 33): nome do time (ITE `n`) nos 245 do time; nome que o household já tinha nos 54 sem par; `decisions.json.names` (nova tabela, com razão) nos 28 itens criados, nas 3 categorias do jogo e no recipiente `counter`. `src/data/locales/en.json` **à mão** (tradução mecânica; os 92 itens do household reaproveitam o inglês que o SDK já tinha, congelado em `tools/items-catalog/base/household-item-names.json`, de onde também sai o pt-BR deles depois que a T3.1g tirar as chaves `item.*` do household).
+- Ferramenta: `build-locale.ts`, saída `locales/pt-BR` em `OUTPUT_FILE_NAMES` (entra no `--check` e no `catalog-up-to-date`), `Sources.householdNames`, `Decisions.names`; teste `tests/locale.test.ts` (nome do time em todo item, nenhum nome morto em `decisions.names`, nomes congelados do household nos dois idiomas, nenhum texto vazio).
+- Pacote completo: `package.json` (dep `game-items`, sem ciclo), `tsconfig`, `tsup` (ESM + IIFE `GameItemsGoods`), `vitest.config`, README, `.claude/skills/game-items-goods/SKILL.md`, changeset, `site/Dockerfile` (a linha `COPY` já existia desde a T3.1b), `pnpm-lock.yaml`.
+- Testes (13): o pacote valida em `createItems` (sozinho e por `createGoodsItems`; 327/17/24/17/33/9), ids únicos, em inglês e snake_case, jogo estende com `patch`/`remove`/pacote próprio, categoria/lugar/raridade referenciados existem, pools/receitas/efeitos/corpo a corpo/caixas só nomeiam itens existentes, medidas entre 1 mm e 2 m e peso positivo, provenance cobre todos e só os itens, todo item tem origem; texto nos dois idiomas para todas as chaves e nada além delas, tradução de todo nome exceto os iguais nos dois idiomas (`dvd`, `ketchup`, `power_bank`, `shampoo`).
+
+**Desvios do desenho e escolhas reversíveis**
+- O desenho dizia "textos en: tradução (haiku)"; fiz eu mesmo (mecânica, 235 nomes + 28 criados). Para os 38 itens juntados o inglês é o do household (nome do time só vale em pt-BR, onde o desenho manda o nome do time).
+- Os pools do goods são cortados para `{ item, weight, qty, isSupply? }`; `type`, `name` e `viewerCategory` do visor ficam só em `data/house-pools.json`.
+- Textos de receita (`recipe.<id>`) e de recipiente entram no locale (não estavam no desenho); os de armazenamento e os efeitos de uso não (são ids de máquina).
+- Raridade em pt-BR fica em minúsculas como no ITE (`comum`); quem exibe capitaliza.
+- `GOODS_TABLES` repete números que o `DEFAULT_RULES` do engine já tem; o teste de integração do `game-items` (T3.1e) prova a igualdade, aqui só se expõe.
+- Nada de golden novo nesta task.
+
+**Portões (Node 24.22.0)**: `pnpm build`, `pnpm -r typecheck`, `pnpm lint` exit 0; `pnpm -r test` exit 0 (`game-items-goods` 13, `items-catalog` 39, `game-items` 139, `game-interactables-household` 1907, `game-weapons` 277, `golden` 42...); `catalog:check` de items e weapons up to date. **Node 22.23.4**: `game-items-goods` 13, `game-items` 139, `tools/items-catalog` 39, `tools/golden` 42 passaram e `catalog:check` up to date. Goldens (golden-tool, `game-weapons`) sem mudança. Nenhum gate falhou 2x. Modelo da execução: `sonnet`.

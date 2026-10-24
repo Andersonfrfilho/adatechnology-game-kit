@@ -7,6 +7,7 @@ import { buildGameSlice } from './build-game-slice'
 import type { GeneratedFiles } from './build-game-slice'
 import { buildHousePools } from './build-house-pools'
 import { buildItems } from './build-items'
+import { buildLocale } from './build-locale'
 import { buildCategories, buildDepletion, buildMelee, buildPlaces, buildRarities, buildSpawn, buildStorage } from './build-tables'
 import { buildUseEffects } from './build-use-effects'
 import { buildIdIndex, resolveReference } from './item-ids'
@@ -26,6 +27,7 @@ export const buildCatalog = ({ gameOutput }: BuildOptions = {}): CatalogFiles =>
   const resolve = (reference: string): string => resolveReference(reference, index).id
   const { items, provenance } = buildItems(sources, resolve)
   const recipeContext = { decisions: sources.decisions, resolveItem: (reference: string) => resolveReference(reference, index) }
+  const containers = buildContainers(sources)
   const files: CatalogFiles = {
     [outputPath('items')]: serialize(items),
     [outputPath('categories')]: serialize(buildCategories(sources)),
@@ -33,7 +35,7 @@ export const buildCatalog = ({ gameOutput }: BuildOptions = {}): CatalogFiles =>
     [outputPath('rarities')]: serialize(buildRarities(sources)),
     [outputPath('storage')]: serialize(buildStorage(sources)),
     [outputPath('recipes')]: serialize(sources.ite.receitas.map((recipe) => parseRecipe(recipe, recipeContext))),
-    [outputPath('containers')]: serialize(buildContainers(sources)),
+    [outputPath('containers')]: serialize(containers),
     [outputPath('depletion')]: serialize(buildDepletion(sources)),
     [outputPath('spawn')]: serialize(buildSpawn(sources)),
     [outputPath('house-pools')]: serialize(buildHousePools(sources, resolve)),
@@ -41,6 +43,7 @@ export const buildCatalog = ({ gameOutput }: BuildOptions = {}): CatalogFiles =>
     [outputPath('use-effects')]: serialize(buildUseEffects(sources, resolve)),
     [outputPath('melee')]: serialize(buildMelee(sources, resolve)),
     [outputPath('provenance')]: serialize(provenance),
+    [outputPath('locales/pt-BR')]: serialize(buildLocale(items, provenance, containers, sources)),
   }
   return gameOutput ? { ...files, ...buildGameSlice(sources, gameOutput, resolve) } : files
 }
