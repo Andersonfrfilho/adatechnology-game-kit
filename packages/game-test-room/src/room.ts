@@ -3,8 +3,8 @@ import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestruction
 import type { DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createDestructionRenderer, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
-import { backblastEffect, blastEffect, createArsenal, createExplosiveBody, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
-import type { Detonation, ExplosiveBody, Shot, SurfaceProbe, Use, WeaponState } from '@adatechnology/game-weapons'
+import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
+import type { Shot, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFluidRenderer } from '@adatechnology/game-fluids-three'
@@ -17,6 +17,7 @@ import { createBenchStore } from './bench'
 import type { BenchStore } from './bench'
 import type { BenchView, MetricRow } from './bench-panel'
 import { buildFromSpec } from './build-from-spec'
+import { createExplosives } from './explosives'
 import { toHostEvent } from './host-events'
 import { DEMO_MATERIALS, demoItems } from './items'
 import { createLog } from './log'
@@ -54,25 +55,6 @@ interface Entry {
   piece: Piece | null
   last: Vec3
   velocity: Vec3
-}
-
-interface Projectile {
-  mesh: THREE_NS.Object3D
-  pos: THREE_NS.Vector3
-  vel: THREE_NS.Vector3
-  weapon: string
-  fuse: number
-  burstOnImpact: boolean
-  energy: number
-  radius: number
-  fire?: { temperature: number; radius: number; seconds: number }
-  age: number
-  /** The explosive that flies or waits (`game-weapons`): when set, it decides the flight and the blast. */
-  body?: ExplosiveBody | undefined
-  /** Points along its velocity (a rocket). */
-  aligned?: boolean
-  /** Set down where it was used: waits for its trigger instead of flying. */
-  placed?: boolean
 }
 
 interface FireZone {
@@ -552,8 +534,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (heldEntry || heldPiece) releaseHeld()
     useItemPlayer = null
     playing.length = 0
-    projectiles.length = 0
-    clearProjectileMeshes()
+    explosives.clear()
     fireZones.length = 0
     burningStains.length = 0
     for (const id of [...entries.keys()]) if (!entries.get(id)?.arena) removeEntry(id)
@@ -976,219 +957,33 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     )
   }
 
-  // ----- projectiles (grenades, molotovs, rockets) and charges set down: an `ExplosiveBody` of game-weapons flies or waits, the room only draws it and applies the blast
-  const projectiles: Projectile[] = []
-  const projMeshes: THREE_NS.Object3D[] = []
-  const clearProjectileMeshes = (): void => {
-    for (const m of projMeshes) m.removeFromParent()
-    projMeshes.length = 0
-  }
-  const UP = new THREE.Vector3(0, 1, 0)
-  const addProjectileMesh = (geometry: THREE_NS.BufferGeometry, color: number, metalness: number, at: Vec3): THREE_NS.Mesh => {
-    const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness }))
-    mesh.castShadow = true
-    mesh.position.set(at[0], at[1], at[2])
-    scene.add(mesh)
-    projMeshes.push(mesh)
-    return mesh
-  }
-  const removeProjectile = (p: Projectile): void => {
-    p.mesh.removeFromParent()
-    const meshAt = projMeshes.indexOf(p.mesh)
-    if (meshAt >= 0) projMeshes.splice(meshAt, 1)
-    const at = projectiles.indexOf(p)
-    if (at >= 0) projectiles.splice(at, 1)
-  }
-  const throwUse = (u: Extract<Use, { kind: 'throw' }>): void => {
-    const w = toolName()
-    const molotov = !!u.fire
-    const rocket = u.trigger === 'impact' && (u.armDistance ?? 0) > 0
-    const geometry = rocket ? new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8) : molotov ? new THREE.CylinderGeometry(0.035, 0.04, 0.2, 8) : new THREE.SphereGeometry(0.045, 8, 6)
-    const mesh = addProjectileMesh(geometry, molotov ? 0x3b7a3b : rocket ? 0x6b705c : 0x4b5320, molotov ? 0 : 0.4, u.origin)
-    projectiles.push({
-      mesh,
-      pos: new THREE.Vector3(u.origin[0], u.origin[1], u.origin[2]),
-      vel: new THREE.Vector3(u.velocity[0], u.velocity[1], u.velocity[2]),
-      weapon: toolId,
-      fuse: u.fuse,
-      burstOnImpact: molotov && u.fuse <= 0,
-      energy: u.energy,
-      radius: u.radius,
-      fire: u.fire,
-      age: 0,
-      ...(u.explosive !== undefined ? { body: createExplosiveBody(u, arsenal.explosives, arsenal.rules.explosives), aligned: rocket } : {}),
-    })
-    const key = rocket ? 'act.launch' : molotov ? 'act.throw.molotov' : 'act.throw.grenade'
-    action(rocket ? 'launch_projectile' : 'throw_projectile', t(key, { weapon: w, fuse: num(u.fuse, 1), arm: num(u.armDistance ?? 0, 0) }), { data: { weapon: toolId, fuse: u.fuse, explosive: u.explosive } })
-  }
-
-  /** A charge goes where the player aims, on the first surface within reach, else on the floor 2 m ahead. */
-  const placementPoint = (u: Extract<Use, { kind: 'place' }>): Vec3 => {
-    const hit = withoutHeld(() => world.raycast(u.origin, u.direction, 3))
-    if (hit) return [hit.point[0] + hit.normal[0] * 0.03, hit.point[1] + hit.normal[1] * 0.03, hit.point[2] + hit.normal[2] * 0.03]
-    const x = u.origin[0] + u.direction[0] * 2
-    const z = u.origin[2] + u.direction[2] * 2
-    return [x, groundAt(x, z) + 0.03, z]
-  }
-  const placeUse = (u: Extract<Use, { kind: 'place' }>): void => {
-    const at = placementPoint(u)
-    const body = createExplosiveBody({ ...u, origin: at }, arsenal.explosives, arsenal.rules.explosives)
-    if (!body) return
-    const mesh = addProjectileMesh(new THREE.BoxGeometry(0.18, 0.06, 0.1), u.explosive === 'claymore' ? 0x556b2f : 0xc2a878, 0.1, at)
-    mesh.rotation.y = Math.atan2(u.direction[0], u.direction[2])
-    projectiles.push({ mesh, pos: new THREE.Vector3(at[0], at[1], at[2]), vel: new THREE.Vector3(), weapon: toolId, fuse: 0, burstOnImpact: false, energy: u.energy, radius: u.radius, age: 0, body, placed: true })
-    action('place_charge', t('act.place', { weapon: toolName(), triggers: u.triggers.join('/') || '-' }), { data: { weapon: toolId, explosive: u.explosive, triggers: [...u.triggers], point: at } })
-  }
-
-  /** The blast behind a launcher: a puff of dust in the cone and what lies inside it, counted. */
-  const backblastUse = (u: Extract<Use, { kind: 'backblast' }>): void => {
-    renderer.emit('smoke', u.origin, u.direction, 14, u.radius)
-    let reached = 0
-    for (const e of entries.values()) {
-      if (e.arena) continue
-      const at = e.so.root.position
-      if (backblastEffect(u, [at.x, at.y, at.z]) > 0) reached++
-    }
-    const onPlayer = backblastEffect(u, [camera.position.x, camera.position.y, camera.position.z])
-    action('backblast', t('act.backblast', { weapon: toolName(), radius: num(u.radius, 0), n: reached, player: num(onPlayer, 2) }), { data: { weapon: toolId, radius: u.radius, halfAngleDeg: u.halfAngleDeg, objects: reached, onPlayer } })
-  }
-
-  const surfaceProbe: SurfaceProbe = (from, to) => {
-    const dx = to[0] - from[0]
-    const dy = to[1] - from[1]
-    const dz = to[2] - from[2]
-    const length = Math.hypot(dx, dy, dz)
-    if (length < 1e-6) return null
-    const d: Vec3 = [dx / length, dy / length, dz / length]
-    const ray = withoutHeld(() => world.raycast(from, d, length + 0.03))
-    let best: { point: Vec3; normal: Vec3; ground: boolean; at: number } | null = ray && ray.distance <= length + 0.03 ? { point: ray.point, normal: ray.normal, ground: ray.normal[1] > 0.7, at: ray.distance } : null
-    const floor = groundAt(to[0], to[2]) + 0.045
-    if (to[1] < floor) {
-      const point: Vec3 = [to[0], floor, to[2]]
-      const at = Math.hypot(point[0] - from[0], point[1] - from[1], point[2] - from[2])
-      if (!best || at < best.at) best = { point, normal: [0, 1, 0], ground: true, at }
-    }
-    return best ? { point: best.point, normal: best.normal, ground: best.ground } : null
-  }
-
-  /** A directional charge only reaches what is inside its cone: each object in reach takes a blast of its own at its place, scaled by how close it is. */
-  const coneBlast = (det: Detonation): number => {
-    let reached = 0
-    for (const e of entries.values()) {
-      if (e.arena) continue
-      const at: Vec3 = [e.so.root.position.x, e.so.root.position.y, e.so.root.position.z]
-      const effect = blastEffect(det, at)
-      if (effect.zone === 'none') continue
-      reached += world.explode(at, det.energy * effect.falloff, 0.5, 'player').length
-    }
-    return reached
-  }
-
-  const detonateBody = (p: Projectile, det: Detonation): void => {
-    const w = toolName(p.weapon)
-    const reach = Math.max(det.injuryRadius, det.lethalRadius)
-    const n = det.energy <= 0 ? 0 : det.cone ? coneBlast(det) : world.explode(det.point, det.energy, reach, 'player').length
-    if (det.energy > 0) renderer.explode(det.point, det.energy, reach)
-    if (det.stunSeconds !== undefined) renderer.emit('flash', det.point, [0, 1, 0], 1, 1)
-    const onPlayer = blastEffect(det, [camera.position.x, camera.position.y, camera.position.z])
-    action('explode', t('act.explode', { weapon: w, energy: num(det.energy, 0), radius: num(reach, 1), n }), {
-      data: { weapon: p.weapon, explosive: det.explosive, cause: det.cause, energyJ: det.energy, radius: reach, point: det.point, player: onPlayer.zone, stunSeconds: onPlayer.stunSeconds },
-    })
-    if (onPlayer.zone !== 'none') action('blast_player', t('act.blast_player', { weapon: w, zone: t(`blast.zone.${onPlayer.zone}`), distance: num(onPlayer.distance, 1), stun: num(onPlayer.stunSeconds, 1) }), { data: { ...onPlayer } })
-    emitHost({ type: 'explosion', source: p.weapon, point: det.point, energy: det.energy, radius: reach, cause: det.cause })
-    if (det.fire) startFire(w, p.weapon, det.point, det.fire, det.cause === 'impact')
-  }
-
-  const startFire = (w: string, weapon: string, at: Vec3, fire: { temperature: number; radius: number; seconds: number }, impact: boolean): void => {
+  const startFire = (weapon: string, at: Vec3, fire: { temperature: number; radius: number; seconds: number }, impact: boolean): void => {
     fluids.splash('fuel', [at[0], Math.max(at[1], groundAt(at[0], at[2])), at[2]], 0.5)
     fireZones.push({ point: [at[0], Math.max(0.02, groundAt(at[0], at[2])), at[2]], radius: fire.radius, temperature: fire.temperature, remaining: fire.seconds, acc: 0 })
     renderer.emit('fire', at, [0, 1, 0], 24, 3)
-    action('molotov_fire', t('act.molotov_fire', { weapon: w, seconds: num(fire.seconds, 0), radius: num(fire.radius, 1) }), { data: { weapon, impact } })
+    action('molotov_fire', t('act.molotov_fire', { weapon: toolName(weapon), seconds: num(fire.seconds, 0), radius: num(fire.radius, 1) }), { data: { weapon, impact } })
   }
 
-  const detonate = (p: Projectile, at: Vec3, impact: boolean): void => {
-    const w = toolName(p.weapon)
-    const results = world.explode(at, p.energy, p.radius, 'player')
-    renderer.explode(at, p.energy, p.radius)
-    action('explode', t('act.explode', { weapon: w, energy: num(p.energy, 0), radius: num(p.radius, 1), n: results.length }), { data: { weapon: p.weapon, energyJ: p.energy, radius: p.radius, point: at } })
-    emitHost({ type: 'explosion', source: p.weapon, point: at, energy: p.energy, radius: p.radius, cause: impact ? 'impact' : 'timer' })
-    if (p.fire) startFire(w, p.weapon, at, p.fire, impact)
-  }
-
-  /** Sets off the charges set down that wait for a remote detonator or a trip wire (the host decides when the wire is touched: here, the same key). */
-  const detonateCharges = (): number => {
-    let n = 0
-    for (const p of [...projectiles]) {
-      if (!p.placed || !p.body) continue
-      const event = p.body.trigger('remote') ?? p.body.trigger('wire')
-      if (event?.type !== 'detonate') continue
-      detonateBody(p, event.detonation)
-      removeProjectile(p)
-      n++
-    }
-    if (n === 0) say(t('hud.no_charges'))
-    return n
-  }
-
-  const stepBody = (p: Projectile, body: ExplosiveBody, dt: number): void => {
-    const events = body.step(dt, surfaceProbe)
-    p.pos.set(body.position[0], body.position[1], body.position[2])
-    p.mesh.position.copy(p.pos)
-    if (p.aligned && body.velocity[0] ** 2 + body.velocity[1] ** 2 + body.velocity[2] ** 2 > 1e-6) p.mesh.quaternion.setFromUnitVectors(UP, new THREE.Vector3(body.velocity[0], body.velocity[1], body.velocity[2]).normalize())
-    else if (!p.placed) p.mesh.rotation.x += dt * 8
-    for (const event of events) {
-      if (event.type === 'dud') action('dud', t('act.dud', { weapon: toolName(p.weapon), distance: num(body.travelled, 1) }), { data: { weapon: p.weapon, point: event.point } })
-      else if (event.type === 'detonate') detonateBody(p, event.detonation)
-    }
-  }
-
-  const updateProjectiles = (dt: number): void => {
-    for (let i = projectiles.length - 1; i >= 0; i--) {
-      const p = projectiles[i]
-      p.age += dt
-      if (p.body) {
-        stepBody(p, p.body, dt)
-        if (p.body.done || (!p.placed && p.age > 60)) removeProjectile(p)
-        continue
-      }
-      p.vel.y -= 9.81 * dt
-      const speed = p.vel.length()
-      const step = speed * dt
-      let burst = false
-      if (step > 1e-6) {
-        const d: Vec3 = [p.vel.x / speed, p.vel.y / speed, p.vel.z / speed]
-        const r = withoutHeld(() => world.raycast(v3(p.pos), d, step + 0.05))
-        if (r && r.distance <= step + 0.04) {
-          p.pos.set(r.point[0] - d[0] * 0.03, r.point[1] - d[1] * 0.03, r.point[2] - d[2] * 0.03)
-          if (p.burstOnImpact) burst = true
-          else {
-            const n = r.normal
-            const vn = p.vel.x * n[0] + p.vel.y * n[1] + p.vel.z * n[2]
-            p.vel.x = (p.vel.x - 2 * vn * n[0]) * 0.35
-            p.vel.y = (p.vel.y - 2 * vn * n[1]) * 0.35
-            p.vel.z = (p.vel.z - 2 * vn * n[2]) * 0.35
-          }
-        } else p.pos.addScaledVector(p.vel, dt)
-      }
-      const g = groundAt(p.pos.x, p.pos.z) + 0.045
-      if (p.pos.y < g) {
-        p.pos.y = g
-        if (p.burstOnImpact) burst = true
-        else {
-          p.vel.y = Math.abs(p.vel.y) * 0.35
-          p.vel.x *= 0.7
-          p.vel.z *= 0.7
-        }
-      }
-      p.mesh.position.copy(p.pos)
-      p.mesh.rotation.x += dt * 8
-      p.fuse -= dt
-      if (burst || (!p.burstOnImpact && p.fuse <= 0) || p.age > 30) {
-        detonate(p, v3(p.pos), burst)
-        removeProjectile(p)
-      }
-    }
-  }
+  // ----- projectiles (grenades, molotovs, rockets) and charges set down: the room lends the explosives its world, log and host
+  const explosives = createExplosives({
+    THREE,
+    scene,
+    camera,
+    world,
+    renderer,
+    arsenal,
+    objects: () => [...entries.values()].filter((e) => !e.arena).map((e) => e.so.root),
+    toolId: () => toolId,
+    toolName,
+    withoutHeld,
+    groundAt,
+    translate: t,
+    format: num,
+    action,
+    emitHost,
+    startFire,
+    say,
+  })
 
   // ----- the trigger
   const useTool = (dt: number, held: boolean): void => {
@@ -1222,13 +1017,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
           heatRays(u, 'heat')
           break
         case 'throw':
-          throwUse(u)
+          explosives.throwUse(u)
           break
         case 'place':
-          placeUse(u)
+          explosives.placeUse(u)
           break
         case 'backblast':
-          backblastUse(u)
+          explosives.backblastUse(u)
           break
         case 'tool':
           toolWork(u, dt)
@@ -1542,7 +1337,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         toggleTap()
         break
       case 'KeyY':
-        detonateCharges()
+        explosives.detonateCharges()
         break
       case 'KeyH': {
         const w = (heldEntry ?? entryOf(inspectTarget()?.object ?? ''))?.item?.weapon
@@ -1676,7 +1471,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const reps = fastForward ? 10 : 1
     updateAnimations(dt)
     updateItemUse(dt)
-    updateProjectiles(dt)
+    explosives.update(dt)
     syncContainers(dt)
     for (let i = 0; i < reps; i++) {
       world.update(dt)
@@ -2296,7 +2091,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       renderer.dispose()
       fluidView.dispose()
       for (const tr of tracers) tr.line.removeFromParent()
-      clearProjectileMeshes()
+      explosives.clear()
       if (ownRenderer) {
         gl.dispose()
         dom.remove()

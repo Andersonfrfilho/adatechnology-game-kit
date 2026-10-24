@@ -102,4 +102,18 @@ describe('explosives of the room go through the rule of game-weapons', () => {
     run(room, 3)
     expect(room.world.part(second, 'tank')?.status).toBe('broken')
   })
+
+  it('a thrown item that names no explosive blasts a sphere of its own radius through the same detonation', () => {
+    const base = makeRoom().arsenal.weapons.get('frag_grenade')
+    if (!base || base.action.kind !== 'throwable') throw new Error('no frag_grenade')
+    const { explosive: _removed, ...action } = base.action
+    const room = makeRoom({ weapons: [{ ...base, id: 'plain_bomb', action }] })
+    const explosions = explosionsOf(room)
+    equip(room, 'plain_bomb')
+    room.look([0, 1.7, 5], [0, 0.6, -3])
+    room.use()
+    run(room, 6)
+    expect(explosions).toMatchObject([{ type: 'explosion', cause: 'timer', energy: action.energy, radius: action.radius }])
+    expect(room.log.entries({ type: 'explode' })).toHaveLength(1)
+  })
 })
