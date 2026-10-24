@@ -1548,5 +1548,15 @@
       1.8
     ],
     "scale": 0.1
+  },
+  {
+    "id": "rebar",
+    "teamId": "vergalhao",
+    "teamBox": [
+      12.7,
+      0.16,
+      0.16
+    ],
+    "scale": 0.1
   }
 ]
