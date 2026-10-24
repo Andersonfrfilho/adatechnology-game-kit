@@ -65,6 +65,8 @@
     "@adatechnology/golden-tool": "workspace:*",
     "@adatechnology/game-destruction-three": "workspace:*",
     "@adatechnology/game-vegetation": "workspace:*",
-    "@adatechnology/game-vegetation-species": "workspace:*"
+    "@adatechnology/game-vegetation-species": "workspace:*",
+    "@adatechnology/game-floorplan-rural": "workspace:*",
+    "@adatechnology/game-floorplan-post-apocalyptic": "workspace:*"
   }
 }

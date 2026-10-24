@@ -566,9 +566,15 @@ importers:
       '@adatechnology/game-floorplan-commercial':
         specifier: workspace:*
         version: link:../game-floorplan-commercial
+      '@adatechnology/game-floorplan-post-apocalyptic':
+        specifier: workspace:*
+        version: link:../game-floorplan-post-apocalyptic
       '@adatechnology/game-floorplan-residential':
         specifier: workspace:*
         version: link:../game-floorplan-residential
+      '@adatechnology/game-floorplan-rural':
+        specifier: workspace:*
+        version: link:../game-floorplan-rural
       '@adatechnology/game-vegetation':
         specifier: workspace:*
         version: link:../game-vegetation
