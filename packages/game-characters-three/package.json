@@ -43,6 +43,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@adatechnology/game-audio": "workspace:*",
     "@adatechnology/game-characters": "workspace:*",
     "@adatechnology/game-contracts": "workspace:*"
   },

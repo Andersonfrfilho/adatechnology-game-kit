@@ -2282,3 +2282,32 @@ Ramo `int/p6b`, a partir da `main` com as Fases 0 a 6 (parte 1). O evento `body`
 
 ### Perguntas para o dono
 - Quantas gotas por ferimento (3, 4, 7, 10) e a regra do sangue antigo (`blood < 0,3`) são minhas. Quer outra conta (por energia do golpe, por exemplo)?
+
+## T6.1g — vozes dos personagens e chamados dos bichos no `game-audio`
+
+Ramo `int/p6b`, depois da Fase 4 (corpo e `body`) na `main`.
+
+| O que | Onde |
+|---|---|
+| As primitivas da Cena (`sNoise`, `sTone`, `voice`) como camadas de receita, que antes moravam dentro do `destruction-three`: `sceneNoise`, `sceneTone`, `sceneVoice`, `sceneMany`, `sceneRecipe`. O `destruction-three` passou a importá-las (as receitas e os 12 traços dos materiais não mudaram) | `game-audio/src/recipes/scene.ts` |
+| Banco dos corpos: 16 receitas. Do jogo (movidas dos suportes de teste do `game-audio`, onde esperavam o dono): `scream_hoarse` (`grito`, L62128), `groan` e `runner_groan` (`voz`, L62143). Da Cena: `groan_walker`, `groan_runner`, `groan_brute` (L1345), `scream` (L1347), `inhale` (L1348), `leap` (L1349), `grab`, `bite`, `hurt` (L1350-L1352, no ouvinte), `flesh`, `flesh_head` (L1353), `sever` (L1355), `gore` (L1356). Cada uma com a linha do time em `sources` | `game-characters-three/src/audio/recipes.ts` |
+| Tabela de quem fala o quê nos 13 tipos | `game-characters-three/src/audio/voices.json` (`UNDEAD_VOICES`) |
+| `createCharacterSound(host.audio)`: `voice`, `body`, `player`, `update`; estilo `art_scene` (padrão) ou `game`; vozes e regras de corpo trocáveis | `src/audio/sound.ts` |
+| Os quatro chamados do `bichoSom` (L66625) e `createAnimalSound` com a recarga da página por bicho (6, 8, 30 e 3 s) | `game-animals-three/src/audio/{recipes.ts,calls.json,sound.ts}` |
+| `createWounds({ sound })` toca ferimento, corte, estouro e divisão onde o segmento estava; a área de personagens ganhou as ações `voice` e `special_call` e a de bichos `call`, todas no motor que a sala empresta | `wounds.ts`, `test-area/module.ts` |
+
+**Prova ("igual ao original")**: `game-characters-three/tests/audio.test.ts` (46 casos) roda cada receita no motor sobre o `AudioContext` falso, com a semente do fixture, e compara com o traço do código do time em `tools/golden/fixtures/audio`: `grito` a 5 distâncias, `voz('gemido')` a 4, `voz('corredor')` a 3, `groan` Lento/Corredor/Brutamonte, `scream`, `inhale`, `leap` em 3 posições, `grab`, `bite`, `hurt`, `flesh`, `flesh_head`, `sever` e `gore` (tolerância 1e-9). `game-animals-three/tests/audio.test.ts` faz o mesmo com os 4 chamados a 4 distâncias (16 casos). O limitador de vozes fica de fora dos traços (`groups` vazio no teste: o grupo `undead_voice` tem teste próprio, e o golden do limitador está no `game-audio`). Os casos `grito`, `voz` e `bichoSom` saíram do `team-trace.test.ts` do `game-audio` porque o dono agora é o pacote do assunto; o resto do arquivo ficou.
+
+### Escolhas minhas (padrões reversíveis)
+
+1. **A regra de classe da Cena vale para os 13 tipos**: Brutamonte tem o seu, velocidade de perseguição acima de 3,4 é gemido de corredor, o resto é de lento. Pelos números do `types.json`, farejador (3,5), saltador (4,5) e espreitador (4) gemem como corredor.
+2. **Tipos sem som próprio no time** (Rastejante, Inchado, Espreitador, Cego, Carbonizado, Afogado, Farejador, Devorador): usam o gemido pela regra acima (`origin: 'rule'`). Dois ganharam um som extra da página mais perto da linha de voz do `types.json` (`origin: 'extra'`): Farejador inspira antes de rosnar (`inhale`, "Fungadas") e Devorador morde (`bite`, "Mastigar molhado"). O Espreitador fica calado parado ("Silencioso") e geme ao acordar. Nada foi sintetizado do zero.
+3. **Grupo `undead_voice` só nos gemidos** (cinco ao mesmo tempo, um a cada 0,25 s, a menos de 40 m). Grito, inspirar e salto da Cena ficam fora do limite (o `grito` do jogo é chamado direto, `screamAt`, sem o orçamento). A Cena conta também o grito e o salto nos cinco do `AU.groans`; aqui só contam os gemidos.
+4. **Alerta**: no estilo do jogo, todo corpo que percebe o jogador responde com `voz('corredor')` (L67275, L67328); no da Cena, com o gemido da sua classe.
+5. **Gritador**: a sequência é inspirar, depois de 1,5 s (`windUpSeconds`) gritar; no estilo do jogo só o `grito`.
+6. **Corpo ferido**: `wound` = `flesh` (`flesh_head` em cabeça e mandíbula), `severed` = `sever`, `destroyed` e `split` = `gore`; no estilo do jogo o `wound` é a classe `sfx_flesh`. A Cena chama `flesh`/`sever`/`gore` nas funções de dano (L1084, L1101, L1127, L1132, L1143), a ligação com os eventos `body` é do kit.
+7. **Chamados dos bichos**: espécie -> chamado pelo gatilho do jogo (galinha, quero-quero, vaca, cachorro). O som do quero-quero dispara pela proximidade do jogador (`alarme`) no jogo; o kit só toca quando o anfitrião manda.
+
+### Perguntas para o dono
+- Os 8 tipos sem som no time (Rastejante, Inchado, Espreitador, Cego, Carbonizado, Afogado, Farejador, Devorador) e as 9 espécies sem chamado (cavalo, porco, javali, capivara, onça, gato, urubu, jararaca, rato) ficam com o gemido da regra, o som "extra" ou silêncio. Quer que o time de som entregue vozes novas, ou aceita as escolhas acima?
+- O Espreitador fica calado enquanto finge morto: aceita?

@@ -1,6 +1,7 @@
 import type { CharacterKit, CharacterPack, CharacterSpec, DamageCharacter, GaitProfile } from '@adatechnology/game-characters'
 import type { Vec3 } from '@adatechnology/game-contracts'
 
+import type { CharacterSoundOptions } from '../audio/sound'
 import type { BloodLook, BloodSink, FilmSink } from '../wounds/fluids-bridge'
 
 /** One undead type as the area needs it: the content pack's own record has all of these fields. */
@@ -54,6 +55,8 @@ export type CharactersTestOptions = {
   readonly fluids?: BloodSink
   /** The running film of the liquids (the room's `room.film`): wounds throw drops of blood into it, in the colours `bloodOf` gives. Without it only the fluid world gets blood. */
   readonly film?: FilmSink
+  /** The sounds of the bodies on the room's engine (`host.audio`): wounds, cuts and the voices of the bench. `false` leaves the area silent. */
+  readonly sound?: false | CharacterSoundOptions
   /** The blood of a body by its infection age (`bloodLookOfAge` over the content's ages). Bodies without an age, and games without this option, bleed the liquid's own colours. */
   readonly bloodOf?: (age: string) => BloodLook | undefined
   /** Seed of the draws of the area (default 1). */

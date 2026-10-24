@@ -8,6 +8,7 @@ import { createWoundMaterials, makeCut, makeStump, ringWound } from './cut'
 import type { WoundMaterials } from './cut'
 import { createFlyingPieces } from './flying'
 import type { FlyingPieces } from './flying'
+import type { CharacterSound } from '../audio/sound'
 import type { FluidsBridge } from './fluids-bridge'
 import { explodeChunks, exitWound, gouge, woundDecal } from './marks'
 import { createPendulum, stepPendulum } from './pendulum'
@@ -21,6 +22,8 @@ export type WoundsOptions = {
   readonly groundAt?: (x: number, z: number) => number
   /** The fluids bridge, when the game has the fluids packages. Without it the wounds draw no blood on the ground. */
   readonly bridge?: FluidsBridge
+  /** The sounds of the bodies (`createCharacterSound`): a wound, a cut and a burst sound where the segment was. Without it the wounds are silent. */
+  readonly sound?: CharacterSound
   readonly materials?: WoundMaterials
   /** Pieces alive at once. Default 40. */
   readonly maxPieces?: number
@@ -64,7 +67,7 @@ const worldPosition = (three: Three, object: THREE_NS.Object3D): THREE_NS.Vector
  * injected so a scene can be repeated.
  */
 export const createWounds = (three: Three, options: WoundsOptions): Wounds => {
-  const { random, scene, bridge } = options
+  const { random, scene, bridge, sound } = options
   const materials = options.materials ?? createWoundMaterials(three)
   const flying = createFlyingPieces(three, { random, ...(options.groundAt ? { groundAt: options.groundAt } : {}), ...(options.maxPieces ? { max: options.maxPieces } : {}) })
   const states = new Map<WoundBody, State>()
@@ -193,6 +196,10 @@ export const createWounds = (three: Three, options: WoundsOptions): Wounds => {
       }
       if (event.type !== 'body') return
       const id = event.part as SegmentId | undefined
+      if (sound) {
+        const heard = worldPosition(three, (id ? body.nodes[id]?.node : undefined) ?? (body.root as THREE_NS.Object3D))
+        sound.body(event, [heard.x, heard.y, heard.z])
+      }
       const fallback = new three.Vector3(0, 0.2, 1)
       const direction = direction3(event.exit, fallback)
       switch (event.change) {

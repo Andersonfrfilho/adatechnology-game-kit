@@ -6,7 +6,7 @@ export type AreaText = {
   elder: string
   controls: Record<'decay' | 'age' | 'penetration' | 'death_rule' | 'detail' | 'moment' | 'pose' | 'cascade' | 'hit_preset' | 'protection' | 'path', string>
   hints: Record<'decay' | 'penetration' | 'death_rule' | 'detail' | 'moment' | 'hit_preset' | 'protection', string>
-  actions: Record<'heal' | 'kill' | 'infect' | 'spawn_100' | 'spawn_1000' | 'fire_preset', string>
+  actions: Record<'heal' | 'kill' | 'infect' | 'spawn_100' | 'spawn_1000' | 'fire_preset' | 'voice' | 'special_call', string>
   options: {
     penetration: Record<string, string>
     death_rule: Record<string, string>
@@ -44,7 +44,7 @@ export const TEXT: Record<string, AreaText> = {
       hit_preset: 'What the Fire hit button does to the body you look at',
       protection: 'Worn by the bodies created from now on',
     },
-    actions: { heal: 'Heal the aimed body', kill: 'Kill the aimed body', infect: 'Bite the aimed person (accelerated)', spawn_100: 'Spawn 100 in the crowd', spawn_1000: 'Spawn 1000 in the crowd', fire_preset: 'Fire the hit' },
+    actions: { heal: 'Heal the aimed body', kill: 'Kill the aimed body', infect: 'Bite the aimed person (accelerated)', spawn_100: 'Spawn 100 in the crowd', spawn_1000: 'Spawn 1000 in the crowd', fire_preset: 'Fire the hit', voice: 'Make the aimed zombie speak (groan, by the moment)', special_call: 'Make the aimed zombie use its call (scream, leap)' },
     options: {
       penetration: { physical: 'Physical', 'team-game': 'Team game' },
       death_rule: { 'vitality-or-head': 'Vitality or head', 'head-only': 'Head only' },
@@ -89,7 +89,7 @@ export const TEXT: Record<string, AreaText> = {
       hit_preset: 'O que o botão Disparar faz no corpo para o qual você olha',
       protection: 'Vestida pelos corpos criados daqui em diante',
     },
-    actions: { heal: 'Curar o corpo mirado', kill: 'Matar o corpo mirado', infect: 'Morder a pessoa mirada (acelerado)', spawn_100: 'Pôr 100 na multidão', spawn_1000: 'Pôr 1000 na multidão', fire_preset: 'Disparar o golpe' },
+    actions: { heal: 'Curar o corpo mirado', kill: 'Matar o corpo mirado', infect: 'Morder a pessoa mirada (acelerado)', spawn_100: 'Pôr 100 na multidão', spawn_1000: 'Pôr 1000 na multidão', fire_preset: 'Disparar o golpe', voice: 'Fazer o zumbi mirado falar (gemido, pelo momento)', special_call: 'Fazer o zumbi mirado usar o chamado (grito, salto)' },
     options: {
       penetration: { physical: 'Física', 'team-game': 'Do jogo' },
       death_rule: { 'vitality-or-head': 'Vitalidade ou cabeça', 'head-only': 'Só a cabeça' },
