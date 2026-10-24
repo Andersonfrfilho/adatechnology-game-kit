@@ -112,6 +112,8 @@ describe('mechanical sounds', () => {
 const createFakeContext = () => {
   const starts: Array<{ kind: string; at: number; offset: number | undefined; filter: number | undefined }> = []
   const buffers: Float32Array[] = []
+  /** Where in the noise buffer each burst starts and for how long it plays (the stop adds 0.05 s of tail). */
+  const spans: Array<{ offset: number; seconds: number }> = []
   const param = () => ({ value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {}, linearRampToValueAtTime() {} })
   const node = <T extends object>(extra: T) => {
     const self: Record<string, unknown> = { connect: (next: unknown) => next, ...extra }
@@ -133,11 +135,20 @@ const createFakeContext = () => {
       return { getChannelData: () => data }
     },
     createBufferSource: () => {
-      const source = node({ buffer: null, start: (at: number, offset?: number) => starts.push({ kind: 'noise', at, offset, filter: undefined }), stop() {} })
-      return source
+      let begin = 0
+      let offset = 0
+      return node({
+        buffer: null,
+        start: (at: number, from?: number) => {
+          begin = at
+          offset = from ?? 0
+          starts.push({ kind: 'noise', at, offset: from, filter: undefined })
+        },
+        stop: (at: number) => void spans.push({ offset, seconds: at - begin - 0.05 }),
+      })
     },
   }
-  return { context: context as unknown as AudioContext, starts, buffers }
+  return { context: context as unknown as AudioContext, starts, buffers, spans }
 }
 
 describe('createWeaponAudio with a fake AudioContext', () => {
@@ -164,6 +175,18 @@ describe('createWeaponAudio with a fake AudioContext', () => {
     createWeaponAudio(0.6, { createContext: () => fake.context }).shot(500, 'pistol', { distance: 500 })
     expect(fake.starts).toHaveLength(0)
     expect(() => createWeaponAudio(0.6, { createContext: () => null as unknown as AudioContext }).shot(500, 'pistol')).not.toThrow()
+  })
+
+  it('starts a noise burst far enough from the end of the buffer for the burst to play whole', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const fake = createFakeContext()
+      const audio = createWeaponAudio(0.6, { seed, createContext: () => fake.context })
+      audio.play('explosion', 1, 0)
+      audio.play('glass', 1, 0)
+      audio.shot(12000, 'sniper', { distance: 0 })
+      expect(fake.spans.length).toBeGreaterThan(0)
+      for (const span of fake.spans) expect(span.offset + span.seconds).toBeLessThanOrEqual(1.5 + 1e-9)
+    }
   })
 
   it('repeats exactly with the same seed and differs with another', () => {

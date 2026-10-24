@@ -47,6 +47,11 @@ describe('scaleClip and sampleClip', () => {
     expect(scaled.events?.map((event) => event.t)).toEqual([1, 1.8])
   })
 
+  it('scales a clip of no duration without making the times NaN', () => {
+    const scaled = scaleClip({ id: 'still', duration: 0, keys: [{ t: 0 }] }, 0.5)
+    expect(scaled.keys.map((key) => key.t)).toEqual([0])
+  })
+
   it('interpolates linearly, rests where a key names nothing and holds the last pose', () => {
     expect(sampleClip(reload, 'mag', 0.25).position).toEqual([0, -0.05, 0])
     expect(sampleClip(reload, 'mag', 2).position).toEqual([0, 0, 0])
@@ -103,6 +108,20 @@ describe('createToolClipPlayer', () => {
     player.apply({ type: 'play', clip: TOOL_CLIP.CLEAR })
     expect(player.playing).toEqual([])
   })
+
+  it('a repeated round that leaves its delay in the middle of a frame starts with the rest of that frame, whatever the frame step', () => {
+    const rise: AnimationClipSpec = { id: 'shot', duration: 1, keys: [{ t: 0 }, { t: 1, parts: { mag: { position: [0, 1, 0] } } }] }
+    const pose = (steps: number[]): number => {
+      const { rig, poses } = recordingRig()
+      const player = createToolClipPlayer({ clips: { shot: rise }, rig, repeatInterval: () => 0.1 })
+      player.apply({ type: 'play', clip: TOOL_CLIP.SHOT, repeat: 2 })
+      for (const dt of steps) player.update(dt)
+      return poses.get('mag')?.position[1] ?? -1
+    }
+    expect(pose([0.25])).toBeCloseTo(0.15, 9)
+    expect(pose([0.05, 0.2])).toBeCloseTo(pose([0.25]), 9)
+    expect(pose([0.03, 0.03, 0.03, 0.03, 0.03, 0.1])).toBeCloseTo(0.15, 9)
+  })
 })
 
 describe('checkToolClips', () => {
@@ -113,5 +132,9 @@ describe('checkToolClips', () => {
     expect(problems.join('|')).toMatch(/has the id "other"/)
     expect(problems.join('|')).toMatch(/unknown part "mag"/)
     expect(problems.join('|')).toMatch(/stage event without data.stage/)
+  })
+
+  it('reports a clip with no duration', () => {
+    expect(checkToolClips({ reload: { ...reload, duration: 0 } }, ['mag']).problems.join('|')).toMatch(/has no duration/)
   })
 })

@@ -108,7 +108,7 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
     gain.gain.exponentialRampToValueAtTime(Math.max(config.gain, 0.0002), start + 0.004)
     gain.gain.exponentialRampToValueAtTime(0.0001, start + config.seconds)
     source.connect(filter).connect(gain).connect(master)
-    source.start(start, rng())
+    source.start(start, rng() * Math.max(0, NOISE_SECONDS - config.seconds))
     source.stop(start + config.seconds + 0.05)
   }
 
@@ -126,7 +126,7 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
     envelope.gain.setValueAtTime(gain, start)
     envelope.gain.exponentialRampToValueAtTime(0.001, start + seconds)
     source.connect(filter).connect(envelope).connect(master)
-    source.start(start, rng())
+    source.start(start, rng() * Math.max(0, NOISE_SECONDS - seconds))
     source.stop(start + seconds + 0.05)
   }
 

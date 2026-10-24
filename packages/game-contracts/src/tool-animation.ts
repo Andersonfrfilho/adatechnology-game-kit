@@ -84,7 +84,7 @@ export const STAGE_EVENT = 'stage'
 
 /** The clip with its times (keys and events) scaled so that it lasts `duration` seconds. */
 export const scaleClip = (clip: AnimationClipSpec, duration: number): AnimationClipSpec => {
-  const factor = duration / clip.duration
+  const factor = clip.duration > 0 ? duration / clip.duration : 1
   return {
     ...clip,
     duration,
@@ -125,6 +125,7 @@ export const checkToolClips = (clips: ToolClipSet, partIds: Iterable<string>): {
   const problems: string[] = []
   for (const [key, clip] of Object.entries(clips)) {
     if (clip.id !== key) problems.push(`clip "${key}" has the id "${clip.id}"`)
+    if (!(clip.duration > 0)) problems.push(`clip "${key}" has no duration`)
     problems.push(...checkAnimation(clip, parts).problems)
     for (const event of clip.events ?? []) if (event.type === STAGE_EVENT && typeof event.data?.stage !== 'string') problems.push(`clip "${key}" has a stage event without data.stage`)
   }
@@ -210,11 +211,12 @@ export const createToolClipPlayer = (options: ToolClipPlayerOptions): ToolClipPl
     },
     update(dt) {
       for (const instance of instances) {
+        const carried = instance.delay > 0 ? dt - instance.delay : dt
         if (instance.delay > 0) {
           instance.delay = Math.max(0, instance.delay - dt)
-          continue
+          if (instance.delay > 0) continue
         }
-        instance.time += dt
+        instance.time += carried
         fireEvents(instance, instance.time)
         render(instance)
       }
