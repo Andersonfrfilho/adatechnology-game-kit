@@ -120,7 +120,30 @@ three.js centripetal curves call `pow`, and a closed `TubeGeometry` on a nearly 
 - Before committing a regenerated fixture, run its tests on two Node versions (CI runs the goldens on 22 and 24). Keep a 1 mm test: a
   vertex or a transform moved by 0.001 must still change the hash (`scene-hash.test.ts`, `game-vehicles-fleet/tests/digest.test.ts`).
 
+## Record a page that keeps its code private (`@adatechnology/golden-tool/record-page`)
+
+Most team pages wrap their code in an IIFE, so a capture cannot reach `hit` or `buildPerson`. `writePatchedPage(page, patches)` writes a copy of the page with code
+inserted inside its closure (`globalThis.__team = { hit, sever }`), and `recordPage(options)` runs `bin/record.mjs` on it (three r128 and the `examples/js` addons
+served from this package's `node_modules`). The page runs as it always did; the capture reads `globalThis.__team` (`--ready "globalThis.__team"`). For code that
+comes from the game (three r160), the capture runs on a blank page and receives the cut code as `globalThis.__SLICES`. Real uses:
+`tools/characters-catalog/src/golden/chrome-goldens.ts` and `tools/characters-catalog/captures/`.
+
+## Cut pure logic out of a team page (`@adatechnology/golden-tool/cut-source`)
+
+Node only. For logic that needs no browser (damage rules, spawn, gait math) the catalog tools cut it from the team source and run it in an
+empty `node:vm` context, with the seeded RNG passed in as a global, so the SDK draws in the same order and the match is exact.
+
+| Function | Cuts |
+|---|---|
+| `cutLiteral(source, name)` / `extractLiteral(source, name, scope?)` | `const <name> = <literal>;`, the literal only (and evaluates it) |
+| `cutDeclaration(source, name)` | the whole `const <name> = ...;` statement (an IIFE, an arrow function) |
+| `cutFunction(source, name)` | `function <name>(...) {...}`, `async function` or `class` |
+| `cutBetween(source, start, end)` / `cutLines(source, from, to)` | a marker range or a line range (anchors drift: prefer a named cut) |
+| `evaluateSlice(code, exports, scope?)` | runs a slice with `scope` as its only globals and returns the names listed in `exports` |
+
+Brackets inside strings, templates, regular expressions and comments do not count.
+
 ## Tests
 
 `pnpm --filter @adatechnology/golden-tool test` covers the seeded PRNG, the determinism installer, the scene hash (stable across runs,
-changes with a vertex, a color, a transform or a name) and the event recorder and diff.
+changes with a vertex, a color, a transform or a name), the event recorder and diff, and the source cutter.

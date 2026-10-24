@@ -1,0 +1,106 @@
+{
+  "dog": {
+    "subtitle": "vira-lata caramelo",
+    "where": "Quintais e ruas das cinco cidades. Matilhas soltas na periferia a partir da semana 2.",
+    "role": "Companheiro. Fareja loot e rastro, guarda a base e rosna para zumbi a 40 m.",
+    "care": "Infectado: corre a 9 m/s, baixo demais para tiro na cabeça fácil, late e chama a horda.",
+    "yield": "Nada. Cão não é comida no Vale.",
+    "sound": "Latido atrai zumbis a 60 m. Rosnado não atrai."
+  },
+  "cat": {
+    "subtitle": "gato de rua rajado",
+    "where": "Telhados, mercados, depósitos e casas abandonadas das cidades.",
+    "role": "Na base, caça ratos e derruba a perda de comida. Chia para zumbi que se aproxima.",
+    "care": "Infectado: pula do alto (telhado, armário) no rosto. Pouco dano, mas infecta.",
+    "yield": "Nada.",
+    "sound": "Chiado curto, não atrai."
+  },
+  "chicken": {
+    "subtitle": "caipira",
+    "where": "Quintais de chácara, sítios e todas as fazendas.",
+    "role": "1 ovo por dia no galinheiro. Cacarejo assustado é alarme da base.",
+    "care": "O mesmo cacarejo atrai zumbis a 30 m.",
+    "yield": "1 kg de carne, ovos e penas para flecha.",
+    "sound": "Cacarejo de alarme, alcance 30 m."
+  },
+  "cow": {
+    "subtitle": "nelore",
+    "where": "Pastos entre Santa Aurora e Campo Largo e as fazendas de Três Pontes.",
+    "role": "Carne, leite e couro. Carcaça de vaca é a melhor isca para desviar horda.",
+    "care": "Tiro perto do rebanho provoca estouro de boiada, que derruba zumbis e jogadores.",
+    "yield": "120 kg de carne, leite com bezerro, couro para armadura leve.",
+    "sound": "Mugido de sede atrai zumbis a 80 m."
+  },
+  "horse": {
+    "subtitle": "crioulo baio",
+    "where": "Haras ao lado do aeroclube de Campo Largo e fazendas grandes.",
+    "role": "Montaria silenciosa sem combustível. Galope de 12 m/s e 60 kg de carga.",
+    "care": "Assusta com tiro e derruba quem tem pouca prática. Zumbis perseguem cavalo.",
+    "yield": "Transporte. Comer cavalo é possível, mas é o último recurso.",
+    "sound": "Relincho atrai a 50 m."
+  },
+  "pig": {
+    "subtitle": "caipira",
+    "where": "Chiqueiros de sítios e fazendas da zona rural oeste e leste.",
+    "role": "Come restos e corpos. Um chiqueiro tira da base o cheiro que atrai hordas.",
+    "care": "Infectado: pesado, investida derruba e atravessa cerca de arame.",
+    "yield": "50 kg de carne e banha para conservar.",
+    "sound": "Guincho alto quando ferido."
+  },
+  "wild_boar": {
+    "subtitle": "javaporco",
+    "where": "Mata Funda, milharais de Campo Largo e pomares abandonados.",
+    "role": "Caça de risco, em bandos de 4 a 10. Praga real do interior.",
+    "care": "Investida a 8 m/s e presas que causam sangramento. Infectado derruba barricada de madeira.",
+    "yield": "40 kg de carne e couro grosso.",
+    "sound": "Grunhido grave; bando fuçando faz barulho a 40 m."
+  },
+  "capybara": {
+    "subtitle": "beira de rio",
+    "where": "Margens do Rio Turvo e do Rio Claro, Lagoa Escura, Brejo do Sapo e açudes.",
+    "role": "Caça fácil e mansa. Capivara calma na margem quer dizer que não há zumbi perto.",
+    "care": "Foge mergulhando. Zumbis afogados na Lagoa Escura pegam capivara e jogador.",
+    "yield": "25 kg de carne e couro.",
+    "sound": "Assobio de alerta quando o bando foge."
+  },
+  "jaguar": {
+    "subtitle": "pintada da Lapa",
+    "where": "Lapa da Onça e Mata Funda. Depois de 2 meses sai da Mata Funda para os sítios.",
+    "role": "Predador de emboscada. Só ataca quem anda sozinho à noite e foge de grupo de 3.",
+    "care": "Salto de 6 m, mata em dois golpes. A Onça da Lapa infectada é um encontro raro e silencioso.",
+    "yield": "Nada. Matar a onça é sobrevivência, não caça.",
+    "sound": "Esturro grave; sem som quando infectada."
+  },
+  "vulture": {
+    "subtitle": "cabeça-preta",
+    "where": "Sobre o engavetamento da BR-101, o trem descarrilado, o centro de Santa Aurora e a área queimada.",
+    "role": "Leitura de mapa: urubus circulando a até 1,5 km marcam mortos, horda comendo ou base caída.",
+    "care": "Pousados, levantam voo quando alguém chega e denunciam a sua posição.",
+    "yield": "Nada.",
+    "sound": "Bater de asas na revoada."
+  },
+  "southern_lapwing": {
+    "subtitle": "sentinela do campo",
+    "where": "Campo aberto: aeroclube, campos de futebol, beira da BR e pastos.",
+    "role": "Grita com qualquer coisa a 25 m. Perto da base, avisa de zumbi chegando.",
+    "care": "O grito acorda zumbis num raio de 40 m. Mergulha em quem chega perto do ninho.",
+    "yield": "Nada.",
+    "sound": "O grito que dá nome ao bicho, alcance 40 m."
+  },
+  "lancehead": {
+    "subtitle": "cobra da mata",
+    "where": "Brejo do Sapo, Mata Funda, pilhas de lenha, paióis e celeiros.",
+    "role": "Ameaça silenciosa que faz o jogador olhar para o chão no mato.",
+    "care": "Picada é veneno: perde vida e a visão turva por 20 min. Soro no posto de saúde.",
+    "yield": "Nada.",
+    "sound": "Nenhum. Só o farfalhar no mato a 3 m."
+  },
+  "rat": {
+    "subtitle": "ratazana de esgoto",
+    "where": "Galerias pluviais de Santa Aurora, cais de Porto Turvo e silos da cooperativa.",
+    "role": "Come 2% do estoque da base por dia sem gato ou lata fechada.",
+    "care": "Enxame infectado de 40 a 80 ratos. Cada mordida tem 5% de chance de infectar. Fogo espanta.",
+    "yield": "Nada.",
+    "sound": "Chiado em massa nas galerias."
+  }
+}

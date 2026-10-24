@@ -1,0 +1,10 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Game slices harness</title></head>
+<body>
+<!-- A blank page with the three.js (r160) module the game itself imports: the capture cuts code out of jogo.js and evaluates it against this THREE. -->
+<script type="module">
+import * as THREE from './three.module.js'
+globalThis.THREE = THREE
+globalThis.__harnessReady = true
+</script>
+</body></html>

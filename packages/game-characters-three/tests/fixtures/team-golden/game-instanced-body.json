@@ -1,0 +1,96 @@
+{
+ "schema": 1,
+ "name": "game-instanced-body",
+ "seed": 1,
+ "events": [
+  {
+   "type": "hash",
+   "data": {
+    "algorithm": "fnv1a-32 over round(value * 1e4)"
+   }
+  },
+  {
+   "type": "body",
+   "data": {
+    "segments": 16,
+    "vertices": 6048,
+    "triangles": 2016,
+    "box": [
+     -0.33,
+     0.0168,
+     -0.1533,
+     0.33,
+     1.8298,
+     0.161
+    ],
+    "position": "673b7600",
+    "normal": "113a7bf4",
+    "bone": "afa2a945",
+    "vcol": "26f311c5",
+    "pivot": "7947e2c5",
+    "ppivot": "2a542ac5"
+   }
+  },
+  {
+   "type": "body",
+   "data": {
+    "segments": 10,
+    "vertices": 2856,
+    "triangles": 952,
+    "box": [
+     -0.3271,
+     0.0168,
+     -0.1462,
+     0.3271,
+     1.8288,
+     0.1556
+    ],
+    "position": "c6a5edaa",
+    "normal": "26d0fe7b",
+    "bone": "0bdfb325",
+    "vcol": "c51590c5",
+    "pivot": "268435c5",
+    "ppivot": "bf180425"
+   }
+  },
+  {
+   "type": "body",
+   "data": {
+    "segments": 5,
+    "vertices": 1485,
+    "triangles": 495,
+    "box": [
+     -0.33,
+     0.0168,
+     -0.1461,
+     0.33,
+     1.8279,
+     0.1461
+    ],
+    "position": "034d5972",
+    "normal": "529004e0",
+    "bone": "03b2973f",
+    "vcol": "d8dcf915",
+    "pivot": "df834aa7",
+    "ppivot": "465646a7"
+   }
+  }
+ ],
+ "scenes": {
+  "body_16": {
+   "objects": 1,
+   "hash": "37757c6",
+   "lines": []
+  },
+  "body_10": {
+   "objects": 1,
+   "hash": "124f369e",
+   "lines": []
+  },
+  "body_5": {
+   "objects": 1,
+   "hash": "5c861175",
+   "lines": []
+  }
+ }
+}

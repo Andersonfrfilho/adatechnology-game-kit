@@ -1,0 +1,19 @@
+{
+  "name": "@adatechnology/characters-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Characters area for the shared test room: the 13 undead types and the professions as bodies the room can shoot (the damage model of game-characters, drawn with the rich builders, wounds, eyes and gait), a shooting lane of five, and a crowd on the instanced path. The bench sets the penetration model, the death rule, the damage detail, the protection, the hit (calibres, blades, grenades at 1, 3 and 6 m), the moment of the zombie and the pose, runs heal, kill, infect (accelerated, to the turn) and spawns 100 or 1000 in the crowd, and turns on the hit capsules, joints, speed vectors and eyes only. Eleven scenarios check the rules.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-characters": "workspace:*",
+    "@adatechnology/game-characters-people": "workspace:*",
+    "@adatechnology/game-characters-three": "workspace:*",
+    "@adatechnology/game-characters-undead": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:*"
+  }
+}

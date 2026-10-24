@@ -1,0 +1,67 @@
+{
+  "id": "physical",
+  "tissuePerCentimetre": {
+    "flesh": 0.25,
+    "bone": 1
+  },
+  "torsoPath": {
+    "fleshCentimetres": 22,
+    "boneCentimetres": 2
+  },
+  "regionFactor": {
+    "head": 0.7,
+    "limb": 0.5,
+    "torso": 1
+  },
+  "bruteTorsoFactor": 2,
+  "energyKept": "P / (P + R)",
+  "points": {
+    "coefficient": 3.5,
+    "exponent": 0.37
+  },
+  "tolerance": {
+    "bodies": 0,
+    "energyKept": 0.05
+  },
+  "calibration": [
+    {
+      "caliber": "9x19",
+      "force": 7.67,
+      "bodies": 2,
+      "energyKeptFirstBody": 0.51,
+      "expectedBodies": 2,
+      "bestiaryEnergyKept": 0.5
+    },
+    {
+      "caliber": "5_56x45",
+      "force": 16.56,
+      "bodies": 3,
+      "energyKeptFirstBody": 0.69,
+      "expectedBodies": 3,
+      "bestiaryEnergyKept": 0.65
+    },
+    {
+      "caliber": "7_62x51",
+      "force": 26.67,
+      "bodies": 4,
+      "energyKeptFirstBody": 0.78,
+      "expectedBodies": 4,
+      "bestiaryEnergyKept": 0.75
+    },
+    {
+      "caliber": "7_62x39",
+      "force": 18.52,
+      "bodies": 3,
+      "energyKeptFirstBody": 0.71,
+      "expectedBodies": 3
+    },
+    {
+      "caliber": "12ga_00buck",
+      "force": 4.35,
+      "bodies": 1,
+      "energyKeptFirstBody": 0.37,
+      "expectedBodies": 1
+    }
+  ],
+  "torsoResistance": 7.5
+}

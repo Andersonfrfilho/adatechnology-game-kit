@@ -1,0 +1,72 @@
+[
+  {
+    "id": "army",
+    "region": "br",
+    "name": {
+      "en": "Brazilian Army",
+      "pt-BR": "Exército Brasileiro"
+    },
+    "color": "7D8A6A",
+    "ranks": "army"
+  },
+  {
+    "id": "military_police",
+    "region": "br",
+    "name": {
+      "en": "Military Police (PM)",
+      "pt-BR": "Polícia Militar"
+    },
+    "color": "C4483B",
+    "ranks": "military_police"
+  },
+  {
+    "id": "civil_police",
+    "region": "br",
+    "name": {
+      "en": "Civil Police",
+      "pt-BR": "Polícia Civil"
+    },
+    "color": "B58AD6",
+    "ranks": "civil_police"
+  },
+  {
+    "id": "highway_police",
+    "region": "br",
+    "name": {
+      "en": "Federal Highway Police (PRF)",
+      "pt-BR": "Polícia Rodoviária Federal"
+    },
+    "color": "E0C341",
+    "ranks": "highway_police"
+  },
+  {
+    "id": "prison_police",
+    "region": "br",
+    "name": {
+      "en": "Prison Police",
+      "pt-BR": "Polícia Penal"
+    },
+    "color": "A3836A",
+    "ranks": "prison_police"
+  },
+  {
+    "id": "special_forces",
+    "region": "br",
+    "name": {
+      "en": "Special forces",
+      "pt-BR": "Forças especiais"
+    },
+    "color": "5FB0A0",
+    "ranks": "army"
+  },
+  {
+    "id": "tactical_unit",
+    "region": "br",
+    "name": {
+      "en": "Tactical units (BOPE, COT, GATE)",
+      "pt-BR": "Unidades táticas (BOPE, COT, GATE)"
+    },
+    "color": "9AA0A6",
+    "ranks": "military_police"
+  }
+]

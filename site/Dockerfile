@@ -9,7 +9,15 @@ WORKDIR /app
 
 # Manifests first so the install layer stays cached until dependencies change.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY packages/game-animals/package.json packages/game-animals/
+COPY packages/game-animals-species/package.json packages/game-animals-species/
+COPY packages/game-animals-three/package.json packages/game-animals-three/
 COPY packages/game-camera/package.json packages/game-camera/
+COPY packages/game-characters/package.json packages/game-characters/
+COPY packages/game-characters-three/package.json packages/game-characters-three/
+COPY packages/game-characters-people/package.json packages/game-characters-people/
+COPY packages/game-characters-undead/package.json packages/game-characters-undead/
+COPY packages/game-characters-uniformed/package.json packages/game-characters-uniformed/
 COPY packages/game-contracts/package.json packages/game-contracts/
 COPY packages/game-destruction/package.json packages/game-destruction/
 COPY packages/game-destruction-three/package.json packages/game-destruction-three/
@@ -37,10 +45,14 @@ COPY packages/game-vehicles/package.json packages/game-vehicles/
 COPY packages/game-vehicles-fleet/package.json packages/game-vehicles-fleet/
 COPY packages/game-weapons/package.json packages/game-weapons/
 COPY packages/game-weapons-three/package.json packages/game-weapons-three/
+COPY tools/animals-catalog/package.json tools/animals-catalog/
+COPY tools/characters-catalog/package.json tools/characters-catalog/
 COPY tools/golden/package.json tools/golden/
 COPY tools/weapon-thumbnails/package.json tools/weapon-thumbnails/
 COPY tools/items-catalog/package.json tools/items-catalog/
 COPY tools/weapons-catalog/package.json tools/weapons-catalog/
+COPY examples/animals-test-area/package.json examples/animals-test-area/
+COPY examples/characters-test-area/package.json examples/characters-test-area/
 COPY examples/interactables-showroom/package.json examples/interactables-showroom/
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
 COPY examples/items-test-area/package.json examples/items-test-area/

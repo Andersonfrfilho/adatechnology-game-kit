@@ -12,6 +12,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./cut-source": {
+      "types": "./dist/cut-source.d.ts",
+      "import": "./dist/cut-source.js"
+    },
+    "./record-page": {
+      "types": "./dist/record-page.d.ts",
+      "import": "./dist/record-page.js"
     }
   },
   "scripts": {
