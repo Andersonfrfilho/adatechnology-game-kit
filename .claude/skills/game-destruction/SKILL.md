@@ -93,7 +93,7 @@ Detalhes e números no README do pacote; exemplos de pilares e vigas em `tests/b
 - `state()` e `part()` são vistas **vivas**: não guarde entre quadros para comparar; use `snapshot`.
 - Eventos e pontos estão em espaço de mundo; `register` de um impl só usa a transformação para raycast e alcance da explosão; `splitGroup` num impl lança erro.
 - Aleatoriedade vem só da semente (nada de `Math.random`); `load` exige os mesmos materiais.
-- Estrutura: sem `structure` o objeto se comporta como antes; capacidades brutas de material costumam ser absurdas, use `sizeStructure`.
+- Estrutura: a laje/viga é sustentada pela **soma** dos apoios que restam (4 pilares dividem a carga; perdendo pilares ela passa aos outros; cai quando a capacidade que sobra é menor que a carga). Configuração: `structure.capacity`, `MaterialDef.compressive`, `sizeStructure({ safety, redundancy })` e a opção do mundo `structure: { safetyFactor }` (padrão 1). Sem `structure` o objeto se comporta como antes; capacidades brutas de material costumam ser absurdas, use `sizeStructure`.
 - Explosão: fragmentos têm teto de 40 m/s.
 
 ## O que vem pela migração (spec 001)

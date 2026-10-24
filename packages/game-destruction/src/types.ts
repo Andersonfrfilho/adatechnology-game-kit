@@ -166,6 +166,19 @@ export interface DestructionOptions {
   maxHoles?: number
   /** Distance at which a burning part heats parts of other objects, in metres (default 0.6). */
   fireSpread?: number
+  /**
+   * The structure solver. A slab or beam is held by the sum of the capacities of what it rests on: its load is shared among the supports that are
+   * left, so losing columns moves the load to the rest and the structure falls when the capacity left (the sum) is less than the load.
+   * The capacity of each part is `structure.capacity`, else the material's `compressive` (kg/m², in `MaterialDef`) times its section.
+   */
+  structure?: {
+    /**
+     * Multiplies every load before it is compared with the capacities: stress = `load * safetyFactor / capacity` (default 1). Above 1 the whole
+     * structure is loaded harder than its capacities were sized for (a worn building, a weaker material); below 1 it has extra margin. It does not
+     * change the capacities; to size them use `sizeStructure({ safety })`.
+     */
+    safetyFactor?: number
+  }
   /** Breach of staged parts (see `PartSpec.breach`). */
   breach?: {
     /** Metres around a hit within which through damage adds up (default 0.55). */

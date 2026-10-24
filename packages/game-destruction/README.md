@@ -132,6 +132,13 @@ solves loads: each structural part carries its own mass plus what rests on it, d
 `PartState.load` is in kg and `PartState.stress` is `load / capacity`. Parts without a role (windows, doors, furniture) carry nothing. Objects
 without any `structure` behave exactly as before.
 
+- **A slab or beam is held by the sum of its supports.** Its load is shared among the supports it rests on that are still there (columns, bearing
+  walls, beams), so a slab on four columns puts a quarter on each; lose one and the other three carry the load of the four, lose two and the
+  two left carry twice their share. The structure falls when the capacity that is left (the sum over the supports) is less than the load.
+  Everything is config: the capacity of a part is `structure.capacity` or `material.compressive` times its section (set `compressive` on a
+  `MaterialDef` passed in `materials`), `sizeStructure({ safety, redundancy })` sizes them (`safety` 0.72 with `redundancy` 0.97 on four columns:
+  rest 0.72, one lost 0.96, two lost 1.44), and the world option `structure: { safetyFactor }` (default 1) multiplies every load before it meets
+  the capacities (stress = `load * safetyFactor / capacity`): above 1 the whole building is loaded harder than it was sized for.
 - **Capacity** defaults to `material.compressive` (kg per m²: concrete 444 000, brick 40 000, softwood 100 000, steel 2 000 000) times the section:
   the two smallest dimensions for columns, beams, roofs and stairs (foundations x10), thickness times longest side for slabs, thickness times
   horizontal length for walls. A 0.3 m concrete column carries 40 t, a 0.2 m brick wall 8 t per metre, a 0.1 x 0.2 m softwood beam 2 t.

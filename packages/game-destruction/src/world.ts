@@ -174,6 +174,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const maxHoles = options.maxHoles ?? 32
   const fireSpread = options.fireSpread ?? 0.6
   const breachRadius = options.breach?.radius ?? BREACH_RADIUS
+  const structureSafety = options.structure?.safetyFactor ?? 1
   const breachBlastFactor = options.breach?.blastFactor ?? BREACH_BLAST_FACTOR
   const rng = createRng(options.seed ?? 1)
   const rnd = () => rng.next()
@@ -439,7 +440,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         o.unsup[i] = o.anyAnchor && !isLost(p)
         continue
       }
-      p.st.stress = p.st.load! / (p.cap * capacityScale(p))
+      p.st.stress = (p.st.load! * structureSafety) / (p.cap * capacityScale(p))
       if (p.st.stress > o.maxStress) o.maxStress = p.st.stress
     }
     if (o.maxStress > 0.8) o.active = true

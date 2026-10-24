@@ -2381,6 +2381,18 @@ o `fracture`, o `debris` e o `stage 3` da janela). A janela fica a ~2,3 m do bot
 estourar pela brecha da explosão; o estilhaço e o dano da explosão continuam. Os outros cinco cenários não mudaram. Testes de pilar/viga perdem a opção
 e o caso "sem a opção".
 
+**2. Pilares: a sustentação é a soma dos pilares.** Resposta do dono à pergunta 1 da T2.6: "deve ser ajustada nas configs; às vezes ficaria melhor tipo 4 pilares e a sustentação é a soma dos 4".
+- Diagnóstico (script no navegador, sala real, `house_two_pillars` com os dois pilares do time): o solver já soma. A laje reparte a carga entre os apoios que restam e cai
+  quando a capacidade que sobra é menor que a carga (teste novo em `structure.test.ts`: 4 pilares dimensionados a 0,72/0,97, perde 1 e fica a 0,9; perde 2 e passa de 1,1 e cai).
+  O que segurava a casa era o **dimensionamento** e a **carga que some**: com `safety 0,65` os 4 pilares ficam a 0,65 em repouso; perdidos 2, os outros 2 iriam a 1,3, mas a cascata
+  de peças que caem arranca as divisórias do andar de cima na hora (junta `thrown`, 0,5 s) e a carga cai ~27%: os 2 pilares ficam parados a 0,95 e a laje a 0,33 (na sala; fora
+  da sala, no mundo puro, a casa caía). Parcelas iguais: nenhuma peça menor (placas, vigas) leva carga, só os pilares.
+- Configuração exposta: capacidade da peça (`structure.capacity` ou `MaterialDef.compressive` × seção), `sizeStructure({ safety, redundancy })`, opção nova do mundo
+  `structure: { safetyFactor }` (padrão 1; tensão = carga × fator / capacidade) e `SpecimenDef.sizing` no `game-floorplan-three`.
+- O pórtico da área (`house_casa_portico`) passa a ser dimensionado a `safety 0,72` e `redundancy 0,97` (um pilar perdido deixa os outros a 0,96, dois passam de 1 mesmo com a carga
+  que some). Com os dois pilares do time a laje e o telhado caem na sala real (`floorplan-test-area/test.mjs`, pt-BR e en). O roteiro estendido do módulo saiu.
+- Goldens: nenhum mudou por este item (o solver não mudou; a opção nova vale 1). O golden `vc3-house-area.json` do time compara só ids, checagens e eventos de sentido.
+
 ## T2.4
 
 Porte literal do Casa3DSDK (`construir`, `planejaLOD`) e do AndaresSDK da página do time (`visor-casas-3d`, L39443-42734; `zombiada-modo-livre`, L7372-7557) para o pacote novo `@adatechnology/game-floorplan-three`. Cinco commits, na ordem do brief.
@@ -2444,7 +2456,7 @@ Módulo de teste das casas, exemplo e goldens contra o VC3 (T2.6a-c). Branch `wo
 - `?arena=` (14 a 200) na página da sala: a arena padrão (14 m) é pequena para uma casa de 12 m e uma fileira.
 - Os andares de cima são alcançados por teletransporte do olho (`up`/`down`); o jogador da sala não tem altura de piso e as escadas não são andadas.
 - O grupo pós-apocalíptico lista só `triage_tent`; os estados `fortified` e `abandoned` valem para as outras tipologias.
-- `house_two_pillars` usa o pórtico com a casa `townhouse` (a `single_storey_a` segura a laje nas divisórias) e, na sala, derruba os pilares seguintes até a laje cair: com o desenhista ligado, dois pilares deixam os outros a 0,95 de tensão e a laje a 0,45 e nada cai. As checagens são as do time; só o roteiro de golpes foi estendido.
+- `house_two_pillars` usa o pórtico com a casa `townhouse` (a `single_storey_a` segura a laje nas divisórias). ~~Na sala, derruba os pilares seguintes até a laje cair~~ **[2026-10-24: resolvido, ver "Decisões do dono de 2026-10-24 (física)", item 2; o roteiro estendido saiu e o cenário roda com os dois pilares do time.]**
 - Contagens de ticks de dano diferem do mundo do time; só os eventos de sentido e as checagens são comparados.
 - Pós-fix, a tank d'água vaza 500 L para 496 L em 40 s com um tiro de 600 J (calibre 9).
 
