@@ -1062,3 +1062,37 @@ Chromium headless (Playwright, GL por software) contra `site/dist` servido por H
 | `docker build -f site/Dockerfile .` | exit 0; a imagem serve `/srv/weapon-svg` com `generated/` (148), `commons/` (18), `manifest.json`, `CREDITS.md` e `LICENSE-NOTE.md` |
 
 Modelo da execução: `sonnet`.
+
+## Fase 6 — grupo A
+
+Desenho: `design/T6-som-e-clima.md`. Modelo da execução: `opus` (a pedido do orquestrador). Branch `feat/spec-001-fase-6`, a partir de `main`; nada foi enviado ao remoto.
+
+### T6.0a — Contratos de som e clima
+
+| O que | Onde |
+|---|---|
+| `SoundRequest`, `SoundHandle`, `LoopHandle`, `AudioListener`, `AudioSink` (`play`, `stop`, `loop?`, `setListener?`, `register?`) e `ModuleHost.audio?` | `game-contracts/src/audio.ts`, `module.ts` |
+| `EnvironmentState` (10 campos), `EnvironmentBus` (`get`, `set`, `on`), `DEFAULT_ENVIRONMENT` (dia seco e calmo: mundo normal primeiro) e `ModuleHost.environment?` | `game-contracts/src/environment.ts`, `module.ts` |
+| `createEnvironmentBus(initial?)`: o repositório de estado mínimo que implementa o barramento (a sala o usa na T6.3; testes e `game-weather` também). Escolha minha: o desenho dizia "a sala implementa", mas um contrato sem implementação de referência obriga cada consumidor a reescrever o mesmo repositório | `environment.ts` |
+| Testes (6): padrão, mesclagem, só avisa o que mudou, silêncio sem mudança, descadastro durante o aviso, sink e host opcionais | `tests/audio-environment.test.ts` |
+
+`game-contracts` 34 testes (eram 28). Changeset `t6-0a-contracts-audio-environment.md` (minor).
+
+### T6.0b — Gravador de áudio, cortes literais e fixtures
+
+| O que | Onde |
+|---|---|
+| `createAudioRecorder`: `AudioContext` falso que registra cada nó criado, propriedade e parâmetro (`value`, `setValueAtTime`, rampas, `setTargetAtTime`), conexão (a nó ou a parâmetro), `start`/`stop` e `close`; buffers viram uma soma FNV-1a por canal; números arredondados a 10 casas; `currentTime` começa em 0 (`setTime`, `clearEntries`). `diffAudioTrace` e `assertAudioTraceMatches` (tolerância 1e-9) | `tools/golden/src/audio-recorder.ts` |
+| `cut-source.ts` (e o teste): o mesmo arquivo da `feat/spec-001-fase-4`, copiado sem mudança para os merges serem limpos; entrada ESM própria (`./cut-source`) | `tools/golden/src/cut-source.ts` |
+| `team-audio.ts`: cortes literais de `jogo.js` (`audioInit`, `noise`, `sfx`, `loopSet`, `grito`, `voz`, `bichoSom`, `boom`, `chiado`, `buzina` e as três declarações) e da Cena de Arte (L1303-1372 mais `clamp`), rodados em `vm` com `Math.random` semeado e `Math.pow` portátil | `tools/golden/src/team-audio.ts`, `bin/record-audio.mjs` |
+| Fixtures do jogo: 111 casos (12 classes a 0/10/60/120/160 m, classe desconhecida, os 4 sons contínuos em 3 níveis com a segunda chamada de suavização, `grito` a 5 distâncias, `voz` gemido/corredor/grito, 4 bichos a 4 distâncias, `boom`, `chiado`, `buzina`) | `tools/golden/fixtures/audio/game-audio.json` (170 KB) |
+| Fixtures da Cena: 85 casos (a cadeia compressor + reverb + 3 laços, os 31 `sfx.*` em 3 posições, `shot` das 5 armas, `groan` dos 3 tipos) | `tools/golden/fixtures/audio/art-scene-audio.json` (461 KB) |
+| **Trace do `createWeaponAudio` ATUAL**, gravado antes de qualquer mudança no som das armas (`git status` de `game-weapons-three/src` limpo na gravação): 3 casos (padrão semente 1, padrão semente 7 com relógio em 2,5 s, opções próprias com classe, curva e mecânico trocados), cada um com a cena de `audio.test.ts` L154-200 mais tiros de todas as classes (supressor, ambiente fechado, silêncio por distância), os 21 sons mecânicos, as 12 classes mais 2 a 4 distâncias, ajudantes de recarga, ciclo, `clink`, `thud`, volume, `dispose` e som depois dele | `packages/game-weapons-three/tests/fixtures/audio-trace.json` (681 KB), `tests/audio-trace.test.ts`, `tests/support/audio-trace-scenario.ts` |
+
+Notas:
+
+- **Fixtures regravam byte a byte** nas duas versões do Node (22.23.4 e 24.22.0): `Math.random` do mulberry32, `Math.pow` portátil (`exp`/`log`), e a soma dos buffers em bytes do `Float32Array`. `Math.hypot` do `panFor` da Cena também bateu.
+- **O corte de `jogo.js` por nome não basta**: `boom`, `AC` e `noiseBuf` existem também em outro lugar do arquivo (`boom` é efeito do mapa). O corte é o da função que usa `AC`, e as três declarações vão pelo texto exato da linha.
+- **`AudioBuffer.length` é inteiro**: a Cena chama `createBuffer(2, sampleRate * 2.2, ...)` (105600,00000000001); o gravador trunca, como o navegador.
+- **O trace do peso das armas** só muda de propósito: a T6.1e (adaptador sobre `game-audio`) tem de devolvê-lo idêntico (`audio-trace.test.ts` compara e também exige o texto igual); só a T6.1e2 (cliques da Cena) regrava, com `UPDATE_GOLDEN=1`.
+- Regravar: `pnpm build && node tools/golden/bin/record-audio.mjs`; o trace das armas, `UPDATE_GOLDEN=1 pnpm --filter @adatechnology/game-weapons-three exec vitest run tests/audio-trace.test.ts`.

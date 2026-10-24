@@ -99,3 +99,29 @@ three.js centripetal curves call `pow`, and a closed `TubeGeometry` on a nearly 
 
 `pnpm --filter @adatechnology/golden-tool test` covers the seeded PRNG, the determinism installer, the scene hash (stable across runs,
 changes with a vertex, a color, a transform or a name) and the event recorder and diff.
+
+## Audio traces (spec 001, Phase 6)
+
+Sound is compared by what the code asks WebAudio to do, not by the audio: `createAudioRecorder()` is a fake `AudioContext` that logs every node
+created, every property and parameter set (`setValueAtTime`, ramps, `.value =`), every connection, start and stop, and summarises each buffer as an
+FNV-1a checksum per channel. Numbers are rounded to 10 decimals; `diffAudioTrace(expected, actual, { tolerance })` (default 1e-9) lists what differs and
+`assertAudioTraceMatches` throws with it. `recorder.AudioContext` is what a page reads as `window.AudioContext`; `currentTime` starts at 0 so every
+logged time is relative to the call (`setTime` moves it), and `clearEntries()` drops the setup so a trace holds only the sound.
+
+The team's own routines are run for real. `@adatechnology/golden-tool/team-audio` cuts them literally from the page text (`cutFunction`,
+`cutBetween`; the names `boom`, `AC`... also exist elsewhere in `jogo.js`, so each cut is the one that touches `AC`) and runs them in a Node `vm`
+with `Math.random` seeded and `Math.pow` portable (Node 22 and 24 give the same bytes):
+
+```bash
+pnpm build && node tools/golden/bin/record-audio.mjs [--seed 1]   # writes tools/golden/fixtures/audio/*.json
+```
+
+| Fixture | Source | Cases |
+|---|---|---|
+| `fixtures/audio/game-audio.json` | `artefatos/2UG1Mhe9LqJkQKKVsJkTWR/jogo.js` (`audioInit`, `noise`, `sfx`, `loopSet`, `grito`, `voz`, `bichoSom`, `boom`, `chiado`, `buzina`) | 12 classes at 0/10/60/120/160 m, the four loops at three levels, `grito`, `voz`, the four animal calls, `boom`, `chiado`, `buzina` (111) |
+| `fixtures/audio/art-scene-audio.json` | `sources/arte__cena-de-arte.js` L1303-1372 (`initAudio` chain and the 31 `sfx.*`) | the chain, then each sound at three positions (85) |
+
+Each case holds `setup` (run first), `call`, the `seed` and the `trace`; the header holds the SHA-256 of every cut, so a changed source is noticed. A
+case runs in its own context with the seed, so the order of random draws is part of the trace: the noise buffer is filled first (one draw per sample),
+then the start offsets. An SDK `realize(plan)` must produce the same entries for the same call (Cena cases record after the chain: `clearEntries`).
+`cut-source` (`cutLiteral`, `cutDeclaration`, `cutFunction`, `cutBetween`, `cutLines`, `evaluateSlice`) is the same file the other phases use.
