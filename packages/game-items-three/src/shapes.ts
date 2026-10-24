@@ -175,7 +175,7 @@ const backpack: Drawer = (c) => {
   const material = k.cloth(c.color)
   const dome = new k.T.SphereGeometry(0.5, seg(c, 12), seg(c, 6), 0, PI * 2, 0, PI / 2)
   const strap = k.cloth(shade(c.color, 0.6))
-  return k.G(k.mesh(k.bx(w, h * 0.78, d * 0.68), material, [0, -h * 0.11, -d * 0.14]), k.mesh(dome, material, [0, h * 0.28, -d * 0.14], [0, 0, 0], [w, h * 0.22, d * 0.68]), k.mesh(k.bx(w * 0.7, h * 0.4, d * 0.3), k.cloth(shade(c.color, 0.75)), [0, -h * 0.18, d * 0.35]), k.mesh(k.bx(w * 0.1, h * 0.7, d * 0.04), strap, [-w * 0.25, -h * 0.05, -d * 0.48]), k.mesh(k.bx(w * 0.1, h * 0.7, d * 0.04), strap, [w * 0.25, -h * 0.05, -d * 0.48]))
+  return k.G(k.mesh(k.bx(w, h * 0.78, d * 0.68), material, [0, -h * 0.11, -d * 0.14]), k.mesh(dome, material, [0, h * 0.28, -d * 0.14], [0, 0, 0], [w, h * 0.44, d * 0.68]), k.mesh(k.bx(w * 0.7, h * 0.4, d * 0.3), k.cloth(shade(c.color, 0.75)), [0, -h * 0.18, d * 0.35]), k.mesh(k.bx(w * 0.1, h * 0.7, d * 0.04), strap, [-w * 0.25, -h * 0.05, -d * 0.48]), k.mesh(k.bx(w * 0.1, h * 0.7, d * 0.04), strap, [w * 0.25, -h * 0.05, -d * 0.48]))
 }
 
 const jerrycan: Drawer = (c) => {

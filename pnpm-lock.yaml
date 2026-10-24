@@ -492,6 +492,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
+      '@adatechnology/game-interactables':
+        specifier: workspace:*
+        version: link:../game-interactables
       '@adatechnology/game-items':
         specifier: workspace:*
         version: link:../game-items
@@ -502,6 +505,9 @@ importers:
       '@adatechnology/game-items-goods':
         specifier: workspace:*
         version: link:../game-items-goods
+      '@adatechnology/game-test-room':
+        specifier: workspace:*
+        version: link:../game-test-room
       '@adatechnology/golden-tool':
         specifier: workspace:*
         version: link:../../tools/golden
