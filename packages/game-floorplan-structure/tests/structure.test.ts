@@ -44,7 +44,7 @@ describe('every generated plan has a structure', () => {
 
   it('the result carries construction, extras, tank, structure and roof; the roof is not repeated inside the structure', () => {
     const plan: any = engine.generate('townhouse', { seed: 2, state: 'normal' })
-    expect(Object.keys(plan.structure).sort()).toEqual(['elevation', 'framed', 'levels', 'parts', 'supports'])
+    expect(Object.keys(plan.structure).sort()).toEqual(['construction', 'elevation', 'framed', 'levels', 'openings', 'parts', 'supports'])
     expect(plan.structureExtras).toEqual({})
     expect(plan.waterTank === null || plan.waterTank.id === 'water_tank').toBe(true)
     expect(plan.roof.shape).toBe('gable')

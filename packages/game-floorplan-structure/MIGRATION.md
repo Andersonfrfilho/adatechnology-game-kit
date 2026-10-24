@@ -59,6 +59,11 @@ the output equals the team page in 900 recorded plans (`tests/team-golden-vc3-st
 | `tpl.construcao(plano, sem)`, `tpl.extras`, `tpl.caixa`, `tpl.caixaLocal` | `registerConstruction(id, builder)` named by `TemplateDef.construction`, `result.structureExtras`, `TemplateDef.tank`, `TemplateDef.tankLocation` |
 | options `semente` ... | `options.wallDetail` (`coarse`, `panels` default, `units`), `options.construction` |
 
+## New with no team original
+
+`wallDetail` `panels` and `units` and `buildWallSpecimen` (spec 001, T2.2d). Ids of the pieces of a wall: `wall_<f>_<n>_pier_<k>`, `_sill_<k>`, `_lintel_<k>`, `_spandrel_<k>`; of bricks `wall_<f>_<n>_pier_<k>_u<row>_<i>`;
+of logs `wall_<f>_<n>_log<row>_<i>`; of a door lintel `lintel_<door>`; of rafters `rafter_a_<n>`, `rafter_b_<n>` and `ridge`.
+
 ## Differences on purpose
 
 - `wallDetail: 'coarse'` is the team's structure. Every other detail also: rafters of each roof side and a `ridge` beam instead of whole trusses (a roof side falls with the wall it rests on, the other stands);

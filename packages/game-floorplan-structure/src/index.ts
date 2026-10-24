@@ -5,6 +5,8 @@ export type { StructurePackOptions } from './register'
 export { buildStructure } from './structure'
 export { toDestructibleSpec } from './to-destructible-spec'
 export type { DestructibleSpecOptions } from './to-destructible-spec'
+export { buildWallSpecimen } from './wall-specimen'
+export type { WallSpecimenOptions } from './wall-specimen'
 export { planWaterTank } from './water-tank'
 export type { TankPlanOptions } from './water-tank'
 export {

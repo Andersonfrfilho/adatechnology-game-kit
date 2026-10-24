@@ -22,6 +22,10 @@ export interface StructurePart {
   mass: number
   /** Part this one is cut out of (a pier of a wall in `panels` detail). */
   host?: string
+  /** Wall assembly of `game-destruction` the part is built from in the destructible spec (layers, units, rebar, breach). */
+  assembly?: string
+  /** A brick, block or log: the unit of a wall (`units` detail, log courses), not a piece of it. */
+  unit?: true
   /** Distance between repeated members (joists, ceiling joists). */
   spacing?: number
   /** `plate` (timber top plate) or `bond_beam` (masonry bond beam). */
@@ -72,13 +76,27 @@ export interface Roof {
   aabb?: Rect
 }
 
+/** A window in a wall (the doors are gaps between walls: a lintel part bridges them). Heights are absolute. */
+export interface Opening {
+  id: string
+  kind: 'window' | 'door'
+  wall: string
+  /** Along the wall (u for a wall along u, v for one along v). */
+  from: number
+  to: number
+  y0: number
+  y1: number
+}
+
 export interface Structure {
   parts: StructurePart[]
   supports: Support[]
+  openings: Opening[]
   /** Absolute height of the floor level of each storey. */
   levels: number[]
   elevation: number
   roof: Roof
+  construction: Construction
   /** A reinforced concrete frame carries the building (apartments, commercial buildings, three storeys or more); the walls are infill. */
   framed: boolean
 }
@@ -88,6 +106,8 @@ export interface WallMaterials {
   interior?: MaterialId
   cladding?: MaterialId | null
   finish?: string
+  /** Wall assembly of `game-destruction` (default by system, and by finish in masonry). */
+  assembly?: string
   thickness: number
   studs?: string
   /** Materials drawn per wall by a hash of its legacy key (the improvised shack). */
@@ -182,6 +202,7 @@ export interface StructureSource {
   rooms: { id: string; type: string; floor: number; parts: Rect[]; ceiling?: number | null }[]
   walls: SourceWall[]
   doors: SourceDoor[]
+  windows?: SourceWindow[]
   items: { id?: string; type: string; category?: string; floor: number; aabb?: Rect; link?: { from: number; to: number } | null }[]
   facade: { roof?: string; finish?: string; [extra: string]: unknown }
   style?: string
@@ -211,6 +232,19 @@ export interface SourceWall {
   /** Gable wall: the plate does not sit on top of it. */
   gable?: boolean
   structureHeight?: number
+}
+
+export interface SourceWindow {
+  id: string
+  floor: number
+  axis: 'u' | 'v'
+  /** Coordinate of the wall line across its axis. */
+  pos: number
+  /** Centre along the wall. */
+  at: number
+  width: number
+  y0: number
+  y1: number
 }
 
 export interface SourceDoor {

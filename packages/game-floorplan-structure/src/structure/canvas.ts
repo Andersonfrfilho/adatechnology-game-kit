@@ -33,5 +33,5 @@ export function buildCanvasStructure(construction: Construction, extras: Structu
     })
   }
   const roof: Roof = { shape: 'tent', covering: 'canvas', material: 'fabric', pitch: 0, bearingFloor: 0, panes, trusses: 0 }
-  return { parts: builder.parts, supports: builder.supports, levels: [0], elevation: 0, roof, framed: false }
+  return { parts: builder.parts, supports: builder.supports, levels: [0], elevation: 0, roof, construction, framed: false, openings: [] }
 }

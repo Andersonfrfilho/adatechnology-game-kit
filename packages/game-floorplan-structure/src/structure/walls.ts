@@ -29,6 +29,8 @@ function railingBase(context: BuildContext, wall: BuildWall, floor: number): Str
   return open.type === 'porch' ? `porch_floor_${open.id}` : `slab_${floor}_${open.id}`
 }
 
+const assemblyOf = (context: BuildContext): string | undefined => context.construction.walls.assembly ?? (context.system.walls || undefined)
+
 function addWallPart(context: BuildContext, wall: BuildWall, floor: number): void {
   const { system, builder } = context
   const isRailing = wall.type === 'railing'
@@ -38,7 +40,7 @@ function addWallPart(context: BuildContext, wall: BuildWall, floor: number): voi
   const framed = system.studs !== undefined && !isRailing
   const part = builder.add(
     { id: wall.id, role: wall.role, material: wall.material, aabb: wall.box, y0, y1: Math.max(y1, y0 + 0.2) },
-    { floor, fill: context.isTimber && wall.role === 'wall' ? system.wallFill : 1, ...(framed ? { studs: system.studs } : {}) },
+    { floor, fill: context.isTimber && wall.role === 'wall' ? system.wallFill : 1, ...(framed ? { studs: system.studs } : {}), ...(isRailing ? {} : { assembly: assemblyOf(context) }) },
   )
   context.wallParts.set(wall.id, part)
   const base = isRailing ? railingBase(context, wall, floor) : context.baseOf(floor)

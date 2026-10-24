@@ -35,8 +35,14 @@ const world = createDestruction({ seed: 1 })
 const id = world.add(toDestructibleSpec(plan.structure)) // capacidades dimensionadas: aguenta 1 pilar a menos, cai com 2
 ```
 Trocar o sistema: `engine.generate('townhouse', { seed: 7, construction: 'wood_frame' })` (`masonry`, `wood_frame`, `log`, `improvised` ou um nome de `registerConstruction`).
-`wallDetail: 'coarse'` reproduz o Visor de casas 3D peça a peça (golden); em `panels` (padrão) o telhado vira caibros por água e cumeeira, e a cobertura da varanda
-só se apoia nos pilares dela.
+`wallDetail: 'coarse'` reproduz o Visor de casas 3D peça a peça (golden); em `panels` (padrão) o telhado vira caibros por água e cumeeira, a cobertura da varanda
+só se apoia nos pilares dela, e `toDestructibleSpec` corta cada parede nas janelas (pilaretes, peitoril, verga de concreto armado com 0,2 m de apoio, parede acima), com a montagem
+de `game-destruction` (reboco que lasca, vergalhão, estágios, brecha) e a massa da parede preservada; o vão da porta ganha verga (`lintel_<porta>`) que carrega a cinta. `units` (área de teste) assenta tijolo,
+bloco e painel de concreto um a um; parede de tronco vira fiadas de toras (a tora de baixo tirada derruba as de cima):
+```ts
+const spec = toDestructibleSpec(plan.structure, { wallDetail: 'units' })
+const specimen = buildWallSpecimen({ assembly: 'reinforced_concrete', w: 2.4, h: 2.1, opening: 'window' })
+```
 
 ## API principal
 | Função/tipo | Para que serve |
@@ -44,6 +50,7 @@ só se apoia nos pilares dela.
 | `register(engine, { tankCapacities? })` | Registra as extensões `construction`, `structureExtras`, `waterTank`, `structure`, `roof` e a camada "Estrutura" do visor 2D |
 | `buildStructure(result, options?)` | `Structure { parts, supports, levels, elevation, roof, framed }` de uma planta (não a modifica) |
 | `toDestructibleSpec(structure, options?)` | `DestructibleSpec` de `game-contracts`: uma caixa por peça, terreno ancorado, juntas `a_on_b`, capacidade pela carga em repouso. Opções: `safety` 0,65, `redundancy` 0,97, `safetyOthers` 0,45, `portico`, `wallDetail`, `filter`, `sized`, `name` |
+| `buildWallSpecimen({ assembly, w, h, opening?, detail? })` | Corpo de prova de parede (2,4 x 2,1 m na área de teste) como a montagem a constrói: pilaretes, verga com 0,2 m de apoio, peitoril, reboco e vergalhão; `opening` `door` ou `window`, `detail` `panels` (padrão) ou `units` |
 | `registerConstructionSystem(id, def)` | Sistema construtivo: montagem de parede (`game-destruction`), juntas, espessura de piso e prato, se é de madeira |
 | `registerConstruction(id, builder)` | Como um modelo é construído (materiais, fundação, telhado) e seus extras; `TemplateDef.construction` ou `options.construction` o nomeiam |
 | `registerRoofCovering(id, { material, joint })` | Cobertura do telhado (`colonial`, `fiber_cement`, `slab`, `asphalt`, `zinc`, `wood`, `canvas`, `thatch`) |
@@ -56,7 +63,7 @@ só se apoia nos pilares dela.
 - Os modelos rurais (T2.2f) registram a construção de cada um (`registerConstruction`) e as extras (chaminé, poço, tendas); o desenho 3D (`game-floorplan-three`) lê `structure`.
 
 ## Ambiente de teste
-- `pnpm --filter @adatechnology/game-floorplan-structure test`: golden contra a página do time (900 plantas), propriedades (toda planta tem estrutura), caminho de carga no mundo de `game-destruction`.
+- `pnpm --filter @adatechnology/game-floorplan-structure test`: golden contra a página do time (900 plantas), propriedades (toda planta tem estrutura), caminho de carga no mundo de `game-destruction`, detalhe de parede e corpos de prova.
 - Visor 2D: `pnpm build && pnpm --filter @adatechnology/game-floorplan viewer:build`, caixa "Estrutura".
 
 ## Cuidados
@@ -69,4 +76,5 @@ só se apoia nos pilares dela.
 ## O que vem pela migração
 - Sistemas construtivos, `montarEstrutura`, `estruturaExtras`, `specDe`, `cargasProjeto` e a caixa d'água do Visor de casas 3D (L10311–10660, L42681–42729, L9279): portados; golden `coarse` igual
   em 900 plantas dos 12 modelos (peças, apoios, `specDe` e `vedacao`, telhado, construção, caixa d'água).
-- Detalhe de parede (`panels`, `units`), `buildWallSpecimen` e as instalações (T2.2d–e) vêm nos commits seguintes da mesma fase.
+- Detalhe de parede (`panels`, `units`) e `buildWallSpecimen` (T2.2d): comportamento novo, sem original do time (a parede do VC3 é uma caixa por segmento, o reboco só um rótulo).
+- As instalações (T2.2e) vêm no commit seguinte da mesma fase.

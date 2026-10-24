@@ -9,6 +9,7 @@ import { addPorches } from './porch'
 import { addPorchRoofs } from './porch-roof'
 import { addRoof } from './roof'
 import { addStairs } from './stairs'
+import { addDoorLintels, findOpenings } from './openings'
 import { addExteriorSteps } from './steps'
 import { addWaterTank } from './tank-parts'
 import { addUpperFloor } from './upper-floor'
@@ -30,12 +31,12 @@ function buildFloors(context: BuildContext): void {
  * roof, stairs, tank) with what each rests on. The plan itself is not modified.
  */
 export function buildStructure(source: StructureSource, options: StructureOptions = {}): Structure {
+  const refined = options.wallDetail !== 'coarse'
   const built = options.construction ? { construction: options.construction, extras: options.extras ?? {} } : resolveConstruction(source)
   const construction = built.construction
   const extras = options.extras ?? built.extras ?? {}
   if (construction.system === 'canvas') return buildCanvasStructure(construction, extras)
   const tank = options.tank !== undefined ? options.tank : (source.waterTank ?? null)
-  const refined = options.wallDetail !== 'coarse'
   const context = createContext(source, construction, extras, tank, { porchRoofOnPostsOnly: options.porchRoofOnPostsOnly ?? refined, rafterRoof: options.rafterRoof ?? refined })
   addFoundation(context)
   buildFloors(context)
@@ -44,10 +45,11 @@ export function buildStructure(source: StructureSource, options: StructureOption
   addExteriorSteps(context)
   addStairs(context)
   addRoof(context)
+  if (refined) addDoorLintels(context)
   addWaterTank(context)
   addChimney(context)
   addWell(context)
   const levels = source.floors.map((_, floor) => context.level(floor))
   const framed = construction.system === 'masonry' && (context.isUnit || source.style === 'commercial' || context.floorCount >= 3)
-  return { parts: context.builder.parts, supports: context.builder.supports, levels, elevation: context.elevation, roof: context.roof, framed }
+  return { parts: context.builder.parts, supports: context.builder.supports, levels, elevation: context.elevation, roof: context.roof, construction, framed, openings: findOpenings(context) }
 }

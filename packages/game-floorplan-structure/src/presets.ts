@@ -14,7 +14,7 @@ export function masonryConstruction(source: StructureSource): Construction {
   const flat = unit || covering === SLAB_COVERING
   return {
     system: 'masonry',
-    walls: { material: 'brick', cladding: PLASTERED_FINISHES.includes(finish) ? 'plaster' : null, finish, thickness: WALL_THICKNESS },
+    walls: { material: 'brick', cladding: PLASTERED_FINISHES.includes(finish) ? 'plaster' : null, finish, thickness: WALL_THICKNESS, ...(finish === 'exposed_block' ? { assembly: 'concrete_block_wall' } : {}) },
     floor: { material: budget ? 'concrete' : 'ceramic', finish: budget ? 'burnt_cement' : 'ceramic_tile' },
     roof: { material: ROOF_COVERINGS.get(covering)?.material ?? 'ceramic', covering, shape: flat ? 'slab' : 'gable', pitch: flat ? 0 : covering === 'colonial' ? 30 : 15, timber: 'wood_soft' },
     frame: { material: 'concrete', pillars: 'concrete', beams: 'concrete', slabs: 'concrete', timber: 'wood_soft', rebar: 'steel' },

@@ -227,7 +227,8 @@ Pacote novo `game-floorplan-structure` (`result.structure`, `result.roof`, `resu
 | `montarCaixaDagua` | VC3 L9279 | `src/water-tank.ts` | golden (`caixaDagua`) |
 | `ROLE_DES`, `cargasProjeto`, `specDe` | VC3 L42681–42729 | `src/{loads,to-destructible-spec}.ts` | golden (`specDe` coarse e `vedacao`) |
 | Cenários estruturais do AC (pilar de canto, dois pilares) e a ênfase do dono (varanda, madeira, tronco, pórtico) | AC L3833–3868, design §8 | `tests/load-path.test.ts` no mundo de `game-destruction` | `load-path.test.ts` |
-| Detalhe de parede, corpo de prova, instalações | | T2.2d–e (mesma fase) | |
+| Detalhe de parede (`panels`, `units`, fiadas de tora) e corpo de prova de parede | design §3 (sem original do time) | `src/wall-detail/*.ts`, `src/wall-specimen.ts` | `wall-detail.test.ts` |
+| Instalações | | T2.2e (mesma fase) | |
 
 Falta para os modelos rurais (T2.2f) registrarem a própria construção e extras com `registerConstruction`.
 
