@@ -1779,6 +1779,15 @@ importers:
       '@adatechnology/game-animals-three':
         specifier: workspace:*
         version: link:../../packages/game-animals-three
+      '@adatechnology/game-characters':
+        specifier: workspace:*
+        version: link:../../packages/game-characters
+      '@adatechnology/game-characters-three':
+        specifier: workspace:*
+        version: link:../../packages/game-characters-three
+      '@adatechnology/game-characters-undead':
+        specifier: workspace:*
+        version: link:../../packages/game-characters-undead
       '@adatechnology/game-interactables-household':
         specifier: workspace:*
         version: link:../../packages/game-interactables-household

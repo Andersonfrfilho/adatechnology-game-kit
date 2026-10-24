@@ -60,6 +60,122 @@
       "ratio": 5.1013,
       "ms": 3.1291
     },
+    "characters/bake:Corredor": {
+      "ratio": 8.8487,
+      "ms": 5.7368
+    },
+    "characters/bake:Lento": {
+      "ratio": 15.2353,
+      "ms": 9.8774
+    },
+    "characters/bake:Rastejante": {
+      "ratio": 11.9229,
+      "ms": 7.7299
+    },
+    "characters/best:Afogado": {
+      "ratio": 2.9901,
+      "ms": 1.9386
+    },
+    "characters/best:Brutamonte": {
+      "ratio": 4.3559,
+      "ms": 2.824
+    },
+    "characters/best:Carbonizado": {
+      "ratio": 2.9534,
+      "ms": 1.9147
+    },
+    "characters/best:Cego": {
+      "ratio": 4.7565,
+      "ms": 3.0838
+    },
+    "characters/best:Corredor": {
+      "ratio": 3.8271,
+      "ms": 2.4812
+    },
+    "characters/best:Devorador": {
+      "ratio": 2.6691,
+      "ms": 1.7305
+    },
+    "characters/best:Espreitador": {
+      "ratio": 2.2,
+      "ms": 1.4263
+    },
+    "characters/best:Farejador": {
+      "ratio": 3.8985,
+      "ms": 2.5275
+    },
+    "characters/best:Gritador": {
+      "ratio": 2.901,
+      "ms": 1.8808
+    },
+    "characters/best:Inchado": {
+      "ratio": 4.4554,
+      "ms": 2.8886
+    },
+    "characters/best:Lento": {
+      "ratio": 2.708,
+      "ms": 1.7557
+    },
+    "characters/best:Rastejante": {
+      "ratio": 2.6243,
+      "ms": 1.7014
+    },
+    "characters/best:Saltador": {
+      "ratio": 3.194,
+      "ms": 2.0708
+    },
+    "characters/instanced:8": {
+      "ratio": 1.1213,
+      "ms": 0.727
+    },
+    "characters/person:arnaldo": {
+      "ratio": 12.7078,
+      "ms": 8.2388
+    },
+    "characters/person:bigode": {
+      "ratio": 8.6752,
+      "ms": 5.6243
+    },
+    "characters/person:brasa": {
+      "ratio": 7.8459,
+      "ms": 5.0867
+    },
+    "characters/person:criancas": {
+      "ratio": 27.6415,
+      "ms": 17.9207
+    },
+    "characters/person:italo": {
+      "ratio": 14.3805,
+      "ms": 9.3232
+    },
+    "characters/person:jessica": {
+      "ratio": 22.2844,
+      "ms": 14.4475
+    },
+    "characters/person:mariana": {
+      "ratio": 12.4915,
+      "ms": 8.0985
+    },
+    "characters/person:nelson": {
+      "ratio": 10.2043,
+      "ms": 6.6157
+    },
+    "characters/person:rafa": {
+      "ratio": 9.7008,
+      "ms": 6.2893
+    },
+    "characters/person:rosa": {
+      "ratio": 10.9679,
+      "ms": 7.1108
+    },
+    "characters/person:val": {
+      "ratio": 11.3223,
+      "ms": 7.3405
+    },
+    "characters/person:zilda": {
+      "ratio": 28.2038,
+      "ms": 18.2852
+    },
     "household/armchair": {
       "ratio": 0.2696,
       "ms": 0.1672

@@ -95,6 +95,7 @@ describe('shapeGeometries: the same geometry as three, made by game-shapes', () 
     expect(T.Vector3).toBe(THREE.Vector3)
     expect(T.TubeGeometry).toBe(THREE.TubeGeometry)
     expect(shapeGeometries(THREE)).toBe(T)
+    expect(shapeGeometries(T)).toBe(T)
   })
 
   it('cached geometries do not share arrays', () => {
