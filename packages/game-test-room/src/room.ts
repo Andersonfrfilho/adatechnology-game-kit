@@ -4,13 +4,13 @@ import type { DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, 
 import { createDestructionRenderer, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { createArsenal, DEFAULT_LOADOUT } from '@adatechnology/game-weapons'
-import type { Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
+import type { MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createFluids, createItemUse, ITEM_USES, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
 import { createFluidRenderer } from '@adatechnology/game-fluids-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { checkAnimation, checkBench, checkDestructible, checkSpec } from '@adatechnology/game-contracts'
-import type { AnimationClipSpec, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createArena } from './arena'
 import type { Arena } from './arena'
 import { createBenchStore } from './bench'
@@ -1763,6 +1763,27 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     flushEvents(toolId, tool)
     say(t(tool.safety ? 'hud.safety_on' : 'hud.safety_off'))
   }
+  function runToolCommand(request: ToolCommand): ToolCommandResult {
+    // the room is the bench: every accessory can be fitted here, whatever it needs (a tool, a workbench)
+    const work = (done: ReturnType<WeaponState['fit']>): ToolCommandResult => (done.ok ? { ok: true, seconds: done.seconds } : { ok: false, reason: done.reason })
+    switch (request.type) {
+      case 'fit':
+        return work(tool.fit(request.attachment, { install: 'bench', ...(request.mount ? { mount: request.mount as MountKind } : {}) }))
+      case 'remove':
+        return work(tool.remove(request.attachment, { install: 'bench' }))
+      case 'toggle':
+        return tool.toggle(request.attachment) === null ? { ok: false, reason: 'not_fitted' } : { ok: true }
+      case 'stock':
+        return tool.setStock(request.state) ? { ok: true } : { ok: false, reason: 'busy' }
+      case 'underbarrel':
+        return tool.useUnderbarrel(request.on) ? { ok: true } : { ok: false, reason: 'busy' }
+      case 'stance':
+        tool.setStance({ ...(request.aiming === undefined ? {} : { aiming: request.aiming }), ...(request.supported === undefined ? {} : { supported: request.supported }) })
+        return { ok: true }
+      default:
+        return { ok: false, reason: 'unknown' }
+    }
+  }
   const host: ModuleHost = {
     THREE,
     scene,
@@ -1780,7 +1801,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       ...(tool.fault ? { fault: tool.fault } : {}),
       safety: tool.safety,
       heat: tool.heatLevel,
+      attachments: tool.attachments.map((part) => ({ id: part.id, mount: part.mount, ...(part.integral ? { integral: true } : {}), ...(part.on === undefined ? {} : { on: part.on }) })),
+      stock: tool.stock,
+      suppressed: tool.suppressed,
+      underbarrelActive: tool.underbarrelActive,
+      mass: tool.mass,
+      aimSeconds: tool.aimSeconds,
     }),
+    command(request) {
+      const result = runToolCommand(request)
+      flushEvents(toolId, tool)
+      return result
+    },
     configureTool(settings) {
       const condition = settings[SETTING_IDS.condition]
       const ammoQuality = settings[SETTING_IDS.ammoQuality]

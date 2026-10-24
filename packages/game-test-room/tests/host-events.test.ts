@@ -35,6 +35,13 @@ describe('toHostEvent', () => {
   })
 })
 
+describe('toHostEvent: suppressed shots', () => {
+  it('tells the module the shot was suppressed, and says nothing otherwise', () => {
+    expect(toHostEvent('colt_m4a1', { type: 'shot', shots: 1, rounds: 1, mode: 'auto', at: 0, suppressed: true })).toMatchObject({ type: 'shot', suppressed: true })
+    expect(toHostEvent('colt_m4a1', { type: 'shot', shots: 1, rounds: 1, mode: 'auto', at: 0 })).not.toHaveProperty('suppressed')
+  })
+})
+
 describe('toHostEvent: launchers', () => {
   it('a launcher spends a round and throws one projectile, which the weapon counts as none: the host hears one', () => {
     expect(toHostEvent('rpg_7', { type: 'shot', shots: 0, rounds: 1, mode: 'single', at: 0 })).toMatchObject({ type: 'shot', shots: 1, rounds: 1 })

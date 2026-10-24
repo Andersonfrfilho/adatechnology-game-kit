@@ -19,7 +19,7 @@ export const toHostEvent = (weapon: string, event: WeaponEvent, options: HostEve
       return event.phase === 'start' ? { type: 'tool', weapon, ...durationOf(phase, 'draw') } : null
     // a launcher spends a round and throws one projectile: the weapon counts none because it is a throw, a host counts the one that leaves
     case 'shot':
-      return { type: 'shot', weapon, shots: Math.max(1, event.shots), recoil, rounds: event.rounds, mode: event.mode }
+      return { type: 'shot', weapon, shots: Math.max(1, event.shots), recoil, rounds: event.rounds, mode: event.mode, ...(event.suppressed ? { suppressed: true } : {}) }
     case 'misfire':
       return { type: 'misfire', weapon }
     case 'reload':
