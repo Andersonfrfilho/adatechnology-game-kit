@@ -961,3 +961,49 @@ Nenhuma regra de jogo mudou de propósito: o comportamento intencional da Fase 1
 ### CI
 
 Novo job `examples` em `.github/workflows/ci.yml`, incluído no `ci-ok`: `pnpm build`, Playwright 1.58.2 e Chromium instalados fora do workspace (`NODE_PATH`), build e verificação dos três exemplos. Medido localmente: build do monorepo 18 s, três verificações 31 s; com `pnpm install` e o download do Chromium estima-se de 3 a 4 min no runner (limite do job: 10 min). Não vale separar em matriz: o custo é dominado pela instalação.
+
+## Revisão da T1.7
+
+Modelo: `sonnet`. Branch `feat/spec-001-t1-7`. Achados da revisão de código das T1.7.6–7 e da regra de acessórios.
+
+### O que foi feito
+
+| # | Achado | Correção | Teste |
+|---|---|---|---|
+| 1 | O raio do laser aceitava malha com ancestral oculto, media a cada quadro e repetia os nomes dos nós como literais | `laser-raycast.ts`: `isVisibleInScene` olha a cadeia de ancestrais, o raio é medido no máximo 30 vezes por segundo (a última distância vale entre as medições), e `VIEWMODEL_NODE_NAME` e `IN_HAND_NODE_NAME` são usados pelo viewmodel e pelo `box-fx` | `laser-raycast.test.ts`: ancestral oculto, os dois nomes de nó, a taxa de 30 Hz |
+| 2 | O botão direito engolia cliques de painéis, campos e sobreposições | Só mira quando o alvo é o canvas da sala ou o ponteiro está travado (`pointerLockElement`). O README de `interactables-test-area` não existe: a documentação foi para o README do `game-weapons` (seção de acessórios), que cobre a área de armas que a página de móveis também carrega | `accessory-bench.test.ts`: clique em botão fora da sala não é consumido, ponteiro travado mira |
+| 3 | `syncUnderbarrel` dava lançador novo a cada re-encaixe (granadas infinitas) | O estado do lançador fica guardado por id do acessório ao sair (com o relógio) e volta ao re-encaixar, posto em dia pelo tempo que ficou fora | `underbarrel.test.ts`: dispara, tira, recoloca, munição 0 e reserva 3 |
+| 4 | O inverso das peças de fábrica dependia da ordem | `cancelShipped` tira dos dois lados os mesmos objetos de modificador (um a um) antes da soma e do produto | `attachments.test.ts`: a ida e volta confere todos os campos do `Loadout` e `action` por `toBe(def.action)` em toda peça de fábrica; novo teste do barrett_mrad com três peças reencaixadas em ordem inversa. O código antigo também passava (a diferença seria só de ponto flutuante), então o teste trava a exatidão sem provar a falha antiga |
+| 5 | Ligar e desligar a lanterna recompilava shaders (muda o número de luzes) | **Escolha:** o `SpotLight` fica `visible` com intensidade 0 enquanto a lanterna está encaixada; `setOn` só muda a intensidade. Uma recompilação por encaixe ou remoção, que já leva segundos de trabalho. Pré-compilar exigiria o renderer, que o módulo não tem | `attachment-models.test.ts` e `accessory-bench.test.ts`: `visible` segue verdadeiro, intensidade 0 e maior que 0 |
+| 6 | Desenho da área de armas | Medido abaixo | — |
+| 7 | `supported` do bipé sem como exercitar | Controle booleano `supported_stance` na bancada, manda `stance { supported }`; volta a falso quando a ferramenta muda | `accessory-bench.test.ts` (controle e comando) |
+
+Nits: `suppressed` do resultado só é verdadeiro se todas as balas foram silenciadas (o supressor caseiro pode quebrar na rajada); `setStance` sai cedo se nada mudou; `wearAttachments` sai cedo sem peça com tiros contados; a lista de acessórios é comparada por quadro com `attachmentsKey` (quantidade, id, encaixe e ligado) em vez de `JSON.stringify`; material da lente da mira e geometrias das argolas da bandoleira são descartados ao tirar; fonte da massa vazia do M134 em `decisions.json` passou a `owner`; o changeset cita os membros novos obrigatórios de `WeaponState` e `Arsenal`.
+
+### Chamadas de desenho e triângulos da área de armas (revisão)
+
+Mesmo método da S1: Chrome real (`google-chrome-stable --headless=new`, SwiftShader), `dist/sala-armas.html` aberto pelo CDP, contagem das chamadas `drawElements`/`drawArrays` (e as instanciadas) do WebGL, que inclui a passada do mapa de sombra, em três janelas de 6 s com o mesmo valor.
+
+| | Chamadas por quadro | Triângulos por quadro | Meshes visíveis | Com sombra |
+|---|---|---|---|---|
+| S1 (Fase 1) | 902 | 1,70 M | — | — |
+| Antes das correções (`0b79a43`) | 1.099 | 1,65 M | 965 | 140 |
+| Depois das correções | 1.099 | 1,65 M | 965 | 140 |
+
+As correções não mexem no caminho de desenho (o valor é o mesmo). O aumento sobre a S1 (+22% nas chamadas, triângulos 3% abaixo) acompanha o conteúdo que a T1.7.5 trouxe (21 armas novas e o M134 no tripé, um mesh por material cada): 965 meshes na passada principal mais 140 com sombra dão as 1.099 chamadas. Não é "muito acima" da S1, então **não foi adicionado** o esconder por distância. Segue o seguimento já registrado (instanciar por modelo ou carregar só a arma mirada) se uma máquina fraca precisar.
+
+### Portões da revisão
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 (`No issues found`) |
+| `pnpm -r test` (inteiro, em segundo plano) | exit 0 (a primeira rodada achou a lista de controles da bancada em `integration.test.ts` sem `supported_stance`; corrigido e rodado de novo) |
+| `catalog:check` (`tools/weapons-catalog`) | `up to date` |
+| `examples/weapons-test-area` `test.mjs` | `ok: bundle and room page` |
+| `examples/interactables-test-area` `test.mjs` | 12/12 passam (en; pt-BR igual) |
+| `examples/test-room` `test.mjs` | todos passam, `OK` (as capturas e o log gerados não foram commitados) |
+| `docker build -f site/Dockerfile .` | exit 0 |
+
+Modelo da execução: `sonnet`.
