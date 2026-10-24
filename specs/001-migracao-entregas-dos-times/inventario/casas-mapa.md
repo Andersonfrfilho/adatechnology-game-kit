@@ -228,9 +228,11 @@ Pacote novo `game-floorplan-structure` (`result.structure`, `result.roof`, `resu
 | `ROLE_DES`, `cargasProjeto`, `specDe` | VC3 L42681–42729 | `src/{loads,to-destructible-spec}.ts` | golden (`specDe` coarse e `vedacao`) |
 | Cenários estruturais do AC (pilar de canto, dois pilares) e a ênfase do dono (varanda, madeira, tronco, pórtico) | AC L3833–3868, design §8 | `tests/load-path.test.ts` no mundo de `game-destruction` | `load-path.test.ts` |
 | Detalhe de parede (`panels`, `units`, fiadas de tora) e corpo de prova de parede | design §3 (sem original do time) | `src/wall-detail/*.ts`, `src/wall-specimen.ts` | `wall-detail.test.ts` |
-| Instalações | | T2.2e (mesma fase) | |
+| `montarGas`, `montarEletrica` (incl. `gato`), `montarSolar`, `montarHidraulica` | VC3 L10879–11166 | `src/utilities/{gas,electrical*,solar,plumbing,wall-points}.ts` | golden (900 plantas), `utilities.test.ts` |
+| `montarEdificacoes`, `caminhosEdificacoes` | VC3 L10752–10823 | `src/utilities/outbuildings.ts` | golden, `utilities.test.ts` |
+| `CONTEUDO`, `sorteiaConteudo`, `aplicaConteudo` (conteúdo por estado) | VC3 L10824–10878 | `src/utilities/content*.ts` (`result.contents`, provedor `findsFor`) | `utilities.test.ts` |
 
-Falta para os modelos rurais (T2.2f) registrarem a própria construção e extras com `registerConstruction`.
+Falta para os modelos rurais (T2.2f) registrarem a própria construção e extras com `registerConstruction` (e `TemplateDef.energy`, `tank`, `tankLocation`).
 
 ### 1.5 Revisão da Casa A (RC)
 

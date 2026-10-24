@@ -913,3 +913,21 @@ Comportamento novo (sem original do time); o `coarse` segue o golden da T2.2c.
 Gate extra: o spec detalhado da casa fica de pé por 60 s (nada quebra sozinho) em 3 modelos; `panels` de uma mansão (302 peças) monta em poucos ms.
 
 **Desvios:** a espessura física da peça é a da montagem (0,13 m no tijolo rebocado), não os 0,15 m do plano; o material das peças continua o da estrutura (`brick`) mas o núcleo da montagem de bloco é concreto (massa vem da estrutura, não da montagem); janela e porta do corpo de prova ficam em 0,33 e 0,8 da altura (a altura da porta de verdade não está na planta: 2,1 m, constante `DOOR_HEIGHT`).
+
+### T2.2e — instalações, edícula e conteúdo por estado
+
+**Fidelidade com a página do time:** as sete listas do golden de instalações (`gas`, `gasBottles`, `electrical`, `solar`, `plumbing`, `outbuildings`, `outbuildingPaths`) conferem em **900 de 900 plantas** (12 modelos x 25 sementes x 3 estados). O teste traduz o SDK de volta para o vocabulário do time (`tests/team-utilities.ts`); os ids dos móveis voltam por posição
+(captura nova `tools/golden/captures/floorplan-item-ids.js`, gravada duas vezes com saída idêntica, `tests/fixtures/team-golden/vc3-item-ids.json`, 1,9 MB). Antes de gravar, conferi 36 plantas contra as linhas completas da página (captura de depuração, fora do repositório): zero diferenças depois de dois acertos (a geladeira
+média de loja também liga numa tomada, e o sorteio da edícula usa o nome de fluxo do time `edif:quintal.edicula`, agora em `streamOf`).
+
+| Peça | Onde |
+|---|---|
+| `montarGas` (botijão ao lado, em nicho externo, sob a bancada, ou encanado com medidor) | `utilities/gas.ts`; o botijão entra em `result.items` como `cooking_gas_cylinder` (registrado no catálogo, 13 kg) |
+| `montarEletrica` (tomadas, entrada de energia, quadro, interruptores, circuitos, eletrodutos), modos `rede`, `gato` (barraco), `offgrid` | `utilities/electrical*.ts`, `wall-points.ts`; modo por `TemplateDef.energy(options, w, d)` |
+| `montarSolar`, `montarHidraulica` | `utilities/solar.ts`, `plumbing.ts` |
+| `montarEdificacoes`, `caminhosEdificacoes` | `utilities/outbuildings.ts` (caminhos em `result.lot.paths`) |
+| `CONTEUDO`, `sorteiaConteudo`, `aplicaConteudo` | `utilities/content-tables.ts`, `content.ts`, `result.contents`: pergunta ao `engine.findsFor` e cai nas tabelas do time quando ninguém responde; regras de estado em `CONTENT_STATES` (`registerContentState`) |
+
+Testes de comportamento (`tests/utilities.test.ts`): todo modelo tem instalações e passa no `engine.validate` (12 modelos x 8 sementes x 3 estados); gás em pelo menos duas posições; botijão externo fora da casa e o de baixo da bancada escondido; aparelho com tomada a até 1,2 m e chuveiro com tomada própria a 1,10 m; chave no lado do trinco; barraco (`tap`) sem medidor e com ligação a 2,6 m; cabana `offgrid` sem instalação, só a fonte (`solar` ou `lamp`); solar no telhado ou em rack de laje; edícula com porta de 0,85 m, 2 janelas, móveis dentro e caminho; geladeira com mais mantimento fortificada do que normal e normal mais do que abandonada, comida estragada na abandonada; um provedor registrado responde antes do padrão.
+
+**Escolhas de negócio (padrão reversível):** as regras de estado (`fortified`, `abandoned`) do conteúdo ficam em `CONTENT_STATES` neste pacote até o catálogo de itens (Fase 3) e o pacote do gênero (G7: multiplicadores do estado em `-post-apocalyptic`) assumirem; ids de item de conteúdo em inglês (`water_bottle`, `canned_tuna`, `spoiled_food`...) são provisórios para o catálogo da Fase 3; `gaveteiro` e `sapateira` do time não têm categoria equivalente no SDK e ficam sem conteúdo; o botijão de cozinha é um tipo novo (`cooking_gas_cylinder`, 0,36 x 0,36 x 0,48) ao lado do `gas_cylinder` externo do residencial.

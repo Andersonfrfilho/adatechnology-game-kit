@@ -59,6 +59,26 @@ the output equals the team page in 900 recorded plans (`tests/team-golden-vc3-st
 | `tpl.construcao(plano, sem)`, `tpl.extras`, `tpl.caixa`, `tpl.caixaLocal` | `registerConstruction(id, builder)` named by `TemplateDef.construction`, `result.structureExtras`, `TemplateDef.tank`, `TemplateDef.tankLocation` |
 | options `semente` ... | `options.wallDetail` (`coarse`, `panels` default, `units`), `options.construction` |
 
+## Installations (T2.2e)
+
+| VC3 | SDK |
+|---|---|
+| `res.gas`, `res.eletrica`, `res.paineisSolares`, `res.hidraulica` | `result.utilities.gas`, `.electrical`, `.solar`, `.plumbing` |
+| `res.edificacoes`; `res.lote.caminhos` of the outbuilding doors | `result.outbuildings`; `result.lot.paths` (`path_<door>`) |
+| `moveis[i].conteudo` and `conteudoAereo` (`CONTEUDO`, `sorteiaConteudo`) | `result.contents[itemId]` and `result.contents['<id>#overhead']` (`FindStack[]` from `engine.findsFor`; default tables in `utilities/content-tables.ts`) |
+| item `botijao_gas` (13 kg cylinder added by `montarGas`) | item `cooking_gas_cylinder` (category the same), added to `result.items`; `liga` is `link`, `local` `ao_lado`/`nicho_externo`/`sob_bancada` is `placement` `beside`/`external_niche`/`under_counter`, `mangueira` is `hose`, `capacidade_kg` is `capacityKg`, `oculto` is `hidden` |
+| gas `{ tipo: botijao\|encanado, medidor }`; stove `gas`, `botijao`, `gasMedidor` | `{ type: cylinder\|piped, meter }`; stove `gas`, `cylinder`, `gasMeter` |
+| electricity `modo` `rede`\|`gato`\|`offgrid`, `entradaEnergia` `{ poste, ramal, medidor, descida, ramalInterno, gato, ligacao }`, `quadro`, `tomadas`, `interruptores`, `circuitos`, `eletrodutos`, `exposta`, `lampadasExternas`, `fonte` | `mode` `grid`\|`tap`\|`offgrid`, `serviceEntrance` `{ pole, drop, meter, descent, internalRun, tap, connection }`, `panel`, `outlets`, `switches`, `circuits`, `conduits`, `exposed`, `outdoorLamps`, `source` (`solar`\|`lamp`) |
+| `tom<n>`, `int<n>`, `circ_<room>_<floor>`, `ed_<id>`, `ext_<door>`; item `tomada`, `chuveiro` `{ eletrico, potencia_w, tomada }` | `outlet<n>`, `switch<n>`, `circuit_<room>_<floor>`, `conduit_<id>`, `outdoor_<door>`; item `outlet`, `showerHeater` `{ electric, powerW, outlet }` |
+| `tpl.config(op).energia`, `.solar` (cabin, shack) | `TemplateDef.energy(options, w, d)` returning `{ mode, solar }` |
+| solar `{ tipo rack_laje\|telhado, norte, ladoVertente, inclinacao, areaM2, n, paineis, inversor }` | `{ type slab_rack\|roof, north, slopeSide, tilt, areaM2, count, panels, inverter }` |
+| plumbing `{ caixa, capacidade_l, pontos, trechosVisiveis }`, points `torneira`, `chuveiro`, `descarga`, `tanque`, `maquina`, `vazao_lpm`, `trecho`; runs `tr_saida`, `tr_sob_<pt>`, `tr_parede_<room>` | `{ tank, capacityL, points, visibleRuns }`, `tap`, `shower`, `flush`, `tub`, `machine`, `flowLpm`, `run`; `run_outlet`, `run_under_<pt>`, `run_wall_<room>` |
+| outbuilding `{ tipo edicula, uso, paredes, portas, janelas, itens, pe, esp, frente }`, uses `quarto_visita`, `escritorio`, `deposito`, `gourmet`; ids `<id>.p0`, `<id>.j0`, `<id>.j1` | `{ type outbuilding, use, walls, doors, windows, items, ceiling, thickness, front }`, uses `guest_room`, `office`, `storage`, `gourmet`; ids `<id>.d0`, `<id>.w0`, `<id>.w1` |
+| contents by state `protegida`, `abandonada` | `fortified`, `abandoned` rules in `CONTENT_STATES` (`registerContentState`) |
+
+The streams of the installations keep the names of the team (`gas`, `eletrica`, `solar`, `edif:quintal.edicula`), so an old seed draws the same gas, sockets, panels and outbuilding use. The golden
+(`tests/team-golden-vc3-structure.test.ts`, with the ids of the items in `tests/fixtures/team-golden/vc3-item-ids.json`) compares the seven lists in 900 plans.
+
 ## New with no team original
 
 `wallDetail` `panels` and `units` and `buildWallSpecimen` (spec 001, T2.2d). Ids of the pieces of a wall: `wall_<f>_<n>_pier_<k>`, `_sill_<k>`, `_lintel_<k>`, `_spandrel_<k>`; of bricks `wall_<f>_<n>_pier_<k>_u<row>_<i>`;

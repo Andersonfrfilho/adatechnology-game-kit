@@ -30,6 +30,7 @@ const plan = engine.generate('townhouse', { seed: 7, state: 'normal' }) // wallD
 plan.structure.parts // { id, role, material, aabb, y0, y1, floor, mass, ... }
 plan.structure.supports // { part, on, joint } : cada peça repousa em outra ou em 'ground'
 plan.roof; plan.construction; plan.waterTank
+plan.utilities // { gas, electrical, solar, plumbing }; plan.outbuildings; plan.contents[itemId]
 
 const world = createDestruction({ seed: 1 })
 const id = world.add(toDestructibleSpec(plan.structure)) // capacidades dimensionadas: aguenta 1 pilar a menos, cai com 2
@@ -56,6 +57,8 @@ const specimen = buildWallSpecimen({ assembly: 'reinforced_concrete', w: 2.4, h:
 | `registerRoofCovering(id, { material, joint })` | Cobertura do telhado (`colonial`, `fiber_cement`, `slab`, `asphalt`, `zinc`, `wood`, `canvas`, `thatch`) |
 | `masonryConstruction`, `woodFrameConstruction`, `chaletConstruction`, `logCabinConstruction`, `shackConstruction`, `campConstruction` | Construções prontas (dados do Visor de casas 3D) para os modelos registrarem |
 | `planWaterTank(result, rng, options?)` | Caixa d'água: na laje, no sótão ou em plataforma sobre o telhado; `custom` e `location` por modelo |
+| `result.utilities` | `gas` (cilindro ao lado, em nicho externo, sob a bancada, ou encanado com medidor), `electrical` (poste, ramal, medidor, quadro, tomadas, interruptores, circuitos, eletrodutos; modos `grid`, `tap` (gato, sem medidor), `offgrid`), `solar`, `plumbing` (pontos e trechos). Os botijões entram em `result.items` (`cooking_gas_cylinder`); `TemplateDef.energy(options, w, d)` decide o modo do modelo |
+| `result.outbuildings`, `result.contents` | Edícula (paredes com vão, porta de 0,85 m, 2 janelas, móveis do uso sorteado, caminho em `lot.paths`) e o conteúdo de cada recipiente por estado (`engine.findsFor`; padrão em `utilities/content`, `registerContentState`) |
 | `structureLayer` | Camada do visor 2D (pilares cheios no concreto e vazados na madeira, vigas tracejadas, tesouras, legenda) |
 
 ## Compõe com
@@ -77,4 +80,4 @@ const specimen = buildWallSpecimen({ assembly: 'reinforced_concrete', w: 2.4, h:
 - Sistemas construtivos, `montarEstrutura`, `estruturaExtras`, `specDe`, `cargasProjeto` e a caixa d'água do Visor de casas 3D (L10311–10660, L42681–42729, L9279): portados; golden `coarse` igual
   em 900 plantas dos 12 modelos (peças, apoios, `specDe` e `vedacao`, telhado, construção, caixa d'água).
 - Detalhe de parede (`panels`, `units`) e `buildWallSpecimen` (T2.2d): comportamento novo, sem original do time (a parede do VC3 é uma caixa por segmento, o reboco só um rótulo).
-- As instalações (T2.2e) vêm no commit seguinte da mesma fase.
+- Instalações (T2.2e): `montarGas`, `montarEletrica`, `montarSolar`, `montarHidraulica`, `montarEdificacoes`, `caminhosEdificacoes` e `CONTEUDO` do Visor de casas 3D (L10752–11166, L9279): portados; as sete listas conferem em 900 plantas (`tests/team-golden-vc3-structure.test.ts`).
