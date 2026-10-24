@@ -77,6 +77,16 @@ for (const lang of ['pt-BR', 'en']) {
   })
   check(`[${lang}] every furniture scenario is green`, report.failed === 0 && report.passed >= 14, report)
 
+  // the characters and animals modules ride along too (owner rule): loaded, and one shot crosses a fridge door and then the zombie behind it
+  const people = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const r = window.__furnitureReport
+    const run = await room.runScenarios(room.scenarios.filter((s) => s.id.includes('zombie_behind_door')))
+    room.clear()
+    return { characters: r.characters?.ok && r.characters.problems.length === 0 && r.characters.items.length, animals: r.animals?.ok && r.animals.problems.length === 0 && r.animals.items.length, scenario: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
+  })
+  check(`[${lang}] the characters and animals modules are loaded, and zombie_behind_door is green`, people.characters >= 25 && people.animals === 13 && people.scenario.passed === 1 && people.scenario.failed === 0, people)
+
   // the weapons module rides along (owner rule: this area shows what every phase adds): loaded, with its accessory bench, and a suppressor goes on an M4 here too
   const weapons = await page.evaluate(() => {
     const room = window.__testRoom

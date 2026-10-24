@@ -1,4 +1,4 @@
-import { visualStateOf } from '@adatechnology/game-animals'
+import { lineUpLength, visualStateOf } from '@adatechnology/game-animals'
 import type { AnimalSpecies, AnimalVisualState } from '@adatechnology/game-animals'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule } from '@adatechnology/game-contracts'
 import type { NodeSkin } from '@adatechnology/game-props3d'
@@ -221,11 +221,22 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
       return placed
     },
     items: () => species.map(item),
-    area: (): ModuleArea => ({
-      // the page's row: each animal given room by its length, centred on the origin
-      placements: species.map((animal, index) => ({ item: `${ANIMAL_ITEM_PREFIX}${animal.id}`, position: [-19 + index * 3.2, 0, 0], rotationY: 1.1 })),
-      view: { eye: [0, 6, 16], target: [0, 0.8, 0] },
-    }),
+    area: (): ModuleArea => {
+      // the page's line-up: each animal given room by its length (and a gap), the row centred on the origin
+      const gap = 0.85
+      let cursor = 0
+      const spots = species.map((animal) => {
+        const length = lineUpLength(animal.body)
+        const x = cursor + length / 2
+        cursor += length + gap
+        return { animal, x }
+      })
+      const offset = -(cursor - gap) / 2
+      return {
+        placements: spots.map(({ animal, x }) => ({ item: `${ANIMAL_ITEM_PREFIX}${animal.id}`, position: [x + offset, 0, 0], rotationY: animal.body.kind === 'snake' ? 2.2 : 1.1 })),
+        view: { eye: [0, 4, Math.max(10, (cursor - gap) * 0.55)], target: [0, 0.6, 0] },
+      }
+    },
     controls: (): ModuleControl[] => [
       { kind: 'choice', id: 'visual_state', name: text.controls.visual_state, hint: text.hints.visual_state, options: (['alive', 'infected', 'dead'] as const).map((id) => ({ id, name: text.options.visual_state[id] as string })), default: 'alive' },
       { kind: 'choice', id: 'gait', name: text.controls.gait, hint: text.hints.gait, options: (['idle', 'walk', 'run'] as const).map((id) => ({ id, name: text.options.gait[id] as string })), default: 'walk' },

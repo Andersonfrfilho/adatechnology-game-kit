@@ -11,6 +11,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY packages/game-animals/package.json packages/game-animals/
 COPY packages/game-animals-species/package.json packages/game-animals-species/
+COPY packages/game-animals-three/package.json packages/game-animals-three/
 COPY packages/game-camera/package.json packages/game-camera/
 COPY packages/game-characters/package.json packages/game-characters/
 COPY packages/game-characters-three/package.json packages/game-characters-three/
@@ -46,6 +47,8 @@ COPY tools/characters-catalog/package.json tools/characters-catalog/
 COPY tools/golden/package.json tools/golden/
 COPY tools/weapon-thumbnails/package.json tools/weapon-thumbnails/
 COPY tools/weapons-catalog/package.json tools/weapons-catalog/
+COPY examples/animals-test-area/package.json examples/animals-test-area/
+COPY examples/characters-test-area/package.json examples/characters-test-area/
 COPY examples/interactables-showroom/package.json examples/interactables-showroom/
 COPY examples/interactables-test-area/package.json examples/interactables-test-area/
 COPY examples/test-room/package.json examples/test-room/

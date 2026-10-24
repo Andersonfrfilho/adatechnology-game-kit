@@ -364,7 +364,7 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
       undeadTypes.forEach((card, index) => placements.push({ item: `${ZOMBIE_ITEM_PREFIX}${card.id}`, position: [-6 + index * 1.1, 0, 3], rotationY: Math.PI }))
       professions.forEach((profession, index) => placements.push({ item: `${PERSON_ITEM_PREFIX}${profession.id}`, position: [-5.45 + index * 1.1, 0, 7], rotationY: Math.PI }))
       lane().forEach((item, index) => placements.push({ item, position: [0, 0, -3 - index * 1.4], rotationY: 0 }))
-      return { placements, view: { eye: [0, 3.4, 14], target: [0, 0.9, 3] } }
+      return { placements, view: { eye: [0, 5.5, 13], target: [0, 0.6, 3] } }
     },
     controls: (): ModuleControl[] => [
       withHint({ kind: 'number', id: 'decay', name: text.controls.decay, min: 0, max: 3, step: 1, default: 0 }, text.hints.decay),

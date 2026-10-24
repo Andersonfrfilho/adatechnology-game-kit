@@ -64,6 +64,26 @@ export const EXAMPLES = [
     areas: [],
   },
   {
+    name: 'characters-test-area',
+    title: 'Área de personagens',
+    summary: 'Os 13 tipos de morto-vivo e as profissões como corpos que a sala atinge: cada um tem o modelo de dano por segmento (corte na junta, osso quebrado que balança, perna que manca e rasteja, cabeça que mata, granada por raio), colete e capacete, ferimentos, olhos que brilham e o andar de cada tipo. Fileira de tiro com cinco corpos para a penetração e uma multidão instanciada de até mil. A bancada troca o modelo de penetração, a regra de morte, o golpe (calibres, facão, machado, granada a 1, 3 e 6 m), a proteção, o momento do zumbi e a pose, morde até virar (acelerado) e liga cápsulas, juntas, vetores de velocidade e só os olhos.',
+    controls: 'Mesmos controles da sala de testes · a bancada tem o golpe, a proteção, o modelo de penetração e as ações curar, matar, morder e pôr 100 ou 1000 na multidão (leste)',
+    url: 'characters-test-area/',
+    ready: 'window.__testRoom && window.__charactersReport',
+    setup: `(() => { const r = window.__testRoom; for (let t = 0; t < 1.2; t += 0.02) r.update(0.02); r.look([0, 5.5, 13], [0, 0.6, 3]); r.update(0.02) })()`,
+    areas: [],
+  },
+  {
+    name: 'animals-test-area',
+    title: 'Área de animais',
+    summary: 'As 13 espécies dos Bichos do Vale numa fila, desenhadas pelos construtores de verdade: estado vivo, infectado ou morto, andar e correr, juntas, vista aberta, anéis do alcance do som e do raio de atração da carcaça, a regra de surto (quem vira, quem morre, quem não sente) com relógio de mordida acelerado, e um campo de 40 bichos como pele de nós.',
+    controls: 'Mesmos controles da sala de testes · a bancada troca o estado visual e o andar, morde todos os bichos e põe 40 bichos como pele de nós',
+    url: 'animals-test-area/',
+    ready: 'window.__testRoom && window.__animalsReport',
+    setup: `(() => { const r = window.__testRoom; for (let t = 0; t < 1.2; t += 0.02) r.update(0.02); r.look([0, 4, 15], [0, 0.6, 0]); r.update(0.02) })()`,
+    areas: [],
+  },
+  {
     name: 'interactables-test-area',
     title: 'Área de móveis na sala de testes',
     summary: 'Os móveis da casa carregados na sala de testes como um módulo: um objeto destrutível de cada tipo, com animações, líquidos e cenários prontos. A página leva também o módulo de armas, com os acessórios, para atirar, queimar e explodir os móveis com as armas de verdade.',
@@ -76,6 +96,8 @@ export const EXAMPLES = [
 ]
 
 export const FAMILIES = [
+  { id: 'characters', title: 'Personagens', what: 'Corpo com 17 segmentos e dano por região, pessoas, uniformizados, mortos-vivos e a multidão instanciada, com feridas e olhos', packages: ['game-characters', 'game-characters-three', 'game-characters-people', 'game-characters-uniformed', 'game-characters-undead'], thumb: 'characters-test-area', seeIn: 'characters-test-area' },
+  { id: 'animals', title: 'Animais', what: 'Treze espécies de quadrúpede, ave e cobra com andar, estados vivo, infectado e morto, e a regra de surto', packages: ['game-animals', 'game-animals-species', 'game-animals-three'], thumb: 'animals-test-area', seeIn: 'animals-test-area' },
   { id: 'destruction', title: 'Destruição e armas', what: 'Como cada material amassa, queima, derrete e quebra, e as armas reais que causam isso', packages: ['game-destruction', 'game-destruction-three', 'game-weapons', 'game-weapons-three'], thumb: 'weapons-test-area', seeIn: 'weapons-test-area' },
   { id: 'interactables', title: 'Objetos interativos', what: 'Portas, gavetas, energia, gás e água dos objetos da casa', packages: ['game-interactables', 'game-interactables-household', 'game-interactables-three'], thumb: 'interactables-showroom-kitchen', seeIn: 'interactables-showroom' },
   { id: 'floorplan', title: 'Plantas de casas', what: 'Cômodos, paredes, portas e janelas gerados por semente, com pacotes residencial, comercial, rural e pós-apocalíptico, e a estrutura (pilares, vigas, telhado) que segura cada planta', packages: ['game-floorplan', 'game-floorplan-residential', 'game-floorplan-commercial', 'game-floorplan-rural', 'game-floorplan-post-apocalyptic', 'game-floorplan-structure'], thumb: 'interactables-showroom-living', seeIn: 'interactables-showroom' },
