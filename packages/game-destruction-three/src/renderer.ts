@@ -912,6 +912,9 @@ class Renderer implements DestructionRenderer {
     this.vfx.push(p, ev.radius, 4)
     // shove pieces and fragments
     const c = this.v1
+    const report = options.report
+    const confinement = report?.find((r) => r.blast !== undefined)?.blast?.confinement ?? 1
+    const energy = ev.energy * confinement
     for (const pc of this.pieceSys.list) {
       this.pieceSys.centerOf(pc, c)
       const dx = c.x - p[0]
@@ -920,13 +923,15 @@ class Renderer implements DestructionRenderer {
       const d = Math.hypot(dx, dy, dz)
       if (d > ev.radius) continue
       const fall = (1 - d / ev.radius) ** 2
-      const speed = Math.min(30, Math.sqrt((2 * ev.energy * 0.02) / pc.mass)) * fall
+      // the energy that got to this piece after what stood in the way (`blast.shelter`); the old formula when the blast carries no report
+      const reach = report?.find((r) => r.object === pc.objectId)?.blast?.shelter ?? 1
+      const speed = Math.min(30, Math.sqrt((2 * energy * reach * 0.02) / pc.mass)) * fall
       const inv = d > 1e-4 ? 1 / d : 0
       const dir: Vec3 = d > 1e-4 ? [dx * inv, dy * inv + 0.3, dz * inv] : [0, 1, 0]
       const spread = pc.halfExtents[0]
       this.pieceSys.impulse(pc, [dir[0] * speed * pc.mass, dir[1] * speed * pc.mass, dir[2] * speed * pc.mass], [c.x + (this.rng() - 0.5) * spread, c.y + spread * 0.5, c.z + (this.rng() - 0.5) * spread])
     }
-    this.fragments.blast(p, ev.radius, Math.min(20, Math.sqrt(ev.energy) * 0.08))
+    this.fragments.blast(p, ev.radius, Math.min(20, Math.sqrt(energy) * 0.08))
     this.sound('explode', p, clamp(0.5 + ev.radius / 10, 0.5, 1))
   }
 

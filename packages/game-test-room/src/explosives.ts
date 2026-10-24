@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
+import type { BlastOptions, DestructionWorld, HitResult, Vec3 } from '@adatechnology/game-destruction'
 import type { DestructionRenderer } from '@adatechnology/game-destruction-three'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import { backblastEffect, blastEffect, createExplosiveBody, tripwireSegment } from '@adatechnology/game-weapons'
@@ -37,6 +37,20 @@ interface Projectile {
   attached?: THREE_NS.Object3D[]
 }
 
+/** What a blast did, summed over everything it reached: the share that got to the most sheltered target (0..1), the pressure multiplier, the fragment hits. */
+export type BlastSummary = { readonly shelter: number; readonly confinement: number; readonly fragmentHits: number; readonly targets: number }
+
+export const summarizeBlast = (results: readonly HitResult[]): BlastSummary | undefined => {
+  const reports = results.flatMap((r) => (r.blast ? [r.blast] : []))
+  if (reports.length === 0) return undefined
+  return {
+    shelter: Math.min(...reports.map((r) => r.shelter)),
+    confinement: reports[0]!.confinement,
+    fragmentHits: reports.reduce((n, r) => n + r.fragmentHits, 0),
+    targets: reports.length,
+  }
+}
+
 /** A body that can set off a trip wire: the player, a physics object, or anything a module brings. */
 export type CrossingBody = { readonly id: string; readonly box: THREE_NS.Box3 }
 
@@ -58,6 +72,10 @@ export type ExplosivesContext = {
   readonly toolName: (id?: string) => string
   readonly withoutHeld: <TResult>(run: () => TResult) => TResult
   readonly groundAt: (x: number, z: number) => number
+  /** The blast options every explosion starts with (the room's toggles). */
+  readonly blast: () => BlastOptions
+  /** What the last blast did, once it carried a report (shelter, confinement, fragment hits). */
+  readonly blasted: (summary: BlastSummary) => void
   readonly translate: (key: string, vars?: Vars) => string
   readonly format: (value: number, digits?: number) => string
   readonly action: (type: string, text: string, extra?: { data?: Record<string, unknown> }) => void
@@ -248,19 +266,31 @@ export function createExplosives(context: ExplosivesContext): Explosives {
       if (box.isEmpty()) box.expandByPoint(object.position)
       const at = mostExposedPoint(box, detonation)
       if (!at) continue
-      reached += world.explode(at, detonation.energy * blastEffect(detonation, at).falloff, CONE_BLAST_RADIUS, 'player').length
+      const results = world.explode(at, detonation.energy * blastEffect(detonation, at).falloff, CONE_BLAST_RADIUS, 'player', context.blast())
+      reached += results.length
+      told(results)
     }
     return reached
+  }
+
+  /** Tells the room what a blast with a report did (for its metrics and its log). */
+  const told = (results: readonly HitResult[]): void => {
+    const summary = summarizeBlast(results)
+    if (!summary) return
+    context.blasted(summary)
+    action('blast_report', translate('act.blast_report', { shelter: format(summary.shelter * 100, 0), confinement: format(summary.confinement, 2), fragments: summary.fragmentHits, n: summary.targets }), { data: { ...summary } })
   }
 
   /** The only place a blast is applied: the world, the drawing, the log, the player's share, the host event and the fire. */
   const detonate = (projectile: Projectile, detonation: Detonation): void => {
     const weaponName = context.toolName(projectile.weapon)
     const reach = Math.max(detonation.injuryRadius, detonation.lethalRadius)
-    const reached = detonation.energy <= 0 ? 0 : detonation.cone ? coneBlast(detonation) : world.explode(detonation.point, detonation.energy, reach, 'player').length
+    const results = detonation.energy <= 0 || detonation.cone ? [] : world.explode(detonation.point, detonation.energy, reach, 'player', context.blast())
+    const reached = detonation.energy <= 0 ? 0 : detonation.cone ? coneBlast(detonation) : results.length
+    if (!detonation.cone) told(results)
     if (detonation.energy > 0) {
       const isPlayed = context.effects.explosion(detonation.explosive, detonation.point, { direction: detonation.direction }) !== null
-      renderer.explode(detonation.point, detonation.energy, reach, { visual: !isPlayed })
+      renderer.explode(detonation.point, detonation.energy, reach, { visual: !isPlayed, report: results })
     }
     if (detonation.stunSeconds !== undefined) renderer.emit('flash', detonation.point, [0, 1, 0], 1, 1)
     const onPlayer = blastEffect(detonation, toArray(camera.position))
