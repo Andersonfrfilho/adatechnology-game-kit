@@ -124,6 +124,8 @@ export interface VfxWorld {
   play(id: string, point: Vec3Like, options?: PlayOptions): number | null
   /** The Workshop's pools (sprites, streaks, debris, decals, rings, lights, screen): what the renderer draws for `play`. Made on first use. */
   workshop(): WorkshopEngine
+  /** The Workshop engine if something already made it (`play`, `workshop()`); never creates it. */
+  peekWorkshop(): WorkshopEngine | undefined
   /** The ids `play` accepts. */
   effectIds(): readonly string[]
   /** `count` sprites of a kind leaving `point` around `normal` at about `speed` m/s (debris, sparks, smoke, steam, drips...). */
@@ -275,6 +277,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
     onLand: (owner, listener) => spriteSystem.onLand(owner, listener),
     sprites: () => spriteSystem,
     workshop,
+    peekWorkshop: () => engine,
     effectIds: () => Object.keys(effects),
     explosion(id, point, explosionOptions = {}) {
       const base = definitionOf(id)

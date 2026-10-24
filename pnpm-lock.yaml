@@ -324,6 +324,12 @@ importers:
       '@adatechnology/game-fluids':
         specifier: workspace:*
         version: link:../game-fluids
+      '@adatechnology/game-vfx':
+        specifier: workspace:*
+        version: link:../game-vfx
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:*
+        version: link:../game-vfx-three
     devDependencies:
       '@types/node':
         specifier: ^22.10.7

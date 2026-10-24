@@ -1720,7 +1720,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const benchView = (): BenchView | null => {
     const store = activeBench ? benches.get(activeBench) : undefined
     if (!store) return null
-    return { title: modules.get(store.moduleId)?.name ?? store.moduleId, controls: store.controls(), layers: store.layers() }
+    return { title: modules.get(store.moduleId)?.name ?? store.moduleId, controls: store.controls(), layers: store.layers(), sheet: store.sheet() }
   }
   const METRIC_UNAVAILABLE = 'n/a'
   const metricText = (value: number | string | undefined, digits: number, unit?: string): string =>
@@ -1757,7 +1757,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const module = declared.map((metric) => {
       const value = values[metric.id]
       const ratio = metric.max && typeof value === 'number' ? value / metric.max : undefined
-      return { id: metric.id, name: metric.name, text: metricText(value, metric.digits ?? 0, metric.unit), ...(ratio === undefined ? {} : { ratio }) }
+      return { id: metric.id, name: metric.name, text: metricText(value, metric.digits ?? 0, metric.unit), ...(typeof value === 'number' ? { value } : {}), ...(ratio === undefined ? {} : { ratio }) }
     })
     return { room, module }
   }
@@ -1873,6 +1873,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     layer: store.layer,
     onChange: store.onChange,
     patch: store.patch,
+    sheet: store.setSheet,
     look: (eye, target) => room.look(eye, target),
   })
   const checkModuleBench = (mod: TestableModule<ScenarioContext>, fail: (problem: string) => void): BenchStore | null => {

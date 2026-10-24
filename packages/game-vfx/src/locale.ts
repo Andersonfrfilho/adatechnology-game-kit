@@ -40,12 +40,12 @@ export const locales: Record<VfxLocale, VfxStrings> = {
   en: {
     effects: en,
     sheet: { when: 'When', look: 'Look', budget: 'Budget', network: 'Network', quality: 'Quality', replay: 'Replay', auto: 'Auto replay' },
-    groups: { creatures: 'Zombies', weapons: 'Weapons and explosives', world: 'Map, weather and destruction', destruction: 'Scenery destruction', vehicles: 'Vehicles', screen: 'Characters and screen effects' },
+    groups: { explosions: 'Explosions', creatures: 'Zombies', weapons: 'Weapons and explosives', world: 'Map, weather and destruction', destruction: 'Scenery destruction', vehicles: 'Vehicles', screen: 'Characters and screen effects' },
   },
   'pt-BR': {
     effects: ptBR,
     sheet: { when: 'Quando', look: 'Visual', budget: 'Orçamento', network: 'Rede', quality: 'Qualidade', replay: 'Repetir', auto: 'Repetição automática' },
-    groups: { creatures: 'Zumbis', weapons: 'Armas e explosivos', world: 'Mapa, clima e destruição', destruction: 'Destruição de cenário', vehicles: 'Veículos', screen: 'Personagens e efeitos de tela' },
+    groups: { explosions: 'Explosões', creatures: 'Zumbis', weapons: 'Armas e explosivos', world: 'Mapa, clima e destruição', destruction: 'Destruição de cenário', vehicles: 'Veículos', screen: 'Personagens e efeitos de tela' },
   },
 }
 

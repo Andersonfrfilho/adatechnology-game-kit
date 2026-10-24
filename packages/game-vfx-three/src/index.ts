@@ -2,7 +2,11 @@
  * @adatechnology/game-vfx-three: the three.js renderer of `@adatechnology/game-vfx`: the Explosion Lab's shaders, debris, shock, lights, marks and
  * screen overlay, plus a deformable ground patch and an `EffectSink` to lend to modules.
  */
-export { createVfxRenderer } from './renderer'
+export { createVfxRenderer, VFX_LAYERS } from './renderer'
+export { createVfxTestModule } from './bench/module'
+export type { VfxTestModuleOptions } from './bench/module'
+export { benchText, benchTexts } from './bench/text'
+export type { BenchText } from './bench/text'
 export { createGroundPatch } from './ground-patch'
 export type { GroundPatch, GroundPatchOptions } from './ground-patch'
 export { createScreenOverlay } from './screen-overlay'

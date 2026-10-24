@@ -160,3 +160,28 @@ describe('createGroundPatch', () => {
     expect(position.getY(center)).toBe(field.heights[center])
   })
 })
+
+describe('workshop layers', () => {
+  it('stay out of the scene until a recipe plays, then draw its pools', () => {
+    const { scene, renderer } = setup()
+    renderer.update(1 / 60)
+    expect(scene.getObjectByName('workshop')).toBeUndefined()
+    renderer.play({ effect: 'blood_hit', point: [0, 0.2, 0], direction: [1, 0.3, 0], seed: 5 })
+    const drawn = (name: string): number => ((scene.getObjectByName('workshop')!.getObjectByName(name)) as THREE.Points).geometry.drawRange.count
+    let most = 0
+    for (let frame = 0; frame < 20; frame++) {
+      renderer.update(1 / 60)
+      const engine = renderer.world.workshop()
+      expect(drawn('workshop-add') + drawn('workshop-normal')).toBe(engine.add.count + engine.normal.count)
+      most = Math.max(most, engine.add.count + engine.normal.count)
+    }
+    expect(most).toBeGreaterThan(20)
+    expect(scene.getObjectByName('workshop')).toBeDefined()
+  })
+
+  it('merges the Workshop screen into the overlay state', () => {
+    const { renderer } = setup()
+    renderer.world.workshop().screen.red = 0.6
+    expect(renderer.screen().red).toBe(0.6)
+  })
+})

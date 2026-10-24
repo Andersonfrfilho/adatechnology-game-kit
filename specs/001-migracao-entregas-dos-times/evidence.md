@@ -1514,3 +1514,20 @@ Fonte: `sources/efeitos__oficina-vfx.js` (W168–1295) e a gravação `vfx-works
 
 - `rebar_expose` o desenho descreve só como "poeira + lascas"; usei o ajudante `chips` (lascas e poeira, W849) mais `rust_at` (ferrugem, W899). Se o time tinha outra intenção, a receita é um arquivo de dados.
 - `stage 1 -> stage_crack` e `collapse -> collapse_dust`: o desenho dá os nomes, as fatias são minhas escolhas entre as seções que a página tem (porta e desabamento). Confirmar.
+
+## T5.2d — desenhistas da Oficina e bancada de efeitos
+
+- **`game-vfx-three/src/workshop-layers.ts`** desenha os pools do motor da Oficina (o que `world.play` enche): sprites aditivo e normal com o shader da página (tamanho em metros preso a 1..512 px, suavidade 1 e 0,55), riscos (`LineSegments` com cor por vértice), detritos (500 caixas instanciadas), decalques (duas malhas instanciadas, brilhante e fosca, círculo de borda irregular que cresce, espalha, seca e evapora pelos campos do decalque), anéis (instanciados, cor por `hold` ou `1-k`) e as 4 luzes de clarão e 2 de fogo. Criados sob demanda: só quando algo já criou o motor (`VfxWorld.peekWorkshop()`). A tela (`screen`) da Oficina e a do Lab entram no overlay pelo maior valor de cada campo.
+- **`createVfxTestModule`** (`game-vfx-three/src/bench/`): módulo `vfx`, grupo `effects`. Efeito (16 explosões do Lab e as receitas por time, em grupos), variante (o `params` da receita, trocado com `bench.patch`), repetir, repetição automática, distância, faixa de LOD, qualidade, 6 camadas (`show_*`), 8 contadores (nuvens, faíscas, destroços com teto 40, luzes com teto 6, partículas do efeito com teto 400, escala de LOD, tempo desde a repetição, tempo desde a explosão) e a ficha com a linha do tempo. Toca por `host.effects`; sem ele, cria um renderizador próprio.
+- **Anfitrião (`game-test-room`)**: `ModuleBench.sheet` (cartão da ficha no painel, com linha do tempo e cabeça de leitura que segue o contador `metric`), `ChoiceOption.group` (`optgroup` no seletor; opções agrupadas nunca viram botões), `MetricRow.value` numérico.
+- `EffectSink.configure` do renderizador entende `quality` (`high`/`medium`/`low`, níveis 0/1/2 do pool) e `layer_<id>`.
+
+### Decisões
+
+- `generic` (perfil de reserva do Lab) não é listado na bancada; as 16 explosões são as da página.
+- Receita com o mesmo id de uma explosão (`molotov`) não aparece na lista: o `EffectSink` tenta a explosão primeiro, então a receita nunca seria alcançada por esse id.
+
+### Perguntas para o dono
+
+- As bolhas de lente (`engine.lens`) e o `engine.post` da Oficina têm dados no motor, mas ainda não são desenhados (a página os pinta num canvas 2D sobre a cena). Quer a lente e o pós-processo no overlay agora ou junto da câmera do jogo?
+- Os nomes das explosões na bancada vêm do id (`m67` -> `m67`), porque o Lab não tem textos por explosão. Há nomes traduzidos que o time de armas queira usar?
