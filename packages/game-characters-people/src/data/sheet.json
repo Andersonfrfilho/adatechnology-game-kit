@@ -1,0 +1,1350 @@
+{
+  "sources": {
+    "file": "specs/001-migracao-entregas-dos-times/sources/zumbis-personagens__personagens.js (site/pages/zumbis-personagens/personagens.html)",
+    "attributes": "ATTRS (lines 6-12)",
+    "skills": "SKILLS (lines 14-44), milestones at levels 3, 6 and 9 (the page table \"Nv 3 / Nv 6 / Nv 9\")",
+    "professions": "PROFS (lines 45-57)",
+    "traits": "TRAITS (lines 59-77)",
+    "pointBuy": "S, BASE_POOL 14, MAXC 8, MINC 1, attributes start at 3 (lines 137-145)",
+    "derived": "derived() (lines 178-190)"
+  },
+  "pointBuy": {
+    "start": 3,
+    "pool": 14,
+    "min": 1,
+    "max": 8
+  },
+  "milestoneLevels": [
+    3,
+    6,
+    9
+  ],
+  "attributes": [
+    {
+      "id": "strength",
+      "key": "for",
+      "name": {
+        "pt-BR": "Força",
+        "en": "Strength"
+      },
+      "description": {
+        "pt-BR": "Dano corpo a corpo, peso carregado, arrombar portas",
+        "en": "Melee damage, carried weight, forcing doors"
+      }
+    },
+    {
+      "id": "vigor",
+      "key": "vig",
+      "name": {
+        "pt-BR": "Vigor",
+        "en": "Vigor"
+      },
+      "description": {
+        "pt-BR": "Vida, fôlego, resistência a doença e fome",
+        "en": "Health, stamina, resistance to disease and hunger"
+      }
+    },
+    {
+      "id": "agility",
+      "key": "agi",
+      "name": {
+        "pt-BR": "Agilidade",
+        "en": "Agility"
+      },
+      "description": {
+        "pt-BR": "Velocidade, esquiva, passos silenciosos",
+        "en": "Speed, dodging, quiet steps"
+      }
+    },
+    {
+      "id": "perception",
+      "key": "per",
+      "name": {
+        "pt-BR": "Percepção",
+        "en": "Perception"
+      },
+      "description": {
+        "pt-BR": "Raio de detecção, achar loot, precisão",
+        "en": "Detection radius, finding loot, accuracy"
+      }
+    },
+    {
+      "id": "intellect",
+      "key": "int",
+      "name": {
+        "pt-BR": "Intelecto",
+        "en": "Intellect"
+      },
+      "description": {
+        "pt-BR": "Velocidade de aprendizado, crafting, medicina",
+        "en": "Learning speed, crafting, medicine"
+      }
+    },
+    {
+      "id": "presence",
+      "key": "pre",
+      "name": {
+        "pt-BR": "Presença",
+        "en": "Presence"
+      },
+      "description": {
+        "pt-BR": "Recrutar NPCs, negociar, acalmar o grupo",
+        "en": "Recruiting people, bargaining, calming the group"
+      }
+    }
+  ],
+  "skillGroups": [
+    {
+      "id": "combat",
+      "name": {
+        "pt-BR": "Combate",
+        "en": "Combat"
+      },
+      "skills": [
+        "pistols",
+        "rifles",
+        "shotguns",
+        "blunt",
+        "blades",
+        "throwing"
+      ]
+    },
+    {
+      "id": "survival",
+      "name": {
+        "pt-BR": "Sobrevivência",
+        "en": "Survival"
+      },
+      "skills": [
+        "first_aid",
+        "cooking",
+        "farming",
+        "hunting",
+        "scavenging",
+        "fishing"
+      ]
+    },
+    {
+      "id": "technical",
+      "name": {
+        "pt-BR": "Técnico",
+        "en": "Technical"
+      },
+      "skills": [
+        "mechanics",
+        "electrics",
+        "carpentry",
+        "metalwork",
+        "gunsmithing",
+        "chemistry"
+      ]
+    },
+    {
+      "id": "physical",
+      "name": {
+        "pt-BR": "Físico",
+        "en": "Physical"
+      },
+      "skills": [
+        "running",
+        "stealth",
+        "climbing",
+        "conditioning"
+      ]
+    },
+    {
+      "id": "social",
+      "name": {
+        "pt-BR": "Social",
+        "en": "Social"
+      },
+      "skills": [
+        "leadership",
+        "negotiation"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "id": "pistols",
+      "group": "combat",
+      "name": {
+        "pt-BR": "Pistolas e revólveres",
+        "en": "Pistols and revolvers"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Troca rápida de carregador",
+          "en": "Fast magazine change"
+        },
+        {
+          "pt-BR": "Tiro duplo controlado",
+          "en": "Controlled double tap"
+        },
+        {
+          "pt-BR": "Mira de reflexo sem desacelerar",
+          "en": "Reflex aim without slowing down"
+        }
+      ]
+    },
+    {
+      "id": "rifles",
+      "group": "combat",
+      "name": {
+        "pt-BR": "Fuzis e carabinas",
+        "en": "Rifles and carbines"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Respiração presa (mira estável 3 s)",
+          "en": "Held breath (steady aim for 3 s)"
+        },
+        {
+          "pt-BR": "Tiro na cabeça a 150 m sem luneta",
+          "en": "Headshot at 150 m without a scope"
+        },
+        {
+          "pt-BR": "Recarga tática mantendo cano no alvo",
+          "en": "Tactical reload keeping the muzzle on target"
+        }
+      ]
+    },
+    {
+      "id": "shotguns",
+      "group": "combat",
+      "name": {
+        "pt-BR": "Espingardas",
+        "en": "Shotguns"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Recarga em movimento",
+          "en": "Reload on the move"
+        },
+        {
+          "pt-BR": "Empurrão com a coronha",
+          "en": "Butt-stock shove"
+        },
+        {
+          "pt-BR": "Tiro de dispersão controlada",
+          "en": "Controlled spread shot"
+        }
+      ]
+    },
+    {
+      "id": "blunt",
+      "group": "combat",
+      "name": {
+        "pt-BR": "Armas contundentes",
+        "en": "Blunt weapons"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Golpe de atordoamento",
+          "en": "Stunning blow"
+        },
+        {
+          "pt-BR": "Derrubar dois de uma vez",
+          "en": "Knock down two at once"
+        },
+        {
+          "pt-BR": "Golpe fatal no crânio caído",
+          "en": "Killing blow to a fallen skull"
+        }
+      ]
+    },
+    {
+      "id": "blades",
+      "group": "combat",
+      "name": {
+        "pt-BR": "Armas cortantes",
+        "en": "Bladed weapons"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Decapitar com facão",
+          "en": "Behead with a machete"
+        },
+        {
+          "pt-BR": "Esfaqueamento silencioso por trás",
+          "en": "Silent stab from behind"
+        },
+        {
+          "pt-BR": "Combo de três golpes sem perder fôlego",
+          "en": "Three-hit combo without losing breath"
+        }
+      ]
+    },
+    {
+      "id": "throwing",
+      "group": "combat",
+      "name": {
+        "pt-BR": "Arremesso",
+        "en": "Throwing"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Garrafa para distrair horda",
+          "en": "Bottle to distract a horde"
+        },
+        {
+          "pt-BR": "Molotov com arco maior",
+          "en": "Molotov with a longer arc"
+        },
+        {
+          "pt-BR": "Faca de arremesso letal",
+          "en": "Lethal throwing knife"
+        }
+      ]
+    },
+    {
+      "id": "first_aid",
+      "group": "survival",
+      "name": {
+        "pt-BR": "Primeiros socorros",
+        "en": "First aid"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Sutura",
+          "en": "Stitches"
+        },
+        {
+          "pt-BR": "Remover projétil",
+          "en": "Remove a bullet"
+        },
+        {
+          "pt-BR": "Amputação com chance de sobreviver +10%",
+          "en": "Amputation with +10% chance to survive"
+        }
+      ]
+    },
+    {
+      "id": "cooking",
+      "group": "survival",
+      "name": {
+        "pt-BR": "Culinária",
+        "en": "Cooking"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Conservas que duram meses",
+          "en": "Preserves that last months"
+        },
+        {
+          "pt-BR": "Pratos que dão moral",
+          "en": "Dishes that lift morale"
+        },
+        {
+          "pt-BR": "Cozinhar sem fumaça visível",
+          "en": "Cook without visible smoke"
+        }
+      ]
+    },
+    {
+      "id": "farming",
+      "group": "survival",
+      "name": {
+        "pt-BR": "Agricultura",
+        "en": "Farming"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Compostagem",
+          "en": "Composting"
+        },
+        {
+          "pt-BR": "Estufa no inverno",
+          "en": "Winter greenhouse"
+        },
+        {
+          "pt-BR": "Colheita dupla",
+          "en": "Double harvest"
+        }
+      ]
+    },
+    {
+      "id": "hunting",
+      "group": "survival",
+      "name": {
+        "pt-BR": "Caça e armadilhas",
+        "en": "Hunting and traps"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Armadilha de laço",
+          "en": "Snare trap"
+        },
+        {
+          "pt-BR": "Ler rastros de animais e zumbis",
+          "en": "Read animal and zombie tracks"
+        },
+        {
+          "pt-BR": "Armadilha de estacas para hordas",
+          "en": "Stake trap for hordes"
+        }
+      ]
+    },
+    {
+      "id": "scavenging",
+      "group": "survival",
+      "name": {
+        "pt-BR": "Busca",
+        "en": "Scavenging"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Achar compartimentos escondidos",
+          "en": "Find hidden compartments"
+        },
+        {
+          "pt-BR": "Saber o que tem dentro sem abrir",
+          "en": "Know what is inside without opening"
+        },
+        {
+          "pt-BR": "Loot raro +15%",
+          "en": "Rare loot +15%"
+        }
+      ]
+    },
+    {
+      "id": "fishing",
+      "group": "survival",
+      "name": {
+        "pt-BR": "Pesca",
+        "en": "Fishing"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Linha de espera",
+          "en": "Set line"
+        },
+        {
+          "pt-BR": "Rede",
+          "en": "Net"
+        },
+        {
+          "pt-BR": "Peixe grande",
+          "en": "Big fish"
+        }
+      ]
+    },
+    {
+      "id": "mechanics",
+      "group": "technical",
+      "name": {
+        "pt-BR": "Mecânica",
+        "en": "Mechanics"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Ligação direta",
+          "en": "Hot-wiring"
+        },
+        {
+          "pt-BR": "Trocar motor",
+          "en": "Engine swap"
+        },
+        {
+          "pt-BR": "Carro blindado artesanal",
+          "en": "Home-made armoured car"
+        }
+      ]
+    },
+    {
+      "id": "electrics",
+      "group": "technical",
+      "name": {
+        "pt-BR": "Elétrica",
+        "en": "Electrics"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Ligar gerador na casa",
+          "en": "Hook a generator to the house"
+        },
+        {
+          "pt-BR": "Rádio caseiro",
+          "en": "Home-made radio"
+        },
+        {
+          "pt-BR": "Cerca elétrica",
+          "en": "Electric fence"
+        }
+      ]
+    },
+    {
+      "id": "carpentry",
+      "group": "technical",
+      "name": {
+        "pt-BR": "Carpintaria",
+        "en": "Carpentry"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Tábuas nas janelas",
+          "en": "Boards on the windows"
+        },
+        {
+          "pt-BR": "Muro de madeira",
+          "en": "Wooden wall"
+        },
+        {
+          "pt-BR": "Torre de vigia",
+          "en": "Watchtower"
+        }
+      ]
+    },
+    {
+      "id": "metalwork",
+      "group": "technical",
+      "name": {
+        "pt-BR": "Metalurgia",
+        "en": "Metalwork"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Solda em chapa",
+          "en": "Sheet welding"
+        },
+        {
+          "pt-BR": "Portão de aço",
+          "en": "Steel gate"
+        },
+        {
+          "pt-BR": "Blindagem de veículo",
+          "en": "Vehicle armour"
+        }
+      ]
+    },
+    {
+      "id": "gunsmithing",
+      "group": "technical",
+      "name": {
+        "pt-BR": "Armeiro",
+        "en": "Gunsmithing"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Limpar e evitar pane",
+          "en": "Clean and prevent jams"
+        },
+        {
+          "pt-BR": "Recarregar munição (estojo, espoleta, pólvora)",
+          "en": "Reload ammunition (case, primer, powder)"
+        },
+        {
+          "pt-BR": "Adaptar peças entre modelos",
+          "en": "Adapt parts between models"
+        }
+      ]
+    },
+    {
+      "id": "chemistry",
+      "group": "technical",
+      "name": {
+        "pt-BR": "Química",
+        "en": "Chemistry"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Pólvora negra",
+          "en": "Black powder"
+        },
+        {
+          "pt-BR": "Antibiótico caseiro",
+          "en": "Home-made antibiotic"
+        },
+        {
+          "pt-BR": "Explosivo improvisado",
+          "en": "Improvised explosive"
+        }
+      ]
+    },
+    {
+      "id": "running",
+      "group": "physical",
+      "name": {
+        "pt-BR": "Corrida",
+        "en": "Running"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Arrancada curta sem gastar fôlego",
+          "en": "Short dash without spending stamina"
+        },
+        {
+          "pt-BR": "Pular cerca sem parar",
+          "en": "Jump a fence without stopping"
+        },
+        {
+          "pt-BR": "Corrida longa: fôlego −30%",
+          "en": "Long run: stamina −30%"
+        }
+      ]
+    },
+    {
+      "id": "stealth",
+      "group": "physical",
+      "name": {
+        "pt-BR": "Furtividade",
+        "en": "Stealth"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Agachado mais rápido",
+          "en": "Faster crouching"
+        },
+        {
+          "pt-BR": "Passar por zumbi parado",
+          "en": "Walk past a standing zombie"
+        },
+        {
+          "pt-BR": "Invisível no escuro a 3 m",
+          "en": "Invisible in the dark at 3 m"
+        }
+      ]
+    },
+    {
+      "id": "climbing",
+      "group": "physical",
+      "name": {
+        "pt-BR": "Escalada",
+        "en": "Climbing"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Subir em muro",
+          "en": "Climb a wall"
+        },
+        {
+          "pt-BR": "Telhados conectados",
+          "en": "Connected rooftops"
+        },
+        {
+          "pt-BR": "Descer de corda",
+          "en": "Rope descent"
+        }
+      ]
+    },
+    {
+      "id": "conditioning",
+      "group": "physical",
+      "name": {
+        "pt-BR": "Condicionamento",
+        "en": "Conditioning"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Carga +10%",
+          "en": "Load +10%"
+        },
+        {
+          "pt-BR": "Dano recebido −10%",
+          "en": "Damage taken −10%"
+        },
+        {
+          "pt-BR": "Ignora 1 nível de dor",
+          "en": "Ignore 1 level of pain"
+        }
+      ]
+    },
+    {
+      "id": "leadership",
+      "group": "social",
+      "name": {
+        "pt-BR": "Liderança",
+        "en": "Leadership"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Dar ordens simples ao grupo",
+          "en": "Give the group simple orders"
+        },
+        {
+          "pt-BR": "Grupo não entra em pânico perto de você",
+          "en": "The group does not panic near you"
+        },
+        {
+          "pt-BR": "Recrutar NPC hostil",
+          "en": "Recruit a hostile person"
+        }
+      ]
+    },
+    {
+      "id": "negotiation",
+      "group": "social",
+      "name": {
+        "pt-BR": "Negociação",
+        "en": "Negotiation"
+      },
+      "milestones": [
+        {
+          "pt-BR": "Ver o preço real das coisas",
+          "en": "See the real price of things"
+        },
+        {
+          "pt-BR": "Trocas a crédito",
+          "en": "Trade on credit"
+        },
+        {
+          "pt-BR": "Convencer grupo rival a recuar",
+          "en": "Convince a rival group to back off"
+        }
+      ]
+    }
+  ],
+  "professions": [
+    {
+      "id": "nurse",
+      "key": "enf",
+      "points": -2,
+      "skills": {
+        "first_aid": 3,
+        "chemistry": 1
+      },
+      "bonus": {
+        "pt-BR": "Vê a gravidade exata de ferimentos e sabe se um ferimento infeccionou",
+        "en": "Sees the exact severity of wounds and knows whether a wound got infected"
+      },
+      "kit": "Kit de primeiros socorros, luvas"
+    },
+    {
+      "id": "police_officer",
+      "key": "pm",
+      "points": -4,
+      "skills": {
+        "pistols": 3,
+        "rifles": 1,
+        "blunt": 1
+      },
+      "bonus": {
+        "pt-BR": "Pânico −25% em combate; abre viaturas e delegacias sem chave",
+        "en": "Panic −25% in combat; opens police cars and stations without a key"
+      },
+      "kit": "Revólver .38 com 6 balas, cassetete"
+    },
+    {
+      "id": "firefighter",
+      "key": "bomb",
+      "points": -3,
+      "skills": {
+        "first_aid": 2,
+        "conditioning": 2,
+        "blades": 1
+      },
+      "bonus": {
+        "pt-BR": "Imune a fumaça leve; arromba portas com machado 2× mais rápido",
+        "en": "Immune to light smoke; breaks doors with an axe 2× faster"
+      },
+      "kit": "Machado de bombeiro"
+    },
+    {
+      "id": "mechanic",
+      "key": "mec",
+      "points": -1,
+      "skills": {
+        "mechanics": 3,
+        "metalwork": 1
+      },
+      "bonus": {
+        "pt-BR": "Sabe o estado de qualquer veículo só de olhar",
+        "en": "Knows the state of any vehicle at a glance"
+      },
+      "kit": "Caixa de ferramentas"
+    },
+    {
+      "id": "builder",
+      "key": "ped",
+      "points": -1,
+      "skills": {
+        "carpentry": 2,
+        "metalwork": 1,
+        "conditioning": 1
+      },
+      "bonus": {
+        "pt-BR": "Barricadas com +30% de resistência",
+        "en": "Barricades with +30% strength"
+      },
+      "kit": "Martelo, pregos"
+    },
+    {
+      "id": "cook",
+      "key": "coz",
+      "points": 0,
+      "skills": {
+        "cooking": 3,
+        "blades": 1
+      },
+      "bonus": {
+        "pt-BR": "Comida estraga 40% mais devagar sob seu cuidado",
+        "en": "Food spoils 40% slower in their care"
+      },
+      "kit": "Faca de chef"
+    },
+    {
+      "id": "sport_shooter",
+      "key": "cac",
+      "points": -4,
+      "skills": {
+        "rifles": 2,
+        "pistols": 2,
+        "gunsmithing": 1
+      },
+      "bonus": {
+        "pt-BR": "Reconhece calibre e munição compatível na hora; pane −30%",
+        "en": "Recognises calibre and compatible ammunition at once; jams −30%"
+      },
+      "kit": "Pistola 9 mm sem munição"
+    },
+    {
+      "id": "farmer",
+      "key": "agr",
+      "points": 0,
+      "skills": {
+        "farming": 3,
+        "hunting": 1
+      },
+      "bonus": {
+        "pt-BR": "Planta sem livro; sabe a época de cada cultura",
+        "en": "Plants without a book; knows the season of each crop"
+      },
+      "kit": "Sementes, enxada"
+    },
+    {
+      "id": "electrician",
+      "key": "ele",
+      "points": -1,
+      "skills": {
+        "electrics": 3,
+        "climbing": 1
+      },
+      "bonus": {
+        "pt-BR": "Liga gerador sem risco de choque",
+        "en": "Hooks up a generator with no risk of a shock"
+      },
+      "kit": "Alicate, fita isolante"
+    },
+    {
+      "id": "courier",
+      "key": "moto",
+      "points": 0,
+      "skills": {
+        "running": 1,
+        "mechanics": 1,
+        "climbing": 1
+      },
+      "bonus": {
+        "pt-BR": "Conhece as ruas: o mapa da cidade já começa revelado",
+        "en": "Knows the streets: the city map starts revealed"
+      },
+      "kit": "Capacete (protege cabeça), moto sem gasolina"
+    },
+    {
+      "id": "teacher",
+      "key": "prof",
+      "points": 2,
+      "skills": {
+        "leadership": 1,
+        "chemistry": 1
+      },
+      "bonus": {
+        "pt-BR": "Ensina outros com XP ×2,5 em vez de ×2",
+        "en": "Teaches others at XP ×2.5 instead of ×2"
+      },
+      "kit": "Livro de química vol. 1"
+    },
+    {
+      "id": "unemployed",
+      "key": "des",
+      "points": 8,
+      "skills": {},
+      "bonus": {
+        "pt-BR": "Nenhum, mas muito mais pontos livres",
+        "en": "None, but many more free points"
+      },
+      "kit": "Nada"
+    }
+  ],
+  "traits": [
+    {
+      "id": "athlete",
+      "key": "atleta",
+      "cost": -4,
+      "excludes": [
+        "sedentary",
+        "asthmatic"
+      ],
+      "name": {
+        "pt-BR": "Atleta",
+        "en": "Athlete"
+      },
+      "effect": {
+        "pt-BR": "Fôlego +25%, corrida +0,3 m/s",
+        "en": "Stamina +25%, running +0.3 m/s"
+      }
+    },
+    {
+      "id": "eagle_eyes",
+      "key": "olhos",
+      "cost": -3,
+      "excludes": [
+        "short_sighted"
+      ],
+      "name": {
+        "pt-BR": "Olhos de águia",
+        "en": "Eagle eyes"
+      },
+      "effect": {
+        "pt-BR": "Raio de detecção +25%",
+        "en": "Detection radius +25%"
+      }
+    },
+    {
+      "id": "cold_blood",
+      "key": "frio",
+      "cost": -4,
+      "excludes": [
+        "fearful"
+      ],
+      "name": {
+        "pt-BR": "Sangue frio",
+        "en": "Cold blood"
+      },
+      "effect": {
+        "pt-BR": "Compostura +40%",
+        "en": "Composure +40%"
+      }
+    },
+    {
+      "id": "fast_learner",
+      "key": "rapido",
+      "cost": -5,
+      "excludes": [
+        "slow_learner"
+      ],
+      "name": {
+        "pt-BR": "Aprende rápido",
+        "en": "Fast learner"
+      },
+      "effect": {
+        "pt-BR": "XP +30% em tudo",
+        "en": "XP +30% in everything"
+      }
+    },
+    {
+      "id": "light_feet",
+      "key": "silen",
+      "cost": -3,
+      "excludes": [
+        "clumsy"
+      ],
+      "name": {
+        "pt-BR": "Pés leves",
+        "en": "Light feet"
+      },
+      "effect": {
+        "pt-BR": "Ruído dos passos −30%",
+        "en": "Footstep noise −30%"
+      }
+    },
+    {
+      "id": "organized",
+      "key": "org",
+      "cost": -3,
+      "excludes": [],
+      "name": {
+        "pt-BR": "Organizado",
+        "en": "Organized"
+      },
+      "effect": {
+        "pt-BR": "Carga +20%",
+        "en": "Load +20%"
+      }
+    },
+    {
+      "id": "tough_body",
+      "key": "touro",
+      "cost": -4,
+      "excludes": [
+        "bleeds_easily"
+      ],
+      "name": {
+        "pt-BR": "Corpo resistente",
+        "en": "Tough body"
+      },
+      "effect": {
+        "pt-BR": "Vida +15, sangra 25% menos",
+        "en": "Health +15, bleeds 25% less"
+      }
+    },
+    {
+      "id": "light_sleeper",
+      "key": "sono",
+      "cost": -2,
+      "excludes": [
+        "heavy_sleeper"
+      ],
+      "name": {
+        "pt-BR": "Sono leve",
+        "en": "Light sleeper"
+      },
+      "effect": {
+        "pt-BR": "Acorda com ruído a 15 m",
+        "en": "Wakes to noise at 15 m"
+      }
+    },
+    {
+      "id": "smoker",
+      "key": "fumante",
+      "cost": 3,
+      "excludes": [],
+      "name": {
+        "pt-BR": "Fumante",
+        "en": "Smoker"
+      },
+      "effect": {
+        "pt-BR": "Estresse sobe sem cigarro; pode largar em 20 dias",
+        "en": "Stress rises without cigarettes; can quit in 20 days"
+      }
+    },
+    {
+      "id": "asthmatic",
+      "key": "asma",
+      "cost": 4,
+      "excludes": [
+        "athlete"
+      ],
+      "name": {
+        "pt-BR": "Asmático",
+        "en": "Asthmatic"
+      },
+      "effect": {
+        "pt-BR": "Fôlego −30%",
+        "en": "Stamina −30%"
+      }
+    },
+    {
+      "id": "short_sighted",
+      "key": "miope",
+      "cost": 3,
+      "excludes": [
+        "eagle_eyes"
+      ],
+      "name": {
+        "pt-BR": "Míope",
+        "en": "Short-sighted"
+      },
+      "effect": {
+        "pt-BR": "Raio −30% até achar óculos",
+        "en": "Radius −30% until glasses are found"
+      }
+    },
+    {
+      "id": "clumsy",
+      "key": "desaj",
+      "cost": 3,
+      "excludes": [
+        "light_feet"
+      ],
+      "name": {
+        "pt-BR": "Desajeitado",
+        "en": "Clumsy"
+      },
+      "effect": {
+        "pt-BR": "Ruído +30%, derruba coisas",
+        "en": "Noise +30%, drops things"
+      }
+    },
+    {
+      "id": "fearful",
+      "key": "medroso",
+      "cost": 4,
+      "excludes": [
+        "cold_blood"
+      ],
+      "name": {
+        "pt-BR": "Medroso",
+        "en": "Fearful"
+      },
+      "effect": {
+        "pt-BR": "Compostura −40%",
+        "en": "Composure −40%"
+      }
+    },
+    {
+      "id": "sedentary",
+      "key": "sedent",
+      "cost": 3,
+      "excludes": [
+        "athlete"
+      ],
+      "name": {
+        "pt-BR": "Sedentário",
+        "en": "Sedentary"
+      },
+      "effect": {
+        "pt-BR": "Fôlego −20%, corrida −0,3 m/s",
+        "en": "Stamina −20%, running −0.3 m/s"
+      }
+    },
+    {
+      "id": "bleeds_easily",
+      "key": "hemo",
+      "cost": 5,
+      "excludes": [
+        "tough_body"
+      ],
+      "name": {
+        "pt-BR": "Sangra fácil",
+        "en": "Bleeds easily"
+      },
+      "effect": {
+        "pt-BR": "Sangramento ×2",
+        "en": "Bleeding ×2"
+      }
+    },
+    {
+      "id": "slow_learner",
+      "key": "lento",
+      "cost": 4,
+      "excludes": [
+        "fast_learner"
+      ],
+      "name": {
+        "pt-BR": "Aprende devagar",
+        "en": "Slow learner"
+      },
+      "effect": {
+        "pt-BR": "XP −30%",
+        "en": "XP −30%"
+      }
+    },
+    {
+      "id": "heavy_sleeper",
+      "key": "pesado",
+      "cost": 2,
+      "excludes": [
+        "light_sleeper"
+      ],
+      "name": {
+        "pt-BR": "Sono pesado",
+        "en": "Heavy sleeper"
+      },
+      "effect": {
+        "pt-BR": "Não acorda com barulho",
+        "en": "Does not wake to noise"
+      }
+    },
+    {
+      "id": "big_eater",
+      "key": "glutao",
+      "cost": 2,
+      "excludes": [],
+      "name": {
+        "pt-BR": "Come muito",
+        "en": "Big eater"
+      },
+      "effect": {
+        "pt-BR": "Fome +30%",
+        "en": "Hunger +30%"
+      }
+    }
+  ],
+  "derived": [
+    {
+      "id": "health",
+      "base": 70,
+      "per": {
+        "vigor": 6
+      },
+      "traits": [
+        {
+          "trait": "tough_body",
+          "add": 15
+        }
+      ],
+      "source": "derived(): vida=70+6*a.vig+(has(\"touro\")?15:0)",
+      "name": {
+        "pt-BR": "Vida máxima",
+        "en": "Max health"
+      }
+    },
+    {
+      "id": "stamina",
+      "base": 40,
+      "per": {
+        "vigor": 6,
+        "agility": 4
+      },
+      "traits": [
+        {
+          "trait": "athlete",
+          "mul": 1.25
+        },
+        {
+          "trait": "asthmatic",
+          "mul": 0.7
+        },
+        {
+          "trait": "sedentary",
+          "mul": 0.8
+        }
+      ],
+      "source": "derived(): folego=40+6*a.vig+4*a.agi; ×1.25 atleta, ×.7 asma, ×.8 sedent",
+      "name": {
+        "pt-BR": "Fôlego",
+        "en": "Stamina"
+      }
+    },
+    {
+      "id": "carry",
+      "base": 8,
+      "per": {
+        "strength": 2.5
+      },
+      "traits": [
+        {
+          "trait": "organized",
+          "mul": 1.2
+        }
+      ],
+      "unit": "kg",
+      "source": "derived(): carga=8+2.5*a.for; ×1.2 org",
+      "name": {
+        "pt-BR": "Carga máxima",
+        "en": "Max load"
+      }
+    },
+    {
+      "id": "run_speed",
+      "base": 5.2,
+      "per": {
+        "agility": 0.12
+      },
+      "traits": [
+        {
+          "trait": "athlete",
+          "add": 0.3
+        },
+        {
+          "trait": "sedentary",
+          "add": -0.3
+        }
+      ],
+      "unit": "m/s",
+      "source": "derived(): corrida=5.2+0.12*a.agi+(atleta?.3:0)-(sedent?.3:0)",
+      "name": {
+        "pt-BR": "Velocidade de corrida",
+        "en": "Running speed"
+      }
+    },
+    {
+      "id": "detection",
+      "base": 12,
+      "per": {
+        "perception": 2
+      },
+      "traits": [
+        {
+          "trait": "eagle_eyes",
+          "mul": 1.25
+        },
+        {
+          "trait": "short_sighted",
+          "mul": 0.7
+        }
+      ],
+      "unit": "m",
+      "source": "derived(): raio=12+2*a.per; ×1.25 olhos, ×.7 miope",
+      "name": {
+        "pt-BR": "Raio de detecção",
+        "en": "Detection radius"
+      }
+    },
+    {
+      "id": "noise",
+      "base": 100,
+      "per": {
+        "agility": -4
+      },
+      "traits": [
+        {
+          "trait": "light_feet",
+          "mul": 0.7
+        },
+        {
+          "trait": "clumsy",
+          "mul": 1.3
+        }
+      ],
+      "unit": "%",
+      "source": "derived(): ruido=100-a.agi*4; ×.7 silen, ×1.3 desaj",
+      "name": {
+        "pt-BR": "Ruído dos passos",
+        "en": "Footstep noise"
+      }
+    },
+    {
+      "id": "learning",
+      "base": 70,
+      "per": {
+        "intellect": 6
+      },
+      "traits": [
+        {
+          "trait": "fast_learner",
+          "mul": 1.3
+        },
+        {
+          "trait": "slow_learner",
+          "mul": 0.7
+        }
+      ],
+      "unit": "%",
+      "source": "derived(): xp=70+6*a.int; ×1.3 rapido, ×.7 lento",
+      "name": {
+        "pt-BR": "Velocidade de aprendizado",
+        "en": "Learning speed"
+      }
+    },
+    {
+      "id": "composure",
+      "base": 20,
+      "per": {
+        "vigor": 3,
+        "presence": 4
+      },
+      "traits": [
+        {
+          "trait": "cold_blood",
+          "mul": 1.4
+        },
+        {
+          "trait": "fearful",
+          "mul": 0.6
+        }
+      ],
+      "source": "derived(): comp=20+3*a.vig+4*a.pre; ×1.4 frio, ×.6 medroso",
+      "name": {
+        "pt-BR": "Compostura",
+        "en": "Composure"
+      }
+    },
+    {
+      "id": "melee",
+      "base": -5,
+      "per": {
+        "strength": 1
+      },
+      "scale": 6,
+      "traits": [],
+      "unit": "%",
+      "source": "derived(): dano=(a.for-5)*6",
+      "name": {
+        "pt-BR": "Dano corpo a corpo",
+        "en": "Melee damage"
+      }
+    }
+  ]
+}

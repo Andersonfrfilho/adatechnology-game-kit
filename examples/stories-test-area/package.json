@@ -1,0 +1,18 @@
+{
+  "name": "@adatechnology/stories-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Stories area for the shared test room: no 3D, the seed and the day slider run a world of stories (casting, beats, the life simulation) and the room's sheet panel shows one person's character sheet with what they lived; the player's actions are switches, and a game's content JSON loads through a file button.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-stories": "workspace:*",
+    "@adatechnology/game-characters": "workspace:*",
+    "@adatechnology/game-characters-people": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:*"
+  }
+}

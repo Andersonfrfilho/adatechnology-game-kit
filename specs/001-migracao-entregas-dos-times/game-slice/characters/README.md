@@ -13,7 +13,7 @@ people and groups, 7º BIS, the life simulation, the calibre points table). The 
 | `relations.json` | Relations, relation types, join rules, states, actions, risk by region | Os Vivos do Vale |
 | `events.json` | The 47 day-by-day events | Os Vivos do Vale `EV` |
 | `forces.json` | Factions (incl. 7º BIS), ranks, the rank rule, loot, generic troopers | Os Vivos do Vale `FACT`, `RANKS`, `RANKRULE`, `LOOT`, `GENT` |
-| `life-simulation.source.js` | `life`, `world`, `apply`, `simulate` and their tables, verbatim (a game rule; not yet ported) | Os Vivos do Vale |
+| `life-simulation.source.js` | `life`, `world`, `apply`, `simulate` and their tables, verbatim (ported to `game-stories` in T8.2; the valley's data is in `../stories/`) | Os Vivos do Vale |
 | `points-table.json` | Damage points per calibre of the game (the SDK default is `3.5 * E^0.37`) | jogo.js `CALIBRES` |
 | `zones.json` | Where the game spawns its zones | jogo.js `ZONES` |
 | `sdk-mapping.json` | Which SDK id each faction (`eb`, `pm`...) and each LOOT row became in `game-characters-uniformed`; `null` for the unique quest items the game keeps | decisions |

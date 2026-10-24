@@ -67,6 +67,14 @@ describe('corpses', () => {
     expect(ledger.count).toBe(0)
   })
 
+  it('takes one corpse away by swapping the last into its place (the devourer eats one)', () => {
+    const ledger = createCorpseLedger<string>({ max: 5, seconds: 10 })
+    for (const id of ['a', 'b', 'c', 'd']) ledger.add(id)
+    expect(ledger.remove(1)).toBe('b')
+    expect(ledger.entries.map((entry) => entry.data)).toEqual(['a', 'd', 'c'])
+    expect(ledger.remove(9)).toBeUndefined()
+  })
+
   it('the kit makes a ledger with its own cap and lifetime (400 bodies, 900 s)', () => {
     const kit = createCharacters()
     const ledger = kit.createCorpses<number>()

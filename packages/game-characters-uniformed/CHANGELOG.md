@@ -1,5 +1,12 @@
 # @adatechnology/game-characters-uniformed
 
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [b6e8131]
+  - @adatechnology/game-characters@0.1.6
+
 ## 0.1.5
 
 ### Patch Changes

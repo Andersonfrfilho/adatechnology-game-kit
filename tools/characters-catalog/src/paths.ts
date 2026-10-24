@@ -15,6 +15,7 @@ export const SOURCE_PATHS = {
   livingValley: join(SOURCES, 'sobreviventes__os-vivos-do-vale.js'),
   arsenal: join(SOURCES, 'armas-itens__galeria-3d-arsenal.js'),
   hordeBench: join(SOURCES, 'jogo__bancada-de-hordas.js'),
+  personagens: join(SOURCES, 'zumbis-personagens__personagens.js'),
 } as const
 
 /** The team pages (artifact HTML) the Chrome captures run. */
