@@ -24,6 +24,7 @@ COPY packages/game-infection/package.json packages/game-infection/
 COPY packages/game-interactables/package.json packages/game-interactables/
 COPY packages/game-interactables-household/package.json packages/game-interactables-household/
 COPY packages/game-interactables-three/package.json packages/game-interactables-three/
+COPY packages/game-items/package.json packages/game-items/
 COPY packages/game-props3d/package.json packages/game-props3d/
 COPY packages/game-test-room/package.json packages/game-test-room/
 COPY packages/game-vegetation/package.json packages/game-vegetation/

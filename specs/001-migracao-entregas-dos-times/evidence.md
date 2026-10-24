@@ -788,3 +788,32 @@ Desenho: `design/T3-itens.md`. Execução em `sonnet` (o desenho recomendava `ha
 | `pnpm --filter @adatechnology/weapons-catalog-tool catalog:check` | up to date |
 
 Node 22.23.4 (npm em pasta de rascunho): `tools/golden` 42, `game-weapons` 277, `game-contracts` 31, `tools/weapons-catalog` 17, `game-weapons-three` 94 passaram (os hashes de golden usam `installPortableMath`, sem mudança).
+
+### T3.1a — Esqueleto do `game-items` (grupo A)
+
+**O que entrou** (`packages/game-items`, `@adatechnology/game-items` 0.1.0 pelo changeset; sem three, sem conteúdo, sem lógica)
+- Tipos do desenho (seção 2): `ItemDef extends BaseItemDef` (o `ItemDef` do interactables) com `category`, `tags`, `rarity`, `volume`, `durability`, `shelfLife`, `portions`, `cookable`, `nutrition`, `protection`, `carry`, `weapon`, `fluid`, `uses`, `finds`, `charge`, `agingFault`, `model` (e `thumbnail`, herdado). Vocabulários fechados `RARITIES` (6), `BODY_SLOTS` (7), `DURABILITY_KINDS` (12). Registros extensíveis: categorias (as 14 em inglês em `ITEM_CATEGORIES`), lugares (`PlaceDef`) e recipientes (`ContainerDef`).
+- `createItems({ packs, patch, remove, include, categories, places, containers, rules })`, mesma ordem do `createArsenal` (pacotes por id, `patch`, `remove`, `include`) sobre `mergeById`/`applyPatches`/`removeIds`/`deepMerge` do contracts. Devolve `ItemsCatalog`: mapas `items`, `categories`, `places`, `containers`, `rules` e `has`, `get` (lança em id desconhecido), `list`, `byCategory`, `byPlace`, `byTag`. `volume` é derivado do `size` (litros) quando o pacote não dá. Tudo inconsistente sai num erro só (`checkItems`): categoria, raridade, lugar, tamanho, peso, validade, porções, durabilidade, proteção, carga, recipientes, regras e ids repetidos.
+- `DEFAULT_RULES` (`ItemRules`): pesos de raridade 60/28/9/2,5/0,5/0 com `fixedOnly: ['unique']`; frescor 0,5/1/1,5; armazenamento (`StorageRule`: `multiplier`, `needsPower`, `limitDays`, `afterLimit`); carga `(8 + 2,5·FOR)·1,2` com `encumbered` 1 e `overloaded` 1,5; proteção teto 0,9, desgaste 8/3, rasgado 0,25, margem de conserto 10; `spawn.retailNew` (true) e `spawn.retailPlaces`. Todas por opção, mescladas com `deepMerge`.
+- Pacote completo: `package.json`, `tsconfig`, `tsup` (ESM + IIFE `GameItems`), `vitest.config`, README, `.claude/skills/game-items/SKILL.md` (esqueleto declarado como tal), changeset `game-items-skeleton.md`, COPY do manifesto em `site/Dockerfile`, `pnpm-lock.yaml`.
+- Testes (18): registro (vazio, ordem dos pacotes, volume derivado, `patch` aninhado e id inexistente, `remove` e `include`, índices, categorias/lugares/recipientes de pacote e de opção, regras mescladas, `get` desconhecido), validação (duplicados, todos os problemas de um item num erro, proteção/carga/lugar/recipiente, lugar não conferido sem registro, regras inconsistentes) e regras padrão.
+
+**Desvios do desenho e escolhas reversíveis**
+- **Multiplicadores de armazenamento:** o brief pedia valores PLACEHOLDER; como a tabela do HTML (L205–211) é curta, os 7 valores já vêm lidos à mão dela (geladeira 0,33 e freezer 0,1 só com energia, caixa térmica 0,5 por 2 dias e depois 1, bag 0,8, porão 0,66, ambiente 1, sol 2). Quem prova é o teste de fonte do `tools/items-catalog` (T3.1b/f); se divergir, muda aqui. Ids em inglês: `fridge`, `freezer`, `cooler`, `delivery_bag`, `cellar`, `ambient`, `hot`.
+- **Lugares sem padrão:** nenhum lugar vem embutido (os 24 são conteúdo do `goods`); `finds.places` só é conferido quando algum lugar foi registrado. Categoria desconhecida, ao contrário, é erro (as 14 sempre existem).
+- **`ContainerDef` provisório** (`categories` por peso e `count`): a T3.1e fixa os campos do sorteio. `ItemRules.spawn.retailPlaces` acompanha `retailNew` (decisão 1 da seção 6) porque a regra precisa saber quais lugares são prateleira/estoque; vazio por padrão, o `goods` preenche.
+- **Limiares de carga:** nomes `encumbered`/`overloaded` (>100% corrida e fôlego −25%; >150% não corre) são interpretação dos textos do HTML; os efeitos ficam para a T3.1e.
+- `unique` com peso 0 e `fixedOnly: ['unique']` (o sexto valor "só-fixo" do brief); `legendary` 0,5 entra no sorteio. Se o HTML disser que lendário também é só de ponto fixo, vira uma linha em `fixedOnly`.
+- `game-items` depende de `game-contracts` e `game-interactables` (`workspace:*`); em T3.1a o interactables só dá o tipo base (o `fitsSize` entra na T3.1e).
+
+**Portões da T3.1a (Node 24.22.0)**
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 |
+| `pnpm -r test` (inteiro) | exit 0; `game-items` 18 (2 arquivos) |
+| `pnpm --filter @adatechnology/weapons-catalog-tool catalog:check` | up to date |
+
+Node 22.23.4: `game-items` 18, `tools/golden` 42, `game-interactables` 153 passaram. Goldens (`golden-tool`, `game-weapons` team-golden e por arma) sem mudança nos dois Nodes; sem golden novo nesta task (o do `game-items` é da T3.1e). Modelo da execução: `sonnet`.
