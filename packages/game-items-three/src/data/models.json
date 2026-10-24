@@ -1078,5 +1078,15 @@
       2
     ],
     "scale": 0.1
+  },
+  {
+    "id": "gas_torch",
+    "teamId": "macarico",
+    "teamBox": [
+      1.5,
+      4.2,
+      1.5
+    ],
+    "scale": 0.1
   }
 ]
