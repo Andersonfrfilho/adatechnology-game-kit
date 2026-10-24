@@ -15,8 +15,6 @@ const DMG_PER_J = 0.02
 /** Fraction of a blast's energy that reaches a part at distance 0. */
 const BLAST_COUPLING = 0.1
 const FLAMMABLE_FLUIDS = ['gas', 'fuel']
-/** Most blasts one call resolves; the rest stay queued for the next call. */
-const MAX_BLASTS_PER_DRAIN = 64
 
 /** A cut only goes through a slice of the part, so a part longer than `CUT_SLICE` costs no more to cut than a 1 m piece of the same section. */
 const CUT_SLICE = 1
@@ -172,13 +170,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const pendingCollapse = new Map<ObjRT, string | undefined>()
   let runDepth = 0
 
-  /** Blasts queued by parts that exploded; each can prime or set off more parts. Capped per call so a runaway chain cannot freeze a frame. */
+  /** Blasts queued by parts that exploded; each can prime or set off more parts. It ends: a part goes off once and is primed once, so the queue only grows by parts not yet lost. */
   const drainBlasts = () => {
-    let guard = 0
-    while (blasts.length && guard++ < MAX_BLASTS_PER_DRAIN) {
-      const b = blasts.shift()!
-      blastWorld(b.point, b.energy, b.radius, b.source)
-    }
+    for (let blast = blasts.shift(); blast; blast = blasts.shift()) blastWorld(blast.point, blast.energy, blast.radius, blast.source)
   }
 
   const run = <T>(fn: () => T): { value: T; events: DestructionEvent[] } => {
@@ -1195,7 +1189,6 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   // World API
   // -------------------------------------------------------------------------------------------------------------------------------------------
 
-  /** Collapse events are produced after the whole operation: make sure the result of the operation carries them. */
   /** The primed part that goes off first: earliest due time, then the older object, then the part listed first. */
   const nextPrimed = (until: number): { o: ObjRT; p: PartRT } | null => {
     let best: { o: ObjRT; p: PartRT } | null = null
@@ -1231,6 +1224,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     time = end
   }
 
+  /** Collapse events are produced after the whole operation: make sure the result of the operation carries them. */
   const withCollapses = (r: { value: HitResult[]; events: DestructionEvent[] }): HitResult[] => {
     const last = r.value[r.value.length - 1]
     if (!last) return r.value

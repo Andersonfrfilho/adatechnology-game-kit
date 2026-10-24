@@ -198,3 +198,25 @@ describe('chain reaction: the gas station (Laboratório SC.posto 968-995)', () =
     expect(pump1?.time).toBeCloseTo(1 + 0.4, 6)
   })
 })
+
+describe('chain reaction: blasts queued in one call', () => {
+  it('resolves every queued blast before the call returns, however many parts went off at once', () => {
+    const seen: DestructionEvent[] = []
+    const world = createDestruction({ seed: 5, onEvent: (event) => seen.push(event) })
+    // 100 charges without a chain delay in a 10 x 10 grid fail together under one huge blast, each queuing a blast of 30 m; a steel sheet 12 m from the middle of the grid is outside the huge blast and inside the reach of every one
+    const charge: DestructibleSpec = { parts: [{ id: 'tank', material: 'steel', shape: { kind: 'cylinder', radius: 0.3, height: 0.9 }, position: [0, 0.45, 0], thickness: 0.001, explodes: { energy: 102000, radius: 30 } }] }
+    for (let k = 0; k < 100; k++) world.add(charge, { id: `barrel_${k}`, position: [(k % 10) * 0.7, 0, Math.floor(k / 10) * 0.7] })
+    const sheet = world.add({ parts: [{ id: 'plate', material: 'steel', shape: { kind: 'box', size: [2, 2, 0.05] }, position: [0, 1, 0], anchored: true }] }, { id: 'sheet', position: [3, 0, 15] })
+    const hpOf = (): number => world.part(sheet, 'plate')?.hp ?? 0
+    const full = hpOf()
+    world.explode([3, 0.5, 3], 1e9, 9)
+    const explodedInCall = explosions(seen).length
+    const afterCall = hpOf()
+    expect(explodedInCall).toBeGreaterThan(64)
+    expect(afterCall).toBeLessThan(full)
+    world.explode([500, 0, 500], 1, 1)
+    world.update(0)
+    expect(explosions(seen)).toHaveLength(explodedInCall)
+    expect(hpOf()).toBe(afterCall)
+  })
+})
