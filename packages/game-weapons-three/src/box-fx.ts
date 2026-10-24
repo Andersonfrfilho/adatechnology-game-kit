@@ -1,11 +1,10 @@
 import type * as THREE_NS from 'three'
 import type { HostEvent, HostTool } from '@adatechnology/game-contracts'
-import { muzzleEnergy } from '@adatechnology/game-weapons'
+import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import type { WeaponAudio } from './audio'
 import { createLayers } from './fx/layers'
 import type { FxLayers } from './fx/layers'
-import { createRandom } from './fx/random'
 import { BODY_ACTIONS, buildWeaponModel } from './props'
 
 export interface WeaponFxOptions {
@@ -73,7 +72,7 @@ interface Body {
 export function createBoxFx(options: WeaponFxOptions): BoxFx {
   const { THREE, scene, camera, arsenal, groundAt } = options
   const audio = options.audio ?? null
-  const random = createRandom(options.seed ?? 1)
+  const random = createRng(options.seed ?? 1)
   const layers = options.layers ?? createLayers()
   const bodies: Body[] = []
   const brass = new THREE.MeshStandardMaterial({ color: 0xc9a24a, metalness: 0.8, roughness: 0.35 })

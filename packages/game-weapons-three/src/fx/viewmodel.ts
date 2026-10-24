@@ -1,8 +1,9 @@
 import type * as THREE_NS from 'three'
 import { createToolClipPlayer, toolAnimationStep } from '@adatechnology/game-contracts'
 import type { HostEvent, HostTool, ToolClipPlayer } from '@adatechnology/game-contracts'
-import { muzzleEnergy } from '@adatechnology/game-weapons'
+import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, CaliberDef, WeaponDef } from '@adatechnology/game-weapons'
+import { ease } from '../animation/clip-builder'
 import { buildToolClips } from '../animation/clip-set'
 import type { WeaponAudio } from '../audio'
 import { weaponEventOf } from '../audio/host-events'
@@ -16,7 +17,6 @@ import type { FxLayers } from './layers'
 import { flameJet, launchRocket } from './heavy'
 import type { HeavyContext } from './heavy'
 import { createParticles } from './particles'
-import { createRandom } from './random'
 import { createModelRig } from './rig'
 import type { FxWorld, Session } from './session'
 import { toWorld, worldPositionOf } from './session'
@@ -71,14 +71,12 @@ interface Task {
   done: (() => void) | undefined
 }
 
-const ease = (progress: number): number => (progress < 0.5 ? 2 * progress * progress : 1 - (-2 * progress + 2) ** 2 / 2)
-
 const caliberOf = (arsenal: Arsenal, def: WeaponDef): CaliberDef | undefined => (def.action.kind === 'firearm' ? arsenal.calibers.get(def.action.caliber) : undefined)
 
 export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const { THREE, scene, camera, arsenal, groundAt, audio } = options
   const kit = modelKit(THREE)
-  const random = createRandom(options.seed ?? 1)
+  const random = createRng(options.seed ?? 1)
   const layers = options.layers ?? createLayers()
   const distance = (): number => options.soundDistance?.() ?? 0
   const particles = createParticles(THREE, scene, groundAt)
