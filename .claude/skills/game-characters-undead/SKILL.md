@@ -9,8 +9,8 @@ description: Use quando precisar dos dados de zumbi do kit, sem engine, como tip
 A camada **só de zumbi** sobre o `game-characters`, como **dado puro** (T4.2a da Fase 4): os 13 tipos do jogo (vida, velocidades por momento, dano,
 chance de mordida, multiplicadores de cabeça/tronco/braços/pernas, percepção, olho da v17, postura, andar, parâmetros de habilidade, textos),
 as 4 idades da infecção, as 4 roupas com proteção e achado, a linha do tempo da infecção e os multiplicadores de velocidade por momento.
-Fica à parte para um jogo estilo GTA nunca importar nada de zumbi. O motor (`assign`/`turn`/`fromAgent`, velocidades × momentos, ganchos de
-dano) vem na T4.2b; a regra de surto dos animais, na T4.3c. Os dados vêm de `tools/characters-catalog` (`catalog:check` acusa dado velho).
+Fica à parte para um jogo estilo GTA nunca importar nada de zumbi. O motor (`createUndead`: `assign`/`create`/`turn`/`fromAgent`, `speedFor`, `infect`, ganchos de
+dano) está em `kit.ts`, e a regra de surto dos animais (`createAnimalOutbreak`) em `animals/outbreak.ts`. Os dados vêm de `tools/characters-catalog` (`catalog:check` acusa dado velho).
 
 ## Quando usar e quando não usar
 - Use para: sortear e descrever zumbis, montar a interface de um bestiário, configurar o jogo com os mesmos números do ZombiAdA.
@@ -37,12 +37,26 @@ UNDEAD_LOCALES['en'].typeText.walker.role  // textos em en e pt-BR
 | `UNDEAD_LOCALES` | `en` e `pt-BR`: textos dos tipos, idades, roupas, estágios e feridas |
 | `childTypeIds()` | os tipos em que uma criança pode virar |
 
+## O motor (`createUndead`)
+```ts
+import { createCharacters } from '@adatechnology/game-characters'
+import { createUndead, createUndeadPack } from '@adatechnology/game-characters-undead'
+
+const kit = createCharacters({ packs: [createUndeadPack()] })
+const undead = createUndead(kit, { speedPreset: 'team-game', infectionClock: 'accelerated' })
+const zombie = undead.create({ seed: 7 }, { type: 'runner' })      // altura em metros, vida, multiplicadores, proteção da roupa e velocidades em spec.traits.undead
+undead.speedFor(undead.traitsOf(zombie)!, { moment: 'chase' })       // m/s absolutos (idade já aplicada)
+const infection = undead.infect('bite', random)                    // caso com fases malaise, fever, delirium, dead, reanimated
+const turned = undead.turn(person)                                 // mesmo corpo, mesmo olhar, mesmo membro faltando; criança vira nos tipos do `childTypePool`
+```
+`createAnimalOutbreak({ species, enabled, timeScale })` é a regra de surto dos bichos (morde, incuba, vira ou morre, carcaça que atrai). Tudo é opção: `patch`, `remove`, `types`, `rules`, `speedOverrides`, `childTypePool`.
+
 ## Compõe com
-- `@adatechnology/game-characters`: o motor que lê estes números (T4.2b); os ids de proteção são os do `game-items`.
+- `@adatechnology/game-characters`: o motor que lê estes números; `createUndeadPack()` põe os tipos como presets do kit; os ids de proteção são os do `game-items`.
 - `game-infection`: o modelo de surto; aqui a linha do tempo é dado.
 
 ## Ambiente de teste
-O módulo do `characters-test-area` (T4.4a) mostra os 13 tipos em fila, a idade 0 a 3 e a infecção acelerada. Por enquanto, `tests/data.test.ts` confere
+O módulo do `characters-test-area` (`createCharactersTestModule`, no `game-characters-three`) mostra os 13 tipos em fila, a decomposição 0 a 3, a mordida até virar e a multidão. O módulo do `animals-test-area` usa `createAnimalOutbreak`. `tests/data.test.ts` confere
 os dados contra os goldens de sorteio (`game-spawn.json`: 650 sorteios).
 
 ## Cuidados
@@ -52,4 +66,4 @@ os dados contra os goldens de sorteio (`game-spawn.json`: 650 sorteios).
 - Os textos `en` foram escritos aqui (as fontes só têm pt-BR); `pt-BR` é cópia do catálogo e um teste confere.
 
 ## O que vem pela migração
-Bestiário (13 fichas), jogo `CATS`, `IDADES`, `ROUPAS`, `INFEC`, `FERIDA` e o Elenco `STAGES`. Falta (T4.2b): `assign`/`turn`/`fromAgent`, velocidade × momento, criança, infecção de ferida.
+Bestiário (13 fichas), jogo `CATS`, `IDADES`, `ROUPAS`, `INFEC`, `FERIDA` e o Elenco `STAGES`. O motor (`assign`/`turn`/`fromAgent`, velocidade × momento, criança, infecção de ferida) e a regra de surto dos animais estão neste pacote.

@@ -44,7 +44,7 @@ kit.gait('gallop')                               // fases das quatro patas, em r
 - `game-characters-undead` (T4.3c): a regra de surto lê `outbreak` e `outcome`; `game-infection`: tipos estruturais, sem import.
 
 ## Ambiente de teste
-O `animals-test-area` (T4.4b) mostra as 13 espécies, o estado visual e a marcha. Por enquanto, `tests/animals.test.ts` confere a conta do layout, as fases e o registro.
+O módulo do `animals-test-area` (`createAnimalsTestModule`, no `game-animals-three`) mostra as 13 espécies, o estado visual, a marcha, a regra de surto e 40 bichos em pele de nós. `tests/animals.test.ts` confere a conta do layout, as fases e o registro.
 
 ## Cuidados
 - Unidades: metros e radianos. As tabelas de fase estão em radianos (a página usa `Math.PI * 0.92` no galope).
@@ -53,4 +53,4 @@ O `animals-test-area` (T4.4b) mostra as 13 espécies, o estado visual e a marcha
 - O visual `dead` vale para as 13 espécies (a página só o usava nas que morrem).
 
 ## O que vem pela migração
-Bichos do Vale: `SPECIES`, `SPEC`, `GAIT`, `ORDER` (gerados por `tools/animals-catalog`) e a conta de pose de `quad`/`bird`. Falta (T4.3b): o desenho (`quad`, `bird`, `snake`) e a animação no `game-animals-three`.
+Bichos do Vale: `SPECIES`, `SPEC`, `GAIT`, `ORDER` (gerados por `tools/animals-catalog`) e a conta de pose de `quad`/`bird`. O desenho (`quad`, `bird`, `snake`) e a animação estão no `game-animals-three`.

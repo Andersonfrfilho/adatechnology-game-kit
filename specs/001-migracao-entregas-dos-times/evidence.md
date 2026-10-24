@@ -1505,3 +1505,47 @@ Tarefas T4.1d e T4.1e 🧠 do desenho `design/T4-personagens-e-animais.md` (§2,
 Commits (todos com o `Co-Authored-By` de Opus 5.5): `feat(characters)` esqueleto do game-characters (T4.1d); `feat(characters)` modelo de dano do corpo (T4.1e); `docs(spec-001)` esta evidência.
 
 Modelo da execução: `opus`.
+
+## T4.1h–T4.4d — Fase 4: construtores 3D, motor de zumbis, bichos e ambientes de teste
+
+Commits em `int/p4`: T4.1h `4ecce49`, T4.3b `68dfb3c`, T4.1i `048cf2a`, T4.2b `64d45c0`, T4.3c `28d3ca6`, correção de altura `3864ea4`, T4.4a `35ab596`, T4.4b `9d6c18b`, T4.4c `954ab3e`, T4.4d (este).
+
+### O que entrou
+
+- **T4.1h**: construtor rico do Bestiário v17 e pessoas (62 acessórios), porte literal.
+- **T4.3b**: Bichos do Vale em `game-animals-three` e `createNodeSkin` no `game-props3d`.
+- **T4.1i**: animador, ferimentos, olhos e ponte de fluidos.
+- **T4.2b**: motor de zumbis; **T4.3c**: regra de surto dos bichos.
+- **Correção**: `kit.ts` do `game-characters-undead` usava o fator de variância como metros; agora altura = corpo base vezes o fator (teste "size of a drawn zombie").
+- **T4.4a/b**: módulos de teste `createCharactersTestModule` (11 cenários) e `createAnimalsTestModule` (6 cenários), com `examples/characters-test-area` e `examples/animals-test-area`.
+- **T4.4c**: os dois módulos entram no `examples/interactables-test-area`; cenário `zombie_behind_door` (tiro atravessa porta do guarda-roupa, MDF e coxa do zumbi); catálogo, Dockerfile e miniaturas do site.
+- **T4.4d**: skills (`game-animals-three` novo; `game-animals`, `game-characters-three`, `game-characters-undead` atualizadas), changesets e este inventário.
+
+### Decisões e desvios
+
+1. O contrato de teste é só o genérico (`TestableModule`); os módulos vivem nos pacotes `-three`.
+2. O material `flesh` é registrado por `registerBodyMaterial(room.world)`; a sala não o conhece.
+3. Osso quebrado no cenário: 3 golpes de 20 pontos (um golpe de 60 pontos corta o membro).
+4. A geladeira não serve de camada no cenário da porta (o `world.shoot` segue no máximo 4 partes); usado o guarda-roupa.
+5. Orçamento de triângulos do nível longe (250) não é atingido (383 assado); o cenário `benchmark_1000` reporta, não falha.
+6. Corpos sem pai são removidos do ambiente de teste no quadro seguinte (sondas dos checks da sala).
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 em cada commit |
+| `pnpm -r typecheck` | exit 0 em cada commit |
+| Testes por pacote (`game-characters-three`, `game-characters-undead`, `game-animals-three`, `game-props3d`) | passaram |
+| Exemplos `characters-test-area`, `animals-test-area` | passaram |
+| `examples/interactables-test-area` (Chromium) | 14 de 14 |
+| `pnpm lint` | exit 0 |
+
+### Perguntas para o dono
+
+1. O orçamento de 250 triângulos do nível longe do corpo é meta ou só referência? Hoje o baked tem 383.
+2. `protection.ballistic` e o reexport de `BodySlot` no `game-items` seguem pendentes do merge da Fase 3.
+3. Os 62 acessórios de pessoa e o catálogo de profissões ficam no pacote `-three` ou migram para um pacote de conteúdo (`-people`)? Hoje o módulo de teste lê o conteúdo do host.
+
+Modelo da execução: `sonnet`.
+

@@ -523,6 +523,24 @@ Atualizado em 2026-10-24. O que do inventário acima já entrou, e onde. Ainda *
 | Pessoas nomeadas (44), grupos (18), relações, eventos, forças com 7º BIS, `life`/`simulate`, tabela de pontos, `ZONES`, NPCs do quarteirão (Cícero e Sandra) | Sim, como fatia do jogo (vai para o repositório zombiada) | `specs/001-migracao-entregas-dos-times/game-slice/characters/` (README), gerado por `--game-out` |
 | 13 espécies (corpo, passos, desfecho da mordida, surto, alcance do som), três andares | Sim | `packages/game-animals-species/src/data/species.json`, `packages/game-animals/src/data/gaits.json`, gerados por `tools/animals-catalog` |
 | Textos e lugares dos bichos, `ZONES`, `TER` | Sim, como fatia do jogo | `specs/001-migracao-entregas-dos-times/game-slice/animals/` |
-| Construtores 3D (BEST v17, Retratos, `buildBody`, `bodyChunk`, `bichoPele`, bichos) | **Não** (grupos C a E); o golden de cada um já está gravado | `packages/*/tests/fixtures/team-golden/` (lista em `evidence.md`, seção Fase 4, grupo A) |
+| Construtores 3D (BEST v17, Retratos, `buildBody`, `bodyChunk`, `bichoPele`, bichos) | **Sim** na Fase 4 (T4.1h, T4.1i, T4.3b); ver a seção de status abaixo | `packages/*/tests/fixtures/team-golden/` (lista em `evidence.md`, seção Fase 4, grupo A) |
 | Contratos do corpo (`BodySlot`, `SegmentKind`, `BodyRegion`, `MISSING_BITS`, `Hit.mass/cut/part`, evento `body`, `ObjectState.body`, `Shot.mass`) | Sim | `packages/game-contracts/src/body.ts`, `destruction.ts`, `weapons.ts`; `game-weapons` preenche `Shot.mass` |
 | `protection.ballistic` e o reexport de `BodySlot` no `game-items` | **Pendente** da Fase 3 (o `game-items` está em outra branch) | entram no merge da Fase 3 |
+
+
+## Status ao fim da Fase 4 (T4.4d)
+
+| Item | Entrou? | Onde |
+|---|---|---|
+| Construtor rico do Bestiário v17 (`createBestBuilder`) | Sim | `packages/game-characters-three/src/` |
+| Sobreviventes: `createPersonBuilder`, 62 acessórios, chapéus, rosto, mãos | Sim | `packages/game-characters-three/src/` |
+| Animador do esqueleto (andar, cascata, pose), ferimentos (corte, osso que balança, membro que voa, estouro), olhos, ponte de fluidos | Sim | `packages/game-characters-three/src/` |
+| Caminho instanciado da multidão (`buildInstancedBody`, `BODY_CHUNK`, `bakeVariants`) | Sim (T4.1g) | `packages/game-characters-three/src/` |
+| Motor de zumbis (`createUndead`, velocidades por momento, ganchos, infecção por ferida) | Sim | `packages/game-characters-undead/src/` |
+| Regra de surto dos bichos (`createAnimalOutbreak`) | Sim | `packages/game-characters-undead/src/` |
+| Bichos do Vale (`quad`, `bird`, `snake`, 13 espécies, vivo/infectado/morto, vista de juntas) | Sim | `packages/game-animals-three/` |
+| Pele de nós em GPU (`createNodeSkin`) | Sim | `packages/game-props3d/` |
+| Ambiente de teste de personagens (`?area=characters`) | Sim | `packages/game-characters-three/src/test-area/`, `examples/characters-test-area/` |
+| Ambiente de teste de animais (`?area=animals`) | Sim | `packages/game-animals-three/src/test-area/`, `examples/animals-test-area/` |
+| Cenário zumbi atrás da porta (móvel + corpo) | Sim | `examples/interactables-test-area/` |
+| `protection.ballistic` no `game-items` | Pendente da Fase 3 | merge da Fase 3 |
