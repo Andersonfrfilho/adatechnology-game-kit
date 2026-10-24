@@ -44,7 +44,17 @@ export type ExplosiveSources = {
   readonly game?: string
 }
 
+type Seconds = number | readonly [number, number]
+
+export type ExplosiveChainDecision = {
+  readonly shot?: Seconds
+  readonly fire?: Seconds
+  readonly explosion?: Seconds
+  readonly shotDamageFraction?: number
+}
+
 export type ExplosiveExtras = {
+  readonly chain?: ExplosiveChainDecision
   readonly fuse?: number
   readonly mass?: number
   readonly stunSeconds?: number
@@ -99,7 +109,7 @@ export type Decisions = {
   readonly magazine: Readonly<Record<string, Decision<{ magazine: number; tubes: number; chamber: number }>>>
   readonly siblingTimings: Readonly<Record<string, Decision<{ siblingOf: string }>>>
   readonly launchers: Readonly<Record<string, Decision<LauncherDecision>>>
-  readonly launcherCommon: Decision<{ minArmDistance: number; backblast: number; recoilBase: string; recoilKickBase: number }>
+  readonly launcherCommon: Decision<{ minArmDistance: number; backblast: number; backblastHalfAngleDeg: number; recoilBase: string; recoilKickBase: number }>
   readonly flamethrowers: Readonly<Record<string, Decision<{ reload: number; rangeFactor: number }>>>
   readonly m79: Decision<{
     id: string

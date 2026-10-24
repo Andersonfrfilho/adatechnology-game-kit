@@ -23,7 +23,7 @@ export interface WeaponStateInit {
   seed: number
   reserve?: number
   rules: WeaponRules
-  /** What a launcher shoots. */
+  /** What a launcher shoots, or the explosive a throwable carries. */
   explosive?: ExplosiveDef | null
   condition?: string
   ammoQuality?: string

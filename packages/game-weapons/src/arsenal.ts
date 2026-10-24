@@ -1,6 +1,7 @@
 import archetypesJson from './data/archetypes.json'
 import calibersJson from './data/calibers.json'
 import explosivesJson from './data/explosives.json'
+import explosiveWeaponsJson from './data/explosive-weapons.json'
 import firearmsJson from './data/firearms.json'
 import launchersJson from './data/launchers.json'
 import { checkArsenal, findDuplicateIds } from './check-arsenal'
@@ -9,6 +10,7 @@ import { deepMerge } from './merge'
 import { applyPatches, mergeById, removeIds, resolveThrowables } from './registry'
 import { DEFAULT_RULES } from './rules'
 import type { Arsenal, ArsenalOptions, CaliberDef, CaliberId, ExplosiveDef, WeaponCategory, WeaponDef, WeaponId, WeaponState } from './types'
+import { createExplosiveBody } from './explosive-body'
 import { muzzleEnergy, WeaponRuntime } from './weapon'
 
 export const CALIBERS = calibersJson as unknown as CaliberDef[]
@@ -16,7 +18,7 @@ export const EXPLOSIVES = explosivesJson as unknown as ExplosiveDef[]
 /** The generic weapons: handling numbers (spread, bloom, range, recoil) by type, which the real models point to through `archetype`. */
 const ARCHETYPES = archetypesJson as unknown as WeaponDef[]
 export const ARCHETYPE_IDS: readonly WeaponId[] = ARCHETYPES.map((def) => def.id)
-export const WEAPONS: WeaponDef[] = [...ARCHETYPES, ...(firearmsJson as unknown as WeaponDef[]), ...(launchersJson as unknown as WeaponDef[])]
+export const WEAPONS: WeaponDef[] = [...ARCHETYPES, ...(firearmsJson as unknown as WeaponDef[]), ...(launchersJson as unknown as WeaponDef[]), ...(explosiveWeaponsJson as unknown as WeaponDef[])]
 
 /** A reasonable starting kit for a test room or a sandbox. */
 export const DEFAULT_LOADOUT: WeaponId[] = [
@@ -25,6 +27,11 @@ export const DEFAULT_LOADOUT: WeaponId[] = [
 ]
 
 export { muzzleEnergy, checkArsenal }
+
+const explosiveOf = (def: WeaponDef, explosives: ReadonlyMap<string, ExplosiveDef>): ExplosiveDef | null => {
+  const id = def.action.kind === 'launcher' ? def.action.projectile : def.action.kind === 'throwable' ? def.action.explosive : undefined
+  return id === undefined ? null : explosives.get(id) ?? null
+}
 
 const energyOf = (def: WeaponDef, calibers: ReadonlyMap<CaliberId, CaliberDef>, explosives: ReadonlyMap<string, ExplosiveDef>): number => {
   const action = def.action
@@ -73,7 +80,7 @@ export const createArsenal = (options: ArsenalOptions = {}): Arsenal => {
     const caliber = def.action.kind === 'firearm' ? calibers.get(def.action.caliber) ?? null : null
     counter += 1
     const seed = opts.seed ?? (baseSeed + Math.imul(counter, 0x9e3779b1)) >>> 0
-    const explosive = def.action.kind === 'launcher' ? explosives.get(def.action.projectile) ?? null : null
+    const explosive = explosiveOf(def, explosives)
     return new WeaponRuntime({ def, caliber, seed, reserve: opts.reserve, rules, explosive, condition: opts.condition, ammoQuality: opts.ammoQuality })
   }
 
@@ -87,6 +94,9 @@ export const createArsenal = (options: ArsenalOptions = {}): Arsenal => {
       const c = calibers.get(caliber)
       if (!c) throw new Error(`game-weapons: unknown calibre "${caliber}"`)
       return muzzleEnergy(c, barrel)
+    },
+    explosiveBody(use) {
+      return createExplosiveBody(use, explosives, rules.explosives)
     },
     energy(id) {
       const def = weapons.get(id)

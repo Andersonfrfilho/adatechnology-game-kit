@@ -17,6 +17,7 @@
       "speed": 117,
       "minArmDistance": 10,
       "backblast": 5,
+      "backblastHalfAngleDeg": 19,
       "recoil": [
         4,
         1
@@ -55,6 +56,7 @@
       "speed": 145,
       "minArmDistance": 10,
       "backblast": 5,
+      "backblastHalfAngleDeg": 19,
       "recoil": [
         2.75,
         0.69
@@ -92,6 +94,7 @@
       "speed": 285,
       "minArmDistance": 10,
       "backblast": 5,
+      "backblastHalfAngleDeg": 19,
       "recoil": [
         3.25,
         0.81
@@ -128,6 +131,7 @@
       "speed": 255,
       "minArmDistance": 10,
       "backblast": 5,
+      "backblastHalfAngleDeg": 19,
       "recoil": [
         3.5,
         0.87

@@ -83,8 +83,8 @@ entries by id, and `checkArsenal` reports every inconsistency at once.
 .50 BMG ~18 kJ, 00 buck ~300 J per pellet. Each calibre also carries the audible distance of its shot (`noise`: 150 / 300 / 420 / 600 m), the case type
 that sets the heat per round, and the cartridge measures.
 
-`WEAPONS` is the union of three files: `firearms.json` (73 real models, from the Galeria and the Arsenal), `launchers.json` (4 rocket launchers and 2
-flamethrowers) and `archetypes.json` (the 42 generic weapons below). Every real model has its `maker`, `dimensions` (length, barrel, empty mass), `family`
+`WEAPONS` is the union of four files: `firearms.json` (73 real models, from the Galeria and the Arsenal), `launchers.json` (4 rocket launchers and 2
+flamethrowers), `explosive-weapons.json` (flashbang, dynamite, C4 and the Claymore, kept by hand: they point to `frag_grenade` for the throw) and `archetypes.json` (the 42 generic weapons below). Every real model has its `maker`, `dimensions` (length, barrel, empty mass), `family`
 (how it reloads), `timings` (draw, reload, empty reload, per round, cycle, clear), `muzzleSpeed`, `faultFactor` and an `archetype`. `EXPLOSIVES` has 17
 entries with lethal and injury radius, energy, noise and fuse.
 
@@ -99,6 +99,16 @@ The generic archetypes:
 | Tools | `screwdriver`, `wrench`, `pry_bar`, `hacksaw`, `utility_knife`, `claw_hammer`, `extinguisher`, `hand` |
 
 `DEFAULT_LOADOUT` lists a starter kit of 19 ids. Pass `calibers` / `weapons` / `explosives` to `createArsenal` to add or override entries by id.
+
+## Explosives, launchers and flamethrowers
+
+A trigger pull on a launcher returns a `throw` use (the rocket: `explosive`, `trigger: 'impact'`, `armDistance`, speed in `velocity`) and, when the launcher has one, a
+`backblast` use (5 m, cone of 19°, pointing away from the target). A throwable returns a `throw` use (fuse from the explosive: M67 4 s, pipe bomb 3 s; fuse 0 means it
+goes off on the first hit, like the molotov, which leaves fire of 4 m for 9 s) or, for the Claymore and C4, a `place` use that waits for `wire` or `remote`.
+`arsenal.explosiveBody(use)` makes the flying (or waiting) body: `step(dt, probe)` applies gravity and bounces (`rules.explosives`), counts the fuse, arms by distance and
+returns `armed`, `impact`, `dud` and `detonate` events; `trigger('wire' | 'remote' | ...)` sets off what waits. `blastEffect(detonation, point)` says if a point is in
+the lethal or the injury zone (with the cone of a directional charge and the stun of a flashbang) and `backblastEffect(use, point)` the danger behind a tube.
+The world explosives (`propane_p13`, `fuel_barrel`, `car_fuel_tank`, `fuel_pump`, `fuel_station_tank`) carry `chain`, the delays of the chain reaction `game-destruction` uses.
 
 ## API
 

@@ -25,7 +25,7 @@ const dimensionsOf = (row: GalleryWeaponRow): Record<string, number> => ({ lengt
 export const buildRocketLauncher = (row: GalleryWeaponRow, context: WeaponContext): WeaponRecord => {
   const decision = context.decisions.launchers[row[0]]?.value
   if (!decision) throw new Error(`weapons-catalog: no launcher decision for "${row[0]}"`)
-  const { minArmDistance, backblast, recoilBase } = context.decisions.launcherCommon.value
+  const { minArmDistance, backblast, backblastHalfAngleDeg, recoilBase } = context.decisions.launcherCommon.value
   return {
     id: idOf(row, context),
     name: nameOf(row, context),
@@ -41,6 +41,7 @@ export const buildRocketLauncher = (row: GalleryWeaponRow, context: WeaponContex
       speed: decision.speed,
       minArmDistance,
       backblast,
+      backblastHalfAngleDeg,
       recoil: recoilFrom(recoilBase, decision.kick, context),
     },
     mass: row[6],

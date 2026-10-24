@@ -36,6 +36,8 @@ export const DEFAULT_RULES: WeaponRules = {
   faultChance: defaultFaultChance,
   heat: DEFAULT_HEAT,
   noiseBurst: { step: 0.05, window: 3, cap: 0.5 },
+  // jogo.js (Jogo) explosionsUpdate 68300-68312: vy -= 9,8·dt; chão vy·-0,35 e vx,vz·0,6; parede v·-0,4
+  explosives: { gravity: 9.8, groundRestitution: 0.35, groundFriction: 0.6, wallRestitution: 0.4 },
   draw: 0.35,
   clear: 1.2,
   startSafe: false,

@@ -44,12 +44,30 @@ Panes: `result.fault` (ou `status` `fault`/`misfire`); `weapon.clearFault()` des
 | `createArsenal(options?)` | `Arsenal`: `create(id, { seed?, reserve?, condition?, ammoQuality? })`, `muzzleEnergy`, `energy`, `name`, `list(category?)`, mapas `calibers`, `weapons`, `explosives`, `rules`; opções `weapons`, `calibers`, `explosives`, `patch`, `remove`, `include`, `rules`, `strings` |
 | `WeaponState` | `ammo`, `capacity`, `reserve`, `mode`, `reloading`, `locked`, `phase`, `fault`, `safety`, `heat`, `heatLevel`, `spread`, `trigger`, `release`, `draw`, `reload(kind?)`, `cycleMode`, `setSafety`, `clearFault`, `setCondition`, `setAmmoQuality`, `update`, `refill`, `drain` |
 | `Shot` | `origin`, `direction`, `energy` (J), `caliber` (mm), `caliberId`, `speed`, `energyAt(distância)`, `pellet`, `weapon`, `source` |
-| `Use` | `melee`, `flame`, `heat`, `throw`, `tool`, `extinguish`, `hand` |
+| `Use` | `melee`, `flame`, `heat`, `throw` (com `explosive`, `trigger`, `armDistance`), `place` (mina, C4), `backblast`, `tool`, `extinguish`, `hand` |
+| `arsenal.explosiveBody(use)` | `ExplosiveBody` de um `throw`/`place`: `step(dt, probe?)` voa com gravidade, quica, conta a espoleta e devolve eventos `armed`, `impact`, `dud`, `detonate`; `trigger('wire'\|'remote'\|…)` dispara a carga posta |
+| `blastEffect(detonation, ponto)`, `backblastEffect(use, ponto)` | zona (`lethal`, `injury`, `none`), queda de 1 a 0 e atordoamento; cone da Claymore; perigo atrás do lançador |
 | `TriggerResult` | `shots`, `uses`, `status` (`ok`, `empty`, `reloading`, `cooldown`, `no_fuel`, `safe`, `drawing`, `fault`, `misfire`, `clearing`), `recoil`, `noise`, `rounds`, `roundTimes`, `fault?` |
 | `CALIBERS`, `WEAPONS`, `EXPLOSIVES`, `ARCHETYPE_IDS`, `DEFAULT_LOADOUT` | dados embutidos (28 calibres, 79 armas reais + 42 arquétipos, 17 explosivos, kit inicial) |
 | `DEFAULT_RULES`, `RELOAD_STAGES`, `checkArsenal` | números das regras (panes, calor, ruído, tempos), ordem das etapas de recarga e verificação de consistência |
 | `muzzleEnergy(calibre, cano?)` | energia de um projétil (ou de um chumbo) |
 | `resolveStrings`, `locales` | nomes em `en` e `pt-BR` |
+
+## Explosivos e lançadores (T1.5)
+```ts
+const result = launcher.trigger(pos, dir, dt)            // rpg_7, at4, m72_law, carl_gustaf_m4, m79
+const [projectile, backblast] = result.uses              // throw (explosive, trigger 'impact', armDistance 10 m) + backblast (5 m, cone de 19°)
+const body = arsenal.explosiveBody(projectile)
+for (const event of body.step(dt, (from, to) => raycast(from, to))) {   // probe: { point, normal, ground? } ou null
+  if (event.type === 'detonate') for (const target of targets) apply(blastEffect(event.detonation, target.position))
+}
+mine.trigger(pos, dir, 0)                                // claymore/c4: use `place`; body.trigger('wire') / body.trigger('remote')
+```
+- Foguete é projétil físico (velocidade do lançador, gravidade 9,8, jogo.js 68303); abaixo de `armDistance` (10 m) bate sem explodir (`dud`).
+- Granada: espoleta conta do arremesso (M67 4 s); molotov explode no primeiro choque e deixa fogo de 4 m por 9 s; flashbang atordoa 4 s até 10 m; Claymore só atinge o cone de 60° (letal 15 m, ferimento 50 m); C4 só responde ao detonador (`remote`).
+- Quique do jogo (`rules.explosives`): chão devolve 35% da queda e 60% do que anda; parede 40%.
+- Cada explosivo do mundo (`propane_p13`, `fuel_barrel`, `car_fuel_tank`, `fuel_pump`, `fuel_station_tank`) traz `chain` (tempos entre tiro, fogo ou explosão vizinha e a explosão); `game-destruction` usa em `explosivePart`.
+- Lança-chamas: `flame` com `range` (M2 6 m, caseiro 3,6 m), `fuelPerSecond` e combustível em segundos (M2 9 s, caseiro 5 s); o último tick é cortado ao que sobra.
 
 ## Compõe com
 - `@adatechnology/game-contracts`: dono dos tipos `Shot`, `Use` e `Vec3` (reexportados aqui).
@@ -67,7 +85,7 @@ Os testes do pacote estão em `packages/game-weapons/tests/` (`weapons`, `rules`
 - Espingarda gera **um `Shot` por chumbo** (`12ga_00buck` 9, `12ga_birdshot` 90); a energia é por chumbo.
 - O sorteio vem da semente: mesma semente, mesmos tiros em qualquer máquina. Cada portador cria o seu `WeaponState`.
 - `create` com id desconhecido lança erro. Locale desconhecido cai em `en`; rótulos de calibre não são traduzidos.
-- `flame`/`heat` gastam `fuelPerSecond × dt`; `throwable` arremessa uma vez por puxada, com leve arco para cima.
+- `flame`/`heat` gastam `fuelPerSecond × dt`; `throwable` arremessa uma vez por puxada, com leve arco para cima. Molotov, M67 e companhia seguem o `ExplosiveDef` (espoleta, fogo, energia): trocar o explosivo troca o arremessável.
 - O alcance (`range`) não corta o tiro: a energia só decai (`energyAt`); quem corta é o host.
 - Panes vêm ligadas por padrão (condição `new`, 0,3% por cartucho); sala de teste e jogo que não tratam `fault` passam `rules: { faults: false }`. O sorteio da pane usa outra sequência (`seed ^ 0x6a09e667`): a dispersão de uma semente não muda.
 - Arco e besta não têm estojo: não esquentam e nunca engasgam. O cartucho na câmara (`chamber`) é só dado; `capacity` é o carregador.
@@ -77,6 +95,6 @@ Os testes do pacote estão em `packages/game-weapons/tests/` (`weapons`, `rules`
 Já entrou (T1.1): a lista é a **união das fontes** (A1) com marcas e modelos reais (G5): 79 armas reais, 6 lançadores, 17 explosivos; 28 calibres (9×18, 5,7×28, .44 Mag,
 .50 AE, 5,45×39, .30-30, 7,62×54R, .30-06, .300 WM, .408; .50 BMG em 12,7 mm, A6); tempos do Arsenal (A5), fases com tempo e eventos (saque, ciclo, recarga tática, vazia e
 um a um, pane, desobstruir), calor do cano, ruído do Arsenal 150 / 300 / 420 / 600 m (A3) e dois raios de explosão (E3). Falta:
-- Modelos 3D, animação por família e a área com todas as armas (T1.2 a T1.4); lançadores e explosivos completos (T1.5): hoje o lançador só gera um `Use` de arremesso.
+- Modelos 3D, animação por família e a área com todas as armas (T1.2 a T1.4). Entrou na T1.5: lançador completo, arremessáveis, cargas postas, lança-chamas e a cadeia dos explosivos do mundo.
 - Tecla de desobstruir e de trava na sala de teste (T1.3); até lá a sala usa `rules: { faults: false }`.
 - Força de penetração por calibre, para o dano em corpos (P7). O jogo passa a atirar por este pacote (A12).

@@ -64,6 +64,7 @@ const buildOne = (id: string, decision: ExplosiveDecision, inputs: ExplosiveInpu
   const fire = fireOf(decision, inputs)
   if (fire) record.fire = fire
   record.triggers = decision.triggers.value
+  if (extras?.chain) record.chain = extras.chain
   if (extras?.mass !== undefined) record.mass = extras.mass
   const origins = [arsenal ? 'arsenal' : undefined, 'lab', names.game ? 'game' : undefined, names.gallery ? 'gallery' : undefined, world || decision.copyOf ? 'derived' : undefined]
   record.sources = origins.filter((origin) => origin !== undefined)

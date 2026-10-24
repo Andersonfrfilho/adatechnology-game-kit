@@ -1343,18 +1343,27 @@
       "triggers": {
         "value": [
           "shot",
-          "fire"
+          "fire",
+          "explosion"
         ],
         "source": "derived",
-        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório. Acrescenta \"explosion\" (A11: explosão dentro do raio dispara a cadeia; Arsenal §13 \"regra de reação em cadeia\")."
       },
       "extras": {
         "value": {
           "fireTemperature": 700,
-          "fireFrom": "game"
+          "fireFrom": "game",
+          "chain": {
+            "shot": 1.4,
+            "fire": 1.4,
+            "explosion": [
+              0.25,
+              0.6
+            ]
+          }
         },
         "source": "game",
-        "reason": "Fogo residual de fogoRes do jogo (1,4 m, 7 s); temperatura do molotov do SDK."
+        "reason": "Fogo residual de fogoRes do jogo (1,4 m, 7 s); temperatura do molotov do SDK. Reação em cadeia: jogo.js (artefatos/2UG1Mhe9LqJkQKKVsJkTWR) exploDamage 68173-68180: tiro faz vazar e explode em 1,4 s; explosão por perto explode em 0,25 a 0,6 s (0,25 + R·0,35). O atraso do fogo (1,4 s) é derivado do vazamento: o jogo não trata fogo, o Arsenal §13 diz \"explode com tiro ou fogo\"."
       }
     },
     "dynamite": {
@@ -1383,6 +1392,13 @@
         ],
         "source": "derived",
         "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+      },
+      "extras": {
+        "value": {
+          "fuse": 4
+        },
+        "source": "derived",
+        "reason": "Q7: a Galeria diz \"feixe de 3 bananas com pavio\" e o Laboratório não dá tempo (só a cena de demonstração); sem número nas fontes, usa a espoleta da M67 (4 s, Arsenal §13) até o dono decidir."
       }
     },
     "c4": {
@@ -1489,10 +1505,11 @@
       },
       "extras": {
         "value": {
-          "stunSeconds": 4
+          "stunSeconds": 4,
+          "fuse": 4
         },
         "source": "arsenal",
-        "reason": "Atordoa por 4 s (Arsenal §13)."
+        "reason": "Atordoa por 4 s (Arsenal §13). Q7: espoleta sem número nas fontes (o Laboratório usa 2,1 s só na demonstração); usa a da M67 (4 s) até o dono decidir."
       }
     },
     "m79_40mm": {
@@ -1669,10 +1686,11 @@
       "triggers": {
         "value": [
           "shot",
-          "fire"
+          "fire",
+          "explosion"
         ],
         "source": "derived",
-        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório. Acrescenta \"explosion\" (A11: explosão dentro do raio dispara a cadeia; Arsenal §13 \"regra de reação em cadeia\")."
       },
       "world": {
         "value": {
@@ -1685,10 +1703,18 @@
       "extras": {
         "value": {
           "fireTemperature": 700,
-          "fireFrom": "game"
+          "fireFrom": "game",
+          "chain": {
+            "shot": 1.2,
+            "fire": 1.2,
+            "explosion": [
+              0.2,
+              0.4
+            ]
+          }
         },
         "source": "game",
-        "reason": "Fogo residual de fogoRes do jogo (2 m, 12 s); temperatura do molotov do SDK."
+        "reason": "Fogo residual de fogoRes do jogo (2 m, 12 s); temperatura do molotov do SDK. Reação em cadeia: jogo.js (artefatos/2UG1Mhe9LqJkQKKVsJkTWR) exploDamage: tiro vaza e explode em 1,2 s (o Laboratório SC.barril também, t>1,2); explosão por perto em 0,2 a 0,4 s (0,2 + R·0,2). Fogo = vazamento (derivado)."
       }
     },
     "car_fuel_tank": {
@@ -1713,10 +1739,11 @@
       "triggers": {
         "value": [
           "shot",
-          "fire"
+          "fire",
+          "explosion"
         ],
         "source": "derived",
-        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório. Acrescenta \"explosion\" (A11: explosão dentro do raio dispara a cadeia; Arsenal §13 \"regra de reação em cadeia\")."
       },
       "world": {
         "value": {
@@ -1729,10 +1756,22 @@
       "extras": {
         "value": {
           "fireTemperature": 700,
-          "fireFrom": "game"
+          "fireFrom": "game",
+          "chain": {
+            "shot": [
+              3,
+              8
+            ],
+            "fire": [
+              3,
+              8
+            ],
+            "explosion": 0.6,
+            "shotDamageFraction": 0.5
+          }
         },
         "source": "game",
-        "reason": "Fogo residual de fogoRes do jogo (2,2 m, 30 s); temperatura do molotov do SDK."
+        "reason": "Fogo residual de fogoRes do jogo (2,2 m, 30 s); temperatura do molotov do SDK. Reação em cadeia: jogo.js (artefatos/2UG1Mhe9LqJkQKKVsJkTWR) exploDamage: carro com hp abaixo de 300 de 600 (metade do dano, `shotDamageFraction` 0,5) pega fogo e explode em 3 + R·5 s (3 a 8 s; Laboratório SC.carro usa 3 s); explosão forte (dano acima de 400) em 0,6 s. A faixa de explosão média (dano 200 a 400, 3 a 8 s) não foi portada: toda explosão no raio usa 0,6 s."
       }
     },
     "fuel_pump": {
@@ -1756,10 +1795,11 @@
       "triggers": {
         "value": [
           "shot",
-          "fire"
+          "fire",
+          "explosion"
         ],
         "source": "derived",
-        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório. Acrescenta \"explosion\" (A11: explosão dentro do raio dispara a cadeia; Arsenal §13 \"regra de reação em cadeia\")."
       },
       "world": {
         "value": {
@@ -1772,10 +1812,15 @@
       "extras": {
         "value": {
           "fireTemperature": 700,
-          "fireFrom": "lab"
+          "fireFrom": "lab",
+          "chain": {
+            "shot": 1.0,
+            "fire": 1.0,
+            "explosion": 0.4
+          }
         },
         "source": "lab",
-        "reason": "Fogo residual do Laboratório (1,1 m, 14 s); temperatura do molotov do SDK."
+        "reason": "Fogo residual do Laboratório (1,1 m, 14 s); temperatura do molotov do SDK. Reação em cadeia: Laboratório SC.posto (sources/efeitos__laboratorio-explosoes.js 968-995): tiro na bomba 1 explode em 1,0 s; a bomba vizinha 0,4 s depois (cadeia 0,4 s); a terceira 0,4 s depois do carro. Fogo = vazamento (derivado)."
       }
     },
     "fuel_station_tank": {
@@ -1798,11 +1843,11 @@
       },
       "triggers": {
         "value": [
-          "shot",
-          "fire"
+          "fire",
+          "explosion"
         ],
         "source": "derived",
-        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório."
+        "reason": "Como dispara, a partir da descrição do Arsenal §13 e do Laboratório. Acrescenta \"explosion\" (A11: explosão dentro do raio dispara a cadeia; Arsenal §13 \"regra de reação em cadeia\")."
       },
       "world": {
         "value": {
@@ -1815,10 +1860,14 @@
       "extras": {
         "value": {
           "fireTemperature": 700,
-          "fireFrom": "lab"
+          "fireFrom": "lab",
+          "chain": {
+            "fire": 2.0,
+            "explosion": 2.0
+          }
         },
         "source": "lab",
-        "reason": "Fogo residual do Laboratório (3,2 m, 20 s); temperatura do molotov do SDK."
+        "reason": "Fogo residual do Laboratório (3,2 m, 20 s); temperatura do molotov do SDK. Reação em cadeia: Laboratório SC.posto: o tanque subterrâneo sobe 2,0 s depois da última bomba (2,3 s para 4,3 s). Enterrado, não leva tiro (sem \"shot\")."
       }
     }
   },
@@ -2180,10 +2229,11 @@
       "minArmDistance": 10,
       "backblast": 5,
       "recoilBase": "shotgun_pump_12",
-      "recoilKickBase": 1.6
+      "recoilKickBase": 1.6,
+      "backblastHalfAngleDeg": 19
     },
     "source": "arsenal",
-    "reason": "Arsenal §13: distância mínima de armar 10 m e sopro atrás do lançador a 5 m. Coice = o da escopeta de bomba × (kick da Galeria / 1,6, o kick da escopeta)."
+    "reason": "Arsenal §13: distância mínima de armar 10 m e sopro atrás do lançador a 5 m. Coice = o da escopeta de bomba × (kick da Galeria / 1,6, o kick da escopeta). Cone do sopro: meio ângulo de 19° (atan 0,35), o desvio lateral do `backblast()` do Laboratório (sources/efeitos__laboratorio-explosoes.js 785-788: direção oposta ±0,35); o Arsenal só dá o raio."
   },
   "flamethrowers": {
     "Lança-chamas M2": {

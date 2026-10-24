@@ -1,3 +1,4 @@
+import { launcherUses, throwableUse } from './explosive-use'
 import { heatPerRound } from './heat'
 import { isReloadable } from './reload'
 import { normalize } from './rng'
@@ -7,9 +8,6 @@ import { EPS, result } from './weapon-shared'
 
 export { BLOOM_CAP, muzzleEnergy } from './weapon-shared'
 export type { WeaponStateInit } from './weapon-shared'
-
-/** Fraction of the throw speed added upwards so a throw arcs. */
-const THROW_LIFT = 0.15
 
 /** Runtime of one weapon. See `WeaponState` for the contract. */
 export class WeaponRuntime extends WeaponFirearm implements WeaponState {
@@ -84,10 +82,8 @@ export class WeaponRuntime extends WeaponFirearm implements WeaponState {
     const t = Math.max(start, this.readyAt)
     this._ammo -= 1
     this._heat = Math.min(this.rules.heat.cap, this._heat + heatPerRound(a, null, this.rules.heat))
-    const velocity: Vec3 = [dir[0] * a.speed, dir[1] * a.speed, dir[2] * a.speed]
-    const use: Use = { kind: 'throw', energy: this.explosive?.energy ?? 0, radius: this.explosive?.lethalRadius ?? 0, fuse: 0, velocity, origin }
     this.emit({ type: 'shot', shots: 0, rounds: 1, mode: this.mode, at: t })
-    return result('ok', { uses: [use], recoil: [a.recoil[0], a.recoil[1]], noise: a.noise ?? 0, rounds: 1, roundTimes: [t - start] })
+    return result('ok', { uses: launcherUses(a, this.explosive, origin, dir), recoil: [a.recoil[0], a.recoil[1]], noise: a.noise ?? 0, rounds: 1, roundTimes: [t - start] })
   }
 
   protected fireMelee(a: Extract<WeaponAction, { kind: 'melee' }>, origin: Vec3, dir: Vec3, start: number, end: number): TriggerResult {
@@ -128,9 +124,6 @@ export class WeaponRuntime extends WeaponFirearm implements WeaponState {
     if (!this.oncePerPull(held)) return result('cooldown')
     if (this._ammo <= 0) return result('empty')
     this._ammo -= 1
-    const velocity: Vec3 = [dir[0] * a.throwSpeed, dir[1] * a.throwSpeed + a.throwSpeed * THROW_LIFT, dir[2] * a.throwSpeed]
-    const use: Use = { kind: 'throw', energy: a.energy, radius: a.radius, fuse: a.fuse, velocity, origin }
-    if (a.fire) use.fire = { ...a.fire }
-    return result('ok', { uses: [use], noise: a.noise })
+    return result('ok', { uses: [throwableUse(a, this.explosive, origin, dir)], noise: a.noise })
   }
 }
