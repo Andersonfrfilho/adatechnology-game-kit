@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
-  "description": "Furniture and interactive objects area for the shared destruction test room: a TestableModule with one destructible item per household type, animations, fluids and scenarios. The page also carries the weapons module (with accessories) to shoot, burn and blow the furniture up with real weapons, and the items module: the containers of the furniture (fridge, cabinets, wardrobe) hold real items from the goods catalog at their real size. It also carries the characters and animals modules: a 7.62 shot crosses a wardrobe door and then the zombie behind it. And the houses area: any typology of the residential, commercial, rural and post-apocalyptic packages, built in the same room. And the player area: the room's camera is the game-player body. And the crowd area: a horde of the undead pack on the instanced path that hunts the game-player body, with civilians, the herd and a game-infection region.",
+  "description": "Furniture and interactive objects area for the shared destruction test room: a TestableModule with one destructible item per household type, animations, fluids and scenarios. The page also carries the weapons module (with accessories) to shoot, burn and blow the furniture up with real weapons, and the items module: the containers of the furniture (fridge, cabinets, wardrobe) hold real items from the goods catalog at their real size. It also carries the characters and animals modules: a 7.62 shot crosses a wardrobe door and then the zombie behind it. And the houses area: any typology of the residential, commercial, rural and post-apocalyptic packages, built in the same room. And the player area: the room's camera is the game-player body. And the crowd area: a horde of the undead pack on the instanced path that hunts the game-player body, with civilians, the herd and a game-infection region. And the stories area: a world of stories (casting, beats, the life simulation) with one character sheet on the room's panel.",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
@@ -35,6 +35,7 @@
     "@adatechnology/game-items-three": "workspace:*",
     "@adatechnology/game-player": "workspace:*",
     "@adatechnology/game-props3d": "workspace:*",
+    "@adatechnology/game-stories": "workspace:*",
     "@adatechnology/game-vfx": "workspace:*",
     "@adatechnology/game-vfx-three": "workspace:*",
     "@adatechnology/game-weapons": "workspace:*",

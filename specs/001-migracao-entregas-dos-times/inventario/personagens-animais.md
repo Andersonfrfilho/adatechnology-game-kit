@@ -166,6 +166,10 @@ Dados de ficha, sem 3D: `ATTRS` (6: Força, Vigor, Agilidade, Percepção, Intel
 o que oferece), `derived()` (178: vida 70+6·VIG, fôlego 40+6·VIG+4·AGI, carga 8+2,5·FOR, corrida 5,2+0,12·AGI, raio 12+2·PER, ruído 100−4·AGI, XP 70+6·INT, compostura 20+3·VIG+4·PRE,
 dano corpo a corpo (FOR−5)·6%), `pool()` e a tela do criador. O texto também fixa a "regra do corredor" (jogador com corrida ≥ 6,0 m/s é mais rápido que o Corredor).
 
+✅ **T8.2**: `ATTRS`, `SKILLS`, `PROFS`, `TRAITS`, `derived()` e os nomes em `game-characters-people` (`SHEET_RULESET`, `NAME_POOLS`, conferidos literalmente por
+`tools/characters-catalog/tests/sheet-sources.test.ts`); `pool()`, a ficha, memória e opinião em `game-stories` (`createSheet`, `drawSheet`), golden de 48 fichas em
+`game-stories-life.json`. Os 8 `NPCS` são conteúdo do jogo (`game-slice/stories/cast.json`, pela versão de Os Vivos do Vale). A tela do criador fica na bancada `stories_area`.
+
 ### 1.4 Retratos do Vale (`retratos.js`, 726 linhas)
 
 - `build(sp, idx)` (64-308): **o mesmo corpo do Elenco**, com acréscimos: cabelo `pony`, rosto `mirror` e `labgoggles` e `beard` simples, chapéu `helmet` (com `tape`, `photo`, `nvg`), e uns 35 acessórios novos
@@ -198,6 +202,11 @@ Tudo é dado e regra de simulação (nenhum 3D):
 - **Vida sorteada** (605-757): `REG`, `EXPO`, `NM` (nomes), `RELW`, `HOSTB`, `CAP`=104, `ROOM`=8, `COUPLES`, `world()` (619), `life(d,S,F,R,W,log)` (623-739: nascimentos, chegadas, laços, brigas, traições,
   caravanas, ataques, gravidez), `apply` (740), `simulate(day, A, O)` (744), com PRNG semeado (`rng`, 606).
 - Texto (linha 2): 31 sobreviventes nomeados, 12 grupos (mais 6 depois), 40 genéricos por servidor, 9 estados, "o mundo segue sem o jogador". Números são proposta para playtest.
+
+✅ **T8.2**: `life()`, `world()`, `apply`, `simulate()` e o motor de `EV` em `game-stories` (`createLifeWorld`, `lifeDay`, `fillWorld`, `createStoryWorld`, `runBeat`,
+`applyChanges`), números em `src/data/life.json` com a linha de origem e textos em `src/data/life-text.json`, golden `game-stories-life.json` (7 vidas inteiras, 40 por hash,
+96 conjuntos de `ACTS`). O conteúdo do vale (`GROUPS`, `NPCS`, `EXTRA`, `RELS`, `ACTS`, `EV` como 13 histórias, `REG`, `EXPO`, `HOSTB`, `COUPLES`) vai para o jogo em
+`game-slice/stories/`; Cícero e Sandra como papéis (`roles.json`, P9). Fardados (`FACT`, `RANKS`, `LOOT`, `GENT`) e `JOIN` não entraram no T8.2.
 
 ### 1.6 Bichos do Vale (`bichos.js`, 521 linhas)
 
@@ -356,12 +365,12 @@ Critério de "melhor": serve a um `game-characters` único, reutilizável por jo
 
 | Assunto | Versão (onde) | O que tem | Melhor | Por quê | Ação |
 |---|---|---|---|---|---|
-| História, rotina, segredo | Personagens `NPCS` (8), Vivos `NPCS` (44, textos dos 8 idênticos), jogo `NPCS` (cópia de Vivos) | | **Vivos** | superset, com laços e eventos | Conteúdo |
+| História, rotina, segredo | Personagens `NPCS` (8), Vivos `NPCS` (44, textos dos 8 idênticos), jogo `NPCS` (cópia de Vivos) | | **Vivos** | superset, com laços e eventos | Conteúdo<br>✅ **T8.2**: `game-slice/stories/cast.json` |
 | Visual | Elenco `NPCS` (8), Retratos `PEOPLE` (44) | | **Retratos** | superset, com `zcat`, criança, item marcado | Conteúdo |
 | Rotina em execução | jogo `NPC` (4 pessoas, `rotina [hora, lugar]`, `npcUpdate`) | | **jogo** (comportamento) | roda no mundo | Motor genérico de rotina em conteúdo/IA |
-| Cícero e Sandra | só no jogo (`livre:74271`) | NPCs do quarteirão que **não existem** em `vivos.js` nem em `retratos.js` | **sem equivalente** | conteúdo novo do jogo | Dúvida 5.9 |
+| Cícero e Sandra | só no jogo (`livre:74271`) | NPCs do quarteirão que **não existem** em `vivos.js` nem em `retratos.js` | **sem equivalente** | conteúdo novo do jogo | Dúvida 5.9<br>✅ **T8.2**: papéis com nome sorteado (P9) em `game-slice/stories/roles.json` |
 | Fardados | Vivos (`FACT`, `RANKS`, `LOOT`, `GENT`), Retratos (camuflado xadrez, colete, placa), Arsenal | | **Vivos** (regras) + **Retratos** (visual) | | Conteúdo |
-| Simulador do destino | Vivos `life`/`simulate`, jogo (cópia) | | **iguais** | | Conteúdo de jogo |
+| Simulador do destino | Vivos `life`/`simulate`, jogo (cópia) | | **iguais** | | Conteúdo de jogo<br>✅ **T8.2**: motor em `game-stories`, conteúdo em `game-slice/stories/` |
 
 ### 2.8 Animais
 

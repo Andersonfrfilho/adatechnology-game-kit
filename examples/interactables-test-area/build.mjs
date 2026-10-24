@@ -26,7 +26,9 @@ const esbuild = createRequire(import.meta.url)(findEsbuild())
   const houses = ['game-destruction', 'game-floorplan', 'game-floorplan-commercial', 'game-floorplan-post-apocalyptic', 'game-floorplan-residential', 'game-floorplan-rural', 'game-floorplan-structure', 'game-floorplan-three']
   // the crowd: the horde, its drawing on the baked variants and the region model it comes from
   const crowd = ['game-crowd', 'game-crowd-three', 'game-infection']
-  for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-vfx', 'game-vfx-three', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', 'game-audio', 'game-weather', 'game-player', ...people, ...houses, ...crowd]) {
+  // the stories: casting, beats, the life simulation and the character sheet (no 3D)
+  const stories = ['game-stories']
+  for (const p of ['game-interactables', 'game-interactables-household', 'game-interactables-three', 'game-props3d', 'game-vfx', 'game-vfx-three', 'game-weapons', 'game-weapons-three', 'game-contracts', 'game-items', 'game-items-goods', 'game-items-three', 'game-audio', 'game-weather', 'game-player', ...people, ...houses, ...crowd, ...stories]) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -67,6 +69,8 @@ const result = await esbuild.build({
     ...Object.fromEntries(houses.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
     // the crowd area rides along too: a horde on the instanced path that hunts the player body
     ...Object.fromEntries(crowd.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
+    // the stories area rides along too: a world of stories and one character sheet on the room's panel
+    ...Object.fromEntries(stories.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
   },
 })
 mkdirSync(join(here, 'dist'), { recursive: true })

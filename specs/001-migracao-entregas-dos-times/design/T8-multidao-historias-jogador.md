@@ -246,6 +246,25 @@ export type CharacterSheet = {
     the spark to `impact` (metal) and the dust to `impact` (concrete); a game passes its own map.
 12. **A civilian's body** (found in T8.1c). The game bakes five bodies for the player and the four named survivors (two with portraits). Default: the
     renderer takes each civilian's body from the host; the kit's area uses the three bodies of G 68469 without a portrait, in turn.
+13. **The bitten band without infection** (found in T8.2). `life()` draws hurt < 0.5, bitten < 0.8, dead < 0.95, else missing. With the infection
+    layer off (the normal world, the default), the bitten band hurts instead; with `infection: true` it is the team's rule. The goldens run with it on.
+14. **Opinion decay.** Personagens says opinions "decaem devagar para o neutro" without a number. Default: 1 point per day (`sheet.json`
+    `opinion.decay`), by option.
+15. **Which memory goes past 30.** The document gives the limit of 30, not which one leaves. Default: the lightest (by absolute weight), then the oldest.
+16. **The kit's example stories and their numbers.** No team delivery has stories that are not ZombiAdA's (question 2). The farm, the town, the two
+    stories and their defence and food numbers are kit inventions marked `example`; the zombiada slice is loaded from `game-slice/stories/`.
+17. **Newcomers when nobody is of bond age.** `life()` picks a bond among the living from 16 years and breaks on an empty list. Default: no arrival that
+    day, with no draw, so the team's sequence is kept whenever the list is not empty.
+18. **Drawing a sheet for a person of the world.** The documents give the point buy, not how a non-player sheet is drawn. Default (`drawSheet`): the
+    person's profession when it is one of the ruleset, else drawn; the points left spent one by one on an attribute drawn among those under the max;
+    no traits.
+19. **The casting order.** P9 says "papéis, não nomes" without an algorithm. Default (`castStories`): a pinned person; else one drawn among the people who
+    fit the role's needs and do not play another role; else a person made from the name pools (the bond's surname and base, the age range, the
+    newcomer's personality formula). It draws from `seed ^ 0x9e3779b9`, so the life simulation keeps its stream.
+
+**Integration and merge still pending (after T8.2).** The coordinator asked to merge `origin/main` into `work/p8` before the last commit and to make
+`game-crowd` and `game-player` use what is on main (the crowd on the urban streets and vehicles; herds and flocks on the vegetation). The merge was
+refused by the session's permission check and was not retried; that integration waits for the merge.
 
 ## Root Cause
 

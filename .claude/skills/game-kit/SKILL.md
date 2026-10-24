@@ -43,16 +43,17 @@ no núcleo (catálogo por registro, números por opção, comportamento por plug
 | `game-player` | Corpo do jogador: ficha e derivados, fôlego, feridas e curativo, agarrão, derrubada, ruído de passos, pânico, empurrão e golpe; infecção individual opcional (desligada) |
 | `game-crowd` | Multidão como estrutura de arrays: faixas de relevância, visão, audição e olfato, campo de fluxo, vagas de ataque, alerta em cadeia, portas, pilha no muro, habilidades por traço, corpos, população e migração |
 | `game-crowd-three` | Desenho da multidão: agentes, corpos no chão e civis em lotes instanciados (corte pela vista, nível de detalhe com histerese, pose de ataque), bichos com os próprios rigs, banco de sons e a área de teste |
+| `game-stories` | Histórias como dados: momentos com papéis, condições e mudanças, escalação, crônica, ficha do personagem (compra de pontos, derivados, memória e opinião) e a vida sorteada entre as histórias; mordida desligada por padrão |
 | `game-camera` | Câmera de ombro, terceira e primeira pessoa |
 | `game-test-room` | Sala de testes genérica: carrega módulos, abre uma área por grupo, registra o comportamento |
 | `game-devtools` | Ferramentas de teste dentro do jogo |
 
 ## Pacotes que a migração vai criar (spec 001)
 
-`game-characters` e `game-characters-undead` (corpo, andar, dano por região, os 13 tipos de zumbi), um gerador de histórias e ficha de
-personagem, civis, manada e revoada em `game-crowd`, `game-animals`, `game-items` (catálogo único), `game-vfx` (+ `-three`,
+`game-characters` e `game-characters-undead` (corpo, andar, dano por região, os 13 tipos de zumbi),
+civis, manada e revoada em `game-crowd`, `game-animals`, `game-items` (catálogo único), `game-vfx` (+ `-three`,
 explosão do Laboratório), `game-weather` (chuva a eventos extremos), `game-audio`, `game-urban` (ruas, postes, bairro),
-`game-floorplan-rural` (`game-player`, `game-crowd`, `game-floorplan-structure` e `game-floorplan-three` já existem). Decisões em
+`game-floorplan-rural` (`game-player`, `game-crowd`, `game-stories`, `game-floorplan-structure` e `game-floorplan-three` já existem). Decisões em
 `specs/001-migracao-entregas-dos-times/consolidado.md`.
 
 ## Como se compõem (exemplos)

@@ -1,0 +1,67 @@
+[
+  {
+    "id": "helena",
+    "name": "Resgatar Helena e Davi no Jardim Aurora",
+    "until": "até o dia 10"
+  },
+  {
+    "id": "vinicius",
+    "name": "Notar a mordida do Vinícius e avisar o Tenente Caio",
+    "until": "até o dia 8 (Primeiros Socorros 3 percebe a febre e o mancar)"
+  },
+  {
+    "id": "insulina",
+    "name": "Levar insulina para a Mariana",
+    "until": "até o dia 14 (farmácia hospitalar ou a caneta do Armando)"
+  },
+  {
+    "id": "otavio",
+    "name": "Trazer enxofre e tirar o álcool do Otávio",
+    "until": "até o dia 18"
+  },
+  {
+    "id": "arnaldo",
+    "name": "Dar paz ao Seu Arnaldo, com a chave do Val",
+    "until": "até o dia 22"
+  },
+  {
+    "id": "radio",
+    "name": "Avisar a Jéssica da horda ao pé da torre",
+    "until": "até o dia 25"
+  },
+  {
+    "id": "penit",
+    "name": "Levar comida e remédio ao bloco C da penitenciária",
+    "until": "até o dia 25"
+  },
+  {
+    "id": "kauan",
+    "name": "Levar o Kauã ao hospital atrás da Lívia",
+    "until": "até o dia 28"
+  },
+  {
+    "id": "italo",
+    "name": "Cobrir a deserção do Ítalo",
+    "until": "até o dia 33"
+  },
+  {
+    "id": "diesel",
+    "name": "Contar ao Brasa onde está o diesel da Rosa",
+    "until": "até o dia 40 (escolha ruim)"
+  },
+  {
+    "id": "sato",
+    "name": "Expor o plano do Dr. Sato ao grupo do hospital",
+    "until": "até o dia 45"
+  },
+  {
+    "id": "dito",
+    "name": "Cuidar do túmulo da família do Dito",
+    "until": "até o dia 55"
+  },
+  {
+    "id": "ponte",
+    "name": "Derrubar a Ponte Velha com os explosivos do Otávio",
+    "until": "até o dia 60 (Otávio vivo)"
+  }
+]

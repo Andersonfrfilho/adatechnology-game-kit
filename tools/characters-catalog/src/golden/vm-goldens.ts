@@ -7,6 +7,7 @@ import { recordWalkGaitGolden } from './vm-gait'
 import { recordPenetrationGolden } from './vm-penetration'
 import { recordPlayerGolden } from './vm-player'
 import { recordSpawnGolden } from './vm-spawn'
+import { recordStoriesGolden } from './vm-stories'
 
 export const VM_GOLDENS = [
   { id: 'game-spawn', path: fixturePath('game-characters-undead', 'game-spawn.json'), record: recordSpawnGolden },
@@ -19,4 +20,5 @@ export const VM_GOLDENS = [
   { id: 'game-crowd-civilians', path: fixturePath('game-crowd', 'game-crowd-civilians.json'), record: recordCrowdCiviliansGolden },
   { id: 'game-crowd-herd', path: fixturePath('game-crowd', 'game-crowd-herd.json'), record: recordCrowdHerdGolden },
   { id: 'game-crowd-render', path: fixturePath('game-crowd-three', 'game-crowd-render.json'), record: recordCrowdRenderGolden },
+  { id: 'game-stories-life', path: fixturePath('game-stories', 'game-stories-life.json'), record: recordStoriesGolden },
 ] as const

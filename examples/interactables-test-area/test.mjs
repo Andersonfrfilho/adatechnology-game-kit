@@ -165,6 +165,16 @@ for (const lang of ['pt-BR', 'en']) {
   })
   check(`[${lang}] the crowd module is loaded too (9 scenarios pass)`, horde.module === 'crowd_area' && horde.ok && horde.problems.length === 0 && horde.scenarios === 9 && horde.failed === 0, horde)
 
+  // the stories area rides along: its report is clean and its six scenarios pass here too
+  const tales = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const loaded = window.__furnitureReport.stories
+    const scenarios = room.scenarios.filter((s) => s.id.startsWith('stories_'))
+    const result = await room.runScenarios(scenarios)
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], scenarios: scenarios.length, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id) }
+  })
+  check(`[${lang}] the stories module is loaded too (6 scenarios pass)`, tales.module === 'stories_area' && tales.ok && tales.problems.length === 0 && tales.scenarios === 6 && tales.failed === 0, tales)
+
   if (lang === 'pt-BR') {
     await page.close()
     const p = await open('?lang=pt-BR&ui=0')

@@ -2604,3 +2604,56 @@ node examples/interactables-test-area/build.mjs && test.mjs -> 26/26
 - **Dúvida 11 do desenho:** efeitos da multidão na sala (padrão `CROWD_EFFECTS`).
 - **Dúvida 12 do desenho:** corpo de cada civil (padrão: o host dá; a área usa os três corpos sem retrato de G 68469).
 
+
+## T8.2 — `game-stories` (histórias, escalação, crônica, ficha e vida sorteada)
+
+> 🤖 Modelo: `opus`
+
+**O que foi feito**
+
+- `packages/game-stories` (novo, global `GameStories`): porte literal de Os Vivos do Vale (`life()` 623-739, `world()`, `apply`, `simulate()` 744-756
+  e o motor de `EV`/`ACTS`/`fill`) e da ficha de Personagens. Histórias como dados (momentos com papéis, variantes em que a primeira que vale ganha,
+  condições `all`/`any`/`not`/`action`/`flag`/`state`/`living`/`base`/`value`/`self`/`changed`/`remembers`, pedaços de texto e mudanças), a escalação
+  (P9: pessoa fixa, alguém que serve, ou alguém feito dos pools de nomes, num fluxo próprio `seed ^ 0x9e3779b9`), a crônica, a ficha (P13: compra de
+  pontos, derivados, habilidades e marcos, memória até 30 e opinião de −100 a 100) e a vida sorteada. Números em `src/data/life.json` e
+  `src/data/sheet.json` com a linha de origem; textos da vida em `src/data/life-text.json` (pt-BR literal e en).
+- Mundo normal primeiro: `infection: false` por padrão (a faixa de mordida fere, ninguém reanima); `infection: true` é a regra do time.
+- `game-characters-people`: `SHEET_RULESET` (`ATTRS`, `SKILLS`, `PROFS`, `TRAITS`, `derived`) e `NAME_POOLS` gerados das fontes, conferidos literalmente
+  por `tools/characters-catalog/tests/sheet-sources.test.ts`.
+- Conteúdo do vale para o jogo em `game-slice/stories/` (`cast.json` 45 pessoas, `stories.json` com os 47 `EV` em 13 histórias, `roles.json` com
+  Cícero e Sandra como papéis, `actions.json`, `life.json`), gerado por `catalog:game` (`slice-stories.ts`, `build-slice.ts`).
+- Golden `game-stories-life.json` (`vm-stories.ts` corta do código do time `GROUPS`, a seção da vida e `byId`; e da ficha `ATTRS`, `SKILLS`, `PROFS`,
+  `TRAITS`, `S`, `pool`, `derived`): 7 vidas inteiras linha a linha (estado final, comida, casais, gente gerada, afinidade), 40 vidas por hash, 96
+  conjuntos de ações só com eventos e 48 fichas. **Todas iguais.** Mutações (chance da caravana 0,12 → 0,13; uma palavra de um texto) quebram 1 e 9
+  testes. A adoção não acontece nas vidas do golden e fica num teste unitário.
+- Bancada `createStoriesTestModule` (`stories_area`, só contratos genéricos): semente, dia (até 365), vida sorteada, mordidas, a pessoa da ficha e as
+  ações; contadores do dia; seis cenários (determinismo, escalação, mundo normal, a ficha guarda o vivido, compra de pontos, histórias que se cruzam);
+  a ficha e a crônica no painel da sala. Conteúdo de exemplo do kit (`STORIES_EXAMPLE`, marcado `example`) até o jogo carregar o dele
+  (`module.load(content)`). `examples/stories-test-area` (`sala-historias.html`, com botão de arquivo JSON) e a `interactables-test-area`.
+
+**Comandos e resultados**
+
+```text
+pnpm build                                              -> ok
+pnpm -r typecheck                                       -> ok
+pnpm lint                                               -> ok
+pnpm --filter @adatechnology/game-stories test          -> 24 passed (golden 10, histórias, bancada)
+pnpm --filter @adatechnology/game-characters-people test -> 11 passed
+characters-catalog-tool vitest --testTimeout=60000      -> 80 passed
+node dist/record-golden-vm.js --check                   -> os goldens vm idênticos duas vezes e iguais ao fixture (com game-stories-life)
+node examples/test-room/build.mjs                       -> ok
+node examples/stories-test-area/build.mjs && test.mjs   -> 7/7 (6 cenários, dia 25, a fatia do vale até o dia 90, pt-BR e en)
+node examples/interactables-test-area/build.mjs && test.mjs -> 28/28
+```
+
+**Desvios e dúvidas**
+
+- O motor não conhece o vale: `GROUPS`, `NPCS`, `RELS`, `EV` e as tabelas da vida são opções (`LifeOptions`) e conteúdo do jogo.
+- A base do grupo do jogador é opção (`playerBase`; o vale usa `jogador`).
+- Sem ninguém em idade de vínculo, não há chegada naquele dia (o código do time quebrava; nenhum sorteio é gasto, o golden não muda).
+- Fardados (`FACT`, `RANKS`, `LOOT`, `GENT`) e `JOIN` não entraram no T8.2.
+- **Dúvidas 13 a 19 do desenho:** faixa de mordida sem infecção, decaimento da opinião (1 por dia), que memória sai depois de 30, histórias de exemplo
+  do kit, chegada sem vínculo possível, sorteio da ficha (`drawSheet`), ordem da escalação.
+- **Merge de `origin/main` e integração pendentes:** o coordenador pediu o merge de `origin/main` antes do último commit e que `game-crowd` e
+  `game-player` usem o que está lá (ruas e veículos do `game-urban`, vegetação para manada e revoada). O merge foi recusado pela verificação de
+  permissão da sessão e não foi tentado de novo; a integração espera essa permissão.
