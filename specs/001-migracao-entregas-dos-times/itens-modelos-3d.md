@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **24 de 257 itens têm modelo 3D; faltam 233.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **26 de 257 itens têm modelo 3D; faltam 231.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,9 +23,9 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **24** | **233** |
+| **Total** | **26** | **231** |
 
-## Comida (3500 de 36)
+## Comida (5 de 36)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -33,7 +33,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Feijão em lata | `feijao_lata` | `canned_beans` | 0,45 kg | comum | 80 x 68 x 79 mm |
 | [x] | Ração operacional do Exército | `racao_militar` | `military_ration` | 0,9 kg | comum | 194 x 260 x 59 mm |
 | [x] | Açúcar (1 kg) (kit) | `acucar` | `sugar` | 1,0 kg | comum | 100 x 200 x 60 mm |
-| [ ] | Barra de chocolate | `chocolate` | `chocolate_bar` | 0,09 kg | comum | 150 x 70 x 10 mm |
+| [x] | Barra de chocolate (kit) | `chocolate` | `chocolate_bar` | 0,09 kg | comum | 150 x 70 x 10 mm |
 | [ ] | Batata (1 kg) | `batata` | `potatoes` | 1,0 kg | comum | 200 x 90 x 140 mm |
 | [ ] | Biscoito de água e sal | `biscoito` | `biscuits` | 0,2 kg | comum | 200 x 50 x 100 mm |
 | [ ] | Café em pó (500 g) | `cafe_po` | `coffee` | 0,5 kg | comum | 80 x 150 x 60 mm |
@@ -66,7 +66,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Sardinha em lata | `sardinha` | `canned_sardines` | 0,13 kg | comum | 112 x 26 x 65 mm |
 | [ ] | Óleo de cozinha (900 ml) | `oleo_cozinha` | `cooking_oil` | 0,9 kg | comum | 70 x 260 x 70 mm |
 
-## Bebida (1248 de 12)
+## Bebida (2 de 12)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -83,7 +83,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Água de coco | `agua_coco` | `coconut_water` | 0,4 kg | comum | 60 x 170 x 60 mm |
 | [ ] | Água de rio ou poça | `agua_suja` | `dirty_water` | 0,5 kg | comum | 66 x 183 x 66 mm |
 
-## Medicina e primeiros socorros (2691 de 26)
+## Medicina e primeiros socorros (3 de 26)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -114,7 +114,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Termômetro | `termometro` | `thermometer` | 0,02 kg | comum | 120 x 20 x 30 mm |
 | [ ] | Álcool 70% (500 ml) | `alcool70` | `alcohol_70` | 0,5 kg | comum | 70 x 200 x 50 mm |
 
-## Ferramentas (2858 de 30)
+## Ferramentas (2 de 30)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -149,7 +149,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Serrote | `serrote` | `handsaw` | 0,5 kg | comum | 500 x 35 x 130 mm |
 | [ ] | Tesoura | `tesoura` | `scissors` | 0,1 kg | comum | 180 x 15 x 70 mm |
 
-## Armas brancas e de disparo silencioso (1916 de 20)
+## Armas brancas e de disparo silencioso (3 de 20)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -174,7 +174,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Taco de beisebol | `taco` | `baseball_bat` | 1,0 kg | incomum | 860 x 70 x 70 mm |
 | [ ] | Tonfa policial | `tonfa` | `police_baton` | 0,6 kg | comum | 500 x 100 x 45 mm |
 
-## Materiais de construção e crafting (2245 de 23)
+## Materiais de construção e crafting (1 de 23)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -202,7 +202,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Vergalhão | `vergalhao` | `rebar` | 2,0 kg | comum | 1,27 x 0,02 x 0,02 m |
 | [ ] | Óleo lubrificante spray | `lubrificante` | `lubricant_spray` | 0,25 kg | comum | 50 x 170 x 50 mm |
 
-## Roupas e proteção (2461 de 23)
+## Roupas e proteção (1 de 23)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -230,7 +230,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Tênis de corrida | `tenis` | `sneakers` | 0,7 kg | comum | 300 x 120 x 120 mm |
 | [ ] | Óculos de proteção | `oculos` | `safety_goggles` | 0,05 kg | comum | 160 x 60 x 80 mm |
 
-## Mochilas e contêineres (1630 de 15)
+## Mochilas e contêineres (1 de 15)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -250,7 +250,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Saco de lixo | `saco_lixo` | `trash_bag` | 0,05 kg | comum | 250 x 25 x 200 mm |
 | [ ] | Sacola de mercado | `sacola` | `shopping_bag` | 0,02 kg | comum | 300 x 20 x 200 mm |
 
-## Eletrônicos, rádio e luz (2135 de 20)
+## Eletrônicos, rádio e luz (4 de 20)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -275,7 +275,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Vela | `vela` | `candles` | 0,05 kg | comum | 60 x 120 x 60 mm |
 | [ ] | Óculos de visão noturna | `nvg` | `night_vision_goggles` | 0,6 kg | muito raro | 150 x 100 x 110 mm |
 
-## Combustível e energia (1000 de 9)
+## Combustível e energia (2 de 9)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -289,7 +289,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Querosene (1 L) | `querosene` | `kerosene` | 0,8 kg | incomum | 90 x 260 x 90 mm |
 | [ ] | Óleo de motor | `oleo_motor` | `motor_oil` | 1,0 kg | comum | 100 x 260 x 70 mm |
 
-## Campo, pesca e caça (1249 de 11)
+## Campo, pesca e caça (0 de 11)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -305,7 +305,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Sementes de milho | `sem_milho` | `corn_seeds` | 0,1 kg | incomum | 100 x 150 x 20 mm |
 | [ ] | Vara de pesca | `vara_pesca` | `fishing_rod` | 1,0 kg | comum | 1,8 x 0,04 x 0,04 m |
 
-## Livros e revistas (666 de 5)
+## Livros e revistas (0 de 5)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -315,7 +315,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Revista Faça Você Mesmo | `revista_receita` | `diy_magazine` | 0,2 kg | incomum | 210 x 280 x 8 mm |
 | [ ] | Revista e gibi | `revista_passa` | `magazines_and_comics` | 0,2 kg | comum | 170 x 260 x 10 mm |
 
-## História e colecionáveis (1668 de 16)
+## História e colecionáveis (1 de 16)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -336,7 +336,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Plaqueta de identificação militar | `plaqueta` | `dog_tag` | 0,01 kg | comum | 30 x 3 x 50 mm |
 | [ ] | Prontuário do paciente zero | `prontuario` | `patient_zero_record` | 0,1 kg | único | do jogo |
 
-## Chaves e acesso (1207 de 11)
+## Chaves e acesso (1 de 11)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
