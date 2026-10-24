@@ -738,5 +738,15 @@
       0.25
     ],
     "scale": 0.1
+  },
+  {
+    "id": "adhesive_bandages",
+    "teamId": "curativo",
+    "teamBox": [
+      1,
+      0.6,
+      0.15
+    ],
+    "scale": 0.1
   }
 ]
