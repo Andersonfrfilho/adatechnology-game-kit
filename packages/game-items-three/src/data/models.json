@@ -378,5 +378,15 @@
       0.75
     ],
     "scale": 0.1
+  },
+  {
+    "id": "condensed_milk",
+    "teamId": "leite_condensado",
+    "teamBox": [
+      0.734,
+      1,
+      0.734
+    ],
+    "scale": 0.1
   }
 ]

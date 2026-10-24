@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **38 de 257 itens têm modelo 3D; faltam 219.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **39 de 257 itens têm modelo 3D; faltam 218.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,9 +23,9 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **38** | **219** |
+| **Total** | **39** | **218** |
 
-## Comida (17 de 36)
+## Comida (18 de 36)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -46,7 +46,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Feijão seco (1 kg) (kit) | `feijao_seco` | `beans` | 1,0 kg | comum | 100 x 200 x 60 mm |
 | [x] | Frango congelado (kit) | `frango` | `frozen_chicken` | 1,2 kg | comum | 260 x 100 x 170 mm |
 | [x] | Laranja (kit) | `laranja` | `orange` | 0,2 kg | comum | 75 x 75 x 75 mm |
-| [ ] | Leite condensado | `leite_condensado` | `condensed_milk` | 0,4 kg | incomum | 73 x 100 x 73 mm |
+| [x] | Leite condensado (kit) | `leite_condensado` | `condensed_milk` | 0,4 kg | incomum | 73 x 100 x 73 mm |
 | [ ] | Macarrão (500 g) | `macarrao` | `pasta` | 0,5 kg | comum | 100 x 250 x 40 mm |
 | [ ] | Macarrão instantâneo | `macarrao_inst` | `instant_noodles` | 0,08 kg | comum | 120 x 160 x 30 mm |
 | [ ] | Mandioca (raiz) | `mandioca` | `cassava_root` | 1,5 kg | comum | 400 x 70 x 70 mm |
