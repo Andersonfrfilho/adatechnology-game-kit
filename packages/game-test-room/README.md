@@ -91,6 +91,8 @@ room.bench()?.set('size', 2) // clamped and snapped; false for an unknown id, a 
 room.metrics() // { room: { fps, draw_calls, ... }, module: { particles: 120 } }
 ```
 
+The room's explosions take the blast options of `game-destruction` (`createTestRoom({ blast: { shelter: true } })`, `room.blast()`, `room.setBlast({ fragmentHits: true })`); three HUD toggles (Shelter, Fragments, Confinement; Abrigo, Estilhaços, Confinamento) flip them, and the numbers of the last blast show as the room metrics `blast_shelter` (% that reached the most sheltered target), `blast_confinement` and `blast_fragments`, and as a `blast_report` line in the log.
+
 A module can put a **sheet** on the panel (`host.bench.sheet(sheet)`, `BenchSheet` of the contracts): a card with a kicker, a title, a text, facts, steps, colour swatches and a timeline of named segments whose playhead follows one of the module's numeric metrics.
 The room also runs the film of the liquids that have one (`createFilmManager` of `game-fluids-three`): a leak of fuel, oil or blood drips into grids on the floor near the camera.
 

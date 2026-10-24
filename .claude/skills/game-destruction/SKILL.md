@@ -75,6 +75,16 @@ Não há `examples/` próprio. A "Sala de testes de destruição" do kit é uma 
 - Furos ficam nos pedaços: todo fragmento de `fracture` ou de brecha leva `marks` (furos que caíram nele, até 12).
 - Casa: `sizeStructure(spec, { redundancy: 0.97, redundancyRoles: ['column', 'wall'], safetyByRole: { beam: 0.45, slab: 0.45, roof: 0.45, stair: 0.45 } })`.
 
+## Explosões: abrigo, estilhaços e confinamento
+
+Opções `blast` (no mundo, em `world.explode(..., opções)` ou no `Hit` explosivo), todas desligadas por padrão: `shelter` (partes entre o centro e o
+alvo deixam passar `exp(-hp por m² / k)` da energia; a que quebra na mesma explosão deixa passar mais), `fragmentHits` (fragmentos viram golpes
+`blunt` de `0,5·m·v²/2` no que está atrás, no máximo 24, semeados) e `confinement` (26 raios, multiplicador de 1 a 3, ou o número do host).
+O retorno traz `HitResult.blast` e o evento `blast`; o renderizador empurra as peças com `renderer.explode(..., { report })`. Para balas:
+`Hit.piercing` / `piercingOf(calibre, tipo)` (chumbo mole não fura aço só pela energia) e `breach.blastReach` (explosão só abre brecha perto).
+Detalhes e números no README do pacote; exemplos de pilares e vigas em `tests/beams-and-columns.test.ts`. Não existe entrega de time para isso:
+é modelo novo do kit, aprovado pelo dono em 2026-10-24.
+
 ## Cuidados
 - Reação em cadeia (A11): peça com `explodes.chain` é **armada** por tiro (`shot`, depois de `shotDamageFraction` do hp), fogo (`fire`, a `atC` ou 300 °C) ou explosão no alcance (`explosion`) e explode depois do atraso daquele gatilho (número ou `[mín, máx]` sorteado da semente). Evento `primed` ao armar, `explode` no fim. Cada peça explode uma vez; tiro e explosão armam em vez de despedaçar na hora; a ordem é por tempo, depois por objeto e peça. O atraso conta do instante da explosão que armou, então a linha do tempo não depende do `dt` de `update`. Sem `update`, nada explode.
 - Um golpe tira `energy * 0.02 * damageScale` de vida. Passa por `energy > penetração (J/mm) * espessura (mm)`; ângulo raso conta caminho maior e pode ricochetear.

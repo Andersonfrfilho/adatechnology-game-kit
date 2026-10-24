@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-vfx-three",
-  "version": "0.0.0",
+  "version": "0.1.1",
   "license": "MIT",
   "description": "three.js renderer for @adatechnology/game-vfx: the Explosion Lab's shaders (heat-ramp puffs that dissolve, streaked shrapnel, halos, shock shell and ground ring), debris with embers, blast and fire lights, scorch and crater marks that follow a dented ground patch, the screen flash overlay, and an EffectSink the test room lends to every module.",
   "keywords": [

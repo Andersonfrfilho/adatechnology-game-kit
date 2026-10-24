@@ -11,6 +11,7 @@
  */
 
 import type {
+  BlastOptions,
   DamageType,
   DebrisKind,
   DestructibleImpl,
@@ -43,7 +44,12 @@ export type {
   DestructibleSpec,
   DestructionEvent,
   DestructionEventType,
+  BlastOptions,
+  BlastReport,
+  ConfinementOptions,
   ExplosionChain,
+  FragmentHitOptions,
+  ShelterOptions,
   FluidKind,
   Fragment,
   FragmentMark,
@@ -112,8 +118,8 @@ export interface MaterialDef {
   fracture: FractureStyle
   /** Fragment size range in metres (default `[0.04, 0.2]`). */
   fragmentSize?: [number, number]
-  /** Damage multipliers per damage type (default 1). */
-  damageScale?: Partial<Record<DamageType, number>>
+  /** Damage multipliers per damage type (default 1); `shelter` multiplies the resistance the material adds between a blast and a target (`blast.shelter`). */
+  damageScale?: Partial<Record<DamageType | 'shelter', number>>
   /** Debris emitted on a hit that does not break the part. */
   hitDebris: DebrisKind
   /** Debris emitted when the part fractures. */
@@ -166,12 +172,23 @@ export interface DestructionOptions {
     radius?: number
     /** Multiplier of the breach area a blast makes over a blow of the same damage: a blast loads the whole crater (default 6). */
     blastFactor?: number
+    /**
+     * Metres of reach per cube root of kilojoule: a blast only opens a breach in a part within `blastReach * cbrt(energy / 1000)` of the centre
+     * (a hand grenade of 200 kJ: 0.7 m; 2 MJ: 1.5 m). Farther away it still damages, dents and cracks. Without it a falloff that is gentle over a
+     * large radius let a grenade at 1 m cut a reinforced column in two. Default `Infinity` (off, so the goldens stay as they were); 0.12 is the value that matches real charges.
+     */
+    blastReach?: number
   }
   /**
    * Speed of the blast front in m/s. A glass part at distance `d` from an explosion breaks `d / blastFrontSpeed` seconds later, in `update`
    * (the speed of sound is 340). Default off: every part takes the blast at once.
    */
   blastFrontSpeed?: number
+  /**
+   * Defaults of every blast (`explode`, an explosive `hit`, a part that explodes); each call can override them. All off by default, and a world
+   * with all of them off gives the results it always gave. See `ShelterOptions`, `FragmentHitOptions` and `ConfinementOptions`.
+   */
+  blast?: BlastOptions
 }
 
 export interface SizeStructureOptions {
@@ -237,12 +254,16 @@ export interface DestructionWorld {
   hit(objectId: string, hit: Hit): HitResult
   /** Apply a hit to a known part (e.g. after the host's own raycast). */
   hitPart(objectId: string, partId: string, hit: Hit): HitResult
-  /** A blast in world space against every object in range. */
-  explode(point: Vec3, energy: number, radius: number, source?: string): HitResult[]
+  /**
+   * A blast in world space against every object in range. With `options` (else `DestructionOptions.blast`) the blast can be sheltered by what
+   * stands in the way, throw the fragments of what it breaks and gain pressure in an enclosed volume; each `HitResult.blast` says what it did to
+   * that target, and a `blast` event sums it up.
+   */
+  explode(point: Vec3, energy: number, radius: number, source?: string, options?: BlastOptions): HitResult[]
   /** Raycast against every part shape (world space). */
   raycast(origin: Vec3, direction: Vec3, maxDistance?: number): RayHit | null
   /** Ballistic shot: raycast, hit, and continue through with the exit energy (up to 4 objects/parts). */
-  shoot(origin: Vec3, direction: Vec3, energy: number, caliber: number, source?: string): HitResult[]
+  shoot(origin: Vec3, direction: Vec3, energy: number, caliber: number, source?: string, piercing?: number): HitResult[]
   /**
    * Work on a joint with a tool for `dt` seconds (call every frame while the player holds the button). Returns the progress 0..1, or -1 when the
    * tool cannot undo this joint. At 1 the joint opens (`detach` with `by: 'tool'`).

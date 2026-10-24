@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
-import type { DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
+import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioEngine, createAudioSink } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { createDestructionRenderer, createDestructionSound, specFromObject3D } from '@adatechnology/game-destruction-three'
@@ -22,6 +22,7 @@ import type { BenchStore } from './bench'
 import type { BenchView, MetricRow } from './bench-panel'
 import { buildFromSpec } from './build-from-spec'
 import { createExplosives } from './explosives'
+import type { BlastSummary } from './explosives'
 import { toHostEvent } from './host-events'
 import { DEMO_MATERIALS, demoItems } from './items'
 import { createLog } from './log'
@@ -1028,6 +1029,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return bodies
   }
 
+  // ----- the blast options of the room's explosions (the HUD toggles them), and what the last blast did
+  let blastOptions: BlastOptions = { ...options.blast }
+  let lastBlast: BlastSummary | undefined
+  const blastOn = (key: 'shelter' | 'fragmentHits' | 'confinement'): boolean => Boolean(blastOptions[key])
+  const toggleBlast = (key: 'shelter' | 'fragmentHits' | 'confinement'): void => {
+    blastOptions = { ...blastOptions, [key]: blastOn(key) ? false : true }
+  }
+
   // ----- projectiles (grenades, molotovs, rockets) and charges set down: the room lends the explosives its world, log and host
   const explosives = createExplosives({
     THREE,
@@ -1043,6 +1052,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     toolName,
     withoutHeld,
     groundAt,
+    blast: () => blastOptions,
+    blasted: (summary) => {
+      lastBlast = summary
+    },
     translate: t,
     format: num,
     action,
@@ -1510,7 +1523,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // when the room runs its own loop it feeds the counters the unclamped real delta; otherwise update(dt) is the only source
   let ownsLoop = false
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
-  const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds })
+  const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: () => lastBlast })
   let qualityName: 'low' | 'medium' | 'high' = quality
 
   const syncContainers = (sdt: number): void => {
@@ -1637,6 +1650,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       timeScale,
       fast: fastForward,
       tap: isTapOn(),
+      blast: { shelter: blastOn('shelter'), fragmentHits: blastOn('fragmentHits'), confinement: blastOn('confinement') },
       quality: qualityName,
       objects: [...entries.values()].filter((e) => !e.arena).length,
     }
@@ -2130,6 +2144,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const room: TestRoom & {
     tilt(rad: number): void
     toggleTap(on?: boolean): boolean
+    blast(): BlastOptions
+    setBlast(options: BlastOptions): void
     setSlowMotion(on: boolean): void
     setFastForward(on: boolean): void
     equip(weaponId: string): void
@@ -2207,6 +2223,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       heldTilt = rad
     },
     toggleTap,
+    blast: () => ({ ...blastOptions }),
+    setBlast: (next) => {
+      blastOptions = { ...blastOptions, ...next }
+    },
     pause() {
       paused = true
     },
@@ -2321,6 +2341,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         setTool(loadout[index])
       },
       onTap: () => toggleTap(),
+      onBlast: (key) => toggleBlast(key),
       onPlay: (objectId, clipId) => {
         playAnimation(clipId, objectId)
       },

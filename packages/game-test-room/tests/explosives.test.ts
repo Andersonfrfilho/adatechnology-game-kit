@@ -303,3 +303,35 @@ describe('trip wire of the Claymore', () => {
     expect(secondExplosions).toHaveLength(0)
   })
 })
+
+describe('blast options of the room', () => {
+  it('start off, the HUD toggles change them and the last blast shows in the metrics and the log', () => {
+    const room = makeRoom()
+    expect(room.blast()).toEqual({})
+    barrel(room, 0)
+    equip(room, 'frag_grenade')
+    room.look([0, 1.7, 5], [0, 0.45, -8])
+    room.use()
+    run(room, 6)
+    expect(room.metrics().room.blast_confinement).toBeUndefined()
+    const reports = room.log.entries().filter((e) => e.type === 'blast_report')
+    expect(reports).toHaveLength(0)
+  })
+
+  it('with the options on, a blast reports shelter, confinement and fragment hits', () => {
+    const room = makeRoom()
+    room.setBlast({ shelter: true, fragmentHits: true, confinement: true })
+    expect(room.blast()).toEqual({ shelter: true, fragmentHits: true, confinement: true })
+    barrel(room, 0)
+    equip(room, 'frag_grenade')
+    room.look([0, 1.7, 5], [0, 0.45, -8])
+    room.use()
+    run(room, 6)
+    const metrics = room.metrics().room
+    expect(metrics.blast_shelter).toBeGreaterThan(0)
+    expect(metrics.blast_shelter).toBeLessThanOrEqual(100)
+    expect(metrics.blast_confinement).toBeGreaterThanOrEqual(1)
+    expect(metrics.blast_fragments).toBeGreaterThanOrEqual(0)
+    expect(room.log.entries().filter((e) => e.type === 'blast_report').length).toBeGreaterThan(0)
+  })
+})

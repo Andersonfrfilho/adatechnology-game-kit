@@ -2269,6 +2269,28 @@ Controles: clima (os 10 estados, nomes em pt-BR e en), transição (de uma vez o
 2. As miniaturas de Som e Clima não têm o que mostrar de som (e o clima sem visual): aceita uma miniatura da bancada ou prefere esperar a T6.2b?
 3. Falta o docker no ambiente: rodar `docker build -f site/Dockerfile .` antes do PR.
 4. A rodada inteira de `game-weapons-three` precisa de máquina livre; vale subir o `testTimeout` do pacote (hoje 5 s) como foi feito no `golden-tool`?
+
+## Explosões: abrigo, estilhaços como projéteis e confinamento (modelo novo do kit)
+
+> Modelo novo, **sem entrega de time**: conferi o Laboratório de Explosões, a Oficina de VFX, o Arsenal e o jogo e nenhum tem abrigo,
+> estilhaço que acerta quem está atrás nem pressão em ambiente fechado. O dono aprovou criar os três como opções em **2026-10-24**, com a
+> frase: "tem paredes que vão destruir e o personagem vai receber esse impacto, não tão grande, mas recebe parte do empurrão e estilhaços".
+> Por isso não há o que marcar no inventário; a regra do `CLAUDE.md` §1 foi cumprida pela pergunta ao dono antes de inventar.
+
+- `game-destruction`: `DestructionOptions.blast` / `explode(..., options)` / `Hit.blast`: `shelter`, `fragmentHits`, `confinement`, tudo desligado por
+  padrão (resultados e goldens idênticos; a suíte inteira passa sem mudar nenhum golden). Números em `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS` e
+  `CONFINEMENT_DEFAULTS`. Exemplos com os padrões: parede de tijolo de 20 cm deixa passar ~19%, porta de madeira de 4 cm ~53%, vidro de 6 mm ~83%,
+  pilar de concreto de 30 cm ~3%; a parede que quebra na mesma explosão deixa passar mais 50% do que segurou; sala fechada de 6 m x3, a mesma sem
+  uma parede ~x2, chão aberto x1.
+- `game-destruction-three`: `renderer.explode(..., { report })` empurra cada peça com a energia que chegou ao seu objeto.
+- `game-test-room`: opção `blast`, `blast()` / `setBlast()`, três botões no painel (pt-BR e en) e as métricas `blast_shelter`, `blast_confinement`,
+  `blast_fragments`.
+- Vigas e pilares (pedido do dono na mesma sessão): `tests/beams-and-columns.test.ts` cruza calibres reais de `game-weapons` com pilar e viga de
+  concreto armado, viga I de aço, viga de madeira e pilar de tijolo. Correções, todas por opção ou valor e sem tocar nos goldens: `Hit.piercing`
+  (chumbo mole não fura 8,5 mm de aço só pela energia), `breach.blastReach` (padrão **desligado**; o valor realista é 0,12 m por raiz cúbica de kJ:
+  ligado, o `gas_explodes` do golden `house-scenarios` muda, então a decisão de ligar e regravar é do dono) e `damageScale.shelter: 3` no vidro
+  (valor novo no JSON de materiais, sem efeito fora do abrigo).
+
 ## T2.4
 
 Porte literal do Casa3DSDK (`construir`, `planejaLOD`) e do AndaresSDK da página do time (`visor-casas-3d`, L39443-42734; `zombiada-modo-livre`, L7372-7557) para o pacote novo `@adatechnology/game-floorplan-three`. Cinco commits, na ordem do brief.
