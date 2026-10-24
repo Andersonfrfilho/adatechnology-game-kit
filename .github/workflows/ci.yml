@@ -124,11 +124,11 @@ jobs:
       - name: Fleet goldens that depend on the Node version
         run: pnpm --filter @adatechnology/game-vehicles-fleet exec vitest run tests/golden-cars-2.test.ts tests/golden-cars-1.test.ts tests/team-golden.test.ts tests/digest.test.ts
 
-  # The three example pages in headless Chromium (software GL): the checks that exercise the room, the furniture area and the weapons area end to end.
-  # Measured locally: build 18 s, the three checks 31 s; on a runner the job should stay under 5 min with the Chromium download.
+  # Every example page in headless Chromium (software GL): the room and each area end to end, in pt-BR and en.
+  # With all the areas of spec 001 (Phase 8: player, crowd, stories) the job passed 10 min on a runner; 25 min leaves room for the Chromium download.
   examples:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -163,6 +163,9 @@ jobs:
           node examples/urban-test-area/build.mjs
           node examples/audio-test-area/build.mjs
           node examples/weather-test-area/build.mjs
+          node examples/player-test-area/build.mjs
+          node examples/crowd-test-area/build.mjs
+          node examples/stories-test-area/build.mjs
 
       - name: Check the examples
         run: |
@@ -178,6 +181,9 @@ jobs:
           node examples/urban-test-area/test.mjs
           node examples/audio-test-area/test.mjs
           node examples/weather-test-area/test.mjs
+          node examples/player-test-area/test.mjs
+          node examples/crowd-test-area/test.mjs
+          node examples/stories-test-area/test.mjs
 
   # One stable required check; Release waits on the whole "CI" workflow.
   ci-ok:

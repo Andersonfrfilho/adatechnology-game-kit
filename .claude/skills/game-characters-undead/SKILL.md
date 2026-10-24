@@ -36,6 +36,7 @@ UNDEAD_LOCALES['en'].typeText.walker.role  // textos em en e pt-BR
 | `UNDEAD_MOMENTS` | multiplicadores: alerta ×1,3, grito ×1,2, ferido ×0,5, rastejar até 0,4, água, noite ×1 |
 | `UNDEAD_LOCALES` | `en` e `pt-BR`: textos dos tipos, idades, roupas, estágios e feridas |
 | `childTypeIds()` | os tipos em que uma criança pode virar |
+| `undeadCrowdPack()` | o pacote da multidão do `game-crowd`: os 13 tipos com os números da horda do jogo (`CATS`: cego 3,0, carbonizado 2,2, afogado 2,5 e peso 0, devorador 3,0) e cada habilidade como traço; idades, roupas, segmentos e paleta |
 
 ## O motor (`createUndead`)
 ```ts

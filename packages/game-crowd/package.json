@@ -1,0 +1,61 @@
+{
+  "name": "@adatechnology/game-crowd",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Any crowd as a struct of arrays, pure and seeded: relevance bands, perception by sight, hearing and smell, a sliced flow field, separation, attack slots, chain alerts, doors, piles against walls, abilities as type traits, corpses, population and migration; civilians, herds and flocks; a bridge to game-infection. A literal port of the team game horde. Knows nothing about any game.",
+  "keywords": [
+    "game",
+    "crowd",
+    "horde",
+    "flow-field",
+    "agents",
+    "simulation",
+    "deterministic",
+    "seeded"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-crowd"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-characters": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@adatechnology/game-animals": "workspace:*",
+    "@adatechnology/game-animals-species": "workspace:*",
+    "@adatechnology/game-characters-undead": "workspace:*",
+    "@adatechnology/game-infection": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

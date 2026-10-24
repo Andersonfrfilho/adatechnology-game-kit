@@ -209,6 +209,36 @@ for (const lang of ['pt-BR', 'en']) {
   check(`[${lang}] the weather picture is loaded too: the storm draws the 14 000-point curtain and 4 000 near streaks over the furniture, seven picture layers, the sky left to the room`, sky.picture.curtain && sky.picture.drawn === 14000 && sky.picture.near === 4000 && sky.picture.layers.length === 7 && sky.picture.skyOn === false && sky.picture.rig, sky.picture)
   check(`[${lang}] the weather bridges: the storm's wind (4.5, 0) goes to the effects world and back to the breeze, the rain and wind loops are open, the thunder is in the room engine`, Math.abs(sky.wind[0] - 4.5) < 1e-9 && sky.wind[2] === 0 && Math.abs(sky.windAfter[0] - 3.5) < 1e-9 && Math.abs(sky.windAfter[2] - 1.5) < 1e-9 && sky.loops >= 1 && sky.thunder, sky)
 
+  // the player area rides along: its report is clean and its six scenarios pass in this room too
+  const body = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const loaded = window.__furnitureReport.player
+    const scenarios = room.scenarios.filter((s) => s.id.startsWith('player_'))
+    const result = await room.runScenarios(scenarios)
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], scenarios: scenarios.length, failed: result.failed }
+  })
+  check(`[${lang}] the player module is loaded too (6 scenarios pass)`, body.module === 'player_area' && body.ok && body.problems.length === 0 && body.scenarios === 6 && body.failed === 0, body)
+
+  // the crowd area rides along: its report is clean, its nine scenarios pass here too, and it starts empty
+  const horde = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const loaded = window.__furnitureReport.crowd
+    const scenarios = room.scenarios.filter((s) => s.id.startsWith('crowd_'))
+    const result = await room.runScenarios(scenarios)
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], scenarios: scenarios.length, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id) }
+  })
+  check(`[${lang}] the crowd module is loaded too (9 scenarios pass)`, horde.module === 'crowd_area' && horde.ok && horde.problems.length === 0 && horde.scenarios === 9 && horde.failed === 0, horde)
+
+  // the stories area rides along: its report is clean and its six scenarios pass here too
+  const tales = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const loaded = window.__furnitureReport.stories
+    const scenarios = room.scenarios.filter((s) => s.id.startsWith('stories_'))
+    const result = await room.runScenarios(scenarios)
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], scenarios: scenarios.length, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id) }
+  })
+  check(`[${lang}] the stories module is loaded too (6 scenarios pass)`, tales.module === 'stories_area' && tales.ok && tales.problems.length === 0 && tales.scenarios === 6 && tales.failed === 0, tales)
+
   if (lang === 'pt-BR') {
     await page.close()
     const p = await open('?lang=pt-BR&ui=0')

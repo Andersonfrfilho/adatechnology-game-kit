@@ -1,0 +1,60 @@
+{
+  "id": "bloco_inicial",
+  "roles": [
+    {
+      "id": "rosa",
+      "person": "rosa"
+    },
+    {
+      "id": "jessica",
+      "person": "jessica"
+    },
+    {
+      "id": "cicero",
+      "create": true,
+      "tags": [
+        "bloco_inicial"
+      ],
+      "needs": {
+        "sex": "m",
+        "age": [
+          58,
+          58
+        ],
+        "base": "aurora",
+        "profession": [
+          "builder"
+        ]
+      },
+      "bond": {
+        "role": "rosa",
+        "relation": "irmão",
+        "sameSurname": true
+      }
+    },
+    {
+      "id": "sandra",
+      "create": true,
+      "tags": [
+        "bloco_inicial"
+      ],
+      "needs": {
+        "sex": "f",
+        "age": [
+          34,
+          34
+        ],
+        "base": "aurora",
+        "profession": [
+          "nurse"
+        ]
+      },
+      "bond": {
+        "role": "jessica",
+        "relation": "prima",
+        "sameSurname": true
+      }
+    }
+  ],
+  "beats": []
+}

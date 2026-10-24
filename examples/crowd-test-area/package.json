@@ -1,0 +1,23 @@
+{
+  "name": "@adatechnology/crowd-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Crowd area for the shared test room: a horde of the undead pack drawn on the instanced path (every type's variants baked by the Bestiário builder, three levels of detail, a few draw calls), the room's camera as the game-player body it hunts, civilians who follow and flee, the herd and the vultures drawn by game-animals-three, and a game-infection region that brings agents out and takes them back. The bench sets the count, the type, the night and the seed, makes a noise, shoots the nearest, kills all, and shows the agents, the levels of detail, the draw calls and the bake time. Nine scenarios check the rules.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-animals": "workspace:*",
+    "@adatechnology/game-animals-species": "workspace:*",
+    "@adatechnology/game-animals-three": "workspace:*",
+    "@adatechnology/game-characters-three": "workspace:*",
+    "@adatechnology/game-characters-undead": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-crowd": "workspace:*",
+    "@adatechnology/game-crowd-three": "workspace:*",
+    "@adatechnology/game-infection": "workspace:*"
+  }
+}

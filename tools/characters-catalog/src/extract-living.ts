@@ -22,6 +22,17 @@ export type LivingData = {
   readonly loot: Rows
   readonly lootCategories: Readonly<Record<string, string>>
   readonly generics: Rows
+  /** The life simulation's tables of the valley: risk by place, exposure by person, couples, nicknames, women, who starts undead, caps. */
+  readonly lifeTables: {
+    readonly placeRisk: Readonly<Record<string, number>>
+    readonly exposure: Readonly<Record<string, number>>
+    readonly couples: readonly (readonly [string, string])[]
+    readonly nicknames: Readonly<Record<string, string>>
+    readonly women: readonly string[]
+    readonly startUndead: Readonly<Record<string, string>>
+    readonly cap: number
+    readonly room: number
+  }
   /** `rng`, `world`, `life`, `apply` and `simulate` plus their tables, verbatim: the life simulation of the valley, a game rule. */
   readonly lifeSimulationSource: string
 }
@@ -54,6 +65,16 @@ export const extractLiving = (): LivingData => {
     loot: extractLiteral(source, 'LOOT'),
     lootCategories: extractLiteral(source, 'LCAT'),
     generics: extractLiteral(source, 'GENT'),
+    lifeTables: {
+      placeRisk: extractLiteral(source, 'REG'),
+      exposure: extractLiteral(source, 'EXPO'),
+      couples: extractLiteral(source, 'COUPLES'),
+      nicknames: extractLiteral(source, 'NICK'),
+      women: evaluateLiteral<readonly string[]>(cutBetween(source, 'const FEM=new Set(', ');').replace('const FEM=new Set(', '')),
+      startUndead: extractLiteral(source, 'START_Z'),
+      cap: Number(/const CAP=(\d+),ROOM=(\d+);/.exec(source)![1]),
+      room: Number(/const CAP=(\d+),ROOM=(\d+);/.exec(source)![2]),
+    },
     lifeSimulationSource: cutBetween(source, LIFE_START, LIFE_END).trimEnd(),
   }
 }

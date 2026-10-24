@@ -1,0 +1,99 @@
+{
+  "sources": {
+    "file": "specs/001-migracao-entregas-dos-times/sources/sobreviventes__os-vivos-do-vale.js (site/pages/sobreviventes/os-vivos-do-vale.html)",
+    "pools": "NM (lines 610-611): m, f, s, bm, bf",
+    "kinship": "RELW (line 612)"
+  },
+  "pt-BR": {
+    "male": [
+      "João",
+      "Paulo",
+      "Marcos",
+      "André",
+      "Rafael",
+      "Thiago",
+      "Bruno",
+      "Luiz",
+      "Sérgio",
+      "Wagner",
+      "Cícero",
+      "Edson",
+      "Igor",
+      "Mateus",
+      "Renan",
+      "Hugo"
+    ],
+    "female": [
+      "Ana",
+      "Patrícia",
+      "Juliana",
+      "Camila",
+      "Sandra",
+      "Luana",
+      "Márcia",
+      "Fernanda",
+      "Aline",
+      "Rita",
+      "Jaqueline",
+      "Simone",
+      "Larissa",
+      "Bruna",
+      "Tereza",
+      "Vanessa"
+    ],
+    "surnames": [
+      "Silva",
+      "Santos",
+      "Oliveira",
+      "Souza",
+      "Pereira",
+      "Lima",
+      "Carvalho",
+      "Gomes",
+      "Ribeiro",
+      "Martins",
+      "Rocha",
+      "Almeida",
+      "Barbosa",
+      "Teixeira",
+      "Moraes",
+      "Cunha"
+    ],
+    "babyMale": [
+      "Davi",
+      "Miguel",
+      "Gael",
+      "Bento",
+      "Noah",
+      "Theo"
+    ],
+    "babyFemale": [
+      "Esperança",
+      "Aurora",
+      "Cecília",
+      "Luna",
+      "Maria Luz",
+      "Alice"
+    ],
+    "kinship": {
+      "male": [
+        "irmão",
+        "primo",
+        "ex-aluno",
+        "vizinho",
+        "colega de trabalho",
+        "afilhado",
+        "filho"
+      ],
+      "female": [
+        "irmã",
+        "prima",
+        "ex-aluna",
+        "vizinha",
+        "colega de trabalho",
+        "afilhada",
+        "filha"
+      ]
+    }
+  }
+}

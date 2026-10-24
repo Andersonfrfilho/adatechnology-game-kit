@@ -166,6 +166,10 @@ Dados de ficha, sem 3D: `ATTRS` (6: Força, Vigor, Agilidade, Percepção, Intel
 o que oferece), `derived()` (178: vida 70+6·VIG, fôlego 40+6·VIG+4·AGI, carga 8+2,5·FOR, corrida 5,2+0,12·AGI, raio 12+2·PER, ruído 100−4·AGI, XP 70+6·INT, compostura 20+3·VIG+4·PRE,
 dano corpo a corpo (FOR−5)·6%), `pool()` e a tela do criador. O texto também fixa a "regra do corredor" (jogador com corrida ≥ 6,0 m/s é mais rápido que o Corredor).
 
+✅ **T8.2**: `ATTRS`, `SKILLS`, `PROFS`, `TRAITS`, `derived()` e os nomes em `game-characters-people` (`SHEET_RULESET`, `NAME_POOLS`, conferidos literalmente por
+`tools/characters-catalog/tests/sheet-sources.test.ts`); `pool()`, a ficha, memória e opinião em `game-stories` (`createSheet`, `drawSheet`), golden de 48 fichas em
+`game-stories-life.json`. Os 8 `NPCS` são conteúdo do jogo (`game-slice/stories/cast.json`, pela versão de Os Vivos do Vale). A tela do criador fica na bancada `stories_area`.
+
 ### 1.4 Retratos do Vale (`retratos.js`, 726 linhas)
 
 - `build(sp, idx)` (64-308): **o mesmo corpo do Elenco**, com acréscimos: cabelo `pony`, rosto `mirror` e `labgoggles` e `beard` simples, chapéu `helmet` (com `tape`, `photo`, `nvg`), e uns 35 acessórios novos
@@ -198,6 +202,11 @@ Tudo é dado e regra de simulação (nenhum 3D):
 - **Vida sorteada** (605-757): `REG`, `EXPO`, `NM` (nomes), `RELW`, `HOSTB`, `CAP`=104, `ROOM`=8, `COUPLES`, `world()` (619), `life(d,S,F,R,W,log)` (623-739: nascimentos, chegadas, laços, brigas, traições,
   caravanas, ataques, gravidez), `apply` (740), `simulate(day, A, O)` (744), com PRNG semeado (`rng`, 606).
 - Texto (linha 2): 31 sobreviventes nomeados, 12 grupos (mais 6 depois), 40 genéricos por servidor, 9 estados, "o mundo segue sem o jogador". Números são proposta para playtest.
+
+✅ **T8.2**: `life()`, `world()`, `apply`, `simulate()` e o motor de `EV` em `game-stories` (`createLifeWorld`, `lifeDay`, `fillWorld`, `createStoryWorld`, `runBeat`,
+`applyChanges`), números em `src/data/life.json` com a linha de origem e textos em `src/data/life-text.json`, golden `game-stories-life.json` (7 vidas inteiras, 40 por hash,
+96 conjuntos de `ACTS`). O conteúdo do vale (`GROUPS`, `NPCS`, `EXTRA`, `RELS`, `ACTS`, `EV` como 13 histórias, `REG`, `EXPO`, `HOSTB`, `COUPLES`) vai para o jogo em
+`game-slice/stories/`; Cícero e Sandra como papéis (`roles.json`, P9). Fardados (`FACT`, `RANKS`, `LOOT`, `GENT`) e `JOIN` não entraram no T8.2.
 
 ### 1.6 Bichos do Vale (`bichos.js`, 521 linhas)
 
@@ -254,14 +263,14 @@ escala 1,25), `c` (criança, 0,66); `o.human`, `o.dead`, `o.still`, `o.walk` (an
 | `BEST` (Bestiário v17) | 70113-70341 | 55191-55421 | o `build` do Bestiário com `setLOD`, ossos marcados (`userData.bone` 11 = mandíbula), olhos marcados (`userData.eye`), boca aberta, mancha nas costas, retorno `{build, TYPES, setLOD, topM}` |
 | `bakeBody(spec, lod)` | 70345-70399 | 55422 | assa qualquer rig (Bestiário ou retrato) numa malha só: osso, pivô e cor por vértice; sangue sobe 6 mm pela normal |
 | `BICHOS` | 70472-70853 | não existe | cópia dos construtores e animação da página dos Bichos sem o cenário (`quad`, `bird`, `snake`, `SPEC`, `animQuad/Bird/Snake`, `setInfected`) |
-| `bichoPele`, `bichoNovo`, `bichosPovoar`, `bichosUpdate`, `bichoSom` | 70854-71039 | não existe | **pele de GPU**: a árvore de ~50 malhas do bicho vira uma malha só com `uB[nos]` matrizes por quadro; povoamento (Caramelo companheiro, 2 gatos, galinhas, 2 quero-queros, fazenda com vaca/cavalo/porcos/vaca morta, 3 capivaras, 3 urubus); medo, alarme, latido, mugido, som sintetizado |
+| `bichoPele`, `bichoNovo`, `bichosPovoar`, `bichosUpdate`, `bichoSom` | 70854-71039 | não existe | **pele de GPU**: a árvore de ~50 malhas do bicho vira uma malha só com `uB[nos]` matrizes por quadro; povoamento (Caramelo companheiro, 2 gatos, galinhas, 2 quero-queros, fazenda com vaca/cavalo/porcos/vaca morta, 3 capivaras, 3 urubus); medo, alarme, latido, mugido, som sintetizado <br>✅ **T8.1b**: comportamento (`bichoLivre`, `zumbiPerto`, `bichosUpdate`, urubus) em `game-crowd` (`createHerd`, `HERD_ROLES`, `createFlock`), golden `game-crowd-herd.json`; a pele e o som sintetizado ficam no desenho e no `game-audio` <br>✅ **T8.1c**: o desenho da manada em `game-crowd-three` (`createHerdView` com os rigs do `game-animals-three`, a pele de nós dele, e as asas dos urubus de G 66707), o som (`bichoSom`) no `CROWD_SOUND_BANK` |
 | `Z` (estruturas de arrays), `zSpawn`, `zRemove` | 71043-71109 | 55545-55662 | 6000 zumbis em arrays tipados; campos de `cat`, `age`, `roupa`, `h`, `b`, `hp`, `segH/segA/segL`, `miss`, `capacete`, `st`, `band`, `y`, `andar`, `burn`, `npc`, `named`... |
 | `hordeUpdate` (flow field, relevância, percepção, ruído, vagas de ataque), `groan`, `screamAt`, `zAttack` | 71161-71334 | 55663- | simulação de horda |
 | `zDamage`, `zKill`, `inchadoBurst`, `corpseAdd`, `corpsesUpdate` | 71337-71402 | 55829- | dano por região unificado (região 0 cabeça, 1 tronco, 2/3 braço E/D, 4/5 perna E/D), capacete absorve tiro de pistola, colete reduz, membro a zero arranca ou quebra, perna a zero rasteja, perna a 50% manca; corpos 15 min (`CORPOS_MAX` 400, `CORPO_VIDA` 900) |
-| `hordeRender`, `ZVAR`, `populate`, `populationUpdate` | 71424-71506 | 55916- | variantes assadas por tipo, LOD por distância (`LOD_D` 18 e 55 m), população com reposição pela borda |
+| `hordeRender`, `ZVAR`, `populate`, `populationUpdate` | 71424-71506 | 55916- | variantes assadas por tipo, LOD por distância (`LOD_D` 18 e 55 m), população com reposição pela borda <br>✅ **T8.1c**: `hordeRender` e `ZVAR` em `game-crowd-three` (`createCrowdInstances`, `createCrowdRenderer`, sobre `bakeBody`/`createVariantBatches` do `game-characters-three`), golden `game-crowd-render.json`; `populationUpdate` já estava no `game-crowd` (T8.1a) |
 | `zSpecialSpawn`, `zAbility`, `zChaseSpeed`, `zFrame`, pirâmide, piscina, rastro de sangue | 71507-71729 | 56073- | habilidades dos 13 tipos (estados 5 no ar, 6 dormente, 7 inchando, 8 golpe em arco, 9 comendo, 10 degrau da pirâmide, 12 indo ao som), pirâmide de corpos (`PILE_STEP` 0,48, `PILE_TOP` 3,7), piscina do Afogado, `TRAIL` do Farejador |
 | `fxLimb`, `fxBlood`, `decalAdd`, `fxCloud` | 72284, 72245, 72174, 72271 | 56416 | membro arrancado voa (cápsula instanciada, 40 máx.), sangue por idade, decal que seca, nuvem do Inchado |
-| `NPC` (quarteirão), `npcUpdate`, `npcMove`, `npcZombies`, `zChaseNpc`, `npcMorre`, `npcVira`, `npcRender`, `VS`, `DIARIO`, rádio das 20 h | 74248-74510 | 58375-58605 | 4 NPCs do quarteirão (Helena, Davi, Seu Cícero, Sandra) com rotina `[hora, lugar]`, fala, item marcado, vínculo; morte, mordida e reanimação como Lento; rádio da Jéssica; relógio do vale que roda `simulate()` à meia-noite |
+| `NPC` (quarteirão), `npcUpdate`, `npcMove`, `npcZombies`, `zChaseNpc`, `npcMorre`, `npcVira`, `npcRender`, `VS`, `DIARIO`, rádio das 20 h | 74248-74510 | 58375-58605 | 4 NPCs do quarteirão (Helena, Davi, Seu Cícero, Sandra) com rotina `[hora, lugar]`, fala, item marcado, vínculo; morte, mordida e reanimação como Lento; rádio da Jéssica; relógio do vale que roda `simulate()` à meia-noite <br>✅ **T8.1b**: o motor (`pontos`, `rota`, `npcZombies`, `zChaseNpc`, `npcMorre`, `npcVira`, `npcMove`, `npcUpdate`) em `game-crowd` (`createCivilians`), golden `game-crowd-civilians.json`; nomes, falas, rádio, diário e a saída da Helena são do jogo (eventos `bitten`, `died`, `turned`, `gone`) <br>✅ **T8.1c**: `npcRender` e `PB` em `game-crowd-three` (`instances.civilians`, um corpo assado por civil dado pelo host) |
 | `GROUPS`, `NPCS`, `RELS`, `EV`, `FACT`, `LOOT`, `GENT`, `life`, `simulate` | 73490-74247 | (cópia) | o código de `vivos.js` embutido, sem a interface |
 
 ---
@@ -356,12 +365,12 @@ Critério de "melhor": serve a um `game-characters` único, reutilizável por jo
 
 | Assunto | Versão (onde) | O que tem | Melhor | Por quê | Ação |
 |---|---|---|---|---|---|
-| História, rotina, segredo | Personagens `NPCS` (8), Vivos `NPCS` (44, textos dos 8 idênticos), jogo `NPCS` (cópia de Vivos) | | **Vivos** | superset, com laços e eventos | Conteúdo |
+| História, rotina, segredo | Personagens `NPCS` (8), Vivos `NPCS` (44, textos dos 8 idênticos), jogo `NPCS` (cópia de Vivos) | | **Vivos** | superset, com laços e eventos | Conteúdo<br>✅ **T8.2**: `game-slice/stories/cast.json` |
 | Visual | Elenco `NPCS` (8), Retratos `PEOPLE` (44) | | **Retratos** | superset, com `zcat`, criança, item marcado | Conteúdo |
 | Rotina em execução | jogo `NPC` (4 pessoas, `rotina [hora, lugar]`, `npcUpdate`) | | **jogo** (comportamento) | roda no mundo | Motor genérico de rotina em conteúdo/IA |
-| Cícero e Sandra | só no jogo (`livre:74271`) | NPCs do quarteirão que **não existem** em `vivos.js` nem em `retratos.js` | **sem equivalente** | conteúdo novo do jogo | Dúvida 5.9 |
+| Cícero e Sandra | só no jogo (`livre:74271`) | NPCs do quarteirão que **não existem** em `vivos.js` nem em `retratos.js` | **sem equivalente** | conteúdo novo do jogo | Dúvida 5.9<br>✅ **T8.2**: papéis com nome sorteado (P9) em `game-slice/stories/roles.json` |
 | Fardados | Vivos (`FACT`, `RANKS`, `LOOT`, `GENT`), Retratos (camuflado xadrez, colete, placa), Arsenal | | **Vivos** (regras) + **Retratos** (visual) | | Conteúdo |
-| Simulador do destino | Vivos `life`/`simulate`, jogo (cópia) | | **iguais** | | Conteúdo de jogo |
+| Simulador do destino | Vivos `life`/`simulate`, jogo (cópia) | | **iguais** | | Conteúdo de jogo<br>✅ **T8.2**: motor em `game-stories`, conteúdo em `game-slice/stories/` |
 
 ### 2.8 Animais
 
@@ -370,7 +379,7 @@ Critério de "melhor": serve a um `game-characters` único, reutilizável por jo
 | Corpos, animação, infecção | Bichos `quad`/`bird`/`snake`/`SPEC`/`anim*` (`bichos:147-440`) | 13 espécies | **Bichos (original)** | é a fonte | Base do `game-animals-three` |
 | | Jogo `BICHOS` (`livre:70472`) | **cópia** dos construtores e animação | igual | cópia literal | Descartar (consumir do pacote) |
 | Pele de GPU | Jogo `bichoPele` (`livre:70862`) | árvore de ~50 malhas → 1 malha com matrizes de nós | **Jogo** | nada igual na página | Portar para `-three` |
-| Comportamento | Jogo `bichosUpdate` (`livre:70974`) | medo, alarme, companheiro, urubus, som | **Jogo** | a página não tem comportamento | Conteúdo/IA de animais |
+| Comportamento | Jogo `bichosUpdate` (`livre:70974`) | medo, alarme, companheiro, urubus, som | **Jogo** | a página não tem comportamento | Conteúdo/IA de animais <br>✅ **T8.1b**: `game-crowd` `createHerd` |
 | Espécies no jogo | | 9 de 13 (sem javali, onça, jararaca, rato) | | | Dúvida 5.10 |
 | Infecção de bicho | Bichos (`setInfected`) | visual de infectado e morto | **só visual** | nenhuma regra de zumbi de bicho no jogo | Dúvida 5.10 |
 

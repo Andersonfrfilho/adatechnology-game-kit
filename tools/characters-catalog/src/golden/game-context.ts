@@ -25,9 +25,9 @@ const rulesCode = (source: string): string =>
   ].join('\n')
 
 /** The zombie table of the game with a small capacity (the golden spawns one at a time), cut from the horde section. */
-const zombieTableCode = (source: string): string => {
+const zombieTableCode = (source: string, capacity: number): string => {
   const horde = fromMarker(source, HORDE_MARKER)
-  return [`const ZMAX = ${SMALL_ZOMBIE_CAPACITY};`, cutDeclaration(horde, 'Z'), cutDeclaration(horde, 'FIELDS')].join('\n')
+  return [`const ZMAX = ${capacity};`, cutDeclaration(horde, 'Z'), cutDeclaration(horde, 'FIELDS')].join('\n')
 }
 
 /**
@@ -44,12 +44,13 @@ export type GameContext = Readonly<Record<string, unknown>>
 
 /**
  * Runs a slice of the game in an empty context. `scope` supplies what the slice reads from the rest of the game (the RNG, the effects as
- * recording stubs); `extra` is more game code (named functions) to cut in, and `exports` the names to hand back.
+ * recording stubs); `extra` is more game code (named functions) to cut in, and `exports` the names to hand back. `capacity` is the zombie table's
+ * size (8 by default: the goldens spawn one at a time).
  */
-export const evaluateGameSlice = <TValue extends GameContext>(options: { readonly functions: readonly string[]; readonly exports: readonly string[]; readonly scope: Record<string, unknown>; readonly tail?: string }): TValue => {
+export const evaluateGameSlice = <TValue extends GameContext>(options: { readonly functions: readonly string[]; readonly exports: readonly string[]; readonly scope: Record<string, unknown>; readonly tail?: string; readonly capacity?: number }): TValue => {
   const source = readSource(SOURCE_PATHS.game)
   const horde = fromMarker(source, HORDE_MARKER)
   const functions = options.functions.map((name) => cutFunction(horde, name))
-  const code = [rulesCode(source), zombieTableCode(source), variantCode(source), ...functions, options.tail ?? ''].join('\n')
+  const code = [rulesCode(source), zombieTableCode(source, options.capacity ?? SMALL_ZOMBIE_CAPACITY), variantCode(source), ...functions, options.tail ?? ''].join('\n')
   return evaluateSlice<TValue>(code, options.exports, options.scope)
 }
