@@ -857,3 +857,45 @@ Regras R do VC3 portadas: `playerRadius` 0,24 (grade de 10 cm que descarta célu
 | `game-floorplan` / `-residential` / `-commercial` / `-post-apocalyptic` (Node 24 e 22) | 17 / 16 / 9 / 106 passaram nos dois |
 
 Modelo da execução: `sonnet`.
+
+## T2.2f–g
+
+Modelo: `sonnet`. Branch `work/spec001-t2-f` (sobre `feat/spec-001-fase-2` com as regras do VC3 no núcleo). Commits: `feat(game-floorplan-rural)…` (T2.2f) e `feat(game-floorplan-residential): casa de laje…` (T2.2g); esta seção é o terceiro.
+
+### T2.2f — `game-floorplan-rural`
+
+- Pacote novo `@adatechnology/game-floorplan-rural` 0.1.0 (ESM + IIFE `GameFloorplanRural`): `wood_frame_house`, `a_frame_chalet`, `log_cabin`, `shack`, `campsite`, estilo e paleta `rural` (receita `mid` com tabela e fluxo próprios), perfil de decoração, 28 itens, 23 bibliotecas de slots (estendem `living` e `laundry` do residencial), nomes en / pt-BR, marca `region: 'br'`, `construction` (`wood_frame`, `log`, `improvised`, `canvas`) e `place` (`house`, `cabin`, `shack`, `camp`). `MIGRATION.md` com as tabelas de ids; elas entram em `vc3-id-map.json`.
+- Motor (mínimo): `TemplateDef.config` (vai para `result.config`), `Plan.options` (o `reservations` do modelo precisa da semente) e `engine.paletteStyles`. Residencial: o passe de decoração põe lampiões (`ceiling_oil_lamp`, `oil_lamp`) nos planos `power: 'offgrid'`, no mesmo ponto do fluxo da página (sem luz de teto).
+- **Golden:** as 375 plantas rurais gravadas na T2.2a passam (5 modelos x 25 sementes x 3 estados, todas as listas); o teste não lista mais pendentes (17 de 17 modelos). Conferência extra, não gravada: gravei de novo a página (sementes 26–100, 5 modelos, 3 estados) e o pacote confere **1125 plantas, 0 diferenças**.
+- `steps` das portas de entrada vêm da elevação da fundação (laje 0,2, vazio 0,6, porão 0,5, pilotis 0,9, cabana 0,5), como a página faz na montagem da estrutura.
+
+### T2.2g
+
+- `budget_slab_house`: `floorRange [1, 3]`, `floorsFn`, opções `floors` (padrão 1: as 75 plantas da página continuam iguais) e `randomFloors`. Andares de cima: 2 quartos + banheiro; escada reta na margem esquerda em `result.config.sideStair`; esperas de vergalhão na laje do topo em 60% (sempre no térreo único, como a página).
+- Barraco: `result.config.power: 'tap'` (gato); decoração segue como rede (luz de teto).
+- Testes: pacote rural (26: registro, textos nos 2 idiomas, 13 variantes x 30 sementes x 3 estados válidas com caminho em toda porta, regras rurais), residencial (+6 da laje), suíte de propriedades do post-apocalyptic com variantes rurais e de 2 e 3 andares (a checagem de escada vira "escada lateral" quando há `sideStair`).
+
+### Escolhas de negócio (padrão reversível, para o PR)
+
+1. `budget_slab_house` sem `floors` continua com 1 andar (a página); o sorteio uniforme 1–3 da Galeria é `randomFloors: true`.
+2. Andar de cima: quarto da frente (5 m), quarto dos fundos e banheiro; a escada é dado de configuração (não item), um lance de 3,9 m por andar; no 3º andar o quarto dos fundos usa só cama de solteiro (porta da escada come parede).
+3. `use` do camping é `recreational`; casas são `residential_single`. `place`: `house`, `cabin` (chalé e cabana), `shack`, `camp`.
+4. Opções renomeadas em inglês (tabela no MIGRATION do rural); cor de telhado do modelo vai em `facade.roofColor`.
+5. Cor de parede e piso de `porch`, `tent` e `camp` não herdam a da sacada (o motor não tem alias de tipo na paleta).
+
+### Perguntas para o dono
+
+1. Com 200 sementes (`FULL=1`) os modelos rurais têm raras plantas que a própria página também gera (idênticas): alpendre da cabana com centro inalcançável (sementes 53, 68, 123, 167, 173), pouso de escada bloqueado por vaso no chalé (187), quarto do barraco com 29% de área alcançável (200) e estado abandonado sem cadeira caída no barraco (90). Mantive o porte fiel (suíte padrão, 25 sementes, passa); corrijo na página e no porte juntos se quiser.
+2. A laje com andares: a escada na margem esquerda tapa a porta lateral da cozinha por cima? (ela passa acima de 2,6 m; confirma o desenho?)
+
+### Portões
+
+| Comando | Resultado |
+|---|---|
+| `pnpm build` | exit 0 |
+| `pnpm -r typecheck` | exit 0 |
+| `pnpm lint` | exit 0 |
+| floorplan, residential, commercial, rural (Node 24 e 22.23.4) | 18 / 23 / 9 / 26 passaram nos dois |
+| post-apocalyptic (golden VC3 + propriedades; Node 24 e 22.23.4) | 175 passaram nos dois |
+| `pnpm -r test` (inteiro, em segundo plano) | todos os pacotes passam; na execução paralela o worker do post-apocalyptic perdeu um RPC do vitest ("Timeout calling onTaskUpdate", 175 passaram), e sozinho dá exit 0 |
+| `docker build -f site/Dockerfile .` | exit 0 |
