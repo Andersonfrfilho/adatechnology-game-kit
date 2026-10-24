@@ -1,7 +1,7 @@
 | **Total** | **26474** | **-26217** |# Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **32 de 257 itens têm modelo 3D; faltam 225.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **33 de 257 itens têm modelo 3D; faltam 224.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -23,9 +23,9 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 666 | -661 |
 | História e colecionáveis | 1668 | -1652 |
 | Chaves e acesso | 1207 | -1196 |
-| **Total** | **32** | **225** |
+| **Total** | **33** | **224** |
 
-## Comida (11 de 36)
+## Comida (12 de 36)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -40,7 +40,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Carne bovina crua (1 kg) (kit) | `carne_bovina` | `raw_beef` | 1,0 kg | comum | 200 x 50 x 150 mm |
 | [x] | Carne de caça (capivara, javali) (kit) | `carne_caca` | `game_meat` | 1,5 kg | comum | 300 x 80 x 200 mm |
 | [x] | Charque (kit) | `charque` | `jerked_beef` | 0,5 kg | incomum | 250 x 25 x 150 mm |
-| [ ] | Conserva caseira (pote) | `conserva` | `home_preserves` | 0,6 kg | incomum | 90 x 130 x 90 mm |
+| [x] | Conserva caseira (pote) (kit) | `conserva` | `home_preserves` | 0,6 kg | incomum | 90 x 130 x 90 mm |
 | [ ] | Dúzia de ovos | `ovos` | `eggs` | 0,7 kg | comum | 250 x 70 x 100 mm |
 | [ ] | Farinha de mandioca (1 kg) | `farinha_mandioca` | `cassava_flour` | 1,0 kg | comum | 150 x 250 x 60 mm |
 | [ ] | Feijão seco (1 kg) | `feijao_seco` | `beans` | 1,0 kg | comum | 100 x 200 x 60 mm |
