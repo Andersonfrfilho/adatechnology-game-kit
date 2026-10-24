@@ -555,6 +555,37 @@ describe('explode without an exploding part', () => {
   })
 })
 
+describe('explode with a blast report', () => {
+  const shoved = (report: Parameters<ReturnType<typeof setup>['renderer']['explode']>[3]) => {
+    const { world, renderer, scene } = setup()
+    world.addObject('crate', [partState('box', 'wood', { mass: 10 })])
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.6))
+    const root = new THREE.Group()
+    root.add(mesh)
+    root.position.set(2, 0.2, 0)
+    scene.add(root)
+    renderer.bind('crate', root, { parts: { box: mesh } })
+    const piece = renderer.makePiece('crate')
+    renderer.explode([0, 0.2, 0], 50000, 6, { visual: false, ...report })
+    return Math.hypot(...piece.velocity)
+  }
+  const result = (shelter: number, confinement = 1) => [{ object: 'crate', damage: 0, penetrated: false, exitEnergy: 0, events: [], blast: { shelter, confinement, fragmentHits: 0 } }]
+
+  it('pushes a piece with the energy that reached it', () => {
+    const open = shoved(undefined)
+    const sheltered = shoved({ report: result(0.15) })
+    expect(sheltered).toBeGreaterThan(0)
+    expect(sheltered).toBeCloseTo(open * Math.sqrt(0.15), 3)
+    expect(shoved({ report: result(1) })).toBeCloseTo(open, 6)
+  })
+
+  it('confinement makes the push stronger and a report of other objects changes nothing', () => {
+    const open = shoved(undefined)
+    expect(shoved({ report: result(1, 2) })).toBeGreaterThan(open)
+    expect(shoved({ report: [{ ...result(0.1)[0]!, object: 'elsewhere' }] })).toBeCloseTo(open, 6)
+  })
+})
+
 describe('clear and dispose', () => {
   it('leaves the scene with only what the host added', () => {
     // a shared effects world adds nothing to the scene; the own layer has its own test below
