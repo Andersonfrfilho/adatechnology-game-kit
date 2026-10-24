@@ -816,6 +816,12 @@ importers:
       '@adatechnology/game-floorplan':
         specifier: workspace:*
         version: link:../game-floorplan
+      '@adatechnology/game-vegetation-species':
+        specifier: workspace:*
+        version: link:../game-vegetation-species
+      '@adatechnology/game-vehicles-fleet':
+        specifier: workspace:*
+        version: link:../game-vehicles-fleet
     devDependencies:
       '@adatechnology/golden-tool':
         specifier: workspace:*
@@ -844,6 +850,15 @@ importers:
       '@adatechnology/game-urban':
         specifier: workspace:*
         version: link:../game-urban
+      '@adatechnology/game-vegetation':
+        specifier: workspace:*
+        version: link:../game-vegetation
+      '@adatechnology/game-vegetation-species':
+        specifier: workspace:*
+        version: link:../game-vegetation-species
+      '@adatechnology/game-vehicles-three':
+        specifier: workspace:*
+        version: link:../game-vehicles-three
     devDependencies:
       '@adatechnology/game-test-room':
         specifier: workspace:*

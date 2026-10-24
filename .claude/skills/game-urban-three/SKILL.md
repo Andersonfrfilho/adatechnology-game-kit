@@ -25,10 +25,11 @@ drawn.dispose()
 | Export | Para que serve |
 |---|---|
 | `createUrbanThree(THREE, { document? })` | o desenhista; `draw(scene, { root? })` devolve `{ root, lights, animate, dispose }` |
+| `createVehicleResolver(vehiclesThree, { quality? })`, `createPlantResolver(THREE, { lod?, condition?, season?, materials? })` | resolvedores das partes `placement`: veículo `lite` do `game-vehicles-three` e planta do `game-vegetation`; passam em `createUrbanThree(THREE, { resolvers: { vehicle, plant } })` |
 | `createRoundedBox`, `createPrism`, `createTextTexture` | as geometrias e a textura do time, soltas |
 
 ## Compõe com
-`game-urban` (as cenas), `game-floorplan` (as silhuetas de casas e prédios entram como partes).
+`game-urban` (as cenas), `game-floorplan` (as silhuetas de casas e prédios entram como partes), `game-vehicles-three` (veículos estacionados), `game-vegetation` e `game-vegetation-species` (plantas).
 
 ## Cuidados
 - `document` só é exigido para placas e letreiros.

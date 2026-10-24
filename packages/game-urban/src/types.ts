@@ -78,8 +78,28 @@ export type LightPart =
       sweep?: { speed: number; radius: number }
     }
 
+/**
+ * A thing another package draws where the scene says: a vehicle of the fleet or a plant of the species pack. The scene keeps only
+ * what to put and where; the drawer asks the resolver of that kind for an object (nothing is drawn when it has none).
+ * `y` is the base on the ground, `color` the body paint of a vehicle (omitted: the palette of its group by `seed`).
+ */
+export type PlacementPart = {
+  shape: 'placement'
+  parent: number
+  kind: 'vehicle' | 'plant'
+  /** Id of the vehicle in the fleet or of the species in the pack. */
+  id: string
+  x: number
+  y: number
+  z: number
+  ry: number
+  scale: number
+  color?: number
+  seed: number | string
+}
+
 /** The parts of an urban scene: the silhouette vocabulary of game-floorplan plus what streets and poles need. */
-export type UrbanPart = Styled<SilhouettePart> | ConePart | CrownPart | PlanePart | VaultPart | TerrainPart | LabelPart | LightPart
+export type UrbanPart = Styled<SilhouettePart> | ConePart | CrownPart | PlanePart | VaultPart | TerrainPart | LabelPart | LightPart | PlacementPart
 
 /** One small box drawn as an instance of a single mesh (dashes of a road, sandbags). `y` is the base. */
 export type ItemBox = { x: number; y: number; z: number; width: number; height: number; depth: number; color: number; rx: number; ry: number; rz: number }

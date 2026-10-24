@@ -3,6 +3,7 @@ import type { ItemBox, PartStyle, SilhouetteWindow, UrbanPart, UrbanScene } from
 import { createPrism, createRoundedBox } from './rounded-box'
 import { createTextTexture } from './text'
 import type { CanvasFactory } from './text'
+import type { PlacementResolver } from './resolvers'
 
 type Three = any
 
@@ -17,6 +18,8 @@ const SIGN_CANVAS = { width: 512, height: 128 }
 export type UrbanThreeOptions = {
   /** Where canvases come from (the page's `document`). Needed only for signs and labels. */
   document?: CanvasFactory
+  /** Who makes the objects of the vehicles and plants a scene places. A kind without a resolver is left empty. */
+  resolvers?: { vehicle?: PlacementResolver; plant?: PlacementResolver }
 }
 
 /** What a drawn scene gives back: the group to add to a scene, the per-frame animation and the cleanup. */
@@ -194,6 +197,16 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
         return [textPlane(part, texture([part.text], SIGN_CANVAS.width, SIGN_CANVAS.height, part.background, part.foreground, SIGN_FONT))]
       case 'label':
         return [textPlane(part, texture(part.lines, part.canvas.width, part.canvas.height, part.background, part.foreground, part.font))]
+      case 'placement': {
+        const holder = new THREE.Group()
+        holder.position.set(part.x, part.y, part.z)
+        if (part.ry) holder.rotation.y = part.ry
+        if (part.scale !== 1) holder.scale.setScalar(part.scale)
+        const object = options.resolvers?.[part.kind]?.(part)
+        if (object) holder.add(object)
+        holder.userData.placement = { kind: part.kind, id: part.id }
+        return [holder]
+      }
       case 'light': {
         if (part.kind === 'point') {
           const light = new THREE.PointLight(part.color, part.intensity, part.distance, part.decay)

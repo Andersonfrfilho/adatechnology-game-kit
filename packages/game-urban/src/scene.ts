@@ -2,7 +2,7 @@ import { boxRadius } from '@adatechnology/game-floorplan'
 
 import { createLightBudget } from './budget'
 import type { TerrainGrid } from './terrain/types'
-import type { ItemBox, LightBudget, LightPart, PartStyle, RandomSource, Silhouette, UrbanPart, UrbanScene } from './types'
+import type { ItemBox, LightBudget, LightPart, PartStyle, PlacementPart, RandomSource, Silhouette, UrbanPart, UrbanScene } from './types'
 
 const ROOT = -1
 const DEFAULT_CYLINDER_SEGMENTS = 14
@@ -73,6 +73,12 @@ export function createUrbanBuilder(random: RandomSource, options: UrbanBuilderOp
   const spot = (part: Omit<Extract<LightPart, { kind: 'spot' }>, 'shape' | 'kind' | 'parent'>): void => {
     parts.push({ shape: 'light', kind: 'spot', parent: ROOT, ...part })
   }
+  /** Asks the drawer for a vehicle or a plant at a spot; the scene does not know how it is drawn. */
+  const place = (kind: PlacementPart['kind'], id: string, x: number, z: number, o: { y?: number; ry?: number; scale?: number; color?: number; seed?: number | string; parent?: number } = {}): void => {
+    const part: PlacementPart = { shape: 'placement', parent: o.parent ?? ROOT, kind, id, x, y: o.y ?? 0, z, ry: o.ry ?? 0, scale: o.scale ?? 1, seed: o.seed ?? `${id}:${x}:${z}` }
+    if (o.color !== undefined) part.color = o.color
+    parts.push(part)
+  }
   const item = (x: number, y: number, z: number, width: number, height: number, depth: number, color: number, ry = 0, rx = 0, rz = 0): void => {
     items.push({ x, y, z, width, height, depth, color, rx, ry, rz })
   }
@@ -92,7 +98,7 @@ export function createUrbanBuilder(random: RandomSource, options: UrbanBuilderOp
     for (const window of silhouette.windows) (window.isLit ? windows.lit : windows.dark).push(window)
   }
   const scene = (): UrbanScene => ({ parts, items, windows })
-  return { random, pick, lights, parts, items, windows, group, box, cylinder, cone, prism, plane, vault, terrain, crown, line, label, light, spot, item, fence, add, scene }
+  return { random, pick, lights, parts, items, windows, group, box, cylinder, cone, prism, plane, vault, terrain, crown, line, label, light, spot, place, item, fence, add, scene }
 }
 
 export type UrbanBuilder = ReturnType<typeof createUrbanBuilder>
