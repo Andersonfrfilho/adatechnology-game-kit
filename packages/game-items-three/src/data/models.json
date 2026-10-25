@@ -973,11 +973,11 @@
     "id": "screwdriver",
     "teamId": "chave_fenda",
     "teamBox": [
-      2.2,
-      0.4,
-      0.4
+      22,
+      4,
+      4
     ],
-    "scale": 0.1
+    "scale": 0.01
   },
   {
     "id": "adjustable_wrench",
