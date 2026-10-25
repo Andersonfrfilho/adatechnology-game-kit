@@ -1898,5 +1898,15 @@
       0.3
     ],
     "scale": 1
+  },
+  {
+    "id": "fishing_rod",
+    "teamId": "vara_pesca",
+    "teamBox": [
+      1.8,
+      0.04,
+      0.04
+    ],
+    "scale": 1
   }
 ]
