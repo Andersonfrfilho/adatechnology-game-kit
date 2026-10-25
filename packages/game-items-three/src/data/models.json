@@ -773,11 +773,11 @@
     "id": "povidone_iodine",
     "teamId": "pvpi",
     "teamBox": [
-      0.45,
+      0.451,
       1.1,
-      0.356
+      0.3563
     ],
-    "scale": 0.1
+    "scale": 0.099335
   },
   {
     "id": "suture_kit",
