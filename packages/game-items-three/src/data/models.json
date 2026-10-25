@@ -2148,5 +2148,15 @@
       0.25
     ],
     "scale": 1
+  },
+  {
+    "id": "mobile_phone",
+    "teamId": "celular",
+    "teamBox": [
+      0.077,
+      0.16,
+      0.009
+    ],
+    "scale": 1
   }
 ]
