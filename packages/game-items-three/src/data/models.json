@@ -923,11 +923,11 @@
     "id": "bolt_cutters",
     "teamId": "corta_vergalhao",
     "teamBox": [
+      60,
       6,
-      0.602,
-      1.5
+      15
     ],
-    "scale": 0.1
+    "scale": 0.01
   },
   {
     "id": "bucket",
