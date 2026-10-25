@@ -320,7 +320,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Diário de sobrevivente | `diario` | `survivor_diary` | 0,3 kg | único | 162 x 210 x 55 mm |
-| [ ] | Bilhete e carta | `bilhete` | `note` | 0,01 kg | comum | 150 x 2 x 100 mm |
+| [x] | Bilhete e carta (kit) | `bilhete` | `note` | 0,01 kg | comum | 150 x 2 x 100 mm |
 | [ ] | Cartão-postal do Vale (19) | `postal` | `valley_postcard` | 0,01 kg | único | do jogo |
 | [ ] | Fichas da penitenciária | `fichas_presos` | `prisoner_files` | 0,2 kg | único | do jogo |
 | [ ] | Fita da Rádio Vale FM (12) | `fita_radio` | `radio_tape` | 0,05 kg | único | do jogo |
