@@ -146,8 +146,8 @@ const fpSteps = [
   ['m4-reload-empty', () => { S.r.resume(); S.run(100); S.r.setTool('colt_m4a1'); S.run(60); S.r.look([-9, 1.7, 9], [-9, 1.5, 30]); for (let n = 0; S.r.tool.ammo > 0 && n < 90; n++) { S.r.use(); S.run(5) } for (let i = 0; i < 6; i++) S.run(300); S.look(); S.run(30); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' })); S.run(130); S.r.pause() }],
   ['ak-reload-empty', () => { S.r.resume(); S.run(100); S.r.setTool('ak_47'); S.run(60); S.r.look([-9, 1.7, 9], [-9, 1.5, 30]); for (let n = 0; S.r.tool.ammo > 0 && n < 90; n++) { S.r.use(); S.run(5) } for (let i = 0; i < 6; i++) S.run(300); S.look(); S.run(30); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' })); S.run(150); S.r.pause() }],
   ['shotgun-pump', () => { S.r.resume(); S.run(100); S.r.setTool('remington_870'); S.run(60); S.r.look([-9, 1.7, 9], [-9, 1.5, 30]); S.r.use(); S.run(4); S.look(); S.run(14); S.r.pause() }],
-  ['kick-left', () => { S.r.resume(); S.run(70); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyV', shiftKey: true })); S.run(19); S.r.pause() }],
-  ['kick-right', () => { S.r.resume(); S.run(70); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyV', shiftKey: true })); S.run(19); S.r.pause() }],
+  ['kick-left', () => { S.r.resume(); S.run(60); S.r.setTool('hand'); S.run(40); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyV', shiftKey: true })); S.run(19); S.r.pause() }],
+  ['kick-right', () => { S.r.resume(); S.run(60); S.r.setTool('hand'); S.run(40); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyV', shiftKey: true })); S.run(19); S.r.pause() }],
   ['shove-wall', () => { S.r.resume(); S.run(70); S.r.spawn('wardrobe', [-9, 0, 8.3], 0); S.run(30); S.r.setTool('shove'); S.run(40); S.r.use(); S.run(16); S.r.pause() }],
   ['punch-third', () => { S.r.resume(); S.run(60); S.r.setCameraMode('third'); S.r.setTool('fists'); S.run(60); S.r.use(); S.run(10); S.r.pause() }],
 ]
@@ -177,6 +177,77 @@ for (const lang of ['pt-BR', 'en']) {
   }
 }
 if (!fpOk) report.failed++
+
+// every weapon with a model in the hands, in first person: contact sheets (five by four, with the id of the weapon) of the view of the hands and the weapon
+{
+  await page.goto(`${url}?ui=0&lang=en`, { timeout: 180000 })
+  await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })
+  const ids = await page.evaluate(() => {
+    const r = window.__testRoom
+    r.clear()
+    for (let i = 0; i < 600; i++) r.update(1 / 60)
+    r.look([-9, 1.7, 9], [-9, 1.5, -10])
+    for (let i = 0; i < 10; i++) r.update(1 / 60)
+    const held = []
+    for (const id of r.arsenal.weapons.keys()) {
+      r.setTool(id)
+      for (let i = 0; i < 6; i++) r.update(1 / 60)
+      const group = r.scene.getObjectByName('weapon-viewmodel')
+      if (group && group.children[0] && group.children[0].children.length > 0) held.push(id)
+    }
+    window.__heldIds = held
+    return held
+  })
+  const COLS = 5
+  const ROWS = 4
+  const CELL = { w: 384, h: 216 }
+  const images = []
+  for (const id of ids) {
+    await page.evaluate((tool) => {
+      const r = window.__testRoom
+      r.setTool(tool)
+      for (let i = 0; i < 45; i++) r.update(1 / 60)
+    }, id)
+    await page.waitForTimeout(40)
+    images.push((await page.screenshot({ clip: { x: 320, y: 180, width: 960, height: 540 } })).toString('base64'))
+  }
+  const sheets = Math.ceil(ids.length / (COLS * ROWS))
+  const compose = await page.context().newPage()
+  for (let sheet = 0; sheet < sheets; sheet++) {
+    const from = sheet * COLS * ROWS
+    const data = await compose.evaluate(async ({ part, pictures, COLS, ROWS, CELL }) => {
+      const canvas = document.createElement('canvas')
+      canvas.width = COLS * CELL.w
+      canvas.height = ROWS * CELL.h
+      const c = canvas.getContext('2d')
+      c.fillStyle = '#000'
+      c.fillRect(0, 0, canvas.width, canvas.height)
+      for (let i = 0; i < part.length; i++) {
+        const img = new Image()
+        await new Promise((done) => {
+          img.onload = done
+          img.src = `data:image/png;base64,${pictures[i]}`
+        })
+        const x = (i % COLS) * CELL.w
+        const y = Math.floor(i / COLS) * CELL.h
+        c.drawImage(img, x, y, CELL.w, CELL.h)
+        c.font = 'bold 16px sans-serif'
+        c.fillStyle = 'rgba(0,0,0,0.65)'
+        c.fillRect(x, y, c.measureText(part[i]).width + 12, 22)
+        c.fillStyle = '#fff'
+        c.fillText(part[i], x + 6, y + 17)
+        c.strokeStyle = '#222'
+        c.strokeRect(x, y, CELL.w, CELL.h)
+      }
+      return canvas.toDataURL('image/png')
+    }, { part: ids.slice(from, from + COLS * ROWS), pictures: images.slice(from, from + COLS * ROWS), COLS, ROWS, CELL })
+    writeFileSync(join(shotsDir, `fp-all-weapons-${sheet + 1}.png`), Buffer.from(data.split(',')[1], 'base64'))
+  }
+  await compose.close()
+  const sheetsOk = ids.length >= 100
+  console.log(`${sheetsOk ? 'PASS' : 'FAIL'}  first person: ${ids.length} weapons with a model held, ${sheets} contact sheets (fp-all-weapons-N.png)`)
+  if (!sheetsOk) report.failed++
+}
 
 // the behaviour log of a full run
 await page.goto(`${url}?scenario=all`, { timeout: 180000 })
