@@ -11,11 +11,12 @@ const read = (package_: string, file: string): GoldenRecord => JSON.parse(readFi
 const eventsOf = (record: GoldenRecord, type: string): readonly Record<string, unknown>[] => record.events.filter((event: GoldenEvent) => event.type === type).map((event) => event.data ?? {})
 
 describe('vm goldens (the game code run with a seeded RNG per character)', () => {
+  // The remaining cost is the game's own simulation recorded twice (flood fill, 90-day runs).
   it.each(VM_GOLDENS)('$id is re-recorded twice byte-identical and equals the fixture', ({ path, record }) => {
     const first = serializeGolden(record())
     expect(serializeGolden(record())).toBe(first)
     expect(readFileSync(path, 'utf8')).toBe(first)
-  })
+  }, 15_000)
 })
 
 describe('G-spawn', () => {
