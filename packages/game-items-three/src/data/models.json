@@ -1563,10 +1563,10 @@
     "id": "lubricant_spray",
     "teamId": "lubrificante",
     "teamBox": [
-      0.502,
+      0.504,
       1.7,
-      0.5
+      0.504
     ],
-    "scale": 0.1
+    "scale": 0.09947
   }
 ]
