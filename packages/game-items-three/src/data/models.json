@@ -1888,5 +1888,15 @@
       0.4
     ],
     "scale": 1
+  },
+  {
+    "id": "fishing_net",
+    "teamId": "rede_pesca",
+    "teamBox": [
+      0.35,
+      0.15,
+      0.3
+    ],
+    "scale": 1
   }
 ]
