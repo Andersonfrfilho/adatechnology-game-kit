@@ -243,7 +243,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Cinto de ferramentas (kit) | `cinto_ferramentas` | `tool_belt` | 0,4 kg | comum | 350 x 100 x 250 mm |
 | [x] | Colete tático (kit) | `colete_tatico` | `tactical_vest` | 1,2 kg | raro | 350 x 100 x 400 mm |
 | [x] | Mala de rodinha (kit) | `mala` | `rolling_suitcase` | 3,0 kg | comum | 400 x 650 x 250 mm |
-| [ ] | Mochila cargueira 70 L | `cargueira` | `trekking_backpack_70l` | 2,2 kg | muito raro | 380 x 750 x 300 mm |
+| [x] | Mochila cargueira 70 L (kit) | `cargueira` | `trekking_backpack_70l` | 2,2 kg | muito raro | 380 x 750 x 300 mm |
 | [x] | Mochila escolar (kit) | `mochila_escolar` | `backpack` | 0,5 kg | comum | 300 x 300 x 200 mm |
 | [x] | Mochila militar (kit) | `mochila_militar` | `military_backpack` | 1,8 kg | raro | 350 x 600 x 300 mm |
 | [x] | Pochete (kit) | `pochete` | `fanny_pack` | 0,15 kg | comum | 250 x 100 x 120 mm |

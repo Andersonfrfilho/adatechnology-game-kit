@@ -2408,5 +2408,15 @@
       0.2
     ],
     "scale": 1
+  },
+  {
+    "id": "trekking_backpack_70l",
+    "teamId": "cargueira",
+    "teamBox": [
+      0.38,
+      0.75,
+      0.3
+    ],
+    "scale": 1
   }
 ]
