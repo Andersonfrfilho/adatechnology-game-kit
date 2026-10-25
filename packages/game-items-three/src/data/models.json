@@ -2088,5 +2088,15 @@
       0.11
     ],
     "scale": 1
+  },
+  {
+    "id": "magazine_arm_guard",
+    "teamId": "braco_revista",
+    "teamBox": [
+      0.3,
+      0.05899,
+      0.15022
+    ],
+    "scale": 1
   }
 ]
