@@ -22,6 +22,9 @@ const HITS: Record<string, { kind: 'burst' | 'blow' | 'blast'; rounds?: number; 
 const GAP = 4
 const EYE = 1.7
 
+/** A template whose storey range starts at this many storeys is a skyscraper. */
+const TALL_STOREYS = 10
+
 type Placed = { house: any; plan: any; seed: number; width: number; depth: number }
 
 const bounds = (plan: any): { width: number; depth: number } => ({ width: Number(plan.w) || 10, depth: Number(plan.d) || 10 })
@@ -411,9 +414,15 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     id: 'floorplan_typologies',
     name: locale === 'en' ? 'every typology of every package builds, with structure and floors' : 'toda tipologia de todo pacote constrói, com estrutura e andares',
     run({ expect }) {
+      const templates = engine?.listTemplates() ?? []
+      // a skyscraper (20 storeys at least) is built at its lowest storey count: the scenario checks that the typology builds, not how tall it can get
+      const shortest = (id: string): { floors?: number } => {
+        const range = templates.find((t) => t.id === id)?.floorRange
+        return range && range[0] >= TALL_STOREYS ? { floors: range[0] } : {}
+      }
       for (const group of groups) {
         for (const id of group.templates) {
-          const plan = (engine as NonNullable<typeof engine>).generate(id, { seed: 1 })
+          const plan = (engine as NonNullable<typeof engine>).generate(id, { seed: 1, ...shortest(id) })
           const house = create(THREE ?? (host?.THREE as any), { locale, ...options.house, destruction: undefined, destructionRenderer: undefined, interactives: undefined, vegetation: undefined, fleet: null }).build(plan, { quality: 'game', terrain: false, noPerimeter: true })
           const ok = house.structure.parts.length > 0 && house.floors.length >= 1 && house.colliders.length > 0
           expect(ok, `${groupName(group)}: ${templateName(id)} (${house.structure.parts.length})`)

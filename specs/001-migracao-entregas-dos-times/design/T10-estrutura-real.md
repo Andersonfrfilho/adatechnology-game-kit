@@ -18,7 +18,7 @@ portante) em detalhe. Os passos 1 e 2 estão implementados em `game-destruction`
 | 6 | Pele de vidro (fachada leve que estilhaça em painéis grandes) | peças em `game-floorplan-structure` | **feito** (§9) |
 | 7 | Cobertura de prédio (manta, caimento, ralos, vazamento) | peças em `game-floorplan-structure` | **feito** (§9) |
 | 8 | Andar técnico (máquinas, caixa d'água, amortecedor: tudo pesa) | peças em `game-floorplan-structure` | **feito** (§9; o amortecedor está no §10) |
-| 9 | Tipologia de arranha-céu, usada pela cidade | `game-floorplan-commercial`/`-residential`, `game-urban` | em andamento (§11) |
+| 9 | Tipologia de arranha-céu, usada pela cidade | `game-floorplan-commercial`/`-residential`, `game-urban` | feito (§11) |
 
 Itens 3 a 9 dependem de 1 e 2 (as peças novas precisam de flexão e de esmagamento reais para que a explosão faça o que faria).
 
@@ -546,7 +546,9 @@ Um núcleo central e um anel de circulação: a planta (largura x profundidade d
 oeste, **núcleo**, antessala de elevadores, faixa leste], corredor norte, faixa norte. O núcleo tem a **escada** (tipo `stairs`, `link` entre andares),
 os **poços** (tipo `elevator`, um por elevador, com porta para a antessala) e uma sala de **serviço** (shaft de instalações). As quatro faixas do
 perímetro são preenchidas pela tipologia: salas de escritório (`office`, 2,4 m de janela, tira de vidro de 0,3 m a `pé-direito − 0,5`) ou apartamentos
-(sala, quarto, cozinha, banheiro, hall). Andar térreo: saguão (`hall`, porta de 3 m na frente), recepção, segurança; andares técnicos: salas de máquinas
+(sala, quarto, cozinha, banheiro, hall; as faixas curtas, de menos de 8 m, levam lavanderia ou depósito comum no lugar do apartamento; a sala dá para uma
+varanda nas faixas dos fundos, onde fica o condensador do ar-condicionado). Andar térreo: saguão (`hall`, porta de 3 m na frente), recepção, segurança e,
+no escritório, um depósito (`stockroom`) na faixa oeste (o estado "fortified" precisa dele para o estoque); andares técnicos: salas de máquinas
 (`storage`) sem janela; todos com `ceiling = pé-direito + laje` (o andar da planta e o da estrutura têm o mesmo passo). A planta e a estrutura vêm
 do mesmo `SkyscraperLayout`: a laje é `plate`, o núcleo é `core.center`/`core.size` (deslocados de metade da planta para o espaço da planta).
 
@@ -557,28 +559,47 @@ do mesmo `SkyscraperLayout`: a laje é `plate`, o núcleo é `core.center`/`core
 | template | `office_tower`, `use: commercial` | `residential_tower`, `use: residential_multi` |
 | `OFFICE_TOWER_DEFAULTS` / `RESIDENTIAL_TOWER_DEFAULTS` | 40 andares (20 a 80), pé-direito 3,6, vão 12 m, vidro, técnico a cada 20, amortecedor acima de 150 m | 30 andares (20 a 60), pé-direito 2,8, vão 9 m, janela em alvenaria, técnico a cada 25, amortecedor acima de 150 m |
 | API | `officeTowerLayout`, `buildOfficeTower`, `officeTowerTemplate`, `OFFICE_TOWER_DEFAULTS` | `residentialTowerLayout`, `buildResidentialTower`, `residentialTowerTemplate`, `RESIDENTIAL_TOWER_DEFAULTS` |
-| zona | `zt` (torres: até 80 andares, 320 m) | `zt` |
+| zona | `zt` (torres: até 80 andares, 320 m), registrada no pacote residencial | `zt` |
 
-`options.floors` escolhe os andares do template; `floorRange` deixa a zona recortar. A zona `zt` entra nas zonas do `br` do pacote comercial.
+`options.floors` escolhe os andares do template; `floorRange` deixa a zona recortar. A zona `zt` fica no pacote residencial (que não depende do comercial). As bibliotecas `office_open` e `living_tower` mobiliam as salas; os pacotes de planta
+dependem de `game-floorplan-structure` (peer e dev) e este não depende mais deles: seus testes carregam os pacotes por caminho relativo.
 
 ### 11.7 A cidade (`game-urban`, opção `towers`)
 
-`createUrban({ towers })`: **desligada por padrão**. Ligada (`towers: {}` ou com opções), todo prédio que o bloco ou a avenida desenha com altura
-`>= minHeight` (padrão 60 m) vira uma torre em vez da caixa: o corpo com a planta do lote, as faixas dos andares técnicos (`mechanicalEvery`, mais escuras,
-sem janela), a fiada de janelas por andar na pele de vidro ou na alvenaria, o coroamento (andar técnico, parapeito, mastro) e a base (térreo mais alto). Opções:
-`minHeight`, `presets` (lista de `{ id, preset, weight, color, glass }`, padrão escritórios 0,6 e residencial 0,4, os valores das duas tipologias),
-`storeyHeight`, `crown` e `provider` (um jogo troca o desenho inteiro). A distribuição de alturas é a do bloco (`minHeight`/`maxHeight` de `fill`) ou a
-da avenida (`north`/`south` do padrão `downtown`); para ter torres, o jogo sobe o `maxHeight` ou o `range` do padrão com `patch`, e liga `towers`. Um jogo
-desliga (`towers: false`, o padrão) ou muda a altura de corte, os presets e os pesos. O sorteio do tipo de torre usa o gerador do construtor só quando a opção está ligada,
-então com ela desligada a saída é a de antes, byte a byte.
+`createUrban({ towers })`: **desligada por padrão**; ligada (`true` ou um objeto), todo prédio que o bloco (`block.fill`) ou a avenida (`downtown`) desenha com
+altura `>= minHeight` (padrão 60 m) vira uma torre em vez da caixa: pódio com o térreo mais alto, o corpo com a planta do lote, uma fiada de janelas por
+andar nas quatro faces (fita de vidro nas de escritório, uma janela por vão na alvenaria das residenciais), faixas mais escuras sem janela nos andares
+técnicos (`mechanicalEvery`), o último andar técnico recuado, platibanda e mastro. Opções: `minHeight`, `presets` (lista de `{ id, weight, storeyHeight,
+mechanicalEvery, glass, color }`; padrão `DEFAULT_TOWER_PRESETS`: escritório 0,6 com andares de 4,0 m, técnico a cada 20, vidro; residencial 0,4 com
+3,1 m, a cada 25, alvenaria), `mast`, `lit` e `provider` (um jogo troca o desenho inteiro e recebe lote, altura, cor e o preset sorteado). Os números dos
+presets são os da tipologia (andar = pé-direito + laje); um teste de `game-urban` confere com `officeTowerLayout` e `residentialTowerLayout`.
+`game-urban` ganha os dois pacotes de planta só como `devDependency` (o teste), não como dependência.
+
+A distribuição de alturas continua a do bloco (`minHeight`/`maxHeight` de `fill`) ou a da avenida (`buildings.north/south` do padrão `downtown`); como o
+Centro da Galeria tem prédios de 12 a 36 m, ligar `towers` sozinho não muda nada nele. Para ter torres o jogo sobe as alturas com `patch` ou usa o
+pacote `TOWER_PATTERNS`, que traz o padrão `financial_district` (lotes de 20 m, torres de 70 a 180 m) fora da folha de amostras da Galeria. O sorteio do
+preset usa o gerador do construtor **só** quando a opção está ligada e a altura passa do corte, então com ela desligada (ou com todos os prédios abaixo do
+corte) a saída é a de antes, byte a byte.
 
 ### 11.8 Conferências
 
-(preenchido junto com os testes, ver abaixo)
+- `game-floorplan-structure/tests/skyscraper.test.ts` (18) e `tower-plan.test.ts`: 20, 40 e 80 andares em pé em repouso e com o vento padrão (V0 40 m/s, categoria IV),
+  com núcleo e estacas; sem estacas tomba; explosão num andar quebra o vidro e danifica só as lajes vizinhas, o núcleo fica inteiro; perder um pilar do perímetro
+  derruba só aquela linha de pilares acima, não a torre.
+- `game-floorplan-commercial/tests/office-tower.test.ts` (9), `game-floorplan-residential/tests/residential-tower.test.ts`: plantas válidas (validador), térreo,
+  escada no núcleo, janelas, varanda e condensador.
+- `game-floorplan-post-apocalyptic/tests/floorplan.test.ts`: as mesmas propriedades dos estados em torres de 20 andares (3 sementes x 3 estados). Achou dois
+  defeitos de planta, corrigidos: torre residencial sem varanda para o ar-condicionado e torre de escritórios sem depósito no térreo.
+- `game-floorplan-three/tests/skyscraper.test.ts` (4): fumaça de renderização; o cenário `floorplan_typologies` do ambiente de teste passou a incluir as torres
+  (no menor número de andares delas).
+- `game-urban/tests/towers.test.ts` (9) e `game-urban-three/tests/towers.test.ts` (2): opção desligada = saída idêntica; presets = tipologias; distribuição de
+  alturas configurável; desenho nas fachadas.
+- Desempenho: `createGrid` (`game-floorplan`) filtra as paredes perto da sala antes do teste por célula (resultado igual, cerca de 2x mais rápido); as rodadas
+  "todo template" (structure, post-apocalyptic) deixam as torres de fora e as de commercial/residential ganharam timeout maior.
 
 ### 11.9 Goldens
 
-Nenhum muda: o arranha-céu é opção nova de pacotes novos, a cidade só o usa com `towers` ligado, e o único código tocado que alcança os cenários que
+Nenhum muda (nem `vc3-*` do post-apocalyptic, nem os de `game-urban-three`, nem os de `game-floorplan-three`): o arranha-céu é opção nova de pacotes novos, a cidade só o usa com `towers` ligado, e o único código tocado que alcança os cenários que
 já existem é `tensionCapacity` (só com vento ligado, que nenhum golden liga).
 
 ### 11.10 Limites e perguntas
