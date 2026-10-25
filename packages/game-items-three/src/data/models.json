@@ -2318,5 +2318,15 @@
       0.11995
     ],
     "scale": 1
+  },
+  {
+    "id": "shopping_bag",
+    "teamId": "sacola",
+    "teamBox": [
+      0.3,
+      0.02,
+      0.2
+    ],
+    "scale": 1
   }
 ]
