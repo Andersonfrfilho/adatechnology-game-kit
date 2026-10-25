@@ -1808,5 +1808,15 @@
       0.091
     ],
     "scale": 1
+  },
+  {
+    "id": "diy_magazine",
+    "teamId": "revista_receita",
+    "teamBox": [
+      0.21,
+      0.28,
+      0.00805
+    ],
+    "scale": 1
   }
 ]

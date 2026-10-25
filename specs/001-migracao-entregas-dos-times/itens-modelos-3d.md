@@ -312,7 +312,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Almanaque do agricultor | `almanaque` | `farmers_almanac` | 0,3 kg | incomum | 150 x 210 x 15 mm |
 | [ ] | Livro de habilidade (volumes 1 a 5) | `livro_hab` | `skill_book` | 0,6 kg | incomum | 160 x 230 x 40 mm |
 | [ ] | Manual técnico | `livro_tecnico` | `technical_manual` | 0,8 kg | raro | 210 x 300 x 40 mm |
-| [ ] | Revista Faça Você Mesmo | `revista_receita` | `diy_magazine` | 0,2 kg | incomum | 210 x 280 x 8 mm |
+| [x] | Revista Faça Você Mesmo (kit) | `revista_receita` | `diy_magazine` | 0,2 kg | incomum | 210 x 280 x 8 mm |
 | [ ] | Revista e gibi | `revista_passa` | `magazines_and_comics` | 0,2 kg | comum | 170 x 260 x 10 mm |
 
 ## História e colecionáveis (1 de 16)
