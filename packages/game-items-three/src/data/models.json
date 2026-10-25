@@ -1878,5 +1878,15 @@
       0.3
     ],
     "scale": 1
+  },
+  {
+    "id": "firefighter_suit",
+    "teamId": "bombeiro",
+    "teamBox": [
+      0.55,
+      0.2,
+      0.4
+    ],
+    "scale": 1
   }
 ]
