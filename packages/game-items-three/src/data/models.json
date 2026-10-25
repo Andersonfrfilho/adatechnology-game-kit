@@ -1748,5 +1748,15 @@
       0.22
     ],
     "scale": 1
+  },
+  {
+    "id": "cooler_box",
+    "teamId": "caixa_termica",
+    "teamBox": [
+      0.32,
+      0.25,
+      0.23
+    ],
+    "scale": 1
   }
 ]
