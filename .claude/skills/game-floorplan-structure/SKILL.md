@@ -81,3 +81,7 @@ const specimen = buildWallSpecimen({ assembly: 'reinforced_concrete', w: 2.4, h:
   em 900 plantas dos 12 modelos (peças, apoios, `specDe` e `vedacao`, telhado, construção, caixa d'água).
 - Detalhe de parede (`panels`, `units`) e `buildWallSpecimen` (T2.2d): comportamento novo, sem original do time (a parede do VC3 é uma caixa por segmento, o reboco só um rótulo).
 - Instalações (T2.2e): `montarGas`, `montarEletrica`, `montarSolar`, `montarHidraulica`, `montarEdificacoes`, `caminhosEdificacoes` e `CONTEUDO` do Visor de casas 3D (L10752–11166, L9279): portados; as sete listas conferem em 900 plantas (`tests/team-golden-vc3-structure.test.ts`).
+
+## Prédios altos (T10 §9)
+
+`buildTower(options)` monta um prédio com estrutura real: pórtico de pilares contínuos e armados, núcleo rígido de concreto (`addCore`: tubo de paredes de 35 cm com gaiola, escada de dois lances e poços de elevador dentro, `coreSize`), pele de vidro presa na borda das lajes (`addCurtainWall`: painéis de 1,5 m, vidro de 12 mm, quebram em pedaços de 0,6 m), cobertura plana (`addFlatRoof`: contrapiso com 1% até os ralos, manta de EPDM com a água da chuva, `outflow` para baixo) e andar técnico (`addMechanicalFloor`: máquinas dos elevadores, reservatório `towerWater`, chillers; tudo pesa). Cada sistema se desliga com `false` ou se configura pelos `*_DEFAULTS`. As funções `add*` servem para qualquer spec de pórtico com a `TowerGeometry` dela.
