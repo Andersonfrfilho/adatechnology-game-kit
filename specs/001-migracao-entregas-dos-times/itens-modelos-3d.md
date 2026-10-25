@@ -272,7 +272,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Power bank | `power_bank` | `power_bank` | 0,3 kg | incomum | 150 x 70 x 16 mm |
 | [ ] | Rádio amador PX | `radio_px` | `cb_radio` | 3,0 kg | raro | 250 x 80 x 200 mm |
 | [ ] | Rádio militar de longo alcance | `radio_militar` | `military_radio` | 6,0 kg | lendário | 300 x 200 x 250 mm |
-| [ ] | Vela | `vela` | `candles` | 0,05 kg | comum | 60 x 120 x 60 mm |
+| [x] | Vela (kit) | `vela` | `candles` | 0,05 kg | comum | 60 x 120 x 60 mm |
 | [ ] | Óculos de visão noturna | `nvg` | `night_vision_goggles` | 0,6 kg | muito raro | 150 x 100 x 110 mm |
 
 ## Combustível e energia (2 de 9)

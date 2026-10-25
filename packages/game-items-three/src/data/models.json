@@ -1628,5 +1628,15 @@
       0.33
     ],
     "scale": 1
+  },
+  {
+    "id": "candles",
+    "teamId": "vela",
+    "teamBox": [
+      0.06,
+      0.12,
+      0.06
+    ],
+    "scale": 1
   }
 ]
