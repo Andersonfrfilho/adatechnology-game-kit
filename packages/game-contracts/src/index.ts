@@ -41,6 +41,7 @@ export type {
   Quat,
   RayHit,
   Reinforcement,
+  TensionRebar,
   StructureRole,
   SurfaceLayer,
   ToolKind,

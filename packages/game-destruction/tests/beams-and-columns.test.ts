@@ -1,7 +1,7 @@
 import { createArsenal } from '@adatechnology/game-weapons'
 import { describe, expect, it } from 'vitest'
 import { buildFrame, createDestruction, sizeStructure } from '../src'
-import type { DestructibleSpec, DestructionEvent, DestructionOptions, PartSpec } from '../src'
+import type { DestructibleSpec, DestructionEvent, DestructionOptions, PartSpec, SizeStructureOptions } from '../src'
 
 /**
  * What the beams and columns of a building do under bullets and blasts. The rounds are the loads of the ammo table of `@adatechnology/game-weapons`
@@ -231,14 +231,14 @@ describe('shots: wooden beam and brick pillar', () => {
 
 describe('a framed building', () => {
   /** Two floors of reinforced concrete columns and beams, sized so every structural part rests at 65% of its capacity. */
-  const frame = (options: DestructionOptions = {}) => {
+  const frame = (options: DestructionOptions = {}, sizing: SizeStructureOptions = {}) => {
     const raw = buildFrame({ floors: 2 })
     const spec: DestructibleSpec = {
       ...raw,
       parts: raw.parts.map((p) => (p.id.startsWith('column') || p.id.startsWith('beam') ? { ...p, reinforcement: REBAR, breach: { area: 0.25 } } : p)),
     }
     const world = createDestruction({ seed: 5, ...options })
-    const id = world.add(sizeStructure(spec, { safety: 0.65 }))
+    const id = world.add(sizeStructure(spec, { safety: 0.65, ...sizing }))
     const events: DestructionEvent[] = []
     world.on('*', (e) => events.push(e))
     const stress = (pid: string) => world.part(id, pid)!.stress ?? 0
@@ -271,8 +271,10 @@ describe('a framed building', () => {
     expect(f.world.part(f.id, 'column_0_0_0')!.status).toBe('broken')
   })
 
-  it('losing a column passes its load on to the others', () => {
-    const f = frame()
+  it('losing a column passes its load on to the others (when the frame is designed for it: N-1)', () => {
+    // the beams and the slab bend over the double span the lost column leaves; a frame sized only for rest (0.65) cannot take that and the bays
+    // around the column come down (see flexure.test.ts), so this one is sized for the loss of any column, as an alternate-path design is
+    const f = frame({}, { redundancy: 0.97 })
     const before = f.stress('column_0_1_0')
     f.lose('column_0_1_1')
     f.run(10)

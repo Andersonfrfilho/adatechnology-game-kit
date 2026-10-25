@@ -101,7 +101,7 @@ export interface PartSpec {
    * parts, over the joints that `bears`. `foundation` implies `anchored`. `none` (and parts without `structure`) never carry load: a window, a door
    * or furniture is not part of the structure. Objects without any structural part behave as before.
    */
-  structure?: { role: StructureRole; capacity?: number }
+  structure?: { role: StructureRole; capacity?: number; rebar?: TensionRebar }
   /**
    * Coats over the core, outermost first (plaster, tile, the paper of a drywall board). `thickness` of the part is the core only; each coat adds
    * `material.penetration x thickness` to what a bullet must get through, and a hit spalls the outer coat at the impact (`spall` event) before it
@@ -136,6 +136,20 @@ export interface Reinforcement {
   diameter: number
   /** Fraction of the part's structural capacity the bare cage keeps (default 0.15). */
   residualCapacity?: number
+}
+
+/**
+ * Tension steel of a concrete beam, slab, roof or stair for the bending model (`DestructionOptions.structure.flexure`), when it is not taken from the
+ * `reinforcement` cage. `ratio` is the steel area over the effective section of the tension face, `As / (b * d)` (NBR 6118: at least 0.15% for
+ * C25-C30; beams 0.5-1.5%, slabs 0.2-0.6%). Unlike `reinforcement` it draws no bars and does not stage the part.
+ */
+export interface TensionRebar {
+  /** `As / (b * d)` of the tension face, 0..0.04. */
+  ratio: number
+  /** Yield strength of the steel in MPa (default `flexure.rebarYieldMPa`, 500 = CA-50). */
+  yieldMPa?: number
+  /** Concrete cover to the bar in metres (default `flexure.cover`). */
+  cover?: number
 }
 
 /** Size of one masonry unit in the part's axes (`size[2]` is along the part's thinnest axis, clamped to it) and how rows are laid. */
@@ -434,6 +448,14 @@ export interface PartState {
   stress?: number
   /** Damage stage; only present on parts that opted in (see `PartSpec.breach`). */
   stage?: DamageStage
+  /**
+   * Beams, slabs, roofs and stairs of a material with `strength.tensileMPa` only: bending moment at rest over the moment the section holds (the steel's
+   * when it is reinforced and holds more than the concrete's cracking moment, else the cracking moment). `stress` is the largest of this and the
+   * compression ratio.
+   */
+  flexure?: number
+  /** The tension face cracked (a blast, an impact or the load bent it past the cracking moment): the concrete no longer carries tension, the steel does. */
+  cracked?: boolean
   /** Reinforced part whose concrete is gone: only the rebar cage is left (capacity x `residualCapacity`); it is still part of the structure. */
   stripped?: boolean
   /** Opening a breach left, in object-local space (stage 2). Raycasts and shots pass through it. */

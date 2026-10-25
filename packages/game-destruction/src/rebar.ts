@@ -28,10 +28,13 @@ const bar = (axis: number, along: number, fixed: Array<[number, number]>): Bar =
 }
 
 /** Long members (columns, beams): two smaller dimensions close to each other and a much longer third one. */
-const isMember = (dims: Vec3): boolean => {
+export const isMember = (dims: Vec3): boolean => {
   const [a = 0, b = 0, c = 0] = [...dims].sort((x, y) => x - y)
   return b / a < 3 && c / b >= 3
 }
+
+/** Bars of a long member's perimeter that lie on one face of width `width` (the face's row of the cage). */
+export const memberBarCount = (width: number, spacing: number): number => spread(width, COVER, spacing, MAX_MEMBER_BARS_PER_SIDE).length
 
 /**
  * Rebar of a box in the part's own axes. Plates (walls, slabs) get a grid along each of the two large axes at mid thickness; long members get
