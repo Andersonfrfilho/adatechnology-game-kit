@@ -44,6 +44,7 @@
   },
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-shapes-three": "workspace:*",
     "@adatechnology/game-vegetation": "workspace:*",
     "@adatechnology/game-vegetation-species": "workspace:*"
   },

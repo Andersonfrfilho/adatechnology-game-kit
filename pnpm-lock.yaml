@@ -1245,6 +1245,9 @@ importers:
       '@adatechnology/game-floorplan':
         specifier: workspace:*
         version: link:../game-floorplan
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:*
+        version: link:../game-shapes-three
       '@adatechnology/game-urban':
         specifier: workspace:*
         version: link:../game-urban
@@ -1331,6 +1334,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:*
+        version: link:../game-shapes-three
       '@adatechnology/game-vegetation':
         specifier: workspace:*
         version: link:../game-vegetation
