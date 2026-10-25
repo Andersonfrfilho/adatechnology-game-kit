@@ -246,7 +246,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Mochila cargueira 70 L | `cargueira` | `trekking_backpack_70l` | 2,2 kg | muito raro | 380 x 750 x 300 mm |
 | [x] | Mochila escolar (kit) | `mochila_escolar` | `backpack` | 0,5 kg | comum | 300 x 300 x 200 mm |
 | [ ] | Mochila militar | `mochila_militar` | `military_backpack` | 1,8 kg | raro | 350 x 600 x 300 mm |
-| [ ] | Pochete | `pochete` | `fanny_pack` | 0,15 kg | comum | 250 x 100 x 120 mm |
+| [x] | Pochete (kit) | `pochete` | `fanny_pack` | 0,15 kg | comum | 250 x 100 x 120 mm |
 | [ ] | Saco de lixo | `saco_lixo` | `trash_bag` | 0,05 kg | comum | 250 x 25 x 200 mm |
 | [ ] | Sacola de mercado | `sacola` | `shopping_bag` | 0,02 kg | comum | 300 x 20 x 200 mm |
 

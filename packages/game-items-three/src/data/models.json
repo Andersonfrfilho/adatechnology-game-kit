@@ -1848,5 +1848,15 @@
       0.23
     ],
     "scale": 1
+  },
+  {
+    "id": "fanny_pack",
+    "teamId": "pochete",
+    "teamBox": [
+      0.25,
+      0.1,
+      0.12
+    ],
+    "scale": 1
   }
 ]
