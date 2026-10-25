@@ -893,11 +893,11 @@
     "id": "alcohol_70",
     "teamId": "alcool70",
     "teamBox": [
-      0.7,
-      2.025,
-      0.506
+      0.702,
+      2,
+      0.5012
     ],
-    "scale": 0.1
+    "scale": 0.099823
   },
   {
     "id": "can_opener",
