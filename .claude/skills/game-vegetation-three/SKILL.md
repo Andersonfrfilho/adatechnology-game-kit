@@ -40,5 +40,5 @@ Controles: semente, qualidade (alta ou jogo), detalhe (LOD 0 a 2), condição, e
 ## Cuidados
 - O módulo não desenha partículas e não pede efeitos: os eventos das plantas (folhas, seiva, fogo) nascem no mundo de destruição padrão, que a sala mostra; um host com `game-vfx-three` liga os efeitos a esses eventos, não a este módulo.
 - A sala dá tempo de saque a toda ferramenta; as provas esperam a ferramenta ficar pronta (`room.waitUntilReady`), o que a página do time não precisava.
-- Peer `three >=0.128.0`; a sala precisa de r129 ou mais (`removeFromParent`), e o caminhante usa cápsula só de r139 em diante (cilindro antes).
+- Peer `three >=0.160.0` (desde o T9g); o caminhante usa a cápsula do three (o cilindro fica para um three sem `CapsuleGeometry`).
 - `tests/team-golden-module.test.ts` roda o módulo do artefato contra a sala do kit (18 specs e clipes iguais, 13 provas com os mesmos checks e linhas de log); `tests/team-golden-nursery.test.ts` roda o `buildLotVeg` da página.

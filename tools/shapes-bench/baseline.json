@@ -380,6 +380,34 @@
       "ratio": 0.6667,
       "ms": 0.4134
     },
+    "houses/apartment_basic": {
+      "ratio": 25.8595,
+      "ms": 18.6816
+    },
+    "houses/apartment_modern": {
+      "ratio": 27.0857,
+      "ms": 19.5674
+    },
+    "houses/market": {
+      "ratio": 26.0343,
+      "ms": 18.8079
+    },
+    "houses/mid_modern_single_storey": {
+      "ratio": 58.9858,
+      "ms": 42.613
+    },
+    "houses/pharmacy": {
+      "ratio": 19.9765,
+      "ms": 14.4316
+    },
+    "houses/single_storey_a": {
+      "ratio": 42.1636,
+      "ms": 30.4601
+    },
+    "houses/townhouse": {
+      "ratio": 54.5719,
+      "ms": 39.4242
+    },
     "items/model:amoxicillin": {
       "ratio": 0.1256,
       "ms": 0.0779
@@ -836,17 +864,117 @@
       "ratio": 0.0151,
       "ms": 0.0093
     },
+    "urban/block": {
+      "ratio": 0.1363,
+      "ms": 0.0824
+    },
+    "urban/patterns": {
+      "ratio": 21.9718,
+      "ms": 13.2812
+    },
+    "urban/pole:concrete": {
+      "ratio": 0.0676,
+      "ms": 0.0409
+    },
+    "urban/pole:flood": {
+      "ratio": 0.0602,
+      "ms": 0.0364
+    },
+    "urban/tent": {
+      "ratio": 0.0422,
+      "ms": 0.0255
+    },
+    "urban/watchtower": {
+      "ratio": 0.0715,
+      "ms": 0.0432
+    },
+    "vegetation/araucaria": {
+      "ratio": 3.5733,
+      "ms": 2.203
+    },
+    "vegetation/banana_with_bunch": {
+      "ratio": 1.0114,
+      "ms": 0.6236
+    },
+    "vegetation/boxwood_hedge": {
+      "ratio": 3.4202,
+      "ms": 2.1086
+    },
+    "vegetation/coconut_palm": {
+      "ratio": 2.5302,
+      "ms": 1.5599
+    },
+    "vegetation/crown_cactus": {
+      "ratio": 0.8855,
+      "ms": 0.5459
+    },
+    "vegetation/dead_tree": {
+      "ratio": 0.5904,
+      "ms": 0.364
+    },
+    "vegetation/hibiscus_shrub": {
+      "ratio": 2.3486,
+      "ms": 1.448
+    },
+    "vegetation/lawn_tuft": {
+      "ratio": 0.2509,
+      "ms": 0.1547
+    },
+    "vegetation/mandacaru": {
+      "ratio": 2.0881,
+      "ms": 1.2874
+    },
+    "vegetation/mango_tree": {
+      "ratio": 2.4292,
+      "ms": 1.4977
+    },
+    "vegetation/mango_young_15": {
+      "ratio": 2.6453,
+      "ms": 1.6309
+    },
+    "vegetation/mango_young_30": {
+      "ratio": 2.9106,
+      "ms": 1.7944
+    },
+    "vegetation/nursery:1": {
+      "ratio": 664.4336,
+      "ms": 409.6373
+    },
+    "vegetation/potted_cactus": {
+      "ratio": 0.9066,
+      "ms": 0.559
+    },
+    "vegetation/potted_fern": {
+      "ratio": 0.7641,
+      "ms": 0.4711
+    },
+    "vegetation/prickly_pear": {
+      "ratio": 1.0495,
+      "ms": 0.6471
+    },
+    "vegetation/rose_bush_red": {
+      "ratio": 0.8616,
+      "ms": 0.5312
+    },
+    "vegetation/sunflower": {
+      "ratio": 0.6072,
+      "ms": 0.3743
+    },
+    "vegetation/yellow_ipe": {
+      "ratio": 2.7493,
+      "ms": 1.695
+    },
     "vehicles/compact_hatch:lite": {
-      "ratio": 201.2483,
-      "ms": 123.4415
+      "ratio": 168.3807,
+      "ms": 110.0695
     },
     "vehicles/midsize_pickup:lite": {
-      "ratio": 151.4979,
-      "ms": 92.9256
+      "ratio": 98.2438,
+      "ms": 64.2214
     },
     "vehicles/sport_bike:lite": {
-      "ratio": 16.1449,
-      "ms": 9.9029
+      "ratio": 12.3054,
+      "ms": 8.044
     },
     "weapons/aa_12": {
       "ratio": 0.4037,

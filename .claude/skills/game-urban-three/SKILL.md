@@ -9,7 +9,7 @@ description: Use quando precisar desenhar em three.js uma cena do game-urban (po
 Desenha as `UrbanScene` do `game-urban` como a Galeria do Vale Cinzento: uma malha por parte na ordem em que foram postas, depois uma malha instanciada para as caixas pequenas e uma para cada tipo de janela.
 
 ## Quando usar e quando não usar
-- Use para: pôr ruas, postes e quarteirões numa cena three.js (r128 ou mais nova).
+- Use para: pôr ruas, postes e quarteirões numa cena three.js (r160 ou mais nova).
 - Não use para: gerar a cidade (isso é o `game-urban`).
 
 ## Como usar

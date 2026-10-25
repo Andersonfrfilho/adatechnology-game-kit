@@ -1,4 +1,5 @@
 import type { ItemBox, PartStyle, SilhouetteWindow, UrbanPart, UrbanScene } from '@adatechnology/game-urban'
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 
 import { createPrism, createRoundedBox } from './rounded-box'
 import { createTextTexture } from './text'
@@ -43,6 +44,8 @@ export type DrawOptions = {
  * the small boxes and one for each kind of window. Materials are shared by colour. The instance matrices are the page's.
  */
 export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) {
+  // three with its primitive geometries made by game-shapes (bit-identical on r128 and r160, cached by parameters)
+  const T = shapeGeometries(THREE) as Three
   const geometries = new Map<string, any>()
   const materials = new Map<string, any>()
   const disposables: any[] = []
@@ -87,7 +90,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     return map
   }
   const textPlane = (part: { x: number; y: number; z: number; width: number; height: number; ry: number }, map: any): any => {
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(part.width, part.height), new THREE.MeshBasicMaterial({ map, transparent: true }))
+    const mesh = new THREE.Mesh(new T.PlaneGeometry(part.width, part.height), new THREE.MeshBasicMaterial({ map, transparent: true }))
     mesh.userData.own = true
     mesh.position.set(part.x, part.y, part.z)
     if (part.ry) mesh.rotation.y = part.ry
@@ -121,7 +124,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
         return [mesh]
       }
       case 'cylinder': {
-        const geometry = new THREE.CylinderGeometry(part.radiusTop, part.radiusBottom, part.height, part.segments)
+        const geometry = new T.CylinderGeometry(part.radiusTop, part.radiusBottom, part.height, part.segments)
         disposables.push(geometry)
         const mesh = new THREE.Mesh(geometry, standard(part.color, part.style))
         mesh.position.set(part.x, part.y, part.z)
@@ -129,7 +132,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
         return [mesh]
       }
       case 'cone': {
-        const geometry = new THREE.ConeGeometry(part.radius, part.height, part.segments)
+        const geometry = new T.ConeGeometry(part.radius, part.height, part.segments)
         disposables.push(geometry)
         const mesh = new THREE.Mesh(geometry, standard(part.color, part.style, true))
         mesh.position.set(part.x, part.y, part.z)
@@ -146,7 +149,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
       }
       case 'terrain': {
         const { grid } = part
-        const geometry = new THREE.PlaneGeometry(grid.size, grid.size, grid.segments, grid.segments)
+        const geometry = new T.PlaneGeometry(grid.size, grid.size, grid.segments, grid.segments)
         geometry.rotateX(-Math.PI / 2)
         const position = geometry.attributes.position
         const colors = new Float32Array(position.count * 3)
@@ -169,7 +172,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
         return [mesh]
       }
       case 'vault': {
-        const geometry = new THREE.CylinderGeometry(part.radius, part.radius, part.length, part.segments, 1, false, 0, part.arc)
+        const geometry = new T.CylinderGeometry(part.radius, part.radius, part.length, part.segments, 1, false, 0, part.arc)
         disposables.push(geometry)
         const mesh = new THREE.Mesh(geometry, standard(part.color, part.style))
         mesh.rotation.set(part.rotation.x, part.rotation.y, part.rotation.z)
@@ -179,7 +182,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
         return [mesh]
       }
       case 'plane': {
-        const geometry = new THREE.PlaneGeometry(part.width, part.depth).rotateX(-Math.PI / 2)
+        const geometry = new T.PlaneGeometry(part.width, part.depth).rotateX(-Math.PI / 2)
         disposables.push(geometry)
         const mesh = new THREE.Mesh(geometry, standard(part.color, part.style))
         mesh.position.set(part.x, part.y, part.z)
@@ -257,7 +260,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
   }
 
   const instancedWindows = (list: readonly SilhouetteWindow[], material: any): any => {
-    const geometry = new THREE.PlaneGeometry(1, 1)
+    const geometry = new T.PlaneGeometry(1, 1)
     disposables.push(geometry)
     const mesh = new THREE.InstancedMesh(geometry, material, list.length)
     const matrix = new THREE.Matrix4()

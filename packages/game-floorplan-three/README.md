@@ -88,6 +88,14 @@ navigator.blocked(x, z, floor) // 1 blocked, 0 free, -1 use the ground grid
 
 Everything the house says to the player (prompts, messages) is in `locales` (`en`, `pt-BR`).
 
+## Geometry
+
+The kernel's three is `shapeGeometries(THREE)` of `@adatechnology/game-shapes-three`: the primitive templates the accumulator copies (box,
+cylinders of 12 and 6 sides, the open cone, sphere, plane), the breach units, the fragments, the mirrors and the test area's specimens are made
+by game-shapes, bit-identical to three's (`tests/exact-golden.test.ts`) and cached by parameters across renderers. The accumulator itself (one
+mesh per group and material) keeps its own arithmetic: its transform, normals and world-projected uvs are not three's matrix order, so moving
+it onto the core bake would change bytes (see the T9 design, §7.3).
+
 ## Build
 
 `dist/index.js` (ESM, three.js and the other packages external), `dist/index.d.ts`, and `dist/index.global.js` exposing `GameFloorplanThree` (three.js is the page's own `THREE`).

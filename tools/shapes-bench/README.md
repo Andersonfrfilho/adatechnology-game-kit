@@ -20,6 +20,10 @@ node tools/shapes-bench/dist/cli.js --baseline-from run.json  # baseline from an
 | `items` | 24 models + 25 shapes | `buildItem` (model, or the simple shape) |
 | `weapons` | the 99 models of `models.json` | `buildWeaponModelById` |
 | `animals` | the 13 species | `createAnimalsThree().build` |
+| `characters` | 12 people, 13 Bestiário bodies, 3 bakes, the instanced body | `createPersonBuilder().buildPerson`, `createBestBuilder().build`, `bakeBody`, `buildInstancedBody` |
+| `vegetation` | the 18 plants of the module and the nursery | `item.build(THREE)` of `createVegetationTestModule`; `createNursery().plant` (seed 1) with colliders and walker |
+| `urban` | 2 poles, a block, 2 props, the sample sheet | `createUrbanThree().draw(scene)` (the scene built once) |
+| `houses` | the 7 typologies of the Visor (seed 3) | `create(THREE).build(plan, { quality: 'high' })` of `game-floorplan-three` (the plan drawn once) |
 | `vehicles` | `compact_hatch`, `midsize_pickup`, `sport_bike` | `createVehiclesThree().build(key, { quality: 'lite' })` |
 | `shapes` | the generators, the three namespace, a whole schema | `buildPrimitive` (cache cleared), `new T.CylinderGeometry`, `generate` |
 
