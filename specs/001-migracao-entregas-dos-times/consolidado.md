@@ -164,3 +164,15 @@ Além de portar, o que encontrei para melhorar (em ordem de impacto):
 13. **README de `game-vehicles-fleet`** mostra `kit.build(...).group`; o objeto real tem `root`.
 14. **`game-vegetation-species`** diz "~90 espécies" no `package.json`; o catálogo tem 71.
 15. **Veículos e vegetação sem ambiente de teste** em `examples/` (previstos em V5).
+
+## 10. Situação em 2026-10-25
+
+Entrou nesta sessão (detalhe em `tasks.md`, Fase 10 e "Entregas fora das fases", e nos inventários):
+
+- `game-shapes` partes 1 a 3 (PRs #39, #43, #47); respostas do dono às perguntas do T9 §11 registradas no próprio desenho (q3: opção b, r160 em todo o kit, goldens regravados uma vez).
+- `AdaptadorInterativos` no kit: `game-floorplan-interactables` (PR #37), item C2 acima.
+- Física de 2026-10-24: tanque realista, pilares somados, granada sempre ligada, penetração por calibre (PR #40).
+- Sala de testes só com itens dos SDKs (PR #44).
+- Estrutura real, passos 1 a 5 e lajes em painéis (PRs #45, #46, #48, #49, #52, #59).
+
+Em aberto: tabela 1 da NBR 6123 (conferir com a norma); deriva acima de 60 andares; `towers` desligado por padrão na cidade; força de cada explosivo como valor de jogo (proposta pendente).

@@ -1568,5 +1568,895 @@
       0.504
     ],
     "scale": 0.09947
+  },
+  {
+    "id": "army_camouflage_uniform",
+    "teamId": "farda_eb",
+    "teamBox": [
+      0.4,
+      0.1005,
+      0.32
+    ],
+    "scale": 1
+  },
+  {
+    "id": "backpack",
+    "teamId": "mochila_escolar",
+    "teamBox": [
+      0.3,
+      0.3,
+      0.2
+    ],
+    "scale": 1
+  },
+  {
+    "id": "ballistic_vest",
+    "teamId": "colete",
+    "teamBox": [
+      0.4,
+      0.07,
+      0.45
+    ],
+    "scale": 1
+  },
+  {
+    "id": "battery_9v",
+    "teamId": "bateria_9v",
+    "teamBox": [
+      0.0262,
+      0.049,
+      0.0182
+    ],
+    "scale": 1
+  },
+  {
+    "id": "bean_seeds",
+    "teamId": "sem_feijao",
+    "teamBox": [
+      0.1,
+      0.15,
+      0.02
+    ],
+    "scale": 1
+  },
+  {
+    "id": "beekeeper_suit",
+    "teamId": "apicultor",
+    "teamBox": [
+      0.4,
+      0.1,
+      0.33
+    ],
+    "scale": 1
+  },
+  {
+    "id": "candles",
+    "teamId": "vela",
+    "teamBox": [
+      0.06,
+      0.12,
+      0.06
+    ],
+    "scale": 1
+  },
+  {
+    "id": "car_alarm_remote",
+    "teamId": "controle_alarme",
+    "teamBox": [
+      0.04,
+      0.07011,
+      0.012
+    ],
+    "scale": 1
+  },
+  {
+    "id": "car_battery_12v",
+    "teamId": "bateria_12v",
+    "teamBox": [
+      0.24,
+      0.19,
+      0.1725
+    ],
+    "scale": 1
+  },
+  {
+    "id": "car_key",
+    "teamId": "chave_carro",
+    "teamBox": [
+      0.06,
+      0.045,
+      0.015
+    ],
+    "scale": 1
+  },
+  {
+    "id": "cash",
+    "teamId": "dinheiro",
+    "teamBox": [
+      0.155,
+      0.01,
+      0.065
+    ],
+    "scale": 1
+  },
+  {
+    "id": "cassava_cuttings",
+    "teamId": "maniva",
+    "teamBox": [
+      0.7,
+      0.12,
+      0.12
+    ],
+    "scale": 1
+  },
+  {
+    "id": "cb_radio",
+    "teamId": "radio_px",
+    "teamBox": [
+      0.25,
+      0.08,
+      0.2
+    ],
+    "scale": 1
+  },
+  {
+    "id": "cell_key",
+    "teamId": "chave_cela",
+    "teamBox": [
+      0.12,
+      0.03,
+      0.008
+    ],
+    "scale": 1
+  },
+  {
+    "id": "charcoal_bag",
+    "teamId": "carvao",
+    "teamBox": [
+      0.3,
+      0.12,
+      0.4
+    ],
+    "scale": 1
+  },
+  {
+    "id": "cigarettes",
+    "teamId": "cigarro",
+    "teamBox": [
+      0.055,
+      0.088,
+      0.022
+    ],
+    "scale": 1
+  },
+  {
+    "id": "city_map",
+    "teamId": "mapa_cidade",
+    "teamBox": [
+      0.11,
+      0.01,
+      0.25
+    ],
+    "scale": 1
+  },
+  {
+    "id": "combat_boots",
+    "teamId": "coturno",
+    "teamBox": [
+      0.3,
+      0.2,
+      0.22
+    ],
+    "scale": 1
+  },
+  {
+    "id": "cooler_box",
+    "teamId": "caixa_termica",
+    "teamBox": [
+      0.32,
+      0.25,
+      0.23
+    ],
+    "scale": 1
+  },
+  {
+    "id": "corn_seeds",
+    "teamId": "sem_milho",
+    "teamBox": [
+      0.1,
+      0.15,
+      0.02
+    ],
+    "scale": 1
+  },
+  {
+    "id": "crossbody_bag",
+    "teamId": "bolsa",
+    "teamBox": [
+      0.25,
+      0.2,
+      0.08
+    ],
+    "scale": 1
+  },
+  {
+    "id": "delivery_bag",
+    "teamId": "bag_entregador",
+    "teamBox": [
+      0.48,
+      0.45,
+      0.42
+    ],
+    "scale": 1
+  },
+  {
+    "id": "denim_jacket",
+    "teamId": "jaqueta_jeans",
+    "teamBox": [
+      0.4,
+      0.08,
+      0.3025
+    ],
+    "scale": 1
+  },
+  {
+    "id": "diesel",
+    "teamId": "diesel",
+    "teamBox": [
+      0.091,
+      0.26,
+      0.091
+    ],
+    "scale": 1
+  },
+  {
+    "id": "diy_magazine",
+    "teamId": "revista_receita",
+    "teamBox": [
+      0.21,
+      0.28,
+      0.00805
+    ],
+    "scale": 1
+  },
+  {
+    "id": "dog_tag",
+    "teamId": "plaqueta",
+    "teamBox": [
+      0.03,
+      0.003,
+      0.05038
+    ],
+    "scale": 1
+  },
+  {
+    "id": "electric_fence_energizer",
+    "teamId": "eletrificador",
+    "teamBox": [
+      0.25,
+      0.2,
+      0.1502
+    ],
+    "scale": 1
+  },
+  {
+    "id": "extension_cord",
+    "teamId": "extensao",
+    "teamBox": [
+      0.228,
+      0.08,
+      0.23
+    ],
+    "scale": 1
+  },
+  {
+    "id": "fanny_pack",
+    "teamId": "pochete",
+    "teamBox": [
+      0.25,
+      0.1,
+      0.12
+    ],
+    "scale": 1
+  },
+  {
+    "id": "farmers_almanac",
+    "teamId": "almanaque",
+    "teamBox": [
+      0.15,
+      0.21,
+      0.0151
+    ],
+    "scale": 1
+  },
+  {
+    "id": "fertilizer_bag",
+    "teamId": "adubo",
+    "teamBox": [
+      0.45,
+      0.13,
+      0.3
+    ],
+    "scale": 1
+  },
+  {
+    "id": "firefighter_suit",
+    "teamId": "bombeiro",
+    "teamBox": [
+      0.55,
+      0.2,
+      0.4
+    ],
+    "scale": 1
+  },
+  {
+    "id": "fishing_net",
+    "teamId": "rede_pesca",
+    "teamBox": [
+      0.35,
+      0.15,
+      0.3
+    ],
+    "scale": 1
+  },
+  {
+    "id": "fishing_rod",
+    "teamId": "vara_pesca",
+    "teamBox": [
+      1.8,
+      0.04,
+      0.04
+    ],
+    "scale": 1
+  },
+  {
+    "id": "fishing_tackle_box",
+    "teamId": "kit_pesca",
+    "teamBox": [
+      0.3,
+      0.1,
+      0.18
+    ],
+    "scale": 1
+  },
+  {
+    "id": "flip_flops",
+    "teamId": "chinelo",
+    "teamBox": [
+      0.29,
+      0.03,
+      0.23
+    ],
+    "scale": 1
+  },
+  {
+    "id": "folding_solar_panel",
+    "teamId": "painel_solar",
+    "teamBox": [
+      0.396,
+      0.296,
+      0.0506
+    ],
+    "scale": 1
+  },
+  {
+    "id": "gas_cartridge",
+    "teamId": "cartucho_gas",
+    "teamBox": [
+      0.111,
+      0.165,
+      0.111
+    ],
+    "scale": 1
+  },
+  {
+    "id": "gasoline",
+    "teamId": "gasolina",
+    "teamBox": [
+      0.091,
+      0.26,
+      0.091
+    ],
+    "scale": 1
+  },
+  {
+    "id": "generator_key",
+    "teamId": "chave_gerador",
+    "teamBox": [
+      0.08,
+      0.03,
+      0.006
+    ],
+    "scale": 1
+  },
+  {
+    "id": "hard_hat",
+    "teamId": "capacete_obra",
+    "teamBox": [
+      0.24958,
+      0.15,
+      0.3
+    ],
+    "scale": 1
+  },
+  {
+    "id": "headlamp",
+    "teamId": "lanterna_cabeca",
+    "teamBox": [
+      0.09,
+      0.06,
+      0.05
+    ],
+    "scale": 1
+  },
+  {
+    "id": "hoodie",
+    "teamId": "moletom",
+    "teamBox": [
+      0.38,
+      0.08,
+      0.28
+    ],
+    "scale": 1
+  },
+  {
+    "id": "janitor_keys",
+    "teamId": "molho_zelador",
+    "teamBox": [
+      0.12125,
+      0.10081,
+      0.02
+    ],
+    "scale": 1
+  },
+  {
+    "id": "jeans",
+    "teamId": "calca_jeans",
+    "teamBox": [
+      0.35,
+      0.06,
+      0.22
+    ],
+    "scale": 1
+  },
+  {
+    "id": "kale_and_lettuce_seeds",
+    "teamId": "sem_couve",
+    "teamBox": [
+      0.09,
+      0.13,
+      0.015
+    ],
+    "scale": 1
+  },
+  {
+    "id": "kerosene",
+    "teamId": "querosene",
+    "teamBox": [
+      0.091,
+      0.26,
+      0.091
+    ],
+    "scale": 1
+  },
+  {
+    "id": "laptop",
+    "teamId": "notebook",
+    "teamBox": [
+      0.36,
+      0.0252,
+      0.251
+    ],
+    "scale": 1
+  },
+  {
+    "id": "leather_motorcycle_jacket",
+    "teamId": "jaqueta_couro",
+    "teamBox": [
+      0.45,
+      0.1,
+      0.355
+    ],
+    "scale": 1
+  },
+  {
+    "id": "leather_motorcycle_pants",
+    "teamId": "calca_couro",
+    "teamBox": [
+      0.4,
+      0.0902,
+      0.3
+    ],
+    "scale": 1
+  },
+  {
+    "id": "leather_work_gloves",
+    "teamId": "luva_couro",
+    "teamBox": [
+      0.25,
+      0.03,
+      0.12
+    ],
+    "scale": 1
+  },
+  {
+    "id": "led_camp_lantern",
+    "teamId": "lampiao_led",
+    "teamBox": [
+      0.11,
+      0.2,
+      0.11
+    ],
+    "scale": 1
+  },
+  {
+    "id": "magazine_arm_guard",
+    "teamId": "braco_revista",
+    "teamBox": [
+      0.3,
+      0.05899,
+      0.15022
+    ],
+    "scale": 1
+  },
+  {
+    "id": "magazines_and_comics",
+    "teamId": "revista_passa",
+    "teamBox": [
+      0.17,
+      0.26,
+      0.0101
+    ],
+    "scale": 1
+  },
+  {
+    "id": "master_key",
+    "teamId": "chave_mestra",
+    "teamBox": [
+      0.09,
+      0.035,
+      0.006
+    ],
+    "scale": 1
+  },
+  {
+    "id": "mechanic_coveralls",
+    "teamId": "macacao",
+    "teamBox": [
+      0.4,
+      0.09,
+      0.3
+    ],
+    "scale": 1
+  },
+  {
+    "id": "military_backpack",
+    "teamId": "mochila_militar",
+    "teamBox": [
+      0.35,
+      0.6,
+      0.3
+    ],
+    "scale": 1
+  },
+  {
+    "id": "military_radio",
+    "teamId": "radio_militar",
+    "teamBox": [
+      0.3,
+      0.2,
+      0.25
+    ],
+    "scale": 1
+  },
+  {
+    "id": "mobile_phone",
+    "teamId": "celular",
+    "teamBox": [
+      0.077,
+      0.16,
+      0.009
+    ],
+    "scale": 1
+  },
+  {
+    "id": "motor_oil",
+    "teamId": "oleo_motor",
+    "teamBox": [
+      0.1,
+      0.26,
+      0.07
+    ],
+    "scale": 1
+  },
+  {
+    "id": "night_vision_goggles",
+    "teamId": "nvg",
+    "teamBox": [
+      0.15,
+      0.1,
+      0.11
+    ],
+    "scale": 1
+  },
+  {
+    "id": "note",
+    "teamId": "bilhete",
+    "teamBox": [
+      0.15,
+      0.002,
+      0.1
+    ],
+    "scale": 1
+  },
+  {
+    "id": "padded_coat",
+    "teamId": "casaco_frio",
+    "teamBox": [
+      0.45,
+      0.15,
+      0.35
+    ],
+    "scale": 1
+  },
+  {
+    "id": "padlock_key",
+    "teamId": "cadeado_chave",
+    "teamBox": [
+      0.05,
+      0.08078,
+      0.025
+    ],
+    "scale": 1
+  },
+  {
+    "id": "photo",
+    "teamId": "foto",
+    "teamBox": [
+      0.102,
+      0.002,
+      0.152
+    ],
+    "scale": 1
+  },
+  {
+    "id": "portable_generator",
+    "teamId": "gerador",
+    "teamBox": [
+      0.5,
+      0.42,
+      0.43345
+    ],
+    "scale": 1
+  },
+  {
+    "id": "power_bank",
+    "teamId": "power_bank",
+    "teamBox": [
+      0.15,
+      0.07,
+      0.0158
+    ],
+    "scale": 1
+  },
+  {
+    "id": "pumpkin_seeds",
+    "teamId": "sem_abobora",
+    "teamBox": [
+      0.09,
+      0.13,
+      0.015
+    ],
+    "scale": 1
+  },
+  {
+    "id": "raincoat",
+    "teamId": "capa_chuva",
+    "teamBox": [
+      0.3,
+      0.04,
+      0.25
+    ],
+    "scale": 1
+  },
+  {
+    "id": "road_map",
+    "teamId": "mapa_rodoviario",
+    "teamBox": [
+      0.11,
+      0.01,
+      0.25
+    ],
+    "scale": 1
+  },
+  {
+    "id": "rolling_suitcase",
+    "teamId": "mala",
+    "teamBox": [
+      0.4,
+      0.65,
+      0.25
+    ],
+    "scale": 1
+  },
+  {
+    "id": "rubber_boots",
+    "teamId": "bota_borracha",
+    "teamBox": [
+      0.3,
+      0.35,
+      0.223
+    ],
+    "scale": 1
+  },
+  {
+    "id": "safe_key",
+    "teamId": "chave_cofre",
+    "teamBox": [
+      0.06995,
+      0.0249,
+      0.005
+    ],
+    "scale": 1
+  },
+  {
+    "id": "safety_goggles",
+    "teamId": "oculos",
+    "teamBox": [
+      0.16,
+      0.06,
+      0.08
+    ],
+    "scale": 1
+  },
+  {
+    "id": "sheet_metal_forearm_guard",
+    "teamId": "braco_chapa",
+    "teamBox": [
+      0.3,
+      0.0981,
+      0.11995
+    ],
+    "scale": 1
+  },
+  {
+    "id": "shopping_bag",
+    "teamId": "sacola",
+    "teamBox": [
+      0.3,
+      0.02,
+      0.2
+    ],
+    "scale": 1
+  },
+  {
+    "id": "shopping_cart",
+    "teamId": "carrinho_merc",
+    "teamBox": [
+      0.55,
+      0.98,
+      0.95
+    ],
+    "scale": 1
+  },
+  {
+    "id": "skill_book",
+    "teamId": "livro_hab",
+    "teamBox": [
+      0.1615,
+      0.23,
+      0.0402
+    ],
+    "scale": 1
+  },
+  {
+    "id": "snare_trap",
+    "teamId": "armadilha_laco",
+    "teamBox": [
+      0.15,
+      0.03,
+      0.15
+    ],
+    "scale": 1
+  },
+  {
+    "id": "sneakers",
+    "teamId": "tenis",
+    "teamBox": [
+      0.29731,
+      0.12,
+      0.12
+    ],
+    "scale": 1
+  },
+  {
+    "id": "tactical_vest",
+    "teamId": "colete_tatico",
+    "teamBox": [
+      0.35,
+      0.1,
+      0.4
+    ],
+    "scale": 1
+  },
+  {
+    "id": "technical_manual",
+    "teamId": "livro_tecnico",
+    "teamBox": [
+      0.21,
+      0.3,
+      0.0404
+    ],
+    "scale": 1
+  },
+  {
+    "id": "tool_belt",
+    "teamId": "cinto_ferramentas",
+    "teamBox": [
+      0.35,
+      0.1,
+      0.25
+    ],
+    "scale": 1
+  },
+  {
+    "id": "trash_bag",
+    "teamId": "saco_lixo",
+    "teamBox": [
+      0.25,
+      0.025,
+      0.2
+    ],
+    "scale": 1
+  },
+  {
+    "id": "trekking_backpack_70l",
+    "teamId": "cargueira",
+    "teamBox": [
+      0.38,
+      0.75,
+      0.3
+    ],
+    "scale": 1
+  },
+  {
+    "id": "tshirt",
+    "teamId": "camiseta",
+    "teamBox": [
+      0.3,
+      0.04,
+      0.22
+    ],
+    "scale": 1
+  },
+  {
+    "id": "watering_can",
+    "teamId": "regador",
+    "teamBox": [
+      0.40001,
+      0.25789,
+      0.18
+    ],
+    "scale": 1
+  },
+  {
+    "id": "wheelbarrow",
+    "teamId": "carrinho_mao",
+    "teamBox": [
+      0.64651,
+      0.65148,
+      1.5
+    ],
+    "scale": 1
+  },
+  {
+    "id": "windup_alarm_clock",
+    "teamId": "despertador",
+    "teamBox": [
+      0.1089,
+      0.125,
+      0.05525
+    ],
+    "scale": 1
   }
 ]

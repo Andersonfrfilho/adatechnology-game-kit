@@ -3,15 +3,23 @@ import { MATERIALS, bearingWallThickness, createDestruction } from '@adatechnolo
 
 import { REBAR_RATIOS, buildStructure, toDestructibleSpec } from '../src'
 import { WALL_THICKNESS } from '../src/geometry'
+import { engine } from './support'
 import { rectangularHouse } from './synthetic-plan'
 
 /** Real structure of the houses (game-destruction `structure.flexure` and `structure.masonry`, design T10-estrutura-real.md). */
 describe('real structure of the houses', () => {
   const structure = () => buildStructure(rectangularHouse({ width: 8, depth: 6 }), { wallDetail: 'coarse' })
 
-  it('the spec stays the one the Visor de casas 3D describes unless rebar is asked for', () => {
-    const spec = toDestructibleSpec(structure(), { wallDetail: 'coarse' })
+  it('the spec stays the one the Visor de casas 3D describes when the reinforced concrete is turned off', () => {
+    const spec = toDestructibleSpec(structure(), { wallDetail: 'coarse', slabPanels: false, rebar: false })
     expect(spec.parts.some((p) => p.structure?.rebar)).toBe(false)
+  })
+
+  it('a house of concrete is reinforced by default, with the slab in panels', () => {
+    const result: any = engine.generate('budget_slab_house', { seed: 3, state: 'normal' })
+    const spec = toDestructibleSpec(result.structure, { portico: true })
+    expect(spec.parts.some((p) => p.structure?.rebar)).toBe(true)
+    expect(spec.parts.some((p) => /^slab_top_p\d+$/.test(p.id))).toBe(true)
   })
 
   it('rebar: the concrete beams and slabs get their tension steel, sized so that they rest at safetyOthers and hold the loss of a bearing wall', () => {

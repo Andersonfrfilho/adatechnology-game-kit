@@ -3,6 +3,9 @@ import { GRAVITY, MATERIALS, SOILS, assemblyPart, partMass, pileLength, profileO
 import type { SoilDef } from '@adatechnology/game-destruction'
 import { sizeCapacities } from './loads'
 import { GROUND } from './types'
+import { resolveSlabPanels } from './slab-panels'
+import type { SlabPanelOptions } from './slab-panels'
+import { applySlabPanels, beamDepthFor, deepenBondBeams } from './slab-panels'
 import { applyPanels, applyUnits } from './wall-detail'
 import type { FoundationType, PartRole, Structure, StructurePart, WallDetail } from './types'
 
@@ -17,6 +20,11 @@ export interface DestructibleSpecOptions {
   portico?: boolean
   /** How finely the walls are split (default `panels`; `coarse` is one part per wall as the Visor de casas 3D builds it). */
   wallDetail?: WallDetail
+  /**
+   * Cuts the concrete slabs into panels with a beam under each edge, and adds the pillars those beams and the bond beams need (design T10 §12): `true` for
+   * `SLAB_PANEL_DEFAULTS`, options to change them, `false` for the slab as one piece, as the Visor de casas 3D describes it. Default `true`.
+   */
+  slabPanels?: boolean | Partial<SlabPanelOptions>
   /** Name of the spec (default `house`). */
   name?: string
   /** Leaves parts out (and what rests on them is dropped from the joints). */
@@ -28,8 +36,9 @@ export interface DestructibleSpecOptions {
   /**
    * Declares the tension steel of the concrete beams, slabs, roofs and stairs of a construction with rebar (`structure.rebar.ratio`), so the destruction
    * world bends them (`structure.flexure` of game-destruction): `true` for the default ratios (`REBAR_RATIOS`), or ratios per role. When the spec is
-   * sized the steel is sized too (`sizeRebar`: at rest at `safetyOthers`, after the loss of any pillar or bearing wall under `redundancy`). Off by
-   * default: the spec stays the one the Visor de casas 3D describes.
+   * sized the steel is sized too (`sizeRebar`: at rest at `safetyOthers`, after the loss of any pillar or bearing wall under `redundancy`). On by
+   * default (a house of concrete is reinforced concrete, with the slab in panels on real beams, `slabPanels`); `false` leaves the concrete plain, as the
+   * Visor de casas 3D describes it.
    */
   rebar?: boolean | Partial<Record<'beam' | 'slab' | 'roof' | 'stair', number>>
   /**
@@ -108,7 +117,11 @@ export function toDestructibleSpec(structure: Structure, options: DestructibleSp
   const ids = new Set(roled.map((part) => part.id))
   const filtered = structure.supports.filter((support) => !options.filter || (ids.has(support.part) && (support.on === GROUND || ids.has(support.on))))
   const detail = options.wallDetail ?? 'panels'
-  const panels = applyPanels({ parts: roled, supports: filtered }, structure, detail)
+  const resolved = resolveSlabPanels(options.slabPanels ?? true)
+  const slabOptions = resolved && structure.levels.length <= resolved.maxStoreys ? resolved : undefined
+  const slabbed = slabOptions ? applySlabPanels({ parts: roled, supports: filtered }, structure, slabOptions) : { parts: roled, supports: filtered }
+  const walled = applyPanels(slabbed, structure, detail, slabOptions && structure.construction.frame.rebar ? (span) => beamDepthFor(span, slabOptions) : undefined)
+  const panels = slabOptions && detail !== 'coarse' ? deepenBondBeams(walled, structure, slabOptions) : walled
   const sizing = { safety, redundancy, safetyOthers }
   const sized = { ...panels, capacities: options.sized === false ? new Map<string, number>() : sizeCapacities(panels.parts, panels.supports, sizing) }
   const { parts, supports, capacities } = detail === 'units' ? applyUnits(sized, structure) : sized
@@ -120,15 +133,19 @@ export function toDestructibleSpec(structure: Structure, options: DestructibleSp
   const z1 = Math.max(...parts.map((part) => part.aabb[3]))
   if (parts.length) specs.push({ id: GROUND, material: 'concrete', shape: { kind: 'box', size: [x1 - x0 + margin, TERRAIN_THICKNESS, z1 - z0 + margin] }, position: [(x0 + x1) / 2, -TERRAIN_THICKNESS / 2, (z0 + z1) / 2], hp: 1e12, structure: { role: 'foundation' }, anchored: true, tags: ['terrain'] })
   const present = new Set([...parts.map((part) => part.id), GROUND])
-  const joints: JointSpec[] = supports.filter((s) => present.has(s.part) && present.has(s.on)).map((s) => ({ id: `${s.part}~${s.on}`, a: s.part, b: s.on, kind: s.joint, bears: s.bears === false ? false : 'a_on_b' }))
+  // in a frame (`portico`) the walls only close: a beam rests on the pillars, not on the wall under it, and is sized for the span between pillars (a wall that is lost does not bring the beam down)
+  const infill = new Set(portico && slabOptions ? kept.filter((part) => part.role === 'wall').map((part) => part.id) : [])
+  const beams = new Set(parts.filter((part) => part.role === 'beam' && (part.beamKind === 'bond_beam' || part.slab !== undefined)).map((part) => part.id))
+  const joints: JointSpec[] = supports.filter((s) => present.has(s.part) && present.has(s.on)).map((s) => ({ id: `${s.part}~${s.on}`, a: s.part, b: s.on, kind: s.joint, bears: s.bears === false || (beams.has(s.part) && infill.has(s.on)) ? false : 'a_on_b' }))
   const spec: DestructibleSpec = { name: options.name ?? 'house', parts: specs, joints, tags: ['structure', 'house'] }
-  return onSoil(withRebar(spec, structure, options, portico), structure, options)
+  return onSoil(withRebar(spec, structure, options, portico, slabOptions !== undefined), structure, options)
 }
 
-function withRebar(spec: DestructibleSpec, structure: Structure, options: DestructibleSpecOptions, portico: boolean): DestructibleSpec {
+function withRebar(spec: DestructibleSpec, structure: Structure, options: DestructibleSpecOptions, portico: boolean, panelled: boolean): DestructibleSpec {
   const { redundancy = 0.97, safetyOthers = 0.45 } = options
-  if (!options.rebar || !structure.construction.frame.rebar) return spec
-  const ratios = { ...REBAR_RATIOS, ...(options.rebar === true ? {} : options.rebar) }
+  const rebar = options.rebar ?? panelled
+  if (!rebar || !structure.construction.frame.rebar) return spec
+  const ratios = { ...REBAR_RATIOS, ...(rebar === true ? {} : rebar) }
   for (const part of spec.parts) {
     const role = part.structure?.role
     if (!role || !(role in ratios) || part.structure!.rebar || !MATERIALS.find((m) => m.id === part.material)?.strength?.tensileMPa) continue

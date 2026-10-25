@@ -14,8 +14,8 @@ describe('wallDetail on a generated plan', () => {
   for (const template of ['single_storey_a', 'townhouse', 'high_end_contemporary', 'market']) {
     it(`${template}: panels and units keep the mass of the walls (within 1%)`, () => {
       const generated = plan(template)
-      const coarse = toDestructibleSpec(generated.structure, { wallDetail: 'coarse' })
-      const panels = toDestructibleSpec(generated.structure, { wallDetail: 'panels' })
+      const coarse = toDestructibleSpec(generated.structure, { wallDetail: 'coarse', slabPanels: false })
+      const panels = toDestructibleSpec(generated.structure, { wallDetail: 'panels', slabPanels: false })
       expect(panels.parts.length).toBeGreaterThan(coarse.parts.length)
       expect(Math.abs(massOf(panels) - massOf(coarse)) / massOf(coarse)).toBeLessThan(0.01)
       const hosts = new Map<string, number>()
@@ -30,7 +30,7 @@ describe('wallDetail on a generated plan', () => {
   it('cuts a wall at its windows: piers, sill, lintel bearing 0.2 m on the piers, wall above', () => {
     const generated = plan('single_storey_a', 1)
     const window = generated.structure.openings.find((o: any) => o.kind === 'window')
-    const spec = toDestructibleSpec(generated.structure, { wallDetail: 'panels' })
+    const spec = toDestructibleSpec(generated.structure, { wallDetail: 'panels', slabPanels: false })
     const pieces = spec.parts.filter((p) => p.id.startsWith(`${window.wall}_`))
     const kinds = pieces.map((p) => p.id.replace(`${window.wall}_`, '').replace(/_\d+$/, ''))
     expect(kinds).toEqual(expect.arrayContaining(['pier', 'sill', 'lintel']))
@@ -47,7 +47,7 @@ describe('wallDetail on a generated plan', () => {
 
   it('bearing piers keep the role of the wall and a partition stays a partition', () => {
     const generated = plan('townhouse', 3)
-    const spec = toDestructibleSpec(generated.structure, { wallDetail: 'panels' })
+    const spec = toDestructibleSpec(generated.structure, { wallDetail: 'panels', slabPanels: false })
     const roleOf = (id: string) => spec.parts.find((p) => p.id === id)!.structure!.role
     for (const part of generated.structure.parts.filter((p: any) => p.id.startsWith('wall_'))) {
       const pier = spec.parts.find((p) => p.id === part.id || p.id.startsWith(`${part.id}_pier_`))
@@ -57,14 +57,14 @@ describe('wallDetail on a generated plan', () => {
 
   it('the detailed house stands whole: nothing breaks on its own in a minute', () => {
     for (const template of ['single_storey_a', 'townhouse', 'high_end_contemporary']) {
-      const spec = toDestructibleSpec(plan(template).structure, { wallDetail: 'panels' })
+      const spec = toDestructibleSpec(plan(template).structure, { wallDetail: 'panels', slabPanels: false })
       expect(breakParts(spec, [], 60).down.size, template).toBe(0)
     }
   })
 
   it('units: bricks laid one by one in bond, each on two below', () => {
     const generated = plan('budget_slab_house', 1)
-    const spec = toDestructibleSpec(generated.structure, { wallDetail: 'units' })
+    const spec = toDestructibleSpec(generated.structure, { wallDetail: 'units', slabPanels: false })
     const bricks = spec.parts.filter((p) => /_u\d+_\d+$/.test(p.id))
     expect(bricks.length).toBeGreaterThan(1000)
     const some = bricks.find((p) => p.id.includes('_u3_'))!
@@ -86,13 +86,13 @@ describe('wallDetail on a generated plan', () => {
   })
 
   it('coarse keeps one box per wall and no assembly layers', () => {
-    const spec = toDestructibleSpec(plan('single_storey_a').structure, { wallDetail: 'coarse' })
+    const spec = toDestructibleSpec(plan('single_storey_a').structure, { wallDetail: 'coarse', slabPanels: false })
     expect(spec.parts.some((p) => p.layers !== undefined || p.reinforcement !== undefined)).toBe(false)
   })
 })
 
 describe('log walls are courses of logs', () => {
-  const cabin = () => toDestructibleSpec(buildStructure(rectangularHouse({ width: 8, depth: 6, construction: logCabinConstruction() })), { wallDetail: 'panels' })
+  const cabin = () => toDestructibleSpec(buildStructure(rectangularHouse({ width: 8, depth: 6, construction: logCabinConstruction() })), { wallDetail: 'panels', slabPanels: false })
 
   it('ten logs of 26 cm to a wall of 2.6 m, each resting on the one under it', () => {
     const spec = cabin()

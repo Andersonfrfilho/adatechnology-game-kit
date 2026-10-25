@@ -2494,6 +2494,17 @@ de destruição não conheça nomes de calibre.
   Lê-se: a bola M80 (7,62x51) não fura a mesa de 8,5 mm da viga I e a M993 AP fura; a .50 BMG M33 (bola) fura o pilar de concreto armado de 30 cm; 5,56 e 7,62 de bola furam a
   viga de madeira de 10 cm e não furam o tijolo de 40 cm nem o concreto. Os goldens do mundo (`wall-golden`, `house-scenarios`) não mudam: nenhum usa `Hit.penetration`.
 
+### Respostas do dono de 2026-10-25 às perguntas do PR #40 (física)
+
+Decidido pelo dono em 2026-10-25 ("ok, pode seguir"): para cada pergunta vale o padrão proposto, que já estava em vigor no código.
+1. **Números de ignição:** continuam um modelo do kit (não existe tabela pública por cartucho); ajusta-se contra uma fonte específica só se o dono trouxer uma.
+2. **Chama e a curva de enchimento:** a incendiária com o tanque cheio acende 40% das vezes; a chama sente metade da curva (`flameFillInfluence 0,5`). Fica assim.
+3. **Perfuração nos veículos:** continua decidida pela energia; a tabela por calibre (`ammo.json`) alimenta o `Hit.penetration` do motor genérico, e os veículos não passam a usá-la por ora.
+4. **Faísca por metal:** alumínio 0,25 e outros metais 0,5, como está (aço e ferro 1, não metal 0).
+5. **Filmes de fluido (`game-fluids`):** não contam como fonte de fogo perto, como está.
+6. **Dois pilares e a carga que some:** a sustentação é a soma dos pilares (`structure.safetyFactor` na config); os dois pilares do time seguram porque parte da carga sai com as divisórias que caem, e o colapso não passa a sair só da soma com pilares mais fracos.
+As quatro decisões de 2026-10-24 acima (tanque realista, pilares somados, granada sempre ligada, tabela de penetração por calibre) ficam como entregues no PR #40.
+
 ## T2.4
 
 Porte literal do Casa3DSDK (`construir`, `planejaLOD`) e do AndaresSDK da página do time (`visor-casas-3d`, L39443-42734; `zombiada-modo-livre`, L7372-7557) para o pacote novo `@adatechnology/game-floorplan-three`. Cinco commits, na ordem do brief.
@@ -3073,6 +3084,11 @@ node examples/interactables-test-area/test.mjs                 -> sem falhas (EX
 2. A regra da chaminé e a do gás de acampamento foram inferidas; o time não dá o vínculo na planta. O `Chimney` do `game-floorplan` deve ganhar o id do item que ele serve?
 3. Os 31 ids de conteúdo da tabela padrão da estrutura foram casados com o household pelo nome; a lista está em `MIGRATION.md`. Alguém do time de itens confere?
 
+**Respostas do dono de 2026-10-25 (PR #37):** decidido pelo dono em 2026-10-25 ("ok, pode seguir"); valem os padrões propostos.
+1. Os ids renomeados ficam; o jogo que quiser as sementes antigas das cenas salvas passa `seedKey`.
+2. O `Chimney` do `game-floorplan` não ganha o id do item que serve por ora; a regra da chaminé e a do gás de acampamento seguem inferidas.
+3. Os 31 ids casados por nome com o household ficam como estão (lista em `MIGRATION.md`); a conferência pelo time de itens não bloqueia.
+
 ## 2026-10-24 · A sala de testes abre só com o conteúdo do SDK
 
 O dono perguntou se os itens de `/test-room/` eram os do jogo: não eram (19 itens procedurais de caixa e cilindro, `demoItems`, mais um carro de aluguel de caixas, `DEMO_MODULE`). Decisão do dono: "remover todos esses itens e deixar apenas dos sdk". Feito:
@@ -3141,3 +3157,25 @@ Desenho em `design/T10-estrutura-real.md` §11. Receita em `game-floorplan-struc
 - **Testes novos:** structure `skyscraper` (18) e `tower-plan`, commercial `office-tower` (9), residential `residential-tower`, post-apocalyptic (torres nas propriedades), floorplan-three `skyscraper` (4), game-urban `towers` (9), game-urban-three `towers` (2).
 - **Portões:** ver o fim desta entrada. `examples/test-room`, `floorplan-test-area` e `urban-test-area` build + `test.mjs` ok (capturas revertidas). O vitest do `game-floorplan-structure` acusou de novo, em parte das rodadas, o `Timeout calling "onTaskUpdate"` do worker (carga da máquina, testes passando).
 - **Pendências para o dono:** (1) acima de 60 andares a deriva passa de H/500 (o motor não tem outrigger nem tubo de perímetro): limitar a faixa a 60 ou aceitar; (2) `towers` desligado por padrão na cidade serve, ou o centro deve nascer com torres e regerar os goldens da Galeria? (3) não há arranha-céu nas entregas dos times nem em `packages/*` antes disto; nada foi reescrito no lugar de uma entrega.
+
+## 2026-10-25 · Estrutura real, lajes em painéis com vigas reais nas casas (T10 §5 resolvido, §12)
+
+Desenho em `design/T10-estrutura-real.md` §12. As lajes de concreto das casas e dos prédios do `game-floorplan` viram painéis de no máximo `maxSpan` (5 m,
+um por cômodo), com vigas `vão/10` (mín. 25 cm) nos limites, lajes `L/40` (mín. 10 cm piso, 8 cm cobertura), pilares de 20 cm onde uma viga ou cinta passa
+do vão e vergas/cintas com a altura do vão. O vergalhão (`rebar`) passou a ser o padrão de `toDestructibleSpec` (desliga com `rebar: false` ou
+`slabPanels: false`); `slabPanels` aceita um objeto com os valores de `SLAB_PANEL_DEFAULTS`. Novo em `game-floorplan-structure/src/slab-panels`, API `slabPanelView`.
+
+- **Cenários:** as 28 tipologias (residencial, comercial, rural, pós-apocalíptica) x sementes 1 a 5 x normal/fortificada/abandonada (420 casas) ficam de pé em repouso
+  com o aço dimensionado (flexão máxima 0,95, na laje da mansão); casas de madeira, rurais e barracas não mudam. Perder um pilar de um sobrado em pórtico não derruba laje
+  nem telhado; os dois pilares das pontas de um lado derrubam o lado; todos os pilares do térreo, a laje e o telhado. Uma explosão sob um painel de laje fissura a
+  face de cima (a tracionada) e o aço segura.
+- **Goldens:** nenhuma golden de time mudou (`vc3-structure` compara com `slabPanels: false, rebar: false`; `vc3-house-scene` e `vc3-house-area` iguais). Mudaram cinco
+  entradas de `game-floorplan-three/tests/fixtures/exact-floorplan.json` (`destruction/breach|spall|fracture`, `specimen/house_casa_portico|house_casa_inteira`), pelos
+  painéis (§6.1 do T10).
+- **Testes antigos ajustados:** `load-path` (dois pórticos), `flexure` (padrão do concreto armado), `extension` e `wall-detail` (opt-out dos painéis), `destruction` do
+  `game-floorplan-three` (painel `slab_1_p0`). O cenário `house_two_pillars` da área de casas perde os pilares das pontas de um lado.
+- **Testes novos:** `game-floorplan-structure/tests/slab-panels.test.ts` (opções, vão, uma casa de cada gabarito em repouso, perda de pilar, explosão sob a laje),
+  `game-floorplan-three/tests/destruction.test.ts` (painéis ligados ao mundo, o painel que falha esconde só os pedaços dele), `game-destruction/tests/terrain-blow.test.ts`.
+- **Achado no motor:** o golpe contundente no terreno (`anchored` com a etiqueta `terrain`) deixa de desgastar as juntas de todas as paredes sobre ele.
+- **Portões:** ver o relatório do passo (build, typecheck, lint, testes dos pacotes `game-floorplan*`, `game-destruction(-three)`, `game-urban-three`, `game-test-room`, exemplos
+  `floorplan-test-area`, `urban-test-area`, `test-room`).

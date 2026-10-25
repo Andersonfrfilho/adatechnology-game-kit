@@ -19,6 +19,27 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
     }
     shared.ctx._flights = { r: R, l }; return l;
   }
+  // The slab pieces of the plan are cut into panels by the structure (`slabPanelView`): a tile of a floor, an underside or a ceiling is split at the borders of
+  // the panels and each part is tagged with its own panel, so the panel that fails drops alone. A slab with no panels (a plan with plain slabs) stays one piece.
+  const panelRects = p => (p.footprint && p.footprint.length ? p.footprint : [p.aabb]);
+  function tilesOf(parent, rc) {
+    const ps = parent && shared.ctx.panelsOf && shared.ctx.panelsOf.get(parent);
+    if (!ps) return [[parent ? structurePiece(parent) : null, rc]];
+    const out = [], taken = [];
+    for (const p of ps) for (const q of panelRects(p)) {
+      const r = [Math.max(rc[0], q[0]), Math.max(rc[1], q[1]), Math.min(rc[2], q[2]), Math.min(rc[3], q[3])];
+      if (r[2] - r[0] > EPS && r[3] - r[1] > EPS) { out.push([structurePiece(p.id), r]); taken.push(r); }
+    }
+    for (const r of subRects([rc], taken)) out.push([null, r]);
+    return out;
+  }
+  function panelAt(parent, x, z) {
+    const ps = shared.ctx.panelsOf && shared.ctx.panelsOf.get(parent);
+    if (!ps) return structurePiece(parent);
+    for (const p of ps) for (const q of panelRects(p)) if (x >= q[0] - EPS && x <= q[2] + EPS && z >= q[1] - EPS && z <= q[3] + EPS) return structurePiece(p.id);
+    return null;
+  }
+  const hasSlab = id => !!(shared.ctx.structureIndex[id] || (shared.ctx.panelsOf && shared.ctx.panelsOf.has(id)));
   function floorsAndSlabs() {
     const R = shared.ctx.r, nA = R.floors.length, C = shared.ctx.colors;
     const V = flights(), holes = f => V.filter(v => v.to === f).flatMap(v => { let rs = [v.rect]; if (v.top) rs = subRects(rs, [v.top]); for (const o of V) if (o.from === f && o.landing) rs = subRects(rs, [o.landing]); return rs; }), landings = f => V.filter(v => v.from === f && v.landing).map(v => v.landing);
@@ -26,19 +47,19 @@ export function installHouseFloors(K: Kernel, shared: Shared): void {
       cursor.group = 'f' + f; const y0 = Y0(f), bur = holes(f);
       for (const c of R.rooms.filter(c => c.floor === f)) {
         if (c.type === 'void' || c.outbuilding || (c.type === 'elevator' && f > 0)) continue;
-        const col = floorColor(c); cursor.pc = f > 0 ? (structurePiece('slab_' + f + '_' + c.type) || structurePiece('slab_' + f + '_' + c.id) || structurePiece('slab_' + f)) : null;
-        for (const rc of subRects(rectsOf(c), bur)) bx('plaster', rc[0], y0 - 0.04, rc[1], rc[2], y0, rc[3], col);
+        const col = floorColor(c), parent = f > 0 ? ['slab_' + f + '_' + c.type, 'slab_' + f + '_' + c.id, 'slab_' + f].find(hasSlab) : null;
+        for (const rc of subRects(rectsOf(c), bur)) for (const [pc, r] of tilesOf(parent, rc)) { cursor.pc = pc; bx('plaster', r[0], y0 - 0.04, r[1], r[2], y0, r[3], col); }
       }
       if (f > 0) { // slab under the floor
-        const rs = R.rooms.filter(c => c.floor === f && c.type !== 'void' && c.type !== 'elevator').flatMap(rectsOf); cursor.pc = structurePiece('slab_' + f);
-        for (const rc of subRects(rs, bur)) bx('plaster', rc[0], y0 - 0.24, rc[1], rc[2], y0 - 0.04, rc[3], C.ceiling != null ? C.ceiling : 0xeeeae2);
+        const rs = R.rooms.filter(c => c.floor === f && c.type !== 'void' && c.type !== 'elevator').flatMap(rectsOf); 
+        for (const rc of subRects(rs, bur)) for (const [pc, r] of tilesOf('slab_' + f, rc)) { cursor.pc = pc; bx('plaster', r[0], y0 - 0.24, r[1], r[2], y0 - 0.04, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2); }
       }
       // ceiling of the rooms with nothing above
-      cursor.group = 't' + f; cursor.pc = structurePiece('slab_' + (f + 1)) || (f === nA - 1 ? (structurePiece('slab_ceiling') || structurePiece('slab_top')) : null);
+      cursor.group = 't' + f; const ceilingOf = hasSlab('slab_' + (f + 1)) ? 'slab_' + (f + 1) : (f === nA - 1 ? ['slab_ceiling', 'slab_top'].find(hasSlab) : null);
       const above = R.rooms.filter(c => c.floor === f + 1).flatMap(rectsOf);
-      for (const c of R.rooms.filter(c => c.floor === f && !OPEN_AREA(c))) for (const rc of subRects(rectsOf(c), above)) bx('plaster', rc[0], y0 + c.ceiling, rc[1], rc[2], y0 + c.ceiling + 0.2, rc[3], C.ceiling != null ? C.ceiling : 0xeeeae2);
+      for (const c of R.rooms.filter(c => c.floor === f && !OPEN_AREA(c))) for (const rc of subRects(rectsOf(c), above)) for (const [pc, r] of tilesOf(ceilingOf, rc)) { cursor.pc = pc; bx('plaster', r[0], y0 + c.ceiling, r[1], r[2], y0 + c.ceiling + 0.2, r[3], C.ceiling != null ? C.ceiling : 0xeeeae2); }
       cursor.pc = null;
     }
   }
-  Object.assign(K, { flights, floorsAndSlabs });
+  Object.assign(K, { flights, floorsAndSlabs, tilesOf, panelAt });
 }

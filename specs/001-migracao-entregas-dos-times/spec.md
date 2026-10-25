@@ -55,4 +55,5 @@ Regra permanente: `CLAUDE.md` da raiz.
   eles produziam está dentro das páginas.
 - Resolvido em 2026-10-23: qual versão vale onde há mais de uma (V2, V8 e as demais) está decidido em `consolidado.md`.
 - Resolvido em 2026-10-23: o Casa3DSDK são três SDKs; destino em C1–C2 do `consolidado.md` (estender `game-floorplan` + `-structure`, `-rural`, `-three`).
+- Em 2026-10-25 o dono respondeu as perguntas abertas dos PRs #37 e #40 (`evidence.md`), do T9 §11 (`design/T9-game-shapes-e-desempenho.md`) e do vento no T10 §10.7 (`design/T10-estrutura-real.md`). Seguem abertas as de T10 §7 (explosivos), §10.7 (tabela 1 da NBR 6123) e §11.10 (arranha-céu).
 - **Todas as decisões estão em `consolidado.md`**; desde 2026-10-23 o dono delegou o restante à recomendação, perguntando só escolha de negócio.

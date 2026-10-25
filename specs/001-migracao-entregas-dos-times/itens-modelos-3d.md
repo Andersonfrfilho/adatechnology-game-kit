@@ -1,7 +1,7 @@
 # Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **157 de 257 itens têm modelo 3D; faltam 100.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **246 de 257 itens têm modelo 3D; faltam 11.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -15,15 +15,15 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Ferramentas | 30 | 0 |
 | Armas brancas e de disparo silencioso | 20 | 0 |
 | Materiais de construção e crafting | 23 | 0 |
-| Roupas e proteção | 1 | 22 |
-| Mochilas e contêineres | 1 | 14 |
-| Eletrônicos, rádio e luz | 4 | 16 |
-| Combustível e energia | 2 | 7 |
-| Campo, pesca e caça | 0 | 11 |
-| Livros e revistas | 0 | 5 |
-| História e colecionáveis | 1 | 15 |
-| Chaves e acesso | 1 | 10 |
-| **Total** | **157** | **100** |
+| Roupas e proteção | 23 | 0 |
+| Mochilas e contêineres | 15 | 0 |
+| Eletrônicos, rádio e luz | 20 | 0 |
+| Combustível e energia | 9 | 0 |
+| Campo, pesca e caça | 11 | 0 |
+| Livros e revistas | 5 | 0 |
+| História e colecionáveis | 8 | 8 |
+| Chaves e acesso | 8 | 3 |
+| **Total** | **246** | **11** |
 
 ## Comida (36 de 36)
 
@@ -202,55 +202,55 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Vergalhão (kit) | `vergalhao` | `rebar` | 2,0 kg | comum | 1,27 x 0,02 x 0,02 m |
 | [x] | Óleo lubrificante spray (kit) | `lubrificante` | `lubricant_spray` | 0,25 kg | comum | 50 x 170 x 50 mm |
 
-## Roupas e proteção (1 de 23)
+## Roupas e proteção (23 de 23)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Capacete de moto fechado | `capacete_moto` | `motorcycle_helmet` | 1,4 kg | incomum | 260 x 254 x 274 mm |
-| [ ] | Bota de borracha | `bota_borracha` | `rubber_boots` | 1,2 kg | comum | 300 x 350 x 220 mm |
-| [ ] | Braçadeira de revista | `braco_revista` | `magazine_arm_guard` | 0,4 kg | incomum | 300 x 60 x 150 mm |
-| [ ] | Calça de motociclista | `calca_couro` | `leather_motorcycle_pants` | 1,6 kg | raro | 400 x 90 x 300 mm |
-| [ ] | Calça jeans | `calca_jeans` | `jeans` | 0,8 kg | comum | 350 x 60 x 220 mm |
-| [ ] | Camiseta | `camiseta` | `tshirt` | 0,15 kg | comum | 300 x 40 x 220 mm |
-| [ ] | Capa de chuva | `capa_chuva` | `raincoat` | 0,4 kg | comum | 300 x 40 x 250 mm |
-| [ ] | Capacete de obra (EPI) | `capacete_obra` | `hard_hat` | 0,4 kg | comum | 250 x 150 x 300 mm |
-| [ ] | Casaco acolchoado | `casaco_frio` | `padded_coat` | 1,3 kg | incomum | 450 x 150 x 350 mm |
-| [ ] | Chinelo de dedo | `chinelo` | `flip_flops` | 0,2 kg | comum | 290 x 30 x 230 mm |
-| [ ] | Coletes balísticos (II-A, III-A, III) | `colete` | `ballistic_vest` | 3,0 kg | raro | 400 x 70 x 450 mm |
-| [ ] | Coturno | `coturno` | `combat_boots` | 1,6 kg | incomum | 300 x 200 x 220 mm |
-| [ ] | Farda camuflada do Exército | `farda_eb` | `army_camouflage_uniform` | 1,5 kg | comum | 400 x 100 x 320 mm |
-| [ ] | Jaqueta de motociclista (couro) | `jaqueta_couro` | `leather_motorcycle_jacket` | 1,8 kg | raro | 450 x 100 x 350 mm |
-| [ ] | Jaqueta jeans | `jaqueta_jeans` | `denim_jacket` | 1,0 kg | comum | 400 x 80 x 300 mm |
-| [ ] | Luvas de couro (raspa) | `luva_couro` | `leather_work_gloves` | 0,2 kg | comum | 250 x 30 x 120 mm |
-| [ ] | Macacão de mecânico | `macacao` | `mechanic_coveralls` | 1,2 kg | comum | 400 x 90 x 300 mm |
-| [ ] | Moletom | `moletom` | `hoodie` | 0,6 kg | comum | 380 x 80 x 280 mm |
-| [ ] | Protetor de antebraço de chapa | `braco_chapa` | `sheet_metal_forearm_guard` | 1,5 kg | raro | 300 x 100 x 120 mm |
-| [ ] | Roupa de apicultor | `apicultor` | `beekeeper_suit` | 1,4 kg | muito raro | 400 x 100 x 330 mm |
-| [ ] | Roupa de bombeiro | `bombeiro` | `firefighter_suit` | 4,0 kg | raro | 550 x 200 x 400 mm |
-| [ ] | Tênis de corrida | `tenis` | `sneakers` | 0,7 kg | comum | 300 x 120 x 120 mm |
-| [ ] | Óculos de proteção | `oculos` | `safety_goggles` | 0,05 kg | comum | 160 x 60 x 80 mm |
+| [x] | Bota de borracha (kit) | `bota_borracha` | `rubber_boots` | 1,2 kg | comum | 300 x 350 x 220 mm |
+| [x] | Braçadeira de revista (kit) | `braco_revista` | `magazine_arm_guard` | 0,4 kg | incomum | 300 x 60 x 150 mm |
+| [x] | Calça de motociclista (kit) | `calca_couro` | `leather_motorcycle_pants` | 1,6 kg | raro | 400 x 90 x 300 mm |
+| [x] | Calça jeans (kit) | `calca_jeans` | `jeans` | 0,8 kg | comum | 350 x 60 x 220 mm |
+| [x] | Camiseta (kit) | `camiseta` | `tshirt` | 0,15 kg | comum | 300 x 40 x 220 mm |
+| [x] | Capa de chuva (kit) | `capa_chuva` | `raincoat` | 0,4 kg | comum | 300 x 40 x 250 mm |
+| [x] | Capacete de obra (EPI) (kit) | `capacete_obra` | `hard_hat` | 0,4 kg | comum | 250 x 150 x 300 mm |
+| [x] | Casaco acolchoado (kit) | `casaco_frio` | `padded_coat` | 1,3 kg | incomum | 450 x 150 x 350 mm |
+| [x] | Chinelo de dedo (kit) | `chinelo` | `flip_flops` | 0,2 kg | comum | 290 x 30 x 230 mm |
+| [x] | Coletes balísticos (II-A, III-A, III) (kit) | `colete` | `ballistic_vest` | 3,0 kg | raro | 400 x 70 x 450 mm |
+| [x] | Coturno (kit) | `coturno` | `combat_boots` | 1,6 kg | incomum | 300 x 200 x 220 mm |
+| [x] | Farda camuflada do Exército (kit) | `farda_eb` | `army_camouflage_uniform` | 1,5 kg | comum | 400 x 100 x 320 mm |
+| [x] | Jaqueta de motociclista (couro) (kit) | `jaqueta_couro` | `leather_motorcycle_jacket` | 1,8 kg | raro | 450 x 100 x 350 mm |
+| [x] | Jaqueta jeans (kit) | `jaqueta_jeans` | `denim_jacket` | 1,0 kg | comum | 400 x 80 x 300 mm |
+| [x] | Luvas de couro (raspa) (kit) | `luva_couro` | `leather_work_gloves` | 0,2 kg | comum | 250 x 30 x 120 mm |
+| [x] | Macacão de mecânico (kit) | `macacao` | `mechanic_coveralls` | 1,2 kg | comum | 400 x 90 x 300 mm |
+| [x] | Moletom (kit) | `moletom` | `hoodie` | 0,6 kg | comum | 380 x 80 x 280 mm |
+| [x] | Protetor de antebraço de chapa (kit) | `braco_chapa` | `sheet_metal_forearm_guard` | 1,5 kg | raro | 300 x 100 x 120 mm |
+| [x] | Roupa de apicultor (kit) | `apicultor` | `beekeeper_suit` | 1,4 kg | muito raro | 400 x 100 x 330 mm |
+| [x] | Roupa de bombeiro (kit) | `bombeiro` | `firefighter_suit` | 4,0 kg | raro | 550 x 200 x 400 mm |
+| [x] | Tênis de corrida (kit) | `tenis` | `sneakers` | 0,7 kg | comum | 300 x 120 x 120 mm |
+| [x] | Óculos de proteção (kit) | `oculos` | `safety_goggles` | 0,05 kg | comum | 160 x 60 x 80 mm |
 
-## Mochilas e contêineres (1 de 15)
+## Mochilas e contêineres (15 de 15)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Mochila de trilha 40 L | `mochila_trilha` | `hiking_backpack_40l` | 1,3 kg | incomum | 411 x 550 x 319 mm |
-| [ ] | Bag de entregador | `bag_entregador` | `delivery_bag` | 1,2 kg | incomum | 480 x 450 x 420 mm |
-| [ ] | Bolsa transversal | `bolsa` | `crossbody_bag` | 0,3 kg | comum | 250 x 200 x 80 mm |
-| [ ] | Caixa térmica | `caixa_termica` | `cooler_box` | 1,0 kg | comum | 320 x 250 x 230 mm |
-| [ ] | Carrinho de mercado | `carrinho_merc` | `shopping_cart` | 12,0 kg | comum | 550 x 980 x 950 mm |
-| [ ] | Carrinho de mão | `carrinho_mao` | `wheelbarrow` | 15,0 kg | comum | 0,65 x 0,65 x 1,5 m |
-| [ ] | Cinto de ferramentas | `cinto_ferramentas` | `tool_belt` | 0,4 kg | comum | 350 x 100 x 250 mm |
-| [ ] | Colete tático | `colete_tatico` | `tactical_vest` | 1,2 kg | raro | 350 x 100 x 400 mm |
-| [ ] | Mala de rodinha | `mala` | `rolling_suitcase` | 3,0 kg | comum | 400 x 650 x 250 mm |
-| [ ] | Mochila cargueira 70 L | `cargueira` | `trekking_backpack_70l` | 2,2 kg | muito raro | 380 x 750 x 300 mm |
-| [ ] | Mochila escolar | `mochila_escolar` | `backpack` | 0,5 kg | comum | 300 x 300 x 200 mm |
-| [ ] | Mochila militar | `mochila_militar` | `military_backpack` | 1,8 kg | raro | 350 x 600 x 300 mm |
-| [ ] | Pochete | `pochete` | `fanny_pack` | 0,15 kg | comum | 250 x 100 x 120 mm |
-| [ ] | Saco de lixo | `saco_lixo` | `trash_bag` | 0,05 kg | comum | 250 x 25 x 200 mm |
-| [ ] | Sacola de mercado | `sacola` | `shopping_bag` | 0,02 kg | comum | 300 x 20 x 200 mm |
+| [x] | Bag de entregador (kit) | `bag_entregador` | `delivery_bag` | 1,2 kg | incomum | 480 x 450 x 420 mm |
+| [x] | Bolsa transversal (kit) | `bolsa` | `crossbody_bag` | 0,3 kg | comum | 250 x 200 x 80 mm |
+| [x] | Caixa térmica (kit) | `caixa_termica` | `cooler_box` | 1,0 kg | comum | 320 x 250 x 230 mm |
+| [x] | Carrinho de mercado (kit) | `carrinho_merc` | `shopping_cart` | 12,0 kg | comum | 550 x 980 x 950 mm |
+| [x] | Carrinho de mão (kit) | `carrinho_mao` | `wheelbarrow` | 15,0 kg | comum | 0,65 x 0,65 x 1,5 m |
+| [x] | Cinto de ferramentas (kit) | `cinto_ferramentas` | `tool_belt` | 0,4 kg | comum | 350 x 100 x 250 mm |
+| [x] | Colete tático (kit) | `colete_tatico` | `tactical_vest` | 1,2 kg | raro | 350 x 100 x 400 mm |
+| [x] | Mala de rodinha (kit) | `mala` | `rolling_suitcase` | 3,0 kg | comum | 400 x 650 x 250 mm |
+| [x] | Mochila cargueira 70 L (kit) | `cargueira` | `trekking_backpack_70l` | 2,2 kg | muito raro | 380 x 750 x 300 mm |
+| [x] | Mochila escolar (kit) | `mochila_escolar` | `backpack` | 0,5 kg | comum | 300 x 300 x 200 mm |
+| [x] | Mochila militar (kit) | `mochila_militar` | `military_backpack` | 1,8 kg | raro | 350 x 600 x 300 mm |
+| [x] | Pochete (kit) | `pochete` | `fanny_pack` | 0,15 kg | comum | 250 x 100 x 120 mm |
+| [x] | Saco de lixo (kit) | `saco_lixo` | `trash_bag` | 0,05 kg | comum | 250 x 25 x 200 mm |
+| [x] | Sacola de mercado (kit) | `sacola` | `shopping_bag` | 0,02 kg | comum | 300 x 20 x 200 mm |
 
-## Eletrônicos, rádio e luz (4 de 20)
+## Eletrônicos, rádio e luz (20 de 20)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -258,96 +258,96 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Pilhas AA (par) | `pilha_aa` | `batteries` | 0,05 kg | comum | 37 x 51 x 17 mm |
 | [x] | Rádio AM/FM a pilha | `radio_portatil` | `portable_radio` | 0,5 kg | comum | 220 x 295 x 70 mm |
 | [x] | Walkie-talkie (par) | `walkie` | `walkie_talkies` | 0,6 kg | incomum | 70 x 220 x 33 mm |
-| [ ] | Bateria 9 V | `bateria_9v` | `battery_9v` | 0,05 kg | comum | 26 x 49 x 18 mm |
-| [ ] | Celular | `celular` | `mobile_phone` | 0,2 kg | comum | 77 x 160 x 9 mm |
-| [ ] | Controle de alarme de carro | `controle_alarme` | `car_alarm_remote` | 0,03 kg | comum | 40 x 70 x 12 mm |
-| [ ] | Despertador de corda | `despertador` | `windup_alarm_clock` | 0,3 kg | comum | 110 x 125 x 55 mm |
-| [ ] | Eletrificador de cerca rural | `eletrificador` | `electric_fence_energizer` | 3,0 kg | raro | 250 x 200 x 150 mm |
-| [ ] | Extensão elétrica 20 m | `extensao` | `extension_cord` | 1,5 kg | comum | 230 x 80 x 230 mm |
-| [ ] | Gerador portátil a gasolina | `gerador` | `portable_generator` | 25,0 kg | raro | 500 x 420 x 430 mm |
-| [ ] | Lampião LED de camping | `lampiao_led` | `led_camp_lantern` | 0,4 kg | incomum | 110 x 200 x 110 mm |
-| [ ] | Lanterna de cabeça | `lanterna_cabeca` | `headlamp` | 0,1 kg | incomum | 90 x 60 x 50 mm |
-| [ ] | Notebook | `notebook` | `laptop` | 2,0 kg | incomum | 360 x 25 x 250 mm |
-| [ ] | Painel solar dobrável | `painel_solar` | `folding_solar_panel` | 1,5 kg | raro | 400 x 300 x 50 mm |
-| [ ] | Power bank | `power_bank` | `power_bank` | 0,3 kg | incomum | 150 x 70 x 16 mm |
-| [ ] | Rádio amador PX | `radio_px` | `cb_radio` | 3,0 kg | raro | 250 x 80 x 200 mm |
-| [ ] | Rádio militar de longo alcance | `radio_militar` | `military_radio` | 6,0 kg | lendário | 300 x 200 x 250 mm |
-| [ ] | Vela | `vela` | `candles` | 0,05 kg | comum | 60 x 120 x 60 mm |
-| [ ] | Óculos de visão noturna | `nvg` | `night_vision_goggles` | 0,6 kg | muito raro | 150 x 100 x 110 mm |
+| [x] | Bateria 9 V (kit) | `bateria_9v` | `battery_9v` | 0,05 kg | comum | 26 x 49 x 18 mm |
+| [x] | Celular (kit) | `celular` | `mobile_phone` | 0,2 kg | comum | 77 x 160 x 9 mm |
+| [x] | Controle de alarme de carro (kit) | `controle_alarme` | `car_alarm_remote` | 0,03 kg | comum | 40 x 70 x 12 mm |
+| [x] | Despertador de corda (kit) | `despertador` | `windup_alarm_clock` | 0,3 kg | comum | 110 x 125 x 55 mm |
+| [x] | Eletrificador de cerca rural (kit) | `eletrificador` | `electric_fence_energizer` | 3,0 kg | raro | 250 x 200 x 150 mm |
+| [x] | Extensão elétrica 20 m (kit) | `extensao` | `extension_cord` | 1,5 kg | comum | 230 x 80 x 230 mm |
+| [x] | Gerador portátil a gasolina (kit) | `gerador` | `portable_generator` | 25,0 kg | raro | 500 x 420 x 430 mm |
+| [x] | Lampião LED de camping (kit) | `lampiao_led` | `led_camp_lantern` | 0,4 kg | incomum | 110 x 200 x 110 mm |
+| [x] | Lanterna de cabeça (kit) | `lanterna_cabeca` | `headlamp` | 0,1 kg | incomum | 90 x 60 x 50 mm |
+| [x] | Notebook (kit) | `notebook` | `laptop` | 2,0 kg | incomum | 360 x 25 x 250 mm |
+| [x] | Painel solar dobrável (kit) | `painel_solar` | `folding_solar_panel` | 1,5 kg | raro | 400 x 300 x 50 mm |
+| [x] | Power bank (kit) | `power_bank` | `power_bank` | 0,3 kg | incomum | 150 x 70 x 16 mm |
+| [x] | Rádio amador PX (kit) | `radio_px` | `cb_radio` | 3,0 kg | raro | 250 x 80 x 200 mm |
+| [x] | Rádio militar de longo alcance (kit) | `radio_militar` | `military_radio` | 6,0 kg | lendário | 300 x 200 x 250 mm |
+| [x] | Vela (kit) | `vela` | `candles` | 0,05 kg | comum | 60 x 120 x 60 mm |
+| [x] | Óculos de visão noturna (kit) | `nvg` | `night_vision_goggles` | 0,6 kg | muito raro | 150 x 100 x 110 mm |
 
-## Combustível e energia (2 de 9)
+## Combustível e energia (9 de 9)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Botijão de gás P13 | `botijao` | `lpg_cylinder_13kg` | 29,0 kg | comum | 353 x 490 x 358 mm |
 | [x] | Galão de combustível 20 L | `galao` | `fuel_jerrycan` | 1,2 kg | incomum | 308 x 470 x 154 mm |
-| [ ] | Bateria 12 V | `bateria_12v` | `car_battery_12v` | 14,0 kg | incomum | 240 x 190 x 175 mm |
-| [ ] | Cartucho de gás | `cartucho_gas` | `gas_cartridge` | 0,35 kg | incomum | 110 x 165 x 110 mm |
-| [ ] | Carvão (saco de 3 kg) | `carvao` | `charcoal_bag` | 3,0 kg | comum | 300 x 120 x 400 mm |
-| [ ] | Diesel (litro) | `diesel` | `diesel` | 0,85 kg | incomum | 90 x 260 x 90 mm |
-| [ ] | Gasolina (litro) | `gasolina` | `gasoline` | 0,75 kg | incomum | 90 x 260 x 90 mm |
-| [ ] | Querosene (1 L) | `querosene` | `kerosene` | 0,8 kg | incomum | 90 x 260 x 90 mm |
-| [ ] | Óleo de motor | `oleo_motor` | `motor_oil` | 1,0 kg | comum | 100 x 260 x 70 mm |
+| [x] | Bateria 12 V (kit) | `bateria_12v` | `car_battery_12v` | 14,0 kg | incomum | 240 x 190 x 175 mm |
+| [x] | Cartucho de gás (kit) | `cartucho_gas` | `gas_cartridge` | 0,35 kg | incomum | 110 x 165 x 110 mm |
+| [x] | Carvão (saco de 3 kg) (kit) | `carvao` | `charcoal_bag` | 3,0 kg | comum | 300 x 120 x 400 mm |
+| [x] | Diesel (litro) (kit) | `diesel` | `diesel` | 0,85 kg | incomum | 90 x 260 x 90 mm |
+| [x] | Gasolina (litro) (kit) | `gasolina` | `gasoline` | 0,75 kg | incomum | 90 x 260 x 90 mm |
+| [x] | Querosene (1 L) (kit) | `querosene` | `kerosene` | 0,8 kg | incomum | 90 x 260 x 90 mm |
+| [x] | Óleo de motor (kit) | `oleo_motor` | `motor_oil` | 1,0 kg | comum | 100 x 260 x 70 mm |
 
-## Campo, pesca e caça (0 de 11)
-
-| | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
-|---|---|---|---|---|---|---|
-| [ ] | Adubo (saco de 10 kg) | `adubo` | `fertilizer_bag` | 10,0 kg | raro | 450 x 130 x 300 mm |
-| [ ] | Armadilha de laço | `armadilha_laco` | `snare_trap` | 0,3 kg | comum | 150 x 30 x 150 mm |
-| [ ] | Caixa de pesca (anzol, linha, isca) | `kit_pesca` | `fishing_tackle_box` | 0,6 kg | comum | 300 x 100 x 180 mm |
-| [ ] | Rama de mandioca (maniva) | `maniva` | `cassava_cuttings` | 2,0 kg | incomum | 700 x 120 x 120 mm |
-| [ ] | Rede de pesca | `rede_pesca` | `fishing_net` | 3,0 kg | incomum | 350 x 150 x 300 mm |
-| [ ] | Regador | `regador` | `watering_can` | 0,5 kg | comum | 400 x 260 x 180 mm |
-| [ ] | Sementes de abóbora | `sem_abobora` | `pumpkin_seeds` | 0,05 kg | incomum | 90 x 130 x 15 mm |
-| [ ] | Sementes de couve e alface | `sem_couve` | `kale_and_lettuce_seeds` | 0,05 kg | incomum | 90 x 130 x 15 mm |
-| [ ] | Sementes de feijão | `sem_feijao` | `bean_seeds` | 0,1 kg | incomum | 100 x 150 x 20 mm |
-| [ ] | Sementes de milho | `sem_milho` | `corn_seeds` | 0,1 kg | incomum | 100 x 150 x 20 mm |
-| [ ] | Vara de pesca | `vara_pesca` | `fishing_rod` | 1,0 kg | comum | 1,8 x 0,04 x 0,04 m |
-
-## Livros e revistas (0 de 5)
+## Campo, pesca e caça (11 de 11)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
-| [ ] | Almanaque do agricultor | `almanaque` | `farmers_almanac` | 0,3 kg | incomum | 150 x 210 x 15 mm |
-| [ ] | Livro de habilidade (volumes 1 a 5) | `livro_hab` | `skill_book` | 0,6 kg | incomum | 160 x 230 x 40 mm |
-| [ ] | Manual técnico | `livro_tecnico` | `technical_manual` | 0,8 kg | raro | 210 x 300 x 40 mm |
-| [ ] | Revista Faça Você Mesmo | `revista_receita` | `diy_magazine` | 0,2 kg | incomum | 210 x 280 x 8 mm |
-| [ ] | Revista e gibi | `revista_passa` | `magazines_and_comics` | 0,2 kg | comum | 170 x 260 x 10 mm |
+| [x] | Adubo (saco de 10 kg) (kit) | `adubo` | `fertilizer_bag` | 10,0 kg | raro | 450 x 130 x 300 mm |
+| [x] | Armadilha de laço (kit) | `armadilha_laco` | `snare_trap` | 0,3 kg | comum | 150 x 30 x 150 mm |
+| [x] | Caixa de pesca (anzol, linha, isca) (kit) | `kit_pesca` | `fishing_tackle_box` | 0,6 kg | comum | 300 x 100 x 180 mm |
+| [x] | Rama de mandioca (maniva) (kit) | `maniva` | `cassava_cuttings` | 2,0 kg | incomum | 700 x 120 x 120 mm |
+| [x] | Rede de pesca (kit) | `rede_pesca` | `fishing_net` | 3,0 kg | incomum | 350 x 150 x 300 mm |
+| [x] | Regador (kit) | `regador` | `watering_can` | 0,5 kg | comum | 400 x 260 x 180 mm |
+| [x] | Sementes de abóbora (kit) | `sem_abobora` | `pumpkin_seeds` | 0,05 kg | incomum | 90 x 130 x 15 mm |
+| [x] | Sementes de couve e alface (kit) | `sem_couve` | `kale_and_lettuce_seeds` | 0,05 kg | incomum | 90 x 130 x 15 mm |
+| [x] | Sementes de feijão (kit) | `sem_feijao` | `bean_seeds` | 0,1 kg | incomum | 100 x 150 x 20 mm |
+| [x] | Sementes de milho (kit) | `sem_milho` | `corn_seeds` | 0,1 kg | incomum | 100 x 150 x 20 mm |
+| [x] | Vara de pesca (kit) | `vara_pesca` | `fishing_rod` | 1,0 kg | comum | 1,8 x 0,04 x 0,04 m |
 
-## História e colecionáveis (1 de 16)
+## Livros e revistas (5 de 5)
+
+| | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
+|---|---|---|---|---|---|---|
+| [x] | Almanaque do agricultor (kit) | `almanaque` | `farmers_almanac` | 0,3 kg | incomum | 150 x 210 x 15 mm |
+| [x] | Livro de habilidade (volumes 1 a 5) (kit) | `livro_hab` | `skill_book` | 0,6 kg | incomum | 160 x 230 x 40 mm |
+| [x] | Manual técnico (kit) | `livro_tecnico` | `technical_manual` | 0,8 kg | raro | 210 x 300 x 40 mm |
+| [x] | Revista Faça Você Mesmo (kit) | `revista_receita` | `diy_magazine` | 0,2 kg | incomum | 210 x 280 x 8 mm |
+| [x] | Revista e gibi (kit) | `revista_passa` | `magazines_and_comics` | 0,2 kg | comum | 170 x 260 x 10 mm |
+
+## História e colecionáveis (8 de 16)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Diário de sobrevivente | `diario` | `survivor_diary` | 0,3 kg | único | 162 x 210 x 55 mm |
-| [ ] | Bilhete e carta | `bilhete` | `note` | 0,01 kg | comum | 150 x 2 x 100 mm |
+| [x] | Bilhete e carta (kit) | `bilhete` | `note` | 0,01 kg | comum | 150 x 2 x 100 mm |
 | [ ] | Cartão-postal do Vale (19) | `postal` | `valley_postcard` | 0,01 kg | único | do jogo |
 | [ ] | Fichas da penitenciária | `fichas_presos` | `prisoner_files` | 0,2 kg | único | do jogo |
 | [ ] | Fita da Rádio Vale FM (12) | `fita_radio` | `radio_tape` | 0,05 kg | único | do jogo |
-| [ ] | Fotografia | `foto` | `photo` | 0,01 kg | comum | 102 x 2 x 152 mm |
+| [x] | Fotografia (kit) | `foto` | `photo` | 0,01 kg | comum | 102 x 2 x 152 mm |
 | [ ] | Item marcado de NPC (31) | `item_marcado` | `npc_marked_item` | 0,2 kg | único | do jogo |
 | [ ] | Livro de registro da Mina São Jorge | `registro_mina` | `mine_logbook` | 0,4 kg | único | do jogo |
-| [ ] | Mapa da cidade anotado | `mapa_cidade` | `city_map` | 0,05 kg | raro | 110 x 10 x 250 mm |
+| [x] | Mapa da cidade anotado (kit) | `mapa_cidade` | `city_map` | 0,05 kg | raro | 110 x 10 x 250 mm |
 | [ ] | Mapa militar | `mapa_militar` | `military_map` | 0,05 kg | muito raro | do jogo |
-| [ ] | Mapa rodoviário | `mapa_rodoviario` | `road_map` | 0,05 kg | comum | 110 x 10 x 250 mm |
-| [ ] | Maço de cigarro | `cigarro` | `cigarettes` | 0,03 kg | comum | 55 x 88 x 22 mm |
-| [ ] | Maço de dinheiro | `dinheiro` | `cash` | 0,05 kg | comum | 155 x 10 x 65 mm |
+| [x] | Mapa rodoviário (kit) | `mapa_rodoviario` | `road_map` | 0,05 kg | comum | 110 x 10 x 250 mm |
+| [x] | Maço de cigarro (kit) | `cigarro` | `cigarettes` | 0,03 kg | comum | 55 x 88 x 22 mm |
+| [x] | Maço de dinheiro (kit) | `dinheiro` | `cash` | 0,05 kg | comum | 155 x 10 x 65 mm |
 | [ ] | Ordem de evacuação do 7º BIS | `ordem_evac` | `evacuation_order` | 0,05 kg | único | do jogo |
-| [ ] | Plaqueta de identificação militar | `plaqueta` | `dog_tag` | 0,01 kg | comum | 30 x 3 x 50 mm |
+| [x] | Plaqueta de identificação militar (kit) | `plaqueta` | `dog_tag` | 0,01 kg | comum | 30 x 3 x 50 mm |
 | [ ] | Prontuário do paciente zero | `prontuario` | `patient_zero_record` | 0,1 kg | único | do jogo |
 
-## Chaves e acesso (1 de 11)
+## Chaves e acesso (8 de 11)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Chave de casa | `chave_casa` | `house_key` | 0,02 kg | comum | 85 x 46 x 4 mm |
-| [ ] | Cadeado com chave | `cadeado_chave` | `padlock_key` | 0,3 kg | comum | 50 x 80 x 25 mm |
-| [ ] | Chave de carro | `chave_carro` | `car_key` | 0,02 kg | comum | 60 x 45 x 15 mm |
-| [ ] | Chave de cela | `chave_cela` | `cell_key` | 0,05 kg | raro | 120 x 30 x 8 mm |
-| [ ] | Chave do cofre da delegacia | `chave_cofre` | `safe_key` | 0,05 kg | único | 70 x 25 x 5 mm |
-| [ ] | Chave do gerador do hospital | `chave_gerador` | `generator_key` | 0,05 kg | único | 80 x 30 x 6 mm |
+| [x] | Cadeado com chave (kit) | `cadeado_chave` | `padlock_key` | 0,3 kg | comum | 50 x 80 x 25 mm |
+| [x] | Chave de carro (kit) | `chave_carro` | `car_key` | 0,02 kg | comum | 60 x 45 x 15 mm |
+| [x] | Chave de cela (kit) | `chave_cela` | `cell_key` | 0,05 kg | raro | 120 x 30 x 8 mm |
+| [x] | Chave do cofre da delegacia (kit) | `chave_cofre` | `safe_key` | 0,05 kg | único | 70 x 25 x 5 mm |
+| [x] | Chave do gerador do hospital (kit) | `chave_gerador` | `generator_key` | 0,05 kg | único | 80 x 30 x 6 mm |
 | [ ] | Chave do teleférico | `chave_teleferico` | `cable_car_key` | 0,05 kg | único | do jogo |
-| [ ] | Chave mestra da portaria | `chave_mestra` | `master_key` | 0,05 kg | incomum | 90 x 35 x 6 mm |
+| [x] | Chave mestra da portaria (kit) | `chave_mestra` | `master_key` | 0,05 kg | incomum | 90 x 35 x 6 mm |
 | [ ] | Crachá da hidrelétrica | `cracha_rep` | `dam_badge` | 0,01 kg | único | do jogo |
 | [ ] | Código do bunker (3 pedaços) | `codigo_bunker` | `bunker_code` | 0,01 kg | único | do jogo |
-| [ ] | Molho de chaves do zelador | `molho_zelador` | `janitor_keys` | 0,15 kg | incomum | 120 x 100 x 20 mm |
+| [x] | Molho de chaves do zelador (kit) | `molho_zelador` | `janitor_keys` | 0,15 kg | incomum | 120 x 100 x 20 mm |

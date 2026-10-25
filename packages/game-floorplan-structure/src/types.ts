@@ -40,6 +40,10 @@ export interface StructurePart {
   pitch?: number
   tent?: string
   form?: string
+  /** Rooms a concrete slab covers (the rectangles of the storey it carries); the slab itself is their bounding box. `toDestructibleSpec` cuts the slab into panels over it. */
+  footprint?: Rect[]
+  /** Slab the panel, beam or column was made for (`toDestructibleSpec` with `slabPanels`; a `StructurePart` of `buildStructure` never has it). */
+  slab?: string
 }
 
 /** `part` rests on `on` (`GROUND` or another part) through `joint`. `bears: false` ties the two without carrying load. */
