@@ -2258,5 +2258,15 @@
       0.25
     ],
     "scale": 1
+  },
+  {
+    "id": "road_map",
+    "teamId": "mapa_rodoviario",
+    "teamBox": [
+      0.11,
+      0.01,
+      0.25
+    ],
+    "scale": 1
   }
 ]
