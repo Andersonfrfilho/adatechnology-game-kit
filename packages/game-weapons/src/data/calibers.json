@@ -669,6 +669,8 @@
       "caseLength": 53.3,
       "projectileDiameter": 11.43
     },
-    "sources": ["sdk"]
+    "sources": [
+      "sdk"
+    ]
   }
 ]
