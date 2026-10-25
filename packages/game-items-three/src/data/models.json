@@ -1678,5 +1678,15 @@
       0.065
     ],
     "scale": 1
+  },
+  {
+    "id": "cassava_cuttings",
+    "teamId": "maniva",
+    "teamBox": [
+      0.7,
+      0.12,
+      0.12
+    ],
+    "scale": 1
   }
 ]

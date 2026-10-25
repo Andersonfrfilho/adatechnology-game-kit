@@ -296,7 +296,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Adubo (saco de 10 kg) | `adubo` | `fertilizer_bag` | 10,0 kg | raro | 450 x 130 x 300 mm |
 | [ ] | Armadilha de laço | `armadilha_laco` | `snare_trap` | 0,3 kg | comum | 150 x 30 x 150 mm |
 | [ ] | Caixa de pesca (anzol, linha, isca) | `kit_pesca` | `fishing_tackle_box` | 0,6 kg | comum | 300 x 100 x 180 mm |
-| [ ] | Rama de mandioca (maniva) | `maniva` | `cassava_cuttings` | 2,0 kg | incomum | 700 x 120 x 120 mm |
+| [x] | Rama de mandioca (maniva) (kit) | `maniva` | `cassava_cuttings` | 2,0 kg | incomum | 700 x 120 x 120 mm |
 | [ ] | Rede de pesca | `rede_pesca` | `fishing_net` | 3,0 kg | incomum | 350 x 150 x 300 mm |
 | [ ] | Regador | `regador` | `watering_can` | 0,5 kg | comum | 400 x 260 x 180 mm |
 | [ ] | Sementes de abóbora | `sem_abobora` | `pumpkin_seeds` | 0,05 kg | incomum | 90 x 130 x 15 mm |
