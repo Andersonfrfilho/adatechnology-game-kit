@@ -70,6 +70,7 @@ COPY tools/weapon-thumbnails/package.json tools/weapon-thumbnails/
 COPY tools/items-catalog/package.json tools/items-catalog/
 COPY tools/weapons-catalog/package.json tools/weapons-catalog/
 COPY tools/vehicles-catalog/package.json tools/vehicles-catalog/
+COPY tools/shapes-bench/package.json tools/shapes-bench/
 COPY examples/audio-test-area/package.json examples/audio-test-area/
 COPY examples/animals-test-area/package.json examples/animals-test-area/
 COPY examples/characters-test-area/package.json examples/characters-test-area/
