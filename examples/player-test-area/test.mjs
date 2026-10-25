@@ -63,6 +63,56 @@ if (!playwright || !existsSync(page)) {
       const free = room.metrics().module
       return { ok: report.ok, problems: report.problems, scenarios: scenarios.length, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id), hurt, free }
     })
+    // the body: it exists, the area starts in third person and shows it, V toggles the view, the avatar area plays a clip and logs it, a grab plays the Bestiário clip
+    const bodyAt = () => tab.evaluate(() => {
+      const r = window.__testRoom
+      return { has: !!r.avatar, mode: r.cameraMode, visible: r.avatar?.root.visible, parent: !!r.avatar?.root.parent, playing: r.avatar?.avatar.playing ?? null }
+    })
+    const first = await bodyAt()
+    check(`[${lang}] the room has the player body and starts in third person with it shown`, first.has && first.mode === 'third' && first.visible && first.parent, first)
+    await tab.keyboard.press('KeyV')
+    const toggled = await bodyAt()
+    check(`[${lang}] V goes to first person and hides the body`, toggled.mode === 'first' && toggled.visible === false, toggled)
+    await tab.keyboard.press('KeyV')
+    const back = await bodyAt()
+    check(`[${lang}] V again: third person, body shown`, back.mode === 'third' && back.visible === true, back)
+    const body = await tab.evaluate(() => {
+      const r = window.__testRoom
+      r.openArea('avatar_area') // the room reads the counters of the area opened last
+      const bench = r.bench('avatar_area')
+      bench.act('camera_first')
+      const afterFirst = r.cameraMode
+      bench.act('camera_third')
+      bench.act('crouch')
+      bench.act('play_grabbed_bitten_human')
+      for (let i = 0; i < 60 * 5; i++) r.update(1 / 60)
+      const metrics = r.metrics().module
+      const lines = r.log.entries().filter((e) => e.text.startsWith('{"type":"avatar"')).map((e) => JSON.parse(e.text).action)
+      bench.act('stop_clip')
+      bench.act('stand')
+      for (let i = 0; i < 30; i++) r.update(1 / 60)
+      r.openArea('player_area')
+      // the gameplay link: the player module's grab plays the clip, a push frees it; a knock-down lays the body down
+      const player = r.bench('player_area')
+      player.act('grab')
+      r.update(1 / 30)
+      const grabbed = r.avatar.avatar.playing
+      for (let i = 0; i < 6; i++) {
+        player.act('push')
+        r.update(1 / 30)
+        r.update(1 / 30)
+      }
+      for (let i = 0; i < 30; i++) r.update(1 / 30)
+      const released = r.avatar.avatar.playing
+      player.act('knock')
+      for (let i = 0; i < 20; i++) r.update(1 / 30)
+      const down = r.avatarState().down
+      return { afterFirst, metrics, lines, grabbed, released, down, pending: r.bench('avatar_area').controls().filter((c) => c.id.startsWith('pending_')).map((c) => c.disabled) }
+    })
+    check(`[${lang}] the avatar area: camera buttons, a clip plays, events and actions are JSON lines in the log`, body.afterFirst === 'first' && body.metrics.clip === 'grabbed_bitten_human' && body.lines.includes('play_clip') && body.lines.includes('clip_event'), { afterFirst: body.afterFirst, clip: body.metrics.clip, last_event: body.metrics.last_event, lines: [...new Set(body.lines)] })
+    check(`[${lang}] Soco, Empurrão, Chute and Tiro (corpo) are disabled`, body.pending.length === 4 && body.pending.every(Boolean), body.pending)
+    check(`[${lang}] the player's grab plays grabbed_bitten_human, the release stops it, a knock-down lays the body down`, body.grabbed === 'grabbed_bitten_human' && body.released === null && body.down === true, { grabbed: body.grabbed, released: body.released, down: body.down })
+    await tab.screenshot({ path: join(shots, `player-third-${lang}.png`) })
     check(`[${lang}] contract report is clean, 6 scenarios pass`, state.ok && state.problems.length === 0 && state.scenarios === 6 && state.failed === 0, state)
     check(`[${lang}] the bench hurts and bites: health drops, the wound bleeds`, state.hurt.health < 70 && state.hurt.wounds === 2, state.hurt)
     check(`[${lang}] six pushes break the grab`, state.free.grab_timer === 0, state.free)
