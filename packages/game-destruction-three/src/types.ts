@@ -7,6 +7,7 @@
  */
 import type * as THREE_NS from 'three'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
+import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 
 export type ThreeNamespace = typeof THREE_NS
@@ -137,6 +138,8 @@ export interface DestructionRenderer {
   /** Restore one object (after `world.reset`). */
   restore(objectId: string): void
   stats(): { fragments: number; particles: number; pieces: number; decals: number }
+  /** Meshes that use the materials of the hole, patch and crack decals, to render once so that the first hit does not build their shader programs in the middle of a frame. */
+  warmUpProbes(): WarmUpProbes
   /** Bars of exposed rebar drawn now (`expose` events; one instanced mesh per part). */
   rebarCount(): number
   dispose(): void

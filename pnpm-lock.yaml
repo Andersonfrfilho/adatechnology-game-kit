@@ -800,6 +800,9 @@ importers:
 
   packages/game-fluids-three:
     dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
       '@adatechnology/game-fluids':
         specifier: workspace:*
         version: link:../game-fluids

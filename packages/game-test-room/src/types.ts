@@ -243,6 +243,8 @@ export interface TestRoom {
    * clip) writing a check line (pass or fail) per result to the log. Loading the same module twice replaces its items and scenarios.
    */
   loadModule(module: TestableModule<ScenarioContext>): ModuleReport
+  /** Compiles the shader programs that the first hit, decal or effect would otherwise compile in the middle of a frame. Call it once the lights of the scene are set (a module that adds lights changes the programs). */
+  warmUp(): void
   /** Animations of the aimed (or held) item: what the animations panel shows. */
   animations(): AnimationInfo | null
   /**

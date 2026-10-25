@@ -108,6 +108,17 @@ export class MaterialCache {
     return m
   }
 
+  /** One material per role, in a clear and in an opaque liquid, which are the shader programs a leak will need (the colour is not part of a program). */
+  probes(): { readonly plain: THREE_NS.MeshStandardMaterial[]; readonly instanced: THREE_NS.MeshStandardMaterial[]; readonly coloured: THREE_NS.MeshStandardMaterial[] } {
+    const base = { id: 'warm_up', color: 0x808080, viscosity: 1, density: 1000, dryTime: 60, gloss: 0.5 }
+    const defs = [{ ...base, opacity: 0.5 }, { ...base, opacity: 1 }]
+    return {
+      plain: defs.flatMap((def) => [this.liquidBody(def), this.liquidStream(def)]),
+      instanced: defs.map((def) => this.liquidStream(def)),
+      coloured: defs.flatMap((def) => [this.stainFilm(def), this.stainWet(def)]),
+    }
+  }
+
   dispose(): void {
     for (const map of [this.body, this.stream, this.film, this.wet]) {
       for (const m of map.values()) m.dispose()

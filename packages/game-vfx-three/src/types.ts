@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { EffectSink } from '@adatechnology/game-contracts'
+import type { EffectSink, WarmUpProbes } from '@adatechnology/game-contracts'
 import type { ScreenState, VfxOptions, VfxProfileName, VfxWorld } from '@adatechnology/game-vfx'
 
 /** The only three.js members the renderer needs at runtime. Pass your own `THREE` instance (the whole namespace works). */
@@ -97,6 +97,8 @@ export interface VfxRenderer extends EffectSink {
   readonly world: VfxWorld
   /** Steps the world, then redraws everything from it. Call once per frame (a shared world is stepped here, nowhere else). */
   update(dt: number): void
+  /** Meshes that use the materials of the solid particles, to render once so that the first effect does not build their shader programs in the middle of a frame. */
+  warmUpProbes(): WarmUpProbes
   /** Shakes the camera for the render that follows (the Lab's L1092) and answers the function that puts it back. */
   applyCamera(): () => void
   stats(): VfxRendererStats

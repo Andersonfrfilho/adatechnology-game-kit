@@ -6,6 +6,7 @@ import { createChunkLayer, createGlowLayer, createPuffLayer, createSparkLayer } 
 import type { PuffUniforms } from './instanced'
 import { createLightLayer } from './lights'
 import { createMarkLayer } from './marks'
+import { createMeshLayerProbes } from './mesh-layer'
 import { createScreenOverlay } from './screen-overlay'
 import { createShockLayer } from './shocks'
 import { createSpriteLayer } from './sprites'
@@ -47,6 +48,15 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
   const requested = options.vfx
   const world = isWorld(requested) ? requested : createVfx({ profile: options.quality ?? 'medium', reducedMotion, ...requested })
   const pools = world.pools()
+  // The probes of the last warm-up keep their materials until the next one: a program is destroyed when the last material that uses it is disposed (every solid particle disposes its own),
+  // and a material that does not use lights keeps the program of the lights it was first drawn with, so each warm-up needs materials of its own.
+  let anchors: { readonly meshes: THREE_NS.Mesh[]; readonly group: THREE_NS.Group } | undefined
+  const releaseAnchors = (): void => {
+    if (!anchors) return
+    anchors.meshes[0]?.geometry.dispose()
+    for (const mesh of anchors.meshes) (mesh.material as THREE_NS.Material).dispose()
+    anchors = undefined
+  }
   const root = new THREE.Group()
   options.scene.add(root)
 
@@ -167,6 +177,15 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
       syncAll()
       overlay?.update(screenNow())
     },
+    warmUpProbes() {
+      releaseAnchors()
+      const meshes = createMeshLayerProbes(THREE)
+      for (const mesh of meshes) mesh.frustumCulled = false
+      const group = new THREE.Group()
+      group.add(...meshes)
+      anchors = { meshes, group }
+      return { group, dispose: () => {} }
+    },
     applyCamera() {
       const shake = screenNow().shake
       if (reducedMotion || !(shake > SHAKE_FLOOR)) return () => {}
@@ -184,6 +203,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
     },
     screen: screenNow,
     dispose() {
+      releaseAnchors()
       stopMarks()
       overlay?.dispose()
       workshopLayers?.dispose()

@@ -22,9 +22,17 @@ function geometryOf(THREE: ThreeLib, particle: MeshParticle): THREE_NS.BufferGeo
 }
 
 /** The materials the gallery gives these: a flat, translucent colour (added to what is behind it for a flash), or a rough grey that the scene's lights shade (smoke). */
-function materialOf(THREE: ThreeLib, particle: MeshParticle): THREE_NS.Material {
+function materialOf(THREE: ThreeLib, particle: Pick<MeshParticle, 'lit' | 'color' | 'opacity' | 'additive'>): THREE_NS.Material {
   if (particle.lit) return new THREE.MeshStandardMaterial({ color: particle.color, roughness: 1, metalness: 0, transparent: true, opacity: particle.opacity, depthWrite: false })
   return new THREE.MeshBasicMaterial({ color: particle.color, transparent: true, opacity: particle.opacity, depthWrite: false, ...(particle.additive ? { blending: THREE.AdditiveBlending } : {}) })
+}
+
+/** One throwaway mesh per material the layer draws with (lit smoke, flat, additive flash), for a host to compile their shader programs before the first effect needs them. */
+export function createMeshLayerProbes(THREE: ThreeLib): THREE_NS.Mesh[] {
+  const geometry = new THREE.BoxGeometry(0.001, 0.001, 0.001)
+  return [{ lit: true, additive: false }, { lit: false, additive: false }, { lit: false, additive: true }].map(
+    (kind) => new THREE.Mesh(geometry, materialOf(THREE, { ...kind, color: 0x808080, opacity: 0.5 })),
+  )
 }
 
 /**
