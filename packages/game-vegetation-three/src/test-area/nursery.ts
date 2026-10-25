@@ -1,5 +1,6 @@
 import type { Condition, Lod, Placement, Season } from '@adatechnology/game-vegetation'
 import type { ScatterRulesOptions } from '@adatechnology/game-vegetation-species'
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 
 import type { MaterialsLike, SpeciesSdk, VegetationSdk } from './types'
 
@@ -104,6 +105,8 @@ function buildScenery(THREE: Three): any {
  * the plants (the wind shader's actors). The module owns it; `plant` builds it, `clear` takes it away.
  */
 export function createNursery(sdk: VegetationSdk, species: SpeciesSdk, THREE: Three, materials: MaterialsLike, parent: any, origin: readonly [number, number]) {
+  // three with its primitive geometries made by game-shapes (bit-identical, cached by parameters)
+  const T = shapeGeometries(THREE) as Three
   const group = new THREE.Group()
   group.name = 'nursery'
   group.position.set(origin[0], 0, origin[1])
@@ -134,9 +137,9 @@ export function createNursery(sdk: VegetationSdk, species: SpeciesSdk, THREE: Th
   const ensure = (): void => {
     if (attached) return
     attached = true
-    scenery = buildScenery(THREE)
+    scenery = buildScenery(T)
     // a capsule where this three.js has one (r139+), else a cylinder of the same size
-    const body = THREE.CapsuleGeometry ? new THREE.CapsuleGeometry(0.28, 1.0, 4, 10) : new THREE.CylinderGeometry(0.28, 0.28, 1.56, 10)
+    const body = T.CapsuleGeometry ? new T.CapsuleGeometry(0.28, 1.0, 4, 10) : new T.CylinderGeometry(0.28, 0.28, 1.56, 10)
     actor = new THREE.Mesh(body, new THREE.MeshStandardMaterial({ color: 0xd9822b, roughness: 0.7 }))
     actor.castShadow = true
     actor.position.set(walker.x, 0.78, walker.z)
@@ -195,7 +198,7 @@ export function createNursery(sdk: VegetationSdk, species: SpeciesSdk, THREE: Th
       })
       dynamic.add(lotObject)
       for (const c of data.colliders) {
-        const m = new THREE.Mesh(new THREE.CylinderGeometry(c.r, c.r, c.h, 14, 1, true), new THREE.MeshBasicMaterial({ color: c.damage ? 0xff7a1a : 0xe5251d, wireframe: true }))
+        const m = new THREE.Mesh(new T.CylinderGeometry(c.r, c.r, c.h, 14, 1, true), new THREE.MeshBasicMaterial({ color: c.damage ? 0xff7a1a : 0xe5251d, wireframe: true }))
         m.position.set(c.x, c.h / 2, c.z)
         colliders.add(m)
       }

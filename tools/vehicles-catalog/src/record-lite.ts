@@ -8,7 +8,7 @@ import { dirname } from 'node:path'
 import { createContext, runInContext } from 'node:vm'
 
 import { installPortableMath } from '@adatechnology/golden-tool'
-import * as THREE from 'three160'
+import * as THREE from 'three'
 
 import { fakeDocument } from './fake-dom'
 import { LITE_GOLDEN_PATH, SOURCE_PATHS } from './paths'

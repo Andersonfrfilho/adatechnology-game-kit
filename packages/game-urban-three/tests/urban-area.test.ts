@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import * as THREE from 'three160'
+import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 

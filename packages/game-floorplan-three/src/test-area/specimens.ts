@@ -1,3 +1,5 @@
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
+
 import { create } from '../create.js'
 import type { HouseRendererOptions } from '../types.js'
 import type { FloorplanEngineLike, SpecimenDef } from './types.js'
@@ -55,11 +57,12 @@ export function specimenSpec(THREE: any, engine: FloorplanEngineLike, def: Speci
  * room binds each mesh to the part of the same name. The anchored terrain slab is left out (the room has a floor).
  */
 export function buildSpecimenMeshes(THREE: any, spec: any): any {
+  const G = shapeGeometries(THREE) as any
   const root = new THREE.Group()
   for (const part of spec.parts) {
     if (part.id === 'ground') continue
     const shape = part.shape
-    const geometry = shape.kind === 'cylinder' ? new THREE.CylinderGeometry(shape.radius, shape.radius, shape.height, 14) : shape.kind === 'sphere' ? new THREE.SphereGeometry(shape.radius, 12, 8) : new THREE.BoxGeometry(shape.size[0], shape.size[1], shape.size[2])
+    const geometry = shape.kind === 'cylinder' ? new G.CylinderGeometry(shape.radius, shape.radius, shape.height, 14) : shape.kind === 'sphere' ? new G.SphereGeometry(shape.radius, 12, 8) : new G.BoxGeometry(shape.size[0], shape.size[1], shape.size[2])
     const glass = /glass/.test(part.material)
     const material = new THREE.MeshStandardMaterial({ color: COLOR[part.material] ?? 0x888888, roughness: 0.8, metalness: part.material === 'steel' || part.material === 'aluminium' ? 0.5 : 0, transparent: glass, opacity: glass ? 0.45 : 1 })
     const mesh = new THREE.Mesh(geometry, material)

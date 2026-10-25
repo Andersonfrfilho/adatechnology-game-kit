@@ -45,6 +45,7 @@
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:*",
     "@adatechnology/game-floorplan": "workspace:*",
+    "@adatechnology/game-shapes-three": "workspace:*",
     "@adatechnology/game-urban": "workspace:*",
     "@adatechnology/game-vegetation": "workspace:*",
     "@adatechnology/game-vegetation-species": "workspace:*",
@@ -54,15 +55,14 @@
     "@adatechnology/game-test-room": "workspace:*",
     "@adatechnology/golden-tool": "workspace:*",
     "@types/node": "^22.10.7",
-    "@types/three": "0.128.0",
+    "@types/three": "^0.160.0",
     "happy-dom": "^17.4.4",
-    "three": "0.128.0",
-    "three160": "npm:three@0.160.1",
+    "three": "^0.160.1",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
-    "three": ">=0.128.0"
+    "three": ">=0.160.0"
   }
 }
