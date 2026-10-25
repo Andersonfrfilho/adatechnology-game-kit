@@ -44,21 +44,17 @@ describe('slab panels: options and rules', () => {
     expect(whole.parts.some((p) => p.id === 'slab_1')).toBe(true)
     expect(panelsOf(whole, 'slab_1')).toEqual([])
   })
-
-  it('no slab panel spans more than the span the engine sizes the steel for, and each is thinner than its beam is deep', () => {
-    const { spec } = specOf('mansion')
-    for (const p of spec.parts.filter((q) => /^slab_\w+_p\d+$/.test(q.id))) {
-      const [sx, sy, sz] = (p.shape as { size: [number, number, number] }).size
-      expect(Math.min(sx, sz), p.id).toBeLessThanOrEqual(SLAB_PANEL_DEFAULTS.maxSpan + 1.5)
-      expect(sy, p.id).toBeLessThanOrEqual(0.4)
-    }
-  })
 })
 
 describe('reinforced concrete is the default: every typology stands at rest', () => {
   for (const template of Object.keys(engine.templates)) {
-    it(`${template}: nothing breaks on its own and no section is past its limit`, () => {
+    it(`${template}: panels no wider than the span, nothing breaks on its own and no section is past its limit`, () => {
       const { spec } = specOf(template, 1, 'normal', 'auto')
+      for (const p of spec.parts.filter((q) => /^slab_\w+_p\d+$/.test(q.id))) {
+        const [sx, sy, sz] = (p.shape as { size: [number, number, number] }).size
+        expect(Math.min(sx, sz), `${template} ${p.id}`).toBeLessThanOrEqual(SLAB_PANEL_DEFAULTS.maxSpan + 1.5)
+        expect(sy, `${template} ${p.id}`).toBeLessThanOrEqual(0.4)
+      }
       const world = createDestruction({ seed: 1 })
       const id = world.add(spec)
       for (let t = 0; t < 20; t += 0.1) world.update(0.1)

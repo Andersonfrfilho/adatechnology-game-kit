@@ -180,7 +180,8 @@ um projeto para perder um pilar (dimensionados com `redundancy`, ou com o aço d
   verdadeiras; só a escolha dos pilares do cenário `house_two_pillars` mudou (ver §10.6).
 - **Auto-goldens**: `game-floorplan-three/tests/fixtures/exact-floorplan.json` mudou em cinco entradas, todas de casa ligada a um mundo de destruição:
   `destruction/breach`, `destruction/spall`, `destruction/fracture` (o sobrado com mundo agora é desenhado por painel de laje: pisos, forros e
-  lajes de cobertura cortados nas bordas dos painéis, cada pedaço no painel dele) e `specimen/house_casa_portico`, `specimen/house_casa_inteira`
+  lajes de cobertura cortados nas bordas dos painéis, cada pedaço no painel dele; `destruction/fracture` também pela regra do golpe no terreno
+  de §10.6: o entulho que cai no chão não solta mais as paredes, 1074 para 1055 objetos) e `specimen/house_casa_portico`, `specimen/house_casa_inteira`
   (a spec dos espécimes agora tem painéis, vigas e pilares, e a sala desenha uma caixa por peça). As 38 entradas `house/*` e as cenas do Visor não mudaram.
 - **Testes antigos que mudaram**: `game-floorplan-structure/tests/load-path.test.ts` (as duas casas em pórtico: antes a laje inteira ficava com um
   pilar a menos e caía com dois; agora ficam todos os painéis com um pilar a menos, e com todos os pilares do térreo perdidos a laje desce e o
