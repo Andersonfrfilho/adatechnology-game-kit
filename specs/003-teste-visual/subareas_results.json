@@ -1,0 +1,3098 @@
+[
+  {
+    "area": "test-room",
+    "subArea": "furniture",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=pt-BR&area=furniture",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=pt-BR&area=furniture",
+    "status": "completed",
+    "loadTimeMs": 1469,
+    "fps": 35,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 1416,
+        "valid": true,
+        "count": 5,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0,\n    \"channel\": \"action\",\n    \"type\": \"clear\",\n    \"text\": \"Limpou a "
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.263219999999999
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-furniture-pt-br.png",
+    "screenshotSize": 172639,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "test-room",
+    "subArea": "furniture",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=en&area=furniture",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=en&area=furniture",
+    "status": "completed",
+    "loadTimeMs": 911,
+    "fps": 35,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 1412,
+        "valid": true,
+        "count": 5,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0,\n    \"channel\": \"action\",\n    \"type\": \"clear\",\n    \"text\": \"Cleared t"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.263560000000001
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-furniture-en.png",
+    "screenshotSize": 173166,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "test-room",
+    "subArea": "structure",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=pt-BR&area=structure",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=pt-BR&area=structure",
+    "status": "completed",
+    "loadTimeMs": 893,
+    "fps": 34,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 1784,
+        "valid": true,
+        "count": 6,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0,\n    \"channel\": \"action\",\n    \"type\": \"clear\",\n    \"text\": \"Limpou a "
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.263559999999999
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-structure-pt-br.png",
+    "screenshotSize": 174896,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "test-room",
+    "subArea": "structure",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=en&area=structure",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=en&area=structure",
+    "status": "completed",
+    "loadTimeMs": 947,
+    "fps": 33,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 1777,
+        "valid": true,
+        "count": 6,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0,\n    \"channel\": \"action\",\n    \"type\": \"clear\",\n    \"text\": \"Cleared t"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.319660000000001
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-structure-en.png",
+    "screenshotSize": 174648,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "test-room",
+    "subArea": "containers",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=pt-BR&area=containers",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=pt-BR&area=containers",
+    "status": "completed",
+    "loadTimeMs": 894,
+    "fps": 36,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 1809,
+        "valid": true,
+        "count": 6,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0,\n    \"channel\": \"action\",\n    \"type\": \"clear\",\n    \"text\": \"Limpou a "
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.320339999999997
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-containers-pt-br.png",
+    "screenshotSize": 162890,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "test-room",
+    "subArea": "containers",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=en&area=containers",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=en&area=containers",
+    "status": "completed",
+    "loadTimeMs": 891,
+    "fps": 35,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 1809,
+        "valid": true,
+        "count": 6,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0,\n    \"channel\": \"action\",\n    \"type\": \"clear\",\n    \"text\": \"Cleared t"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.37712
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-containers-en.png",
+    "screenshotSize": 162213,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "test-room",
+    "subArea": "plants",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=pt-BR&area=plants",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=pt-BR&area=plants",
+    "status": "completed",
+    "loadTimeMs": 849,
+    "fps": 36,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 757,
+        "valid": true,
+        "count": 3,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0,\n    \"channel\": \"action\",\n    \"type\": \"clear\",\n    \"text\": \"Limpou a "
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.320340000000001
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-plants-pt-br.png",
+    "screenshotSize": 189721,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "test-room",
+    "subArea": "plants",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=en&area=plants",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=en&area=plants",
+    "status": "completed",
+    "loadTimeMs": 847,
+    "fps": 34,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 758,
+        "valid": true,
+        "count": 3,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0,\n    \"channel\": \"action\",\n    \"type\": \"clear\",\n    \"text\": \"Cleared t"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.319659999999999
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-plants-en.png",
+    "screenshotSize": 187571,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "test-room",
+    "subArea": "vehicles",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=pt-BR&area=vehicles",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=pt-BR&area=vehicles",
+    "status": "completed",
+    "loadTimeMs": 898,
+    "fps": 37,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 429,
+        "valid": true,
+        "count": 2,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0,\n    \"channel\": \"action\",\n    \"type\": \"clear\",\n    \"text\": \"Limpou a "
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.3199999999999985
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-vehicles-pt-br.png",
+    "screenshotSize": 146684,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "test-room",
+    "subArea": "vehicles",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=en&area=vehicles",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=en&area=vehicles",
+    "status": "completed",
+    "loadTimeMs": 1426,
+    "fps": 39,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 428,
+        "valid": true,
+        "count": 2,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0,\n    \"channel\": \"action\",\n    \"type\": \"clear\",\n    \"text\": \"Cleared t"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.3199999999999985
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-vehicles-en.png",
+    "screenshotSize": 143495,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "test-room",
+    "subArea": "items",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=pt-BR&area=items",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=pt-BR&area=items",
+    "status": "completed",
+    "loadTimeMs": 910,
+    "fps": 38,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Sala de testes",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copiar JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 1765,
+        "valid": true,
+        "count": 6,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0,\n    \"channel\": \"action\",\n    \"type\": \"clear\",\n    \"text\": \"Limpou a "
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.207119999999999
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-items-pt-br.png",
+    "screenshotSize": 159947,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "test-room",
+    "subArea": "items",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/test-room/?lang=en&area=items",
+    "localUrl": "http://127.0.0.1:4888/test-room/?lang=en&area=items",
+    "status": "completed",
+    "loadTimeMs": 957,
+    "fps": 39,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 1280,
+      "height": 800,
+      "hasContent": false,
+      "isRoom": true,
+      "isShowroom": false,
+      "documentTitle": "Test room",
+      "htmlLang": "en"
+    },
+    "copyLog": {
+      "hasButton": true,
+      "buttonText": "Copy JSON",
+      "clipboard": {
+        "ok": true,
+        "textLength": 1757,
+        "valid": true,
+        "count": 6,
+        "sample": "[\n  {\n    \"seq\": 0,\n    \"t\": 0,\n    \"channel\": \"action\",\n    \"type\": \"clear\",\n    \"text\": \"Cleared t"
+      }
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 0,
+      "results": []
+    },
+    "keyboardMouse": {
+      "hasCamera": true,
+      "initialCamPos": [
+        0,
+        1.7,
+        5
+      ],
+      "posAfterW": [
+        0,
+        1.7,
+        4.2639
+      ],
+      "movedOnW": true,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "test-room-items-en.png",
+    "screenshotSize": 161037,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "kitchen",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=pt-BR&area=kitchen",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=pt-BR&area=kitchen",
+    "status": "completed",
+    "loadTimeMs": 2393,
+    "fps": 9,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-kitchen-pt-br.png",
+    "screenshotSize": 300602,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "kitchen",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=en&area=kitchen",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=en&area=kitchen",
+    "status": "completed",
+    "loadTimeMs": 2528,
+    "fps": 8,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-kitchen-en.png",
+    "screenshotSize": 300571,
+    "problems": [
+      {
+        "step": "Seleção de idioma (?lang=en)",
+        "expected": "Atributo lang da tag html deve ser \"en\"",
+        "seen": "html lang é \"pt-BR\"",
+        "severity": "cosmético"
+      },
+      {
+        "step": "Localização em inglês (?lang=en)",
+        "expected": "Toda a interface, prompts e painel traduzidos para o inglês",
+        "seen": "Textos em português fixos detectados: Mochila, Rede elétrica, Caixa d'água",
+        "severity": "atrapalha"
+      },
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "living",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=pt-BR&area=living",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=pt-BR&area=living",
+    "status": "completed",
+    "loadTimeMs": 2183,
+    "fps": 9,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-living-pt-br.png",
+    "screenshotSize": 300520,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "living",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=en&area=living",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=en&area=living",
+    "status": "completed",
+    "loadTimeMs": 2092,
+    "fps": 9,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-living-en.png",
+    "screenshotSize": 300602,
+    "problems": [
+      {
+        "step": "Seleção de idioma (?lang=en)",
+        "expected": "Atributo lang da tag html deve ser \"en\"",
+        "seen": "html lang é \"pt-BR\"",
+        "severity": "cosmético"
+      },
+      {
+        "step": "Localização em inglês (?lang=en)",
+        "expected": "Toda a interface, prompts e painel traduzidos para o inglês",
+        "seen": "Textos em português fixos detectados: Mochila, Rede elétrica, Caixa d'água",
+        "severity": "atrapalha"
+      },
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "bedroom",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=pt-BR&area=bedroom",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=pt-BR&area=bedroom",
+    "status": "completed",
+    "loadTimeMs": 2293,
+    "fps": 9,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-bedroom-pt-br.png",
+    "screenshotSize": 300602,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "bedroom",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=en&area=bedroom",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=en&area=bedroom",
+    "status": "completed",
+    "loadTimeMs": 2249,
+    "fps": 8,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-bedroom-en.png",
+    "screenshotSize": 300602,
+    "problems": [
+      {
+        "step": "Seleção de idioma (?lang=en)",
+        "expected": "Atributo lang da tag html deve ser \"en\"",
+        "seen": "html lang é \"pt-BR\"",
+        "severity": "cosmético"
+      },
+      {
+        "step": "Localização em inglês (?lang=en)",
+        "expected": "Toda a interface, prompts e painel traduzidos para o inglês",
+        "seen": "Textos em português fixos detectados: Mochila, Rede elétrica, Caixa d'água",
+        "severity": "atrapalha"
+      },
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "bathroom",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=pt-BR&area=bathroom",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=pt-BR&area=bathroom",
+    "status": "completed",
+    "loadTimeMs": 2268,
+    "fps": 9,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-bathroom-pt-br.png",
+    "screenshotSize": 300520,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "bathroom",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=en&area=bathroom",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=en&area=bathroom",
+    "status": "completed",
+    "loadTimeMs": 2137,
+    "fps": 9,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-bathroom-en.png",
+    "screenshotSize": 300602,
+    "problems": [
+      {
+        "step": "Seleção de idioma (?lang=en)",
+        "expected": "Atributo lang da tag html deve ser \"en\"",
+        "seen": "html lang é \"pt-BR\"",
+        "severity": "cosmético"
+      },
+      {
+        "step": "Localização em inglês (?lang=en)",
+        "expected": "Toda a interface, prompts e painel traduzidos para o inglês",
+        "seen": "Textos em português fixos detectados: Mochila, Rede elétrica, Caixa d'água",
+        "severity": "atrapalha"
+      },
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "laundry",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=pt-BR&area=laundry",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=pt-BR&area=laundry",
+    "status": "completed",
+    "loadTimeMs": 2301,
+    "fps": 9,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-laundry-pt-br.png",
+    "screenshotSize": 300571,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "laundry",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=en&area=laundry",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=en&area=laundry",
+    "status": "completed",
+    "loadTimeMs": 2292,
+    "fps": 8,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-laundry-en.png",
+    "screenshotSize": 300602,
+    "problems": [
+      {
+        "step": "Seleção de idioma (?lang=en)",
+        "expected": "Atributo lang da tag html deve ser \"en\"",
+        "seen": "html lang é \"pt-BR\"",
+        "severity": "cosmético"
+      },
+      {
+        "step": "Localização em inglês (?lang=en)",
+        "expected": "Toda a interface, prompts e painel traduzidos para o inglês",
+        "seen": "Textos em português fixos detectados: Mochila, Rede elétrica, Caixa d'água",
+        "severity": "atrapalha"
+      },
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "yard",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=pt-BR&area=yard",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=pt-BR&area=yard",
+    "status": "completed",
+    "loadTimeMs": 2171,
+    "fps": 9,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-yard-pt-br.png",
+    "screenshotSize": 300602,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "yard",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=en&area=yard",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=en&area=yard",
+    "status": "completed",
+    "loadTimeMs": 2261,
+    "fps": 8,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-yard-en.png",
+    "screenshotSize": 300571,
+    "problems": [
+      {
+        "step": "Seleção de idioma (?lang=en)",
+        "expected": "Atributo lang da tag html deve ser \"en\"",
+        "seen": "html lang é \"pt-BR\"",
+        "severity": "cosmético"
+      },
+      {
+        "step": "Localização em inglês (?lang=en)",
+        "expected": "Toda a interface, prompts e painel traduzidos para o inglês",
+        "seen": "Textos em português fixos detectados: Mochila, Rede elétrica, Caixa d'água",
+        "severity": "atrapalha"
+      },
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "cabin",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=pt-BR&area=cabin",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=pt-BR&area=cabin",
+    "status": "completed",
+    "loadTimeMs": 2438,
+    "fps": 8,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-cabin-pt-br.png",
+    "screenshotSize": 300602,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "cabin",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=en&area=cabin",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=en&area=cabin",
+    "status": "completed",
+    "loadTimeMs": 2609,
+    "fps": 8,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-cabin-en.png",
+    "screenshotSize": 300602,
+    "problems": [
+      {
+        "step": "Seleção de idioma (?lang=en)",
+        "expected": "Atributo lang da tag html deve ser \"en\"",
+        "seen": "html lang é \"pt-BR\"",
+        "severity": "cosmético"
+      },
+      {
+        "step": "Localização em inglês (?lang=en)",
+        "expected": "Toda a interface, prompts e painel traduzidos para o inglês",
+        "seen": "Textos em português fixos detectados: Mochila, Rede elétrica, Caixa d'água",
+        "severity": "atrapalha"
+      },
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "camp",
+    "lang": "pt-BR",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=pt-BR&area=camp",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=pt-BR&area=camp",
+    "status": "completed",
+    "loadTimeMs": 2205,
+    "fps": 8,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-camp-pt-br.png",
+    "screenshotSize": 300602,
+    "problems": [
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  },
+  {
+    "area": "interactables-showroom",
+    "subArea": "camp",
+    "lang": "en",
+    "url": "https://demo-production-13d5.up.railway.app/interactables-showroom/?lang=en&area=camp",
+    "localUrl": "http://127.0.0.1:4888/interactables-showroom/?lang=en&area=camp",
+    "status": "completed",
+    "loadTimeMs": 2403,
+    "fps": 8,
+    "canvas": {
+      "exists": true,
+      "hasContext": true,
+      "width": 960,
+      "height": 800,
+      "hasContent": true,
+      "isRoom": false,
+      "isShowroom": true,
+      "documentTitle": "Bancada de móveis interativos",
+      "htmlLang": "pt-BR"
+    },
+    "copyLog": {
+      "hasButton": false,
+      "note": "interactables-showroom não possui painel de log JSON"
+    },
+    "benchControls": [],
+    "buttonInteractions": {
+      "hasBench": true,
+      "totalButtons": 66,
+      "results": [
+        {
+          "buttonText": "Alta",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Jogo",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Encher",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Esvaziar",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": ""
+        },
+        {
+          "buttonText": "Vazamento",
+          "logsChanged": false,
+          "toastChanged": true,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da cozinha",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária da sala",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do banheiro",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Luminária do quarto",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "water_tank",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Geladeira",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        },
+        {
+          "buttonText": "Armário de cozinha (balcão) 1",
+          "logsChanged": false,
+          "toastChanged": false,
+          "toastText": "Vazamento na caixa d'água."
+        }
+      ]
+    },
+    "keyboardMouse": {
+      "hasCamera": false,
+      "initialCamPos": null,
+      "posAfterW": null,
+      "movedOnW": false,
+      "vToggled": false
+    },
+    "errors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 404 ()",
+        "location": {
+          "url": "https://demo-production-13d5.up.railway.app/favicon.ico",
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "warnings": [],
+    "screenshot": "interactables-showroom-camp-en.png",
+    "screenshotSize": 300602,
+    "problems": [
+      {
+        "step": "Seleção de idioma (?lang=en)",
+        "expected": "Atributo lang da tag html deve ser \"en\"",
+        "seen": "html lang é \"pt-BR\"",
+        "severity": "cosmético"
+      },
+      {
+        "step": "Localização em inglês (?lang=en)",
+        "expected": "Toda a interface, prompts e painel traduzidos para o inglês",
+        "seen": "Textos em português fixos detectados: Mochila, Rede elétrica, Caixa d'água",
+        "severity": "atrapalha"
+      },
+      {
+        "step": "Console de execução",
+        "expected": "Sem erros no console",
+        "seen": "Failed to load resource: the server responded with a status of 404 ()",
+        "severity": "bloqueia"
+      }
+    ]
+  }
+]

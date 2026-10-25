@@ -1,4 +1,4 @@
-// Bundles the player area (@adatechnology/game-player, the player bench module) into dist/player-area.js (IIFE, global `PlayerArea`) and,
+// Bundles the player area (@adatechnology/game-player, the player bench module, and the player's body of @adatechnology/game-characters-three) into dist/player-area.js (IIFE, global `PlayerArea`) and,
 // when the shared test room page is found (ROOM_HTML, default the kit's own examples/test-room build), writes dist/sala-jogador.html: the room
 // page with the area loaded and opened, one file, no network.
 import { createRequire } from 'node:module'
@@ -21,7 +21,8 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-for (const p of ['game-player', 'game-contracts']) {
+const names = ['game-player', 'game-contracts', 'game-characters', 'game-characters-three']
+for (const p of names) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -35,10 +36,7 @@ const result = await esbuild.build({
   target: 'es2020',
   minify: true,
   legalComments: 'none',
-  alias: {
-    '@adatechnology/game-player': join(pkg('game-player'), 'dist/index.js'),
-    '@adatechnology/game-contracts': join(pkg('game-contracts'), 'dist/index.js'),
-  },
+  alias: Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
 })
 mkdirSync(join(here, 'dist'), { recursive: true })
 const bundle = result.outputFiles[0].text

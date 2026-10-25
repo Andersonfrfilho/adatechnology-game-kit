@@ -14,13 +14,15 @@ import {
 import type { BendGeometry } from './flexure'
 import { footingSoil, pileCapacity, pileStiffness, profileOf, resolveSoil, soilAt, solveFoundation, stiffnessCentre, subgradeModulus, yieldSprings } from './soil'
 import type { SoilSpring } from './soil'
+import { analyzeWind, damperTuning, exposureOf, gustAt, makeGust, meanHeightFactor, resolveWind, shapeAt, stepSway, tensionCapacity } from './wind'
+import type { Gust, ResolvedWind, SwayState, SwaySystem, WindAnalysis, WindCase, WindPartInput } from './wind'
 import { JOINT_DEFAULTS, inferJoints, MATERIALS, partCapacity, partMass, partThickness, partVolume, fragility } from './materials'
 import { aabbOf, createRng, distanceToShape, quat, quatFromEuler, rayShape, rotateVec, shapeArea, shapeBound, shapeDims, surfacePoint, toLocal, toWorld, vec } from './math'
 import type { DestructibleImpl } from './contracts'
 import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
   DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec,
-  PartState, Quat, RayHit, ToolKind, Vec3, SoilProfile, SoilState,
+  PartState, Quat, RayHit, ToolKind, Vec3, SoilProfile, SoilState, WindOptions, WindState,
   BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
   BallisticExtras,
 } from './types'
@@ -135,6 +137,27 @@ interface ObjRT {
   base: { pos: Vec3; rot: Quat }
   /** The ground under the object (`DestructibleSpec.soil`), when it has foundations on it. */
   soil?: SoilRT
+  /** The wind on the object (`DestructionOptions.wind`), when the world has wind and the object is a structure. */
+  wind?: WindRT
+}
+
+interface WindRT {
+  /** The wind of the world with this object's `DestructibleSpec.wind` over it, as of the last analysis. */
+  cfg: ResolvedWind
+  gust: Gust
+  /** What the gust was made for (speed, terrain), to make it again when the wind changes. */
+  gustKey: string
+  analysis: WindAnalysis | null
+  /** Parts of the object that went into the analysis, by input index. */
+  parts: number[]
+  sys: SwaySystem | null
+  /** Mass ratio of the damper and its modal weight in the system (0 without one). */
+  mu: number
+  dyn: SwayState & { peak: number }
+  /** Tension capacity of each wall and column, by part index. */
+  tension: Map<number, number>
+  /** Time and values of the last `sway` event. */
+  emitted: { t: number; peak: number; status: WindState['status'] }
 }
 
 interface SoilRT {
@@ -160,6 +183,7 @@ interface Carry {
   collapsed?: string[]
   soil?: SoilState
   soilSets?: Record<string, number>
+  wind?: [number, number, number, number, number]
 }
 
 
@@ -231,6 +255,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const flexure = resolveFlexure(options.structure?.flexure)
   const masonry = resolveMasonry(options.structure?.masonry)
   const soilCfg = resolveSoil(options.soil)
+  let windOpts: WindOptions | undefined = options.wind
+  let windCfg: ResolvedWind | null = windOpts ? resolveWind(windOpts) : null
   const ignitionRules = resolveIgnitionRules(options.ignition)
   const breachBlastFactor = options.breach?.blastFactor ?? BREACH_BLAST_FACTOR
   const rng = createRng(options.seed ?? 1)
@@ -387,6 +413,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     updateBound(o)
     o.anyAnchor = o.parts.some((p) => p.anchored)
     o.unsup = o.parts.map(() => false)
+    if (windCfg && o.hasStructure && spec.wind !== false) o.wind = newWind(o, carry?.wind)
     const ground = spec.soil ?? soilCfg.site
     if (ground !== undefined && o.parts.some((p) => p.spec.structure?.role === 'foundation')) initSoil(o, profileOf(ground), carry?.soil, carry?.soilSets)
     solveStructure(o)
@@ -675,8 +702,176 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
       if (p.st.stress > o.maxStress) o.maxStress = p.st.stress
     }
+    if (o.wind) applyWind(o)
     if (o.maxStress > 0.8) o.active = true
     if (o.soil) o.soil.dirty = true
+  }
+
+  // -------------------------------------------------------------------------------------------------------------------------------------------
+  // Wind (`DestructionOptions.wind`): lateral load that grows with height, the walls and frame that resist it, the sway of the top
+  // -------------------------------------------------------------------------------------------------------------------------------------------
+
+  const newWind = (o: ObjRT, carried?: [number, number, number, number, number]): WindRT => {
+    const cfg = exposureOf(windCfg!, o.spec.wind)
+    const [x = 0, v = 0, y = 0, w = 0, peak = 0] = carried ?? []
+    return {
+      cfg, gust: { freq: [], amp: [], phase: [] }, gustKey: '', analysis: null, parts: [], sys: null, mu: 0, dyn: { x, v, y, w, peak }, tension: new Map(),
+      emitted: { t: -Infinity, peak: 0, status: 'ok' },
+    }
+  }
+
+  /** The wind direction in the object's own axes: the horizontal unit vector `[x, z]`. */
+  const windDirection = (o: ObjRT, cfg: ResolvedWind): [number, number] => {
+    const d = rotateVec(quat.conjugate(o.base.rot), cfg.direction)
+    const h = Math.hypot(d[0], d[2])
+    return h > 1e-9 ? [d[0] / h, d[2] / h] : [1, 0]
+  }
+
+  /** Axial force the wind adds to the walls and columns, the design drift and the first mode of the object as it stands now. */
+  const applyWind = (o: ObjRT) => {
+    const w = o.wind!
+    const cfg = (w.cfg = exposureOf(windCfg!, o.spec.wind))
+    const terrain = cfg.terrains.get(cfg.terrain)
+    if (!terrain) throw new Error(`unknown wind terrain "${cfg.terrain}"`)
+    const inputs: WindPartInput[] = []
+    const at = new Map<number, number>()
+    const keep: number[] = []
+    let ground = Infinity, foundationTop = -Infinity
+    o.parts.forEach((p, i) => {
+      if (isLost(p) || isTerrain(p) || o.collapsed.has(p.spec.id) || o.unsup[i]) return
+      const box = aabbOf(p.spec.shape, p.pos, p.q)
+      const role = p.spec.structure?.role
+      const e = p.mat.strength?.elasticGPa
+      const kind: WindPartInput['kind'] = role === 'wall' ? 'wall' : role === 'column' ? 'column' : role === 'beam' ? 'beam' : role === 'foundation' ? 'foundation' : 'other'
+      at.set(i, inputs.length)
+      keep.push(i)
+      ground = Math.min(ground, box.min[1])
+      if (kind === 'foundation') foundationTop = Math.max(foundationTop, box.max[1])
+      inputs.push({ min: box.min, max: box.max, kind, ...(e ? { elasticPa: e * 1e9 } : {}), mass: p.st.mass, ...(p.spec.damper ? { damper: true } : {}) })
+    })
+    keep.forEach((i, k) => {
+      if (inputs[k].kind !== 'column') return
+      const beams: number[] = []
+      for (const j of o.byPart.get(o.parts[i].spec.id)!) {
+        if (j.st.open) continue
+        const b = at.get(j.ia === i ? j.ib : j.ia)
+        if (b !== undefined && inputs[b].kind === 'beam') beams.push(b)
+      }
+      inputs[k].beams = beams
+    })
+    // a slab that rests on a beam works with it as a flange
+    keep.forEach((i, k) => {
+      if (inputs[k].kind !== 'beam') return
+      for (const j of o.byPart.get(o.parts[i].spec.id)!) {
+        if (j.st.open) continue
+        const q = o.parts[j.ia === i ? j.ib : j.ia]
+        const role = q.spec.structure?.role
+        if ((role === 'slab' || role === 'roof') && !isLost(q) && q.spec.shape.kind === 'box') {
+          inputs[k].slab = q.dims[1]
+          break
+        }
+      }
+    })
+    const c: WindCase = {
+      speed: cfg.speed, direction: windDirection(o, cfg), terrain, cls: cfg.class, topography: cfg.topography, statistical: cfg.statistical, drag: cfg.drag, damping: cfg.damping,
+      airDensity: cfg.airDensity, minHeight: cfg.minHeight, bandHeight: cfg.bandHeight, stiffnessFactor: cfg.stiffnessFactor, beamFactor: cfg.beamFactor, loadFactor: cfg.loadFactor,
+      chord: cfg.chord, meanRatio: cfg.meanRatio, gustFactor: cfg.gustFactor, flange: cfg.flange,
+    }
+    const a = inputs.length && cfg.speed > 0 ? analyzeWind(inputs, c, foundationTop > -Infinity ? foundationTop : ground) : null
+    w.analysis = a
+    w.parts = keep
+    for (const p of o.parts) delete p.st.wind
+    if (!a) {
+      w.sys = null
+      delete o.st.wind
+      return
+    }
+    // the load on the walls and columns: compression adds to their load, tension takes from it (and pulls on the part when it passes the dead load)
+    keep.forEach((i, k) => {
+      const N = a.axial[k]
+      const p = o.parts[i]
+      if (!N || !p.structural || o.unsup[i]) return
+      p.st.wind = N
+      const dead = p.st.load ?? p.st.mass
+      const force = N * cfg.loadFactor
+      let stress = 0
+      if (force >= 0) stress = (dead * structureSafety + force / GRAVITY) / (p.cap * capacityScale(p))
+      else if (dead + force / GRAVITY < 0) {
+        let cap = w.tension.get(i)
+        if (cap === undefined) {
+          const r = p.spec.reinforcement
+          const ratio = p.spec.structure?.rebar?.ratio
+          cap = tensionCapacity(p.dims, {
+            ...(r ? { reinforcement: r } : {}), ...(ratio ? { ratio } : {}), yieldMPa: flexure.rebarYieldMPa,
+            ...(p.mat.strength?.tensileMPa !== undefined ? { tensileMPa: p.mat.strength.tensileMPa } : {}),
+          })
+          w.tension.set(i, cap)
+        }
+        stress = Math.min(10, (-(dead + force / GRAVITY) * GRAVITY) / Math.max(cap * capacityScale(p), 1))
+      }
+      if (stress > (p.st.stress ?? 0)) p.st.stress = stress
+      if ((p.st.stress ?? 0) > o.maxStress) o.maxStress = p.st.stress ?? 0
+    })
+    // the first mode, with the tuned mass damper if there is one
+    const key = `${cfg.speed}|${cfg.terrain}|${cfg.topography}|${cfg.statistical}|${cfg.meanRatio}|${cfg.gust.components}|${cfg.gust.maxHz}|${cfg.gust.scale}|${cfg.gust.seed}`
+    if (key !== w.gustKey) {
+      w.gustKey = key
+      const v10 = cfg.speed * cfg.topography * cfg.statistical * meanHeightFactor(10, terrain, a.cls, { meanRatio: cfg.meanRatio, minHeight: cfg.minHeight })
+      w.gust = makeGust(v10, cfg.gust)
+    }
+    let md = 0, spec: PartSpec['damper'] | undefined
+    for (const i of keep) {
+      const p = o.parts[i]
+      if (!p.spec.damper) continue
+      const phi = shapeAt(a, p.pos[1] - (foundationTop > -Infinity ? foundationTop : ground))
+      md += p.st.mass * phi * phi
+      spec ??= p.spec.damper
+    }
+    const sys: SwaySystem = { M: a.modalMass, K: a.modalStiffness, C: 2 * cfg.damping * a.omega * a.modalMass }
+    w.mu = 0
+    if (md > 0 && a.modalMass > 0) {
+      w.mu = md / a.modalMass
+      const tuned = damperTuning(w.mu, cfg.tuning)
+      const f = spec?.frequency ?? tuned.frequency * a.frequency
+      const zeta = spec?.damping ?? tuned.damping
+      sys.damper = { m: md, k: md * (2 * Math.PI * f) ** 2, c: 2 * zeta * md * 2 * Math.PI * f }
+    }
+    w.sys = a.modalMass > 0 && a.omega > 0 ? sys : null
+    const st: WindState = {
+      speed: cfg.speed, pressure: a.pressure, shear: a.shear, moment: a.moment, deflection: a.deflection, drift: a.drift, limit: cfg.driftLimit, overturn: Math.min(a.overturn, 1000),
+      frequency: a.frequency, lean: a.lean, sway: w.dyn.x, peak: w.dyn.peak, status: a.overturn > 1 ? 'overturn' : a.drift > cfg.driftLimit ? 'drift' : 'ok',
+    }
+    if (sys.damper) st.damper = { ratio: w.mu, travel: w.dyn.y - w.dyn.x }
+    o.st.wind = st
+  }
+
+  /** Moves the top of the building with the gust (the first mode and the damper, integrated together) and reports `sway` when it changes. */
+  const stepWind = (o: ObjRT, dt: number) => {
+    const w = o.wind!
+    const a = w.analysis
+    const st = o.st.wind
+    if (!a || !st || !w.sys) return
+    const gust = w.gust
+    const I = a.intensity
+    const force = (t: number) => {
+      const n = gustAt(gust, t)
+      return a.modalForce * (2 * I * n + I * I * (n * n - 1))
+    }
+    const wn = Math.max(a.omega, w.sys.damper ? Math.sqrt(w.sys.damper.k / w.sys.damper.m) : 0)
+    stepSway(w.dyn, w.sys, time - dt, dt, force, (2 * Math.PI) / wn / 20)
+    const d = w.dyn
+    d.peak = Math.max(Math.abs(d.x), d.peak * Math.exp(-dt / w.cfg.peakDecay))
+    st.sway = d.x
+    st.peak = d.peak
+    if (st.damper) st.damper.travel = d.y - d.x
+    const e = w.emitted
+    if (d.peak < e.peak * 0.8) e.peak = d.peak
+    if (st.status !== e.status || (time - e.t >= 0.5 && d.peak > e.peak * 1.05 + 1e-3)) {
+      w.emitted = { t: time, peak: d.peak, status: st.status }
+      const dir = windDirection(o, w.cfg)
+      const world = rotateVec(o.base.rot, [dir[0], 0, dir[1]])
+      emit({ ...base(o), type: 'sway', sway: d.x, peak: d.peak, drift: st.drift, overturn: st.overturn, frequency: st.frequency, direction: world, status: st.status })
+    }
   }
 
   // -------------------------------------------------------------------------------------------------------------------------------------------
@@ -841,7 +1036,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return
     }
     const height = Math.max(0, c[1] - so.pivot[1])
-    const r = solveFoundation(springs, w, c[0], c[2], height, so.imp, { s: so.s, a: so.a, b: so.b })
+    // the wind overturns the building as if its centre of mass stood `M / W` further downwind
+    const wa = o.wind?.analysis
+    const push = wa ? windDirection(o, o.wind!.cfg) : [0, 0]
+    const shift = wa ? wa.moment / w : 0
+    const r = solveFoundation(springs, w, c[0] + shift * push[0], c[2] + shift * push[1], height, so.imp, { s: so.s, a: so.a, b: so.b })
     let status: SoilState['status'] = 'stable'
     const sinkStep = soilCfg.sinkRate * dt
     const tiltStep = Math.tan((soilCfg.tiltRate * Math.PI) / 180) * dt
@@ -2628,6 +2827,16 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         o.active = true
       })
     },
+    setWind(next) {
+      windOpts = { ...windOpts, ...Object.fromEntries(Object.entries(next).filter(([, v]) => v !== undefined)) }
+      windCfg = resolveWind(windOpts)
+      for (const o of objects.values()) {
+        if (!o.hasStructure || o.spec.wind === false) continue
+        o.wind ??= newWind(o)
+        o.dirty = true
+        o.active = true
+      }
+    },
     setLiters(objectId, partId, liters) {
       if (impls.has(objectId)) return
       const p = getPart(getObj(objectId), partId)
@@ -2642,6 +2851,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         const sources: Array<{ o: ObjRT; p: PartRT; flame: number }> = []
         for (const o of [...objects.values()]) if (o.active) stepObject(o, dt, sources)
         for (const o of [...objects.values()]) if (o.soil && objects.get(o.id) === o) stepSoil(o, dt)
+        for (const o of [...objects.values()]) if (o.wind && objects.get(o.id) === o) stepWind(o, dt)
         if (sources.length) {
           spread(sources, dt)
           igniteLeaksNearFire(sources, dt)
@@ -2684,7 +2894,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         rng: rng.state(),
         counter,
         objects: [...objects.values()].map((o) => {
-          const runtime: ObjectRuntime = { parts: {}, joints: {}, collapsed: [...o.collapsed], ...(o.soil?.sets.size ? { soil: Object.fromEntries(o.soil.sets) } : {}) }
+          const runtime: ObjectRuntime = { parts: {}, joints: {}, collapsed: [...o.collapsed], ...(o.soil?.sets.size ? { soil: Object.fromEntries(o.soil.sets) } : {}), ...(o.wind ? { wind: [o.wind.dyn.x, o.wind.dyn.v, o.wind.dyn.y, o.wind.dyn.w, o.wind.dyn.peak] as [number, number, number, number, number] } : {}) }
           for (const p of o.parts) runtime.parts[p.spec.id] = clone(p.rt)
           for (const j of o.joints) runtime.joints[j.spec.id] = j.step
           return { id: o.id, spec: clone(o.spec), state: clone(o.st), runtime }
@@ -2708,6 +2918,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           ),
           joints: new Map(state.joints.map((st) => [st.id, { st, step: e.runtime?.joints[st.id] ?? 0 }])),
           collapsed: e.runtime?.collapsed,
+          ...(e.runtime?.wind ? { wind: e.runtime.wind } : {}),
         }
         let pos = state.position, rot = state.rotation
         if (state.soil) {

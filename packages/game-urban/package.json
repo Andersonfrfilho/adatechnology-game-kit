@@ -49,6 +49,9 @@
     "@adatechnology/game-vehicles-fleet": "workspace:*"
   },
   "devDependencies": {
+    "@adatechnology/game-floorplan-commercial": "workspace:*",
+    "@adatechnology/game-floorplan-residential": "workspace:*",
+    "@adatechnology/game-floorplan-structure": "workspace:*",
     "@adatechnology/golden-tool": "workspace:*",
     "@types/node": "^22.10.7",
     "tsup": "^8.5.1",

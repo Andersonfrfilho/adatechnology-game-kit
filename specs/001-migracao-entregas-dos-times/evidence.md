@@ -3125,9 +3125,26 @@ Desenho em `design/T10-estrutura-real.md` §9. Presets em `game-floorplan-struct
 - **Testes novos:** `game-destruction/tests/frame-systems.test.ts` (3), `game-floorplan-structure/tests/tower.test.ts` (8). Nenhum teste antigo mudou.
 - **Portões:** `pnpm build`, `pnpm typecheck`, `pnpm lint` ok; testes de `game-destruction` (247), `game-destruction-three` (113), `game-floorplan-structure` (275), `game-floorplan-three` (142), `game-test-room` (145), `game-interactables-three` (304) ok; `examples/test-room/build.mjs`, `floorplan-test-area` e `interactables-test-area` build + `test.mjs` ok (capturas revertidas).
 
-## 2026-10-25 · Estrutura real, lajes em painéis com vigas reais nas casas (T10 §5 resolvido, §10)
+## 2026-10-25 · Estrutura real, passo 4 · vento e balanço (lacuna 5)
 
-Desenho em `design/T10-estrutura-real.md` §10. As lajes de concreto das casas e dos prédios do `game-floorplan` viram painéis de no máximo `maxSpan` (5 m,
+- **Cenários:** torre de 40 andares com núcleo fica de pé com deriva 1/589 (dentro de H/500) e flecha de 0,221 m; sem núcleo (dimensionada ao vento) a deriva é 1/169 e passa do limite; o amortecedor de 0,85% reduz o desvio-padrão do balanço a cerca de 0,73; casa de 2 andares quase não sente (0,02 mm).
+- **Goldens:** nenhuma mudou (vento desligado por padrão).
+- **Testes novos:** `game-destruction/tests/wind.test.ts` (35), `game-floorplan-structure/tests/wind.test.ts` (11). Nenhum teste antigo mudou.
+- **Pendências para o dono:** H/500 contra H/1700 da NBR 6118; tabela 1 da NBR 6123 transcrita da memória; padrão V0 = 40 m/s e categoria III.
+
+## 2026-10-25 · Estrutura real, passo 5 · arranha-céu e a cidade (lacuna 9)
+
+Desenho em `design/T10-estrutura-real.md` §11. Receita em `game-floorplan-structure` (`skyscraper.ts`, `skyscraper-plan.ts`), torre de escritórios em `game-floorplan-commercial` (`office_tower`), torre residencial em `game-floorplan-residential` (`residential_tower`), cidade em `game-urban` (opção `towers`, desligada por padrão). No motor, a barra de tração de parede e pilar passou a contar as barras que o espaçamento dá (`verticalBarCount`).
+
+- **Cenários:** torres de 20, 40 e 80 andares em pé em repouso e com o vento padrão, com núcleo e estacas (sem estacas tomba); explosão num andar quebra o vidro e as lajes vizinhas e o núcleo fica; perder um pilar do perímetro derruba só aquela linha; plantas de 20 andares passam o validador e as propriedades dos estados do post-apocalyptic; a cidade com `towers` desenha as torres e, desligada, sai idêntica.
+- **Goldens:** nenhuma mudou.
+- **Testes novos:** structure `skyscraper` (18) e `tower-plan`, commercial `office-tower` (9), residential `residential-tower`, post-apocalyptic (torres nas propriedades), floorplan-three `skyscraper` (4), game-urban `towers` (9), game-urban-three `towers` (2).
+- **Portões:** ver o fim desta entrada. `examples/test-room`, `floorplan-test-area` e `urban-test-area` build + `test.mjs` ok (capturas revertidas). O vitest do `game-floorplan-structure` acusou de novo, em parte das rodadas, o `Timeout calling "onTaskUpdate"` do worker (carga da máquina, testes passando).
+- **Pendências para o dono:** (1) acima de 60 andares a deriva passa de H/500 (o motor não tem outrigger nem tubo de perímetro): limitar a faixa a 60 ou aceitar; (2) `towers` desligado por padrão na cidade serve, ou o centro deve nascer com torres e regerar os goldens da Galeria? (3) não há arranha-céu nas entregas dos times nem em `packages/*` antes disto; nada foi reescrito no lugar de uma entrega.
+
+## 2026-10-25 · Estrutura real, lajes em painéis com vigas reais nas casas (T10 §5 resolvido, §12)
+
+Desenho em `design/T10-estrutura-real.md` §12. As lajes de concreto das casas e dos prédios do `game-floorplan` viram painéis de no máximo `maxSpan` (5 m,
 um por cômodo), com vigas `vão/10` (mín. 25 cm) nos limites, lajes `L/40` (mín. 10 cm piso, 8 cm cobertura), pilares de 20 cm onde uma viga ou cinta passa
 do vão e vergas/cintas com a altura do vão. O vergalhão (`rebar`) passou a ser o padrão de `toDestructibleSpec` (desliga com `rebar: false` ou
 `slabPanels: false`); `slabPanels` aceita um objeto com os valores de `SLAB_PANEL_DEFAULTS`. Novo em `game-floorplan-structure/src/slab-panels`, API `slabPanelView`.

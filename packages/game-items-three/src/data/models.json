@@ -238,5 +238,1335 @@
       0.5377
     ],
     "scale": 0.526212
+  },
+  {
+    "id": "sugar",
+    "teamId": "acucar",
+    "teamBox": [
+      1,
+      2,
+      0.61
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "chocolate_bar",
+    "teamId": "chocolate",
+    "teamBox": [
+      1.5,
+      0.7,
+      0.1
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "potatoes",
+    "teamId": "batata",
+    "teamBox": [
+      2,
+      0.902,
+      1.402
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "biscuits",
+    "teamId": "biscoito",
+    "teamBox": [
+      2,
+      0.5,
+      1.01
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "coffee",
+    "teamId": "cafe_po",
+    "teamBox": [
+      0.8,
+      1.5,
+      0.61
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "raw_beef",
+    "teamId": "carne_bovina",
+    "teamBox": [
+      2,
+      0.495,
+      1.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "game_meat",
+    "teamId": "carne_caca",
+    "teamBox": [
+      3,
+      0.8,
+      2
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "jerked_beef",
+    "teamId": "charque",
+    "teamBox": [
+      2.5,
+      0.25,
+      1.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "home_preserves",
+    "teamId": "conserva",
+    "teamBox": [
+      0.908,
+      1.3,
+      0.908
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "eggs",
+    "teamId": "ovos",
+    "teamBox": [
+      2.5,
+      0.71,
+      1
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "cassava_flour",
+    "teamId": "farinha_mandioca",
+    "teamBox": [
+      1.5,
+      2.5,
+      0.61
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "beans",
+    "teamId": "feijao_seco",
+    "teamBox": [
+      1,
+      2,
+      0.61
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "frozen_chicken",
+    "teamId": "frango",
+    "teamBox": [
+      2.6,
+      1.002,
+      1.702
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "orange",
+    "teamId": "laranja",
+    "teamBox": [
+      0.75,
+      0.75,
+      0.75
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "condensed_milk",
+    "teamId": "leite_condensado",
+    "teamBox": [
+      0.734,
+      1,
+      0.734
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "pasta",
+    "teamId": "macarrao",
+    "teamBox": [
+      1,
+      2.5,
+      0.402
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "instant_noodles",
+    "teamId": "macarrao_inst",
+    "teamBox": [
+      1.2,
+      1.6,
+      0.3
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "cassava_root",
+    "teamId": "mandioca",
+    "teamBox": [
+      4,
+      0.7,
+      0.7
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "canned_corn_and_peas",
+    "teamId": "milho_lata",
+    "teamBox": [
+      0.734,
+      0.85,
+      0.734
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "mortadella",
+    "teamId": "mortadela",
+    "teamBox": [
+      1.5,
+      0.6,
+      0.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "fresh_fish",
+    "teamId": "peixe_fresco",
+    "teamBox": [
+      3,
+      0.6,
+      1.01
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "salted_fish",
+    "teamId": "peixe_salgado",
+    "teamBox": [
+      2.5,
+      0.3,
+      1
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "banana_bunch",
+    "teamId": "banana",
+    "teamBox": [
+      3,
+      1.3,
+      1.7
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "honey_jar",
+    "teamId": "mel",
+    "teamBox": [
+      0.808,
+      1,
+      0.808
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "bread",
+    "teamId": "pao_forma",
+    "teamBox": [
+      3,
+      1.01,
+      1
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "cheese",
+    "teamId": "queijo",
+    "teamBox": [
+      1.502,
+      0.402,
+      1
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "rapadura",
+    "teamId": "rapadura",
+    "teamBox": [
+      1.9,
+      1,
+      0.61
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "dog_food",
+    "teamId": "racao_cao",
+    "teamBox": [
+      1.8,
+      2.6,
+      0.71
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "salt",
+    "teamId": "sal",
+    "teamBox": [
+      0.704,
+      1.6,
+      0.704
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "snack_chips",
+    "teamId": "salgadinho",
+    "teamBox": [
+      2.002,
+      2.8,
+      0.602
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "canned_sausages",
+    "teamId": "salsicha_lata",
+    "teamBox": [
+      0.734,
+      0.85,
+      0.734
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "canned_sardines",
+    "teamId": "sardinha",
+    "teamBox": [
+      1.12,
+      0.26,
+      0.65
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "cooking_oil",
+    "teamId": "oleo_cozinha",
+    "teamBox": [
+      0.704,
+      2.6,
+      0.704
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "beer_can",
+    "teamId": "cerveja",
+    "teamBox": [
+      0.664,
+      1.2,
+      0.664
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "energy_drink",
+    "teamId": "energetico",
+    "teamBox": [
+      0.584,
+      1.35,
+      0.584
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "water_jug_5l",
+    "teamId": "galao_agua",
+    "teamBox": [
+      1.9,
+      3.3,
+      1.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "sports_drink",
+    "teamId": "isotonico",
+    "teamBox": [
+      0.664,
+      1.83,
+      0.664
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "milk_carton",
+    "teamId": "leite",
+    "teamBox": [
+      0.702,
+      2,
+      0.702
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "soda_can",
+    "teamId": "refri_lata",
+    "teamBox": [
+      0.664,
+      1.2,
+      0.664
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "juice_box",
+    "teamId": "suco_cx",
+    "teamBox": [
+      0.52,
+      1,
+      0.37
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "communion_wine",
+    "teamId": "vinho",
+    "teamBox": [
+      0.764,
+      3,
+      0.764
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "coconut_water",
+    "teamId": "agua_coco",
+    "teamBox": [
+      0.6,
+      1.7,
+      0.6
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "dirty_water",
+    "teamId": "agua_suja",
+    "teamBox": [
+      0.66,
+      1.83,
+      0.66
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "painkillers",
+    "teamId": "analgesico",
+    "teamBox": [
+      0.6,
+      0.2,
+      0.4
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "tramadol",
+    "teamId": "opioide",
+    "teamBox": [
+      0.952,
+      0.5,
+      0.152
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "ibuprofen",
+    "teamId": "ibuprofeno",
+    "teamBox": [
+      0.95,
+      0.5,
+      0.15
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "antihistamine",
+    "teamId": "antialergico",
+    "teamBox": [
+      0.8,
+      0.5,
+      0.15
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "ceftriaxone",
+    "teamId": "ceftriaxona",
+    "teamBox": [
+      1.002,
+      0.6,
+      0.302
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "clonazepam",
+    "teamId": "calmante",
+    "teamBox": [
+      0.9,
+      0.5,
+      0.15
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "activated_charcoal",
+    "teamId": "carvao_ativado",
+    "teamBox": [
+      0.6,
+      0.95,
+      0.25
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "adhesive_bandages",
+    "teamId": "curativo",
+    "teamBox": [
+      1,
+      0.6,
+      0.15
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "medical_tape",
+    "teamId": "esparadrapo",
+    "teamBox": [
+      0.5,
+      0.252,
+      0.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "sterile_gauze",
+    "teamId": "gaze",
+    "teamBox": [
+      1,
+      1,
+      0.15
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "povidone_iodine",
+    "teamId": "pvpi",
+    "teamBox": [
+      0.45,
+      1.1,
+      0.356
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "suture_kit",
+    "teamId": "kit_sutura",
+    "teamBox": [
+      1.5,
+      0.8,
+      0.3
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "exam_gloves",
+    "teamId": "luva_proc",
+    "teamBox": [
+      1,
+      1.2,
+      0.1
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "n95_mask",
+    "teamId": "n95",
+    "teamBox": [
+      1.5,
+      1.1,
+      0.25
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "multivitamin",
+    "teamId": "vitamina",
+    "teamBox": [
+      0.508,
+      0.9,
+      0.508
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "maintenance_medication",
+    "teamId": "remedio_continuo",
+    "teamBox": [
+      0.458,
+      0.9,
+      0.458
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "rehydration_salts",
+    "teamId": "sais_reidrat",
+    "teamBox": [
+      0.9,
+      1.2,
+      0.1
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "syringe",
+    "teamId": "seringa",
+    "teamBox": [
+      1.5,
+      0.2,
+      0.2
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "antivenom",
+    "teamId": "antiofidico",
+    "teamBox": [
+      1.5,
+      0.9,
+      0.506
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "saline_iv_bag",
+    "teamId": "soro",
+    "teamBox": [
+      1.2,
+      2.5,
+      0.45
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "splint",
+    "teamId": "tala",
+    "teamBox": [
+      4.6,
+      1.1,
+      0.1
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "thermometer",
+    "teamId": "termometro",
+    "teamBox": [
+      1.2,
+      0.2,
+      0.3
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "alcohol_70",
+    "teamId": "alcool70",
+    "teamBox": [
+      0.7,
+      2.025,
+      0.506
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "can_opener",
+    "teamId": "abridor",
+    "teamBox": [
+      1.4,
+      0.4,
+      0.25
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "pliers",
+    "teamId": "alicate",
+    "teamBox": [
+      2,
+      0.302,
+      0.7
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "bolt_cutters",
+    "teamId": "corta_vergalhao",
+    "teamBox": [
+      6,
+      0.602,
+      1.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "bucket",
+    "teamId": "balde",
+    "teamBox": [
+      2.804,
+      2.7,
+      2.804
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "binoculars",
+    "teamId": "binoculo",
+    "teamBox": [
+      1.8,
+      1.5,
+      1.211
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "matches",
+    "teamId": "fosforo",
+    "teamBox": [
+      0.502,
+      0.15,
+      0.355
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "pocket_knife",
+    "teamId": "canivete",
+    "teamBox": [
+      1.1,
+      0.22,
+      0.32
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "screwdriver",
+    "teamId": "chave_fenda",
+    "teamBox": [
+      2.2,
+      0.4,
+      0.4
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "adjustable_wrench",
+    "teamId": "chave_inglesa",
+    "teamBox": [
+      2.5,
+      0.2,
+      0.6
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "hoe",
+    "teamId": "enxada",
+    "teamBox": [
+      13.5,
+      0.6,
+      1.7
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "fire_extinguisher",
+    "teamId": "extintor",
+    "teamBox": [
+      1.6,
+      4.8,
+      1.6
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "duct_tape",
+    "teamId": "silver_tape",
+    "teamBox": [
+      1,
+      0.502,
+      1
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "camp_stove",
+    "teamId": "fogareiro",
+    "teamBox": [
+      1.8,
+      1,
+      1.1
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "lighter",
+    "teamId": "isqueiro",
+    "teamBox": [
+      0.25,
+      0.8,
+      0.12
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "lockpick_kit",
+    "teamId": "kit_chaveiro",
+    "teamBox": [
+      1,
+      0.7,
+      0.2
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "sewing_kit",
+    "teamId": "kit_costura",
+    "teamBox": [
+      0.9,
+      0.5,
+      0.3
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "car_jack",
+    "teamId": "macaco",
+    "teamBox": [
+      3,
+      1.1,
+      1.1
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "mechanic_toolbox",
+    "teamId": "kit_mecanico",
+    "teamBox": [
+      4,
+      2,
+      2
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "gas_torch",
+    "teamId": "macarico",
+    "teamBox": [
+      1.5,
+      4.2,
+      1.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "inverter_welder",
+    "teamId": "solda",
+    "teamBox": [
+      3,
+      2.2,
+      1.3
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "pot",
+    "teamId": "panela",
+    "teamBox": [
+      2.5,
+      1.5,
+      2.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "cordless_drill",
+    "teamId": "parafusadeira",
+    "teamBox": [
+      2.2,
+      2,
+      0.7
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "flint_striker",
+    "teamId": "pederneira",
+    "teamBox": [
+      1.1,
+      0.202,
+      0.152
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "sharpening_stone",
+    "teamId": "amolador",
+    "teamBox": [
+      2.002,
+      0.5,
+      0.252
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "shovel",
+    "teamId": "pa",
+    "teamBox": [
+      11,
+      0.7,
+      2.2
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "hacksaw",
+    "teamId": "serra_arco",
+    "teamBox": [
+      4.2,
+      0.3,
+      1.2
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "handsaw",
+    "teamId": "serrote",
+    "teamBox": [
+      5,
+      0.352,
+      1.3
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "scissors",
+    "teamId": "tesoura",
+    "teamBox": [
+      1.8,
+      0.152,
+      0.7
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "recurve_bow",
+    "teamId": "arco",
+    "teamBox": [
+      13,
+      2,
+      0.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "crossbow",
+    "teamId": "besta",
+    "teamBox": [
+      7,
+      1.2,
+      8
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "iron_pipe",
+    "teamId": "cano",
+    "teamBox": [
+      8,
+      0.354,
+      0.354
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "meat_cleaver",
+    "teamId": "cutelo",
+    "teamBox": [
+      3.3,
+      0.302,
+      1.2
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "slingshot",
+    "teamId": "estilingue",
+    "teamBox": [
+      1.3,
+      1.5,
+      0.252
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "knife",
+    "teamId": "faca_cozinha",
+    "teamBox": [
+      2.5,
+      0.302,
+      0.4
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "tactical_knife",
+    "teamId": "faca_tatica",
+    "teamBox": [
+      2.6,
+      0.282,
+      0.45
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "arrows_and_bolts",
+    "teamId": "flecha",
+    "teamBox": [
+      7,
+      0.252,
+      0.402
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "sickle",
+    "teamId": "foice",
+    "teamBox": [
+      4,
+      0.352,
+      3.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "cast_iron_skillet",
+    "teamId": "frigideira",
+    "teamBox": [
+      4.3,
+      0.5,
+      2.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "improvised_spear",
+    "teamId": "lanca",
+    "teamBox": [
+      16,
+      0.35,
+      0.35
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "hatchet",
+    "teamId": "machadinha",
+    "teamBox": [
+      3.5,
+      0.5,
+      1.3
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "sledgehammer",
+    "teamId": "marreta",
+    "teamBox": [
+      9,
+      1.2,
+      2.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "chainsaw",
+    "teamId": "motosserra",
+    "teamBox": [
+      4.5,
+      2.6,
+      2.3
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "pickaxe",
+    "teamId": "picareta",
+    "teamBox": [
+      9,
+      0.4,
+      3.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "baseball_bat",
+    "teamId": "taco",
+    "teamBox": [
+      8.6,
+      0.704,
+      0.704
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "police_baton",
+    "teamId": "tonfa",
+    "teamBox": [
+      5,
+      1,
+      0.45
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "wire_roll",
+    "teamId": "arame",
+    "teamBox": [
+      1.4,
+      0.502,
+      1.4
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "barbed_wire",
+    "teamId": "arame_farpado",
+    "teamBox": [
+      3,
+      1.2,
+      3
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "glass_shards",
+    "teamId": "cacos",
+    "teamBox": [
+      1.2,
+      0.5,
+      1
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "sheet_metal",
+    "teamId": "chapa",
+    "teamBox": [
+      6,
+      0.03,
+      4.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "cement_bag",
+    "teamId": "cimento",
+    "teamBox": [
+      5,
+      1.01,
+      3
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "epoxy_glue",
+    "teamId": "cola",
+    "teamBox": [
+      1,
+      0.6,
+      0.3
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "electronic_components",
+    "teamId": "componentes",
+    "teamBox": [
+      1,
+      0.2,
+      0.8
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "rope",
+    "teamId": "corda",
+    "teamBox": [
+      1.5,
+      0.8,
+      1.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "copper_wire",
+    "teamId": "fio_cobre",
+    "teamBox": [
+      0.8,
+      0.302,
+      0.8
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "pet_bottle",
+    "teamId": "garrafa_pet",
+    "teamBox": [
+      1.054,
+      3.3,
+      1.054
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "glass_bottle",
+    "teamId": "garrafa_vidro",
+    "teamBox": [
+      0.75,
+      2.6,
+      0.75
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "empty_can",
+    "teamId": "lata_vazia",
+    "teamBox": [
+      0.664,
+      1.206,
+      0.664
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "firewood",
+    "teamId": "lenha",
+    "teamBox": [
+      4.006,
+      1.2,
+      1.6
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "tarp",
+    "teamId": "lona",
+    "teamBox": [
+      3.5,
+      1.002,
+      2.502
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "screws",
+    "teamId": "parafusos",
+    "teamBox": [
+      0.9,
+      0.51,
+      0.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "nails",
+    "teamId": "pregos",
+    "teamBox": [
+      1.3,
+      0.605,
+      0.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "raffia_sack",
+    "teamId": "saco_areia",
+    "teamBox": [
+      4.002,
+      0.202,
+      3
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "scrap_metal",
+    "teamId": "sucata",
+    "teamBox": [
+      2,
+      0.8,
+      1.5
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "bricks",
+    "teamId": "tijolo",
+    "teamBox": [
+      1.902,
+      1.8,
+      2.902
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "rag",
+    "teamId": "trapo",
+    "teamBox": [
+      2.2,
+      0.252,
+      1.8
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "rebar",
+    "teamId": "vergalhao",
+    "teamBox": [
+      12.7,
+      0.16,
+      0.16
+    ],
+    "scale": 0.1
+  },
+  {
+    "id": "lubricant_spray",
+    "teamId": "lubrificante",
+    "teamBox": [
+      0.502,
+      1.7,
+      0.5
+    ],
+    "scale": 0.1
   }
 ]

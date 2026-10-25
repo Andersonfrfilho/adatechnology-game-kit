@@ -6,7 +6,7 @@ import type { FloorplanEngineLike, SpecimenDef } from './types.js'
 
 /**
  * The five items of the team's house area (sala-de-testes/area-casas): a frame house, a whole house, a wood-frame house, a log cabin and a tent. The team's frame house is its single-storey house A; here it is the
- * two-storey townhouse, because the ceiling slab of the single-storey plan keeps standing on its bearing partitions when two pillars go (see evidence, T2.6). The frame house is a reinforced concrete frame (T10 §10): the slabs
+ * two-storey townhouse, because the ceiling slab of the single-storey plan keeps standing on its bearing partitions when two pillars go (see evidence, T2.6). The frame house is a reinforced concrete frame (T10 §12): the slabs
  * are cut into panels on real beams, the pillars are sized (`sizing`) to carry the load of the ones lost, and the beams to carry the span the lost pillar leaves: one pillar lost and the slab stays,
  * the two ends of a side lost and that side comes down (owner, 2026-10-24: "4 pilares e a sustentação é a soma dos 4"; 2026-10-25: the real structure of the houses).
  */

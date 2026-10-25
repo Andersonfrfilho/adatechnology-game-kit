@@ -4,7 +4,7 @@
  */
 import { afterEach, describe, expect, it } from 'vitest'
 import { interiorTemplateIds } from '@adatechnology/game-floorplan-commercial'
-import { FULL, N, STATES, checkPlan, createFailures, engine, sizes, variants } from './support'
+import { FULL, N, STATES, TOWER_TEMPLATES, checkPlan, createFailures, engine, sizes, variants } from './support'
 
 // The suite is CPU-bound and synchronous; yield a macrotask between tests so the worker can report progress.
 afterEach(() => new Promise<void>((r) => setTimeout(r, 0)))
@@ -204,5 +204,22 @@ describe('colour palettes', () => {
       if (JSON.stringify(engine.palette({ seed: 9, style, state: 'normal' })) !== JSON.stringify(engine.palette({ seed: 9, style, state: 'normal' }))) F.add('palette is not deterministic', style)
       expect(F.report()).toEqual([])
     })
+  }
+})
+
+// A tower is 20 storeys at least and takes seconds to generate: the same properties on 20 storeys, 3 seeds and the three states.
+describe('skyscraper plans (the same properties on 20 storeys)', () => {
+  for (const id of TOWER_TEMPLATES) {
+    for (const state of STATES) {
+      it(`${id}/${state}: 3 seeds hold every property`, () => {
+        const F = createFailures()
+        const seen = new Set<string>()
+        for (let s = 1; s <= 3; s++) {
+          const res = engine.generate(id, { seed: s, state, floors: 20 })
+          checkPlan(id, res, s, seen, F)
+        }
+        expect(F.report()).toEqual([])
+      }, 300000)
+    }
   }
 })

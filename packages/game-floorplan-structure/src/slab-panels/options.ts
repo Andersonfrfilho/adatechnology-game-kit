@@ -1,6 +1,6 @@
 /**
  * How a concrete slab of a house is cut into panels with beams under their edges, and where pillars are added so that every beam spans a
- * reasonable distance (design T10-estrutura-real.md §10). Every number is a choice of the design and can be changed per call
+ * reasonable distance (design T10-estrutura-real.md §12). Every number is a choice of the design and can be changed per call
  * (`toDestructibleSpec({ slabPanels: { maxSpan: 4 } })`).
  */
 export interface SlabPanelOptions {

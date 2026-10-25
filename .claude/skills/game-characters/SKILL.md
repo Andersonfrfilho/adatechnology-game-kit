@@ -72,3 +72,7 @@ kit.penetrateLine(shot, [{ character: a, part: 'torso', distance: 3 }, ...])  //
 - **`createConditionTimeline`**: fases ordenadas com efeitos (infecção: saudável, febre, delírio, reanimado) em horas ou num relógio acelerado (`unitsPerSecond`).
 - **`kit.createCorpses()`**: corpos no chão (400, 900 s; o mais velho sai quando enche; saída por troca com o último, como o jogo).
 - **Aparência**: `drawBodyVariance` (as 8 sorteios do `zSpawn`), `variantCountFor`/`variantSeed`/`variantDecay` (regra ZVAR) e `drawAppearance` (o `VR` do Bestiário v17, na mesma ordem, devolvendo o fluxo para o construtor continuar).
+
+## Clipes de pose (`pose-clips/`)
+- **`PoseClip`** são poses-chave sobre as juntas do corpo rico (`lean`, `headY`, `armR`, `legL`...). `samplePoseClip(clip, t)` amostra (o `sample` do Bestiário); `clipEventsBetween(clip, t0, t1)` devolve os eventos em `(t0, t1]`, e `impact` marca o instante em que o golpe acerta (o jogo aplica o dano ao disparar). `filterPoseChannels` separa `full`, `upper` (as pernas seguem a passada) ou `lower`.
+- **`POSE_CLIPS`** traz os dois clipes da cena de agarrar e morder, portados do Bestiário: `grabbed_bitten_human` e `grab_bite_zombie`. `createPoseClipRegistry(POSE_CLIPS).register(clip)` adiciona ou troca clipes; um clipe em JSON serve (golpes incluídos).

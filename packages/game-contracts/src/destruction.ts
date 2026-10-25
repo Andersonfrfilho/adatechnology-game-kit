@@ -126,6 +126,19 @@ export interface PartSpec {
    * `radius` metres of a point that adds up to `area` square metres opens the part: stage 2, the part stays with an opening.
    */
   breach?: PartBreach
+  /**
+   * The part is a tuned mass damper: a mass on springs and dashpots near the top of a building that moves against its sway (`wind`). Its `mass` is the
+   * damper's mass and enters the load like any other part. Without `frequency` and `damping` the world tunes it to the building (Den Hartog).
+   */
+  damper?: TunedMassDamper
+}
+
+/** A tuned mass damper (`PartSpec.damper`). */
+export interface TunedMassDamper {
+  /** Natural frequency of the damper on its springs, in Hz (default: tuned to the first mode of the building by `wind.tuning`). */
+  frequency?: number
+  /** Damping ratio of the damper (default: the optimum for its mass ratio). */
+  damping?: number
 }
 
 /** A coat over a part's core. `faces` says on which side(s) of the part's thinnest axis it lies (`'+'` and `'-'` are the local +/- directions). */
@@ -259,6 +272,27 @@ export interface DestructibleSpec {
    * and, when the soil cannot carry it, sinks and tips over (`ObjectState.soil`, `settle` events). Without it the foundations are fixed as before.
    */
   soil?: string | SoilProfile
+  /**
+   * How this object takes the wind of the world (`DestructionOptions.wind`): where it stands and what shape it has. Each field replaces the world's for
+   * this object. `false` keeps the object out of the wind. Without the world's `wind` it does nothing.
+   */
+  wind?: WindExposure | false
+}
+
+/** What belongs to the place and the shape of one building in the wind (`DestructibleSpec.wind`; the world's `wind` has the same fields as defaults). */
+export interface WindExposure {
+  /** Roughness category of the terrain around it, `I` (sea, flat water) to `V` (city centre with tall buildings): NBR 6123 table 1. */
+  terrain?: 'I' | 'II' | 'III' | 'IV' | 'V'
+  /** Class by the largest dimension, `A` up to 20 m, `B` to 50 m, `C` above (`auto`: from the building). */
+  class?: 'auto' | 'A' | 'B' | 'C'
+  /** Topographic factor S1 (1: flat ground; a hill top is above 1). */
+  topography?: number
+  /** Statistical factor S3 (1: homes and offices; 1.1 for essential buildings). */
+  statistical?: number
+  /** Drag coefficient Ca of the whole building (1.3: windward 0.8 + leeward 0.5). */
+  drag?: number
+  /** Structural damping ratio of the first mode (0.016: reinforced concrete). */
+  damping?: number
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -500,6 +534,8 @@ export interface PartState {
    * compression ratio.
    */
   flexure?: number
+  /** Axial force the wind adds to a wall or column, in newtons (compression positive, tension negative; `DestructionOptions.wind`). */
+  wind?: number
   /** The tension face cracked (a blast, an impact or the load bent it past the cracking moment): the concrete no longer carries tension, the steel does. */
   cracked?: boolean
   /** Reinforced part whose concrete is gone: only the rebar cage is left (capacity x `residualCapacity`); it is still part of the structure. */
@@ -529,6 +565,36 @@ export interface SoilState {
    * transform. `ObjectState.position` and `rotation` already include it.
    */
   offset: { position: Vec3; rotation: Quat }
+}
+
+/** How a building is taking the wind (`DestructionOptions.wind`). */
+export interface WindState {
+  /** Basic speed of the wind in m/s. */
+  speed: number
+  /** Design pressure at the top, N/m². */
+  pressure: number
+  /** Design shear at the base, N (the sum of the forces on every storey). */
+  shear: number
+  /** Design overturning moment at the base, N m. */
+  moment: number
+  /** Top deflection under the design wind, metres. */
+  deflection: number
+  /** Top deflection over the height (the drift) and its limit (default 1/500). */
+  drift: number
+  limit: number
+  /** Overturning moment over what the weight resists (above 1 the building tips over on its foundation). */
+  overturn: number
+  /** First-mode frequency in Hz. */
+  frequency: number
+  /** Top deflection under the mean wind, metres: how far the building leans while the wind blows. */
+  lean: number
+  /** Swing of the top about that lean now and its recent peak, metres, along the wind. */
+  sway: number
+  peak: number
+  /** Tuned mass damper: mass over the modal mass and its travel against the top now, metres. */
+  damper?: { ratio: number; travel: number }
+  /** `ok`; `drift`: the drift is over its limit; `overturn`: the overturning moment passes what the weight resists. */
+  status: 'ok' | 'drift' | 'overturn'
 }
 
 export interface JointState {
@@ -562,6 +628,8 @@ export interface ObjectState {
   destroyed: boolean
   /** Only objects with `DestructibleSpec.soil`: how the ground under it is holding. */
   soil?: SoilState
+  /** Only structures in the wind of the world (`DestructionOptions.wind`): the load, the drift and the sway of the building. */
+  wind?: WindState
   /** Only objects that are a living body (a character, an animal): the summary the crowd and the HUD read. */
   body?: { alive: boolean; vitality: number; missing: number; limp: boolean; crawl: boolean }
 }
@@ -628,6 +696,11 @@ export type DestructionEvent =
    * (`status: 'toppled'`, followed by a `collapse` of everything). Throttled to once per 0.5 s while it moves. `direction` is in world space.
    */
   | (EventBase & { type: 'settle'; settlement: number; tilt: number; direction: Vec3; bearing: number; status: SoilState['status'] })
+  /**
+   * A building in the wind (`DestructionOptions.wind`) changed how it stands: the drift went over its limit or came back, the overturning moment passed
+   * what the weight resists, or the sway of the top grew. Throttled to once per 0.5 s. `direction` is the wind's, in world space.
+   */
+  | (EventBase & { type: 'sway'; sway: number; peak: number; drift: number; overturn: number; frequency: number; direction: Vec3; status: WindState['status'] })
   /** A group with structural parts lost every anchored part (an anchored part exists in the object): it falls. Reported once per group. */
   | (EventBase & { type: 'collapse'; parts: string[]; mass: number })
   /** The outer coat of a layered part came off at `point` (`layer` indexes `PartSpec.layers`; `area` in m²). */

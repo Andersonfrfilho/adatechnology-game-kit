@@ -43,6 +43,10 @@ const plan = engine.generate('mid_modern_townhouse', { seed: 12, floors: 3, zone
 | `mansion` | high | residential_single | 1 to 3 (optional elevator) |
 | `apartment_modern` | mid / high (`tier`) | residential_multi | one unit of a 3 to 20 floor building |
 
+### Residential tower
+
+`residential_tower` (`residentialTowerTemplate`, `RESIDENTIAL_TOWER_DEFAULTS`) is the plan of an apartment skyscraper built from the layout of `game-floorplan-structure` (`skyscraperLayout`): 30 storeys by default (`floors`, 20 to 60), 2.8 m clear height, 9 m bays, a punched masonry facade, a plant floor every 25 storeys and a damper above 150 m. Every storey has the stairs, the elevators and the lobby in the core and the corridors around it; the ground floor has the entrance lobby (3 m door), the concierge and the bicycle room; a typical storey has six apartments (living, bedroom, kitchen, hall, bathroom) and a shared laundry and a storage room at the ends. `buildResidentialTower(options)` is the destructible tower of the same layout (core, piles, facade, wind). The numbers are options: `options.tower` takes any `SkyscraperOptions`, and `residentialTowerTemplate(preset, plan)` builds a template with other numbers to register. The zone `zt` (towers, 80 storeys and 320 m) is in the `br` region.
+
 ## Regions
 
 `register(engine, { region })` takes `'br'` or a `ResidentialRegion` object. A region carries the house paint swatches, the facade colour names and the zone table, all in `src/regions/<id>/`, so a `regions/us` can be added without changing templates. Region texts live in the locale files.

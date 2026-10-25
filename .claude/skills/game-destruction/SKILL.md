@@ -53,12 +53,13 @@ Quem possui as transformações (renderizador ou física) chama `setTransform`; 
 | `SOILS`, `SOIL_DEFAULTS`, `pileCapacity`, `pileLength`, `footingSoil`, `solveFoundation` | solo e fundação: classes de solo (NBR 6122), resistência de estaca (Décourt-Quaresma), comprimento até o chão firme, equilíbrio do corpo rígido sobre as molas |
 | `sizeRebar`, `bearingWallThickness`, `FLEXURE_DEFAULTS`, `MASONRY_DEFAULTS` | taxa de aço de viga/laje armada por dimensionamento (até 4%); espessura de parede portante por andar (γf 1,4, γm 2,0, mín. 0,14 m); números da flexão e da alvenaria |
 | `assemblyPart(id, { id, width, height, position })`, `ASSEMBLIES`, `registerAssembly`, `getAssembly` | parede pronta a partir de uma das 8 montagens (`brick_wall_plastered`, `concrete_block_wall`, `reinforced_concrete`, `drywall`, `wood_frame_wall`, `log_wall`, `sheet_metal_shack`, `glass_pane`) |
+| `wind` (option), `WIND_DEFAULTS`, `WIND_TERRAIN`, `world.setWind`, `analyzeWind`, `damperTuning` | vento e balanço (desligado por padrão): pressão NBR 6123 por altura, parede + pórtico, deriva H/500, tombamento, rajada e amortecedor de massa (`PartSpec.damper`); `ObjectState.wind`, evento `sway` |
 | `inferJoints`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS` | juntas (screw, bolt, weld, mortar, rebar...) |
 | `checkDestructible`, `checkHit`, `IMPACT_CONTRACT` | validar um `DestructibleImpl` ou um golpe contra o contrato |
 | `resolveStrings(locale)`, `locales` | nomes em `en` e `pt-BR` |
 
 Eventos: `damage`, `dent`, `hole`, `crack`, `ricochet`, `debris`, `fracture`, `detach`, `disassemble_progress`, `ignite`, `extinguish`, `burnout`, `melt`,
-`drip`, `leak`, `explode`, `primed`, `stress`, `collapse`, `spall`, `stage`, `expose`, `destroyed`.
+`drip`, `leak`, `explode`, `primed`, `stress`, `sway`, `collapse`, `spall`, `stage`, `expose`, `destroyed`.
 
 ## Compõe com
 - `@adatechnology/game-contracts`: dono dos tipos de golpe, evento e `DestructibleImpl` (este pacote os reexporta).

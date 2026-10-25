@@ -21,7 +21,7 @@ export interface DestructibleSpecOptions {
   /** How finely the walls are split (default `panels`; `coarse` is one part per wall as the Visor de casas 3D builds it). */
   wallDetail?: WallDetail
   /**
-   * Cuts the concrete slabs into panels with a beam under each edge, and adds the pillars those beams and the bond beams need (design T10 §10): `true` for
+   * Cuts the concrete slabs into panels with a beam under each edge, and adds the pillars those beams and the bond beams need (design T10 §12): `true` for
    * `SLAB_PANEL_DEFAULTS`, options to change them, `false` for the slab as one piece, as the Visor de casas 3D describes it. Default `true`.
    */
   slabPanels?: boolean | Partial<SlabPanelOptions>

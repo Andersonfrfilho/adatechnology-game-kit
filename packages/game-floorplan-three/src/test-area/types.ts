@@ -2,8 +2,8 @@ import type { HouseRendererOptions } from '../types.js'
 
 /** The part of the floorplan engine (`engine` of `@adatechnology/game-floorplan`, with the content packs the page registered) the test area reads. */
 export interface FloorplanEngineLike {
-  generate(template: string, options?: { seed?: number; state?: string }): any
-  listTemplates(): Array<{ id: string; name?: string; floors?: number }>
+  generate(template: string, options?: { seed?: number; state?: string; floors?: number }): any
+  listTemplates(): Array<{ id: string; name?: string; floors?: number; floorRange?: number[] | null }>
   listStates(): string[]
   translate?(namespace: any, key: string, locale?: string, vars?: Record<string, string | number>): string
 }

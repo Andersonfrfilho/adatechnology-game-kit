@@ -11,9 +11,9 @@ beforeAll(() => {
 const flatten = (o: any, p = ''): string[] => Object.entries(o).flatMap(([k, v]) => (v && typeof v === 'object' ? flatten(v, p + k + '.') : [p + k]))
 
 describe('residential pack', () => {
-  it('registers the ten templates under their English ids', () => {
+  it('registers the eleven templates under their English ids', () => {
     expect(residentialTemplateIds.slice().sort()).toEqual(
-      ['apartment_basic', 'apartment_modern', 'budget_semi_detached', 'budget_slab_house', 'high_end_contemporary', 'mansion', 'mid_modern_single_storey', 'mid_modern_townhouse', 'single_storey_a', 'townhouse'].sort(),
+      ['apartment_basic', 'apartment_modern', 'budget_semi_detached', 'budget_slab_house', 'high_end_contemporary', 'mansion', 'mid_modern_single_storey', 'mid_modern_townhouse', 'residential_tower', 'single_storey_a', 'townhouse'].sort(),
     )
     const ids = engine.listTemplates().map((t) => t.id)
     for (const id of residentialTemplateIds) expect(ids).toContain(id)
@@ -76,7 +76,8 @@ describe('urban zoning (region br)', () => {
       })
       expect(ok.length, `${id} fits no zone`).toBeGreaterThan(0)
     }
-  })
+    // the residential tower has 30 storeys by default: a few seconds a zone
+  }, 180000)
 
   it('a plan that violates a zone is caught', () => {
     const apartment = engine.generate('apartment_modern', { seed: 1 })

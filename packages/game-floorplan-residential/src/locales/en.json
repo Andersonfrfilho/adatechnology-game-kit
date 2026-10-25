@@ -65,7 +65,12 @@
     "upper_floor_2": "Second upper floor",
     "veranda": "Veranda",
     "veranda_gourmet": "Gourmet veranda",
-    "void_living": "Living room void"
+    "void_living": "Living room void",
+    "concierge": "Concierge",
+    "bike_room": "Bicycle room",
+    "lobby_entrance": "Entrance lobby",
+    "laundry_room": "Laundry room",
+    "storage_room": "Storage room"
   },
   "templates": {
     "single_storey_a": "House type A (single storey)",
@@ -77,7 +82,8 @@
     "mid_modern_single_storey": "Modern single-storey house (mid-range)",
     "mid_modern_townhouse": "Modern townhouse (mid-range)",
     "high_end_contemporary": "High-end contemporary house",
-    "apartment_modern": "Apartment (mid or high end)"
+    "apartment_modern": "Apartment (mid or high end)",
+    "residential_tower": "Residential tower"
   },
   "styles": {
     "budget": "Budget",
@@ -116,6 +122,7 @@
     "zr1": "ZR1 – Low-density residential",
     "zr_ap": "ZR-AP – High-end gated residential",
     "zr2": "ZR2 – Medium-density residential",
-    "zr3_zm": "ZR3 / ZM – Mixed use"
+    "zr3_zm": "ZR3 / ZM – Mixed use",
+    "zt": "ZT – Towers"
   }
 }

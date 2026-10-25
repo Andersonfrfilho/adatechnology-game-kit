@@ -410,7 +410,7 @@ function supportBondBeam(context: Context, plate: StructurePart): void {
 }
 
 /**
- * The slabs of concrete cut into panels with beams (`SlabPanelOptions`): see `T10-estrutura-real.md` §10. `input` is the structure as
+ * The slabs of concrete cut into panels with beams (`SlabPanelOptions`): see `T10-estrutura-real.md` §12. `input` is the structure as
  * `toDestructibleSpec` has it (walls with their roles), and the result has the panels, the beams, the pillars they need and the supports re-pointed.
  */
 export function applySlabPanels(input: PartsAndSupports, structure: Structure, options: SlabPanelOptions): PartsAndSupports {

@@ -112,6 +112,23 @@ await shot('burning-sofa', () => {
   r.look([0.4, 1.2, -2.2], [0, 0.3, -4])
 })
 
+// the player's body: hidden in first person (the default), shown after V, with the startup hint in the log and the V hint on the HUD
+await page.goto(`${url}?ui=1`)
+await page.waitForFunction(() => window.__testRoom, null, { timeout: 60000 })
+const before = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, hint: window.__testRoom.log.entries().some((e) => /\bV\b/.test(e.text)) }))
+await page.keyboard.press('KeyV')
+await page.evaluate(() => {
+  const r = window.__testRoom
+  r.spawn('fridge', [-1.5, 0, -2])
+  r.look([0, 1.7, 3.5], [0, 1.2, -8])
+  for (let i = 0; i < 40; i++) r.update(0.02)
+})
+await page.waitForTimeout(400)
+await page.screenshot({ path: join(shotsDir, 'third-person.png') })
+const after = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, help: document.querySelector('.tr-help')?.textContent ?? '' }))
+const bodyOk = before.mode === 'first' && before.visible === false && before.hint && after.mode === 'third' && after.visible === true && /V:/.test(after.help)
+console.log(`${bodyOk ? 'PASS' : 'FAIL'}  the player body: hidden in first person, shown after V, hint on the HUD and in the log`, JSON.stringify({ before, after: { mode: after.mode, visible: after.visible } }))
+
 // the behaviour log of a full run
 await page.goto(`${url}?scenario=all`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoomReport, null, { timeout: 600000 })
@@ -119,7 +136,7 @@ const ndjson = await page.evaluate(() => window.__testRoom.log.toNDJSON())
 writeFileSync(join(shotsDir, 'log.ndjson'), ndjson)
 
 await browser.close()
-let bad = report.failed > 0
+let bad = report.failed > 0 || !bodyOk
 if (external.length) {
   console.log('external requests:', external)
   bad = true
