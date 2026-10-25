@@ -41,6 +41,10 @@ const HAND_OFFSET: [number, number, number] = [0.2, -0.2, -0.42]
 /** A handgun is held in both hands, so it rides higher and nearer the middle than a long gun: both hands stay in the view. */
 const HANDGUN_OFFSET: [number, number, number] = [0.1, -0.12, -0.44]
 const HEAT_DISPLAY_MAX_FALLBACK = 120
+/** The weapon against a wall: it comes back as far as it needs to stay `margin` in front of it, up to `max` metres, at `rate` per second; the world is probed `probe` metres ahead. */
+export const WALL_PULL = { margin: 0.03, max: 0.7, rate: 14, probe: 3 }
+/** The shooting hand stays above this height of the view (-1 is the bottom edge, 0 the middle): a weapon held low (a pistol grip on a short body, a heavy gun) is raised, up to `max` metres, at `rate` per second. */
+export const HAND_IN_VIEW = { floor: -0.88, max: 0.18, rate: 10 }
 // the launcher has no calibre: its shot is the game's `explosao` class, at the volume of a mid-sized blast
 const LAUNCH_VOLUME = 0.6
 
@@ -61,6 +65,8 @@ export interface ViewmodelOptions {
   layers?: FxLayers
   /** Metres between the shooter and the listener, for the distance muffling of the shot sound (default 0). */
   soundDistance?: () => number
+  /** Where the world is: the distance from a point along a direction to the first surface (not the weapon in the hands), or null. The weapon in the hands comes back from a wall it would go through. */
+  contact?: LaserRaycast
   /** Told at every sound cue of a reload clip, at the moment the clip says it (also with no audio). */
   onSound?: (cue: { weapon: string; cue: string; profile: SoundProfile }) => void
   /** Builders of accessory models that replace or add to the ones the kit ships. */
@@ -209,6 +215,11 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     hold = null
     reloading = false
     magazineHand = 0
+    reach = 0
+    pull = 0
+    lift = 0
+    handHeight = 0
+    handDepth = 0
     rigStock(THREE, model, def)
     rigUnderbarrel(THREE, model, def)
     const length = new THREE.Box3().setFromObject(model.root).getSize(new THREE.Vector3()).x
@@ -269,11 +280,46 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     current.attachments.sync(fittedOf(tool.attachments))
   }
 
-  const place = (): void => {
+  // the weapon against a wall: how far it reaches in front of the eye (measured once, with no pull) and how far it is pulled back now
+  let reach = 0
+  let pull = 0
+  // how far the weapon is raised to keep the shooting hand in view, and where that hand was seen last (the height in the view and the depth in front of the eye)
+  let lift = 0
+  let handHeight = 0
+  let handDepth = 0
+  const ahead = new THREE.Vector3()
+  const up = new THREE.Vector3()
+  const seen = new THREE.Vector3()
+  const eyeTurn = new THREE.Quaternion()
+  const corner = new THREE.Vector3()
+  const bounds = new THREE.Box3()
+  const measureReach = (current: Session): number => {
+    bounds.setFromObject(current.model.root)
+    let farthest = 0
+    for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) farthest = Math.max(farthest, corner.set(x, y, z).sub(camera.position).dot(ahead))
+    return farthest
+  }
+
+  const place = (dt = 0): void => {
     const family = session?.model.parts.family
     const [x, y, z] = family === 'pistol' || family === 'revolver' ? HANDGUN_OFFSET : HAND_OFFSET
     hand.position.set(x, y, z).applyQuaternion(camera.quaternion).add(camera.position)
     hand.quaternion.copy(camera.quaternion)
+    if (session && handDepth > 0.05 && 'fov' in camera) {
+      const tanHalf = Math.tan((((camera as THREE_NS.PerspectiveCamera).fov ?? 70) * PI) / 360)
+      const want = Math.max(0, Math.min(HAND_IN_VIEW.max, lift + (HAND_IN_VIEW.floor - handHeight) * tanHalf * handDepth))
+      lift += (want - lift) * Math.min(1, dt * HAND_IN_VIEW.rate)
+      if (lift > 1e-4) hand.position.addScaledVector(up.set(0, 1, 0).applyQuaternion(camera.quaternion), lift)
+    }
+    hand.updateMatrixWorld(true)
+    if (!options.contact || !session) return
+    ahead.set(0, 0, -1).applyQuaternion(camera.quaternion)
+    if (reach === 0) reach = Math.max(0.01, measureReach(session))
+    const free = options.contact(camera.position, ahead, WALL_PULL.probe)
+    const want = free === null ? 0 : Math.max(0, Math.min(WALL_PULL.max, reach + WALL_PULL.margin - free))
+    pull += (want - pull) * Math.min(1, dt * WALL_PULL.rate)
+    if (pull < 1e-4) return
+    hand.position.addScaledVector(ahead, -pull)
     hand.updateMatrixWorld(true)
   }
 
@@ -333,7 +379,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     update(dt) {
       clock += dt
       if (session) {
-        place()
+        place(dt)
         player?.update(dt)
         const wantsMagazine = reloading || options.tool?.().reloading === true
         magazineHand += ((wantsMagazine ? 1 : 0) - magazineHand) * Math.min(1, dt * HAND_HOLD.magRate)
@@ -342,7 +388,11 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
         session.attachments?.update()
         glow(tool)
         if (tool && session.def.action.kind === 'flame') {
-          if (tool.ammo < lastAmmo) flameJet(heavy(session), dt, session.model.parts.launcherType === 'flame' ? 1 : 0.6)
+          if (tool.ammo < lastAmmo) {
+            flameJet(heavy(session), dt, session.model.parts.launcherType === 'flame' ? 1 : 0.6)
+            // a flamethrower has no shot event: the trigger is down while the fuel burns
+            lastShot = clock
+          }
           lastAmmo = tool.ammo
         }
         if (tool && tool.heat !== undefined && tool.heat * heatMax > 10 && session.model.parts.muzzle) {
@@ -377,6 +427,11 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       const targets = targetsOf(THREE, hold, session.model.root.getWorldQuaternion(rootQuaternion), magazineHand, hold.works ? workWeights(hold.works, player?.running ?? []) : undefined)
       const trigger = session.model.parts.trigger
       if (trigger) targets.fingers = { index: indexCurl(trigger.rotation.z - triggerRest, clock - lastShot) }
+      if (targets.R && 'fov' in camera) {
+        seen.set(...targets.R.position).sub(camera.position).applyQuaternion(eyeTurn.copy(camera.quaternion).invert())
+        handDepth = -seen.z
+        handHeight = handDepth > 0.05 ? seen.y / handDepth / Math.tan((((camera as THREE_NS.PerspectiveCamera).fov ?? 70) * PI) / 360) : 0
+      }
       return targets
     },
     get inHand() {

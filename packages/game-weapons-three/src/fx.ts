@@ -52,6 +52,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     ...(options.condition ? { condition: options.condition } : {}),
     ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
     ...(options.raycast ? { raycast: options.raycast } : {}),
+    ...(options.contact ? { contact: options.contact } : {}),
     ...(options.effects ? { effects: options.effects } : {}),
   })
   return {

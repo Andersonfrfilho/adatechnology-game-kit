@@ -354,6 +354,8 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         audio.dispose()
         audio = createWeaponAudio(undefined, { ...seedOption, engine: lentEngine })
       }
+      let simulatedMs = 0
+      const offClock = lent.onFrame((dt) => (simulatedMs += dt * 1000))
       const created = createWeaponFx({
         onSound: ({ weapon, cue, profile }) => lent.log(fill(text.soundCue, { weapon: arsenal.name(weapon), cue: text.soundCues[cue] ?? cue }), { weapon, cue, weight: profile.weight, material: profile.material }, 'sound'),
         THREE: lent.THREE as typeof THREE_NS,
@@ -365,6 +367,8 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         tool: lent.tool,
         soundDistance: () => soundDistance,
         raycast: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera),
+        // the weapon against a wall asks as often as the laser, on the clock of the simulation (so a fast-forwarded room measures as often per frame)
+        contact: createLaserRaycast(lent.THREE as typeof THREE_NS, lent.scene as THREE_NS.Scene, lent.camera as THREE_NS.Camera, { now: () => simulatedMs }),
         ...(lent.effects ? { effects: lent.effects } : {}),
         ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
         ...(options.condition ? { condition: options.condition } : {}),
@@ -416,6 +420,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         offBench?.()
         offEvents()
         offFrame()
+        offClock()
         offHands?.()
         created.dispose()
         audio?.dispose()
