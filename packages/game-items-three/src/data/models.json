@@ -473,11 +473,11 @@
     "id": "honey_jar",
     "teamId": "mel",
     "teamBox": [
-      0.808,
+      0.804,
       1,
-      0.808
+      0.804
     ],
-    "scale": 0.1
+    "scale": 0.099668
   },
   {
     "id": "bread",
