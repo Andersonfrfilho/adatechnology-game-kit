@@ -1263,11 +1263,11 @@
     "id": "sickle",
     "teamId": "foice",
     "teamBox": [
-      4,
+      4.0085,
       0.352,
-      3.5
+      3.4971
     ],
-    "scale": 0.1
+    "scale": 0.099767
   },
   {
     "id": "cast_iron_skillet",
