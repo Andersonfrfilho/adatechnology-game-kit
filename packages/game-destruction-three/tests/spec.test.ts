@@ -183,3 +183,23 @@ describe.skipIf(!hasCore)('a root scaled down to metres', () => {
     expect(local.y).toBeCloseTo(0, 2)
   })
 })
+
+describe.skipIf(!hasCore)('userData.destructionSkin', () => {
+  it('keeps a label on the part under it instead of making a part of its own', async () => {
+    const { specFromObject3D } = await import('../src/spec')
+    const g = new THREE.Group()
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.1, 12), new THREE.MeshStandardMaterial())
+    body.userData.destructionMaterial = 'aluminium'
+    const label = new THREE.Mesh(new THREE.CylinderGeometry(0.0332, 0.0332, 0.05, 12), new THREE.MeshStandardMaterial())
+    label.userData.destructionMaterial = 'paper'
+    label.userData.destructionSkin = true
+    g.add(body, label)
+    g.updateMatrixWorld(true)
+    const { spec, parts } = specFromObject3D(THREE, g)
+    expect(spec.parts).toHaveLength(1)
+    expect(spec.parts[0].material).toBe('aluminium')
+    expect(Object.values(parts)[0]).toEqual([body, label])
+    g.userData.destructionMass = 0.35
+    expect(specFromObject3D(THREE, g).spec.parts[0].mass).toBeCloseTo(0.35, 6)
+  })
+})

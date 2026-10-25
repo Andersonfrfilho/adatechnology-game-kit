@@ -1,0 +1,5 @@
+{
+  "soda_can": { "hollow": true, "welded": true, "skinTags": ["paper"], "materials": { "metal": "aluminium" } },
+  "beer_can": { "hollow": true, "welded": true, "skinTags": ["paper"], "materials": { "metal": "aluminium" } },
+  "empty_can": { "hollow": true, "welded": true, "skinTags": ["paper"], "materials": { "metal": "aluminium" } }
+}

@@ -323,7 +323,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
       latestTHREE = T
-      const model = buildItem(T, drawable(def), { wear: stageFor(def) })
+      const model = buildItem(T, drawable(def), { wear: stageFor(def), destructible: true })
       register({ id: `${ITEM_PREFIX}${def.id}`, itemId: def.id, group: 'shelf', category: def.category, def, kind: model.kind, size: def.size, root: model.root })
       return model.root
     },
@@ -335,8 +335,8 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     movable: false,
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
-      const subject: DrawableItem = { id: model.id, category: model.def?.category ?? '', size: model.size, model: model.id }
-      const built = buildItem(T, subject, { wear: stageFor(model.def) })
+      const subject: DrawableItem = { id: model.id, category: model.def?.category ?? '', size: model.size, model: model.id, ...(model.def ? { weight: model.def.weight } : {}) }
+      const built = buildItem(T, subject, { wear: stageFor(model.def), destructible: true })
       register({ id: `${SHOWCASE_PREFIX}${model.id}`, itemId: model.id, group: 'showcase', category: model.def?.category ?? '', def: model.def, kind: built.kind, size: model.size, root: built.root })
       return built.root
     },
