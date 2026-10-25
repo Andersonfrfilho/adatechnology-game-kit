@@ -713,9 +713,9 @@
     "id": "ceftriaxone",
     "teamId": "ceftriaxona",
     "teamBox": [
-      1.002,
+      1,
       0.6,
-      0.302
+      0.3
     ],
     "scale": 0.1
   },
