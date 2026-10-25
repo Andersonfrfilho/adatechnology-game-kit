@@ -1658,5 +1658,15 @@
       0.1725
     ],
     "scale": 1
+  },
+  {
+    "id": "car_key",
+    "teamId": "chave_carro",
+    "teamBox": [
+      0.06,
+      0.045,
+      0.015
+    ],
+    "scale": 1
   }
 ]

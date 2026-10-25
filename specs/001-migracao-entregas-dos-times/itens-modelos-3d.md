@@ -342,7 +342,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 |---|---|---|---|---|---|---|
 | [x] | Chave de casa | `chave_casa` | `house_key` | 0,02 kg | comum | 85 x 46 x 4 mm |
 | [ ] | Cadeado com chave | `cadeado_chave` | `padlock_key` | 0,3 kg | comum | 50 x 80 x 25 mm |
-| [ ] | Chave de carro | `chave_carro` | `car_key` | 0,02 kg | comum | 60 x 45 x 15 mm |
+| [x] | Chave de carro (kit) | `chave_carro` | `car_key` | 0,02 kg | comum | 60 x 45 x 15 mm |
 | [ ] | Chave de cela | `chave_cela` | `cell_key` | 0,05 kg | raro | 120 x 30 x 8 mm |
 | [ ] | Chave do cofre da delegacia | `chave_cofre` | `safe_key` | 0,05 kg | único | 70 x 25 x 5 mm |
 | [ ] | Chave do gerador do hospital | `chave_gerador` | `generator_key` | 0,05 kg | único | 80 x 30 x 6 mm |
