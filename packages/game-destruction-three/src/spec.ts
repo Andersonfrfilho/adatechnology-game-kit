@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import { guessMaterial, inferJoints } from '@adatechnology/game-destruction'
+import { guessMaterial, inferJoints, MATERIALS, partMass } from '@adatechnology/game-destruction'
 import type { JointKind, JointSpec, MaterialId, PartSpec } from '@adatechnology/game-destruction'
 import type { Mesh, Object3D, SpecFromObjectOptions, SpecFromObjectResult, ThreeNamespace } from './types'
 
@@ -11,7 +11,11 @@ interface Entry {
   explicitId: string | null
   fill?: number
   hollow: boolean
+  /** `userData.destructionSkin`: a layer drawn on a part (a label, a coat), never a part of its own. */
+  skin: boolean
   tags?: string[]
+  /** `userData.destructionContains`: the fluid the part holds (a hole in it makes it leak). */
+  contains?: { fluid: string; liters: number }
   /** Part id wished by the host (`userData.destructionPart`). */
   fixedId: boolean
   name: string
@@ -26,6 +30,13 @@ export interface PartHint {
   material?: string
   parent?: string
   kind?: string
+}
+
+/** Read `userData.destructionContains` (`{ fluid, liters }`); undefined when it holds nothing. */
+function containsOf(value: unknown): { fluid: string; liters: number } | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const v = value as Record<string, unknown>
+  return typeof v.fluid === 'string' && typeof v.liters === 'number' && v.liters > 0 ? { fluid: v.fluid, liters: v.liters } : undefined
 }
 
 /** Read `userData.destructionPart` (string or object with an `id`); null when it names no part. */
@@ -59,19 +70,29 @@ function sizeOf(box: THREE_NS.Box3): [number, number, number] {
   return [box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z]
 }
 
+/** Inverse of the root's world pose without its scale: world space to the metric frame the spec and the world's `setTransform` use. */
+export function specFrameInverse(THREE: ThreeNamespace, root: Object3D): THREE_NS.Matrix4 {
+  root.updateMatrixWorld(true)
+  const position = new THREE.Vector3()
+  const quaternion = new THREE.Quaternion()
+  root.matrixWorld.decompose(position, quaternion, new THREE.Vector3())
+  return new THREE.Matrix4().compose(position, quaternion, new THREE.Vector3(1, 1, 1)).invert()
+}
+
 /**
  * Build a `DestructibleSpec` from a three.js object: one part per mesh (meshes sharing `userData.destructionPart` become one part), each an
- * axis-aligned box in the root's space (rotation omitted), with the material taken from `options.materialOf`, `userData.destructionMaterial`
+ * axis-aligned box in metres in the root's frame (its position and rotation removed, its world scale kept; rotation omitted), with the material taken from `options.materialOf`, `userData.destructionMaterial`
  * or a guess from the names. Tiny meshes are merged into the part they overlap most; joints are inferred from touching parts.
  *
+ * `userData.destructionContains` (`{ fluid, liters }`) makes the part a container: a hole through it leaks. `root.userData.destructionMass` (kg) fixes the total mass, split between the parts in proportion to their volume, density and fill.
+ * A mesh with `userData.destructionSkin` (a label, a coat) joins the part it overlaps most instead of becoming a part: it stays drawn and bound to that part (decals, dents) but never breaks off.
  * Meshes that are invisible or have `userData.destructionIgnore` (or sit under such an object) are skipped. The result also tells which meshes
  * became which part, ready to be passed to `bind`.
  */
 export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options: SpecFromObjectOptions = {}): SpecFromObjectResult {
   const fallback = options.fallback ?? 'plastic'
   const minSize = options.minSize ?? 0.015
-  root.updateMatrixWorld(true)
-  const inv = root.matrixWorld.clone().invert()
+  const inv = specFrameInverse(THREE, root)
 
   // 1. collect meshes -> entries (grouped by an explicit part name)
   const entries: Entry[] = []
@@ -95,8 +116,10 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
           fallback
         const explicit = hint?.id ?? null
         const hollow = ud.hollow === true || /hollow/i.test(o.name)
+        const skin = ud.destructionSkin === true
         const fill = options.fillOf?.(o, material)
         const tags = Array.isArray(ud.destructionTags) ? (ud.destructionTags as string[]) : undefined
+        const contains = containsOf(ud.destructionContains)
         const existing = explicit ? byKey.get(explicit) : undefined
         if (existing) {
           const before = sizeOf(existing.box)
@@ -106,9 +129,11 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
           existing.meshes.push(o)
           if (ns[0] * ns[1] * ns[2] > bv) existing.material = material
           existing.hollow = existing.hollow || hollow
+          existing.skin = existing.skin && skin
           if (fill !== undefined) existing.fill = fill
+          if (contains) existing.contains = contains
         } else {
-          const e: Entry = { key: explicit ?? `m${entries.length}`, meshes: [o], box, material, explicitId: explicit, fill, hollow, tags, fixedId: !!explicit, name: o.name, parent: hint?.parent, jointKind: hint?.kind as JointKind | undefined }
+          const e: Entry = { key: explicit ?? `m${entries.length}`, meshes: [o], box, material, explicitId: explicit, fill, hollow, skin, tags, fixedId: !!explicit, ...(contains ? { contains } : {}), name: o.name, parent: hint?.parent, jointKind: hint?.kind as JointKind | undefined }
           entries.push(e)
           if (explicit) byKey.set(explicit, e)
         }
@@ -118,7 +143,7 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
   }
   visit(root)
 
-  // 2. merge tiny meshes into the touching part they overlap most
+  // 2. merge tiny meshes and skins into the touching part they overlap most
   const eps = 0.005
   const overlapVolume = (a: THREE_NS.Box3, b: THREE_NS.Box3): number => {
     const x = Math.min(a.max.x, b.max.x) - Math.max(a.min.x, b.min.x) + eps
@@ -129,7 +154,7 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
   const largest = (e: Entry) => Math.max(...sizeOf(e.box))
   const kept: Entry[] = []
   const tiny: Entry[] = []
-  for (const e of entries) (!e.fixedId && largest(e) < minSize ? tiny : kept).push(e)
+  for (const e of entries) (e.skin || (!e.fixedId && largest(e) < minSize) ? tiny : kept).push(e)
   for (const t of tiny) {
     let best: Entry | null = null
     let bestV = 0
@@ -186,10 +211,21 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
       part.thickness = Math.max(minSide, 0.0005)
     }
     if (e.tags) part.tags = [...e.tags]
+    if (e.contains) part.contains = { ...e.contains }
     const ao = options.anchorBelow ?? -1
     if (ao >= 0 && e.box.min.y <= ao) part.anchored = true
     parts.push(part)
     meshesOf[id] = e.meshes
+  }
+
+  const knownMass = root.userData?.destructionMass
+  if (typeof knownMass === 'number' && knownMass > 0) {
+    const shares = parts.map((p) => {
+      const material = MATERIALS.find((m) => m.id === p.material)
+      return material ? partMass(p, material) : 0
+    })
+    const total = shares.reduce((a, b) => a + b, 0)
+    if (total > 0) parts.forEach((p, i) => (p.mass = (knownMass * shares[i]) / total))
   }
 
   const spec: SpecFromObjectResult['spec'] = { parts }

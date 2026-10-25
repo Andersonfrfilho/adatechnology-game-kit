@@ -2055,6 +2055,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return r.ok ? store : null
   }
 
+  const LIGHTS_CHECK_MS = 250
+
+  /** Renders the scene once with throwaway meshes of the materials that decals, effects and liquids make on demand (every light count is another set of programs), so that the first shot does not build them. */
+  const warmUp = (): void => {
+    const probes = [renderer.warmUpProbes(), vfx.warmUpProbes(), fluidView.warmUpProbes()]
+    const groups = probes.map((probe) => probe.group as THREE_NS.Object3D)
+    scene.add(...groups)
+    gl.render(scene, camera)
+    scene.remove(...groups)
+    for (const probe of probes) probe.dispose()
+  }
+
   const loadModule = (mod: TestableModule<ScenarioContext>): ModuleReport => {
     const report: ModuleReport = { module: mod.id, items: [], scenarios: [], ok: true, problems: [] }
     const fail = (problem: string): void => {
@@ -2357,6 +2369,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     equip,
     openArea,
     loadModule,
+    warmUp,
     animations: animationsOf,
     playAnimation,
     bench(moduleId) {
@@ -2493,8 +2506,26 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   if (ownRenderer && typeof requestAnimationFrame === 'function') {
     let last = performance.now()
     ownsLoop = true
+    let nextLightsCheck = 0
+    let warmedLights = ''
+    // modules add lights after the first frame, and each light count is another set of programs: warm again when the lights change
+    const lightsKey = (): string => {
+      let key = ''
+      scene.traverseVisible((object) => {
+        if ((object as THREE_NS.Light).isLight) key += `${object.type[0]}${object.castShadow ? 's' : ''}`
+      })
+      return key
+    }
     const loop = (now: number): void => {
       raf = requestAnimationFrame(loop)
+      if (now >= nextLightsCheck) {
+        nextLightsCheck = now + LIGHTS_CHECK_MS
+        const key = lightsKey()
+        if (key !== warmedLights) {
+          warmedLights = key
+          warmUp()
+        }
+      }
       const realDelta = (now - last) / 1000
       roomMetrics.frame(realDelta)
       const dt = Math.min(0.05, realDelta)

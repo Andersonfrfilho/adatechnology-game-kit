@@ -148,6 +148,31 @@ export function createFluidRenderer(THREE: ThreeLib, options: FluidRendererOptio
       bodies.delete(containerId)
     },
 
+    warmUpProbes() {
+      // each kind of mesh is drawn with the attributes that are part of its program: a plain tube or body, drops instanced, a stain with a colour per vertex that carries alpha
+      const plainGeometry = new THREE.BufferGeometry()
+      plainGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3))
+      plainGeometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(9), 3))
+      const stainGeometry = plainGeometry.clone()
+      stainGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(12), 4))
+      const { plain, instanced, coloured } = materials.probes()
+      const meshes = [
+        ...plain.map((material) => new THREE.Mesh(plainGeometry, material)),
+        ...instanced.map((material) => new THREE.InstancedMesh(dropGeometry, material, 1)),
+        ...coloured.map((material) => new THREE.Mesh(stainGeometry, material)),
+      ]
+      const group = new THREE.Group()
+      for (const mesh of meshes) mesh.frustumCulled = false
+      group.add(...meshes)
+      return {
+        group,
+        dispose() {
+          plainGeometry.dispose()
+          stainGeometry.dispose()
+        },
+      }
+    },
+
     update(dt: number) {
       if (disposed) return
       time += dt

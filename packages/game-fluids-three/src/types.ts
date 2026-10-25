@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { ThreeLib as VfxThreeLib } from '@adatechnology/game-vfx-three'
 import type { FluidWorld, Vec3 } from '@adatechnology/game-fluids'
@@ -79,6 +80,8 @@ export interface FluidRenderer {
   /** Draw the liquid of a world container inside `object` (a volume clipped by the liquid surface, plus steam). */
   bindContainer(containerId: string, object: THREE_NS.Object3D, options?: BindOptions): void
   unbindContainer(containerId: string): void
+  /** Meshes that use the materials of the liquid bodies, streams and stains, to render once so that the first leak does not build their shader programs in the middle of a frame. */
+  warmUpProbes(): WarmUpProbes
   /** Advance the visuals (call it after `fluids.update(dt)`). */
   update(dt: number): void
   /** Remove every stain, stream and particle (the bindings stay). */
