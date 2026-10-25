@@ -1,0 +1,19 @@
+{
+  "source": {
+    "file": "site/pages/jogo/zombiada-modo-livre.html",
+    "variable": "PB specs[0] ('você') and PLAYER_COR",
+    "note": "The team game's player body: the Bestiário/Elenco human body. Overridable by `createPlayerAvatar(THREE, { spec, shirtColor })`."
+  },
+  "spec": {
+    "type": "Lento",
+    "human": true,
+    "decay": 0,
+    "seed": 4242,
+    "skin": "b07a52",
+    "fem": false,
+    "life": 1,
+    "hs": "short",
+    "hair": "2a1e16"
+  },
+  "shirtColor": "3d5a73"
+}

@@ -46,6 +46,11 @@ limbs.launch({ x, z, kind: 'leg', color, blood: { color, dried, bleeds: true } }
 `createCharactersTestModule({ packs, undeadTypes, professions, createUndead, fluids?, film?, bloodOf?, sound? })` (`examples/characters-test-area`, `?area=characters`, global `CharactersArea`): os 13 tipos e as profissões como `DestructibleImpl` que a sala atinge, fileira de tiro com 5, multidão instanciada.
 Antes de carregar, `registerBodyMaterial(room.world)` põe o material `flesh` no mundo. Bancada: decomposição, faixa de idade, modelo de penetração, regra de morte, detalhe, momento, pose, cascata, golpe, proteção; ações: disparar o golpe, curar, matar, morder (acelerado), pôr 100 ou 1000 na multidão; camadas: cápsulas, juntas, sangramento, só olhos, vetores de velocidade; 11 cenários.
 
+## Corpo do jogador
+- `createPlayerAvatar(THREE, options?)` é o corpo do jogador do jogo da equipe (humano do Bestiário, `presets/player-avatar.json`). `update(dt, { speed, crouch, down, armed, pitch, hip })` anda com a velocidade do chão, agacha, derruba (caído) e arma o braço de mira (`(pitch + 1) / 3`).
+- `hand('R' | 'L')` devolve o soquete da mão (a arma vai na R, em -x). `play(clip, { onEvent })` sobrepõe um `PoseClip` (`channels: 'upper'` deixa as pernas para a passada) e dispara `impact` e `phase` uma vez; `stop()` volta.
+- `toRoomAvatar(player)` adapta o corpo para `room.setAvatar`, e `createAvatarTestModule({ avatar, camera, state })` é a área `avatar_area` (`AVATAR_AREA_ID`) no `game-test-room`: 1ª/3ª pessoa, agachar, cair, armar e os clipes registrados.
+
 ## Notas
 - O lado é decidido pelo sinal de x (osso 2/4/7/9 em x negativo), qualquer que seja o nome no spec.
 - O `buildInstancedBody` com `GUIDE` é um desvio assumido (P1): as juntas seguem o spec, os tamanhos das peças seguem as distâncias entre juntas.

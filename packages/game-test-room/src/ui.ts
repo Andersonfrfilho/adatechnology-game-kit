@@ -56,6 +56,8 @@ export interface HudState {
   blast: { shelter: boolean; fragmentHits: boolean; confinement: boolean }
   quality: string
   objects: number
+  /** The view when the room has a body (`null`: no body, no shortcut). */
+  camera: 'first' | 'third' | null
 }
 
 export interface UiOptions {
@@ -606,6 +608,9 @@ export function createUi(o: UiOptions): RoomUi {
       toolBox.textContent = ''
       toolBox.append(document.createTextNode(s.toolName))
       if (s.ammo) toolBox.append(mk('small', undefined, s.ammo))
+      if (s.camera) toolBox.append(mk('small', undefined, t(`camera.${s.camera}`)))
+      const helpText = s.camera ? `${t('ui.help')} · ${t('ui.help.camera')}` : t('ui.help')
+      if (help.textContent !== helpText) help.textContent = helpText
       if (s.status) status.textContent = s.status
       else if (!toastTimer) status.textContent = ''
       if (s.progress) {

@@ -20,6 +20,8 @@ import type { AnimationClipSpec, ControlValue, DestructibleImpl, EnvironmentBus,
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
+export type { RoomAvatar, RoomAvatarState, CameraMode, ThirdPersonOptions } from './avatar'
+import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions } from './avatar'
 
 export type ThreeNamespace = typeof THREE_NS
 
@@ -109,6 +111,12 @@ export interface TestRoomOptions {
   environment?: EnvironmentBus
   /** Show the built-in HUD and panels (default true). */
   ui?: boolean
+  /** The player's body (see `TestRoom.setAvatar`). */
+  avatar?: RoomAvatar
+  /** The view the room starts in (default `first`; the V key and `TestRoom.setCameraMode` change it). */
+  cameraMode?: CameraMode
+  /** The over-the-shoulder view of the `third` mode: distance, shoulder, height, wall probes. Defaults are the team game's. */
+  thirdPerson?: ThirdPersonOptions
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
   metrics?: readonly RoomMetricId[] | false
   /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
@@ -196,7 +204,7 @@ export interface TestRoom {
   update(dt: number): void
   /** Advance frames until the tool in hand has no phase left (the draw `setTool` plays, a reload, a cycle) or `maxSeconds` pass; plus one frame so the next pull is not inside the phase; returns the seconds waited. */
   waitUntilReady(maxSeconds?: number): number
-  on(type: 'spawn' | 'tool' | 'grab' | 'throw' | 'event', fn: (data: unknown) => void): () => void
+  on(type: 'spawn' | 'tool' | 'grab' | 'throw' | 'event' | 'camera', fn: (data: unknown) => void): () => void
   /** Tilt the held item by `rad` radians around its own x axis (hold Z in the room). Pouring and spilling follow from the tilt. */
   tilt(rad: number): void
   /** Open or close the tap over the table (default: toggle). Returns whether it is open. */
@@ -244,6 +252,21 @@ export interface TestRoom {
   playAnimation(clipId: string, objectId?: string): boolean
   /** The bench of a loaded module (default the active one: the module of the last `openArea`, else the last loaded with a bench), or null. */
   bench(moduleId?: string): BenchHandle | null
+  /**
+   * Show a body for the player (or none with null). The room adds `root` to the scene, puts it at the player's feet with the player's yaw every
+   * frame and calls `update` with the speed of the player's movement, Shift, the crouch/down set by `setAvatarState`, whether a firearm is in hand
+   * and the camera pitch. Hidden in first person, shown in third. In third person the carried item follows `avatar.hand('R')`. The previous
+   * avatar is taken out of the scene, not disposed.
+   */
+  setAvatar(avatar: RoomAvatar | null): void
+  readonly avatar: RoomAvatar | null
+  /** Crouch and knocked-down state a player module drives (merged over what is set; the room fills the rest). `armed` forces the armed arms (`null`: follow the tool in hand again). */
+  setAvatarState(state: { crouch?: boolean; down?: boolean; armed?: boolean | null }): void
+  /** What the avatar was last given. */
+  avatarState(): RoomAvatarState
+  /** `first` (the camera is the eye) or `third` (over the shoulder). V toggles it when a body is set. Logged as a `camera` action. */
+  setCameraMode(mode: CameraMode): void
+  readonly cameraMode: CameraMode
   /** Room counters and the active module's metrics, read now. */
   /**
    * Shakes the camera for the render that follows, by the shake of the effects world, and answers the function that puts it back. The room's own loop

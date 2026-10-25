@@ -7,10 +7,12 @@
 //   ?area=furniture     open on one catalogue group (the groups the loaded modules add)
 //   ?quality=low|medium|high
 //   ?ui=0               hide the panels
+//   ?cam=third          start in third person (V toggles 1st/3rd person at any time; the player's body is in the room)
 //   ?arena=40           half size of the arena in metres (default 14): the houses area needs room for a whole lot
 //   ?bench.<moduleId>=size=2;smoke=0   bench state of that module (the page keeps it up to date as the controls change)
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
+import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
 
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
 /* global __ROOM_FULL__ */
@@ -47,8 +49,16 @@ const room = createTestRoom({
   },
 })
 
+// the player's body (the team game's player, @adatechnology/game-characters-three): seen in third person, hidden in first. V toggles.
+// The first person stays the default; pages that load an area (`window.__THREE` is for them) may start in third.
+room.setAvatar(toRoomAvatar(createPlayerAvatar(THREE)))
+if (params.get('cam') === 'third') room.setCameraMode('third')
+// V is the camera; say it once, in the room's language
+room.log.add({ channel: 'action', type: 'hint', text: locale === 'en' ? 'Press V for 1st/3rd person (your body shows in the 3rd).' : 'Aperte V para 1ª/3ª pessoa (seu corpo aparece na 3ª).' })
+
 // agents read the behaviour log from here, e.g. __testRoom.log.toNDJSON()
 window.__testRoom = room
+window.__THREE = THREE
 
 function start() {
   if (deferred) {

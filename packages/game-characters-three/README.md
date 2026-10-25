@@ -28,6 +28,27 @@ time.value += dt
 - `createCharacterSound(host.audio, { style? })`: `voice(typeId, 'idle' | 'alert' | 'special', position)` for the 13 undead types (`UNDEAD_VOICES`: the game's groans and scream, the art scene's `voice` groan, scream and leap, with the class rule of the page for the types it does not have), `body(event, position)` (wound = flesh, cut = sever, burst or split = gore), `player('grab' | 'bite' | 'hurt')`. The 16 recipes (`CHARACTER_SOUND_BANK`) leave the same trace as the team code.
 - `createFluidsBridge({ sink, film })` and `bloodLookOfAge(age)`: a `body` event throws drops of blood into the film, in the fresh and dry colours of the infection age (`ages.json`), `old_blood` for the thin ones.
 
+**Player avatar.** `createPlayerAvatar(THREE, options?)` is the team game's player body: the rich human of the Bestiário/Elenco built from `presets/player-avatar.json`
+(`{ type: 'Lento', human: true, seed: 4242, skin, hs: 'short', hair }`, shirt `0x3d5a73`), overridable with `{ spec, shirtColor, clips, blend, fallSeconds }`.
+
+```ts
+const player = createPlayerAvatar(THREE)
+scene.add(player.root)
+player.update(dt, { speed, crouch, down, armed, pitch, hip }) // the gait is tied to the ground speed (cadence and swing from `walkCadence`/`walkGait`)
+player.hand('R').add(weaponMesh) // a socket at the weapon hand
+player.play('grabbed_bitten_human', { onEvent: (event) => event.type === 'impact' && applyBlow() }) // or player.play(myClip); player.on('event', fn); player.stop()
+```
+
+Crouch, down and the aimed arms are derived literally from the game's GPU pose code (`BODY_CHUNK`, lines quoted in `src/player/avatar.ts`): crouch is thigh `-0.95`, knee `1.9`, trunk `+0.25`, hip `-0.35`;
+down turns the body about the hip (`±1.5` rad, face up or down by the phase) with the limbs of pose 2; `armed` follows `(pitch + 1) / 3`. `play` overlays a `PoseClip` of `@adatechnology/game-characters`
+(`channels: 'upper'` leaves the legs to the gait) with a 0.12 s blend, and fires its events (`impact`, `phase`) once through `onEvent` and `on('event')`. `hand('R')` is the weapon hand (the puppet's right, at -x).
+
+**In the test room.** `room.setAvatar(toRoomAvatar(player))` shows the body at the player's feet (`toRoomAvatar` only flips the pitch: the room counts a look up as positive, the team game a look down) and V switches between the first and the third person of
+`@adatechnology/game-test-room`. `createAvatarTestModule({ avatar, camera, state })` is the module of the area `avatar_area` (`AVATAR_AREA_ID`): bench buttons for the view (1st/3rd person), crouch, stand, fall, get up, armed on/off,
+one button per registered clip (`Tocar: grabbed_bitten_human`, `grab_bite_zombie`) and stop; the entries Soco, Empurrão, Chute and Tiro (corpo), shown disabled with the note that the animation is pending delivery by the Elenco team and that the rule is
+already in the Player area; metrics for the camera, the clip playing, the last clip event and the joints. Every action is a JSON line in the room log (`{"type":"avatar","action":"play_clip","clip":...}`), clip events included.
+The module takes the body, the view (`camera: { mode, set }`) and the state (`state: { set }`) by option and imports only `@adatechnology/game-contracts`.
+
 ## Geometry
 
 The builders (`createPersonBuilder`, `createBestBuilder`, `bakeBody`, `buildInstancedBody`, `createFlyingLimbs`, `createEye`) draw with
