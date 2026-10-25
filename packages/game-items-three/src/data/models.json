@@ -1938,5 +1938,15 @@
       0.0506
     ],
     "scale": 1
+  },
+  {
+    "id": "gas_cartridge",
+    "teamId": "cartucho_gas",
+    "teamBox": [
+      0.111,
+      0.165,
+      0.111
+    ],
+    "scale": 1
   }
 ]
