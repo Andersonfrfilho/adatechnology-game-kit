@@ -1668,5 +1668,15 @@
       0.015
     ],
     "scale": 1
+  },
+  {
+    "id": "cash",
+    "teamId": "dinheiro",
+    "teamBox": [
+      0.155,
+      0.01,
+      0.065
+    ],
+    "scale": 1
   }
 ]
