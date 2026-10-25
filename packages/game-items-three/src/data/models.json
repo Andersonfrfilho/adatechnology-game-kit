@@ -263,11 +263,11 @@
     "id": "potatoes",
     "teamId": "batata",
     "teamBox": [
-      2,
-      0.902,
-      1.402
+      1.9511,
+      0.9,
+      1.3608
     ],
-    "scale": 0.1
+    "scale": 0.101787
   },
   {
     "id": "biscuits",
