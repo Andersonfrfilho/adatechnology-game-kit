@@ -247,7 +247,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Mochila escolar (kit) | `mochila_escolar` | `backpack` | 0,5 kg | comum | 300 x 300 x 200 mm |
 | [x] | Mochila militar (kit) | `mochila_militar` | `military_backpack` | 1,8 kg | raro | 350 x 600 x 300 mm |
 | [x] | Pochete (kit) | `pochete` | `fanny_pack` | 0,15 kg | comum | 250 x 100 x 120 mm |
-| [ ] | Saco de lixo | `saco_lixo` | `trash_bag` | 0,05 kg | comum | 250 x 25 x 200 mm |
+| [x] | Saco de lixo (kit) | `saco_lixo` | `trash_bag` | 0,05 kg | comum | 250 x 25 x 200 mm |
 | [x] | Sacola de mercado (kit) | `sacola` | `shopping_bag` | 0,02 kg | comum | 300 x 20 x 200 mm |
 
 ## Eletrônicos, rádio e luz (4 de 20)
