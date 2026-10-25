@@ -1,7 +1,7 @@
 # Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **157 de 257 itens têm modelo 3D; faltam 100.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **246 de 257 itens têm modelo 3D; faltam 11.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -15,15 +15,15 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Ferramentas | 30 | 0 |
 | Armas brancas e de disparo silencioso | 20 | 0 |
 | Materiais de construção e crafting | 23 | 0 |
-| Roupas e proteção | 1 | 22 |
-| Mochilas e contêineres | 1 | 14 |
-| Eletrônicos, rádio e luz | 4 | 16 |
-| Combustível e energia | 2 | 7 |
-| Campo, pesca e caça | 0 | 11 |
-| Livros e revistas | 0 | 5 |
-| História e colecionáveis | 1 | 15 |
-| Chaves e acesso | 1 | 10 |
-| **Total** | **157** | **100** |
+| Roupas e proteção | 23 | 0 |
+| Mochilas e contêineres | 15 | 0 |
+| Eletrônicos, rádio e luz | 20 | 0 |
+| Combustível e energia | 9 | 0 |
+| Campo, pesca e caça | 11 | 0 |
+| Livros e revistas | 5 | 0 |
+| História e colecionáveis | 8 | 8 |
+| Chaves e acesso | 8 | 3 |
+| **Total** | **246** | **11** |
 
 ## Comida (36 de 36)
 
@@ -202,7 +202,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Vergalhão (kit) | `vergalhao` | `rebar` | 2,0 kg | comum | 1,27 x 0,02 x 0,02 m |
 | [x] | Óleo lubrificante spray (kit) | `lubrificante` | `lubricant_spray` | 0,25 kg | comum | 50 x 170 x 50 mm |
 
-## Roupas e proteção (1 de 23)
+## Roupas e proteção (23 de 23)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -230,7 +230,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Tênis de corrida (kit) | `tenis` | `sneakers` | 0,7 kg | comum | 300 x 120 x 120 mm |
 | [x] | Óculos de proteção (kit) | `oculos` | `safety_goggles` | 0,05 kg | comum | 160 x 60 x 80 mm |
 
-## Mochilas e contêineres (1 de 15)
+## Mochilas e contêineres (15 de 15)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -250,7 +250,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Saco de lixo (kit) | `saco_lixo` | `trash_bag` | 0,05 kg | comum | 250 x 25 x 200 mm |
 | [x] | Sacola de mercado (kit) | `sacola` | `shopping_bag` | 0,02 kg | comum | 300 x 20 x 200 mm |
 
-## Eletrônicos, rádio e luz (4 de 20)
+## Eletrônicos, rádio e luz (20 de 20)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -275,7 +275,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Vela (kit) | `vela` | `candles` | 0,05 kg | comum | 60 x 120 x 60 mm |
 | [x] | Óculos de visão noturna (kit) | `nvg` | `night_vision_goggles` | 0,6 kg | muito raro | 150 x 100 x 110 mm |
 
-## Combustível e energia (2 de 9)
+## Combustível e energia (9 de 9)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -289,7 +289,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Querosene (1 L) (kit) | `querosene` | `kerosene` | 0,8 kg | incomum | 90 x 260 x 90 mm |
 | [x] | Óleo de motor (kit) | `oleo_motor` | `motor_oil` | 1,0 kg | comum | 100 x 260 x 70 mm |
 
-## Campo, pesca e caça (0 de 11)
+## Campo, pesca e caça (11 de 11)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -305,7 +305,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Sementes de milho (kit) | `sem_milho` | `corn_seeds` | 0,1 kg | incomum | 100 x 150 x 20 mm |
 | [x] | Vara de pesca (kit) | `vara_pesca` | `fishing_rod` | 1,0 kg | comum | 1,8 x 0,04 x 0,04 m |
 
-## Livros e revistas (0 de 5)
+## Livros e revistas (5 de 5)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -315,7 +315,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Revista Faça Você Mesmo (kit) | `revista_receita` | `diy_magazine` | 0,2 kg | incomum | 210 x 280 x 8 mm |
 | [x] | Revista e gibi (kit) | `revista_passa` | `magazines_and_comics` | 0,2 kg | comum | 170 x 260 x 10 mm |
 
-## História e colecionáveis (1 de 16)
+## História e colecionáveis (8 de 16)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
@@ -336,7 +336,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Plaqueta de identificação militar (kit) | `plaqueta` | `dog_tag` | 0,01 kg | comum | 30 x 3 x 50 mm |
 | [ ] | Prontuário do paciente zero | `prontuario` | `patient_zero_record` | 0,1 kg | único | do jogo |
 
-## Chaves e acesso (1 de 11)
+## Chaves e acesso (8 de 11)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
