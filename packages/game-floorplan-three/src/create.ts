@@ -1,4 +1,5 @@
 import * as props3d from '@adatechnology/game-props3d'
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 
 import type { Kernel, Shared } from './kernel-types.js'
 import { createTranslator } from './locale.js'
@@ -82,7 +83,8 @@ export function create(THREE: any, options: HouseRendererOptions = {}): HouseRen
   const colliderChanged = (c: any) => { if (c && cfg.onCollider) cfg.onCollider(c) }
   const shared: Shared = { mats: null, quality: cfg.quality === 'game' ? 'game' : 'high' }
   const seedKey = (id: any) => { if (cfg.seedKey && id != null) { const k = cfg.seedKey(String(id)); return k == null ? id : k } return id }
-  const K: Kernel = { t: createTranslator(cfg.locale), seedKey, THREE, cfg, DOC, PROPS, Reflector, FLEET, HP, invalidate, invalidateShadow, colliderChanged, VERSION, rectsOf: statics.rectsOf, isOpenArea: statics.isOpenArea, OPEN_ROOM_TYPES: statics.OPEN_ROOM_TYPES }
+  // the kernel's three: its primitive geometries (the GEO templates, breach units, fragments, mirrors) are made by game-shapes, bit-identical and cached by parameters
+  const K: Kernel = { t: createTranslator(cfg.locale), seedKey, THREE: shapeGeometries(THREE), cfg, DOC, PROPS, Reflector, FLEET, HP, invalidate, invalidateShadow, colliderChanged, VERSION, rectsOf: statics.rectsOf, isOpenArea: statics.isOpenArea, OPEN_ROOM_TYPES: statics.OPEN_ROOM_TYPES }
   installKernelGeometry(K, shared)
   installKernelNoise(K, shared)
   installMaterialsTextures(K, shared)
