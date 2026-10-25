@@ -334,3 +334,71 @@ Nenhuma muda: as opções novas de `buildFrame` são desligadas por padrão e `o
 - Elevador sem cabo nem contrapeso como peças: o peso pendurado está na máquina; a cabine é uma peça parada no fundo do poço.
 - A água da manta não corre até o ralo (estado só: nível e vazamento); a chuva entra pelo `setLiters`.
 - Vidro da fachada como uma lâmina de 12 mm, sem a câmara de ar nem a intercamada como camada; caixilho só como massa.
+
+## 10. Lajes em painéis com vigas reais nas casas (§5 resolvido; 2026-10-25)
+
+Dono (2026-10-25): aprovou (a) dividir as lajes das casas em painéis com vigas reais a cada 4 a 5 m (um painel por cômodo, vigas nos limites dos
+cômodos e das paredes portantes, pilares onde uma casa em pórtico precisa) e (b) que os hashes `coarseParts`/`enclosureParts` da golden `vc3-structure`
+possam mudar. O objetivo: ligar o vergalhão por padrão em toda casa e prédio de concreto do kit, e que a explosão e a perda de um pilar façam o que
+fariam de verdade (a laje racha na face tracionada; o colapso progressivo só onde ele existe).
+
+### 10.1 O que muda para quem joga
+
+- Uma casa em repouso fica de pé com folga (laje, viga e pilar a no máximo `safetyOthers`/`safety`), com o aço dimensionado em cada peça.
+- Perder um pilar interno de um sobrado em pórtico **racha** as lajes e vigas vizinhas (aviso `stress`, `crack`) mas não derruba tudo: a viga que
+  perdeu o apoio vence o dobro do vão e o painel ao lado passa a se apoiar nas outras três bordas. Perder dois pilares vizinhos derruba o painel
+  entre eles, e o andar de cima desce junto (colapso progressivo real, só onde as vigas não têm outro caminho).
+- Uma explosão sobre a laje racha a face de baixo do **painel** atingido (o resto da laje fica), em vez de a laje inteira de 8 x 12 m dobrar.
+- Os desenhos (`game-floorplan-three`) continuam os mesmos: as vigas ficam dentro das paredes e do forro, como numa obra; o piso de cada cômodo
+  cai com o painel dele.
+
+### 10.2 Regras de layout (`game-floorplan-structure/src/slab-panels`)
+
+Só lajes de concreto de uma construção com vergalhão (`construction.frame.rebar`): `slab_N` (andares), `slab_top*` (cobertura plana), `slab_ceiling` (sob a
+caixa d'água) e `slab_base` (piso de uma unidade num prédio). Lajes de madeira (vigas e tábuas), varandas em balanço, o piso da varanda coberta, a laje da
+caixa d'água e o radier não mudam. O layout é uma etapa de `toDestructibleSpec` (como o corte das paredes em painéis, `wallDetail`): `buildStructure`
+continua devolvendo as peças e os apoios da equipe, e as golden `pieces`/`supports` não mudam.
+
+1. **Pegada**: cada laje leva a lista de retângulos que ela cobre (`StructurePart.footprint`: os cômodos do andar de cima, sem varanda nem vazio). Um
+   painel com menos de metade da área dentro da pegada é descartado (o canto vazio de uma casa em L não ganha laje).
+2. **Linhas de corte**: as paredes do andar de cima (que descem sobre a laje) e do de baixo (que a seguram) agrupadas em linhas (tolerância 0,2 m); a
+   cobertura de uma linha é o comprimento coberto por paredes dentro do retângulo, com vãos de porta de até 1,3 m contados como parede.
+3. **Corte recursivo** de um retângulo `R` (começa na laje): (a) se um lado passa de `maxSpan` (5 m), corta no eixo desse lado, na linha com cobertura
+   mínima (0,6) que deixa os dois pedaços mais equilibrados, ou no meio se não há parede; (b) se os dois lados cabem, mas há uma linha de parede que
+   cruza `R` quase toda (cobertura >= 0,6), corta nela (um painel por cômodo); (c) nunca deixa um pedaço com menos de `minPanel` (1,5 m).
+4. **Painel**: cada folha do corte é uma laje com id `slab_N_p<k>` (a laje que não é cortada guarda o id e a caixa). Espessura `h = L/40` (L = o menor
+   lado, que é o vão da laje armada em uma direção), no mínimo 10 cm nos pisos e 8 cm na cobertura (NBR 6118 13.2.4.1 pede 8 e 7 cm; os mínimos do
+   dono são mais folgados), arredondada para cima em 1 cm. O painel de borda de uma cobertura mantém o beiral.
+5. **Viga** em cada segmento de corte que confina um painel mantido: `slab_N_b<k>`, de concreto da construção, com o topo na face de baixo da laje.
+   Altura `h = vão/12` (NBR 6118: vigas biapoiadas L/10, contínuas L/12; o vão é o maior trecho sem apoio da viga), no mínimo 25 cm, múltiplo de 5 cm;
+   largura `max(parede, h/3)` (a viga fica dentro da parede de 15 cm quando h <= 45 cm: NBR 6118 13.2.2, mínimo 12 cm). O painel apoia nas vigas e nas
+   peças que já o seguravam (cintas, pilares, paredes portantes) e a viga apoia em quem estiver debaixo dela e nas vigas em que ela termina.
+6. **Pilares onde precisam**: o vão de uma viga (ou de uma cinta) é a maior distância sem apoio, medida como o motor mede (`spanOf`: duas vezes a maior
+   distância de um ponto ao apoio mais próximo). Se passa de `maxSpan`, entra um pilar de 20 cm (NBR 6118 13.2.3: mínimo 19 cm) no meio do trecho
+   mais longo, e se repete até caber. Num pórtico (`portico`, as paredes só fecham) não há parede portante, então os pilares aparecem em volta e por dentro
+   a cada 5 m; numa casa de alvenaria portante a parede de baixo é o apoio contínuo e quase nenhum pilar entra. O pilar nasce no chão (ou na laje do andar
+   de baixo, andar a andar) e a viga e a cinta de cima descansam nele.
+7. **Cintas** (`plate_*` de concreto): ganham os mesmos pilares quando o vão passa de `maxSpan` (só acontece em pórtico, onde a parede de baixo não carrega).
+
+### 10.3 Valores padrão e fontes
+
+| Valor | Padrão | Fonte |
+|---|---|---|
+| Vão máximo do painel e da viga (`maxSpan`) | 5 m | prática de lajes maciças armadas em uma direção: 4 a 5 m (Bastos, *Lajes de concreto*, UNESP); pedido do dono |
+| Painel mínimo (`minPanel`) | 1,5 m | prática (laje com largura menor que isso vira balanço da viga vizinha) |
+| Espessura da laje | L/40, mín. 10 cm (piso), 8 cm (cobertura) | NBR 6118 14.7.2.1 (d ~ L/35 a L/40 em laje armada em uma direção); mínimos do dono |
+| Altura da viga | vão/12, mín. 25 cm, em múltiplos de 5 cm | NBR 6118 e Bastos, *Vigas de concreto armado*: L/10 a L/12 |
+| Largura da viga | max(parede, altura/3) | NBR 6118 13.2.2 (mín. 12 cm) |
+| Lado do pilar acrescentado | 20 cm | NBR 6118 13.2.3 (mín. 19 cm) |
+| Cobertura mínima de uma linha de corte | 0,6 | escolha de projeto (uma parede que cobre 60% do comprimento é um limite de cômodo) |
+| Vão de porta contado como parede | 1,3 m | porta de 0,8 a 1,2 m com a ombreira |
+
+Tudo em `SLAB_PANEL_DEFAULTS`, trocável por `toDestructibleSpec({ slabPanels: { maxSpan: 4 } })` (ou `slabPanels: false` para a laje inteira como a equipe
+a descreve). O vergalhão é dimensionado por `sizeRebar` como já era (§2.3), agora peça por peça: painéis, vigas, cintas.
+
+### 10.4 O que muda ao ligar o vergalhão por padrão
+
+`toDestructibleSpec` passa a declarar o aço (`rebar: true`) e a dimensioná-lo (`sizeRebar`) em toda construção com `frame.rebar` (concreto armado); casas
+de madeira e barracas não têm concreto com tração e não mudam. A spec das casas de alvenaria ganha `structure.rebar` nas lajes, vigas e cintas, mais
+as peças novas (painéis, vigas, pilares). `rebar: false` e `slabPanels: false` devolvem a spec antiga (é o que a comparação com o Visor de casas 3D
+usa; ver §6).
