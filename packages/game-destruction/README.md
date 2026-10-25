@@ -119,6 +119,9 @@ instead of tearing it apart on the spot, and a part goes off once. Blasts resolv
 part, so the timeline does not depend on the `dt` you pass to `update`. `explosivePart(explosive, part)` builds the part from an `ExplosiveDef` of `@adatechnology/game-weapons`
 (`explosives.get('fuel_barrel')`), so energy, reach and delays come from one place and a game changes them with `patch.explosives`.
 
+A fluid with `contains.outflow` (object-local direction) leaves a hole that way instead of out of the hole: the water on a roof membrane runs down
+(`[0, -1, 0]`) into the floor below.
+
 ## Joints and tools
 
 | Kind | Strength | Tools | Seconds |
@@ -176,6 +179,8 @@ without any `structure` behave exactly as before.
   `splitGroup`.
 - `buildFrame({ spanX, spanZ, columnsX, columnsZ, height, floors, walls, roof, columnCapacity, ... })` returns a test structure: columns on
   foundations (`rebar`), beams, a slab per floor, optional brick walls (`mortar`) with a door opening, and a roof that rests (`resting`) on the top beams.
+  `continuousColumns` makes each column rest on the one below instead of on the slab (a tall frame needs it: otherwise the first-floor beams carry
+  the tower in bending), `columnCage` gives the columns a rebar cage and `roofThickness` sets the roof slab (default 0.75 x `slabThickness`).
 - `sizeStructure(spec, { safety?, redundancy?, redundancyRoles?, safetyByRole? })` returns a copy of the spec with `structure.capacity` set from the loads the world itself solves
   for the intact spec, so every structural part rests at stress `safety` (default 0.65). With `redundancy` (e.g. 0.97) the capacities are also
   raised where needed so that losing any single `column` keeps every other part at or below that stress: the structure stands with one column

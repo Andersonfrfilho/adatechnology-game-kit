@@ -1,4 +1,4 @@
-import type { DestructibleSpec, JointSpec, MaterialId, PartSpec, PileSpec, SoilProfile } from './types'
+import type { DestructibleSpec, JointSpec, MaterialId, PartSpec, PileSpec, Reinforcement, SoilProfile } from './types'
 
 export interface FrameOptions {
   /** Total length along x between the outer column centres, metres (default 8). */
@@ -39,6 +39,15 @@ export interface FrameOptions {
   raft?: boolean
   /** Piles under each pad (or under the raft): the pad becomes a pile cap. */
   piles?: PileSpec
+  /**
+   * Columns run from storey to storey: each one rests on the column below (through the slab, as a cast-in-place column does) instead of on the slab,
+   * so the slab carries only its own floor. Default false (the column of each storey stands on the slab below, as before).
+   */
+  continuousColumns?: boolean
+  /** Rebar cage of the columns (`PartSpec.reinforcement`; default none). A caged column carries `0.85 fck Ac + As fy` and its `rebar` joints are monolithic. */
+  columnCage?: Reinforcement
+  /** Thickness of the roof slab (default 0.75 x `slabThickness`; a flat roof that carries a screed and equipment is as thick as a floor). */
+  roofThickness?: number
   /** The ground the frame stands on (`DestructibleSpec.soil`). */
   soil?: string | SoilProfile
 }
@@ -92,8 +101,9 @@ export const buildFrame = (o: FrameOptions = {}): DestructibleSpec => {
         parts.push({
           id, material: mat, shape: { kind: 'box', size: [cs, H, cs] }, position: [xs[i], yb + H / 2, zs[j]],
           structure: o.columnCapacity === undefined ? { role: 'column' } : { role: 'column', capacity: o.columnCapacity },
+          ...(o.columnCage ? { reinforcement: { ...o.columnCage } } : {}),
         })
-        on(id, f === 0 ? (o.raft ? 'raft' : `foundation_${i}_${j}`) : `slab_${f - 1}`, 'rebar')
+        on(id, f === 0 ? (o.raft ? 'raft' : `foundation_${i}_${j}`) : o.continuousColumns ? `column_${f - 1}_${i}_${j}` : `slab_${f - 1}`, 'rebar')
       }
     }
     const beams: string[] = []
@@ -113,7 +123,7 @@ export const buildFrame = (o: FrameOptions = {}): DestructibleSpec => {
         beam(`beam_z_${f}_${i}_${j}`, [bw, bh, zs[j + 1] - zs[j] - cs], [xs[i], top - bh / 2, (zs[j] + zs[j + 1]) / 2], `column_${f}_${i}_${j}`, `column_${f}_${i}_${j + 1}`)
       }
     }
-    const thick = last && roof ? T * 0.75 : T
+    const thick = last && roof ? o.roofThickness ?? T * 0.75 : T
     parts.push({
       id: slabId, material: mat, shape: { kind: 'box', size: [spanX + cs + 0.2, thick, spanZ + cs + 0.2] }, position: [0, top + thick / 2, 0],
       structure: { role: last && roof ? 'roof' : 'slab', ...rebarOf('slab') },

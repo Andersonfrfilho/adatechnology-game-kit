@@ -1578,7 +1578,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (brittle && mat.fracture === 'shatter') addCrack(o, p, entry, n, crackLen, src)
       if (p.spec.contains && (p.st.liters ?? 0) > 0) {
         emit({
-          ...base(o, src), type: 'leak', part: id, fluid: p.spec.contains.fluid, point: entry, direction: n, rate: holeRate(hole, !!p.spec.contains.pressurized),
+          ...base(o, src), type: 'leak', part: id, fluid: p.spec.contains.fluid, point: entry,
+          direction: p.spec.contains.outflow ? vec.normalize(rotateVec(o.st.rotation, rotateVec(p.q, p.spec.contains.outflow))) : n, rate: holeRate(hole, !!p.spec.contains.pressurized),
           pressurized: !!p.spec.contains.pressurized,
         })
         rollIgnition(o, p, round)
