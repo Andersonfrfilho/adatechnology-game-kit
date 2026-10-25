@@ -5,7 +5,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   blood_hit: {
     name: 'Blood by infection age',
     short: 'A mist on the way in, a jet on the way out, a pool that grows. Age changes colour and amount.',
-    cost: '≤ 70 part.',
+    cost: '≤ 70 particles',
     costNote: '1 pool · 6 splashes',
     paramLabel: 'Age',
     when: 'Every bullet or blow that hits a zombie. The blood value comes from the bestiary age: 1.0 · 0.7 · 0.35 · 0.1.',
@@ -16,7 +16,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   headshot: {
     name: 'Headshot',
     short: 'The head bursts, the eyes go out on the same frame and the body drops.',
-    cost: '≤ 70 part.',
+    cost: '≤ 70 particles',
     costNote: '8 debris · 1 pool',
     when: 'A head hit that kills (bestiary rule: a head kills at once).',
     look: 'A red mist around the head, a jet of drops backwards, 6 to 8 pieces of bone and skin, a swap to the burst-neck mesh. The eye glow goes out on the same frame, which is the most readable signal from afar.',
@@ -26,7 +26,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   dismember: {
     name: 'Dismemberment',
     short: 'The arm comes off whole with physics and the shoulder gushes for half a second.',
-    cost: '≤ 60 part.',
+    cost: '≤ 60 particles',
     costNote: '1 limb · 4 splashes',
     when: 'Damage to a limb above the threshold (multipliers by region from the bestiary) or an axe blow.',
     look: 'The limb becomes a loose piece with physics and bounces. A short pulsing jet from the shoulder, drops that form a trail to the pool. The zombie staggers but keeps walking.',
@@ -36,7 +36,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   bloater_cloud: {
     name: 'Bloater cloud',
     short: 'The belly pulses for 0.5 s, bursts and leaves 4 m of gas for 8 s.',
-    cost: '≤ 180 part.',
+    cost: '≤ 180 particles',
     costNote: 'server entity',
     when: 'Death of the Bloater, by any cause.',
     look: 'A 0.5 s warning with the belly swelling, a burst with pieces and a greenish jet, and a low moss-green cloud that undulates on the ground for 8 s. Loose green glows inside the cloud mark the area.',
@@ -46,7 +46,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   screamer_shriek: {
     name: 'Screamer shriek',
     short: 'A 1.5 s wind-up with steam, a wave on the ground and the horde\'s eyes light up.',
-    cost: '≤ 150 part.',
+    cost: '≤ 150 particles',
     costNote: '3 rings · aberration',
     when: 'The Screamer spots the player and starts the shriek (1.5 s wind-up, calls everyone within 150 m).',
     look: 'Head back and steam from the mouth during the wind-up. On the shriek, three pressure rings on the ground, dust raised in the radius, a short chromatic aberration on the screen of whoever is near, and the eyes of nearby zombies flare when they hear.',
@@ -66,7 +66,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   corpse_decay: {
     name: 'Corpse: darken and dissolve',
     short: '15 minutes in 8 seconds: fall, darken, flies and turn to dust.',
-    cost: '≤ 40 part.',
+    cost: '≤ 40 particles',
     costNote: 'pool of 400 bodies',
     when: 'Zombie death. Bestiary timeline: ragdoll 3 s, frozen mesh, darken, dissolve between 14 and 15 min.',
     look: 'The skin loses colour until almost black, the pool dries to brown, flies appear from minute 5 and in the last minute the body sinks and gives off dark dust.',
@@ -76,7 +76,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   reanimation: {
     name: 'Reanimation',
     short: 'Veins light up, spasms, the eyes switch on and the body gets up.',
-    cost: '≤ 30 part.',
+    cost: '≤ 30 particles',
     costNote: 'emissive in the shader',
     when: 'End of infection of a player or NPC: reanimates in 2 to 6 min as Fresh (70% Slow, 30% Runner).',
     look: 'Green pulses through the skin (emissive in the shader, not particles), spasms in the arms and head, the eyes light up from the inside out and the body stands. Breath as steam on the first shriek.',
@@ -86,7 +86,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   muzzle_flash: {
     name: 'Muzzle flash',
     short: 'Core, petals and smoke scaled by weapon. The Barrett raises dust.',
-    cost: '≤ 60 part.',
+    cost: '≤ 60 particles',
     costNote: '1 light · 50 ms',
     paramLabel: 'Weapon',
     when: 'Every shot. In first person it uses the weapon model; from afar it is only the core sprite.',
@@ -97,7 +97,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   impact: {
     name: 'Impact by material',
     short: 'Concrete, metal, wood, glass, flesh and water: each with its own response.',
-    cost: '≤ 40 part.',
+    cost: '≤ 40 particles',
     costNote: '1 hole',
     paramLabel: 'Material',
     when: 'Every bullet that hits something. The material comes from the mesh surface tag.',
@@ -108,7 +108,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   penetration: {
     name: 'Bullet through the horde',
     short: 'Barrett tracer passing through 5 zombies, in 10x slow motion.',
-    cost: '≤ 250 part.',
+    cost: '≤ 250 particles',
     costNote: 'aggregate event',
     when: 'Weapon with penetration: the AK goes through 2, the Remington 700 through 3, the Barrett through 6 and cars.',
     look: 'A tracer with a hot-air trail, blood exiting each body in the order the bullet passes (each in the colour of its age), bodies falling one after another and a final impact on the concrete.',
@@ -128,7 +128,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   molotov: {
     name: 'Molotov cocktail',
     short: 'A lit wick in the arc, glass breaking and a pool of fire that spreads.',
-    cost: '≤ 300 part.',
+    cost: '≤ 300 particles',
     costNote: '2 lights · entity',
     when: 'A molotov hitting the ground or a zombie.',
     look: 'A bottle in an arc with the wick giving off flame and smoke. On impact, green shards and a splash of fire that opens from 0.5 m to 2.2 m in 0.8 s. Low flames, embers, dark smoke and a flickering light for 6 s, then embers and a burn mark.',
@@ -138,7 +138,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   grenade: {
     name: 'Fragmentation grenade',
     short: 'A bounce on the asphalt, flash, shock wave, shrapnel and a ring of dust.',
-    cost: '≤ 400 part.',
+    cost: '≤ 400 particles',
     costNote: 'aggregate event',
     when: 'A grenade exploding (1.8 s fuse after the throw).',
     look: 'The grenade bounces twice. A layered explosion: a white flash that paints the screen, a short fireball, a shock ring on the ground and another facing the camera, bright shrapnel that bounces, a ring of low dust, grey smoke that rises and a burn mark. Zombies in the radius fall outwards.',
@@ -148,7 +148,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   explosive_barrel: {
     name: 'Explosive barrel',
     short: 'A mushroom of fire, the lid flying, petrol burning on the ground and a column of smoke.',
-    cost: '≤ 450 part.',
+    cost: '≤ 450 particles',
     costNote: '2 lights · fire entity',
     when: 'A red barrel with damage above the threshold, a shot or fire touching it.',
     look: 'Everything the grenade does, plus: a fireball that rises into a mushroom, the lid and red pieces flying high, three pools of petrol burning for 5 s and a black smoke column that serves as a landmark from afar.',
@@ -168,7 +168,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   door_stages: {
     name: 'Door giving way in 3 stages',
     short: 'Blows shake dust from the frame, a plank cracks and the door falls.',
-    cost: '≤ 120 part.',
+    cost: '≤ 120 particles',
     costNote: '3 stages',
     when: 'The horde hitting a door or barricade (the Brute does 3x damage). Stages: 66%, 33%, 0% health.',
     look: 'Each blow shakes the door and loosens dust from the frame and splinters. At stage 2 the middle plank cracks and falls. At 3 the door topples and raises a cloud of low dust, and the zombie comes out of the dark.',
@@ -178,7 +178,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   building_collapse: {
     name: 'Collapse',
     short: 'Dust trickling from the awning, blocks falling and a cloud of dust rolling down the street.',
-    cost: '≤ 350 part.',
+    cost: '≤ 350 particles',
     costNote: '26 debris',
     when: 'A structure that loses its health: explosion, vehicle impact, a big horde pushing (destruction of the map buildings).',
     look: 'Before: fine dust trickling and pebbles falling for 1 s, as a warning. Then: large and small blocks fall, the camera shakes and a cloud of grey-beige dust rolls along the ground and hangs in the air for 5 s, hiding zombies.',
@@ -188,7 +188,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   block_wall: {
     name: 'Wall brought down with holes',
     short: 'A burst leaves holes and chips; the wall falls in blocks and the holes stay on them.',
-    cost: '≤ 300 part.',
+    cost: '≤ 300 particles',
     costNote: '30 blocks · attached holes',
     when: 'A concrete wall, low wall or barricade that loses health from shots, explosion, the Brute or a car (map and arsenal destruction).',
     look: 'Each bullet opens a dark hole with a chipped rim, giving off dust and pebbles. When the wall gives way it splits into blocks that topple with physics and a cloud of dust rolls along the ground. The bullet holes are attached to the blocks: they stay on the fallen pieces, turned with them, and do not vanish when the wall breaks.',
@@ -198,7 +198,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   metal_door: {
     name: 'Metal door denting',
     short: 'Each blow sinks the plate, flakes the paint and throws sparks; the hinge bursts.',
-    cost: '≤ 160 part.',
+    cost: '≤ 160 particles',
     costNote: 'deformable mesh',
     when: 'A door, gate or steel plate taking a zombie blow (Brute 3x), a 12-gauge shot or a car hit.',
     look: 'The plate sinks where it is hit (a deformed mesh, not a model swap), with 3 visible levels. Each blow gives off sparks, flakes of green paint and rust dust. When the health runs out the top hinge bursts in sparks, the door topples and scrapes on the ground giving off more sparks.',
@@ -208,7 +208,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   iron_railing: {
     name: 'Iron railing bending',
     short: 'The horde pushes, the bars bow, the weld pops in a spark and the railing falls.',
-    cost: '≤ 200 part.',
+    cost: '≤ 200 particles',
     costNote: '3 deformable bars',
     when: 'A railing, iron gate, handrail or chain-link fence with zombies pushing (horde pressure) or a car hitting it.',
     look: 'The bars bow gradually at the point of pressure and the vertical ones tilt with them. Rust falls in a thread during the strain. At two moments the weld pops with a crackle of sparks. At the end the middle post gives and the railing topples, leaving the bent iron on the ground.',
@@ -218,7 +218,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   wooden_fence: {
     name: 'Wooden fence breaking',
     short: 'Planks snap one by one, chips and dust, and the section topples as the horde passes.',
-    cost: '≤ 150 part.',
+    cost: '≤ 150 particles',
     costNote: '12 planks',
     when: 'A fence, yard gate or plank barricade taking a shot, blow or horde pressure.',
     look: 'Each plank snaps at a random point: the stump stays on the rail and the top piece flies off with chips and wood dust. The zombie appears through the gap. At the end the rail cracks and the whole section topples forward.',
@@ -228,7 +228,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   hit_point_breakage: {
     name: 'Breakage by the point hit',
     short: 'A shot to the leg, a machete on the corner, a bat on the top and a 12-gauge up close: each weapon breaks the part it hit.',
-    cost: '≤ 120 part.',
+    cost: '≤ 120 particles',
     costNote: 'parts with their own health',
     when: 'Any destructible item. The damage goes to the part that was hit, not to the whole item.',
     look: 'A 9 mm shot to the front leg: the lower part of the leg breaks off and the table tips toward that corner. A machete on the corner of the top: the corner comes off whole in a straight cut, with chips in a line. A bat on the other corner: the top cracks and falls apart in pieces with dust. A 12-gauge up close on what is left: 9 grouped holes that stay in the wood.',
@@ -238,7 +238,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   pressure_cylinders: {
     name: 'Extinguisher and oxygen cylinder',
     short: 'A shot to the extinguisher makes a white cloud and a spin; on oxygen the valve breaks and the cylinder becomes a rocket.',
-    cost: '≤ 250 part.',
+    cost: '≤ 250 particles',
     costNote: 'cloud entity',
     paramLabel: 'Cylinder',
     when: 'A shot, a strong blow or fire on an extinguisher, oxygen cylinder or welding cylinder (extinguisher and oxygen_cylinder keys of the map catalogue).',
@@ -249,7 +249,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   building_fire: {
     name: 'Building on fire',
     short: 'Fire coming out of the windows, licking the facade, embers and smoke with the wind.',
-    cost: '≤ 600 part.',
+    cost: '≤ 600 particles',
     costNote: '2 lights · reference',
     when: 'A building fire (molotov, explosion, vehicle). It lasts minutes and spreads to the neighbour.',
     look: 'Windows lit orange that flicker, tongues of fire coming out of the top of each window and climbing the facade, embers carried by the wind and a thick slanted column of smoke. The light paints the street.',
@@ -290,7 +290,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   engine_smoke: {
     name: 'Engine smoke',
     short: 'White steam, grey smoke, then black with fire, depending on condition.',
-    cost: '≤ 120 part.',
+    cost: '≤ 120 particles',
     costNote: 'continuous',
     paramLabel: 'Condition',
     when: 'Whenever the engine is on or hot, from the part condition (0 to 100) in the fleet brief.',
@@ -301,7 +301,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   fuel_leak: {
     name: 'Tank leak and fire',
     short: 'Dripping petrol, a pool, a spark and the fire running to the tank.',
-    cost: '≤ 400 part.',
+    cost: '≤ 400 particles',
     costNote: 'fire entity',
     when: 'A tank punctured by a shot or a crash. A spark, a shot or nearby fire lights the pool.',
     look: 'Drops of petrol with an oily sheen forming a growing pool. A shot on the metal throws a spark, the fire lights on the pool, runs to the car and, if nobody puts it out, the car explodes.',
@@ -311,7 +311,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   car_explosion: {
     name: 'Car explosion',
     short: 'A fireball, the car jumping, the bonnet and doors flying, the shell burning.',
-    cost: '≤ 600 part.',
+    cost: '≤ 600 particles',
     costNote: 'rare event',
     when: 'A tank on fire for more than 4 s, or damage above the threshold on a car with fuel.',
     look: 'A large explosion (grenade scale 1.8), the car jumps and lands crooked, the bonnet, doors and a wheel fly off, the glass bursts into shards. The bodywork goes black and the shell burns with black smoke for minutes.',
@@ -372,7 +372,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   bloater_blindness: {
     name: 'Bloater blindness',
     short: 'Green gas in the face: a blurred screen for 5 s and mucus on the lens.',
-    cost: 'post + 30 part.',
+    cost: 'post + 30 particles',
     costNote: 'server entity',
     when: 'A player inside the Bloater cloud (radius 4 m) when it spawns.',
     look: 'A green cloud bursts between the zombie and the camera, the screen goes green and blurred and clears in 5 s, with drops of green mucus on the lens that run down. A cough shakes the camera twice.',
@@ -382,7 +382,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   campfire: {
     name: 'Campsite fire',
     short: 'A low flame, embers spiralling up and a flickering warm light.',
-    cost: '≤ 120 part.',
+    cost: '≤ 120 particles',
     costNote: '1 fire light',
     when: 'A campfire lit by the group or by NPCs. It warms, lights and draws zombies from afar (light).',
     look: 'Small low flames, embers that rise turning and fade, thin smoke and a warm light that flickers and paints the survivor.',
@@ -392,7 +392,7 @@ export const en: Readonly<Record<string, EffectTexts>> = {
   cough_and_breath: {
     name: 'Cough, breath and flashlight',
     short: 'Breath vapour in the cold, the fever cough visible to others and the flashlight beam.',
-    cost: '≤ 40 part.',
+    cost: '≤ 40 particles',
     costNote: '1 spot with shadow',
     when: 'A cold night: breath always. Infection fever: a cough every few seconds, audible at 10 m.',
     look: 'A short puff of vapour every 2.4 s. On a cough, three quick bigger puffs and the body jolts. The flashlight shows the beam in the fog and is the only light with a shadow.',
