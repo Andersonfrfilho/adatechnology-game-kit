@@ -433,11 +433,11 @@
     "id": "mortadella",
     "teamId": "mortadela",
     "teamBox": [
-      1.5,
+      1.516,
       0.6,
       0.5
     ],
-    "scale": 0.1
+    "scale": 0.099647
   },
   {
     "id": "fresh_fish",
