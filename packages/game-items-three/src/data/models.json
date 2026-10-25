@@ -2348,5 +2348,15 @@
       0.0402
     ],
     "scale": 1
+  },
+  {
+    "id": "snare_trap",
+    "teamId": "armadilha_laco",
+    "teamBox": [
+      0.15,
+      0.03,
+      0.15
+    ],
+    "scale": 1
   }
 ]
