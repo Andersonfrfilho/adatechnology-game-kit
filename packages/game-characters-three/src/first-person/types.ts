@@ -90,7 +90,8 @@ export type FirstPersonArms = {
   /** Add it to the scene: it follows the camera by itself. */
   root: THREE_NS.Group
   /** Starts a clip; false when no registered clip has that id. The previous clip is dropped. */
-  play(clip: string): boolean
+  /** `leg: 'left'` plays the foot of the clip (the right foot) as the left one, in a mirror. */
+  play(clip: string, options?: { leg?: 'left' | 'right' }): boolean
   stop(): void
   /** The clip being played, or null. */
   readonly playing: string | null

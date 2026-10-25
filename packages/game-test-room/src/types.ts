@@ -20,8 +20,8 @@ import type { AnimationClipSpec, ControlValue, DestructibleImpl, EnvironmentBus,
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
-export type { RoomAvatar, RoomAvatarState, RoomFirstPersonState, CameraMode, ThirdPersonOptions } from './avatar'
-import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions } from './avatar'
+export type { RoomAvatar, RoomAvatarState, RoomFirstPersonState, CameraMode, KickLeg, ThirdPersonOptions } from './avatar'
+import type { CameraMode, KickLeg, RoomAvatar, RoomAvatarState, ThirdPersonOptions } from './avatar'
 
 export type ThreeNamespace = typeof THREE_NS
 
@@ -120,6 +120,8 @@ export interface TestRoomOptions {
    * the avatar's `strike` answers; a tool that is not here, or an avatar that cannot play the clip, strikes at the click. Default `{ fists: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }`.
    */
   strikeClips?: Readonly<Record<string, string>>
+  /** Which leg the kick uses: `alternate` (default) swaps at each kick starting with the right, or always `left` or `right`. */
+  kickLeg?: KickLeg
   /** The first-person stance of the arms by tool id, for the tools that hold nothing the module places (default `{ fists: 'fists' }`; any other tool holds, or is `relaxed` with nothing to hold). */
   handStances?: Readonly<Record<string, string>>
   /** The over-the-shoulder view of the `third` mode: distance, shoulder, height, wall probes. Defaults are the team game's. */

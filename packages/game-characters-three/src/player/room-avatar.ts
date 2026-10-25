@@ -1,4 +1,5 @@
 import { ATTACK_CLIPS, FIRST_PERSON_CLIPS } from '@adatechnology/game-characters-people'
+import { mirrorPoseClip } from '@adatechnology/game-characters'
 import type { FirstPersonClip, PoseClip } from '@adatechnology/game-characters'
 import type { HandTargets } from '@adatechnology/game-contracts'
 
@@ -15,7 +16,7 @@ export type RoomAvatarLike = {
   /** The arms of the first-person view (`RoomAvatar.firstPerson`); absent when `toRoomAvatar` was told to make none. */
   firstPerson?: { root: THREE_NS.Object3D; update(dt: number, state: { camera: THREE_NS.Object3D; targets: HandTargets | null; stance: string; speed: number; running: boolean; crouch: boolean }): void }
   /** Plays a strike on the body and the arms and answers the seconds to its impact (`RoomAvatar.strike`). */
-  strike(clipId: string): number | null
+  strike(clipId: string, options?: { leg?: 'left' | 'right' }): number | null
   /** The avatar it wraps. */
   readonly avatar: PlayerAvatar
   /** The first-person arms, for whoever wants more of them than the room asks (`play`, `on('event')`). */
@@ -50,6 +51,13 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
           ...options.firstPerson,
         })
   const strikes = new Map((options.strikeClips ?? ATTACK_CLIPS).map((clip) => [clip.id, clip]))
+  const mirrored = new Map<string, PoseClip>()
+  /** The clip for a kick with the left leg: the mirror of the one that is written for the right. */
+  const leftOf = (clip: PoseClip): PoseClip => {
+    let found = mirrored.get(clip.id)
+    if (!found) mirrored.set(clip.id, (found = mirrorPoseClip(clip, `${clip.id}_left`)))
+    return found
+  }
   return {
     root: avatar.root,
     avatar,
@@ -57,11 +65,12 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
     ...(arms ? { firstPerson: { root: arms.root, update: (dt: number, state: Parameters<NonNullable<RoomAvatarLike['firstPerson']>['update']>[1]) => arms.update(dt, state) } } : {}),
     update: (dt, state) => avatar.update(dt, { speed: state.speed, running: state.running, crouch: state.crouch, down: state.down, armed: state.armed, pitch: -state.pitch }),
     hand: (side) => avatar.hand(side),
-    strike: (clipId) => {
+    strike: (clipId, strikeOptions) => {
       const clip = strikes.get(clipId)
       if (!clip) return null
-      avatar.play(clip)
-      arms?.play(clipId)
+      const left = strikeOptions?.leg === 'left'
+      avatar.play(left ? leftOf(clip) : clip)
+      arms?.play(clipId, left ? { leg: 'left' } : undefined)
       return impactOf(clip)
     },
   }

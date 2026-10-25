@@ -1081,14 +1081,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
    * A melee blow. A tool with a strike clip (`strikeClips`) on an avatar that plays it starts the clip, on the arms and on the body, and the blow lands when the clip reaches its
    * impact, with the aim read again then; any other blow lands now.
    */
+  const kickLeg = options.kickLeg ?? 'alternate'
+  let nextLeg: 'left' | 'right' = 'right'
   const strikeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
     const clip = strikeClips[id]
-    const seconds = clip === undefined ? null : (avatar?.strike?.(clip) ?? null)
+    // a kick uses the leg the option says (alternating from the right), whatever the avatar does with it
+    const leg = id === 'kick' ? (kickLeg === 'alternate' ? nextLeg : kickLeg) : undefined
+    const seconds = clip === undefined ? null : (avatar?.strike?.(clip, leg ? { leg } : undefined) ?? null)
+    if (leg && seconds !== null && kickLeg === 'alternate') nextLeg = leg === 'right' ? 'left' : 'right'
     if (clip === undefined || seconds === null) {
       meleeUse(u, id)
       return
     }
-    action('strike', t('act.strike', { weapon: toolName(id), clip, seconds: num(seconds, 2) }), { data: { weapon: id, clip, impactIn: seconds } })
+    action('strike', t(leg ? 'act.strike.leg' : 'act.strike', { weapon: toolName(id), clip, seconds: num(seconds, 2), leg: leg ? t(`leg.${leg}`) : '' }), { data: { weapon: id, clip, impactIn: seconds, ...(leg ? { leg } : {}) } })
     strikes.push({
       key: id,
       remaining: seconds,

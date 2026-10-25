@@ -7,6 +7,7 @@ import { makeRoom } from './helpers'
 
 type Fake = RoomAvatar & {
   struck: string[]
+  legs: Array<'left' | 'right' | undefined>
   states: RoomFirstPersonState[]
   armsRoot: THREE.Group
   /** Seconds to impact per clip; a clip not here cannot be played. */
@@ -16,18 +17,21 @@ type Fake = RoomAvatar & {
 const fakeAvatar = (impacts: Record<string, number> = { punch_right: 0.16, shove_two_hands: 0.26, front_kick: 0.32 }): Fake => {
   const armsRoot = new THREE.Group()
   const struck: string[] = []
+  const legs: Array<'left' | 'right' | undefined> = []
   const states: RoomFirstPersonState[] = []
   return {
     root: new THREE.Group(),
     armsRoot,
     struck,
+    legs,
     states,
     impacts,
     update: () => undefined,
     firstPerson: { root: armsRoot, update: (_dt, state) => void states.push({ ...state }) },
-    strike: (clip) => {
+    strike: (clip, options) => {
       if (!(clip in impacts)) return null
       struck.push(clip)
+      legs.push(options?.leg)
       return impacts[clip]!
     },
   }
@@ -91,6 +95,36 @@ describe('strikes wait for the impact of the clip', () => {
     expect(room.log.entries({ type: 'melee' })).toHaveLength(1) // the shove landed; the kick is on its way
     wait(room, 0.4)
     expect(room.log.entries({ type: 'melee' }).map((entry) => entry.data?.weapon)).toEqual(['shove', 'kick'])
+  })
+
+  const kicks = (kickLeg?: 'alternate' | 'left' | 'right', count = 3) => {
+    const avatar = fakeAvatar()
+    const room = makeRoom(kickLeg ? { kickLeg } : {})
+    room.setAvatar(avatar)
+    for (let i = 0; i < count; i++) {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyV', shiftKey: true }))
+      run(room, 2)
+    }
+    return { avatar, room }
+  }
+
+  it('kicks alternate legs by default, starting with the right, and log the leg', () => {
+    const { avatar, room } = kicks()
+    expect(avatar.legs).toEqual(['right', 'left', 'right'])
+    const entries = room.log.entries({ type: 'strike' })
+    expect(entries.map((entry) => entry.data?.leg)).toEqual(['right', 'left', 'right'])
+    expect(entries.map((entry) => entry.data?.impactIn)).toEqual([0.32, 0.32, 0.32])
+  })
+
+  it('kickLeg left or right keeps one leg; other strikes carry no leg', () => {
+    expect(kicks('left', 2).avatar.legs).toEqual(['left', 'left'])
+    expect(kicks('right', 2).avatar.legs).toEqual(['right', 'right'])
+    const avatar = fakeAvatar()
+    const room = setup(avatar)
+    room.setTool('shove')
+    wait(room, 0.5)
+    room.use()
+    expect(avatar.legs).toEqual([undefined])
   })
 
   it('the aim is read again at the impact: a target turned to meanwhile is the one hit', () => {

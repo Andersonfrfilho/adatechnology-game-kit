@@ -90,6 +90,15 @@ const mixPose = (THREE: Three, out: Pose, a: Pose, b: Pose, k: number): Pose => 
   return out
 }
 
+/** The mirror image of a rotation across the plane x = 0 (M R M with M = diag(-1, 1, 1)): for a shoe, which is its own mirror image about its length. */
+const mirrorRotation = (THREE: Three, q: THREE_NS.Quaternion): THREE_NS.Quaternion => {
+  const m = new THREE.Matrix4().makeRotationFromQuaternion(q)
+  const e = m.elements
+  // column-major: element (row i, column j) is e[j * 4 + i]; the ones with exactly one of i, j equal to 0 change sign
+  for (const [i, j] of [[0, 1], [0, 2], [1, 0], [2, 0]] as const) e[j * 4 + i] = -e[j * 4 + i]!
+  return new THREE.Quaternion().setFromRotationMatrix(m)
+}
+
 /** The mirror image of a pose across the plane x = 0: the left hand that is the right one seen in a mirror (its frame is the right hand's with z flipped, so z is flipped back). */
 const mirrorQuaternion = (THREE: Three, q: THREE_NS.Quaternion): THREE_NS.Quaternion => {
   const m = new THREE.Matrix4().makeRotationFromQuaternion(q)
@@ -244,7 +253,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   }
 
   const listeners = new Set<(event: FirstPersonEvent) => void>()
-  let run: { clip: FirstPersonClip; time: number } | null = null
+  let run: { clip: FirstPersonClip; time: number; left: boolean } | null = null
   const emit = (event: FirstPersonEvent): void => {
     for (const listener of listeners) listener(event)
   }
@@ -310,10 +319,13 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   const footPose = newPose(THREE)
   const footRest = newPose(THREE)
   const ankle = new THREE.Vector3()
-  const drawLeg = (pose: Pose): void => {
-    solveTwoBone(hip, pose.p, rig.thigh, rig.shin, kneePole, bone)
+  const hipMirrored = new THREE.Vector3(-hip.x, hip.y, hip.z)
+  const kneePoleMirrored = new THREE.Vector3(-kneePole.x, kneePole.y, kneePole.z)
+  const drawLeg = (pose: Pose, left: boolean): void => {
+    const origin = left ? hipMirrored : hip
+    solveTwoBone(origin, pose.p, rig.thigh, rig.shin, left ? kneePoleMirrored : kneePole, bone)
     ankle.copy(bone.end)
-    place(thigh, hip, bone.joint)
+    place(thigh, origin, bone.joint)
     place(shin, bone.joint, ankle)
     knee.position.copy(bone.joint)
     shoe.position.copy(ankle)
@@ -335,10 +347,10 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     get stance() {
       return stanceId
     },
-    play(id) {
+    play(id, options) {
       const clip = clips.get(id)
       if (!clip) return false
-      run = { clip, time: 0 }
+      run = { clip, time: 0, left: options?.leg === 'left' }
       fire(clip, -1e-9, 0) // the events at t = 0 fire as the clip starts
       return true
     },
@@ -406,7 +418,12 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
         fromChannel(foot, 'R', footRest, footPose)
         mixPose(THREE, mixed, footRest, footPose, foot.w)
         copyPose(footPose, mixed)
-        drawLeg(footPose)
+        // the left leg is the right one in a mirror
+        if (run?.left) {
+          footPose.p.x = -footPose.p.x
+          footPose.q.copy(mirrorRotation(THREE, footPose.q))
+        }
+        drawLeg(footPose, run?.left ?? false)
       }
       if (run && run.time >= run.clip.duration) run = null
       first = false

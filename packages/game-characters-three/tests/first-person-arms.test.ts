@@ -133,6 +133,22 @@ describe('createFirstPersonArms', () => {
     expect(leg.visible).toBe(false)
   })
 
+  it('a kick with the left leg shows the foot on the left, mirrored, with the same impact second', () => {
+    const arms = createFirstPersonArms(THREE, { clips: FIRST_PERSON_CLIPS })
+    const footX = (leg: 'left' | 'right'): number => {
+      arms.play('front_kick', { leg })
+      step(arms, 0.32, { camera: camera(), stance: 'relaxed' })
+      const shoe = arms.root.getObjectByName('first-person-leg')!.children.find((child) => child.type === 'Group')!
+      const x = shoe.position.x
+      step(arms, 0.7, { camera: camera(), stance: 'relaxed' })
+      return x
+    }
+    const right = footX('right')
+    const left = footX('left')
+    expect(right).toBeGreaterThan(0.05)
+    expect(left).toBeCloseTo(-right, 3)
+  })
+
   it('dispose releases the geometries and materials without throwing', () => {
     const arms = createFirstPersonArms(THREE)
     expect(() => arms.dispose()).not.toThrow()
@@ -174,5 +190,15 @@ describe('toRoomAvatar with the first-person arms', () => {
     expect(room.arms!.playing).toBe(id)
     expect(room.avatar.playing).not.toBeNull()
     expect(room.strike('unknown')).toBeNull()
+  })
+
+  it('a kick with the left leg plays the mirrored body clip, with the same impact second as the right', () => {
+    const room = toRoomAvatar(createPlayerAvatar(THREE))
+    const right = room.strike('front_kick', { leg: 'right' })
+    const rightClip = room.avatar.playing
+    const left = room.strike('front_kick', { leg: 'left' })
+    expect(left).toBe(right)
+    expect(room.avatar.playing).not.toBe(rightClip)
+    expect(room.avatar.playing).toBe('front_kick_left')
   })
 })

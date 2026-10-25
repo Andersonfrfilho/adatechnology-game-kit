@@ -56,3 +56,28 @@ export const filterPoseChannels = (pose: Record<string, number>, channels: PoseC
   for (const name of allowed) if (pose[name] !== undefined) out[name] = pose[name] as number
   return out
 }
+
+/** Joints that swap with their opposite when a clip is mirrored, and the channels that change sign (side, twist and the sideways turns). */
+const MIRROR_PAIRS: ReadonlyArray<readonly [string, string]> = [['armR', 'armL'], ['elbR', 'elbL'], ['armRz', 'armLz'], ['legR', 'legL'], ['kneeR', 'kneeL']]
+const MIRROR_NEGATED: ReadonlySet<string> = new Set(['side', 'twist', 'headY', 'headZ'])
+
+/** The clip as seen in a mirror: left and right swap and the sideways channels change sign; the times, the events and the duration stay, so the impact falls at the same second. */
+export const mirrorPoseClip = (clip: PoseClip, id: string): PoseClip => ({
+  ...clip,
+  id,
+  keys: clip.keys.map((key) => {
+    const pose: Record<string, number> = {}
+    for (const [name, value] of Object.entries(key.pose)) pose[name] = MIRROR_NEGATED.has(name) ? -value : value
+    for (const [a, b] of MIRROR_PAIRS) {
+      const va = key.pose[a]
+      const vb = key.pose[b]
+      const sign = a === 'armRz' ? -1 : 1 // the sideways swing of an arm opens to the other side
+      if (vb !== undefined) pose[a] = sign * vb
+      else delete pose[a]
+      if (va !== undefined) pose[b] = sign * va
+      else delete pose[b]
+    }
+    return { t: key.t, pose }
+  }),
+  ...(clip.events ? { events: clip.events.map((event) => ({ ...event })) } : {}),
+})
