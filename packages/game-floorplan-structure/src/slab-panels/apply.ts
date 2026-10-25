@@ -457,8 +457,16 @@ function anchorBalconies(context: Context): void {
   }
 }
 
-/** The panels `toDestructibleSpec` makes of the slabs of a structure (named as it names them), for a renderer that draws the floor of each room apart. */
-export function slabPanelsOf(structure: Structure, options: SlabPanelOptions): StructurePart[] {
+/**
+ * The panels `toDestructibleSpec` makes of the slabs of a structure (named as it names them), for a renderer that draws the floor of each room apart:
+ * `panels` (each with `slab`, the id of the slab it was cut from), `replaced` (those slabs, which the spec no longer has) and the `supports` that touch the panels.
+ */
+export function slabPanelView(structure: Structure, options: SlabPanelOptions): { panels: StructurePart[]; replaced: string[]; supports: Support[] } {
   const out = applySlabPanels({ parts: structure.parts, supports: structure.supports }, structure, options)
-  return out.parts.filter((p) => p.slab !== undefined && p.role === 'slab')
+  const panels = out.parts.filter((p) => p.slab !== undefined && p.role === 'slab')
+  const ids = new Set(panels.map((p) => p.id))
+  return { panels, replaced: [...new Set(panels.map((p) => p.slab!))], supports: out.supports.filter((s) => ids.has(s.part) || ids.has(s.on)) }
 }
+
+/** The panels of `slabPanelView`, alone. */
+export const slabPanelsOf = (structure: Structure, options: SlabPanelOptions): StructurePart[] => slabPanelView(structure, options).panels

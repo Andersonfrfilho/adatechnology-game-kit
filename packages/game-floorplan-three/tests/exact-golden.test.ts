@@ -53,7 +53,7 @@ const destroyed = (hit: (s: { world: any; d: any; centre: (id: string) => number
   return scene
 }
 cases.push(['destruction/breach', () => destroyed(({ world, d, centre }) => world.hitPart(d.id, 'wall_0_0', { type: 'blunt', point: centre('wall_0_0'), energy: 3e4, radius: 0.35, source: 'test' }))])
-cases.push(['destruction/spall', () => destroyed(({ world, d }) => world.hitPart(d.id, 'slab_1', { type: 'explosive', point: d.spec.parts.find((p: any) => p.id === 'slab_1').position, energy: 4e5, radius: 1.5 }))])
+cases.push(['destruction/spall', () => destroyed(({ world, d }) => world.hitPart(d.id, 'slab_1_p0', { type: 'explosive', point: d.spec.parts.find((p: any) => p.id === 'slab_1_p0').position, energy: 4e5, radius: 1.5 }))])
 cases.push(['destruction/fracture', () => destroyed(({ world, d, centre }) => world.hitPart(d.id, 'wall_0_0', { type: 'explosive', point: centre('wall_0_0'), energy: 2e6, radius: 2.5, source: 'test' }))])
 // the specimens include rural typologies: their pack is registered when the first specimen is drawn (after the houses)
 let rural = false

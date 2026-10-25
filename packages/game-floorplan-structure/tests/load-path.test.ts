@@ -57,27 +57,28 @@ describe('reinforced concrete frame: pillars, bond beams and slabs', () => {
     return { result, spec: toDestructibleSpec(result.structure, { portico: true }) }
   }
 
-  it('flat-roof house: one corner pillar lost and the slab stays in part (the corner bay drops); all four and the slab is down', () => {
+  it('flat-roof house: one corner pillar lost and the slab stays; all four and the slab is down', () => {
     const { spec } = frameOf('budget_slab_house')
     const pillars = idsStarting(spec, 'column_0_')
     const panels = idsStarting(spec, 'slab_top_p')
     expect(pillars).toHaveLength(4)
     expect(panels.length).toBeGreaterThan(1)
-    expect(panels.some((id) => breakParts(spec, pillars.slice(0, 1)).stands(id))).toBe(true)
+    const one = breakParts(spec, pillars.slice(0, 1))
+    expect(panels.every((id) => one.stands(id))).toBe(true)
     const all = breakParts(spec, pillars)
     expect(panels.some((id) => !all.stands(id))).toBe(true)
   })
 
-  it('two storeys: one pillar lost and the roof and part of the slab above stay; all the pillars of the ground floor and the roof falls', () => {
+  it('two storeys: one pillar lost and the slab above and the roof stay; two and part of the slab above falls; all four and the roof falls too', () => {
     const { spec } = frameOf('townhouse')
     const pillars = idsStarting(spec, 'column_0_')
     const panels = idsStarting(spec, 'slab_1_p')
     const one = breakParts(spec, pillars.slice(0, 1))
-    expect(one.stands('roof_a')).toBe(true)
-    expect(one.stands('roof_b')).toBe(true)
-    expect(panels.some((id) => one.stands(id))).toBe(true)
+    expect(panels.every((id) => one.stands(id))).toBe(true)
+    expect(one.stands('roof_a') && one.stands('roof_b')).toBe(true)
+    const two = breakParts(spec, pillars.slice(0, 2))
+    expect(panels.some((id) => !two.stands(id))).toBe(true)
     const all = breakParts(spec, pillars)
-    expect(panels.some((id) => !all.stands(id))).toBe(true)
     expect(all.stands('roof_a') && all.stands('roof_b')).toBe(false)
   })
 

@@ -55,9 +55,9 @@ describe('registration in the world', () => {
     expect(gas.thickness).toBeLessThan(0.01)
   })
 
-  it('gives the concrete that is drawn the rebar of reinforced concrete', () => {
+  it('gives the concrete that is drawn (a panel of the slab) the rebar of reinforced concrete', () => {
     const { d } = setup()
-    const slab = d.spec.parts.find((p: any) => p.id === 'slab_1')
+    const slab = d.spec.parts.find((p: any) => p.id === 'slab_1_p0')
     expect(slab.reinforcement).toBeTruthy()
     expect(d.spec.parts.find((p: any) => p.id === 'roof_a' || p.material === 'ceramic')?.reinforcement).toBeUndefined()
   })
@@ -96,6 +96,33 @@ describe('registration in the world', () => {
 })
 
 describe('fracture and reset', () => {
+  it('binds the house to the panels the slab is cut into when it has a world, and draws the slab whole when it has none', () => {
+    const { house } = setup()
+    const panels = [...house.structure.byId.keys()].filter((id) => /^slab_1_p\d+$/.test(id))
+    expect(panels.length).toBeGreaterThan(1)
+    expect(house.structure.byId.has('slab_1')).toBe(false)
+    expect(panels.filter((id) => house.structure.meshesOf(id).length).length).toBeGreaterThan(1)
+    for (const id of panels) expect(house.structure.byId.get(id).role).toBe('slab')
+    const bare = houseOf(planOf('sobrado', 3)).house
+    expect(bare.structure.byId.has('slab_1')).toBe(true)
+    expect(bare.structure.byId.has('slab_1_p0')).toBe(false)
+  })
+
+  it('a slab panel that fractures hides its own tiles and leaves the other panels of the slab', () => {
+    const { house, d, world, centre, run, events } = setup()
+    const drawn = [...house.structure.byId.keys()].filter((id) => /^slab_1_p\d+$/.test(id) && house.structure.meshesOf(id).some((it: any) => it.mesh && !it.whole))
+    expect(drawn.length).toBeGreaterThan(1)
+    const first = drawn[0]!
+    const dist = (id: string): number => Math.hypot(...(centre(id).map((v, k) => v - centre(first)[k]) as number[]))
+    const other = [...drawn].sort((a, b) => dist(b) - dist(a))[0]!
+    expect(hidden(house, first)).toBe(false)
+    world.hitPart(d.id, first, { type: 'explosive', point: centre(first), energy: 5e9, radius: 1, source: 'test' })
+    run(1)
+    expect(events.some((e) => (e.type === 'fracture' && e.part === first) || (e.type === 'collapse' && e.parts.includes(first)))).toBe(true)
+    expect(hidden(house, first)).toBe(true)
+    expect(hidden(house, other)).toBe(false)
+  })
+
   it('hides the wall that fractures and puts it back on reset', () => {
     const { house, d, world, centre, run, events } = setup()
     const before = house.structure.meshesOf('wall_0_0').map((it: any) => it.mesh.geometry.attributes.position.array.slice(it.v0 * 3, it.v1 * 3))
@@ -122,7 +149,7 @@ describe('fracture and reset', () => {
   it('draws the rebar cage of a concrete slab that spalls, as instanced bars', () => {
     const { d, world, renderer, run, events } = setup()
     expect(renderer.rebarCount()).toBe(0)
-    world.hitPart(d.id, 'slab_1', { type: 'explosive', point: d.spec.parts.find((p: any) => p.id === 'slab_1').position, energy: 4e5, radius: 1.5 })
+    world.hitPart(d.id, 'slab_1_p0', { type: 'explosive', point: d.spec.parts.find((p: any) => p.id === 'slab_1_p0').position, energy: 4e5, radius: 1.5 })
     run(1)
     expect(events.some((e) => e.type === 'expose')).toBe(true)
     expect(renderer.rebarCount()).toBeGreaterThan(0)

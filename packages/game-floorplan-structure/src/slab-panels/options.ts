@@ -22,7 +22,7 @@ export interface SlabPanelOptions {
   floorMinThickness: number
   /** Thinnest roof slab, metres (default 0.08). */
   roofMinThickness: number
-  /** Depth of a beam is its span over this (default 12: `h = L/12`, continuous beams of NBR 6118; simply supported ones are L/10). */
+  /** Depth of a beam is its span over this (default 10: `h = L/10`, a simply supported beam of NBR 6118, and deep enough for the frame to carry the loss of one pillar; continuous beams are L/12). */
   beamDepthRatio: number
   /** Shallowest beam, metres (default 0.25). */
   beamMinDepth: number
@@ -36,7 +36,7 @@ export interface SlabPanelOptions {
 
 export const SLAB_PANEL_DEFAULTS: Readonly<SlabPanelOptions> = {
   maxSpan: 5, minPanel: 1.5, lineCoverage: 0.6, doorGap: 1.3, lineTolerance: 0.2, footprintShare: 0.5, thicknessRatio: 40, floorMinThickness: 0.1, roofMinThickness: 0.08,
-  beamDepthRatio: 12, beamMinDepth: 0.25, beamStep: 0.05, beamWidthRatio: 3, columnSide: 0.2,
+  beamDepthRatio: 10, beamMinDepth: 0.25, beamStep: 0.05, beamWidthRatio: 3, columnSide: 0.2,
 }
 
 export const resolveSlabPanels = (options?: boolean | Partial<SlabPanelOptions>): SlabPanelOptions | undefined => {

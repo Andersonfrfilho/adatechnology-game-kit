@@ -12,13 +12,13 @@ const specOf = (template: string, seed = 3, state: 'normal' | 'abandoned' = 'nor
 const panelsOf = (spec: { parts: { id: string }[] }, slab: string) => spec.parts.map((p) => p.id).filter((id) => new RegExp(`^${slab}_p\\d+$`).test(id))
 
 describe('slab panels: options and rules', () => {
-  it('the slab thickness follows the span (L/40) with a floor and a roof minimum, and the beam depth follows L/12 in steps', () => {
+  it('the slab thickness follows the span (L/40) with a floor and a roof minimum, and the beam depth follows L/10 in steps', () => {
     const o = SLAB_PANEL_DEFAULTS
     expect(o.maxSpan).toBe(5)
     expect(o.thicknessRatio).toBe(40)
     expect(o.floorMinThickness).toBeGreaterThanOrEqual(0.1)
     expect(o.roofMinThickness).toBeGreaterThanOrEqual(0.08)
-    expect(beamDepthFor(6, o)).toBeCloseTo(0.5, 6)
+    expect(beamDepthFor(6, o)).toBeCloseTo(0.6, 6)
     expect(beamDepthFor(1, o)).toBe(o.beamMinDepth)
     expect(resolveSlabPanels(false)).toBeUndefined()
     expect(resolveSlabPanels({ maxSpan: 4 })!.maxSpan).toBe(4)
@@ -70,25 +70,36 @@ describe('reinforced concrete is the default: every typology stands at rest', ()
 })
 
 describe('progressive collapse only where real', () => {
-  it('a framed sobrado that loses one corner column drops its corner bay, not the whole slab and not the roof', () => {
+  it('a framed sobrado that loses one corner column keeps its slab and its roof (the beams carry the bay across); two corner columns and the bay falls', () => {
     const { spec } = specOf('townhouse')
     const columns = idsStarting(spec, 'column_0_')
     const panels = panelsOf(spec, 'slab_1')
     expect(panels.length).toBeGreaterThan(2)
-    const fallen = breakParts(spec, columns.slice(0, 1))
-    const down = panels.filter((id) => !fallen.stands(id))
-    expect(down.length).toBeLessThan(panels.length)
-    expect(fallen.stands('roof_a')).toBe(true)
-    expect(fallen.stands('roof_b')).toBe(true)
-    expect(panels.some((id) => fallen.stands(id))).toBe(true)
+    const one = breakParts(spec, columns.slice(0, 1))
+    expect(panels.every((id) => one.stands(id))).toBe(true)
+    expect(one.stands('roof_a') && one.stands('roof_b')).toBe(true)
+    const two = breakParts(spec, columns.slice(0, 2))
+    const down = panels.filter((id) => !two.stands(id))
+    expect(down.length).toBeGreaterThan(0)
+    expect(down.length).toBeLessThan(panels.length + 1)
   })
 
-  it('a flat-roof house that loses one corner column keeps part of its slab; with all four columns lost the slab is down', () => {
+  it('a column of the upper floor lost drops the bay it carries and not the slab of the whole house', () => {
+    const { spec } = specOf('townhouse')
+    const upper = idsStarting(spec, 'column_1_').concat(idsStarting(spec, 'pillar_1_'))
+    const panels = panelsOf(spec, 'slab_ceiling')
+    expect(upper.length).toBeGreaterThan(1)
+    const fallen = breakParts(spec, upper)
+    expect(panels.some((id) => !fallen.stands(id))).toBe(true)
+    expect(panelsOf(spec, 'slab_1').every((id) => fallen.stands(id))).toBe(true)
+  })
+
+  it('a flat-roof house that loses one corner column keeps its slab; with all four columns lost the slab is down', () => {
     const { spec } = specOf('budget_slab_house')
     const columns = idsStarting(spec, 'column_0_')
     const panels = panelsOf(spec, 'slab_top')
     const one = breakParts(spec, columns.slice(0, 1))
-    expect(panels.some((id) => one.stands(id))).toBe(true)
+    expect(panels.every((id) => one.stands(id))).toBe(true)
     const all = breakParts(spec, columns)
     expect(panels.some((id) => !all.stands(id))).toBe(true)
   })

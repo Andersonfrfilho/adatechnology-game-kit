@@ -2,6 +2,7 @@
 import { assemblyPart, getAssembly } from '@adatechnology/game-destruction';
 import { DENSITY, toDestructibleSpec } from '@adatechnology/game-floorplan-structure';
 import type { Kernel, Shared } from '../kernel-types.js';
+import { panelViewOf } from './panels.js';
 
 export function installDestructionPieces(K: Kernel, shared: Shared): void {
   const { THREE, floorAtY, pieceRecord } = K;
@@ -43,9 +44,9 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           return b.isEmpty() ? null : [b.min.x, b.min.y, b.min.z, b.max.x, b.max.y, b.max.z]; };
         const parts = [], byId = new Map(), supports = E0.supports.map(a => Object.assign({}, a));
         for (const e of E0.parts) { const p = Object.assign({}, e, { meshes: (meshes.get(e.id) || []).length, extra: false }), pc = shared.ctx.pieces.get(e.id); if (pc) for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill']) if (pc[k] != null && p[k] == null) p[k] = pc[k]; parts.push(p); byId.set(p.id, p); }
-        const base = parts.length;
+        const base = parts.length, view = shared.ctx.panelView || panelViewOf(null, false), panelIds = new Set(view.panels.map(e => e.id)); // the panels are pieces of the structure, not of the plan
         for (const [id, pc] of shared.ctx.pieces) { // tagged pieces that do not come from the plan: windows, doors, tank, pipes, wiring, cylinder, walls
-          if (byId.has(id) || !meshes.has(id)) continue;
+          if (byId.has(id) || panelIds.has(id) || !meshes.has(id)) continue;
           const b = box3(id); if (!b) continue; const vol = Math.max(1e-6, (b[3] - b[0]) * (b[4] - b[1]) * (b[5] - b[2]));
           const p = { id, role: 'none', material: pc.mat, aabb: [b[0], b[2], b[3], b[5]], y0: b[1], y1: b[4], floor: pc.floor != null ? pc.floor : floorAtY(b[1] + 0.1), mass: pc.mass != null ? pc.mass : Math.max(0.5, vol * (DENSITY[pc.mat] || 800) * (pc.fill != null ? pc.fill : 0.15)), meshes: meshes.get(id).length, extra: true };
           for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill']) if (pc[k] != null) p[k] = pc[k];
@@ -58,6 +59,16 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           let m = null, md = 1e9; for (const q of parts.slice(0, base)) { if (!target.includes(q.role) || !inside(p, q, 0.2)) continue; const d = Math.hypot((p.aabb[0] + p.aabb[2] - q.aabb[0] - q.aabb[2]) / 2, (p.aabb[1] + p.aabb[3] - q.aabb[1] - q.aabb[3]) / 2); if (d < md) { md = d; m = q; } }
           if (m) supports.push({ part: p.id, on: m.id, joint: /^(window|jamb)/.test(p.id) ? 'glue' : 'clip', bears: false, extra: true });
         }
+        // The spec is made from the pieces of the plan (the slabs whole), and the structure cuts them into panels; the house is then bound to the panels: a floor, a
+        // ceiling and a roof slab are drawn tile by tile in the panel they lie on (house/floors), and the slab they were cut from is not a piece any more.
+        const specParts = parts.slice(), specSupports = supports.slice();
+        if (view.panels.length) {
+          const gone = new Set(view.replaced);
+          parts.splice(0, parts.length, ...parts.filter(p => !gone.has(p.id)));
+          for (const id of gone) byId.delete(id);
+          for (const e of view.panels) { const p = Object.assign({}, e, { meshes: (meshes.get(e.id) || []).length, extra: false }), pc = shared.ctx.pieces.get(e.id); if (pc) for (const k of ['contains', 'explodes', 'tags', 'form', 'thickness', 'fill']) if (pc[k] != null && p[k] == null) p[k] = pc[k]; parts.push(p); byId.set(p.id, p); }
+          supports.splice(0, supports.length, ...supports.filter(s => !gone.has(s.part) && !gone.has(s.on)), ...view.supports.filter(s => byId.has(s.part) && (byId.has(s.on) || s.on === 'ground')).map(a => Object.assign({}, a)));
+        }
         const structure: any = {
           ...E0, system: (r0.construction && r0.construction.system) || 'masonry', parts, supports, levels: (E0.levels || []).slice(), elevation: E0.elevation || 0, byId,
           meshesOf: id => meshes.get(id) || [],
@@ -66,7 +77,7 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           // One part per wall, as the house draws them (a mesh range per wall): the panels of `wallDetail: 'panels'` would name parts the meshes do not have.
           // A masonry wall keeps its assembly (layers, units, rebar, breach) on the same box, so its stage 2 can open the courses; `o.wallDetail` still overrides.
           spec: o => {
-            const spec = toDestructibleSpec(structure, { wallDetail: 'coarse', ...o });
+            const spec = toDestructibleSpec({ ...structure, parts: specParts, supports: specSupports }, { wallDetail: 'coarse', ...o });
             if (o && o.wallDetail && o.wallDetail !== 'coarse') return spec;
             // what a part holds, what makes it explode and how thin its wall is (the water tank, the gas cylinder) comes from the piece; the structure package's spec does not carry it
             spec.parts = spec.parts.map(sp => {

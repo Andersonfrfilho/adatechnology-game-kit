@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- port of the team's closure: dead locals and shapes stay as delivered */
+import { panelViewOf } from '../destruction/panels.js';
 import type { Kernel, Shared } from '../kernel-types.js';
 
 export function installBuildBuild(K: Kernel, shared: Shared): void {
@@ -13,7 +14,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         const pr = opts.building || {};
         shared.ctx.r = r; shared.ctx.colors = r.colors; shared.ctx.cut = !!opts.cut; shared.ctx.night = !!opts.night; shared.ctx.labels = []; shared.ctx.colliders = []; shared.ctx.stairs = []; shared.ctx.noTerrain = opts.terrain === false;
         shared.ctx.roomById = {}; for (const c of r.rooms) shared.ctx.roomById[c.id] = c;
-        shared.ctx.pieces = new Map(); shared.ctx.pieceObjects = new Map(); shared.ctx.structureIndex = {}; for (const e of (r0.structure && r0.structure.parts) || []) shared.ctx.structureIndex[e.id] = e; shared.ctx.panes = (r0.roof && r0.roof.panes) || []; shared.ctx.noPiece = false;
+        shared.ctx.pieces = new Map(); shared.ctx.pieceObjects = new Map(); shared.ctx.structureIndex = {}; for (const e of (r0.structure && r0.structure.parts) || []) shared.ctx.structureIndex[e.id] = e; { const view = shared.ctx.panelView = panelViewOf(r0.structure, !!cfg.destruction); shared.ctx.panelsOf = new Map(); for (const id of view.replaced) delete shared.ctx.structureIndex[id]; for (const e of view.panels) { shared.ctx.structureIndex[e.id] = e; const l = shared.ctx.panelsOf.get(e.slab); if (l) l.push(e); else shared.ctx.panelsOf.set(e.slab, [e]); } } shared.ctx.panes = (r0.roof && r0.roof.panes) || []; shared.ctx.noPiece = false;
         cursor.separate = opts.pieces === 'meshes'; cursor.pc = null;
         shared.ctx.apartment = r.template === 'apartment_modern'; shared.ctx.pa = Math.max(3, Math.min(20, pr.floors != null ? pr.floors : 5)); shared.ctx.pf = Math.max(1, Math.min(shared.ctx.pa, pr.floor != null ? pr.floor : 3)); shared.ctx.pu = Math.max(0, pr.unit != null ? pr.unit : 0);
         shared.ctx.showBuilding = shared.ctx.apartment && (pr.showIt == null ? true : !!pr.showIt);

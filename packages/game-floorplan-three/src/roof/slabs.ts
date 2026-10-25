@@ -7,13 +7,14 @@ export function installRoofSlabs(K: Kernel, shared: Shared): void {
   const sh = (...a: any[]): any => K.sh(...a);
   // slab: a plate per cell; parapet only on the outer perimeter (nothing between neighbouring slabs or next to the upper storey)
   function slabs(f, xs, zs, O, U, nx, nz, full, pe, C) {
-    cursor.pc = structurePiece('slab_top');
+    cursor.pc = null;
     const c = C.facade != null ? C.facade : 0xd8d0c0, cap = sh(c, 1.12), pr = 0.5, t = 0.14, o = 0.08, slab = sh(C.ceiling != null ? C.ceiling : 0xb8b4ac, 0.85);
     const yb0 = pe(xs[0], zs[0], xs[nx], zs[nz]);
     const free = (j, i) => !O(j, i) && !U(j, i);
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
       if (!O(j, i)) continue;
       const x0 = xs[i], x1 = xs[i + 1], z0 = zs[j], z1 = zs[j + 1], yb = pe(x0, z0, x1, z1);
+      cursor.pc = K.panelAt('slab_top', (x0 + x1) / 2, (z0 + z1) / 2); // the cell belongs to the panel of the roof slab it lies on
       const ex0 = free(j, i - 1) ? o : 0, ex1 = free(j, i + 1) ? o : 0, ez0 = free(j - 1, i) ? o : 0, ez1 = free(j + 1, i) ? o : 0;
       bx('plaster', x0 - ex0, yb, z0 - ez0, x1 + ex1, yb + 0.03, z1 + ez1, slab);
       const side = (ok, ax0, az0, ax1, az1) => { if (!ok) return; bx('plaster', ax0, yb, az0, ax1, yb + pr, az1, c); bx('plaster', ax0 - (ax1 - ax0 < 0.5 ? 0.03 : 0), yb + pr, az0 - (az1 - az0 < 0.5 ? 0.03 : 0), ax1 + (ax1 - ax0 < 0.5 ? 0.03 : 0), yb + pr + 0.04, az1 + (az1 - az0 < 0.5 ? 0.03 : 0), cap); };
