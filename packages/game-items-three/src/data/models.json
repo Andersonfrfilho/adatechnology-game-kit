@@ -1778,5 +1778,15 @@
       0.08
     ],
     "scale": 1
+  },
+  {
+    "id": "delivery_bag",
+    "teamId": "bag_entregador",
+    "teamBox": [
+      0.48,
+      0.45,
+      0.42
+    ],
+    "scale": 1
   }
 ]
