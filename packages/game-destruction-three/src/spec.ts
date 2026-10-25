@@ -14,6 +14,8 @@ interface Entry {
   /** `userData.destructionSkin`: a layer drawn on a part (a label, a coat), never a part of its own. */
   skin: boolean
   tags?: string[]
+  /** `userData.destructionContains`: the fluid the part holds (a hole in it makes it leak). */
+  contains?: { fluid: string; liters: number }
   /** Part id wished by the host (`userData.destructionPart`). */
   fixedId: boolean
   name: string
@@ -28,6 +30,13 @@ export interface PartHint {
   material?: string
   parent?: string
   kind?: string
+}
+
+/** Read `userData.destructionContains` (`{ fluid, liters }`); undefined when it holds nothing. */
+function containsOf(value: unknown): { fluid: string; liters: number } | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const v = value as Record<string, unknown>
+  return typeof v.fluid === 'string' && typeof v.liters === 'number' && v.liters > 0 ? { fluid: v.fluid, liters: v.liters } : undefined
 }
 
 /** Read `userData.destructionPart` (string or object with an `id`); null when it names no part. */
@@ -75,7 +84,7 @@ export function specFrameInverse(THREE: ThreeNamespace, root: Object3D): THREE_N
  * axis-aligned box in metres in the root's frame (its position and rotation removed, its world scale kept; rotation omitted), with the material taken from `options.materialOf`, `userData.destructionMaterial`
  * or a guess from the names. Tiny meshes are merged into the part they overlap most; joints are inferred from touching parts.
  *
- * `root.userData.destructionMass` (kg) fixes the total mass, split between the parts in proportion to their volume, density and fill.
+ * `userData.destructionContains` (`{ fluid, liters }`) makes the part a container: a hole through it leaks. `root.userData.destructionMass` (kg) fixes the total mass, split between the parts in proportion to their volume, density and fill.
  * A mesh with `userData.destructionSkin` (a label, a coat) joins the part it overlaps most instead of becoming a part: it stays drawn and bound to that part (decals, dents) but never breaks off.
  * Meshes that are invisible or have `userData.destructionIgnore` (or sit under such an object) are skipped. The result also tells which meshes
  * became which part, ready to be passed to `bind`.
@@ -110,6 +119,7 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
         const skin = ud.destructionSkin === true
         const fill = options.fillOf?.(o, material)
         const tags = Array.isArray(ud.destructionTags) ? (ud.destructionTags as string[]) : undefined
+        const contains = containsOf(ud.destructionContains)
         const existing = explicit ? byKey.get(explicit) : undefined
         if (existing) {
           const before = sizeOf(existing.box)
@@ -121,8 +131,9 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
           existing.hollow = existing.hollow || hollow
           existing.skin = existing.skin && skin
           if (fill !== undefined) existing.fill = fill
+          if (contains) existing.contains = contains
         } else {
-          const e: Entry = { key: explicit ?? `m${entries.length}`, meshes: [o], box, material, explicitId: explicit, fill, hollow, skin, tags, fixedId: !!explicit, name: o.name, parent: hint?.parent, jointKind: hint?.kind as JointKind | undefined }
+          const e: Entry = { key: explicit ?? `m${entries.length}`, meshes: [o], box, material, explicitId: explicit, fill, hollow, skin, tags, fixedId: !!explicit, ...(contains ? { contains } : {}), name: o.name, parent: hint?.parent, jointKind: hint?.kind as JointKind | undefined }
           entries.push(e)
           if (explicit) byKey.set(explicit, e)
         }
@@ -200,6 +211,7 @@ export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options:
       part.thickness = Math.max(minSide, 0.0005)
     }
     if (e.tags) part.tags = [...e.tags]
+    if (e.contains) part.contains = { ...e.contains }
     const ao = options.anchorBelow ?? -1
     if (ao >= 0 && e.box.min.y <= ao) part.anchored = true
     parts.push(part)
