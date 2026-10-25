@@ -1123,11 +1123,11 @@
     "id": "flint_striker",
     "teamId": "pederneira",
     "teamBox": [
-      1.1,
-      0.202,
-      0.152
+      11.1,
+      2,
+      1.5
     ],
-    "scale": 0.1
+    "scale": 0.00997
   },
   {
     "id": "sharpening_stone",
