@@ -524,10 +524,10 @@
     "teamId": "sal",
     "teamBox": [
       0.704,
-      1.6,
+      1.61,
       0.704
     ],
-    "scale": 0.1
+    "scale": 0.099414
   },
   {
     "id": "snack_chips",
