@@ -2388,5 +2388,15 @@
       0.0404
     ],
     "scale": 1
+  },
+  {
+    "id": "tool_belt",
+    "teamId": "cinto_ferramentas",
+    "teamBox": [
+      0.35,
+      0.1,
+      0.25
+    ],
+    "scale": 1
   }
 ]

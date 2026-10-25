@@ -240,7 +240,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Caixa térmica (kit) | `caixa_termica` | `cooler_box` | 1,0 kg | comum | 320 x 250 x 230 mm |
 | [x] | Carrinho de mercado (kit) | `carrinho_merc` | `shopping_cart` | 12,0 kg | comum | 550 x 980 x 950 mm |
 | [ ] | Carrinho de mão | `carrinho_mao` | `wheelbarrow` | 15,0 kg | comum | 0,65 x 0,65 x 1,5 m |
-| [ ] | Cinto de ferramentas | `cinto_ferramentas` | `tool_belt` | 0,4 kg | comum | 350 x 100 x 250 mm |
+| [x] | Cinto de ferramentas (kit) | `cinto_ferramentas` | `tool_belt` | 0,4 kg | comum | 350 x 100 x 250 mm |
 | [x] | Colete tático (kit) | `colete_tatico` | `tactical_vest` | 1,2 kg | raro | 350 x 100 x 400 mm |
 | [x] | Mala de rodinha (kit) | `mala` | `rolling_suitcase` | 3,0 kg | comum | 400 x 650 x 250 mm |
 | [ ] | Mochila cargueira 70 L | `cargueira` | `trekking_backpack_70l` | 2,2 kg | muito raro | 380 x 750 x 300 mm |
