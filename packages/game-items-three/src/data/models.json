@@ -2108,5 +2108,15 @@
       0.0101
     ],
     "scale": 1
+  },
+  {
+    "id": "master_key",
+    "teamId": "chave_mestra",
+    "teamBox": [
+      0.09,
+      0.035,
+      0.006
+    ],
+    "scale": 1
   }
 ]
