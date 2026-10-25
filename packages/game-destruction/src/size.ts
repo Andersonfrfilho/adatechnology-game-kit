@@ -1,6 +1,8 @@
 import { createDestruction } from './world'
-import { bendGeometry, isFlexural, isReinforced, resolveFlexure, sectionMoments, sectionWidth, steelMoment, tensionSteel } from './flexure'
+import { GRAVITY, bendGeometry, isFlexural, isReinforced, resolveFlexure, sectionMoments, sectionWidth, steelMoment, tensionSteel } from './flexure'
 import { MATERIALS } from './materials'
+import { shapeDims } from './math'
+import { resolveWind, tensionCapacity } from './wind'
 import type { DestructibleSpec, MaterialDef, SizeStructureOptions, StructureRole } from './types'
 
 /** Highest tension steel ratio a designer puts in a beam or slab (NBR 6118 17.3.5.2.4: 4% of the section). */
@@ -92,19 +94,21 @@ export const sizeStructure = (spec: DestructibleSpec, options: SizeStructureOpti
   const redundancy = options.redundancy
   const redundancyRoles: readonly StructureRole[] = options.redundancyRoles ?? ['column']
   const safetyOf = (role: StructureRole): number => options.safetyByRole?.[role] ?? safety
-  const loads = (s: DestructibleSpec): Map<string, { load: number; stress: number }> => {
-    const w = createDestruction(options.materials ? { materials: options.materials } : {})
+  const loads = (s: DestructibleSpec, wind?: SizeStructureOptions['wind']): Map<string, { load: number; stress: number; wind: number }> => {
+    const w = createDestruction({ ...(options.materials ? { materials: options.materials } : {}), ...(wind ? { wind } : {}) })
     const id = w.add(onRock(s))
-    return new Map(w.state(id)!.parts.map((p) => [p.id, { load: p.load ?? 0, stress: p.stress ?? 0 }]))
+    return new Map(w.state(id)!.parts.map((p) => [p.id, { load: p.load ?? 0, stress: p.stress ?? 0, wind: p.wind ?? 0 }]))
   }
   const out = structuredClone(spec)
-  const base = loads(out)
+  const base = loads(out, options.wind)
+  const gamma = options.wind ? resolveWind(options.wind).loadFactor : 0
   const need = new Map<string, number>()
   for (const p of out.parts) {
     if (!p.structure || p.structure.role === 'none') continue
     const b = base.get(p.id)
     if (!b || b.stress <= 0) continue
-    need.set(p.id, b.load / safetyOf(p.structure.role))
+    // the wind adds its factored axial force to the dead load (compression side); on the tension side the bars are sized below
+    need.set(p.id, (b.load + (b.wind > 0 ? (gamma * b.wind) / GRAVITY : 0)) / safetyOf(p.structure.role))
   }
   if (redundancy !== undefined) {
     for (const col of out.parts) {
@@ -126,6 +130,20 @@ export const sizeStructure = (spec: DestructibleSpec, options: SizeStructureOpti
   for (const p of out.parts) {
     const n = need.get(p.id)
     if (n !== undefined) p.structure = { ...p.structure!, capacity: n }
+  }
+  if (options.wind) {
+    // a wall or column that the wind pulls past its dead load needs bars for the pull: thicker bars, to the 40 mm of NBR 7480
+    const yieldMPa = resolveFlexure(options.flexure).rebarYieldMPa
+    for (const p of out.parts) {
+      const b = base.get(p.id)
+      if (!b || b.wind >= 0 || !p.reinforcement || p.shape.kind !== 'box') continue
+      const pull = (-(b.load + (gamma * b.wind) / GRAVITY) * GRAVITY)
+      if (pull <= 0) continue
+      const dims = shapeDims(p.shape)
+      const have = tensionCapacity(dims, { reinforcement: p.reinforcement, yieldMPa })
+      const want = pull / safetyOf(p.structure?.role ?? 'wall')
+      if (have > 0 && want > have) p.reinforcement = { ...p.reinforcement, diameter: Math.min(0.04, p.reinforcement.diameter * Math.sqrt(want / have)) }
+    }
   }
   return sizeRebar(out, options)
 }
