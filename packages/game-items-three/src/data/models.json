@@ -933,11 +933,11 @@
     "id": "bucket",
     "teamId": "balde",
     "teamBox": [
-      2.804,
-      2.7,
-      2.804
+      28,
+      27,
+      28
     ],
-    "scale": 0.1
+    "scale": 0.01
   },
   {
     "id": "binoculars",
