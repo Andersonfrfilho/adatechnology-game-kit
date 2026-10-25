@@ -1,3 +1,4 @@
+import type { CategoryDef as KindDef } from '@adatechnology/game-contracts'
 import type { ArsenalItemRecord, CategoryDef, ContainerDef, ItemDef, PlaceDef, PoolEntry, RecipeDef, UseEffectDef } from '@adatechnology/game-items'
 
 import ammoBoxesJson from './data/ammo-boxes.json'
@@ -6,6 +7,8 @@ import containersJson from './data/containers.json'
 import depletionJson from './data/depletion.json'
 import housePoolsJson from './data/house-pools.json'
 import itemsJson from './data/items.json'
+import kindsJson from './data/kinds.json'
+import knownGapsJson from './data/known-gaps.json'
 import meleeJson from './data/melee.json'
 import placesJson from './data/places.json'
 import provenanceJson from './data/provenance.json'
@@ -96,3 +99,9 @@ export const GOODS_TABLES = {
 export const GOODS_ARSENAL_RECORDS = ammoBoxesJson as unknown as readonly ArsenalItemRecord[]
 
 export const GOODS_PROVENANCE = provenanceJson as unknown as Readonly<Record<string, ItemProvenance>>
+
+/** The tree of kinds (`kind` of each item): defaults and required contracts per kind, see `createGoodsKinds`. */
+export const GOODS_KINDS = kindsJson as unknown as readonly KindDef[]
+
+/** Gaps of the catalog that are known and allowed, by item id: the problem prefixes `checkGoodsItems` lets through. It only shrinks: a test fails when a gap no longer applies. */
+export const GOODS_KNOWN_GAPS = knownGapsJson as Readonly<Record<string, readonly string[]>>

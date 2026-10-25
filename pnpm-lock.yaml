@@ -958,10 +958,16 @@ importers:
 
   packages/game-items-goods:
     dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
       '@adatechnology/game-items':
         specifier: workspace:*
         version: link:../game-items
     devDependencies:
+      '@adatechnology/game-destruction':
+        specifier: workspace:*
+        version: link:../game-destruction
       '@adatechnology/game-interactables':
         specifier: workspace:*
         version: link:../game-interactables
