@@ -4,6 +4,8 @@ three.js presentation for `@adatechnology/game-weapons`: the real models of the 
 
 The muzzle flash, the smoke, the backblast of a launched rocket and the flame jet of the weapon in the hands are not built here: they are recipes of `@adatechnology/game-vfx` (`viewmodel_muzzle_flash`, `weapon_smoke_puff`, `launcher_backblast`, `flame_jet`) that draw them as the gallery does, as solids (an open cone, four small cones and a core for 55 ms growing from 0.6 to 1.5 times their size, a light of `4 k` that holds, spheres of smoke that rise and grow, icosahedra of fire), with the gallery's numbers and the barrel's whole turn (`orientation`, pitch and roll included). `createWeaponFx({ effects })` plays them through the host's effect sink (the test area passes `host.effects`); with no sink the viewer makes a world of effects of its own, stepped and drawn with the weapon. Casings, magazines, the rocket itself and the burning droplets stay meshes of this package.
 
+**Hands.** The weapon in the hands tells the host where the hands go (`host.setHandTargets`, `HandTargets` of `game-contracts`): the right on the pistol grip (the `grip` pivot of the model, else under the receiver), the left on the handguard, on the pump of a pump gun (it moves with the pump), under the right on a handgun, and to the magazine while it is changed; the generic props take the right hand on the `handle` and the left under the `head` of a long gun. Sizes come from the model, the hands shrink with a model drawn small.
+
 ## Geometry
 
 The models' geometry comes from [`game-shapes`](../game-shapes): the model kit's `THREE` is `shapeGeometries(host)` (box, cylinder, cone, sphere,

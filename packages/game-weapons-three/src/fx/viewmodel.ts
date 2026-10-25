@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import { createToolClipPlayer, toolAnimationStep } from '@adatechnology/game-contracts'
-import type { AnimationPose, EffectSink, HostEvent, HostTool, HostToolAttachment, ToolAnimationStep, ToolClipPlayer } from '@adatechnology/game-contracts'
+import type { AnimationPose, EffectSink, HandTargets, HostEvent, HostTool, HostToolAttachment, ToolAnimationStep, ToolClipPlayer } from '@adatechnology/game-contracts'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, CaliberDef, FittedAttachment, MountKind, WeaponDef } from '@adatechnology/game-weapons'
 import { ease } from '../animation/clip-builder'
@@ -29,10 +29,14 @@ import { createModelRig } from './rig'
 import type { FxWorld, Session } from './session'
 import { toWorld, worldPositionOf } from './session'
 import { createClipEventHandler } from './viewmodel-events'
+import { HAND_HOLD, holdOfModel, targetsOf } from './hand-hold'
+import type { Hold } from './hand-hold'
 
 const PI = Math.PI
 // where the weapon sits against the camera: right, down and ahead; long guns are drawn smaller so they do not fill the view
 const HAND_OFFSET: [number, number, number] = [0.2, -0.2, -0.42]
+/** A handgun is held in both hands, so it rides higher and nearer the middle than a long gun: both hands stay in the view. */
+const HANDGUN_OFFSET: [number, number, number] = [0.1, -0.12, -0.44]
 const HEAT_DISPLAY_MAX_FALLBACK = 120
 // the launcher has no calibre: its shot is the game's `explosao` class, at the volume of a mid-sized blast
 const LAUNCH_VOLUME = 0.6
@@ -71,6 +75,8 @@ export interface Viewmodel {
   handle(event: HostEvent, tool: HostTool): void
   update(dt: number): void
   setCondition(condition: string): void
+  /** Where the hands take the weapon now (world space), or null with nothing in the hands. The right hand sits on the grip, the left on the forend, and goes to the magazine while it is changed. */
+  handTargets(): HandTargets | null
   readonly inHand: string | null
   readonly casings: number
   readonly magazines: number
@@ -123,6 +129,10 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   let lastAmmo = 0
   let smokeDebt = 0
   let secondsSinceShot = Number.POSITIVE_INFINITY
+  let hold: Hold | null = null
+  let reloading = false
+  let magazineHand = 0
+  const rootQuaternion = new THREE.Quaternion()
 
   const world: FxWorld = {
     kit,
@@ -147,6 +157,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     player = null
     session = null
     tasks = []
+    hold = null
   }
 
   const heavy = (current: Session): HeavyContext => ({
@@ -168,6 +179,9 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     const model = def ? buildWeaponModelById(THREE, weapon) : undefined
     if (!def || !model) return false
     release()
+    hold = null
+    reloading = false
+    magazineHand = 0
     rigStock(THREE, model, def)
     rigUnderbarrel(THREE, model, def)
     const length = new THREE.Box3().setFromObject(model.root).getSize(new THREE.Vector3()).x
@@ -211,6 +225,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     if (model.parts.stockMove && onTool?.stock === 'collapsed') rig.setPartPose('stock', collapsedStockPose(model.parts.stockMove))
     applyCondition(kit, model, condition)
     lastAmmo = options.tool?.().ammo ?? 0
+    hand.updateMatrixWorld(true)
+    hold = holdOfModel(THREE, model, scale)
     return true
   }
 
@@ -227,7 +243,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   }
 
   const place = (): void => {
-    const [x, y, z] = HAND_OFFSET
+    const family = session?.model.parts.family
+    const [x, y, z] = family === 'pistol' || family === 'revolver' ? HANDGUN_OFFSET : HAND_OFFSET
     hand.position.set(x, y, z).applyQuaternion(camera.quaternion).add(camera.position)
     hand.quaternion.copy(camera.quaternion)
     hand.updateMatrixWorld(true)
@@ -273,7 +290,10 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       if (!session || !player || event.weapon !== session.id) return
       const current = session
       if (event.type === 'shot') handleShot(current, event, tool)
-      else if (event.type === 'reload' && event.phase === 'start') current.nextChamber = 0
+      else if (event.type === 'reload' && event.phase === 'start') {
+        current.nextChamber = 0
+        reloading = true
+      } else if (event.type === 'reload' && event.phase === 'end') reloading = false
       else if (event.type === 'clear' && event.phase === 'end') current.stuckCase = null
       const mechanical = weaponEventOf(event)
       if (mechanical) audio?.event(mechanical)
@@ -286,6 +306,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       if (session) {
         place()
         player?.update(dt)
+        const wantsMagazine = reloading || options.tool?.().reloading === true
+        magazineHand += ((wantsMagazine ? 1 : 0) - magazineHand) * Math.min(1, dt * HAND_HOLD.magRate)
         const tool = options.tool?.()
         syncAttachments(session, tool)
         session.attachments?.update()
@@ -320,6 +342,11 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     setCondition(next) {
       condition = next
       if (session) applyCondition(kit, session.model, condition)
+    },
+    handTargets() {
+      if (!session || !hold) return null
+      hand.updateMatrixWorld(true)
+      return targetsOf(THREE, hold, session.model.root.getWorldQuaternion(rootQuaternion), magazineHand)
     },
     get inHand() {
       return session?.id ?? null

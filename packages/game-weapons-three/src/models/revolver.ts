@@ -41,6 +41,7 @@ export function buildRevolver(kit: ModelKit, options: ModelOptions): BuiltModel 
   parts.hammer = hammer
   const grip = kit.pivot(group, 0.024, -0.062, 0)
   grip.rotation.z = -0.38
+  parts.grip = grip
   box(grip, 0.034, 0.1, 0.031, options.wood ? M.wood : M.rubber, 0, 0, 0)
   if (!options.wood) for (let i = 0; i < 4; i++) box(grip, 0.006, 0.07, 0.033, M.dark, -0.012 + i * 0.008, 0, 0)
   box(group, 0.038, 0.004, 0.008, metal, 0.062, -0.036, 0)

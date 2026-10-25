@@ -118,6 +118,8 @@ export interface ModelParts {
   chambers?: THREE_NS.Object3D[]
   barrels?: THREE_NS.Object3D
   breech?: THREE_NS.Object3D[]
+  /** The pivot of the pistol grip (its y runs along the grip, tilted as the grip is): the right hand holds here. Models without a drawn grip leave it out and the hand is placed from `frames`. */
+  grip?: THREE_NS.Object3D
   /** The existing selector or safety mesh; the gallery draws it but does not move it. */
   safety?: THREE_NS.Object3D
   muzzle?: THREE_NS.Object3D

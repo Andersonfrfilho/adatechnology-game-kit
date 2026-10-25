@@ -214,6 +214,9 @@ importers:
       '@adatechnology/game-characters':
         specifier: workspace:*
         version: link:../game-characters
+      '@adatechnology/game-characters-people':
+        specifier: workspace:*
+        version: link:../game-characters-people
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
@@ -221,9 +224,6 @@ importers:
         specifier: workspace:*
         version: link:../game-shapes-three
     devDependencies:
-      '@adatechnology/game-characters-people':
-        specifier: workspace:*
-        version: link:../game-characters-people
       '@adatechnology/game-characters-undead':
         specifier: workspace:*
         version: link:../game-characters-undead

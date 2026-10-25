@@ -37,6 +37,7 @@ function buildFrame(kit: ModelKit, group: THREE.Group, parts: ModelParts, option
   const gy = -h / 2 - gripLength / 2 + 0.006
   const grip = kit.pivot(group, gx, gy, 0)
   grip.rotation.z = style.ga
+  parts.grip = grip
   const gripWidth = style.grip === 'chunky' ? w * 1.18 : w * 1.06
   const gripDepth = style.grip === 'chunky' ? 0.036 : 0.032
   kit.roundness = 0.3

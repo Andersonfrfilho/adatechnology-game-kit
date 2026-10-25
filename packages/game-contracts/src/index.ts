@@ -65,6 +65,7 @@ export { DEFAULT_IGNITION_RULES, fillFactor, ignitionChance, resolveIgnitionRule
 export type { IgnitionRules } from './ignition'
 export type { Shot, Use } from './weapons'
 export type { ContainerSpec, ItemUseDef, LiquidId } from './fluids'
+export type { HandPose, HandTargetSource, HandTargets } from './hands'
 export type { EffectHandle, EffectRequest, EffectSink } from './effects'
 export type { WarmUpProbes } from './warm-up'
 export { checkAnimation } from './animation'
