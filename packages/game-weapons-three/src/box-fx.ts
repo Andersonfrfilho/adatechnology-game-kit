@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { EffectSink, HostEvent, HostTool } from '@adatechnology/game-contracts'
+import type { EffectSink, HandTargets, HostEvent, HostTool } from '@adatechnology/game-contracts'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import type { WeaponAudio } from './audio'
@@ -7,6 +7,8 @@ import { createLayers } from './fx/layers'
 import type { FxLayers } from './fx/layers'
 import type { AttachmentModelRegistry, LaserRaycast } from './models/attachments/types'
 import { IN_HAND_NODE_NAME } from './laser-raycast'
+import { holdOfProp, targetsOf } from './fx/hand-hold'
+import type { Hold } from './fx/hand-hold'
 import { BODY_ACTIONS, buildWeaponModel } from './props'
 
 export interface WeaponFxOptions {
@@ -45,6 +47,8 @@ export interface BoxFx {
   unequip(): void
   /** Weapon shown in the hands, or null. */
   readonly inHand: string | null
+  /** Where the hands take the prop now (world space): the right around its handle, the left under the barrel of a long gun; null with nothing in the hands. */
+  handTargets(): HandTargets | null
   /** Casings and magazines currently on the floor or in the air. */
   readonly casings: number
   readonly magazines: number
@@ -92,11 +96,13 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   let model: THREE_NS.Object3D | null = null
   let inHand: string | null = null
   let def: WeaponDef | null = null
+  let hold: Hold | null = null
   let kick = 0
   let dip = 0
   let reloading = false
   const v = new THREE.Vector3()
   const q = new THREE.Quaternion()
+  const q2 = new THREE.Quaternion()
   const pointForward = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
 
   const equip = (weapon: string): void => {
@@ -112,6 +118,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
     model.quaternion.copy(pointForward)
     hand.add(model)
     inHand = def.id
+    hold = holdOfProp(THREE, model, def.category, model.scale.x)
   }
 
   // a point on the gun in camera space, turned into the world
@@ -218,6 +225,12 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
       if (model) hand.remove(model)
       model = null
       inHand = null
+      hold = null
+    },
+    handTargets() {
+      if (!model || !hold) return null
+      hand.updateMatrixWorld(true)
+      return targetsOf(THREE, hold, model.getWorldQuaternion(q2), 0)
     },
     handle(event, tool) {
       if (event.type === 'explosion') return

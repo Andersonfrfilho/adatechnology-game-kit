@@ -12,6 +12,7 @@ export function buildGrip(context: RifleContext): number {
   if (!context.isTraditional && o.grip !== 'none') {
     const grip = kit.pivot(group, gx - 0.012, -hR / 2 - 0.046, 0)
     grip.rotation.z = -0.3
+    parts.grip = grip
     box(grip, 0.032, 0.105, 0.028, furn, 0, 0, 0)
     for (let i = 0; i < 3; i++) box(grip, 0.006, 0.012, 0.026, furn, 0.017, 0.022 - i * 0.02, 0)
     box(grip, 0.034, 0.008, 0.03, furn, 0, -0.052, 0)
