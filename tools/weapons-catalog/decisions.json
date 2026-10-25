@@ -1456,10 +1456,22 @@
               0.25,
               0.6
             ]
+          },
+          "mass": 28,
+          "leak": {
+            "fluid": "gas",
+            "liters": 24,
+            "pressurized": true,
+            "igniteDelay": 0.8,
+            "hissSeconds": 0.8
+          },
+          "shell": {
+            "launchSpeed": 13,
+            "trailSeconds": 1.8
           }
         },
         "source": "game",
-        "reason": "Fogo residual de fogoRes do jogo (1,4 m, 7 s); temperatura do molotov do SDK. Reação em cadeia: jogo.js (artefatos/2UG1Mhe9LqJkQKKVsJkTWR) exploDamage 68173-68180: tiro faz vazar e explode em 1,4 s; explosão por perto explode em 0,25 a 0,6 s (0,25 + R·0,35). O atraso do fogo (1,4 s) é derivado do vazamento: o jogo não trata fogo, o Arsenal §13 diz \"explode com tiro ou fogo\"."
+        "reason": "Vazamento e voo do casco do Laboratório de Explosões (SC.p13 L894-911): jato branco de 0 a 0,8 s, maçarico de 0,8 a 1,4 s, casco sobe a 13 m/s com rastro de fogo de 1,8 s. Massa: 15 kg de casco + 13 kg de gás; 13 kg / 0,54 kg/l = 24 l. Fogo residual de fogoRes do jogo (1,4 m, 7 s); temperatura do molotov do SDK. Reação em cadeia: jogo.js (artefatos/2UG1Mhe9LqJkQKKVsJkTWR) exploDamage 68173-68180: tiro faz vazar e explode em 1,4 s; explosão por perto explode em 0,25 a 0,6 s (0,25 + R·0,35). O atraso do fogo (1,4 s) é derivado do vazamento: o jogo não trata fogo, o Arsenal §13 diz \"explode com tiro ou fogo\"."
       }
     },
     "dynamite": {
