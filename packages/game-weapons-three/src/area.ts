@@ -82,6 +82,9 @@ interface Text {
   counter: string
   targets: Record<string, string>
   reloadStart: string
+  /** The line of a reload start: how it goes (`kind`), the clip that plays and its seconds. */
+  reloadClip: string
+  reloadKinds: Record<string, string>
   reloadEnd: string
   worldExplosives: Record<string, string>
   mountedM134: string
@@ -106,6 +109,8 @@ const TEXT: Record<string, Text> = {
     counter: 'Weapon counter',
     targets: { target_steel_plate: 'Steel plate target', target_plywood: 'Plywood target', target_concrete: 'Concrete block target' },
     reloadStart: 'Reload started: {weapon} ({ammo}/{capacity})',
+    reloadClip: 'Reload of {weapon}: {kind}, clip {clip} ({seconds} s)',
+    reloadKinds: { tactical: 'tactical (round chambered, no pull)', empty: 'empty chamber (works the action)', one_by_one: 'one by one', full: 'speed loader' },
     reloadEnd: 'Reload done: {weapon} ({ammo}/{capacity})',
     worldExplosives: { fuel_barrel: 'Fuel barrel', propane_p13: 'Propane cylinder (P13)', car_fuel_tank: 'Car fuel tank' },
     mountedM134: 'M134 Minigun on its tripod',
@@ -128,6 +133,8 @@ const TEXT: Record<string, Text> = {
     counter: 'Balcão de armas',
     targets: { target_steel_plate: 'Alvo: chapa de aço', target_plywood: 'Alvo: compensado', target_concrete: 'Alvo: bloco de concreto' },
     reloadStart: 'Recarga iniciada: {weapon} ({ammo}/{capacity})',
+    reloadClip: 'Recarga de {weapon}: {kind}, clipe {clip} ({seconds} s)',
+    reloadKinds: { tactical: 'tática (com bala na câmara, sem puxar)', empty: 'vazia (puxa o ferrolho ou a trava)', one_by_one: 'uma a uma', full: 'carregador rápido' },
     reloadEnd: 'Recarga completa: {weapon} ({ammo}/{capacity})',
     worldExplosives: { fuel_barrel: 'Barril de combustível', propane_p13: 'Botijão de gás (P13)', car_fuel_tank: 'Tanque de combustível do carro' },
     mountedM134: 'M134 Minigun no tripé',
@@ -384,6 +391,13 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         }
         const tool = lent.tool()
         created.handle(event, tool)
+        if (event.type === 'reload' && event.phase === 'start') {
+          const clip = created.clips.find((entry) => entry.name.startsWith('reload'))
+          if (clip) {
+            const kind = event.kind ?? 'tactical'
+            lent.log(fill(text.reloadClip, { weapon: arsenal.name(event.weapon), kind: text.reloadKinds[kind] ?? kind, clip: clip.name, seconds: clip.seconds.toFixed(2) }), { weapon: event.weapon, kind, clip: clip.name, seconds: clip.seconds })
+          }
+        }
         if (event.type === 'reload') lent.log(fill(event.phase === 'start' ? text.reloadStart : text.reloadEnd, { weapon: arsenal.name(event.weapon), ammo: tool.ammo, capacity: tool.capacity }), { weapon: event.weapon, phase: event.phase })
       })
       const offFrame = lent.onFrame((dt) => created.update(dt))

@@ -22,6 +22,8 @@ export interface WeaponFx {
   readonly layers: FxLayers
   /** Weapon shown in the hands, or null. */
   readonly inHand: string | null
+  /** The clips of the model playing now with the seconds each lasts (scaled to the rule's duration): which reload variant went (`reload` or `reload_empty`...). */
+  readonly clips: ReadonlyArray<{ name: string; seconds: number }>
   /** Casings and magazines currently on the floor or in the air. */
   readonly casings: number
   readonly magazines: number
@@ -70,6 +72,9 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     layers,
     get inHand() {
       return model.inHand ?? box.inHand
+    },
+    get clips() {
+      return model.clips
     },
     get casings() {
       return box.casings + model.casings

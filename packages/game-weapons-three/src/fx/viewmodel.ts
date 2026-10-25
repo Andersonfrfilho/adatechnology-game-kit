@@ -79,6 +79,8 @@ export interface Viewmodel {
   /** Where the hands take the weapon now (world space), or null with nothing in the hands. The right hand sits on the grip, the left on the forend, and goes to the magazine while it is changed. */
   handTargets(): HandTargets | null
   readonly inHand: string | null
+  /** The clips playing now, with the seconds each lasts. */
+  readonly clips: ReadonlyArray<{ name: string; seconds: number }>
   readonly casings: number
   readonly magazines: number
   dispose(): void
@@ -364,6 +366,9 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     },
     get inHand() {
       return session?.id ?? null
+    },
+    get clips() {
+      return (player?.running ?? []).map(({ name, clip }) => ({ name, seconds: clip.duration }))
     },
     get casings() {
       return particles.count('casing')
