@@ -29,6 +29,7 @@ import type {
   RayHit,
   HitResult,
   Hit,
+  SoilProfile,
   StructureRole,
   ToolKind,
   Vec3,
@@ -77,6 +78,10 @@ export type {
   RayHit,
   Reinforcement,
   TensionRebar,
+  PileSpec,
+  SoilLayer,
+  SoilProfile,
+  SoilState,
   StructureRole,
   SurfaceLayer,
   ToolKind,
@@ -234,6 +239,53 @@ export interface MasonryOptions {
   concreteFactor?: number
 }
 
+/** What a soil is made of: decides the pile factors (Décourt-Quaresma) and the modulus correlation. */
+export type SoilKind = 'clay' | 'silt' | 'sand' | 'gravel' | 'rock'
+
+/** A soil class of the registry (`SOILS`, `soils.json`): real allowable pressures and stiffness. Add or override them with `soil.soils`. */
+export interface SoilDef {
+  id: string
+  kind: SoilKind
+  /** Allowable pressure of a shallow footing in kPa (NBR 6122 basic pressures); the soil gives way at `allowableKPa * soil.safety`. */
+  allowableKPa: number
+  /** SPT blow count N (NBR 6484), used for the pile resistance (Décourt-Quaresma). */
+  spt: number
+  /** Young's modulus in MPa (Teixeira & Godoy: `alpha * K * N`). */
+  elasticMPa: number
+  /** Poisson's ratio. */
+  poisson: number
+  /** Ultimate pile resistances in kPa when they do not come from `spt` (rock): end bearing at the tip and skin friction on the shaft. */
+  pile?: { tipKPa?: number; skinKPa?: number }
+}
+
+/** The soil model. Every number has a real default; see `SOIL_DEFAULTS`. */
+export interface SoilOptions {
+  /** Extra or overriding soil classes (merged over `SOILS` by id). */
+  soils?: SoilDef[]
+  /** Profile for objects with foundations whose spec has no `soil` (default none: only objects with `soil` bear on the ground). */
+  site?: string | SoilProfile
+  /** Global safety factor of a shallow footing: the soil gives way at this times the allowable pressure (3: NBR 6122). */
+  safety?: number
+  /** Global safety factor of a pile (2: NBR 6122); `pileLength` sizes with it. */
+  pileSafety?: number
+  /** Influence factor of a rigid footing in the elastic settlement `q B (1 - nu^2) Iw / E` (0.82: rigid square, Bowles). */
+  rigidity?: number
+  /** Depth under a footing, in footing widths, whose soil it bears on (2: the stress bulb of a square footing). */
+  influence?: number
+  /** Out-of-plumb of a building, radians (1/200: Eurocode 2 5.2 basic imperfection); it leans this way before any load. */
+  imperfection?: number
+  /** Footing cells per side for the contact pressure (default 4). */
+  cells?: number
+  /** Speed at which a yielding foundation sinks, in m/s of game time (0.05; the real thing takes hours to days). */
+  sinkRate?: number
+  /** Speed at which a yielding object leans further, in degrees per second of game time (1.5). */
+  tiltRate?: number
+  /** Width a footing has at least under a part that rests on a `terrain` foundation, metres (0.6: NBR 6122 minimum), unless the profile says. */
+  footingWidth?: number
+  /** Young's modulus of the piles in GPa when the material has no `strength.elasticGPa` (25). */
+  pileElasticGPa?: number
+}
+
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // World
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -272,6 +324,8 @@ export interface DestructionOptions {
     /** Crushing of bearing walls and pillars with slenderness. See `MasonryOptions`. */
     masonry?: MasonryOptions
   }
+  /** The ground under objects that have `DestructibleSpec.soil` (or `soil.site`): settlement, tilt, bearing failure and piles. See `SoilOptions`. */
+  soil?: SoilOptions
   /**
    * What lights the flammable fluid that leaks from a container (a fuel tank, a jerrycan, a gas bottle). A round that goes through only makes a
    * leak; it lights it only when `Hit.ignition` (a spark on metal), `Hit.incendiary` or `Hit.tracer` say so, by the chance of the round weighed by
@@ -451,6 +505,8 @@ export interface ObjectRuntime {
   joints: Record<string, number>
   /** Parts of groups that already reported a `collapse`. */
   collapsed?: string[]
+  /** Permanent settlement of the soil under each footing cell or pile that yielded (`DestructibleSpec.soil`), metres. */
+  soil?: Record<string, number>
 }
 
 export interface DestructionSnapshot {

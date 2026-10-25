@@ -211,6 +211,28 @@ steel counts) and `stress` is the larger of that and compression.
   (at most 4%, NBR 6118 17.3.5.2.4); plain concrete stays plain. `buildFrame({ rebar })` declares beams at 1% and slabs at 0.5% (`false` for
   plain concrete).
 
+### Soil and foundations
+
+Give the spec a `soil` (a soil class id such as `clay_soft`, or `{ layers: [{ soil, thickness }, ...], surface?, footingWidth? }`) and its foundations
+bear on the ground instead of being fixed. Without it nothing changes.
+
+- **Soil classes** (`SOILS`, `soils.json`, extend with `soil.soils`): allowable footing pressure (NBR 6122 basic pressures: dense sand 400 kPa,
+  stiff clay 200, medium clay 100, soft clay 30, rock 3000), SPT N, Young's modulus (Teixeira & Godoy) and Poisson's ratio.
+- **Footings** (a `foundation` part: pad, strip or raft): a grid of springs with the subgrade modulus of a rigid footing `E / (B (1 - nu^2) Iw)`
+  that give way at `safety` (3, NBR 6122) times the allowable pressure of the weakest layer within two widths below. Structural parts resting on a
+  foundation tagged `terrain` get a footing at least 0.6 m wide each.
+- **Piles** (`structure.pile: { length, diameter, count?, method? }` on the cap): end bearing and skin friction by Décourt-Quaresma through the
+  layers. `pileLength(profile, { load, diameter })` gives the shortest pile that carries a load with safety 2 (down to firm ground).
+- **The object is a rigid body on those springs**, out of plumb by 1/200 (EN 1992-1-1) the weak way, with P-delta. It settles at once where the
+  soil holds; where it yields it moves to the new equilibrium at `sinkRate`/`tiltRate` (game time), and with no stable equilibrium it keeps sinking
+  and leaning until its centre of mass passes the edge of its foundations: it tips over (`settle` with `status: 'toppled'`, then a `collapse` of
+  everything).
+- `ObjectState.soil` has `settlement`, `tilt`, `direction`, `bearing` (weight over what the foundations carry), `edge`, `status` and `offset`
+  (the settled pose relative to the host's). `ObjectState.position`/`rotation` include it; `setTransform` sets the host's pose under it. A `settle`
+  event goes out when it moves (at most every 0.5 s) or changes status.
+- Options (`soil`, `SOIL_DEFAULTS`): `soils`, `site`, `safety`, `pileSafety`, `rigidity`, `influence`, `imperfection`, `cells`, `sinkRate`,
+  `tiltRate`, `footingWidth`, `pileElasticGPa`. `buildFrame({ footing, raft, piles, soil })` builds test frames on the ground.
+
 ## Walls: layers, stages, breach and reinforcement
 A wall is one part that opts in with `layers`, `units`, `reinforcement` or `breach` (`PartSpec`, all optional; parts without them behave as before).
 `assemblyPart(id, { id, width, height, position, structure? })` builds one from the eight built-in **assemblies** (`ASSEMBLIES`, data in
@@ -343,7 +365,7 @@ world continues with the same events as the original. The loading world must use
 `raycast`, `shoot`, `disassemble`, `workableJoints`, `nearestJoint`, `extinguish`, `setLiters`, `update`, `state`, `part`, `reset`, `on`,
 `register`, `serialize`, `load`, `time`. `explode(point, energy, radius, source?, blastOptions?)`; `shoot(origin, direction, energy, caliber, source?, round?)` (`round`: `Hit.penetration`, `piercing`, `incendiary`, `tracer`, `ignition` or a bare piercing factor). `state()` and `part()` return live views; do not mutate them.
 
-Also exported: `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS`, `CONFINEMENT_DEFAULTS`, `buildFrame`, `sizeStructure`, `sizeRebar`, `FLEXURE_DEFAULTS`, `MASONRY_DEFAULTS`, `bearingWallThickness`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
+Also exported: `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS`, `CONFINEMENT_DEFAULTS`, `buildFrame`, `sizeStructure`, `sizeRebar`, `FLEXURE_DEFAULTS`, `MASONRY_DEFAULTS`, `bearingWallThickness`, `SOILS`, `SOIL_DEFAULTS`, `pileCapacity`, `pileLength`, `pileStiffness`, `footingSoil`, `subgradeModulus`, `solveFoundation`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
 helpers `vec`, `quat`, `quatFromEuler`, `rotateVec`, `toLocal`, `toWorld`, the locale (`locales`, `resolveStrings`, `DestructionStrings`) and all types.
 
 The locale table has `en` and `pt-BR` strings for material names, part statuses, joint kinds, tools, damage types, event labels and fracture styles:
@@ -359,5 +381,7 @@ determinístico (semente fixa) e serializável, então um host de LAN pode rodar
 (materiais, ferramentas, juntas, eventos) estão em `resolveStrings('pt-BR')`.
 
 Estrutura real: viga e laje de concreto com `structure.rebar` dobram. Na explosão a face tracionada racha e o aço segura; sem aço a peça parte; com o aço escoado até 10° de giro ela dobra e cai inteira (`structure.flexure`). Paredes e pilares de alvenaria resistem com a resistência real do tijolo e a redução por esbeltez da NBR 16868-1, então a parede portante do térreo esmaga quando há andares demais em cima (`bearingWallThickness` dá a espessura de projeto). Valores e fontes em `specs/001-migracao-entregas-dos-times/design/T10-estrutura-real.md`.
+
+Solo e fundação: com `soil` na spec a fundação se apoia no solo (classes com a tensão admissível da NBR 6122). Prédio pesado em sapata sobre argila mole afunda e tomba; em estacas até o chão firme (`structure.pile`, Décourt-Quaresma, `pileLength`) fica de pé; casa em radier em solo firme não sente.
 
 Explosões: `blast.shelter` (paredes e portas entre a explosão e o alvo ficam com a sua parte: tijolo de 20 cm deixa passar ~19%, porta de madeira ~53%, vidro ~83%; a parede que quebra na mesma explosão deixa passar metade do que segurou), `blast.fragmentHits` (os pedaços do que quebra viram golpes de baixa energia no que está atrás) e `blast.confinement` (pressão num ambiente fechado, de 1 a 3 vezes). Tudo desligado por padrão, por opção do mundo ou da chamada, com os números em `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS` e `CONFINEMENT_DEFAULTS`.
