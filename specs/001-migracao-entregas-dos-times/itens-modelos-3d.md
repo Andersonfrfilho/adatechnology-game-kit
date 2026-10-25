@@ -283,7 +283,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Galão de combustível 20 L | `galao` | `fuel_jerrycan` | 1,2 kg | incomum | 308 x 470 x 154 mm |
 | [x] | Bateria 12 V (kit) | `bateria_12v` | `car_battery_12v` | 14,0 kg | incomum | 240 x 190 x 175 mm |
 | [ ] | Cartucho de gás | `cartucho_gas` | `gas_cartridge` | 0,35 kg | incomum | 110 x 165 x 110 mm |
-| [ ] | Carvão (saco de 3 kg) | `carvao` | `charcoal_bag` | 3,0 kg | comum | 300 x 120 x 400 mm |
+| [x] | Carvão (saco de 3 kg) (kit) | `carvao` | `charcoal_bag` | 3,0 kg | comum | 300 x 120 x 400 mm |
 | [ ] | Diesel (litro) | `diesel` | `diesel` | 0,85 kg | incomum | 90 x 260 x 90 mm |
 | [ ] | Gasolina (litro) | `gasolina` | `gasoline` | 0,75 kg | incomum | 90 x 260 x 90 mm |
 | [ ] | Querosene (1 L) | `querosene` | `kerosene` | 0,8 kg | incomum | 90 x 260 x 90 mm |
