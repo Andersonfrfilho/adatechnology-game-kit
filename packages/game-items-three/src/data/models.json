@@ -2068,5 +2068,15 @@
       0.3
     ],
     "scale": 1
+  },
+  {
+    "id": "leather_work_gloves",
+    "teamId": "luva_couro",
+    "teamBox": [
+      0.25,
+      0.03,
+      0.12
+    ],
+    "scale": 1
   }
 ]
