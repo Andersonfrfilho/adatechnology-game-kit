@@ -238,7 +238,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Bag de entregador (kit) | `bag_entregador` | `delivery_bag` | 1,2 kg | incomum | 480 x 450 x 420 mm |
 | [x] | Bolsa transversal (kit) | `bolsa` | `crossbody_bag` | 0,3 kg | comum | 250 x 200 x 80 mm |
 | [x] | Caixa térmica (kit) | `caixa_termica` | `cooler_box` | 1,0 kg | comum | 320 x 250 x 230 mm |
-| [ ] | Carrinho de mercado | `carrinho_merc` | `shopping_cart` | 12,0 kg | comum | 550 x 980 x 950 mm |
+| [x] | Carrinho de mercado (kit) | `carrinho_merc` | `shopping_cart` | 12,0 kg | comum | 550 x 980 x 950 mm |
 | [ ] | Carrinho de mão | `carrinho_mao` | `wheelbarrow` | 15,0 kg | comum | 0,65 x 0,65 x 1,5 m |
 | [ ] | Cinto de ferramentas | `cinto_ferramentas` | `tool_belt` | 0,4 kg | comum | 350 x 100 x 250 mm |
 | [ ] | Colete tático | `colete_tatico` | `tactical_vest` | 1,2 kg | raro | 350 x 100 x 400 mm |

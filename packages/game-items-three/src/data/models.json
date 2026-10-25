@@ -2328,5 +2328,15 @@
       0.2
     ],
     "scale": 1
+  },
+  {
+    "id": "shopping_cart",
+    "teamId": "carrinho_merc",
+    "teamBox": [
+      0.55,
+      0.98,
+      0.95
+    ],
+    "scale": 1
   }
 ]
