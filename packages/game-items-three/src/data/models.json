@@ -1153,11 +1153,11 @@
     "id": "hacksaw",
     "teamId": "serra_arco",
     "teamBox": [
-      4.2,
-      0.3,
-      1.2
+      42,
+      3,
+      12
     ],
-    "scale": 0.1
+    "scale": 0.01
   },
   {
     "id": "handsaw",
