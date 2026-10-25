@@ -5,7 +5,17 @@ import type { ItemModelBuilder } from './registry'
  * It draws in the units of the builder; `data/models.json` gives the scale to metres of the item `car_jack`.
  */
 export const carJack: ItemModelBuilder = ({ mesh, bx, cyl, G, metal }) => {
-  const base = mesh(bx(3.0, 0.9, 1.1), metal(0xbb2222), [0, -0.1, 0])
-  const piston = mesh(cyl(0.3, 0.3, 0.2, 14), metal(0xcccccc), [0, 0.45, 0])
-  return G(base, piston)
+  const steel = metal(0x5f6469)
+  const dark = metal(0x3e4247)
+  const arm = (x: number, y: number, angle: number, z: number) => mesh(bx(12.65, 1.2, 1.6), steel, [x, y, z], [0, 0, angle])
+  const arms = [3.8, -3.8].flatMap((z) => [arm(-5.9, 2, 0.3217, z), arm(-5.9, -2, -0.3217, z), arm(5.9, 2, -0.3217, z), arm(5.9, -2, 0.3217, z)])
+  return G(
+    mesh(bx(8, 1, 11), dark, [0, -5, 0]),
+    mesh(bx(8, 1, 11), dark, [0, 5, 0]),
+    ...arms,
+    mesh(cyl(0.6, 0.6, 30, 8), metal(0x8d9196), [0, 0, 0], [0, 0, Math.PI / 2]),
+    mesh(bx(1.6, 2.4, 3), dark, [-11.8, 0, 0]),
+    mesh(bx(1.6, 2.4, 3), dark, [11.8, 0, 0]),
+    mesh(bx(1, 0.8, 5), metal(0xb5321f), [14.5, 0, 0]),
+  )
 }
