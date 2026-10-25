@@ -1,4 +1,4 @@
-import { add, cos, DIRECTION, div, eq, floor, INDEX, lt, min, mul, neg, pick, rand, sin, sub, variable, vx, vz } from '../dsl'
+import { add, cos, DIRECTION, div, eq, floor, gt, INDEX, ite, lt, min, mul, ne, neg, pick, rand, sin, sub, variable, vx, vz } from '../dsl'
 import { append, flash, mesh, repeat, set, when } from '../steps'
 import type { EffectDef, EffectStep } from '../types'
 
@@ -12,6 +12,8 @@ import type { EffectDef, EffectStep } from '../types'
 const PI = Math.PI
 /** The gallery's `smoke`: a sphere of 10 by 8 segments, a grey that rises, slows and grows by 2.1 a second while it fades. */
 const SMOKE = { color: 0x8a8a86, width: 10, height: 8, gravity: -0.08, drag: 2.2, growth: 2.1 }
+/** Default muzzle smoke numbers (the `smokeless` profile of `@adatechnology/game-weapons`). */
+const DEFAULT_SMOKE = { puffs: 2, radius: 0.01, opacity: 0.14, life: 0.7, drift: 0.2, rise: 0.06, growth: 2.1, flash: 1 } as const
 /** The flash lasts 55 ms and its group grows from 0.6 to 1.5 times its size (`0.6 + min(1, age / 0.055) * 0.9`). */
 const FLASH_SECONDS = 0.055
 const FLASH_RAMP = [0.6, 0.9] as const
@@ -22,10 +24,12 @@ const FLAME_ADDITIVE = 3
 const ORIGIN = [0, 0, 0] as const
 
 const SIZE = variable('size')
+const FLASH_SCALE = variable('flash')
+const fallback = (name: string, defaultValue: number): unknown => ite(ne(variable(name), undefined), variable(name), defaultValue)
 const wide = (width: number): unknown => mul(sub(rand(), 0.5), width)
 
 /** The gallery's `smoke(position, velocity, size, life, opacity)`; the keys are in the order the gallery drew its numbers. `world` is a velocity that is not turned with the weapon. */
-const puff = (point: unknown, velocity: unknown, world: unknown, radius: unknown, life: unknown, opacity: unknown): EffectStep =>
+const puff = (point: unknown, velocity: unknown, world: unknown, radius: unknown, life: unknown, opacity: unknown, growth: unknown = SMOKE.growth): EffectStep =>
   mesh({
     shape: 'sphere',
     p: point,
@@ -41,7 +45,7 @@ const puff = (point: unknown, velocity: unknown, world: unknown, radius: unknown
     lit: true,
     g: SMOKE.gravity,
     drag: SMOKE.drag,
-    grow: SMOKE.growth,
+    grow: growth,
   })
 
 /** The gallery's `flameBit`: an icosahedron of one of four colours, tumbling, thrown, rising, growing and slowing. The numbers are drawn in the gallery's order, the colour after the life. */
@@ -84,37 +88,51 @@ const MUZZLE_FLASH: EffectDef = {
   id: 'viewmodel_muzzle_flash',
   pageId: 'event:viewmodel_muzzle_flash',
   team: 'weapons',
-  budget: { particles: 12, lights: 1 },
+  budget: { particles: 14, lights: 1 },
   loop: 0.1,
+  setup: [
+    set('size', fallback('size', 1)),
+    set('puffs', fallback('puffs', DEFAULT_SMOKE.puffs)),
+    set('radius', fallback('radius', DEFAULT_SMOKE.radius)),
+    set('opacity', fallback('opacity', DEFAULT_SMOKE.opacity)),
+    set('life', fallback('life', DEFAULT_SMOKE.life)),
+    set('drift', fallback('drift', DEFAULT_SMOKE.drift)),
+    set('rise', fallback('rise', DEFAULT_SMOKE.rise)),
+    set('growth', fallback('growth', DEFAULT_SMOKE.growth)),
+    set('flash', fallback('flash', DEFAULT_SMOKE.flash)),
+  ],
   timeline: [
     set('angles', []),
     repeat(4, append('angles', add(div(mul(INDEX, PI), 2), mul(rand(), 0.6)))),
     set('roll', mul(rand(), PI)),
-    flash(ORIGIN, 0xffb060, mul(4, SIZE), FLASH_SECONDS, mul(2, SIZE), true, true),
-    flashPiece('cone_open', mul(0.013, SIZE), mul(0.085, SIZE), 10, [mul(0.042, SIZE), 0, 0], [0, 0, -PI / 2], 0xffb347),
-    repeat(
-      4,
-      set('angle', pick(variable('angles'), INDEX)),
-      flashPiece(
-        'cone',
-        mul(0.005, SIZE),
-        mul(0.04, SIZE),
-        6,
-        [mul(0.012, SIZE), mul(cos(variable('angle')), 0.016, SIZE), mul(sin(variable('angle')), 0.016, SIZE)],
-        [variable('angle'), 0, -PI / 2],
-        0xffb347,
+    when(gt(FLASH_SCALE, 0), [
+      flash(ORIGIN, 0xffb060, mul(4, SIZE, FLASH_SCALE), FLASH_SECONDS, mul(2, SIZE, FLASH_SCALE), true, true),
+      flashPiece('cone_open', mul(0.013, SIZE, FLASH_SCALE), mul(0.085, SIZE, FLASH_SCALE), 10, [mul(0.042, SIZE, FLASH_SCALE), 0, 0], [0, 0, -PI / 2], 0xffb347),
+      repeat(
+        4,
+        set('angle', pick(variable('angles'), INDEX)),
+        flashPiece(
+          'cone',
+          mul(0.005, SIZE, FLASH_SCALE),
+          mul(0.04, SIZE, FLASH_SCALE),
+          6,
+          [mul(0.012, SIZE, FLASH_SCALE), mul(cos(variable('angle')), 0.016, SIZE, FLASH_SCALE), mul(sin(variable('angle')), 0.016, SIZE, FLASH_SCALE)],
+          [variable('angle'), 0, -PI / 2],
+          0xffb347,
+        ),
       ),
-    ),
-    flashPiece('sphere', mul(0.016, SIZE), undefined, 12, [mul(0.008, SIZE), 0, 0], [0, 0, 0], 0xfff1c0),
+      flashPiece('sphere', mul(0.016, SIZE, FLASH_SCALE), undefined, 12, [mul(0.008, SIZE, FLASH_SCALE), 0, 0], [0, 0, 0], 0xfff1c0),
+    ]),
     repeat(
-      6,
+      variable('puffs'),
       puff(
         ORIGIN,
-        [add(0.15, mul(rand(), 0.35)), add(0.03, mul(rand(), 0.12)), mul(sub(rand(), 0.5), 0.14)],
+        [add(variable('drift'), mul(rand(), 0.1)), add(variable('rise'), mul(rand(), 0.04)), mul(sub(rand(), 0.5), 0.06)],
         [0, 0, 0],
-        mul(0.013, SIZE),
-        add(1.3, mul(rand(), 0.6)),
-        0.45,
+        mul(variable('radius'), SIZE),
+        add(variable('life'), mul(rand(), mul(variable('life'), 0.3))),
+        variable('opacity'),
+        variable('growth'),
       ),
     ),
   ],

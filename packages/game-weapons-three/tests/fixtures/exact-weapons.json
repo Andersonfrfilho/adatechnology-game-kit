@@ -204,6 +204,7 @@
 "cartridge/50bmg":{"hash":"fa870335","objects":6},
 "cartridge/4_6x30":{"hash":"dc080f63","objects":6},
 "cartridge/32acp":{"hash":"d0fddab6","objects":5},
+"cartridge/45_70_bp":{"hash":"b81c84b0","objects":5},
 "prop/hand":{"hash":"8b4e14c8","objects":3},
 "prop/kick":{"hash":"bcaa167f","objects":3},
 "prop/shove":{"hash":"77f75792","objects":3},

@@ -1,0 +1,42 @@
+{
+  "smokeless": {
+    "puffs": 2,
+    "radius": 0.010,
+    "opacity": 0.14,
+    "life": 0.7,
+    "drift": 0.20,
+    "rise": 0.06,
+    "growth": 2.1,
+    "flash": 1.0
+  },
+  "black_powder": {
+    "puffs": 8,
+    "radius": 0.022,
+    "opacity": 0.55,
+    "life": 5.5,
+    "drift": 0.12,
+    "rise": 0.04,
+    "growth": 2.8,
+    "flash": 1.0
+  },
+  "suppressed": {
+    "puffs": 1,
+    "radius": 0.006,
+    "opacity": 0.08,
+    "life": 0.5,
+    "drift": 0.15,
+    "rise": 0.05,
+    "growth": 2.1,
+    "flash": 0.15
+  },
+  "none": {
+    "puffs": 0,
+    "radius": 0.0,
+    "opacity": 0.0,
+    "life": 0.0,
+    "drift": 0.0,
+    "rise": 0.0,
+    "growth": 0.0,
+    "flash": 0.0
+  }
+}
