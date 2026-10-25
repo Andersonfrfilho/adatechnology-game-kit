@@ -1003,11 +1003,11 @@
     "id": "fire_extinguisher",
     "teamId": "extintor",
     "teamBox": [
-      1.6,
-      4.8,
-      1.6
+      16.0794,
+      48,
+      16
     ],
-    "scale": 0.1
+    "scale": 0.009984
   },
   {
     "id": "duct_tape",
