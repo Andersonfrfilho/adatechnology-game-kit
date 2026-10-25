@@ -1616,8 +1616,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
       debris(o, p, mat.hitDebris, point, n, clamp(Math.round(E / 25) + 1, 1, 10), clamp(Math.sqrt(E) / 8, 1, 6), src)
     }
-    if (kind === 'blunt') wearJoints(o, p, E * 0.3, undefined, 0, src)
-    else wearJoints(o, p, E * 0.3, point, 0.06, src)
+    // a blow shakes the joints of the part it lands on, except on the terrain a structure stands on (an anchored part tagged `terrain`): a piece that lands on the
+    // ground does not loosen every wall that stands on it
+    if (kind === 'blunt') {
+      if (!(p.anchored && p.spec.tags?.includes('terrain'))) wearJoints(o, p, E * 0.3, undefined, 0, src)
+    } else wearJoints(o, p, E * 0.3, point, 0.06, src)
     if (kind === 'blunt' && E > 0 && p.layers.length > 0) spallOuter(o, p, point, faceOf(o, p, n), n, Math.max(contactR, 0.05), src)
     const scale = mat.damageScale?.[kind] ?? 1
     const done = applyDamage(o, p, Ec * DMG_PER_J * scale * (kind === 'slash' ? p.cutFactor : 1), kind, point, d, E * 0.1, 12, src)
