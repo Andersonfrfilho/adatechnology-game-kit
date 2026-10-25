@@ -11,7 +11,8 @@ const mixed = (): DestructibleSpec => {
     { id: 'wall_a', material: 'brick', shape: { kind: 'box', size: [1.1, 3, 0.2] }, position: [-0.6, 1.5, 1.5], structure: { role: 'wall' } },
     { id: 'wall_b', material: 'brick', shape: { kind: 'box', size: [1.1, 3, 0.2] }, position: [0.6, 1.5, 1.5], structure: { role: 'wall' } },
     { id: 'wall_c', material: 'brick', shape: { kind: 'box', size: [1.1, 3, 0.2] }, position: [1.8, 1.5, 1.5], structure: { role: 'wall' } },
-    { id: 'slab', material: 'concrete', shape: { kind: 'box', size: [4, 0.2, 4] }, position: [0, 3.1, 0], structure: { role: 'slab' } },
+    // reinforced at the minimum ratio of NBR 6118: sizeStructure adds the steel it needs in bending
+    { id: 'slab', material: 'concrete', shape: { kind: 'box', size: [4, 0.2, 4] }, position: [0, 3.1, 0], structure: { role: 'slab', rebar: { ratio: 0.0015 } } },
     { id: 'roof', material: 'wood_soft', shape: { kind: 'box', size: [4.2, 0.1, 4.2] }, position: [0, 3.25, 0], structure: { role: 'roof' } },
   ]
   const joints: JointSpec[] = [

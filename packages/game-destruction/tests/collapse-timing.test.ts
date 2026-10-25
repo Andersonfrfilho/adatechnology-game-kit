@@ -20,7 +20,8 @@ const slab = (stress: number): DestructibleSpec => {
       parts.push({ id: `c${i}`, material: 'concrete', shape: { kind: 'box', size: [0.3, 3, 0.3] }, position: [x, 1.5, z], structure: { role: 'column', capacity } })
       joints.push({ a: `c${i}`, b: `f${i}`, kind: 'rebar', bears: 'a_on_b' }, { a: 'slab', b: `c${i}`, kind: 'rebar', bears: 'a_on_b' })
     })
-    parts.push({ id: 'slab', material: 'concrete', shape: { kind: 'box', size: [4.2, 0.2, 4.2] }, position: [0, 3.1, 0], structure: { role: 'slab' } })
+    // reinforced (0.5%) so that it hangs on the columns that are left: this is about how fast overloaded columns give way, not bending
+    parts.push({ id: 'slab', material: 'concrete', shape: { kind: 'box', size: [4.2, 0.2, 4.2] }, position: [0, 3.1, 0], structure: { role: 'slab', rebar: { ratio: 0.005 } } })
     return { parts, joints }
   }
   const w = createDestruction()
