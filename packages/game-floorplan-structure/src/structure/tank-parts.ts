@@ -23,7 +23,7 @@ function ensureCeilingSlab(context: BuildContext, y: number): StructurePart {
       ((part.role === 'beam' && part.id.startsWith(`plate_${top}_`)) || (part.role === 'column' && part.floor === top) || (part.role === 'wall' && part.floor === top && !part.id.startsWith('basement'))) &&
       touches(box, part.aabb, 0.1),
   )
-  const slab = builder.add({ id: 'slab_ceiling', role: 'slab', material: construction.frame.slabs, aabb: box, y0: y - 0.12, y1: y }, { floor: top })
+  const slab = builder.add({ id: 'slab_ceiling', role: 'slab', material: construction.frame.slabs, aabb: box, y0: y - 0.12, y1: y }, { floor: top, footprint: [box] })
   for (const carrier of carriers) builder.rest(slab, carrier, system.joints.slab)
   return slab
 }

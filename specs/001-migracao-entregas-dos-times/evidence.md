@@ -3141,3 +3141,25 @@ Desenho em `design/T10-estrutura-real.md` §11. Receita em `game-floorplan-struc
 - **Testes novos:** structure `skyscraper` (18) e `tower-plan`, commercial `office-tower` (9), residential `residential-tower`, post-apocalyptic (torres nas propriedades), floorplan-three `skyscraper` (4), game-urban `towers` (9), game-urban-three `towers` (2).
 - **Portões:** ver o fim desta entrada. `examples/test-room`, `floorplan-test-area` e `urban-test-area` build + `test.mjs` ok (capturas revertidas). O vitest do `game-floorplan-structure` acusou de novo, em parte das rodadas, o `Timeout calling "onTaskUpdate"` do worker (carga da máquina, testes passando).
 - **Pendências para o dono:** (1) acima de 60 andares a deriva passa de H/500 (o motor não tem outrigger nem tubo de perímetro): limitar a faixa a 60 ou aceitar; (2) `towers` desligado por padrão na cidade serve, ou o centro deve nascer com torres e regerar os goldens da Galeria? (3) não há arranha-céu nas entregas dos times nem em `packages/*` antes disto; nada foi reescrito no lugar de uma entrega.
+
+## 2026-10-25 · Estrutura real, lajes em painéis com vigas reais nas casas (T10 §5 resolvido, §12)
+
+Desenho em `design/T10-estrutura-real.md` §12. As lajes de concreto das casas e dos prédios do `game-floorplan` viram painéis de no máximo `maxSpan` (5 m,
+um por cômodo), com vigas `vão/10` (mín. 25 cm) nos limites, lajes `L/40` (mín. 10 cm piso, 8 cm cobertura), pilares de 20 cm onde uma viga ou cinta passa
+do vão e vergas/cintas com a altura do vão. O vergalhão (`rebar`) passou a ser o padrão de `toDestructibleSpec` (desliga com `rebar: false` ou
+`slabPanels: false`); `slabPanels` aceita um objeto com os valores de `SLAB_PANEL_DEFAULTS`. Novo em `game-floorplan-structure/src/slab-panels`, API `slabPanelView`.
+
+- **Cenários:** as 28 tipologias (residencial, comercial, rural, pós-apocalíptica) x sementes 1 a 5 x normal/fortificada/abandonada (420 casas) ficam de pé em repouso
+  com o aço dimensionado (flexão máxima 0,95, na laje da mansão); casas de madeira, rurais e barracas não mudam. Perder um pilar de um sobrado em pórtico não derruba laje
+  nem telhado; os dois pilares das pontas de um lado derrubam o lado; todos os pilares do térreo, a laje e o telhado. Uma explosão sob um painel de laje fissura a
+  face de cima (a tracionada) e o aço segura.
+- **Goldens:** nenhuma golden de time mudou (`vc3-structure` compara com `slabPanels: false, rebar: false`; `vc3-house-scene` e `vc3-house-area` iguais). Mudaram cinco
+  entradas de `game-floorplan-three/tests/fixtures/exact-floorplan.json` (`destruction/breach|spall|fracture`, `specimen/house_casa_portico|house_casa_inteira`), pelos
+  painéis (§6.1 do T10).
+- **Testes antigos ajustados:** `load-path` (dois pórticos), `flexure` (padrão do concreto armado), `extension` e `wall-detail` (opt-out dos painéis), `destruction` do
+  `game-floorplan-three` (painel `slab_1_p0`). O cenário `house_two_pillars` da área de casas perde os pilares das pontas de um lado.
+- **Testes novos:** `game-floorplan-structure/tests/slab-panels.test.ts` (opções, vão, uma casa de cada gabarito em repouso, perda de pilar, explosão sob a laje),
+  `game-floorplan-three/tests/destruction.test.ts` (painéis ligados ao mundo, o painel que falha esconde só os pedaços dele), `game-destruction/tests/terrain-blow.test.ts`.
+- **Achado no motor:** o golpe contundente no terreno (`anchored` com a etiqueta `terrain`) deixa de desgastar as juntas de todas as paredes sobre ele.
+- **Portões:** ver o relatório do passo (build, typecheck, lint, testes dos pacotes `game-floorplan*`, `game-destruction(-three)`, `game-urban-three`, `game-test-room`, exemplos
+  `floorplan-test-area`, `urban-test-area`, `test-room`).

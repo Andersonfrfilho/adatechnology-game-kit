@@ -103,7 +103,7 @@ export const hashOf = (value: unknown): string => hashText(text(value))
 export const hashRows = (list: unknown[]): string => hashText(list.map(text).join('\n'))
 
 function teamSpec(structure: Structure, portico: boolean): { parts: unknown[]; joints: unknown[] } {
-  const spec = toDestructibleSpec(structure, { portico, wallDetail: 'coarse' })
+  const spec = toDestructibleSpec(structure, { portico, wallDetail: 'coarse', slabPanels: false, rebar: false })
   const parts = spec.parts.map((part) => ({ ...part, id: teamId(part.id), ...(part.tags ? { tags: part.tags.map((tag) => (tag === 'terrain' ? 'terreno' : tag)) } : {}) }))
   const joints = (spec.joints ?? []).map((joint) => ({ id: `${teamId(joint.a)}~${teamId(joint.b)}`, a: teamId(joint.a), b: teamId(joint.b), kind: joint.kind, bears: joint.bears }))
   return { parts, joints }

@@ -20,7 +20,7 @@ function addBuildingBase(context: BuildContext): void {
     builder.rest(pillar, GROUND, 'rebar')
     return pillar
   })
-  const slab = builder.add({ id: 'slab_base', role: 'slab', material: construction.frame.slabs, aabb: box, y0: top, y1: context.level(0) }, { floor: 0 })
+  const slab = builder.add({ id: 'slab_base', role: 'slab', material: construction.frame.slabs, aabb: box, y0: top, y1: context.level(0) }, { floor: 0, footprint: [box] })
   for (const pillar of pillars) builder.rest(slab, pillar, 'rebar')
   context.base0 = slab
 }
