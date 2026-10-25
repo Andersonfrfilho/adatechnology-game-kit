@@ -663,11 +663,11 @@
     "id": "dirty_water",
     "teamId": "agua_suja",
     "teamBox": [
-      0.66,
+      0.664,
       1.83,
-      0.66
+      0.664
     ],
-    "scale": 0.1
+    "scale": 0.099598
   },
   {
     "id": "painkillers",
