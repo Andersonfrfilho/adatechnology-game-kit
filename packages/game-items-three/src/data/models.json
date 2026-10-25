@@ -1688,5 +1688,15 @@
       0.12
     ],
     "scale": 1
+  },
+  {
+    "id": "cb_radio",
+    "teamId": "radio_px",
+    "teamBox": [
+      0.25,
+      0.08,
+      0.2
+    ],
+    "scale": 1
   }
 ]
