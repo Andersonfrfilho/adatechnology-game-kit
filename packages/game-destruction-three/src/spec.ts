@@ -59,9 +59,18 @@ function sizeOf(box: THREE_NS.Box3): [number, number, number] {
   return [box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z]
 }
 
+/** Inverse of the root's world pose without its scale: world space to the metric frame the spec and the world's `setTransform` use. */
+export function specFrameInverse(THREE: ThreeNamespace, root: Object3D): THREE_NS.Matrix4 {
+  root.updateMatrixWorld(true)
+  const position = new THREE.Vector3()
+  const quaternion = new THREE.Quaternion()
+  root.matrixWorld.decompose(position, quaternion, new THREE.Vector3())
+  return new THREE.Matrix4().compose(position, quaternion, new THREE.Vector3(1, 1, 1)).invert()
+}
+
 /**
  * Build a `DestructibleSpec` from a three.js object: one part per mesh (meshes sharing `userData.destructionPart` become one part), each an
- * axis-aligned box in the root's space (rotation omitted), with the material taken from `options.materialOf`, `userData.destructionMaterial`
+ * axis-aligned box in metres in the root's frame (its position and rotation removed, its world scale kept; rotation omitted), with the material taken from `options.materialOf`, `userData.destructionMaterial`
  * or a guess from the names. Tiny meshes are merged into the part they overlap most; joints are inferred from touching parts.
  *
  * Meshes that are invisible or have `userData.destructionIgnore` (or sit under such an object) are skipped. The result also tells which meshes
@@ -70,8 +79,7 @@ function sizeOf(box: THREE_NS.Box3): [number, number, number] {
 export function specFromObject3D(THREE: ThreeNamespace, root: Object3D, options: SpecFromObjectOptions = {}): SpecFromObjectResult {
   const fallback = options.fallback ?? 'plastic'
   const minSize = options.minSize ?? 0.015
-  root.updateMatrixWorld(true)
-  const inv = root.matrixWorld.clone().invert()
+  const inv = specFrameInverse(THREE, root)
 
   // 1. collect meshes -> entries (grouped by an explicit part name)
   const entries: Entry[] = []

@@ -137,3 +137,49 @@ describe.skipIf(!hasCore)('userData.destructionPart as an object', () => {
     expect(trunk.geometry).toBe(trunkGeo)
   })
 })
+
+describe.skipIf(!hasCore)('a root scaled down to metres', () => {
+  function can(): { root: THREE.Group; body: THREE.Mesh } {
+    const root = new THREE.Group()
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.33, 1.2, 16), new THREE.MeshStandardMaterial())
+    body.name = 'body'
+    root.add(body)
+    root.scale.setScalar(0.1)
+    root.position.set(2, 0.5, -1.5)
+    root.rotation.y = 0.7
+    root.updateMatrixWorld(true)
+    return { root, body }
+  }
+
+  it('measures the spec in metres, keeping the root scale', async () => {
+    const { specFromObject3D } = await import('../src/spec')
+    const { root } = can()
+    const { spec } = specFromObject3D(THREE, root)
+    const shape = spec.parts[0].shape
+    expect(shape.kind).toBe('box')
+    if (shape.kind !== 'box') return
+    expect(shape.size[1]).toBeCloseTo(0.12, 5)
+    expect(shape.size[0]).toBeCloseTo(0.066, 5)
+  })
+
+  it('puts a hole decal on the visible surface of the scaled mesh', async () => {
+    const { createDestructionRenderer } = await import('../src/renderer')
+    const { FakeWorld, partState } = await import('./fake-world')
+    const world = new FakeWorld()
+    const scene = new THREE.Scene()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld() })
+    world.addObject('can', [partState('body', 'steel')])
+    const { root, body } = can()
+    scene.add(root)
+    renderer.bind('can', root, { parts: { body } })
+    // a hit on the +X side of the drawn can, at its middle, in world space
+    const side = new THREE.Vector3(0.33, 0, 0).applyMatrix4(root.matrixWorld)
+    const normal = new THREE.Vector3(1, 0, 0).transformDirection(root.matrixWorld)
+    world.emit({ type: 'hole', object: 'can', part: 'body', worldPoint: [side.x, side.y, side.z], hole: { point: [side.x, side.y, side.z], normal: [normal.x, normal.y, normal.z], diameter: 0.01, through: false } })
+    renderer.update(0.016)
+    expect(body.children).toHaveLength(1)
+    const local = body.children[0].position
+    expect(Math.hypot(local.x, local.z)).toBeCloseTo(0.33, 1)
+    expect(local.y).toBeCloseTo(0, 2)
+  })
+})

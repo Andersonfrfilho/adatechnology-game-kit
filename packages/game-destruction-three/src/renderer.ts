@@ -11,7 +11,7 @@ import type { Bound, HostVis, MeshVis, PartVis, PieceBody } from './internal'
 import { clamp, createRng, hashNumbers, hashString, mixHex } from './math'
 import { PieceSystem } from './pieces'
 import { RebarCages } from './rebar'
-import { partHintOf } from './spec'
+import { partHintOf, specFrameInverse } from './spec'
 import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, ThreeNamespace } from './types'
 import { Visuals } from './visual'
 
@@ -280,13 +280,13 @@ class Renderer implements DestructionRenderer {
       specParts = undefined
     }
     if (!specParts) return
-    root.updateMatrixWorld(true)
+    const frame = specFrameInverse(this.THREE, root)
     const e = new this.THREE.Euler()
     const q = new this.THREE.Quaternion()
     for (const m of meshes) {
       this.box.setFromObject(m)
       if (this.box.isEmpty()) continue
-      const c = root.worldToLocal(this.box.getCenter(this.v1))
+      const c = this.box.getCenter(this.v1).applyMatrix4(frame)
       let best: PartSpec | null = null
       let bestVol = Infinity
       for (const p of specParts) {
@@ -326,10 +326,9 @@ class Renderer implements DestructionRenderer {
   // Pieces
   // ----------------------------------------------------------------------------------------------------------------------------------
 
-  /** Half extents and centre of the box around some meshes, in the local space of `root`. */
+  /** Half extents and centre of the box around some meshes, in the metric frame of `root` (its pose removed, its scale kept). */
   private measure(root: Object3D, meshes: MeshVis[]): { half: Vec3; center: THREE_NS.Vector3 } {
-    root.updateMatrixWorld(true)
-    const inv = root.matrixWorld.clone().invert()
+    const inv = specFrameInverse(this.THREE, root)
     const total = new this.THREE.Box3()
     const m4 = new this.THREE.Matrix4()
     const lb = new this.THREE.Box3()
