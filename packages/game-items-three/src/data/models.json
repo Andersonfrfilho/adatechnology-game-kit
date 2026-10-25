@@ -1928,5 +1928,15 @@
       0.23
     ],
     "scale": 1
+  },
+  {
+    "id": "folding_solar_panel",
+    "teamId": "painel_solar",
+    "teamBox": [
+      0.396,
+      0.296,
+      0.0506
+    ],
+    "scale": 1
   }
 ]
