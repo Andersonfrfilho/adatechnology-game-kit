@@ -1524,10 +1524,10 @@
     "teamId": "sucata",
     "teamBox": [
       2,
-      0.8,
+      0.805,
       1.5
     ],
-    "scale": 0.1
+    "scale": 0.099793
   },
   {
     "id": "bricks",
