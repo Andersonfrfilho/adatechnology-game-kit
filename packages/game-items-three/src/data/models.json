@@ -1073,11 +1073,11 @@
     "id": "mechanic_toolbox",
     "teamId": "kit_mecanico",
     "teamBox": [
-      4,
-      2,
-      2
+      40,
+      20,
+      19.8
     ],
-    "scale": 0.1
+    "scale": 0.010034
   },
   {
     "id": "gas_torch",
