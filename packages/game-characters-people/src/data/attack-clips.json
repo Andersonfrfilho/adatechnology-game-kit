@@ -39,6 +39,26 @@
         { "t": 0.26, "type": "impact", "data": { "kind": "shove" } },
         { "t": 0.34, "type": "phase", "data": { "label": "attack_clip.phase.recover" } }
       ]
+    },
+    {
+      "id": "front_kick",
+      "source": { "authored": "game-kit", "note": "authored in the kit; replace with the Elenco team's clip when delivered" },
+      "duration": 0.6,
+      "loop": false,
+      "channels": "full",
+      "keys": [
+        { "t": 0, "pose": { "lean": 0, "twist": 0, "side": 0, "drop": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0, "legL": -0.05, "legR": 0.05, "kneeL": 0.05, "kneeR": 0.05 } },
+        { "t": 0.18, "pose": { "lean": -0.1, "twist": 0, "side": 0.04, "drop": -0.05, "headX": 0.05, "headY": 0, "headZ": 0, "armR": -0.5, "armL": 0.4, "elbR": -0.5, "elbL": -0.4, "armRz": -0.1, "armLz": 0.1, "legL": 0.1, "legR": -1.1, "kneeL": 0.35, "kneeR": 1.8 } },
+        { "t": 0.32, "pose": { "lean": -0.22, "twist": 0, "side": 0.04, "drop": -0.06, "headX": 0.1, "headY": 0, "headZ": 0, "armR": -0.7, "armL": 0.7, "elbR": -0.6, "elbL": -0.3, "armRz": -0.15, "armLz": 0.15, "legL": 0.12, "legR": -1.45, "kneeL": 0.2, "kneeR": 0.1 } },
+        { "t": 0.42, "pose": { "lean": -0.18, "twist": 0, "side": 0.03, "drop": -0.05, "headX": 0.08, "headY": 0, "headZ": 0, "armR": -0.5, "armL": 0.5, "elbR": -0.5, "elbL": -0.3, "armRz": -0.1, "armLz": 0.1, "legL": 0.1, "legR": -1.2, "kneeL": 0.3, "kneeR": 1.2 } },
+        { "t": 0.6, "pose": { "lean": 0, "twist": 0, "side": 0, "drop": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0, "legL": -0.05, "legR": 0.05, "kneeL": 0.05, "kneeR": 0.05 } }
+      ],
+      "events": [
+        { "t": 0, "type": "phase", "data": { "label": "attack_clip.phase.windup" } },
+        { "t": 0.18, "type": "phase", "data": { "label": "attack_clip.phase.strike" } },
+        { "t": 0.32, "type": "impact", "data": { "kind": "kick" } },
+        { "t": 0.42, "type": "phase", "data": { "label": "attack_clip.phase.recover" } }
+      ]
     }
   ],
   "locales": {

@@ -7,6 +7,7 @@ import { ATTACK_CLIPS, ATTACK_CLIP_LOCALES } from '../src'
 
 /** The relaxed upper body the melee clips start and end at (the first key of the Bestiário human clip). */
 const NEUTRAL_UPPER: Record<string, number> = { lean: 0, twist: 0, side: 0, headX: 0, headY: 0, headZ: 0, armR: 0.05, armL: -0.1, elbR: -0.2, elbL: -0.2, armRz: 0, armLz: 0 }
+const NEUTRAL_FULL: Record<string, number> = { ...NEUTRAL_UPPER, drop: 0, legL: -0.05, legR: 0.05, kneeL: 0.05, kneeR: 0.05 }
 const TOLERANCE = 0.12
 const STEPS = 200
 
@@ -15,6 +16,7 @@ type Expectation = { duration: number; channels: 'upper' | 'full'; impactAt: [nu
 const EXPECTED: Record<string, Expectation> = {
   punch_right: { duration: 0.35, channels: 'upper', impactAt: [0.1, 0.25], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
   shove_two_hands: { duration: 0.5, channels: 'upper', impactAt: [0.15, 0.35], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
+  front_kick: { duration: 0.6, channels: 'full', impactAt: [0.2, 0.4], neutral: NEUTRAL_FULL, phases: ['windup', 'strike', 'recover'] },
 }
 
 const byId = (id: string): PoseClip => ATTACK_CLIPS.find((clip) => clip.id === id)!
