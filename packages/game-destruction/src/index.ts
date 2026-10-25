@@ -13,6 +13,11 @@ export {
   sectionMoments, slendernessFactor, spanMoment, spanOf, steelMoment, tensionSteel,
 } from './flexure'
 export type { BearingWallOptions, BendGeometry, BendSection, SectionMoments, TensionSteel } from './flexure'
+export {
+  SOILS, SOIL_DEFAULTS, footingArea, footingSoil, layersBetween, pileCapacity, pileLength, pileStiffness, profileOf, soilAt, solveFoundation, stiffnessCentre,
+  subgradeModulus,
+} from './soil'
+export type { FoundationSolve, SoilSpring } from './soil'
 export { vec, quat, quatFromEuler, rotateVec, toLocal, toWorld } from './math'
 export { resolveStrings, locales } from './locale'
 export type { DestructionStrings, DestructionLocale } from './locale'
