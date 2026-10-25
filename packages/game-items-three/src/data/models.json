@@ -1698,5 +1698,15 @@
       0.2
     ],
     "scale": 1
+  },
+  {
+    "id": "cell_key",
+    "teamId": "chave_cela",
+    "teamBox": [
+      0.12,
+      0.03,
+      0.008
+    ],
+    "scale": 1
   }
 ]
