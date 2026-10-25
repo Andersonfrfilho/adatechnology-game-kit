@@ -1,6 +1,6 @@
 // Bundle entry (IIFE global `FurnitureArea`): the area wired to the two kit packages it needs, so a page only has to call
 // `FurnitureArea.loadInto(room)` or `room.loadModule(FurnitureArea.createFurnitureArea({ locale }))`.
-// The page also carries the weapons module (arms and accessories), so what the furniture does under fire can be tried with the real weapons: `loadInto` loads it too.
+// The page also carries the weapons module (arms and accessories) and the explosives module (the P13 cylinder: shot, valve, lighter, fire), so what the furniture does under fire can be tried with the real weapons: `loadInto` loads it too.
 // And the items module (`ItemsArea`: every item of the goods catalog at real size): the containers of the furniture hold real items, drawn by game-items-three at their real size.
 // It carries the characters and the animals modules as well (owner rule: this area shows what every phase adds), so a shot can cross a wardrobe door and reach a zombie behind it,
 // the vehicles module, so a car can stand in the yard next to the furniture (`car_in_the_yard`), the vegetation module, so the plants of the Viveiro can be cut, shot and burnt in the same world,
@@ -20,7 +20,7 @@ import { buildItem, createItemsTestModule } from '@adatechnology/game-items-thre
 import { createWeatherTestModule } from '@adatechnology/game-weather'
 import { createWeatherVisual } from '@adatechnology/game-weather-three'
 import { createVfxTestModule } from '@adatechnology/game-vfx-three'
-import { createWeaponsTestModule } from '@adatechnology/game-weapons-three'
+import { createExplosivesTestModule, createWeaponsTestModule } from '@adatechnology/game-weapons-three'
 import { registerBodyMaterial } from '@adatechnology/game-characters-three'
 import { createModule as createAnimalsModule } from '../../animals-test-area/src/entry.js'
 import { createModule as createCharactersModule } from '../../characters-test-area/src/entry.js'
@@ -87,18 +87,20 @@ export function createFurnitureArea(options = {}) {
   return create({ GameInteractablesHousehold, GameInteractablesThree, fillContainers: createItemContents(), ...options })
 }
 
-export { createVfxTestModule, createWeaponsTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createAudioTestModule, createWeatherTestModule, createFloorplanModule, createUrbanModule, loadVehiclesTestModule, loadVegetationTestModule, createPlayerModule, createCrowdModule, createStoriesModule }
+export { createVfxTestModule, createWeaponsTestModule, createExplosivesTestModule, createItemsTestModule, createCharactersModule, createAnimalsModule, createAudioTestModule, createWeatherTestModule, createFloorplanModule, createUrbanModule, loadVehiclesTestModule, loadVegetationTestModule, createPlayerModule, createCrowdModule, createStoriesModule }
 
 // the site copies the weapon thumbnails to site/dist/weapon-svg, next to the folder of each example page
 const SITE_THUMBNAIL_BASE = '../weapon-svg/'
 
 /**
  * Creates the module for the room's locale (`?lang=en` or pt-BR) and loads it, after the weapons, items, characters, animals, effects, sound, weather, houses, vehicles, vegetation, urban, player, crowd and stories modules (the furniture bench stays the one the panel shows).
- * Returns the room's report of the furniture module, with the other modules' reports under `weapons`, `itemsArea`, `characters`, `animals`, `vfx`, `audio`, `weather`, `floorplan`, `vehicles`, `vegetation`, `urban`, `player`, `crowd` and `stories`.
+ * Returns the room's report of the furniture module, with the other modules' reports under `weapons`, `explosives`, `itemsArea`, `characters`, `animals`, `vfx`, `audio`, `weather`, `floorplan`, `vehicles`, `vegetation`, `urban`, `player`, `crowd` and `stories`.
  */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const weapons = options.weapons === false ? undefined : room.loadModule(createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE }))
+  // the P13 cylinder of the weapons area with its whole sequence (leak, torch, blast, shell) in a kitchen corner against the room's brick wall, with the furniture and the people of the other modules (`?area=explosives_area`)
+  const explosives = options.explosives === false ? undefined : room.loadModule(createExplosivesTestModule({ locale: lang, room }))
   const itemsArea = options.items === false ? undefined : room.loadModule(createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang }))
   // the bodies of the characters module are DestructibleImpls with the 'flesh' material, which the room's world has to know before the module is checked
   registerBodyMaterial(room.world)
@@ -123,5 +125,5 @@ export function loadInto(room, options = {}) {
   // the stories ride along: no 3D, a world of stories and a character sheet for the room's panel
   const stories = options.stories === false ? undefined : room.loadModule(createStoriesModule({ locale: lang }))
   const report = room.loadModule(createFurnitureArea({ ...options, locale: lang }))
-  return { ...report, ...(weapons ? { weapons } : {}), ...(itemsArea ? { itemsArea } : {}), ...(characters ? { characters } : {}), ...(animals ? { animals } : {}), ...(vfx ? { vfx } : {}), ...(audio ? { audio } : {}), ...(weather ? { weather } : {}), ...(floorplan ? { floorplan } : {}), ...(vehicles ? { vehicles } : {}), ...(vegetation ? { vegetation } : {}), ...(urban ? { urban } : {}), ...(player ? { player } : {}), ...(crowd ? { crowd } : {}), ...(stories ? { stories } : {}) }
+  return { ...report, ...(weapons ? { weapons } : {}), ...(explosives ? { explosives } : {}), ...(itemsArea ? { itemsArea } : {}), ...(characters ? { characters } : {}), ...(animals ? { animals } : {}), ...(vfx ? { vfx } : {}), ...(audio ? { audio } : {}), ...(weather ? { weather } : {}), ...(floorplan ? { floorplan } : {}), ...(vehicles ? { vehicles } : {}), ...(vegetation ? { vegetation } : {}), ...(urban ? { urban } : {}), ...(player ? { player } : {}), ...(crowd ? { crowd } : {}), ...(stories ? { stories } : {}) }
 }
