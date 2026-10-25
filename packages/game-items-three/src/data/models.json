@@ -2038,5 +2038,15 @@
       0.091
     ],
     "scale": 1
+  },
+  {
+    "id": "laptop",
+    "teamId": "notebook",
+    "teamBox": [
+      0.36,
+      0.0252,
+      0.251
+    ],
+    "scale": 1
   }
 ]
