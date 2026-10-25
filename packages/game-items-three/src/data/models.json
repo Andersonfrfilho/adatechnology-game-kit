@@ -1738,5 +1738,15 @@
       0.25
     ],
     "scale": 1
+  },
+  {
+    "id": "combat_boots",
+    "teamId": "coturno",
+    "teamBox": [
+      0.3,
+      0.2,
+      0.22
+    ],
+    "scale": 1
   }
 ]
