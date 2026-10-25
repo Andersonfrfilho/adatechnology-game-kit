@@ -154,4 +154,29 @@ describe('hand targets of the weapon in the hands', () => {
     expect(along).toBeLessThan(0.9)
     expect(left.y).toBeLessThan(0)
   })
+
+  it.each(['colt_m4a1', 'ak_47'])('%s: the support hand is palm up, under the handguard axis', (weapon) => {
+    const { room, last } = roomWithRecorder()
+    equip(room, weapon)
+    const viewmodel = room.scene.getObjectByName('weapon-viewmodel')!
+    viewmodel.updateWorldMatrix(true, true)
+    const inverse = viewmodel.matrixWorld.clone().invert()
+    const world = viewmodel.getWorldQuaternion(new THREE.Quaternion())
+    const pose = last()!.targets!.L!
+    // the palm is the -y side of the hand frame; in the weapon's space it must face up
+    const palm = new THREE.Vector3(0, -1, 0).applyQuaternion(new THREE.Quaternion(...pose.quaternion)).applyQuaternion(world.clone().invert())
+    expect(palm.y).toBeGreaterThan(0.7)
+    // the barrel axis: the middle height of what lies at the muzzle end
+    const whole = new THREE.Box3().setFromObject(viewmodel).applyMatrix4(inverse)
+    const heights: number[] = []
+    viewmodel.traverse((object) => {
+      const mesh = object as THREE.Mesh
+      if (!mesh.isMesh) return
+      const box = new THREE.Box3().setFromObject(mesh).applyMatrix4(inverse)
+      if (box.min.z < whole.min.z + 0.05) heights.push((box.min.y + box.max.y) / 2)
+    })
+    const axis = heights.reduce((a, b) => a + b, 0) / heights.length
+    const centre = new THREE.Vector3(...pose.position).applyMatrix4(inverse)
+    expect(centre.y).toBeLessThan(axis - 0.015)
+  })
 })

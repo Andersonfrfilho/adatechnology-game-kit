@@ -136,6 +136,7 @@ const fpSteps = [
   ['fists', () => { S.r.setTool('fists'); S.run(60) }],
   ['pistol', () => { S.r.setTool('glock_17'); S.run(60) }],
   ['rifle', () => { S.r.setTool('ak_47'); S.run(60) }],
+  ['m4', () => { S.r.setTool('colt_m4a1'); S.run(60) }],
   ['rifle-reload', () => { S.r.use(); S.run(12); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' })); S.run(22); S.r.pause() }],
   ['pistol-reload', () => { S.r.resume(); S.run(60); S.r.setTool('glock_17'); S.run(60); S.r.use(); S.run(12); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' })); S.run(22); S.r.pause() }],
   ['punch', () => { S.r.resume(); S.run(60); S.r.setTool('fists'); S.run(40); S.r.use(); S.run(10); S.r.pause() }],
@@ -143,7 +144,7 @@ const fpSteps = [
   ['kick', () => { S.r.resume(); S.run(60); S.r.setTool('hand'); S.run(40); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyV', shiftKey: true })); S.run(19); S.r.pause() }],
   ['punch-third', () => { S.r.resume(); S.run(60); S.r.setCameraMode('third'); S.r.setTool('fists'); S.run(60); S.r.use(); S.run(10); S.r.pause() }],
 ]
-const fpExpect = { 'bare-hands': 'relaxed', fists: 'fists', pistol: 'hold', rifle: 'hold', 'rifle-reload': 'hold', 'pistol-reload': 'hold', punch: 'fists', shove: 'relaxed', kick: 'relaxed' }
+const fpExpect = { 'bare-hands': 'relaxed', fists: 'fists', pistol: 'hold', rifle: 'hold', m4: 'hold', 'rifle-reload': 'hold', 'pistol-reload': 'hold', punch: 'fists', shove: 'relaxed', kick: 'relaxed' }
 const fpPlaying = { punch: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick', 'punch-third': 'punch_right' }
 let fpOk = true
 for (const lang of ['pt-BR', 'en']) {

@@ -21,7 +21,11 @@ export const HAND_HOLD = {
   /** The grip of a long gun that has no drawn pistol grip: how far under the receiver the hand sits. */
   strapUnder: 0.04,
   /** How far lower than touching the palm hangs under a handguard, so the fingers close under it and not over it. */
-  forendDrop: 0.008,
+  forendDrop: 0.016,
+  /** How far (radians) the fingers of a support hand under a handguard rise from level. */
+  forendTilt: 0.3,
+  /** How far a handgun's support hand dips for the new magazine, along the grip. */
+  magDip: 0.045,
   /** Closure of the fingers on a grip and on a forend (0 open, 1 closed). */
   closed: 0.9,
   forend: 0.6,
@@ -96,8 +100,8 @@ const gripFrame = (THREE: Three, up: THREE_NS.Vector3, side: 1 | -1): THREE_NS.Q
   return handFrame(THREE, forward.clone().applyQuaternion(tilt), toSide.clone().applyQuaternion(tilt).multiplyScalar(side))
 }
 
-/** The palm under a forend, the fingers going to the right and closing over it, the thumb forward. */
-const forendFrame = (THREE: Three): THREE_NS.Quaternion => handFrame(THREE, V(THREE, 0, 0, 1), V(THREE, 0, -1, 0))
+/** The palm under a forend (palm up, back of the hand down), the fingers going to the right and closing up its right side, the thumb forward along its left. `tilt` raises the fingers, so the wrist is below and to the left: the forearm comes from under the gun. */
+const forendFrame = (THREE: Three, tilt = 0): THREE_NS.Quaternion => handFrame(THREE, V(THREE, 0, Math.sin(tilt), Math.cos(tilt)), V(THREE, 0, -Math.cos(tilt), Math.sin(tilt)))
 
 /** The hold of a gallery model: the right hand on the pistol grip, the left on the forend (or wrapped under the right on a handgun), on the pump of a pump gun, on the magazine while it is changed. */
 export function holdOfModel(THREE: Three, model: WeaponModel, holderScale: number): Hold {
@@ -138,14 +142,15 @@ export function holdOfModel(THREE: Three, model: WeaponModel, holderScale: numbe
   } else if (frames) {
     const handguardHeight = frames.receiverHeight * 0.8
     const x = frames.receiverEnd + (frames.handguardEnd - frames.receiverEnd) * HAND_HOLD.forendAt
-    left = { part: root, offset: toRoot(x, frames.barrelY - handguardHeight / 2 - HAND_HOLD.palm - HAND_HOLD.forendDrop, 0), quaternion: forendFrame(THREE) }
+    left = { part: root, offset: toRoot(x, frames.barrelY - handguardHeight / 2 - HAND_HOLD.palm - HAND_HOLD.forendDrop, 0), quaternion: forendFrame(THREE, HAND_HOLD.forendTilt) }
   }
   if (left && parts.mag) {
     const box = new THREE.Box3().setFromObject(parts.mag)
     const center = box.getCenter(new THREE.Vector3())
     // the magazine well of a handgun is inside the grip: the hand goes under its base, where the new magazine is slapped in
-    const local = parts.mag.worldToLocal(V(THREE, center.x, box.min.y - HAND_HOLD.palm - (handgun ? 0.02 : 0), center.z))
-    leftMagazine = { part: parts.mag, offset: local, quaternion: forendFrame(THREE) }
+    const local = parts.mag.worldToLocal(V(THREE, center.x, box.min.y - HAND_HOLD.palm, center.z))
+    // a handgun's new magazine comes from the belt: the hand dips a little along the grip and stays in the view; a long gun's goes under its magazine
+    leftMagazine = handgun && left ? { part: root, offset: left.offset.clone().addScaledVector(up, -HAND_HOLD.magDip), quaternion: left.quaternion } : { part: parts.mag, offset: local, quaternion: forendFrame(THREE) }
   }
   return {
     right,
