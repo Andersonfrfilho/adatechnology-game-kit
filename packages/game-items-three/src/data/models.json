@@ -2288,5 +2288,15 @@
       0.223
     ],
     "scale": 1
+  },
+  {
+    "id": "safe_key",
+    "teamId": "chave_cofre",
+    "teamBox": [
+      0.06995,
+      0.0249,
+      0.005
+    ],
+    "scale": 1
   }
 ]
