@@ -1718,5 +1718,15 @@
       0.4
     ],
     "scale": 1
+  },
+  {
+    "id": "cigarettes",
+    "teamId": "cigarro",
+    "teamBox": [
+      0.055,
+      0.088,
+      0.022
+    ],
+    "scale": 1
   }
 ]
