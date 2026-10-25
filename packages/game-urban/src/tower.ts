@@ -15,6 +15,9 @@ export type TowerPreset = {
   mechanicalEvery: number | false
   /** A glass curtain wall (a ribbon of tall windows on a tinted skin) or a punched facade (a window in each bay of the masonry). */
   glass: boolean
+  /** Fewest and most storeys this preset's towers have (the lot height is raised or cut to it); omitted: no minimum, and `TowerOptions.maxStoreys` for the top. */
+  minStoreys?: number
+  maxStoreys?: number
   /** Colour of the skin; omitted: the facade colour the block drew for the lot (glass: a blue tint of it). */
   color?: number
 }
@@ -25,8 +28,19 @@ export const DEFAULT_TOWER_PRESETS: readonly TowerPreset[] = [
   { id: 'residential', weight: 0.4, storeyHeight: 3.1, mechanicalEvery: 25, glass: false },
 ]
 
+/**
+ * A preset from the layout of a typology (`officeTowerLayout(opts)`, `residentialTowerLayout(opts)`), so the city draws the tower the game configured:
+ * the storey pitch and the facade come from the layout, the storey range from its `range` when given.
+ */
+export const towerPresetOf = (
+  id: string,
+  weight: number,
+  layout: { pitch: number; facade: 'curtain' | 'punched' },
+  extra: Partial<Omit<TowerPreset, 'id' | 'weight' | 'storeyHeight' | 'glass'>> = {},
+): TowerPreset => ({ id, weight, storeyHeight: layout.pitch, mechanicalEvery: 20, glass: layout.facade === 'curtain', ...extra })
+
 /** What a game asks a tower provider to put on the ground: the lot, the height, the preset the random chose and the facade colour. */
-export type TowerRequest = { x: number; z: number; width: number; depth: number; height: number; color: number; preset: TowerPreset; lit: number }
+export type TowerRequest = { x: number; z: number; width: number; depth: number; height: number; color: number; preset: TowerPreset; lit: number; use?: string; storeys?: number }
 /** Draws a tower in place of the default one (the game's own model, or the plan of the typology rendered by `game-floorplan-three`). */
 export type TowerProvider = (request: TowerRequest, b: UrbanBuilder) => void
 
@@ -39,11 +53,13 @@ export type TowerOptions = {
   provider?: TowerProvider
   /** The crown: height of the mast over the roof as a share of the tower (default 0.06, at most 25 m), 0 for none. */
   mast?: number
+  /** Most storeys a tower may have (default 60, the structural limit of the kit): a taller lot is drawn at this many storeys of its preset. */
+  maxStoreys?: number
   /** Chance that a window is lit when the block did not say (default 0.12). */
   lit?: number
 }
 
-export const TOWER_DEFAULTS = { minHeight: 60, mast: 0.06, lit: 0.12 } as const
+export const TOWER_DEFAULTS = { minHeight: 60, maxStoreys: 60, mast: 0.06, lit: 0.12 } as const
 
 const PODIUM = 1.5
 const PLANT = 0x2c2f33
@@ -118,10 +134,13 @@ export function createTowerDrawer(towers: TowerOptions, plain: (b: UrbanBuilder,
   const presets = towers.presets ?? DEFAULT_TOWER_PRESETS
   return (b: UrbanBuilder, x: number, z: number, width: number, depth: number, height: number, color: number, o: BuildingOptions = {}): BlockBuilding => {
     if (height < minHeight || presets.length === 0) return plain(b, x, z, width, depth, height, color, o)
-    const request: TowerRequest = { x, z, width, depth, height, color, preset: pickTowerPreset(b, presets), lit: o.lit ?? towers.lit ?? TOWER_DEFAULTS.lit }
+    const preset = (o.preset ? presets.find((p) => p.id === o.preset) : undefined) ?? pickTowerPreset(b, presets)
+    const top = (preset.maxStoreys ?? towers.maxStoreys ?? TOWER_DEFAULTS.maxStoreys) * preset.storeyHeight
+    const bottom = (preset.minStoreys ?? 0) * preset.storeyHeight
+    const request: TowerRequest = { x, z, width, depth, height: Math.min(Math.max(height, bottom), top), color, preset, lit: o.lit ?? towers.lit ?? TOWER_DEFAULTS.lit, ...(o.use ? { use: o.use } : {}), ...(o.storeys ? { storeys: o.storeys } : {}) }
     if (towers.provider) {
       towers.provider(request, b)
-      return { x, z, width, depth, height, color }
+      return { x, z, width, depth, height: request.height, color }
     }
     return drawTower(b, request, towers)
   }

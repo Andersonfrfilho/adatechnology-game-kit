@@ -30,6 +30,12 @@ export interface PileDesign {
 
 export const PILE_DEFAULTS = { diameter: 1.2, pitch: 3.5, method: 'bored', maxLength: 60 } as const
 
+/**
+ * Most storeys a skyscraper has by default (owner decision 2026-10-25): above about 60 the drift at the top passes H/500, because the engine has no outrigger
+ * or perimeter tube. A default, not a physical constant: `SkyscraperOptions.range` (or a preset with another `range`) raises it.
+ */
+export const SKYSCRAPER_MAX_STOREYS = 60
+
 /** Numbers that describe one typology of skyscraper. Every one is an option of `skyscraperLayout`. */
 export interface SkyscraperPreset {
   /** Storeys: the default and the range the typology accepts (the top storey is the mechanical floor). */
@@ -63,7 +69,7 @@ export interface SkyscraperPreset {
 /** Defaults of a generic skyscraper: a 40-storey tower on 12 m bays with a curtain wall, a plant floor every 20 storeys, a damper above 150 m, in a city wind, on piles to the sand under soft clay. */
 export const SKYSCRAPER_DEFAULTS: SkyscraperPreset = {
   storeys: 40,
-  range: [20, 80],
+  range: [20, SKYSCRAPER_MAX_STOREYS],
   height: 3.6,
   bay: [12, 12],
   bays: [3, 3],
@@ -78,7 +84,7 @@ export const SKYSCRAPER_DEFAULTS: SkyscraperPreset = {
   superimposed: 450,
 }
 
-export interface SkyscraperOptions extends Partial<Omit<SkyscraperPreset, 'bay' | 'bays' | 'range'>> {
+export interface SkyscraperOptions extends Partial<Omit<SkyscraperPreset, 'bay' | 'bays'>> {
   bay?: number | readonly [number, number]
   bays?: readonly [number, number]
   /** Sizes derived from the load and the height unless given: columns, beam depth and slab thickness in metres. */
@@ -136,8 +142,8 @@ const WALL_SLENDER = 200
 
 /** Resolves the numbers of a skyscraper from a preset and the options. Pure: nothing is built. */
 export function skyscraperLayout(options: SkyscraperOptions = {}, preset: SkyscraperPreset = SKYSCRAPER_DEFAULTS): SkyscraperLayout {
-  const range = preset.range
   const o = { ...preset, ...Object.fromEntries(Object.entries(options).filter(([, v]) => v !== undefined)) } as SkyscraperPreset & SkyscraperOptions
+  const range = o.range
   const storeys = Math.max(range[0], Math.min(range[1], Math.round(o.storeys)))
   const given: [number, number] = typeof o.bay === 'number' ? [o.bay, o.bay] : [o.bay[0], o.bay[1]]
   const oddZ = (n: number) => (Math.round(n) % 2 === 1 ? Math.round(n) : Math.round(n) + 1)

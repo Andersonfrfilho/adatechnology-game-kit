@@ -507,7 +507,7 @@ caixas (`createCityBuilding`). Nada a portar; a tipologia é nova.
 
 ### 11.1 O que muda para quem joga
 
-- Há duas torres prontas: a **torre de escritórios** (`game-floorplan-commercial`, 20 a 80 andares, pele de vidro) e a **torre residencial**
+- Há duas torres prontas: a **torre de escritórios** (`game-floorplan-commercial`, 20 a 60 andares, pele de vidro) e a **torre residencial**
   (`game-floorplan-residential`, 20 a 60 andares, fachada de alvenaria com janelas). Cada uma tem **planta ao nível de cômodo** em todos os andares:
   térreo com saguão, andar tipo com antessala de elevadores, escada e poços dentro do núcleo, salas (ou apartamentos) em volta, andar técnico no topo.
 - A mesma torre tem a **estrutura real**: pilares contínuos, núcleo de concreto do alicerce à cobertura, pele de vidro (ou alvenaria com janelas),
@@ -525,7 +525,7 @@ duplicado) e põe o solo e as estacas. O `SkyscraperPreset` é o conjunto de nú
 
 | Opção | Padrão genérico | Significado |
 |---|---|---|
-| `storeys` | 40 (faixa 20 a 80) | andares; o último é o andar técnico |
+| `storeys` | 40 (faixa 20 a 60) | andares; o último é o andar técnico |
 | `height` | 3,6 m | pé-direito livre; o andar tem `height + laje` |
 | `bay`, `bays` | 12 m, 3 x 3 vãos | vão entre pilares e quantidade (em z sempre ímpar: o núcleo fica no vão do meio, entre duas linhas de vigas) |
 | `slenderness` | 9 | altura máxima sobre o lado estreito (Taipei 101 tem 8,3; Burj Khalifa 8); os vãos crescem até caber |
@@ -584,9 +584,9 @@ do mesmo `SkyscraperLayout`: a laje é `plate`, o núcleo é `core.center`/`core
 | | Torre de escritórios (`game-floorplan-commercial`) | Torre residencial (`game-floorplan-residential`) |
 |---|---|---|
 | template | `office_tower`, `use: commercial` | `residential_tower`, `use: residential_multi` |
-| `OFFICE_TOWER_DEFAULTS` / `RESIDENTIAL_TOWER_DEFAULTS` | 40 andares (20 a 80), pé-direito 3,6, vão 12 m, vidro, técnico a cada 20, amortecedor acima de 150 m | 30 andares (20 a 60), pé-direito 2,8, vão 9 m, janela em alvenaria, técnico a cada 25, amortecedor acima de 150 m |
+| `OFFICE_TOWER_DEFAULTS` / `RESIDENTIAL_TOWER_DEFAULTS` | 40 andares (20 a 60), pé-direito 3,6, vão 12 m, vidro, técnico a cada 20, amortecedor acima de 150 m | 30 andares (20 a 60), pé-direito 2,8, vão 9 m, janela em alvenaria, técnico a cada 25, amortecedor acima de 150 m |
 | API | `officeTowerLayout`, `buildOfficeTower`, `officeTowerTemplate`, `OFFICE_TOWER_DEFAULTS` | `residentialTowerLayout`, `buildResidentialTower`, `residentialTowerTemplate`, `RESIDENTIAL_TOWER_DEFAULTS` |
-| zona | `zt` (torres: até 80 andares, 320 m), registrada no pacote residencial | `zt` |
+| zona | `zt` (torres: até 60 andares, 240 m), registrada no pacote residencial | `zt` |
 
 `options.floors` escolhe os andares do template; `floorRange` deixa a zona recortar. A zona `zt` fica no pacote residencial (que não depende do comercial). As bibliotecas `office_open` e `living_tower` mobiliam as salas; os pacotes de planta
 dependem de `game-floorplan-structure` (peer e dev) e este não depende mais deles: seus testes carregam os pacotes por caminho relativo.
@@ -610,7 +610,7 @@ corte) a saída é a de antes, byte a byte.
 
 ### 11.8 Conferências
 
-- `game-floorplan-structure/tests/skyscraper.test.ts` (18) e `tower-plan.test.ts`: 20, 40 e 80 andares em pé em repouso e com o vento padrão (V0 40 m/s, categoria IV),
+- `game-floorplan-structure/tests/skyscraper.test.ts` (18) e `tower-plan.test.ts`: 20, 40 e 60 andares em pé em repouso e com o vento padrão (V0 40 m/s, categoria IV),
   com núcleo e estacas; sem estacas tomba; explosão num andar quebra o vidro e danifica só as lajes vizinhas, o núcleo fica inteiro; perder um pilar do perímetro
   derruba só aquela linha de pilares acima, não a torre.
 - `game-floorplan-commercial/tests/office-tower.test.ts` (9), `game-floorplan-residential/tests/residential-tower.test.ts`: plantas válidas (validador), térreo,
@@ -631,12 +631,13 @@ já existem é `tensionCapacity` (só com vento ligado, que nenhum golden liga).
 
 ### 11.10 Limites e perguntas
 
+- **Decidido pelo dono em 2026-10-25: limite de 60 andares por padrão** (`SKYSCRAPER_MAX_STOREYS`; a faixa `range` de `SkyscraperOptions`/preset, `towers.maxStoreys` da cidade e a zona `zt` — agora 60 andares e 240 m, para o aviso do zoneamento não prometer o que a estrutura não faz — são opções e o jogo as sobe). Medido com 60 andares no vento padrão: deriva 0,00265 (1/377), ainda acima de H/500 (0,002), então `sway.status` fica `drift` aos 60; aos 20 e 40 fica `ok`. O limite de 60 reduz mas não elimina o aviso.
 - Acima de 60 andares (escritório) o balanço de topo passa de H/500 (deriva 1/180 a 1/240 com 80 andares, período de 20 s): o motor tem só núcleo e pórtico, sem
   outrigger nem tubo de perímetro (`chord`). Em pé e sem tensão sobrando, mas com `sway.status` `drift`. A deriva é de projeto do jogo.
 - A laje é uma peça por andar; a pele de vidro é uma lâmina de 12 mm; o núcleo tem uma fileira de poços (largura dada pelo vão).
 - A planta e a estrutura vêm do mesmo layout, mas são dois objetos: o `plan.structure` do pipeline de casas (pórtico de concreto, ≥ 3 andares) e a
   `DestructibleSpec` da torre (núcleo, vidro, estacas, vento). O jogo usa a segunda para a física da torre.
-- **Perguntas ao dono, ainda pendentes (sem resposta em 2026-10-25):** (1) a torre de 80 andares pode passar de H/500 no padrão, ou o jogo prefere limitar a faixa a 60?
+- **Perguntas ao dono:** (1) ~~a torre de 80 andares pode passar de H/500 no padrão, ou limitar a faixa a 60?~~ decidido em 2026-10-25: limite de 60 andares por padrão, configurável.
   (2) `towers` desligado por padrão na cidade serve, ou o centro deve nascer com torres e regerar os goldens da Galeria?
 
 ## 12. Lajes em painéis com vigas reais nas casas (§5 resolvido; 2026-10-25)

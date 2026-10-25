@@ -3179,3 +3179,9 @@ do vão e vergas/cintas com a altura do vão. O vergalhão (`rebar`) passou a se
 - **Achado no motor:** o golpe contundente no terreno (`anchored` com a etiqueta `terrain`) deixa de desgastar as juntas de todas as paredes sobre ele.
 - **Portões:** ver o relatório do passo (build, typecheck, lint, testes dos pacotes `game-floorplan*`, `game-destruction(-three)`, `game-urban-three`, `game-test-room`, exemplos
   `floorplan-test-area`, `urban-test-area`, `test-room`).
+
+## Limite de 60 andares nas torres (dono, 2026-10-25)
+
+- Padrão de 60 andares (`SKYSCRAPER_MAX_STOREYS`), configurável por `range` (estrutura, torres de escritório e residencial), `towers.maxStoreys` e `minStoreys`/`maxStoreys` por preset (cidade); zona `zt` passa a 60 andares e 240 m.
+- Medido: 60 andares, vento padrão, deriva 0,00265 (1/377), acima de H/500 (0,002): `sway.status` é `drift` aos 60; 20 e 40 andares ficam `ok`.
+- Testes: cenários de 80 andares trocados por 60; novos para o máximo padrão e para subir por opção (estrutura, escritório, residencial, cidade); opções de geração `floors`/`tower` por tipologia.
