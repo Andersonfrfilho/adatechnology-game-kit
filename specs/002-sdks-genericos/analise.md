@@ -16,6 +16,7 @@ Análise de 24/10/2026 sobre o `adatechnology-game-kit` (36 pacotes) e o jogo Zo
   objetivos, carro dirigível, áudio sintetizado e a ferramenta de orçamento de desempenho. Todos passam no teste do GTA.
 - **Faltam pacotes que nem estão no plano**: rede LAN, salvar e carregar, entrada (teclas e controle), tempo do mundo (relógio e
   calendário), navegação, interface (HUD), missões e diálogo.
+- **A fonte do jogo é pequena** (cerca de 8.700 linhas em `implementacao/jogo-web/src`), o que torna a extração viável.
 - **Falta um contrato único de customização.** Cada pacote resolve opções, registro e plugin do seu jeito. Padronizar isso no
   `game-contracts` antes de criar pacotes novos evita retrabalho, e é o que prepara rede e save (tudo serializável e com semente).
 
@@ -136,9 +137,19 @@ formato que todo pacote novo segue e que os antigos adotam aos poucos.
 9. **`game-save`**, depois **`game-net`** (LAN, host autoritativo, como no projeto de rede da revisão final).
 10. **`game-urban` e `game-terrain`** (fase 7), usando casas, veículos, vegetação e multidão.
 
-## 7. Pontos em aberto
+## 7. Código-fonte do jogo e pontos em aberto
 
-- **Onde está o código-fonte do jogo?** O portal aponta `implementacao/jogo-web/src/NN-*.js` e `build.py`, mas isso não está em
-  nenhum dos dois repositórios nem na pasta `zombiada` do computador. Só existem as páginas já montadas. Dá para extrair dos
-  arquivos montados, mas com a fonte é mais seguro.
+- **A fonte foi achada** em 25/10: `implementacao/jogo-web/` na pasta compartilhada do projeto (`src/NN-*.js`, `build.py`,
+  `shell.html`, `dados/`, `t/`). São só cerca de **8.700 linhas** em 36 arquivos; o tamanho das páginas montadas vem das malhas
+  embutidas e dos SDKs. Os maiores: `22-galeria.js` (1.072), `75-vale.js` (761, vida dos NPCs), `26-casa.js` (695),
+  `27-casa3d-jogo.js` (548), `40-horde.js` (466), `55-explosions.js` (365), `60-player.js` (337), `50-fx.js` (312),
+  `80-npc.js` (262), `65-inventory.js` (198), `70-hud.js` (199), `85-objectives.js` (140), `82-car.js` (101). Isso deixa a
+  extração da seção 3 bem menor do que parecia.
+- Os SDKs que o jogo embute ficam em `sdk/` da mesma pasta: `casa3d` (4.454 linhas), `plantas` (3.825), `moveis3d` (449),
+  `andares` (187), `camera` (70), `teste` (176), `contagio` (141), mais cópias de `destruicao` e `interactables` puxadas do npm
+  por `sdk/versoes.json`.
+- **Duplicação nova:** o `sdk/contagio` (25/10, frente "Início gradual do surto") faz o mesmo que o `game-infection` do kit
+  (surto abstrato, determinístico, por regiões). Pela regra do kit, os dois devem virar um só: levar ao `game-infection` o que o
+  `contagio` tem a mais (incubação em fila, contidos, abrigados, ligações, saída do mapa, salvar e carregar) e o jogo passar a
+  usar o pacote.
 - Nomes dos pacotes novos (`game-life`, `game-navigation`, `game-time` etc.) são sugestão; confirmar antes de criar.
