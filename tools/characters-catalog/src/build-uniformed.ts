@@ -37,6 +37,9 @@ export const buildForces = ({ living, decisions }: UniformedInputs): unknown[] =
 const NUMBER_AFTER_GREATER_OR_EQUAL = /≥\s*(\d+)/
 const OPINION_BELOW = /abaixo de\s*[−-](\d+)/
 
+const rankRuleEnglish = (commandMinimum: string, disobeyBelow: string): string =>
+  `In the game, rank decides who leads when the leader falls (the highest living rank with courage + loyalty ≥ ${commandMinimum}) and what a soldier obeys. A higher rank beats opinion, unless the soldier's opinion of the superior is below −${disobeyBelow}: then they disobey, desert or mutiny.`
+
 export const buildRanks = ({ living, decisions }: UniformedInputs): unknown => {
   const commandMinimum = NUMBER_AFTER_GREATER_OR_EQUAL.exec(living.rankRule)?.[1] ?? missing('command threshold in RANKRULE', 'rankRule')
   const disobeyBelow = OPINION_BELOW.exec(living.rankRule)?.[1] ?? missing('opinion threshold in RANKRULE', 'rankRule')
@@ -48,7 +51,7 @@ export const buildRanks = ({ living, decisions }: UniformedInputs): unknown => {
       commander: { choose: 'highest-rank-alive', minimumCourageAndLoyalty: Number(commandMinimum) },
       disobeyBelowOpinion: -Number(disobeyBelow),
       onDisobey: ['disobey', 'desert', 'mutiny'],
-      text: { 'pt-BR': living.rankRule },
+      text: { en: rankRuleEnglish(commandMinimum, disobeyBelow), 'pt-BR': living.rankRule },
     },
   }
 }
