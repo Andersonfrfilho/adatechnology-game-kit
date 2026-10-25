@@ -384,10 +384,10 @@
     "teamId": "leite_condensado",
     "teamBox": [
       0.734,
-      1,
+      1.004,
       0.734
     ],
-    "scale": 0.1
+    "scale": 0.099504
   },
   {
     "id": "pasta",
