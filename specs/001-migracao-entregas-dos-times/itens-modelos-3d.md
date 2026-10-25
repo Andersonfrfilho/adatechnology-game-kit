@@ -345,7 +345,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Chave de carro (kit) | `chave_carro` | `car_key` | 0,02 kg | comum | 60 x 45 x 15 mm |
 | [x] | Chave de cela (kit) | `chave_cela` | `cell_key` | 0,05 kg | raro | 120 x 30 x 8 mm |
 | [ ] | Chave do cofre da delegacia | `chave_cofre` | `safe_key` | 0,05 kg | único | 70 x 25 x 5 mm |
-| [ ] | Chave do gerador do hospital | `chave_gerador` | `generator_key` | 0,05 kg | único | 80 x 30 x 6 mm |
+| [x] | Chave do gerador do hospital (kit) | `chave_gerador` | `generator_key` | 0,05 kg | único | 80 x 30 x 6 mm |
 | [ ] | Chave do teleférico | `chave_teleferico` | `cable_car_key` | 0,05 kg | único | do jogo |
 | [ ] | Chave mestra da portaria | `chave_mestra` | `master_key` | 0,05 kg | incomum | 90 x 35 x 6 mm |
 | [ ] | Crachá da hidrelétrica | `cracha_rep` | `dam_badge` | 0,01 kg | único | do jogo |

@@ -1958,5 +1958,15 @@
       0.091
     ],
     "scale": 1
+  },
+  {
+    "id": "generator_key",
+    "teamId": "chave_gerador",
+    "teamBox": [
+      0.08,
+      0.03,
+      0.006
+    ],
+    "scale": 1
   }
 ]
