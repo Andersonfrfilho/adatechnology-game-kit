@@ -2238,5 +2238,15 @@
       0.0158
     ],
     "scale": 1
+  },
+  {
+    "id": "pumpkin_seeds",
+    "teamId": "sem_abobora",
+    "teamBox": [
+      0.09,
+      0.13,
+      0.015
+    ],
+    "scale": 1
   }
 ]
