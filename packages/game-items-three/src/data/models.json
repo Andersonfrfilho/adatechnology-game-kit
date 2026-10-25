@@ -963,11 +963,11 @@
     "id": "pocket_knife",
     "teamId": "canivete",
     "teamBox": [
-      1.1,
-      0.22,
-      0.32
+      11,
+      2.2,
+      3.2
     ],
-    "scale": 0.1
+    "scale": 0.01
   },
   {
     "id": "screwdriver",
