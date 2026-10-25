@@ -5,7 +5,7 @@ import { createSilhouetteRandom } from '@adatechnology/game-floorplan'
 import { drawBuilding, fillBlock, DEFAULT_FACADES } from './block'
 import type { BlockBuilding, BuildingOptions, FillBlockOptions } from './block'
 import { createLightBudget } from './budget'
-import { createTowerDrawer } from './tower'
+import { createTowerDrawer, DEFAULT_TOWER_PRESETS } from './tower'
 import type { TowerOptions } from './tower'
 import { DEFAULT_POLES, POLE_SHAPES } from './poles'
 import type { PoleDef, PoleOptions, PoleShapeBuilder } from './poles'
@@ -16,6 +16,8 @@ import type { Origin, SampleSheetOptions } from './neighbourhoods/compose'
 import { COMPOSERS } from './neighbourhoods/composers'
 import { DEFAULT_PATTERNS, SAMPLE_CELLS } from './neighbourhoods/patterns'
 import type { ComposeOptions, Composer, Locale, NeighbourhoodPattern, UrbanKitCore, UrbanPlan } from './neighbourhoods/types'
+import { createCities } from './cities'
+import type { CityPlanInput, DistrictKindDef } from './cities'
 import { createUrbanBuilder } from './scene'
 import { createTerrain, drawTerrain } from './terrain'
 import type { Terrain, TerrainOptions } from './terrain'
@@ -31,15 +33,17 @@ export const DEFAULT_URBAN_SEED = 7
 
 export type UrbanOptions = {
   /** Entries added to the catalogues (an entry with an existing id replaces it). */
-  packs?: { poles?: readonly PoleDef[]; neighbourhoods?: readonly NeighbourhoodPattern<any>[] }
+  packs?: { poles?: readonly PoleDef[]; neighbourhoods?: readonly NeighbourhoodPattern<any>[]; districtKinds?: readonly DistrictKindDef[]; cityPlans?: readonly CityPlanInput[] }
   /** Numbers changed on shipped entries, by id (objects merge, arrays replace). */
-  patch?: { poles?: Record<string, DeepPartial<PoleDef>>; neighbourhoods?: Record<string, DeepPartial<NeighbourhoodPattern<any>>> }
+  patch?: { poles?: Record<string, DeepPartial<PoleDef>>; neighbourhoods?: Record<string, DeepPartial<NeighbourhoodPattern<any>>>; districtKinds?: Record<string, DeepPartial<DistrictKindDef>>; cityPlans?: Record<string, DeepPartial<CityPlanInput>> }
   /** Ids taken out of the catalogues. */
-  remove?: { poles?: readonly string[]; neighbourhoods?: readonly string[] }
+  remove?: { poles?: readonly string[]; neighbourhoods?: readonly string[]; districtKinds?: readonly string[]; cityPlans?: readonly string[] }
   /** Shape builders for the poles a pack adds; the five of the Galeria are always there. */
   shapes?: Readonly<Record<string, PoleShapeBuilder>>
   /** Composers for the patterns a pack adds; the ten of the Galeria are always there. */
   composers?: Readonly<Record<string, Composer>>
+  /** City plans (zoning): district kinds and plans are catalogues (`packs`, `patch` and `remove` above, under `districtKinds` and `cityPlans`). */
+  cities?: { /** Most storeys a district may have. Default 60. */ maxFloors?: number }
   lights?: { budget?: number }
   streets?: StreetOptions
   /** Facade colours of the city buildings. */
@@ -152,5 +156,13 @@ export function createUrban(options: UrbanOptions = {}) {
   }
   /** A ground from its layers (see TerrainOptions): the numbers of the place are the game's. */
   const terrain = (o: TerrainOptions): Terrain => createTerrain(o)
-  return { ...core, poles, builder, neighbourhoods, terrain, drawTerrain, towers: { enabled: towers !== null, options: towers } }
+  const cities = createCities({
+    maxFloors: options.cities?.maxFloors,
+    packs: { kinds: options.packs?.districtKinds, plans: options.packs?.cityPlans },
+    patch: { kinds: options.patch?.districtKinds, plans: options.patch?.cityPlans },
+    remove: { kinds: options.remove?.districtKinds, plans: options.remove?.cityPlans },
+    presets: towers?.presets ?? DEFAULT_TOWER_PRESETS,
+    fill: core.block.fill,
+  })
+  return { ...core, poles, cities, builder, neighbourhoods, terrain, drawTerrain, towers: { enabled: towers !== null, options: towers } }
 }

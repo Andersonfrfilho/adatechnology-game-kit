@@ -87,6 +87,55 @@ urban.neighbourhoods.composeSampleSheet(b)   // the ground and the ten cells, in
 
 `createVehicleProvider({ ids?, pick?, paint? })` parks a vehicle of `game-vehicles-fleet` (cars, SUVs, pickups and vans by default) where a pattern parks one, and `createPlantProvider({ region?, contexts?, seed?, pick? })` plants a species of `game-vegetation-species` where a pattern plants (a tree from the region's `sidewalk_tree` table, a pine from `square`). They do not draw: they add a `placement` part (`b.place(kind, id, x, z, { ry, scale, color, seed })`) that says what to put and where. The choice depends on the spot and not on `b.random`, so the scene around it keeps the same draw order. The drawer (`game-urban-three`) asks a resolver for each kind and leaves the spot empty when it has none.
 
+## City plans (zoning)
+
+A **district kind** (`urban.cities.kinds`, 22 shipped) says what a patch of the city is: its map `color`, the `zone` of the floorplan packages (`zt`, `zc`, `zr1`, ...), the neighbourhood `pattern` that dresses it (an id of `urban.neighbourhoods`, or `financial_district` of `TOWER_PATTERNS`), the `floors` `[min, max]`, the share of buildings by `uses` (`commercial`, `residential`, `industrial`, `institutional`, `agricultural`), the `block` size in metres (0 = no blocks) and its `text` in `pt-BR` and `en`. A **city plan** (`urban.cities.plans`) paints kinds on a map of metres (centre 0,0, x east, z south): `districts` (`{ id, kind, rect: [x0, z0, x1, z1], name?, floors?, uses? }`) listed from the outer to the inner one, so the **last district that contains a point wins**; `lines` (avenue, street, highway, rail, river) and `landmarks`. Plans are data: nothing is drawn unless you call `fillBlock`, and existing scenes do not change.
+
+| id | scale | size (m) | what it is |
+|---|---|---|---|
+| `metropolis` | metropolis | 6000 x 6000 | Tower downtown ringed by commerce, high-rise and low-rise neighbourhoods, outskirts and industry on the railway |
+| `regional_city` | city | 4000 x 4000 | Commercial centre with a few tall buildings, house neighbourhoods and an industrial district |
+| `port_city` | city | 4000 x 3000 | Quays and warehouses on the shore, old town behind the port and neighbourhoods up the hill |
+| `rail_town` | town | 3000 x 3000 | A town grown around its station: rail yard, old centre, company village |
+| `country_town` | town | 2400 x 2400 | Main square with the church, ground-floor shops around, houses, a co-op and smallholdings |
+| `mountain_village` | village | 1600 x 1200 | Church square, a street of inns up the slope and chalets scattered on the hill |
+
+```ts
+const urban = createUrban({ towers: true })
+const layout = urban.cities.layout('regional_city', { locale: 'en', maxFloors: 40 })
+layout.districtAt(0, 0)                              // { id, kind, color, zone, pattern, floors, uses, block, name, rect }
+const center = layout.districts.find((d) => d.kind === 'commercial_center')!
+const blocks = layout.blocks(center.id, { street: 10 })   // { x, z, size, district, building: { floors, uses, zone, pattern } }[]
+const b = urban.builder({ seed: 7 })
+for (const block of blocks) urban.cities.fillBlock(b, block)   // block.fill with minHeight/maxHeight = floors x storey height
+urban.cities.stats(layout)                           // [{ kind, area, share, districts }] by kind
+```
+
+`blocks` is the grid of the district's rectangle by the kind's `block` size, less the street, skipping the cells whose centre belongs to another district (one painted over it). `block.building` is the config a building generator takes. `fillBlock` calls `block.fill` with the storey height of the tower presets (`office` 4 m for the commercial share, `residential` 3.1 m for the residential, weighted by `uses`; a game that changes the presets changes it) and a ground-floor `shop` chance equal to the commercial share; it draws nothing for kinds with no storeys or no pattern. `block.fill` has no parameter for the use of a building yet, so the use only sets the storey height and the shop share.
+
+**Floors are capped at 60 by default**, after the district's own override: `createUrban({ cities: { maxFloors: 40 } })` or `layout(plan, { maxFloors })` clamp every district to `[0, maxFloors]`. A game raises the cap and the kind together.
+
+A game adds its own city (or kind) with `packs`, changes numbers with `patch` and takes some out with `remove`, under the keys `districtKinds` and `cityPlans`. A plan can start from another with `extends`: its districts, lines and landmarks come first, a district or line with the same id replaces the parent's in place, new ones append (landmarks always append), and `size`, `scale` and `text` are inherited when omitted.
+
+```ts
+createUrban({
+  cities: { maxFloors: 80 },
+  packs: {
+    districtKinds: [{ id: 'harbour_lofts', color: '#5aa0a8', zone: 'zr3_zm', pattern: 'downtown', floors: [3, 9], uses: { residential: 0.7, commercial: 0.3 }, block: 60,
+      text: { 'pt-BR': { name: 'Lofts do cais', description: 'Armazéns reformados.' }, en: { name: 'Harbour lofts', description: 'Converted warehouses.' } } }],
+    cityPlans: [{
+      id: 'my_port',
+      extends: 'port_city',
+      districts: [{ id: 'lofts', kind: 'harbour_lofts', rect: [-400, -200, 0, 300] }],   // painted over what is there
+      lines: [{ id: 'ferry', kind: 'street', width: 12, points: [[-400, 0], [0, 0]] }],
+      landmarks: [{ kind: 'lighthouse', at: [-380, 120], name: 'Old light' }],
+    }],
+  },
+  patch: { districtKinds: { downtown: { floors: [30, 80] } } },
+  remove: { cityPlans: ['rail_town'] },
+})
+```
+
 ## Terrain
 
 `urban.terrain(options)` is a ground made of layers, as the Galeria's Vale: a rolling base (waves), masked relief (mountains, hills: `mask · (level + waves)`), cities levelled flat, rivers carved to a bed, lakes carved to a level, a forest density, and a colour for every point by ordered rules (low ground, ellipses such as a bog, city rectangles, high rock, forest, then open fields picked by a hash of the map cell). It answers `heightAt(px, py)`, `forestAt`, `colorAt`, `nearRiver` and `toWorld`/`fromWorld` (the frame maps the plan to metres: `world = plan · scale + origin`), and hands a drawer `grid(segments)`: the 32-bit coordinates, heights and colours of the square mesh, rows along z. `urban.drawTerrain(b, terrain)` adds the mesh part and the water plane. `custom(px, py, h)` has the last word on a height.
