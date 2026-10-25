@@ -132,7 +132,10 @@ export function toDestructibleSpec(structure: Structure, options: DestructibleSp
   const z1 = Math.max(...parts.map((part) => part.aabb[3]))
   if (parts.length) specs.push({ id: GROUND, material: 'concrete', shape: { kind: 'box', size: [x1 - x0 + margin, TERRAIN_THICKNESS, z1 - z0 + margin] }, position: [(x0 + x1) / 2, -TERRAIN_THICKNESS / 2, (z0 + z1) / 2], hp: 1e12, structure: { role: 'foundation' }, anchored: true, tags: ['terrain'] })
   const present = new Set([...parts.map((part) => part.id), GROUND])
-  const joints: JointSpec[] = supports.filter((s) => present.has(s.part) && present.has(s.on)).map((s) => ({ id: `${s.part}~${s.on}`, a: s.part, b: s.on, kind: s.joint, bears: s.bears === false ? false : 'a_on_b' }))
+  // in a frame (`portico`) the walls only close: a beam rests on the pillars, not on the wall under it, and is sized for the span between pillars (a wall that is lost does not bring the beam down)
+  const infill = new Set(portico && slabOptions ? kept.filter((part) => part.role === 'wall').map((part) => part.id) : [])
+  const beams = new Set(parts.filter((part) => part.role === 'beam' && (part.beamKind === 'bond_beam' || part.slab !== undefined)).map((part) => part.id))
+  const joints: JointSpec[] = supports.filter((s) => present.has(s.part) && present.has(s.on)).map((s) => ({ id: `${s.part}~${s.on}`, a: s.part, b: s.on, kind: s.joint, bears: s.bears === false || (beams.has(s.part) && infill.has(s.on)) ? false : 'a_on_b' }))
   const spec: DestructibleSpec = { name: options.name ?? 'house', parts: specs, joints, tags: ['structure', 'house'] }
   return onSoil(withRebar(spec, structure, options, portico), structure, options)
 }

@@ -86,7 +86,7 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
               return Object.keys(extra).length ? { ...sp, ...extra } : sp;
             });
             spec.parts = spec.parts.map(sp => {
-              const pc = byId.get(sp.id); if (!pc || pc.unit) return sp;
+              const pc = byId.get(sp.id) || (sp.structure ? { role: sp.structure.role, material: sp.material } : null); if (!pc || pc.unit) return sp; // what the structure adds to the plan (beams and pillars of the slab panels) is reinforced concrete like the rest
               // Concrete slabs, beams, pillars and stairs are not walls: they keep their box and take the rebar of reinforced concrete (the renderer draws the cage when the concrete spalls).
               if (pc.role !== 'wall' && pc.role !== 'partition') {
                 const def = getAssembly(pc.assembly || (pc.material === 'concrete' && ['slab', 'beam', 'column', 'stair'].includes(pc.role) ? 'reinforced_concrete' : ''));
