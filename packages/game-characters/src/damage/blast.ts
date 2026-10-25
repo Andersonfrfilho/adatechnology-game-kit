@@ -16,14 +16,28 @@ export type BlastParams = {
   readonly center: Vec3
   readonly points: number
   readonly radius: number
+  /** Inside this distance a segment takes the whole blast (lethal); from it to `radius` it takes at most `blast.injuryPoints`, falling off to nothing at `radius`. Without it: `points × (1 − distance/radius)`. */
+  readonly lethalRadius?: number
   /** A joint position in local space. */
   readonly jointOf: (id: SegmentId) => Vec3
 }
 
-/** The share of a blast each target takes: points × (1 − distance/radius), kept above the minimum, strongest first (Arsenal `grenadeAt`). */
+/** Points per segment at the edge of the lethal radius when the rules name none: a person there is left badly hurt, not dead. */
+const INJURY_POINTS = 15
+
+/** The points of a blast on a segment `metres` from its centre: `points × (1 − distance/radius)`; with a `lethalRadius`, all of them inside it and, beyond it, the injury share that falls off to the edge. */
+const pointsAt = (params: BlastParams, metres: number): number => {
+  const { points, radius, lethalRadius, ops } = params
+  if (lethalRadius === undefined || lethalRadius >= radius) return points * Math.max(0, 1 - metres / radius)
+  if (metres <= lethalRadius) return points
+  const injury = Math.min(points, ops.rules.blast.injuryPoints ?? INJURY_POINTS)
+  return injury * Math.max(0, 1 - (metres - lethalRadius) / (radius - lethalRadius))
+}
+
+/** The share of a blast each target takes (`pointsAt`), kept above the minimum, strongest first (Arsenal `grenadeAt`). */
 const shares = <TTarget>(params: BlastParams, targets: readonly TTarget[], pivot: (target: TTarget) => SegmentId): { target: TTarget; points: number }[] =>
   targets
-    .map((target) => ({ target, points: params.points * Math.max(0, 1 - distance(params.jointOf(pivot(target)), params.center) / params.radius) }))
+    .map((target) => ({ target, points: pointsAt(params, distance(params.jointOf(pivot(target)), params.center)) }))
     .filter((share) => share.points > params.ops.rules.blast.minimumPoints)
     .sort((a, b) => b.points - a.points)
 

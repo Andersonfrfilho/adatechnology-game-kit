@@ -355,6 +355,8 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
   // ------------------------------------------------------------------------------------------------------------------------------------
   // What the blast left
   // ------------------------------------------------------------------------------------------------------------------------------------
+  /** The most vitality each person was seen with (the body counts raw points, 100 for a fit one): what the fraction that is left is measured against. Read at the first leak, before any blast. */
+  const fullVitality = new Map<string, number>()
   const witnesses = (): ReturnType<ExplosivesBench['witnesses']> => {
     if (!room) return []
     const origin = [...vessels.values()][0]?.centre ?? options.scene.cylinder
@@ -366,7 +368,9 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
       if (spawned.itemId.startsWith('zombie_') || spawned.itemId.startsWith('person_')) {
         const state = room.world.state(spawned.objectId) as { body?: { alive?: boolean; vitality?: number } } | null
         const alive = state?.body?.alive ?? true
-        const vitality = state?.body?.vitality
+        const raw = state?.body?.vitality
+        if (raw !== undefined) fullVitality.set(spawned.objectId, Math.max(fullVitality.get(spawned.objectId) ?? 0, raw))
+        const vitality = raw === undefined ? undefined : Math.max(0, raw) / Math.max(1e-9, fullVitality.get(spawned.objectId) ?? raw)
         found.push({ kind: 'person', id: spawned.objectId, itemId: spawned.itemId, distance, alive, ...(vitality === undefined ? {} : { vitality }) })
       } else if (REPORTED_OBJECTS.includes(spawned.itemId)) {
         const parts = room.world.state(spawned.objectId)?.parts ?? []
@@ -415,6 +419,7 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
     const vessel = vessels.get(event.object)
     if (!vessel || !('part' in event) || event.part !== 'tank') return
     if (event.type === 'leak') {
+      witnesses()
       if (vessel.leakAt === undefined) {
         vessel.leakAt = event.time
         vessel.cause = vessel.valveRequested ? 'valve' : 'shot'

@@ -58,7 +58,7 @@ const explosivePart = (def: ExplosiveDef, shape: WorldShape, scale: number): Par
   // a real mass (the vessel and what it holds) replaces the hollow-sheet density
   ...(def.mass !== undefined && shape.wall !== undefined ? { mass: def.mass } : {}),
   ...(def.leak ? { contains: { fluid: def.leak.fluid, liters: def.leak.liters, pressurized: def.leak.pressurized } } : {}),
-  explodes: { energy: def.energy * scale, radius: def.injuryRadius * scale, effect: def.id, ...(def.chain ? { chain: { ...def.chain } } : {}) },
+  explodes: { energy: def.energy * scale, radius: def.injuryRadius * scale, lethalRadius: def.lethalRadius * scale, effect: def.id, ...(def.chain ? { chain: { ...def.chain } } : {}) },
 })
 
 const meshOf = (THREE: typeof THREE_NS, shape: WorldShape): THREE_NS.Mesh => {

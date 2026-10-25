@@ -41,7 +41,7 @@ export const IMPACT_CONTRACT: Record<DamageType, ImpactContract> = {
   ballistic: { required: ['type', 'point', 'direction', 'energy', 'caliber'], optional: ['space', 'source'], note: 'bullets and pellets: joules and diameter in millimetres' },
   blunt: { required: ['type', 'point', 'energy'], optional: ['direction', 'radius', 'space', 'source'], note: 'contact radius in metres (default 3 cm)' },
   slash: { required: ['type', 'point', 'energy'], optional: ['direction', 'radius', 'space', 'source'], note: 'axes, knives, machetes' },
-  explosive: { required: ['type', 'point', 'energy', 'radius'], optional: ['space', 'source'], note: 'point is the centre of the blast, radius the range in metres' },
+  explosive: { required: ['type', 'point', 'energy', 'radius'], optional: ['lethalRadius', 'space', 'source'], note: 'point is the centre of the blast, radius the range in metres' },
   fire: { required: ['type', 'point', 'temperature', 'radius'], optional: ['duration', 'space', 'source'], note: 'flame temperature in °C; duration in seconds (call every frame with `dt`)' },
   heat: { required: ['type', 'point', 'temperature', 'radius'], optional: ['duration', 'space', 'source'], note: 'heat without flame (cutting torch, hot plate)' },
 }

@@ -52,6 +52,8 @@ export function explosivesScenarios(locale: string, bench: ExplosivesBench): Arr
         const witnesses = bench.witnesses()
         const zombie = witnesses.find((w) => w.itemId.startsWith('zombie_'))
         expect(!!zombie && (zombie.alive === false || (zombie.vitality ?? 1) < 0.5), `${text.shot_zombie} (${zombie?.distance.toFixed(1)} m)`, { zombie })
+        const survivor = witnesses.find((w) => w.kind === 'person' && !w.itemId.startsWith('zombie_'))
+        expect(!!survivor && survivor.alive === true && (survivor.vitality ?? 1) < 1, `${text.shot_survivor} (${survivor?.distance.toFixed(1)} m, ${survivor?.alive ? 'alive' : 'dead'})`, { survivor })
         const wall = witnesses.find((w) => w.kind === 'wall')
         expect((wall?.marks ?? 0) + (wall?.broken ?? 0) + ((wall?.pieces ?? 1) - 1) > 0, text.shot_wall, { wall })
       },

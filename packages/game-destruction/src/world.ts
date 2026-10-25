@@ -211,6 +211,7 @@ interface Blast {
   point: Vec3
   energy: number
   radius: number
+  lethalRadius?: number
   source?: string
 }
 
@@ -301,7 +302,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** Blasts queued by parts that exploded; each can prime or set off more parts. It ends: a part goes off once and is primed once, so the queue only grows by parts not yet lost. */
   const drainBlasts = () => {
-    for (let blast = blasts.shift(); blast; blast = blasts.shift()) blastWorld(blast.point, blast.energy, blast.radius, blast.source)
+    for (let blast = blasts.shift(); blast; blast = blasts.shift()) blastWorld(blast.point, blast.energy, blast.radius, blast.source, undefined, undefined, blast.lethalRadius)
   }
 
   const run = <T>(fn: () => T): { value: T; events: DestructionEvent[] } => {
@@ -1655,8 +1656,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return
     }
     if (ex) {
-      emit({ ...base(o, src), type: 'explode', part: p.spec.id, point: c, energy: ex.energy, radius: ex.radius, ...(ex.effect !== undefined ? { effect: ex.effect } : {}) })
-      blasts.push({ point: c, energy: ex.energy, radius: ex.radius, source: src })
+      emit({ ...base(o, src), type: 'explode', part: p.spec.id, point: c, energy: ex.energy, radius: ex.radius, ...(ex.lethalRadius !== undefined ? { lethalRadius: ex.lethalRadius } : {}), ...(ex.effect !== undefined ? { effect: ex.effect } : {}) })
+      blasts.push({ point: c, energy: ex.energy, radius: ex.radius, ...(ex.lethalRadius !== undefined ? { lethalRadius: ex.lethalRadius } : {}), source: src })
     }
     partLost(o, p, src)
   }
@@ -1957,7 +1958,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const FLAG_OPEN = 2
 
   /** The legacy blast: every part of every object, then every impl, each at full strength. */
-  const blastPlain = (point: Vec3, energy: number, radius: number, src?: string): HitResult[] => {
+  const blastPlain = (point: Vec3, energy: number, radius: number, src?: string, lethal?: number): HitResult[] => {
     const out: HitResult[] = []
     for (const o of [...objects.values()]) {
       if (vec.distance(toWorld(o.st.position, o.st.rotation, o.bc), point) - o.br >= radius) continue
@@ -1965,7 +1966,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (r.part) out.push(r)
     }
     for (const im of [...impls.values()]) {
-      if (implInRange(im, point, radius)) out.push(implHit(im, { type: 'explosive', point, energy, radius, ...(src !== undefined ? { source: src } : {}) }))
+      if (implInRange(im, point, radius)) out.push(implHit(im, { type: 'explosive', point, energy, radius, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(src !== undefined ? { source: src } : {}) }))
     }
     return out
   }
@@ -1979,7 +1980,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const implInRange = (im: ImplRT, point: Vec3, radius: number): boolean => implParts(im).some(({ ps, c, q }) => distanceToShape(ps.shape, toLocal(c, q, point)) < radius)
 
   /** A blast with shelter, fragment hits or confinement. Parts are served from the nearest to the farthest, so a wall takes the blast (and may break) before what is behind it. */
-  const blastScene = (point: Vec3, energy: number, radius: number, src: string | undefined, cfg: BlastCfg, only?: ObjRT | ImplRT): HitResult[] => {
+  const blastScene = (point: Vec3, energy: number, radius: number, src: string | undefined, cfg: BlastCfg, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
     const mult = confinementOf(cfg.conf, point, radius)
     const E = energy * mult
     const shelter = cfg.shelter
@@ -2094,7 +2095,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           den += f
         }
         const k = den > 0 ? num / den : 1
-        const res = implHit(im, { type: 'explosive', point, energy: E * k, radius, ...(shelter ? { shelter: k } : {}), ...(src !== undefined ? { source: src } : {}) })
+        const res = implHit(im, { type: 'explosive', point, energy: E * k, radius, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(shelter ? { shelter: k } : {}), ...(src !== undefined ? { source: src } : {}) })
         results.set(im, res)
         report(im).shelter = k
       }
@@ -2201,9 +2202,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     rep.fragmentHits++
   }
 
-  const blastWorld = (point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT): HitResult[] => {
+  const blastWorld = (point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
     const cfg = blastCfg(call)
-    const res = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlain(point, energy, radius, src) : blastScene(point, energy, radius, src, cfg, only)
+    const res = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlain(point, energy, radius, src, lethal) : blastScene(point, energy, radius, src, cfg, only, lethal)
     // a blast is a flame: a container that leaks flammable fluid inside it catches
     lightLeaksNear(point, radius)
     return res

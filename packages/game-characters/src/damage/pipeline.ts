@@ -56,7 +56,7 @@ const burn = ({ ops, hit, setup, worn }: ApplyBlowParams): HitReport => {
 
 const blast = ({ ops, hit, setup, localPoint, jointOf }: ApplyBlowParams): HitReport => {
   const points = hit.points ?? pointsFromEnergy(hit.energy ?? 0, setup.rules)
-  const base = { ops, center: localPoint, points, radius: hit.radius ?? 1, jointOf }
+  const base = { ops, center: localPoint, points, radius: hit.radius ?? 1, ...(hit.lethalRadius !== undefined ? { lethalRadius: hit.lethalRadius } : {}), jointOf }
   const common = { cut: hit.cut ?? setup.rules.defaultCut.explosive, damageType: hit.type, model: setup.model, headResistance: HEAD_RESISTANCE }
   const rule = SEGMENT_RULES[setup.rules.segmentRule] ?? kitRule
   const result =

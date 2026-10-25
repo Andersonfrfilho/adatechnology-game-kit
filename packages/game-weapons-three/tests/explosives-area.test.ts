@@ -63,7 +63,7 @@ describe('explosives area', () => {
     const ids = new Set(['explosives_p13_shot', 'explosives_p13_valve', 'explosives_p13_fire', 'explosives_p13_chain'])
     const report = await room.runScenarios(room.scenarios.filter((s) => ids.has(s.id)))
     expect(report.results).toHaveLength(4)
-    const failed = report.results.flatMap((r) => r.checks.filter((c) => !c.ok && !/zumbi|zombie|parede|wall/i.test(c.label)).map((c) => `${r.id}: ${c.label}`))
+    const failed = report.results.flatMap((r) => r.checks.filter((c) => !c.ok && !/zumbi|zombie|sobrevivente|survivor|parede|wall/i.test(c.label)).map((c) => `${r.id}: ${c.label}`))
     expect(failed).toEqual([])
   })
 })

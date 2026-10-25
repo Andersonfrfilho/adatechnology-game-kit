@@ -89,6 +89,8 @@ export type BlastRules = {
   readonly headDestroyPoints: number
   /** A blast this strong on a segment destroys it when it reaches 0. */
   readonly bigPoints: number
+  /** Most points a segment takes in the injury zone of a blast with a `lethalRadius` (between the lethal radius and `radius`); default 15, which leaves a person just past the lethal radius badly hurt and one at the middle of the zone with about a third of the vitality gone. */
+  readonly injuryPoints?: number
 }
 
 export type DeathRule = 'vitality-or-head' | 'head-only'

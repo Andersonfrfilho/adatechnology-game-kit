@@ -52,6 +52,7 @@ export interface ExplosivesText {
     shot_ignite: string
     shot_explode: string
     shot_zombie: string
+    shot_survivor: string
     shot_wall: string
     valve: string
     valve_leak: string
@@ -130,6 +131,7 @@ export const EXPLOSIVES_TEXT: Record<string, ExplosivesText> = {
       shot_ignite: 'The jet caught fire (torch) between 0.7 and 1.0 s after the hole',
       shot_explode: 'The cylinder exploded within 1.6 s of the shot',
       shot_zombie: 'The zombie 3 m from the cylinder did not survive the blast',
+      shot_survivor: 'The survivor 8 m away, past the lethal ring, is hurt but alive',
       shot_wall: 'The brick wall behind it was marked by the blast',
       valve: 'P13 cylinder: the open valve leaks gas without fire and the cylinder goes off only when a flame lights it',
       valve_leak: 'The open valve leaks gas',
@@ -206,6 +208,7 @@ export const EXPLOSIVES_TEXT: Record<string, ExplosivesText> = {
       shot_ignite: 'O jato pegou fogo (maçarico) entre 0,7 e 1,0 s depois do furo',
       shot_explode: 'O botijão explodiu até 1,6 s depois do tiro',
       shot_zombie: 'O zumbi a 3 m do botijão não sobreviveu à explosão',
+      shot_survivor: 'O sobrevivente a 8 m, depois do anel letal, fica ferido mas vivo',
       shot_wall: 'A parede de tijolo atrás dele ficou marcada pela explosão',
       valve: 'Botijão P13: o registro aberto vaza gás sem fogo e o botijão só explode quando uma chama acende',
       valve_leak: 'O registro aberto vaza gás',
