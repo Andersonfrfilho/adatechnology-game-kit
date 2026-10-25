@@ -2278,5 +2278,15 @@
       0.25
     ],
     "scale": 1
+  },
+  {
+    "id": "rubber_boots",
+    "teamId": "bota_borracha",
+    "teamBox": [
+      0.3,
+      0.35,
+      0.223
+    ],
+    "scale": 1
   }
 ]

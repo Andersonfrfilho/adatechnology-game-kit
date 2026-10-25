@@ -207,7 +207,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Capacete de moto fechado | `capacete_moto` | `motorcycle_helmet` | 1,4 kg | incomum | 260 x 254 x 274 mm |
-| [ ] | Bota de borracha | `bota_borracha` | `rubber_boots` | 1,2 kg | comum | 300 x 350 x 220 mm |
+| [x] | Bota de borracha (kit) | `bota_borracha` | `rubber_boots` | 1,2 kg | comum | 300 x 350 x 220 mm |
 | [x] | Braçadeira de revista (kit) | `braco_revista` | `magazine_arm_guard` | 0,4 kg | incomum | 300 x 60 x 150 mm |
 | [x] | Calça de motociclista (kit) | `calca_couro` | `leather_motorcycle_pants` | 1,6 kg | raro | 400 x 90 x 300 mm |
 | [x] | Calça jeans (kit) | `calca_jeans` | `jeans` | 0,8 kg | comum | 350 x 60 x 220 mm |
