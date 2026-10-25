@@ -2428,5 +2428,15 @@
       0.22
     ],
     "scale": 1
+  },
+  {
+    "id": "watering_can",
+    "teamId": "regador",
+    "teamBox": [
+      0.40001,
+      0.25789,
+      0.18
+    ],
+    "scale": 1
   }
 ]
