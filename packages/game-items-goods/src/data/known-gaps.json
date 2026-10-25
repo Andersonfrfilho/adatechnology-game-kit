@@ -1,1 +1,9 @@
-{}
+{
+  "cassava_flour": ["is not an input of any recipe"],
+  "coffee": ["is not an input of any recipe"],
+  "flour": ["is not an input of any recipe"],
+  "butter": ["is not an input of any recipe"],
+  "ketchup": ["is not an input of any recipe"],
+  "seasoning": ["is not an input of any recipe"],
+  "slingshot": ["missing weapon"]
+}
