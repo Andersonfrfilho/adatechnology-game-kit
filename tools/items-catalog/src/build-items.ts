@@ -203,6 +203,6 @@ export const buildItems = (sources: Sources, resolve: (reference: string) => str
   const provenance = Object.fromEntries(all.map(({ record, provenance: row }) => [record.id, row]))
   withViewerAliases(provenance, sources, resolve)
   withGameIds(provenance, sources)
-  const modeled = (record: ItemRecord): ItemRecord => (sources.decisions.dimensions[record.id]?.modelScaleRef ? { ...record, model: record.id } : record)
+  const modeled = (record: ItemRecord): ItemRecord => (sources.decisions.dimensions[record.id]?.modelScaleRef || sources.decisions.kitModels[record.id] ? { ...record, model: record.id } : record)
   return { items: all.map(({ record }) => modeled(record)), provenance }
 }

@@ -72,6 +72,9 @@ export type DimensionDecision = Decision<Vec3> & {
   readonly modelScaleRef?: ModelScaleReference
 }
 
+/** A model authored in this kit (not one of the showcase's): drawn at the catalog size of the item, so `scale` is metres per unit of its builder and `teamBox` the box the builder measures. */
+export type KitModel = { readonly teamId: string; readonly teamBox: Vec3; readonly scale: number }
+
 export type Decisions = {
   readonly categoryMap: DecisionTable<NamedId>
   readonly gameCategoryMap: DecisionTable<NamedId>
@@ -97,6 +100,8 @@ export type Decisions = {
   readonly householdRarity: Decision<Rarity>
   /** Final item id (or the id of a game-only item that has a model) -> measure. */
   readonly dimensions: Readonly<Record<string, DimensionDecision>>
+  /** Final item id -> model authored in this kit, in the order of `models.json` after the showcase's; the item gets `model: <id>`. */
+  readonly kitModels: DecisionTable<KitModel>
   readonly stackByCategory: DecisionTable<number>
   /** Final item id -> stack, for what the category default gets wrong (a brick is not stacked by eight). */
   readonly stackOverrides: DecisionTable<number>
