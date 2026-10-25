@@ -1988,5 +1988,15 @@
       0.05
     ],
     "scale": 1
+  },
+  {
+    "id": "hoodie",
+    "teamId": "moletom",
+    "teamBox": [
+      0.38,
+      0.08,
+      0.28
+    ],
+    "scale": 1
   }
 ]
