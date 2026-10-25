@@ -2168,5 +2168,15 @@
       0.07
     ],
     "scale": 1
+  },
+  {
+    "id": "night_vision_goggles",
+    "teamId": "nvg",
+    "teamBox": [
+      0.15,
+      0.1,
+      0.11
+    ],
+    "scale": 1
   }
 ]
