@@ -32,7 +32,6 @@
   },
   "zones": {
     "zc": "ZC – Commercial / central",
-    "zi": "ZI – Industrial",
-    "zt": "ZT – Towers"
+    "zi": "ZI – Industrial"
   }
 }

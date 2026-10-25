@@ -20,7 +20,7 @@ function ungrounded(structure: Structure): string[] {
 
 /** The plans of the skyscraper templates go through the structure and the installations like any other plan (the loops over every template leave them out: see support.ts). */
 describe('skyscraper plans', () => {
-  for (const template of TOWER_TEMPLATES.filter((id) => engine.listTemplates().some((t: { id: string }) => t.id === id))) {
+  for (const template of TOWER_TEMPLATES) {
     it(`${template}: 20 storeys have a structure on the ground, a roof, one level a storey, installations and a plan the validator accepts`, () => {
       const plan: any = engine.generate(template, { seed: 3, floors: 20, state: 'normal' })
       expect(plan.floors).toHaveLength(20)

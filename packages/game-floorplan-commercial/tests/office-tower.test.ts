@@ -100,7 +100,6 @@ describe('office tower', () => {
   it('has the names in both languages', () => {
     for (const locale of [en, ptBR]) {
       expect(locale.templates.office_tower).toBeTruthy()
-      expect(locale.zones.zt).toBeTruthy()
       for (const key of ['office_suite', 'washrooms', 'reception', 'security_desk', 'lobby_entrance']) expect((locale.labels as Record<string, string>)[key]).toBeTruthy()
     }
     const pt = engine.generate('office_tower', { seed: 7, floors: 20, locale: 'pt-BR' }) as any
