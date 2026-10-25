@@ -2158,5 +2158,15 @@
       0.009
     ],
     "scale": 1
+  },
+  {
+    "id": "motor_oil",
+    "teamId": "oleo_motor",
+    "teamBox": [
+      0.1,
+      0.26,
+      0.07
+    ],
+    "scale": 1
   }
 ]
