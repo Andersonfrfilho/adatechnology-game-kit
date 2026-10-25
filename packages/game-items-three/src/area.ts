@@ -8,6 +8,8 @@ import { ITEM_PREFIX, SHELF_HEIGHT, SHOWCASE_PREFIX, shelvesLayout } from './are
 import type { ShelfPlan } from './area-layout'
 import { buildItem } from './build-item'
 import type { DrawableItem } from './build-item'
+import { itemContents, SHELL_PART_ID } from './destruction'
+import type { ContentsSubject } from './destruction'
 import { checkBudget, countDrawCalls, countTriangles, ITEM_BUDGETS } from './budgets'
 import { MODEL_BUDGET_DEVIATIONS } from './models/deviations'
 import { itemThumbnailSvg } from './thumbnails'
@@ -315,11 +317,18 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
   })
   const shelfRoots: THREE_NS.Group[] = []
 
+  /** The liquid a can holds, as the room's `TestableItem.fluid`: a hole in the shell leaks it. */
+  const fluidOf = (subject: ContentsSubject): Pick<TestableItem, 'fluid'> => {
+    const contents = itemContents(subject)
+    return contents ? { fluid: { container: contents.container, part: SHELL_PART_ID } } : {}
+  }
+
   const itemOf = (def: ItemDef): TestableItem => ({
     id: `${ITEM_PREFIX}${def.id}`,
     name: nameOf(def),
     movable: true,
     thumbnail: itemThumbnailSvg(drawable(def)),
+    ...fluidOf({ ...(def.model === undefined ? {} : { model: def.model }), size: def.size, weight: def.weight }),
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
       latestTHREE = T
@@ -333,6 +342,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     id: `${SHOWCASE_PREFIX}${model.id}`,
     name: model.def ? nameOf(model.def) : label(`item.${model.id}`, humanize(model.id)),
     movable: false,
+    ...fluidOf({ model: model.id, size: model.size, ...(model.def ? { weight: model.def.weight } : {}) }),
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
       const subject: DrawableItem = { id: model.id, category: model.def?.category ?? '', size: model.size, model: model.id, ...(model.def ? { weight: model.def.weight } : {}) }
