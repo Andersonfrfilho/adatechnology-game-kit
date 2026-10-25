@@ -443,11 +443,11 @@
     "id": "fresh_fish",
     "teamId": "peixe_fresco",
     "teamBox": [
-      3,
+      3.0071,
       0.6,
-      1.01
+      1
     ],
-    "scale": 0.1
+    "scale": 0.099921
   },
   {
     "id": "salted_fish",
