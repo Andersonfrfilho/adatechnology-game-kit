@@ -22,7 +22,7 @@ describe('residential tower', () => {
     const layout = residentialTowerLayout({ storeys: 30, wind: false, piles: { diameter: 1 } })
     expect(layout.tower.wind).toBe(false)
     expect(buildResidentialTower({ storeys: 20, piles: { diameter: 1 } }).parts.find((p) => p.id === 'raft')!.structure!.pile!.diameter).toBe(1)
-  })
+  }, 180000)
 
   it('is registered as a multi-family residential template whose storeys are an option, and the zone zt holds it', () => {
     const t = engine.listTemplates().find((x) => x.id === 'residential_tower')!

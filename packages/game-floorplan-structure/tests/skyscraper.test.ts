@@ -73,11 +73,21 @@ describe('skyscraper layout', () => {
     expect(skyscraperLayout({ storeys: 80 }, { ...SKYSCRAPER_DEFAULTS, range: [20, 100] }).storeys).toBe(80)
   })
 
+  it('sized for the wind: 60 storeys pass H/500 by a wider plate and core, 20 and 40 come out as laid out, and sizeForWind: false keeps the raw layout', () => {
+    const raw = skyscraperLayout({ storeys: 60, sizeForWind: false })
+    const sized = skyscraperLayout({ storeys: 60 })
+    expect(raw.bay).toEqual([12, 12])
+    expect(sized.bay[0]).toBeGreaterThan(12)
+    expect(sized.core!.size[0]).toBeGreaterThan(raw.core!.size[0])
+    expect(sized.core!.wallThickness).toBeLessThanOrEqual(1.5)
+    for (const n of [20, 40]) expect(skyscraperLayout({ storeys: n })).toEqual(skyscraperLayout({ storeys: n, sizeForWind: false }))
+  })
+
   it('too slender a tower gets wider bays; a preset can turn the rule off', () => {
-    const slim = skyscraperLayout({ storeys: 60, bay: 6, slenderness: 9 })
+    const slim = skyscraperLayout({ storeys: 60, bay: 6, slenderness: 9, sizeForWind: false })
     expect(Math.min(...slim.span)).toBeGreaterThanOrEqual(slim.total / 9 - 1e-6)
     expect(slim.bay[0]).toBeGreaterThan(6)
-    expect(skyscraperLayout({ storeys: 60, bay: 6, slenderness: false }).bay).toEqual([6, 6])
+    expect(skyscraperLayout({ storeys: 60, bay: 6, slenderness: false, sizeForWind: false }).bay).toEqual([6, 6])
   })
 
   it('the core walls grow with the height but never past a third of the storey, and the bars get closer on the tall ones', () => {
@@ -116,10 +126,9 @@ describe('skyscraper structure', () => {
         expect(st.soil!.status).toBe('stable')
         expect(st.soil!.bearing).toBeLessThan(0.85)
         expect(st.soil!.tilt).toBeLessThan(0.5)
-        // measured at 60 storeys: drift 0.00265 (1/377), above H/500 = 0.002, so the status is 'drift' there; 20 and 40 storeys are 'ok'
         expect(st.wind!.overturn).toBeLessThan(0.3)
-        expect(st.wind!.status === 'ok' || storeys >= 60).toBe(true)
-        expect(st.wind!.drift).toBeLessThan(storeys >= 60 ? 1 / 300 : 1 / 500)
+        expect(st.wind!.status).toBe('ok')
+        expect(st.wind!.drift).toBeLessThanOrEqual(1 / 500)
         expect(bad(run(w, 20))).toHaveLength(0)
         expect(w.state(id)!.groups).toHaveLength(1)
       })

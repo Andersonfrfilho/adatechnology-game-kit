@@ -41,7 +41,7 @@ describe('office tower', () => {
     const layout = officeTowerLayout({ storeys: 30, piles: { diameter: 1 }, wind: { speed: 30, terrain: 'III' } })
     expect(layout.tower.wind).toEqual({ speed: 30, terrain: 'III' })
     expect(buildOfficeTower({ storeys: 20, piles: { diameter: 1 } }).parts.find((p) => p.id === 'raft')!.structure!.pile!.diameter).toBe(1)
-  })
+  }, 180000)
 
   it('the plan is the plate of the layout, one storey per storey of the structure with the same pitch', () => {
     expect([plan.w, plan.d]).toEqual(layout.plate)

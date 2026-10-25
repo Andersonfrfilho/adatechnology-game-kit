@@ -1,5 +1,5 @@
 import type { DestructibleSpec, PartSpec, PileSpec, SoilProfile } from '@adatechnology/game-contracts'
-import { GRAVITY, MATERIALS, SOILS, partMass, pileLength, profileOf } from '@adatechnology/game-destruction'
+import { GRAVITY, MATERIALS, SOILS, createDestruction, partMass, pileLength, profileOf } from '@adatechnology/game-destruction'
 import type { SizeStructureOptions, WindOptions } from '@adatechnology/game-destruction'
 
 import {
@@ -62,6 +62,12 @@ export interface SkyscraperPreset {
   soil: string | SoilProfile | false
   /** Deep piles under the raft (only with `soil`); `false` leaves a shallow raft. */
   piles: PileDesign | false
+  /**
+   * Sizes the lateral system by height (default on): a tower taller than `above` metres whose design drift at the requested storeys is over the limit of
+   * the wind (`driftLimit`, default H/500: NBR 6118 serviceability) gets wider bays, and with them a larger plate and core, in steps of 0.5 m up to `maxBay`
+   * until it passes. `false` keeps the layout as given (and then a 60-storey tower is `drift`).
+   */
+  sizeForWind?: boolean | { above?: number; maxBay?: number }
   /** Dead load per m² of floor besides the slab itself, kg/m² (facade, partitions, finishes, equipment), used to size the columns. */
   superimposed: number
 }
@@ -140,8 +146,46 @@ const CORE_CLEARANCE = 0.4
 /** A core wall is as thick as the total height over this, in metres per metre (40 cm at 80 m, 1.55 m at 312 m; real cores run 30 cm to 1.5 m). */
 const WALL_SLENDER = 200
 
-/** Resolves the numbers of a skyscraper from a preset and the options. Pure: nothing is built. */
+/** Sizing by wind below this height (metres) is skipped: every tower up to 40 storeys passes H/500 as laid out. */
+export const WIND_SIZING_DEFAULTS = { above: 180, maxBay: 20 } as const
+
+const sizedCache = new Map<string, SkyscraperLayout>()
+
+/** The design drift (deflection over height) of the tower of a layout, in the wind it is designed for. */
+const driftOf = (layout: SkyscraperLayout, wind: WindOptions): number => {
+  const w = createDestruction({ wind })
+  return w.state(w.add(buildTower(layout.tower)))?.wind?.drift ?? 0
+}
+
+/**
+ * Resolves the numbers of a skyscraper from a preset and the options. Without `sizeForWind: false`, a tall tower that would drift past H/500 gets wider
+ * bays (so a larger plate and core) until it does not: the way real towers thicken the core and widen the footprint with height. Memoised, because it
+ * builds the tower to measure it.
+ */
 export function skyscraperLayout(options: SkyscraperOptions = {}, preset: SkyscraperPreset = SKYSCRAPER_DEFAULTS): SkyscraperLayout {
+  const raw = rawLayout(options, preset)
+  const o = { ...preset, ...Object.fromEntries(Object.entries(options).filter(([, v]) => v !== undefined)) } as SkyscraperPreset & SkyscraperOptions
+  const cfg = { ...WIND_SIZING_DEFAULTS, ...(typeof o.sizeForWind === 'object' ? o.sizeForWind : {}) }
+  if (o.sizeForWind === false || !o.wind || o.core === false || raw.total < cfg.above) return raw
+  const key = JSON.stringify([options, preset])
+  const hit = sizedCache.get(key)
+  if (hit) return hit
+  const limit = o.wind.driftLimit ?? 1 / 500
+  let layout = raw
+  for (let i = 0; i < 6; i++) {
+    const drift = driftOf(layout, o.wind)
+    const widest = Math.max(...layout.bay)
+    if (drift <= limit || widest >= cfg.maxBay) break
+    // drift falls about with the cube of the bay (the plate, the core and the lever arm grow together)
+    const k = Math.max(1.02, Math.pow(drift / limit, 1 / 3) * 1.02)
+    const bay = layout.bay.map((b) => Math.min(cfg.maxBay, round2(ceilTo(b * k, 0.5)))) as [number, number]
+    layout = rawLayout({ ...options, bay }, preset)
+  }
+  sizedCache.set(key, layout)
+  return layout
+}
+
+function rawLayout(options: SkyscraperOptions, preset: SkyscraperPreset): SkyscraperLayout {
   const o = { ...preset, ...Object.fromEntries(Object.entries(options).filter(([, v]) => v !== undefined)) } as SkyscraperPreset & SkyscraperOptions
   const range = o.range
   const storeys = Math.max(range[0], Math.min(range[1], Math.round(o.storeys)))
