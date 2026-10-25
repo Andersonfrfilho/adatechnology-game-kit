@@ -1858,5 +1858,15 @@
       0.12
     ],
     "scale": 1
+  },
+  {
+    "id": "farmers_almanac",
+    "teamId": "almanaque",
+    "teamBox": [
+      0.15,
+      0.21,
+      0.0151
+    ],
+    "scale": 1
   }
 ]
