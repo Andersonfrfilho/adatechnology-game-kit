@@ -2308,5 +2308,15 @@
       0.08
     ],
     "scale": 1
+  },
+  {
+    "id": "sheet_metal_forearm_guard",
+    "teamId": "braco_chapa",
+    "teamBox": [
+      0.3,
+      0.0981,
+      0.11995
+    ],
+    "scale": 1
   }
 ]
