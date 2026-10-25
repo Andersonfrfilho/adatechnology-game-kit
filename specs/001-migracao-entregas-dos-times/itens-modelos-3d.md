@@ -1,7 +1,7 @@
 # Checklist de modelos 3D dos itens
 
 Fonte: Itens do Vale Cinzento (`sources/armas-itens__itens-vale-cinzento.js`, catálogo `versao` 0.1, lista `MODELS`; artefato https://claude.ai/artifact/NKmkGZ2Lvcd96mp6Nyksds).
-Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **24 de 257 itens têm modelo 3D; faltam 233.**
+Gerado por `tools/items-catalog` (`pnpm --filter @adatechnology/items-catalog-tool catalog`). **157 de 257 itens têm modelo 3D; faltam 100.**
 
 Pedido ao time de itens: entregar o modelo de cada item marcado `[ ]`, no estilo low poly dos que já existem e **no tamanho real**. A vitrine atual normaliza todos para 1,55 de altura;
 o SDK não: desenha cada item na medida da coluna **tamanho real** (largura x altura x profundidade, no quadro do item). Para os 24 modelados a medida é a caixa do modelo do time vezes uma escala tirada
@@ -9,12 +9,12 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 
 | Categoria | Têm | Faltam |
 |---|---|---|
-| Comida | 3 | 33 |
-| Bebida | 2 | 10 |
-| Medicina e primeiros socorros | 3 | 23 |
-| Ferramentas | 2 | 28 |
-| Armas brancas e de disparo silencioso | 3 | 17 |
-| Materiais de construção e crafting | 1 | 22 |
+| Comida | 36 | 0 |
+| Bebida | 12 | 0 |
+| Medicina e primeiros socorros | 26 | 0 |
+| Ferramentas | 30 | 0 |
+| Armas brancas e de disparo silencioso | 20 | 0 |
+| Materiais de construção e crafting | 23 | 0 |
 | Roupas e proteção | 1 | 22 |
 | Mochilas e contêineres | 1 | 14 |
 | Eletrônicos, rádio e luz | 4 | 16 |
@@ -23,184 +23,184 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | Livros e revistas | 0 | 5 |
 | História e colecionáveis | 1 | 15 |
 | Chaves e acesso | 1 | 10 |
-| **Total** | **24** | **233** |
+| **Total** | **157** | **100** |
 
-## Comida (3 de 36)
+## Comida (36 de 36)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Arroz (1 kg) | `arroz` | `rice` | 1,0 kg | comum | 171 x 250 x 71 mm |
 | [x] | Feijão em lata | `feijao_lata` | `canned_beans` | 0,45 kg | comum | 80 x 68 x 79 mm |
 | [x] | Ração operacional do Exército | `racao_militar` | `military_ration` | 0,9 kg | comum | 194 x 260 x 59 mm |
-| [ ] | Açúcar (1 kg) | `acucar` | `sugar` | 1,0 kg | comum | 100 x 200 x 60 mm |
-| [ ] | Barra de chocolate | `chocolate` | `chocolate_bar` | 0,09 kg | comum | 150 x 70 x 10 mm |
-| [ ] | Batata (1 kg) | `batata` | `potatoes` | 1,0 kg | comum | 200 x 90 x 140 mm |
-| [ ] | Biscoito de água e sal | `biscoito` | `biscuits` | 0,2 kg | comum | 200 x 50 x 100 mm |
-| [ ] | Café em pó (500 g) | `cafe_po` | `coffee` | 0,5 kg | comum | 80 x 150 x 60 mm |
-| [ ] | Carne bovina crua (1 kg) | `carne_bovina` | `raw_beef` | 1,0 kg | comum | 200 x 50 x 150 mm |
-| [ ] | Carne de caça (capivara, javali) | `carne_caca` | `game_meat` | 1,5 kg | comum | 300 x 80 x 200 mm |
-| [ ] | Charque | `charque` | `jerked_beef` | 0,5 kg | incomum | 250 x 25 x 150 mm |
-| [ ] | Conserva caseira (pote) | `conserva` | `home_preserves` | 0,6 kg | incomum | 90 x 130 x 90 mm |
-| [ ] | Dúzia de ovos | `ovos` | `eggs` | 0,7 kg | comum | 250 x 70 x 100 mm |
-| [ ] | Farinha de mandioca (1 kg) | `farinha_mandioca` | `cassava_flour` | 1,0 kg | comum | 150 x 250 x 60 mm |
-| [ ] | Feijão seco (1 kg) | `feijao_seco` | `beans` | 1,0 kg | comum | 100 x 200 x 60 mm |
-| [ ] | Frango congelado | `frango` | `frozen_chicken` | 1,2 kg | comum | 260 x 100 x 170 mm |
-| [ ] | Laranja | `laranja` | `orange` | 0,2 kg | comum | 75 x 75 x 75 mm |
-| [ ] | Leite condensado | `leite_condensado` | `condensed_milk` | 0,4 kg | incomum | 73 x 100 x 73 mm |
-| [ ] | Macarrão (500 g) | `macarrao` | `pasta` | 0,5 kg | comum | 100 x 250 x 40 mm |
-| [ ] | Macarrão instantâneo | `macarrao_inst` | `instant_noodles` | 0,08 kg | comum | 120 x 160 x 30 mm |
-| [ ] | Mandioca (raiz) | `mandioca` | `cassava_root` | 1,5 kg | comum | 400 x 70 x 70 mm |
-| [ ] | Milho e ervilha em lata | `milho_lata` | `canned_corn_and_peas` | 0,3 kg | comum | 73 x 85 x 73 mm |
-| [ ] | Mortadela (peça) | `mortadela` | `mortadella` | 0,4 kg | comum | 150 x 60 x 50 mm |
-| [ ] | Peixe fresco | `peixe_fresco` | `fresh_fish` | 0,6 kg | comum | 300 x 60 x 100 mm |
-| [ ] | Peixe salgado | `peixe_salgado` | `salted_fish` | 0,4 kg | incomum | 250 x 30 x 100 mm |
-| [ ] | Penca de banana | `banana` | `banana_bunch` | 1,0 kg | comum | 300 x 130 x 170 mm |
-| [ ] | Pote de mel | `mel` | `honey_jar` | 0,5 kg | incomum | 80 x 100 x 80 mm |
-| [ ] | Pão de forma | `pao_forma` | `bread` | 0,5 kg | comum | 300 x 100 x 100 mm |
-| [ ] | Queijo minas | `queijo` | `cheese` | 0,5 kg | incomum | 150 x 40 x 100 mm |
-| [ ] | Rapadura | `rapadura` | `rapadura` | 0,5 kg | incomum | 190 x 100 x 60 mm |
-| [ ] | Ração de cachorro (1 kg) | `racao_cao` | `dog_food` | 1,0 kg | comum | 180 x 260 x 70 mm |
-| [ ] | Sal (1 kg) | `sal` | `salt` | 1,0 kg | comum | 70 x 160 x 70 mm |
-| [ ] | Salgadinho de pacote | `salgadinho` | `snack_chips` | 0,1 kg | comum | 200 x 280 x 60 mm |
-| [ ] | Salsicha em lata | `salsicha_lata` | `canned_sausages` | 0,3 kg | comum | 73 x 85 x 73 mm |
-| [ ] | Sardinha em lata | `sardinha` | `canned_sardines` | 0,13 kg | comum | 112 x 26 x 65 mm |
-| [ ] | Óleo de cozinha (900 ml) | `oleo_cozinha` | `cooking_oil` | 0,9 kg | comum | 70 x 260 x 70 mm |
+| [x] | Açúcar (1 kg) (kit) | `acucar` | `sugar` | 1,0 kg | comum | 100 x 200 x 60 mm |
+| [x] | Barra de chocolate (kit) | `chocolate` | `chocolate_bar` | 0,09 kg | comum | 150 x 70 x 10 mm |
+| [x] | Batata (1 kg) (kit) | `batata` | `potatoes` | 1,0 kg | comum | 200 x 90 x 140 mm |
+| [x] | Biscoito de água e sal (kit) | `biscoito` | `biscuits` | 0,2 kg | comum | 200 x 50 x 100 mm |
+| [x] | Café em pó (500 g) (kit) | `cafe_po` | `coffee` | 0,5 kg | comum | 80 x 150 x 60 mm |
+| [x] | Carne bovina crua (1 kg) (kit) | `carne_bovina` | `raw_beef` | 1,0 kg | comum | 200 x 50 x 150 mm |
+| [x] | Carne de caça (capivara, javali) (kit) | `carne_caca` | `game_meat` | 1,5 kg | comum | 300 x 80 x 200 mm |
+| [x] | Charque (kit) | `charque` | `jerked_beef` | 0,5 kg | incomum | 250 x 25 x 150 mm |
+| [x] | Conserva caseira (pote) (kit) | `conserva` | `home_preserves` | 0,6 kg | incomum | 90 x 130 x 90 mm |
+| [x] | Dúzia de ovos (kit) | `ovos` | `eggs` | 0,7 kg | comum | 250 x 70 x 100 mm |
+| [x] | Farinha de mandioca (1 kg) (kit) | `farinha_mandioca` | `cassava_flour` | 1,0 kg | comum | 150 x 250 x 60 mm |
+| [x] | Feijão seco (1 kg) (kit) | `feijao_seco` | `beans` | 1,0 kg | comum | 100 x 200 x 60 mm |
+| [x] | Frango congelado (kit) | `frango` | `frozen_chicken` | 1,2 kg | comum | 260 x 100 x 170 mm |
+| [x] | Laranja (kit) | `laranja` | `orange` | 0,2 kg | comum | 75 x 75 x 75 mm |
+| [x] | Leite condensado (kit) | `leite_condensado` | `condensed_milk` | 0,4 kg | incomum | 73 x 100 x 73 mm |
+| [x] | Macarrão (500 g) (kit) | `macarrao` | `pasta` | 0,5 kg | comum | 100 x 250 x 40 mm |
+| [x] | Macarrão instantâneo (kit) | `macarrao_inst` | `instant_noodles` | 0,08 kg | comum | 120 x 160 x 30 mm |
+| [x] | Mandioca (raiz) (kit) | `mandioca` | `cassava_root` | 1,5 kg | comum | 400 x 70 x 70 mm |
+| [x] | Milho e ervilha em lata (kit) | `milho_lata` | `canned_corn_and_peas` | 0,3 kg | comum | 73 x 85 x 73 mm |
+| [x] | Mortadela (peça) (kit) | `mortadela` | `mortadella` | 0,4 kg | comum | 150 x 60 x 50 mm |
+| [x] | Peixe fresco (kit) | `peixe_fresco` | `fresh_fish` | 0,6 kg | comum | 300 x 60 x 100 mm |
+| [x] | Peixe salgado (kit) | `peixe_salgado` | `salted_fish` | 0,4 kg | incomum | 250 x 30 x 100 mm |
+| [x] | Penca de banana (kit) | `banana` | `banana_bunch` | 1,0 kg | comum | 300 x 130 x 170 mm |
+| [x] | Pote de mel (kit) | `mel` | `honey_jar` | 0,5 kg | incomum | 80 x 100 x 80 mm |
+| [x] | Pão de forma (kit) | `pao_forma` | `bread` | 0,5 kg | comum | 300 x 100 x 100 mm |
+| [x] | Queijo minas (kit) | `queijo` | `cheese` | 0,5 kg | incomum | 150 x 40 x 100 mm |
+| [x] | Rapadura (kit) | `rapadura` | `rapadura` | 0,5 kg | incomum | 190 x 100 x 60 mm |
+| [x] | Ração de cachorro (1 kg) (kit) | `racao_cao` | `dog_food` | 1,0 kg | comum | 180 x 260 x 70 mm |
+| [x] | Sal (1 kg) (kit) | `sal` | `salt` | 1,0 kg | comum | 70 x 160 x 70 mm |
+| [x] | Salgadinho de pacote (kit) | `salgadinho` | `snack_chips` | 0,1 kg | comum | 200 x 280 x 60 mm |
+| [x] | Salsicha em lata (kit) | `salsicha_lata` | `canned_sausages` | 0,3 kg | comum | 73 x 85 x 73 mm |
+| [x] | Sardinha em lata (kit) | `sardinha` | `canned_sardines` | 0,13 kg | comum | 112 x 26 x 65 mm |
+| [x] | Óleo de cozinha (900 ml) (kit) | `oleo_cozinha` | `cooking_oil` | 0,9 kg | comum | 70 x 260 x 70 mm |
 
-## Bebida (2 de 12)
+## Bebida (12 de 12)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Cachaça (garrafa) | `cachaca` | `cachaca` | 1,0 kg | incomum | 90 x 214 x 90 mm |
 | [x] | Água mineral (500 ml) | `agua_500` | `water_bottle` | 0,52 kg | comum | 66 x 183 x 66 mm |
-| [ ] | Cerveja (lata) | `cerveja` | `beer_can` | 0,35 kg | comum | 66 x 120 x 66 mm |
-| [ ] | Energético (lata) | `energetico` | `energy_drink` | 0,27 kg | incomum | 58 x 135 x 58 mm |
-| [ ] | Galão de água (5 L) | `galao_agua` | `water_jug_5l` | 5,2 kg | incomum | 190 x 330 x 150 mm |
-| [ ] | Isotônico | `isotonico` | `sports_drink` | 0,52 kg | incomum | 66 x 183 x 66 mm |
-| [ ] | Leite longa vida (1 L) | `leite` | `milk_carton` | 1,05 kg | comum | 70 x 200 x 70 mm |
-| [ ] | Refrigerante (lata) | `refri_lata` | `soda_can` | 0,35 kg | comum | 66 x 120 x 66 mm |
-| [ ] | Suco de caixinha | `suco_cx` | `juice_box` | 0,2 kg | comum | 52 x 100 x 37 mm |
-| [ ] | Vinho de missa | `vinho` | `communion_wine` | 0,75 kg | incomum | 76 x 300 x 76 mm |
-| [ ] | Água de coco | `agua_coco` | `coconut_water` | 0,4 kg | comum | 60 x 170 x 60 mm |
-| [ ] | Água de rio ou poça | `agua_suja` | `dirty_water` | 0,5 kg | comum | 66 x 183 x 66 mm |
+| [x] | Cerveja (lata) (kit) | `cerveja` | `beer_can` | 0,35 kg | comum | 66 x 120 x 66 mm |
+| [x] | Energético (lata) (kit) | `energetico` | `energy_drink` | 0,27 kg | incomum | 58 x 135 x 58 mm |
+| [x] | Galão de água (5 L) (kit) | `galao_agua` | `water_jug_5l` | 5,2 kg | incomum | 190 x 330 x 150 mm |
+| [x] | Isotônico (kit) | `isotonico` | `sports_drink` | 0,52 kg | incomum | 66 x 183 x 66 mm |
+| [x] | Leite longa vida (1 L) (kit) | `leite` | `milk_carton` | 1,05 kg | comum | 70 x 200 x 70 mm |
+| [x] | Refrigerante (lata) (kit) | `refri_lata` | `soda_can` | 0,35 kg | comum | 66 x 120 x 66 mm |
+| [x] | Suco de caixinha (kit) | `suco_cx` | `juice_box` | 0,2 kg | comum | 52 x 100 x 37 mm |
+| [x] | Vinho de missa (kit) | `vinho` | `communion_wine` | 0,75 kg | incomum | 76 x 300 x 76 mm |
+| [x] | Água de coco (kit) | `agua_coco` | `coconut_water` | 0,4 kg | comum | 60 x 170 x 60 mm |
+| [x] | Água de rio ou poça (kit) | `agua_suja` | `dirty_water` | 0,5 kg | comum | 66 x 183 x 66 mm |
 
-## Medicina e primeiros socorros (3 de 26)
+## Medicina e primeiros socorros (26 de 26)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Antibiótico (amoxicilina) | `amoxicilina` | `amoxicillin` | 0,05 kg | incomum | 100 x 53 x 69 mm |
 | [x] | Atadura de crepe | `atadura` | `bandage` | 0,05 kg | comum | 101 x 78 x 44 mm |
 | [x] | Kit de primeiros socorros | `kit_ps` | `first_aid_kit` | 0,9 kg | incomum | 250 x 214 x 96 mm |
-| [ ] | Analgésico (dipirona, 10 comp.) | `analgesico` | `painkillers` | 0,03 kg | comum | 60 x 20 x 40 mm |
-| [ ] | Analgésico forte (tramadol) | `opioide` | `tramadol` | 0,03 kg | raro | 95 x 50 x 15 mm |
-| [ ] | Anti-inflamatório (ibuprofeno) | `ibuprofeno` | `ibuprofen` | 0,03 kg | comum | 95 x 50 x 15 mm |
-| [ ] | Antialérgico | `antialergico` | `antihistamine` | 0,02 kg | incomum | 80 x 50 x 15 mm |
-| [ ] | Antibiótico injetável (ceftriaxona) | `ceftriaxona` | `ceftriaxone` | 0,1 kg | raro | 100 x 60 x 30 mm |
-| [ ] | Calmante (clonazepam) | `calmante` | `clonazepam` | 0,02 kg | raro | 90 x 50 x 15 mm |
-| [ ] | Carvão ativado | `carvao_ativado` | `activated_charcoal` | 0,05 kg | incomum | 60 x 95 x 25 mm |
-| [ ] | Curativo adesivo (caixa) | `curativo` | `adhesive_bandages` | 0,03 kg | comum | 100 x 60 x 15 mm |
-| [ ] | Esparadrapo | `esparadrapo` | `medical_tape` | 0,04 kg | comum | 50 x 25 x 50 mm |
-| [ ] | Gaze estéril | `gaze` | `sterile_gauze` | 0,02 kg | comum | 100 x 100 x 15 mm |
-| [ ] | Iodopovidona | `pvpi` | `povidone_iodine` | 0,1 kg | incomum | 45 x 110 x 35 mm |
-| [ ] | Kit de sutura | `kit_sutura` | `suture_kit` | 0,15 kg | raro | 150 x 80 x 30 mm |
-| [ ] | Luvas de procedimento | `luva_proc` | `exam_gloves` | 0,02 kg | comum | 100 x 120 x 10 mm |
-| [ ] | Máscara N95 | `n95` | `n95_mask` | 0,02 kg | incomum | 150 x 110 x 25 mm |
-| [ ] | Polivitamínico | `vitamina` | `multivitamin` | 0,05 kg | comum | 50 x 90 x 50 mm |
-| [ ] | Remédio de uso contínuo | `remedio_continuo` | `maintenance_medication` | 0,05 kg | comum | 45 x 90 x 45 mm |
-| [ ] | Sais de reidratação | `sais_reidrat` | `rehydration_salts` | 0,03 kg | comum | 90 x 120 x 10 mm |
-| [ ] | Seringa descartável | `seringa` | `syringe` | 0,01 kg | comum | 150 x 20 x 20 mm |
-| [ ] | Soro antiofídico | `antiofidico` | `antivenom` | 0,2 kg | muito raro | 150 x 90 x 50 mm |
-| [ ] | Soro fisiológico com equipo | `soro` | `saline_iv_bag` | 0,55 kg | raro | 120 x 250 x 45 mm |
-| [ ] | Tala imobilizadora | `tala` | `splint` | 0,3 kg | incomum | 460 x 110 x 10 mm |
-| [ ] | Termômetro | `termometro` | `thermometer` | 0,02 kg | comum | 120 x 20 x 30 mm |
-| [ ] | Álcool 70% (500 ml) | `alcool70` | `alcohol_70` | 0,5 kg | comum | 70 x 200 x 50 mm |
+| [x] | Analgésico (dipirona, 10 comp.) (kit) | `analgesico` | `painkillers` | 0,03 kg | comum | 60 x 20 x 40 mm |
+| [x] | Analgésico forte (tramadol) (kit) | `opioide` | `tramadol` | 0,03 kg | raro | 95 x 50 x 15 mm |
+| [x] | Anti-inflamatório (ibuprofeno) (kit) | `ibuprofeno` | `ibuprofen` | 0,03 kg | comum | 95 x 50 x 15 mm |
+| [x] | Antialérgico (kit) | `antialergico` | `antihistamine` | 0,02 kg | incomum | 80 x 50 x 15 mm |
+| [x] | Antibiótico injetável (ceftriaxona) (kit) | `ceftriaxona` | `ceftriaxone` | 0,1 kg | raro | 100 x 60 x 30 mm |
+| [x] | Calmante (clonazepam) (kit) | `calmante` | `clonazepam` | 0,02 kg | raro | 90 x 50 x 15 mm |
+| [x] | Carvão ativado (kit) | `carvao_ativado` | `activated_charcoal` | 0,05 kg | incomum | 60 x 95 x 25 mm |
+| [x] | Curativo adesivo (caixa) (kit) | `curativo` | `adhesive_bandages` | 0,03 kg | comum | 100 x 60 x 15 mm |
+| [x] | Esparadrapo (kit) | `esparadrapo` | `medical_tape` | 0,04 kg | comum | 50 x 25 x 50 mm |
+| [x] | Gaze estéril (kit) | `gaze` | `sterile_gauze` | 0,02 kg | comum | 100 x 100 x 15 mm |
+| [x] | Iodopovidona (kit) | `pvpi` | `povidone_iodine` | 0,1 kg | incomum | 45 x 110 x 35 mm |
+| [x] | Kit de sutura (kit) | `kit_sutura` | `suture_kit` | 0,15 kg | raro | 150 x 80 x 30 mm |
+| [x] | Luvas de procedimento (kit) | `luva_proc` | `exam_gloves` | 0,02 kg | comum | 100 x 120 x 10 mm |
+| [x] | Máscara N95 (kit) | `n95` | `n95_mask` | 0,02 kg | incomum | 150 x 110 x 25 mm |
+| [x] | Polivitamínico (kit) | `vitamina` | `multivitamin` | 0,05 kg | comum | 50 x 90 x 50 mm |
+| [x] | Remédio de uso contínuo (kit) | `remedio_continuo` | `maintenance_medication` | 0,05 kg | comum | 45 x 90 x 45 mm |
+| [x] | Sais de reidratação (kit) | `sais_reidrat` | `rehydration_salts` | 0,03 kg | comum | 90 x 120 x 10 mm |
+| [x] | Seringa descartável (kit) | `seringa` | `syringe` | 0,01 kg | comum | 150 x 20 x 20 mm |
+| [x] | Soro antiofídico (kit) | `antiofidico` | `antivenom` | 0,2 kg | muito raro | 150 x 90 x 50 mm |
+| [x] | Soro fisiológico com equipo (kit) | `soro` | `saline_iv_bag` | 0,55 kg | raro | 120 x 250 x 45 mm |
+| [x] | Tala imobilizadora (kit) | `tala` | `splint` | 0,3 kg | incomum | 460 x 110 x 10 mm |
+| [x] | Termômetro (kit) | `termometro` | `thermometer` | 0,02 kg | comum | 120 x 20 x 30 mm |
+| [x] | Álcool 70% (500 ml) (kit) | `alcool70` | `alcohol_70` | 0,5 kg | comum | 70 x 200 x 50 mm |
 
-## Ferramentas (2 de 30)
+## Ferramentas (30 de 30)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Martelo | `martelo` | `hammer` | 0,6 kg | comum | 159 x 330 x 47 mm |
 | [x] | Pé de cabra | `pe_cabra` | `crowbar` | 1,5 kg | incomum | 188 x 750 x 48 mm |
-| [ ] | Abridor de lata | `abridor` | `can_opener` | 0,05 kg | comum | 140 x 40 x 25 mm |
-| [ ] | Alicate | `alicate` | `pliers` | 0,3 kg | comum | 200 x 30 x 70 mm |
-| [ ] | Alicate corta-vergalhão | `corta_vergalhao` | `bolt_cutters` | 3,5 kg | raro | 600 x 60 x 150 mm |
-| [ ] | Balde | `balde` | `bucket` | 0,5 kg | comum | 280 x 270 x 280 mm |
-| [ ] | Binóculo | `binoculo` | `binoculars` | 0,6 kg | incomum | 180 x 150 x 120 mm |
-| [ ] | Caixa de fósforos | `fosforo` | `matches` | 0,02 kg | comum | 50 x 15 x 35 mm |
-| [ ] | Canivete multifuncional | `canivete` | `pocket_knife` | 0,15 kg | incomum | 110 x 22 x 32 mm |
-| [ ] | Chave de fenda | `chave_fenda` | `screwdriver` | 0,15 kg | comum | 220 x 40 x 40 mm |
-| [ ] | Chave inglesa | `chave_inglesa` | `adjustable_wrench` | 0,5 kg | comum | 250 x 20 x 60 mm |
-| [ ] | Enxada | `enxada` | `hoe` | 1,8 kg | comum | 1,35 x 0,06 x 0,17 m |
-| [ ] | Extintor de pó | `extintor` | `fire_extinguisher` | 4,0 kg | comum | 160 x 480 x 160 mm |
-| [ ] | Fita silver tape | `silver_tape` | `duct_tape` | 0,2 kg | comum | 100 x 50 x 100 mm |
-| [ ] | Fogareiro de camping | `fogareiro` | `camp_stove` | 0,8 kg | incomum | 180 x 100 x 110 mm |
-| [ ] | Isqueiro | `isqueiro` | `lighter` | 0,02 kg | comum | 25 x 80 x 12 mm |
-| [ ] | Kit de chaveiro (gazuas) | `kit_chaveiro` | `lockpick_kit` | 0,1 kg | muito raro | 100 x 70 x 20 mm |
-| [ ] | Kit de costura | `kit_costura` | `sewing_kit` | 0,05 kg | comum | 90 x 50 x 30 mm |
-| [ ] | Macaco e chave de roda | `macaco` | `car_jack` | 4,0 kg | comum | 300 x 110 x 110 mm |
-| [ ] | Maleta de ferramentas do mecânico | `kit_mecanico` | `mechanic_toolbox` | 6,0 kg | raro | 400 x 200 x 200 mm |
-| [ ] | Maçarico a gás | `macarico` | `gas_torch` | 3,0 kg | raro | 150 x 420 x 150 mm |
-| [ ] | Máquina de solda inversora | `solda` | `inverter_welder` | 6,0 kg | raro | 300 x 220 x 130 mm |
-| [ ] | Panela | `panela` | `pot` | 1,0 kg | comum | 250 x 150 x 250 mm |
-| [ ] | Parafusadeira a bateria | `parafusadeira` | `cordless_drill` | 1,5 kg | incomum | 220 x 200 x 70 mm |
-| [ ] | Pederneira | `pederneira` | `flint_striker` | 0,08 kg | raro | 110 x 20 x 15 mm |
-| [ ] | Pedra de amolar | `amolador` | `sharpening_stone` | 0,3 kg | incomum | 200 x 50 x 25 mm |
-| [ ] | Pá | `pa` | `shovel` | 2,0 kg | comum | 1,1 x 0,07 x 0,22 m |
-| [ ] | Serra de arco | `serra_arco` | `hacksaw` | 0,4 kg | incomum | 420 x 30 x 120 mm |
-| [ ] | Serrote | `serrote` | `handsaw` | 0,5 kg | comum | 500 x 35 x 130 mm |
-| [ ] | Tesoura | `tesoura` | `scissors` | 0,1 kg | comum | 180 x 15 x 70 mm |
+| [x] | Abridor de lata (kit) | `abridor` | `can_opener` | 0,05 kg | comum | 140 x 40 x 25 mm |
+| [x] | Alicate (kit) | `alicate` | `pliers` | 0,3 kg | comum | 200 x 30 x 70 mm |
+| [x] | Alicate corta-vergalhão (kit) | `corta_vergalhao` | `bolt_cutters` | 3,5 kg | raro | 600 x 60 x 150 mm |
+| [x] | Balde (kit) | `balde` | `bucket` | 0,5 kg | comum | 280 x 270 x 280 mm |
+| [x] | Binóculo (kit) | `binoculo` | `binoculars` | 0,6 kg | incomum | 180 x 150 x 120 mm |
+| [x] | Caixa de fósforos (kit) | `fosforo` | `matches` | 0,02 kg | comum | 50 x 15 x 35 mm |
+| [x] | Canivete multifuncional (kit) | `canivete` | `pocket_knife` | 0,15 kg | incomum | 110 x 22 x 32 mm |
+| [x] | Chave de fenda (kit) | `chave_fenda` | `screwdriver` | 0,15 kg | comum | 220 x 40 x 40 mm |
+| [x] | Chave inglesa (kit) | `chave_inglesa` | `adjustable_wrench` | 0,5 kg | comum | 250 x 20 x 60 mm |
+| [x] | Enxada (kit) | `enxada` | `hoe` | 1,8 kg | comum | 1,35 x 0,06 x 0,17 m |
+| [x] | Extintor de pó (kit) | `extintor` | `fire_extinguisher` | 4,0 kg | comum | 160 x 480 x 160 mm |
+| [x] | Fita silver tape (kit) | `silver_tape` | `duct_tape` | 0,2 kg | comum | 100 x 50 x 100 mm |
+| [x] | Fogareiro de camping (kit) | `fogareiro` | `camp_stove` | 0,8 kg | incomum | 180 x 100 x 110 mm |
+| [x] | Isqueiro (kit) | `isqueiro` | `lighter` | 0,02 kg | comum | 25 x 80 x 12 mm |
+| [x] | Kit de chaveiro (gazuas) (kit) | `kit_chaveiro` | `lockpick_kit` | 0,1 kg | muito raro | 100 x 70 x 20 mm |
+| [x] | Kit de costura (kit) | `kit_costura` | `sewing_kit` | 0,05 kg | comum | 90 x 50 x 30 mm |
+| [x] | Macaco e chave de roda (kit) | `macaco` | `car_jack` | 4,0 kg | comum | 300 x 110 x 110 mm |
+| [x] | Maleta de ferramentas do mecânico (kit) | `kit_mecanico` | `mechanic_toolbox` | 6,0 kg | raro | 400 x 200 x 200 mm |
+| [x] | Maçarico a gás (kit) | `macarico` | `gas_torch` | 3,0 kg | raro | 150 x 420 x 150 mm |
+| [x] | Máquina de solda inversora (kit) | `solda` | `inverter_welder` | 6,0 kg | raro | 300 x 220 x 130 mm |
+| [x] | Panela (kit) | `panela` | `pot` | 1,0 kg | comum | 250 x 150 x 250 mm |
+| [x] | Parafusadeira a bateria (kit) | `parafusadeira` | `cordless_drill` | 1,5 kg | incomum | 220 x 200 x 70 mm |
+| [x] | Pederneira (kit) | `pederneira` | `flint_striker` | 0,08 kg | raro | 110 x 20 x 15 mm |
+| [x] | Pedra de amolar (kit) | `amolador` | `sharpening_stone` | 0,3 kg | incomum | 200 x 50 x 25 mm |
+| [x] | Pá (kit) | `pa` | `shovel` | 2,0 kg | comum | 1,1 x 0,07 x 0,22 m |
+| [x] | Serra de arco (kit) | `serra_arco` | `hacksaw` | 0,4 kg | incomum | 420 x 30 x 120 mm |
+| [x] | Serrote (kit) | `serrote` | `handsaw` | 0,5 kg | comum | 500 x 35 x 130 mm |
+| [x] | Tesoura (kit) | `tesoura` | `scissors` | 0,1 kg | comum | 180 x 15 x 70 mm |
 
-## Armas brancas e de disparo silencioso (3 de 20)
+## Armas brancas e de disparo silencioso (20 de 20)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Facão | `facao` | `machete` | 0,7 kg | comum | 550 x 85 x 35 mm |
 | [x] | Machado | `machado` | `axe` | 1,6 kg | incomum | 250 x 700 x 59 mm |
 | [x] | Taco com pregos | `taco_pregos` | `nail_bat` | 1,2 kg | incomum | 223 x 860 x 221 mm |
-| [ ] | Arco recurvo | `arco` | `recurve_bow` | 1,2 kg | raro | 1,3 x 0,2 x 0,05 m |
-| [ ] | Besta | `besta` | `crossbow` | 3,2 kg | muito raro | 700 x 120 x 800 mm |
-| [ ] | Cano de ferro | `cano` | `iron_pipe` | 1,2 kg | comum | 800 x 35 x 35 mm |
-| [ ] | Cutelo de açougue | `cutelo` | `meat_cleaver` | 0,6 kg | incomum | 330 x 30 x 120 mm |
-| [ ] | Estilingue | `estilingue` | `slingshot` | 0,15 kg | incomum | 130 x 150 x 25 mm |
-| [ ] | Faca de cozinha | `faca_cozinha` | `knife` | 0,2 kg | comum | 250 x 30 x 40 mm |
-| [ ] | Faca tática | `faca_tatica` | `tactical_knife` | 0,3 kg | raro | 260 x 28 x 45 mm |
-| [ ] | Flechas e virotes (6) | `flecha` | `arrows_and_bolts` | 0,3 kg | raro | 700 x 25 x 40 mm |
-| [ ] | Foice | `foice` | `sickle` | 1,2 kg | incomum | 400 x 35 x 350 mm |
-| [ ] | Frigideira de ferro | `frigideira` | `cast_iron_skillet` | 1,2 kg | comum | 430 x 50 x 250 mm |
-| [ ] | Lança improvisada | `lanca` | `improvised_spear` | 1,1 kg | incomum | 1,6 x 0,04 x 0,04 m |
-| [ ] | Machadinha | `machadinha` | `hatchet` | 0,8 kg | incomum | 350 x 50 x 130 mm |
-| [ ] | Marreta | `marreta` | `sledgehammer` | 5,0 kg | raro | 900 x 120 x 250 mm |
-| [ ] | Motosserra | `motosserra` | `chainsaw` | 6,0 kg | muito raro | 450 x 260 x 230 mm |
-| [ ] | Picareta | `picareta` | `pickaxe` | 2,8 kg | raro | 900 x 40 x 350 mm |
-| [ ] | Taco de beisebol | `taco` | `baseball_bat` | 1,0 kg | incomum | 860 x 70 x 70 mm |
-| [ ] | Tonfa policial | `tonfa` | `police_baton` | 0,6 kg | comum | 500 x 100 x 45 mm |
+| [x] | Arco recurvo (kit) | `arco` | `recurve_bow` | 1,2 kg | raro | 1,3 x 0,2 x 0,05 m |
+| [x] | Besta (kit) | `besta` | `crossbow` | 3,2 kg | muito raro | 700 x 120 x 800 mm |
+| [x] | Cano de ferro (kit) | `cano` | `iron_pipe` | 1,2 kg | comum | 800 x 35 x 35 mm |
+| [x] | Cutelo de açougue (kit) | `cutelo` | `meat_cleaver` | 0,6 kg | incomum | 330 x 30 x 120 mm |
+| [x] | Estilingue (kit) | `estilingue` | `slingshot` | 0,15 kg | incomum | 130 x 150 x 25 mm |
+| [x] | Faca de cozinha (kit) | `faca_cozinha` | `knife` | 0,2 kg | comum | 250 x 30 x 40 mm |
+| [x] | Faca tática (kit) | `faca_tatica` | `tactical_knife` | 0,3 kg | raro | 260 x 28 x 45 mm |
+| [x] | Flechas e virotes (6) (kit) | `flecha` | `arrows_and_bolts` | 0,3 kg | raro | 700 x 25 x 40 mm |
+| [x] | Foice (kit) | `foice` | `sickle` | 1,2 kg | incomum | 400 x 35 x 350 mm |
+| [x] | Frigideira de ferro (kit) | `frigideira` | `cast_iron_skillet` | 1,2 kg | comum | 430 x 50 x 250 mm |
+| [x] | Lança improvisada (kit) | `lanca` | `improvised_spear` | 1,1 kg | incomum | 1,6 x 0,04 x 0,04 m |
+| [x] | Machadinha (kit) | `machadinha` | `hatchet` | 0,8 kg | incomum | 350 x 50 x 130 mm |
+| [x] | Marreta (kit) | `marreta` | `sledgehammer` | 5,0 kg | raro | 900 x 120 x 250 mm |
+| [x] | Motosserra (kit) | `motosserra` | `chainsaw` | 6,0 kg | muito raro | 450 x 260 x 230 mm |
+| [x] | Picareta (kit) | `picareta` | `pickaxe` | 2,8 kg | raro | 900 x 40 x 350 mm |
+| [x] | Taco de beisebol (kit) | `taco` | `baseball_bat` | 1,0 kg | incomum | 860 x 70 x 70 mm |
+| [x] | Tonfa policial (kit) | `tonfa` | `police_baton` | 0,6 kg | comum | 500 x 100 x 45 mm |
 
-## Materiais de construção e crafting (1 de 23)
+## Materiais de construção e crafting (23 de 23)
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
 | [x] | Tábua | `tabua` | `wooden_plank` | 2,0 kg | comum | 800 x 249 x 283 mm |
-| [ ] | Arame (rolo de 10 m) | `arame` | `wire_roll` | 0,5 kg | comum | 140 x 50 x 140 mm |
-| [ ] | Arame farpado (rolo de 25 m) | `arame_farpado` | `barbed_wire` | 4,0 kg | incomum | 300 x 120 x 300 mm |
-| [ ] | Cacos de vidro | `cacos` | `glass_shards` | 0,2 kg | comum | 120 x 50 x 100 mm |
-| [ ] | Chapa de metal | `chapa` | `sheet_metal` | 6,0 kg | incomum | 600 x 3 x 450 mm |
-| [ ] | Cimento (saco de 25 kg) | `cimento` | `cement_bag` | 25,0 kg | incomum | 500 x 100 x 300 mm |
-| [ ] | Cola epóxi | `cola` | `epoxy_glue` | 0,1 kg | incomum | 100 x 60 x 30 mm |
-| [ ] | Componentes eletrônicos | `componentes` | `electronic_components` | 0,1 kg | incomum | 100 x 20 x 80 mm |
-| [ ] | Corda (15 m) | `corda` | `rope` | 1,0 kg | comum | 150 x 80 x 150 mm |
-| [ ] | Fio de cobre (5 m) | `fio_cobre` | `copper_wire` | 0,3 kg | comum | 80 x 30 x 80 mm |
-| [ ] | Garrafa PET vazia | `garrafa_pet` | `pet_bottle` | 0,05 kg | comum | 105 x 330 x 105 mm |
-| [ ] | Garrafa de vidro vazia | `garrafa_vidro` | `glass_bottle` | 0,3 kg | comum | 75 x 260 x 75 mm |
-| [ ] | Lata vazia | `lata_vazia` | `empty_can` | 0,05 kg | comum | 66 x 120 x 66 mm |
-| [ ] | Lenha | `lenha` | `firewood` | 1,5 kg | comum | 400 x 120 x 160 mm |
-| [ ] | Lona (4 × 4 m) | `lona` | `tarp` | 2,0 kg | comum | 350 x 100 x 250 mm |
-| [ ] | Parafusos (caixa de 50) | `parafusos` | `screws` | 0,4 kg | comum | 90 x 50 x 50 mm |
-| [ ] | Pregos (caixa de 100) | `pregos` | `nails` | 0,5 kg | comum | 130 x 60 x 50 mm |
-| [ ] | Saco de ráfia | `saco_areia` | `raffia_sack` | 0,2 kg | comum | 400 x 20 x 300 mm |
-| [ ] | Sucata de metal | `sucata` | `scrap_metal` | 1,0 kg | comum | 200 x 80 x 150 mm |
-| [ ] | Tijolos (10) | `tijolo` | `bricks` | 25,0 kg | comum | 190 x 180 x 290 mm |
-| [ ] | Trapo | `trapo` | `rag` | 0,05 kg | comum | 220 x 25 x 180 mm |
-| [ ] | Vergalhão | `vergalhao` | `rebar` | 2,0 kg | comum | 1,27 x 0,02 x 0,02 m |
-| [ ] | Óleo lubrificante spray | `lubrificante` | `lubricant_spray` | 0,25 kg | comum | 50 x 170 x 50 mm |
+| [x] | Arame (rolo de 10 m) (kit) | `arame` | `wire_roll` | 0,5 kg | comum | 140 x 50 x 140 mm |
+| [x] | Arame farpado (rolo de 25 m) (kit) | `arame_farpado` | `barbed_wire` | 4,0 kg | incomum | 300 x 120 x 300 mm |
+| [x] | Cacos de vidro (kit) | `cacos` | `glass_shards` | 0,2 kg | comum | 120 x 50 x 100 mm |
+| [x] | Chapa de metal (kit) | `chapa` | `sheet_metal` | 6,0 kg | incomum | 600 x 3 x 450 mm |
+| [x] | Cimento (saco de 25 kg) (kit) | `cimento` | `cement_bag` | 25,0 kg | incomum | 500 x 100 x 300 mm |
+| [x] | Cola epóxi (kit) | `cola` | `epoxy_glue` | 0,1 kg | incomum | 100 x 60 x 30 mm |
+| [x] | Componentes eletrônicos (kit) | `componentes` | `electronic_components` | 0,1 kg | incomum | 100 x 20 x 80 mm |
+| [x] | Corda (15 m) (kit) | `corda` | `rope` | 1,0 kg | comum | 150 x 80 x 150 mm |
+| [x] | Fio de cobre (5 m) (kit) | `fio_cobre` | `copper_wire` | 0,3 kg | comum | 80 x 30 x 80 mm |
+| [x] | Garrafa PET vazia (kit) | `garrafa_pet` | `pet_bottle` | 0,05 kg | comum | 105 x 330 x 105 mm |
+| [x] | Garrafa de vidro vazia (kit) | `garrafa_vidro` | `glass_bottle` | 0,3 kg | comum | 75 x 260 x 75 mm |
+| [x] | Lata vazia (kit) | `lata_vazia` | `empty_can` | 0,05 kg | comum | 66 x 120 x 66 mm |
+| [x] | Lenha (kit) | `lenha` | `firewood` | 1,5 kg | comum | 400 x 120 x 160 mm |
+| [x] | Lona (4 × 4 m) (kit) | `lona` | `tarp` | 2,0 kg | comum | 350 x 100 x 250 mm |
+| [x] | Parafusos (caixa de 50) (kit) | `parafusos` | `screws` | 0,4 kg | comum | 90 x 50 x 50 mm |
+| [x] | Pregos (caixa de 100) (kit) | `pregos` | `nails` | 0,5 kg | comum | 130 x 60 x 50 mm |
+| [x] | Saco de ráfia (kit) | `saco_areia` | `raffia_sack` | 0,2 kg | comum | 400 x 20 x 300 mm |
+| [x] | Sucata de metal (kit) | `sucata` | `scrap_metal` | 1,0 kg | comum | 200 x 80 x 150 mm |
+| [x] | Tijolos (10) (kit) | `tijolo` | `bricks` | 25,0 kg | comum | 190 x 180 x 290 mm |
+| [x] | Trapo (kit) | `trapo` | `rag` | 0,05 kg | comum | 220 x 25 x 180 mm |
+| [x] | Vergalhão (kit) | `vergalhao` | `rebar` | 2,0 kg | comum | 1,27 x 0,02 x 0,02 m |
+| [x] | Óleo lubrificante spray (kit) | `lubrificante` | `lubricant_spray` | 0,25 kg | comum | 50 x 170 x 50 mm |
 
 ## Roupas e proteção (1 de 23)
 

@@ -944,6 +944,4228 @@
    "0/2 Group 55dd014c"
   ]
  },
+ "model/sugar": {
+  "hash": "5eb64200",
+  "nodes": [
+   "0 Group 4b711da5",
+   "0/0 Group cb71d576",
+   "0/0/0 Mesh db33dcc9",
+   "0/0/1 Mesh 553d224a",
+   "0/0/2 Mesh 72cfa6de"
+  ]
+ },
+ "model/sugar:merged": {
+  "hash": "5ac59ee9",
+  "nodes": [
+   "0 Group 4b711da5",
+   "0/0 Mesh ad855205",
+   "0/1 Mesh 2fa2f8a2",
+   "0/2 Mesh 8b1ae7e8"
+  ]
+ },
+ "model/sugar:lod": {
+  "hash": "c1cb74b7",
+  "nodes": [
+   "0 LOD 38f8967f",
+   "0/0 Group b3f21895",
+   "0/0/0 Mesh a0b12ecd",
+   "0/0/1 Mesh 232c844e",
+   "0/0/2 Mesh d4564589",
+   "0/1 Group 1cf64bba",
+   "0/1/0 Mesh 907a0ae3",
+   "0/1/1 Mesh 5f0098e0",
+   "0/1/2 Mesh e4ec4f6d",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/chocolate_bar": {
+  "hash": "8824d996",
+  "nodes": [
+   "0 Group 8bda6f37",
+   "0/0 Group 303a3135",
+   "0/0/0 Mesh 122172f3",
+   "0/0/1 Mesh 5f22c61f",
+   "0/0/2 Mesh 96015174"
+  ]
+ },
+ "model/chocolate_bar:merged": {
+  "hash": "4582e22d",
+  "nodes": [
+   "0 Group 8bda6f37",
+   "0/0 Mesh a36ee916",
+   "0/1 Mesh d2eedf52",
+   "0/2 Mesh 2f93fd81"
+  ]
+ },
+ "model/chocolate_bar:lod": {
+  "hash": "611de7d2",
+  "nodes": [
+   "0 LOD 6accf259",
+   "0/0 Group bc9e4b33",
+   "0/0/0 Mesh 82cb7cac",
+   "0/0/1 Mesh 14b0219d",
+   "0/0/2 Mesh ff9e8d5e",
+   "0/1 Group 18454760",
+   "0/1/0 Mesh 552629dd",
+   "0/1/1 Mesh 2b931f10",
+   "0/1/2 Mesh a6822a27",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/potatoes": {
+  "hash": "ceb18fe2",
+  "nodes": [
+   "0 Group c642a1f8",
+   "0/0 Group 8d677a43",
+   "0/0/0 Mesh a9a4caad",
+   "0/0/1 Mesh 979d3acb"
+  ]
+ },
+ "model/potatoes:merged": {
+  "hash": "ad2e8cf0",
+  "nodes": [
+   "0 Group c642a1f8",
+   "0/0 Mesh a6e59fd4",
+   "0/1 Mesh 4a06909a"
+  ]
+ },
+ "model/potatoes:lod": {
+  "hash": "a486d2a5",
+  "nodes": [
+   "0 LOD 44392e0c",
+   "0/0 Group 52770b9e",
+   "0/0/0 Mesh be1895a3",
+   "0/0/1 Mesh c96db77f",
+   "0/1 Group d884030f",
+   "0/1/0 Mesh 8f6620c7",
+   "0/1/1 Mesh f8515fb3",
+   "0/1/2 Mesh 3058df88",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/biscuits": {
+  "hash": "2a13f2a6",
+  "nodes": [
+   "0 Group de68f4d3",
+   "0/0 Group ceec5e1d",
+   "0/0/0 Mesh 47013614",
+   "0/0/1 Mesh 4711d305"
+  ]
+ },
+ "model/biscuits:merged": {
+  "hash": "ca37b513",
+  "nodes": [
+   "0 Group de68f4d3",
+   "0/0 Mesh 9ce950eb",
+   "0/1 Mesh 333f605b"
+  ]
+ },
+ "model/biscuits:lod": {
+  "hash": "cbfa038a",
+  "nodes": [
+   "0 LOD 39cc2675",
+   "0/0 Group 66f4d149",
+   "0/0/0 Mesh d05643d6",
+   "0/0/1 Mesh b14141e2",
+   "0/1 Group 1529691c",
+   "0/1/0 Mesh 7c7a3e03",
+   "0/1/1 Mesh c2114a59",
+   "0/1/2 Mesh 3ad20190",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/coffee": {
+  "hash": "95349a19",
+  "nodes": [
+   "0 Group 76ac223",
+   "0/0 Group c6cd5a9d",
+   "0/0/0 Mesh bb91f330",
+   "0/0/1 Mesh 9c516d01",
+   "0/0/2 Mesh 30808eaa"
+  ]
+ },
+ "model/coffee:merged": {
+  "hash": "90264d1b",
+  "nodes": [
+   "0 Group 76ac223",
+   "0/0 Mesh 714cc45c",
+   "0/1 Mesh 8c725228",
+   "0/2 Mesh 21a21e03"
+  ]
+ },
+ "model/coffee:lod": {
+  "hash": "e3d58e68",
+  "nodes": [
+   "0 LOD f107af0d",
+   "0/0 Group 99d826f1",
+   "0/0/0 Mesh 6a3b45cc",
+   "0/0/1 Mesh 8c943e60",
+   "0/0/2 Mesh fe61d34b",
+   "0/1 Group b9570cb4",
+   "0/1/0 Mesh 7f76b90c",
+   "0/1/1 Mesh d0672ffe",
+   "0/1/2 Mesh a8c8e946",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/raw_beef": {
+  "hash": "6c3a5653",
+  "nodes": [
+   "0 Group 427a0536",
+   "0/0 Group c59f3ca6",
+   "0/0/0 Mesh 1b3f20c7",
+   "0/0/1 Mesh 645488f2",
+   "0/0/2 Mesh d9540e5a"
+  ]
+ },
+ "model/raw_beef:merged": {
+  "hash": "9a9673ed",
+  "nodes": [
+   "0 Group 427a0536",
+   "0/0 Mesh db006852",
+   "0/1 Mesh cc98a5d7",
+   "0/2 Mesh 28b11155"
+  ]
+ },
+ "model/raw_beef:lod": {
+  "hash": "bedf6257",
+  "nodes": [
+   "0 LOD ca2add8a",
+   "0/0 Group 2e4998bc",
+   "0/0/0 Mesh 1d54cc0f",
+   "0/0/1 Mesh 182f8f5d",
+   "0/0/2 Mesh fa9db497",
+   "0/1 Group fe46609",
+   "0/1/0 Mesh a9fc2bf",
+   "0/1/1 Mesh b965a7ba",
+   "0/1/2 Mesh bc5f6cef",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/game_meat": {
+  "hash": "c5119103",
+  "nodes": [
+   "0 Group 6c819437",
+   "0/0 Group d9f47923",
+   "0/0/0 Mesh 92edc723",
+   "0/0/1 Mesh a60aa941"
+  ]
+ },
+ "model/game_meat:merged": {
+  "hash": "53e940d3",
+  "nodes": [
+   "0 Group 6c819437",
+   "0/0 Mesh 27db38e1",
+   "0/1 Mesh 7972da6d"
+  ]
+ },
+ "model/game_meat:lod": {
+  "hash": "1f6dade0",
+  "nodes": [
+   "0 LOD 53efc3b1",
+   "0/0 Group 77efca9b",
+   "0/0/0 Mesh f9fccff8",
+   "0/0/1 Mesh ddeec3a4",
+   "0/1 Group 77242058",
+   "0/1/0 Mesh 17334163",
+   "0/1/1 Mesh 86eff4bf",
+   "0/1/2 Mesh ea1c012e",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/jerked_beef": {
+  "hash": "be903065",
+  "nodes": [
+   "0 Group d5ea8039",
+   "0/0 Group e29db92b",
+   "0/0/0 Mesh d8868bed",
+   "0/0/1 Mesh 896345a3"
+  ]
+ },
+ "model/jerked_beef:merged": {
+  "hash": "93d6b656",
+  "nodes": [
+   "0 Group d5ea8039",
+   "0/0 Mesh 90726da7",
+   "0/1 Mesh cb1f506c"
+  ]
+ },
+ "model/jerked_beef:lod": {
+  "hash": "ac3d6fb9",
+  "nodes": [
+   "0 LOD f63c7e33",
+   "0/0 Group adab5ee9",
+   "0/0/0 Mesh d06680b9",
+   "0/0/1 Mesh 71b8d616",
+   "0/1 Group 5f5dc0ae",
+   "0/1/0 Mesh f130819e",
+   "0/1/1 Mesh 8ac81c66",
+   "0/1/2 Mesh 8617194e",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/home_preserves": {
+  "hash": "3ed37b2c",
+  "nodes": [
+   "0 Group 256a8d2e",
+   "0/0 Group f8de0cfb",
+   "0/0/0 Mesh 504a48e5",
+   "0/0/1 Mesh 2c2f64ea",
+   "0/0/2 Mesh 99be847a"
+  ]
+ },
+ "model/home_preserves:merged": {
+  "hash": "67f59e23",
+  "nodes": [
+   "0 Group 256a8d2e",
+   "0/0 Mesh e4c07687",
+   "0/1 Mesh 32210dd2",
+   "0/2 Mesh a24cbc8b"
+  ]
+ },
+ "model/home_preserves:lod": {
+  "hash": "34763c10",
+  "nodes": [
+   "0 LOD d04a2a9a",
+   "0/0 Group 2ae68598",
+   "0/0/0 Mesh 8313cf13",
+   "0/0/1 Mesh 83382965",
+   "0/0/2 Mesh a8ce9d93",
+   "0/1 Group fdc4a599",
+   "0/1/0 Mesh 80849105",
+   "0/1/1 Mesh e68602a9",
+   "0/1/2 Mesh 9136b73",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/eggs": {
+  "hash": "e68ff72a",
+  "nodes": [
+   "0 Group dac3488d",
+   "0/0 Group c6c9cfbc",
+   "0/0/0 Mesh 75c0415f",
+   "0/0/1 Mesh 88e0928b"
+  ]
+ },
+ "model/eggs:merged": {
+  "hash": "d30ba014",
+  "nodes": [
+   "0 Group dac3488d",
+   "0/0 Mesh 9bcc27a",
+   "0/1 Mesh cb4ab66d"
+  ]
+ },
+ "model/eggs:lod": {
+  "hash": "cce504d5",
+  "nodes": [
+   "0 LOD 19d84827",
+   "0/0 Group b3d28fff",
+   "0/0/0 Mesh 6301108d",
+   "0/0/1 Mesh 370d8e4f",
+   "0/1 Group 17038942",
+   "0/1/0 Mesh d4da6be3",
+   "0/1/1 Mesh 92b6bbf7",
+   "0/1/2 Mesh 65414aeb",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/cassava_flour": {
+  "hash": "79f70ce7",
+  "nodes": [
+   "0 Group c5bb785c",
+   "0/0 Group 98af6d57",
+   "0/0/0 Mesh 972a946",
+   "0/0/1 Mesh ee9a3a2",
+   "0/0/2 Mesh 67bbbc02"
+  ]
+ },
+ "model/cassava_flour:merged": {
+  "hash": "5c1785bc",
+  "nodes": [
+   "0 Group c5bb785c",
+   "0/0 Mesh 6209bdf0",
+   "0/1 Mesh 66daf509",
+   "0/2 Mesh 8e3a9f46"
+  ]
+ },
+ "model/cassava_flour:lod": {
+  "hash": "5e79ae8",
+  "nodes": [
+   "0 LOD 74b7cc38",
+   "0/0 Group bac5d538",
+   "0/0/0 Mesh 9e42a1d0",
+   "0/0/1 Mesh bf22950d",
+   "0/0/2 Mesh 4c82faae",
+   "0/1 Group 737548eb",
+   "0/1/0 Mesh e87c43bf",
+   "0/1/1 Mesh a0e1c216",
+   "0/1/2 Mesh 91c8ede0",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/beans": {
+  "hash": "2c6dbdb6",
+  "nodes": [
+   "0 Group 79647464",
+   "0/0 Group cf083a1b",
+   "0/0/0 Mesh 2d7eeabc",
+   "0/0/1 Mesh dc2dc1f0"
+  ]
+ },
+ "model/beans:merged": {
+  "hash": "5ad898fd",
+  "nodes": [
+   "0 Group 79647464",
+   "0/0 Mesh 6d282a1c",
+   "0/1 Mesh 26c2fabb"
+  ]
+ },
+ "model/beans:lod": {
+  "hash": "d096c041",
+  "nodes": [
+   "0 LOD 49792180",
+   "0/0 Group 77fd26b8",
+   "0/0/0 Mesh 18b16bba",
+   "0/0/1 Mesh 53acd7db",
+   "0/1 Group 4f7eeb3",
+   "0/1/0 Mesh e6a687d4",
+   "0/1/1 Mesh fc8afba5",
+   "0/1/2 Mesh 42fda1a",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/frozen_chicken": {
+  "hash": "3d2d5418",
+  "nodes": [
+   "0 Group b419bda1",
+   "0/0 Group bca978e",
+   "0/0/0 Mesh fa9b1c3b",
+   "0/0/1 Mesh 422ca40d"
+  ]
+ },
+ "model/frozen_chicken:merged": {
+  "hash": "828f2a91",
+  "nodes": [
+   "0 Group b419bda1",
+   "0/0 Mesh e89a3bde",
+   "0/1 Mesh d7eeff00"
+  ]
+ },
+ "model/frozen_chicken:lod": {
+  "hash": "fa671989",
+  "nodes": [
+   "0 LOD 36bd73d3",
+   "0/0 Group f501f8d3",
+   "0/0/0 Mesh e0803498",
+   "0/0/1 Mesh 318ab029",
+   "0/1 Group 6cf114ce",
+   "0/1/0 Mesh e0aa5dc0",
+   "0/1/1 Mesh ad06f8ab",
+   "0/1/2 Mesh bb200a93",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/orange": {
+  "hash": "43d58881",
+  "nodes": [
+   "0 Group ef4da441",
+   "0/0 Group 6f497d9a",
+   "0/0/0 Mesh dd9cab68",
+   "0/0/1 Mesh e8167bfd"
+  ]
+ },
+ "model/orange:merged": {
+  "hash": "9c32be7b",
+  "nodes": [
+   "0 Group ef4da441",
+   "0/0 Mesh 66ac6a27",
+   "0/1 Mesh fcbf7c11"
+  ]
+ },
+ "model/orange:lod": {
+  "hash": "bac6f9e3",
+  "nodes": [
+   "0 LOD d1e9dbab",
+   "0/0 Group 4325c01b",
+   "0/0/0 Mesh 7413f7a9",
+   "0/0/1 Mesh b8c893e9",
+   "0/1 Group aef54286",
+   "0/1/0 Mesh 419f0b48",
+   "0/1/1 Mesh eb33536b",
+   "0/1/2 Mesh 2dbf9d88",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/condensed_milk": {
+  "hash": "3bbcff44",
+  "nodes": [
+   "0 Group bb0668de",
+   "0/0 Group 48a16c8b",
+   "0/0/0 Mesh 26fbd122",
+   "0/0/1 Mesh 59583da"
+  ]
+ },
+ "model/condensed_milk:merged": {
+  "hash": "10018ec6",
+  "nodes": [
+   "0 Group bb0668de",
+   "0/0 Mesh 8614b3aa",
+   "0/1 Mesh 83f2b968"
+  ]
+ },
+ "model/condensed_milk:lod": {
+  "hash": "22a57c2b",
+  "nodes": [
+   "0 LOD 7bdd327a",
+   "0/0 Group 42a5cb6c",
+   "0/0/0 Mesh 8559d864",
+   "0/0/1 Mesh becb4b97",
+   "0/1 Group fb1a4959",
+   "0/1/0 Mesh 16be6919",
+   "0/1/1 Mesh 9e1adaee",
+   "0/1/2 Mesh 40c53ee",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/pasta": {
+  "hash": "bc82b500",
+  "nodes": [
+   "0 Group a34e91a8",
+   "0/0 Group b7eab062",
+   "0/0/0 Mesh 9180d354",
+   "0/0/1 Mesh 9b4d30ad"
+  ]
+ },
+ "model/pasta:merged": {
+  "hash": "7d364c7e",
+  "nodes": [
+   "0 Group a34e91a8",
+   "0/0 Mesh f22a5bfc",
+   "0/1 Mesh 7e23d4e0"
+  ]
+ },
+ "model/pasta:lod": {
+  "hash": "18cfd8fc",
+  "nodes": [
+   "0 LOD 6209c3b4",
+   "0/0 Group 41f3c400",
+   "0/0/0 Mesh 26af37ad",
+   "0/0/1 Mesh f46cb3ce",
+   "0/1 Group c6c41337",
+   "0/1/0 Mesh 8b0a1547",
+   "0/1/1 Mesh d17c45b4",
+   "0/1/2 Mesh 10d2de4b",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/instant_noodles": {
+  "hash": "d98716fd",
+  "nodes": [
+   "0 Group cbdd56ed",
+   "0/0 Group bc64d4ba",
+   "0/0/0 Mesh 20b58e9e",
+   "0/0/1 Mesh 9ea2fd81"
+  ]
+ },
+ "model/instant_noodles:merged": {
+  "hash": "59da407c",
+  "nodes": [
+   "0 Group cbdd56ed",
+   "0/0 Mesh 64454916",
+   "0/1 Mesh 6671b5b7"
+  ]
+ },
+ "model/instant_noodles:lod": {
+  "hash": "1fb62b6f",
+  "nodes": [
+   "0 LOD cadfec7f",
+   "0/0 Group d1010e7d",
+   "0/0/0 Mesh 7c6f8fc1",
+   "0/0/1 Mesh cf9b33d",
+   "0/1 Group c4c5c77a",
+   "0/1/0 Mesh 40c57a5a",
+   "0/1/1 Mesh 9a86f031",
+   "0/1/2 Mesh 9d3d29de",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/cassava_root": {
+  "hash": "587a5c58",
+  "nodes": [
+   "0 Group 2b7835de",
+   "0/0 Group b00f7286",
+   "0/0/0 Mesh 1835fd55",
+   "0/0/1 Mesh 5895104c"
+  ]
+ },
+ "model/cassava_root:merged": {
+  "hash": "1bf2ad06",
+  "nodes": [
+   "0 Group 2b7835de",
+   "0/0 Mesh c9c09a38",
+   "0/1 Mesh c2129056"
+  ]
+ },
+ "model/cassava_root:lod": {
+  "hash": "eeaa89d5",
+  "nodes": [
+   "0 LOD 6549f352",
+   "0/0 Group e7a6482c",
+   "0/0/0 Mesh 736860e0",
+   "0/0/1 Mesh f2a432d8",
+   "0/1 Group 16be1411",
+   "0/1/0 Mesh 7e5101f1",
+   "0/1/1 Mesh 5598242a",
+   "0/1/2 Mesh 26966e25",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/canned_corn_and_peas": {
+  "hash": "51baab9a",
+  "nodes": [
+   "0 Group cbb63c0b",
+   "0/0 Group f7e4729c",
+   "0/0/0 Mesh b7942669",
+   "0/0/1 Mesh 74f680e7"
+  ]
+ },
+ "model/canned_corn_and_peas:merged": {
+  "hash": "cf0cab9f",
+  "nodes": [
+   "0 Group cbb63c0b",
+   "0/0 Mesh 77a5cd54",
+   "0/1 Mesh 7b3f0fd6"
+  ]
+ },
+ "model/canned_corn_and_peas:lod": {
+  "hash": "7187d8c4",
+  "nodes": [
+   "0 LOD f64db57d",
+   "0/0 Group 46f11045",
+   "0/0/0 Mesh 888368da",
+   "0/0/1 Mesh 48304581",
+   "0/1 Group a7328864",
+   "0/1/0 Mesh eb20a831",
+   "0/1/1 Mesh 5c078c11",
+   "0/1/2 Mesh 5b494121",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/mortadella": {
+  "hash": "8f6e08e1",
+  "nodes": [
+   "0 Group bfe4f492",
+   "0/0 Group 5ff9b4e7",
+   "0/0/0 Mesh 8a5ab3b",
+   "0/0/1 Mesh 33f15b24",
+   "0/0/2 Mesh 6153a44b"
+  ]
+ },
+ "model/mortadella:merged": {
+  "hash": "25ed01bf",
+  "nodes": [
+   "0 Group bfe4f492",
+   "0/0 Mesh d6d87f2f",
+   "0/1 Mesh f30e4f1e",
+   "0/2 Mesh 3e7e57a3"
+  ]
+ },
+ "model/mortadella:lod": {
+  "hash": "ba46f999",
+  "nodes": [
+   "0 LOD 9b3f937e",
+   "0/0 Group 93e3dd74",
+   "0/0/0 Mesh 4cdf9dca",
+   "0/0/1 Mesh a7876be6",
+   "0/0/2 Mesh 62a78709",
+   "0/1 Group cf0fee9d",
+   "0/1/0 Mesh 6bdab8fd",
+   "0/1/1 Mesh 7e553f94",
+   "0/1/2 Mesh 5d5ed2e9",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/fresh_fish": {
+  "hash": "62959e90",
+  "nodes": [
+   "0 Group 7eba0a18",
+   "0/0 Group cb211ffa",
+   "0/0/0 Mesh f18d12f3",
+   "0/0/1 Mesh f28424f8",
+   "0/0/2 Mesh 72cdf6c9"
+  ]
+ },
+ "model/fresh_fish:merged": {
+  "hash": "86d34b0e",
+  "nodes": [
+   "0 Group 7eba0a18",
+   "0/0 Mesh fccd5559",
+   "0/1 Mesh 253415a0",
+   "0/2 Mesh 3d17c86e"
+  ]
+ },
+ "model/fresh_fish:lod": {
+  "hash": "9c24068",
+  "nodes": [
+   "0 LOD 83d103d4",
+   "0/0 Group c92cecd6",
+   "0/0/0 Mesh 6009e566",
+   "0/0/1 Mesh 95ac3a7b",
+   "0/0/2 Mesh 958b102",
+   "0/1 Group a0e46257",
+   "0/1/0 Mesh bb51159",
+   "0/1/1 Mesh 3267d1fe",
+   "0/1/2 Mesh bd78c08e",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/salted_fish": {
+  "hash": "45c580d8",
+  "nodes": [
+   "0 Group 1a0bc5bf",
+   "0/0 Group 4de45183",
+   "0/0/0 Mesh 6785c37d",
+   "0/0/1 Mesh 682cdd18"
+  ]
+ },
+ "model/salted_fish:merged": {
+  "hash": "14780b5d",
+  "nodes": [
+   "0 Group 1a0bc5bf",
+   "0/0 Mesh bc030bb7",
+   "0/1 Mesh 91f0f05"
+  ]
+ },
+ "model/salted_fish:lod": {
+  "hash": "f1c0658f",
+  "nodes": [
+   "0 LOD a4939a1",
+   "0/0 Group d034fa03",
+   "0/0/0 Mesh bfa0519f",
+   "0/0/1 Mesh 54f5f974",
+   "0/1 Group 4dd2988",
+   "0/1/0 Mesh 3527fb37",
+   "0/1/1 Mesh 49d166b5",
+   "0/1/2 Mesh d6d4c24a",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/banana_bunch": {
+  "hash": "d6cd15f0",
+  "nodes": [
+   "0 Group dd7f78d3",
+   "0/0 Group ff3b51c6",
+   "0/0/0 Mesh f2cfe5d9",
+   "0/0/1 Mesh e804180e",
+   "0/0/2 Mesh 48c39fe2"
+  ]
+ },
+ "model/banana_bunch:merged": {
+  "hash": "576bd541",
+  "nodes": [
+   "0 Group dd7f78d3",
+   "0/0 Mesh efdedd0",
+   "0/1 Mesh 492c5576",
+   "0/2 Mesh 810d344f"
+  ]
+ },
+ "model/banana_bunch:lod": {
+  "hash": "d480246",
+  "nodes": [
+   "0 LOD 3c3a4c6d",
+   "0/0 Group 2c122d81",
+   "0/0/0 Mesh 6cc22d7b",
+   "0/0/1 Mesh ebe823af",
+   "0/0/2 Mesh e15fe84a",
+   "0/1 Group caea5f94",
+   "0/1/0 Mesh aea33676",
+   "0/1/1 Mesh 8f64599b",
+   "0/1/2 Mesh ac516258",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/honey_jar": {
+  "hash": "842b6d2",
+  "nodes": [
+   "0 Group a43827d6",
+   "0/0 Group dc9504fb",
+   "0/0/0 Mesh 7cd219bd",
+   "0/0/1 Mesh 95d577f5",
+   "0/0/2 Mesh 7993af9"
+  ]
+ },
+ "model/honey_jar:merged": {
+  "hash": "f6e0e561",
+  "nodes": [
+   "0 Group a43827d6",
+   "0/0 Mesh 3c5fc72b",
+   "0/1 Mesh 3ac107c6",
+   "0/2 Mesh efb2bf59"
+  ]
+ },
+ "model/honey_jar:lod": {
+  "hash": "30028691",
+  "nodes": [
+   "0 LOD 3aba284a",
+   "0/0 Group 6e1c8292",
+   "0/0/0 Mesh 9775c494",
+   "0/0/1 Mesh ba392fe3",
+   "0/0/2 Mesh 4f7f1345",
+   "0/1 Group e76958e9",
+   "0/1/0 Mesh ba8e3815",
+   "0/1/1 Mesh 75e18adb",
+   "0/1/2 Mesh fe0e15b7",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/bread": {
+  "hash": "941095b0",
+  "nodes": [
+   "0 Group 885ea131",
+   "0/0 Group bb1412bf",
+   "0/0/0 Mesh 8c1bd25e",
+   "0/0/1 Mesh e7d9dc7b"
+  ]
+ },
+ "model/bread:merged": {
+  "hash": "9a91dfb6",
+  "nodes": [
+   "0 Group 885ea131",
+   "0/0 Mesh 62dcb3bf",
+   "0/1 Mesh 7dc42bb0"
+  ]
+ },
+ "model/bread:lod": {
+  "hash": "e4bb6c90",
+  "nodes": [
+   "0 LOD 7132853",
+   "0/0 Group 3d6ea7b5",
+   "0/0/0 Mesh cad75299",
+   "0/0/1 Mesh a660c22b",
+   "0/1 Group a7d9622e",
+   "0/1/0 Mesh 6fa4ed76",
+   "0/1/1 Mesh 6ad5554d",
+   "0/1/2 Mesh c199dc73",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/cheese": {
+  "hash": "52a25e05",
+  "nodes": [
+   "0 Group bcb29f06",
+   "0/0 Group 4aa3b34",
+   "0/0/0 Mesh bb68aea6",
+   "0/0/1 Mesh 83684944"
+  ]
+ },
+ "model/cheese:merged": {
+  "hash": "cd8bb847",
+  "nodes": [
+   "0 Group bcb29f06",
+   "0/0 Mesh 9654444c",
+   "0/1 Mesh f38ecd3b"
+  ]
+ },
+ "model/cheese:lod": {
+  "hash": "2ff9a5ee",
+  "nodes": [
+   "0 LOD 4219c52a",
+   "0/0 Group 1eb48c4",
+   "0/0/0 Mesh 69bf275b",
+   "0/0/1 Mesh cc41a7d4",
+   "0/1 Group c7a8f269",
+   "0/1/0 Mesh da394ce2",
+   "0/1/1 Mesh a2ab37b7",
+   "0/1/2 Mesh 4abc2b7d",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/rapadura": {
+  "hash": "988e8b59",
+  "nodes": [
+   "0 Group f3f9f473",
+   "0/0 Group 942c110c",
+   "0/0/0 Mesh a98d042b",
+   "0/0/1 Mesh 37345264"
+  ]
+ },
+ "model/rapadura:merged": {
+  "hash": "41c569f2",
+  "nodes": [
+   "0 Group f3f9f473",
+   "0/0 Mesh 8d25ec4",
+   "0/1 Mesh 6d729e0f"
+  ]
+ },
+ "model/rapadura:lod": {
+  "hash": "3baabcdb",
+  "nodes": [
+   "0 LOD 1e3973e5",
+   "0/0 Group 10831bb1",
+   "0/0/0 Mesh 789d9a0f",
+   "0/0/1 Mesh b55849cf",
+   "0/1 Group 76979e4c",
+   "0/1/0 Mesh 3a4f6d0b",
+   "0/1/1 Mesh 872dcce",
+   "0/1/2 Mesh decb3e7e",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/dog_food": {
+  "hash": "4e71d7de",
+  "nodes": [
+   "0 Group 88a52690",
+   "0/0 Group a50dd3f2",
+   "0/0/0 Mesh 7ea303ef",
+   "0/0/1 Mesh a275e07c"
+  ]
+ },
+ "model/dog_food:merged": {
+  "hash": "99fb09d",
+  "nodes": [
+   "0 Group 88a52690",
+   "0/0 Mesh 1cfe336f",
+   "0/1 Mesh e44c2192"
+  ]
+ },
+ "model/dog_food:lod": {
+  "hash": "f74cb027",
+  "nodes": [
+   "0 LOD 78328b5c",
+   "0/0 Group 7624fefe",
+   "0/0/0 Mesh eed66763",
+   "0/0/1 Mesh ebc15d3d",
+   "0/1 Group 48b856ff",
+   "0/1/0 Mesh 7bec6bba",
+   "0/1/1 Mesh a7ed0d52",
+   "0/1/2 Mesh c1bbc40a",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/salt": {
+  "hash": "7bb45b51",
+  "nodes": [
+   "0 Group 1865a40b",
+   "0/0 Group 9b1393e5",
+   "0/0/0 Mesh 7d85bbe5",
+   "0/0/1 Mesh 4855d203"
+  ]
+ },
+ "model/salt:merged": {
+  "hash": "31c91763",
+  "nodes": [
+   "0 Group 1865a40b",
+   "0/0 Mesh c0346ff5",
+   "0/1 Mesh d734e6a5"
+  ]
+ },
+ "model/salt:lod": {
+  "hash": "4c18931e",
+  "nodes": [
+   "0 LOD 56306aad",
+   "0/0 Group 64781ff1",
+   "0/0/0 Mesh 14907a73",
+   "0/0/1 Mesh 24f07577",
+   "0/1 Group f5a3b8d4",
+   "0/1/0 Mesh a5367a87",
+   "0/1/1 Mesh 98840483",
+   "0/1/2 Mesh 8238ff5a",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/snack_chips": {
+  "hash": "a774a141",
+  "nodes": [
+   "0 Group 4e9ee641",
+   "0/0 Group 6cd70dae",
+   "0/0/0 Mesh 9774bd6",
+   "0/0/1 Mesh 5348cddd"
+  ]
+ },
+ "model/snack_chips:merged": {
+  "hash": "df1593f0",
+  "nodes": [
+   "0 Group 4e9ee641",
+   "0/0 Mesh 4fb40f6a",
+   "0/1 Mesh eac01149"
+  ]
+ },
+ "model/snack_chips:lod": {
+  "hash": "364b53d7",
+  "nodes": [
+   "0 LOD 4f1401d3",
+   "0/0 Group a4fb1add",
+   "0/0/0 Mesh dd5b54b8",
+   "0/0/1 Mesh 36fa8549",
+   "0/1 Group a0318a8e",
+   "0/1/0 Mesh 185d9b01",
+   "0/1/1 Mesh 3ce82d0f",
+   "0/1/2 Mesh 61da66d4",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/canned_sausages": {
+  "hash": "d82d7c3b",
+  "nodes": [
+   "0 Group 1e4ebcdd",
+   "0/0 Group 59c68275",
+   "0/0/0 Mesh b7942669",
+   "0/0/1 Mesh f18d9bb7"
+  ]
+ },
+ "model/canned_sausages:merged": {
+  "hash": "6a1e9f0d",
+  "nodes": [
+   "0 Group 1e4ebcdd",
+   "0/0 Mesh 77a5cd54",
+   "0/1 Mesh 35e5736a"
+  ]
+ },
+ "model/canned_sausages:lod": {
+  "hash": "5fa837c6",
+  "nodes": [
+   "0 LOD 3516b057",
+   "0/0 Group 80c61d7d",
+   "0/0/0 Mesh 888368da",
+   "0/0/1 Mesh 6c2474e5",
+   "0/1 Group b8873c52",
+   "0/1/0 Mesh eb20a831",
+   "0/1/1 Mesh 5c078c11",
+   "0/1/2 Mesh 5b494121",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/canned_sardines": {
+  "hash": "e935c526",
+  "nodes": [
+   "0 Group d6a2fdc0",
+   "0/0 Group d1f62c8",
+   "0/0/0 Mesh cad8881b",
+   "0/0/1 Mesh 5fe69d58"
+  ]
+ },
+ "model/canned_sardines:merged": {
+  "hash": "14ca17a9",
+  "nodes": [
+   "0 Group d6a2fdc0",
+   "0/0 Mesh 438ae108",
+   "0/1 Mesh 4cae7dff"
+  ]
+ },
+ "model/canned_sardines:lod": {
+  "hash": "10de3569",
+  "nodes": [
+   "0 LOD bacf59e4",
+   "0/0 Group 2bbf4f2c",
+   "0/0/0 Mesh 328402b2",
+   "0/0/1 Mesh 63415254",
+   "0/1 Group 31cf6fc7",
+   "0/1/0 Mesh a0c526ed",
+   "0/1/1 Mesh 1afdf3c5",
+   "0/1/2 Mesh ef216042",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/cooking_oil": {
+  "hash": "70a4b676",
+  "nodes": [
+   "0 Group 10ef83ec",
+   "0/0 Group ebf5c5ea",
+   "0/0/0 Mesh c896b9ff",
+   "0/0/1 Mesh daf3db2",
+   "0/0/2 Mesh a9d6ca97"
+  ]
+ },
+ "model/cooking_oil:merged": {
+  "hash": "e7de11f6",
+  "nodes": [
+   "0 Group 10ef83ec",
+   "0/0 Mesh 6baa06a6",
+   "0/1 Mesh ca6ca257",
+   "0/2 Mesh e6675534"
+  ]
+ },
+ "model/cooking_oil:lod": {
+  "hash": "5723ac5d",
+  "nodes": [
+   "0 LOD cb370890",
+   "0/0 Group a919a14",
+   "0/0/0 Mesh 610cda94",
+   "0/0/1 Mesh 64a975d5",
+   "0/0/2 Mesh c73c18a2",
+   "0/1 Group 20e60c83",
+   "0/1/0 Mesh 22dcf5a4",
+   "0/1/1 Mesh 5aa6cc2e",
+   "0/1/2 Mesh 9ff8714c",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/beer_can": {
+  "hash": "512ab38a",
+  "nodes": [
+   "0 Group 6932d060",
+   "0/0 Group 73e7fc59",
+   "0/0/0 Mesh 5c425f86",
+   "0/0/1 Mesh d874529e",
+   "0/0/2 Mesh ef70f049"
+  ]
+ },
+ "model/beer_can:merged": {
+  "hash": "fcd493bf",
+  "nodes": [
+   "0 Group 6932d060",
+   "0/0 Mesh bcfffee3",
+   "0/1 Mesh 36eb99f5",
+   "0/2 Mesh a5b27118"
+  ]
+ },
+ "model/beer_can:lod": {
+  "hash": "77e2ab91",
+  "nodes": [
+   "0 LOD a1a0732c",
+   "0/0 Group c9fcc376",
+   "0/0/0 Mesh 2cf931fd",
+   "0/0/1 Mesh d3b57968",
+   "0/0/2 Mesh 94260393",
+   "0/1 Group d7d69f2f",
+   "0/1/0 Mesh 6b90d518",
+   "0/1/1 Mesh cef517e6",
+   "0/1/2 Mesh 6f003ed3",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/energy_drink": {
+  "hash": "c928e70",
+  "nodes": [
+   "0 Group bb07ce82",
+   "0/0 Group d88564a0",
+   "0/0/0 Mesh 2511341f",
+   "0/0/1 Mesh 63811bb6",
+   "0/0/2 Mesh 6062980d"
+  ]
+ },
+ "model/energy_drink:merged": {
+  "hash": "f85246ed",
+  "nodes": [
+   "0 Group bb07ce82",
+   "0/0 Mesh 2ecd3972",
+   "0/1 Mesh 62c7e447",
+   "0/2 Mesh 3e8b4e21"
+  ]
+ },
+ "model/energy_drink:lod": {
+  "hash": "47fc3390",
+  "nodes": [
+   "0 LOD a154262e",
+   "0/0 Group f866128c",
+   "0/0/0 Mesh 340cccd0",
+   "0/0/1 Mesh ed659834",
+   "0/0/2 Mesh 82420c88",
+   "0/1 Group eac02f8d",
+   "0/1/0 Mesh af1971f1",
+   "0/1/1 Mesh 55d7400a",
+   "0/1/2 Mesh adfb6eab",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/water_jug_5l": {
+  "hash": "df3d99eb",
+  "nodes": [
+   "0 Group 72a277f5",
+   "0/0 Group 74010419",
+   "0/0/0 Mesh d37d6fc5",
+   "0/0/1 Mesh 313c4e63",
+   "0/0/2 Mesh a031af65"
+  ]
+ },
+ "model/water_jug_5l:merged": {
+  "hash": "371ed8cf",
+  "nodes": [
+   "0 Group 72a277f5",
+   "0/0 Mesh cb02f56a",
+   "0/1 Mesh a20db39e",
+   "0/2 Mesh 4685b36f"
+  ]
+ },
+ "model/water_jug_5l:lod": {
+  "hash": "e1b65c6d",
+  "nodes": [
+   "0 LOD 2f2d098f",
+   "0/0 Group 13ba3607",
+   "0/0/0 Mesh ead900e",
+   "0/0/1 Mesh 2cb411a9",
+   "0/0/2 Mesh ee6e4b58",
+   "0/1 Group eca7a42a",
+   "0/1/0 Mesh 2eb2f9d8",
+   "0/1/1 Mesh ebcb6485",
+   "0/1/2 Mesh 1d98acca",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/sports_drink": {
+  "hash": "9ad8acf9",
+  "nodes": [
+   "0 Group 55d86785",
+   "0/0 Group 255a8b8d",
+   "0/0/0 Mesh 9948121a",
+   "0/0/1 Mesh 331f05d9",
+   "0/0/2 Mesh 2a3c1690"
+  ]
+ },
+ "model/sports_drink:merged": {
+  "hash": "cc90a895",
+  "nodes": [
+   "0 Group 55d86785",
+   "0/0 Mesh d83c1163",
+   "0/1 Mesh 876da9de",
+   "0/2 Mesh 6b8da948"
+  ]
+ },
+ "model/sports_drink:lod": {
+  "hash": "3254cdd3",
+  "nodes": [
+   "0 LOD 6ed149ef",
+   "0/0 Group fbc79093",
+   "0/0/0 Mesh 84db441e",
+   "0/0/1 Mesh bcb0c132",
+   "0/0/2 Mesh 5d4cf834",
+   "0/1 Group d462f10a",
+   "0/1/0 Mesh 6543bb36",
+   "0/1/1 Mesh c5ace630",
+   "0/1/2 Mesh b7e53d3c",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/milk_carton": {
+  "hash": "2d0f6898",
+  "nodes": [
+   "0 Group 97f17f00",
+   "0/0 Group 553c77ae",
+   "0/0/0 Mesh 25083e9a",
+   "0/0/1 Mesh 58f16a1b",
+   "0/0/2 Mesh 6dbd35bb"
+  ]
+ },
+ "model/milk_carton:merged": {
+  "hash": "f7f91be7",
+  "nodes": [
+   "0 Group 97f17f00",
+   "0/0 Mesh 64a46ca5",
+   "0/1 Mesh b999d699",
+   "0/2 Mesh 7c99f58"
+  ]
+ },
+ "model/milk_carton:lod": {
+  "hash": "6344e52d",
+  "nodes": [
+   "0 LOD 6100964",
+   "0/0 Group c3ce9358",
+   "0/0/0 Mesh dad436a2",
+   "0/0/1 Mesh d136181f",
+   "0/0/2 Mesh d96a0123",
+   "0/1 Group badb54a7",
+   "0/1/0 Mesh 5dc1f60a",
+   "0/1/1 Mesh 5e6996c8",
+   "0/1/2 Mesh 724b2e3b",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/soda_can": {
+  "hash": "31465afe",
+  "nodes": [
+   "0 Group bff73863",
+   "0/0 Group 5b97c942",
+   "0/0/0 Mesh 8bcc42d3",
+   "0/0/1 Mesh d028561b",
+   "0/0/2 Mesh ef70f049"
+  ]
+ },
+ "model/soda_can:merged": {
+  "hash": "785cb9a0",
+  "nodes": [
+   "0 Group bff73863",
+   "0/0 Mesh acabfc76",
+   "0/1 Mesh 9020554",
+   "0/2 Mesh a5b27118"
+  ]
+ },
+ "model/soda_can:lod": {
+  "hash": "40033036",
+  "nodes": [
+   "0 LOD 78da73c5",
+   "0/0 Group 3e832df5",
+   "0/0/0 Mesh a0c189fb",
+   "0/0/1 Mesh d0094cb6",
+   "0/0/2 Mesh 94260393",
+   "0/1 Group 539cab6c",
+   "0/1/0 Mesh 6b90d518",
+   "0/1/1 Mesh cef517e6",
+   "0/1/2 Mesh 6f003ed3",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/juice_box": {
+  "hash": "da145fca",
+  "nodes": [
+   "0 Group a78f35d",
+   "0/0 Group fdef6999",
+   "0/0/0 Mesh 326c7755",
+   "0/0/1 Mesh 8e598423",
+   "0/0/2 Mesh 2826fa48"
+  ]
+ },
+ "model/juice_box:merged": {
+  "hash": "23358e7d",
+  "nodes": [
+   "0 Group a78f35d",
+   "0/0 Mesh 18ad7b6b",
+   "0/1 Mesh 41e12640",
+   "0/2 Mesh 163c2d6e"
+  ]
+ },
+ "model/juice_box:lod": {
+  "hash": "e63c75e3",
+  "nodes": [
+   "0 LOD 30472ce7",
+   "0/0 Group 2a861a49",
+   "0/0/0 Mesh 48739a04",
+   "0/0/1 Mesh 34ada965",
+   "0/0/2 Mesh bcd5af61",
+   "0/1 Group e74040a2",
+   "0/1/0 Mesh c449f5f4",
+   "0/1/1 Mesh a1b29dc1",
+   "0/1/2 Mesh 88f38e6b",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/communion_wine": {
+  "hash": "fefd91fb",
+  "nodes": [
+   "0 Group 2ce13f1a",
+   "0/0 Group fc5743c0",
+   "0/0/0 Mesh 7b29510",
+   "0/0/1 Mesh 3c4a8d95",
+   "0/0/2 Mesh 7c5e5960"
+  ]
+ },
+ "model/communion_wine:merged": {
+  "hash": "d8bc4e9",
+  "nodes": [
+   "0 Group 2ce13f1a",
+   "0/0 Mesh 202a05d6",
+   "0/1 Mesh 4ff09b1f",
+   "0/2 Mesh 35338fb3"
+  ]
+ },
+ "model/communion_wine:lod": {
+  "hash": "27697c77",
+  "nodes": [
+   "0 LOD 1b651cb6",
+   "0/0 Group e2565228",
+   "0/0/0 Mesh 697eeb25",
+   "0/0/1 Mesh a9c7d12d",
+   "0/0/2 Mesh 27501f9e",
+   "0/1 Group a7be4dd5",
+   "0/1/0 Mesh af25f605",
+   "0/1/1 Mesh bb7d7624",
+   "0/1/2 Mesh 92007e76",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/coconut_water": {
+  "hash": "58d6eb2a",
+  "nodes": [
+   "0 Group 33b16df4",
+   "0/0 Group 67822565",
+   "0/0/0 Mesh 8e081681",
+   "0/0/1 Mesh 6b1a6559"
+  ]
+ },
+ "model/coconut_water:merged": {
+  "hash": "c8e704a1",
+  "nodes": [
+   "0 Group 33b16df4",
+   "0/0 Mesh 8112e654",
+   "0/1 Mesh 1092ee07"
+  ]
+ },
+ "model/coconut_water:lod": {
+  "hash": "3ba80cd1",
+  "nodes": [
+   "0 LOD c278d658",
+   "0/0 Group 4599b9e0",
+   "0/0/0 Mesh 4cd1db9",
+   "0/0/1 Mesh e08bdda2",
+   "0/1 Group 7e12878b",
+   "0/1/0 Mesh deb401ec",
+   "0/1/1 Mesh 16ec57e9",
+   "0/1/2 Mesh 97051ef6",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/dirty_water": {
+  "hash": "b33e7f32",
+  "nodes": [
+   "0 Group 34421a03",
+   "0/0 Group cbb75842",
+   "0/0/0 Mesh ebc49955",
+   "0/0/1 Mesh e46fbb83"
+  ]
+ },
+ "model/dirty_water:merged": {
+  "hash": "e8572eb2",
+  "nodes": [
+   "0 Group 34421a03",
+   "0/0 Mesh b48305c4",
+   "0/1 Mesh 78dacb61"
+  ]
+ },
+ "model/dirty_water:lod": {
+  "hash": "e3dc3a13",
+  "nodes": [
+   "0 LOD d342528d",
+   "0/0 Group 1cca59bb",
+   "0/0/0 Mesh c02d517f",
+   "0/0/1 Mesh f380246f",
+   "0/1 Group ce404234",
+   "0/1/0 Mesh a12b81ed",
+   "0/1/1 Mesh 9965a735",
+   "0/1/2 Mesh 4d65cdc7",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/painkillers": {
+  "hash": "5ca5d4fb",
+  "nodes": [
+   "0 Group 983737a7",
+   "0/0 Group f471842a",
+   "0/0/0 Mesh 1e8609b3",
+   "0/0/1 Mesh 689c0ee8"
+  ]
+ },
+ "model/painkillers:merged": {
+  "hash": "9655d1f5",
+  "nodes": [
+   "0 Group 983737a7",
+   "0/0 Mesh 31d1ddc7",
+   "0/1 Mesh 9688f369"
+  ]
+ },
+ "model/painkillers:lod": {
+  "hash": "4bf95b8f",
+  "nodes": [
+   "0 LOD 1d1d2f99",
+   "0/0 Group 3352f483",
+   "0/0/0 Mesh d7359527",
+   "0/0/1 Mesh 54b839f7",
+   "0/1 Group 2fee32e0",
+   "0/1/0 Mesh 54d803a8",
+   "0/1/1 Mesh bbcb436e",
+   "0/1/2 Mesh ab267d33",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/tramadol": {
+  "hash": "545c125d",
+  "nodes": [
+   "0 Group b004e781",
+   "0/0 Group b695f27e",
+   "0/0/0 Mesh 40fdc45b",
+   "0/0/1 Mesh aa8a9b94"
+  ]
+ },
+ "model/tramadol:merged": {
+  "hash": "40d11d60",
+  "nodes": [
+   "0 Group b004e781",
+   "0/0 Mesh 2b44c74d",
+   "0/1 Mesh 3916509c"
+  ]
+ },
+ "model/tramadol:lod": {
+  "hash": "3d04e583",
+  "nodes": [
+   "0 LOD f9b13da3",
+   "0/0 Group 87a2d37f",
+   "0/0/0 Mesh e151549e",
+   "0/0/1 Mesh e31d40b2",
+   "0/1 Group 1a0991be",
+   "0/1/0 Mesh 42797377",
+   "0/1/1 Mesh adc262f0",
+   "0/1/2 Mesh 4819bcc",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/ibuprofen": {
+  "hash": "312d8dd0",
+  "nodes": [
+   "0 Group 52008711",
+   "0/0 Group 24e2bb8a",
+   "0/0/0 Mesh 5f854fc9",
+   "0/0/1 Mesh 20987d5b"
+  ]
+ },
+ "model/ibuprofen:merged": {
+  "hash": "83f4864a",
+  "nodes": [
+   "0 Group 52008711",
+   "0/0 Mesh 3a2f2a6f",
+   "0/1 Mesh 217de7c8"
+  ]
+ },
+ "model/ibuprofen:lod": {
+  "hash": "a8125e7f",
+  "nodes": [
+   "0 LOD 2026b62b",
+   "0/0 Group 5c4d2059",
+   "0/0/0 Mesh 603d0334",
+   "0/0/1 Mesh edfaa83a",
+   "0/1 Group dafce566",
+   "0/1/0 Mesh 42797377",
+   "0/1/1 Mesh adc262f0",
+   "0/1/2 Mesh 4819bcc",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/antihistamine": {
+  "hash": "880b1b41",
+  "nodes": [
+   "0 Group 811ed7bb",
+   "0/0 Group c0a51287",
+   "0/0/0 Mesh 745a4164",
+   "0/0/1 Mesh a053cc7e"
+  ]
+ },
+ "model/antihistamine:merged": {
+  "hash": "67191d0e",
+  "nodes": [
+   "0 Group 811ed7bb",
+   "0/0 Mesh bea74666",
+   "0/1 Mesh 802fb341"
+  ]
+ },
+ "model/antihistamine:lod": {
+  "hash": "db01dcf0",
+  "nodes": [
+   "0 LOD 309ee965",
+   "0/0 Group 84a6355f",
+   "0/0/0 Mesh da1f4b3d",
+   "0/0/1 Mesh 72887aab",
+   "0/1 Group b73be28c",
+   "0/1/0 Mesh 2491db2b",
+   "0/1/1 Mesh bc3c6f00",
+   "0/1/2 Mesh 26009def",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/ceftriaxone": {
+  "hash": "a2bb0c97",
+  "nodes": [
+   "0 Group a26e1c6d",
+   "0/0 Group 249988e4",
+   "0/0/0 Mesh 11cfab17",
+   "0/0/1 Mesh d15373fe"
+  ]
+ },
+ "model/ceftriaxone:merged": {
+  "hash": "7ed1e045",
+  "nodes": [
+   "0 Group a26e1c6d",
+   "0/0 Mesh 96b5f591",
+   "0/1 Mesh 7fac4db1"
+  ]
+ },
+ "model/ceftriaxone:lod": {
+  "hash": "3779c7ba",
+  "nodes": [
+   "0 LOD be0f0977",
+   "0/0 Group c44f0cb1",
+   "0/0/0 Mesh 7647965",
+   "0/0/1 Mesh d57ceff1",
+   "0/1 Group dc065832",
+   "0/1/0 Mesh cd54933f",
+   "0/1/1 Mesh 2b28c5a4",
+   "0/1/2 Mesh 7eccd45",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/clonazepam": {
+  "hash": "fe2d39ce",
+  "nodes": [
+   "0 Group d55b6cb5",
+   "0/0 Group 90c59b7e",
+   "0/0/0 Mesh e3400db2",
+   "0/0/1 Mesh 2491aad4"
+  ]
+ },
+ "model/clonazepam:merged": {
+  "hash": "14f39f31",
+  "nodes": [
+   "0 Group d55b6cb5",
+   "0/0 Mesh 8e134b28",
+   "0/1 Mesh f7d11c46"
+  ]
+ },
+ "model/clonazepam:lod": {
+  "hash": "e3970b2f",
+  "nodes": [
+   "0 LOD a722c9af",
+   "0/0 Group 18869fff",
+   "0/0/0 Mesh 3768e1",
+   "0/0/1 Mesh 8e8efd40",
+   "0/1 Group a2d7b16a",
+   "0/1/0 Mesh 650ab73a",
+   "0/1/1 Mesh 6cf11087",
+   "0/1/2 Mesh 3e57337d",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/activated_charcoal": {
+  "hash": "9df786c9",
+  "nodes": [
+   "0 Group 924f7dd8",
+   "0/0 Group 4b0664d5",
+   "0/0/0 Mesh 8ff7a42d",
+   "0/0/1 Mesh 815ac6a"
+  ]
+ },
+ "model/activated_charcoal:merged": {
+  "hash": "fbef0c0d",
+  "nodes": [
+   "0 Group 924f7dd8",
+   "0/0 Mesh a4d9166f",
+   "0/1 Mesh 1f4b6be2"
+  ]
+ },
+ "model/activated_charcoal:lod": {
+  "hash": "f3dad4f8",
+  "nodes": [
+   "0 LOD b4c53014",
+   "0/0 Group aca57582",
+   "0/0/0 Mesh 958b374a",
+   "0/0/1 Mesh f6cc4c0",
+   "0/1 Group 7227a0b7",
+   "0/1/0 Mesh e10fc01d",
+   "0/1/1 Mesh e001fc20",
+   "0/1/2 Mesh 49c7a636",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/adhesive_bandages": {
+  "hash": "28dfe92b",
+  "nodes": [
+   "0 Group 11b8a5d4",
+   "0/0 Group e636ce19",
+   "0/0/0 Mesh 3abed475",
+   "0/0/1 Mesh bb0fc8c0"
+  ]
+ },
+ "model/adhesive_bandages:merged": {
+  "hash": "91bd8e1f",
+  "nodes": [
+   "0 Group 11b8a5d4",
+   "0/0 Mesh c75c870f",
+   "0/1 Mesh a5054794"
+  ]
+ },
+ "model/adhesive_bandages:lod": {
+  "hash": "9a9c823e",
+  "nodes": [
+   "0 LOD 4a512b08",
+   "0/0 Group 88decd4c",
+   "0/0/0 Mesh a84d361d",
+   "0/0/1 Mesh f8b00140",
+   "0/1 Group dbfdc83b",
+   "0/1/0 Mesh 166b8295",
+   "0/1/1 Mesh c7a6139d",
+   "0/1/2 Mesh cfc86276",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/medical_tape": {
+  "hash": "7ae7cb64",
+  "nodes": [
+   "0 Group f3880e27",
+   "0/0 Group fc9b5b41",
+   "0/0/0 Mesh 861474e",
+   "0/0/1 Mesh b9ac80e3"
+  ]
+ },
+ "model/medical_tape:merged": {
+  "hash": "c82a71e0",
+  "nodes": [
+   "0 Group f3880e27",
+   "0/0 Mesh 905a4339",
+   "0/1 Mesh 3b3ddd12"
+  ]
+ },
+ "model/medical_tape:lod": {
+  "hash": "5ea49f5e",
+  "nodes": [
+   "0 LOD e75b0a19",
+   "0/0 Group 6eb59409",
+   "0/0/0 Mesh 97558655",
+   "0/0/1 Mesh fbd44195",
+   "0/1 Group 6fb93f80",
+   "0/1/0 Mesh 32439f2",
+   "0/1/1 Mesh 4e1d9c98",
+   "0/1/2 Mesh 6a074dec",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/sterile_gauze": {
+  "hash": "a128b06d",
+  "nodes": [
+   "0 Group e5b9aae6",
+   "0/0 Group 570303ea",
+   "0/0/0 Mesh 2972d3ac",
+   "0/0/1 Mesh 9dd94e74"
+  ]
+ },
+ "model/sterile_gauze:merged": {
+  "hash": "37932d31",
+  "nodes": [
+   "0 Group e5b9aae6",
+   "0/0 Mesh 2235806a",
+   "0/1 Mesh e297a20b"
+  ]
+ },
+ "model/sterile_gauze:lod": {
+  "hash": "8353ac8a",
+  "nodes": [
+   "0 LOD c522e6aa",
+   "0/0 Group a67e31b6",
+   "0/0/0 Mesh 87ee1a33",
+   "0/0/1 Mesh 5928b473",
+   "0/1 Group 31003a9",
+   "0/1/0 Mesh ea7ecc98",
+   "0/1/1 Mesh 1fa9f4da",
+   "0/1/2 Mesh bce38211",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/povidone_iodine": {
+  "hash": "ebe8ac3",
+  "nodes": [
+   "0 Group 59ce6654",
+   "0/0 Group f5f2523",
+   "0/0/0 Mesh 81ada0dc",
+   "0/0/1 Mesh 115775da",
+   "0/0/2 Mesh b785a022"
+  ]
+ },
+ "model/povidone_iodine:merged": {
+  "hash": "c659025d",
+  "nodes": [
+   "0 Group 59ce6654",
+   "0/0 Mesh 243d4a",
+   "0/1 Mesh bebcfe9b",
+   "0/2 Mesh a18e58ff"
+  ]
+ },
+ "model/povidone_iodine:lod": {
+  "hash": "b6825938",
+  "nodes": [
+   "0 LOD dbee9918",
+   "0/0 Group 30384e30",
+   "0/0/0 Mesh f5b72d8c",
+   "0/0/1 Mesh 454b6835",
+   "0/0/2 Mesh 4dfeca77",
+   "0/1 Group d84e252b",
+   "0/1/0 Mesh 8d6ed498",
+   "0/1/1 Mesh d850446e",
+   "0/1/2 Mesh 89820dda",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/suture_kit": {
+  "hash": "8a335fc9",
+  "nodes": [
+   "0 Group 49d17c76",
+   "0/0 Group 918bef52",
+   "0/0/0 Mesh 35e4bc3e",
+   "0/0/1 Mesh 5fd04dbe"
+  ]
+ },
+ "model/suture_kit:merged": {
+  "hash": "6f489e5b",
+  "nodes": [
+   "0 Group 49d17c76",
+   "0/0 Mesh 6233b6da",
+   "0/1 Mesh 8ad07975"
+  ]
+ },
+ "model/suture_kit:lod": {
+  "hash": "449e519",
+  "nodes": [
+   "0 LOD e9357f12",
+   "0/0 Group 90715340",
+   "0/0/0 Mesh 32382f54",
+   "0/0/1 Mesh 4c728e32",
+   "0/1 Group fb7cf3b1",
+   "0/1/0 Mesh ad811578",
+   "0/1/1 Mesh b20d16bd",
+   "0/1/2 Mesh 889b865f",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/exam_gloves": {
+  "hash": "597afb22",
+  "nodes": [
+   "0 Group 3034eee1",
+   "0/0 Group c5226e3e",
+   "0/0/0 Mesh fcf33265",
+   "0/0/1 Mesh a6b4e711"
+  ]
+ },
+ "model/exam_gloves:merged": {
+  "hash": "190bbf90",
+  "nodes": [
+   "0 Group 3034eee1",
+   "0/0 Mesh 8919933d",
+   "0/1 Mesh 57520fa4"
+  ]
+ },
+ "model/exam_gloves:lod": {
+  "hash": "560b8192",
+  "nodes": [
+   "0 LOD e73293b3",
+   "0/0 Group d4509119",
+   "0/0/0 Mesh e3979a25",
+   "0/0/1 Mesh 1986f1ec",
+   "0/1 Group d8c31aae",
+   "0/1/0 Mesh 35935ae8",
+   "0/1/1 Mesh 6a45c366",
+   "0/1/2 Mesh a76cd841",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/n95_mask": {
+  "hash": "8aec3290",
+  "nodes": [
+   "0 Group f09710d6",
+   "0/0 Group 9dad196b",
+   "0/0/0 Mesh f1bfa37d",
+   "0/0/1 Mesh 2da53291"
+  ]
+ },
+ "model/n95_mask:merged": {
+  "hash": "a8e1d477",
+  "nodes": [
+   "0 Group f09710d6",
+   "0/0 Mesh 2334dd81",
+   "0/1 Mesh f66f0318"
+  ]
+ },
+ "model/n95_mask:lod": {
+  "hash": "1132dec0",
+  "nodes": [
+   "0 LOD 160b9062",
+   "0/0 Group c0184eec",
+   "0/0/0 Mesh 6ccabb08",
+   "0/0/1 Mesh ddfdce18",
+   "0/1 Group 17a5ae21",
+   "0/1/0 Mesh cd5ba685",
+   "0/1/1 Mesh b6e316ad",
+   "0/1/2 Mesh bccedaf1",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/multivitamin": {
+  "hash": "984a6bcb",
+  "nodes": [
+   "0 Group 6ae0779a",
+   "0/0 Group 394b4dda",
+   "0/0/0 Mesh 52a2ae42",
+   "0/0/1 Mesh bf294323",
+   "0/0/2 Mesh b7c4a3f0"
+  ]
+ },
+ "model/multivitamin:merged": {
+  "hash": "26bdd0b6",
+  "nodes": [
+   "0 Group 6ae0779a",
+   "0/0 Mesh 950b5dca",
+   "0/1 Mesh 741ea3a8",
+   "0/2 Mesh e19eb187"
+  ]
+ },
+ "model/multivitamin:lod": {
+  "hash": "d20979a",
+  "nodes": [
+   "0 LOD fc21447e",
+   "0/0 Group 167e5758",
+   "0/0/0 Mesh 4ecaaea6",
+   "0/0/1 Mesh 9995a0d",
+   "0/0/2 Mesh e8f4087b",
+   "0/1 Group 5c8c23dd",
+   "0/1/0 Mesh 9da2c94e",
+   "0/1/1 Mesh 4ac6a84b",
+   "0/1/2 Mesh 20173b7",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/maintenance_medication": {
+  "hash": "391df90d",
+  "nodes": [
+   "0 Group a2c57584",
+   "0/0 Group 10dac81e",
+   "0/0/0 Mesh c85d4a11",
+   "0/0/1 Mesh 4f8e22b9",
+   "0/0/2 Mesh 27dd98cb"
+  ]
+ },
+ "model/maintenance_medication:merged": {
+  "hash": "93715882",
+  "nodes": [
+   "0 Group a2c57584",
+   "0/0 Mesh 1c713c1",
+   "0/1 Mesh 35c64726",
+   "0/2 Mesh 84e794bc"
+  ]
+ },
+ "model/maintenance_medication:lod": {
+  "hash": "1d9b149c",
+  "nodes": [
+   "0 LOD 2c84fb38",
+   "0/0 Group 1f132486",
+   "0/0/0 Mesh f3f340a0",
+   "0/0/1 Mesh ecb87f4",
+   "0/0/2 Mesh c42c844a",
+   "0/1 Group f5f3792b",
+   "0/1/0 Mesh 88c6dfe3",
+   "0/1/1 Mesh 54684ce6",
+   "0/1/2 Mesh 6b48ea2d",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/rehydration_salts": {
+  "hash": "4e112bb",
+  "nodes": [
+   "0 Group 85f6b940",
+   "0/0 Group a0c3a36d",
+   "0/0/0 Mesh 8a405978",
+   "0/0/1 Mesh dbfbe801"
+  ]
+ },
+ "model/rehydration_salts:merged": {
+  "hash": "7971c35d",
+  "nodes": [
+   "0 Group 85f6b940",
+   "0/0 Mesh db2c4f7e",
+   "0/1 Mesh 4ff5a421"
+  ]
+ },
+ "model/rehydration_salts:lod": {
+  "hash": "93a83868",
+  "nodes": [
+   "0 LOD 116f06a4",
+   "0/0 Group d2fffa24",
+   "0/0/0 Mesh 89bf74b2",
+   "0/0/1 Mesh 83e2e041",
+   "0/1 Group 1e247507",
+   "0/1/0 Mesh 450bf8d0",
+   "0/1/1 Mesh 46fc4e24",
+   "0/1/2 Mesh d7d7c4c8",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/syringe": {
+  "hash": "e021606",
+  "nodes": [
+   "0 Group f289d11a",
+   "0/0 Group ca75e114",
+   "0/0/0 Mesh 9758fdd7",
+   "0/0/1 Mesh 770dd164"
+  ]
+ },
+ "model/syringe:merged": {
+  "hash": "24711a5b",
+  "nodes": [
+   "0 Group f289d11a",
+   "0/0 Mesh f13c265",
+   "0/1 Mesh fa8f3b4c"
+  ]
+ },
+ "model/syringe:lod": {
+  "hash": "f48052aa",
+  "nodes": [
+   "0 LOD 7912c1fe",
+   "0/0 Group b18c6bf2",
+   "0/0/0 Mesh 227acc4c",
+   "0/0/1 Mesh bb87f453",
+   "0/1 Group 80c631d",
+   "0/1/0 Mesh 6e20c26",
+   "0/1/1 Mesh ce0f3ffe",
+   "0/1/2 Mesh ae6874be",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/antivenom": {
+  "hash": "1f610a8a",
+  "nodes": [
+   "0 Group 71a52ca",
+   "0/0 Group 795c37e2",
+   "0/0/0 Mesh c3e33917",
+   "0/0/1 Mesh c38f25d0"
+  ]
+ },
+ "model/antivenom:merged": {
+  "hash": "4436af68",
+  "nodes": [
+   "0 Group 71a52ca",
+   "0/0 Mesh 8b2f342d",
+   "0/1 Mesh 6c6274d"
+  ]
+ },
+ "model/antivenom:lod": {
+  "hash": "4c56b533",
+  "nodes": [
+   "0 LOD f8e1824e",
+   "0/0 Group d722bd1e",
+   "0/0/0 Mesh edf31d87",
+   "0/0/1 Mesh ed4b4a61",
+   "0/1 Group daad4ecd",
+   "0/1/0 Mesh 2bd7ed9e",
+   "0/1/1 Mesh 32b117dc",
+   "0/1/2 Mesh fa46f73a",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/saline_iv_bag": {
+  "hash": "af34b2a",
+  "nodes": [
+   "0 Group d13ef24e",
+   "0/0 Group a9370317",
+   "0/0/0 Mesh 2392f343",
+   "0/0/1 Mesh 361ccaa9",
+   "0/0/2 Mesh 1ad93745"
+  ]
+ },
+ "model/saline_iv_bag:merged": {
+  "hash": "a2adb24a",
+  "nodes": [
+   "0 Group d13ef24e",
+   "0/0 Mesh 81c81ff0",
+   "0/1 Mesh a43fee24",
+   "0/2 Mesh 8474e3b7"
+  ]
+ },
+ "model/saline_iv_bag:lod": {
+  "hash": "7bfe6415",
+  "nodes": [
+   "0 LOD 97be319a",
+   "0/0 Group d7d6bb96",
+   "0/0/0 Mesh ab0ac8bf",
+   "0/0/1 Mesh 8e81f98f",
+   "0/0/2 Mesh f432386d",
+   "0/1 Group 5a4a5999",
+   "0/1/0 Mesh e47eea85",
+   "0/1/1 Mesh 9f0e434a",
+   "0/1/2 Mesh 9e5c9187",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/splint": {
+  "hash": "28a711",
+  "nodes": [
+   "0 Group 8cabc0dd",
+   "0/0 Group dabeaef5",
+   "0/0/0 Mesh ae75330e",
+   "0/0/1 Mesh eee9ea98"
+  ]
+ },
+ "model/splint:merged": {
+  "hash": "b7596c78",
+  "nodes": [
+   "0 Group 8cabc0dd",
+   "0/0 Mesh 1af1084",
+   "0/1 Mesh 6da4a13f"
+  ]
+ },
+ "model/splint:lod": {
+  "hash": "cc0f5902",
+  "nodes": [
+   "0 LOD af94a747",
+   "0/0 Group 961865bf",
+   "0/0/0 Mesh 54d7a01b",
+   "0/0/1 Mesh b309ce75",
+   "0/1 Group eb7e43a2",
+   "0/1/0 Mesh 8a00d4ce",
+   "0/1/1 Mesh 15fe95fa",
+   "0/1/2 Mesh f444a96a",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/thermometer": {
+  "hash": "edbffa70",
+  "nodes": [
+   "0 Group fa6ebd93",
+   "0/0 Group 41457d1a",
+   "0/0/0 Mesh d31c1007",
+   "0/0/1 Mesh b5edc3ed"
+  ]
+ },
+ "model/thermometer:merged": {
+  "hash": "3c7d6fcc",
+  "nodes": [
+   "0 Group fa6ebd93",
+   "0/0 Mesh b04c1574",
+   "0/1 Mesh 16c3bd"
+  ]
+ },
+ "model/thermometer:lod": {
+  "hash": "cb101acc",
+  "nodes": [
+   "0 LOD 56f7d3d",
+   "0/0 Group c8c9947",
+   "0/0/0 Mesh d68352fa",
+   "0/0/1 Mesh ffe5e7ae",
+   "0/1 Group 3f9517c4",
+   "0/1/0 Mesh d0a78e79",
+   "0/1/1 Mesh 8ac667c9",
+   "0/1/2 Mesh 2d815a1e",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/alcohol_70": {
+  "hash": "60036df4",
+  "nodes": [
+   "0 Group 5bf35727",
+   "0/0 Group ba1d0d4",
+   "0/0/0 Mesh 4362a803",
+   "0/0/1 Mesh 86aa0b53",
+   "0/0/2 Mesh 40db8d73"
+  ]
+ },
+ "model/alcohol_70:merged": {
+  "hash": "9e43a408",
+  "nodes": [
+   "0 Group 5bf35727",
+   "0/0 Mesh 8cf55a80",
+   "0/1 Mesh f525cfaf",
+   "0/2 Mesh 9f8400bf"
+  ]
+ },
+ "model/alcohol_70:lod": {
+  "hash": "4cd884b2",
+  "nodes": [
+   "0 LOD 41381081",
+   "0/0 Group ff106509",
+   "0/0/0 Mesh fea37a7f",
+   "0/0/1 Mesh bd6a144c",
+   "0/0/2 Mesh 54a68f5b",
+   "0/1 Group c2fcca8",
+   "0/1/0 Mesh e325e664",
+   "0/1/1 Mesh e9c6af76",
+   "0/1/2 Mesh ea331199",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/can_opener": {
+  "hash": "e4470074",
+  "nodes": [
+   "0 Group f462746f",
+   "0/0 Group ff7a749b",
+   "0/0/0 Mesh a45d3d5b",
+   "0/0/1 Mesh 378ed30a"
+  ]
+ },
+ "model/can_opener:merged": {
+  "hash": "43043d7",
+  "nodes": [
+   "0 Group f462746f",
+   "0/0 Mesh bead94ad",
+   "0/1 Mesh e27aae95"
+  ]
+ },
+ "model/can_opener:lod": {
+  "hash": "35296bd8",
+  "nodes": [
+   "0 LOD 256611f9",
+   "0/0 Group 9dcc50b9",
+   "0/0/0 Mesh 2ff45da9",
+   "0/0/1 Mesh 9e1082ef",
+   "0/1 Group b2dd53e0",
+   "0/1/0 Mesh c5036023",
+   "0/1/1 Mesh f6e54491",
+   "0/1/2 Mesh ddcd50c4",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/pliers": {
+  "hash": "b1e1ae38",
+  "nodes": [
+   "0 Group c4cad046",
+   "0/0 Group 7601b4bb",
+   "0/0/0 Mesh a51439a8",
+   "0/0/1 Mesh a6c9b3c4"
+  ]
+ },
+ "model/pliers:merged": {
+  "hash": "c1bf7d09",
+  "nodes": [
+   "0 Group c4cad046",
+   "0/0 Mesh 7962175",
+   "0/1 Mesh c722de06"
+  ]
+ },
+ "model/pliers:lod": {
+  "hash": "d666e821",
+  "nodes": [
+   "0 LOD 1e97f1d2",
+   "0/0 Group 98906f78",
+   "0/0/0 Mesh 63dd1edd",
+   "0/0/1 Mesh 9b2a1291",
+   "0/1 Group 89283971",
+   "0/1/0 Mesh 1e48f1ef",
+   "0/1/1 Mesh 6ed50c31",
+   "0/1/2 Mesh 15b00f60",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/bolt_cutters": {
+  "hash": "9cd20015",
+  "nodes": [
+   "0 Group a1ddac83",
+   "0/0 Group 3372b683",
+   "0/0/0 Mesh f71de04d",
+   "0/0/1 Mesh 68a4dfa9"
+  ]
+ },
+ "model/bolt_cutters:merged": {
+  "hash": "a6521bde",
+  "nodes": [
+   "0 Group a1ddac83",
+   "0/0 Mesh b95f2c5c",
+   "0/1 Mesh 27ae1771"
+  ]
+ },
+ "model/bolt_cutters:lod": {
+  "hash": "ebf69848",
+  "nodes": [
+   "0 LOD acd2d0fd",
+   "0/0 Group de2b910d",
+   "0/0/0 Mesh 6b3bc869",
+   "0/0/1 Mesh 79b9d706",
+   "0/1 Group 2c90393c",
+   "0/1/0 Mesh 90c4cbda",
+   "0/1/1 Mesh 30283cc2",
+   "0/1/2 Mesh f4f12975",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/bucket": {
+  "hash": "9f896846",
+  "nodes": [
+   "0 Group cc5c0f91",
+   "0/0 Group 27c849f4",
+   "0/0/0 Mesh 534aad7",
+   "0/0/1 Mesh c16dac45"
+  ]
+ },
+ "model/bucket:merged": {
+  "hash": "67039439",
+  "nodes": [
+   "0 Group cc5c0f91",
+   "0/0 Mesh de660312",
+   "0/1 Mesh 10e40358"
+  ]
+ },
+ "model/bucket:lod": {
+  "hash": "4abb8b98",
+  "nodes": [
+   "0 LOD d8817b13",
+   "0/0 Group e57af637",
+   "0/0/0 Mesh 12894b60",
+   "0/0/1 Mesh 336dceda",
+   "0/1 Group a9bf6aae",
+   "0/1/0 Mesh 3fa97d88",
+   "0/1/1 Mesh 8183f777",
+   "0/1/2 Mesh b2718d37",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/binoculars": {
+  "hash": "d62fd063",
+  "nodes": [
+   "0 Group 9d8331ad",
+   "0/0 Group 487ebfa2",
+   "0/0/0 Mesh c678b65",
+   "0/0/1 Mesh b23425c",
+   "0/0/2 Mesh 8d4d17a7"
+  ]
+ },
+ "model/binoculars:merged": {
+  "hash": "e8f386c",
+  "nodes": [
+   "0 Group 9d8331ad",
+   "0/0 Mesh 89801200",
+   "0/1 Mesh 4a76c735",
+   "0/2 Mesh 44e77251"
+  ]
+ },
+ "model/binoculars:lod": {
+  "hash": "1ea841d7",
+  "nodes": [
+   "0 LOD e553fc4f",
+   "0/0 Group 1766bf17",
+   "0/0/0 Mesh 30b35ace",
+   "0/0/1 Mesh eef4099f",
+   "0/0/2 Mesh 5fe59a43",
+   "0/1 Group 962a13ea",
+   "0/1/0 Mesh f3517a9b",
+   "0/1/1 Mesh c6fc27f8",
+   "0/1/2 Mesh a1a719b3",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/matches": {
+  "hash": "aab648dc",
+  "nodes": [
+   "0 Group 80f954da",
+   "0/0 Group 521db2ec",
+   "0/0/0 Mesh 172c3f3c",
+   "0/0/1 Mesh 2b2f755d"
+  ]
+ },
+ "model/matches:merged": {
+  "hash": "8bf3495e",
+  "nodes": [
+   "0 Group 80f954da",
+   "0/0 Mesh a6369318",
+   "0/1 Mesh 49511efe"
+  ]
+ },
+ "model/matches:lod": {
+  "hash": "6f66aa3e",
+  "nodes": [
+   "0 LOD 8b87b34e",
+   "0/0 Group db3301a",
+   "0/0/0 Mesh c47d9d33",
+   "0/0/1 Mesh 552db6fc",
+   "0/1 Group e8743acd",
+   "0/1/0 Mesh f8f55761",
+   "0/1/1 Mesh 6f888c7",
+   "0/1/2 Mesh 78d3e1b6",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/pocket_knife": {
+  "hash": "fa3331d8",
+  "nodes": [
+   "0 Group d7676dc7",
+   "0/0 Group 94a8ee25",
+   "0/0/0 Mesh 308eefc2",
+   "0/0/1 Mesh 246c05d5"
+  ]
+ },
+ "model/pocket_knife:merged": {
+  "hash": "6cc2e53e",
+  "nodes": [
+   "0 Group d7676dc7",
+   "0/0 Mesh c5246878",
+   "0/1 Mesh ded66883"
+  ]
+ },
+ "model/pocket_knife:lod": {
+  "hash": "d53f14f1",
+  "nodes": [
+   "0 LOD a7a2ac09",
+   "0/0 Group 4ca0469",
+   "0/0/0 Mesh 414240d4",
+   "0/0/1 Mesh 8d120331",
+   "0/1 Group 97af13b0",
+   "0/1/0 Mesh c6b7cc74",
+   "0/1/1 Mesh 19e9a9f9",
+   "0/1/2 Mesh 4b5d3d3b",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/screwdriver": {
+  "hash": "1b28f49a",
+  "nodes": [
+   "0 Group 79cb4e29",
+   "0/0 Group 5aec7284",
+   "0/0/0 Mesh 4a0bb1a7",
+   "0/0/1 Mesh 6a54f06b"
+  ]
+ },
+ "model/screwdriver:merged": {
+  "hash": "befd2596",
+  "nodes": [
+   "0 Group 79cb4e29",
+   "0/0 Mesh 44863808",
+   "0/1 Mesh 9d4c27e9"
+  ]
+ },
+ "model/screwdriver:lod": {
+  "hash": "31e11a0e",
+  "nodes": [
+   "0 LOD b73c0733",
+   "0/0 Group f3c80e5",
+   "0/0/0 Mesh a586bde7",
+   "0/0/1 Mesh fe1af5c2",
+   "0/1 Group 5984deee",
+   "0/1/0 Mesh 61f0d5c6",
+   "0/1/1 Mesh 25c1ea2e",
+   "0/1/2 Mesh bfd6cabb",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/adjustable_wrench": {
+  "hash": "3dc5cc1d",
+  "nodes": [
+   "0 Group 594fa5a",
+   "0/0 Group ead63af3",
+   "0/0/0 Mesh 821108fa",
+   "0/0/1 Mesh 24154c9d"
+  ]
+ },
+ "model/adjustable_wrench:merged": {
+  "hash": "9bb54978",
+  "nodes": [
+   "0 Group 594fa5a",
+   "0/0 Mesh fbf89265",
+   "0/1 Mesh 5047955f"
+  ]
+ },
+ "model/adjustable_wrench:lod": {
+  "hash": "6df462db",
+  "nodes": [
+   "0 LOD 7953478e",
+   "0/0 Group 73e0daaa",
+   "0/0/0 Mesh 8ee33b93",
+   "0/0/1 Mesh cb543a92",
+   "0/1 Group 781a8e0d",
+   "0/1/0 Mesh d3e33bac",
+   "0/1/1 Mesh b4c4ec59",
+   "0/1/2 Mesh b1022a88",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/hoe": {
+  "hash": "3fbcb59f",
+  "nodes": [
+   "0 Group 503fd2b7",
+   "0/0 Group 99271363",
+   "0/0/0 Mesh 7e9326fc",
+   "0/0/1 Mesh 8e1831a6"
+  ]
+ },
+ "model/hoe:merged": {
+  "hash": "94d20725",
+  "nodes": [
+   "0 Group 503fd2b7",
+   "0/0 Mesh e46ffb2d",
+   "0/1 Mesh e9a62067"
+  ]
+ },
+ "model/hoe:lod": {
+  "hash": "91cc003e",
+  "nodes": [
+   "0 LOD e8ad1009",
+   "0/0 Group 707ebed7",
+   "0/0/0 Mesh ee206b42",
+   "0/0/1 Mesh d935cc39",
+   "0/1 Group 15c6d430",
+   "0/1/0 Mesh a2fbbc0e",
+   "0/1/1 Mesh 107f4c7d",
+   "0/1/2 Mesh 9b6213fe",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/fire_extinguisher": {
+  "hash": "7f8d0ca3",
+  "nodes": [
+   "0 Group e75f29",
+   "0/0 Group bb0599e3",
+   "0/0/0 Mesh 2917f6da",
+   "0/0/1 Mesh c0248044"
+  ]
+ },
+ "model/fire_extinguisher:merged": {
+  "hash": "cef88fc7",
+  "nodes": [
+   "0 Group e75f29",
+   "0/0 Mesh 8fff24fc",
+   "0/1 Mesh 8070a630"
+  ]
+ },
+ "model/fire_extinguisher:lod": {
+  "hash": "f3afc4ca",
+  "nodes": [
+   "0 LOD 406f99e3",
+   "0/0 Group a9a04201",
+   "0/0/0 Mesh f0ec0185",
+   "0/0/1 Mesh d3f6b0d5",
+   "0/1 Group b6ca36be",
+   "0/1/0 Mesh 486851ab",
+   "0/1/1 Mesh cb1f4688",
+   "0/1/2 Mesh d344fb05",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/duct_tape": {
+  "hash": "d111dd4b",
+  "nodes": [
+   "0 Group 457ae5b6",
+   "0/0 Group 357fec6e",
+   "0/0/0 Mesh 74eccf1a",
+   "0/0/1 Mesh 67391014"
+  ]
+ },
+ "model/duct_tape:merged": {
+  "hash": "c8f98b40",
+  "nodes": [
+   "0 Group 457ae5b6",
+   "0/0 Mesh 7935094e",
+   "0/1 Mesh 30e75b76"
+  ]
+ },
+ "model/duct_tape:lod": {
+  "hash": "3cad1988",
+  "nodes": [
+   "0 LOD b141795a",
+   "0/0 Group 99c26522",
+   "0/0/0 Mesh 56e7f8ee",
+   "0/0/1 Mesh ea0843a7",
+   "0/1 Group a83ec939",
+   "0/1/0 Mesh 4aa21b40",
+   "0/1/1 Mesh a0d42289",
+   "0/1/2 Mesh 7845c267",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/camp_stove": {
+  "hash": "a649fdf6",
+  "nodes": [
+   "0 Group c9f6e738",
+   "0/0 Group 8ea90ef0",
+   "0/0/0 Mesh 44317118",
+   "0/0/1 Mesh fb88a4f5"
+  ]
+ },
+ "model/camp_stove:merged": {
+  "hash": "ff07e3d8",
+  "nodes": [
+   "0 Group c9f6e738",
+   "0/0 Mesh f7b4d283",
+   "0/1 Mesh 96fa8d25"
+  ]
+ },
+ "model/camp_stove:lod": {
+  "hash": "b57db390",
+  "nodes": [
+   "0 LOD 6df04534",
+   "0/0 Group 7cf934e2",
+   "0/0/0 Mesh a15c7283",
+   "0/0/1 Mesh a75ebe2f",
+   "0/1 Group 8b53457",
+   "0/1/0 Mesh aaeef4e7",
+   "0/1/1 Mesh 2c16e027",
+   "0/1/2 Mesh 9d46cde5",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/lighter": {
+  "hash": "d88b5a2",
+  "nodes": [
+   "0 Group 9219cc08",
+   "0/0 Group 63e83846",
+   "0/0/0 Mesh e1b76baf",
+   "0/0/1 Mesh c11dcbd2"
+  ]
+ },
+ "model/lighter:merged": {
+  "hash": "7d5b8cba",
+  "nodes": [
+   "0 Group 9219cc08",
+   "0/0 Mesh 80dc8335",
+   "0/1 Mesh df61fa6b"
+  ]
+ },
+ "model/lighter:lod": {
+  "hash": "34ad58d5",
+  "nodes": [
+   "0 LOD a0fb849c",
+   "0/0 Group 43fd0180",
+   "0/0/0 Mesh d7aa7a8a",
+   "0/0/1 Mesh 39bec90",
+   "0/1 Group 662c987f",
+   "0/1/0 Mesh 65d1647d",
+   "0/1/1 Mesh c7ca4f4f",
+   "0/1/2 Mesh 81326ef2",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/lockpick_kit": {
+  "hash": "18129b94",
+  "nodes": [
+   "0 Group fcee7676",
+   "0/0 Group 8837a3d9",
+   "0/0/0 Mesh 6d224990",
+   "0/0/1 Mesh ae6eab88"
+  ]
+ },
+ "model/lockpick_kit:merged": {
+  "hash": "b930fd1b",
+  "nodes": [
+   "0 Group fcee7676",
+   "0/0 Mesh 2b4a2230",
+   "0/1 Mesh ad8da9f7"
+  ]
+ },
+ "model/lockpick_kit:lod": {
+  "hash": "3faf252c",
+  "nodes": [
+   "0 LOD d81bd682",
+   "0/0 Group 88318664",
+   "0/0/0 Mesh 634ae9f7",
+   "0/0/1 Mesh df1cd060",
+   "0/1 Group 824580a1",
+   "0/1/0 Mesh e1f5f266",
+   "0/1/1 Mesh d5066cfd",
+   "0/1/2 Mesh f45cd965",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/sewing_kit": {
+  "hash": "313ab0bf",
+  "nodes": [
+   "0 Group 49b355b3",
+   "0/0 Group 902b85d7",
+   "0/0/0 Mesh 12da1182",
+   "0/0/1 Mesh f25d5a"
+  ]
+ },
+ "model/sewing_kit:merged": {
+  "hash": "99d12da7",
+  "nodes": [
+   "0 Group 49b355b3",
+   "0/0 Mesh 303eb5dd",
+   "0/1 Mesh 487b3989"
+  ]
+ },
+ "model/sewing_kit:lod": {
+  "hash": "aab0aef8",
+  "nodes": [
+   "0 LOD bee97f05",
+   "0/0 Group 458551d1",
+   "0/0/0 Mesh abdaef45",
+   "0/0/1 Mesh b4cc4956",
+   "0/1 Group 5dfed8ec",
+   "0/1/0 Mesh 76c69213",
+   "0/1/1 Mesh 2c458625",
+   "0/1/2 Mesh 15a87121",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/car_jack": {
+  "hash": "f2d02c0f",
+  "nodes": [
+   "0 Group 107a87b3",
+   "0/0 Group fd2cdaf6",
+   "0/0/0 Mesh 62a8f759",
+   "0/0/1 Mesh 97504dee"
+  ]
+ },
+ "model/car_jack:merged": {
+  "hash": "f461574d",
+  "nodes": [
+   "0 Group 107a87b3",
+   "0/0 Mesh b89ed41",
+   "0/1 Mesh f5afd6c7"
+  ]
+ },
+ "model/car_jack:lod": {
+  "hash": "3834afe3",
+  "nodes": [
+   "0 LOD 58eb8c1d",
+   "0/0 Group 2ed06d21",
+   "0/0/0 Mesh 27d35821",
+   "0/0/1 Mesh 26b07092",
+   "0/1 Group d4248a44",
+   "0/1/0 Mesh 31848bd7",
+   "0/1/1 Mesh 499e73fd",
+   "0/1/2 Mesh ab21faae",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/mechanic_toolbox": {
+  "hash": "79ac02e7",
+  "nodes": [
+   "0 Group f61e9655",
+   "0/0 Group a865cfce",
+   "0/0/0 Mesh 3bf6380c",
+   "0/0/1 Mesh 5843a91f"
+  ]
+ },
+ "model/mechanic_toolbox:merged": {
+  "hash": "a03bba78",
+  "nodes": [
+   "0 Group f61e9655",
+   "0/0 Mesh 9eb04eff",
+   "0/1 Mesh fc66b8a2"
+  ]
+ },
+ "model/mechanic_toolbox:lod": {
+  "hash": "dd766037",
+  "nodes": [
+   "0 LOD 71755c2f",
+   "0/0 Group 393dc2e7",
+   "0/0/0 Mesh 4a268fff",
+   "0/0/1 Mesh 1266dc1b",
+   "0/1 Group 746b0b4a",
+   "0/1/0 Mesh e4890c77",
+   "0/1/1 Mesh 7e2d2a6d",
+   "0/1/2 Mesh 369a0bb5",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/gas_torch": {
+  "hash": "cff2a37d",
+  "nodes": [
+   "0 Group c0889033",
+   "0/0 Group eedc9557",
+   "0/0/0 Mesh 40b67819",
+   "0/0/1 Mesh 40f78d25"
+  ]
+ },
+ "model/gas_torch:merged": {
+  "hash": "c6d58feb",
+  "nodes": [
+   "0 Group c0889033",
+   "0/0 Mesh 918eee0e",
+   "0/1 Mesh ab6e1514"
+  ]
+ },
+ "model/gas_torch:lod": {
+  "hash": "12a44e1",
+  "nodes": [
+   "0 LOD 43a1a4ad",
+   "0/0 Group dec450b3",
+   "0/0/0 Mesh 2343ea9e",
+   "0/0/1 Mesh 3567a295",
+   "0/1 Group ae2f6374",
+   "0/1/0 Mesh 8d07fd21",
+   "0/1/1 Mesh e7b9b060",
+   "0/1/2 Mesh 8e58c573",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/inverter_welder": {
+  "hash": "ecbd22c2",
+  "nodes": [
+   "0 Group 11c5013c",
+   "0/0 Group 4577e84d",
+   "0/0/0 Mesh 468b136f",
+   "0/0/1 Mesh dfaede2d"
+  ]
+ },
+ "model/inverter_welder:merged": {
+  "hash": "3cbeccd1",
+  "nodes": [
+   "0 Group 11c5013c",
+   "0/0 Mesh 854c141c",
+   "0/1 Mesh d469c057"
+  ]
+ },
+ "model/inverter_welder:lod": {
+  "hash": "9d92922e",
+  "nodes": [
+   "0 LOD 4bb39f80",
+   "0/0 Group a5b84b0",
+   "0/0/0 Mesh 8083284e",
+   "0/0/1 Mesh 8c564c06",
+   "0/1 Group 4675da73",
+   "0/1/0 Mesh 33712a29",
+   "0/1/1 Mesh 5ca5da62",
+   "0/1/2 Mesh 5f2a8ebc",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/pot": {
+  "hash": "6be9c177",
+  "nodes": [
+   "0 Group ff11ad64",
+   "0/0 Group 8d1d5842",
+   "0/0/0 Mesh bc9b043d",
+   "0/0/1 Mesh 964442c7",
+   "0/0/2 Mesh d401bf25"
+  ]
+ },
+ "model/pot:merged": {
+  "hash": "4240c532",
+  "nodes": [
+   "0 Group ff11ad64",
+   "0/0 Mesh bbef4432",
+   "0/1 Mesh 1008b406",
+   "0/2 Mesh 8de5eac3"
+  ]
+ },
+ "model/pot:lod": {
+  "hash": "644694cd",
+  "nodes": [
+   "0 LOD 79774580",
+   "0/0 Group 26f637f8",
+   "0/0/0 Mesh f63d3d9a",
+   "0/0/1 Mesh 1017f20d",
+   "0/0/2 Mesh 15fea5b2",
+   "0/1 Group 62186693",
+   "0/1/0 Mesh d1aa9ec5",
+   "0/1/1 Mesh fb358c03",
+   "0/1/2 Mesh d6ec9426",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/cordless_drill": {
+  "hash": "6d642fc",
+  "nodes": [
+   "0 Group b14127b4",
+   "0/0 Group 6e8b1193",
+   "0/0/0 Mesh df8102be",
+   "0/0/1 Mesh 787024ae"
+  ]
+ },
+ "model/cordless_drill:merged": {
+  "hash": "73b358a6",
+  "nodes": [
+   "0 Group b14127b4",
+   "0/0 Mesh 3fdf20ed",
+   "0/1 Mesh cae6bf3b"
+  ]
+ },
+ "model/cordless_drill:lod": {
+  "hash": "a521194f",
+  "nodes": [
+   "0 LOD 45a69d68",
+   "0/0 Group b6f59a46",
+   "0/0/0 Mesh 118d545d",
+   "0/0/1 Mesh a98e398c",
+   "0/1 Group 2ac0841b",
+   "0/1/0 Mesh 2c3b0f1c",
+   "0/1/1 Mesh cf6ab82f",
+   "0/1/2 Mesh d898e336",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/flint_striker": {
+  "hash": "af3bad1e",
+  "nodes": [
+   "0 Group 9aabdd23",
+   "0/0 Group 305f7875",
+   "0/0/0 Mesh 5ca12a71",
+   "0/0/1 Mesh 59258538"
+  ]
+ },
+ "model/flint_striker:merged": {
+  "hash": "c373d674",
+  "nodes": [
+   "0 Group 9aabdd23",
+   "0/0 Mesh a5b3aa71",
+   "0/1 Mesh f8a16602"
+  ]
+ },
+ "model/flint_striker:lod": {
+  "hash": "e456751a",
+  "nodes": [
+   "0 LOD 54f89165",
+   "0/0 Group 6fc1107f",
+   "0/0/0 Mesh 8d912ecc",
+   "0/0/1 Mesh 8dd89b78",
+   "0/1 Group a7d1ff6c",
+   "0/1/0 Mesh d418fed9",
+   "0/1/1 Mesh 3e60b957",
+   "0/1/2 Mesh 5a806ec2",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/sharpening_stone": {
+  "hash": "9d130b2a",
+  "nodes": [
+   "0 Group 43118f1c",
+   "0/0 Group a23e1410",
+   "0/0/0 Mesh 445f8c86",
+   "0/0/1 Mesh fdd0e93"
+  ]
+ },
+ "model/sharpening_stone:merged": {
+  "hash": "cdaf243b",
+  "nodes": [
+   "0 Group 43118f1c",
+   "0/0 Mesh 24d1040e",
+   "0/1 Mesh 3f550fb3"
+  ]
+ },
+ "model/sharpening_stone:lod": {
+  "hash": "f4f0e004",
+  "nodes": [
+   "0 LOD 73fedd38",
+   "0/0 Group af948dfe",
+   "0/0/0 Mesh 9e787c85",
+   "0/0/1 Mesh fe2d36af",
+   "0/1 Group 62f2434b",
+   "0/1/0 Mesh e018337e",
+   "0/1/1 Mesh 2e78e680",
+   "0/1/2 Mesh d5402d4f",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/shovel": {
+  "hash": "fccd9796",
+  "nodes": [
+   "0 Group 4e24c0cc",
+   "0/0 Group 900add34",
+   "0/0/0 Mesh 4a63f44e",
+   "0/0/1 Mesh db0203b1"
+  ]
+ },
+ "model/shovel:merged": {
+  "hash": "55fcca01",
+  "nodes": [
+   "0 Group 4e24c0cc",
+   "0/0 Mesh 23e76d7c",
+   "0/1 Mesh 32dcb96f"
+  ]
+ },
+ "model/shovel:lod": {
+  "hash": "2cf67a7d",
+  "nodes": [
+   "0 LOD e5f77d18",
+   "0/0 Group b3d8faa2",
+   "0/0/0 Mesh c195ae93",
+   "0/0/1 Mesh e1aab2f9",
+   "0/1 Group c70f5b3",
+   "0/1/0 Mesh 47e48d37",
+   "0/1/1 Mesh 19568b97",
+   "0/1/2 Mesh a62c34da",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/hacksaw": {
+  "hash": "9ee74fef",
+  "nodes": [
+   "0 Group 48e5fe41",
+   "0/0 Group c06a8ef7",
+   "0/0/0 Mesh 7623edce",
+   "0/0/1 Mesh 7a952f38"
+  ]
+ },
+ "model/hacksaw:merged": {
+  "hash": "ac296c2",
+  "nodes": [
+   "0 Group 48e5fe41",
+   "0/0 Mesh 9e4a5af5",
+   "0/1 Mesh 605b7176"
+  ]
+ },
+ "model/hacksaw:lod": {
+  "hash": "87e101b6",
+  "nodes": [
+   "0 LOD 13263cfb",
+   "0/0 Group a9ce43e5",
+   "0/0/0 Mesh 2aed2404",
+   "0/0/1 Mesh dc6f5679",
+   "0/1 Group cac5b816",
+   "0/1/0 Mesh 71c396df",
+   "0/1/1 Mesh 1526d4ea",
+   "0/1/2 Mesh caf97c54",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/handsaw": {
+  "hash": "625586af",
+  "nodes": [
+   "0 Group 15b72435",
+   "0/0 Group 49bbe669",
+   "0/0/0 Mesh c8017f6c",
+   "0/0/1 Mesh 8922c54"
+  ]
+ },
+ "model/handsaw:merged": {
+  "hash": "67b67dbe",
+  "nodes": [
+   "0 Group 15b72435",
+   "0/0 Mesh d7b71364",
+   "0/1 Mesh 2652e3e5"
+  ]
+ },
+ "model/handsaw:lod": {
+  "hash": "7233b98e",
+  "nodes": [
+   "0 LOD e8ca4527",
+   "0/0 Group 9658c38d",
+   "0/0/0 Mesh 51fe53ff",
+   "0/0/1 Mesh 8007a282",
+   "0/1 Group dbbcdf02",
+   "0/1/0 Mesh 65999104",
+   "0/1/1 Mesh 2b56c6ca",
+   "0/1/2 Mesh 89e5601d",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/scissors": {
+  "hash": "fb1a0503",
+  "nodes": [
+   "0 Group b40d9cc8",
+   "0/0 Group 9bd6c170",
+   "0/0/0 Mesh 9b13b802",
+   "0/0/1 Mesh fb9663fc"
+  ]
+ },
+ "model/scissors:merged": {
+  "hash": "16cdf101",
+  "nodes": [
+   "0 Group b40d9cc8",
+   "0/0 Mesh fb8fd64f",
+   "0/1 Mesh 7777fede"
+  ]
+ },
+ "model/scissors:lod": {
+  "hash": "d6e6d986",
+  "nodes": [
+   "0 LOD 3ca685cc",
+   "0/0 Group df8320d2",
+   "0/0/0 Mesh 97bda160",
+   "0/0/1 Mesh 5e3a02d8",
+   "0/1 Group c533c6af",
+   "0/1/0 Mesh a6d2f995",
+   "0/1/1 Mesh 53bd5799",
+   "0/1/2 Mesh f515d23d",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/recurve_bow": {
+  "hash": "ed1c93eb",
+  "nodes": [
+   "0 Group f096e198",
+   "0/0 Group 38d45bec",
+   "0/0/0 Mesh 4111d152",
+   "0/0/1 Mesh 83d8a9e4"
+  ]
+ },
+ "model/recurve_bow:merged": {
+  "hash": "4197d2ce",
+  "nodes": [
+   "0 Group f096e198",
+   "0/0 Mesh 4e02f9d",
+   "0/1 Mesh 4231aaf3"
+  ]
+ },
+ "model/recurve_bow:lod": {
+  "hash": "435b3cb2",
+  "nodes": [
+   "0 LOD f0d00d34",
+   "0/0 Group 15a4a5e4",
+   "0/0/0 Mesh 918135d9",
+   "0/0/1 Mesh 9a340ec1",
+   "0/1 Group b0876d57",
+   "0/1/0 Mesh 34998f78",
+   "0/1/1 Mesh 835934a9",
+   "0/1/2 Mesh e29b849a",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/crossbow": {
+  "hash": "92f667f9",
+  "nodes": [
+   "0 Group ccba7663",
+   "0/0 Group 7816c288",
+   "0/0/0 Mesh 8d2c0758",
+   "0/0/1 Mesh 37e64907"
+  ]
+ },
+ "model/crossbow:merged": {
+  "hash": "7148dfca",
+  "nodes": [
+   "0 Group ccba7663",
+   "0/0 Mesh 16486bfb",
+   "0/1 Mesh d104064e"
+  ]
+ },
+ "model/crossbow:lod": {
+  "hash": "89793d27",
+  "nodes": [
+   "0 LOD 13322845",
+   "0/0 Group ea152451",
+   "0/0/0 Mesh 10cac519",
+   "0/0/1 Mesh 48e5784b",
+   "0/1 Group 46a4aba4",
+   "0/1/0 Mesh d5791fbe",
+   "0/1/1 Mesh 138e6c37",
+   "0/1/2 Mesh 4692371e",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/iron_pipe": {
+  "hash": "123945de",
+  "nodes": [
+   "0 Group 6c07cdf4",
+   "0/0 Group 5e74a619",
+   "0/0/0 Mesh f0ba645",
+   "0/0/1 Mesh f855795"
+  ]
+ },
+ "model/iron_pipe:merged": {
+  "hash": "7547a724",
+  "nodes": [
+   "0 Group 6c07cdf4",
+   "0/0 Mesh 89874827",
+   "0/1 Mesh e860db3b"
+  ]
+ },
+ "model/iron_pipe:lod": {
+  "hash": "3634574a",
+  "nodes": [
+   "0 LOD e7eb53b8",
+   "0/0 Group 96bbd1fc",
+   "0/0/0 Mesh cd687269",
+   "0/0/1 Mesh 558444d8",
+   "0/1 Group 22792033",
+   "0/1/0 Mesh 9df8110b",
+   "0/1/1 Mesh ff6a9415",
+   "0/1/2 Mesh 1ce71f64",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/meat_cleaver": {
+  "hash": "d00a35fc",
+  "nodes": [
+   "0 Group a14c172d",
+   "0/0 Group 31bcd249",
+   "0/0/0 Mesh 72568291",
+   "0/0/1 Mesh 87e66924"
+  ]
+ },
+ "model/meat_cleaver:merged": {
+  "hash": "611670d7",
+  "nodes": [
+   "0 Group a14c172d",
+   "0/0 Mesh 7c6f046a",
+   "0/1 Mesh 6c101d1e"
+  ]
+ },
+ "model/meat_cleaver:lod": {
+  "hash": "a545203d",
+  "nodes": [
+   "0 LOD 657dcd3f",
+   "0/0 Group ef219b83",
+   "0/0/0 Mesh d42648f4",
+   "0/0/1 Mesh 765f42eb",
+   "0/1 Group 4d2a68ba",
+   "0/1/0 Mesh 32b0aa5b",
+   "0/1/1 Mesh 7489c303",
+   "0/1/2 Mesh 6634f51a",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/slingshot": {
+  "hash": "eb200d04",
+  "nodes": [
+   "0 Group 995265a",
+   "0/0 Group 1f71bd67",
+   "0/0/0 Mesh 8c6ff693",
+   "0/0/1 Mesh 370dda85"
+  ]
+ },
+ "model/slingshot:merged": {
+  "hash": "bc2385d5",
+  "nodes": [
+   "0 Group 995265a",
+   "0/0 Mesh 16cc4bc8",
+   "0/1 Mesh 115de15"
+  ]
+ },
+ "model/slingshot:lod": {
+  "hash": "6d4d8bce",
+  "nodes": [
+   "0 LOD d025a5ae",
+   "0/0 Group 9b32f6ea",
+   "0/0/0 Mesh b6af08d2",
+   "0/0/1 Mesh 66912d51",
+   "0/1 Group 176d430d",
+   "0/1/0 Mesh baadd5e8",
+   "0/1/1 Mesh 6219de1b",
+   "0/1/2 Mesh 45a56c49",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/knife": {
+  "hash": "8d992b9f",
+  "nodes": [
+   "0 Group f8b77e42",
+   "0/0 Group 33fc454e",
+   "0/0/0 Mesh 2271de67",
+   "0/0/1 Mesh 31b4b5f"
+  ]
+ },
+ "model/knife:merged": {
+  "hash": "d2a6c798",
+  "nodes": [
+   "0 Group f8b77e42",
+   "0/0 Mesh cd6a6195",
+   "0/1 Mesh 864f4843"
+  ]
+ },
+ "model/knife:lod": {
+  "hash": "35a1b7f3",
+  "nodes": [
+   "0 LOD 979dcc66",
+   "0/0 Group d25eba6",
+   "0/0/0 Mesh aa9cfdad",
+   "0/0/1 Mesh f330ef6e",
+   "0/1 Group 9dff4d85",
+   "0/1/0 Mesh 242cb968",
+   "0/1/1 Mesh 39933df6",
+   "0/1/2 Mesh 37f7e03",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/tactical_knife": {
+  "hash": "b630172f",
+  "nodes": [
+   "0 Group 65ca9a88",
+   "0/0 Group 91c5d4fa",
+   "0/0/0 Mesh 92b8defc",
+   "0/0/1 Mesh 2e91b770"
+  ]
+ },
+ "model/tactical_knife:merged": {
+  "hash": "f49c12ca",
+  "nodes": [
+   "0 Group 65ca9a88",
+   "0/0 Mesh e875c2f4",
+   "0/1 Mesh 43c505e0"
+  ]
+ },
+ "model/tactical_knife:lod": {
+  "hash": "217b9a8d",
+  "nodes": [
+   "0 LOD 956a290c",
+   "0/0 Group aa79a2f2",
+   "0/0/0 Mesh 9c1124cb",
+   "0/0/1 Mesh 72e0f083",
+   "0/1 Group 9136acaf",
+   "0/1/0 Mesh 531a1c9d",
+   "0/1/1 Mesh 7da836ad",
+   "0/1/2 Mesh 17798864",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/arrows_and_bolts": {
+  "hash": "73a490b9",
+  "nodes": [
+   "0 Group dfd1e4a8",
+   "0/0 Group 854ae68",
+   "0/0/0 Mesh 63f1b00",
+   "0/0/1 Mesh a265ff45",
+   "0/0/2 Mesh abdcbdae"
+  ]
+ },
+ "model/arrows_and_bolts:merged": {
+  "hash": "fa13cae2",
+  "nodes": [
+   "0 Group dfd1e4a8",
+   "0/0 Mesh f59ba716",
+   "0/1 Mesh b625db49",
+   "0/2 Mesh 8e8ce18a"
+  ]
+ },
+ "model/arrows_and_bolts:lod": {
+  "hash": "fb3e34df",
+  "nodes": [
+   "0 LOD cb96545c",
+   "0/0 Group 9696507e",
+   "0/0/0 Mesh d58edb92",
+   "0/0/1 Mesh 6e864f81",
+   "0/0/2 Mesh 143bcdd2",
+   "0/1 Group 911fbf3f",
+   "0/1/0 Mesh 466e0e16",
+   "0/1/1 Mesh 22824dd0",
+   "0/1/2 Mesh d859ccce",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/sickle": {
+  "hash": "f693c574",
+  "nodes": [
+   "0 Group 8b5f6a7e",
+   "0/0 Group ebe31b4d",
+   "0/0/0 Mesh 7fe43bb7",
+   "0/0/1 Mesh 13b3baa1"
+  ]
+ },
+ "model/sickle:merged": {
+  "hash": "65a35652",
+  "nodes": [
+   "0 Group 8b5f6a7e",
+   "0/0 Mesh bc9b0300",
+   "0/1 Mesh e5c32b8a"
+  ]
+ },
+ "model/sickle:lod": {
+  "hash": "3acbf7b9",
+  "nodes": [
+   "0 LOD 51e2b47a",
+   "0/0 Group 94175d68",
+   "0/0/0 Mesh cff7165e",
+   "0/0/1 Mesh 25c5b70e",
+   "0/1 Group af696b79",
+   "0/1/0 Mesh e501cf2b",
+   "0/1/1 Mesh a44d83a2",
+   "0/1/2 Mesh 18a03a5f",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/cast_iron_skillet": {
+  "hash": "ff87bc94",
+  "nodes": [
+   "0 Group 213af19a",
+   "0/0 Group 1ff9ad79",
+   "0/0/0 Mesh 2ddd5aac",
+   "0/0/1 Mesh 52431a38"
+  ]
+ },
+ "model/cast_iron_skillet:merged": {
+  "hash": "8c55ea95",
+  "nodes": [
+   "0 Group 213af19a",
+   "0/0 Mesh 4bbbf2cd",
+   "0/1 Mesh b6cd6d0e"
+  ]
+ },
+ "model/cast_iron_skillet:lod": {
+  "hash": "16cd556",
+  "nodes": [
+   "0 LOD 752ded6e",
+   "0/0 Group f33f849a",
+   "0/0/0 Mesh c185e72",
+   "0/0/1 Mesh f36aa5b9",
+   "0/1 Group e4cf154d",
+   "0/1/0 Mesh 28b755f4",
+   "0/1/1 Mesh 2d19a11",
+   "0/1/2 Mesh 45c28801",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/improvised_spear": {
+  "hash": "e2e07621",
+  "nodes": [
+   "0 Group fae34ca5",
+   "0/0 Group 5bef9b86",
+   "0/0/0 Mesh 605a1c5",
+   "0/0/1 Mesh 75148dc0"
+  ]
+ },
+ "model/improvised_spear:merged": {
+  "hash": "ec8c0da9",
+  "nodes": [
+   "0 Group fae34ca5",
+   "0/0 Mesh 54d71b86",
+   "0/1 Mesh 8d2f6e7c"
+  ]
+ },
+ "model/improvised_spear:lod": {
+  "hash": "6f61eda2",
+  "nodes": [
+   "0 LOD d06786db",
+   "0/0 Group 21abec73",
+   "0/0/0 Mesh d22cbcf8",
+   "0/0/1 Mesh 3edbff6a",
+   "0/1 Group 9d154b8a",
+   "0/1/0 Mesh 7a71cfe0",
+   "0/1/1 Mesh eb0f5d6d",
+   "0/1/2 Mesh cb5cd2bb",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/hatchet": {
+  "hash": "59a2beef",
+  "nodes": [
+   "0 Group 1292f7d0",
+   "0/0 Group 683cf6db",
+   "0/0/0 Mesh 3f749808",
+   "0/0/1 Mesh 798a98bb"
+  ]
+ },
+ "model/hatchet:merged": {
+  "hash": "91b55137",
+  "nodes": [
+   "0 Group 1292f7d0",
+   "0/0 Mesh baba4931",
+   "0/1 Mesh e1e6452e"
+  ]
+ },
+ "model/hatchet:lod": {
+  "hash": "add3b507",
+  "nodes": [
+   "0 LOD 221bae6c",
+   "0/0 Group 5ee43244",
+   "0/0/0 Mesh f20b642a",
+   "0/0/1 Mesh 584ce768",
+   "0/1 Group df51818f",
+   "0/1/0 Mesh d6a0a8ea",
+   "0/1/1 Mesh 272587aa",
+   "0/1/2 Mesh 3f7dee78",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/sledgehammer": {
+  "hash": "e80d7f33",
+  "nodes": [
+   "0 Group 9cac80f7",
+   "0/0 Group 36e5b6d9",
+   "0/0/0 Mesh e667a17a",
+   "0/0/1 Mesh 4a3ffb26"
+  ]
+ },
+ "model/sledgehammer:merged": {
+  "hash": "c22f3473",
+  "nodes": [
+   "0 Group 9cac80f7",
+   "0/0 Mesh c7852652",
+   "0/1 Mesh 21e78f40"
+  ]
+ },
+ "model/sledgehammer:lod": {
+  "hash": "1f26b8c",
+  "nodes": [
+   "0 LOD e9e73701",
+   "0/0 Group 60bdafa9",
+   "0/0/0 Mesh ba8e12e3",
+   "0/0/1 Mesh 8be6be8c",
+   "0/1 Group 1f7f05a8",
+   "0/1/0 Mesh f943126a",
+   "0/1/1 Mesh f8bada2f",
+   "0/1/2 Mesh 9ffe9562",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/chainsaw": {
+  "hash": "a51267af",
+  "nodes": [
+   "0 Group a60dbbcd",
+   "0/0 Group a1312aae",
+   "0/0/0 Mesh d9e58059",
+   "0/0/1 Mesh 1e0b8368"
+  ]
+ },
+ "model/chainsaw:merged": {
+  "hash": "fd36aff0",
+  "nodes": [
+   "0 Group a60dbbcd",
+   "0/0 Mesh 7fe42d56",
+   "0/1 Mesh f76711fd"
+  ]
+ },
+ "model/chainsaw:lod": {
+  "hash": "5c2d5688",
+  "nodes": [
+   "0 LOD 725f60ff",
+   "0/0 Group f50968f7",
+   "0/0/0 Mesh 8e82cad1",
+   "0/0/1 Mesh 7bc8d220",
+   "0/1 Group 4f416fa",
+   "0/1/0 Mesh 18f60ccb",
+   "0/1/1 Mesh a1f72551",
+   "0/1/2 Mesh 72d93eb9",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/pickaxe": {
+  "hash": "c57f0535",
+  "nodes": [
+   "0 Group 6a80656c",
+   "0/0 Group 743e8cef",
+   "0/0/0 Mesh d60cf335",
+   "0/0/1 Mesh 6e593ada"
+  ]
+ },
+ "model/pickaxe:merged": {
+  "hash": "2be3c9e5",
+  "nodes": [
+   "0 Group 6a80656c",
+   "0/0 Mesh e8d008b",
+   "0/1 Mesh 625e57fa"
+  ]
+ },
+ "model/pickaxe:lod": {
+  "hash": "e41d697f",
+  "nodes": [
+   "0 LOD e6d70b8",
+   "0/0 Group 3bf930f0",
+   "0/0/0 Mesh fbf57ae0",
+   "0/0/1 Mesh d09de8d8",
+   "0/1 Group fd79e8f3",
+   "0/1/0 Mesh 5ad773c4",
+   "0/1/1 Mesh 78b74cdd",
+   "0/1/2 Mesh d5d8b2c9",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/baseball_bat": {
+  "hash": "e15ac66f",
+  "nodes": [
+   "0 Group e6b960cf",
+   "0/0 Group ea7925e2",
+   "0/0/0 Mesh d0e202b3",
+   "0/0/1 Mesh 95619e0e"
+  ]
+ },
+ "model/baseball_bat:merged": {
+  "hash": "d724bbd7",
+  "nodes": [
+   "0 Group e6b960cf",
+   "0/0 Mesh 7c27f8fb",
+   "0/1 Mesh d0425247"
+  ]
+ },
+ "model/baseball_bat:lod": {
+  "hash": "f774741a",
+  "nodes": [
+   "0 LOD 13751771",
+   "0/0 Group b07ce7c9",
+   "0/0/0 Mesh 4da96f8b",
+   "0/0/1 Mesh d876f9fc",
+   "0/1 Group 7065f778",
+   "0/1/0 Mesh b41e54a8",
+   "0/1/1 Mesh 2d86d9e6",
+   "0/1/2 Mesh e3d57731",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/police_baton": {
+  "hash": "17046844",
+  "nodes": [
+   "0 Group 49f98720",
+   "0/0 Group acaa3197",
+   "0/0/0 Mesh 3bce0bfe",
+   "0/0/1 Mesh 670fff42"
+  ]
+ },
+ "model/police_baton:merged": {
+  "hash": "d636bd72",
+  "nodes": [
+   "0 Group 49f98720",
+   "0/0 Mesh e3d78137",
+   "0/1 Mesh a1f465cd"
+  ]
+ },
+ "model/police_baton:lod": {
+  "hash": "1ae34aab",
+  "nodes": [
+   "0 LOD 71b61934",
+   "0/0 Group c5fef5c6",
+   "0/0/0 Mesh 48d56da",
+   "0/0/1 Mesh 6719c1b8",
+   "0/1 Group b1a0dc57",
+   "0/1/0 Mesh 7dea46a0",
+   "0/1/1 Mesh c32cc753",
+   "0/1/2 Mesh dbaabd61",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/wire_roll": {
+  "hash": "8b1c21b4",
+  "nodes": [
+   "0 Group 9ac0edea",
+   "0/0 Group fc6fd554",
+   "0/0/0 Mesh 1aae4051",
+   "0/0/1 Mesh 3476a7b8"
+  ]
+ },
+ "model/wire_roll:merged": {
+  "hash": "3c0ae627",
+  "nodes": [
+   "0 Group 9ac0edea",
+   "0/0 Mesh df8723ca",
+   "0/1 Mesh 8a58f42d"
+  ]
+ },
+ "model/wire_roll:lod": {
+  "hash": "29712a64",
+  "nodes": [
+   "0 LOD 34a48b36",
+   "0/0 Group 78b02ba",
+   "0/0/0 Mesh 7a0b6814",
+   "0/0/1 Mesh af14353b",
+   "0/1 Group e1dce55",
+   "0/1/0 Mesh ee414f8e",
+   "0/1/1 Mesh 1c2de3e4",
+   "0/1/2 Mesh 66c22cc2",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/barbed_wire": {
+  "hash": "73c66916",
+  "nodes": [
+   "0 Group 69f09757",
+   "0/0 Group cf3422c7",
+   "0/0/0 Mesh 94ce0558",
+   "0/0/1 Mesh 6f48d62f"
+  ]
+ },
+ "model/barbed_wire:merged": {
+  "hash": "347bf18f",
+  "nodes": [
+   "0 Group 69f09757",
+   "0/0 Mesh f175f919",
+   "0/1 Mesh 44a90765"
+  ]
+ },
+ "model/barbed_wire:lod": {
+  "hash": "16edfdb8",
+  "nodes": [
+   "0 LOD eb2a66d1",
+   "0/0 Group 91d2223f",
+   "0/0/0 Mesh 423daee1",
+   "0/0/1 Mesh 2adfc9c",
+   "0/1 Group 93c2378",
+   "0/1/0 Mesh 7f82d58a",
+   "0/1/1 Mesh 9fb5288",
+   "0/1/2 Mesh 8d533fc1",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/glass_shards": {
+  "hash": "65f2328a",
+  "nodes": [
+   "0 Group a026739f",
+   "0/0 Group a61a451c",
+   "0/0/0 Mesh 6dde485c",
+   "0/0/1 Mesh 311b537c"
+  ]
+ },
+ "model/glass_shards:merged": {
+  "hash": "29d8a0ae",
+  "nodes": [
+   "0 Group a026739f",
+   "0/0 Mesh f69bd3f7",
+   "0/1 Mesh 93b37346"
+  ]
+ },
+ "model/glass_shards:lod": {
+  "hash": "faff0049",
+  "nodes": [
+   "0 LOD ad9e8bd9",
+   "0/0 Group 91f91b25",
+   "0/0/0 Mesh 68945ff6",
+   "0/0/1 Mesh a81248f",
+   "0/1 Group 739712a0",
+   "0/1/0 Mesh aacae262",
+   "0/1/1 Mesh e9d04b30",
+   "0/1/2 Mesh d0e3e09a",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/sheet_metal": {
+  "hash": "d5de4b4b",
+  "nodes": [
+   "0 Group 42a4c0c",
+   "0/0 Group d8959cba",
+   "0/0/0 Mesh 8e4bf80d"
+  ]
+ },
+ "model/sheet_metal:merged": {
+  "hash": "6229654b",
+  "nodes": [
+   "0 Group 42a4c0c",
+   "0/0 Mesh 4ffb07d0"
+  ]
+ },
+ "model/sheet_metal:lod": {
+  "hash": "b8887848",
+  "nodes": [
+   "0 LOD b05ab310",
+   "0/0 Group 36108d58",
+   "0/0/0 Mesh bb210726",
+   "0/1 Group 3a09e66b",
+   "0/1/0 Mesh a3628436",
+   "0/1/1 Mesh c4fa4d32",
+   "0/1/2 Mesh 2ce85c00",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/cement_bag": {
+  "hash": "5cca007e",
+  "nodes": [
+   "0 Group c73d4066",
+   "0/0 Group 7ba1c6e0",
+   "0/0/0 Mesh c0af7c58",
+   "0/0/1 Mesh ef330ecd"
+  ]
+ },
+ "model/cement_bag:merged": {
+  "hash": "5e653590",
+  "nodes": [
+   "0 Group c73d4066",
+   "0/0 Mesh 2ca08ccb",
+   "0/1 Mesh ca3a4435"
+  ]
+ },
+ "model/cement_bag:lod": {
+  "hash": "ceddaa89",
+  "nodes": [
+   "0 LOD 813d7d8a",
+   "0/0 Group 7a44760c",
+   "0/0/0 Mesh 5cf9f71c",
+   "0/0/1 Mesh 2a9f369c",
+   "0/1 Group 786c9c29",
+   "0/1/0 Mesh 59f449fb",
+   "0/1/1 Mesh 57f584dd",
+   "0/1/2 Mesh 9f4ad756",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/epoxy_glue": {
+  "hash": "7e9f4c28",
+  "nodes": [
+   "0 Group 12cc0f48",
+   "0/0 Group 96a10869",
+   "0/0/0 Mesh bec27f6a",
+   "0/0/1 Mesh b2b689d7",
+   "0/0/2 Mesh 47d90188"
+  ]
+ },
+ "model/epoxy_glue:merged": {
+  "hash": "555d61ef",
+  "nodes": [
+   "0 Group 12cc0f48",
+   "0/0 Mesh a41e5cc4",
+   "0/1 Mesh e125a74d",
+   "0/2 Mesh 8d83b899"
+  ]
+ },
+ "model/epoxy_glue:lod": {
+  "hash": "3c220234",
+  "nodes": [
+   "0 LOD ba5fd4dc",
+   "0/0 Group 4921a0ee",
+   "0/0/0 Mesh 2d452629",
+   "0/0/1 Mesh 46827a09",
+   "0/0/2 Mesh 1d22cd47",
+   "0/1 Group 18adc3f",
+   "0/1/0 Mesh 53286780",
+   "0/1/1 Mesh 8ba7e291",
+   "0/1/2 Mesh 9b5b092",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/electronic_components": {
+  "hash": "fe765ae",
+  "nodes": [
+   "0 Group 9ca23e08",
+   "0/0 Group 59f3fe1e",
+   "0/0/0 Mesh 63e894d8",
+   "0/0/1 Mesh 80bfb815",
+   "0/0/2 Mesh e0c26c33"
+  ]
+ },
+ "model/electronic_components:merged": {
+  "hash": "20b174a4",
+  "nodes": [
+   "0 Group 9ca23e08",
+   "0/0 Mesh ebc5cf4",
+   "0/1 Mesh 7ed22897",
+   "0/2 Mesh 9c65f528"
+  ]
+ },
+ "model/electronic_components:lod": {
+  "hash": "dc8a72a3",
+  "nodes": [
+   "0 LOD e5907f3c",
+   "0/0 Group 2c49d6a8",
+   "0/0/0 Mesh 2d3c7ac1",
+   "0/0/1 Mesh b74797c9",
+   "0/0/2 Mesh 97fe526e",
+   "0/1 Group 3bf2f51f",
+   "0/1/0 Mesh afd284e1",
+   "0/1/1 Mesh b4a59ad1",
+   "0/1/2 Mesh a350a7cb",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/rope": {
+  "hash": "b502dd83",
+  "nodes": [
+   "0 Group cae84b73",
+   "0/0 Group 47955ad0",
+   "0/0/0 Mesh 1bdb7d23",
+   "0/0/1 Mesh 812e065a"
+  ]
+ },
+ "model/rope:merged": {
+  "hash": "28d6ea4e",
+  "nodes": [
+   "0 Group cae84b73",
+   "0/0 Mesh a08aba6f",
+   "0/1 Mesh f1f57ef6"
+  ]
+ },
+ "model/rope:lod": {
+  "hash": "d7279ff3",
+  "nodes": [
+   "0 LOD 5030df65",
+   "0/0 Group 23b7157d",
+   "0/0/0 Mesh 7cc23635",
+   "0/0/1 Mesh 5b5d4d10",
+   "0/1 Group 7511cb0c",
+   "0/1/0 Mesh fc55a911",
+   "0/1/1 Mesh 4f1c36fd",
+   "0/1/2 Mesh e65e3e",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/copper_wire": {
+  "hash": "cfe2b779",
+  "nodes": [
+   "0 Group 3c2da778",
+   "0/0 Group 66b56b32",
+   "0/0/0 Mesh 29f69b5c",
+   "0/0/1 Mesh ea952436"
+  ]
+ },
+ "model/copper_wire:merged": {
+  "hash": "d39bb203",
+  "nodes": [
+   "0 Group 3c2da778",
+   "0/0 Mesh d838de71",
+   "0/1 Mesh ee08432a"
+  ]
+ },
+ "model/copper_wire:lod": {
+  "hash": "7d34601a",
+  "nodes": [
+   "0 LOD 22ff2b94",
+   "0/0 Group 1cf4b5e0",
+   "0/0/0 Mesh e1f8da87",
+   "0/0/1 Mesh ed932db4",
+   "0/1 Group 80a5ad37",
+   "0/1/0 Mesh 41f2780e",
+   "0/1/1 Mesh ba5ecc76",
+   "0/1/2 Mesh a1daa10a",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/pet_bottle": {
+  "hash": "cf253c1d",
+  "nodes": [
+   "0 Group 18d5a4cd",
+   "0/0 Group 1f8d9864",
+   "0/0/0 Mesh 60391de2",
+   "0/0/1 Mesh 4efdbc91",
+   "0/0/2 Mesh f03363b3"
+  ]
+ },
+ "model/pet_bottle:merged": {
+  "hash": "ea60cbf3",
+  "nodes": [
+   "0 Group 18d5a4cd",
+   "0/0 Mesh 9b67cce",
+   "0/1 Mesh 9f612938",
+   "0/2 Mesh 443a96e1"
+  ]
+ },
+ "model/pet_bottle:lod": {
+  "hash": "43f1f11f",
+  "nodes": [
+   "0 LOD b2095ddf",
+   "0/0 Group e0c5513f",
+   "0/0/0 Mesh 1ee2f42d",
+   "0/0/1 Mesh 2470a827",
+   "0/0/2 Mesh 3e6594c9",
+   "0/1 Group 39443aba",
+   "0/1/0 Mesh ae92b412",
+   "0/1/1 Mesh b8e50d6c",
+   "0/1/2 Mesh d40e5e71",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/glass_bottle": {
+  "hash": "2c641701",
+  "nodes": [
+   "0 Group 147bf0ce",
+   "0/0 Group e6c1b357",
+   "0/0/0 Mesh cfa0ac22",
+   "0/0/1 Mesh 624cecdd"
+  ]
+ },
+ "model/glass_bottle:merged": {
+  "hash": "339c54c9",
+  "nodes": [
+   "0 Group 147bf0ce",
+   "0/0 Mesh e75e6ba1",
+   "0/1 Mesh 45c192e2"
+  ]
+ },
+ "model/glass_bottle:lod": {
+  "hash": "27e80e16",
+  "nodes": [
+   "0 LOD c618600a",
+   "0/0 Group a126a5b0",
+   "0/0/0 Mesh 138d6989",
+   "0/0/1 Mesh d0573b7b",
+   "0/1 Group 8949d189",
+   "0/1/0 Mesh c995675c",
+   "0/1/1 Mesh c409a827",
+   "0/1/2 Mesh 23161bb0",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/empty_can": {
+  "hash": "d3e71595",
+  "nodes": [
+   "0 Group 861ecfc7",
+   "0/0 Group 58fdad5d",
+   "0/0/0 Mesh f002fd8c",
+   "0/0/1 Mesh 9a63ebe8",
+   "0/0/2 Mesh 4da2b6b"
+  ]
+ },
+ "model/empty_can:merged": {
+  "hash": "e89992c5",
+  "nodes": [
+   "0 Group 861ecfc7",
+   "0/0 Mesh 6af2c05",
+   "0/1 Mesh 6bbba690",
+   "0/2 Mesh 9195c9fe"
+  ]
+ },
+ "model/empty_can:lod": {
+  "hash": "f3a892d",
+  "nodes": [
+   "0 LOD cb701be1",
+   "0/0 Group 7a6860e7",
+   "0/0/0 Mesh 27ef4072",
+   "0/0/1 Mesh 2ee20bc0",
+   "0/0/2 Mesh 7602eef3",
+   "0/1 Group 3bb3cc88",
+   "0/1/0 Mesh 6b90d518",
+   "0/1/1 Mesh cef517e6",
+   "0/1/2 Mesh 6f003ed3",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/firewood": {
+  "hash": "5b2b62",
+  "nodes": [
+   "0 Group d3f6ff36",
+   "0/0 Group d63988fc",
+   "0/0/0 Mesh dd9e2554",
+   "0/0/1 Mesh df72a9e3"
+  ]
+ },
+ "model/firewood:merged": {
+  "hash": "5b5e8a72",
+  "nodes": [
+   "0 Group d3f6ff36",
+   "0/0 Mesh 47a9a839",
+   "0/1 Mesh 7d3e85a5"
+  ]
+ },
+ "model/firewood:lod": {
+  "hash": "b59a4a4c",
+  "nodes": [
+   "0 LOD 8a4371a2",
+   "0/0 Group d96f3ec8",
+   "0/0/0 Mesh 743e7b60",
+   "0/0/1 Mesh 359825c3",
+   "0/1 Group 36720ce1",
+   "0/1/0 Mesh 4688f1f5",
+   "0/1/1 Mesh 85540c70",
+   "0/1/2 Mesh b148e93b",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/tarp": {
+  "hash": "86c7c275",
+  "nodes": [
+   "0 Group 1de995e2",
+   "0/0 Group b047ca91",
+   "0/0/0 Mesh c7c6d798",
+   "0/0/1 Mesh 4f8f1849"
+  ]
+ },
+ "model/tarp:merged": {
+  "hash": "e2a2bf1f",
+  "nodes": [
+   "0 Group 1de995e2",
+   "0/0 Mesh 3807cd9b",
+   "0/1 Mesh 92c6860e"
+  ]
+ },
+ "model/tarp:lod": {
+  "hash": "6bc8b02d",
+  "nodes": [
+   "0 LOD f307a61e",
+   "0/0 Group 47247b00",
+   "0/0/0 Mesh 8668d544",
+   "0/0/1 Mesh 476a788",
+   "0/1 Group 44dd9d",
+   "0/1/0 Mesh 2ac4a453",
+   "0/1/1 Mesh 37e00b5c",
+   "0/1/2 Mesh ac5374dd",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/screws": {
+  "hash": "7e64abf6",
+  "nodes": [
+   "0 Group 1383b112",
+   "0/0 Group d54a800b",
+   "0/0/0 Mesh a415ed96",
+   "0/0/1 Mesh af7c7b7c"
+  ]
+ },
+ "model/screws:merged": {
+  "hash": "ff7ef90f",
+  "nodes": [
+   "0 Group 1383b112",
+   "0/0 Mesh 901bacc9",
+   "0/1 Mesh 671de344"
+  ]
+ },
+ "model/screws:lod": {
+  "hash": "35696eb1",
+  "nodes": [
+   "0 LOD c8d74fa6",
+   "0/0 Group e4bb80f0",
+   "0/0/0 Mesh 1e699636",
+   "0/0/1 Mesh 92f3ed44",
+   "0/1 Group 41803be5",
+   "0/1/0 Mesh cffc5d03",
+   "0/1/1 Mesh f54ad635",
+   "0/1/2 Mesh 300a5244",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/nails": {
+  "hash": "49879218",
+  "nodes": [
+   "0 Group 811150da",
+   "0/0 Group 1307047c",
+   "0/0/0 Mesh 8e7ef825",
+   "0/0/1 Mesh 59bd7bf6"
+  ]
+ },
+ "model/nails:merged": {
+  "hash": "6a16538a",
+  "nodes": [
+   "0 Group 811150da",
+   "0/0 Mesh 15d7f062",
+   "0/1 Mesh 3d2bcac8"
+  ]
+ },
+ "model/nails:lod": {
+  "hash": "5cb426c7",
+  "nodes": [
+   "0 LOD 260778b6",
+   "0/0 Group 44035b3e",
+   "0/0/0 Mesh 7113d738",
+   "0/0/1 Mesh 26ef12a",
+   "0/1 Group 3fefef5",
+   "0/1/0 Mesh ca4653f4",
+   "0/1/1 Mesh 930dab12",
+   "0/1/2 Mesh feea9734",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/raffia_sack": {
+  "hash": "5c7e43d",
+  "nodes": [
+   "0 Group 6a1053cd",
+   "0/0 Group 6c93a7e7",
+   "0/0/0 Mesh 8cccc6d7",
+   "0/0/1 Mesh fd526a09"
+  ]
+ },
+ "model/raffia_sack:merged": {
+  "hash": "e3e299c",
+  "nodes": [
+   "0 Group 6a1053cd",
+   "0/0 Mesh 72a17f77",
+   "0/1 Mesh 303694ce"
+  ]
+ },
+ "model/raffia_sack:lod": {
+  "hash": "f02a520",
+  "nodes": [
+   "0 LOD 673fda9f",
+   "0/0 Group d087a9f9",
+   "0/0/0 Mesh c5b45ee3",
+   "0/0/1 Mesh 4e73867a",
+   "0/1 Group c256105a",
+   "0/1/0 Mesh 45e71fd6",
+   "0/1/1 Mesh fdcfdde3",
+   "0/1/2 Mesh 646b6462",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/scrap_metal": {
+  "hash": "db03f24d",
+  "nodes": [
+   "0 Group a0742fd2",
+   "0/0 Group 45028d3a",
+   "0/0/0 Mesh 3bf1f70e",
+   "0/0/1 Mesh 6e8d9caa"
+  ]
+ },
+ "model/scrap_metal:merged": {
+  "hash": "79693c8d",
+  "nodes": [
+   "0 Group a0742fd2",
+   "0/0 Mesh 91a856cf",
+   "0/1 Mesh bc7c7986"
+  ]
+ },
+ "model/scrap_metal:lod": {
+  "hash": "48f991",
+  "nodes": [
+   "0 LOD e9a65ee6",
+   "0/0 Group bc719fae",
+   "0/0/0 Mesh d2af79d6",
+   "0/0/1 Mesh 6a97c85e",
+   "0/1 Group 4276b065",
+   "0/1/0 Mesh 78610a5e",
+   "0/1/1 Mesh 91d5d553",
+   "0/1/2 Mesh 2fb3ee23",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/bricks": {
+  "hash": "dbd1a406",
+  "nodes": [
+   "0 Group 2b4668a5",
+   "0/0 Group 2747232",
+   "0/0/0 Mesh 4b208605",
+   "0/0/1 Mesh fe6f6843"
+  ]
+ },
+ "model/bricks:merged": {
+  "hash": "b232f7cc",
+  "nodes": [
+   "0 Group 2b4668a5",
+   "0/0 Mesh 1953abf",
+   "0/1 Mesh 502bfb6"
+  ]
+ },
+ "model/bricks:lod": {
+  "hash": "5a69b6ee",
+  "nodes": [
+   "0 LOD ee3bcb07",
+   "0/0 Group b56bd83b",
+   "0/0/0 Mesh 71cc03c6",
+   "0/0/1 Mesh aa6fb99e",
+   "0/1 Group 9115ba02",
+   "0/1/0 Mesh 54cfb57b",
+   "0/1/1 Mesh 790f7826",
+   "0/1/2 Mesh 91b1b04f",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/rag": {
+  "hash": "9db3005f",
+  "nodes": [
+   "0 Group b9372b31",
+   "0/0 Group 6665277b",
+   "0/0/0 Mesh 43d8adb7",
+   "0/0/1 Mesh 38b92b0b"
+  ]
+ },
+ "model/rag:merged": {
+  "hash": "f1ae3de8",
+  "nodes": [
+   "0 Group b9372b31",
+   "0/0 Mesh c41b5228",
+   "0/1 Mesh 57196b7b"
+  ]
+ },
+ "model/rag:lod": {
+  "hash": "6fdc1009",
+  "nodes": [
+   "0 LOD 8d96db3b",
+   "0/0 Group 7bd40871",
+   "0/0/0 Mesh 25fafa79",
+   "0/0/1 Mesh 28b6c9d5",
+   "0/1 Group 90298536",
+   "0/1/0 Mesh d27b59a",
+   "0/1/1 Mesh c956ae77",
+   "0/1/2 Mesh c5b97046",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/rebar": {
+  "hash": "4676f93b",
+  "nodes": [
+   "0 Group 6aa47b35",
+   "0/0 Group e6028dfd",
+   "0/0/0 Mesh c23dbdd",
+   "0/0/1 Mesh c015030f",
+   "0/0/2 Mesh 5b38d7f8",
+   "0/0/3 Mesh 74a4023c"
+  ]
+ },
+ "model/rebar:merged": {
+  "hash": "c8d3a8df",
+  "nodes": [
+   "0 Group 6aa47b35",
+   "0/0 Mesh f775e45c",
+   "0/1 Mesh 5ec38f3f",
+   "0/2 Mesh 5a331a42",
+   "0/3 Mesh 498aa873"
+  ]
+ },
+ "model/rebar:lod": {
+  "hash": "a61f1641",
+  "nodes": [
+   "0 LOD 481d7313",
+   "0/0 Group c34b80f5",
+   "0/0/0 Mesh 3440abb8",
+   "0/0/1 Mesh e6d12f6e",
+   "0/0/2 Mesh 7054428f",
+   "0/0/3 Mesh 23749226",
+   "0/1 Group 5c27aa82",
+   "0/1/0 Mesh 7cca90a2",
+   "0/1/1 Mesh b4720b37",
+   "0/1/2 Mesh ac417a4f",
+   "0/2 Group 55dd014c"
+  ]
+ },
+ "model/lubricant_spray": {
+  "hash": "1acb5880",
+  "nodes": [
+   "0 Group c7277db9",
+   "0/0 Group f26cf2db",
+   "0/0/0 Mesh 6b26e469",
+   "0/0/1 Mesh f157c1d",
+   "0/0/2 Mesh c865dd1e"
+  ]
+ },
+ "model/lubricant_spray:merged": {
+  "hash": "bab45357",
+  "nodes": [
+   "0 Group c7277db9",
+   "0/0 Mesh 9f85ca27",
+   "0/1 Mesh cf39cc0b",
+   "0/2 Mesh 4136e693"
+  ]
+ },
+ "model/lubricant_spray:lod": {
+  "hash": "f0611cb3",
+  "nodes": [
+   "0 LOD f90d9dc3",
+   "0/0 Group b68704f1",
+   "0/0/0 Mesh 4422c690",
+   "0/0/1 Mesh 10fdf9f3",
+   "0/0/2 Mesh 8f8626ff",
+   "0/1 Group 66b9243e",
+   "0/1/0 Mesh 8c3e5d0b",
+   "0/1/1 Mesh 88d9a602",
+   "0/1/2 Mesh 6132f93b",
+   "0/2 Group 55dd014c"
+  ]
+ },
  "shape/can": {
   "hash": "4f408b22",
   "nodes": [
