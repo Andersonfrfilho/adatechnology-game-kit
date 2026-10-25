@@ -303,6 +303,7 @@
       "mutiny"
     ],
     "text": {
+      "en": "In the game, rank decides who leads when the leader falls (the highest living rank with courage + loyalty ≥ 100) and what a soldier obeys. A higher rank beats opinion, unless the soldier's opinion of the superior is below −20: then they disobey, desert or mutiny.",
       "pt-BR": "No jogo, patente decide quem manda quando o líder cai (maior patente viva com coragem + lealdade ≥ 100) e o que um soldado obedece. Ordem de patente maior vence opinião, a menos que a opinião do soldado pelo superior esteja abaixo de −20: aí ele desobedece, deserta ou se amotina."
     }
   }
