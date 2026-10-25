@@ -270,6 +270,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   const desired = newPose(THREE)
   const channelPose = newPose(THREE)
   const mixed = newPose(THREE)
+  let indexCurl: number | undefined
   const bone = createTwoBone(THREE)
   const shoulder = new THREE.Vector3()
   const wristAt = new THREE.Vector3()
@@ -308,6 +309,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     arm.anchor.quaternion.copy(pose.q)
     arm.anchor.scale.setScalar(scale)
     arm.hand.setGrip(pose.grip)
+    arm.hand.setIndex(arm.side === 'R' ? indexCurl : undefined)
     place(arm.upper, shoulder, bone.joint)
     place(arm.fore, bone.joint, bone.end)
     arm.elbow.position.copy(bone.joint)
@@ -399,6 +401,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
           desired.p.add(bobOffset)
         }
         modeOf(mode, arm)
+        if (side === 'R') indexCurl = mode === 'target' ? targets?.fingers?.index : undefined
         arm.blend = blendSeconds <= 0 ? 1 : Math.min(1, arm.blend + dt / blendSeconds)
         if (arm.blend >= 1) copyPose(arm.shown, desired)
         else mixPose(THREE, arm.shown, arm.from, desired, ease(arm.blend))

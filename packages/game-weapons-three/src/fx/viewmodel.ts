@@ -29,6 +29,7 @@ import { createModelRig } from './rig'
 import type { FxWorld, Session } from './session'
 import { toWorld, worldPositionOf } from './session'
 import { createClipEventHandler } from './viewmodel-events'
+import { handWorkOf, workWeights } from './hand-work'
 import { HAND_HOLD, holdOfModel, targetsOf } from './hand-hold'
 import type { Hold } from './hand-hold'
 
@@ -105,6 +106,19 @@ const underbarrelStep = (step: ToolAnimationStep, tool: HostTool): ToolAnimation
 
 const caliberOf = (arsenal: Arsenal, def: WeaponDef): CaliberDef | undefined => (def.action.kind === 'firearm' ? arsenal.calibers.get(def.action.caliber) : undefined)
 
+/**
+ * The curl of the trigger finger: along the frame (`TRIGGER_FINGER.safe`) until the weapon fires, on the trigger (`ready`) for `readySeconds` after a shot, and pulled in by the turn of the
+ * trigger part (the clip's pull, `TRIGGER_TURN` radians), so each shot of a burst or of full auto pulls and releases it; a burst keeps it nearly pulled, with a small tremor per shot.
+ */
+export const TRIGGER_FINGER = { safe: 0.08, ready: 0.45, pulled: 0.92, readySeconds: 1.5, burstSeconds: 0.14, tremor: 0.03 } as const
+const TRIGGER_TURN = 0.35
+const indexCurl = (turn: number, sinceShot: number): number => {
+  const ready = sinceShot < TRIGGER_FINGER.readySeconds ? TRIGGER_FINGER.ready : TRIGGER_FINGER.safe
+  const pull = Math.min(1, Math.max(0, turn / TRIGGER_TURN))
+  const held = sinceShot < TRIGGER_FINGER.burstSeconds ? TRIGGER_FINGER.pulled - TRIGGER_FINGER.tremor * (0.5 + 0.5 * Math.sin(sinceShot * 220)) : 0
+  return Math.max(ready + (TRIGGER_FINGER.pulled - ready) * pull, held)
+}
+
 export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const { THREE, scene, camera, arsenal, groundAt, audio } = options
   const kit = modelKit(THREE)
@@ -131,6 +145,10 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   let hold: Hold | null = null
   let reloading = false
   let magazineHand = 0
+  // the trigger finger: the seconds since the last shot and the turn of the trigger part at rest
+  let clock = 0
+  let lastShot = -Infinity
+  let triggerRest = 0
   const rootQuaternion = new THREE.Quaternion()
 
   const world: FxWorld = {
@@ -222,6 +240,9 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     lastAmmo = options.tool?.().ammo ?? 0
     hand.updateMatrixWorld(true)
     hold = holdOfModel(THREE, model, scale)
+    hold = { ...hold, works: handWorkOf(THREE, model, weapon, hold.right) }
+    triggerRest = model.parts.trigger?.rotation.z ?? 0
+    lastShot = -Infinity
     return true
   }
 
@@ -276,7 +297,10 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       if (event.type === 'tool') equip(event.weapon)
       if (!session || !player || event.weapon !== session.id) return
       const current = session
-      if (event.type === 'shot') handleShot(current, event, tool)
+      if (event.type === 'shot') {
+        lastShot = clock
+        handleShot(current, event, tool)
+      }
       else if (event.type === 'reload' && event.phase === 'start') {
         current.nextChamber = 0
         reloading = true
@@ -290,6 +314,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       player.apply(last ? { ...step, variant: 'last' } : underbarrelStep(step, tool))
     },
     update(dt) {
+      clock += dt
       if (session) {
         place()
         player?.update(dt)
@@ -332,7 +357,10 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     handTargets() {
       if (!session || !hold) return null
       hand.updateMatrixWorld(true)
-      return targetsOf(THREE, hold, session.model.root.getWorldQuaternion(rootQuaternion), magazineHand)
+      const targets = targetsOf(THREE, hold, session.model.root.getWorldQuaternion(rootQuaternion), magazineHand, hold.works ? workWeights(hold.works, player?.running ?? []) : undefined)
+      const trigger = session.model.parts.trigger
+      if (trigger) targets.fingers = { index: indexCurl(trigger.rotation.z - triggerRest, clock - lastShot) }
+      return targets
     },
     get inHand() {
       return session?.id ?? null
