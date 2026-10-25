@@ -52,7 +52,8 @@ export function createGrid(plan: Plan, room: Room, ignored?: Set<string> | null,
   const nz = Math.ceil((v1 - v0) / gs)
   const insideCells = new Uint8Array(nx * nz)
   const insets = room.outdoor ? usableParts(room, 0.08) : room.parts
-  const bodies = room.outdoor ? null : wallBodies(plan, room.floor)
+  // only the walls within reach of the room's box can be closer than the player's body to one of its cells (a tower floor has hundreds of them)
+  const bodies = room.outdoor ? null : wallBodies(plan, room.floor).filter((r) => r[0] - radius <= u1 && r[2] + radius >= u0 && r[1] - radius <= v1 && r[3] + radius >= v0)
   const tooClose = (u: number, v: number) =>
     (bodies as Rect[]).some((r) => {
       const dx = Math.max(r[0] - u, 0, u - r[2])
