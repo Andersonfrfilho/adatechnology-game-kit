@@ -48,6 +48,8 @@ interface Leak {
   rate: number
   pressurized: boolean
   acc: number
+  /** The part had a through opening when the leak began: the leak ends when it has none (a valve shut with `seal`). */
+  opened: boolean
 }
 
 const FLUID_COLORS: Record<string, number> = {
@@ -614,7 +616,7 @@ class Renderer implements DestructionRenderer {
           same.direction = ev.direction
         } else {
           if (this.leaks.length >= 24) this.leaks.shift()
-          this.leaks.push({ object: ev.object, part: ev.part, fluid: ev.fluid, point: ev.point, direction: ev.direction, rate: ev.rate, pressurized: ev.pressurized, acc: 0 })
+          this.leaks.push({ object: ev.object, part: ev.part, fluid: ev.fluid, point: ev.point, direction: ev.direction, rate: ev.rate, pressurized: ev.pressurized, acc: 0, opened: this.world.part(ev.object, ev.part)?.holes.some((h) => h.through) ?? false })
         }
         void key
         break
@@ -1075,7 +1077,8 @@ class Renderer implements DestructionRenderer {
     for (let i = this.leaks.length - 1; i >= 0; i--) {
       const l = this.leaks[i]
       const ps = this.world.part(l.object, l.part)
-      if (!ps || ps.liters === undefined || ps.liters <= 0) {
+      // a leak ends when the container is empty or the opening is closed (a valve shut, `seal`)
+      if (!ps || ps.liters === undefined || ps.liters <= 0 || (l.opened && !ps.holes.some((h) => h.through))) {
         this.leaks.splice(i, 1)
         continue
       }

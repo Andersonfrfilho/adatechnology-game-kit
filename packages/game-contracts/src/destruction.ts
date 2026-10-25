@@ -486,6 +486,8 @@ export interface Hole {
   diameter: number
   /** The projectile went through. */
   through: boolean
+  /** An opening made on purpose (`DestructionWorld.vent`: a valve, a tap), not damage: `seal` closes it. */
+  vent?: boolean
 }
 
 export interface Crack {

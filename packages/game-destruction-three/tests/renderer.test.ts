@@ -466,6 +466,18 @@ describe('leaks', () => {
     for (let i = 0; i < 400; i++) renderer.update(1 / 60) // every particle expires
     expect(renderer.stats().particles).toBe(0)
   })
+
+  it('stops when the opening is closed (a valve shut with seal), the container still holding its liters', () => {
+    const { world, renderer } = setup()
+    world.addObject('o1', [partState('tank', 'steel', { liters: 5, holes: [{ point: [0, 1, 0], normal: [1, 0, 0], diameter: 0.008, through: true, vent: true }] })])
+    renderer.bind('o1', new THREE.Group())
+    world.emit({ type: 'leak', object: 'o1', part: 'tank', fluid: 'gas', point: [0, 1, 0], direction: [1, 0, 0], rate: 0.4, pressurized: true })
+    for (let i = 0; i < 20; i++) renderer.update(1 / 60)
+    expect(renderer.stats().particles).toBeGreaterThan(5)
+    world.part('o1', 'tank')!.holes = []
+    for (let i = 0; i < 400; i++) renderer.update(1 / 60)
+    expect(renderer.stats().particles).toBe(0)
+  })
 })
 
 describe('particles and explosions', () => {
