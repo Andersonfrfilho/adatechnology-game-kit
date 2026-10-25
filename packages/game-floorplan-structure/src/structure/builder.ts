@@ -5,7 +5,7 @@ import { round2 } from '../geometry'
 import { GROUND } from '../types'
 import type { PartRole, Rect, StructurePart, Support } from '../types'
 
-export type PartExtras = Partial<Pick<StructurePart, 'host' | 'spacing' | 'beamKind' | 'steps' | 'door' | 'cover' | 'studs' | 'pitch' | 'tent' | 'form' | 'liters' | 'assembly'>>
+export type PartExtras = Partial<Pick<StructurePart, 'host' | 'spacing' | 'beamKind' | 'steps' | 'door' | 'cover' | 'studs' | 'pitch' | 'tent' | 'form' | 'liters' | 'assembly' | 'footprint'>>
 export interface PartOptions extends PartExtras {
   floor?: number
   /** Solid fraction of the box (studs, trusses, tile roofs). */

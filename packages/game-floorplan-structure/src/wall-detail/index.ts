@@ -18,7 +18,7 @@ function logSpec(construction: Construction, part: StructurePart): CourseSpec {
 }
 
 /** Walls cut at their windows (piers, sills, lintels, spandrels); the walls of logs as courses of logs. */
-function panelSplits(input: PartsAndSupports, structure: Structure): Map<string, WallSplit> {
+function panelSplits(input: PartsAndSupports, structure: Structure, lintelDepth?: (span: number) => number): Map<string, WallSplit> {
   const { construction } = structure
   const system = CONSTRUCTION_SYSTEMS.get(construction.system)!
   const splits = new Map<string, WallSplit>()
@@ -28,7 +28,7 @@ function panelSplits(input: PartsAndSupports, structure: Structure): Map<string,
       continue
     }
     const split = splitIntoPanels(part, structure.openings, {
-      lintelMaterial: system.timber ? construction.frame.timber : 'concrete', ...(system.timber ? {} : { lintelAssembly: 'reinforced_concrete' }), lintelJoint: system.joints.beam, wallJoint: system.joints.wall,
+      lintelMaterial: system.timber ? construction.frame.timber : 'concrete', ...(system.timber ? {} : { lintelAssembly: 'reinforced_concrete' }), lintelJoint: system.joints.beam, wallJoint: system.joints.wall, ...(lintelDepth && !system.timber ? { lintelDepth } : {}),
     })
     if (split.pieces.length > 1) splits.set(part.id, split)
   }
@@ -36,9 +36,9 @@ function panelSplits(input: PartsAndSupports, structure: Structure): Map<string,
 }
 
 /** Splits the walls the way `detail` says: `coarse` keeps one part per wall, `panels` cuts them at the windows, `units` goes on to bricks and blocks. */
-export function applyPanels(input: PartsAndSupports, structure: Structure, detail: WallDetail): PartsAndSupports {
+export function applyPanels(input: PartsAndSupports, structure: Structure, detail: WallDetail, lintelDepth?: (span: number) => number): PartsAndSupports {
   if (detail === 'coarse') return input
-  return applySplits(input, panelSplits(input, structure))
+  return applySplits(input, panelSplits(input, structure, lintelDepth))
 }
 
 export interface Sized extends PartsAndSupports {

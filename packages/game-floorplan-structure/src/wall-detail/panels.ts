@@ -9,6 +9,8 @@ export interface PanelStyle {
   /** Joint of a lintel on its piers and of the wall above it on the lintel. */
   lintelJoint: JointKind
   wallJoint: JointKind
+  /** Depth of the lintel over an opening of the given width, metres (default `LINTEL_DEPTH`): a wide opening needs a deeper beam. */
+  lintelDepth?: (span: number) => number
 }
 
 export interface WallSplit {
@@ -73,7 +75,7 @@ export function splitIntoPanels(wall: StructurePart, openings: readonly Opening[
   }
   own.forEach((opening, k) => {
     addPier(Math.max(cursor, opening.from))
-    const lintelTop = Math.min(wall.y1, opening.y1 + LINTEL_DEPTH)
+    const lintelTop = Math.min(wall.y1, opening.y1 + Math.max(LINTEL_DEPTH, style.lintelDepth?.(opening.to - opening.from) ?? 0))
     const lintelFrom = Math.max(frame.from, opening.from - LINTEL_BEARING)
     const lintelTo = Math.min(frame.to, opening.to + LINTEL_BEARING)
     const lintelHeight = lintelTop - opening.y1

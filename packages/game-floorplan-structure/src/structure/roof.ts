@@ -49,7 +49,7 @@ function addFlatRoof(context: BuildContext, unit: RoofUnit, carriers: StructureP
   const { builder, construction, system } = context
   const top = context.level(unit.floor) + context.ceilingOf(unit.floor)
   const [u0, v0, u1, v1] = unit.box
-  const slab = builder.add({ id: `slab_top${unit.suffix}`, role: 'slab', material: construction.frame.slabs, aabb: [u0 - 0.15, v0 - 0.15, u1 + 0.15, v1 + 0.15], y0: top, y1: top + 0.12 }, { floor: unit.floor, cover: true })
+  const slab = builder.add({ id: `slab_top${unit.suffix}`, role: 'slab', material: construction.frame.slabs, aabb: [u0 - 0.15, v0 - 0.15, u1 + 0.15, v1 + 0.15], y0: top, y1: top + 0.12 }, { floor: unit.floor, cover: true, footprint: [unit.box] })
   for (const carrier of carriers.length ? carriers : (context.plates.get(unit.floor) ?? [])) builder.rest(slab, carrier, system.joints.slab)
   if (unit.suffix === '') context.topSlab = slab
   return { id: slab.id, aabb: slab.aabb, y0: slab.y0, y1: slab.y1, flat: true }

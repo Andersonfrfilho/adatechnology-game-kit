@@ -3,6 +3,9 @@ import { GRAVITY, MATERIALS, SOILS, assemblyPart, partMass, pileLength, profileO
 import type { SoilDef } from '@adatechnology/game-destruction'
 import { sizeCapacities } from './loads'
 import { GROUND } from './types'
+import { resolveSlabPanels } from './slab-panels'
+import type { SlabPanelOptions } from './slab-panels'
+import { applySlabPanels, beamDepthFor, deepenBondBeams } from './slab-panels'
 import { applyPanels, applyUnits } from './wall-detail'
 import type { FoundationType, PartRole, Structure, StructurePart, WallDetail } from './types'
 
@@ -17,6 +20,11 @@ export interface DestructibleSpecOptions {
   portico?: boolean
   /** How finely the walls are split (default `panels`; `coarse` is one part per wall as the Visor de casas 3D builds it). */
   wallDetail?: WallDetail
+  /**
+   * Cuts the concrete slabs into panels with a beam under each edge, and adds the pillars those beams and the bond beams need (design T10 §10): `true` for
+   * `SLAB_PANEL_DEFAULTS`, options to change them, `false` for the slab as one piece, as the Visor de casas 3D describes it. Default `true`.
+   */
+  slabPanels?: boolean | Partial<SlabPanelOptions>
   /** Name of the spec (default `house`). */
   name?: string
   /** Leaves parts out (and what rests on them is dropped from the joints). */
@@ -108,7 +116,10 @@ export function toDestructibleSpec(structure: Structure, options: DestructibleSp
   const ids = new Set(roled.map((part) => part.id))
   const filtered = structure.supports.filter((support) => !options.filter || (ids.has(support.part) && (support.on === GROUND || ids.has(support.on))))
   const detail = options.wallDetail ?? 'panels'
-  const panels = applyPanels({ parts: roled, supports: filtered }, structure, detail)
+  const slabOptions = resolveSlabPanels(options.slabPanels ?? true)
+  const slabbed = slabOptions ? applySlabPanels({ parts: roled, supports: filtered }, structure, slabOptions) : { parts: roled, supports: filtered }
+  const walled = applyPanels(slabbed, structure, detail, slabOptions && structure.construction.frame.rebar ? (span) => beamDepthFor(span, slabOptions) : undefined)
+  const panels = slabOptions && detail !== 'coarse' ? deepenBondBeams(walled, structure, slabOptions) : walled
   const sizing = { safety, redundancy, safetyOthers }
   const sized = { ...panels, capacities: options.sized === false ? new Map<string, number>() : sizeCapacities(panels.parts, panels.supports, sizing) }
   const { parts, supports, capacities } = detail === 'units' ? applyUnits(sized, structure) : sized
