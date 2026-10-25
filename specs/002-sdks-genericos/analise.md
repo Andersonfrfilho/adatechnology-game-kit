@@ -148,8 +148,7 @@ formato que todo pacote novo segue e que os antigos adotam aos poucos.
 - Os SDKs que o jogo embute ficam em `sdk/` da mesma pasta: `casa3d` (4.454 linhas), `plantas` (3.825), `moveis3d` (449),
   `andares` (187), `camera` (70), `teste` (176), `contagio` (141), mais cópias de `destruicao` e `interactables` puxadas do npm
   por `sdk/versoes.json`.
-- **Duplicação nova:** o `sdk/contagio` (25/10, frente "Início gradual do surto") faz o mesmo que o `game-infection` do kit
-  (surto abstrato, determinístico, por regiões). Pela regra do kit, os dois devem virar um só: levar ao `game-infection` o que o
-  `contagio` tem a mais (incubação em fila, contidos, abrigados, ligações, saída do mapa, salvar e carregar) e o jogo passar a
-  usar o pacote.
+- O `sdk/contagio` do jogo é a origem do `game-infection`: o pacote é o port 1:1, com resultado bit a bit igual (ver
+  `MIGRATION.md` do pacote). Não há o que levar ao kit; falta só o jogo trocar o `sdk/contagio` pelo bundle `GameInfection`,
+  o que já está em andamento na frente do surto gradual.
 - Nomes dos pacotes novos (`game-life`, `game-navigation`, `game-time` etc.) são sugestão; confirmar antes de criar.
