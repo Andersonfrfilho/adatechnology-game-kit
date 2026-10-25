@@ -59,6 +59,23 @@
         { "t": 0.32, "type": "impact", "data": { "kind": "kick" } },
         { "t": 0.42, "type": "phase", "data": { "label": "attack_clip.phase.recover" } }
       ]
+    },
+    {
+      "id": "recoil_rifle",
+      "source": { "authored": "game-kit", "note": "authored in the kit; replace with the Elenco team's clip when delivered. Starts and ends at the armed pose of createPlayerAvatar at pitch 0" },
+      "duration": 0.22,
+      "loop": false,
+      "channels": "upper",
+      "keys": [
+        { "t": 0, "pose": { "lean": 0, "twist": 0, "headX": 0, "armR": -1.42, "armL": -1.42, "elbR": -0.04, "elbL": -0.12, "armRz": -0.54, "armLz": 0.36 } },
+        { "t": 0.04, "pose": { "lean": -0.1, "twist": 0.03, "headX": -0.06, "armR": -1.62, "armL": -1.62, "elbR": -0.35, "elbL": -0.45, "armRz": -0.5, "armLz": 0.34 } },
+        { "t": 0.22, "pose": { "lean": 0, "twist": 0, "headX": 0, "armR": -1.42, "armL": -1.42, "elbR": -0.04, "elbL": -0.12, "armRz": -0.54, "armLz": 0.36 } }
+      ],
+      "events": [
+        { "t": 0, "type": "impact", "data": { "kind": "shot" } },
+        { "t": 0, "type": "phase", "data": { "label": "attack_clip.phase.strike" } },
+        { "t": 0.08, "type": "phase", "data": { "label": "attack_clip.phase.recover" } }
+      ]
     }
   ],
   "locales": {

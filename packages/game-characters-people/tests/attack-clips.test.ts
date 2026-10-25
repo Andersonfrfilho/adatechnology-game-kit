@@ -8,6 +8,8 @@ import { ATTACK_CLIPS, ATTACK_CLIP_LOCALES } from '../src'
 /** The relaxed upper body the melee clips start and end at (the first key of the Bestiário human clip). */
 const NEUTRAL_UPPER: Record<string, number> = { lean: 0, twist: 0, side: 0, headX: 0, headY: 0, headZ: 0, armR: 0.05, armL: -0.1, elbR: -0.2, elbL: -0.2, armRz: 0, armLz: 0 }
 const NEUTRAL_FULL: Record<string, number> = { ...NEUTRAL_UPPER, drop: 0, legL: -0.05, legR: 0.05, kneeL: 0.05, kneeR: 0.05 }
+/** Both hands on the weapon at pitch 0, as `createPlayerAvatar` poses the armed body (`AIMED` in the avatar); the recoil clips start and end here. */
+const NEUTRAL_AIMED: Record<string, number> = { lean: 0, twist: 0, headX: 0, armR: -1.42, armL: -1.42, elbR: -0.04, elbL: -0.12, armRz: -0.54, armLz: 0.36 }
 const TOLERANCE = 0.12
 const STEPS = 200
 
@@ -17,6 +19,7 @@ const EXPECTED: Record<string, Expectation> = {
   punch_right: { duration: 0.35, channels: 'upper', impactAt: [0.1, 0.25], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
   shove_two_hands: { duration: 0.5, channels: 'upper', impactAt: [0.15, 0.35], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
   front_kick: { duration: 0.6, channels: 'full', impactAt: [0.2, 0.4], neutral: NEUTRAL_FULL, phases: ['windup', 'strike', 'recover'] },
+  recoil_rifle: { duration: 0.22, channels: 'upper', impactAt: [0, 0.05], neutral: NEUTRAL_AIMED, phases: ['strike', 'recover'] },
 }
 
 const byId = (id: string): PoseClip => ATTACK_CLIPS.find((clip) => clip.id === id)!
@@ -65,7 +68,7 @@ describe('attack clips', () => {
         const impactTime = impacts[0]!.t
         expect(impactTime).toBeGreaterThanOrEqual(expected.impactAt[0])
         expect(impactTime).toBeLessThanOrEqual(expected.impactAt[1])
-        expect(clipEventsBetween(clip, 0, clip.duration).filter((event) => event.type === 'impact')).toHaveLength(1)
+        expect(clipEventsBetween(clip, -1e-9, clip.duration).filter((event) => event.type === 'impact')).toHaveLength(1)
         const phases = events.filter((event) => event.type === 'phase')
         expect(phases.map((event) => (event.data?.label as string).replace('attack_clip.phase.', ''))).toEqual(expected.phases)
         expect(phases.map((event) => event.t)).toEqual([...phases.map((event) => event.t)].sort((a, b) => a - b))
