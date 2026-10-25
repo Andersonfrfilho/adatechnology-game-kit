@@ -233,7 +233,7 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
       return targetsOf(THREE, hold, model.getWorldQuaternion(q2), 0)
     },
     handle(event, tool) {
-      if (event.type === 'explosion') return
+      if (event.type === 'explosion' || event.type === 'player') return
       const weapon = arsenal.weapons.get(event.weapon)
       if (event.type === 'tool') equip(event.weapon)
       if (!weapon) return

@@ -57,7 +57,7 @@ Ordem: armas → casas → itens → personagens → efeitos → som e clima →
 ## Fase 4 — Personagens e animais
 > 🤖 Modelo: `sonnet` (T4.1 é 🧠 → `opus`)
 
-- T4.1 🧠 `game-characters`: corpo do jogo com a proporção do guia (P1), juntas, andar, 11 segmentos com resistência por ponto contra a
+- T4.1 🧠 (jogador, braços e agachar adiantados na spec 002) `game-characters`: corpo do jogo com a proporção do guia (P1), juntas, andar, 11 segmentos com resistência por ponto contra a
   força da arma (P7, A4), desmembramento em 3 níveis (P8).
 - T4.2 `game-characters-undead`: os 13 tipos do Bestiário v17 (P2, P11), velocidades com multiplicadores por momento (P3), olhos (P4),
   tipo de zumbi como propriedade na criação (P5), crianças podem virar (P6).
@@ -88,7 +88,7 @@ Ordem: armas → casas → itens → personagens → efeitos → som e clima →
   cor por semente e `DIMS`; condução arcade e semi-simulação (V4); `vehicles-test-area` (V5).
 - ✅ T7.2 Vegetação: juntar Viveiro (V8), `rulesFor`, `vegetation-test-area`.
 - ✅ T7.3 `game-urban`: ruas, calçadas, os 5 postes, bairro, quarteirão, relevo (C3), com veículos e plantas como provedores e a `urban-test-area`.
-- ✅ T7.4 Câmera de ombro do jogo no `game-camera` (V7). (T7.0 a T7.5 entregues no ramo `int/p7`; prova em `evidence.md`, Fase 7.)
+- ✅ T7.4 Câmera de ombro do jogo no `game-camera` (V7). Adiantada na spec 002. (T7.0 a T7.5 entregues no ramo `int/p7`; prova em `evidence.md`, Fase 7.)
 
 ## Fase 8 — Multidão, histórias e jogador
 > 🤖 Modelo: `sonnet` (T8.2 é 🧠 → `opus`)
