@@ -779,7 +779,8 @@ function scenariosOf(module: ItemsTestModule, catalog: ItemsCatalog, text: Text,
         const models = listItemModels()
         expect(models.length === SHIPPED_MODELS.length, `${SHIPPED_MODELS.length} models are shipped`, { count: models.length })
         const withModel = catalog.list().filter((item) => item.model !== undefined && hasItemModel(item.model))
-        expect(withModel.length === 23, '23 items of the catalog name a model', { count: withModel.length })
+        const shippedItems = SHIPPED_MODELS.filter(({ entry }) => catalog.has(entry.id)).length
+        expect(withModel.length === shippedItems, `${shippedItems} items of the catalog name a model (every shipped model that is a catalog item)`, { count: withModel.length })
         const stand = module.placed().filter((entry) => entry.group === 'showcase')
         expect(stand.length === 0 || stand.every((entry) => entry.kind === 'model'), 'every piece of the stand is drawn by the model of the team')
       },
