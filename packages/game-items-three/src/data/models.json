@@ -2098,5 +2098,15 @@
       0.15022
     ],
     "scale": 1
+  },
+  {
+    "id": "magazines_and_comics",
+    "teamId": "revista_passa",
+    "teamBox": [
+      0.17,
+      0.26,
+      0.0101
+    ],
+    "scale": 1
   }
 ]
