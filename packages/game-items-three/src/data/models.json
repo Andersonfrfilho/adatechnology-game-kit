@@ -1143,11 +1143,11 @@
     "id": "shovel",
     "teamId": "pa",
     "teamBox": [
-      11,
-      0.7,
-      2.2
+      110.3,
+      7,
+      22
     ],
-    "scale": 0.1
+    "scale": 0.009991
   },
   {
     "id": "hacksaw",
