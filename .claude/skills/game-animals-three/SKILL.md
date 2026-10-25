@@ -52,3 +52,4 @@ chamadas de desenho, triângulos, nós por pele, incubando, viraram, morreram. S
 - Espécie com textura de pelo precisa de `document` (um canvas); no teste, um documento de mentira basta.
 - A pele de nós guarda como nós próprios as peças que a animação mexe (`collectReferencedNodes`): rode `animate` e depois `skin.update()`.
 - `Math.random` não entra: a fase inicial do passo vem do fluxo semeado.
+- Geometria: `createAnimalsThree` desenha com `shapeGeometries(host)` do `game-shapes-three` e o torno do `profileGeometry` vem do `game-shapes` (os mesmos bytes); `tests/exact-golden.test.ts` guarda cada bit.

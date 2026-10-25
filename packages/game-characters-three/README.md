@@ -27,3 +27,10 @@ time.value += dt
 
 - `createCharacterSound(host.audio, { style? })`: `voice(typeId, 'idle' | 'alert' | 'special', position)` for the 13 undead types (`UNDEAD_VOICES`: the game's groans and scream, the art scene's `voice` groan, scream and leap, with the class rule of the page for the types it does not have), `body(event, position)` (wound = flesh, cut = sever, burst or split = gore), `player('grab' | 'bite' | 'hurt')`. The 16 recipes (`CHARACTER_SOUND_BANK`) leave the same trace as the team code.
 - `createFluidsBridge({ sink, film })` and `bloodLookOfAge(age)`: a `body` event throws drops of blood into the film, in the fresh and dry colours of the infection age (`ages.json`), `old_blood` for the thin ones.
+
+## Geometry
+
+The builders (`createPersonBuilder`, `createBestBuilder`, `bakeBody`, `buildInstancedBody`, `createFlyingLimbs`, `createEye`) draw with
+`shapeGeometries(host)` of [`game-shapes-three`](../game-shapes-three): boxes, cylinders, cones, spheres, circles, rings, lathes and tori come
+from game-shapes with the same bytes; dodecahedron, shape and capsule geometries are three's. `tests/exact-golden.test.ts` holds every bit as
+the old path made them.

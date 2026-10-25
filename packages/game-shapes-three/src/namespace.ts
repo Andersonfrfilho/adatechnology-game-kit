@@ -61,6 +61,8 @@ export interface ShapeGeometriesOptions {
 }
 
 const namespaces = new WeakMap<object, Map<string, Three>>()
+/** The namespaces this module made: wrapping one again gives it back (a package handing its `T` to another). */
+const shims = new WeakSet<object>()
 
 /**
  * A three namespace whose `BoxGeometry`, `CylinderGeometry`, `ConeGeometry`, `SphereGeometry`, `PlaneGeometry`, `CircleGeometry`, `RingGeometry`,
@@ -69,6 +71,7 @@ const namespaces = new WeakMap<object, Map<string, Three>>()
  * An extrusion with curves, several shapes, a path or a custom uv generator falls back to three.
  */
 export function shapeGeometries(THREE: Three, options: ShapeGeometriesOptions = {}): Three {
+  if (shims.has(THREE)) return THREE
   const cache = options.cache !== false
   const key = cache ? 'cache' : 'nocache'
   let byKey = namespaces.get(THREE)
@@ -124,5 +127,6 @@ export function shapeGeometries(THREE: Three, options: ShapeGeometriesOptions = 
   }
   const result = namespace as unknown as Three
   byKey.set(key, result)
+  shims.add(result)
   return result
 }

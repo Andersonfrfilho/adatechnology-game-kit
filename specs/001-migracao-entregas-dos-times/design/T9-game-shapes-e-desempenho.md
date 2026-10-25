@@ -426,6 +426,9 @@ migrates (§7).
 | `ShapeGeometry`, `ExtrudeGeometry` with curves, Dodecahedron / Icosahedron / Tetrahedron, Capsule | characters, vehicles, urban, vfx | Not used by the first three migrations; added when their package migrates |
 | Lathe and Extrude under three r128 | urban, vegetation, vehicles | r128's lathe normals and index order and extrude uvs differ from r160's (measured); see §11 q3 |
 | `MeshApiOptions` with a three whose `Color.setHex` is neither raw sRGB nor r160's linear | interactables | `createMeshApi` checks the 256 channel values once per three and throws: game-shapes knows those two spaces only |
+| The rounded box of the weapon models (`createRoundedBoxGeometry`) | weapons | Its corner rounding is three Vector3 arithmetic over a segmented box; the box now comes from game-shapes, the rounding stays a port of the three addon (a game-shapes generator is a later slice) |
+| `IcosahedronGeometry`, `DodecahedronGeometry`, `ShapeGeometry`, `CapsuleGeometry`, `TubeGeometry` | weapons, characters | Not ported to game-shapes: `shapeGeometries` hands them to three |
+| The test areas' own room furniture (`test-area/module.ts`, `area.ts`) | characters, weapons, items | Drawn with the room's three, not the package's builders |
 | The items area's own furniture (shelves, stand, ruler, table, mannequin in `area.ts`) | items | Drawn with the host's three, not the kit: room furniture, not an item; it moves with the test room, not with the items |
 
 ### 7.4 Migrated (T9e)
@@ -438,7 +441,10 @@ byte of every attribute and index, attribute order and array types, transforms, 
 | `game-props3d` | `createShapeRecorder()`: the props api (and parts) as a game-shapes schema with the mesh api's arithmetic; `mergeByMaterial` is the one of `game-shapes-three` (re-exported) | `tests/shape-recorder.test.ts`; the props cases of the interactables golden | — (builders only describe primitives) |
 | `game-interactables-three` | `createMeshApi`: the builders draw into the recorder, `finish` calls `generate` (materials, fallback `plain`, shared instances as `materialAlias`, the colour space of the given three) and makes the same meshes, parts, lights, merges and destruction tags | `tests/exact-golden.test.ts`: 222 cases (57 props and 51 household objects in both qualities, five option sets) | props3d 13.0 → 10.5; household 31.1 → 30.5 |
 | `game-items-three` | the kit's `T` is `shapeGeometries(THREE)` (box, cylinder, cone, sphere, plane, lathe, torus, straight extrude from game-shapes; tube from three); `mergeItem` on `game-shapes-three` | `tests/exact-golden.test.ts`: 147 cases (24 models and 25 shapes alone, merged, half detail, LOD) and the team golden `items-showcase.json` | items 4.7 → 3.1 |
-| `game-weapons-three` (merge only) | `buildProp`'s `mergeByMaterial` now comes through props3d from `game-shapes-three` | its team goldens | — |
+| `game-weapons-three` (T9f) | the model kit's `THREE` is `shapeGeometries(host)` (box, cylinder, cone, sphere, torus of the gallery models, attachments, cartridges and the heavy effects; the rounded box is built over game-shapes' segmented box); `buildProp` boxes and `mergeByMaterial` from `game-shapes-three` (no more props3d dependency) | `tests/exact-golden.test.ts`: 367 cases (114 models and archetypes, 40 weapons as they ship, 25 accessories, 27 cartridges, 161 props) and the team goldens | weapons 44.1 → 39.3 (T9f, same session) |
+| `game-animals-three` (T9f) | `createAnimalsThree` draws with `shapeGeometries(host)`; `profileGeometry`'s lathe from game-shapes | `tests/exact-golden.test.ts`: 13 species × 2 seeds and the profile; the page goldens | animals 30.3 → 11.1 |
+| `game-characters-three` (T9f) | `createPersonBuilder`, `createPersonKit`, `createBestBuilder`, `bakeBody`, `buildInstancedBody`, `createFlyingLimbs`, `createEye` draw with `shapeGeometries(host)` | `tests/exact-golden.test.ts`: 281 cases (44 people and 8 as zombies, every extra, hat, face feature and hand item, 13 Bestiário bodies × 4 decays × 2 levels, bakes, the instanced body); the team goldens | characters (new group: 12 people, 13 bodies, 3 bakes, instanced body) 166.7 → 90.9 |
+| `game-crowd-three` (T9f) | nothing of its own: it instances the baked variants of characters-three, which now come from game-shapes | its team golden `game-crowd-render.json`, unchanged | — |
 
 ## 8. Performance plan
 

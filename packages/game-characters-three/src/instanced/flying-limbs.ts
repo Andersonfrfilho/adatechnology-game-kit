@@ -1,3 +1,4 @@
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import type { Three, THREE_NS } from '../three'
 
 const GRAVITY = 9.8
@@ -59,7 +60,8 @@ export type FlyingLimbs = {
 }
 
 /** Torn-off pieces that fly, bounce and stay on the ground, as one instanced mesh of capsules (G 67953 `fxLimb`, 68040 update). */
-export const createFlyingLimbs = (three: Three, { max = 40, random, effects = {} }: FlyingLimbsOptions): FlyingLimbs => {
+export const createFlyingLimbs = (host: Three, { max = 40, random, effects = {} }: FlyingLimbsOptions): FlyingLimbs => {
+  const three = shapeGeometries(host)
   const limbs: FlyingLimb[] = []
   const mesh = new three.InstancedMesh(new three.CapsuleGeometry(0.065, 0.32, 2, 6), new three.MeshLambertMaterial({ color: 0xffffff }), max)
   mesh.count = 0

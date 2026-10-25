@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-unused-expressions */
 // @ts-nocheck
 // Literal port of the Retratos do Vale survivor builder (sobreviventes/retratos-do-vale.html), kept as the team wrote it so a diff against the page stays readable.
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import type { Three } from '../three'
 
 export type PersonKitOptions = {
@@ -11,7 +12,8 @@ export type PersonKitOptions = {
 }
 
 /** The page's primitives: materials are cached by colour, `add` puts a mesh in a parent, and the `ball`/`ring`/`limb` shapes of the anatomical body. */
-export const createPersonKit = (THREE: Three, { random: R, createCanvas = () => document.createElement('canvas') }: PersonKitOptions) => {
+export const createPersonKit = (host: Three, { random: R, createCanvas = () => document.createElement('canvas') }: PersonKitOptions) => {
+  const THREE = shapeGeometries(host)
   const T = THREE
   // The page multiplied the colour in sRGB (three r128 did not convert) and read the hex back truncating; r160 multiplies in linear space, which would darken differently.
   const scaleHex=(hex,factor)=>{const channel=(shift)=>((hex>>shift)&255)/255*factor*255;return (channel(16)<<16)^(channel(8)<<8)^(channel(0)<<0)};
