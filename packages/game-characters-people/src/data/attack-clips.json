@@ -19,6 +19,26 @@
         { "t": 0.16, "type": "impact", "data": { "kind": "punch" } },
         { "t": 0.22, "type": "phase", "data": { "label": "attack_clip.phase.recover" } }
       ]
+    },
+    {
+      "id": "shove_two_hands",
+      "source": { "authored": "game-kit", "note": "authored in the kit; replace with the Elenco team's clip when delivered" },
+      "duration": 0.5,
+      "loop": false,
+      "channels": "upper",
+      "keys": [
+        { "t": 0, "pose": { "lean": 0, "twist": 0, "side": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0 } },
+        { "t": 0.15, "pose": { "lean": -0.08, "twist": 0, "side": 0, "headX": -0.05, "headY": 0, "headZ": 0, "armR": -0.9, "armL": -0.9, "elbR": -1.9, "elbL": -1.9, "armRz": -0.12, "armLz": 0.12 } },
+        { "t": 0.26, "pose": { "lean": 0.3, "twist": 0, "side": 0, "headX": 0.06, "headY": 0, "headZ": 0, "armR": -1.5, "armL": -1.5, "elbR": -0.12, "elbL": -0.12, "armRz": -0.08, "armLz": 0.08 } },
+        { "t": 0.34, "pose": { "lean": 0.26, "twist": 0, "side": 0, "headX": 0.05, "headY": 0, "headZ": 0, "armR": -1.4, "armL": -1.4, "elbR": -0.2, "elbL": -0.2, "armRz": -0.06, "armLz": 0.06 } },
+        { "t": 0.5, "pose": { "lean": 0, "twist": 0, "side": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0 } }
+      ],
+      "events": [
+        { "t": 0, "type": "phase", "data": { "label": "attack_clip.phase.windup" } },
+        { "t": 0.15, "type": "phase", "data": { "label": "attack_clip.phase.strike" } },
+        { "t": 0.26, "type": "impact", "data": { "kind": "shove" } },
+        { "t": 0.34, "type": "phase", "data": { "label": "attack_clip.phase.recover" } }
+      ]
     }
   ],
   "locales": {

@@ -1,5 +1,6 @@
 import { clipEventsBetween, samplePoseClip } from '@adatechnology/game-characters'
 import type { PoseClip } from '@adatechnology/game-characters'
+import { PLAYER_DEFAULTS } from '@adatechnology/game-player'
 import { describe, expect, it } from 'vitest'
 
 import { ATTACK_CLIPS, ATTACK_CLIP_LOCALES } from '../src'
@@ -13,6 +14,7 @@ type Expectation = { duration: number; channels: 'upper' | 'full'; impactAt: [nu
 
 const EXPECTED: Record<string, Expectation> = {
   punch_right: { duration: 0.35, channels: 'upper', impactAt: [0.1, 0.25], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
+  shove_two_hands: { duration: 0.5, channels: 'upper', impactAt: [0.15, 0.35], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
 }
 
 const byId = (id: string): PoseClip => ATTACK_CLIPS.find((clip) => clip.id === id)!
@@ -69,4 +71,13 @@ describe('attack clips', () => {
       })
     })
   }
+})
+
+describe('attack clips against the game-player rules', () => {
+  // game-player applies the shove (stun, push) and the melee blow on the key press and has no wind-up of its own: the host fires the effect from the clip's `impact`
+  it('keeps the shoved target stunned until the player has recovered (shove)', () => {
+    const clip = byId('shove_two_hands')
+    const impact = clip.events!.find((event) => event.type === 'impact')!
+    expect(clip.duration - impact.t).toBeLessThanOrEqual(PLAYER_DEFAULTS.numbers.shoveStun)
+  })
 })
