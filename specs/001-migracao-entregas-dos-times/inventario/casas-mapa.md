@@ -29,7 +29,7 @@ O spec 001 trata o Casa3DSDK como "um SDK de casas (pilares, vigas, lajes...) qu
 |---|---|---|---|
 | **PlantasSDK** v3.0 | dados: plantas de casas e lotes com semente (cômodos, paredes, portas, janelas, móveis em slots, paleta, estados) **e, na versão estendida, a estrutura de sustentação (pilar, viga, laje, parede portante/vedação, telhado, escada, caixa d'água), a construção por material, a rede elétrica, hidráulica, gás, painéis solares, edificações do quintal e conteúdo dos móveis** | L7374–11190 | `game-floorplan` + `-residential` + `-commercial` + `-post-apocalyptic` (porte de uma versão **mais antiga** do PlantasSDK; ver 0.1) |
 | **Casa3DSDK** v1.0.0 | renderizador three.js do resultado do PlantasSDK: paredes com vãos, portas e janelas, pisos, lajes, forros, escadas, elevador, telhados, lote (muro, portão, calçada), calhas, telhas com relevo, espelhos, luzes, interação, colisão, LOD, adaptador de destruição | L39443–42734 | **nenhum** (não existe `game-floorplan-three`) |
-| **AdaptadorInterativos** v0.2.0 | ponte entre o PlantasSDK e o kit de interativos (`GameInteractables` + `GameInteractablesHousehold`): `MAPA_TIPOS` de tipo de planta para tipo household | L35057–36006 | **nenhum** (é "código do JOGO" segundo o próprio cabeçalho, L35051) |
+| **AdaptadorInterativos** v0.2.0 | ponte entre o PlantasSDK e o kit de interativos (`GameInteractables` + `GameInteractablesHousehold`): `MAPA_TIPOS` de tipo de planta para tipo household | L35057–36006 | ~~nenhum~~ **entrou (2026-10-25, PR #37)** em `packages/game-floorplan-interactables` (era "código do JOGO" segundo o próprio cabeçalho, L35051; o dono mandou levar para o kit) |
 | Moveis3DSDK | 57 builders de decoração/móvel/quintal/estado | L11196–~11646 (só ~450 linhas) | `game-props3d` (57 builders, **exatamente os mesmos 57 tipos**, renomeados para inglês) |
 | AndaresSDK | vários andares para sobrados e mansões no jogo: grade fina de 10 cm por andar, escadas, retorno em U (só em ML) | ML L7372–7560 | **nenhum** |
 
@@ -549,3 +549,19 @@ Atualizado em 2026-10-24. As linhas 27, 31, 38 e 40 da tabela e as peças urbana
 | Casas da amostra (sobrado, laje, colonial, chalé, vila operária, palafita, sede, prédio) | Sim, as silhuetas de longe do `game-floorplan` como provedor padrão | `game-urban` (`createSilhouetteHouses`) |
 | Partes que o `buildWorld` espalha (árvores e vilas pelo mapa, estradas, trilhas e trilhos, túneis, pontes, linhas de transmissão, muros, decoração do vale, marcadores do mapa) | **Não**: ficam como pendência (ver `evidence.md`, Fase 7, "Perguntas para o dono") | - |
 | Ambiente de teste da cidade (`?area=urban`) | Sim | `packages/game-urban-three/src/test-area/`, `examples/urban-test-area/` |
+
+## Atualização de 2026-10-25: o que entrou nesta sessão e onde
+
+Sala de testes (item 12 acima, "item de casa provisório do `game-test-room`"): resolvido, o `frame()` e todos os itens de caixa saíram; a sala carrega só os módulos dos SDKs (PR #44).
+
+| Entrega | Onde entrou | PR |
+|---|---|---|
+| `AdaptadorInterativos` (ponte planta para móveis do household), genérico e configurável, com teste diferencial contra o IIFE do time (93 testes); padrão de `interactives` no `game-floorplan-three` | `packages/game-floorplan-interactables` | #37 |
+| Estrutura real, passo 1: flexão do concreto armado (vergalhão), alvenaria portante pela altura (NBR 16868-1) | `packages/game-destruction` (`structure.rebar`, `FLEXURE_DEFAULTS`, `MASONRY_DEFAULTS`); `packages/game-floorplan-structure` (opção `rebar`) | #45 |
+| Passo 2: solo, sapatas, radier e estacas, com recalque e tombamento | `packages/game-destruction` (`soil`), `game-destruction-three`, `game-floorplan-structure` (`foundation`, `piles`) | #46 |
+| Passo 3: pilares contínuos, núcleo, pele de vidro, cobertura plana, andar técnico | `game-destruction` (`buildFrame`), `game-contracts` (`contains.outflow`), `game-floorplan-structure` (`buildTower`, `addCore`, `addCurtainWall`, `addFlatRoof`, `addMechanicalFloor`) | #48 |
+| Passo 4: vento, balanço do topo e amortecedor de massa | `game-destruction` (`wind`, `WIND_DEFAULTS`), `game-floorplan-structure` (`addTunedMassDamper`) | #49 |
+| Passo 5: arranha-céu (`office_tower`, `residential_tower`) e torres na cidade (`towers`) | `game-floorplan-structure` (`skyscraper.ts`), `game-floorplan-commercial`, `game-floorplan-residential`, `game-urban` | #52 |
+| Lajes das casas em painéis com vigas reais; vergalhão ligado por padrão (com `slabPanels`) | `game-floorplan-structure` (`slab-panels`, `SLAB_PANEL_DEFAULTS`); `game-floorplan-three` desenha por painel | #59 |
+
+Perguntas em aberto da estrutura real (T10 §10.7 e §11.10): tabela 1 da NBR 6123 a conferir; deriva acima de 60 andares; `towers` desligado por padrão na cidade; correção da energia dos explosivos (proposta pendente).

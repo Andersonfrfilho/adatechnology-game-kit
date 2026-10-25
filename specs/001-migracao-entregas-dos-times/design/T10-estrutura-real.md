@@ -20,6 +20,8 @@ portante) em detalhe. Os passos 1 e 2 estão implementados em `game-destruction`
 | 8 | Andar técnico (máquinas, caixa d'água, amortecedor: tudo pesa) | peças em `game-floorplan-structure` | **feito** (§9; o amortecedor está no §10) |
 | 9 | Tipologia de arranha-céu, usada pela cidade | `game-floorplan-commercial`/`-residential`, `game-urban` | feito (§11) |
 
+Em aberto em 2026-10-25: (a) energia dos explosivos (§7, proposta pendente); (b) conferência da tabela 1 da NBR 6123 (§10.7); (c) deriva acima de 60 andares e `towers` desligado na cidade (§11.10). Decididas pelo dono em 2026-10-25: `H/500`, `V0 = 40 m/s` e categoria III (§10.7).
+
 Itens 3 a 9 dependem de 1 e 2 (as peças novas precisam de flexão e de esmagamento reais para que a explosão faça o que faria).
 
 ## 2. Flexão: o concreto racha na tração, o aço segura (lacuna 1)
@@ -196,8 +198,9 @@ um projeto para perder um pilar (dimensionados com `redundancy`, ou com o aço d
   da espessura, o cálculo usa a altura útil real.
 - Impacto (carro, objeto lançado) ainda não dobra vigas: o `Hit` precisa da massa do impactador (`Hit.mass` de `blunt`).
 - Paredes ainda não dobram para fora do plano numa explosão (a parede de vedação empurrada para dentro): entra com a pele de vidro (lacuna 6).
-- As energias dos explosivos de `game-weapons` são menores que as reais (granada 200 kJ = 48 g de TNT; uma M67 tem ~185 g de Composição B,
-  ~0,24 kg de TNT): pergunta ao dono se corrige a tabela.
+- Energia dos explosivos de `game-weapons` (granada 200 kJ = 48 g de TNT; uma M67 real tem ~0,24 kg de TNT equivalente): o dono pediu a correção; ficou decidido
+  não calibrar pelos valores reais de explosivos. Proposta pendente: a força de cada explosivo como valor de jogo na configuração, ajustada pelo efeito em jogo
+  (porta, parede, laje, pilar), aguardando resposta do dono.
 
 ## 8. Solo e fundação (lacuna 3, passo 2 da ordem; 2026-10-25)
 
@@ -486,8 +489,12 @@ tracionada (até 40 mm), `lean` desloca o centro de massa na fundação (`M/W`),
 - A lâmina de vidro e a laje não entram na rigidez lateral (conservador); a laje faz o papel de diafragma rígido por suposição.
 - Idealização contínua: a deriva por andar tem erro da ordem de meia força de andar; vários amortecedores no mesmo prédio agem como um só (somados).
 - O batente do amortecedor (curso máximo) não existe; o curso relativo é só informado (`damper.travel`).
-- Perguntas ao dono: (1) `H/500` com o vento inteiro (equivale ao `H/1700` da NBR 6118 com `ψ1 = 0,3`) está certo, ou o jogo prefere outro limite? (2) A tabela 1 da
-  NBR 6123 foi transcrita da memória da norma; precisa de conferência com o texto. (3) O padrão ligado de `V0 = 40` e categoria III serve ao jogo?
+- **Decidido pelo dono em 2026-10-25** ("se for perto do que é real, sim"):
+  1. O limite de deriva fica em `H/500` com o vento inteiro. Ele é próximo do valor de serviço do vento da NBR 6118 (`H/1700` com a combinação frequente,
+     `ψ1 = 0,3`, que dá cerca de `H/510` com o vento inteiro; ver o item 5 do §10.2).
+  2. Os padrões ligados `V0 = 40 m/s` e categoria de terreno III ficam.
+- **Pendente (verificação, não é pergunta ao dono):** os valores da tabela 1 da NBR 6123 (`b`, `p`, `zg`) foram transcritos da memória da norma. Ficam como item aberto
+  até serem conferidos com o texto da norma; nada foi corrigido por palpite.
 
 
 ## 11. Arranha-céu (lacuna 9, passo 5 da ordem; 2026-10-25)
@@ -629,8 +636,8 @@ já existem é `tensionCapacity` (só com vento ligado, que nenhum golden liga).
 - A laje é uma peça por andar; a pele de vidro é uma lâmina de 12 mm; o núcleo tem uma fileira de poços (largura dada pelo vão).
 - A planta e a estrutura vêm do mesmo layout, mas são dois objetos: o `plan.structure` do pipeline de casas (pórtico de concreto, ≥ 3 andares) e a
   `DestructibleSpec` da torre (núcleo, vidro, estacas, vento). O jogo usa a segunda para a física da torre.
-- Perguntas ao dono: (1) a torre de 80 andares pode passar de H/500 no padrão, ou o jogo prefere limitar a faixa a 60? (2) `towers` desligado por padrão na
-  cidade serve, ou o centro deve nascer com torres e regerar os goldens da Galeria?
+- **Perguntas ao dono, ainda pendentes (sem resposta em 2026-10-25):** (1) a torre de 80 andares pode passar de H/500 no padrão, ou o jogo prefere limitar a faixa a 60?
+  (2) `towers` desligado por padrão na cidade serve, ou o centro deve nascer com torres e regerar os goldens da Galeria?
 
 ## 12. Lajes em painéis com vigas reais nas casas (§5 resolvido; 2026-10-25)
 

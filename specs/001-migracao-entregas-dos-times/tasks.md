@@ -128,6 +128,32 @@ desempenho). Pedido do dono (2026-10-24): o 3D de tudo sai de um SDK que aceita 
 
 Inventário da migração (o que entrou e onde): T9 §7.4.
 
+As partes 1, 2 e 3 da Fase 9 entraram nos PRs #39 (T9a a T9e), #43 (T9f) e #47 (T9g). As perguntas do T9 §11 foram respondidas pelo dono em 2026-10-25 (q3 antes: opção b).
+
+## Fase 10 — Estrutura real de casas, prédios e arranha-céus
+> 🤖 Modelo: `opus`
+
+Pedido do dono (2026-10-24). Desenho: `design/T10-estrutura-real.md`; lista de lacunas em `spec001/estruturas-reais-lacunas.md`. Estado em 2026-10-25:
+
+| Passo | Conteúdo (lacunas) | Estado | Onde |
+|---|---|---|---|
+| 1 | Flexão do concreto armado, vergalhão e alvenaria portante (1, 2) | feito | PR #45: `game-destruction`, `game-floorplan-structure` |
+| 2 | Solo, sapatas, radier e estacas (3) | feito | PR #46: `game-destruction`, `game-destruction-three`, `game-floorplan-structure` |
+| 3 | Pilares contínuos, núcleo, pele de vidro, cobertura plana, andar técnico (4, 6, 7, 8) | feito | PR #48: `game-destruction`, `game-contracts`, `game-floorplan-structure` |
+| 4 | Vento, balanço do topo e amortecedor de massa (5) | feito | PR #49: `game-destruction`, `game-floorplan-structure` |
+| 5 | Arranha-céu `office_tower` e `residential_tower`, torres na cidade (9) | feito | PR #52: `game-floorplan-structure`, `-commercial`, `-residential`, `game-urban` |
+| 6 | Lajes das casas em painéis com vigas e vergalhão por padrão (T10 §5, §12) | feito | PR #59: `game-floorplan-structure`, `game-floorplan-three` |
+
+Em aberto (T10 §10.7, §11.10 e §7): conferir a tabela 1 da NBR 6123; deriva acima de 60 andares; `towers` desligado por padrão na cidade; proposta de força de cada explosivo como valor de jogo (aguarda o dono).
+
+## Entregas fora das fases, em 2026-10-25
+
+| Entrega | Estado | Onde |
+|---|---|---|
+| `AdaptadorInterativos` no kit | feito (PR #37) | `packages/game-floorplan-interactables` |
+| Física decidida em 2026-10-24 (tanque, pilares somados, granada, penetração por calibre) | feito (PR #40) | `game-contracts`, `game-weapons`, `game-destruction`, `game-vehicles`, `game-vfx`; respostas do dono em `evidence.md` |
+| Sala de testes só com itens dos SDKs | feito (PR #44) | `packages/game-test-room`, `examples/test-room` |
+
 ## Gates de cada task
 
 `pnpm build`, `pnpm -r typecheck`, testes do pacote (goldens incluídos), `pnpm lint`, skill do pacote atualizada em

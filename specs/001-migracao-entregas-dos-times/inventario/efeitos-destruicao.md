@@ -366,3 +366,11 @@ Atualizado em 2026-10-24. Cada linha: a peça da página, onde ficou, e o que **
 | Jogo (versão reduzida, teto por área, cadeia) | `AREA_CAP_GAME`, `LOD_GAME`, `delay` do `explosion` | entrou como padrão do SDK |
 
 Dúvidas 1 a 9 da seção 5: a 9 (efeitos de tela) foi decidida como estado em `game-vfx` mais overlay DOM em `game-vfx-three`. As abertas ficam em "Perguntas para o dono" de cada seção do `evidence.md`.
+
+## Atualização de 2026-10-25: o que entrou nesta sessão e onde
+
+| Entrega | Onde entrou | PR |
+|---|---|---|
+| Física decidida pelo dono em 2026-10-24: tanque de combustível realista (ignição por faísca, chama, fogo perto e explosão), sustentação como soma dos pilares (`structure.safetyFactor`), correção da granada sempre ligada (`BREACH_BLAST_REACH`), tabela de penetração por calibre (50 cargas em `ammo.json`) | `game-contracts` (`IgnitionRules`), `game-weapons` (`rules.ignition`, `ammo.json`), `game-destruction`, `game-vehicles` (`createVehicleDestructible({ ignition, fuel })`), `game-vfx` (`vehicle_leak_ignited`) | #40 |
+| Sala de testes só com itens dos SDKs (saíram `demoItems`, `SCENARIOS` e o carro de caixas) | `packages/game-test-room` (breaking 0.x), `examples/test-room`, `game-weapons-three/src/scenarios.ts` | #44 |
+| Flexão, solo, núcleo, vento, arranha-céu e lajes em painéis (flexão e estruturas da explosão) | ver a tabela em `inventario/casas-mapa.md` (Atualização de 2026-10-25) e `design/T10-estrutura-real.md` | #45 #46 #48 #49 #52 #59 |
