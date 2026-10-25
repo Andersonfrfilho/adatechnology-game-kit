@@ -1,16 +1,16 @@
 import type { DoorDef, FloorplanOptions, RoomDef, TemplateDef } from '@adatechnology/game-floorplan'
-import { SKYSCRAPER_DEFAULTS, buildSkyscraper, exteriorWindows, skyscraperLayout, splitStrip, stripDoor, towerFloors } from '@adatechnology/game-floorplan-structure'
+import { SKYSCRAPER_DEFAULTS, SKYSCRAPER_MAX_STOREYS, buildSkyscraper, exteriorWindows, skyscraperLayout, splitStrip, stripDoor, towerFloors } from '@adatechnology/game-floorplan-structure'
 import type { PlateStrip, SkyscraperLayout, SkyscraperOptions, SkyscraperPreset, StripFiller, TowerPlate } from '@adatechnology/game-floorplan-structure'
 import { r2 } from '../util'
 
 /**
- * The office tower: the numbers of the typology, all of them options of `skyscraperLayout`. 40 storeys (20 to 80) of 3.6 m clear height on 12 m bays with a
+ * The office tower: the numbers of the typology, all of them options of `skyscraperLayout`. 40 storeys (20 to 60, the default maximum `SKYSCRAPER_MAX_STOREYS`; `range` raises it) of 3.6 m clear height on 12 m bays with a
  * glass curtain wall, a plant floor every 20 storeys and a tuned mass damper above 150 m, standing on piles to the sand under soft clay in a city wind.
  */
 export const OFFICE_TOWER_DEFAULTS: SkyscraperPreset = {
   ...SKYSCRAPER_DEFAULTS,
   storeys: 40,
-  range: [20, 80],
+  range: [20, SKYSCRAPER_MAX_STOREYS],
   height: 3.6,
   bay: [12, 12],
   bays: [3, 3],

@@ -3,7 +3,7 @@ import { createDestruction } from '@adatechnology/game-destruction'
 import type { DestructionEvent } from '@adatechnology/game-destruction'
 
 import {
-  SKYSCRAPER_DEFAULTS, buildSkyscraper, mechanicalStoreys, pilesFor, skyscraperLayout, splitStrip, storeyKinds, stripDoor, towerFloors, towerPlate,
+  SKYSCRAPER_DEFAULTS, SKYSCRAPER_MAX_STOREYS, buildSkyscraper, mechanicalStoreys, pilesFor, skyscraperLayout, splitStrip, storeyKinds, stripDoor, towerFloors, towerPlate,
 } from '../src'
 import type { SkyscraperOptions } from '../src'
 
@@ -47,7 +47,7 @@ describe('skyscraper layout', () => {
   })
 
   it('every number is an option: the range, the height, the bays, the facade, the mechanical floors, the damper', () => {
-    expect(skyscraperLayout({ storeys: 500 }).storeys).toBe(80)
+    expect(skyscraperLayout({ storeys: 500 }).storeys).toBe(60)
     expect(skyscraperLayout({ storeys: 3 }).storeys).toBe(20)
     const l = skyscraperLayout({ storeys: 30, height: 3, bay: [9, 12], slenderness: false, bays: [1, 2], facade: 'punched', mechanicalEvery: false, damperAbove: false, columnSize: 1, beamHeight: 0.7, slabThickness: 0.3 })
     expect(l.bay).toEqual([9, 12])
@@ -65,18 +65,36 @@ describe('skyscraper layout', () => {
     expect(skyscraperLayout({ storeys: 30, core: false }).core).toBeNull()
   })
 
+  it('60 storeys is the default maximum (owner, 2026-10-25) and an option raises it', () => {
+    expect(SKYSCRAPER_MAX_STOREYS).toBe(60)
+    expect(SKYSCRAPER_DEFAULTS.range).toEqual([20, 60])
+    expect(skyscraperLayout({ storeys: 80 }).storeys).toBe(60)
+    expect(skyscraperLayout({ storeys: 80, range: [20, 80] }).storeys).toBe(80)
+    expect(skyscraperLayout({ storeys: 80 }, { ...SKYSCRAPER_DEFAULTS, range: [20, 100] }).storeys).toBe(80)
+  })
+
+  it('sized for the wind: 60 storeys pass H/500 by a wider plate and core, 20 and 40 come out as laid out, and sizeForWind: false keeps the raw layout', () => {
+    const raw = skyscraperLayout({ storeys: 60, sizeForWind: false })
+    const sized = skyscraperLayout({ storeys: 60 })
+    expect(raw.bay).toEqual([12, 12])
+    expect(sized.bay[0]).toBeGreaterThan(12)
+    expect(sized.core!.size[0]).toBeGreaterThan(raw.core!.size[0])
+    expect(sized.core!.wallThickness).toBeLessThanOrEqual(1.5)
+    for (const n of [20, 40]) expect(skyscraperLayout({ storeys: n })).toEqual(skyscraperLayout({ storeys: n, sizeForWind: false }))
+  })
+
   it('too slender a tower gets wider bays; a preset can turn the rule off', () => {
-    const slim = skyscraperLayout({ storeys: 80, bay: 6, slenderness: 9 })
+    const slim = skyscraperLayout({ storeys: 60, bay: 6, slenderness: 9, sizeForWind: false })
     expect(Math.min(...slim.span)).toBeGreaterThanOrEqual(slim.total / 9 - 1e-6)
     expect(slim.bay[0]).toBeGreaterThan(6)
-    expect(skyscraperLayout({ storeys: 80, bay: 6, slenderness: false }).bay).toEqual([6, 6])
+    expect(skyscraperLayout({ storeys: 60, bay: 6, slenderness: false, sizeForWind: false }).bay).toEqual([6, 6])
   })
 
   it('the core walls grow with the height but never past a third of the storey, and the bars get closer on the tall ones', () => {
     const t = (n: number) => skyscraperLayout({ storeys: n }).core!.wallThickness
     expect(t(20)).toBeLessThan(t(40))
     expect(t(40)).toBeLessThan(t(60))
-    expect(t(80)).toBeLessThanOrEqual(3.6 / 3)
+    expect(t(60)).toBeLessThanOrEqual(3.6 / 3)
     expect(skyscraperLayout({ storeys: 40 }).tower.core).toMatchObject({ rebar: { spacing: 0.1 } })
     expect(skyscraperLayout({ storeys: 60 }).tower.core).toMatchObject({ rebar: { spacing: 0.075 } })
   })
@@ -86,13 +104,13 @@ describe('skyscraper layout', () => {
     expect(mechanicalStoreys(80, 20)).toEqual([20, 40, 60])
     expect(mechanicalStoreys(28, 20)).toEqual([])
     expect(mechanicalStoreys(80)).toEqual([])
-    expect(skyscraperLayout({ storeys: 80 }).mechanical).toEqual([20, 40, 60, 79])
-    expect(skyscraperLayout({ storeys: 80, mechanicalEvery: 10 }).mechanical).toEqual([10, 20, 30, 40, 50, 60, 70, 79])
+    expect(skyscraperLayout({ storeys: 60 }).mechanical).toEqual([20, 40, 59])
+    expect(skyscraperLayout({ storeys: 60, mechanicalEvery: 10 }).mechanical).toEqual([10, 20, 30, 40, 50, 59])
   })
 })
 
 describe('skyscraper structure', () => {
-  const cases: Array<[number, SkyscraperOptions]> = [[20, {}], [40, {}], [80, {}]]
+  const cases: Array<[number, SkyscraperOptions]> = [[20, {}], [40, {}], [60, {}]]
 
   for (const [storeys, extra] of cases) {
     describe(`${storeys} storeys`, () => {
@@ -109,8 +127,8 @@ describe('skyscraper structure', () => {
         expect(st.soil!.bearing).toBeLessThan(0.85)
         expect(st.soil!.tilt).toBeLessThan(0.5)
         expect(st.wind!.overturn).toBeLessThan(0.3)
-        expect(st.wind!.status === 'ok' || storeys > 60).toBe(true)
-        expect(st.wind!.drift).toBeLessThan(1 / 100)
+        expect(st.wind!.status).toBe('ok')
+        expect(st.wind!.drift).toBeLessThanOrEqual(1 / 500)
         expect(bad(run(w, 20))).toHaveLength(0)
         expect(w.state(id)!.groups).toHaveLength(1)
       })

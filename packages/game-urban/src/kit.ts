@@ -110,7 +110,7 @@ export function createUrban(options: UrbanOptions = {}) {
       facades,
       building: drawBlockBuilding,
       fill: (b: UrbanBuilder, g: { cx: number; cz: number; size: number; minHeight: number; maxHeight: number } & FillBlockOptions): BlockBuilding[] =>
-        fillBlock(b, g.cx, g.cz, g.size, g.minHeight, g.maxHeight, { palette: facades, draw: drawBlockBuilding, ...g }),
+        fillBlock(b, g.cx, g.cz, g.size, g.minHeight, g.maxHeight, { palette: facades, draw: drawBlockBuilding, ...(towers?.presets ? { presets: towers.presets } : {}), ...g }),
     },
     props: {
       fence: drawFence,

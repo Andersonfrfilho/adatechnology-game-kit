@@ -27,7 +27,7 @@ export {
   PUNCHED_DEFAULTS, addPunchedFacade, mechanicalStoreys,
 } from './tower'
 export type { CoreOptions, CurtainWallOptions, DamperOptions, FlatRoofOptions, MechanicalFloorOptions, PunchedFacadeOptions, TowerGeometry, TowerMechanicalOptions, TowerOptions } from './tower'
-export { PILE_DEFAULTS, SKYSCRAPER_DEFAULTS, buildSkyscraper, pilesFor, skyscraperLayout } from './skyscraper'
+export { PILE_DEFAULTS, SKYSCRAPER_DEFAULTS, SKYSCRAPER_MAX_STOREYS, buildSkyscraper, pilesFor, skyscraperLayout } from './skyscraper'
 export type { PileDesign, SkyscraperLayout, SkyscraperOptions, SkyscraperPreset } from './skyscraper'
 export { PLATE_DEFAULTS, exteriorWindows, planToSpace, splitStrip, storeyKinds, stripDoor, towerFloors, towerLocales, towerPlate } from './skyscraper-plan'
 export type { PlateOptions, PlateRect, PlateStrip, StoreyContext, StoreyKind, StripFill, StripFiller, StripId, TowerPlanOptions, TowerPlate } from './skyscraper-plan'

@@ -3,8 +3,8 @@ import { engine } from '@adatechnology/game-floorplan'
 import { register as registerResidential, residentialTowerLayout, RESIDENTIAL_TOWER_DEFAULTS } from '@adatechnology/game-floorplan-residential'
 import { register as registerCommercial, officeTowerLayout, OFFICE_TOWER_DEFAULTS } from '@adatechnology/game-floorplan-commercial'
 
-import { DEFAULT_TOWER_PRESETS, TOWER_DEFAULTS, TOWER_PATTERNS, TOWER_SAMPLE_CELLS, createUrban, drawTower, towerStoreys } from '../src'
-import type { TowerRequest } from '../src'
+import { DEFAULT_TOWER_PRESETS, TOWER_DEFAULTS, TOWER_PATTERNS, TOWER_SAMPLE_CELLS, createTowerDrawer, createUrban, drawTower, towerPresetOf, towerStoreys } from '../src'
+import type { TowerOptions, TowerRequest } from '../src'
 
 registerResidential(engine)
 registerCommercial(engine)
@@ -88,6 +88,26 @@ describe('towers in the city', () => {
     expect(TOWER_DEFAULTS.minHeight).toBe(60)
   })
 
+  it('a lot taller than 60 storeys is drawn at 60 storeys by default; maxStoreys, a preset range and towerPresetOf configure it from the game', () => {
+    expect(TOWER_DEFAULTS.maxStoreys).toBe(60)
+    const office = DEFAULT_TOWER_PRESETS[0]
+    const heights = (towers: TowerOptions, lot = 400) => {
+      const seen: number[] = []
+      const draw = createTowerDrawer({ ...towers, provider: (r) => { seen.push(r.height) } }, () => ({ x: 0, z: 0, width: 1, depth: 1, height: 1, color: 0 }))
+      draw(createUrban().builder({ seed: 1 }), 0, 0, 24, 24, lot, 0x445566)
+      return seen[0]
+    }
+    expect(heights({ presets: [office] })).toBe(240)
+    expect(heights({ presets: [office], maxStoreys: 80 })).toBe(320)
+    expect(heights({ presets: [{ ...office, maxStoreys: 30 }] })).toBe(120)
+    expect(heights({ presets: [{ ...office, minStoreys: 25 }] }, 70)).toBe(100)
+    const mine = towerPresetOf('mine', 1, officeTowerLayout({ storeys: 40, height: 3 }), { mechanicalEvery: 10 })
+    expect(mine).toMatchObject({ id: 'mine', storeyHeight: officeTowerLayout({ storeys: 40, height: 3 }).pitch, glass: true, mechanicalEvery: 10 })
+    // weights mix the typologies: only residential when the office has weight 0
+    const only = createUrban({ towers: { presets: [{ ...DEFAULT_TOWER_PRESETS[0], weight: 0 }, { ...DEFAULT_TOWER_PRESETS[1], weight: 1 }] } })
+    expect(only.towers.options!.presets!.map((p) => p.weight)).toEqual([0, 1])
+  })
+
   it('the financial district pack puts towers on the avenue; without the option the same numbers draw tall boxes', () => {
     const on = createUrban({ packs: { neighbourhoods: TOWER_PATTERNS }, towers: true })
     expect(on.neighbourhoods.ids()).toContain('financial_district')
@@ -110,5 +130,58 @@ describe('towers in the city', () => {
     const plan = kit.neighbourhoods.get('downtown').compose(b, { x: 0, z: 0 })
     expect(plan.buildings.slice(0, 1).every((p) => p.height >= 70)).toBe(true)
     expect(b.scene().parts.some((p) => p.shape === 'box' && p.color === 0x2a2d31)).toBe(true)
+  })
+})
+
+/** `block.fill` takes the storeys and the uses of each building, as a city block's `building` gives them. */
+describe('block.fill with floors and uses', () => {
+  const fill = (kit: ReturnType<typeof createUrban>, extra: object, seed = 7) => {
+    const b = kit.builder({ seed })
+    const requests: TowerRequest[] = []
+    const placed = kit.block.fill(b, { cx: 0, cz: 0, size: 100, minHeight: 20, maxHeight: 220, k: 4, gap: 0, ...extra })
+    return { b, placed, requests }
+  }
+
+  it('without floors and uses the output is the same as before', () => {
+    const a = fill(createUrban(), {}), b = fill(createUrban(), { floors: undefined, uses: undefined })
+    expect(b.placed).toEqual(a.placed)
+    expect(b.b.scene()).toEqual(a.b.scene())
+  })
+
+  it('floors give the height as storeys times the storey height of the use, a single number is that many storeys', () => {
+    const [office, residential] = DEFAULT_TOWER_PRESETS
+    const one = fill(createUrban(), { floors: 5, uses: { commercial: 1 } }).placed
+    expect(one.every((p) => Math.abs(p.height - 5 * office.storeyHeight) < 1e-9)).toBe(true)
+    const res = fill(createUrban(), { floors: [3, 9], uses: { residential: 1 } }).placed
+    expect(res.every((p) => { const n = p.height / residential.storeyHeight; return Math.abs(n - Math.round(n)) < 1e-9 && n >= 3 && n <= 9 })).toBe(true)
+    const noUse = fill(createUrban(), { floors: [3, 9], storeyHeight: 3 }).placed
+    expect(noUse.every((p) => Math.abs(p.height / 3 - Math.round(p.height / 3)) < 1e-9)).toBe(true)
+  })
+
+  it('tall commercial lots are office towers, tall residential lots residential towers, low ones keep the plain building', () => {
+    const seen: TowerRequest[] = []
+    const kit = createUrban({ towers: { provider: (r) => { seen.push(r) } } })
+    fill(kit, { floors: [30, 40], uses: { commercial: 1 } })
+    expect(seen.length).toBeGreaterThan(8)
+    expect(seen.every((r) => r.preset.id === 'office' && r.use === 'commercial' && r.storeys! >= 30)).toBe(true)
+    seen.length = 0
+    fill(kit, { floors: 40, uses: { residential: 1 } })
+    expect(seen.every((r) => r.preset.id === 'residential' && r.storeys === 40)).toBe(true)
+    seen.length = 0
+    fill(kit, { floors: [2, 6], uses: { commercial: 1, residential: 1 } })
+    expect(seen).toHaveLength(0)
+    seen.length = 0
+    fill(kit, { floors: 80, uses: { commercial: 1 } })
+    expect(seen.every((r) => r.height === 60 * r.preset.storeyHeight)).toBe(true)
+  })
+
+  it('the mix of uses follows the weights, and storeyPresets maps a use to another preset', () => {
+    const seen: TowerRequest[] = []
+    const kit = createUrban({ towers: { provider: (r) => { seen.push(r) } } })
+    fill(kit, { floors: 30, uses: { commercial: 1, residential: 1 } })
+    expect(new Set(seen.map((r) => r.preset.id))).toEqual(new Set(['office', 'residential']))
+    seen.length = 0
+    fill(kit, { floors: 30, uses: { industrial: 1 }, storeyPresets: { industrial: 'office' } })
+    expect(seen.every((r) => r.preset.id === 'office')).toBe(true)
   })
 })

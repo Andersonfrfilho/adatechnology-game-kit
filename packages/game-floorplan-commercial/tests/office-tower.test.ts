@@ -16,13 +16,32 @@ describe('office tower', () => {
   it('is registered as a commercial template whose storeys are an option, clamped by the zone', () => {
     const t = engine.listTemplates().find((x) => x.id === 'office_tower')!
     expect(t.use).toBe('commercial')
-    expect((t as { floorRange?: number[] }).floorRange).toEqual([20, 80])
+    expect((t as { floorRange?: number[] }).floorRange).toEqual([20, 60])
     const zt = engine.listZones().find((z) => z.id === 'zt')!
-    expect(zt.maxFloors).toBe(80)
-    expect(zt.maxHeight).toBe(320)
-    const zc = engine.generate('office_tower', { seed: 7, floors: 80, zone: 'zc', locale: 'en' }) as any
+    expect(zt.maxFloors).toBe(60)
+    expect(zt.maxHeight).toBe(240)
+    const zc = engine.generate('office_tower', { seed: 7, floors: 60, zone: 'zc', locale: 'en' }) as any
     expect(zc.floors.length).toBeLessThanOrEqual(24)
   })
+
+  it('60 storeys is the default maximum and the preset range raises it', () => {
+    expect(OFFICE_TOWER_DEFAULTS.range).toEqual([20, 60])
+    expect(officeTowerLayout({ storeys: 80 }).storeys).toBe(60)
+    expect(officeTowerLayout({ storeys: 80, range: [20, 80] }).storeys).toBe(80)
+  })
+
+  it('the game configures the tower at generation: floors wins over tower.storeys, every field of tower is reachable, the max is raised by tower.range', () => {
+    const gen = (o: object) => (engine.generate('office_tower', { seed: 7, locale: 'en', ...o }) as any).config.tower
+    expect(gen({ floors: 24, tower: { storeys: 30 } }).storeys).toBe(24)
+    expect(gen({ tower: { storeys: 30 } }).storeys).toBe(30)
+    expect(officeTowerLayout({ storeys: 90 }).storeys).toBe(60)
+    expect(gen({ floors: 62, tower: { range: [20, 62] } }).storeys).toBe(62)
+    const t = gen({ floors: 30, tower: { height: 3.2, bay: [10, 10], slenderness: false, facade: 'punched', mechanicalEvery: 10, damperAbove: false, piles: { diameter: 1 }, wind: { speed: 30, terrain: 'III' } } })
+    expect(t).toMatchObject({ storeys: 30, height: 3.2, bay: [10, 10], facade: 'punched', damper: false, mechanical: [10, 20, 29] })
+    const layout = officeTowerLayout({ storeys: 30, piles: { diameter: 1 }, wind: { speed: 30, terrain: 'III' } })
+    expect(layout.tower.wind).toEqual({ speed: 30, terrain: 'III' })
+    expect(buildOfficeTower({ storeys: 20, piles: { diameter: 1 } }).parts.find((p) => p.id === 'raft')!.structure!.pile!.diameter).toBe(1)
+  }, 180000)
 
   it('the plan is the plate of the layout, one storey per storey of the structure with the same pitch', () => {
     expect([plan.w, plan.d]).toEqual(layout.plate)

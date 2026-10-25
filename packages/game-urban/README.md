@@ -145,3 +145,27 @@ The numbers of a place are the game's: the Vale Cinzento (4 rivers, 4 lakes, 5 c
 ## Same seed, same city
 
 The page keeps one generator for everything it draws and draws from it in call order. The builder does the same: the facade colour, the shop signs, the lit windows and the heights come from `b.random`, in the page's order, so a scene drawn with the same seed and the same calls has the same parts. The golden test in `game-urban-three` compares 34 parts, the terrain mesh (181 x 181 vertices, heights and colours) and the whole sample sheet (1029 objects, the lists of instances and windows, the light budget left, the next number of the random and the map markers) with the page's scene hash, the lists the page keeps before its flush and the surface of each material.
+
+### Configurar pelo jogo (torres da cidade)
+
+`createUrban({ towers })` aceita `minHeight`, `maxStoreys` (padrão 60: um lote mais alto é desenhado com 60 andares do tipo), `presets` (cada um com `weight`, `storeyHeight`, `mechanicalEvery`, `glass`, `minStoreys`, `maxStoreys`), `mast`, `lit` e `provider`. `towerPresetOf` monta um preset a partir do layout de uma tipologia, para a cidade desenhar a mesma torre que o jogo configurou em `office_tower` / `residential_tower`.
+
+```ts
+const office = officeTowerLayout({ storeys: 50, height: 3.4 })
+const kit = createUrban({
+  packs: { neighbourhoods: TOWER_PATTERNS },
+  towers: {
+    maxStoreys: 70,
+    presets: [
+      towerPresetOf('office', 0.3, office, { mechanicalEvery: 18, minStoreys: 25, maxStoreys: 70 }),
+      { ...DEFAULT_TOWER_PRESETS[1], weight: 0.7, maxStoreys: 40 },
+    ],
+  },
+})
+```
+
+Por prédio, o bloco também aceita os andares e os usos (os mesmos nomes de `building` de um bloco de `urban.cities`): `block.fill(b, { ..., floors: [8, 40], uses: { commercial: 0.6, residential: 0.4 } })`. `floors` é um número ou `[min, max]` e vira altura (andares vezes o pé-direito do preset do uso; sem uso, `storeyHeight`); `uses` sorteia o uso de cada prédio por peso, e `storeyPresets` (padrão `{ commercial: 'office', residential: 'residential' }`) diz que tipo de torre cada uso desenha. Com `towers` ligado, prédios altos comerciais viram `office` e residenciais `residential` (o `TowerRequest` traz `use` e `storeys`); os baixos seguem o prédio comum com a altura dos andares pedidos. Sem `floors` e `uses` a saída não muda.
+
+```ts
+kit.block.fill(b, { cx: 0, cz: 0, size: 100, minHeight: 20, maxHeight: 60, ...block.building })  // block.building = { floors: [10, 40], uses: { commercial: 1 } }
+```

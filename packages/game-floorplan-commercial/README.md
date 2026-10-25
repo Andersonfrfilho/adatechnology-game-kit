@@ -49,7 +49,7 @@ const shop = engine.generate('market', { seed: 4, zone: 'zc' })
 | `metalworks` | `industrial` | 30 x 20 m, 8 m ceiling: presses, conveyor line, furnace, pallet racks, forklift, canteen, lockers, mezzanine office |
 | `farm` | `agricultural` | 12 x 9 m farmhouse (style `farm`) with veranda posts, well, coop, corral, barn, silo, machine shed, tractors and hay bales in the lot |
 
-`office_tower` (`officeTowerTemplate`, `OFFICE_TOWER_DEFAULTS`, `use: commercial`) is the plan of an office skyscraper built from the layout of `game-floorplan-structure` (`skyscraperLayout`): 40 storeys by default (`floors`, 20 to 80), 3.6 m clear height, 12 m bays, a glass curtain wall, a plant floor every 20 storeys and a damper above 150 m. The ground floor has the entrance lobby (3 m door), reception and the security desk; a typical storey has open-plan suites (library `office_open`) on the four sides of the core, with restrooms; the plant floors have plant rooms and no windows. `buildOfficeTower(options)` is the destructible tower of the same layout (core, piles, glass, wind). `options.tower` takes any `SkyscraperOptions`; `officeTowerTemplate(preset, plan)` builds a template with other numbers. The zone for it, `zt`, is in the residential pack.
+`office_tower` (`officeTowerTemplate`, `OFFICE_TOWER_DEFAULTS`, `use: commercial`) is the plan of an office skyscraper built from the layout of `game-floorplan-structure` (`skyscraperLayout`): 40 storeys by default (`floors`, 20 to 60: the default maximum, `SKYSCRAPER_MAX_STOREYS`, because above about 60 the drift at the top passes H/500), 3.6 m clear height, 12 m bays, a glass curtain wall, a plant floor every 20 storeys and a damper above 150 m. The ground floor has the entrance lobby (3 m door), reception and the security desk; a typical storey has open-plan suites (library `office_open`) on the four sides of the core, with restrooms; the plant floors have plant rooms and no windows. `buildOfficeTower(options)` is the destructible tower of the same layout (core, piles, glass, wind). `options.tower` takes any `SkyscraperOptions`; `officeTowerTemplate(preset, plan)` builds a template with other numbers. The zone for it, `zt`, is in the residential pack.
 
 Each interior building declares `place` and `construction`; `interiorFindsHints[templateId]` lists what each place can hold (the loot pins of the team's gallery scene) for the finds provider.
 
@@ -67,3 +67,15 @@ engine.generate('market', { seed: 4, locale: 'pt-BR' })   // "Mercadinho"
 ```
 
 `mercado` é `market` e `farmacia` é `pharmacy`. Uma loja em zona só de casas (ZR1) aparece como violação de `use`. Tabelas completas em [MIGRATION.md](MIGRATION.md).
+
+### Configurar pelo jogo (torre de escritórios)
+
+Tudo é opção na hora de gerar: `floors` é o número de andares (vence `tower.storeys`) e `tower` aceita qualquer `SkyscraperOptions` (andares, pé-direito `height`, vão `bay`, `facade`, `mechanicalEvery`, `damperAbove`, `piles`, `wind`, `range`). O máximo padrão é 60 andares; o jogo o sobe com `range` (a zona `zt` também limita a 60: sem zona, ou com uma zona própria, vale o `range`).
+
+```ts
+const plan = engine.generate('office_tower', {
+  seed: 7, floors: 72,
+  tower: { range: [20, 80], height: 3.4, bay: [10, 10], facade: 'curtain', mechanicalEvery: 18, damperAbove: 120, wind: { speed: 35, terrain: 'III' }, piles: { diameter: 1.4 } },
+})
+const structure = buildOfficeTower({ storeys: 72, range: [20, 80] })
+```

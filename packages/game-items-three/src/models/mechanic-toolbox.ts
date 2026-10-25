@@ -5,7 +5,17 @@ import type { ItemModelBuilder } from './registry'
  * It draws in the units of the builder; `data/models.json` gives the scale to metres of the item `mechanic_toolbox`.
  */
 export const mechanicToolbox: ItemModelBuilder = ({ mesh, bx, G, metal, plastic }) => {
-  const box = mesh(bx(4.0, 1.8, 2.0), metal(0xb02020), [0, -0.1, 0])
-  const handle = mesh(bx(1.2, 0.2, 0.3), plastic(0x111111), [0, 0.9, 0])
-  return G(box, handle)
+  const red = metal(0xa8281f)
+  const steel = metal(0x8d9196)
+  const latch = (x: number) => mesh(bx(2.6, 6, 0.3), steel, [x, 2, 9.85])
+  return G(
+    mesh(bx(40, 12, 19.4), red, [0, -4, 0]),
+    mesh(bx(40, 1.2, 19.6), metal(0x2c2e30), [0, -9.4, 0]),
+    mesh(bx(40, 5, 19.4), red, [0, 4.5, 0]),
+    mesh(bx(40, 0.5, 19.6), metal(0x2c2e30), [0, 2, 0]),
+    mesh(bx(1.2, 2, 1.8), plastic(0x1f2022), [-7.5, 8, 0]),
+    mesh(bx(1.2, 2, 1.8), plastic(0x1f2022), [7.5, 8, 0]),
+    mesh(bx(16.2, 1, 1.8), plastic(0x1f2022), [0, 9.5, 0]),
+    latch(-11), latch(11),
+  )
 }
