@@ -68,6 +68,13 @@ describe('residential tower', () => {
     expect(plan.rooms.filter((r: { id: string; type: string }) => !seen.has(r.id) && r.type !== 'elevator').map((r: { id: string }) => r.id)).toEqual([])
   })
 
+  it('the apartments on the back of the building have a balcony off the living room, where the air conditioner hangs its condenser', () => {
+    const rooms = plan.rooms.filter((r: { floor: number }) => r.floor === 7)
+    expect(rooms.filter((r: { type: string }) => r.type === 'balcony')).toHaveLength(3)
+    expect(plan.doors.filter((d: { b: string; floor: number }) => d.floor === 7 && d.b.endsWith('_balcony'))).toHaveLength(3)
+    expect(plan.items.some((i: { type: string }) => i.type === 'ac_condenser')).toBe(true)
+  })
+
   it('the homes are furnished', () => {
     const items = plan.items.filter((i: { floor: number }) => i.floor === 7)
     for (const category of ['sofa', 'bed', 'toilet']) expect(items.some((i: { category: string }) => i.category === category), category).toBe(true)

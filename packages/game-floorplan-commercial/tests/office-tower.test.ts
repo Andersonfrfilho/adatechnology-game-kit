@@ -45,7 +45,7 @@ describe('office tower', () => {
   it('the ground floor has the entrance lobby with a 3 m door on the front, reception and the security desk; the top one has plant rooms and no windows', () => {
     const door = plan.doors.find((d: { a: string; b: string }) => d.b === 'outside')
     expect(door).toMatchObject({ a: 'lobby_0_entrance', side: 'front', width: 3, exterior: true })
-    expect(plan.rooms.filter((r: { floor: number }) => r.floor === 0).map((r: { label: string }) => r.label)).toEqual(expect.arrayContaining(['reception', 'lobby_entrance', 'security_desk']))
+    expect(plan.rooms.filter((r: { floor: number }) => r.floor === 0).map((r: { label: string }) => r.label)).toEqual(expect.arrayContaining(['reception', 'lobby_entrance', 'security_desk', 'stockroom']))
     const top = plan.rooms.filter((r: { floor: number }) => r.floor === 19)
     expect(top.filter((r: { label: string }) => r.label === 'plant_room')).toHaveLength(4)
     expect(plan.windows.filter((w: { floor: number }) => w.floor === 19)).toHaveLength(0)

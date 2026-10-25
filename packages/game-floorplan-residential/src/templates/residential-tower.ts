@@ -70,6 +70,14 @@ function apartment(strip: PlateStrip, floor: number, k: number, from: number, to
     { a: id('hall'), b: id('bath'), width: 0.8, opensTo: id('bath') },
   ]
   const windows: WindowDef[] = rooms.filter((r) => r.type === 'living' || r.type === 'bedroom').flatMap((r) => exteriorWindows(r.id, r.rect as PlateRect, plate, ceiling, { ...win, width: 2.2, spacing: 4.5 }))
+  // a balcony off the living room on the back of the building (the plate's edge at `d`, as the veranda of `apartment_modern`): the glass door replaces the window there,
+  // and the air conditioner of the apartment hangs its condenser on it
+  if (strip.side === 'back') {
+    const [u0, , u1, v1] = rooms[0].rect as PlateRect
+    rooms.push({ id: id('balcony'), type: 'balcony', label: 'balcony', library: 'balcony', rect: [r2(u0 + 0.6), v1, r2(u1 - 0.6), r2(v1 + 1.6)] })
+    doors.push({ a: id('living'), b: id('balcony'), width: 1.6, opensTo: id('balcony') })
+    return { rooms, doors, windows: windows.filter((w) => !(w.room === id('living') && w.side === 'back')) }
+  }
   return { rooms, doors, windows }
 }
 

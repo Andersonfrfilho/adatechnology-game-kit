@@ -63,8 +63,12 @@ const suitesOf = (strip: PlateStrip, floor: number, plate: TowerPlate, ceiling: 
 const officeFiller = (plan: Required<OfficeTowerPlan>): StripFiller => (strip, { floor, plate, ceiling }) =>
   suitesOf(strip, floor, plate, ceiling, plan, plan.restrooms && strip.id === 'north' && Math.round(strip.length / plan.suite) >= 3)
 
-/** The ground floor: the entrance lobby in the middle of the front, reception on one side, the security desk on the other; the rest as a typical storey. */
+/** The ground floor: the entrance lobby in the middle of the front, reception on one side, the security desk on the other, the building's stockroom on the west side; the rest as a typical storey. */
 const groundFiller = (plan: Required<OfficeTowerPlan>): StripFiller => (strip, context) => {
+  if (strip.id === 'west') {
+    const id = `stockroom_${context.floor}`
+    return { rooms: [{ id, type: 'stockroom', label: 'stockroom', rect: [...strip.rect] }], doors: [stripDoor(id, strip, context.floor, 1.2)], windows: [] }
+  }
   if (strip.id !== 'south') return officeFiller(plan)(strip, context)
   const { floor, plate, ceiling } = context
   const lobby = `lobby_${floor}_entrance`, reception = `reception_${floor}`, security = `security_${floor}`
