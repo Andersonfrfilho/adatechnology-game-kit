@@ -1443,11 +1443,11 @@
     "id": "pet_bottle",
     "teamId": "garrafa_pet",
     "teamBox": [
-      1.054,
+      1.06,
       3.3,
-      1.054
+      1.06
     ],
-    "scale": 0.1
+    "scale": 0.09937
   },
   {
     "id": "glass_bottle",
