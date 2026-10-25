@@ -1043,11 +1043,11 @@
     "id": "lockpick_kit",
     "teamId": "kit_chaveiro",
     "teamBox": [
-      1,
-      0.7,
-      0.2
+      10,
+      7,
+      2
     ],
-    "scale": 0.1
+    "scale": 0.01
   },
   {
     "id": "sewing_kit",
