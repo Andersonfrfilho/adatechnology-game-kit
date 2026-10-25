@@ -3124,3 +3124,10 @@ Desenho em `design/T10-estrutura-real.md` §9. Presets em `game-floorplan-struct
 - **Goldens:** nenhuma mudou (opções novas desligadas por padrão; `game-floorplan-three` não foi tocado).
 - **Testes novos:** `game-destruction/tests/frame-systems.test.ts` (3), `game-floorplan-structure/tests/tower.test.ts` (8). Nenhum teste antigo mudou.
 - **Portões:** `pnpm build`, `pnpm typecheck`, `pnpm lint` ok; testes de `game-destruction` (247), `game-destruction-three` (113), `game-floorplan-structure` (275), `game-floorplan-three` (142), `game-test-room` (145), `game-interactables-three` (304) ok; `examples/test-room/build.mjs`, `floorplan-test-area` e `interactables-test-area` build + `test.mjs` ok (capturas revertidas).
+
+## 2026-10-25 · Estrutura real, passo 4 · vento e balanço (lacuna 5)
+
+- **Cenários:** torre de 40 andares com núcleo fica de pé com deriva 1/589 (dentro de H/500) e flecha de 0,221 m; sem núcleo (dimensionada ao vento) a deriva é 1/169 e passa do limite; o amortecedor de 0,85% reduz o desvio-padrão do balanço a cerca de 0,73; casa de 2 andares quase não sente (0,02 mm).
+- **Goldens:** nenhuma mudou (vento desligado por padrão).
+- **Testes novos:** `game-destruction/tests/wind.test.ts` (35), `game-floorplan-structure/tests/wind.test.ts` (11). Nenhum teste antigo mudou.
+- **Pendências para o dono:** H/500 contra H/1700 da NBR 6118; tabela 1 da NBR 6123 transcrita da memória; padrão V0 = 40 m/s e categoria III.

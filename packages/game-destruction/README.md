@@ -238,6 +238,13 @@ bear on the ground instead of being fixed. Without it nothing changes.
 - Options (`soil`, `SOIL_DEFAULTS`): `soils`, `site`, `safety`, `pileSafety`, `rigidity`, `influence`, `imperfection`, `cells`, `sinkRate`,
   `tiltRate`, `footingWidth`, `pileElasticGPa`. `buildFrame({ footing, raft, piles, soil })` builds test frames on the ground.
 
+## Wind and sway
+Off unless `createDestruction({ wind })` is given. Pressure `q = 0.613 V^2` grows with height by the NBR 6123 profile (terrain I-V, class by size), times a drag
+coefficient, per 3 m band. The lateral system is the walls (cantilever) plus columns and T-beams (shear frame); the result is in `ObjectState.wind` (`deflection`,
+`drift` against `driftLimit` H/500, `overturn`, `frequency`, `lean`, `sway`, `peak`, `status`) and a `sway` event. A gust (Davenport spectrum) shakes the first mode;
+a part with `damper` (tuned mass damper, Den Hartog) reduces it. `world.setWind({ speed, direction })` changes it in play; `sizeStructure({ wind })` sizes for it;
+on soft soil the wind moment tilts the building. Options and defaults: `wind`, `WIND_DEFAULTS`, `WIND_TERRAIN`. Sources in `specs/001-migracao-entregas-dos-times/design/T10-estrutura-real.md` section 10.
+
 ## Walls: layers, stages, breach and reinforcement
 A wall is one part that opts in with `layers`, `units`, `reinforcement` or `breach` (`PartSpec`, all optional; parts without them behave as before).
 `assemblyPart(id, { id, width, height, position, structure? })` builds one from the eight built-in **assemblies** (`ASSEMBLIES`, data in
