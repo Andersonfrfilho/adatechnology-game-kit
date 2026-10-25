@@ -48,6 +48,7 @@
     "@adatechnology/game-audio": "workspace:*",
     "@adatechnology/game-contracts": "workspace:*",
     "@adatechnology/game-interactables-three": "workspace:*",
+    "@adatechnology/game-items-three": "workspace:*",
     "@adatechnology/game-shapes-three": "workspace:*",
     "@adatechnology/game-vfx": "workspace:*",
     "@adatechnology/game-vfx-three": "workspace:*",

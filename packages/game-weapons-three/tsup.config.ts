@@ -18,6 +18,6 @@ export default defineConfig([
     globalName: 'GameWeaponsThree',
     sourcemap: true,
     target: 'es2020',
-    noExternal: ['@adatechnology/game-audio', '@adatechnology/game-weapons', '@adatechnology/game-interactables-three', '@adatechnology/game-interactables', '@adatechnology/game-props3d', '@adatechnology/game-shapes', '@adatechnology/game-shapes-three', '@adatechnology/game-vfx', '@adatechnology/game-vfx-three'],
+    noExternal: ['@adatechnology/game-audio', '@adatechnology/game-weapons', '@adatechnology/game-interactables-three', '@adatechnology/game-interactables', '@adatechnology/game-props3d', '@adatechnology/game-shapes', '@adatechnology/game-shapes-three', '@adatechnology/game-items', '@adatechnology/game-items-three', '@adatechnology/game-vfx', '@adatechnology/game-vfx-three'],
   },
 ])
