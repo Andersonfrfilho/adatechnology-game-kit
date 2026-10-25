@@ -49,6 +49,23 @@ createUrban({
 - `block.fill(b, { cx, cz, size, minHeight, maxHeight, k, gap, lit, shop })`: a `k x k` split of the block less 2 m of street; a building a little smaller than its lot, as tall as `lerp(min, max, random^1.6)` (more low buildings than tall ones), drawn by `createCityBuilding` of game-floorplan with the shared generator. Returns the buildings for the game's bookkeeping. `block.building` places one.
 - `props`: `fence`, `tent`, `pine`, `tree`, `container`, `watchtower` (with a searchlight whose beam circles the ground), `sandbags` (instances), `label` (two lines on a 22 x 4.4 m board) and `wires`.
 
+### Towers
+
+`createUrban({ towers: true })` (off by default; the output is then the same as before, byte for byte) draws a building of the block or of an avenue that is at least `minHeight` (60 m) tall as a **tower** instead of a box: a podium with a taller ground storey, the shaft with a row of windows on every storey of its four faces, darker bands without windows where the plant floors are, the top plant floor set back, the parapet and a mast. Which kind is drawn is chosen by weight among the `presets`, whose numbers are the ones of the typologies of `game-floorplan-commercial` (`office`: 4 m storeys, a plant floor every 20, glass curtain wall) and `game-floorplan-residential` (`residential`: 3.1 m storeys, every 25, masonry with a window in each bay); the tests keep them equal. A game turns them off, changes the cut-off height, the presets and their weights, or draws the tower itself:
+
+```ts
+createUrban({
+  towers: {
+    minHeight: 80,
+    presets: [{ id: 'office', weight: 1, storeyHeight: 4, mechanicalEvery: 20, glass: true, color: 0x3c5a73 }],
+    mast: 0.04,
+    provider: (request, b) => myTower(request, b),   // request: x, z, width, depth, height, color, preset, lit
+  },
+})
+```
+
+The heights come from where the building is drawn: `block.fill`'s `minHeight` and `maxHeight`, or the `buildings` of the `downtown` pattern (raise them with `patch`). The pack `TOWER_PATTERNS` (not in the sample sheet) adds `financial_district`, the avenue with 20 m lots and towers of 70 to 180 m: `createUrban({ packs: { neighbourhoods: TOWER_PATTERNS }, towers: true })`.
+
 ## Neighbourhood patterns
 
 `urban.neighbourhoods` has the ten patterns of the Galeria's sample sheet: `downtown`, `suburb`, `working_class`, `historic_street`, `industrial_port`, `railway_village`, `mountain_resort`, `stilt_village`, `military` and `rural`. A pattern is data (`streetWidth`, `walkWidth`, `typologies`, `pole`, `lightColor`, `spacing`, `lit` = the share of lamps on and the rest burnt out, `marker`, `text` in `pt-BR` and `en`, and the `params` of its composer) plus a `compose` key into the registry of composers, which draw the street. A game changes a number with `patch`, adds a pattern with `packs` and a composer with `composers`, or takes one out with `remove`.

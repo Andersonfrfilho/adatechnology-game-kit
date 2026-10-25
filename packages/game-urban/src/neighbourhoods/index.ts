@@ -17,6 +17,7 @@ export { createSilhouetteHouses, SILHOUETTE_TYPOLOGIES } from './houses'
 export { createPlantProvider, createVehicleProvider, DEFAULT_PLANT_CONTEXTS, PARKED_VEHICLE_IDS } from './providers'
 export type { PlantProviderOptions, VehicleProviderOptions } from './providers'
 export { DEFAULT_PATTERNS, SAMPLE_CELLS } from './patterns'
+export { TOWER_PATTERNS, TOWER_SAMPLE_CELLS } from './towers'
 export type {
   ComposeContext,
   ComposeOptions,

@@ -1218,6 +1218,15 @@ importers:
         specifier: workspace:*
         version: link:../game-vehicles-fleet
     devDependencies:
+      '@adatechnology/game-floorplan-commercial':
+        specifier: workspace:*
+        version: link:../game-floorplan-commercial
+      '@adatechnology/game-floorplan-residential':
+        specifier: workspace:*
+        version: link:../game-floorplan-residential
+      '@adatechnology/game-floorplan-structure':
+        specifier: workspace:*
+        version: link:../game-floorplan-structure
       '@adatechnology/golden-tool':
         specifier: workspace:*
         version: link:../../tools/golden
