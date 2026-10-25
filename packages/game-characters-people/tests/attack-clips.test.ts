@@ -20,6 +20,7 @@ const EXPECTED: Record<string, Expectation> = {
   shove_two_hands: { duration: 0.5, channels: 'upper', impactAt: [0.15, 0.35], neutral: NEUTRAL_UPPER, phases: ['windup', 'strike', 'recover'] },
   front_kick: { duration: 0.6, channels: 'full', impactAt: [0.2, 0.4], neutral: NEUTRAL_FULL, phases: ['windup', 'strike', 'recover'] },
   recoil_rifle: { duration: 0.22, channels: 'upper', impactAt: [0, 0.05], neutral: NEUTRAL_AIMED, phases: ['strike', 'recover'] },
+  recoil_pistol: { duration: 0.18, channels: 'upper', impactAt: [0, 0.05], neutral: NEUTRAL_AIMED, phases: ['strike', 'recover'] },
 }
 
 const byId = (id: string): PoseClip => ATTACK_CLIPS.find((clip) => clip.id === id)!
