@@ -13,11 +13,11 @@ portante) em detalhe. Os passos 1 e 2 estão implementados em `game-destruction`
 | 1 | Concreto que racha na tração; o vergalhão segura o puxão; viga sem vergalhão parte | motor (`game-destruction`, `structure.flexure`) | **feito** (§2) |
 | 2 | Alvenaria portante limitada pela altura (o tijolo do térreo esmaga) | motor (`partCapacity`, `structure.masonry`) e `bearingWallThickness` | **feito** (§3) |
 | 3 | Solo e fundação (capacidade do solo, recalque, tombamento; estacas profundas) | motor (`game-destruction`, `soil`) + radier/estacas em `game-floorplan-structure` | **feito** (§8) |
-| 4 | Núcleo rígido (tubo de concreto com elevadores e escada) | peças/presets em `game-floorplan-structure` | depois |
+| 4 | Núcleo rígido (tubo de concreto com elevadores e escada) | peças/presets em `game-floorplan-structure` | **feito** (§9) |
 | 5 | Vento e balanço (carga lateral que cresce com a altura, amortecedor de massa) | motor | depois |
-| 6 | Pele de vidro (fachada leve que estilhaça em painéis grandes) | peças em `game-floorplan-structure` | depois |
-| 7 | Cobertura de prédio (manta, caimento, ralos, vazamento) | peças em `game-floorplan-structure` | depois |
-| 8 | Andar técnico (máquinas, caixa d'água, amortecedor: tudo pesa) | peças em `game-floorplan-structure` | depois |
+| 6 | Pele de vidro (fachada leve que estilhaça em painéis grandes) | peças em `game-floorplan-structure` | **feito** (§9) |
+| 7 | Cobertura de prédio (manta, caimento, ralos, vazamento) | peças em `game-floorplan-structure` | **feito** (§9) |
+| 8 | Andar técnico (máquinas, caixa d'água, amortecedor: tudo pesa) | peças em `game-floorplan-structure` | **feito** (§9; o amortecedor fica com o vento) |
 | 9 | Tipologia de arranha-céu, usada pela cidade | `game-floorplan-commercial`/`-residential`, `game-urban` | depois |
 
 Itens 3 a 9 dependem de 1 e 2 (as peças novas precisam de flexão e de esmagamento reais para que a explosão faça o que faria).
@@ -264,3 +264,73 @@ Nenhuma muda: o solo só existe para quem declara `soil` (ou `soil.site` no mund
 - A estaca não resiste a arrancamento (a mola não puxa) e não há efeito de grupo; a sapata não ganha capacidade com a profundidade ou a largura.
 - A estrutura sobre o solo é rígida (não se deforma com o recalque); o tombamento entrega tudo ao `collapse`, e o renderizador faz a queda.
 - O pórtico de teste de 20 andares precisou de vigas de 70 cm, porque no `buildFrame` o pilar de cima nasce sobre a laje de baixo (não é contínuo).
+
+## 9. Núcleo, pele de vidro, cobertura e andar técnico (lacunas 4, 6, 7, 8; passo 3 da ordem; 2026-10-25)
+
+Tudo em `game-floorplan-structure/src/tower.ts`, como peças somadas a uma spec de pórtico (`addCore`, `addCurtainWall`, `addFlatRoof`,
+`addMechanicalFloor`, com a geometria `TowerGeometry`) e o conjunto `buildTower`, dimensionado com `sizeStructure`. No motor entraram só três
+opções genéricas de `buildFrame` e uma do contrato.
+
+### 9.1 Motor
+
+- **Pilar contínuo** (`buildFrame({ continuousColumns })`): o pilar de cada andar se apoia no de baixo (através da laje, como o pilar moldado no local)
+  e não na laje. Antes o pilar nascia sobre a laje e a viga do 1º andar levava a torre inteira em flexão: o pórtico de 20 andares com vigas de 30 cm
+  ficava a 1,69 da capacidade; contínuo fica a 0,65 com as mesmas vigas, e cada laje leva só o seu andar. Padrão desligado (as cenas e goldens que
+  usam `buildFrame` ficam como estavam).
+- **Gaiola dos pilares** (`columnCage`): pilar armado (capacidade `0,85 fck Ac + As fy`, juntas `rebar` monolíticas). **Laje de cobertura**
+  (`roofThickness`): a cobertura plana com contrapiso e equipamento tem a espessura de um piso.
+- **Saída do fluido** (`PartSpec.contains.outflow`, contrato): direção em que o líquido sai pelo furo; a água da manta escorre para baixo
+  (`[0, -1, 0]`) em vez de voltar pelo furo. O `leak` e o esvaziamento (`liters`) são os de sempre.
+
+### 9.2 Núcleo rígido (lacuna 4)
+
+Tubo de concreto armado do alicerce (radier do núcleo `core_mat`, 1,2 m, ou o radier do prédio) à cobertura: quatro paredes de 35 cm por andar
+(30 a 60 cm em núcleos de prédios altos; mínimo h/25), a parede entre a escada e os poços e as paredes entre poços (20 cm), cada uma apoiada na de baixo,
+com gaiola de 12,5 mm a cada 15 cm (cerca de 0,5% da seção, acima do mínimo de 0,2% do EN 1992-1-1 9.6.2). A laje de cada andar se apoia no tubo.
+Dentro: a escada em dois lances de meio andar com patamar (compartimento de 2,6 x 4,8 m; 1,6 m de subida em 2,4 m, cerca de 34°, NBR 9077) e os
+poços de elevador (2,2 x 2,4 m) com a cabine parada no fundo. Layout: `coreSize` (5,95 x 5,5 m com 2 elevadores). Na explosão: a mesma carga de 5 kg de
+TNT a 1 m tira um pilar de 60 cm (a pilha de pilares acima cai; as lajes ficam nas vigas e no núcleo) e só abre uma brecha (estágio 2) na parede do
+núcleo, que fica com mais da metade dos pontos de vida e nada do núcleo ou das lajes desaba.
+
+### 9.3 Pele de vidro (lacuna 6)
+
+Um painel por vão (1,5 m) e por andar, de piso a piso, preso por `bolt` à borda da laje de cima, sem papel estrutural (não carrega nada). Vidro
+`glass` (recozido/laminado; `tempered_glass` quebra em cubinhos) de 12 mm (duas lâminas de 6 mm de uma unidade insulada), 30 kg/m² de vidro + 10 kg/m²
+de caixilho de alumínio. Quebra em pedaços de 0,6 m (`units`, intercamada de PVB como `plastic`) que saem com a velocidade da explosão: a chuva de
+vidro é o `fracture` com esses fragmentos, desenhada pelo sistema de fragmentos que já existe. Um painel cuja laje cai vai junto. O andar técnico
+não tem vidro (tem venezianas). Conferido: 1 kg de TNT a 3 m da fachada quebra mais de 6 painéis, todos em `shatter` com pedaços de até 0,6 m, e não
+quebra pilar, viga, laje nem núcleo.
+
+### 9.4 Cobertura plana (lacuna 7)
+
+Sobre a laje de cobertura: contrapiso com caimento de 1% (mínimo da NBR 9575) até os ralos, com 2 cm no ralo (o peso sai da espessura média
+`0,02 + 0,01 · percurso / 2`, percurso até o ponto mais distante de um ralo), manta de EPDM de 1,5 mm (`rubber`) e um ralo a cada 150 m² (pelo menos
+2) na linha central. Contrapiso e manta pesam na laje (papel `partition`: carregados, não carregam). A manta guarda a água de chuva que está a caminho
+dos ralos (5 mm por padrão, `setLiters` no jogo); um tiro que fura a manta dá `leak` de água para baixo e o nível cai pelo furo; sem furo a água fica.
+
+### 9.5 Andar técnico (lacuna 8)
+
+O último andar, sob a cobertura: uma máquina de tração por elevador sobre o poço (2500 kg com o quadro + 4500 kg pendurados: cabine 1500, contrapeso
+2000, carga nominal 1000), o reservatório superior (`towerWater`: 16 pessoas por andar x 200 L/dia x 40% guardado em cima, NBR 5626, + 6000 L de
+reserva de incêndio, NBR 13714; 20 m³ para 11 andares; de fibra/polietileno com 10 mm de parede, com a água em `contains`, vaza com tiro) e dois chillers
+de 3500 kg. Tudo apoiado na laje do andar (papel `partition`), então entra na carga: a laje sob o andar técnico leva o seu andar mais os 44 t do
+equipamento, e isso desce para o núcleo e os pilares. O amortecedor de massa fica para o vento (lacuna 5). O fator de impacto 2 da casa de máquinas
+(EN 81-20) é para o projeto da laje e não entra no peso em repouso.
+
+### 9.6 Torre padrão (`buildTower`)
+
+16 x 24 m numa malha de 8 m (3 x 4 pilares de 60 cm armados com 20 mm, vigas de 60 cm), 12 andares de 3 m + laje de 20 cm, pilares contínuos, núcleo
+no vão a +x do centro, pele de vidro, cobertura plana e andar técnico; cerca de 1100 peças, em repouso a 0,65 depois do dimensionamento e sem evento.
+Cada sistema se desliga (`false`) ou se configura (`CORE_DEFAULTS`, `CURTAIN_DEFAULTS`, `FLAT_ROOF_DEFAULTS`, `MECHANICAL_DEFAULTS`, `TOWER_DEFAULTS`).
+
+### 9.7 Goldens
+
+Nenhuma muda: as opções novas de `buildFrame` são desligadas por padrão e `outflow` só vale quando declarado; nada de `game-floorplan-three` foi tocado.
+
+### 9.8 Limites
+
+- A laje continua uma peça por andar (sem abertura no núcleo, sem painéis): igual ao §5.
+- A parede do núcleo não dobra para fora do plano nem trabalha como viga-parede contra o vento (lacuna 5); o núcleo segura carga vertical e explosão.
+- Elevador sem cabo nem contrapeso como peças: o peso pendurado está na máquina; a cabine é uma peça parada no fundo do poço.
+- A água da manta não corre até o ralo (estado só: nível e vazamento); a chuva entra pelo `setLiters`.
+- Vidro da fachada como uma lâmina de 12 mm, sem a câmara de ar nem a intercamada como camada; caixilho só como massa.

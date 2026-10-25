@@ -77,7 +77,16 @@ export interface PartSpec {
   /** Axis of the grain for `splinter` materials, in local space (default the longest axis). */
   grain?: 'x' | 'y' | 'z'
   /** Fluid inside the part; punctures make it leak (a `leak` event per hole, the level drops in `update`). */
-  contains?: { fluid: FluidKind; liters: number; pressurized?: boolean }
+  contains?: {
+    fluid: FluidKind
+    liters: number
+    pressurized?: boolean
+    /**
+     * Object-local direction the fluid leaves through a hole (the `leak` event's `direction`), for a fluid that does not spray back out of the hole
+     * but runs down through it: the water on a roof membrane goes `[0, -1, 0]` into the floor below. Default: out of the hole (its normal).
+     */
+    outflow?: Vec3
+  }
   /** The part explodes when destroyed, or when its temperature passes `atC` (gas bottle, fuel tank, aerosol). */
   explodes?: {
     energy: number
