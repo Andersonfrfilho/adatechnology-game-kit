@@ -1758,5 +1758,15 @@
       0.23
     ],
     "scale": 1
+  },
+  {
+    "id": "corn_seeds",
+    "teamId": "sem_milho",
+    "teamBox": [
+      0.1,
+      0.15,
+      0.02
+    ],
+    "scale": 1
   }
 ]
