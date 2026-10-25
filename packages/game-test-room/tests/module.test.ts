@@ -134,6 +134,18 @@ describe('loadModule', () => {
     expect(room.log.entries({ type: 'spawn' })[0].text).toContain('Painel deslizante')
   })
 
+  it('lays an area around items of other modules and leaves out, with a log line, the ones that are not loaded', () => {
+    const room = makeRoom()
+    const area = mod()
+    area.area = () => ({ placements: [{ item: 'sliding_panel', position: [0, 0, -3] }, { item: 'sofa_of_another_module', position: [2, 0, -3] }] })
+    room.loadModule(area)
+    const placed = room.openArea('panels')
+    expect(placed.map((o) => o.itemId)).toEqual(['sliding_panel'])
+    const skipped = room.log.entries({ type: 'area_skip' })
+    expect(skipped).toHaveLength(1)
+    expect(skipped[0].text).toBe('Area item "sofa_of_another_module" is not loaded in this room: left out')
+  })
+
   it('rejects an impl whose id is not the one the room gave it', () => {
     const room = makeRoom()
     const m = mod()

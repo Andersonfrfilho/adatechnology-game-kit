@@ -2211,8 +2211,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // lays a module area: things that hold others first, so what goes on them finds their top
   const layArea = (layout: ModuleArea): SpawnedObject[] => {
-    const holders = layout.placements.filter((p) => p.surface)
-    const rest = layout.placements.filter((p) => !p.surface)
+    // an area may place items of other modules (a kitchen of the household module around a cylinder): the ones this room did not load are left out and said
+    const known = layout.placements.filter((p) => {
+      if (catalogMap.has(p.item)) return true
+      action('area_skip', t('act.area_skip', { item: p.item }), { itemId: p.item })
+      return false
+    })
+    const holders = known.filter((p) => p.surface)
+    const rest = known.filter((p) => !p.surface)
     const placed = [...holders, ...rest].map((p) => {
       const so = spawn(p.item, p.position, p.rotationY ?? 0)
       if (p.surface) {
