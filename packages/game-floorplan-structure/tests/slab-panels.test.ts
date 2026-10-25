@@ -2,7 +2,7 @@ import { createDestruction } from '@adatechnology/game-destruction'
 import { describe, expect, it } from 'vitest'
 
 import { SLAB_PANEL_DEFAULTS, beamDepthFor, beamSpan, resolveSlabPanels, toDestructibleSpec } from '../src'
-import { engine } from './support'
+import { TOWER_TEMPLATES, engine } from './support'
 import { breakParts, idsStarting } from './world-helpers'
 
 const specOf = (template: string, seed = 3, state: 'normal' | 'abandoned' = 'normal', portico: boolean | 'auto' = true) => {
@@ -38,6 +38,14 @@ describe('slab panels: options and rules', () => {
     expect(panelsOf(many, 'slab_1').length).toBeGreaterThanOrEqual(panelsOf(few, 'slab_1').length)
   })
 
+  it('a building taller than maxStoreys keeps its slabs whole and its steel undeclared (a tower has its own frame); a lower limit does the same to a house', () => {
+    const result: any = engine.generate('townhouse', { seed: 3, state: 'normal' })
+    expect(SLAB_PANEL_DEFAULTS.maxStoreys).toBe(8)
+    const low = toDestructibleSpec(result.structure, { portico: true, slabPanels: { maxStoreys: 1 } })
+    expect(low.parts.some((p) => p.id === 'slab_1')).toBe(true)
+    expect(low.parts.some((p) => p.structure?.rebar)).toBe(false)
+  })
+
   it('slabPanels: false keeps the slabs whole, as the team vocabulary and the coarse detail', () => {
     const result: any = engine.generate('townhouse', { seed: 3, state: 'normal' })
     const whole = toDestructibleSpec(result.structure, { portico: true, slabPanels: false })
@@ -47,7 +55,8 @@ describe('slab panels: options and rules', () => {
 })
 
 describe('reinforced concrete is the default: every typology stands at rest', () => {
-  for (const template of Object.keys(engine.templates)) {
+  // the towers keep their whole slabs (next block) and stand as they always did; their own tests (tower, skyscraper) cover them
+  for (const template of Object.keys(engine.templates).filter((id) => !TOWER_TEMPLATES.includes(id))) {
     it(`${template}: panels no wider than the span, nothing breaks on its own and no section is past its limit`, () => {
       const { spec } = specOf(template, 1, 'normal', 'auto')
       for (const p of spec.parts.filter((q) => /^slab_\w+_p\d+$/.test(q.id))) {
@@ -62,6 +71,20 @@ describe('reinforced concrete is the default: every typology stands at rest', ()
       expect(parts.filter((p) => p.status === 'broken').map((p) => p.id), template).toEqual([])
       for (const p of parts) if (p.flexure !== undefined) expect(p.flexure, `${template} ${p.id}`).toBeLessThan(1)
     }, 60000)
+  }
+})
+
+describe('towers of the plan engine: no panels, built in seconds', () => {
+  for (const template of TOWER_TEMPLATES) {
+    it(`${template}: whole slabs, plain concrete as before, and the spec is made in a few seconds (panels and steel took minutes on 40 storeys: the loss of each pillar is one world)`, () => {
+      const result: any = engine.generate(template, { seed: 1, state: 'normal' })
+      expect(result.structure.levels.length).toBeGreaterThan(SLAB_PANEL_DEFAULTS.maxStoreys)
+      const started = Date.now()
+      const spec = toDestructibleSpec(result.structure)
+      expect(Date.now() - started).toBeLessThan(60000)
+      expect(spec.parts.some((p) => /^slab_\w+_p\d+$/.test(p.id))).toBe(false)
+      expect(spec.parts.some((p) => p.structure?.rebar)).toBe(false)
+    }, 120000)
   }
 })
 

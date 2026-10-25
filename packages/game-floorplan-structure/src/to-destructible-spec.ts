@@ -117,7 +117,8 @@ export function toDestructibleSpec(structure: Structure, options: DestructibleSp
   const ids = new Set(roled.map((part) => part.id))
   const filtered = structure.supports.filter((support) => !options.filter || (ids.has(support.part) && (support.on === GROUND || ids.has(support.on))))
   const detail = options.wallDetail ?? 'panels'
-  const slabOptions = resolveSlabPanels(options.slabPanels ?? true)
+  const resolved = resolveSlabPanels(options.slabPanels ?? true)
+  const slabOptions = resolved && structure.levels.length <= resolved.maxStoreys ? resolved : undefined
   const slabbed = slabOptions ? applySlabPanels({ parts: roled, supports: filtered }, structure, slabOptions) : { parts: roled, supports: filtered }
   const walled = applyPanels(slabbed, structure, detail, slabOptions && structure.construction.frame.rebar ? (span) => beamDepthFor(span, slabOptions) : undefined)
   const panels = slabOptions && detail !== 'coarse' ? deepenBondBeams(walled, structure, slabOptions) : walled
@@ -137,12 +138,12 @@ export function toDestructibleSpec(structure: Structure, options: DestructibleSp
   const beams = new Set(parts.filter((part) => part.role === 'beam' && (part.beamKind === 'bond_beam' || part.slab !== undefined)).map((part) => part.id))
   const joints: JointSpec[] = supports.filter((s) => present.has(s.part) && present.has(s.on)).map((s) => ({ id: `${s.part}~${s.on}`, a: s.part, b: s.on, kind: s.joint, bears: s.bears === false || (beams.has(s.part) && infill.has(s.on)) ? false : 'a_on_b' }))
   const spec: DestructibleSpec = { name: options.name ?? 'house', parts: specs, joints, tags: ['structure', 'house'] }
-  return onSoil(withRebar(spec, structure, options, portico), structure, options)
+  return onSoil(withRebar(spec, structure, options, portico, slabOptions !== undefined), structure, options)
 }
 
-function withRebar(spec: DestructibleSpec, structure: Structure, options: DestructibleSpecOptions, portico: boolean): DestructibleSpec {
+function withRebar(spec: DestructibleSpec, structure: Structure, options: DestructibleSpecOptions, portico: boolean, panelled: boolean): DestructibleSpec {
   const { redundancy = 0.97, safetyOthers = 0.45 } = options
-  const rebar = options.rebar ?? resolveSlabPanels(options.slabPanels ?? true) !== undefined
+  const rebar = options.rebar ?? panelled
   if (!rebar || !structure.construction.frame.rebar) return spec
   const ratios = { ...REBAR_RATIOS, ...(rebar === true ? {} : rebar) }
   for (const part of spec.parts) {

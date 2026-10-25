@@ -32,11 +32,16 @@ export interface SlabPanelOptions {
   beamWidthRatio: number
   /** Side of the pillars that are added, metres (default 0.20; NBR 6118 13.2.3 asks for 19 cm). */
   columnSide: number
+  /**
+   * Most storeys of a building that gets panels (default 8). A tall building is a frame of its own (`buildTower`, the skyscraper presets), and cutting its 40 slabs and
+   * sizing every pillar for the loss of each other one is quadratic: minutes for the 40-storey tower of the plan engine. It keeps its slabs whole, and the steel is not declared.
+   */
+  maxStoreys: number
 }
 
 export const SLAB_PANEL_DEFAULTS: Readonly<SlabPanelOptions> = {
   maxSpan: 5, minPanel: 1.5, lineCoverage: 0.6, doorGap: 1.3, lineTolerance: 0.2, footprintShare: 0.5, thicknessRatio: 40, floorMinThickness: 0.1, roofMinThickness: 0.08,
-  beamDepthRatio: 10, beamMinDepth: 0.25, beamStep: 0.05, beamWidthRatio: 3, columnSide: 0.2,
+  beamDepthRatio: 10, beamMinDepth: 0.25, beamStep: 0.05, beamWidthRatio: 3, columnSide: 0.2, maxStoreys: 8,
 }
 
 export const resolveSlabPanels = (options?: boolean | Partial<SlabPanelOptions>): SlabPanelOptions | undefined => {

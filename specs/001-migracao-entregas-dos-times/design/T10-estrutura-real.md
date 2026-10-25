@@ -728,3 +728,17 @@ usa; ver §6).
   (golpe contundente desgasta todas as juntas da peça atingida). Na área de casas isso soltava todas as paredes das casas a cada queda de entulho; a
   casa ligada a painéis deixava de esconder o efeito. O golpe contundente no terreno não desgasta mais as juntas (`game-destruction/tests/terrain-blow.test.ts`).
 
+### 12.7 Prédios altos: sem painéis (`maxStoreys`)
+
+Depois da fusão com o passo do arranha-céu, `office_tower` (40 andares, 3764 peças na planta) e `residential_tower` (30) passam por `toDestructibleSpec` com os
+padrões novos. Medido: sem painéis a spec sai em ~3 s (9665 peças); só com os painéis (`rebar: false`) levava **483 s** (21629 peças). O tempo estava em
+`sizeCapacities`, que roda o repouso de toda a planta uma vez por pilar e parede perdidos (O(portantes x peças); com os pilares novos, ~10 mil mundos de 16 mil peças),
+e, antes de uma correção, em `applySlabPanels` (as distâncias ao chão eram refeitas a cada cinta: agora ficam em cache enquanto nenhuma peça ou apoio entra; o
+corte das 39 lajes cai para ~4 s). Com o aço declarado, o `sizeRebar` por pilar (um mundo por pilar perdido) seria pior ainda: minutos.
+
+Decisão: `SlabPanelOptions.maxStoreys` (padrão 8). Um prédio com mais andares do que isso mantém as lajes inteiras e o aço não é declarado (o vergalhão padrão
+acompanha os painéis), como era. Os arranha-céus têm estrutura própria (`buildTower`, `buildSkyscraper`, dimensionada com as próprias regras) e a planta
+alta do motor de plantas continua como a equipe a descreve. É uma opção: `slabPanels: { maxStoreys: 50 }` liga os painéis numa torre, pagando o tempo (minutos). O
+laço "de pé em repouso" de `slab-panels.test.ts` deixa as duas torres de fora (têm os testes `tower`/`skyscraper`) e um teste próprio confere que elas saem
+sem painéis nem aço e em segundos.
+

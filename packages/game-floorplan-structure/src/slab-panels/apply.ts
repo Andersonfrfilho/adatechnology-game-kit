@@ -116,17 +116,29 @@ interface Context {
   panelsOf: Map<string, StructurePart[]>
   pillars: number
   groundBase: string
+  /** The distances of the last call to `distancesOf`, kept while no part or support is added (a tower asks for them once per bond beam and per slab). */
+  distCache?: { parts: number; supports: number; map: Map<string, number> }
 }
 
 const boxOfSpot = (spot: Spot, side: number): Rect => [spot.u - side / 2, spot.v - side / 2, spot.u + side / 2, spot.v + side / 2]
 
 /** Steps from the ground of every part, the way the destruction world counts them: through the supports that carry, and not through a partition. */
+function distancesOf(context: Context): Map<string, number> {
+  const cache = context.distCache
+  if (cache && cache.parts === context.parts.length && cache.supports === context.supports.length) return cache.map
+  const map = distances(context.parts, context.supports)
+  context.distCache = { parts: context.parts.length, supports: context.supports.length, map }
+  return map
+}
+
 function distances(parts: readonly StructurePart[], supports: readonly Support[]): Map<string, number> {
   const byId = new Map(parts.map((p) => [p.id, p]))
   const carrying = new Map<string, string[]>()
   for (const s of supports) {
     if (s.bears === false || !byId.has(s.part) || (s.on !== GROUND && !byId.has(s.on))) continue
-    carrying.set(s.on, [...(carrying.get(s.on) ?? []), s.part])
+    const list = carrying.get(s.on)
+    if (list) list.push(s.part)
+    else carrying.set(s.on, [s.part])
   }
   const dist = new Map<string, number>([[GROUND, 0]])
   const queue = [GROUND]
@@ -302,7 +314,7 @@ function cutSlab(context: Context, slab: StructurePart, wallBoxes: readonly Rect
 
   // the beams: under the edges of the panels, on pillars and bearing walls; a bond beam that already runs there is the beam
   const top = roof ? slab.y0 : y0
-  const dist = distances(context.parts, context.supports)
+  const dist = distancesOf(context)
   const storey = storeyUnder(context, slab)
   const props = propsUnder(context, dist, top, slab.y1, storey.floor)
   const near = props.length ? Math.min(...props.map((p) => p.dist)) : pillarDist(context, dist, storey)
@@ -390,7 +402,7 @@ function supportBondBeam(context: Context, plate: StructurePart): void {
   const dir: 'u' | 'v' = plate.aabb[2] - plate.aabb[0] >= plate.aabb[3] - plate.aabb[1] ? 'u' : 'v'
   const line = lineOf(plate.aabb, dir)
   const width = dir === 'u' ? plate.aabb[3] - plate.aabb[1] : plate.aabb[2] - plate.aabb[0]
-  const dist = distances(context.parts, context.supports)
+  const dist = distancesOf(context)
   const floor = plate.floor
   const props = propsUnder(context, dist, plate.y0, plate.y1, floor)
   const storey = { floor, below: floor >= 1 ? `slab_${floor}` : undefined, bottom: context.structure.levels[floor] ?? 0 }
@@ -416,7 +428,7 @@ function supportBondBeam(context: Context, plate: StructurePart): void {
 export function applySlabPanels(input: PartsAndSupports, structure: Structure, options: SlabPanelOptions): PartsAndSupports {
   const frame = structure.construction.frame
   const system = CONSTRUCTION_SYSTEMS.get(structure.construction.system)
-  if (!frame.rebar || !system || system.timber) return input
+  if (!frame.rebar || !system || system.timber || structure.levels.length > options.maxStoreys) return input
   const parts = input.parts.map((p) => ({ ...p }))
   const slabs = parts.filter((p) => isConcreteSlab(p, frame.slabs))
   const bonds = parts.filter((p) => isBondBeam(p, frame.beams))
