@@ -24,7 +24,7 @@ scene.add(drawn.root)
 - Lights are real `PointLight` and `SpotLight` objects; `drawn.lights` lists them. `animate(t)` flickers the failing lamps (`I * (sin(23t + x) > 0.3 || sin(3.1t) > 0.85 ? 0.15 : 1)`) and moves each searchlight target around its tower.
 - A `terrain` part becomes the square mesh with vertex colours (flat shaded, roughness 1, casts and receives shadows); the water is a plane part drawn after it.
 - A `placement` part (a vehicle of the fleet, a species of the pack) becomes a group at the spot, turned and scaled, holding the object a resolver made: `createUrbanThree(THREE, { resolvers: { vehicle: createVehicleResolver(vehiclesThree), plant: createPlantResolver(THREE) } })`. The vehicle resolver uses the `lite` build of `game-vehicles-three` (six fused meshes) and the plant resolver `generate` and `createPlantObject` of `game-vegetation`; each is built once for an id and paint (or seed) and cloned for every spot, sharing geometry and materials. An id the package does not know leaves the spot empty. `resolver.dispose()` frees them.
-- `draw(scene, { root })` draws into a group of yours. Works on three r128 and later.
+- `draw(scene, { root })` draws into a group of yours. Works on three r160 and later.
 
 The scene hash, the lists of instances and the surface of each material (shadows, roughness, metalness, flat shading) of 34 cases are tested against the page.
 

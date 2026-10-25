@@ -1268,17 +1268,14 @@ importers:
         specifier: ^22.10.7
         version: 22.20.5
       '@types/three':
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.0
+        version: 0.160.0
       happy-dom:
         specifier: ^17.4.4
         version: 17.6.3
       three:
-        specifier: 0.128.0
-        version: 0.128.0
-      three160:
-        specifier: npm:three@0.160.1
-        version: three@0.160.1
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
@@ -1351,17 +1348,14 @@ importers:
         specifier: ^22.10.7
         version: 22.20.5
       '@types/three':
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.0
+        version: 0.160.0
       happy-dom:
         specifier: ^17.4.4
         version: 17.6.3
       three:
-        specifier: 0.128.0
-        version: 0.128.0
-      three160:
-        specifier: npm:three@0.160.1
-        version: three@0.160.1
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
@@ -1385,14 +1379,14 @@ importers:
         specifier: ^22.10.7
         version: 22.20.5
       '@types/three':
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.0
+        version: 0.160.0
       happy-dom:
         specifier: ^17.4.4
         version: 17.6.3
       three:
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
@@ -1440,11 +1434,11 @@ importers:
         specifier: ^22.10.7
         version: 22.20.5
       '@types/three':
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.0
+        version: 0.160.0
       three:
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
@@ -1486,17 +1480,14 @@ importers:
         specifier: ^22.10.7
         version: 22.20.5
       '@types/three':
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.0
+        version: 0.160.0
       happy-dom:
         specifier: ^17.4.4
         version: 17.6.3
       three:
-        specifier: 0.128.0
-        version: 0.128.0
-      three160:
-        specifier: npm:three@0.160.1
-        version: three@0.160.1
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
@@ -1867,14 +1858,11 @@ importers:
         specifier: ^22.10.7
         version: 22.20.5
       '@types/three':
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.0
+        version: 0.160.0
       three:
-        specifier: 0.128.0
-        version: 0.128.0
-      three160:
-        specifier: npm:three@0.160.1
-        version: three@0.160.1
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)

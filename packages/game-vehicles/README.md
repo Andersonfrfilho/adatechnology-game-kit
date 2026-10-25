@@ -18,7 +18,7 @@ pnpm add @adatechnology/game-vehicles three
 Browser without a bundler (the global is `GameVehicles`):
 
 ```html
-<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
 <script src="https://unpkg.com/@adatechnology/game-vehicles/dist/index.global.js"></script>
 <script>
   const kit = GameVehicles.createVehicleKit({ THREE })

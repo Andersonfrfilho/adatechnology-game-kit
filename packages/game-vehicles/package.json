@@ -45,14 +45,14 @@
     "example:build": "node example/build-example.mjs"
   },
   "peerDependencies": {
-    "three": ">=0.128.0"
+    "three": ">=0.160.0"
   },
   "devDependencies": {
     "@adatechnology/game-weapons": "workspace:*",
     "@types/node": "^22.10.7",
-    "@types/three": "0.128.0",
+    "@types/three": "^0.160.0",
     "happy-dom": "^17.4.4",
-    "three": "0.128.0",
+    "three": "^0.160.1",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",
     "vitest": "^3.2.4"

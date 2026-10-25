@@ -17,7 +17,7 @@ car.triangles // 19286 · car.drawCalls // 6 · car.damageables // metal, glass,
 
 - `quality: 'high'` is the kit's vehicle (the context stays in `car.context` for damage), `'lite'` fuses it into `paint`, `trim`, `metal`, `glass`, `light` and `plate`, dropping interiors and pieces under 3 cm.
 - The colour comes from `color` or from `seed` through the palette of the vehicle's group (`colorFromSeed`).
-- Tested against the team's page on three r160 (triangles, draw calls, size, per-class vertices, damageable boxes) and against `DIMS` for the 69 vehicles on r128.
+- Tested against the team's page on three r160 (triangles, draw calls, size, per-class vertices, damageable boxes) and against `DIMS` for the 69 vehicles.
 
 ## Test area
 
