@@ -15,4 +15,18 @@ const kit = createCharacters({ packs: [createPeoplePack()] })
 kit.create({ seed: 5, kind: 'nurse' })
 ```
 
+**Attack clips.** `ATTACK_CLIPS` are the player's strike poses as data in the `PoseClip` format of `game-characters`: `punch_right` (0.35 s, impact 0.16 s), `shove_two_hands` (0.5 s, 0.26 s),
+`front_kick` (0.6 s, 0.32 s, full body) and the body recoil of a shot, `recoil_rifle` (0.22 s) and `recoil_pistol` (0.18 s), both with the impact on the first frame. The punch, shove and recoils drive
+the upper body only (the legs keep walking). The `phase` labels (`attack_clip.phase.windup`, `strike`, `recover`) are in `ATTACK_CLIP_LOCALES` (`pt-BR`, `en`), in the shape of `POSE_CLIP_LOCALES`.
+Authored in the kit; replace with the Elenco team's clips when delivered.
+
+```ts
+import { POSE_CLIPS, createPoseClipRegistry } from '@adatechnology/game-characters'
+import { ATTACK_CLIPS } from '@adatechnology/game-characters-people'
+
+const clips = createPoseClipRegistry([...POSE_CLIPS, ...ATTACK_CLIPS]) // player.play('punch_right', { onEvent })
+```
+
+`game-player` applies a shove or a blow on the key press; fire the effect from the clip's `impact` event when the animation should lead.
+
 Plain script: `dist/index.global.js` exposes the `GameCharactersPeople` global.

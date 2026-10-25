@@ -91,6 +91,16 @@ if (!playwright || !existsSync(page)) {
       bench.act('stop_clip')
       bench.act('stand')
       for (let i = 0; i < 30; i++) r.update(1 / 60)
+      // the strikes: each clip plays, fires its one impact and it is logged as JSON
+      const strikes = []
+      for (const id of ['punch_right', 'shove_two_hands', 'front_kick', 'recoil_rifle', 'recoil_pistol']) {
+        const before = r.log.entries().length
+        bench.act(`play_${id}`)
+        for (let i = 0; i < 60; i++) r.update(1 / 60)
+        const impacts = r.log.entries().slice(before).map((e) => e.text).filter((t) => t.startsWith('{"type":"avatar"')).map((t) => JSON.parse(t)).filter((x) => x.action === 'impact')
+        strikes.push({ id, impacts: impacts.length, t: impacts[0]?.t, playing: r.avatar.avatar.playing })
+        for (let i = 0; i < 60; i++) r.update(1 / 60)
+      }
       r.openArea('player_area')
       // the gameplay link: the player module's grab plays the clip, a push frees it; a knock-down lays the body down
       const player = r.bench('player_area')
@@ -107,12 +117,33 @@ if (!playwright || !existsSync(page)) {
       player.act('knock')
       for (let i = 0; i < 20; i++) r.update(1 / 30)
       const down = r.avatarState().down
-      return { afterFirst, metrics, lines, grabbed, released, down, pending: r.bench('avatar_area').controls().filter((c) => c.id.startsWith('pending_')).map((c) => c.disabled) }
+      return { afterFirst, metrics, lines, grabbed, released, down, strikes }
     })
     check(`[${lang}] the avatar area: camera buttons, a clip plays, events and actions are JSON lines in the log`, body.afterFirst === 'first' && body.metrics.clip === 'grabbed_bitten_human' && body.lines.includes('play_clip') && body.lines.includes('clip_event'), { afterFirst: body.afterFirst, clip: body.metrics.clip, last_event: body.metrics.last_event, lines: [...new Set(body.lines)] })
-    check(`[${lang}] Soco, Empurrão, Chute and Tiro (corpo) are disabled`, body.pending.length === 4 && body.pending.every(Boolean), body.pending)
+    check(`[${lang}] the five attack clips play and fire exactly one impact each`, body.strikes.length === 5 && body.strikes.every((x) => x.impacts === 1), body.strikes)
     check(`[${lang}] the player's grab plays grabbed_bitten_human, the release stops it, a knock-down lays the body down`, body.grabbed === 'grabbed_bitten_human' && body.released === null && body.down === true, { grabbed: body.grabbed, released: body.released, down: body.down })
     await tab.screenshot({ path: join(shots, `player-third-${lang}.png`) })
+    // one capture per strike, taken on the frame of its impact (rifle and pistol with the armed arms)
+    for (const strike of body.strikes) {
+      await tab.evaluate(({ id, t }) => {
+        const r = window.__testRoom
+        r.openArea('avatar_area')
+        const bench = r.bench('avatar_area')
+        bench.act(id.startsWith('recoil') ? 'armed_on' : 'armed_off')
+        for (let i = 0; i < 20; i++) r.update(1 / 60)
+        bench.act(`play_${id}`)
+        for (let i = 0; i < Math.round(t * 60) + 1; i++) r.update(1 / 60)
+      }, strike)
+      await tab.waitForTimeout(100)
+      await tab.screenshot({ path: join(shots, `strike-${strike.id}-${lang}.png`) })
+      await tab.evaluate(() => {
+        const bench = window.__testRoom.bench('avatar_area')
+        bench.act('stop_clip')
+        bench.act('armed_off')
+        for (let i = 0; i < 30; i++) window.__testRoom.update(1 / 60)
+        window.__testRoom.openArea('player_area')
+      })
+    }
     check(`[${lang}] contract report is clean, 6 scenarios pass`, state.ok && state.problems.length === 0 && state.scenarios === 6 && state.failed === 0, state)
     check(`[${lang}] the bench hurts and bites: health drops, the wound bleeds`, state.hurt.health < 70 && state.hurt.wounds === 2, state.hurt)
     check(`[${lang}] six pushes break the grab`, state.free.grab_timer === 0, state.free)

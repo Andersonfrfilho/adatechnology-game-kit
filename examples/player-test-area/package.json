@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@adatechnology/game-characters": "workspace:*",
+    "@adatechnology/game-characters-people": "workspace:*",
     "@adatechnology/game-characters-three": "workspace:*",
     "@adatechnology/game-contracts": "workspace:*",
     "@adatechnology/game-player": "workspace:*"
