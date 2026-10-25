@@ -1798,5 +1798,15 @@
       0.3025
     ],
     "scale": 1
+  },
+  {
+    "id": "diesel",
+    "teamId": "diesel",
+    "teamBox": [
+      0.091,
+      0.26,
+      0.091
+    ],
+    "scale": 1
   }
 ]
