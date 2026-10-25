@@ -1618,5 +1618,15 @@
       0.02
     ],
     "scale": 1
+  },
+  {
+    "id": "beekeeper_suit",
+    "teamId": "apicultor",
+    "teamBox": [
+      0.4,
+      0.1,
+      0.33
+    ],
+    "scale": 1
   }
 ]
