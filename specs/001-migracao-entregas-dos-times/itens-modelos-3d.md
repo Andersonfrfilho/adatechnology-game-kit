@@ -215,7 +215,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Capa de chuva | `capa_chuva` | `raincoat` | 0,4 kg | comum | 300 x 40 x 250 mm |
 | [ ] | Capacete de obra (EPI) | `capacete_obra` | `hard_hat` | 0,4 kg | comum | 250 x 150 x 300 mm |
 | [ ] | Casaco acolchoado | `casaco_frio` | `padded_coat` | 1,3 kg | incomum | 450 x 150 x 350 mm |
-| [ ] | Chinelo de dedo | `chinelo` | `flip_flops` | 0,2 kg | comum | 290 x 30 x 230 mm |
+| [x] | Chinelo de dedo (kit) | `chinelo` | `flip_flops` | 0,2 kg | comum | 290 x 30 x 230 mm |
 | [x] | Coletes balísticos (II-A, III-A, III) (kit) | `colete` | `ballistic_vest` | 3,0 kg | raro | 400 x 70 x 450 mm |
 | [x] | Coturno (kit) | `coturno` | `combat_boots` | 1,6 kg | incomum | 300 x 200 x 220 mm |
 | [x] | Farda camuflada do Exército (kit) | `farda_eb` | `army_camouflage_uniform` | 1,5 kg | comum | 400 x 100 x 320 mm |

@@ -1918,5 +1918,15 @@
       0.18
     ],
     "scale": 1
+  },
+  {
+    "id": "flip_flops",
+    "teamId": "chinelo",
+    "teamBox": [
+      0.29,
+      0.03,
+      0.23
+    ],
+    "scale": 1
   }
 ]
