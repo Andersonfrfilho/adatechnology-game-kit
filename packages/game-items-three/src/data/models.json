@@ -1868,5 +1868,15 @@
       0.0151
     ],
     "scale": 1
+  },
+  {
+    "id": "fertilizer_bag",
+    "teamId": "adubo",
+    "teamBox": [
+      0.45,
+      0.13,
+      0.3
+    ],
+    "scale": 1
   }
 ]

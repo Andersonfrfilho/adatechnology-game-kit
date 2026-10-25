@@ -293,7 +293,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 
 | | Item | id do time | id no SDK | Peso | Raridade | Tamanho real |
 |---|---|---|---|---|---|---|
-| [ ] | Adubo (saco de 10 kg) | `adubo` | `fertilizer_bag` | 10,0 kg | raro | 450 x 130 x 300 mm |
+| [x] | Adubo (saco de 10 kg) (kit) | `adubo` | `fertilizer_bag` | 10,0 kg | raro | 450 x 130 x 300 mm |
 | [ ] | Armadilha de laço | `armadilha_laco` | `snare_trap` | 0,3 kg | comum | 150 x 30 x 150 mm |
 | [ ] | Caixa de pesca (anzol, linha, isca) | `kit_pesca` | `fishing_tackle_box` | 0,6 kg | comum | 300 x 100 x 180 mm |
 | [x] | Rama de mandioca (maniva) (kit) | `maniva` | `cassava_cuttings` | 2,0 kg | incomum | 700 x 120 x 120 mm |
