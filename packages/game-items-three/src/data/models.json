@@ -314,10 +314,10 @@
     "teamId": "charque",
     "teamBox": [
       2.5,
-      0.25,
+      0.251,
       1.5
     ],
-    "scale": 0.1
+    "scale": 0.099867
   },
   {
     "id": "home_preserves",
