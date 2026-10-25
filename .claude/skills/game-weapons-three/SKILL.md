@@ -90,7 +90,7 @@ ferramenta do host) e `fx.update(dt)` a cada quadro. `tool: () => HostTool` dá 
 Atirar, rajada e destravar ficam nas teclas (entrada do jogador). O som da explosão sai do evento `explosion` do host, pela distância da câmera.
 
 ## Área de explosivos (`explosives_area`)
-O botijão P13 de cozinha com o modelo real do time (`lpg_cylinder_13kg`, 0,353 x 0,49 x 0,358 m), numa quina de cozinha junto da parede de tijolo: geladeira, balcão, fogão e mesa, um zumbi a 3 m, um sobrevivente a 8 m, anéis no chão a 5 m (letal) e 14 m (ferimento) e o jogador a cerca de 10 m. Abre por `?area=explosives_area` (ou `?area=Explosivos`; em inglês `Explosives`); a página padrão da sala já a carrega.
+O botijão P13 de cozinha com o modelo real do time (`lpg_cylinder_13kg`, 0,353 x 0,49 x 0,358 m), numa quina de cozinha junto da parede de tijolo: geladeira, balcão, fogão e mesa, um zumbi a 3 m, um sobrevivente a 8 m, anéis no chão a 5 m (letal) e 14 m (ferimento) e o jogador a cerca de 6 m (fora do anel letal). Abre por `?area=explosives_area` (ou `?area=Explosivos`; em inglês `Explosives`); a página padrão da sala já a carrega.
 | Id | Tipo | O que faz |
 |---|---|---|
 | `shoot` | botão | "Atirar no botijão": 9 mm no casco; jato branco, tocha em 0,8 s, explosão em 1,4 s |

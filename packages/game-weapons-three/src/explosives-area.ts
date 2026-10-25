@@ -11,7 +11,7 @@ import { WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
 export { EXPLOSIVES_AREA_ID }
 export type { ExplosivesRoom }
 
-/** Where the things of the scene stand (metres, in the room's world; the brick wall is the room's own at z = -11). The kitchen corner is against the wall; the player looks at it from about 10 m. */
+/** Where the things of the scene stand (metres, in the room's world; the brick wall is the room's own at z = -11). The kitchen corner is against the wall; the player looks at it from about 6 m. */
 export interface ExplosivesScene {
   /** Item ids and positions of the kitchen furniture (items of the household module); one that the room does not know is left out. */
   readonly furniture: ReadonlyArray<{ readonly item: string; readonly at: Vec3; readonly rotationY?: number }>
@@ -20,7 +20,7 @@ export interface ExplosivesScene {
   /** The zombie (about 3 m from the cylinder) and the survivor (about 8 m): item ids of the characters module. */
   readonly zombie: { readonly item: string; readonly at: Vec3 }
   readonly survivor: { readonly item: string; readonly at: Vec3 }
-  /** The player's eye (about 10 m from the cylinder). */
+  /** The player's eye (about 6 m from the cylinder: outside the 5 m lethal ring, the lamp rig of the weather module is behind it). */
   readonly eye: Vec3
 }
 
@@ -34,8 +34,8 @@ export const DEFAULT_EXPLOSIVES_SCENE: ExplosivesScene = {
   ],
   cylinder: [0.02, 0, -10.66],
   zombie: { item: 'zombie_walker', at: [-1.6, 0, -8.1] },
-  survivor: { item: 'person_police_officer', at: [-4.5, 0, -3.8] },
-  eye: [1.5, 1.7, 0],
+  survivor: { item: 'person_police_officer', at: [6, 0, -5.3] },
+  eye: [0, 1.7, -4.7],
 }
 
 export interface ExplosivesTestModuleOptions {
