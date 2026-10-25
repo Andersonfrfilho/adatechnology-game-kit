@@ -1568,5 +1568,15 @@
       0.5
     ],
     "scale": 0.1
+  },
+  {
+    "id": "army_camouflage_uniform",
+    "teamId": "farda_eb",
+    "teamBox": [
+      0.4,
+      0.1005,
+      0.32
+    ],
+    "scale": 1
   }
 ]

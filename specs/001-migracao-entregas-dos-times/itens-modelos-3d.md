@@ -218,7 +218,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Chinelo de dedo | `chinelo` | `flip_flops` | 0,2 kg | comum | 290 x 30 x 230 mm |
 | [ ] | Coletes balísticos (II-A, III-A, III) | `colete` | `ballistic_vest` | 3,0 kg | raro | 400 x 70 x 450 mm |
 | [ ] | Coturno | `coturno` | `combat_boots` | 1,6 kg | incomum | 300 x 200 x 220 mm |
-| [ ] | Farda camuflada do Exército | `farda_eb` | `army_camouflage_uniform` | 1,5 kg | comum | 400 x 100 x 320 mm |
+| [x] | Farda camuflada do Exército (kit) | `farda_eb` | `army_camouflage_uniform` | 1,5 kg | comum | 400 x 100 x 320 mm |
 | [ ] | Jaqueta de motociclista (couro) | `jaqueta_couro` | `leather_motorcycle_jacket` | 1,8 kg | raro | 450 x 100 x 350 mm |
 | [ ] | Jaqueta jeans | `jaqueta_jeans` | `denim_jacket` | 1,0 kg | comum | 400 x 80 x 300 mm |
 | [ ] | Luvas de couro (raspa) | `luva_couro` | `leather_work_gloves` | 0,2 kg | comum | 250 x 30 x 120 mm |
