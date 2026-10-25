@@ -1377,6 +1377,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:*
+        version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-weapons':
         specifier: workspace:*
@@ -1800,6 +1803,21 @@ importers:
       '@adatechnology/game-characters-undead':
         specifier: workspace:*
         version: link:../../packages/game-characters-undead
+      '@adatechnology/game-floorplan':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan
+      '@adatechnology/game-floorplan-commercial':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-commercial
+      '@adatechnology/game-floorplan-residential':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-residential
+      '@adatechnology/game-floorplan-structure':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-structure
+      '@adatechnology/game-floorplan-three':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-three
       '@adatechnology/game-interactables-household':
         specifier: workspace:*
         version: link:../../packages/game-interactables-household
@@ -1821,6 +1839,21 @@ importers:
       '@adatechnology/game-shapes-three':
         specifier: workspace:*
         version: link:../../packages/game-shapes-three
+      '@adatechnology/game-urban':
+        specifier: workspace:*
+        version: link:../../packages/game-urban
+      '@adatechnology/game-urban-three':
+        specifier: workspace:*
+        version: link:../../packages/game-urban-three
+      '@adatechnology/game-vegetation':
+        specifier: workspace:*
+        version: link:../../packages/game-vegetation
+      '@adatechnology/game-vegetation-species':
+        specifier: workspace:*
+        version: link:../../packages/game-vegetation-species
+      '@adatechnology/game-vegetation-three':
+        specifier: workspace:*
+        version: link:../../packages/game-vegetation-three
       '@adatechnology/game-vehicles':
         specifier: workspace:*
         version: link:../../packages/game-vehicles

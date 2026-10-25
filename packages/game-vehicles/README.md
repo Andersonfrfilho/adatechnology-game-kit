@@ -201,6 +201,13 @@ Plain DOM and SVG, no framework: `ui.damageMap(host, c, { selected, onSelect })`
 ones in a strip below); `ui.bandButtons`, `ui.legend`, `ui.healthBar({ text, bar }, c)`, `ui.scenarioButtons`. `ui.injectStyles()` adds minimal CSS
 (`--panel-2`, `--line` and `--muted` customise it).
 
+## Geometry
+
+The kit's three is `shapeGeometries(THREE)` of `@adatechnology/game-shapes-three`, thinned by the light mode: boxes, cylinders, cones, spheres,
+planes, circles, rings, tori, the tyre lathes and the straight-edged extrusions are made by game-shapes, bit-identical to three's
+(`tests/exact-golden.test.ts`, and the fleet's and `game-vehicles-three`'s) and cached by parameters across vehicles. Tubes, curved
+extrusions, the lofted bodies and the warps stay three's own or the kit's custom buffers. The IIFE build bundles game-shapes.
+
 ## Determinism and old seeds
 
 The random stream of a zone is seeded from the vehicle key, the zone id and the band. The first version of this engine used Portuguese ids, so ids

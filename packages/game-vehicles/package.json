@@ -59,6 +59,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@adatechnology/game-contracts": "workspace:*"
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-shapes-three": "workspace:*"
   }
 }
