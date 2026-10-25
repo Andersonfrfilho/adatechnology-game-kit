@@ -1838,5 +1838,15 @@
       0.1502
     ],
     "scale": 1
+  },
+  {
+    "id": "extension_cord",
+    "teamId": "extensao",
+    "teamBox": [
+      0.228,
+      0.08,
+      0.23
+    ],
+    "scale": 1
   }
 ]

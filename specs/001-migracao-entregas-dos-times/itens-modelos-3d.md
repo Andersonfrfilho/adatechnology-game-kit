@@ -263,7 +263,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Controle de alarme de carro (kit) | `controle_alarme` | `car_alarm_remote` | 0,03 kg | comum | 40 x 70 x 12 mm |
 | [ ] | Despertador de corda | `despertador` | `windup_alarm_clock` | 0,3 kg | comum | 110 x 125 x 55 mm |
 | [x] | Eletrificador de cerca rural (kit) | `eletrificador` | `electric_fence_energizer` | 3,0 kg | raro | 250 x 200 x 150 mm |
-| [ ] | Extensão elétrica 20 m | `extensao` | `extension_cord` | 1,5 kg | comum | 230 x 80 x 230 mm |
+| [x] | Extensão elétrica 20 m (kit) | `extensao` | `extension_cord` | 1,5 kg | comum | 230 x 80 x 230 mm |
 | [ ] | Gerador portátil a gasolina | `gerador` | `portable_generator` | 25,0 kg | raro | 500 x 420 x 430 mm |
 | [ ] | Lampião LED de camping | `lampiao_led` | `led_camp_lantern` | 0,4 kg | incomum | 110 x 200 x 110 mm |
 | [ ] | Lanterna de cabeça | `lanterna_cabeca` | `headlamp` | 0,1 kg | incomum | 90 x 60 x 50 mm |
