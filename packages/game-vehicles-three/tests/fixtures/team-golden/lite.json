@@ -1,0 +1,3314 @@
+{
+  "seed": 7,
+  "vehicles": {
+    "hatch:lite": {
+      "color": "#17181a",
+      "tris": 19181,
+      "drawCalls": 6,
+      "L": 4.212,
+      "W": 1.919,
+      "H": 1.472,
+      "pruned": 20,
+      "classes": {
+        "pintura": {
+          "vertices": 27396,
+          "indices": 27432,
+          "hash": "ca61174a"
+        },
+        "acabamento": {
+          "vertices": 11104,
+          "indices": 15324,
+          "hash": "d131f5ad"
+        },
+        "metal": {
+          "vertices": 3449,
+          "indices": 7641,
+          "hash": "197e45a6"
+        },
+        "vidro": {
+          "vertices": 2174,
+          "indices": 3984,
+          "hash": "97902309"
+        },
+        "luz": {
+          "vertices": 1938,
+          "indices": 3150,
+          "hash": "158331ec"
+        },
+        "placa": {
+          "vertices": 8,
+          "indices": 12,
+          "hash": "8f016cf1"
+        }
+      },
+      "damageables": [
+        {
+          "material": "metal",
+          "zone": "parachoque_d",
+          "part": "parachoque",
+          "side": "centro",
+          "min": [
+            -1.065,
+            -0.02,
+            1.7042
+          ],
+          "max": [
+            1.065,
+            0.62,
+            2.2542
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "capo",
+          "part": "capo",
+          "side": "centro",
+          "min": [
+            -0.7207,
+            0.7934,
+            0.8552
+          ],
+          "max": [
+            0.7207,
+            1.1917,
+            1.7732
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_de",
+          "part": "porta",
+          "side": "esquerdo",
+          "min": [
+            0.525,
+            0.14,
+            -0.4358
+          ],
+          "max": [
+            1.115,
+            1.03,
+            0.7542
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_te",
+          "part": "porta",
+          "side": "esquerdo",
+          "min": [
+            0.525,
+            0.14,
+            -1.1558
+          ],
+          "max": [
+            1.115,
+            1.03,
+            -0.4358
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_dd",
+          "part": "porta",
+          "side": "direito",
+          "min": [
+            -1.115,
+            0.14,
+            -0.4358
+          ],
+          "max": [
+            -0.525,
+            1.03,
+            0.7542
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_td",
+          "part": "porta",
+          "side": "direito",
+          "min": [
+            -1.115,
+            0.14,
+            -1.1558
+          ],
+          "max": [
+            -0.525,
+            1.03,
+            -0.4358
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "tampa",
+          "part": "tampa",
+          "side": "centro",
+          "min": [
+            -0.745,
+            0.56,
+            -2.1958
+          ],
+          "max": [
+            0.745,
+            1.22,
+            -1.6958
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "parachoque_t",
+          "part": "parachoque",
+          "side": "centro",
+          "min": [
+            -1.065,
+            -0.02,
+            -2.2958
+          ],
+          "max": [
+            1.065,
+            0.62,
+            -1.7458
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidro_lateral_traseiro_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -0.7781,
+            1.0636,
+            -1.6202
+          ],
+          "max": [
+            -0.6382,
+            1.3089,
+            -1.1758
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_traseira_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -0.7859,
+            1.0393,
+            -1.1358
+          ],
+          "max": [
+            -0.6122,
+            1.3908,
+            -0.4558
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_dianteira_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -0.798,
+            1.0018,
+            -0.4158
+          ],
+          "max": [
+            -0.6087,
+            1.4018,
+            0.6409
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidro_lateral_traseiro_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.6382,
+            1.0636,
+            -1.6202
+          ],
+          "max": [
+            0.7781,
+            1.3089,
+            -1.1758
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_traseira_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.6122,
+            1.0393,
+            -1.1358
+          ],
+          "max": [
+            0.7859,
+            1.3908,
+            -0.4558
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_dianteira_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.6087,
+            1.0018,
+            -0.4158
+          ],
+          "max": [
+            0.798,
+            1.4018,
+            0.6409
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "para_brisa",
+          "part": "parabrisa",
+          "side": "centro",
+          "min": [
+            -0.6759,
+            1.0519,
+            0.0738
+          ],
+          "max": [
+            0.6759,
+            1.4639,
+            0.7714
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidro_traseiro",
+          "part": "janela",
+          "side": "centro",
+          "min": [
+            -0.6676,
+            1.0537,
+            -1.8762
+          ],
+          "max": [
+            0.6676,
+            1.3496,
+            -1.4251
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_d",
+          "part": "farol",
+          "side": "direito",
+          "min": [
+            -0.8896,
+            0.6298,
+            1.6373
+          ],
+          "max": [
+            -0.3209,
+            0.7978,
+            2.0615
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_e",
+          "part": "farol",
+          "side": "esquerdo",
+          "min": [
+            0.3209,
+            0.6298,
+            1.6373
+          ],
+          "max": [
+            0.8896,
+            0.7978,
+            2.0615
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_d",
+          "part": "lanterna",
+          "side": "direito",
+          "min": [
+            -0.888,
+            0.8088,
+            -2.0602
+          ],
+          "max": [
+            -0.3113,
+            0.9998,
+            -1.6903
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_e",
+          "part": "lanterna",
+          "side": "esquerdo",
+          "min": [
+            0.3113,
+            0.8088,
+            -2.0602
+          ],
+          "max": [
+            0.888,
+            0.9998,
+            -1.6903
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_dianteira_direita",
+          "part": "roda",
+          "side": "direito",
+          "min": [
+            -0.8886,
+            -0.04,
+            0.8959
+          ],
+          "max": [
+            -0.6045,
+            0.6532,
+            1.5925
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_dianteira_esquerda",
+          "part": "roda",
+          "side": "esquerdo",
+          "min": [
+            0.6045,
+            -0.04,
+            0.8959
+          ],
+          "max": [
+            0.8886,
+            0.6532,
+            1.5925
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_traseira_direita",
+          "part": "roda",
+          "side": "direito",
+          "min": [
+            -0.8886,
+            -0.04,
+            -1.6841
+          ],
+          "max": [
+            -0.6045,
+            0.6532,
+            -0.9875
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_traseira_esquerda",
+          "part": "roda",
+          "side": "esquerdo",
+          "min": [
+            0.6045,
+            -0.04,
+            -1.6841
+          ],
+          "max": [
+            0.8886,
+            0.6532,
+            -0.9875
+          ]
+        },
+        {
+          "material": "combustivel",
+          "zone": "tanque",
+          "part": "tanque",
+          "side": "esquerdo",
+          "min": [
+            -0.0194,
+            0.23,
+            -1.5958
+          ],
+          "max": [
+            0.7806,
+            0.59,
+            -0.8958
+          ]
+        }
+      ]
+    },
+    "seda:lite": {
+      "color": "#17181a",
+      "tris": 19286,
+      "drawCalls": 6,
+      "L": 4.681,
+      "W": 1.934,
+      "H": 1.467,
+      "pruned": 20,
+      "classes": {
+        "pintura": {
+          "vertices": 28485,
+          "indices": 28509,
+          "hash": "ecf99894"
+        },
+        "acabamento": {
+          "vertices": 11050,
+          "indices": 15186,
+          "hash": "a286b0c0"
+        },
+        "metal": {
+          "vertices": 3824,
+          "indices": 7773,
+          "hash": "294bdd00"
+        },
+        "vidro": {
+          "vertices": 1670,
+          "indices": 3648,
+          "hash": "b51c1d5f"
+        },
+        "luz": {
+          "vertices": 1922,
+          "indices": 2730,
+          "hash": "dc4cb8b1"
+        },
+        "placa": {
+          "vertices": 8,
+          "indices": 12,
+          "hash": "56090e15"
+        }
+      },
+      "damageables": [
+        {
+          "material": "metal",
+          "zone": "parachoque_d",
+          "part": "parachoque",
+          "side": "centro",
+          "min": [
+            -1.09,
+            -0.02,
+            1.9382
+          ],
+          "max": [
+            1.09,
+            0.62,
+            2.4882
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "capo",
+          "part": "capo",
+          "side": "centro",
+          "min": [
+            -0.7486,
+            0.7415,
+            0.941
+          ],
+          "max": [
+            0.7486,
+            1.1742,
+            2.0072
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_de",
+          "part": "porta",
+          "side": "esquerdo",
+          "min": [
+            0.55,
+            0.14,
+            -0.39
+          ],
+          "max": [
+            1.14,
+            1.01,
+            0.84
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_te",
+          "part": "porta",
+          "side": "esquerdo",
+          "min": [
+            0.55,
+            0.14,
+            -1.19
+          ],
+          "max": [
+            1.14,
+            1.01,
+            -0.39
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_dd",
+          "part": "porta",
+          "side": "direito",
+          "min": [
+            -1.14,
+            0.14,
+            -0.39
+          ],
+          "max": [
+            -0.55,
+            1.01,
+            0.84
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_td",
+          "part": "porta",
+          "side": "direito",
+          "min": [
+            -1.14,
+            0.14,
+            -1.19
+          ],
+          "max": [
+            -0.55,
+            1.01,
+            -0.39
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "tampa",
+          "part": "tampa",
+          "side": "centro",
+          "min": [
+            -0.77,
+            0.56,
+            -2.3891
+          ],
+          "max": [
+            0.77,
+            1.2,
+            -1.59
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "parachoque_t",
+          "part": "parachoque",
+          "side": "centro",
+          "min": [
+            -1.09,
+            -0.02,
+            -2.4891
+          ],
+          "max": [
+            1.09,
+            0.62,
+            -1.9391
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_traseira_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -0.8034,
+            0.9908,
+            -1.1628
+          ],
+          "max": [
+            -0.6119,
+            1.3751,
+            -0.41
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_dianteira_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -0.808,
+            0.9774,
+            -0.37
+          ],
+          "max": [
+            -0.6099,
+            1.3811,
+            0.7237
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_traseira_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.6119,
+            0.9908,
+            -1.1628
+          ],
+          "max": [
+            0.8034,
+            1.3751,
+            -0.41
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_dianteira_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.6099,
+            0.9774,
+            -0.37
+          ],
+          "max": [
+            0.808,
+            1.3811,
+            0.7237
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "para_brisa",
+          "part": "parabrisa",
+          "side": "centro",
+          "min": [
+            -0.6842,
+            1.0291,
+            0.0597
+          ],
+          "max": [
+            0.6842,
+            1.4457,
+            0.8525
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidro_traseiro",
+          "part": "janela",
+          "side": "centro",
+          "min": [
+            -0.6831,
+            1.0322,
+            -1.6977
+          ],
+          "max": [
+            0.6831,
+            1.3833,
+            -1.1195
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_d",
+          "part": "farol",
+          "side": "direito",
+          "min": [
+            -0.9242,
+            0.5832,
+            1.7974
+          ],
+          "max": [
+            -0.2549,
+            0.7687,
+            2.2823
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_e",
+          "part": "farol",
+          "side": "esquerdo",
+          "min": [
+            0.2549,
+            0.5832,
+            1.7974
+          ],
+          "max": [
+            0.9242,
+            0.7687,
+            2.2823
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_d",
+          "part": "lanterna",
+          "side": "direito",
+          "min": [
+            -0.9152,
+            0.7883,
+            -2.2918
+          ],
+          "max": [
+            -0.3652,
+            0.9882,
+            -1.8734
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_e",
+          "part": "lanterna",
+          "side": "esquerdo",
+          "min": [
+            0.3652,
+            0.7883,
+            -2.2918
+          ],
+          "max": [
+            0.9152,
+            0.9882,
+            -1.8734
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_dianteira_direita",
+          "part": "roda",
+          "side": "direito",
+          "min": [
+            -0.9162,
+            -0.04,
+            1.0288
+          ],
+          "max": [
+            -0.6214,
+            0.6789,
+            1.7512
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_dianteira_esquerda",
+          "part": "roda",
+          "side": "esquerdo",
+          "min": [
+            0.6214,
+            -0.04,
+            1.0288
+          ],
+          "max": [
+            0.9162,
+            0.6789,
+            1.7512
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_traseira_direita",
+          "part": "roda",
+          "side": "direito",
+          "min": [
+            -0.9162,
+            -0.04,
+            -1.6712
+          ],
+          "max": [
+            -0.6214,
+            0.6789,
+            -0.9488
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_traseira_esquerda",
+          "part": "roda",
+          "side": "esquerdo",
+          "min": [
+            0.6214,
+            -0.04,
+            -1.6712
+          ],
+          "max": [
+            0.9162,
+            0.6789,
+            -0.9488
+          ]
+        },
+        {
+          "material": "combustivel",
+          "zone": "tanque",
+          "part": "tanque",
+          "side": "esquerdo",
+          "min": [
+            -0.0084,
+            0.23,
+            -1.7891
+          ],
+          "max": [
+            0.7916,
+            0.59,
+            -1.0891
+          ]
+        }
+      ]
+    },
+    "picape:lite": {
+      "color": "#17181a",
+      "tris": 16931,
+      "drawCalls": 6,
+      "L": 5.339,
+      "W": 2.022,
+      "H": 2.029,
+      "pruned": 22,
+      "classes": {
+        "pintura": {
+          "vertices": 23493,
+          "indices": 23529,
+          "hash": "7ba4ad14"
+        },
+        "acabamento": {
+          "vertices": 11780,
+          "indices": 15720,
+          "hash": "ddf3de84"
+        },
+        "metal": {
+          "vertices": 3672,
+          "indices": 7566,
+          "hash": "c9b17986"
+        },
+        "vidro": {
+          "vertices": 1302,
+          "indices": 2064,
+          "hash": "9e2c0814"
+        },
+        "luz": {
+          "vertices": 702,
+          "indices": 1902,
+          "hash": "3fd480a2"
+        },
+        "placa": {
+          "vertices": 8,
+          "indices": 12,
+          "hash": "2363919"
+        }
+      },
+      "damageables": [
+        {
+          "material": "metal",
+          "zone": "parachoque_d",
+          "part": "parachoque",
+          "side": "centro",
+          "min": [
+            -1.0975,
+            -0.02,
+            2.2265
+          ],
+          "max": [
+            1.0975,
+            0.82,
+            2.7765
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "capo",
+          "part": "capo",
+          "side": "centro",
+          "min": [
+            -0.7713,
+            1.0676,
+            1.345
+          ],
+          "max": [
+            0.7713,
+            1.4242,
+            2.3455
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_de",
+          "part": "porta",
+          "side": "esquerdo",
+          "min": [
+            0.5575,
+            0.34,
+            0.114
+          ],
+          "max": [
+            1.1475,
+            1.23,
+            1.244
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_te",
+          "part": "porta",
+          "side": "esquerdo",
+          "min": [
+            0.5575,
+            0.34,
+            -0.946
+          ],
+          "max": [
+            1.1475,
+            1.23,
+            0.114
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_dd",
+          "part": "porta",
+          "side": "direito",
+          "min": [
+            -1.1475,
+            0.34,
+            0.114
+          ],
+          "max": [
+            -0.5575,
+            1.23,
+            1.244
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_td",
+          "part": "porta",
+          "side": "direito",
+          "min": [
+            -1.1475,
+            0.34,
+            -0.946
+          ],
+          "max": [
+            -0.5575,
+            1.23,
+            0.114
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "cacamba",
+          "part": "tampa",
+          "side": "centro",
+          "min": [
+            -0.5775,
+            0.41,
+            -2.6779
+          ],
+          "max": [
+            0.5775,
+            1.4,
+            -1.036
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "parachoque_t",
+          "part": "parachoque",
+          "side": "centro",
+          "min": [
+            -1.0975,
+            -0.02,
+            -2.7779
+          ],
+          "max": [
+            1.0975,
+            0.82,
+            -2.2279
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_traseira_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -0.9034,
+            1.22,
+            -0.8782
+          ],
+          "max": [
+            -0.7555,
+            1.72,
+            0.094
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_dianteira_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -0.9034,
+            1.22,
+            0.134
+          ],
+          "max": [
+            -0.7555,
+            1.72,
+            1.1208
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_traseira_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.7555,
+            1.22,
+            -0.8782
+          ],
+          "max": [
+            0.9034,
+            1.72,
+            0.094
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_dianteira_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.7555,
+            1.22,
+            0.134
+          ],
+          "max": [
+            0.9034,
+            1.72,
+            1.1208
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "para_brisa",
+          "part": "parabrisa",
+          "side": "centro",
+          "min": [
+            -0.786,
+            1.2588,
+            0.6212
+          ],
+          "max": [
+            0.786,
+            1.7696,
+            1.2756
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidro_traseiro",
+          "part": "janela",
+          "side": "centro",
+          "min": [
+            -0.7864,
+            1.2555,
+            -1.032
+          ],
+          "max": [
+            0.7864,
+            1.6847,
+            -0.9142
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_d",
+          "part": "farol",
+          "side": "direito",
+          "min": [
+            -0.8119,
+            0.5205,
+            2.4358
+          ],
+          "max": [
+            -0.3371,
+            1.1162,
+            2.7113
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_e",
+          "part": "farol",
+          "side": "esquerdo",
+          "min": [
+            0.3371,
+            0.5205,
+            2.4358
+          ],
+          "max": [
+            0.8119,
+            1.1162,
+            2.7113
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_d",
+          "part": "lanterna",
+          "side": "direito",
+          "min": [
+            -0.9035,
+            0.767,
+            -2.6056
+          ],
+          "max": [
+            -0.7375,
+            1.213,
+            -2.4546
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_e",
+          "part": "lanterna",
+          "side": "esquerdo",
+          "min": [
+            0.7375,
+            0.767,
+            -2.6056
+          ],
+          "max": [
+            0.9035,
+            1.213,
+            -2.4546
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_dianteira_direita",
+          "part": "roda",
+          "side": "direito",
+          "min": [
+            -0.9431,
+            -0.04,
+            1.2911
+          ],
+          "max": [
+            -0.595,
+            0.8065,
+            2.1419
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_dianteira_esquerda",
+          "part": "roda",
+          "side": "esquerdo",
+          "min": [
+            0.595,
+            -0.04,
+            1.2911
+          ],
+          "max": [
+            0.9431,
+            0.8065,
+            2.1419
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_traseira_direita",
+          "part": "roda",
+          "side": "direito",
+          "min": [
+            -0.9506,
+            -0.04,
+            -1.7939
+          ],
+          "max": [
+            -0.6025,
+            0.8065,
+            -0.9431
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_traseira_esquerda",
+          "part": "roda",
+          "side": "esquerdo",
+          "min": [
+            0.6025,
+            -0.04,
+            -1.7939
+          ],
+          "max": [
+            0.9506,
+            0.8065,
+            -0.9431
+          ]
+        },
+        {
+          "material": "combustivel",
+          "zone": "tanque",
+          "part": "tanque",
+          "side": "esquerdo",
+          "min": [
+            -0.0105,
+            0.43,
+            -2.1279
+          ],
+          "max": [
+            0.7895,
+            0.79,
+            -1.4279
+          ]
+        }
+      ]
+    },
+    "onibus:lite": {
+      "color": "#17181a",
+      "tris": 17682,
+      "drawCalls": 6,
+      "L": 9.541,
+      "W": 2.96,
+      "H": 3.21,
+      "pruned": 30,
+      "classes": {
+        "pintura": {
+          "vertices": 22068,
+          "indices": 22068,
+          "hash": "6567fd30"
+        },
+        "acabamento": {
+          "vertices": 9392,
+          "indices": 18846,
+          "hash": "eacea2a3"
+        },
+        "metal": {
+          "vertices": 1392,
+          "indices": 4584,
+          "hash": "7c5a28e9"
+        },
+        "vidro": {
+          "vertices": 4539,
+          "indices": 4932,
+          "hash": "80e3ecad"
+        },
+        "luz": {
+          "vertices": 656,
+          "indices": 2604,
+          "hash": "ccca7c6d"
+        },
+        "placa": {
+          "vertices": 8,
+          "indices": 12,
+          "hash": "f87524f9"
+        }
+      },
+      "damageables": [
+        {
+          "material": "vidro",
+          "zone": "vidros_f",
+          "part": "parabrisa",
+          "side": "centro",
+          "min": [
+            -1.17,
+            1.325,
+            4.4363
+          ],
+          "max": [
+            1.17,
+            2.4984,
+            4.5439
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidros_e",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            1.1843,
+            1.64,
+            -4.3993
+          ],
+          "max": [
+            1.2961,
+            2.66,
+            4.2307
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidros_d",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -1.302,
+            0.58,
+            -4.3993
+          ],
+          "max": [
+            -1.1843,
+            2.66,
+            4.2307
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidros_t",
+          "part": "janela",
+          "side": "centro",
+          "min": [
+            -0.9,
+            1.93,
+            -4.6943
+          ],
+          "max": [
+            0.9,
+            2.61,
+            -4.5943
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_d",
+          "part": "farol",
+          "side": "direito",
+          "min": [
+            -1.1772,
+            0.7759,
+            4.4142
+          ],
+          "max": [
+            -0.6603,
+            1.0641,
+            4.5771
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_e",
+          "part": "farol",
+          "side": "esquerdo",
+          "min": [
+            0.6628,
+            0.7759,
+            4.4142
+          ],
+          "max": [
+            1.1797,
+            1.0641,
+            4.5771
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_d",
+          "part": "lanterna",
+          "side": "direito",
+          "min": [
+            -1.2286,
+            0.9364,
+            -4.7143
+          ],
+          "max": [
+            -0.8314,
+            1.1636,
+            -4.5779
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_e",
+          "part": "lanterna",
+          "side": "esquerdo",
+          "min": [
+            0.8314,
+            0.9364,
+            -4.7143
+          ],
+          "max": [
+            1.2286,
+            1.1636,
+            -4.5779
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "rodas_eixo1",
+          "part": "roda",
+          "side": "centro",
+          "min": [
+            -1.229,
+            -0.04,
+            2.4475
+          ],
+          "max": [
+            1.229,
+            1.0409,
+            3.534
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "rodas_eixo2",
+          "part": "roda",
+          "side": "centro",
+          "min": [
+            -1.324,
+            -0.04,
+            -2.1525
+          ],
+          "max": [
+            1.324,
+            1.0409,
+            -1.066
+          ]
+        },
+        {
+          "material": "combustivel",
+          "zone": "tanque",
+          "part": "tanque",
+          "side": "esquerdo",
+          "min": [
+            0.2,
+            0.33,
+            -4.2893
+          ],
+          "max": [
+            0.9,
+            0.93,
+            -3.4893
+          ]
+        }
+      ]
+    },
+    "leopardo:lite": {
+      "color": "#3b4a33",
+      "tris": 26628,
+      "drawCalls": 4,
+      "L": 9.666,
+      "W": 3.41,
+      "H": 4.782,
+      "pruned": 0,
+      "classes": {
+        "acabamento": {
+          "vertices": 40540,
+          "indices": 58266,
+          "hash": "849ab9fc"
+        },
+        "metal": {
+          "vertices": 16920,
+          "indices": 19476,
+          "hash": "b100e03"
+        },
+        "vidro": {
+          "vertices": 192,
+          "indices": 288,
+          "hash": "71400025"
+        },
+        "luz": {
+          "vertices": 498,
+          "indices": 1854,
+          "hash": "b3a7404c"
+        }
+      },
+      "damageables": [
+        {
+          "material": "vidro",
+          "zone": "vidros_f",
+          "part": "parabrisa",
+          "side": "centro",
+          "min": [
+            -0.66,
+            1.3962,
+            -0.012
+          ],
+          "max": [
+            0.89,
+            2.6612,
+            1.238
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidros_t",
+          "part": "janela",
+          "side": "centro",
+          "min": [
+            -0.65,
+            2.3862,
+            -1.282
+          ],
+          "max": [
+            -0.45,
+            2.5362,
+            -1.182
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_d",
+          "part": "farol",
+          "side": "direito",
+          "min": [
+            -1.4138,
+            1.3544,
+            1.734
+          ],
+          "max": [
+            -1.1843,
+            1.5848,
+            1.8614
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_d",
+          "part": "lanterna",
+          "side": "direito",
+          "min": [
+            -1.3814,
+            1.2998,
+            -4.863
+          ],
+          "max": [
+            -1.1186,
+            1.4626,
+            -4.7545
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_e",
+          "part": "farol",
+          "side": "esquerdo",
+          "min": [
+            1.1862,
+            1.3544,
+            1.734
+          ],
+          "max": [
+            1.4157,
+            1.5848,
+            1.8614
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_e",
+          "part": "lanterna",
+          "side": "esquerdo",
+          "min": [
+            1.1186,
+            1.2998,
+            -4.863
+          ],
+          "max": [
+            1.3814,
+            1.4626,
+            -4.7545
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "tampa_motor",
+          "part": "capo",
+          "side": "centro",
+          "min": [
+            -1.3,
+            1.2112,
+            -4.682
+          ],
+          "max": [
+            1.3,
+            1.8112,
+            -3.282
+          ]
+        }
+      ]
+    },
+    "moto:lite": {
+      "color": "#17181a",
+      "tris": 4422,
+      "drawCalls": 4,
+      "L": 2.051,
+      "W": 0.77,
+      "H": 1.315,
+      "pruned": 0,
+      "classes": {
+        "pintura": {
+          "vertices": 1560,
+          "indices": 1560,
+          "hash": "92bfb5d5"
+        },
+        "acabamento": {
+          "vertices": 4484,
+          "indices": 8898,
+          "hash": "e113494a"
+        },
+        "metal": {
+          "vertices": 1204,
+          "indices": 2172,
+          "hash": "44ed50ae"
+        },
+        "luz": {
+          "vertices": 244,
+          "indices": 636,
+          "hash": "db0d3f79"
+        }
+      },
+      "damageables": [
+        {
+          "material": "vidro",
+          "zone": "lanterna_c",
+          "part": "lanterna",
+          "side": "centro",
+          "min": [
+            -0.093,
+            0.707,
+            -0.963
+          ],
+          "max": [
+            0.093,
+            0.843,
+            -0.832
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_dianteira",
+          "part": "roda",
+          "side": "centro",
+          "min": [
+            -0.104,
+            -0.04,
+            0.318
+          ],
+          "max": [
+            0.09,
+            0.66,
+            1.018
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_traseira",
+          "part": "roda",
+          "side": "centro",
+          "min": [
+            -0.09,
+            -0.04,
+            -1.002
+          ],
+          "max": [
+            0.09,
+            0.66,
+            -0.302
+          ]
+        }
+      ]
+    },
+    "blackhawk:lite": {
+      "color": "#3b4a33",
+      "tris": 21517,
+      "drawCalls": 4,
+      "L": 17.252,
+      "W": 11.954,
+      "H": 5.199,
+      "pruned": 15,
+      "classes": {
+        "acabamento": {
+          "vertices": 54543,
+          "indices": 58227,
+          "hash": "75873d6e"
+        },
+        "metal": {
+          "vertices": 336,
+          "indices": 912,
+          "hash": "71d4c659"
+        },
+        "vidro": {
+          "vertices": 5196,
+          "indices": 5220,
+          "hash": "6daebda9"
+        },
+        "luz": {
+          "vertices": 112,
+          "indices": 192,
+          "hash": "3d3323f9"
+        }
+      },
+      "damageables": [
+        {
+          "material": "borracha",
+          "zone": "esquis",
+          "part": "roda",
+          "side": "centro",
+          "min": [
+            -1.4,
+            -0.05,
+            -6.0009
+          ],
+          "max": [
+            1.4,
+            0.72,
+            6.2491
+          ]
+        }
+      ]
+    },
+    "trator:lite": {
+      "color": "#17181a",
+      "tris": 7904,
+      "drawCalls": 4,
+      "L": 3.89,
+      "W": 2.02,
+      "H": 2.751,
+      "pruned": 22,
+      "classes": {
+        "pintura": {
+          "vertices": 3340,
+          "indices": 3480,
+          "hash": "7e064247"
+        },
+        "acabamento": {
+          "vertices": 10384,
+          "indices": 16512,
+          "hash": "b70b47e5"
+        },
+        "metal": {
+          "vertices": 960,
+          "indices": 2376,
+          "hash": "45f6eecd"
+        },
+        "luz": {
+          "vertices": 536,
+          "indices": 1344,
+          "hash": "ca7ab755"
+        }
+      },
+      "damageables": [
+        {
+          "material": "metal",
+          "zone": "capo_trator",
+          "part": "capo",
+          "side": "centro",
+          "min": [
+            -0.45,
+            1.2608,
+            -0.245
+          ],
+          "max": [
+            0.45,
+            1.9608,
+            1.535
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_d",
+          "part": "farol",
+          "side": "centro",
+          "min": [
+            -0.413,
+            1.3478,
+            1.655
+          ],
+          "max": [
+            -0.227,
+            1.5338,
+            1.786
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_e",
+          "part": "farol",
+          "side": "centro",
+          "min": [
+            0.227,
+            1.3478,
+            1.655
+          ],
+          "max": [
+            0.413,
+            1.5338,
+            1.786
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_d",
+          "part": "lanterna",
+          "side": "direito",
+          "min": [
+            -0.913,
+            1.4878,
+            -1.511
+          ],
+          "max": [
+            -0.747,
+            1.6938,
+            -1.39
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_e",
+          "part": "lanterna",
+          "side": "esquerdo",
+          "min": [
+            0.747,
+            1.4878,
+            -1.511
+          ],
+          "max": [
+            0.913,
+            1.6938,
+            -1.39
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "rodas_eixo1",
+          "part": "roda",
+          "side": "centro",
+          "min": [
+            -0.887,
+            0.0208,
+            0.7372
+          ],
+          "max": [
+            0.887,
+            0.8921,
+            1.6128
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "rodas_eixo2",
+          "part": "roda",
+          "side": "centro",
+          "min": [
+            -1.0328,
+            -0.04,
+            -1.8228
+          ],
+          "max": [
+            1.0328,
+            1.7416,
+            0.0328
+          ]
+        },
+        {
+          "material": "combustivel",
+          "zone": "tanque",
+          "part": "tanque",
+          "side": "centro",
+          "min": [
+            -0.35,
+            1.2108,
+            -0.445
+          ],
+          "max": [
+            0.35,
+            1.8108,
+            0.355
+          ]
+        }
+      ]
+    },
+    "suv:lite": {
+      "color": "#17181a",
+      "tris": 17490,
+      "drawCalls": 6,
+      "L": 4.874,
+      "W": 1.996,
+      "H": 1.841,
+      "pruned": 27,
+      "classes": {
+        "pintura": {
+          "vertices": 22752,
+          "indices": 22776,
+          "hash": "6c783c32"
+        },
+        "acabamento": {
+          "vertices": 13690,
+          "indices": 18246,
+          "hash": "666be3f8"
+        },
+        "metal": {
+          "vertices": 3202,
+          "indices": 6846,
+          "hash": "a8d6d09c"
+        },
+        "vidro": {
+          "vertices": 1854,
+          "indices": 2616,
+          "hash": "429723cf"
+        },
+        "luz": {
+          "vertices": 750,
+          "indices": 1974,
+          "hash": "4c065ed0"
+        },
+        "placa": {
+          "vertices": 8,
+          "indices": 12,
+          "hash": "b4e1c61"
+        }
+      },
+      "damageables": [
+        {
+          "material": "metal",
+          "zone": "parachoque_d",
+          "part": "parachoque",
+          "side": "centro",
+          "min": [
+            -1.095,
+            -0.02,
+            1.9785
+          ],
+          "max": [
+            1.095,
+            0.8,
+            2.5285
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "capo",
+          "part": "capo",
+          "side": "centro",
+          "min": [
+            -0.7625,
+            1.0995,
+            1.287
+          ],
+          "max": [
+            0.7625,
+            1.4442,
+            2.0975
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_de",
+          "part": "porta",
+          "side": "esquerdo",
+          "min": [
+            0.555,
+            0.32,
+            -0.014
+          ],
+          "max": [
+            1.145,
+            1.25,
+            1.186
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_te",
+          "part": "porta",
+          "side": "esquerdo",
+          "min": [
+            0.555,
+            0.32,
+            -1.109
+          ],
+          "max": [
+            1.145,
+            1.25,
+            -0.014
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_dd",
+          "part": "porta",
+          "side": "direito",
+          "min": [
+            -1.145,
+            0.32,
+            -0.014
+          ],
+          "max": [
+            -0.555,
+            1.25,
+            1.186
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_td",
+          "part": "porta",
+          "side": "direito",
+          "min": [
+            -1.145,
+            0.32,
+            -1.109
+          ],
+          "max": [
+            -0.555,
+            1.25,
+            -0.014
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "tampa",
+          "part": "tampa",
+          "side": "centro",
+          "min": [
+            -0.775,
+            0.74,
+            -2.3853
+          ],
+          "max": [
+            0.775,
+            1.44,
+            -1.8853
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "parachoque_t",
+          "part": "parachoque",
+          "side": "centro",
+          "min": [
+            -1.095,
+            -0.02,
+            -2.4853
+          ],
+          "max": [
+            1.095,
+            0.8,
+            -1.9353
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidro_lateral_traseiro_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -0.8916,
+            1.2367,
+            -2.1184
+          ],
+          "max": [
+            -0.7416,
+            1.6643,
+            -1.214
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_traseira_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -0.8916,
+            1.2382,
+            -1.174
+          ],
+          "max": [
+            -0.7416,
+            1.68,
+            -0.034
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_dianteira_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -0.8916,
+            1.24,
+            0.006
+          ],
+          "max": [
+            -0.7416,
+            1.68,
+            1.0515
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidro_lateral_traseiro_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.7416,
+            1.2367,
+            -2.1184
+          ],
+          "max": [
+            0.8916,
+            1.6643,
+            -1.214
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_traseira_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.7416,
+            1.2382,
+            -1.174
+          ],
+          "max": [
+            0.8916,
+            1.68,
+            -0.034
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_dianteira_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.7416,
+            1.24,
+            0.006
+          ],
+          "max": [
+            0.8916,
+            1.68,
+            1.0515
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "para_brisa",
+          "part": "parabrisa",
+          "side": "centro",
+          "min": [
+            -0.7735,
+            1.2763,
+            0.5545
+          ],
+          "max": [
+            0.7735,
+            1.7373,
+            1.2117
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidro_traseiro",
+          "part": "janela",
+          "side": "centro",
+          "min": [
+            -0.772,
+            1.279,
+            -2.2679
+          ],
+          "max": [
+            0.772,
+            1.6466,
+            -2.0587
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_d",
+          "part": "farol",
+          "side": "direito",
+          "min": [
+            -0.8514,
+            0.5385,
+            2.1646
+          ],
+          "max": [
+            -0.3001,
+            1.1152,
+            2.4638
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_e",
+          "part": "farol",
+          "side": "esquerdo",
+          "min": [
+            0.3001,
+            0.5385,
+            2.1646
+          ],
+          "max": [
+            0.8514,
+            1.1152,
+            2.4638
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_d",
+          "part": "lanterna",
+          "side": "direito",
+          "min": [
+            -0.8561,
+            1.022,
+            -2.3267
+          ],
+          "max": [
+            -0.4901,
+            1.218,
+            -2.0357
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_e",
+          "part": "lanterna",
+          "side": "esquerdo",
+          "min": [
+            0.4901,
+            1.022,
+            -2.3267
+          ],
+          "max": [
+            0.8561,
+            1.218,
+            -2.0357
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_dianteira_direita",
+          "part": "roda",
+          "side": "direito",
+          "min": [
+            -0.9456,
+            -0.04,
+            1.1331
+          ],
+          "max": [
+            -0.5975,
+            0.8065,
+            1.9839
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_dianteira_esquerda",
+          "part": "roda",
+          "side": "esquerdo",
+          "min": [
+            0.5975,
+            -0.04,
+            1.1331
+          ],
+          "max": [
+            0.9456,
+            0.8065,
+            1.9839
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_traseira_direita",
+          "part": "roda",
+          "side": "direito",
+          "min": [
+            -0.9506,
+            -0.04,
+            -1.6119
+          ],
+          "max": [
+            -0.6025,
+            0.8065,
+            -0.7611
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_traseira_esquerda",
+          "part": "roda",
+          "side": "esquerdo",
+          "min": [
+            0.6025,
+            -0.04,
+            -1.6119
+          ],
+          "max": [
+            0.9506,
+            0.8065,
+            -0.7611
+          ]
+        },
+        {
+          "material": "combustivel",
+          "zone": "tanque",
+          "part": "tanque",
+          "side": "esquerdo",
+          "min": [
+            -0.0114,
+            0.41,
+            -1.8353
+          ],
+          "max": [
+            0.7886,
+            0.77,
+            -1.1353
+          ]
+        }
+      ]
+    },
+    "van:lite": {
+      "color": "#17181a",
+      "tris": 15324,
+      "drawCalls": 6,
+      "L": 5.936,
+      "W": 2.309,
+      "H": 2.627,
+      "pruned": 22,
+      "classes": {
+        "pintura": {
+          "vertices": 24906,
+          "indices": 24930,
+          "hash": "dfd56970"
+        },
+        "acabamento": {
+          "vertices": 10008,
+          "indices": 13572,
+          "hash": "bfd1f67f"
+        },
+        "metal": {
+          "vertices": 2176,
+          "indices": 4524,
+          "hash": "79d0b005"
+        },
+        "vidro": {
+          "vertices": 651,
+          "indices": 1032,
+          "hash": "d955e564"
+        },
+        "luz": {
+          "vertices": 702,
+          "indices": 1902,
+          "hash": "f8ced850"
+        },
+        "placa": {
+          "vertices": 8,
+          "indices": 12,
+          "hash": "6d714ce5"
+        }
+      },
+      "damageables": [
+        {
+          "material": "metal",
+          "zone": "parachoque_d",
+          "part": "parachoque",
+          "side": "centro",
+          "min": [
+            -1.195,
+            -0.02,
+            2.5739
+          ],
+          "max": [
+            1.195,
+            0.78,
+            3.1239
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "capo",
+          "part": "capo",
+          "side": "centro",
+          "min": [
+            -0.854,
+            1.0272,
+            2.1424
+          ],
+          "max": [
+            0.854,
+            1.4779,
+            2.6929
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_de",
+          "part": "porta",
+          "side": "esquerdo",
+          "min": [
+            0.655,
+            0.3,
+            0.5114
+          ],
+          "max": [
+            1.245,
+            1.39,
+            2.0214
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_dd",
+          "part": "porta",
+          "side": "direito",
+          "min": [
+            -1.245,
+            0.3,
+            0.5114
+          ],
+          "max": [
+            -0.655,
+            1.39,
+            2.0214
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_td",
+          "part": "porta",
+          "side": "direito",
+          "min": [
+            -1.245,
+            0.3,
+            -0.7486
+          ],
+          "max": [
+            -0.655,
+            2.33,
+            0.5714
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "parachoque_t",
+          "part": "parachoque",
+          "side": "centro",
+          "min": [
+            -1.195,
+            -0.02,
+            -2.9681
+          ],
+          "max": [
+            1.195,
+            0.78,
+            -2.4181
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "para_brisa",
+          "part": "parabrisa",
+          "side": "centro",
+          "min": [
+            -0.9331,
+            1.3634,
+            1.2629
+          ],
+          "max": [
+            0.9331,
+            2.1127,
+            2.0434
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_da_cabine_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -1.0443,
+            1.38,
+            0.4714
+          ],
+          "max": [
+            -0.9298,
+            2.06,
+            1.7902
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_da_cabine_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.9298,
+            1.38,
+            0.4714
+          ],
+          "max": [
+            1.0443,
+            2.06,
+            1.7902
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_d",
+          "part": "farol",
+          "side": "direito",
+          "min": [
+            -0.9515,
+            0.5233,
+            2.5458
+          ],
+          "max": [
+            -0.4028,
+            1.2051,
+            2.9845
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_e",
+          "part": "farol",
+          "side": "esquerdo",
+          "min": [
+            0.4028,
+            0.5233,
+            2.5458
+          ],
+          "max": [
+            0.9515,
+            1.2051,
+            2.9845
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_d",
+          "part": "lanterna",
+          "side": "direito",
+          "min": [
+            -1.0098,
+            0.837,
+            -2.8177
+          ],
+          "max": [
+            -0.7738,
+            1.523,
+            -2.6667
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_e",
+          "part": "lanterna",
+          "side": "esquerdo",
+          "min": [
+            0.7738,
+            0.837,
+            -2.8177
+          ],
+          "max": [
+            1.0098,
+            1.523,
+            -2.6667
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_dianteira_direita",
+          "part": "roda",
+          "side": "direito",
+          "min": [
+            -1.0242,
+            -0.04,
+            1.574
+          ],
+          "max": [
+            -0.7,
+            0.7759,
+            2.3939
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_dianteira_esquerda",
+          "part": "roda",
+          "side": "esquerdo",
+          "min": [
+            0.7,
+            -0.04,
+            1.574
+          ],
+          "max": [
+            1.0242,
+            0.7759,
+            2.3939
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_traseira_direita",
+          "part": "roda",
+          "side": "direito",
+          "min": [
+            -1.0242,
+            -0.04,
+            -2.091
+          ],
+          "max": [
+            -0.7,
+            0.7759,
+            -1.2711
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_traseira_esquerda",
+          "part": "roda",
+          "side": "esquerdo",
+          "min": [
+            0.7,
+            -0.04,
+            -2.091
+          ],
+          "max": [
+            1.0242,
+            0.7759,
+            -1.2711
+          ]
+        },
+        {
+          "material": "combustivel",
+          "zone": "tanque",
+          "part": "tanque",
+          "side": "esquerdo",
+          "min": [
+            0.0301,
+            0.39,
+            -2.3181
+          ],
+          "max": [
+            0.8301,
+            0.75,
+            -1.6181
+          ]
+        }
+      ]
+    },
+    "lancha:lite": {
+      "color": "#17181a",
+      "tris": 9860,
+      "drawCalls": 5,
+      "L": 8.023,
+      "W": 2.65,
+      "H": 2.122,
+      "pruned": 0,
+      "classes": {
+        "pintura": {
+          "vertices": 15018,
+          "indices": 15474,
+          "hash": "1d901d78"
+        },
+        "acabamento": {
+          "vertices": 3932,
+          "indices": 10770,
+          "hash": "23fadc34"
+        },
+        "metal": {
+          "vertices": 1030,
+          "indices": 2472,
+          "hash": "21b7f60a"
+        },
+        "vidro": {
+          "vertices": 36,
+          "indices": 96,
+          "hash": "a352e1d3"
+        },
+        "luz": {
+          "vertices": 208,
+          "indices": 768,
+          "hash": "1452f1ef"
+        }
+      },
+      "damageables": [
+        {
+          "material": "combustivel",
+          "zone": "tanque",
+          "part": "tanque",
+          "side": "centro",
+          "min": [
+            -0.35,
+            0.223,
+            -1.1723
+          ],
+          "max": [
+            0.35,
+            0.723,
+            -0.4723
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidros_f",
+          "part": "parabrisa",
+          "side": "centro",
+          "min": [
+            -1.21,
+            1.323,
+            0.8677
+          ],
+          "max": [
+            1.21,
+            1.763,
+            1.6177
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_c",
+          "part": "lanterna",
+          "side": "centro",
+          "min": [
+            -0.116,
+            1.423,
+            3.8165
+          ],
+          "max": [
+            0.116,
+            1.543,
+            3.9389
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_d",
+          "part": "lanterna",
+          "side": "direito",
+          "min": [
+            -1.222,
+            2.038,
+            -3.0887
+          ],
+          "max": [
+            -1.078,
+            2.168,
+            -2.9559
+          ]
+        }
+      ]
+    },
+    "heli:lite": {
+      "color": "#17181a",
+      "tris": 5145,
+      "drawCalls": 5,
+      "L": 11.243,
+      "W": 3.609,
+      "H": 3.277,
+      "pruned": 2,
+      "classes": {
+        "pintura": {
+          "vertices": 4045,
+          "indices": 4101,
+          "hash": "ee43946a"
+        },
+        "acabamento": {
+          "vertices": 2074,
+          "indices": 3504,
+          "hash": "88864a5a"
+        },
+        "metal": {
+          "vertices": 1615,
+          "indices": 4968,
+          "hash": "5d19a025"
+        },
+        "vidro": {
+          "vertices": 1224,
+          "indices": 1224,
+          "hash": "3e97c468"
+        },
+        "luz": {
+          "vertices": 430,
+          "indices": 1638,
+          "hash": "c6e80b16"
+        }
+      },
+      "damageables": [
+        {
+          "material": "vidro",
+          "zone": "farol_c",
+          "part": "farol",
+          "side": "centro",
+          "min": [
+            -0.2271,
+            0.7908,
+            2.6337
+          ],
+          "max": [
+            0.2286,
+            0.9826,
+            2.7787
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_d",
+          "part": "lanterna",
+          "side": "direito",
+          "min": [
+            -0.712,
+            1.7217,
+            -4.5579
+          ],
+          "max": [
+            -0.568,
+            1.8517,
+            -4.4252
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_e",
+          "part": "lanterna",
+          "side": "esquerdo",
+          "min": [
+            0.568,
+            1.7217,
+            -4.5579
+          ],
+          "max": [
+            0.712,
+            1.8517,
+            -4.4252
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_c",
+          "part": "lanterna",
+          "side": "centro",
+          "min": [
+            -0.084,
+            1.8517,
+            -5.4227
+          ],
+          "max": [
+            0.084,
+            2.4867,
+            -0.6348
+          ]
+        }
+      ]
+    },
+    "hatch:high": {
+      "color": "#17181a",
+      "tris": 193908,
+      "drawCalls": 356,
+      "L": 4.213,
+      "W": 1.919,
+      "H": 1.473,
+      "pruned": 0,
+      "damageables": [
+        {
+          "material": "metal",
+          "zone": "parachoque_d",
+          "part": "parachoque",
+          "side": "centro",
+          "min": [
+            -1.065,
+            -0.02,
+            1.7038
+          ],
+          "max": [
+            1.065,
+            0.62,
+            2.2538
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "capo",
+          "part": "capo",
+          "side": "centro",
+          "min": [
+            -0.7256,
+            0.7934,
+            0.8548
+          ],
+          "max": [
+            0.7256,
+            1.1917,
+            1.7728
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_de",
+          "part": "porta",
+          "side": "esquerdo",
+          "min": [
+            0.525,
+            0.14,
+            -0.4362
+          ],
+          "max": [
+            1.115,
+            1.03,
+            0.7538
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_te",
+          "part": "porta",
+          "side": "esquerdo",
+          "min": [
+            0.525,
+            0.14,
+            -1.1562
+          ],
+          "max": [
+            1.115,
+            1.03,
+            -0.4362
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_dd",
+          "part": "porta",
+          "side": "direito",
+          "min": [
+            -1.115,
+            0.14,
+            -0.4362
+          ],
+          "max": [
+            -0.525,
+            1.03,
+            0.7538
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "porta_td",
+          "part": "porta",
+          "side": "direito",
+          "min": [
+            -1.115,
+            0.14,
+            -1.1562
+          ],
+          "max": [
+            -0.525,
+            1.03,
+            -0.4362
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "tampa",
+          "part": "tampa",
+          "side": "centro",
+          "min": [
+            -0.745,
+            0.56,
+            -2.1962
+          ],
+          "max": [
+            0.745,
+            1.22,
+            -1.6962
+          ]
+        },
+        {
+          "material": "metal",
+          "zone": "parachoque_t",
+          "part": "parachoque",
+          "side": "centro",
+          "min": [
+            -1.065,
+            -0.02,
+            -2.2962
+          ],
+          "max": [
+            1.065,
+            0.62,
+            -1.7462
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidro_lateral_traseiro_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -0.7781,
+            1.0636,
+            -1.6208
+          ],
+          "max": [
+            -0.6383,
+            1.3085,
+            -1.1762
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_traseira_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -0.7859,
+            1.0393,
+            -1.1362
+          ],
+          "max": [
+            -0.6122,
+            1.3908,
+            -0.4562
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_dianteira_direita",
+          "part": "janela",
+          "side": "direito",
+          "min": [
+            -0.798,
+            1.0018,
+            -0.4162
+          ],
+          "max": [
+            -0.6087,
+            1.4018,
+            0.6408
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidro_lateral_traseiro_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.6383,
+            1.0636,
+            -1.6208
+          ],
+          "max": [
+            0.7781,
+            1.3085,
+            -1.1762
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_traseira_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.6122,
+            1.0393,
+            -1.1362
+          ],
+          "max": [
+            0.7859,
+            1.3908,
+            -0.4562
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "janela_dianteira_esquerda",
+          "part": "janela",
+          "side": "esquerdo",
+          "min": [
+            0.6087,
+            1.0018,
+            -0.4162
+          ],
+          "max": [
+            0.798,
+            1.4018,
+            0.6408
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "para_brisa",
+          "part": "parabrisa",
+          "side": "centro",
+          "min": [
+            -0.6759,
+            1.0519,
+            0.0734
+          ],
+          "max": [
+            0.6759,
+            1.4639,
+            0.771
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "vidro_traseiro",
+          "part": "janela",
+          "side": "centro",
+          "min": [
+            -0.6676,
+            1.0537,
+            -1.8766
+          ],
+          "max": [
+            0.6676,
+            1.3496,
+            -1.4255
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_d",
+          "part": "farol",
+          "side": "direito",
+          "min": [
+            -0.8895,
+            0.6299,
+            1.6373
+          ],
+          "max": [
+            -0.3209,
+            0.7978,
+            2.0613
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "farol_e",
+          "part": "farol",
+          "side": "esquerdo",
+          "min": [
+            0.3209,
+            0.6299,
+            1.6373
+          ],
+          "max": [
+            0.8895,
+            0.7978,
+            2.0613
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_d",
+          "part": "lanterna",
+          "side": "direito",
+          "min": [
+            -0.8879,
+            0.8085,
+            -2.0608
+          ],
+          "max": [
+            -0.3113,
+            1,
+            -1.6908
+          ]
+        },
+        {
+          "material": "vidro",
+          "zone": "lanterna_e",
+          "part": "lanterna",
+          "side": "esquerdo",
+          "min": [
+            0.3113,
+            0.8085,
+            -2.0608
+          ],
+          "max": [
+            0.8879,
+            1,
+            -1.6908
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_dianteira_direita",
+          "part": "roda",
+          "side": "direito",
+          "min": [
+            -0.8891,
+            -0.04,
+            0.8955
+          ],
+          "max": [
+            -0.6045,
+            0.66,
+            1.5921
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_dianteira_esquerda",
+          "part": "roda",
+          "side": "esquerdo",
+          "min": [
+            0.6045,
+            -0.04,
+            0.8955
+          ],
+          "max": [
+            0.8891,
+            0.66,
+            1.5921
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_traseira_direita",
+          "part": "roda",
+          "side": "direito",
+          "min": [
+            -0.8891,
+            -0.04,
+            -1.6845
+          ],
+          "max": [
+            -0.6045,
+            0.66,
+            -0.9879
+          ]
+        },
+        {
+          "material": "borracha",
+          "zone": "roda_traseira_esquerda",
+          "part": "roda",
+          "side": "esquerdo",
+          "min": [
+            0.6045,
+            -0.04,
+            -1.6845
+          ],
+          "max": [
+            0.8891,
+            0.66,
+            -0.9879
+          ]
+        },
+        {
+          "material": "combustivel",
+          "zone": "tanque",
+          "part": "tanque",
+          "side": "esquerdo",
+          "min": [
+            -0.0194,
+            0.23,
+            -1.5962
+          ],
+          "max": [
+            0.7806,
+            0.59,
+            -0.8962
+          ]
+        }
+      ]
+    }
+  }
+}

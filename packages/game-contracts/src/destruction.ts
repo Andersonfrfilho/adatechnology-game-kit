@@ -89,6 +89,8 @@ export interface PartSpec {
      * Each part goes off once. Without `chain`, it explodes only when destroyed (or at `atC`).
      */
     chain?: ExplosionChain
+    /** Id of the effect the host plays for the blast (`explosion_fuel_barrel`); without it the host picks a generic one by `energy` and `radius`. */
+    effect?: string
   }
   /** Fixed to the world (a wall-mounted cabinet, a tree trunk in the ground). Groups that keep an anchored part stay in place. */
   anchored?: boolean
@@ -220,6 +222,94 @@ export type DamageType =
   /** heat without flame (cutting torch, hot plate): `temperature`, `radius`, `duration`; heats and melts */
   | 'heat'
 
+/**
+ * What stands between a blast and what it reaches (`blast.shelter`). Each part the line from the centre to the target crosses lets through
+ * `exp(-resistance / k)` of the energy, with `resistance = hpPerKg * density * path * damageScale.shelter` (the hit points of the slab it crosses,
+ * per square metre). Defaults: `k` 2800, `brokenTransmission` 0.5 (a brick wall of 20 cm lets 19%, a 4 cm wooden door 53%, 6 mm glass 83%).
+ */
+export interface ShelterOptions {
+  /** Hit points per square metre at which a slab lets `1/e` (37%) through (default 2800). */
+  k?: number
+  /** Share of what a blocker held back that goes through anyway when the blocker is destroyed or breached by this same blast (default 0.5). */
+  brokenTransmission?: number
+  /** Shortest path through a part that counts as a crossing, in metres (default 0.005). */
+  minPath?: number
+}
+
+/**
+ * Fragments of a part a blast breaks, thrown as low-energy hits on what they reach (`blast.fragmentHits`). Each fragment hits with
+ * `energyFactor * m * v^2 / 2` joules. Defaults: `max` 24, `energyFactor` 0.5, `hitType` blunt, `range` 6 m, `flightTime` 0.4 s, `spread` 10 deg, `aim` 40 deg.
+ */
+export interface FragmentHitOptions {
+  /** Most fragment hits in one blast; the most energetic go first (default 24). */
+  max?: number
+  /** Share of the fragment's kinetic energy that lands as the hit (default 0.5). */
+  energyFactor?: number
+  /** `blunt` (default), or `ballistic` (the hit carries the fragment's mass in grams and a calibre from its size). */
+  hitType?: 'blunt' | 'ballistic'
+  /** Longest throw in metres (default 6); the throw is also limited to `speed * flightTime`. */
+  range?: number
+  /** Seconds of flight that set the throw range with the speed (default 0.4). */
+  flightTime?: number
+  /** Half angle in degrees of the seeded scatter around the aim (default 10). */
+  spread?: number
+  /** With `shelter`: fragments of a blocker whose line to a target is within this many degrees of their flight aim at that target (default 40). */
+  aim?: number
+}
+
+/** Pressure of a blast in an enclosed volume (`blast.confinement`): `1 + gain * closed^power * clamp(radius / meanDistance, 0, 2)`, up to `max`. */
+export interface ConfinementOptions {
+  /** Seeded rays from the centre (default 26). */
+  rays?: number
+  /** The rays reach `radius * reach` (default 1.5). */
+  reach?: number
+  /** Default 1.5. */
+  gain?: number
+  /** Exponent on the closed share of the rays (default 2). */
+  power?: number
+  /** Largest multiplier (default 3). */
+  max?: number
+}
+
+/**
+ * Options of a blast, all off by default (the blast then behaves exactly as before): world defaults in `DestructionOptions.blast`, per call in
+ * `world.explode(..., options)` and on the explosive `Hit`.
+ */
+export interface BlastOptions {
+  /** Walls and other parts between the centre and the target take their share of the blast. `true` for the defaults. */
+  shelter?: boolean | ShelterOptions
+  /** Fragments of what the blast breaks fly on to hit what is behind. `true` for the defaults. */
+  fragmentHits?: boolean | FragmentHitOptions
+  /** A number is the multiplier itself (a room volume the host knows, skips the rays); `true` or options estimate it with rays. */
+  confinement?: boolean | number | ConfinementOptions
+}
+
+/** What a blast did to one target (`HitResult.blast`). */
+export interface BlastReport {
+  /** Share of the blast that reaches the target, 0..1 (the most exposed part of an object; 1 without `shelter`). */
+  shelter: number
+  /** Share per part that took the blast, when `shelter` is on. */
+  parts?: Record<string, number>
+  /** Pressure multiplier applied to the blast energy (1 without `confinement`). */
+  confinement: number
+  /** Fragment hits that landed on this target. */
+  fragmentHits: number
+}
+
+/**
+ * How likely a round is to set flammable vapour or fuel alight when it hits a container of it, as the weapons module resolves them for the round
+ * (core, jacket, incendiary or tracer composition, each with a configured chance). 0..1 each, per hit.
+ */
+export interface HitIgnition {
+  /** Sparks from a hard core or jacket striking metal: counts only when the struck part is metal. */
+  spark: number
+  /** A flame the round carries (incendiary, tracer): counts whatever it hits. */
+  flame: number
+}
+
+/** The ballistic fields of a `Hit` that come from the round and not from the shot geometry (see `shotExtras`). */
+export type BallisticExtras = Pick<Hit, 'piercing' | 'penetration' | 'incendiary' | 'tracer' | 'ignition'>
+
 export interface Hit {
   type: DamageType
   /** Point of the hit (world space unless `space: 'local'`). For `explosive` it is the centre of the blast. */
@@ -246,6 +336,30 @@ export interface Hit {
   cut?: number
   /** A part the caller already resolved, by id (a crowd raycast against capsules); the impl then skips its own part search. */
   part?: string
+  /**
+   * Ballistic: how well the bullet cuts through for its energy, default 1 (a rifle FMJ). Soft lead (a slug, buckshot) deforms and goes through
+   * less steel than its joules say, an armour-piercing core more: the energy that counts against the penetration of a hard material (metal, masonry) is `energy * piercing`; wood, glass and soft materials take the energy as it is.
+   */
+  piercing?: number
+  /**
+   * Ballistic: how far the projectile goes through, in millimetres, by material class (`steel`, `concrete`, `brick`, `wood`, or a material id). The world
+   * takes the entry of the struck material (its `penetrationClass`, else its id, scaled by its `penetrationScale`) and the bullet goes through when it is
+   * at least as thick as the part; a material with no entry falls back to the energy rule (`energy` and `piercing`). The engine reads no calibre
+   * names: the weapons put the numbers here (`ammo.penetration` of `@adatechnology/game-weapons`, scaled by the energy left at the hit).
+   */
+  penetration?: Readonly<Record<string, number>>
+  /** Ballistic: the round carries an incendiary composition (it can light flammable vapour and fuel whatever it hits). */
+  incendiary?: boolean
+  /** Ballistic: the round is a tracer (a burning pyrotechnic in the base). */
+  tracer?: boolean
+  /** Ballistic: chances that the round lights flammable vapour or fuel (see `HitIgnition`). Absent: it never does. */
+  ignition?: HitIgnition
+  /** Explosive: pressure multiplier the host knows (a room volume); the energy is then `energy * confinement` and the ray estimate is skipped. */
+  confinement?: number
+  /** Explosive: per-call blast options (see `BlastOptions`). */
+  blast?: BlastOptions
+  /** Explosive hit on an impl: the share of the blast that reaches it after what stood between; `energy` is already reduced by it. Informational. */
+  shelter?: number
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -413,7 +527,7 @@ export type DestructionEvent =
   | (EventBase & { type: 'melt'; part: string; melt: number })
   | (EventBase & { type: 'drip'; part: string; point: Vec3; material: MaterialId })
   | (EventBase & { type: 'leak'; part: string; fluid: FluidKind; point: Vec3; direction: Vec3; rate: number; pressurized: boolean })
-  | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number })
+  | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number; effect?: string })
   /** An explosive part was set off by a bullet, fire or a nearby blast and will explode `delay` seconds from now (`explodes.chain`). */
   | (EventBase & { type: 'primed'; part: string; point: Vec3; trigger: 'shot' | 'fire' | 'explosion'; delay: number })
   /** A structural part is overloaded (`stress` > 1); throttled to once per 0.5 s per part. Brittle parts also `crack` at stress > 0.8. */
@@ -438,6 +552,27 @@ export type DestructionEvent =
       below?: string[]
       exit?: Vec3
     })
+  /** A blast with `shelter`, `fragmentHits` or `confinement` on: what it did (once per blast, after its damage). `energy` is the blast energy after confinement. */
+  | (EventBase & {
+      type: 'blast'
+      point: Vec3
+      energy: number
+      radius: number
+      confinement: number
+      shelter: Array<{ object: string; part?: string; factor: number }>
+      fragmentHits: number
+    })
+  /** A fragment of a part the blast broke hit something (`blast.fragmentHits`); the target's own events follow. */
+  | (EventBase & {
+      type: 'fragment_hit'
+      from: { object: string; part: string }
+      target: { object: string; part?: string }
+      point: Vec3
+      direction: Vec3
+      energy: number
+      mass: number
+      speed: number
+    })
   | (EventBase & { type: 'destroyed' })
 
 export type DestructionEventType = DestructionEvent['type']
@@ -455,6 +590,8 @@ export interface HitResult {
   penetrated: boolean
   exitEnergy: number
   events: DestructionEvent[]
+  /** Explosive hits with `shelter`, `fragmentHits` or `confinement` on: what the blast did to this target. */
+  blast?: BlastReport
 }
 
 export interface RayHit {

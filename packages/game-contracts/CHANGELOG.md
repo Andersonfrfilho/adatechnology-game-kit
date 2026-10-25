@@ -1,5 +1,44 @@
 # @adatechnology/game-contracts
 
+## 0.13.0
+
+### Minor Changes
+
+- f49e466: The effects of the weapon in the hands move onto `game-vfx`, drawn as the Arsenal gallery draws them. `game-vfx` gets a solid-particle primitive (`MeshSpawn`, `MeshPool`, the `mesh` step: cone, open cone, sphere, icosahedron with their segments, additive or lit material, a place and a turn inside a group, a scale ramp, growth, drag, gravity, spin, fading opacity), the whole turn of a thing (`PlayOptions.orientation`, `Placement.orientation`: pitch and roll included), named numbers (`PlayOptions.values`, read with `variable(name)`), the expression `exp`, a flash light that holds its strength (`flash(..., steady)`), and four recipes in the weapon's own axes with the gallery's numbers and order of draws (`VIEWMODEL_EFFECTS`): `viewmodel_muzzle_flash` (an open cone, four small cones and a core for 55 ms growing from 0.6 by 0.9, a light of 4 k over 2 k metres, six spheres of smoke), `weapon_smoke_puff`, `launcher_backblast` (26 spheres and 14 icosahedra) and `flame_jet` (`floor(420 dt scale)` icosahedra a frame and, half the frames, a sphere of smoke). `game-contracts`: `EffectRequest.orientation` and `EffectRequest.values`. `game-vfx-three` draws the solid particles (`workshop-meshes`) and passes `orientation` and `values` on. `game-weapons-three`: `createWeaponFx({ effects })` and `createViewmodel({ effects })` play those recipes through the host's effect sink; without a sink the viewmodel makes a world of effects of its own (new dependencies on `game-vfx` and `game-vfx-three`). Casings, magazines, the flying rocket and the burning droplets stay as they were.
+
+## 0.12.0
+
+### Minor Changes
+
+- 98ae206: `ModuleHost.addBlocker(blocked)`: a module with walls of its own (a house) keeps the walking player out of them; the function is asked on every step with the player's radius and may follow a door that opens. `ModuleHost.onClear(listener)`: a module that put things in the world on its own follows the room clearing its area (`clear()`, opening an area, scenarios) to take them away. Both optional; the room lends them.
+
+## 0.11.0
+
+### Minor Changes
+
+- 968d7df: Blast contracts, additive: `BlastOptions` (`shelter`, `fragmentHits`, `confinement`), `ShelterOptions`, `FragmentHitOptions`, `ConfinementOptions`, `BlastReport`; `Hit.blast`, `Hit.confinement`, `Hit.shelter`, `Hit.piercing`; `HitResult.blast`; the `blast` and `fragment_hit` events.
+
+## 0.10.0
+
+### Minor Changes
+
+- 7fd46fb: Sound and weather contracts, additive and generic. `AudioSink` (`play(SoundRequest)`, `stop`, optional `loop`, `setListener`, `register`) and `ModuleHost.audio?`; `EnvironmentState` (rain in mm/h, wind, fog, visibility, night factor, temperature, wetness), `EnvironmentBus` (`get`, `set`, `on`), `createEnvironmentBus` and `DEFAULT_ENVIRONMENT` (the calm dry day), and `ModuleHost.environment?`. A module that makes sound or reacts to the weather uses what the host lends and works without it.
+
+## 0.9.0
+
+### Minor Changes
+
+- cb85470: Effects the host lends, types first (T5.1a). New `EffectSink` (`play`, `stop`, and optional `configure`, `stats`, `catalog`), `EffectRequest` and `EffectHandle`, and `ModuleHost.effects`. The `explosion` `HostEvent` gains `explosive` (the id of the explosive), `PartSpec.explodes` gains `effect` and the `explode` destruction event carries it. The bench gains `ChoiceOption.group` (options listed under a heading; `checkBench` rejects a group that is split or empty) and `ModuleBench.sheet(BenchSheet | null)` with the `BenchSheet` card (kicker, title, body, facts, steps, swatches, note and a timeline whose playhead follows a module metric). All additive; a host that does not lend `effects` or `sheet` keeps working.
+- 6aa11f1: One sprite pool for the whole kit (T5.1f-g, spec 001). `game-vfx` gets `vfx.burst(kind, point, normal, count, speed?, options?)`, `vfx.spawn(...)`, `vfx.onLand(owner, fn)` and `vfx.sprites()` over 14 kinds (`data/sprite-kinds.json`, `patchSpriteKinds`; the numbers and the generator are the ones of the old `particles.ts`), with `floor` and `rise` spawn options; `game-vfx-three` draws them in two layers (`vfx-sprites-additive`, `vfx-sprites`). `game-destruction-three` and `game-fluids-three` delete their own `particles.ts` and use the pool (`ParticleKind` stays as an alias of `SpriteKind`; `FluidRendererOptions` gets `vfx` and `camera`; the destruction renderer plays the effects of the Phase 2 events through `eventEffects`, default `EVENT_EFFECTS_MAP`). `game-weapons-three` plays the muzzle flash and the casing of a shot seen from outside through `host.effects` (`muzzle_glock|ak|r870|barrett`, `casing_brass|shell|50`, by case type, in `data/world-effects.json`); the `shot` host event of `game-contracts` carries optional `origin` and `direction`, and the effect sink falls back from explosions to the Workshop recipes (`param` by index or id).
+
+## 0.8.0
+
+### Minor Changes
+
+- 76d15b6: Contrato do corpo vivo (fase 4): `body.ts` com `BodySlot`, `SegmentKind`, `BodyRegion` e `MISSING_BITS`; `Hit.mass`, `Hit.cut` e `Hit.part`; evento `body`; `ObjectState.body`. `Shot.mass` (gramas do projétil) sai das armas e `shotToHit` copia para o `Hit`. O `game-destruction` ganha o rótulo do evento `body` nos dois idiomas.
+- cc182c7: Contracts: `Thumbnail` (`svg` or `render`, with `yaw`, `pitch`, `distance` and `wear`) and `TestableItem.thumbnail`; the registry helpers `mergeById`, `applyPatches`, `removeIds`, `deepMerge` and the `DeepPartial` type now live here so every catalog package merges packs the same way. Interactables: `ItemDef.thumbnail` and a dependency on the contracts. Weapons: imports the helpers from the contracts (public API unchanged).
+- 9e58b50: Contratos de parede em camadas e estágios de dano (todos opcionais): `PartSpec.layers` (`SurfaceLayer`), `reinforcement` (`Reinforcement`), `units` (`PartUnits`) e `breach` (`PartBreach`); `PartState.stage` (`DamageStage` 0 a 3), `stripped` e `opening`; `Fragment.marks` (`FragmentMark`); eventos `spall`, `stage` (com `opening` e `fragments`) e `expose`. `checkSpec` valida os campos novos. Módulos existentes compilam sem mudança.
+
 ## 0.7.0
 
 ### Minor Changes

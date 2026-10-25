@@ -1,0 +1,19 @@
+{
+  "sources": ["jogo:L62089-62107"],
+  "note": "The game's sfx table P: [lowpass cutoff Hz, peak gain, seconds]. Played as a noise burst with the game's distance curve (falloff game_sfx) and a 0.05 s tail. Team names in `team`.",
+  "classes": [
+    { "id": "pistol", "team": "pistola", "bus": "weapons", "cutoff": 1800, "gain": 0.9, "seconds": 0.18 },
+    { "id": "shotgun", "team": "escopeta", "bus": "weapons", "cutoff": 900, "gain": 1.2, "seconds": 0.35 },
+    { "id": "rifle", "team": "fuzil", "bus": "weapons", "cutoff": 1400, "gain": 1.1, "seconds": 0.28 },
+    { "id": "long_rifle", "team": "rifle", "bus": "weapons", "cutoff": 1100, "gain": 1.3, "seconds": 0.45 },
+    { "id": "impact", "team": "impacto", "bus": "world", "cutoff": 2500, "gain": 0.25, "seconds": 0.05 },
+    { "id": "flesh", "team": "carne", "bus": "world", "cutoff": 600, "gain": 0.35, "seconds": 0.08 },
+    { "id": "step", "team": "passo", "bus": "world", "cutoff": 400, "gain": 0.08, "seconds": 0.05 },
+    { "id": "glass", "team": "vidro", "bus": "world", "cutoff": 5000, "gain": 0.5, "seconds": 0.3 },
+    { "id": "wood", "team": "madeira", "bus": "world", "cutoff": 700, "gain": 0.5, "seconds": 0.2 },
+    { "id": "reload", "team": "recarga", "bus": "weapons", "cutoff": 3000, "gain": 0.15, "seconds": 0.06 },
+    { "id": "empty", "team": "vazio", "bus": "weapons", "cutoff": 4000, "gain": 0.12, "seconds": 0.03 },
+    { "id": "explosion", "team": "explosao", "bus": "world", "cutoff": 200, "gain": 1.6, "seconds": 1.4 }
+  ],
+  "fallback": { "id": "unknown", "team": "(any other name)", "bus": "world", "cutoff": 1000, "gain": 0.5, "seconds": 0.1 }
+}

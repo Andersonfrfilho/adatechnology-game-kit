@@ -1,0 +1,18 @@
+{
+  "name": "@adatechnology/vegetation-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Vegetation area for the shared test room: the 18 plants of the Viveiro (mango trees of three sizes, ipe, coconut palm, banana, araucaria, dead tree, hibiscus, boxwood hedge, rose, sunflower, three cacti, two potted plants, lawn tuft) as destructible items with separable pieces, real wood thickness and wind sway; the nursery lot (12 x 20 m with house, walls and path) planted by the regional table with its seed, quality, detail, condition and season, the wind, and the walker that bends the plants; colliders, piece boxes and wood axes as layers. Thirteen scenarios: axe, saw, machete, knife, 9 mm, lighter and a walk on grass.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-vegetation": "workspace:*",
+    "@adatechnology/game-vegetation-species": "workspace:*",
+    "@adatechnology/game-vegetation-three": "workspace:*"
+  }
+}

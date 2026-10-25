@@ -3,6 +3,8 @@ import type { BuildState } from '../api'
 
 export interface VehicleItemOptions {
   state?: BuildState
+  /** Build in the light mode of the kit (`kit.lod`): fewer segments and no interior, for crowds and for budgets. Default off. */
+  lod?: boolean
 }
 
 export interface VehicleItem {
@@ -19,7 +21,7 @@ export interface VehicleItem {
  */
 export function buildVehicleItem(kit: VehicleKit, key: string, options: VehicleItemOptions = {}): VehicleItem {
   const THREE = kit.THREE
-  const vehicle = kit.build(key, options.state ?? 'intact')
+  const vehicle = options.lod ? kit.build(key, options.state ?? 'intact', undefined, { lod: true }) : kit.build(key, options.state ?? 'intact')
   const m = vehicle.meta
   const root = new THREE.Group()
   root.name = key

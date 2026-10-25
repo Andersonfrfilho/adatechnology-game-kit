@@ -1,7 +1,10 @@
 import type { AnimationClipSpec } from './animation'
+import type { AudioSink } from './audio'
 import type { ModuleBench, ModuleControl, ModuleLayer, ModuleMetric } from './bench'
 import type { DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
+import type { EnvironmentBus } from './environment'
+import type { EffectSink } from './effects'
 import type { ContainerSpec } from './fluids'
 
 /** An item that holds a liquid (a cup, a bottle, a fuel tank). `part` is the destruction part that is the container; a hole in it makes it leak. */
@@ -85,7 +88,21 @@ export type HostEvent =
   /** The tool is put in hand; `duration` is the seconds the rule takes to ready it (absent: no draw time). */
   | { type: 'tool'; weapon: string; duration?: number }
   /** `shots` are projectiles (a shotgun shell is many), `rounds` the cartridges spent (a burst is several). */
-  | { type: 'shot'; weapon: string; shots: number; recoil: [number, number]; rounds?: number; mode?: string; suppressed?: boolean }
+  | {
+      type: 'shot'
+      weapon: string
+      shots: number
+      recoil: [number, number]
+      rounds?: number
+      mode?: string
+      suppressed?: boolean
+      /**
+       * Where the muzzle is in the world and where it points, for a shot the viewer sees from outside (another player, the third-person camera). A module
+       * then shows the shooter's flash and casing through `host.effects`. Absent for the player's own shot, which the weapon in the hands already draws.
+       */
+      origin?: Vec3
+      direction?: Vec3
+    }
   /** The trigger was pulled, the round was spent and nothing left the tool (a dud cartridge): no projectile, no recoil. */
   | { type: 'misfire'; weapon: string }
   /** `kind` is how the rule reloads (`tactical`, `empty`, `one_by_one`); `duration` the seconds of the whole reload, on `start`. */
@@ -114,8 +131,11 @@ export type HostEvent =
   | { type: 'stock'; weapon: string; state: 'collapsed' | 'extended'; kind?: string; duration?: number }
   /** The weapon in hand changed between the main weapon and the one under its barrel (`on`: the under-barrel one is in use); `duration` is the seconds of the switch. */
   | { type: 'underbarrel'; weapon: string; on: boolean; duration?: number }
-  /** Something blew up: a thrown or launched explosive, a charge, or a part of the world (a fuel barrel); `source` is the weapon or the object, `cause` what set it off. */
-  | { type: 'explosion'; source: string; point: Vec3; energy: number; radius: number; cause: string }
+  /**
+   * Something blew up: a thrown or launched explosive, a charge, or a part of the world (a fuel barrel); `source` is the weapon or the object, `cause` what set it off.
+   * `explosive` is the id of the explosive when there is one (`m67`, `c4`, `fuel_barrel`): the host picks the blast by it.
+   */
+  | { type: 'explosion'; source: string; point: Vec3; energy: number; radius: number; cause: string; explosive?: string }
 
 /** The tool in hand as the host sees it. */
 export interface HostTool {
@@ -184,6 +204,11 @@ export interface ModuleHost {
   on(listener: (event: HostEvent) => void): () => void
   /** Run every simulated frame with the frame's seconds. Returns the unsubscribe function. */
   onFrame(update: (dt: number) => void): () => void
+  /**
+   * Follow the host clearing its area (`clear()`, opening an area, running scenarios): everything the module put in the world on its own (not as items) is to be taken away or put back. Returns the
+   * unsubscribe function. A host that never clears leaves it out.
+   */
+  onClear?(listener: () => void): () => void
   /** Write a line to the host's behaviour log. */
   log(text: string, data?: Record<string, unknown>): void
   /**
@@ -191,10 +216,21 @@ export interface ModuleHost {
    * ones taken later start that way. A host applies the ids it knows and ignores the rest. The test room knows `condition` (how worn the tools are) and `ammo_quality` (how good what they load is).
    */
   configureTool?(settings: Readonly<Record<string, string>>): void
+  /**
+   * Adds a place the walking player cannot enter: `blocked(x, z, radius)` answers for a disc of the player's `radius` centred on the world point (x, z). A module with walls of its own (a house) uses it so the
+   * player stops at them; the function is asked on every step, so it may follow a door that opens. Returns the function that takes it away. A host without a walking player leaves it out.
+   */
+  addBlocker?(blocked: (x: number, z: number, radius: number) => boolean): () => void
   /** Asks the tool in hand to do something (see `ToolCommand`). A host without accessories leaves it out. */
   command?(command: ToolCommand): ToolCommandResult
   /** Lent only to a module that declares controls, layers or metrics. */
   bench?: ModuleBench
+  /** The host's shared sound engine; a module that makes sound uses it when lent and stays silent (or brings its own) when not. */
+  audio?: AudioSink
+  /** The host's weather, light and ground; a module that reacts to rain, wind or night reads it. */
+  environment?: EnvironmentBus
+  /** The host's effects (smoke, sparks, blast, impacts): a module asks for them by id instead of drawing its own. Absent when the host has none. */
+  effects?: EffectSink
 }
 
 /** What a module hands the test room: its items and, optionally, scenarios that exercise them, its area and its own presentation. */

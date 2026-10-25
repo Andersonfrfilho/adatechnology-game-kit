@@ -9,12 +9,14 @@
  * from buttons (or headless in tests) and write pass/fail checks to the same log, so people and agents can verify the behaviour.
  */
 import type * as THREE_NS from 'three'
-import type { DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
+import type { AudioEngine } from '@adatechnology/game-audio'
+import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
-import type { FluidRenderer } from '@adatechnology/game-fluids-three'
+import type { VfxWorld } from '@adatechnology/game-vfx'
+import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
-import type { AnimationClipSpec, ControlValue, DestructibleImpl, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, ControlValue, DestructibleImpl, EnvironmentBus, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -85,6 +87,8 @@ export interface TestRoomOptions {
   world?: DestructionWorld
   worldOptions?: DestructionOptions
   quality?: Quality
+  /** Replaces the arena floor with a deformable patch (60 m, 33 cm cells) that the craters of big explosions dig into. Default false. */
+  craters?: boolean
   /** Heaviest object the player can carry (default 60 kg). */
   maxCarryKg?: number
   /** Arena half size in metres (default 14). */
@@ -96,10 +100,19 @@ export interface TestRoomOptions {
   /** Called for every destruction event (to log, play sounds, sync over LAN). Fluid events reach the log too. */
   onEvent?: (event: DestructionEvent) => void
   onSound?: (key: string, point: Vec3, volume: number) => void
+  /**
+   * The sound engine of the room (@adatechnology/game-audio): the destruction renderer's sound keys play on it, and modules get it as `host.audio`.
+   * Default: a new engine of the room's own (it makes no AudioContext until the first sound); `false` for a silent room.
+   */
+  audio?: AudioEngine | false
+  /** The environment store modules get as `host.environment` (the weather module writes it, the others read it). Default: a new one with a calm dry day. */
+  environment?: EnvironmentBus
   /** Show the built-in HUD and panels (default true). */
   ui?: boolean
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
   metrics?: readonly RoomMetricId[] | false
+  /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
+  blast?: BlastOptions
   /**
    * Module bench state. `state` maps a module id to its encoded state, restored when that module is first loaded (a module reloaded
    * keeps its live state instead) before its first changes are sent; ids are per module, so two modules may share a control id.
@@ -109,7 +122,10 @@ export interface TestRoomOptions {
 }
 
 /** Counters the room measures itself. `fps` and `frame_ms` use the real frame time, so slow motion does not change them. */
-export type RoomMetricId = 'fps' | 'frame_ms' | 'draw_calls' | 'triangles' | 'objects' | 'fragments' | 'particles' | 'decals'
+export type RoomMetricId =
+  | 'fps' | 'frame_ms' | 'draw_calls' | 'triangles' | 'objects' | 'fragments' | 'particles' | 'decals'
+  /** Of the last blast, once the room's blast options are on: the share that reached the most sheltered target (%), the pressure multiplier, the fragment hits. */
+  | 'blast_shelter' | 'blast_confinement' | 'blast_fragments'
 
 /** A module control as the room holds it: the declaration with the module's patches applied, and its value (none for an action). */
 export type BenchControl = ModuleControl & { readonly disabled: boolean; readonly value?: ControlValue }
@@ -138,6 +154,10 @@ export interface SpawnedObject {
 }
 
 export interface TestRoom {
+  /** The room's sound engine, or `null` in a silent room. */
+  readonly audio: AudioEngine | null
+  /** The environment store lent to modules as `host.environment`. */
+  readonly environment: EnvironmentBus
   readonly world: DestructionWorld
   readonly renderer: DestructionRenderer
   readonly scene: THREE_NS.Scene
@@ -150,6 +170,10 @@ export interface TestRoom {
   resetAll(): void
   readonly arsenal: Arsenal
   readonly fluids: FluidWorld
+  /** The running film of the liquids (blood, fuel, oil): `splat` throws drops into it (a wound), `setWeather` is the rain hook. */
+  readonly film: FilmBridge
+  /** The room's one effects world (what `host.effects` draws into): the weather moves its wind. */
+  readonly vfx: VfxWorld
   /** Equip a weapon or tool of the loadout (or any arsenal id). */
   setTool(weaponId: string): void
   readonly tool: WeaponState
@@ -177,6 +201,9 @@ export interface TestRoom {
   tilt(rad: number): void
   /** Open or close the tap over the table (default: toggle). Returns whether it is open. */
   toggleTap(on?: boolean): boolean
+  /** The blast options the room's explosions use now, and a way to change them (each key replaces the old one; `undefined` clears it). */
+  blast(): BlastOptions
+  setBlast(options: BlastOptions): void
   /** Stop the simulation (time, physics, animations, tools, walks): the UI, the camera and the log stay live. `step` and `update` do nothing until `resume`. Scenarios run unpaused. */
   pause(): void
   resume(): void
@@ -218,6 +245,11 @@ export interface TestRoom {
   /** The bench of a loaded module (default the active one: the module of the last `openArea`, else the last loaded with a bench), or null. */
   bench(moduleId?: string): BenchHandle | null
   /** Room counters and the active module's metrics, read now. */
+  /**
+   * Shakes the camera for the render that follows, by the shake of the effects world, and answers the function that puts it back. The room's own loop
+   * wraps its render in it; a host that renders by itself calls it around its own `render`.
+   */
+  applyCamera(): () => void
   metrics(): { room: Partial<Record<RoomMetricId, number>>; module: Record<string, number | string> }
   dispose(): void
 }

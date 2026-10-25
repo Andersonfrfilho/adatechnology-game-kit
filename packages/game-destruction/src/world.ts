@@ -14,17 +14,31 @@ import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
   DamageStage, DestructionWorld, Fragment, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec,
   PartState, Quat, RayHit, ToolKind, Vec3,
+  BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
+  BallisticExtras,
 } from './types'
+import { ignitionChance, resolveIgnitionRules, sparkTargetFactor } from '@adatechnology/game-contracts'
 
 /** Hit points removed per joule (before the material's `damageScale`). */
 const DMG_PER_J = 0.02
 /** Fraction of a blast's energy that reaches a part at distance 0. */
 const BLAST_COUPLING = 0.1
+/**
+ * Blast options (all off until asked for). Shelter: a part the line from the blast to the target crosses lets through `exp(-r / k)`, `r` being the
+ * hit points of the slab it crosses per square metre (`hpPerKg * density * path * damageScale.shelter`). Fragment hits: up to 24 fragments, half their
+ * kinetic energy lands as a blunt hit, thrown at most 6 m (and `speed * 0.4 s`) within 10 degrees of their aim. Confinement: 26 rays reaching
+ * `1.5 * radius`, multiplier `1 + 1.5 * closedShare^2 * clamp(radius / meanDistance, 0, 2)` up to 3.
+ */
+export const SHELTER_DEFAULTS: Required<ShelterOptions> = { k: 2800, brokenTransmission: 0.5, minPath: 0.005 }
+export const FRAGMENT_HIT_DEFAULTS: Required<FragmentHitOptions> = { max: 24, energyFactor: 0.5, hitType: 'blunt', range: 6, flightTime: 0.4, spread: 10, aim: 40 }
+export const CONFINEMENT_DEFAULTS: Required<ConfinementOptions> = { rays: 26, reach: 1.5, gain: 1.5, power: 2, max: 3 }
 const FLAMMABLE_FLUIDS = ['gas', 'fuel']
 /** Staged parts: default breach radius (m), blast multiplier on the breach area, area a part must lose to open (m²), and the share of capacity the bare cage keeps. */
 const BREACH_RADIUS = 0.55
 const BREACH_BLAST_FACTOR = 6
 const BREACH_AREA = 0.25
+/** Metres of reach per cube root of kilojoule for a blast to open a breach. */
+const BREACH_BLAST_REACH = 0.12
 const RESIDUAL_CAPACITY = 0.15
 /** Unit-sized fragments of a whole wall: at most this many times `maxFragments`. A breach picks its units from a grid of up to `BREACH_GRID_CAP`. */
 const UNIT_FRAGMENT_FACTOR = 4
@@ -128,6 +142,12 @@ interface Blast {
 }
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
+/** Millimetres of this material a round goes through: the entry of `Hit.penetration` for its `penetrationClass` (else its id) times the material's `penetrationScale`; undefined when the round has none. */
+const penetrationOf = (mat: MaterialDef, table: Readonly<Record<string, number>> | undefined): number | undefined => {
+  if (!table) return undefined
+  const v = table[mat.penetrationClass ?? mat.id] ?? table[mat.id]
+  return v === undefined ? undefined : v * (mat.penetrationScale ?? 1)
+}
 /** Share of its capacity a structural part still has: a bare rebar cage keeps the reinforcement's residual, a breached part loses what left it. */
 const capacityScale = (p: PartRT): number => {
   if (p.st.stripped) return p.spec.reinforcement?.residualCapacity ?? RESIDUAL_CAPACITY
@@ -162,6 +182,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const maxHoles = options.maxHoles ?? 32
   const fireSpread = options.fireSpread ?? 0.6
   const breachRadius = options.breach?.radius ?? BREACH_RADIUS
+  const structureSafety = options.structure?.safetyFactor ?? 1
+  const ignitionRules = resolveIgnitionRules(options.ignition)
   const breachBlastFactor = options.breach?.blastFactor ?? BREACH_BLAST_FACTOR
   const rng = createRng(options.seed ?? 1)
   const rnd = () => rng.next()
@@ -172,6 +194,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const listeners = new Map<string, Set<(e: DestructionEvent) => void>>()
   let cur: DestructionEvent[] = []
   const blasts: Blast[] = []
+  /** Glass the blast front has not reached yet: the damage lands when it does (`blastFrontSpeed`). */
+  const frontQueue: Array<{ o: ObjRT; p: PartRT; due: number; amount: number; fragEnergy: number; point: Vec3; src?: string }> = []
+  const blastFrontSpeed = options.blastFrontSpeed ?? 0
   /** Explosive parts that were primed and wait for their delay. */
   const primed = new Map<PartRT, ObjRT>()
   let orderCounter = 0
@@ -424,7 +449,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         o.unsup[i] = o.anyAnchor && !isLost(p)
         continue
       }
-      p.st.stress = p.st.load! / (p.cap * capacityScale(p))
+      p.st.stress = (p.st.load! * structureSafety) / (p.cap * capacityScale(p))
       if (p.st.stress > o.maxStress) o.maxStress = p.st.stress
     }
     if (o.maxStress > 0.8) o.active = true
@@ -505,7 +530,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return -b - Math.sqrt(disc) > maxDist
   }
 
-  const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>): (RayHit & { pathLen: number }) | null => {
+  const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false): (RayHit & { pathLen: number }) | null => {
     const d = vec.normalize(dir)
     let best: (RayHit & { pathLen: number }) | null = null
     for (const o of objects.values()) {
@@ -518,7 +543,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (!best || r.t0 < best.distance) best = { object: o.id, part: p.spec.id, point: vec.madd(origin, d, r.t0), normal: r.n, distance: r.t0, pathLen: r.t1 - r.t0 }
       }
     }
-    for (const im of impls.values()) {
+    for (const im of worldOnly ? [] : impls.values()) {
       for (const ps of im.impl.describe().parts) {
         if (ignore?.has(`${im.impl.id}\0${ps.id}`)) continue
         const ov = im.poses.get(ps.id)
@@ -943,7 +968,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return
     }
     if (ex) {
-      emit({ ...base(o, src), type: 'explode', part: p.spec.id, point: c, energy: ex.energy, radius: ex.radius })
+      emit({ ...base(o, src), type: 'explode', part: p.spec.id, point: c, energy: ex.energy, radius: ex.radius, ...(ex.effect !== undefined ? { effect: ex.effect } : {}) })
       blasts.push({ point: c, energy: ex.energy, radius: ex.radius, source: src })
     }
     partLost(o, p, src)
@@ -987,10 +1012,45 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   // Hits
   // -------------------------------------------------------------------------------------------------------------------------------------------
 
+  /** A container of flammable fluid with a hole that goes through: it leaks. */
+  const leaksFlammable = (p: PartRT): boolean => {
+    const c = p.spec.contains
+    return !!c && FLAMMABLE_FLUIDS.includes(c.fluid) && (p.st.liters ?? 0) > 0 && p.st.holes.some((h) => h.through)
+  }
+
+  /**
+   * A round that went through the wall of a container of flammable fluid lights the leak or does not: the spark of a hard round on metal and the
+   * flame of an incendiary or tracer (`Hit.ignition`, `Hit.incendiary`, `Hit.tracer`), weighed by how full the container is (`options.ignition`).
+   * A plain bullet carries neither and only leaks. The part burns or goes off at the next `update` (`rt.lit`).
+   */
+  const rollIgnition = (o: ObjRT, p: PartRT, round: BallisticExtras) => {
+    const c = p.spec.contains
+    if (!c || !FLAMMABLE_FLUIDS.includes(c.fluid) || p.rt.jet || p.rt.lit) return
+    const fill = c.liters > 0 ? (p.st.liters ?? 0) / c.liters : 0
+    const chance = ignitionChance(round, { sparkTarget: sparkTargetFactor(p.mat.id, !!p.mat.tags?.includes('metal'), ignitionRules), fill, fluid: c.fluid }, ignitionRules)
+    if (chance > 0 && rnd() < chance) {
+      p.rt.lit = true
+      o.active = true
+    }
+  }
+
+  /** What is lit by a fire or a blast near: the leaks of flammable fluid within `radius` of `centre` (object parts only). */
+  const lightLeaksNear = (centre: Vec3, radius: number) => {
+    for (const o of objects.values()) {
+      for (const q of o.parts) {
+        if (isLost(q) || q.rt.lit || q.rt.jet || !leaksFlammable(q)) continue
+        if (vec.distance(partXf(o, q).c, centre) - q.bound > radius) continue
+        q.rt.lit = true
+        o.active = true
+      }
+    }
+  }
+
   interface BallisticOut { penetrated: boolean; exitEnergy: number; exitPoint?: Vec3; damage: number }
 
-  const ballistic = (o: ObjRT, p: PartRT, entry: Vec3, n: Vec3, d: Vec3, E: number, caliber: number, pathLen: number, src?: string): BallisticOut => {
+  const ballistic = (o: ObjRT, p: PartRT, entry: Vec3, n: Vec3, d: Vec3, E: number, caliber: number, pathLen: number, src?: string, round: BallisticExtras = {}): BallisticOut => {
     const mat = p.mat
+    const piercing = round.piercing ?? 1
     // a bare cage and an opening do not stop a bullet
     if (p.st.stripped || (p.st.opening && insideOpening(o, p, objLocal(o, entry)))) {
       return { penetrated: true, exitEnergy: E, exitPoint: vec.madd(entry, d, Math.min(pathLen, p.thickness)), damage: 0 }
@@ -1004,7 +1064,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const coats = p.layers.length > 0 ? layersEnergy(p.layers, p.rt.spalls, face, objLocal(o, entry)) + layersEnergy(p.layers, p.rt.spalls, -face, exitLocal) : 0
     // each coat adds penetration x thickness to the core's; a part without layers keeps the plain formula
     const thr = coats > 0 ? (mat.penetration * p.thickness * 1000 + coats) / slant : mat.penetration * effM * 1000
-    const penetrated = E > thr
+    // the bullet's kind matters against hard targets (steel, masonry); wood, flesh and the like take every bullet for its energy
+    const hard = mat.tags?.includes('metal') || mat.tags?.includes('masonry')
+    // a round that carries its penetration (mm by material class) goes through a part as thick as that, whatever the energy says; else the energy rule with `piercing`
+    const penMm = penetrationOf(mat, round.penetration)
+    const Ep = penMm !== undefined ? penMm * mat.penetration : piercing === 1 || !hard ? E : E * piercing
+    const penetrated = Ep > thr
     // a thin brittle shell that shatters (a pane, a bottle) is lost to one bullet that a thick block of the same glass shrugs off: the same
     // fragility factor that melee uses for blunt hits (1 for ductile materials and for shells 2 cm or thicker, up to x118 for 3 mm glass)
     const scale = (mat.damageScale?.ballistic ?? 1) * (mat.fracture === 'shatter' ? fragility(mat.ductility, p.thickness) : 1)
@@ -1018,7 +1083,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     if (p.layers.length > 0) spallOuter(o, p, entry, face, n, Math.max(0.03, (caliber / 1000) * 4), src)
     const brittle = mat.ductility < 0.3
-    const ratio = E / Math.max(thr, 1e-6)
+    const ratio = Ep / Math.max(thr, 1e-6)
     const crackLen = clamp(0.03 + ratio * 0.2, 0.03, 0.8)
     let exitPoint: Vec3 | undefined
     if (penetrated) {
@@ -1032,6 +1097,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           ...base(o, src), type: 'leak', part: id, fluid: p.spec.contains.fluid, point: entry, direction: n, rate: holeRate(hole, !!p.spec.contains.pressurized),
           pressurized: !!p.spec.contains.pressurized,
         })
+        rollIgnition(o, p, round)
       }
     } else if (mat.ductility >= 0.5) {
       addDent(o, p, entry, n, Math.max((caliber * 3) / 1000, 0.012), clamp(Math.min(Math.max(p.thickness * 3, 0.003), ratio * 0.01), 0.001, 0.05), src)
@@ -1043,7 +1109,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     // a bullet only wears the joints of the part it hits, by the energy the part absorbed (a through-and-through shot transfers little)
     wearJoints(o, p, (penetrated ? thr : E) * 0.02, undefined, 0, src, true)
     const dmg = applyDamage(o, p, E * DMG_PER_J * scale, 'ballistic', entry, d, E * 0.1, 12, src)
-    return { penetrated, exitEnergy: penetrated ? E - thr : 0, exitPoint, damage: dmg }
+    return { penetrated, exitEnergy: penetrated ? (penMm !== undefined ? E * (1 - thr / Ep) : E - thr / (hard ? piercing : 1)) : 0, exitPoint, damage: dmg }
   }
 
   const melee = (o: ObjRT, p: PartRT, kind: 'blunt' | 'slash', E: number, point: Vec3, n: Vec3, d: Vec3, contactR: number, src?: string): number => {
@@ -1074,50 +1140,132 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return done
   }
 
+  /**
+   * What one part takes of a blast: dents, cracks, debris, heat, joint wear and the hit points. `reach` is the share of the blast that gets to the
+   * part (`blast.shelter`; 1 without it) and it comes back, so a caller can report it. It is computed from the point of the part nearest to the centre.
+   */
+  const blastPart = (o: ObjRT, p: PartRT, point: Vec3, energy: number, radius: number, src: string | undefined, res: HitResult, reachAt?: (wp: Vec3, p: PartRT) => number): number | null => {
+    if (isLost(p)) return null
+    const { c, q } = partXf(o, p)
+    const lp = toLocal(c, q, point)
+    const dist = distanceToShape(p.spec.shape, lp)
+    if (dist >= radius) return null
+    const sp = surfacePoint(p.spec.shape, lp)
+    const wp = toWorld(c, q, sp.point)
+    const reach = reachAt ? reachAt(wp, p) : 1
+    const f = (1 - dist / radius) ** 2 * reach
+    const Ein = energy * f * BLAST_COUPLING
+    const wn = rotateVec(q, sp.normal)
+    if (!res.part) {
+      res.part = p.spec.id
+      res.point = wp
+    }
+    const mat = p.mat
+    if (Ein > 20) {
+      if (mat.ductility >= 0.5) addDent(o, p, wp, wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), clamp(0.004 + Ein * 0.00002, 0.004, 0.08), src)
+      else if (mat.ductility < 0.3 && Ein > 60) addCrack(o, p, wp, wn, clamp(0.05 + Ein * 0.0005, 0.05, 1), src)
+      debris(o, p, mat.hitDebris, wp, wn, clamp(Math.round(Ein / 80) + 1, 1, 12), clamp(Math.sqrt(Ein) / 4, 2, 15), src)
+    }
+    const th = mat.thermal
+    if (th.ignitionC !== undefined && p.st.fuel > 0) {
+      p.st.temperature += 300 * f
+      o.active = true
+      if (f >= 0.25 && !p.st.burning) {
+        p.st.temperature = Math.max(p.st.temperature, th.ignitionC + 1)
+        checkIgnite(o, p, src)
+      }
+    }
+    wearJoints(o, p, Ein * 0.5, undefined, 0, src)
+    const amount = Ein * DMG_PER_J * (mat.damageScale?.explosive ?? 1)
+    if (blastFrontSpeed > 0 && dist > 0 && mat.tags?.includes('glass')) {
+      frontQueue.push({ o, p, due: time + dist / blastFrontSpeed, amount, fragEnergy: Ein * 0.3, point, ...(src !== undefined ? { src } : {}) })
+      return reach
+    }
+    if (Ein > 20 && p.layers.length > 0) spallOuter(o, p, wp, faceOf(o, p, wn), wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), src)
+    const dealt = applyDamage(o, p, amount, 'explosive', point, null, Ein * 0.3, 40, src)
+    res.damage += dealt
+    if (dist <= BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000)) addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
+    return reach
+  }
+
   const blastObject = (o: ObjRT, point: Vec3, energy: number, radius: number, src?: string): HitResult => {
     const start = cur.length
     const res: HitResult = { object: o.id, damage: 0, penetrated: false, exitEnergy: 0, events: [] }
-    for (const p of o.parts) {
-      if (isLost(p)) continue
-      const { c, q } = partXf(o, p)
-      const lp = toLocal(c, q, point)
-      const dist = distanceToShape(p.spec.shape, lp)
-      if (dist >= radius) continue
-      const f = (1 - dist / radius) ** 2
-      const Ein = energy * f * BLAST_COUPLING
-      const sp = surfacePoint(p.spec.shape, lp)
-      const wp = toWorld(c, q, sp.point)
-      const wn = rotateVec(q, sp.normal)
-      if (!res.part) {
-        res.part = p.spec.id
-        res.point = wp
-      }
-      const mat = p.mat
-      if (Ein > 20) {
-        if (mat.ductility >= 0.5) addDent(o, p, wp, wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), clamp(0.004 + Ein * 0.00002, 0.004, 0.08), src)
-        else if (mat.ductility < 0.3 && Ein > 60) addCrack(o, p, wp, wn, clamp(0.05 + Ein * 0.0005, 0.05, 1), src)
-        debris(o, p, mat.hitDebris, wp, wn, clamp(Math.round(Ein / 80) + 1, 1, 12), clamp(Math.sqrt(Ein) / 4, 2, 15), src)
-      }
-      const th = mat.thermal
-      if (th.ignitionC !== undefined && p.st.fuel > 0) {
-        p.st.temperature += 300 * f
-        o.active = true
-        if (f >= 0.25 && !p.st.burning) {
-          p.st.temperature = Math.max(p.st.temperature, th.ignitionC + 1)
-          checkIgnite(o, p, src)
-        }
-      }
-      wearJoints(o, p, Ein * 0.5, undefined, 0, src)
-      if (Ein > 20 && p.layers.length > 0) spallOuter(o, p, wp, faceOf(o, p, wn), wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), src)
-      const dealt = applyDamage(o, p, Ein * DMG_PER_J * (mat.damageScale?.explosive ?? 1), 'explosive', point, null, Ein * 0.3, 40, src)
-      res.damage += dealt
-      addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
-    }
+    for (const p of o.parts) blastPart(o, p, point, energy, radius, src, res)
     res.events = cur.slice(start)
     return res
   }
 
-  const blastWorld = (point: Vec3, energy: number, radius: number, src?: string): HitResult[] => {
+  // -------------------------------------------------------------------------------------------------------------------------------------------
+  // Blast options: shelter, fragment hits, confinement (all off by default)
+  // -------------------------------------------------------------------------------------------------------------------------------------------
+
+  interface BlastCfg {
+    shelter: Required<ShelterOptions> | null
+    frag: Required<FragmentHitOptions> | null
+    /** A number is the multiplier itself. */
+    conf: Required<ConfinementOptions> | number | null
+  }
+
+  const blastCfg = (call?: BlastOptions): BlastCfg => {
+    const pick = <K extends keyof BlastOptions>(key: K): BlastOptions[K] => (call && call[key] !== undefined ? call[key] : options.blast?.[key])
+    const merge = <T extends object>(v: boolean | T | undefined, defaults: Required<T>): Required<T> | null => {
+      if (!v) return null
+      const out = { ...defaults }
+      if (v !== true) for (const [key, value] of Object.entries(v)) if (value !== undefined) (out as Record<string, unknown>)[key] = value
+      return out
+    }
+    const conf = pick('confinement')
+    return {
+      shelter: merge(pick('shelter'), SHELTER_DEFAULTS),
+      frag: merge(pick('fragmentHits'), FRAGMENT_HIT_DEFAULTS),
+      conf: typeof conf === 'number' ? (Number.isFinite(conf) ? Math.max(0, conf) : 1) : merge(conf, CONFINEMENT_DEFAULTS),
+    }
+  }
+
+  /** Same directions in every blast of this world: a Fibonacci lattice turned by the world seed. */
+  const confinementRays = new Map<number, Vec3[]>()
+  const raysOf = (n: number): Vec3[] => {
+    let rays = confinementRays.get(n)
+    if (rays) return rays
+    const r = createRng((options.seed ?? 1) ^ 0x5bd1e995)
+    const off = r.next()
+    const phi0 = r.next() * Math.PI * 2
+    rays = []
+    for (let i = 0; i < n; i++) {
+      const y = 1 - (2 * (i + off)) / n
+      const s = Math.sqrt(Math.max(0, 1 - y * y))
+      const phi = phi0 + i * 2.399963229728653
+      rays.push([Math.cos(phi) * s, y, Math.sin(phi) * s])
+    }
+    confinementRays.set(n, rays)
+    return rays
+  }
+
+  /** Pressure multiplier of a blast at `point`: the host's number, or an estimate from rays that hit parts (never the ones that are lost or open). */
+  const confinementOf = (conf: BlastCfg['conf'], point: Vec3, radius: number): number => {
+    if (conf === null) return 1
+    if (typeof conf === 'number') return conf
+    let hits = 0
+    let sum = 0
+    for (const d of raysOf(Math.max(1, Math.round(conf.rays)))) {
+      const h = raycastInternal(point, d, radius * conf.reach, undefined, true)
+      if (h) {
+        hits++
+        sum += h.distance
+      }
+    }
+    if (hits === 0) return 1
+    const closed = hits / Math.max(1, Math.round(conf.rays))
+    const ratio = clamp(radius / Math.max(sum / hits, 1e-3), 0, 2)
+    return Math.min(Math.max(1, conf.max), 1 + conf.gain * closed ** conf.power * ratio)
+  }
+
+  const FLAG_LOST = 1
+  const FLAG_OPEN = 2
+
+  /** The legacy blast: every part of every object, then every impl, each at full strength. */
+  const blastPlain = (point: Vec3, energy: number, radius: number, src?: string): HitResult[] => {
     const out: HitResult[] = []
     for (const o of [...objects.values()]) {
       if (vec.distance(toWorld(o.st.position, o.st.rotation, o.bc), point) - o.br >= radius) continue
@@ -1125,15 +1273,248 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (r.part) out.push(r)
     }
     for (const im of [...impls.values()]) {
-      const inRange = im.impl.describe().parts.some((ps) => {
-        const ov = im.poses.get(ps.id)
-        const c = toWorld(im.position, im.rotation, ov?.pos ?? ps.position)
-        const q = quat.mul(im.rotation, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0])))
-        return distanceToShape(ps.shape, toLocal(c, q, point)) < radius
-      })
-      if (inRange) out.push(implHit(im, { type: 'explosive', point, energy, radius, ...(src !== undefined ? { source: src } : {}) }))
+      if (implInRange(im, point, radius)) out.push(implHit(im, { type: 'explosive', point, energy, radius, ...(src !== undefined ? { source: src } : {}) }))
     }
     return out
+  }
+
+  const implParts = (im: ImplRT) =>
+    im.impl.describe().parts.map((ps) => {
+      const ov = im.poses.get(ps.id)
+      return { ps, c: toWorld(im.position, im.rotation, ov?.pos ?? ps.position), q: quat.mul(im.rotation, ov?.q ?? quatFromEuler(...(ps.rotation ?? [0, 0, 0]))) }
+    })
+
+  const implInRange = (im: ImplRT, point: Vec3, radius: number): boolean => implParts(im).some(({ ps, c, q }) => distanceToShape(ps.shape, toLocal(c, q, point)) < radius)
+
+  /** A blast with shelter, fragment hits or confinement. Parts are served from the nearest to the farthest, so a wall takes the blast (and may break) before what is behind it. */
+  const blastScene = (point: Vec3, energy: number, radius: number, src: string | undefined, cfg: BlastCfg, only?: ObjRT | ImplRT): HitResult[] => {
+    const mult = confinementOf(cfg.conf, point, radius)
+    const E = energy * mult
+    const shelter = cfg.shelter
+    const flags = new Map<PartRT, number>()
+    const inRange: ObjRT[] = []
+    for (const o of objects.values()) {
+      if (vec.distance(toWorld(o.st.position, o.st.rotation, o.bc), point) - o.br >= radius) continue
+      inRange.push(o)
+      if (shelter) for (const p of o.parts) flags.set(p, (isLost(p) ? FLAG_LOST : 0) | (p.st.opening || p.st.stripped ? FLAG_OPEN : 0))
+    }
+    // what each blocker stands in front of, to aim its fragments
+    const shields = new Map<PartRT, Vec3[]>()
+    /** Share of the blast that gets to `tp` (world) through everything between it and the centre; `self` never blocks. */
+    const reachAt = (tp: Vec3, self: PartRT | null): number => {
+      if (!shelter) return 1
+      const L = vec.distance(point, tp)
+      if (L < 1e-4) return 1
+      const d = vec.scale(vec.sub(tp, point), 1 / L)
+      let t = 1
+      for (const o of inRange) {
+        if (raySphereMiss(point, d, toWorld(o.st.position, o.st.rotation, o.bc), o.br, L)) continue
+        for (const p of o.parts) {
+          if (p === self) continue
+          const was = flags.get(p) ?? 0
+          if (was & FLAG_LOST) continue
+          const r = rayPart(o, p, point, d)
+          if (!r) continue
+          const t0 = Math.max(r.t0, 0)
+          const path = Math.min(r.t1, L) - t0
+          if (path < shelter.minPath) continue
+          const mid = vec.madd(point, d, t0 + path / 2)
+          const opening = p.st.opening && insideOpening(o, p, mid)
+          if (opening && was & FLAG_OPEN) continue
+          if (p.st.stripped && was & FLAG_OPEN) continue
+          const resistance = p.mat.hpPerKg * p.mat.density * path * (p.mat.damageScale?.shelter ?? 1)
+          let ti = Math.exp(-resistance / shelter.k)
+          // destroyed or breached by this same blast: part of what it held back goes through
+          if (isLost(p) || opening || (p.st.stripped && !(was & FLAG_OPEN))) ti += (1 - ti) * shelter.brokenTransmission
+          t *= ti
+          if (cfg.frag) {
+            let list = shields.get(p)
+            if (!list) shields.set(p, (list = []))
+            list.push(tp)
+          }
+        }
+      }
+      return t
+    }
+
+    interface Item { dist: number; order: number; o?: ObjRT; p?: PartRT; im?: ImplRT }
+    const items: Item[] = []
+    let order = 0
+    for (const o of inRange) {
+      if (only && only !== o) continue
+      for (const p of o.parts) {
+        if (isLost(p)) continue
+        const dist = distToPart(o, p, point)
+        if (dist < radius) items.push({ dist, order: order++, o, p })
+      }
+    }
+    for (const im of impls.values()) {
+      if (only && only !== im) continue
+      let dist = Infinity
+      for (const { ps, c, q } of implParts(im)) dist = Math.min(dist, distanceToShape(ps.shape, toLocal(c, q, point)))
+      if (dist < radius) items.push({ dist, order: order++, im })
+    }
+    items.sort((a, b) => a.dist - b.dist || a.order - b.order)
+
+    const results = new Map<ObjRT | ImplRT, HitResult>()
+    const reports = new Map<ObjRT | ImplRT, BlastReport>()
+    const report = (key: ObjRT | ImplRT): BlastReport => {
+      let r = reports.get(key)
+      if (!r) reports.set(key, (r = { shelter: 0, confinement: mult, fragmentHits: 0 }))
+      return r
+    }
+    const thrown: Array<{ frag: Fragment; object: string; part: PartRT | null }> = []
+    const sweep = (from: number) => {
+      if (!cfg.frag) return
+      for (let i = from; i < cur.length; i++) {
+        const e = cur[i]!
+        if (e.type !== 'fracture' && e.type !== 'stage') continue
+        for (const frag of e.fragments ?? []) thrown.push({ frag, object: e.object, part: objects.get(e.object)?.byId.get(e.part) ?? null })
+      }
+    }
+
+    for (const it of items) {
+      if (it.o && it.p) {
+        const o = it.o
+        let res = results.get(o)
+        if (!res) results.set(o, (res = { object: o.id, damage: 0, penetrated: false, exitEnergy: 0, events: [] }))
+        const start = cur.length
+        const k = blastPart(o, it.p, point, E, radius, src, res, shelter ? reachAt : undefined)
+        res.events.push(...cur.slice(start))
+        sweep(start)
+        if (k !== null) {
+          const rep = report(o)
+          rep.shelter = Math.max(rep.shelter, k)
+          if (shelter) (rep.parts ??= {})[it.p.spec.id] = k
+        }
+      } else if (it.im) {
+        const im = it.im
+        // the impl takes one hit: the share of the blast that gets to its parts, weighted by how hard the blast hits each
+        let num = 0
+        let den = 0
+        for (const { ps, c, q } of implParts(im)) {
+          const lp = toLocal(c, q, point)
+          const dist = distanceToShape(ps.shape, lp)
+          if (dist >= radius) continue
+          const f = (1 - dist / radius) ** 2
+          const sp = surfacePoint(ps.shape, lp)
+          num += f * reachAt(toWorld(c, q, sp.point), null)
+          den += f
+        }
+        const k = den > 0 ? num / den : 1
+        const res = implHit(im, { type: 'explosive', point, energy: E * k, radius, ...(shelter ? { shelter: k } : {}), ...(src !== undefined ? { source: src } : {}) })
+        results.set(im, res)
+        report(im).shelter = k
+      }
+    }
+
+    if (cfg.frag && thrown.length > 0) {
+      const g = cfg.frag
+      const energyOf = (f: Fragment) => 0.5 * f.mass * (f.velocity[0] ** 2 + f.velocity[1] ** 2 + f.velocity[2] ** 2)
+      const list = thrown
+        .map((t, i) => ({ ...t, i, e: energyOf(t.frag) }))
+        .sort((a, b) => b.e - a.e || a.i - b.i)
+        .slice(0, Math.max(0, Math.floor(g.max)))
+      list.forEach((t, i) => throwFragment(t.frag, t.object, t.part, g, point, i, src, shields, results, reports, mult))
+    }
+
+    const out: HitResult[] = []
+    const reportShelter = (key: ObjRT | ImplRT, res: HitResult) => {
+      res.blast = reports.get(key) ?? { shelter: 1, confinement: mult, fragmentHits: 0 }
+    }
+    const summary: Array<{ object: string; part?: string; factor: number }> = []
+    let fragmentHits = 0
+    for (const o of objects.values()) {
+      const r = results.get(o)
+      if (!r?.part) continue
+      reportShelter(o, r)
+      out.push(r)
+      for (const [part, factor] of Object.entries(r.blast?.parts ?? {})) summary.push({ object: o.id, part, factor })
+      fragmentHits += r.blast?.fragmentHits ?? 0
+    }
+    for (const im of impls.values()) {
+      const r = results.get(im)
+      if (!r) continue
+      reportShelter(im, r)
+      out.push(r)
+      if (shelter) summary.push({ object: im.impl.id, factor: r.blast?.shelter ?? 1 })
+      fragmentHits += r.blast?.fragmentHits ?? 0
+    }
+    emit({ type: 'blast', object: '', time, ...(src !== undefined ? { source: src } : {}), point, energy: E, radius, confinement: mult, shelter: summary, fragmentHits })
+    return out
+  }
+
+  /** Integer seed from numbers: a fragment's flight depends only on the blast and on the fragment, not on what the world did before. */
+  const seedOf = (...nums: number[]): number => {
+    let h = 2166136261
+    for (const n of nums) {
+      h = Math.imul(h ^ (Math.round(n * 1000) | 0), 16777619)
+      h ^= h >>> 15
+    }
+    return h | 0
+  }
+
+  /** One fragment of a part the blast broke flies on: a low-energy hit on the first part or impl it reaches within its throw. */
+  const throwFragment = (
+    frag: Fragment, objectId: string, from: PartRT | null, g: Required<FragmentHitOptions>, centre: Vec3, index: number, src: string | undefined,
+    shields: Map<PartRT, Vec3[]>, results: Map<ObjRT | ImplRT, HitResult>, reports: Map<ObjRT | ImplRT, BlastReport>, mult: number,
+  ) => {
+    const v = frag.velocity
+    const speed = Math.hypot(v[0], v[1], v[2])
+    const energy = g.energyFactor * 0.5 * frag.mass * speed * speed
+    if (speed < 0.5 || energy < 1) return
+    const r = createRng(seedOf(options.seed ?? 1, centre[0], centre[1], centre[2], index, frag.center[0], frag.center[1], frag.center[2]))
+    let dir = vec.scale(v, 1 / speed)
+    // a fragment of a blocker whose flight points at a target behind it goes for that target
+    const behind = from ? shields.get(from) : undefined
+    if (behind) {
+      let best = Math.cos((g.aim * Math.PI) / 180)
+      for (const tp of behind) {
+        const to = vec.sub(tp, frag.center)
+        const len = vec.length(to)
+        if (len < 1e-4) continue
+        const cos = vec.dot(dir, to) / len
+        if (cos >= best) {
+          best = cos
+          dir = vec.scale(to, 1 / len)
+        }
+      }
+    }
+    const spread = Math.tan((g.spread * Math.PI) / 180)
+    dir = vec.normalize([dir[0] + (r.next() - 0.5) * 2 * spread, dir[1] + (r.next() - 0.5) * 2 * spread, dir[2] + (r.next() - 0.5) * 2 * spread], dir)
+    const range = Math.min(g.range, speed * g.flightTime)
+    const origin = vec.madd(frag.center, dir, 0.02)
+    const rh = raycastInternal(origin, dir, range, from ? new Set([`${objectId}\0${from.spec.id}`]) : undefined)
+    if (!rh) return
+    const hit: Hit = {
+      type: g.hitType, point: rh.point, direction: dir, energy, radius: 0.05, part: rh.part,
+      ...(g.hitType === 'ballistic' ? { caliber: clamp(Math.max(...frag.size) * 1000, 3, 30), mass: frag.mass * 1000 } : {}),
+      ...(src !== undefined ? { source: src } : {}),
+    }
+    emit({ type: 'fragment_hit', object: objectId, time, ...(src !== undefined ? { source: src } : {}), from: { object: objectId, part: frag.part }, target: { object: rh.object, part: rh.part }, point: rh.point, direction: dir, energy, mass: frag.mass, speed })
+    const im = impls.get(rh.object)
+    const o = im ? undefined : objects.get(rh.object)
+    const key = im ?? o
+    if (!key) return
+    const res = im ? implHit(im, hit) : doHit(o!, hit, o!.byId.get(rh.part))
+    const have = results.get(key)
+    if (have) {
+      have.damage += res.damage
+      have.events.push(...res.events)
+      if (!have.part) have.part = res.part
+      if (res.penetrated) have.penetrated = true
+    } else results.set(key, { ...res, events: [...res.events] })
+    let rep = reports.get(key)
+    if (!rep) reports.set(key, (rep = { shelter: 1, confinement: mult, fragmentHits: 0 }))
+    rep.fragmentHits++
+  }
+
+  const blastWorld = (point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT): HitResult[] => {
+    const cfg = blastCfg(call)
+    const res = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlain(point, energy, radius, src) : blastScene(point, energy, radius, src, cfg, only)
+    // a blast is a flame: a container that leaks flammable fluid inside it catches
+    lightLeaksNear(point, radius)
+    return res
   }
 
   const heatObject = (o: ObjRT, point: Vec3, T: number, radius: number, duration: number, src?: string): HitResult => {
@@ -1173,7 +1554,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (hit.type === 'ballistic') {
       const loc = locate(o, point, dir, 0.05, only)
       if (loc) {
-        const out = ballistic(o, loc.p, loc.point, loc.normal, loc.dir, E, hit.caliber ?? 9, loc.pathLen, src)
+        const out = ballistic(o, loc.p, loc.point, loc.normal, loc.dir, E, hit.caliber ?? 9, loc.pathLen, src, hit)
         res = { ...res, part: loc.p.spec.id, point: loc.point, damage: out.damage, penetrated: out.penetrated, exitEnergy: out.exitEnergy }
       }
     } else if (hit.type === 'blunt' || hit.type === 'slash') {
@@ -1195,7 +1576,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         }
       }
     } else if (hit.type === 'explosive') {
-      res = blastObject(o, point, E, hit.radius ?? 2, src)
+      const call = hit.blast || hit.confinement !== undefined ? { ...hit.blast, ...(hit.confinement !== undefined ? { confinement: hit.confinement } : {}) } : undefined
+      const cfg = blastCfg(call)
+      if (!cfg.shelter && !cfg.frag && cfg.conf === null) res = blastObject(o, point, E, hit.radius ?? 2, src)
+      else {
+        res = blastWorld(point, E, hit.radius ?? 2, src, call, o)[0] ?? res
+        res.events = cur.slice(start)
+      }
     } else {
       res = heatObject(o, point, hit.temperature ?? 800, hit.radius ?? 0.25, hit.duration ?? 1, src)
     }
@@ -1332,7 +1719,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         if (rate > 0) {
           s.liters = Math.max(0, (s.liters ?? 0) - rate * dt)
           hot = true
-          if (FLAMMABLE_FLUIDS.includes(cont.fluid) && s.temperature >= 350 && !p.rt.jet) {
+          if (FLAMMABLE_FLUIDS.includes(cont.fluid) && (s.temperature >= 350 || p.rt.lit) && !p.rt.jet) {
+            p.rt.lit = false
             if (ex && chainDelayOf(p.spec, 'fire') !== undefined) {
               prime(o, p, 'fire')
               continue
@@ -1347,6 +1735,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           }
         }
       }
+      if ((s.liters ?? 0) <= 0) p.rt.lit = false
       if (p.rt.jet && (s.liters ?? 0) <= 0) {
         p.rt.jet = false
         s.burning = false
@@ -1396,6 +1785,27 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (o.maxStress > 0.8) hot = true
     }
     o.active = hot
+  }
+
+  /** A leak of flammable fluid within `ignition.fireNear.radius` of a burning part (or of a jet) lights at `chancePerSecond`. */
+  const igniteLeaksNearFire = (sources: Array<{ o: ObjRT; p: PartRT; flame: number }>, dt: number) => {
+    const { radius, chancePerSecond } = ignitionRules.fireNear
+    if (chancePerSecond <= 0) return
+    const chance = 1 - Math.exp(-chancePerSecond * dt)
+    for (const src of sources) {
+      if (!src.p.st.burning && !src.p.rt.jet) continue
+      const sc = partXf(src.o, src.p).c
+      for (const o of objects.values()) {
+        for (const q of o.parts) {
+          if (q === src.p || isLost(q) || q.rt.lit || q.rt.jet || !leaksFlammable(q)) continue
+          if (vec.distance(partXf(o, q).c, sc) - q.bound - src.p.bound > radius) continue
+          if (rnd() < chance) {
+            q.rt.lit = true
+            o.active = true
+          }
+        }
+      }
+    }
   }
 
   const spread = (sources: Array<{ o: ObjRT; p: PartRT; flame: number }>, dt: number) => {
@@ -1462,12 +1872,33 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     time = end
   }
 
+  /** Lands the damage of the glass the blast front has reached by `time`, the nearest first. */
+  const releaseFront = () => {
+    if (frontQueue.length === 0) return
+    frontQueue.sort((a, b) => a.due - b.due)
+    while (frontQueue.length > 0 && frontQueue[0]!.due <= time) {
+      const hit = frontQueue.shift()!
+      if (objects.get(hit.o.id) !== hit.o) continue
+      applyDamage(hit.o, hit.p, hit.amount, 'explosive', hit.point, null, hit.fragEnergy, 40, hit.src)
+    }
+  }
+
   /** Collapse events are produced after the whole operation: make sure the result of the operation carries them. */
   const withCollapses = (r: { value: HitResult[]; events: DestructionEvent[] }): HitResult[] => {
     const last = r.value[r.value.length - 1]
     if (!last) return r.value
     for (const e of r.events) if (e.type === 'collapse' && !r.value.some((h) => h.events.includes(e))) last.events.push(e)
     return r.value
+  }
+
+  /** An explosive hit on an impl: a blast of its own when blast options are on, else the plain hit. */
+  const blastImpl = (im: ImplRT, h: Hit): HitResult => {
+    const call = h.blast || h.confinement !== undefined ? { ...h.blast, ...(h.confinement !== undefined ? { confinement: h.confinement } : {}) } : undefined
+    const cfg = blastCfg(call)
+    if (!cfg.shelter && !cfg.frag && cfg.conf === null) return implHit(im, h)
+    const world = h.space === 'local' ? toWorld(im.position, im.rotation, h.point) : h.point
+    const r = blastWorld(world, h.energy ?? 0, h.radius ?? 2, h.source, call, im)
+    return r.find((x) => x.object === im.impl.id) ?? implHit(im, h)
   }
 
   const whole = (fn: () => HitResult): HitResult => {
@@ -1559,7 +1990,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     },
     hit(objectId, h) {
       const im = impls.get(objectId)
-      if (im) return whole(() => implHit(im, h))
+      if (im) return whole(() => (h.type === 'explosive' ? blastImpl(im, h) : implHit(im, h)))
       const o = getObj(objectId)
       return whole(() => doHit(o, h))
     },
@@ -1570,14 +2001,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const p = getPart(o, partId)
       return whole(() => doHit(o, h, p))
     },
-    explode(point, energy, radius, source) {
-      return withCollapses(run(() => blastWorld(point, energy, radius, source)))
+    explode(point, energy, radius, source, blast) {
+      return withCollapses(run(() => blastWorld(point, energy, radius, source, blast)))
     },
     raycast(origin, direction, maxDistance = Infinity) {
       const r = raycastInternal(origin, direction, maxDistance)
       return r ? { object: r.object, part: r.part, point: r.point, normal: r.normal, distance: r.distance } : null
     },
-    shoot(origin, direction, energy, caliber, source) {
+    shoot(origin, direction, energy, caliber, source, round) {
+      const extras: BallisticExtras = typeof round === 'number' ? { piercing: round } : round ?? {}
       return withCollapses(run(() => {
         const results: HitResult[] = []
         const d = vec.normalize(direction)
@@ -1589,7 +2021,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           if (!rh) break
           const im = impls.get(rh.object)
           if (im) {
-            const r = implHit(im, { type: 'ballistic', point: rh.point, direction: d, energy: E, caliber, ...(source !== undefined ? { source } : {}) })
+            const r = implHit(im, { type: 'ballistic', point: rh.point, direction: d, energy: E, caliber, ...extras, ...(source !== undefined ? { source } : {}) })
             r.part = rh.part
             r.point = rh.point
             r.exitEnergy = r.penetrated ? E * 0.5 : 0
@@ -1603,7 +2035,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           const o = getObj(rh.object)
           const p = getPart(o, rh.part)
           const start = cur.length
-          const out = ballistic(o, p, rh.point, rh.normal, d, E, caliber, rh.pathLen, source)
+          const out = ballistic(o, p, rh.point, rh.normal, d, E, caliber, rh.pathLen, source, extras)
           results.push({ object: o.id, part: p.spec.id, point: rh.point, damage: out.damage, penetrated: out.penetrated, exitEnergy: out.exitEnergy, events: cur.slice(start) })
           ignore.add(`${o.id}\0${p.spec.id}`)
           if (!out.penetrated || !out.exitPoint) break
@@ -1716,8 +2148,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         time += dt
         const sources: Array<{ o: ObjRT; p: PartRT; flame: number }> = []
         for (const o of [...objects.values()]) if (o.active) stepObject(o, dt, sources)
-        if (sources.length) spread(sources, dt)
+        if (sources.length) {
+          spread(sources, dt)
+          igniteLeaksNearFire(sources, dt)
+        }
         detonatePrimed(time)
+        releaseFront()
         for (const im of [...impls.values()]) {
           if (!im.impl.update) continue
           for (const e of im.impl.update(dt) ?? []) emit(e.time === undefined ? { ...e, time } : e)

@@ -1,0 +1,54 @@
+{
+  "name": "@adatechnology/game-vfx",
+  "version": "0.3.0",
+  "license": "MIT",
+  "description": "Renderer-free visual effects, deterministic and testable in Node: the Explosion Lab's layer compositor (flash, fireball that cools into smoke, shock wave, dust, shrapnel, glowing debris, marks, mushroom, lingering fire) with its 16 profiles, seeded random streams, ordered pools, lights, screen shake and flash, distance LOD and the area cap of the game.",
+  "keywords": [
+    "game",
+    "vfx",
+    "explosion",
+    "particles",
+    "effects",
+    "deterministic"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-vfx"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

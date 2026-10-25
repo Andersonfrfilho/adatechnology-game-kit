@@ -271,7 +271,7 @@ Legenda de "melhor": **SDK**, **ZombiAdA**, **igual**, **ausente** (só um lado 
 | Bancada de móveis interativos | bancada 3791-5696 | `examples/interactables-showroom` | **igual** | o código da página **é** o do SDK (5 linhas a menos) | manter SDK |
 | Área de móveis | area-moveis 3789-3848 | `examples/interactables-test-area` | **igual** (SDK mais novo) | a página é um build antigo do exemplo | manter SDK, atualizar o build da página |
 | Tipos de móvel | jogo: 39 tipos (bundle em modo-livre 35661) | household: 51 tipos | **SDK** | o jogo não tem cabana, campismo, beliche, poço, privada, fogão a lenha, lareira, cooler | atualizar o bundle do jogo |
-| Planta para objeto do kit | `AdaptadorInterativos` modo-livre 34747-35660 (`MAPA_TIPOS`) | `game-floorplan` e household, sem ponte | **ZombiAdA** | só o jogo sabe que `geladeira_med` é `fridge` variante `steel` | decidir (dúvida 3): ponte genérica `game-floorplan-interactables` ou fica no jogo |
+| Planta para objeto do kit | `AdaptadorInterativos` modo-livre 34747-35660 (`MAPA_TIPOS`) | `game-floorplan` e household, sem ponte | **ZombiAdA** | só o jogo sabe que `geladeira_med` é `fridge` variante `steel` | **decidido: ponte genérica `game-floorplan-interactables`, portada em 2026-10-24** (`TYPE_MAP` e demais tabelas são registros; o jogo troca ou tira entradas) |
 
 ### 3.3 Vegetação
 
@@ -295,11 +295,11 @@ Legenda de "melhor": **SDK**, **ZombiAdA**, **igual**, **ausente** (só um lado 
 | Contágio abstrato | antes-do-dia-1 15-72 | `game-infection` | **igual** | resultado idêntico em 9 datas | manter SDK |
 | Tela do surto (gráfico, cartões por região, escolhas) | antes-do-dia-1 74-141 | nada | **ZombiAdA** | só a visualização | portar como `examples/infection-outbreak` |
 | "Multidão civil" e "Boletim" (as outras 2 SDKs do documento) | só no texto | nada | **ausente** | prometidas, sem código | decidir (dúvida 6) |
-| Infecção do jogador (febre, delírio, morte, reanimação, ferida por tipo) | jardim-aurora `INFEC` 53126, `FERIDA` 53127, `player.hurt` 56880 | nada (`game-infection` é por região) | **ZombiAdA** | `game-infection` não modela o indivíduo | portar para o pacote de personagens ou sobrevivência; ponte com `infect/remove/materialize` |
-| **Horda** (SoA, relevância R0-R3, flow field fatiado, grade espacial, vagas de ataque) | bancada 53088-53298; jogo 55542-55997 | nada | **ZombiAdA** | é outro nível de abstração que `game-infection`; a bancada é o protótipo e o jogo a versão completa | **pacote novo `game-crowd`** (decisão T8.2, dúvida 2) |
-| IA dos 13 tipos (percepção, ruído, grito em cadeia, habilidades, pirâmide, piscina, rastro) | jardim-aurora 55663-56219 | nada | **ZombiAdA** | o motor é genérico, os tipos são conteúdo | motor em `game-crowd`; os 13 tipos em pacote de conteúdo (junto do Bestiário, Fase 4) |
+| Infecção do jogador (febre, delírio, morte, reanimação, ferida por tipo) | jardim-aurora `INFEC` 53126, `FERIDA` 53127, `player.hurt` 56880 | nada (`game-infection` é por região) | **ZombiAdA** | `game-infection` não modela o indivíduo | portar para o pacote de personagens ou sobrevivência; ponte com `infect/remove/materialize` <br>✅ **T8.3**: `game-player` (`infection`, desligada por padrão; números de `INFEC`/`FERIDA` em `defaults.json`), golden `game-player.json` |
+| **Horda** (SoA, relevância R0-R3, flow field fatiado, grade espacial, vagas de ataque) | bancada 53088-53298; jogo 55542-55997 | nada | **ZombiAdA** | é outro nível de abstração que `game-infection`; a bancada é o protótipo e o jogo a versão completa | **pacote novo `game-crowd`** (decisão T8.2, dúvida 2) <br>✅ **T8.1a**: `packages/game-crowd` (porte literal de G 66714-67430 e das portas G 63796-64050: SoA, faixas, flow fatiado, grade espacial, 6 vagas, alerta em cadeia, portas, pilha, corpos, rastro, população e migração), golden `game-crowd.json` (8 cenas, quadro a quadro) <br>✅ **T8.1c**: o desenho (`hordeRender` G 67098-67136: corte pela vista, LOD 18/55 m com histerese, pose de ataque, pose por estado, corpos no chão) em `packages/game-crowd-three`, golden `game-crowd-render.json` (11 cenas, instância por instância), área `crowd_area` em `examples/crowd-test-area` |
+| IA dos 13 tipos (percepção, ruído, grito em cadeia, habilidades, pirâmide, piscina, rastro) | jardim-aurora 55663-56219 | nada | **ZombiAdA** | o motor é genérico, os tipos são conteúdo | motor em `game-crowd`; os 13 tipos em pacote de conteúdo (junto do Bestiário, Fase 4) <br>✅ **T8.1a**: habilidades como traços em `game-crowd` (`zAbility`, `zChaseSpeed`, `zFrame`, pirâmide, piscina, rastro); os 13 tipos com os números da horda em `undeadCrowdPack()` (`game-characters-undead/src/data/crowd.json`) |
 | Dano por região, desmembramento, capacete, colete, penetração | jardim-aurora 55829-55864, 57137-57200 | `Hit` de `game-contracts`, `game-weapons` | **ZombiAdA** | planejado em `game-characters` (T4.1) | portar para `game-characters` |
-| Jogador (ficha, fôlego, ferimentos, agarrão, pânico) | jardim-aurora 56865-57060 | nada | **ZombiAdA** | motor de "sobrevivente" genérico com conteúdo no jogo | portar (pacote novo ou `game-characters`), dúvida 7 |
+| Jogador (ficha, fôlego, ferimentos, agarrão, pânico) | jardim-aurora 56865-57060 | nada | **ZombiAdA** | motor de "sobrevivente" genérico com conteúdo no jogo | portar (pacote novo ou `game-characters`), dúvida 7 <br>✅ **T8.3**: `packages/game-player` (porte literal de G 68427-68640: `player`, `playerUpdate`, `frontZombies`, `shove`, `knife`; 18 roteiros do golden batem quadro a quadro), `examples/player-test-area` |
 | Inventário, necessidades, saque, barricada, lanterna | jardim-aurora 57199-57397 | nada | **ZombiAdA** | planejado em `game-items` (T3.1) | portar para `game-items` |
 | Áudio sintetizado (`sfx`, `loopSet`, `grito`, `voz`) | jardim-aurora 53189-53268 | só `game-weapons-three/src/audio.ts` | **ZombiAdA** | usa `Math.random`; sem pacote | portar para `game-audio` (ou ampliar o de armas) |
 | Ciclo de dia, chuva, luz de sódio, neblina de zona | jardim-aurora 57536-57589 | nada | **ZombiAdA** | motor genérico (sol por degraus de 10 min, luar, poças) | portar para `game-environment` |
@@ -370,7 +370,7 @@ então o método de geração está validado) e tratar a página como referênci
 2. **Horda: pacote próprio (`game-crowd`) ou dentro de `game-infection`?** Recomendo pacote próprio: `game-infection` é epidemia por região
    (horas, compartimentos); a horda é por agente (metros, segundos). A ponte já existe no contágio: `materialize(region, n)` entrega os infectados
    como sementes e `giveBack` os devolve.
-3. **Ponte planta para household** (`AdaptadorInterativos`): vira `game-floorplan-interactables` genérico ou continua código do jogo, como o cabeçalho diz?
+3. **Ponte planta para household** (`AdaptadorInterativos`): vira `game-floorplan-interactables` genérico ou continua código do jogo, como o cabeçalho diz? **Respondida (2026-10-24): virou `packages/game-floorplan-interactables`, genérico e configurável (evidence.md, seção "AdaptadorInterativos").**
 4. **Os fontes do gerador dos carros "assados"** (`veh/gen.py`, `veh/ext.mjs`, `veh/simp.mjs`) existem? O jogo ainda usa os 15 modelos da Garagem v3, e eles
    estão defasados em relação à v5. Se não existirem, o modo leve do SDK os substitui.
 5. **Condução**: o documento da frota pede semi-simulação com suspensão por raycast, e o jogo entrega arcade sem suspensão. O que entra no SDK, as duas
@@ -384,3 +384,29 @@ então o método de geração está validado) e tratar a página como referênci
    ou resto de build que pode sair?
 10. **Qual das duas versões do jogo vale como referência** de integração: `zombiada-jardim-aurora` (53054-58955) ou `zombiada-modo-livre` (66287-75272)? O
     modo livre é mais novo e inclui andares, bichos, Jardim das Palmeiras e o adaptador de câmera; o jardim-aurora é a fatia v7 descrita na revisão final.
+
+
+## Status ao fim da Fase 7 (T7.5)
+
+Atualizado em 2026-10-24. O que deste inventário (veículos, vegetação e câmera do jogo) já entrou, e onde. A parte do jogo que sobra
+(horda, contágio, jogador, ciclo de dia, áudio) é das Fases 5, 6 e 8.
+
+| Item | Entrou? | Onde |
+|---|---|---|
+| Garagem v4/v5 (69 veículos, dano por zona) × SDK | **Já era igual** (207 comparações, 0 diferenças; as 10 que diferem no golden antigo são do próprio golden) | `comparacoes/veiculos/` (`tools/vehicles-catalog compare`), `game-vehicles-fleet` sem mudança de dado |
+| Modo leve (`LOD`, 13 ganchos `[LOD]`, `skipJogo`) | Sim | `game-vehicles` (`kit.lod`, `build(..., { lod })`), cópias da frota em `game-vehicles-fleet` |
+| Fusão em 6 malhas, poda de 3 cm, quadro de saída (+z), cor por semente | Sim | `game-vehicles-three` (`createVehiclesThree`, `quality: 'lite'`) |
+| `DIMS` dos 69, `PALETA` e `PALETA_MIL`, `corDaSemente`, cartões de projeto da Frota | Sim (dado gerado por `tools/vehicles-catalog`, com `--check`) | `game-vehicles-fleet` (`fleetDims`, `paintPalettes`, `colorFromSeed`, `fleetStats`) |
+| `coletarDanificaveis` | Sim | `game-vehicles` (`kit.damageables`) |
+| Condução arcade do jogo (`CAR`, `carUpdate`), atropelamento, barulho | Sim | `game-vehicles-driving` (`createArcadeDriver`, `runOver`) |
+| Semissimulação do documento da Frota | Sim, sem código do time: os números do documento são os testes | `game-vehicles-driving` (`createSemiSimDriver`, registro de superfícies) |
+| Plugin do jogo (sangue de zumbi, marca horda, placa `ZMB4D23`, `SCENARIOS` de horda) | Fatia do jogo, não entra no SDK | `game-slice/vehicles/` |
+| Módulo de teste de veículos (8 itens, 11 cenários da página + 2) | Sim | `packages/game-vehicles-three/src/test-area/`, `examples/vehicles-test-area/` (`?area=vehicles`) |
+| Aplicativo da Garagem (palco, folha de contatos, `hitAt`) | **Não** como aplicativo: o visor é a `vehicles-test-area`; a folha de contatos com cache em `localStorage` ficou sem destino (dúvida 3 abaixo) | - |
+| Viveiro (artefato, V8): geometria das peças de madeira | Sim | `game-vegetation` (`radius`, `length`, `axis`, `base` em `PlantPiece`, `LotPiece` e `userData.destructionPart`) |
+| `rulesFor` e `AREAS` do Viveiro | Sim | `game-vegetation-species` (`scatterRulesFor`), `game-vegetation-three` (`AREAS`, `scatterLot`) |
+| Módulo do Viveiro (18 plantas, 13 cenários `veg_*`), canteiro de 12 x 20 m com o caminhante | Sim | `packages/game-vegetation-three/src/test-area/`, `examples/vegetation-test-area/` (`?area=vegetation`) |
+| Câmera de ombro do jogo (`cameraUpdate`): amortecimento, FOV por zoom, sensibilidade, órbita da morte, balanço da febre e do pânico | Sim | `game-camera` (`smoothing` lido, `aim`, `wallRecovery`, `deathOrbit`, `look`, `shake`, `rig.look`) |
+| Os três módulos na `interactables-test-area` | Sim (22 de 22 no Chromium) | `examples/interactables-test-area/` |
+| Coreografia do carro explodindo, fumaça do motor por condição, faísca de raspagem, para-brisa em 4 estágios | **Não**: os módulos pedem os efeitos por id a `host.effects`; as receitas são do `game-vfx` (Fase 5) | ver `evidence.md`, Fase 7, "Dependência do vfx" |
+| Horda, contágio, jogador, ciclo de dia, áudio | Fases 5, 6 e 8 | - |

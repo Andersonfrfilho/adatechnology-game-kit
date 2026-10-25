@@ -88,11 +88,27 @@ for 3 mm glass), so a 9 mm shatters a window pane in one shot while a 5 cm block
 ## Fire, melting and leaks
 
 `update(dt)` advances everything that is hot. Burning parts consume fuel (`burnRate * surface`), lose hit points, char and finally turn to ashes
-(`fuelFraction >= 0.8`) or stay charred. Heat flows through closed joints by conductivity and to parts of other objects within `fireSpread`. Heat
+(`fuelFraction >= 0.8`) or stay charred. Heat flows through closed joints by conductivity and to parts of other objects within `fireSpread`. With `blastFrontSpeed` (m/s, 340 is the speed of sound; default off) the glass an explosion reaches breaks `distance / speed` seconds later, in `update`, instead of on the spot. Heat
 only moves towards a source temperature, so a wood fire (800 °C) never melts steel (1450 °C) but melts aluminium and plastic, and a 3000 °C torch
 melts anything. Melting emits `melt` and `drip`; a melted part is lost and its joints open. Pressurized gas that leaks near fire burns (or explodes
 when the part has `explodes`). `contains` parts leak through punctures: the `leak` event carries the hole's world point, the outward normal as
 `direction` and the rate in litres per second, and `PartState.liters` drops in `update` (`setLiters` fills or empties a container).
+
+### Ignition of a leak
+
+A round that goes through a `contains` part with a flammable fluid (`gas`, `fuel`: a tank, a jerrycan, a gas bottle) **leaks and does not light by itself**. The leak lights
+(a jet that burns, or the explosion of a part with `explodes`) when:
+
+- the round carries a **spark** and hits **metal**: `Hit.ignition.spark` (the weapons build it from the core and the jacket of the round) times the factor of the struck
+  material (`ignition.sparkTarget`: steel and iron 1, aluminium 0.25, other metals `sparkMetalDefault` 0.5, a part that is not metal never sparks);
+- the round carries a **flame**: `Hit.ignition.flame`, or the flags `Hit.incendiary` / `Hit.tracer` (0.7 and 0.2 when the host sends only the flags), whatever the wall;
+- a **fire is near**: a burning part or a jet within `ignition.fireNear.radius` (1.5 m) lights the leak at `chancePerSecond` (0.5); or
+- a **blast** (`explode`) goes off within its radius of the leaking container.
+
+Both chances are weighed by how full the container is, `ignition.fillCurve` (points `[filled, factor]`; a full container is too rich to burn and mostly leaks, a nearly empty one lights
+easiest; default 0.6 empty, 1 at 10 percent, 0.6 at 35, 0.3 at 65, 0.15 at 90, 0.12 full; the flame feels half of it, `flameFillInfluence` 0.5) and rolled with the seeded generator of the
+world. `createDestruction({ ignition })` changes any number (`IgnitionRules` and `DEFAULT_IGNITION_RULES` of `@adatechnology/game-contracts`, which also export `ignitionChance` and
+`fillFactor`). A round without `ignition`, `incendiary` and `tracer` never lights a leak; a part heated to 350 degrees C still does, as before.
 
 ### Chain reaction
 
@@ -132,6 +148,13 @@ solves loads: each structural part carries its own mass plus what rests on it, d
 `PartState.load` is in kg and `PartState.stress` is `load / capacity`. Parts without a role (windows, doors, furniture) carry nothing. Objects
 without any `structure` behave exactly as before.
 
+- **A slab or beam is held by the sum of its supports.** Its load is shared among the supports it rests on that are still there (columns, bearing
+  walls, beams), so a slab on four columns puts a quarter on each; lose one and the other three carry the load of the four, lose two and the
+  two left carry twice their share. The structure falls when the capacity that is left (the sum over the supports) is less than the load.
+  Everything is config: the capacity of a part is `structure.capacity` or `material.compressive` times its section (set `compressive` on a
+  `MaterialDef` passed in `materials`), `sizeStructure({ safety, redundancy })` sizes them (`safety` 0.72 with `redundancy` 0.97 on four columns:
+  rest 0.72, one lost 0.96, two lost 1.44), and the world option `structure: { safetyFactor }` (default 1) multiplies every load before it meets
+  the capacities (stress = `load * safetyFactor / capacity`): above 1 the whole building is loaded harder than it was sized for.
 - **Capacity** defaults to `material.compressive` (kg per m²: concrete 444 000, brick 40 000, softwood 100 000, steel 2 000 000) times the section:
   the two smallest dimensions for columns, beams, roofs and stairs (foundations x10), thickness times longest side for slabs, thickness times
   horizontal length for walls. A 0.3 m concrete column carries 40 t, a 0.2 m brick wall 8 t per metre, a 0.1 x 0.2 m softwood beam 2 t.
@@ -181,6 +204,63 @@ panels), `drywall`, `wood_frame_wall`, `log_wall`, `sheet_metal_shack`, `glass_p
 - **Holes stay on the pieces.** Every `fracture` and breach fragment carries `marks` (`FragmentMark`: point, normal and diameter in the fragment's own
   axes) for the holes that fell inside it, at most 12 per fragment.
 
+## Blasts: shelter, fragment hits and confinement
+
+All three are options, **off by default** (a blast then does exactly what it always did, goldens included). Set them for the world with
+`createDestruction({ blast: { shelter: true, ... } })`, or per call: `world.explode(point, energy, radius, source, { shelter: true })`, or on the
+explosive `Hit` (`hit.blast`, `hit.confinement`). A call overrides the world default (`shelter: false` turns it off). Every number below is an
+option; the defaults are exported as `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS` and `CONFINEMENT_DEFAULTS`. This is the kit's own model (no team
+delivery has it), approved by the owner on 2026-10-24.
+
+**Shelter.** For each part (or impl) in range, a segment from the centre to the nearest point of the target is cut against every other part of
+every object, skipping parts already lost and the target itself. A part crossed along a path `p` lets through `exp(-r / k)` of the energy, with
+`r = hpPerKg * density * p * damageScale.shelter` (the hit points of the slab it crosses, per m²) and `k = 2800`. The energy that reaches the target
+is `E * product(t_i)`, and it is used for both the damage and the push. Parts are served from the nearest to the farthest, so a wall takes the blast
+(damage, dents, maybe breaking) before what is behind it. A blocker the same blast destroys or breaches lets `brokenTransmission` (0.5) of what it
+held back go through: `t' = t + (1 - t) * 0.5`. An opening (a breach, a bare rebar cage) from before the blast lets everything through. Impls
+(characters, animals) get one hit with the energy-weighted mean of the share that reaches their parts, and `Hit.shelter` carries it. Impls do not
+shelter anything (they have no material).
+
+| Blocker | Path | Lets through |
+|---|---|---|
+| glass pane | 6 mm | 83% (`damageScale.shelter: 3` in the material) |
+| wooden door (softwood) | 4 cm | 53% |
+| brick wall | 20 cm | 19% |
+| reinforced concrete column | 30 cm | 3% |
+
+**Fragment hits.** The fragments of a part the blast fractures or breaches (the `fracture` and `stage` events) become hits on the first part or impl
+along their flight, in order of energy, at most `max` (24) per blast. Each is a `blunt` hit (or `ballistic` with its mass in grams and a calibre from
+its size) of `energyFactor * m * v² / 2` (0.5), thrown up to `min(range 6 m, speed * flightTime 0.4 s)` within a seeded `spread` (10°) of its
+direction. With `shelter` on, a fragment of a blocker whose line to a target is within `aim` (40°) of its flight goes for that target. The flights
+depend only on the world seed, the blast and the fragment, never on what the world did before. Fragments of what a fragment breaks are not thrown
+again. Events: `fragment_hit` (before the target's own events).
+
+**Confinement.** `confinement: true` shoots `rays` (26) seeded rays from the centre as far as `radius * reach` (1.5) against the world's parts (impls
+do not count; open doors, windows and breaches are absent parts). With `c` the share of rays that hit and `d` their mean distance:
+`multiplier = min(max, 1 + gain * c^power * clamp(radius / d, 0, 2))` with `gain` 1.5, `power` 2, `max` 3. The energy of the whole blast is
+multiplied. Open ground gives 1, a closed room of 6 m about 3, the same room with one wall missing about 2. A number (`confinement: 2.5`, or
+`Hit.confinement`) is the multiplier itself, for a host that knows the room volume.
+
+**What comes back.** `HitResult.blast = { shelter, parts?, confinement, fragmentHits }` per target (`shelter` is the most exposed part's share),
+and one `blast` event per blast (`energy` after confinement, `shelter` per target, `fragmentHits`). `@adatechnology/game-destruction-three` takes
+the results for the push on pieces: `renderer.explode(point, energy, radius, { report: results })`.
+
+### Bullets and blasts against beams and columns
+
+`tests/beams-and-columns.test.ts` fires the loads of the ammo table of `@adatechnology/game-weapons` against a reinforced concrete column and beam, a steel
+I-beam, a hardwood beam and a brick pillar (it prints the results table with `PRINT_TABLE=1`). Two corrections came out of it:
+
+- `Hit.penetration` (the 6th argument of `shoot` is `{ penetration }` or a bare piercing factor): millimetres the round goes through, by material class
+  (`steel`, `concrete`, `brick`, `wood`). The weapons put it in the `Hit` (`shotToHit` / `shotExtras` of the contracts); the world reads no calibre names. The
+  material says which entry measures it (`MaterialDef.penetrationClass`, default its id) and how much more or less it resists
+  (`penetrationScale`: structural steel 1.3 against the RHA of the tables, softwood 1.5 against hardwood, aluminium 3 against steel). The round goes through when its
+  millimetres times that scale exceed the thickness of the part (slant counts); a material with no entry falls back to the energy rule, where `Hit.piercing`
+  (default 1) multiplies the energy against hard materials. M80 ball does not pierce an 8.5 mm structural flange, M993 AP does, and the .50 BMG M33 ball
+  pierces a 30 cm reinforced column. `PIERCING_BY_KIND`, `PIERCING_BY_CALIBER` and `piercingOf` are gone: the table lives in game-weapons.
+- Blast reach of a breach (no option, it is the physics): a blast only opens a breach within 0.12 m per cube root of kilojoule of the part
+  (`BREACH_BLAST_REACH`). A hand grenade (200 kJ) at 1 m does not cut a reinforced column in two (at 0.2 m it strips it). Farther away the blast still
+  damages, dents and cracks. The old `breach.blastReach` option (default `Infinity`) is gone: it was a second path for a correction.
+
 ## Contracts: implement your own or use the default world
 
 The kit defines contracts; each game module implements them for the objects it owns, and the world in this package is the optional default
@@ -228,9 +308,9 @@ world continues with the same events as the original. The loading world must use
 
 `createDestruction(options)` returns a `DestructionWorld`: `add`, `remove`, `has`, `ids`, `setTransform`, `splitGroup`, `hit`, `hitPart`, `explode`,
 `raycast`, `shoot`, `disassemble`, `workableJoints`, `nearestJoint`, `extinguish`, `setLiters`, `update`, `state`, `part`, `reset`, `on`,
-`register`, `serialize`, `load`, `time`. `state()` and `part()` return live views; do not mutate them.
+`register`, `serialize`, `load`, `time`. `explode(point, energy, radius, source?, blastOptions?)`; `shoot(origin, direction, energy, caliber, source?, round?)` (`round`: `Hit.penetration`, `piercing`, `incendiary`, `tracer`, `ignition` or a bare piercing factor). `state()` and `part()` return live views; do not mutate them.
 
-Also exported: `buildFrame`, `sizeStructure`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
+Also exported: `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS`, `CONFINEMENT_DEFAULTS`, `buildFrame`, `sizeStructure`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
 helpers `vec`, `quat`, `quatFromEuler`, `rotateVec`, `toLocal`, `toWorld`, the locale (`locales`, `resolveStrings`, `DestructionStrings`) and all types.
 
 The locale table has `en` and `pt-BR` strings for material names, part statuses, joint kinds, tools, damage types, event labels and fracture styles:
@@ -244,3 +324,5 @@ plástico derretem e pingam. As juntas cedem com impacto, quando a peça é dest
 parafuso, chave inglesa para porca e parafuso, maçarico para solda). O mundo devolve tudo como eventos para o renderizador desenhar. É
 determinístico (semente fixa) e serializável, então um host de LAN pode rodar o mundo e enviar só as entradas. Os nomes em português
 (materiais, ferramentas, juntas, eventos) estão em `resolveStrings('pt-BR')`.
+
+Explosões: `blast.shelter` (paredes e portas entre a explosão e o alvo ficam com a sua parte: tijolo de 20 cm deixa passar ~19%, porta de madeira ~53%, vidro ~83%; a parede que quebra na mesma explosão deixa passar metade do que segurou), `blast.fragmentHits` (os pedaços do que quebra viram golpes de baixa energia no que está atrás) e `blast.confinement` (pressão num ambiente fechado, de 1 a 3 vezes). Tudo desligado por padrão, por opção do mundo ou da chamada, com os números em `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS` e `CONFINEMENT_DEFAULTS`.

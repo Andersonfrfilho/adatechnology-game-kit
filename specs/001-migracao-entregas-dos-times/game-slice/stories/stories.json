@@ -1,0 +1,3052 @@
+[
+  {
+    "id": "aurora",
+    "roles": [
+      {
+        "id": "helena",
+        "person": "helena"
+      },
+      {
+        "id": "jessica",
+        "person": "jessica"
+      },
+      {
+        "id": "kauan",
+        "person": "kauan"
+      }
+    ],
+    "crosses": [
+      "radio"
+    ],
+    "beats": [
+      {
+        "id": "d3_socorro",
+        "day": 3,
+        "title": "Pedido de socorro no Jardim Aurora",
+        "roles": [
+          "helena",
+          "jessica",
+          "kauan"
+        ],
+        "variants": [
+          {
+            "text": [
+              "Helena chama no rádio do marido, presa num sobrado com o filho. Jéssica repete o pedido na transmissão das 20h; Kauã também ouve."
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d10_helena_sai",
+        "day": 10,
+        "title": "Helena tenta sair sozinha",
+        "roles": [
+          "helena"
+        ],
+        "variants": [
+          {
+            "when": {
+              "action": "helena"
+            },
+            "alt": true,
+            "text": [
+              "O jogador chegou antes. Helena e Davi entram no grupo, com a planta da rua desenhada."
+            ],
+            "changes": [
+              {
+                "role": "helena",
+                "state": "party",
+                "note": "com Davi"
+              }
+            ]
+          },
+          {
+            "text": [
+              "Sem comida, Helena sai com Davi no colo. É mordida no portão; Davi corre e chega à igreja."
+            ],
+            "changes": [
+              {
+                "role": "helena",
+                "state": "bitten",
+                "note": "mordida no portão"
+              }
+            ],
+            "flags": {
+              "davi": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d12_helena_reanima",
+        "day": 12,
+        "title": "Helena reanima",
+        "roles": [
+          "helena"
+        ],
+        "variants": [
+          {
+            "when": {
+              "not": {
+                "state": "helena",
+                "is": "bitten"
+              }
+            },
+            "none": true
+          },
+          {
+            "text": [
+              "Zumbi nomeado na rua das Acácias, com o sinalizador laranja no bolso."
+            ],
+            "changes": [
+              {
+                "role": "helena",
+                "state": "undead",
+                "note": "rua das Acácias, sinalizador no bolso"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "matriz",
+    "roles": [
+      {
+        "id": "taina",
+        "person": "taina"
+      },
+      {
+        "id": "zilda",
+        "person": "zilda"
+      },
+      {
+        "id": "mariana",
+        "person": "mariana"
+      },
+      {
+        "id": "armando",
+        "person": "armando"
+      },
+      {
+        "id": "arnaldo",
+        "person": "arnaldo"
+      },
+      {
+        "id": "val",
+        "person": "val"
+      },
+      {
+        "id": "criancas",
+        "person": "criancas"
+      },
+      {
+        "id": "cida",
+        "person": "cida"
+      },
+      {
+        "id": "biel",
+        "person": "biel"
+      },
+      {
+        "id": "neide",
+        "person": "neide"
+      }
+    ],
+    "crosses": [
+      "ponte",
+      "oficina"
+    ],
+    "beats": [
+      {
+        "id": "d6_taina",
+        "day": 6,
+        "title": "Tainá chega à Matriz",
+        "roles": [
+          "taina",
+          "zilda"
+        ],
+        "variants": [
+          {
+            "text": [
+              "Tainá chega à igreja grávida de sete meses, com um saco de arroz nas costas. A Zilda conta nos dedos: o bebê nasce no fim do mês que vem."
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d14_insulina",
+        "day": 14,
+        "title": "Mariana sem insulina",
+        "roles": [
+          "mariana",
+          "zilda",
+          "armando"
+        ],
+        "variants": [
+          {
+            "when": {
+              "action": "insulina"
+            },
+            "alt": true,
+            "text": [
+              "O jogador trouxe insulina. Mariana estabiliza e a Zilda passa a confiar no jogador (+30)."
+            ],
+            "changes": []
+          },
+          {
+            "text": [
+              "Mariana entra em crise. A Zilda passa a noite em claro e esquece de descer ao porão."
+            ],
+            "changes": [
+              {
+                "role": "mariana",
+                "state": "hurt",
+                "note": "crise de glicose"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d16_mariana",
+        "day": 16,
+        "title": "Mariana morre",
+        "roles": [
+          "mariana",
+          "zilda"
+        ],
+        "variants": [
+          {
+            "when": {
+              "action": "insulina"
+            },
+            "none": true
+          },
+          {
+            "text": [
+              "Mariana morre na sacristia. Val abre a cova; Zilda não sai do lado do caixão improvisado."
+            ],
+            "changes": [
+              {
+                "role": "mariana",
+                "state": "dead",
+                "note": "enterrada atrás da igreja"
+              },
+              {
+                "role": "zilda",
+                "state": "ok",
+                "note": "de luto"
+              }
+            ],
+            "flags": {
+              "lutoZilda": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d22_porao",
+        "day": 22,
+        "title": "O porão da igreja",
+        "roles": [
+          "arnaldo",
+          "zilda",
+          "val",
+          "criancas"
+        ],
+        "variants": [
+          {
+            "when": {
+              "all": [
+                {
+                  "action": "arnaldo"
+                },
+                {
+                  "state": "arnaldo",
+                  "is": "undead"
+                }
+              ]
+            },
+            "alt": true,
+            "text": [
+              "Com a chave do Val e a permissão da Zilda, o jogador dá paz ao Arnaldo. Ela enterra o marido com o relógio."
+            ],
+            "changes": [
+              {
+                "role": "arnaldo",
+                "state": "dead",
+                "note": "enterrado com o relógio"
+              }
+            ]
+          },
+          {
+            "when": {
+              "all": [
+                {
+                  "flag": "lutoZilda"
+                },
+                {
+                  "living": "zilda"
+                }
+              ]
+            },
+            "text": [
+              "De luto, Zilda esquece o cadeado aberto. Arnaldo arranca a argola da parede e morde a esposa na escada. Val o mata com a pá, tarde demais, e se corta na briga."
+            ],
+            "changes": [
+              {
+                "role": "zilda",
+                "state": "bitten",
+                "note": "mordida no braço"
+              },
+              {
+                "role": "arnaldo",
+                "state": "dead",
+                "note": "morto pelo Val"
+              },
+              {
+                "role": "val",
+                "state": "hurt",
+                "note": "corte na mão"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d24_igreja",
+        "day": 24,
+        "title": "A igreja sem a Zilda",
+        "roles": [
+          "zilda",
+          "criancas",
+          "val",
+          "taina"
+        ],
+        "variants": [
+          {
+            "when": {
+              "not": {
+                "state": "zilda",
+                "is": "bitten"
+              }
+            },
+            "none": true
+          },
+          {
+            "text": [
+              "Zilda reanima de manhã. Val tranca o portão e leva as crianças e a Tainá para a igreja da Vila, com a Pastora Neide."
+            ],
+            "changes": [
+              {
+                "role": "zilda",
+                "state": "undead",
+                "note": "volta à igreja às 6h, com o terço"
+              },
+              {
+                "role": "criancas",
+                "state": "moved",
+                "note": "na igreja da Vila",
+                "base": "vila"
+              },
+              {
+                "role": "val",
+                "state": "moved",
+                "note": "na igreja da Vila",
+                "base": "vila"
+              },
+              {
+                "when": {
+                  "living": "taina"
+                },
+                "changes": [
+                  {
+                    "role": "taina",
+                    "state": "moved",
+                    "note": "na igreja da Vila",
+                    "base": "vila"
+                  }
+                ]
+              }
+            ],
+            "flags": {
+              "igrejaCaiu": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d38_parto",
+        "day": 38,
+        "title": "O parto",
+        "roles": [
+          "taina",
+          "zilda",
+          "cida",
+          "biel",
+          "neide"
+        ],
+        "variants": [
+          {
+            "when": {
+              "not": {
+                "living": "taina"
+              }
+            },
+            "none": true
+          },
+          {
+            "when": {
+              "all": [
+                {
+                  "base": "taina",
+                  "is": "igreja"
+                },
+                {
+                  "state": "zilda",
+                  "is": [
+                    "ok",
+                    "hurt"
+                  ]
+                }
+              ]
+            },
+            "alt": true,
+            "text": [
+              "Zilda faz o parto na sacristia, com água fervida e o terço no pulso. Nasce Vitória, quase 3 kg, chorando alto. As crianças escolhem o nome."
+            ],
+            "changes": [
+              {
+                "role": "vitoria",
+                "state": "ok",
+                "note": "nasceu na Matriz",
+                "base": "igreja"
+              }
+            ]
+          },
+          {
+            "when": {
+              "all": [
+                {
+                  "base": "taina",
+                  "is": "vila"
+                },
+                {
+                  "living": "cida"
+                }
+              ]
+            },
+            "text": [
+              "Sem a Zilda, a Pastora Neide manda o Biel correr até a serra buscar a Dona Cida. A raizeira desce a trilha de noite e faz o parto no salão da Vila, na frente dos acorrentados. Nasce Vitória. Neide e Cida, que nunca tinham se falado, passam a madrugada rezando cada uma do seu jeito."
+            ],
+            "changes": [
+              {
+                "role": "vitoria",
+                "state": "ok",
+                "note": "nasceu na igreja da Vila",
+                "base": "vila"
+              }
+            ],
+            "flags": {
+              "cidaVila": 1
+            }
+          },
+          {
+            "text": [
+              "Sem parteira, o parto dura a noite inteira. Tainá não resiste. A menina vive e ",
+              {
+                "when": {
+                  "base": "taina",
+                  "is": "vila"
+                },
+                "text": "a Pastora Neide",
+                "else": "o Val"
+              },
+              " fica com ela."
+            ],
+            "changes": [
+              {
+                "role": "taina",
+                "state": "dead",
+                "note": "no parto"
+              },
+              {
+                "role": "vitoria",
+                "state": "ok",
+                "note": "órfã, chamada de Vitória",
+                "base": {
+                  "baseOf": "taina"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "colegio",
+    "roles": [
+      {
+        "id": "otavio",
+        "person": "otavio"
+      },
+      {
+        "id": "bianca",
+        "person": "bianca"
+      }
+    ],
+    "crosses": [
+      "hospital",
+      "ponte"
+    ],
+    "beats": [
+      {
+        "id": "d18_otavio",
+        "day": 18,
+        "title": "Otávio perde o controle",
+        "roles": [
+          "otavio",
+          "bianca"
+        ],
+        "variants": [
+          {
+            "when": {
+              "action": "otavio"
+            },
+            "alt": true,
+            "text": [
+              "Com enxofre e sem o álcool, Otávio retoma a produção de pólvora e para de falar sozinho."
+            ],
+            "changes": []
+          },
+          {
+            "text": [
+              "Bêbado, Otávio derruba um frasco e o laboratório pega fogo. Bianca apaga com o extintor; ele fica com queimaduras nas mãos."
+            ],
+            "changes": [
+              {
+                "role": "otavio",
+                "state": "hurt",
+                "note": "queimaduras nas mãos"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d30_laboratorio",
+        "day": 30,
+        "title": "O laboratório",
+        "roles": [
+          "otavio",
+          "bianca"
+        ],
+        "variants": [
+          {
+            "when": {
+              "action": "otavio"
+            },
+            "alt": true,
+            "text": [
+              "Otávio pede para se juntar ao grupo do jogador e leva Bianca e o estoque de pólvora."
+            ],
+            "changes": [
+              {
+                "role": "otavio",
+                "state": "party",
+                "note": ""
+              },
+              {
+                "role": "bianca",
+                "state": "party",
+                "note": ""
+              }
+            ]
+          },
+          {
+            "text": [
+              "Otávio bebe álcool metílico do estoque e não acorda. Bianca leva o diário dos alunos para o hospital."
+            ],
+            "changes": [
+              {
+                "role": "otavio",
+                "state": "dead",
+                "note": "no laboratório"
+              },
+              {
+                "role": "bianca",
+                "state": "moved",
+                "note": "no hospital, com o Sato",
+                "base": "hospital"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bloqueio_norte",
+    "roles": [
+      {
+        "id": "caio",
+        "person": "caio"
+      },
+      {
+        "id": "ferraz",
+        "person": "ferraz"
+      },
+      {
+        "id": "vinicius",
+        "person": "vinicius"
+      },
+      {
+        "id": "renata",
+        "person": "renata"
+      },
+      {
+        "id": "nelson",
+        "person": "nelson"
+      },
+      {
+        "id": "jessica",
+        "person": "jessica"
+      },
+      {
+        "id": "kevin",
+        "person": "kevin"
+      }
+    ],
+    "crosses": [
+      "falcao",
+      "radio"
+    ],
+    "beats": [
+      {
+        "id": "d1_quarentena",
+        "day": 1,
+        "title": "Quarentena no norte",
+        "roles": [
+          "caio",
+          "ferraz",
+          "vinicius"
+        ],
+        "variants": [
+          {
+            "text": [
+              "O pelotão do Tenente Caio fecha a estrada norte com contêineres e arame. Ordem: ninguém sai do vale até a triagem. Quem chega perto ouve tiro de advertência."
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d8_recruta",
+        "day": 8,
+        "title": "A canela do recruta",
+        "roles": [
+          "vinicius",
+          "caio",
+          "ferraz"
+        ],
+        "variants": [
+          {
+            "when": {
+              "action": "vinicius"
+            },
+            "alt": true,
+            "text": [
+              "Avisado, o Tenente Caio isola o recruta num contêiner. Vinícius dita uma carta para a mãe e pede para não virar um deles. Caio cumpre o pedido sozinho, ao amanhecer, e os homens passam a confiar nele."
+            ],
+            "changes": [
+              {
+                "role": "vinicius",
+                "state": "dead",
+                "note": "enterrado na barreira, com a foto"
+              }
+            ],
+            "flags": {
+              "caioFirme": 1
+            }
+          },
+          {
+            "text": [
+              "Vinícius é mordido na canela na patrulha do rio e esconde a ferida com fita e meia."
+            ],
+            "changes": [
+              {
+                "role": "vinicius",
+                "state": "bitten",
+                "note": "esconde a mordida"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d10_conteiner",
+        "day": 10,
+        "title": "A noite no contêiner",
+        "roles": [
+          "vinicius",
+          "caio",
+          "ferraz"
+        ],
+        "variants": [
+          {
+            "when": {
+              "not": {
+                "state": "vinicius",
+                "is": "bitten"
+              }
+            },
+            "none": true
+          },
+          {
+            "text": [
+              "Vinícius reanima de madrugada no contêiner dos recrutas e morde o Tenente Caio no braço antes de o Ferraz atirar."
+            ],
+            "changes": [
+              {
+                "role": "vinicius",
+                "state": "dead",
+                "note": "abatido pelo Ferraz"
+              },
+              {
+                "role": "caio",
+                "state": "bitten",
+                "note": "mordida no braço"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d11_sargento",
+        "day": 11,
+        "title": "O sargento assume",
+        "roles": [
+          "caio",
+          "ferraz"
+        ],
+        "variants": [
+          {
+            "when": {
+              "not": {
+                "state": "caio",
+                "is": "bitten"
+              }
+            },
+            "none": true
+          },
+          {
+            "text": [
+              "Ferraz lê em voz alta a ordem que o tenente escondeu e dá paz a ele antes que reanime. A partir de hoje, quem tentar passar pelo norte leva tiro."
+            ],
+            "changes": [
+              {
+                "role": "caio",
+                "state": "dead",
+                "note": "enterrado ao lado da barreira"
+              },
+              {
+                "role": "ferraz",
+                "state": "ok",
+                "note": "comanda o Bloqueio"
+              }
+            ],
+            "flags": {
+              "ferrazManda": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d80_sinal",
+        "day": 80,
+        "title": "Sinal da base",
+        "roles": [
+          "renata",
+          "nelson",
+          "jessica",
+          "kevin"
+        ],
+        "variants": [
+          {
+            "when": {
+              "all": [
+                {
+                  "any": [
+                    {
+                      "living": "jessica"
+                    },
+                    {
+                      "living": "nelson"
+                    },
+                    {
+                      "living": "kevin"
+                    }
+                  ]
+                },
+                {
+                  "flag": "bloqueioAberto"
+                }
+              ]
+            },
+            "alt": true,
+            "text": [
+              "Cabo Renata pede ajuda da torre do 7º BIS. O Bloqueio Norte ouve e manda uma viatura pela Estrada do Quartel: Renata desce da torre escoltada, com a chave do paiol."
+            ],
+            "changes": [
+              {
+                "role": "renata",
+                "state": "moved",
+                "note": "no Bloqueio Norte, com a chave do paiol",
+                "base": "bloqueio"
+              }
+            ]
+          },
+          {
+            "when": {
+              "any": [
+                {
+                  "living": "jessica"
+                },
+                {
+                  "living": "nelson"
+                },
+                {
+                  "living": "kevin"
+                }
+              ]
+            },
+            "alt": true,
+            "text": [
+              "Cabo Renata pede ajuda da torre do 7º BIS. A rádio retransmite: abre a missão da base e do paiol."
+            ],
+            "changes": [
+              {
+                "role": "renata",
+                "state": "ok",
+                "note": "espera resgate na torre"
+              }
+            ]
+          },
+          {
+            "text": [
+              "Cabo Renata chama a noite toda. Ninguém responde."
+            ],
+            "changes": []
+          }
+        ]
+      },
+      {
+        "id": "d88_torre",
+        "day": 88,
+        "title": "A torre do 7º BIS",
+        "roles": [
+          "renata"
+        ],
+        "variants": [
+          {
+            "when": {
+              "all": [
+                {
+                  "state": "renata",
+                  "is": "ok"
+                },
+                {
+                  "not": {
+                    "living": "jessica"
+                  }
+                },
+                {
+                  "not": {
+                    "living": "nelson"
+                  }
+                },
+                {
+                  "not": {
+                    "living": "kevin"
+                  }
+                }
+              ]
+            },
+            "text": [
+              "Sem água, Cabo Renata desce da torre à noite e não volta."
+            ],
+            "changes": [
+              {
+                "role": "renata",
+                "state": "dead",
+                "note": "ao pé da torre"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "falcao",
+    "roles": [
+      {
+        "id": "lince",
+        "person": "lince"
+      },
+      {
+        "id": "paula",
+        "person": "paula"
+      },
+      {
+        "id": "kevin",
+        "person": "kevin"
+      },
+      {
+        "id": "profeta",
+        "person": "profeta"
+      },
+      {
+        "id": "nelson",
+        "person": "nelson"
+      },
+      {
+        "id": "sato",
+        "person": "sato"
+      },
+      {
+        "id": "nicole",
+        "person": "nicole"
+      },
+      {
+        "id": "kauan",
+        "person": "kauan"
+      },
+      {
+        "id": "ferraz",
+        "person": "ferraz"
+      },
+      {
+        "id": "caio",
+        "person": "caio"
+      }
+    ],
+    "crosses": [
+      "hospital",
+      "bloqueio_norte"
+    ],
+    "beats": [
+      {
+        "id": "d2_helicoptero",
+        "day": 2,
+        "title": "O helicóptero cai na serra",
+        "roles": [
+          "lince",
+          "paula",
+          "kevin",
+          "profeta"
+        ],
+        "variants": [
+          {
+            "text": [
+              "O helicóptero da Equipe Falcão cai na Serra do Corvo. O piloto morre. Os Corvos chegam aos destroços antes da equipe voltar e levam um fuzil e duas caixas de munição."
+            ],
+            "flags": {
+              "corvosArmados": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d14_falcao",
+        "day": 14,
+        "title": "A Falcão chega ao hospital",
+        "roles": [
+          "lince",
+          "paula",
+          "kevin",
+          "nelson"
+        ],
+        "variants": [
+          {
+            "text": [
+              "A Equipe Falcão se esconde no edifício-garagem ao lado do hospital. Kevin acha a frequência da Vale FM",
+              {
+                "when": {
+                  "living": "renata"
+                },
+                "text": " e, por ela, o rádio secreto da Cabo Renata.",
+                "else": "."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d30_comando",
+        "day": 30,
+        "title": "A mensagem do Comando",
+        "roles": [
+          "kevin",
+          "lince",
+          "paula"
+        ],
+        "variants": [
+          {
+            "when": {
+              "not": {
+                "living": "kevin"
+              }
+            },
+            "none": true
+          },
+          {
+            "text": [
+              "O rádio de satélite fala pela primeira vez. Só o Kevin ouve tudo: a extração foi cancelada e a ordem é queimar o laboratório do hospital com as amostras."
+            ],
+            "flags": {
+              "ordemQueima": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d46_fogo",
+        "day": 46,
+        "title": "Fogo na ala isolada",
+        "roles": [
+          "lince",
+          "paula",
+          "kevin",
+          "sato",
+          "nicole",
+          "kauan"
+        ],
+        "variants": [
+          {
+            "when": {
+              "not": {
+                "all": [
+                  {
+                    "flag": "ordemQueima"
+                  },
+                  {
+                    "living": "lince"
+                  }
+                ]
+              }
+            },
+            "none": true
+          },
+          {
+            "when": {
+              "state": "sato",
+              "is": "hostile"
+            },
+            "alt": true,
+            "text": [
+              "A Falcão entra na ala isolada para cumprir a ordem. Sozinho, Sato avança com uma seringa contra o capitão e leva um tiro. Paula não deixa queimar a ala com os presos dentro."
+            ],
+            "changes": [
+              {
+                "role": "sato",
+                "state": "dead",
+                "note": "na ala isolada, com o gravador"
+              }
+            ]
+          },
+          {
+            "join": " ",
+            "text": [
+              "Lince invade a ala isolada com a ordem de queimar tudo.",
+              {
+                "when": {
+                  "state": "nicole",
+                  "is": "bitten"
+                },
+                "text": "Paula dá paz à Nicole antes que ela reanime."
+              },
+              {
+                "when": {
+                  "living": "kevin"
+                },
+                "text": "Uma maca se solta no corredor: Kevin é mordido no pescoço e pede para ficar de guarda na porta enquanto o fogo sobe."
+              },
+              {
+                "when": {
+                  "living": "sato"
+                },
+                "text": "Sato foge pelos túneis da lavanderia com o gravador."
+              },
+              {
+                "when": {
+                  "state": "kauan",
+                  "is": "missing"
+                },
+                "text": "Na ala B, a equipe acha o Kauã e o solta."
+              }
+            ],
+            "changes": [
+              {
+                "when": {
+                  "state": "nicole",
+                  "is": "bitten"
+                },
+                "changes": [
+                  {
+                    "role": "nicole",
+                    "state": "dead",
+                    "note": "Paula fechou os olhos dela"
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "living": "kevin"
+                },
+                "changes": [
+                  {
+                    "role": "kevin",
+                    "state": "dead",
+                    "note": "de guarda na porta da ala"
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "living": "sato"
+                },
+                "changes": [
+                  {
+                    "role": "sato",
+                    "state": "missing",
+                    "note": "fugiu pelos túneis da lavanderia"
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "state": "kauan",
+                  "is": "missing"
+                },
+                "changes": [
+                  {
+                    "role": "kauan",
+                    "state": "ok",
+                    "note": "solto pela Falcão",
+                    "base": "nomade"
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "all": [
+                    {
+                      "state": "bianca",
+                      "is": "moved"
+                    },
+                    {
+                      "base": "bianca",
+                      "is": "hospital"
+                    }
+                  ]
+                },
+                "changes": [
+                  {
+                    "role": "bianca",
+                    "state": "moved",
+                    "note": "fugiu do fogo para a Vila",
+                    "base": "vila"
+                  }
+                ]
+              }
+            ],
+            "flags": {
+              "hospitalQueimado": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d52_bloqueio",
+        "day": 52,
+        "title": "Dois comandos no Bloqueio",
+        "roles": [
+          "lince",
+          "paula",
+          "ferraz",
+          "caio"
+        ],
+        "variants": [
+          {
+            "when": {
+              "not": {
+                "living": "lince"
+              }
+            },
+            "none": true
+          },
+          {
+            "when": {
+              "all": [
+                {
+                  "flag": "ferrazManda"
+                },
+                {
+                  "living": "ferraz"
+                }
+              ]
+            },
+            "text": [
+              "Sem missão, Lince e Paula sobem a Estrada do Quartel para se juntar ao Bloqueio. O capitão exige o comando. Ferraz atira primeiro: Lince morre na barreira e Paula foge ferida para o posto da PRF."
+            ],
+            "changes": [
+              {
+                "role": "lince",
+                "state": "dead",
+                "note": "na barreira do norte"
+              },
+              {
+                "role": "paula",
+                "state": "hurt",
+                "note": "no posto da PRF",
+                "base": "prf"
+              }
+            ],
+            "flags": {
+              "bloqueioHostil": 1
+            }
+          },
+          {
+            "when": {
+              "living": "caio"
+            },
+            "alt": true,
+            "text": [
+              "Lince e Paula chegam ao Bloqueio. Caio e o capitão juntam os homens e mudam a ordem: o norte vira ponto de triagem, não muro. Quem passar sem mordida segue escoltado."
+            ],
+            "changes": [
+              {
+                "role": "lince",
+                "state": "moved",
+                "note": "no Bloqueio Norte",
+                "base": "bloqueio"
+              },
+              {
+                "role": "paula",
+                "state": "moved",
+                "note": "enfermaria do Bloqueio",
+                "base": "bloqueio"
+              }
+            ],
+            "flags": {
+              "bloqueioAberto": 1
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "radio",
+    "roles": [
+      {
+        "id": "jessica",
+        "person": "jessica"
+      },
+      {
+        "id": "nelson",
+        "person": "nelson"
+      },
+      {
+        "id": "brasa",
+        "person": "brasa"
+      },
+      {
+        "id": "rafa",
+        "person": "rafa"
+      },
+      {
+        "id": "italo",
+        "person": "italo"
+      },
+      {
+        "id": "jacare",
+        "person": "jacare"
+      }
+    ],
+    "crosses": [
+      "delegacia",
+      "penitenciaria"
+    ],
+    "beats": [
+      {
+        "id": "d25_horda_torre",
+        "day": 25,
+        "title": "Horda ao pé da torre",
+        "roles": [
+          "jessica",
+          "nelson"
+        ],
+        "variants": [
+          {
+            "when": {
+              "action": "radio"
+            },
+            "alt": true,
+            "text": [
+              "Avisada, Jéssica desliga o gerador a tempo e leva a rádio para a caixa d'água do Colégio. A transmissão continua."
+            ],
+            "changes": [
+              {
+                "role": "jessica",
+                "state": "ok",
+                "note": "rádio no Colégio"
+              },
+              {
+                "role": "nelson",
+                "state": "ok",
+                "note": "rádio no Colégio"
+              }
+            ]
+          },
+          {
+            "text": [
+              "A horda derruba o portão da torre durante a transmissão das 20h. Jéssica morre no ar. Nelson foge ferido para a oficina da Rosa."
+            ],
+            "changes": [
+              {
+                "role": "jessica",
+                "state": "undead",
+                "note": "ao pé da torre, de fones vermelhos"
+              },
+              {
+                "role": "nelson",
+                "state": "hurt",
+                "note": "escondido na oficina",
+                "base": "oficina"
+              }
+            ],
+            "flags": {
+              "radioMuda": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d50_assembleia",
+        "day": 50,
+        "title": "Assembleia dos grupos",
+        "roles": [
+          "jessica",
+          "brasa",
+          "rafa",
+          "italo",
+          "jacare"
+        ],
+        "variants": [
+          {
+            "when": {
+              "all": [
+                {
+                  "living": "jessica"
+                },
+                {
+                  "flag": "provas"
+                },
+                {
+                  "living": "brasa"
+                }
+              ]
+            },
+            "alt": true,
+            "text": [
+              "Jéssica transmite a lista. Os grupos votam e a Rafa abre o portão por dentro: Brasa perde a delegacia e sobe a serra."
+            ],
+            "changes": [
+              {
+                "role": "brasa",
+                "state": "hostile",
+                "note": "expulso, foi para a serra",
+                "base": "serra"
+              },
+              {
+                "role": "rafa",
+                "state": "ok",
+                "note": "lidera a delegacia"
+              },
+              {
+                "when": {
+                  "all": [
+                    {
+                      "living": "lucas"
+                    },
+                    {
+                      "base": "lucas",
+                      "is": "deleg"
+                    }
+                  ]
+                },
+                "changes": [
+                  {
+                    "role": "lucas",
+                    "state": "hostile",
+                    "note": "subiu a serra com o Brasa",
+                    "base": "serra"
+                  }
+                ]
+              }
+            ],
+            "flags": {
+              "brasaSerra": 1
+            }
+          },
+          {
+            "when": {
+              "living": "brasa"
+            },
+            "text": [
+              "Sem voz ou sem provas, ninguém enfrenta o Brasa. A delegacia passa a cobrar comida de todos os grupos do Centro.",
+              {
+                "when": {
+                  "all": [
+                    {
+                      "flag": "penitArmada"
+                    },
+                    {
+                      "living": "jacare"
+                    }
+                  ]
+                },
+                "text": " Pelo celular, o Jacaré fecha com ele: a penitenciária manda homens, a delegacia manda diesel."
+              }
+            ],
+            "changes": [
+              {
+                "role": "brasa",
+                "state": "ok",
+                "note": "domina o Centro"
+              }
+            ],
+            "flags": {
+              "brasaDomina": 1
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "penitenciaria",
+    "roles": [
+      {
+        "id": "josue",
+        "person": "josue"
+      },
+      {
+        "id": "jacare",
+        "person": "jacare"
+      },
+      {
+        "id": "brasa",
+        "person": "brasa"
+      }
+    ],
+    "crosses": [
+      "hospital",
+      "oeste",
+      "radio"
+    ],
+    "beats": [
+      {
+        "id": "d26_bloco_c",
+        "day": 26,
+        "title": "O acordo do bloco C",
+        "roles": [
+          "josue",
+          "jacare"
+        ],
+        "variants": [
+          {
+            "when": {
+              "action": "penit"
+            },
+            "alt": true,
+            "text": [
+              "Com a comida e os remédios do jogador, o acordo da penitenciária se mantém. Josué e Jacaré dividem o comando e abrem o portão para troca uma vez por semana."
+            ],
+            "changes": [],
+            "flags": {
+              "penitFeira": 1
+            }
+          },
+          {
+            "text": [
+              "A comida acaba no bloco C. Jacaré descobre que o chaveiro do Josué abre a sala de armas, toma as escopetas e solta os rapazes. Josué foge ferido pela estrada e chega ao posto da PRF."
+            ],
+            "changes": [
+              {
+                "role": "josue",
+                "state": "hurt",
+                "note": "no posto da PRF",
+                "base": "prf"
+              },
+              {
+                "role": "jacare",
+                "state": "hostile",
+                "note": "comanda a penitenciária armada"
+              }
+            ],
+            "flags": {
+              "penitArmada": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d68_bloco_c",
+        "day": 68,
+        "title": "O bloco C",
+        "roles": [
+          "josue",
+          "jacare",
+          "brasa"
+        ],
+        "variants": [
+          {
+            "when": {
+              "flag": "penitFeira"
+            },
+            "alt": true,
+            "text": [
+              "A penitenciária vira feira: sabão de cadeia e verdura da horta em troca de remédio. Josué e Jacaré mandam três rapazes reforçar o muro da oficina."
+            ],
+            "changes": []
+          },
+          {
+            "when": {
+              "all": [
+                {
+                  "flag": "penitArmada"
+                },
+                {
+                  "living": "jacare"
+                }
+              ]
+            },
+            "text": [
+              "Jacaré desce para o Centro com os presos armados e cobra a parte dele dos saques.",
+              {
+                "when": {
+                  "flag": "brasaDomina"
+                },
+                "text": " Agora o Centro tem dois pedágios."
+              }
+            ],
+            "changes": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "hospital",
+    "roles": [
+      {
+        "id": "kauan",
+        "person": "kauan"
+      },
+      {
+        "id": "livia",
+        "person": "livia"
+      },
+      {
+        "id": "sato",
+        "person": "sato"
+      },
+      {
+        "id": "nicole",
+        "person": "nicole"
+      },
+      {
+        "id": "diego",
+        "person": "diego"
+      },
+      {
+        "id": "bianca",
+        "person": "bianca"
+      }
+    ],
+    "crosses": [
+      "falcao",
+      "colegio"
+    ],
+    "beats": [
+      {
+        "id": "d28_kauan",
+        "day": 28,
+        "title": "Kauã entra no hospital",
+        "roles": [
+          "kauan",
+          "livia",
+          "sato"
+        ],
+        "variants": [
+          {
+            "when": {
+              "action": "kauan"
+            },
+            "alt": true,
+            "text": [
+              "Com o jogador, Kauã acha a Lívia na ala isolada. Os dois saem pela lavanderia e entram no grupo."
+            ],
+            "changes": [
+              {
+                "role": "kauan",
+                "state": "party",
+                "note": ""
+              },
+              {
+                "role": "livia",
+                "state": "party",
+                "note": ""
+              }
+            ]
+          },
+          {
+            "text": [
+              "Sozinho, Kauã é pego pelos rapazes do Sato e trancado na ala B. Lívia não fica sabendo."
+            ],
+            "changes": [
+              {
+                "role": "kauan",
+                "state": "missing",
+                "note": "preso na ala B do hospital"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d45_experimento",
+        "day": 45,
+        "title": "O experimento",
+        "roles": [
+          "sato",
+          "nicole",
+          "diego",
+          "kauan",
+          "bianca"
+        ],
+        "variants": [
+          {
+            "when": {
+              "action": "sato"
+            },
+            "alt": true,
+            "text": [
+              "O jogador mostra a lista ao grupo. Diego e Nicole fogem com antibióticos e soltam quem estava preso. Sato fica sozinho."
+            ],
+            "changes": [
+              {
+                "role": "diego",
+                "state": "moved",
+                "note": "na igreja da Vila",
+                "base": "vila"
+              },
+              {
+                "role": "nicole",
+                "state": "moved",
+                "note": "na igreja da Vila",
+                "base": "vila"
+              },
+              {
+                "role": "sato",
+                "state": "hostile",
+                "note": "sozinho com os presos"
+              },
+              {
+                "when": {
+                  "state": "kauan",
+                  "is": "missing"
+                },
+                "changes": [
+                  {
+                    "role": "kauan",
+                    "state": "ok",
+                    "note": "solto da ala B"
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "state": "bianca",
+                  "is": "moved"
+                },
+                "changes": [
+                  {
+                    "role": "bianca",
+                    "state": "moved",
+                    "note": "na igreja da Vila",
+                    "base": "vila"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "text": [
+              "Sato pede um voluntário com as palavras certas. Nicole aceita. Ele a infecta e anota cada hora. Diego foge na mesma noite."
+            ],
+            "changes": [
+              {
+                "role": "nicole",
+                "state": "bitten",
+                "note": "inoculada pelo Sato"
+              },
+              {
+                "role": "diego",
+                "state": "missing",
+                "note": "fugiu sem rumo"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d47_nicole",
+        "day": 47,
+        "title": "Nicole reanima",
+        "roles": [
+          "nicole",
+          "sato"
+        ],
+        "variants": [
+          {
+            "when": {
+              "not": {
+                "state": "nicole",
+                "is": "bitten"
+              }
+            },
+            "none": true
+          },
+          {
+            "text": [
+              "Reanima como Corredor em 3 minutos. Sato grava: 'é o primeiro dado limpo'."
+            ],
+            "changes": [
+              {
+                "role": "nicole",
+                "state": "undead",
+                "note": "Corredor de jaleco, solto no hospital"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d72_ala_b",
+        "day": 72,
+        "title": "A ala B",
+        "roles": [
+          "sato",
+          "kauan"
+        ],
+        "variants": [
+          {
+            "when": {
+              "state": "sato",
+              "is": "hostile"
+            },
+            "text": [
+              "Sozinho, Sato é mordido ao trocar a corrente de um preso."
+            ],
+            "changes": [
+              {
+                "role": "sato",
+                "state": "bitten",
+                "note": "mordido por um preso"
+              }
+            ]
+          },
+          {
+            "when": {
+              "all": [
+                {
+                  "state": "sato",
+                  "is": "ok"
+                },
+                {
+                  "state": "kauan",
+                  "is": "missing"
+                }
+              ]
+            },
+            "text": [
+              "Sato começa o segundo experimento com o preso da ala B."
+            ],
+            "changes": [
+              {
+                "role": "kauan",
+                "state": "bitten",
+                "note": "inoculado pelo Sato"
+              }
+            ]
+          },
+          {
+            "when": {
+              "all": [
+                {
+                  "state": "sato",
+                  "is": "missing"
+                },
+                {
+                  "flag": "penitArmada"
+                },
+                {
+                  "living": "jacare"
+                }
+              ]
+            },
+            "text": [
+              "Sato aparece no portão da penitenciária e oferece ao Jacaré “uma arma que não precisa de bala”."
+            ],
+            "changes": [
+              {
+                "role": "sato",
+                "state": "moved",
+                "note": "no bloco C, com o Jacaré",
+                "base": "penit"
+              }
+            ],
+            "flags": {
+              "satoPenit": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d74_reanimacoes",
+        "day": 74,
+        "title": "Reanimações no hospital",
+        "roles": [
+          "sato",
+          "kauan"
+        ],
+        "variants": [
+          {
+            "needsChanges": true,
+            "text": [
+              "O hospital ganha mais um zumbi com nome."
+            ],
+            "changes": [
+              {
+                "when": {
+                  "state": "sato",
+                  "is": "bitten"
+                },
+                "changes": [
+                  {
+                    "role": "sato",
+                    "state": "undead",
+                    "note": "de jaleco, com o gravador no bolso"
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "state": "kauan",
+                  "is": "bitten"
+                },
+                "changes": [
+                  {
+                    "role": "kauan",
+                    "state": "undead",
+                    "note": "Corredor de capacete, na ala B"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "oficina",
+    "roles": [
+      {
+        "id": "lucas",
+        "person": "lucas"
+      },
+      {
+        "id": "lucia",
+        "person": "lucia"
+      },
+      {
+        "id": "gil",
+        "person": "gil"
+      },
+      {
+        "id": "bigode",
+        "person": "bigode"
+      },
+      {
+        "id": "brasa",
+        "person": "brasa"
+      },
+      {
+        "id": "rosa",
+        "person": "rosa"
+      },
+      {
+        "id": "nelson",
+        "person": "nelson"
+      },
+      {
+        "id": "tadeu",
+        "person": "tadeu"
+      },
+      {
+        "id": "chico",
+        "person": "chico"
+      }
+    ],
+    "crosses": [
+      "delegacia",
+      "oeste",
+      "matriz"
+    ],
+    "beats": [
+      {
+        "id": "d20_gaucho",
+        "day": 20,
+        "title": "Um gaúcho na BR-Sul",
+        "roles": [
+          "lucas",
+          "lucia",
+          "gil"
+        ],
+        "variants": [
+          {
+            "when": {
+              "not": {
+                "living": "lucia"
+              }
+            },
+            "none": true
+          },
+          {
+            "text": [
+              "Lúcia para uma picape no posto da PRF: Lucas, caminhoneiro gaúcho, sem carga e sem nota. Ela anota a placa no livro e escolta a picape até a oficina. Gil abraça o homem como irmão de estrada."
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d36_divida",
+        "day": 36,
+        "title": "A dívida do Lucas",
+        "roles": [
+          "lucas",
+          "bigode",
+          "brasa"
+        ],
+        "variants": [
+          {
+            "when": {
+              "all": [
+                {
+                  "living": "lucas"
+                },
+                {
+                  "living": "bigode"
+                },
+                {
+                  "living": "brasa"
+                },
+                {
+                  "base": "lucas",
+                  "is": "oficina"
+                }
+              ]
+            },
+            "text": [
+              "Bigode cobra a dívida antiga do Lucas: perdoa tudo em troca de saber onde a Rosa esconde o diesel. Lucas conta."
+            ],
+            "flags": {
+              "lucasContou": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d40_diesel",
+        "day": 40,
+        "title": "O diesel da oficina",
+        "roles": [
+          "brasa",
+          "rosa",
+          "gil",
+          "bigode",
+          "nelson",
+          "lucas"
+        ],
+        "values": {
+          "luc": [
+            {
+              "when": {
+                "all": [
+                  {
+                    "living": "lucas"
+                  },
+                  {
+                    "base": "lucas",
+                    "is": "oficina"
+                  },
+                  {
+                    "flag": "lucasContou"
+                  }
+                ]
+              },
+              "value": "1"
+            }
+          ]
+        },
+        "variants": [
+          {
+            "when": {
+              "not": {
+                "all": [
+                  {
+                    "living": "brasa"
+                  },
+                  {
+                    "living": "rosa"
+                  }
+                ]
+              }
+            },
+            "none": true
+          },
+          {
+            "when": {
+              "action": "diesel"
+            },
+            "text": [
+              "O jogador contou ao Brasa onde está o diesel. Ele leva tudo sem disparar um tiro. Rosa descobre quem contou."
+            ],
+            "changes": [
+              {
+                "role": "rosa",
+                "state": "hostile",
+                "note": "odeia o jogador"
+              }
+            ],
+            "flags": {
+              "dieselPerdido": 1
+            }
+          },
+          {
+            "when": {
+              "flag": "provas"
+            },
+            "alt": true,
+            "text": [
+              "Rafa avisa a oficina pelo rádio do Ítalo. O ataque cai numa emboscada: Bigode morre no pátio, Brasa recua ferido.",
+              {
+                "when": {
+                  "value": "luc"
+                },
+                "text": " Lucas foge para a delegacia antes do primeiro tiro."
+              }
+            ],
+            "changes": [
+              {
+                "role": "bigode",
+                "state": "dead",
+                "note": "no pátio da oficina"
+              },
+              {
+                "role": "brasa",
+                "state": "hurt",
+                "note": "tiro no ombro"
+              },
+              {
+                "when": {
+                  "value": "luc"
+                },
+                "changes": [
+                  {
+                    "role": "lucas",
+                    "state": "moved",
+                    "note": "na delegacia, com o Brasa",
+                    "base": "deleg"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "text": [
+              {
+                "when": {
+                  "value": "luc"
+                },
+                "text": "Brasa entra pelo portão que o Lucas deixou destrancado. ",
+                "else": "Brasa toma a oficina à noite. "
+              },
+              "Gil morre defendendo o portão, Rosa leva um tiro na perna e o diesel vai para a delegacia."
+            ],
+            "changes": [
+              {
+                "role": "gil",
+                "state": "dead",
+                "note": "no portão da oficina"
+              },
+              {
+                "role": "rosa",
+                "state": "hurt",
+                "note": "tiro na perna"
+              },
+              {
+                "when": {
+                  "value": "luc"
+                },
+                "changes": [
+                  {
+                    "role": "lucas",
+                    "state": "moved",
+                    "note": "na delegacia, com o Brasa",
+                    "base": "deleg"
+                  }
+                ]
+              }
+            ],
+            "flags": {
+              "dieselPerdido": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d48_velas",
+        "day": 48,
+        "title": "Velas de ignição",
+        "roles": [
+          "tadeu",
+          "rosa"
+        ],
+        "variants": [
+          {
+            "when": {
+              "all": [
+                {
+                  "living": "tadeu"
+                },
+                {
+                  "state": "rosa",
+                  "is": [
+                    "ok",
+                    "hurt"
+                  ]
+                }
+              ]
+            },
+            "text": [
+              "Tadeu aparece na oficina com uma caixa de velas de ignição embrulhada em jornal. Rosa ri pela primeira vez desde o ataque e aceita ver o pôr do sol do telhado com ele."
+            ],
+            "flags": {
+              "casalRT": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d66_chico",
+        "day": 66,
+        "title": "Chico vende o resto",
+        "roles": [
+          "chico",
+          "rosa"
+        ],
+        "variants": [
+          {
+            "when": {
+              "state": "rosa",
+              "is": [
+                "ok",
+                "hurt"
+              ]
+            },
+            "text": [
+              "Rosa compra o que sobrou do diesel do Chico com chapas do ônibus e leva ele para a oficina."
+            ],
+            "changes": [
+              {
+                "role": "chico",
+                "state": "moved",
+                "note": "na oficina",
+                "base": "oficina"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d70_onibus",
+        "day": 70,
+        "title": "O ônibus blindado",
+        "roles": [
+          "rosa",
+          "gil",
+          "lucas",
+          "nelson",
+          "chico",
+          "tadeu"
+        ],
+        "values": {
+          "driver": [
+            {
+              "when": {
+                "living": "gil"
+              },
+              "value": "Gil"
+            },
+            {
+              "when": {
+                "all": [
+                  {
+                    "living": "lucas"
+                  },
+                  {
+                    "base": "lucas",
+                    "is": "oficina"
+                  }
+                ]
+              },
+              "value": "Lucas"
+            }
+          ]
+        },
+        "variants": [
+          {
+            "when": {
+              "not": {
+                "all": [
+                  {
+                    "state": "rosa",
+                    "is": [
+                      "ok",
+                      "hurt"
+                    ]
+                  },
+                  {
+                    "value": "driver"
+                  },
+                  {
+                    "not": {
+                      "flag": "dieselPerdido"
+                    }
+                  }
+                ]
+              }
+            },
+            "text": [
+              "O ônibus nunca sai. ",
+              {
+                "when": {
+                  "flag": "dieselPerdido"
+                },
+                "text": "Sem diesel",
+                "else": "Sem motorista"
+              },
+              ", vira mais uma barricada no pátio."
+            ],
+            "changes": []
+          },
+          {
+            "alt": true,
+            "text": [
+              "O ônibus sai pela ",
+              {
+                "when": {
+                  "action": "ponte"
+                },
+                "text": "Ponte Férrea",
+                "else": "Ponte Velha"
+              },
+              " com ",
+              {
+                "count": "changes"
+              },
+              " pessoas a bordo e ",
+              {
+                "value": "driver"
+              },
+              " no volante. Quem estava com o jogador fica.",
+              {
+                "when": {
+                  "all": [
+                    {
+                      "flag": "casalRT"
+                    },
+                    {
+                      "changed": "ivone"
+                    }
+                  ]
+                },
+                "text": " Rosa guardou um lugar para a mãe do Tadeu."
+              },
+              {
+                "when": {
+                  "flag": "bloqueioAberto"
+                },
+                "text": " Uma viatura do Bloqueio Norte escolta até a serra."
+              }
+            ],
+            "changes": [
+              {
+                "each": {
+                  "roles": [
+                    "rosa",
+                    "gil",
+                    "lucas",
+                    "nelson",
+                    "chico",
+                    "criancas",
+                    "val",
+                    "mariana",
+                    "zilda",
+                    "tadeu",
+                    "diego",
+                    "nicole",
+                    "bianca",
+                    "livia",
+                    "kauan",
+                    "taina",
+                    "vitoria",
+                    "lucia",
+                    "josue",
+                    "paula"
+                  ],
+                  "where": {
+                    "all": [
+                      {
+                        "state": "self",
+                        "is": [
+                          "ok",
+                          "hurt",
+                          "moved"
+                        ]
+                      },
+                      {
+                        "any": [
+                          {
+                            "not": {
+                              "self": "lucas"
+                            }
+                          },
+                          {
+                            "base": "lucas",
+                            "is": "oficina"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "change": {
+                  "state": "left",
+                  "note": "no ônibus da Rosa"
+                }
+              },
+              {
+                "when": {
+                  "flag": "casalRT"
+                },
+                "changes": [
+                  {
+                    "each": {
+                      "roles": [
+                        "ivone"
+                      ],
+                      "where": {
+                        "all": [
+                          {
+                            "state": "self",
+                            "is": [
+                              "ok",
+                              "hurt",
+                              "moved"
+                            ]
+                          },
+                          {
+                            "any": [
+                              {
+                                "not": {
+                                  "self": "lucas"
+                                }
+                              },
+                              {
+                                "base": "lucas",
+                                "is": "oficina"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "change": {
+                      "state": "left",
+                      "note": "no ônibus da Rosa"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "delegacia",
+    "roles": [
+      {
+        "id": "italo",
+        "person": "italo"
+      },
+      {
+        "id": "brasa",
+        "person": "brasa"
+      },
+      {
+        "id": "rafa",
+        "person": "rafa"
+      }
+    ],
+    "crosses": [
+      "radio",
+      "oficina"
+    ],
+    "beats": [
+      {
+        "id": "d33_italo",
+        "day": 33,
+        "title": "Ítalo quer desertar",
+        "roles": [
+          "italo",
+          "brasa",
+          "rafa"
+        ],
+        "variants": [
+          {
+            "when": {
+              "action": "italo"
+            },
+            "alt": true,
+            "text": [
+              "O jogador cobre a fuga. Ítalo sai de madrugada com as cópias da Rafa: a lista de quem ficou do lado de fora do portão."
+            ],
+            "changes": [
+              {
+                "role": "italo",
+                "state": "party",
+                "note": "com as cópias da lista"
+              }
+            ],
+            "flags": {
+              "provas": 1
+            }
+          },
+          {
+            "text": [
+              "Brasa descobre o plano na reunião das 19h. Ítalo é posto para fora do muro sem arma. A Rafa assiste da janela."
+            ],
+            "changes": [
+              {
+                "role": "italo",
+                "state": "dead",
+                "note": "na avenida, em frente à delegacia"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "oeste",
+    "roles": [
+      {
+        "id": "profeta",
+        "person": "profeta"
+      },
+      {
+        "id": "ivone",
+        "person": "ivone"
+      },
+      {
+        "id": "tadeu",
+        "person": "tadeu"
+      },
+      {
+        "id": "brasa",
+        "person": "brasa"
+      },
+      {
+        "id": "lucia",
+        "person": "lucia"
+      },
+      {
+        "id": "douglas",
+        "person": "douglas"
+      },
+      {
+        "id": "dito",
+        "person": "dito"
+      },
+      {
+        "id": "jacare",
+        "person": "jacare"
+      }
+    ],
+    "crosses": [
+      "falcao",
+      "oficina",
+      "penitenciaria"
+    ],
+    "beats": [
+      {
+        "id": "d55_corvos",
+        "day": 55,
+        "title": "Os Corvos descem da serra",
+        "roles": [
+          "profeta",
+          "ivone",
+          "tadeu",
+          "brasa"
+        ],
+        "variants": [
+          {
+            "text": [
+              "Os Corvos atacam a fazenda dos Moreira pela estrada",
+              {
+                "when": {
+                  "flag": "corvosArmados"
+                },
+                "text": ", com o fuzil tirado do helicóptero"
+              },
+              ". Tadeu morre na porteira; Ivone se fecha no celeiro com o Joel.",
+              {
+                "when": {
+                  "flag": "brasaSerra"
+                },
+                "text": " Brasa está com eles."
+              },
+              {
+                "when": {
+                  "flag": "casalRT"
+                },
+                "text": " Na oficina, Rosa sobe no ônibus inacabado e não desce por dois dias."
+              }
+            ],
+            "changes": [
+              {
+                "role": "tadeu",
+                "state": "dead",
+                "note": "na porteira dos Moreira"
+              },
+              {
+                "role": "ivone",
+                "state": "hurt",
+                "note": "fechada no celeiro"
+              },
+              {
+                "when": {
+                  "flag": "brasaSerra"
+                },
+                "changes": [
+                  {
+                    "role": "brasa",
+                    "state": "hostile",
+                    "note": "com os Corvos"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d57_viatura",
+        "day": 57,
+        "title": "A viatura na fazenda",
+        "roles": [
+          "lucia",
+          "douglas",
+          "ivone"
+        ],
+        "variants": [
+          {
+            "when": {
+              "all": [
+                {
+                  "living": "lucia"
+                },
+                {
+                  "state": "ivone",
+                  "is": "hurt"
+                }
+              ]
+            },
+            "text": [
+              "Lúcia e Douglas chegam de viatura depois do ataque e levam Ivone e o Joel para o posto da PRF."
+            ],
+            "changes": [
+              {
+                "role": "ivone",
+                "state": "moved",
+                "note": "no posto da PRF, com o Joel",
+                "base": "prf"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d58_boa_vista",
+        "day": 58,
+        "title": "Sítio Boa Vista",
+        "roles": [
+          "dito",
+          "profeta",
+          "ivone"
+        ],
+        "variants": [
+          {
+            "when": {
+              "action": "dito"
+            },
+            "alt": true,
+            "text": [
+              "Dito trata o jogador como neto e chama ajuda pelo rádio. Os Corvos recuam do sítio com dois mortos. Ivone e Joel se mudam para o Boa Vista."
+            ],
+            "changes": [
+              {
+                "role": "dito",
+                "state": "ok",
+                "note": "sítio será herança do jogador"
+              },
+              {
+                "role": "ivone",
+                "state": "ok",
+                "note": "mora no Boa Vista",
+                "base": "oeste"
+              }
+            ]
+          },
+          {
+            "text": [
+              "Os Corvos tomam o sítio. Dito atira até o último cartucho; Trovão foge para a mata e passa a vigiar o pomar."
+            ],
+            "changes": [
+              {
+                "role": "dito",
+                "state": "dead",
+                "note": "no alpendre do sítio"
+              }
+            ],
+            "flags": {
+              "corvosOeste": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d63_prf",
+        "day": 63,
+        "title": "Ataque ao posto da PRF",
+        "roles": [
+          "lucia",
+          "douglas",
+          "profeta",
+          "jacare"
+        ],
+        "variants": [
+          {
+            "when": {
+              "not": {
+                "all": [
+                  {
+                    "flag": "corvosOeste"
+                  },
+                  {
+                    "living": "lucia"
+                  },
+                  {
+                    "base": "lucia",
+                    "is": "prf"
+                  }
+                ]
+              }
+            },
+            "none": true
+          },
+          {
+            "text": [
+              "Os Corvos descem a BR atrás da viatura e das armas do posto",
+              {
+                "when": {
+                  "all": [
+                    {
+                      "flag": "penitArmada"
+                    },
+                    {
+                      "living": "jacare"
+                    }
+                  ]
+                },
+                "text": ", com presos do Jacaré na carroceria"
+              },
+              ". Douglas segura o pátio de moto até o último cartucho de escopeta. Lúcia sai pelos fundos com todo mundo que estava no posto e leva para a oficina."
+            ],
+            "changes": [
+              {
+                "role": "douglas",
+                "state": "dead",
+                "note": "no pátio do posto"
+              },
+              {
+                "each": {
+                  "cast": true,
+                  "except": [
+                    "douglas"
+                  ],
+                  "where": {
+                    "all": [
+                      {
+                        "living": "self"
+                      },
+                      {
+                        "base": "self",
+                        "is": "prf"
+                      }
+                    ]
+                  }
+                },
+                "change": {
+                  "state": "moved",
+                  "note": "na oficina, depois do ataque ao posto",
+                  "base": "oficina"
+                }
+              }
+            ],
+            "flags": {
+              "prfCaiu": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "d85_corvos",
+        "day": 85,
+        "title": "Os Corvos",
+        "roles": [
+          "profeta",
+          "dito"
+        ],
+        "variants": [
+          {
+            "when": {
+              "all": [
+                {
+                  "action": "dito"
+                },
+                {
+                  "living": "dito"
+                }
+              ]
+            },
+            "alt": true,
+            "text": [
+              "Os Corvos voltam ao sítio para vingança e caem nas armadilhas do Dito. Profeta morre no pomar."
+            ],
+            "changes": [
+              {
+                "role": "profeta",
+                "state": "dead",
+                "note": "no pomar do Boa Vista"
+              }
+            ]
+          },
+          {
+            "when": {
+              "flag": "corvosOeste"
+            },
+            "text": [
+              "Os Corvos controlam o oeste e cobram dízimo na BR."
+            ],
+            "changes": [
+              {
+                "role": "profeta",
+                "state": "ok",
+                "note": "domina o oeste"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ponte",
+    "roles": [
+      {
+        "id": "armando",
+        "person": "armando"
+      },
+      {
+        "id": "neide",
+        "person": "neide"
+      },
+      {
+        "id": "biel",
+        "person": "biel"
+      },
+      {
+        "id": "zilda",
+        "person": "zilda"
+      },
+      {
+        "id": "criancas",
+        "person": "criancas"
+      },
+      {
+        "id": "cida",
+        "person": "cida"
+      },
+      {
+        "id": "profeta",
+        "person": "profeta"
+      }
+    ],
+    "crosses": [
+      "matriz",
+      "colegio"
+    ],
+    "beats": [
+      {
+        "id": "d60_ponte",
+        "day": 60,
+        "title": "Horda migratória na Ponte Velha",
+        "roles": [
+          "armando",
+          "neide",
+          "biel",
+          "zilda",
+          "criancas"
+        ],
+        "variants": [
+          {
+            "when": {
+              "all": [
+                {
+                  "action": "ponte"
+                },
+                {
+                  "living": "otavio"
+                }
+              ]
+            },
+            "alt": true,
+            "text": [
+              "Os explosivos do Otávio derrubam a Ponte Velha. Uns 1.800 zumbis se acumulam na outra margem. O ônibus da Rosa vai precisar da Ponte Férrea."
+            ],
+            "changes": []
+          },
+          {
+            "text": [
+              {
+                "when": {
+                  "action": "ponte"
+                },
+                "text": "Sem o Otávio, ninguém sabe montar a carga. "
+              },
+              "Cerca de 1.800 zumbis atravessam a ponte para o Centro. A loja do Armando cai. Na Vila, os acorrentados da Pastora se soltam no tumulto.",
+              {
+                "when": {
+                  "all": [
+                    {
+                      "state": "vitoria",
+                      "is": "ok"
+                    },
+                    {
+                      "base": "vitoria",
+                      "is": "vila"
+                    }
+                  ]
+                },
+                "text": " Biel leva a bebê Vitória para a laje mais alta."
+              }
+            ],
+            "changes": [
+              {
+                "role": "armando",
+                "state": "undead",
+                "note": "na porta da loja, de colete de caça"
+              },
+              {
+                "role": "neide",
+                "state": "bitten",
+                "note": "mordida soltando o filho"
+              },
+              {
+                "role": "biel",
+                "state": "ok",
+                "note": "lidera a Vila Esperança"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d62_depois",
+        "day": 62,
+        "title": "Depois da horda",
+        "roles": [
+          "neide",
+          "cida",
+          "profeta"
+        ],
+        "variants": [
+          {
+            "needsChanges": true,
+            "join": " ",
+            "text": [
+              {
+                "when": {
+                  "state": "neide",
+                  "is": "bitten"
+                },
+                "text": "Neide reanima entre os acorrentados."
+              },
+              {
+                "when": {
+                  "flag": "corvosOeste"
+                },
+                "text": "Os Corvos sobem a trilha atrás de ervas e matam Dona Cida."
+              }
+            ],
+            "changes": [
+              {
+                "when": {
+                  "state": "neide",
+                  "is": "bitten"
+                },
+                "changes": [
+                  {
+                    "role": "neide",
+                    "state": "undead",
+                    "note": "no salão, com a Bíblia"
+                  }
+                ]
+              },
+              {
+                "when": {
+                  "flag": "corvosOeste"
+                },
+                "changes": [
+                  {
+                    "role": "cida",
+                    "state": "dead",
+                    "note": "na cabana da cachoeira"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fabril",
+    "roles": [
+      {
+        "id": "chico",
+        "person": "chico"
+      }
+    ],
+    "crosses": [
+      "oficina"
+    ],
+    "beats": [
+      {
+        "id": "d75_galpao",
+        "day": 75,
+        "title": "O galpão desperta",
+        "roles": [
+          "chico"
+        ],
+        "variants": [
+          {
+            "when": {
+              "all": [
+                {
+                  "living": "chico"
+                },
+                {
+                  "not": {
+                    "state": "chico",
+                    "is": "moved"
+                  }
+                }
+              ]
+            },
+            "text": [
+              "A linha de produção acorda a horda dormente do galpão. Chico é mordido tentando desligar o gerador."
+            ],
+            "changes": [
+              {
+                "role": "chico",
+                "state": "bitten",
+                "note": "no galpão"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "d77_chico",
+        "day": 77,
+        "title": "Chico reanima",
+        "roles": [
+          "chico"
+        ],
+        "variants": [
+          {
+            "when": {
+              "state": "chico",
+              "is": "bitten"
+            },
+            "text": [
+              "Zumbi nomeado de capacete amarelo no pátio do depósito."
+            ],
+            "changes": [
+              {
+                "role": "chico",
+                "state": "undead",
+                "note": "de capacete amarelo, no depósito"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

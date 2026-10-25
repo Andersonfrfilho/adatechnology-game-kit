@@ -1,0 +1,55 @@
+{
+  "name": "@adatechnology/game-audio",
+  "version": "0.2.0",
+  "license": "MIT",
+  "description": "Sound as data for games: recipes planned into resolved, seeded sound plans, a WebAudio layer that builds them, distance curves, pan, a voice limiter, loops and mixing profiles taken from the teams (the game and the art scene). Knows nothing about any game.",
+  "keywords": [
+    "game",
+    "audio",
+    "webaudio",
+    "sound",
+    "synthesis",
+    "deterministic",
+    "seeded"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-audio"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

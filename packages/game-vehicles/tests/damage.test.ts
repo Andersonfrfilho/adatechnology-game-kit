@@ -3,13 +3,16 @@
  * the particle/part counts) produced by the original, pre-port SDK for the same vehicles, zones, bands and interactions. Matching them
  * proves the port reproduces the original geometry and damage formulas.
  */
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { digest } from './helpers/digest'
 import { OPERATIONS, registerCaseScenario } from './helpers/cases'
 import { makeKit } from './helpers/kit'
 import { SAMPLE_KEYS } from './helpers/sample-fleet'
 import golden from './fixtures/golden.json'
 import { legacyZoneId } from '../src'
+
+/* the builds are long synchronous loops: let the worker report between tests */
+afterEach(() => new Promise((resolve) => setImmediate(resolve)))
 
 const kit = makeKit()
 registerCaseScenario(kit)

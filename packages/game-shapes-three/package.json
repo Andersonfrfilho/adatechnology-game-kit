@@ -1,0 +1,60 @@
+{
+  "name": "@adatechnology/game-shapes-three",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "three.js drawing of @adatechnology/game-shapes buffers: BufferGeometry with three's own type and prototype, meshes per batch, part groups, InstancedMesh and LOD; a geometry namespace whose constructors are made by game-shapes (for ported code that reads new T.BoxGeometry); and mergeByMaterial on the core merge.",
+  "keywords": [
+    "three",
+    "threejs",
+    "game",
+    "geometry",
+    "procedural",
+    "lod",
+    "instancing"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-shapes-three"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-shapes": "workspace:*"
+  },
+  "peerDependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "three": "^0.160.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

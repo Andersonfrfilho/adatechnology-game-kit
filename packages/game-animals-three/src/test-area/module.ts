@@ -4,6 +4,8 @@ import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, M
 import type { NodeSkin } from '@adatechnology/game-props3d'
 import type * as THREE_NS from 'three'
 
+import { createAnimalSound } from '../audio/sound'
+import type { AnimalSound } from '../audio/sound'
 import { createAnimalsThree } from '../index'
 import type { AnimalsThree } from '../index'
 import type { AnimalRig, Three } from '../types'
@@ -35,6 +37,7 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
   let animals: AnimalsThree | null = null
   let host: ModuleHost | null = null
   let outbreak: OutbreakLike | null = null
+  let sound: AnimalSound | null = null
   let time = 0
   let clock = 0
   let skinGroup: THREE_NS.Group | null = null
@@ -146,6 +149,11 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
           delete entry.counted
           animals?.setVisualState(entry.rig, settings.visual)
         }
+      } else if (change.id === 'call' && sound) {
+        for (const [id, entry] of placed) {
+          const at = entry.rig.root.getWorldPosition(new (three as Three).Vector3())
+          sound.call(entry.rig.species.id, [at.x, at.y + 0.5, at.z], { key: id })
+        }
       } else if (change.id === 'skin_40') addSkins()
       else if (change.id === 'clear_skins') clearSkins()
       return
@@ -163,6 +171,7 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
   const frame = (dt: number): void => {
     time += dt * settings.speed
     clock += dt
+    sound?.update(dt)
     for (const [id, entry] of placed) {
       if (!entry.rig.root.parent) {
         placed.delete(id)
@@ -245,6 +254,7 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
       { kind: 'number', id: 'time_scale', name: text.controls.time_scale, hint: text.hints.time_scale, min: 1, max: 600, step: 1, default: DEFAULT_TIME_SCALE },
       { kind: 'action', id: 'bite_all', name: text.actions.bite_all },
       { kind: 'action', id: 'recover', name: text.actions.recover },
+      { kind: 'action', id: 'call', name: text.actions.call },
       { kind: 'action', id: 'skin_40', name: text.actions.skin_40 },
       { kind: 'action', id: 'clear_skins', name: text.actions.clear_skins },
     ],
@@ -262,6 +272,7 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
     attach(lent) {
       host = lent
       ensure(lent.THREE as Three)
+      sound = lent.audio && options.sound !== false ? createAnimalSound(lent.audio, options.sound ?? {}) : null
       const stopChange = lent.bench?.onChange(onChange)
       const stopFrame = lent.onFrame(frame)
       return () => {
@@ -269,6 +280,8 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
         stopFrame()
         clearRings()
         clearSkins()
+        sound?.dispose()
+        sound = null
         host = null
       }
     },

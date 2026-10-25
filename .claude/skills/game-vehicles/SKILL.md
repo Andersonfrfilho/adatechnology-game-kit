@@ -68,6 +68,7 @@ car.status() // { canStart, lightsOn, canDrive, brakeFactor, steerPull, flatTyre
 | `kit.ui.damageMap`, `bandButtons`, `legend`, `healthBar`, `scenarioButtons` | Widgets DOM/SVG do mapa de danos |
 | `registerLocale`, `resolveStrings`, `listLocales`, `createTranslate` | Textos (en e pt-BR embutidos, resto cai no inglês) |
 | `createVehicleDestructible`, `buildVehicleItem`, `buildVehicleModel`, `JOINT_RULES` | Contrato de destruição |
+| `createVehicleDestructible(..., { fuel?, ignition? })` | tanque furado só vaza; acende com faísca de munição dura no aço, munição incendiária ou traçante, fogo perto ou explosão (`Hit.ignition` do `game-weapons`), ponderado pelo nível do tanque (`fuel` 0 a 1: quase vazio acende mais); depois segue o fogo e a explosão. Números em `IgnitionRules` do `game-contracts` |
 | `registerLegacySeeds`, `LEGACY_ZONE_IDS`, `legacyZoneId` | Sementes dos ids antigos em português |
 
 ## Compõe com

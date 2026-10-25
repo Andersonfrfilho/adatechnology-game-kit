@@ -1,4 +1,4 @@
-import type { ControlValue } from '@adatechnology/game-contracts'
+import type { BenchSheet, ControlValue } from '@adatechnology/game-contracts'
 import type { BenchControl, BenchLayer } from './types'
 
 /** What the bench panel shows: the active module's bench, or only the room counters. */
@@ -6,12 +6,15 @@ export interface BenchView {
   readonly title: string
   readonly controls: readonly BenchControl[]
   readonly layers: readonly BenchLayer[]
+  readonly sheet?: BenchSheet | null
 }
 
 export interface MetricRow {
   readonly id: string
   readonly name: string
   readonly text: string
+  /** The number behind `text`, when the metric reads one (a sheet's playhead follows it). */
+  readonly value?: number
   /** Value over the budget, when the metric has one. */
   readonly ratio?: number
 }
@@ -42,7 +45,7 @@ const mk = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
 
 // the shape of the panel without the values: when it is unchanged the values are updated in place (a range being dragged keeps its focus)
 const shapeOf = (view: BenchView): string =>
-  JSON.stringify([view.title, view.controls.map((c) => ({ ...c, value: undefined })), view.layers.map((l) => [l.id, l.name])])
+  JSON.stringify([view.title, view.controls.map((c) => ({ ...c, value: undefined })), view.layers.map((l) => [l.id, l.name]), view.sheet ?? null])
 
 export function createBenchPanel(o: BenchPanelOptions): BenchPanel {
   const { t } = o
@@ -103,7 +106,8 @@ export function createBenchPanel(o: BenchPanelOptions): BenchPanel {
   const choiceControl = (control: Extract<BenchControl, { kind: 'choice' }>): HTMLElement => {
     const wrap = mk('div', 'tr-ctl')
     wrap.appendChild(mk('span', undefined, control.name))
-    if (control.options.length <= SEGMENTED_MAX) {
+    const grouped = control.options.some((option) => option.group !== undefined)
+    if (control.options.length <= SEGMENTED_MAX && !grouped) {
       const group = mk('div', 'tr-seg')
       group.setAttribute('role', 'group')
       const buttons = control.options.map((option) => {
@@ -126,10 +130,22 @@ export function createBenchPanel(o: BenchPanelOptions): BenchPanel {
     }
     const select = mk('select')
     select.disabled = control.disabled
+    let heading: string | undefined
+    let section: HTMLElement = select
     for (const option of control.options) {
+      if (option.group !== heading) {
+        heading = option.group
+        section = select
+        if (heading !== undefined) {
+          const optgroup = mk('optgroup')
+          optgroup.label = heading
+          select.appendChild(optgroup)
+          section = optgroup
+        }
+      }
       const op = mk('option', undefined, option.name)
       op.value = option.id
-      select.appendChild(op)
+      section.appendChild(op)
     }
     select.onchange = () => o.onControl(control.id, select.value)
     wrap.appendChild(select)
@@ -171,7 +187,65 @@ export function createBenchPanel(o: BenchPanelOptions): BenchPanel {
     return wrap
   }
 
+  let playhead: { node: HTMLElement; metric: string; end: number } | null = null
+
+  const sheetCard = (sheet: BenchSheet): HTMLElement => {
+    const card = mk('div', 'tr-sheet')
+    if (sheet.kicker) card.appendChild(mk('div', 'sub', sheet.kicker))
+    card.appendChild(mk('h4', undefined, sheet.title))
+    if (sheet.body) card.appendChild(mk('p', undefined, sheet.body))
+    if (sheet.facts?.length) {
+      const facts = mk('dl', 'tr-facts')
+      for (const fact of sheet.facts) facts.append(mk('dt', undefined, fact.label), mk('dd', undefined, fact.value))
+      card.appendChild(facts)
+    }
+    if (sheet.steps?.length) {
+      const steps = mk('ol', 'tr-steps')
+      for (const step of sheet.steps) {
+        const li = mk('li')
+        li.append(mk('b', undefined, step.at), document.createTextNode(` ${step.text}`))
+        steps.appendChild(li)
+      }
+      card.appendChild(steps)
+    }
+    if (sheet.swatches?.length) {
+      const row = mk('div', 'tr-swatches')
+      for (const swatch of sheet.swatches) {
+        const chip = mk('span', 'tr-swatch')
+        const dot = mk('i')
+        dot.style.background = swatch.color
+        chip.append(dot, document.createTextNode(swatch.name))
+        row.appendChild(chip)
+      }
+      card.appendChild(row)
+    }
+    if (sheet.timeline) {
+      const { segments, ticks, metric } = sheet.timeline
+      const end = Math.max(0.001, ...segments.map((segment) => segment.end), ...ticks)
+      const strip = mk('div', 'tr-timeline')
+      for (const segment of segments) {
+        const bar = mk('div', 'tr-segment', segment.name)
+        bar.style.left = `${(segment.start / end) * 100}%`
+        bar.style.width = `${((segment.end - segment.start) / end) * 100}%`
+        bar.style.background = segment.color
+        strip.appendChild(bar)
+      }
+      for (const tick of ticks) {
+        const mark = mk('u', 'tr-tick')
+        mark.style.left = `${(tick / end) * 100}%`
+        strip.appendChild(mark)
+      }
+      const head = mk('s', 'tr-playhead')
+      strip.appendChild(head)
+      playhead = { node: head, metric, end }
+      card.appendChild(strip)
+    }
+    if (sheet.note) card.appendChild(mk('p', 'sub', sheet.note))
+    return card
+  }
+
   const rebuild = (view: BenchView): void => {
+    playhead = null
     body.textContent = ''
     refreshers.length = 0
     body.appendChild(mk('div', 'sub', view.title))
@@ -179,6 +253,7 @@ export function createBenchPanel(o: BenchPanelOptions): BenchPanel {
     for (const control of view.controls) if (!control.hidden) list.appendChild(controlElement(control))
     body.appendChild(list)
     if (view.layers.length) body.appendChild(layerList(view.layers))
+    if (view.sheet) body.appendChild(sheetCard(view.sheet))
   }
 
   const renderMetrics = (rows: readonly MetricRow[]): void => {
@@ -212,6 +287,7 @@ export function createBenchPanel(o: BenchPanelOptions): BenchPanel {
       hasBench = view !== null
       syncDisplay()
       if (!view) {
+        playhead = null
         shape = ''
         body.textContent = ''
         refreshers.length = 0
@@ -240,6 +316,10 @@ export function createBenchPanel(o: BenchPanelOptions): BenchPanel {
         if (!node) continue
         node.text.textContent = row.text
         if (node.bar && row.ratio !== undefined) fillBar(node.bar, row.ratio)
+      }
+      if (playhead) {
+        const at = rows.module.find((row) => row.id === playhead?.metric)?.value
+        playhead.node.style.left = `${Math.max(0, Math.min(1, (at ?? 0) / playhead.end)) * 100}%`
       }
     },
     get visible() {

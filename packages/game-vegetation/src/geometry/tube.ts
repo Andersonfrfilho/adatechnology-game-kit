@@ -41,6 +41,7 @@ export function pathFrames(path: Vec3[]): { t: Vec3; n: Vec3; b: Vec3 }[] {
 export function tube(b: MeshBuilder, path: Vec3[], o: TubeOptions): void {
   const n = path.length
   if (n < 2) return
+  b.tubes.push({ tag: b.tag, path, radii: o.radii })
   const frames = pathFrames(path)
   const S = o.sides
   const smooth = o.smooth !== false
@@ -131,6 +132,7 @@ export interface RibbedInfo {
 
 /** Ribbed column (cactus): 2*ribs vertices per ring alternating ridge and valley, flat shaded. */
 export function ribbedTube(b: MeshBuilder, path: Vec3[], o: RibbedOptions): RibbedInfo {
+  b.tubes.push({ tag: b.tag, path, radii: o.radii })
   const frames = pathFrames(path)
   const pts = path.slice()
   const radii = o.radii.slice()

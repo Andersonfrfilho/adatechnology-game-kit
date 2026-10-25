@@ -13,6 +13,13 @@ const id = pickForContext(regions.br, 'front_yard', 42) // weighted, determinist
 ```
 
 API: `species`, `getSpecies(id)`, `listIds()`, `byTag(tag)`, `toSpec(idOrSpecies)` (hex strings become ints), `loadLocale(locale)` (falls back to en), `name`, `description`, `regions`, `pickForContext(region, context, seedOrRng)`.
+`scatterRulesFor(region, context, seed, options?)` turns a context into scatter rules: it draws species from the regional table (60 draws by default, the same seed draws the same), leaves out the vines and, with `noLarge`, the big trees, and splits the picks into trees, hedges, the middle layer and the ground cover, each with its density, spacing and scale. It returns `{ rules, picks }`; give the rules to `scatter` of `@adatechnology/game-vegetation`. Every number is an option (`n`, `draws`, `skipArchetypes`, `maxCount` by group, `treeDensity`, `groupRules`, `classify`).
+
+```ts
+const { rules } = scatterRulesFor(regions.br, 'front_yard', 'quintal-1', { n: 12, noLarge: true, maxCount: { trees: 1, hedges: 10, mid: 14, ground: 40 } })
+const placements = scatter({ rect: { x: 0.5, z: 0.5, w: 11, d: 5.6 } }, rules, { seed: 'quintal-1:f:0' })
+```
+
 Contexts: front_yard, backyard, sidewalk_tree, square, vacant_lot, indoor, semiarid.
 
 ## Em português

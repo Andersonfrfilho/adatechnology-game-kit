@@ -36,6 +36,8 @@ const skin = animals.createSkin(rigs[1]); scene.add(skin.mesh); skin.update() //
 | `lineUpAnimals(rigs, options?)` | a fila da página |
 | `BIRD_EXTRAS`, `QUADRUPED_EXTRAS` | as peças que a página monta com código, por id de espécie (crina, chifre, crista...) |
 | `profileGeometry`, `createCoatTexture` | o perfil do tronco e a textura do pelo (listras, rosetas) |
+| `createAnimalSound(sink, { calls? })` | os chamados do jogo (`bichoSom`) no som do anfitrião: galinha, quero-quero, vaca e cachorro, com a recarga da página por bicho (`call(espécie, posição, { key })`, `update(dt)`); as outras espécies não têm som no time |
+| `ANIMAL_SOUND_BANK`, `ANIMAL_CALLS` | as 4 receitas (`dog_bark`, `lapwing_call`, `hen_cluck`, `cow_moo`, traço igual ao do `bichoSom`) e a tabela espécie -> chamado |
 | `createAnimalsTestModule(options)` | o módulo da área de teste (abaixo) |
 
 ## Compõe com
@@ -43,10 +45,11 @@ const skin = animals.createSkin(rigs[1]); scene.add(skin.mesh); skin.update() //
 
 ## Ambiente de teste
 `createAnimalsTestModule({ species, createOutbreak, document? })` entra na sala com `room.loadModule` (`examples/animals-test-area`, `?area=animals`, global `AnimalsArea`). Itens: uma espécie cada. Bancada: estado visual, andar,
-velocidade da animação, regra de surto ligada ou desligada, relógio da mordida; ações morder todos, curar, pôr 40 bichos como pele de nós; camadas: juntas, vista aberta, alcance do som, raio de atração da carcaça. Métricas: bichos,
+velocidade da animação, regra de surto ligada ou desligada, relógio da mordida; ações morder todos, curar, chamar (usa o `host.audio` da sala), pôr 40 bichos como pele de nós; camadas: juntas, vista aberta, alcance do som, raio de atração da carcaça. Métricas: bichos,
 chamadas de desenho, triângulos, nós por pele, incubando, viraram, morreram. Seis cenários conferem os estados, o andar, a regra, a carcaça, o relógio da mordida e as 40 peles.
 
 ## Cuidados
 - Espécie com textura de pelo precisa de `document` (um canvas); no teste, um documento de mentira basta.
 - A pele de nós guarda como nós próprios as peças que a animação mexe (`collectReferencedNodes`): rode `animate` e depois `skin.update()`.
 - `Math.random` não entra: a fase inicial do passo vem do fluxo semeado.
+- Geometria: `createAnimalsThree` desenha com `shapeGeometries(host)` do `game-shapes-three` e o torno do `profileGeometry` vem do `game-shapes` (os mesmos bytes); `tests/exact-golden.test.ts` guarda cada bit.

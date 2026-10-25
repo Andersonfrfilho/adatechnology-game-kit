@@ -1,0 +1,12 @@
+{
+  "undead_voice": {
+    "maxConcurrent": 5,
+    "cooldown": 0.25,
+    "maxDistance": 40,
+    "sources": [
+      "cena:L1342 `AU.groans > 4` refuses, so five play at once",
+      "jogo:L66986 one groan every 0.25 s (`groanBudget`), only nearer than 40 m",
+      "jogo:L70472 the budget counts down by the frame time"
+    ]
+  }
+}

@@ -4,6 +4,7 @@
 // against the page stays readable. The accessories (face, hats, clothing and gear, hand items) are registries in `./accessories`; the primitives are in `./person-kit`;
 // the hands are in `./accessories/hands` and have fingers only at the highest level of detail. Changes from the page, all listed in KNOWN_DEVIATIONS: three.js, the random
 // stream and the canvas come in as options; the walk blend is the engine's `MOVES`.
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import { MOVES, createRng } from '@adatechnology/game-characters'
 
 import type { Three } from '../three'
@@ -36,7 +37,8 @@ export type PersonBuilder = {
 
 const PAGE_EYES = { lento: 0xe3c341, corredor: 0xe5392b, brutamonte: 0xef8a2a }
 
-export const createPersonBuilder = (THREE: Three, options: PersonBuilderOptions = {}): PersonBuilder => {
+export const createPersonBuilder = (host: Three, options: PersonBuilderOptions = {}): PersonBuilder => {
+  const THREE = shapeGeometries(host)
   const kit = createPersonKit(THREE, { random: options.random ?? createRng(77), createCanvas: options.createCanvas })
   const { PI, R, scaleHex, Bx, add, cmat, ball, ring, cap, limb, mlimb, torsoGeo, splat, stainM, chessTex } = kit
   const reduce = options.reducedMotion ?? false

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "game",
+    "master": 0.5,
+    "noise": { "seconds": 1.5, "create": "lazy" },
+    "sources": ["jogo:L62077-62081 master 0.5 to the output", "jogo:L62082-62088 noise 1.5 s made by the first sound that needs it"]
+  },
+  {
+    "id": "art_scene",
+    "master": 0.85,
+    "compressor": { "threshold": -12, "ratio": 5 },
+    "reverb": { "seconds": 2.2, "decay": 3.4, "wet": 0.4 },
+    "noise": { "seconds": 2, "create": "eager" },
+    "sources": [
+      "cena:L1308 compressor -12 dB, ratio 5",
+      "cena:L1309 master 0.85",
+      "cena:L1310 convolver, impulse 2.2 s of (1 - i/len)^3.4",
+      "cena:L1311 wet 0.4",
+      "cena:L1312 noise 2 s made with the chain"
+    ]
+  }
+]

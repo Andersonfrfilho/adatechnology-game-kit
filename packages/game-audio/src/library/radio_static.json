@@ -1,0 +1,15 @@
+{
+  "id": "radio_static",
+  "bus": "world",
+  "order": "static",
+  "duration": 0.6,
+  "layers": [
+    {
+      "source": { "kind": "noise", "offset": "random" },
+      "filters": { "mode": "serial", "bank": [{ "type": "bandpass", "frequency": { "set": 1800 }, "q": 0.8 }] },
+      "envelope": [[0, 0.06, "set"], ["1d", 0.001, "exp", "fixed"]]
+    }
+  ],
+  "falloff": { "model": "none" },
+  "sources": ["jogo:L69998-70004 chiado: noise through a 1800 Hz bandpass (Q 0.8), 0.06 falling over 0.6 s", "temporary home until the props or radio package (Q12)"]
+}

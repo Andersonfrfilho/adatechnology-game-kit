@@ -7,6 +7,7 @@ export function installWarp(kit: Kit): void {
   const V3 = THREE.Vector3
   const PI = Math.PI
   const I = kit._
+  const lod = kit.lod
   const { crease } = I
 
   /* ================= global rounding (warp), resampled loft ================= */
@@ -108,6 +109,7 @@ export function installWarp(kit: Kit): void {
     })
   }
   function resample(st: any, n: any) {
+    if (lod.on) n = Math.max(lod.minStations, Math.round(n * lod.stationFraction))
     const out = []
     const L = st.length
     function P(i: any) {
@@ -139,6 +141,7 @@ export function installWarp(kit: Kit): void {
   }
   function smoothLoft(st: any, o: any) {
     o = o || {}
+    if (lod.on) o = Object.assign({}, o, { seg: Math.max(lod.minLoftSegments, Math.round((o.seg || 24) * lod.loftSegmentFraction)) })
     if (o.smooth) st = resample(st, o.smooth)
     const seg = o.seg || 24
     const pos: any = []

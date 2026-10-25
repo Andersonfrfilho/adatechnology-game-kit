@@ -4,8 +4,8 @@
 // the professions in the front row and the five in the lane are the first five professions; the crowd stands in the east field and is filled by the bench.
 import { createCharacters } from '@adatechnology/game-characters'
 import { createPeoplePack, PROFESSIONS } from '@adatechnology/game-characters-people'
-import { BODY_MATERIAL_DEF, CHARACTERS_AREA_ID, createCharactersTestModule, registerBodyMaterial } from '@adatechnology/game-characters-three'
-import { UNDEAD_TYPES, createUndead, createUndeadPack } from '@adatechnology/game-characters-undead'
+import { BODY_MATERIAL_DEF, CHARACTERS_AREA_ID, bloodLookOfAge, createCharactersTestModule, registerBodyMaterial } from '@adatechnology/game-characters-three'
+import { UNDEAD_TYPES, createUndead, createUndeadPack, getUndeadAge } from '@adatechnology/game-characters-undead'
 
 export { BODY_MATERIAL_DEF, createCharactersTestModule, registerBodyMaterial }
 
@@ -16,6 +16,11 @@ export function createModule(options = {}) {
     undeadTypes: UNDEAD_TYPES,
     professions: PROFESSIONS,
     createUndead: (kit) => createUndead(kit),
+    // wounds throw drops of blood into the running film in the colours of the infection age (ages.json)
+    bloodOf: (age) => {
+      const found = getUndeadAge(age)
+      return found ? bloodLookOfAge(found) : undefined
+    },
     createKit: ({ penetration, deathRule }) => createCharacters({ packs: [createPeoplePack(), createUndeadPack()], penetration, damage: { deathRule } }),
     ...options,
   })
@@ -25,7 +30,7 @@ export function createModule(options = {}) {
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   registerBodyMaterial(room.world)
-  const report = room.loadModule(createModule({ fluids: room.fluids, ...options, locale: lang }))
+  const report = room.loadModule(createModule({ fluids: room.fluids, film: room.film, ...options, locale: lang }))
   room.openArea(CHARACTERS_AREA_ID)
   return report
 }

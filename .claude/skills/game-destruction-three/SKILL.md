@@ -27,7 +27,7 @@ const renderer = createDestructionRenderer(THREE, {
   world,
   quality: 'medium',
   onPiece: (piece) => grabbable.push(piece),
-  onSound: (key, point, volume) => audio.play(key, point, volume),
+  onSound: (key, point, volume) => audio.play(key, point, volume), // ou createDestructionSound(engine).onSound, que traduz as chaves para as receitas do game-audio
 })
 
 scene.add(chairModel)
@@ -47,12 +47,12 @@ Malha fundida (prédio assado): ligue cada peça por faixa de vértices, `{ mesh
 ## API principal
 | Função / tipo | Para que serve |
 |---|---|
-| `createDestructionRenderer(THREE, options)` | cria o `DestructionRenderer` (`scene`, `world`, `quality`, `maxFragments`, `maxParticles`, `groundAt`, `autoSplit`, `onPiece`, `onSound`, `explosionLight`, `pointScale`) |
+| `createDestructionRenderer(THREE, options)` | cria o `DestructionRenderer` (`scene`, `world`, `quality`, `maxFragments`, `maxParticles`, `groundAt`, `autoSplit`, `onPiece`, `onSound`, `vfx`, `camera`, `pointScale`) |
 | `renderer.bind / unbind` | liga um objeto do mundo à raiz three.js (`parts`, `syncTransform`) |
 | `renderer.makePiece / pieces / piece / impulse` | peça física arremessável e empurrões |
 | `renderer.update(dt)` | integra fragmentos, peças e partículas |
 | `renderer.emit(kind, point, normal, count, speed?)` | partículas diretas (clarão de boca, espuma, faíscas de ferramenta) |
-| `renderer.explode(point, energy, radius)` | desenha uma explosão sem peça que explode (granada, foguete): clarão, fogo, fumaça, luz, som e empurrão nas peças |
+| `renderer.explode(point, energy, radius, options?)` | desenha uma explosão sem peça que explode (granada, foguete): o efeito (`options.effect`, senão `generic` na escala do raio) do mundo de efeitos, som e empurrão nas peças; `visual: false` deixa só empurrão e som |
 | `renderer.restore / clear / stats / rebarCount / dispose` | restaurar um objeto, limpar tudo, contagens (`rebarCount`: vergalhões à mostra), soltar recursos |
 | `specFromObject3D(THREE, root, options?)` | gera `{ spec, parts }`: uma peça por malha, material pelo nome, juntas inferidas |
 | `heatColor(temperatureC)` | cor `0xRRGGBB` do brilho: 0 abaixo de ~450 °C, vermelho ~500, laranja ~800, branco de 1400 |
@@ -74,14 +74,14 @@ Malha fundida (prédio assado): ligue cada peça por faixa de vértices, `{ mesh
 - Chame `renderer.update` depois de `world.update`, uma vez por quadro.
 - Em `low`, orçamentos de partículas e fragmentos caem à metade e dentes em malhas com mais de 20 mil vértices são pulados.
 - Derretimento supõe malhas em pé (escala o Y da própria malha).
-- A luz da explosão é criada na primeira explosão: há uma recompilação de shader única; use `explosionLight: false` para evitar.
+- Explosão e fogo de peça queimando vêm do mundo de efeitos (`game-vfx`): passe o `vfx` que o jogo compartilha (e passe o `update` dele uma vez por quadro, pelo `VfxRenderer`); sem `vfx` o renderizador cria o próprio mundo e a própria camada three e os atualiza em `update`. A luz da explosão é do mundo de efeitos (a opção `explosionLight` saiu).
+- Detritos, faíscas, gotas e vazamentos ainda usam o pool de pontos do pacote (`particles.ts`): ele sai quando o `game-vfx` ganhar o pool de sprites compartilhado (T5.2a).
 - `pointScale` (padrão 700) deve acompanhar a altura do viewport, senão fumaça e fogo ficam com tamanho errado.
 - Queda dura de peça (acima de 3 m/s) chama `world.hit` do tipo `blunt` com `source: 'fall'`.
 - `world.explode` **não emite evento** (só uma peça com `explodes` emite `explode`): quem detona granada ou foguete chama `renderer.explode` junto, senão só aparecem os detritos e o fogo, o clarão e a fumaça ficam de fora.
 - Global de navegador `GameDestructionThree` já inclui o núcleo; só falta carregar o three.js.
 
 ## O que vem pela migração (spec 001)
-- A explosão atual desenha (T0.3: a sala de testes passou a chamar `renderer.explode`); a troca para a explosão do Laboratório (E1) segue na Fase 5.
-- Efeitos passam a vir do `game-vfx-three` (E4), com teto de 6 explosões a cada 4 s por área e menos detalhe de longe.
+- A explosão do Laboratório (E1) e o fogo de peça já vêm do `game-vfx` (T5.1f), com teto de 6 explosões a cada 4 s por área e menos detalhe de longe. Falta trocar os detritos pelo pool de sprites e apagar `particles.ts`.
 - Juntar as duas versões da Sala de destruição, mantendo o que cada uma tem a mais (V8).
 - Concreto armado e tijolo (T2.3b): `spall` vira remendo da cor do núcleo, `stage` 2 solta os fragmentos do tamanho da peça (furos em `marks` vão junto), `expose` desenha o vergalhão em cilindros instanciados. **Falta para a T2.4c**: abrir a abertura na malha da parede (colapsar a faixa de vértices por peça do `bind`, cortar o buraco nas duas faces), fiadas de tijolo instanciadas no LOD0 e a normal exata do remendo de lasca (hoje o eixo fino da caixa do mundo).

@@ -6,7 +6,7 @@
     "stainColor": 7309206,
     "viscosity": 1,
     "density": 1000,
-    "dryTime": 600,
+    "dryTime": 180,
     "gloss": 0.9,
     "drink": {
       "thirst": 100,
@@ -184,9 +184,9 @@
     "stainColor": 7232298,
     "viscosity": 0.6,
     "density": 740,
-    "dryTime": 120,
+    "dryTime": 60,
     "gloss": 0.95,
-    "leavesMark": true,
+    "leavesMark": false,
     "flammable": true,
     "drink": {
       "thirst": 0,
@@ -267,14 +267,54 @@
     "id": "blood",
     "color": 7997964,
     "opacity": 0.92,
-    "stainColor": 4850950,
+    "stainColor": 3874068,
     "viscosity": 4,
     "density": 1060,
-    "dryTime": 1200,
+    "dryTime": 600,
     "gloss": 0.75,
     "leavesMark": true,
     "drink": {
       "thirst": 10,
+      "effects": [
+        "disgust"
+      ]
+    },
+    "tags": [
+      "organic"
+    ]
+  },
+  {
+    "id": "old_blood",
+    "color": 7085078,
+    "opacity": 0.92,
+    "stainColor": 2758158,
+    "viscosity": 4,
+    "density": 1060,
+    "dryTime": 360,
+    "gloss": 0.7,
+    "leavesMark": true,
+    "drink": {
+      "thirst": 10,
+      "effects": [
+        "disgust"
+      ]
+    },
+    "tags": [
+      "organic"
+    ]
+  },
+  {
+    "id": "bile",
+    "color": 9083434,
+    "opacity": 0.9,
+    "stainColor": 4080160,
+    "viscosity": 6,
+    "density": 1020,
+    "dryTime": 900,
+    "gloss": 0.75,
+    "leavesMark": true,
+    "drink": {
+      "thirst": 0,
       "effects": [
         "disgust"
       ]

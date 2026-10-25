@@ -93,6 +93,29 @@ budget, the newest are drawn.
 Types exported: `FluidRenderer`, `FluidRendererOptions`, `FluidRendererStats`, `BindOptions`, `FluidQuality`, `ThreeLib`. `smoothOutline(front, subdiv)` is
 exported too (the periodic Catmull-Rom used for the stain rim).
 
+
+## Running film
+
+`createFilmManager(THREE, options)` draws the film of `@adatechnology/game-fluids` (blood, old blood, bile, motor oil, fuel running down a wall or a floor) over
+the host's surfaces. The shader is the Fluid Standard's (thickness to colour, normals from the gradient, gloss, bile bubbles, oil and fuel iridescence, cracks
+where it dried thick); it is drawn transparent, so the host's own surface shows where nothing is wet. The film stays **near the player**: at most 6 grids of
+2 x 2 m (160 x 160 cells), only within 30 m, simulated inside a millisecond budget and uploaded by the dirty rectangle (`gpu`: pass the `WebGLRenderer` so
+`copyTextureToTexture` can be used). A grid that is out of range, still for 20 s or squeezed out by a newer one is **baked** into the stain decals of the
+fluid world (`fluids.splash` with the film's colours) and freed.
+
+```ts
+const film = createFilmManager(THREE, { scene, camera, random: createFilmLcg(1), fluids, gpu: renderer })
+film.launch({ fluid: 'blood', point: [0, 1.2, 0], velocity: [1, -1, 0], radius: 4 }) // a drop; the grid is made under it
+film.drip({ fluid: 'fuel', point: [0, 0.9, 0], every: 0.5 })
+const bridge = createFilmBridge({ fluids, manager: film, random })
+// every frame: fluids.update(dt); bridge.update(dt); film.update(dt)
+bridge.splat({ fluid: 'blood', point, direction, tint: { fresh: 0x8a0a0a, dry: 0x3a1c12 } }) // a wound, in the colours of an infection age
+bridge.setWeather({ rain: 1 }) // the rain hook: drying stops, spread x1.5 (a no-op until game-weather drives it)
+```
+
+`surfaceAt(point)` gives the floor, the wall and the curb of a point (`layoutFromSurfaces`); without it the film lies on the ground. A `leak` of a liquid that has a
+film drips from the hole into it until the stream ends.
+
 ## Português
 
 Renderizador three.js do `@adatechnology/game-fluids`: o líquido dentro do recipiente (um volume cortado pelo plano da superfície, sempre

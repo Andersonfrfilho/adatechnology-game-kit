@@ -1,0 +1,58 @@
+{
+  "name": "@adatechnology/game-stories",
+  "version": "0.2.0",
+  "license": "MIT",
+  "description": "Pure, seeded story generator for games: roles cast from people or name pools at world creation, stories as data that cross each other through flags and the player's actions, a chronicle, a character sheet that keeps the decisions and stories each person lived, and a life simulation (risk, bonds, couples, births, rivalries, fights, betrayal, food, caravans, raids, arrivals) ported literally from the team's design. Knows nothing about any game.",
+  "keywords": [
+    "game",
+    "stories",
+    "narrative",
+    "procedural",
+    "character-sheet",
+    "simulation",
+    "deterministic",
+    "seeded"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-stories"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-characters": "workspace:*",
+    "@adatechnology/game-characters-people": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

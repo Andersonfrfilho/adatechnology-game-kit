@@ -16,6 +16,16 @@ function make(key: string, locale = 'en') {
 const types = (evs: DestructionEvent[]) => evs.map((e) => e.type)
 const find = (evs: DestructionEvent[], type: string) => evs.filter((e) => e.type === type)
 
+describe('light mode item', () => {
+  it('builds an item in the light mode of the kit with the same parts and a valid contract', () => {
+    const kit = makeKit()
+    const full = createVehicleDestructible(kit, buildVehicleItem(kit, 'proto').vehicle)
+    const light = createVehicleDestructible(kit, buildVehicleItem(kit, 'proto', { lod: true }).vehicle)
+    expect(checkDestructible(light, { materials: MATERIALS }).problems).toEqual([])
+    expect(light.describe().parts.map((p) => p.id)).toEqual(full.describe().parts.map((p) => p.id))
+  })
+})
+
 describe('contract', () => {
   for (const key of SAMPLE_KEYS) {
     it(`${key}: checkDestructible and checkAnimation pass`, () => {

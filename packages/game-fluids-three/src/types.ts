@@ -1,24 +1,32 @@
 import type * as THREE_NS from 'three'
+import type { VfxWorld } from '@adatechnology/game-vfx'
+import type { ThreeLib as VfxThreeLib } from '@adatechnology/game-vfx-three'
 import type { FluidWorld, Vec3 } from '@adatechnology/game-fluids'
 
 /** The only three.js members the renderer needs at runtime. Pass your own `THREE` instance (the whole namespace works). */
-export type ThreeLib = Pick<
-  typeof THREE_NS,
-  | 'BufferAttribute'
-  | 'BufferGeometry'
-  | 'Color'
-  | 'DoubleSide'
-  | 'DynamicDrawUsage'
-  | 'Group'
-  | 'InstancedMesh'
-  | 'Matrix4'
-  | 'Mesh'
-  | 'MeshStandardMaterial'
-  | 'Points'
-  | 'ShaderMaterial'
-  | 'SphereGeometry'
-  | 'Vector3'
->
+export type ThreeLib = VfxThreeLib &
+  Pick<
+    typeof THREE_NS,
+    | 'BufferAttribute'
+    | 'PerspectiveCamera'
+    | 'BufferGeometry'
+    | 'Color'
+    | 'DataTexture'
+    | 'DoubleSide'
+    | 'DynamicDrawUsage'
+    | 'Group'
+    | 'LinearFilter'
+    | 'InstancedMesh'
+    | 'Matrix4'
+    | 'Mesh'
+    | 'MeshStandardMaterial'
+    | 'Points'
+    | 'RGBAFormat'
+    | 'ShaderMaterial'
+    | 'SphereGeometry'
+    | 'Vector2'
+    | 'Vector3'
+  >
 
 /** Detail level. It sets the budgets (stains, streams, particles) and the mesh resolution. */
 export type FluidQuality = 'low' | 'medium' | 'high'
@@ -32,8 +40,15 @@ export interface FluidRendererOptions {
   quality?: FluidQuality
   /** Environment map the wet surfaces and liquids reflect. When omitted they use `scene.environment` if the host set one. */
   envMap?: THREE_NS.Texture | null
-  /** Pixel scale of the round point sprites (about half the canvas height in pixels). Default 600. */
+  /** Pixel scale of the round point sprites (about half the canvas height in pixels). Default 600. Only read when `vfx` is not given. */
   pointScale?: number
+  /**
+   * The effects world that holds the droplets and steam (a host lends one to every renderer and steps it once per frame). Without it the renderer
+   * makes its own world and its own three layer and steps them in `update`.
+   */
+  vfx?: VfxWorld
+  /** Camera of the own effects world (distance LOD); only read when `vfx` is not given. Default a camera at the origin. */
+  camera?: THREE_NS.Camera
 }
 
 export interface BindOptions {

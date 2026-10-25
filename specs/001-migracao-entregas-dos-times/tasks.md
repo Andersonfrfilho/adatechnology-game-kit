@@ -44,7 +44,7 @@ Ordem: armas → casas → itens → personagens → efeitos → som e clima →
 - T2.4 `game-floorplan-three`: desenho 3D (Casa3DSDK), andares andáveis (C6), ponte para os móveis.
 - T2.5 Interiores com interior completo (C5): delegacia, escola, igreja, posto, pronto-socorro, metalúrgica, loja de armas, fazenda,
   triagem, mercado completo; silhuetas da Galeria como versão de longe (C4).
-- T2.6 Goldens contra o VC3 e a área de casas; `floorplan-test-area`.
+- T2.6 ✅ Goldens contra o VC3 e a área de casas; `floorplan-test-area`. (a: módulo e exemplo; b: também na `interactables-test-area`; c: site, Dockerfile, CI, miniatura; ver evidence.md `## T2.6`)
 
 ## Fase 3 — Itens
 > 🤖 Modelo: `sonnet`
@@ -67,24 +67,28 @@ Ordem: armas → casas → itens → personagens → efeitos → som e clima →
 ## Fase 5 — Efeitos
 > 🤖 Modelo: `sonnet`
 
-- T5.1 `game-vfx` + `-three`: explosão do Laboratório com o teto e o LOD do jogo (E1); destruição, fluidos e armas passam a usá-lo.
-- T5.2 Oficina de VFX como módulo da bancada de efeitos (E5, T0.2), modelada no Laboratório.
-- T5.3 `game-fluids`: filme que escorre, respingo por ângulo, bile e sangue antigo, com os valores do time como padrão configurável (E2).
+- T5.1 ✅ `game-vfx` + `-three`: explosão do Laboratório com o teto e o LOD do jogo (E1); destruição, fluidos e armas passam a usá-lo.
+- T5.2 ✅ Oficina de VFX como módulo da bancada de efeitos (E5, T0.2), modelada no Laboratório.
+- T5.3 ✅ `game-fluids`: filme que escorre, respingo por ângulo, bile e sangue antigo, com os valores do time como padrão configurável (E2). A ligação do `body` dos personagens ao filme (com a tinta da idade) entrou na T5.3e, depois da Fase 4.
 
 ## Fase 6 — Som e clima
 > 🤖 Modelo: `sonnet`
 
 - T6.1 `game-audio` (S1): síntese, mixagem, distância, limite de vozes, sons contínuos; os sons do jogo e da Cena de Arte.
+  Feitas: T6.1c (motor WebAudio), T6.1e e T6.1e2 (armas), T6.1f (destruição), T6.1g (personagens e bichos), T6.1h (`audio-test-area`).
 - T6.2 `game-weather` (E6): chuva leve e forte, neblina, relâmpago, vento, ciclone, tufão, calor intenso, ligados a fluidos e som.
+  Feitas: T6.2a (núcleo), T6.2b (pontes e som), T6.2c (`game-weather-three`: cortina, chuva perto, neblina, céu, relâmpago, faróis e névoa de calor; os três efeitos da Oficina `chuva`, `neblina` e `farol` no `game-vfx`) e T6.2d (`weather-test-area`).
+  Depois: o clarão, a fumaça, o sopro do lançador e o jato de chama da arma na mão passaram para receitas do `game-vfx` (`VIEWMODEL_EFFECTS`).
+- T6.3 A sala empresta `host.audio` e `host.environment`; as áreas de som e clima entram no `interactables-test-area` (feita). T6.4 `site/` com os exemplos e miniaturas (feita nas partes de som e clima).
 
 ## Fase 7 — Veículos e cidade
 > 🤖 Modelo: `sonnet`
 
-- T7.1 Comparar a fundo a Garagem do artefato com a v4 e o SDK (V2); trazer as frotas novas e o modo leve (V3), a API `danificaveis`,
+- ✅ T7.1 Comparar a fundo a Garagem do artefato com a v4 e o SDK (V2); trazer as frotas novas e o modo leve (V3), a API `danificaveis`,
   cor por semente e `DIMS`; condução arcade e semi-simulação (V4); `vehicles-test-area` (V5).
-- T7.2 Vegetação: juntar Viveiro (V8), `rulesFor`, `vegetation-test-area`.
-- T7.3 `game-urban`: ruas, calçadas, os 5 postes, bairro, quarteirão, relevo (C3).
-- T7.4 Câmera de ombro do jogo no `game-camera` (V7).
+- ✅ T7.2 Vegetação: juntar Viveiro (V8), `rulesFor`, `vegetation-test-area`.
+- ✅ T7.3 `game-urban`: ruas, calçadas, os 5 postes, bairro, quarteirão, relevo (C3), com veículos e plantas como provedores e a `urban-test-area`.
+- ✅ T7.4 Câmera de ombro do jogo no `game-camera` (V7). (T7.0 a T7.5 entregues no ramo `int/p7`; prova em `evidence.md`, Fase 7.)
 
 ## Fase 8 — Multidão, histórias e jogador
 > 🤖 Modelo: `sonnet` (T8.2 é 🧠 → `opus`)
@@ -93,6 +97,36 @@ Ordem: armas → casas → itens → personagens → efeitos → som e clima →
 - T8.2 🧠 Gerador de histórias e ficha de personagem (P9, P13): papéis, nomes sorteados, histórias que se cruzam, ficha que acumula
   decisões e histórias.
 - T8.3 `game-player` (V6): fôlego, ferida, infecção individual, agarrão.
+
+Desenho: `design/T8-multidao-historias-jogador.md`. Subtarefas, nesta ordem:
+
+| # | Commit | Modelo |
+|---|---|---|
+| T8.0 | desenho, tasks e evidência | `opus` |
+| T8.3 | `game-player` (núcleo, `defaults.json` com fontes, golden vm, módulo de teste, `examples/player-test-area`) | `sonnet` |
+| T8.1a | `game-crowd` núcleo (horda SoA do jogo: grade, portas, flow, spawn, update, alertas, ataque, dano, corpos, população, habilidades) e golden | `sonnet` |
+| T8.1b | civis, manada, revoada, `bindInfection`; `undeadCrowdTypes()` no `game-characters-undead`; goldens | `sonnet` |
+| T8.1c | `game-crowd-three` (renderizador instanciado, módulo de teste), `examples/crowd-test-area` | `sonnet` |
+| T8.2 🧠 | `game-stories` (elenco por sorteio, histórias como dados, crônica, ficha, simulação da vida); nomes e regras da ficha no `game-characters-people`; `game-slice/stories/`; golden; `examples/stories-test-area` | `opus` |
+
+## Fase 9 — Gerador único de 3D (`game-shapes`) e desempenho
+> 🤖 Modelo: `opus`
+
+Desenho: `design/T9-game-shapes-e-desempenho.md` (inventário dos construtores, esquema, buffers, cache, workers, regra de migração e plano de
+desempenho). Pedido do dono (2026-10-24): o 3D de tudo sai de um SDK que aceita JSON e vira a forma, e os outros SDKs o usam.
+
+| # | Commit | Estado |
+|---|---|---|
+| T9.0 | desenho e inventário | feito |
+| T9a | `game-shapes`: esquema JSON, geradores portados do three r160 (bit a bit), buffers por material, peças, pontos, LOD, instâncias | feito |
+| T9b | `game-shapes-three`: geometria com a classe do three, `shapeGeometries(THREE)`, `toObject3D`, `mergeByMaterial` | feito |
+| T9c | `tools/shapes-bench` e o job `shapes-bench` do CI (teto de regressão) | feito |
+| T9d | pool de workers e cache por chave | feito |
+| T9e | goldens exatos e as primeiras migrações: `game-props3d` (`createShapeRecorder`, `mergeByMaterial` vindo do `game-shapes-three`), `game-interactables-three` (`createMeshApi`), `game-items-three` (kit `T`, `mergeItem`) | feito |
+| T9f | goldens exatos e migração de `game-weapons-three` (modelos, acessórios, cartuchos, props), `game-animals-three`, `game-characters-three`; `game-crowd-three` não tem geometria própria (herda a dos personagens) | feito |
+| T9g | vegetation, urban, floorplan, vehicles (esperam a pergunta 3 do §11, r128) | a fazer |
+
+Inventário da migração (o que entrou e onde): T9 §7.4.
 
 ## Gates de cada task
 

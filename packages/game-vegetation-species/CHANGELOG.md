@@ -1,5 +1,16 @@
 # @adatechnology/game-vegetation-species
 
+## 0.2.0
+
+### Minor Changes
+
+- 54419e4: `scatterRulesFor(region, context, seed, options)` (spec 001, T7.2b): sorteia espécies da tabela regional de um contexto, deixa de fora as trepadeiras e, se pedido, as árvores grandes, e separa em árvores, cercas-vivas, plantas médias e forração, cada grupo com a sua regra de dispersão. Porte do `rulesFor` do Viveiro; todo número é opção. Confere com a página (48 casos).
+
+### Patch Changes
+
+- Updated dependencies [0b3c030]
+  - @adatechnology/game-vegetation@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

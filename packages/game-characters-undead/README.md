@@ -11,4 +11,8 @@ getUndeadType('runner')?.speed // { wander: 1.2, chase: 5.5, sprint: 6 }
 childTypeIds()                 // every type except brute and bloater
 ```
 
+`undeadCrowdPack()` is the crowd pack for `@adatechnology/game-crowd`: the 13 types with the numbers of the game's horde (`jogo.js` `CATS`; the blind,
+charred, drowned and devourer chase speeds and the drowned weight differ from the Bestiário table in `types.json`) and each special move as a trait, with
+the ages, outfits, segments and the clothes palette. `src/data/crowd.json` is written by hand from the game, with its sources.
+
 Plain script: `dist/index.global.js` exposes the `GameCharactersUndead` global.

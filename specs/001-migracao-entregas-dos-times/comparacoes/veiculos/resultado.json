@@ -1,0 +1,3935 @@
+[
+  {
+    "id": "compact_hatch",
+    "key": "hatch",
+    "state": "intact",
+    "artifact": {
+      "objects": 368,
+      "hash": "f3172e95"
+    },
+    "site": {
+      "objects": 368,
+      "hash": "f3172e95"
+    },
+    "sdk": {
+      "objects": 368,
+      "hash": "f3172e95"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "compact_hatch",
+    "key": "hatch",
+    "state": "damaged",
+    "artifact": {
+      "objects": 480,
+      "hash": "ac9c941b"
+    },
+    "site": {
+      "objects": 480,
+      "hash": "ac9c941b"
+    },
+    "sdk": {
+      "objects": 480,
+      "hash": "ac9c941b"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "compact_hatch",
+    "key": "hatch",
+    "state": "modified",
+    "artifact": {
+      "objects": 552,
+      "hash": "e2cbd5e"
+    },
+    "site": {
+      "objects": 552,
+      "hash": "e2cbd5e"
+    },
+    "sdk": {
+      "objects": 552,
+      "hash": "e2cbd5e"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "taxi",
+    "key": "taxi",
+    "state": "intact",
+    "artifact": {
+      "objects": 355,
+      "hash": "99536e54"
+    },
+    "site": {
+      "objects": 355,
+      "hash": "99536e54"
+    },
+    "sdk": {
+      "objects": 355,
+      "hash": "99536e54"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "taxi",
+    "key": "taxi",
+    "state": "damaged",
+    "artifact": {
+      "objects": 467,
+      "hash": "f5910460"
+    },
+    "site": {
+      "objects": 467,
+      "hash": "f5910460"
+    },
+    "sdk": {
+      "objects": 467,
+      "hash": "f5910460"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "taxi",
+    "key": "taxi",
+    "state": "modified",
+    "artifact": {
+      "objects": 510,
+      "hash": "49a66cd3"
+    },
+    "site": {
+      "objects": 510,
+      "hash": "49a66cd3"
+    },
+    "sdk": {
+      "objects": 510,
+      "hash": "49a66cd3"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "entry_hatch",
+    "key": "popular",
+    "state": "intact",
+    "artifact": {
+      "objects": 347,
+      "hash": "7710f50c"
+    },
+    "site": {
+      "objects": 347,
+      "hash": "7710f50c"
+    },
+    "sdk": {
+      "objects": 347,
+      "hash": "7710f50c"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "entry_hatch",
+    "key": "popular",
+    "state": "damaged",
+    "artifact": {
+      "objects": 474,
+      "hash": "fcb79901"
+    },
+    "site": {
+      "objects": 474,
+      "hash": "fcb79901"
+    },
+    "sdk": {
+      "objects": 474,
+      "hash": "fcb79901"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "entry_hatch",
+    "key": "popular",
+    "state": "modified",
+    "artifact": {
+      "objects": 500,
+      "hash": "63663f0"
+    },
+    "site": {
+      "objects": 500,
+      "hash": "63663f0"
+    },
+    "sdk": {
+      "objects": 500,
+      "hash": "63663f0"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "electric_hatch",
+    "key": "eletrico",
+    "state": "intact",
+    "artifact": {
+      "objects": 378,
+      "hash": "5c6eda49"
+    },
+    "site": {
+      "objects": 378,
+      "hash": "5c6eda49"
+    },
+    "sdk": {
+      "objects": 378,
+      "hash": "5c6eda49"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "electric_hatch",
+    "key": "eletrico",
+    "state": "damaged",
+    "artifact": {
+      "objects": 466,
+      "hash": "fa436a6e"
+    },
+    "site": {
+      "objects": 466,
+      "hash": "fa436a6e"
+    },
+    "sdk": {
+      "objects": 466,
+      "hash": "fa436a6e"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "electric_hatch",
+    "key": "eletrico",
+    "state": "modified",
+    "artifact": {
+      "objects": 570,
+      "hash": "366c37b7"
+    },
+    "site": {
+      "objects": 570,
+      "hash": "366c37b7"
+    },
+    "sdk": {
+      "objects": 570,
+      "hash": "366c37b7"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "midsize_sedan",
+    "key": "seda",
+    "state": "intact",
+    "artifact": {
+      "objects": 374,
+      "hash": "742f2cc5"
+    },
+    "site": {
+      "objects": 374,
+      "hash": "742f2cc5"
+    },
+    "sdk": {
+      "objects": 374,
+      "hash": "742f2cc5"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "midsize_sedan",
+    "key": "seda",
+    "state": "damaged",
+    "artifact": {
+      "objects": 486,
+      "hash": "93cc39fe"
+    },
+    "site": {
+      "objects": 486,
+      "hash": "93cc39fe"
+    },
+    "sdk": {
+      "objects": 486,
+      "hash": "93cc39fe"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "midsize_sedan",
+    "key": "seda",
+    "state": "modified",
+    "artifact": {
+      "objects": 528,
+      "hash": "13f32138"
+    },
+    "site": {
+      "objects": 528,
+      "hash": "13f32138"
+    },
+    "sdk": {
+      "objects": 528,
+      "hash": "13f32138"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "police_sedan",
+    "key": "viatura",
+    "state": "intact",
+    "artifact": {
+      "objects": 395,
+      "hash": "89498369"
+    },
+    "site": {
+      "objects": 395,
+      "hash": "89498369"
+    },
+    "sdk": {
+      "objects": 395,
+      "hash": "89498369"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "police_sedan",
+    "key": "viatura",
+    "state": "damaged",
+    "artifact": {
+      "objects": 507,
+      "hash": "d53a5dda"
+    },
+    "site": {
+      "objects": 507,
+      "hash": "d53a5dda"
+    },
+    "sdk": {
+      "objects": 507,
+      "hash": "d53a5dda"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "police_sedan",
+    "key": "viatura",
+    "state": "modified",
+    "artifact": {
+      "objects": 553,
+      "hash": "703372da"
+    },
+    "site": {
+      "objects": 553,
+      "hash": "703372da"
+    },
+    "sdk": {
+      "objects": 553,
+      "hash": "703372da"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "highway_police_sedan",
+    "key": "viatura-prf",
+    "state": "intact",
+    "artifact": {
+      "objects": 397,
+      "hash": "b59296cc"
+    },
+    "site": {
+      "objects": 397,
+      "hash": "b59296cc"
+    },
+    "sdk": {
+      "objects": 397,
+      "hash": "b59296cc"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "highway_police_sedan",
+    "key": "viatura-prf",
+    "state": "damaged",
+    "artifact": {
+      "objects": 511,
+      "hash": "91e7f3ff"
+    },
+    "site": {
+      "objects": 511,
+      "hash": "91e7f3ff"
+    },
+    "sdk": {
+      "objects": 511,
+      "hash": "91e7f3ff"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "highway_police_sedan",
+    "key": "viatura-prf",
+    "state": "modified",
+    "artifact": {
+      "objects": 555,
+      "hash": "37092920"
+    },
+    "site": {
+      "objects": 555,
+      "hash": "37092920"
+    },
+    "sdk": {
+      "objects": 555,
+      "hash": "37092920"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "bicycle",
+    "key": "bicicleta",
+    "state": "intact",
+    "artifact": {
+      "objects": 66,
+      "hash": "88515440"
+    },
+    "site": {
+      "objects": 66,
+      "hash": "88515440"
+    },
+    "sdk": {
+      "objects": 66,
+      "hash": "88515440"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "bicycle",
+    "key": "bicicleta",
+    "state": "damaged",
+    "artifact": {
+      "objects": 69,
+      "hash": "e57ac2b2"
+    },
+    "site": {
+      "objects": 69,
+      "hash": "e57ac2b2"
+    },
+    "sdk": {
+      "objects": 69,
+      "hash": "e57ac2b2"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "bicycle",
+    "key": "bicicleta",
+    "state": "modified",
+    "artifact": {
+      "objects": 76,
+      "hash": "a7374840"
+    },
+    "site": {
+      "objects": 76,
+      "hash": "a7374840"
+    },
+    "sdk": {
+      "objects": 76,
+      "hash": "a7374840"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "scooter",
+    "key": "scooter",
+    "state": "intact",
+    "artifact": {
+      "objects": 106,
+      "hash": "c1ec4d84"
+    },
+    "site": {
+      "objects": 106,
+      "hash": "c1ec4d84"
+    },
+    "sdk": {
+      "objects": 106,
+      "hash": "c1ec4d84"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "scooter",
+    "key": "scooter",
+    "state": "damaged",
+    "artifact": {
+      "objects": 152,
+      "hash": "ab2ee04c"
+    },
+    "site": {
+      "objects": 152,
+      "hash": "ab2ee04c"
+    },
+    "sdk": {
+      "objects": 152,
+      "hash": "ab2ee04c"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "scooter",
+    "key": "scooter",
+    "state": "modified",
+    "artifact": {
+      "objects": 116,
+      "hash": "3eb26c13"
+    },
+    "site": {
+      "objects": 116,
+      "hash": "3eb26c13"
+    },
+    "sdk": {
+      "objects": 116,
+      "hash": "3eb26c13"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "commuter_motorcycle",
+    "key": "moto",
+    "state": "intact",
+    "artifact": {
+      "objects": 114,
+      "hash": "58dc6f68"
+    },
+    "site": {
+      "objects": 114,
+      "hash": "58dc6f68"
+    },
+    "sdk": {
+      "objects": 114,
+      "hash": "58dc6f68"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "commuter_motorcycle",
+    "key": "moto",
+    "state": "damaged",
+    "artifact": {
+      "objects": 147,
+      "hash": "28c69b83"
+    },
+    "site": {
+      "objects": 147,
+      "hash": "28c69b83"
+    },
+    "sdk": {
+      "objects": 147,
+      "hash": "28c69b83"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "commuter_motorcycle",
+    "key": "moto",
+    "state": "modified",
+    "artifact": {
+      "objects": 130,
+      "hash": "aab11644"
+    },
+    "site": {
+      "objects": 130,
+      "hash": "aab11644"
+    },
+    "sdk": {
+      "objects": 130,
+      "hash": "aab11644"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "trail_bike",
+    "key": "trail",
+    "state": "intact",
+    "artifact": {
+      "objects": 107,
+      "hash": "796f4e9c"
+    },
+    "site": {
+      "objects": 107,
+      "hash": "796f4e9c"
+    },
+    "sdk": {
+      "objects": 107,
+      "hash": "796f4e9c"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "trail_bike",
+    "key": "trail",
+    "state": "damaged",
+    "artifact": {
+      "objects": 131,
+      "hash": "fd869b3"
+    },
+    "site": {
+      "objects": 131,
+      "hash": "fd869b3"
+    },
+    "sdk": {
+      "objects": 131,
+      "hash": "fd869b3"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "trail_bike",
+    "key": "trail",
+    "state": "modified",
+    "artifact": {
+      "objects": 122,
+      "hash": "8fa614ba"
+    },
+    "site": {
+      "objects": 122,
+      "hash": "8fa614ba"
+    },
+    "sdk": {
+      "objects": 122,
+      "hash": "8fa614ba"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "adventure_bike",
+    "key": "bigtrail",
+    "state": "intact",
+    "artifact": {
+      "objects": 115,
+      "hash": "b0420f93"
+    },
+    "site": {
+      "objects": 115,
+      "hash": "b0420f93"
+    },
+    "sdk": {
+      "objects": 115,
+      "hash": "b0420f93"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "adventure_bike",
+    "key": "bigtrail",
+    "state": "damaged",
+    "artifact": {
+      "objects": 150,
+      "hash": "b30b2486"
+    },
+    "site": {
+      "objects": 150,
+      "hash": "b30b2486"
+    },
+    "sdk": {
+      "objects": 150,
+      "hash": "b30b2486"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "adventure_bike",
+    "key": "bigtrail",
+    "state": "modified",
+    "artifact": {
+      "objects": 133,
+      "hash": "e452eba3"
+    },
+    "site": {
+      "objects": 133,
+      "hash": "e452eba3"
+    },
+    "sdk": {
+      "objects": 133,
+      "hash": "e452eba3"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "highway_police_bike",
+    "key": "moto-prf",
+    "state": "intact",
+    "artifact": {
+      "objects": 126,
+      "hash": "8b92ca68"
+    },
+    "site": {
+      "objects": 126,
+      "hash": "8b92ca68"
+    },
+    "sdk": {
+      "objects": 126,
+      "hash": "8b92ca68"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "highway_police_bike",
+    "key": "moto-prf",
+    "state": "damaged",
+    "artifact": {
+      "objects": 165,
+      "hash": "e8d2a254"
+    },
+    "site": {
+      "objects": 165,
+      "hash": "e8d2a254"
+    },
+    "sdk": {
+      "objects": 165,
+      "hash": "e8d2a254"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "highway_police_bike",
+    "key": "moto-prf",
+    "state": "modified",
+    "artifact": {
+      "objects": 144,
+      "hash": "6e887794"
+    },
+    "site": {
+      "objects": 144,
+      "hash": "6e887794"
+    },
+    "sdk": {
+      "objects": 144,
+      "hash": "6e887794"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "quad_bike",
+    "key": "quadri",
+    "state": "intact",
+    "artifact": {
+      "objects": 178,
+      "hash": "19d130f8"
+    },
+    "site": {
+      "objects": 178,
+      "hash": "19d130f8"
+    },
+    "sdk": {
+      "objects": 178,
+      "hash": "19d130f8"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "quad_bike",
+    "key": "quadri",
+    "state": "damaged",
+    "artifact": {
+      "objects": 239,
+      "hash": "9e441731"
+    },
+    "site": {
+      "objects": 239,
+      "hash": "9e441731"
+    },
+    "sdk": {
+      "objects": 239,
+      "hash": "9e441731"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "quad_bike",
+    "key": "quadri",
+    "state": "modified",
+    "artifact": {
+      "objects": 195,
+      "hash": "c4fde20e"
+    },
+    "site": {
+      "objects": 195,
+      "hash": "c4fde20e"
+    },
+    "sdk": {
+      "objects": 195,
+      "hash": "c4fde20e"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "beetle",
+    "key": "fusca",
+    "state": "intact",
+    "artifact": {
+      "objects": 218,
+      "hash": "ca4f0699"
+    },
+    "site": {
+      "objects": 218,
+      "hash": "ca4f0699"
+    },
+    "sdk": {
+      "objects": 218,
+      "hash": "ca4f0699"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "beetle",
+    "key": "fusca",
+    "state": "damaged",
+    "artifact": {
+      "objects": 318,
+      "hash": "8bc8d825"
+    },
+    "site": {
+      "objects": 318,
+      "hash": "8bc8d825"
+    },
+    "sdk": {
+      "objects": 318,
+      "hash": "8bc8d825"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "beetle",
+    "key": "fusca",
+    "state": "modified",
+    "artifact": {
+      "objects": 344,
+      "hash": "34929d15"
+    },
+    "site": {
+      "objects": 344,
+      "hash": "34929d15"
+    },
+    "sdk": {
+      "objects": 344,
+      "hash": "34929d15"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "compact_suv",
+    "key": "suvc",
+    "state": "intact",
+    "artifact": {
+      "objects": 388,
+      "hash": "5f75dd4b"
+    },
+    "site": {
+      "objects": 388,
+      "hash": "5f75dd4b"
+    },
+    "sdk": {
+      "objects": 388,
+      "hash": "5f75dd4b"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "compact_suv",
+    "key": "suvc",
+    "state": "damaged",
+    "artifact": {
+      "objects": 514,
+      "hash": "806ab393"
+    },
+    "site": {
+      "objects": 514,
+      "hash": "806ab393"
+    },
+    "sdk": {
+      "objects": 514,
+      "hash": "806ab393"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "compact_suv",
+    "key": "suvc",
+    "state": "modified",
+    "artifact": {
+      "objects": 564,
+      "hash": "1e343cf4"
+    },
+    "site": {
+      "objects": 564,
+      "hash": "1e343cf4"
+    },
+    "sdk": {
+      "objects": 564,
+      "hash": "1e343cf4"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "hybrid_suv",
+    "key": "hibrido",
+    "state": "intact",
+    "artifact": {
+      "objects": 365,
+      "hash": "dcd9935"
+    },
+    "site": {
+      "objects": 365,
+      "hash": "dcd9935"
+    },
+    "sdk": {
+      "objects": 365,
+      "hash": "dcd9935"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "hybrid_suv",
+    "key": "hibrido",
+    "state": "damaged",
+    "artifact": {
+      "objects": 467,
+      "hash": "512127ed"
+    },
+    "site": {
+      "objects": 467,
+      "hash": "512127ed"
+    },
+    "sdk": {
+      "objects": 467,
+      "hash": "512127ed"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "hybrid_suv",
+    "key": "hibrido",
+    "state": "modified",
+    "artifact": {
+      "objects": 558,
+      "hash": "fdd4d58c"
+    },
+    "site": {
+      "objects": 558,
+      "hash": "fdd4d58c"
+    },
+    "sdk": {
+      "objects": 558,
+      "hash": "fdd4d58c"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "midsize_suv",
+    "key": "compas",
+    "state": "intact",
+    "artifact": {
+      "objects": 420,
+      "hash": "6d9f278f"
+    },
+    "site": {
+      "objects": 420,
+      "hash": "6d9f278f"
+    },
+    "sdk": {
+      "objects": 420,
+      "hash": "6d9f278f"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "midsize_suv",
+    "key": "compas",
+    "state": "damaged",
+    "artifact": {
+      "objects": 547,
+      "hash": "77b3c672"
+    },
+    "site": {
+      "objects": 547,
+      "hash": "77b3c672"
+    },
+    "sdk": {
+      "objects": 547,
+      "hash": "77b3c672"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "midsize_suv",
+    "key": "compas",
+    "state": "modified",
+    "artifact": {
+      "objects": 623,
+      "hash": "6469db01"
+    },
+    "site": {
+      "objects": 623,
+      "hash": "6469db01"
+    },
+    "sdk": {
+      "objects": 623,
+      "hash": "6469db01"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "large_suv",
+    "key": "suv",
+    "state": "intact",
+    "artifact": {
+      "objects": 427,
+      "hash": "3f3d8c04"
+    },
+    "site": {
+      "objects": 427,
+      "hash": "3f3d8c04"
+    },
+    "sdk": {
+      "objects": 427,
+      "hash": "3f3d8c04"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "large_suv",
+    "key": "suv",
+    "state": "damaged",
+    "artifact": {
+      "objects": 549,
+      "hash": "15ccaa46"
+    },
+    "site": {
+      "objects": 549,
+      "hash": "15ccaa46"
+    },
+    "sdk": {
+      "objects": 549,
+      "hash": "15ccaa46"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "large_suv",
+    "key": "suv",
+    "state": "modified",
+    "artifact": {
+      "objects": 635,
+      "hash": "67fcc4ea"
+    },
+    "site": {
+      "objects": 635,
+      "hash": "67fcc4ea"
+    },
+    "sdk": {
+      "objects": 635,
+      "hash": "67fcc4ea"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "compact_pickup",
+    "key": "strada",
+    "state": "intact",
+    "artifact": {
+      "objects": 374,
+      "hash": "79a307e8"
+    },
+    "site": {
+      "objects": 374,
+      "hash": "79a307e8"
+    },
+    "sdk": {
+      "objects": 374,
+      "hash": "79a307e8"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "compact_pickup",
+    "key": "strada",
+    "state": "damaged",
+    "artifact": {
+      "objects": 500,
+      "hash": "96d676ea"
+    },
+    "site": {
+      "objects": 500,
+      "hash": "96d676ea"
+    },
+    "sdk": {
+      "objects": 500,
+      "hash": "96d676ea"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "compact_pickup",
+    "key": "strada",
+    "state": "modified",
+    "artifact": {
+      "objects": 567,
+      "hash": "a66308df"
+    },
+    "site": {
+      "objects": 567,
+      "hash": "a66308df"
+    },
+    "sdk": {
+      "objects": 567,
+      "hash": "a66308df"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "crossover_pickup",
+    "key": "touro",
+    "state": "intact",
+    "artifact": {
+      "objects": 398,
+      "hash": "32d4230"
+    },
+    "site": {
+      "objects": 398,
+      "hash": "32d4230"
+    },
+    "sdk": {
+      "objects": 398,
+      "hash": "32d4230"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "crossover_pickup",
+    "key": "touro",
+    "state": "damaged",
+    "artifact": {
+      "objects": 524,
+      "hash": "c96d5448"
+    },
+    "site": {
+      "objects": 524,
+      "hash": "c96d5448"
+    },
+    "sdk": {
+      "objects": 524,
+      "hash": "c96d5448"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "crossover_pickup",
+    "key": "touro",
+    "state": "modified",
+    "artifact": {
+      "objects": 606,
+      "hash": "61f5471e"
+    },
+    "site": {
+      "objects": 606,
+      "hash": "61f5471e"
+    },
+    "sdk": {
+      "objects": 606,
+      "hash": "61f5471e"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "midsize_pickup",
+    "key": "picape",
+    "state": "intact",
+    "artifact": {
+      "objects": 402,
+      "hash": "af360770"
+    },
+    "site": {
+      "objects": 402,
+      "hash": "af360770"
+    },
+    "sdk": {
+      "objects": 402,
+      "hash": "af360770"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "midsize_pickup",
+    "key": "picape",
+    "state": "damaged",
+    "artifact": {
+      "objects": 537,
+      "hash": "418d5279"
+    },
+    "site": {
+      "objects": 537,
+      "hash": "418d5279"
+    },
+    "sdk": {
+      "objects": 537,
+      "hash": "418d5279"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "midsize_pickup",
+    "key": "picape",
+    "state": "modified",
+    "artifact": {
+      "objects": 611,
+      "hash": "5de16682"
+    },
+    "site": {
+      "objects": 611,
+      "hash": "5de16682"
+    },
+    "sdk": {
+      "objects": 611,
+      "hash": "5de16682"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "monster_truck",
+    "key": "bigfoot",
+    "state": "intact",
+    "artifact": {
+      "objects": 563,
+      "hash": "af317ff6"
+    },
+    "site": {
+      "objects": 563,
+      "hash": "af317ff6"
+    },
+    "sdk": {
+      "objects": 563,
+      "hash": "af317ff6"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "monster_truck",
+    "key": "bigfoot",
+    "state": "damaged",
+    "artifact": {
+      "objects": 675,
+      "hash": "1895096b"
+    },
+    "site": {
+      "objects": 675,
+      "hash": "1895096b"
+    },
+    "sdk": {
+      "objects": 675,
+      "hash": "1895096b"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "monster_truck",
+    "key": "bigfoot",
+    "state": "modified",
+    "artifact": {
+      "objects": 722,
+      "hash": "b13bfad7"
+    },
+    "site": {
+      "objects": 722,
+      "hash": "b13bfad7"
+    },
+    "sdk": {
+      "objects": 722,
+      "hash": "b13bfad7"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "cargo_van",
+    "key": "van",
+    "state": "intact",
+    "artifact": {
+      "objects": 318,
+      "hash": "2ed09a73"
+    },
+    "site": {
+      "objects": 318,
+      "hash": "2ed09a73"
+    },
+    "sdk": {
+      "objects": 318,
+      "hash": "2ed09a73"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "cargo_van",
+    "key": "van",
+    "state": "damaged",
+    "artifact": {
+      "objects": 443,
+      "hash": "3eea6117"
+    },
+    "site": {
+      "objects": 443,
+      "hash": "3eea6117"
+    },
+    "sdk": {
+      "objects": 443,
+      "hash": "3eea6117"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "cargo_van",
+    "key": "van",
+    "state": "modified",
+    "artifact": {
+      "objects": 502,
+      "hash": "3ccca76e"
+    },
+    "site": {
+      "objects": 502,
+      "hash": "3ccca76e"
+    },
+    "sdk": {
+      "objects": 502,
+      "hash": "3ccca76e"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "ambulance",
+    "key": "ambulancia",
+    "state": "intact",
+    "artifact": {
+      "objects": 351,
+      "hash": "2fbd4ad2"
+    },
+    "site": {
+      "objects": 351,
+      "hash": "2fbd4ad2"
+    },
+    "sdk": {
+      "objects": 351,
+      "hash": "2fbd4ad2"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "ambulance",
+    "key": "ambulancia",
+    "state": "damaged",
+    "artifact": {
+      "objects": 478,
+      "hash": "653a54da"
+    },
+    "site": {
+      "objects": 478,
+      "hash": "653a54da"
+    },
+    "sdk": {
+      "objects": 478,
+      "hash": "653a54da"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "ambulance",
+    "key": "ambulancia",
+    "state": "modified",
+    "artifact": {
+      "objects": 555,
+      "hash": "663db240"
+    },
+    "site": {
+      "objects": 555,
+      "hash": "663db240"
+    },
+    "sdk": {
+      "objects": 555,
+      "hash": "663db240"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "box_truck",
+    "key": "bau",
+    "state": "intact",
+    "artifact": {
+      "objects": 485,
+      "hash": "bd7795ce"
+    },
+    "site": {
+      "objects": 485,
+      "hash": "bd7795ce"
+    },
+    "sdk": {
+      "objects": 485,
+      "hash": "bd7795ce"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "box_truck",
+    "key": "bau",
+    "state": "damaged",
+    "artifact": {
+      "objects": 607,
+      "hash": "c0e9cd9"
+    },
+    "site": {
+      "objects": 607,
+      "hash": "c0e9cd9"
+    },
+    "sdk": {
+      "objects": 607,
+      "hash": "c0e9cd9"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "box_truck",
+    "key": "bau",
+    "state": "modified",
+    "artifact": {
+      "objects": 701,
+      "hash": "2dd6802c"
+    },
+    "site": {
+      "objects": 701,
+      "hash": "2dd6802c"
+    },
+    "sdk": {
+      "objects": 701,
+      "hash": "2dd6802c"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "tanker_truck",
+    "key": "tanque",
+    "state": "intact",
+    "artifact": {
+      "objects": 620,
+      "hash": "88dd9653"
+    },
+    "site": {
+      "objects": 620,
+      "hash": "88dd9653"
+    },
+    "sdk": {
+      "objects": 620,
+      "hash": "88dd9653"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "tanker_truck",
+    "key": "tanque",
+    "state": "damaged",
+    "artifact": {
+      "objects": 738,
+      "hash": "5ff30efc"
+    },
+    "site": {
+      "objects": 738,
+      "hash": "5ff30efc"
+    },
+    "sdk": {
+      "objects": 738,
+      "hash": "5ff30efc"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "tanker_truck",
+    "key": "tanque",
+    "state": "modified",
+    "artifact": {
+      "objects": 793,
+      "hash": "5686c015"
+    },
+    "site": {
+      "objects": 793,
+      "hash": "5686c015"
+    },
+    "sdk": {
+      "objects": 793,
+      "hash": "5686c015"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "school_bus",
+    "key": "onibus",
+    "state": "intact",
+    "artifact": {
+      "objects": 391,
+      "hash": "f57e138e"
+    },
+    "site": {
+      "objects": 391,
+      "hash": "f57e138e"
+    },
+    "sdk": {
+      "objects": 391,
+      "hash": "f57e138e"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "school_bus",
+    "key": "onibus",
+    "state": "damaged",
+    "artifact": {
+      "objects": 485,
+      "hash": "9535213a"
+    },
+    "site": {
+      "objects": 485,
+      "hash": "9535213a"
+    },
+    "sdk": {
+      "objects": 485,
+      "hash": "9535213a"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "school_bus",
+    "key": "onibus",
+    "state": "modified",
+    "artifact": {
+      "objects": 731,
+      "hash": "5299be74"
+    },
+    "site": {
+      "objects": 731,
+      "hash": "5299be74"
+    },
+    "sdk": {
+      "objects": 731,
+      "hash": "5299be74"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "city_bus",
+    "key": "urbano",
+    "state": "intact",
+    "artifact": {
+      "objects": 404,
+      "hash": "b7f78238"
+    },
+    "site": {
+      "objects": 404,
+      "hash": "b7f78238"
+    },
+    "sdk": {
+      "objects": 404,
+      "hash": "b7f78238"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "city_bus",
+    "key": "urbano",
+    "state": "damaged",
+    "artifact": {
+      "objects": 499,
+      "hash": "d46b7826"
+    },
+    "site": {
+      "objects": 499,
+      "hash": "d46b7826"
+    },
+    "sdk": {
+      "objects": 499,
+      "hash": "d46b7826"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "city_bus",
+    "key": "urbano",
+    "state": "modified",
+    "artifact": {
+      "objects": 819,
+      "hash": "fb328bb2"
+    },
+    "site": {
+      "objects": 819,
+      "hash": "fb328bb2"
+    },
+    "sdk": {
+      "objects": 819,
+      "hash": "fb328bb2"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "armored_truck",
+    "key": "forte",
+    "state": "intact",
+    "artifact": {
+      "objects": 550,
+      "hash": "671157fd"
+    },
+    "site": {
+      "objects": 550,
+      "hash": "671157fd"
+    },
+    "sdk": {
+      "objects": 550,
+      "hash": "671157fd"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "armored_truck",
+    "key": "forte",
+    "state": "damaged",
+    "artifact": {
+      "objects": 670,
+      "hash": "507a70f5"
+    },
+    "site": {
+      "objects": 670,
+      "hash": "507a70f5"
+    },
+    "sdk": {
+      "objects": 670,
+      "hash": "507a70f5"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "armored_truck",
+    "key": "forte",
+    "state": "modified",
+    "artifact": {
+      "objects": 711,
+      "hash": "ae4b5081"
+    },
+    "site": {
+      "objects": 711,
+      "hash": "ae4b5081"
+    },
+    "sdk": {
+      "objects": 711,
+      "hash": "ae4b5081"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "tractor",
+    "key": "trator",
+    "state": "intact",
+    "artifact": {
+      "objects": 261,
+      "hash": "7453bb18"
+    },
+    "site": {
+      "objects": 261,
+      "hash": "7453bb18"
+    },
+    "sdk": {
+      "objects": 261,
+      "hash": "7453bb18"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "tractor",
+    "key": "trator",
+    "state": "damaged",
+    "artifact": {
+      "objects": 324,
+      "hash": "746140b9"
+    },
+    "site": {
+      "objects": 324,
+      "hash": "746140b9"
+    },
+    "sdk": {
+      "objects": 324,
+      "hash": "746140b9"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "tractor",
+    "key": "trator",
+    "state": "modified",
+    "artifact": {
+      "objects": 302,
+      "hash": "2f51f506"
+    },
+    "site": {
+      "objects": 302,
+      "hash": "2f51f506"
+    },
+    "sdk": {
+      "objects": 302,
+      "hash": "2f51f506"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "light_4x4",
+    "key": "marrua",
+    "state": "intact",
+    "artifact": {
+      "objects": 342,
+      "hash": "fbcdbbe4"
+    },
+    "site": {
+      "objects": 342,
+      "hash": "fbcdbbe4"
+    },
+    "sdk": {
+      "objects": 342,
+      "hash": "fbcdbbe4"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "light_4x4",
+    "key": "marrua",
+    "state": "damaged",
+    "artifact": {
+      "objects": 452,
+      "hash": "1c0112f3"
+    },
+    "site": {
+      "objects": 452,
+      "hash": "1c0112f3"
+    },
+    "sdk": {
+      "objects": 452,
+      "hash": "1c0112f3"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "light_4x4",
+    "key": "marrua",
+    "state": "modified",
+    "artifact": {
+      "objects": 454,
+      "hash": "e30106fa"
+    },
+    "site": {
+      "objects": 454,
+      "hash": "e30106fa"
+    },
+    "sdk": {
+      "objects": 454,
+      "hash": "e30106fa"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "troop_truck",
+    "key": "worker",
+    "state": "intact",
+    "artifact": {
+      "objects": 417,
+      "hash": "b60618fb"
+    },
+    "site": {
+      "objects": 417,
+      "hash": "b60618fb"
+    },
+    "sdk": {
+      "objects": 417,
+      "hash": "b60618fb"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "troop_truck",
+    "key": "worker",
+    "state": "damaged",
+    "artifact": {
+      "objects": 514,
+      "hash": "72ac34b"
+    },
+    "site": {
+      "objects": 514,
+      "hash": "72ac34b"
+    },
+    "sdk": {
+      "objects": 514,
+      "hash": "72ac34b"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "troop_truck",
+    "key": "worker",
+    "state": "modified",
+    "artifact": {
+      "objects": 611,
+      "hash": "ed9d2a6f"
+    },
+    "site": {
+      "objects": 611,
+      "hash": "ed9d2a6f"
+    },
+    "sdk": {
+      "objects": 611,
+      "hash": "ed9d2a6f"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "apc_6x6",
+    "key": "guarani",
+    "state": "intact",
+    "artifact": {
+      "objects": 393,
+      "hash": "4f069815"
+    },
+    "site": {
+      "objects": 393,
+      "hash": "4f069815"
+    },
+    "sdk": {
+      "objects": 393,
+      "hash": "4f069815"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "apc_6x6",
+    "key": "guarani",
+    "state": "damaged",
+    "artifact": {
+      "objects": 509,
+      "hash": "3132070a"
+    },
+    "site": {
+      "objects": 509,
+      "hash": "3132070a"
+    },
+    "sdk": {
+      "objects": 509,
+      "hash": "3132070a"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "apc_6x6",
+    "key": "guarani",
+    "state": "modified",
+    "artifact": {
+      "objects": 553,
+      "hash": "f6f0960"
+    },
+    "site": {
+      "objects": 553,
+      "hash": "f6f0960"
+    },
+    "sdk": {
+      "objects": 553,
+      "hash": "f6f0960"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "armored_car_6x6",
+    "key": "cascavel",
+    "state": "intact",
+    "artifact": {
+      "objects": 314,
+      "hash": "e49a6a0e"
+    },
+    "site": {
+      "objects": 314,
+      "hash": "e49a6a0e"
+    },
+    "sdk": {
+      "objects": 314,
+      "hash": "e49a6a0e"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "armored_car_6x6",
+    "key": "cascavel",
+    "state": "damaged",
+    "artifact": {
+      "objects": 406,
+      "hash": "398819"
+    },
+    "site": {
+      "objects": 406,
+      "hash": "398819"
+    },
+    "sdk": {
+      "objects": 406,
+      "hash": "398819"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "armored_car_6x6",
+    "key": "cascavel",
+    "state": "modified",
+    "artifact": {
+      "objects": 442,
+      "hash": "7b3f38d3"
+    },
+    "site": {
+      "objects": 442,
+      "hash": "7b3f38d3"
+    },
+    "sdk": {
+      "objects": 442,
+      "hash": "7b3f38d3"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "battle_tank",
+    "key": "leopardo",
+    "state": "intact",
+    "artifact": {
+      "objects": 435,
+      "hash": "3e3b4d4c"
+    },
+    "site": {
+      "objects": 435,
+      "hash": "3e3b4d4c"
+    },
+    "sdk": {
+      "objects": 435,
+      "hash": "3e3b4d4c"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "battle_tank",
+    "key": "leopardo",
+    "state": "damaged",
+    "artifact": {
+      "objects": 535,
+      "hash": "5043bc80"
+    },
+    "site": {
+      "objects": 535,
+      "hash": "5043bc80"
+    },
+    "sdk": {
+      "objects": 535,
+      "hash": "5043bc80"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "battle_tank",
+    "key": "leopardo",
+    "state": "modified",
+    "artifact": {
+      "objects": 570,
+      "hash": "b3cba3f5"
+    },
+    "site": {
+      "objects": 570,
+      "hash": "b3cba3f5"
+    },
+    "sdk": {
+      "objects": 570,
+      "hash": "b3cba3f5"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "transport_helicopter",
+    "key": "blackhawk",
+    "state": "intact",
+    "artifact": {
+      "objects": 172,
+      "hash": "3223faa6"
+    },
+    "site": {
+      "objects": 172,
+      "hash": "3223faa6"
+    },
+    "sdk": {
+      "objects": 172,
+      "hash": "3223faa6"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "transport_helicopter",
+    "key": "blackhawk",
+    "state": "damaged",
+    "artifact": {
+      "objects": 226,
+      "hash": "e90d4e5"
+    },
+    "site": {
+      "objects": 226,
+      "hash": "e90d4e5"
+    },
+    "sdk": {
+      "objects": 226,
+      "hash": "e90d4e5"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "transport_helicopter",
+    "key": "blackhawk",
+    "state": "modified",
+    "artifact": {
+      "objects": 212,
+      "hash": "a48aa96"
+    },
+    "site": {
+      "objects": 212,
+      "hash": "a48aa96"
+    },
+    "sdk": {
+      "objects": 212,
+      "hash": "a48aa96"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "river_skiff",
+    "key": "voadeira",
+    "state": "intact",
+    "artifact": {
+      "objects": 70,
+      "hash": "40dc0428"
+    },
+    "site": {
+      "objects": 70,
+      "hash": "40dc0428"
+    },
+    "sdk": {
+      "objects": 70,
+      "hash": "40dc0428"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "river_skiff",
+    "key": "voadeira",
+    "state": "damaged",
+    "artifact": {
+      "objects": 130,
+      "hash": "61a07679"
+    },
+    "site": {
+      "objects": 130,
+      "hash": "61a07679"
+    },
+    "sdk": {
+      "objects": 130,
+      "hash": "61a07679"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "river_skiff",
+    "key": "voadeira",
+    "state": "modified",
+    "artifact": {
+      "objects": 107,
+      "hash": "ac326592"
+    },
+    "site": {
+      "objects": 107,
+      "hash": "ac326592"
+    },
+    "sdk": {
+      "objects": 107,
+      "hash": "ac326592"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "speedboat",
+    "key": "lancha",
+    "state": "intact",
+    "artifact": {
+      "objects": 104,
+      "hash": "ba0a1c2"
+    },
+    "site": {
+      "objects": 104,
+      "hash": "ba0a1c2"
+    },
+    "sdk": {
+      "objects": 104,
+      "hash": "ba0a1c2"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "speedboat",
+    "key": "lancha",
+    "state": "damaged",
+    "artifact": {
+      "objects": 164,
+      "hash": "aa529cd"
+    },
+    "site": {
+      "objects": 164,
+      "hash": "aa529cd"
+    },
+    "sdk": {
+      "objects": 164,
+      "hash": "aa529cd"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "speedboat",
+    "key": "lancha",
+    "state": "modified",
+    "artifact": {
+      "objects": 153,
+      "hash": "a3acd8ac"
+    },
+    "site": {
+      "objects": 153,
+      "hash": "a3acd8ac"
+    },
+    "sdk": {
+      "objects": 153,
+      "hash": "a3acd8ac"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "fishing_boat",
+    "key": "pesqueiro",
+    "state": "intact",
+    "artifact": {
+      "objects": 163,
+      "hash": "8c1cf4de"
+    },
+    "site": {
+      "objects": 163,
+      "hash": "8c1cf4de"
+    },
+    "sdk": {
+      "objects": 163,
+      "hash": "8c1cf4de"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "fishing_boat",
+    "key": "pesqueiro",
+    "state": "damaged",
+    "artifact": {
+      "objects": 199,
+      "hash": "2296d40e"
+    },
+    "site": {
+      "objects": 199,
+      "hash": "2296d40e"
+    },
+    "sdk": {
+      "objects": 199,
+      "hash": "2296d40e"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "fishing_boat",
+    "key": "pesqueiro",
+    "state": "modified",
+    "artifact": {
+      "objects": 237,
+      "hash": "34cc6e51"
+    },
+    "site": {
+      "objects": 237,
+      "hash": "34cc6e51"
+    },
+    "sdk": {
+      "objects": 237,
+      "hash": "34cc6e51"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "single_engine_plane",
+    "key": "monomotor",
+    "state": "intact",
+    "artifact": {
+      "objects": 177,
+      "hash": "bfb0a91f"
+    },
+    "site": {
+      "objects": 177,
+      "hash": "bfb0a91f"
+    },
+    "sdk": {
+      "objects": 177,
+      "hash": "bfb0a91f"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "single_engine_plane",
+    "key": "monomotor",
+    "state": "damaged",
+    "artifact": {
+      "objects": 216,
+      "hash": "bbf9c91b"
+    },
+    "site": {
+      "objects": 216,
+      "hash": "bbf9c91b"
+    },
+    "sdk": {
+      "objects": 216,
+      "hash": "bbf9c91b"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "single_engine_plane",
+    "key": "monomotor",
+    "state": "modified",
+    "artifact": {
+      "objects": 200,
+      "hash": "21693ee0"
+    },
+    "site": {
+      "objects": 200,
+      "hash": "21693ee0"
+    },
+    "sdk": {
+      "objects": 200,
+      "hash": "21693ee0"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "crop_duster",
+    "key": "agricola",
+    "state": "intact",
+    "artifact": {
+      "objects": 185,
+      "hash": "6809808f"
+    },
+    "site": {
+      "objects": 185,
+      "hash": "6809808f"
+    },
+    "sdk": {
+      "objects": 185,
+      "hash": "6809808f"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "crop_duster",
+    "key": "agricola",
+    "state": "damaged",
+    "artifact": {
+      "objects": 199,
+      "hash": "8e8abe40"
+    },
+    "site": {
+      "objects": 199,
+      "hash": "8e8abe40"
+    },
+    "sdk": {
+      "objects": 199,
+      "hash": "8e8abe40"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "crop_duster",
+    "key": "agricola",
+    "state": "modified",
+    "artifact": {
+      "objects": 203,
+      "hash": "2954fa69"
+    },
+    "site": {
+      "objects": 203,
+      "hash": "2954fa69"
+    },
+    "sdk": {
+      "objects": 203,
+      "hash": "2954fa69"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "piston_helicopter",
+    "key": "heli",
+    "state": "intact",
+    "artifact": {
+      "objects": 151,
+      "hash": "e3b62a2c"
+    },
+    "site": {
+      "objects": 151,
+      "hash": "e3b62a2c"
+    },
+    "sdk": {
+      "objects": 151,
+      "hash": "e3b62a2c"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "piston_helicopter",
+    "key": "heli",
+    "state": "damaged",
+    "artifact": {
+      "objects": 230,
+      "hash": "13727b40"
+    },
+    "site": {
+      "objects": 230,
+      "hash": "13727b40"
+    },
+    "sdk": {
+      "objects": 230,
+      "hash": "13727b40"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "piston_helicopter",
+    "key": "heli",
+    "state": "modified",
+    "artifact": {
+      "objects": 179,
+      "hash": "8f803570"
+    },
+    "site": {
+      "objects": 179,
+      "hash": "8f803570"
+    },
+    "sdk": {
+      "objects": 179,
+      "hash": "8f803570"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "rescue_helicopter",
+    "key": "resgate",
+    "state": "intact",
+    "artifact": {
+      "objects": 173,
+      "hash": "a08bc942"
+    },
+    "site": {
+      "objects": 173,
+      "hash": "a08bc942"
+    },
+    "sdk": {
+      "objects": 173,
+      "hash": "a08bc942"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "rescue_helicopter",
+    "key": "resgate",
+    "state": "damaged",
+    "artifact": {
+      "objects": 249,
+      "hash": "4f640e53"
+    },
+    "site": {
+      "objects": 249,
+      "hash": "4f640e53"
+    },
+    "sdk": {
+      "objects": 249,
+      "hash": "4f640e53"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "rescue_helicopter",
+    "key": "resgate",
+    "state": "modified",
+    "artifact": {
+      "objects": 183,
+      "hash": "de34bdb8"
+    },
+    "site": {
+      "objects": 183,
+      "hash": "de34bdb8"
+    },
+    "sdk": {
+      "objects": 183,
+      "hash": "de34bdb8"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "step_through_scooter",
+    "key": "bis",
+    "state": "intact",
+    "artifact": {
+      "objects": 115,
+      "hash": "b9763e5"
+    },
+    "site": {
+      "objects": 115,
+      "hash": "b9763e5"
+    },
+    "sdk": {
+      "objects": 115,
+      "hash": "b9763e5"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "step_through_scooter",
+    "key": "bis",
+    "state": "damaged",
+    "artifact": {
+      "objects": 143,
+      "hash": "4f433265"
+    },
+    "site": {
+      "objects": 143,
+      "hash": "4f433265"
+    },
+    "sdk": {
+      "objects": 143,
+      "hash": "4f433265"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "step_through_scooter",
+    "key": "bis",
+    "state": "modified",
+    "artifact": {
+      "objects": 128,
+      "hash": "f1f2271d"
+    },
+    "site": {
+      "objects": 128,
+      "hash": "f1f2271d"
+    },
+    "sdk": {
+      "objects": 128,
+      "hash": "f1f2271d"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "naked_bike",
+    "key": "faze",
+    "state": "intact",
+    "artifact": {
+      "objects": 135,
+      "hash": "bebaa074"
+    },
+    "site": {
+      "objects": 135,
+      "hash": "bebaa074"
+    },
+    "sdk": {
+      "objects": 135,
+      "hash": "bebaa074"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "naked_bike",
+    "key": "faze",
+    "state": "damaged",
+    "artifact": {
+      "objects": 159,
+      "hash": "e635b0e3"
+    },
+    "site": {
+      "objects": 159,
+      "hash": "e635b0e3"
+    },
+    "sdk": {
+      "objects": 159,
+      "hash": "e635b0e3"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "naked_bike",
+    "key": "faze",
+    "state": "modified",
+    "artifact": {
+      "objects": 150,
+      "hash": "5d67483a"
+    },
+    "site": {
+      "objects": 150,
+      "hash": "5d67483a"
+    },
+    "sdk": {
+      "objects": 150,
+      "hash": "5d67483a"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "sport_bike",
+    "key": "ninja",
+    "state": "intact",
+    "artifact": {
+      "objects": 138,
+      "hash": "70a00e2a"
+    },
+    "site": {
+      "objects": 138,
+      "hash": "70a00e2a"
+    },
+    "sdk": {
+      "objects": 138,
+      "hash": "70a00e2a"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "sport_bike",
+    "key": "ninja",
+    "state": "damaged",
+    "artifact": {
+      "objects": 163,
+      "hash": "64fe5dbf"
+    },
+    "site": {
+      "objects": 163,
+      "hash": "64fe5dbf"
+    },
+    "sdk": {
+      "objects": 163,
+      "hash": "64fe5dbf"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "sport_bike",
+    "key": "ninja",
+    "state": "modified",
+    "artifact": {
+      "objects": 155,
+      "hash": "ec161ce2"
+    },
+    "site": {
+      "objects": 155,
+      "hash": "ec161ce2"
+    },
+    "sdk": {
+      "objects": 155,
+      "hash": "ec161ce2"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "cruiser",
+    "key": "fatboi",
+    "state": "intact",
+    "artifact": {
+      "objects": 208,
+      "hash": "d34d2548"
+    },
+    "site": {
+      "objects": 208,
+      "hash": "d34d2548"
+    },
+    "sdk": {
+      "objects": 208,
+      "hash": "d34d2548"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "cruiser",
+    "key": "fatboi",
+    "state": "damaged",
+    "artifact": {
+      "objects": 248,
+      "hash": "525c25f2"
+    },
+    "site": {
+      "objects": 248,
+      "hash": "525c25f2"
+    },
+    "sdk": {
+      "objects": 248,
+      "hash": "525c25f2"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "cruiser",
+    "key": "fatboi",
+    "state": "modified",
+    "artifact": {
+      "objects": 221,
+      "hash": "c6dc0009"
+    },
+    "site": {
+      "objects": 221,
+      "hash": "c6dc0009"
+    },
+    "sdk": {
+      "objects": 221,
+      "hash": "c6dc0009"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "delivery_bike",
+    "key": "cargo",
+    "state": "intact",
+    "artifact": {
+      "objects": 131,
+      "hash": "e649ed6a"
+    },
+    "site": {
+      "objects": 131,
+      "hash": "e649ed6a"
+    },
+    "sdk": {
+      "objects": 131,
+      "hash": "e649ed6a"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "delivery_bike",
+    "key": "cargo",
+    "state": "damaged",
+    "artifact": {
+      "objects": 156,
+      "hash": "568e2f8f"
+    },
+    "site": {
+      "objects": 156,
+      "hash": "568e2f8f"
+    },
+    "sdk": {
+      "objects": 156,
+      "hash": "568e2f8f"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "delivery_bike",
+    "key": "cargo",
+    "state": "modified",
+    "artifact": {
+      "objects": 148,
+      "hash": "d76c41dc"
+    },
+    "site": {
+      "objects": 148,
+      "hash": "d76c41dc"
+    },
+    "sdk": {
+      "objects": 148,
+      "hash": "d76c41dc"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "boxy_hatch",
+    "key": "uno",
+    "state": "intact",
+    "artifact": {
+      "objects": 337,
+      "hash": "7688fe9b"
+    },
+    "site": {
+      "objects": 337,
+      "hash": "7688fe9b"
+    },
+    "sdk": {
+      "objects": 337,
+      "hash": "7688fe9b"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "boxy_hatch",
+    "key": "uno",
+    "state": "damaged",
+    "artifact": {
+      "objects": 448,
+      "hash": "27262af"
+    },
+    "site": {
+      "objects": 448,
+      "hash": "27262af"
+    },
+    "sdk": {
+      "objects": 448,
+      "hash": "27262af"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "boxy_hatch",
+    "key": "uno",
+    "state": "modified",
+    "artifact": {
+      "objects": 516,
+      "hash": "cf19edf6"
+    },
+    "site": {
+      "objects": 516,
+      "hash": "cf19edf6"
+    },
+    "sdk": {
+      "objects": 516,
+      "hash": "cf19edf6"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "family_hatch",
+    "key": "gol",
+    "state": "intact",
+    "artifact": {
+      "objects": 366,
+      "hash": "48d0ccb5"
+    },
+    "site": {
+      "objects": 366,
+      "hash": "48d0ccb5"
+    },
+    "sdk": {
+      "objects": 366,
+      "hash": "48d0ccb5"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "family_hatch",
+    "key": "gol",
+    "state": "damaged",
+    "artifact": {
+      "objects": 479,
+      "hash": "1cf41303"
+    },
+    "site": {
+      "objects": 479,
+      "hash": "1cf41303"
+    },
+    "sdk": {
+      "objects": 479,
+      "hash": "1cf41303"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "family_hatch",
+    "key": "gol",
+    "state": "modified",
+    "artifact": {
+      "objects": 533,
+      "hash": "ffab30c"
+    },
+    "site": {
+      "objects": 533,
+      "hash": "ffab30c"
+    },
+    "sdk": {
+      "objects": 533,
+      "hash": "ffab30c"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "rideshare_hatch",
+    "key": "hb21",
+    "state": "intact",
+    "artifact": {
+      "objects": 379,
+      "hash": "ff886875"
+    },
+    "site": {
+      "objects": 379,
+      "hash": "ff886875"
+    },
+    "sdk": {
+      "objects": 379,
+      "hash": "ff886875"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "rideshare_hatch",
+    "key": "hb21",
+    "state": "damaged",
+    "artifact": {
+      "objects": 491,
+      "hash": "6dd53cbb"
+    },
+    "site": {
+      "objects": 491,
+      "hash": "6dd53cbb"
+    },
+    "sdk": {
+      "objects": 491,
+      "hash": "6dd53cbb"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "rideshare_hatch",
+    "key": "hb21",
+    "state": "modified",
+    "artifact": {
+      "objects": 545,
+      "hash": "a42a1f3a"
+    },
+    "site": {
+      "objects": 545,
+      "hash": "a42a1f3a"
+    },
+    "sdk": {
+      "objects": 545,
+      "hash": "a42a1f3a"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "turbo_hatch",
+    "key": "polo",
+    "state": "intact",
+    "artifact": {
+      "objects": 361,
+      "hash": "f4d12d61"
+    },
+    "site": {
+      "objects": 361,
+      "hash": "f4d12d61"
+    },
+    "sdk": {
+      "objects": 361,
+      "hash": "f4d12d61"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "turbo_hatch",
+    "key": "polo",
+    "state": "damaged",
+    "artifact": {
+      "objects": 472,
+      "hash": "d5388714"
+    },
+    "site": {
+      "objects": 472,
+      "hash": "d5388714"
+    },
+    "sdk": {
+      "objects": 472,
+      "hash": "d5388714"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "turbo_hatch",
+    "key": "polo",
+    "state": "modified",
+    "artifact": {
+      "objects": 541,
+      "hash": "7ae775b8"
+    },
+    "site": {
+      "objects": 541,
+      "hash": "7ae775b8"
+    },
+    "sdk": {
+      "objects": 541,
+      "hash": "7ae775b8"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "fastback_sedan",
+    "key": "civico",
+    "state": "intact",
+    "artifact": {
+      "objects": 397,
+      "hash": "304796b0"
+    },
+    "site": {
+      "objects": 397,
+      "hash": "304796b0"
+    },
+    "sdk": {
+      "objects": 397,
+      "hash": "304796b0"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "fastback_sedan",
+    "key": "civico",
+    "state": "damaged",
+    "artifact": {
+      "objects": 506,
+      "hash": "91649483"
+    },
+    "site": {
+      "objects": 506,
+      "hash": "91649483"
+    },
+    "sdk": {
+      "objects": 506,
+      "hash": "91649483"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "fastback_sedan",
+    "key": "civico",
+    "state": "modified",
+    "artifact": {
+      "objects": 568,
+      "hash": "85305bbf"
+    },
+    "site": {
+      "objects": 568,
+      "hash": "85305bbf"
+    },
+    "sdk": {
+      "objects": 568,
+      "hash": "85305bbf"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "classic_six_sedan",
+    "key": "opala",
+    "state": "intact",
+    "artifact": {
+      "objects": 322,
+      "hash": "df19b8b0"
+    },
+    "site": {
+      "objects": 322,
+      "hash": "df19b8b0"
+    },
+    "sdk": {
+      "objects": 322,
+      "hash": "df19b8b0"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "classic_six_sedan",
+    "key": "opala",
+    "state": "damaged",
+    "artifact": {
+      "objects": 456,
+      "hash": "41c35248"
+    },
+    "site": {
+      "objects": 456,
+      "hash": "41c35248"
+    },
+    "sdk": {
+      "objects": 456,
+      "hash": "41c35248"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "classic_six_sedan",
+    "key": "opala",
+    "state": "modified",
+    "artifact": {
+      "objects": 482,
+      "hash": "d9132d2d"
+    },
+    "site": {
+      "objects": 482,
+      "hash": "d9132d2d"
+    },
+    "sdk": {
+      "objects": 482,
+      "hash": "d9132d2d"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "v8_coupe",
+    "key": "mustang",
+    "state": "intact",
+    "artifact": {
+      "objects": 381,
+      "hash": "8079d1c3"
+    },
+    "site": {
+      "objects": 381,
+      "hash": "8079d1c3"
+    },
+    "sdk": {
+      "objects": 381,
+      "hash": "8079d1c3"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "v8_coupe",
+    "key": "mustang",
+    "state": "damaged",
+    "artifact": {
+      "objects": 491,
+      "hash": "e0bc579a"
+    },
+    "site": {
+      "objects": 491,
+      "hash": "e0bc579a"
+    },
+    "sdk": {
+      "objects": 491,
+      "hash": "e0bc579a"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "v8_coupe",
+    "key": "mustang",
+    "state": "modified",
+    "artifact": {
+      "objects": 520,
+      "hash": "5a878833"
+    },
+    "site": {
+      "objects": 520,
+      "hash": "5a878833"
+    },
+    "sdk": {
+      "objects": 520,
+      "hash": "5a878833"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "jet_ski",
+    "key": "jetski",
+    "state": "intact",
+    "artifact": {
+      "objects": 51,
+      "hash": "6ddb9904"
+    },
+    "site": {
+      "objects": 51,
+      "hash": "6ddb9904"
+    },
+    "sdk": {
+      "objects": 51,
+      "hash": "6ddb9904"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "jet_ski",
+    "key": "jetski",
+    "state": "damaged",
+    "artifact": {
+      "objects": 87,
+      "hash": "b97be660"
+    },
+    "site": {
+      "objects": 87,
+      "hash": "b97be660"
+    },
+    "sdk": {
+      "objects": 87,
+      "hash": "b97be660"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "jet_ski",
+    "key": "jetski",
+    "state": "modified",
+    "artifact": {
+      "objects": 69,
+      "hash": "ee35ef3b"
+    },
+    "site": {
+      "objects": 69,
+      "hash": "ee35ef3b"
+    },
+    "sdk": {
+      "objects": 69,
+      "hash": "ee35ef3b"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "sailboat",
+    "key": "veleiro",
+    "state": "intact",
+    "artifact": {
+      "objects": 132,
+      "hash": "78a8b92b"
+    },
+    "site": {
+      "objects": 132,
+      "hash": "78a8b92b"
+    },
+    "sdk": {
+      "objects": 132,
+      "hash": "78a8b92b"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "sailboat",
+    "key": "veleiro",
+    "state": "damaged",
+    "artifact": {
+      "objects": 168,
+      "hash": "a26fad06"
+    },
+    "site": {
+      "objects": 168,
+      "hash": "a26fad06"
+    },
+    "sdk": {
+      "objects": 168,
+      "hash": "a26fad06"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "sailboat",
+    "key": "veleiro",
+    "state": "modified",
+    "artifact": {
+      "objects": 163,
+      "hash": "69caa08"
+    },
+    "site": {
+      "objects": 163,
+      "hash": "69caa08"
+    },
+    "sdk": {
+      "objects": 163,
+      "hash": "69caa08"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "rescue_dinghy",
+    "key": "bote",
+    "state": "intact",
+    "artifact": {
+      "objects": 97,
+      "hash": "6202546b"
+    },
+    "site": {
+      "objects": 97,
+      "hash": "6202546b"
+    },
+    "sdk": {
+      "objects": 97,
+      "hash": "6202546b"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "rescue_dinghy",
+    "key": "bote",
+    "state": "damaged",
+    "artifact": {
+      "objects": 133,
+      "hash": "b27f89e4"
+    },
+    "site": {
+      "objects": 133,
+      "hash": "b27f89e4"
+    },
+    "sdk": {
+      "objects": 133,
+      "hash": "b27f89e4"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "rescue_dinghy",
+    "key": "bote",
+    "state": "modified",
+    "artifact": {
+      "objects": 118,
+      "hash": "b3befcf"
+    },
+    "site": {
+      "objects": 118,
+      "hash": "b3befcf"
+    },
+    "sdk": {
+      "objects": 118,
+      "hash": "b3befcf"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "patrol_boat",
+    "key": "patrulha",
+    "state": "intact",
+    "artifact": {
+      "objects": 148,
+      "hash": "b0cf1671"
+    },
+    "site": {
+      "objects": 148,
+      "hash": "b0cf1671"
+    },
+    "sdk": {
+      "objects": 148,
+      "hash": "b0cf1671"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "patrol_boat",
+    "key": "patrulha",
+    "state": "damaged",
+    "artifact": {
+      "objects": 195,
+      "hash": "ff8251c3"
+    },
+    "site": {
+      "objects": 195,
+      "hash": "ff8251c3"
+    },
+    "sdk": {
+      "objects": 195,
+      "hash": "ff8251c3"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "patrol_boat",
+    "key": "patrulha",
+    "state": "modified",
+    "artifact": {
+      "objects": 186,
+      "hash": "610998b"
+    },
+    "site": {
+      "objects": 186,
+      "hash": "610998b"
+    },
+    "sdk": {
+      "objects": 186,
+      "hash": "610998b"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "tandem_trainer",
+    "key": "paipa",
+    "state": "intact",
+    "artifact": {
+      "objects": 195,
+      "hash": "384bcc98"
+    },
+    "site": {
+      "objects": 195,
+      "hash": "384bcc98"
+    },
+    "sdk": {
+      "objects": 195,
+      "hash": "384bcc98"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "tandem_trainer",
+    "key": "paipa",
+    "state": "damaged",
+    "artifact": {
+      "objects": 213,
+      "hash": "5e42e626"
+    },
+    "site": {
+      "objects": 213,
+      "hash": "5e42e626"
+    },
+    "sdk": {
+      "objects": 213,
+      "hash": "5e42e626"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "tandem_trainer",
+    "key": "paipa",
+    "state": "modified",
+    "artifact": {
+      "objects": 211,
+      "hash": "c7634d13"
+    },
+    "site": {
+      "objects": 211,
+      "hash": "c7634d13"
+    },
+    "sdk": {
+      "objects": 211,
+      "hash": "c7634d13"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "regional_turboprop",
+    "key": "bandeirante",
+    "state": "intact",
+    "artifact": {
+      "objects": 316,
+      "hash": "b137ff04"
+    },
+    "site": {
+      "objects": 316,
+      "hash": "b137ff04"
+    },
+    "sdk": {
+      "objects": 316,
+      "hash": "b137ff04"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "regional_turboprop",
+    "key": "bandeirante",
+    "state": "damaged",
+    "artifact": {
+      "objects": 340,
+      "hash": "76eb0490"
+    },
+    "site": {
+      "objects": 340,
+      "hash": "76eb0490"
+    },
+    "sdk": {
+      "objects": 340,
+      "hash": "76eb0490"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "regional_turboprop",
+    "key": "bandeirante",
+    "state": "modified",
+    "artifact": {
+      "objects": 342,
+      "hash": "866c168f"
+    },
+    "site": {
+      "objects": 342,
+      "hash": "866c168f"
+    },
+    "sdk": {
+      "objects": 342,
+      "hash": "866c168f"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "amphibian_turboprop",
+    "key": "caravana",
+    "state": "intact",
+    "artifact": {
+      "objects": 258,
+      "hash": "5b154e04"
+    },
+    "site": {
+      "objects": 258,
+      "hash": "5b154e04"
+    },
+    "sdk": {
+      "objects": 258,
+      "hash": "5b154e04"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "amphibian_turboprop",
+    "key": "caravana",
+    "state": "damaged",
+    "artifact": {
+      "objects": 270,
+      "hash": "440710a7"
+    },
+    "site": {
+      "objects": 270,
+      "hash": "440710a7"
+    },
+    "sdk": {
+      "objects": 270,
+      "hash": "440710a7"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "amphibian_turboprop",
+    "key": "caravana",
+    "state": "modified",
+    "artifact": {
+      "objects": 318,
+      "hash": "107f4888"
+    },
+    "site": {
+      "objects": 318,
+      "hash": "107f4888"
+    },
+    "sdk": {
+      "objects": 318,
+      "hash": "107f4888"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "light_jet",
+    "key": "fenom",
+    "state": "intact",
+    "artifact": {
+      "objects": 200,
+      "hash": "81b82541"
+    },
+    "site": {
+      "objects": 200,
+      "hash": "81b82541"
+    },
+    "sdk": {
+      "objects": 200,
+      "hash": "81b82541"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "light_jet",
+    "key": "fenom",
+    "state": "damaged",
+    "artifact": {
+      "objects": 214,
+      "hash": "46e2ab73"
+    },
+    "site": {
+      "objects": 214,
+      "hash": "46e2ab73"
+    },
+    "sdk": {
+      "objects": 214,
+      "hash": "46e2ab73"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "light_jet",
+    "key": "fenom",
+    "state": "modified",
+    "artifact": {
+      "objects": 220,
+      "hash": "fac0a501"
+    },
+    "site": {
+      "objects": 220,
+      "hash": "fac0a501"
+    },
+    "sdk": {
+      "objects": 220,
+      "hash": "fac0a501"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "light_attack_turboprop",
+    "key": "tucano",
+    "state": "intact",
+    "artifact": {
+      "objects": 165,
+      "hash": "81e0c4cc"
+    },
+    "site": {
+      "objects": 165,
+      "hash": "81e0c4cc"
+    },
+    "sdk": {
+      "objects": 165,
+      "hash": "81e0c4cc"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "light_attack_turboprop",
+    "key": "tucano",
+    "state": "damaged",
+    "artifact": {
+      "objects": 191,
+      "hash": "39bc5b15"
+    },
+    "site": {
+      "objects": 191,
+      "hash": "39bc5b15"
+    },
+    "sdk": {
+      "objects": 191,
+      "hash": "39bc5b15"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "light_attack_turboprop",
+    "key": "tucano",
+    "state": "modified",
+    "artifact": {
+      "objects": 186,
+      "hash": "7f6374f8"
+    },
+    "site": {
+      "objects": 186,
+      "hash": "7f6374f8"
+    },
+    "sdk": {
+      "objects": 186,
+      "hash": "7f6374f8"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "trainer_helicopter",
+    "key": "r22",
+    "state": "intact",
+    "artifact": {
+      "objects": 143,
+      "hash": "199c3530"
+    },
+    "site": {
+      "objects": 143,
+      "hash": "199c3530"
+    },
+    "sdk": {
+      "objects": 143,
+      "hash": "199c3530"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "trainer_helicopter",
+    "key": "r22",
+    "state": "damaged",
+    "artifact": {
+      "objects": 217,
+      "hash": "bdb88c72"
+    },
+    "site": {
+      "objects": 217,
+      "hash": "bdb88c72"
+    },
+    "sdk": {
+      "objects": 217,
+      "hash": "bdb88c72"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "trainer_helicopter",
+    "key": "r22",
+    "state": "modified",
+    "artifact": {
+      "objects": 167,
+      "hash": "2d5d2d02"
+    },
+    "site": {
+      "objects": 167,
+      "hash": "2d5d2d02"
+    },
+    "sdk": {
+      "objects": 167,
+      "hash": "2d5d2d02"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "turbine_helicopter",
+    "key": "jetranger",
+    "state": "intact",
+    "artifact": {
+      "objects": 169,
+      "hash": "296731a3"
+    },
+    "site": {
+      "objects": 169,
+      "hash": "296731a3"
+    },
+    "sdk": {
+      "objects": 169,
+      "hash": "296731a3"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "turbine_helicopter",
+    "key": "jetranger",
+    "state": "damaged",
+    "artifact": {
+      "objects": 270,
+      "hash": "fe158518"
+    },
+    "site": {
+      "objects": 270,
+      "hash": "fe158518"
+    },
+    "sdk": {
+      "objects": 270,
+      "hash": "fe158518"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "turbine_helicopter",
+    "key": "jetranger",
+    "state": "modified",
+    "artifact": {
+      "objects": 186,
+      "hash": "f47c4155"
+    },
+    "site": {
+      "objects": 186,
+      "hash": "f47c4155"
+    },
+    "sdk": {
+      "objects": 186,
+      "hash": "f47c4155"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "police_helicopter",
+    "key": "h145",
+    "state": "intact",
+    "artifact": {
+      "objects": 250,
+      "hash": "684ef702"
+    },
+    "site": {
+      "objects": 250,
+      "hash": "684ef702"
+    },
+    "sdk": {
+      "objects": 250,
+      "hash": "684ef702"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "police_helicopter",
+    "key": "h145",
+    "state": "damaged",
+    "artifact": {
+      "objects": 363,
+      "hash": "61b32f13"
+    },
+    "site": {
+      "objects": 363,
+      "hash": "61b32f13"
+    },
+    "sdk": {
+      "objects": 363,
+      "hash": "61b32f13"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "police_helicopter",
+    "key": "h145",
+    "state": "modified",
+    "artifact": {
+      "objects": 263,
+      "hash": "f737673b"
+    },
+    "site": {
+      "objects": 263,
+      "hash": "f737673b"
+    },
+    "sdk": {
+      "objects": 263,
+      "hash": "f737673b"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "attack_helicopter",
+    "key": "sabre",
+    "state": "intact",
+    "artifact": {
+      "objects": 280,
+      "hash": "45509b1c"
+    },
+    "site": {
+      "objects": 280,
+      "hash": "45509b1c"
+    },
+    "sdk": {
+      "objects": 280,
+      "hash": "45509b1c"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "attack_helicopter",
+    "key": "sabre",
+    "state": "damaged",
+    "artifact": {
+      "objects": 402,
+      "hash": "ad2e3e3d"
+    },
+    "site": {
+      "objects": 402,
+      "hash": "ad2e3e3d"
+    },
+    "sdk": {
+      "objects": 402,
+      "hash": "ad2e3e3d"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  },
+  {
+    "id": "attack_helicopter",
+    "key": "sabre",
+    "state": "modified",
+    "artifact": {
+      "objects": 290,
+      "hash": "4501f027"
+    },
+    "site": {
+      "objects": 290,
+      "hash": "4501f027"
+    },
+    "sdk": {
+      "objects": 290,
+      "hash": "4501f027"
+    },
+    "artifactEqualsSite": true,
+    "sdkEqualsArtifact": true
+  }
+]

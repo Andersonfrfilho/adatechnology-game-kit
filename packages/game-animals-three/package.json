@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-animals-three",
-  "version": "0.0.0",
+  "version": "0.2.1",
   "license": "MIT",
   "description": "three.js drawing of the animals of @adatechnology/game-animals: a literal port of the Bichos do Vale builders (quadruped, bird, snake) and their animation, with the alive, infected and dead looks for every species, the joints and split views, and a GPU node skin for crowds.",
   "keywords": [
@@ -57,8 +57,10 @@
   },
   "dependencies": {
     "@adatechnology/game-animals": "workspace:*",
+    "@adatechnology/game-audio": "workspace:*",
     "@adatechnology/game-contracts": "workspace:*",
-    "@adatechnology/game-props3d": "workspace:*"
+    "@adatechnology/game-props3d": "workspace:*",
+    "@adatechnology/game-shapes-three": "workspace:*"
   },
   "peerDependencies": {
     "three": "^0.160.0"

@@ -1,0 +1,71 @@
+{
+  "name": "@adatechnology/game-crowd-three",
+  "version": "0.2.0",
+  "license": "MIT",
+  "description": "three.js drawing for @adatechnology/game-crowd: every agent, body on the ground and civilian as instances (a literal port of the team game's hordeRender and npcRender: view culling, LOD with hysteresis, attack pose, the pose by state), the renderer on the baked variants of game-characters-three, the herd on the animals' own rigs, the crowd's sound bank and the crowd test area.",
+  "keywords": [
+    "three",
+    "threejs",
+    "game",
+    "crowd",
+    "horde",
+    "instancing",
+    "lod"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Andersonfrfilho/adatechnology-game-kit.git",
+    "directory": "packages/game-crowd-three"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "unpkg": "dist/index.global.js",
+  "jsdelivr": "dist/index.global.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./global": "./dist/index.global.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@adatechnology/game-audio": "workspace:*",
+    "@adatechnology/game-characters": "workspace:*",
+    "@adatechnology/game-characters-three": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-crowd": "workspace:*",
+    "@adatechnology/game-player": "workspace:*"
+  },
+  "peerDependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@adatechnology/game-animals": "workspace:*",
+    "@adatechnology/game-animals-species": "workspace:*",
+    "@adatechnology/game-animals-three": "workspace:*",
+    "@adatechnology/game-characters-undead": "workspace:*",
+    "@adatechnology/game-infection": "workspace:*",
+    "@adatechnology/golden-tool": "workspace:*",
+    "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "happy-dom": "^17.4.4",
+    "three": "^0.160.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

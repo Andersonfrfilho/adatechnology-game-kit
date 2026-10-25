@@ -5,6 +5,7 @@
 import { GAIT_PHASES } from '@adatechnology/game-animals'
 import type { AnimalSpecies, AnimalVisualState, GaitPhases } from '@adatechnology/game-animals'
 import { collectReferencedNodes, createNodeSkin } from '@adatechnology/game-props3d'
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import type { NodeSkin } from '@adatechnology/game-props3d'
 import type * as THREE_NS from 'three'
 
@@ -21,6 +22,9 @@ import type { AnimalRig, AnimalsThreeOptions, DocumentLike, Three } from './type
 import { applyVisualState } from './visual-state'
 import { setJointView, setSplit, updateSplit } from './views'
 
+export { ANIMAL_SOUND_BANK, ANIMAL_SOUNDS, COW_MOO, DOG_BARK, HEN_CLUCK, LAPWING_CALL } from './audio/recipes'
+export { ANIMAL_CALLS, ANIMAL_CALL_SOURCES, createAnimalSound } from './audio/sound'
+export type { AnimalCall, AnimalSound, AnimalSoundOptions, AnimalSoundSink } from './audio/sound'
 export type { AnimalLeg, AnimalPivot, AnimalRig, AnimalWing, AnimalsThreeOptions, CanvasLike, DocumentLike, Three } from './types'
 export type { AnimateParams } from './animate-types'
 export type { BirdExtra, BirdParts, ExtraContext, QuadrupedExtra, QuadrupedParts } from './extras'
@@ -57,7 +61,12 @@ const countTriangles = (root: THREE_NS.Object3D): number => {
   return Math.round(triangles)
 }
 
-export const createAnimalsThree = (THREE: Three, options: AnimalsThreeOptions = {}): AnimalsThree => {
+/**
+ * The animals drawn with the host's three.js. The geometry (boxes, cylinders, cones, spheres, circles, tori, the lathe of the bodies) comes from
+ * game-shapes through `shapeGeometries(host)`: the same bytes and classes as three's, from a template cache; everything else is the host's.
+ */
+export const createAnimalsThree = (host: Three, options: AnimalsThreeOptions = {}): AnimalsThree => {
+  const THREE = shapeGeometries(host)
   const random = options.random ?? createStream(options.seed ?? 7)
   const documentOf = (): DocumentLike => {
     const found = options.document ?? (globalThis as { document?: DocumentLike }).document

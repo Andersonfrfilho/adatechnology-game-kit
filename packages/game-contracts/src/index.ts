@@ -10,14 +10,21 @@ export type {
   DebrisKind,
   Dent,
   DestructibleSpec,
+  BlastOptions,
+  BlastReport,
+  ConfinementOptions,
   ExplosionChain,
+  FragmentHitOptions,
+  ShelterOptions,
   DestructionEvent,
   DestructionEventType,
   FluidKind,
   Fragment,
   FragmentMark,
   FractureStyle,
+  BallisticExtras,
   Hit,
+  HitIgnition,
   HitResult,
   Hole,
   JointKind,
@@ -45,9 +52,12 @@ export { MISSING_BITS } from './body'
 export type { BodyRegion, BodySlot, SegmentKind } from './body'
 export { checkSpec } from './spec'
 export type { CheckSpecOptions, SpecReport } from './spec'
-export { shotToHit } from './weapons'
+export { shotToHit, shotExtras } from './weapons'
+export { DEFAULT_IGNITION_RULES, fillFactor, ignitionChance, resolveIgnitionRules, sparkTargetFactor } from './ignition'
+export type { IgnitionRules } from './ignition'
 export type { Shot, Use } from './weapons'
 export type { ContainerSpec, ItemUseDef, LiquidId } from './fluids'
+export type { EffectHandle, EffectRequest, EffectSink } from './effects'
 export { checkAnimation } from './animation'
 export type { AnimationClipSpec, AnimationEventSpec, AnimationKey, AnimationPose, ItemAnimationContract } from './animation'
 export { STAGE_EVENT, TOOL_CLIP, checkToolClips, createToolClipPlayer, sampleClip, scaleClip, toolAnimationStep } from './tool-animation'
@@ -61,6 +71,7 @@ export type {
   BenchChange,
   BenchDeclaration,
   BenchReport,
+  BenchSheet,
   BooleanControl,
   ChoiceControl,
   ChoiceOption,
@@ -72,3 +83,6 @@ export type {
   ModuleMetric,
   NumberControl,
 } from './bench'
+export type { AudioListener, AudioSink, LoopHandle, SoundHandle, SoundRequest } from './audio'
+export { DEFAULT_ENVIRONMENT, createEnvironmentBus } from './environment'
+export type { EnvironmentBus, EnvironmentKey, EnvironmentState } from './environment'

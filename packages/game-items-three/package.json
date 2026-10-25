@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-items-three",
-  "version": "0.0.0",
+  "version": "0.1.6",
   "license": "MIT",
   "description": "three.js presentation for @adatechnology/game-items: the 24 models of the Itens do Vale Cinzento showcase at real size, simple shapes at real size for every other item, wear (new, used, spoiled) on the materials, merge by material, LOD and the draw budgets of the team.",
   "keywords": [
@@ -46,7 +46,7 @@
     "@adatechnology/game-contracts": "workspace:*",
     "@adatechnology/game-interactables": "workspace:*",
     "@adatechnology/game-items": "workspace:*",
-    "@adatechnology/game-props3d": "workspace:*"
+    "@adatechnology/game-shapes-three": "workspace:*"
   },
   "peerDependencies": {
     "three": "^0.160.0"

@@ -17,6 +17,10 @@
       "types": "./dist/cut-source.d.ts",
       "import": "./dist/cut-source.js"
     },
+    "./team-audio": {
+      "types": "./dist/team-audio.d.ts",
+      "import": "./dist/team-audio.js"
+    },
     "./record-page": {
       "types": "./dist/record-page.d.ts",
       "import": "./dist/record-page.js"
@@ -26,7 +30,8 @@
     "build": "tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "record": "node bin/record.mjs"
+    "record": "node bin/record.mjs",
+    "record-audio": "node bin/record-audio.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.7",

@@ -342,5 +342,41 @@ export function buildScenarios(locale, analysisOf) {
         expect(hp() < before, T(`O zumbi perdeu pontos: ${n1(before)} para ${n1(hp())}`, `The zombie lost points: ${n1(before)} to ${n1(hp())}`), { before, after: hp() })
       },
     },
+    // Cross-phase scenario (owner rule): the vehicles module is a DestructibleImpl in the very world that holds the furniture, so one shot at the car leaves the fridge alone.
+    {
+      id: 'car_in_the_yard',
+      name: T('Carro no quintal: um 7,62 fura a porta do sedã no modo leve e a geladeira ao lado não sente', 'Car in the yard: a 7.62 goes through the door of the light-mode sedan and the fridge beside it feels nothing'),
+      run: ({ room, step, expect }) => {
+        const fridge = spawn(room, 'fridge', [-3, 0, -9])
+        const bench = room.bench('vehicles_area')
+        let car
+        try {
+          // the light mode of the fleet (fewer segments, no interior): the car of a crowd, with the same doors
+          bench?.set('quality', 'lite')
+          car = room.spawn('sedan', [2.5, 0, -5], 0)
+        } catch (e) {
+          expect(false, T(`O módulo de veículos não está carregado: ${e.message}`, `The vehicles module is not loaded: ${e.message}`))
+          return
+        } finally {
+          bench?.set('quality', 'high')
+        }
+        const destructible = car.root.userData.destructible
+        const total = (id) => (room.world.state(id)?.parts ?? []).reduce((sum, p) => sum + p.hp, 0)
+        const fridgeBefore = total(fridge)
+        const before = part(room, car.objectId, 'door_front_left').hp
+        const c = destructible.partWorldCenter('door_front_left')
+        room.setTool('rifle_7_62x39')
+        room.waitUntilReady()
+        // the left of the car is +x: the shooter stands on that side
+        room.look([c[0] + 2.5, c[1], c[2]], c)
+        room.use()
+        step(0.6)
+        const door = part(room, car.objectId, 'door_front_left')
+        const events = room.log.entries({ channel: 'event' }).filter((e) => e.objectId === car.objectId).map((e) => e.type)
+        expect(door.hp < before, T(`A porta dianteira esquerda perdeu pontos: ${n1(before)} para ${n1(door.hp)}`, `The front left door lost points: ${n1(before)} to ${n1(door.hp)}`), { before, after: door.hp, events })
+        expect(door.holes.length >= 1, T(`A porta tem ${door.holes.length} furo(s) (esperado: 1 ou mais)`, `The door has ${door.holes.length} hole(s) (expected: 1 or more)`), { holes: door.holes.length })
+        expect(Math.abs(total(fridge) - fridgeBefore) < 1e-6, T(`A geladeira ao lado ficou intacta: ${n1(fridgeBefore)} e ${n1(total(fridge))}`, `The fridge beside it is untouched: ${n1(fridgeBefore)} and ${n1(total(fridge))}`), { before: fridgeBefore, after: total(fridge) })
+      },
+    },
   ]
 }

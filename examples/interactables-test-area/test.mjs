@@ -87,6 +87,63 @@ for (const lang of ['pt-BR', 'en']) {
   })
   check(`[${lang}] the characters and animals modules are loaded, and zombie_behind_door is green`, people.characters >= 25 && people.animals === 13 && people.scenario.passed === 1 && people.scenario.failed === 0, people)
 
+  // the vehicles module rides along too (owner rule): loaded with its 8 vehicles, and the 7.62 shot at the light-mode sedan leaves the fridge beside it alone
+  const cars = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const r = window.__furnitureReport.vehicles
+    const run = await room.runScenarios(room.scenarios.filter((s) => s.id.includes('car_in_the_yard')))
+    room.clear()
+    return { ok: r?.ok && r.problems.length === 0, items: r?.items?.length ?? 0, scenario: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
+  })
+  check(`[${lang}] the vehicles module is loaded (8 vehicles), and car_in_the_yard is green`, cars.ok && cars.items === 8 && cars.scenario.passed === 1 && cars.scenario.failed === 0, cars)
+
+  // the vegetation module rides along too (owner rule): loaded with its 18 plants, and an axe fells the 15 cm trunk here as well
+  const plants = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const r = window.__furnitureReport.vegetation
+    const run = await room.runScenarios(room.scenarios.filter((s) => s.id === 'veg_axe_fells_crown' || s.id === 'veg_walk_on_grass'))
+    room.clear()
+    return { ok: r?.ok && r.problems.length === 0, items: r?.items?.length ?? 0, scenarios: r?.scenarios?.length ?? 0, run: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
+  })
+  check(`[${lang}] the vegetation module is loaded (18 plants, 13 scenarios), and the axe and the grass walk are green`, plants.ok && plants.items === 18 && plants.scenarios === 13 && plants.run.passed === 2 && plants.run.failed === 0, plants)
+
+  // the urban module rides along too (owner rule): loaded with its 17 items and 8 scenarios, and the light budget and the dashes of a road are green here as well
+  const city = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const r = window.__furnitureReport.urban
+    const run = await room.runScenarios(room.scenarios.filter((s) => s.id === 'urban_light_budget' || s.id === 'urban_road_dashes'))
+    room.clear()
+    return { ok: r?.ok && r.problems.length === 0, items: r?.items?.length ?? 0, scenarios: r?.scenarios?.length ?? 0, run: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
+  })
+  check(`[${lang}] the urban module is loaded (17 items, 8 scenarios), and the light budget and the road dashes are green`, city.ok && city.items === 17 && city.scenarios === 8 && city.run.passed === 2 && city.run.failed === 0, city)
+  // a wound on a zombie throws drops of blood into the running film, in the colours of its infection age (the body event reaches the film bridge the room lends)
+  const gore = await page.evaluate(() => {
+    const room = window.__testRoom
+    const so = room.spawn('zombie_walker', [0, 0, -3], 0)
+    const calls = []
+    const splat = room.film.splat
+    room.film.splat = (call) => (calls.push({ fluid: call.fluid, count: call.count, tint: call.tint }), splat.call(room.film, call))
+    room.world.hit(so.objectId, { type: 'slash', point: [0.2, 1.4, -3], direction: [-1, 0, 0], part: 'upperArmL', points: 100, cut: 1 })
+    for (let i = 0; i < 60; i++) room.update(1 / 30)
+    room.film.splat = splat
+    const grids = room.scene.getObjectByName('film_grid') !== undefined
+    room.clear()
+    return { calls: calls.length, tinted: calls.every((call) => call.tint && call.tint.fresh > 0 && call.count > 0), fluid: calls[0]?.fluid, grids }
+  })
+  check(`[${lang}] a wound on a zombie throws tinted blood into the film (the body event reaches the film bridge)`, gore.calls > 0 && gore.tinted && gore.grids, gore)
+
+  // the voices of the bodies and the calls of the animals play on the room's engine (T6.1g): a zombie groans, a cow moos
+  // (the room plays in real time, so earlier voices may end meanwhile: the count only has to show voices playing, not more than before)
+  const voices = await page.evaluate(() => {
+    const room = window.__testRoom
+    const before = room.audio.stats()
+    const groan = room.bench('characters_area').act('voice')
+    const moo = room.bench('animals_area').act('call')
+    const after = room.audio.stats()
+    return { groan, moo, peak: after.peak, voices: after.voices, registered: ['groan_walker', 'scream', 'cow_moo', 'hen_cluck'].every((id) => room.audio.registry.sound(id) !== undefined), before: before.voices }
+  })
+  check(`[${lang}] the voices of the bodies and the calls of the animals play on the room engine`, voices.groan && voices.moo && voices.registered && voices.voices > 0, voices)
+
   // the weapons module rides along (owner rule: this area shows what every phase adds): loaded, with its accessory bench, and a suppressor goes on an M4 here too
   const weapons = await page.evaluate(() => {
     const room = window.__testRoom
@@ -113,6 +170,74 @@ for (const lang of ['pt-BR', 'en']) {
     return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, inFridge: found.length }
   })
   check(`[${lang}] the items module is loaded too and the fridge holds real items`, items.module === 'items_area' && items.ok && items.problems.length === 0 && items.items > 300 && items.inFridge > 0, items)
+  // the floorplan module rides along too, on the room's world and renderer (houses are built on demand, not on load)
+  const floorplan = await page.evaluate(() => {
+    const loaded = window.__furnitureReport.floorplan
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, scenarios: loaded?.scenarios?.length ?? 0 }
+  })
+  check(`[${lang}] the floorplan module is loaded too (5 specimens, 7 scenarios)`, floorplan.module === 'floorplan_area' && floorplan.ok && floorplan.problems.length === 0 && floorplan.items === 5 && floorplan.scenarios === 7, floorplan)
+  const effects = await page.evaluate(() => {
+    const loaded = window.__furnitureReport.vfx
+    const bench = window.__testRoom.bench('vfx')
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], controls: bench ? bench.controls().length : 0, layers: bench ? bench.layers().length : 0 }
+  })
+  check(`[${lang}] the effects bench is loaded too (7 controls, 6 layers)`, effects.module === 'vfx' && effects.ok && effects.problems.length === 0 && effects.controls === 7 && effects.layers === 6, effects)
+
+  // the sound and weather modules ride along: both on what the room lends (host.audio, host.environment); a storm writes the room's environment and a sound plays on the room's engine
+  const sky = await page.evaluate(() => {
+    const room = window.__testRoom
+    const report = window.__furnitureReport
+    const weather = room.bench('weather_area')
+    const audio = room.bench('audio_area')
+    weather.set('state', 'storm')
+    audio.set('sound', 'bench_ping')
+    audio.act('play')
+    for (let i = 0; i < 400; i++) room.update(0.1)
+    const environment = room.environment.get()
+    const stats = room.audio.stats()
+    // the weather bridges: the storm's wind reaches the room's effects world, and its rain and wind loops open on the room's engine
+    const result = { weather: report.weather?.ok && report.weather.problems.length === 0, sound: report.audio?.ok && report.audio.problems.length === 0, rain: environment.rain, visibility: environment.visibility, peak: stats.peak, fog: room.scene.fog === null, wind: room.vfx.wind(), loops: stats.loops, thunder: room.audio.registry.sound('thunder') !== undefined }
+    // the weather picture rides along: the storm draws the rain curtain and the near rain over the furniture; the room's sky and fog stay as they were
+    const curtain = room.scene.getObjectByName('weather-rain-curtain')
+    result.picture = { curtain: curtain?.visible === true, drawn: curtain?.geometry.drawRange.count, near: room.vfx.peekWorkshop()?.rain.count, layers: weather.layers().map((layer) => layer.id).filter((id) => id.endsWith('_rain') || ['mist', 'sky', 'lightning', 'headlights', 'haze'].includes(id)), skyOn: weather.layer('sky'), rig: room.scene.getObjectByName('weather-lamp-rig') !== undefined }
+    weather.set('state', 'clear')
+    for (let i = 0; i < 20; i++) room.update(0.1)
+    result.windAfter = room.vfx.wind()
+    return result
+  })
+  check(`[${lang}] the sound and weather modules are loaded too: a storm writes host.environment, a sound plays on the room engine, the furniture scene keeps its fog off`, sky.weather && sky.sound && sky.rain > 10 && sky.visibility < 120 && sky.peak >= 1 && sky.fog, sky)
+  check(`[${lang}] the weather picture is loaded too: the storm draws the 14 000-point curtain and 4 000 near streaks over the furniture, seven picture layers, the sky left to the room`, sky.picture.curtain && sky.picture.drawn === 14000 && sky.picture.near === 4000 && sky.picture.layers.length === 7 && sky.picture.skyOn === false && sky.picture.rig, sky.picture)
+  check(`[${lang}] the weather bridges: the storm's wind (4.5, 0) goes to the effects world and back to the breeze, the rain and wind loops are open, the thunder is in the room engine`, Math.abs(sky.wind[0] - 4.5) < 1e-9 && sky.wind[2] === 0 && Math.abs(sky.windAfter[0] - 3.5) < 1e-9 && Math.abs(sky.windAfter[2] - 1.5) < 1e-9 && sky.loops >= 1 && sky.thunder, sky)
+
+  // the player area rides along: its report is clean and its six scenarios pass in this room too
+  const body = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const loaded = window.__furnitureReport.player
+    const scenarios = room.scenarios.filter((s) => s.id.startsWith('player_'))
+    const result = await room.runScenarios(scenarios)
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], scenarios: scenarios.length, failed: result.failed }
+  })
+  check(`[${lang}] the player module is loaded too (6 scenarios pass)`, body.module === 'player_area' && body.ok && body.problems.length === 0 && body.scenarios === 6 && body.failed === 0, body)
+
+  // the crowd area rides along: its report is clean, its nine scenarios pass here too, and it starts empty
+  const horde = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const loaded = window.__furnitureReport.crowd
+    const scenarios = room.scenarios.filter((s) => s.id.startsWith('crowd_'))
+    const result = await room.runScenarios(scenarios)
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], scenarios: scenarios.length, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id) }
+  })
+  check(`[${lang}] the crowd module is loaded too (9 scenarios pass)`, horde.module === 'crowd_area' && horde.ok && horde.problems.length === 0 && horde.scenarios === 9 && horde.failed === 0, horde)
+
+  // the stories area rides along: its report is clean and its six scenarios pass here too
+  const tales = await page.evaluate(async () => {
+    const room = window.__testRoom
+    const loaded = window.__furnitureReport.stories
+    const scenarios = room.scenarios.filter((s) => s.id.startsWith('stories_'))
+    const result = await room.runScenarios(scenarios)
+    return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], scenarios: scenarios.length, failed: result.failed, bad: result.results.filter((r) => !r.ok).map((r) => r.id) }
+  })
+  check(`[${lang}] the stories module is loaded too (6 scenarios pass)`, tales.module === 'stories_area' && tales.ok && tales.problems.length === 0 && tales.scenarios === 6 && tales.failed === 0, tales)
 
   if (lang === 'pt-BR') {
     await page.close()

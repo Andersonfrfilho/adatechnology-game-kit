@@ -75,15 +75,26 @@ Não há `examples/` próprio. A "Sala de testes de destruição" do kit é uma 
 - Furos ficam nos pedaços: todo fragmento de `fracture` ou de brecha leva `marks` (furos que caíram nele, até 12).
 - Casa: `sizeStructure(spec, { redundancy: 0.97, redundancyRoles: ['column', 'wall'], safetyByRole: { beam: 0.45, slab: 0.45, roof: 0.45, stair: 0.45 } })`.
 
+## Explosões: abrigo, estilhaços e confinamento
+
+Opções `blast` (no mundo, em `world.explode(..., opções)` ou no `Hit` explosivo), todas desligadas por padrão: `shelter` (partes entre o centro e o
+alvo deixam passar `exp(-hp por m² / k)` da energia; a que quebra na mesma explosão deixa passar mais), `fragmentHits` (fragmentos viram golpes
+`blunt` de `0,5·m·v²/2` no que está atrás, no máximo 24, semeados) e `confinement` (26 raios, multiplicador de 1 a 3, ou o número do host).
+O retorno traz `HitResult.blast` e o evento `blast`; o renderizador empurra as peças com `renderer.explode(..., { report })`. Para balas:
+`Hit.penetration` (mm por classe de material: aço, concreto, tijolo, madeira) que o `game-weapons` passa no Hit (`shotToHit`/`shotExtras`); a tabela por calibre e munição mora em `game-weapons` (`ammo.json`), o motor não lê nome de calibre; o material diz a classe e a escala (`penetrationClass`, `penetrationScale`); sem tabela vale a energia com `Hit.piercing` ; a explosão só abre brecha perto (0,12 m por raiz cúbica de kJ, sempre ligado, sem opção).
+Detalhes e números no README do pacote; exemplos de pilares e vigas em `tests/beams-and-columns.test.ts`. Não existe entrega de time para isso:
+é modelo novo do kit, aprovado pelo dono em 2026-10-24.
+
 ## Cuidados
 - Reação em cadeia (A11): peça com `explodes.chain` é **armada** por tiro (`shot`, depois de `shotDamageFraction` do hp), fogo (`fire`, a `atC` ou 300 °C) ou explosão no alcance (`explosion`) e explode depois do atraso daquele gatilho (número ou `[mín, máx]` sorteado da semente). Evento `primed` ao armar, `explode` no fim. Cada peça explode uma vez; tiro e explosão armam em vez de despedaçar na hora; a ordem é por tempo, depois por objeto e peça. O atraso conta do instante da explosão que armou, então a linha do tempo não depende do `dt` de `update`. Sem `update`, nada explode.
+- Ignição de vazamento: bala que fura recipiente com fluido inflamável (`gas`, `fuel`: tanque, galão, botijão) **só vaza**. Acende com faísca de munição dura em metal (`Hit.ignition.spark` × `ignition.sparkTarget` do material: aço 1, alumínio 0,25, não metal 0), chama (`Hit.ignition.flame`, ou as marcas `Hit.incendiary`/`tracer`), fogo perto (`ignition.fireNear`: 1,5 m, 0,5 por segundo) ou explosão no alcance; a chance é ponderada pelo enchimento (`ignition.fillCurve`: cheio quase não acende, quase vazio acende mais). `createDestruction({ ignition })` troca qualquer número; padrões em `DEFAULT_IGNITION_RULES` do `game-contracts`. Depois de aceso segue o fogo e a explosão de sempre.
 - Um golpe tira `energy * 0.02 * damageScale` de vida. Passa por `energy > penetração (J/mm) * espessura (mm)`; ângulo raso conta caminho maior e pode ricochetear.
 - Vidro e cerâmica (`shatter`) levam dano multiplicado por `fragility`: 9 mm quebra um vidro de 3 mm em um tiro.
 - Fogo só leva a peça até a temperatura da fonte: fogueira (800 °C) nunca derrete aço (1450 °C).
 - `state()` e `part()` são vistas **vivas**: não guarde entre quadros para comparar; use `snapshot`.
 - Eventos e pontos estão em espaço de mundo; `register` de um impl só usa a transformação para raycast e alcance da explosão; `splitGroup` num impl lança erro.
 - Aleatoriedade vem só da semente (nada de `Math.random`); `load` exige os mesmos materiais.
-- Estrutura: sem `structure` o objeto se comporta como antes; capacidades brutas de material costumam ser absurdas, use `sizeStructure`.
+- Estrutura: a laje/viga é sustentada pela **soma** dos apoios que restam (4 pilares dividem a carga; perdendo pilares ela passa aos outros; cai quando a capacidade que sobra é menor que a carga). Configuração: `structure.capacity`, `MaterialDef.compressive`, `sizeStructure({ safety, redundancy })` e a opção do mundo `structure: { safetyFactor }` (padrão 1). Sem `structure` o objeto se comporta como antes; capacidades brutas de material costumam ser absurdas, use `sizeStructure`.
 - Explosão: fragmentos têm teto de 40 m/s.
 
 ## O que vem pela migração (spec 001)

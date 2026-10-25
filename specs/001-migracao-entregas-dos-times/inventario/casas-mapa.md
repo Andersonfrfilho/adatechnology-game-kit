@@ -195,6 +195,7 @@ Módulo que já segue `game-contracts` (`room.loadModule(HouseArea.module({local
 - 6 cenários com expectativas: `house_one_pillar` (um pilar de canto: laje fica), `house_two_pillars` (dois pilares: laje e telhado caem), `house_partition` (parede de vedação cai sozinha, laje fica),
   `house_window_glass` (vidro: primeiro tiro fura, quebra em N tiros, paredes inteiras), `house_tank_leak` (caixa furada vaza: L antes e depois), `house_gas_explodes` (botijão explode e danifica as peças ao redor).
 - Esses cenários são os testes goldens naturais do porte (R2 da spec).
+- **Entrou (T2.6):** `packages/game-floorplan-three/src/test-area/{module,scenarios,specimens,text,types}.ts`; o golden gravado da página está em `packages/game-floorplan-three/tests/fixtures/team-golden/vc3-house-area.json`. Diferença conhecida: o pórtico do time derruba a laje com dois pilares; na sala o nosso solver pede mais pilares (pergunta 1 do evidence T2.6).
 
 ### 1.4b Destruição de parede: ARS, OFI e AC no SDK (T2.3a–b, 2026-10-24)
 
@@ -213,7 +214,33 @@ Estado do porte do **comportamento** (o motor segue em joules, A2; a tabela de p
 | N-1 em pilares e paredes portantes, `fsOutros` 0,45 | `specDe` L42685–42729 | `sizeStructure({ redundancyRoles, safetyByRole })` | `size-roles.test.ts` |
 | Reboco só rótulo no VC3 | VC3 L10344 | passa a ser camada que lasca e soma penetração (`layers`) | `walls.test.ts` |
 
-Falta: abrir a abertura na malha da parede e as fiadas de tijolo instanciadas (T2.4c), `wallDetail` panels/units e `buildWallSpecimen` (T2.2d).
+Entrou na T2.4c: a abertura na malha da parede e as fiadas de tijolo instanciadas (ver 1.2c). Falta: `wallDetail` panels/units e `buildWallSpecimen` (T2.2d).
+
+### 1.2c Casa3DSDK e AndaresSDK no SDK (T2.4, 2026-10-24)
+
+Pacote novo `game-floorplan-three` (`GameFloorplanThree`). Porte literal: mesma geometria, mesmos desenhos e mesmo sorteio por semente; só mudam os nomes (API em inglês, textos em `locales`) e o que a página lia de globais, que agora é opção. Golden `vc3-house-scene.json`: a cena de seis plantas (casa, lote, telhado e cada andar, nó a nó) e o plano de LOD (25 situações) igual à da página; nomes em `MIGRATION.md` do pacote. Ver a lista dos pares que não fecham exatamente e o motivo em `evidence.md`, seção T2.4.
+
+| Seção do Casa3DSDK | Linhas | Onde entrou (`packages/game-floorplan-three/src/`) | Estado |
+|---|---|---|---|
+| Geometria | 39466–39719 | `kernel/geometry.ts`, `kernel/noise.ts`, `build/instance.ts` | portado |
+| Móveis (`mkApi`, `MOV`, `tabelaTipos`, `extraTipos`) | 39720–39984, 40378 | `furniture/{api,builders,type-table,extra-types,place-items}.ts` (os builders de `Moveis3DSDK` vêm de `game-props3d`) | portado |
+| Fixtures | 39985–40398 | `furniture/{fixtures,taps,plants,yard}.ts`, `lights/fixtures.ts` | portado |
+| Casa (paredes, portas, janelas, pisos e lajes, escadas) | 40399–40617 | `house/{walls,doors,windows,floors,stairs}.ts` | portado |
+| Água (R69), Elétrica (R50), Solar (R57) | 40618–40797 | `utilities/{water,electrical,solar}.ts` | portado |
+| Rodapé e calçada (R46), Edificações (R43), Prédio | 40727–40874, 41499–41533 | `house/{baseboard,outbuildings,building}.ts` | portado |
+| Vegetação (R39) | 40875–40909 | `vegetation/bridge.ts` (pacote injetado em `vegetation`) | portado |
+| Luzes extras e iluminação | 40963–41000, ~42216–42295 | `lights/{decor,fixtures,room-light}.ts` | portado |
+| Lote, calhas, telhas | 41002–41325 | `lot/{terrain,perimeter,gates}.ts`, `roof/{roofs,rect,gutters,tiles,slabs}.ts` | portado |
+| Espelhos | 41326–41390 | `mirrors.ts` (`Reflector` injetado em `reflector`) | portado |
+| Carros | 41391–41498 | `cars.ts` (frota injetada em `fleet`, tipos por estilo em `carKinds`) | portado |
+| Interação | 41534–41883 | `interaction/{state,doors,items,fittings,target,collision}.ts` | portado |
+| Interativos | 41884–42174 | `interactables/{kit,bridge}.ts` | ponte portada; o `AdaptadorInterativos` era código do jogo (cabeçalho dele) e entrava injetado em `interactives.adapter`; **dúvida 5 respondida (2026-10-24, decisão do dono): entrou no kit, em `packages/game-floorplan-interactables`, e é o padrão de `interactives`** (evidence.md, seção "AdaptadorInterativos") |
+| Animações | 42175–42220 | `animation/clotheslines.ts` | portado |
+| Destruição | 42296–42466 | `destruction/{pieces,world}.ts`; `breach.ts` é novo (abertura na malha e fiadas de tijolo no LOD 0) | portado; fragmentos, lascamento e armadura aparente são do `game-destruction-three` |
+| LOD | 42659–42680 | `statics.ts` (`planLod`), `build/build.ts` (`setLod`, LOD por distância) | portado |
+| Estrutura → spec | 42681–42729 | `game-floorplan-structure` (T2.2c) | já estava |
+| `AndaresSDK` | ML 7372–7557 | `navigation/floor-navigator.ts` (+ `from-house.ts`, `bind.ts`, novos na T2.4d) | portado; grade de 10 cm por andar, escadas, oclusão; `openCells`/`closeCells` ligam à destruição |
+
 
 ### 1.1b Estrutura das casas no SDK (T2.2c–e, 2026-10-24)
 
@@ -417,7 +444,7 @@ Legenda de "melhor": **T** = time (ZombiAdA), **S** = SDK, **=** equivalentes, *
 | 41 | Multi-andar andável | `AndaresSDK` (ML L7372–7560): grade de 10 cm por andar, escada, retorno em U | **nenhum** | **T** | sem isso o jogador não sobe a escada de um sobrado | **Portar** (decidir pacote, ver 4.4) |
 | 42 | Colisão e interação na casa | Casa3D `colideDe`, `alvoDe`, `alternaPorta` (L41807–41883) | `game-interactables` cuida dos objetos, não de paredes/portas da planta | **T** | porta fechada para o jogador (R70), pegadas orientadas, E abre | **Portar** |
 | 43 | LOD por orçamento de draw calls | `planejaLOD` (L42670) | **nenhum** | **T** | distribui 3 níveis entre várias casas por distância | **Portar** |
-| 44 | Área de teste de casas | `HouseArea` (AC L3789–3882), 5 itens, 6 cenários | `game-test-room` `frame()`; `examples/*-test-area` sem casa | **T** | já é um `TestableModule`; os cenários são os goldens de dano estrutural | **Portar** (vira `examples/floorplan-test-area`) |
+| 44 | Área de teste de casas | `HouseArea` (AC L3789–3882), 5 itens, 6 cenários | `game-test-room` `frame()`; `examples/*-test-area` sem casa | **T** | já é um `TestableModule`; os cenários são os goldens de dano estrutural | **Portado (T2.6, 2026-10-24)**: `createFloorplanTestModule` em `packages/game-floorplan-three/src/test-area/` (módulo, 5 espécimes, 6 cenários com os ids e as checagens do time, mais `floorplan_typologies`), carregado por `examples/floorplan-test-area` e por `examples/interactables-test-area`; paridade com o golden do VC3 em `tests/team-golden-house-area.test.ts` |
 | 45 | Zoneamento e casas do Jardim das Palmeiras | ML L71900+ | zonas `zr_ap` etc. | **S** (regras) / **T** (conteúdo de lote) | | manter SDK; lotes e posições como conteúdo ZombiAdA |
 | 46 | Duplicação da galeria no jogo | JA L53469, ML L66711 (gerado por `porta_galeria.py`) | — | — | 3 cópias do mesmo código | resolvido quando a galeria sair do SDK (R4) |
 | 47 | Checklist do Mapa e Revisão da Casa A | CHK, RC | `game-devtools` | **n/a** | ferramentas de QA pessoais do dono, dados 100% ZombiAdA | **Não migrar**; opcional: checklist genérico no devtools |
@@ -504,3 +531,21 @@ no PlantasSDK estendido, estrutura e construção L10307–10701 (≈ 395 linhas
 12. **Item de casa provisório do `game-test-room`** (`frame()` com `buildFrame`, `items.ts:166`) é um substituto de caixas. Trocar pelo `HouseArea` quando o pacote de estrutura existir?
 13. **`MAPA_TIPOS` e `tabelaTipos`**: o catálogo de planta do SDK tem 164 tipos com nomes em inglês; os do time estão em português (121 e ~85). O mapa tipo→builder deve usar os ids novos (`MIGRATION.md` tem a tabela antigo→novo) ou os dois?
 14. **Dados dependentes do kit:** `HP` de vidro 20, madeira 60 etc. em `cfg.hp` e `danificavel.hp` ("dano legado") são do jogo e coexistem com o dano do núcleo. O novo renderizador mantém o `hp` legado ou passa a ler o hp do `game-destruction` direto?
+
+
+## Status ao fim da Fase 7 (urbano, T7.5)
+
+Atualizado em 2026-10-24. As linhas 27, 31, 38 e 40 da tabela e as peças urbanas da Galeria do Vale Cinzento (seção 1.6).
+
+| Item | Entrou? | Onde |
+|---|---|---|
+| 27 Postes (`poleLED`, `poleConcrete`, `poleIron`, `poleWood`, `floodTower`) com altura, luz real com orçamento `LB`, pisca, transformador | Sim | `game-urban` (`kit.poles`, `createLightBudget`, 16 luzes por cena, o contador passa de zero como o `LB`) |
+| `road` (faixa a cada 5 m), `walk`, `ground`, `streetGrid`, `fillBlock`, `building` | Sim, pelo mesmo sorteio da página | `game-urban` (`kit.streets`, `kit.block`); os prédios vêm do `game-floorplan` |
+| Adereços da amostra: `fence`, `tent`, `pine`, `tree`, `container`, `watchtower`, `sandbags`, letreiro, fios | Sim | `game-urban` (`kit.props`) |
+| 38 Padrão de ruas (9 bairros + militar), `buildPadraoRuas` | Sim, os 10 como dado + compositor | `game-urban` (`kit.neighbourhoods`, `composeSampleSheet`, textos pt-BR e en, marcadores) |
+| 40 Relevo (`hW`, `forestF`, `nearRiver`, `inBrejo`, `inQueimada`, `W2`, `buildWorld`): terreno por camadas, rios, lagos, mata, cor por vértice | Sim, o motor genérico; os números do Vale (4 rios, 4 lagos, 5 cidades, a Serra, a Mata Funda) ficam no jogo | `game-urban` (`kit.terrain`, `drawTerrain`), `game-slice/urban/valley-terrain.json` (fixture de teste copiada) |
+| 31 Árvores e pinheiros da galeria | Os dois (cone e bola) seguem como adereço padrão; o provedor de plantas (`createPlantProvider`) usa as espécies do `game-vegetation-species` | `game-urban`, `game-urban-three` (`createPlantResolver`) |
+| Carro e ônibus de caixas da amostra | **Não** (decisão: substituto de caixas é proibido); o provedor de veículos (`createVehicleProvider`) estaciona veículos da frota | `game-urban`, `game-urban-three` (`createVehicleResolver`, modo leve) |
+| Casas da amostra (sobrado, laje, colonial, chalé, vila operária, palafita, sede, prédio) | Sim, as silhuetas de longe do `game-floorplan` como provedor padrão | `game-urban` (`createSilhouetteHouses`) |
+| Partes que o `buildWorld` espalha (árvores e vilas pelo mapa, estradas, trilhas e trilhos, túneis, pontes, linhas de transmissão, muros, decoração do vale, marcadores do mapa) | **Não**: ficam como pendência (ver `evidence.md`, Fase 7, "Perguntas para o dono") | - |
+| Ambiente de teste da cidade (`?area=urban`) | Sim | `packages/game-urban-three/src/test-area/`, `examples/urban-test-area/` |

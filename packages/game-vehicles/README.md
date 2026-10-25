@@ -241,6 +241,12 @@ car.animations() // open/close clips for the doors, hood and trunk
 
 Fluids: the tank, the oil pan and the radiator hold fuel, oil and coolant; a hole below the level makes a `leak` event, a puddle and a falling level.
 
+Fuel tank: a bullet that goes through it **leaks and does not set it alight by itself**. The leak lights (event `ignite`, then the usual fire and, for a petrol tank, the explosion) with
+a spark of a hard round on the steel wall, an incendiary or tracer round, a burning part or burning fuel stain within `ignition.fireNear.radius`, or a blast. The chances of the round
+come in `Hit.ignition` (the weapons build them from the core and jacket of the ammunition) and are weighed by how full the tank is (`fuel`, 0 to 1, the starting level; a nearly empty tank lights
+easiest, a full one mostly leaks); diesel takes a spark far worse than petrol. `createVehicleDestructible(kit, vehicle, { fuel: 0.1, ignition: { fillCurve, fireNear, sparkTarget } })`;
+the defaults and every number are `IgnitionRules` of `@adatechnology/game-contracts`.
+
 ## Português
 
 Motor genérico de veículos procedurais para three.js: carrocerias, vidros, faróis, rodas, interiores, capô e compartimento do motor, **zonas de dano
@@ -266,3 +272,7 @@ scene.add(c.root)
 ### Contrato de destruição
 
 `createVehicleDestructible(kit, c, opções)` faz um veículo construído seguir o `DestructibleImpl` de `@adatechnology/game-contracts`: cada zona de dano vira uma peça com material, as peças mecânicas (bateria, alternador, câmbio, freios, direção, amortecedores, pneus, retrovisores, engate) são acrescentadas, as juntas (dobradiça, parafuso, solda) se desfazem por desgaste ou com a chave inglesa, e as peças saem do veículo e caem. `status()` diz o que a mecânica faz (freios, direção, bateria, câmbio). Os nomes em português estão em `locales/pt-BR.json` (`mechanics.*`).
+
+## Light mode and damageable parts
+
+`createVehicleKit({ lod })` takes the settings of the light mode (`defaultLodSettings`: every number can be overridden). `kit.build(key, state, zones, { lod: true })` builds the same vehicle with fewer triangles (rounded boxes with one ring, coarser lofts, grilles and generators, interiors tagged `userData.skipLite`) and puts the switch back; with it off nothing changes. `kit.damageables(c, matrix?)` lists the metal, glass, rubber and fuel parts of a built vehicle as `Box3` boxes (`kit.damageableKinds` maps zone types to parts and can be extended).

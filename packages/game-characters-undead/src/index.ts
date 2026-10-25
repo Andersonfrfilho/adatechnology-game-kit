@@ -42,3 +42,5 @@ export { deathEffects, doorDamageFactor, headAreaFactor, isFireImmune, waterHeal
 export type { UndeadEffect } from './hooks'
 export { createAnimalOutbreak } from './animals/outbreak'
 export type { AnimalFate, AnimalFateState, AnimalOutbreak, Carcass, OutbreakOptions, OutbreakSpecies } from './animals/outbreak'
+export { UNDEAD_CROWD_SOURCES, undeadCrowdPack } from './crowd'
+export type { UndeadCrowdPack } from './crowd'

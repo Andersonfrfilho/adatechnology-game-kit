@@ -10,7 +10,8 @@ Pessoas **genéricas** para o `game-characters` (T4.2c da Fase 4): as **12 profi
 `firefighter`, `mechanic`, `builder`, `cook`, `sport_shooter`, `farmer`, `electrician`, `courier`, `teacher`, `unemployed`) com visual, acessórios, o que
 levam e a proteção que vestem; **4 faixas de idade** (criança: altura 0,52 a 0,70 e porte 0,68 a 0,76 do adulto; lidas das pessoas da página de Retratos);
 os **pools de aparência** (tons de pele, penteados, cores, chapéus, detalhes do rosto) e os **ids dos acessórios** que o construtor de Retratos conhece
-(cabelo, chapéu, rosto, vestido, mão). Gente nomeada, histórias, grupos do vale e vida simulada ficam no jogo (`game-slice/characters/`).
+(cabelo, chapéu, rosto, vestido, mão). A regra da ficha de Personagens (`SHEET_RULESET`) e os pools de nomes (`NAME_POOLS`) também estão aqui. Gente nomeada, histórias e grupos do vale ficam
+no jogo (`game-slice/characters/`, `game-slice/stories/`); a vida sorteada e a ficha viva são do `game-stories`.
 
 ## Quando usar e quando não usar
 - Use para: povoar uma cidade com gente comum, sortear aparência, montar a tela de criação de personagem, dar profissão a um NPC.
@@ -38,6 +39,8 @@ APPEARANCE_POOLS.hairStyles                                       // ['afro', 'b
 | `APPEARANCE_POOLS` | valores que as profissões e as 44 pessoas usam: pele, cabelo, chapéu, rosto, mangas, roupa, sapato |
 | `ACCESSORIES` | id e encaixe (`hair`, `hat`, `face`, `worn`, `hand`) de cada acessório do construtor |
 | `PEOPLE_LOCALES` | `en` e `pt-BR`: faixas de idade e encaixes |
+| `SHEET_RULESET` | a regra da ficha de Personagens como dado: compra de pontos (14, de 1 a 8, começa em 3), atributos, habilidades e marcos, profissões com pontos e habilidades iniciais, traços com custo e exclusões, fórmulas dos derivados; a ficha em si é do `game-stories` |
+| `NAME_POOLS`, `getNamePools(locale)` | nomes e sobrenomes (masculinos, femininos) para gente feita pela escalação do `game-stories` |
 
 ## Compõe com
 - `@adatechnology/game-characters`: o kit que cria o personagem; `game-items`: os ids de proteção (`vest_police`, `turnout_gear`).
@@ -54,5 +57,5 @@ O `characters-test-area` (T4.4a) mostra as 12 profissões em fila, criança e id
 - Cores são `RRGGBB` sem `#`.
 
 ## O que vem pela migração
-Elenco `PROFS`, Retratos (construtor: cabelo, rosto, chapéus, acessórios, itens de mão) e `PEOPLE` (só as faixas de altura e porte). O desenho dos 44 retratos
+Personagens (`ATTRS`, `SKILLS`, `PROFS`, `TRAITS`, `derived`, os nomes), Elenco `PROFS`, Retratos (construtor: cabelo, rosto, chapéus, acessórios, itens de mão) e `PEOPLE` (só as faixas de altura e porte). O desenho dos 44 retratos
 é do `-three`.

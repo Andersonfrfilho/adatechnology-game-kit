@@ -1,4 +1,4 @@
-import type { Condition, GenerateOptions, Lod, PartKind, PieceKind, PlantMesh, PlantPiece, PlantSpec, Season, Vec3 } from './types'
+import type { Condition, GenerateOptions, Lod, PartKind, PieceGeometry, PieceKind, PlantMesh, PlantPiece, PlantSpec, Season, Vec3 } from './types'
 import { materialKeyForPart, type MaterialKey } from './destruction'
 import { Rng, toSeed } from './rng'
 import { MeshBuilder } from './geometry/builder'
@@ -65,6 +65,10 @@ export function generate(spec: PlantSpec, opts: GenerateOptions = {}): PlantMesh
       ctx.foliage.tag = id
       ctx.flowers.tag = id
       ctx.spines.tag = id
+    },
+    pieceGeom(id, geom) {
+      const m = pieceMeta.get(id)
+      if (m) m.geom = geom
     },
     fruitItem(draw) {
       const id = `fruit${fruitCount++}`
@@ -202,6 +206,57 @@ function clusterFruit(ctx: Ctx, n: number): void {
 
 const PART_ORDER: PartKind[] = ['wood', 'foliage', 'flowers', 'fruit', 'spines']
 
+/** Pieces made of a straight-ish wood tube: they get a radius, length, axis and base. */
+const WOOD_KINDS: ReadonlySet<PieceKind> = new Set<PieceKind>(['trunk', 'branch', 'stem', 'arm', 'pad'])
+/** The radius is measured away from the root flare (first 15 % of the length) and the tip taper (after 60 %). */
+const FLARE_SKIP = 0.15
+const BODY_END = 0.6
+
+/**
+ * The straight-tube fit of a wood piece, in plant space (scaled): the mean radius of the body of its tube, its length along the centreline, the direction from its first to its last point
+ * and the first point. An archetype that set `pieceGeom` wins. Returns `undefined` when no tube was drawn under the tag.
+ */
+function pieceGeometry(tag: string, m: PieceMeta, builders: Record<PartKind, MeshBuilder>, scale: number): PieceGeometry | undefined {
+  if (m.geom) {
+    const g = m.geom
+    return { radius: g.radius * scale, length: g.length * scale, axis: [...g.axis] as Vec3, base: [g.base[0] * scale, g.base[1] * scale, g.base[2] * scale] }
+  }
+  let tube: MeshBuilder['tubes'][number] | undefined
+  for (const part of PART_ORDER) {
+    tube = builders[part].tubes.find((t) => t.tag === tag)
+    if (tube) break
+  }
+  if (!tube || tube.path.length < 2) return undefined
+  const { path, radii } = tube
+  const seg: number[] = []
+  let total = 0
+  for (let i = 1; i < path.length; i++) {
+    const l = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1], path[i][2] - path[i - 1][2])
+    seg.push(l)
+    total += l
+  }
+  if (total <= 0) return undefined
+  let wsum = 0
+  let rsum = 0
+  let all = 0
+  let acc = 0
+  for (let i = 0; i < seg.length; i++) {
+    const r = (radii[i] + radii[i + 1]) / 2
+    all += r * seg[i]
+    const mid = acc + seg[i] / 2
+    if (mid >= total * FLARE_SKIP && mid <= total * BODY_END) {
+      rsum += r * seg[i]
+      wsum += seg[i]
+    }
+    acc += seg[i]
+  }
+  const radius = wsum > 0 ? rsum / wsum : all / total
+  const a = path[0]
+  const b = path[path.length - 1]
+  const d = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]) || 1
+  return { radius: radius * scale, length: total * scale, axis: [(b[0] - a[0]) / d, (b[1] - a[1]) / d, (b[2] - a[2]) / d], base: [a[0] * scale, a[1] * scale, a[2] * scale] }
+}
+
 /** Turn the builders' tag ranges into pieces with ids, materials, pivots and bounds (positions already scaled). */
 function buildPieces(parts: PlantMesh['parts'], builders: Record<PartKind, MeshBuilder>, meta: Map<string, PieceMeta>, rootId: string, condition: Condition, scale: number): PlantPiece[] {
   const primary = new Map<string, PartKind>()
@@ -292,6 +347,7 @@ function buildPieces(parts: PlantMesh['parts'], builders: Record<PartKind, MeshB
       else if (m.kind === 'soil') material = 'soil'
       const parentTag = hang ? hang.parent : m.parent
       const parentId = parentTag !== undefined && primary.has(parentTag) ? idOf(parentTag, primary.get(parentTag)!) : undefined
+      const geom = WOOD_KINDS.has(m.kind) ? pieceGeometry(tag, m, builders, scale) : undefined
       out.push({
         id: idOf(tag, part),
         kind: m.kind,
@@ -302,6 +358,7 @@ function buildPieces(parts: PlantMesh['parts'], builders: Record<PartKind, MeshB
         indexCount: r.indexCount,
         pivot,
         bounds: { min, max },
+        ...(geom ?? {}),
       })
     }
   }

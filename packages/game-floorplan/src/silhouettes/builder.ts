@@ -8,7 +8,7 @@ const PLAIN_BOX_RADIUS = 0.012
 type Options = { parent?: number; ry?: number; rz?: number; emissive?: boolean }
 
 /** Rounded-box radius the team page gives a box; below 1.2 cm it is a plain box. */
-function boxRadius(width: number, height: number, depth: number): number {
+export function boxRadius(width: number, height: number, depth: number): number {
   const radius = Math.min(Math.min(width, height, depth) * BOX_RADIUS_RATIO, MAX_BOX_RADIUS)
   return radius < PLAIN_BOX_RADIUS ? 0 : radius
 }

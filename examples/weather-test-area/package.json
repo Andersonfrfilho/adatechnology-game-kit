@@ -1,0 +1,18 @@
+{
+  "name": "@adatechnology/weather-test-area",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Weather area for the shared test room: any weather of the game-weather registry (clear to typhoon) with an instant or 10 s blend, the hour of the day, the automatic climate schedule at 600x, the seed, the weather written into host.environment and the scene fog, and the numbers a game reads from it (rain, visibility, sight and hearing scale, wind, heat index, wet ground, lightning strikes).",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test.mjs"
+  },
+  "devDependencies": {
+    "@adatechnology/game-weather": "workspace:*",
+    "@adatechnology/game-weather-three": "workspace:*",
+    "@adatechnology/game-vfx": "workspace:*",
+    "@adatechnology/game-contracts": "workspace:*"
+  }
+}

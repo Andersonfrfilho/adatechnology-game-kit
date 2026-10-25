@@ -18,6 +18,6 @@ export default defineConfig([
     globalName: 'GameInteractablesThree',
     sourcemap: true,
     target: 'es2020',
-    noExternal: ['@adatechnology/game-interactables'],
+    noExternal: ['@adatechnology/game-interactables', '@adatechnology/game-shapes'],
   },
 ])

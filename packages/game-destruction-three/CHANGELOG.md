@@ -1,5 +1,115 @@
 # @adatechnology/game-destruction-three
 
+## 0.7.3
+
+### Patch Changes
+
+- Updated dependencies [0aafb73]
+  - @adatechnology/game-vfx@0.3.0
+  - @adatechnology/game-vfx-three@0.2.1
+
+## 0.7.2
+
+### Patch Changes
+
+- a41fcb7: The voices and the animal calls on `game-audio` (T6.1g). `game-characters-three` gets the sound bank of the bodies, 16 recipes whose traces equal the team code (the game's `grito` and `voz`, the art scene's `voice` behind groan, scream and leap, plus inhale, grab, bite, hurt, flesh, sever and gore), the table of the voices of the 13 undead types (`UNDEAD_VOICES`) and `createCharacterSound(host.audio)` (voices by moment, `body` events, what the player hears, the screamer's wind-up). `game-animals-three` gets the four calls of the game's `bichoSom` and `createAnimalSound` with the page's cooldowns. Both test areas play on the room's engine (new actions `voice`, `special_call` and `call`). `game-audio` exports the art scene's primitives (`sceneNoise`, `sceneTone`, `sceneVoice`, `sceneRecipe`); `game-destruction-three` uses them instead of its own copy (same recipes).
+- Updated dependencies [a41fcb7]
+- Updated dependencies [485acc7]
+- Updated dependencies [d15e990]
+- Updated dependencies [f49e466]
+  - @adatechnology/game-audio@0.2.0
+  - @adatechnology/game-vfx@0.2.0
+  - @adatechnology/game-vfx-three@0.2.0
+  - @adatechnology/game-contracts@0.13.0
+  - @adatechnology/game-destruction@0.7.2
+
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies [98ae206]
+  - @adatechnology/game-contracts@0.12.0
+  - @adatechnology/game-audio@0.1.2
+  - @adatechnology/game-destruction@0.7.1
+  - @adatechnology/game-vfx@0.1.3
+  - @adatechnology/game-vfx-three@0.1.3
+
+## 0.7.0
+
+### Minor Changes
+
+- 968d7df: `renderer.explode(point, energy, radius, { report })` pushes each piece with the energy that reached its object (shelter and confinement of the `world.explode` results); without a report the old formula.
+
+### Patch Changes
+
+- Updated dependencies [968d7df]
+- Updated dependencies [968d7df]
+  - @adatechnology/game-contracts@0.11.0
+  - @adatechnology/game-destruction@0.7.0
+  - @adatechnology/game-audio@0.1.1
+  - @adatechnology/game-vfx@0.1.2
+  - @adatechnology/game-vfx-three@0.1.2
+
+## 0.6.0
+
+### Minor Changes
+
+- 0f9e616: `createDestructionSound(engine)` registers the material sounds of the art scene (`glass`, `wood`, `thunk`, `ping`, `clang`, `chip`, `crumble`, `thud`, `hiss`, `boom`, `burst`, `crack`) and the game's `explosion_boom` in `@adatechnology/game-audio`, and maps the renderer's `onSound` keys through a replaceable table (`art_scene` or `game` style). The renderer sends `burn_end` when a part goes out or finishes burning, and `burn_loop` is the fire loop that rises with the parts in flames. `game-audio` is a dependency.
+
+### Patch Changes
+
+- Updated dependencies [7fd46fb]
+- Updated dependencies [0f9e616]
+- Updated dependencies [3a8cc95]
+  - @adatechnology/game-contracts@0.10.0
+  - @adatechnology/game-audio@0.1.0
+  - @adatechnology/game-destruction@0.6.1
+  - @adatechnology/game-vfx@0.1.1
+  - @adatechnology/game-vfx-three@0.1.1
+
+## 0.5.0
+
+### Minor Changes
+
+- aa2c014: `game-destruction-three` draws blasts and fires with the effects world (T5.1f). A new `RendererOptions.vfx` takes the world the host shares (stepped by the host's `VfxRenderer`); without it the renderer makes its own world and `game-vfx-three` layer and steps them in `update`, so existing callers keep working. An `explode` event plays `ev.effect ?? 'generic'` (the M67 scaled by `radius / 15`; an id the catalogue does not know falls back to it), the five old bursts and the point light are gone, and a burning part gets one `vfx.fire` that follows it and stops when the part stops burning. `explode(point, energy, radius, options?)` takes `{ effect, direction, visual }`; `visual: false` keeps only the shove and the sound. `RendererOptions.explosionLight` is removed (the light belongs to the effects world) and `RendererOptions.camera` is new. Debris, sparks, ash, steam, drips and leaks go through the shared sprite pool (see `t5-1fg-sprite-pool`).
+
+  `game-destruction` gets `blastFrontSpeed` (default off): glass an explosion reaches breaks `distance / speed` seconds later, in `update`. The `explode` event now carries `effect` from `explodes.effect`.
+
+  `game-vfx-three` names its puff, spark and glow meshes (`vfx-puffs`, `vfx-sparks`, `vfx-glows`) and draws blank mark textures when there is no DOM, so it runs headless.
+
+- 6aa11f1: One sprite pool for the whole kit (T5.1f-g, spec 001). `game-vfx` gets `vfx.burst(kind, point, normal, count, speed?, options?)`, `vfx.spawn(...)`, `vfx.onLand(owner, fn)` and `vfx.sprites()` over 14 kinds (`data/sprite-kinds.json`, `patchSpriteKinds`; the numbers and the generator are the ones of the old `particles.ts`), with `floor` and `rise` spawn options; `game-vfx-three` draws them in two layers (`vfx-sprites-additive`, `vfx-sprites`). `game-destruction-three` and `game-fluids-three` delete their own `particles.ts` and use the pool (`ParticleKind` stays as an alias of `SpriteKind`; `FluidRendererOptions` gets `vfx` and `camera`; the destruction renderer plays the effects of the Phase 2 events through `eventEffects`, default `EVENT_EFFECTS_MAP`). `game-weapons-three` plays the muzzle flash and the casing of a shot seen from outside through `host.effects` (`muzzle_glock|ak|r870|barrett`, `casing_brass|shell|50`, by case type, in `data/world-effects.json`); the `shot` host event of `game-contracts` carries optional `origin` and `direction`, and the effect sink falls back from explosions to the Workshop recipes (`param` by index or id).
+
+### Patch Changes
+
+- Updated dependencies [cb85470]
+- Updated dependencies [3f89fd3]
+- Updated dependencies [55037ce]
+- Updated dependencies [51d16d1]
+- Updated dependencies [4415620]
+- Updated dependencies [aa2c014]
+- Updated dependencies [6aa11f1]
+- Updated dependencies [6aa11f1]
+- Updated dependencies [6aa11f1]
+  - @adatechnology/game-contracts@0.9.0
+  - @adatechnology/game-vfx@0.1.0
+  - @adatechnology/game-vfx-three@0.1.0
+  - @adatechnology/game-destruction@0.6.0
+
+## 0.4.0
+
+### Minor Changes
+
+- 86179cc: Desenha os eventos de parede: `spall` (remendo da cor do núcleo), `stage` 2 (fragmentos do tamanho da peça com os furos de `Fragment.marks` presos neles, a peça continua desenhada) e `expose` (vergalhão em cilindros instanciados, `renderer.rebarCount()`). A abertura cortada na malha fica para o renderizador de casas.
+
+### Patch Changes
+
+- Updated dependencies [76d15b6]
+- Updated dependencies [cc182c7]
+- Updated dependencies [9e58b50]
+- Updated dependencies [95c4bdd]
+  - @adatechnology/game-contracts@0.8.0
+  - @adatechnology/game-destruction@0.5.0
+
 ## 0.3.3
 
 ### Patch Changes

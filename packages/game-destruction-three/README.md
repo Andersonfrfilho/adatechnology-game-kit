@@ -5,9 +5,9 @@ package draws them on your meshes: vertex dents, bullet-hole and crack decals, c
 physics, loose pieces after a part comes off, and pooled particles (fire, smoke, sparks, dust, shards, splinters, ...).
 
 - Nothing is changed in place: geometry and materials are cloned on the first visual change of a mesh, and `restore` / `clear` give the originals back.
-- Two pooled `THREE.Points` (additive and normal blending) draw every particle, with a soft sprite computed in the shader (no texture asset).
+- Blasts and the fires of burning parts are drawn by the effects world of [`@adatechnology/game-vfx`](../game-vfx) (an `explode` event plays `ev.effect ?? 'generic'`, scaled by the radius when it names none). Pass the world the host shares in `vfx`; without it the renderer makes its own world and its own `game-vfx-three` layer and steps them in `update`. Debris, sparks, drips and leaks still use two pooled `THREE.Points` (additive and normal blending), with a soft sprite computed in the shader (no texture asset); they move to the shared sprite pool when `game-vfx` gets one.
 - `three` is a peer dependency used for types only: you pass your own `THREE` instance at runtime.
-- Sounds are not played: you get keys (`impact_metal`, `shatter_glass`, ...) through `onSound`.
+- The renderer plays nothing: you get keys (`impact_metal`, `shatter_glass`, `burn_loop`, `burn_end`, ...) through `onSound`. `createDestructionSound(engine)` is the sound bank for them on a [`@adatechnology/game-audio`](../game-audio) engine: the Cena de Arte's material sounds (clang, wood, glass, crumble, thud, boom...) and the game's explosion thump, a fire loop that follows how many parts burn, and a key table (`style: 'art_scene' | 'game'`, `keys` to replace) so a game changes what each key plays.
 
 Contracts live in [`@adatechnology/game-contracts`](../game-contracts); the types are re-exported here, so existing imports keep working.
 
@@ -145,9 +145,9 @@ heatColor(temperatureC: number): number // 0xRRGGBB, 0 below ~450 C, dark red ~5
 ```
 
 `RendererOptions`: `scene`, `world`, `quality`, `maxFragments`, `maxParticles`, `fragmentLife`, `groundAt`, `gravity`, `autoSplit`, `onPiece`, `onSound`,
-`explosionLight`, `pointScale` (point size in pixels per metre at 1 m; about `viewportHeight / (2 tan(fov / 2))`, default 700).
+`vfx` (shared effects world), `camera` (of the own world, when `vfx` is not given), `pointScale` (point size in pixels per metre at 1 m; about `viewportHeight / (2 tan(fov / 2))`, default 700).
 
-`DestructionRenderer`: `bind`, `unbind`, `makePiece`, `pieces`, `piece`, `impulse`, `update`, `emit`, `explode`, `clear`, `restore`, `stats`, `dispose`.
+`DestructionRenderer`: `bind`, `unbind`, `makePiece`, `pieces`, `piece`, `impulse`, `update`, `emit`, `explode(point, energy, radius, { effect?, direction?, visual? })` (`visual: false` keeps only the shove and the sound, for a host that played the effect itself), `clear`, `restore`, `stats`, `dispose`.
 `clear()` removes fragments, decals, puddles and particles from the scene and restores every bound mesh; `dispose()` also unsubscribes from the world.
 
 ## Português
@@ -155,7 +155,7 @@ heatColor(temperatureC: number): number // 0xRRGGBB, 0 below ~450 C, dark red ~5
 Renderizador three.js para o `@adatechnology/game-destruction`. O núcleo decide o que cada golpe faz e devolve eventos; este pacote desenha: amassados
 nos vértices, furos de bala e rachaduras, carbonização e brilho de calor, derretimento e poças, fragmentos com física leve, peças soltas e partículas
 em pool (fogo, fumaça, faíscas, poeira, cacos, lascas). Geometria e materiais só são clonados na primeira mudança visual de uma malha, e `restore` /
-`clear` devolvem os originais. Os sons não são tocados: o jogo recebe chaves (`impact_metal`, `shatter_glass`, ...) em `onSound`.
+`clear` devolvem os originais. O renderer não toca nada: o jogo recebe chaves (`impact_metal`, `shatter_glass`, `burn_loop`, `burn_end`, ...) em `onSound`; `createDestructionSound(engine)` é o banco de sons delas no `game-audio` (sons dos materiais da Cena de Arte, o estouro do jogo, o laço de fogo e a tabela chave → som, trocável).
 
 Uso: `specFromObject3D(THREE, modelo)` gera a especificação e o mapa parte -> malhas; registre no mundo com `world.add(spec)`, ligue com
 `renderer.bind(id, modelo, { parts })` e chame `world.update(dt)` e `renderer.update(dt)` a cada quadro. Com `quality: 'low'` os orçamentos de
