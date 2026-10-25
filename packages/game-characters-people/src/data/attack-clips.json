@@ -1,0 +1,36 @@
+{
+  "clips": [
+    {
+      "id": "punch_right",
+      "source": { "authored": "game-kit", "note": "authored in the kit; replace with the Elenco team's clip when delivered" },
+      "duration": 0.35,
+      "loop": false,
+      "channels": "upper",
+      "keys": [
+        { "t": 0, "pose": { "lean": 0, "twist": 0, "side": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0 } },
+        { "t": 0.1, "pose": { "lean": 0.04, "twist": -0.35, "side": 0, "headX": 0, "headY": 0.28, "headZ": 0, "armR": 0.45, "armL": -0.7, "elbR": -1.9, "elbL": -1.6, "armRz": 0, "armLz": 0.1 } },
+        { "t": 0.16, "pose": { "lean": 0.2, "twist": 0.5, "side": 0, "headX": 0, "headY": -0.38, "headZ": 0, "armR": -1.5, "armL": -0.6, "elbR": -0.1, "elbL": -1.7, "armRz": -0.1, "armLz": 0.1 } },
+        { "t": 0.22, "pose": { "lean": 0.16, "twist": 0.4, "side": 0, "headX": 0, "headY": -0.3, "headZ": 0, "armR": -1.35, "armL": -0.6, "elbR": -0.25, "elbL": -1.6, "armRz": -0.08, "armLz": 0.08 } },
+        { "t": 0.35, "pose": { "lean": 0, "twist": 0, "side": 0, "headX": 0, "headY": 0, "headZ": 0, "armR": 0.05, "armL": -0.1, "elbR": -0.2, "elbL": -0.2, "armRz": 0, "armLz": 0 } }
+      ],
+      "events": [
+        { "t": 0, "type": "phase", "data": { "label": "attack_clip.phase.windup" } },
+        { "t": 0.1, "type": "phase", "data": { "label": "attack_clip.phase.strike" } },
+        { "t": 0.16, "type": "impact", "data": { "kind": "punch" } },
+        { "t": 0.22, "type": "phase", "data": { "label": "attack_clip.phase.recover" } }
+      ]
+    }
+  ],
+  "locales": {
+    "pt-BR": {
+      "attack_clip.phase.windup": "Preparação",
+      "attack_clip.phase.strike": "Golpe",
+      "attack_clip.phase.recover": "Recuperação"
+    },
+    "en": {
+      "attack_clip.phase.windup": "Wind-up",
+      "attack_clip.phase.strike": "Strike",
+      "attack_clip.phase.recover": "Recover"
+    }
+  }
+}
