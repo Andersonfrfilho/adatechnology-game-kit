@@ -2128,5 +2128,15 @@
       0.3
     ],
     "scale": 1
+  },
+  {
+    "id": "military_backpack",
+    "teamId": "mochila_militar",
+    "teamBox": [
+      0.35,
+      0.6,
+      0.3
+    ],
+    "scale": 1
   }
 ]
