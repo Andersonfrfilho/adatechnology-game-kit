@@ -2188,5 +2188,15 @@
       0.1
     ],
     "scale": 1
+  },
+  {
+    "id": "padded_coat",
+    "teamId": "casaco_frio",
+    "teamBox": [
+      0.45,
+      0.15,
+      0.35
+    ],
+    "scale": 1
   }
 ]
