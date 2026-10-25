@@ -77,7 +77,16 @@ export interface PartSpec {
   /** Axis of the grain for `splinter` materials, in local space (default the longest axis). */
   grain?: 'x' | 'y' | 'z'
   /** Fluid inside the part; punctures make it leak (a `leak` event per hole, the level drops in `update`). */
-  contains?: { fluid: FluidKind; liters: number; pressurized?: boolean }
+  contains?: {
+    fluid: FluidKind
+    liters: number
+    pressurized?: boolean
+    /**
+     * Object-local direction the fluid leaves through a hole (the `leak` event's `direction`), for a fluid that does not spray back out of the hole
+     * but runs down through it: the water on a roof membrane goes `[0, -1, 0]` into the floor below. Default: out of the hole (its normal).
+     */
+    outflow?: Vec3
+  }
   /** The part explodes when destroyed, or when its temperature passes `atC` (gas bottle, fuel tank, aerosol). */
   explodes?: {
     energy: number
@@ -101,7 +110,7 @@ export interface PartSpec {
    * parts, over the joints that `bears`. `foundation` implies `anchored`. `none` (and parts without `structure`) never carry load: a window, a door
    * or furniture is not part of the structure. Objects without any structural part behave as before.
    */
-  structure?: { role: StructureRole; capacity?: number }
+  structure?: { role: StructureRole; capacity?: number; rebar?: TensionRebar; pile?: PileSpec }
   /**
    * Coats over the core, outermost first (plaster, tile, the paper of a drywall board). `thickness` of the part is the core only; each coat adds
    * `material.penetration x thickness` to what a bullet must get through, and a hit spalls the outer coat at the impact (`spall` event) before it
@@ -136,6 +145,52 @@ export interface Reinforcement {
   diameter: number
   /** Fraction of the part's structural capacity the bare cage keeps (default 0.15). */
   residualCapacity?: number
+}
+
+/**
+ * Tension steel of a concrete beam, slab, roof or stair for the bending model (`DestructionOptions.structure.flexure`), when it is not taken from the
+ * `reinforcement` cage. `ratio` is the steel area over the effective section of the tension face, `As / (b * d)` (NBR 6118: at least 0.15% for
+ * C25-C30; beams 0.5-1.5%, slabs 0.2-0.6%). Unlike `reinforcement` it draws no bars and does not stage the part.
+ */
+export interface TensionRebar {
+  /** `As / (b * d)` of the tension face, 0..0.04. */
+  ratio: number
+  /** Yield strength of the steel in MPa (default `flexure.rebarYieldMPa`, 500 = CA-50). */
+  yieldMPa?: number
+  /** Concrete cover to the bar in metres (default `flexure.cover`). */
+  cover?: number
+}
+
+/**
+ * Deep foundation under a `foundation` part (its pile cap): `count` concrete piles of `diameter` going `length` metres down from the bottom of the
+ * part, laid out in a grid under it. They carry the load by end bearing at the tip and skin friction along the shaft, from the soil layers they go
+ * through (`DestructibleSpec.soil`). Without it a foundation part is a shallow footing (pad, strip or raft) that bears on the soil under it.
+ */
+export interface PileSpec {
+  /** Metres below the bottom of the part. */
+  length: number
+  /** Metres. */
+  diameter: number
+  /** Piles under the part (default 1). */
+  count?: number
+  /** `bored` (cast in place, the default) or `driven` (precast): how much of the soil's resistance the pile mobilises. */
+  method?: 'bored' | 'driven'
+}
+
+/** One layer of soil, from the top down. `soil` is a soil class id (`clay_soft`, `sand_dense`, `rock`...); the last layer goes on forever. */
+export interface SoilLayer {
+  soil: string
+  /** Metres (ignored on the last layer). */
+  thickness?: number
+}
+
+/** The ground under an object. Settlement, tilt and bearing failure are computed only for objects that have one. */
+export interface SoilProfile {
+  layers: readonly SoilLayer[]
+  /** Object-local height of the ground surface (default: the top of the highest foundation part). */
+  surface?: number
+  /** Width a footing has at least where a part rests on a foundation tagged `terrain` (default 0.6 m, the NBR 6122 minimum). */
+  footingWidth?: number
 }
 
 /** Size of one masonry unit in the part's axes (`size[2]` is along the part's thinnest axis, clamped to it) and how rows are laid. */
@@ -199,6 +254,11 @@ export interface DestructibleSpec {
   joints?: JointSpec[]
   /** Free tags (`furniture`, `vehicle`, `plant`, `structure`, `weapon`, `item`...). */
   tags?: string[]
+  /**
+   * The ground the object stands on: a soil class id (one layer) or a profile. With it the foundations bear on the soil: the object settles, tilts
+   * and, when the soil cannot carry it, sinks and tips over (`ObjectState.soil`, `settle` events). Without it the foundations are fixed as before.
+   */
+  soil?: string | SoilProfile
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -434,12 +494,41 @@ export interface PartState {
   stress?: number
   /** Damage stage; only present on parts that opted in (see `PartSpec.breach`). */
   stage?: DamageStage
+  /**
+   * Beams, slabs, roofs and stairs of a material with `strength.tensileMPa` only: bending moment at rest over the moment the section holds (the steel's
+   * when it is reinforced and holds more than the concrete's cracking moment, else the cracking moment). `stress` is the largest of this and the
+   * compression ratio.
+   */
+  flexure?: number
+  /** The tension face cracked (a blast, an impact or the load bent it past the cracking moment): the concrete no longer carries tension, the steel does. */
+  cracked?: boolean
   /** Reinforced part whose concrete is gone: only the rebar cage is left (capacity x `residualCapacity`); it is still part of the structure. */
   stripped?: boolean
   /** Opening a breach left, in object-local space (stage 2). Raycasts and shots pass through it. */
   opening?: { center: Vec3; radius: number }
   /** Index into `ObjectState.groups` of the piece this part belongs to (-1 when the part is broken, melted or ash). */
   group: number
+}
+
+/** How the ground under an object is holding (`DestructibleSpec.soil`). */
+export interface SoilState {
+  /** Metres the foundations went down, at their centre of stiffness. */
+  settlement: number
+  /** Degrees the object leans from the vertical. */
+  tilt: number
+  /** Object-local horizontal unit vector the top leans toward (zero when it stands straight). */
+  direction: Vec3
+  /** Weight of the object over what its foundations can carry before the soil gives way (above 1 it sinks). */
+  bearing: number
+  /** Largest share of its capacity any foundation (a strip of a footing, a pile) is using, 0..1: at 1 the soil under it is yielding. */
+  edge: number
+  /** `stable`: at rest; `yielding`: the soil is giving way and the object is still moving; `toppled`: it tipped over. */
+  status: 'stable' | 'yielding' | 'toppled'
+  /**
+   * The settled pose relative to the pose the host gave (`setTransform`), in object-local space: draw the object's parts under a node with this
+   * transform. `ObjectState.position` and `rotation` already include it.
+   */
+  offset: { position: Vec3; rotation: Quat }
 }
 
 export interface JointState {
@@ -471,6 +560,8 @@ export interface ObjectState {
   groups: string[][]
   /** Every part is broken, melted or ash. */
   destroyed: boolean
+  /** Only objects with `DestructibleSpec.soil`: how the ground under it is holding. */
+  soil?: SoilState
   /** Only objects that are a living body (a character, an animal): the summary the crowd and the HUD read. */
   body?: { alive: boolean; vitality: number; missing: number; limp: boolean; crawl: boolean }
 }
@@ -532,6 +623,11 @@ export type DestructionEvent =
   | (EventBase & { type: 'primed'; part: string; point: Vec3; trigger: 'shot' | 'fire' | 'explosion'; delay: number })
   /** A structural part is overloaded (`stress` > 1); throttled to once per 0.5 s per part. Brittle parts also `crack` at stress > 0.8. */
   | (EventBase & { type: 'stress'; part: string; stress: number; load: number })
+  /**
+   * The ground under an object moved (`DestructibleSpec.soil`): it settled or leans more, the soil started or stopped yielding, or it tipped over
+   * (`status: 'toppled'`, followed by a `collapse` of everything). Throttled to once per 0.5 s while it moves. `direction` is in world space.
+   */
+  | (EventBase & { type: 'settle'; settlement: number; tilt: number; direction: Vec3; bearing: number; status: SoilState['status'] })
   /** A group with structural parts lost every anchored part (an anchored part exists in the object): it falls. Reported once per group. */
   | (EventBase & { type: 'collapse'; parts: string[]; mass: number })
   /** The outer coat of a layered part came off at `point` (`layer` indexes `PartSpec.layers`; `area` in m²). */

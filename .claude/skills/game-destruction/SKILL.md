@@ -49,7 +49,9 @@ Quem possui as transformações (renderizador ou física) chama `setTransform`; 
 | `world.setLiters / extinguish / reset / splitGroup / setTransform / setPartPose` | recipientes, apagar fogo, reparar, separar pedaço, sincronizar pose |
 | `world.state / part / snapshot / serialize / load` | estado vivo (só leitura), cópia, JSON de ida e volta |
 | `MATERIALS`, `guessMaterial(name)` | 26 materiais embutidos; adivinha o material pelo nome da malha |
-| `buildFrame`, `sizeStructure` | estrutura de teste (colunas, lajes, paredes) e dimensionamento de capacidade (`redundancyRoles`, `safetyByRole` para casas) |
+| `buildFrame`, `sizeStructure` | estrutura de teste (colunas, lajes, paredes) e dimensionamento de capacidade (`redundancyRoles`, `safetyByRole` para casas; termina com `sizeRebar`); `buildFrame({ rebar })` vigas 1%, lajes 0,5%; `continuousColumns` (pilar sobre pilar, preciso para prédio alto), `columnCage`, `roofThickness` |
+| `SOILS`, `SOIL_DEFAULTS`, `pileCapacity`, `pileLength`, `footingSoil`, `solveFoundation` | solo e fundação: classes de solo (NBR 6122), resistência de estaca (Décourt-Quaresma), comprimento até o chão firme, equilíbrio do corpo rígido sobre as molas |
+| `sizeRebar`, `bearingWallThickness`, `FLEXURE_DEFAULTS`, `MASONRY_DEFAULTS` | taxa de aço de viga/laje armada por dimensionamento (até 4%); espessura de parede portante por andar (γf 1,4, γm 2,0, mín. 0,14 m); números da flexão e da alvenaria |
 | `assemblyPart(id, { id, width, height, position })`, `ASSEMBLIES`, `registerAssembly`, `getAssembly` | parede pronta a partir de uma das 8 montagens (`brick_wall_plastered`, `concrete_block_wall`, `reinforced_concrete`, `drywall`, `wood_frame_wall`, `log_wall`, `sheet_metal_shack`, `glass_pane`) |
 | `inferJoints`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS` | juntas (screw, bolt, weld, mortar, rebar...) |
 | `checkDestructible`, `checkHit`, `IMPACT_CONTRACT` | validar um `DestructibleImpl` ou um golpe contra o contrato |
@@ -95,6 +97,7 @@ Detalhes e números no README do pacote; exemplos de pilares e vigas em `tests/b
 - Eventos e pontos estão em espaço de mundo; `register` de um impl só usa a transformação para raycast e alcance da explosão; `splitGroup` num impl lança erro.
 - Aleatoriedade vem só da semente (nada de `Math.random`); `load` exige os mesmos materiais.
 - Estrutura: a laje/viga é sustentada pela **soma** dos apoios que restam (4 pilares dividem a carga; perdendo pilares ela passa aos outros; cai quando a capacidade que sobra é menor que a carga). Configuração: `structure.capacity`, `MaterialDef.compressive`, `sizeStructure({ safety, redundancy })` e a opção do mundo `structure: { safetyFactor }` (padrão 1). Sem `structure` o objeto se comporta como antes; capacidades brutas de material costumam ser absurdas, use `sizeStructure`.
+- Estrutura real (T10): concreto e tijolo têm `MaterialDef.strength` (fck 25 / fct 2,56 / E 28 GPa; tijolo fk 2,35 / 0,1 / 2,35 GPa) e a capacidade de compressão sai disso (pilar 30x30 de 3 m = 203 t; parede de tijolo de 20 cm = 41 t/m; esbeltez NBR 16868-1), então a parede portante do térreo esmaga primeiro quando há andares demais. Viga/laje com `structure.rebar` dobra (`structure.flexure`, alcance `scope` 'rebar' por padrão): `PartState.flexure`, `cracked`; explosão (SDOF de Biggs, impulso de Sadovsky) racha a face tracionada, sem aço parte (`snap`), com aço escoa e a 10° de giro dobra e cai inteira (`detach` + `collapse`). Juntas `rebar` de peça armada não se gastam com golpe.
 - Explosão: fragmentos têm teto de 40 m/s.
 
 ## O que vem pela migração (spec 001)
@@ -103,3 +106,5 @@ Detalhes e números no README do pacote; exemplos de pilares e vigas em `tests/b
 - Dois raios de explosão, letal e de ferimento (E3): dados em `game-weapons`, dano em `game-characters`.
 - Carro e parede da Galeria não são portados: usam este pacote (A8).
 - Destruição passa a usar o futuro `game-vfx` para os efeitos (E4).
+- Solo (T10 §8): `DestructibleSpec.soil` (id ou camadas) liga o solo; sem ele nada muda. Sapata/radier = molas `E/(B(1−ν²)Iw)` que cedem a 3·qa; peça sobre `terrain` ganha sapata de 0,6 m; `structure.pile` = estaca (Décourt-Quaresma). O objeto recalca, inclina (desaprumo 1/200, P-delta) e tomba quando o centro de massa passa da borda (`settle` → `collapse`). `ObjectState.soil` e `position`/`rotation` já com o recalque; `setTransform` dá a pose do host. Opções em `soil` (`SOIL_DEFAULTS`).
+- `contains.outflow`: direção (local) em que o fluido sai pelo furo (água da manta da cobertura: `[0, -1, 0]`); sem ela sai pelo furo.

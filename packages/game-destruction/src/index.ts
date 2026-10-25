@@ -7,7 +7,17 @@ export { ASSEMBLIES, registerAssembly, getAssembly, assemblyPart, assemblyDepth 
 export type { AssemblyDef, AssemblyPartOptions } from './assemblies'
 export { buildFrame } from './frame'
 export type { FrameOptions } from './frame'
-export { sizeStructure } from './size'
+export { sizeStructure, sizeRebar } from './size'
+export {
+  GRAVITY, FLEXURE_DEFAULTS, MASONRY_DEFAULTS, bearingWallThickness, bendGeometry, blastImpulse, crackingMoment, elasticEnergy, impulseEnergy, momentOfEnergy,
+  sectionMoments, slendernessFactor, spanMoment, spanOf, steelMoment, tensionSteel,
+} from './flexure'
+export type { BearingWallOptions, BendGeometry, BendSection, SectionMoments, TensionSteel } from './flexure'
+export {
+  SOILS, SOIL_DEFAULTS, footingArea, footingSoil, layersBetween, pileCapacity, pileLength, pileStiffness, profileOf, soilAt, solveFoundation, stiffnessCentre,
+  subgradeModulus,
+} from './soil'
+export type { FoundationSolve, SoilSpring } from './soil'
 export { vec, quat, quatFromEuler, rotateVec, toLocal, toWorld } from './math'
 export { resolveStrings, locales } from './locale'
 export type { DestructionStrings, DestructionLocale } from './locale'

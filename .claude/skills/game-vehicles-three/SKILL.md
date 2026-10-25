@@ -34,5 +34,5 @@ cena.add(carro.group); carro.damageables                  // [{ material, zone, 
 
 ## Cuidados
 - O modo leve deixa de fora os interiores, o motor e as peças com menos de 3 cm; a placa mantém a textura.
-- Peer `three >=0.128.0`: testado em r128 e r160.
+- Peer `three >=0.160.0`: testado em r160 (desde o T9g).
 - Sem `Math.random`: a cor vem da semente.

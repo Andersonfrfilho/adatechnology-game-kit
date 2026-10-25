@@ -31,3 +31,10 @@ The module draws no particles and asks for no effects: leaves, sap and fire come
 ## Tests
 
 `tests/team-golden-module.test.ts` runs the module of the Viveiro artifact against the kit's room and compares it with this one: the 18 items (names in both languages, meshes, specs, clips) and the 13 scenarios (the same checks and the same count of every log line). `tests/team-golden-nursery.test.ts` cuts `buildLotVeg` from the page and compares the placements, triangles, plants, colliders and species for 8 seeds. `examples/vegetation-test-area` loads the module, and so does `examples/interactables-test-area`.
+
+## Geometry
+
+The nursery's scenery (ground, street, walls, house and roof), its colliders and walker, and the colliders layer are made through
+`shapeGeometries(THREE)` of `@adatechnology/game-shapes-three`: the same bytes as three's constructors
+(`tests/exact-golden.test.ts`), cached by parameters. The plants themselves are `@adatechnology/game-vegetation`'s own buffers (`PlantMesh`,
+with the per-vertex `sway` of the wind), drawn by its adapter.

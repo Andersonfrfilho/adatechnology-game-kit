@@ -84,7 +84,7 @@ const render = (rows: readonly Row[]): string => {
     '',
     'Gerado por `pnpm --filter @adatechnology/vehicles-catalog-tool compare`. Cada veículo é construído nos três estados (intacto, danificado, modificado) pelo',
     'artefato (`artefatos/Xy9QydZTRyAfwxRMjzh1aT/`), pelos `<script>` da página v4 (`sources/veiculos__garagem.js`) e pelo SDK (`game-vehicles` + `game-vehicles-fleet`),',
-    'todos em Node com three r128 e o canvas falso do repositório. O resumo de cada cena (objetos e hash de transformações, geometrias e materiais) é o de',
+    'todos em Node com three r160 e o canvas falso do repositório. O resumo de cada cena (objetos e hash de transformações, geometrias e materiais) é o de',
     '`packages/game-vehicles-fleet/tests/helpers/digest.ts`. O estado danificado usa o cenário `frontal` sem a bandeira de sangue, que só existe no jogo.',
     '',
     `Veículos: ${new Set(rows.map((row) => row.id)).size}. Comparações: ${rows.length}. Diferentes: ${different.length}.`,

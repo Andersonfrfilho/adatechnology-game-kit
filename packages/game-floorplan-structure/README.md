@@ -12,4 +12,7 @@ plan.structure.parts // the parts that carry load, each with role, material, box
 plan.structure.supports // what each part rests on, down to 'ground'
 ```
 
+Tall buildings: `buildTower()` builds a frame with continuous columns, a concrete core with stairs and elevator shafts, a glass curtain wall, a flat
+roof with its membrane and the mechanical floor (`addCore`, `addCurtainWall`, `addFlatRoof`, `addMechanicalFloor` add each one to any frame spec).
+
 See `.claude/skills/game-floorplan-structure/SKILL.md` for the API and `MIGRATION.md` for the names the Visor de casas 3D used.

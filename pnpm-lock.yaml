@@ -717,6 +717,9 @@ importers:
       '@adatechnology/game-props3d':
         specifier: workspace:*
         version: link:../game-props3d
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:*
+        version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-destruction-three':
         specifier: workspace:*
@@ -1242,6 +1245,9 @@ importers:
       '@adatechnology/game-floorplan':
         specifier: workspace:*
         version: link:../game-floorplan
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:*
+        version: link:../game-shapes-three
       '@adatechnology/game-urban':
         specifier: workspace:*
         version: link:../game-urban
@@ -1265,17 +1271,14 @@ importers:
         specifier: ^22.10.7
         version: 22.20.5
       '@types/three':
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.0
+        version: 0.160.0
       happy-dom:
         specifier: ^17.4.4
         version: 17.6.3
       three:
-        specifier: 0.128.0
-        version: 0.128.0
-      three160:
-        specifier: npm:three@0.160.1
-        version: three@0.160.1
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
@@ -1331,6 +1334,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:*
+        version: link:../game-shapes-three
       '@adatechnology/game-vegetation':
         specifier: workspace:*
         version: link:../game-vegetation
@@ -1348,17 +1354,14 @@ importers:
         specifier: ^22.10.7
         version: 22.20.5
       '@types/three':
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.0
+        version: 0.160.0
       happy-dom:
         specifier: ^17.4.4
         version: 17.6.3
       three:
-        specifier: 0.128.0
-        version: 0.128.0
-      three160:
-        specifier: npm:three@0.160.1
-        version: three@0.160.1
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
@@ -1374,22 +1377,28 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:*
+        version: link:../game-shapes-three
     devDependencies:
       '@adatechnology/game-weapons':
         specifier: workspace:*
         version: link:../game-weapons
+      '@adatechnology/golden-tool':
+        specifier: workspace:*
+        version: link:../../tools/golden
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
       '@types/three':
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.0
+        version: 0.160.0
       happy-dom:
         specifier: ^17.4.4
         version: 17.6.3
       three:
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
@@ -1437,11 +1446,11 @@ importers:
         specifier: ^22.10.7
         version: 22.20.5
       '@types/three':
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.0
+        version: 0.160.0
       three:
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
@@ -1483,17 +1492,14 @@ importers:
         specifier: ^22.10.7
         version: 22.20.5
       '@types/three':
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.0
+        version: 0.160.0
       happy-dom:
         specifier: ^17.4.4
         version: 17.6.3
       three:
-        specifier: 0.128.0
-        version: 0.128.0
-      three160:
-        specifier: npm:three@0.160.1
-        version: three@0.160.1
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
@@ -1797,6 +1803,21 @@ importers:
       '@adatechnology/game-characters-undead':
         specifier: workspace:*
         version: link:../../packages/game-characters-undead
+      '@adatechnology/game-floorplan':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan
+      '@adatechnology/game-floorplan-commercial':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-commercial
+      '@adatechnology/game-floorplan-residential':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-residential
+      '@adatechnology/game-floorplan-structure':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-structure
+      '@adatechnology/game-floorplan-three':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-three
       '@adatechnology/game-interactables-household':
         specifier: workspace:*
         version: link:../../packages/game-interactables-household
@@ -1818,6 +1839,21 @@ importers:
       '@adatechnology/game-shapes-three':
         specifier: workspace:*
         version: link:../../packages/game-shapes-three
+      '@adatechnology/game-urban':
+        specifier: workspace:*
+        version: link:../../packages/game-urban
+      '@adatechnology/game-urban-three':
+        specifier: workspace:*
+        version: link:../../packages/game-urban-three
+      '@adatechnology/game-vegetation':
+        specifier: workspace:*
+        version: link:../../packages/game-vegetation
+      '@adatechnology/game-vegetation-species':
+        specifier: workspace:*
+        version: link:../../packages/game-vegetation-species
+      '@adatechnology/game-vegetation-three':
+        specifier: workspace:*
+        version: link:../../packages/game-vegetation-three
       '@adatechnology/game-vehicles':
         specifier: workspace:*
         version: link:../../packages/game-vehicles
@@ -1864,14 +1900,11 @@ importers:
         specifier: ^22.10.7
         version: 22.20.5
       '@types/three':
-        specifier: 0.128.0
-        version: 0.128.0
+        specifier: ^0.160.0
+        version: 0.160.0
       three:
-        specifier: 0.128.0
-        version: 0.128.0
-      three160:
-        specifier: npm:three@0.160.1
-        version: three@0.160.1
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)

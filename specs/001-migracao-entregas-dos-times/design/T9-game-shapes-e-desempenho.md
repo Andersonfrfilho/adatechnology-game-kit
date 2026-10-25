@@ -34,7 +34,8 @@ Three findings shape the design:
   (same parameters, bitwise): Box, Cylinder, Cone, Sphere, Plane, Torus, Circle and Ring give the same position, normal, uv and index arrays;
   **Lathe** differs in normals and index order and **Extrude** in uvs (`WorldUVGenerator`). The packages whose tests still run three 0.128
   (`game-urban-three`, `game-vegetation-three`, `game-vehicles`, `-fleet`, `-three`) can therefore move to `game-shapes` for everything but lathes
-  and extrusions without an r128 variant (§11, question 3).
+  and extrusions without an r128 variant (§11, question 3). **Answered 2026-10-25 (b):** those packages moved to three r160 and their goldens were
+  re-recorded once (§7.5); `game-shapes` keeps r160 generators only.
 
 ## 1. Inventory of the geometry builders
 
@@ -412,7 +413,7 @@ migrates (§7).
 | 5 | `game-animals-three` | `context.ts` `addMesh` geometry; the node skin stays | `animals-page.json`, `game-animal-skin.json` | |
 | 6 | `game-characters-three`, then `game-crowd-three` | `person-kit.ts`, accessories, wounds templates; the variant bake; the crowd's per-frame instance matrices stay in `game-crowd-three` (they are animation, not generation) | `portraits-people.json`, `game-best-body.json`, `game-instanced-body.json`, `game-crowd-render.json` | the crowd changes nothing until the bake moves |
 | 7 | `game-vegetation(-three)` | `PlantMesh` becomes a `mesh` node (or `ShapeBuffers` directly); the nursery's pots and stakes | module goldens | r128 in tests: only kinds proven equal on r128 |
-| 8 | `game-urban-three` | `draw.ts`, rounded box, prism; the instanced lists become `instances` | `urban-parts.json`, `urban-patterns.json`, `urban-terrain.json` | r128; extrusions stay until §11 q3 |
+| 8 | `game-urban-three` | `draw.ts`, rounded box, prism; the instanced lists become `instances` | `urban-parts.json`, `urban-patterns.json`, `urban-terrain.json` | on r160 since T9g (§11 q3 answered: b) |
 | 9 | `game-floorplan-three` | the kernel accumulator and `furniture/api.ts` onto the core bake (its own templates as parameters, 32-bit indices by option) | `vc3-house-scene.json`, `vc3-house-area.json`, `gallery-silhouettes.json` | the largest win (§8): 24 houses, 1 750 meshes |
 | 10 | `game-vehicles`, `-fleet`, `-three` | the kit's primitive helpers, then the lite fusion on the core merge | the four garage goldens, `lite.json` | r128; lofts and warps are custom buffers and stay `mesh` nodes |
 | — | effects (`vfx`, `fluids`, `weather`, `destruction-three`) | only their static templates, if any | their goldens | per-frame buffers stay where they are |
@@ -424,14 +425,16 @@ migrates (§7).
 | `TubeGeometry` (Catmull-Rom curves, Frenet frames) | items (`crowbar`), interactables (`cord.ts`), weapons, vehicles | Not ported yet: the curve's arc-length table and the centripetal `pow` make an exact port a slice of its own |
 | `createNodeSkin` | props3d, animals | Reads three materials and textures (colour sampled at the uv) to bake per-vertex surface data; it is a bake of an existing tree, not generation |
 | `ShapeGeometry`, `ExtrudeGeometry` with curves, Dodecahedron / Icosahedron / Tetrahedron, Capsule | characters, vehicles, urban, vfx | Not used by the first three migrations; added when their package migrates |
-| Lathe and Extrude under three r128 | urban, vegetation, vehicles | r128's lathe normals and index order and extrude uvs differ from r160's (measured); see §11 q3 |
 | `MeshApiOptions` with a three whose `Color.setHex` is neither raw sRGB nor r160's linear | interactables | `createMeshApi` checks the 256 channel values once per three and throws: game-shapes knows those two spaces only |
 | The rounded box of the weapon models (`createRoundedBoxGeometry`) | weapons | Its corner rounding is three Vector3 arithmetic over a segmented box; the box now comes from game-shapes, the rounding stays a port of the three addon (a game-shapes generator is a later slice) |
 | `IcosahedronGeometry`, `DodecahedronGeometry`, `ShapeGeometry`, `CapsuleGeometry`, `TubeGeometry` | weapons, characters | Not ported to game-shapes: `shapeGeometries` hands them to three |
 | The test areas' own room furniture (`test-area/module.ts`, `area.ts`) | characters, weapons, items | Drawn with the room's three, not the package's builders |
 | The items area's own furniture (shelves, stand, ruler, table, mannequin in `area.ts`) | items | Drawn with the host's three, not the kit: room furniture, not an item; it moves with the test room, not with the items |
+| The house kernel's accumulator (`put`, `polyFace`) and `furniture/api.ts` | floorplan | Its own arithmetic (scale before rotation, normals divided by the scale and renormalised by `hypot`, world-projected uvs, atlas cells rotated and flipped, a colour callback per vertex) is not three's matrix order: moving it onto the core bake changes bytes, so it waits for §11 q1 (a geometry v2); the templates it copies come from game-shapes |
+| `PlantMesh` (the plants) | vegetation | Already renderer-agnostic buffers with a per-vertex `sway` the shape batches do not carry; the adapter draws them as they are |
+| Tubes, curved extrusions, lofted bodies and warps | vehicles | Tube and curved extrude are not ported (see above); the lofts and warps are the kit's own buffers |
 
-### 7.4 Migrated (T9e)
+### 7.4 Migrated (T9e to T9g)
 
 Every row is guarded by an exact golden recorded on the old path in its own commit before the move (`exactSnapshot` of the golden tool: every
 byte of every attribute and index, attribute order and array types, transforms, user data, materials by identity, lights), and none changed.
@@ -445,6 +448,24 @@ byte of every attribute and index, attribute order and array types, transforms, 
 | `game-animals-three` (T9f) | `createAnimalsThree` draws with `shapeGeometries(host)`; `profileGeometry`'s lathe from game-shapes | `tests/exact-golden.test.ts`: 13 species × 2 seeds and the profile; the page goldens | animals 30.3 → 11.1 |
 | `game-characters-three` (T9f) | `createPersonBuilder`, `createPersonKit`, `createBestBuilder`, `bakeBody`, `buildInstancedBody`, `createFlyingLimbs`, `createEye` draw with `shapeGeometries(host)` | `tests/exact-golden.test.ts`: 281 cases (44 people and 8 as zombies, every extra, hat, face feature and hand item, 13 Bestiário bodies × 4 decays × 2 levels, bakes, the instanced body); the team goldens | characters (new group: 12 people, 13 bodies, 3 bakes, instanced body) 166.7 → 90.9 |
 | `game-crowd-three` (T9f) | nothing of its own: it instances the baked variants of characters-three, which now come from game-shapes | its team golden `game-crowd-render.json`, unchanged | — |
+| `game-vegetation-three` (T9g) | the nursery's scenery, colliders and walker and the module's colliders layer through `shapeGeometries(THREE)`; the plants stay `game-vegetation`'s own `PlantMesh` buffers (per-vertex `sway`) | `tests/exact-golden.test.ts`: 22 cases (18 plants, 4 nursery settings); the team goldens | vegetation (new group: 18 plants and the nursery) 486.2 → 424.9 (the nursery's lot dominates; noise) |
+| `game-urban-three` (T9g) | `createUrbanThree`, the rounded box, the prism and the light reach spheres through `shapeGeometries(THREE)` | `tests/exact-golden.test.ts`: 48 cases (28 parts, sample sheet, terrain, 17 items, helpers); `urban-parts.json`, `urban-patterns.json`, `urban-terrain.json` | urban (new group: 2 poles, a block, 2 props, the sample sheet) 17.8 → 16.0 |
+| `game-floorplan-three` (T9g) | the kernel's three is `shapeGeometries(THREE)`: the accumulator's primitive templates, breach units, fragments, mirrors and the specimens | `tests/exact-golden.test.ts`: 43 cases (7 typologies × 2 seeds × 2 qualities, night, cut, pieces, bare, building floor, abandoned, fortified, breach, spall, fracture, 5 specimens); `vc3-house-scene.json`, `vc3-house-area.json` | houses (new group: the 7 typologies) 265.9 → 266.4 (the templates are a few per kernel; the cost is the accumulator) |
+| `game-vehicles`, `-fleet`, `-three` (T9g) | the kit's three is `shapeGeometries(THREE)` under the light mode's wrapper (box, cylinder, sphere, torus, plane, circle, ring, the tyre lathes, straight extrusions) | `tests/exact-golden.test.ts` in the three packages: 46 sample cases, 148 fleet cases (69 × intact and damaged, a crash per group), 79 game-frame cases (69 lite, one high per group); the garage, fleet and `lite.json` goldens | vehicles (3 in light mode) 179.6 → 182.3 (noise: the lofts and the fusion dominate) |
+
+### 7.5 The move to three r160 (T9g, §11 q3 = b)
+
+One commit moved `game-urban-three`, `game-vegetation-three`, `game-vehicles`, `-fleet`, `-three` and `tools/vehicles-catalog` from three 0.128
+to 0.160.1 (dev dependency, types, peer `>=0.160.0`; the `three160` aliases are gone) and re-recorded only what r160 changes. Each change was
+traced object by object by building the same vehicle or scene on both three builds:
+
+| Golden | Changed | Why |
+|---|---|---|
+| `game-vehicles` `tests/fixtures/golden.json` | 110 of 155 digests | the tyre is `LatheGeometry(...).toNonIndexed()`: r160's lathe pushes the second triangle of each quad as (c, d, b), so the non-indexed vertex order differs (same positions); paint and burn tints are mixed in r160's linear working colour space (`ColorManagement`), so some material hexes differ |
+| `game-vehicles-fleet` `tests/fixtures/golden.json` | 430 digests (states and scenarios) of the 69 vehicles | the same two (604 tyre meshes, 763 tinted materials over intact, damaged and modified) and 3 meshes of `midsize_sedan` whose extruded body cap is triangulated by r160's earcut 2.2.4 (r128: 2.2.2) |
+| `game-vehicles-fleet` `garage-hatch.json`, `garage-seda.json`, `garage-popular.json`, `garage-civico.json` | the scenes; the scenario events are unchanged | the same reasons |
+| `game-urban-three` `urban-terrain.json` | `colorsHash` only | `Color.setHex` converts the sRGB hex to linear in r160, so the terrain's vertex colours are linear |
+| `urban-parts.json`, `urban-patterns.json`, the vegetation goldens, `game-vehicles-three` (`lite.json`, module) | nothing | positions, counts and hexes are the same on r160 (the prism's extrusion uvs are not in the scene hash; `game-vehicles-three` was already compared on r160) |
 
 ## 8. Performance plan
 
@@ -521,6 +542,8 @@ To add as a new item in §1 or §3 of `CLAUDE.md`:
 3. **three r128 packages.** Urban, vegetation and vehicles tests still run three 0.128 because their team pages did. Lathe and extrusions differ
    between r128 and r160. Do we (a) add an `r128` variant of those two generators to `game-shapes`, (b) move those packages' tests to r160 and
    re-record their goldens once, or (c) leave lathes and extrusions of those packages on three?
+   **Answered by the owner on 2026-10-25: (b).** The packages, their tests and tools moved to three r160 in one commit that re-recorded only the
+   goldens r160 changes (§7.5); the r128 variants were not shipped.
 4. **Booleans.** Only "box minus through-holes" is cheap and exact. Is that enough (walls, windows, doors, shelves), or do you want real CSG
    (holes at an angle, cuts in curved pieces) at the cost of a dependency and non-exact output?
 5. **Bench budget.** The proposal was 50 % per builder; measured on a shared machine that flakes, so the bench ships with ×2 per builder,

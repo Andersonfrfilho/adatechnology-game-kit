@@ -124,7 +124,7 @@ desempenho). Pedido do dono (2026-10-24): o 3D de tudo sai de um SDK que aceita 
 | T9d | pool de workers e cache por chave | feito |
 | T9e | goldens exatos e as primeiras migrações: `game-props3d` (`createShapeRecorder`, `mergeByMaterial` vindo do `game-shapes-three`), `game-interactables-three` (`createMeshApi`), `game-items-three` (kit `T`, `mergeItem`) | feito |
 | T9f | goldens exatos e migração de `game-weapons-three` (modelos, acessórios, cartuchos, props), `game-animals-three`, `game-characters-three`; `game-crowd-three` não tem geometria própria (herda a dos personagens) | feito |
-| T9g | vegetation, urban, floorplan, vehicles (esperam a pergunta 3 do §11, r128) | a fazer |
+| T9g | three r160 em urbano, vegetação e veículos (§11 q3 = b, goldens regravados uma vez com evidência no §7.5); vegetation-three, urban-three, floorplan-three e vehicles(-fleet, -three) pelo game-shapes, goldens exatos e dos times sem mudança (§7.4) | feito |
 
 Inventário da migração (o que entrou e onde): T9 §7.4.
 

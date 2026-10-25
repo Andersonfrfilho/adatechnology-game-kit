@@ -47,7 +47,8 @@
     "@adatechnology/game-destruction": "workspace:*",
     "@adatechnology/game-floorplan-interactables": "workspace:*",
     "@adatechnology/game-floorplan-structure": "workspace:*",
-    "@adatechnology/game-props3d": "workspace:*"
+    "@adatechnology/game-props3d": "workspace:*",
+    "@adatechnology/game-shapes-three": "workspace:*"
   },
   "peerDependencies": {
     "three": "^0.160.0",

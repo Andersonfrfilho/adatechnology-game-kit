@@ -1,4 +1,5 @@
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import * as GameVegetationMain from '@adatechnology/game-vegetation'
 import * as GameVegetationAdapter from '@adatechnology/game-vegetation/three'
 import * as GameVegetationSpeciesMain from '@adatechnology/game-vegetation-species'
@@ -98,7 +99,7 @@ export function createVegetationTestModule(options: VegetationTestOptions = {}):
       }
       if (host.bench.layer('colliders') && root.userData.collider && root.userData.collider.kind) {
         const c = root.userData.collider
-        const wire = new three.Mesh(new three.CylinderGeometry(c.radius, c.radius, c.height, 14, 1, true), new three.MeshBasicMaterial({ color: root.userData.thorny ? 0xff7a1a : 0xe5251d, wireframe: true }))
+        const wire = new three.Mesh(new (shapeGeometries(three) as any).CylinderGeometry(c.radius, c.radius, c.height, 14, 1, true), new three.MeshBasicMaterial({ color: root.userData.thorny ? 0xff7a1a : 0xe5251d, wireframe: true }))
         wire.position.set(0, c.height / 2, 0)
         mark(wire)
       }

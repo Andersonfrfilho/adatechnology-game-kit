@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import * as THREE from 'three160'
+import * as THREE from 'three'
 import { createVehicleKit, legacyZoneId } from '@adatechnology/game-vehicles'
 import { installFleet, legacyVehicleSeeds } from '@adatechnology/game-vehicles-fleet'
 import { createVehiclesThree } from '../src'

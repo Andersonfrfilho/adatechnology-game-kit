@@ -119,6 +119,9 @@ instead of tearing it apart on the spot, and a part goes off once. Blasts resolv
 part, so the timeline does not depend on the `dt` you pass to `update`. `explosivePart(explosive, part)` builds the part from an `ExplosiveDef` of `@adatechnology/game-weapons`
 (`explosives.get('fuel_barrel')`), so energy, reach and delays come from one place and a game changes them with `patch.explosives`.
 
+A fluid with `contains.outflow` (object-local direction) leaves a hole that way instead of out of the hole: the water on a roof membrane runs down
+(`[0, -1, 0]`) into the floor below.
+
 ## Joints and tools
 
 | Kind | Strength | Tools | Seconds |
@@ -155,9 +158,16 @@ without any `structure` behave exactly as before.
   `MaterialDef` passed in `materials`), `sizeStructure({ safety, redundancy })` sizes them (`safety` 0.72 with `redundancy` 0.97 on four columns:
   rest 0.72, one lost 0.96, two lost 1.44), and the world option `structure: { safetyFactor }` (default 1) multiplies every load before it meets
   the capacities (stress = `load * safetyFactor / capacity`): above 1 the whole building is loaded harder than it was sized for.
-- **Capacity** defaults to `material.compressive` (kg per m²: concrete 444 000, brick 40 000, softwood 100 000, steel 2 000 000) times the section:
-  the two smallest dimensions for columns, beams, roofs and stairs (foundations x10), thickness times longest side for slabs, thickness times
-  horizontal length for walls. A 0.3 m concrete column carries 40 t, a 0.2 m brick wall 8 t per metre, a 0.1 x 0.2 m softwood beam 2 t.
+- **Capacity** is `structure.capacity` when the spec gives it. Otherwise, for a material with real strengths (`MaterialDef.strength`: concrete C25
+  and ceramic brick ship with them), it is the compressive strength times the section, divided by g: a 0.3 x 0.3 m plain concrete column of 3 m
+  carries 203 t, a 0.2 m brick wall 2.8 m tall 41 t per metre. Masonry and plain concrete walls and columns (`strength.slender`, default for
+  `masonry` materials without steel) get the NBR 16868-1 reduction `(1 - 2e)(1 - (h/t/40)^3)` (`structure.masonry`: `minEccentricity` 0.05,
+  `slendernessLimit` 40); a reinforced column carries `0.85 fck Ac + As fy` (`masonry.concreteFactor` 0.85). Materials without `strength` keep
+  `material.compressive` (kg per m²: softwood 100 000, steel 2 000 000). The section is the two smallest dimensions for columns, beams, roofs and
+  stairs (foundations x10), thickness times longest side for slabs, thickness times horizontal length for walls. Because each storey passes its
+  load down, a bearing wall that carries too many storeys crushes at the ground floor first. `bearingWallThickness({ storeys, storeyHeight,
+  floorLoad, material })` gives the thickness a designer would give each storey (γf 1.4, γm 2.0, minimum 0.14 m): 16 storeys of 3.75 m with
+  26 kN/m of floor per wall give 1.49 m at the base (the Monadnock Building has 1.8 m).
 - **Joints** carry load when `bears` is true (default when both parts have a role). `bears: 'a_on_b'` means part `a` rests on `b`: load flows only
   that way. A `partition` is supported but supports nothing, so breaking it never drops anything.
 - **Overload**: above stress 1 a part loses `min(0.6, 0.12 + 0.8 * (stress - 1))` of its `maxHp` per second (stress 1.02 gives way in ~7 s, 1.1 in ~5 s,
@@ -169,6 +179,8 @@ without any `structure` behave exactly as before.
   `splitGroup`.
 - `buildFrame({ spanX, spanZ, columnsX, columnsZ, height, floors, walls, roof, columnCapacity, ... })` returns a test structure: columns on
   foundations (`rebar`), beams, a slab per floor, optional brick walls (`mortar`) with a door opening, and a roof that rests (`resting`) on the top beams.
+  `continuousColumns` makes each column rest on the one below instead of on the slab (a tall frame needs it: otherwise the first-floor beams carry
+  the tower in bending), `columnCage` gives the columns a rebar cage and `roofThickness` sets the roof slab (default 0.75 x `slabThickness`).
 - `sizeStructure(spec, { safety?, redundancy?, redundancyRoles?, safetyByRole? })` returns a copy of the spec with `structure.capacity` set from the loads the world itself solves
   for the intact spec, so every structural part rests at stress `safety` (default 0.65). With `redundancy` (e.g. 0.97) the capacities are also
   raised where needed so that losing any single `column` keeps every other part at or below that stress: the structure stands with one column
@@ -177,6 +189,54 @@ without any `structure` behave exactly as before.
   `redundancyRoles` (default `['column']`) says which parts the N-1 check removes one at a time: a house uses `['column', 'wall']` so it also
   stands with a bearing wall gone. `safetyByRole` overrides `safety` per role: `{ beam: 0.45, slab: 0.45, roof: 0.45, stair: 0.45 }` keeps the
   floors well under their limit so they outlast the member that fails.
+
+### Bending: concrete cracks in tension, the steel holds
+
+Beams, slabs, roofs and stairs of a material with `strength.tensileMPa` that declare their steel (`structure.rebar: { ratio, yieldMPa?, cover? }`,
+`ratio: 0` is plain concrete) also bend. The span comes from the supports (twice the farthest distance to one, so two walls 4 m apart give 4 m,
+corner columns give the long side, a cantilever of c gives 2c, and losing a column doubles it); the bending load is the part's own weight plus
+what rests on it away from the supports (a load within one depth of a support goes straight down, EN 1992-1-1 6.2.2(6)). `M = wL²/8` meets the
+section: cracking moment `1.5 fct b h²/6` (NBR 6118 17.3.1) and the steel moment with the NBR 6118 rectangular block (`0.85 fck` over `0.8x`,
+`x/d` at most 0.45, the rest as double reinforcement), CA-50 at 500 MPa, 3 cm cover. `PartState.flexure = M / capacity` (after cracking only the
+steel counts) and `stress` is the larger of that and compression.
+
+- **Blast**: a single-degree-of-freedom check (Biggs: KL 0.64, KM 0.5) with the Sadovsky impulse of the TNT-equivalent charge (4.184 MJ/kg),
+  reflected `2 + 4/Z`. Above the cracking moment the tension face cracks (`crack` on the face away from the charge, `PartState.cracked`); a part
+  without steel snaps (`fracture` style `snap`); with steel, yielding adds plastic rotation and at 10° (PDC-TR 06-08) the part hinges and falls in
+  one piece (`detach` from its supports, `collapse`).
+- **At rest**: `flexure > 1` wears the part like a compression overload; a reinforced part then hinges and falls, a plain one snaps.
+- **Joints**: `rebar` joints of a reinforced part are monolithic: blows and blasts do not wear them.
+- **Options** (`structure.flexure`, `FLEXURE_DEFAULTS`): `enabled`, `roles`, `scope` (`'rebar'` default: only parts with `structure.rebar`;
+  `'reinforced'`: also parts with only a `reinforcement` cage; `'all'`: every concrete beam and slab, plain when they have no steel),
+  `crackFactor`, `rebarYieldMPa`, `cover`, `neutralAxisLimit`, `failRotationDeg`, `loadFactor`, `massFactor`, `tntJoules`, `impulse`,
+  `reflection`, `reflectionNear`, `nearScaled`. Helpers: `crackingMoment`, `steelMoment`, `sectionMoments`, `blastImpulse`, `slendernessFactor`,
+  `spanOf`, `bearingWallThickness`.
+- **Sizing**: `sizeRebar(spec, { safety, redundancy, redundancyRoles, safetyByRole })` (also run at the end of `sizeStructure`) raises the steel
+  ratio of each reinforced beam or slab so it rests at `safety` and stays at or below `redundancy` after losing any part of `redundancyRoles`
+  (at most 4%, NBR 6118 17.3.5.2.4); plain concrete stays plain. `buildFrame({ rebar })` declares beams at 1% and slabs at 0.5% (`false` for
+  plain concrete).
+
+### Soil and foundations
+
+Give the spec a `soil` (a soil class id such as `clay_soft`, or `{ layers: [{ soil, thickness }, ...], surface?, footingWidth? }`) and its foundations
+bear on the ground instead of being fixed. Without it nothing changes.
+
+- **Soil classes** (`SOILS`, `soils.json`, extend with `soil.soils`): allowable footing pressure (NBR 6122 basic pressures: dense sand 400 kPa,
+  stiff clay 200, medium clay 100, soft clay 30, rock 3000), SPT N, Young's modulus (Teixeira & Godoy) and Poisson's ratio.
+- **Footings** (a `foundation` part: pad, strip or raft): a grid of springs with the subgrade modulus of a rigid footing `E / (B (1 - nu^2) Iw)`
+  that give way at `safety` (3, NBR 6122) times the allowable pressure of the weakest layer within two widths below. Structural parts resting on a
+  foundation tagged `terrain` get a footing at least 0.6 m wide each.
+- **Piles** (`structure.pile: { length, diameter, count?, method? }` on the cap): end bearing and skin friction by Décourt-Quaresma through the
+  layers. `pileLength(profile, { load, diameter })` gives the shortest pile that carries a load with safety 2 (down to firm ground).
+- **The object is a rigid body on those springs**, out of plumb by 1/200 (EN 1992-1-1) the weak way, with P-delta. It settles at once where the
+  soil holds; where it yields it moves to the new equilibrium at `sinkRate`/`tiltRate` (game time), and with no stable equilibrium it keeps sinking
+  and leaning until its centre of mass passes the edge of its foundations: it tips over (`settle` with `status: 'toppled'`, then a `collapse` of
+  everything).
+- `ObjectState.soil` has `settlement`, `tilt`, `direction`, `bearing` (weight over what the foundations carry), `edge`, `status` and `offset`
+  (the settled pose relative to the host's). `ObjectState.position`/`rotation` include it; `setTransform` sets the host's pose under it. A `settle`
+  event goes out when it moves (at most every 0.5 s) or changes status.
+- Options (`soil`, `SOIL_DEFAULTS`): `soils`, `site`, `safety`, `pileSafety`, `rigidity`, `influence`, `imperfection`, `cells`, `sinkRate`,
+  `tiltRate`, `footingWidth`, `pileElasticGPa`. `buildFrame({ footing, raft, piles, soil })` builds test frames on the ground.
 
 ## Walls: layers, stages, breach and reinforcement
 A wall is one part that opts in with `layers`, `units`, `reinforcement` or `breach` (`PartSpec`, all optional; parts without them behave as before).
@@ -310,7 +370,7 @@ world continues with the same events as the original. The loading world must use
 `raycast`, `shoot`, `disassemble`, `workableJoints`, `nearestJoint`, `extinguish`, `setLiters`, `update`, `state`, `part`, `reset`, `on`,
 `register`, `serialize`, `load`, `time`. `explode(point, energy, radius, source?, blastOptions?)`; `shoot(origin, direction, energy, caliber, source?, round?)` (`round`: `Hit.penetration`, `piercing`, `incendiary`, `tracer`, `ignition` or a bare piercing factor). `state()` and `part()` return live views; do not mutate them.
 
-Also exported: `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS`, `CONFINEMENT_DEFAULTS`, `buildFrame`, `sizeStructure`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
+Also exported: `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS`, `CONFINEMENT_DEFAULTS`, `buildFrame`, `sizeStructure`, `sizeRebar`, `FLEXURE_DEFAULTS`, `MASONRY_DEFAULTS`, `bearingWallThickness`, `SOILS`, `SOIL_DEFAULTS`, `pileCapacity`, `pileLength`, `pileStiffness`, `footingSoil`, `subgradeModulus`, `solveFoundation`, `assemblyPart`, `registerAssembly`, `getAssembly`, `ASSEMBLIES`, `assemblyDepth`, `partCapacity`, `checkDestructible`, `checkHit`, `IMPACT_CONTRACT`, `MATERIALS`, `JOINT_DEFAULTS`, `JOINT_BY_MATERIALS`, `inferJoints`, `guessMaterial`, `partVolume`, `partMass`, `partThickness`, the
 helpers `vec`, `quat`, `quatFromEuler`, `rotateVec`, `toLocal`, `toWorld`, the locale (`locales`, `resolveStrings`, `DestructionStrings`) and all types.
 
 The locale table has `en` and `pt-BR` strings for material names, part statuses, joint kinds, tools, damage types, event labels and fracture styles:
@@ -324,5 +384,9 @@ plástico derretem e pingam. As juntas cedem com impacto, quando a peça é dest
 parafuso, chave inglesa para porca e parafuso, maçarico para solda). O mundo devolve tudo como eventos para o renderizador desenhar. É
 determinístico (semente fixa) e serializável, então um host de LAN pode rodar o mundo e enviar só as entradas. Os nomes em português
 (materiais, ferramentas, juntas, eventos) estão em `resolveStrings('pt-BR')`.
+
+Estrutura real: viga e laje de concreto com `structure.rebar` dobram. Na explosão a face tracionada racha e o aço segura; sem aço a peça parte; com o aço escoado até 10° de giro ela dobra e cai inteira (`structure.flexure`). Paredes e pilares de alvenaria resistem com a resistência real do tijolo e a redução por esbeltez da NBR 16868-1, então a parede portante do térreo esmaga quando há andares demais em cima (`bearingWallThickness` dá a espessura de projeto). Valores e fontes em `specs/001-migracao-entregas-dos-times/design/T10-estrutura-real.md`.
+
+Solo e fundação: com `soil` na spec a fundação se apoia no solo (classes com a tensão admissível da NBR 6122). Prédio pesado em sapata sobre argila mole afunda e tomba; em estacas até o chão firme (`structure.pile`, Décourt-Quaresma, `pileLength`) fica de pé; casa em radier em solo firme não sente.
 
 Explosões: `blast.shelter` (paredes e portas entre a explosão e o alvo ficam com a sua parte: tijolo de 20 cm deixa passar ~19%, porta de madeira ~53%, vidro ~83%; a parede que quebra na mesma explosão deixa passar metade do que segurou), `blast.fragmentHits` (os pedaços do que quebra viram golpes de baixa energia no que está atrás) e `blast.confinement` (pressão num ambiente fechado, de 1 a 3 vezes). Tudo desligado por padrão, por opção do mundo ou da chamada, com os números em `SHELTER_DEFAULTS`, `FRAGMENT_HIT_DEFAULTS` e `CONFINEMENT_DEFAULTS`.

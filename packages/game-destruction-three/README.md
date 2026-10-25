@@ -114,6 +114,10 @@ loose meshes. An invalid range (outside the geometry or empty) throws from `bind
 | `leak` | stream of drops (or a faint puff for gas) from the hole while the part still has liters | |
 | `explode` | flash, fire, smoke, dust and sparks, a pooled `PointLight` pulse, impulses on pieces and fragments in range | `explode` |
 
+`settle` (an object with `DestructibleSpec.soil` settled or tilted): on the first one the renderer moves the children of the bound root under a group named
+`destruction-soil` and gives it `ObjectState.soil.offset`, updated every frame while the soil yields; the root keeps the host's pose, which is what
+`syncTransform` keeps sending to the world.
+
 `world.explode` emits no event of its own (only a part with `explodes` does), so a host that detonates a grenade or rocket calls `renderer.explode(point, energy, radius)` next to it to get the same flash, fire, smoke, light, sound and shove.
 
 Pieces report hard landings: above 3 m/s the renderer calls `world.hit(id, { type: 'blunt', energy: 0.5 m v^2, radius: 0.08, direction: [0, -1, 0], source: 'fall' })`

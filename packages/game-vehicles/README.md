@@ -18,7 +18,7 @@ pnpm add @adatechnology/game-vehicles three
 Browser without a bundler (the global is `GameVehicles`):
 
 ```html
-<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.160.1/build/three.min.js"></script>
 <script src="https://unpkg.com/@adatechnology/game-vehicles/dist/index.global.js"></script>
 <script>
   const kit = GameVehicles.createVehicleKit({ THREE })
@@ -200,6 +200,13 @@ Lengths in metres. The short field names are kept from the original engine and a
 Plain DOM and SVG, no framework: `ui.damageMap(host, c, { selected, onSelect })` draws the top-down map (external zones on the outline, internal
 ones in a strip below); `ui.bandButtons`, `ui.legend`, `ui.healthBar({ text, bar }, c)`, `ui.scenarioButtons`. `ui.injectStyles()` adds minimal CSS
 (`--panel-2`, `--line` and `--muted` customise it).
+
+## Geometry
+
+The kit's three is `shapeGeometries(THREE)` of `@adatechnology/game-shapes-three`, thinned by the light mode: boxes, cylinders, cones, spheres,
+planes, circles, rings, tori, the tyre lathes and the straight-edged extrusions are made by game-shapes, bit-identical to three's
+(`tests/exact-golden.test.ts`, and the fleet's and `game-vehicles-three`'s) and cached by parameters across vehicles. Tubes, curved
+extrusions, the lofted bodies and the warps stay three's own or the kit's custom buffers. The IIFE build bundles game-shapes.
 
 ## Determinism and old seeds
 

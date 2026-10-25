@@ -6,6 +6,11 @@ import { createRng } from '@adatechnology/game-characters'
 import { bakeBody, buildInstancedBody, createBestBuilder, createPersonBuilder } from '@adatechnology/game-characters-three'
 import { UNDEAD_TYPES } from '@adatechnology/game-characters-undead'
 import { SPECIES } from '@adatechnology/game-animals-species'
+import { engine as floorplanEngine } from '@adatechnology/game-floorplan'
+import { register as registerCommercial } from '@adatechnology/game-floorplan-commercial'
+import { register as registerResidential } from '@adatechnology/game-floorplan-residential'
+import { register as registerStructure } from '@adatechnology/game-floorplan-structure'
+import { create as createHouseRenderer } from '@adatechnology/game-floorplan-three'
 import { createHousehold } from '@adatechnology/game-interactables-household'
 import { createMeshApi } from '@adatechnology/game-interactables-three'
 import { createGoodsItems } from '@adatechnology/game-items-goods'
@@ -17,6 +22,13 @@ import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import { createVehicleKit } from '@adatechnology/game-vehicles'
 import { installFleet } from '@adatechnology/game-vehicles-fleet'
 import { createVehiclesThree } from '@adatechnology/game-vehicles-three'
+import { createUrban } from '@adatechnology/game-urban'
+import type { UrbanBuilder } from '@adatechnology/game-urban'
+import { createUrbanThree } from '@adatechnology/game-urban-three'
+import * as GameVegetation from '@adatechnology/game-vegetation'
+import * as GameVegetationAdapter from '@adatechnology/game-vegetation/three'
+import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
+import { createNursery, createVegetationTestModule } from '@adatechnology/game-vegetation-three'
 import { buildWeaponModelById, MODEL_ENTRIES } from '@adatechnology/game-weapons-three'
 import * as THREE from 'three'
 
@@ -149,6 +161,49 @@ export function benchEntries(options: EntryOptions = {}): BenchEntry[] {
     entries.push({ id: `characters/bake:${card.name}`, run: () => bakeBody(THREE, builders as never, { type: card.name, decay: 1, seed: 3 }, 1) })
   }
   entries.push({ id: 'characters/instanced:8', run: () => buildInstancedBody(THREE, { segments: 8 }) })
+
+  // vegetation: the 18 plants of the module and the nursery planted (scenery, lot, colliders, walker)
+  const vegetation = createVegetationTestModule({ locale: 'en' })
+  for (const item of vegetation.items('en')) entries.push({ id: `vegetation/${item.id}`, run: () => item.build(THREE) })
+  const vegetationSdk = { ...GameVegetation, ...GameVegetationAdapter }
+  entries.push({
+    id: 'vegetation/nursery:1',
+    run: () => {
+      const nursery = createNursery(vegetationSdk as never, GameVegetationSpecies as never, THREE, vegetation.materials(THREE), new THREE.Group(), [0, 0])
+      nursery.plant({ seed: 1, quality: 'high', lod: 0, condition: 'healthy', season: 'spring' } as never)
+      nursery.showColliders(true)
+      nursery.setWalker(true)
+      return nursery.group
+    },
+  })
+
+  // urban: poles, a block, props, the sample sheet of the ten neighbourhoods and the valley terrain (the scene is built once; the bench is the drawing)
+  const urbanKit = createUrban()
+  const urbanThree = createUrbanThree(THREE, { document: stubDocument() })
+  const urbanScene = (run: (b: UrbanBuilder) => void): ReturnType<UrbanBuilder['scene']> => {
+    const b = urbanKit.builder({ seed: 7, budget: 99 })
+    run(b)
+    return b.scene()
+  }
+  const urbanScenes: Record<string, ReturnType<UrbanBuilder['scene']>> = {
+    'pole:concrete': urbanScene((b) => urbanKit.poles.get('concrete_arm').build(b, { x: 0, z: 0, dir: 1, on: true, transformer: true })),
+    'pole:flood': urbanScene((b) => urbanKit.poles.get('flood_tower').build(b, { x: 0, z: 0, on: true })),
+    block: urbanScene((b) => void urbanKit.block.fill(b, { cx: 30, cz: -20, size: 40, minHeight: 8, maxHeight: 20, k: 3, gap: 0.3, lit: 0.1 })),
+    watchtower: urbanScene((b) => urbanKit.props.watchtower(b, 2, -3, true)),
+    tent: urbanScene((b) => urbanKit.props.tent(b, 2, 3, 0.4, 6, 8)),
+    patterns: urbanScene((b) => void urbanKit.neighbourhoods.composeSampleSheet(b, { ground: { color: 0x1e2124, size: 500 } })),
+  }
+  for (const [name, scene] of Object.entries(urbanScenes)) entries.push({ id: `urban/${name}`, run: () => urbanThree.draw(scene) })
+
+  // houses: the seven typologies of the Visor (seed 3, full quality), the plan drawn once; the bench is the house renderer
+  registerResidential(floorplanEngine)
+  registerCommercial(floorplanEngine)
+  registerStructure(floorplanEngine)
+  const houseRenderer = createHouseRenderer(THREE, { document })
+  for (const template of ['single_storey_a', 'apartment_basic', 'townhouse', 'mid_modern_single_storey', 'apartment_modern', 'market', 'pharmacy']) {
+    const plan = floorplanEngine.generate(template, { seed: 3, state: 'normal' })
+    entries.push({ id: `houses/${template}`, run: () => houseRenderer.build(plan, { quality: 'high', night: false }) })
+  }
 
   // game-shapes: each generator from scratch, the three namespace, and a whole shape
   for (const [name, node] of Object.entries(GENERATOR_NODES)) {

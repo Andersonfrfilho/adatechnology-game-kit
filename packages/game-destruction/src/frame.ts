@@ -1,4 +1,4 @@
-import type { DestructibleSpec, JointSpec, MaterialId, PartSpec } from './types'
+import type { DestructibleSpec, JointSpec, MaterialId, PartSpec, PileSpec, Reinforcement, SoilProfile } from './types'
 
 export interface FrameOptions {
   /** Total length along x between the outer column centres, metres (default 8). */
@@ -28,6 +28,28 @@ export interface FrameOptions {
   wallMaterial?: MaterialId
   /** Override the load capacity of every column, kg (see `PartState.load`). */
   columnCapacity?: number
+  /**
+   * Tension steel ratio of the beams and slabs (`structure.rebar.ratio`; default beams 1%, slabs and roof 0.5%, inside the ranges of NBR 6118);
+   * `false` makes them plain concrete (they snap when they bend past cracking).
+   */
+  rebar?: { beam?: number; slab?: number } | false
+  /** Side of the square pad under each column in metres (default 2.2 x `columnSize`), 0.3 m thick. */
+  footing?: number
+  /** One raft under the whole frame instead of a pad per column (`raft`, the footprint plus `footing` / 2 each side, 0.4 m thick). */
+  raft?: boolean
+  /** Piles under each pad (or under the raft): the pad becomes a pile cap. */
+  piles?: PileSpec
+  /**
+   * Columns run from storey to storey: each one rests on the column below (through the slab, as a cast-in-place column does) instead of on the slab,
+   * so the slab carries only its own floor. Default false (the column of each storey stands on the slab below, as before).
+   */
+  continuousColumns?: boolean
+  /** Rebar cage of the columns (`PartSpec.reinforcement`; default none). A caged column carries `0.85 fck Ac + As fy` and its `rebar` joints are monolithic. */
+  columnCage?: Reinforcement
+  /** Thickness of the roof slab (default 0.75 x `slabThickness`; a flat roof that carries a screed and equipment is as thick as a floor). */
+  roofThickness?: number
+  /** The ground the frame stands on (`DestructibleSpec.soil`). */
+  soil?: string | SoilProfile
 }
 
 /**
@@ -44,18 +66,28 @@ export const buildFrame = (o: FrameOptions = {}): DestructibleSpec => {
   const dw = o.doorWidth ?? 1, dh = o.doorHeight ?? 2.1
   const mat = o.material ?? 'concrete', wmat = o.wallMaterial ?? 'brick'
   const roof = o.roof ?? true
+  const rebarOf = (kind: 'beam' | 'slab') => (o.rebar === false ? {} : { rebar: { ratio: o.rebar?.[kind] ?? (kind === 'beam' ? 0.01 : 0.005) } })
   const xs = Array.from({ length: nx }, (_, i) => -spanX / 2 + (i * spanX) / (nx - 1))
   const zs = Array.from({ length: nz }, (_, j) => -spanZ / 2 + (j * spanZ) / (nz - 1))
   const parts: PartSpec[] = []
   const joints: JointSpec[] = []
   const on = (a: string, b: string, kind: JointSpec['kind']) => joints.push({ id: `${a}~${b}`, a, b, kind, bears: 'a_on_b' })
 
-  for (let i = 0; i < nx; i++) {
-    for (let j = 0; j < nz; j++) {
-      parts.push({
-        id: `foundation_${i}_${j}`, material: mat, shape: { kind: 'box', size: [cs * 2.2, 0.3, cs * 2.2] }, position: [xs[i], -0.15, zs[j]],
-        structure: { role: 'foundation' }, anchored: true,
-      })
+  const pad = o.footing ?? cs * 2.2
+  const pile = o.piles ? { pile: { ...o.piles } } : {}
+  if (o.raft) {
+    parts.push({
+      id: 'raft', material: mat, shape: { kind: 'box', size: [spanX + pad, 0.4, spanZ + pad] }, position: [0, -0.2, 0],
+      structure: { role: 'foundation', ...pile }, anchored: true,
+    })
+  } else {
+    for (let i = 0; i < nx; i++) {
+      for (let j = 0; j < nz; j++) {
+        parts.push({
+          id: `foundation_${i}_${j}`, material: mat, shape: { kind: 'box', size: [pad, 0.3, pad] }, position: [xs[i], -0.15, zs[j]],
+          structure: { role: 'foundation', ...pile }, anchored: true,
+        })
+      }
     }
   }
   for (let f = 0; f < floors; f++) {
@@ -69,13 +101,14 @@ export const buildFrame = (o: FrameOptions = {}): DestructibleSpec => {
         parts.push({
           id, material: mat, shape: { kind: 'box', size: [cs, H, cs] }, position: [xs[i], yb + H / 2, zs[j]],
           structure: o.columnCapacity === undefined ? { role: 'column' } : { role: 'column', capacity: o.columnCapacity },
+          ...(o.columnCage ? { reinforcement: { ...o.columnCage } } : {}),
         })
-        on(id, f === 0 ? `foundation_${i}_${j}` : `slab_${f - 1}`, 'rebar')
+        on(id, f === 0 ? (o.raft ? 'raft' : `foundation_${i}_${j}`) : o.continuousColumns ? `column_${f - 1}_${i}_${j}` : `slab_${f - 1}`, 'rebar')
       }
     }
     const beams: string[] = []
     const beam = (id: string, size: [number, number, number], pos: [number, number, number], c1: string, c2: string) => {
-      parts.push({ id, material: mat, shape: { kind: 'box', size }, position: pos, structure: { role: 'beam' } })
+      parts.push({ id, material: mat, shape: { kind: 'box', size }, position: pos, structure: { role: 'beam', ...rebarOf('beam') } })
       on(id, c1, 'rebar')
       on(id, c2, 'rebar')
       beams.push(id)
@@ -90,10 +123,10 @@ export const buildFrame = (o: FrameOptions = {}): DestructibleSpec => {
         beam(`beam_z_${f}_${i}_${j}`, [bw, bh, zs[j + 1] - zs[j] - cs], [xs[i], top - bh / 2, (zs[j] + zs[j + 1]) / 2], `column_${f}_${i}_${j}`, `column_${f}_${i}_${j + 1}`)
       }
     }
-    const thick = last && roof ? T * 0.75 : T
+    const thick = last && roof ? o.roofThickness ?? T * 0.75 : T
     parts.push({
       id: slabId, material: mat, shape: { kind: 'box', size: [spanX + cs + 0.2, thick, spanZ + cs + 0.2] }, position: [0, top + thick / 2, 0],
-      structure: { role: last && roof ? 'roof' : 'slab' },
+      structure: { role: last && roof ? 'roof' : 'slab', ...rebarOf('slab') },
     })
     for (const b of beams) on(slabId, b, last && roof ? 'resting' : 'rebar')
 
@@ -127,5 +160,5 @@ export const buildFrame = (o: FrameOptions = {}): DestructibleSpec => {
       }
     }
   }
-  return { name: 'frame', parts, joints, tags: ['structure'] }
+  return { name: 'frame', parts, joints, tags: ['structure'], ...(o.soil !== undefined ? { soil: o.soil } : {}) }
 }

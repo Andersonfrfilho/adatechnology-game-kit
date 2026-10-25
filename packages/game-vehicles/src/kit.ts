@@ -1,3 +1,5 @@
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
+
 import { assignDeep, createMatchers, createTranslate, registerLocale, resolveStrings } from './locale'
 import { LEGACY_STATES, registerLegacySeeds } from './legacy-seeds'
 import { clamp, hash, markDecal, rng, smooth, strHash } from './util'
@@ -45,7 +47,8 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
   if (!opts.THREE || !opts.THREE.Vector3) throw new Error('createVehicleKit: options.THREE (the three.js namespace) is required')
   /* the light mode settings, and the three.js namespace whose generators obey them */
   const lod = createLod(opts.lod)
-  const THREE = wrapThreeForLod(opts.THREE, lod)
+  // its primitive geometries are made by game-shapes (bit-identical to three's, cached by parameters), then thinned by the light mode
+  const THREE = wrapThreeForLod(shapeGeometries(opts.THREE), lod)
   const strings = resolveStrings(opts.locale)
   const t = createTranslate(strings)
   const doc = opts.document || (typeof document !== 'undefined' ? document : undefined)
