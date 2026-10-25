@@ -31,6 +31,8 @@ export interface RoomFirstPersonState {
   speed: number
   running: boolean
   crouch: boolean
+  /** The distance along a ray (world space) to the first thing in the room, or null: what the arms use to stop at a wall or a wardrobe. */
+  contact(origin: [number, number, number], direction: [number, number, number], maxDistance: number): number | null
 }
 
 /** A body the room can show. The room puts `root` at the player's feet turned to where the player looks: the body's front is +z (as the catalogue items'), so `rotation.y` is the player's yaw plus pi. */

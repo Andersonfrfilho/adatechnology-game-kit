@@ -24,6 +24,14 @@ const ELBOW_SEGMENTS = 8
 /** An arm is stretched to this fraction of its length before the shoulder moves toward the target. */
 const REACH_SLACK = 0.97
 /** A foot is shown while a clip holds it by at least this much. */
+/** How far (m) the world is probed in front of the camera, the closest a hand may come to the eye, and the gap left in front of a surface. */
+const CONTACT_PROBE = 1.4
+const CONTACT_MIN = 0.12
+const CONTACT_MARGIN = 0.005
+const CONTACT_PALM = 0.03
+/** The toe of the shoe (and the corners of its sole) is this far (m) from the ankle along the shoe. */
+const FOOT_LENGTH = 0.24
+
 const FOOT_SHOWN = 0.001
 
 /** How much of its own colour each material glows with (0..1). */
@@ -188,6 +196,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     const fore = limb(root, rig.radius.elbow, rig.radius.wrist, rig.fore, materials.sleeve)
     const cuff = limb(root, rig.radius.cuff, rig.radius.cuff, 0.03, materials.cuff)
     const elbow = ball(root, rig.radius.elbow * 1.02, materials.sleeve)
+    elbow.name = `first-person-elbow-${side}`
     arms[side] = { side, sign, hand, anchor, upper, fore, cuff, elbow, shown: newPose(THREE), from: newPose(THREE), mode: null, blend: 1, drawn: newPose(THREE) }
   }
 
@@ -243,6 +252,31 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   const camPosition = new THREE.Vector3()
   const camQuaternion = new THREE.Quaternion()
   const camInverse = new THREE.Quaternion()
+  const clamped = newPose(THREE)
+  const probeAt = new THREE.Vector3()
+  const probeForward = new THREE.Vector3()
+  const probeFingers = new THREE.Vector3()
+  /** Set each update when the host can answer where the world is in front of the camera (`contact` of the state). */
+  let contact: ((origin: [number, number, number], direction: [number, number, number], maxDistance: number) => number | null) | undefined
+  /**
+   * Keeps a hand (or the foot) in front of the surface it would go into: the surface along the camera's forward through the hand's place, minus how far the hand reaches forward (its fingers when they point
+   * ahead) and a few millimetres. The IK then bends the elbow instead of the hand entering the mesh. Never closer to the eye than `CONTACT_MIN`.
+   */
+  const keepOutside = (pose: Pose, reach: number): Pose => {
+    if (!contact) return pose
+    probeAt.set(pose.p.x, pose.p.y, 0).applyQuaternion(camQuaternion).add(camPosition)
+    probeForward.set(0, 0, -1).applyQuaternion(camQuaternion)
+    const distance = contact([probeAt.x, probeAt.y, probeAt.z], [probeForward.x, probeForward.y, probeForward.z], CONTACT_PROBE)
+    if (distance === null) return pose
+    const limit = Math.max(CONTACT_MIN, distance - reach - CONTACT_MARGIN)
+    if (-pose.p.z <= limit) return pose
+    copyPose(clamped, pose)
+    clamped.p.z = -limit
+    return clamped
+  }
+  /** How far a hand reaches forward of its middle: the fingers when they point ahead, else the thickness of the palm. */
+  const forward = (pose: Pose, length: number): number => Math.max(CONTACT_PALM, -probeFingers.set(1, 0, 0).applyQuaternion(pose.q).z * length * pose.scale)
+  const handReach = (pose: Pose): number => forward(pose, 0.085)
   const camScale = new THREE.Vector3()
   const toCamera = (target: HandPose, grip: number, scale: number, out: Pose): Pose => {
     out.p.set(...target.position).sub(camPosition).applyQuaternion(camInverse)
@@ -361,6 +395,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     },
     update(dt, state) {
       const { camera } = state
+      contact = state.contact
       camera.updateWorldMatrix(true, false)
       camera.matrixWorld.decompose(camPosition, camQuaternion, camScale)
       camInverse.copy(camQuaternion).invert()
@@ -409,8 +444,8 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
         if (channel && channel.w > 0) {
           fromChannel(channel, side, arm.shown, channelPose)
           mixPose(THREE, mixed, arm.shown, channelPose, channel.w)
-          drawArm(arm, mixed)
-        } else drawArm(arm, arm.shown)
+          drawArm(arm, mode === 'target' ? mixed : keepOutside(mixed, handReach(mixed)))
+        } else drawArm(arm, mode === 'target' ? arm.shown : keepOutside(arm.shown, handReach(arm.shown)))
       }
 
       // the leg of a kick
@@ -426,7 +461,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
           footPose.p.x = -footPose.p.x
           footPose.q.copy(mirrorRotation(THREE, footPose.q))
         }
-        drawLeg(footPose, run?.left ?? false)
+        drawLeg(contact ? keepOutside(footPose, forward(footPose, FOOT_LENGTH)) : footPose, run?.left ?? false)
       }
       if (run && run.time >= run.clip.duration) run = null
       first = false

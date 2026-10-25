@@ -142,10 +142,13 @@ const fpSteps = [
   ['punch', () => { S.r.resume(); S.run(60); S.r.setTool('fists'); S.run(40); S.r.use(); S.run(10); S.r.pause() }],
   ['shove', () => { S.r.resume(); S.run(60); S.r.setTool('shove'); S.run(40); S.r.use(); S.run(16); S.r.pause() }],
   ['kick', () => { S.r.resume(); S.run(60); S.r.setTool('hand'); S.run(40); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyV', shiftKey: true })); S.run(19); S.r.pause() }],
+  ['kick-left', () => { S.r.resume(); S.run(70); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyV', shiftKey: true })); S.run(19); S.r.pause() }],
+  ['kick-right', () => { S.r.resume(); S.run(70); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyV', shiftKey: true })); S.run(19); S.r.pause() }],
+  ['shove-wall', () => { S.r.resume(); S.run(70); S.r.spawn('wardrobe', [-9, 0, 8.3], 0); S.run(30); S.r.setTool('shove'); S.run(40); S.r.use(); S.run(16); S.r.pause() }],
   ['punch-third', () => { S.r.resume(); S.run(60); S.r.setCameraMode('third'); S.r.setTool('fists'); S.run(60); S.r.use(); S.run(10); S.r.pause() }],
 ]
-const fpExpect = { 'bare-hands': 'relaxed', fists: 'fists', pistol: 'hold', rifle: 'hold', m4: 'hold', 'rifle-reload': 'hold', 'pistol-reload': 'hold', punch: 'fists', shove: 'relaxed', kick: 'relaxed' }
-const fpPlaying = { punch: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick', 'punch-third': 'punch_right' }
+const fpExpect = { 'bare-hands': 'relaxed', fists: 'fists', pistol: 'hold', rifle: 'hold', m4: 'hold', 'rifle-reload': 'hold', 'pistol-reload': 'hold', punch: 'fists', shove: 'relaxed', 'shove-wall': 'relaxed', kick: 'relaxed', 'kick-left': 'relaxed', 'kick-right': 'relaxed' }
+const fpPlaying = { punch: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick', 'kick-left': 'front_kick', 'kick-right': 'front_kick', 'shove-wall': 'shove_two_hands', 'punch-third': 'punch_right' }
 let fpOk = true
 for (const lang of ['pt-BR', 'en']) {
   await page.goto(`${url}?ui=0&lang=${lang}`, { timeout: 180000 })

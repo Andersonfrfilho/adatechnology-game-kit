@@ -78,6 +78,8 @@ export type FirstPersonArmsState = {
   targets?: HandTargets | null
   /** `hold` follows the targets; any other stance is a rest pose. Default `relaxed`. */
   stance?: string
+  /** Where the world is: the distance along a ray (world space) to the first surface, or null for none within `maxDistance`. The hands and the foot stop at the surface (the elbow bends) instead of going into it. */
+  contact?(origin: [number, number, number], direction: [number, number, number], maxDistance: number): number | null
   /** Ground speed, m/s. */
   speed?: number
   running?: boolean

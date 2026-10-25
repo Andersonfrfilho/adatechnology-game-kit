@@ -121,6 +121,36 @@ describe('createFirstPersonArms', () => {
     }
   })
 
+  it('a shove against a wall 0.4 m ahead stops the hands at the wall and bends the elbows', () => {
+    const impact = (wall: number | null): { depth: number; elbow: THREE.Vector3 } => {
+      const arms = createFirstPersonArms(THREE, { clips: FIRST_PERSON_CLIPS })
+      const state = { camera: camera(), stance: 'relaxed', contact: (_o: number[], _d: number[], max: number): number | null => (wall !== null && wall <= max ? wall : null) }
+      step(arms, 0.6, state)
+      arms.play('shove_two_hands')
+      step(arms, 0.26, state)
+      return { depth: Math.max(-arms.handPose('R').position.z, -arms.handPose('L').position.z), elbow: arms.root.getObjectByName('first-person-elbow-R')!.position.clone() }
+    }
+    const free = impact(null)
+    const blocked = impact(0.4)
+    expect(free.depth).toBeGreaterThan(0.45)
+    expect(blocked.depth).toBeLessThanOrEqual(0.4)
+    expect(blocked.depth).toBeGreaterThan(0.3)
+    // the forearm folds back: the elbow rides further out and up than with the arm stretched
+    expect(blocked.elbow.distanceTo(free.elbow)).toBeGreaterThan(0.02)
+  })
+
+  it('a kick against a wall stops the foot in front of it', () => {
+    const arms = createFirstPersonArms(THREE, { clips: FIRST_PERSON_CLIPS })
+    const leg = arms.root.getObjectByName('first-person-leg')!
+    const state = { camera: camera(), stance: 'relaxed', contact: (): number | null => 0.5 }
+    step(arms, 0.3, state)
+    arms.play('front_kick')
+    step(arms, 0.32, state)
+    const box = new THREE.Box3().setFromObject(leg)
+    expect(leg.visible).toBe(true)
+    expect(-box.min.z).toBeLessThanOrEqual(0.5)
+  })
+
   it('a kick shows the right leg while it lasts', () => {
     const arms = createFirstPersonArms(THREE, { clips: FIRST_PERSON_CLIPS })
     const leg = arms.root.getObjectByName('first-person-leg')!

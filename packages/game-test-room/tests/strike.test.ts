@@ -290,3 +290,17 @@ describe('first-person arms in the room', () => {
     expect(avatar.states.at(-1)!.targets).toBeNull()
   })
 })
+
+describe('the arms can probe the room', () => {
+  it('gives the first-person arms a contact probe that sees the chair ahead and nothing behind', () => {
+    const avatar = fakeAvatar()
+    const room = setup(avatar)
+    wait(room, 0.2)
+    const probe = avatar.states.at(-1)!.contact
+    const toward = probe([-0.6, 0.2, -4.18], [1, 0, 0], 3)
+    expect(toward).not.toBeNull()
+    expect(toward!).toBeGreaterThan(0.1)
+    expect(toward!).toBeLessThan(1.2)
+    expect(probe([-0.6, 0.2, -4.18], [-1, 0, 0], 3)).toBeNull()
+  })
+})

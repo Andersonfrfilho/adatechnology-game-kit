@@ -750,6 +750,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       speed: avatarState.speed,
       running: avatarState.running,
       crouch: avatarState.crouch,
+      contact: (origin, direction, maxDistance) => rayWorld(origin, direction, maxDistance)?.distance ?? null,
     })
   }
   /** Moves the camera to the shoulder view for the render that follows, and answers the function that puts it back. */
