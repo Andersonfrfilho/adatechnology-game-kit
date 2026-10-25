@@ -2228,5 +2228,15 @@
       0.43345
     ],
     "scale": 1
+  },
+  {
+    "id": "power_bank",
+    "teamId": "power_bank",
+    "teamBox": [
+      0.15,
+      0.07,
+      0.0158
+    ],
+    "scale": 1
   }
 ]

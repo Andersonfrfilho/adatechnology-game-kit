@@ -269,7 +269,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Lanterna de cabeça (kit) | `lanterna_cabeca` | `headlamp` | 0,1 kg | incomum | 90 x 60 x 50 mm |
 | [x] | Notebook (kit) | `notebook` | `laptop` | 2,0 kg | incomum | 360 x 25 x 250 mm |
 | [x] | Painel solar dobrável (kit) | `painel_solar` | `folding_solar_panel` | 1,5 kg | raro | 400 x 300 x 50 mm |
-| [ ] | Power bank | `power_bank` | `power_bank` | 0,3 kg | incomum | 150 x 70 x 16 mm |
+| [x] | Power bank (kit) | `power_bank` | `power_bank` | 0,3 kg | incomum | 150 x 70 x 16 mm |
 | [x] | Rádio amador PX (kit) | `radio_px` | `cb_radio` | 3,0 kg | raro | 250 x 80 x 200 mm |
 | [x] | Rádio militar de longo alcance (kit) | `radio_militar` | `military_radio` | 6,0 kg | lendário | 300 x 200 x 250 mm |
 | [x] | Vela (kit) | `vela` | `candles` | 0,05 kg | comum | 60 x 120 x 60 mm |
