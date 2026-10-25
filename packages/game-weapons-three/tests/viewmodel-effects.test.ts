@@ -105,34 +105,50 @@ describe('the effects of the weapon in the hands go through the host sink', () =
     }
   })
 
-  it('a hot barrel emits a thin rising thread of smoke (fiozinho)', () => {
-    const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera()
-    const weapon = 'ak_47'
-    const tool = { weapon, category: 'rifle', ammo: 30, capacity: 30, reserve: 90, reloading: false, heat: 0.5 }
-    const played: Array<Record<string, unknown>> = []
-    const fx = createWeaponFx({
-      THREE,
-      scene,
-      camera,
-      arsenal,
-      groundAt: () => 0,
-      audio: null,
-      tool: () => tool,
-      effects: { play: (request) => (played.push({ ...request }), played.length), stop: () => undefined },
-    })
-    fx.handle({ type: 'tool', weapon }, tool)
-    for (let frame = 0; frame < 30; frame++) fx.update(1 / 60)
-    const wisps = played.filter((entry) => entry.effect === 'weapon_smoke_puff')
-    expect(wisps.length).toBeGreaterThan(0)
-    for (const wisp of wisps) {
-      const values = wisp.values as { radius: number; opacity: number; vy: number }
-      expect(values.radius).toBeLessThanOrEqual(0.01)
-      expect(values.opacity).toBeLessThanOrEqual(0.18)
-      expect(values.vy).toBeGreaterThan(0.05)
+  describe('hot barrel', () => {
+    const wispsFor = (heat: number, secondsAfterShot: number): Array<Record<string, unknown>> => {
+      const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
+      const weapon = 'ak_47'
+      const tool = { weapon, category: 'rifle', ammo: 30, capacity: 30, reserve: 90, reloading: false, heat }
+      const played: Array<Record<string, unknown>> = []
+      const fx = createWeaponFx({
+        THREE,
+        scene: new THREE.Scene(),
+        camera: new THREE.PerspectiveCamera(),
+        arsenal,
+        groundAt: () => 0,
+        audio: null,
+        tool: () => tool,
+        effects: { play: (request) => (played.push({ ...request }), played.length), stop: () => undefined },
+      })
+      fx.handle({ type: 'tool', weapon }, tool)
+      fx.handle({ type: 'shot', weapon, shots: 1, recoil: [0, 0] }, tool)
+      played.length = 0
+      for (let frame = 0; frame < Math.round(secondsAfterShot * 60); frame++) fx.update(1 / 60)
+      fx.dispose()
+      return played.filter((entry) => entry.effect === 'weapon_smoke_puff')
     }
-    fx.dispose()
+
+    it('a long burst leaves a thin rising thread of smoke (fiozinho) for a second or two after the last shot', () => {
+      const wisps = wispsFor(0.95, 1.5)
+      expect(wisps.length).toBeGreaterThan(0)
+      for (const wisp of wisps) {
+        const values = wisp.values as { radius: number; opacity: number; vy: number }
+        expect(values.radius).toBeLessThanOrEqual(0.01)
+        expect(values.opacity).toBeLessThanOrEqual(0.18)
+        expect(values.vy).toBeGreaterThan(0.05)
+      }
+    })
+
+    it('the thread stops a few seconds after the shooting stops, however hot the barrel still is', () => {
+      expect(wispsFor(0.95, 4).filter((_, index, all) => index >= all.length - 1).length).toBeLessThanOrEqual(1)
+      const late = wispsFor(0.95, 6).length - wispsFor(0.95, 3).length
+      expect(late).toBe(0)
+    })
+
+    it('a magazine of a rifle does not smoke the barrel', () => {
+      expect(wispsFor(0.45, 1.5)).toHaveLength(0)
+    })
   })
 
   it('a launcher throws its backblast: 26 puffs and 14 bits of fire', () => {

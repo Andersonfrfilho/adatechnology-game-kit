@@ -122,6 +122,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   let condition = options.condition ?? 'new'
   let lastAmmo = 0
   let smokeDebt = 0
+  let secondsSinceShot = Number.POSITIVE_INFINITY
 
   const world: FxWorld = {
     kit,
@@ -136,6 +137,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   }
 
   const heatMax = arsenal.rules.heat.displayMax || HEAT_DISPLAY_MAX_FALLBACK
+  const visual = arsenal.rules.heat.visual
   const hasSuppressor = (parts: readonly FittedAttachment[]): boolean => parts.some((part) => arsenal.attachments.get(part.id)?.kind === 'suppressor')
 
   const release = (): void => {
@@ -234,7 +236,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const glow = (tool: HostTool | undefined): void => {
     if (!session) return
     const heat = (tool?.heat ?? 0) * heatMax
-    const level = Math.max(0, Math.min(1, (heat - 50) / 50))
+    const level = Math.max(0, Math.min(1, (heat - visual.glowFrom) / visual.glowSpan))
     for (const mesh of session.model.parts.glow) {
       const material = mesh.material as THREE_NS.MeshStandardMaterial
       material.emissive.setRGB(level, 0.2 * level * level, 0.02 * level * level)
@@ -243,6 +245,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   }
 
   const handleShot = (current: Session, event: Extract<HostEvent, { type: 'shot' }>, tool: HostTool): void => {
+    secondsSinceShot = 0
     if (event.suppressed !== undefined) current.suppressed = event.suppressed
     else if (tool.suppressed !== undefined) current.suppressed = tool.suppressed
     else current.suppressed = hasSuppressor(tool.attachments ? fittedOf(tool.attachments) : (current.def.fitted ?? []))
@@ -291,11 +294,12 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
           if (tool.ammo < lastAmmo) flameJet(heavy(session), dt, session.model.parts.launcherType === 'flame' ? 1 : 0.6)
           lastAmmo = tool.ammo
         }
-        if (tool && tool.heat !== undefined && tool.heat * heatMax > 10 && session.model.parts.muzzle) {
-          smokeDebt += dt * tool.heat * heatMax * 0.1
+        secondsSinceShot += dt
+        if (tool && tool.heat !== undefined && tool.heat * heatMax > visual.smokeFrom && secondsSinceShot < visual.smokeSeconds && session.model.parts.muzzle) {
+          smokeDebt += dt * (tool.heat * heatMax - visual.smokeFrom) * 0.1
           while (smokeDebt > 1) {
             smokeDebt -= 1
-            const k = 0.5 + (tool.heat * heatMax) / 60
+            const k = 0.5 + (tool.heat * heatMax - visual.smokeFrom) / 60
             effects.smoke(worldPositionOf(session, session.model.parts.muzzle, new THREE.Vector3()), new THREE.Vector3((random() - 0.5) * 0.015, 0.07 + random() * 0.08, (random() - 0.5) * 0.015), 0.004 * k, 1.2 + random() * 0.6, Math.min(0.18, 0.06 + k * 0.04))
           }
         }
