@@ -1908,5 +1908,15 @@
       0.04
     ],
     "scale": 1
+  },
+  {
+    "id": "fishing_tackle_box",
+    "teamId": "kit_pesca",
+    "teamBox": [
+      0.3,
+      0.1,
+      0.18
+    ],
+    "scale": 1
   }
 ]
