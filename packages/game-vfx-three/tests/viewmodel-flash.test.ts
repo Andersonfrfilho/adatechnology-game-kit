@@ -11,6 +11,9 @@ type Run = { name: string; seed: number; size: number; point: [number, number, n
 type Fixture = { source: { commit: string }; frames: number; runs: Run[] }
 const fixture = JSON.parse(readFileSync(new URL('../../../tools/golden/fixtures/weapons/viewmodel-flash.json', import.meta.url), 'utf8')) as Fixture
 
+// The `gallery` profile of @adatechnology/game-weapons (MUZZLE_SMOKE.gallery), inlined because game-vfx-three does not depend on game-weapons.
+const GALLERY_SMOKE = { puffs: 6, radius: 0.013, opacity: 0.45, life: 1.3, lifeSpread: 0.6, drift: 0.15, driftSpread: 0.35, rise: 0.03, riseSpread: 0.12, sideSpread: 0.14, growth: 2.1, flash: 1 }
+
 const DIGITS = 9
 const near = (actual: readonly number[], expected: readonly number[], label: string): void => {
   expect(actual.length, label).toBe(expected.length)
@@ -62,7 +65,7 @@ describe(`the muzzle flash of the weapon in the hands, against fx/effects.ts at 
       const scene = new THREE.Scene()
       const camera = new THREE.PerspectiveCamera()
       const renderer = createVfxRenderer(THREE, { scene, camera, vfx: { profile: 'high' }, reducedMotion: true })
-      const handle = renderer.play({ effect: 'viewmodel_muzzle_flash', point: run.point, orientation: run.orientation, seed: run.seed, values: { size: run.size } })
+      const handle = renderer.play({ effect: 'viewmodel_muzzle_flash', point: run.point, orientation: run.orientation, seed: run.seed, values: { size: run.size, ...GALLERY_SMOKE } })
       expect(handle).not.toBeNull()
       const wanted = new Map(run.frames.map((sample) => [sample.frame, sample]))
       for (let frame = 1; frame <= fixture.frames; frame++) {

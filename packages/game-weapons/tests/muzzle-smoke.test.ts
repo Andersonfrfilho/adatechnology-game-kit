@@ -17,8 +17,8 @@ const weaponOf = (id: string): WeaponDef => {
 }
 
 describe('muzzle smoke profiles and resolver', () => {
-  it('ships the four profiles as data: smokeless, black_powder, suppressed and none', () => {
-    expect(Object.keys(MUZZLE_SMOKE).sort()).toEqual(['black_powder', 'none', 'smokeless', 'suppressed'])
+  it('ships the profiles as data: smokeless, black_powder, suppressed, none and gallery', () => {
+    expect(Object.keys(MUZZLE_SMOKE).sort()).toEqual(['black_powder', 'gallery', 'none', 'smokeless', 'suppressed'])
     expect(MUZZLE_SMOKE.smokeless.puffs).toBeGreaterThanOrEqual(1)
     expect(MUZZLE_SMOKE.smokeless.puffs).toBeLessThanOrEqual(2)
     expect(MUZZLE_SMOKE.smokeless.opacity).toBeLessThan(0.2)
@@ -82,6 +82,15 @@ describe('muzzle smoke profiles and resolver', () => {
     expect(muzzleSmokeOf({ caliber: caliberOf('30_30'), weapon: rifle })).toBe(MUZZLE_SMOKE.smokeless)
     expect(muzzleSmokeOf({ caliber: caliberOf('30_30'), weapon: { ...rifle, muzzleSmoke: 'black_powder' } })).toBe(MUZZLE_SMOKE.black_powder)
     expect(muzzleSmokeOf({ caliber: caliberOf('45_70_bp'), weapon: { ...rifle, muzzleSmoke: 'smokeless' } })).toBe(MUZZLE_SMOKE.smokeless)
+  })
+
+  it('reaches the legacy gallery profile only through the weapon override', () => {
+    const rifle = weaponOf('winchester_1894')
+    expect(muzzleSmokeOf({ caliber: caliberOf('30_30'), weapon: { ...rifle, muzzleSmoke: 'gallery' } })).toBe(MUZZLE_SMOKE.gallery)
+    expect(MUZZLE_SMOKE.gallery).toEqual({ puffs: 6, radius: 0.013, opacity: 0.45, life: 1.3, lifeSpread: 0.6, drift: 0.15, driftSpread: 0.35, rise: 0.03, riseSpread: 0.12, sideSpread: 0.14, growth: 2.1, flash: 1 })
+    for (const id of ['22lr', '45_70_bp', 'arrow']) expect(muzzleSmokeOf({ caliber: caliberOf(id) }), id).not.toBe(MUZZLE_SMOKE.gallery)
+    expect(muzzleSmokeOf({})).not.toBe(MUZZLE_SMOKE.gallery)
+    expect(muzzleSmokeOf({ weapon: { ...rifle, muzzleSmoke: 'gallery' }, suppressed: true })).toBe(MUZZLE_SMOKE.suppressed)
   })
 
   it('suppressed always wins over calibre propellant and weapon override', () => {

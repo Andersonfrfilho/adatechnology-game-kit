@@ -14,6 +14,8 @@ const PI = Math.PI
 const SMOKE = { color: 0x8a8a86, width: 10, height: 8, gravity: -0.08, drag: 2.2, growth: 2.1 }
 /** Default muzzle smoke numbers (the `smokeless` profile of `@adatechnology/game-weapons`). */
 const DEFAULT_SMOKE = { puffs: 2, radius: 0.01, opacity: 0.14, life: 0.7, drift: 0.2, rise: 0.06, growth: 2.1, flash: 1 } as const
+/** Default random spreads on top of drift, rise and sideways speed; the `gallery` profile widens them to reproduce the Arsenal gallery's smoke. */
+const DEFAULT_SPREAD = { drift: 0.1, rise: 0.04, side: 0.06 } as const
 /** The flash lasts 55 ms and its group grows from 0.6 to 1.5 times its size (`0.6 + min(1, age / 0.055) * 0.9`). */
 const FLASH_SECONDS = 0.055
 const FLASH_RAMP = [0.6, 0.9] as const
@@ -100,6 +102,10 @@ const MUZZLE_FLASH: EffectDef = {
     set('rise', fallback('rise', DEFAULT_SMOKE.rise)),
     set('growth', fallback('growth', DEFAULT_SMOKE.growth)),
     set('flash', fallback('flash', DEFAULT_SMOKE.flash)),
+    set('driftSpread', fallback('driftSpread', DEFAULT_SPREAD.drift)),
+    set('riseSpread', fallback('riseSpread', DEFAULT_SPREAD.rise)),
+    set('sideSpread', fallback('sideSpread', DEFAULT_SPREAD.side)),
+    set('lifeSpread', ite(ne(variable('lifeSpread'), undefined), variable('lifeSpread'), mul(variable('life'), 0.3))),
   ],
   timeline: [
     set('angles', []),
@@ -127,10 +133,10 @@ const MUZZLE_FLASH: EffectDef = {
       variable('puffs'),
       puff(
         ORIGIN,
-        [add(variable('drift'), mul(rand(), 0.1)), add(variable('rise'), mul(rand(), 0.04)), mul(sub(rand(), 0.5), 0.06)],
+        [add(variable('drift'), mul(rand(), variable('driftSpread'))), add(variable('rise'), mul(rand(), variable('riseSpread'))), mul(sub(rand(), 0.5), variable('sideSpread'))],
         [0, 0, 0],
         mul(variable('radius'), SIZE),
-        add(variable('life'), mul(rand(), mul(variable('life'), 0.3))),
+        add(variable('life'), mul(rand(), variable('lifeSpread'))),
         variable('opacity'),
         variable('growth'),
       ),

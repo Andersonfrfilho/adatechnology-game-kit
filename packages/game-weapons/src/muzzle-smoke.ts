@@ -28,10 +28,18 @@ export interface MuzzleSmokeProfile {
   readonly growth: number
   /** Flash scale multiplier (0 = no flash/light, 1 = full). */
   readonly flash: number
+  /** Random extra forward speed per puff (m/s); the recipe defaults to 0.1. */
+  readonly driftSpread?: number
+  /** Random extra rise speed per puff (m/s); the recipe defaults to 0.04. */
+  readonly riseSpread?: number
+  /** Total sideways speed range per puff (m/s); the recipe defaults to 0.06. */
+  readonly sideSpread?: number
+  /** Random extra life per puff in seconds; the recipe defaults to 0.3 times `life`. */
+  readonly lifeSpread?: number
 }
 
 /** Profile id — corresponds to a top-level key of `muzzle-smoke.json`. */
-export type MuzzleSmokeProfileId = 'smokeless' | 'black_powder' | 'suppressed' | 'none'
+export type MuzzleSmokeProfileId = 'smokeless' | 'black_powder' | 'suppressed' | 'none' | 'gallery'
 
 /** All built-in muzzle smoke profiles, indexed by id. */
 export const MUZZLE_SMOKE: Readonly<Record<MuzzleSmokeProfileId, MuzzleSmokeProfile>> = PROFILES_JSON as Readonly<Record<MuzzleSmokeProfileId, MuzzleSmokeProfile>>
@@ -53,6 +61,8 @@ export interface MuzzleSmokeParams {
  * 2. `weapon.muzzleSmoke` → explicit weapon-level override (profile id).
  * 3. `caliber.propellant` → derived from the calibre's propellant type.
  * 4. Default: `smokeless`.
+ *
+ * The `gallery` profile (the Arsenal gallery's original look) is only reachable through `weapon.muzzleSmoke: 'gallery'`.
  */
 export function muzzleSmokeOf({ caliber, weapon, suppressed }: MuzzleSmokeParams): MuzzleSmokeProfile {
   if (suppressed) return MUZZLE_SMOKE.suppressed
