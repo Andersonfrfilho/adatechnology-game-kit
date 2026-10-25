@@ -7,11 +7,18 @@
     "ground_floor": "Térreo",
     "office": "Escritório",
     "shop": "Loja",
-    "stockroom": "Estoque"
+    "stockroom": "Estoque",
+    "office_suite": "Conjunto de escritórios",
+    "washrooms": "Sanitários",
+    "reception": "Recepção",
+    "security_desk": "Portaria",
+    "lobby_entrance": "Saguão de entrada",
+    "meeting_suite": "Salas de reunião"
   },
   "templates": {
     "market": "Mercadinho",
-    "pharmacy": "Farmácia"
+    "pharmacy": "Farmácia",
+    "office_tower": "Torre de escritórios"
   },
   "styles": {
     "commercial": "Comercial"

@@ -22,6 +22,8 @@ export interface TowerGeometry {
   /** Columns along x and z (`buildFrame` `columnsX`, `columnsZ`; default 3 and 4, as `TOWER_DEFAULTS`). */
   columnsX?: number
   columnsZ?: number
+  /** Depth of the beams (`buildFrame` `beamHeight`; default 0.6 m, as `TOWER_DEFAULTS`). */
+  beamHeight?: number
   /** The top slab is a roof (`roof` id) instead of `slab_<floors-1>`. */
   roof: boolean
 }
@@ -213,6 +215,85 @@ export function addCurtainWall(spec: DestructibleSpec, g: TowerGeometry, options
 }
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------
+// Punched facade
+// -------------------------------------------------------------------------------------------------------------------------------------------------
+
+export interface PunchedFacadeOptions {
+  /** Material of the infill wall (default `brick`: a masonry or block wall between the columns, as the residential towers are built). */
+  material?: string
+  /** Thickness of the wall in metres (default 0.2). */
+  thickness?: number
+  /** Width of the window as a share of the clear bay (default 0.6). */
+  window?: number
+  /** Sill and head of the window above the floor of the storey (default 0.9 and 2.4 m; the head is kept under the beam). */
+  sill?: number
+  head?: number
+  /** Glass of the window and its thickness (default `glass`, 12 mm: an insulated unit). */
+  glass?: string
+  glassThickness?: number
+  /** Storeys without infill (louvres on a mechanical floor): default none. */
+  skip?: (floor: number) => boolean
+}
+
+export const PUNCHED_DEFAULTS = { material: 'brick', thickness: 0.2, window: 0.6, sill: 0.9, head: 2.4, glass: 'glass', glassThickness: 0.012 } as const
+
+/**
+ * Closes the perimeter bays of every storey with an infill wall that has a window in it (the alternative to the curtain wall): a sill wall under the
+ * window, a wall over it and a pier at each side, all resting on the columns of the bay (role partition: they load the columns and carry nothing, as the
+ * walls of `buildFrame`), and the glass in the opening, which rests on the sill and carries nothing. Part ids: `infill_<f>_<side>_<k>_sill|head|pl|pr`,
+ * `glass_<f>_<side>_<k>` with side `n`, `s`, `e`, `w` (the same ids as the curtain wall, so the two exclude each other).
+ */
+export function addPunchedFacade(spec: DestructibleSpec, g: TowerGeometry, options: PunchedFacadeOptions = {}): DestructibleSpec {
+  const c = { ...PUNCHED_DEFAULTS, ...options }
+  const parts: PartSpec[] = [...spec.parts]
+  const joints: JointSpec[] = [...(spec.joints ?? [])]
+  const nx = Math.max(2, g.columnsX ?? 3), nz = Math.max(2, g.columnsZ ?? 4)
+  const xs = Array.from({ length: nx }, (_, i) => -g.spanX / 2 + (i * g.spanX) / (nx - 1))
+  const zs = Array.from({ length: nz }, (_, j) => -g.spanZ / 2 + (j * g.spanZ) / (nz - 1))
+  const beamUnder = g.beamHeight ?? TOWER_DEFAULTS.beamHeight
+  for (let f = 0; f < g.floors; f++) {
+    if (c.skip?.(f)) continue
+    const yb = storeyBase(g, f)
+    const room = g.height - beamUnder
+    const head = Math.min(c.head, room - 0.3), sill = Math.min(c.sill, head - 0.6)
+    const wall = (id: string, size: Vec3, position: Vec3, on: string[]) => {
+      parts.push({ id, material: c.material, shape: box(size), position, structure: { role: 'partition' }, tags: ['infill'] })
+      for (const o of on) rests(joints, id, o, 'mortar')
+    }
+    const bay = (side: string, k: number, along: 0 | 2, centre: number, fixed: number, length: number, c1: string, c2: string) => {
+      const clear = length - g.columnSize
+      const win = clear * c.window
+      const pier = (clear - win) / 2
+      const at = (u: number): Vec3 => (along === 0 ? [u, 0, fixed] : [fixed, 0, u])
+      const size = (u: number, h: number): Vec3 => (along === 0 ? [u, h, c.thickness] : [c.thickness, h, u])
+      const put = (name: string, u: number, h: number, y: number, centreU: number, on: string[]) => {
+        const p = at(centreU)
+        wall(`infill_${f}_${side}_${k}_${name}`, size(u, h), [p[0], y, p[2]], on)
+      }
+      const id = (name: string) => `infill_${f}_${side}_${k}_${name}`
+      put('sill', clear, sill, yb + sill / 2, centre, [c1, c2])
+      put('pl', pier, head - sill, yb + sill + (head - sill) / 2, centre - clear / 2 + pier / 2, [c1, id('sill')])
+      put('pr', pier, head - sill, yb + sill + (head - sill) / 2, centre + clear / 2 - pier / 2, [c2, id('sill')])
+      put('head', clear, room - head, yb + head + (room - head) / 2, centre, [c1, c2])
+      const gp = at(centre)
+      const gid = `glass_${f}_${side}_${k}`
+      parts.push({
+        id: gid, material: c.glass, shape: box(size(win - 0.01, head - sill)), position: [gp[0], yb + sill + (head - sill) / 2, gp[2]], thickness: c.glassThickness,
+        units: { size: [0.6, 0.6, c.glassThickness], bond: 'stack', mortar: 'plastic' }, tags: ['window', 'glass'],
+      })
+      rests(joints, gid, id('sill'), 'glue', false)
+    }
+    for (const [side, j] of [['s', 0], ['n', nz - 1]] as const) {
+      for (let i = 0; i < nx - 1; i++) bay(side, i, 0, (xs[i] + xs[i + 1]) / 2, zs[j], xs[i + 1] - xs[i], `column_${f}_${i}_${j}`, `column_${f}_${i + 1}_${j}`)
+    }
+    for (const [side, i] of [['w', 0], ['e', nx - 1]] as const) {
+      for (let j = 0; j < nz - 1; j++) bay(side, j, 2, (zs[j] + zs[j + 1]) / 2, xs[i], zs[j + 1] - zs[j], `column_${f}_${i}_${j}`, `column_${f}_${i}_${j + 1}`)
+    }
+  }
+  return { ...spec, parts, joints }
+}
+
+// -------------------------------------------------------------------------------------------------------------------------------------------------
 // Flat roof
 // -------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -304,6 +385,11 @@ export interface MechanicalFloorOptions {
   tankWall?: number
   /** Where the tank goes, `[x, z]` (default the middle of the bay at -x, away from the core). */
   tankAt?: [number, number]
+  /**
+   * Storey the equipment stands on (default the top one, under the roof). On any other storey the part ids end in `_<floor>` (`water_tank_20`,
+   * `chiller_0_20`), so a tower can carry a mechanical floor every few storeys (design T10 §11).
+   */
+  floor?: number
 }
 
 export const MECHANICAL_DEFAULTS = { tankMaterial: 'plastic', tankWall: 0.01, machineMass: 2500, suspendedMass: 4500, occupants: 16, litersPerPerson: 200, storedFraction: 0.4, fireReserve: 6000, chillers: 2, chillerMass: 3500 } as const
@@ -320,17 +406,20 @@ export const towerWater = (storeys: number, o: Pick<MechanicalFloorOptions, 'occ
 export function addMechanicalFloor(spec: DestructibleSpec, g: TowerGeometry, options: MechanicalFloorOptions = {}): DestructibleSpec {
   const c = { ...MECHANICAL_DEFAULTS, ...options }
   if (g.floors < 2) return spec
+  const level = options.floor ?? g.floors - 1
+  if (level < 1 || level > g.floors - 1) return spec
+  const sfx = level === g.floors - 1 ? '' : `_${level}`
   const parts: PartSpec[] = [...spec.parts]
   const joints: JointSpec[] = [...(spec.joints ?? [])]
-  const floor = `slab_${g.floors - 2}`
-  const y = storeyBase(g, g.floors - 1)
+  const floor = `slab_${level - 1}`
+  const y = storeyBase(g, level)
   const shafts = options.shafts ?? []
   const put = (id: string, material: string, size: Vec3, at: [number, number], mass: number, extra: Partial<PartSpec> = {}) => {
-    parts.push({ id, material, shape: box(size), position: [at[0], y + size[1] / 2, at[1]], mass, fill: 0.2, structure: { role: 'partition' }, tags: ['mechanical'], ...extra })
-    rests(joints, id, floor, 'bolt')
+    parts.push({ id: id + sfx, material, shape: box(size), position: [at[0], y + size[1] / 2, at[1]], mass, fill: 0.2, structure: { role: 'partition' }, tags: ['mechanical'], ...extra })
+    rests(joints, id + sfx, floor, 'bolt')
   }
   shafts.forEach((at, k) => put(`machine_${k}`, 'steel', [1.2, 1.0, 0.8], at, c.machineMass + c.suspendedMass, { tags: ['mechanical', 'elevator_machine'] }))
-  const liters = options.waterLiters ?? towerWater(g.floors - 1, options)
+  const liters = options.waterLiters ?? towerWater(level, options)
   const depth = 2
   const side = Math.sqrt(liters / 1000 / depth)
   const [hx] = slabHalf(g)
@@ -415,15 +504,33 @@ export function addTunedMassDamper(spec: DestructibleSpec, g: TowerGeometry, opt
 // Tower
 // -------------------------------------------------------------------------------------------------------------------------------------------------
 
+export interface TowerMechanicalOptions {
+  /**
+   * Another mechanical floor every this many storeys (design T10 §11): storeys `every`, `2 * every`... below the top one, each with its own
+   * relay water tank for the storeys it serves and its chillers, and without glass. Default none: only the top storey.
+   */
+  every?: number
+}
+
+/** Indices of the intermediate mechanical storeys of a tower of `floors` storeys with one every `every` (none below `every / 2` storeys of the top one). */
+export const mechanicalStoreys = (floors: number, every?: number): number[] => {
+  if (!every || every < 2) return []
+  const out: number[] = []
+  for (let k = every; k < floors - 1; k += every) if (floors - 1 - k >= every / 2) out.push(k)
+  return out
+}
+
 export interface TowerOptions extends Omit<FrameOptions, 'walls' | 'roof' | 'continuousColumns'> {
   /** The core (default on); `false` for a frame alone. */
   core?: CoreOptions | false
   /** The curtain wall (default on, without glass on the mechanical floor). */
   facade?: CurtainWallOptions | false
+  /** A punched facade (infill walls with windows) instead of the curtain wall: turn the curtain wall off (`facade: false`) when you use it. Default off. */
+  punched?: PunchedFacadeOptions | false
   /** The flat roof (default on). */
   flatRoof?: FlatRoofOptions | false
   /** The mechanical floor under the roof (default on). */
-  mechanical?: MechanicalFloorOptions | false
+  mechanical?: (MechanicalFloorOptions & TowerMechanicalOptions) | false
   /** A tuned mass damper on the mechanical floor (default off: `{}` adds one of 1% of the modal mass). */
   damper?: DamperOptions | false
   /**
@@ -459,9 +566,12 @@ export const TOWER_DEFAULTS = {
  * the flat roof and the mechanical floor, sized as a designer would. Every system can be turned off or configured.
  */
 export function buildTower(options: TowerOptions = {}): DestructibleSpec {
-  const { core, facade, flatRoof, mechanical, damper, wind, sizing, ...frame } = options
+  const { core, facade, punched, flatRoof, mechanical, damper, wind, sizing, ...frame } = options
   const f = { ...TOWER_DEFAULTS, ...frame, columnCage: { ...TOWER_DEFAULTS.columnCage, ...frame.columnCage } }
-  const g: TowerGeometry = { floors: f.floors, height: f.height, slab: f.slabThickness, spanX: f.spanX, spanZ: f.spanZ, columnSize: f.columnSize, columnsX: f.columnsX, columnsZ: f.columnsZ, roof: true }
+  const g: TowerGeometry = { floors: f.floors, height: f.height, slab: f.slabThickness, spanX: f.spanX, spanZ: f.spanZ, columnSize: f.columnSize, columnsX: f.columnsX, columnsZ: f.columnsZ, beamHeight: f.beamHeight, roof: true }
+  const { every, ...mech } = mechanical || {}
+  const relays = mechanical === false ? [] : mechanicalStoreys(f.floors, every)
+  const noGlass = (fl: number) => mechanical !== false && (fl === g.floors - 1 || relays.includes(fl))
   let spec = buildFrame({ roofThickness: f.slabThickness, ...f, roof: true, continuousColumns: true })
   spec = { ...spec, name: 'tower', tags: ['structure', 'tower'] }
   let shafts: Array<[number, number]> = []
@@ -474,9 +584,14 @@ export function buildTower(options: TowerOptions = {}): DestructibleSpec {
     const sx = center[0] - W / 2 + c.wallThickness + c.stairWidth + c.innerThickness + c.shaftDepth / 2
     shafts = Array.from({ length: c.elevators }, (_, k) => [sx, center[1] - L / 2 + c.wallThickness + k * (c.shaft + c.innerThickness) + c.shaft / 2] as [number, number])
   }
-  if (facade !== false) spec = addCurtainWall(spec, g, { skip: mechanical === false ? undefined : (fl) => fl === g.floors - 1, ...facade })
+  if (facade !== false && !punched) spec = addCurtainWall(spec, g, { skip: noGlass, ...facade })
+  if (punched) spec = addPunchedFacade(spec, g, { skip: noGlass, ...punched })
   if (flatRoof !== false) spec = addFlatRoof(spec, g, flatRoof || {})
-  if (mechanical !== false) spec = addMechanicalFloor(spec, g, { shafts, ...mechanical })
+  if (mechanical !== false) {
+    spec = addMechanicalFloor(spec, g, { shafts, ...mech })
+    // the intermediate floors hold the plant of the zone below them: no elevator machines (they are on the top floor), a relay tank and the chillers
+    for (const floor of relays) spec = addMechanicalFloor(spec, g, { ...mech, shafts: [], floor, waterLiters: mech.waterLiters ?? towerWater(every ?? floor, mech) })
+  }
   if (damper) spec = addTunedMassDamper(spec, g, damper)
   if (wind) {
     const exposure = windExposureOf(wind)

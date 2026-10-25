@@ -59,8 +59,9 @@ describe('towers in the wind', () => {
     expect(west.wind!).toBeLessThan(0)
     expect(east.wind!).toBeGreaterThan(0)
     expect(Math.abs(west.wind!)).toBeGreaterThan(1e6)
-    // the small core of the default tower carries the same tower with less dead load: the wind pulls past it
-    const slim = { floors: 40, columnSize: 1.0 }
+    // the small core of the default tower carries the same tower with less dead load: the wind pulls past it (a wall with a bar every 0.5 m: the bars of
+    // a tight cage hold the pull outright, since every bar counts)
+    const slim = { floors: 40, columnSize: 1.0, core: { rebar: { spacing: 0.5 } } }
     const bars = (spec: ReturnType<typeof buildTower>) => spec.parts.find((p) => p.id === 'core_1_w')!.reinforcement!.diameter
     const weight = buildTower({ ...slim, wind: false })
     const designed = buildTower({ ...slim, wind })

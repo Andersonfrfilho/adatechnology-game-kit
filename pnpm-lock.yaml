@@ -533,6 +533,9 @@ importers:
       '@adatechnology/game-floorplan-residential':
         specifier: workspace:*
         version: link:../game-floorplan-residential
+      '@adatechnology/game-floorplan-structure':
+        specifier: workspace:*
+        version: link:../game-floorplan-structure
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -626,6 +629,9 @@ importers:
       '@adatechnology/game-floorplan':
         specifier: workspace:*
         version: link:../game-floorplan
+      '@adatechnology/game-floorplan-structure':
+        specifier: workspace:*
+        version: link:../game-floorplan-structure
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -672,15 +678,6 @@ importers:
       '@adatechnology/game-floorplan':
         specifier: workspace:*
         version: link:../game-floorplan
-      '@adatechnology/game-floorplan-commercial':
-        specifier: workspace:*
-        version: link:../game-floorplan-commercial
-      '@adatechnology/game-floorplan-post-apocalyptic':
-        specifier: workspace:*
-        version: link:../game-floorplan-post-apocalyptic
-      '@adatechnology/game-floorplan-residential':
-        specifier: workspace:*
-        version: link:../game-floorplan-residential
       '@adatechnology/game-items':
         specifier: workspace:*
         version: link:../game-items
@@ -1224,6 +1221,15 @@ importers:
         specifier: workspace:*
         version: link:../game-vehicles-fleet
     devDependencies:
+      '@adatechnology/game-floorplan-commercial':
+        specifier: workspace:*
+        version: link:../game-floorplan-commercial
+      '@adatechnology/game-floorplan-residential':
+        specifier: workspace:*
+        version: link:../game-floorplan-residential
+      '@adatechnology/game-floorplan-structure':
+        specifier: workspace:*
+        version: link:../game-floorplan-structure
       '@adatechnology/golden-tool':
         specifier: workspace:*
         version: link:../../tools/golden

@@ -49,6 +49,8 @@ const shop = engine.generate('market', { seed: 4, zone: 'zc' })
 | `metalworks` | `industrial` | 30 x 20 m, 8 m ceiling: presses, conveyor line, furnace, pallet racks, forklift, canteen, lockers, mezzanine office |
 | `farm` | `agricultural` | 12 x 9 m farmhouse (style `farm`) with veranda posts, well, coop, corral, barn, silo, machine shed, tractors and hay bales in the lot |
 
+`office_tower` (`officeTowerTemplate`, `OFFICE_TOWER_DEFAULTS`, `use: commercial`) is the plan of an office skyscraper built from the layout of `game-floorplan-structure` (`skyscraperLayout`): 40 storeys by default (`floors`, 20 to 80), 3.6 m clear height, 12 m bays, a glass curtain wall, a plant floor every 20 storeys and a damper above 150 m. The ground floor has the entrance lobby (3 m door), reception and the security desk; a typical storey has open-plan suites (library `office_open`) on the four sides of the core, with restrooms; the plant floors have plant rooms and no windows. `buildOfficeTower(options)` is the destructible tower of the same layout (core, piles, glass, wind). `options.tower` takes any `SkyscraperOptions`; `officeTowerTemplate(preset, plan)` builds a template with other numbers. The zone for it, `zt`, is in the residential pack.
+
 Each interior building declares `place` and `construction`; `interiorFindsHints[templateId]` lists what each place can hold (the loot pins of the team's gallery scene) for the finds provider.
 
 Zones in region `br`: `zc` (commercial / central, up to 24 floors and 80 m, institutional, mixed and multi-family allowed), `zi` (industrial, 4 floors, 20 m, large lots) and `za` (agricultural, large lots). A shop placed in a houses-only zone such as `zr1` is reported as a `use` violation.

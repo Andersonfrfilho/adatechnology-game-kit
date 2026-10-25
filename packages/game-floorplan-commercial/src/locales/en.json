@@ -7,11 +7,18 @@
     "ground_floor": "Ground floor",
     "office": "Office",
     "shop": "Shop floor",
-    "stockroom": "Stockroom"
+    "stockroom": "Stockroom",
+    "office_suite": "Office suite",
+    "washrooms": "Restroom",
+    "reception": "Reception",
+    "security_desk": "Security desk",
+    "lobby_entrance": "Entrance lobby",
+    "meeting_suite": "Meeting suite"
   },
   "templates": {
     "market": "Corner market",
-    "pharmacy": "Pharmacy"
+    "pharmacy": "Pharmacy",
+    "office_tower": "Office tower"
   },
   "styles": {
     "commercial": "Commercial"

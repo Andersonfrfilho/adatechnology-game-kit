@@ -5,6 +5,8 @@ import { createSilhouetteRandom } from '@adatechnology/game-floorplan'
 import { drawBuilding, fillBlock, DEFAULT_FACADES } from './block'
 import type { BlockBuilding, BuildingOptions, FillBlockOptions } from './block'
 import { createLightBudget } from './budget'
+import { createTowerDrawer } from './tower'
+import type { TowerOptions } from './tower'
 import { DEFAULT_POLES, POLE_SHAPES } from './poles'
 import type { PoleDef, PoleOptions, PoleShapeBuilder } from './poles'
 import { drawContainer, drawFence, drawPine, drawSandbags, drawStripLabel, drawTent, drawTree, drawWatchtower, drawWires, DEFAULT_PROP_COLORS } from './props'
@@ -43,6 +45,11 @@ export type UrbanOptions = {
   /** Facade colours of the city buildings. */
   facades?: readonly number[]
   props?: Partial<PropColors>
+  /**
+   * Towers on the tall lots, off by default. `true` or an object turns them on: a building of the block or of an avenue at least `minHeight` (60 m) tall is drawn as
+   * a tower of one of the `presets` (the office and residential typologies), not as a box; a `provider` replaces the drawing. See `TowerOptions`.
+   */
+  towers?: boolean | TowerOptions
 }
 
 export type Pole = { readonly def: PoleDef; build(b: UrbanBuilder, options: PoleOptions): void }
@@ -71,6 +78,10 @@ export function createUrban(options: UrbanOptions = {}) {
   const facades = options.facades ?? DEFAULT_FACADES
   const propColors: PropColors = { ...DEFAULT_PROP_COLORS, ...options.props }
 
+  const towers: TowerOptions | null = options.towers ? (options.towers === true ? {} : options.towers) : null
+  const building = (b: UrbanBuilder, x: number, z: number, width: number, depth: number, height: number, color: number, o?: BuildingOptions): BlockBuilding => drawBuilding(b, x, z, width, depth, height, color, o)
+  const drawBlockBuilding = towers ? createTowerDrawer(towers, building) : building
+
   const poles = {
     ids: (): string[] => [...entries.keys()],
     list: (): PoleDef[] => [...entries.values()],
@@ -93,9 +104,9 @@ export function createUrban(options: UrbanOptions = {}) {
     },
     block: {
       facades,
-      building: (b: UrbanBuilder, x: number, z: number, width: number, depth: number, height: number, color: number, o?: BuildingOptions): BlockBuilding => drawBuilding(b, x, z, width, depth, height, color, o),
+      building: drawBlockBuilding,
       fill: (b: UrbanBuilder, g: { cx: number; cz: number; size: number; minHeight: number; maxHeight: number } & FillBlockOptions): BlockBuilding[] =>
-        fillBlock(b, g.cx, g.cz, g.size, g.minHeight, g.maxHeight, { palette: facades, ...g }),
+        fillBlock(b, g.cx, g.cz, g.size, g.minHeight, g.maxHeight, { palette: facades, draw: drawBlockBuilding, ...g }),
     },
     props: {
       fence: drawFence,
@@ -141,5 +152,5 @@ export function createUrban(options: UrbanOptions = {}) {
   }
   /** A ground from its layers (see TerrainOptions): the numbers of the place are the game's. */
   const terrain = (o: TerrainOptions): Terrain => createTerrain(o)
-  return { ...core, poles, builder, neighbourhoods, terrain, drawTerrain }
+  return { ...core, poles, builder, neighbourhoods, terrain, drawTerrain, towers: { enabled: towers !== null, options: towers } }
 }

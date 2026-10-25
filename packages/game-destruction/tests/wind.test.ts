@@ -196,6 +196,16 @@ describe('tension of walls and columns', () => {
     expect(tensionCapacity([0.6, 3, 0.6], { reinforcement: { spacing: 0.15, diameter: 0.02 }, yieldMPa: 500 })).toBeCloseTo(1.885e6, -3)
   })
 
+  it('a wall holds every bar its spacing puts in, not only the 24 that are drawn', () => {
+    // 0.35 x 3 x 9 m wall, 12.5 mm bars every 0.15 m: (9 - 0.06) / 0.15 + 1 = 60 vertical bars -> 60 * pi * 0.00625^2 * 500 MPa = 3.68 MN
+    const bars = (spacing: number) => tensionCapacity([0.35, 3, 9], { reinforcement: { spacing, diameter: 0.0125 }, yieldMPa: 500 })
+    expect(bars(0.15)).toBeCloseTo(60 * Math.PI * 0.00625 ** 2 * 500e6, -3)
+    // below 24 bars nothing changed: every 0.5 m there are 18
+    expect(bars(0.5)).toBeCloseTo(18 * Math.PI * 0.00625 ** 2 * 500e6, -3)
+    // a long member lying on its side (a beam) has no vertical bars
+    expect(tensionCapacity([9, 0.35, 0.35], { reinforcement: { spacing: 0.15, diameter: 0.0125 }, yieldMPa: 500 })).toBe(0)
+  })
+
   it('a ratio of the section, then the concrete, then nothing', () => {
     // 1% of 0.35 x 5 m at 500 MPa = 8.75 MN
     expect(tensionCapacity([0.35, 3, 5], { ratio: 0.01, yieldMPa: 500 })).toBeCloseTo(8.75e6, -3)
