@@ -453,11 +453,11 @@
     "id": "salted_fish",
     "teamId": "peixe_salgado",
     "teamBox": [
-      2.5,
-      0.3,
-      1
+      2.487,
+      0.291,
+      0.98
     ],
-    "scale": 0.1
+    "scale": 0.101878
   },
   {
     "id": "banana_bunch",
