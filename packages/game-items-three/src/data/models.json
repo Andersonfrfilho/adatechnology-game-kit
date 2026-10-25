@@ -1578,5 +1578,15 @@
       0.32
     ],
     "scale": 1
+  },
+  {
+    "id": "backpack",
+    "teamId": "mochila_escolar",
+    "teamBox": [
+      0.3,
+      0.3,
+      0.2
+    ],
+    "scale": 1
   }
 ]
