@@ -27,6 +27,12 @@ describe('cut-source', () => {
     expect(cutLiteral("const NOT_A = [5];", "NOT_A")).toBe("[5]")
   })
 
+  it('skips lines that only mention the name and takes the first one that declares it', () => {
+    const source = 'const other = A_NAME + 1; // A_NAME\n  // let A_NAME = 0\n  let A_NAME = [1];\nfunction A_NAME_2() {}\nconst A_NAME = [2];'
+    expect(cutLiteral(source, 'A_NAME')).toBe('[1]')
+    expect(cutFunction('x = function f() {}\nfunction f() { return 1 }', 'f')).toBe('function f() { return 1 }')
+  })
+
   it('cuts a whole declaration that is not one group, and a function by name', () => {
     const { BUILD } = evaluateSlice<{ BUILD: (n: number) => number }>(cutDeclaration(SOURCE, 'BUILD'), ['BUILD'])
     expect(BUILD(4)).toBe(12)
@@ -40,6 +46,14 @@ describe('cut-source', () => {
     expect(cutBetween(SOURCE, '// ---- marker a', '// ---- marker b').trim()).toBe('// ---- marker a\nconst MID = 1')
     expect(() => cutBetween(SOURCE, '// ---- marker a', 'nope')).toThrow(/end marker/)
     expect(cutLines('a\nb\nc\nd', 2, 3)).toBe('b\nc')
+  })
+
+  it('gives every run of the same slice a fresh state, and the scope reaches it as globals', () => {
+    const code = 'let count = 0; const next = () => ++count * FACTOR'
+    const first = evaluateSlice<{ next: () => number }>(code, ['next'], { FACTOR: 2 })
+    expect([first.next(), first.next()]).toEqual([2, 4])
+    const second = evaluateSlice<{ next: () => number }>(code, ['next'], { FACTOR: 3 })
+    expect(second.next()).toBe(3)
   })
 
   it('evaluates a slice with the given scope as its only globals', () => {

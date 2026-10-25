@@ -42,15 +42,25 @@ const variantCode = (source: string): string => {
 
 export type GameContext = Readonly<Record<string, unknown>>
 
+const codeCache = new Map<string, string>()
+
+/** The cut code depends only on what is asked for, so each distinct slice is cut once per process. */
+const buildSliceCode = (options: { readonly functions: readonly string[]; readonly tail?: string; readonly capacity?: number }): string => {
+  const key = JSON.stringify([options.functions, options.tail ?? '', options.capacity ?? SMALL_ZOMBIE_CAPACITY])
+  const cached = codeCache.get(key)
+  if (cached !== undefined) return cached
+  const source = readSource(SOURCE_PATHS.game)
+  const horde = fromMarker(source, HORDE_MARKER)
+  const functions = options.functions.map((name) => cutFunction(horde, name))
+  const code = [rulesCode(source), zombieTableCode(source, options.capacity ?? SMALL_ZOMBIE_CAPACITY), variantCode(source), ...functions, options.tail ?? ''].join('\n')
+  codeCache.set(key, code)
+  return code
+}
+
 /**
  * Runs a slice of the game in an empty context. `scope` supplies what the slice reads from the rest of the game (the RNG, the effects as
  * recording stubs); `extra` is more game code (named functions) to cut in, and `exports` the names to hand back. `capacity` is the zombie table's
  * size (8 by default: the goldens spawn one at a time).
  */
-export const evaluateGameSlice = <TValue extends GameContext>(options: { readonly functions: readonly string[]; readonly exports: readonly string[]; readonly scope: Record<string, unknown>; readonly tail?: string; readonly capacity?: number }): TValue => {
-  const source = readSource(SOURCE_PATHS.game)
-  const horde = fromMarker(source, HORDE_MARKER)
-  const functions = options.functions.map((name) => cutFunction(horde, name))
-  const code = [rulesCode(source), zombieTableCode(source, options.capacity ?? SMALL_ZOMBIE_CAPACITY), variantCode(source), ...functions, options.tail ?? ''].join('\n')
-  return evaluateSlice<TValue>(code, options.exports, options.scope)
-}
+export const evaluateGameSlice = <TValue extends GameContext>(options: { readonly functions: readonly string[]; readonly exports: readonly string[]; readonly scope: Record<string, unknown>; readonly tail?: string; readonly capacity?: number }): TValue =>
+  evaluateSlice<TValue>(buildSliceCode(options), options.exports, options.scope)

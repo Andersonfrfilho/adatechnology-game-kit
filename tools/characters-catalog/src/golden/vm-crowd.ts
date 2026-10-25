@@ -540,46 +540,15 @@ class ColorStub {
   }
 }
 
-const createCrowdHarness = (scenario: CrowdScenario, render = false) => {
+/** The game code the harness cuts in around the slice; it depends only on the scenario kind, so each kind is cut once per process. */
+const crowdTailCache = new Map<string, string>()
+const crowdTail = (scenario: CrowdScenario, render: boolean): string => {
+  const key = `${!!scenario.civilians}|${!!scenario.herd}|${render}`
+  const cached = crowdTailCache.get(key)
+  if (cached !== undefined) return cached
   const source = readSource(SOURCE_PATHS.game)
   const horde = fromMarker(source, HORDE_MARKER)
   const worldSection = fromMarker(source, WORLD_MARKER)
-  let stream = createSeededRandom(scenario.seed)
-  let recorder: EventRecorder = createEventRecorder()
-  const target = {
-    x: scenario.target.x,
-    z: scenario.target.z,
-    y: 0,
-    andar: 0,
-    yaw: 0,
-    alive: true,
-    turned: false,
-    crouch: scenario.target.crouch ?? false,
-    bleeding: scenario.target.bleeding ?? 0,
-    scentT: 0,
-    screamBoost: 0,
-    grabbedBy: -1,
-    blind: 0,
-    burnT: 0,
-    grab(i: number, noJaw: boolean, drown: boolean) {
-      target.grabbedBy = i
-      recorder.record('target', { verb: 'grab', by: i, noJaw, drown })
-    },
-    hurt(amount: number, by: number) {
-      recorder.record('target', { verb: 'hurt', amount: r6(amount), by })
-    },
-    knock(seconds: number) {
-      recorder.record('target', { verb: 'knock', seconds })
-    },
-    release() {
-      recorder.record('target', { verb: 'release', by: target.grabbedBy })
-      target.grabbedBy = -1
-    },
-  }
-  const view = { yaw: scenario.viewYaw }
-  let hour = scenario.civilians?.hour[0] ?? 12
-  const effect = (kind: string, payload: Record<string, EventValue>) => recorder.record('effect', { effect: kind, ...payload })
-  const pushes: RenderPush[] = []
   const tail = [
     cutDeclaration(source, 'WORLD'),
     cutDeclaration(worldSection, 'GC'),
@@ -649,6 +618,48 @@ const createCrowdHarness = (scenario: CrowdScenario, render = false) => {
     'function __setNight(v) { nightF = v; }',
     ...(render ? renderTail(source, horde, !!scenario.civilians) : []),
   ].join('\n')
+  crowdTailCache.set(key, tail)
+  return tail
+}
+
+const createCrowdHarness = (scenario: CrowdScenario, render = false) => {
+  let stream = createSeededRandom(scenario.seed)
+  let recorder: EventRecorder = createEventRecorder()
+  const target = {
+    x: scenario.target.x,
+    z: scenario.target.z,
+    y: 0,
+    andar: 0,
+    yaw: 0,
+    alive: true,
+    turned: false,
+    crouch: scenario.target.crouch ?? false,
+    bleeding: scenario.target.bleeding ?? 0,
+    scentT: 0,
+    screamBoost: 0,
+    grabbedBy: -1,
+    blind: 0,
+    burnT: 0,
+    grab(i: number, noJaw: boolean, drown: boolean) {
+      target.grabbedBy = i
+      recorder.record('target', { verb: 'grab', by: i, noJaw, drown })
+    },
+    hurt(amount: number, by: number) {
+      recorder.record('target', { verb: 'hurt', amount: r6(amount), by })
+    },
+    knock(seconds: number) {
+      recorder.record('target', { verb: 'knock', seconds })
+    },
+    release() {
+      recorder.record('target', { verb: 'release', by: target.grabbedBy })
+      target.grabbedBy = -1
+    },
+  }
+  const view = { yaw: scenario.viewYaw }
+  let hour = scenario.civilians?.hour[0] ?? 12
+  const effect = (kind: string, payload: Record<string, EventValue>) => recorder.record('effect', { effect: kind, ...payload })
+  const pushes: RenderPush[] = []
+  const tail = crowdTail(scenario, render)
   const camera = { position: { x: scenario.target.x, z: scenario.target.z } }
   const scope = {
     R: () => stream(),
