@@ -228,7 +228,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Roupa de apicultor (kit) | `apicultor` | `beekeeper_suit` | 1,4 kg | muito raro | 400 x 100 x 330 mm |
 | [x] | Roupa de bombeiro (kit) | `bombeiro` | `firefighter_suit` | 4,0 kg | raro | 550 x 200 x 400 mm |
 | [ ] | Tênis de corrida | `tenis` | `sneakers` | 0,7 kg | comum | 300 x 120 x 120 mm |
-| [ ] | Óculos de proteção | `oculos` | `safety_goggles` | 0,05 kg | comum | 160 x 60 x 80 mm |
+| [x] | Óculos de proteção (kit) | `oculos` | `safety_goggles` | 0,05 kg | comum | 160 x 60 x 80 mm |
 
 ## Mochilas e contêineres (1 de 15)
 

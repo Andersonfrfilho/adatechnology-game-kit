@@ -2298,5 +2298,15 @@
       0.005
     ],
     "scale": 1
+  },
+  {
+    "id": "safety_goggles",
+    "teamId": "oculos",
+    "teamBox": [
+      0.16,
+      0.06,
+      0.08
+    ],
+    "scale": 1
   }
 ]
