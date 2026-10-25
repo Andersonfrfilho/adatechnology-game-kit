@@ -793,11 +793,11 @@
     "id": "exam_gloves",
     "teamId": "luva_proc",
     "teamBox": [
-      1,
+      1.0104,
       1.2,
-      0.1
+      0.1005
     ],
-    "scale": 0.1
+    "scale": 0.09949
   },
   {
     "id": "n95_mask",
