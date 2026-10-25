@@ -36,8 +36,9 @@ export interface DestructibleSpecOptions {
   /**
    * Declares the tension steel of the concrete beams, slabs, roofs and stairs of a construction with rebar (`structure.rebar.ratio`), so the destruction
    * world bends them (`structure.flexure` of game-destruction): `true` for the default ratios (`REBAR_RATIOS`), or ratios per role. When the spec is
-   * sized the steel is sized too (`sizeRebar`: at rest at `safetyOthers`, after the loss of any pillar or bearing wall under `redundancy`). Off by
-   * default: the spec stays the one the Visor de casas 3D describes.
+   * sized the steel is sized too (`sizeRebar`: at rest at `safetyOthers`, after the loss of any pillar or bearing wall under `redundancy`). On by
+   * default (a house of concrete is reinforced concrete, with the slab in panels on real beams, `slabPanels`); `false` leaves the concrete plain, as the
+   * Visor de casas 3D describes it.
    */
   rebar?: boolean | Partial<Record<'beam' | 'slab' | 'roof' | 'stair', number>>
   /**
@@ -138,8 +139,9 @@ export function toDestructibleSpec(structure: Structure, options: DestructibleSp
 
 function withRebar(spec: DestructibleSpec, structure: Structure, options: DestructibleSpecOptions, portico: boolean): DestructibleSpec {
   const { redundancy = 0.97, safetyOthers = 0.45 } = options
-  if (!options.rebar || !structure.construction.frame.rebar) return spec
-  const ratios = { ...REBAR_RATIOS, ...(options.rebar === true ? {} : options.rebar) }
+  const rebar = options.rebar ?? resolveSlabPanels(options.slabPanels ?? true) !== undefined
+  if (!rebar || !structure.construction.frame.rebar) return spec
+  const ratios = { ...REBAR_RATIOS, ...(rebar === true ? {} : rebar) }
   for (const part of spec.parts) {
     const role = part.structure?.role
     if (!role || !(role in ratios) || part.structure!.rebar || !MATERIALS.find((m) => m.id === part.material)?.strength?.tensileMPa) continue

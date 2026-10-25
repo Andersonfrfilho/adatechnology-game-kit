@@ -45,8 +45,8 @@ describe('the spec of the structure', () => {
   it('agrees with sizeStructure of game-destruction for houses held by bearing walls', () => {
     for (const template of ['single_storey_a', 'townhouse', 'budget_slab_house']) {
       const plan: any = engine.generate(template, { seed: 3, state: 'normal' })
-      const sized = toDestructibleSpec(plan.structure, { wallDetail: 'coarse' })
-      const bare = toDestructibleSpec(plan.structure, { wallDetail: 'coarse', sized: false })
+      const sized = toDestructibleSpec(plan.structure, { wallDetail: 'coarse', slabPanels: false })
+      const bare = toDestructibleSpec(plan.structure, { wallDetail: 'coarse', slabPanels: false, sized: false })
       const engineSized = sizeStructure(bare, { safety: 0.65, redundancy: 0.97, redundancyRoles: ['column', 'wall'], safetyByRole: { beam: 0.45, slab: 0.45, roof: 0.45, stair: 0.45, partition: 0.45 } })
       for (const part of sized.parts.filter((p) => p.structure?.capacity !== undefined && p.id !== 'ground')) {
         const other = engineSized.parts.find((p) => p.id === part.id)!.structure!.capacity!
