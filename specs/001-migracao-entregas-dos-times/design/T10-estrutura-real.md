@@ -151,7 +151,9 @@ ser pórtico a partir de 3 andares, o que está dentro do real. Uma torre de par
 | Espessura mínima de parede portante | 14 cm | NBR 16868-1 |
 | Gravidade | 9,81 m/s² | constante física |
 
-## 5. Achado: as casas do `game-floorplan` não são uma estrutura real em flexão
+## 5. Achado: as casas do `game-floorplan` não são uma estrutura real em flexão (resolvido em §10, 2026-10-25)
+
+> Resolvido: o dono aprovou dividir a laje em painéis com vigas reais e aceitar a mudança dos hashes; ver §10. O texto abaixo é o achado original.
 
 Com o aço declarado e dimensionado (`toDestructibleSpec({ rebar: true })`), a casa térrea pede 3,7 a 4% de aço na laje do forro e o sobrado em
 pórtico fica com a laje do 1º andar a **1,5 da capacidade em repouso mesmo com 4%**: ela é uma peça única de 8 x 12 m e 12 cm apoiada nas
@@ -168,6 +170,23 @@ de o pilar e a sapata cederem primeiro; nas duas cenas de pilar da casa a laje f
 flexão depois de perder um pilar. Nenhuma golden de time (`vc3-*`) muda. Testes antigos que mudaram: as capacidades documentadas do pilar e da
 parede (agora pela resistência real: 30 x 30 cm de C25 = 203 t, 1 m de parede de tijolo de 20 cm = 41 t) e os pórticos de teste que precisavam de
 um projeto para perder um pilar (dimensionados com `redundancy`, ou com o aço declarado para isso).
+
+### 6.1 Goldens do passo das lajes em painéis (§10; 2026-10-25)
+
+- **Goldens de time (`vc3-*`)**: nenhum hash mudou. O dono aceitou que `coarseParts`/`enclosureParts` de `vc3-structure` mudassem, mas a comparação
+  chama `toDestructibleSpec(..., { slabPanels: false, rebar: false })` (a spec que a equipe descreve, a mesma de antes), então a golden continua
+  valendo bit a bit e a spec nova fica coberta pelos testes de `slab-panels.test.ts`. `vc3-house-scene` (a cena do Visor) também não muda: a casa sem
+  mundo de destruição é desenhada exatamente como antes. `vc3-house-area` (os seis cenários da área de casas) segue com as mesmas verificações todas
+  verdadeiras; só a escolha dos pilares do cenário `house_two_pillars` mudou (ver §10.6).
+- **Auto-goldens**: `game-floorplan-three/tests/fixtures/exact-floorplan.json` mudou em cinco entradas, todas de casa ligada a um mundo de destruição:
+  `destruction/breach`, `destruction/spall`, `destruction/fracture` (o sobrado com mundo agora é desenhado por painel de laje: pisos, forros e
+  lajes de cobertura cortados nas bordas dos painéis, cada pedaço no painel dele) e `specimen/house_casa_portico`, `specimen/house_casa_inteira`
+  (a spec dos espécimes agora tem painéis, vigas e pilares, e a sala desenha uma caixa por peça). As 38 entradas `house/*` e as cenas do Visor não mudaram.
+- **Testes antigos que mudaram**: `game-floorplan-structure/tests/load-path.test.ts` (as duas casas em pórtico: antes a laje inteira ficava com um
+  pilar a menos e caía com dois; agora ficam todos os painéis com um pilar a menos, e com todos os pilares do térreo perdidos a laje desce e o
+  telhado também), `flexure.test.ts` ("a spec fica a do Visor 3D a menos que..." virou "...quando se desliga o concreto armado" mais "a casa de concreto
+  é armada por padrão"), `extension.test.ts` e `wall-detail.test.ts` (comparam com a spec da equipe e com o dimensionamento do motor: passam
+  `slabPanels: false`), `game-floorplan-three/tests/destruction.test.ts` (a laje é o painel `slab_1_p0`). `game-destruction`: nenhuma golden mudou.
 
 ## 7. Limites conhecidos (próximos passos)
 
@@ -345,9 +364,9 @@ fariam de verdade (a laje racha na face tracionada; o colapso progressivo só on
 ### 10.1 O que muda para quem joga
 
 - Uma casa em repouso fica de pé com folga (laje, viga e pilar a no máximo `safetyOthers`/`safety`), com o aço dimensionado em cada peça.
-- Perder um pilar interno de um sobrado em pórtico **racha** as lajes e vigas vizinhas (aviso `stress`, `crack`) mas não derruba tudo: a viga que
-  perdeu o apoio vence o dobro do vão e o painel ao lado passa a se apoiar nas outras três bordas. Perder dois pilares vizinhos derruba o painel
-  entre eles, e o andar de cima desce junto (colapso progressivo real, só onde as vigas não têm outro caminho).
+- Perder um pilar de um sobrado em pórtico não derruba laje nem telhado: a viga que perdeu o apoio vence o dobro do vão (a flexão sobe, o aço
+  dimensionado com `redundancy` segura) e o painel ao lado passa a se apoiar nas outras bordas. Perder os dois pilares das pontas de um lado derruba o lado,
+  e o andar de cima desce junto (colapso progressivo real, só onde as vigas não têm outro caminho).
 - Uma explosão sobre a laje racha a face de baixo do **painel** atingido (o resto da laje fica), em vez de a laje inteira de 8 x 12 m dobrar.
 - Os desenhos (`game-floorplan-three`) continuam os mesmos: as vigas ficam dentro das paredes e do forro, como numa obra; o piso de cada cômodo
   cai com o painel dele.
@@ -370,7 +389,7 @@ continua devolvendo as peças e os apoios da equipe, e as golden `pieces`/`suppo
    lado, que é o vão da laje armada em uma direção), no mínimo 10 cm nos pisos e 8 cm na cobertura (NBR 6118 13.2.4.1 pede 8 e 7 cm; os mínimos do
    dono são mais folgados), arredondada para cima em 1 cm. O painel de borda de uma cobertura mantém o beiral.
 5. **Viga** em cada segmento de corte que confina um painel mantido: `slab_N_b<k>`, de concreto da construção, com o topo na face de baixo da laje.
-   Altura `h = vão/12` (NBR 6118: vigas biapoiadas L/10, contínuas L/12; o vão é o maior trecho sem apoio da viga), no mínimo 25 cm, múltiplo de 5 cm;
+   Altura `h = vão/10` (NBR 6118: vigas biapoiadas L/10, contínuas L/12; o padrão final é L/10, ver §10.5; o vão é o maior trecho sem apoio da viga), no mínimo 25 cm, múltiplo de 5 cm;
    largura `max(parede, h/3)` (a viga fica dentro da parede de 15 cm quando h <= 45 cm: NBR 6118 13.2.2, mínimo 12 cm). O painel apoia nas vigas e nas
    peças que já o seguravam (cintas, pilares, paredes portantes) e a viga apoia em quem estiver debaixo dela e nas vigas em que ela termina.
 6. **Pilares onde precisam**: o vão de uma viga (ou de uma cinta) é a maior distância sem apoio, medida como o motor mede (`spanOf`: duas vezes a maior
@@ -387,7 +406,7 @@ continua devolvendo as peças e os apoios da equipe, e as golden `pieces`/`suppo
 | Vão máximo do painel e da viga (`maxSpan`) | 5 m | prática de lajes maciças armadas em uma direção: 4 a 5 m (Bastos, *Lajes de concreto*, UNESP); pedido do dono |
 | Painel mínimo (`minPanel`) | 1,5 m | prática (laje com largura menor que isso vira balanço da viga vizinha) |
 | Espessura da laje | L/40, mín. 10 cm (piso), 8 cm (cobertura) | NBR 6118 14.7.2.1 (d ~ L/35 a L/40 em laje armada em uma direção); mínimos do dono |
-| Altura da viga | vão/12, mín. 25 cm, em múltiplos de 5 cm | NBR 6118 e Bastos, *Vigas de concreto armado*: L/10 a L/12 |
+| Altura da viga | vão/10, mín. 25 cm, em múltiplos de 5 cm | NBR 6118 e Bastos, *Vigas de concreto armado*: L/10 a L/12; L/10 é a que segura a perda de um pilar (§10.5) |
 | Largura da viga | max(parede, altura/3) | NBR 6118 13.2.2 (mín. 12 cm) |
 | Lado do pilar acrescentado | 20 cm | NBR 6118 13.2.3 (mín. 19 cm) |
 | Cobertura mínima de uma linha de corte | 0,6 | escolha de projeto (uma parede que cobre 60% do comprimento é um limite de cômodo) |
@@ -402,3 +421,32 @@ a descreve). O vergalhão é dimensionado por `sizeRebar` como já era (§2.3), 
 de madeira e barracas não têm concreto com tração e não mudam. A spec das casas de alvenaria ganha `structure.rebar` nas lajes, vigas e cintas, mais
 as peças novas (painéis, vigas, pilares). `rebar: false` e `slabPanels: false` devolvem a spec antiga (é o que a comparação com o Visor de casas 3D
 usa; ver §6).
+
+### 10.5 Como ficou (valores que mudaram em relação ao desenho acima)
+
+- **Altura da viga: vão/10** (e não /12). Com L/12 o canto de um sobrado em pórtico ainda caía ao perder um pilar (a cinta do térreo passava de 1,1 da capacidade
+  com o vão dobrado e puxava o painel de cima); com L/10 (viga biapoiada da NBR 6118, dentro da faixa pedida) nenhum pilar isolado derruba laje, de nenhum
+  dos sobrados e casas de laje testados, e dois pilares nas pontas de um lado ainda derrubam o lado. `beamDepthRatio` continua configurável.
+- **Vergas e cintas pelo vão**: a verga de concreto sobre uma janela e a cinta sobre uma abertura larga ganham a altura de uma viga daquele vão
+  (`beamDepthFor`), porque o motor as apoia nas ombreiras e não na parede inteira. Isso vale com `wallDetail: 'panels'` e `'units'`.
+- **Pórtico: a cinta não apoia na parede de vedação**. Com `portico` e painéis, a junção cinta/viga sobre uma parede que só fecha passa a não carregar
+  (`bears: false`); a viga é dimensionada para o vão entre pilares e perder a parede não derruba a viga. As vergas continuam apoiadas nas ombreiras.
+- **Varandas**: num prédio (`foundation: 'building'`) o pilar da varanda de uma unidade alta é cortado e a varanda passa a ser balanço da laje da unidade
+  (`slab_base`), em vez de um único pilar de cinco andares.
+- **Tempo**: a spec de uma mansão (560 peças) leva ~6,5 s para montar e dimensionar; casas comuns, menos de 1 s.
+- **Levantamento** (28 gabaritos x sementes 1 a 5 x normal/fortificada/abandonada, 420 casas): todas ficam de pé em repouso por 30 s com o aço
+  dimensionado; flexão máxima 0,95 (laje da mansão); casas de madeira, rurais e barracas não mudam (sem concreto com tração).
+
+### 10.6 Visualizador e área de casas
+
+- `game-floorplan-three`: uma casa ligada a um mundo de destruição (`create(THREE, { destruction })`) é ligada aos painéis (`slabPanelView`): o piso de cada
+  cômodo, o forro e a laje de cobertura são desenhados por pedaço, cada um no painel em que está (`house/floors.ts`, `roof/slabs.ts`), e o painel que
+  falha cai sozinho. Sem mundo de destruição o desenho é o do Visor 3D, bit a bit. As vigas e os pilares novos existem só no mundo (ficam dentro das
+  paredes e do forro); a gaiola de vergalhão que o renderizador desenha ao descascar o concreto vale para eles também.
+- Área de casas: a spec dos espécimes é a nova (uma caixa por peça: painéis, vigas e pilares aparecem). O cenário `house_two_pillars` perde os dois
+  pilares nas pontas de um lado (o que a estrutura real derruba), porque perder os dois primeiros do vetor passou a ser um canto com o pilar do meio
+  segurando. `house_one_pillar` segue o desenho original: um pilar perdido e a laje fica.
+- Achado de passagem, no motor: uma peça que cai sobre o terreno (`anchored` com a etiqueta `terrain`) gastava as juntas de todas as paredes sobre ele
+  (golpe contundente desgasta todas as juntas da peça atingida). Na área de casas isso soltava todas as paredes das casas a cada queda de entulho; a
+  casa ligada a painéis deixava de esconder o efeito. O golpe contundente no terreno não desgasta mais as juntas (`game-destruction/tests/terrain-blow.test.ts`).
+
