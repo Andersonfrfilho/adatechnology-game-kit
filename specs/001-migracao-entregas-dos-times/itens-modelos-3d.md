@@ -327,7 +327,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Fotografia | `foto` | `photo` | 0,01 kg | comum | 102 x 2 x 152 mm |
 | [ ] | Item marcado de NPC (31) | `item_marcado` | `npc_marked_item` | 0,2 kg | único | do jogo |
 | [ ] | Livro de registro da Mina São Jorge | `registro_mina` | `mine_logbook` | 0,4 kg | único | do jogo |
-| [ ] | Mapa da cidade anotado | `mapa_cidade` | `city_map` | 0,05 kg | raro | 110 x 10 x 250 mm |
+| [x] | Mapa da cidade anotado (kit) | `mapa_cidade` | `city_map` | 0,05 kg | raro | 110 x 10 x 250 mm |
 | [ ] | Mapa militar | `mapa_militar` | `military_map` | 0,05 kg | muito raro | do jogo |
 | [ ] | Mapa rodoviário | `mapa_rodoviario` | `road_map` | 0,05 kg | comum | 110 x 10 x 250 mm |
 | [x] | Maço de cigarro (kit) | `cigarro` | `cigarettes` | 0,03 kg | comum | 55 x 88 x 22 mm |
