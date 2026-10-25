@@ -2078,5 +2078,15 @@
       0.12
     ],
     "scale": 1
+  },
+  {
+    "id": "led_camp_lantern",
+    "teamId": "lampiao_led",
+    "teamBox": [
+      0.11,
+      0.2,
+      0.11
+    ],
+    "scale": 1
   }
 ]
