@@ -416,6 +416,8 @@ class Renderer implements DestructionRenderer {
     dt = clamp(dt, 0, 0.1)
     this.time += dt
     this.drainQueue()
+    // a settling object keeps moving between its (throttled) `settle` events
+    for (const b of this.bounds.values()) if (b.soilNode && this.world.state(b.id)?.soil?.status === 'yielding') this.onSettle(b.id)
     this.updateActive(dt)
     this.updateLeaks(dt)
     this.pieceSys.update(dt)
@@ -435,6 +437,28 @@ class Renderer implements DestructionRenderer {
         if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', ev.type, err)
       }
     }
+  }
+
+  /**
+   * The ground under an object settled or tilted: its parts are drawn under a node with the soil's offset (`ObjectState.soil.offset`), so the host's
+   * root keeps the pose the host gave and the world keeps getting it from `syncTransform`.
+   */
+  private onSettle(objectId: string): void {
+    const b = this.bounds.get(objectId)
+    const soil = this.world.state(objectId)?.soil
+    if (!b || !soil) return
+    let node = b.soilNode
+    if (!node) {
+      node = new this.THREE.Group()
+      node.name = 'destruction-soil'
+      for (const c of [...b.root.children]) node.add(c)
+      b.root.add(node)
+      b.soilNode = node
+    }
+    const { position: p, rotation: q } = soil.offset
+    node.position.set(p[0], p[1], p[2])
+    node.quaternion.set(q[0], q[1], q[2], q[3])
+    node.updateMatrixWorld(true)
   }
 
   private syncTransforms(): void {
@@ -494,6 +518,9 @@ class Renderer implements DestructionRenderer {
         break
       case 'detach':
         this.onDetach(ev)
+        break
+      case 'settle':
+        this.onSettle(ev.object)
         break
       case 'collapse':
         this.splitLoose(ev.object)

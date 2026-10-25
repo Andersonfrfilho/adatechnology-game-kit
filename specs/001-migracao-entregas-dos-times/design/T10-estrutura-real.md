@@ -3,7 +3,8 @@
 Regra do dono (24/10): *"na construção de arranha-céus, prédios e casa focar bem nas estruturas, pois se houver uma explosão uma interação deve
 ser bem parecida com o que acontece realmente"*. Todos os valores ficam na configuração. A lista de lacunas é
 `spec001/estruturas-reais-lacunas.md`; este documento cobre a lista toda em resumo e os passos 1 e 2 dela (tração/vergalhão e alvenaria
-portante) em detalhe. Os passos 1 e 2 estão implementados em `game-destruction` (motor) e `game-floorplan-structure` (opção de vergalhão).
+portante) em detalhe. Os passos 1 e 2 estão implementados em `game-destruction` (motor) e `game-floorplan-structure` (opção de vergalhão). O passo 2 da ordem
+(lacuna 3, solo e estacas) está no §8.
 
 ## 1. A lista de lacunas, em resumo
 
@@ -11,7 +12,7 @@ portante) em detalhe. Os passos 1 e 2 estão implementados em `game-destruction`
 |---|---|---|---|
 | 1 | Concreto que racha na tração; o vergalhão segura o puxão; viga sem vergalhão parte | motor (`game-destruction`, `structure.flexure`) | **feito** (§2) |
 | 2 | Alvenaria portante limitada pela altura (o tijolo do térreo esmaga) | motor (`partCapacity`, `structure.masonry`) e `bearingWallThickness` | **feito** (§3) |
-| 3 | Solo e fundação (capacidade do solo, recalque, tombamento; estacas profundas) | motor (solo) + peças em `game-floorplan-structure` | próximo passo |
+| 3 | Solo e fundação (capacidade do solo, recalque, tombamento; estacas profundas) | motor (`game-destruction`, `soil`) + radier/estacas em `game-floorplan-structure` | **feito** (§8) |
 | 4 | Núcleo rígido (tubo de concreto com elevadores e escada) | peças/presets em `game-floorplan-structure` | depois |
 | 5 | Vento e balanço (carga lateral que cresce com a altura, amortecedor de massa) | motor | depois |
 | 6 | Pele de vidro (fachada leve que estilhaça em painéis grandes) | peças em `game-floorplan-structure` | depois |
@@ -177,3 +178,89 @@ um projeto para perder um pilar (dimensionados com `redundancy`, ou com o aço d
 - Paredes ainda não dobram para fora do plano numa explosão (a parede de vedação empurrada para dentro): entra com a pele de vidro (lacuna 6).
 - As energias dos explosivos de `game-weapons` são menores que as reais (granada 200 kJ = 48 g de TNT; uma M67 tem ~185 g de Composição B,
   ~0,24 kg de TNT): pergunta ao dono se corrige a tabela.
+
+## 8. Solo e fundação (lacuna 3, passo 2 da ordem; 2026-10-25)
+
+### 8.1 O que muda para quem joga
+
+- Um prédio alto em sapatas sobre argila mole **afunda e tomba**: o solo cede, o prédio desce e se inclina para o lado mais estreito, e quando o
+  centro de massa passa da borda da fundação ele vai ao chão inteiro (`settle` com `status: 'toppled'`, depois `collapse` de tudo).
+- O mesmo prédio sobre **estacas de concreto que descem até a areia firme** fica de pé: assenta uns centímetros e não se mexe mais.
+- Uma casa sobre radier em solo firme não sente nada (recalque de milímetros, nenhum evento).
+- Tudo só para objetos com solo (`DestructibleSpec.soil`); sem ele a fundação continua fixa no mundo como antes.
+
+### 8.2 Modelo
+
+1. **Solo por camadas** (`SoilProfile`: camadas de cima para baixo, a última infinita; ou só o id de uma classe). Cada classe (`SoilDef`, registro
+   `SOILS` em `soils.json`) tem a tensão admissível de sapata `qa` (NBR 6122), o N do SPT, o módulo `E` e o Poisson `ν`.
+2. **Sapata, sapata corrida, radier**: cada peça `foundation` (que não seja `terrain`) vira uma grade de células (`soil.cells` por lado) que são molas
+   elastoplásticas: rigidez `ks · área` com `ks = E / (B (1 − ν²) Iw)` (recalque elástico de sapata rígida, Bowles) e capacidade `FS · qa · área`
+   (FS global 3, NBR 6122). `qa` é a menor e `E` a média das camadas até `influence` (2) larguras abaixo da base: a argila mole debaixo de uma crosta
+   firme conta, como no silo de Transcona.
+3. **Peças sobre o terreno** (a laje `terrain` que o `game-floorplan` usa como chão): cada parede ou pilar apoiado nela ganha uma sapata de pelo menos
+   `footingWidth` (0,60 m, mínimo da NBR 6122) de largura.
+4. **Estaca** (`structure.pile`: `length`, `diameter`, `count`, `method`): cada estaca é uma mola com a resistência última de Décourt-Quaresma
+   (ponta `α C N A`, atrito `β 10 (N/3 + 1)` kPa por camada, N entre 3 e 50; C = 120 argila, 200 silte, 400 areia; α, β de Décourt 1996 para escavada,
+   1 para cravada; rocha com valores próprios) e a rigidez do fuste encurtando sob metade da carga em série com a ponta como placa rígida.
+   `pileLength` dá o menor comprimento (de 0,5 em 0,5 m) que carrega a carga com FS 2 (NBR 6122): é o "descer até o chão firme".
+5. **O objeto é um corpo rígido sobre as molas**: recalque `s` e inclinações `a`, `b` da base. O equilíbrio (Newton, 3 incógnitas) inclui o
+   **desaprumo** de 1/200 (EN 1992-1-1 5.2) no sentido desfavorável (o eixo em que a fundação é mais fraca) e o **P-delta** (o peso anda `h · a` quando
+   o prédio inclina), de onde sai a instabilidade de tombamento da Torre de Pisa (Hambly 1985: cai quando `W h` passa a rigidez à rotação).
+   O solo que cede guarda a deformação (recalque permanente por mola).
+6. **Tempo**: ao ser posto no mundo o objeto já está no equilíbrio (o prédio "estava ali"). Em `update`, mudança elástica é imediata; solo que cede
+   leva o objeto ao novo equilíbrio a `sinkRate` (0,05 m/s) e `tiltRate` (1,5°/s) — tempo de jogo, o real leva horas a dias; sem equilíbrio estável ele
+   continua afundando e inclinando até o centro de massa passar da borda da fundação (ou 60°): tomba.
+7. **Pose**: `ObjectState.position`/`rotation` passam a ser a pose do host (`setTransform`) com o recalque e a inclinação por cima
+   (`ObjectState.soil.offset`, girando em torno do centro de rigidez na cota da base). Tiro, explosão e raio usam a pose real. `game-destruction-three`
+   desenha as peças sob um nó `destruction-soil` com esse deslocamento, sem mexer no nó raiz do host.
+
+### 8.3 Superfície de configuração
+
+- Contrato: `DestructibleSpec.soil`, `SoilProfile`/`SoilLayer` (`surface`, `footingWidth`), `PartSpec.structure.pile` (`PileSpec`),
+  `ObjectState.soil` (`SoilState`: `settlement`, `tilt`, `direction`, `bearing`, `edge`, `status`, `offset`), evento `settle`.
+- Mundo: `soil` (`SoilOptions`): `soils` (registro), `site` (solo padrão de objetos com fundação), `safety` 3, `pileSafety` 2, `rigidity` 0,82,
+  `influence` 2, `imperfection` 1/200, `cells` 4, `sinkRate`, `tiltRate`, `footingWidth` 0,6, `pileElasticGPa` 25.
+- Funções: `pileCapacity`, `pileLength`, `pileStiffness`, `footingSoil`, `subgradeModulus`, `footingArea`, `solveFoundation`, `SOILS`, `SOIL_DEFAULTS`.
+- `buildFrame({ footing, raft, piles, soil })`.
+- `toDestructibleSpec({ soil, foundation, piles, soils })` em `game-floorplan-structure`: com solo, fundação `raft`/`basement`/`building` vira um radier
+  de concreto (`RAFT_THICKNESS` 0,25 m) sob as peças apoiadas no chão; `piles` põe estacas sob ele (diâmetro 0,4 m, uma a cada `PILE_AREA` 9 m², pelo
+  menos 4, comprimento por `pileLength`); as outras fundações mantêm o terreno com uma sapata sob cada parede e pilar. Sem `soil` nada muda.
+
+### 8.4 Valores e fontes
+
+| Classe | qa (kPa) | N SPT | E (MPa) | ν | Fonte de qa |
+|---|---|---|---|---|---|
+| `rock` / `rock_fractured` | 3000 / 1500 | 50 | 10000 / 2000 | 0,2 / 0,25 | NBR 6122:1996 tab. 4 (rocha sã / laminada); estaca: ponta 3 qa, atrito 500/300 kPa (típico de estaca embutida em rocha) |
+| `gravel_dense` / `gravel_loose` | 600 / 300 | 40 / 8 | 132 / 26 | 0,3 | NBR 6122:1996 tab. 4 |
+| `sand_very_dense` / `sand_dense` / `sand_medium` | 500 / 400 / 200 | 45 / 25 / 12 | 120 / 68 / 32 | 0,3 | NBR 6122:1996 tab. 4 |
+| `sand_loose` | 50 | 3 | 8 | 0,3 | fora da tabela (a norma pede ensaio); valor típico |
+| `silt_hard` / `silt_stiff` / `silt_medium` | 300 / 200 / 100 | 25 / 15 / 8 | 44 / 26 / 14 | 0,35 | NBR 6122:1996 tab. 4 |
+| `clay_hard` / `clay_stiff` / `clay_medium` | 300 / 200 / 100 | 25 / 15 / 8 | 35 / 21 / 11 | 0,4 | NBR 6122:1996 tab. 4 |
+| `clay_soft` / `clay_very_soft` | 30 / 15 | 3 / 1 | 4,2 / 1,4 | 0,4 | 5,14 cu / 3 (Skempton) com cu 18 / 9 kPa |
+
+Módulos: Teixeira & Godoy (1996), `E = α K N` (areia 3 · 0,9; silte 5 · 0,35; argila 7 · 0,2; pedregulho 3 · 1,1 MPa). A NBR 6122:2019 tirou a
+tabela de pressões básicas, mas os valores continuam a referência usual de anteprojeto. FS global 3 (sapata) e 2 (estaca): NBR 6122:2019.
+Décourt & Quaresma (1978) e Décourt (1996) para as estacas. `Iw` 0,82: sapata quadrada rígida (Bowles, *Foundation Analysis and Design*).
+
+### 8.5 Conferência
+
+- Sapata de 2 x 2 m em areia média a 150 kPa: o motor dá 7,0 mm, igual a `q B (1 − ν²) Iw / E`.
+- Estaca escavada de 0,6 m, 21 m (18 m de argila mole + 3 m de areia compacta): 2220 kN de resistência última (543 de atrito na argila, 264 na
+  areia, 1414 de ponta), conferido à mão no teste; para 1,2 MN com FS 2 ela precisa de 23,5 m.
+- Prédio de 20 andares, 8 x 16 m, 2500 t em 15 sapatas de 2,5 x 2,5 m sobre argila mole: 260 kPa contra 90 de ruptura (`bearing` 3,1); afunda e
+  tomba pelo lado de 8 m com cerca de 9° (o centro de massa a 34 m de altura passa da borda a 5,25 m). Em estacas de 0,6 m até a areia: 2 cm de
+  recalque, inclinação muito abaixo de 1/500 (Bjerrum), nada se mexe depois.
+- Casa de 2 andares em radier sobre argila rija: menos de 1 cm de recalque, `bearing` < 0,1, as tensões da casa iguais às do terreno fixo.
+
+### 8.6 Goldens
+
+Nenhuma muda: o solo só existe para quem declara `soil` (ou `soil.site` no mundo), e nenhuma cena, golden de time (`vc3-*`) ou auto-golden declara.
+`sizeStructure`/`sizeRebar` dimensionam sem o solo (o solo não muda as cargas da estrutura). Em `game-floorplan-three` nada mudou.
+
+### 8.7 Limites (próximos passos)
+
+- Sem adensamento no tempo (o recalque da argila mole em anos) nem lençol freático: só o elástico imediato e a ruptura.
+- O recalque diferencial ainda não racha paredes (a distorção de 1/300 de Bjerrum daria `crack` nas alvenarias): fica para o núcleo/pele (lacunas 4 e 6).
+- A estaca não resiste a arrancamento (a mola não puxa) e não há efeito de grupo; a sapata não ganha capacidade com a profundidade ou a largura.
+- A estrutura sobre o solo é rígida (não se deforma com o recalque); o tombamento entrega tudo ao `collapse`, e o renderizador faz a queda.
+- O pórtico de teste de 20 andares precisou de vigas de 70 cm, porque no `buildFrame` o pilar de cima nasce sobre a laje de baixo (não é contínuo).

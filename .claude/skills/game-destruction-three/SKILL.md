@@ -79,6 +79,7 @@ Malha fundida (prédio assado): ligue cada peça por faixa de vértices, `{ mesh
 - `pointScale` (padrão 700) deve acompanhar a altura do viewport, senão fumaça e fogo ficam com tamanho errado.
 - Queda dura de peça (acima de 3 m/s) chama `world.hit` do tipo `blunt` com `source: 'fall'`.
 - `world.explode` **não emite evento** (só uma peça com `explodes` emite `explode`): quem detona granada ou foguete chama `renderer.explode` junto, senão só aparecem os detritos e o fogo, o clarão e a fumaça ficam de fora.
+- Solo (`settle`): os filhos do nó raiz vão para um grupo `destruction-soil` com o recalque e a inclinação (`ObjectState.soil.offset`); o nó raiz fica com a pose do host. Não reposicione os filhos do nó raiz por fora depois disso.
 - Global de navegador `GameDestructionThree` já inclui o núcleo; só falta carregar o three.js.
 
 ## O que vem pela migração (spec 001)

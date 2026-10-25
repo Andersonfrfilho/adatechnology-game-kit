@@ -6,6 +6,13 @@ import type { DestructibleSpec, MaterialDef, SizeStructureOptions, StructureRole
 /** Highest tension steel ratio a designer puts in a beam or slab (NBR 6118 17.3.5.2.4: 4% of the section). */
 const MAX_REBAR_RATIO = 0.04
 
+/** The spec as the sizing worlds see it: the ground does not change the loads, so the soil is left out. */
+const onRock = (spec: DestructibleSpec): DestructibleSpec => {
+  if (spec.soil === undefined) return spec
+  const { soil: _soil, ...rest } = spec
+  return rest
+}
+
 /** The spec without one part (and its joints; inferred joints are inferred again without it). */
 const without = (spec: DestructibleSpec, id: string): DestructibleSpec => {
   const reduced: DestructibleSpec = { ...spec, parts: spec.parts.filter((p) => p.id !== id), joints: (spec.joints ?? []).filter((j) => j.a !== id && j.b !== id) }
@@ -33,7 +40,7 @@ export const sizeRebar = (spec: DestructibleSpec, options: SizeStructureOptions 
   const safetyOf = (role: StructureRole): number => options.safetyByRole?.[role] ?? safety
   const bending = (s: DestructibleSpec): Map<string, number> => {
     const w = createDestruction({ ...(options.materials ? { materials: options.materials } : {}), structure: { flexure: options.flexure } })
-    const id = w.add(s)
+    const id = w.add(onRock(s))
     return new Map(w.state(id)!.parts.map((p) => [p.id, p.flexure ?? 0]))
   }
   const base = bending(out)
@@ -87,7 +94,7 @@ export const sizeStructure = (spec: DestructibleSpec, options: SizeStructureOpti
   const safetyOf = (role: StructureRole): number => options.safetyByRole?.[role] ?? safety
   const loads = (s: DestructibleSpec): Map<string, { load: number; stress: number }> => {
     const w = createDestruction(options.materials ? { materials: options.materials } : {})
-    const id = w.add(s)
+    const id = w.add(onRock(s))
     return new Map(w.state(id)!.parts.map((p) => [p.id, { load: p.load ?? 0, stress: p.stress ?? 0 }]))
   }
   const out = structuredClone(spec)

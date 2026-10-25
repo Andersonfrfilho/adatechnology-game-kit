@@ -1,4 +1,4 @@
-import type { DestructibleSpec, JointSpec, MaterialId, PartSpec } from './types'
+import type { DestructibleSpec, JointSpec, MaterialId, PartSpec, PileSpec, SoilProfile } from './types'
 
 export interface FrameOptions {
   /** Total length along x between the outer column centres, metres (default 8). */
@@ -33,6 +33,14 @@ export interface FrameOptions {
    * `false` makes them plain concrete (they snap when they bend past cracking).
    */
   rebar?: { beam?: number; slab?: number } | false
+  /** Side of the square pad under each column in metres (default 2.2 x `columnSize`), 0.3 m thick. */
+  footing?: number
+  /** One raft under the whole frame instead of a pad per column (`raft`, the footprint plus `footing` / 2 each side, 0.4 m thick). */
+  raft?: boolean
+  /** Piles under each pad (or under the raft): the pad becomes a pile cap. */
+  piles?: PileSpec
+  /** The ground the frame stands on (`DestructibleSpec.soil`). */
+  soil?: string | SoilProfile
 }
 
 /**
@@ -56,12 +64,21 @@ export const buildFrame = (o: FrameOptions = {}): DestructibleSpec => {
   const joints: JointSpec[] = []
   const on = (a: string, b: string, kind: JointSpec['kind']) => joints.push({ id: `${a}~${b}`, a, b, kind, bears: 'a_on_b' })
 
-  for (let i = 0; i < nx; i++) {
-    for (let j = 0; j < nz; j++) {
-      parts.push({
-        id: `foundation_${i}_${j}`, material: mat, shape: { kind: 'box', size: [cs * 2.2, 0.3, cs * 2.2] }, position: [xs[i], -0.15, zs[j]],
-        structure: { role: 'foundation' }, anchored: true,
-      })
+  const pad = o.footing ?? cs * 2.2
+  const pile = o.piles ? { pile: { ...o.piles } } : {}
+  if (o.raft) {
+    parts.push({
+      id: 'raft', material: mat, shape: { kind: 'box', size: [spanX + pad, 0.4, spanZ + pad] }, position: [0, -0.2, 0],
+      structure: { role: 'foundation', ...pile }, anchored: true,
+    })
+  } else {
+    for (let i = 0; i < nx; i++) {
+      for (let j = 0; j < nz; j++) {
+        parts.push({
+          id: `foundation_${i}_${j}`, material: mat, shape: { kind: 'box', size: [pad, 0.3, pad] }, position: [xs[i], -0.15, zs[j]],
+          structure: { role: 'foundation', ...pile }, anchored: true,
+        })
+      }
     }
   }
   for (let f = 0; f < floors; f++) {
@@ -76,7 +93,7 @@ export const buildFrame = (o: FrameOptions = {}): DestructibleSpec => {
           id, material: mat, shape: { kind: 'box', size: [cs, H, cs] }, position: [xs[i], yb + H / 2, zs[j]],
           structure: o.columnCapacity === undefined ? { role: 'column' } : { role: 'column', capacity: o.columnCapacity },
         })
-        on(id, f === 0 ? `foundation_${i}_${j}` : `slab_${f - 1}`, 'rebar')
+        on(id, f === 0 ? (o.raft ? 'raft' : `foundation_${i}_${j}`) : `slab_${f - 1}`, 'rebar')
       }
     }
     const beams: string[] = []
@@ -133,5 +150,5 @@ export const buildFrame = (o: FrameOptions = {}): DestructibleSpec => {
       }
     }
   }
-  return { name: 'frame', parts, joints, tags: ['structure'] }
+  return { name: 'frame', parts, joints, tags: ['structure'], ...(o.soil !== undefined ? { soil: o.soil } : {}) }
 }
