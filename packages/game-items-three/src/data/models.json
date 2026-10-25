@@ -2368,5 +2368,15 @@
       0.12
     ],
     "scale": 1
+  },
+  {
+    "id": "tactical_vest",
+    "teamId": "colete_tatico",
+    "teamBox": [
+      0.35,
+      0.1,
+      0.4
+    ],
+    "scale": 1
   }
 ]
