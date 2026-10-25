@@ -2418,5 +2418,15 @@
       0.3
     ],
     "scale": 1
+  },
+  {
+    "id": "tshirt",
+    "teamId": "camiseta",
+    "teamBox": [
+      0.3,
+      0.04,
+      0.22
+    ],
+    "scale": 1
   }
 ]
