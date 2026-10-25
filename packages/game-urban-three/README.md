@@ -28,6 +28,12 @@ scene.add(drawn.root)
 
 The scene hash, the lists of instances and the surface of each material (shadows, roughness, metalness, flat shading) of 34 cases are tested against the page.
 
+## Geometry
+
+Planes, cylinders, cones, boxes (and the rounded box built on one), the prism's extrusion and the test area's light reach spheres are made
+through `shapeGeometries(THREE)` of `@adatechnology/game-shapes-three`: the same bytes as three's constructors
+(`tests/exact-golden.test.ts`), cached by parameters. The dodecahedron rock is still three's own.
+
 ## Test area
 
 `createUrbanTestModule(options)` and `loadUrbanTestModule(room, options)` put the city in the shared test room (`?area=urban` in `examples/urban-test-area`; the module also loads in `examples/interactables-test-area`).

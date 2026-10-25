@@ -1,6 +1,7 @@
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { createPlantProvider, createUrban, createVehicleProvider, SAMPLE_CELLS } from '@adatechnology/game-urban'
 import type { Locale, Providers, TerrainOptions, UrbanBuilder, UrbanKit, UrbanOptions } from '@adatechnology/game-urban'
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 
 import { createUrbanThree } from '../draw'
 import type { DrawnUrban } from '../draw'
@@ -212,7 +213,7 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
       if (host.bench.layer('light_radius')) {
         for (const light of entry.drawn.lights) {
           if (!light.isPointLight && !light.isSpotLight) continue
-          const reach = new three.Mesh(new three.SphereGeometry(Math.min(light.distance || 10, 60), 14, 8), new three.MeshBasicMaterial({ color: light.color ?? 0xffcc66, wireframe: true, transparent: true, opacity: 0.25 }))
+          const reach = new three.Mesh(new (shapeGeometries(three) as any).SphereGeometry(Math.min(light.distance || 10, 60), 14, 8), new three.MeshBasicMaterial({ color: light.color ?? 0xffcc66, wireframe: true, transparent: true, opacity: 0.25 }))
           reach.position.copy(light.position)
           mark(light.parent ?? entry.root, reach)
         }
