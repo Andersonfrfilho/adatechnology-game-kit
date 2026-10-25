@@ -1648,5 +1648,15 @@
       0.012
     ],
     "scale": 1
+  },
+  {
+    "id": "car_battery_12v",
+    "teamId": "bateria_12v",
+    "teamBox": [
+      0.24,
+      0.19,
+      0.1725
+    ],
+    "scale": 1
   }
 ]
