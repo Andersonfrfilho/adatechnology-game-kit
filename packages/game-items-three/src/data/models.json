@@ -2268,5 +2268,15 @@
       0.25
     ],
     "scale": 1
+  },
+  {
+    "id": "rolling_suitcase",
+    "teamId": "mala",
+    "teamBox": [
+      0.4,
+      0.65,
+      0.25
+    ],
+    "scale": 1
   }
 ]
