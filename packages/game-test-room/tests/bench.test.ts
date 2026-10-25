@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import type { BenchChange, HostEvent, ModuleControl, ModuleHost, TestableModule } from '@adatechnology/game-contracts'
-import { createTestRoom, decodeBenchState, demoItems } from '../src'
+import { createTestRoom, decodeBenchState } from '../src'
+import { demoItems } from './fixtures/demo-items'
 import type { ScenarioContext } from '../src'
 import { makeRoom, stubRenderer } from './helpers'
 

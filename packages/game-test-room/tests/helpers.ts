@@ -1,5 +1,6 @@
 import * as THREE from 'three'
-import { createTestRoom, demoItems } from '../src'
+import { createTestRoom } from '../src'
+import { demoItems } from './fixtures/demo-items'
 import type { TestRoom, TestRoomOptions } from '../src'
 
 /** A WebGLRenderer stand-in: the room only needs these members, and happy-dom cannot make a real GL context. */

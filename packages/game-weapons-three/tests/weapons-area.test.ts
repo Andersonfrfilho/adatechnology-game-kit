@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
-import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
+import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 import { ARCHETYPE_MODELS, COUNTER_ITEM_ID, createWeaponsTestModule, MOUNTED_M134_ITEM_ID, weaponsLayout, WEAPON_ITEM_PREFIX } from '../src'
 
@@ -15,7 +15,7 @@ function stubRenderer(): THREE.WebGLRenderer {
 function roomWithWeapons(): { room: TestRoom; module: ReturnType<typeof createWeaponsTestModule> } {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: demoItems('pt-BR'), renderer: stubRenderer(), ui: false })
+  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false })
   const module = createWeaponsTestModule({ locale: 'pt-BR', sound: false })
   const report = room.loadModule(module)
   expect(report.problems).toEqual([])

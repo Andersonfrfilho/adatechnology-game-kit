@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import type { TestableModule } from '@adatechnology/game-contracts'
-import { createTestRoom, demoItems } from '../src'
+import { createTestRoom } from '../src'
+import { demoItems } from './fixtures/demo-items'
 import type { TestRoomItem } from '../src'
 import { stubRenderer } from './helpers'
 

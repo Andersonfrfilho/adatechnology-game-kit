@@ -1,7 +1,8 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createDestruction } from '@adatechnology/game-destruction'
-import { buildFromSpec, demoItems, DEMO_ITEMS, DEMO_MATERIALS, brickWallSpec } from '../src'
+import { buildFromSpec, brickWallSpec } from '../src'
+import { demoItems, DEMO_ITEMS, DEMO_MATERIALS } from './fixtures/demo-items'
 
 describe('buildFromSpec', () => {
   const spec = {

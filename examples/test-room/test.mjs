@@ -1,4 +1,4 @@
-// End-to-end test of dist/test-room.html with Playwright (Chromium, software GL): opens it via file:// with the network blocked,
+// End-to-end test of dist/test-room.html (the room with the SDK's real content loaded) with Playwright (Chromium, software GL): opens it via file:// with the network blocked,
 // runs every scenario (?scenario=all), prints the report and saves screenshots plus the behaviour log to shots/.
 // Run: node build.mjs && node test.mjs   (Chromium is expected at $PLAYWRIGHT_BROWSERS_PATH, e.g. /opt/pw-browsers)
 import { createRequire } from 'node:module'
@@ -37,15 +37,18 @@ await context.route('**/*', (route) => {
   return route.abort()
 })
 const page = await context.newPage()
+// the weapon thumbnails (../weapon-svg/) exist only in the built site: on file:// each one is a CORS error plus a bare "Failed to load resource"
+const isThumbnailError = (text) => /weapon-svg|^Failed to load resource: net::ERR_FAILED$/.test(text)
 page.on('console', (m) => {
-  if (m.type() === 'error') consoleErrors.push(m.text())
+  if (m.type() === 'error' && !isThumbnailError(m.text())) consoleErrors.push(m.text())
 })
 page.on('pageerror', (e) => consoleErrors.push(`pageerror: ${e.message}`))
 
 const url = pathToFileURL(dist).href
-await page.goto(`${url}?scenario=all`)
+await page.goto(`${url}?scenario=all`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoomReport, null, { timeout: 600000 })
 const report = await page.evaluate(() => window.__testRoomReport)
+
 
 console.log(`\nscenarios: ${report.passed} passed, ${report.failed} failed`)
 for (const r of report.results) {
@@ -53,58 +56,64 @@ for (const r of report.results) {
   for (const c of r.checks) if (!c.ok) console.log(`   ✗ ${c.label}`)
 }
 
+// the default page carries the SDK's real items (the teams' content) and none of the old procedural demo ones
+const DEMO_IDS = ['chair', 'sofa_demo', 'shelf', 'old_tv', 'steel_sheet', 'glass_pane', 'concrete_block', 'brick_column', 'building_frame', 'car_door', 'small_tree', 'potted_plant', 'coffee_cup', 'glass_bottle', 'wooden_crate', 'steel_drum', 'plastic_bucket', 'jerrycan', 'rental_car']
+const content = await page.evaluate(() => {
+  const r = window.__furnitureReport
+  const lists = { household: r.items, weapons: r.weapons?.items ?? [], goods: r.itemsArea?.items ?? [], vehicles: r.vehicles?.items ?? [], vegetation: r.vegetation?.items ?? [], characters: r.characters?.items ?? [], animals: r.animals?.items ?? [] }
+  const all = Object.values(lists).flat()
+  const room = window.__testRoom
+  const spawnable = {}
+  for (const id of ['weapon_pistol_9mm', 'fridge', 'item_canned_beans', 'sedan', 'mango_tree', 'zombie_walker']) {
+    try {
+      spawnable[id] = !!room.spawn(id, [0, 0, -5], 0)
+    } catch {
+      spawnable[id] = false
+    }
+    room.clear()
+  }
+  return { counts: Object.fromEntries(Object.entries(lists).map(([k, v]) => [k, v.length])), all, spawnable, problems: Object.values(r).flatMap((x) => x?.problems ?? []).length }
+})
+const extra = content.all.filter((id) => id.startsWith('weapon_') || id.startsWith('item_')).length
+const demoLeft = DEMO_IDS.filter((id) => content.all.includes(id))
+const spawnOk = Object.values(content.spawnable).every(Boolean)
+const contentOk = content.counts.household === 51 && content.counts.weapons > 100 && content.counts.goods > 300 && demoLeft.length === 0 && spawnOk && extra > 400
+console.log(`${contentOk ? 'PASS' : 'FAIL'}  default page loads the SDK content`, JSON.stringify({ counts: content.counts, demoLeft, spawnable: content.spawnable }))
+if (!contentOk) report.failed++
+
 // screenshots: a fresh room per scene, driven through window.__testRoom
 async function shot(name, setup) {
-  await page.goto(`${url}?ui=1`)
-  await page.waitForFunction(() => window.__testRoom, null, { timeout: 60000 })
+  await page.goto(`${url}?ui=1`, { timeout: 180000 })
+  await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })
   await page.evaluate(setup)
   await page.waitForTimeout(400)
   await page.screenshot({ path: join(shotsDir, `${name}.png`) })
 }
 await shot('overview', () => {
   const r = window.__testRoom
-  r.spawn('chair', [-1.5, 0, -2])
-  r.spawn('wooden_crate', [0, 0, -2])
-  r.spawn('coffee_cup', [3.5, 0.8, -1.5])
+  r.spawn('fridge', [-1.5, 0, -2])
+  r.spawn('sofa', [0.5, 0, -2])
+  r.spawn('sedan', [4, 0, -4])
 })
-await shot('glass-shot', async () => {
+await shot('weapon-in-hand', () => {
   const r = window.__testRoom
-  r.spawn('glass_pane', [0, 0, -3])
-  r.equip?.('pistol')
-  await r.runScenarios(r.scenarios.filter((s) => s.id === 'glass_shatters'))
+  r.spawn('wardrobe', [0, 0, -3])
+  r.setTool('pistol_9mm')
+  for (let i = 0; i < 40; i++) r.update(0.02)
 })
-await shot('burning-crate', () => {
+await shot('burning-sofa', () => {
   const r = window.__testRoom
-  const o = r.spawn('wooden_crate', [0, 0, -4])
+  r.spawn('sofa', [0, 0, -4])
   r.setTool('lighter')
   r.update(0.4)
-  r.look([0, 0.3, -3.65], [0, 0.25, -3.76])
+  r.look([0, 0.5, -3.2], [0, 0.4, -4])
   r.use(5)
   for (let i = 0; i < 12; i++) r.update(0.25)
   r.look([0.4, 1.2, -2.2], [0, 0.3, -4])
-  return o
-})
-await shot('coffee-spill', async () => {
-  const r = window.__testRoom
-  await r.runScenarios(r.scenarios.filter((s) => s.id === 'tilt_cup_spills'))
-})
-
-await shot('rental-car-module', async () => {
-  // the module scenario loads the rental car; the door then opens through its own `open` clip and the animations panel lists it
-  const r = window.__testRoom
-  await r.runScenarios(r.scenarios.filter((s) => s.id === 'load_rental_car_module'))
-  r.clear()
-  const car = r.spawn('rental_car', [0, 0, -5], 0.6)
-  r.look([-3.4, 1.5, -1.6], [-0.4, 0.7, -4.6])
-  r.playAnimation('open', car.objectId)
-  for (let i = 0; i < 90; i++) r.update(1 / 60)
-  r.setTool('pistol_9mm')
-  r.update(0.4)
-  r.look([-3.4, 1.5, -1.6], [-0.4, 0.7, -4.6])
 })
 
 // the behaviour log of a full run
-await page.goto(`${url}?scenario=all`)
+await page.goto(`${url}?scenario=all`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoomReport, null, { timeout: 600000 })
 const ndjson = await page.evaluate(() => window.__testRoom.log.toNDJSON())
 writeFileSync(join(shotsDir, 'log.ndjson'), ndjson)

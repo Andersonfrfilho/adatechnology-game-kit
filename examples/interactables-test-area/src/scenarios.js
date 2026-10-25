@@ -174,6 +174,50 @@ export function buildScenarios(locale, analysisOf) {
       expect(burned('foam') > 0 && burned('fabric') + burned('foam') > 1, T(`Depois de 4 min: espuma queimada em ${burned('foam')} parte(s), tecido em ${burned('fabric')}`, `After 4 min: foam burned in ${burned('foam')} part(s), fabric in ${burned('fabric')}`), { foam: burned('foam'), fabric: burned('fabric') })
     }),
 
+    sc('wrong_tool_refused', T('Dobradiça da geladeira: só a chave de fenda serve e a chave inglesa é recusada', 'Fridge hinge: only a screwdriver fits and the wrench is refused'), ({ room, step, expect }) => {
+      const id = spawn(room, 'fridge')
+      const hinge = jointTarget('fridge', 'door_fridge')
+      const c = world(hinge)
+      room.setTool('wrench')
+      room.waitUntilReady()
+      room.look([c[0] + 0.1, c[1], c[2] + 0.5], [c[0], c[1], c[2]])
+      room.use(0.5)
+      step(0.2)
+      const refused = count(room, 'tool_refused', id)
+      const opened = (room.world.state(id)?.joints ?? []).filter((j) => j.open).length
+      expect(refused > 0 && opened === 0, T(`Ferramenta recusada ${refused} vez(es), juntas abertas ${opened} (esperado: recusada e nenhuma aberta)`, `Tool refused ${refused} time(s), joints opened ${opened} (expected: refused and none opened)`), { refused, opened })
+    }),
+
+    sc('sofa_fire_extinguished', T('Sofá em chamas: o extintor apaga o fogo do estofado', 'Burning sofa: the extinguisher puts the upholstery fire out'), ({ room, step, expect }) => {
+      const id = spawn(room, 'sofa')
+      const burning = () => room.world.state(id).parts.some((p) => p.burning)
+      const seat = analysisOf('sofa').destructible.parts.filter((p) => p.material === 'foam').sort((a, b) => b.shape.size[0] * b.shape.size[2] - a.shape.size[0] * a.shape.size[2])[0]
+      const c = world(seat)
+      room.world.hit(id, { type: 'fire', point: c, temperature: 900, radius: 0.6, duration: 4 })
+      step(6)
+      expect(burning(), T('O assento do sofá pegou fogo antes do extintor', 'The sofa seat caught fire before the extinguisher'))
+      room.setTool('extinguisher')
+      room.waitUntilReady()
+      room.look([c[0], c[1] + 0.7, c[2] + 1.8], [c[0], c[1], c[2]])
+      room.use(2.5)
+      step(1)
+      const events = count(room, 'extinguish', id)
+      expect(!burning(), T(`Depois do extintor: ainda queimando ${burning() ? 'sim' : 'não'}, eventos de apagar ${events}`, `After the extinguisher: still burning ${burning() ? 'yes' : 'no'}, extinguish events ${events}`), { events })
+    }),
+
+    sc('chair_thrown_at_wall', T('Cadeira de jantar arremessada na parede: bate com energia e danifica o tijolo', 'Dining chair thrown at the wall: hits with energy and damages the brick'), ({ room, step, expect }) => {
+      const id = spawn(room, 'dining_chair', [0, 0, -5.2])
+      room.look([0, 1.7, -4.2], [0, 0.45, -5.2])
+      room.grab()
+      room.look([0, 1.7, -4.2], [0, 2.3, -11])
+      step(0.3)
+      room.throwHeld(16)
+      step(2.5)
+      const hits = room.log.entries({ type: 'impact' })
+      const wallDamage = room.log.entries().filter((e) => e.objectId === 'target_wall' && ['dent', 'damage', 'crack', 'fracture'].includes(e.type)).length
+      expect(hits.length > 0 && wallDamage > 0, T(`Impactos ${hits.length}, danos na parede ${wallDamage}`, `Impacts ${hits.length}, wall damage ${wallDamage}`), { id })
+    }),
+
     sc('gas_bottle_explodes', T('Botijão de gás: aquecido passa dos 250 °C e explode', 'Gas bottle: heated past 250 °C it explodes'), ({ room, step, expect }) => {
       const id = spawn(room, 'gas_bottle')
       const chair = spawn(room, 'dining_chair', [1.4, 0, -5])
@@ -324,14 +368,16 @@ export function buildScenarios(locale, analysisOf) {
         step(0.2)
         const hp = () => (room.world.state(zombie)?.parts ?? []).reduce((sum, p) => sum + p.hp, 0)
         const before = hp()
-        const from = room.log.entries().length
+        // the log keeps only its last entries, so a position in the list goes stale after a long run: mark the point by the sequence number instead
+        const all = room.log.entries()
+        const from = all.length ? all[all.length - 1].seq : -1
         // 0.7 m high, a hand off the middle: the door, the liner and the back of the wardrobe are three layers, and the left thigh of the zombie is the fourth
         room.setTool('rifle_7_62x39')
         room.waitUntilReady()
         room.look([AT[0] + 0.1, 0.7, AT[2] + 2.5], [AT[0] + 0.1, 0.7, AT[2]])
         room.use()
         step(0.6)
-        const events = room.log.entries().slice(from).filter((e) => e.channel === 'event')
+        const events = room.log.entries().filter((e) => e.seq > from && e.channel === 'event')
         const first = (id) => events.findIndex((e) => e.objectId === id)
         const onDoor = first(wardrobe)
         const onZombie = first(zombie)

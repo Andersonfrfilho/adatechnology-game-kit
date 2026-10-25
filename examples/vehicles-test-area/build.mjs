@@ -43,7 +43,7 @@ const bundle = result.outputFiles[0].text
 writeFileSync(join(here, 'dist/vehicles-area.js'), bundle)
 console.log(`dist/vehicles-area.js ${(bundle.length / 1024).toFixed(0)} KB`)
 
-const roomHtml = process.env.ROOM_HTML || join(here, '../test-room/dist/test-room.html')
+const roomHtml = process.env.ROOM_HTML || join(here, '../test-room/base/test-room.html')
 if (existsSync(roomHtml)) {
   const safe = (s) => s.replace(/<\/(script)/gi, '<\\/$1')
   const page = readFileSync(roomHtml, 'utf8')
