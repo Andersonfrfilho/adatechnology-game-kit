@@ -286,7 +286,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Carvão (saco de 3 kg) (kit) | `carvao` | `charcoal_bag` | 3,0 kg | comum | 300 x 120 x 400 mm |
 | [x] | Diesel (litro) (kit) | `diesel` | `diesel` | 0,85 kg | incomum | 90 x 260 x 90 mm |
 | [x] | Gasolina (litro) (kit) | `gasolina` | `gasoline` | 0,75 kg | incomum | 90 x 260 x 90 mm |
-| [ ] | Querosene (1 L) | `querosene` | `kerosene` | 0,8 kg | incomum | 90 x 260 x 90 mm |
+| [x] | Querosene (1 L) (kit) | `querosene` | `kerosene` | 0,8 kg | incomum | 90 x 260 x 90 mm |
 | [ ] | Óleo de motor | `oleo_motor` | `motor_oil` | 1,0 kg | comum | 100 x 260 x 70 mm |
 
 ## Campo, pesca e caça (0 de 11)
