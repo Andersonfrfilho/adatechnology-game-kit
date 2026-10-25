@@ -430,8 +430,11 @@ migrates (§7).
 | `IcosahedronGeometry`, `DodecahedronGeometry`, `ShapeGeometry`, `CapsuleGeometry`, `TubeGeometry` | weapons, characters | Not ported to game-shapes: `shapeGeometries` hands them to three |
 | The test areas' own room furniture (`test-area/module.ts`, `area.ts`) | characters, weapons, items | Drawn with the room's three, not the package's builders |
 | The items area's own furniture (shelves, stand, ruler, table, mannequin in `area.ts`) | items | Drawn with the host's three, not the kit: room furniture, not an item; it moves with the test room, not with the items |
+| The house kernel's accumulator (`put`, `polyFace`) and `furniture/api.ts` | floorplan | Its own arithmetic (scale before rotation, normals divided by the scale and renormalised by `hypot`, world-projected uvs, atlas cells rotated and flipped, a colour callback per vertex) is not three's matrix order: moving it onto the core bake changes bytes, so it waits for §11 q1 (a geometry v2); the templates it copies come from game-shapes |
+| `PlantMesh` (the plants) | vegetation | Already renderer-agnostic buffers with a per-vertex `sway` the shape batches do not carry; the adapter draws them as they are |
+| Tubes, curved extrusions, lofted bodies and warps | vehicles | Tube and curved extrude are not ported (see above); the lofts and warps are the kit's own buffers |
 
-### 7.4 Migrated (T9e)
+### 7.4 Migrated (T9e to T9g)
 
 Every row is guarded by an exact golden recorded on the old path in its own commit before the move (`exactSnapshot` of the golden tool: every
 byte of every attribute and index, attribute order and array types, transforms, user data, materials by identity, lights), and none changed.
@@ -445,6 +448,10 @@ byte of every attribute and index, attribute order and array types, transforms, 
 | `game-animals-three` (T9f) | `createAnimalsThree` draws with `shapeGeometries(host)`; `profileGeometry`'s lathe from game-shapes | `tests/exact-golden.test.ts`: 13 species × 2 seeds and the profile; the page goldens | animals 30.3 → 11.1 |
 | `game-characters-three` (T9f) | `createPersonBuilder`, `createPersonKit`, `createBestBuilder`, `bakeBody`, `buildInstancedBody`, `createFlyingLimbs`, `createEye` draw with `shapeGeometries(host)` | `tests/exact-golden.test.ts`: 281 cases (44 people and 8 as zombies, every extra, hat, face feature and hand item, 13 Bestiário bodies × 4 decays × 2 levels, bakes, the instanced body); the team goldens | characters (new group: 12 people, 13 bodies, 3 bakes, instanced body) 166.7 → 90.9 |
 | `game-crowd-three` (T9f) | nothing of its own: it instances the baked variants of characters-three, which now come from game-shapes | its team golden `game-crowd-render.json`, unchanged | — |
+| `game-vegetation-three` (T9g) | the nursery's scenery, colliders and walker and the module's colliders layer through `shapeGeometries(THREE)`; the plants stay `game-vegetation`'s own `PlantMesh` buffers (per-vertex `sway`) | `tests/exact-golden.test.ts`: 22 cases (18 plants, 4 nursery settings); the team goldens | vegetation (new group: 18 plants and the nursery) 486.2 → 424.9 (the nursery's lot dominates; noise) |
+| `game-urban-three` (T9g) | `createUrbanThree`, the rounded box, the prism and the light reach spheres through `shapeGeometries(THREE)` | `tests/exact-golden.test.ts`: 48 cases (28 parts, sample sheet, terrain, 17 items, helpers); `urban-parts.json`, `urban-patterns.json`, `urban-terrain.json` | urban (new group: 2 poles, a block, 2 props, the sample sheet) 17.8 → 16.0 |
+| `game-floorplan-three` (T9g) | the kernel's three is `shapeGeometries(THREE)`: the accumulator's primitive templates, breach units, fragments, mirrors and the specimens | `tests/exact-golden.test.ts`: 43 cases (7 typologies × 2 seeds × 2 qualities, night, cut, pieces, bare, building floor, abandoned, fortified, breach, spall, fracture, 5 specimens); `vc3-house-scene.json`, `vc3-house-area.json` | houses (new group: the 7 typologies) 265.9 → 266.4 (the templates are a few per kernel; the cost is the accumulator) |
+| `game-vehicles`, `-fleet`, `-three` (T9g) | the kit's three is `shapeGeometries(THREE)` under the light mode's wrapper (box, cylinder, sphere, torus, plane, circle, ring, the tyre lathes, straight extrusions) | `tests/exact-golden.test.ts` in the three packages: 46 sample cases, 148 fleet cases (69 × intact and damaged, a crash per group), 79 game-frame cases (69 lite, one high per group); the garage, fleet and `lite.json` goldens | vehicles (3 in light mode) 179.6 → 182.3 (noise: the lofts and the fusion dominate) |
 
 ### 7.5 The move to three r160 (T9g, §11 q3 = b)
 
