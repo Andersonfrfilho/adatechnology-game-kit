@@ -171,6 +171,29 @@ for (const lang of ['pt-BR', 'en']) {
     return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, inFridge: found.length }
   })
   check(`[${lang}] the items module is loaded too and the fridge holds real items`, items.module === 'items_area' && items.ok && items.problems.length === 0 && items.items > 300 && items.inFridge > 0, items)
+  // a can holds what its label says, welded as one shell, and a bullet hole in it makes it leak (the items module draws cans by family and gives the shell its contents)
+  const can = await page.evaluate(() => {
+    const room = window.__testRoom
+    const THREE = window.__THREE
+    room.clear()
+    const so = room.spawn('item_soda_can', [0, 0, -1.5], 0)
+    for (let i = 0; i < 60; i++) room.update(1 / 60)
+    const before = room.world.part(so.objectId, 'shell')?.liters ?? 0
+    const centre = new THREE.Box3().setFromObject(so.root).getCenter(new THREE.Vector3())
+    room.setTool('pistol_9mm')
+    room.waitUntilReady(5)
+    room.look([0, centre.y, 0], [centre.x, centre.y, centre.z])
+    room.use()
+    for (let i = 0; i < 240; i++) room.update(1 / 60)
+    const after = room.world.part(so.objectId, 'shell')?.liters ?? 0
+    const leaked = room.log.entries({ type: 'leak' }).length
+    const wet = room.fluids.stains().length + room.fluids.streams().length
+    const parts = room.world.state(so.objectId).parts.filter((p) => p.status === 'broken' || p.status === 'detached').length
+    room.setTool('hand')
+    room.clear()
+    return { before, after, leaked, wet, parts }
+  })
+  check(`[${lang}] a soda can holds soda, a shot makes it leak and it stays in one piece`, can.before > 0.2 && can.after < can.before && can.leaked > 0 && can.wet > 0 && can.parts === 0, can)
   // the floorplan module rides along too, on the room's world and renderer (houses are built on demand, not on load)
   const floorplan = await page.evaluate(() => {
     const loaded = window.__furnitureReport.floorplan
