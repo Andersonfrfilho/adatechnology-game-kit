@@ -333,7 +333,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Maço de cigarro (kit) | `cigarro` | `cigarettes` | 0,03 kg | comum | 55 x 88 x 22 mm |
 | [x] | Maço de dinheiro (kit) | `dinheiro` | `cash` | 0,05 kg | comum | 155 x 10 x 65 mm |
 | [ ] | Ordem de evacuação do 7º BIS | `ordem_evac` | `evacuation_order` | 0,05 kg | único | do jogo |
-| [ ] | Plaqueta de identificação militar | `plaqueta` | `dog_tag` | 0,01 kg | comum | 30 x 3 x 50 mm |
+| [x] | Plaqueta de identificação militar (kit) | `plaqueta` | `dog_tag` | 0,01 kg | comum | 30 x 3 x 50 mm |
 | [ ] | Prontuário do paciente zero | `prontuario` | `patient_zero_record` | 0,1 kg | único | do jogo |
 
 ## Chaves e acesso (1 de 11)

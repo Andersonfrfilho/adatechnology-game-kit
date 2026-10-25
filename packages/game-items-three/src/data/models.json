@@ -1818,5 +1818,15 @@
       0.00805
     ],
     "scale": 1
+  },
+  {
+    "id": "dog_tag",
+    "teamId": "plaqueta",
+    "teamBox": [
+      0.03,
+      0.003,
+      0.05038
+    ],
+    "scale": 1
   }
 ]
