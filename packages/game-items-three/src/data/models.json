@@ -943,11 +943,11 @@
     "id": "binoculars",
     "teamId": "binoculo",
     "teamBox": [
-      1.8,
-      1.5,
-      1.211
+      18,
+      15,
+      12
     ],
-    "scale": 0.1
+    "scale": 0.01
   },
   {
     "id": "matches",
