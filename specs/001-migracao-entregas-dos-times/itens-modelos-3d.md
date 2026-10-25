@@ -324,7 +324,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Cartão-postal do Vale (19) | `postal` | `valley_postcard` | 0,01 kg | único | do jogo |
 | [ ] | Fichas da penitenciária | `fichas_presos` | `prisoner_files` | 0,2 kg | único | do jogo |
 | [ ] | Fita da Rádio Vale FM (12) | `fita_radio` | `radio_tape` | 0,05 kg | único | do jogo |
-| [ ] | Fotografia | `foto` | `photo` | 0,01 kg | comum | 102 x 2 x 152 mm |
+| [x] | Fotografia (kit) | `foto` | `photo` | 0,01 kg | comum | 102 x 2 x 152 mm |
 | [ ] | Item marcado de NPC (31) | `item_marcado` | `npc_marked_item` | 0,2 kg | único | do jogo |
 | [ ] | Livro de registro da Mina São Jorge | `registro_mina` | `mine_logbook` | 0,4 kg | único | do jogo |
 | [x] | Mapa da cidade anotado (kit) | `mapa_cidade` | `city_map` | 0,05 kg | raro | 110 x 10 x 250 mm |
