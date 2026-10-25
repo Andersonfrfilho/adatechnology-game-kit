@@ -2338,5 +2338,15 @@
       0.95
     ],
     "scale": 1
+  },
+  {
+    "id": "skill_book",
+    "teamId": "livro_hab",
+    "teamBox": [
+      0.1615,
+      0.23,
+      0.0402
+    ],
+    "scale": 1
   }
 ]
