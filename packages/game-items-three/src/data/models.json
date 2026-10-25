@@ -2138,5 +2138,15 @@
       0.3
     ],
     "scale": 1
+  },
+  {
+    "id": "military_radio",
+    "teamId": "radio_militar",
+    "teamBox": [
+      0.3,
+      0.2,
+      0.25
+    ],
+    "scale": 1
   }
 ]
