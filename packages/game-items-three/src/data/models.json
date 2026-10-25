@@ -2448,5 +2448,15 @@
       1.5
     ],
     "scale": 1
+  },
+  {
+    "id": "windup_alarm_clock",
+    "teamId": "despertador",
+    "teamBox": [
+      0.1089,
+      0.125,
+      0.05525
+    ],
+    "scale": 1
   }
 ]

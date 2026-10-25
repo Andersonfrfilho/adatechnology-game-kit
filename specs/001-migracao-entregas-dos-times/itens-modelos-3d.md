@@ -261,7 +261,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Bateria 9 V (kit) | `bateria_9v` | `battery_9v` | 0,05 kg | comum | 26 x 49 x 18 mm |
 | [x] | Celular (kit) | `celular` | `mobile_phone` | 0,2 kg | comum | 77 x 160 x 9 mm |
 | [x] | Controle de alarme de carro (kit) | `controle_alarme` | `car_alarm_remote` | 0,03 kg | comum | 40 x 70 x 12 mm |
-| [ ] | Despertador de corda | `despertador` | `windup_alarm_clock` | 0,3 kg | comum | 110 x 125 x 55 mm |
+| [x] | Despertador de corda (kit) | `despertador` | `windup_alarm_clock` | 0,3 kg | comum | 110 x 125 x 55 mm |
 | [x] | Eletrificador de cerca rural (kit) | `eletrificador` | `electric_fence_energizer` | 3,0 kg | raro | 250 x 200 x 150 mm |
 | [x] | Extensão elétrica 20 m (kit) | `extensao` | `extension_cord` | 1,5 kg | comum | 230 x 80 x 230 mm |
 | [x] | Gerador portátil a gasolina (kit) | `gerador` | `portable_generator` | 25,0 kg | raro | 500 x 420 x 430 mm |
