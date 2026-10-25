@@ -1,0 +1,58 @@
+{
+  "excluded": [
+    "game-destruction",
+    "game-destruction-three",
+    "game-shapes*",
+    "game-floorplan",
+    "game-floorplan-*",
+    "game-contracts",
+    "game-test-room",
+    "examples/floorplan-test-area",
+    "examples/test-room"
+  ],
+  "values": [
+    "Normal",
+    "Pose",
+    "Avatar",
+    "Auto",
+    "Civil",
+    "Arcade",
+    "Rural",
+    "RURAL",
+    "Material",
+    "Headshot",
+    "Home office",
+    "Closet",
+    "Sauna",
+    "minimal",
+    "MVP",
+    "Major",
+    "Flamboyant",
+    "Mandacaru",
+    "Saguaro",
+    "Xique-xique",
+    "Agave",
+    "Echeveria",
+    "Ketchup",
+    "Shampoo",
+    "DVD",
+    "Power bank",
+    "diesel",
+    "bile",
+    "{circuit}",
+    "LOD 0",
+    "LOD 1",
+    "LOD 2",
+    "≤ 120 sprites"
+  ],
+  "keys": [],
+  "keyPatterns": [
+    "^game-vehicles-fleet::fleet\\.",
+    "\\.text\\[\\d+\\]\\.name$",
+    "nomadBase$"
+  ],
+  "_notes": "values: words identical in both languages (loanwords, proper names, units). keyPatterns: regexes on 'owner::key.path'; fleet = real brands and their fictional respellings, identical in both languages.",
+  "knownGaps": {
+    "game-characters-people": "first-name pools exist only for pt-BR by design; an English pool is new content, left for the owner"
+  }
+}
