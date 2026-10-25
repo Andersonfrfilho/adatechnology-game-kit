@@ -107,6 +107,20 @@ describe('createFirstPersonArms', () => {
     expect(arms.handPose('R').position.z).toBeLessThan(guard.z - 0.1)
   })
 
+  it('a shove at its impact has both palms facing forward with the fingers up (the clip orientation reaches the hand)', () => {
+    const arms = createFirstPersonArms(THREE, { clips: FIRST_PERSON_CLIPS })
+    step(arms, 0.6, { camera: camera(), stance: 'relaxed' })
+    arms.play('shove_two_hands')
+    step(arms, 0.26, { camera: camera(), stance: 'relaxed' })
+    for (const side of ['R', 'L'] as const) {
+      const { quaternion } = arms.handPose(side)
+      const fingers = new THREE.Vector3(1, 0, 0).applyQuaternion(quaternion)
+      const back = new THREE.Vector3(0, 1, 0).applyQuaternion(quaternion)
+      expect(fingers.y).toBeGreaterThan(0.85)
+      expect(back.z).toBeGreaterThan(0.5)
+    }
+  })
+
   it('a kick shows the right leg while it lasts', () => {
     const arms = createFirstPersonArms(THREE, { clips: FIRST_PERSON_CLIPS })
     const leg = arms.root.getObjectByName('first-person-leg')!

@@ -260,6 +260,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   const bobOffset = new THREE.Vector3()
   const desired = newPose(THREE)
   const channelPose = newPose(THREE)
+  const mixed = newPose(THREE)
   const bone = createTwoBone(THREE)
   const shoulder = new THREE.Vector3()
   const wristAt = new THREE.Vector3()
@@ -392,8 +393,8 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
         const channel = sample?.[side]
         if (channel && channel.w > 0) {
           fromChannel(channel, side, arm.shown, channelPose)
-          mixPose(THREE, channelPose, arm.shown, channelPose, channel.w)
-          drawArm(arm, channelPose)
+          mixPose(THREE, mixed, arm.shown, channelPose, channel.w)
+          drawArm(arm, mixed)
         } else drawArm(arm, arm.shown)
       }
 
@@ -403,7 +404,8 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
       if (foot && leg.visible) {
         restPose(rig.foot, false, footRest)
         fromChannel(foot, 'R', footRest, footPose)
-        mixPose(THREE, footPose, footRest, footPose, foot.w)
+        mixPose(THREE, mixed, footRest, footPose, foot.w)
+        copyPose(footPose, mixed)
         drawLeg(footPose)
       }
       if (run && run.time >= run.clip.duration) run = null

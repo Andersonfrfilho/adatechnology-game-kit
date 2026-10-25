@@ -106,4 +106,52 @@ describe('hand targets of the weapon in the hands', () => {
     const second = last()!.targets!.R!.position
     expect(Math.hypot(second[0] - first[0], second[1] - first[1], second[2] - first[2])).toBeGreaterThan(0.001)
   })
+
+  it('a pistol reload takes the supporting hand off the grip, to the magazine, and back', () => {
+    const { room, last } = roomWithRecorder()
+    equip(room, 'glock_17')
+    const rest = last()!.targets!.L!.position.slice()
+    room.use()
+    run(room, 0.2)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' }))
+    let farthest = 0
+    for (let i = 0; i < 100; i++) {
+      room.update(0.02)
+      const p = last()!.targets!.L!.position
+      farthest = Math.max(farthest, Math.hypot(p[0] - rest[0], p[1] - rest[1], p[2] - rest[2]))
+    }
+    expect(farthest).toBeGreaterThan(0.03)
+    run(room, 3)
+    const back = last()!.targets!.L!.position
+    expect(Math.hypot(back[0] - rest[0], back[1] - rest[1], back[2] - rest[2])).toBeLessThan(0.02)
+  })
+
+  it('both hands of a pistol are inside the view, in front of the camera and not at the bottom edge', () => {
+    const { room, last } = roomWithRecorder()
+    equip(room, 'glock_17')
+    const eye = room.camera
+    for (const side of ['R', 'L'] as const) {
+      const local = eye.worldToLocal(new THREE.Vector3(...last()!.targets![side]!.position))
+      expect(local.z).toBeLessThan(-0.25)
+      expect(Math.atan2(-local.y, -local.z)).toBeLessThan(0.55)
+      expect(Math.abs(Math.atan2(local.x, -local.z))).toBeLessThan(0.5)
+    }
+  })
+
+  it.each(['colt_m4a1', 'ak_47'])('%s: the left hand is under the handguard, past the receiver, about 60 percent of the way to its end', (weapon) => {
+    const { room, last } = roomWithRecorder()
+    equip(room, weapon)
+    const viewmodel = room.scene.getObjectByName('weapon-viewmodel')!
+    viewmodel.updateWorldMatrix(true, true)
+    const inverse = viewmodel.matrixWorld.clone().invert()
+    const box = new THREE.Box3().setFromObject(viewmodel).applyMatrix4(inverse)
+    const left = new THREE.Vector3(...last()!.targets!.L!.position).applyMatrix4(inverse)
+    const right = new THREE.Vector3(...last()!.targets!.R!.position).applyMatrix4(inverse)
+    // the gun lies along -z of the viewmodel (muzzle at min z); the left hand is forward of the right and in the front half
+    const along = (box.max.z - left.z) / (box.max.z - box.min.z)
+    expect(left.z).toBeLessThan(right.z - 0.1)
+    expect(along).toBeGreaterThan(0.6)
+    expect(along).toBeLessThan(0.9)
+    expect(left.y).toBeLessThan(0)
+  })
 })

@@ -23,11 +23,11 @@
       "source": {"authored": "game-kit", "note": "first-person counterpart of attack-clips.json (same duration, same events); authored in the kit, replace with the Elenco team's clips when delivered"},
       "duration": 0.5,
       "keys": [
-        {"t": 0, "R": {"p": [0.17, -0.14, -0.36], "r": [1.45, 0.12, 1.45], "grip": 0.05, "w": 0}, "L": "mirror"},
-        {"t": 0.15, "R": {"p": [0.15, -0.09, -0.27], "r": [1.45, 0.12, 1.45], "grip": 0.05}, "L": "mirror"},
-        {"t": 0.26, "R": {"p": [0.1, -0.03, -0.58], "r": [1.45, 0.05, 1.45], "grip": 0.05}, "L": "mirror"},
-        {"t": 0.34, "R": {"p": [0.11, -0.04, -0.54], "r": [1.45, 0.05, 1.45], "grip": 0.05}, "L": "mirror"},
-        {"t": 0.5, "R": {"p": [0.17, -0.14, -0.36], "r": [1.45, 0.12, 1.45], "grip": 0.05, "w": 0}, "L": "mirror"}
+        {"t": 0, "R": {"p": [0.17, -0.14, -0.36], "r": [0, 1.5708, 1.4], "grip": 0.05, "w": 0}, "L": "mirror"},
+        {"t": 0.15, "R": {"p": [0.15, -0.09, -0.27], "r": [0, 1.5708, 1.5], "grip": 0.05}, "L": "mirror"},
+        {"t": 0.26, "R": {"p": [0.11, -0.02, -0.58], "r": [0, 1.5708, 1.75], "grip": 0.05}, "L": "mirror"},
+        {"t": 0.34, "R": {"p": [0.12, -0.03, -0.54], "r": [0, 1.5708, 1.65], "grip": 0.05}, "L": "mirror"},
+        {"t": 0.5, "R": {"p": [0.17, -0.14, -0.36], "r": [0, 1.5708, 1.4], "grip": 0.05, "w": 0}, "L": "mirror"}
       ],
       "events": [
         {"t": 0, "type": "phase", "data": {"label": "attack_clip.phase.windup"}},

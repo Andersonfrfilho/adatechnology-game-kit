@@ -15,14 +15,16 @@ export const HAND_HOLD = {
   /** How far down the grip the supporting hand of a pistol sits from the middle. */
   supportDown: 0.036,
   /** Where along the handguard (0 the receiver, 1 the end of the forend) the supporting hand closes. */
-  forendAt: 0.45,
+  forendAt: 0.6,
   /** How far under the handguard the palm sits (half a handguard plus the palm). */
   forendUnder: 0.034,
   /** The grip of a long gun that has no drawn pistol grip: how far under the receiver the hand sits. */
   strapUnder: 0.04,
+  /** How far lower than touching the palm hangs under a handguard, so the fingers close under it and not over it. */
+  forendDrop: 0.008,
   /** Closure of the fingers on a grip and on a forend (0 open, 1 closed). */
   closed: 0.9,
-  forend: 0.75,
+  forend: 0.6,
   /** How fast the supporting hand goes to the magazine and back, per second. */
   magRate: 7,
   /** The hands shrink with the tool: a tool drawn at scale `s` takes hands at `s ** handScaleExponent`. */
@@ -136,18 +138,14 @@ export function holdOfModel(THREE: Three, model: WeaponModel, holderScale: numbe
   } else if (frames) {
     const handguardHeight = frames.receiverHeight * 0.8
     const x = frames.receiverEnd + (frames.handguardEnd - frames.receiverEnd) * HAND_HOLD.forendAt
-    left = { part: root, offset: toRoot(x, frames.barrelY - handguardHeight / 2 - HAND_HOLD.palm, 0), quaternion: forendFrame(THREE) }
+    left = { part: root, offset: toRoot(x, frames.barrelY - handguardHeight / 2 - HAND_HOLD.palm - HAND_HOLD.forendDrop, 0), quaternion: forendFrame(THREE) }
   }
   if (left && parts.mag) {
     const box = new THREE.Box3().setFromObject(parts.mag)
     const center = box.getCenter(new THREE.Vector3())
-    if (handgun) {
-      const local = parts.mag.worldToLocal(V(THREE, center.x, center.y, center.z))
-      leftMagazine = { part: parts.mag, offset: local.add(V(THREE, 0, -0.01, 0)), quaternion: forendFrame(THREE) }
-    } else {
-      const local = parts.mag.worldToLocal(V(THREE, center.x, box.min.y - HAND_HOLD.palm, center.z))
-      leftMagazine = { part: parts.mag, offset: local, quaternion: forendFrame(THREE) }
-    }
+    // the magazine well of a handgun is inside the grip: the hand goes under its base, where the new magazine is slapped in
+    const local = parts.mag.worldToLocal(V(THREE, center.x, box.min.y - HAND_HOLD.palm - (handgun ? 0.02 : 0), center.z))
+    leftMagazine = { part: parts.mag, offset: local, quaternion: forendFrame(THREE) }
   }
   return {
     right,

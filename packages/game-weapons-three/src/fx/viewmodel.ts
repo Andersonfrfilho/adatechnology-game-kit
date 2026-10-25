@@ -35,6 +35,8 @@ import type { Hold } from './hand-hold'
 const PI = Math.PI
 // where the weapon sits against the camera: right, down and ahead; long guns are drawn smaller so they do not fill the view
 const HAND_OFFSET: [number, number, number] = [0.2, -0.2, -0.42]
+/** A handgun is held in both hands, so it rides higher and nearer the middle than a long gun: both hands stay in the view. */
+const HANDGUN_OFFSET: [number, number, number] = [0.1, -0.12, -0.44]
 const HEAT_DISPLAY_MAX_FALLBACK = 120
 // the launcher has no calibre: its shot is the game's `explosao` class, at the volume of a mid-sized blast
 const LAUNCH_VOLUME = 0.6
@@ -232,7 +234,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   }
 
   const place = (): void => {
-    const [x, y, z] = HAND_OFFSET
+    const family = session?.model.parts.family
+    const [x, y, z] = family === 'pistol' || family === 'revolver' ? HANDGUN_OFFSET : HAND_OFFSET
     hand.position.set(x, y, z).applyQuaternion(camera.quaternion).add(camera.position)
     hand.quaternion.copy(camera.quaternion)
     hand.updateMatrixWorld(true)
