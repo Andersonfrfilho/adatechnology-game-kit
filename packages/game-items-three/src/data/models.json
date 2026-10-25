@@ -1394,10 +1394,10 @@
     "teamId": "cimento",
     "teamBox": [
       5,
-      1.01,
+      1.011,
       3
     ],
-    "scale": 0.1
+    "scale": 0.099636
   },
   {
     "id": "epoxy_glue",
