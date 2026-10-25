@@ -1513,8 +1513,8 @@
     "id": "raffia_sack",
     "teamId": "saco_areia",
     "teamBox": [
-      4.002,
-      0.202,
+      4,
+      0.2,
       3
     ],
     "scale": 0.1
