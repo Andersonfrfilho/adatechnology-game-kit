@@ -2018,5 +2018,15 @@
       0.22
     ],
     "scale": 1
+  },
+  {
+    "id": "kale_and_lettuce_seeds",
+    "teamId": "sem_couve",
+    "teamBox": [
+      0.09,
+      0.13,
+      0.015
+    ],
+    "scale": 1
   }
 ]
