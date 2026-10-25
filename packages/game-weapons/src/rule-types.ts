@@ -41,6 +41,13 @@ export interface WeaponRules {
     readonly faultSpan: number
     readonly perShot: Readonly<Record<CaseType, number>>
     readonly perRocket: number
+    /** What the player sees of the heat: wisps of smoke only while the barrel is above `smokeFrom` and for `smokeSeconds` after the last shot; the red glow from `glowFrom` over `glowSpan` points. */
+    readonly visual: {
+      readonly smokeFrom: number
+      readonly smokeSeconds: number
+      readonly glowFrom: number
+      readonly glowSpan: number
+    }
   }
   /** Each shot in the last `window` seconds raises the noise radius by `step`, up to `cap`. */
   readonly noiseBurst: { readonly step: number; readonly window: number; readonly cap: number }

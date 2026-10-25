@@ -45,6 +45,7 @@ export const buildCalibers = (
     const record: Record<string, unknown> = { ...merged, noise: decision.noise.value }
     if (caseType) record.caseType = caseType
     if (decision.rim) record.rim = decision.rim.value
+    if (decision.propellant) record.propellant = decision.propellant.value
     if (ammoRow) {
       assertSameDiameter(id, { ...record, caseType }, ammoRow, decision.diameter !== undefined)
       record.cartridge = cartridgeOf(ammoRow, decision.diameter ? decision.diameter.value : ammoRow[4])

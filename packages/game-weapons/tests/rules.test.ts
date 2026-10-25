@@ -229,7 +229,7 @@ describe('heat', () => {
       expected = decayed(expected)
       if (frame % 15 === 0) {
         weapon.trigger(ORIGIN, AIM, 0, false)
-        expected += 3
+        expected += createArsenal().rules.heat.perShot.pistol
       }
       expect(weapon.heat).toBeCloseTo(expected, 9)
     }
