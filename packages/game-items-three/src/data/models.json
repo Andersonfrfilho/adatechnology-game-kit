@@ -1788,5 +1788,15 @@
       0.42
     ],
     "scale": 1
+  },
+  {
+    "id": "denim_jacket",
+    "teamId": "jaqueta_jeans",
+    "teamBox": [
+      0.4,
+      0.08,
+      0.3025
+    ],
+    "scale": 1
   }
 ]
