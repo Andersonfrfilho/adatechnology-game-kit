@@ -20,7 +20,7 @@ export { DENSITY } from './density'
 export { GROUND } from './types'
 export type * from './types'
 export {
-  CORE_DEFAULTS, CURTAIN_DEFAULTS, FLAT_ROOF_DEFAULTS, MECHANICAL_DEFAULTS, TOWER_DEFAULTS, addCore, addCurtainWall, addFlatRoof, addMechanicalFloor, buildTower,
-  coreSize, towerWater,
+  CORE_DEFAULTS, CURTAIN_DEFAULTS, DAMPER_DEFAULTS, FLAT_ROOF_DEFAULTS, MECHANICAL_DEFAULTS, TOWER_DEFAULTS, addCore, addCurtainWall, addFlatRoof, addMechanicalFloor,
+  addTunedMassDamper, buildTower, coreSize, damperMass, towerWater, windExposureOf,
 } from './tower'
-export type { CoreOptions, CurtainWallOptions, FlatRoofOptions, MechanicalFloorOptions, TowerGeometry, TowerOptions } from './tower'
+export type { CoreOptions, CurtainWallOptions, DamperOptions, FlatRoofOptions, MechanicalFloorOptions, TowerGeometry, TowerOptions } from './tower'

@@ -14,10 +14,10 @@ portante) em detalhe. Os passos 1 e 2 estão implementados em `game-destruction`
 | 2 | Alvenaria portante limitada pela altura (o tijolo do térreo esmaga) | motor (`partCapacity`, `structure.masonry`) e `bearingWallThickness` | **feito** (§3) |
 | 3 | Solo e fundação (capacidade do solo, recalque, tombamento; estacas profundas) | motor (`game-destruction`, `soil`) + radier/estacas em `game-floorplan-structure` | **feito** (§8) |
 | 4 | Núcleo rígido (tubo de concreto com elevadores e escada) | peças/presets em `game-floorplan-structure` | **feito** (§9) |
-| 5 | Vento e balanço (carga lateral que cresce com a altura, amortecedor de massa) | motor | depois |
+| 5 | Vento e balanço (carga lateral que cresce com a altura, amortecedor de massa) | motor (`wind`) + amortecedor em `game-floorplan-structure` | feito (§10) |
 | 6 | Pele de vidro (fachada leve que estilhaça em painéis grandes) | peças em `game-floorplan-structure` | **feito** (§9) |
 | 7 | Cobertura de prédio (manta, caimento, ralos, vazamento) | peças em `game-floorplan-structure` | **feito** (§9) |
-| 8 | Andar técnico (máquinas, caixa d'água, amortecedor: tudo pesa) | peças em `game-floorplan-structure` | **feito** (§9; o amortecedor fica com o vento) |
+| 8 | Andar técnico (máquinas, caixa d'água, amortecedor: tudo pesa) | peças em `game-floorplan-structure` | **feito** (§9; o amortecedor está no §10) |
 | 9 | Tipologia de arranha-céu, usada pela cidade | `game-floorplan-commercial`/`-residential`, `game-urban` | depois |
 
 Itens 3 a 9 dependem de 1 e 2 (as peças novas precisam de flexão e de esmagamento reais para que a explosão faça o que faria).
@@ -334,3 +334,137 @@ Nenhuma muda: as opções novas de `buildFrame` são desligadas por padrão e `o
 - Elevador sem cabo nem contrapeso como peças: o peso pendurado está na máquina; a cabine é uma peça parada no fundo do poço.
 - A água da manta não corre até o ralo (estado só: nível e vazamento); a chuva entra pelo `setLiters`.
 - Vidro da fachada como uma lâmina de 12 mm, sem a câmara de ar nem a intercamada como camada; caixilho só como massa.
+
+## 10. Vento e balanço (lacuna 5, passo 4 da ordem; 2026-10-25)
+
+### 10.1 O que muda para quem joga
+
+- Com vento ligado (`wind` nas opções do mundo), um prédio alto leva uma força lateral que **cresce com a altura**: o vento é mais forte no alto e o prédio
+  mostra mais área ao vento. O topo **balança** (`ObjectState.wind.sway`, evento `sway`), e o balanço cresce com a rajada.
+- O **núcleo** de concreto é o que segura o vento: o mesmo prédio com o núcleo fica dentro do limite de deriva (H/500) e sem o núcleo passa dele; o
+  pórtico sozinho é flexível. A coluna do lado de sotavento recebe carga a mais, a do lado de barlavento perde carga (e pode tracionar); se isso passa da
+  capacidade, o `stress` e o colapso de sempre cuidam do resto. Perder o núcleo numa explosão muda o balanço na hora.
+- O **amortecedor de massa sintonizado** (`addTunedMassDamper`, no andar técnico) pesa na laje como qualquer máquina e **reduz o balanço de pico** na
+  frequência do prédio.
+- Uma casa baixa mal sente: a força é de poucos kN e a deriva de décimos de milímetro.
+- Desligado por padrão (§10.5). Sem `wind` nada muda.
+
+### 10.2 Modelo
+
+1. **Pressão** `q = ½ ρ Vk²` com `ρ = 1,226 kg/m³` (ar a 15 °C, nível do mar), isto é `q = 0,613 Vk²` N/m² (NBR 6123 4.2.b). A velocidade característica é
+   `Vk = V0 · S1 · S2 · S3` (NBR 6123 4.1): `V0` a velocidade básica (rajada de 3 s, 10 m, terreno plano, 50 anos), `S1` topografia, `S3` estatístico.
+2. **Perfil com a altura** `S2 = b · Fr · (z/10)^p` (NBR 6123 5.3, tabela 1), por categoria de rugosidade do terreno (I mar a V centro de cidade com prédios
+   altos) e por classe da edificação pela maior dimensão (A até 20 m, B de 20 a 50 m, C acima de 50 m, escolhida sozinha: `class: 'auto'`). `z` é a altura
+   acima do topo da fundação, no mínimo 5 m (e no máximo a altura gradiente `zg` da categoria). `Fr` é o fator de rajada da categoria II (1,00; 0,98; 0,95).
+3. **Força por faixa**: o prédio é fatiado em faixas de `bandHeight` (3 m); a força numa faixa é `F = q(z) · Ca · L · Δ`, com `L` a largura que as peças
+   mostram ao vento (perpendicular a ele, medida nas peças vivas e apoiadas, incluindo a pele de vidro) e `Ca` o coeficiente de arrasto (1,3: barlavento
+   0,8 + sotavento 0,5, prisma de planta quase quadrada, ASCE 7 / EN 1991-1-4 tab. 7.1). A força, o cortante `V(z)` e o momento `M(z)` somam de cima para baixo.
+4. **Sistema lateral** (peças com módulo de elasticidade, `strength.elasticGPa`):
+   - **Paredes** (`role: 'wall'`: o núcleo, e também as paredes de alvenaria de uma casa) trabalham juntas como um cantiléver de **seção composta**, planos
+     permanecem planos: `EI(z) = Σ Ei (Ii + Ai di²)` em torno do centroide ponderado por `Ei Ai`, com `Ii = a³ b / 12` de cada retângulo.
+   - **Pórtico** (pilares e vigas): trabalha por **cisalhamento de andar** (racking), rigidez de andar de Muto `K = a · Σ 12 Ec Ic / h³` com
+     `a = k / (2 + k)` e `k = 2 Σ(Eb Ib / L) / Σ(Ec Ic / h)` (vigas paralelas ao vento; Muto 1974; Naeim). Rigidez de cisalhamento contínua `GA = K · h`.
+     Os pilares **não** entram na seção composta (sem ação de corda), a menos que `chord: true`: um pórtico de vigas rasas não funciona como tubo.
+   - **Interação parede–pórtico** (Heidebrecht & Stafford Smith 1973): com `ψ = w'` a rotação, `-(EI ψ')' + GA ψ = V(z)`, `ψ(0) = 0` e momento zero no
+     topo. Sai por elementos finitos de 1ª ordem (matriz tridiagonal, um elemento por faixa) e dá `w(z)` por integração. Sem paredes é só cisalhamento
+     (`w' = V/GA`), sem pórtico é o cantiléver puro; o caso uniforme sem pórtico dá o `δ = w H⁴ / (8 EI)` (teste a mão).
+   - Rigidez de serviço: `EI` e `GA` vezes `stiffnessFactor` 0,8 (seção fissurada, `(EI)sec = 0,8 Eci Ic` da NBR 6118 15.7.3 para pilares).
+5. **Deriva**: `δ/H` do topo contra `driftLimit = 1/500`. Justificativa: a NBR 6118 13.3 (tab. 13.3) dá `H/1700` para o deslocamento lateral do edifício
+   com a **combinação frequente** do vento, que tem `ψ1 = 0,3` (tab. 11.2); com o vento de projeto inteiro isso é `H/(1700 · 0,3) ≈ H/510`, que é o `H/500` da
+   prática (decisão do dono). O limite entre andares fica fora (§10.7).
+6. **Esforços nas peças**: o momento da parede, `Mw = EI ψ'`, vira esforço normal em cada peça da seção `ΔN = Mw Ei Ai di / EI` (compressão do lado de
+   sotavento, tração do de barlavento); o resto, `Mf = M − Mw`, o pórtico leva como binário nos pilares (`ΔN` proporcional a `A d`). A carga de vento entra no
+   `stress` do solver de sempre: `(carga · segurança + γ ΔN / g) / capacidade` com `γ = 1,4` (NBR 8681 tab. 3, ação variável). Se a carga permanente menos o
+   vento fica negativa a peça **traciona**: a capacidade é a do aço vertical (`reinforcement`: `As fy`), senão `fct A` do concreto, senão zero.
+   `PartState.wind` guarda o `ΔN` em newtons. A força cortante nas paredes (cisalhamento no plano) fica fora (§10.7).
+7. **Estabilidade global**: `overturn = γ M(0) / (W · e)`, `W` o peso (peças vivas, apoiadas) e `e` a distância do centro de massa à borda de sotavento
+   da fundação. Acima de 1 o prédio tomba sobre a própria fundação. Com `soil`, o momento entra no equilíbrio do corpo rígido sobre as molas como
+   deslocamento do centro de massa `M/W` (já existe a rotação, o P-delta e o tombamento do §8): o vento em prédio sobre argila mole inclina e derruba.
+8. **Modo fundamental** (Rayleigh): a deformada sob uma carga igual à massa de cada faixa, `u`, dá `ω² = Σ m u / Σ m u²`; o modo é `φ = u / u_topo`, a massa
+   modal `M* = Σ m φ²` e a rigidez modal `K* = ω² M*`. (Prédio de concreto de 40 andares dá `T1` de 3 a 5 s; a regra `T1 ≈ 0,05 + 0,015 H` da NBR 6123 dá 2 s a
+   130 m e serve só de ordem de grandeza.)
+9. **Rajada no tempo**: a velocidade é `V(z,t) = V̄(z) (1 + I n(t))`, `V̄ = meanRatio · V0 S1 S3 b (z/10)^p` (a média de 10 min, a razão 0,69 do fator de
+   rajada da NBR 6123 cap. 9), `I = 1/ln(zs/z0)` com `zs = 0,6 H` (EN 1991-1-4 4.4, `z0` por categoria) e `n(t)` uma soma de 400 senos de fase sorteada
+   (semente fixa) com a amplitude do espectro de Davenport `f S(f)/u*² = 4 x²/(1 + x²)^(4/3)`, `x = 1200 f / V̄10`, normalizada para variância 1. A
+   força modal é `F*(t) = Σ φi Fi,médio (1 + I n)²`, e `M* ẍ + C* ẋ + K* x = F*(t)` com `C* = 2 ζ ω M*` (`ζ = 0,016`: decremento logarítmico 0,10 do
+   concreto armado, EN 1991-1-4 tab. F.2). `sway` é o `x` do topo e `peak` o máximo que decai com `peakDecay` (60 s).
+10. **Amortecedor de massa sintonizado** (`PartSpec.damper`): massa `md` (a da peça) com razão `μ = md φd² / M*` (0,5 a 2% do modal, 1% por padrão
+    em `addTunedMassDamper`), mola `kd` e amortecedor `cd`. Sintonia de Den Hartog (1956), `f_d / f_1 = 1/(1 + μ)` e `ζ_d = √(3 μ / (8 (1 + μ)³))` (para
+    `μ = 1%`: 0,990 e 0,0603); `tuning: 'warburton'` usa a de carga aleatória (Warburton 1982, `√(1 − μ/2)/(1 + μ)`). Frequência e amortecimento da peça
+    mandam se ela os der (amortecedor desafinado). A estrutura e o amortecedor são integrados juntos (RK4, subpassos menores que 1/20 do período).
+    A conferência é o domínio da frequência: para força harmônica na ressonância a amplificação do ótimo é `√(1 + 2/μ)` (14,2 para 1%) contra `1/(2ζ)` (31) da
+    estrutura sem ele; o teste compara o tempo integrado com a resposta em frequência calculada à parte (número complexo, mesma estrutura de 2 graus de liberdade).
+
+### 10.3 Superfície de configuração
+
+- Contrato (`game-contracts`): `PartSpec.damper` (`TunedMassDamper`: `frequency`, `damping`), `DestructibleSpec.wind` (`WindExposure`: o que é do lugar e da
+  forma do prédio: `terrain`, `class`, `topography`, `statistical`, `drag`, `damping`; `false` tira o objeto do vento), `PartState.wind`, `ObjectState.wind`
+  (`WindState`: `speed`, `pressure`, `shear`, `moment`, `deflection`, `drift`, `limit`, `overturn`, `frequency`, `lean`, `sway`, `peak`, `damper`, `status`), evento `sway`.
+- Mundo: `DestructionOptions.wind` (`WindOptions`): `speed` 40, `direction` `[1, 0, 0]`, e os do `WindExposure` como padrão do mundo; `airDensity`, `minHeight`,
+  `bandHeight`, `stiffnessFactor`, `beamFactor`, `flange`, `driftLimit`, `loadFactor`, `chord`, `meanRatio`, `roughness`, `gust` (`components`, `maxHz`, `scale`, `seed`), `peakDecay`,
+  `tuning`, `terrains` (registro de categorias, para trocar ou acrescentar). `world.setWind({ speed, direction })` muda em jogo.
+- Funções puras (`wind.ts`): `windPressure`, `heightFactor`, `windClass`, `WIND_TERRAIN`, `WIND_DEFAULTS`, `solveWallFrame`, `damperTuning`, `damperResponse`.
+- `game-floorplan-structure`: `addTunedMassDamper(spec, g, options)` (massa por `ratio` do modal estimado ou `mass`; frequência e amortecimento opcionais),
+  `buildTower({ damper, wind })`, `DAMPER_DEFAULTS`.
+
+### 10.4 Valores e fontes
+
+| Valor | Padrão | Fonte |
+|---|---|---|
+| `V0` | 40 m/s | isopletas da NBR 6123 (30 a 50 m/s; 40 em São Paulo); o jogo escolhe |
+| `ρ` | 1,226 kg/m³ | ar a 15 °C, 101,3 kPa; `q = 0,613 V²` da NBR 6123 4.2 |
+| categoria / classe | III / automática | NBR 6123 tab. 1 (III: subúrbios; classe pela maior dimensão) |
+| `b`, `p` | tabela 1 (II: 1,00 e 0,085/0,09/0,10 para A/B/C; III: 0,94/0,94/0,93 e 0,10/0,105/0,115; IV: 0,86/0,85/0,84 e 0,12/0,125/0,135) | NBR 6123:1988 tab. 1 |
+| `Fr` | 1,00 / 0,98 / 0,95 (A/B/C) | NBR 6123 tab. 1 |
+| `S1`, `S3` | 1, 1 | terreno plano; grupo 2 (edificações residenciais e comerciais), NBR 6123 tab. 3 |
+| `Ca` | 1,3 | 0,8 + 0,5 (ASCE 7, EN 1991-1-4 tab. 7.1 para h/d ~ 1); a NBR 6123 fig. 4 dá 1,1 a 1,5 |
+| faixa | 3 m | um andar |
+| `stiffnessFactor` / `beamFactor` | 0,8 / 0,4 | NBR 6118 15.7.3 (pilares e paredes / vigas) |
+| `flange` | 0,1 do vão de cada lado | mesa da laje na viga em T, NBR 6118 14.6.2.2 |
+| `driftLimit` | 1/500 | §10.2 item 5 |
+| `loadFactor` | 1,4 | NBR 8681 tab. 3 (vento, ação variável) |
+| `ζ` estrutural | 0,016 | EN 1991-1-4 tab. F.2 (concreto armado, δs = 0,10) |
+| `meanRatio` | 0,69 | NBR 6123 cap. 9 (média de 10 min sobre a rajada de 3 s) |
+| rugosidade `z0` I a V | 0,005; 0,05; 0,3; 1,0; 2,5 m | EN 1991-1-4 tab. 4.1 (0, II, III, IV) e Davenport-Wieringa (centro de cidade) |
+| `μ` do amortecedor | 1% (0,5 a 2%) | prática (Taipei 101 e torres de Nova York: 0,3 a 1% do modal); Den Hartog 1956 para a sintonia |
+
+### 10.5 Padrão desligado
+
+`wind` ausente: nenhuma força, nenhum consumo do gerador de números, nenhum evento. É o mesmo critério do `flexure.scope` (§2.4: o padrão deixa o que
+foi feito antes como estava) e do `soil` (só quem declara o solo o tem): as casas do `game-floorplan` e os prédios das entregas dos times foram
+dimensionados sem vento e, ligado, pilares e paredes deles ganhariam carga que o projeto nunca previu (um prédio de 20 andares de `buildFrame` sem
+núcleo chega a 0,96 no pilar sob 40 m/s, sem margem alguma). O vento é do mundo (clima), então liga-se uma vez no mundo; `DestructibleSpec.wind` só ajusta o lugar de cada prédio.
+`buildTower` não liga nada sozinho: o amortecedor e o `wind` do prédio são `false`/ausentes por padrão, e a torre padrão continua igual.
+
+### 10.6 Conferências
+
+Torre de 40 andares (16 x 24 m, `columnSize` 1,0, laje 0,25 m, núcleo com 6 elevadores e paredes de 0,6 m), `V0 = 40 m/s`, categoria IV:
+
+| Caso | Flecha no topo | Deriva | Frequência | Tombamento |
+|---|---|---|---|---|
+| com núcleo | 0,221 m | 1/589 (dentro de H/500) | 0,187 Hz (T = 5,3 s) | 0,24 |
+| sem núcleo (`core: false`, dimensionada ao vento) | 0,772 m | 1/169 (passa) | 0,112 Hz | 0,317 |
+
+Com núcleo: pressão no topo 1247 Pa, cortante na base 4,24 MN, momento 308 MN·m, inclinação do centro de massa (`lean`) 0,117 m. Amortecedor de
+`μ = 0,85%`: o desvio-padrão do balanço cai para cerca de 0,73 do sem ele (torres reais: 30 a 40% de redução de pico); o tempo integrado concorda com a
+resposta em frequência calculada à parte. Casa de 2 andares: flecha 0,02 mm, deriva 2,9e-6, tombamento 0,055 (praticamente imune). Pórtico de 20 andares
+de `buildFrame` (dimensionado só ao peso): tensão máxima 0,96 sob 40 m/s. Fórmulas conferidas à mão nos testes (`q = 0,613 V²`, `S2`, faixas, Den Hartog,
+parede em balanço e parede com pórtico em forma fechada).
+
+**Goldens:** nenhum muda; o vento é desligado por padrão (§10.5), sem força, sem consumo do gerador e sem evento.
+
+### 10.6a Detalhes do modelo que o código fixou
+
+Viga em T com mesa da laje (`flange`), pilares do térreo engastados com penalidade na base ponderada pela parcela da parede, faixas acima do sistema
+lateral rígidas (fator 1e3, movem-se com o topo), `sizeStructure({ wind })` soma o axial majorado do vento à capacidade e engrossa a barra da peça
+tracionada (até 40 mm), `lean` desloca o centro de massa na fundação (`M/W`), de modo que o vento inclina prédios em solo mole.
+
+### 10.7 Limites e perguntas
+
+- Sem cortante no plano das paredes, sem torção (o vento age no centro de rigidez), sem P-delta de segunda ordem e sem deriva entre andares.
+- Sem vibração transversal ao vento (desprendimento de vórtices) nem efeito de vizinhança; a rajada é totalmente correlacionada na altura (conservador).
+- A lâmina de vidro e a laje não entram na rigidez lateral (conservador); a laje faz o papel de diafragma rígido por suposição.
+- Idealização contínua: a deriva por andar tem erro da ordem de meia força de andar; vários amortecedores no mesmo prédio agem como um só (somados).
+- O batente do amortecedor (curso máximo) não existe; o curso relativo é só informado (`damper.travel`).
+- Perguntas ao dono: (1) `H/500` com o vento inteiro (equivale ao `H/1700` da NBR 6118 com `ψ1 = 0,3`) está certo, ou o jogo prefere outro limite? (2) A tabela 1 da
+  NBR 6123 foi transcrita da memória da norma; precisa de conferência com o texto. (3) O padrão ligado de `V0 = 40` e categoria III serve ao jogo?

@@ -1,6 +1,6 @@
-import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology/game-contracts'
-import { buildFrame, sizeStructure } from '@adatechnology/game-destruction'
-import type { FrameOptions, SizeStructureOptions } from '@adatechnology/game-destruction'
+import type { DestructibleSpec, JointSpec, PartSpec, Vec3, WindExposure } from '@adatechnology/game-contracts'
+import { MATERIALS, buildFrame, partMass, sizeStructure } from '@adatechnology/game-destruction'
+import type { FrameOptions, SizeStructureOptions, WindOptions } from '@adatechnology/game-destruction'
 
 /**
  * Building systems of a multi-storey building, as parts added to a frame spec: the rigid concrete core (shear-wall tube with the stairs and the
@@ -19,6 +19,9 @@ export interface TowerGeometry {
   spanX: number
   spanZ: number
   columnSize: number
+  /** Columns along x and z (`buildFrame` `columnsX`, `columnsZ`; default 3 and 4, as `TOWER_DEFAULTS`). */
+  columnsX?: number
+  columnsZ?: number
   /** The top slab is a roof (`roof` id) instead of `slab_<floors-1>`. */
   roof: boolean
 }
@@ -341,6 +344,74 @@ export function addMechanicalFloor(spec: DestructibleSpec, g: TowerGeometry, opt
 }
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------
+// Tuned mass damper
+// -------------------------------------------------------------------------------------------------------------------------------------------------
+
+export interface DamperOptions {
+  /** Mass of the damper in kg (default: `ratio` of the modal mass of the building, estimated as `modalShare` of its mass). */
+  mass?: number
+  /** Mass ratio, damper over the modal mass of the building (default 0.01: 0.5 to 2% is the usual range). */
+  ratio?: number
+  /** Share of the building's mass that is its modal mass in the first mode, tip at 1 (default 0.25, a uniform cantilever). */
+  modalShare?: number
+  /** Frequency in Hz and damping ratio of the damper (default: tuned by the world to the building, `wind.tuning`). */
+  frequency?: number
+  damping?: number
+  /** Where it stands on the mechanical floor, object-local `[x, z]` (default on the beam end beside the column nearest to 35% of the depth at +z, clear of the machines: its weight goes straight to the beam and the column). */
+  at?: [number, number]
+  /** Material of the mass (default `steel`; the real ones are steel or lead-filled blocks and concrete). */
+  material?: string
+  /** Tallest the block may be, metres (default 2.5: it stands inside the mechanical floor). */
+  maxHeight?: number
+}
+
+export const DAMPER_DEFAULTS = { ratio: 0.01, modalShare: 0.25, material: 'steel', maxHeight: 2.5 } as const
+
+/** Mass in kg of a damper for a structure: `ratio` of `modalShare` of the mass of everything above the foundations (curtain wall, roof and equipment included). */
+export const damperMass = (spec: DestructibleSpec, o: Pick<DamperOptions, 'ratio' | 'modalShare'> = {}): number => {
+  const byId = new Map(MATERIALS.map((m) => [m.id, m]))
+  let total = 0
+  for (const p of spec.parts) {
+    const m = byId.get(p.material)
+    if (!m || p.structure?.role === 'foundation' || p.damper) continue
+    total += partMass(p, m)
+  }
+  return total * (o.modalShare ?? DAMPER_DEFAULTS.modalShare) * (o.ratio ?? DAMPER_DEFAULTS.ratio)
+}
+
+/**
+ * Adds a tuned mass damper to the mechanical floor: a block of `material` on the slab under the roof (role partition: its mass loads the slab and
+ * goes down to the core and the columns like the machines), with `PartSpec.damper` so the world tunes it to the building and moves it against the
+ * sway (Den Hartog). Part id: `damper`.
+ */
+export function addTunedMassDamper(spec: DestructibleSpec, g: TowerGeometry, options: DamperOptions = {}): DestructibleSpec {
+  const c = { ...DAMPER_DEFAULTS, ...options }
+  if (g.floors < 2) return spec
+  const mat = MATERIALS.find((m) => m.id === c.material)
+  if (!mat) throw new Error(`unknown material "${c.material}" for the damper`)
+  const mass = options.mass ?? damperMass(spec, c)
+  const volume = mass / mat.density
+  const height = Math.min(c.maxHeight, Math.cbrt(volume))
+  const side = Math.sqrt(volume / height)
+  const column = (span: number, n: number | undefined, want: number) => {
+    const k = Math.max(2, n ?? 0) - 1
+    return n === undefined ? want : Math.round((want + span / 2) / (span / k)) * (span / k) - span / 2
+  }
+  const colZ = column(g.spanZ, g.columnsZ, g.spanZ * 0.35)
+  // on the beam end beside the column, so the slab hands its weight straight to the beam, which hands it to the column
+  const at = options.at ?? [column(g.spanX, g.columnsX, 0), colZ - Math.sign(colZ || 1) * (g.columnSize / 2 + 0.1)]
+  const y = storeyBase(g, g.floors - 1)
+  const floor = `slab_${g.floors - 2}`
+  const part: PartSpec = {
+    id: 'damper', material: c.material, shape: box([side, height, side]), position: [at[0], y + height / 2, at[1]], mass, structure: { role: 'partition' }, tags: ['mechanical', 'tuned_mass_damper'],
+    damper: { ...(c.frequency !== undefined ? { frequency: c.frequency } : {}), ...(c.damping !== undefined ? { damping: c.damping } : {}) },
+  }
+  const joints: JointSpec[] = [...(spec.joints ?? [])]
+  rests(joints, part.id, floor, 'bolt')
+  return { ...spec, parts: [...spec.parts, part], joints }
+}
+
+// -------------------------------------------------------------------------------------------------------------------------------------------------
 // Tower
 // -------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -353,8 +424,28 @@ export interface TowerOptions extends Omit<FrameOptions, 'walls' | 'roof' | 'con
   flatRoof?: FlatRoofOptions | false
   /** The mechanical floor under the roof (default on). */
   mechanical?: MechanicalFloorOptions | false
+  /** A tuned mass damper on the mechanical floor (default off: `{}` adds one of 1% of the modal mass). */
+  damper?: DamperOptions | false
+  /**
+   * The wind the tower is made for (default none: the tower is sized for its weight only). Its `speed`, `terrain`, `class`... size the walls, columns
+   * and core bars for the wind (`sizeStructure({ wind })`), and the fields of `WindExposure` (terrain, class, topography, statistical, drag, damping)
+   * go into `DestructibleSpec.wind`, where the building stands. The world still needs its own `wind` for the wind to blow.
+   */
+  wind?: WindOptions | false
   /** Size the structure (`sizeStructure`, default `{}`); `false` keeps the material capacities. */
   sizing?: SizeStructureOptions | false
+}
+
+/** The fields of the wind options that describe the place and the shape of one building (`DestructibleSpec.wind`). */
+export const windExposureOf = (w: WindOptions): WindExposure => {
+  const out: WindExposure = {}
+  if (w.terrain !== undefined) out.terrain = w.terrain
+  if (w.class !== undefined) out.class = w.class
+  if (w.topography !== undefined) out.topography = w.topography
+  if (w.statistical !== undefined) out.statistical = w.statistical
+  if (w.drag !== undefined) out.drag = w.drag
+  if (w.damping !== undefined) out.damping = w.damping
+  return out
 }
 
 /** Defaults of the frame of a tower: 16 x 24 m on a 8 m grid, 12 storeys of 3 m, 60 cm columns caged with 20 mm bars, 60 cm beams, continuous columns. */
@@ -368,9 +459,9 @@ export const TOWER_DEFAULTS = {
  * the flat roof and the mechanical floor, sized as a designer would. Every system can be turned off or configured.
  */
 export function buildTower(options: TowerOptions = {}): DestructibleSpec {
-  const { core, facade, flatRoof, mechanical, sizing, ...frame } = options
+  const { core, facade, flatRoof, mechanical, damper, wind, sizing, ...frame } = options
   const f = { ...TOWER_DEFAULTS, ...frame, columnCage: { ...TOWER_DEFAULTS.columnCage, ...frame.columnCage } }
-  const g: TowerGeometry = { floors: f.floors, height: f.height, slab: f.slabThickness, spanX: f.spanX, spanZ: f.spanZ, columnSize: f.columnSize, roof: true }
+  const g: TowerGeometry = { floors: f.floors, height: f.height, slab: f.slabThickness, spanX: f.spanX, spanZ: f.spanZ, columnSize: f.columnSize, columnsX: f.columnsX, columnsZ: f.columnsZ, roof: true }
   let spec = buildFrame({ roofThickness: f.slabThickness, ...f, roof: true, continuousColumns: true })
   spec = { ...spec, name: 'tower', tags: ['structure', 'tower'] }
   let shafts: Array<[number, number]> = []
@@ -386,5 +477,11 @@ export function buildTower(options: TowerOptions = {}): DestructibleSpec {
   if (facade !== false) spec = addCurtainWall(spec, g, { skip: mechanical === false ? undefined : (fl) => fl === g.floors - 1, ...facade })
   if (flatRoof !== false) spec = addFlatRoof(spec, g, flatRoof || {})
   if (mechanical !== false) spec = addMechanicalFloor(spec, g, { shafts, ...mechanical })
-  return sizing === false ? spec : sizeStructure(spec, sizing ?? {})
+  if (damper) spec = addTunedMassDamper(spec, g, damper)
+  if (wind) {
+    const exposure = windExposureOf(wind)
+    if (Object.keys(exposure).length) spec = { ...spec, wind: exposure }
+  }
+  if (sizing === false) return spec
+  return sizeStructure(spec, wind && sizing?.wind === undefined ? { ...sizing, wind } : sizing ?? {})
 }

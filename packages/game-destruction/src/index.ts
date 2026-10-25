@@ -23,3 +23,8 @@ export { resolveStrings, locales } from './locale'
 export type { DestructionStrings, DestructionLocale } from './locale'
 export { checkDestructible, checkHit, IMPACT_CONTRACT } from './contracts'
 export type { DestructibleImpl, ImpactContract, CheckOptions } from './contracts'
+export {
+  WIND_DEFAULTS, WIND_TERRAIN, analyzeWind, damperAmplification, damperTuning, exposureOf, gustAt, heightFactor, makeGust, meanHeightFactor, momentNodes, resolveWind, shapeAt, shearNodes,
+  solveWallFrame, stepSway, tBeamInertia, tensionCapacity, turbulenceIntensity, windClass, windPressure,
+} from './wind'
+export type { Gust, ResolvedWind, SwayState, SwaySystem, WallFrameSolution, WindAnalysis, WindCase, WindPartInput } from './wind'

@@ -33,6 +33,7 @@ import type {
   StructureRole,
   ToolKind,
   Vec3,
+  WindExposure,
 } from '@adatechnology/game-contracts'
 
 // The contract types live in @adatechnology/game-contracts; they are re-exported so that no import from this package breaks.
@@ -85,7 +86,10 @@ export type {
   StructureRole,
   SurfaceLayer,
   ToolKind,
+  TunedMassDamper,
   Vec3,
+  WindExposure,
+  WindState,
 } from '@adatechnology/game-contracts'
 
 export interface MaterialThermal {
@@ -286,6 +290,60 @@ export interface SoilOptions {
   pileElasticGPa?: number
 }
 
+/** A terrain roughness category of the wind profile (`wind.terrains`, `WIND_TERRAIN`): NBR 6123 table 1 and the roughness length. */
+export interface WindTerrainDef {
+  id: string
+  /** Gradient height in metres: the profile stops growing above it. */
+  zg: number
+  /** Parameter `b` of the profile `S2 = b * Fr * (z / 10)^p`, by class of the building. */
+  b: { A: number; B: number; C: number }
+  /** Exponent `p` of the profile, by class. */
+  p: { A: number; B: number; C: number }
+  /** Roughness length in metres, for the turbulence intensity `1 / ln(z / z0)` (EN 1991-1-4 4.4). */
+  z0: number
+}
+
+/**
+ * The wind. Every number has a real default; see `WIND_DEFAULTS`. The fields of `WindExposure` are the defaults for every object; an object's
+ * `DestructibleSpec.wind` replaces them for itself.
+ */
+export interface WindOptions extends WindExposure {
+  /** Basic wind speed V0 in m/s: the 3 s gust at 10 m over flat open ground, 50-year return (NBR 6123 isopleths; 40). */
+  speed?: number
+  /** Direction the wind blows towards, in world space (the horizontal part is used; default `[1, 0, 0]`). */
+  direction?: Vec3
+  /** Air density in kg/m³ (1.226: `q = 0.613 V^2`). */
+  airDensity?: number
+  /** Lowest height the profile is evaluated at, metres (5: NBR 6123). */
+  minHeight?: number
+  /** Height of one slice of the building, metres (3). */
+  bandHeight?: number
+  /** Share of the gross stiffness the cracked structure keeps (0.8: NBR 6118 15.7.3). */
+  stiffnessFactor?: number
+  /** Share of the gross stiffness the cracked beams keep (0.4: NBR 6118 15.7.3); they set how much the columns of a frame resist. */
+  beamFactor?: number
+  /** Share of the span each side of the web that the slab adds to a beam as a flange (0.1: NBR 6118 14.6.2.2); 0 leaves the slab out of the frame. */
+  flange?: number
+  /** Drift limit, top deflection over height (1/500). */
+  driftLimit?: number
+  /** Factor on the wind in the strength checks of the parts and the overturning (1.4: NBR 8681 variable action). */
+  loadFactor?: number
+  /** Count the axial stiffness of the columns in the bending of the whole building (false: a frame of shallow beams does not act as a tube). */
+  chord?: boolean
+  /** Fraction of the design gust the 10-minute mean wind is (0.69: NBR 6123 chapter 9). */
+  meanRatio?: number
+  /** Gust factor Fr of each class (NBR 6123 table 1: 1, 0.98, 0.95). */
+  gustFactor?: { A: number; B: number; C: number }
+  /** Extra or overriding terrain categories (merged over `WIND_TERRAIN` by id). */
+  terrains?: WindTerrainDef[]
+  /** The gust in time: sines drawn from the Davenport spectrum (`components` of them up to `maxHz`, `scale` metres in `x = scale f / V10`, `seed` for the phases). */
+  gust?: { components?: number; maxHz?: number; scale?: number; seed?: number }
+  /** Seconds in which the recorded peak of the sway decays by a factor e (60). */
+  peakDecay?: number
+  /** Tuning of a tuned mass damper that gives no frequency: `den-hartog` (harmonic force) or `warburton` (random force). */
+  tuning?: 'den-hartog' | 'warburton'
+}
+
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // World
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -326,6 +384,11 @@ export interface DestructionOptions {
   }
   /** The ground under objects that have `DestructibleSpec.soil` (or `soil.site`): settlement, tilt, bearing failure and piles. See `SoilOptions`. */
   soil?: SoilOptions
+  /**
+   * The wind of the world on every structure (default none: no wind). A lateral load that grows with height, the core and the frame that resist it, the
+   * sway of the top and tuned mass dampers. See `WindOptions`.
+   */
+  wind?: WindOptions
   /**
    * What lights the flammable fluid that leaks from a container (a fuel tank, a jerrycan, a gas bottle). A round that goes through only makes a
    * leak; it lights it only when `Hit.ignition` (a spark on metal), `Hit.incendiary` or `Hit.tracer` say so, by the chance of the round weighed by
@@ -373,6 +436,12 @@ export interface SizeStructureOptions {
    * of any part of `redundancyRoles`. Steel is only added, never removed, and plain concrete stays plain.
    */
   flexure?: FlexureOptions
+  /**
+   * The wind the structure is designed for (the same `WindOptions` the world will have): each wall and column gets the capacity for its dead load
+   * plus the factored axial force the wind adds to it, at `safety`, and a reinforced one that the wind pulls past its dead load gets bars thick enough
+   * (to 40 mm) to hold the pull at `safety`. Beams and slabs do not change (the wind moment in the frame is not modelled).
+   */
+  wind?: WindOptions
 }
 
 /*
@@ -467,6 +536,11 @@ export interface DestructionWorld {
    * that drain or refill the part. Does nothing when the part has no `contains`.
    */
   setLiters(objectId: string, partId: string, liters: number): void
+  /**
+   * Change the wind of the world (`DestructionOptions.wind`) while playing: its speed and the direction it blows towards. Turns the wind on when the
+   * world was made without it.
+   */
+  setWind(wind: { speed?: number; direction?: Vec3 }): void
   /** Seconds since creation. */
   readonly time: number
 }
@@ -507,6 +581,8 @@ export interface ObjectRuntime {
   collapsed?: string[]
   /** Permanent settlement of the soil under each footing cell or pile that yielded (`DestructibleSpec.soil`), metres. */
   soil?: Record<string, number>
+  /** Sway of the top and of the tuned mass damper: `[x, v, y, w, peak]` (displacement and velocity of the building, of the damper, recorded peak). */
+  wind?: [number, number, number, number, number]
 }
 
 export interface DestructionSnapshot {
