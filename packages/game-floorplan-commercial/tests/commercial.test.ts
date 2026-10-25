@@ -67,7 +67,8 @@ describe('urban zoning (region br, commercial)', () => {
       })
       expect(ok.length, `${id} fits no zone`).toBeGreaterThan(0)
     }
-  })
+    // the office tower has 40 storeys by default: a few seconds a zone
+  }, 180000)
 
   it('a shop in a houses-only zone is caught', () => {
     const r = engine.generate('market', { seed: 1 })

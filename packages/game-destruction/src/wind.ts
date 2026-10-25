@@ -2,7 +2,7 @@ import windTerrainJson from './data/wind-terrain.json'
 import { GRAVITY } from './flexure'
 import { createRng } from './math'
 import { thinAxisOf } from './layers'
-import { rebarBars } from './rebar'
+import { verticalBarCount } from './rebar'
 import type { Vec3, WindExposure, WindOptions, WindTerrainDef } from './types'
 
 /**
@@ -595,7 +595,7 @@ export const tensionCapacity = (
 ): number => {
   const section = dims[0] * dims[2]
   if (o.reinforcement) {
-    const bars = rebarBars(dims, thinAxisOf(dims), o.reinforcement.spacing).filter(([a, b]) => a[1] !== b[1]).length
+    const bars = verticalBarCount(dims, thinAxisOf(dims), o.reinforcement.spacing)
     return bars * Math.PI * (o.reinforcement.diameter / 2) ** 2 * o.yieldMPa * 1e6
   }
   if (o.ratio) return o.ratio * section * o.yieldMPa * 1e6

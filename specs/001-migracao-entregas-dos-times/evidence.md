@@ -3131,3 +3131,13 @@ Desenho em `design/T10-estrutura-real.md` §9. Presets em `game-floorplan-struct
 - **Goldens:** nenhuma mudou (vento desligado por padrão).
 - **Testes novos:** `game-destruction/tests/wind.test.ts` (35), `game-floorplan-structure/tests/wind.test.ts` (11). Nenhum teste antigo mudou.
 - **Pendências para o dono:** H/500 contra H/1700 da NBR 6118; tabela 1 da NBR 6123 transcrita da memória; padrão V0 = 40 m/s e categoria III.
+
+## 2026-10-25 · Estrutura real, passo 5 · arranha-céu e a cidade (lacuna 9)
+
+Desenho em `design/T10-estrutura-real.md` §11. Receita em `game-floorplan-structure` (`skyscraper.ts`, `skyscraper-plan.ts`), torre de escritórios em `game-floorplan-commercial` (`office_tower`), torre residencial em `game-floorplan-residential` (`residential_tower`), cidade em `game-urban` (opção `towers`, desligada por padrão). No motor, a barra de tração de parede e pilar passou a contar as barras que o espaçamento dá (`verticalBarCount`).
+
+- **Cenários:** torres de 20, 40 e 80 andares em pé em repouso e com o vento padrão, com núcleo e estacas (sem estacas tomba); explosão num andar quebra o vidro e as lajes vizinhas e o núcleo fica; perder um pilar do perímetro derruba só aquela linha; plantas de 20 andares passam o validador e as propriedades dos estados do post-apocalyptic; a cidade com `towers` desenha as torres e, desligada, sai idêntica.
+- **Goldens:** nenhuma mudou.
+- **Testes novos:** structure `skyscraper` (18) e `tower-plan`, commercial `office-tower` (9), residential `residential-tower`, post-apocalyptic (torres nas propriedades), floorplan-three `skyscraper` (4), game-urban `towers` (9), game-urban-three `towers` (2).
+- **Portões:** ver o fim desta entrada. `examples/test-room`, `floorplan-test-area` e `urban-test-area` build + `test.mjs` ok (capturas revertidas). O vitest do `game-floorplan-structure` acusou de novo, em parte das rodadas, o `Timeout calling "onTaskUpdate"` do worker (carga da máquina, testes passando).
+- **Pendências para o dono:** (1) acima de 60 andares a deriva passa de H/500 (o motor não tem outrigger nem tubo de perímetro): limitar a faixa a 60 ou aceitar; (2) `towers` desligado por padrão na cidade serve, ou o centro deve nascer com torres e regerar os goldens da Galeria? (3) não há arranha-céu nas entregas dos times nem em `packages/*` antes disto; nada foi reescrito no lugar de uma entrega.

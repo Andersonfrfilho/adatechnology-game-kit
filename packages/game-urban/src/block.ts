@@ -23,6 +23,8 @@ export type FillBlockOptions = {
   shop?: number
   /** Facade colours. Default `DEFAULT_FACADES`. */
   palette?: readonly number[]
+  /** Draws each building (default `drawBuilding`): the kit passes its own to put towers on the tall lots. */
+  draw?: (b: UrbanBuilder, x: number, z: number, width: number, depth: number, height: number, color: number, options: BuildingOptions) => BlockBuilding
 }
 
 /** A building a block ended up with, for the game's own bookkeeping (collisions, minimap). */
@@ -58,7 +60,7 @@ export function fillBlock(b: UrbanBuilder, cx: number, cz: number, size: number,
       const x = cx - half + lot * (i + 0.5)
       const z = cz - half + lot * (j + 0.5)
       const color = b.pick(palette)
-      placed.push(drawBuilding(b, x, z, width, depth, height, color, options))
+      placed.push((options.draw ?? drawBuilding)(b, x, z, width, depth, height, color, options))
     }
   }
   return placed

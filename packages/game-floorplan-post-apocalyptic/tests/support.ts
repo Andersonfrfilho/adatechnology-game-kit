@@ -418,10 +418,15 @@ export function sizes(id: string, s: number, opts: Record<string, unknown>) {
   return { w: Math.round((L.w[0] + r() * (L.w[1] - L.w[0])) * 2) / 2, d: Math.round((L.d[0] + r() * (L.d[1] - L.d[0])) * 2) / 2 }
 }
 
+/** Skyscraper templates, checked with the same properties on 20 storeys and a few seeds (`floorplan.test.ts`). */
+export const TOWER_TEMPLATES = ['office_tower', 'residential_tower']
+
 /** Template variants exercised by the suite: [name, template id, extra options]. */
 export function variants(): [string, string, Record<string, unknown>][] {
   const out: [string, string, Record<string, unknown>][] = []
   for (const t of engine.listTemplates()) {
+    // the skyscrapers have tens of storeys a plan (seconds each): `TOWER_TEMPLATES` below, a few seeds
+    if (TOWER_TEMPLATES.includes(t.id)) continue
     if (t.id === 'apartment_modern') out.push([t.id + '[mid]', t.id, { tier: 'mid' }], [t.id + '[high]', t.id, { tier: 'high' }])
     else if (t.id === 'mansion') out.push([t.id + '[3]', t.id, {}], [t.id + '[2]', t.id, { floors: 2 }], [t.id + '[1]', t.id, { floors: 1 }], [t.id + '[3+elevator]', t.id, { floors: 3, elevator: true }])
     else if (t.id === 'high_end_contemporary') out.push([t.id + '[2]', t.id, {}], [t.id + '[3]', t.id, { floors: 3 }])

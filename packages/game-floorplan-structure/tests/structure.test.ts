@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import { buildStructure, campConstruction, logCabinConstruction, planWaterTank, registerConstruction, woodFrameConstruction, shackConstruction } from '../src'
 import type { Structure, WaterTank } from '../src'
-import { engine } from './support'
+import { TOWER_TEMPLATES, engine } from './support'
 import { rectangularHouse } from './synthetic-plan'
 
 const SEEDS = Number(process.env.SEEDS) || 8
 const STATES = ['normal', 'fortified', 'abandoned']
-const TEMPLATES = engine.listTemplates().map((entry: { id: string }) => entry.id) as string[]
+const TEMPLATES = (engine.listTemplates().map((entry: { id: string }) => entry.id) as string[]).filter((id) => !TOWER_TEMPLATES.includes(id))
 
 /** Follows what every part rests on until the ground; a part that never reaches it would fall on the first frame. */
 function ungrounded(structure: Structure): string[] {

@@ -8,5 +8,12 @@
     "structure_beam_concrete": "Bond beam / beam (concrete)",
     "structure_beam_wood": "Plate / beam (wood)",
     "structure_roof_frame": "Trusses, rafters and ridge (roof view)"
+  },
+  "labels": {
+    "elevator_lobby": "Elevator lobby",
+    "service_shaft": "Service shaft",
+    "plant_room": "Plant room",
+    "mechanical_floor": "Mechanical floor",
+    "typical_floor": "Typical floor"
   }
 }

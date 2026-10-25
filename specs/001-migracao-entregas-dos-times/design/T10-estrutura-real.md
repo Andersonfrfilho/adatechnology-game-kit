@@ -18,7 +18,7 @@ portante) em detalhe. Os passos 1 e 2 estão implementados em `game-destruction`
 | 6 | Pele de vidro (fachada leve que estilhaça em painéis grandes) | peças em `game-floorplan-structure` | **feito** (§9) |
 | 7 | Cobertura de prédio (manta, caimento, ralos, vazamento) | peças em `game-floorplan-structure` | **feito** (§9) |
 | 8 | Andar técnico (máquinas, caixa d'água, amortecedor: tudo pesa) | peças em `game-floorplan-structure` | **feito** (§9; o amortecedor está no §10) |
-| 9 | Tipologia de arranha-céu, usada pela cidade | `game-floorplan-commercial`/`-residential`, `game-urban` | depois |
+| 9 | Tipologia de arranha-céu, usada pela cidade | `game-floorplan-commercial`/`-residential`, `game-urban` | feito (§11) |
 
 Itens 3 a 9 dependem de 1 e 2 (as peças novas precisam de flexão e de esmagamento reais para que a explosão faça o que faria).
 
@@ -468,3 +468,146 @@ tracionada (até 40 mm), `lean` desloca o centro de massa na fundação (`M/W`),
 - O batente do amortecedor (curso máximo) não existe; o curso relativo é só informado (`damper.travel`).
 - Perguntas ao dono: (1) `H/500` com o vento inteiro (equivale ao `H/1700` da NBR 6118 com `ψ1 = 0,3`) está certo, ou o jogo prefere outro limite? (2) A tabela 1 da
   NBR 6123 foi transcrita da memória da norma; precisa de conferência com o texto. (3) O padrão ligado de `V0 = 40` e categoria III serve ao jogo?
+
+
+## 11. Arranha-céu (lacuna 9, passo 5 da ordem; 2026-10-25)
+
+Montado só com o que os passos 1 a 4 já puseram (`buildTower`, núcleo, pele de vidro, cobertura, andar técnico, amortecedor, estacas e solo, vento) e
+com as tipologias de planta que já existem; a cidade passa a usá-lo nas torres. **Antes de criar, procurei:** nos pacotes do SDK só há torre de
+holofote (`flood_tower`), torre de vigia, torre de igreja e o `buildTower` do passo 3; nas entregas dos times (clone `zombiada`, páginas `mapa`,
+`jogo`, `sala-de-testes`, `veiculos`) não há arranha-céu nenhum: o "Centro" da Galeria do Vale Cinzento tem prédios de 4 a 12 andares desenhados como
+caixas (`createCityBuilding`). Nada a portar; a tipologia é nova.
+
+### 11.1 O que muda para quem joga
+
+- Há duas torres prontas: a **torre de escritórios** (`game-floorplan-commercial`, 20 a 80 andares, pele de vidro) e a **torre residencial**
+  (`game-floorplan-residential`, 20 a 60 andares, fachada de alvenaria com janelas). Cada uma tem **planta ao nível de cômodo** em todos os andares:
+  térreo com saguão, andar tipo com antessala de elevadores, escada e poços dentro do núcleo, salas (ou apartamentos) em volta, andar técnico no topo.
+- A mesma torre tem a **estrutura real**: pilares contínuos, núcleo de concreto do alicerce à cobertura, pele de vidro (ou alvenaria com janelas),
+  cobertura plana, andar técnico no topo **e um a cada N andares**, amortecedor de massa acima de uma altura, vento ligado, e **estacas profundas**
+  dimensionadas pela carga e pelo solo (comprimento por `pileLength`, até o chão firme). Sem estaca e sobre argila mole a mesma torre afunda e tomba.
+- Uma explosão num andar quebra o vidro da fachada e a laje local, e o núcleo continua de pé. Perder um pilar do perímetro não derruba a torre: o
+  pilar contínuo redistribui a carga (§11.8).
+- A **cidade** (`game-urban`) desenha como torre (silhueta com andares, faixas de andar técnico, coroa) o prédio que passa de uma altura configurável.
+  É opcional (`towers`), e desligada por padrão: o centro que já existe não muda.
+
+### 11.2 A receita (`game-floorplan-structure`, `skyscraper.ts`)
+
+`skyscraperLayout(options, preset)` resolve os números; `buildSkyscraper(options, preset)` constrói a `DestructibleSpec` (chama `buildTower`, nada
+duplicado) e põe o solo e as estacas. O `SkyscraperPreset` é o conjunto de números de uma tipologia; `SKYSCRAPER_DEFAULTS` é o genérico.
+
+| Opção | Padrão genérico | Significado |
+|---|---|---|
+| `storeys` | 40 (faixa 20 a 80) | andares; o último é o andar técnico |
+| `height` | 3,6 m | pé-direito livre; o andar tem `height + laje` |
+| `bay`, `bays` | 12 m, 3 x 3 vãos | vão entre pilares e quantidade (em z sempre ímpar: o núcleo fica no vão do meio, entre duas linhas de vigas) |
+| `slenderness` | 9 | altura máxima sobre o lado estreito (Taipei 101 tem 8,3; Burj Khalifa 8); os vãos crescem até caber |
+| `coreRatio` | 0,08 | pegada do tubo do núcleo sobre a planta; dá o número de elevadores (até o que cabe no vão) e a largura do núcleo |
+| `facade` | `curtain` | `curtain` (pele de vidro) ou `punched` (alvenaria com janela) |
+| `mechanicalEvery` | 20 | andar técnico a cada N andares, além do último (`false`: só o do topo) |
+| `damperAbove` | 150 m | altura total a partir da qual entra o amortecedor (`false`: nunca) |
+| `wind` | 40 m/s, categoria IV | vento de projeto (`buildTower({ wind })`); `false` dimensiona só ao peso |
+| `soil`, `piles` | 10 m de argila mole sobre areia compacta, estaca escavada de 1,2 m | `false` deixa o terreno fixo; `piles: false` deixa o radier raso |
+| `superimposed` | 450 kg/m² | carga permanente além da laje (fachada, divisórias, acabamento), para o pilar |
+
+Medidas derivadas (todas podem ser dadas por opção: `columnSize`, `beamHeight`, `slabThickness`, `core`, `curtain`, `punchedFacade`, `flatRoof`,
+`mechanical`, `damper`, `sizing`):
+
+- **Laje** `max(0,2, vão / 32)` arredondada a 5 cm (12 m: 40 cm); **viga** `max(0,6, vão / 14)` (12 m: 90 cm); **cobertura** laje + 10 cm (leva contrapiso,
+  manta, máquinas e amortecedor).
+- **Pilar**: `Ac = 0,5 · área tributária · andares · (superimposed + peso da laje) / (0,65 · 0,85 fck)`, lado arredondado a 10 cm (0,5 é a parcela da
+  carga que o pilar leva; o resto vai para o núcleo e as paredes). 40 andares de 12 m: 1,8 m; 80 andares: 2,5 m.
+- **Núcleo**: parede `max(0,35, altura / 200)`, no máximo `pé-direito / 3 − 5 cm` (uma parede mais grossa que um terço da altura é um bloco para o motor:
+  sem barra vertical e sem tração); barras a cada 10 cm (7,5 cm acima de 50 andares); elevadores `ceil` pela razão, no máximo os que cabem entre as vigas
+  do vão do meio; a largura cresce (`shaftDepth`) até a razão pedida, no máximo o que cabe no vão. Centro: o vão do meio.
+- **Estacas**: grade de 3,5 diâmetros sobre o radier (radier sob todo o pórtico), cada uma com o comprimento de `pileLength` (FS 2, NBR 6122) para a sua
+  parcela do peso total; se passa de 60 m a grade se fecha até 2,5 diâmetros.
+- **Andar técnico a cada N**: `mechanicalStoreys(andares, N)` (andares N, 2N..., que ficam a pelo menos N/2 do topo), sem vidro (venezianas), com
+  um reservatório de repasse (`towerWater(N)`) e os chillers; as máquinas dos elevadores ficam no andar do topo.
+
+### 11.3 Peças novas em `tower.ts`
+
+- `addMechanicalFloor(..., { floor })`: o andar técnico em qualquer andar (ids terminam em `_<andar>` fora do topo). `buildTower({ mechanical: { every } })`.
+- `addPunchedFacade` (`PUNCHED_DEFAULTS`): em cada vão do perímetro de cada andar, parede de peitoril, parede de verga e dois montantes de tijolo de
+  20 cm (janela de 60% do vão livre, peitoril 0,9 m, verga 2,4 m), todos `partition` apoiados nos pilares, e o vidro da janela apoiado no peitoril. Mesmos ids
+  `glass_<f>_<lado>_<k>` da pele de vidro. `buildTower({ punched })`, com `facade: false`.
+
+### 11.4 Achado do motor: a tração do núcleo (`game-destruction`)
+
+A capacidade à tração de uma parede ou pilar armado (`tensionCapacity`) contava só as barras que o **desenho** da gaiola traz (no máximo 24 por direção,
+para a gaiola ficar leve). Um núcleo de 10 m de lado tem 70 barras de verdade, e o motor contava 24: o topo do núcleo de uma torre de 60 andares dava
+tensão 2,4 a 10 (o vento puxa a parede de barlavento mais do que o peso do alto segura). `verticalBarCount` conta todas as barras que o espaçamento põe.
+Muda só quem tem parede ou pilar armado com mais de 24 barras e vento ligado; o desenho da gaiola e a compressão ficam como estavam. O teste do §10
+que mostrava a barra engrossando para a tração passou a usar um espaçamento que fica abaixo do limite (ver os testes).
+
+### 11.5 As plantas (`towerPlate`, `game-floorplan-structure`)
+
+Um núcleo central e um anel de circulação: a planta (largura x profundidade da laje) é dividida em faixa sul, corredor sul, [faixa oeste, corredor
+oeste, **núcleo**, antessala de elevadores, faixa leste], corredor norte, faixa norte. O núcleo tem a **escada** (tipo `stairs`, `link` entre andares),
+os **poços** (tipo `elevator`, um por elevador, com porta para a antessala) e uma sala de **serviço** (shaft de instalações). As quatro faixas do
+perímetro são preenchidas pela tipologia: salas de escritório (`office`, 2,4 m de janela, tira de vidro de 0,3 m a `pé-direito − 0,5`) ou apartamentos
+(sala, quarto, cozinha, banheiro, hall; as faixas curtas, de menos de 8 m, levam lavanderia ou depósito comum no lugar do apartamento; a sala dá para uma
+varanda nas faixas dos fundos, onde fica o condensador do ar-condicionado). Andar térreo: saguão (`hall`, porta de 3 m na frente), recepção, segurança e,
+no escritório, um depósito (`stockroom`) na faixa oeste (o estado "fortified" precisa dele para o estoque); andares técnicos: salas de máquinas
+(`storage`) sem janela; todos com `ceiling = pé-direito + laje` (o andar da planta e o da estrutura têm o mesmo passo). A planta e a estrutura vêm
+do mesmo `SkyscraperLayout`: a laje é `plate`, o núcleo é `core.center`/`core.size` (deslocados de metade da planta para o espaço da planta).
+
+### 11.6 Tipologias
+
+| | Torre de escritórios (`game-floorplan-commercial`) | Torre residencial (`game-floorplan-residential`) |
+|---|---|---|
+| template | `office_tower`, `use: commercial` | `residential_tower`, `use: residential_multi` |
+| `OFFICE_TOWER_DEFAULTS` / `RESIDENTIAL_TOWER_DEFAULTS` | 40 andares (20 a 80), pé-direito 3,6, vão 12 m, vidro, técnico a cada 20, amortecedor acima de 150 m | 30 andares (20 a 60), pé-direito 2,8, vão 9 m, janela em alvenaria, técnico a cada 25, amortecedor acima de 150 m |
+| API | `officeTowerLayout`, `buildOfficeTower`, `officeTowerTemplate`, `OFFICE_TOWER_DEFAULTS` | `residentialTowerLayout`, `buildResidentialTower`, `residentialTowerTemplate`, `RESIDENTIAL_TOWER_DEFAULTS` |
+| zona | `zt` (torres: até 80 andares, 320 m), registrada no pacote residencial | `zt` |
+
+`options.floors` escolhe os andares do template; `floorRange` deixa a zona recortar. A zona `zt` fica no pacote residencial (que não depende do comercial). As bibliotecas `office_open` e `living_tower` mobiliam as salas; os pacotes de planta
+dependem de `game-floorplan-structure` (peer e dev) e este não depende mais deles: seus testes carregam os pacotes por caminho relativo.
+
+### 11.7 A cidade (`game-urban`, opção `towers`)
+
+`createUrban({ towers })`: **desligada por padrão**; ligada (`true` ou um objeto), todo prédio que o bloco (`block.fill`) ou a avenida (`downtown`) desenha com
+altura `>= minHeight` (padrão 60 m) vira uma torre em vez da caixa: pódio com o térreo mais alto, o corpo com a planta do lote, uma fiada de janelas por
+andar nas quatro faces (fita de vidro nas de escritório, uma janela por vão na alvenaria das residenciais), faixas mais escuras sem janela nos andares
+técnicos (`mechanicalEvery`), o último andar técnico recuado, platibanda e mastro. Opções: `minHeight`, `presets` (lista de `{ id, weight, storeyHeight,
+mechanicalEvery, glass, color }`; padrão `DEFAULT_TOWER_PRESETS`: escritório 0,6 com andares de 4,0 m, técnico a cada 20, vidro; residencial 0,4 com
+3,1 m, a cada 25, alvenaria), `mast`, `lit` e `provider` (um jogo troca o desenho inteiro e recebe lote, altura, cor e o preset sorteado). Os números dos
+presets são os da tipologia (andar = pé-direito + laje); um teste de `game-urban` confere com `officeTowerLayout` e `residentialTowerLayout`.
+`game-urban` ganha os dois pacotes de planta só como `devDependency` (o teste), não como dependência.
+
+A distribuição de alturas continua a do bloco (`minHeight`/`maxHeight` de `fill`) ou a da avenida (`buildings.north/south` do padrão `downtown`); como o
+Centro da Galeria tem prédios de 12 a 36 m, ligar `towers` sozinho não muda nada nele. Para ter torres o jogo sobe as alturas com `patch` ou usa o
+pacote `TOWER_PATTERNS`, que traz o padrão `financial_district` (lotes de 20 m, torres de 70 a 180 m) fora da folha de amostras da Galeria. O sorteio do
+preset usa o gerador do construtor **só** quando a opção está ligada e a altura passa do corte, então com ela desligada (ou com todos os prédios abaixo do
+corte) a saída é a de antes, byte a byte.
+
+### 11.8 Conferências
+
+- `game-floorplan-structure/tests/skyscraper.test.ts` (18) e `tower-plan.test.ts`: 20, 40 e 80 andares em pé em repouso e com o vento padrão (V0 40 m/s, categoria IV),
+  com núcleo e estacas; sem estacas tomba; explosão num andar quebra o vidro e danifica só as lajes vizinhas, o núcleo fica inteiro; perder um pilar do perímetro
+  derruba só aquela linha de pilares acima, não a torre.
+- `game-floorplan-commercial/tests/office-tower.test.ts` (9), `game-floorplan-residential/tests/residential-tower.test.ts`: plantas válidas (validador), térreo,
+  escada no núcleo, janelas, varanda e condensador.
+- `game-floorplan-post-apocalyptic/tests/floorplan.test.ts`: as mesmas propriedades dos estados em torres de 20 andares (3 sementes x 3 estados). Achou dois
+  defeitos de planta, corrigidos: torre residencial sem varanda para o ar-condicionado e torre de escritórios sem depósito no térreo.
+- `game-floorplan-three/tests/skyscraper.test.ts` (4): fumaça de renderização; o cenário `floorplan_typologies` do ambiente de teste passou a incluir as torres
+  (no menor número de andares delas).
+- `game-urban/tests/towers.test.ts` (9) e `game-urban-three/tests/towers.test.ts` (2): opção desligada = saída idêntica; presets = tipologias; distribuição de
+  alturas configurável; desenho nas fachadas.
+- Desempenho: `createGrid` (`game-floorplan`) filtra as paredes perto da sala antes do teste por célula (resultado igual, cerca de 2x mais rápido); as rodadas
+  "todo template" (structure, post-apocalyptic) deixam as torres de fora e as de commercial/residential ganharam timeout maior.
+
+### 11.9 Goldens
+
+Nenhum muda (nem `vc3-*` do post-apocalyptic, nem os de `game-urban-three`, nem os de `game-floorplan-three`): o arranha-céu é opção nova de pacotes novos, a cidade só o usa com `towers` ligado, e o único código tocado que alcança os cenários que
+já existem é `tensionCapacity` (só com vento ligado, que nenhum golden liga).
+
+### 11.10 Limites e perguntas
+
+- Acima de 60 andares (escritório) o balanço de topo passa de H/500 (deriva 1/180 a 1/240 com 80 andares, período de 20 s): o motor tem só núcleo e pórtico, sem
+  outrigger nem tubo de perímetro (`chord`). Em pé e sem tensão sobrando, mas com `sway.status` `drift`. A deriva é de projeto do jogo.
+- A laje é uma peça por andar; a pele de vidro é uma lâmina de 12 mm; o núcleo tem uma fileira de poços (largura dada pelo vão).
+- A planta e a estrutura vêm do mesmo layout, mas são dois objetos: o `plan.structure` do pipeline de casas (pórtico de concreto, ≥ 3 andares) e a
+  `DestructibleSpec` da torre (núcleo, vidro, estacas, vento). O jogo usa a segunda para a física da torre.
+- Perguntas ao dono: (1) a torre de 80 andares pode passar de H/500 no padrão, ou o jogo prefere limitar a faixa a 60? (2) `towers` desligado por padrão na
+  cidade serve, ou o centro deve nascer com torres e regerar os goldens da Galeria?

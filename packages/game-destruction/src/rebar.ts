@@ -78,6 +78,22 @@ export const clipBarsToDisc = (bars: readonly Bar[], u: number, v: number, cente
   return out
 }
 
+/**
+ * How many bars of `rebarBars` run up the part (along its vertical axis), counted without the cap that keeps the drawn cage light: the steel that holds a
+ * wall or a column in tension is all the bars its spacing puts in, not the 24 that are drawn. A long member lying on its side has none.
+ */
+export const verticalBarCount = (dims: Vec3, thin: number, spacing: number): number => {
+  if (isMember(dims)) {
+    if (dims.indexOf(Math.max(...dims)) !== 1) return 0
+    const us = spread(dims[0], COVER, spacing, Infinity).length, vs = spread(dims[2], COVER, spacing, Infinity).length
+    return 2 * us + 2 * Math.max(0, vs - 2)
+  }
+  const [u = 0, v = 0] = [0, 1, 2].filter((i) => i !== thin)
+  if (u === 1) return spread(dims[v], COVER, spacing, Infinity).length
+  if (v === 1) return spread(dims[u], COVER, spacing, Infinity).length
+  return 0
+}
+
 /** Steel mass in kg of bars of `diameter` metres. */
 export const rebarMass = (bars: readonly Bar[], diameter: number, density = STEEL_DENSITY): number => {
   let length = 0
