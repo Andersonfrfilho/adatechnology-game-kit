@@ -2378,5 +2378,15 @@
       0.4
     ],
     "scale": 1
+  },
+  {
+    "id": "technical_manual",
+    "teamId": "livro_tecnico",
+    "teamBox": [
+      0.21,
+      0.3,
+      0.0404
+    ],
+    "scale": 1
   }
 ]
