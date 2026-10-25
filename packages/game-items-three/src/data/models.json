@@ -1533,11 +1533,11 @@
     "id": "bricks",
     "teamId": "tijolo",
     "teamBox": [
-      1.902,
+      1.911,
       1.8,
-      2.902
+      2.9
     ],
-    "scale": 0.1
+    "scale": 0.099808
   },
   {
     "id": "rag",
