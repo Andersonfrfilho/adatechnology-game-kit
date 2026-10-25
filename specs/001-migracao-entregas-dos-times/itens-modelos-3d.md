@@ -301,7 +301,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Regador | `regador` | `watering_can` | 0,5 kg | comum | 400 x 260 x 180 mm |
 | [ ] | Sementes de abóbora | `sem_abobora` | `pumpkin_seeds` | 0,05 kg | incomum | 90 x 130 x 15 mm |
 | [ ] | Sementes de couve e alface | `sem_couve` | `kale_and_lettuce_seeds` | 0,05 kg | incomum | 90 x 130 x 15 mm |
-| [ ] | Sementes de feijão | `sem_feijao` | `bean_seeds` | 0,1 kg | incomum | 100 x 150 x 20 mm |
+| [x] | Sementes de feijão (kit) | `sem_feijao` | `bean_seeds` | 0,1 kg | incomum | 100 x 150 x 20 mm |
 | [ ] | Sementes de milho | `sem_milho` | `corn_seeds` | 0,1 kg | incomum | 100 x 150 x 20 mm |
 | [ ] | Vara de pesca | `vara_pesca` | `fishing_rod` | 1,0 kg | comum | 1,8 x 0,04 x 0,04 m |
 

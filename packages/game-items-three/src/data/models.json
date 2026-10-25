@@ -1608,5 +1608,15 @@
       0.0182
     ],
     "scale": 1
+  },
+  {
+    "id": "bean_seeds",
+    "teamId": "sem_feijao",
+    "teamBox": [
+      0.1,
+      0.15,
+      0.02
+    ],
+    "scale": 1
   }
 ]
