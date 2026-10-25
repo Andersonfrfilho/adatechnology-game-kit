@@ -467,6 +467,8 @@ traced object by object by building the same vehicle or scene on both three buil
 | `game-urban-three` `urban-terrain.json` | `colorsHash` only | `Color.setHex` converts the sRGB hex to linear in r160, so the terrain's vertex colours are linear |
 | `urban-parts.json`, `urban-patterns.json`, the vegetation goldens, `game-vehicles-three` (`lite.json`, module) | nothing | positions, counts and hexes are the same on r160 (the prism's extrusion uvs are not in the scene hash; `game-vehicles-three` was already compared on r160) |
 
+**Decidido pelo dono em 2026-10-25** ("ok, pode seguir"): esta evidência do espaço de cor (pneus, tintas e marcas de queimado misturados em linear na r160; `Color.setHex` converte sRGB para linear) está aceita, e os goldens regravados ficam como estão.
+
 ## 8. Performance plan
 
 ### 8.1 Timing bench with a CI ceiling
@@ -537,21 +539,27 @@ To add as a new item in §1 or §3 of `CLAUDE.md`:
 1. **Exact or improved?** The migrations reproduce today's geometry bit for bit, including its quirks (the interactables leaf and the floorplan
    leaf are different meshes; a cone in the floorplan is a 0.3→0.5 open cylinder). Do we keep that forever, or do we allow a later, deliberate
    "geometry v2" with re-recorded goldens (for example to share one leaf and one cylinder kit-wide, or to drop hidden faces)?
+   **Decidido pelo dono em 2026-10-25** ("ok, pode seguir"): vale o padrão proposto. A geometria v1 exata fica; uma "v2" só entra se for pedida depois, com goldens regravados.
 2. **Workers in the game.** Moving generation to workers changes load from synchronous to asynchronous. Do the game and the test room accept a
    loading step (promise per house / per street), or should the kit keep a synchronous path as the default and offer workers as an option?
+   **Decidido pelo dono em 2026-10-25** ("ok, pode seguir"): vale o padrão proposto. A geração fica síncrona, na mesma thread, por padrão; os workers (`createShapePool`) são opção de quem quiser carregar de forma assíncrona.
 3. **three r128 packages.** Urban, vegetation and vehicles tests still run three 0.128 because their team pages did. Lathe and extrusions differ
    between r128 and r160. Do we (a) add an `r128` variant of those two generators to `game-shapes`, (b) move those packages' tests to r160 and
    re-record their goldens once, or (c) leave lathes and extrusions of those packages on three?
    **Answered by the owner on 2026-10-25: (b).** The packages, their tests and tools moved to three r160 in one commit that re-recorded only the
    goldens r160 changes (§7.5); the r128 variants were not shipped.
+   **Decidido pelo dono em 2026-10-25: opção (b), r160 em todo o kit**, goldens regravados uma única vez (só o que a r160 muda, PR #47, evidência no §7.5). Não há variantes r128.
 4. **Booleans.** Only "box minus through-holes" is cheap and exact. Is that enough (walls, windows, doors, shelves), or do you want real CSG
    (holes at an angle, cuts in curved pieces) at the cost of a dependency and non-exact output?
+   **Decidido pelo dono em 2026-10-25** ("ok, pode seguir"): vale o padrão proposto. Só a caixa com furos passantes (exata e barata); CSG de verdade fica de fora, sem dependência nova.
 5. **Bench budget.** The proposal was 50 % per builder; measured on a shared machine that flakes, so the bench ships with ×2 per builder,
    ×1.5 per group of 8 or more and a warning at ×1.5 (§8.1), and a baseline recorded in this container. Once CI has a few runs: refresh the
    baseline from the CI artifact and tighten (×1.5 per builder, ×1.25 per group)? A tighter budget for the hot builders (houses,
    vehicles)? Should the bench also guard memory (bytes per shape)?
+   **Decidido pelo dono em 2026-10-25** ("ok, pode seguir"): vale o padrão proposto. Segue ×2 por construtor e ×1,5 por grupo (aviso a ×1,5); depois de algumas rodadas no CI, regrava-se o baseline pelo artefato do CI (`--baseline-from`) e aperta-se para ×1,5 e ×1,25. A memória (bytes por forma) não entra na bancada por ora.
 6. **Where the schemas live.** The first migrations generate the schema in code from the existing builders. Should content packs also ship
    schemas as JSON files (so a game can edit a sofa without code), and if so, is a JSON file per item the format you want in the content packages?
+   **Decidido pelo dono em 2026-10-25** ("ok, pode seguir"): vale o padrão proposto. Os esquemas continuam gerados em código a partir dos construtores existentes; os pacotes de conteúdo não publicam JSON por item por ora.
 
 ## References
 

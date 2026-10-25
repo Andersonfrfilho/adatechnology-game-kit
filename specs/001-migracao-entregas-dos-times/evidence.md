@@ -2494,6 +2494,17 @@ de destruição não conheça nomes de calibre.
   Lê-se: a bola M80 (7,62x51) não fura a mesa de 8,5 mm da viga I e a M993 AP fura; a .50 BMG M33 (bola) fura o pilar de concreto armado de 30 cm; 5,56 e 7,62 de bola furam a
   viga de madeira de 10 cm e não furam o tijolo de 40 cm nem o concreto. Os goldens do mundo (`wall-golden`, `house-scenarios`) não mudam: nenhum usa `Hit.penetration`.
 
+### Respostas do dono de 2026-10-25 às perguntas do PR #40 (física)
+
+Decidido pelo dono em 2026-10-25 ("ok, pode seguir"): para cada pergunta vale o padrão proposto, que já estava em vigor no código.
+1. **Números de ignição:** continuam um modelo do kit (não existe tabela pública por cartucho); ajusta-se contra uma fonte específica só se o dono trouxer uma.
+2. **Chama e a curva de enchimento:** a incendiária com o tanque cheio acende 40% das vezes; a chama sente metade da curva (`flameFillInfluence 0,5`). Fica assim.
+3. **Perfuração nos veículos:** continua decidida pela energia; a tabela por calibre (`ammo.json`) alimenta o `Hit.penetration` do motor genérico, e os veículos não passam a usá-la por ora.
+4. **Faísca por metal:** alumínio 0,25 e outros metais 0,5, como está (aço e ferro 1, não metal 0).
+5. **Filmes de fluido (`game-fluids`):** não contam como fonte de fogo perto, como está.
+6. **Dois pilares e a carga que some:** a sustentação é a soma dos pilares (`structure.safetyFactor` na config); os dois pilares do time seguram porque parte da carga sai com as divisórias que caem, e o colapso não passa a sair só da soma com pilares mais fracos.
+As quatro decisões de 2026-10-24 acima (tanque realista, pilares somados, granada sempre ligada, tabela de penetração por calibre) ficam como entregues no PR #40.
+
 ## T2.4
 
 Porte literal do Casa3DSDK (`construir`, `planejaLOD`) e do AndaresSDK da página do time (`visor-casas-3d`, L39443-42734; `zombiada-modo-livre`, L7372-7557) para o pacote novo `@adatechnology/game-floorplan-three`. Cinco commits, na ordem do brief.
@@ -3072,6 +3083,11 @@ node examples/interactables-test-area/test.mjs                 -> sem falhas (EX
 1. A renomeação dos ids criados pelo adaptador (`service_entrance`, `panel`...) muda as sementes de uma cena salva com os ids do time. Aceita, ou o jogo passa `seedKey`?
 2. A regra da chaminé e a do gás de acampamento foram inferidas; o time não dá o vínculo na planta. O `Chimney` do `game-floorplan` deve ganhar o id do item que ele serve?
 3. Os 31 ids de conteúdo da tabela padrão da estrutura foram casados com o household pelo nome; a lista está em `MIGRATION.md`. Alguém do time de itens confere?
+
+**Respostas do dono de 2026-10-25 (PR #37):** decidido pelo dono em 2026-10-25 ("ok, pode seguir"); valem os padrões propostos.
+1. Os ids renomeados ficam; o jogo que quiser as sementes antigas das cenas salvas passa `seedKey`.
+2. O `Chimney` do `game-floorplan` não ganha o id do item que serve por ora; a regra da chaminé e a do gás de acampamento seguem inferidas.
+3. Os 31 ids casados por nome com o household ficam como estão (lista em `MIGRATION.md`); a conferência pelo time de itens não bloqueia.
 
 ## 2026-10-24 · A sala de testes abre só com o conteúdo do SDK
 
