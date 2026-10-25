@@ -1598,5 +1598,15 @@
       0.45
     ],
     "scale": 1
+  },
+  {
+    "id": "battery_9v",
+    "teamId": "bateria_9v",
+    "teamBox": [
+      0.0262,
+      0.049,
+      0.0182
+    ],
+    "scale": 1
   }
 ]

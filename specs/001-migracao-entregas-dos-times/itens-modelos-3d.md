@@ -258,7 +258,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Pilhas AA (par) | `pilha_aa` | `batteries` | 0,05 kg | comum | 37 x 51 x 17 mm |
 | [x] | Rádio AM/FM a pilha | `radio_portatil` | `portable_radio` | 0,5 kg | comum | 220 x 295 x 70 mm |
 | [x] | Walkie-talkie (par) | `walkie` | `walkie_talkies` | 0,6 kg | incomum | 70 x 220 x 33 mm |
-| [ ] | Bateria 9 V | `bateria_9v` | `battery_9v` | 0,05 kg | comum | 26 x 49 x 18 mm |
+| [x] | Bateria 9 V (kit) | `bateria_9v` | `battery_9v` | 0,05 kg | comum | 26 x 49 x 18 mm |
 | [ ] | Celular | `celular` | `mobile_phone` | 0,2 kg | comum | 77 x 160 x 9 mm |
 | [ ] | Controle de alarme de carro | `controle_alarme` | `car_alarm_remote` | 0,03 kg | comum | 40 x 70 x 12 mm |
 | [ ] | Despertador de corda | `despertador` | `windup_alarm_clock` | 0,3 kg | comum | 110 x 125 x 55 mm |
