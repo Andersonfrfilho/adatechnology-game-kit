@@ -1353,11 +1353,11 @@
     "id": "wire_roll",
     "teamId": "arame",
     "teamBox": [
-      1.4,
-      0.502,
-      1.4
+      1.404,
+      0.5,
+      1.404
     ],
-    "scale": 0.1
+    "scale": 0.09981
   },
   {
     "id": "barbed_wire",
