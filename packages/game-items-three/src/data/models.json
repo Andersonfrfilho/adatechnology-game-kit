@@ -993,11 +993,11 @@
     "id": "hoe",
     "teamId": "enxada",
     "teamBox": [
-      13.5,
-      0.6,
-      1.7
+      135,
+      6,
+      17
     ],
-    "scale": 0.1
+    "scale": 0.01
   },
   {
     "id": "fire_extinguisher",
