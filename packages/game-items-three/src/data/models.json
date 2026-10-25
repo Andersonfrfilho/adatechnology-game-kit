@@ -2048,5 +2048,15 @@
       0.251
     ],
     "scale": 1
+  },
+  {
+    "id": "leather_motorcycle_jacket",
+    "teamId": "jaqueta_couro",
+    "teamBox": [
+      0.45,
+      0.1,
+      0.355
+    ],
+    "scale": 1
   }
 ]
