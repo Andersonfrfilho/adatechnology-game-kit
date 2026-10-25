@@ -2438,5 +2438,15 @@
       0.18
     ],
     "scale": 1
+  },
+  {
+    "id": "wheelbarrow",
+    "teamId": "carrinho_mao",
+    "teamBox": [
+      0.64651,
+      0.65148,
+      1.5
+    ],
+    "scale": 1
   }
 ]
