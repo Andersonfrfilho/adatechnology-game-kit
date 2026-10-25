@@ -37,7 +37,7 @@ Toda função existe também sem o adaptador, com `THREE` primeiro: `createMeshA
 | Função/tipo | Para que serve |
 |---|---|
 | `createThreeAdapter(THREE, { document, Reflector, envMap })` | Adaptador com tudo ligado ao seu THREE |
-| `createMeshApi({ materials, quality, shadows, materialFor })` | `{ api, finish, materials }`; `quality` `'game'` (Lambert, menos segmentos) ou `'high'` (Standard) |
+| `createMeshApi({ materials, quality, shadows, materialFor })` | `{ api, finish, materials }`; `quality` `'game'` (Lambert, menos segmentos) ou `'high'` (Standard). Grava no `createShapeRecorder` do props3d e assa com o `generate` do `game-shapes`; `tests/exact-golden.test.ts` guarda cada bit (regrave com `UPDATE_EXACT=1` só quando a mudança for de propósito) |
 | `finish(spec?, { mergeParts, materialFor })` | `{ group, parts, lights }`; `parts[id]` é o grupo da parte |
 | `mergeParts` | Une partes do mesmo `PartSpec.group` e panos `cloth` (persiana 38 malhas para 3, varal 31 para 2) |
 | `applyPose`, `poseOf`, `rememberRest`, `syncObject` | Pose da parte e balanço dos volumes macios a partir do mundo |

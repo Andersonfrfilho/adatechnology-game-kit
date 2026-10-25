@@ -288,6 +288,7 @@ export abstract class WeaponAttachments extends WeaponCommands {
       mode: this.mode,
       condition: this._condition.id,
       ammoQuality: this._ammoQuality.id,
+      ...(this._ammoKind !== undefined ? { ammoKind: this._ammoKind } : {}),
       ...(launcher ? { underbarrel: launcher } : {}),
     }
   }

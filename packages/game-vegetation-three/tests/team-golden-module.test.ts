@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three160'
-import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
+import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 import * as GameVegetationMain from '@adatechnology/game-vegetation'
 import * as GameVegetationAdapter from '@adatechnology/game-vegetation/three'
@@ -32,7 +32,7 @@ const stubRenderer = (): never => {
 const makeRoom = (): TestRoom => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  return createTestRoom({ THREE, container, locale: 'en', catalog: demoItems('en'), renderer: stubRenderer(), ui: false })
+  return createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
 }
 
 /** The artifact's module, evaluated as the page does: a classic script that sets a global. */

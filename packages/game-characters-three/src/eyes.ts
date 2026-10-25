@@ -1,3 +1,4 @@
+import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import type { Three, THREE_NS } from './three'
 
 const GLOW_SIZE = 64
@@ -30,7 +31,8 @@ export type EyeOptions = {
 }
 
 /** One glowing eye: an unlit ball (emissive by itself) and an additive sprite on top. Add it to the head group at the socket. */
-export const createEye = (three: Three, { color, radius = 0.02, glow, glowOpacity = 0.55, texture = null }: EyeOptions): THREE_NS.Group => {
+export const createEye = (host: Three, { color, radius = 0.02, glow, glowOpacity = 0.55, texture = null }: EyeOptions): THREE_NS.Group => {
+  const three = shapeGeometries(host)
   const eye = new three.Group()
   const ball = new three.Mesh(new three.SphereGeometry(radius, 10, 8), new three.MeshBasicMaterial({ color }))
   ball.userData.eye = 1

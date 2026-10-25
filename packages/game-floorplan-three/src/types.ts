@@ -34,7 +34,7 @@ export interface HouseRendererOptions {
   destruction?: any
   /** `createDestructionRenderer(THREE, { scene, world })` of `@adatechnology/game-destruction-three`: draws fracture, collapse, fragments, spalls and the rebar cage on the house's meshes. */
   destructionRenderer?: any
-  /** The interactables kit, injected: `{ GameInteractables, GameInteractablesHousehold, GameInteractablesThree, adapter, locale, region, items, effects, camera, onEvent, onSeat }`. */
+  /** The interactables kit, injected: `{ GameInteractables, GameInteractablesHousehold, GameInteractablesThree, adapter (optional), adapterOptions, locale, region, items, effects, camera, onEvent, onSeat }`. */
   interactives?: any
   /** The vegetation packages, injected: `{ GameVegetation, GameVegetationSpecies }`. */
   vegetation?: any

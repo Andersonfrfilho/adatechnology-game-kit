@@ -1,6 +1,8 @@
 import type { AttachmentDef, AttachmentId, WeaponSnapshot } from './attachment-types'
 import type { IsCompatible } from './attachments'
 import type {
+  AmmoDef,
+  AmmoKind,
   CaliberDef,
   ExplosiveDef,
   TriggerResult,
@@ -31,6 +33,9 @@ export interface WeaponStateInit {
   explosive?: ExplosiveDef | null
   condition?: string
   ammoQuality?: string
+  /** Kind of round loaded (the calibre's own kind when absent) and the ammo table it is looked up in. */
+  ammoKind?: AmmoKind
+  ammo?: ReadonlyMap<string, AmmoDef>
   /** The accessories of the arsenal, by id (without them the weapon carries only its own numbers). */
   attachments?: ReadonlyMap<AttachmentId, AttachmentDef>
   isCompatible?: IsCompatible

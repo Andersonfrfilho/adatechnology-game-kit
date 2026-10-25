@@ -25,11 +25,17 @@ const packages = [
   'game-destruction',
   'game-floorplan',
   'game-floorplan-commercial',
+  'game-floorplan-interactables',
   'game-floorplan-post-apocalyptic',
   'game-floorplan-residential',
   'game-floorplan-rural',
   'game-floorplan-structure',
   'game-floorplan-three',
+  'game-interactables',
+  'game-interactables-household',
+  'game-interactables-three',
+  'game-items',
+  'game-items-goods',
   'game-props3d',
 ]
 for (const p of packages) {
@@ -53,7 +59,7 @@ const bundle = result.outputFiles[0].text
 writeFileSync(join(here, 'dist/floorplan-area.js'), bundle)
 console.log(`dist/floorplan-area.js ${(bundle.length / 1024).toFixed(0)} KB`)
 
-const roomHtml = process.env.ROOM_HTML || join(here, '../test-room/dist/test-room.html')
+const roomHtml = process.env.ROOM_HTML || join(here, '../test-room/base/test-room.html')
 if (existsSync(roomHtml)) {
   const safe = (s) => s.replace(/<\/(script)/gi, '<\\/$1')
   const page = readFileSync(roomHtml, 'utf8')

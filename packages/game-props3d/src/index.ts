@@ -37,3 +37,5 @@ export type {
   WaterAtlas,
 } from './types'
 export { mergeByMaterial } from './merge-by-material'
+export { createShapeRecorder } from './shape-recorder'
+export type { RecordedPart, ShapeRecorder, ShapeRecorderApi, ShapeRecorderOptions } from './shape-recorder'

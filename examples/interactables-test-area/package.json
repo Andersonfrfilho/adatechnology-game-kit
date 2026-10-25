@@ -24,6 +24,7 @@
     "@adatechnology/game-destruction": "workspace:*",
     "@adatechnology/game-floorplan": "workspace:*",
     "@adatechnology/game-floorplan-commercial": "workspace:*",
+    "@adatechnology/game-floorplan-interactables": "workspace:*",
     "@adatechnology/game-floorplan-post-apocalyptic": "workspace:*",
     "@adatechnology/game-floorplan-residential": "workspace:*",
     "@adatechnology/game-floorplan-rural": "workspace:*",

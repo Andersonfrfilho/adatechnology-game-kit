@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology/game-contracts'
 import type { WeaponDef } from '@adatechnology/game-weapons'
-import { mergeByMaterial } from '@adatechnology/game-props3d'
+import { mergeByMaterial, shapeGeometries } from '@adatechnology/game-shapes-three'
 import { buildWeaponModelById } from './models'
 import { buildTripodLegs } from './models/attachments/tripod'
 import { modelKit } from './models/kit'
@@ -86,7 +86,7 @@ export function buildProp(THREE: typeof THREE_NS, prop: WeaponProp): THREE_NS.Gr
     if (part.shape.kind !== 'box') continue
     const [w, h, d] = part.shape.size
     const material = new THREE.MeshStandardMaterial({ color: prop.colors[part.id] ?? 0x777777, roughness: 0.6, metalness: part.material === 'steel' ? 0.6 : 0.05 })
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material)
+    const mesh = new THREE.Mesh(new (shapeGeometries(THREE).BoxGeometry)(w, h, d), material)
     mesh.name = part.id
     mesh.position.set(part.position[0], part.position[1], part.position[2])
     mesh.castShadow = true

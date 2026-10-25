@@ -1,5 +1,24 @@
 # @adatechnology/game-floorplan-three
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [e29f38d]
+  - @adatechnology/game-props3d@0.3.0
+  - @adatechnology/game-floorplan-interactables@0.1.0
+
+## 0.2.0
+
+### Minor Changes
+
+- 1cb7dc8: New package `@adatechnology/game-floorplan-interactables`: the team's `AdaptadorInterativos` ported (plan to objects of the interactables kit, wiring, gas, water, chairs, contents, doors fitted to the walls), every table a registry. `game-floorplan-three` uses it as the default of `interactives` (`adapter` still injects another, `adapterOptions` goes to `create`) and the bridge no longer misreads the plan (`floorY`, `panel`, `mats.floor`).
+
+### Patch Changes
+
+- Updated dependencies [1cb7dc8]
+  - @adatechnology/game-floorplan-interactables@0.1.0
+
 ## 0.1.1
 
 ### Patch Changes

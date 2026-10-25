@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createTestRoom, demoItems } from '../src'
+import { createTestRoom } from '../src'
+import { demoItems } from './fixtures/demo-items'
 import * as THREE from 'three'
 import { makeRoom, stubRenderer } from './helpers'
 

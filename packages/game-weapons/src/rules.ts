@@ -1,3 +1,4 @@
+import { DEFAULT_IGNITION_RULES } from '@adatechnology/game-contracts'
 import type { FaultContext, WeaponRules } from './types'
 
 const DEFAULT_HEAT: WeaponRules['heat'] = {
@@ -51,6 +52,14 @@ export const DEFAULT_RULES: WeaponRules = {
       { stat: 'recoilVertical', mul: 1.3 },
       { stat: 'spread', mul: 1.15 },
     ],
+  },
+  // Modelo do kit (2026-10-24, decisão do dono): não existe tabela pública de ignição por cartucho. Ordem de grandeza: bala comum (chumbo com camisa de
+  // cobre) quase nunca acende um tanque; núcleo de aço e perfurante (aço temperado, carbeto de tungstênio) faíscam em aço; incendiária e traçante
+  // acendem por conta própria (a literatura de vulnerabilidade de tanques de combustível cita API como a munição que acende de fato). Troque por jogo.
+  ignition: {
+    core: { lead: 0.005, lead_steel: 0.04, steel: 0.12, hardened_steel: 0.25, tungsten_carbide: 0.25, copper: 0.01, none: 0 },
+    jacket: { gilding_metal: 0.005, copper: 0.005, brass: 0.01, steel: 0.08, none: 0 },
+    flame: { incendiary: DEFAULT_IGNITION_RULES.flameDefaults.incendiary, tracer: DEFAULT_IGNITION_RULES.flameDefaults.tracer },
   },
   draw: 0.35,
   clear: 1.2,

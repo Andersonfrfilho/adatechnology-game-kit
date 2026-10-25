@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three160'
-import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
+import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 import * as GameVehicles from '@adatechnology/game-vehicles'
 import * as GameVehiclesFleet from '@adatechnology/game-vehicles-fleet'
@@ -32,7 +32,7 @@ const stubRenderer = (): never => {
 const makeRoom = (): TestRoom => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  return createTestRoom({ THREE, container, locale: 'en', catalog: demoItems('en'), renderer: stubRenderer(), ui: false })
+  return createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
 }
 
 /** The page's module, evaluated as the page does: a classic script that finds the three globals on `window` (the kit gets the fake document the Node run needs). */

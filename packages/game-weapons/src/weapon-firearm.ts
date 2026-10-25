@@ -1,3 +1,4 @@
+import { ammoIgnition, resolveLoad } from './ammo'
 import { isDudWithoutJam, rollFault } from './faults'
 import { manualCycleSeconds, planRounds, weaponNoise, weaponSpeed } from './fire'
 import { burstNoise, heatPerRound } from './heat'
@@ -113,8 +114,11 @@ export abstract class WeaponFirearm extends WeaponAttachments {
   protected fireOne(a: FirearmAction, origin: Vec3, dir: Vec3, t: number, res: TriggerResult, source?: string): void {
     const cal = this.caliber as CaliberDef
     const isFirstRound = res.shots.length === 0
-    const speed = weaponSpeed(a, cal)
-    const energy = 0.5 * (cal.bulletGrams / 1000) * speed * speed
+    // the load in the weapon: a round of the table may weigh and leave at other numbers than the calibre's own
+    const load = this.ammoTable ? resolveLoad(cal, this.ammoTable, this._ammoKind) : null
+    const speed = load && load.speed !== cal.muzzleSpeed ? weaponSpeed(a, cal) * (load.speed / cal.muzzleSpeed) : weaponSpeed(a, cal)
+    const grams = load ? load.grams : cal.bulletGrams
+    const energy = 0.5 * (grams / 1000) * speed * speed
     const drag = cal.dragPer100m ?? 0.1
     const energyAt = (distance: number): number => {
       const f = Math.pow(1 - drag, Math.max(0, distance) / 100)
@@ -133,12 +137,19 @@ export abstract class WeaponFirearm extends WeaponAttachments {
         caliber: cal.diameter,
         caliberId: cal.id,
         speed,
-        mass: cal.bulletGrams,
+        mass: grams,
         energyAt,
         pellet: p,
         weapon: this.def.id,
       }
       if (source !== undefined) shot.source = source
+      if (load) {
+        shot.ammo = load.kind
+        shot.penetration = { ...load.penetration }
+        if (load.def.incendiary) shot.incendiary = true
+        if (load.def.tracer) shot.tracer = true
+        shot.ignition = ammoIgnition(load.def, this.rules.ignition)
+      }
       res.shots.push(shot)
     }
     this._ammo -= 1

@@ -48,3 +48,10 @@ down turns the body about the hip (`±1.5` rad, face up or down by the phase) wi
 one button per registered clip (`Tocar: grabbed_bitten_human`, `grab_bite_zombie`) and stop; the entries Soco, Empurrão, Chute and Tiro (corpo), shown disabled with the note that the animation is pending delivery by the Elenco team and that the rule is
 already in the Player area; metrics for the camera, the clip playing, the last clip event and the joints. Every action is a JSON line in the room log (`{"type":"avatar","action":"play_clip","clip":...}`), clip events included.
 The module takes the body, the view (`camera: { mode, set }`) and the state (`state: { set }`) by option and imports only `@adatechnology/game-contracts`.
+
+## Geometry
+
+The builders (`createPersonBuilder`, `createBestBuilder`, `bakeBody`, `buildInstancedBody`, `createFlyingLimbs`, `createEye`) draw with
+`shapeGeometries(host)` of [`game-shapes-three`](../game-shapes-three): boxes, cylinders, cones, spheres, circles, rings, lathes and tori come
+from game-shapes with the same bytes; dodecahedron, shape and capsule geometries are three's. `tests/exact-golden.test.ts` holds every bit as
+the old path made them.

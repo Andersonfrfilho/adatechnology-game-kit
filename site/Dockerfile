@@ -27,6 +27,7 @@ COPY packages/game-destruction-three/package.json packages/game-destruction-thre
 COPY packages/game-devtools/package.json packages/game-devtools/
 COPY packages/game-floorplan/package.json packages/game-floorplan/
 COPY packages/game-floorplan-commercial/package.json packages/game-floorplan-commercial/
+COPY packages/game-floorplan-interactables/package.json packages/game-floorplan-interactables/
 COPY packages/game-floorplan-post-apocalyptic/package.json packages/game-floorplan-post-apocalyptic/
 COPY packages/game-floorplan-residential/package.json packages/game-floorplan-residential/
 COPY packages/game-floorplan-rural/package.json packages/game-floorplan-rural/
@@ -43,6 +44,8 @@ COPY packages/game-items-goods/package.json packages/game-items-goods/
 COPY packages/game-items-three/package.json packages/game-items-three/
 COPY packages/game-player/package.json packages/game-player/
 COPY packages/game-props3d/package.json packages/game-props3d/
+COPY packages/game-shapes/package.json packages/game-shapes/
+COPY packages/game-shapes-three/package.json packages/game-shapes-three/
 COPY packages/game-stories/package.json packages/game-stories/
 COPY packages/game-test-room/package.json packages/game-test-room/
 COPY packages/game-vegetation/package.json packages/game-vegetation/

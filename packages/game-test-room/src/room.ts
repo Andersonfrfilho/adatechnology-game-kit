@@ -13,7 +13,7 @@ import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adate
 import { createGroundField, createVfx } from '@adatechnology/game-vfx'
 import { createGroundPatch, createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus } from '@adatechnology/game-contracts'
+import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, shotExtras } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createArena } from './arena'
 import type { Arena } from './arena'
@@ -24,14 +24,12 @@ import { buildFromSpec } from './build-from-spec'
 import { createExplosives } from './explosives'
 import type { BlastSummary } from './explosives'
 import { toHostEvent } from './host-events'
-import { DEMO_MATERIALS, demoItems } from './items'
 import { createLog } from './log'
 import { createRoomMetrics, ROOM_METRICS } from './metrics'
 import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
 import { THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
-import { makeScenarios } from './scenarios'
 import { resolveStrings } from './locale'
 import { createUi } from './ui'
 import type { HudState, InspectInfo, RoomUi } from './ui'
@@ -148,7 +146,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   scene.add(arena.group)
 
   const ownWorld = !options.world
-  const world = options.world ?? createDestruction({ seed: 1, ...options.worldOptions, materials: [...DEMO_MATERIALS, ...(options.worldOptions?.materials ?? [])] })
+  const world = options.world ?? createDestruction({ seed: 1, ...options.worldOptions, materials: [...(options.worldOptions?.materials ?? [])] })
   const pristineWorld = ownWorld ? world.serialize() : null
   const tableOk = (): boolean => {
     const p = world.part(arena.table.id, arena.table.topPart)
@@ -274,7 +272,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let tool = toolState(toolId)
 
   const catalogMap = new Map<string, TestRoomItem>()
-  for (const i of demoItems(locale)) catalogMap.set(i.id, i)
   for (const i of options.catalog) catalogMap.set(i.id, i)
   const catalog = [...options.catalog]
 
@@ -945,7 +942,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     withoutHeld(() => {
       for (const s of shots) {
         energy = Math.max(energy, s.energy)
-        const results = world.shoot(s.origin, s.direction, s.energy, s.caliber, 'player')
+        const results = world.shoot(s.origin, s.direction, s.energy, s.caliber, 'player', shotExtras(s))
         const r0 = results.find((r) => r.part && r.point)
         let end: Vec3 = [s.origin[0] + s.direction[0] * 40, s.origin[1] + s.direction[1] * 40, s.origin[2] + s.direction[2] * 40]
         if (r0?.point && r0.part) {
@@ -2154,7 +2151,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return report
   }
 
-  const allScenarios = (): TestRoomScenario[] => [...makeScenarios(t, num, locale), ...extraScenarios]
+  const allScenarios = (): TestRoomScenario[] => [...extraScenarios]
   let scenarioRunning = false
 
   const step = (seconds: number): void => {

@@ -147,7 +147,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       for (const e of events as { type: string; part?: string; point?: Vec3; worldPoint?: Vec3 }[]) {
         const position = e.point ?? e.worldPoint
         if (!position) continue
-        if (e.type === 'ignite') fx.play({ effect: effectIds.ignite, point: position })
+        // a pierced tank only leaks; when the leak catches fire the whole sequence plays (the fire runs to the tank, then the blast)
+        if (e.type === 'ignite') fx.play({ effect: /fuel_tank|tank/.test(e.part ?? '') ? effectIds.leakIgnited : effectIds.ignite, point: position })
         else if (e.type === 'explode') fx.play({ effect: effectIds.explode, point: position })
         else if (e.type === 'leak') fx.play({ effect: effectIds.leak, point: position })
         else if (e.type === 'fracture' && /glass|window|windshield/.test(e.part ?? '')) fx.play({ effect: effectIds.glass, point: position })

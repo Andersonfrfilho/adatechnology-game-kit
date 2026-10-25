@@ -14,6 +14,8 @@ export type VehicleEffectIds = {
   readonly glass: string
   readonly sparks: string
   readonly leak: string
+  /** The leak of a pierced tank caught fire: the whole sequence (fire along the pool, then the blast). `leak` is only the pool and the drips. */
+  readonly leakIgnited: string
   readonly exhaust: string
 }
 
@@ -23,6 +25,7 @@ export const defaultEffectIds: VehicleEffectIds = {
   glass: 'glass_burst',
   sparks: 'impact_metal',
   leak: 'vehicle_leak',
+  leakIgnited: 'vehicle_leak_ignited',
   exhaust: 'vehicle_exhaust',
 }
 
@@ -41,7 +44,7 @@ export type VehiclesTestOptions = {
   readonly three?: unknown
   /** The vehicles to lay out, as fleet ids (default the 8 of the Frota test: hatch, sedan, pickup, sport bike, box truck, city bus, battle tank, attack helicopter). */
   readonly vehicles?: readonly string[]
-  /** Effect ids requested through `host.effects` (the defaults are ids of `game-vfx`: the Garagem's `car_fuel_tank` blast, the `vehicle_fire`, `vehicle_leak` and `vehicle_exhaust` recipes written around a car from `engine_smoke` and `fuel_leak`, and the point-based `glass_burst` and `impact_metal`). */
+  /** Effect ids requested through `host.effects` (the defaults are ids of `game-vfx`: the Garagem's `car_fuel_tank` blast, the `vehicle_fire`, `vehicle_leak` (pool and drips only), `vehicle_leak_ignited` (the whole sequence) and `vehicle_exhaust` recipes written around a car from `engine_smoke` and `fuel_leak`, and the point-based `glass_burst` and `impact_metal`). */
   readonly effects?: Partial<VehicleEffectIds>
   /** Sound ids requested through `host.audio` (the defaults are the `game-audio` ones: `engine_saw`, `horn`, `sfx_impact`). */
   readonly sounds?: Partial<VehicleSoundIds>

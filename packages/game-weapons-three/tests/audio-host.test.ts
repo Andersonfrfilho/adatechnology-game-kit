@@ -1,6 +1,6 @@
 import { createAudioEngine } from '@adatechnology/game-audio'
 import { createAudioRecorder } from '@adatechnology/golden-tool'
-import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
+import { createTestRoom } from '@adatechnology/game-test-room'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
@@ -18,7 +18,7 @@ describe('weapons module on the host audio', () => {
     const engine = createAudioEngine({ seed: 2, mix: 'game', createContext: () => recorder.context })
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'en', catalog: demoItems('en'), renderer: stubRenderer(), ui: false, audio: engine })
+    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, audio: engine })
     const module = createWeaponsTestModule({ locale: 'en' })
     expect(room.loadModule(module).problems).toEqual([])
     module.audio?.play('glass', 1, 0)

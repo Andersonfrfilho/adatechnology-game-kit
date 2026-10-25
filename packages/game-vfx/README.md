@@ -71,6 +71,12 @@ about the vertical axis `direction` gives) and named numbers (`values`, read wit
 `breach_dust` and `collapse_dust`, `expose` `rebar_expose`, a fracture of glass `glass_burst`; `muzzle_*` and `casing_*` are the weapon slices. `GAME_EFFECTS`
 is the recipes plus these, what a world plays by default. Texts of every recipe (name, cost, when, look, budget, network) are in `locales` (`en`, `pt-BR`).
 
+## Vehicle effects
+
+`VEHICLE_EFFECTS` write the Garagem's recipes around a car: `vehicle_fire` and `vehicle_exhaust` (`engine_smoke`), `vehicle_leak` and `vehicle_leak_ignited` (`fuel_leak`). A normal bullet through a tank only leaks, so
+`vehicle_leak` is the page's pool and drips without the fire and the explosion (`FUEL_LEAK_ONLY`: the same `decal` and `emit` steps); `vehicle_leak_ignited` is the whole sequence (the spark, the fire running along
+the pool to the tank and the blast at 7.2 s), played when the leak catches fire.
+
 ## Install
 
 ```sh

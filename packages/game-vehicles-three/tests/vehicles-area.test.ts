@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three160'
-import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
+import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 
 import { defaultEffectIds, defaultSoundIds, VEHICLES_AREA_ID, VEHICLE_SCENARIO_IDS, createVehiclesTestModule, loadVehiclesTestModule } from '../src'
@@ -19,7 +19,7 @@ const stubRenderer = (): never => {
 const roomWithVehicles = (locale = 'pt-BR'): { room: TestRoom; module: ReturnType<typeof createVehiclesTestModule>; played: string[] } => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale, catalog: demoItems(locale), renderer: stubRenderer(), ui: false })
+  const room = createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
   const played: string[] = []
   const module = createVehiclesTestModule({ locale, document: fakeDocument as never, three: THREE })
   const report = room.loadModule(module as never)
@@ -59,7 +59,7 @@ describe('vehicles test area', () => {
   it('learns the room three.js by itself and brings the door, hood and trunk clips', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'en', catalog: demoItems('en'), renderer: stubRenderer(), ui: false })
+    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
     const report = loadVehiclesTestModule(room, { locale: 'en', document: fakeDocument as never }) as { problems: string[]; items: string[] }
     expect(report.problems).toEqual([])
     expect(report.items).toHaveLength(8)

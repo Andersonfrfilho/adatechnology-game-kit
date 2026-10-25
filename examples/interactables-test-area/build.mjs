@@ -23,7 +23,7 @@ const esbuild = createRequire(import.meta.url)(findEsbuild())
 
 const people = ['game-characters', 'game-characters-three', 'game-characters-people', 'game-characters-undead', 'game-animals', 'game-animals-species', 'game-animals-three']
 // the houses: the plans of every package, their structure and the drawing in three.js
-const houses = ['game-destruction', 'game-floorplan', 'game-floorplan-commercial', 'game-floorplan-post-apocalyptic', 'game-floorplan-residential', 'game-floorplan-rural', 'game-floorplan-structure', 'game-floorplan-three']
+const houses = ['game-destruction', 'game-floorplan', 'game-floorplan-commercial', 'game-floorplan-interactables', 'game-floorplan-post-apocalyptic', 'game-floorplan-residential', 'game-floorplan-rural', 'game-floorplan-structure', 'game-floorplan-three']
 const vehicles = ['game-vehicles', 'game-vehicles-fleet', 'game-vehicles-three', 'game-vehicles-driving']
 const vegetation = ['game-vegetation', 'game-vegetation-species', 'game-vegetation-three']
 const urban = ['game-urban', 'game-urban-three']
@@ -89,7 +89,7 @@ const bundle = result.outputFiles[0].text
 writeFileSync(join(here, 'dist/furniture-area.js'), bundle)
 console.log(`dist/furniture-area.js ${(bundle.length / 1024).toFixed(0)} KB`)
 
-const roomHtml = process.env.ROOM_HTML || join(here, '../test-room/dist/test-room.html')
+const roomHtml = process.env.ROOM_HTML || join(here, '../test-room/base/test-room.html')
 if (existsSync(roomHtml)) {
   const safe = (s) => s.replace(/<\/(script)/gi, '<\\/$1')
   const page = readFileSync(roomHtml, 'utf8')

@@ -78,12 +78,6 @@ export function createHouseScenarios(text: AreaText, at: Vec3 = SPECIMEN_AT): Ar
         blunt(room, oid, columns[0].id, centre(columns[0].id), 3e6)
         blunt(room, oid, columns[1].id, centre(columns[1].id), 3e6)
         step(90)
-        // In the room the ground floor of the portico carries on two pillars less (the stress of the other two stays at 0.95, the slab at 0.45): the team's world dropped the slab there. The solver
-        // answer is not ours to change here (open question T2.6-1), so the next pillars go too until the slab comes down: the checks stay the team's.
-        for (let next = 2; next < columns.length && !slabs(parts).some((id) => collapsed(list).includes(id)); next++) {
-          blunt(room, oid, columns[next].id, centre(columns[next].id), 3e6)
-          step(90)
-        }
         const fell = collapsed(list)
         expect(laj.some((id) => fell.includes(id)), fill(T.two_slab_fell as string, { n: fell.length }))
         expect(parts.filter((p) => role(p) === 'roof').some((p) => fell.includes(p.id)), T.two_roof_fell as string)

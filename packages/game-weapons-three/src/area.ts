@@ -17,6 +17,7 @@ import type { WeaponProp } from './props'
 import { DEFAULT_THUMBNAIL_BASE, weaponThumbnailCredit, weaponThumbnailUrl } from './thumbnails'
 import { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
 import { createWorldEffects } from './world-effects'
+import { weaponsScenarios } from './scenarios'
 
 export interface WeaponsTestModuleOptions {
   /** `en` or `pt-BR` (default). */
@@ -296,6 +297,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       ...worldExplosives.map((item) => withThumbnail(item, item.id.slice(WORLD_EXPLOSIVE_PREFIX.length))),
       ...mountedM134.map((item) => withThumbnail(item, MOUNTED_M134.weaponId)),
     ],
+    scenarios: (scenarioLocale) => weaponsScenarios(scenarioLocale ?? locale),
     area: (): ModuleArea => ({
       placements: [
         ...weaponsLayout(weaponIds, pitchOf).filter((placement) => !placement.item.startsWith(WORLD_EXPLOSIVE_PREFIX) || worldExplosiveIds.has(placement.item)),

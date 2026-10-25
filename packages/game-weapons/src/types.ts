@@ -42,7 +42,7 @@ export interface CaliberDef {
   /** Speed lost per 100 m as a fraction (default 0.1 rifle, 0.2 pistol, 0.45 buckshot). */
   dragPer100m?: number
   /** Armour-piercing or hollow-point flavour (a damage model may use it). */
-  kind?: 'fmj' | 'hp' | 'ap' | 'buck' | 'slug' | 'birdshot' | 'rimfire' | 'arrow' | 'bolt'
+  kind?: AmmoKind
   tags?: string[]
   /** Audible distance of a shot in this calibre, metres. A weapon may override it (suppressor). */
   noise?: number
@@ -51,6 +51,57 @@ export interface CaliberDef {
   cartridge?: CartridgeDims
   /** Where the numbers come from (team deliveries, the SDK itself, a published reference, or derived from a sibling). */
   sources?: readonly DataSource[]
+}
+
+/** The load a calibre ships with is its `kind`; other loads of it are entries of the ammo table (`AmmoDef`). */
+export type AmmoKind = 'fmj' | 'hp' | 'ap' | 'buck' | 'slug' | 'birdshot' | 'rimfire' | 'arrow' | 'bolt' | 'incendiary' | 'tracer'
+/** What the core of a projectile is made of. Hard cores strike sparks on metal; lead almost never does. */
+export type AmmoCore = 'lead' | 'lead_steel' | 'steel' | 'hardened_steel' | 'tungsten_carbide' | 'copper' | 'none'
+/** What the outside of a projectile is made of. */
+export type AmmoJacket = 'gilding_metal' | 'copper' | 'brass' | 'steel' | 'none'
+
+/** Millimetres a projectile goes through at close range (muzzle to about 100 m), at normal incidence: steel is RHA-equivalent, wood is dry hardwood. */
+export type AmmoPenetration = {
+  readonly steel: number
+  readonly concrete: number
+  readonly brick: number
+  readonly wood: number
+}
+
+/**
+ * One load of a calibre: its construction and how far it goes through steel, concrete, brick and wood. `bulletGrams` and `muzzleSpeed` replace the
+ * calibre's own when present (an armour-piercing round is lighter and faster). The id is `<caliber>:<kind>`.
+ */
+export interface AmmoDef {
+  readonly id: string
+  readonly caliber: CaliberId
+  readonly kind: AmmoKind
+  /** Display name, e.g. `7.62x51 M993 AP`. Not translated (it is a technical name). */
+  readonly label: string
+  readonly bulletGrams?: number
+  readonly muzzleSpeed?: number
+  readonly core: AmmoCore
+  readonly jacket: AmmoJacket
+  /** A burning pyrotechnic in the base (it can light fuel). */
+  readonly tracer?: boolean
+  /** An incendiary composition in the nose (it lights fuel whatever it hits). */
+  readonly incendiary?: boolean
+  readonly penetration: AmmoPenetration
+  /** `published` = a figure quoted in `sources`; `estimated` = derived (see the notes of `ammo.json`). */
+  readonly basis: 'published' | 'estimated'
+  readonly sources: readonly string[]
+}
+
+/** A load resolved against its calibre: what one round weighs, how fast it leaves and how much energy it carries. */
+export interface AmmoLoad {
+  readonly def: AmmoDef
+  readonly kind: AmmoKind
+  readonly grams: number
+  /** Muzzle speed from the reference barrel, m/s. */
+  readonly speed: number
+  /** Muzzle energy in joules: 0.5 x mass x speed squared. */
+  readonly energy: number
+  readonly penetration: AmmoPenetration
 }
 
 export type CaseType = 'pistol' | 'rifle' | 'shell' | 'big' | 'tiny'
@@ -305,6 +356,8 @@ export interface WeaponState {
   readonly heatLevel: number
   readonly condition: string
   readonly ammoQuality: string
+  /** The load in the weapon, by `AmmoKind` (the calibre's own `kind` until `setAmmoKind`). */
+  readonly ammoKind: AmmoKind | undefined
   /** Current spread in degrees (base + bloom). */
   readonly spread: number
   /**
@@ -329,6 +382,8 @@ export interface WeaponState {
   setCondition(id: string): void
   /** Quality of the rounds, by `rules.ammoQualities` id. */
   setAmmoQuality(id: string): void
+  /** Loads another kind of round of the calibre (`arsenal.ammo` has an entry `<caliber>:<kind>`); throws when there is none. */
+  setAmmoKind(kind: AmmoKind): void
   /** Metres of safety fuse for explosives that burn one (dynamite): replaces the explosive's `fuseLength`; `undefined` goes back to it. */
   setFuseLength(metres: number | undefined): void
   /** Start putting the weapon in hand; the trigger answers `drawing` until it is ready. */
@@ -385,15 +440,18 @@ export interface ArsenalOptions {
   calibers?: CaliberDef[]
   weapons?: WeaponDef[]
   explosives?: ExplosiveDef[]
+  /** Extra or overriding loads of the ammo table, by id (`<caliber>:<kind>`). */
+  ammo?: AmmoDef[]
   /** Changes to shipped or added entries, by id, applied after the lists above are merged. */
   patch?: {
     weapons?: Record<WeaponId, WeaponPatch>
     calibers?: Record<CaliberId, Partial<CaliberDef>>
     explosives?: Record<ExplosiveId, Partial<ExplosiveDef>>
+    ammo?: Record<string, DeepPartial<AmmoDef>>
     attachments?: Record<AttachmentId, DeepPartial<AttachmentDef>>
   }
   /** Entries to leave out, by id. */
-  remove?: { weapons?: WeaponId[]; calibers?: CaliberId[]; explosives?: ExplosiveId[]; attachments?: AttachmentId[] }
+  remove?: { weapons?: WeaponId[]; calibers?: CaliberId[]; ammo?: string[]; explosives?: ExplosiveId[]; attachments?: AttachmentId[] }
   /** Keeps a weapon only when this returns true (applied after `remove`). */
   include?: (def: WeaponDef) => boolean
   /** Added or replaced accessories (merged by id over the ones the kit ships). */
@@ -412,6 +470,8 @@ export interface Arsenal {
   readonly calibers: ReadonlyMap<CaliberId, CaliberDef>
   readonly weapons: ReadonlyMap<WeaponId, WeaponDef>
   readonly explosives: ReadonlyMap<ExplosiveId, ExplosiveDef>
+  /** The ammo table by id (`<caliber>:<kind>`). */
+  readonly ammo: ReadonlyMap<string, AmmoDef>
   readonly attachments: ReadonlyMap<AttachmentId, AttachmentDef>
   readonly rules: WeaponRules
   /** Whether an accessory goes on a weapon with the given parts on it (a weapon as it ships when `fitted` is left out), and where. */
@@ -419,7 +479,9 @@ export interface Arsenal {
   /** Rebuilds a weapon from `WeaponState.snapshot()`; the random streams start again from `seed`. */
   restore(snapshot: WeaponSnapshot, options?: { seed?: number }): WeaponState
   /** Make a runtime state for a weapon (each holder gets its own). Unknown id throws. */
-  create(id: WeaponId, options?: { seed?: number; reserve?: number; condition?: string; ammoQuality?: string }): WeaponState
+  create(id: WeaponId, options?: { seed?: number; reserve?: number; condition?: string; ammoQuality?: string; ammoKind?: AmmoKind }): WeaponState
+  /** A load of a calibre (its own `kind` when `kind` is left out) with mass, speed, energy and penetration; throws when the table has none. */
+  loadOf(caliber: CaliberId, kind?: AmmoKind): AmmoLoad
   /** Muzzle energy of a calibre (optionally with a barrel factor). */
   muzzleEnergy(caliber: CaliberId, barrel?: number): number
   /** The explosive a `throw` or `place` use carries, ready to fly (`step`) or wait for its trigger; undefined when the use carries none. */

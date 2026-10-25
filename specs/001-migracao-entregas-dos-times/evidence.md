@@ -596,7 +596,7 @@ Modelo da execução: `sonnet`. Branch `feat/spec-001-fase-1` (sobre T1.1 a T1.5
 
 ### Decisões
 
-1. **Arquétipo só empresta modelo de quem atira do mesmo jeito.** Os lançadores (`rpg_7`, `m72_law`, `at4`, `carl_gustaf_m4`) têm `archetype: shotgun_pump_12` nos dados; pela regra "menor id" o `at4` daria um tubo de foguete à escopeta. A condição é `action.kind` igual ao do arquétipo. Resultado: 15 arquétipos com modelo (`pistol_9mm` → `beretta_92fs`, `pistol_45` → `colt_m1911`, `revolver_357` → `sw_686`, `revolver_38` → `taurus_82`, `smg_9mm` → `cz_scorpion_evo_3`, `shotgun_pump_12` → `cbc_pump_military_3_0`, `shotgun_semi_12` → `aa_12`, `shotgun_double_12` → `boito_double_barrel`, `rifle_7_62x39` → `ak_47`, `rifle_5_56` → `ak_12`, `rifle_bolt_308` → `fn_scar_h`, `sniper_338` → `accuracy_awm`, `anti_materiel_50` → `barrett_m82a1`, `carbine_22` → `cbc_122`, `flamethrower` → `improvised_flamethrower`); `pistol_22` (nenhuma marca o aponta), o corpo a corpo, o arco, a besta, as ferramentas e os arremessáveis seguem com o prop. O comprimento do modelo é o da marca, não o do arquétipo.
+1. **Arquétipo só empresta modelo de quem atira do mesmo jeito.** Os lançadores (`rpg_7`, `m72_law`, `at4`, `carl_gustaf_m4`) têm `archetype: shotgun_pump_12` nos dados; pela regra "menor id" o `at4` daria um tubo de foguete à escopeta. A condição é `action.kind` igual ao do arquétipo. Resultado: 15 arquétipos com modelo (`pistol_9mm` → `beretta_92fs`, `pistol_45` → `colt_m1911`, `revolver_357` → `sw_686`, `revolver_38` → `taurus_82`, `smg_9mm` → `cz_scorpion_evo_3`, `shotgun_pump_12` → `cbc_pump_military_3_0`, `shotgun_semi_12` → `aa_12`, `shotgun_double_12` → `boito_double_barrel`, `barrett_m82a1` → `ak_47`, `rifle_5_56` → `ak_12`, `rifle_bolt_308` → `fn_scar_h`, `sniper_338` → `accuracy_awm`, `anti_materiel_50` → `barrett_m82a1`, `carbine_22` → `cbc_122`, `flamethrower` → `improvised_flamethrower`); `pistol_22` (nenhuma marca o aponta), o corpo a corpo, o arco, a besta, as ferramentas e os arremessáveis seguem com o prop. O comprimento do modelo é o da marca, não o do arquétipo.
 2. **Explosão vira evento do host** (`HostEvent.explosion`) em vez de o módulo ouvir a sala: aditivo, genérico (não cita arma), e é o que deixa a área tocar o som por distância. Também sai das peças do mundo (`explode` do destruidor).
 3. **`ModuleHost.configureTool({ condition, ammoQuality })`**: o módulo não tinha como mudar a regra da arma na mão. O host aplica à ferramenta em mãos e às seguintes (`toolSettings`). Genérico (desgaste e qualidade da munição valem para qualquer ferramenta).
 4. **Raio do mundo = alcance de ferimento.** A explosão arremessada passa a chamar `world.explode` com `injuryRadius` (antes o raio letal da arremessável), igual ao da peça armada em cadeia (`explodes.radius = injuryRadius`): o mesmo explosivo faz o mesmo estrago no mundo, arremessado ou em cadeia. A energia cai com a distância.
@@ -2369,9 +2369,130 @@ Controles: clima (os 10 estados, nomes em pt-BR e en), transição (de uma vez o
   `blast_fragments`.
 - Vigas e pilares (pedido do dono na mesma sessão): `tests/beams-and-columns.test.ts` cruza calibres reais de `game-weapons` com pilar e viga de
   concreto armado, viga I de aço, viga de madeira e pilar de tijolo. Correções, todas por opção ou valor e sem tocar nos goldens: `Hit.piercing`
-  (chumbo mole não fura 8,5 mm de aço só pela energia), `breach.blastReach` (padrão **desligado**; o valor realista é 0,12 m por raiz cúbica de kJ:
-  ligado, o `gas_explodes` do golden `house-scenarios` muda, então a decisão de ligar e regravar é do dono) e `damageScale.shelter: 3` no vidro
+  (chumbo mole não fura 8,5 mm de aço só pela energia), `breach.blastReach` (padrão **desligado**; o valor realista é 0,12 m por raiz cúbica de kJ; **removida em 2026-10-24**, ver "Decisões do dono de 2026-10-24" abaixo) e `damageScale.shelter: 3` no vidro
   (valor novo no JSON de materiais, sem efeito fora do abrigo).
+
+### Decisões do dono de 2026-10-24 (física)
+
+**1. Tanque de combustível realista.** Dono: "depende, na vida real se receber um tiro quais possibilidades de explodi-lo". Bala comum que fura tanque de veículo ou recipiente inflamável (`contains` com `gas` ou
+`fuel`: galão, botijão) **vaza e não explode sozinha**. Para acender precisa de uma fonte: faísca de munição dura em metal, incendiária ou traçante, fogo perto ou explosão. Aceso, corre o fogo e a explosão de sempre.
+- Antes: `game-vehicles/src/destructible/impl.ts` aquecia o tanque ao ponto de ignição com qualquer acerto de energia acima de 1500 J (linha `E > 1500`, removida); o mundo genérico só acendia por calor (350 °C).
+- Contratos (`game-contracts/src/ignition.ts`): `IgnitionRules` (lado do recipiente) e `ignitionChance`. Padrões: curva de enchimento `[0,0.6] [0.1,1] [0.35,0.6] [0.65,0.3] [0.9,0.15] [1,0.12]`
+  (cheio fica rico demais para queimar e só vaza; quase vazio acende mais; a chama sente metade da curva, `flameFillInfluence 0.5`), faísca por material (aço e ferro 1, alumínio 0,25, outro metal 0,5, não metal 0),
+  diesel com 0,15 da faísca (ponto de fulgor de 52 °C ou mais), fogo perto a 1,5 m com 0,5 por segundo, chama padrão de quem manda só a marca (incendiária 0,7, traçante 0,2).
+- Munição (`game-weapons`, `rules.ignition`, lido de `ammo.json`): faísca = 1 - (1 - núcleo)(1 - jaqueta). Núcleo: chumbo 0,005, chumbo com ponta de aço 0,04, aço 0,12, aço temperado 0,25, carbeto de tungstênio 0,25, cobre 0,01.
+  Jaqueta: metal dourado 0,005, cobre 0,005, latão 0,01, aço 0,08. Chama: incendiária 0,7, traçante 0,2. Resultado: 7.62x51 M80 (chumbo, metal dourado) 1%; 7.62x39 M43 e 5.45x39 7N6 (aço e aço) 19%; M993 e M2 AP 25%.
+  Fonte: não existe tabela pública de ignição por cartucho; são números do kit (modelo), na ordem de grandeza da literatura de vulnerabilidade de tanques (bala comum raramente acende, perfurante incendiária acende), para o jogo ajustar.
+- Medido com 500 tiros semeados no tanque de 55 L do `proto` (`game-vehicles/tests/tank-ignition.test.ts`), % que acende, cheio / meio / 10%: M80 0 / 0,2 / 1; 7.62x39 M43 2,2 / 9 / 19; 5.45x39 7N6 2,2 / 9 / 19; M993 AP 3,2 / 11,4 / 24,8;
+  7.62x51 traçante 11,4 / 14,8 / 20,8; .50 BMG M8 API 40 / 56 / 80. A incendiária cheia dá 40% e não 70% por causa da curva (0,7 x (1 - 0,5 x 0,88)); vazio a 10% dá 80%.
+- Testes: 100 tiros M80 num tanque cheio de aço vazam e acendem no máximo 2 vezes; núcleo de aço e AP acendem mais que M80; tanque quase vazio acende mais de 2 vezes o cheio; incendiária acende na taxa configurada; vazamento ao lado de um pneu
+  em chamas acende em menos de 4 s (o tanque inteiro, sem vazamento, só esquenta bem depois: 18 s); explosão perto acende. Mesmo roteiro no mundo genérico (`game-destruction/tests/ignition.test.ts`, galão de aço e de plástico: plástico nunca faísca).
+- Efeitos (`game-vfx`): `vehicle_leak` agora é só a poça e o pingar (passos `decal` e `emit` da Garagem sem o fogo e a explosão) e a sequência inteira (faísca, fogo pela poça, explosão aos 7,2 s) é `vehicle_leak_ignited`, pedida
+  pelo `game-vehicles-three` quando o tanque pega fogo (`defaultEffectIds.leakIgnited`). Nível do tanque: opção nova `fuel` (0 a 1) do `createVehicleDestructible`.
+- Goldens: nenhum arquivo de golden mudou por este item.
+
+**3. Correção da granada sempre ligada.** Dono: "Correção da granada já ligada não deveria nem ter dois caminhos já que é correção." A opção
+`breach.blastReach` e o padrão `Infinity` saíram; os 0,12 m por raiz cúbica de kJ são a física (constante nomeada `BREACH_BLAST_REACH` em `world.ts`).
+Golden regravado com `UPDATE_GOLDEN=1 vitest run tests/wall-golden.test.ts`: só mudou o cenário `gas_explodes` de `house-scenarios.json` (3 eventos a menos:
+o `fracture`, o `debris` e o `stage 3` da janela). A janela fica a ~2,3 m do botijão (60 kJ alcançam 0,47 m), então ela deixa de
+estourar pela brecha da explosão; o estilhaço e o dano da explosão continuam. Os outros cinco cenários não mudaram. Testes de pilar/viga perdem a opção
+e o caso "sem a opção".
+
+**2. Pilares: a sustentação é a soma dos pilares.** Resposta do dono à pergunta 1 da T2.6: "deve ser ajustada nas configs; às vezes ficaria melhor tipo 4 pilares e a sustentação é a soma dos 4".
+- Diagnóstico (script no navegador, sala real, `house_two_pillars` com os dois pilares do time): o solver já soma. A laje reparte a carga entre os apoios que restam e cai
+  quando a capacidade que sobra é menor que a carga (teste novo em `structure.test.ts`: 4 pilares dimensionados a 0,72/0,97, perde 1 e fica a 0,9; perde 2 e passa de 1,1 e cai).
+  O que segurava a casa era o **dimensionamento** e a **carga que some**: com `safety 0,65` os 4 pilares ficam a 0,65 em repouso; perdidos 2, os outros 2 iriam a 1,3, mas a cascata
+  de peças que caem arranca as divisórias do andar de cima na hora (junta `thrown`, 0,5 s) e a carga cai ~27%: os 2 pilares ficam parados a 0,95 e a laje a 0,33 (na sala; fora
+  da sala, no mundo puro, a casa caía). Parcelas iguais: nenhuma peça menor (placas, vigas) leva carga, só os pilares.
+- Configuração exposta: capacidade da peça (`structure.capacity` ou `MaterialDef.compressive` × seção), `sizeStructure({ safety, redundancy })`, opção nova do mundo
+  `structure: { safetyFactor }` (padrão 1; tensão = carga × fator / capacidade) e `SpecimenDef.sizing` no `game-floorplan-three`.
+- O pórtico da área (`house_casa_portico`) passa a ser dimensionado a `safety 0,72` e `redundancy 0,97` (um pilar perdido deixa os outros a 0,96, dois passam de 1 mesmo com a carga
+  que some). Com os dois pilares do time a laje e o telhado caem na sala real (`floorplan-test-area/test.mjs`, pt-BR e en). O roteiro estendido do módulo saiu.
+- Goldens: nenhum mudou por este item (o solver não mudou; a opção nova vale 1). O golden `vc3-house-area.json` do time compara só ids, checagens e eventos de sentido.
+
+**4. Tabela de penetração por calibre em `game-weapons`.** O dono pediu que cada calibre e tipo de munição traga massa, energia e penetração em aço, concreto, tijolo e madeira, e que o motor
+de destruição não conheça nomes de calibre.
+- Onde: `packages/game-weapons/src/data/ammo.json` (50 cargas, id `<calibre>:<tipo>`), `arsenal.loadOf(calibre, tipo?)`, `weapon.setAmmoKind(tipo)`, opções `ammo`/`patch.ammo`/`remove.ammo`.
+  O `Shot` leva `ammo`, `mass`, `penetration`, `incendiary`, `tracer`; `shotToHit`/`shotExtras` (contratos) escalam a penetração pela energia que sobra e põem em `Hit.penetration`.
+- Motor: lê `Hit.penetration` por classe de material (`MaterialDef.penetrationClass`/`penetrationScale`, em `materials.json`: aço estrutural 1,3 contra o RHA das tabelas, madeira mole 1,5,
+  alumínio 3...); sem tabela vale a regra da energia com `Hit.piercing`. `PIERCING_BY_KIND`, `PIERCING_BY_CALIBER` e `piercingOf` saíram do `game-destruction`.
+- Fonte dos números: **um** valor publicado (7,62x51 M993 AP: 18 mm RHA a 100 m, 7 mm a 500 m; página do produto da Nammo); o resto é **estimativa** minha a partir de ordens de grandeza
+  publicadas (bola 4 a 6 mm de RHA, núcleo de aço 6 a 8, AP 10 a 22, .50 BMG bola cerca de 14), da energia e da construção. Cada carga diz `basis: 'published' | 'estimated'` e as notas
+  do arquivo explicam. Concreto, tijolo e madeira não têm fonte citada: pergunta ao dono abaixo.
+- Tabela do arquivo (`ammo.json`):
+
+| Load | kind | g | m/s | J | core / jacket | steel mm | concrete mm | brick mm | wood mm | basis |
+|---|---|---|---|---|---|---|---|---|---|---|
+| .22 LR lead round nose | rimfire | 2.6 | 350 | 159 | lead / none | 1.4 | 12 | 25 | 60 | estimated |
+| .380 ACP FMJ | fmj | 6.2 | 295 | 270 | lead / gilding_metal | 2.2 | 20 | 40 | 80 | estimated |
+| 9x18 Makarov FMJ | fmj | 6.1 | 315 | 303 | lead / steel | 2.6 | 22 | 45 | 85 | estimated |
+| 9x19 FMJ 124 gr | fmj | 7.5 | 365 | 500 | lead / gilding_metal | 3 | 25 | 50 | 80 | estimated |
+| 9x19 JHP | hp | 7.5 | 365 | 500 | lead / gilding_metal | 2 | 15 | 35 | 55 | estimated |
+| .40 S&W FMJ | fmj | 11.7 | 310 | 562 | lead / gilding_metal | 3 | 28 | 55 | 85 | estimated |
+| .45 ACP FMJ 230 gr | fmj | 14.9 | 254 | 481 | lead / gilding_metal | 2.8 | 28 | 55 | 85 | estimated |
+| .45 ACP JHP | hp | 14.9 | 254 | 481 | lead / gilding_metal | 1.8 | 18 | 40 | 60 | estimated |
+| 5.7x28 SS190 | fmj | 2 | 715 | 511 | lead_steel / gilding_metal | 4 | 25 | 50 | 100 | estimated |
+| .38 Special lead round nose | fmj | 10.2 | 247 | 311 | lead / none | 2 | 20 | 40 | 70 | estimated |
+| .357 Magnum JHP | hp | 10.2 | 396 | 800 | lead / gilding_metal | 3 | 25 | 45 | 90 | estimated |
+| .44 Magnum FMJ | fmj | 15.6 | 440 | 1510 | lead / gilding_metal | 4 | 40 | 70 | 150 | estimated |
+| .50 AE FMJ | fmj | 19.4 | 470 | 2143 | lead / gilding_metal | 4 | 38 | 65 | 130 | estimated |
+| 12 ga 00 buck (one pellet) | buck | 3.5 | 414 | 300 | lead / none | 0.8 | 10 | 25 | 60 | estimated |
+| 12 ga rifled slug | slug | 28 | 463 | 3001 | lead / none | 4 | 60 | 100 | 250 | estimated |
+| 12 ga birdshot (one pellet) | birdshot | 0.2 | 400 | 16 | lead / none | 0.2 | 3 | 8 | 20 | estimated |
+| 20 ga buck (one pellet) | buck | 1.3 | 400 | 104 | lead / none | 0.6 | 8 | 20 | 50 | estimated |
+| 5.56x45 M855 (steel tip, lead core) | fmj | 4 | 935 | 1748 | lead_steel / gilding_metal | 4.5 | 90 | 180 | 280 | estimated |
+| 5.45x39 7N6 (steel core) | fmj | 3.4 | 900 | 1377 | steel / steel | 5.5 | 90 | 180 | 280 | estimated |
+| 7.62x39 M43 (steel core) | fmj | 8 | 725 | 2102 | steel / steel | 6.5 | 110 | 220 | 300 | estimated |
+| .30-30 Winchester flat nose | fmj | 9.7 | 670 | 2177 | lead / gilding_metal | 3 | 80 | 160 | 250 | estimated |
+| 7.62x51 M80 ball | fmj | 9.7 | 850 | 3504 | lead / gilding_metal | 5 | 120 | 250 | 330 | estimated |
+| 7.62x54R LPS (steel core) | fmj | 9.6 | 865 | 3591 | steel / steel | 6.5 | 130 | 260 | 330 | estimated |
+| .30-06 M1 ball | fmj | 9.7 | 880 | 3756 | lead / gilding_metal | 5.5 | 130 | 260 | 340 | estimated |
+| .300 Win Mag FMJ | fmj | 11.7 | 900 | 4738 | lead / gilding_metal | 6.5 | 150 | 290 | 360 | estimated |
+| .338 Lapua Magnum FMJ | fmj | 16.2 | 903 | 6605 | lead / gilding_metal | 8 | 190 | 360 | 450 | estimated |
+| .408 CheyTac solid | fmj | 27.2 | 900 | 11016 | copper / none | 12 | 250 | 450 | 550 | estimated |
+| Arrow (steel broadhead) | arrow | 25 | 90 | 101 | steel / none | 0.5 | 5 | 15 | 100 | estimated |
+| Crossbow bolt | bolt | 20 | 122 | 149 | steel / none | 0.8 | 8 | 20 | 120 | estimated |
+| 4.6x30 DM11 | fmj | 2 | 735 | 540 | steel / gilding_metal | 3.5 | 25 | 50 | 100 | estimated |
+| .32 ACP FMJ | fmj | 4.6 | 276 | 175 | lead / gilding_metal | 1.8 | 15 | 30 | 60 | estimated |
+| 9x19 tracer | tracer | 7.5 | 365 | 500 | lead / gilding_metal | 2.8 | 22 | 45 | 75 | estimated |
+| 5.56x45 M995 AP (tungsten carbide) | ap | 3.6 | 1013 | 1847 | tungsten_carbide / gilding_metal | 10 | 110 | 210 | 300 | estimated |
+| 5.56x45 M856 tracer | tracer | 3.95 | 914 | 1650 | lead / gilding_metal | 3.5 | 80 | 160 | 260 | estimated |
+| 5.45x39 7T3M tracer | tracer | 3.4 | 900 | 1377 | lead / steel | 4 | 80 | 160 | 260 | estimated |
+| 7.62x39 BZ API | incendiary | 7.7 | 720 | 1996 | hardened_steel / steel | 8 | 110 | 220 | 300 | estimated |
+| 7.62x39 T-45 tracer | tracer | 8 | 725 | 2102 | lead / steel | 4.5 | 100 | 200 | 280 | estimated |
+| 7.62x51 M993 AP (tungsten carbide) | ap | 8.2 | 930 | 3546 | tungsten_carbide / gilding_metal | 18 | 160 | 300 | 360 | published |
+| 7.62x51 M62 tracer | tracer | 9.7 | 850 | 3504 | lead / gilding_metal | 4 | 110 | 230 | 320 | estimated |
+| 7.62x54R 7N37 AP | ap | 9.6 | 865 | 3591 | hardened_steel / steel | 11 | 140 | 270 | 340 | estimated |
+| 7.62x54R B-32 API | incendiary | 10 | 830 | 3445 | hardened_steel / steel | 10 | 130 | 260 | 330 | estimated |
+| 7.62x54R T-46 tracer | tracer | 9.6 | 865 | 3591 | lead / steel | 4.5 | 110 | 220 | 300 | estimated |
+| .30-06 M2 AP (hardened steel) | ap | 10.8 | 860 | 3994 | hardened_steel / gilding_metal | 10 | 140 | 270 | 340 | estimated |
+| .30-06 M25 tracer | tracer | 9.7 | 880 | 3756 | lead / gilding_metal | 4 | 110 | 230 | 320 | estimated |
+| .338 Lapua AP (tungsten) | ap | 16.2 | 903 | 6605 | tungsten_carbide / gilding_metal | 16 | 200 | 380 | 470 | estimated |
+| .50 BMG M33 ball | fmj | 42 | 925 | 17968 | lead_steel / gilding_metal | 14 | 330 | 560 | 600 | estimated |
+| .50 BMG M2 AP (hardened steel) | ap | 42 | 925 | 17968 | hardened_steel / gilding_metal | 22 | 350 | 580 | 600 | estimated |
+| .50 BMG M8 API | incendiary | 42 | 925 | 17968 | hardened_steel / gilding_metal | 18 | 340 | 570 | 600 | estimated |
+| .50 BMG M17 tracer | tracer | 42 | 925 | 17968 | lead / gilding_metal | 9 | 300 | 520 | 580 | estimated |
+| 12 ga incendiary shell (one pellet, magnesium) | incendiary | 3.5 | 414 | 300 | none / none | 0.1 | 3 | 8 | 15 | estimated |
+
+- Resultado contra vigas e pilares (`tests/beams-and-columns.test.ts`, "results table", lê a tabela acima; `PRINT_TABLE=1` imprime). Um tiro no meio de cada elemento, a 3 m:
+
+| Munição | Energia (J) | aço (mm) | concreto (mm) | tijolo (mm) | madeira (mm) | pilar CA 30 cm | viga CA | viga I aço 8,5 mm | viga madeira 10 cm | pilar tijolo 40 cm |
+|---|---|---|---|---|---|---|---|---|---|---|
+| .22 LR lead round nose | 159 | 1.4 | 12 | 25 | 60 | não | não | não | não | não |
+| 9x19 FMJ 124 gr | 500 | 3 | 25 | 50 | 80 | não | não | não | não | não |
+| .45 ACP FMJ 230 gr | 481 | 2.8 | 28 | 55 | 85 | não | não | não | não | não |
+| 5.56x45 M855 (steel tip, lead core) | 1748 | 4.5 | 90 | 180 | 280 | não | não | não | sim | não |
+| 5.56x45 M995 AP (tungsten carbide) | 1847 | 10 | 110 | 210 | 300 | não | não | sim | sim | não |
+| 7.62x39 M43 (steel core) | 2103 | 6.5 | 110 | 220 | 300 | não | não | não | sim | não |
+| 7.62x51 M80 ball | 3504 | 5 | 120 | 250 | 330 | não | não | não | sim | não |
+| 7.62x51 M993 AP (tungsten carbide) | 3546 | 18 | 160 | 300 | 360 | não | não | sim | sim | não |
+| .50 BMG M33 ball | 17968 | 14 | 330 | 560 | 600 | sim | sim | sim | sim | sim |
+| .50 BMG M2 AP (hardened steel) | 17968 | 22 | 350 | 580 | 600 | sim | sim | sim | sim | sim |
+| 12 ga rifled slug | 3001 | 4 | 60 | 100 | 250 | não | não | não | sim | não |
+| 12 ga 00 buck (one pellet) | 300 | 0.8 | 10 | 25 | 60 | não | não | não | não | não |
+
+  Lê-se: a bola M80 (7,62x51) não fura a mesa de 8,5 mm da viga I e a M993 AP fura; a .50 BMG M33 (bola) fura o pilar de concreto armado de 30 cm; 5,56 e 7,62 de bola furam a
+  viga de madeira de 10 cm e não furam o tijolo de 40 cm nem o concreto. Os goldens do mundo (`wall-golden`, `house-scenarios`) não mudam: nenhum usa `Hit.penetration`.
 
 ## T2.4
 
@@ -2436,7 +2557,7 @@ Módulo de teste das casas, exemplo e goldens contra o VC3 (T2.6a-c). Branch `wo
 - `?arena=` (14 a 200) na página da sala: a arena padrão (14 m) é pequena para uma casa de 12 m e uma fileira.
 - Os andares de cima são alcançados por teletransporte do olho (`up`/`down`); o jogador da sala não tem altura de piso e as escadas não são andadas.
 - O grupo pós-apocalíptico lista só `triage_tent`; os estados `fortified` e `abandoned` valem para as outras tipologias.
-- `house_two_pillars` usa o pórtico com a casa `townhouse` (a `single_storey_a` segura a laje nas divisórias) e, na sala, derruba os pilares seguintes até a laje cair: com o desenhista ligado, dois pilares deixam os outros a 0,95 de tensão e a laje a 0,45 e nada cai. As checagens são as do time; só o roteiro de golpes foi estendido.
+- `house_two_pillars` usa o pórtico com a casa `townhouse` (a `single_storey_a` segura a laje nas divisórias). ~~Na sala, derruba os pilares seguintes até a laje cair~~ **[2026-10-24: resolvido, ver "Decisões do dono de 2026-10-24 (física)", item 2; o roteiro estendido saiu e o cenário roda com os dois pilares do time.]**
 - Contagens de ticks de dano diferem do mundo do time; só os eventos de sentido e as checagens são comparados.
 - Pós-fix, a tank d'água vaza 500 L para 496 L em 40 s com um tiro de 600 J (calibre 9).
 
@@ -2882,3 +3003,97 @@ node examples/interactables-test-area/build.mjs && test.mjs -> 28/28
 - **Merge de `origin/main` e integração pendentes:** o coordenador pediu o merge de `origin/main` antes do último commit e que `game-crowd` e
   `game-player` usem o que está lá (ruas e veículos do `game-urban`, vegetação para manada e revoada). O merge foi recusado pela verificação de
   permissão da sessão e não foi tentado de novo; a integração espera essa permissão.
+
+## AdaptadorInterativos no kit (`game-floorplan-interactables`)
+
+Resposta do dono à pergunta 5 da T2.4/T2.6 (2026-10-24): o `AdaptadorInterativos` entra no kit, genérico e configurável, e passa a ser o padrão da opção
+`interactives` do `game-floorplan-three`. Branch `work/adapter`, a partir de `origin/main`.
+
+**Fonte:** IIFE de `site/pages/sala-de-testes/area-casas.html` (L36290, 1040 linhas, v0.3.0). As cópias de `pages/jogo/visor-casas-3d.html` e
+`pages/jogo/zombiada-modo-livre.html` são idênticas (conferido com `diff`). A cópia literal está em
+`packages/game-floorplan-interactables/tests/fixtures/team-golden/adaptador-interativos.js` (sha256 `0cc377e6248bbbad3b49c82e7b8b864f3449442923a0c32a2d53f4129d72d7c4`).
+
+**Pacote escolhido, pelo grafo de dependências:** pacote novo e puro, `packages/game-floorplan-interactables`.
+- Depende só de contratos: recebe `GameInteractables` e `GameInteractablesHousehold` por opção (sem dependência de runtime), e lê a planta do motor (`game-floorplan`).
+- Não pode ir em `game-floorplan` (o motor da planta não conhece o kit de interativos; seria dependência nova do núcleo), nem em `game-interactables-household` (o household não conhece planta), nem em `game-floorplan-three` (three.js só no adaptador `-three`; o adaptador não usa three.js).
+- O `game-floorplan-three` passa a depender dele (é o padrão de `interactives`); o inverso não existe, então não há ciclo. Mesmo molde de `-fleet`, `-species`, `-household`.
+
+**O que mudou na tradução (tabela completa em `packages/game-floorplan-interactables/MIGRATION.md`):**
+
+| Original | Novo |
+|---|---|
+| `criar`, `planejar`, `criarMundo`, `adicionar`, `bloqueadoDe`, `pontoDe`, `especProprio` | `create`, `plan`, `createWorld`, `add`, `blockedOf`, `pointOf`, `ownSpec` |
+| `MAPA_TIPOS` (88 tipos), tabela de conteúdo (114), cadeiras, pontos de água, preferência, substitutos | `TYPE_MAP`, `CONTENT_MAP`, `CONTENT_BY_GROUP`, `CHAIR_TABLES`, `FIXTURES_OF_POINT`, `PREFERENCE`, `OBJECT_SUBSTITUTES`: registros; chave `null` tira a entrada |
+| `regiao` (`br`), `locale` (`pt-BR`) | `region`, `locale`, com os valores do time como padrão |
+| frases dos avisos | `messages` (`en` e `pt-BR`; o `pt-BR` é a frase do time) |
+| ids criados (`entrada_energia`, `quadro`, `medidor`, `gas_encanado`, `#aereo`, `#armario`, `#cadeiraN`) | `service_entrance`, `panel`, `meter`, `piped_gas`, `#overhead`, `#cabinet`, `#chairN` |
+
+Nada do ZombiAdA está no código: os valores do time são o padrão das opções. Sem `Math.random` (todo sorteio sai da semente).
+
+**Verificação contra o código do time:** `tests/team-golden.test.ts` roda o IIFE original num `vm` sobre uma planta com a forma do `PlantasSDK`, reconstruída da planta do kit (tradutor
+inverso nos testes), e compara a resposta, depois de renomeada, com `toEqual`:
+- `plan`: 17 tipologias x 3 sementes, mais os estados fortified e abandoned, `night`, `floor`, origem e `inw` (espelhado);
+- `world.serialize()` e o resultado de `add` (dobradiças viradas, objetos afastados) em 7 casas;
+- `blockedOf` numa grade de pontos;
+- chaminé (lareira, fogão a lenha, por id) e os conteúdos vindos do catálogo de bens.
+Os testes de registro (`tests/adapter.test.ts`) cobrem `typeMap` com `null` e com troca, `contentMap`, fallback por grupo, `preference`, cadeiras, `seedKey`, textos e erro de kit faltando.
+
+**Ligação no `game-floorplan-three`:** `interactives.adapter` ficou opcional (padrão `FloorplanInteractables`); aceita objeto com `plan/add/createWorld/blockedOf` ou fábrica com `create`.
+Novas opções: `interactives.adapterOptions` (vai para `create`), `locale` do renderizador e `seedKey` do renderizador repassados. O aviso de `interactives` incompleto continua (sem `GameInteractables`, `GameInteractablesHousehold` ou `GameInteractablesThree`).
+Foram corrigidos erros de tradução da ponte (`bridge.ts`): `ent.floorKind` virou `ent.floorY`, `plane.picture` virou `plane.panel`, `mats.floorKind` virou `mats.floor`.
+Esses três nomes estavam errados na ponte (o plano usa `floorY`, `panel` e o material `floor`), e só apareceriam com um adaptador de verdade.
+Área de teste: `examples/floorplan-test-area` agora entrega as três bibliotecas e a casa nasce com objetos do kit, sem adaptador injetado pela página; a `interactables-test-area` herda (carrega o módulo das casas).
+
+**Desvios:**
+- O adaptador do time lê o resultado do `PlantasSDK`; o porte lê a planta do kit (nomes em inglês, `contents` como pilhas do catálogo, `utilities`). É porte literal com troca de chaves, provado pelo teste diferencial.
+- Conteúdo: `nome_pt` some (o item tem nome próprio) e `data` da pilha não leva idade nem estado; a correspondência de 31 ids da tabela padrão da estrutura para o household foi derivada pelo nome.
+- `FROZEN_ITEMS` substitui a checagem do time pelo nome "congel".
+- A chaminé não tem vínculo com item no tipo `Chimney` do kit: a regra (id `chimney.fireplace` / `chimney.stove`, senão a primeira lareira ou fogão a lenha pelo `kind`) foi inferida; nenhum modelo rural emite chaminé hoje.
+- Gás de acampamento: liga o primeiro `camp_stove` ao primeiro `gas_canister`.
+- As sementes dos objetos que o adaptador cria diferem das do time (ids renomeados); `seedKey` reproduz as antigas, e os testes usam `teamSeedKey`.
+- O modo de luz vem de `electrical.mode`.
+
+**Comandos e resultados**
+
+```text
+pnpm build                                                    -> ok
+pnpm typecheck                                                -> ok
+pnpm lint                                                     -> ok
+pnpm --filter @adatechnology/game-floorplan-interactables test -> 93 passed (golden contra o IIFE do time 70 + 4, registros 19)
+pnpm --filter @adatechnology/game-floorplan-three test         -> 142 passed (4 novos: adaptador padrão, adapterOptions, adaptador injetado)
+game-interactables 153, game-interactables-household 1911, game-interactables-three 82 -> passed
+game-test-room                                                 -> 145 passed; 1 (dinamite com pavio) estourou o tempo com a máquina carregada e passou sozinho
+node examples/test-room/build.mjs && floorplan-test-area/build.mjs && interactables-test-area/build.mjs -> ok
+node examples/floorplan-test-area/test.mjs                     -> 24/24 (pt-BR e en; a casa nasce com 83 objetos do kit, 9 lâmpadas, sem aviso)
+node examples/interactables-test-area/test.mjs                 -> sem falhas (EXIT 0)
+```
+
+**Perguntas para o dono:**
+1. A renomeação dos ids criados pelo adaptador (`service_entrance`, `panel`...) muda as sementes de uma cena salva com os ids do time. Aceita, ou o jogo passa `seedKey`?
+2. A regra da chaminé e a do gás de acampamento foram inferidas; o time não dá o vínculo na planta. O `Chimney` do `game-floorplan` deve ganhar o id do item que ele serve?
+3. Os 31 ids de conteúdo da tabela padrão da estrutura foram casados com o household pelo nome; a lista está em `MIGRATION.md`. Alguém do time de itens confere?
+
+## 2026-10-24 · A sala de testes abre só com o conteúdo do SDK
+
+O dono perguntou se os itens de `/test-room/` eram os do jogo: não eram (19 itens procedurais de caixa e cilindro, `demoItems`, mais um carro de aluguel de caixas, `DEMO_MODULE`). Decisão do dono: "remover todos esses itens e deixar apenas dos sdk". Feito:
+
+- `game-test-room` perdeu `demoItems`/`DEMO_ITEMS`/`DEMO_MATERIALS`, os cenários embutidos (`SCENARIOS`, `scenariosFor`, `makeScenarios`, que usavam esses ids e a ferramenta `pistol_9mm`) e os textos deles. Fica só `brickWallSpec` (parede-alvo da arena). Os cenários de destruição, fluido e fogo que eles cobriam já existem nos testes de `game-destruction`/`game-fluids` e nos cenários de módulo dos pacotes de conteúdo; nenhum foi portado porque nenhum tinha item real equivalente sem cenário próprio (pendência: cenário de módulo para o extintor apagando fogo e para o fogo em estofado, se quisermos manter essa cobertura).
+- `examples/test-room` carrega o mesmo conjunto de `examples/interactables-test-area` (o `entry.js` dele é embutido na página; a sala "nua" sem itens fica em `examples/test-room/base/` e é sobre ela que as outras áreas se constroem). `demo-module.js` foi removido.
+- Os testes do pacote usam `tests/fixtures/demo-items.ts` (não exportado).
+
+### 2026-10-24 · Cobertura dos cenários removidos da sala, reescrita com itens reais
+
+Cada cenário embutido que a sala trazia foi para o módulo do pacote dono do item real, ou já tinha equivalente:
+
+| Cenário removido | Onde está agora |
+|---|---|
+| `steel_through_hole`, `concrete_stops_bullet`, `shotgun_splinters_crate`, `hammer_dents_drum`, `torch_melts_steel` | `game-weapons-three` (`src/scenarios.ts`, alvos `target_steel_plate`/`target_plywood`/`target_concrete`, `pistol_9mm`, `barrett_m82a1`, `shotgun_pump_12`, `hammer`, `cutting_torch`). O 9 mm só amassa a chapa de 10 mm (realista); o furo que atravessa é do .50 BMG do Barrett (com a ammo.json, o 7,62x39 comum não fura 10 mm). A escopeta fura o compensado com vários chumbos, não estilhaça. |
+| `extinguisher_puts_out_fire`, `throw_chair_at_wall`, `wrong_tool_refused` | área de móveis (`examples/interactables-test-area/src/scenarios.js`): `sofa_fire_extinguished`, `chair_thrown_at_wall`, `wrong_tool_refused` (chave inglesa na dobradiça da geladeira) |
+| `glass_shatters` | já existiam `tv_screen_shatters` e `shower_glass_shatters` |
+| `kick_chair_leg`, `kick_detaches_leg_via_tool` | já existiam `chair_kicked_apart` e `camp_chair_kicked` |
+| `lighter_burns_crate` | já existe `sofa_burns` |
+| `one_column_roof_stands`, `two_columns_roof_collapses` | já cobertos pelos cenários de desabamento de `game-floorplan-three` |
+| `gas_bottle_explodes` | já existe com o mesmo nome |
+| `screwdriver_shelf_board`, `bucket_melts_drips`, `bottle_drop_shatters`, `coffee_three_sips`, `tilt_cup_spills`, `jerrycan_leaks_fuel`, `fuel_stain_burns` | **sem item real equivalente**: dependem de recipiente com líquido (xícara, garrafa, balde, galão) ou de prateleira de tábuas, que não existem como item destrutível com `fluid` no SDK. Pendência: quando os itens de recipiente entrarem, escrever os cenários no pacote que os entregar. |
+
+Também: `zombie_behind_door` falhava só depois de ~45 cenários na mesma sala porque marcava o ponto do log pelo tamanho da lista, e o log guarda só os últimos 5000 registros; passou a marcar pelo `seq`.
