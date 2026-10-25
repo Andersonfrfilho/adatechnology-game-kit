@@ -2248,5 +2248,15 @@
       0.015
     ],
     "scale": 1
+  },
+  {
+    "id": "raincoat",
+    "teamId": "capa_chuva",
+    "teamBox": [
+      0.3,
+      0.04,
+      0.25
+    ],
+    "scale": 1
   }
 ]
