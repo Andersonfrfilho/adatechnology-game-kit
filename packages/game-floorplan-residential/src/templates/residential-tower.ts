@@ -1,5 +1,5 @@
 import type { DoorDef, FloorplanOptions, RoomDef, TemplateDef, WindowDef } from '@adatechnology/game-floorplan'
-import { SKYSCRAPER_DEFAULTS, buildSkyscraper, exteriorWindows, skyscraperLayout, stripDoor, towerFloors } from '@adatechnology/game-floorplan-structure'
+import { SKYSCRAPER_DEFAULTS, SKYSCRAPER_MAX_STOREYS, buildSkyscraper, exteriorWindows, skyscraperLayout, stripDoor, towerFloors } from '@adatechnology/game-floorplan-structure'
 import type { PlateRect, PlateStrip, SkyscraperLayout, SkyscraperOptions, SkyscraperPreset, StripFiller, TowerPlate } from '@adatechnology/game-floorplan-structure'
 import { r2 } from '../util'
 
@@ -10,7 +10,7 @@ import { r2 } from '../util'
 export const RESIDENTIAL_TOWER_DEFAULTS: SkyscraperPreset = {
   ...SKYSCRAPER_DEFAULTS,
   storeys: 30,
-  range: [20, 60],
+  range: [20, SKYSCRAPER_MAX_STOREYS],
   height: 2.8,
   bay: [9, 9],
   bays: [3, 3],

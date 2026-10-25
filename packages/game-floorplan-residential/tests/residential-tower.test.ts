@@ -11,12 +11,25 @@ describe('residential tower', () => {
   const plan = engine.generate('residential_tower', { seed: 4, floors: 20, locale: 'en' }) as any
   const layout = residentialTowerLayout({ storeys: 20 })
 
+  it('the game configures the tower at generation: floors wins over tower.storeys, every field of tower is reachable, the max is raised by tower.range', () => {
+    const gen = (o: object) => (engine.generate('residential_tower', { seed: 4, locale: 'en', ...o }) as any).config.tower
+    expect(gen({ floors: 24, tower: { storeys: 30 } }).storeys).toBe(24)
+    expect(gen({ tower: { storeys: 35 } }).storeys).toBe(35)
+    expect(residentialTowerLayout({ storeys: 90 }).storeys).toBe(60)
+    expect(gen({ floors: 62, tower: { range: [20, 62] } }).storeys).toBe(62)
+    const t = gen({ floors: 30, tower: { height: 3, bay: [8, 8], slenderness: false, facade: 'curtain', mechanicalEvery: 10, damperAbove: false } })
+    expect(t).toMatchObject({ storeys: 30, height: 3, bay: [8, 8], facade: 'curtain', damper: false, mechanical: [10, 20, 29] })
+    const layout = residentialTowerLayout({ storeys: 30, wind: false, piles: { diameter: 1 } })
+    expect(layout.tower.wind).toBe(false)
+    expect(buildResidentialTower({ storeys: 20, piles: { diameter: 1 } }).parts.find((p) => p.id === 'raft')!.structure!.pile!.diameter).toBe(1)
+  }, 180000)
+
   it('is registered as a multi-family residential template whose storeys are an option, and the zone zt holds it', () => {
     const t = engine.listTemplates().find((x) => x.id === 'residential_tower')!
     expect(t.use).toBe('residential_multi')
     expect((t as { floorRange?: number[] }).floorRange).toEqual([20, 60])
     const zt = engine.getZone('zt')!
-    expect([zt.maxFloors, zt.maxHeight]).toEqual([80, 320])
+    expect([zt.maxFloors, zt.maxHeight]).toEqual([60, 240])
     expect(zt.allowedUses).toContain('residential_multi')
     const inZt = engine.generate('residential_tower', { seed: 4, floors: 60, zone: 'zt' }) as any
     expect(inZt.floors).toHaveLength(60)
