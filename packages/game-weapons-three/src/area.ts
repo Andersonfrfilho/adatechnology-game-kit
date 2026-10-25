@@ -85,6 +85,9 @@ interface Text {
   /** The line of a reload start: how it goes (`kind`), the clip that plays and its seconds. */
   reloadClip: string
   reloadKinds: Record<string, string>
+  /** The line of a sound cue of a reload clip and the name of each cue. */
+  soundCue: string
+  soundCues: Record<string, string>
   reloadEnd: string
   worldExplosives: Record<string, string>
   mountedM134: string
@@ -110,6 +113,8 @@ const TEXT: Record<string, Text> = {
     targets: { target_steel_plate: 'Steel plate target', target_plywood: 'Plywood target', target_concrete: 'Concrete block target' },
     reloadStart: 'Reload started: {weapon} ({ammo}/{capacity})',
     reloadClip: 'Reload of {weapon}: {kind}, clip {clip} ({seconds} s)',
+    soundCue: 'Sound: {cue} ({weapon})',
+    soundCues: { mag_release: 'magazine release button', mag_out: 'magazine slides out', mag_insert: 'magazine slides in', mag_seat: 'magazine seats (click)', slide_release: 'slide snaps forward', charging_handle_pull: 'charging handle pulled', charging_handle_release: 'charging handle released', bolt_lift: 'bolt handle lifted', bolt_pull: 'bolt pulled back', bolt_push: 'bolt pushed forward', bolt_lock: 'bolt handle locked down', shell_insert: 'round inserted', pump_back: 'pump back', pump_forward: 'pump forward', lever_open: 'lever down', lever_close: 'lever up', cylinder_open: 'cylinder opens', cylinder_eject: 'cases fall out', speedloader: 'speed loader empties', cylinder_close: 'cylinder closes', barrels_open: 'barrels open', casings_eject: 'cases pop out', barrels_close: 'barrels close', belt_cover_open: 'cover opens', belt_insert: 'belt seats', belt_cover_close: 'cover closes', rocket_load: 'rocket slides in', rocket_seat: 'rocket seats', grenade_load: 'grenade goes in', breech_open: 'breech opens', breech_close: 'breech closes', tube_drop: 'empty tube dropped', tube_seat: 'new tube seats' },
     reloadKinds: { tactical: 'tactical (round chambered, no pull)', empty: 'empty chamber (works the action)', one_by_one: 'one by one', full: 'speed loader' },
     reloadEnd: 'Reload done: {weapon} ({ammo}/{capacity})',
     worldExplosives: { fuel_barrel: 'Fuel barrel', propane_p13: 'Propane cylinder (P13)', car_fuel_tank: 'Car fuel tank' },
@@ -134,6 +139,8 @@ const TEXT: Record<string, Text> = {
     targets: { target_steel_plate: 'Alvo: chapa de aço', target_plywood: 'Alvo: compensado', target_concrete: 'Alvo: bloco de concreto' },
     reloadStart: 'Recarga iniciada: {weapon} ({ammo}/{capacity})',
     reloadClip: 'Recarga de {weapon}: {kind}, clipe {clip} ({seconds} s)',
+    soundCue: 'Som: {cue} ({weapon})',
+    soundCues: { mag_release: 'botão do carregador', mag_out: 'carregador desliza para fora', mag_insert: 'carregador desliza para dentro', mag_seat: 'carregador encaixa (clique)', slide_release: 'ferrolho volta com estalo', charging_handle_pull: 'alavanca de armar puxada', charging_handle_release: 'alavanca de armar solta', bolt_lift: 'alavanca do ferrolho levantada', bolt_pull: 'ferrolho puxado', bolt_push: 'ferrolho empurrado', bolt_lock: 'alavanca do ferrolho travada', shell_insert: 'cartucho entra', pump_back: 'bomba para trás', pump_forward: 'bomba para frente', lever_open: 'alavanca para baixo', lever_close: 'alavanca para cima', cylinder_open: 'tambor abre', cylinder_eject: 'cápsulas caem', speedloader: 'speedloader esvazia', cylinder_close: 'tambor fecha', barrels_open: 'canos abrem', casings_eject: 'estojos saltam', barrels_close: 'canos fecham', belt_cover_open: 'tampa abre', belt_insert: 'cinta encaixa', belt_cover_close: 'tampa fecha', rocket_load: 'foguete desliza para dentro', rocket_seat: 'foguete encaixa', grenade_load: 'granada entra', breech_open: 'culatra abre', breech_close: 'culatra fecha', tube_drop: 'tubo vazio cai', tube_seat: 'tubo novo encaixa' },
     reloadKinds: { tactical: 'tática (com bala na câmara, sem puxar)', empty: 'vazia (puxa o ferrolho ou a trava)', one_by_one: 'uma a uma', full: 'carregador rápido' },
     reloadEnd: 'Recarga completa: {weapon} ({ammo}/{capacity})',
     worldExplosives: { fuel_barrel: 'Barril de combustível', propane_p13: 'Botijão de gás (P13)', car_fuel_tank: 'Tanque de combustível do carro' },
@@ -348,6 +355,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         audio = createWeaponAudio(undefined, { ...seedOption, engine: lentEngine })
       }
       const created = createWeaponFx({
+        onSound: ({ weapon, cue, profile }) => lent.log(fill(text.soundCue, { weapon: arsenal.name(weapon), cue: text.soundCues[cue] ?? cue }), { weapon, cue, weight: profile.weight, material: profile.material }, 'sound'),
         THREE: lent.THREE as typeof THREE_NS,
         scene: lent.scene as THREE_NS.Scene,
         camera: lent.camera as THREE_NS.Camera,

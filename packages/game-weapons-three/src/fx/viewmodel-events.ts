@@ -156,6 +156,9 @@ export function createClipEventHandler(world: FxWorld, session: Session): (event
       case 'breech_round':
         breechRound()
         break
+      case 'sound':
+        world.sound(session.id, String(data.id), session.soundProfile)
+        break
       default:
         break
     }

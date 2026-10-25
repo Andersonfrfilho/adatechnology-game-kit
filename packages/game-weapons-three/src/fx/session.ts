@@ -7,6 +7,7 @@ import type { ModelKit } from '../models/kit'
 import type { Effects } from './effects'
 import type { Particles } from './particles'
 import type { WeaponAudio } from '../audio'
+import type { SoundProfile } from '../audio/reload-sounds'
 import type { FxLayers } from './layers'
 
 /** What the viewmodel shares with the handlers of the clip events. */
@@ -19,6 +20,8 @@ export interface FxWorld {
   readonly audio: WeaponAudio | null
   readonly layers: FxLayers
   groundAt(x: number, z: number): number
+  /** A sound cue of a clip: the audio plays it (when there is one) and the host is told. */
+  sound(weapon: string, cue: string, profile: SoundProfile): void
   /** Runs `step(e)` for `seconds` from `delay` seconds on, with `e` the eased progress, then `done`. */
   schedule(delay: number, seconds: number, step: (eased: number) => void, done?: () => void): void
 }
@@ -32,6 +35,8 @@ export interface Session {
   readonly holderScale: number
   readonly lengthMetres: number
   readonly caseType: CaseType
+  /** How the weapon sounds: the weight of its metal and what it is made of. */
+  readonly soundProfile: SoundProfile
   readonly kit: ModelKit
   readonly cartridge: { dims: CartridgeDims; shape: CartridgeShape } | null
   stuckCase: THREE_NS.Object3D | null

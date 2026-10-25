@@ -3,6 +3,7 @@ import type { EffectSink, HandTargets, HostEvent, HostTool } from '@adatechnolog
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import type { WeaponAudio } from './audio'
+import type { SoundProfile } from './audio/reload-sounds'
 import { createLayers } from './fx/layers'
 import type { FxLayers } from './fx/layers'
 import type { AttachmentModelRegistry, LaserRaycast } from './models/attachments/types'
@@ -30,6 +31,8 @@ export interface WeaponFxOptions {
   layers?: FxLayers
   /** Metres between the shooter and the listener, for the distance muffling of the shot sound (default 0). */
   soundDistance?: () => number
+  /** Told at every sound cue of a reload clip, at the moment the clip says it (also with no audio): the weapon, the cue id and the profile it sounds with. */
+  onSound?: (cue: { weapon: string; cue: string; profile: SoundProfile }) => void
   /** Builders of accessory models that replace or add to the ones the kit ships (by the `model` of the accessory). */
   attachmentModels?: AttachmentModelRegistry
   /** How far a laser beam goes from a point along a direction (metres), or null when it hits nothing: the dot lands where it ends. */

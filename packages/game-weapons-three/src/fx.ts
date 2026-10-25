@@ -40,6 +40,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
   const model = createViewmodel({
     layers,
     ...(options.soundDistance ? { soundDistance: options.soundDistance } : {}),
+    ...(options.onSound ? { onSound: options.onSound } : {}),
     THREE: options.THREE,
     scene: options.scene,
     camera: options.camera,

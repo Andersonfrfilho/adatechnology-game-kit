@@ -1,6 +1,6 @@
 import type { AnimationEventSpec } from '@adatechnology/game-contracts'
 import type { ModelParts } from '../models/types'
-import { cue, move } from './clip-builder'
+import { cue, move, sound } from './clip-builder'
 import type { Tween } from './clip-builder'
 
 /** The magazine goes out, drops away, and a new one rises into the well: the page's `magSwap`, which takes 0.82 s. */
@@ -17,7 +17,7 @@ export function magazineSwap(parts: ModelParts, start: number): { tweens: Tween[
       move('mag', 'y', start + 0.16, 0, 0, direction * drop * 2.2),
       move('mag', 'y', start + MAGAZINE_IN_AT, 0.3, direction * drop * 2.2, 0),
     ],
-    events: [cue(start + 0.16, 'drop_magazine', { up: direction > 0 })],
+    events: [sound(start, 'mag_release'), cue(start + 0.16, 'drop_magazine', { up: direction > 0 }), sound(start + 0.16, 'mag_out'), sound(start + MAGAZINE_IN_AT, 'mag_insert'), sound(start + MAGAZINE_IN_AT + 0.3, 'mag_seat')],
     end: start + MAGAZINE_SWAP_SECONDS,
   }
 }

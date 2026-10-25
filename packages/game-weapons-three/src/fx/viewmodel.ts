@@ -7,6 +7,8 @@ import { ease } from '../animation/clip-builder'
 import { buildToolClips } from '../animation/clip-set'
 import type { WeaponAudio } from '../audio'
 import { weaponEventOf } from '../audio/host-events'
+import { soundProfileOf } from '../audio/reload-sounds'
+import type { SoundProfile } from '../audio/reload-sounds'
 import { buildWeaponModelById } from '../models'
 import { fitAttachmentModels } from '../models/attachments/fit'
 import type { AttachmentModelRegistry, LaserRaycast } from '../models/attachments/types'
@@ -59,6 +61,8 @@ export interface ViewmodelOptions {
   layers?: FxLayers
   /** Metres between the shooter and the listener, for the distance muffling of the shot sound (default 0). */
   soundDistance?: () => number
+  /** Told at every sound cue of a reload clip, at the moment the clip says it (also with no audio). */
+  onSound?: (cue: { weapon: string; cue: string; profile: SoundProfile }) => void
   /** Builders of accessory models that replace or add to the ones the kit ships. */
   attachmentModels?: AttachmentModelRegistry
   /** How far a laser beam goes (metres) from a point along a direction, or null when it hits nothing. */
@@ -151,6 +155,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   let clock = 0
   let lastShot = -Infinity
   let triggerRest = 0
+  // whether the feed clip of the weapon in the hands carries its own sound
+  let feedCued = false
   const rootQuaternion = new THREE.Quaternion()
 
   const world: FxWorld = {
@@ -162,6 +168,10 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     audio,
     layers,
     groundAt,
+    sound: (weapon, cue, profile) => {
+      audio?.cue(cue, profile)
+      options.onSound?.({ weapon, cue, profile })
+    },
     schedule: (delay, seconds, step, done) => void tasks.push({ delay, seconds, elapsed: 0, step: (progress) => step(ease(progress)), done }),
   }
 
@@ -215,6 +225,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       holderScale: scale,
       lengthMetres: length,
       caseType: caliber?.caseType ?? 'rifle',
+      soundProfile: soundProfileOf(weapon, model.parts.family),
       kit,
       cartridge: caliber && dims ? { dims, shape: cartridgeShape(caliber, dims) } : null,
       stuckCase: null,
@@ -231,8 +242,10 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     const reloadFamily = action.kind === 'firearm' || action.kind === 'flame' || action.kind === 'launcher' ? action.family : undefined
     const rpm = action.kind === 'firearm' ? action.rpm : 0
     const rig = createModelRig(model)
+    const clips = buildToolClips({ parts: model.parts, family: model.parts.family, caseType: session.caseType, reloadFamily })
+    feedCued = clips.feed?.events?.some((entry) => entry.type === 'sound') ?? false
     player = createToolClipPlayer({
-      clips: buildToolClips({ parts: model.parts, family: model.parts.family, caseType: session.caseType, reloadFamily }),
+      clips,
       rig,
       onEvent: createClipEventHandler(world, session),
       repeatInterval: () => (rpm > 0 ? 60 / rpm : 0.1),
@@ -309,7 +322,9 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       } else if (event.type === 'reload' && event.phase === 'end') reloading = false
       else if (event.type === 'clear' && event.phase === 'end') current.stuckCase = null
       const mechanical = weaponEventOf(event)
-      if (mechanical) audio?.event(mechanical)
+      // the clips of the model say when each step of a reload makes its noise (`sound` cues): the rule's stage and feed events would sound it twice
+      const cued = mechanical?.type === 'feed' ? feedCued : mechanical?.type === 'reload_stage' && (player.running.some(({ clip }) => clip.events?.some((entry) => entry.type === 'sound')) ?? false)
+      if (mechanical && !cued) audio?.event(mechanical)
       const step = toolAnimationStep(event)
       if (!step) return
       const last = step.type === 'play' && step.clip === 'shot' && current.model.parts.family === 'pistol' && tool.ammo === 0

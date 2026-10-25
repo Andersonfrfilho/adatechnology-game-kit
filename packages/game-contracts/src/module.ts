@@ -210,8 +210,8 @@ export interface ModuleHost {
    * unsubscribe function. A host that never clears leaves it out.
    */
   onClear?(listener: () => void): () => void
-  /** Write a line to the host's behaviour log. */
-  log(text: string, data?: Record<string, unknown>): void
+  /** Write a line to the host's behaviour log; `type` is the kind of entry (default `module_note`), so a module can log what a filter looks for (`sound`). */
+  log(text: string, data?: Record<string, unknown>, type?: string): void
   /**
    * Sets what the host lets a module tune on its tools, keyed by the id of the module's own control (`ModuleControl.id`) with the id of the option as the value; the tool in hand changes at once and the
    * ones taken later start that way. A host applies the ids it knows and ignores the rest. The test room knows `condition` (how worn the tools are) and `ammo_quality` (how good what they load is).

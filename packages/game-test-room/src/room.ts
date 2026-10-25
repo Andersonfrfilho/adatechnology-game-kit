@@ -2116,8 +2116,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         if (handSource === source) handSource = null
       }
     },
-    log(text, data) {
-      action('module_note', text, { data })
+    log(text, data, type) {
+      action(type ?? 'module_note', text, { data })
     },
     addBlocker(blocked) {
       blockers.add(blocked)

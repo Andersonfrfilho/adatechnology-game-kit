@@ -26,7 +26,7 @@ export interface ReloadRun {
   /** The steps the rule emits, with their second since the start. */
   stages: Array<{ stage: string; at: number }>
   /** The clip the viewmodel plays for it and its length after scaling to the rule's seconds; null when the model has none. */
-  clip: { name: string; seconds: number; markers: Array<{ stage: string; at: number }> } | null
+  clip: { name: string; seconds: number; markers: Array<{ stage: string; at: number }>; cues: Array<{ id: string; at: number }> } | null
 }
 
 export interface WeaponAudit {
@@ -90,7 +90,8 @@ const clipOf = (arsenal: Arsenal, def: WeaponDef, kind: string, seconds: number)
   const running = player.running[0]
   if (!running) return null
   const markers = (running.clip.events ?? []).filter((e) => e.type === 'stage' && typeof e.data?.stage === 'string').map((e) => ({ stage: String(e.data?.stage), at: e.t }))
-  return { name: running.name, seconds: running.clip.duration, markers }
+  const cues = (running.clip.events ?? []).filter((e) => e.type === 'sound').map((e) => ({ id: String(e.data?.id), at: e.t }))
+  return { name: running.name, seconds: running.clip.duration, markers, cues }
 }
 
 /** Every weapon that has a model, with the reloads the rule plans for it and the clip each one plays. */
