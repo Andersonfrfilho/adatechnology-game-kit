@@ -413,11 +413,11 @@
     "id": "cassava_root",
     "teamId": "mandioca",
     "teamBox": [
-      4,
-      0.7,
-      0.7
+      4.0317,
+      0.7121,
+      0.71
     ],
-    "scale": 0.1
+    "scale": 0.098701
   },
   {
     "id": "canned_corn_and_peas",
