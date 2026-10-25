@@ -31,7 +31,7 @@ const byName = (a: IteItem, b: IteItem): number => (a.n < b.n ? -1 : a.n > b.n ?
  */
 export const buildChecklist = (sources: Sources): string => {
   const { ite } = sources
-  const modeled = new Set(teamModelIds())
+  const modeled = new Set([...teamModelIds(), ...Object.values(sources.decisions.kitModels).map(({ value }) => value.teamId)])
   const total = ite.itens.length
   const done = ite.itens.filter((item) => modeled.has(item.id)).length
   const categories = Object.entries(ite.categorias)

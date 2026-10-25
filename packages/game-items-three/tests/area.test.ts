@@ -4,7 +4,7 @@ import type { TestRoom } from '@adatechnology/game-test-room'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
-import { createItemsTestModule, FINDS_TABLE_ID, HUMAN_ID, ITEM_PREFIX, listItemModels, RULER_ID, SHELF_HEIGHT, shelvesLayout, SHOWCASE_PREFIX, SHOWCASE_STAND_ID } from '../src'
+import { createItemsTestModule, FINDS_TABLE_ID, HUMAN_ID, ITEM_PREFIX, listItemModels, RULER_ID, SHELF_HEIGHT, shelvesLayout, SHIPPED_MODELS, SHOWCASE_PREFIX, SHOWCASE_STAND_ID } from '../src'
 
 const catalog = createGoodsItems()
 const translate = (key: string, locale: string): string | undefined => goodsText(key, locale)
@@ -177,7 +177,7 @@ describe('items test area', () => {
     const all = room.metrics().module
     expect(Number(all.items)).toBeGreaterThan(catalog.list().length)
     expect(Number(all.draw_calls)).toBeGreaterThan(Number(all.items))
-    expect(String(all.modeled)).toMatch(/^23\/\d+$/)
+    expect(String(all.modeled)).toBe(`${SHIPPED_MODELS.filter(({ entry }) => catalog.has(entry.id)).length}/${catalog.list().length}`)
     bench.set('category', 'keys')
     const keys = room.metrics().module
     expect(Number(keys.items)).toBeLessThan(Number(all.items))

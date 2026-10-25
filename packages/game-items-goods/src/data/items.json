@@ -69,7 +69,8 @@
         "docks",
         "road"
       ]
-    }
+    },
+    "model": "canned_sardines"
   },
   {
     "id": "canned_corn_and_peas",
@@ -103,7 +104,8 @@
         "supermarket",
         "train"
       ]
-    }
+    },
+    "model": "canned_corn_and_peas"
   },
   {
     "id": "canned_sausages",
@@ -137,7 +139,8 @@
         "house",
         "road"
       ]
-    }
+    },
+    "model": "canned_sausages"
   },
   {
     "id": "condensed_milk",
@@ -170,7 +173,8 @@
         "house",
         "supermarket"
       ]
-    }
+    },
+    "model": "condensed_milk"
   },
   {
     "id": "military_ration",
@@ -280,7 +284,8 @@
         "farm",
         "school"
       ]
-    }
+    },
+    "model": "beans"
   },
   {
     "id": "pasta",
@@ -316,7 +321,8 @@
         "supermarket",
         "apartment"
       ]
-    }
+    },
+    "model": "pasta"
   },
   {
     "id": "instant_noodles",
@@ -352,7 +358,8 @@
         "gas_station",
         "school"
       ]
-    }
+    },
+    "model": "instant_noodles"
   },
   {
     "id": "cassava_flour",
@@ -386,7 +393,8 @@
         "supermarket",
         "farm"
       ]
-    }
+    },
+    "model": "cassava_flour"
   },
   {
     "id": "biscuits",
@@ -423,7 +431,8 @@
         "school",
         "apartment"
       ]
-    }
+    },
+    "model": "biscuits"
   },
   {
     "id": "snack_chips",
@@ -457,7 +466,8 @@
         "supermarket",
         "school"
       ]
-    }
+    },
+    "model": "snack_chips"
   },
   {
     "id": "chocolate_bar",
@@ -492,7 +502,8 @@
         "mall",
         "house"
       ]
-    }
+    },
+    "model": "chocolate_bar"
   },
   {
     "id": "rapadura",
@@ -526,7 +537,8 @@
         "supermarket",
         "lodge"
       ]
-    }
+    },
+    "model": "rapadura"
   },
   {
     "id": "honey_jar",
@@ -555,7 +567,8 @@
         "lodge",
         "farm"
       ]
-    }
+    },
+    "model": "honey_jar"
   },
   {
     "id": "bread",
@@ -590,7 +603,8 @@
         "apartment",
         "supermarket"
       ]
-    }
+    },
+    "model": "bread"
   },
   {
     "id": "cheese",
@@ -625,7 +639,8 @@
         "supermarket",
         "farm"
       ]
-    }
+    },
+    "model": "cheese"
   },
   {
     "id": "mortadella",
@@ -659,7 +674,8 @@
         "house",
         "train"
       ]
-    }
+    },
+    "model": "mortadella"
   },
   {
     "id": "raw_beef",
@@ -694,7 +710,8 @@
         "house",
         "farm"
       ]
-    }
+    },
+    "model": "raw_beef"
   },
   {
     "id": "frozen_chicken",
@@ -729,7 +746,8 @@
         "apartment",
         "house"
       ]
-    }
+    },
+    "model": "frozen_chicken"
   },
   {
     "id": "eggs",
@@ -766,7 +784,8 @@
         "farm",
         "house"
       ]
-    }
+    },
+    "model": "eggs"
   },
   {
     "id": "banana_bunch",
@@ -801,7 +820,8 @@
         "farm",
         "house"
       ]
-    }
+    },
+    "model": "banana_bunch"
   },
   {
     "id": "orange",
@@ -834,7 +854,8 @@
         "supermarket",
         "farm"
       ]
-    }
+    },
+    "model": "orange"
   },
   {
     "id": "potatoes",
@@ -869,7 +890,8 @@
         "house",
         "farm"
       ]
-    }
+    },
+    "model": "potatoes"
   },
   {
     "id": "cassava_root",
@@ -902,7 +924,8 @@
       "places": [
         "farm"
       ]
-    }
+    },
+    "model": "cassava_root"
   },
   {
     "id": "fresh_fish",
@@ -935,7 +958,8 @@
       "places": [
         "docks"
       ]
-    }
+    },
+    "model": "fresh_fish"
   },
   {
     "id": "salted_fish",
@@ -967,7 +991,8 @@
       "places": [
         "docks"
       ]
-    }
+    },
+    "model": "salted_fish"
   },
   {
     "id": "jerked_beef",
@@ -1000,7 +1025,8 @@
         "supermarket",
         "farm"
       ]
-    }
+    },
+    "model": "jerked_beef"
   },
   {
     "id": "game_meat",
@@ -1033,7 +1059,8 @@
       "places": [
         "farm"
       ]
-    }
+    },
+    "model": "game_meat"
   },
   {
     "id": "home_preserves",
@@ -1067,7 +1094,8 @@
         "house",
         "lodge"
       ]
-    }
+    },
+    "model": "home_preserves"
   },
   {
     "id": "dog_food",
@@ -1101,7 +1129,8 @@
         "supermarket",
         "farm"
       ]
-    }
+    },
+    "model": "dog_food"
   },
   {
     "id": "sugar",
@@ -1134,7 +1163,8 @@
         "supermarket",
         "school"
       ]
-    }
+    },
+    "model": "sugar"
   },
   {
     "id": "salt",
@@ -1167,7 +1197,8 @@
         "supermarket",
         "docks"
       ]
-    }
+    },
+    "model": "salt"
   },
   {
     "id": "cooking_oil",
@@ -1201,7 +1232,8 @@
         "house",
         "supermarket"
       ]
-    }
+    },
+    "model": "cooking_oil"
   },
   {
     "id": "coffee",
@@ -1237,7 +1269,8 @@
         "school",
         "police_station"
       ]
-    }
+    },
+    "model": "coffee"
   },
   {
     "id": "water_bottle",
@@ -1300,7 +1333,8 @@
         "school",
         "church"
       ]
-    }
+    },
+    "model": "water_jug_5l"
   },
   {
     "id": "dirty_water",
@@ -1326,7 +1360,8 @@
       "places": [
         "road"
       ]
-    }
+    },
+    "model": "dirty_water"
   },
   {
     "id": "soda_can",
@@ -1362,7 +1397,8 @@
         "house",
         "school"
       ]
-    }
+    },
+    "model": "soda_can"
   },
   {
     "id": "juice_box",
@@ -1396,7 +1432,8 @@
         "supermarket",
         "house"
       ]
-    }
+    },
+    "model": "juice_box"
   },
   {
     "id": "milk_carton",
@@ -1430,7 +1467,8 @@
         "supermarket",
         "school"
       ]
-    }
+    },
+    "model": "milk_carton"
   },
   {
     "id": "sports_drink",
@@ -1462,7 +1500,8 @@
         "gas_station",
         "mall"
       ]
-    }
+    },
+    "model": "sports_drink"
   },
   {
     "id": "energy_drink",
@@ -1494,7 +1533,8 @@
         "supermarket",
         "mall"
       ]
-    }
+    },
+    "model": "energy_drink"
   },
   {
     "id": "coconut_water",
@@ -1525,7 +1565,8 @@
         "road",
         "farm"
       ]
-    }
+    },
+    "model": "coconut_water"
   },
   {
     "id": "beer_can",
@@ -1557,7 +1598,8 @@
         "supermarket",
         "gas_station"
       ]
-    }
+    },
+    "model": "beer_can"
   },
   {
     "id": "cachaca",
@@ -1613,7 +1655,8 @@
       "places": [
         "church"
       ]
-    }
+    },
+    "model": "communion_wine"
   },
   {
     "id": "bandage",
@@ -1668,7 +1711,8 @@
         "pharmacy",
         "hospital"
       ]
-    }
+    },
+    "model": "sterile_gauze"
   },
   {
     "id": "adhesive_bandages",
@@ -1694,7 +1738,8 @@
         "school",
         "mall"
       ]
-    }
+    },
+    "model": "adhesive_bandages"
   },
   {
     "id": "medical_tape",
@@ -1719,7 +1764,8 @@
         "hospital",
         "house"
       ]
-    }
+    },
+    "model": "medical_tape"
   },
   {
     "id": "alcohol_70",
@@ -1748,7 +1794,8 @@
         "pharmacy",
         "hospital"
       ]
-    }
+    },
+    "model": "alcohol_70"
   },
   {
     "id": "povidone_iodine",
@@ -1772,7 +1819,8 @@
         "pharmacy",
         "hospital"
       ]
-    }
+    },
+    "model": "povidone_iodine"
   },
   {
     "id": "saline_iv_bag",
@@ -1795,7 +1843,8 @@
       "places": [
         "hospital"
       ]
-    }
+    },
+    "model": "saline_iv_bag"
   },
   {
     "id": "painkillers",
@@ -1825,7 +1874,8 @@
         "hospital",
         "school"
       ]
-    }
+    },
+    "model": "painkillers"
   },
   {
     "id": "ibuprofen",
@@ -1849,7 +1899,8 @@
         "house",
         "pharmacy"
       ]
-    }
+    },
+    "model": "ibuprofen"
   },
   {
     "id": "tramadol",
@@ -1873,7 +1924,8 @@
         "pharmacy",
         "hospital"
       ]
-    }
+    },
+    "model": "tramadol"
   },
   {
     "id": "clonazepam",
@@ -1898,7 +1950,8 @@
         "hospital",
         "apartment"
       ]
-    }
+    },
+    "model": "clonazepam"
   },
   {
     "id": "amoxicillin",
@@ -1947,7 +2000,8 @@
         "hospital",
         "military_base"
       ]
-    }
+    },
+    "model": "ceftriaxone"
   },
   {
     "id": "syringe",
@@ -1971,7 +2025,8 @@
         "pharmacy",
         "hospital"
       ]
-    }
+    },
+    "model": "syringe"
   },
   {
     "id": "suture_kit",
@@ -1995,7 +2050,8 @@
         "hospital",
         "military_base"
       ]
-    }
+    },
+    "model": "suture_kit"
   },
   {
     "id": "splint",
@@ -2020,7 +2076,8 @@
         "school",
         "police_station"
       ]
-    }
+    },
+    "model": "splint"
   },
   {
     "id": "first_aid_kit",
@@ -2076,7 +2133,8 @@
         "pharmacy",
         "hospital"
       ]
-    }
+    },
+    "model": "exam_gloves"
   },
   {
     "id": "n95_mask",
@@ -2103,7 +2161,8 @@
         "warehouse",
         "house"
       ]
-    }
+    },
+    "model": "n95_mask"
   },
   {
     "id": "activated_charcoal",
@@ -2127,7 +2186,8 @@
         "pharmacy",
         "hospital"
       ]
-    }
+    },
+    "model": "activated_charcoal"
   },
   {
     "id": "rehydration_salts",
@@ -2152,7 +2212,8 @@
         "hospital",
         "school"
       ]
-    }
+    },
+    "model": "rehydration_salts"
   },
   {
     "id": "antihistamine",
@@ -2176,7 +2237,8 @@
         "pharmacy",
         "lodge"
       ]
-    }
+    },
+    "model": "antihistamine"
   },
   {
     "id": "antivenom",
@@ -2200,7 +2262,8 @@
         "hospital",
         "lodge"
       ]
-    }
+    },
+    "model": "antivenom"
   },
   {
     "id": "thermometer",
@@ -2227,7 +2290,8 @@
         "pharmacy",
         "hospital"
       ]
-    }
+    },
+    "model": "thermometer"
   },
   {
     "id": "maintenance_medication",
@@ -2252,7 +2316,8 @@
         "apartment",
         "pharmacy"
       ]
-    }
+    },
+    "model": "maintenance_medication"
   },
   {
     "id": "multivitamin",
@@ -2276,7 +2341,8 @@
         "house",
         "pharmacy"
       ]
-    }
+    },
+    "model": "multivitamin"
   },
   {
     "id": "hammer",
@@ -2335,7 +2401,8 @@
         "warehouse",
         "workshop"
       ]
-    }
+    },
+    "model": "screwdriver"
   },
   {
     "id": "crowbar",
@@ -2388,7 +2455,8 @@
         "warehouse",
         "farm"
       ]
-    }
+    },
+    "model": "handsaw"
   },
   {
     "id": "hacksaw",
@@ -2412,7 +2480,8 @@
         "warehouse",
         "workshop"
       ]
-    }
+    },
+    "model": "hacksaw"
   },
   {
     "id": "bolt_cutters",
@@ -2438,7 +2507,8 @@
         "prison",
         "mine"
       ]
-    }
+    },
+    "model": "bolt_cutters"
   },
   {
     "id": "pliers",
@@ -2463,7 +2533,8 @@
         "warehouse",
         "workshop"
       ]
-    }
+    },
+    "model": "pliers"
   },
   {
     "id": "adjustable_wrench",
@@ -2488,7 +2559,8 @@
         "warehouse",
         "farm"
       ]
-    }
+    },
+    "model": "adjustable_wrench"
   },
   {
     "id": "mechanic_toolbox",
@@ -2512,7 +2584,8 @@
         "workshop",
         "warehouse"
       ]
-    }
+    },
+    "model": "mechanic_toolbox"
   },
   {
     "id": "car_jack",
@@ -2535,7 +2608,8 @@
         "car",
         "workshop"
       ]
-    }
+    },
+    "model": "car_jack"
   },
   {
     "id": "gas_torch",
@@ -2560,7 +2634,8 @@
         "warehouse",
         "workshop"
       ]
-    }
+    },
+    "model": "gas_torch"
   },
   {
     "id": "inverter_welder",
@@ -2584,7 +2659,8 @@
         "warehouse",
         "workshop"
       ]
-    }
+    },
+    "model": "inverter_welder"
   },
   {
     "id": "cordless_drill",
@@ -2610,7 +2686,8 @@
         "house",
         "mall"
       ]
-    }
+    },
+    "model": "cordless_drill"
   },
   {
     "id": "shovel",
@@ -2635,7 +2712,8 @@
         "warehouse",
         "house"
       ]
-    }
+    },
+    "model": "shovel"
   },
   {
     "id": "hoe",
@@ -2658,7 +2736,8 @@
       "places": [
         "farm"
       ]
-    }
+    },
+    "model": "hoe"
   },
   {
     "id": "pocket_knife",
@@ -2684,7 +2763,8 @@
         "gun_shop",
         "lodge"
       ]
-    }
+    },
+    "model": "pocket_knife"
   },
   {
     "id": "can_opener",
@@ -2708,7 +2788,8 @@
         "supermarket",
         "apartment"
       ]
-    }
+    },
+    "model": "can_opener"
   },
   {
     "id": "scissors",
@@ -2735,7 +2816,8 @@
         "school",
         "pharmacy"
       ]
-    }
+    },
+    "model": "scissors"
   },
   {
     "id": "duct_tape",
@@ -2764,7 +2846,8 @@
         "workshop",
         "mall"
       ]
-    }
+    },
+    "model": "duct_tape"
   },
   {
     "id": "pot",
@@ -2792,7 +2875,8 @@
         "church",
         "school"
       ]
-    }
+    },
+    "model": "pot"
   },
   {
     "id": "camp_stove",
@@ -2818,7 +2902,8 @@
         "lodge",
         "gun_shop"
       ]
-    }
+    },
+    "model": "camp_stove"
   },
   {
     "id": "sewing_kit",
@@ -2843,7 +2928,8 @@
         "apartment",
         "church"
       ]
-    }
+    },
+    "model": "sewing_kit"
   },
   {
     "id": "lockpick_kit",
@@ -2868,7 +2954,8 @@
         "prison",
         "warehouse"
       ]
-    }
+    },
+    "model": "lockpick_kit"
   },
   {
     "id": "lighter",
@@ -2898,7 +2985,8 @@
         "gas_station",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "lighter"
   },
   {
     "id": "matches",
@@ -2927,7 +3015,8 @@
         "supermarket",
         "church"
       ]
-    }
+    },
+    "model": "matches"
   },
   {
     "id": "flint_striker",
@@ -2951,7 +3040,8 @@
         "lodge",
         "military_base"
       ]
-    }
+    },
+    "model": "flint_striker"
   },
   {
     "id": "bucket",
@@ -2975,7 +3065,8 @@
         "farm",
         "warehouse"
       ]
-    }
+    },
+    "model": "bucket"
   },
   {
     "id": "binoculars",
@@ -3000,7 +3091,8 @@
         "military_base",
         "lodge"
       ]
-    }
+    },
+    "model": "binoculars"
   },
   {
     "id": "fire_extinguisher",
@@ -3028,7 +3120,8 @@
         "hospital",
         "gas_station"
       ]
-    }
+    },
+    "model": "fire_extinguisher"
   },
   {
     "id": "sharpening_stone",
@@ -3053,7 +3146,8 @@
         "farm",
         "gun_shop"
       ]
-    }
+    },
+    "model": "sharpening_stone"
   },
   {
     "id": "knife",
@@ -3082,7 +3176,8 @@
         "apartment",
         "supermarket"
       ]
-    }
+    },
+    "model": "knife"
   },
   {
     "id": "tactical_knife",
@@ -3108,7 +3203,8 @@
         "military_base",
         "police_station"
       ]
-    }
+    },
+    "model": "tactical_knife"
   },
   {
     "id": "machete",
@@ -3159,7 +3255,8 @@
       "places": [
         "supermarket"
       ]
-    }
+    },
+    "model": "meat_cleaver"
   },
   {
     "id": "hatchet",
@@ -3185,7 +3282,8 @@
         "lodge",
         "farm"
       ]
-    }
+    },
+    "model": "hatchet"
   },
   {
     "id": "axe",
@@ -3238,7 +3336,8 @@
         "house",
         "school"
       ]
-    }
+    },
+    "model": "baseball_bat"
   },
   {
     "id": "nail_bat",
@@ -3288,7 +3387,8 @@
         "train",
         "prison"
       ]
-    }
+    },
+    "model": "iron_pipe"
   },
   {
     "id": "sledgehammer",
@@ -3314,7 +3414,8 @@
         "mine",
         "farm"
       ]
-    }
+    },
+    "model": "sledgehammer"
   },
   {
     "id": "pickaxe",
@@ -3338,7 +3439,8 @@
       "places": [
         "mine"
       ]
-    }
+    },
+    "model": "pickaxe"
   },
   {
     "id": "sickle",
@@ -3362,7 +3464,8 @@
       "places": [
         "farm"
       ]
-    }
+    },
+    "model": "sickle"
   },
   {
     "id": "police_baton",
@@ -3387,7 +3490,8 @@
         "police_station",
         "prison"
       ]
-    }
+    },
+    "model": "police_baton"
   },
   {
     "id": "cast_iron_skillet",
@@ -3412,7 +3516,8 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "model": "cast_iron_skillet"
   },
   {
     "id": "improvised_spear",
@@ -3434,7 +3539,8 @@
       "kind": "hits",
       "amount": 80
     },
-    "weapon": "improvised_spear"
+    "weapon": "improvised_spear",
+    "model": "improvised_spear"
   },
   {
     "id": "chainsaw",
@@ -3460,7 +3566,8 @@
         "farm",
         "warehouse"
       ]
-    }
+    },
+    "model": "chainsaw"
   },
   {
     "id": "slingshot",
@@ -3485,7 +3592,8 @@
         "farm",
         "school"
       ]
-    }
+    },
+    "model": "slingshot"
   },
   {
     "id": "recurve_bow",
@@ -3510,7 +3618,8 @@
         "gun_shop",
         "school"
       ]
-    }
+    },
+    "model": "recurve_bow"
   },
   {
     "id": "crossbow",
@@ -3534,7 +3643,8 @@
       "places": [
         "gun_shop"
       ]
-    }
+    },
+    "model": "crossbow"
   },
   {
     "id": "arrows_and_bolts",
@@ -3558,7 +3668,8 @@
         "gun_shop",
         "school"
       ]
-    }
+    },
+    "model": "arrows_and_bolts"
   },
   {
     "id": "wooden_plank",
@@ -3611,7 +3722,8 @@
         "workshop",
         "farm"
       ]
-    }
+    },
+    "model": "nails"
   },
   {
     "id": "screws",
@@ -3636,7 +3748,8 @@
         "workshop",
         "mall"
       ]
-    }
+    },
+    "model": "screws"
   },
   {
     "id": "sheet_metal",
@@ -3662,7 +3775,8 @@
         "train",
         "docks"
       ]
-    }
+    },
+    "model": "sheet_metal"
   },
   {
     "id": "scrap_metal",
@@ -3684,7 +3798,8 @@
         "car",
         "road"
       ]
-    }
+    },
+    "model": "scrap_metal"
   },
   {
     "id": "wire_roll",
@@ -3709,7 +3824,8 @@
         "warehouse",
         "house"
       ]
-    }
+    },
+    "model": "wire_roll"
   },
   {
     "id": "barbed_wire",
@@ -3733,7 +3849,8 @@
         "farm",
         "military_base"
       ]
-    }
+    },
+    "model": "barbed_wire"
   },
   {
     "id": "rope",
@@ -3761,7 +3878,8 @@
         "docks",
         "lodge"
       ]
-    }
+    },
+    "model": "rope"
   },
   {
     "id": "tarp",
@@ -3785,7 +3903,8 @@
         "farm",
         "road"
       ]
-    }
+    },
+    "model": "tarp"
   },
   {
     "id": "raffia_sack",
@@ -3810,7 +3929,8 @@
         "military_base",
         "farm"
       ]
-    }
+    },
+    "model": "raffia_sack"
   },
   {
     "id": "bricks",
@@ -3834,7 +3954,8 @@
         "warehouse",
         "house"
       ]
-    }
+    },
+    "model": "bricks"
   },
   {
     "id": "cement_bag",
@@ -3857,7 +3978,8 @@
       "places": [
         "warehouse"
       ]
-    }
+    },
+    "model": "cement_bag"
   },
   {
     "id": "rag",
@@ -3877,7 +3999,8 @@
         "house",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "rag"
   },
   {
     "id": "glass_bottle",
@@ -3899,7 +4022,8 @@
         "church",
         "road"
       ]
-    }
+    },
+    "model": "glass_bottle"
   },
   {
     "id": "pet_bottle",
@@ -3920,7 +4044,8 @@
         "road",
         "school"
       ]
-    }
+    },
+    "model": "pet_bottle"
   },
   {
     "id": "empty_can",
@@ -3943,7 +4068,8 @@
         "house",
         "road"
       ]
-    }
+    },
+    "model": "empty_can"
   },
   {
     "id": "glass_shards",
@@ -3963,7 +4089,8 @@
         "house",
         "supermarket"
       ]
-    }
+    },
+    "model": "glass_shards"
   },
   {
     "id": "epoxy_glue",
@@ -3988,7 +4115,8 @@
         "mall",
         "house"
       ]
-    }
+    },
+    "model": "epoxy_glue"
   },
   {
     "id": "electronic_components",
@@ -4009,7 +4137,8 @@
         "dam",
         "apartment"
       ]
-    }
+    },
+    "model": "electronic_components"
   },
   {
     "id": "copper_wire",
@@ -4030,7 +4159,8 @@
         "dam",
         "house"
       ]
-    }
+    },
+    "model": "copper_wire"
   },
   {
     "id": "firewood",
@@ -4055,7 +4185,8 @@
         "farm",
         "lodge"
       ]
-    }
+    },
+    "model": "firewood"
   },
   {
     "id": "rebar",
@@ -4075,7 +4206,8 @@
         "warehouse",
         "road"
       ]
-    }
+    },
+    "model": "rebar"
   },
   {
     "id": "lubricant_spray",
@@ -4100,7 +4232,8 @@
         "workshop",
         "house"
       ]
-    }
+    },
+    "model": "lubricant_spray"
   },
   {
     "id": "tshirt",
@@ -4138,7 +4271,8 @@
         "mall",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "tshirt"
   },
   {
     "id": "hoodie",
@@ -4172,7 +4306,8 @@
         "mall",
         "school"
       ]
-    }
+    },
+    "model": "hoodie"
   },
   {
     "id": "denim_jacket",
@@ -4205,7 +4340,8 @@
         "house",
         "mall"
       ]
-    }
+    },
+    "model": "denim_jacket"
   },
   {
     "id": "leather_motorcycle_jacket",
@@ -4239,7 +4375,8 @@
         "mall",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "leather_motorcycle_jacket"
   },
   {
     "id": "jeans",
@@ -4275,7 +4412,8 @@
         "mall",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "jeans"
   },
   {
     "id": "leather_motorcycle_pants",
@@ -4307,7 +4445,8 @@
         "mall",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "leather_motorcycle_pants"
   },
   {
     "id": "army_camouflage_uniform",
@@ -4342,7 +4481,8 @@
         "zombie_corpse",
         "gun_shop"
       ]
-    }
+    },
+    "model": "army_camouflage_uniform"
   },
   {
     "id": "mechanic_coveralls",
@@ -4376,7 +4516,8 @@
         "workshop",
         "warehouse"
       ]
-    }
+    },
+    "model": "mechanic_coveralls"
   },
   {
     "id": "firefighter_suit",
@@ -4409,7 +4550,8 @@
       "places": [
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "firefighter_suit"
   },
   {
     "id": "beekeeper_suit",
@@ -4446,7 +4588,8 @@
         "lodge",
         "farm"
       ]
-    }
+    },
+    "model": "beekeeper_suit"
   },
   {
     "id": "raincoat",
@@ -4481,7 +4624,8 @@
         "gas_station",
         "docks"
       ]
-    }
+    },
+    "model": "raincoat"
   },
   {
     "id": "padded_coat",
@@ -4514,7 +4658,8 @@
         "lodge",
         "mall"
       ]
-    }
+    },
+    "model": "padded_coat"
   },
   {
     "id": "motorcycle_helmet",
@@ -4581,7 +4726,8 @@
         "warehouse",
         "mine"
       ]
-    }
+    },
+    "model": "hard_hat"
   },
   {
     "id": "safety_goggles",
@@ -4614,7 +4760,8 @@
         "school",
         "workshop"
       ]
-    }
+    },
+    "model": "safety_goggles"
   },
   {
     "id": "leather_work_gloves",
@@ -4647,7 +4794,8 @@
         "farm",
         "workshop"
       ]
-    }
+    },
+    "model": "leather_work_gloves"
   },
   {
     "id": "combat_boots",
@@ -4680,7 +4828,8 @@
         "police_station",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "combat_boots"
   },
   {
     "id": "rubber_boots",
@@ -4712,7 +4861,8 @@
         "farm",
         "docks"
       ]
-    }
+    },
+    "model": "rubber_boots"
   },
   {
     "id": "sneakers",
@@ -4747,7 +4897,8 @@
         "house",
         "mall"
       ]
-    }
+    },
+    "model": "sneakers"
   },
   {
     "id": "flip_flops",
@@ -4779,7 +4930,8 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "model": "flip_flops"
   },
   {
     "id": "magazine_arm_guard",
@@ -4808,7 +4960,8 @@
       "bite": 0.35,
       "scratch": 0.5,
       "warmth": 0
-    }
+    },
+    "model": "magazine_arm_guard"
   },
   {
     "id": "sheet_metal_forearm_guard",
@@ -4837,7 +4990,8 @@
       "bite": 0.7,
       "scratch": 0.9,
       "warmth": 0
-    }
+    },
+    "model": "sheet_metal_forearm_guard"
   },
   {
     "id": "ballistic_vest",
@@ -4870,7 +5024,8 @@
         "military_base",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "ballistic_vest"
   },
   {
     "id": "shopping_bag",
@@ -4899,7 +5054,8 @@
         "supermarket",
         "house"
       ]
-    }
+    },
+    "model": "shopping_bag"
   },
   {
     "id": "trash_bag",
@@ -4929,7 +5085,8 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "model": "trash_bag"
   },
   {
     "id": "fanny_pack",
@@ -4958,7 +5115,8 @@
         "mall",
         "house"
       ]
-    }
+    },
+    "model": "fanny_pack"
   },
   {
     "id": "crossbody_bag",
@@ -4988,7 +5146,8 @@
         "apartment",
         "mall"
       ]
-    }
+    },
+    "model": "crossbody_bag"
   },
   {
     "id": "backpack",
@@ -5021,7 +5180,8 @@
         "house",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "backpack"
   },
   {
     "id": "delivery_bag",
@@ -5051,7 +5211,8 @@
         "road",
         "house"
       ]
-    }
+    },
+    "model": "delivery_bag"
   },
   {
     "id": "hiking_backpack_40l",
@@ -5111,7 +5272,8 @@
         "military_base",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "military_backpack"
   },
   {
     "id": "trekking_backpack_70l",
@@ -5140,7 +5302,8 @@
         "mall",
         "lodge"
       ]
-    }
+    },
+    "model": "trekking_backpack_70l"
   },
   {
     "id": "rolling_suitcase",
@@ -5171,7 +5334,8 @@
         "train",
         "road"
       ]
-    }
+    },
+    "model": "rolling_suitcase"
   },
   {
     "id": "tactical_vest",
@@ -5200,7 +5364,8 @@
         "police_station",
         "military_base"
       ]
-    }
+    },
+    "model": "tactical_vest"
   },
   {
     "id": "tool_belt",
@@ -5229,7 +5394,8 @@
         "warehouse",
         "workshop"
       ]
-    }
+    },
+    "model": "tool_belt"
   },
   {
     "id": "cooler_box",
@@ -5258,7 +5424,8 @@
         "docks",
         "gas_station"
       ]
-    }
+    },
+    "model": "cooler_box"
   },
   {
     "id": "shopping_cart",
@@ -5286,7 +5453,8 @@
       "places": [
         "supermarket"
       ]
-    }
+    },
+    "model": "shopping_cart"
   },
   {
     "id": "wheelbarrow",
@@ -5315,7 +5483,8 @@
         "farm",
         "warehouse"
       ]
-    }
+    },
+    "model": "wheelbarrow"
   },
   {
     "id": "flashlight",
@@ -5374,7 +5543,8 @@
         "mine",
         "gun_shop"
       ]
-    }
+    },
+    "model": "headlamp"
   },
   {
     "id": "batteries",
@@ -5432,7 +5602,8 @@
     },
     "charge": {
       "lossPerMonth": 0.1
-    }
+    },
+    "model": "battery_9v"
   },
   {
     "id": "power_bank",
@@ -5458,7 +5629,8 @@
         "mall",
         "house"
       ]
-    }
+    },
+    "model": "power_bank"
   },
   {
     "id": "folding_solar_panel",
@@ -5482,7 +5654,8 @@
         "lodge",
         "gun_shop"
       ]
-    }
+    },
+    "model": "folding_solar_panel"
   },
   {
     "id": "portable_radio",
@@ -5563,7 +5736,8 @@
         "dam",
         "farm"
       ]
-    }
+    },
+    "model": "cb_radio"
   },
   {
     "id": "military_radio",
@@ -5586,7 +5760,8 @@
       "places": [
         "military_base"
       ]
-    }
+    },
+    "model": "military_radio"
   },
   {
     "id": "portable_generator",
@@ -5613,7 +5788,8 @@
         "farm",
         "workshop"
       ]
-    }
+    },
+    "model": "portable_generator"
   },
   {
     "id": "led_camp_lantern",
@@ -5639,7 +5815,8 @@
         "lodge",
         "gun_shop"
       ]
-    }
+    },
+    "model": "led_camp_lantern"
   },
   {
     "id": "mobile_phone",
@@ -5665,7 +5842,8 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "model": "mobile_phone"
   },
   {
     "id": "laptop",
@@ -5692,7 +5870,8 @@
         "hospital",
         "police_station"
       ]
-    }
+    },
+    "model": "laptop"
   },
   {
     "id": "windup_alarm_clock",
@@ -5715,7 +5894,8 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "model": "windup_alarm_clock"
   },
   {
     "id": "car_alarm_remote",
@@ -5739,7 +5919,8 @@
         "zombie_corpse",
         "house"
       ]
-    }
+    },
+    "model": "car_alarm_remote"
   },
   {
     "id": "electric_fence_energizer",
@@ -5762,7 +5943,8 @@
       "places": [
         "farm"
       ]
-    }
+    },
+    "model": "electric_fence_energizer"
   },
   {
     "id": "extension_cord",
@@ -5785,7 +5967,8 @@
         "house",
         "warehouse"
       ]
-    }
+    },
+    "model": "extension_cord"
   },
   {
     "id": "candles",
@@ -5813,7 +5996,8 @@
         "church",
         "house"
       ]
-    }
+    },
+    "model": "candles"
   },
   {
     "id": "night_vision_goggles",
@@ -5836,7 +6020,8 @@
       "places": [
         "military_base"
       ]
-    }
+    },
+    "model": "night_vision_goggles"
   },
   {
     "id": "fuel_jerrycan",
@@ -5892,7 +6077,8 @@
     "agingFault": {
       "afterDays": 180,
       "chance": 0.1
-    }
+    },
+    "model": "gasoline"
   },
   {
     "id": "diesel",
@@ -5919,7 +6105,8 @@
         "docks",
         "mine"
       ]
-    }
+    },
+    "model": "diesel"
   },
   {
     "id": "lpg_cylinder_13kg",
@@ -5973,7 +6160,8 @@
         "lodge",
         "warehouse"
       ]
-    }
+    },
+    "model": "gas_cartridge"
   },
   {
     "id": "kerosene",
@@ -5999,7 +6187,8 @@
         "lodge",
         "church"
       ]
-    }
+    },
+    "model": "kerosene"
   },
   {
     "id": "charcoal_bag",
@@ -6028,7 +6217,8 @@
         "gas_station",
         "house"
       ]
-    }
+    },
+    "model": "charcoal_bag"
   },
   {
     "id": "car_battery_12v",
@@ -6053,7 +6243,8 @@
         "workshop",
         "farm"
       ]
-    }
+    },
+    "model": "car_battery_12v"
   },
   {
     "id": "motor_oil",
@@ -6077,7 +6268,8 @@
         "gas_station",
         "workshop"
       ]
-    }
+    },
+    "model": "motor_oil"
   },
   {
     "id": "bean_seeds",
@@ -6102,7 +6294,8 @@
         "farm",
         "supermarket"
       ]
-    }
+    },
+    "model": "bean_seeds"
   },
   {
     "id": "corn_seeds",
@@ -6126,7 +6319,8 @@
       "places": [
         "farm"
       ]
-    }
+    },
+    "model": "corn_seeds"
   },
   {
     "id": "pumpkin_seeds",
@@ -6150,7 +6344,8 @@
       "places": [
         "farm"
       ]
-    }
+    },
+    "model": "pumpkin_seeds"
   },
   {
     "id": "kale_and_lettuce_seeds",
@@ -6175,7 +6370,8 @@
         "farm",
         "supermarket"
       ]
-    }
+    },
+    "model": "kale_and_lettuce_seeds"
   },
   {
     "id": "cassava_cuttings",
@@ -6199,7 +6395,8 @@
       "places": [
         "farm"
       ]
-    }
+    },
+    "model": "cassava_cuttings"
   },
   {
     "id": "fertilizer_bag",
@@ -6223,7 +6420,8 @@
       "places": [
         "farm"
       ]
-    }
+    },
+    "model": "fertilizer_bag"
   },
   {
     "id": "watering_can",
@@ -6246,7 +6444,8 @@
         "house",
         "farm"
       ]
-    }
+    },
+    "model": "watering_can"
   },
   {
     "id": "fishing_rod",
@@ -6272,7 +6471,8 @@
         "house",
         "gun_shop"
       ]
-    }
+    },
+    "model": "fishing_rod"
   },
   {
     "id": "fishing_tackle_box",
@@ -6297,7 +6497,8 @@
         "docks",
         "gun_shop"
       ]
-    }
+    },
+    "model": "fishing_tackle_box"
   },
   {
     "id": "fishing_net",
@@ -6320,7 +6521,8 @@
       "places": [
         "docks"
       ]
-    }
+    },
+    "model": "fishing_net"
   },
   {
     "id": "snare_trap",
@@ -6342,7 +6544,8 @@
       "kind": "uses",
       "amount": 5,
       "per": "capturas"
-    }
+    },
+    "model": "snare_trap"
   },
   {
     "id": "skill_book",
@@ -6369,7 +6572,8 @@
         "apartment",
         "mall"
       ]
-    }
+    },
+    "model": "skill_book"
   },
   {
     "id": "technical_manual",
@@ -6397,7 +6601,8 @@
         "hospital",
         "military_base"
       ]
-    }
+    },
+    "model": "technical_manual"
   },
   {
     "id": "diy_magazine",
@@ -6424,7 +6629,8 @@
         "gas_station",
         "mall"
       ]
-    }
+    },
+    "model": "diy_magazine"
   },
   {
     "id": "magazines_and_comics",
@@ -6450,7 +6656,8 @@
         "school",
         "gas_station"
       ]
-    }
+    },
+    "model": "magazines_and_comics"
   },
   {
     "id": "farmers_almanac",
@@ -6475,7 +6682,8 @@
         "farm",
         "supermarket"
       ]
-    }
+    },
+    "model": "farmers_almanac"
   },
   {
     "id": "note",
@@ -6498,7 +6706,8 @@
         "train",
         "car"
       ]
-    }
+    },
+    "model": "note"
   },
   {
     "id": "photo",
@@ -6519,7 +6728,8 @@
         "zombie_corpse",
         "car"
       ]
-    }
+    },
+    "model": "photo"
   },
   {
     "id": "city_map",
@@ -6538,7 +6748,8 @@
       "places": [
         "police_station"
       ]
-    }
+    },
+    "model": "city_map"
   },
   {
     "id": "road_map",
@@ -6558,7 +6769,8 @@
         "gas_station",
         "car"
       ]
-    }
+    },
+    "model": "road_map"
   },
   {
     "id": "dog_tag",
@@ -6578,7 +6790,8 @@
         "zombie_corpse",
         "military_base"
       ]
-    }
+    },
+    "model": "dog_tag"
   },
   {
     "id": "cash",
@@ -6600,7 +6813,8 @@
         "zombie_corpse",
         "car"
       ]
-    }
+    },
+    "model": "cash"
   },
   {
     "id": "cigarettes",
@@ -6626,7 +6840,8 @@
         "prison",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "cigarettes"
   },
   {
     "id": "house_key",
@@ -6668,7 +6883,8 @@
         "zombie_corpse",
         "car"
       ]
-    }
+    },
+    "model": "car_key"
   },
   {
     "id": "master_key",
@@ -6687,7 +6903,8 @@
       "places": [
         "apartment"
       ]
-    }
+    },
+    "model": "master_key"
   },
   {
     "id": "janitor_keys",
@@ -6706,7 +6923,8 @@
       "places": [
         "school"
       ]
-    }
+    },
+    "model": "janitor_keys"
   },
   {
     "id": "generator_key",
@@ -6725,7 +6943,8 @@
       "places": [
         "hospital"
       ]
-    }
+    },
+    "model": "generator_key"
   },
   {
     "id": "safe_key",
@@ -6744,7 +6963,8 @@
       "places": [
         "police_station"
       ]
-    }
+    },
+    "model": "safe_key"
   },
   {
     "id": "padlock_key",
@@ -6765,7 +6985,8 @@
         "farm",
         "house"
       ]
-    }
+    },
+    "model": "padlock_key"
   },
   {
     "id": "cell_key",
@@ -6785,7 +7006,8 @@
         "prison",
         "zombie_corpse"
       ]
-    }
+    },
+    "model": "cell_key"
   },
   {
     "id": "canned_food",

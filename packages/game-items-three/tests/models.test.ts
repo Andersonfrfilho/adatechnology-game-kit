@@ -40,11 +40,11 @@ const SHOWCASE_IDS = [
 ] as const
 
 describe('the shipped models', () => {
-  it('are the 24 of the page, registered by catalog id, and 23 of them are the model of an item of the goods catalog', () => {
+  it('are the 24 of the page, registered by catalog id, and every one that is an item of the goods catalog is named by that item', () => {
     expect(SHIPPED_MODELS.slice(0, 24).map(({ entry }) => entry.id)).toEqual(SHOWCASE_IDS)
     expect(listItemModels()).toEqual(SHIPPED_MODELS.map(({ entry }) => entry.id))
     const modeled = catalog.list().filter((item) => item.model !== undefined)
-    expect(modeled.map((item) => item.id).sort()).toEqual(SHOWCASE_IDS.filter((id) => !(id in GAME_ONLY)).sort())
+    expect(modeled.map((item) => item.id).sort()).toEqual(SHIPPED_MODELS.map(({ entry }) => entry.id).filter((id) => !(id in GAME_ONLY)).sort())
     for (const item of modeled) expect(hasItemModel(item.model as string), item.id).toBe(true)
   })
 

@@ -2,7 +2,7 @@ import { createGoodsItems } from '@adatechnology/game-items-goods'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
-import { composeThumbnailScene, itemThumbnail, itemThumbnailSvg, renderItemThumbnail, shapeThumbnailSvg, SHAPES, thumbnailPatch } from '../src'
+import { composeThumbnailScene, itemThumbnail, itemThumbnailSvg, renderItemThumbnail, shapeThumbnailSvg, SHAPES, SHIPPED_MODELS, thumbnailPatch } from '../src'
 
 const catalog = createGoodsItems()
 
@@ -38,8 +38,9 @@ describe('the thumbnail of every item of the goods catalog', () => {
       }
       expect(itemThumbnailSvg(item), item.id).toMatch(/^<svg /)
     }
-    expect(rendered).toBe(23)
-    expect(drawn).toBe(catalog.list().length - 23)
+    const shippedItems = SHIPPED_MODELS.filter(({ entry }) => catalog.has(entry.id)).length
+    expect(rendered).toBe(shippedItems)
+    expect(drawn).toBe(catalog.list().length - shippedItems)
   })
 
   it('goes into a catalog as a patch', () => {
