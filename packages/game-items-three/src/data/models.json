@@ -493,11 +493,11 @@
     "id": "cheese",
     "teamId": "queijo",
     "teamBox": [
-      1.502,
-      0.402,
-      1
+      1.4941,
+      0.405,
+      0.981
     ],
-    "scale": 0.1
+    "scale": 0.100355
   },
   {
     "id": "rapadura",
