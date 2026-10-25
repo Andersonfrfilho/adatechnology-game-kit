@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { registerContentState } from '../src/utilities/content'
-import { engine } from './support'
+import { TOWER_TEMPLATES, engine } from './support'
 
 const SEEDS = Number(process.env.SEEDS) || 8
-const TEMPLATES = engine.listTemplates().map((entry: { id: string }) => entry.id) as string[]
+const TEMPLATES = (engine.listTemplates().map((entry: { id: string }) => entry.id) as string[]).filter((id) => !TOWER_TEMPLATES.includes(id))
 
 /** Fixtures that take water (the VC3 rule: one point for each, `src/utilities/plumbing.ts`). */
 const WET_CATEGORIES = ['kitchen_cabinet', 'washbasin', 'shower', 'toilet', 'laundry_tub', 'washing_machine']

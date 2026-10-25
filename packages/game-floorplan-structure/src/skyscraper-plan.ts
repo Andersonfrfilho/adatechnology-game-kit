@@ -1,6 +1,8 @@
 import type { DoorDef, FloorDef, RoomDef, WindowDef } from '@adatechnology/game-floorplan'
 
 import type { SkyscraperLayout } from './skyscraper'
+import enLocale from './locales/en.json'
+import ptBrLocale from './locales/pt-BR.json'
 
 /**
  * The floor plan of a skyscraper at room level, shared by every typology: a central core (stairs, elevator shafts and a service shaft) inside a ring of
@@ -209,3 +211,6 @@ export function towerFloors(layout: SkyscraperLayout, plan: TowerPlanOptions): F
     }
   })
 }
+
+/** The names of the rooms and storeys the plan helpers make (`elevator_lobby`, `plant_room`, `typical_floor`...), for the packs that fill the strips to register with `engine.registerLocale`. */
+export const towerLocales = { en: { labels: enLocale.labels }, 'pt-BR': { labels: ptBrLocale.labels } } as const
