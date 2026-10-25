@@ -613,11 +613,11 @@
     "id": "milk_carton",
     "teamId": "leite",
     "teamBox": [
-      0.702,
+      0.7,
       2,
-      0.702
+      0.704
     ],
-    "scale": 0.1
+    "scale": 0.09981
   },
   {
     "id": "soda_can",
