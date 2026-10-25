@@ -260,7 +260,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Walkie-talkie (par) | `walkie` | `walkie_talkies` | 0,6 kg | incomum | 70 x 220 x 33 mm |
 | [x] | Bateria 9 V (kit) | `bateria_9v` | `battery_9v` | 0,05 kg | comum | 26 x 49 x 18 mm |
 | [ ] | Celular | `celular` | `mobile_phone` | 0,2 kg | comum | 77 x 160 x 9 mm |
-| [ ] | Controle de alarme de carro | `controle_alarme` | `car_alarm_remote` | 0,03 kg | comum | 40 x 70 x 12 mm |
+| [x] | Controle de alarme de carro (kit) | `controle_alarme` | `car_alarm_remote` | 0,03 kg | comum | 40 x 70 x 12 mm |
 | [ ] | Despertador de corda | `despertador` | `windup_alarm_clock` | 0,3 kg | comum | 110 x 125 x 55 mm |
 | [ ] | Eletrificador de cerca rural | `eletrificador` | `electric_fence_energizer` | 3,0 kg | raro | 250 x 200 x 150 mm |
 | [ ] | Extensão elétrica 20 m | `extensao` | `extension_cord` | 1,5 kg | comum | 230 x 80 x 230 mm |

@@ -1638,5 +1638,15 @@
       0.06
     ],
     "scale": 1
+  },
+  {
+    "id": "car_alarm_remote",
+    "teamId": "controle_alarme",
+    "teamBox": [
+      0.04,
+      0.07011,
+      0.012
+    ],
+    "scale": 1
   }
 ]
