@@ -107,11 +107,11 @@ layout.districtAt(0, 0)                              // { id, kind, color, zone,
 const center = layout.districts.find((d) => d.kind === 'commercial_center')!
 const blocks = layout.blocks(center.id, { street: 10 })   // { x, z, size, district, building: { floors, uses, zone, pattern } }[]
 const b = urban.builder({ seed: 7 })
-for (const block of blocks) urban.cities.fillBlock(b, block)   // block.fill with minHeight/maxHeight = floors x storey height
+for (const block of blocks) urban.cities.fillBlock(b, block)   // block.fill with the block's floors and uses
 urban.cities.stats(layout)                           // [{ kind, area, share, districts }] by kind
 ```
 
-`blocks` is the grid of the district's rectangle by the kind's `block` size, less the street, skipping the cells whose centre belongs to another district (one painted over it). `block.building` is the config a building generator takes. `fillBlock` calls `block.fill` with the storey height of the tower presets (`office` 4 m for the commercial share, `residential` 3.1 m for the residential, weighted by `uses`; a game that changes the presets changes it) and a ground-floor `shop` chance equal to the commercial share; it draws nothing for kinds with no storeys or no pattern. `block.fill` has no parameter for the use of a building yet, so the use only sets the storey height and the shop share.
+`blocks` is the grid of the district's rectangle by the kind's `block` size, less the street, skipping the cells whose centre belongs to another district (one painted over it). `block.building` is the config a building generator takes. `fillBlock` calls `block.fill` with the block's `floors` and `uses` (and `storeyPresets` / `storeyHeight` when you pass them), so each building picks its use by weight and gets `floors x storey height` of that use's tower preset (`office` 4 m, `residential` 3.1 m; a game that changes the presets changes it); with `towers` on, tall commercial buildings become office towers and tall residential ones residential towers, capped by `towers.maxStoreys`. The ground-floor `shop` chance defaults to the commercial share. It draws nothing for kinds with no storeys or no pattern.
 
 **Floors are capped at 60 by default**, after the district's own override: `createUrban({ cities: { maxFloors: 40 } })` or `layout(plan, { maxFloors })` clamp every district to `[0, maxFloors]`. A game raises the cap and the kind together.
 

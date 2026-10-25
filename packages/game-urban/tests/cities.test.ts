@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_CITY_PLANS, DEFAULT_DISTRICT_KINDS, DEFAULT_TOWER_PRESETS, createUrban } from '../src'
-import type { CityPlanInput, DistrictKindDef } from '../src'
+import type { CityPlanInput, DistrictKindDef, TowerRequest } from '../src'
 
 const kit = createUrban()
 const cities = kit.cities
@@ -195,38 +195,57 @@ describe('fillBlock', () => {
   const downtownLayout = cities.layout('metropolis')
   const downtown = downtownLayout.districts.find((d) => d.kind === 'downtown')!
 
-  it('buildings are within floors x storey height, with the same seed the same city', () => {
+  it('a downtown block yields office and residential towers of 20 to 60 storeys, the same seed the same city', () => {
     const block = downtownLayout.blocks(downtown.id)[0]!
-    const h = (1 * storey('office') * 0.7 + storey('residential') * 0.3) // uses 0.7 / 0.3
-    expect(cities.storeyHeight(downtown.uses, {})).toBeCloseTo(h, 9)
+    const requests: TowerRequest[] = []
+    const towerKit = createUrban({ towers: { provider: (r) => { requests.push(r) } } })
     const run = (seed: number) => {
-      const b = kit.builder({ seed })
-      return { placed: cities.fillBlock(b, block, { k: 3, gap: 1e-9 }), scene: b.scene() }
+      const b = towerKit.builder({ seed })
+      requests.length = 0
+      return { placed: towerKit.cities.fillBlock(b, block, { k: 3, gap: 1e-9 }), scene: b.scene(), towers: [...requests] }
     }
-    const { placed, scene } = run(7)
+    const { placed, scene, towers } = run(7)
     expect(placed).toHaveLength(9)
+    expect(towers.length).toBeGreaterThan(0)
+    for (const t of towers) {
+      expect(['office', 'residential']).toContain(t.preset.id)
+      expect(t.use).toBeDefined()
+      expect(t.storeys!).toBeGreaterThanOrEqual(20)
+      expect(t.storeys!).toBeLessThanOrEqual(60)
+      expect(t.height).toBeCloseTo(t.storeys! * t.preset.storeyHeight, 9)
+    }
     for (const p of placed) {
-      expect(p.height).toBeGreaterThanOrEqual(20 * h - 1e-6)
-      expect(p.height).toBeLessThanOrEqual(60 * h + 1e-6)
+      expect(p.height).toBeGreaterThanOrEqual(20 * storey('residential') - 1e-6)
+      expect(p.height).toBeLessThanOrEqual(60 * storey('office') + 1e-6)
       expect(Math.abs(p.x - block.x)).toBeLessThan(block.size[0] / 2)
     }
-    expect(scene.parts.length).toBeGreaterThan(0)
     expect(run(7).scene).toEqual(scene)
+    expect(run(7).towers).toEqual(towers)
     expect(run(8).placed).not.toEqual(placed)
   })
 
-  it('the shop share is the commercial share; storey heights follow the use and the kit presets', () => {
-    expect(cities.storeyHeight({ residential: 1 }, {})).toBe(3.1)
-    expect(cities.storeyHeight({ commercial: 1 }, {})).toBe(4)
-    expect(cities.storeyHeight({ industrial: 1 }, {})).toBe(3.1)
-    expect(cities.storeyHeight({ industrial: 1 }, { storeyHeight: 6 })).toBe(6)
-    const k = createUrban({ towers: { presets: [{ id: 'office', weight: 1, storeyHeight: 5, mechanicalEvery: 20, glass: true }, { id: 'residential', weight: 1, storeyHeight: 2.5, mechanicalEvery: 25, glass: false }] } })
-    expect(k.cities.storeyHeight({ commercial: 1 }, {})).toBe(5)
-    const shops = (shop: number | undefined, kk = kit) => {
-      const l = kk.cities.layout('mountain_village')
-      const d = l.districts.find((x) => x.kind === 'historic')!
-      const b = kk.builder({ seed: 3 })
-      kk.cities.fillBlock(b, l.blocks(d.id)[0]!, { k: 3, gap: 1e-9, shop })
+  it('a residential_low block yields buildings of 1 to 2 storeys', () => {
+    const l = cities.layout('regional_city')
+    const d = l.districts.find((x) => x.kind === 'residential_low')!
+    const block = l.blocks(d.id)[0]!
+    const placed = cities.fillBlock(kit.builder({ seed: 5 }), block, { k: 3, gap: 1e-9 })
+    expect(placed).toHaveLength(9)
+    for (const p of placed) {
+      expect(p.height).toBeGreaterThanOrEqual(1 * storey('residential') - 1e-6)
+      expect(p.height).toBeLessThanOrEqual(2 * storey('residential') + 1e-6)
+    }
+  })
+
+  it('options pass through: storeyPresets and storeyHeight reach block.fill; the shop share follows the commercial share', () => {
+    const l = cities.layout('mountain_village')
+    const d = l.districts.find((x) => x.kind === 'historic')!
+    const block = l.blocks(d.id)[0]!
+    const heights = (opt: object) => cities.fillBlock(kit.builder({ seed: 3 }), block, { k: 3, gap: 1e-9, ...opt }).map((p) => p.height)
+    const base = heights({})
+    expect(heights({ storeyPresets: { commercial: 'residential' } })).not.toEqual(base)
+    const shops = (shop: number | undefined) => {
+      const b = kit.builder({ seed: 3 })
+      cities.fillBlock(b, block, { k: 3, gap: 1e-9, shop })
       return b.scene().parts.length
     }
     expect(shops(undefined)).toBeGreaterThan(shops(0))

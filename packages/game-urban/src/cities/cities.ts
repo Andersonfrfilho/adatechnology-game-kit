@@ -185,42 +185,31 @@ export function createCities(o: CitiesOptions) {
       .sort((a, b) => b.area - a.area)
   }
 
-  /** Storey height (m) of a block: the average of the presets of its uses, weighted by their shares. */
-  const storeyHeightOf = (uses: Readonly<Record<string, number>>, opt: FillBlockCityOptions): number => {
-    const map = opt.storeyPresets ?? DEFAULT_STOREY_PRESETS
-    let sum = 0
-    let weight = 0
-    for (const [use, share] of Object.entries(uses)) {
-      const preset = o.presets.find((p) => p.id === map[use])
-      if (!preset || share <= 0) continue
-      sum += preset.storeyHeight * share
-      weight += share
-    }
-    if (weight > 0) return sum / weight
-    return opt.storeyHeight ?? o.presets.find((p) => p.id === map.residential)?.storeyHeight ?? (o.presets[0]?.storeyHeight as number)
-  }
-
   /**
-   * Fills a block of a layout with city buildings through `block.fill`: heights from the block's storeys (`floors x storey height`, the height of the
-   * tower presets by use) and a ground-floor shop share from the commercial share. Nothing for blocks of a kind without storeys or without a pattern.
+   * Fills a block of a layout with city buildings through `block.fill`, passing the block's own `floors` and `uses` (and `storeyPresets` / `storeyHeight` when
+   * given) so `block.fill` draws the heights, the use of each building and the towers. A ground-floor shop share comes from the commercial share unless
+   * given. Nothing for blocks of a kind without storeys or without a pattern.
    */
   const fillBlock = (b: UrbanBuilder, block: Block, options: FillBlockCityOptions = {}): BlockBuilding[] => {
     const { floors, uses, pattern } = block.building
     if (floors[1] <= 0 || pattern === null) return []
-    const { storeyPresets: _p, storeyHeight: _h, shop, ...rest } = options
-    const storey = storeyHeightOf(uses, options)
+    const { shop, ...rest } = options
+    // `minHeight` / `maxHeight` are required by the signature but unused while `floors` is given; the residential preset's storey height keeps them sensible
+    const storey = options.storeyHeight ?? o.presets.find((p) => p.id === DEFAULT_STOREY_PRESETS.residential)?.storeyHeight ?? (o.presets[0]?.storeyHeight as number)
     return o.fill(b, {
       cx: block.x,
       cz: block.z,
       size: Math.min(block.size[0], block.size[1]),
       minHeight: floors[0] * storey,
       maxHeight: floors[1] * storey,
+      floors: [floors[0], floors[1]],
+      uses,
       shop: shop ?? uses.commercial ?? 0,
       ...rest,
     })
   }
 
-  return { maxFloors, kinds, plans, layout, stats, fillBlock, storeyHeight: storeyHeightOf }
+  return { maxFloors, kinds, plans, layout, stats, fillBlock }
 }
 
 export type Cities = ReturnType<typeof createCities>
