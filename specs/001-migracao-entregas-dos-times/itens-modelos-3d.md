@@ -236,7 +236,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 |---|---|---|---|---|---|---|
 | [x] | Mochila de trilha 40 L | `mochila_trilha` | `hiking_backpack_40l` | 1,3 kg | incomum | 411 x 550 x 319 mm |
 | [ ] | Bag de entregador | `bag_entregador` | `delivery_bag` | 1,2 kg | incomum | 480 x 450 x 420 mm |
-| [ ] | Bolsa transversal | `bolsa` | `crossbody_bag` | 0,3 kg | comum | 250 x 200 x 80 mm |
+| [x] | Bolsa transversal (kit) | `bolsa` | `crossbody_bag` | 0,3 kg | comum | 250 x 200 x 80 mm |
 | [x] | Caixa térmica (kit) | `caixa_termica` | `cooler_box` | 1,0 kg | comum | 320 x 250 x 230 mm |
 | [ ] | Carrinho de mercado | `carrinho_merc` | `shopping_cart` | 12,0 kg | comum | 550 x 980 x 950 mm |
 | [ ] | Carrinho de mão | `carrinho_mao` | `wheelbarrow` | 15,0 kg | comum | 0,65 x 0,65 x 1,5 m |
