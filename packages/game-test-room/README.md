@@ -18,13 +18,13 @@ pnpm add @adatechnology/game-test-room three
 
 ```ts
 import * as THREE from 'three'
-import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
+import { createTestRoom } from '@adatechnology/game-test-room'
 
 const room = createTestRoom({
   THREE,
   container: document.getElementById('app')!,
   locale: 'en', // 'en' or 'pt-BR'
-  catalog: demoItems('en'),
+  catalog: [], // the room ships no items: load modules (`room.loadModule`) or pass your own
 })
 room.runScenarios().then((report) => console.log(report.passed, report.failed))
 console.log(room.log.toNDJSON())
@@ -39,7 +39,6 @@ const room = createTestRoom({
   THREE,
   container,
   catalog: [
-    ...demoItems('en'),
     { id: 'my_crate', name: 'My crate', group: 'Mine', build: (T) => buildMyCrate(T), specOptions: { /* material per mesh name */ } },
   ],
   scenarios: [
@@ -56,8 +55,15 @@ const room = createTestRoom({
 })
 ```
 
-`DEMO_MATERIALS` is now empty (kept for compatibility: the demo items use only core materials). `buildFromSpec` turns a `DestructibleSpec` into meshes,
-and `brickWallSpec` / `DEMO_ITEMS` / `SCENARIOS` are exported to reuse or extend.
+`buildFromSpec` turns a `DestructibleSpec` into meshes, and `brickWallSpec` (the arena's target wall) is exported to reuse.
+
+## Breaking: the demo catalogue and the built-in scenarios are gone
+
+The room used to ship 19 procedural box/cylinder items (`demoItems`, `DEMO_ITEMS`, `DEMO_MATERIALS`: chair, sofa, crate, jerrycan...) and its built-in scenarios (`SCENARIOS`, `scenariosFor`, `makeScenarios`) built on them. They were not the game's items, so they were removed: the room now holds only the generic contracts and the arena. Migrate:
+
+- `catalog: demoItems(locale)` becomes `catalog: []`, and the items come from the SDK modules loaded with `room.loadModule` (weapons, items, household furniture, vehicles, characters...). `examples/interactables-test-area` loads all of them; `examples/test-room` opens with that set.
+- `room.scenarios` is empty until the host passes `scenarios` or a module brings its own. The destruction checks the removed ones made (steel sheet, glass, concrete, fire, collapse) are covered by the tests of `game-destruction`, `game-fluids` and the module scenarios of the content packages.
+- A test that needs a throwaway item should define it in its own fixture (see `tests/fixtures/demo-items.ts`, not exported).
 
 ## Loading a module
 
@@ -67,7 +73,7 @@ A game module hands the room a `TestableModule` from `@adatechnology/game-contra
 const report = room.loadModule(RENTAL_CARS) // { module, items, scenarios, ok, problems }
 ```
 
-The items join the catalogue under the module's group and its scenarios become buttons. The contract checks run at once and write one line per result to the log: `checkDestructible` for every item with an `impl`, `checkAnimation` for every clip (`✓ Rental car: destructible contract ok (4 parts...)` or `✗ ...: <problem>`). The animations panel lists the clips of the aimed or held item; `room.playAnimation(clipId)` plays one (poses are offsets from the rest pose, events go to the log and `sound` events to `onSound`). The example (`examples/test-room`) loads a `DEMO_MODULE` rental car that owns its damage rule, its door `open` clip and a wheel that comes off with a wrench.
+The items join the catalogue under the module's group and its scenarios become buttons. The contract checks run at once and write one line per result to the log: `checkDestructible` for every item with an `impl`, `checkAnimation` for every clip (`✓ Rental car: destructible contract ok (4 parts...)` or `✗ ...: <problem>`). The animations panel lists the clips of the aimed or held item; `room.playAnimation(clipId)` plays one (poses are offsets from the rest pose, events go to the log and `sound` events to `onSound`). The example (`examples/test-room`) loads the SDK's content modules (the same set as `examples/interactables-test-area`).
 
 ## Module bench
 

@@ -5,7 +5,7 @@ import { SPECIES } from '@adatechnology/game-animals-species'
 import { createAnimalOutbreak } from '@adatechnology/game-characters-undead'
 import { createAudioEngine } from '@adatechnology/game-audio'
 import { createAudioRecorder } from '@adatechnology/golden-tool'
-import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
+import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 
 import { ANIMALS_AREA_ID, ANIMAL_ITEM_PREFIX, createAnimalsTestModule } from '../src'
@@ -22,7 +22,7 @@ const stubRenderer = (): THREE.WebGLRenderer => {
 const roomWithAnimals = (audio?: ReturnType<typeof createAudioEngine>): { room: TestRoom; module: ReturnType<typeof createAnimalsTestModule> } => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: demoItems('pt-BR'), renderer: stubRenderer(), ui: false, ...(audio ? { audio } : {}) })
+  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false, ...(audio ? { audio } : {}) })
   const module = createAnimalsTestModule({
     locale: 'pt-BR',
     species: SPECIES,

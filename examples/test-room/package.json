@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
-  "description": "The test room with the generic demo catalogue (first person, pt-BR or en). Builds ONE self-contained HTML file and tests it with Playwright.",
+  "description": "The test room with the SDK content of every team loaded by default (weapons, items, furniture, characters, animals, effects, sound, weather, houses, vehicles, vegetation, urban, player, crowd, stories), first person, pt-BR or en. Builds ONE self-contained HTML file and tests it with Playwright.",
   "type": "module",
   "scripts": {
     "build": "node build.mjs",

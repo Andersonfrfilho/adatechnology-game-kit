@@ -28,6 +28,11 @@ export interface FrameOptions {
   wallMaterial?: MaterialId
   /** Override the load capacity of every column, kg (see `PartState.load`). */
   columnCapacity?: number
+  /**
+   * Tension steel ratio of the beams and slabs (`structure.rebar.ratio`; default beams 1%, slabs and roof 0.5%, inside the ranges of NBR 6118);
+   * `false` makes them plain concrete (they snap when they bend past cracking).
+   */
+  rebar?: { beam?: number; slab?: number } | false
 }
 
 /**
@@ -44,6 +49,7 @@ export const buildFrame = (o: FrameOptions = {}): DestructibleSpec => {
   const dw = o.doorWidth ?? 1, dh = o.doorHeight ?? 2.1
   const mat = o.material ?? 'concrete', wmat = o.wallMaterial ?? 'brick'
   const roof = o.roof ?? true
+  const rebarOf = (kind: 'beam' | 'slab') => (o.rebar === false ? {} : { rebar: { ratio: o.rebar?.[kind] ?? (kind === 'beam' ? 0.01 : 0.005) } })
   const xs = Array.from({ length: nx }, (_, i) => -spanX / 2 + (i * spanX) / (nx - 1))
   const zs = Array.from({ length: nz }, (_, j) => -spanZ / 2 + (j * spanZ) / (nz - 1))
   const parts: PartSpec[] = []
@@ -75,7 +81,7 @@ export const buildFrame = (o: FrameOptions = {}): DestructibleSpec => {
     }
     const beams: string[] = []
     const beam = (id: string, size: [number, number, number], pos: [number, number, number], c1: string, c2: string) => {
-      parts.push({ id, material: mat, shape: { kind: 'box', size }, position: pos, structure: { role: 'beam' } })
+      parts.push({ id, material: mat, shape: { kind: 'box', size }, position: pos, structure: { role: 'beam', ...rebarOf('beam') } })
       on(id, c1, 'rebar')
       on(id, c2, 'rebar')
       beams.push(id)
@@ -93,7 +99,7 @@ export const buildFrame = (o: FrameOptions = {}): DestructibleSpec => {
     const thick = last && roof ? T * 0.75 : T
     parts.push({
       id: slabId, material: mat, shape: { kind: 'box', size: [spanX + cs + 0.2, thick, spanZ + cs + 0.2] }, position: [0, top + thick / 2, 0],
-      structure: { role: last && roof ? 'roof' : 'slab' },
+      structure: { role: last && roof ? 'roof' : 'slab', ...rebarOf('slab') },
     })
     for (const b of beams) on(slabId, b, last && roof ? 'resting' : 'rebar')
 

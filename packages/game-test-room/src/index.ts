@@ -1,6 +1,5 @@
 export { createTestRoom } from './room'
-export { demoItems, DEMO_ITEMS, DEMO_MATERIALS, brickWallSpec } from './items'
-export { makeScenarios, scenariosFor, SCENARIOS } from './scenarios'
+export { brickWallSpec } from './items'
 export { buildFromSpec, MATERIAL_COLORS } from './build-from-spec'
 export { createLog } from './log'
 export { encodeBenchState, decodeBenchState } from './bench'

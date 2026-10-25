@@ -35,7 +35,8 @@ async function open(query = '') {
     return route.abort()
   })
   const page = await context.newPage()
-  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
+  // the weapon thumbnails (../weapon-svg/) exist only in the built site: on file:// each one is a CORS error plus a bare "Failed to load resource"
+  page.on('console', (m) => m.type() === 'error' && !/weapon-svg|^Failed to load resource: net::ERR_FAILED$/.test(m.text()) && errors.push(m.text()))
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
   await page.goto(pathToFileURL(dist).href + query)
   await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })

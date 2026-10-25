@@ -7,12 +7,17 @@ import type { LocalHole, UnitCell } from './breach'
 import { layersEnergy, layersThickness, MAX_SPALLS, outerLayer, resolveLayer, thinAxisOf } from './layers'
 import type { LayerRT } from './layers'
 import { clipBarsToDisc, rebarBars, rebarMass } from './rebar'
+import {
+  GRAVITY, bendGeometry, blastImpulse, isReinforced, elasticEnergy, impulseEnergy, isFlexural, lineLoad, momentOfEnergy, resolveFlexure, resolveMasonry, sectionMoments, sectionWidth,
+  spanMoment, spanOf, tensionSteel,
+} from './flexure'
+import type { BendGeometry } from './flexure'
 import { JOINT_DEFAULTS, inferJoints, MATERIALS, partCapacity, partMass, partThickness, partVolume, fragility } from './materials'
 import { aabbOf, createRng, distanceToShape, quat, quatFromEuler, rayShape, rotateVec, shapeArea, shapeBound, shapeDims, surfacePoint, toLocal, toWorld, vec } from './math'
 import type { DestructibleImpl } from './contracts'
 import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
-  DamageStage, DestructionWorld, Fragment, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec,
+  DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec,
   PartState, Quat, RayHit, ToolKind, Vec3,
   BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
   BallisticExtras,
@@ -40,6 +45,8 @@ const BREACH_AREA = 0.25
 /** Metres of reach per cube root of kilojoule for a blast to open a breach. */
 const BREACH_BLAST_REACH = 0.12
 const RESIDUAL_CAPACITY = 0.15
+/** Metres two parts may be apart and still rest on each other, for the span of a beam or a slab. */
+const SUPPORT_TOLERANCE = 0.05
 /** Unit-sized fragments of a whole wall: at most this many times `maxFragments`. A breach picks its units from a grid of up to `BREACH_GRID_CAP`. */
 const UNIT_FRAGMENT_FACTOR = 4
 const BREACH_GRID_CAP = 4096
@@ -73,6 +80,18 @@ interface PartRT {
   /** Axis the part is thinnest along (the wall's depth). */
   thin: number
   layers: LayerRT[]
+  /** Bending geometry, for parts in the bending model (`structure.flexure`). */
+  bend?: BendGeometry
+  /** Span in metres between the supports it rests on now (0: it rests along its whole length, or on nothing). */
+  span: number
+  /** Supports the span was measured for (indices joined), to measure it again only when they change. */
+  spanKey: string
+  /** Moment at rest in N m of the section that bends under its weight. */
+  restMoment: number
+  /** Load in kg that bends it: its own mass and what rests on it away from its supports. */
+  bendLoad: number
+  /** Overloaded in bending without steel that holds: when it fails it snaps in two instead of crumbling. */
+  snap: boolean
 }
 
 interface JointRT {
@@ -183,6 +202,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const fireSpread = options.fireSpread ?? 0.6
   const breachRadius = options.breach?.radius ?? BREACH_RADIUS
   const structureSafety = options.structure?.safetyFactor ?? 1
+  const flexure = resolveFlexure(options.structure?.flexure)
+  const masonry = resolveMasonry(options.structure?.masonry)
   const ignitionRules = resolveIgnitionRules(options.ignition)
   const breachBlastFactor = options.breach?.blastFactor ?? BREACH_BLAST_FACTOR
   const rng = createRng(options.seed ?? 1)
@@ -301,8 +322,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const p: PartRT = {
         spec: ps, mat, st: pst, q: quatFromEuler(...(ps.rotation ?? [0, 0, 0])), pos: [ps.position[0], ps.position[1], ps.position[2]], mass0, fuel0, area: shapeArea(ps.shape), thickness: partThickness(ps), cutFactor: cutFactorOf(ps.shape),
         dims: shapeDims(ps.shape), bound: shapeBound(ps.shape), rt: c?.rt ?? { ...freshRuntime(), prevTemp: pst.temperature },
-        structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat) : 0,
-        staged, thin: thinAxisOf(shapeDims(ps.shape)), layers,
+        structural: !!ps.structure && ps.structure.role !== 'none', anchored: !!ps.anchored || ps.structure?.role === 'foundation', cap: ps.structure ? partCapacity(ps, mat, { masonry, flexure }) : 0,
+        staged, thin: thinAxisOf(shapeDims(ps.shape)), layers, span: 0, spanKey: '', restMoment: 0, bendLoad: 0, snap: false,
+        ...(ps.shape.kind === 'box' && isFlexural(ps, mat, flexure) ? { bend: bendGeometry(ps) } : {}),
       }
       if (p.structural) o.hasStructure = true
       if (p.rt.chainDue !== undefined && !isLost(p)) primed.set(p, o)
@@ -401,6 +423,147 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return j.ib === r ? j.ia : -1
   }
 
+  // -------------------------------------------------------------------------------------------------------------------------------------------
+  // Bending (`structure.flexure`): span from the supports, moment at rest, blast impulse on the span
+  // -------------------------------------------------------------------------------------------------------------------------------------------
+
+  /** Where `p` touches `support`, as a box in `p`'s own axes. */
+  const contactBox = (p: PartRT, support: PartRT): [Vec3, Vec3] => {
+    const A = aabbOf(p.spec.shape, p.pos, p.q), B = aabbOf(support.spec.shape, support.pos, support.q)
+    const lo: Vec3 = [0, 0, 0], hi: Vec3 = [0, 0, 0]
+    for (let k = 0; k < 3; k++) {
+      const a = Math.max(A.min[k], B.min[k]) - SUPPORT_TOLERANCE, b = Math.min(A.max[k], B.max[k]) + SUPPORT_TOLERANCE
+      lo[k] = Math.min(a, b)
+      hi[k] = Math.max(a, b)
+    }
+    const out: [Vec3, Vec3] = [[Infinity, Infinity, Infinity], [-Infinity, -Infinity, -Infinity]]
+    for (let c = 0; c < 8; c++) {
+      const l = toLocal(p.pos, p.q, [c & 1 ? hi[0] : lo[0], c & 2 ? hi[1] : lo[1], c & 4 ? hi[2] : lo[2]])
+      for (let k = 0; k < 3; k++) {
+        out[0][k] = Math.min(out[0][k], l[k])
+        out[1][k] = Math.max(out[1][k], l[k])
+      }
+    }
+    return out
+  }
+
+  /** The centre of where `above` touches `p`, in object space. */
+  const contactCentre = (p: PartRT, above: PartRT): Vec3 => {
+    const [lo, hi] = contactBox(p, above)
+    return toWorld(p.pos, p.q, [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2])
+  }
+
+  /**
+   * The support of `p` (index into the object's parts, among `lower`) that a load standing at `at` (object space) is over: within one depth of `p` of
+   * where `p` rests on it, so the load goes straight down by a strut instead of bending `p` (a load that near a support is not carried in bending,
+   * EN 1992-1-1 6.2.2(6)). -1 when it is over none.
+   */
+  const overSupportAt = (o: ObjRT, p: PartRT, at: Vec3, lower: readonly number[]): number => {
+    const g = p.bend!
+    const local = toLocal(p.pos, p.q, at)
+    const depth = g.gravity >= 0 ? g.dims[g.gravity] : Math.min(...g.depthAxes.map((a) => g.dims[a]))
+    let best = -1
+    let bestGap = depth
+    for (const k of lower) {
+      const [a, b] = contactBox(p, o.parts[k])
+      let gap = 0
+      for (const ax of g.spanAxes) gap = Math.max(gap, a[ax] - local[ax], local[ax] - b[ax])
+      if (gap <= bestGap) {
+        best = k
+        bestGap = gap - 1e-9
+      }
+    }
+    return best
+  }
+
+  /** The section of `p` that bends along `axis`, with its tension steel and moments (a bare cage keeps only the steel's residual). */
+  const sectionOf = (p: PartRT, axis: number) => {
+    const g = p.bend!
+    const section = { b: sectionWidth(g, axis), h: g.dims[axis] }
+    const rebar = tensionSteel(p.spec, g.dims, section, flexure)
+    return { section, rebar, ...sectionMoments(p.mat, section, rebar, flexure) }
+  }
+
+  /** Moment at rest over the moment the section holds, for the supports `lower` (indices) `p` rests on now. Sets `p.span` and `p.restMoment`. */
+  const restFlexure = (o: ObjRT, p: PartRT, lower: readonly number[]): number => {
+    const g = p.bend!
+    const key = lower.join(',')
+    if (key !== p.spanKey) {
+      p.spanKey = key
+      p.span = spanOf(g, lower.map((k) => contactBox(p, o.parts[k])))
+    }
+    p.restMoment = 0
+    if (g.gravity < 0 || p.span <= 0) return 0
+    const sec = sectionOf(p, g.gravity)
+    p.restMoment = spanMoment(lineLoad(g, p.bendLoad) * Math.abs(g.up[g.gravity]), p.span)
+    // once the tension face has cracked only the steel holds; a bare cage keeps its residual share
+    const holds = (p.st.cracked ? sec.steel : sec.ultimate) * capacityScale(p)
+    return (p.restMoment * structureSafety) / Math.max(holds, 1)
+  }
+
+  /**
+   * A blast bends a beam or a slab: the reflected impulse over the span (`blastImpulse`, averaged over points of the face that takes it) gives the
+   * span kinetic energy (`impulseEnergy`), which it takes as strain energy up to a peak moment (`momentOfEnergy`), added to or taken from the moment at
+   * rest when the blast pushes along the weight. Past the cracking moment the tension face cracks; a section whose steel does not hold more than that
+   * snaps; a reinforced one yields and fails when its plastic rotation (`(U(M) - U(Mu)) / (2 Mu)` per blast, added up) reaches `failRotationDeg`.
+   */
+  const bendByBlast = (o: ObjRT, p: PartRT, point: Vec3, energy: number, radius: number, reach: number, src?: string) => {
+    const g = p.bend
+    if (!g || p.span <= 0 || isLost(p) || p.st.stripped || reach <= 0) return
+    const s = p.mat.strength!
+    if (!s.elasticGPa) return
+    const { c, q } = partXf(o, p)
+    const near = surfacePoint(p.spec.shape, toLocal(c, q, point))
+    const local = toLocal(c, q, point)
+    const away = vec.normalize(vec.sub(near.point, local), vec.scale(near.normal, -1))
+    let axis = g.depthAxes[0]!
+    for (const a of g.depthAxes) if (Math.abs(away[a]) > Math.abs(away[axis])) axis = a
+    const cos = Math.abs(away[axis])
+    if (cos < 1e-3) return
+    const tnt = energy / flexure.tntJoules
+    const L = p.span
+    const offsets = g.member ? [[-0.5], [-0.25], [0], [0.25], [0.5]] : [[0, 0], [-0.25, 0], [0.25, 0], [0, -0.25], [0, 0.25]]
+    const face = -Math.sign(away[axis]) * g.dims[axis] / 2
+    let sum = 0
+    for (const off of offsets) {
+      const sp: Vec3 = [near.point[0], near.point[1], near.point[2]]
+      g.spanAxes.forEach((a, k) => (sp[a] = Math.max(-g.dims[a] / 2, Math.min(g.dims[a] / 2, sp[a] + off[k]! * L))))
+      sp[axis] = face
+      const r = vec.distance(toWorld(c, q, sp), point)
+      if (r < radius) sum += blastImpulse(tnt, r, flexure)
+    }
+    const width = sectionWidth(g, axis)
+    const impulse = (sum / offsets.length) * cos * reach * width * L
+    const weight = axis === g.gravity ? p.bendLoad : p.st.mass
+    const kinetic = impulseEnergy(impulse, (lineLoad(g, weight) / GRAVITY) * L, flexure)
+    const sec = sectionOf(p, axis)
+    const EI = (s.elasticGPa * 1e9 * sec.section.b * sec.section.h ** 3) / 12
+    const along = axis === g.gravity ? -Math.sign(away[axis] * g.up[axis]) : 0
+    const dynamic = momentOfEnergy(kinetic, L, EI, flexure.loadFactor)
+    const peak = Math.abs(dynamic + along * p.restMoment)
+    if (peak <= sec.cracking) return
+    if (!p.st.cracked) {
+      p.st.cracked = true
+      const tension: Vec3 = [near.point[0], near.point[1], near.point[2]]
+      tension[axis] = dynamic + along * p.restMoment >= 0 ? -face : face
+      const n: Vec3 = [0, 0, 0]
+      n[axis] = Math.sign(tension[axis]) || 1
+      addCrack(o, p, toWorld(c, q, tension), rotateVec(q, n), sec.section.b, src)
+    }
+    if (!sec.reinforced) {
+      p.snap = true
+      failPart(o, p, point, away, kinetic, 12, src, 'snap')
+      return
+    }
+    // a lightly reinforced section (its steel holds less than the concrete did) now carries only what the steel gives
+    solveStructure(o)
+    if (peak <= sec.steel) return
+    const rotation = (elasticEnergy(peak, L, EI, flexure.loadFactor) - elasticEnergy(sec.steel, L, EI, flexure.loadFactor)) / (2 * sec.steel)
+    p.rt.hinge = (p.rt.hinge ?? 0) + rotation
+    markDamaged(p)
+    if (p.rt.hinge >= (flexure.failRotationDeg * Math.PI) / 180) hingeDrop(o, p, src)
+  }
+
   /** Distribute own mass plus carried load down the bearing graph to the anchored parts; mark parts without any support path. */
   const solveStructure = (o: ObjRT) => {
     o.maxStress = 0
@@ -427,17 +590,36 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
     }
     const incoming = new Array<number>(n).fill(0)
-    for (let h = queue.length - 1; h >= 0; h--) {
-      const i = queue[h]
-      const total = parts[i].st.mass + incoming[i]
-      parts[i].st.load = total
+    const lowerOf = new Map<number, number[]>()
+    for (const i of queue) {
       const lower: number[] = []
       for (const j of o.byPart.get(parts[i].spec.id)!) {
         if (j.st.open || !j.bears) continue
         const k = restsOn(j, i)
         if (k >= 0 && dist[k] >= 0 && dist[k] < dist[i] && !isPartition(k)) lower.push(k)
       }
+      lowerOf.set(i, lower)
+    }
+    // the part of the load that bends a beam or a slab: what rests on it away from its supports. A load that stands over a support (a column
+    // standing on a slab right over the beam below, a wall right over the wall below) goes straight down to that support with where it stands,
+    // and bends that one only if it is away from its own supports
+    const bending = new Array<number>(n).fill(0)
+    const through: Array<Array<{ at: Vec3; mass: number; over: number }>> = parts.map(() => [])
+    const pass = (k: number, at: Vec3, mass: number) => {
+      const over = overSupportAt(o, parts[k], at, lowerOf.get(k) ?? [])
+      if (over < 0) bending[k] += mass
+      else through[k].push({ at, mass, over })
+    }
+    for (let h = queue.length - 1; h >= 0; h--) {
+      const i = queue[h]
+      const total = parts[i].st.mass + incoming[i]
+      parts[i].st.load = total
+      const lower = lowerOf.get(i)!
       for (const k of lower) incoming[k] += total / lower.length
+      if (lower.length === 0) continue
+      const bulk = parts[i].bend ? parts[i].st.mass + bending[i] : total
+      for (const k of lower) if (parts[k].bend) pass(k, contactCentre(parts[k], parts[i]), bulk / lower.length)
+      if (parts[i].bend) for (const item of through[i]) if (parts[item.over]?.bend) pass(item.over, item.at, item.mass)
     }
     for (let i = 0; i < n; i++) {
       const p = parts[i]
@@ -450,6 +632,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         continue
       }
       p.st.stress = (p.st.load! * structureSafety) / (p.cap * capacityScale(p))
+      if (p.bend) {
+        p.bendLoad = p.st.mass + bending[i]
+        const bent = restFlexure(o, p, lowerOf.get(i) ?? [])
+        p.st.flexure = bent
+        p.snap = bent > 1 && !p.st.stripped && !sectionOf(p, p.bend.gravity).reinforced
+        // a beam or slab carries its load in bending: the load the solver routes through it is not a compression it takes, unless a designer gave
+        // it a capacity (`structure.capacity`, `sizeStructure`), which then holds as well
+        if (p.spec.structure?.capacity === undefined || bent > p.st.stress) p.st.stress = bent
+      }
       if (p.st.stress > o.maxStress) o.maxStress = p.st.stress
     }
     if (o.maxStress > 0.8) o.active = true
@@ -737,8 +928,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (split && mine.length) amount /= mine.length
     for (const j of mine) {
       if (j.st.open) continue
-      // the rebar of a reinforced part is its cage: blows do not wear it, only a torch or a saw cuts it (or the cage itself giving way)
-      if (j.spec.kind === 'rebar' && (o.parts[j.ia].spec.reinforcement || o.parts[j.ib].spec.reinforcement)) continue
+      // the rebar of a reinforced part (a cage, or the tension steel of `structure.rebar`) ties it to the next one: blows do not wear it, only a torch
+      // or a saw cuts it (or the part itself giving way)
+      if (j.spec.kind === 'rebar' && (isReinforced(o.parts[j.ia].spec) || isReinforced(o.parts[j.ib].spec))) continue
       if (near && jointReach(o, j, near) > Math.max(radius, jointReachLimit(o, j))) continue
       j.st.hp -= amount
       if (j.st.hp <= 0) {
@@ -917,15 +1109,43 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     partLost(o, p, src)
   }
 
+  /**
+   * A reinforced beam or slab that fails in bending folds at the hinge and comes down in one piece, held together by its bars: the joints it rests on
+   * open, it keeps what rests on it, and it falls (a `collapse` follows) instead of turning to rubble.
+   */
+  const hingeDrop = (o: ObjRT, p: PartRT, src?: string) => {
+    const i = o.idx.get(p.spec.id)!
+    const opened: JointRT[] = []
+    for (const j of o.byPart.get(p.spec.id) ?? []) {
+      if (j.st.open || restsOn(j, i) < 0) continue
+      j.st.open = true
+      j.st.hp = 0
+      j.st.openedBy = 'break'
+      opened.push(j)
+    }
+    p.st.hp = Math.max(1, p.st.maxHp * 0.1)
+    p.st.cracked = true
+    markDamaged(p)
+    debris(o, p, p.mat.breakDebris, partXf(o, p).c, [0, -1, 0], 12, 2, src)
+    solveStructure(o)
+    recomputeGroups(o)
+    detachEvents(o, opened, 'break', src)
+    collapseCheck(o, src)
+  }
+
   /** Part hit points reached 0 (or it was forced to explode): fragments, debris, joints open. */
-  const failPart = (o: ObjRT, p: PartRT, origin: Vec3 | null, dir: Vec3 | null, fragEnergy: number, cap: number, src?: string) => {
+  const failPart = (o: ObjRT, p: PartRT, origin: Vec3 | null, dir: Vec3 | null, fragEnergy: number, cap: number, src?: string, force?: FractureStyle) => {
     if (isLost(p)) return
     if (p.st.stripped) {
       loseCage(o, p, src)
       return
     }
+    if (!force && p.bend && (p.st.flexure ?? 0) > 1 && sectionOf(p, p.bend.gravity).reinforced) {
+      hingeDrop(o, p, src)
+      return
+    }
     const ex = p.spec.explodes
-    const style = p.mat.fracture === 'none' ? 'snap' : p.mat.fracture
+    const style = force ?? (p.snap ? 'snap' : p.mat.fracture === 'none' ? 'snap' : p.mat.fracture)
     const { c, q } = partXf(o, p)
     const hitW = origin ?? c
     const grain = p.spec.grain ? AXIS[p.spec.grain] : undefined
@@ -1184,6 +1404,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (Ein > 20 && p.layers.length > 0) spallOuter(o, p, wp, faceOf(o, p, wn), wn, clamp(0.05 + Math.sqrt(Ein) * 0.002, 0.05, 0.4), src)
     const dealt = applyDamage(o, p, amount, 'explosive', point, null, Ein * 0.3, 40, src)
     res.damage += dealt
+    if (p.bend && flexure.enabled) bendByBlast(o, p, point, energy, radius, reach, src)
     if (dist <= BREACH_BLAST_REACH * Math.cbrt(Math.max(0, energy) / 1000)) addBreach(o, p, wp, breachAreaOf(p, dealt, true), Ein, null, src)
     return reach
   }

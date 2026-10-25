@@ -76,6 +76,7 @@ export type {
   Quat,
   RayHit,
   Reinforcement,
+  TensionRebar,
   StructureRole,
   SurfaceLayer,
   ToolKind,
@@ -157,6 +158,80 @@ export interface MaterialDef {
    * softwood 100 000, steel 2 000 000). Default 20 000. See `PartSpec.structure`.
    */
   compressive?: number
+  /**
+   * Engineering strengths of the material, in real units. When present they replace the game-tuned `compressive` for the capacity of the part and
+   * turn on the bending model of beams and slabs (`tensileMPa`). See `MaterialStrength`.
+   */
+  strength?: MaterialStrength
+}
+
+/**
+ * Real strengths of a structural material (characteristic values). Concrete C25 (NBR 6118 / Eurocode 2): compressive 25, tensile 0.3 * fck^(2/3) = 2.56,
+ * elastic 5600 * sqrt(fck) = 28 GPa. Clay brick masonry (Eurocode 6, fk = 0.55 * fb^0.7 * fm^0.3 with fb 4 MPa, mortar M5): compressive 2.35.
+ */
+export interface MaterialStrength {
+  /** Characteristic compressive strength in MPa (fck of concrete, fk of a masonry wall). */
+  compressiveMPa: number
+  /** Mean axial tensile strength in MPa (fctm of concrete). Without it the material does not take part in the bending model. */
+  tensileMPa?: number
+  /** Modulus of elasticity in GPa (tangent at the origin, Eci, for the dynamic stiffness). */
+  elasticGPa?: number
+  /**
+   * Masonry and plain concrete walls and pillars lose capacity with their slenderness and the unavoidable eccentricity of the load (`structure.masonry`).
+   * Default true for materials tagged `masonry` that are not reinforced.
+   */
+  slender?: boolean
+}
+
+/** Bending of beams, slabs, roofs and stairs (`DestructionOptions.structure.flexure`). Every number is configurable; the defaults are real values. */
+export interface FlexureOptions {
+  /** Off: beams and slabs are checked in compression only, as before (default true). */
+  enabled?: boolean
+  /** Roles the bending model applies to (default beam, slab, roof, stair). Only parts whose material has `strength.tensileMPa`. */
+  roles?: readonly StructureRole[]
+  /**
+   * Which beams and slabs the bending model takes. `rebar` (default): those that declare their tension steel in `structure.rebar` (a ratio of 0 is
+   * plain concrete). `reinforced`: also those with only a `reinforcement` cage, their steel taken from the cage. `all`: every one, and those with no
+   * steel at all are plain concrete. The default leaves structures made before this model as they were.
+   */
+  scope?: 'rebar' | 'reinforced' | 'all'
+  /** Factor alpha on the tensile strength for the cracking moment of a rectangular section, `Mr = alpha * fct * b * h^2 / 6` (NBR 6118 17.3.1: 1.5). */
+  crackFactor?: number
+  /** Yield strength of the tension steel in MPa when the part does not say it (500: CA-50, NBR 7480). */
+  rebarYieldMPa?: number
+  /** Cover from the tension face to the bar in metres when the part does not say it (0.03: NBR 6118 table 7.2, class II, beams). */
+  cover?: number
+  /**
+   * Largest neutral axis depth over d of a ductile section (0.45: NBR 6118 14.6.4.3). Steel beyond it is taken as double reinforcement (it adds its
+   * pull times `d - d'`).
+   */
+  neutralAxisLimit?: number
+  /** Support rotation in degrees at which a reinforced member fails under a blast (10: PDC-TR 06-08, hazardous damage of RC beams and slabs). */
+  failRotationDeg?: number
+  /** Load factor of the equivalent one-degree-of-freedom system (0.64: Biggs 1964, simply supported, uniform load, elastic). */
+  loadFactor?: number
+  /** Mass factor of the equivalent system (0.50: Biggs 1964, same case). */
+  massFactor?: number
+  /** Joules per kilogram of TNT to turn a blast energy into a charge mass (4.184e6, the definition of the TNT equivalent). */
+  tntJoules?: number
+  /** Incident impulse coefficient in Pa s m / kg^(2/3): `i = impulse * W^(2/3) / R` (200: Sadovsky). */
+  impulse?: number
+  /** Reflected over incident impulse far from the charge (2: normal reflection of a weak shock). */
+  reflection?: number
+  /** Rise of the reflection near the charge, in m/kg^(1/3): the factor is `reflection + reflectionNear / Z` (4: about 4 at Z = 2, 6 at Z = 1). */
+  reflectionNear?: number
+  /** Smallest scaled distance in m/kg^(1/3) the impulse formula is used at; nearer, the breach model of the hit points takes over (0.5). */
+  nearScaled?: number
+}
+
+/** Crushing of bearing walls and pillars of masonry or plain concrete (`DestructionOptions.structure.masonry`). */
+export interface MasonryOptions {
+  /** Unavoidable eccentricity of the load over the thickness (0.05: NBR 16868-1 and Eurocode 6 6.1.2.2): the capacity is times `1 - 2 * e`. */
+  minEccentricity?: number
+  /** Slenderness `h / t` at which the capacity reaches zero in `1 - (lambda / limit)^3` (40: NBR 16868-1 reduction factor R). */
+  slendernessLimit?: number
+  /** Share of the cross-section of concrete counted in the axial capacity of a reinforced pillar, `0.85 * fck` (0.85: NBR 6118 17.2.2). */
+  concreteFactor?: number
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -192,6 +267,10 @@ export interface DestructionOptions {
      * change the capacities; to size them use `sizeStructure({ safety })`.
      */
     safetyFactor?: number
+    /** Bending of beams and slabs: the tension face cracks, the steel carries the pull, a member without steel snaps. See `FlexureOptions`. */
+    flexure?: FlexureOptions
+    /** Crushing of bearing walls and pillars with slenderness. See `MasonryOptions`. */
+    masonry?: MasonryOptions
   }
   /**
    * What lights the flammable fluid that leaks from a container (a fuel tank, a jerrycan, a gas bottle). A round that goes through only makes a
@@ -234,6 +313,12 @@ export interface SizeStructureOptions {
   redundancy?: number
   /** Extra or overriding materials, the same list given to `createDestruction`. */
   materials?: MaterialDef[]
+  /**
+   * Bending options of the world the spec will go into (`DestructionOptions.structure.flexure`). Reinforced beams and slabs (a `reinforcement` cage
+   * or `structure.rebar`) get the tension steel ratio they need: at rest at `safety` (per role) of their moment, and, with `redundancy`, after the loss
+   * of any part of `redundancyRoles`. Steel is only added, never removed, and plain concrete stays plain.
+   */
+  flexure?: FlexureOptions
 }
 
 /*
@@ -356,6 +441,8 @@ export interface PartRuntime {
   breach?: Array<[number, number, number, number]>
   /** Mass in kg that left the part in a breach. */
   removed?: number
+  /** Plastic rotation in radians a reinforced beam or slab took in bending (blasts add it up; `flexure.failRotationDeg` breaks it). */
+  hinge?: number
 }
 
 /** Opaque bookkeeping of an object (see `PartRuntime`). `joints` holds the last disassembly step reported per joint id. */

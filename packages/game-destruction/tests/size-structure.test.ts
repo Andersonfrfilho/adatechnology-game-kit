@@ -13,7 +13,8 @@ const slab4 = (): DestructibleSpec => {
     joints.push({ a: `c${i}`, b: `f${i}`, kind: 'rebar', bears: 'a_on_b' })
     joints.push({ a: 'slab', b: `c${i}`, kind: 'rebar', bears: 'a_on_b' })
   })
-  parts.push({ id: 'slab', material: 'concrete', shape: { kind: 'box', size: [4.2, 0.2, 4.2] }, position: [0, 3.1, 0], structure: { role: 'slab' } })
+  // reinforced at the minimum ratio of NBR 6118 (0.15%): sizeStructure adds the steel the slab needs in bending
+  parts.push({ id: 'slab', material: 'concrete', shape: { kind: 'box', size: [4.2, 0.2, 4.2] }, position: [0, 3.1, 0], structure: { role: 'slab', rebar: { ratio: 0.0015 } } })
   parts.push({ id: 'window', material: 'glass', shape: { kind: 'box', size: [1, 1, 0.01] }, position: [0, 1.5, 2.1] })
   return { name: 'slab4', parts, joints }
 }

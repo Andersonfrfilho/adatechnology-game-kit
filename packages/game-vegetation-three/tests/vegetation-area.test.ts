@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as THREE from 'three'
-import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
+import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 
 import * as GameVegetation from '@adatechnology/game-vegetation'
@@ -21,7 +21,7 @@ const stubRenderer = (): never => {
 const makeRoom = (locale = 'pt-BR'): TestRoom => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  return createTestRoom({ THREE, container, locale, catalog: demoItems(locale), renderer: stubRenderer(), ui: false })
+  return createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
 }
 
 describe('vegetation test area', () => {

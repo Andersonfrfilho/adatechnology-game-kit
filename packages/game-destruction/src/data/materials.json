@@ -393,7 +393,12 @@
    "masonry",
    "brittle"
   ],
-  "compressive": 444000
+  "compressive": 444000,
+  "strength": {
+   "compressiveMPa": 25,
+   "tensileMPa": 2.56,
+   "elasticGPa": 28
+  }
  },
  {
   "id": "brick",
@@ -418,7 +423,12 @@
    "masonry",
    "brittle"
   ],
-  "compressive": 40000
+  "compressive": 40000,
+  "strength": {
+   "compressiveMPa": 2.35,
+   "tensileMPa": 0.1,
+   "elasticGPa": 2.35
+  }
  },
  {
   "id": "plaster",

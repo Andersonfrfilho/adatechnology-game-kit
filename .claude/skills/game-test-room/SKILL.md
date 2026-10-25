@@ -55,9 +55,9 @@ export const CRATES: TestableModule = {
 ```ts
 // jogo ou examples/<lib>-test-area
 import * as THREE from 'three'
-import { createTestRoom, demoItems } from '@adatechnology/game-test-room'
+import { createTestRoom } from '@adatechnology/game-test-room'
 
-const room = createTestRoom({ THREE, container: document.getElementById('app')!, locale: 'pt-BR', catalog: demoItems('pt-BR') })
+const room = createTestRoom({ THREE, container: document.getElementById('app')!, locale: 'pt-BR', catalog: [] })
 const report = room.loadModule(CRATES) // { module, items, scenarios, ok, problems }
 if (!report.ok) console.error(report.problems)
 room.openArea('crates') // id do módulo ou o group; usa module.area(); sem area, enfileira os itens
@@ -79,9 +79,9 @@ Sem `area`, os itens vão em fileiras. `openArea` de um grupo sem módulo també
 | `room.metrics()` | Contadores da sala (`fps`, `frame_ms`, `draw_calls`, `triangles`, `objects`, `fragments`, `particles`, `decals`) e os do módulo ativo |
 | `options.metrics`, `options.bench` | Quais contadores da sala (`false` para nenhum); estado da bancada (`state`: `{ [moduleId]: 'id=valor;...' }`) e `onChange(moduleId, encoded)` |
 | `encodeBenchState`, `decodeBenchState` | Estado `id=valor;id=valor`; o decode trata a entrada como hostil |
-| `room.runScenarios()` / `room.scenarios` | Cenários embutidos e os do módulo |
+| `room.runScenarios()` / `room.scenarios` | Cenários do anfitrião e dos módulos (a sala não traz cenários próprios) |
 | `room.log` / `createLog` | Log de comportamento (`toNDJSON`, JSON) |
-| `demoItems`, `brickWallSpec`, `buildFromSpec` | Itens de demonstração e desenho de uma spec em malhas |
+| `brickWallSpec`, `buildFromSpec` | Parede-alvo da arena e desenho de uma spec em malhas (a sala não traz itens: eles vêm dos módulos) |
 | `resolveStrings`, `locales` | Textos `en` e `pt-BR` |
 | `ModuleReport`, `ScenarioContext` | Resultado do carregamento; contexto `{ room, step, expect }` |
 
@@ -98,7 +98,7 @@ Libs de conteúdo (`-fleet`, `-household`, `-species`) entregam módulos; não i
 `bench.test.ts`, `metrics.test.ts`).
 A sala executa `host.command` pela regra do `game-weapons` na bancada (acessórios de qualquer instalação, no tempo que a regra dá) e mostra o que a ferramenta leva em `host.tool()`.
 
-Exemplos no repositório: `examples/test-room` (carrega `DEMO_MODULE`), `examples/weapons-test-area`, `examples/interactables-test-area` (a página leva também o módulo de armas com os acessórios, para atirar nos móveis).
+Exemplos no repositório: `examples/test-room` (abre já com todos os módulos do SDK), `examples/weapons-test-area`, `examples/interactables-test-area` (a página leva também o módulo de armas com os acessórios, para atirar nos móveis).
 Query strings do exemplo: `?area=`, `?items=`, `?scenario=all|<id>`, `?lang=`, `?quality=`, `?ui=0`, `?bench=` (estado da bancada).
 
 ## Som e ambiente emprestados (T6.3)

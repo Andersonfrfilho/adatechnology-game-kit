@@ -596,7 +596,7 @@ Modelo da execução: `sonnet`. Branch `feat/spec-001-fase-1` (sobre T1.1 a T1.5
 
 ### Decisões
 
-1. **Arquétipo só empresta modelo de quem atira do mesmo jeito.** Os lançadores (`rpg_7`, `m72_law`, `at4`, `carl_gustaf_m4`) têm `archetype: shotgun_pump_12` nos dados; pela regra "menor id" o `at4` daria um tubo de foguete à escopeta. A condição é `action.kind` igual ao do arquétipo. Resultado: 15 arquétipos com modelo (`pistol_9mm` → `beretta_92fs`, `pistol_45` → `colt_m1911`, `revolver_357` → `sw_686`, `revolver_38` → `taurus_82`, `smg_9mm` → `cz_scorpion_evo_3`, `shotgun_pump_12` → `cbc_pump_military_3_0`, `shotgun_semi_12` → `aa_12`, `shotgun_double_12` → `boito_double_barrel`, `rifle_7_62x39` → `ak_47`, `rifle_5_56` → `ak_12`, `rifle_bolt_308` → `fn_scar_h`, `sniper_338` → `accuracy_awm`, `anti_materiel_50` → `barrett_m82a1`, `carbine_22` → `cbc_122`, `flamethrower` → `improvised_flamethrower`); `pistol_22` (nenhuma marca o aponta), o corpo a corpo, o arco, a besta, as ferramentas e os arremessáveis seguem com o prop. O comprimento do modelo é o da marca, não o do arquétipo.
+1. **Arquétipo só empresta modelo de quem atira do mesmo jeito.** Os lançadores (`rpg_7`, `m72_law`, `at4`, `carl_gustaf_m4`) têm `archetype: shotgun_pump_12` nos dados; pela regra "menor id" o `at4` daria um tubo de foguete à escopeta. A condição é `action.kind` igual ao do arquétipo. Resultado: 15 arquétipos com modelo (`pistol_9mm` → `beretta_92fs`, `pistol_45` → `colt_m1911`, `revolver_357` → `sw_686`, `revolver_38` → `taurus_82`, `smg_9mm` → `cz_scorpion_evo_3`, `shotgun_pump_12` → `cbc_pump_military_3_0`, `shotgun_semi_12` → `aa_12`, `shotgun_double_12` → `boito_double_barrel`, `barrett_m82a1` → `ak_47`, `rifle_5_56` → `ak_12`, `rifle_bolt_308` → `fn_scar_h`, `sniper_338` → `accuracy_awm`, `anti_materiel_50` → `barrett_m82a1`, `carbine_22` → `cbc_122`, `flamethrower` → `improvised_flamethrower`); `pistol_22` (nenhuma marca o aponta), o corpo a corpo, o arco, a besta, as ferramentas e os arremessáveis seguem com o prop. O comprimento do modelo é o da marca, não o do arquétipo.
 2. **Explosão vira evento do host** (`HostEvent.explosion`) em vez de o módulo ouvir a sala: aditivo, genérico (não cita arma), e é o que deixa a área tocar o som por distância. Também sai das peças do mundo (`explode` do destruidor).
 3. **`ModuleHost.configureTool({ condition, ammoQuality })`**: o módulo não tinha como mudar a regra da arma na mão. O host aplica à ferramenta em mãos e às seguintes (`toolSettings`). Genérico (desgaste e qualidade da munição valem para qualquer ferramenta).
 4. **Raio do mundo = alcance de ferimento.** A explosão arremessada passa a chamar `world.explode` com `injuryRadius` (antes o raio letal da arremessável), igual ao da peça armada em cadeia (`explodes.radius = injuryRadius`): o mesmo explosivo faz o mesmo estrago no mundo, arremessado ou em cadeia. A energia cai com a distância.
@@ -3072,3 +3072,37 @@ node examples/interactables-test-area/test.mjs                 -> sem falhas (EX
 1. A renomeação dos ids criados pelo adaptador (`service_entrance`, `panel`...) muda as sementes de uma cena salva com os ids do time. Aceita, ou o jogo passa `seedKey`?
 2. A regra da chaminé e a do gás de acampamento foram inferidas; o time não dá o vínculo na planta. O `Chimney` do `game-floorplan` deve ganhar o id do item que ele serve?
 3. Os 31 ids de conteúdo da tabela padrão da estrutura foram casados com o household pelo nome; a lista está em `MIGRATION.md`. Alguém do time de itens confere?
+
+## 2026-10-24 · A sala de testes abre só com o conteúdo do SDK
+
+O dono perguntou se os itens de `/test-room/` eram os do jogo: não eram (19 itens procedurais de caixa e cilindro, `demoItems`, mais um carro de aluguel de caixas, `DEMO_MODULE`). Decisão do dono: "remover todos esses itens e deixar apenas dos sdk". Feito:
+
+- `game-test-room` perdeu `demoItems`/`DEMO_ITEMS`/`DEMO_MATERIALS`, os cenários embutidos (`SCENARIOS`, `scenariosFor`, `makeScenarios`, que usavam esses ids e a ferramenta `pistol_9mm`) e os textos deles. Fica só `brickWallSpec` (parede-alvo da arena). Os cenários de destruição, fluido e fogo que eles cobriam já existem nos testes de `game-destruction`/`game-fluids` e nos cenários de módulo dos pacotes de conteúdo; nenhum foi portado porque nenhum tinha item real equivalente sem cenário próprio (pendência: cenário de módulo para o extintor apagando fogo e para o fogo em estofado, se quisermos manter essa cobertura).
+- `examples/test-room` carrega o mesmo conjunto de `examples/interactables-test-area` (o `entry.js` dele é embutido na página; a sala "nua" sem itens fica em `examples/test-room/base/` e é sobre ela que as outras áreas se constroem). `demo-module.js` foi removido.
+- Os testes do pacote usam `tests/fixtures/demo-items.ts` (não exportado).
+
+### 2026-10-24 · Cobertura dos cenários removidos da sala, reescrita com itens reais
+
+Cada cenário embutido que a sala trazia foi para o módulo do pacote dono do item real, ou já tinha equivalente:
+
+| Cenário removido | Onde está agora |
+|---|---|
+| `steel_through_hole`, `concrete_stops_bullet`, `shotgun_splinters_crate`, `hammer_dents_drum`, `torch_melts_steel` | `game-weapons-three` (`src/scenarios.ts`, alvos `target_steel_plate`/`target_plywood`/`target_concrete`, `pistol_9mm`, `barrett_m82a1`, `shotgun_pump_12`, `hammer`, `cutting_torch`). O 9 mm só amassa a chapa de 10 mm (realista); o furo que atravessa é do .50 BMG do Barrett (com a ammo.json, o 7,62x39 comum não fura 10 mm). A escopeta fura o compensado com vários chumbos, não estilhaça. |
+| `extinguisher_puts_out_fire`, `throw_chair_at_wall`, `wrong_tool_refused` | área de móveis (`examples/interactables-test-area/src/scenarios.js`): `sofa_fire_extinguished`, `chair_thrown_at_wall`, `wrong_tool_refused` (chave inglesa na dobradiça da geladeira) |
+| `glass_shatters` | já existiam `tv_screen_shatters` e `shower_glass_shatters` |
+| `kick_chair_leg`, `kick_detaches_leg_via_tool` | já existiam `chair_kicked_apart` e `camp_chair_kicked` |
+| `lighter_burns_crate` | já existe `sofa_burns` |
+| `one_column_roof_stands`, `two_columns_roof_collapses` | já cobertos pelos cenários de desabamento de `game-floorplan-three` |
+| `gas_bottle_explodes` | já existe com o mesmo nome |
+| `screwdriver_shelf_board`, `bucket_melts_drips`, `bottle_drop_shatters`, `coffee_three_sips`, `tilt_cup_spills`, `jerrycan_leaks_fuel`, `fuel_stain_burns` | **sem item real equivalente**: dependem de recipiente com líquido (xícara, garrafa, balde, galão) ou de prateleira de tábuas, que não existem como item destrutível com `fluid` no SDK. Pendência: quando os itens de recipiente entrarem, escrever os cenários no pacote que os entregar. |
+
+Também: `zombie_behind_door` falhava só depois de ~45 cenários na mesma sala porque marcava o ponto do log pelo tamanho da lista, e o log guarda só os últimos 5000 registros; passou a marcar pelo `seq`.
+
+## 2026-10-25 · Estrutura real, passos 1 e 2 (tração com vergalhão, alvenaria portante)
+
+Desenho em `design/T10-estrutura-real.md`. O concreto racha na tração e o vergalhão segura; a viga sem aço parte; a parede portante do térreo esmaga quando há andares demais (conferido com o Monadnock: 16 andares pedem 1,49 m na base, o prédio tem 1,8 m).
+
+- **Goldens:** nenhuma mudou, nem de time (`vc3-*`) nem auto-goldens. A flexão vale por padrão só para peças com `structure.rebar` (`scope: 'rebar'`); as casas do `game-floorplan` e as cenas de `game-destruction` usam só a gaiola `reinforcement` e ficam como estavam. Com `scope: 'reinforced'` mudariam `gate-rpg-collapse` e `house-scenarios` (auto) e `house_one_pillar`/`house_partition` do `game-floorplan-three` cairiam: a laje de 8 x 12 m e 12 cm do sobrado não é uma estrutura real em flexão (T10 §5).
+- **Testes antigos ajustados:** as capacidades documentadas do pilar e da parede (agora pela resistência real); as lajes de teste de `structure`, `size-structure`, `size-roles`, `collapse-timing` ganharam `structure.rebar` (laje armada, como no real); o pórtico de `beams-and-columns` que perde o pilar central agora é dimensionado com `redundancy` (o vão dobra, a viga precisa de aço para isso); o pórtico "forte" da cascata ganhou aço declarado.
+- **Testes novos:** `game-destruction/tests/flexure.test.ts` (fórmulas; viga de CA na explosão racha e segura; sem aço parte; rótula depois de explosões repetidas; torre de tijolo esmaga no térreo no 18º andar com paredes de 19 cm; Monadnock; pórtico de 10 andares com divisórias fica de pé e a divisória cai sem levar a laje) e `game-floorplan-structure/tests/flexure.test.ts`.
+- **Portões:** `pnpm build`, `pnpm typecheck`, `pnpm lint` ok; testes de `game-destruction` (230), `game-destruction-three` (112), `game-floorplan-structure` (263), `game-floorplan-three` (142), `game-test-room` (145), `game-interactables-three` (304) ok; `examples/test-room/build.mjs`, `floorplan-test-area` e `interactables-test-area` build + `test.mjs` ok (capturas reescritas revertidas).
