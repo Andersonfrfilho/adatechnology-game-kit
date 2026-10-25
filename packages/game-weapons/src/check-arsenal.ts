@@ -64,6 +64,8 @@ const checkExplosiveNumbers = (explosive: ExplosiveDef): string[] => {
   if (explosive.fuseLength !== undefined && !(explosive.fuseLength > 0)) problems.push(`explosive "${explosive.id}" has a fuse length of ${explosive.fuseLength} m`)
   if (explosive.burnRate !== undefined && !(explosive.burnRate > 0)) problems.push(`explosive "${explosive.id}" has a burn rate of ${explosive.burnRate} s/m`)
   if (explosive.burnTolerance !== undefined && !(explosive.burnTolerance >= 0 && explosive.burnTolerance < 1)) problems.push(`explosive "${explosive.id}" has a burn tolerance of ${explosive.burnTolerance}`)
+  if (explosive.leak && !(explosive.leak.liters > 0 && explosive.leak.igniteDelay >= 0 && (explosive.leak.hissSeconds ?? 0) >= 0)) problems.push(`explosive "${explosive.id}" has a leak of ${explosive.leak.liters} l that lights after ${explosive.leak.igniteDelay} s`)
+  if (explosive.shell && !(explosive.shell.launchSpeed >= 0 && explosive.shell.trailSeconds >= 0)) problems.push(`explosive "${explosive.id}" has a shell that leaves at ${explosive.shell.launchSpeed} m/s and trails fire for ${explosive.shell.trailSeconds} s`)
   if (explosive.tripwire && !(explosive.tripwire.length > 0)) problems.push(`explosive "${explosive.id}" has a trip wire of ${explosive.tripwire.length} m`)
   return problems
 }
