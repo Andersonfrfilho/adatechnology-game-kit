@@ -1968,5 +1968,15 @@
       0.006
     ],
     "scale": 1
+  },
+  {
+    "id": "hard_hat",
+    "teamId": "capacete_obra",
+    "teamBox": [
+      0.24958,
+      0.15,
+      0.3
+    ],
+    "scale": 1
   }
 ]
