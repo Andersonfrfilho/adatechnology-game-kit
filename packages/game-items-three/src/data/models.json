@@ -1828,5 +1828,15 @@
       0.05038
     ],
     "scale": 1
+  },
+  {
+    "id": "electric_fence_energizer",
+    "teamId": "eletrificador",
+    "teamBox": [
+      0.25,
+      0.2,
+      0.1502
+    ],
+    "scale": 1
   }
 ]
