@@ -350,4 +350,4 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [ ] | Chave mestra da portaria | `chave_mestra` | `master_key` | 0,05 kg | incomum | 90 x 35 x 6 mm |
 | [ ] | Crachá da hidrelétrica | `cracha_rep` | `dam_badge` | 0,01 kg | único | do jogo |
 | [ ] | Código do bunker (3 pedaços) | `codigo_bunker` | `bunker_code` | 0,01 kg | único | do jogo |
-| [ ] | Molho de chaves do zelador | `molho_zelador` | `janitor_keys` | 0,15 kg | incomum | 120 x 100 x 20 mm |
+| [x] | Molho de chaves do zelador (kit) | `molho_zelador` | `janitor_keys` | 0,15 kg | incomum | 120 x 100 x 20 mm |

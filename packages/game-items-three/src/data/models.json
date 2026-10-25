@@ -1998,5 +1998,15 @@
       0.28
     ],
     "scale": 1
+  },
+  {
+    "id": "janitor_keys",
+    "teamId": "molho_zelador",
+    "teamBox": [
+      0.12125,
+      0.10081,
+      0.02
+    ],
+    "scale": 1
   }
 ]
