@@ -1023,11 +1023,11 @@
     "id": "camp_stove",
     "teamId": "fogareiro",
     "teamBox": [
-      1.8,
-      1,
-      1.1
+      18,
+      10,
+      11
     ],
-    "scale": 0.1
+    "scale": 0.01
   },
   {
     "id": "lighter",
