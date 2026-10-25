@@ -2198,5 +2198,15 @@
       0.35
     ],
     "scale": 1
+  },
+  {
+    "id": "padlock_key",
+    "teamId": "cadeado_chave",
+    "teamBox": [
+      0.05,
+      0.08078,
+      0.025
+    ],
+    "scale": 1
   }
 ]
