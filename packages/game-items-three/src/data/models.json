@@ -1083,11 +1083,11 @@
     "id": "gas_torch",
     "teamId": "macarico",
     "teamBox": [
-      1.5,
-      4.2,
-      1.5
+      15.1,
+      42,
+      15
     ],
-    "scale": 0.1
+    "scale": 0.009978
   },
   {
     "id": "inverter_welder",
