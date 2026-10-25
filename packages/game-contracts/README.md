@@ -147,6 +147,14 @@ Everything is exported from the package root; see `src/*.ts` for the doc comment
 of the container side (the `fillCurve`, the `sparkTarget` of the wall, `fireNear`), `ignitionChance(hit, { sparkTarget, fill, fluid? }, rules?)` is the chance that one round that went through
 lights the leak, `fillFactor(fill, curve?)` the curve and `sparkTargetFactor(materialId, isMetal, rules?)` the wall. `game-destruction` and `game-vehicles` use them; a plain bullet only leaks.
 
+## Categories (kinds with inheritance)
+
+`defineCategories(defs, { extra, patches, remove })` builds a `CategoryRegistry`: each `CategoryDef` has an `id`, an optional `extends` (any depth), `defaults`, `requires` (contract ids) and `abstract`.
+`defaults(id)` deep-merges along the chain (root first, arrays replace), `requires(id)` is the deduped union, `chain(id)`, `isA(id, ancestor)` and `check()` (unknown parent, cycle, duplicate id) complete it.
+`resolveEntry(registry, entry)` puts the category defaults under an entry (the entry wins); `checkCategorized(entries, registry, checkers, { allow })` runs the `ContractChecker` of every required contract on the resolved entry and
+reports `"<id>" (<kind>): <problem>, required by <category>`; `allow` lists known gaps that go to `allowed` instead of `problems`.
+Items only name their `kind`, so a game can insert a new parent above existing types (`patches: { canned_food: { extends: 'preserved' } }` with `preserved` extending the old parent) or add a child under any type, and every item keeps resolving, now with the extra defaults and requirements, without being edited.
+
 ## Português
 
 Os contratos de que todo módulo de jogo depende, e só isso: tipos mais alguns verificadores pequenos e puros, **sem dependências em tempo de
