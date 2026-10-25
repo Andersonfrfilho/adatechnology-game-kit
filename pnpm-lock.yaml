@@ -190,6 +190,9 @@ importers:
         specifier: workspace:*
         version: link:../game-characters
     devDependencies:
+      '@adatechnology/game-player':
+        specifier: workspace:*
+        version: link:../game-player
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5

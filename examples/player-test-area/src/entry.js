@@ -5,9 +5,11 @@
 // Metrics: health, stamina, bleeding, wounds, infection, time left, panic, aim spread, grab timer, last noise, footsteps, message.
 //
 // The body: `loadInto` gives the room the player's avatar (`createPlayerAvatar` of @adatechnology/game-characters-three) and starts in third person (V toggles),
-// loads the avatar area (`avatar_area`: view, crouch, fall, armed, the grab and bite clips) and links the player to the body: crouching crouches it, a knock-down
+// loads the avatar area (`avatar_area`: view, crouch, fall, armed, the grab and bite clips and the strikes: punch, shove, kick, the recoil of a rifle and of a pistol) and links the player to the body: crouching crouches it, a knock-down
 // (or death) lays it down, and being grabbed plays the Bestiário clip `grabbed_bitten_human` until the player is let go. three.js comes from the page (`options.THREE`,
 // else `window.__THREE`): the bundle never carries a second copy.
+import { POSE_CLIPS } from '@adatechnology/game-characters'
+import { ATTACK_CLIPS, ATTACK_CLIP_LOCALES } from '@adatechnology/game-characters-people'
 import { PLAYER_DEFAULTS, createPlayer, createPlayerTestModule } from '@adatechnology/game-player'
 import { AVATAR_AREA_ID, createAvatarTestModule, createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
 
@@ -69,6 +71,8 @@ export function loadInto(room, options = {}) {
     createAvatarTestModule({
       avatar,
       locale,
+      clips: [...POSE_CLIPS, ...ATTACK_CLIPS],
+      clipLocales: ATTACK_CLIP_LOCALES,
       camera: { mode: () => room.cameraMode, set: (mode) => room.setCameraMode(mode) },
       state: { set: (state) => room.setAvatarState(state) },
     }),

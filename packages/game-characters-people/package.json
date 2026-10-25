@@ -44,6 +44,7 @@
     "@adatechnology/game-characters": "workspace:*"
   },
   "devDependencies": {
+    "@adatechnology/game-player": "workspace:*",
     "@types/node": "^22.10.7",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",

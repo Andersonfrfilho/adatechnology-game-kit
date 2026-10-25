@@ -2,11 +2,12 @@
  * @adatechnology/game-characters-people: generic people for `game-characters`, as data and one pack. 12 professions, 4 age presets, the appearance
  * pools and the accessory ids the portraits builder knows, the name pools and the character sheet ruleset. Named people and their stories belong to the game.
  */
-import type { CharacterPack } from '@adatechnology/game-characters'
+import type { CharacterPack, PoseClip } from '@adatechnology/game-characters'
 
 import accessoriesData from './data/accessories.json'
 import agesData from './data/ages.json'
 import appearanceData from './data/appearance.json'
+import attackClipsData from './data/attack-clips.json'
 import namesData from './data/names.json'
 import professionsData from './data/professions.json'
 import sheetData from './data/sheet.json'
@@ -20,6 +21,13 @@ export const PROFESSIONS = professionsData as unknown as readonly Profession[]
 export const AGE_PRESETS = agesData as unknown as readonly AgePreset[]
 export const APPEARANCE_POOLS = appearanceData as unknown as AppearancePools
 export const ACCESSORIES = accessoriesData as unknown as readonly Accessory[]
+/**
+ * The player's attack pose clips (punch, shove, kick, the recoil of a rifle and of a pistol) in the `PoseClip` format of `game-characters`.
+ * Authored in the kit; replace with the Elenco team's clips when delivered. A game registers them with `createPoseClipRegistry([...POSE_CLIPS, ...ATTACK_CLIPS])`.
+ */
+export const ATTACK_CLIPS = attackClipsData.clips as unknown as readonly PoseClip[]
+/** Texts of the phase labels of `ATTACK_CLIPS` by locale, in the shape of `POSE_CLIP_LOCALES` of `game-characters`. */
+export const ATTACK_CLIP_LOCALES = attackClipsData.locales as Readonly<Record<LocaleId, Readonly<Record<string, string>>>>
 export const PEOPLE_LOCALES = { en, 'pt-BR': ptBR } as unknown as Readonly<Record<LocaleId, PeopleLocale>>
 
 /** First names, surnames, babies' names and kinship words by language (Os Vivos do Vale `NM`, `RELW`); pt-BR is the one the teams wrote. */

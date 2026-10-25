@@ -12,27 +12,29 @@ export type AvatarTestOptions = {
   avatar: PlayerAvatar
   /** The text language when the host does not ask for one. Default `pt-BR`. */
   locale?: string
-  /** The clips offered as buttons. Default `POSE_CLIPS` (the two of the Bestiário). */
+  /** The clips offered as buttons. Default `POSE_CLIPS` (the two of the Bestiário); a game adds its strikes, such as `ATTACK_CLIPS` of game-characters-people. */
   clips?: readonly PoseClip[]
+  /** Texts of the `phase` labels of `clips` by locale, merged over `POSE_CLIP_LOCALES` (for example `ATTACK_CLIP_LOCALES`). */
+  clipLocales?: Readonly<Record<string, Readonly<Record<string, string>>>>
   /** The room's view: `mode()` reads it, `set` changes it (`room.cameraMode` and `room.setCameraMode`). Without it the camera buttons only log. */
   camera?: { mode(): 'first' | 'third'; set(mode: 'first' | 'third'): void }
   /** The room's avatar state (`room.setAvatarState`): the module drives crouch, down and the armed arms through it. */
   state?: { set(state: { crouch?: boolean; down?: boolean; armed?: boolean | null }): void }
 }
 
-const PENDING = ['punch', 'shove', 'kick', 'shot_body'] as const
 const round = (value: number): string => (Math.round(value * 100) / 100).toString()
 
 /**
  * The player's body as a `TestableModule` for the area `avatar_area`: bench buttons for the view (1st and 3rd person), crouch, fall and get up, the armed arms and every registered
- * pose clip (grab, bite), the entries for the animations still to be delivered, and metrics for the camera, the clip, its last event and the joints. Every action goes to the room's
+ * pose clip (grab, bite), and metrics for the camera, the clip, its last event and the joints. Every action goes to the room's
  * log as JSON. It uses only the contracts: the body, the camera and the state come in by option, so the module knows no room.
  */
 export function createAvatarTestModule(options: AvatarTestOptions): TestableModule & { readonly state: { crouch: boolean; down: boolean; armed: boolean | null } } {
   const clips = options.clips ?? POSE_CLIPS
   const textOf = (locale?: string) => AVATAR_TEXT[locale ?? options.locale ?? 'pt-BR'] ?? (AVATAR_TEXT['pt-BR'] as (typeof AVATAR_TEXT)[string])
   const phaseLabel = (label: unknown, locale?: string): string => {
-    const table = POSE_CLIP_LOCALES[locale ?? options.locale ?? 'pt-BR'] ?? POSE_CLIP_LOCALES['pt-BR'] ?? {}
+    const id = locale ?? options.locale ?? 'pt-BR'
+    const table = { ...(POSE_CLIP_LOCALES[id] ?? POSE_CLIP_LOCALES['pt-BR']), ...(options.clipLocales?.[id] ?? options.clipLocales?.['pt-BR']) }
     return typeof label === 'string' ? (table[label] ?? label) : ''
   }
   const state = { crouch: false, down: false, armed: null as boolean | null }
@@ -112,7 +114,6 @@ export function createAvatarTestModule(options: AvatarTestOptions): TestableModu
         action('armed_off', text.actions.armed_off),
         ...clips.map((clip) => action(`play_${clip.id}`, `${text.play}: ${clip.id}`)),
         action('stop_clip', text.actions.stop_clip),
-        ...PENDING.map((id) => action(`pending_${id}`, `${text.pending[id]} (…)`, text.pendingHint)),
       ]
     },
     metrics: (locale): ModuleMetric[] => {
@@ -127,12 +128,11 @@ export function createAvatarTestModule(options: AvatarTestOptions): TestableModu
     },
     attach(lent) {
       host = lent
-      // the entries of the animations not yet delivered look off and say why
-      for (const id of PENDING) lent.bench?.patch(`pending_${id}`, { disabled: true })
       const stopChange = lent.bench?.onChange(onChange)
       const stopEvents = options.avatar.on('event', (event) => {
         lastEvent = `${event.clip} ${event.type} ${round(event.t)}s${event.data && 'label' in event.data ? ` ${phaseLabel(event.data.label)}` : ''}`
         log('clip_event', { clip: event.clip, event: event.type, t: event.t, data: event.data ?? null })
+        if (event.type === 'impact') log('impact', { clip: event.clip, t: event.t, kind: event.data?.kind ?? null })
       })
       return () => {
         stopChange?.()

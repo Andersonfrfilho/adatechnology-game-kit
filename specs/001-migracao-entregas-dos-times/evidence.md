@@ -3148,6 +3148,23 @@ Desenho em `design/T10-estrutura-real.md` §9. Presets em `game-floorplan-struct
 - **Testes novos:** `game-destruction/tests/wind.test.ts` (35), `game-floorplan-structure/tests/wind.test.ts` (11). Nenhum teste antigo mudou.
 - **Pendências para o dono:** H/500 contra H/1700 da NBR 6118; tabela 1 da NBR 6123 transcrita da memória; padrão V0 = 40 m/s e categoria III.
 
+## 2026-10-25 · Clipes de ataque do jogador (soco, empurrão, chute, recuo do tiro)
+
+Nenhum time entregou pose de golpe (Elenco, Bestiário e o jogo só têm a regra: `shove` e `knife` do jogo, sem animação). Os clipes foram escritos no kit como dado no formato `PoseClip`, em `game-characters-people/src/data/attack-clips.json` (`ATTACK_CLIPS`, textos das fases em `ATTACK_CLIP_LOCALES`, pt-BR e en). O núcleo `game-characters` continua só com os dois clipes do Bestiário.
+
+| Clipe | Canais | Duração | `impact` |
+|---|---|---|---|
+| `punch_right` | upper | 0,35 s | 0,16 s |
+| `shove_two_hands` | upper | 0,50 s | 0,26 s |
+| `front_kick` | full | 0,60 s | 0,32 s |
+| `recoil_rifle` | upper | 0,22 s | 0 s |
+| `recoil_pistol` | upper | 0,18 s | 0 s |
+
+- **Regra do `game-player`:** o empurrão e o golpe corpo a corpo valem no quadro da tecla, sem preparação própria; o `impact` do clipe é o momento em que o jogo que tocar o clipe deve aplicar o efeito (ou o jogo atrasa o efeito até ele). O atordoamento do empurrão (`shoveStun` 0,9 s) cobre a recuperação do clipe (0,50 − 0,26 s), e um teste confere.
+- **Área do avatar** (`game-characters-three`): os quatro botões desabilitados saíram; cada clipe registrado tem seu botão e o `impact` vira uma linha JSON `{"type":"avatar","action":"impact",...}` no log. Opções novas do módulo: `clipLocales`. O exemplo `player-test-area` registra `ATTACK_CLIPS`.
+- **Testes:** 22 novos em `game-characters-people` (amostragem sem NaN, pose neutra no início e no fim, um único `impact` dentro da janela, fases em ordem, textos) e 3 em `game-characters-three` (juntas existem no corpo, `upper` deixa as pernas ao andar, botões e `impact` no log); `examples/player-test-area/test.mjs` toca os cinco clipes em pt-BR e en e grava uma captura por golpe em `shots/strike-*.png`.
+
+
 ## 2026-10-25 · Estrutura real, passo 5 · arranha-céu e a cidade (lacuna 9)
 
 Desenho em `design/T10-estrutura-real.md` §11. Receita em `game-floorplan-structure` (`skyscraper.ts`, `skyscraper-plan.ts`), torre de escritórios em `game-floorplan-commercial` (`office_tower`), torre residencial em `game-floorplan-residential` (`residential_tower`), cidade em `game-urban` (opção `towers`, desligada por padrão). No motor, a barra de tração de parede e pilar passou a contar as barras que o espaçamento dá (`verticalBarCount`).
