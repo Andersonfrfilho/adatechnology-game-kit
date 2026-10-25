@@ -26,6 +26,9 @@ const REACH_SLACK = 0.97
 /** A foot is shown while a clip holds it by at least this much. */
 const FOOT_SHOWN = 0.001
 
+/** How much of its own colour each material glows with (0..1). */
+const FILL = 0.3
+
 /** The stances of the preset: `relaxed` and `fists` are rest poses, `hold` follows the targets of the tool in the hands. */
 export const FIRST_PERSON_STANCES = preset.stances as unknown as Readonly<Record<string, StanceDef>>
 /** The rig of the preset: shoulders, bones, elbow pole, hips and the leg of the kick. */
@@ -99,7 +102,7 @@ const mirrorQuaternion = (THREE: Three, q: THREE_NS.Quaternion): THREE_NS.Quater
 
 /**
  * The player's arms in first person, drawn in the space of the camera so they cannot leave the view. Each arm is a sleeve (upper arm and forearm, an elbow and a cuff) and a hand of skin (a palm,
- * four fingers of two segments and a thumb that close on a grip); the right leg (trouser and shoe) appears only while a kick holds it. The hands go where the stance puts them (`relaxed`, `fists`) or,
+ * four fingers of three segments and a thumb that close on a grip); the right leg (trouser and shoe) appears only while a kick holds it. The hands go where the stance puts them (`relaxed`, `fists`) or,
  * in the `hold` stance, where the tool in the hands asks (`HandTargets` of game-contracts, world space); a two-bone IK from fixed shoulders brings the sleeves to them, the elbow bending down and out. A
  * clip (`play`) moves the hands and the foot over that, by a weight that is 0 at its start and end.
  *
@@ -121,13 +124,15 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   const root = new THREE.Group()
   root.name = 'first-person-arms'
   root.userData.viewmodel = true
+  // a little of the colour glows by itself (`FILL`): the arms hang in the camera's space, where the scene's lights reach their undersides badly and a dark trouser would read as a hole
+  const lit = (color: number): THREE_NS.MeshLambertMaterial => new THREE.MeshLambertMaterial({ color, emissive: scaleHex(color, FILL) })
   const materials = {
-    skin: new THREE.MeshLambertMaterial({ color: colors.skin }),
-    sleeve: new THREE.MeshLambertMaterial({ color: colors.sleeve }),
-    cuff: new THREE.MeshLambertMaterial({ color: colors.cuff }),
-    trouser: new THREE.MeshLambertMaterial({ color: colors.trouser }),
-    shoe: new THREE.MeshLambertMaterial({ color: colors.shoe }),
-    sole: new THREE.MeshLambertMaterial({ color: scaleHex(colors.shoe, 0.55) }),
+    skin: lit(colors.skin),
+    sleeve: lit(colors.sleeve),
+    cuff: lit(colors.cuff),
+    trouser: lit(colors.trouser),
+    shoe: lit(colors.shoe),
+    sole: lit(scaleHex(colors.shoe, 0.55)),
   }
   const geometries: THREE_NS.BufferGeometry[] = []
   const Y = new THREE.Vector3(0, 1, 0)

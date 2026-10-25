@@ -13,7 +13,7 @@ export const HAND_HOLD = {
   /** How far up the grip the web of the hand sits from its middle. */
   gripUp: 0.006,
   /** How far down the grip the supporting hand of a pistol sits from the middle. */
-  supportDown: 0.026,
+  supportDown: 0.036,
   /** Where along the handguard (0 the receiver, 1 the end of the forend) the supporting hand closes. */
   forendAt: 0.45,
   /** How far under the handguard the palm sits (half a handguard plus the palm). */
