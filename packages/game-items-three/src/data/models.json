@@ -2118,5 +2118,15 @@
       0.006
     ],
     "scale": 1
+  },
+  {
+    "id": "mechanic_coveralls",
+    "teamId": "macacao",
+    "teamBox": [
+      0.4,
+      0.09,
+      0.3
+    ],
+    "scale": 1
   }
 ]

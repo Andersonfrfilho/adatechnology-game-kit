@@ -222,7 +222,7 @@ de uma medida real do objeto; para os demais é uma referência (REF) de um obje
 | [x] | Jaqueta de motociclista (couro) (kit) | `jaqueta_couro` | `leather_motorcycle_jacket` | 1,8 kg | raro | 450 x 100 x 350 mm |
 | [x] | Jaqueta jeans (kit) | `jaqueta_jeans` | `denim_jacket` | 1,0 kg | comum | 400 x 80 x 300 mm |
 | [x] | Luvas de couro (raspa) (kit) | `luva_couro` | `leather_work_gloves` | 0,2 kg | comum | 250 x 30 x 120 mm |
-| [ ] | Macacão de mecânico | `macacao` | `mechanic_coveralls` | 1,2 kg | comum | 400 x 90 x 300 mm |
+| [x] | Macacão de mecânico (kit) | `macacao` | `mechanic_coveralls` | 1,2 kg | comum | 400 x 90 x 300 mm |
 | [x] | Moletom (kit) | `moletom` | `hoodie` | 0,6 kg | comum | 380 x 80 x 280 mm |
 | [ ] | Protetor de antebraço de chapa | `braco_chapa` | `sheet_metal_forearm_guard` | 1,5 kg | raro | 300 x 100 x 120 mm |
 | [x] | Roupa de apicultor (kit) | `apicultor` | `beekeeper_suit` | 1,4 kg | muito raro | 400 x 100 x 330 mm |
