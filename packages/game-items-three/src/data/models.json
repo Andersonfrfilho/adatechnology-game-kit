@@ -374,10 +374,10 @@
     "teamId": "laranja",
     "teamBox": [
       0.75,
-      0.75,
+      0.7518,
       0.75
     ],
-    "scale": 0.1
+    "scale": 0.099921
   },
   {
     "id": "condensed_milk",
