@@ -533,11 +533,11 @@
     "id": "snack_chips",
     "teamId": "salgadinho",
     "teamBox": [
-      2.002,
+      2,
       2.8,
-      0.602
+      0.601
     ],
-    "scale": 0.1
+    "scale": 0.099945
   },
   {
     "id": "canned_sausages",
