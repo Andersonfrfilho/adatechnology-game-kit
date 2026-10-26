@@ -80,6 +80,11 @@ export class DecalKit {
 const tmpV = (THREE: typeof THREE_NS) => new THREE.Vector3()
 
 /** Mesh-level visual changes: copy-on-write geometry and materials, dents, decals, char, glow, melt, hiding, restoring. */
+/** A dent that finds fewer vertices than this on its mesh widens its radius (see `Visuals.applyDent`). */
+const MIN_DENT_VERTICES = 3
+/** The widened radius is this many times the distance to the nearest vertex, so the nearest ones are inside with a visible falloff. */
+const WIDEN_PER_SPACING = 1.5
+
 export class Visuals {
   readonly kit: DecalKit
   private readonly a: THREE_NS.Vector3
@@ -286,33 +291,48 @@ export class Visuals {
     if (!this.ownGeometry(mv)) return false
     const work = (mv.host ? mv.host.work : mv.work) as Float32Array
     const pos = positionAttr(mesh.geometry) as THREE_NS.BufferAttribute
-    const r2 = r * r
-    let touched = false
-    const px = lp.x
-    const py = lp.y
-    const pz = lp.z
-    const nx = ln.x
-    const ny = ln.y
-    const nz = ln.z
     const from = mv.range ? mv.range[0] * 3 : 0
     const to = mv.range ? mv.range[1] * 3 : work.length
-    for (let i = from; i < to; i += 3) {
-      const dx = work[i] - px
-      const dy = work[i + 1] - py
-      const dz = work[i + 2] - pz
-      const d2 = dx * dx + dy * dy + dz * dz
-      if (d2 >= r2) continue
-      const f = 1 - d2 / r2
-      const k = depth * f * f
-      work[i] -= nx * k
-      work[i + 1] -= ny * k
-      work[i + 2] -= nz * k
-      touched = true
+    let reach = r
+    let pass = this.nearestAndCount(work, from, to, lp, reach)
+    // a mesh coarser than the dent would swallow it silently: widen to the local vertex spacing so at least the nearest vertices give
+    if (pass.count < MIN_DENT_VERTICES && pass.nearest < Infinity) {
+      reach = Math.max(r, pass.nearest * WIDEN_PER_SPACING)
+      pass = this.nearestAndCount(work, from, to, lp, reach)
     }
-    if (!touched) return false
+    if (pass.count === 0) return false
+    const reach2 = reach * reach
+    for (let i = from; i < to; i += 3) {
+      const dx = work[i] - lp.x
+      const dy = work[i + 1] - lp.y
+      const dz = work[i + 2] - lp.z
+      const d2 = dx * dx + dy * dy + dz * dz
+      if (d2 >= reach2) continue
+      const f = 1 - d2 / reach2
+      const k = depth * f * f
+      work[i] -= ln.x * k
+      work[i + 1] -= ln.y * k
+      work[i + 2] -= ln.z * k
+    }
     mv.touched = true
     this.writePositions(mv, pos)
     return true
+  }
+
+  /** Vertices of `work[from, to)` within `reach` of `point`, and the distance to the nearest vertex of the whole range. */
+  private nearestAndCount(work: Float32Array, from: number, to: number, point: THREE_NS.Vector3, reach: number): { count: number; nearest: number } {
+    const reach2 = reach * reach
+    let count = 0
+    let nearest2 = Infinity
+    for (let i = from; i < to; i += 3) {
+      const dx = work[i] - point.x
+      const dy = work[i + 1] - point.y
+      const dz = work[i + 2] - point.z
+      const d2 = dx * dx + dy * dy + dz * dz
+      if (d2 < nearest2) nearest2 = d2
+      if (d2 < reach2) count++
+    }
+    return { count, nearest: Math.sqrt(nearest2) }
   }
 
   /** Copy `work` (dents) into the geometry, adding the melt sag when the mesh is melting. */
