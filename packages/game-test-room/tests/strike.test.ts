@@ -280,7 +280,7 @@ describe('first-person arms in the room', () => {
       name: 'Holder',
       group: 'Test',
       items: () => [],
-      attach: (host) => host.setHandTargets?.(() => ({ R: { position: [0, 1, -1], quaternion: [0, 0, 0, 1] }, grip: 0.8, ...(curl === undefined ? {} : { fingers: { index: curl } }) })),
+      attach: (host) => host.setHandTargets?.(() => ({ R: { position: [0, 1, -1], quaternion: [0, 0, 0, 1] }, grip: 0.8, ...(curl === undefined ? {} : { fingers: { index: curl } }) })) ?? (() => undefined),
     })
     expect(loaded.problems).toEqual([])
     room.setTool('pistol_9mm')
