@@ -702,7 +702,7 @@ class Renderer implements DestructionRenderer {
     const wn = this.worldDir(b, ev.dent.normal)
     const shown = pv.meshes.filter((mv) => this.visuals.shown(mv))
     const reach = shown.reduce((widest, mv) => Math.max(widest, this.visuals.dentReach(mv, wp, ev.dent)), ev.dent.radius)
-    for (const mv of shown) this.visuals.applyDent(mv, wp, wn, ev.dent, reach)
+    this.visuals.applyPartDent(shown, wp, wn, ev.dent, reach)
     if (def?.tags?.includes('metal')) this.vfx.burst('sparks', ev.worldPoint, [wn.x, wn.y, wn.z], 4 + Math.min(8, ev.dent.depth * 150), 3.2)
     this.sound(impactKey(def), ev.worldPoint, clamp(0.3 + ev.dent.depth * 12, 0.3, 1))
   }

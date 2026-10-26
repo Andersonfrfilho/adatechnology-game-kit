@@ -3,6 +3,7 @@ import type { Dent } from '@adatechnology/game-destruction'
 import { heatColor } from './heat'
 import type { Decal, HostVis, MeshVis, PartVis } from './internal'
 import { clamp, createRng, lerp } from './math'
+import { shellDisplacementAt, type ShellSnapshot } from './skin-dent'
 
 type Mesh = THREE_NS.Mesh
 
@@ -81,9 +82,15 @@ const tmpV = (THREE: typeof THREE_NS) => new THREE.Vector3()
 
 /** Mesh-level visual changes: copy-on-write geometry and materials, dents, decals, char, glow, melt, hiding, restoring. */
 /** A dent reaches at least this many vertices of a mesh: fewer and the mesh cannot show its curve (it would be invisible or a sharp spike). */
-const MIN_DENT_VERTICES = 6
+const MIN_DENT_VERTICES = 10
 /** The reach of a dent that had to widen is this many times the distance to the farthest of those vertices, so they all get a falloff above zero. */
 const WIDEN_MARGIN = 1.1
+/** A skin follows its shell this share of the way in: the two meshes triangulate the dent differently, and a skin left a bit outside never lets the shell through. */
+const SKIN_FOLLOW = 0.85
+/** And stays this many metres outside, so the thin gap of a label (a millimetre) survives the two meshes triangulating the rim differently. */
+const SKIN_SLACK = 0.0005
+/** Extra slack per metre a skin lies above its shell: skins stacked on one another (a label and its band) keep their order while the dent bends them. */
+const SKIN_LAYER_SLACK = 4
 /** And at least this many times the distance to the nearest vertex, so even the nearest one is pushed visibly. */
 const NEAREST_MARGIN = 1.5
 
@@ -350,6 +357,56 @@ export class Visuals {
     distances.sort((x, y) => x - y)
     const nearest = Math.sqrt(distances[0]!)
     return Math.max(dent.radius, Math.sqrt(distances[MIN_DENT_VERTICES - 1]!) * s * WIDEN_MARGIN, nearest * s * NEAREST_MARGIN)
+  }
+
+  /**
+   * Dent all the meshes of a part. The shells take the dent as `applyDent` gives it; a skin (label, coat: `userData.destructionSkin`) sits a hair above its shell
+   * and moves with the shell's surface instead (see `shellDisplacementAt`), so the shell never shows through it whatever the two meshes' vertex grids are.
+   */
+  applyPartDent(meshes: readonly MeshVis[], worldPoint: THREE_NS.Vector3, worldNormal: THREE_NS.Vector3, dent: Dent, reachWorld: number): void {
+    const isSkin = (mv: MeshVis): boolean => mv.mesh.userData.destructionSkin === true && !mv.host
+    const shells = meshes.filter((mv) => !isSkin(mv))
+    const snapshots: ShellSnapshot[] = []
+    for (const mv of shells) {
+      const heavy = this.lowQuality && this.vertexCount(mv) > 20000
+      const plain = !mv.host && !heavy && this.ownGeometry(mv) && mv.work
+      const before = plain ? new Float32Array(mv.work as Float32Array) : null
+      this.applyDent(mv, worldPoint, worldNormal, dent, reachWorld)
+      if (before) snapshots.push({ mesh: mv.mesh, before, after: mv.work as Float32Array })
+    }
+    const displacement = this.t
+    const vertex = this.a
+    for (const mv of meshes) {
+      if (!isSkin(mv)) continue
+      if (snapshots.length === 0) {
+        this.applyDent(mv, worldPoint, worldNormal, dent, reachWorld)
+        continue
+      }
+      if (!this.ownGeometry(mv)) continue
+      const work = mv.work as Float32Array
+      const mesh = mv.mesh
+      mesh.updateWorldMatrix(true, false)
+      const toLocal = this.m4.copy(mesh.matrixWorld).invert()
+      const scale = mesh.matrixWorld.getMaxScaleOnAxis() || 1
+      let touched = false
+      for (let i = 0; i < work.length; i += 3) {
+        vertex.set(work[i]!, work[i + 1]!, work[i + 2]!).applyMatrix4(mesh.matrixWorld)
+        if (vertex.distanceTo(worldPoint) > reachWorld) continue
+        const height = shellDisplacementAt(this.THREE, vertex, snapshots, displacement)
+        const length = displacement.length()
+        if (length === 0) continue
+        // the shell's facets lie outside a dip (deeper than the shell, the skin would sink under it) and inside a rim (the smooth dent is shallower there): take the shallower of the two
+        const falloff = 1 - (vertex.distanceTo(worldPoint) / reachWorld) ** 2
+        const smooth = dent.depth * falloff * falloff
+        const pull = Math.max(0, Math.min(length, smooth) * SKIN_FOLLOW - SKIN_SLACK - height * SKIN_LAYER_SLACK)
+        displacement.transformDirection(toLocal).multiplyScalar(pull / scale)
+        work[i] += displacement.x
+        work[i + 1] += displacement.y
+        work[i + 2] += displacement.z
+        touched = true
+      }
+      if (touched) this.writePositions(mv, positionAttr(mesh.geometry) as THREE_NS.BufferAttribute)
+    }
   }
 
   /** Copy `work` (dents) into the geometry, adding the melt sag when the mesh is melting. */

@@ -30,13 +30,14 @@ describe('dent on a coarse mesh', () => {
     expect(deepest).toBeGreaterThan(0.001)
   })
 
-  it('dents a shell and the label on it with the same reach, so the label does not leave the shell behind', () => {
+  it('moves a label with the dented shell under it, so the label stays outside the shell', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()
     const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onSound: () => {}, vfx: createVfx() })
     const shell = new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.122, 20, 6), new THREE.MeshStandardMaterial())
     const label = new THREE.Mesh(new THREE.CylinderGeometry(0.0335, 0.0335, 0.06, 20, 3, true), new THREE.MeshStandardMaterial())
     const root = new THREE.Group()
+    label.userData.destructionSkin = true
     root.add(shell, label)
     scene.add(root)
     root.updateMatrixWorld(true)
