@@ -67,6 +67,21 @@ describe('families of models', () => {
     }
   })
 
+  it('rebuilds the cylinders of every can with enough segments for a dent to find vertices, only when destructible', () => {
+    for (const model of Object.values(ITEM_FAMILIES).flatMap((entry) => entry.models)) {
+      const item = { id: model, category: 'food', size: [0.07, 0.12, 0.07] as [number, number, number], model }
+      const plain = meshesOf(buildItem(THREE, item).root).filter((m) => m.geometry.type === 'CylinderGeometry')
+      const dented = meshesOf(buildItem(THREE, item, { destructible: true }).root).filter((m) => m.geometry.type === 'CylinderGeometry')
+      expect(dented.length, model).toBe(plain.length)
+      for (const mesh of dented) {
+        const parameters = (mesh.geometry as THREE.CylinderGeometry).parameters
+        expect(parameters.heightSegments, model).toBeGreaterThanOrEqual(10)
+        expect(parameters.radialSegments, model).toBeGreaterThanOrEqual(28)
+      }
+      for (const mesh of plain) expect((mesh.geometry as THREE.CylinderGeometry).parameters.heightSegments, model).toBeLessThan(10)
+    }
+  })
+
   it('draws the sauce of the beans as a skin, not as a part', () => {
     const { root } = buildItem(THREE, { id: 'canned_beans', category: 'food', size: [0.075, 0.12, 0.075], model: 'canned_beans' }, { destructible: true })
     const skins = meshesOf(root).filter((mesh) => mesh.userData.destructionSkin === true && mesh.userData.destructionMaterial === DESTRUCTION_MATERIAL_BY_TAG.food)

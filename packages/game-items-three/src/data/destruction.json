@@ -16,6 +16,10 @@
         ],
         "materials": {
           "metal": "aluminium"
+        },
+        "tessellate": {
+          "heightSegments": 10,
+          "radialSegments": 28
         }
       }
     },
@@ -36,6 +40,10 @@
         ],
         "materials": {
           "metal": "steel"
+        },
+        "tessellate": {
+          "heightSegments": 10,
+          "radialSegments": 28
         }
       }
     }

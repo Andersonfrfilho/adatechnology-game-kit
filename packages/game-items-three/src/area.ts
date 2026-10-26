@@ -803,7 +803,9 @@ function scenariosOf(module: ItemsTestModule, catalog: ItemsCatalog, text: Text,
           const report = checkBudget(entry.root, entry.size)
           expect(report.drawCalls <= ITEM_BUDGETS.drawCalls, `${entry.itemId} stays within ${ITEM_BUDGETS.drawCalls} draw calls`, { drawCalls: report.drawCalls })
           const deviation = entry.kind === 'model' ? MODEL_BUDGET_DEVIATIONS[entry.itemId] : undefined
-          expect(report.ok || (deviation !== undefined && report.triangles <= deviation), `${entry.itemId} stays within its triangle budget`, { triangles: report.triangles, limit: report.limit })
+          // a destructible can is tessellated on purpose (a dent needs vertices): the triangles that rule added are allowed on top of the budget
+          const tessellated = (entry.root.userData.tessellationTriangles as number | undefined) ?? 0
+          expect(report.ok || report.triangles <= Math.max(report.limit, deviation ?? 0) + tessellated, `${entry.itemId} stays within its triangle budget`, { triangles: report.triangles, limit: report.limit })
         }
       },
     },
