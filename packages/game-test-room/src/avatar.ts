@@ -28,6 +28,8 @@ export interface RoomFirstPersonState {
   targets: HandTargets | null
   /** `hold` when something is held (targets), else the rest stance of the tool in hand (`relaxed`, `fists`...; `RoomOptions.handStances`). */
   stance: string
+  /** How far the index finger of the shooting hand is curled, 0 extended along the frame to 1 pulled on the trigger; null when no tool asks for it. */
+  triggerFinger: number | null
   speed: number
   running: boolean
   crouch: boolean

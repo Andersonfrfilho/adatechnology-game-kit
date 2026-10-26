@@ -270,6 +270,38 @@ describe('first-person arms in the room', () => {
     expect(avatar.states.at(-1)!.targets).toBeNull()
   })
 
+  it('says how far the trigger finger is curled (the index of the hand targets) in the state of the arms and in `handState`, and a debug camera leaves the player\'s own view alone', () => {
+    const avatar = fakeAvatar()
+    const room = makeRoom()
+    room.setAvatar(avatar)
+    let curl: number | undefined = 0
+    const loaded = room.loadModule({
+      id: 'holder',
+      name: 'Holder',
+      group: 'Test',
+      items: () => [],
+      attach: (host) => host.setHandTargets?.(() => ({ R: { position: [0, 1, -1], quaternion: [0, 0, 0, 1] }, grip: 0.8, ...(curl === undefined ? {} : { fingers: { index: curl } }) })),
+    })
+    expect(loaded.problems).toEqual([])
+    room.setTool('pistol_9mm')
+    room.update(1 / 60)
+    expect(avatar.states.at(-1)!.triggerFinger).toBe(0)
+    expect(room.handState()).toMatchObject({ stance: 'hold', triggerFinger: 0 })
+    curl = 0.8
+    room.update(1 / 60)
+    expect(avatar.states.at(-1)!.triggerFinger).toBe(0.8)
+    expect(room.handState().triggerFinger).toBe(0.8)
+    curl = undefined
+    room.update(1 / 60)
+    expect(room.handState().triggerFinger).toBeNull()
+    const eye = room.camera.position.clone()
+    room.setDebugCamera({ position: [3, 2, 3], target: [0, 1, 0], fov: 30 })
+    room.update(1 / 60)
+    expect(room.camera.position.distanceTo(eye)).toBeLessThan(1e-6)
+    expect(avatar.states.at(-1)!.camera).toBe(room.camera)
+    room.setDebugCamera(null)
+  })
+
   it('a carried item gives a hand under it, and none in third person', () => {
     const avatar = fakeAvatar()
     const room = makeRoom()
