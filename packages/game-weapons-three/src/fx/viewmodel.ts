@@ -122,7 +122,7 @@ const caliberOf = (arsenal: Arsenal, def: WeaponDef): CaliberDef | undefined => 
  * The curl of the trigger finger: along the frame (`TRIGGER_FINGER.safe`) until the weapon fires, on the trigger (`ready`) for `readySeconds` after a shot, and pulled in by the turn of the
  * trigger part (the clip's pull, `TRIGGER_TURN` radians), so each shot of a burst or of full auto pulls and releases it; a burst keeps it nearly pulled, with a small tremor per shot.
  */
-export const TRIGGER_FINGER = { safe: 0.08, ready: 0.45, pulled: 0.92, readySeconds: 1.5, burstSeconds: 0.14, tremor: 0.03 } as const
+export const TRIGGER_FINGER = { safe: 0, ready: 0.5, pulled: 1, readySeconds: 1.5, burstSeconds: 0.14, tremor: 0.03 } as const
 const TRIGGER_TURN = 0.35
 const indexCurl = (turn: number, sinceShot: number): number => {
   const ready = sinceShot < TRIGGER_FINGER.readySeconds ? TRIGGER_FINGER.ready : TRIGGER_FINGER.safe

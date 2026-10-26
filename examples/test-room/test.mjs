@@ -321,6 +321,33 @@ if (!fpOk) report.failed++
   const reached = Math.min(...run.track.map((entry) => entry.d))
   verdict('glock empty: the slide goes back and forward, the support hand reaches it and the snap sounds', back < -0.02 && Math.abs(xs.at(-1)) < 1e-3 && xs[0] === 0 && reached < 0.09 && run.snap.length === 1, { back: +back.toFixed(3), pulledAtFrame: rack.frames, handToSlide: +reached.toFixed(3), snapAt: run.snap })
 
+  // the trigger finger, 25 cm from the grip: extended along the frame at rest, curled on the trigger mid-pull, extended again once released
+  const finger = (phase) => {
+    const r = window.C.r
+    const S = window.S
+    if (phase === 'rest') {
+      window.C.armed('glock_17')
+      r.pause()
+    } else if (phase === 'pull') {
+      r.resume()
+      window.C.armed('glock_17')
+      r.use()
+      for (let n = 0; n < 40 && (r.handState().triggerFinger ?? 0) < 0.75; n++) S.run(1)
+      r.pause()
+    } else {
+      r.resume()
+      S.run(260)
+      r.pause()
+    }
+    const grip = r.handState().targets.R.position
+    // 25 cm away, in front of the hand and to its right, where the finger is seen from the side it curls to
+    window.C.view([grip[0] + 0.17, grip[1] + 0.04, grip[2] - 0.18], [grip[0], grip[1] + 0.02, grip[2] - 0.03], 32)
+    return +r.handState().triggerFinger.toFixed(2)
+  }
+  const fingerAt = {}
+  for (const phase of ['rest', 'pull', 'released']) fingerAt[phase] = await closeShot(`trigger-finger-${phase}`, finger, phase)
+  verdict('trigger finger: 0 at rest, curled on the trigger mid-pull (at least 0.75: more than 60 degrees at the first joint), 0 again once released', fingerAt.rest === 0 && fingerAt.pull >= 0.75 && fingerAt.released === 0, fingerAt)
+
   await page.evaluate(() => {
     window.__testRoom.setDebugCamera(null)
     window.__testRoom.resume()

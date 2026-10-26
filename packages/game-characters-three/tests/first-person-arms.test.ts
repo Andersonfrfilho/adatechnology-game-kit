@@ -232,3 +232,30 @@ describe('toRoomAvatar with the first-person arms', () => {
     expect(room.avatar.playing).toBe('front_kick_left')
   })
 })
+
+describe('the index finger on the trigger', () => {
+  it('is straight along the frame at rest and curls at least 60 degrees at its first joint when pulled, the other fingers staying where the grip puts them', async () => {
+    const { createHandMesh } = await import('../src/first-person/hand')
+    const hand = createHandMesh(THREE, new THREE.MeshBasicMaterial())
+    const joints = (): number[][] => hand.root.children.filter((child) => child.type === 'Group' && child.children.length > 0 && child.position.z !== 0 && child !== undefined).map((finger) => {
+      const out: number[] = []
+      let part: THREE.Object3D | undefined = finger
+      while (part) {
+        out.push(part.rotation.z)
+        part = part.children.find((child) => child.type === 'Group')
+      }
+      return out
+    })
+    hand.setGrip(0.9)
+    const grip = joints()
+    hand.setIndex(0)
+    const extended = joints()
+    expect(extended[0]!.every((angle) => Math.abs(angle) < 1e-9)).toBe(true)
+    hand.setIndex(1)
+    const pulled = joints()
+    expect((Math.abs(pulled[0]![0]!) * 180) / Math.PI).toBeGreaterThanOrEqual(60)
+    for (const finger of [1, 2, 3]) expect(pulled[finger]).toEqual(grip[finger])
+    hand.setIndex(undefined)
+    expect(joints()[0]).toEqual(grip[0])
+  })
+})

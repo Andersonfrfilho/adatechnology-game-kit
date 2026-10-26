@@ -136,6 +136,26 @@ describe('the trigger finger', () => {
     expect(last().targets!.fingers!.index).toBeCloseTo(TRIGGER_FINGER.safe, 2)
   })
 
+  it('the room hand state says how far the finger is curled on every frame: extended at rest, fully pulled on a shot, back to extended', () => {
+    const { room, last } = setup()
+    room.setTool('glock_17')
+    step(room, 40)
+    expect(room.handState().triggerFinger).toBe(0)
+    expect(last().triggerFinger).toBe(0)
+    room.use()
+    let highest = 0
+    step(room, 20, () => {
+      expect(room.handState().triggerFinger).toBe(last().targets!.fingers!.index)
+      highest = Math.max(highest, room.handState().triggerFinger!)
+    })
+    expect(highest).toBeGreaterThanOrEqual(0.95)
+    step(room, 60 * 3)
+    expect(room.handState().triggerFinger).toBe(0)
+    room.setTool('fists')
+    step(room, 10)
+    expect(room.handState().triggerFinger).toBeNull()
+  })
+
   it('every weapon with a trigger part gives a finger and the others keep the normal grip', () => {
     const [rested] = indexAfter('glock_17', [1])
     expect(rested).toBeCloseTo(TRIGGER_FINGER.safe, 2)
