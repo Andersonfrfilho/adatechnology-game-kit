@@ -280,6 +280,8 @@ if (!fpOk) report.failed++
   for (const [name, to] of [['shell-1', 40], ['shell-3', 110], ['shell-6', 215], ['pump', 245]]) {
     const info = await closeShot(`870-${name}`, pumpTo, { to, view: true })
     console.log(`      870 ${name}: ${info.ammo}/${info.capacity} shells at ${info.at} s, ${info.sounds.length} sounds, ${info.visits} visits, shooting hand ${info.awayFromGrip} m from the grip`)
+    // the pump moves the support hand only: the shooting hand is on the grip, closed, from the first sound of the pump
+    if (name === 'pump') verdict('remington 870 at the pump: the shooting hand holds the grip (closed, not at the port)', info.awayFromGrip < 0.012 && info.grip >= 0.85 && info.actions.length > 0, { awayFromGrip: info.awayFromGrip, grip: info.grip, actions: info.actions })
   }
   full = await page.evaluate(pumpTo, { to: 60 * 8 })
   const secs = full.steps.map((entry) => entry.at)
