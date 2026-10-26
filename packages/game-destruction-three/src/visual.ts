@@ -80,10 +80,12 @@ export class DecalKit {
 const tmpV = (THREE: typeof THREE_NS) => new THREE.Vector3()
 
 /** Mesh-level visual changes: copy-on-write geometry and materials, dents, decals, char, glow, melt, hiding, restoring. */
-/** A dent that finds fewer vertices than this on its mesh widens its radius (see `Visuals.applyDent`). */
-const MIN_DENT_VERTICES = 3
-/** The widened radius is this many times the distance to the nearest vertex, so the nearest ones are inside with a visible falloff. */
-const WIDEN_PER_SPACING = 1.5
+/** A dent reaches at least this many vertices of a mesh: fewer and the mesh cannot show its curve (it would be invisible or a sharp spike). */
+const MIN_DENT_VERTICES = 6
+/** The reach of a dent that had to widen is this many times the distance to the farthest of those vertices, so they all get a falloff above zero. */
+const WIDEN_MARGIN = 1.1
+/** And at least this many times the distance to the nearest vertex, so even the nearest one is pushed visibly. */
+const NEAREST_MARGIN = 1.5
 
 export class Visuals {
   readonly kit: DecalKit
@@ -270,14 +272,14 @@ export class Visuals {
    * Push the vertices of the mesh within `dent.radius` of `worldPoint` inwards along `worldNormal` by `depth * (1 - (d/r)^2)^2`.
    * Returns false when nothing was changed (too far, low quality on a heavy mesh, or no editable positions).
    */
-  applyDent(mv: MeshVis, worldPoint: THREE_NS.Vector3, worldNormal: THREE_NS.Vector3, dent: Dent): boolean {
+  applyDent(mv: MeshVis, worldPoint: THREE_NS.Vector3, worldNormal: THREE_NS.Vector3, dent: Dent, reachWorld = 0): boolean {
     const mesh = mv.mesh
     if (this.lowQuality && this.vertexCount(mv) > 20000) return false
     mesh.updateWorldMatrix(true, false)
     const s = mesh.matrixWorld.getMaxScaleOnAxis() || 1
     const lp = mesh.worldToLocal(this.a.copy(worldPoint))
     const ln = this.b.copy(worldNormal).transformDirection(this.m4.copy(mesh.matrixWorld).invert()).normalize()
-    const r = dent.radius / s
+    const r = Math.max(dent.radius, reachWorld) / s
     const depth = dent.depth / s
     // quick reject: the point must be near the mesh bounds
     const geo = mesh.geometry
@@ -293,14 +295,7 @@ export class Visuals {
     const pos = positionAttr(mesh.geometry) as THREE_NS.BufferAttribute
     const from = mv.range ? mv.range[0] * 3 : 0
     const to = mv.range ? mv.range[1] * 3 : work.length
-    let reach = r
-    let pass = this.nearestAndCount(work, from, to, lp, reach)
-    // a mesh coarser than the dent would swallow it silently: widen to the local vertex spacing so at least the nearest vertices give
-    if (pass.count < MIN_DENT_VERTICES && pass.nearest < Infinity) {
-      reach = Math.max(r, pass.nearest * WIDEN_PER_SPACING)
-      pass = this.nearestAndCount(work, from, to, lp, reach)
-    }
-    if (pass.count === 0) return false
+    const reach = r
     const reach2 = reach * reach
     for (let i = from; i < to; i += 3) {
       const dx = work[i] - lp.x
@@ -319,20 +314,42 @@ export class Visuals {
     return true
   }
 
-  /** Vertices of `work[from, to)` within `reach` of `point`, and the distance to the nearest vertex of the whole range. */
-  private nearestAndCount(work: Float32Array, from: number, to: number, point: THREE_NS.Vector3, reach: number): { count: number; nearest: number } {
-    const reach2 = reach * reach
-    let count = 0
-    let nearest2 = Infinity
-    for (let i = from; i < to; i += 3) {
-      const dx = work[i] - point.x
-      const dy = work[i + 1] - point.y
-      const dz = work[i + 2] - point.z
-      const d2 = dx * dx + dy * dy + dz * dz
-      if (d2 < nearest2) nearest2 = d2
-      if (d2 < reach2) count++
+  /**
+   * World radius a dent needs on this mesh to reach `MIN_DENT_VERTICES` vertices (the dent's own radius when the mesh is fine enough). A part with several meshes
+   * (a shell and its label) must dent them all with the largest of these, so the skin and the shell follow the same smooth surface and never cross.
+   */
+  dentReach(mv: MeshVis, worldPoint: THREE_NS.Vector3, dent: Dent): number {
+    const mesh = mv.mesh
+    mesh.updateWorldMatrix(true, false)
+    const s = mesh.matrixWorld.getMaxScaleOnAxis() || 1
+    const lp = mesh.worldToLocal(this.a.copy(worldPoint))
+    const source = (mv.host ? mv.host.work : mv.work) ?? ((positionAttr(mesh.geometry) as THREE_NS.BufferAttribute | undefined)?.array as ArrayLike<number> | undefined)
+    if (!source) return dent.radius
+    // a mesh the dent does not touch (the far cap of a can) must not widen it
+    let bounds: THREE_NS.Box3 | null
+    if (mv.host) bounds = this.localBox(mv, this.lbox)
+    else {
+      if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox()
+      bounds = mesh.geometry.boundingBox
     }
-    return { count, nearest: Math.sqrt(nearest2) }
+    if (bounds && !bounds.isEmpty() && bounds.distanceToPoint(lp) > dent.radius / s) return dent.radius
+    const from = mv.range ? mv.range[0] * 3 : 0
+    const to = mv.range ? mv.range[1] * 3 : source.length
+    const r2 = (dent.radius / s) ** 2
+    const distances: number[] = []
+    let inside = 0
+    for (let i = from; i < to; i += 3) {
+      const dx = source[i]! - lp.x
+      const dy = source[i + 1]! - lp.y
+      const dz = source[i + 2]! - lp.z
+      const d2 = dx * dx + dy * dy + dz * dz
+      if (d2 < r2) inside++
+      distances.push(d2)
+    }
+    if (inside >= MIN_DENT_VERTICES || distances.length < MIN_DENT_VERTICES) return dent.radius
+    distances.sort((x, y) => x - y)
+    const nearest = Math.sqrt(distances[0]!)
+    return Math.max(dent.radius, Math.sqrt(distances[MIN_DENT_VERTICES - 1]!) * s * WIDEN_MARGIN, nearest * s * NEAREST_MARGIN)
   }
 
   /** Copy `work` (dents) into the geometry, adding the melt sag when the mesh is melting. */

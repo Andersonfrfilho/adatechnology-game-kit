@@ -18,8 +18,15 @@
           "metal": "aluminium"
         },
         "tessellate": {
-          "heightSegments": 10,
-          "radialSegments": 28
+          "cylinder": {
+            "heightSegments": 6,
+            "radialSegments": 20
+          },
+          "box": {
+            "widthSegments": 8,
+            "heightSegments": 1,
+            "depthSegments": 5
+          }
         }
       }
     },
@@ -42,8 +49,15 @@
           "metal": "steel"
         },
         "tessellate": {
-          "heightSegments": 10,
-          "radialSegments": 28
+          "cylinder": {
+            "heightSegments": 6,
+            "radialSegments": 20
+          },
+          "box": {
+            "widthSegments": 8,
+            "heightSegments": 1,
+            "depthSegments": 5
+          }
         }
       }
     }

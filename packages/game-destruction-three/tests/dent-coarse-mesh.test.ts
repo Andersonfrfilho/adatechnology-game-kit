@@ -29,4 +29,30 @@ describe('dent on a coarse mesh', () => {
     }
     expect(deepest).toBeGreaterThan(0.001)
   })
+
+  it('dents a shell and the label on it with the same reach, so the label does not leave the shell behind', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const renderer = createDestructionRenderer(THREE, { scene, world: world.asWorld(), onSound: () => {}, vfx: createVfx() })
+    const shell = new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.122, 20, 6), new THREE.MeshStandardMaterial())
+    const label = new THREE.Mesh(new THREE.CylinderGeometry(0.0335, 0.0335, 0.06, 20, 3, true), new THREE.MeshStandardMaterial())
+    const root = new THREE.Group()
+    root.add(shell, label)
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    world.addObject('can', [partState('shell', 'steel')], [['shell']])
+    renderer.bind('can', root, { parts: { shell: [shell, label] } })
+    world.emit({ type: 'dent', object: 'can', part: 'shell', worldPoint: [0.033, 0, 0], dent: { point: [0.033, 0, 0], normal: [-1, 0, 0], radius: 0.012, depth: 0.01 } })
+    renderer.update(0.016)
+    // the vertex of each mesh at the dent: the label (0.5 mm outside) must still be outside the shell
+    const depthAt = (mesh: THREE.Mesh): number => {
+      const position = mesh.geometry.getAttribute('position') as THREE.BufferAttribute
+      let deepest = 0.04
+      for (let index = 0; index < position.count; index++) if (Math.abs(position.getY(index)) < 0.02 && position.getX(index) > 0) deepest = Math.min(deepest, position.getX(index))
+      return deepest
+    }
+    expect(depthAt(shell)).toBeLessThan(0.033)
+    expect(depthAt(label)).toBeLessThan(0.0335)
+    expect(depthAt(label)).toBeGreaterThanOrEqual(depthAt(shell))
+  })
 })
