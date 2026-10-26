@@ -283,6 +283,44 @@ if (!fpOk) report.failed++
   const gaps = secs.slice(1).map((t, i) => +(t - secs[i]).toFixed(2))
   verdict('remington 870 empty: one shell per step (the rule\'s 0.55 s), one sound and one hand visit each', full.steps.length === full.capacity && full.steps.every((entry, i) => entry.ammo === i + 1) && gaps.every((g) => g >= 0.5) && full.sounds.length === full.capacity && full.visits === full.capacity && !full.reloading, { ...full, gaps })
 
+  // the pistol, empty: the slide is racked by the support hand (it goes back and forward) and the snap is heard as it closes
+  const glockTo = (arg) => {
+    const r = window.C.r
+    const S = window.S
+    if (arg.start) {
+      window.C.emptied('glock_17')
+      window.__glock = { frames: 0, track: [], before: r.log.entries().length, slide: r.scene.getObjectByName('weapon-viewmodel').getObjectByName('slide') }
+      window.C.key('KeyR')
+    }
+    const run = window.__glock
+    r.resume()
+    const step = () => {
+      S.run(1)
+      run.frames++
+      const hand = r.handState().targets.L.position
+      const at = window.C.at('slide')
+      run.track.push({ x: run.slide.position.x, d: at ? Math.hypot(hand[0] - at[0], hand[1] - at[1], hand[2] - at[2]) : 9 })
+    }
+    // `to`: a frame; `rear`: until the slide is at the rear, the moment it is pulled back (the slide back and no longer going further)
+    if (arg.rear) while (run.frames < 400 && !(run.track.length > 1 && run.track.at(-1).x < -0.02 && run.track.at(-1).x >= run.track.at(-2).x)) step()
+    else while (run.frames < arg.to) step()
+    r.pause()
+    const snap = r.log.entries().slice(run.before).filter((e) => e.type === 'sound' && e.data?.cue === 'slide_release').map((e) => +e.t.toFixed(2))
+    const at = window.C.at('slide')
+    // from the left and above, where the support hand reaches over the slide
+    if (arg.view && at) window.C.view([at[0] - 0.28, at[1] + 0.16, at[2] + 0.12], [at[0], at[1] - 0.02, at[2]], 38)
+    return { track: run.track, snap, frames: run.frames }
+  }
+  await page.evaluate(glockTo, { start: true, to: 0 })
+  await closeShot('glock-magazine', glockTo, { to: 30, view: true })
+  const rack = await closeShot('glock-rack-back', glockTo, { rear: true, view: true })
+  await closeShot('glock-closed', glockTo, { to: rack.frames + 60, view: true })
+  const run = await page.evaluate(glockTo, { to: 60 * 4 })
+  const xs = run.track.map((entry) => entry.x)
+  const back = Math.min(...xs)
+  const reached = Math.min(...run.track.map((entry) => entry.d))
+  verdict('glock empty: the slide goes back and forward, the support hand reaches it and the snap sounds', back < -0.02 && Math.abs(xs.at(-1)) < 1e-3 && xs[0] === 0 && reached < 0.09 && run.snap.length === 1, { back: +back.toFixed(3), pulledAtFrame: rack.frames, handToSlide: +reached.toFixed(3), snapAt: run.snap })
+
   await page.evaluate(() => {
     window.__testRoom.setDebugCamera(null)
     window.__testRoom.resume()

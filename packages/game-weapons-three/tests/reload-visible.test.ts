@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import type { RoomAvatar, RoomFirstPersonState, TestRoom } from '@adatechnology/game-test-room'
+import { sampleClip } from '@adatechnology/game-contracts'
 import { createArsenal } from '@adatechnology/game-weapons'
 import { createWeaponsTestModule } from '../src'
+import { buildToolClips } from '../src/animation/clip-set'
 import { hasWeaponModel, buildWeaponModelById } from '../src/models'
 
 // What the eye must see in a reload, measured on the clips and on the room with the weapon in the hands: the slide that moves, one visit of the hand and one sound per round.
@@ -33,6 +35,28 @@ const step = (room: TestRoom, frames: number, each?: () => void): void => {
   }
 }
 const keyR = (): boolean => window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' }))
+
+describe('the slide of an empty pistol reload', () => {
+  it.each(['glock_17', 'colt_m1911', 'beretta_92fs', 'makarov_pm'])('%s: the slide goes back and forward, and the snap is heard as it closes', (id) => {
+    const model = buildWeaponModelById(THREE, id)!
+    const clips = buildToolClips({ parts: model.parts, family: model.parts.family, caseType: 'pistol', reloadFamily: 'pistol' })
+    const clip = clips.reload_empty!
+    expect(clip).toBeDefined()
+    const samples: Array<{ t: number; x: number }> = []
+    for (let t = 0; t <= clip.duration; t += clip.duration / 400) samples.push({ t, x: sampleClip(clip, 'slide', t).position[0] })
+    const stroke = Math.min(...samples.map((entry) => entry.x))
+    expect(stroke).toBeLessThan(-0.02)
+    const back = samples.find((entry) => entry.x < stroke * 0.9)!
+    const home = samples.find((entry) => entry.t > back.t && entry.x > stroke * 0.1)!
+    // it starts closed (the magazine is swapped first), is pulled back and let go
+    expect(samples[0]!.x).toBe(0)
+    expect(home.t - back.t).toBeGreaterThan(0.1)
+    expect(samples.at(-1)!.x).toBe(0)
+    const snap = (clip.events ?? []).find((event) => event.type === 'sound' && event.data?.id === 'slide_release')!
+    expect(snap.t).toBeGreaterThanOrEqual(home.t - 0.05)
+    expect(snap.t).toBeLessThanOrEqual(home.t + 0.12)
+  })
+})
 
 describe('an empty reload of a weapon that loads round by round', () => {
   const ids = [...arsenal.weapons.values()]

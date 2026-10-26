@@ -28,6 +28,11 @@ const boltSounds = (start: number): AnimationEventSpec[] => [sound(start, 'bolt_
 
 const cycleWithoutEject = (start: number): Draft => ({ tweens: boltStroke(start), events: [], end: start + 0.55 })
 
+// the slide racked: seconds back, held at the rear and forward
+const RACK_BACK = 0.14
+const RACK_HOLD = 0.04
+const RACK_FORWARD = 0.06
+
 /** Reloads that take a magazine: swap it (0.82 s), then what the mechanism needs. `kind` `empty` also works the action. */
 function magazineReload(context: ClipContext, kind: ReloadKind): Draft {
   const { parts, family } = context
@@ -35,9 +40,11 @@ function magazineReload(context: ClipContext, kind: ReloadKind): Draft {
   const draft: Draft = { tweens: [...swap.tweens], events: [...swap.events], end: swap.end }
   if (family === 'pistol') {
     if (kind === 'empty' && parts.slide) {
-      draft.tweens.push(move('slide', 'x', 0, 0, 0, strokeOf(parts)), move('slide', 'x', swap.end, 0.05, strokeOf(parts), 0))
-      draft.events.push(sound(swap.end + 0.03, 'slide_release'))
-      draft.end += 0.12
+      // the new magazine is in and the slide is closed: it is pulled back (by the support hand, or released by the thumb of a pistol that is listed for it) and let go
+      const travel = strokeOf(parts)
+      draft.tweens.push(move('slide', 'x', swap.end + 0.04, RACK_BACK, 0, travel), move('slide', 'x', swap.end + 0.04 + RACK_BACK + RACK_HOLD, RACK_FORWARD, travel, 0))
+      draft.events.push(sound(swap.end + 0.04 + RACK_BACK + RACK_HOLD + 0.02, 'slide_release'))
+      draft.end += 0.04 + RACK_BACK + RACK_HOLD + RACK_FORWARD + 0.08
     }
   } else if (family === 'boltmag') {
     const stroke = cycleWithoutEject(swap.end)

@@ -81,19 +81,10 @@ describe('the hands work the parts the reload clip moves', () => {
     expect(min).toBeLessThan(rest - 0.02)
   })
 
-  it('a pistol with a slide stop (glock_17) works it with the thumb: the shooting hand rises off the grip', () => {
-    const { room, last } = setup()
-    room.setTool('glock_17')
-    step(room, 40)
-    empty(room)
-    const rest = last().targets!.R!.position.slice()
-    keyR()
-    let farthest = 0
-    step(room, 60 * 4, () => {
-      const p = last().targets!.R!.position
-      farthest = Math.max(farthest, Math.hypot(p[0] - rest[0], p[1] - rest[1], p[2] - rest[2]))
-    })
-    expect(farthest).toBeGreaterThan(0.008)
+  it('glock_17 (empty): the support hand reaches over to the slide and racks it', () => {
+    const { min, rest } = reloadReach('glock_17', 'L', 'slide', 'empty')
+    expect(min).toBeLessThan(0.09)
+    expect(min).toBeLessThan(rest - 0.02)
   })
 
   it.each([

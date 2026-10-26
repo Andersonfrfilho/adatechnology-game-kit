@@ -6,19 +6,8 @@
     "comment": "fractions of the clip's duration: the hand arrives this long before the part starts to move and lets go this long after it stops"
   },
   "pistolRelease": {
-    "comment": "Pistols whose slide stop is worked with the thumb of the shooting hand after the magazine is in; every other pistol is racked by the support hand taking the rear of the slide. Owner to confirm per weapon.",
-    "weapons": [
-      "glock_17",
-      "glock_18",
-      "glock_19",
-      "colt_m1911",
-      "sig_sauer_p226",
-      "cz_75",
-      "fn_five_seven",
-      "beretta_92fs",
-      "pistol_9mm",
-      "pistol_45"
-    ]
+    "comment": "Pistols whose slide stop is worked with the thumb of the shooting hand after the magazine is in. Empty by default: every pistol is racked by the support hand taking the rear of the slide (the reading shot of the move). Put an id here only for a pistol that is meant to be released by the thumb.",
+    "weapons": []
   },
   "akCharge": {
     "comment": "Guns charged by a handle on the right of the receiver, reached over the top by the support hand; the rest of the magazine guns are charged at the rear top (AR style).",
