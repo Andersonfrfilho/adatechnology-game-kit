@@ -116,12 +116,58 @@ describe('createPlayerAvatar', () => {
     })
   })
 
-  it('has a hand socket under the weapon arm (-x) and one under the other', () => {
-    const avatar = createPlayerAvatar(THREE)
+  it('has a hand socket under the weapon arm (-x) and one under the other, with articulated fingers in third person', () => {
+    const avatar = createPlayerAvatar(THREE, { cascade: false })
     const right = avatar.hand('R')
     expect(right.parent).toBe(avatar.rig.arms[1]!.el)
     expect(avatar.hand('L').parent).toBe(avatar.rig.arms[0]!.el)
     expect(right.position.y).toBeCloseTo(-0.33, 5)
+    const handGroupR = (avatar.rig.arms[1]!.el as unknown as THREE.Object3D).getObjectByName('hand_group_R')
+    const handGroupL = (avatar.rig.arms[0]!.el as unknown as THREE.Object3D).getObjectByName('hand_group_L')
+    expect(handGroupR).toBeDefined()
+    expect(handGroupL).toBeDefined()
+    expect(handGroupR!.children.length).toBeGreaterThanOrEqual(6) // palm + 4 fingers + thumb
+
+    // holding raises the right arm and curls the fingers; drinking brings the right hand toward the mouth and tilts the head back
+    avatar.update(1 / 60, { speed: 0 })
+    const idleArmL = avatar.rig.arms[1]!.g.rotation.x
+    const idleElbL = avatar.rig.arms[1]!.el.rotation.x
+    avatar.update(1 / 60, { speed: 0, holding: true })
+    const holdArmL = avatar.rig.arms[1]!.g.rotation.x
+    const holdElbL = avatar.rig.arms[1]!.el.rotation.x
+    expect(holdArmL).toBeLessThan(idleArmL - 0.3)
+    expect(holdElbL).toBeLessThan(idleElbL - 0.5)
+
+    avatar.update(1 / 60, {
+      speed: 0,
+      holding: true,
+      itemUse: { id: 'drink', position: [0, 0.02, -0.2], rotation: [-1.22, 0, 0] },
+    })
+    expect(avatar.rig.arms[1]!.g.rotation.x).toBeLessThan(holdArmL - 0.8)
+    expect(avatar.rig.arms[1]!.g.rotation.z).toBeGreaterThan(0.5)
+    expect(avatar.rig.headG.rotation.x).toBeLessThan(-0.15)
+  })
+
+  it('human arms rest down at the sides, below the waist, and swing below waist level when walking', () => {
+    const avatar = createPlayerAvatar(THREE, { cascade: false })
+    avatar.update(1 / 60, { speed: 0 })
+    // arms hang down at rest (close to 0 rad)
+    expect(Math.abs(avatar.rig.arms[0]!.g.rotation.x)).toBeLessThan(0.1)
+    expect(Math.abs(avatar.rig.arms[1]!.g.rotation.x)).toBeLessThan(0.1)
+    // walking arms swing gently beside the hips, staying within [-0.38, 0.38] rad
+    for (let i = 0; i < 60; i++) {
+      avatar.update(1 / 60, { speed: 3 })
+      expect(Math.abs(avatar.rig.arms[0]!.g.rotation.x)).toBeLessThan(0.38)
+      expect(Math.abs(avatar.rig.arms[1]!.g.rotation.x)).toBeLessThan(0.38)
+    }
+  })
+
+  it('running animation: running leans the torso forward, bends elbows and pumps arms dynamically', () => {
+    const avatar = createPlayerAvatar(THREE, { cascade: false })
+    run(avatar, 0.5, { speed: 5, running: true })
+    expect(avatar.rig.upper.rotation.x).toBeGreaterThan(0.1) // forward torso lean
+    expect(avatar.rig.arms[0]!.el.rotation.x).toBeLessThan(-0.8) // bent elbow
+    expect(avatar.rig.arms[1]!.el.rotation.x).toBeLessThan(-0.8) // bent elbow
   })
 
   it('takes a spec override', () => {

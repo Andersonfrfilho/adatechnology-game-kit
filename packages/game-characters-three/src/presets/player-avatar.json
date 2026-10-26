@@ -13,7 +13,16 @@
     "fem": false,
     "life": 1,
     "hs": "short",
-    "hair": "2a1e16"
+    "hair": "2a1e16",
+    "pose": {
+      "armL": 0,
+      "armR": 0,
+      "elbL": -0.08,
+      "elbR": -0.08,
+      "lean": 0.04,
+      "headX": 0,
+      "headZ": 0
+    }
   },
   "shirtColor": "3d5a73"
 }

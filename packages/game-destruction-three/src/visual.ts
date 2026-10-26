@@ -44,6 +44,7 @@ export class DecalKit {
       polygonOffset: true,
       polygonOffsetFactor: -4,
       polygonOffsetUnits: -4,
+      side: this.THREE.DoubleSide,
     }))
   }
 
@@ -477,6 +478,27 @@ export class Visuals {
 
   addHole(mv: MeshVis, worldPoint: THREE_NS.Vector3, worldNormal: THREE_NS.Vector3, diameter: number): void {
     const { s, pos, quat } = this.decalPose(mv.mesh, worldPoint, worldNormal, 0.0025)
+    const work = (mv.host ? mv.host.work : mv.work) as Float32Array | undefined
+    if (work && mv.touched) {
+      const ln = worldNormal.clone().transformDirection(this.m4.copy(mv.mesh.matrixWorld).invert()).normalize()
+      let minDistSq = Infinity
+      let nearestDisp = 0
+      const from = mv.range ? mv.range[0] * 3 : 0
+      const to = mv.range ? mv.range[1] * 3 : work.length
+      for (let i = from; i < to; i += 3) {
+        const dx = work[i]! - pos.x
+        const dy = work[i + 1]! - pos.y
+        const dz = work[i + 2]! - pos.z
+        const d2 = dx * dx + dy * dy + dz * dz
+        if (d2 < minDistSq) {
+          minDistSq = d2
+          nearestDisp = dx * ln.x + dy * ln.y + dz * ln.z
+        }
+      }
+      if (minDistSq < (0.06 / s) ** 2 && nearestDisp < 0) {
+        pos.addScaledVector(ln, nearestDisp)
+      }
+    }
     const disc = new this.THREE.Mesh(this.kit.discGeometry(), this.kit.discMaterial())
     disc.position.copy(pos)
     disc.quaternion.copy(quat)

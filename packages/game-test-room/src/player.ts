@@ -36,6 +36,8 @@ export interface Player {
   /** Horizontal metres per second walked in the last update. */
   readonly speed: number
   readonly running: boolean
+  /** Whether the player is crouched (Ctrl held): the eye sinks and the walk slows. */
+  readonly crouching: boolean
   /** Held keys, by `KeyboardEvent.code`. */
   keys: ReadonlySet<string>
   update(dt: number): void
@@ -55,6 +57,10 @@ const EYE = 1.7
 /** Horizontal radius of the player, metres: what the colliders and a trip wire see. */
 export const PLAYER_RADIUS = 0.3
 const WALK = 3.4
+/** How far (m) the eye sinks when crouched, the speed of a crouched walk, and how fast the eye goes down and up (per second). */
+export const CROUCH_DROP = 0.55
+const CROUCH_WALK = 1.7
+const CROUCH_RATE = 9
 const RUN = 6.2
 const JUMP = 4.6
 const GRAVITY = 13
@@ -70,6 +76,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   let pitch = 0
   let y = 0
   let eye = EYE
+  let crouch = 0
   let vy = 0
   let walked = 0
   let running = false
@@ -81,7 +88,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   const apply = (): void => {
     euler.set(pitch, yaw, 0, 'YXZ')
     cam.quaternion.setFromEuler(euler)
-    cam.position.set(px.x, eye + y, px.z)
+    cam.position.set(px.x, eye + y - CROUCH_DROP * crouch, px.z)
     cam.updateMatrixWorld(true)
   }
   apply()
@@ -228,12 +235,18 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     get running() {
       return running
     },
+    get crouching() {
+      return keys.has('ControlLeft') || keys.has('ControlRight')
+    },
     keys,
     update(dt) {
-      const run = keys.has('ShiftLeft') || keys.has('ShiftRight')
+      const crouched = keys.has('ControlLeft') || keys.has('ControlRight')
+      crouch += ((crouched ? 1 : 0) - crouch) * Math.min(1, dt * CROUCH_RATE)
+      if (!crouched && crouch < 1e-3) crouch = 0
+      const run = !crouched && (keys.has('ShiftLeft') || keys.has('ShiftRight'))
       const fromX = px.x
       const fromZ = px.z
-      const speed = run ? RUN : WALK
+      const speed = crouched ? CROUCH_WALK : run ? RUN : WALK
       let f = 0
       let r = 0
       if (keys.has('KeyW') || keys.has('ArrowUp')) f += 1

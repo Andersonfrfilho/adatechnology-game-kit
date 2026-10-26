@@ -71,6 +71,8 @@ export type FirstPersonArmsOptions = {
   clips?: readonly FirstPersonClip[]
   /** Seconds to move from one stance (or from a held tool to the rest) to the next. Default 0.18. */
   blend?: number
+  /** In the `relaxed` stance with no clip playing (walking, standing, nothing in the hands) the hands drop out of the view and are not drawn; a strike, a shove, a held tool or `fists` bring them back. Default false. */
+  hideWhenIdle?: boolean
   bob?: Partial<FirstPersonBob>
 }
 

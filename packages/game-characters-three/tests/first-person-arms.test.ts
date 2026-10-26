@@ -46,6 +46,37 @@ describe('two-bone IK', () => {
   })
 })
 
+describe('hands hidden while idle', () => {
+  const shownOf = (arms: ReturnType<typeof createFirstPersonArms>): boolean[] => {
+    const flags: boolean[] = []
+    arms.root.traverse((object) => {
+      if (object.name.startsWith('first-person-hand-') || object.name.startsWith('first-person-elbow-')) flags.push(object.visible)
+    })
+    return flags
+  }
+
+  it('draws no hand while walking with nothing in them, and draws both for a held tool, fists or a shove', () => {
+    const arms = createFirstPersonArms(THREE, { hideWhenIdle: true, clips: FIRST_PERSON_CLIPS })
+    step(arms, 1, { camera: camera(), stance: 'relaxed', speed: 3 })
+    expect(shownOf(arms).every((flag) => !flag)).toBe(true)
+    step(arms, 0.6, { camera: camera(), stance: 'fists' })
+    expect(shownOf(arms).every((flag) => flag)).toBe(true)
+    step(arms, 0.6, { camera: camera(), stance: 'relaxed' })
+    expect(shownOf(arms).every((flag) => !flag)).toBe(true)
+    arms.play('shove_two_hands')
+    step(arms, 0.25, { camera: camera(), stance: 'relaxed' })
+    expect(shownOf(arms).every((flag) => flag)).toBe(true)
+    step(arms, 1, { camera: camera(), stance: 'relaxed' })
+    expect(shownOf(arms).every((flag) => !flag)).toBe(true)
+  })
+
+  it('keeps the hands drawn when the option is off (the default)', () => {
+    const arms = createFirstPersonArms(THREE)
+    step(arms, 1, { camera: camera(), stance: 'relaxed' })
+    expect(shownOf(arms).every((flag) => flag)).toBe(true)
+  })
+})
+
 describe('createFirstPersonArms', () => {
   const target = (x: number, y: number, z: number): HandTargets => ({ R: { position: [x, y, z], quaternion: [0, 0, 0, 1] }, L: null, grip: 0.9, gripL: 0.5, scale: 1 })
 
