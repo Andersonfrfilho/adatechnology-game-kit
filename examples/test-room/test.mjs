@@ -271,17 +271,20 @@ if (!fpOk) report.failed++
     const port = window.C.at('loadPort')
     if (arg.view && port) window.C.view([port[0] + 0.32, port[1] + 0.1, port[2] + 0.08], port, 38)
     const steps = run.ammo.flatMap((a, i) => (i > 0 && a !== run.ammo[i - 1] ? [{ at: +(i / 60).toFixed(2), ammo: a }] : []))
-    return { capacity: run.capacity, ammo: r.tool.ammo, reloading: r.tool.reloading, steps, sounds, visits: run.visits, at: +(run.frames / 60).toFixed(2) }
+    const actions = r.log.entries().slice(run.before).filter((e) => e.type === 'sound' && ['pump_back', 'pump_forward'].includes(e.data?.cue)).map((e) => +e.t.toFixed(2))
+    const hand = r.handState().targets.R.position
+    const awayFromGrip = +Math.hypot(hand[0] - run.rest[0], hand[1] - run.rest[1], hand[2] - run.rest[2]).toFixed(3)
+    return { capacity: run.capacity, ammo: r.tool.ammo, reloading: r.tool.reloading, steps, sounds, actions, awayFromGrip, grip: r.handState().targets.grip, visits: run.visits, at: +(run.frames / 60).toFixed(2) }
   }
   let full = await page.evaluate(pumpTo, { start: true, to: 0 })
   for (const [name, to] of [['shell-1', 40], ['shell-3', 110], ['shell-6', 215], ['pump', 245]]) {
     const info = await closeShot(`870-${name}`, pumpTo, { to, view: true })
-    console.log(`      870 ${name}: ${info.ammo}/${info.capacity} shells at ${info.at} s, ${info.sounds.length} sounds, ${info.visits} visits`)
+    console.log(`      870 ${name}: ${info.ammo}/${info.capacity} shells at ${info.at} s, ${info.sounds.length} sounds, ${info.visits} visits, shooting hand ${info.awayFromGrip} m from the grip`)
   }
   full = await page.evaluate(pumpTo, { to: 60 * 8 })
   const secs = full.steps.map((entry) => entry.at)
   const gaps = secs.slice(1).map((t, i) => +(t - secs[i]).toFixed(2))
-  verdict('remington 870 empty: one shell per step (the rule\'s 0.55 s), one sound and one hand visit each', full.steps.length === full.capacity && full.steps.every((entry, i) => entry.ammo === i + 1) && gaps.every((g) => g >= 0.5) && full.sounds.length === full.capacity && full.visits === full.capacity && !full.reloading, { ...full, gaps })
+  verdict('remington 870 empty: one shell per step (the rule\'s 0.55 s), one sound and one hand visit each, every shell in before the pump', full.steps.length === full.capacity && full.steps.every((entry, i) => entry.ammo === i + 1) && gaps.every((g) => g >= 0.5) && full.sounds.length === full.capacity && full.visits === full.capacity && !full.reloading && full.actions.length === 2 && full.sounds.at(-1) < full.actions[0], { ...full, gaps })
 
   // the pistol, empty: the slide is racked by the support hand (it goes back and forward) and the snap is heard as it closes
   const glockTo = (arg) => {

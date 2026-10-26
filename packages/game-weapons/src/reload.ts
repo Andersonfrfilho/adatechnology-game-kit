@@ -19,6 +19,8 @@ export interface ReloadPlan {
 
 /** Seconds the action takes to be worked after an empty tube is loaded when the rule gives no `timings.cycle`. */
 export const ACTION_WORK_SECONDS = 0.5
+/** Seconds the last round of an empty tube takes to be seated (the hand puts it in, leaves the port and is back on the grip) before the action is worked. */
+export const ACTION_DELAY_SECONDS = 0.6
 
 export const isReloadable = (action: WeaponAction): action is ReloadableAction => action.kind === 'firearm' || action.kind === 'launcher'
 
@@ -47,9 +49,10 @@ export const planReload = (action: ReloadableAction, ammo: number, capacity: num
     const rounds = Math.max(1, Math.min(capacity - ammo, reserve))
     const loading = rounds * perRound
     const works = kind === 'empty' && action.kind === 'firearm' && action.family !== undefined && LOADS_THEN_WORKS.has(action.family)
-    // the closing stage sits at a fraction of the reload (the tables, 0.87 to 0.89): the work of the action is never shorter than what puts that stage after the last round
+    // the last round needs `ACTION_DELAY_SECONDS` to be seated before the action is worked, and the closing stage sits at a fraction of the reload (the tables, 0.87 to 0.89): the
+    // action never starts before the last round is in and seated
     const closingAt = works && action.family ? RELOAD_STAGES[action.family].empty.find((entry) => entry.stage !== 'round_in')?.at ?? 0.88 : 0.88
-    const tail = works ? Math.max(action.timings?.cycle ?? ACTION_WORK_SECONDS, (loading * (1 - closingAt)) / closingAt) : 0
+    const tail = works ? Math.max(ACTION_DELAY_SECONDS + (action.timings?.cycle ?? ACTION_WORK_SECONDS), (loading + ACTION_DELAY_SECONDS) / closingAt - loading) : 0
     return { kind, step: perRound, first: perRound, total: loading + tail, rounds, tail }
   }
   const seconds = kind === 'empty' ? action.timings?.reloadEmpty ?? baseSeconds(action) : baseSeconds(action)

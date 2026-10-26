@@ -58,7 +58,8 @@ describe('an empty reload of a weapon that loads round by round', () => {
       if (stages.length > 1 && action.family && ['pump', 'lever', 'tube_semi', 'top_load_semi'].includes(action.family)) {
         // the closing stage comes when the last round is in
         const closing = stages.at(-1) as { at: number }
-        expect(closing.at).toBeGreaterThanOrEqual(feeds.at(-1)! - 0.02)
+        // and the action starts only once the last round is seated (the hand needs 0.6 s to put it in and be back on the grip)
+        expect(closing.at).toBeGreaterThanOrEqual(feeds.at(-1)! + 0.6 - 1e-6)
         expect((end as { at: number }).at).toBeGreaterThan(feeds.at(-1)! + 0.1)
       }
     })

@@ -109,6 +109,9 @@ describe('an empty reload of a weapon that loads round by round', () => {
     expect((lastFrame - first) / 60).toBeGreaterThan((capacity - 1) * 0.4)
     const shells = room.log.entries().slice(before).filter((entry) => entry.type === 'sound' && (entry.data as { cue?: string }).cue === 'shell_insert')
     expect(shells.length, 'a shell sound per round').toBe(capacity)
+    // the action (the pump, the lever, the charging handle) is worked only after the last shell is in: every shell sound comes before the first sound of the action
+    const actions = room.log.entries().slice(before).filter((entry) => entry.type === 'sound' && ['pump_back', 'pump_forward', 'lever_open', 'lever_close', 'charging_handle_pull', 'charging_handle_release'].includes((entry.data as { cue?: string }).cue ?? ''))
+    if (actions.length > 0) expect(shells.at(-1)!.t, 'the last shell is in before the action').toBeLessThan(actions[0]!.t)
     expect(shells.at(-1)!.t - shells[0]!.t).toBeGreaterThan((capacity - 1) * 0.4)
     // a tube is filled with the hand going back to the grip between two rounds; a bolt action is loaded in one go from the top, the hand stays at the port
     const family = buildWeaponModelById(THREE, id)!.parts.family
