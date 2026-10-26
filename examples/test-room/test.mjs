@@ -29,6 +29,12 @@ mkdirSync(shotsDir, { recursive: true })
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
 const external = []
 const consoleErrors = []
+// CI runs software GL, several times slower and nothing there reads the pictures: screenshots get a long timeout, and the first-person steps, the contact sheets and the close-ups keep every assertion
+// (both languages, the 100 weapons held, each number) but take no picture; the pictures in shots/ come from a run on a developer's machine
+const CI = Boolean(process.env.CI)
+const SHOT = { timeout: 180000 }
+const started = Date.now()
+const lap = (label) => console.log(`TIME  ${((Date.now() - started) / 1000).toFixed(0)} s  ${label}`)
 const context = await browser.newContext({ viewport: { width: 1280, height: 720 } })
 await context.route('**/*', (route) => {
   const url = route.request().url()
@@ -87,7 +93,7 @@ async function shot(name, setup) {
   await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })
   await page.evaluate(setup)
   await page.waitForTimeout(400)
-  await page.screenshot({ path: join(shotsDir, `${name}.png`) })
+  await page.screenshot({ path: join(shotsDir, `${name}.png`), ...SHOT })
 }
 await shot('overview', () => {
   const r = window.__testRoom
@@ -124,12 +130,13 @@ await page.evaluate(() => {
   for (let i = 0; i < 40; i++) r.update(0.02)
 })
 await page.waitForTimeout(400)
-await page.screenshot({ path: join(shotsDir, 'third-person.png') })
+await page.screenshot({ path: join(shotsDir, 'third-person.png'), ...SHOT })
 const after = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, help: document.querySelector('.tr-help')?.textContent ?? '' }))
 const bodyOk = before.mode === 'first' && before.visible === false && before.hint && after.mode === 'third' && after.visible === true && /V:/.test(after.help)
 console.log(`${bodyOk ? 'PASS' : 'FAIL'}  the player body: hidden in first person, shown after V, hint on the HUD and in the log`, JSON.stringify({ before, after: { mode: after.mode, visible: after.visible } }))
 
 
+lap('before the first-person steps')
 // the first-person arms and the strikes, in both languages: bare hands, fists, a pistol and a rifle held, the rifle mid-reload, the punch, the shove and the kick at their impact, and the punch seen from behind
 const fpSteps = [
   ['bare-hands', () => { S.r.setTool('hand'); S.run(60) }],
@@ -165,10 +172,13 @@ for (const lang of ['pt-BR', 'en']) {
     window.S.look()
     window.S.run(10)
   })
+  lap(`first-person steps, ${lang}`)
   for (const [name, act] of fpSteps) {
     const seen = await page.evaluate(`(() => { (${act.toString()})(); const a = window.__testRoom.avatar; return { stance: a.arms?.stance ?? null, playing: a.arms?.playing ?? null, visible: a.firstPerson?.root.visible ?? null, strikes: window.__testRoom.log.entries().filter((e) => /impact in|impacto em/.test(e.text)).length } })()`)
-    await page.waitForTimeout(150)
-    await page.screenshot({ path: join(shotsDir, `fp-${name}-${lang}.png`) })
+    if (!CI) {
+      await page.waitForTimeout(150)
+      await page.screenshot({ path: join(shotsDir, `fp-${name}-${lang}.png`), ...SHOT })
+    }
     const stanceOk = fpExpect[name] === undefined || seen.stance === fpExpect[name]
     const playOk = fpPlaying[name] === undefined || seen.playing === fpPlaying[name]
     const visibleOk = name === 'punch-third' ? seen.visible === false : seen.visible === true
@@ -176,6 +186,7 @@ for (const lang of ['pt-BR', 'en']) {
     console.log(`${stanceOk && playOk && visibleOk ? 'PASS' : 'FAIL'}  [${lang}] first-person arms: ${name}`, JSON.stringify(seen))
   }
 }
+lap('first-person steps done')
 if (!fpOk) report.failed++
 
 // every weapon with a model in the hands, in first person: contact sheets (five by four, with the id of the weapon) of the view of the hands and the weapon
@@ -202,18 +213,18 @@ if (!fpOk) report.failed++
   const ROWS = 4
   const CELL = { w: 384, h: 216 }
   const images = []
-  for (const id of ids) {
+  for (const id of CI ? [] : ids) {
     await page.evaluate((tool) => {
       const r = window.__testRoom
       r.setTool(tool)
       for (let i = 0; i < 45; i++) r.update(1 / 60)
     }, id)
     await page.waitForTimeout(40)
-    images.push((await page.screenshot({ clip: { x: 320, y: 180, width: 960, height: 540 } })).toString('base64'))
+    images.push((await page.screenshot({ clip: { x: 320, y: 180, width: 960, height: 540 }, ...SHOT })).toString('base64'))
   }
   const sheets = Math.ceil(ids.length / (COLS * ROWS))
-  const compose = await page.context().newPage()
-  for (let sheet = 0; sheet < sheets; sheet++) {
+  const compose = CI ? null : await page.context().newPage()
+  for (let sheet = 0; sheet < (CI ? 0 : sheets); sheet++) {
     const from = sheet * COLS * ROWS
     const data = await compose.evaluate(async ({ part, pictures, COLS, ROWS, CELL }) => {
       const canvas = document.createElement('canvas')
@@ -243,12 +254,13 @@ if (!fpOk) report.failed++
     }, { part: ids.slice(from, from + COLS * ROWS), pictures: images.slice(from, from + COLS * ROWS), COLS, ROWS, CELL })
     writeFileSync(join(shotsDir, `fp-all-weapons-${sheet + 1}.png`), Buffer.from(data.split(',')[1], 'base64'))
   }
-  await compose.close()
+  await compose?.close()
   const sheetsOk = ids.length >= 100
   console.log(`${sheetsOk ? 'PASS' : 'FAIL'}  first person: ${ids.length} weapons with a model held, ${sheets} contact sheets (fp-all-weapons-N.png)`)
   if (!sheetsOk) report.failed++
 }
 
+lap('contact sheets done')
 // the behaviour log of a full run
 await page.goto(`${url}?scenario=all`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoomReport, null, { timeout: 600000 })
