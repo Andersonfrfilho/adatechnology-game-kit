@@ -170,6 +170,16 @@ describe('createPlayerAvatar', () => {
     expect(avatar.rig.arms[1]!.el.rotation.x).toBeLessThan(-0.8) // bent elbow
   })
 
+  it('disarming returns arm z rotations to the rest carrying angle to clear the hips', () => {
+    const avatar = createPlayerAvatar(THREE, { cascade: false })
+    avatar.update(1 / 60, { armed: true })
+    expect(avatar.rig.arms[0]!.g.rotation.z).toBeCloseTo(-0.54, 2)
+    expect(avatar.rig.arms[1]!.g.rotation.z).toBeCloseTo(0.36, 2)
+    avatar.update(1 / 60, { armed: false })
+    expect(avatar.rig.arms[0]!.g.rotation.z).toBeCloseTo(0.18, 2)
+    expect(avatar.rig.arms[1]!.g.rotation.z).toBeCloseTo(-0.18, 2)
+  })
+
   it('takes a spec override', () => {
     const avatar = createPlayerAvatar(THREE, { spec: { seed: 1, fem: true, skin: 'ffcc99' }, shirtColor: 0xff0000 })
     expect(avatar.rig).toBeDefined()

@@ -17,8 +17,9 @@
     "pose": {
       "armL": 0,
       "armR": 0,
-      "elbL": -0.08,
-      "elbR": -0.08,
+      "elbL": -0.12,
+      "elbR": -0.12,
+      "armOut": 0.11,
       "lean": 0.04,
       "headX": 0,
       "headZ": 0

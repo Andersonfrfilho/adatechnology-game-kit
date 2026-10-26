@@ -29,6 +29,7 @@ const WALK_BOB = 0.035 // :71 `abs(sin(ph))*0.035*gait`
 const WALK_LEAN = 0.04 // :64 `0.04*gait`
 const RUN_LEAN = 0.16
 const RUN_BOB = 0.05
+const REST_ARM_Z = 0.18 // outward carrying angle: clears hips and pelvis comfortably
 const CROUCH = { thigh: -0.95, thighWalk: 0.3, shin: 1.9, lean: 0.25, drop: -0.35 } // :29, :66, :71
 const AIMED = { shoulder: -1.42, perAim: 0.85, swing: 0.02, zRight: -0.54, zLeft: 0.36, elbowRight: -0.04, elbowLeft: -0.12 } // :45, :47
 const DOWN = { thighWalk: 0.5, shinSwing: 0.85, shinBend: 1.3, armHigh: -2.8, armLow: -0.35, armWave: 0.3, armZ: 0.5, armZWave: 0.3, tilt: 1.5, roll: 0.3, hipY: 0.16, hipZ: 0.6, hipZFlip: 1.2 } // :29-:47, :74
@@ -191,7 +192,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     }
     const hg = new THREE.Group()
     hg.name = side > 0 ? 'hand_group_L' : 'hand_group_R'
-    hg.position.y = -0.3
+    hg.position.set(side * 0.02, -0.3, 0.01)
     el.add(hg)
     const palm = addMesh(hg, new THREE.SphereGeometry(0.048, 14, 10), handMaterial, 0, -0.035, 0)
     palm.scale.set(0.6, 1.05, 1)
@@ -202,7 +203,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     hand.fingers.forEach((finger, j) => {
       finger.rotation.z = -hand.side * grip * (j % 2 ? 1.1 : 0.9)
     })
-    if (hand.th) hand.th.rotation.z = -hand.side * (0.45 + grip * 0.25)
+    if (hand.th) hand.th.rotation.z = -hand.side * (0.32 + grip * 0.25)
     hand.hg.rotation.x = wristX
   }
 
@@ -321,6 +322,8 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       targets.armL = -0.32 + sine * 0.65 * gait
       targets.elbR = -1.25 + Math.max(0, sine) * 0.3 * gait
       targets.elbL = -1.25 + Math.max(0, -sine) * 0.3 * gait
+      targets.armRz = 0.22
+      targets.armLz = -0.22
     }
     return targets
   }
@@ -443,6 +446,14 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
         if (state.crouch) animator.setPose(rig, crouchPose(gait))
         if (state.armed) animator.setPose(rig, armed(state.pitch ?? 0, gait, state.hip ?? 0))
         else if (state.holding || state.itemUse) animator.setPose(rig, holdingPose(gait, state.itemUse))
+        else if (!running) {
+          animator.setPose(rig, {
+            armRz: REST_ARM_Z,
+            armLz: -REST_ARM_Z,
+            elbR: -0.12,
+            elbL: -0.12,
+          })
+        }
       }
       placeBody(fall)
       stepClip(dt, down)
@@ -462,7 +473,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
                 ? 1.22
                 : running
                   ? 0.85
-                  : 0.35
+                  : 0.12
         const wristSwing = holdRight || state.armed || running ? 0 : -Math.min(1, gait) * Math.sin(ph - 0.6) * 0.12 * hand.side
         setHandGrip(hand, grip, wristSwing)
       })
