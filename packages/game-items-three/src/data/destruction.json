@@ -23,9 +23,9 @@
             "radialSegments": 20
           },
           "box": {
-            "widthSegments": 8,
+            "widthSegments": 6,
             "heightSegments": 1,
-            "depthSegments": 5
+            "depthSegments": 4
           }
         }
       }
@@ -54,9 +54,9 @@
             "radialSegments": 20
           },
           "box": {
-            "widthSegments": 8,
+            "widthSegments": 6,
             "heightSegments": 1,
-            "depthSegments": 5
+            "depthSegments": 4
           }
         }
       }

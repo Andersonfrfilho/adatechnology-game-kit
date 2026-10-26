@@ -86,7 +86,7 @@ describe('families of models', () => {
     const { root } = buildItem(THREE, { id: 'canned_sardines', category: 'food', size: [0.1, 0.03, 0.06], model: 'canned_sardines' }, { destructible: true })
     const boxes = meshesOf(root).filter((m) => m.geometry.type === 'BoxGeometry')
     expect(boxes.length).toBeGreaterThan(3)
-    for (const mesh of boxes) expect((mesh.geometry as THREE.BoxGeometry).parameters.widthSegments).toBeGreaterThanOrEqual(8)
+    for (const mesh of boxes) expect((mesh.geometry as THREE.BoxGeometry).parameters.widthSegments).toBeGreaterThanOrEqual(6)
   })
 
   it('draws the sauce of the beans as a skin, not as a part', () => {
