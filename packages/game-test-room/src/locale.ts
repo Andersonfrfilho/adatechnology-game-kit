@@ -223,7 +223,7 @@ const en: RoomStrings = {
     'hud.tilt': 'tilt (hold)',
     'hud.equip': 'equip {weapon}',
 
-    'ui.help': 'Click: look · WASD: walk · Shift: run · Ctrl: crouch · Space: jump · 1-0 / wheel: tool · LMB: use · E: grab/drop · G or RMB: throw · R: reload · Q: fire mode · X: clear a jam · B: safety · Y: detonate charges set down · Tab: panels · Esc: free the mouse',
+    'ui.help': 'Click: look · WASD: walk · Shift: run · Ctrl or C: crouch · Space: jump · 1-0 / wheel: tool · LMB: use · E: grab/drop · G or RMB: throw · R: reload · Q: fire mode · X: clear a jam · B: safety · Y: detonate charges set down · Tab: panels · Esc: free the mouse',
     'ui.help.camera': 'V: 1st/3rd person (Shift+V: kick)',
     'camera.first': '1st person',
     'camera.third': '3rd person',
@@ -511,7 +511,7 @@ const ptBR: RoomStrings = {
     'hud.tilt': 'inclinar (segurar)',
     'hud.equip': 'equipar {weapon}',
 
-    'ui.help': 'Clique: olhar · WASD: andar · Shift: correr · Ctrl: agachar · Espaço: pular · 1-0 / roda: ferramenta · botão esquerdo: usar · E: pegar/soltar · G ou botão direito: arremessar · R: recarregar · Q: modo de tiro · X: destravar · B: trava · Y: detonar cargas postas · Tab: painéis · Esc: soltar o mouse',
+    'ui.help': 'Clique: olhar · WASD: andar · Shift: correr · Ctrl ou C: agachar · Espaço: pular · 1-0 / roda: ferramenta · botão esquerdo: usar · E: pegar/soltar · G ou botão direito: arremessar · R: recarregar · Q: modo de tiro · X: destravar · B: trava · Y: detonar cargas postas · Tab: painéis · Esc: soltar o mouse',
     'ui.help.camera': 'V: 1ª/3ª pessoa (Shift+V: chute)',
     'camera.first': '1ª pessoa',
     'camera.third': '3ª pessoa',

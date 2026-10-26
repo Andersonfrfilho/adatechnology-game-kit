@@ -116,6 +116,21 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   }
   const onLockChange = (): void => {
     locked = document.pointerLockElement === o.dom
+    if (locked) {
+      try {
+        const nav = (typeof navigator !== 'undefined' ? navigator : null) as unknown as { keyboard?: { lock?(keys?: string[]): Promise<void> } } | null
+        nav?.keyboard?.lock?.(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyX', 'KeyC', 'KeyQ', 'KeyR', 'ControlLeft', 'ControlRight']).catch(() => {})
+      } catch {
+        // ignore if not supported
+      }
+    } else {
+      try {
+        const nav = (typeof navigator !== 'undefined' ? navigator : null) as unknown as { keyboard?: { unlock?(): void } } | null
+        nav?.keyboard?.unlock?.()
+      } catch {
+        // ignore
+      }
+    }
   }
   const onMouseDown = (e: MouseEvent): void => {
     o.dom.focus?.()
@@ -186,6 +201,12 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   const onKeyDown = (e: KeyboardEvent): void => {
     if (typing(e)) return
     if (e.code === 'Space' || e.code === 'Tab') e.preventDefault()
+    // When Ctrl or Meta is held, prevent browser shortcuts from intercepting game actions (Ctrl+S save, Ctrl+W close tab, Ctrl+X cut, Ctrl+D bookmark, etc.)
+    if (e.ctrlKey || e.metaKey || keys.has('ControlLeft') || keys.has('ControlRight')) {
+      if (e.code !== 'F12' && e.code !== 'F5' && e.code !== 'F11') {
+        e.preventDefault()
+      }
+    }
     if (!e.repeat) keys.add(e.code)
     o.hooks.key(e.code, true, e)
   }
@@ -236,11 +257,11 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       return running
     },
     get crouching() {
-      return keys.has('ControlLeft') || keys.has('ControlRight')
+      return keys.has('ControlLeft') || keys.has('ControlRight') || keys.has('KeyC')
     },
     keys,
     update(dt) {
-      const crouched = keys.has('ControlLeft') || keys.has('ControlRight')
+      const crouched = keys.has('ControlLeft') || keys.has('ControlRight') || keys.has('KeyC')
       crouch += ((crouched ? 1 : 0) - crouch) * Math.min(1, dt * CROUCH_RATE)
       if (!crouched && crouch < 1e-3) crouch = 0
       const run = !crouched && (keys.has('ShiftLeft') || keys.has('ShiftRight'))

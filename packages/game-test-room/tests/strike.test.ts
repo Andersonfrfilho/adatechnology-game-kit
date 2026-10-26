@@ -251,6 +251,19 @@ describe('first-person arms in the room', () => {
     for (let i = 0; i < 60; i++) room.update(1 / 60)
     expect(room.camera.position.y).toBeCloseTo(standing, 2)
     expect(avatar.states.at(-1)!.crouch).toBe(false)
+
+    // Keys pressed while holding Ctrl prevent default browser shortcuts
+    const ev = new KeyboardEvent('keydown', { code: 'KeyS', ctrlKey: true, cancelable: true })
+    window.dispatchEvent(ev)
+    expect(ev.defaultPrevented).toBe(true)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyC' }))
+    for (let i = 0; i < 60; i++) room.update(1 / 60)
+    expect(room.camera.position.y).toBeLessThan(standing - 0.4)
+    expect(avatar.states.at(-1)!.crouch).toBe(true)
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyC' }))
+    for (let i = 0; i < 60; i++) room.update(1 / 60)
+    expect(room.camera.position.y).toBeCloseTo(standing, 2)
+    expect(avatar.states.at(-1)!.crouch).toBe(false)
   })
 
   it('reads the targets of the module after its frame hooks ran, so the weapon is placed first', () => {
