@@ -23,9 +23,9 @@ const TEMPLATES: Record<string, { tactical: string[]; empty: string[] }> = {
   belt: { tactical: ['belt_cover_open', 'belt_insert', 'belt_cover_close', 'charging_handle_pull', 'charging_handle_release'], empty: ['belt_cover_open', 'belt_insert', 'belt_cover_close', 'charging_handle_pull', 'charging_handle_release'] },
   bolt: { tactical: ['bolt_lift', 'bolt_pull', 'bolt_push', 'bolt_lock'], empty: ['bolt_lift', 'bolt_pull', 'bolt_push', 'bolt_lock'] },
   break: { tactical: ['barrels_open', 'casings_eject', 'shell_insert', 'shell_insert', 'barrels_close'], empty: ['barrels_open', 'casings_eject', 'shell_insert', 'shell_insert', 'barrels_close'] },
-  pump: { tactical: [], empty: ['shell_insert', 'shell_insert', 'pump_back', 'pump_forward'] },
-  lever: { tactical: [], empty: ['shell_insert', 'shell_insert', 'lever_open', 'lever_close'] },
-  semi12: { tactical: [], empty: ['shell_insert', 'shell_insert', 'charging_handle_pull', 'charging_handle_release'] },
+  pump: { tactical: [], empty: ['pump_back', 'pump_forward'] },
+  lever: { tactical: [], empty: ['lever_open', 'lever_close'] },
+  semi12: { tactical: [], empty: ['charging_handle_pull', 'charging_handle_release'] },
   semiint: { tactical: ['charging_handle_pull', 'charging_handle_release'], empty: ['charging_handle_pull', 'charging_handle_release'] },
 }
 const REVOLVER = (kind: string): string[] => ['cylinder_open', 'cylinder_eject', ...(kind === 'one_by_one' ? [] : ['speedloader']), 'cylinder_close']

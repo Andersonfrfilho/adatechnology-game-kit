@@ -92,7 +92,9 @@ const reloadChecks = (row: WeaponAudit): Pick<WeaponChecks, 'tactical' | 'empty'
   const needs = EMPTY_WORK[row.modelFamily]
   if (empty && emptyCell.ok && empty.kind === 'empty' && needs) {
     const clipName = empty.clip!.name
-    const works = row.works.filter((work) => needs.includes(work.anchor) && work.clips.includes(clipName))
+    // a tube is loaded round by round (the `feed` clip, one visit of the hand to the port each) and its empty clip is the action worked after the last
+    const names = ['pump', 'lever', 'semi12'].includes(row.modelFamily) ? [clipName, 'feed'] : [clipName]
+    const works = row.works.filter((work) => needs.includes(work.anchor) && names.some((name) => work.clips.includes(name)))
     if (works.length === 0) {
       emptyCell.ok = false
       emptyCell.note = `nenhuma mão trabalha a ação no clipe ${clipName}`

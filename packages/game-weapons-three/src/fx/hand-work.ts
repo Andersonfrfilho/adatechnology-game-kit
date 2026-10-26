@@ -19,6 +19,9 @@ export interface HandWork {
   merge: number
   /** The anchor follows the part it names. */
   id: string
+  /** Fractions of the clip the hand takes to arrive and to leave, when this work asks for other than the data's `timing`. */
+  lead?: number
+  tail?: number
 }
 
 const V = (THREE: Three, x: number, y: number, z: number): THREE_NS.Vector3 => new THREE.Vector3(x, y, z)
@@ -82,11 +85,11 @@ export function handWorkOf(THREE: Three, model: WeaponModel, weaponId: string, r
   const anchors = anchorsOf(THREE, model, right)
   const style = family === 'pistol' ? (releasePistols.has(weaponId) ? 'release' : 'rack') : akCharge.has(weaponId) ? 'ak' : 'ar'
   const out: HandWork[] = []
-  for (const entry of data.works as ReadonlyArray<{ family: string; clips: string[]; part?: string; hand: 'R' | 'L'; anchor: string; style?: string; merge?: number; whole?: boolean }>) {
+  for (const entry of data.works as ReadonlyArray<{ family: string; clips: string[]; part?: string; hand: 'R' | 'L'; anchor: string; style?: string; merge?: number; whole?: boolean; lead?: number; tail?: number }>) {
     if (entry.family !== family || (entry.style && entry.style !== style)) continue
     const anchor = anchors(entry.anchor, entry.part ?? null)
     if (!anchor) continue
-    out.push({ hand: entry.hand, anchor, part: entry.whole ? null : (entry.part ?? null), clips: entry.clips, merge: entry.merge ?? 0, id: entry.anchor })
+    out.push({ hand: entry.hand, anchor, part: entry.whole ? null : (entry.part ?? null), clips: entry.clips, merge: entry.merge ?? 0, id: entry.anchor, ...(entry.lead === undefined ? {} : { lead: entry.lead }), ...(entry.tail === undefined ? {} : { tail: entry.tail }) })
   }
   return out
 }
@@ -132,9 +135,9 @@ const smooth = (x: number): number => {
 
 /** How much each piece of work holds its hand now (0..1), from the clips that are running. */
 export function workWeights(works: readonly HandWork[], running: ReadonlyArray<{ name: string; time: number; clip: AnimationClipSpec }>): number[] {
-  const lead = data.timing.lead
-  const tail = data.timing.tail
   return works.map((work) => {
+    const lead = work.lead ?? data.timing.lead
+    const tail = work.tail ?? data.timing.tail
     let best = 0
     for (const { name, time, clip } of running) {
       if (!work.clips.includes(name)) continue

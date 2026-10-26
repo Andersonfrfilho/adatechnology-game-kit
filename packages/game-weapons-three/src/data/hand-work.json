@@ -116,11 +116,14 @@
       "clips": [
         "reload",
         "reload_empty",
-        "reload_one_by_one"
+        "reload_one_by_one",
+        "feed"
       ],
       "hand": "R",
       "anchor": "loading_port",
-      "whole": true
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
     },
     {
       "family": "bolt",
@@ -137,46 +140,49 @@
     {
       "family": "pump",
       "clips": [
-        "reload",
-        "reload_empty",
-        "reload_one_by_one"
+        "feed"
       ],
       "hand": "R",
       "anchor": "loading_port",
-      "whole": true
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
     },
     {
       "family": "semi12",
       "clips": [
-        "reload",
-        "reload_empty",
-        "reload_one_by_one"
+        "feed"
       ],
       "hand": "R",
       "anchor": "loading_port",
-      "whole": true
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
     },
     {
       "family": "semiint",
       "clips": [
         "reload",
         "reload_empty",
-        "reload_one_by_one"
+        "reload_one_by_one",
+        "feed"
       ],
       "hand": "R",
       "anchor": "loading_port",
-      "whole": true
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
     },
     {
       "family": "lever",
       "clips": [
-        "reload",
-        "reload_empty",
-        "reload_one_by_one"
+        "feed"
       ],
       "hand": "R",
       "anchor": "loading_port",
-      "whole": true
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
     },
     {
       "family": "revolver",

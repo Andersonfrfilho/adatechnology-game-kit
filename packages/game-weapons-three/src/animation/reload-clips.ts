@@ -80,8 +80,8 @@ function tubeReload(context: ClipContext, kind: ReloadKind): Draft {
   const { parts, family } = context
   const draft: Draft = { tweens: [], events: [], end: UNIT }
   if (kind !== 'empty') return draft
-  // the shells go into the tube, then the action is worked
-  draft.events.push(sound(0.2, 'shell_insert'), sound(0.5, 'shell_insert'))
+  // the shells go into the tube one by one, each as the rule feeds it (the `feed` clip: the hand to the loading port, one sound a shell); this clip is the action worked after the last one,
+  // which the rule's closing stage (`pump_cycle`, `lever_cycle`, `charge`) brings to its marker
   if (family === 'pump' && parts.pump) {
     draft.tweens.push(move('pump', 'x', 0.88, 0.05, 0, PUMP_TRAVEL), move('pump', 'x', 0.94, 0.05, PUMP_TRAVEL, 0))
     draft.events.push(sound(0.88, 'pump_back'), sound(0.94, 'pump_forward'))
@@ -177,11 +177,14 @@ export function reloadClips(context: ClipContext): AnimationClipSpec[] {
   return clips.length > 0 ? clips : first ? [renamed(first, 'reload')] : []
 }
 
+/** How long the hand takes to put one round in: the shooting hand goes to the port, drops it in and comes back (the rule's seconds per round are longer, the hand waits on the grip between two). */
+export const FEED_SECONDS = 0.4
+
 /** One more round goes in while a tube, a top-loaded or a revolver loads round by round. */
 export function feedClip(context: ClipContext): AnimationClipSpec | undefined {
   const { family } = context
   if (family === 'revolver') return composeClip('feed', [], [cue(0, 'move_in', { from: 'chambers', next: true }), sound(0.1, 'shell_insert')], 0.24)
-  if (family === 'bolt' || family === 'semiint') return composeClip('feed', [], [cue(0, 'move_in', { from: 'topLoad' }), sound(0.1, 'shell_insert')], 0.24)
-  if (isTube(context)) return composeClip('feed', [], [cue(0, 'move_in', { from: 'loadPort' }), sound(0.1, 'shell_insert')], 0.24)
+  if (family === 'bolt' || family === 'semiint') return composeClip('feed', [], [cue(0, 'move_in', { from: 'topLoad' }), sound(0.2, 'shell_insert')], FEED_SECONDS)
+  if (isTube(context)) return composeClip('feed', [], [cue(0, 'move_in', { from: 'loadPort' }), sound(0.2, 'shell_insert')], FEED_SECONDS)
   return undefined
 }

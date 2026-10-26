@@ -62,7 +62,8 @@ const reloadReach = (weapon: string, hand: 'R' | 'L', partName: string, mode: 'e
   keyR()
   let min = Infinity
   step(room, 60 * 12, () => {
-    if (!room.tool.reloading) return
+    // the hand goes to the port after each round the rule feeds, so the last visit ends as the reload does
+    if (!room.tool.reloading && partName !== 'loadPort') return
     min = Math.min(min, distance())
   })
   return { min, rest }

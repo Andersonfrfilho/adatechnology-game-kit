@@ -189,6 +189,108 @@ for (const lang of ['pt-BR', 'en']) {
 lap('first-person steps done')
 if (!fpOk) report.failed++
 
+// close-ups, drawn from a debug camera while the player's camera, the arms and the weapon stay as they are (room.setDebugCamera): what the eye has to see in the moves that pass every assertion but
+// were not readable at the normal view: the tube loaded shell by shell, the slide racked by the support hand, the cup of the support hand under a handguard and the trigger finger.
+{
+  let closeOk = true
+  const verdict = (name, ok, info) => {
+    if (!ok) closeOk = false
+    console.log(`${ok ? 'PASS' : 'FAIL'}  close-up: ${name}`, JSON.stringify(info))
+  }
+  // (CI renders in software and every picture costs seconds there: the assertions run, the pictures are the ones committed)
+  const closeShot = async (name, fn, arg) => {
+    const info = await page.evaluate(fn, arg)
+    if (CI) return info
+    await page.waitForTimeout(250)
+    await page.screenshot({ path: join(shotsDir, `closeup-${name}.png`), ...SHOT })
+    return info
+  }
+  // one frame loop shared by the close-ups: the room back at the player's own view, the weapon out, the debug camera off
+  await page.evaluate(() => {
+    const r = window.__testRoom
+    r.setDebugCamera(null)
+    r.resume()
+    r.setCameraMode('first')
+    window.C = {
+      r,
+      key: (code, extra = {}) => window.dispatchEvent(new KeyboardEvent('keydown', { code, ...extra })),
+      at: (name) => {
+        const part = r.scene.getObjectByName('weapon-viewmodel')?.getObjectByName(name)
+        if (!part) return null
+        part.updateWorldMatrix(true, false)
+        const e = part.matrixWorld.elements
+        return [e[12], e[13], e[14]]
+      },
+      view: (position, target, fov = 40) => r.setDebugCamera({ position, target, fov }),
+      armed: (id) => {
+        r.setDebugCamera(null)
+        r.resume()
+        window.S.look()
+        window.S.run(30)
+        r.setTool(id)
+        window.S.run(60)
+      },
+      emptied: (id) => {
+        window.C.armed(id)
+        for (let n = 0; r.tool.ammo > 0 && n < 90; n++) {
+          r.use()
+          window.S.run(40)
+        }
+        window.S.run(180)
+      },
+    }
+  })
+
+  // the tube shotgun, empty: the shells go in one by one at the rule's seconds, a hand visit and a sound each, then the pump. One reload, looked at four times: the room stays paused between the shots
+  const pumpTo = (arg) => {
+    const r = window.C.r
+    const S = window.S
+    if (arg.start) {
+      window.C.emptied('remington_870')
+      const run = { frames: 0, ammo: [], visits: 0, away: false, capacity: r.tool.capacity, before: r.log.entries().length, rest: r.handState().targets.R.position.slice() }
+      window.__pump = run
+      window.C.key('KeyR')
+    }
+    const run = window.__pump
+    r.resume()
+    while (run.frames < arg.to) {
+      S.run(1)
+      run.frames++
+      run.ammo.push(r.tool.ammo)
+      const p = r.handState().targets?.R?.position
+      if (p) {
+        const d = Math.hypot(p[0] - run.rest[0], p[1] - run.rest[1], p[2] - run.rest[2])
+        if (!run.away && d > 0.02) {
+          run.away = true
+          run.visits++
+        } else if (run.away && d < 0.008) run.away = false
+      }
+    }
+    r.pause()
+    const sounds = r.log.entries().slice(run.before).filter((e) => e.type === 'sound' && e.data?.cue === 'shell_insert').map((e) => +e.t.toFixed(2))
+    const port = window.C.at('loadPort')
+    if (arg.view && port) window.C.view([port[0] + 0.32, port[1] + 0.1, port[2] + 0.08], port, 38)
+    const steps = run.ammo.flatMap((a, i) => (i > 0 && a !== run.ammo[i - 1] ? [{ at: +(i / 60).toFixed(2), ammo: a }] : []))
+    return { capacity: run.capacity, ammo: r.tool.ammo, reloading: r.tool.reloading, steps, sounds, visits: run.visits, at: +(run.frames / 60).toFixed(2) }
+  }
+  let full = await page.evaluate(pumpTo, { start: true, to: 0 })
+  for (const [name, to] of [['shell-1', 40], ['shell-3', 110], ['shell-6', 215], ['pump', 245]]) {
+    const info = await closeShot(`870-${name}`, pumpTo, { to, view: true })
+    console.log(`      870 ${name}: ${info.ammo}/${info.capacity} shells at ${info.at} s, ${info.sounds.length} sounds, ${info.visits} visits`)
+  }
+  full = await page.evaluate(pumpTo, { to: 60 * 8 })
+  const secs = full.steps.map((entry) => entry.at)
+  const gaps = secs.slice(1).map((t, i) => +(t - secs[i]).toFixed(2))
+  verdict('remington 870 empty: one shell per step (the rule\'s 0.55 s), one sound and one hand visit each', full.steps.length === full.capacity && full.steps.every((entry, i) => entry.ammo === i + 1) && gaps.every((g) => g >= 0.5) && full.sounds.length === full.capacity && full.visits === full.capacity && !full.reloading, { ...full, gaps })
+
+  await page.evaluate(() => {
+    window.__testRoom.setDebugCamera(null)
+    window.__testRoom.resume()
+  })
+  if (!closeOk) report.failed++
+}
+lap('close-ups done')
+
 // every weapon with a model in the hands, in first person: contact sheets (five by four, with the id of the weapon) of the view of the hands and the weapon
 {
   await page.goto(`${url}?ui=0&lang=en`, { timeout: 180000 })

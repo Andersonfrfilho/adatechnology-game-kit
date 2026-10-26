@@ -23,9 +23,9 @@ Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir
 | .308 bolt-action rifle (`rifle_bolt_308`) | ✓ | ✓ | ✓ | ✓ | ✓ 3,50 s / 3,50 s | ✓ | n/a | ✓ |
 | .338 Lapua sniper rifle (`sniper_338`) | ✓ | ✓ | ✓ | ✓ | ✓ 4,00 s / 4,00 s | ✓ | n/a | ✓ |
 | .50 BMG anti-materiel rifle (`anti_materiel_50`) | ✓ | ✓ | ✓ | ✓ | ✓ 4,50 s / 4,50 s | ✓ | n/a | ✓ |
-| 12 gauge pump-action shotgun (`shotgun_pump_12`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,60 s / 0,60 s | ✓ | n/a | ✓ |
+| 12 gauge pump-action shotgun (`shotgun_pump_12`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,60 s / 3,60 s | ✓ | n/a | ✓ |
 | 12 gauge double-barrel shotgun (`shotgun_double_12`) | ✓ | ✓ | ✓ | ✓ | ✓ 3,50 s / 3,50 s | ✓ | n/a | ✓ |
-| 12 gauge semi-automatic shotgun (`shotgun_semi_12`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,70 s / 0,70 s | ✓ | n/a | ✓ |
+| 12 gauge semi-automatic shotgun (`shotgun_semi_12`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,70 s / 3,50 s | ✓ | n/a | ✓ |
 | Flamethrower (`flamethrower`) | ✓ | ✓ | — | — | — | ✓ | n/a | — |
 | Glock 17 (`glock_17`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,80 s / 1,80 s | ✓ | n/a | ✓ |
 | Glock 18 (`glock_18`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,80 s / 1,80 s | ✓ | n/a | ✓ |
@@ -52,12 +52,12 @@ Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir
 | Thompson M1A1 (`thompson_m1a1`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,90 s / 2,90 s | ✓ | n/a | ✓ |
 | CZ Scorpion EVO 3 (`cz_scorpion_evo_3`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,40 s / 2,40 s | ✓ | n/a | ✓ |
 | MAC-10 (`mac_10`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,20 s / 2,20 s | ✓ | n/a | ✓ |
-| Remington 870 (`remington_870`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,55 s / 0,55 s | ✓ | n/a | ✓ |
-| Mossberg 500 (`mossberg_500`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,55 s / 0,55 s | ✓ | n/a | ✓ |
-| CBC Pump Military 3.0 (`cbc_pump_military_3_0`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,60 s / 0,60 s | ✓ | n/a | ✓ |
-| Benelli M4 (`benelli_m4`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,50 s / 0,50 s | ✓ | n/a | ✓ |
-| Franchi SPAS-12 (`franchi_spas_12`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,55 s / 0,55 s | ✓ | n/a | ✓ |
-| Kel-Tec KSG (`kel_tec_ksg`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,55 s / 0,55 s | ✓ | n/a | ✓ |
+| Remington 870 (`remington_870`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,55 s / 3,80 s | ✓ | n/a | ✓ |
+| Mossberg 500 (`mossberg_500`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,55 s / 3,25 s | ✓ | n/a | ✓ |
+| CBC Pump Military 3.0 (`cbc_pump_military_3_0`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,60 s / 4,77 s | ✓ | n/a | ✓ |
+| Benelli M4 (`benelli_m4`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,50 s / 4,00 s | ✓ | n/a | ✓ |
+| Franchi SPAS-12 (`franchi_spas_12`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,55 s / 5,00 s | ✓ | n/a | ✓ |
+| Kel-Tec KSG (`kel_tec_ksg`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,55 s / 8,75 s | ✓ | n/a | ✓ |
 | Saiga-12 (`saiga_12`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,80 s / 2,80 s | ✓ | n/a | ✓ |
 | AA-12 (`aa_12`) | ✓ | ✓ | ✓ | ✓ | ✓ 3,00 s / 3,00 s | ✓ | n/a | ✓ |
 | Boito double-barrel (`boito_double_barrel`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,00 s / 2,00 s | ✓ | n/a | ✓ |
@@ -79,11 +79,11 @@ Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir
 | FN SCAR-H (`fn_scar_h`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,60 s / 2,60 s | ✓ | n/a | ✓ |
 | Knight's SR-25 (Mk 11) (`knights_sr_25_mk11`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,70 s / 2,70 s | ✓ | n/a | ✓ |
 | HK PSG-1 (`hk_psg_1`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,70 s / 3,60 s | ✓ | n/a | ✓ |
-| Steyr SSG 69 (`steyr_ssg_69`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,70 s / 0,70 s | ✓ | n/a | ✓ |
+| Steyr SSG 69 (`steyr_ssg_69`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,70 s / 3,50 s | ✓ | n/a | ✓ |
 | Barrett MRAD (`barrett_mrad`) | ✓ | ✓ | ✓ | ✓ | ✓ 3,20 s / 3,20 s | ✓ | n/a | ✓ |
 | CheyTac M200 (`cheytac_m200`) | ✓ | ✓ | ✓ | ✓ | ✓ 3,20 s / 3,20 s | ✓ | n/a | ✓ |
-| Remington 700 (`remington_700`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,70 s / 0,70 s | ✓ | n/a | ✓ |
-| M24 SWS (`m24_sws`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,70 s / 0,70 s | ✓ | n/a | ✓ |
+| Remington 700 (`remington_700`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,70 s / 2,80 s | ✓ | n/a | ✓ |
+| M24 SWS (`m24_sws`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,70 s / 3,50 s | ✓ | n/a | ✓ |
 | Mosin-Nagant 91/30 (`mosin_nagant_91_30`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,40 s / 2,40 s | ✓ | n/a | ✓ |
 | Accuracy AWM (`accuracy_awm`) | ✓ | ✓ | ✓ | ✓ | ✓ 3,20 s / 3,20 s | ✓ | n/a | ✓ |
 | Sako TRG-42 (`sako_trg_42`) | ✓ | ✓ | ✓ | ✓ | ✓ 3,00 s / 3,00 s | ✓ | n/a | ✓ |
@@ -91,19 +91,19 @@ Gerado por `packages/game-weapons-three/tests/support/checklist-doc.ts` a partir
 | Ruger 10/22 (`ruger_10_22`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,90 s / 1,90 s | ✓ | n/a | ✓ |
 | CBC 7022 (`cbc_7022`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,90 s / 1,90 s | ✓ | n/a | ✓ |
 | CBC 122 (`cbc_122`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,90 s / 1,90 s | ✓ | n/a | ✓ |
-| Winchester 1894 (`winchester_1894`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,60 s / 0,60 s | ✓ | n/a | ✓ |
-| Rossi Puma (`rossi_puma`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,50 s / 0,50 s | ✓ | n/a | ✓ |
-| .30-06 hunting rifle (`hunting_rifle_30_06`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,70 s / 0,70 s | ✓ | n/a | ✓ |
+| Winchester 1894 (`winchester_1894`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,60 s / 4,81 s | ✓ | n/a | ✓ |
+| Rossi Puma (`rossi_puma`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,50 s / 5,73 s | ✓ | n/a | ✓ |
+| .30-06 hunting rifle (`hunting_rifle_30_06`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,70 s / 2,80 s | ✓ | n/a | ✓ |
 | FN Minimi (`fn_minimi`) | ✓ | ✓ | ✓ | ✓ | ✓ 7,50 s / 7,50 s | ✓ | n/a | ✓ |
 | PKM (`pkm`) | ✓ | ✓ | ✓ | ✓ | ✓ 8,00 s / 8,00 s | ✓ | n/a | ✓ |
 | M60 (`m60`) | ✓ | ✓ | ✓ | ✓ | ✓ 8,50 s / 8,50 s | ✓ | n/a | ✓ |
 | Browning M2 .50 (`browning_m2`) | ✓ | — | ✓ | ✓ | ✓ 10,00 s / 10,00 s | ✓ | n/a | ✓ |
-| Remington 700 (.300 WM) (`remington_700_300wm`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,70 s / 0,70 s | ✓ | n/a | ✓ |
+| Remington 700 (.300 WM) (`remington_700_300wm`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,70 s / 2,10 s | ✓ | n/a | ✓ |
 | HK MP5SD3 (`hk_mp5sd3`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,60 s / 2,60 s | ✓ | n/a | ✓ |
 | FN ParaFAL (`fn_parafal`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,70 s / 3,50 s | ✓ | n/a | ✓ |
 | Taurus T4 (civil) (`taurus_t4_civil`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,40 s / 3,10 s | ✓ | n/a | ✓ |
 | Taurus TH380 (`taurus_th380`) | ✓ | ✓ | ✓ | ✓ | ✓ 1,70 s / 1,70 s | ✓ | n/a | ✓ |
-| Mossberg 500 Cruiser (`mossberg_500_cruiser`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,55 s / 0,55 s | ✓ | n/a | ✓ |
+| Mossberg 500 Cruiser (`mossberg_500_cruiser`) | ✓ | ✓ | ✓ | ✓ | ✓ 0,55 s / 3,25 s | ✓ | n/a | ✓ |
 | HK MP5K (`hk_mp5k`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,60 s / 2,60 s | ✓ | n/a | ✓ |
 | HK UMP9 (`hk_ump9`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,70 s / 2,70 s | ✓ | n/a | ✓ |
 | Mini Uzi (`mini_uzi`) | ✓ | ✓ | ✓ | ✓ | ✓ 2,40 s / 2,40 s | ✓ | n/a | ✓ |
