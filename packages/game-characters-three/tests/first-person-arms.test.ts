@@ -259,3 +259,23 @@ describe('the index finger on the trigger', () => {
     expect(joints()[0]).toEqual(grip[0])
   })
 })
+
+describe('the support arm under a rifle', () => {
+  // the hand of an M4 held at rest, in the camera's space: 0.65 m ahead, a little to the right and low, palm up and the fingers rising to the right
+  const cup = (): HandTargets => {
+    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(Math.cos(0.5), Math.sin(0.5), 0), new THREE.Vector3(Math.sin(0.5), -Math.cos(0.5), 0), new THREE.Vector3(0, 0, -1)))
+    const grip: HandTargets['R'] = { position: [0.2, -0.3, -0.36], quaternion: [0, 0, 0, 1] }
+    return { R: grip, L: { position: [0.156, -0.255, -0.647], quaternion: [q.x, q.y, q.z, q.w] }, grip: 0.9, gripL: 0.6, scale: 1 }
+  }
+  it('comes from below: the elbow hangs under the wrist and the forearm does not sweep in from the side', () => {
+    const arms = createFirstPersonArms(THREE)
+    step(arms, 1, { camera: camera(), targets: cup(), stance: 'hold' })
+    const { elbow, wrist, shoulder } = arms.joints('L')
+    const fore = wrist.clone().sub(elbow)
+    expect(wrist.y - elbow.y, 'the elbow is under the wrist').toBeGreaterThan(0.1)
+    expect((Math.atan2(fore.x, -fore.z) * 180) / Math.PI, 'few degrees off the forward').toBeLessThan(25)
+    expect(Math.atan2(fore.y, Math.hypot(fore.x, fore.z)) * (180 / Math.PI), 'rising to the hand').toBeGreaterThan(20)
+    // the left shoulder sits nearer the middle than the right one (the arm does not pass beside the gun)
+    expect(Math.abs(shoulder.x)).toBeLessThan(0.1)
+  })
+})

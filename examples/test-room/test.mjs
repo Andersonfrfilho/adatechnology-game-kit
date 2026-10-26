@@ -321,6 +321,33 @@ if (!fpOk) report.failed++
   const reached = Math.min(...run.track.map((entry) => entry.d))
   verdict('glock empty: the slide goes back and forward, the support hand reaches it and the snap sounds', back < -0.02 && Math.abs(xs.at(-1)) < 1e-3 && xs[0] === 0 && reached < 0.09 && run.snap.length === 1, { back: +back.toFixed(3), pulledAtFrame: rack.frames, handToSlide: +reached.toFixed(3), snapAt: run.snap })
 
+  // the support hand at rest under a handguard: a palm-up cup, the forearm from below
+  const cup = (id) => {
+    const r = window.C.r
+    window.C.armed(id)
+    r.pause()
+    const j = r.avatar.arms.joints('L')
+    const fore = j.wrist.clone().sub(j.elbow)
+    const left = r.handState().targets.L
+    window.C.view([left.position[0] + 0.55, left.position[1], left.position[2] + 0.1], left.position, 40)
+    return { underWrist: +(j.wrist.y - j.elbow.y).toFixed(3), offForward: +((Math.atan2(fore.x, -fore.z) * 180) / Math.PI).toFixed(0), rising: +((Math.atan2(fore.y, Math.hypot(fore.x, fore.z)) * 180) / Math.PI).toFixed(0) }
+  }
+  for (const [name, id] of [['m4', 'colt_m4a1'], ['ak', 'ak_47']]) {
+    const geometry = await closeShot(`${name}-rest-side`, cup, id)
+    verdict(`${id} at rest: forearm from below, the hand a cup under the handguard`, geometry.underWrist > 0.1 && geometry.offForward < 25 && geometry.rising > 20, geometry)
+    // the same moment from the player's own camera
+    await page.evaluate(() => window.__testRoom.setDebugCamera(null))
+    if (!CI) {
+      await page.waitForTimeout(250)
+      await page.screenshot({ path: join(shotsDir, `closeup-${name}-rest-player.png`), ...SHOT })
+    }
+    await closeShot(`${name}-rest-below`, () => {
+      const r = window.__testRoom
+      const l = r.handState().targets.L.position
+      window.C.view([l[0] + 0.1, l[1] - 0.5, l[2] + 0.35], l, 40)
+    })
+  }
+
   // the trigger finger, 25 cm from the grip: extended along the frame at rest, curled on the trigger mid-pull, extended again once released
   const finger = (phase) => {
     const r = window.C.r

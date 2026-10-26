@@ -27,6 +27,9 @@ export type FirstPersonRig = {
   wrist: number
   /** The way the elbow bends, for the right arm; mirrored for the left. */
   elbowPole: Triple
+  /** The left shoulder and the way its elbow bends, when they are not the mirror image of the right's: the support hand cups a handguard from below, so its shoulder sits nearer the middle and the elbow hangs under the forearm. */
+  shoulderLeft?: Triple
+  elbowPoleLeft?: Triple
   radius: { shoulder: number; elbow: number; wrist: number; cuff: number }
   /** The right hip, the bones of the leg, the way the knee bends, and where the foot waits below the view. */
   hip: Triple
@@ -104,5 +107,7 @@ export type FirstPersonArms = {
   on(type: 'event', listener: (event: FirstPersonEvent) => void): () => void
   /** The camera-space pose the hand is drawn at (for tests and for hosts that attach things to it). */
   handPose(side: 'R' | 'L'): { position: THREE_NS.Vector3; quaternion: THREE_NS.Quaternion; grip: number }
+  /** Where the arm is drawn, in the camera's space: the shoulder, the elbow and the wrist (for tests of the way an arm reaches a hand). */
+  joints(side: 'R' | 'L'): { shoulder: THREE_NS.Vector3; elbow: THREE_NS.Vector3; wrist: THREE_NS.Vector3 }
   dispose(): void
 }

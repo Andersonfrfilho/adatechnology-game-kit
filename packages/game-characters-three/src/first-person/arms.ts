@@ -80,6 +80,8 @@ type Arm = {
   blend: number
   /** What is drawn. */
   drawn: Pose
+  /** The joints of the arm as drawn, in the space of the arms root (the camera's). */
+  joints: { shoulder: THREE_NS.Vector3; elbow: THREE_NS.Vector3; wrist: THREE_NS.Vector3 }
 }
 
 const newPose = (THREE: Three): Pose => ({ p: new THREE.Vector3(), q: new THREE.Quaternion(), grip: 0, scale: 1 })
@@ -197,7 +199,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     const cuff = limb(root, rig.radius.cuff, rig.radius.cuff, 0.03, materials.cuff)
     const elbow = ball(root, rig.radius.elbow * 1.02, materials.sleeve)
     elbow.name = `first-person-elbow-${side}`
-    arms[side] = { side, sign, hand, anchor, upper, fore, cuff, elbow, shown: newPose(THREE), from: newPose(THREE), mode: null, blend: 1, drawn: newPose(THREE) }
+    arms[side] = { side, sign, hand, anchor, upper, fore, cuff, elbow, shown: newPose(THREE), from: newPose(THREE), mode: null, blend: 1, drawn: newPose(THREE), joints: { shoulder: new THREE.Vector3(), elbow: new THREE.Vector3(), wrist: new THREE.Vector3() } }
   }
 
   // the right leg, shown only while a kick holds it: a trouser, a knee, a trouser, a shoe
@@ -222,8 +224,8 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   shoeBox(0.1, 0.05, 0.088, 0.17, -0.005, materials.shoe)
   leg.add(shoe)
 
-  const shoulderOf = (sign: 1 | -1, out: THREE_NS.Vector3): THREE_NS.Vector3 => out.set(rig.shoulder[0] * sign, rig.shoulder[1], rig.shoulder[2])
-  const poleOf = (sign: 1 | -1): THREE_NS.Vector3 => new THREE.Vector3(rig.elbowPole[0] * sign, rig.elbowPole[1], rig.elbowPole[2])
+  const shoulderOf = (sign: 1 | -1, out: THREE_NS.Vector3): THREE_NS.Vector3 => (sign === -1 && rig.shoulderLeft ? out.set(...rig.shoulderLeft) : out.set(rig.shoulder[0] * sign, rig.shoulder[1], rig.shoulder[2]))
+  const poleOf = (sign: 1 | -1): THREE_NS.Vector3 => (sign === -1 && rig.elbowPoleLeft ? new THREE.Vector3(...rig.elbowPoleLeft) : new THREE.Vector3(rig.elbowPole[0] * sign, rig.elbowPole[1], rig.elbowPole[2]))
   const kneePole = new THREE.Vector3(...rig.kneePole)
   const hip = new THREE.Vector3(...rig.hip)
 
@@ -344,6 +346,9 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     arm.anchor.scale.setScalar(scale)
     arm.hand.setGrip(pose.grip)
     arm.hand.setIndex(arm.side === 'R' ? indexCurl : undefined)
+    arm.joints.shoulder.copy(shoulder)
+    arm.joints.elbow.copy(bone.joint)
+    arm.joints.wrist.copy(bone.end)
     place(arm.upper, shoulder, bone.joint)
     place(arm.fore, bone.joint, bone.end)
     arm.elbow.position.copy(bone.joint)
@@ -469,6 +474,10 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     on(_type, listener) {
       listeners.add(listener)
       return () => void listeners.delete(listener)
+    },
+    joints(side) {
+      const { shoulder, elbow, wrist } = arms[side].joints
+      return { shoulder: shoulder.clone(), elbow: elbow.clone(), wrist: wrist.clone() }
     },
     handPose(side) {
       const pose = arms[side].drawn

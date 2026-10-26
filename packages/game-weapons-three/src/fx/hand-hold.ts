@@ -22,9 +22,9 @@ export const HAND_HOLD = {
   /** The grip of a long gun that has no drawn pistol grip: how far under the receiver the hand sits. */
   strapUnder: 0.04,
   /** How far lower than touching the palm hangs under a handguard, so the fingers close under it and not over it. */
-  forendDrop: 0.016,
+  forendDrop: 0.03,
   /** How far (radians) the fingers of a support hand under a handguard rise from level. */
-  forendTilt: 0.3,
+  forendTilt: 0.5,
   /** How far a handgun's support hand dips for the new magazine, along the grip. */
   magDip: 0.045,
   /** Closure of the fingers on a grip and on a forend (0 open, 1 closed). */
