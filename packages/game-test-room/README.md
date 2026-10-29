@@ -65,6 +65,32 @@ The room used to ship 19 procedural box/cylinder items (`demoItems`, `DEMO_ITEMS
 - `room.scenarios` is empty until the host passes `scenarios` or a module brings its own. The destruction checks the removed ones made (steel sheet, glass, concrete, fire, collapse) are covered by the tests of `game-destruction`, `game-fluids` and the module scenarios of the content packages.
 - A test that needs a throwaway item should define it in its own fixture (see `tests/fixtures/demo-items.ts`, not exported).
 
+## Scenery
+
+The arena holds three destructible pieces by default, hand-made from boxes: `target_wall` (a brick wall of 48 panels at z = -11), `table` (with the water tap on a post beside it, at x = 3.5) and `shelf` (x = -3.5). `scenery` is a registry keyed by arena object id, so a host can use its own pieces without touching the room:
+
+| `scenery[id]` | Effect |
+|---|---|
+| a key of a default (`target_wall`, `table`, `shelf`) | replaces that piece; `position` defaults to the replaced one's |
+| `null` | removes the piece (no table: no tap either) |
+| a new key | adds a piece; `position` is required |
+
+```ts
+createTestRoom({ ..., scenery: {
+  target_wall: { spec: wallSpec, position: [0, 0, -11], build: (THREE) => drawWall(THREE) },
+  table: { spec: tableSpec, build: drawTable, top: { part: 'wood_0', y: 0.78 } },
+  crate: { spec: crateSpec, position: [0, 0, -4], rotationY: 0.4, label: 'Crate' },
+  shelf: null,
+} })
+```
+
+A `SceneryObject` is `{ spec, position?, rotationY?, colors?, build?, label?, top? }`:
+
+- `spec`: the `DestructibleSpec` the world is given. The player collider is the footprint of its parts (what lies lower than 10 cm is walked over); the `target_wall` collider also closes the arena behind the wall.
+- `build(THREE)`: draws the piece as a group whose meshes are named by part id (`userData.destructionPart` too), like `buildFromSpec` does. Without it the room draws one plain mesh per part with `buildFromSpec` and `colors`.
+- `top: { part, y }`: loose things rest on that part's footprint at height `y` while the part stands (`room.groundAt`), and liquids pool on it. The tap stands beside the `table` top.
+- `label`: the name in the inspector and the log (the defaults are translated).
+
 ## Loading a module
 
 A game module hands the room a `TestableModule` from `@adatechnology/game-contracts` (items, each with an optional `impl` for its own destruction and `animations`, plus scenarios):

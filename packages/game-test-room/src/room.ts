@@ -16,7 +16,7 @@ import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, shotExtras } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createArena } from './arena'
-import type { Arena } from './arena'
+import type { Arena, ArenaTop } from './arena'
 import { createBenchStore } from './bench'
 import type { BenchStore } from './bench'
 import type { BenchView, MetricRow } from './bench-panel'
@@ -142,14 +142,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // Worlds
   // ---------------------------------------------------------------------------------------------------------------------------------------
   const arenaSize = options.arenaSize ?? 14
-  const arena: Arena = createArena(THREE, arenaSize, scene)
+  const arena: Arena = createArena(THREE, arenaSize, scene, options.scenery)
   scene.add(arena.group)
 
   const ownWorld = !options.world
   const world = options.world ?? createDestruction({ seed: 1, ...options.worldOptions, materials: [...(options.worldOptions?.materials ?? [])] })
   const pristineWorld = ownWorld ? world.serialize() : null
-  const tableOk = (): boolean => {
-    const p = world.part(arena.table.id, arena.table.topPart)
+  const topOk = (t: ArenaTop): boolean => {
+    const p = world.part(t.id, t.topPart)
     return !!p && p.status !== 'broken' && p.status !== 'melted' && p.status !== 'ashes'
   }
   // tops of spawned objects that hold others (a module's counter, a shelf board): loose things rest on them while the object is in the world
@@ -159,8 +159,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const c of restingTops) if (x > c.minX && x < c.maxX && z > c.minZ && z < c.maxZ && world.has(c.objectId)) top = Math.max(top, c.top)
     return top
   }
-  const groundAt = (x: number, z: number): number =>
-    Math.max(x > arena.table.minX && x < arena.table.maxX && z > arena.table.minZ && z < arena.table.maxZ && tableOk() ? arena.table.top : 0, restingTopAt(x, z))
+  const sceneryTopAt = (x: number, z: number): number => {
+    let top = 0
+    for (const t of arena.tops) if (t.top > top && x > t.minX && x < t.maxX && z > t.minZ && z < t.maxZ && topOk(t)) top = t.top
+    return top
+  }
+  const groundAt = (x: number, z: number): number => Math.max(sceneryTopAt(x, z), restingTopAt(x, z))
 
   const ownFluids = !options.fluids
   const fluids = options.fluids ?? createFluids({ seed: 1, locale, liquids: options.liquids, groundAt })
@@ -474,12 +478,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const addArena = (): void => {
     for (const o of arena.objects) {
-      const root = buildFromSpec(THREE, o.spec, { colors: o.colors })
+      const root = o.build ? o.build(THREE) : buildFromSpec(THREE, o.spec, { colors: o.colors })
       root.position.set(o.position[0], o.position[1], o.position[2])
+      root.rotation.y = o.rotationY
       scene.add(root)
       root.updateMatrixWorld(true)
-      world.add(structuredCloneSpec(o.spec), { id: o.id, position: o.position })
-      registerEntry(o.id, o.id, root, o.spec, S.text[`arena.${o.id}`] ?? o.id, undefined, undefined, true, false)
+      world.add(structuredCloneSpec(o.spec), { id: o.id, position: o.position, ...(o.rotationY ? { rotation: [0, Math.sin(o.rotationY / 2), 0, Math.cos(o.rotationY / 2)] as [number, number, number, number] } : {}) })
+      registerEntry(o.id, o.id, root, o.spec, o.label ?? S.text[`arena.${o.id}`] ?? o.id, undefined, undefined, true, false)
     }
   }
   addArena()
@@ -1415,7 +1420,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   const TAP_ID = 'room_tap'
   const TAP_RATE = 0.25
-  fluids.addTap({ id: TAP_ID, position: arena.tapSpout, liquid: 'water', rate: TAP_RATE, temperature: 16, on: false })
+  if (arena.tapSpout) fluids.addTap({ id: TAP_ID, position: arena.tapSpout, liquid: 'water', rate: TAP_RATE, temperature: 16, on: false })
   const isTapOn = (): boolean => fluids.taps().some((x) => x.id === TAP_ID && x.on)
   const toggleTap = (on = !isTapOn()): boolean => {
     fluids.setTap(TAP_ID, on)

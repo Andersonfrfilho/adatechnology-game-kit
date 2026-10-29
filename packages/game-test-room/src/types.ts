@@ -62,6 +62,33 @@ export interface TestRoomItem {
   thumbnailCredit?: string
 }
 
+/**
+ * One piece of destructible scenery of the arena (the target wall, the table, the shelf, or any piece the host adds): a spec, where it stands and how it is drawn.
+ * Keyed by arena object id in `TestRoomOptions.scenery`.
+ */
+export interface SceneryObject {
+  /** What the destruction world is given. */
+  spec: DestructibleSpec
+  /** World position of the spec's origin. Required for a new id; for a default id it defaults to the object it replaces. */
+  position?: Vec3
+  /** Turn about the vertical axis, radians (default 0). */
+  rotationY?: number
+  /** Colour per part id, then per material id, for the default drawing (`buildFromSpec`). */
+  colors?: Record<string, number>
+  /**
+   * Draws the object: a group whose meshes are named by part id (and carry `userData.destructionPart`), in the space of the spec. Without it the room
+   * draws one plain mesh per part with `buildFromSpec`.
+   */
+  build?: (THREE: ThreeNamespace) => THREE_NS.Object3D
+  /** Name shown in the inspector and the log (default the translated name of a default id, else the id). */
+  label?: string
+  /**
+   * A top that loose things rest on (and liquids pool on) while that part stands: the part id and the height of its upper face in the spec's space.
+   * The rectangle is the part's footprint. Without it nothing rests on the object.
+   */
+  top?: { part: string; y: number }
+}
+
 export interface TestRoomOptions {
   THREE: ThreeNamespace
   /** Element the bench fills (canvas + HUD). */
@@ -95,6 +122,12 @@ export interface TestRoomOptions {
   maxCarryKg?: number
   /** Arena half size in metres (default 14). */
   arenaSize?: number
+  /**
+   * The destructible scenery of the arena, by object id. The defaults are `target_wall` (a brick wall of panels 11 m ahead of the start), `table` (with the
+   * water tap beside it) and `shelf`. A key that matches a default replaces it (the position defaults to the replaced one), `null` removes it, a new key adds
+   * a piece (its `position` is required). The player cannot walk through any of them: the collider is the footprint of the spec's parts.
+   */
+  scenery?: Record<string, SceneryObject | null>
   /** Spawn these catalogue ids on start, in a row in front of the player. */
   initial?: string[]
   /** Open on one catalogue group (`furniture`, `structure`, `weapons`…): see `TestRoom.openArea`. */
