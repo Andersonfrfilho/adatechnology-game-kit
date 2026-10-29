@@ -63,6 +63,14 @@ export interface ExplosivesText {
     fire_explode: string
     chain: string
     chain_explode: string
+    push_p13: string
+    push_grenade: string
+    push_found: string
+    push_told: string
+    push_outward: string
+    push_falloff: string
+    push_person: string
+    push_heavy: string
   }
 }
 
@@ -84,7 +92,7 @@ export const EXPLOSIVES_TEXT: Record<string, ExplosivesText> = {
     phases: { rest: 'At rest', leaking: 'Leaking gas', torch: 'Burning jet', primed: 'About to go off', exploded: 'Exploded' },
     rings: { lethal: 'lethal', injury: 'injury' },
     triggers: { shot: 'a bullet', fire: 'fire', explosion: 'another blast' },
-    things: { zombie: 'Zombie', survivor: 'Survivor', fridge: 'Fridge', kitchen_cabinet_base: 'Kitchen cabinet', stove: 'Stove', camp_table: 'Table' },
+    things: { zombie: 'Zombie', survivor: 'Survivor', fridge: 'Fridge', kitchen_cabinet_base: 'Kitchen cabinet', stove: 'Stove', camp_table: 'Table', can: 'Can of beans', bottle: 'Water bottle', chair: 'Chair' },
     verdicts: { wall_pieces: 'broke loose into {pieces} pieces and cracked ({n} marks)', lost_parts: 'lost {n} parts', dead: 'dead', hurt: 'hurt (vitality {vitality}%)', unhurt: 'unhurt', wall_broken: 'cracked and lost {n} brick panels', wall_cracked: 'cracked ({n} marks)', wall_intact: 'intact', burning: 'burning', standing: 'standing' },
     log: {
       leak_shot: 'Hole of {diameter} mm in the shell: gas leaking at {rate} l/s ({liters} l left in the cylinder)',
@@ -142,6 +150,14 @@ export const EXPLOSIVES_TEXT: Record<string, ExplosivesText> = {
       fire_explode: 'The cylinder in the fire exploded',
       chain: 'P13 cylinder: another blast next to it sets it off by the explosion chain',
       chain_explode: 'The second cylinder exploded after the first one',
+      push_p13: 'P13 blast: the loose items, the furniture and the people around it are thrown away from it, less the farther they stand',
+      push_grenade: 'Thrown M67 grenade: the loose items and the people around it are thrown away from it, less the farther they stand',
+      push_told: 'The explosion reached the host as an event',
+      push_found: '{n} bodies were laid around the blast to be measured ({kinds})',
+      push_outward: 'Every body inside the reach moved away from the blast ({moved} of {n}, {least} m at the least)',
+      push_falloff: '{what}: the nearer one moved more than the farther one ({near} m at {nearDistance} m, {far} m at {farDistance} m)',
+      push_person: '{who} at {distance} m was pushed {moved} m away',
+      push_heavy: '{what} (too heavy to grab, not fixed) was moved {moved} m by the blast',
     },
   },
   'pt-BR': {
@@ -161,7 +177,7 @@ export const EXPLOSIVES_TEXT: Record<string, ExplosivesText> = {
     phases: { rest: 'Em repouso', leaking: 'Vazando gás', torch: 'Jato em chamas', primed: 'Prestes a explodir', exploded: 'Explodiu' },
     rings: { lethal: 'letal', injury: 'ferimento' },
     triggers: { shot: 'um tiro', fire: 'fogo', explosion: 'outra explosão' },
-    things: { zombie: 'Zumbi', survivor: 'Sobrevivente', fridge: 'Geladeira', kitchen_cabinet_base: 'Armário de cozinha', stove: 'Fogão', camp_table: 'Mesa' },
+    things: { zombie: 'Zumbi', survivor: 'Sobrevivente', fridge: 'Geladeira', kitchen_cabinet_base: 'Armário de cozinha', stove: 'Fogão', camp_table: 'Mesa', can: 'Lata de feijão', bottle: 'Garrafa de água', chair: 'Cadeira' },
     verdicts: { wall_pieces: 'se soltou em {pieces} pedaços e trincou ({n} marcas)', lost_parts: 'perdeu {n} peças', dead: 'morto', hurt: 'ferido (vitalidade {vitality}%)', unhurt: 'ileso', wall_broken: 'trincou e perdeu {n} painéis de tijolo', wall_cracked: 'trincou ({n} marcas)', wall_intact: 'intacta', burning: 'pegando fogo', standing: 'de pé' },
     log: {
       leak_shot: 'Furo de {diameter} mm no casco: gás vazando a {rate} l/s ({liters} l no botijão)',
@@ -219,6 +235,14 @@ export const EXPLOSIVES_TEXT: Record<string, ExplosivesText> = {
       fire_explode: 'O botijão no fogo explodiu',
       chain: 'Botijão P13: outra explosão ao lado detona pela cadeia de explosão',
       chain_explode: 'O segundo botijão explodiu depois do primeiro',
+      push_p13: 'Explosão do P13: os itens soltos, os móveis e as pessoas em volta são jogados para longe, menos quanto mais longe estão',
+      push_grenade: 'Granada M67 arremessada: os itens soltos e as pessoas em volta são jogados para longe, menos quanto mais longe estão',
+      push_told: 'A explosão chegou ao host como evento',
+      push_found: '{n} corpos foram postos em volta da explosão para serem medidos ({kinds})',
+      push_outward: 'Todo corpo dentro do alcance se afastou da explosão ({moved} de {n}, no mínimo {least} m)',
+      push_falloff: '{what}: o mais perto andou mais que o mais longe ({near} m a {nearDistance} m, {far} m a {farDistance} m)',
+      push_person: '{who} a {distance} m foi empurrado {moved} m para longe',
+      push_heavy: '{what} (pesado demais para pegar, mas solto) foi movido {moved} m pela explosão',
     },
   },
 }

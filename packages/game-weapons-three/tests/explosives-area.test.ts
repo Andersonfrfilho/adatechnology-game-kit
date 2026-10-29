@@ -15,10 +15,30 @@ function stubRenderer(): THREE.WebGLRenderer {
   return { domElement: dom, shadowMap: { enabled: false, type: 0 }, setSize: () => undefined, setPixelRatio: () => undefined, render: () => undefined, dispose: () => undefined } as unknown as THREE.WebGLRenderer
 }
 
-function roomWithExplosives(locale = 'pt-BR'): { room: TestRoom; module: ReturnType<typeof createExplosivesTestModule> } {
+/** Plain stand-ins for the goods and the chair the push scenarios lay around the blast (the page brings the team's models; here a box of the real size is enough to be pushed). */
+const LOOSE_THINGS = [
+  { id: 'item_canned_beans', size: [0.08, 0.1, 0.08] },
+  { id: 'item_water_bottle', size: [0.07, 0.25, 0.07] },
+  { id: 'dining_chair', size: [0.45, 0.9, 0.45] },
+].map(({ id, size }) => ({
+  id,
+  name: id,
+  group: 'probe',
+  movable: true,
+  build: () => {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(size[0]!, size[1]!, size[2]!), new THREE.MeshStandardMaterial())
+    mesh.position.y = size[1]! / 2
+    mesh.userData.hollow = true
+    const group = new THREE.Group()
+    group.add(mesh)
+    return group
+  },
+}))
+
+function roomWithExplosives(locale = 'pt-BR', catalog: typeof LOOSE_THINGS = []): { room: TestRoom; module: ReturnType<typeof createExplosivesTestModule> } {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
+  const room = createTestRoom({ THREE, container, locale, catalog: catalog as never, renderer: stubRenderer(), ui: false })
   room.loadModule(createWeaponsTestModule({ locale, sound: false }))
   const module = createExplosivesTestModule({ locale, room: room as never })
   const report = room.loadModule(module)
@@ -65,5 +85,16 @@ describe('explosives area', () => {
     expect(report.results).toHaveLength(4)
     const failed = report.results.flatMap((r) => r.checks.filter((c) => !c.ok && !/zumbi|zombie|sobrevivente|survivor|parede|wall/i.test(c.label)).map((c) => `${r.id}: ${c.label}`))
     expect(failed).toEqual([])
+  })
+
+  it('an explosion throws the loose things around it away, the nearer ones faster (the P13 shot and a thrown M67)', async () => {
+    const { room } = roomWithExplosives('en', LOOSE_THINGS)
+    const ids = new Set(['explosives_push_p13', 'explosives_push_grenade'])
+    const report = await room.runScenarios(room.scenarios.filter((s) => ids.has(s.id)))
+    expect(report.results).toHaveLength(2)
+    const failed = report.results.flatMap((r) => r.checks.filter((c) => !c.ok).map((c) => `${r.id}: ${c.label}`))
+    expect(failed).toEqual([])
+    // the checks that were made: the three kinds, in both scenarios
+    for (const r of report.results) expect(r.checks.filter((c) => /the nearer one moved more/.test(c.label)).length).toBe(3)
   })
 })

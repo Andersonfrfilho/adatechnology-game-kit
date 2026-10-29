@@ -39,6 +39,7 @@ export interface ExplosivesRoom {
   }
   spawned(): ReadonlyArray<{ readonly objectId: string; readonly itemId: string; readonly root: unknown }>
   openArea(group: string): unknown
+  clear(): void
   spawn(itemId: string, position?: Vec3, rotationY?: number): { readonly objectId: string; readonly itemId: string; readonly root: unknown }
   setTool(weaponId: string): void
   waitUntilReady(maxSeconds?: number): number
@@ -64,6 +65,8 @@ export interface ExplosivesBench {
   /** The cylinder of the scene (the first one alive), with what the bench knows about it. */
   vessel(): VesselView | undefined
   /** The wall of the scene, the zombie and the survivor, as the aftermath reads them. */
+  /** The last explosion the host told (a part of the world or a thrown explosive): where, how strong and how far; undefined before the first, and after the area is cleared. */
+  lastBlast(): { readonly point: Vec3; readonly energy: number; readonly radius: number; readonly cause: string; readonly explosive?: string } | undefined
   witnesses(): Array<{ kind: 'person' | 'wall' | 'object'; id: string; itemId: string; distance: number; alive?: boolean; vitality?: number; broken?: number; marks?: number; pieces?: number }>
 }
 
@@ -167,6 +170,7 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
   let host: ModuleHost | null = null
   let strength = options.blastScale
   let inArea = false
+  let lastBlast: ReturnType<ExplosivesBench['lastBlast']>
   let ringsOn = true
   let initial = true
   let aftermathDue: Array<{ at: number; vessel: Vessel; point: Vec3 }> = []
@@ -676,6 +680,11 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
         offs.push(room.on('spawn', adopt))
         for (const spawned of room.spawned()) adopt(spawned)
       }
+      offs.push(
+        lent.on((event) => {
+          if (event.type === 'explosion') lastBlast = { point: event.point, energy: event.energy, radius: event.radius, cause: event.cause, ...(event.explosive === undefined ? {} : { explosive: event.explosive }) }
+        }),
+      )
       offs.push(lent.onFrame(frame))
       offs.push(lent.bench?.onChange(change) ?? (() => undefined))
       offs.push(
@@ -685,6 +694,7 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
           clearShells()
           wallParts.clear()
           aftermathDue = []
+          lastBlast = undefined
           inArea = false
         }) ?? (() => undefined),
       )
@@ -703,6 +713,7 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
       if (!v) return undefined
       return { objectId: v.objectId, leakAt: v.leakAt, litAt: v.litAt, explodedAt: v.explodedAt, cause: v.cause, valveOpen: v.valveOpen, lit: v.lit, exploded: v.exploded, point: v.leaks[v.leaks.length - 1]?.point }
     },
+    lastBlast: () => lastBlast,
     witnesses,
   }
 }
