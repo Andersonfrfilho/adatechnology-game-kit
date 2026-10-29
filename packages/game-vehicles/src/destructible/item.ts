@@ -5,6 +5,8 @@ export interface VehicleItemOptions {
   state?: BuildState
   /** Build in the light mode of the kit (`kit.lod`): fewer segments and no interior, for crowds and for budgets. Default off. */
   lod?: boolean
+  /** A registered damage scenario (id or name, e.g. the fleet's `burnt`) built into the vehicle, through `kit.build(key, state, { scenario })`. */
+  scenario?: string
 }
 
 export interface VehicleItem {
@@ -21,7 +23,8 @@ export interface VehicleItem {
  */
 export function buildVehicleItem(kit: VehicleKit, key: string, options: VehicleItemOptions = {}): VehicleItem {
   const THREE = kit.THREE
-  const vehicle = options.lod ? kit.build(key, options.state ?? 'intact', undefined, { lod: true }) : kit.build(key, options.state ?? 'intact')
+  const zoneState = options.scenario != null ? { scenario: options.scenario } : undefined
+  const vehicle = options.lod ? kit.build(key, options.state ?? 'intact', zoneState, { lod: true }) : kit.build(key, options.state ?? 'intact', zoneState)
   const m = vehicle.meta
   const root = new THREE.Group()
   root.name = key
