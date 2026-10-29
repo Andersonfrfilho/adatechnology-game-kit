@@ -12,6 +12,8 @@
 //   ?bench.<moduleId>=size=2;smoke=0   bench state of that module (the page keeps it up to date as the controls change)
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
+import { buildWallSpecimen } from '@adatechnology/game-floorplan-structure'
+import { buildSpecimenMeshes, furnitureSpec } from '@adatechnology/game-floorplan-three'
 import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
 
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
@@ -28,11 +30,39 @@ const arena = Number(params.get('arena'))
 const quality = ['low', 'medium', 'high'].includes(params.get('quality')) ? params.get('quality') : 'medium'
 const items = params.get('items')
 
+// The room's scenery is the kit's own pieces: the wall of the structure package (brick, plastered), and the team's table and bookcase.
+// `buildWallSpecimen` gives one part for a whole wall (a 10 m wall in `panels` is a single slab) and 1761 bricks in `units`, too many for the room (the page takes minutes to
+// load). So the 10 x 3 m wall is 8 x 6 cells of the same specimen, 1.25 x 0.5 m each (48 parts, like the wall it replaces): each cell is the specimen's own wall part
+// (plastered brick with its units and breach), the bottom row stands on the ground and the cells are bonded with mortar.
+function brickWall(cols, rows, cw, ch) {
+  const cell = buildWallSpecimen({ assembly: 'brick_wall_plastered', w: cw, h: ch }).parts.find((p) => p.id === 'wall_specimen')
+  const parts = []
+  const joints = []
+  const id = (c, r) => `brick_${r}_${c}`
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      parts.push({ ...structuredClone(cell), id: id(c, r), position: [(c - (cols - 1) / 2) * cw, ch / 2 + r * ch, 0], ...(r === 0 ? { anchored: true } : {}) })
+      if (c > 0) joints.push({ a: id(c - 1, r), b: id(c, r), kind: 'mortar' })
+      if (r > 0) joints.push({ a: id(c, r - 1), b: id(c, r), kind: 'mortar' })
+    }
+  }
+  return { name: 'brick wall', parts, joints, tags: ['structure'] }
+}
+const wallSpec = brickWall(8, 6, 1.25, 0.5)
+const table = furnitureSpec(THREE, 'dining_table', { w: 1.6, d: 0.8, h: 0.78, options: { chairs: false } })
+const shelf = furnitureSpec(THREE, 'bookcase')
+const scenery = {
+  target_wall: { spec: wallSpec, position: [0, 0, -11], build: (T) => buildSpecimenMeshes(T, wallSpec) },
+  table: { spec: table.spec, position: [3.5, 0, 0], build: table.build, top: table.top },
+  shelf: { spec: shelf.spec, position: [-3.5, 0, 0], build: shelf.build },
+}
+
 const room = createTestRoom({
   THREE,
   container: document.getElementById('app'),
   locale,
   catalog: [],
+  scenery,
   quality,
   arenaSize: arena >= 14 && arena <= 200 ? arena : undefined,
   ui: params.get('ui') !== '0',

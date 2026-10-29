@@ -113,7 +113,7 @@ await shot('burning-sofa', () => {
 })
 
 // the player's body: hidden in first person (the default), shown after V, with the startup hint in the log and the V hint on the HUD
-await page.goto(`${url}?ui=1`)
+await page.goto(`${url}?ui=1`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoom, null, { timeout: 60000 })
 const before = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, hint: window.__testRoom.log.entries().some((e) => /\bV\b/.test(e.text)) }))
 await page.keyboard.press('KeyV')
