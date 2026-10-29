@@ -390,12 +390,14 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         if (event.type === 'reload') lent.log(fill(event.phase === 'start' ? text.reloadStart : text.reloadEnd, { weapon: arsenal.name(event.weapon), ammo: tool.ammo, capacity: tool.capacity }), { weapon: event.weapon, phase: event.phase })
       })
       const offFrame = lent.onFrame((dt) => created.update(dt))
+      const offHands = lent.setHandTargets?.(() => created.handTargets())
       created.handle({ type: 'tool', weapon: lent.tool().weapon }, lent.tool())
       return () => {
         accessories.dispose()
         offBench?.()
         offEvents()
         offFrame()
+        offHands?.()
         created.dispose()
         audio?.dispose()
         fx = null

@@ -37,22 +37,54 @@ describe('the effects of the weapon in the hands', () => {
     for (const effect of VIEWMODEL_EFFECTS) expect(GAME_EFFECTS[effect.id]).toBe(effect)
   })
 
-  it('make a flash of one open cone, four small cones and a core, six spheres of smoke, and a light of 4 k at 2 k metres', () => {
+  it('make a flash of one open cone, four small cones and a core, two thin spheres of smokeless smoke by default, and a light of 4 k at 2 k metres', () => {
     const vfx = world()
     expect(vfx.play('viewmodel_muzzle_flash', [1, 1.5, -2], { orientation: LEVEL, seed: 3, values: { size: 1.2 } })).not.toBeNull()
     const all = particles(vfx)
-    expect(all.map((piece) => piece.shape)).toEqual(['cone_open', 'cone', 'cone', 'cone', 'cone', 'sphere', 'sphere', 'sphere', 'sphere', 'sphere', 'sphere', 'sphere'])
+    expect(all.map((piece) => piece.shape)).toEqual(['cone_open', 'cone', 'cone', 'cone', 'cone', 'sphere', 'sphere', 'sphere'])
     const [cone, ...rest] = all
     expect([cone!.radius, cone!.height, cone!.segments, cone!.segments2]).toEqual([0.013 * 1.2, 0.085 * 1.2, 10, 1])
     for (const spike of rest.slice(0, 4)) expect([spike.radius, spike.height, spike.segments, spike.segments2]).toEqual([0.005 * 1.2, 0.04 * 1.2, 6, 1])
     const core = rest[4]!
     expect([core.radius, core.segments, core.segments2, core.color, core.additive]).toEqual([0.016 * 1.2, 12, 8, 0xfff1c0, true])
-    for (const puff of rest.slice(5)) expect([puff.radius, puff.segments, puff.segments2, puff.color, puff.lit, puff.additive]).toEqual([0.013 * 1.2, 10, 8, 0x8a8a86, true, false])
+    for (const puff of rest.slice(5)) expect([puff.radius, puff.segments, puff.segments2, puff.color, puff.lit, puff.additive, puff.startOpacity, puff.grow]).toEqual([0.01 * 1.2, 10, 8, 0x8a8a86, true, false, 0.14, 2.1])
     const light = vfx.workshop().lights.lights.find((source) => source.intensity > 0)!
     expect(light.intensity).toBeCloseTo(4.8, 10)
     expect(light.distance).toBeCloseTo(2.4, 10)
     expect(light.steady).toBe(true)
     expect(light.color).toBe(0xffb060)
+  })
+
+  it('drives the puffs and flash scale from values (black powder, suppressed, none)', () => {
+    const bp = world()
+    bp.play('viewmodel_muzzle_flash', [0, 0, 0], {
+      orientation: LEVEL,
+      seed: 3,
+      values: { size: 1, puffs: 8, radius: 0.022, opacity: 0.55, life: 5.5, drift: 0.12, rise: 0.04, growth: 2.8, flash: 1 },
+    })
+    const bpPuffs = particles(bp).slice(6)
+    expect(bpPuffs).toHaveLength(8)
+    for (const puff of bpPuffs) expect([puff.radius, puff.startOpacity, puff.grow]).toEqual([0.022, 0.55, 2.8])
+
+    const sup = world()
+    sup.play('viewmodel_muzzle_flash', [0, 0, 0], {
+      orientation: LEVEL,
+      seed: 3,
+      values: { size: 1, puffs: 1, radius: 0.006, opacity: 0.08, life: 0.5, drift: 0.15, rise: 0.05, growth: 2.1, flash: 0.15 },
+    })
+    expect(particles(sup)).toHaveLength(7)
+    expect(particles(sup)[0]!.radius).toBeCloseTo(0.013 * 0.15, 10)
+    expect(sup.workshop().lights.lights.find((source) => source.intensity > 0)!.intensity).toBeCloseTo(4 * 0.15, 10)
+    expect(particles(sup)[6]!.startOpacity).toBe(0.08)
+
+    const none = world()
+    none.play('viewmodel_muzzle_flash', [0, 0, 0], {
+      orientation: LEVEL,
+      seed: 3,
+      values: { size: 1, puffs: 0, radius: 0, opacity: 0, life: 0, drift: 0, rise: 0, growth: 0, flash: 0 },
+    })
+    expect(particles(none)).toHaveLength(0)
+    expect(none.workshop().lights.lights.every((source) => source.intensity === 0)).toBe(true)
   })
 
   it('grows the flash from 0.6 by 0.9 over 55 ms and ends it with the ramp; the light holds and goes out with it', () => {
@@ -67,7 +99,7 @@ describe('the effects of the weapon in the hands', () => {
     vfx.update(0.0275)
     expect(flashes()).toHaveLength(0)
     expect(engine.lights.lights.every((source) => source.intensity === 0)).toBe(true)
-    expect(particles(vfx)).toHaveLength(6)
+    expect(particles(vfx)).toHaveLength(2)
   })
 
   it('draws the flash numbers in the gallery order: the angle of each small cone, the roll of the group, then the velocity and life of each puff', () => {
@@ -87,8 +119,8 @@ describe('the effects of the weapon in the hands', () => {
     const rolled = rest[0]!.frame
     near(rolled, [Math.sin(roll / 2), 0, 0, Math.cos(roll / 2)], 12)
     for (const puff of rest.slice(5)) {
-      const velocity = [0.15 + stream.next() * 0.35, 0.03 + stream.next() * 0.12, (stream.next() - 0.5) * 0.14]
-      const life = 1.3 + stream.next() * 0.6
+      const velocity = [0.2 + stream.next() * 0.1, 0.06 + stream.next() * 0.04, (stream.next() - 0.5) * 0.06]
+      const life = 0.7 + stream.next() * (0.7 * 0.3)
       near([puff.vx, puff.vy, puff.vz], velocity, 12)
       expect(puff.life).toBeCloseTo(life, 12)
     }
@@ -100,7 +132,7 @@ describe('the effects of the weapon in the hands', () => {
     const reference = lehmer(4)
     for (let index = 0; index < 5; index++) reference.next()
     for (const puff of particles(vfx).slice(6)) {
-      const local: [number, number, number] = [0.15 + reference.next() * 0.35, 0.03 + reference.next() * 0.12, (reference.next() - 0.5) * 0.14]
+      const local: [number, number, number] = [0.2 + reference.next() * 0.1, 0.06 + reference.next() * 0.04, (reference.next() - 0.5) * 0.06]
       reference.next()
       near([puff.vx, puff.vy, puff.vz], turned(AIMED, local), 12)
     }

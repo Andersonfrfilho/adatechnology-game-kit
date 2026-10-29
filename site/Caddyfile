@@ -2,12 +2,19 @@
 	root * /srv
 	encode zstd gzip
 
-	@html {
-		path / *.html
+	# a page (/, /area, /area/, *.html) revalidates by ETag, or a deploy stays hidden behind the day-long asset cache
+	@asset {
+		path_regexp \.[A-Za-z0-9]+$
+		not path *.html
 	}
-	header @html Cache-Control "public, max-age=300"
-	@other not path / *.html
-	header @other Cache-Control "public, max-age=86400"
+	header @asset Cache-Control "public, max-age=86400"
+	@page {
+		not {
+			path_regexp \.[A-Za-z0-9]+$
+			not path *.html
+		}
+	}
+	header @page Cache-Control "no-cache"
 
 	try_files {path} {path}/index.html
 	file_server

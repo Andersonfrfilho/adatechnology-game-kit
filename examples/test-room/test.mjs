@@ -129,6 +129,48 @@ const after = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, v
 const bodyOk = before.mode === 'first' && before.visible === false && before.hint && after.mode === 'third' && after.visible === true && /V:/.test(after.help)
 console.log(`${bodyOk ? 'PASS' : 'FAIL'}  the player body: hidden in first person, shown after V, hint on the HUD and in the log`, JSON.stringify({ before, after: { mode: after.mode, visible: after.visible } }))
 
+
+// the first-person arms and the strikes, in both languages: bare hands, fists, a pistol and a rifle held, the rifle mid-reload, the punch, the shove and the kick at their impact, and the punch seen from behind
+const fpSteps = [
+  ['bare-hands', () => { S.r.setTool('hand'); S.run(60) }],
+  ['fists', () => { S.r.setTool('fists'); S.run(60) }],
+  ['pistol', () => { S.r.setTool('glock_17'); S.run(60) }],
+  ['rifle', () => { S.r.setTool('ak_47'); S.run(60) }],
+  ['m4', () => { S.r.setTool('colt_m4a1'); S.run(60) }],
+  ['rifle-reload', () => { S.r.use(); S.run(12); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' })); S.run(22); S.r.pause() }],
+  ['pistol-reload', () => { S.r.resume(); S.run(60); S.r.setTool('glock_17'); S.run(60); S.r.use(); S.run(12); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR' })); S.run(22); S.r.pause() }],
+  ['punch', () => { S.r.resume(); S.run(60); S.r.setTool('fists'); S.run(40); S.r.use(); S.run(10); S.r.pause() }],
+  ['shove', () => { S.r.resume(); S.run(60); S.r.setTool('shove'); S.run(40); S.r.use(); S.run(16); S.r.pause() }],
+  ['kick', () => { S.r.resume(); S.run(60); S.r.setTool('hand'); S.run(40); window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyV', shiftKey: true })); S.run(19); S.r.pause() }],
+  ['punch-third', () => { S.r.resume(); S.run(60); S.r.setCameraMode('third'); S.r.setTool('fists'); S.run(60); S.r.use(); S.run(10); S.r.pause() }],
+]
+const fpExpect = { 'bare-hands': 'relaxed', fists: 'fists', pistol: 'hold', rifle: 'hold', m4: 'hold', 'rifle-reload': 'hold', 'pistol-reload': 'hold', punch: 'fists', shove: 'relaxed', kick: 'relaxed' }
+const fpPlaying = { punch: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick', 'punch-third': 'punch_right' }
+let fpOk = true
+for (const lang of ['pt-BR', 'en']) {
+  await page.goto(`${url}?ui=0&lang=${lang}`, { timeout: 180000 })
+  await page.waitForFunction(() => window.__furnitureReport, null, { timeout: 90000 })
+  await page.evaluate(() => {
+    const r = window.__testRoom
+    r.clear()
+    for (let i = 0; i < 600; i++) r.update(1 / 60)
+    window.S = { r, run: (n) => { for (let i = 0; i < n; i++) r.update(1 / 60) }, look: () => r.look([-9, 1.7, 9], [-9, 1.5, -10]) }
+    window.S.look()
+    window.S.run(10)
+  })
+  for (const [name, act] of fpSteps) {
+    const seen = await page.evaluate(`(() => { (${act.toString()})(); const a = window.__testRoom.avatar; return { stance: a.arms?.stance ?? null, playing: a.arms?.playing ?? null, visible: a.firstPerson?.root.visible ?? null, strikes: window.__testRoom.log.entries().filter((e) => /impact in|impacto em/.test(e.text)).length } })()`)
+    await page.waitForTimeout(150)
+    await page.screenshot({ path: join(shotsDir, `fp-${name}-${lang}.png`) })
+    const stanceOk = fpExpect[name] === undefined || seen.stance === fpExpect[name]
+    const playOk = fpPlaying[name] === undefined || seen.playing === fpPlaying[name]
+    const visibleOk = name === 'punch-third' ? seen.visible === false : seen.visible === true
+    if (!(stanceOk && playOk && visibleOk)) fpOk = false
+    console.log(`${stanceOk && playOk && visibleOk ? 'PASS' : 'FAIL'}  [${lang}] first-person arms: ${name}`, JSON.stringify(seen))
+  }
+}
+if (!fpOk) report.failed++
+
 // the behaviour log of a full run
 await page.goto(`${url}?scenario=all`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoomReport, null, { timeout: 600000 })

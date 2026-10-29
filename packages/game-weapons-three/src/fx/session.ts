@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { CartridgeDims, CaseType, WeaponDef } from '@adatechnology/game-weapons'
+import type { CaliberDef, CartridgeDims, CaseType, WeaponDef } from '@adatechnology/game-weapons'
 import type { WeaponModel } from '../models'
 import type { CartridgeShape } from '../models/cartridge'
 import type { AttachmentRig } from '../models/attachments/fit'
@@ -27,6 +27,7 @@ export interface FxWorld {
 export interface Session {
   readonly id: string
   readonly def: WeaponDef
+  readonly caliber: CaliberDef | undefined
   readonly model: WeaponModel
   /** How much the model is scaled down to sit in the hands. */
   readonly holderScale: number
@@ -39,6 +40,8 @@ export interface Session {
   /** The accessories drawn on the model, and what was fitted when they were last synced (to see a change). */
   attachments: AttachmentRig | null
   attachmentsSignature: string
+  /** Whether a suppressor is fitted for the current shot. */
+  suppressed: boolean
 }
 
 /** World position of a part of the model. */

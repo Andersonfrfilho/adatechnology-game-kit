@@ -6176,9 +6176,9 @@
         "teamBox": [
           1,
           2,
-          0.61
+          0.601
         ],
-        "scale": 0.1
+        "scale": 0.099945
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6189,9 +6189,9 @@
         "teamBox": [
           1.5,
           0.7,
-          0.1
+          0.102
         ],
-        "scale": 0.1
+        "scale": 0.099342
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6200,11 +6200,11 @@
       "value": {
         "teamId": "batata",
         "teamBox": [
-          2,
-          0.902,
-          1.402
+          1.9511,
+          0.9,
+          1.3608
         ],
-        "scale": 0.1
+        "scale": 0.101787
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6215,7 +6215,7 @@
         "teamBox": [
           2,
           0.5,
-          1.01
+          1
         ],
         "scale": 0.1
       },
@@ -6230,7 +6230,7 @@
           1.5,
           0.61
         ],
-        "scale": 0.1
+        "scale": 0.099451
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6240,7 +6240,7 @@
         "teamId": "carne_bovina",
         "teamBox": [
           2,
-          0.495,
+          0.5,
           1.5
         ],
         "scale": 0.1
@@ -6266,10 +6266,10 @@
         "teamId": "charque",
         "teamBox": [
           2.5,
-          0.25,
+          0.251,
           1.5
         ],
-        "scale": 0.1
+        "scale": 0.099867
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6278,11 +6278,11 @@
       "value": {
         "teamId": "conserva",
         "teamBox": [
-          0.908,
+          0.904,
           1.3,
-          0.908
+          0.904
         ],
-        "scale": 0.1
+        "scale": 0.099705
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6292,7 +6292,7 @@
         "teamId": "ovos",
         "teamBox": [
           2.5,
-          0.71,
+          0.7,
           1
         ],
         "scale": 0.1
@@ -6306,9 +6306,9 @@
         "teamBox": [
           1.5,
           2.5,
-          0.61
+          0.601
         ],
-        "scale": 0.1
+        "scale": 0.099945
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6319,7 +6319,7 @@
         "teamBox": [
           1,
           2,
-          0.61
+          0.6
         ],
         "scale": 0.1
       },
@@ -6331,8 +6331,8 @@
         "teamId": "frango",
         "teamBox": [
           2.6,
-          1.002,
-          1.702
+          1,
+          1.7
         ],
         "scale": 0.1
       },
@@ -6344,10 +6344,10 @@
         "teamId": "laranja",
         "teamBox": [
           0.75,
-          0.75,
+          0.7518,
           0.75
         ],
-        "scale": 0.1
+        "scale": 0.099921
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6357,10 +6357,10 @@
         "teamId": "leite_condensado",
         "teamBox": [
           0.734,
-          1,
+          1.004,
           0.734
         ],
-        "scale": 0.1
+        "scale": 0.099504
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6371,9 +6371,9 @@
         "teamBox": [
           1,
           2.5,
-          0.402
+          0.405
         ],
-        "scale": 0.1
+        "scale": 0.099587
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6384,9 +6384,9 @@
         "teamBox": [
           1.2,
           1.6,
-          0.3
+          0.308
         ],
-        "scale": 0.1
+        "scale": 0.099127
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6395,11 +6395,11 @@
       "value": {
         "teamId": "mandioca",
         "teamBox": [
-          4,
-          0.7,
-          0.7
+          4.0317,
+          0.7121,
+          0.71
         ],
-        "scale": 0.1
+        "scale": 0.098701
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6412,7 +6412,7 @@
           0.85,
           0.734
         ],
-        "scale": 0.1
+        "scale": 0.099636
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6421,11 +6421,11 @@
       "value": {
         "teamId": "mortadela",
         "teamBox": [
-          1.5,
+          1.516,
           0.6,
           0.5
         ],
-        "scale": 0.1
+        "scale": 0.099647
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6434,11 +6434,11 @@
       "value": {
         "teamId": "peixe_fresco",
         "teamBox": [
-          3,
+          3.0071,
           0.6,
-          1.01
+          1
         ],
-        "scale": 0.1
+        "scale": 0.099921
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6447,11 +6447,11 @@
       "value": {
         "teamId": "peixe_salgado",
         "teamBox": [
-          2.5,
-          0.3,
-          1
+          2.487,
+          0.291,
+          0.98
         ],
-        "scale": 0.1
+        "scale": 0.101878
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6460,11 +6460,11 @@
       "value": {
         "teamId": "banana",
         "teamBox": [
-          3,
-          1.3,
-          1.7
+          3.0041,
+          1.2881,
+          1.6943
         ],
-        "scale": 0.1
+        "scale": 0.100373
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6473,11 +6473,11 @@
       "value": {
         "teamId": "mel",
         "teamBox": [
-          0.808,
+          0.804,
           1,
-          0.808
+          0.804
         ],
-        "scale": 0.1
+        "scale": 0.099668
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6487,7 +6487,7 @@
         "teamId": "pao_forma",
         "teamBox": [
           3,
-          1.01,
+          1,
           1
         ],
         "scale": 0.1
@@ -6499,11 +6499,11 @@
       "value": {
         "teamId": "queijo",
         "teamBox": [
-          1.502,
-          0.402,
-          1
+          1.4941,
+          0.405,
+          0.981
         ],
-        "scale": 0.1
+        "scale": 0.100355
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6514,9 +6514,9 @@
         "teamBox": [
           1.9,
           1,
-          0.61
+          0.602
         ],
-        "scale": 0.1
+        "scale": 0.099889
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6527,9 +6527,9 @@
         "teamBox": [
           1.8,
           2.6,
-          0.71
+          0.711
         ],
-        "scale": 0.1
+        "scale": 0.099482
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6539,10 +6539,10 @@
         "teamId": "sal",
         "teamBox": [
           0.704,
-          1.6,
+          1.61,
           0.704
         ],
-        "scale": 0.1
+        "scale": 0.099414
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6551,11 +6551,11 @@
       "value": {
         "teamId": "salgadinho",
         "teamBox": [
-          2.002,
+          2,
           2.8,
-          0.602
+          0.601
         ],
-        "scale": 0.1
+        "scale": 0.099945
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6568,7 +6568,7 @@
           0.85,
           0.734
         ],
-        "scale": 0.1
+        "scale": 0.099636
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6594,7 +6594,7 @@
           2.6,
           0.704
         ],
-        "scale": 0.1
+        "scale": 0.099621
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6607,7 +6607,7 @@
           1.2,
           0.664
         ],
-        "scale": 0.1
+        "scale": 0.099598
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6620,7 +6620,7 @@
           1.35,
           0.584
         ],
-        "scale": 0.1
+        "scale": 0.099543
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6631,9 +6631,9 @@
         "teamBox": [
           1.9,
           3.3,
-          1.5
+          1.501
         ],
-        "scale": 0.1
+        "scale": 0.099978
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6646,7 +6646,7 @@
           1.83,
           0.664
         ],
-        "scale": 0.1
+        "scale": 0.099598
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6655,11 +6655,11 @@
       "value": {
         "teamId": "leite",
         "teamBox": [
-          0.702,
+          0.7,
           2,
-          0.702
+          0.704
         ],
-        "scale": 0.1
+        "scale": 0.09981
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6672,7 +6672,7 @@
           1.2,
           0.664
         ],
-        "scale": 0.1
+        "scale": 0.099598
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6683,9 +6683,9 @@
         "teamBox": [
           0.52,
           1,
-          0.37
+          0.3715
         ],
-        "scale": 0.1
+        "scale": 0.099865
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6696,9 +6696,9 @@
         "teamBox": [
           0.764,
           3,
-          0.764
+          0.767
         ],
-        "scale": 0.1
+        "scale": 0.099521
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6720,11 +6720,11 @@
       "value": {
         "teamId": "agua_suja",
         "teamBox": [
-          0.66,
+          0.664,
           1.83,
-          0.66
+          0.664
         ],
-        "scale": 0.1
+        "scale": 0.099598
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6734,10 +6734,10 @@
         "teamId": "analgesico",
         "teamBox": [
           0.6,
-          0.2,
+          0.201,
           0.4
         ],
-        "scale": 0.1
+        "scale": 0.099834
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6746,11 +6746,11 @@
       "value": {
         "teamId": "opioide",
         "teamBox": [
-          0.952,
+          0.95,
           0.5,
-          0.152
+          0.1525
         ],
-        "scale": 0.1
+        "scale": 0.099451
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6761,9 +6761,9 @@
         "teamBox": [
           0.95,
           0.5,
-          0.15
+          0.1525
         ],
-        "scale": 0.1
+        "scale": 0.099451
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6774,9 +6774,9 @@
         "teamBox": [
           0.8,
           0.5,
-          0.15
+          0.1525
         ],
-        "scale": 0.1
+        "scale": 0.099451
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6785,9 +6785,9 @@
       "value": {
         "teamId": "ceftriaxona",
         "teamBox": [
-          1.002,
+          1,
           0.6,
-          0.302
+          0.3
         ],
         "scale": 0.1
       },
@@ -6800,9 +6800,9 @@
         "teamBox": [
           0.9,
           0.5,
-          0.15
+          0.1525
         ],
-        "scale": 0.1
+        "scale": 0.099451
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6813,9 +6813,9 @@
         "teamBox": [
           0.6,
           0.95,
-          0.25
+          0.2515
         ],
-        "scale": 0.1
+        "scale": 0.099801
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6826,9 +6826,9 @@
         "teamBox": [
           1,
           0.6,
-          0.15
+          0.1516
         ],
-        "scale": 0.1
+        "scale": 0.099647
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6838,7 +6838,7 @@
         "teamId": "esparadrapo",
         "teamBox": [
           0.5,
-          0.252,
+          0.25,
           0.5
         ],
         "scale": 0.1
@@ -6852,9 +6852,9 @@
         "teamBox": [
           1,
           1,
-          0.15
+          0.1526
         ],
-        "scale": 0.1
+        "scale": 0.099429
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6863,11 +6863,11 @@
       "value": {
         "teamId": "pvpi",
         "teamBox": [
-          0.45,
+          0.451,
           1.1,
-          0.356
+          0.3563
         ],
-        "scale": 0.1
+        "scale": 0.099335
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6878,9 +6878,9 @@
         "teamBox": [
           1.5,
           0.8,
-          0.3
+          0.305
         ],
-        "scale": 0.1
+        "scale": 0.099451
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6889,11 +6889,11 @@
       "value": {
         "teamId": "luva_proc",
         "teamBox": [
-          1,
+          1.0104,
           1.2,
-          0.1
+          0.1005
         ],
-        "scale": 0.1
+        "scale": 0.09949
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6903,10 +6903,10 @@
         "teamId": "n95",
         "teamBox": [
           1.5,
-          1.1,
+          1.1007,
           0.25
         ],
-        "scale": 0.1
+        "scale": 0.099978
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6915,9 +6915,9 @@
       "value": {
         "teamId": "vitamina",
         "teamBox": [
-          0.508,
+          0.5,
           0.9,
-          0.508
+          0.5
         ],
         "scale": 0.1
       },
@@ -6928,9 +6928,9 @@
       "value": {
         "teamId": "remedio_continuo",
         "teamBox": [
-          0.458,
+          0.45,
           0.9,
-          0.458
+          0.45
         ],
         "scale": 0.1
       },
@@ -6943,9 +6943,9 @@
         "teamBox": [
           0.9,
           1.2,
-          0.1
+          0.1005
         ],
-        "scale": 0.1
+        "scale": 0.099834
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6969,9 +6969,9 @@
         "teamBox": [
           1.5,
           0.9,
-          0.506
+          0.504
         ],
-        "scale": 0.1
+        "scale": 0.099735
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -6995,9 +6995,9 @@
         "teamBox": [
           4.6,
           1.1,
-          0.1
+          0.1005
         ],
-        "scale": 0.1
+        "scale": 0.099834
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7007,10 +7007,10 @@
         "teamId": "termometro",
         "teamBox": [
           1.2,
-          0.2,
+          0.198,
           0.3
         ],
-        "scale": 0.1
+        "scale": 0.100336
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7019,11 +7019,11 @@
       "value": {
         "teamId": "alcool70",
         "teamBox": [
-          0.7,
-          2.025,
-          0.506
+          0.702,
+          2,
+          0.5012
         ],
-        "scale": 0.1
+        "scale": 0.099823
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7032,11 +7032,11 @@
       "value": {
         "teamId": "abridor",
         "teamBox": [
-          1.4,
-          0.4,
-          0.25
+          14,
+          4,
+          2.5
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7045,11 +7045,11 @@
       "value": {
         "teamId": "alicate",
         "teamBox": [
-          2,
-          0.302,
-          0.7
+          20,
+          3,
+          7
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7058,11 +7058,11 @@
       "value": {
         "teamId": "corta_vergalhao",
         "teamBox": [
+          60,
           6,
-          0.602,
-          1.5
+          15
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7071,11 +7071,11 @@
       "value": {
         "teamId": "balde",
         "teamBox": [
-          2.804,
-          2.7,
-          2.804
+          28,
+          27,
+          28
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7084,11 +7084,11 @@
       "value": {
         "teamId": "binoculo",
         "teamBox": [
-          1.8,
-          1.5,
-          1.211
+          18,
+          15,
+          12
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7097,11 +7097,11 @@
       "value": {
         "teamId": "fosforo",
         "teamBox": [
-          0.502,
-          0.15,
-          0.355
+          5,
+          1.5,
+          3.5
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7110,11 +7110,11 @@
       "value": {
         "teamId": "canivete",
         "teamBox": [
-          1.1,
-          0.22,
-          0.32
+          11,
+          2.2,
+          3.2
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7123,11 +7123,11 @@
       "value": {
         "teamId": "chave_fenda",
         "teamBox": [
-          2.2,
-          0.4,
-          0.4
+          22,
+          4,
+          4
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7136,11 +7136,11 @@
       "value": {
         "teamId": "chave_inglesa",
         "teamBox": [
-          2.5,
-          0.2,
-          0.6
+          25,
+          2,
+          6
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7149,11 +7149,11 @@
       "value": {
         "teamId": "enxada",
         "teamBox": [
-          13.5,
-          0.6,
-          1.7
+          135,
+          6,
+          17
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7162,11 +7162,11 @@
       "value": {
         "teamId": "extintor",
         "teamBox": [
-          1.6,
-          4.8,
-          1.6
+          16.0794,
+          48,
+          16
         ],
-        "scale": 0.1
+        "scale": 0.009984
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7175,11 +7175,11 @@
       "value": {
         "teamId": "silver_tape",
         "teamBox": [
-          1,
-          0.502,
-          1
+          10,
+          5,
+          10
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7188,11 +7188,11 @@
       "value": {
         "teamId": "fogareiro",
         "teamBox": [
-          1.8,
-          1,
-          1.1
+          18,
+          10,
+          11
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7201,11 +7201,11 @@
       "value": {
         "teamId": "isqueiro",
         "teamBox": [
-          0.25,
-          0.8,
-          0.12
+          2.5,
+          8,
+          1.2
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7214,11 +7214,11 @@
       "value": {
         "teamId": "kit_chaveiro",
         "teamBox": [
-          1,
-          0.7,
-          0.2
+          10,
+          7,
+          2
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7227,11 +7227,11 @@
       "value": {
         "teamId": "kit_costura",
         "teamBox": [
-          0.9,
-          0.5,
-          0.3
+          9,
+          5,
+          3
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7240,11 +7240,11 @@
       "value": {
         "teamId": "macaco",
         "teamBox": [
-          3,
-          1.1,
-          1.1
+          30,
+          11,
+          11
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7253,11 +7253,11 @@
       "value": {
         "teamId": "kit_mecanico",
         "teamBox": [
-          4,
-          2,
-          2
+          40,
+          20,
+          19.8
         ],
-        "scale": 0.1
+        "scale": 0.010034
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7266,11 +7266,11 @@
       "value": {
         "teamId": "macarico",
         "teamBox": [
-          1.5,
-          4.2,
-          1.5
+          15.1,
+          42,
+          15
         ],
-        "scale": 0.1
+        "scale": 0.009978
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7279,11 +7279,11 @@
       "value": {
         "teamId": "solda",
         "teamBox": [
-          3,
-          2.2,
-          1.3
+          30,
+          22,
+          12.9
         ],
-        "scale": 0.1
+        "scale": 0.010026
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7292,11 +7292,11 @@
       "value": {
         "teamId": "panela",
         "teamBox": [
-          2.5,
-          1.5,
-          2.5
+          25,
+          15,
+          25
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7305,11 +7305,11 @@
       "value": {
         "teamId": "parafusadeira",
         "teamBox": [
-          2.2,
-          2,
-          0.7
+          22,
+          20,
+          7
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7318,11 +7318,11 @@
       "value": {
         "teamId": "pederneira",
         "teamBox": [
-          1.1,
-          0.202,
-          0.152
+          11.1,
+          2,
+          1.5
         ],
-        "scale": 0.1
+        "scale": 0.00997
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7331,11 +7331,11 @@
       "value": {
         "teamId": "amolador",
         "teamBox": [
-          2.002,
-          0.5,
-          0.252
+          20,
+          5,
+          2.5
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7344,11 +7344,11 @@
       "value": {
         "teamId": "pa",
         "teamBox": [
-          11,
-          0.7,
-          2.2
+          110.3,
+          7,
+          22
         ],
-        "scale": 0.1
+        "scale": 0.009991
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7357,11 +7357,11 @@
       "value": {
         "teamId": "serra_arco",
         "teamBox": [
-          4.2,
-          0.3,
-          1.2
+          42,
+          3,
+          12
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7370,11 +7370,11 @@
       "value": {
         "teamId": "serrote",
         "teamBox": [
-          5,
-          0.352,
-          1.3
+          50.01,
+          3.5,
+          13.021
         ],
-        "scale": 0.1
+        "scale": 0.009994
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7383,11 +7383,11 @@
       "value": {
         "teamId": "tesoura",
         "teamBox": [
-          1.8,
-          0.152,
-          0.7
+          18,
+          1.5,
+          7
         ],
-        "scale": 0.1
+        "scale": 0.01
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7396,11 +7396,11 @@
       "value": {
         "teamId": "arco",
         "teamBox": [
-          13,
-          2,
+          12.9812,
+          1.98,
           0.5
         ],
-        "scale": 0.1
+        "scale": 0.100385
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7411,9 +7411,9 @@
         "teamBox": [
           7,
           1.2,
-          8
+          8.0191
         ],
-        "scale": 0.1
+        "scale": 0.09992
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7422,11 +7422,11 @@
       "value": {
         "teamId": "cano",
         "teamBox": [
-          8,
+          8.01,
           0.354,
           0.354
         ],
-        "scale": 0.1
+        "scale": 0.099204
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7436,7 +7436,7 @@
         "teamId": "cutelo",
         "teamBox": [
           3.3,
-          0.302,
+          0.3,
           1.2
         ],
         "scale": 0.1
@@ -7448,11 +7448,11 @@
       "value": {
         "teamId": "estilingue",
         "teamBox": [
-          1.3,
-          1.5,
+          1.3013,
+          1.5055,
           0.252
         ],
-        "scale": 0.1
+        "scale": 0.099578
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7461,11 +7461,11 @@
       "value": {
         "teamId": "faca_cozinha",
         "teamBox": [
-          2.5,
-          0.302,
-          0.4
+          2.5028,
+          0.3,
+          0.404
         ],
-        "scale": 0.1
+        "scale": 0.099632
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7474,11 +7474,11 @@
       "value": {
         "teamId": "faca_tatica",
         "teamBox": [
-          2.6,
+          2.6028,
           0.282,
-          0.45
+          0.454
         ],
-        "scale": 0.1
+        "scale": 0.099433
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7488,8 +7488,8 @@
         "teamId": "flecha",
         "teamBox": [
           7,
-          0.252,
-          0.402
+          0.25,
+          0.4
         ],
         "scale": 0.1
       },
@@ -7500,11 +7500,11 @@
       "value": {
         "teamId": "foice",
         "teamBox": [
-          4,
+          4.0085,
           0.352,
-          3.5
+          3.4971
         ],
-        "scale": 0.1
+        "scale": 0.099767
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7539,11 +7539,11 @@
       "value": {
         "teamId": "machadinha",
         "teamBox": [
-          3.5,
+          3.5016,
           0.5,
-          1.3
+          1.3047
         ],
-        "scale": 0.1
+        "scale": 0.099866
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7580,9 +7580,9 @@
         "teamBox": [
           9,
           0.4,
-          3.5
+          3.5352
         ],
-        "scale": 0.1
+        "scale": 0.099667
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7595,7 +7595,7 @@
           0.704,
           0.704
         ],
-        "scale": 0.1
+        "scale": 0.099621
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7617,11 +7617,11 @@
       "value": {
         "teamId": "arame",
         "teamBox": [
-          1.4,
-          0.502,
-          1.4
+          1.404,
+          0.5,
+          1.404
         ],
-        "scale": 0.1
+        "scale": 0.09981
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7643,11 +7643,11 @@
       "value": {
         "teamId": "cacos",
         "teamBox": [
-          1.2,
-          0.5,
-          1
+          1.205,
+          0.5149,
+          1.0049
         ],
-        "scale": 0.1
+        "scale": 0.098729
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7670,10 +7670,10 @@
         "teamId": "cimento",
         "teamBox": [
           5,
-          1.01,
+          1.011,
           3
         ],
-        "scale": 0.1
+        "scale": 0.099636
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7725,7 +7725,7 @@
           0.302,
           0.8
         ],
-        "scale": 0.1
+        "scale": 0.099779
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7734,11 +7734,11 @@
       "value": {
         "teamId": "garrafa_pet",
         "teamBox": [
-          1.054,
+          1.06,
           3.3,
-          1.054
+          1.06
         ],
-        "scale": 0.1
+        "scale": 0.09937
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7761,10 +7761,10 @@
         "teamId": "lata_vazia",
         "teamBox": [
           0.664,
-          1.206,
+          1.207,
           0.664
         ],
-        "scale": 0.1
+        "scale": 0.099405
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7773,7 +7773,7 @@
       "value": {
         "teamId": "lenha",
         "teamBox": [
-          4.006,
+          4,
           1.2,
           1.6
         ],
@@ -7790,7 +7790,7 @@
           1.002,
           2.502
         ],
-        "scale": 0.1
+        "scale": 0.099907
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7800,7 +7800,7 @@
         "teamId": "parafusos",
         "teamBox": [
           0.9,
-          0.51,
+          0.5,
           0.5
         ],
         "scale": 0.1
@@ -7813,7 +7813,7 @@
         "teamId": "pregos",
         "teamBox": [
           1.3,
-          0.605,
+          0.6,
           0.5
         ],
         "scale": 0.1
@@ -7825,8 +7825,8 @@
       "value": {
         "teamId": "saco_areia",
         "teamBox": [
-          4.002,
-          0.202,
+          4,
+          0.2,
           3
         ],
         "scale": 0.1
@@ -7839,10 +7839,10 @@
         "teamId": "sucata",
         "teamBox": [
           2,
-          0.8,
+          0.805,
           1.5
         ],
-        "scale": 0.1
+        "scale": 0.099793
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7851,11 +7851,11 @@
       "value": {
         "teamId": "tijolo",
         "teamBox": [
-          1.902,
+          1.911,
           1.8,
-          2.902
+          2.9
         ],
-        "scale": 0.1
+        "scale": 0.099808
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7868,7 +7868,7 @@
           0.252,
           1.8
         ],
-        "scale": 0.1
+        "scale": 0.099735
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."
@@ -7890,11 +7890,11 @@
       "value": {
         "teamId": "lubrificante",
         "teamBox": [
-          0.502,
+          0.504,
           1.7,
-          0.5
+          0.504
         ],
-        "scale": 0.1
+        "scale": 0.09947
       },
       "source": "kit",
       "reason": "Model authored in this kit (packages/game-items-three/src/models), drawn at the catalog size of the item: teamBox is the box the builder measures, scale the metres per unit."

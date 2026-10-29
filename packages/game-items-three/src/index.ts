@@ -6,6 +6,8 @@ export { canonicalFrame, drawShape, isShape, shade, shapeOf, SHAPES } from './sh
 export type { ShapeContext, ShapeId, ShapeSubject } from './shapes'
 export { buildItem } from './build-item'
 export type { BuildItemOptions, DrawableItem, ItemModel } from './build-item'
+export { DESTRUCTION_MATERIAL_BY_TAG, ITEM_FAMILIES, itemContents, itemDestruction, itemFamily, SHELL_PART_ID, tagForDestruction } from './destruction'
+export type { ContentsSubject, DestructionTagOptions, ItemContents, ItemDestruction, ItemFamily } from './destruction'
 export { mergeItem } from './merge'
 export { buildItemLod } from './lod'
 export type { ItemLod, ItemLodOptions } from './lod'

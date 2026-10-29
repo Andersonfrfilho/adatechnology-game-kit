@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { LaserRaycast } from './models/attachments/types'
 
-/** Names of the groups that hold the weapon in the hands: the beam of a laser never lands on its own weapon. */
+/** Names of the groups that hold the weapon in the hands (and the `userData.viewmodel` flag of the arms that hold it): the beam of a laser never lands on its own weapon. */
 export const VIEWMODEL_NODE_NAME = 'weapon-viewmodel'
 export const IN_HAND_NODE_NAME = 'weapon-in-hand'
 
@@ -9,7 +9,7 @@ export const IN_HAND_NODE_NAME = 'weapon-in-hand'
 export const LASER_RAYCAST_HZ = 30
 
 const isHeld = (object: THREE_NS.Object3D): boolean => {
-  for (let node: THREE_NS.Object3D | null = object; node; node = node.parent) if (node.name === VIEWMODEL_NODE_NAME || node.name === IN_HAND_NODE_NAME) return true
+  for (let node: THREE_NS.Object3D | null = object; node; node = node.parent) if (node.name === VIEWMODEL_NODE_NAME || node.name === IN_HAND_NODE_NAME || node.userData?.viewmodel === true) return true
   return false
 }
 

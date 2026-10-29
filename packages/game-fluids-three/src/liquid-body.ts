@@ -85,6 +85,12 @@ export class LiquidBody {
       this.vertices = 0
       return
     }
+    // Nothing of a sealed opaque shell shows its liquid, and a dent in that shell goes deeper than the liquid wall and would let the liquid through.
+    if (state.closed && this.isShellOpaque()) {
+      if (this.mesh) this.mesh.visible = false
+      this.vertices = 0
+      return
+    }
     this.build(state, quality)
     if (!this.mesh || !this.solid) return
     this.mesh.material = materials.liquidBody(def)
@@ -114,6 +120,18 @@ export class LiquidBody {
         particles.steam([o.x, o.y + 0.01, o.z])
       }
     } else this.steamAcc = 0
+  }
+
+  /** Every mesh of the bound object (the liquid itself aside) is drawn with an opaque material. */
+  private isShellOpaque(): boolean {
+    let opaque = true
+    this.object.traverse((child) => {
+      const mesh = child as THREE_NS.Mesh
+      if (!opaque || !mesh.isMesh || child === this.mesh) return
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+      if (materials.some((material) => material.transparent || material.opacity < 1)) opaque = false
+    })
+    return opaque
   }
 
   get triangles(): number {

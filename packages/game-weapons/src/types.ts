@@ -51,6 +51,14 @@ export interface CaliberDef {
   cartridge?: CartridgeDims
   /** Where the numbers come from (team deliveries, the SDK itself, a published reference, or derived from a sibling). */
   sources?: readonly DataSource[]
+  /**
+   * The propellant type of this calibre, which determines the muzzle smoke profile.
+   * - `'smokeless'`: modern powder (pistols, rifles, SMGs, shotguns, machine guns) — thin faint puff.
+   * - `'black_powder'`: black-powder loads — thick grey-white cloud that lingers.
+   * - `'none'`: no propellant combustion (arrows, crossbow bolts, melee) — no smoke.
+   * Defaults to `'smokeless'` when omitted.
+   */
+  propellant?: 'smokeless' | 'black_powder' | 'none'
 }
 
 /** The load a calibre ships with is its `kind`; other loads of it are entries of the ammo table (`AmmoDef`). */
@@ -284,6 +292,8 @@ export interface WeaponDef {
   /** What the stock does (fold, retract); absent: a fixed stock or none. */
   stock?: StockDef
   sources?: readonly DataSource[]
+  /** Override the muzzle smoke profile id for this weapon (defaults to the calibre's propellant profile). */
+  muzzleSmoke?: string
 }
 
 export interface TriggerResult {

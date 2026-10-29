@@ -127,6 +127,22 @@ describe('module host', () => {
     expect(events.find((event) => event.type === 'shot')).toMatchObject({ suppressed: true })
   })
 
+  it('reports the player from the controller: position, facing, speed and the camera mode', () => {
+    const room = makeRoom()
+    let lent: ModuleHost | null = null
+    room.loadModule(benchModule((host) => (lent = host)))
+    room.look([2, 1.7, 5], [2, 1.7, -5])
+    room.update(0.1)
+    const state = lent!.player()
+    expect(state.position[0]).toBeCloseTo(2)
+    expect(state.position[2]).toBeCloseTo(5)
+    expect(state.yaw).toBeCloseTo(0)
+    expect(state.crouching).toBe(false)
+    expect(state.running).toBe(false)
+    expect(state.speed).toBe(0)
+    expect(state.cameraMode).toBe('first')
+  })
+
   it('lends the scene and the camera and reports the tool events', () => {
     const room = makeRoom()
     const events: HostEvent[] = []

@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  test: { environment: 'happy-dom', include: ['tests/**/*.test.ts'], testTimeout: 60000 },
+  test: { environment: 'happy-dom', include: ['tests/**/*.test.ts'], setupFiles: ['../../test-support/yield-between-tests.ts'], testTimeout: 60000 },
 })

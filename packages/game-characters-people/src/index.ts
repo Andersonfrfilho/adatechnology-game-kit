@@ -2,12 +2,13 @@
  * @adatechnology/game-characters-people: generic people for `game-characters`, as data and one pack. 12 professions, 4 age presets, the appearance
  * pools and the accessory ids the portraits builder knows, the name pools and the character sheet ruleset. Named people and their stories belong to the game.
  */
-import type { CharacterPack, PoseClip } from '@adatechnology/game-characters'
+import type { CharacterPack, FirstPersonClip, PoseClip } from '@adatechnology/game-characters'
 
 import accessoriesData from './data/accessories.json'
 import agesData from './data/ages.json'
 import appearanceData from './data/appearance.json'
 import attackClipsData from './data/attack-clips.json'
+import firstPersonClipsData from './data/first-person-clips.json'
 import namesData from './data/names.json'
 import professionsData from './data/professions.json'
 import sheetData from './data/sheet.json'
@@ -28,6 +29,12 @@ export const ACCESSORIES = accessoriesData as unknown as readonly Accessory[]
 export const ATTACK_CLIPS = attackClipsData.clips as unknown as readonly PoseClip[]
 /** Texts of the phase labels of `ATTACK_CLIPS` by locale, in the shape of `POSE_CLIP_LOCALES` of `game-characters`. */
 export const ATTACK_CLIP_LOCALES = attackClipsData.locales as Readonly<Record<LocaleId, Readonly<Record<string, string>>>>
+/**
+ * The first-person counterpart of the strikes of `ATTACK_CLIPS` (`punch_right`, `shove_two_hands`, `front_kick`): the same duration and the same events, so the `impact` of a clip lands at the same
+ * second in both views, but as hands and a foot in the camera's space instead of joint angles. Authored in the kit; replace with the Elenco team's clips when delivered. The arms of
+ * `game-characters-three` (`createFirstPersonArms`) play them.
+ */
+export const FIRST_PERSON_CLIPS = firstPersonClipsData.clips as unknown as readonly FirstPersonClip[]
 export const PEOPLE_LOCALES = { en, 'pt-BR': ptBR } as unknown as Readonly<Record<LocaleId, PeopleLocale>>
 
 /** First names, surnames, babies' names and kinship words by language (Os Vivos do Vale `NM`, `RELW`); pt-BR is the one the teams wrote. */

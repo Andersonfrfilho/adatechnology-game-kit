@@ -31,6 +31,11 @@ export interface Player {
   readonly x: number
   readonly z: number
   readonly feet: number
+  /** Feet position. */
+  readonly position: Vec3
+  /** Horizontal metres per second walked in the last update. */
+  readonly speed: number
+  readonly running: boolean
   /** Held keys, by `KeyboardEvent.code`. */
   keys: ReadonlySet<string>
   update(dt: number): void
@@ -66,6 +71,8 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   let y = 0
   let eye = EYE
   let vy = 0
+  let walked = 0
+  let running = false
   const px = { x: o.start[0], z: o.start[2] }
   let locked = false
   const keys = new Set<string>()
@@ -212,9 +219,20 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     get feet() {
       return y
     },
+    get position() {
+      return [px.x, y, px.z] as Vec3
+    },
+    get speed() {
+      return walked
+    },
+    get running() {
+      return running
+    },
     keys,
     update(dt) {
       const run = keys.has('ShiftLeft') || keys.has('ShiftRight')
+      const fromX = px.x
+      const fromZ = px.z
       const speed = run ? RUN : WALK
       let f = 0
       let r = 0
@@ -231,6 +249,8 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
         const rz = -Math.sin(yaw)
         move(((fx * f + rx * r) / len) * speed * dt, ((fz * f + rz * r) / len) * speed * dt)
       }
+      walked = dt > 0 ? Math.hypot(px.x - fromX, px.z - fromZ) / dt : 0
+      running = run && walked > 0
       if (y <= 0 && keys.has('Space')) vy = JUMP
       if (y > 0 || vy > 0) {
         vy -= GRAVITY * dt

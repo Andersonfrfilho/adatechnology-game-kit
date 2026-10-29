@@ -1,0 +1,5 @@
+---
+"@adatechnology/game-items-three": minor
+---
+
+Cans are described by family, not by model: `data/destruction.json` lists `families` (`drink_can` in aluminium, `food_tin` in steel), each with its models and one rule, and `itemDestruction(modelId)` / `itemFamily(modelId)` look the rule up (one function, so an item-category system can feed it later). Adding a model to a family is one id. The rule takes `food` as a skin tag too, so what a tin shows of its contents (the sauce of the beans) is drawn on the shell and never breaks off as a loose red block. The `contents` of the data say what each model holds (soda, beer, a sauce, brine, oil, condensed milk as honey); `itemContents` sizes it from the item (inner volume of the shell, the fill of the model, never more than the item weighs), `buildItem({ destructible: true })` writes it on the shell part and the items test area declares it as the item's `fluid`, so a bullet hole makes the can leak. `tagForDestruction` now takes an options object (`modelId`, `weight`, `size`).
