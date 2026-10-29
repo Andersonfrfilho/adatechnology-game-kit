@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-weather",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "MIT",
   "description": "Pure, seeded weather for games: states (clear to typhoon), climates with a Markov scheduler in game time, fronts from the west, lightning with thunder delay, ground wetness, gameplay effects, heat index and the day-night formula. Knows nothing about any game.",
   "keywords": [

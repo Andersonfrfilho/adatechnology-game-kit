@@ -1,5 +1,38 @@
 # @adatechnology/game-fluids-three
 
+## 0.4.0
+
+### Minor Changes
+
+- b3f1cf1: The first shot, hit or leak no longer stalls the frame: the renderers build the shader programs they would make on demand (`warmUpProbes()` of the destruction, effects and fluids renderers returns meshes of those materials, `WarmUpProbes` in the contracts) and the test room renders them once, again whenever the lights of the scene change (a program is keyed by the light counts, and a material that does not use lights keeps the program of the lights it was first drawn with). `TestRoom.warmUp()` does it on demand. Measured in the items test area with a pistol on a soda can: the first frames after the shot went from 201 and 106 ms with 3 new programs to 15 and 8 ms with none.
+
+### Patch Changes
+
+- d3581b5: A sealed container inside an opaque shell (a closed can) no longer draws its liquid body: nothing of it was visible, and a dent deeper than the liquid wall (3 mm inside the shell) let the liquid show through the can as red or dark patches. A glass shell or an opened container still draws it.
+- Updated dependencies [1331018]
+- Updated dependencies [8feb42f]
+- Updated dependencies [ef44e99]
+- Updated dependencies [5b1d53f]
+- Updated dependencies [b861fca]
+- Updated dependencies [6889db1]
+- Updated dependencies [5679830]
+- Updated dependencies [1b1d611]
+- Updated dependencies [d610199]
+- Updated dependencies [9b27571]
+- Updated dependencies [f62305b]
+- Updated dependencies [945d00d]
+- Updated dependencies [024d0e8]
+- Updated dependencies [d24de8a]
+- Updated dependencies [cd2d333]
+- Updated dependencies [e9a0932]
+- Updated dependencies [dbe8de3]
+- Updated dependencies [b3f1cf1]
+- Updated dependencies [011e17a]
+  - @adatechnology/game-contracts@0.14.0
+  - @adatechnology/game-vfx@0.4.0
+  - @adatechnology/game-vfx-three@0.3.0
+  - @adatechnology/game-fluids@0.3.1
+
 ## 0.3.1
 
 ### Patch Changes

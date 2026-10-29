@@ -1,5 +1,16 @@
 # @adatechnology/game-interactables-household
 
+## 0.2.7
+
+### Patch Changes
+
+- Updated dependencies [1af2cb3]
+- Updated dependencies [c21c718]
+- Updated dependencies [fcd0be6]
+  - @adatechnology/game-items-goods@0.2.0
+  - @adatechnology/game-props3d@0.3.1
+  - @adatechnology/game-interactables@0.2.6
+
 ## 0.2.6
 
 ### Patch Changes

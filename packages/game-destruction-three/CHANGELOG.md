@@ -1,5 +1,63 @@
 # @adatechnology/game-destruction-three
 
+## 0.8.0
+
+### Minor Changes
+
+- 8feb42f: An explosion shoves what is around it. `blastShove` (game-contracts) is the one rule, `min(maxSpeed, sqrt(2 * energy * coupling / mass)) * (1 - d / r)^2`, with every number in `BlastShoveOptions` (the room's `blastShove` option, lent to modules as `ModuleHost.blastShove`). The destruction renderer uses it for its pieces and, with `shoveable`/`onLoosened`, makes a heavy object that is not fixed a piece when a blast reaches it. The test room marks heavy, free items that way, and wraps an item whose builder scales the root so that its spec, box and mass are in metres (a can of beans was 0.7 m and 460 kg). The characters test area pushes its people and knocks them down. The explosives area has scenarios that measure the push of a P13 shot and a thrown M67.
+- 642f290: `buildItem` takes `destructible: true`: each mesh gets the `game-destruction` material of its kit tag (`DESTRUCTION_MATERIAL_BY_TAG`), and models listed in `data/destruction.json` (the three cans) are hollow shells welded to one another with their label as a skin. The items test area draws its items that way. `specFromObject3D` understands `userData.destructionSkin` (such a mesh stays on the part it overlaps and never becomes a part of its own) and `root.userData.destructionMass` (the real weight, split between the parts); `buildItem` passes the item's `weight` that way.
+- 8dc6775: Loose pieces and debris can be picked. Every mesh of a part now carries `userData.destructionPart` (part id) and `userData.destructionObject` (id of the world object it belongs to), including the meshes of a piece made by a collapse or detach and the mesh a vertex-range part gets when it leaves a merged mesh (they used to lose it). Fracture fragments, decals and ground stains carry `userData.destructionDebris = true` so a host can skip them in a raycast.
+- bcf60c8: `specFromObject3D` reads `userData.destructionContains` (`{ fluid, liters }`) of a mesh onto the part it makes, so that part is a container: a hole through it emits a `leak`.
+- d24de8a: Soil and foundations (T10 §8). `game-contracts`: `DestructibleSpec.soil` (`SoilProfile`, `SoilLayer`), `PartSpec.structure.pile` (`PileSpec`),
+  `ObjectState.soil` (`SoilState`) and the `settle` event. `game-destruction`: soil classes with the NBR 6122 basic pressures (`SOILS`), footings as
+  elastic-plastic springs (subgrade modulus of a rigid footing, safety 3), piles by Décourt-Quaresma (`pileCapacity`, `pileLength`), and the object as a
+  rigid body on them with the 1/200 out-of-plumb and P-delta: it settles, a heavy building on soft soil sinks, leans and tips over, on piles to firm
+  ground it holds; `buildFrame({ footing, raft, piles, soil })`; option `soil` (`SOIL_DEFAULTS`). Off unless a spec has `soil`. `game-destruction-three`:
+  draws the settlement and tilt under a `destruction-soil` node. `game-floorplan-structure`: `toDestructibleSpec({ soil, foundation, piles, soils })`
+  puts the house on a raft (with piles) or on footings under each wall (`RAFT_THICKNESS`, `PILE_AREA`).
+- b3f1cf1: The first shot, hit or leak no longer stalls the frame: the renderers build the shader programs they would make on demand (`warmUpProbes()` of the destruction, effects and fluids renderers returns meshes of those materials, `WarmUpProbes` in the contracts) and the test room renders them once, again whenever the lights of the scene change (a program is keyed by the light counts, and a material that does not use lights keeps the program of the lights it was first drawn with). `TestRoom.warmUp()` does it on demand. Measured in the items test area with a pistol on a soda can: the first frames after the shot went from 201 and 106 ms with 3 new programs to 15 and 8 ms with none.
+
+### Patch Changes
+
+- 3ebc4d5: A dent is never silently invisible: when fewer than 3 vertices of a mesh fall inside the dent radius (a mesh coarser than the dent), `applyDent` widens the radius to 1.5 times the distance to the nearest vertex, so the nearest vertices are pushed in.
+- 31e7483: A skin mesh (`userData.destructionSkin`: a label, a coat) now moves with the surface of the shell under it when the part is dented (nearest shell triangle, barycentric weights, `applyPartDent`), instead of being dented on its own grid, so the two meshes never cross whatever their vertex grids are.
+
+  The dent of a part also uses one reach for all its meshes: `Visuals.dentReach` finds the radius that gives each mesh at least 10 vertices (and 1.5 times the distance to the nearest), the part takes the widest.
+
+- 7b5efe4: `specFromObject3D` (and the renderer's part matching and piece measuring) now work in metres for a scaled root: the root's world scale is kept, only its position and rotation are removed. A model drawn in other units and shrunk with `root.scale` no longer gets an oversized destruction body.
+- 5b1d53f: `DestructionWorld.vent(objectId, partId, { point?, normal?, diameter? })` opens a through opening in a container part like a valve does (a `leak` event, the level drops, no damage and no `hole` event; `Hole.vent` marks it) and `seal` closes it. A `heat` hit of 470 °C or more on a part that leaks flammable fluid lights the leak (a lighter or a torch held at a gas jet): it burns, or goes off by its `explodes.chain`. The renderer ends a leak when its opening is closed.
+- Updated dependencies [1331018]
+- Updated dependencies [8feb42f]
+- Updated dependencies [ef44e99]
+- Updated dependencies [5b1d53f]
+- Updated dependencies [b861fca]
+- Updated dependencies [6889db1]
+- Updated dependencies [5679830]
+- Updated dependencies [e4663e1]
+- Updated dependencies [1b1d611]
+- Updated dependencies [9f7dadf]
+- Updated dependencies [d610199]
+- Updated dependencies [fa6ea00]
+- Updated dependencies [9b27571]
+- Updated dependencies [f62305b]
+- Updated dependencies [945d00d]
+- Updated dependencies [024d0e8]
+- Updated dependencies [20cc300]
+- Updated dependencies [89807ec]
+- Updated dependencies [d24de8a]
+- Updated dependencies [cd2d333]
+- Updated dependencies [e9a0932]
+- Updated dependencies [d032102]
+- Updated dependencies [0e27281]
+- Updated dependencies [dbe8de3]
+- Updated dependencies [b3f1cf1]
+- Updated dependencies [011e17a]
+  - @adatechnology/game-contracts@0.14.0
+  - @adatechnology/game-destruction@0.8.0
+  - @adatechnology/game-vfx@0.4.0
+  - @adatechnology/game-vfx-three@0.3.0
+  - @adatechnology/game-audio@0.2.1
+
 ## 0.7.3
 
 ### Patch Changes

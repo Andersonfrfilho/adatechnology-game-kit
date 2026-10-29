@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-weather-three",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "license": "MIT",
   "description": "three.js renderer for @adatechnology/game-weather: the game's rain curtain (14 000 GPU points), the near rain and mist and ash on the game-vfx pools, linear and exponential fog with zone fog, the sky that dims in rain, lightning, headlights in rain and a heat haze.",
   "keywords": [

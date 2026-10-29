@@ -1,5 +1,37 @@
 # @adatechnology/game-characters
 
+## 0.2.0
+
+### Minor Changes
+
+- 1331018: An explosive part can carry `explodes.lethalRadius` (and a blast `Hit` its `lethalRadius`; the `explode` event repeats it). A character inside it takes the whole blast, between it and `radius` it takes at most `blast.injuryPoints` (default 15 per segment) falling off to nothing at `radius`, so it is hurt but not killed. Without `lethalRadius` the blast is the old one: points fall off over `radius`.
+- 95691ff: First-person clips: the `FirstPersonClip` format (hands and a foot as poses in the camera's space, with a weight that hands the pose back to what the hand is doing otherwise, and the same events as a `PoseClip`) and `sampleFirstPersonClip`, which eases between keys with the smoothstep of the pose clips.
+- 15c5da6: The kick alternates legs (`kickLeg`: `alternate` default, `left`, `right`). `mirrorPoseClip` mirrors a pose clip (legs and arms swap, sideways channels flip, events and times stay); the first-person arms play a kick with `play(clip, { leg: 'left' })`; the room logs the leg in the strike entry.
+- 4ecaa9f: Keyframed pose clips and the player's body. `game-characters`: `PoseClip`, `samplePoseClip` (the Bestiário `sample`), `clipEventsBetween`, `createPoseClipRegistry` and the two
+  "grab and bite" clips (`POSE_CLIPS`, texts in `pt-BR` and `en`). `game-characters-three`: `createPlayerAvatar`, the team game's player body (rich human, default spec as data) that
+  walks with the gait tied to ground speed, crouches, goes down, plays pose clips over the gait (upper or full body, with blend and events) and has a hand socket for weapons.
+
+### Patch Changes
+
+- Updated dependencies [1331018]
+- Updated dependencies [8feb42f]
+- Updated dependencies [ef44e99]
+- Updated dependencies [5b1d53f]
+- Updated dependencies [b861fca]
+- Updated dependencies [6889db1]
+- Updated dependencies [1b1d611]
+- Updated dependencies [d610199]
+- Updated dependencies [9b27571]
+- Updated dependencies [f62305b]
+- Updated dependencies [945d00d]
+- Updated dependencies [024d0e8]
+- Updated dependencies [d24de8a]
+- Updated dependencies [cd2d333]
+- Updated dependencies [e9a0932]
+- Updated dependencies [dbe8de3]
+- Updated dependencies [b3f1cf1]
+  - @adatechnology/game-contracts@0.14.0
+
 ## 0.1.6
 
 ### Patch Changes

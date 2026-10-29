@@ -1,5 +1,78 @@
 # @adatechnology/game-test-room
 
+## 0.12.0
+
+### Minor Changes
+
+- 8feb42f: An explosion shoves what is around it. `blastShove` (game-contracts) is the one rule, `min(maxSpeed, sqrt(2 * energy * coupling / mass)) * (1 - d / r)^2`, with every number in `BlastShoveOptions` (the room's `blastShove` option, lent to modules as `ModuleHost.blastShove`). The destruction renderer uses it for its pieces and, with `shoveable`/`onLoosened`, makes a heavy object that is not fixed a piece when a blast reaches it. The test room marks heavy, free items that way, and wraps an item whose builder scales the root so that its spec, box and mass are in metres (a can of beans was 0.7 m and 460 kg). The characters test area pushes its people and knocks them down. The explosives area has scenarios that measure the push of a P13 shot and a thrown M67.
+- b3afeea: Breaking (0.x, so minor): the room no longer ships the procedural demo catalogue or its built-in scenarios. Removed: `demoItems`, `DEMO_ITEMS`, `DEMO_MATERIALS`, `SCENARIOS`, `scenariosFor`, `makeScenarios`, the demo item names of the locale tables and the `sc.*` texts of the removed scenarios. Pass `catalog: []` and load the SDK modules with `room.loadModule`; scenarios come from the host and the modules. `brickWallSpec` stays (the arena's target wall). See the README section "Breaking".
+- 15c5da6: The kick alternates legs (`kickLeg`: `alternate` default, `left`, `right`). `mirrorPoseClip` mirrors a pose clip (legs and arms swap, sideways channels flip, events and times stay); the first-person arms play a kick with `play(clip, { leg: 'left' })`; the room logs the leg in the strike entry.
+- 766acf0: The room can show the player's body and a third-person camera. `setAvatar(avatar | null)` takes any `RoomAvatar` (`root`, `update(dt, state)`, optional `hand(side)`), places it at the feet with the player's yaw and feeds it speed, running, armed (a firearm in hand) and pitch; `setAvatarState({ crouch, down })` lets a player module drive the rest. `setCameraMode('first' | 'third')` (V with a body; Shift+V kicks) puts the camera over the shoulder with the team game's numbers (3.8 m back, 0.9 m aside, 1.95 m up), pulled in against walls; the carried item follows `avatar.hand('R')`. The simulation and the aim stay at the eye. HUD, hint and log in `pt-BR` and `en`.
+- 5806205: `RoomLoading.idle()` (`room.loading.idle()`): resolves once no loading task is open, so a scenario or a test waits for a rebuild that runs behind the loading indicator without sleeping.
+- 945d00d: A loading indicator for any slow job of the test room: `room.loading` / `room.busy(label, work)` / `room.openAreaAsync(area)` (spinner or bar, text in the room's locale, nothing drawn with `ui: false`), the generic `BusySink` contract and `ModuleHost.loading`, `ModuleControl.slow` and `TestableItem.slow` so the room's panel and catalogue run a slow press or spawn behind it, and `LOADING_CSS` / `loadingMarkup` for a page's first frame. The house bench rebuilds, the nursery lot, the walker, the crowd, the skins and the vehicles use it.
+- 72e195a: First-person arms and strikes at the impact: `RoomAvatar.firstPerson` and `RoomAvatar.strike`, options `strikeClips` and `handStances`. Fists, shove and the kick play their clip and land the blow at its impact second, with the aim read again; a `strike` line goes to the log.
+- a185888: Strikes stop at contact: the update state of the first-person arms takes an optional `contact(origin, direction, maxDistance)` (distance to the first surface or null) that the room answers with its raycast, leaving out the player, the held item and the viewmodel. The hands and the kick foot stay a few millimetres in front of the surface along the camera forward, so the elbow bends instead of the hand entering the mesh.
+- b3f1cf1: The first shot, hit or leak no longer stalls the frame: the renderers build the shader programs they would make on demand (`warmUpProbes()` of the destruction, effects and fluids renderers returns meshes of those materials, `WarmUpProbes` in the contracts) and the test room renders them once, again whenever the lights of the scene change (a program is keyed by the light counts, and a material that does not use lights keeps the program of the lights it was first drawn with). `TestRoom.warmUp()` does it on demand. Measured in the items test area with a pistol on a soda can: the first frames after the shot went from 201 and 106 ms with 3 new programs to 15 and 8 ms with none.
+
+### Patch Changes
+
+- 1b1d611: Per-caliber penetration table in `game-weapons` (`AMMO`, 50 loads, `arsenal.loadOf`, `weapon.setAmmoKind`, `ArsenalOptions.ammo`): per calibre and kind of round
+  (fmj, hp, ap, buck, slug, birdshot, incendiary, tracer...) the core and jacket, the mass and speed when they differ, the energy and the millimetres of steel,
+  concrete, brick and wood it goes through. The shot carries `ammo`, `penetration`, `incendiary` and `tracer`. `game-contracts`: `Hit.penetration`, `Hit.incendiary`,
+  `Hit.tracer`, `Hit.ignition`, `shotExtras(shot, distance)` (the penetration scaled by the energy left) and `shotToHit` passes them. `game-destruction` reads
+  `Hit.penetration` by material class (`MaterialDef.penetrationClass` / `penetrationScale`), keeps `Hit.piercing` as the energy-rule fallback and reads no calibre
+  names: `PIERCING_BY_KIND`, `PIERCING_BY_CALIBER` and `piercingOf` are removed (breaking). `shoot` takes `{ penetration, piercing, ... }` or a bare piercing factor.
+  `game-test-room` passes the round of the shot to the world.
+- 9b27571: `ModuleHost.player()` returns a generic `PlayerState` (`position`, `yaw`, `pitch`, `crouching`, `speed`, `running`, `cameraMode`), and `HostEvent` gains `{ type: 'player' }` for when crouching or the camera mode changes. A host implementing `ModuleHost` must add `player()`. The test room answers from its player controller (not crouching, first-person camera for now).
+- f62305b: Reload sounds follow the animation: the reload clips carry `sound` cues (mag release/out/insert/seat, slide release, charging handle pull and release, bolt lift/pull/push/lock, a shell per round, pump, lever, cylinder, speed loader, barrels, belt cover, rocket, grenade, breech and tube) and the viewmodel plays each one at its second, scaled to the weapon's reload time. The recipes are data (`reload-sounds.json`), with a weight and material profile per weapon; `WeaponAudio.cue`, the `reloadCues` option and `createWeaponFx({ onSound })` are new. `ModuleHost.log` takes an optional entry `type` (the weapons area logs one `sound` entry per cue).
+- 8ebb70b: `openArea` skips a placement whose item is not in the catalogue and logs it (`area_skip`) instead of failing.
+- 1124b2d: The holder the room puts around an item whose builder scales the root answers for the root the module built (its visibility), and lets go of it when the item leaves the scene.
+- dbe8de3: Add `useToHit(use, point, normal?)` next to `shotToHit`: the public `Use` -> `Hit` mapping (melee blunt/slash, flame -> fire, heat, throw -> explosive or the molotov fire patch; `null` for tool, extinguish and hand). The test room uses it instead of its private copy.
+- Updated dependencies [1331018]
+- Updated dependencies [8feb42f]
+- Updated dependencies [ef44e99]
+- Updated dependencies [3ebc4d5]
+- Updated dependencies [31e7483]
+- Updated dependencies [7b5efe4]
+- Updated dependencies [5b1d53f]
+- Updated dependencies [b861fca]
+- Updated dependencies [6889db1]
+- Updated dependencies [642f290]
+- Updated dependencies [5679830]
+- Updated dependencies [8842f5b]
+- Updated dependencies [e4663e1]
+- Updated dependencies [0604035]
+- Updated dependencies [1b1d611]
+- Updated dependencies [9f7dadf]
+- Updated dependencies [d610199]
+- Updated dependencies [fa6ea00]
+- Updated dependencies [8dc6775]
+- Updated dependencies [9b27571]
+- Updated dependencies [f62305b]
+- Updated dependencies [945d00d]
+- Updated dependencies [d3581b5]
+- Updated dependencies [bcf60c8]
+- Updated dependencies [024d0e8]
+- Updated dependencies [20cc300]
+- Updated dependencies [89807ec]
+- Updated dependencies [d24de8a]
+- Updated dependencies [cd2d333]
+- Updated dependencies [e9a0932]
+- Updated dependencies [d032102]
+- Updated dependencies [0e27281]
+- Updated dependencies [dbe8de3]
+- Updated dependencies [b3f1cf1]
+- Updated dependencies [011e17a]
+  - @adatechnology/game-contracts@0.14.0
+  - @adatechnology/game-destruction@0.8.0
+  - @adatechnology/game-destruction-three@0.8.0
+  - @adatechnology/game-vfx@0.4.0
+  - @adatechnology/game-weapons@0.5.0
+  - @adatechnology/game-fluids-three@0.4.0
+  - @adatechnology/game-vfx-three@0.3.0
+  - @adatechnology/game-audio@0.2.1
+  - @adatechnology/game-fluids@0.3.1
+
 ## 0.11.1
 
 ### Patch Changes

@@ -1,5 +1,34 @@
 # @adatechnology/game-items-goods
 
+## 0.2.0
+
+### Minor Changes
+
+- 1af2cb3: Every item of the catalog declares a `kind` from a tree (`kinds.json`, 41 kinds: consumable, container, weapon, wearable, equipment, material_misc and their children) that supplies defaults (parts and materials, impact, use animation and sounds, leftover, raw effect) and the contracts the item must meet. New: `GOODS_KINDS`, `createGoodsKinds`, `checkGoodsItems`, `createItemContracts`, `ITEM_CONTRACTS`, `GOODS_KNOWN_GAPS` and the `kind.<id>` texts in pt-BR and en. Values filled from the real world carry `estimated: [...]`; `pnpm check:items` fails when an item lacks what its kind requires. Seven impossible densities fixed.
+- c21c718: 222 more items now carry `model: <id>`, pointing to the kit-authored model of `@adatechnology/game-items-three` that draws them (245 items in all). Sizes are unchanged: the models were authored at the catalog size.
+
+### Patch Changes
+
+- Updated dependencies [1331018]
+- Updated dependencies [8feb42f]
+- Updated dependencies [ef44e99]
+- Updated dependencies [5b1d53f]
+- Updated dependencies [b861fca]
+- Updated dependencies [6889db1]
+- Updated dependencies [1b1d611]
+- Updated dependencies [d610199]
+- Updated dependencies [9b27571]
+- Updated dependencies [f62305b]
+- Updated dependencies [945d00d]
+- Updated dependencies [024d0e8]
+- Updated dependencies [d24de8a]
+- Updated dependencies [cd2d333]
+- Updated dependencies [e9a0932]
+- Updated dependencies [dbe8de3]
+- Updated dependencies [b3f1cf1]
+  - @adatechnology/game-contracts@0.14.0
+  - @adatechnology/game-items@0.1.6
+
 ## 0.1.5
 
 ### Patch Changes

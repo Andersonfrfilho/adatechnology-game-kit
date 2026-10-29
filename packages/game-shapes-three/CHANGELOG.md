@@ -1,5 +1,11 @@
 # @adatechnology/game-shapes-three
 
+## 0.1.1
+
+### Patch Changes
+
+- fcd0be6: The weapon models, the animals and the characters draw their geometry with game-shapes (`shapeGeometries(host)`), with the same bytes as before (exact goldens of 367, 27 and 281 cases). game-weapons-three no longer depends on game-props3d. The IIFE builds of game-props3d, game-interactables-three and game-weapons-three bundle game-shapes. `shapeGeometries` of a namespace it made gives it back.
+
 ## 0.1.0
 
 ### Minor Changes

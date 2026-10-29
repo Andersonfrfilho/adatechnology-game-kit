@@ -1,5 +1,20 @@
 # @adatechnology/game-characters-people
 
+## 0.3.0
+
+### Minor Changes
+
+- 6546677: The player's attack pose clips as data: `ATTACK_CLIPS` (`punch_right`, `shove_two_hands`, `front_kick`, `recoil_rifle`, `recoil_pistol`, in the `PoseClip` format of `game-characters`, one `impact` each) and `ATTACK_CLIP_LOCALES` (the phase texts in pt-BR and en). Authored in the kit; replace with the Elenco team's clips when delivered.
+- 95691ff: `FIRST_PERSON_CLIPS`: the first-person counterpart of the strikes of `ATTACK_CLIPS` (`punch_right`, `shove_two_hands`, `front_kick`), with the same duration and the same `impact` second as the third-person clip, so both views hit at the same moment. Authored in the kit; replace with the Elenco team's clips when delivered.
+
+### Patch Changes
+
+- Updated dependencies [1331018]
+- Updated dependencies [95691ff]
+- Updated dependencies [15c5da6]
+- Updated dependencies [4ecaa9f]
+  - @adatechnology/game-characters@0.2.0
+
 ## 0.2.0
 
 ### Minor Changes

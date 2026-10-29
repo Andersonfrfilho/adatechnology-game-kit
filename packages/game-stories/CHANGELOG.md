@@ -1,5 +1,35 @@
 # @adatechnology/game-stories
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [6546677]
+- Updated dependencies [1331018]
+- Updated dependencies [8feb42f]
+- Updated dependencies [ef44e99]
+- Updated dependencies [5b1d53f]
+- Updated dependencies [95691ff]
+- Updated dependencies [95691ff]
+- Updated dependencies [b861fca]
+- Updated dependencies [6889db1]
+- Updated dependencies [15c5da6]
+- Updated dependencies [1b1d611]
+- Updated dependencies [d610199]
+- Updated dependencies [9b27571]
+- Updated dependencies [4ecaa9f]
+- Updated dependencies [f62305b]
+- Updated dependencies [945d00d]
+- Updated dependencies [024d0e8]
+- Updated dependencies [d24de8a]
+- Updated dependencies [cd2d333]
+- Updated dependencies [e9a0932]
+- Updated dependencies [dbe8de3]
+- Updated dependencies [b3f1cf1]
+  - @adatechnology/game-characters-people@0.3.0
+  - @adatechnology/game-contracts@0.14.0
+  - @adatechnology/game-characters@0.2.0
+
 ## 0.2.0
 
 ### Minor Changes

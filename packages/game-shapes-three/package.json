@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-shapes-three",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "description": "three.js drawing of @adatechnology/game-shapes buffers: BufferGeometry with three's own type and prototype, meshes per batch, part groups, InstancedMesh and LOD; a geometry namespace whose constructors are made by game-shapes (for ported code that reads new T.BoxGeometry); and mergeByMaterial on the core merge.",
   "keywords": [

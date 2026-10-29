@@ -1,5 +1,67 @@
 # @adatechnology/game-weapons-three
 
+## 0.8.0
+
+### Minor Changes
+
+- 8feb42f: An explosion shoves what is around it. `blastShove` (game-contracts) is the one rule, `min(maxSpeed, sqrt(2 * energy * coupling / mass)) * (1 - d / r)^2`, with every number in `BlastShoveOptions` (the room's `blastShove` option, lent to modules as `ModuleHost.blastShove`). The destruction renderer uses it for its pieces and, with `shoveable`/`onLoosened`, makes a heavy object that is not fixed a piece when a blast reaches it. The test room marks heavy, free items that way, and wraps an item whose builder scales the root so that its spec, box and mass are in metres (a can of beans was 0.7 m and 460 kg). The characters test area pushes its people and knocks them down. The explosives area has scenarios that measure the push of a P13 shot and a thrown M67.
+- b28f7ef: The weapons module brings its own scenarios against its real targets and weapons: the 9 mm dents the 10 mm steel plate and the .50 BMG of the Barrett goes through it, the 9 mm does not go through the concrete block, the pump shotgun drives pellets through the plywood, the hammer dents the steel plate and the cutting torch melts it (`target_steel_heavy_through_hole`, `target_concrete_stops_bullet`, `target_plywood_shotgun_holes`, `target_steel_hammer_dents`, `target_steel_torch_melts`). They replace the generic checks the test room used to ship over its demo items.
+- 57078ff: The weapon in the hands lends its hand targets to the host (`host.setHandTargets`): the right hand on the grip, the left on the handguard or the pump, both on a handgun, the left to the magazine while it is changed. Models may name a `parts.grip` pivot.
+- 6889db1: The hands work the parts a reload clip moves (`data/hand-work.json`: slide rack or thumb release on a pistol, charging handle on ARs and AKs after an empty reload, bolt handle, loading port, crane, belt cover), following the clip's own timeline; `ToolClipPlayer.running` exposes the clip time. The right index finger rests along the frame, goes to the trigger after a shot and pulls with the trigger part (`HandTargets.fingers.index`).
+- d7b0b7b: `world_propane_p13` is the team's real model (`lpg_cylinder_13kg`, valve mesh `valve`) with a real mass and its gas, and the package gets the explosives test area (`createExplosivesTestModule`, id `explosives_area`, group Explosivos/Explosives): a kitchen corner with the cylinder, furniture, a zombie and a survivor, rings at the lethal and injury radii, bench actions to shoot, open the valve, light and throw it in a fire, a blast multiplier, narration in pt-BR and en, and four scenarios.
+- f62305b: Reload sounds follow the animation: the reload clips carry `sound` cues (mag release/out/insert/seat, slide release, charging handle pull and release, bolt lift/pull/push/lock, a shell per round, pump, lever, cylinder, speed loader, barrels, belt cover, rocket, grenade, breech and tube) and the viewmodel plays each one at its second, scaled to the weapon's reload time. The recipes are data (`reload-sounds.json`), with a weight and material profile per weapon; `WeaponAudio.cue`, the `reloadCues` option and `createWeaponFx({ onSound })` are new. `ModuleHost.log` takes an optional entry `type` (the weapons area logs one `sound` entry per cue).
+- f89a1aa: The reload log says which variant played: `WeaponFx.clips` gives the clips playing with their seconds, and the weapons area logs `kind`, the clip (`reload` or `reload_empty`) and its seconds at every reload start (pt-BR and en). Tests: an empty weapon plays `reload_empty`, one with a round chambered the tactical `reload`.
+- 011e17a: Drive first-person muzzle smoke and flash scale from per-weapon data profiles (`smokeless`, `black_powder`, `suppressed`, `none`). Add `propellant` to `CaliberDef`, `.45-70 Government (black powder)` (`45_70_bp`), `MUZZLE_SMOKE` and `muzzleSmokeOf({ caliber, weapon, suppressed })` in `game-weapons`, parameterize `viewmodel_muzzle_flash` in `game-vfx` with smokeless defaults, pass the resolved profile through `createEffects().muzzleFlash` and `viewmodel-events.ts` in `game-weapons-three`, and refine the hot-barrel smoke wisp into a thin rising thread.
+
+  Add a `gallery` smoke profile (never chosen by default) and optional `driftSpread`, `riseSpread`, `sideSpread` and `lifeSpread` values so the recipe can still reproduce the Arsenal gallery's original muzzle smoke exactly.
+
+  Cool the barrel closer to real life: `rules.heat.perShot` is lower (a rifle magazine no longer glows), and the new `rules.heat.visual` (`smokeFrom`, `smokeSeconds`, `glowFrom`, `glowSpan`) sets when the player sees the hot-barrel thread of smoke (only above `smokeFrom` and for `smokeSeconds` after the last shot) and the red glow. `GALLERY_HEAT` keeps the numbers the Arsenal gallery recorded.
+
+- 4c03a62: The weapon in the hands stays out of walls and its hand stays in view. `createWeaponFx({ contact })` (the test area gives it a raycast on the simulation clock) makes the weapon come back from a surface it would go through (`WALL_PULL`: a few centimetres of margin, at most 0.7 m, smoothed); the shooting hand raises the weapon when it would sit below the bottom of the view (`HAND_IN_VIEW`). A flamethrower pulls the trigger finger while the fuel burns.
+
+### Patch Changes
+
+- d111066: Complete the `en` accessory text: every attachment name is now in the English table (same text the catalog fallback gave).
+- 9b27571: `ModuleHost.player()` returns a generic `PlayerState` (`position`, `yaw`, `pitch`, `crouching`, `speed`, `running`, `cameraMode`), and `HostEvent` gains `{ type: 'player' }` for when crouching or the camera mode changes. A host implementing `ModuleHost` must add `player()`. The test room answers from its player controller (not crouching, first-person camera for now).
+- fcd0be6: The weapon models, the animals and the characters draw their geometry with game-shapes (`shapeGeometries(host)`), with the same bytes as before (exact goldens of 367, 27 and 281 cases). game-weapons-three no longer depends on game-props3d. The IIFE builds of game-props3d, game-interactables-three and game-weapons-three bundle game-shapes. `shapeGeometries` of a namespace it made gives it back.
+- Updated dependencies [dba2c82]
+- Updated dependencies [1331018]
+- Updated dependencies [8feb42f]
+- Updated dependencies [9d7e0c5]
+- Updated dependencies [ef44e99]
+- Updated dependencies [5b1d53f]
+- Updated dependencies [d796b0f]
+- Updated dependencies [b861fca]
+- Updated dependencies [6889db1]
+- Updated dependencies [69ccd0b]
+- Updated dependencies [642f290]
+- Updated dependencies [285cf02]
+- Updated dependencies [5679830]
+- Updated dependencies [8842f5b]
+- Updated dependencies [0604035]
+- Updated dependencies [1b1d611]
+- Updated dependencies [d610199]
+- Updated dependencies [9b27571]
+- Updated dependencies [f62305b]
+- Updated dependencies [945d00d]
+- Updated dependencies [024d0e8]
+- Updated dependencies [d24de8a]
+- Updated dependencies [cd2d333]
+- Updated dependencies [e9a0932]
+- Updated dependencies [fcd0be6]
+- Updated dependencies [c21c718]
+- Updated dependencies [dbe8de3]
+- Updated dependencies [b3f1cf1]
+- Updated dependencies [011e17a]
+  - @adatechnology/game-items-three@0.2.0
+  - @adatechnology/game-contracts@0.14.0
+  - @adatechnology/game-vfx@0.4.0
+  - @adatechnology/game-weapons@0.5.0
+  - @adatechnology/game-interactables-three@0.1.8
+  - @adatechnology/game-shapes-three@0.1.1
+  - @adatechnology/game-vfx-three@0.3.0
+  - @adatechnology/game-audio@0.2.1
+
 ## 0.7.2
 
 ### Patch Changes

@@ -1,5 +1,45 @@
 # @adatechnology/game-crowd-three
 
+## 0.3.0
+
+### Minor Changes
+
+- 945d00d: A loading indicator for any slow job of the test room: `room.loading` / `room.busy(label, work)` / `room.openAreaAsync(area)` (spinner or bar, text in the room's locale, nothing drawn with `ui: false`), the generic `BusySink` contract and `ModuleHost.loading`, `ModuleControl.slow` and `TestableItem.slow` so the room's panel and catalogue run a slow press or spawn behind it, and `LOADING_CSS` / `loadingMarkup` for a page's first frame. The house bench rebuilds, the nursery lot, the walker, the crowd, the skins and the vehicles use it.
+
+### Patch Changes
+
+- Updated dependencies [6546677]
+- Updated dependencies [4e90488]
+- Updated dependencies [1331018]
+- Updated dependencies [8feb42f]
+- Updated dependencies [ef44e99]
+- Updated dependencies [5b1d53f]
+- Updated dependencies [574f847]
+- Updated dependencies [95691ff]
+- Updated dependencies [b861fca]
+- Updated dependencies [6889db1]
+- Updated dependencies [15c5da6]
+- Updated dependencies [1b1d611]
+- Updated dependencies [d610199]
+- Updated dependencies [9b27571]
+- Updated dependencies [4ecaa9f]
+- Updated dependencies [f62305b]
+- Updated dependencies [945d00d]
+- Updated dependencies [a185888]
+- Updated dependencies [024d0e8]
+- Updated dependencies [d24de8a]
+- Updated dependencies [cd2d333]
+- Updated dependencies [e9a0932]
+- Updated dependencies [fcd0be6]
+- Updated dependencies [dbe8de3]
+- Updated dependencies [b3f1cf1]
+  - @adatechnology/game-characters-three@0.3.0
+  - @adatechnology/game-contracts@0.14.0
+  - @adatechnology/game-characters@0.2.0
+  - @adatechnology/game-audio@0.2.1
+  - @adatechnology/game-crowd@0.2.1
+  - @adatechnology/game-player@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes

@@ -1,5 +1,18 @@
 # @adatechnology/game-vehicles-fleet
 
+## 3.0.0
+
+### Minor Changes
+
+- 3be5d21: Testes e ferramentas no three r160 (o pacote do three passa a pedir `>=0.160.0`); os goldens que o r160 muda foram regravados uma vez: torno dos pneus (ordem dos índices), cores misturadas no espaço linear, um tampo extrudado pelo earcut 2.2.4 e as cores do terreno urbano.
+
+### Patch Changes
+
+- Updated dependencies [d610199]
+- Updated dependencies [3be5d21]
+- Updated dependencies [c470a2c]
+  - @adatechnology/game-vehicles@0.3.0
+
 ## 2.0.0
 
 ### Minor Changes

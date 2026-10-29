@@ -1,5 +1,16 @@
 # @adatechnology/game-characters-uniformed
 
+## 0.1.7
+
+### Patch Changes
+
+- 6beab38: Add the English text of the rank rule note (`RANKS.rule.text.en`).
+- Updated dependencies [1331018]
+- Updated dependencies [95691ff]
+- Updated dependencies [15c5da6]
+- Updated dependencies [4ecaa9f]
+  - @adatechnology/game-characters@0.2.0
+
 ## 0.1.6
 
 ### Patch Changes
