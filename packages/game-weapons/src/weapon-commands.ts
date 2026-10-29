@@ -75,6 +75,7 @@ export abstract class WeaponCommands extends WeaponCore {
     const plan = planReload(a, this._ammo, this._capacity, this.reserve, request)
     this._reloading = true
     this.loadStep = plan.step
+    this.reloadTail = plan.tail
     this.reloadKind = plan.kind
     this.reloadEnd = this.clock + plan.first
     this._phase = { id: 'reload', start: this.clock, end: this.clock + plan.total }

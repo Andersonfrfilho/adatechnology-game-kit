@@ -8,6 +8,8 @@ import type { WeaponEvent } from '@adatechnology/game-weapons'
 import { MECHANICAL_SOUNDS, mechanicalSoundOf } from './audio/mechanical-sounds'
 import { BURST_IDS, SCENE_NOISE_IDS, SCENE_TONE_IDS, TONE_IDS, classBurstId, weaponRecipes } from './audio/recipes'
 import type { MechanicalSoundId, SoundStep } from './audio/mechanical-sounds'
+import { RELOAD_CUES, reloadCueSteps } from './audio/reload-sounds'
+import type { SoundProfile } from './audio/reload-sounds'
 import { computeShotSound, FALLBACK_SOUND_CLASS, GAME_DISTANCE_CURVE, GAME_SOUND_CLASSES } from './audio/shot-sound'
 import type { ShotSound, ShotSoundInput, ShotSoundOptions, SoundClassDef } from './audio/shot-sound'
 
@@ -15,6 +17,8 @@ export { computeShotSound, GAME_SOUND_CLASSES, GAME_DISTANCE_CURVE, DEFAULT_ENER
 export type { ShotSound, ShotSoundInput, ShotSoundOptions, ShotSoundClass, SoundClassDef, DistanceCurve, EnergyCurve } from './audio/shot-sound'
 export { MECHANICAL_SOUNDS, mechanicalSoundOf } from './audio/mechanical-sounds'
 export type { MechanicalSoundId, SoundStep } from './audio/mechanical-sounds'
+export { RELOAD_CUES, RELOAD_CUE_IDS, DEFAULT_SOUND_PROFILE, reloadCueSteps, soundProfileOf } from './audio/reload-sounds'
+export type { ReloadCueId, SoundProfile } from './audio/reload-sounds'
 
 /** What a shot adds to the energy and the category: where the listener is and how the weapon is set. */
 export type ShotExtras = Pick<ShotSoundInput, 'caliber' | 'distance' | 'volume' | 'suppressed' | 'indoors'>
@@ -24,6 +28,8 @@ export interface WeaponAudioOptions extends ShotSoundOptions {
   readonly seed?: number
   /** Replaces or adds mechanical sounds by id. */
   readonly mechanical?: Readonly<Partial<Record<MechanicalSoundId, readonly SoundStep[]>>>
+  /** Replaces or adds the sounds of the reload clip cues by id (`reload-sounds.json` has the ones the kit ships). */
+  readonly reloadCues?: Readonly<Record<string, readonly SoundStep[]>>
   /** Where the AudioContext comes from (default: the global one); lets a host or a test lend its own. Not used with `engine`. */
   readonly createContext?: () => AudioContext
   /**
@@ -44,6 +50,8 @@ export interface WeaponAudio {
   click(): void
   /** A mechanical sound by id: a reload stage, `dry_fire`, `jam`, `safety_on`... */
   mechanical(id: MechanicalSoundId): void
+  /** A cue of a reload clip (`mag_seat`, `charging_handle_pull`, `pump_back`...) for a weapon's profile (the weight of its metal and what it is made of): played now, where the clip says. */
+  cue(id: string, profile?: SoundProfile): void
   /** The mechanical sound of a weapon event, if it has one (reload stages, empty, misfire, fault, clear, safety, mode, feed). */
   event(event: WeaponEvent): void
   /** A sound class of the game by name (`impact`, `flesh`, `glass`...), with the game's distance muffling. */
@@ -74,6 +82,7 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
   const classes: Readonly<Record<string, SoundClassDef>> = { ...GAME_SOUND_CLASSES, ...options.classes }
   const distanceCurve = { ...GAME_DISTANCE_CURVE, ...options.distance }
   const mechanicalTable = { ...MECHANICAL_SOUNDS, ...options.mechanical }
+  const cueTable = { ...RELOAD_CUES, ...options.reloadCues }
   const shared = options.engine
   // own engine: the game mix at the given volume, noise made with the chain, and no voice limit (these sounds are short and the old audio had none)
   const engine: AudioEngine =
@@ -155,6 +164,9 @@ export function createWeaponAudio(volume = 0.6, options: WeaponAudioOptions = {}
       mechanical('dry_fire')
     },
     mechanical,
+    cue(id, profile) {
+      for (const entry of reloadCueSteps(id, profile, cueTable)) step(entry)
+    },
     event(event) {
       const id = mechanicalSoundOf(event)
       if (id) mechanical(id)

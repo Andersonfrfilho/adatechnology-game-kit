@@ -38,6 +38,8 @@ export abstract class WeaponCore {
   protected reloadEnd = 0
   /** Seconds per round while a one-by-one reload runs; null when the magazine goes in at once. */
   protected loadStep: number | null = null
+  /** Seconds of the action worked after the last round of an empty tube. */
+  protected reloadTail = 0
   protected _locked = false
   protected reloadKind: ReloadKind = 'tactical'
   protected drawEnd = 0
@@ -208,8 +210,14 @@ export abstract class WeaponCore {
           this.reserve -= 1
           this.emit({ type: 'feed', at: doneAt })
         }
-        if (this._ammo >= this._capacity || this.reserve <= 0) this.finishReload(doneAt)
-        else this.reloadEnd += this.loadStep
+        if (this._ammo >= this._capacity || this.reserve <= 0) {
+          // an empty tube: the action is worked after the last round, then the reload is over
+          this.loadStep = null
+          if (this.reloadTail > 0) {
+            this.reloadEnd = doneAt + this.reloadTail
+            this.reloadTail = 0
+          } else this.finishReload(doneAt)
+        } else this.reloadEnd += this.loadStep
       } else {
         const take = Math.min(this._capacity - this._ammo, this.reserve)
         this._ammo += take

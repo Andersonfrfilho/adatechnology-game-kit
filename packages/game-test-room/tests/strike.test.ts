@@ -7,6 +7,7 @@ import { makeRoom } from './helpers'
 
 type Fake = RoomAvatar & {
   struck: string[]
+  legs: Array<'left' | 'right' | undefined>
   states: RoomFirstPersonState[]
   armsRoot: THREE.Group
   /** Seconds to impact per clip; a clip not here cannot be played. */
@@ -16,18 +17,21 @@ type Fake = RoomAvatar & {
 const fakeAvatar = (impacts: Record<string, number> = { punch_right: 0.16, shove_two_hands: 0.26, front_kick: 0.32 }): Fake => {
   const armsRoot = new THREE.Group()
   const struck: string[] = []
+  const legs: Array<'left' | 'right' | undefined> = []
   const states: RoomFirstPersonState[] = []
   return {
     root: new THREE.Group(),
     armsRoot,
     struck,
+    legs,
     states,
     impacts,
     update: () => undefined,
     firstPerson: { root: armsRoot, update: (_dt, state) => void states.push({ ...state }) },
-    strike: (clip) => {
+    strike: (clip, options) => {
       if (!(clip in impacts)) return null
       struck.push(clip)
+      legs.push(options?.leg)
       return impacts[clip]!
     },
   }
@@ -91,6 +95,36 @@ describe('strikes wait for the impact of the clip', () => {
     expect(room.log.entries({ type: 'melee' })).toHaveLength(1) // the shove landed; the kick is on its way
     wait(room, 0.4)
     expect(room.log.entries({ type: 'melee' }).map((entry) => entry.data?.weapon)).toEqual(['shove', 'kick'])
+  })
+
+  const kicks = (kickLeg?: 'alternate' | 'left' | 'right', count = 3) => {
+    const avatar = fakeAvatar()
+    const room = makeRoom(kickLeg ? { kickLeg } : {})
+    room.setAvatar(avatar)
+    for (let i = 0; i < count; i++) {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyV', shiftKey: true }))
+      run(room, 2)
+    }
+    return { avatar, room }
+  }
+
+  it('kicks alternate legs by default, starting with the right, and log the leg', () => {
+    const { avatar, room } = kicks()
+    expect(avatar.legs).toEqual(['right', 'left', 'right'])
+    const entries = room.log.entries({ type: 'strike' })
+    expect(entries.map((entry) => entry.data?.leg)).toEqual(['right', 'left', 'right'])
+    expect(entries.map((entry) => entry.data?.impactIn)).toEqual([0.32, 0.32, 0.32])
+  })
+
+  it('kickLeg left or right keeps one leg; other strikes carry no leg', () => {
+    expect(kicks('left', 2).avatar.legs).toEqual(['left', 'left'])
+    expect(kicks('right', 2).avatar.legs).toEqual(['right', 'right'])
+    const avatar = fakeAvatar()
+    const room = setup(avatar)
+    room.setTool('shove')
+    wait(room, 0.5)
+    room.use()
+    expect(avatar.legs).toEqual([undefined])
   })
 
   it('the aim is read again at the impact: a target turned to meanwhile is the one hit', () => {
@@ -236,6 +270,38 @@ describe('first-person arms in the room', () => {
     expect(avatar.states.at(-1)!.targets).toBeNull()
   })
 
+  it('says how far the trigger finger is curled (the index of the hand targets) in the state of the arms and in `handState`, and a debug camera leaves the player\'s own view alone', () => {
+    const avatar = fakeAvatar()
+    const room = makeRoom()
+    room.setAvatar(avatar)
+    let curl: number | undefined = 0
+    const loaded = room.loadModule({
+      id: 'holder',
+      name: 'Holder',
+      group: 'Test',
+      items: () => [],
+      attach: (host) => host.setHandTargets?.(() => ({ R: { position: [0, 1, -1], quaternion: [0, 0, 0, 1] }, grip: 0.8, ...(curl === undefined ? {} : { fingers: { index: curl } }) })) ?? (() => undefined),
+    })
+    expect(loaded.problems).toEqual([])
+    room.setTool('pistol_9mm')
+    room.update(1 / 60)
+    expect(avatar.states.at(-1)!.triggerFinger).toBe(0)
+    expect(room.handState()).toMatchObject({ stance: 'hold', triggerFinger: 0 })
+    curl = 0.8
+    room.update(1 / 60)
+    expect(avatar.states.at(-1)!.triggerFinger).toBe(0.8)
+    expect(room.handState().triggerFinger).toBe(0.8)
+    curl = undefined
+    room.update(1 / 60)
+    expect(room.handState().triggerFinger).toBeNull()
+    const eye = room.camera.position.clone()
+    room.setDebugCamera({ position: [3, 2, 3], target: [0, 1, 0], fov: 30 })
+    room.update(1 / 60)
+    expect(room.camera.position.distanceTo(eye)).toBeLessThan(1e-6)
+    expect(avatar.states.at(-1)!.camera).toBe(room.camera)
+    room.setDebugCamera(null)
+  })
+
   it('a carried item gives a hand under it, and none in third person', () => {
     const avatar = fakeAvatar()
     const room = makeRoom()
@@ -254,5 +320,19 @@ describe('first-person arms in the room', () => {
     room.setCameraMode('third')
     run(room, 0.2)
     expect(avatar.states.at(-1)!.targets).toBeNull()
+  })
+})
+
+describe('the arms can probe the room', () => {
+  it('gives the first-person arms a contact probe that sees the chair ahead and nothing behind', () => {
+    const avatar = fakeAvatar()
+    const room = setup(avatar)
+    wait(room, 0.2)
+    const probe = avatar.states.at(-1)!.contact
+    const toward = probe([-0.6, 0.2, -4.18], [1, 0, 0], 3)
+    expect(toward).not.toBeNull()
+    expect(toward!).toBeGreaterThan(0.1)
+    expect(toward!).toBeLessThan(1.2)
+    expect(probe([-0.6, 0.2, -4.18], [-1, 0, 0], 3)).toBeNull()
   })
 })

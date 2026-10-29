@@ -121,6 +121,36 @@ describe('createFirstPersonArms', () => {
     }
   })
 
+  it('a shove against a wall 0.4 m ahead stops the hands at the wall and bends the elbows', () => {
+    const impact = (wall: number | null): { depth: number; elbow: THREE.Vector3 } => {
+      const arms = createFirstPersonArms(THREE, { clips: FIRST_PERSON_CLIPS })
+      const state = { camera: camera(), stance: 'relaxed', contact: (_o: number[], _d: number[], max: number): number | null => (wall !== null && wall <= max ? wall : null) }
+      step(arms, 0.6, state)
+      arms.play('shove_two_hands')
+      step(arms, 0.26, state)
+      return { depth: Math.max(-arms.handPose('R').position.z, -arms.handPose('L').position.z), elbow: arms.root.getObjectByName('first-person-elbow-R')!.position.clone() }
+    }
+    const free = impact(null)
+    const blocked = impact(0.4)
+    expect(free.depth).toBeGreaterThan(0.45)
+    expect(blocked.depth).toBeLessThanOrEqual(0.4)
+    expect(blocked.depth).toBeGreaterThan(0.3)
+    // the forearm folds back: the elbow rides further out and up than with the arm stretched
+    expect(blocked.elbow.distanceTo(free.elbow)).toBeGreaterThan(0.02)
+  })
+
+  it('a kick against a wall stops the foot in front of it', () => {
+    const arms = createFirstPersonArms(THREE, { clips: FIRST_PERSON_CLIPS })
+    const leg = arms.root.getObjectByName('first-person-leg')!
+    const state = { camera: camera(), stance: 'relaxed', contact: (): number | null => 0.5 }
+    step(arms, 0.3, state)
+    arms.play('front_kick')
+    step(arms, 0.32, state)
+    const box = new THREE.Box3().setFromObject(leg)
+    expect(leg.visible).toBe(true)
+    expect(-box.min.z).toBeLessThanOrEqual(0.5)
+  })
+
   it('a kick shows the right leg while it lasts', () => {
     const arms = createFirstPersonArms(THREE, { clips: FIRST_PERSON_CLIPS })
     const leg = arms.root.getObjectByName('first-person-leg')!
@@ -131,6 +161,22 @@ describe('createFirstPersonArms', () => {
     expect(leg.visible).toBe(true)
     step(arms, 0.6, { camera: camera(), stance: 'relaxed' })
     expect(leg.visible).toBe(false)
+  })
+
+  it('a kick with the left leg shows the foot on the left, mirrored, with the same impact second', () => {
+    const arms = createFirstPersonArms(THREE, { clips: FIRST_PERSON_CLIPS })
+    const footX = (leg: 'left' | 'right'): number => {
+      arms.play('front_kick', { leg })
+      step(arms, 0.32, { camera: camera(), stance: 'relaxed' })
+      const shoe = arms.root.getObjectByName('first-person-leg')!.children.find((child) => child.type === 'Group')!
+      const x = shoe.position.x
+      step(arms, 0.7, { camera: camera(), stance: 'relaxed' })
+      return x
+    }
+    const right = footX('right')
+    const left = footX('left')
+    expect(right).toBeGreaterThan(0.05)
+    expect(left).toBeCloseTo(-right, 3)
   })
 
   it('dispose releases the geometries and materials without throwing', () => {
@@ -174,5 +220,62 @@ describe('toRoomAvatar with the first-person arms', () => {
     expect(room.arms!.playing).toBe(id)
     expect(room.avatar.playing).not.toBeNull()
     expect(room.strike('unknown')).toBeNull()
+  })
+
+  it('a kick with the left leg plays the mirrored body clip, with the same impact second as the right', () => {
+    const room = toRoomAvatar(createPlayerAvatar(THREE))
+    const right = room.strike('front_kick', { leg: 'right' })
+    const rightClip = room.avatar.playing
+    const left = room.strike('front_kick', { leg: 'left' })
+    expect(left).toBe(right)
+    expect(room.avatar.playing).not.toBe(rightClip)
+    expect(room.avatar.playing).toBe('front_kick_left')
+  })
+})
+
+describe('the index finger on the trigger', () => {
+  it('is straight along the frame at rest and curls at least 60 degrees at its first joint when pulled, the other fingers staying where the grip puts them', async () => {
+    const { createHandMesh } = await import('../src/first-person/hand')
+    const hand = createHandMesh(THREE, new THREE.MeshBasicMaterial())
+    const joints = (): number[][] => hand.root.children.filter((child) => child.type === 'Group' && child.children.length > 0 && child.position.z !== 0 && child !== undefined).map((finger) => {
+      const out: number[] = []
+      let part: THREE.Object3D | undefined = finger
+      while (part) {
+        out.push(part.rotation.z)
+        part = part.children.find((child) => child.type === 'Group')
+      }
+      return out
+    })
+    hand.setGrip(0.9)
+    const grip = joints()
+    hand.setIndex(0)
+    const extended = joints()
+    expect(extended[0]!.every((angle) => Math.abs(angle) < 1e-9)).toBe(true)
+    hand.setIndex(1)
+    const pulled = joints()
+    expect((Math.abs(pulled[0]![0]!) * 180) / Math.PI).toBeGreaterThanOrEqual(60)
+    for (const finger of [1, 2, 3]) expect(pulled[finger]).toEqual(grip[finger])
+    hand.setIndex(undefined)
+    expect(joints()[0]).toEqual(grip[0])
+  })
+})
+
+describe('the support arm under a rifle', () => {
+  // the hand of an M4 held at rest, in the camera's space: 0.65 m ahead, a little to the right and low, palm up and the fingers rising to the right
+  const cup = (): HandTargets => {
+    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(Math.cos(0.5), Math.sin(0.5), 0), new THREE.Vector3(Math.sin(0.5), -Math.cos(0.5), 0), new THREE.Vector3(0, 0, -1)))
+    const grip: HandTargets['R'] = { position: [0.2, -0.3, -0.36], quaternion: [0, 0, 0, 1] }
+    return { R: grip, L: { position: [0.156, -0.255, -0.647], quaternion: [q.x, q.y, q.z, q.w] }, grip: 0.9, gripL: 0.6, scale: 1 }
+  }
+  it('comes from below: the elbow hangs under the wrist and the forearm does not sweep in from the side', () => {
+    const arms = createFirstPersonArms(THREE)
+    step(arms, 1, { camera: camera(), targets: cup(), stance: 'hold' })
+    const { elbow, wrist, shoulder } = arms.joints('L')
+    const fore = wrist.clone().sub(elbow)
+    expect(wrist.y - elbow.y, 'the elbow is under the wrist').toBeGreaterThan(0.1)
+    expect((Math.atan2(fore.x, -fore.z) * 180) / Math.PI, 'few degrees off the forward').toBeLessThan(25)
+    expect(Math.atan2(fore.y, Math.hypot(fore.x, fore.z)) * (180 / Math.PI), 'rising to the hand').toBeGreaterThan(20)
+    // the left shoulder sits nearer the middle than the right one (the arm does not pass beside the gun)
+    expect(Math.abs(shoulder.x)).toBeLessThan(0.1)
   })
 })

@@ -46,6 +46,9 @@ const beltSwap: readonly ReloadStage[] = [
   { stage: 'charge', at: 0.742 },
 ]
 
+/** Families that load an empty tube round by round and then work the action (pump, lever, charging handle) to chamber the first round. */
+export const LOADS_THEN_WORKS: ReadonlySet<ReloadFamily> = new Set<ReloadFamily>(['top_load_semi', 'tube_semi', 'pump', 'lever'])
+
 /** Where each step of a reload falls, as a fraction of its duration, from the key frames of the gallery animations. The runtime scales them to the duration of the weapon. */
 export const RELOAD_STAGES: Readonly<Record<ReloadFamily, StageTable>> = {
   pistol: byMagazine(0.872),

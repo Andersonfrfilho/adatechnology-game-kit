@@ -28,9 +28,13 @@ export interface RoomFirstPersonState {
   targets: HandTargets | null
   /** `hold` when something is held (targets), else the rest stance of the tool in hand (`relaxed`, `fists`...; `RoomOptions.handStances`). */
   stance: string
+  /** How far the index finger of the shooting hand is curled, 0 extended along the frame to 1 pulled on the trigger; null when no tool asks for it. */
+  triggerFinger: number | null
   speed: number
   running: boolean
   crouch: boolean
+  /** The distance along a ray (world space) to the first thing in the room, or null: what the arms use to stop at a wall or a wardrobe. */
+  contact(origin: [number, number, number], direction: [number, number, number], maxDistance: number): number | null
 }
 
 /** A body the room can show. The room puts `root` at the player's feet turned to where the player looks: the body's front is +z (as the catalogue items'), so `rotation.y` is the player's yaw plus pi. */
@@ -48,8 +52,11 @@ export interface RoomAvatar {
    * Plays the strike `clipId` (on the body and on the arms) and answers the seconds until its impact, or null when this avatar has no such clip. The room then waits that long
    * before the blow lands (`strikeClips`); an avatar without `strike`, or one that answers null, gets the blow at the click.
    */
-  strike?(clipId: string): number | null
+  strike?(clipId: string, options?: { leg?: 'left' | 'right' }): number | null
 }
+
+/** Which leg a kick uses: `alternate` swaps at each kick (right first). */
+export type KickLeg = 'alternate' | 'left' | 'right'
 
 export type CameraMode = 'first' | 'third'
 

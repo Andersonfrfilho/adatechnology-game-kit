@@ -16,12 +16,12 @@ import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapon
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
-import type { AnimationClipSpec, ControlValue, DestructibleImpl, EnvironmentBus, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, ControlValue, DestructibleImpl, HandTargets, EnvironmentBus, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
-export type { RoomAvatar, RoomAvatarState, RoomFirstPersonState, CameraMode, ThirdPersonOptions } from './avatar'
-import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions } from './avatar'
+export type { RoomAvatar, RoomAvatarState, RoomFirstPersonState, CameraMode, KickLeg, ThirdPersonOptions } from './avatar'
+import type { CameraMode, KickLeg, RoomAvatar, RoomAvatarState, ThirdPersonOptions } from './avatar'
 
 export type ThreeNamespace = typeof THREE_NS
 
@@ -189,6 +189,8 @@ export interface TestRoomOptions {
    * the avatar's `strike` answers; a tool that is not here, or an avatar that cannot play the clip, strikes at the click. Default `{ fists: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }`.
    */
   strikeClips?: Readonly<Record<string, string>>
+  /** Which leg the kick uses: `alternate` (default) swaps at each kick starting with the right, or always `left` or `right`. */
+  kickLeg?: KickLeg
   /** The first-person stance of the arms by tool id, for the tools that hold nothing the module places (default `{ fists: 'fists' }`; any other tool holds, or is `relaxed` with nothing to hold). */
   handStances?: Readonly<Record<string, string>>
   /** The over-the-shoulder view of the `third` mode: distance, shoulder, height, wall probes. Defaults are the team game's. */
@@ -340,6 +342,10 @@ export interface TestRoom {
   readonly avatar: RoomAvatar | null
   /** Crouch and knocked-down state a player module drives (merged over what is set; the room fills the rest). `armed` forces the armed arms (`null`: follow the tool in hand again). */
   setAvatarState(state: { crouch?: boolean; down?: boolean; armed?: boolean | null }): void
+  /** What the first-person arms were last given: the stance, how far the trigger finger is curled (0 extended to 1 pulled) and the targets. Read it on each shot to see the finger. */
+  handState(): { stance: string; triggerFinger: number | null; targets: HandTargets | null }
+  /** Draws the room from another camera (a debug view: the player's camera, the arms and the tool stay as they are) until it is given null. Look at the arms from the side or at a hand from 25 cm. */
+  setDebugCamera(view: { position: Vec3; target: Vec3; fov?: number } | null): void
   /** What the avatar was last given. */
   avatarState(): RoomAvatarState
   /** `first` (the camera is the eye) or `third` (over the shoulder). V toggles it when a body is set. Logged as a `camera` action. */

@@ -1,4 +1,4 @@
-import { RELOAD_STAGES } from './reload-stages'
+import { LOADS_THEN_WORKS, RELOAD_STAGES } from './reload-stages'
 import type { ReloadKind, ReloadRequest, ReloadStageId, WeaponAction } from './types'
 
 export type ReloadableAction = Extract<WeaponAction, { kind: 'firearm' | 'launcher' }>
@@ -11,7 +11,16 @@ export interface ReloadPlan {
   readonly first: number
   /** Seconds of the whole reload; the stages are placed along it. */
   readonly total: number
+  /** Rounds that go in one at a time (0 when the whole magazine goes in at once). */
+  readonly rounds: number
+  /** Seconds after the last round for the action to be worked (the pump, the lever, the charging handle of an empty tube), 0 when there is none. */
+  readonly tail: number
 }
+
+/** Seconds the action takes to be worked after an empty tube is loaded when the rule gives no `timings.cycle`. */
+export const ACTION_WORK_SECONDS = 0.5
+/** Seconds the last round of an empty tube takes to be seated (the hand puts it in, leaves the port and is back on the grip) before the action is worked. */
+export const ACTION_DELAY_SECONDS = 0.6
 
 export const isReloadable = (action: WeaponAction): action is ReloadableAction => action.kind === 'firearm' || action.kind === 'launcher'
 
@@ -33,14 +42,21 @@ const pickKind = (action: ReloadableAction, ammo: number, oneAtATime: boolean, r
 /** How a reload goes: tactical (a magazine swap), empty (with the action to work after) or one by one; `full` loads a revolver all at once with a speed loader. */
 export const planReload = (action: ReloadableAction, ammo: number, capacity: number, reserve: number, request: ReloadRequest): ReloadPlan => {
   const perRound = secondsPerRound(action)
+  const revolver = action.kind === 'firearm' && action.family === 'revolver'
   const oneAtATime = perRound !== undefined && request !== 'full'
   const kind = pickKind(action, ammo, oneAtATime, request)
-  if (kind === 'one_by_one' && perRound !== undefined) {
+  if (perRound !== undefined && oneAtATime && (kind === 'one_by_one' || (kind === 'empty' && action.kind === 'firearm' && !revolver))) {
     const rounds = Math.max(1, Math.min(capacity - ammo, reserve))
-    return { kind, step: perRound, first: perRound, total: rounds * perRound }
+    const loading = rounds * perRound
+    const works = kind === 'empty' && action.kind === 'firearm' && action.family !== undefined && LOADS_THEN_WORKS.has(action.family)
+    // the last round needs `ACTION_DELAY_SECONDS` to be seated before the action is worked, and the closing stage sits at a fraction of the reload (the tables, 0.87 to 0.89): the
+    // action never starts before the last round is in and seated
+    const closingAt = works && action.family ? RELOAD_STAGES[action.family].empty.find((entry) => entry.stage !== 'round_in')?.at ?? 0.88 : 0.88
+    const tail = works ? Math.max(ACTION_DELAY_SECONDS + (action.timings?.cycle ?? ACTION_WORK_SECONDS), (loading + ACTION_DELAY_SECONDS) / closingAt - loading) : 0
+    return { kind, step: perRound, first: perRound, total: loading + tail, rounds, tail }
   }
   const seconds = kind === 'empty' ? action.timings?.reloadEmpty ?? baseSeconds(action) : baseSeconds(action)
-  return { kind, step: null, first: seconds, total: seconds }
+  return { kind, step: null, first: seconds, total: seconds, rounds: 0, tail: 0 }
 }
 
 /** The steps of a reload with the time they happen, scaled to the duration of this weapon's reload. */
