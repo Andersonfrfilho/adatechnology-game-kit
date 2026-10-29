@@ -7,6 +7,8 @@ import { ease } from '../animation/clip-builder'
 import { buildToolClips } from '../animation/clip-set'
 import type { WeaponAudio } from '../audio'
 import { weaponEventOf } from '../audio/host-events'
+import { soundProfileOf } from '../audio/reload-sounds'
+import type { SoundProfile } from '../audio/reload-sounds'
 import { buildWeaponModelById } from '../models'
 import { fitAttachmentModels } from '../models/attachments/fit'
 import type { AttachmentModelRegistry, LaserRaycast } from '../models/attachments/types'
@@ -29,6 +31,7 @@ import { createModelRig } from './rig'
 import type { FxWorld, Session } from './session'
 import { toWorld, worldPositionOf } from './session'
 import { createClipEventHandler } from './viewmodel-events'
+import { handWorkOf, workWeights } from './hand-work'
 import { HAND_HOLD, holdOfModel, targetsOf } from './hand-hold'
 import type { Hold } from './hand-hold'
 
@@ -38,6 +41,10 @@ const HAND_OFFSET: [number, number, number] = [0.2, -0.2, -0.42]
 /** A handgun is held in both hands, so it rides higher and nearer the middle than a long gun: both hands stay in the view. */
 const HANDGUN_OFFSET: [number, number, number] = [0.1, -0.12, -0.44]
 const HEAT_DISPLAY_MAX_FALLBACK = 120
+/** The weapon against a wall: it comes back as far as it needs to stay `margin` in front of it, up to `max` metres, at `rate` per second; the world is probed `probe` metres ahead. */
+export const WALL_PULL = { margin: 0.03, max: 0.7, rate: 14, probe: 3 }
+/** The shooting hand stays above this height of the view (-1 is the bottom edge, 0 the middle): a weapon held low (a pistol grip on a short body, a heavy gun) is raised, up to `max` metres, at `rate` per second. */
+export const HAND_IN_VIEW = { floor: -0.88, max: 0.18, rate: 10 }
 // the launcher has no calibre: its shot is the game's `explosao` class, at the volume of a mid-sized blast
 const LAUNCH_VOLUME = 0.6
 
@@ -58,6 +65,10 @@ export interface ViewmodelOptions {
   layers?: FxLayers
   /** Metres between the shooter and the listener, for the distance muffling of the shot sound (default 0). */
   soundDistance?: () => number
+  /** Where the world is: the distance from a point along a direction to the first surface (not the weapon in the hands), or null. The weapon in the hands comes back from a wall it would go through. */
+  contact?: LaserRaycast
+  /** Told at every sound cue of a reload clip, at the moment the clip says it (also with no audio). */
+  onSound?: (cue: { weapon: string; cue: string; profile: SoundProfile }) => void
   /** Builders of accessory models that replace or add to the ones the kit ships. */
   attachmentModels?: AttachmentModelRegistry
   /** How far a laser beam goes (metres) from a point along a direction, or null when it hits nothing. */
@@ -80,6 +91,8 @@ export interface Viewmodel {
   /** Where the hands take the weapon now (world space), or null with nothing in the hands. The right hand sits on the grip, the left on the forend, and goes to the magazine while it is changed. */
   handTargets(): HandTargets | null
   readonly inHand: string | null
+  /** The clips playing now, with the seconds each lasts. */
+  readonly clips: ReadonlyArray<{ name: string; seconds: number }>
   readonly casings: number
   readonly magazines: number
   dispose(): void
@@ -106,6 +119,19 @@ const collapsedStockPose = (move: NonNullable<Session['model']['parts']['stockMo
 const underbarrelStep = (step: ToolAnimationStep, tool: HostTool): ToolAnimationStep => (tool.underbarrelActive && step.type === 'play' && (step.clip === 'shot' || step.clip === 'reload') ? { ...step, variant: 'ugl' } : step)
 
 const caliberOf = (arsenal: Arsenal, def: WeaponDef): CaliberDef | undefined => (def.action.kind === 'firearm' ? arsenal.calibers.get(def.action.caliber) : undefined)
+
+/**
+ * The curl of the trigger finger: along the frame (`TRIGGER_FINGER.safe`) until the weapon fires, on the trigger (`ready`) for `readySeconds` after a shot, and pulled in by the turn of the
+ * trigger part (the clip's pull, `TRIGGER_TURN` radians), so each shot of a burst or of full auto pulls and releases it; a burst keeps it nearly pulled, with a small tremor per shot.
+ */
+export const TRIGGER_FINGER = { safe: 0, ready: 0.5, pulled: 1, readySeconds: 1.5, burstSeconds: 0.14, tremor: 0.03 } as const
+const TRIGGER_TURN = 0.35
+const indexCurl = (turn: number, sinceShot: number): number => {
+  const ready = sinceShot < TRIGGER_FINGER.readySeconds ? TRIGGER_FINGER.ready : TRIGGER_FINGER.safe
+  const pull = Math.min(1, Math.max(0, turn / TRIGGER_TURN))
+  const held = sinceShot < TRIGGER_FINGER.burstSeconds ? TRIGGER_FINGER.pulled - TRIGGER_FINGER.tremor * (0.5 + 0.5 * Math.sin(sinceShot * 220)) : 0
+  return Math.max(ready + (TRIGGER_FINGER.pulled - ready) * pull, held)
+}
 
 export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const { THREE, scene, camera, arsenal, groundAt, audio } = options
@@ -134,6 +160,12 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   let hold: Hold | null = null
   let reloading = false
   let magazineHand = 0
+  // the trigger finger: the seconds since the last shot and the turn of the trigger part at rest
+  let clock = 0
+  let lastShot = -Infinity
+  let triggerRest = 0
+  // whether the feed clip of the weapon in the hands carries its own sound
+  let feedCued = false
   const rootQuaternion = new THREE.Quaternion()
 
   const world: FxWorld = {
@@ -145,6 +177,10 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     audio,
     layers,
     groundAt,
+    sound: (weapon, cue, profile) => {
+      audio?.cue(cue, profile)
+      options.onSound?.({ weapon, cue, profile })
+    },
     schedule: (delay, seconds, step, done) => void tasks.push({ delay, seconds, elapsed: 0, step: (progress) => step(ease(progress)), done }),
   }
 
@@ -184,6 +220,11 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     hold = null
     reloading = false
     magazineHand = 0
+    reach = 0
+    pull = 0
+    lift = 0
+    handHeight = 0
+    handDepth = 0
     rigStock(THREE, model, def)
     rigUnderbarrel(THREE, model, def)
     const length = new THREE.Box3().setFromObject(model.root).getSize(new THREE.Vector3()).x
@@ -204,6 +245,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       holderScale: scale,
       lengthMetres: length,
       caseType: caliber?.caseType ?? 'rifle',
+      soundProfile: soundProfileOf(weapon, model.parts.family),
       kit,
       cartridge: caliber && dims ? { dims, shape: cartridgeShape(caliber, dims) } : null,
       stuckCase: null,
@@ -218,8 +260,10 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     const reloadFamily = action.kind === 'firearm' || action.kind === 'flame' || action.kind === 'launcher' ? action.family : undefined
     const rpm = action.kind === 'firearm' ? action.rpm : 0
     const rig = createModelRig(model)
+    const clips = buildToolClips({ parts: model.parts, family: model.parts.family, caseType: session.caseType, reloadFamily })
+    feedCued = clips.feed?.events?.some((entry) => entry.type === 'sound') ?? false
     player = createToolClipPlayer({
-      clips: buildToolClips({ parts: model.parts, family: model.parts.family, caseType: session.caseType, reloadFamily }),
+      clips,
       rig,
       onEvent: createClipEventHandler(world, session),
       repeatInterval: () => (rpm > 0 ? 60 / rpm : 0.1),
@@ -229,6 +273,9 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     lastAmmo = options.tool?.().ammo ?? 0
     hand.updateMatrixWorld(true)
     hold = holdOfModel(THREE, model, scale)
+    hold = { ...hold, works: handWorkOf(THREE, model, weapon, hold.right) }
+    triggerRest = model.parts.trigger?.rotation.z ?? 0
+    lastShot = -Infinity
     return true
   }
 
@@ -244,11 +291,46 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     current.attachments.sync(fitted)
   }
 
-  const place = (): void => {
+  // the weapon against a wall: how far it reaches in front of the eye (measured once, with no pull) and how far it is pulled back now
+  let reach = 0
+  let pull = 0
+  // how far the weapon is raised to keep the shooting hand in view, and where that hand was seen last (the height in the view and the depth in front of the eye)
+  let lift = 0
+  let handHeight = 0
+  let handDepth = 0
+  const ahead = new THREE.Vector3()
+  const up = new THREE.Vector3()
+  const seen = new THREE.Vector3()
+  const eyeTurn = new THREE.Quaternion()
+  const corner = new THREE.Vector3()
+  const bounds = new THREE.Box3()
+  const measureReach = (current: Session): number => {
+    bounds.setFromObject(current.model.root)
+    let farthest = 0
+    for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) farthest = Math.max(farthest, corner.set(x, y, z).sub(camera.position).dot(ahead))
+    return farthest
+  }
+
+  const place = (dt = 0): void => {
     const family = session?.model.parts.family
     const [x, y, z] = family === 'pistol' || family === 'revolver' ? HANDGUN_OFFSET : HAND_OFFSET
     hand.position.set(x, y, z).applyQuaternion(camera.quaternion).add(camera.position)
     hand.quaternion.copy(camera.quaternion)
+    if (session && handDepth > 0.05 && 'fov' in camera) {
+      const tanHalf = Math.tan((((camera as THREE_NS.PerspectiveCamera).fov ?? 70) * PI) / 360)
+      const want = Math.max(0, Math.min(HAND_IN_VIEW.max, lift + (HAND_IN_VIEW.floor - handHeight) * tanHalf * handDepth))
+      lift += (want - lift) * Math.min(1, dt * HAND_IN_VIEW.rate)
+      if (lift > 1e-4) hand.position.addScaledVector(up.set(0, 1, 0).applyQuaternion(camera.quaternion), lift)
+    }
+    hand.updateMatrixWorld(true)
+    if (!options.contact || !session) return
+    ahead.set(0, 0, -1).applyQuaternion(camera.quaternion)
+    if (reach === 0) reach = Math.max(0.01, measureReach(session))
+    const free = options.contact(camera.position, ahead, WALL_PULL.probe)
+    const want = free === null ? 0 : Math.max(0, Math.min(WALL_PULL.max, reach + WALL_PULL.margin - free))
+    pull += (want - pull) * Math.min(1, dt * WALL_PULL.rate)
+    if (pull < 1e-4) return
+    hand.position.addScaledVector(ahead, -pull)
     hand.updateMatrixWorld(true)
   }
 
@@ -291,22 +373,28 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       if (event.type === 'tool') equip(event.weapon)
       if (!session || !player || event.weapon !== session.id) return
       const current = session
-      if (event.type === 'shot') handleShot(current, event, tool)
+      if (event.type === 'shot') {
+        lastShot = clock
+        handleShot(current, event, tool)
+      }
       else if (event.type === 'reload' && event.phase === 'start') {
         current.nextChamber = 0
         reloading = true
       } else if (event.type === 'reload' && event.phase === 'end') reloading = false
       else if (event.type === 'clear' && event.phase === 'end') current.stuckCase = null
       const mechanical = weaponEventOf(event)
-      if (mechanical) audio?.event(mechanical)
+      // the clips of the model say when each step of a reload makes its noise (`sound` cues): the rule's stage and feed events would sound it twice
+      const cued = mechanical?.type === 'feed' ? feedCued : mechanical?.type === 'reload_stage' && (player.running.some(({ clip }) => clip.events?.some((entry) => entry.type === 'sound')) ?? false)
+      if (mechanical && !cued) audio?.event(mechanical)
       const step = toolAnimationStep(event)
       if (!step) return
       const last = step.type === 'play' && step.clip === 'shot' && current.model.parts.family === 'pistol' && tool.ammo === 0
       player.apply(last ? { ...step, variant: 'last' } : underbarrelStep(step, tool))
     },
     update(dt) {
+      clock += dt
       if (session) {
-        place()
+        place(dt)
         player?.update(dt)
         const wantsMagazine = reloading || options.tool?.().reloading === true
         magazineHand += ((wantsMagazine ? 1 : 0) - magazineHand) * Math.min(1, dt * HAND_HOLD.magRate)
@@ -315,7 +403,11 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
         session.attachments?.update()
         glow(tool)
         if (tool && session.def.action.kind === 'flame') {
-          if (tool.ammo < lastAmmo) flameJet(heavy(session), dt, session.model.parts.launcherType === 'flame' ? 1 : 0.6)
+          if (tool.ammo < lastAmmo) {
+            flameJet(heavy(session), dt, session.model.parts.launcherType === 'flame' ? 1 : 0.6)
+            // a flamethrower has no shot event: the trigger is down while the fuel burns
+            lastShot = clock
+          }
           lastAmmo = tool.ammo
         }
         secondsSinceShot += dt
@@ -348,10 +440,21 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     handTargets() {
       if (!session || !hold) return null
       hand.updateMatrixWorld(true)
-      return targetsOf(THREE, hold, session.model.root.getWorldQuaternion(rootQuaternion), magazineHand)
+      const targets = targetsOf(THREE, hold, session.model.root.getWorldQuaternion(rootQuaternion), magazineHand, hold.works ? workWeights(hold.works, player?.running ?? []) : undefined)
+      const trigger = session.model.parts.trigger
+      if (trigger) targets.fingers = { index: indexCurl(trigger.rotation.z - triggerRest, clock - lastShot) }
+      if (targets.R && 'fov' in camera) {
+        seen.set(...targets.R.position).sub(camera.position).applyQuaternion(eyeTurn.copy(camera.quaternion).invert())
+        handDepth = -seen.z
+        handHeight = handDepth > 0.05 ? seen.y / handDepth / Math.tan((((camera as THREE_NS.PerspectiveCamera).fov ?? 70) * PI) / 360) : 0
+      }
+      return targets
     },
     get inHand() {
       return session?.id ?? null
+    },
+    get clips() {
+      return (player?.running ?? []).map(({ name, clip }) => ({ name, seconds: clip.duration }))
     },
     get casings() {
       return particles.count('casing')

@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { HandPose, HandTargets } from '@adatechnology/game-contracts'
 import type { WeaponModel } from '../models'
+import type { HandWork } from './hand-work'
 
 /**
  * How the hands take a tool, in metres of the model. Constants of the grip (the thickness of a palm against the thing it holds), not of any weapon: the models say where their grip is.
@@ -21,9 +22,9 @@ export const HAND_HOLD = {
   /** The grip of a long gun that has no drawn pistol grip: how far under the receiver the hand sits. */
   strapUnder: 0.04,
   /** How far lower than touching the palm hangs under a handguard, so the fingers close under it and not over it. */
-  forendDrop: 0.016,
+  forendDrop: 0.03,
   /** How far (radians) the fingers of a support hand under a handguard rise from level. */
-  forendTilt: 0.3,
+  forendTilt: 0.5,
   /** How far a handgun's support hand dips for the new magazine, along the grip. */
   magDip: 0.045,
   /** Closure of the fingers on a grip and on a forend (0 open, 1 closed). */
@@ -50,6 +51,8 @@ export interface Hold {
   scale: number
   grip: number
   gripLeft: number
+  /** What the hands do to the parts the clips move (`handWorkOf`); empty until the viewmodel adds it. */
+  works?: readonly HandWork[]
 }
 
 type Three = typeof THREE_NS
@@ -79,13 +82,21 @@ export const blendPose = (THREE: Three, a: HandPose, b: HandPose, k: number): Ha
 }
 
 /** The targets of a hold: the right hand, the supporting hand (moved toward the magazine by `magazine` 0..1), the grip and the size of the hands. */
-export const targetsOf = (THREE: Three, hold: Hold, rootQuaternion: THREE_NS.Quaternion, magazine: number): HandTargets => {
-  const right = hold.right ? poseOf(hold.right, rootQuaternion) : null
+export const targetsOf = (THREE: Three, hold: Hold, rootQuaternion: THREE_NS.Quaternion, magazine: number, weights?: readonly number[]): HandTargets => {
+  let right = hold.right ? poseOf(hold.right, rootQuaternion) : null
   let left: HandPose | null = null
   if (hold.left) {
     left = poseOf(hold.left, rootQuaternion)
     if (hold.leftMagazine && magazine > 0) left = blendPose(THREE, left, poseOf(hold.leftMagazine, rootQuaternion), magazine)
   }
+  // the hand that works a part leaves what it was holding and goes to the part for as long as the clip moves it
+  hold.works?.forEach((work, index) => {
+    const k = weights?.[index] ?? 0
+    if (k <= 0) return
+    const pose = poseOf(work.anchor, rootQuaternion)
+    if (work.hand === 'R') right = right ? blendPose(THREE, right, pose, k) : pose
+    else left = left ? blendPose(THREE, left, pose, k) : pose
+  })
   return { R: right, L: left, grip: hold.grip, gripL: hold.gripLeft, scale: hold.scale }
 }
 

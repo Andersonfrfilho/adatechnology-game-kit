@@ -27,6 +27,9 @@ export type FirstPersonRig = {
   wrist: number
   /** The way the elbow bends, for the right arm; mirrored for the left. */
   elbowPole: Triple
+  /** The left shoulder and the way its elbow bends, when they are not the mirror image of the right's: the support hand cups a handguard from below, so its shoulder sits nearer the middle and the elbow hangs under the forearm. */
+  shoulderLeft?: Triple
+  elbowPoleLeft?: Triple
   radius: { shoulder: number; elbow: number; wrist: number; cuff: number }
   /** The right hip, the bones of the leg, the way the knee bends, and where the foot waits below the view. */
   hip: Triple
@@ -78,6 +81,8 @@ export type FirstPersonArmsState = {
   targets?: HandTargets | null
   /** `hold` follows the targets; any other stance is a rest pose. Default `relaxed`. */
   stance?: string
+  /** Where the world is: the distance along a ray (world space) to the first surface, or null for none within `maxDistance`. The hands and the foot stop at the surface (the elbow bends) instead of going into it. */
+  contact?(origin: [number, number, number], direction: [number, number, number], maxDistance: number): number | null
   /** Ground speed, m/s. */
   speed?: number
   running?: boolean
@@ -90,7 +95,8 @@ export type FirstPersonArms = {
   /** Add it to the scene: it follows the camera by itself. */
   root: THREE_NS.Group
   /** Starts a clip; false when no registered clip has that id. The previous clip is dropped. */
-  play(clip: string): boolean
+  /** `leg: 'left'` plays the foot of the clip (the right foot) as the left one, in a mirror. */
+  play(clip: string, options?: { leg?: 'left' | 'right' }): boolean
   stop(): void
   /** The clip being played, or null. */
   readonly playing: string | null
@@ -101,5 +107,7 @@ export type FirstPersonArms = {
   on(type: 'event', listener: (event: FirstPersonEvent) => void): () => void
   /** The camera-space pose the hand is drawn at (for tests and for hosts that attach things to it). */
   handPose(side: 'R' | 'L'): { position: THREE_NS.Vector3; quaternion: THREE_NS.Quaternion; grip: number }
+  /** Where the arm is drawn, in the camera's space: the shoulder, the elbow and the wrist (for tests of the way an arm reaches a hand). */
+  joints(side: 'R' | 'L'): { shoulder: THREE_NS.Vector3; elbow: THREE_NS.Vector3; wrist: THREE_NS.Vector3 }
   dispose(): void
 }
