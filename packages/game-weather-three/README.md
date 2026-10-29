@@ -33,8 +33,9 @@ picture.update(dt)
 ## Bench
 
 `createWeatherTestModule({ visual: createWeatherVisual({ vfx: room.vfx }) })` (the module of `game-weather`) adds the picture to the weather bench: seven layers
-(rain curtain, near rain and splashes, mist and ash, sky, lightning, headlights, heat haze; names in pt-BR and en), and a lamp rig (two lamps on a block, the
-Workshop's `hlMat` lenses) in front of the camera to show the headlights. `layers: { sky: false }` keeps a room's own sky; the bench's own `fog` layer reaches the
+(rain curtain, near rain and splashes, mist and ash, sky, lightning, headlights, heat haze; names in pt-BR and en), and a lamp rig in front of the camera to show the headlights. The rig's car is not drawn here: pass
+`vehicles: (THREE) => createVehiclesThree(THREE, { kit })` (game-vehicles-three, with the fleet installed) and it builds a fleet car (`rigVehicle`, default
+`midsize_sedan`) under the lamps, so it follows the vehicles SDK; without it the rig has only the lamps and their beams. `layers: { sky: false }` keeps a room's own sky; the bench's own `fog` layer reaches the
 renderer too. The fog layer gives back the fog the host had when it is switched off.
 
 ## Proof

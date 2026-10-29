@@ -59,4 +59,31 @@ describe('the weather bench with the visual', () => {
     expect(scene.getObjectByName('weather-rain-curtain')).toBeUndefined()
     expect(scene.getObjectByName('weather-lamp-rig')).toBeUndefined()
   })
+
+  it('draws no car of its own: the rig only carries the lamps unless the vehicles SDK lends one', () => {
+    const { host, scene } = lend()
+    const bare = createWeatherTestModule({ seed: 3, autoSchedule: false, sound: false, visual: createWeatherVisual() })
+    const detachBare = bare.attach?.(host)
+    const empty = scene.getObjectByName('weather-lamp-rig')!
+    expect(empty.children.some((child) => (child as THREE.Mesh).isMesh && (child as THREE.Mesh).geometry.type === 'BoxGeometry')).toBe(false)
+    detachBare?.()
+
+    const built: string[] = []
+    let disposed = 0
+    const vehicles = () => ({
+      build(key: string) {
+        built.push(key)
+        const group = new THREE.Group()
+        group.name = 'fleet-car'
+        return { group, length: 4.8, dispose: () => void disposed++ }
+      },
+    })
+    const module = createWeatherTestModule({ seed: 3, autoSchedule: false, sound: false, visual: createWeatherVisual({ vehicles }) })
+    const detach = module.attach?.(host)
+    const car = scene.getObjectByName('weather-lamp-rig')!.getObjectByName('fleet-car')!
+    expect(built).toEqual(['midsize_sedan'])
+    expect(car.position.z).toBeCloseTo(2.15 + 0.1 - 2.4)
+    detach?.()
+    expect(disposed).toBe(1)
+  })
 })
