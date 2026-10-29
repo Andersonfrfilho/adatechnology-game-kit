@@ -42,6 +42,8 @@ export interface VehicleContext {
   meta: VehicleMeta
   zones: DamageZone[]
   zoneState: ZoneState
+  /** The scenario the vehicle was built in (`kit.build(key, state, { scenario })`), so a rebuild keeps it. */
+  scenario?: string
   /** Deterministic random generator seeded from the vehicle key and state. */
   rand: () => number
   parts: VehiclePart[]

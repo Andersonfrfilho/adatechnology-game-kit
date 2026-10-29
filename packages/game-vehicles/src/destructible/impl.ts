@@ -1010,7 +1010,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
   const reset = (): void => {
     const old = c
     const parent = old.root.parent
-    const next = kit.build(old.key, old.state)
+    const next = kit.build(old.key, old.state, old.scenario != null ? { scenario: old.scenario } : undefined)
     if (parent) {
       next.root.position.copy(old.root.position)
       next.root.quaternion.copy(old.root.quaternion)

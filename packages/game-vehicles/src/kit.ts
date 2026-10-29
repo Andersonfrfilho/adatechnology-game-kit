@@ -294,6 +294,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
     }
     if (zoneState == null && st === 'damaged' && kit.config.damagedScenario) zoneState = kit.zoneScenario(c, kit.config.damagedScenario)
     else if (zoneState && zoneState.scenario != null) {
+      c.scenario = zoneState.scenario
       let fromScenario: any = { health: {}, flags: {} }
       try {
         fromScenario = kit.zoneScenario(c, zoneState.scenario)

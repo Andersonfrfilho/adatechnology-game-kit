@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { createVehicleDestructible } from '../src'
 import type { Plugin, ScenarioDefinition } from '../src'
 import { makeKit } from './helpers/kit'
 import { DEMO_CAR } from './helpers/sample-fleet'
@@ -101,6 +102,17 @@ describe('plugins and scenarios', () => {
     expect(c.zoneState.flags.burnt).toBe(false)
     expect(c.zoneState.flags.flipped).toBe(true)
     expect(c.zoneState.health.hood).toBeLessThan(100)
+  })
+
+  it('keeps the scenario a vehicle was built in, so a destructible reset rebuilds the wreck', () => {
+    const kit = makeKit({ plugins: [pack] })
+    const c = kit.build('proto', 'intact', { scenario: 'crashed' })
+    expect(c.scenario).toBe('crashed')
+    const d = createVehicleDestructible(kit, c, { headless: true })
+    d.reset!()
+    expect(d.vehicle).not.toBe(c)
+    expect(d.vehicle.scenario).toBe('crashed')
+    expect(d.vehicle.zoneState.flags.burnt).toBe(true)
   })
 
   it('builds an unknown scenario like zoneScenario answers it: nothing damaged', () => {
