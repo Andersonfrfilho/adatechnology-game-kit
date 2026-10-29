@@ -1,3 +1,4 @@
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type * as THREE_NS from 'three'
 import type { BenchChange, BenchSheet, DestructionEvent, Hit, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, Vec3 } from '@adatechnology/game-contracts'
 import type { ExplosiveDef } from '@adatechnology/game-weapons'
@@ -237,7 +238,8 @@ export function createExplosivesBench(options: ExplosivesBenchOptions): Explosiv
     return new (T().LineLoop)(geometry, new (T().LineBasicMaterial)({ color: colour }))
   }
   const drawRings = (vessel: Vessel): void => {
-    const group = new (T().Group)()
+    // a measuring overlay of the bench, not a piece
+    const group = markKitOrigin(new (T().Group)(), { owner: 'game-weapons-three', kind: 'aid' })
     group.name = 'blast_rings'
     const lethal = lethalOf(vessel)
     const injury = injuryOf(vessel)

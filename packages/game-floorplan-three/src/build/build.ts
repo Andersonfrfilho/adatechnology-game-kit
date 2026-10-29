@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars -- port of the team's closure: dead locals and shapes stay as delivered */
+import { markKitOrigin } from '@adatechnology/game-contracts';
 import { panelViewOf } from '../destruction/panels.js';
 import type { Kernel, Shared } from '../kernel-types.js';
 
@@ -38,7 +39,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         }
         if (shared.ctx.iv) ivAssemble(shared.ctx.iv, gs);
         assembleInteractive(gs); linkDoorLeaves(); mailboxInteractive();
-        const root = new THREE.Group(), house = new THREE.Group(); root.name = 'house3d'; root.add(house); shared.mirrors.house = house;
+        const root = markKitOrigin(new THREE.Group(), { owner: 'game-floorplan-three', kind: 'structure', id: r.template }), house = new THREE.Group(); root.name = 'house3d'; root.add(house); shared.mirrors.house = house;
         if (shared.ctx.apartment) { const u = r.building.units[Math.min(shared.ctx.pu, r.building.units.length - 1)]; house.position.set(u.u, shared.ctx.showBuilding ? 0 : -r.floors[0].y0, u.v); house.rotation.y = u.ry; shared.ctx.unitRy = u.ry; }
         house.updateMatrixWorld(true); shared.ctx.unitInverse = house.matrixWorld.clone().invert();
         for (const [k, g] of Object.entries<any>(gs)) { g.name = k; (k === 'floor' || k === 'building' ? root : house).add(g); }

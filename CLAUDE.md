@@ -37,7 +37,8 @@ Antes de construir qualquer coisa (modelo 3D, animação, comportamento, efeito,
   parede sobre a fundação, cinta de concreto em cima, camadas, tijolos e furo; desenhada pelo renderizador das casas com reboco, pintura, rodapé
   e calçada) ou a casa inteira. Nada de parede de blocos soltos, cubos coloridos ou estrutura montada à parte.
 - **Peça fora do dono fica documentada**: `node tools/kit-audit/audit.mjs --check` roda no CI e falha numa peça nova desenhada fora do SDK
-  dono. O que ainda está fora está em `docs/pecas-fora-do-sdk.md` (peça, onde, dono certo, PR de origem, correção) e em `pending` do
+  dono. `node tools/kit-audit/scene.mjs --check` também: abre cada área da sala de teste e falha em tudo o que aparece na tela sem a marca
+  de origem de um construtor do kit (`markKitOrigin` do `game-contracts`); todo construtor de peça novo marca a raiz que devolve. O que ainda está fora está em `docs/pecas-fora-do-sdk.md` (peça, onde, dono certo, PR de origem, correção) e em `pending` do
   `tools/kit-audit/allowlist.json`; ao corrigir, tire das duas listas.
 - Ao terminar uma migração, atualize o inventário da spec de migração (`specs/`) marcando o que entrou e onde.
 

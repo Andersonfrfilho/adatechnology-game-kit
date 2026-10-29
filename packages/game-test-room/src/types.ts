@@ -315,6 +315,8 @@ export interface TestRoom {
    * that brings an `area` is laid out by it; any other group is laid in rows (small items in front, fixed big ones behind). Unknown: nothing.
    */
   openArea(group: string): SpawnedObject[]
+  /** The loaded modules (`loadModule`): id, name, catalogue group and whether it lays an area of its own. */
+  modules(): Array<{ id: string; name: string; group?: string; hasArea: boolean }>
   /**
    * `openArea` with the loading indicator: shows "Opening <area>…", waits for it to be painted and then lays the area (an area with hundreds of items takes a second or more and would
    * otherwise look frozen). Resolves with the spawned objects. Use it where a person waits for the result (a page that opens an area on load); scenarios call `openArea`, which is synchronous.

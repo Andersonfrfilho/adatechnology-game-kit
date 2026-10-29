@@ -1,6 +1,8 @@
 import type * as THREE_NS from 'three'
 import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology/game-contracts'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { WeaponDef } from '@adatechnology/game-weapons'
+import { buildItem, hasItemModel } from '@adatechnology/game-items-three'
 import { mergeByMaterial, shapeGeometries } from '@adatechnology/game-shapes-three'
 import { buildWeaponModelById } from './models'
 import { buildTripodLegs } from './models/attachments/tripod'
@@ -96,23 +98,122 @@ export function buildProp(THREE: typeof THREE_NS, prop: WeaponProp): THREE_NS.Gr
   return group
 }
 
-/** The model of a weapon for the hands or a shelf: the same prop the counters show. */
+/** How a weapon is drawn from an item model of game-items-three: the item (default the weapon id), and the turns the laying-down rule gets wrong. */
+export interface WeaponItemModel {
+  /** Catalog id of the item model; the weapon id when absent. */
+  readonly item?: string
+  /** Quarter turns about y after the long axis is laid along x (a crossbow's stock is shorter than its limbs). */
+  readonly turn?: number
+  /** Turn it end for end after the head is found (the head is the narrow end: a knife's blade, a screwdriver's tip, an extinguisher's nozzle). */
+  readonly flip?: boolean
+}
+
+// the weapons whose item has another id, or that the laying-down rule turns the wrong way
+const WEAPON_ITEM_MODELS = new Map<string, WeaponItemModel>([
+  ['wrench', { item: 'adjustable_wrench' }],
+  ['extinguisher', { item: 'fire_extinguisher', flip: true }],
+  ['blowtorch', { item: 'gas_torch', flip: true }],
+  ['crossbow', { turn: 1 }],
+  ['knife', { flip: true }],
+  ['meat_cleaver', { flip: true }],
+  ['screwdriver', { flip: true }],
+])
+
+/** Draws a weapon the gallery did not model with an item model of game-items-three (a game adds its own or corrects one; `null` keeps the low-poly prop). */
+export function registerWeaponItemModel(weaponId: string, model: WeaponItemModel | null): void {
+  WEAPON_ITEM_MODELS.set(weaponId, model ?? { item: '' })
+}
+
+/** The item model of game-items-three that draws a weapon (`baseball_bat`, `axe`, `fire_extinguisher`...), or undefined when there is none. */
+export function itemModelOfWeapon(weaponId: string): string | undefined {
+  const id = WEAPON_ITEM_MODELS.get(weaponId)?.item ?? weaponId
+  return id && hasItemModel(id) ? id : undefined
+}
+
+/**
+ * A weapon the gallery did not draw, with the team's item model (Itens do Vale Cinzento: the bat, the axe, the machete, the extinguisher...): its long axis turned
+ * along +x and laid flat, the wider end (the head) at +x unless `registerWeaponItemModel` says otherwise, the origin at the bottom centre, an empty `handle` at the narrow end where the hand closes. Undefined
+ * when game-items-three has no model of it.
+ */
+export function buildItemWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>): THREE_NS.Group | undefined {
+  const itemId = itemModelOfWeapon(def.id)
+  if (!itemId) return undefined
+  const { root } = buildItem(THREE, { id: itemId, category: 'weapon', size: [0, 0, 0], model: itemId })
+  const group = markKitOrigin(new THREE.Group(), { owner: 'game-weapons-three', kind: 'weapon', id: def.id })
+  group.name = def.id
+  group.add(root)
+  const sizeOf = (): THREE_NS.Vector3 => {
+    group.updateMatrixWorld(true)
+    return new THREE.Box3().setFromObject(root).getSize(new THREE.Vector3())
+  }
+  // the long axis along x, the thinnest along y
+  let size = sizeOf()
+  if (size.y > size.x && size.y >= size.z) root.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -Math.PI / 2)
+  else if (size.z > size.x && size.z > size.y) root.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), Math.PI / 2)
+  size = sizeOf()
+  if (size.z < size.y) root.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), Math.PI / 2)
+  const turn = WEAPON_ITEM_MODELS.get(def.id)?.turn ?? 0
+  if (turn) root.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), (turn * Math.PI) / 2)
+  // the head is the wider end (across the floor, z): it goes to +x
+  const box = new THREE.Box3().setFromObject(root)
+  const middle = (box.min.x + box.max.x) / 2
+  const span = [
+    [Infinity, -Infinity],
+    [Infinity, -Infinity],
+  ]
+  const point = new THREE.Vector3()
+  root.traverse((node) => {
+    const mesh = node as THREE_NS.Mesh
+    const position = mesh.isMesh ? mesh.geometry.getAttribute('position') : undefined
+    if (!position) return
+    for (let i = 0; i < position.count; i++) {
+      point.fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld)
+      const half = span[point.x > middle ? 1 : 0]
+      half[0] = Math.min(half[0], point.z)
+      half[1] = Math.max(half[1], point.z)
+    }
+  })
+  const reach = span.map(([low, high]) => high - low)
+  const flip = WEAPON_ITEM_MODELS.get(def.id)?.flip === true
+  if (reach[0] > reach[1] !== flip) root.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), Math.PI)
+  group.updateMatrixWorld(true)
+  const laid = new THREE.Box3().setFromObject(root)
+  const centre = laid.getCenter(new THREE.Vector3())
+  root.position.sub(new THREE.Vector3(centre.x, laid.min.y, centre.z))
+  const length = laid.max.x - laid.min.x
+  const handle = new THREE.Object3D()
+  handle.name = 'handle'
+  handle.position.set(-length * 0.35, 0, 0)
+  group.add(handle)
+  root.traverse((node) => {
+    const mesh = node as THREE_NS.Mesh
+    if (!mesh.isMesh) return
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+  })
+  return group
+}
+
+/** The model of a weapon for the hands or a shelf: the team's item model when the kit has one (`buildItemWeaponModel`), the low-poly prop the counters show otherwise. */
 export function buildWeaponModel(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id' | 'category' | 'mass'>): THREE_NS.Group {
-  return buildProp(THREE, weaponProp(def))
+  return buildItemWeaponModel(THREE, def) ?? buildProp(THREE, weaponProp(def))
 }
 
 const MODEL_BODY = 'body'
 
 /**
- * The prop of a weapon the gallery drew, for a counter or the floor: its model lying on the side, centred on the footprint with its underside on the floor, joined into one mesh per
+ * The prop of a weapon the gallery drew (or that an item model draws, `buildItemWeaponModel`), for a counter or the floor: its model lying on the side, centred on the footprint with its underside on the floor, joined into one mesh per
  * material (the hands keep the model with its pivots, `buildWeaponModelById`), every mesh naming the one rigid part (`body`) that moves it. The size of that part is left in
  * `userData.footprint` for `modeledPropSpec`.
  */
 export function buildModeledProp(THREE: typeof THREE_NS, def: Pick<WeaponDef, 'id'>, name: string, decorate?: (root: THREE_NS.Object3D) => void): THREE_NS.Group | undefined {
-  const model = buildWeaponModelById(THREE, def.id)
+  const model = buildWeaponModelById(THREE, def.id) ?? (() => {
+    const root = buildItemWeaponModel(THREE, def)
+    return root ? { root } : undefined
+  })()
   if (!model) return undefined
   decorate?.(model.root)
-  const group = new THREE.Group()
+  const group = markKitOrigin(new THREE.Group(), { owner: 'game-weapons-three', kind: 'weapon', id: def.id })
   group.name = name
   const box = new THREE.Box3().setFromObject(model.root)
   const center = box.getCenter(new THREE.Vector3())

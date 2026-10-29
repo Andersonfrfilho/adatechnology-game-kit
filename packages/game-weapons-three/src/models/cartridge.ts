@@ -1,3 +1,4 @@
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type * as THREE from 'three'
 import type { CaliberDef, CartridgeDims } from '@adatechnology/game-weapons'
 import type { ModelKit } from './kit'
@@ -21,7 +22,7 @@ export function cartridgeShape(caliber: Pick<CaliberDef, 'caseType' | 'rim'>, di
 /** Port of the gallery's `cartridge`: the round standing on its base, in millimetres (the gallery shows it enlarged), brass case and copper or lead bullet. */
 export function buildCartridge(kit: ModelKit, dims: CartridgeDims, shape: CartridgeShape): THREE.Group {
   const { M, cylinderY } = kit
-  const group = kit.group()
+  const group = markKitOrigin(kit.group(), { owner: 'game-weapons-three', kind: 'ammunition', id: shape })
   const radius = dims.caseDiameter / 2
   const bulletRadius = dims.projectileDiameter / 2
   const caseLength = dims.caseLength
@@ -55,7 +56,7 @@ export function buildCartridge(kit: ModelKit, dims: CartridgeDims, shape: Cartri
 /** An empty case in metres, lying along x with the base at the origin: the brass the weapon throws out. */
 export function buildCasing(kit: ModelKit, dims: CartridgeDims, shape: CartridgeShape): { group: THREE.Group; radius: number; length: number } {
   const { M, cylinderX } = kit
-  const group = kit.group()
+  const group = markKitOrigin(kit.group(), { owner: 'game-weapons-three', kind: 'ammunition', id: shape })
   const radius = dims.caseDiameter / 2000
   const length = dims.caseLength / 1000
   if (shape === 'shell') {
@@ -73,7 +74,7 @@ export function buildCasing(kit: ModelKit, dims: CartridgeDims, shape: Cartridge
 
 /** A live round in metres, lying along x with the base at the origin: what is loaded into a weapon and what a clear throws out. */
 export function buildRound(kit: ModelKit, dims: CartridgeDims, shape: CartridgeShape): { group: THREE.Group; radius: number } {
-  const group = kit.group()
+  const group = markKitOrigin(kit.group(), { owner: 'game-weapons-three', kind: 'ammunition', id: shape })
   const cartridge = buildCartridge(kit, dims, shape)
   cartridge.scale.setScalar(0.001)
   cartridge.rotation.z = -Math.PI / 2

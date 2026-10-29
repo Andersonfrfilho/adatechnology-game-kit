@@ -2570,6 +2570,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     equip,
     openArea,
+    modules: () => [...modules.values()].map((m) => ({ id: m.id, name: m.name, group: m.group, hasArea: typeof m.area === 'function' })),
     openAreaAsync: (area) => loading.busy(t('loading.open_area', { area: areaLabel(area) }), () => openArea(area)),
     loading,
     busy: (label, work, busyOptions) => loading.busy(label, work, busyOptions),

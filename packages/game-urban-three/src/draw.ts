@@ -1,3 +1,4 @@
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { ItemBox, PartStyle, SilhouetteWindow, UrbanPart, UrbanScene } from '@adatechnology/game-urban'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 
@@ -277,7 +278,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
 
   /** Draws a scene: its parts in order, then the instanced boxes, the lit windows and the dark windows. */
   function draw(scene: UrbanScene, drawOptions: DrawOptions = {}): DrawnUrban {
-    const root = drawOptions.root ?? new THREE.Group()
+    const root = markKitOrigin(drawOptions.root ?? new THREE.Group(), { owner: 'game-urban-three', kind: 'urban' })
     const animators: ((t: number) => void)[] = []
     const lights: any[] = []
     const objects: any[][] = []

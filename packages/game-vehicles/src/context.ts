@@ -1,3 +1,5 @@
+import { markKitOrigin } from '@adatechnology/game-contracts'
+
 import type { Kit } from './types'
 import { clamp, rng } from './util'
 
@@ -29,6 +31,8 @@ export function installContext(kit: Kit): void {
       this.effects = new THREE.Group()
       this.root.add(this.vehicle)
       this.root.add(this.effects)
+      // the vehicle is a piece of the kit; its effects (smoke, fire, sparks) are drawn by it too
+      markKitOrigin(this.root, { owner: 'game-vehicles', kind: 'vehicle' })
       this.state = state
       this.glass = []
       this.quads = []

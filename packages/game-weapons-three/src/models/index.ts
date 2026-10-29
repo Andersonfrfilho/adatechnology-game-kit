@@ -1,3 +1,4 @@
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type * as THREE_NS from 'three'
 import { WEAPONS } from '@adatechnology/game-weapons'
 import data from '../data/models.json'
@@ -98,6 +99,7 @@ export function buildWeaponModelById(THREE: typeof THREE_NS, id: string): Weapon
     built.group.position.x = -new THREE.Box3().setFromObject(built.group).min.x
   } else root = fitLength(kit, built.group, entry.length / 1000)
   root.name = id
+  markKitOrigin(root, { owner: 'game-weapons-three', kind: 'weapon', id })
   const model: WeaponModel = { id, root, inner: built.group, parts: built.parts }
   if (!built.parts.frames) built.parts.frames = deriveFrames(THREE, model)
   return model

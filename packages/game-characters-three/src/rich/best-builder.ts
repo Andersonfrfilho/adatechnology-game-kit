@@ -3,6 +3,7 @@
 // Literal port of the game's Bestiário v17 body builder (G 65787-66014 `BEST`, from implementacao/zumbi-arte/bestiario-zombiada.html `build()`), kept as the team
 // wrote it so a diff against the game stays readable. Changes from the source, all listed in KNOWN_DEVIATIONS: three.js and the type cards come in as
 // parameters; the random look comes from the engine's `drawAppearance` (the same `VR` draws in the same order), the blood stream from `createBloodStream`.
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import { createBloodStream, createRng, drawAppearance } from '@adatechnology/game-characters'
 
@@ -255,5 +256,7 @@ export const createBestBuilder = (host: Three, { types, random = Math.random }: 
   }
 
 
-  return { build, TYPES, setLOD(k) { LK = k; SEG = Math.max(5, Math.round(16 * k)); }, topM: () => topM_ref };
+  // every body this builder draws is a piece of the kit (the port above stays as the team wrote it)
+  const marked = (...args) => markKitOrigin(build(...args), { owner: 'game-characters-three', kind: 'person' });
+  return { build: marked, TYPES, setLOD(k) { LK = k; SEG = Math.max(5, Math.round(16 * k)); }, topM: () => topM_ref };
 }

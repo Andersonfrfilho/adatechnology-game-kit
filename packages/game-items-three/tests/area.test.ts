@@ -4,6 +4,7 @@ import type { TestRoom } from '@adatechnology/game-test-room'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
+import { kitOriginOf } from '@adatechnology/game-contracts'
 import { createItemsTestModule, FINDS_TABLE_ID, HUMAN_ID, ITEM_PREFIX, listItemModels, RULER_ID, SHELF_HEIGHT, shelvesLayout, SHIPPED_MODELS, SHOWCASE_PREFIX, SHOWCASE_STAND_ID } from '../src'
 
 const catalog = createGoodsItems()
@@ -14,11 +15,19 @@ function stubRenderer(): THREE.WebGLRenderer {
   return { domElement: dom, shadowMap: { enabled: false, type: 0 }, setSize: () => undefined, setPixelRatio: () => undefined, render: () => undefined, dispose: () => undefined } as unknown as THREE.WebGLRenderer
 }
 
-function roomWithItems(locale = 'pt-BR'): { room: TestRoom; module: ReturnType<typeof createItemsTestModule> } {
+// what the host's person builder returns (a survivor of game-characters-three in the kit's page): any object, the module brings it to 1.80 m
+const person = (T: unknown): THREE.Object3D => {
+  const root = new (T as typeof THREE).Group()
+  root.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.7, 0.3)))
+  root.children[0]!.position.y = 0.85
+  return root
+}
+
+function roomWithItems(locale = 'pt-BR', withPerson = true): { room: TestRoom; module: ReturnType<typeof createItemsTestModule> } {
   const container = document.createElement('div')
   document.body.appendChild(container)
   const room = createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
-  const module = createItemsTestModule({ catalog, locale, translate })
+  const module = createItemsTestModule({ catalog, locale, translate, ...(withPerson ? { person } : {}) })
   const report = room.loadModule(module)
   expect(report.problems).toEqual([])
   return { room, module }
@@ -83,6 +92,18 @@ describe('items test area', () => {
     expect(placed.filter((o) => o.itemId.startsWith(ITEM_PREFIX))).toHaveLength(catalog.list().length)
     expect(placed.filter((o) => o.itemId.startsWith(SHOWCASE_PREFIX))).toHaveLength(listItemModels().length)
     for (const id of [SHOWCASE_STAND_ID, RULER_ID, HUMAN_ID, FINDS_TABLE_ID]) expect(placed.some((o) => o.itemId === id), id).toBe(true)
+  })
+
+  it('draws the shelves and the finds table with the furniture catalogue, and the person the host gives at 1.80 m (none without one)', () => {
+    const { room } = roomWithItems()
+    const placed = room.openArea('items_area')
+    const rootOf = (itemId: string): THREE.Object3D => placed.find((o) => o.itemId === itemId)!.root as THREE.Object3D
+    for (const id of [FINDS_TABLE_ID, ...placed.filter((o) => o.itemId.startsWith('shelf_')).map((o) => o.itemId)]) {
+      expect(kitOriginOf(rootOf(id)), id).toMatchObject({ owner: 'game-floorplan-three', kind: 'furniture' })
+    }
+    expect(new THREE.Box3().setFromObject(rootOf(HUMAN_ID)).getSize(new THREE.Vector3()).y).toBeCloseTo(1.8, 2)
+    const bare = roomWithItems('pt-BR', false).room.openArea('items_area')
+    expect(bare.some((o) => o.itemId === HUMAN_ID)).toBe(false)
   })
 
   it('declares a valid bench in both languages', () => {

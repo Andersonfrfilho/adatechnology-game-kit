@@ -129,10 +129,11 @@ jobs:
         run: pnpm --filter @adatechnology/game-vehicles-fleet exec vitest run tests/golden-cars-2.test.ts tests/golden-cars-1.test.ts tests/team-golden.test.ts tests/digest.test.ts
 
   # Every example page in headless Chromium (software GL): the room and each area end to end, in pt-BR and en.
-  # With all the areas of spec 001 (Phase 8: player, crowd, stories) the job passed 10 min on a runner; 25 min leaves room for the Chromium download.
+  # With all the areas of spec 001 (Phase 8: player, crowd, stories) the job passed 10 min on a runner; on 2026-10-29 it took 14 to 25 min (two runs were
+  # cancelled at 25 on a slow runner), so 40 min.
   examples:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -189,6 +190,36 @@ jobs:
           node examples/crowd-test-area/test.mjs
           node examples/stories-test-area/test.mjs
 
+  # Every drawn thing of every area of the test room comes from the SDK that owns it (CLAUDE.md, "Nada desenhado à mão"): tools/kit-audit/scene.mjs opens
+  # each area and fails on anything with no origin mark of a kit builder (markKitOrigin) that is not pending in tools/kit-audit/allowlist.json (`drawn`).
+  # A job of its own: the examples job is already close to its limit.
+  scene-origin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --prefix "$RUNNER_TEMP/playwright" playwright@1.58.2
+          "$RUNNER_TEMP/playwright/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/playwright/node_modules" >> "$GITHUB_ENV"
+
+      - name: Build the test room
+        run: node examples/test-room/build.mjs
+
+      - name: Check where every drawn piece comes from
+        run: node tools/kit-audit/scene.mjs --check
+
   # Timing of the kit's 3D builders (tools/shapes-bench): medians as ratios to a calibration loop, against baseline.json.
   # Fails when a builder is twice as slow as its baseline, or a group (props3d, household, items, weapons, animals...) 1.5 times, after
   # re-timing the suspects; the table goes to the job summary and the run to an artifact (bench --baseline-from turns it into a baseline).
@@ -221,7 +252,7 @@ jobs:
   # One stable required check; Release waits on the whole "CI" workflow.
   ci-ok:
     if: always()
-    needs: [lint, typecheck, test, goldens-node-24, examples, shapes-bench]
+    needs: [lint, typecheck, test, goldens-node-24, examples, scene-origin, shapes-bench]
     runs-on: ubuntu-latest
     steps:
       - name: Check results

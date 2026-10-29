@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { ControlValue } from '@adatechnology/game-contracts'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import { colorOfChunk, createVfx, hexToLinearRgb } from '@adatechnology/game-vfx'
 import type { ScreenState, VfxWorld, WorkshopEngine } from '@adatechnology/game-vfx'
 import { createChunkLayer, createGlowLayer, createPuffLayer, createSparkLayer } from './instanced'
@@ -57,7 +58,7 @@ export function createVfxRenderer(THREE: ThreeLib, options: VfxRendererOptions):
     for (const mesh of anchors.meshes) (mesh.material as THREE_NS.Material).dispose()
     anchors = undefined
   }
-  const root = new THREE.Group()
+  const root = markKitOrigin(new THREE.Group(), { owner: 'game-vfx-three', kind: 'effect' })
   options.scene.add(root)
 
   const direction = new THREE.Vector3(...(options.lightDirection ?? LAB_LIGHT_DIRECTION)).normalize()

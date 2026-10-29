@@ -77,6 +77,11 @@ export type AudioTestModuleOptions = {
   seed?: number
   /** First sound chosen (default `bench_ping`). */
   sound?: string
+  /**
+   * Draws the thing the probe stands for, where the sound comes from with the `probe` source (for example a portable radio of `game-items-three`). The module
+   * draws nothing of its own: without it the area has no probe and the sounds come from the bench settings.
+   */
+  probe?: (THREE: unknown) => unknown
 }
 
 /** What the scenarios use of the context the test room passes. */
@@ -283,25 +288,23 @@ export function createAudioTestModule(options: AudioTestModuleOptions = {}): Aud
     }
   }
 
-  const items = (): TestableItem[] => [
-    {
-      id: PROBE_ID,
-      name: text.probe,
-      movable: false,
-      build: (THREE) => {
-        const T = THREE as { Group: new () => { add(...objects: unknown[]): void; userData: Record<string, unknown> }; Mesh: new (geometry: unknown, material: unknown) => { position: { set(x: number, y: number, z: number): void } }; CylinderGeometry: new (top: number, bottom: number, height: number, segments: number) => unknown; BoxGeometry: new (x: number, y: number, z: number) => unknown; MeshStandardMaterial: new (parameters: Record<string, unknown>) => unknown }
-        const group = new T.Group()
-        const post = new T.Mesh(new T.CylinderGeometry(0.04, 0.05, 1.5, 10), new T.MeshStandardMaterial({ color: 0x4a4f55 }))
-        post.position.set(0, 0.75, 0)
-        const speaker = new T.Mesh(new T.BoxGeometry(0.32, 0.4, 0.26), new T.MeshStandardMaterial({ color: 0x1d2024 }))
-        speaker.position.set(0, 1.5, 0)
-        group.add(post, speaker)
-        group.userData[PROBE_ID] = true
-        return group
+  const items = (): TestableItem[] => {
+    const probe = options.probe
+    if (!probe) return []
+    return [
+      {
+        id: PROBE_ID,
+        name: text.probe,
+        movable: false,
+        build: (THREE) => {
+          const root = probe(THREE) as { userData?: Record<string, unknown> }
+          root.userData = root.userData ?? {}
+          root.userData[PROBE_ID] = true
+          return root
+        },
       },
-      spec: { parts: [{ id: 'post', material: 'steel', shape: { kind: 'box', size: [0.12, 1.7, 0.3] }, position: [0, 0.85, 0], mass: 25, hp: 400 }] },
-    },
-  ]
+    ]
+  }
 
   const controls = (): ModuleControl[] => [
     { kind: 'choice', id: 'sound', name: text.controls.sound, options: soundOptions(), default: state.sound },
@@ -383,7 +386,7 @@ export function createAudioTestModule(options: AudioTestModuleOptions = {}): Aud
   ]
 
   const area = (): { placements: AreaPlacement[]; view: { eye: Vec3; target: Vec3 } } => ({
-    placements: [{ item: PROBE_ID, position: PROBE_AT, asleep: true }],
+    placements: options.probe ? [{ item: PROBE_ID, position: PROBE_AT, asleep: true }] : [],
     view: { eye: [0, 1.7, 3], target: [0, 1.4, -10] },
   })
 
