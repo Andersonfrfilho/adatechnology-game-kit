@@ -56,9 +56,10 @@ const census = (area) =>
     const frames = (n) => new Promise((done) => { let k = 0; const step = () => (++k >= n ? done() : requestAnimationFrame(step)); requestAnimationFrame(step) })
     const count = () => { let n = 0; room.scene.traverse(() => n++); return n }
     if (area) await room.openAreaAsync(area)
-    // modules build some of their area over a few frames: wait until the scene stops growing (at most ~10 s of frames)
-    for (let last = -1, i = 0; i < 40; i++) {
-      await frames(15)
+    // modules build some of their area over a few frames: wait until the scene stops growing, at most 60 s (a frame of the vehicles area takes seconds in software GL)
+    const until = performance.now() + 60000
+    for (let last = -1; performance.now() < until; ) {
+      await frames(5)
       const now = count()
       if (now === last) break
       last = now

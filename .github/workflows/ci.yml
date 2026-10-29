@@ -195,7 +195,7 @@ jobs:
   # A job of its own: the examples job is already close to its limit.
   scene-origin:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
