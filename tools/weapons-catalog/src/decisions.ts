@@ -7,6 +7,7 @@ export type Decision<TValue> = { readonly value: TValue; readonly source: string
 
 type CaseType = 'pistol' | 'rifle' | 'shell' | 'big' | 'tiny'
 type RimType = 'rimfire' | 'rimmed' | 'rimless' | 'shell'
+type Propellant = 'smokeless' | 'black_powder' | 'none'
 type DataSource = 'gallery' | 'arsenal' | 'game' | 'lab' | 'sdk' | 'reference' | 'derived'
 
 export type CartridgeDimensions = {
@@ -31,6 +32,7 @@ export type CaliberDecision = {
   readonly noise: Decision<number>
   readonly caseType?: Decision<CaseType>
   readonly rim?: Decision<RimType>
+  readonly propellant?: Decision<Propellant>
   readonly sources: Decision<readonly DataSource[]>
   readonly base?: Decision<NewCaliberBase>
   readonly cartridge?: Decision<CartridgeDimensions>

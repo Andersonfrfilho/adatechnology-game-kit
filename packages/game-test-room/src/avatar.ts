@@ -4,6 +4,7 @@
  */
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
+import type { HandTargets } from '@adatechnology/game-contracts'
 
 /** What the room tells the avatar every frame. */
 export interface RoomAvatarState {
@@ -19,15 +20,43 @@ export interface RoomAvatarState {
   pitch: number
 }
 
+/** What the room tells the first-person arms every frame, after the modules have placed the tool in the hands. */
+export interface RoomFirstPersonState {
+  /** The player's eye: the arms are drawn in its space. */
+  camera: THREE_NS.Object3D
+  /** Where the tool in the hands asks them to be (world space): the module's, else the carried item's, else null. */
+  targets: HandTargets | null
+  /** `hold` when something is held (targets), else the rest stance of the tool in hand (`relaxed`, `fists`...; `RoomOptions.handStances`). */
+  stance: string
+  speed: number
+  running: boolean
+  crouch: boolean
+}
+
 /** A body the room can show. The room puts `root` at the player's feet turned to where the player looks: the body's front is +z (as the catalogue items'), so `rotation.y` is the player's yaw plus pi. */
 export interface RoomAvatar {
   root: THREE_NS.Object3D
   update(dt: number, state: RoomAvatarState): void
   /** A socket at a hand: the carried item follows `hand('R')` in third person. */
   hand?(side: 'R' | 'L'): THREE_NS.Object3D
+  /**
+   * The arms of the first-person view. The room shows `root` only in first person (the body only in third), updates it every frame after the modules'
+   * frame hooks (so the tool in the hands is already placed) and before the render.
+   */
+  firstPerson?: { root: THREE_NS.Object3D; update(dt: number, state: RoomFirstPersonState): void }
+  /**
+   * Plays the strike `clipId` (on the body and on the arms) and answers the seconds until its impact, or null when this avatar has no such clip. The room then waits that long
+   * before the blow lands (`strikeClips`); an avatar without `strike`, or one that answers null, gets the blow at the click.
+   */
+  strike?(clipId: string): number | null
 }
 
 export type CameraMode = 'first' | 'third'
+
+/** Which clip a melee tool plays before its blow lands (`TestRoomOptions.strikeClips`). */
+export const DEFAULT_STRIKE_CLIPS: Readonly<Record<string, string>> = { fists: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }
+/** The first-person stance of the tools that choose one (`TestRoomOptions.handStances`). */
+export const DEFAULT_HAND_STANCES: Readonly<Record<string, string>> = { fists: 'fists' }
 
 /**
  * The over-the-shoulder view, metres. Defaults are the numbers of the team game's shoulder camera

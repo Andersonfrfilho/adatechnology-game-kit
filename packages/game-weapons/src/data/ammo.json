@@ -930,6 +930,24 @@
       "sources": [
         "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
       ]
+    },
+    {
+      "id": "45_70_bp:fmj",
+      "caliber": "45_70_bp",
+      "kind": "fmj",
+      "label": ".45-70 Government 405 gr lead",
+      "core": "lead",
+      "jacket": "none",
+      "penetration": {
+        "steel": 2.5,
+        "concrete": 75,
+        "brick": 150,
+        "wood": 240
+      },
+      "basis": "estimated",
+      "sources": [
+        "Estimated from muzzle energy, bullet construction and the published anchors of this file (see _notes); refine with a datasheet."
+      ]
     }
   ]
 }

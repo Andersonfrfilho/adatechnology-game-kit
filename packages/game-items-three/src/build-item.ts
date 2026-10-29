@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 
+import { tagForDestruction } from './destruction'
 import { createItemKit } from './kit'
 import type { ItemKit, Vec3Tuple } from './kit'
 import { itemModelBuilder, itemModelEntry } from './models/registry'
@@ -14,6 +15,8 @@ export interface DrawableItem extends ShapeSubject {
   size: Vec3Tuple
   /** Key of a showcase model; without one (or when the model is not registered) the simple shape is drawn. */
   model?: string
+  /** Real weight in kg; with `destructible` it becomes the mass of the destruction body. */
+  weight?: number
 }
 
 export interface BuildItemOptions {
@@ -23,6 +26,8 @@ export interface BuildItemOptions {
   simple?: boolean
   /** Level of detail of the simple shape, 1 (default) or 0.5 for half the segments. */
   detail?: number
+  /** Write the `userData` that `game-destruction-three`'s `specFromObject3D` reads (material of each mesh, hollow shells, welded parts, skins; see `tagForDestruction`). Default off. */
+  destructible?: boolean
   /** A kit to draw with (and to collect the materials in); default a new one. */
   kit?: ItemKit
 }
@@ -78,5 +83,6 @@ export function buildItem(T: typeof THREE_NS, item: DrawableItem, options: Build
   const materials = kit.materials.slice(first)
   if (options.wear) setWear(materials, options.wear)
   root.userData.wear = options.wear ?? 0
+  if (options.destructible) tagForDestruction(root, { ...(kind === 'model' && item.model !== undefined ? { modelId: item.model } : {}), ...(item.weight === undefined ? {} : { weight: item.weight }), size: item.size })
   return { root, kind, ...(shape ? { shape } : {}), size: item.size, materials }
 }
