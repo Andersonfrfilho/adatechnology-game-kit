@@ -2,7 +2,7 @@ import { checkSpec } from '@adatechnology/game-contracts'
 import { createDestruction } from '@adatechnology/game-destruction'
 import { describe, expect, it } from 'vitest'
 
-import { furnitureSpec } from '../src'
+import { furnitureSpec, tapSpec } from '../src'
 import { THREE } from './helpers/houses'
 import { fakeDocument } from './helpers/fake-document'
 
@@ -57,5 +57,29 @@ describe('furnitureSpec', () => {
     expect(() => make('no_such_thing')).toThrow(/no builder/)
     expect(() => make('bookcase', { catalog: [] })).toThrow(/catalogue/)
     expect(make('bookcase', { catalog: [], w: 1, d: 0.3, h: 1.5 }).size.h).toBe(1.5)
+  })
+})
+
+describe('tapSpec', () => {
+  it('draws the team\'s counter tap as steel parts and says where the water leaves it', () => {
+    const tap = tapSpec(THREE, { document: fakeDocument })
+    expect(tap.spec.parts.length).toBeGreaterThanOrEqual(8)
+    expect(tap.spec.parts.every((p) => p.material === 'steel')).toBe(true)
+    // the lever is drawn too, the water thread is not
+    expect(tap.spec.parts.some((p) => p.position[0] > 0.02)).toBe(true)
+    expect(tap.spout[1]).toBeGreaterThan(0.04)
+    expect(tap.spout[1]).toBeLessThan(0.2)
+    expect(tap.spout[2]).toBeGreaterThan(0)
+    expect(Math.abs(tap.spout[0])).toBeLessThan(0.01)
+    const names = new Set<string>()
+    tap.build(THREE).traverse((o: { isMesh?: boolean; name: string }) => o.isMesh && names.add(o.name))
+    expect([...names].sort()).toEqual(tap.spec.parts.map((p) => p.id).sort())
+  })
+
+  it('draws the wall tap too, and is the same every time', () => {
+    const a = tapSpec(THREE, { kind: 'wall', document: fakeDocument })
+    const b = tapSpec(THREE, { kind: 'wall', document: fakeDocument })
+    expect(a.spec.parts.length).toBeGreaterThan(3)
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b))
   })
 })

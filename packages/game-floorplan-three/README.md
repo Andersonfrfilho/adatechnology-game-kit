@@ -61,6 +61,8 @@ const table = furnitureSpec(THREE, 'dining_table', { w: 1.6, d: 0.8, h: 0.78, op
 table.top // { part: 'wood_0', y: 0.78 }: what loose things rest on
 ```
 
+`tapSpec(THREE, { kind: 'counter' | 'wall', reach? })` does the same for the team's tap (`counterTap` of the sink, `wallTap` of the laundry tub): the steel parts of the base, column, spout and lever, and `spout`, where the water thread starts (the thread itself is not drawn).
+
 Materials: `wood` is `wood_hard` (`wood_soft` under 3.5 cm: boards, panels), `metal` is `steel`, `plain` is `plastic` (`paper` on shelves and racks: the books), `fabric`, `glass` and `plant` keep their name; `options.materials` overrides any key. Parts that touch the floor are anchored. Joints come from `inferJoints` (screws between wood...), except that paper rests on what it lies on with a weak `resting` joint, so books fall when their board breaks, and is not joined to its neighbours. `options.chairs: false` drops what the builder draws in a frame of its own (a table's chairs). Planes and leaves have no volume and are left out.
 
 ## Bound to the destruction
