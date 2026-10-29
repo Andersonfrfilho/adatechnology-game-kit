@@ -484,10 +484,24 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   addArena()
 
+  /**
+   * The object of an item, with its root at scale 1: a builder that sizes its model by the scale of the root (the showcase models of game-items-three do, page units to metres) is wrapped
+   * in a group, so that the destruction spec, the piece box and the mass read the object in metres like the eye does.
+   */
+  const buildRoot = (item: TestRoomItem): THREE_NS.Object3D => {
+    const built = item.build(THREE)
+    if (item.impl || (Math.abs(built.scale.x - 1) < 1e-6 && Math.abs(built.scale.y - 1) < 1e-6 && Math.abs(built.scale.z - 1) < 1e-6)) return built
+    const holder = new THREE.Group()
+    holder.name = built.name
+    holder.userData = built.userData
+    holder.add(built)
+    return holder
+  }
+
   const spawn = (itemId: string, position?: Vec3, rotationY?: number): SpawnedObject => {
     const item = catalogMap.get(itemId)
     if (!item) throw new Error(`game-test-room: unknown item "${itemId}"`)
-    const root = item.build(THREE)
+    const root = buildRoot(item)
     let pos: Vec3
     if (position) pos = [position[0], position[1], position[2]]
     else {
@@ -2090,7 +2104,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       let partIds: string[] = []
       const base = { module: mod.id, item: item.id }
       try {
-        const root = item.build(THREE)
+        const root = buildRoot(item)
         root.updateMatrixWorld(true)
         if (item.impl) {
           const probe = item.impl(root, `${item.id}_check`)
