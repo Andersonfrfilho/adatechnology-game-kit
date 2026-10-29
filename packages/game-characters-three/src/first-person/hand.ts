@@ -20,6 +20,8 @@ export type HandMesh = {
   root: THREE_NS.Group
   /** 0 open, 1 closed on a grip. */
   setGrip(grip: number): void
+  /** Curls the index finger on its own (0 extended, 1 curled); `undefined` gives it back to the grip. */
+  setIndex(curl: number | undefined): void
   dispose(): void
 }
 
@@ -86,17 +88,32 @@ export const createHandMesh = (THREE: Three, skin: THREE_NS.Material, wristSkin:
   thumbNear.add(thumbFar)
   root.add(thumbNear)
 
+  let lastGrip = 0
+  let indexCurl: number | undefined
+  const curl = [CURL.near, CURL.mid, CURL.far]
+  const applyIndex = (): void => {
+    const finger = joints[0]
+    if (!finger) return
+    const k = indexCurl === undefined ? lastGrip : Math.min(1, Math.max(0, indexCurl))
+    finger.segments.forEach((segment, i) => (segment.rotation.z = -curl[i]! * k * finger.weight))
+  }
   const setGrip = (grip: number): void => {
     const k = Math.min(1, Math.max(0, grip))
-    const curl = [CURL.near, CURL.mid, CURL.far]
+    lastGrip = k
     for (const joint of joints) joint.segments.forEach((segment, i) => (segment.rotation.z = -curl[i]! * k * joint.weight))
     thumbNear.rotation.set(0, 0.55 - 1.45 * k, -0.1 - 0.75 * k)
     thumbFar.rotation.z = -0.1 - 0.7 * k
+    applyIndex()
+  }
+  const setIndex = (value: number | undefined): void => {
+    indexCurl = value
+    applyIndex()
   }
   setGrip(0)
   return {
     root,
     setGrip,
+    setIndex,
     dispose() {
       for (const geometry of geometries) geometry.dispose()
     },

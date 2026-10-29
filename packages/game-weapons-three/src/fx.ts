@@ -22,6 +22,8 @@ export interface WeaponFx {
   readonly layers: FxLayers
   /** Weapon shown in the hands, or null. */
   readonly inHand: string | null
+  /** The clips of the model playing now with the seconds each lasts (scaled to the rule's duration): which reload variant went (`reload` or `reload_empty`...). */
+  readonly clips: ReadonlyArray<{ name: string; seconds: number }>
   /** Casings and magazines currently on the floor or in the air. */
   readonly casings: number
   readonly magazines: number
@@ -38,6 +40,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
   const model = createViewmodel({
     layers,
     ...(options.soundDistance ? { soundDistance: options.soundDistance } : {}),
+    ...(options.onSound ? { onSound: options.onSound } : {}),
     THREE: options.THREE,
     scene: options.scene,
     camera: options.camera,
@@ -49,6 +52,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     ...(options.condition ? { condition: options.condition } : {}),
     ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
     ...(options.raycast ? { raycast: options.raycast } : {}),
+    ...(options.contact ? { contact: options.contact } : {}),
     ...(options.effects ? { effects: options.effects } : {}),
     ...(options.flyRocket === undefined ? {} : { flyRocket: options.flyRocket }),
   })
@@ -71,6 +75,9 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     layers,
     get inHand() {
       return model.inHand ?? box.inHand
+    },
+    get clips() {
+      return model.clips
     },
     get casings() {
       return box.casings + model.casings

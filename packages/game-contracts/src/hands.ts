@@ -24,6 +24,8 @@ export interface HandTargets {
   gripL?: number
   /** The size of the hands against life size (a tool drawn smaller than real takes smaller hands). Default 1. */
   scale?: number
+  /** Fingers of the right hand that curl by themselves, 0 extended to 1 fully curled (the index finger of a trigger hand); the others follow `grip`. */
+  fingers?: { index?: number }
 }
 
 /** Read every frame by whoever draws the arms; answers null while nothing is held. */

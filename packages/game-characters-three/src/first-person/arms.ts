@@ -24,6 +24,14 @@ const ELBOW_SEGMENTS = 8
 /** An arm is stretched to this fraction of its length before the shoulder moves toward the target. */
 const REACH_SLACK = 0.97
 /** A foot is shown while a clip holds it by at least this much. */
+/** How far (m) the world is probed in front of the camera, the closest a hand may come to the eye, and the gap left in front of a surface. */
+const CONTACT_PROBE = 1.4
+const CONTACT_MIN = 0.12
+const CONTACT_MARGIN = 0.005
+const CONTACT_PALM = 0.03
+/** The toe of the shoe (and the corners of its sole) is this far (m) from the ankle along the shoe. */
+const FOOT_LENGTH = 0.24
+
 const FOOT_SHOWN = 0.001
 
 /** How much of its own colour each material glows with (0..1). */
@@ -72,6 +80,8 @@ type Arm = {
   blend: number
   /** What is drawn. */
   drawn: Pose
+  /** The joints of the arm as drawn, in the space of the arms root (the camera's). */
+  joints: { shoulder: THREE_NS.Vector3; elbow: THREE_NS.Vector3; wrist: THREE_NS.Vector3 }
 }
 
 const newPose = (THREE: Three): Pose => ({ p: new THREE.Vector3(), q: new THREE.Quaternion(), grip: 0, scale: 1 })
@@ -88,6 +98,15 @@ const mixPose = (THREE: Three, out: Pose, a: Pose, b: Pose, k: number): Pose => 
   out.grip = mix(a.grip, b.grip, k)
   out.scale = mix(a.scale, b.scale, k)
   return out
+}
+
+/** The mirror image of a rotation across the plane x = 0 (M R M with M = diag(-1, 1, 1)): for a shoe, which is its own mirror image about its length. */
+const mirrorRotation = (THREE: Three, q: THREE_NS.Quaternion): THREE_NS.Quaternion => {
+  const m = new THREE.Matrix4().makeRotationFromQuaternion(q)
+  const e = m.elements
+  // column-major: element (row i, column j) is e[j * 4 + i]; the ones with exactly one of i, j equal to 0 change sign
+  for (const [i, j] of [[0, 1], [0, 2], [1, 0], [2, 0]] as const) e[j * 4 + i] = -e[j * 4 + i]!
+  return new THREE.Quaternion().setFromRotationMatrix(m)
 }
 
 /** The mirror image of a pose across the plane x = 0: the left hand that is the right one seen in a mirror (its frame is the right hand's with z flipped, so z is flipped back). */
@@ -179,7 +198,8 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     const fore = limb(root, rig.radius.elbow, rig.radius.wrist, rig.fore, materials.sleeve)
     const cuff = limb(root, rig.radius.cuff, rig.radius.cuff, 0.03, materials.cuff)
     const elbow = ball(root, rig.radius.elbow * 1.02, materials.sleeve)
-    arms[side] = { side, sign, hand, anchor, upper, fore, cuff, elbow, shown: newPose(THREE), from: newPose(THREE), mode: null, blend: 1, drawn: newPose(THREE) }
+    elbow.name = `first-person-elbow-${side}`
+    arms[side] = { side, sign, hand, anchor, upper, fore, cuff, elbow, shown: newPose(THREE), from: newPose(THREE), mode: null, blend: 1, drawn: newPose(THREE), joints: { shoulder: new THREE.Vector3(), elbow: new THREE.Vector3(), wrist: new THREE.Vector3() } }
   }
 
   // the right leg, shown only while a kick holds it: a trouser, a knee, a trouser, a shoe
@@ -204,8 +224,8 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   shoeBox(0.1, 0.05, 0.088, 0.17, -0.005, materials.shoe)
   leg.add(shoe)
 
-  const shoulderOf = (sign: 1 | -1, out: THREE_NS.Vector3): THREE_NS.Vector3 => out.set(rig.shoulder[0] * sign, rig.shoulder[1], rig.shoulder[2])
-  const poleOf = (sign: 1 | -1): THREE_NS.Vector3 => new THREE.Vector3(rig.elbowPole[0] * sign, rig.elbowPole[1], rig.elbowPole[2])
+  const shoulderOf = (sign: 1 | -1, out: THREE_NS.Vector3): THREE_NS.Vector3 => (sign === -1 && rig.shoulderLeft ? out.set(...rig.shoulderLeft) : out.set(rig.shoulder[0] * sign, rig.shoulder[1], rig.shoulder[2]))
+  const poleOf = (sign: 1 | -1): THREE_NS.Vector3 => (sign === -1 && rig.elbowPoleLeft ? new THREE.Vector3(...rig.elbowPoleLeft) : new THREE.Vector3(rig.elbowPole[0] * sign, rig.elbowPole[1], rig.elbowPole[2]))
   const kneePole = new THREE.Vector3(...rig.kneePole)
   const hip = new THREE.Vector3(...rig.hip)
 
@@ -234,6 +254,31 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   const camPosition = new THREE.Vector3()
   const camQuaternion = new THREE.Quaternion()
   const camInverse = new THREE.Quaternion()
+  const clamped = newPose(THREE)
+  const probeAt = new THREE.Vector3()
+  const probeForward = new THREE.Vector3()
+  const probeFingers = new THREE.Vector3()
+  /** Set each update when the host can answer where the world is in front of the camera (`contact` of the state). */
+  let contact: ((origin: [number, number, number], direction: [number, number, number], maxDistance: number) => number | null) | undefined
+  /**
+   * Keeps a hand (or the foot) in front of the surface it would go into: the surface along the camera's forward through the hand's place, minus how far the hand reaches forward (its fingers when they point
+   * ahead) and a few millimetres. The IK then bends the elbow instead of the hand entering the mesh. Never closer to the eye than `CONTACT_MIN`.
+   */
+  const keepOutside = (pose: Pose, reach: number): Pose => {
+    if (!contact) return pose
+    probeAt.set(pose.p.x, pose.p.y, 0).applyQuaternion(camQuaternion).add(camPosition)
+    probeForward.set(0, 0, -1).applyQuaternion(camQuaternion)
+    const distance = contact([probeAt.x, probeAt.y, probeAt.z], [probeForward.x, probeForward.y, probeForward.z], CONTACT_PROBE)
+    if (distance === null) return pose
+    const limit = Math.max(CONTACT_MIN, distance - reach - CONTACT_MARGIN)
+    if (-pose.p.z <= limit) return pose
+    copyPose(clamped, pose)
+    clamped.p.z = -limit
+    return clamped
+  }
+  /** How far a hand reaches forward of its middle: the fingers when they point ahead, else the thickness of the palm. */
+  const forward = (pose: Pose, length: number): number => Math.max(CONTACT_PALM, -probeFingers.set(1, 0, 0).applyQuaternion(pose.q).z * length * pose.scale)
+  const handReach = (pose: Pose): number => forward(pose, 0.085)
   const camScale = new THREE.Vector3()
   const toCamera = (target: HandPose, grip: number, scale: number, out: Pose): Pose => {
     out.p.set(...target.position).sub(camPosition).applyQuaternion(camInverse)
@@ -244,7 +289,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   }
 
   const listeners = new Set<(event: FirstPersonEvent) => void>()
-  let run: { clip: FirstPersonClip; time: number } | null = null
+  let run: { clip: FirstPersonClip; time: number; left: boolean } | null = null
   const emit = (event: FirstPersonEvent): void => {
     for (const listener of listeners) listener(event)
   }
@@ -261,6 +306,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   const desired = newPose(THREE)
   const channelPose = newPose(THREE)
   const mixed = newPose(THREE)
+  let indexCurl: number | undefined
   const bone = createTwoBone(THREE)
   const shoulder = new THREE.Vector3()
   const wristAt = new THREE.Vector3()
@@ -299,6 +345,10 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     arm.anchor.quaternion.copy(pose.q)
     arm.anchor.scale.setScalar(scale)
     arm.hand.setGrip(pose.grip)
+    arm.hand.setIndex(arm.side === 'R' ? indexCurl : undefined)
+    arm.joints.shoulder.copy(shoulder)
+    arm.joints.elbow.copy(bone.joint)
+    arm.joints.wrist.copy(bone.end)
     place(arm.upper, shoulder, bone.joint)
     place(arm.fore, bone.joint, bone.end)
     arm.elbow.position.copy(bone.joint)
@@ -310,10 +360,13 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   const footPose = newPose(THREE)
   const footRest = newPose(THREE)
   const ankle = new THREE.Vector3()
-  const drawLeg = (pose: Pose): void => {
-    solveTwoBone(hip, pose.p, rig.thigh, rig.shin, kneePole, bone)
+  const hipMirrored = new THREE.Vector3(-hip.x, hip.y, hip.z)
+  const kneePoleMirrored = new THREE.Vector3(-kneePole.x, kneePole.y, kneePole.z)
+  const drawLeg = (pose: Pose, left: boolean): void => {
+    const origin = left ? hipMirrored : hip
+    solveTwoBone(origin, pose.p, rig.thigh, rig.shin, left ? kneePoleMirrored : kneePole, bone)
     ankle.copy(bone.end)
-    place(thigh, hip, bone.joint)
+    place(thigh, origin, bone.joint)
     place(shin, bone.joint, ankle)
     knee.position.copy(bone.joint)
     shoe.position.copy(ankle)
@@ -335,10 +388,10 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     get stance() {
       return stanceId
     },
-    play(id) {
+    play(id, options) {
       const clip = clips.get(id)
       if (!clip) return false
-      run = { clip, time: 0 }
+      run = { clip, time: 0, left: options?.leg === 'left' }
       fire(clip, -1e-9, 0) // the events at t = 0 fire as the clip starts
       return true
     },
@@ -347,6 +400,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     },
     update(dt, state) {
       const { camera } = state
+      contact = state.contact
       camera.updateWorldMatrix(true, false)
       camera.matrixWorld.decompose(camPosition, camQuaternion, camScale)
       camInverse.copy(camQuaternion).invert()
@@ -387,6 +441,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
           desired.p.add(bobOffset)
         }
         modeOf(mode, arm)
+        if (side === 'R') indexCurl = mode === 'target' ? targets?.fingers?.index : undefined
         arm.blend = blendSeconds <= 0 ? 1 : Math.min(1, arm.blend + dt / blendSeconds)
         if (arm.blend >= 1) copyPose(arm.shown, desired)
         else mixPose(THREE, arm.shown, arm.from, desired, ease(arm.blend))
@@ -394,8 +449,8 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
         if (channel && channel.w > 0) {
           fromChannel(channel, side, arm.shown, channelPose)
           mixPose(THREE, mixed, arm.shown, channelPose, channel.w)
-          drawArm(arm, mixed)
-        } else drawArm(arm, arm.shown)
+          drawArm(arm, mode === 'target' ? mixed : keepOutside(mixed, handReach(mixed)))
+        } else drawArm(arm, mode === 'target' ? arm.shown : keepOutside(arm.shown, handReach(arm.shown)))
       }
 
       // the leg of a kick
@@ -406,7 +461,12 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
         fromChannel(foot, 'R', footRest, footPose)
         mixPose(THREE, mixed, footRest, footPose, foot.w)
         copyPose(footPose, mixed)
-        drawLeg(footPose)
+        // the left leg is the right one in a mirror
+        if (run?.left) {
+          footPose.p.x = -footPose.p.x
+          footPose.q.copy(mirrorRotation(THREE, footPose.q))
+        }
+        drawLeg(contact ? keepOutside(footPose, forward(footPose, FOOT_LENGTH)) : footPose, run?.left ?? false)
       }
       if (run && run.time >= run.clip.duration) run = null
       first = false
@@ -414,6 +474,10 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     on(_type, listener) {
       listeners.add(listener)
       return () => void listeners.delete(listener)
+    },
+    joints(side) {
+      const { shoulder, elbow, wrist } = arms[side].joints
+      return { shoulder: shoulder.clone(), elbow: elbow.clone(), wrist: wrist.clone() }
     },
     handPose(side) {
       const pose = arms[side].drawn

@@ -400,6 +400,7 @@
       "magazine": 6,
       "reload": 0.6,
       "perRound": true,
+      "family": "pump",
       "barrel": 1,
       "spreadDeg": 1,
       "bloomDeg": 0.5,

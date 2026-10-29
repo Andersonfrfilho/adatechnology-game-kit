@@ -3184,6 +3184,24 @@ Nenhum time entregou braços, mãos nem pose de golpe em primeira pessoa (o jogo
 - **Capturas:** `examples/test-room/test.mjs` grava `shots/fp-*-pt-BR.png` e `fp-*-en.png` (mãos vazias, punhos, pistola, fuzil, recarga, soco, empurrão, chute e soco em terceira pessoa).
 
 
+## 2026-10-25 · Recarga com as mãos, contato, dedo no gatilho, chute alternado e som de recarga (todas as armas)
+
+Continuação da entrada anterior. Os times não entregaram mãos, dedo no gatilho, contato nem sons de recarga (a Galeria 3D do Arsenal move as peças, não desenha mãos nem soa); o que entrou foi escrito no kit sobre os clipes que o time entregou, sem substituir nada.
+
+| O que | Onde |
+|---|---|
+| Mão em cada passo da recarga (pistola: mão de apoio puxa o ferrolho ou polegar na trava, por dado; AR: alavanca atrás e em cima; AK: alavanca à direita; pump e semi: cartuchos na janela de carga; ferrolho: mão de tiro na alavanca; revólver: mão de apoio no tambor; cinta: tampa) | `game-weapons-three/src/fx/hand-work.ts`, `src/data/hand-work.json` |
+| Dedo indicador no gatilho (repouso estendido, no gatilho pronto, puxa a cada tiro, rajada com tremor, lança-chamas e minigun com o gatilho preso) e dedo por mão em `HandTargets.fingers` | `game-weapons-three/src/fx/viewmodel.ts`, `game-characters-three/src/first-person/hand.ts` |
+| Chute alternado (`kickLeg`), clipe espelhado (`mirrorPoseClip`) | `game-test-room`, `game-characters`, `game-characters-three` |
+| Golpe para no contato (`contact` no estado dos braços; mãos e pé a poucos mm da superfície, o cotovelo dobra) e arma que recua de parede e sobe se a mão sairia da vista | `game-characters-three/src/first-person/arms.ts`, `game-weapons-three/src/fx/viewmodel.ts` (`WALL_PULL`, `HAND_IN_VIEW`) |
+| Variante da recarga no log (`kind`, clipe e segundos) | `game-weapons-three/src/area.ts` |
+| Sons de recarga no segundo de cada passo do clipe (`sound` cues), receitas em dados com perfil de peso e material | `game-weapons-three/src/audio/reload-sounds.ts`, `src/data/reload-sounds.json`, `src/animation/reload-clips.ts` |
+
+- **Todas as armas:** `recargas-por-arma.md` (passos, tempos, fonte) e `checklist-animacoes.md` (✓/✗ por arma, medido por teste) são gerados dos mesmos dados (`WRITE_DOCS=1`) e um teste falha se ficarem diferentes. Nenhuma arma com modelo fica ✗. Sem modelo (caixas): M79, M203, GP-25, AG36, pistola .22, arcos e bestas, armas brancas e ferramentas.
+- **Tempos:** o clipe de cada arma dura o tempo da regra (0,05 s) e marca os passos da regra nos mesmos segundos (`reload-audit.test.ts`). A recarga vazia usa o tempo da tática quando a arma não traz `timings.reloadEmpty` (87 armas; os golden da equipe fixam isso); as 14 armas genéricas sem `family` na regra tocam o clipe do modelo sem marcas de passo.
+- **Capturas:** `examples/test-room/shots/fp-*-reload-empty-*.png`, `fp-shotgun-pump-*`, `fp-kick-left-*`, `fp-kick-right-*`, `fp-shove-wall-*` e as folhas `fp-all-weapons-*.png`.
+
+
 ## 2026-10-25 · Estrutura real, passo 5 · arranha-céu e a cidade (lacuna 9)
 
 Desenho em `design/T10-estrutura-real.md` §11. Receita em `game-floorplan-structure` (`skyscraper.ts`, `skyscraper-plan.ts`), torre de escritórios em `game-floorplan-commercial` (`office_tower`), torre residencial em `game-floorplan-residential` (`residential_tower`), cidade em `game-urban` (opção `towers`, desligada por padrão). No motor, a barra de tração de parede e pilar passou a contar as barras que o espaçamento dá (`verticalBarCount`).

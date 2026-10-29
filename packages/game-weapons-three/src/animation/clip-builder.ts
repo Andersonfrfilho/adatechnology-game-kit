@@ -30,6 +30,9 @@ export const turn = (part: string, axis: Axis, start: number, duration: number, 
 /** A step of the clip at `t` the host maps (`muzzle_flash`, `eject_casing`, `drop_magazine`...). */
 export const cue = (t: number, type: string, data?: Record<string, unknown>): AnimationEventSpec => ({ t, type, ...(data ? { data } : {}) })
 
+/** A sound the host plays at `t` (`id` is a key of `data/reload-sounds.json`): the animation says when each part makes its noise. */
+export const sound = (t: number, id: string): AnimationEventSpec => ({ t, type: 'sound', data: { id } })
+
 export const stage = (id: string, t: number): AnimationEventSpec => ({ t, type: STAGE_EVENT, data: { stage: id } })
 
 const valueAt = (tweens: readonly Tween[], t: number, includeInstants: boolean): number => {

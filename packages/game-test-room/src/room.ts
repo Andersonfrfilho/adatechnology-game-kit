@@ -15,6 +15,7 @@ import { createGroundPatch, createVfxRenderer } from '@adatechnology/game-vfx-th
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, shotExtras } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandTargetSource, HandTargets, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
+import type { RoomFirstPersonState } from './avatar'
 import { createArena } from './arena'
 import type { Arena, ArenaTop } from './arena'
 import { createBenchStore } from './bench'
@@ -788,20 +789,27 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ----- the first-person arms: where the tool in the hands asks them to be (a module lends it), else the carried item, else nothing
   let handSource: HandTargetSource | null = null
   let carriedHand: HandTargets | null = null
+  // a second camera the room can be drawn from without moving the player's: the arms stay where the player's eye puts them
+  let debugView: THREE_NS.PerspectiveCamera | null = null
+  let lastHand: { stance: string; triggerFinger: number | null; targets: HandTargets | null } = { stance: 'relaxed', triggerFinger: null, targets: null }
   const strikeClips: Readonly<Record<string, string>> = options.strikeClips ?? DEFAULT_STRIKE_CLIPS
   const handStances: Readonly<Record<string, string>> = options.handStances ?? DEFAULT_HAND_STANCES
   const stepFirstPerson = (dt: number): void => {
     const arms = avatar?.firstPerson
     if (!arms) return
     const targets = handSource?.() ?? carriedHand
-    arms.update(dt, {
+    const state: RoomFirstPersonState = {
       camera,
       targets,
       stance: handStances[toolId] ?? (targets ? 'hold' : 'relaxed'),
       speed: avatarState.speed,
       running: avatarState.running,
       crouch: avatarState.crouch,
-    })
+      contact: (origin, direction, maxDistance) => rayWorld(origin, direction, maxDistance)?.distance ?? null,
+      triggerFinger: targets?.fingers?.index ?? null,
+    }
+    lastHand = { stance: state.stance, triggerFinger: state.triggerFinger, targets }
+    arms.update(dt, state)
   }
   /** Moves the camera to the shoulder view for the render that follows, and answers the function that puts it back. */
   const applyThirdView = (): (() => void) => {
@@ -1132,14 +1140,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
    * A melee blow. A tool with a strike clip (`strikeClips`) on an avatar that plays it starts the clip, on the arms and on the body, and the blow lands when the clip reaches its
    * impact, with the aim read again then; any other blow lands now.
    */
+  const kickLeg = options.kickLeg ?? 'alternate'
+  let nextLeg: 'left' | 'right' = 'right'
   const strikeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
     const clip = strikeClips[id]
-    const seconds = clip === undefined ? null : (avatar?.strike?.(clip) ?? null)
+    // a kick uses the leg the option says (alternating from the right), whatever the avatar does with it
+    const leg = id === 'kick' ? (kickLeg === 'alternate' ? nextLeg : kickLeg) : undefined
+    const seconds = clip === undefined ? null : (avatar?.strike?.(clip, leg ? { leg } : undefined) ?? null)
+    if (leg && seconds !== null && kickLeg === 'alternate') nextLeg = leg === 'right' ? 'left' : 'right'
     if (clip === undefined || seconds === null) {
       meleeUse(u, id)
       return
     }
-    action('strike', t('act.strike', { weapon: toolName(id), clip, seconds: num(seconds, 2) }), { data: { weapon: id, clip, impactIn: seconds } })
+    action('strike', t(leg ? 'act.strike.leg' : 'act.strike', { weapon: toolName(id), clip, seconds: num(seconds, 2), leg: leg ? t(`leg.${leg}`) : '' }), { data: { weapon: id, clip, impactIn: seconds, ...(leg ? { leg } : {}) } })
     strikes.push({
       key: id,
       remaining: seconds,
@@ -2173,8 +2186,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         if (handSource === source) handSource = null
       }
     },
-    log(text, data) {
-      action('module_note', text, { data })
+    log(text, data, type) {
+      action(type ?? 'module_note', text, { data })
     },
     addBlocker(blocked) {
       blockers.add(blocked)
@@ -2589,6 +2602,20 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (state.armed !== undefined) armedForced = state.armed
     },
     avatarState: () => ({ ...avatarState }),
+    handState: () => ({ ...lastHand }),
+    setDebugCamera(view) {
+      if (!view) {
+        debugView = null
+        return
+      }
+      debugView ??= new THREE.PerspectiveCamera(60, camera.aspect, 0.01, 200)
+      debugView.fov = view.fov ?? 40
+      debugView.aspect = camera.aspect
+      debugView.position.set(...view.position)
+      debugView.lookAt(...view.target)
+      debugView.updateProjectionMatrix()
+      debugView.updateMatrixWorld(true)
+    },
     setCameraMode,
     get cameraMode() {
       return cameraMode
@@ -2743,7 +2770,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       last = now
       if (!scenarioRunning) update(dt)
       const restoreCamera = room.applyCamera()
-      gl.render(scene, camera)
+      gl.render(scene, debugView ?? camera)
       restoreCamera()
       roomMetrics.rendered()
     }

@@ -173,6 +173,8 @@ export interface ToolClipPlayer {
   apply(step: ToolAnimationStep): void
   update(dt: number): void
   readonly playing: readonly string[]
+  /** The clips being played with the time each has reached and the clip itself (scaled to the duration the rule gave), for a renderer that has to follow what the clip does now (the hands working a part). */
+  readonly running: ReadonlyArray<{ readonly name: string; readonly time: number; readonly clip: AnimationClipSpec }>
 }
 
 export const createToolClipPlayer = (options: ToolClipPlayerOptions): ToolClipPlayer => {
@@ -243,6 +245,9 @@ export const createToolClipPlayer = (options: ToolClipPlayerOptions): ToolClipPl
     },
     get playing() {
       return instances.map((instance) => instance.name)
+    },
+    get running() {
+      return instances.filter((instance) => instance.delay <= 0).map((instance) => ({ name: instance.name, time: instance.time, clip: instance.clip }))
     },
   }
 }

@@ -1,0 +1,188 @@
+{
+  "source": "Authored in the kit: the gallery's clips move the parts (slide, bolt, bolt handle, crane, cover) but the Galeria 3D do Arsenal draws no hands, so which hand works which part is written here. Times are not here: a hand takes a part while the clip of the weapon moves it, so they follow the clip and the seconds of the rule's reload.",
+  "timing": {
+    "lead": 0.08,
+    "tail": 0.06,
+    "comment": "fractions of the clip's duration: the hand arrives this long before the part starts to move and lets go this long after it stops"
+  },
+  "pistolRelease": {
+    "comment": "Pistols whose slide stop is worked with the thumb of the shooting hand after the magazine is in. Empty by default: every pistol is racked by the support hand taking the rear of the slide (the reading shot of the move). Put an id here only for a pistol that is meant to be released by the thumb.",
+    "weapons": []
+  },
+  "akCharge": {
+    "comment": "Guns charged by a handle on the right of the receiver, reached over the top by the support hand; the rest of the magazine guns are charged at the rear top (AR style).",
+    "weapons": [
+      "ak_47",
+      "akm",
+      "ak_74",
+      "ak_12",
+      "rpk",
+      "saiga_12",
+      "sks",
+      "m14_ebr",
+      "fn_fal",
+      "fn_parafal",
+      "hk_g3a3",
+      "hk_psg_1",
+      "svd_dragunov"
+    ]
+  },
+  "works": [
+    {
+      "family": "pistol",
+      "clips": [
+        "reload_empty"
+      ],
+      "part": "slide",
+      "hand": "L",
+      "anchor": "slide_rear",
+      "style": "rack"
+    },
+    {
+      "family": "pistol",
+      "clips": [
+        "reload_empty"
+      ],
+      "part": "slide",
+      "hand": "R",
+      "anchor": "thumb_release",
+      "style": "release"
+    },
+    {
+      "family": "rifle",
+      "clips": [
+        "reload_empty"
+      ],
+      "part": "bolt",
+      "hand": "L",
+      "anchor": "rear_top",
+      "style": "ar"
+    },
+    {
+      "family": "rifle",
+      "clips": [
+        "reload_empty"
+      ],
+      "part": "bolt",
+      "hand": "L",
+      "anchor": "side_right",
+      "style": "ak"
+    },
+    {
+      "family": "p90",
+      "clips": [
+        "reload_empty"
+      ],
+      "part": "bolt",
+      "hand": "L",
+      "anchor": "rear_top",
+      "style": "ar"
+    },
+    {
+      "family": "belt",
+      "clips": [
+        "reload"
+      ],
+      "part": "cover",
+      "hand": "L",
+      "anchor": "cover_top",
+      "merge": 1
+    },
+    {
+      "family": "boltmag",
+      "clips": [
+        "reload",
+        "reload_empty",
+        "reload_one_by_one",
+        "cycle"
+      ],
+      "part": "boltHandle",
+      "hand": "R",
+      "anchor": "top_handle"
+    },
+    {
+      "family": "bolt",
+      "clips": [
+        "reload",
+        "reload_empty",
+        "reload_one_by_one",
+        "feed"
+      ],
+      "hand": "R",
+      "anchor": "loading_port",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "bolt",
+      "clips": [
+        "reload",
+        "reload_empty",
+        "reload_one_by_one",
+        "cycle"
+      ],
+      "part": "boltHandle",
+      "hand": "R",
+      "anchor": "top_handle"
+    },
+    {
+      "family": "pump",
+      "clips": [
+        "feed"
+      ],
+      "hand": "R",
+      "anchor": "loading_port",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "semi12",
+      "clips": [
+        "feed"
+      ],
+      "hand": "R",
+      "anchor": "loading_port",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "semiint",
+      "clips": [
+        "reload",
+        "reload_empty",
+        "reload_one_by_one",
+        "feed"
+      ],
+      "hand": "R",
+      "anchor": "loading_port",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "lever",
+      "clips": [
+        "feed"
+      ],
+      "hand": "R",
+      "anchor": "loading_port",
+      "whole": true,
+      "lead": 0.3,
+      "tail": 0.3
+    },
+    {
+      "family": "revolver",
+      "clips": [
+        "reload",
+        "reload_one_by_one"
+      ],
+      "part": "crane",
+      "hand": "L",
+      "anchor": "cylinder_side",
+      "merge": 1
+    }
+  ]
+}
