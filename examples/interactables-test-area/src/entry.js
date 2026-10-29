@@ -98,7 +98,7 @@ const SITE_THUMBNAIL_BASE = '../weapon-svg/'
  */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
-  const weapons = options.weapons === false ? undefined : room.loadModule(createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE }))
+  const weapons = options.weapons === false ? undefined : room.loadModule(createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false }))
   const itemsArea = options.items === false ? undefined : room.loadModule(createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang }))
   // the bodies of the characters module are DestructibleImpls with the 'flesh' material, which the room's world has to know before the module is checked
   registerBodyMaterial(room.world)

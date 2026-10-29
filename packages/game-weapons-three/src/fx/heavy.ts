@@ -35,13 +35,17 @@ const flameMaterials = (kit: ModelKit): THREE_NS.MeshBasicMaterial[] => {
 }
 
 /** A rocket leaving the tube: backblast smoke and fire at the rear, then the round flying out along the barrel, gaining speed, with a trail. */
-export function launchRocket(context: HeavyContext): void {
+export function launchRocket(context: HeavyContext, flyRound = true): void {
   const { kit, scene, parts, random } = context
   const { THREE } = kit
   const forward = context.forward()
   const muzzle = context.positionOf(parts.muzzle as THREE_NS.Object3D)
   const rear = context.positionOf(parts.rear as THREE_NS.Object3D)
   context.effects.backblast(rear, context.orientation())
+  if (!flyRound) {
+    if (parts.round) parts.round.visible = false
+    return
+  }
   const rocket = parts.makeRound ? parts.makeRound() : buildFlyingRocket(kit, parts.launcherType)
   if (parts.round) parts.round.visible = false
   rocket.quaternion.copy(context.orientation())

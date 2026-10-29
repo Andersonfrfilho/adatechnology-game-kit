@@ -22,6 +22,8 @@ export interface WeaponFxOptions {
   audio?: WeaponAudio | null
   /** Seed of the scatter of the effects of the gallery models. */
   seed?: number
+  /** The rocket of a launcher flies out of the viewmodel along the barrel (default true). A host that draws the projectile itself (the test room does) sets it to false, so one round flies, not two. */
+  flyRocket?: boolean
   /** The tool as it is now (barrel heat, fuel burning). */
   tool?: () => HostTool
   /** Wear of the weapon: `new`, `used`, `worn` or `rusty`. */
