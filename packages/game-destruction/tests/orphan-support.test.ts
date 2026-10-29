@@ -21,8 +21,10 @@ const lossOfOne = (spec: DestructibleSpec) => {
     const id = w.add(spec)
     const hit = strike(w, id, spec, c.id)
     const fallen = collapsedBy(w, [hit.events])
-    // the frame itself (columns, beams, slabs, roof) never comes down; at most the door jamb that rested on the lost column does
-    expect(fallen.filter((f) => /^(column|beam|slab|roof|foundation)/.test(f)), `${spec.name} ${c.id}`).toEqual([])
+    // the frame itself (columns, slabs, roof, foundations) never comes down; what can fall is the door jamb that rested on the lost column and, in
+    // the bending model, the beams of the first floor that framed into it (they bend over the double span it leaves, see flexure.test.ts)
+    expect(fallen.filter((f) => /^(column|slab|roof|foundation)/.test(f)), `${spec.name} ${c.id}`).toEqual([])
+    expect(fallen.filter((f) => /^beam/.test(f) && !/^beam_[xz]_0_/.test(f)), `${spec.name} ${c.id}`).toEqual([])
     worst = Math.max(worst, fallen.length)
   }
   return worst
@@ -34,8 +36,11 @@ describe('losing one ground column of a sized frame', () => {
     { floors: 2, columnsX: 4, columnsZ: 3, walls: false },
     { floors: 3, columnsX: 3, columnsZ: 3, walls: true, roof: false },
   ]
-  it('with redundancy 0.97 the frame stands (at most the door jamb on that column falls)', () => {
-    for (const o of opts) expect(lossOfOne(sizeStructure(buildFrame(o), { safety: 0.65, redundancy: 0.97 }))).toBeLessThanOrEqual(2)
+  it('with redundancy 0.97 the frame stands (at most the door jamb and the first-floor beams on that column fall)', () => {
+    // two floors on a 4 x 3 grid: nothing but the door jamb; three floors on 3 x 3 carry more per column, and its first-floor beams may bend down
+    expect(lossOfOne(sizeStructure(buildFrame(opts[0]), { safety: 0.65, redundancy: 0.97 }))).toBeLessThanOrEqual(2)
+    expect(lossOfOne(sizeStructure(buildFrame(opts[1]), { safety: 0.65, redundancy: 0.97 }))).toBe(0)
+    expect(lossOfOne(sizeStructure(buildFrame(opts[2]), { safety: 0.65, redundancy: 0.97 }))).toBeLessThanOrEqual(4)
   })
   it('without redundancy at most the bays the column carried fall, never the building', () => {
     for (const o of opts) {
