@@ -44,7 +44,7 @@ export function buildStructure(source: StructureSource, options: StructureOption
   addPorchRoofs(context)
   addExteriorSteps(context)
   addStairs(context)
-  addRoof(context)
+  if (options.roof !== false) addRoof(context)
   if (refined) addDoorLintels(context)
   addWaterTank(context)
   addChimney(context)

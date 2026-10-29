@@ -65,6 +65,19 @@ table.top // { part: 'wood_0', y: 0.78 }: what loose things rest on
 
 Materials: `wood` is `wood_hard` (`wood_soft` under 3.5 cm: boards, panels), `metal` is `steel`, `plain` is `plastic` (`paper` on shelves and racks: the books), `fabric`, `glass` and `plant` keep their name; `options.materials` overrides any key. Parts that touch the floor are anchored. Joints come from `inferJoints` (screws between wood...), except that paper rests on what it lies on with a weak `resting` joint, so books fall when their board breaks, and is not joined to its neighbours. `options.chairs: false` drops what the builder draws in a frame of its own (a table's chairs). Planes and leaves have no volume and are left out.
 
+## A wall as the houses build it
+
+`wallPiece(THREE, { w, h, thickness?, finish?, color?, house? })` is a free-standing wall (a target wall, a garden wall) made exactly like the walls of the houses: `wallPlan` gives a one-storey plan whose only wall is exterior on both sides, with the houses' masonry construction, and its structure is `buildStructure` of `game-floorplan-structure` without a roof (the wall on the strip footing, the concrete bond beam on it). The house renderer draws it (plaster and paint, baseboard, sidewalk) and gives the spec a house gives (`house.structure.spec()`: the plastered brick wall with its layers, units and breach, the bond beam with its rebar). `build(THREE)` returns the drawn wall with each mesh labelled by its part (`userData.destructionPart`), centred on the origin along x.
+
+```ts
+import { wallPiece } from '@adatechnology/game-floorplan-three'
+const wall = wallPiece(THREE, { w: 10, h: 3 })
+world.add(wall.spec, { id: 'target_wall', position: [0, 0, -11] })
+scene.add(wall.build(THREE))
+```
+
+Any wall a scene, an area or a game needs is made this way, never drawn on its own: the same look and the same load path as the houses, so a change to the houses shows on every wall.
+
 ## Bound to the destruction
 
 With `destruction` (a world of `game-destruction`) and `destructionRenderer` (`game-destruction-three`), the house registers itself in the world on first need

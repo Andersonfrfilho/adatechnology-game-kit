@@ -276,6 +276,8 @@ export interface StructureOptions {
   /** Gable roofs as rafters of each side and a ridge beam (a side falls with the wall it rests on) instead of whole trusses. Default: when the detail is not `coarse`. */
   rafterRoof?: boolean
   wallDetail?: WallDetail
+  /** `false`: no roof (a free-standing wall, a garden wall). Default `true`. */
+  roof?: boolean
 }
 
 /** What a construction builder and the tank get to see: the generated plan, its seed and the template. */
