@@ -170,6 +170,22 @@ describe('the loading indicator in the room', () => {
     room.dispose()
   })
 
+  it('idle() resolves at once when nothing is open, and when the last task ends otherwise', async () => {
+    const loading = createLoading({ container: box(), working: 'Working…' })
+    await loading.idle()
+    const outer = loading.begin('Outer')
+    const inner = loading.begin('Inner')
+    let woke = false
+    const waiting = loading.idle().then(() => (woke = true))
+    inner.end()
+    await Promise.resolve()
+    expect(woke).toBe(false)
+    outer.end()
+    await waiting
+    expect(woke).toBe(true)
+    loading.dispose()
+  })
+
   it('an opaque task hides the room behind it, and the others dim it', () => {
     const container = box()
     const loading = createLoading({ container, working: 'Working…' })

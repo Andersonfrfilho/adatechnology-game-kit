@@ -21,6 +21,8 @@ export interface LoadingState {
 export interface RoomLoading extends BusySink {
   /** True while a task is open. */
   readonly active: boolean
+  /** Resolves once no task is open (at once when none is): a scenario or test awaits it after a change that rebuilds behind the indicator, instead of sleeping. */
+  idle(): Promise<void>
   /** What it shows now, or undefined when nothing is open. */
   state(): LoadingState | undefined
   /** Follows it: called whenever a task opens, steps or ends, with `undefined` once none is left. Returns the function that stops following. */
@@ -84,6 +86,7 @@ export function createLoading(options: LoadingOptions): RoomLoading {
   let barNode: HTMLElement | null = null
   let fillNode: HTMLElement | null = null
   let hideTimer: ReturnType<typeof setTimeout> | undefined
+  const idlers: Array<() => void> = []
 
   const current = (): Task | undefined => tasks[tasks.length - 1]
   const state = (): LoadingState | undefined => {
@@ -110,6 +113,7 @@ export function createLoading(options: LoadingOptions): RoomLoading {
   const render = (): void => {
     const now = state()
     for (const listener of listeners) listener(now)
+    if (!now) for (const wake of idlers.splice(0)) wake()
     if (!draw) return
     if (!now) {
       if (element) {
@@ -161,6 +165,7 @@ export function createLoading(options: LoadingOptions): RoomLoading {
       return element
     },
     state,
+    idle: () => (tasks.length === 0 ? Promise.resolve() : new Promise<void>((resolve) => idlers.push(resolve))),
     on(listener) {
       listeners.add(listener)
       return () => listeners.delete(listener)
@@ -178,6 +183,7 @@ export function createLoading(options: LoadingOptions): RoomLoading {
     dispose() {
       if (hideTimer !== undefined) clearTimeout(hideTimer)
       tasks.length = 0
+      for (const wake of idlers.splice(0)) wake()
       listeners.clear()
       element?.remove()
       element = undefined
