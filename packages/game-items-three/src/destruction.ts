@@ -25,6 +25,11 @@ export interface ItemDestruction {
   readonly skinTags?: readonly string[]
   /** Material tag to destruction material id, over `DESTRUCTION_MATERIAL_BY_TAG`. */
   readonly materials?: Readonly<Record<string, string>>
+  /** Segments the cylinder and box meshes of the model are rebuilt with, so a bullet dent (a few millimetres wide) finds vertices to push in. */
+  readonly tessellate?: {
+    readonly cylinder?: { readonly heightSegments: number; readonly radialSegments: number }
+    readonly box?: { readonly widthSegments: number; readonly heightSegments: number; readonly depthSegments: number }
+  }
 }
 
 /** A family of models that behave alike: one rule for all of them, so adding a model is one id and changing the rule changes them all. */
@@ -121,6 +126,49 @@ export interface DestructionTagOptions {
   readonly size?: readonly [number, number, number]
 }
 
+type CylinderParameters = { radiusTop: number; radiusBottom: number; height: number; openEnded: boolean; thetaStart: number; thetaLength: number }
+type BoxParameters = { width: number; height: number; depth: number }
+type Tessellation = NonNullable<ItemDestruction['tessellate']>
+type GeometryConstructor = new (...args: readonly (number | boolean)[]) => THREE_NS.BufferGeometry
+
+/** The same shape as `geometry` with the segments of the rule, or undefined when the rule says nothing about its kind. */
+function tessellated(geometry: THREE_NS.BufferGeometry, rule: Tessellation): THREE_NS.BufferGeometry | undefined {
+  const Shape = geometry.constructor as GeometryConstructor
+  if (geometry.type === 'CylinderGeometry' && rule.cylinder) {
+    const { radiusTop, radiusBottom, height, openEnded, thetaStart, thetaLength } = (geometry as unknown as { parameters: CylinderParameters }).parameters
+    return new Shape(radiusTop, radiusBottom, height, rule.cylinder.radialSegments, rule.cylinder.heightSegments, openEnded, thetaStart, thetaLength)
+  }
+  if (geometry.type === 'BoxGeometry' && rule.box) {
+    const { width, height, depth } = (geometry as unknown as { parameters: BoxParameters }).parameters
+    return new Shape(width, height, depth, rule.box.widthSegments, rule.box.heightSegments, rule.box.depthSegments)
+  }
+  return undefined
+}
+
+const triangleCount = (geometry: THREE_NS.BufferGeometry): number => (geometry.index ? geometry.index.count : geometry.getAttribute('position').count) / 3
+
+/** Rebuilds the cylinder and box geometries of every mesh under `root` with the segments of the rule; a geometry shared by several meshes is rebuilt once. */
+function tessellateShapes(root: THREE_NS.Object3D, rule: Tessellation): void {
+  const rebuilt = new Map<THREE_NS.BufferGeometry, THREE_NS.BufferGeometry>()
+  root.traverse((object) => {
+    const mesh = object as THREE_NS.Mesh
+    if (!mesh.isMesh) return
+    let fresh = rebuilt.get(mesh.geometry)
+    if (!fresh) {
+      fresh = tessellated(mesh.geometry, rule)
+      if (!fresh) return
+      rebuilt.set(mesh.geometry, fresh)
+    }
+    mesh.geometry = fresh
+  })
+  let added = 0
+  rebuilt.forEach((fresh, old) => {
+    added += triangleCount(fresh) - triangleCount(old)
+    old.dispose()
+  })
+  root.userData.tessellationTriangles = added
+}
+
 /**
  * Writes the `userData` that `specFromObject3D` reads onto the meshes of a drawn item: the destruction material of each mesh from its kit material tag,
  * the item's real weight in kg (`destructionMass`, so the world weighs what the thing weighs) and what the model's family in `data/destruction.json` asks for (hollow shells, welded parts, skins),
@@ -130,6 +178,7 @@ export function tagForDestruction(root: THREE_NS.Object3D, options: DestructionT
   const { modelId, weight, size } = options
   if (weight !== undefined && weight > 0) root.userData.destructionMass = weight
   const rule = modelId === undefined ? undefined : itemDestruction(modelId)
+  if (rule?.tessellate) tessellateShapes(root, rule.tessellate)
   const solid: THREE_NS.Mesh[] = []
   root.traverse((object) => {
     const mesh = object as THREE_NS.Mesh

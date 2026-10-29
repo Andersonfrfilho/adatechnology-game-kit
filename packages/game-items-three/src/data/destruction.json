@@ -16,6 +16,17 @@
         ],
         "materials": {
           "metal": "aluminium"
+        },
+        "tessellate": {
+          "cylinder": {
+            "heightSegments": 6,
+            "radialSegments": 20
+          },
+          "box": {
+            "widthSegments": 6,
+            "heightSegments": 1,
+            "depthSegments": 4
+          }
         }
       }
     },
@@ -36,6 +47,17 @@
         ],
         "materials": {
           "metal": "steel"
+        },
+        "tessellate": {
+          "cylinder": {
+            "heightSegments": 6,
+            "radialSegments": 20
+          },
+          "box": {
+            "widthSegments": 6,
+            "heightSegments": 1,
+            "depthSegments": 4
+          }
         }
       }
     }

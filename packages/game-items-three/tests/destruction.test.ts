@@ -67,6 +67,28 @@ describe('families of models', () => {
     }
   })
 
+  it('rebuilds the cylinders and boxes of every can with enough segments for a dent to find vertices, only when destructible', () => {
+    for (const model of Object.values(ITEM_FAMILIES).flatMap((entry) => entry.models)) {
+      const item = { id: model, category: 'food', size: [0.07, 0.12, 0.07] as [number, number, number], model }
+      const plain = meshesOf(buildItem(THREE, item).root).filter((m) => m.geometry.type === 'CylinderGeometry')
+      const dented = meshesOf(buildItem(THREE, item, { destructible: true }).root).filter((m) => m.geometry.type === 'CylinderGeometry')
+      expect(dented.length, model).toBe(plain.length)
+      for (const mesh of dented) {
+        const parameters = (mesh.geometry as THREE.CylinderGeometry).parameters
+        expect(parameters.heightSegments, model).toBeGreaterThanOrEqual(6)
+        expect(parameters.radialSegments, model).toBeGreaterThanOrEqual(20)
+      }
+      for (const mesh of plain) expect((mesh.geometry as THREE.CylinderGeometry).parameters.heightSegments, model).toBeLessThan(6)
+    }
+  })
+
+  it('rebuilds the boxes of a tin too', () => {
+    const { root } = buildItem(THREE, { id: 'canned_sardines', category: 'food', size: [0.1, 0.03, 0.06], model: 'canned_sardines' }, { destructible: true })
+    const boxes = meshesOf(root).filter((m) => m.geometry.type === 'BoxGeometry')
+    expect(boxes.length).toBeGreaterThan(3)
+    for (const mesh of boxes) expect((mesh.geometry as THREE.BoxGeometry).parameters.widthSegments).toBeGreaterThanOrEqual(6)
+  })
+
   it('draws the sauce of the beans as a skin, not as a part', () => {
     const { root } = buildItem(THREE, { id: 'canned_beans', category: 'food', size: [0.075, 0.12, 0.075], model: 'canned_beans' }, { destructible: true })
     const skins = meshesOf(root).filter((mesh) => mesh.userData.destructionSkin === true && mesh.userData.destructionMaterial === DESTRUCTION_MATERIAL_BY_TAG.food)
