@@ -83,6 +83,7 @@ function buildAt4(kit: ModelKit, group: THREE.Group, parts: ModelParts): void {
   box(group, 0.012, 0.05, 0.02, M.dark, 0.71, 0.08, -0.035)
   const grip = kit.pivot(group, 0.68, -0.05, 0)
   grip.rotation.z = -0.15
+  parts.grip = grip
   box(grip, 0.035, 0.11, 0.032, M.dark, 0, -0.05, 0)
   box(group, 0.14, 0.035, 0.06, M.rubber, 0.32, -0.06, 0)
   box(group, 0.3, 0.012, 0.055, M.dark, 0.5, -0.05, 0)

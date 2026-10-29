@@ -53,8 +53,22 @@ export { CHARACTER_SOUND_BANK, CHARACTER_SOUNDS, UNDEAD_VOICE_GROUP } from './au
 export { BODY_SOUNDS, PLAYER_SOUNDS, UNDEAD_VOICES, UNDEAD_VOICE_SOURCES, createCharacterSound } from './audio/sound'
 export type { BodySoundRule, CharacterSound, CharacterSoundOptions, CharacterSoundSink, CharacterSoundStyle, UndeadVoice, VoiceMoment, VoiceStep } from './audio/sound'
 export { createPlayerAvatar } from './player/avatar'
-export type { AvatarEvent, AvatarUpdate, PlayPoseOptions, PlayerAvatar, PlayerAvatarOptions, PlayerAvatarSpec } from './player/avatar'
+export type { AvatarEvent, AvatarUpdate, PlayPoseOptions, PlayerAvatar, PlayerAvatarColors, PlayerAvatarOptions, PlayerAvatarSpec } from './player/avatar'
 export { toRoomAvatar } from './player/room-avatar'
-export type { RoomAvatarLike } from './player/room-avatar'
+export type { RoomAvatarLike, ToRoomAvatarOptions } from './player/room-avatar'
 export { AVATAR_AREA_ID, createAvatarTestModule } from './player/test-module'
 export type { AvatarTestOptions } from './player/test-module'
+export { createFirstPersonArms, FIRST_PERSON_BOB, FIRST_PERSON_COLORS, FIRST_PERSON_RIG, FIRST_PERSON_STANCES } from './first-person/arms'
+export { solveTwoBone } from './first-person/ik'
+export type { TwoBone } from './first-person/ik'
+export type {
+  FirstPersonArms,
+  FirstPersonArmsOptions,
+  FirstPersonArmsState,
+  FirstPersonBob,
+  FirstPersonColors,
+  FirstPersonEvent,
+  FirstPersonRig,
+  RestPose,
+  StanceDef,
+} from './first-person/types'

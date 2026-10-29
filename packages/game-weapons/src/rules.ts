@@ -8,8 +8,15 @@ const DEFAULT_HEAT: WeaponRules['heat'] = {
   decayPerPoint: 0.03,
   faultFrom: 60,
   faultSpan: 40,
-  perShot: { shell: 6, big: 9, tiny: 1.2, pistol: 3, rifle: 4.5 },
+  perShot: { shell: 3, big: 6, tiny: 0.5, pistol: 1.2, rifle: 2 },
   perRocket: 35,
+  visual: { smokeFrom: 70, smokeSeconds: 2.5, glowFrom: 80, glowSpan: 40 },
+}
+
+/** The heat the Galeria 3D do Arsenal recorded (hotter per round: a magazine was enough to glow); kept so the recorded runs stay reproducible. */
+export const GALLERY_HEAT: WeaponRules['heat'] = {
+  ...DEFAULT_HEAT,
+  perShot: { shell: 6, big: 9, tiny: 1.2, pistol: 3, rifle: 4.5 },
 }
 
 /** Chance of a fault for one round: the wear of the weapon, scaled by its reliability and by how hot it is. */

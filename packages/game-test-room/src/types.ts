@@ -20,7 +20,7 @@ import type { AnimationClipSpec, ControlValue, DestructibleImpl, EnvironmentBus,
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
-export type { RoomAvatar, RoomAvatarState, CameraMode, ThirdPersonOptions } from './avatar'
+export type { RoomAvatar, RoomAvatarState, RoomFirstPersonState, CameraMode, ThirdPersonOptions } from './avatar'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions } from './avatar'
 
 export type ThreeNamespace = typeof THREE_NS
@@ -115,6 +115,13 @@ export interface TestRoomOptions {
   avatar?: RoomAvatar
   /** The view the room starts in (default `first`; the V key and `TestRoom.setCameraMode` change it). */
   cameraMode?: CameraMode
+  /**
+   * The strike clip each melee tool plays before its blow lands, by tool id. The blow (`meleeUse`, with the aim read again) falls at the clip's impact second, which
+   * the avatar's `strike` answers; a tool that is not here, or an avatar that cannot play the clip, strikes at the click. Default `{ fists: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }`.
+   */
+  strikeClips?: Readonly<Record<string, string>>
+  /** The first-person stance of the arms by tool id, for the tools that hold nothing the module places (default `{ fists: 'fists' }`; any other tool holds, or is `relaxed` with nothing to hold). */
+  handStances?: Readonly<Record<string, string>>
   /** The over-the-shoulder view of the `third` mode: distance, shoulder, height, wall probes. Defaults are the team game's. */
   thirdPerson?: ThirdPersonOptions
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
@@ -243,6 +250,8 @@ export interface TestRoom {
    * clip) writing a check line (pass or fail) per result to the log. Loading the same module twice replaces its items and scenarios.
    */
   loadModule(module: TestableModule<ScenarioContext>): ModuleReport
+  /** Compiles the shader programs that the first hit, decal or effect would otherwise compile in the middle of a frame. Call it once the lights of the scene are set (a module that adds lights changes the programs). */
+  warmUp(): void
   /** Animations of the aimed (or held) item: what the animations panel shows. */
   animations(): AnimationInfo | null
   /**
