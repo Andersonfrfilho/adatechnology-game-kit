@@ -57,7 +57,9 @@ if (params.get('cam') === 'third') room.setCameraMode('third')
 room.log.add({ channel: 'action', type: 'hint', text: locale === 'en' ? 'Press V for 1st/3rd person (your body shows in the 3rd).' : 'Aperte V para 1ª/3ª pessoa (seu corpo aparece na 3ª).' })
 
 // agents read the behaviour log from here, e.g. __testRoom.log.toNDJSON()
-window.__testRoom = room
+// the default page publishes the room when its content is loaded (the boot script in build.mjs), so a test that waits for `__testRoom` never sees a half-loaded one
+if (deferred) window.__bootRoom = room
+else window.__testRoom = room
 window.__THREE = THREE
 
 function start() {

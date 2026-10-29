@@ -92,38 +92,119 @@ export { createVfxTestModule, createWeaponsTestModule, createExplosivesTestModul
 // the site copies the weapon thumbnails to site/dist/weapon-svg, next to the folder of each example page
 const SITE_THUMBNAIL_BASE = '../weapon-svg/'
 
+/** Short labels of each loading step, for the modules that are not created before they load (pt-BR, en). */
+const STEP_LABELS = {
+  vehicles: ['Veículos', 'Vehicles'],
+  vegetation: ['Vegetação', 'Vegetation'],
+}
+
+/**
+ * The loading steps of `loadInto`, in order. A step creates its module only when it is its turn (`prepare()` returns `{ name, load }`, `load()` returns the module's report),
+ * so the modules still see the room as the ones before them left it. A module that is created shows its own `name`; the others a short label.
+ * The furniture area is the last step and its report is the base of the whole one.
+ */
+function loadSteps(room, options, lang) {
+  const on = (key) => options[key] !== false
+  const label = (key) => STEP_LABELS[key]?.[lang === 'en' ? 1 : 0] ?? key
+  const steps = []
+  const mod = (key, create, before) => {
+    if (!on(key)) return
+    steps.push({
+      key,
+      prepare: () => {
+        before?.()
+        const module = create()
+        return { name: module.name ?? label(key), load: () => room.loadModule(module) }
+      },
+    })
+  }
+  const custom = (key, load) => {
+    if (on(key)) steps.push({ key, prepare: () => ({ name: label(key), load }) })
+  }
+  mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE }))
+  // the P13 cylinder of the weapons area with its whole sequence (leak, torch, blast, shell) in a kitchen corner against the room's brick wall, with the furniture and the people of the other modules (`?area=explosives_area`)
+  mod('explosives', () => createExplosivesTestModule({ locale: lang, room }))
+  mod('items', () => createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang }))
+  // the bodies of the characters module are DestructibleImpls with the 'flesh' material, which the room's world has to know before the module is checked
+  mod('characters', () => createCharactersModule({ fluids: room.fluids, film: room.film, locale: lang }), () => registerBodyMaterial(room.world))
+  mod('animals', () => createAnimalsModule({ locale: lang }))
+  mod('vfx', () => createVfxTestModule({ locale: lang }))
+  // the sound and the weather (with its picture: rain curtain, near rain, mist, lightning, headlights, haze; the sky and the fog stay the room's own) ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here
+  mod('audio', () => createAudioTestModule({ locale: lang }))
+  mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false } }) }))
+  // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
+  mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
+  // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture
+  custom('vehicles', () => loadVehiclesTestModule(room, { locale: lang }))
+  // the plants of the Viveiro: cut, shot and burnt next to the house (the module only loads here; its own area is `?area=vegetation`)
+  custom('vegetation', () => loadVegetationTestModule(room, { locale: lang }))
+  // the street poles, the ten neighbourhoods and the terrain patch (the module only loads here; its own area is `?area=urban`)
+  mod('urban', () => createUrbanModule({ locale: lang }))
+  // the player body rides along: the room's camera is the player, so walking here spends stamina and makes footstep noise
+  mod('player', () => createPlayerModule({ locale: lang }))
+  // the crowd rides along: empty until the bench adds agents, then a horde on the instanced path hunting the player body
+  mod('crowd', () => createCrowdModule({ locale: lang }))
+  // the stories ride along: no 3D, a world of stories and a character sheet for the room's panel
+  mod('stories', () => createStoriesModule({ locale: lang }))
+  // the furniture comes last: its report is the base of the whole one
+  steps.push({
+    key: 'furniture',
+    prepare: () => {
+      const module = createFurnitureArea({ ...options, locale: lang })
+      return { name: module.name, load: () => room.loadModule(module) }
+    },
+  })
+  return steps
+}
+
+/** The key a module's report goes under (the items module's is `itemsArea`). */
+const REPORT_KEYS = { items: 'itemsArea' }
+
+const langOf = (options) => options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
+
+function assemble(results) {
+  const base = results.find(([key]) => key === 'furniture')[1]
+  return { ...base, ...Object.fromEntries(results.filter(([key, report]) => key !== 'furniture' && report).map(([key, report]) => [REPORT_KEYS[key] ?? key, report])) }
+}
+
 /**
  * Creates the module for the room's locale (`?lang=en` or pt-BR) and loads it, after the weapons, items, characters, animals, effects, sound, weather, houses, vehicles, vegetation, urban, player, crowd and stories modules (the furniture bench stays the one the panel shows).
  * Returns the room's report of the furniture module, with the other modules' reports under `weapons`, `explosives`, `itemsArea`, `characters`, `animals`, `vfx`, `audio`, `weather`, `floorplan`, `vehicles`, `vegetation`, `urban`, `player`, `crowd` and `stories`.
  */
 export function loadInto(room, options = {}) {
-  const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
-  const weapons = options.weapons === false ? undefined : room.loadModule(createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE }))
-  // the P13 cylinder of the weapons area with its whole sequence (leak, torch, blast, shell) in a kitchen corner against the room's brick wall, with the furniture and the people of the other modules (`?area=explosives_area`)
-  const explosives = options.explosives === false ? undefined : room.loadModule(createExplosivesTestModule({ locale: lang, room }))
-  const itemsArea = options.items === false ? undefined : room.loadModule(createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang }))
-  // the bodies of the characters module are DestructibleImpls with the 'flesh' material, which the room's world has to know before the module is checked
-  registerBodyMaterial(room.world)
-  const characters = options.characters === false ? undefined : room.loadModule(createCharactersModule({ fluids: room.fluids, film: room.film, locale: lang }))
-  const animals = options.animals === false ? undefined : room.loadModule(createAnimalsModule({ locale: lang }))
-  const vfx = options.vfx === false ? undefined : room.loadModule(createVfxTestModule({ locale: lang }))
-  // the sound and the weather (with its picture: rain curtain, near rain, mist, lightning, headlights, haze; the sky and the fog stay the room's own) ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here
-  const audio = options.audio === false ? undefined : room.loadModule(createAudioTestModule({ locale: lang }))
-  const weather = options.weather === false ? undefined : room.loadModule(createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false } }) }))
-  // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
-  const floorplan = options.floorplan === false ? undefined : room.loadModule(createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))
-  // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture
-  const vehicles = options.vehicles === false ? undefined : loadVehiclesTestModule(room, { locale: lang })
-  // the plants of the Viveiro: cut, shot and burnt next to the house (the module only loads here; its own area is `?area=vegetation`)
-  const vegetation = options.vegetation === false ? undefined : loadVegetationTestModule(room, { locale: lang })
-  // the street poles, the ten neighbourhoods and the terrain patch (the module only loads here; its own area is `?area=urban`)
-  const urban = options.urban === false ? undefined : room.loadModule(createUrbanModule({ locale: lang }))
-  // the player body rides along: the room's camera is the player, so walking here spends stamina and makes footstep noise
-  const player = options.player === false ? undefined : room.loadModule(createPlayerModule({ locale: lang }))
-  // the crowd rides along: empty until the bench adds agents, then a horde on the instanced path hunting the player body
-  const crowd = options.crowd === false ? undefined : room.loadModule(createCrowdModule({ locale: lang }))
-  // the stories ride along: no 3D, a world of stories and a character sheet for the room's panel
-  const stories = options.stories === false ? undefined : room.loadModule(createStoriesModule({ locale: lang }))
-  const report = room.loadModule(createFurnitureArea({ ...options, locale: lang }))
-  return { ...report, ...(weapons ? { weapons } : {}), ...(explosives ? { explosives } : {}), ...(itemsArea ? { itemsArea } : {}), ...(characters ? { characters } : {}), ...(animals ? { animals } : {}), ...(vfx ? { vfx } : {}), ...(audio ? { audio } : {}), ...(weather ? { weather } : {}), ...(floorplan ? { floorplan } : {}), ...(vehicles ? { vehicles } : {}), ...(vegetation ? { vegetation } : {}), ...(urban ? { urban } : {}), ...(player ? { player } : {}), ...(crowd ? { crowd } : {}), ...(stories ? { stories } : {}) }
+  const lang = langOf(options)
+  const results = loadSteps(room, options, lang).map((step) => [step.key, step.prepare().load()])
+  return assemble(results)
+}
+
+/** Waits for the browser to paint (a frame, then a task); falls back to a timer where frames do not run (a hidden tab). */
+const nextPaint = () =>
+  new Promise((resolve) => {
+    let done = false
+    const finish = () => {
+      if (done) return
+      done = true
+      resolve()
+    }
+    globalThis.requestAnimationFrame?.(() => setTimeout(finish, 0))
+    setTimeout(finish, 100)
+  })
+
+/**
+ * Same as `loadInto`, but yields to the browser before each module so a loading screen can paint and move. `onProgress({ index, total, key, name })` is called before each step
+ * (`index` counts from 1; `index === total` is the furniture area); once more with `index: total + 1` and `done: true` at the end. Resolves to the same report as `loadInto`.
+ */
+export async function loadIntoAsync(room, options = {}) {
+  const { onProgress, ...rest } = options
+  const lang = langOf(rest)
+  const steps = loadSteps(room, rest, lang)
+  const results = []
+  for (const [i, step] of steps.entries()) {
+    const { name, load } = step.prepare()
+    onProgress?.({ index: i + 1, total: steps.length, key: step.key, name })
+    await nextPaint()
+    results.push([step.key, load()])
+  }
+  onProgress?.({ index: steps.length + 1, total: steps.length, key: 'done', name: '', done: true })
+  return assemble(results)
 }

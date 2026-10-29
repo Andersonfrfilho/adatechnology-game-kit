@@ -46,10 +46,17 @@ async function bundleMain(full) {
 const safe = (s) => s.replace(/<\/(script|style)/gi, '<\\/$1')
 const css = safe(readFileSync(join(here, 'src/style.css'), 'utf8'))
 const template = readFileSync(join(here, 'index.html'), 'utf8')
-const page = (bundle) => template.replace('/*STYLE*/', () => css).replace('/*BUNDLE*/', () => safe(bundle))
+// The default page paints a loading screen on its first frame; the bare room has nothing to load, so it has none.
+const overlay = `<div id="boot" role="status" aria-live="polite"><div class="boot-card"><div class="boot-title" id="boot-title">Carregando a sala de testes…</div><div class="boot-bar"><i id="boot-fill"></i></div><div class="boot-step" id="boot-step">Iniciando…</div></div></div>
+<script>(function(){if(/[?&]lang=en(&|$)/.test(location.search)){document.getElementById('boot-title').textContent='Loading the test room…';document.getElementById('boot-step').textContent='Starting…'}})()</script>`
+const page = (bundle, full) =>
+  template
+    .replace('/*STYLE*/', () => css)
+    .replace('<!--BOOT-->', () => (full ? overlay : ''))
+    .replace('<script>/*BUNDLE*/</script>', () => (full ? `<script type="text/plain" id="room-bundle">${safe(bundle)}</script>` : `<script>${safe(bundle)}</script>`))
 
 // 1. the bare room, for the other areas (they add their own module over it)
-const baseHtml = page(await bundleMain(false))
+const baseHtml = page(await bundleMain(false), false)
 mkdirSync(join(here, 'base'), { recursive: true })
 const basePath = join(here, 'base/test-room.html')
 writeFileSync(basePath, baseHtml)
@@ -59,11 +66,64 @@ writeFileSync(basePath, baseHtml)
 execFileSync(process.execPath, [join(here, '../interactables-test-area/build.mjs')], { stdio: 'inherit', env: { ...process.env, ROOM_HTML: basePath } })
 const area = readFileSync(join(here, '../interactables-test-area/dist/furniture-area.js'), 'utf8')
 
-// 3. the default page: the room, then the teams' content loaded into it
-const fullHtml = page(await bundleMain(true))
+// 3. the default page: the room, then the teams' content loaded into it. Both bundles ride as inert text so the HTML parses at once and the loading screen paints on the first frame;
+//    the boot script then runs the room bundle after a paint, loads the modules one at a time (yielding to the browser between them, with the step on the screen) and removes the screen.
+const fullHtml = page(await bundleMain(true), true)
 const at = fullHtml.lastIndexOf('</body>')
-const boot = `window.__furnitureReport = FurnitureArea.loadInto(window.__testRoom)\nwindow.__roomStart && window.__roomStart()`
-const html = `${fullHtml.slice(0, at)}<script>${safe(area)}\n${boot}</script>\n${fullHtml.slice(at)}`
+const boot = `(function () {
+  var lang = /[?&]lang=en(&|$)/.test(location.search) ? 'en' : 'pt'
+  var fill = document.getElementById('boot-fill')
+  var stepText = document.getElementById('boot-step')
+  var paint = function () {
+    return new Promise(function (resolve) {
+      var done = false
+      var finish = function () { if (!done) { done = true; resolve() } }
+      requestAnimationFrame(function () { setTimeout(finish, 0) })
+      setTimeout(finish, 100)
+    })
+  }
+  var run = function (id) {
+    var script = document.createElement('script')
+    script.textContent = document.getElementById(id).textContent
+    document.body.appendChild(script)
+  }
+  var progress = function (p) {
+    if (p.done) {
+      fill.style.width = '100%'
+      return
+    }
+    fill.style.width = (((p.index - 1) / p.total) * 100).toFixed(1) + '%'
+    stepText.textContent = p.name + ' ' + p.index + '/' + p.total
+  }
+  var failed = function (error) {
+    stepText.textContent = (lang === 'en' ? 'Loading failed: ' : 'Falha ao carregar: ') + (error && error.message ? error.message : error)
+    stepText.style.color = '#ff8a80'
+    throw error
+  }
+  paint().then(paint).then(function () {
+    run('room-bundle')
+    return paint()
+  }).then(function () {
+    run('room-area')
+    return FurnitureArea.loadIntoAsync(window.__bootRoom, { onProgress: progress })
+  }).then(function (report) {
+    window.__bootReport = report
+    window.__roomStart && window.__roomStart()
+    stepText.textContent = lang === 'en' ? 'Preparing the picture…' : 'Preparando a imagem…'
+    fill.style.width = '100%'
+    return paint()
+  }).then(function () {
+    window.__bootRoom.warmUp()
+    return paint()
+  }).then(function () {
+    window.__testRoom = window.__bootRoom
+    window.__furnitureReport = window.__bootReport
+    var overlay = document.getElementById('boot')
+    overlay.classList.add('boot-done')
+    setTimeout(function () { overlay.remove() }, 400)
+  }).catch(failed)
+})()`
+const html = `${fullHtml.slice(0, at)}<script type="text/plain" id="room-area">${safe(area)}</script>\n<script>${boot}</script>\n${fullHtml.slice(at)}`
 
 mkdirSync(join(here, 'dist'), { recursive: true })
 writeFileSync(join(here, 'dist/test-room.html'), html)
