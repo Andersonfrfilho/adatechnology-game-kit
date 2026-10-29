@@ -2089,7 +2089,7 @@
   "crumpled_paper": {
     "household": "crumpled_paper",
     "idSource": "household",
-    "sizeSource": "household",
+    "sizeSource": "REF",
     "vc3": [
       "papel_amassado"
     ]
@@ -2107,7 +2107,7 @@
   "plastic_bag": {
     "household": "plastic_bag",
     "idSource": "household",
-    "sizeSource": "household"
+    "sizeSource": "REF"
   },
   "bill": {
     "household": "bill",

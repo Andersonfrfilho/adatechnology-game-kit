@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 
+import { applyKinds, buildKindLocale } from './apply-kinds'
 import { buildAmmoBoxes } from './build-ammo-boxes'
 import { buildContainers } from './build-containers'
 import { buildGameSlice } from './build-game-slice'
@@ -27,7 +28,8 @@ export const buildCatalog = ({ gameOutput }: BuildOptions = {}): CatalogFiles =>
   const sources = loadSources()
   const index = buildIdIndex(sources)
   const resolve = (reference: string): string => resolveReference(reference, index).id
-  const { items, provenance } = buildItems(sources, resolve)
+  const { items: baseItems, provenance } = buildItems(sources, resolve)
+  const items = applyKinds(baseItems)
   const recipeContext = { decisions: sources.decisions, resolveItem: (reference: string) => resolveReference(reference, index) }
   const containers = buildContainers(sources)
   const files: CatalogFiles = {
@@ -45,7 +47,7 @@ export const buildCatalog = ({ gameOutput }: BuildOptions = {}): CatalogFiles =>
     [outputPath('use-effects')]: serialize(buildUseEffects(sources, resolve)),
     [outputPath('melee')]: serialize(buildMelee(sources, resolve)),
     [outputPath('provenance')]: serialize(provenance),
-    [outputPath('locales/pt-BR')]: serialize(buildLocale(items, provenance, containers, sources)),
+    [outputPath('locales/pt-BR')]: serialize({ ...buildLocale(items, provenance, containers, sources), ...buildKindLocale() }),
     [MODELS_OUTPUT_PATH]: serialize(buildModels(sources)),
     [CHECKLIST_PATH]: buildChecklist(sources),
   }

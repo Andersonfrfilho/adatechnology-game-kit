@@ -96,3 +96,5 @@ export type {
 export type { AudioListener, AudioSink, LoopHandle, SoundHandle, SoundRequest } from './audio'
 export { DEFAULT_ENVIRONMENT, createEnvironmentBus } from './environment'
 export type { EnvironmentBus, EnvironmentKey, EnvironmentState } from './environment'
+export { checkCategorized, defineCategories, resolveEntry } from './categories'
+export type { CategorizedOptions, CategorizedReport, CategoryDef, CategoryOptions, CategoryRegistry, ContractChecker, ContractContext } from './categories'
