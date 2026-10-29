@@ -14,6 +14,7 @@ import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import { buildWallSpecimen } from '@adatechnology/game-floorplan-structure'
 import { buildSpecimenMeshes, furnitureSpec, tapSpec } from '@adatechnology/game-floorplan-three'
+import { projectileModel } from '@adatechnology/game-weapons-three'
 import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
 
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
@@ -65,6 +66,8 @@ const room = createTestRoom({
   locale,
   catalog: [],
   scenery,
+  // the rocket in flight is the weapons package's own round; the throwables it has no model for stay the room's primitives
+  projectileModel: (query) => projectileModel(THREE, query),
   tap: { build: tap.build, spout: tap.spout },
   quality,
   arenaSize: arena >= 14 && arena <= 200 ? arena : undefined,
