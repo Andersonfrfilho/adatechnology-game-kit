@@ -137,6 +137,8 @@ export type HostEvent =
    * `explosive` is the id of the explosive when there is one (`m67`, `c4`, `fuel_barrel`): the host picks the blast by it.
    */
   | { type: 'explosion'; source: string; point: Vec3; energy: number; radius: number; cause: string; explosive?: string }
+  /** The player crouched or stood up, or the camera mode changed; read the new state with `host.player()`. */
+  | { type: 'player' }
 
 /** The tool in hand as the host sees it. */
 export interface HostTool {
@@ -189,6 +191,22 @@ export interface ToolCommandResult {
   readonly seconds?: number
 }
 
+/** The player as the host sees it. Generic: any game with someone walking around in a world has these. */
+export interface PlayerState {
+  /** World position of the player's feet, metres. */
+  readonly position: Vec3
+  /** Radians around the vertical axis; 0 looks down -z. */
+  readonly yaw: number
+  /** Radians up (positive) or down (negative). */
+  readonly pitch: number
+  readonly crouching: boolean
+  /** Horizontal speed in metres per second. */
+  readonly speed: number
+  readonly running: boolean
+  /** How the camera follows the player (`first`, `shoulder`...); the ids are the host's. */
+  readonly cameraMode: string
+}
+
 /**
  * What the host lends a module that brings its own presentation (a weapon in the hands, sounds, ejected casings). `THREE`, `scene` and `camera`
  * are the host's three.js namespace, scene and camera: `unknown` here because the contracts do not depend on three.js.
@@ -201,6 +219,8 @@ export interface ModuleHost {
   /** Height of whatever things rest on at (x, z): the floor, a table, a counter. */
   groundAt(x: number, z: number): number
   tool(): HostTool
+  /** The player now: where, which way, crouching, how fast and how the camera follows. A `player` event tells when crouching or the camera mode changes. */
+  player(): PlayerState
   /** Follow the player's tool events. Returns the unsubscribe function. */
   on(listener: (event: HostEvent) => void): () => void
   /** Run every simulated frame with the frame's seconds. Returns the unsubscribe function. */

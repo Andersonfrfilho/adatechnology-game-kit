@@ -75,6 +75,8 @@ export interface ViewmodelOptions {
   raycast?: LaserRaycast
   /** The host's effects (`host.effects`): the muzzle flash, the smoke, the backblast and the flame jet are recipes it plays. Without it the viewmodel makes a world of its own for them. */
   effects?: EffectSink
+  /** The rocket of a launcher flies out along the barrel (default true); false leaves the round to the host. */
+  flyRocket?: boolean
 }
 
 /** The weapon in the hands for the models the gallery drew: it follows the camera, plays the clips of the rule's events, and throws casings, magazines and smoke. */
@@ -154,6 +156,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   let condition = options.condition ?? 'new'
   let lastAmmo = 0
   let smokeDebt = 0
+  let secondsSinceShot = Number.POSITIVE_INFINITY
   let hold: Hold | null = null
   let reloading = false
   let magazineHand = 0
@@ -182,6 +185,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   }
 
   const heatMax = arsenal.rules.heat.displayMax || HEAT_DISPLAY_MAX_FALLBACK
+  const visual = arsenal.rules.heat.visual
+  const hasSuppressor = (parts: readonly FittedAttachment[]): boolean => parts.some((part) => arsenal.attachments.get(part.id)?.kind === 'suppressor')
 
   const release = (): void => {
     if (!session) return
@@ -229,9 +234,13 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     holder.add(model.root)
     const caliber = caliberOf(arsenal, def)
     const dims = caliber?.cartridge
+    const hostTool = options.tool?.()
+    const onTool = hostTool?.weapon === weapon ? hostTool : undefined
+    const fitted = onTool?.attachments ? fittedOf(onTool.attachments) : [...(def.fitted ?? [])]
     session = {
       id: weapon,
       def,
+      caliber,
       model,
       holderScale: scale,
       lengthMetres: length,
@@ -243,10 +252,8 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
       nextChamber: 0,
       attachments: null,
       attachmentsSignature: '',
+      suppressed: onTool?.suppressed ?? hasSuppressor(fitted),
     }
-    const hostTool = options.tool?.()
-    const onTool = hostTool?.weapon === weapon ? hostTool : undefined
-    const fitted = onTool?.attachments ? fittedOf(onTool.attachments) : [...(def.fitted ?? [])]
     session.attachments = fitAttachmentModels(model, fitted, kit, { catalogue: arsenal.attachments, isDrawn: () => layers.attachments, areBeamsOn: () => layers.beams, ...(options.attachmentModels ? { overrides: options.attachmentModels } : {}), ...(options.raycast ? { raycast: options.raycast } : {}) })
     session.attachmentsSignature = attachmentsKey(onTool?.attachments)
     const action = def.action
@@ -273,11 +280,15 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   }
 
   const syncAttachments = (current: Session, tool: HostTool | undefined): void => {
-    if (!current.attachments || tool?.weapon !== current.id || !tool.attachments) return
+    if (!current.attachments || tool?.weapon !== current.id) return
+    if (tool.suppressed !== undefined) current.suppressed = tool.suppressed
+    if (!tool.attachments) return
     const signature = attachmentsKey(tool.attachments)
     if (signature === current.attachmentsSignature) return
     current.attachmentsSignature = signature
-    current.attachments.sync(fittedOf(tool.attachments))
+    const fitted = fittedOf(tool.attachments)
+    if (tool.suppressed === undefined) current.suppressed = hasSuppressor(fitted)
+    current.attachments.sync(fitted)
   }
 
   // the weapon against a wall: how far it reaches in front of the eye (measured once, with no pull) and how far it is pulled back now
@@ -326,7 +337,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const glow = (tool: HostTool | undefined): void => {
     if (!session) return
     const heat = (tool?.heat ?? 0) * heatMax
-    const level = Math.max(0, Math.min(1, (heat - 50) / 50))
+    const level = Math.max(0, Math.min(1, (heat - visual.glowFrom) / visual.glowSpan))
     for (const mesh of session.model.parts.glow) {
       const material = mesh.material as THREE_NS.MeshStandardMaterial
       material.emissive.setRGB(level, 0.2 * level * level, 0.02 * level * level)
@@ -335,26 +346,30 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   }
 
   const handleShot = (current: Session, event: Extract<HostEvent, { type: 'shot' }>, tool: HostTool): void => {
+    secondsSinceShot = 0
+    if (event.suppressed !== undefined) current.suppressed = event.suppressed
+    else if (tool.suppressed !== undefined) current.suppressed = tool.suppressed
+    else current.suppressed = hasSuppressor(tool.attachments ? fittedOf(tool.attachments) : (current.def.fitted ?? []))
     if (tool.underbarrelActive && current.model.parts.uglMuzzle) {
       audio?.play('explosion', LAUNCH_VOLUME, distance())
       return
     }
     const action = current.def.action
     if (action.kind === 'launcher') {
-      launchRocket(heavy(current))
+      launchRocket(heavy(current), options.flyRocket !== false)
       audio?.play('explosion', LAUNCH_VOLUME, distance())
     }
     if (action.kind !== 'firearm') return
     const caliber = caliberOf(arsenal, current.def)
     if (!caliber) return
-    audio?.shot(muzzleEnergy(caliber) * (caliber.pellets ?? 1), current.def.category, { caliber, distance: distance(), ...(event.suppressed === true ? { suppressed: true } : {}) })
+    audio?.shot(muzzleEnergy(caliber) * (caliber.pellets ?? 1), current.def.category, { caliber, distance: distance(), ...(current.suppressed ? { suppressed: true } : {}) })
   }
 
   return {
     equip,
     unequip: release,
     handle(event, tool) {
-      if (event.type === 'explosion') return
+      if (event.type === 'explosion' || event.type === 'player') return
       if (event.type === 'tool') equip(event.weapon)
       if (!session || !player || event.weapon !== session.id) return
       const current = session
@@ -395,12 +410,13 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
           }
           lastAmmo = tool.ammo
         }
-        if (tool && tool.heat !== undefined && tool.heat * heatMax > 10 && session.model.parts.muzzle) {
-          smokeDebt += dt * tool.heat * heatMax * 0.1
+        secondsSinceShot += dt
+        if (tool && tool.heat !== undefined && tool.heat * heatMax > visual.smokeFrom && secondsSinceShot < visual.smokeSeconds && session.model.parts.muzzle) {
+          smokeDebt += dt * (tool.heat * heatMax - visual.smokeFrom) * 0.1
           while (smokeDebt > 1) {
             smokeDebt -= 1
-            const k = 0.5 + (tool.heat * heatMax) / 60
-            effects.smoke(worldPositionOf(session, session.model.parts.muzzle, new THREE.Vector3()), new THREE.Vector3((random() - 0.5) * 0.03, 0.07 + random() * 0.08, (random() - 0.5) * 0.03), 0.007 * k, 1.6 + random(), Math.min(0.42, 0.14 + k * 0.1))
+            const k = 0.5 + (tool.heat * heatMax - visual.smokeFrom) / 60
+            effects.smoke(worldPositionOf(session, session.model.parts.muzzle, new THREE.Vector3()), new THREE.Vector3((random() - 0.5) * 0.015, 0.07 + random() * 0.08, (random() - 0.5) * 0.015), 0.004 * k, 1.2 + random() * 0.6, Math.min(0.18, 0.06 + k * 0.04))
           }
         }
       }

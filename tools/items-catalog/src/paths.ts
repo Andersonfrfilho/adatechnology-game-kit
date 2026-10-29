@@ -16,6 +16,9 @@ export const SOURCE_PATHS = {
 export const GAME_SLICE_DIR = join(SPEC_DIR, 'game-slice', 'items')
 
 export const DECISIONS_PATH = join(TOOL_DIR, 'decisions.json')
+/** What the kinds add to each item (written by `packages/game-items-goods/scripts/migrate-kinds.mjs`) and the pt-BR texts of the kinds. */
+export const KINDS_OVERLAY_PATH = join(TOOL_DIR, 'kinds-overlay.json')
+export const KIND_TEXTS_PATH = join(TOOL_DIR, 'kind-texts.json')
 export const HOUSEHOLD_ITEMS_PATH = join(TOOL_DIR, 'base', 'household-items.sdk.json')
 export const HOUSEHOLD_NAMES_PATH = join(TOOL_DIR, 'base', 'household-item-names.json')
 
@@ -42,6 +45,9 @@ export const outputPath = (name: OutputName): string => join(GOODS_DATA, `${name
 
 /** `models.json` of the 3D package: the scale of each model of the showcase. */
 export const MODELS_OUTPUT_PATH = join(REPO_ROOT, 'packages', 'game-items-three', 'src', 'data', 'models.json')
+
+/** The tree of kinds, as the goods package ships it. */
+export const KINDS_PATH = join(GOODS_DATA, 'kinds.json')
 
 export const WEAPONS_CALIBERS_PATH = join(REPO_ROOT, 'packages', 'game-weapons', 'src', 'data', 'calibers.json')
 

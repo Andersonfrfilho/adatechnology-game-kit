@@ -4,6 +4,8 @@ export function buildApi(K: Kernel, shared: Shared): any {
   const { cfg, VERSION, ATLAS, TEX, applyPart, carGroup, carModel, props, TYPES, roomLightMask, lighting, newState, build } = K;
   return {
         version: VERSION, build, newState, types: TYPES, mv: props, applyPart,
+        // the kernel and the shared state, for recorders that run the team's builders into something else than the house (`furnitureSpec`, `tapSpec`): not a stable api
+        internals: { K, shared },
         get materials() { return shared.mats; }, roomLightMask, lighting,
         setNight(n) { shared.mats.glass.emissive.set(n ? 0x8a5a20 : 0x000000); shared.mats.glass.opacity = n ? 0.4 : 0.24; },
         cars: { model: carModel, group: carGroup, info: (k, seed) => { const m = carModel(k, seed); return m && { parts: m.parts.length, tris: m.tris, L: m.L, W: m.W, H: m.H }; } },

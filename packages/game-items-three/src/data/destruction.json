@@ -1,0 +1,100 @@
+{
+  "families": {
+    "drink_can": {
+      "models": [
+        "soda_can",
+        "beer_can",
+        "energy_drink",
+        "empty_can"
+      ],
+      "rule": {
+        "hollow": true,
+        "welded": true,
+        "skinTags": [
+          "paper",
+          "food"
+        ],
+        "materials": {
+          "metal": "aluminium"
+        },
+        "tessellate": {
+          "cylinder": {
+            "heightSegments": 6,
+            "radialSegments": 20
+          },
+          "box": {
+            "widthSegments": 6,
+            "heightSegments": 1,
+            "depthSegments": 4
+          }
+        }
+      }
+    },
+    "food_tin": {
+      "models": [
+        "canned_beans",
+        "canned_corn_and_peas",
+        "canned_sausages",
+        "canned_sardines",
+        "condensed_milk"
+      ],
+      "rule": {
+        "hollow": true,
+        "welded": true,
+        "skinTags": [
+          "paper",
+          "food"
+        ],
+        "materials": {
+          "metal": "steel"
+        },
+        "tessellate": {
+          "cylinder": {
+            "heightSegments": 6,
+            "radialSegments": 20
+          },
+          "box": {
+            "widthSegments": 6,
+            "heightSegments": 1,
+            "depthSegments": 4
+          }
+        }
+      }
+    }
+  },
+  "contents": {
+    "soda_can": {
+      "liquid": "soda",
+      "fill": 0.95
+    },
+    "beer_can": {
+      "liquid": "beer",
+      "fill": 0.95
+    },
+    "energy_drink": {
+      "liquid": "soda",
+      "fill": 0.95
+    },
+    "canned_beans": {
+      "liquid": "juice",
+      "fill": 0.4
+    },
+    "canned_corn_and_peas": {
+      "liquid": "water",
+      "fill": 0.4
+    },
+    "canned_sausages": {
+      "liquid": "water",
+      "fill": 0.3
+    },
+    "canned_sardines": {
+      "liquid": "cooking_oil",
+      "fill": 0.3,
+      "box": true
+    },
+    "condensed_milk": {
+      "liquid": "honey",
+      "fill": 0.9
+    }
+  }
+}

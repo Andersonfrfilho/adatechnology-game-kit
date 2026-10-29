@@ -341,3 +341,23 @@ describe('sprites of the shared effects world', () => {
     renderer.dispose()
   })
 })
+
+describe('sealed containers', () => {
+  const sealed = (transparent: boolean): boolean => {
+    const world = createFluids()
+    world.addContainer({ capacity: 0.25, liquid: 'coffee', liters: 0.2, shape: { kind: 'cylinder', radius: 0.04, height: 0.1 }, opening: 0.04, closed: true }, { id: 'tin', position: [0, 1, 0] })
+    const scene = new THREE.Scene()
+    const tin = new THREE.Group()
+    tin.add(new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.1), new THREE.MeshStandardMaterial({ transparent })))
+    scene.add(tin)
+    const renderer = createFluidRenderer(THREE, { scene, fluids: world })
+    renderer.bindContainer('tin', tin)
+    step(world, renderer, 0.1)
+    return find(tin, 'fluid_liquid').some((mesh) => mesh.visible)
+  }
+
+  it('draws no liquid inside an opaque shell, where a dent would let it show through, and still draws it in a glass one', () => {
+    expect(sealed(false)).toBe(false)
+    expect(sealed(true)).toBe(true)
+  })
+})

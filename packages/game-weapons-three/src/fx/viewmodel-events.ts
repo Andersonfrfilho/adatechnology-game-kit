@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { AnimationEventSpec } from '@adatechnology/game-contracts'
+import { muzzleSmokeOf } from '@adatechnology/game-weapons'
 import { buildCasing, buildRound } from '../models/cartridge'
 import { FLASH_BY_CASE } from './effects'
 import { toWorld, worldPositionOf } from './session'
@@ -125,7 +126,11 @@ export function createClipEventHandler(world: FxWorld, session: Session): (event
       case 'muzzle_flash':
         if (data.at === 'ugl') {
           if (parts.uglMuzzle && world.layers.muzzleFlash) effects.muzzleFlash(positionOf(parts.uglMuzzle), root.getWorldQuaternion(new THREE.Quaternion()), UGL_FLASH)
-        } else if (parts.muzzle && world.layers.muzzleFlash) effects.muzzleFlash(positionOf(parts.muzzle), root.getWorldQuaternion(new THREE.Quaternion()), session.def.action.kind === 'launcher' ? 2.2 : FLASH_BY_CASE[session.caseType])
+        } else if (parts.muzzle && world.layers.muzzleFlash && (session.def.action.kind === 'firearm' || session.def.action.kind === 'launcher')) {
+          const profile = muzzleSmokeOf({ caliber: session.caliber, weapon: session.def, suppressed: session.suppressed })
+          const size = session.def.action.kind === 'launcher' ? 2.2 : FLASH_BY_CASE[session.caseType]
+          effects.muzzleFlash(positionOf(parts.muzzle), root.getWorldQuaternion(new THREE.Quaternion()), size, profile)
+        }
         break
       case 'eject_casing':
         if (data.from === 'chambers') ejectAll(parts.chambers, () => ({ velocity: vector(-0.5 - random() * 0.3, -0.1 + random() * 0.3, (random() - 0.5) * 0.25), spin: vector(10, 20, 5), tilt: 0 }))

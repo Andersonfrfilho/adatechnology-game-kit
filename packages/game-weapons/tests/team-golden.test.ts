@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createArsenal } from '../src'
+import { createArsenal, GALLERY_HEAT } from '../src'
 import type { Vec3, WeaponState } from '../src'
 import gallery from './fixtures/team-golden/gallery-heat.json'
 
@@ -34,7 +34,7 @@ const burst = (weapon: WeaponState): void => {
 
 describe('Galeria 3D do Arsenal: heat and ammunition', () => {
   const entries = gallery.events as Entry[]
-  const arsenal = createArsenal({ rules: { faults: false } })
+  const arsenal = createArsenal({ rules: { faults: false, heat: GALLERY_HEAT } })
   for (const [name, id] of Object.entries(IDS)) {
     it(`${name} heats and spends rounds like the page after Atirar and Rajada`, () => {
       const weapon = arsenal.create(id, { reserve: 0 })

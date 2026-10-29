@@ -34,6 +34,8 @@ export interface WeaponsTestModuleOptions {
   attachmentModels?: AttachmentModelRegistry
   /** Folder (ending with a slash) the weapon thumbnails are served from, relative to the page (default `weapon-svg/`); `false` leaves the items without a thumbnail. */
   thumbnailBase?: string | false
+  /** The rocket of a launcher flies out of the weapon in the hands (default true). A host that draws the projectile (the test room's `projectileModel`) passes false: one round flies. */
+  flyRocket?: boolean
 }
 
 /** Prefix of the item ids of the weapon props (`weapon_pistol_9mm`). */
@@ -373,6 +375,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
         ...(options.condition ? { condition: options.condition } : {}),
         ...(options.seed === undefined ? {} : { seed: options.seed }),
+        ...(options.flyRocket === undefined ? {} : { flyRocket: options.flyRocket }),
       })
       fx = created
       const camera = lent.camera as THREE_NS.Camera

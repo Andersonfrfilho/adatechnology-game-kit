@@ -54,10 +54,11 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     ...(options.raycast ? { raycast: options.raycast } : {}),
     ...(options.contact ? { contact: options.contact } : {}),
     ...(options.effects ? { effects: options.effects } : {}),
+    ...(options.flyRocket === undefined ? {} : { flyRocket: options.flyRocket }),
   })
   return {
     handle(event, tool) {
-      if (event.type === 'explosion') return
+      if (event.type === 'explosion' || event.type === 'player') return
       if (event.type === 'tool') {
         if (hasWeaponModel(event.weapon)) box.unequip()
         else model.unequip()

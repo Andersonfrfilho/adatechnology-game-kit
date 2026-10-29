@@ -13,7 +13,7 @@ describe('shipped catalog', () => {
   })
 
   it('has the calibres, explosives and weapons of the team deliveries', () => {
-    expect(CALIBERS).toHaveLength(30)
+    expect(CALIBERS).toHaveLength(31)
     expect(EXPLOSIVES).toHaveLength(18)
     expect(WEAPONS.filter((def) => def.sources?.includes('gallery'))).toHaveLength(79)
     expect(ARCHETYPE_IDS).toHaveLength(42)

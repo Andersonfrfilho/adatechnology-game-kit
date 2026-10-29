@@ -2,6 +2,7 @@
   {
     "id": "canned_beans",
     "category": "food",
+    "kind": "canned_food",
     "tags": [
       "perishable"
     ],
@@ -39,6 +40,7 @@
   {
     "id": "canned_sardines",
     "category": "food",
+    "kind": "canned_food",
     "tags": [
       "perishable"
     ],
@@ -75,6 +77,7 @@
   {
     "id": "canned_corn_and_peas",
     "category": "food",
+    "kind": "canned_food",
     "tags": [
       "perishable"
     ],
@@ -110,6 +113,7 @@
   {
     "id": "canned_sausages",
     "category": "food",
+    "kind": "canned_food",
     "tags": [
       "perishable"
     ],
@@ -145,6 +149,7 @@
   {
     "id": "condensed_milk",
     "category": "food",
+    "kind": "canned_food",
     "tags": [
       "perishable"
     ],
@@ -179,6 +184,7 @@
   {
     "id": "military_ration",
     "category": "food",
+    "kind": "food_improves_cooked",
     "tags": [
       "perishable"
     ],
@@ -214,6 +220,7 @@
   {
     "id": "rice",
     "category": "food",
+    "kind": "food_needs_prep",
     "tags": [
       "food",
       "perishable"
@@ -252,6 +259,7 @@
   {
     "id": "beans",
     "category": "food",
+    "kind": "food_needs_prep",
     "tags": [
       "food",
       "perishable"
@@ -290,6 +298,7 @@
   {
     "id": "pasta",
     "category": "food",
+    "kind": "food_needs_prep",
     "tags": [
       "food",
       "perishable"
@@ -327,6 +336,7 @@
   {
     "id": "instant_noodles",
     "category": "food",
+    "kind": "food_needs_prep",
     "tags": [
       "perishable"
     ],
@@ -359,11 +369,16 @@
         "school"
       ]
     },
-    "model": "instant_noodles"
+    "model": "instant_noodles",
+    "cookable": true,
+    "estimated": [
+      "cookable"
+    ]
   },
   {
     "id": "cassava_flour",
     "category": "food",
+    "kind": "ingredient",
     "tags": [
       "perishable"
     ],
@@ -399,6 +414,7 @@
   {
     "id": "biscuits",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "food",
       "perishable"
@@ -437,6 +453,7 @@
   {
     "id": "snack_chips",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "perishable"
     ],
@@ -472,6 +489,7 @@
   {
     "id": "chocolate_bar",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "perishable"
     ],
@@ -508,6 +526,7 @@
   {
     "id": "rapadura",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "perishable"
     ],
@@ -543,6 +562,7 @@
   {
     "id": "honey_jar",
     "category": "food",
+    "kind": "food_ready",
     "size": [
       0.08,
       0.1,
@@ -568,11 +588,16 @@
         "farm"
       ]
     },
-    "model": "honey_jar"
+    "model": "honey_jar",
+    "nonPerishable": true,
+    "estimated": [
+      "nonPerishable"
+    ]
   },
   {
     "id": "bread",
     "category": "food",
+    "kind": "food_improves_cooked",
     "tags": [
       "food",
       "perishable"
@@ -609,6 +634,7 @@
   {
     "id": "cheese",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "food",
       "perishable"
@@ -645,6 +671,7 @@
   {
     "id": "mortadella",
     "category": "food",
+    "kind": "food_improves_cooked",
     "tags": [
       "perishable"
     ],
@@ -680,6 +707,7 @@
   {
     "id": "raw_beef",
     "category": "food",
+    "kind": "food_needs_prep",
     "tags": [
       "perishable"
     ],
@@ -716,6 +744,7 @@
   {
     "id": "frozen_chicken",
     "category": "food",
+    "kind": "food_needs_prep",
     "tags": [
       "perishable"
     ],
@@ -752,6 +781,7 @@
   {
     "id": "eggs",
     "category": "food",
+    "kind": "food_needs_prep",
     "tags": [
       "food",
       "perishable"
@@ -790,6 +820,7 @@
   {
     "id": "banana_bunch",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "perishable"
     ],
@@ -826,6 +857,7 @@
   {
     "id": "orange",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "perishable"
     ],
@@ -860,6 +892,7 @@
   {
     "id": "potatoes",
     "category": "food",
+    "kind": "food_needs_prep",
     "tags": [
       "perishable"
     ],
@@ -896,6 +929,7 @@
   {
     "id": "cassava_root",
     "category": "food",
+    "kind": "food_needs_prep",
     "tags": [
       "perishable"
     ],
@@ -930,6 +964,7 @@
   {
     "id": "fresh_fish",
     "category": "food",
+    "kind": "food_needs_prep",
     "tags": [
       "perishable"
     ],
@@ -964,6 +999,7 @@
   {
     "id": "salted_fish",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "perishable"
     ],
@@ -997,6 +1033,7 @@
   {
     "id": "jerked_beef",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "perishable"
     ],
@@ -1031,6 +1068,7 @@
   {
     "id": "game_meat",
     "category": "food",
+    "kind": "food_needs_prep",
     "tags": [
       "perishable"
     ],
@@ -1065,6 +1103,7 @@
   {
     "id": "home_preserves",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "perishable"
     ],
@@ -1100,6 +1139,7 @@
   {
     "id": "dog_food",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "perishable"
     ],
@@ -1135,6 +1175,7 @@
   {
     "id": "sugar",
     "category": "food",
+    "kind": "ingredient",
     "tags": [
       "food"
     ],
@@ -1164,11 +1205,16 @@
         "school"
       ]
     },
-    "model": "sugar"
+    "model": "sugar",
+    "nonPerishable": true,
+    "estimated": [
+      "nonPerishable"
+    ]
   },
   {
     "id": "salt",
     "category": "food",
+    "kind": "ingredient",
     "tags": [
       "food"
     ],
@@ -1198,11 +1244,16 @@
         "docks"
       ]
     },
-    "model": "salt"
+    "model": "salt",
+    "nonPerishable": true,
+    "estimated": [
+      "nonPerishable"
+    ]
   },
   {
     "id": "cooking_oil",
     "category": "food",
+    "kind": "ingredient",
     "tags": [
       "food",
       "perishable"
@@ -1238,6 +1289,7 @@
   {
     "id": "coffee",
     "category": "food",
+    "kind": "ingredient",
     "tags": [
       "food",
       "perishable"
@@ -1275,6 +1327,7 @@
   {
     "id": "water_bottle",
     "category": "drink",
+    "kind": "drink_ready",
     "tags": [
       "drink"
     ],
@@ -1304,11 +1357,21 @@
         "car"
       ]
     },
-    "model": "water_bottle"
+    "model": "water_bottle",
+    "nonPerishable": true,
+    "fluid": {
+      "liquid": "water",
+      "liters": 0.5
+    },
+    "estimated": [
+      "nonPerishable",
+      "fluid"
+    ]
   },
   {
     "id": "water_jug_5l",
     "category": "drink",
+    "kind": "drink_ready",
     "size": [
       0.19,
       0.33,
@@ -1334,11 +1397,21 @@
         "church"
       ]
     },
-    "model": "water_jug_5l"
+    "model": "water_jug_5l",
+    "nonPerishable": true,
+    "fluid": {
+      "liquid": "water",
+      "liters": 5
+    },
+    "estimated": [
+      "nonPerishable",
+      "fluid"
+    ]
   },
   {
     "id": "dirty_water",
     "category": "drink",
+    "kind": "drink_untreated",
     "size": [
       0.066,
       0.183,
@@ -1361,11 +1434,21 @@
         "road"
       ]
     },
-    "model": "dirty_water"
+    "model": "dirty_water",
+    "nonPerishable": true,
+    "fluid": {
+      "liquid": "water",
+      "liters": 0.5
+    },
+    "estimated": [
+      "nonPerishable",
+      "fluid"
+    ]
   },
   {
     "id": "soda_can",
     "category": "drink",
+    "kind": "canned_drink",
     "tags": [
       "drink",
       "perishable"
@@ -1398,11 +1481,19 @@
         "school"
       ]
     },
-    "model": "soda_can"
+    "model": "soda_can",
+    "fluid": {
+      "liquid": "soda",
+      "liters": 0.35
+    },
+    "estimated": [
+      "fluid"
+    ]
   },
   {
     "id": "juice_box",
     "category": "drink",
+    "kind": "drink_ready",
     "tags": [
       "drink",
       "perishable"
@@ -1433,11 +1524,37 @@
         "house"
       ]
     },
-    "model": "juice_box"
+    "model": "juice_box",
+    "fluid": {
+      "liquid": "juice",
+      "liters": 0.2
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "impact": {
+      "response": "squash",
+      "pushImpulse": true
+    },
+    "leftover": {
+      "item": "food_packaging",
+      "despawnSeconds": 300
+    },
+    "estimated": [
+      "fluid",
+      "parts",
+      "impact",
+      "leftover"
+    ]
   },
   {
     "id": "milk_carton",
     "category": "drink",
+    "kind": "drink_ready",
     "tags": [
       "drink",
       "perishable"
@@ -1468,11 +1585,37 @@
         "school"
       ]
     },
-    "model": "milk_carton"
+    "model": "milk_carton",
+    "fluid": {
+      "liquid": "milk",
+      "liters": 1
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "impact": {
+      "response": "squash",
+      "pushImpulse": true
+    },
+    "leftover": {
+      "item": "food_packaging",
+      "despawnSeconds": 300
+    },
+    "estimated": [
+      "fluid",
+      "parts",
+      "impact",
+      "leftover"
+    ]
   },
   {
     "id": "sports_drink",
     "category": "drink",
+    "kind": "drink_ready",
     "tags": [
       "perishable"
     ],
@@ -1501,11 +1644,19 @@
         "mall"
       ]
     },
-    "model": "sports_drink"
+    "model": "sports_drink",
+    "fluid": {
+      "liquid": "juice",
+      "liters": 0.5
+    },
+    "estimated": [
+      "fluid"
+    ]
   },
   {
     "id": "energy_drink",
     "category": "drink",
+    "kind": "drink_ready",
     "tags": [
       "perishable"
     ],
@@ -1534,11 +1685,19 @@
         "mall"
       ]
     },
-    "model": "energy_drink"
+    "model": "energy_drink",
+    "fluid": {
+      "liquid": "soda",
+      "liters": 0.25
+    },
+    "estimated": [
+      "fluid"
+    ]
   },
   {
     "id": "coconut_water",
     "category": "drink",
+    "kind": "drink_ready",
     "tags": [
       "perishable"
     ],
@@ -1566,11 +1725,19 @@
         "farm"
       ]
     },
-    "model": "coconut_water"
+    "model": "coconut_water",
+    "fluid": {
+      "liquid": "juice",
+      "liters": 0.33
+    },
+    "estimated": [
+      "fluid"
+    ]
   },
   {
     "id": "beer_can",
     "category": "drink",
+    "kind": "canned_drink",
     "tags": [
       "perishable"
     ],
@@ -1599,11 +1766,19 @@
         "gas_station"
       ]
     },
-    "model": "beer_can"
+    "model": "beer_can",
+    "fluid": {
+      "liquid": "beer",
+      "liters": 0.35
+    },
+    "estimated": [
+      "fluid"
+    ]
   },
   {
     "id": "cachaca",
     "category": "drink",
+    "kind": "drink_ready",
     "size": [
       0.09,
       0.21359,
@@ -1629,11 +1804,40 @@
         "lodge"
       ]
     },
-    "model": "cachaca"
+    "model": "cachaca",
+    "nonPerishable": true,
+    "fluid": {
+      "liquid": "spirits",
+      "liters": 0.7
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "glass",
+        "thickness": 0.003
+      }
+    ],
+    "impact": {
+      "response": "shatter",
+      "pushImpulse": true,
+      "shed": true
+    },
+    "leftover": {
+      "item": "glass_bottle",
+      "despawnSeconds": 600
+    },
+    "estimated": [
+      "nonPerishable",
+      "fluid",
+      "parts",
+      "impact",
+      "leftover"
+    ]
   },
   {
     "id": "communion_wine",
     "category": "drink",
+    "kind": "drink_ready",
     "size": [
       0.076,
       0.3,
@@ -1656,11 +1860,40 @@
         "church"
       ]
     },
-    "model": "communion_wine"
+    "model": "communion_wine",
+    "nonPerishable": true,
+    "fluid": {
+      "liquid": "wine",
+      "liters": 0.75
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "glass",
+        "thickness": 0.003
+      }
+    ],
+    "impact": {
+      "response": "shatter",
+      "pushImpulse": true,
+      "shed": true
+    },
+    "leftover": {
+      "item": "glass_bottle",
+      "despawnSeconds": 600
+    },
+    "estimated": [
+      "nonPerishable",
+      "fluid",
+      "parts",
+      "impact",
+      "leftover"
+    ]
   },
   {
     "id": "bandage",
     "category": "medical",
+    "kind": "first_aid",
     "tags": [
       "medical"
     ],
@@ -1692,6 +1925,7 @@
   {
     "id": "sterile_gauze",
     "category": "medical",
+    "kind": "first_aid",
     "size": [
       0.1,
       0.1,
@@ -1717,6 +1951,7 @@
   {
     "id": "adhesive_bandages",
     "category": "medical",
+    "kind": "first_aid",
     "size": [
       0.1,
       0.06,
@@ -1744,6 +1979,7 @@
   {
     "id": "medical_tape",
     "category": "medical",
+    "kind": "first_aid",
     "size": [
       0.05,
       0.025,
@@ -1770,6 +2006,7 @@
   {
     "id": "alcohol_70",
     "category": "medical",
+    "kind": "medicine",
     "tags": [
       "medical"
     ],
@@ -1795,11 +2032,22 @@
         "hospital"
       ]
     },
-    "model": "alcohol_70"
+    "model": "alcohol_70",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "povidone_iodine",
     "category": "medical",
+    "kind": "medicine",
     "size": [
       0.045,
       0.11,
@@ -1820,11 +2068,22 @@
         "hospital"
       ]
     },
-    "model": "povidone_iodine"
+    "model": "povidone_iodine",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "saline_iv_bag",
     "category": "medical",
+    "kind": "medicine",
     "size": [
       0.12,
       0.25,
@@ -1844,11 +2103,22 @@
         "hospital"
       ]
     },
-    "model": "saline_iv_bag"
+    "model": "saline_iv_bag",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "painkillers",
     "category": "medical",
+    "kind": "medicine",
     "tags": [
       "medical"
     ],
@@ -1880,6 +2150,7 @@
   {
     "id": "ibuprofen",
     "category": "medical",
+    "kind": "medicine",
     "size": [
       0.095,
       0.05,
@@ -1905,6 +2176,7 @@
   {
     "id": "tramadol",
     "category": "medical",
+    "kind": "medicine",
     "size": [
       0.095,
       0.05,
@@ -1930,6 +2202,7 @@
   {
     "id": "clonazepam",
     "category": "medical",
+    "kind": "medicine",
     "size": [
       0.09,
       0.05,
@@ -1956,6 +2229,7 @@
   {
     "id": "amoxicillin",
     "category": "medical",
+    "kind": "medicine",
     "size": [
       0.1,
       0.05305,
@@ -1981,6 +2255,7 @@
   {
     "id": "ceftriaxone",
     "category": "medical",
+    "kind": "medicine",
     "size": [
       0.1,
       0.06,
@@ -2006,6 +2281,7 @@
   {
     "id": "syringe",
     "category": "medical",
+    "kind": "first_aid",
     "size": [
       0.15,
       0.02,
@@ -2026,11 +2302,22 @@
         "hospital"
       ]
     },
-    "model": "syringe"
+    "model": "syringe",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "suture_kit",
     "category": "medical",
+    "kind": "first_aid",
     "size": [
       0.15,
       0.08,
@@ -2056,6 +2343,7 @@
   {
     "id": "splint",
     "category": "medical",
+    "kind": "first_aid",
     "size": [
       0.46,
       0.11,
@@ -2077,11 +2365,22 @@
         "police_station"
       ]
     },
-    "model": "splint"
+    "model": "splint",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_soft",
+        "thickness": 0.01
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "first_aid_kit",
     "category": "medical",
+    "kind": "first_aid",
     "tags": [
       "medical"
     ],
@@ -2108,11 +2407,22 @@
         "gas_station"
       ]
     },
-    "model": "first_aid_kit"
+    "model": "first_aid_kit",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "exam_gloves",
     "category": "medical",
+    "kind": "first_aid",
     "size": [
       0.1,
       0.12,
@@ -2134,11 +2444,22 @@
         "hospital"
       ]
     },
-    "model": "exam_gloves"
+    "model": "exam_gloves",
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.0001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "n95_mask",
     "category": "medical",
+    "kind": "first_aid",
     "size": [
       0.15,
       0.11,
@@ -2162,11 +2483,22 @@
         "house"
       ]
     },
-    "model": "n95_mask"
+    "model": "n95_mask",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "activated_charcoal",
     "category": "medical",
+    "kind": "medicine",
     "size": [
       0.06,
       0.095,
@@ -2192,6 +2524,7 @@
   {
     "id": "rehydration_salts",
     "category": "medical",
+    "kind": "medicine",
     "size": [
       0.09,
       0.12,
@@ -2218,6 +2551,7 @@
   {
     "id": "antihistamine",
     "category": "medical",
+    "kind": "medicine",
     "size": [
       0.08,
       0.05,
@@ -2243,6 +2577,7 @@
   {
     "id": "antivenom",
     "category": "medical",
+    "kind": "medicine",
     "size": [
       0.15,
       0.09,
@@ -2268,6 +2603,7 @@
   {
     "id": "thermometer",
     "category": "medical",
+    "kind": "tool",
     "tags": [
       "medical"
     ],
@@ -2291,11 +2627,22 @@
         "hospital"
       ]
     },
-    "model": "thermometer"
+    "model": "thermometer",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "maintenance_medication",
     "category": "medical",
+    "kind": "medicine",
     "size": [
       0.045,
       0.09,
@@ -2322,6 +2669,7 @@
   {
     "id": "multivitamin",
     "category": "medical",
+    "kind": "medicine",
     "size": [
       0.05,
       0.09,
@@ -2347,6 +2695,7 @@
   {
     "id": "hammer",
     "category": "tools",
+    "kind": "tool",
     "tags": [
       "garage"
     ],
@@ -2378,6 +2727,7 @@
   {
     "id": "screwdriver",
     "category": "tools",
+    "kind": "tool",
     "tags": [
       "garage"
     ],
@@ -2407,6 +2757,7 @@
   {
     "id": "crowbar",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.18786,
       0.75,
@@ -2435,6 +2786,7 @@
   {
     "id": "handsaw",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.5,
       0.035,
@@ -2461,6 +2813,7 @@
   {
     "id": "hacksaw",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.42,
       0.03,
@@ -2486,6 +2839,7 @@
   {
     "id": "bolt_cutters",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.6,
       0.06,
@@ -2513,6 +2867,7 @@
   {
     "id": "pliers",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.2,
       0.03,
@@ -2539,6 +2894,7 @@
   {
     "id": "adjustable_wrench",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.25,
       0.02,
@@ -2565,6 +2921,7 @@
   {
     "id": "mechanic_toolbox",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.4,
       0.2,
@@ -2590,6 +2947,7 @@
   {
     "id": "car_jack",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.3,
       0.11,
@@ -2614,6 +2972,7 @@
   {
     "id": "gas_torch",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.15,
       0.42,
@@ -2640,6 +2999,7 @@
   {
     "id": "inverter_welder",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.3,
       0.22,
@@ -2665,6 +3025,7 @@
   {
     "id": "cordless_drill",
     "category": "tools",
+    "kind": "electronics",
     "size": [
       0.22,
       0.2,
@@ -2687,11 +3048,18 @@
         "mall"
       ]
     },
-    "model": "cordless_drill"
+    "model": "cordless_drill",
+    "charge": {
+      "lossPerMonth": 0.03
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "shovel",
     "category": "tools",
+    "kind": "tool",
     "size": [
       1.1,
       0.07,
@@ -2718,6 +3086,7 @@
   {
     "id": "hoe",
     "category": "tools",
+    "kind": "tool",
     "size": [
       1.35,
       0.06,
@@ -2742,6 +3111,7 @@
   {
     "id": "pocket_knife",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.11,
       0.022,
@@ -2769,6 +3139,7 @@
   {
     "id": "can_opener",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.14,
       0.04,
@@ -2794,6 +3165,7 @@
   {
     "id": "scissors",
     "category": "tools",
+    "kind": "tool",
     "tags": [
       "kitchen"
     ],
@@ -2822,6 +3194,7 @@
   {
     "id": "duct_tape",
     "category": "tools",
+    "kind": "tool",
     "tags": [
       "garage"
     ],
@@ -2847,11 +3220,22 @@
         "mall"
       ]
     },
-    "model": "duct_tape"
+    "model": "duct_tape",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "pot",
     "category": "tools",
+    "kind": "cookware",
     "tags": [
       "kitchen"
     ],
@@ -2876,11 +3260,22 @@
         "school"
       ]
     },
-    "model": "pot"
+    "model": "pot",
+    "parts": [
+      {
+        "id": "body",
+        "material": "aluminium",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "camp_stove",
     "category": "tools",
+    "kind": "camping",
     "size": [
       0.18,
       0.1,
@@ -2903,11 +3298,22 @@
         "gun_shop"
       ]
     },
-    "model": "camp_stove"
+    "model": "camp_stove",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "sewing_kit",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.09,
       0.05,
@@ -2929,11 +3335,22 @@
         "church"
       ]
     },
-    "model": "sewing_kit"
+    "model": "sewing_kit",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "lockpick_kit",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.1,
       0.07,
@@ -2960,6 +3377,7 @@
   {
     "id": "lighter",
     "category": "tools",
+    "kind": "tool",
     "tags": [
       "tool"
     ],
@@ -2986,11 +3404,22 @@
         "zombie_corpse"
       ]
     },
-    "model": "lighter"
+    "model": "lighter",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "matches",
     "category": "tools",
+    "kind": "tool",
     "tags": [
       "tool"
     ],
@@ -3016,11 +3445,22 @@
         "church"
       ]
     },
-    "model": "matches"
+    "model": "matches",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "flint_striker",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.11,
       0.02,
@@ -3046,6 +3486,7 @@
   {
     "id": "bucket",
     "category": "tools",
+    "kind": "tank",
     "size": [
       0.28,
       0.27,
@@ -3066,11 +3507,18 @@
         "warehouse"
       ]
     },
-    "model": "bucket"
+    "model": "bucket",
+    "container": {
+      "capacityLiters": 10
+    },
+    "estimated": [
+      "container"
+    ]
   },
   {
     "id": "binoculars",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.18,
       0.15,
@@ -3092,11 +3540,22 @@
         "lodge"
       ]
     },
-    "model": "binoculars"
+    "model": "binoculars",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "fire_extinguisher",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.16,
       0.48,
@@ -3126,6 +3585,7 @@
   {
     "id": "sharpening_stone",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.2,
       0.05,
@@ -3147,11 +3607,22 @@
         "gun_shop"
       ]
     },
-    "model": "sharpening_stone"
+    "model": "sharpening_stone",
+    "parts": [
+      {
+        "id": "body",
+        "material": "stone",
+        "thickness": 0.02
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "knife",
     "category": "melee",
+    "kind": "melee",
     "tags": [
       "kitchen"
     ],
@@ -3182,6 +3653,7 @@
   {
     "id": "tactical_knife",
     "category": "melee",
+    "kind": "melee",
     "size": [
       0.26,
       0.028,
@@ -3209,6 +3681,7 @@
   {
     "id": "machete",
     "category": "melee",
+    "kind": "melee",
     "size": [
       0.55,
       0.0852,
@@ -3236,6 +3709,7 @@
   {
     "id": "meat_cleaver",
     "category": "melee",
+    "kind": "melee",
     "size": [
       0.33,
       0.03,
@@ -3261,6 +3735,7 @@
   {
     "id": "hatchet",
     "category": "melee",
+    "kind": "melee",
     "size": [
       0.35,
       0.05,
@@ -3288,6 +3763,7 @@
   {
     "id": "axe",
     "category": "melee",
+    "kind": "melee",
     "size": [
       0.24959,
       0.7,
@@ -3315,6 +3791,7 @@
   {
     "id": "baseball_bat",
     "category": "melee",
+    "kind": "melee",
     "size": [
       0.86,
       0.07,
@@ -3337,11 +3814,27 @@
         "school"
       ]
     },
-    "model": "baseball_bat"
+    "model": "baseball_bat",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_hard",
+        "thickness": 0.03
+      }
+    ],
+    "impact": {
+      "response": "break",
+      "pushImpulse": true
+    },
+    "estimated": [
+      "parts",
+      "impact"
+    ]
   },
   {
     "id": "nail_bat",
     "category": "melee",
+    "kind": "melee",
     "tags": [
       "craft_only"
     ],
@@ -3360,11 +3853,27 @@
       "amount": 90
     },
     "weapon": "nail_bat",
-    "model": "nail_bat"
+    "model": "nail_bat",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_hard",
+        "thickness": 0.03
+      }
+    ],
+    "impact": {
+      "response": "break",
+      "pushImpulse": true
+    },
+    "estimated": [
+      "parts",
+      "impact"
+    ]
   },
   {
     "id": "iron_pipe",
     "category": "melee",
+    "kind": "melee",
     "size": [
       0.8,
       0.035,
@@ -3393,6 +3902,7 @@
   {
     "id": "sledgehammer",
     "category": "melee",
+    "kind": "melee",
     "size": [
       0.9,
       0.12,
@@ -3420,6 +3930,7 @@
   {
     "id": "pickaxe",
     "category": "melee",
+    "kind": "melee",
     "size": [
       0.9,
       0.04,
@@ -3445,6 +3956,7 @@
   {
     "id": "sickle",
     "category": "melee",
+    "kind": "melee",
     "size": [
       0.4,
       0.035,
@@ -3470,6 +3982,7 @@
   {
     "id": "police_baton",
     "category": "melee",
+    "kind": "melee",
     "size": [
       0.5,
       0.1,
@@ -3491,11 +4004,22 @@
         "prison"
       ]
     },
-    "model": "police_baton"
+    "model": "police_baton",
+    "parts": [
+      {
+        "id": "body",
+        "material": "aluminium",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "cast_iron_skillet",
     "category": "melee",
+    "kind": "melee",
     "size": [
       0.43,
       0.05,
@@ -3517,11 +4041,22 @@
         "apartment"
       ]
     },
-    "model": "cast_iron_skillet"
+    "model": "cast_iron_skillet",
+    "parts": [
+      {
+        "id": "body",
+        "material": "cast_iron",
+        "thickness": 0.004
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "improvised_spear",
     "category": "melee",
+    "kind": "melee",
     "tags": [
       "craft_only"
     ],
@@ -3540,11 +4075,27 @@
       "amount": 80
     },
     "weapon": "improvised_spear",
-    "model": "improvised_spear"
+    "model": "improvised_spear",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_soft",
+        "thickness": 0.02
+      }
+    ],
+    "impact": {
+      "response": "break",
+      "pushImpulse": true
+    },
+    "estimated": [
+      "parts",
+      "impact"
+    ]
   },
   {
     "id": "chainsaw",
     "category": "melee",
+    "kind": "melee",
     "size": [
       0.45,
       0.26,
@@ -3572,6 +4123,7 @@
   {
     "id": "slingshot",
     "category": "melee",
+    "kind": "ranged",
     "size": [
       0.13,
       0.15,
@@ -3598,6 +4150,7 @@
   {
     "id": "recurve_bow",
     "category": "melee",
+    "kind": "ranged",
     "size": [
       1.3,
       0.2,
@@ -3624,6 +4177,7 @@
   {
     "id": "crossbow",
     "category": "melee",
+    "kind": "ranged",
     "size": [
       0.7,
       0.12,
@@ -3649,6 +4203,7 @@
   {
     "id": "arrows_and_bolts",
     "category": "melee",
+    "kind": "ammo",
     "size": [
       0.7,
       0.025,
@@ -3669,11 +4224,24 @@
         "school"
       ]
     },
-    "model": "arrows_and_bolts"
+    "model": "arrows_and_bolts",
+    "caliber": "arrow",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_soft",
+        "thickness": 0.005
+      }
+    ],
+    "estimated": [
+      "caliber",
+      "parts"
+    ]
   },
   {
     "id": "wooden_plank",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.8,
       0.24948,
@@ -3701,6 +4269,7 @@
   {
     "id": "nails",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.13,
       0.06,
@@ -3723,11 +4292,22 @@
         "farm"
       ]
     },
-    "model": "nails"
+    "model": "nails",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "screws",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.09,
       0.05,
@@ -3749,11 +4329,22 @@
         "mall"
       ]
     },
-    "model": "screws"
+    "model": "screws",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "sheet_metal",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.6,
       0.003,
@@ -3776,11 +4367,22 @@
         "docks"
       ]
     },
-    "model": "sheet_metal"
+    "model": "sheet_metal",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "scrap_metal",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.2,
       0.08,
@@ -3799,11 +4401,22 @@
         "road"
       ]
     },
-    "model": "scrap_metal"
+    "model": "scrap_metal",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "wire_roll",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.14,
       0.05,
@@ -3825,11 +4438,22 @@
         "house"
       ]
     },
-    "model": "wire_roll"
+    "model": "wire_roll",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "barbed_wire",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.3,
       0.12,
@@ -3850,11 +4474,22 @@
         "military_base"
       ]
     },
-    "model": "barbed_wire"
+    "model": "barbed_wire",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "rope",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "garage"
     ],
@@ -3879,11 +4514,22 @@
         "lodge"
       ]
     },
-    "model": "rope"
+    "model": "rope",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.01
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "tarp",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.35,
       0.1,
@@ -3904,11 +4550,22 @@
         "road"
       ]
     },
-    "model": "tarp"
+    "model": "tarp",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "raffia_sack",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.4,
       0.02,
@@ -3930,11 +4587,22 @@
         "farm"
       ]
     },
-    "model": "raffia_sack"
+    "model": "raffia_sack",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "bricks",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.19,
       0.18,
@@ -3955,11 +4623,22 @@
         "house"
       ]
     },
-    "model": "bricks"
+    "model": "bricks",
+    "parts": [
+      {
+        "id": "body",
+        "material": "brick",
+        "thickness": 0.1
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "cement_bag",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.5,
       0.1,
@@ -3979,11 +4658,22 @@
         "warehouse"
       ]
     },
-    "model": "cement_bag"
+    "model": "cement_bag",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "rag",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.22,
       0.025,
@@ -4000,11 +4690,22 @@
         "zombie_corpse"
       ]
     },
-    "model": "rag"
+    "model": "rag",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "glass_bottle",
     "category": "materials",
+    "kind": "glass_bottle",
     "size": [
       0.075,
       0.26,
@@ -4028,12 +4729,13 @@
   {
     "id": "pet_bottle",
     "category": "materials",
+    "kind": "plastic_bottle",
     "size": [
       0.105,
       0.33,
       0.105
     ],
-    "weight": 0.05,
+    "weight": 0.08,
     "stack": 4,
     "shape": "box",
     "color": 8421504,
@@ -4045,11 +4747,15 @@
         "school"
       ]
     },
-    "model": "pet_bottle"
+    "model": "pet_bottle",
+    "estimated": [
+      "weight"
+    ]
   },
   {
     "id": "empty_can",
     "category": "materials",
+    "kind": "metal_can",
     "tags": [
       "trash"
     ],
@@ -4074,6 +4780,7 @@
   {
     "id": "glass_shards",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.12,
       0.05,
@@ -4090,11 +4797,22 @@
         "supermarket"
       ]
     },
-    "model": "glass_shards"
+    "model": "glass_shards",
+    "parts": [
+      {
+        "id": "body",
+        "material": "glass",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "epoxy_glue",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.1,
       0.06,
@@ -4116,11 +4834,22 @@
         "house"
       ]
     },
-    "model": "epoxy_glue"
+    "model": "epoxy_glue",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "electronic_components",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.1,
       0.02,
@@ -4138,11 +4867,22 @@
         "apartment"
       ]
     },
-    "model": "electronic_components"
+    "model": "electronic_components",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "copper_wire",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.08,
       0.03,
@@ -4160,11 +4900,22 @@
         "house"
       ]
     },
-    "model": "copper_wire"
+    "model": "copper_wire",
+    "parts": [
+      {
+        "id": "body",
+        "material": "copper",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "firewood",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.4,
       0.12,
@@ -4191,6 +4942,7 @@
   {
     "id": "rebar",
     "category": "materials",
+    "kind": "material",
     "size": [
       1.27,
       0.016,
@@ -4207,11 +4959,22 @@
         "road"
       ]
     },
-    "model": "rebar"
+    "model": "rebar",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.012
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "lubricant_spray",
     "category": "materials",
+    "kind": "material",
     "size": [
       0.05,
       0.17,
@@ -4233,11 +4996,22 @@
         "house"
       ]
     },
-    "model": "lubricant_spray"
+    "model": "lubricant_spray",
+    "parts": [
+      {
+        "id": "body",
+        "material": "aluminium",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "tshirt",
     "category": "clothing",
+    "kind": "clothing",
     "tags": [
       "clothing"
     ],
@@ -4277,6 +5051,7 @@
   {
     "id": "hoodie",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.38,
       0.08,
@@ -4312,6 +5087,7 @@
   {
     "id": "denim_jacket",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.4,
       0.08,
@@ -4346,6 +5122,7 @@
   {
     "id": "leather_motorcycle_jacket",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.45,
       0.1,
@@ -4376,11 +5153,22 @@
         "zombie_corpse"
       ]
     },
-    "model": "leather_motorcycle_jacket"
+    "model": "leather_motorcycle_jacket",
+    "parts": [
+      {
+        "id": "body",
+        "material": "leather",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "jeans",
     "category": "clothing",
+    "kind": "clothing",
     "tags": [
       "clothing"
     ],
@@ -4418,6 +5206,7 @@
   {
     "id": "leather_motorcycle_pants",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.4,
       0.09,
@@ -4446,11 +5235,22 @@
         "zombie_corpse"
       ]
     },
-    "model": "leather_motorcycle_pants"
+    "model": "leather_motorcycle_pants",
+    "parts": [
+      {
+        "id": "body",
+        "material": "leather",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "army_camouflage_uniform",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.4,
       0.1,
@@ -4487,6 +5287,7 @@
   {
     "id": "mechanic_coveralls",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.4,
       0.09,
@@ -4522,6 +5323,7 @@
   {
     "id": "firefighter_suit",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.55,
       0.2,
@@ -4556,6 +5358,7 @@
   {
     "id": "beekeeper_suit",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.4,
       0.1,
@@ -4594,6 +5397,7 @@
   {
     "id": "raincoat",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.3,
       0.04,
@@ -4630,6 +5434,7 @@
   {
     "id": "padded_coat",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.45,
       0.15,
@@ -4664,6 +5469,7 @@
   {
     "id": "motorcycle_helmet",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.26,
       0.25356,
@@ -4694,11 +5500,22 @@
         "road"
       ]
     },
-    "model": "motorcycle_helmet"
+    "model": "motorcycle_helmet",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "hard_hat",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.25,
       0.15,
@@ -4727,11 +5544,22 @@
         "mine"
       ]
     },
-    "model": "hard_hat"
+    "model": "hard_hat",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.004
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "safety_goggles",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.16,
       0.06,
@@ -4761,11 +5589,22 @@
         "workshop"
       ]
     },
-    "model": "safety_goggles"
+    "model": "safety_goggles",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "leather_work_gloves",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.25,
       0.03,
@@ -4795,11 +5634,22 @@
         "workshop"
       ]
     },
-    "model": "leather_work_gloves"
+    "model": "leather_work_gloves",
+    "parts": [
+      {
+        "id": "body",
+        "material": "leather",
+        "thickness": 0.0015
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "combat_boots",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.3,
       0.2,
@@ -4829,11 +5679,22 @@
         "zombie_corpse"
       ]
     },
-    "model": "combat_boots"
+    "model": "combat_boots",
+    "parts": [
+      {
+        "id": "body",
+        "material": "leather",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "rubber_boots",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.3,
       0.35,
@@ -4862,11 +5723,22 @@
         "docks"
       ]
     },
-    "model": "rubber_boots"
+    "model": "rubber_boots",
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.004
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "sneakers",
     "category": "clothing",
+    "kind": "clothing",
     "tags": [
       "clothing"
     ],
@@ -4898,11 +5770,22 @@
         "mall"
       ]
     },
-    "model": "sneakers"
+    "model": "sneakers",
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.006
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "flip_flops",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.29,
       0.03,
@@ -4931,11 +5814,22 @@
         "apartment"
       ]
     },
-    "model": "flip_flops"
+    "model": "flip_flops",
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.008
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "magazine_arm_guard",
     "category": "clothing",
+    "kind": "clothing",
     "tags": [
       "craft_only"
     ],
@@ -4961,11 +5855,22 @@
       "scratch": 0.5,
       "warmth": 0
     },
-    "model": "magazine_arm_guard"
+    "model": "magazine_arm_guard",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "sheet_metal_forearm_guard",
     "category": "clothing",
+    "kind": "clothing",
     "tags": [
       "craft_only"
     ],
@@ -4991,11 +5896,27 @@
       "scratch": 0.9,
       "warmth": 0
     },
-    "model": "sheet_metal_forearm_guard"
+    "model": "sheet_metal_forearm_guard",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.001
+      }
+    ],
+    "impact": {
+      "response": "dent",
+      "pushImpulse": false
+    },
+    "estimated": [
+      "parts",
+      "impact"
+    ]
   },
   {
     "id": "ballistic_vest",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.4,
       0.07,
@@ -5030,12 +5951,13 @@
   {
     "id": "shopping_bag",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.3,
       0.02,
       0.2
     ],
-    "weight": 0.02,
+    "weight": 0.1,
     "stack": 1,
     "shape": "bag",
     "color": 8421504,
@@ -5055,11 +5977,15 @@
         "house"
       ]
     },
-    "model": "shopping_bag"
+    "model": "shopping_bag",
+    "estimated": [
+      "weight"
+    ]
   },
   {
     "id": "trash_bag",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.25,
       0.025,
@@ -5086,11 +6012,22 @@
         "apartment"
       ]
     },
-    "model": "trash_bag"
+    "model": "trash_bag",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.0002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "fanny_pack",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.25,
       0.1,
@@ -5121,6 +6058,7 @@
   {
     "id": "crossbody_bag",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.25,
       0.2,
@@ -5152,6 +6090,7 @@
   {
     "id": "backpack",
     "category": "bags",
+    "kind": "bag",
     "tags": [
       "clothing"
     ],
@@ -5186,12 +6125,13 @@
   {
     "id": "delivery_bag",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.48,
       0.45,
       0.42
     ],
-    "weight": 1.2,
+    "weight": 2,
     "stack": 1,
     "shape": "bag",
     "color": 8421504,
@@ -5212,17 +6152,21 @@
         "house"
       ]
     },
-    "model": "delivery_bag"
+    "model": "delivery_bag",
+    "estimated": [
+      "weight"
+    ]
   },
   {
     "id": "hiking_backpack_40l",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.41121,
       0.55,
       0.31869
     ],
-    "weight": 1.3,
+    "weight": 1.8,
     "stack": 1,
     "shape": "bag",
     "color": 8421504,
@@ -5243,11 +6187,15 @@
         "gun_shop"
       ]
     },
-    "model": "hiking_backpack_40l"
+    "model": "hiking_backpack_40l",
+    "estimated": [
+      "weight"
+    ]
   },
   {
     "id": "military_backpack",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.35,
       0.6,
@@ -5278,6 +6226,7 @@
   {
     "id": "trekking_backpack_70l",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.38,
       0.75,
@@ -5308,6 +6257,7 @@
   {
     "id": "rolling_suitcase",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.4,
       0.65,
@@ -5335,11 +6285,22 @@
         "road"
       ]
     },
-    "model": "rolling_suitcase"
+    "model": "rolling_suitcase",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "tactical_vest",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.35,
       0.1,
@@ -5370,6 +6331,7 @@
   {
     "id": "tool_belt",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.35,
       0.1,
@@ -5395,11 +6357,22 @@
         "workshop"
       ]
     },
-    "model": "tool_belt"
+    "model": "tool_belt",
+    "parts": [
+      {
+        "id": "body",
+        "material": "leather",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "cooler_box",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.32,
       0.25,
@@ -5425,11 +6398,22 @@
         "gas_station"
       ]
     },
-    "model": "cooler_box"
+    "model": "cooler_box",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.004
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "shopping_cart",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.55,
       0.98,
@@ -5454,11 +6438,22 @@
         "supermarket"
       ]
     },
-    "model": "shopping_cart"
+    "model": "shopping_cart",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "wheelbarrow",
     "category": "bags",
+    "kind": "bag",
     "size": [
       0.65,
       0.65,
@@ -5484,11 +6479,22 @@
         "warehouse"
       ]
     },
-    "model": "wheelbarrow"
+    "model": "wheelbarrow",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.0015
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "flashlight",
     "category": "electronics",
+    "kind": "electronics",
     "tags": [
       "tool"
     ],
@@ -5516,11 +6522,18 @@
         "school"
       ]
     },
-    "model": "flashlight"
+    "model": "flashlight",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "headlamp",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.09,
       0.06,
@@ -5544,11 +6557,18 @@
         "gun_shop"
       ]
     },
-    "model": "headlamp"
+    "model": "headlamp",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "batteries",
     "category": "electronics",
+    "kind": "electronics",
     "tags": [
       "tool"
     ],
@@ -5583,6 +6603,7 @@
   {
     "id": "battery_9v",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.026,
       0.049,
@@ -5608,6 +6629,7 @@
   {
     "id": "power_bank",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.15,
       0.07,
@@ -5630,11 +6652,18 @@
         "house"
       ]
     },
-    "model": "power_bank"
+    "model": "power_bank",
+    "charge": {
+      "lossPerMonth": 0.03
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "folding_solar_panel",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.4,
       0.3,
@@ -5655,11 +6684,18 @@
         "gun_shop"
       ]
     },
-    "model": "folding_solar_panel"
+    "model": "folding_solar_panel",
+    "charge": {
+      "lossPerMonth": 0
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "portable_radio",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.22,
       0.29532,
@@ -5683,11 +6719,18 @@
         "church"
       ]
     },
-    "model": "portable_radio"
+    "model": "portable_radio",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "walkie_talkies",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.06959,
       0.22,
@@ -5711,11 +6754,18 @@
         "military_base"
       ]
     },
-    "model": "walkie_talkies"
+    "model": "walkie_talkies",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "cb_radio",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.25,
       0.08,
@@ -5737,11 +6787,18 @@
         "farm"
       ]
     },
-    "model": "cb_radio"
+    "model": "cb_radio",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "military_radio",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.3,
       0.2,
@@ -5761,11 +6818,18 @@
         "military_base"
       ]
     },
-    "model": "military_radio"
+    "model": "military_radio",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "portable_generator",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.5,
       0.42,
@@ -5789,11 +6853,26 @@
         "workshop"
       ]
     },
-    "model": "portable_generator"
+    "model": "portable_generator",
+    "charge": {
+      "lossPerMonth": 0
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "charge",
+      "parts"
+    ]
   },
   {
     "id": "led_camp_lantern",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.11,
       0.2,
@@ -5816,11 +6895,18 @@
         "gun_shop"
       ]
     },
-    "model": "led_camp_lantern"
+    "model": "led_camp_lantern",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "mobile_phone",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.077,
       0.16,
@@ -5843,11 +6929,18 @@
         "apartment"
       ]
     },
-    "model": "mobile_phone"
+    "model": "mobile_phone",
+    "charge": {
+      "lossPerMonth": 0.03
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "laptop",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.36,
       0.025,
@@ -5871,11 +6964,18 @@
         "police_station"
       ]
     },
-    "model": "laptop"
+    "model": "laptop",
+    "charge": {
+      "lossPerMonth": 0.03
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "windup_alarm_clock",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.11,
       0.125,
@@ -5895,11 +6995,18 @@
         "apartment"
       ]
     },
-    "model": "windup_alarm_clock"
+    "model": "windup_alarm_clock",
+    "charge": {
+      "lossPerMonth": 0
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "car_alarm_remote",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.04,
       0.07,
@@ -5920,11 +7027,18 @@
         "house"
       ]
     },
-    "model": "car_alarm_remote"
+    "model": "car_alarm_remote",
+    "charge": {
+      "lossPerMonth": 0.01
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "electric_fence_energizer",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.25,
       0.2,
@@ -5944,11 +7058,18 @@
         "farm"
       ]
     },
-    "model": "electric_fence_energizer"
+    "model": "electric_fence_energizer",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "extension_cord",
     "category": "electronics",
+    "kind": "tool",
     "size": [
       0.23,
       0.08,
@@ -5968,11 +7089,22 @@
         "warehouse"
       ]
     },
-    "model": "extension_cord"
+    "model": "extension_cord",
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "candles",
     "category": "electronics",
+    "kind": "camping",
     "tags": [
       "tool"
     ],
@@ -5997,11 +7129,22 @@
         "house"
       ]
     },
-    "model": "candles"
+    "model": "candles",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wax",
+        "thickness": 0.01
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "night_vision_goggles",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.15,
       0.1,
@@ -6021,11 +7164,18 @@
         "military_base"
       ]
     },
-    "model": "night_vision_goggles"
+    "model": "night_vision_goggles",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "fuel_jerrycan",
     "category": "fuel",
+    "kind": "fuel",
     "size": [
       0.30778,
       0.47,
@@ -6047,11 +7197,19 @@
         "car"
       ]
     },
-    "model": "fuel_jerrycan"
+    "model": "fuel_jerrycan",
+    "fluid": {
+      "liquid": "fuel",
+      "liters": 5
+    },
+    "estimated": [
+      "fluid"
+    ]
   },
   {
     "id": "gasoline",
     "category": "fuel",
+    "kind": "fuel",
     "size": [
       0.09,
       0.26,
@@ -6078,11 +7236,19 @@
       "afterDays": 180,
       "chance": 0.1
     },
-    "model": "gasoline"
+    "model": "gasoline",
+    "fluid": {
+      "liquid": "fuel",
+      "liters": 1
+    },
+    "estimated": [
+      "fluid"
+    ]
   },
   {
     "id": "diesel",
     "category": "fuel",
+    "kind": "fuel",
     "size": [
       0.09,
       0.26,
@@ -6106,11 +7272,19 @@
         "mine"
       ]
     },
-    "model": "diesel"
+    "model": "diesel",
+    "fluid": {
+      "liquid": "diesel",
+      "liters": 1
+    },
+    "estimated": [
+      "fluid"
+    ]
   },
   {
     "id": "lpg_cylinder_13kg",
     "category": "fuel",
+    "kind": "fuel",
     "size": [
       0.35299,
       0.49,
@@ -6133,11 +7307,27 @@
         "supermarket"
       ]
     },
-    "model": "lpg_cylinder_13kg"
+    "model": "lpg_cylinder_13kg",
+    "fluid": {
+      "liquid": "gas",
+      "liters": 24
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "fluid",
+      "parts"
+    ]
   },
   {
     "id": "gas_cartridge",
     "category": "fuel",
+    "kind": "fuel",
     "size": [
       0.11,
       0.165,
@@ -6161,11 +7351,27 @@
         "warehouse"
       ]
     },
-    "model": "gas_cartridge"
+    "model": "gas_cartridge",
+    "fluid": {
+      "liquid": "gas",
+      "liters": 0.58
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "fluid",
+      "parts"
+    ]
   },
   {
     "id": "kerosene",
     "category": "fuel",
+    "kind": "fuel",
     "size": [
       0.09,
       0.26,
@@ -6188,11 +7394,19 @@
         "church"
       ]
     },
-    "model": "kerosene"
+    "model": "kerosene",
+    "fluid": {
+      "liquid": "fuel",
+      "liters": 1
+    },
+    "estimated": [
+      "fluid"
+    ]
   },
   {
     "id": "charcoal_bag",
     "category": "fuel",
+    "kind": "camping",
     "tags": [
       "bbq"
     ],
@@ -6218,11 +7432,22 @@
         "house"
       ]
     },
-    "model": "charcoal_bag"
+    "model": "charcoal_bag",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "car_battery_12v",
     "category": "fuel",
+    "kind": "electronics",
     "size": [
       0.24,
       0.19,
@@ -6244,11 +7469,18 @@
         "farm"
       ]
     },
-    "model": "car_battery_12v"
+    "model": "car_battery_12v",
+    "charge": {
+      "lossPerMonth": 0.05
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "motor_oil",
     "category": "fuel",
+    "kind": "fuel",
     "size": [
       0.1,
       0.26,
@@ -6269,11 +7501,19 @@
         "workshop"
       ]
     },
-    "model": "motor_oil"
+    "model": "motor_oil",
+    "fluid": {
+      "liquid": "motor_oil",
+      "liters": 1
+    },
+    "estimated": [
+      "fluid"
+    ]
   },
   {
     "id": "bean_seeds",
     "category": "outdoors",
+    "kind": "material",
     "size": [
       0.1,
       0.15,
@@ -6295,11 +7535,22 @@
         "supermarket"
       ]
     },
-    "model": "bean_seeds"
+    "model": "bean_seeds",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "corn_seeds",
     "category": "outdoors",
+    "kind": "material",
     "size": [
       0.1,
       0.15,
@@ -6320,11 +7571,22 @@
         "farm"
       ]
     },
-    "model": "corn_seeds"
+    "model": "corn_seeds",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "pumpkin_seeds",
     "category": "outdoors",
+    "kind": "material",
     "size": [
       0.09,
       0.13,
@@ -6345,11 +7607,22 @@
         "farm"
       ]
     },
-    "model": "pumpkin_seeds"
+    "model": "pumpkin_seeds",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "kale_and_lettuce_seeds",
     "category": "outdoors",
+    "kind": "material",
     "size": [
       0.09,
       0.13,
@@ -6371,11 +7644,22 @@
         "supermarket"
       ]
     },
-    "model": "kale_and_lettuce_seeds"
+    "model": "kale_and_lettuce_seeds",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "cassava_cuttings",
     "category": "outdoors",
+    "kind": "material",
     "size": [
       0.7,
       0.12,
@@ -6396,11 +7680,22 @@
         "farm"
       ]
     },
-    "model": "cassava_cuttings"
+    "model": "cassava_cuttings",
+    "parts": [
+      {
+        "id": "body",
+        "material": "green_wood",
+        "thickness": 0.02
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "fertilizer_bag",
     "category": "outdoors",
+    "kind": "material",
     "size": [
       0.45,
       0.13,
@@ -6421,11 +7716,22 @@
         "farm"
       ]
     },
-    "model": "fertilizer_bag"
+    "model": "fertilizer_bag",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "watering_can",
     "category": "outdoors",
+    "kind": "tank",
     "size": [
       0.4,
       0.26,
@@ -6445,11 +7751,18 @@
         "farm"
       ]
     },
-    "model": "watering_can"
+    "model": "watering_can",
+    "container": {
+      "capacityLiters": 5
+    },
+    "estimated": [
+      "container"
+    ]
   },
   {
     "id": "fishing_rod",
     "category": "outdoors",
+    "kind": "tool",
     "size": [
       1.8,
       0.04,
@@ -6472,11 +7785,22 @@
         "gun_shop"
       ]
     },
-    "model": "fishing_rod"
+    "model": "fishing_rod",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_hard",
+        "thickness": 0.01
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "fishing_tackle_box",
     "category": "outdoors",
+    "kind": "tool",
     "size": [
       0.3,
       0.1,
@@ -6498,11 +7822,22 @@
         "gun_shop"
       ]
     },
-    "model": "fishing_tackle_box"
+    "model": "fishing_tackle_box",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "fishing_net",
     "category": "outdoors",
+    "kind": "tool",
     "size": [
       0.35,
       0.15,
@@ -6522,11 +7857,22 @@
         "docks"
       ]
     },
-    "model": "fishing_net"
+    "model": "fishing_net",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "snare_trap",
     "category": "outdoors",
+    "kind": "tool",
     "tags": [
       "craft_only"
     ],
@@ -6550,6 +7896,7 @@
   {
     "id": "skill_book",
     "category": "books",
+    "kind": "book",
     "size": [
       0.16,
       0.23,
@@ -6578,6 +7925,7 @@
   {
     "id": "technical_manual",
     "category": "books",
+    "kind": "book",
     "size": [
       0.21,
       0.3,
@@ -6607,6 +7955,7 @@
   {
     "id": "diy_magazine",
     "category": "books",
+    "kind": "book",
     "size": [
       0.21,
       0.28,
@@ -6635,6 +7984,7 @@
   {
     "id": "magazines_and_comics",
     "category": "books",
+    "kind": "book",
     "size": [
       0.17,
       0.26,
@@ -6662,6 +8012,7 @@
   {
     "id": "farmers_almanac",
     "category": "books",
+    "kind": "book",
     "size": [
       0.15,
       0.21,
@@ -6688,6 +8039,7 @@
   {
     "id": "note",
     "category": "collectibles",
+    "kind": "collectible",
     "size": [
       0.15,
       0.002,
@@ -6712,6 +8064,7 @@
   {
     "id": "photo",
     "category": "collectibles",
+    "kind": "collectible",
     "size": [
       0.102,
       0.002,
@@ -6734,6 +8087,7 @@
   {
     "id": "city_map",
     "category": "collectibles",
+    "kind": "collectible",
     "size": [
       0.11,
       0.01,
@@ -6754,6 +8108,7 @@
   {
     "id": "road_map",
     "category": "collectibles",
+    "kind": "collectible",
     "size": [
       0.11,
       0.01,
@@ -6775,6 +8130,7 @@
   {
     "id": "dog_tag",
     "category": "collectibles",
+    "kind": "collectible",
     "size": [
       0.03,
       0.003,
@@ -6791,11 +8147,22 @@
         "military_base"
       ]
     },
-    "model": "dog_tag"
+    "model": "dog_tag",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "cash",
     "category": "collectibles",
+    "kind": "collectible",
     "size": [
       0.155,
       0.01,
@@ -6819,6 +8186,7 @@
   {
     "id": "cigarettes",
     "category": "collectibles",
+    "kind": "collectible",
     "size": [
       0.055,
       0.088,
@@ -6846,6 +8214,7 @@
   {
     "id": "house_key",
     "category": "keys",
+    "kind": "key",
     "size": [
       0.085,
       0.04574,
@@ -6867,6 +8236,7 @@
   {
     "id": "car_key",
     "category": "keys",
+    "kind": "key",
     "size": [
       0.06,
       0.045,
@@ -6889,6 +8259,7 @@
   {
     "id": "master_key",
     "category": "keys",
+    "kind": "key",
     "size": [
       0.09,
       0.035,
@@ -6909,6 +8280,7 @@
   {
     "id": "janitor_keys",
     "category": "keys",
+    "kind": "key",
     "size": [
       0.12,
       0.1,
@@ -6929,6 +8301,7 @@
   {
     "id": "generator_key",
     "category": "keys",
+    "kind": "key",
     "size": [
       0.08,
       0.03,
@@ -6949,6 +8322,7 @@
   {
     "id": "safe_key",
     "category": "keys",
+    "kind": "key",
     "size": [
       0.07,
       0.025,
@@ -6969,6 +8343,7 @@
   {
     "id": "padlock_key",
     "category": "keys",
+    "kind": "key",
     "size": [
       0.05,
       0.08,
@@ -6991,6 +8366,7 @@
   {
     "id": "cell_key",
     "category": "keys",
+    "kind": "key",
     "size": [
       0.12,
       0.03,
@@ -7012,6 +8388,7 @@
   {
     "id": "canned_food",
     "category": "food",
+    "kind": "canned_food",
     "tags": [
       "food"
     ],
@@ -7024,11 +8401,21 @@
     "stack": 6,
     "shape": "can",
     "color": 13148218,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 25,
+      "hydration": -5
+    },
+    "shelfLife": 730,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
   },
   {
     "id": "flour",
     "category": "food",
+    "kind": "ingredient",
     "tags": [
       "food"
     ],
@@ -7041,11 +8428,21 @@
     "stack": 4,
     "shape": "bag",
     "color": 16052452,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 5,
+      "hydration": -8
+    },
+    "shelfLife": 365,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
   },
   {
     "id": "cereal_box",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "food"
     ],
@@ -7058,11 +8455,21 @@
     "stack": 2,
     "shape": "box",
     "color": 14182960,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 18,
+      "hydration": -5
+    },
+    "shelfLife": 270,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
   },
   {
     "id": "butter",
     "category": "food",
+    "kind": "ingredient",
     "tags": [
       "food"
     ],
@@ -7075,11 +8482,21 @@
     "stack": 2,
     "shape": "box",
     "color": 16050336,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 8,
+      "hydration": -4
+    },
+    "shelfLife": 90,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
   },
   {
     "id": "ketchup",
     "category": "food",
+    "kind": "ingredient",
     "tags": [
       "food"
     ],
@@ -7092,11 +8509,21 @@
     "stack": 2,
     "shape": "bottle",
     "color": 13117984,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 2,
+      "hydration": 0
+    },
+    "shelfLife": 365,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
   },
   {
     "id": "ham",
     "category": "food",
+    "kind": "food_improves_cooked",
     "tags": [
       "food"
     ],
@@ -7109,11 +8536,21 @@
     "stack": 2,
     "shape": "box",
     "color": 15245472,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 16,
+      "hydration": -3
+    },
+    "shelfLife": 30,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
   },
   {
     "id": "yogurt",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "food"
     ],
@@ -7126,11 +8563,21 @@
     "stack": 6,
     "shape": "jar",
     "color": 15786216,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 10,
+      "hydration": 5
+    },
+    "shelfLife": 28,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
   },
   {
     "id": "apple",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "food"
     ],
@@ -7143,11 +8590,21 @@
     "stack": 6,
     "shape": "fruit",
     "color": 13122096,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 8,
+      "hydration": 6
+    },
+    "shelfLife": 21,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
   },
   {
     "id": "tomato",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "food"
     ],
@@ -7160,11 +8617,21 @@
     "stack": 6,
     "shape": "fruit",
     "color": 14172202,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 5,
+      "hydration": 8
+    },
+    "shelfLife": 10,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
   },
   {
     "id": "frozen_meat",
     "category": "food",
+    "kind": "food_needs_prep",
     "tags": [
       "food"
     ],
@@ -7177,11 +8644,23 @@
     "stack": 2,
     "shape": "box",
     "color": 12081754,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 20,
+      "hydration": -2
+    },
+    "shelfLife": 180,
+    "cookable": true,
+    "estimated": [
+      "nutrition",
+      "shelfLife",
+      "cookable"
+    ]
   },
   {
     "id": "ice_cream",
     "category": "food",
+    "kind": "food_ready",
     "tags": [
       "food"
     ],
@@ -7194,11 +8673,21 @@
     "stack": 2,
     "shape": "jar",
     "color": 15784160,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 10,
+      "hydration": 4
+    },
+    "shelfLife": 180,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
   },
   {
     "id": "frozen_pizza",
     "category": "food",
+    "kind": "food_improves_cooked",
     "tags": [
       "food"
     ],
@@ -7211,11 +8700,21 @@
     "stack": 2,
     "shape": "box",
     "color": 14195264,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 28,
+      "hydration": -6
+    },
+    "shelfLife": 180,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
   },
   {
     "id": "frozen_vegetables",
     "category": "food",
+    "kind": "food_needs_prep",
     "tags": [
       "food"
     ],
@@ -7228,11 +8727,23 @@
     "stack": 3,
     "shape": "bag",
     "color": 4889168,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 10,
+      "hydration": 3
+    },
+    "shelfLife": 270,
+    "cookable": true,
+    "estimated": [
+      "nutrition",
+      "shelfLife",
+      "cookable"
+    ]
   },
   {
     "id": "plate",
     "category": "tools",
+    "kind": "tableware",
     "tags": [
       "kitchen"
     ],
@@ -7250,6 +8761,7 @@
   {
     "id": "bowl",
     "category": "tools",
+    "kind": "tableware",
     "tags": [
       "kitchen"
     ],
@@ -7267,6 +8779,7 @@
   {
     "id": "cup",
     "category": "tools",
+    "kind": "tableware",
     "tags": [
       "kitchen"
     ],
@@ -7284,6 +8797,7 @@
   {
     "id": "cutlery",
     "category": "tools",
+    "kind": "tool",
     "tags": [
       "kitchen"
     ],
@@ -7301,6 +8815,7 @@
   {
     "id": "pan",
     "category": "tools",
+    "kind": "cookware",
     "tags": [
       "kitchen"
     ],
@@ -7318,6 +8833,7 @@
   {
     "id": "soap",
     "category": "medical",
+    "kind": "hygiene",
     "tags": [
       "hygiene"
     ],
@@ -7330,11 +8846,22 @@
     "stack": 6,
     "shape": "box",
     "color": 15790304,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wax",
+        "thickness": 0.01
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "shampoo",
     "category": "medical",
+    "kind": "hygiene",
     "tags": [
       "hygiene"
     ],
@@ -7352,6 +8879,7 @@
   {
     "id": "toothpaste",
     "category": "medical",
+    "kind": "hygiene",
     "tags": [
       "hygiene"
     ],
@@ -7369,6 +8897,7 @@
   {
     "id": "toothbrush",
     "category": "medical",
+    "kind": "hygiene",
     "tags": [
       "hygiene"
     ],
@@ -7386,6 +8915,7 @@
   {
     "id": "deodorant",
     "category": "medical",
+    "kind": "hygiene",
     "tags": [
       "hygiene"
     ],
@@ -7398,11 +8928,22 @@
     "stack": 2,
     "shape": "bottle",
     "color": 11061480,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "aluminium",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "toilet_paper",
     "category": "medical",
+    "kind": "hygiene",
     "tags": [
       "hygiene"
     ],
@@ -7415,11 +8956,22 @@
     "stack": 8,
     "shape": "roll",
     "color": 16316664,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "towel",
     "category": "clothing",
+    "kind": "hygiene",
     "tags": [
       "hygiene"
     ],
@@ -7432,11 +8984,22 @@
     "stack": 3,
     "shape": "cloth",
     "color": 4885160,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "detergent",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "cleaning"
     ],
@@ -7449,11 +9012,22 @@
     "stack": 3,
     "shape": "bottle",
     "color": 7000224,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "bleach",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "cleaning"
     ],
@@ -7466,11 +9040,22 @@
     "stack": 2,
     "shape": "bottle",
     "color": 15263988,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "sponge",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "cleaning"
     ],
@@ -7483,11 +9068,22 @@
     "stack": 4,
     "shape": "box",
     "color": 15257648,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "foam",
+        "thickness": 0.03
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "jacket",
     "category": "clothing",
+    "kind": "clothing",
     "tags": [
       "clothing"
     ],
@@ -7500,11 +9096,24 @@
     "stack": 2,
     "shape": "cloth",
     "color": 4868690,
-    "rarity": "common"
+    "rarity": "common",
+    "protection": {
+      "slots": [
+        "torso",
+        "arms"
+      ],
+      "bite": 0.1,
+      "scratch": 0.25,
+      "warmth": 0.4
+    },
+    "estimated": [
+      "protection"
+    ]
   },
   {
     "id": "socks",
     "category": "clothing",
+    "kind": "clothing",
     "tags": [
       "clothing"
     ],
@@ -7517,11 +9126,23 @@
     "stack": 6,
     "shape": "cloth",
     "color": 14211288,
-    "rarity": "common"
+    "rarity": "common",
+    "protection": {
+      "slots": [
+        "feet"
+      ],
+      "bite": 0,
+      "scratch": 0.02,
+      "warmth": 0.15
+    },
+    "estimated": [
+      "protection"
+    ]
   },
   {
     "id": "underwear",
     "category": "clothing",
+    "kind": "clothing",
     "tags": [
       "clothing"
     ],
@@ -7534,11 +9155,23 @@
     "stack": 6,
     "shape": "cloth",
     "color": 9079450,
-    "rarity": "common"
+    "rarity": "common",
+    "protection": {
+      "slots": [
+        "legs"
+      ],
+      "bite": 0,
+      "scratch": 0.01,
+      "warmth": 0.05
+    },
+    "estimated": [
+      "protection"
+    ]
   },
   {
     "id": "hat",
     "category": "clothing",
+    "kind": "clothing",
     "tags": [
       "clothing"
     ],
@@ -7551,11 +9184,23 @@
     "stack": 1,
     "shape": "cloth",
     "color": 9071162,
-    "rarity": "common"
+    "rarity": "common",
+    "protection": {
+      "slots": [
+        "head"
+      ],
+      "bite": 0,
+      "scratch": 0.05,
+      "warmth": 0.2
+    },
+    "estimated": [
+      "protection"
+    ]
   },
   {
     "id": "scarf",
     "category": "clothing",
+    "kind": "clothing",
     "tags": [
       "clothing"
     ],
@@ -7568,11 +9213,23 @@
     "stack": 2,
     "shape": "cloth",
     "color": 12073530,
-    "rarity": "common"
+    "rarity": "common",
+    "protection": {
+      "slots": [
+        "torso"
+      ],
+      "bite": 0.05,
+      "scratch": 0.02,
+      "warmth": 0.2
+    },
+    "estimated": [
+      "protection"
+    ]
   },
   {
     "id": "blanket",
     "category": "clothing",
+    "kind": "camping",
     "tags": [
       "clothing"
     ],
@@ -7590,6 +9247,7 @@
   {
     "id": "pillow",
     "category": "clothing",
+    "kind": "camping",
     "tags": [
       "clothing"
     ],
@@ -7607,6 +9265,7 @@
   {
     "id": "documents",
     "category": "collectibles",
+    "kind": "collectible",
     "tags": [
       "office"
     ],
@@ -7624,6 +9283,7 @@
   {
     "id": "wallet",
     "category": "collectibles",
+    "kind": "collectible",
     "tags": [
       "office"
     ],
@@ -7636,11 +9296,22 @@
     "stack": 1,
     "shape": "box",
     "color": 4864554,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "leather",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "phone_charger",
     "category": "electronics",
+    "kind": "electronics",
     "tags": [
       "office"
     ],
@@ -7653,11 +9324,18 @@
     "stack": 1,
     "shape": "tool",
     "color": 15790320,
-    "rarity": "common"
+    "rarity": "common",
+    "charge": {
+      "lossPerMonth": 0
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "notebook",
     "category": "collectibles",
+    "kind": "collectible",
     "tags": [
       "office"
     ],
@@ -7675,6 +9353,7 @@
   {
     "id": "pen",
     "category": "collectibles",
+    "kind": "tool",
     "tags": [
       "office"
     ],
@@ -7687,28 +9366,50 @@
     "stack": 6,
     "shape": "tool",
     "color": 2771616,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "crumpled_paper",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "trash"
     ],
     "size": [
-      0.1,
-      0.1,
-      0.1
+      0.07,
+      0.07,
+      0.07
     ],
     "weight": 0.02,
     "stack": 6,
     "shape": "paper",
     "color": 15262940,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "empty_bottle",
     "category": "materials",
+    "kind": "plastic_bottle",
     "tags": [
       "trash"
     ],
@@ -7726,6 +9427,7 @@
   {
     "id": "food_scraps",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "trash"
     ],
@@ -7738,28 +9440,51 @@
     "stack": 2,
     "shape": "bag",
     "color": 8022586,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "flesh_fruit",
+        "thickness": 0.02
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "plastic_bag",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "trash"
     ],
     "size": [
-      0.2,
-      0.2,
-      0.1
+      0.1,
+      0.08,
+      0.05
     ],
-    "weight": 0.02,
+    "weight": 0.01,
     "stack": 4,
     "shape": "bag",
     "color": 15263976,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.00002
+      }
+    ],
+    "estimated": [
+      "parts",
+      "weight"
+    ]
   },
   {
     "id": "bill",
     "category": "collectibles",
+    "kind": "collectible",
     "tags": [
       "mail"
     ],
@@ -7777,6 +9502,7 @@
   {
     "id": "letter",
     "category": "collectibles",
+    "kind": "collectible",
     "tags": [
       "mail"
     ],
@@ -7794,6 +9520,7 @@
   {
     "id": "flyer",
     "category": "collectibles",
+    "kind": "collectible",
     "tags": [
       "mail"
     ],
@@ -7811,6 +9538,7 @@
   {
     "id": "postcard",
     "category": "collectibles",
+    "kind": "collectible",
     "tags": [
       "mail"
     ],
@@ -7828,6 +9556,7 @@
   {
     "id": "tongs",
     "category": "outdoors",
+    "kind": "camping",
     "tags": [
       "bbq"
     ],
@@ -7840,11 +9569,22 @@
     "stack": 1,
     "shape": "tool",
     "color": 11843772,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "skewers",
     "category": "outdoors",
+    "kind": "camping",
     "tags": [
       "bbq"
     ],
@@ -7857,11 +9597,22 @@
     "stack": 2,
     "shape": "tool",
     "color": 11843772,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "firelighter",
     "category": "outdoors",
+    "kind": "camping",
     "tags": [
       "bbq"
     ],
@@ -7874,11 +9625,22 @@
     "stack": 4,
     "shape": "box",
     "color": 15261888,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "paint_can",
     "category": "tools",
+    "kind": "metal_can",
     "tags": [
       "garage"
     ],
@@ -7896,6 +9658,7 @@
   {
     "id": "ice_pack",
     "category": "tools",
+    "kind": "camping",
     "tags": [
       "drink"
     ],
@@ -7908,11 +9671,22 @@
     "stack": 3,
     "shape": "box",
     "color": 9356776,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "sandwich",
     "category": "food",
+    "kind": "food_improves_cooked",
     "tags": [
       "food"
     ],
@@ -7925,11 +9699,21 @@
     "stack": 2,
     "shape": "box",
     "color": 14268282,
-    "rarity": "common"
+    "rarity": "common",
+    "nutrition": {
+      "satiety": 22,
+      "hydration": -3
+    },
+    "shelfLife": 2,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
   },
   {
     "id": "branch",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "craft_only"
     ],
@@ -7947,6 +9731,7 @@
   {
     "id": "stick",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "craft_only"
     ],
@@ -7964,6 +9749,7 @@
   {
     "id": "feather",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "craft_only"
     ],
@@ -7976,11 +9762,22 @@
     "stack": 20,
     "shape": "paper",
     "color": 8421504,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "bread_mold",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "craft_only"
     ],
@@ -7993,11 +9790,22 @@
     "stack": 4,
     "shape": "box",
     "color": 8421504,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "foliage",
+        "thickness": 0.005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "glass_jar",
     "category": "materials",
+    "kind": "jar",
     "size": [
       0.08,
       0.11,
@@ -8020,6 +9828,7 @@
   {
     "id": "broomstick",
     "category": "tools",
+    "kind": "tool",
     "tags": [
       "craft_only"
     ],
@@ -8032,11 +9841,22 @@
     "stack": 1,
     "shape": "tool",
     "color": 8421504,
-    "rarity": "common"
+    "rarity": "common",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_soft",
+        "thickness": 0.015
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "barrel",
     "category": "tools",
+    "kind": "tank",
     "size": [
       0.4,
       0.55,
@@ -8054,11 +9874,18 @@
         "workshop",
         "docks"
       ]
-    }
+    },
+    "container": {
+      "capacityLiters": 60
+    },
+    "estimated": [
+      "container"
+    ]
   },
   {
     "id": "access_badge",
     "category": "keys",
+    "kind": "key",
     "tags": [
       "access"
     ],
@@ -8071,11 +9898,22 @@
     "stack": 1,
     "shape": "paper",
     "color": 8421504,
-    "rarity": "uncommon"
+    "rarity": "uncommon",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "insulin",
     "category": "medical",
+    "kind": "medicine",
     "tags": [
       "perishable",
       "refrigerated"
@@ -8098,11 +9936,22 @@
         "pharmacy",
         "hospital"
       ]
-    }
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "glass",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "leftover_meal",
     "category": "food",
+    "kind": "food_improves_cooked",
     "tags": [
       "perishable",
       "kitchen"
@@ -8133,6 +9982,7 @@
   {
     "id": "disinfectant",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "cleaning"
     ],
@@ -8154,11 +10004,22 @@
         "school",
         "hospital"
       ]
-    }
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "seasoning",
     "category": "food",
+    "kind": "ingredient",
     "tags": [
       "kitchen"
     ],
@@ -8178,11 +10039,21 @@
         "apartment",
         "supermarket"
       ]
-    }
+    },
+    "nutrition": {
+      "satiety": 1,
+      "hydration": -2
+    },
+    "shelfLife": 730,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
   },
   {
     "id": "stapler",
     "category": "collectibles",
+    "kind": "tool",
     "tags": [
       "office"
     ],
@@ -8203,11 +10074,22 @@
         "school",
         "police_station"
       ]
-    }
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "remote_control",
     "category": "electronics",
+    "kind": "electronics",
     "size": [
       0.05,
       0.2,
@@ -8223,11 +10105,18 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
   },
   {
     "id": "dvd",
     "category": "collectibles",
+    "kind": "collectible",
     "tags": [
       "media"
     ],
@@ -8246,11 +10135,22 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "cable_bundle",
     "category": "electronics",
+    "kind": "tool",
     "size": [
       0.12,
       0.05,
@@ -8266,11 +10166,22 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "shoe_polish",
     "category": "materials",
+    "kind": "metal_can",
     "tags": [
       "cleaning"
     ],
@@ -8294,6 +10205,7 @@
   {
     "id": "laundry_powder",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "cleaning"
     ],
@@ -8313,11 +10225,22 @@
         "apartment",
         "supermarket"
       ]
-    }
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "broom",
     "category": "tools",
+    "kind": "tool",
     "tags": [
       "cleaning"
     ],
@@ -8337,11 +10260,22 @@
         "apartment",
         "school"
       ]
-    }
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_soft",
+        "thickness": 0.015
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "rubber_gloves",
     "category": "clothing",
+    "kind": "clothing",
     "tags": [
       "cleaning"
     ],
@@ -8360,11 +10294,31 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "protection": {
+      "slots": [
+        "hands"
+      ],
+      "bite": 0.05,
+      "scratch": 0.1,
+      "warmth": 0.05
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "protection",
+      "parts"
+    ]
   },
   {
     "id": "fabric_softener",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "cleaning"
     ],
@@ -8384,11 +10338,22 @@
         "apartment",
         "supermarket"
       ]
-    }
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "clothespins",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.12,
       0.1,
@@ -8404,11 +10369,22 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_soft",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "electrical_tape",
     "category": "tools",
+    "kind": "tool",
     "size": [
       0.07,
       0.02,
@@ -8426,11 +10402,22 @@
         "workshop",
         "warehouse"
       ]
-    }
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.0002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "full_trash_bag",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "trash"
     ],
@@ -8449,18 +10436,29 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.0002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "food_packaging",
     "category": "materials",
+    "kind": "material",
     "tags": [
       "trash"
     ],
     "size": [
-      0.2,
-      0.2,
-      0.1
+      0.15,
+      0.12,
+      0.08
     ],
     "weight": 0.05,
     "stack": 4,
@@ -8472,11 +10470,22 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "wine_glass",
     "category": "tools",
+    "kind": "tableware",
     "tags": [
       "kitchen"
     ],
@@ -8495,11 +10504,22 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "glass",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
   },
   {
     "id": "book",
     "category": "books",
+    "kind": "book",
     "size": [
       0.15,
       0.22,
@@ -8522,6 +10542,7 @@
   {
     "id": "eyeglasses",
     "category": "clothing",
+    "kind": "clothing",
     "size": [
       0.14,
       0.04,
@@ -8537,6 +10558,25 @@
         "house",
         "apartment"
       ]
-    }
+    },
+    "protection": {
+      "slots": [
+        "eyes"
+      ],
+      "bite": 0,
+      "scratch": 0.02,
+      "warmth": 0
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "protection",
+      "parts"
+    ]
   }
 ]
