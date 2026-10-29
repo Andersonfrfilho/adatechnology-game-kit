@@ -16,7 +16,11 @@ no núcleo (catálogo por registro, números por opção, comportamento por plug
 
 ## Antes de escrever código
 
-1. Ache o pacote nesta lista e carregue a skill dele (mesmo nome do pacote).
+Vale para todo jogo do nosso lado, não só para o kit (dono, 2026-10-29): **o SDK primeiro**. Existe no kit, usa importado; não existe, cria
+primeiro no pacote certo do kit e só depois usa no jogo. Nunca copie código ou modelo do kit para o jogo.
+
+1. Ache o pacote nesta lista e carregue a skill dele (mesmo nome do pacote). O MCP `game-kit` (`kit_owner`) diz qual pacote é dono de uma
+   peça; a skill `kit-origem`, de onde veio uma peça que já está na tela.
 2. Não existe? Veja se um time do ZombiAdA já fez (`specs/001-migracao-entregas-dos-times/fontes.md` e `inventario/`). Se fez, **porte**,
    não reescreva.
 3. Só então crie, e no pacote certo: motor genérico no pacote base, three.js no `-three`, conteúdo reaproveitável num pacote de conteúdo,

@@ -1,0 +1,43 @@
+{
+  "$comment": "Who owns each kind of piece (CLAUDE.md, 'Nada desenhado à mão quando o kit já tem'). A primitive drawn outside the owners, with one of the words of its domain nearby, is a finding. Words are matched whole, case-insensitive, in the code around the primitive (identifiers split on camelCase and _).",
+  "domains": {
+    "vehicles": {
+      "owners": ["game-vehicles", "game-vehicles-fleet", "game-vehicles-three", "game-vehicles-driving"],
+      "use": "createVehicleKit + installFleet + createVehiclesThree(THREE, { kit }).build(key) (game-vehicles-three)",
+      "words": ["car", "cars", "carro", "vehicle", "vehicles", "veiculo", "sedan", "truck", "headlight", "headlights", "farol", "garage"]
+    },
+    "structure": {
+      "owners": ["game-floorplan", "game-floorplan-structure", "game-floorplan-three", "game-floorplan-residential", "game-floorplan-commercial", "game-floorplan-rural", "game-floorplan-post-apocalyptic", "game-floorplan-interactables", "game-urban", "game-urban-three"],
+      "use": "every wall as the houses: wallPiece of game-floorplan-three (the houses' structure, drawn by the house renderer) or a whole house; the street pieces of game-urban",
+      "words": ["wall", "walls", "muro", "parede", "house", "houses", "casa", "roof", "telhado", "sidewalk", "street", "rua"]
+    },
+    "furniture": {
+      "owners": ["game-interactables", "game-interactables-household", "game-interactables-three", "game-props3d", "game-floorplan-three"],
+      "use": "the household catalogue (furnitureSpec of game-interactables-three, e.g. dining_table, bookcase, laundry_tub) or game-props3d",
+      "words": ["table", "mesa", "shelf", "shelves", "estante", "bookcase", "counter", "balcao", "chair", "cadeira", "sink", "tap", "torneira", "tub"]
+    },
+    "people": {
+      "owners": ["game-characters", "game-characters-people", "game-characters-three", "game-characters-undead", "game-characters-uniformed", "game-crowd", "game-crowd-three", "game-player"],
+      "use": "the people of game-characters-people drawn by game-characters-three (createPlayerAvatar, the cast)",
+      "words": ["human", "person", "pessoa", "people", "mannequin", "manequim", "dummy", "figure", "torso"]
+    },
+    "plants": {
+      "owners": ["game-vegetation", "game-vegetation-species", "game-vegetation-three"],
+      "use": "the species of game-vegetation-species drawn by game-vegetation-three",
+      "words": ["tree", "trees", "arvore", "plant", "planta", "bush", "shrub", "trunk", "tronco"]
+    },
+    "items": {
+      "owners": ["game-items", "game-items-goods", "game-items-three"],
+      "use": "the goods catalogue (game-items-goods) drawn by game-items-three (buildItem)",
+      "words": ["speaker", "radio", "drum", "barrel", "barril", "tambor", "bottle", "garrafa", "can", "lata", "bucket", "balde"]
+    },
+    "weapons": {
+      "owners": ["game-weapons", "game-weapons-three"],
+      "use": "the arsenal of game-weapons and its models in game-weapons-three (projectileModel, the explosives)",
+      "words": ["grenade", "granada", "molotov", "rocket", "foguete", "mine", "mina", "claymore", "explosive", "explosivo"]
+    }
+  },
+  "window": 6,
+  "scan": ["packages/*/src", "examples/*/src"],
+  "skip": ["node_modules", "dist", "tests", "assets", "generated"]
+}

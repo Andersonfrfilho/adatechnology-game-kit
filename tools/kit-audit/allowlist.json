@@ -1,0 +1,152 @@
+{
+  "$comment": "`allowed`: findings that are not a piece of another SDK (the word matched something else: a car's roof, a gun barrel, a fluid's container shape), each with its reason. `pending`: real findings already listed in docs/pecas-fora-do-sdk.md, each with the fix; --check fails only on a finding that is in neither list, so a new hand-drawn piece stops CI. Take an entry out of `pending` when it is fixed.",
+  "allowed": [
+    {
+      "file": "packages/game-contracts/src/fluids.ts",
+      "domain": "items",
+      "reason": "the contract's container shape (box or cylinder), not a drawn bottle"
+    },
+    {
+      "file": "packages/game-destruction/src/frame.ts",
+      "domain": "structure",
+      "reason": "the generic structural frame of the destruction engine, which the floorplan builds on"
+    },
+    {
+      "file": "packages/game-items-three/src/destruction.ts",
+      "domain": "structure",
+      "reason": "the inner shape of a container (fluid volume inside its wall share), not a wall"
+    },
+    {
+      "file": "packages/game-props3d/src/shape-recorder.ts",
+      "domain": "plants",
+      "reason": "the generic shape recorder of the props (it records any primitive a builder asks for)"
+    },
+    {
+      "file": "packages/game-test-room/src/explosives.ts",
+      "domain": "items",
+      "reason": "the stake and flag that mark a charge set down: a room marker, not an item"
+    },
+    {
+      "file": "packages/game-vehicles-fleet/src/vehicles/cars-extra.ts",
+      "domain": "structure",
+      "reason": "a car's roof"
+    },
+    {
+      "file": "packages/game-vehicles-fleet/src/vehicles/heavy.ts",
+      "domain": "structure",
+      "reason": "a truck's roof"
+    },
+    {
+      "file": "packages/game-vehicles-fleet/src/vehicles/motorcycles-cars.ts",
+      "domain": "structure",
+      "reason": "a car's roof"
+    },
+    {
+      "file": "packages/game-vehicles-fleet/src/vehicles/suv-pickup-van.ts",
+      "domain": "structure",
+      "reason": "a van's roof"
+    },
+    {
+      "file": "packages/game-vehicles-fleet/src/vehicles/military.ts",
+      "domain": "items",
+      "reason": "the gun barrel of a military vehicle"
+    },
+    {
+      "file": "packages/game-vehicles-fleet/src/vehicles/motorcycles-extra.ts",
+      "domain": "items",
+      "reason": "a motorcycle's brake drum"
+    },
+    {
+      "file": "packages/game-weapons-three/src/world-explosives.ts",
+      "domain": "structure",
+      "reason": "P13_WALL is the steel wall thickness of the gas cylinder, not a wall"
+    },
+    {
+      "file": "packages/game-weather-three/src/headlights.ts",
+      "domain": "vehicles",
+      "reason": "the beam cone of the headlights (light, not a car)"
+    }
+  ],
+  "pending": [
+    {
+      "file": "examples/interactables-showroom/src/showroom.js",
+      "domain": "plants",
+      "fix": "the yard trees from game-vegetation-species (game-vegetation-three)"
+    },
+    {
+      "file": "packages/game-audio/src/bench/module.ts",
+      "domain": "items",
+      "fix": "the sound probe on a speaker of the goods catalogue (add it to game-items-goods first if it is not there)"
+    },
+    {
+      "file": "packages/game-characters-three/src/rich/accessories/extras.ts",
+      "domain": "items",
+      "fix": "the radio from game-items-goods (portable_radio) drawn by game-items-three"
+    },
+    {
+      "file": "packages/game-characters-three/src/rich/accessories/hand-items.ts",
+      "domain": "items",
+      "fix": "the radio and the bottle in the hand from game-items-goods drawn by game-items-three"
+    },
+    {
+      "file": "packages/game-items-three/src/area.ts",
+      "domain": "furniture",
+      "fix": "the shelves and the table of the items area from the household catalogue"
+    },
+    {
+      "file": "packages/game-items-three/src/area.ts",
+      "domain": "people",
+      "fix": "the 1.80 m scale figure as a person of game-characters-people"
+    },
+    {
+      "file": "packages/game-test-room/src/arena.ts",
+      "domain": "furniture",
+      "fix": "no default table, shelf or tap in the generic room: the host passes kit pieces in `scenery` (examples/test-room already does)"
+    },
+    {
+      "file": "packages/game-test-room/src/arena.ts",
+      "domain": "structure",
+      "fix": "no default wall in the generic room: the host passes the structure wall in `scenery`"
+    },
+    {
+      "file": "packages/game-test-room/src/items.ts",
+      "domain": "structure",
+      "fix": "drop brickWallSpec from the generic room; the wall is buildWallSpecimen of game-floorplan-structure"
+    },
+    {
+      "file": "packages/game-test-room/src/explosives.ts",
+      "domain": "weapons",
+      "fix": "every throwable and charge drawn by game-weapons-three (projectileModel), no primitive fallback"
+    },
+    {
+      "file": "packages/game-vegetation-three/src/test-area/nursery.ts",
+      "domain": "structure",
+      "fix": "the nursery's house, walls and street from game-floorplan and game-urban"
+    },
+    {
+      "file": "packages/game-vehicles-three/src/test-area/module.ts",
+      "domain": "structure",
+      "fix": "the crash wall of the vehicles area from game-floorplan-structure (buildWallSpecimen)"
+    },
+    {
+      "file": "packages/game-weapons-three/src/area.ts",
+      "domain": "furniture",
+      "fix": "the weapons counter from the household catalogue"
+    },
+    {
+      "file": "packages/game-weapons-three/src/world-explosives.ts",
+      "domain": "vehicles",
+      "fix": "the car fuel tank inside a fleet car (the fuel_tank zone of game-vehicles), not a loose box"
+    },
+    {
+      "file": "packages/game-weapons-three/src/world-explosives.ts",
+      "domain": "items",
+      "fix": "the fuel drum as an item of the goods catalogue (add it to game-items-goods first)"
+    },
+    {
+      "file": "packages/game-weather-three/src/bench/visual.ts",
+      "domain": "vehicles",
+      "fix": "the lamp rig on a fleet car (PR #71)"
+    }
+  ]
+}
