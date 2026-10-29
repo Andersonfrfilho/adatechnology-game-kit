@@ -43,8 +43,8 @@ export type {
   MechanicalSoundId,
   SoundStep,
 } from './audio'
-export { buildWeaponModel, buildProp, weaponProp, BODY_ACTIONS } from './props'
-export type { WeaponProp } from './props'
+export { buildItemWeaponModel, buildWeaponModel, buildProp, itemModelOfWeapon, registerWeaponItemModel, weaponProp, BODY_ACTIONS } from './props'
+export type { WeaponItemModel, WeaponProp } from './props'
 export { MODEL_ENTRIES, ARCHETYPE_MODELS, buildWeaponModelById, hasWeaponModel } from './models'
 export type { ModelEntry, ModelFamily, ModelOptions, ModelParts, WeaponModel } from './models'
 export { buildCartridge, buildCasing, buildRound, cartridgeShape } from './models/cartridge'

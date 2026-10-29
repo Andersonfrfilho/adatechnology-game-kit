@@ -1,4 +1,5 @@
 import { inferJoints } from '@adatechnology/game-destruction'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { DestructibleSpec, JointSpec, PartSpec } from '@adatechnology/game-contracts'
 import { residentialItems } from '@adatechnology/game-floorplan-residential'
 
@@ -193,7 +194,7 @@ function recordSpec(THREE: any, name: string, root: any, run: (A: any) => void, 
   const colors = new Map(drawn.map((p) => [p.id, p.color]))
 
   const build = (T3: any): any => {
-    const group = new T3.Group()
+    const group = markKitOrigin(new T3.Group(), { owner: 'game-floorplan-three', kind: 'furniture', id: name })
     group.name = name
     const mats = new Map<string, any>()
     for (const p of parts) {

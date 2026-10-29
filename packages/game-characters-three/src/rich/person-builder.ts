@@ -4,6 +4,7 @@
 // against the page stays readable. The accessories (face, hats, clothing and gear, hand items) are registries in `./accessories`; the primitives are in `./person-kit`;
 // the hands are in `./accessories/hands` and have fingers only at the highest level of detail. Changes from the page, all listed in KNOWN_DEVIATIONS: three.js, the random
 // stream and the canvas come in as options; the walk blend is the engine's `MOVES`.
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import { MOVES, createRng } from '@adatechnology/game-characters'
 
@@ -202,5 +203,7 @@ export const createPersonBuilder = (host: Three, options: PersonBuilderOptions =
   chars.forEach(c=>pose(c,c.z,0,0));
   return {root,chars};
 }
-  return { build, pose, zombify, buildPerson }
+  // every person this builder draws is a piece of the kit (the port above stays as the team wrote it)
+  const mark = (c) => { markKitOrigin(c.root, { owner: 'game-characters-three', kind: 'person' }); return c }
+  return { build: (sp, idx) => mark(build(sp, idx)), pose, zombify, buildPerson: (p, zed) => mark(buildPerson(p, zed)) }
 }

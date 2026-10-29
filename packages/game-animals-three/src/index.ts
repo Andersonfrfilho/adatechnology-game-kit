@@ -3,6 +3,7 @@
  * their animation, with the alive / infected / dead looks for every species, the joints and split views, and a GPU node skin for crowds.
  */
 import { GAIT_PHASES } from '@adatechnology/game-animals'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { AnimalSpecies, AnimalVisualState, GaitPhases } from '@adatechnology/game-animals'
 import { collectReferencedNodes, createNodeSkin } from '@adatechnology/game-props3d'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
@@ -84,6 +85,7 @@ export const createAnimalsThree = (host: Three, options: AnimalsThreeOptions = {
       else if (species.body.kind === 'bird') buildBird(THREE, rig, { extra: BIRD_EXTRAS[species.id] })
       else buildQuadruped(THREE, rig, { document: species.body.texture ? documentOf() : (undefined as never), extra: QUADRUPED_EXTRAS[species.id] })
       rig.triangles = countTriangles(rig.root)
+      markKitOrigin(rig.root, { owner: 'game-animals-three', kind: 'animal', id: species.id })
       rig.root.traverse((object) => {
         if ((object as THREE_NS.Mesh).isMesh) object.userData.speciesId = species.id
       })

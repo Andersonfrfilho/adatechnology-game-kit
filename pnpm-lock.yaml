@@ -896,6 +896,9 @@ importers:
 
   packages/game-interactables-three:
     dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
       '@adatechnology/game-interactables':
         specifier: workspace:*
         version: link:../game-interactables
@@ -995,6 +998,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
+      '@adatechnology/game-floorplan-three':
+        specifier: workspace:*
+        version: link:../game-floorplan-three
       '@adatechnology/game-fluids':
         specifier: workspace:*
         version: link:../game-fluids
@@ -1614,6 +1620,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
+      '@adatechnology/game-floorplan-three':
+        specifier: workspace:*
+        version: link:../game-floorplan-three
       '@adatechnology/game-interactables-three':
         specifier: workspace:*
         version: link:../game-interactables-three

@@ -1,4 +1,4 @@
-import { checkBench, checkSpec } from '@adatechnology/game-contracts'
+import { checkBench } from '@adatechnology/game-contracts'
 import type { BenchChange, ControlPatch, ModuleHost } from '@adatechnology/game-contracts'
 import { createAudioRecorder } from '@adatechnology/golden-tool'
 import { describe, expect, it } from 'vitest'
@@ -46,14 +46,16 @@ const rig = (options: Parameters<typeof createAudioTestModule>[0] = {}) => {
 const starts = (recorder: ReturnType<typeof createAudioRecorder>): number => recorder.trace().entries.filter((entry) => entry.op === 'start').length
 
 describe('the audio bench module', () => {
-  it('declares a valid bench and a probe item with a valid spec', () => {
-    const { module } = rig()
+  it('declares a valid bench, and a probe drawn by the host (none without one)', () => {
+    const { module } = rig({ probe: () => ({ name: 'portable_radio' }) })
     const report = checkBench({ controls: module.controls?.('en'), layers: module.layers?.('en'), metrics: module.metrics?.('en') })
     expect(report.problems).toEqual([])
     const probe = module.items('en')[0]!
     expect(probe.id).toBe('audio_probe')
-    expect(checkSpec(probe.spec as Parameters<typeof checkSpec>[0]).ok).toBe(true)
+    expect(probe.build({})).toMatchObject({ name: 'portable_radio', userData: { audio_probe: true } })
     expect(module.area?.('en').placements[0]?.item).toBe('audio_probe')
+    expect(rig().module.items('en')).toEqual([])
+    expect(rig().module.area?.('en').placements).toEqual([])
     expect(module.group).toBe('Sound')
     expect(createAudioTestModule({ locale: 'pt-BR' }).group).toBe('Som')
   })

@@ -1,3 +1,4 @@
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { Damageable, VehicleContext, VehicleKit } from '@adatechnology/game-vehicles'
 import { colorFromSeed, fleetDims, paintPalettes, paletteOf } from '@adatechnology/game-vehicles-fleet'
 import type { FleetDims } from '@adatechnology/game-vehicles-fleet'
@@ -126,6 +127,7 @@ export function createVehiclesThree(THREE: any, options: VehiclesThreeOptions): 
     const pivotMatrix = new THREE.Matrix4().makeTranslation(-cx, -bounds.min.y, -cz).multiply(rotation)
     const group = new THREE.Group()
     group.name = `vehicle:${key}`
+    markKitOrigin(group, { owner: 'game-vehicles-three', kind: 'vehicle', id: key })
     const damageables = kit.damageables(c, pivotMatrix)
     let pruned = 0
     if (quality === 'high') {

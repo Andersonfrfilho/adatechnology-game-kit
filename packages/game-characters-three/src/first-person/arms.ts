@@ -1,5 +1,6 @@
 import { clipEventsBetween, sampleFirstPersonClip } from '@adatechnology/game-characters'
 import type { FirstPersonClip, FirstPersonSampleChannel } from '@adatechnology/game-characters'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { HandPose } from '@adatechnology/game-contracts'
 
 import playerPreset from '../presets/player-avatar.json'
@@ -148,7 +149,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   const blendSeconds = options.blend ?? DEFAULT_BLEND
   const clips = new Map<string, FirstPersonClip>((options.clips ?? []).map((clip) => [clip.id, clip]))
 
-  const root = new THREE.Group()
+  const root = markKitOrigin(new THREE.Group(), { owner: 'game-characters-three', kind: 'person', id: 'first-person-arms' })
   root.name = 'first-person-arms'
   root.userData.viewmodel = true
   // a little of the colour glows by itself (`FILL`): the arms hang in the camera's space, where the scene's lights reach their undersides badly and a dark trouser would read as a hole

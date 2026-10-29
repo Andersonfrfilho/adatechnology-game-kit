@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import type { SurfaceSpec } from '@adatechnology/game-fluids'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import { brickWallSpec } from './items'
 import type { SceneryObject, SceneryTap } from './types'
 
@@ -151,7 +152,8 @@ export function resolveScenery(scenery: Record<string, SceneryObject | null> | u
 }
 
 export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_NS.Scene, scenery?: Record<string, SceneryObject | null>, tapOption?: SceneryTap | null): Arena {
-  const group = new THREE.Group()
+  // the room's own floor, grid and ruler (not a piece: the pieces in the room come from their packages)
+  const group = markKitOrigin(new THREE.Group(), { owner: 'game-test-room', kind: 'room' })
   group.name = 'test-room-arena'
   scene.background = new THREE.Color(0x9fb4c8)
 

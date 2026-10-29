@@ -74,11 +74,6 @@
       "fix": "the yard trees from game-vegetation-species (game-vegetation-three)"
     },
     {
-      "file": "packages/game-audio/src/bench/module.ts",
-      "domain": "items",
-      "fix": "the sound probe on a speaker of the goods catalogue (add it to game-items-goods first if it is not there)"
-    },
-    {
       "file": "packages/game-characters-three/src/rich/accessories/extras.ts",
       "domain": "items",
       "fix": "the radio from game-items-goods (portable_radio) drawn by game-items-three"
@@ -87,16 +82,6 @@
       "file": "packages/game-characters-three/src/rich/accessories/hand-items.ts",
       "domain": "items",
       "fix": "the radio and the bottle in the hand from game-items-goods drawn by game-items-three"
-    },
-    {
-      "file": "packages/game-items-three/src/area.ts",
-      "domain": "furniture",
-      "fix": "the shelves and the table of the items area from the household catalogue"
-    },
-    {
-      "file": "packages/game-items-three/src/area.ts",
-      "domain": "people",
-      "fix": "the 1.80 m scale figure as a person of game-characters-people"
     },
     {
       "file": "packages/game-test-room/src/arena.ts",
@@ -129,11 +114,6 @@
       "fix": "the crash wall of the vehicles area from game-floorplan-structure (buildWallSpecimen)"
     },
     {
-      "file": "packages/game-weapons-three/src/area.ts",
-      "domain": "furniture",
-      "fix": "the weapons counter from the household catalogue"
-    },
-    {
       "file": "packages/game-weapons-three/src/world-explosives.ts",
       "domain": "vehicles",
       "fix": "the car fuel tank inside a fleet car (the fuel_tank zone of game-vehicles), not a loose box"
@@ -142,11 +122,24 @@
       "file": "packages/game-weapons-three/src/world-explosives.ts",
       "domain": "items",
       "fix": "the fuel drum as an item of the goods catalogue (add it to game-items-goods first)"
+    }
+  ],
+  "$comment_drawn": "`drawn`: what scene.mjs finds on screen with no origin mark of a kit builder, already known: `area` (an area id, `room` or `*`), `match` (a regular expression on the path of names) and the fix. scene.mjs --check fails on anything else. Take an entry out when it is fixed.",
+  "drawn": [
+    {
+      "area": "*",
+      "match": "^weapon_(pistol_22|bow_compound|molotov|cutting_torch|frag_grenade|flashbang|pipe_bomb|dynamite|c4|claymore|pry_bar|utility_knife|claw_hammer|m79|m203|gp_25|ag36) > ",
+      "fix": "weapons with no team model yet, neither in the Arsenal gallery nor in the items: the team's model (ask before drawing one); until then the low-poly prop of game-weapons-three"
     },
     {
-      "file": "packages/game-weather-three/src/bench/visual.ts",
-      "domain": "vehicles",
-      "fix": "the lamp rig on a fleet car (PR #71)"
+      "area": "*",
+      "match": "^world_car_fuel_tank > ",
+      "fix": "the fuel tank inside a fleet car (the fuel_tank zone of game-vehicles), not a loose box"
+    },
+    {
+      "area": "*",
+      "match": "^world_fuel_barrel > ",
+      "fix": "the fuel drum as an item of the goods catalogue with a team model (add it to game-items-goods first)"
     }
   ]
 }

@@ -1,3 +1,4 @@
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, DestructibleSpec, JointSpec, PartSpec, TestableItem } from '@adatechnology/game-contracts'
 import type { Condition, PlantMesh, PlantSpec } from '@adatechnology/game-vegetation'
 
@@ -95,7 +96,7 @@ export function createPlants(sdk: VegetationSdk, species: SpeciesSdk, materials:
 
   // ---- the 3D object ----------------------------------------------------------------------------------------------------------------------
   function buildObject(THREE: Three, def: PlantDef): any {
-    const root = new THREE.Group()
+    const root = markKitOrigin(new THREE.Group(), { owner: 'game-vegetation-three', kind: 'plant', id: def.base ?? def.id })
     root.name = def.id
     const segments = def.segments ?? 1
     let spacing = 0

@@ -8,6 +8,7 @@ import { GAME_SFX_BANK, LIBRARY_BANK, createAudioEngine, createAudioTestModule }
 export { createAudioEngine, createAudioTestModule, GAME_SFX_BANK, LIBRARY_BANK }
 
 /** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the sound area. Returns the room's module report. */
+// The probe the sounds can come from is drawn by the host (`probe`, a portable radio of game-items-three in the kit's full room); this page alone has none.
 export function loadInto(room, options = {}) {
   const locale = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const report = room.loadModule(createAudioTestModule({ ...options, locale }))

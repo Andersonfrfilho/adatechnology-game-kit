@@ -1,5 +1,6 @@
 import { variantDecay, variantSeed } from '@adatechnology/game-characters'
 import type { Civilian, Crowd, CrowdType } from '@adatechnology/game-crowd'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import { LOD_BAKE, LOD_SEGMENTS, bakeBody, buildInstancedBody, createBodyBatch, createVariantBatches } from '@adatechnology/game-characters-three'
 import type { BakeBuilders, BakeSpec, BakedBody, BodyBatch, BodyVariant, Three } from '@adatechnology/game-characters-three'
 import type * as THREE_NS from 'three'
@@ -49,7 +50,7 @@ const now = (): number => (typeof performance === 'undefined' ? Date.now() : per
  */
 export function createCrowdRenderer(three: Three, options: CrowdRendererOptions): CrowdRenderer {
   const { crowd } = options
-  const group = new three.Group()
+  const group = markKitOrigin(new three.Group(), { owner: 'game-crowd-three', kind: 'person' })
   group.name = 'crowd'
   const time = { value: 0 }
   const eyes = crowd.pack.types.map((type) => type.eye ?? null)

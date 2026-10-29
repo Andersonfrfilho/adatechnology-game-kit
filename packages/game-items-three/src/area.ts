@@ -1,5 +1,7 @@
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type * as THREE_NS from 'three'
-import type { AreaPlacement, BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
+import type { AreaPlacement, BenchChange, DestructibleSpec, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
+import { furnitureSpec } from '@adatechnology/game-floorplan-three'
 import { rng } from '@adatechnology/game-interactables'
 import { canCraft, craft, createFindsProvider, freshness, ITEM_CATEGORIES } from '@adatechnology/game-items'
 import type { FindStack, FindsProvider, FindsQuery, ItemDef, ItemsCatalog, RecipeDef } from '@adatechnology/game-items'
@@ -31,6 +33,11 @@ export interface ItemsTestModuleOptions {
   wear?: string
   /** The finds provider; default the one of `game-items` over `catalog`. A game gives its own (floorplan bindings, pools). */
   provider?: FindsProvider
+  /**
+   * Draws a person of the kit to judge the scale by (for example a survivor of `createPersonBuilder` of `game-characters-three`); the module brings it to 1.80 m. Without it
+   * the area shows the ruler alone.
+   */
+  person?: (THREE: unknown) => THREE_NS.Object3D
 }
 
 export const SHOWCASE_STAND_ID = 'stand_models'
@@ -44,6 +51,9 @@ const STAND = { at: [0, 0, 9.5] as Vec3, radius: 2.1, height: 0.8, ring: 1.35 }
 const RULER_AT: Vec3 = [-6.5, 0, 9]
 const HUMAN_AT: Vec3 = [-5.4, 0, 9]
 const TABLE = { at: [7, 0, 9.5] as Vec3, length: 3.2, depth: 1, height: 0.8 }
+// the furniture of the catalogue the shelves and the finds table are (an iron bench with an open shelf under the top, a wooden table)
+const SHELF_FURNITURE = 'workbench'
+const TABLE_FURNITURE = 'meeting_table'
 const WEARS = ['new', 'used', 'spoiled'] as const
 const WEAR_STAGE: Readonly<Record<string, WearStage>> = { new: 0, used: 1, spoiled: 2 }
 const SPIN = 0.6
@@ -292,30 +302,28 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     entries.push({ ...entry, triangles: countTriangles(entry.root), drawCalls: countDrawCalls(entry.root) })
   }
 
-  const shelfItem = (plan: ShelfPlan): TestableItem => ({
-    id: plan.id,
-    name: fill(text.shelf, { category: categoryName(plan.category) }),
+  // the shelves and the finds table are pieces of the furniture catalogue (`furnitureSpec` of game-floorplan-three), drawn by the house renderer at their measures
+  const furnitureItem = (id: string, name: string, type: string, size: { w: number; d: number; h: number }, decorate?: (root: THREE_NS.Object3D) => void): TestableItem => ({
+    id,
+    name,
     movable: false,
     build: (THREE: unknown) => {
-      const T = THREE as typeof THREE_NS
-      const group = new T.Group()
-      const wood = new T.MeshStandardMaterial({ color: 0x8a6a45, roughness: 0.85 })
-      const frame = new T.MeshStandardMaterial({ color: 0x4a4d52, roughness: 0.7, metalness: 0.3 })
-      const top = new T.Mesh(new T.BoxGeometry(plan.length, 0.04, plan.depth), wood)
-      top.position.y = SHELF_HEIGHT - 0.02
-      group.add(top)
-      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-        const leg = new T.Mesh(new T.BoxGeometry(0.05, SHELF_HEIGHT - 0.04, 0.05), frame)
-        leg.position.set((sx * (plan.length - 0.1)) / 2, (SHELF_HEIGHT - 0.04) / 2, (sz * (plan.depth - 0.1)) / 2)
-        group.add(leg)
-      }
-      group.userData.category = plan.category
-      group.userData.shelf = true
-      shelfRoots.push(group)
-      return group
+      const piece = furnitureSpec(THREE, type, { ...size, options: { chairs: false } })
+      const root = piece.build(THREE) as THREE_NS.Object3D
+      root.userData.furnitureSpec = { ...piece.spec, name }
+      decorate?.(root)
+      return root
     },
+    spec: (root: unknown) => (root as THREE_NS.Object3D).userData.furnitureSpec as DestructibleSpec,
   })
-  const shelfRoots: THREE_NS.Group[] = []
+
+  const shelfItem = (plan: ShelfPlan): TestableItem =>
+    furnitureItem(plan.id, fill(text.shelf, { category: categoryName(plan.category) }), SHELF_FURNITURE, { w: plan.length, d: plan.depth, h: SHELF_HEIGHT }, (root) => {
+      root.userData.category = plan.category
+      root.userData.shelf = true
+      shelfRoots.push(root)
+    })
+  const shelfRoots: THREE_NS.Object3D[] = []
 
   /** The liquid a can holds, as the room's `TestableItem.fluid`: a hole in the shell leaks it. */
   const fluidOf = (subject: ContentsSubject): Pick<TestableItem, 'fluid'> => {
@@ -358,7 +366,8 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     movable: false,
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
-      const group = new T.Group()
+      // the display stand of the bench and the measuring ruler are aids of the area, not pieces
+      const group = markKitOrigin(new T.Group(), { owner: 'game-items-three', kind: 'aid' })
       const base = new T.Mesh(new T.CylinderGeometry(STAND.radius, STAND.radius + 0.1, STAND.height - 0.04, 40), new T.MeshStandardMaterial({ color: 0x3a3d44, roughness: 0.8 }))
       base.position.y = (STAND.height - 0.04) / 2
       const top = new T.Mesh(new T.CylinderGeometry(STAND.radius, STAND.radius, 0.04, 40), new T.MeshStandardMaterial({ color: 0xcfcab8, roughness: 0.6 }))
@@ -374,7 +383,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     movable: false,
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
-      const group = new T.Group()
+      const group = markKitOrigin(new T.Group(), { owner: 'game-items-three', kind: 'aid' })
       const post = new T.Mesh(new T.BoxGeometry(0.06, RULER_HEIGHT, 0.02), new T.MeshStandardMaterial({ color: 0xe8e2c8, roughness: 0.7 }))
       post.position.y = RULER_HEIGHT / 2
       group.add(post)
@@ -393,49 +402,22 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     },
   })
 
-  const humanItem = (): TestableItem => ({
+  // a person of the kit (the host's `person`, a builder of game-characters-three) brought to 1.80 m
+  const humanItem = (person: NonNullable<ItemsTestModuleOptions['person']>): TestableItem => ({
     id: HUMAN_ID,
     name: text.human,
     movable: false,
     build: (THREE: unknown) => {
       const T = THREE as typeof THREE_NS
-      const group = new T.Group()
-      const skin = new T.MeshStandardMaterial({ color: 0x9aa3ad, roughness: 0.9 })
-      const part = (geometry: THREE_NS.BufferGeometry, x: number, y: number): void => {
-        const mesh = new T.Mesh(geometry, skin)
-        mesh.position.set(x, y, 0)
-        group.add(mesh)
-      }
-      // 1.80 m: legs to 0.88, torso to 1.50, neck and head to 1.80
-      for (const x of [-0.09, 0.09]) part(new T.CylinderGeometry(0.075, 0.06, 0.88, 10), x, 0.44)
-      part(new T.BoxGeometry(0.4, 0.62, 0.22), 0, 0.88 + 0.31)
-      for (const x of [-0.26, 0.26]) part(new T.CylinderGeometry(0.045, 0.04, 0.6, 8), x, 1.2)
-      part(new T.CylinderGeometry(0.05, 0.055, 0.07, 8), 0, 1.535)
-      part(new T.SphereGeometry(0.115, 14, 10), 0, 1.685)
-      group.userData.height = HUMAN_HEIGHT
-      return group
+      const root = person(THREE)
+      const height = new T.Box3().setFromObject(root).getSize(new T.Vector3()).y
+      if (height > 0) root.scale.multiplyScalar(HUMAN_HEIGHT / height)
+      root.userData.height = HUMAN_HEIGHT
+      return root
     },
   })
 
-  const tableItem = (): TestableItem => ({
-    id: FINDS_TABLE_ID,
-    name: text.table,
-    movable: false,
-    build: (THREE: unknown) => {
-      const T = THREE as typeof THREE_NS
-      const group = new T.Group()
-      const top = new T.Mesh(new T.BoxGeometry(TABLE.length, 0.05, TABLE.depth), new T.MeshStandardMaterial({ color: 0x7a6a55, roughness: 0.8 }))
-      top.position.y = TABLE.height - 0.025
-      group.add(top)
-      const frame = new T.MeshStandardMaterial({ color: 0x3d3f44 })
-      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-        const leg = new T.Mesh(new T.BoxGeometry(0.06, TABLE.height - 0.05, 0.06), frame)
-        leg.position.set((sx * (TABLE.length - 0.12)) / 2, (TABLE.height - 0.05) / 2, (sz * (TABLE.depth - 0.12)) / 2)
-        group.add(leg)
-      }
-      return group
-    },
-  })
+  const tableItem = (): TestableItem => furnitureItem(FINDS_TABLE_ID, text.table, TABLE_FURNITURE, { w: TABLE.length, d: TABLE.depth, h: TABLE.height })
 
   const liveEntries = (): Entry[] => entries.filter((entry) => entry.root.parent !== null)
   const visibleEntries = (): Entry[] => liveEntries().filter((entry) => entry.root.visible)
@@ -607,7 +589,8 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
       const angle = (index / showcase.length) * Math.PI * 2
       placements.push({ item: `${SHOWCASE_PREFIX}${model.id}`, position: [STAND.at[0] + Math.cos(angle) * STAND.ring, STAND.height + 0.01, STAND.at[2] + Math.sin(angle) * STAND.ring], asleep: true })
     })
-    placements.push({ item: RULER_ID, position: RULER_AT }, { item: HUMAN_ID, position: HUMAN_AT })
+    placements.push({ item: RULER_ID, position: RULER_AT })
+    if (options.person) placements.push({ item: HUMAN_ID, position: HUMAN_AT })
     placements.push({ item: FINDS_TABLE_ID, position: TABLE.at, surface: { halfSize: [TABLE.length / 2, TABLE.depth / 2], height: TABLE.height } })
     return placements
   }
@@ -702,7 +685,7 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
       standItem(),
       ...showcase.map(showcaseItem),
       rulerItem(),
-      humanItem(),
+      ...(options.person ? [humanItem(options.person)] : []),
       tableItem(),
     ],
     area: (): ModuleArea => ({ placements: areaPlacements(), view: { eye: [0, 5.5, 16], target: [0, 0.8, 0] } }),

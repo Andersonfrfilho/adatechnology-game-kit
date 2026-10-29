@@ -39,6 +39,14 @@ describe('exactSnapshot', () => {
     expect(exactSnapshot(tagged).hash).not.toBe(base)
     expect(exactSnapshot(build()).nodes).toHaveLength(3)
   })
+  it('leaves out where an object comes from (the kit origin mark), not the rest of its user data', () => {
+    const marked = build()
+    marked.userData.kitOrigin = { owner: 'game-items-three', kind: 'item' }
+    expect(exactSnapshot(marked).hash).toBe(exactSnapshot(build()).hash)
+    marked.userData.extra = 1
+    expect(exactSnapshot(marked).hash).not.toBe(exactSnapshot(build()).hash)
+  })
+
   it('tells shared materials from equal ones', () => {
     const shared = new THREE.Group()
     const m = new THREE.MeshBasicMaterial()

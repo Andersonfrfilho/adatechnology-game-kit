@@ -33,6 +33,9 @@ parede e casa do `game-floorplan`, móvel do catálogo de móveis, pessoa do `ga
 ## Manter documentado
 
 - `node tools/kit-audit/audit.mjs --check` roda no CI. Uma peça nova desenhada fora do dono quebra o build.
+- `node tools/kit-audit/scene.mjs --check` também roda no CI: abre cada área da sala de teste e falha em qualquer coisa desenhada sem a marca
+  de origem (`markKitOrigin` do `game-contracts`) de um construtor do kit. Peça nova do kit marca a raiz no construtor; quem hospeda não desenha,
+  usa a peça do kit. Os conhecidos ficam em `drawn` do `tools/kit-audit/allowlist.json`.
 - O que ainda está fora: `docs/pecas-fora-do-sdk.md` (peça, onde, dono certo, PR de origem, correção) e `pending` de
   `tools/kit-audit/allowlist.json`. Ao corrigir uma peça, tire das duas listas. Um falso positivo (o teto de um carro, o cano de um blindado)
   vai para `allowed` com o motivo.

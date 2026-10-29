@@ -21,7 +21,8 @@ import { createWeatherTestModule } from '@adatechnology/game-weather'
 import { createWeatherVisual } from '@adatechnology/game-weather-three'
 import { createVfxTestModule } from '@adatechnology/game-vfx-three'
 import { createExplosivesTestModule, createWeaponsTestModule } from '@adatechnology/game-weapons-three'
-import { registerBodyMaterial } from '@adatechnology/game-characters-three'
+import { createPersonBuilder, personSpecOf, registerBodyMaterial } from '@adatechnology/game-characters-three'
+import { PROFESSIONS } from '@adatechnology/game-characters-people'
 import { createModule as createAnimalsModule } from '../../animals-test-area/src/entry.js'
 import { createModule as createCharactersModule } from '../../characters-test-area/src/entry.js'
 import { createModule as createCrowdModule } from '../../crowd-test-area/src/entry.js'
@@ -124,13 +125,17 @@ function loadSteps(room, options, lang) {
   mod('weapons', () => createWeaponsTestModule({ locale: lang, thumbnailBase: SITE_THUMBNAIL_BASE, flyRocket: false }))
   // the P13 cylinder of the weapons area with its whole sequence (leak, torch, blast, shell) in a kitchen corner against the room's brick wall, with the furniture and the people of the other modules (`?area=explosives_area`)
   mod('explosives', () => createExplosivesTestModule({ locale: lang, room }))
-  mod('items', () => createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang }))
+  // the 1.80 m reference of the items area is a person of the kit (a survivor of the Retratos do Vale builder), not a figure drawn on the spot
+  const person = (THREE) => createPersonBuilder(THREE, { createCanvas: () => document.createElement('canvas') }).build(personSpecOf(PROFESSIONS.find((p) => p.id === 'mechanic') ?? PROFESSIONS[0])).root
+  mod('items', () => createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang, person }))
   // the bodies of the characters module are DestructibleImpls with the 'flesh' material, which the room's world has to know before the module is checked
   mod('characters', () => createCharactersModule({ fluids: room.fluids, film: room.film, locale: lang }), () => registerBodyMaterial(room.world))
   mod('animals', () => createAnimalsModule({ locale: lang }))
   mod('vfx', () => createVfxTestModule({ locale: lang }))
   // the sound and the weather (with its picture: rain curtain, near rain, mist, lightning, headlights, haze; the sky and the fog stay the room's own) ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here
-  mod('audio', () => createAudioTestModule({ locale: lang }))
+  // the probe of the sound bench is a portable radio of the goods catalogue, drawn by game-items-three
+  const radio = (THREE) => buildItem(THREE, createGoodsItems().items.get('portable_radio')).root
+  mod('audio', () => createAudioTestModule({ locale: lang, probe: radio }))
   mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(THREE, lang) }) }))
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang }))

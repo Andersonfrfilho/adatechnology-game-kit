@@ -1,3 +1,4 @@
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { ObjectSpec } from '@adatechnology/game-interactables'
 import { createShapeRecorder } from '@adatechnology/game-props3d'
 import { colorChannels, generate } from '@adatechnology/game-shapes'
@@ -175,7 +176,7 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
       })
       const batches = buffers.levels[0]?.batches ?? []
       const of = (id: string | null): { batches: ShapeBatch[]; points: ShapePoint[] } => ({ batches: batches.filter((b) => b.part === id), points: buffers.points.filter((p) => p.part === id) })
-      const group = new THREE.Group()
+      const group = markKitOrigin(new THREE.Group(), { owner: 'game-interactables-three', kind: 'furniture', ...(spec ? { id: spec.type } : {}) })
       group.name = 'interactable'
       const parts: Record<string, ThreeNS.Group> = {}
       const body = of(null)

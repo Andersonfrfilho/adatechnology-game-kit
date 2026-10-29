@@ -1,8 +1,10 @@
 import type * as THREE_NS from 'three'
 import type { AreaPlacement, BenchChange, DestructibleSpec, HostTool, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import type { EngineSink } from '@adatechnology/game-audio'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import { createArsenal } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
+import { furnitureSpec } from '@adatechnology/game-floorplan-three'
 import { createAccessoryBench, accessoryControls, accessoryLayers, accessoryMetrics } from './accessory-bench'
 import { accessoryTextOf } from './accessory-text'
 import { createWeaponAudio } from './audio'
@@ -12,7 +14,7 @@ import type { WeaponFx } from './fx'
 import { createLaserRaycast } from './laser-raycast'
 import { ARCHETYPE_MODELS, hasWeaponModel } from './models'
 import type { AttachmentModelRegistry } from './models/attachments/types'
-import { BODY_ACTIONS, buildModeledProp, buildProp, buildTripodMountedProp, modeledPropSpec, weaponProp } from './props'
+import { BODY_ACTIONS, buildModeledProp, buildProp, buildTripodMountedProp, itemModelOfWeapon, modeledPropSpec, weaponProp } from './props'
 import type { WeaponProp } from './props'
 import { DEFAULT_THUMBNAIL_BASE, weaponThumbnailCredit, weaponThumbnailUrl } from './thumbnails'
 import { WORLD_EXPLOSIVE_IDS, WORLD_EXPLOSIVE_PREFIX, worldExplosiveItem } from './world-explosives'
@@ -164,23 +166,23 @@ const TEXT: Record<string, Text> = {
 const textOf = (locale: string): Text => TEXT[locale] ?? (TEXT.en as Text)
 const fill = (template: string, vars: Record<string, string | number>): string => template.replace(/\{(\w+)\}/g, (_, key: string) => String(vars[key] ?? ''))
 
-const counterProp = (name: string): WeaponProp => {
-  const { length, depth, height } = COUNTER
+// the counters are the buffet of the furniture catalogue (a cabinet base under a top), drawn by the house renderer at the counter's measures: its width across x, its length along z
+const COUNTER_FURNITURE = 'buffet'
+
+/** A counter of the furniture catalogue (`furnitureSpec` of game-floorplan-three), as an item of the area. */
+const counterItem = (name: string): TestableItem => {
+  const counter = (THREE: unknown) => furnitureSpec(THREE, COUNTER_FURNITURE, { w: COUNTER.depth, d: COUNTER.length, h: COUNTER.height })
   return {
-    spec: {
-      name,
-      parts: [
-        { id: 'top', material: 'wood_soft', shape: { kind: 'box', size: [depth, 0.05, length] }, position: [0, height - 0.025, 0] },
-        { id: 'side_a', material: 'plywood', shape: { kind: 'box', size: [depth - 0.1, height - 0.05, 0.05] }, position: [0, (height - 0.05) / 2, -length / 2 + 0.05], anchored: true },
-        { id: 'side_b', material: 'plywood', shape: { kind: 'box', size: [depth - 0.1, height - 0.05, 0.05] }, position: [0, (height - 0.05) / 2, length / 2 - 0.05], anchored: true },
-      ],
-      joints: [
-        { a: 'top', b: 'side_a', kind: 'screw' },
-        { a: 'top', b: 'side_b', kind: 'screw' },
-      ],
-      tags: ['furniture'],
+    id: COUNTER_ITEM_ID,
+    name,
+    build: (THREE: unknown) => {
+      const piece = counter(THREE)
+      const root = piece.build(THREE) as THREE_NS.Object3D
+      root.userData.counterSpec = { ...piece.spec, name, tags: [...(piece.spec.tags ?? []), 'furniture'] }
+      return root
     },
-    colors: { top: 0x8a5a30, side_a: 0x6b4426, side_b: 0x6b4426 },
+    spec: (root: unknown) => (root as THREE_NS.Object3D).userData.counterSpec as DestructibleSpec,
+    movable: false,
   }
 }
 
@@ -203,10 +205,10 @@ const targetProp = (id: string, name: string): WeaponProp => {
   return { spec, colors: { post: 0x3a3d42, face: color } }
 }
 
-/** A weapon on the counters: the gallery model when it drew one (one rigid body of its measures), the low-poly prop of its category when it did not. */
+/** A weapon on the counters: the gallery model when it drew one, else the item model of game-items-three (one rigid body of its measures), the low-poly prop of its category when neither. */
 const weaponItem = (def: WeaponDef, name: string): TestableItem => {
   const id = `${WEAPON_ITEM_PREFIX}${def.id}`
-  if (!hasWeaponModel(def.id)) return asItem(id, name, weaponProp(def, name), { weapon: def.id, movable: true })
+  if (!hasWeaponModel(def.id) && !itemModelOfWeapon(def.id)) return asItem(id, name, weaponProp(def, name), { weapon: def.id, movable: true })
   return {
     id,
     name,
@@ -226,6 +228,12 @@ const mountedM134Item = (def: WeaponDef, name: string): TestableItem => ({
   weapon: def.id,
   movable: false,
 })
+
+/** A shooting target of the range (a plate of steel, plywood or concrete on a post): a piece of the weapons kit itself, marked as such. */
+const targetItem = (id: string, name: string): TestableItem => {
+  const prop = targetProp(id, name)
+  return { id, name, build: (THREE: unknown) => markKitOrigin(buildProp(THREE as typeof THREE_NS, prop), { owner: 'game-weapons-three', kind: 'target', id }), spec: prop.spec, movable: false }
+}
 
 const asItem = (id: string, name: string, prop: WeaponProp, extra: Partial<TestableItem> = {}): TestableItem => ({
   id,
@@ -308,8 +316,8 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
     },
     items: () => [
       ...weaponDefs.map((def) => withThumbnail(weaponItem(def, arsenal.name(def.id)), def.id)),
-      asItem(COUNTER_ITEM_ID, text.counter, counterProp(text.counter), { movable: false }),
-      ...TARGETS.map((target) => asItem(target.id, text.targets[target.id] ?? target.id, targetProp(target.id, text.targets[target.id] ?? target.id), { movable: false })),
+      counterItem(text.counter),
+      ...TARGETS.map((target) => targetItem(target.id, text.targets[target.id] ?? target.id)),
       ...worldExplosives.map((item) => withThumbnail(item, item.id.slice(WORLD_EXPLOSIVE_PREFIX.length))),
       ...mountedM134.map((item) => withThumbnail(item, MOUNTED_M134.weaponId)),
     ],

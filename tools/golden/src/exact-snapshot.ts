@@ -61,6 +61,14 @@ function geometryLines(g: Any): string[] {
   return lines
 }
 
+// where the object comes from (`markKitOrigin` of game-contracts) is not part of the drawing: a builder that starts marking its root keeps its golden
+const PROVENANCE_KEYS = new Set(['kitOrigin'])
+function drawnUserData(userData: Any): Any | null {
+  if (!userData) return null
+  const keys = Object.keys(userData).filter((key) => !PROVENANCE_KEYS.has(key))
+  return keys.length ? Object.fromEntries(keys.map((key) => [key, userData[key]])) : null
+}
+
 function materialLine(m: Any, ids: Map<object, number>): string {
   let id = ids.get(m)
   if (id === undefined) {
@@ -90,7 +98,8 @@ export function exactSnapshot(root: Any): ExactSnapshot {
       `${path} ${o.type} name=${o.name} visible=${o.visible} cast=${o.castShadow} receive=${o.receiveShadow} order=${o.renderOrder} culled=${o.frustumCulled}`,
       `  p=${vec(o.position, ['x', 'y', 'z'])} q=${vec(o.quaternion, ['x', 'y', 'z', 'w'])} s=${vec(o.scale, ['x', 'y', 'z'])} auto=${o.matrixAutoUpdate}`,
     ]
-    if (o.userData && Object.keys(o.userData).length) lines.push(`  userData ${stable(o.userData)}`)
+    const userData = drawnUserData(o.userData)
+    if (userData) lines.push(`  userData ${stable(userData)}`)
     if (o.geometry) lines.push(...geometryLines(o.geometry))
     if (o.material) for (const m of Array.isArray(o.material) ? o.material : [o.material]) lines.push(materialLine(m, ids))
     if (o.isInstancedMesh) lines.push(`  instances count=${o.count} matrices=${hashBytes(o.instanceMatrix.array)} colors=${o.instanceColor ? hashBytes(o.instanceColor.array) : '-'}`)

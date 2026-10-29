@@ -1,3 +1,4 @@
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import type * as THREE_NS from 'three'
 
 import { tagForDestruction } from './destruction'
@@ -84,5 +85,6 @@ export function buildItem(T: typeof THREE_NS, item: DrawableItem, options: Build
   if (options.wear) setWear(materials, options.wear)
   root.userData.wear = options.wear ?? 0
   if (options.destructible) tagForDestruction(root, { ...(kind === 'model' && item.model !== undefined ? { modelId: item.model } : {}), ...(item.weight === undefined ? {} : { weight: item.weight }), size: item.size })
+  markKitOrigin(root, { owner: 'game-items-three', kind: 'item', id: item.id, ...(kind === 'shape' ? { standIn: true } : {}) })
   return { root, kind, ...(shape ? { shape } : {}), size: item.size, materials }
 }
