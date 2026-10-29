@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "game-kit": {
+      "command": "node",
+      "args": ["tools/kit-audit/mcp.mjs"]
+    }
+  }
+}

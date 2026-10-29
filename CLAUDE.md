@@ -23,6 +23,14 @@ Antes de construir qualquer coisa (modelo 3D, animação, comportamento, efeito,
 - **Nada desenhado à mão quando o kit já tem** (dono, 2026-10-29): cenário de sala de teste, área de exemplo, prévia ou cena de jogo
   usa as peças do kit (móveis, paredes, itens, veículos, plantas) pelo catálogo, nunca caixas ou geometria montada na hora "parecida".
   Se a peça não existe no kit, ela entra primeiro num pacote do kit e só então é usada.
+- **Cada peça vem do SDK dono, importada** (dono, 2026-10-29): carro e veículo sempre do SDK de veículos (`game-vehicles-three` com a
+  frota), parede e casa do `game-floorplan`, móvel do catálogo de móveis, pessoa do `game-characters`, planta do `game-vegetation`, item do
+  `game-items-goods`, arma e explosivo do `game-weapons`. Importe pelo pacote (ou receba o construtor por opção, como o `vehicles` do
+  `createWeatherVisual`), nunca copie o modelo: a mudança no SDK tem que aparecer em todo lugar que usa a peça. Quem é dono de quê está em
+  `tools/kit-audit/rules.json`; o MCP `game-kit` (`.mcp.json`) responde `kit_owner`, `kit_origin` e `kit_audit`, e a skill `kit-origem` diz como.
+- **Peça fora do dono fica documentada**: `node tools/kit-audit/audit.mjs --check` roda no CI e falha numa peça nova desenhada fora do SDK
+  dono. O que ainda está fora está em `docs/pecas-fora-do-sdk.md` (peça, onde, dono certo, PR de origem, correção) e em `pending` do
+  `tools/kit-audit/allowlist.json`; ao corrigir, tire das duas listas.
 - Ao terminar uma migração, atualize o inventário da spec de migração (`specs/`) marcando o que entrou e onde.
 
 ## 2. Motor genérico; conteúdo de cada jogo no repositório do jogo
