@@ -1749,7 +1749,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         if (heldEntry?.uses[0]) useItem(heldEntry.uses[0])
         break
       case 'KeyC':
-        if (heldEntry?.uses[1]) useItem(heldEntry.uses[1])
+        // C crouches by default: the item's second use takes it only when the page moved the crouch to other keys
+        if (heldEntry?.uses[1] && !(options.crouch?.keys ?? ['KeyC']).includes('KeyC')) useItem(heldEntry.uses[1])
         break
       case 'KeyV':
         if (heldEntry?.uses[2]) useItem(heldEntry.uses[2])
