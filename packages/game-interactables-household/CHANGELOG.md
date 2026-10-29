@@ -1,5 +1,12 @@
 # @adatechnology/game-interactables-household
 
+## 0.2.8
+
+### Patch Changes
+
+- @adatechnology/game-interactables@0.2.7
+- @adatechnology/game-items-goods@0.2.1
+
 ## 0.2.7
 
 ### Patch Changes

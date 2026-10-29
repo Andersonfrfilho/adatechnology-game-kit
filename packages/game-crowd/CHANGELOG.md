@@ -1,5 +1,13 @@
 # @adatechnology/game-crowd
 
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [df42f4b]
+  - @adatechnology/game-contracts@0.15.0
+  - @adatechnology/game-characters@0.2.1
+
 ## 0.2.1
 
 ### Patch Changes

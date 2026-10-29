@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-urban",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "license": "MIT",
   "description": "The urban pattern as data, with no three.js: the five street poles with a light budget, roads, sidewalks and street grids, filled blocks of city buildings and the props of a street (fences, tents, trees, containers, watch towers, sandbags, labels, wires), as parts on the silhouette vocabulary of game-floorplan. Every catalogue is a registry and every number an option.",
   "keywords": [

@@ -1,5 +1,12 @@
 # @adatechnology/game-vfx
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [df42f4b]
+  - @adatechnology/game-contracts@0.15.0
+
 ## 0.4.0
 
 ### Minor Changes

@@ -1,5 +1,25 @@
 # @adatechnology/game-test-room
 
+## 0.14.0
+
+### Minor Changes
+
+- df42f4b: Every builder of the kit marks what it draws with its origin (`markKitOrigin`, `kitOriginOf`, `unmarkedDrawings` of `game-contracts`): a car of the fleet, a house or wall, a piece of furniture, a person, an animal, a plant, an item (and whether it is still a stand-in shape), a weapon, the street, effects and the room. The test room lists its modules (`room.modules()`), and `tools/kit-audit/scene.mjs` opens each area and fails on anything drawn on the spot instead of coming from the SDK that owns it.
+
+### Patch Changes
+
+- Updated dependencies [df42f4b]
+- Updated dependencies [df42f4b]
+  - @adatechnology/game-audio@0.3.0
+  - @adatechnology/game-contracts@0.15.0
+  - @adatechnology/game-vfx-three@0.3.1
+  - @adatechnology/game-destruction-three@0.8.2
+  - @adatechnology/game-destruction@0.8.2
+  - @adatechnology/game-fluids@0.3.2
+  - @adatechnology/game-fluids-three@0.4.1
+  - @adatechnology/game-vfx@0.4.1
+  - @adatechnology/game-weapons@0.5.1
+
 ## 0.13.0
 
 ### Minor Changes
