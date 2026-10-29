@@ -20,6 +20,9 @@ Antes de construir qualquer coisa (modelo 3D, animação, comportamento, efeito,
   comportamentos e nomes de peças. **Proibido reescrever "parecido"** ou pôr substituto (caixas, placeholder) quando o time já
   entregou a versão real.
 - Não achou nem no SDK nem nas entregas, ou a entrega está incompleta: **pergunte** antes de inventar.
+- **Nada desenhado à mão quando o kit já tem** (dono, 2026-10-29): cenário de sala de teste, área de exemplo, prévia ou cena de jogo
+  usa as peças do kit (móveis, paredes, itens, veículos, plantas) pelo catálogo, nunca caixas ou geometria montada na hora "parecida".
+  Se a peça não existe no kit, ela entra primeiro num pacote do kit e só então é usada.
 - Ao terminar uma migração, atualize o inventário da spec de migração (`specs/`) marcando o que entrou e onde.
 
 ## 2. Motor genérico; conteúdo de cada jogo no repositório do jogo
