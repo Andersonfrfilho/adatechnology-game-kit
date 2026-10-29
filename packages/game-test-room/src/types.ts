@@ -89,6 +89,19 @@ export interface SceneryObject {
   top?: { part: string; y: number }
 }
 
+/** What the room asks when something thrown or set down needs a model: the tool in the hand, the explosive it carries (an id of the arsenal) and how it is used. */
+export interface ProjectileQuery {
+  weapon: string
+  explosive?: string
+  kind: 'grenade' | 'molotov' | 'rocket' | 'charge'
+}
+
+/** A model for a projectile: the object, and the axis along its length (default +y, what the room's own primitives use; a rocket points that axis along its flight). */
+export interface ProjectileModel {
+  model: THREE_NS.Object3D
+  axis?: Vec3
+}
+
 /** The room's tap (a stream of water): how it is drawn and where the water leaves it. */
 export interface SceneryTap {
   /** Draws the tap in its own space (the origin where it stands). */
@@ -142,6 +155,11 @@ export interface TestRoomOptions {
   scenery?: Record<string, SceneryObject | null>
   /** The tap of the room. Omitted: a tap drawn from primitives on a post beside the table; an object: that model (see `SceneryTap`); `null`: no tap. */
   tap?: SceneryTap | null
+  /**
+   * The model of something thrown (a grenade, a molotov, a rocket) or set down (a charge). The room only knows the arsenal's ids, so the host's weapons package
+   * supplies the real model; where it answers nothing the room draws a plain primitive (a sphere, a cylinder, a box).
+   */
+  projectileModel?: (query: ProjectileQuery) => ProjectileModel | null | undefined
   /** Spawn these catalogue ids on start, in a row in front of the player. */
   initial?: string[]
   /** Open on one catalogue group (`furniture`, `structure`, `weapons`…): see `TestRoom.openArea`. */

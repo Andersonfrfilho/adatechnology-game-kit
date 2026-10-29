@@ -7,6 +7,7 @@ import type { Arsenal, Detonation, ExplosiveBody, SurfaceProbe, Use } from '@ada
 import type { HostEvent } from '@adatechnology/game-contracts'
 
 import { segmentTouchesBox } from './segment-box'
+import type { ProjectileModel, ProjectileQuery } from './types'
 
 type Vars = Record<string, string | number>
 type Fire = { temperature: number; radius: number; seconds: number }
@@ -29,6 +30,8 @@ interface Projectile {
   body?: ExplosiveBody | undefined
   /** Points along its velocity (a rocket). */
   aligned?: boolean
+  /** The axis of the mesh that points along its velocity (default +y). */
+  axis?: THREE_NS.Vector3
   /** Set down where it was used: waits for its trigger instead of flying. */
   placed?: boolean
   /** The wire of a charge that waits for a body to cross it, and the bodies already touching it when it was set (they are let out first). */
@@ -82,6 +85,8 @@ export type ExplosivesContext = {
   readonly emitHost: (event: HostEvent) => void
   readonly startFire: (weapon: string, at: Vec3, fire: Fire, isImpact: boolean) => void
   readonly say: (message: string) => void
+  /** The host's model for a projectile or a charge; without it, or when it answers nothing, the room draws a primitive. */
+  readonly projectileModel?: ((query: ProjectileQuery) => ProjectileModel | null | undefined) | undefined
 }
 
 export type Explosives = {
@@ -119,6 +124,19 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     return mesh
   }
 
+  /** Puts the host's model of a projectile in the scene, or undefined when the host has none. */
+  const addModel = (query: ProjectileQuery, at: Vec3): { mesh: THREE_NS.Object3D; axis?: THREE_NS.Vector3 } | undefined => {
+    const custom = context.projectileModel?.(query)
+    if (!custom) return undefined
+    custom.model.position.set(at[0], at[1], at[2])
+    custom.model.traverse((child) => {
+      child.castShadow = true
+    })
+    scene.add(custom.model)
+    meshes.push(custom.model)
+    return { mesh: custom.model, ...(custom.axis ? { axis: new THREE.Vector3(custom.axis[0], custom.axis[1], custom.axis[2]).normalize() } : {}) }
+  }
+
   const remove = (projectile: Projectile): void => {
     for (const extra of projectile.attached ?? []) {
       extra.removeFromParent()
@@ -135,10 +153,11 @@ export function createExplosives(context: ExplosivesContext): Explosives {
   const throwUse = (use: Extract<Use, { kind: 'throw' }>): void => {
     const isMolotov = !!use.fire
     const isRocket = use.trigger === 'impact' && (use.armDistance ?? 0) > 0
-    const geometry = isRocket ? new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8) : isMolotov ? new THREE.CylinderGeometry(0.035, 0.04, 0.2, 8) : new THREE.SphereGeometry(0.045, 8, 6)
-    const mesh = addMesh(geometry, isMolotov ? 0x3b7a3b : isRocket ? 0x6b705c : 0x4b5320, isMolotov ? 0 : 0.4, use.origin)
+    const modeled = addModel({ weapon: context.toolId(), ...(use.explosive !== undefined ? { explosive: use.explosive } : {}), kind: isRocket ? 'rocket' : isMolotov ? 'molotov' : 'grenade' }, use.origin)
+    const mesh = modeled?.mesh ?? addMesh(isRocket ? new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8) : isMolotov ? new THREE.CylinderGeometry(0.035, 0.04, 0.2, 8) : new THREE.SphereGeometry(0.045, 8, 6), isMolotov ? 0x3b7a3b : isRocket ? 0x6b705c : 0x4b5320, isMolotov ? 0 : 0.4, use.origin)
     projectiles.push({
       mesh,
+      ...(modeled?.axis ? { axis: modeled.axis } : {}),
       pos: new THREE.Vector3(use.origin[0], use.origin[1], use.origin[2]),
       vel: new THREE.Vector3(use.velocity[0], use.velocity[1], use.velocity[2]),
       weapon: context.toolId(),
@@ -201,7 +220,8 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     const placed = { ...use, origin: at }
     const body = createExplosiveBody(placed, arsenal.explosives, arsenal.rules.explosives)
     if (!body) return
-    const mesh = addMesh(new THREE.BoxGeometry(0.18, 0.06, 0.1), use.explosive === 'claymore' ? 0x556b2f : 0xc2a878, 0.1, at)
+    const modeled = addModel({ weapon: context.toolId(), explosive: use.explosive, kind: 'charge' }, at)
+    const mesh = modeled?.mesh ?? addMesh(new THREE.BoxGeometry(0.18, 0.06, 0.1), use.explosive === 'claymore' ? 0x556b2f : 0xc2a878, 0.1, at)
     mesh.rotation.y = Math.atan2(use.direction[0], use.direction[2])
     const attached: THREE_NS.Object3D[] = [markerAt(at)]
     const segment = tripwireSegment(placed)
@@ -340,7 +360,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     projectile.pos.set(body.position[0], body.position[1], body.position[2])
     projectile.mesh.position.copy(projectile.pos)
     if (projectile.aligned && body.velocity[0] ** 2 + body.velocity[1] ** 2 + body.velocity[2] ** 2 > 1e-6) {
-      projectile.mesh.quaternion.setFromUnitVectors(up, new THREE.Vector3(body.velocity[0], body.velocity[1], body.velocity[2]).normalize())
+      projectile.mesh.quaternion.setFromUnitVectors(projectile.axis ?? up, new THREE.Vector3(body.velocity[0], body.velocity[1], body.velocity[2]).normalize())
     } else if (!projectile.placed) projectile.mesh.rotation.x += dt * 8
     for (const event of events) {
       if (event.type === 'dud') action('dud', translate('act.dud', { weapon: context.toolName(projectile.weapon), distance: format(body.travelled, 1) }), { data: { weapon: projectile.weapon, point: event.point } })

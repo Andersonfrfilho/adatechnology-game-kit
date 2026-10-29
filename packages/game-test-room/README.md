@@ -93,6 +93,10 @@ A `SceneryObject` is `{ spec, position?, rotationY?, colors?, build?, label?, to
 
 `tap` is the room's water tap: omitted, the room draws a post with an arm beside the table; `{ build(THREE), spout, position?, rotationY? }` puts the host's model there (the origin where it stands, `spout` where the water leaves it; by default it stands on the table top with the spout over its right half); `null` removes it.
 
+## Models of thrown and placed explosives
+
+The room knows the arsenal's ids, not the weapons' models. `projectileModel({ weapon, explosive, kind })` (`kind`: `grenade`, `molotov`, `rocket` or `charge`) is the host's hook: it answers `{ model, axis? }` (`axis`: the length of the model, default +y; a rocket points it along its flight) or `null`, and the room draws a plain primitive (a sphere, a cylinder, a box) only where it answers nothing. `@adatechnology/game-weapons-three` has one: `projectileModel(THREE, query)`.
+
 ## Loading a module
 
 A game module hands the room a `TestableModule` from `@adatechnology/game-contracts` (items, each with an optional `impl` for its own destruction and `animations`, plus scenarios):

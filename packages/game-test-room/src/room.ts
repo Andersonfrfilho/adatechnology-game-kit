@@ -1164,6 +1164,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     emitHost,
     startFire,
     say,
+    projectileModel: options.projectileModel,
   })
 
   // ----- the trigger
