@@ -13,7 +13,7 @@
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import { buildWallSpecimen } from '@adatechnology/game-floorplan-structure'
-import { buildSpecimenMeshes, furnitureSpec } from '@adatechnology/game-floorplan-three'
+import { buildSpecimenMeshes, furnitureSpec, tapSpec } from '@adatechnology/game-floorplan-three'
 import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
 
 // build.mjs defines __ROOM_FULL__: true on the default page (the teams' content is loaded after this script), false on the bare room the other areas build over
@@ -51,6 +51,8 @@ function brickWall(cols, rows, cw, ch) {
 const wallSpec = brickWall(8, 6, 1.25, 0.5)
 const table = furnitureSpec(THREE, 'dining_table', { w: 1.6, d: 0.8, h: 0.78, options: { chairs: false } })
 const shelf = furnitureSpec(THREE, 'bookcase')
+// the water tap is the team's counter tap (the sink's), standing on the table top
+const tap = tapSpec(THREE)
 const scenery = {
   target_wall: { spec: wallSpec, position: [0, 0, -11], build: (T) => buildSpecimenMeshes(T, wallSpec) },
   table: { spec: table.spec, position: [3.5, 0, 0], build: table.build, top: table.top },
@@ -63,6 +65,7 @@ const room = createTestRoom({
   locale,
   catalog: [],
   scenery,
+  tap: { build: tap.build, spout: tap.spout },
   quality,
   arenaSize: arena >= 14 && arena <= 200 ? arena : undefined,
   ui: params.get('ui') !== '0',
