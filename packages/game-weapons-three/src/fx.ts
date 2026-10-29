@@ -1,4 +1,4 @@
-import type { HostEvent, HostTool } from '@adatechnology/game-contracts'
+import type { HandTargets, HostEvent, HostTool } from '@adatechnology/game-contracts'
 import { createBoxFx } from './box-fx'
 import type { WeaponFxOptions } from './box-fx'
 import { hasWeaponModel } from './models'
@@ -16,6 +16,8 @@ export interface WeaponFx {
   update(dt: number): void
   /** Dresses the weapon for its wear (`new`, `used`, `worn`, `rusty`); the gallery models show it in their metal. */
   setCondition(condition: string): void
+  /** Where the hands take the weapon (world space, read every frame after `update`): the grip and the forend of the model, or the handle of the generic prop; null with nothing in the hands. */
+  handTargets(): HandTargets | null
   /** What is drawn (casings, magazines, muzzle flash): change a field and the next event follows it. */
   readonly layers: FxLayers
   /** Weapon shown in the hands, or null. */
@@ -48,10 +50,11 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
     ...(options.raycast ? { raycast: options.raycast } : {}),
     ...(options.effects ? { effects: options.effects } : {}),
+    ...(options.flyRocket === undefined ? {} : { flyRocket: options.flyRocket }),
   })
   return {
     handle(event, tool) {
-      if (event.type === 'explosion') return
+      if (event.type === 'explosion' || event.type === 'player') return
       if (event.type === 'tool') {
         if (hasWeaponModel(event.weapon)) box.unequip()
         else model.unequip()
@@ -64,6 +67,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
       model.update(dt)
     },
     setCondition: (condition) => model.setCondition(condition),
+    handTargets: () => model.handTargets() ?? box.handTargets(),
     layers,
     get inHand() {
       return model.inHand ?? box.inHand

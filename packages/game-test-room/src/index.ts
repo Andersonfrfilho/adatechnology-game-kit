@@ -1,4 +1,5 @@
 export { createTestRoom } from './room'
+export { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS } from './avatar'
 export { brickWallSpec } from './items'
 export { buildFromSpec, MATERIAL_COLORS } from './build-from-spec'
 export { createLog } from './log'

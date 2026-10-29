@@ -588,6 +588,7 @@
     "dragPer100m": 0.12,
     "kind": "arrow",
     "noise": 20,
+    "propellant": "none",
     "sources": [
       "sdk"
     ]
@@ -601,6 +602,7 @@
     "dragPer100m": 0.12,
     "kind": "bolt",
     "noise": 25,
+    "propellant": "none",
     "sources": [
       "sdk"
     ]
@@ -647,6 +649,28 @@
     "sources": [
       "reference",
       "derived"
+    ]
+  },
+  {
+    "id": "45_70_bp",
+    "label": ".45-70 Government (black powder)",
+    "diameter": 11.43,
+    "bulletGrams": 26.2,
+    "muzzleSpeed": 400,
+    "dragPer100m": 0.09,
+    "kind": "fmj",
+    "noise": 350,
+    "caseType": "rifle",
+    "rim": "rimmed",
+    "propellant": "black_powder",
+    "cartridge": {
+      "caseDiameter": 12.07,
+      "overallLength": 66.5,
+      "caseLength": 53.3,
+      "projectileDiameter": 11.43
+    },
+    "sources": [
+      "sdk"
     ]
   }
 ]

@@ -65,6 +65,39 @@ The room used to ship 19 procedural box/cylinder items (`demoItems`, `DEMO_ITEMS
 - `room.scenarios` is empty until the host passes `scenarios` or a module brings its own. The destruction checks the removed ones made (steel sheet, glass, concrete, fire, collapse) are covered by the tests of `game-destruction`, `game-fluids` and the module scenarios of the content packages.
 - A test that needs a throwaway item should define it in its own fixture (see `tests/fixtures/demo-items.ts`, not exported).
 
+## Scenery
+
+The arena holds three destructible pieces by default, hand-made from boxes: `target_wall` (a brick wall of 48 panels at z = -11), `table` (with the water tap on a post beside it, at x = 3.5) and `shelf` (x = -3.5). `scenery` is a registry keyed by arena object id, so a host can use its own pieces without touching the room:
+
+| `scenery[id]` | Effect |
+|---|---|
+| a key of a default (`target_wall`, `table`, `shelf`) | replaces that piece; `position` defaults to the replaced one's |
+| `null` | removes the piece (no table: no tap either) |
+| a new key | adds a piece; `position` is required |
+
+```ts
+createTestRoom({ ..., scenery: {
+  target_wall: { spec: wallSpec, position: [0, 0, -11], build: (THREE) => drawWall(THREE) },
+  table: { spec: tableSpec, build: drawTable, top: { part: 'wood_0', y: 0.78 } },
+  crate: { spec: crateSpec, position: [0, 0, -4], rotationY: 0.4, label: 'Crate' },
+  shelf: null,
+} })
+```
+
+A `SceneryObject` is `{ spec, position?, rotationY?, colors?, build?, label?, top? }`:
+
+- `spec`: the `DestructibleSpec` the world is given. The player collider is the footprint of its parts (what lies lower than 10 cm is walked over); the `target_wall` collider also closes the arena behind the wall.
+- `build(THREE)`: draws the piece as a group whose meshes are named by part id (`userData.destructionPart` too), like `buildFromSpec` does. Without it the room draws one plain mesh per part with `buildFromSpec` and `colors`.
+- `top: { part, y }`: loose things rest on that part's footprint at height `y` while the part stands (`room.groundAt`), and liquids pool on it. The tap stands beside the `table` top.
+- `spout`: where a water tap of the piece pours (a sink, a tub), in the spec's space. The room's tap pours from the first piece that has one, so the piece's own model is the tap; without one the tap stands on the `table` top (see `tap` below).
+- `label`: the name in the inspector and the log (the defaults are translated).
+
+`tap` is the room's water tap: omitted, the room draws a post with an arm beside the table; `{ build(THREE), spout, position?, rotationY? }` puts the host's model there (the origin where it stands, `spout` where the water leaves it; by default it stands on the table top with the spout over its right half); `null` removes it.
+
+## Models of thrown and placed explosives
+
+The room knows the arsenal's ids, not the weapons' models. `projectileModel({ weapon, explosive, kind })` (`kind`: `grenade`, `molotov`, `rocket` or `charge`) is the host's hook: it answers `{ model, axis? }` (`axis`: the length of the model, default +y; a rocket points it along its flight) or `null`, and the room draws a plain primitive (a sphere, a cylinder, a box) only where it answers nothing. `@adatechnology/game-weapons-three` has one: `projectileModel(THREE, query)`.
+
 ## Loading a module
 
 A game module hands the room a `TestableModule` from `@adatechnology/game-contracts` (items, each with an optional `impl` for its own destruction and `animations`, plus scenarios):
@@ -146,10 +179,14 @@ interface RoomAvatar {
   root: Object3D
   update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; armed: boolean; pitch: number }): void
   hand?(side: 'R' | 'L'): Object3D
+  firstPerson?: { root: Object3D; update(dt: number, state: { camera: Object3D; targets: HandTargets | null; stance: string; speed: number; running: boolean; crouch: boolean }): void }
+  strike?(clipId: string): number | null
 }
 ```
 
 Every frame the room puts `root` at the player's feet turned to where the player looks (the body's front is +z, as the catalogue items'; `rotation.y` is the yaw plus pi) and calls `update` with the ground speed of the player's movement, Shift, `armed` (a firearm is the tool in hand) and the camera `pitch` (radians, positive looking up). `crouch` and `down` are not known to the room: a player module sets them with `room.setAvatarState({ crouch, down })` (`avatarState()` reads them back). `@adatechnology/game-characters-three` has such a body: `toRoomAvatar(createPlayerAvatar(THREE))`.
+
+**First-person arms and strikes.** An avatar may carry `firstPerson` (arms drawn in the camera's space; the room shows them only in the first person, updates them every frame after the modules' frame hooks and hands them where the tool in the hands asks the hands to be) and `strike(clipId)`. The hand targets come from the module that places the tool (`host.setHandTargets(source)`, `HandTargets` of `@adatechnology/game-contracts`: world-space poses of the right and left hand plus the grip closure and the size of the hands), else from the carried item, else null; the stance is `hold` when there are targets, else `handStances[toolId]` (default `{ fists: 'fists' }`) or `relaxed`. A melee strike (`fists`, `shove`, Shift+V kick) no longer lands at the click: the room calls `avatar.strike(strikeClips[toolId])` (default `{ fists: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }`), which plays the clip on the arms and on the body and answers the seconds to its impact, writes a `strike` line to the log, and calls the existing `meleeUse` at that second with the aim read again. A tool without a clip, or an avatar that answers null, keeps the instant blow; a strike pending blocks the same tool. `toRoomAvatar(createPlayerAvatar(THREE))` already gives all of it (`firstPerson: false` for no arms).
 
 `room.setCameraMode('first' | 'third')` (option `cameraMode`, property `cameraMode`, event `room.on('camera', fn)`; every change is a `camera` action in the log). V toggles it when a body is set. In `first` the body is hidden; in `third` it is shown, the camera stands over the shoulder, and a carried item rides `avatar.hand('R')` instead of the camera frame. Option `thirdPerson` changes the view; the defaults are the team game's shoulder camera (`zombiada-modo-livre.html`, `cameraUpdate`, line 76546): `back` 3.8 m, `side` 0.9 m to the right, `up` 1.95 m (`crouchUp` 1.4 m), `lift` 0.1 m, three probe rays (`probes` 0 and +-0.2 m) that pull the camera in `margin` 0.3 m short of a wall (never closer than `minDistance` 0.2 m) and let it out at `recover` 4 per second.
 
@@ -184,7 +221,7 @@ automáticos conferem o resultado e gravam aprovado/reprovado no mesmo registro.
 Um módulo que declara controles, camadas ou contadores ganha um painel de bancada genérico; o estado vai para a URL do exemplo (`?bench.<idDoMódulo>=`) e
 `room.bench()` / `room.metrics()` dirigem e leem a bancada por script.
 
-Corpo do jogador: `room.setAvatar(corpo)` põe um corpo (qualquer objeto no formato `RoomAvatar`) nos pés do jogador; `room.setCameraMode('first' | 'third')` e a tecla V alternam entre 1ª e 3ª pessoa (câmera sobre o ombro com os números do jogo da equipe, puxada para perto de paredes). `room.setAvatarState({ crouch, down })` deixa um módulo de jogador agachar e derrubar o corpo. Com corpo, V alterna a câmera e Shift+V chuta.
+Corpo do jogador: `room.setAvatar(corpo)` põe um corpo (qualquer objeto no formato `RoomAvatar`) nos pés do jogador; `room.setCameraMode('first' | 'third')` e a tecla V alternam entre 1ª e 3ª pessoa (câmera sobre o ombro com os números do jogo da equipe, puxada para perto de paredes). `room.setAvatarState({ crouch, down })` deixa um módulo de jogador agachar e derrubar o corpo. Com corpo, V alterna a câmera e Shift+V chuta. Em primeira pessoa o corpo pode trazer braços e mãos (`avatar.firstPerson`) que seguram a arma onde o módulo manda (`host.setHandTargets`): mão direita no punho, esquerda no guarda-mão, as duas na pistola, esquerda ao carregador na recarga; sem nada na mão ficam relaxadas, e `fists` levanta os punhos. Soco, empurrão e chute tocam o clipe (`avatar.strike`, opção `strikeClips`) e o efeito só acontece no instante do impacto, não no clique; um golpe pendente bloqueia a mesma ferramenta.
 
 ## Known limitations
 

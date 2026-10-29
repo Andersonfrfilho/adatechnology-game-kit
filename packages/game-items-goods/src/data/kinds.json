@@ -1,0 +1,869 @@
+[
+  {
+    "id": "item",
+    "abstract": true,
+    "requires": [
+      "physical",
+      "destructible",
+      "impact"
+    ],
+    "defaults": {
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true
+      }
+    }
+  },
+  {
+    "id": "consumable",
+    "extends": "item",
+    "abstract": true,
+    "defaults": {
+      "leftover": "none"
+    }
+  },
+  {
+    "id": "food_ready",
+    "extends": "consumable",
+    "requires": [
+      "edible",
+      "use_animation",
+      "leftover"
+    ],
+    "defaults": {
+      "lootCategory": [
+        "food"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "flesh_fruit"
+        }
+      ],
+      "impact": {
+        "response": "squash",
+        "pushImpulse": true
+      },
+      "use": {
+        "clip": "eat_food",
+        "sounds": [
+          "chew"
+        ]
+      },
+      "rawEffect": {
+        "sickChance": 0
+      }
+    }
+  },
+  {
+    "id": "canned_food",
+    "extends": "food_ready",
+    "defaults": {
+      "parts": [
+        {
+          "id": "body",
+          "material": "steel",
+          "thickness": 0.0002
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true,
+        "shed": false
+      },
+      "use": {
+        "clip": "open_can_eat",
+        "sounds": [
+          "can_open",
+          "chew"
+        ]
+      },
+      "leftover": {
+        "item": "empty_can",
+        "despawnSeconds": 600
+      }
+    }
+  },
+  {
+    "id": "food_improves_cooked",
+    "extends": "consumable",
+    "requires": [
+      "edible",
+      "use_animation",
+      "leftover"
+    ],
+    "defaults": {
+      "lootCategory": [
+        "food"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "flesh_fruit"
+        }
+      ],
+      "impact": {
+        "response": "squash",
+        "pushImpulse": true
+      },
+      "use": {
+        "clip": "eat_food",
+        "sounds": [
+          "chew"
+        ]
+      },
+      "rawEffect": {
+        "sickChance": 0.05
+      }
+    }
+  },
+  {
+    "id": "food_needs_prep",
+    "extends": "consumable",
+    "requires": [
+      "edible",
+      "use_animation",
+      "leftover",
+      "preparation"
+    ],
+    "defaults": {
+      "lootCategory": [
+        "food"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "flesh_fruit"
+        }
+      ],
+      "impact": {
+        "response": "squash",
+        "pushImpulse": true
+      },
+      "use": {
+        "clip": "eat_food",
+        "sounds": [
+          "chew"
+        ]
+      },
+      "rawEffect": {
+        "sickChance": 0.5
+      }
+    }
+  },
+  {
+    "id": "ingredient",
+    "extends": "consumable",
+    "requires": [
+      "edible",
+      "recipe_input"
+    ],
+    "defaults": {
+      "lootCategory": [
+        "food"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "flesh_fruit"
+        }
+      ],
+      "impact": {
+        "response": "squash",
+        "pushImpulse": true
+      },
+      "rawEffect": {
+        "sickChance": 0
+      }
+    }
+  },
+  {
+    "id": "drink_ready",
+    "extends": "consumable",
+    "requires": [
+      "edible",
+      "use_animation",
+      "leftover",
+      "liquid_container"
+    ],
+    "defaults": {
+      "lootCategory": [
+        "drink"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "plastic",
+          "thickness": 0.0004
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true
+      },
+      "use": {
+        "clip": "drink",
+        "sounds": [
+          "gulp"
+        ]
+      },
+      "leftover": {
+        "item": "pet_bottle",
+        "despawnSeconds": 600
+      },
+      "rawEffect": {
+        "sickChance": 0
+      }
+    }
+  },
+  {
+    "id": "canned_drink",
+    "extends": "drink_ready",
+    "defaults": {
+      "parts": [
+        {
+          "id": "body",
+          "material": "aluminium",
+          "thickness": 0.0001
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true,
+        "shed": false
+      },
+      "use": {
+        "clip": "open_can_drink",
+        "sounds": [
+          "can_open",
+          "gulp"
+        ]
+      },
+      "leftover": {
+        "item": "empty_can",
+        "despawnSeconds": 600
+      }
+    }
+  },
+  {
+    "id": "drink_untreated",
+    "extends": "consumable",
+    "requires": [
+      "edible",
+      "use_animation",
+      "leftover",
+      "liquid_container",
+      "preparation"
+    ],
+    "defaults": {
+      "lootCategory": [
+        "drink"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "plastic",
+          "thickness": 0.0004
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true
+      },
+      "use": {
+        "clip": "drink",
+        "sounds": [
+          "gulp"
+        ]
+      },
+      "leftover": {
+        "item": "pet_bottle",
+        "despawnSeconds": 600
+      },
+      "rawEffect": {
+        "sickChance": 0.4
+      }
+    }
+  },
+  {
+    "id": "medicine",
+    "extends": "consumable",
+    "requires": [
+      "use_animation",
+      "leftover"
+    ],
+    "defaults": {
+      "lootCategory": [
+        "medical"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "paper",
+          "thickness": 0.0005
+        }
+      ],
+      "impact": {
+        "response": "tear",
+        "pushImpulse": true
+      },
+      "use": {
+        "clip": "take_medicine",
+        "sounds": [
+          "pill_shake"
+        ]
+      }
+    }
+  },
+  {
+    "id": "first_aid",
+    "extends": "medicine",
+    "defaults": {
+      "parts": [
+        {
+          "id": "body",
+          "material": "fabric"
+        }
+      ],
+      "use": {
+        "clip": "apply_dressing",
+        "sounds": [
+          "cloth_rip"
+        ]
+      }
+    }
+  },
+  {
+    "id": "container",
+    "extends": "item",
+    "abstract": true
+  },
+  {
+    "id": "packaging",
+    "extends": "container",
+    "abstract": true
+  },
+  {
+    "id": "metal_can",
+    "extends": "packaging",
+    "defaults": {
+      "lootCategory": [
+        "materials",
+        "tools"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "steel",
+          "thickness": 0.0002
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true,
+        "shed": false
+      }
+    }
+  },
+  {
+    "id": "glass_bottle",
+    "extends": "packaging",
+    "defaults": {
+      "lootCategory": [
+        "materials"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "glass",
+          "thickness": 0.003
+        }
+      ],
+      "impact": {
+        "response": "shatter",
+        "pushImpulse": true,
+        "shed": true
+      }
+    }
+  },
+  {
+    "id": "plastic_bottle",
+    "extends": "packaging",
+    "defaults": {
+      "lootCategory": [
+        "materials"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "plastic",
+          "thickness": 0.0004
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true,
+        "shed": false
+      }
+    }
+  },
+  {
+    "id": "jar",
+    "extends": "packaging",
+    "defaults": {
+      "lootCategory": [
+        "materials"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "glass",
+          "thickness": 0.004
+        }
+      ],
+      "impact": {
+        "response": "shatter",
+        "pushImpulse": true,
+        "shed": true
+      }
+    }
+  },
+  {
+    "id": "cookware",
+    "extends": "container",
+    "requires": [
+      "heat_resistant"
+    ],
+    "defaults": {
+      "lootCategory": [
+        "tools"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "steel",
+          "thickness": 0.002
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true
+      }
+    }
+  },
+  {
+    "id": "tableware",
+    "extends": "container",
+    "defaults": {
+      "lootCategory": [
+        "tools"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "ceramic",
+          "thickness": 0.004
+        }
+      ],
+      "impact": {
+        "response": "shatter",
+        "pushImpulse": true,
+        "shed": true
+      }
+    }
+  },
+  {
+    "id": "tank",
+    "extends": "container",
+    "requires": [
+      "liquid_container"
+    ],
+    "defaults": {
+      "lootCategory": [
+        "tools",
+        "outdoors"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "plastic",
+          "thickness": 0.003
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true
+      }
+    }
+  },
+  {
+    "id": "weapon",
+    "extends": "item",
+    "abstract": true,
+    "defaults": {
+      "lootCategory": [
+        "melee"
+      ]
+    }
+  },
+  {
+    "id": "melee",
+    "extends": "weapon",
+    "requires": [
+      "weapon"
+    ],
+    "defaults": {
+      "parts": [
+        {
+          "id": "body",
+          "material": "steel",
+          "thickness": 0.004
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true
+      }
+    }
+  },
+  {
+    "id": "ranged",
+    "extends": "weapon",
+    "requires": [
+      "weapon"
+    ],
+    "defaults": {
+      "parts": [
+        {
+          "id": "body",
+          "material": "wood_hard",
+          "thickness": 0.02
+        }
+      ],
+      "impact": {
+        "response": "break",
+        "pushImpulse": true
+      }
+    }
+  },
+  {
+    "id": "firearm",
+    "extends": "weapon",
+    "requires": [
+      "weapon"
+    ],
+    "defaults": {
+      "parts": [
+        {
+          "id": "body",
+          "material": "steel",
+          "thickness": 0.004
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true
+      }
+    }
+  },
+  {
+    "id": "ammo",
+    "extends": "weapon",
+    "requires": [
+      "weapon"
+    ],
+    "defaults": {
+      "parts": [
+        {
+          "id": "body",
+          "material": "steel",
+          "thickness": 0.002
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true
+      }
+    }
+  },
+  {
+    "id": "throwable",
+    "extends": "weapon",
+    "requires": [
+      "weapon"
+    ],
+    "defaults": {
+      "parts": [
+        {
+          "id": "body",
+          "material": "steel",
+          "thickness": 0.003
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true
+      }
+    }
+  },
+  {
+    "id": "wearable",
+    "extends": "item",
+    "abstract": true
+  },
+  {
+    "id": "clothing",
+    "extends": "wearable",
+    "requires": [
+      "wearable"
+    ],
+    "defaults": {
+      "lootCategory": [
+        "clothing"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "fabric",
+          "thickness": 0.002
+        }
+      ],
+      "impact": {
+        "response": "tear",
+        "pushImpulse": false
+      }
+    }
+  },
+  {
+    "id": "bag",
+    "extends": "wearable",
+    "requires": [
+      "wearable"
+    ],
+    "defaults": {
+      "lootCategory": [
+        "bags"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "fabric",
+          "thickness": 0.002
+        }
+      ],
+      "impact": {
+        "response": "tear",
+        "pushImpulse": false
+      }
+    }
+  },
+  {
+    "id": "equipment",
+    "extends": "item",
+    "abstract": true
+  },
+  {
+    "id": "tool",
+    "extends": "equipment",
+    "defaults": {
+      "lootCategory": [
+        "tools",
+        "outdoors",
+        "medical",
+        "collectibles",
+        "electronics"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "steel",
+          "thickness": 0.003
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true
+      }
+    }
+  },
+  {
+    "id": "electronics",
+    "extends": "equipment",
+    "requires": [
+      "battery"
+    ],
+    "defaults": {
+      "lootCategory": [
+        "electronics",
+        "tools",
+        "fuel"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "plastic",
+          "thickness": 0.002
+        }
+      ],
+      "impact": {
+        "response": "break",
+        "pushImpulse": true
+      }
+    }
+  },
+  {
+    "id": "fuel",
+    "extends": "equipment",
+    "requires": [
+      "liquid_container"
+    ],
+    "defaults": {
+      "lootCategory": [
+        "fuel"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "plastic",
+          "thickness": 0.002
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true
+      }
+    }
+  },
+  {
+    "id": "camping",
+    "extends": "equipment",
+    "defaults": {
+      "lootCategory": [
+        "tools",
+        "outdoors",
+        "fuel",
+        "electronics",
+        "clothing"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "fabric",
+          "thickness": 0.002
+        }
+      ],
+      "impact": {
+        "response": "tear",
+        "pushImpulse": false
+      }
+    }
+  },
+  {
+    "id": "material_misc",
+    "extends": "item",
+    "abstract": true
+  },
+  {
+    "id": "material",
+    "extends": "material_misc",
+    "defaults": {
+      "lootCategory": [
+        "materials",
+        "outdoors"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "wood_soft",
+          "thickness": 0.02
+        }
+      ],
+      "impact": {
+        "response": "break",
+        "pushImpulse": true
+      }
+    }
+  },
+  {
+    "id": "book",
+    "extends": "material_misc",
+    "defaults": {
+      "lootCategory": [
+        "books",
+        "collectibles"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "paper",
+          "thickness": 0.005
+        }
+      ],
+      "impact": {
+        "response": "tear",
+        "pushImpulse": false
+      }
+    }
+  },
+  {
+    "id": "key",
+    "extends": "material_misc",
+    "defaults": {
+      "lootCategory": [
+        "keys"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "steel",
+          "thickness": 0.002
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true
+      }
+    }
+  },
+  {
+    "id": "collectible",
+    "extends": "material_misc",
+    "defaults": {
+      "lootCategory": [
+        "collectibles"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "paper",
+          "thickness": 0.001
+        }
+      ],
+      "impact": {
+        "response": "tear",
+        "pushImpulse": false
+      }
+    }
+  },
+  {
+    "id": "hygiene",
+    "extends": "material_misc",
+    "defaults": {
+      "lootCategory": [
+        "medical",
+        "clothing"
+      ],
+      "parts": [
+        {
+          "id": "body",
+          "material": "plastic",
+          "thickness": 0.001
+        }
+      ],
+      "impact": {
+        "response": "dent",
+        "pushImpulse": true
+      }
+    }
+  }
+]

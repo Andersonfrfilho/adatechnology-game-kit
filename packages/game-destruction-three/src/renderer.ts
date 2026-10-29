@@ -12,7 +12,8 @@ import type { Bound, HostVis, MeshVis, PartVis, PieceBody } from './internal'
 import { clamp, createRng, hashNumbers, hashString, mixHex } from './math'
 import { PieceSystem } from './pieces'
 import { RebarCages } from './rebar'
-import { partHintOf } from './spec'
+import { partHintOf, specFrameInverse } from './spec'
+import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { DestructionRenderer, BindOptions, ExplodeOptions, Mesh, MeshRange, Object3D, Piece, RendererOptions, ThreeNamespace } from './types'
 import { Visuals } from './visual'
 
@@ -283,13 +284,13 @@ class Renderer implements DestructionRenderer {
       specParts = undefined
     }
     if (!specParts) return
-    root.updateMatrixWorld(true)
+    const frame = specFrameInverse(this.THREE, root)
     const e = new this.THREE.Euler()
     const q = new this.THREE.Quaternion()
     for (const m of meshes) {
       this.box.setFromObject(m)
       if (this.box.isEmpty()) continue
-      const c = root.worldToLocal(this.box.getCenter(this.v1))
+      const c = this.box.getCenter(this.v1).applyMatrix4(frame)
       let best: PartSpec | null = null
       let bestVol = Infinity
       for (const p of specParts) {
@@ -329,10 +330,9 @@ class Renderer implements DestructionRenderer {
   // Pieces
   // ----------------------------------------------------------------------------------------------------------------------------------
 
-  /** Half extents and centre of the box around some meshes, in the local space of `root`. */
+  /** Half extents and centre of the box around some meshes, in the metric frame of `root` (its pose removed, its scale kept). */
   private measure(root: Object3D, meshes: MeshVis[]): { half: Vec3; center: THREE_NS.Vector3 } {
-    root.updateMatrixWorld(true)
-    const inv = root.matrixWorld.clone().invert()
+    const inv = specFrameInverse(this.THREE, root)
     const total = new this.THREE.Box3()
     const m4 = new this.THREE.Matrix4()
     const lb = new this.THREE.Box3()
@@ -703,10 +703,9 @@ class Renderer implements DestructionRenderer {
     const def = this.world.materials.get(pv.material)
     const wp = new this.THREE.Vector3(ev.worldPoint[0], ev.worldPoint[1], ev.worldPoint[2])
     const wn = this.worldDir(b, ev.dent.normal)
-    for (const mv of pv.meshes) {
-      if (!this.visuals.shown(mv)) continue
-      this.visuals.applyDent(mv, wp, wn, ev.dent)
-    }
+    const shown = pv.meshes.filter((mv) => this.visuals.shown(mv))
+    const reach = shown.reduce((widest, mv) => Math.max(widest, this.visuals.dentReach(mv, wp, ev.dent)), ev.dent.radius)
+    this.visuals.applyPartDent(shown, wp, wn, ev.dent, reach)
     if (def?.tags?.includes('metal')) this.vfx.burst('sparks', ev.worldPoint, [wn.x, wn.y, wn.z], 4 + Math.min(8, ev.dent.depth * 150), 3.2)
     this.sound(impactKey(def), ev.worldPoint, clamp(0.3 + ev.dent.depth * 12, 0.3, 1))
   }
@@ -1199,11 +1198,36 @@ class Renderer implements DestructionRenderer {
     return puffs + sparks + glows + chunks
   }
 
+  // The last warm-up keeps its materials until the next one: a material that does not use lights keeps the program of the lights it was first drawn with, so each warm-up needs materials of its own.
+  private warmProbes: { readonly group: THREE_NS.Group; readonly geometry: THREE_NS.BufferGeometry; readonly materials: THREE_NS.Material[] } | undefined
+
+  warmUpProbes(): WarmUpProbes {
+    this.releaseWarmProbes()
+    const { kit } = this.visuals
+    const T = this.THREE
+    const geometry = new T.BufferGeometry()
+    geometry.setAttribute('position', new T.BufferAttribute(new Float32Array(6), 3))
+    const materials = [kit.discMaterial().clone(), kit.patchMaterial(0x808080).clone(), kit.lineMaterial(0x000000).clone()]
+    const group = new T.Group()
+    group.add(new T.Mesh(kit.discGeometry(), materials[0]), new T.Mesh(kit.discGeometry(), materials[1]), new T.LineSegments(geometry, materials[2] as THREE_NS.LineBasicMaterial))
+    for (const probe of group.children) probe.frustumCulled = false
+    this.warmProbes = { group, geometry, materials }
+    return { group, dispose: () => {} }
+  }
+
+  private releaseWarmProbes(): void {
+    if (!this.warmProbes) return
+    this.warmProbes.geometry.dispose()
+    for (const material of this.warmProbes.materials) material.dispose()
+    this.warmProbes = undefined
+  }
+
   rebarCount(): number {
     return this.cages.count
   }
 
   dispose(): void {
+    this.releaseWarmProbes()
     if (this.disposed) return
     this.unsubscribe()
     this.clear()

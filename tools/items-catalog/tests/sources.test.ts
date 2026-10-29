@@ -57,14 +57,17 @@ describe('items against the team catalog', () => {
     for (const source of sdkIteItems(sources)) {
       const record = outputOf(source.id)
       const rarityId = sources.decisions.rarityMap[source.rar]?.value
-      expect(record.weight, `${source.id} kg`).toBe(source.kg)
+      // What the kinds filled from the real world (`estimated`, see kinds-overlay.json) is not the team's number: the team's stays checked everywhere else.
+      const estimated = (record as ItemRecord & { estimated?: string[] }).estimated ?? []
+      const team = (field: string): boolean => !estimated.includes(field)
+      if (team('weight')) expect(record.weight, `${source.id} kg`).toBe(source.kg)
       expect(record.rarity, `${source.id} rarity`).toBe(rarityId)
       expect(record.finds?.places.length ?? 0, `${source.id} places`).toBe(source.onde.length)
-      expect(record.shelfLife, `${source.id} v`).toBe(source.v ?? undefined)
+      if (team('shelfLife')) expect(record.shelfLife, `${source.id} v`).toBe(source.v ?? undefined)
       expect(record.portions, `${source.id} p`).toBe(source.p)
-      expect(record.nutrition?.satiety, `${source.id} f`).toBe(source.f)
-      expect(record.nutrition?.hydration, `${source.id} s`).toBe(source.s)
-      expect(record.cookable ?? false, `${source.id} ck`).toBe(Boolean(source.ck))
+      if (team('nutrition')) expect(record.nutrition?.satiety, `${source.id} f`).toBe(source.f)
+      if (team('nutrition')) expect(record.nutrition?.hydration, `${source.id} s`).toBe(source.s)
+      if (team('cookable')) expect(record.cookable ?? false, `${source.id} ck`).toBe(Boolean(source.ck))
       expect(record.protection?.bite, `${source.id} bm`).toBe(source.bm === undefined ? undefined : source.bm / 100)
       expect(record.protection?.scratch, `${source.id} ar`).toBe(source.ar === undefined ? undefined : source.ar / 100)
       expect(record.carry?.capacityKg, `${source.id} cap`).toBe(source.cap)

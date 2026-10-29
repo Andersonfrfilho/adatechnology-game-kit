@@ -72,9 +72,16 @@ export type PlayPoseOptions = {
   blend?: number
 }
 
+/** The colours the body was drawn with, for whatever has to match it (the first-person arms): skin, shirt, trousers and shoes as 0xRRGGBB, and whether the sleeves cover the forearms. */
+export type PlayerAvatarColors = { skin: number; shirt: number; trousers: number; shoes: number; longSleeves: boolean }
+
 export type PlayerAvatar = {
   root: THREE_NS.Object3D
   rig: RichRig
+  /** What the body wears, read from the body itself. */
+  readonly colors: PlayerAvatarColors
+  /** The three.js namespace the body was made with, so what is made to fit it (the first-person arms) uses the same one. */
+  readonly three: Three
   update(dt: number, state?: AvatarUpdate): void
   play(clip: string | PoseClip, options?: PlayPoseOptions): void
   stop(): void
@@ -115,6 +122,19 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
   const tilt = new THREE.Group()
   tilt.add(body)
   root.add(tilt)
+  const colorOf = (object: THREE_NS.Object3D | undefined): number | undefined => ((object as THREE_NS.Mesh | undefined)?.material as THREE_NS.MeshLambertMaterial | undefined)?.color?.getHex()
+  const meshesOf = (node: THREE_NS.Object3D): THREE_NS.Mesh[] => node.children.filter((child) => (child as THREE_NS.Mesh).isMesh) as THREE_NS.Mesh[]
+  // the trousers are the first mesh of the thigh, the shoe the flattened long ball on the shin, the sleeve (or the skin of a bare arm) the first mesh of the forearm
+  const shirt = options.shirtColor ?? hexOf(preset.shirtColor)
+  const shoe = meshesOf(rig.legs[0]!.kn as unknown as THREE_NS.Object3D).find((mesh) => mesh.scale.z > 1.5)
+  const forearm = colorOf(meshesOf(rig.arms[1]!.el as unknown as THREE_NS.Object3D)[0])
+  const colors: PlayerAvatarColors = {
+    skin: Number(spec.skin),
+    shirt,
+    trousers: colorOf(meshesOf(rig.legs[0]!.g as unknown as THREE_NS.Object3D)[0]) ?? 0x2d3440,
+    shoes: colorOf(shoe) ?? 0x1c1a1a,
+    longSleeves: forearm === shirt,
+  }
   const sockets = { R: new THREE.Object3D(), L: new THREE.Object3D() }
   // arms[0] is at +x (the puppet's left), arms[1] at -x: the weapon hand of the game (`playerHand`: shoulder at -x)
   const armOf = { R: rig.arms[1]!, L: rig.arms[0]! }
@@ -273,6 +293,8 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
   return {
     root,
     rig,
+    colors,
+    three: THREE,
     get playing() {
       return run ? run.clip.id : null
     },

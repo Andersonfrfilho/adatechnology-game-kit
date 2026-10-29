@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { GOODS_CATEGORIES, GOODS_CONTAINERS, GOODS_ITEMS, GOODS_PLACES, GOODS_RECIPES, GOODS_STRINGS, GOODS_TABLES, goodsText, pickGoodsLocale } from '../src'
+import { GOODS_CATEGORIES, GOODS_CONTAINERS, GOODS_ITEMS, GOODS_KINDS, GOODS_PLACES, GOODS_RECIPES, GOODS_STRINGS, GOODS_TABLES, goodsText, pickGoodsLocale } from '../src'
 
 const keysOfItems = GOODS_ITEMS.map((item) => `item.${item.id}`)
 const expectedKeys = [
   ...keysOfItems,
   ...GOODS_CATEGORIES.map((category) => `category.${category.id}`),
+  ...GOODS_KINDS.flatMap((kind) => [`kind.${kind.id}`, `kind.${kind.id}.description`]),
   ...GOODS_PLACES.map((place) => `place.${place.id}`),
   ...GOODS_TABLES.rarities.map((rarity) => `rarity.${rarity.id}`),
   ...GOODS_CONTAINERS.map((container) => `container.${container.id}`),
@@ -14,7 +15,7 @@ const expectedKeys = [
 
 describe('texts', () => {
   for (const locale of ['pt-BR', 'en'] as const) {
-    it(`${locale} has a text for every item, category, place, rarity, container and recipe, and nothing else`, () => {
+    it(`${locale} has a text for every item, category, kind (name and description), place, rarity, container and recipe, and nothing else`, () => {
       const strings = GOODS_STRINGS[locale]
       expect(Object.keys(strings).sort()).toEqual([...expectedKeys].sort())
       for (const key of expectedKeys) expect(strings[key]?.trim(), `${locale} ${key}`).toBeTruthy()

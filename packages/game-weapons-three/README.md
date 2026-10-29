@@ -4,6 +4,8 @@ three.js presentation for `@adatechnology/game-weapons`: the real models of the 
 
 The muzzle flash, the smoke, the backblast of a launched rocket and the flame jet of the weapon in the hands are not built here: they are recipes of `@adatechnology/game-vfx` (`viewmodel_muzzle_flash`, `weapon_smoke_puff`, `launcher_backblast`, `flame_jet`) that draw them as the gallery does, as solids (an open cone, four small cones and a core for 55 ms growing from 0.6 to 1.5 times their size, a light of `4 k` that holds, spheres of smoke that rise and grow, icosahedra of fire), with the gallery's numbers and the barrel's whole turn (`orientation`, pitch and roll included). `createWeaponFx({ effects })` plays them through the host's effect sink (the test area passes `host.effects`); with no sink the viewer makes a world of effects of its own, stepped and drawn with the weapon. Casings, magazines, the rocket itself and the burning droplets stay meshes of this package.
 
+**Hands.** The weapon in the hands tells the host where the hands go (`host.setHandTargets`, `HandTargets` of `game-contracts`): the right on the pistol grip (the `grip` pivot of the model, else under the receiver), the left on the handguard, on the pump of a pump gun (it moves with the pump), under the right on a handgun, and to the magazine while it is changed; the generic props take the right hand on the `handle` and the left under the `head` of a long gun. Sizes come from the model, the hands shrink with a model drawn small.
+
 ## Geometry
 
 The models' geometry comes from [`game-shapes`](../game-shapes): the model kit's `THREE` is `shapeGeometries(host)` (box, cylinder, cone, sphere,
@@ -20,6 +22,12 @@ The code is MIT. The `assets/weapon-svg/` thumbnails are not code and have their
 Read `assets/weapon-svg/LICENSE-NOTE.md` before redistributing the folder and keep `assets/weapon-svg/CREDITS.md` (author, license, link and modifications of every file) and `manifest.json` with it. The kit's demo site shows the same credits at `weapon-svg/credits.html`.
 
 Unused generated fallbacks: every weapon keeps its `generated/` file even when it has a `commons/` one; the manifest does not reference those, they are what the weapon returns to if the Commons file is removed.
+
+## Models of thrown and fired explosives
+
+`projectileModel(THREE, { weapon, explosive, kind })` gives a host the model of the round a launcher fires (the RPG-7's PG-7V, the Carl Gustaf's 84 mm round, the rocket of the disposable tubes; the same code the weapon in the hands uses to fly it), long axis +x, or `null`. It is the hook the test room's `projectileModel` option takes. The gallery has no model yet for the throwables (M67, molotov, pipe bomb, dynamite, C4, Claymore, flashbang) nor for the grenade launchers (M203, GP-25, AG36: their rounds), so those answer `null`.
+
+`createWeaponsTestModule({ flyRocket: false })` (and `createWeaponFx`) keeps the viewmodel from flying a rocket of its own out of the launcher, for a host that draws the projectile itself (the test room does, with `projectileModel`): one round flies, not two. The backblast stays.
 
 ## Área de explosivos (`explosives_area`)
 O botijão P13 de cozinha com o modelo real do time (`lpg_cylinder_13kg`, 0,353 x 0,49 x 0,358 m), numa quina de cozinha junto da parede de tijolo: geladeira, balcão, fogão e mesa, um zumbi a 3 m, um sobrevivente a 8 m, anéis no chão a 5 m (letal) e 14 m (ferimento) e o jogador a cerca de 6 m (fora do anel letal). Abre por `?area=explosives_area` (ou `?area=Explosivos`; em inglês `Explosives`); a página padrão da sala já a carrega.

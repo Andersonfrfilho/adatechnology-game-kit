@@ -1,0 +1,2701 @@
+{
+  "canned_beans": {
+    "kind": "canned_food"
+  },
+  "canned_sardines": {
+    "kind": "canned_food"
+  },
+  "canned_corn_and_peas": {
+    "kind": "canned_food"
+  },
+  "canned_sausages": {
+    "kind": "canned_food"
+  },
+  "condensed_milk": {
+    "kind": "canned_food"
+  },
+  "military_ration": {
+    "kind": "food_improves_cooked"
+  },
+  "rice": {
+    "kind": "food_needs_prep"
+  },
+  "beans": {
+    "kind": "food_needs_prep"
+  },
+  "pasta": {
+    "kind": "food_needs_prep"
+  },
+  "instant_noodles": {
+    "kind": "food_needs_prep",
+    "cookable": true,
+    "estimated": [
+      "cookable"
+    ]
+  },
+  "cassava_flour": {
+    "kind": "ingredient"
+  },
+  "biscuits": {
+    "kind": "food_ready"
+  },
+  "snack_chips": {
+    "kind": "food_ready"
+  },
+  "chocolate_bar": {
+    "kind": "food_ready"
+  },
+  "rapadura": {
+    "kind": "food_ready"
+  },
+  "honey_jar": {
+    "kind": "food_ready",
+    "nonPerishable": true,
+    "estimated": [
+      "nonPerishable"
+    ]
+  },
+  "bread": {
+    "kind": "food_improves_cooked"
+  },
+  "cheese": {
+    "kind": "food_ready"
+  },
+  "mortadella": {
+    "kind": "food_improves_cooked"
+  },
+  "raw_beef": {
+    "kind": "food_needs_prep"
+  },
+  "frozen_chicken": {
+    "kind": "food_needs_prep"
+  },
+  "eggs": {
+    "kind": "food_needs_prep"
+  },
+  "banana_bunch": {
+    "kind": "food_ready"
+  },
+  "orange": {
+    "kind": "food_ready"
+  },
+  "potatoes": {
+    "kind": "food_needs_prep"
+  },
+  "cassava_root": {
+    "kind": "food_needs_prep"
+  },
+  "fresh_fish": {
+    "kind": "food_needs_prep"
+  },
+  "salted_fish": {
+    "kind": "food_ready"
+  },
+  "jerked_beef": {
+    "kind": "food_ready"
+  },
+  "game_meat": {
+    "kind": "food_needs_prep"
+  },
+  "home_preserves": {
+    "kind": "food_ready"
+  },
+  "dog_food": {
+    "kind": "food_ready"
+  },
+  "sugar": {
+    "kind": "ingredient",
+    "nonPerishable": true,
+    "estimated": [
+      "nonPerishable"
+    ]
+  },
+  "salt": {
+    "kind": "ingredient",
+    "nonPerishable": true,
+    "estimated": [
+      "nonPerishable"
+    ]
+  },
+  "cooking_oil": {
+    "kind": "ingredient"
+  },
+  "coffee": {
+    "kind": "ingredient"
+  },
+  "water_bottle": {
+    "kind": "drink_ready",
+    "nonPerishable": true,
+    "fluid": {
+      "liquid": "water",
+      "liters": 0.5
+    },
+    "estimated": [
+      "nonPerishable",
+      "fluid"
+    ]
+  },
+  "water_jug_5l": {
+    "kind": "drink_ready",
+    "nonPerishable": true,
+    "fluid": {
+      "liquid": "water",
+      "liters": 5
+    },
+    "estimated": [
+      "nonPerishable",
+      "fluid"
+    ]
+  },
+  "dirty_water": {
+    "kind": "drink_untreated",
+    "nonPerishable": true,
+    "fluid": {
+      "liquid": "water",
+      "liters": 0.5
+    },
+    "estimated": [
+      "nonPerishable",
+      "fluid"
+    ]
+  },
+  "soda_can": {
+    "kind": "canned_drink",
+    "fluid": {
+      "liquid": "soda",
+      "liters": 0.35
+    },
+    "estimated": [
+      "fluid"
+    ]
+  },
+  "juice_box": {
+    "kind": "drink_ready",
+    "fluid": {
+      "liquid": "juice",
+      "liters": 0.2
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "impact": {
+      "response": "squash",
+      "pushImpulse": true
+    },
+    "leftover": {
+      "item": "food_packaging",
+      "despawnSeconds": 300
+    },
+    "estimated": [
+      "fluid",
+      "parts",
+      "impact",
+      "leftover"
+    ]
+  },
+  "milk_carton": {
+    "kind": "drink_ready",
+    "fluid": {
+      "liquid": "milk",
+      "liters": 1
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "impact": {
+      "response": "squash",
+      "pushImpulse": true
+    },
+    "leftover": {
+      "item": "food_packaging",
+      "despawnSeconds": 300
+    },
+    "estimated": [
+      "fluid",
+      "parts",
+      "impact",
+      "leftover"
+    ]
+  },
+  "sports_drink": {
+    "kind": "drink_ready",
+    "fluid": {
+      "liquid": "juice",
+      "liters": 0.5
+    },
+    "estimated": [
+      "fluid"
+    ]
+  },
+  "energy_drink": {
+    "kind": "drink_ready",
+    "fluid": {
+      "liquid": "soda",
+      "liters": 0.25
+    },
+    "estimated": [
+      "fluid"
+    ]
+  },
+  "coconut_water": {
+    "kind": "drink_ready",
+    "fluid": {
+      "liquid": "juice",
+      "liters": 0.33
+    },
+    "estimated": [
+      "fluid"
+    ]
+  },
+  "beer_can": {
+    "kind": "canned_drink",
+    "fluid": {
+      "liquid": "beer",
+      "liters": 0.35
+    },
+    "estimated": [
+      "fluid"
+    ]
+  },
+  "cachaca": {
+    "kind": "drink_ready",
+    "nonPerishable": true,
+    "fluid": {
+      "liquid": "spirits",
+      "liters": 0.7
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "glass",
+        "thickness": 0.003
+      }
+    ],
+    "impact": {
+      "response": "shatter",
+      "pushImpulse": true,
+      "shed": true
+    },
+    "leftover": {
+      "item": "glass_bottle",
+      "despawnSeconds": 600
+    },
+    "estimated": [
+      "nonPerishable",
+      "fluid",
+      "parts",
+      "impact",
+      "leftover"
+    ]
+  },
+  "communion_wine": {
+    "kind": "drink_ready",
+    "nonPerishable": true,
+    "fluid": {
+      "liquid": "wine",
+      "liters": 0.75
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "glass",
+        "thickness": 0.003
+      }
+    ],
+    "impact": {
+      "response": "shatter",
+      "pushImpulse": true,
+      "shed": true
+    },
+    "leftover": {
+      "item": "glass_bottle",
+      "despawnSeconds": 600
+    },
+    "estimated": [
+      "nonPerishable",
+      "fluid",
+      "parts",
+      "impact",
+      "leftover"
+    ]
+  },
+  "bandage": {
+    "kind": "first_aid"
+  },
+  "sterile_gauze": {
+    "kind": "first_aid"
+  },
+  "adhesive_bandages": {
+    "kind": "first_aid"
+  },
+  "medical_tape": {
+    "kind": "first_aid"
+  },
+  "alcohol_70": {
+    "kind": "medicine",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "povidone_iodine": {
+    "kind": "medicine",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "saline_iv_bag": {
+    "kind": "medicine",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "painkillers": {
+    "kind": "medicine"
+  },
+  "ibuprofen": {
+    "kind": "medicine"
+  },
+  "tramadol": {
+    "kind": "medicine"
+  },
+  "clonazepam": {
+    "kind": "medicine"
+  },
+  "amoxicillin": {
+    "kind": "medicine"
+  },
+  "ceftriaxone": {
+    "kind": "medicine"
+  },
+  "syringe": {
+    "kind": "first_aid",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "suture_kit": {
+    "kind": "first_aid"
+  },
+  "splint": {
+    "kind": "first_aid",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_soft",
+        "thickness": 0.01
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "first_aid_kit": {
+    "kind": "first_aid",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "exam_gloves": {
+    "kind": "first_aid",
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.0001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "n95_mask": {
+    "kind": "first_aid",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "activated_charcoal": {
+    "kind": "medicine"
+  },
+  "rehydration_salts": {
+    "kind": "medicine"
+  },
+  "antihistamine": {
+    "kind": "medicine"
+  },
+  "antivenom": {
+    "kind": "medicine"
+  },
+  "thermometer": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "maintenance_medication": {
+    "kind": "medicine"
+  },
+  "multivitamin": {
+    "kind": "medicine"
+  },
+  "hammer": {
+    "kind": "tool"
+  },
+  "screwdriver": {
+    "kind": "tool"
+  },
+  "crowbar": {
+    "kind": "tool"
+  },
+  "handsaw": {
+    "kind": "tool"
+  },
+  "hacksaw": {
+    "kind": "tool"
+  },
+  "bolt_cutters": {
+    "kind": "tool"
+  },
+  "pliers": {
+    "kind": "tool"
+  },
+  "adjustable_wrench": {
+    "kind": "tool"
+  },
+  "mechanic_toolbox": {
+    "kind": "tool"
+  },
+  "car_jack": {
+    "kind": "tool"
+  },
+  "gas_torch": {
+    "kind": "tool"
+  },
+  "inverter_welder": {
+    "kind": "tool"
+  },
+  "cordless_drill": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.03
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "shovel": {
+    "kind": "tool"
+  },
+  "hoe": {
+    "kind": "tool"
+  },
+  "pocket_knife": {
+    "kind": "tool"
+  },
+  "can_opener": {
+    "kind": "tool"
+  },
+  "scissors": {
+    "kind": "tool"
+  },
+  "duct_tape": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "pot": {
+    "kind": "cookware",
+    "parts": [
+      {
+        "id": "body",
+        "material": "aluminium",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "camp_stove": {
+    "kind": "camping",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "sewing_kit": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "lockpick_kit": {
+    "kind": "tool"
+  },
+  "lighter": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "matches": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "flint_striker": {
+    "kind": "tool"
+  },
+  "bucket": {
+    "kind": "tank",
+    "container": {
+      "capacityLiters": 10
+    },
+    "estimated": [
+      "container"
+    ]
+  },
+  "binoculars": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "fire_extinguisher": {
+    "kind": "tool"
+  },
+  "sharpening_stone": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "stone",
+        "thickness": 0.02
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "knife": {
+    "kind": "melee"
+  },
+  "tactical_knife": {
+    "kind": "melee"
+  },
+  "machete": {
+    "kind": "melee"
+  },
+  "meat_cleaver": {
+    "kind": "melee"
+  },
+  "hatchet": {
+    "kind": "melee"
+  },
+  "axe": {
+    "kind": "melee"
+  },
+  "baseball_bat": {
+    "kind": "melee",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_hard",
+        "thickness": 0.03
+      }
+    ],
+    "impact": {
+      "response": "break",
+      "pushImpulse": true
+    },
+    "estimated": [
+      "parts",
+      "impact"
+    ]
+  },
+  "nail_bat": {
+    "kind": "melee",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_hard",
+        "thickness": 0.03
+      }
+    ],
+    "impact": {
+      "response": "break",
+      "pushImpulse": true
+    },
+    "estimated": [
+      "parts",
+      "impact"
+    ]
+  },
+  "iron_pipe": {
+    "kind": "melee"
+  },
+  "sledgehammer": {
+    "kind": "melee"
+  },
+  "pickaxe": {
+    "kind": "melee"
+  },
+  "sickle": {
+    "kind": "melee"
+  },
+  "police_baton": {
+    "kind": "melee",
+    "parts": [
+      {
+        "id": "body",
+        "material": "aluminium",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "cast_iron_skillet": {
+    "kind": "melee",
+    "parts": [
+      {
+        "id": "body",
+        "material": "cast_iron",
+        "thickness": 0.004
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "improvised_spear": {
+    "kind": "melee",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_soft",
+        "thickness": 0.02
+      }
+    ],
+    "impact": {
+      "response": "break",
+      "pushImpulse": true
+    },
+    "estimated": [
+      "parts",
+      "impact"
+    ]
+  },
+  "chainsaw": {
+    "kind": "melee"
+  },
+  "slingshot": {
+    "kind": "ranged"
+  },
+  "recurve_bow": {
+    "kind": "ranged"
+  },
+  "crossbow": {
+    "kind": "ranged"
+  },
+  "arrows_and_bolts": {
+    "kind": "ammo",
+    "caliber": "arrow",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_soft",
+        "thickness": 0.005
+      }
+    ],
+    "estimated": [
+      "caliber",
+      "parts"
+    ]
+  },
+  "wooden_plank": {
+    "kind": "material"
+  },
+  "nails": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "screws": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "sheet_metal": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "scrap_metal": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "wire_roll": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "barbed_wire": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "rope": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.01
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "tarp": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "raffia_sack": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "bricks": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "brick",
+        "thickness": 0.1
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "cement_bag": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "rag": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "glass_bottle": {
+    "kind": "glass_bottle"
+  },
+  "pet_bottle": {
+    "kind": "plastic_bottle",
+    "weight": 0.08,
+    "estimated": [
+      "weight"
+    ]
+  },
+  "empty_can": {
+    "kind": "metal_can"
+  },
+  "glass_shards": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "glass",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "epoxy_glue": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "electronic_components": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "copper_wire": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "copper",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "firewood": {
+    "kind": "material"
+  },
+  "rebar": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.012
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "lubricant_spray": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "aluminium",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "tshirt": {
+    "kind": "clothing"
+  },
+  "hoodie": {
+    "kind": "clothing"
+  },
+  "denim_jacket": {
+    "kind": "clothing"
+  },
+  "leather_motorcycle_jacket": {
+    "kind": "clothing",
+    "parts": [
+      {
+        "id": "body",
+        "material": "leather",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "jeans": {
+    "kind": "clothing"
+  },
+  "leather_motorcycle_pants": {
+    "kind": "clothing",
+    "parts": [
+      {
+        "id": "body",
+        "material": "leather",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "army_camouflage_uniform": {
+    "kind": "clothing"
+  },
+  "mechanic_coveralls": {
+    "kind": "clothing"
+  },
+  "firefighter_suit": {
+    "kind": "clothing"
+  },
+  "beekeeper_suit": {
+    "kind": "clothing"
+  },
+  "raincoat": {
+    "kind": "clothing"
+  },
+  "padded_coat": {
+    "kind": "clothing"
+  },
+  "motorcycle_helmet": {
+    "kind": "clothing",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "hard_hat": {
+    "kind": "clothing",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.004
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "safety_goggles": {
+    "kind": "clothing",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "leather_work_gloves": {
+    "kind": "clothing",
+    "parts": [
+      {
+        "id": "body",
+        "material": "leather",
+        "thickness": 0.0015
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "combat_boots": {
+    "kind": "clothing",
+    "parts": [
+      {
+        "id": "body",
+        "material": "leather",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "rubber_boots": {
+    "kind": "clothing",
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.004
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "sneakers": {
+    "kind": "clothing",
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.006
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "flip_flops": {
+    "kind": "clothing",
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.008
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "magazine_arm_guard": {
+    "kind": "clothing",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "sheet_metal_forearm_guard": {
+    "kind": "clothing",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.001
+      }
+    ],
+    "impact": {
+      "response": "dent",
+      "pushImpulse": false
+    },
+    "estimated": [
+      "parts",
+      "impact"
+    ]
+  },
+  "ballistic_vest": {
+    "kind": "clothing"
+  },
+  "shopping_bag": {
+    "kind": "bag",
+    "weight": 0.1,
+    "estimated": [
+      "weight"
+    ]
+  },
+  "trash_bag": {
+    "kind": "bag",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.0002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "fanny_pack": {
+    "kind": "bag"
+  },
+  "crossbody_bag": {
+    "kind": "bag"
+  },
+  "backpack": {
+    "kind": "bag"
+  },
+  "delivery_bag": {
+    "kind": "bag",
+    "weight": 2,
+    "estimated": [
+      "weight"
+    ]
+  },
+  "hiking_backpack_40l": {
+    "kind": "bag",
+    "weight": 1.8,
+    "estimated": [
+      "weight"
+    ]
+  },
+  "military_backpack": {
+    "kind": "bag"
+  },
+  "trekking_backpack_70l": {
+    "kind": "bag"
+  },
+  "rolling_suitcase": {
+    "kind": "bag",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "tactical_vest": {
+    "kind": "bag"
+  },
+  "tool_belt": {
+    "kind": "bag",
+    "parts": [
+      {
+        "id": "body",
+        "material": "leather",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "cooler_box": {
+    "kind": "bag",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.004
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "shopping_cart": {
+    "kind": "bag",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "wheelbarrow": {
+    "kind": "bag",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.0015
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "flashlight": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "headlamp": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "batteries": {
+    "kind": "electronics"
+  },
+  "battery_9v": {
+    "kind": "electronics"
+  },
+  "power_bank": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.03
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "folding_solar_panel": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "portable_radio": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "walkie_talkies": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "cb_radio": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "military_radio": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "portable_generator": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "charge",
+      "parts"
+    ]
+  },
+  "led_camp_lantern": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "mobile_phone": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.03
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "laptop": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.03
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "windup_alarm_clock": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "car_alarm_remote": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.01
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "electric_fence_energizer": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "extension_cord": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "candles": {
+    "kind": "camping",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wax",
+        "thickness": 0.01
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "night_vision_goggles": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "fuel_jerrycan": {
+    "kind": "fuel",
+    "fluid": {
+      "liquid": "fuel",
+      "liters": 5
+    },
+    "estimated": [
+      "fluid"
+    ]
+  },
+  "gasoline": {
+    "kind": "fuel",
+    "fluid": {
+      "liquid": "fuel",
+      "liters": 1
+    },
+    "estimated": [
+      "fluid"
+    ]
+  },
+  "diesel": {
+    "kind": "fuel",
+    "fluid": {
+      "liquid": "diesel",
+      "liters": 1
+    },
+    "estimated": [
+      "fluid"
+    ]
+  },
+  "lpg_cylinder_13kg": {
+    "kind": "fuel",
+    "fluid": {
+      "liquid": "gas",
+      "liters": 24
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "fluid",
+      "parts"
+    ]
+  },
+  "gas_cartridge": {
+    "kind": "fuel",
+    "fluid": {
+      "liquid": "gas",
+      "liters": 0.58
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "fluid",
+      "parts"
+    ]
+  },
+  "kerosene": {
+    "kind": "fuel",
+    "fluid": {
+      "liquid": "fuel",
+      "liters": 1
+    },
+    "estimated": [
+      "fluid"
+    ]
+  },
+  "charcoal_bag": {
+    "kind": "camping",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "car_battery_12v": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.05
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "motor_oil": {
+    "kind": "fuel",
+    "fluid": {
+      "liquid": "motor_oil",
+      "liters": 1
+    },
+    "estimated": [
+      "fluid"
+    ]
+  },
+  "bean_seeds": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "corn_seeds": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "pumpkin_seeds": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "kale_and_lettuce_seeds": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "cassava_cuttings": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "green_wood",
+        "thickness": 0.02
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "fertilizer_bag": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "watering_can": {
+    "kind": "tank",
+    "container": {
+      "capacityLiters": 5
+    },
+    "estimated": [
+      "container"
+    ]
+  },
+  "fishing_rod": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_hard",
+        "thickness": 0.01
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "fishing_tackle_box": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "fishing_net": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "snare_trap": {
+    "kind": "tool"
+  },
+  "skill_book": {
+    "kind": "book"
+  },
+  "technical_manual": {
+    "kind": "book"
+  },
+  "diy_magazine": {
+    "kind": "book"
+  },
+  "magazines_and_comics": {
+    "kind": "book"
+  },
+  "farmers_almanac": {
+    "kind": "book"
+  },
+  "note": {
+    "kind": "collectible"
+  },
+  "photo": {
+    "kind": "collectible"
+  },
+  "city_map": {
+    "kind": "collectible"
+  },
+  "road_map": {
+    "kind": "collectible"
+  },
+  "dog_tag": {
+    "kind": "collectible",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "cash": {
+    "kind": "collectible"
+  },
+  "cigarettes": {
+    "kind": "collectible"
+  },
+  "house_key": {
+    "kind": "key"
+  },
+  "car_key": {
+    "kind": "key"
+  },
+  "master_key": {
+    "kind": "key"
+  },
+  "janitor_keys": {
+    "kind": "key"
+  },
+  "generator_key": {
+    "kind": "key"
+  },
+  "safe_key": {
+    "kind": "key"
+  },
+  "padlock_key": {
+    "kind": "key"
+  },
+  "cell_key": {
+    "kind": "key"
+  },
+  "canned_food": {
+    "kind": "canned_food",
+    "nutrition": {
+      "satiety": 25,
+      "hydration": -5
+    },
+    "shelfLife": 730,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
+  },
+  "flour": {
+    "kind": "ingredient",
+    "nutrition": {
+      "satiety": 5,
+      "hydration": -8
+    },
+    "shelfLife": 365,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
+  },
+  "cereal_box": {
+    "kind": "food_ready",
+    "nutrition": {
+      "satiety": 18,
+      "hydration": -5
+    },
+    "shelfLife": 270,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
+  },
+  "butter": {
+    "kind": "ingredient",
+    "nutrition": {
+      "satiety": 8,
+      "hydration": -4
+    },
+    "shelfLife": 90,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
+  },
+  "ketchup": {
+    "kind": "ingredient",
+    "nutrition": {
+      "satiety": 2,
+      "hydration": 0
+    },
+    "shelfLife": 365,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
+  },
+  "ham": {
+    "kind": "food_improves_cooked",
+    "nutrition": {
+      "satiety": 16,
+      "hydration": -3
+    },
+    "shelfLife": 30,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
+  },
+  "yogurt": {
+    "kind": "food_ready",
+    "nutrition": {
+      "satiety": 10,
+      "hydration": 5
+    },
+    "shelfLife": 28,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
+  },
+  "apple": {
+    "kind": "food_ready",
+    "nutrition": {
+      "satiety": 8,
+      "hydration": 6
+    },
+    "shelfLife": 21,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
+  },
+  "tomato": {
+    "kind": "food_ready",
+    "nutrition": {
+      "satiety": 5,
+      "hydration": 8
+    },
+    "shelfLife": 10,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
+  },
+  "frozen_meat": {
+    "kind": "food_needs_prep",
+    "nutrition": {
+      "satiety": 20,
+      "hydration": -2
+    },
+    "shelfLife": 180,
+    "cookable": true,
+    "estimated": [
+      "nutrition",
+      "shelfLife",
+      "cookable"
+    ]
+  },
+  "ice_cream": {
+    "kind": "food_ready",
+    "nutrition": {
+      "satiety": 10,
+      "hydration": 4
+    },
+    "shelfLife": 180,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
+  },
+  "frozen_pizza": {
+    "kind": "food_improves_cooked",
+    "nutrition": {
+      "satiety": 28,
+      "hydration": -6
+    },
+    "shelfLife": 180,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
+  },
+  "frozen_vegetables": {
+    "kind": "food_needs_prep",
+    "nutrition": {
+      "satiety": 10,
+      "hydration": 3
+    },
+    "shelfLife": 270,
+    "cookable": true,
+    "estimated": [
+      "nutrition",
+      "shelfLife",
+      "cookable"
+    ]
+  },
+  "plate": {
+    "kind": "tableware"
+  },
+  "bowl": {
+    "kind": "tableware"
+  },
+  "cup": {
+    "kind": "tableware"
+  },
+  "cutlery": {
+    "kind": "tool"
+  },
+  "pan": {
+    "kind": "cookware"
+  },
+  "soap": {
+    "kind": "hygiene",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wax",
+        "thickness": 0.01
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "shampoo": {
+    "kind": "hygiene"
+  },
+  "toothpaste": {
+    "kind": "hygiene"
+  },
+  "toothbrush": {
+    "kind": "hygiene"
+  },
+  "deodorant": {
+    "kind": "hygiene",
+    "parts": [
+      {
+        "id": "body",
+        "material": "aluminium",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "toilet_paper": {
+    "kind": "hygiene",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "towel": {
+    "kind": "hygiene",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "detergent": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "bleach": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "sponge": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "foam",
+        "thickness": 0.03
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "jacket": {
+    "kind": "clothing",
+    "protection": {
+      "slots": [
+        "torso",
+        "arms"
+      ],
+      "bite": 0.1,
+      "scratch": 0.25,
+      "warmth": 0.4
+    },
+    "estimated": [
+      "protection"
+    ]
+  },
+  "socks": {
+    "kind": "clothing",
+    "protection": {
+      "slots": [
+        "feet"
+      ],
+      "bite": 0,
+      "scratch": 0.02,
+      "warmth": 0.15
+    },
+    "estimated": [
+      "protection"
+    ]
+  },
+  "underwear": {
+    "kind": "clothing",
+    "protection": {
+      "slots": [
+        "legs"
+      ],
+      "bite": 0,
+      "scratch": 0.01,
+      "warmth": 0.05
+    },
+    "estimated": [
+      "protection"
+    ]
+  },
+  "hat": {
+    "kind": "clothing",
+    "protection": {
+      "slots": [
+        "head"
+      ],
+      "bite": 0,
+      "scratch": 0.05,
+      "warmth": 0.2
+    },
+    "estimated": [
+      "protection"
+    ]
+  },
+  "scarf": {
+    "kind": "clothing",
+    "protection": {
+      "slots": [
+        "torso"
+      ],
+      "bite": 0.05,
+      "scratch": 0.02,
+      "warmth": 0.2
+    },
+    "estimated": [
+      "protection"
+    ]
+  },
+  "blanket": {
+    "kind": "camping"
+  },
+  "pillow": {
+    "kind": "camping"
+  },
+  "documents": {
+    "kind": "collectible"
+  },
+  "wallet": {
+    "kind": "collectible",
+    "parts": [
+      {
+        "id": "body",
+        "material": "leather",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "phone_charger": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "notebook": {
+    "kind": "collectible"
+  },
+  "pen": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "crumpled_paper": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "empty_bottle": {
+    "kind": "plastic_bottle"
+  },
+  "food_scraps": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "flesh_fruit",
+        "thickness": 0.02
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "plastic_bag": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.00002
+      }
+    ],
+    "weight": 0.01,
+    "estimated": [
+      "parts",
+      "weight"
+    ]
+  },
+  "bill": {
+    "kind": "collectible"
+  },
+  "letter": {
+    "kind": "collectible"
+  },
+  "flyer": {
+    "kind": "collectible"
+  },
+  "postcard": {
+    "kind": "collectible"
+  },
+  "tongs": {
+    "kind": "camping",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "skewers": {
+    "kind": "camping",
+    "parts": [
+      {
+        "id": "body",
+        "material": "steel",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "firelighter": {
+    "kind": "camping",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "paint_can": {
+    "kind": "metal_can"
+  },
+  "ice_pack": {
+    "kind": "camping",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "sandwich": {
+    "kind": "food_improves_cooked",
+    "nutrition": {
+      "satiety": 22,
+      "hydration": -3
+    },
+    "shelfLife": 2,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
+  },
+  "branch": {
+    "kind": "material"
+  },
+  "stick": {
+    "kind": "material"
+  },
+  "feather": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "fabric",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "bread_mold": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "foliage",
+        "thickness": 0.005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "glass_jar": {
+    "kind": "jar"
+  },
+  "broomstick": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_soft",
+        "thickness": 0.015
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "barrel": {
+    "kind": "tank",
+    "container": {
+      "capacityLiters": 60
+    },
+    "estimated": [
+      "container"
+    ]
+  },
+  "access_badge": {
+    "kind": "key",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "insulin": {
+    "kind": "medicine",
+    "parts": [
+      {
+        "id": "body",
+        "material": "glass",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "leftover_meal": {
+    "kind": "food_improves_cooked"
+  },
+  "disinfectant": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "seasoning": {
+    "kind": "ingredient",
+    "nutrition": {
+      "satiety": 1,
+      "hydration": -2
+    },
+    "shelfLife": 730,
+    "estimated": [
+      "nutrition",
+      "shelfLife"
+    ]
+  },
+  "stapler": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "remote_control": {
+    "kind": "electronics",
+    "charge": {
+      "lossPerMonth": 0.02
+    },
+    "estimated": [
+      "charge"
+    ]
+  },
+  "dvd": {
+    "kind": "collectible",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "cable_bundle": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "shoe_polish": {
+    "kind": "metal_can"
+  },
+  "laundry_powder": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "broom": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_soft",
+        "thickness": 0.015
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "rubber_gloves": {
+    "kind": "clothing",
+    "protection": {
+      "slots": [
+        "hands"
+      ],
+      "bite": 0.05,
+      "scratch": 0.1,
+      "warmth": 0.05
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.0005
+      }
+    ],
+    "estimated": [
+      "protection",
+      "parts"
+    ]
+  },
+  "fabric_softener": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.001
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "clothespins": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "wood_soft",
+        "thickness": 0.003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "electrical_tape": {
+    "kind": "tool",
+    "parts": [
+      {
+        "id": "body",
+        "material": "rubber",
+        "thickness": 0.0002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "full_trash_bag": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.0002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "food_packaging": {
+    "kind": "material",
+    "parts": [
+      {
+        "id": "body",
+        "material": "paper",
+        "thickness": 0.0003
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "wine_glass": {
+    "kind": "tableware",
+    "parts": [
+      {
+        "id": "body",
+        "material": "glass",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "parts"
+    ]
+  },
+  "book": {
+    "kind": "book"
+  },
+  "eyeglasses": {
+    "kind": "clothing",
+    "protection": {
+      "slots": [
+        "eyes"
+      ],
+      "bite": 0,
+      "scratch": 0.02,
+      "warmth": 0
+    },
+    "parts": [
+      {
+        "id": "body",
+        "material": "plastic",
+        "thickness": 0.002
+      }
+    ],
+    "estimated": [
+      "protection",
+      "parts"
+    ]
+  }
+}

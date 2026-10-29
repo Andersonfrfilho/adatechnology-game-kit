@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { IMPACT_CONTRACT, MISSING_BITS, checkAnimation, checkDestructible, checkHit, shotExtras, shotToHit } from '../src'
-import type { AnimationClipSpec, DestructibleImpl, DestructionEvent, Hit, ObjectState, Shot, TestableModule } from '../src'
+import type { AnimationClipSpec, DestructibleImpl, DestructionEvent, HostEvent, Hit, ModuleHost, ObjectState, PlayerState, Shot, TestableModule } from '../src'
 
 /** A tiny module-owned destructible: one panel that dents by its own rule. */
 const panelImpl = (id = 'panel_1', material = 'steel'): DestructibleImpl => {
@@ -149,5 +149,16 @@ describe('testable module', () => {
     const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as Record<string, unknown>
     expect(pkg.dependencies).toBeUndefined()
     expect(pkg.peerDependencies).toBeUndefined()
+  })
+})
+
+describe('player state', () => {
+  it('is what the host reports and a player event carries nothing more', () => {
+    const state: PlayerState = { position: [1, 0, -2], yaw: 0.5, pitch: -0.1, crouching: true, speed: 1, running: false, cameraMode: 'first' }
+    const host: Pick<ModuleHost, 'player'> = { player: () => state }
+    const events: HostEvent[] = [{ type: 'player' }]
+    expect(host.player().crouching).toBe(true)
+    expect(host.player().position).toEqual([1, 0, -2])
+    expect(events[0]?.type).toBe('player')
   })
 })

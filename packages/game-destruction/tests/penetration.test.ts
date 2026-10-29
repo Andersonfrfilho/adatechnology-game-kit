@@ -50,3 +50,26 @@ describe('Hit.penetration', () => {
     expect(world.shoot([2, 0.5, 0], [-1, 0, 0], 3000, 7.8, 'test', 0.25)[0]!.penetrated).toBe(false)
   })
 })
+
+describe('a thin sheet punched through', () => {
+  const dentDepth = (energy: number): number | undefined => {
+    const world = createDestruction({ seed: 1 })
+    world.add({ parts: [plate('aluminium', 1)] })
+    world.shoot([2, 0.5, 0], [-1, 0, 0], energy, 9, 'test')
+    return world.state(world.serialize().objects[0]!.id)?.parts[0]?.dents[0]?.depth
+  }
+
+  it('is dished around the hole, deeper with more energy', () => {
+    const light = dentDepth(400)
+    const heavy = dentDepth(1600)
+    expect(light).toBeGreaterThan(0)
+    expect(heavy).toBeGreaterThan(light!)
+  })
+
+  it('a thick plate keeps a clean hole', () => {
+    const world = createDestruction({ seed: 1 })
+    world.add({ parts: [plate('aluminium', 20)] })
+    world.shoot([2, 0.5, 0], [-1, 0, 0], 20000, 9, 'test')
+    expect(world.state(world.serialize().objects[0]!.id)?.parts[0]?.dents).toHaveLength(0)
+  })
+})

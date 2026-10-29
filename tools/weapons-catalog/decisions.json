@@ -1171,6 +1171,11 @@
         "source": "sdk",
         "reason": "O ruído saía da arma (arco); passa para o calibre."
       },
+      "propellant": {
+        "value": "none",
+        "source": "sdk",
+        "reason": "Sem pólvora: o arco não solta fumaça no tiro."
+      },
       "sources": {
         "value": [
           "sdk"
@@ -1184,6 +1189,11 @@
         "value": 25,
         "source": "sdk",
         "reason": "O ruído saía da arma (besta); passa para o calibre."
+      },
+      "propellant": {
+        "value": "none",
+        "source": "sdk",
+        "reason": "Sem pólvora: a besta não solta fumaça no tiro."
       },
       "sources": {
         "value": [
@@ -1287,6 +1297,58 @@
         },
         "source": "reference",
         "reason": "Aro de .358 pol (9,1 mm), estojo de .680 pol (17,3 mm) e cartucho de .984 pol (25,0 mm). https://en.wikipedia.org/wiki/.32_ACP"
+      }
+    },
+    "45_70_bp": {
+      "noise": {
+        "value": 350,
+        "source": "derived",
+        "reason": "Fuzil de calibre grande com carga de pólvora negra; mesma classe de ruído de um fuzil de potência alta, sem linha própria no Arsenal."
+      },
+      "caseType": {
+        "value": "rifle",
+        "source": "design",
+        "reason": "Tipo de estojo (calor por tiro e modelo do cartucho)."
+      },
+      "rim": {
+        "value": "rimmed",
+        "source": "reference",
+        "reason": "Estojo com aro (rimmed). https://en.wikipedia.org/wiki/.45-70"
+      },
+      "propellant": {
+        "value": "black_powder",
+        "source": "reference",
+        "reason": "Carga original de pólvora negra: a fumaça é densa e demora a dissipar. https://en.wikipedia.org/wiki/.45-70"
+      },
+      "sources": {
+        "value": [
+          "sdk"
+        ],
+        "source": "sdk",
+        "reason": "Calibre acrescentado pelo SDK (não está nas entregas dos times)."
+      },
+      "base": {
+        "value": {
+          "label": ".45-70 Government (black powder)",
+          "bulletGrams": 26.2,
+          "muzzleSpeed": 400,
+          "dragPer100m": 0.09,
+          "kind": "fmj",
+          "id": "45_70_bp",
+          "diameter": 11.43
+        },
+        "source": "reference",
+        "reason": "Projétil de 405 gr (26,2 g) a cerca de 400 m/s e diâmetro .45 pol (11,43 mm). https://en.wikipedia.org/wiki/.45-70"
+      },
+      "cartridge": {
+        "value": {
+          "caseDiameter": 12.07,
+          "overallLength": 66.5,
+          "caseLength": 53.3,
+          "projectileDiameter": 11.43
+        },
+        "source": "reference",
+        "reason": "Aro de 12,07 mm, estojo de 53,3 mm e cartucho de 66,5 mm. https://en.wikipedia.org/wiki/.45-70"
       }
     }
   },

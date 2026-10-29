@@ -5693,6 +5693,14 @@
    }
   },
   {
+   "type": "dent",
+   "data": {
+    "scenario": "tank_leak",
+    "time": 0,
+    "part": "tank"
+   }
+  },
+  {
    "type": "leak",
    "data": {
     "scenario": "tank_leak",

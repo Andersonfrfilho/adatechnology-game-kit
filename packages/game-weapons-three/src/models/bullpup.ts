@@ -18,6 +18,7 @@ export function buildBullpup(kit: ModelKit, options: ModelOptions): BuiltModel {
   const gx = bodyLength * 0.8
   const grip = kit.pivot(group, gx, -0.085, 0)
   grip.rotation.z = -0.25
+  parts.grip = grip
   box(grip, 0.03, 0.1, 0.03, M.poly, 0, 0, 0)
   box(group, 0.1, 0.006, 0.03, body, gx + 0.01, -0.06, 0)
   parts.trigger = box(group, 0.004, 0.016, 0.004, M.dark, gx + 0.02, -0.05, 0, 0.15)

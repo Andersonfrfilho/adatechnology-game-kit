@@ -214,6 +214,9 @@ importers:
       '@adatechnology/game-characters':
         specifier: workspace:*
         version: link:../game-characters
+      '@adatechnology/game-characters-people':
+        specifier: workspace:*
+        version: link:../game-characters-people
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
@@ -221,9 +224,6 @@ importers:
         specifier: workspace:*
         version: link:../game-shapes-three
     devDependencies:
-      '@adatechnology/game-characters-people':
-        specifier: workspace:*
-        version: link:../game-characters-people
       '@adatechnology/game-characters-undead':
         specifier: workspace:*
         version: link:../game-characters-undead
@@ -711,6 +711,9 @@ importers:
       '@adatechnology/game-floorplan-interactables':
         specifier: workspace:*
         version: link:../game-floorplan-interactables
+      '@adatechnology/game-floorplan-residential':
+        specifier: workspace:*
+        version: link:../game-floorplan-residential
       '@adatechnology/game-floorplan-structure':
         specifier: workspace:*
         version: link:../game-floorplan-structure
@@ -733,9 +736,6 @@ importers:
       '@adatechnology/game-floorplan-post-apocalyptic':
         specifier: workspace:*
         version: link:../game-floorplan-post-apocalyptic
-      '@adatechnology/game-floorplan-residential':
-        specifier: workspace:*
-        version: link:../game-floorplan-residential
       '@adatechnology/game-floorplan-rural':
         specifier: workspace:*
         version: link:../game-floorplan-rural
@@ -800,6 +800,9 @@ importers:
 
   packages/game-fluids-three:
     dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
       '@adatechnology/game-fluids':
         specifier: workspace:*
         version: link:../game-fluids
@@ -958,10 +961,16 @@ importers:
 
   packages/game-items-goods:
     dependencies:
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../game-contracts
       '@adatechnology/game-items':
         specifier: workspace:*
         version: link:../game-items
     devDependencies:
+      '@adatechnology/game-destruction':
+        specifier: workspace:*
+        version: link:../game-destruction
       '@adatechnology/game-interactables':
         specifier: workspace:*
         version: link:../game-interactables
@@ -986,6 +995,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:*
         version: link:../game-contracts
+      '@adatechnology/game-fluids':
+        specifier: workspace:*
+        version: link:../game-fluids
       '@adatechnology/game-interactables':
         specifier: workspace:*
         version: link:../game-interactables

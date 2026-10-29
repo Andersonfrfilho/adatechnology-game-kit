@@ -3166,6 +3166,24 @@ Nenhum time entregou pose de golpe (Elenco, Bestiário e o jogo só têm a regra
 - **Testes:** 22 novos em `game-characters-people` (amostragem sem NaN, pose neutra no início e no fim, um único `impact` dentro da janela, fases em ordem, textos) e 3 em `game-characters-three` (juntas existem no corpo, `upper` deixa as pernas ao andar, botões e `impact` no log); `examples/player-test-area/test.mjs` toca os cinco clipes em pt-BR e en e grava uma captura por golpe em `shots/strike-*.png`.
 
 
+## 2026-10-25 · Braços e mãos em primeira pessoa, golpes no impacto
+
+Nenhum time entregou braços, mãos nem pose de golpe em primeira pessoa (o jogo só tem a regra de `shove` e `knife`); tudo foi escrito no kit, sem reaproveitar entrega.
+
+| O que | Onde |
+|---|---|
+| Contrato de alvos das mãos (`HandTargets`, `HandTargetSource`, `ModuleHost.setHandTargets`) | `game-contracts/src/hands.ts`, `module.ts` |
+| Formato do clipe em primeira pessoa e amostragem | `game-characters/src/pose-clips/first-person-clip.ts` |
+| Clipes `punch_right`, `shove_two_hands`, `front_kick` (mesmas durações e instantes de impacto de `ATTACK_CLIPS`: 0,16 / 0,26 / 0,32 s) | `game-characters-people/src/data/first-person-clips.json` (`FIRST_PERSON_CLIPS`) |
+| Braços, mãos, IA de dois ossos, posturas `relaxed`/`fists`/`hold`, perna do chute | `game-characters-three/src/first-person/`, `presets/first-person-arms.json`; `toRoomAvatar` os entrega por padrão |
+| Mãos na arma: punho, guarda-mão, bomba da pump, carregador na recarga, cabo dos objetos genéricos | `game-weapons-three/src/fx/hand-hold.ts` (`parts.grip` nos modelos de pistola, revólver, bullpup etc.) |
+| Golpe no impacto, não no clique (`strikeClips`, `handStances`, linha `strike` no log) | `game-test-room/src/room.ts`, `avatar.ts` |
+
+- **Regra:** o soco, o empurrão e o chute (Shift+V) tocam o clipe nos braços e no corpo e chamam o `meleeUse` existente no segundo do `impact`, relendo a mira; ferramenta sem clipe segue instantânea e um golpe pendente bloqueia a mesma ferramenta.
+- **Testes:** `game-characters-three/tests/first-person-arms.test.ts` (IA, posturas, impacto uma vez no instante certo, perna, `toRoomAvatar`), `game-weapons-three/tests/hand-targets.test.ts`, `game-test-room/tests/strike.test.ts`, `game-characters/tests/first-person-clip.test.ts`, `game-characters-people/tests/first-person-clips.test.ts`.
+- **Capturas:** `examples/test-room/test.mjs` grava `shots/fp-*-pt-BR.png` e `fp-*-en.png` (mãos vazias, punhos, pistola, fuzil, recarga, soco, empurrão, chute e soco em terceira pessoa).
+
+
 ## 2026-10-25 · Estrutura real, passo 5 · arranha-céu e a cidade (lacuna 9)
 
 Desenho em `design/T10-estrutura-real.md` §11. Receita em `game-floorplan-structure` (`skyscraper.ts`, `skyscraper-plan.ts`), torre de escritórios em `game-floorplan-commercial` (`office_tower`), torre residencial em `game-floorplan-residential` (`residential_tower`), cidade em `game-urban` (opção `towers`, desligada por padrão). No motor, a barra de tração de parede e pilar passou a contar as barras que o espaçamento dá (`verticalBarCount`).

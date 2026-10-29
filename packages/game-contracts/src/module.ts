@@ -7,6 +7,7 @@ import type { DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
 import type { EnvironmentBus } from './environment'
 import type { EffectSink } from './effects'
+import type { HandTargetSource } from './hands'
 import type { ContainerSpec } from './fluids'
 
 /** An item that holds a liquid (a cup, a bottle, a fuel tank). `part` is the destruction part that is the container; a hole in it makes it leak. */
@@ -140,6 +141,8 @@ export type HostEvent =
    * `explosive` is the id of the explosive when there is one (`m67`, `c4`, `fuel_barrel`): the host picks the blast by it.
    */
   | { type: 'explosion'; source: string; point: Vec3; energy: number; radius: number; cause: string; explosive?: string }
+  /** The player crouched or stood up, or the camera mode changed; read the new state with `host.player()`. */
+  | { type: 'player' }
 
 /** The tool in hand as the host sees it. */
 export interface HostTool {
@@ -192,6 +195,22 @@ export interface ToolCommandResult {
   readonly seconds?: number
 }
 
+/** The player as the host sees it. Generic: any game with someone walking around in a world has these. */
+export interface PlayerState {
+  /** World position of the player's feet, metres. */
+  readonly position: Vec3
+  /** Radians around the vertical axis; 0 looks down -z. */
+  readonly yaw: number
+  /** Radians up (positive) or down (negative). */
+  readonly pitch: number
+  readonly crouching: boolean
+  /** Horizontal speed in metres per second. */
+  readonly speed: number
+  readonly running: boolean
+  /** How the camera follows the player (`first`, `shoulder`...); the ids are the host's. */
+  readonly cameraMode: string
+}
+
 /**
  * What the host lends a module that brings its own presentation (a weapon in the hands, sounds, ejected casings). `THREE`, `scene` and `camera`
  * are the host's three.js namespace, scene and camera: `unknown` here because the contracts do not depend on three.js.
@@ -204,6 +223,8 @@ export interface ModuleHost {
   /** Height of whatever things rest on at (x, z): the floor, a table, a counter. */
   groundAt(x: number, z: number): number
   tool(): HostTool
+  /** The player now: where, which way, crouching, how fast and how the camera follows. A `player` event tells when crouching or the camera mode changes. */
+  player(): PlayerState
   /** Follow the player's tool events. Returns the unsubscribe function. */
   on(listener: (event: HostEvent) => void): () => void
   /** Run every simulated frame with the frame's seconds. Returns the unsubscribe function. */
@@ -225,6 +246,11 @@ export interface ModuleHost {
    * player stops at them; the function is asked on every step, so it may follow a door that opens. Returns the function that takes it away. A host without a walking player leaves it out.
    */
   addBlocker?(blocked: (x: number, z: number, radius: number) => boolean): () => void
+  /**
+   * Lends the host the place of the hands for the tool in the module's hands (a weapon's grip and handguard): the host that draws the player's arms reads `source` every frame, after the
+   * frame hooks have run, and puts the hands there. Pass null (or call the returned function) to let go. A host without arms leaves it out.
+   */
+  setHandTargets?(source: HandTargetSource | null): () => void
   /** Asks the tool in hand to do something (see `ToolCommand`). A host without accessories leaves it out. */
   command?(command: ToolCommand): ToolCommandResult
   /** Lent only to a module that declares controls, layers or metrics. */

@@ -14,9 +14,9 @@ import { createGroundField, createVfx } from '@adatechnology/game-vfx'
 import { createGroundPatch, createVfxRenderer } from '@adatechnology/game-vfx-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
 import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, shotExtras } from '@adatechnology/game-contracts'
-import type { AnimationClipSpec, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, HandTargetSource, HandTargets, HostEvent, ModuleArea, ModuleBench, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { createArena } from './arena'
-import type { Arena } from './arena'
+import type { Arena, ArenaTop } from './arena'
 import { createBenchStore } from './bench'
 import type { BenchStore } from './bench'
 import type { BenchView, MetricRow } from './bench-panel'
@@ -29,7 +29,7 @@ import { createLog } from './log'
 import { createRoomMetrics, ROOM_METRICS } from './metrics'
 import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
-import { THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
+import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
 import type { CameraMode, RoomAvatar, RoomAvatarState, ThirdPersonOptions, ThirdPersonPose } from './avatar'
 import { resolveStrings } from './locale'
 import { createUi } from './ui'
@@ -81,6 +81,10 @@ interface BurningStain {
 
 const FIXED_DT = 1 / 60
 const METRICS_INTERVAL_S = 0.25
+/** The carried item in first person: how far the nearest of a small item is held (m), how far the palm sits under it and how closed the fingers are. */
+const CARRY_NEAR = 0.62
+const CARRY_PALM = 0.012
+const CARRY_GRIP = 0.45
 /** Faster than this (m/s) a change of the player's position is a teleport, not walking: the avatar does not stride for it. The player runs at 6.2. */
 const MAX_STRIDE_SPEED = 10
 
@@ -147,14 +151,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // Worlds
   // ---------------------------------------------------------------------------------------------------------------------------------------
   const arenaSize = options.arenaSize ?? 14
-  const arena: Arena = createArena(THREE, arenaSize, scene)
+  const arena: Arena = createArena(THREE, arenaSize, scene, options.scenery, options.tap)
   scene.add(arena.group)
 
   const ownWorld = !options.world
   const world = options.world ?? createDestruction({ seed: 1, ...options.worldOptions, materials: [...(options.worldOptions?.materials ?? [])] })
   const pristineWorld = ownWorld ? world.serialize() : null
-  const tableOk = (): boolean => {
-    const p = world.part(arena.table.id, arena.table.topPart)
+  const topOk = (t: ArenaTop): boolean => {
+    const p = world.part(t.id, t.topPart)
     return !!p && p.status !== 'broken' && p.status !== 'melted' && p.status !== 'ashes'
   }
   // tops of spawned objects that hold others (a module's counter, a shelf board): loose things rest on them while the object is in the world
@@ -164,8 +168,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const c of restingTops) if (x > c.minX && x < c.maxX && z > c.minZ && z < c.maxZ && world.has(c.objectId)) top = Math.max(top, c.top)
     return top
   }
-  const groundAt = (x: number, z: number): number =>
-    Math.max(x > arena.table.minX && x < arena.table.maxX && z > arena.table.minZ && z < arena.table.maxZ && tableOk() ? arena.table.top : 0, restingTopAt(x, z))
+  const sceneryTopAt = (x: number, z: number): number => {
+    let top = 0
+    for (const t of arena.tops) if (t.top > top && x > t.minX && x < t.maxX && z > t.minZ && z < t.maxZ && topOk(t)) top = t.top
+    return top
+  }
+  const groundAt = (x: number, z: number): number => Math.max(sceneryTopAt(x, z), restingTopAt(x, z))
 
   const ownFluids = !options.fluids
   const fluids = options.fluids ?? createFluids({ seed: 1, locale, liquids: options.liquids, groundAt })
@@ -492,12 +500,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const addArena = (): void => {
     for (const o of arena.objects) {
-      const root = buildFromSpec(THREE, o.spec, { colors: o.colors })
+      const root = o.build ? o.build(THREE) : buildFromSpec(THREE, o.spec, { colors: o.colors })
       root.position.set(o.position[0], o.position[1], o.position[2])
+      root.rotation.y = o.rotationY
       scene.add(root)
       root.updateMatrixWorld(true)
-      world.add(structuredCloneSpec(o.spec), { id: o.id, position: o.position })
-      registerEntry(o.id, o.id, root, o.spec, S.text[`arena.${o.id}`] ?? o.id, undefined, undefined, true, false)
+      world.add(structuredCloneSpec(o.spec), { id: o.id, position: o.position, ...(o.rotationY ? { rotation: [0, Math.sin(o.rotationY / 2), 0, Math.cos(o.rotationY / 2)] as [number, number, number, number] } : {}) })
+      registerEntry(o.id, o.id, root, o.spec, o.label ?? S.text[`arena.${o.id}`] ?? o.id, undefined, undefined, true, false)
     }
   }
   addArena()
@@ -688,6 +697,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       for (const s of [...arena.surfaces, ...(options.surfaces ?? [])]) fluids.addSurface(s)
     }
     pending = []
+    strikes = []
     rng = 12345
     counter = 0
     slot = 0
@@ -729,7 +739,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const thirdActive = (): boolean => cameraMode === 'third' && avatar !== null
   const syncAvatarVisible = (): void => {
-    if (avatar) avatar.root.visible = cameraMode === 'third'
+    if (!avatar) return
+    avatar.root.visible = cameraMode === 'third'
+    if (avatar.firstPerson) avatar.firstPerson.root.visible = cameraMode === 'first'
   }
   const setCameraMode = (mode: CameraMode): void => {
     if (mode !== 'first' && mode !== 'third') return
@@ -743,10 +755,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const setAvatar = (next: RoomAvatar | null): void => {
     if (avatar === next) return
     avatar?.root.removeFromParent()
+    avatar?.firstPerson?.root.removeFromParent()
     avatar = next
     feetPrev = null
     if (avatar) {
       scene.add(avatar.root)
+      if (avatar.firstPerson) scene.add(avatar.firstPerson.root)
       syncAvatarVisible()
       stepAvatar(0)
     }
@@ -770,6 +784,24 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     avatar.root.rotation.set(0, player.yaw + Math.PI, 0) // the body's front is +z (the three.js way, as the catalogue items), the view looks down -z at yaw 0
     avatar.update(dt, avatarState)
     avatar.root.updateMatrixWorld(true)
+  }
+  // ----- the first-person arms: where the tool in the hands asks them to be (a module lends it), else the carried item, else nothing
+  let handSource: HandTargetSource | null = null
+  let carriedHand: HandTargets | null = null
+  const strikeClips: Readonly<Record<string, string>> = options.strikeClips ?? DEFAULT_STRIKE_CLIPS
+  const handStances: Readonly<Record<string, string>> = options.handStances ?? DEFAULT_HAND_STANCES
+  const stepFirstPerson = (dt: number): void => {
+    const arms = avatar?.firstPerson
+    if (!arms) return
+    const targets = handSource?.() ?? carriedHand
+    arms.update(dt, {
+      camera,
+      targets,
+      stance: handStances[toolId] ?? (targets ? 'hold' : 'relaxed'),
+      speed: avatarState.speed,
+      running: avatarState.running,
+      crouch: avatarState.crouch,
+    })
   }
   /** Moves the camera to the shoulder view for the render that follows, and answers the function that puts it back. */
   const applyThirdView = (): (() => void) => {
@@ -1094,6 +1126,37 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     })
   }
 
+  /** Strikes that have begun and whose blow has not landed yet: the tool they belong to, the simulated seconds left and what lands. */
+  let strikes: Array<{ key: string; remaining: number; land: () => void }> = []
+  /**
+   * A melee blow. A tool with a strike clip (`strikeClips`) on an avatar that plays it starts the clip, on the arms and on the body, and the blow lands when the clip reaches its
+   * impact, with the aim read again then; any other blow lands now.
+   */
+  const strikeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
+    const clip = strikeClips[id]
+    const seconds = clip === undefined ? null : (avatar?.strike?.(clip) ?? null)
+    if (clip === undefined || seconds === null) {
+      meleeUse(u, id)
+      return
+    }
+    action('strike', t('act.strike', { weapon: toolName(id), clip, seconds: num(seconds, 2) }), { data: { weapon: id, clip, impactIn: seconds } })
+    strikes.push({
+      key: id,
+      remaining: seconds,
+      land: () => {
+        aim()
+        meleeUse({ ...u, origin: [aimO[0], aimO[1], aimO[2]], direction: [aimD[0], aimD[1], aimD[2]] }, id)
+      },
+    })
+  }
+  const stepStrikes = (dt: number): void => {
+    if (strikes.length === 0) return
+    for (const strike of strikes) strike.remaining -= dt
+    const landed = strikes.filter((strike) => strike.remaining <= 0)
+    strikes = strikes.filter((strike) => strike.remaining > 0)
+    for (const strike of landed) strike.land()
+  }
+
   const toolWork = (u: Extract<Use, { kind: 'tool' }>, dt: number): void => {
     const w = toolName()
     const r = rayWorld(u.origin, u.direction, u.reach)
@@ -1205,6 +1268,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     emitHost,
     startFire,
     say,
+    projectileModel: options.projectileModel,
   })
 
   // ----- the trigger
@@ -1212,6 +1276,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     aim()
     const cat = tool.def.category
     if (cat === 'hand') return
+    if (strikes.some((strike) => strike.key === toolId)) return // the blow of this tool is still on its way
     const res = tool.trigger([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], dt, held, 'player')
     flushEvents(toolId, tool, res.recoil)
     if (res.status === 'empty') {
@@ -1234,7 +1299,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const u of res.uses) {
       switch (u.kind) {
         case 'melee':
-          meleeUse(u)
+          strikeUse(u)
           break
         case 'flame':
           heatRays(u, 'fire')
@@ -1277,11 +1342,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   /** The V shortcut: a kick with the `kick` tool, whatever tool is selected (it keeps its own cooldown). */
   const kick = (): void => {
-    if (!arsenal.weapons.has('kick')) return
+    if (!arsenal.weapons.has('kick') || strikes.some((strike) => strike.key === 'kick')) return
     aim()
     const res = toolState('kick').trigger([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 0, false, 'player')
     if (res.status !== 'ok') return
-    for (const u of res.uses) if (u.kind === 'melee') meleeUse(u, 'kick')
+    for (const u of res.uses) if (u.kind === 'melee') strikeUse(u, 'kick')
   }
   const setTool = (id: string): void => {
     if (!arsenal.weapons.has(id)) throw new Error(`game-test-room: unknown weapon "${id}"`)
@@ -1312,6 +1377,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let heldTilt = 0
   let tiltKey = 0
   const heldLocal = new THREE.Vector3()
+  let heldRadius = 0.2
   const heldVel: Vec3 = [0, 0, 0]
   let useItemPlayer: ItemUsePlayer | null = null
   let useItemName = ''
@@ -1364,6 +1430,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     piece.root.updateMatrixWorld(true)
     heldLocal.copy(c).sub(piece.root.position)
     heldLocal.applyQuaternion(piece.root.quaternion.clone().invert())
+    heldRadius = box.getSize(new THREE.Vector3()).length() / 3
     heldYaw = 0
     heldTilt = 0
     heldVel[0] = heldVel[1] = heldVel[2] = 0
@@ -1386,8 +1453,23 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return true
   }
 
+  /** The right hand under the carried item, palm up, for the first-person arms: under the middle of its underside, the fingers the way the player faces. */
+  const carriedTargets = (root: THREE_NS.Object3D): HandTargets => {
+    const box = new THREE.Box3().setFromObject(root)
+    const center = box.getCenter(new THREE.Vector3())
+    const forward = camera.getWorldDirection(new THREE.Vector3())
+    forward.y = 0
+    if (forward.lengthSq() < 1e-6) forward.set(0, 0, -1)
+    forward.normalize()
+    const back = new THREE.Vector3(0, -1, 0) // the back of the hand faces down: the palm carries
+    const z = forward.clone().cross(back).normalize()
+    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(forward, back, z))
+    return { R: { position: [center.x, box.min.y - CARRY_PALM, center.z], quaternion: [q.x, q.y, q.z, q.w] }, grip: CARRY_GRIP }
+  }
+
   const followHeld = (dt: number): void => {
     const piece = heldPiece
+    carriedHand = null
     if (!piece) return
     camera.updateMatrixWorld(true)
     const root = piece.root
@@ -1408,7 +1490,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       targetQ.copy(handQ).multiply(eq)
       targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), heldYaw))
     } else {
-      pos = tmpV.set(0.05, -0.28, -1.15).applyMatrix4(camera.matrixWorld)
+      // with arms to reach it, a small item is held close; a big one stays out to the usual distance
+      pos = tmpV.set(0.05, -0.28, avatar?.firstPerson ? -Math.min(1.15, CARRY_NEAR + heldRadius) : -1.15).applyMatrix4(camera.matrixWorld)
       targetQ.setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw + heldYaw)
       targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -heldTilt))
     }
@@ -1426,6 +1509,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       heldVel[2] = (root.position.z - pz) / dt
     }
     root.updateMatrixWorld(true)
+    if (avatar?.firstPerson && cameraMode === 'first') carriedHand = carriedTargets(root)
   }
 
   const useItem = (useId: string): boolean => {
@@ -1461,7 +1545,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   const TAP_ID = 'room_tap'
   const TAP_RATE = 0.25
-  fluids.addTap({ id: TAP_ID, position: arena.tapSpout, liquid: 'water', rate: TAP_RATE, temperature: 16, on: false })
+  if (arena.tapSpout) fluids.addTap({ id: TAP_ID, position: arena.tapSpout, liquid: 'water', rate: TAP_RATE, temperature: 16, on: false })
   const isTapOn = (): boolean => fluids.taps().some((x) => x.id === TAP_ID && x.on)
   const toggleTap = (on = !isTapOn()): boolean => {
     fluids.setTap(TAP_ID, on)
@@ -1715,6 +1799,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     // `dt` is simulated seconds; real time only drives input
     simTime += dt
     stepWalk(dt)
+    stepStrikes(dt)
     const reps = fastForward ? 10 : 1
     updateAnimations(dt)
     updateItemUse(dt)
@@ -1767,6 +1852,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     if (!paused) followHeld(dt)
     stepSim(dt * timeScale)
+    stepFirstPerson(paused ? 0 : dt)
     if (progress && simTime - progress.at > 0.25) progress = null
     hudAcc += dt
     if (hudAcc >= 0.1 && ui) {
@@ -2051,6 +2137,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       flushEvents(toolId, tool)
       return result
     },
+    player: () => ({
+      position: player.position,
+      yaw: player.yaw,
+      pitch: player.pitch,
+      crouching: false,
+      speed: player.speed,
+      running: player.running,
+      cameraMode: 'first',
+    }),
     configureTool(settings) {
       const condition = settings[SETTING_IDS.condition]
       const ammoQuality = settings[SETTING_IDS.ammoQuality]
@@ -2071,6 +2166,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     onFrame(update) {
       frameListeners.add(update)
       return () => frameListeners.delete(update)
+    },
+    setHandTargets(source) {
+      handSource = source
+      return () => {
+        if (handSource === source) handSource = null
+      }
     },
     log(text, data) {
       action('module_note', text, { data })
@@ -2105,6 +2206,34 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     moduleCheck(r.ok, text, { module: mod.id, check: 'bench', problems: r.problems })
     for (const p of r.problems) fail(`bench: ${p}`)
     return r.ok ? store : null
+  }
+
+  const LIGHTS_CHECK_MS = 250
+
+  /** Renders the scene once with throwaway meshes of the materials that decals, effects and liquids make on demand (every light count is another set of programs), so that the first shot does not build them. */
+  const warmUp = (): void => {
+    const probes = [renderer.warmUpProbes(), vfx.warmUpProbes(), fluidView.warmUpProbes()]
+    const groups = probes.map((probe) => probe.group as THREE_NS.Object3D)
+    scene.add(...groups)
+    gl.render(scene, camera)
+    scene.remove(...groups)
+    for (const probe of probes) probe.dispose()
+  }
+
+  /** Draws a throw-away blast and a fire (their particle materials and lights make the materials recompile the first time they appear), then clears them: nothing stays in the world, the log or the sound. */
+  const warmUpEffects = (): void => {
+    const ids = vfx.catalog?.() ?? []
+    const flames = ids.filter((id) => /fire|flame/i.test(id)).slice(0, 1)
+    gl.compile(scene, camera)
+    const handles = ['m67', ...flames].filter((id) => ids.includes(id)).map((effect) => vfx.play({ effect, point: [0, 0.1, -4], direction: [0, 1, 0], normal: [0, 1, 0] }))
+    for (let i = 0; i < 3; i++) {
+      vfx.update(0.02)
+      gl.render(scene, camera)
+    }
+    for (const h of handles) if (h !== null) vfx.stop(h)
+    vfx.world.clear()
+    vfx.update(0)
+    gl.render(scene, camera)
   }
 
   const loadModule = (mod: TestableModule<ScenarioContext>): ModuleReport => {
@@ -2371,20 +2500,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     grab,
     throwHeld,
-    warmUp() {
-      const ids = vfx.catalog?.() ?? []
-      const flames = ids.filter((id) => /fire|flame/i.test(id)).slice(0, 1)
-      gl.compile(scene, camera)
-      const handles = ['m67', ...flames].filter((id) => ids.includes(id)).map((effect) => vfx.play({ effect, point: [0, 0.1, -4], direction: [0, 1, 0], normal: [0, 1, 0] }))
-      for (let i = 0; i < 3; i++) {
-        vfx.update(0.02)
-        gl.render(scene, camera)
-      }
-      for (const h of handles) if (h !== null) vfx.stop(h)
-      vfx.world.clear()
-      vfx.update(0)
-      gl.render(scene, camera)
-    },
     look(position, target) {
       player.look(position, target)
     },
@@ -2446,6 +2561,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     loading,
     busy: (label, work, busyOptions) => loading.busy(label, work, busyOptions),
     loadModule,
+    warmUp: () => {
+      warmUp()
+      warmUpEffects()
+    },
     animations: animationsOf,
     playAnimation,
     bench(moduleId) {
@@ -2598,8 +2717,26 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   if (ownRenderer && typeof requestAnimationFrame === 'function') {
     let last = performance.now()
     ownsLoop = true
+    let nextLightsCheck = 0
+    let warmedLights = ''
+    // modules add lights after the first frame, and each light count is another set of programs: warm again when the lights change
+    const lightsKey = (): string => {
+      let key = ''
+      scene.traverseVisible((object) => {
+        if ((object as THREE_NS.Light).isLight) key += `${object.type[0]}${object.castShadow ? 's' : ''}`
+      })
+      return key
+    }
     const loop = (now: number): void => {
       raf = requestAnimationFrame(loop)
+      if (now >= nextLightsCheck) {
+        nextLightsCheck = now + LIGHTS_CHECK_MS
+        const key = lightsKey()
+        if (key !== warmedLights) {
+          warmedLights = key
+          warmUp()
+        }
+      }
       const realDelta = (now - last) / 1000
       roomMetrics.frame(realDelta)
       const dt = Math.min(0.05, realDelta)
