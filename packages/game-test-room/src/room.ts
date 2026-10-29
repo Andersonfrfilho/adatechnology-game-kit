@@ -60,6 +60,8 @@ interface Entry {
   piece: Piece | null
   last: Vec3
   velocity: Vec3
+  /** Heavy but not fixed (a fridge, a table): not grabbable, yet a blast that reaches it with enough speed makes it a piece and shoves it. */
+  free?: boolean
 }
 
 interface FireZone {
@@ -214,6 +216,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     groundAt,
     pointScale,
     onSound: playSound,
+    ...(options.blastShove ? { blastShove: options.blastShove } : {}),
+    // a blast moves what is heavy but not nailed down: the renderer makes it a piece the moment the shove reaches it
+    shoveable: (objectId) => {
+      const e = entries.get(objectId)
+      return e?.free === true && !e.piece
+    },
+    onLoosened: (objectId, piece) => {
+      const e = entries.get(objectId)
+      if (!e) return
+      e.piece = piece
+      rendererPieces.set(objectId, piece)
+      action('loosened', t('act.loosened', { name: e.name }), { objectId, itemId: e.so.itemId })
+    },
     onPiece: (piece) => {
       rendererPieces.set(piece.objectId, piece)
       loose.push(piece)
@@ -545,6 +560,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (own) world.register(own, { id: objectId, position: pos, rotation: [q.x, q.y, q.z, q.w] })
     else world.add(spec, { id: objectId, position: pos, rotation: [q.x, q.y, q.z, q.w] })
     const e = registerEntry(objectId, item.id, root, spec, item.name, parts, item, false, movable)
+    // heavy by its mass and not said to be fixed: a blast can still push it
+    if (!own && !movable && item.movable === undefined) e.free = true
     action('spawn', t('act.spawn', { name: item.name, x: num(pos[0], 1), z: num(pos[2], 1) }), { objectId, itemId: item.id, data: { position: pos, movable, massKg: Math.round(massOfObject(objectId) * 10) / 10 } })
     fire('spawn', e.so)
     return e.so
@@ -1994,6 +2011,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     environment,
     groundAt,
     effects: vfx,
+    ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     tool: () => ({
       weapon: toolId,
       category: tool.def.category,

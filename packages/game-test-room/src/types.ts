@@ -16,7 +16,7 @@ import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapon
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
-import type { AnimationClipSpec, ControlValue, DestructibleImpl, EnvironmentBus, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, BlastShoveOptions, ControlValue, DestructibleImpl, EnvironmentBus, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -121,6 +121,11 @@ export interface TestRoomOptions {
   metrics?: readonly RoomMetricId[] | false
   /** Blast options every explosion of the room starts with (`shelter`, `fragmentHits`, `confinement`; default all off). The HUD toggles them and `TestRoom.setBlast` changes them. */
   blast?: BlastOptions
+  /**
+   * The numbers of the shove an explosion gives to what is around it: loose items, furniture, and the bodies of the modules (people), which read them from `ModuleHost.blastShove`.
+   * Default: the SDK's (`DEFAULT_BLAST_SHOVE` of game-contracts: 2 % of the energy becomes speed, 20 m/s at most, falloff `(1 - d / r)^2`).
+   */
+  blastShove?: BlastShoveOptions
   /**
    * Module bench state. `state` maps a module id to its encoded state, restored when that module is first loaded (a module reloaded
    * keeps its live state instead) before its first changes are sent; ids are per module, so two modules may share a control id.

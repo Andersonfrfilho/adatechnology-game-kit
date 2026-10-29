@@ -1,5 +1,6 @@
 import type { AnimationClipSpec } from './animation'
 import type { AudioSink } from './audio'
+import type { BlastShoveOptions } from './blast-shove'
 import type { ModuleBench, ModuleControl, ModuleLayer, ModuleMetric } from './bench'
 import type { DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
@@ -231,6 +232,11 @@ export interface ModuleHost {
   environment?: EnvironmentBus
   /** The host's effects (smoke, sparks, blast, impacts): a module asks for them by id instead of drawing its own. Absent when the host has none. */
   effects?: EffectSink
+  /**
+   * The numbers of the shove a blast gives to a body. A module that moves bodies of its own (people, vehicles) answers the `explosion` host event with `blastShove(event, body, host.blastShove)`
+   * so that it throws things the way the host throws its loose items. Absent when the host keeps the defaults.
+   */
+  blastShove?: BlastShoveOptions
 }
 
 /** What a module hands the test room: its items and, optionally, scenarios that exercise them, its area and its own presentation. */
