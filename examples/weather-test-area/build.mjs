@@ -21,7 +21,8 @@ function findEsbuild() {
 }
 const esbuild = createRequire(import.meta.url)(findEsbuild())
 
-for (const p of ['game-weather', 'game-weather-three', 'game-vfx', 'game-contracts']) {
+const vehicles = ['game-vehicles', 'game-vehicles-fleet', 'game-vehicles-three']
+for (const p of ['game-weather', 'game-weather-three', 'game-vfx', 'game-contracts', ...vehicles]) {
   if (!existsSync(join(pkg(p), 'dist/index.js'))) throw new Error(`${p} is not built: run pnpm -r build first`)
 }
 
@@ -41,6 +42,8 @@ const result = await esbuild.build({
     '@adatechnology/game-vfx': join(pkg('game-vfx'), 'dist/index.js'),
     '@adatechnology/game-contracts': join(pkg('game-contracts'), 'dist/index.js'),
     '@adatechnology/game-audio': join(pkg('game-audio'), 'dist/index.js'),
+    // the lamp rig's car comes from the vehicles SDK
+    ...Object.fromEntries(vehicles.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
   },
 })
 mkdirSync(join(here, 'dist'), { recursive: true })
