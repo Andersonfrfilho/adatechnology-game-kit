@@ -119,7 +119,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     if (locked) {
       try {
         const nav = (typeof navigator !== 'undefined' ? navigator : null) as unknown as { keyboard?: { lock?(keys?: string[]): Promise<void> } } | null
-        nav?.keyboard?.lock?.(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyX', 'KeyC', 'KeyQ', 'KeyR', 'ControlLeft', 'ControlRight']).catch(() => {})
+        nav?.keyboard?.lock?.().catch(() => {})
       } catch {
         // ignore if not supported
       }
@@ -201,11 +201,10 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   const onKeyDown = (e: KeyboardEvent): void => {
     if (typing(e)) return
     if (e.code === 'Space' || e.code === 'Tab') e.preventDefault()
-    // When Ctrl or Meta is held, prevent browser shortcuts from intercepting game actions (Ctrl+S save, Ctrl+W close tab, Ctrl+X cut, Ctrl+D bookmark, etc.)
-    if (e.ctrlKey || e.metaKey || keys.has('ControlLeft') || keys.has('ControlRight')) {
-      if (e.code !== 'F12' && e.code !== 'F5' && e.code !== 'F11') {
-        e.preventDefault()
-      }
+    // Ctrl/Meta/Alt chords are game input while playing (crouch + key); only F keys stay with the browser
+    const isControlHeld = e.ctrlKey || e.metaKey || keys.has('ControlLeft') || keys.has('ControlRight')
+    if (isControlHeld || (e.altKey && locked)) {
+      if (!/^F\d+$/.test(e.code)) e.preventDefault()
     }
     if (!e.repeat) keys.add(e.code)
     o.hooks.key(e.code, true, e)
