@@ -20,6 +20,30 @@ export interface ExplosiveTripwire {
   readonly height?: number
 }
 
+/**
+ * What a world explosive holds and how it behaves once the shell is punctured or its valve is opened (a pressure vessel: the P13 cylinder). `game-destruction` reads `fluid`,
+ * `liters` and `pressurized` from `PartSpec.contains`; the host plays the timings (Laboratório de Explosões, `SC.p13` L894-911).
+ */
+export interface ExplosiveLeak {
+  /** What escapes (`gas`: flammable, it lights from a spark, a flame or a blast). */
+  readonly fluid: string
+  /** Litres of it at the start (13 kg of liquid propane at 0.54 kg per litre is about 24 l). */
+  readonly liters: number
+  readonly pressurized: boolean
+  /** Seconds from the first leak to the jet catching fire as a torch when nothing lit it before (the lab: the white jet runs 0.8 s, then it lights). */
+  readonly igniteDelay: number
+  /** Seconds the white jet hisses and shoves the vessel before it lights (the lab's 0 to 0.8 s). */
+  readonly hissSeconds?: number
+}
+
+/** What is left of the vessel after the blast: the torn shell flies off trailing fire (the lab: `vy` 13 m/s, a fire trail for about 1.8 s). */
+export interface ExplosiveShell {
+  /** Metres per second, upwards. */
+  readonly launchSpeed: number
+  /** Seconds the flying shell trails fire. */
+  readonly trailSeconds: number
+}
+
 export interface ExplosiveDef {
   readonly id: ExplosiveId
   readonly name?: string
@@ -49,6 +73,10 @@ export interface ExplosiveDef {
   readonly fire?: { temperature: number; radius: number; seconds: number }
   readonly triggers?: readonly ExplosiveTrigger[]
   readonly chain?: ExplosiveChain
+  /** A world explosive that is a pressure vessel (the P13 cylinder): the gas it holds and when a leak catches fire. Absent: a bullet only primes it. */
+  readonly leak?: ExplosiveLeak
+  /** What is left of the vessel after the blast (see `ExplosiveShell`). */
+  readonly shell?: ExplosiveShell
   /** The trip wire of an explosive with the `wire` trigger; without it the one in `rules.explosives.tripwire` is used. */
   readonly tripwire?: ExplosiveTripwire
   /** Kilograms. */

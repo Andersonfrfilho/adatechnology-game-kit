@@ -11,10 +11,12 @@ export { createWeaponsTestModule }
 // the site copies the weapon thumbnails to site/dist/weapon-svg, next to the folder of each example page
 const SITE_THUMBNAIL_BASE = '../weapon-svg/'
 
-/** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the weapons area. Returns the room's module report. */
+/** Creates the module for the room's locale (`?lang=en` or pt-BR), loads it and opens the weapons area (behind the room's loading indicator). Returns the room's module report. */
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const report = room.loadModule(createWeaponsTestModule({ thumbnailBase: SITE_THUMBNAIL_BASE, ...options, locale: lang }))
-  room.openArea('weapons_area')
+  // the area is heavy (hundreds of items, or a whole fleet): the room's loading indicator shows while it is laid, one frame after this returns
+  if (room.openAreaAsync) void room.openAreaAsync('weapons_area')
+  else room.openArea('weapons_area')
   return report
 }

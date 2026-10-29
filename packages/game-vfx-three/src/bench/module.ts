@@ -301,6 +301,11 @@ export function createVfxTestModule(
     controls,
     layers,
     metrics,
+    // opening the effects area puts the camera at the bench view (the initial distance does not move it: that would take the player's view on load)
+    area: () => ({
+      placements: [],
+      view: { eye: eyeFor(DEFAULT_DISTANCE), target: [0, 1.2, 0] },
+    }),
     attach(host: ModuleHost) {
       const bench = host.bench;
       let own: VfxRenderer | undefined;
@@ -320,6 +325,9 @@ export function createVfxTestModule(
       let phase = 0;
       let handle: EffectHandle | null = null;
       let sinceRepeat = 0;
+      // The room hands a module its initial and restored values right after attach (`sendInitial`), in the same tick: those set the state
+      // (effect, variant, sheet) but must not play. Playing starts with the first frame, i.e. with what the user does afterwards.
+      let live = false;
 
       read = () => {
         const def = explosions[effect];
@@ -370,7 +378,7 @@ export function createVfxTestModule(
               },
         );
         bench?.sheet?.(sheetFor(id));
-        replay();
+        if (live) replay();
       }
 
       function look(): void {
@@ -389,7 +397,7 @@ export function createVfxTestModule(
           choose(change.value);
         else if (change.id === "variant" && typeof change.value === "string") {
           variant = change.value;
-          if (recipes[effect]?.params) replay();
+          if (live && recipes[effect]?.params) replay();
         } else if (change.id === "auto_repeat") auto = change.value === true;
         else if (change.id === "distance" && typeof change.value === "number") {
           distance = change.value;
@@ -399,6 +407,7 @@ export function createVfxTestModule(
       };
       const offChange = bench?.onChange(apply);
       const offFrame = host.onFrame((dt) => {
+        live = true;
         phase += dt;
         sinceRepeat += dt;
         own?.update(dt);

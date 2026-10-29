@@ -686,7 +686,14 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     },
     measure: (root) => {
       if (!latestTHREE) return null
+      // the size of the object itself: a piece that a blast or a throw has turned (it, or the holder the room put around it) is measured upright
+      const turned: Array<{ node: THREE_NS.Object3D; rotation: THREE_NS.Euler }> = []
+      for (let node: THREE_NS.Object3D | null = root; node; node = node.parent) turned.push({ node, rotation: node.rotation.clone() })
+      for (const { node } of turned) node.rotation.set(0, 0, 0)
+      root.updateWorldMatrix(true, true)
       const size = new latestTHREE.Box3().setFromObject(root).getSize(new latestTHREE.Vector3())
+      for (const { node, rotation } of turned) node.rotation.copy(rotation)
+      root.updateWorldMatrix(true, true)
       return [size.x, size.y, size.z]
     },
     items: () => [

@@ -1617,6 +1617,9 @@ importers:
       '@adatechnology/game-interactables-three':
         specifier: workspace:*
         version: link:../game-interactables-three
+      '@adatechnology/game-items-three':
+        specifier: workspace:*
+        version: link:../game-items-three
       '@adatechnology/game-shapes-three':
         specifier: workspace:*
         version: link:../game-shapes-three

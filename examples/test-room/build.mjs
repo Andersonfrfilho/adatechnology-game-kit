@@ -44,12 +44,22 @@ async function bundleMain(full) {
   return result.outputFiles[0].text
 }
 const safe = (s) => s.replace(/<\/(script|style)/gi, '<\\/$1')
-const css = safe(readFileSync(join(here, 'src/style.css'), 'utf8'))
+// the loading indicator's look comes from the room's own source (game-test-room/src/loading-view.ts, no dependency), so the screen the page starts with and the one the room shows later are one
+const view = await esbuild.build({ entryPoints: [join(pkg('game-test-room'), 'src/loading-view.ts')], bundle: true, write: false, format: 'esm', platform: 'node', target: 'es2020' })
+const { LOADING_CSS, loadingMarkup } = await import(`data:text/javascript;base64,${Buffer.from(view.outputFiles[0].text).toString('base64')}`)
+const css = safe(readFileSync(join(here, 'src/style.css'), 'utf8') + LOADING_CSS)
 const template = readFileSync(join(here, 'index.html'), 'utf8')
-const page = (bundle) => template.replace('/*STYLE*/', () => css).replace('/*BUNDLE*/', () => safe(bundle))
+// The default page paints a loading screen on its first frame; the bare room has nothing to load, so it has none.
+const overlay = `${loadingMarkup({ title: 'Carregando a sala de testes…', step: 'Iniciando…', solid: true, fixed: true, id: 'boot' })}
+<script>(function(){if(/[?&]lang=en(&|$)/.test(location.search)){var b=document.getElementById('boot');b.querySelector('.tr-loading-label').textContent='Loading the test room…';b.querySelector('.tr-loading-step').textContent='Starting…'}})()</script>`
+const page = (bundle, full) =>
+  template
+    .replace('/*STYLE*/', () => css)
+    .replace('<!--BOOT-->', () => (full ? overlay : ''))
+    .replace('<script>/*BUNDLE*/</script>', () => (full ? `<script type="text/plain" id="room-bundle">${safe(bundle)}</script>` : `<script>${safe(bundle)}</script>`))
 
 // 1. the bare room, for the other areas (they add their own module over it)
-const baseHtml = page(await bundleMain(false))
+const baseHtml = page(await bundleMain(false), false)
 mkdirSync(join(here, 'base'), { recursive: true })
 const basePath = join(here, 'base/test-room.html')
 writeFileSync(basePath, baseHtml)
@@ -59,11 +69,67 @@ writeFileSync(basePath, baseHtml)
 execFileSync(process.execPath, [join(here, '../interactables-test-area/build.mjs')], { stdio: 'inherit', env: { ...process.env, ROOM_HTML: basePath } })
 const area = readFileSync(join(here, '../interactables-test-area/dist/furniture-area.js'), 'utf8')
 
-// 3. the default page: the room, then the teams' content loaded into it
-const fullHtml = page(await bundleMain(true))
+// 3. the default page: the room, then the teams' content loaded into it. Both bundles ride as inert text so the HTML parses at once and the loading screen paints on the first frame;
+//    the boot script then runs the room bundle after a paint, loads the modules one at a time (yielding to the browser between them, with the step on the screen) and removes the screen.
+const fullHtml = page(await bundleMain(true), true)
 const at = fullHtml.lastIndexOf('</body>')
-const boot = `window.__furnitureReport = FurnitureArea.loadInto(window.__testRoom)\nwindow.__roomStart && window.__roomStart()`
-const html = `${fullHtml.slice(0, at)}<script>${safe(area)}\n${boot}</script>\n${fullHtml.slice(at)}`
+const boot = `(function () {
+  var lang = /[?&]lang=en(&|$)/.test(location.search) ? 'en' : 'pt'
+  var title = lang === 'en' ? 'Loading the test room…' : 'Carregando a sala de testes…'
+  var paint = function () {
+    return new Promise(function (resolve) {
+      var done = false
+      var finish = function () { if (!done) { done = true; resolve() } }
+      requestAnimationFrame(function () { setTimeout(finish, 0) })
+      setTimeout(finish, 100)
+    })
+  }
+  var run = function (id) {
+    var script = document.createElement('script')
+    script.textContent = document.getElementById(id).textContent
+    document.body.appendChild(script)
+  }
+  var shown = document.getElementById('boot')
+  var task = null
+  // the first screen is static markup (the room's bundle has not run); once the room exists its own loading indicator takes over, opaque, and the markup goes
+  var progress = function (p) {
+    if (p.done) return task.step(undefined, 100)
+    task.step(p.name + ' ' + p.index + '/' + p.total, Math.round(((p.index - 1) / p.total) * 100))
+  }
+  var failed = function (error) {
+    var text = (lang === 'en' ? 'Loading failed: ' : 'Falha ao carregar: ') + (error && error.message ? error.message : error)
+    var step = (document.querySelector('.tr-loading-step') || {})
+    step.textContent = text
+    step.style && (step.style.color = '#ff8a80')
+    throw error
+  }
+  paint().then(paint).then(function () {
+    run('room-bundle')
+    task = window.__bootRoom.loading.begin(title, { total: 100, opaque: true })
+    task.step(lang === 'en' ? 'Starting…' : 'Iniciando…', 0)
+    return paint()
+  }).then(function () {
+    // with ?ui=0 the room draws no indicator: the first screen stays until the end
+    if (window.__bootRoom.loading.element) shown.remove()
+    run('room-area')
+    return FurnitureArea.loadIntoAsync(window.__bootRoom, { onProgress: progress })
+  }).then(function (report) {
+    window.__bootReport = report
+    return window.__roomStart && window.__roomStart()
+  }).then(function () {
+    task.step(lang === 'en' ? 'Preparing the picture…' : 'Preparando a imagem…', 100)
+    return paint()
+  }).then(function () {
+    window.__bootRoom.warmUp()
+    return paint()
+  }).then(function () {
+    window.__testRoom = window.__bootRoom
+    window.__furnitureReport = window.__bootReport
+    task.end()
+    shown.remove()
+  }).catch(failed)
+})()`
+const html = `${fullHtml.slice(0, at)}<script type="text/plain" id="room-area">${safe(area)}</script>\n<script>${boot}</script>\n${fullHtml.slice(at)}`
 
 mkdirSync(join(here, 'dist'), { recursive: true })
 writeFileSync(join(here, 'dist/test-room.html'), html)

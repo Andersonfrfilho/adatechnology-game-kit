@@ -59,6 +59,7 @@ describe('createVfxTestModule', () => {
     const { host, frame, send, patches, sheets, looks } = fakeHost()
     const module = createVfxTestModule()
     const detach = module.attach!(host)
+    frame(1 / 60)
     send({ kind: 'control', id: 'effect', value: 'm67' })
     for (let i = 0; i < 10; i++) frame(1 / 60)
     const metric = (id: string): number => Number(module.metrics!('en').find((m) => m.id === id)!.read())
@@ -84,10 +85,29 @@ describe('createVfxTestModule', () => {
     expect(sheets.at(-1)).toBeNull()
   })
 
+  it('does not play the initial or restored values; the replay action and a later pick do', () => {
+    const { host, frame, send, sheets } = fakeHost()
+    const module = createVfxTestModule({ locale: 'en' })
+    module.attach!(host)
+    const metric = (id: string): number => Number(module.metrics!('en').find((m) => m.id === id)!.read())
+    // what the room sends right after attach: the state is set (sheet up), nothing plays
+    send({ kind: 'control', id: 'effect', value: 'm67' })
+    send({ kind: 'control', id: 'variant', value: 'none' })
+    for (let i = 0; i < 120; i++) frame(1 / 60)
+    expect(sheets.at(-1)?.title).toBeTruthy()
+    expect(metric('puffs')).toBe(0)
+    expect(metric('blast_time')).toBe(0)
+    expect(metric('budget_particles')).toBeGreaterThan(100)
+    send({ kind: 'action', id: 'replay' })
+    for (let i = 0; i < 10; i++) frame(1 / 60)
+    expect(metric('puffs')).toBeGreaterThan(10)
+  })
+
   it('replays by itself while auto replay is on', () => {
     const { host, frame, send } = fakeHost()
     const module = createVfxTestModule({ repeatSeconds: 1 })
     module.attach!(host)
+    frame(1 / 60)
     send({ kind: 'control', id: 'auto_repeat', value: true })
     send({ kind: 'control', id: 'effect', value: 'm67' })
     for (let i = 0; i < 70; i++) frame(1 / 60)

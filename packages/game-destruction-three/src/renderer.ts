@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { DebrisKind, DestructionEvent, Fragment, MaterialDef, PartSpec, Vec3 } from '@adatechnology/game-destruction'
+import { blastShove } from '@adatechnology/game-contracts'
 import { createVfx, effectForEvent, EVENT_EFFECTS_MAP } from '@adatechnology/game-vfx'
 import type { GameEvent } from '@adatechnology/game-vfx'
 import type { VfxWorld } from '@adatechnology/game-vfx'
@@ -49,6 +50,8 @@ interface Leak {
   rate: number
   pressurized: boolean
   acc: number
+  /** The part had a through opening when the leak began: the leak ends when it has none (a valve shut with `seal`). */
+  opened: boolean
 }
 
 const FLUID_COLORS: Record<string, number> = {
@@ -633,7 +636,7 @@ class Renderer implements DestructionRenderer {
           same.direction = ev.direction
         } else {
           if (this.leaks.length >= 24) this.leaks.shift()
-          this.leaks.push({ object: ev.object, part: ev.part, fluid: ev.fluid, point: ev.point, direction: ev.direction, rate: ev.rate, pressurized: ev.pressurized, acc: 0 })
+          this.leaks.push({ object: ev.object, part: ev.part, fluid: ev.fluid, point: ev.point, direction: ev.direction, rate: ev.rate, pressurized: ev.pressurized, acc: 0, opened: this.world.part(ev.object, ev.part)?.holes.some((h) => h.through) ?? false })
         }
         void key
         break
@@ -961,24 +964,41 @@ class Renderer implements DestructionRenderer {
     const report = options.report
     const confinement = report?.find((r) => r.blast !== undefined)?.blast?.confinement ?? 1
     const energy = ev.energy * confinement
-    for (const pc of this.pieceSys.list) {
+    // the energy that got to an object after what stood in the way (`blast.shelter`); the whole of it when the blast carries no report
+    const reachOf = (objectId: string): number => report?.find((r) => r.object === objectId)?.blast?.shelter ?? 1
+    const shove = (pc: PieceBody): void => {
       this.pieceSys.centerOf(pc, c)
-      const dx = c.x - p[0]
-      const dy = c.y - p[1]
-      const dz = c.z - p[2]
-      const d = Math.hypot(dx, dy, dz)
-      if (d > ev.radius) continue
-      const fall = (1 - d / ev.radius) ** 2
-      // the energy that got to this piece after what stood in the way (`blast.shelter`); the old formula when the blast carries no report
-      const reach = report?.find((r) => r.object === pc.objectId)?.blast?.shelter ?? 1
-      const speed = Math.min(30, Math.sqrt((2 * energy * reach * 0.02) / pc.mass)) * fall
-      const inv = d > 1e-4 ? 1 / d : 0
-      const dir: Vec3 = d > 1e-4 ? [dx * inv, dy * inv + 0.3, dz * inv] : [0, 1, 0]
+      const hit = blastShove({ point: p, energy, radius: ev.radius, reach: reachOf(pc.objectId) }, { position: [c.x, c.y, c.z], mass: pc.mass }, this.o.blastShove)
+      if (!hit) return
       const spread = pc.halfExtents[0]
-      this.pieceSys.impulse(pc, [dir[0] * speed * pc.mass, dir[1] * speed * pc.mass, dir[2] * speed * pc.mass], [c.x + (this.rng() - 0.5) * spread, c.y + spread * 0.5, c.z + (this.rng() - 0.5) * spread])
+      const momentum = hit.speed * pc.mass
+      this.pieceSys.impulse(pc, [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum], [c.x + (this.rng() - 0.5) * spread, c.y + spread * 0.5, c.z + (this.rng() - 0.5) * spread])
     }
+    for (const pc of [...this.pieceSys.list]) shove(pc)
+    if (this.o.shoveable) this.loosen(p, ev.radius, energy, reachOf)
     this.fragments.blast(p, ev.radius, Math.min(20, Math.sqrt(energy) * 0.08))
     this.sound('explode', p, clamp(0.5 + ev.radius / 10, 0.5, 1))
+  }
+
+  /** The bound objects without a piece that the host lets a blast move (`shoveable`): the ones it reaches with enough speed become pieces and get the shove. */
+  private loosen(point: Vec3, radius: number, energy: number, reachOf: (objectId: string) => number): void {
+    const shoveable = this.o.shoveable
+    if (!shoveable) return
+    for (const b of [...this.bounds.values()]) {
+      if (b.piece || this.pieceSys.get(b.id) || !shoveable(b.id) || !this.world.has(b.id)) continue
+      const { half, center } = this.measure(b.root, this.meshesOf(b))
+      const world = center.clone().applyQuaternion(b.root.quaternion).add(b.root.position)
+      const mass = this.massOf(b.id)
+      const hit = blastShove({ point, energy, radius, reach: reachOf(b.id) }, { position: [world.x, world.y, world.z], mass }, this.o.blastShove)
+      if (!hit) continue
+      const piece = this.makePiece(b.id, { mass })
+      const body = this.pieceSys.get(b.id)
+      if (!body) continue
+      this.o.onLoosened?.(b.id, piece)
+      const spread = half[0]
+      const momentum = hit.speed * mass
+      this.pieceSys.impulse(body, [hit.direction[0] * momentum, hit.direction[1] * momentum, hit.direction[2] * momentum], [world.x + (this.rng() - 0.5) * spread, world.y + spread * 0.5, world.z + (this.rng() - 0.5) * spread])
+    }
   }
 
   private playExplosion(ev: Ev<'explode'>, options: ExplodeOptions): void {
@@ -1094,7 +1114,8 @@ class Renderer implements DestructionRenderer {
     for (let i = this.leaks.length - 1; i >= 0; i--) {
       const l = this.leaks[i]
       const ps = this.world.part(l.object, l.part)
-      if (!ps || ps.liters === undefined || ps.liters <= 0) {
+      // a leak ends when the container is empty or the opening is closed (a valve shut, `seal`)
+      if (!ps || ps.liters === undefined || ps.liters <= 0 || (l.opened && !ps.holes.some((h) => h.through))) {
         this.leaks.splice(i, 1)
         continue
       }

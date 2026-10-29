@@ -90,6 +90,18 @@
         0.6
       ]
     },
+    "mass": 28,
+    "leak": {
+      "fluid": "gas",
+      "liters": 24,
+      "pressurized": true,
+      "igniteDelay": 0.8,
+      "hissSeconds": 0.8
+    },
+    "shell": {
+      "launchSpeed": 13,
+      "trailSeconds": 1.8
+    },
     "sources": [
       "arsenal",
       "lab",

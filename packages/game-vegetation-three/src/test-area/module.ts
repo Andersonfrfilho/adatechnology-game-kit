@@ -256,9 +256,9 @@ export function createVegetationTestModule(options: VegetationTestOptions = {}):
       { kind: 'choice', id: 'season', name: text.controls.season, hint: text.hints.season, options: (['spring', 'summer', 'autumn', 'winter'] as const).map((id) => ({ id, name: text.options.season[id] as string })), default: 'spring' },
       { kind: 'number', id: 'wind', name: text.controls.wind, hint: text.hints.wind, min: 0, max: 1, step: 0.05, default: 0.35 },
       { kind: 'number', id: 'gust', name: text.controls.gust, hint: text.hints.gust, min: 0, max: 1, step: 0.05, default: 0.15 },
-      { kind: 'action', id: 'plant_lot', name: text.actions.plant_lot },
+      { kind: 'action', id: 'plant_lot', name: text.actions.plant_lot, slow: true },
       { kind: 'action', id: 'clear_lot', name: text.actions.clear_lot },
-      { kind: 'action', id: 'toggle_walker', name: text.actions.toggle_walker },
+      { kind: 'action', id: 'toggle_walker', name: text.actions.toggle_walker, slow: true },
     ],
     layers: (): ModuleLayer[] => (['colliders', 'piece_boxes', 'wood_axes'] as const).map((id) => ({ id, name: text.layers[id], default: false })),
     metrics: (): ModuleMetric[] => [

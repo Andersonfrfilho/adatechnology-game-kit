@@ -21,6 +21,8 @@ import { createCrowd } from './crowd'
 import type { Crowd } from './crowd'
 import { HIT_PRESETS, hitFor, hitPresetOf } from './hits'
 import { personSpecOf } from './person-spec'
+import { bodyMass, knockOf, KNOCKED_DOWN_ANGLE, stepKnock } from './knock'
+import type { Knock } from './knock'
 import { createScenarios } from './scenarios'
 import type { AreaContext, ScenarioDeps } from './scenarios'
 import { TEXT } from './text'
@@ -45,6 +47,8 @@ type Entry = {
   character: DamageCharacter
   walk: number
   tilt: number
+  /** What a blast is doing to the body now (see `knock.ts`); undefined at rest. */
+  knock?: Knock
 }
 
 const MOMENTS_WITH_LIMP = new Set(['limp', 'crawl'])
@@ -240,6 +244,18 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
 
   const animate = (entry: Entry, dt: number): void => {
     const { root, character } = entry
+    if (entry.knock) {
+      const rig = root.userData.rig as { fig: { rotation: { x: number } } } | undefined
+      const ground = (x: number, z: number): number => host?.groundAt(x, z) ?? 0
+      const done = stepKnock(entry.knock, root.position, dt, ground, character.alive)
+      if (done) entry.knock = undefined
+      if (character.alive && rig) rig.fig.rotation.x = -(entry.knock?.lying ?? 0) * KNOCKED_DOWN_ANGLE
+      if (entry.knock && entry.knock.lying > 0 && character.alive) {
+        // down on the ground: the body does not walk
+        entry.eyes?.off()
+        return
+      }
+    }
     if (!character.alive) {
       entry.tilt = Math.min(1, entry.tilt + dt * 2)
       const rig = root.userData.rig as { fig: { rotation: { x: number } } } | undefined
@@ -425,6 +441,16 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
       wounds = createWounds(lent.THREE as Three, { random, scene, groundAt: (x, z) => lent.groundAt(x, z), ...(bridge ? { bridge } : {}), ...(sound ? { sound } : {}) })
       for (const entry of entries.values()) trackEntry(entry)
       const stopChange = lent.bench?.onChange(onChange)
+      // a blast shoves the bodies the way the host shoves its loose items, and knocks them down when it is strong enough (the damage itself is the world's)
+      const stopEvents = lent.on((event) => {
+        if (event.type !== 'explosion') return
+        for (const entry of entries.values()) {
+          if (!entry.root.parent) continue
+          const p = entry.root.position
+          const knock = knockOf(event, [p.x, p.y, p.z], bodyMass(entry.character.spec.height, entry.character.spec.build), lent.blastShove)
+          if (knock) entry.knock = entry.knock ? { ...knock, lying: entry.knock.lying } : knock
+        }
+      })
       const stopFrame = lent.onFrame((dt) => {
         time += dt
         for (const [id, entry] of entries) {
@@ -441,6 +467,7 @@ export function createCharactersTestModule(options: CharactersTestOptions = {}):
       })
       return () => {
         stopChange?.()
+        stopEvents()
         stopFrame()
         clearOverlays()
         wounds?.dispose()

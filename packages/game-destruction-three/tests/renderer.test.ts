@@ -466,6 +466,18 @@ describe('leaks', () => {
     for (let i = 0; i < 400; i++) renderer.update(1 / 60) // every particle expires
     expect(renderer.stats().particles).toBe(0)
   })
+
+  it('stops when the opening is closed (a valve shut with seal), the container still holding its liters', () => {
+    const { world, renderer } = setup()
+    world.addObject('o1', [partState('tank', 'steel', { liters: 5, holes: [{ point: [0, 1, 0], normal: [1, 0, 0], diameter: 0.008, through: true, vent: true }] })])
+    renderer.bind('o1', new THREE.Group())
+    world.emit({ type: 'leak', object: 'o1', part: 'tank', fluid: 'gas', point: [0, 1, 0], direction: [1, 0, 0], rate: 0.4, pressurized: true })
+    for (let i = 0; i < 20; i++) renderer.update(1 / 60)
+    expect(renderer.stats().particles).toBeGreaterThan(5)
+    world.part('o1', 'tank')!.holes = []
+    for (let i = 0; i < 400; i++) renderer.update(1 / 60)
+    expect(renderer.stats().particles).toBe(0)
+  })
 })
 
 describe('particles and explosions', () => {
@@ -632,5 +644,56 @@ describe('clear and dispose', () => {
     const { world, renderer } = setup()
     renderer.dispose()
     expect(world.handlers).toHaveLength(0)
+  })
+})
+
+describe('the shove of a blast', () => {
+  const crate = (opts: Partial<RendererOptions>, at = 2, mass = 10) => {
+    const { world, renderer, scene } = setup(opts)
+    world.addObject('crate', [partState('box', 'wood', { mass })])
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.6))
+    const root = new THREE.Group()
+    root.add(mesh)
+    root.position.set(at, 0.2, 0)
+    scene.add(root)
+    renderer.bind('crate', root, { parts: { box: mesh } })
+    return { renderer, root }
+  }
+
+  it('falls off with (1 - d/r)^2 and takes its numbers from the options', () => {
+    const speedAt = (opts: Partial<RendererOptions>, at: number): number => {
+      const { renderer } = crate(opts, at)
+      const piece = renderer.makePiece('crate')
+      renderer.explode([0, 0.2, 0], 50000, 8, { visual: false })
+      return Math.hypot(...piece.velocity)
+    }
+    const near = speedAt({}, 2)
+    const far = speedAt({}, 5)
+    expect(near).toBeGreaterThan(far)
+    expect(far).toBeGreaterThan(0)
+    expect(speedAt({ blastShove: { coupling: 0.04 } }, 2)).toBeGreaterThan(near)
+    expect(speedAt({ blastShove: { maxSpeed: 0.5 } }, 2)).toBeLessThan(0.55)
+    expect(speedAt({ blastShove: { minSpeed: 100 } }, 2)).toBe(0)
+  })
+
+  it('makes a bound object without a piece one when the host lets a blast move it, and only then', () => {
+    const loosened: string[] = []
+    const { renderer, root } = crate({ shoveable: (id) => id === 'crate', onLoosened: (id) => loosened.push(id) }, 3, 60)
+    expect(renderer.piece('crate')).toBeNull()
+    renderer.explode([0, 0.2, 0], 200000, 8, { visual: false })
+    const piece = renderer.piece('crate')
+    expect(piece).not.toBeNull()
+    expect(loosened).toEqual(['crate'])
+    expect(piece!.velocity[0]).toBeGreaterThan(1)
+    for (let i = 0; i < 30; i++) renderer.update(1 / 60)
+    expect(root.position.x).toBeGreaterThan(3.5)
+
+    const fixed = crate({ shoveable: () => false }, 3, 60)
+    fixed.renderer.explode([0, 0.2, 0], 200000, 8, { visual: false })
+    expect(fixed.renderer.piece('crate')).toBeNull()
+
+    const far = crate({ shoveable: () => true }, 7.9, 60)
+    far.renderer.explode([0, 0.2, 0], 200000, 8, { visual: false })
+    expect(far.renderer.piece('crate')).toBeNull()
   })
 })

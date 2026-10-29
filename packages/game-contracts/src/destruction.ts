@@ -91,6 +91,8 @@ export interface PartSpec {
   explodes?: {
     energy: number
     radius: number
+    /** Inside this radius (metres) the blast is lethal to a body; from here to `radius` it only hurts, less with distance. Without it a body takes the energy falling off over `radius`. */
+    lethalRadius?: number
     atC?: number
     /**
      * Chain reaction: what sets the part off before it is destroyed and the seconds from that to the blast (a number, or `[min, max]` drawn
@@ -416,6 +418,8 @@ export interface Hit {
   caliber?: number
   /** Radius of effect in metres (blast radius, flame radius, blunt contact radius). */
   radius?: number
+  /** `explosive` only: inside this radius (metres) a body takes the blast as lethal; between it and `radius` it is hurt, less with distance. */
+  lethalRadius?: number
   /** Source temperature for `fire` and `heat`. */
   temperature?: number
   /** Seconds the heat is applied for (a flamethrower calls `hit` every frame with `duration: dt`). */
@@ -486,6 +490,8 @@ export interface Hole {
   diameter: number
   /** The projectile went through. */
   through: boolean
+  /** An opening made on purpose (`DestructionWorld.vent`: a valve, a tap), not damage: `seal` closes it. */
+  vent?: boolean
 }
 
 export interface Crack {
@@ -686,7 +692,7 @@ export type DestructionEvent =
   | (EventBase & { type: 'melt'; part: string; melt: number })
   | (EventBase & { type: 'drip'; part: string; point: Vec3; material: MaterialId })
   | (EventBase & { type: 'leak'; part: string; fluid: FluidKind; point: Vec3; direction: Vec3; rate: number; pressurized: boolean })
-  | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number; effect?: string })
+  | (EventBase & { type: 'explode'; part: string; point: Vec3; energy: number; radius: number; lethalRadius?: number; effect?: string })
   /** An explosive part was set off by a bullet, fire or a nearby blast and will explode `delay` seconds from now (`explodes.chain`). */
   | (EventBase & { type: 'primed'; part: string; point: Vec3; trigger: 'shot' | 'fire' | 'explosion'; delay: number })
   /** A structural part is overloaded (`stress` > 1); throttled to once per 0.5 s per part. Brittle parts also `crack` at stress > 0.8. */

@@ -166,6 +166,8 @@ if (!playwright || !existsSync(page)) {
       const bench = room.bench('floorplan_area')
       bench.set('houses', 4)
       for (let i = 0; i < 40; i++) room.update(0.05)
+      // the rebuild runs behind the room's loading indicator, a frame later: wait for it to finish
+      await room.loading.idle()
       const area = window.__floorplanReport.area
       bench.set('lod', 'auto')
       bench.set('budget', 300)
@@ -184,6 +186,7 @@ if (!playwright || !existsSync(page)) {
       bench.set('houses', 1)
       bench.set('lod', 'auto')
       for (let i = 0; i < 40; i++) room.update(0.05)
+      await room.loading.idle()
       return { levels, tight, roomy, planned, hidden, full, houses: area.houses.length }
     })
     check(`[${lang}] a tight budget lowers the level of the row, a roomy one gives every house the full level; by hand 0 and 2 hold`, lod.levels.length === 4 && lod.tight > lod.roomy && lod.roomy === 0 && lod.planned > 0 && lod.hidden && lod.full && lod.houses === 1, lod)

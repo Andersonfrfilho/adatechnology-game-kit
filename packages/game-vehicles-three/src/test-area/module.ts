@@ -102,6 +102,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     id: itemId(key),
     name: text.items[itemId(key)] ?? key,
     movable: false,
+    // the first build of a vehicle takes most of a second
+    slow: true,
     build: (THREE: unknown) => {
       const kit = kitFor(THREE as Three)
       const built = buildVehicleItem(kit, key, { lod: settings.quality === 'lite' })

@@ -30,3 +30,22 @@ Unused generated fallbacks: every weapon keeps its `generated/` file even when i
 `projectileModel(THREE, { weapon, explosive, kind })` gives a host the model of the round a launcher fires (the RPG-7's PG-7V, the Carl Gustaf's 84 mm round, the rocket of the disposable tubes; the same code the weapon in the hands uses to fly it), long axis +x, or `null`. It is the hook the test room's `projectileModel` option takes. The gallery has no model yet for the throwables (M67, molotov, pipe bomb, dynamite, C4, Claymore, flashbang) nor for the grenade launchers (M203, GP-25, AG36: their rounds), so those answer `null`.
 
 `createWeaponsTestModule({ flyRocket: false })` (and `createWeaponFx`) keeps the viewmodel from flying a rocket of its own out of the launcher, for a host that draws the projectile itself (the test room does, with `projectileModel`): one round flies, not two. The backblast stays.
+
+## Área de explosivos (`explosives_area`)
+O botijão P13 de cozinha com o modelo real do time (`lpg_cylinder_13kg`, 0,353 x 0,49 x 0,358 m), numa quina de cozinha junto da parede de tijolo: geladeira, balcão, fogão e mesa, um zumbi a 3 m, um sobrevivente a 8 m, anéis no chão a 5 m (letal) e 14 m (ferimento) e o jogador a cerca de 6 m (fora do anel letal). Abre por `?area=explosives_area` (ou `?area=Explosivos`; em inglês `Explosives`); a página padrão da sala já a carrega.
+| Id | Tipo | O que faz |
+|---|---|---|
+| `shoot` | botão | "Atirar no botijão": 9 mm no casco; jato branco, tocha em 0,8 s, explosão em 1,4 s |
+| `valve` | botão | "Abrir o registro": vaza sem fogo; sem chama não explode |
+| `light` | botão | "Acender (isqueiro)": a chama acende o vazamento, vira tocha e explode 1,4 s depois |
+| `fire` | botão | "Jogar no fogo": poça de fogo a 700 °C; o casco passa de 300 °C e explode |
+| `reset` | botão | "Reiniciar": refaz a cena |
+| `blast_scale` | número 0,25 a 3 (padrão 1) | "Força da explosão (multiplicador de jogo)": multiplica energia e raios do botijão a cada novo botijão |
+| `rings` | camada | os anéis de 5 m e 14 m |
+| `gas`, `clock`, `phase` | métricas | gás que resta, relógio desde o gatilho e fase |
+
+Cada fase conta no registro da sala, em pt-BR e en, e vira JSON no registro de comportamento. Depois do estouro o casco voa com rastro de fogo e o fogo residual dura 7 s; 2 s depois o registro diz quem morreu e o que a parede e os móveis perderam.
+
+**Onde ajustar a força:** o multiplicador da bancada é só do teste. No jogo, energia, raios, tempos e gás ficam no arsenal: `createArsenal({ patch: { explosives: { propane_p13: { energy, lethalRadius, injuryRadius, chain: { shot, fire, explosion }, leak: { igniteDelay, liters, hissSeconds }, shell: { launchSpeed, trailSeconds } } } } })` (`ArsenalOptions.patch.explosives`). `createExplosivesTestModule({ blastScale })` muda o ponto de partida da bancada.
+
+Cenários: `explosives_p13_shot`, `explosives_p13_valve`, `explosives_p13_fire`, `explosives_p13_chain`.

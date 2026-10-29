@@ -537,6 +537,14 @@ export interface DestructionWorld {
    */
   setLiters(objectId: string, partId: string, liters: number): void
   /**
+   * Opens a through opening of `diameter` metres (default 8 mm) in a container part (`PartSpec.contains`) at a world point, as a valve or a tap does: the part leaks like it does from a bullet hole
+   * (a `leak` event, the level drops in `update`, gas lights from a flame and then burns or goes off by its `explodes.chain`) but nothing is damaged and no `hole` event is sent. `point` defaults to the part's
+   * centre and `normal` (the way the fluid leaves) to up. Returns false when the part holds nothing, is lost or the object is a registered impl; true when it is open (also when it already was).
+   */
+  vent(objectId: string, partId: string, opening?: { point?: Vec3; normal?: Vec3; diameter?: number }): boolean
+  /** Closes the openings `vent` made in a part; returns how many it closed. The leak stops (a gas jet that is burning goes out when the level reaches zero or the fluid no longer flows). */
+  seal(objectId: string, partId: string): number
+  /**
    * Change the wind of the world (`DestructionOptions.wind`) while playing: its speed and the direction it blows towards. Turns the wind on when the
    * world was made without it.
    */

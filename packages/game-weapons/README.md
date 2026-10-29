@@ -194,6 +194,10 @@ goes off on the first hit, like the molotov, which leaves fire of 4 m for 9 s) o
 returns `armed`, `impact`, `dud` and `detonate` events; `trigger('wire' | 'remote' | ...)` sets off what waits. `blastEffect(detonation, point)` says if a point is in
 the lethal or the injury zone (with the cone of a directional charge and the stun of a flashbang) and `backblastEffect(use, point)` the danger behind a tube.
 The world explosives (`propane_p13`, `fuel_barrel`, `car_fuel_tank`, `fuel_pump`, `fuel_station_tank`) carry `chain`, the delays of the chain reaction `game-destruction` uses.
+A world explosive that is a pressure vessel carries two more optional blocks, as data a host plays (the P13 cylinder has both, from the Laboratório de Explosões `SC.p13`):
+`leak: { fluid, liters, pressurized, igniteDelay, hissSeconds? }` is what it holds (24 l of gas = 13 kg of liquid propane at 0.54 kg/l) and the seconds from the first leak
+(a bullet through the shell, or the valve opened) to the jet catching fire as a torch (`igniteDelay` 0.8 s; the blast still comes from `chain`: shot 1.4 s). `shell: { launchSpeed, trailSeconds }`
+is what is left of it after the blast: the torn shell flies up at 13 m/s trailing fire for 1.8 s. Change them like any other value: `patch.explosives.propane_p13.leak.igniteDelay`.
 
 ### Cooking a grenade, safety fuses, the flashbang and trip wires
 

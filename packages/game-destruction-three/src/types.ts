@@ -9,6 +9,7 @@ import type * as THREE_NS from 'three'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { VfxWorld } from '@adatechnology/game-vfx'
+import type { BlastShoveOptions } from '@adatechnology/game-contracts'
 
 export type ThreeNamespace = typeof THREE_NS
 export type Object3D = THREE_NS.Object3D
@@ -35,6 +36,18 @@ export interface RendererOptions {
   autoSplit?: boolean
   /** Called when a loose piece is created (the bench registers it as grabbable). */
   onPiece?: (piece: Piece) => void
+  /**
+   * The numbers of the shove a blast gives to the pieces (`BlastShoveOptions` of game-contracts: how much of the energy becomes speed, the fastest throw, the lift, the falloff).
+   * The defaults give the pieces the speed the blast always gave them, with the cap lowered to 20 m/s.
+   */
+  blastShove?: BlastShoveOptions
+  /**
+   * Bound objects that have no piece but that a blast may move anyway (a fridge, a table: heavy, so not grabbable, but not nailed down either): when this answers true for an object a blast
+   * reaches with enough speed, the renderer makes it a piece (`makePiece`) and shoves it, and tells `onLoosened`. Without it only the pieces move. Never answer true for a wall or a fixture.
+   */
+  shoveable?: (objectId: string) => boolean
+  /** Called when a blast made a bound object a piece (see `shoveable`). */
+  onLoosened?: (objectId: string, piece: Piece) => void
   /** Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). `burn_loop` is sent when a part starts to burn and `burn_end` when it burns out or is put out. */
   onSound?: (key: string, point: Vec3, volume: number) => void
   /**

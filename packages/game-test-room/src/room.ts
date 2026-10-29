@@ -25,6 +25,7 @@ import { buildFromSpec } from './build-from-spec'
 import { createExplosives } from './explosives'
 import type { BlastSummary } from './explosives'
 import { toHostEvent } from './host-events'
+import { createLoading } from './loading'
 import { createLog } from './log'
 import { createRoomMetrics, ROOM_METRICS } from './metrics'
 import { createNarrator } from './narrate'
@@ -61,6 +62,8 @@ interface Entry {
   piece: Piece | null
   last: Vec3
   velocity: Vec3
+  /** Heavy but not fixed (a fridge, a table): not grabbable, yet a blast that reaches it with enough speed makes it a piece and shoves it. */
+  free?: boolean
 }
 
 interface FireZone {
@@ -104,6 +107,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (vars) for (const k of Object.keys(vars)) s = s.split(`{${k}}`).join(String(vars[k]))
     return s
   }
+  // the loading indicator of the room (and of its modules, as `host.loading`): any slow job shows a spinner or a bar so that the page never looks frozen; `ui: false` keeps the state and draws nothing
+  const loading = createLoading({ container: options.container, draw: options.ui !== false, working: t('loading.working') })
   const num = (n: number, digits = 1): string => {
     const s = (Math.round(n * 10 ** digits) / 10 ** digits).toFixed(digits)
     return locale.toLowerCase().startsWith('pt') ? s.replace('.', ',') : s
@@ -223,6 +228,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     groundAt,
     pointScale,
     onSound: playSound,
+    ...(options.blastShove ? { blastShove: options.blastShove } : {}),
+    // a blast moves what is heavy but not nailed down: the renderer makes it a piece the moment the shove reaches it
+    shoveable: (objectId) => {
+      const e = entries.get(objectId)
+      return e?.free === true && !e.piece
+    },
+    onLoosened: (objectId, piece) => {
+      const e = entries.get(objectId)
+      if (!e) return
+      e.piece = piece
+      rendererPieces.set(objectId, piece)
+      action('loosened', t('act.loosened', { name: e.name }), { objectId, itemId: e.so.itemId })
+    },
     onPiece: (piece) => {
       rendererPieces.set(piece.objectId, piece)
       loose.push(piece)
@@ -494,10 +512,35 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   addArena()
 
+  /**
+   * The object of an item, with its root at scale 1: a builder that sizes its model by the scale of the root (the showcase models of game-items-three do, page units to metres) is wrapped
+   * in a group, so that the destruction spec, the piece box and the mass read the object in metres like the eye does.
+   */
+  const wrapped = new WeakMap<THREE_NS.Object3D, THREE_NS.Object3D>()
+  /** A holder that leaves the scene lets go of the object it held: the module that built it reads `root.parent === null` as "not on show". */
+  const letGo = (root: THREE_NS.Object3D): void => {
+    const inner = wrapped.get(root)
+    if (!inner) return
+    inner.removeFromParent()
+    wrapped.delete(root)
+  }
+  const buildRoot = (item: TestRoomItem): THREE_NS.Object3D => {
+    const built = item.build(THREE)
+    if (item.impl || (Math.abs(built.scale.x - 1) < 1e-6 && Math.abs(built.scale.y - 1) < 1e-6 && Math.abs(built.scale.z - 1) < 1e-6)) return built
+    const holder = new THREE.Group()
+    holder.name = built.name
+    holder.userData = built.userData
+    holder.add(built)
+    wrapped.set(holder, built)
+    // a module hides or shows its object through the root it built (the category filter of the items area does): the holder answers for it
+    Object.defineProperty(holder, 'visible', { get: () => built.visible, set: (v: boolean) => void (built.visible = v), configurable: true })
+    return holder
+  }
+
   const spawn = (itemId: string, position?: Vec3, rotationY?: number): SpawnedObject => {
     const item = catalogMap.get(itemId)
     if (!item) throw new Error(`game-test-room: unknown item "${itemId}"`)
-    const root = item.build(THREE)
+    const root = buildRoot(item)
     let pos: Vec3
     if (position) pos = [position[0], position[1], position[2]]
     else {
@@ -541,6 +584,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (own) world.register(own, { id: objectId, position: pos, rotation: [q.x, q.y, q.z, q.w] })
     else world.add(spec, { id: objectId, position: pos, rotation: [q.x, q.y, q.z, q.w] })
     const e = registerEntry(objectId, item.id, root, spec, item.name, parts, item, false, movable)
+    // heavy by its mass and not said to be fixed: a blast can still push it
+    if (!own && !movable && item.movable === undefined) e.free = true
     action('spawn', t('act.spawn', { name: item.name, x: num(pos[0], 1), z: num(pos[2], 1) }), { objectId, itemId: item.id, data: { position: pos, movable, massKg: Math.round(massOfObject(objectId) * 10) / 10 } })
     fire('spawn', e.so)
     return e.so
@@ -571,6 +616,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     if (world.has(id)) world.remove(id)
     e.so.root.removeFromParent()
+    letGo(e.so.root)
     entries.delete(id)
     rendererPieces.delete(id)
     specs.delete(id)
@@ -2079,6 +2125,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     environment,
     groundAt,
     effects: vfx,
+    loading,
+    ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     tool: () => ({
       weapon: toolId,
       category: tool.def.category,
@@ -2150,13 +2198,17 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return () => clearListeners.delete(listener)
     },
   }
+  let sendingInitial = false
   const lendBench = (store: BenchStore): ModuleBench => ({
     value: store.value,
     layer: store.layer,
     onChange: store.onChange,
     patch: store.patch,
     sheet: store.setSheet,
-    look: (eye, target) => room.look(eye, target),
+    // the initial and restored values only set the module's state: they do not move the player's camera (`ModuleArea.view` is how a module asks for a view when its area opens)
+    look: (eye, target) => {
+      if (!sendingInitial) room.look(eye, target)
+    },
   })
   const checkModuleBench = (mod: TestableModule<ScenarioContext>, fail: (problem: string) => void): BenchStore | null => {
     const store = createBenchStore(mod, locale, (error) => reportOnce(`${mod.id}:listener`, t('mod.listener_failed', { name: mod.name, error: failureText(error) })))
@@ -2181,6 +2233,22 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const probe of probes) probe.dispose()
   }
 
+  /** Draws a throw-away blast and a fire (their particle materials and lights make the materials recompile the first time they appear), then clears them: nothing stays in the world, the log or the sound. */
+  const warmUpEffects = (): void => {
+    const ids = vfx.catalog?.() ?? []
+    const flames = ids.filter((id) => /fire|flame/i.test(id)).slice(0, 1)
+    gl.compile(scene, camera)
+    const handles = ['m67', ...flames].filter((id) => ids.includes(id)).map((effect) => vfx.play({ effect, point: [0, 0.1, -4], direction: [0, 1, 0], normal: [0, 1, 0] }))
+    for (let i = 0; i < 3; i++) {
+      vfx.update(0.02)
+      gl.render(scene, camera)
+    }
+    for (const h of handles) if (h !== null) vfx.stop(h)
+    vfx.world.clear()
+    vfx.update(0)
+    gl.render(scene, camera)
+  }
+
   const loadModule = (mod: TestableModule<ScenarioContext>): ModuleReport => {
     const report: ModuleReport = { module: mod.id, items: [], scenarios: [], ok: true, problems: [] }
     const fail = (problem: string): void => {
@@ -2196,6 +2264,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         build: (T) => ti.build(T) as THREE_NS.Object3D,
         spec: ti.spec as TestRoomItem['spec'],
         movable: ti.movable,
+        slow: ti.slow,
         fluid: ti.fluid,
         weapon: ti.weapon,
         impl: ti.impl as TestRoomItem['impl'],
@@ -2211,8 +2280,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       // contract checks on a throwaway build of the item (never added to the scene)
       let partIds: string[] = []
       const base = { module: mod.id, item: item.id }
+      let checked: THREE_NS.Object3D | undefined
       try {
-        const root = item.build(THREE)
+        const root = (checked = buildRoot(item))
         root.updateMatrixWorld(true)
         if (item.impl) {
           const probe = item.impl(root, `${item.id}_check`)
@@ -2235,6 +2305,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         moduleCheck(false, t('mod.destructible_fail', { name: item.name, problems: msg }), { ...base, check: 'destructible', problems: [msg] }, item.id)
         fail(`${item.id}: ${msg}`)
       }
+      if (checked) letGo(checked)
       for (const clip of item.animations ?? []) {
         const r = checkAnimation(clip, partIds)
         moduleCheck(r.ok, r.ok ? t('mod.animation_ok', { name: item.name, clip: clip.id, seconds: num(clip.duration, 1) }) : t('mod.animation_fail', { name: item.name, clip: clip.id, problems: r.problems.join('; ') }), { ...base, check: 'animation', clip: clip.id, problems: r.problems }, item.id)
@@ -2271,7 +2342,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (!activeBench || !benches.has(activeBench)) activeBench = mod.id
     } else if (activeBench === mod.id) activeBench = lastBench()
     if (mod.attach) detachers.set(mod.id, mod.attach(bench ? { ...host, bench: lendBench(bench) } : host))
-    bench?.sendInitial()
+    sendingInitial = true
+    try {
+      bench?.sendInitial()
+    } finally {
+      sendingInitial = false
+    }
     showBench()
     ui?.refresh()
     return report
@@ -2337,8 +2413,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // lays a module area: things that hold others first, so what goes on them finds their top
   const layArea = (layout: ModuleArea): SpawnedObject[] => {
-    const holders = layout.placements.filter((p) => p.surface)
-    const rest = layout.placements.filter((p) => !p.surface)
+    // an area may place items of other modules (a kitchen of the household module around a cylinder): the ones this room did not load are left out and said
+    const known = layout.placements.filter((p) => {
+      if (catalogMap.has(p.item)) return true
+      action('area_skip', t('act.area_skip', { item: p.item }), { itemId: p.item })
+      return false
+    })
+    const holders = known.filter((p) => p.surface)
+    const rest = known.filter((p) => !p.surface)
     const placed = [...holders, ...rest].map((p) => {
       const so = spawn(p.item, p.position, p.rotationY ?? 0)
       if (p.surface) {
@@ -2353,6 +2435,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     if (layout.view) room.look(layout.view.eye, layout.view.target)
     return placed.map(({ so }) => so)
+  }
+
+  /** The name an area is shown with: its module's group, a demo group, or the id. */
+  const areaLabel = (area: string): string => {
+    const mod = [...modules.values()].find((m) => m.id === area || m.group === area)
+    return mod?.group ?? S.groups[area] ?? area
   }
 
   // a test environment per catalogue group, the way the demo site links each area of the index: a loaded module brings its own area,
@@ -2482,8 +2570,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     equip,
     openArea,
+    openAreaAsync: (area) => loading.busy(t('loading.open_area', { area: areaLabel(area) }), () => openArea(area)),
+    loading,
+    busy: (label, work, busyOptions) => loading.busy(label, work, busyOptions),
     loadModule,
-    warmUp,
+    warmUp: () => {
+      warmUp()
+      warmUpEffects()
+    },
     animations: animationsOf,
     playAnimation,
     bench(moduleId) {
@@ -2540,6 +2634,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       window.removeEventListener('resize', onResize)
       player.dispose()
       ui?.dispose()
+      loading.dispose()
       renderer.dispose()
       vfx.dispose()
       craterPatch?.dispose()
@@ -2558,6 +2653,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // UI and loop
   // ---------------------------------------------------------------------------------------------------------------------------------------
+  /** Runs a change of the bench panel: a control the module declares `slow` shows the loading indicator first (and gets its frame to paint), any other runs at once. */
+  const slowly = (moduleId: string, controlId: string, run: () => unknown): void => {
+    const control = benches.get(moduleId)?.controls().find((c) => c.id === controlId)
+    const slow = control?.slow
+    if (!slow) {
+      run()
+      return
+    }
+    void loading.busy(typeof slow === 'string' ? slow : control.name, run).catch((error: unknown) => {
+      action('bench_failed', t('act.bench_failed', { name: control.name, error: error instanceof Error ? error.message : String(error) }), { data: { module: moduleId, control: controlId } })
+    })
+  }
   let ui: RoomUi | null = null
   if (options.ui !== false) {
     const groups = (): Map<string, TestRoomItem[]> => {
@@ -2577,7 +2684,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       groups,
       loadout: () => loadout.map((id) => ({ id, name: arsenal.name(id) })),
       onSpawn: (id) => {
-        spawn(id)
+        const item = catalogMap.get(id)
+        // an item that declares itself slow (a vehicle: its first build takes most of a second) spawns behind the loading indicator
+        if (item?.slow) void loading.busy(typeof item.slow === 'string' ? item.slow : t('loading.spawn', { name: item.name }), () => spawn(id))
+        else spawn(id)
       },
       onEquip: (itemId) => {
         const w = catalogMap.get(itemId)?.weapon
@@ -2617,13 +2727,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       },
       onResize: resize,
       onControl: (id, value) => {
-        if (activeBench) benches.get(activeBench)?.set(id, value)
+        if (activeBench) slowly(activeBench, id, () => benches.get(activeBench as string)?.set(id, value))
       },
       onLayer: (id, on) => {
         if (activeBench) benches.get(activeBench)?.setLayer(id, on)
       },
       onAction: (id) => {
-        if (activeBench) benches.get(activeBench)?.act(id)
+        if (activeBench) slowly(activeBench, id, () => benches.get(activeBench as string)?.act(id))
       },
     })
     ui.hud(hudState())

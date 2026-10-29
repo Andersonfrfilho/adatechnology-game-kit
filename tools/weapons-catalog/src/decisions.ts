@@ -68,6 +68,8 @@ export type ExplosiveExtras = {
   readonly cone?: boolean
   readonly fireTemperature?: number
   readonly fireFrom?: 'game' | 'lab'
+  readonly leak?: { readonly fluid: string; readonly liters: number; readonly pressurized?: boolean; readonly igniteDelay?: number; readonly hissSeconds?: number }
+  readonly shell?: { readonly launchSpeed: number; readonly trailSeconds?: number }
 }
 
 export type ExplosiveDecision = {

@@ -108,6 +108,16 @@ const report = room.loadModule(RENTAL_CARS) // { module, items, scenarios, ok, p
 
 The items join the catalogue under the module's group and its scenarios become buttons. The contract checks run at once and write one line per result to the log: `checkDestructible` for every item with an `impl`, `checkAnimation` for every clip (`✓ Rental car: destructible contract ok (4 parts...)` or `✗ ...: <problem>`). The animations panel lists the clips of the aimed or held item; `room.playAnimation(clipId)` plays one (poses are offsets from the rest pose, events go to the log and `sound` events to `onSound`). The example (`examples/test-room`) loads the SDK's content modules (the same set as `examples/interactables-test-area`).
 
+## Loading indicator
+
+Anything slow shows a spinner or a bar with a line of text over the room, so the page never looks frozen. `room.loading` (`RoomLoading`) is the component and `room.busy(label, work)` its shortcut: `busy` shows the indicator, waits for it to be painted (a synchronous job cannot paint it itself), runs `work` and takes it down, even when `work` throws. For a job in steps use `const task = room.loading.begin(label, { total })`, `task.step(text, done)`, `await task.paint()` and `task.end()`; tasks nest and the last one to end hides the card. `await room.loading.idle()` resolves when no task is open: the way for a scenario or a test to wait for a rebuild that runs behind the indicator. `room.openAreaAsync(area)` is `openArea` behind it. The text follows the room's `locale`, a room with `ui: false` draws nothing and tells the state through `room.loading.on(...)`.
+
+A module declares what is slow and the room does the rest: `ModuleControl.slow` (an action or a control that takes a third of a second or more) and `TestableItem.slow` (a vehicle) make the room's own panel and catalogue run the press or the spawn behind the indicator (`bench().act/set` and `spawn` stay synchronous for scenarios). A module with a job of its own (a house rebuilt after a seed change) calls `host.loading.busy(...)`. `LOADING_CSS` and `loadingMarkup` are the same card as static HTML, for a page that must show it before its scripts run (the default test room's first frame does).
+
+## Blasts shove what is around them
+
+An `explosion` moves the loose items, the heavy furniture that is not fixed, and the bodies of the modules that answer it. One rule, `blastShove` of `@adatechnology/game-contracts`: `min(maxSpeed, sqrt(2 * energy * coupling / mass)) * (1 - d / r)^2` away from the centre with some lift, and nothing under `minSpeed`. The room's `blastShove` option sets the numbers (`coupling` 0.02, `maxSpeed` 20 m/s, `lift` 0.3, `minSpeed` 0.3, `falloffPower` 2) for the renderer's pieces and, as `host.blastShove`, for modules such as the characters area, which slide and knock their people down.
+
 ## Module bench
 
 The room makes **one** effects world (`game-vfx` and its `game-vfx-three` layer) and steps it once per frame, after the destruction renderer. The destruction

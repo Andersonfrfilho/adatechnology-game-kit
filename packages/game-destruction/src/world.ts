@@ -44,6 +44,10 @@ export const SHELTER_DEFAULTS: Required<ShelterOptions> = { k: 2800, brokenTrans
 export const FRAGMENT_HIT_DEFAULTS: Required<FragmentHitOptions> = { max: 24, energyFactor: 0.5, hitType: 'blunt', range: 6, flightTime: 0.4, spread: 10, aim: 40 }
 export const CONFINEMENT_DEFAULTS: Required<ConfinementOptions> = { rays: 26, reach: 1.5, gain: 1.5, power: 2, max: 3 }
 const FLAMMABLE_FLUIDS = ['gas', 'fuel']
+/** Diameter in metres of the opening `vent` makes when none is given: a cylinder valve (about 8 mm). */
+const VENT_DIAMETER = 0.008
+/** A flame lights a flammable leak when it reaches this temperature (the auto-ignition of propane in air is about 470 °C; a lighter flame is above 1000 °C). */
+const FLAME_LIGHTS_LEAK_C = 470
 /** Staged parts: default breach radius (m), blast multiplier on the breach area, area a part must lose to open (m²), and the share of capacity the bare cage keeps. */
 const BREACH_RADIUS = 0.55
 const BREACH_BLAST_FACTOR = 6
@@ -213,6 +217,7 @@ interface Blast {
   point: Vec3
   energy: number
   radius: number
+  lethalRadius?: number
   source?: string
 }
 
@@ -303,7 +308,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** Blasts queued by parts that exploded; each can prime or set off more parts. It ends: a part goes off once and is primed once, so the queue only grows by parts not yet lost. */
   const drainBlasts = () => {
-    for (let blast = blasts.shift(); blast; blast = blasts.shift()) blastWorld(blast.point, blast.energy, blast.radius, blast.source)
+    for (let blast = blasts.shift(); blast; blast = blasts.shift()) blastWorld(blast.point, blast.energy, blast.radius, blast.source, undefined, undefined, blast.lethalRadius)
   }
 
   const run = <T>(fn: () => T): { value: T; events: DestructionEvent[] } => {
@@ -1664,8 +1669,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return
     }
     if (ex) {
-      emit({ ...base(o, src), type: 'explode', part: p.spec.id, point: c, energy: ex.energy, radius: ex.radius, ...(ex.effect !== undefined ? { effect: ex.effect } : {}) })
-      blasts.push({ point: c, energy: ex.energy, radius: ex.radius, source: src })
+      emit({ ...base(o, src), type: 'explode', part: p.spec.id, point: c, energy: ex.energy, radius: ex.radius, ...(ex.lethalRadius !== undefined ? { lethalRadius: ex.lethalRadius } : {}), ...(ex.effect !== undefined ? { effect: ex.effect } : {}) })
+      blasts.push({ point: c, energy: ex.energy, radius: ex.radius, ...(ex.lethalRadius !== undefined ? { lethalRadius: ex.lethalRadius } : {}), source: src })
     }
     partLost(o, p, src)
   }
@@ -1968,7 +1973,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const FLAG_OPEN = 2
 
   /** The legacy blast: every part of every object, then every impl, each at full strength. */
-  const blastPlain = (point: Vec3, energy: number, radius: number, src?: string): HitResult[] => {
+  const blastPlain = (point: Vec3, energy: number, radius: number, src?: string, lethal?: number): HitResult[] => {
     const out: HitResult[] = []
     for (const o of [...objects.values()]) {
       if (vec.distance(toWorld(o.st.position, o.st.rotation, o.bc), point) - o.br >= radius) continue
@@ -1976,7 +1981,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (r.part) out.push(r)
     }
     for (const im of [...impls.values()]) {
-      if (implInRange(im, point, radius)) out.push(implHit(im, { type: 'explosive', point, energy, radius, ...(src !== undefined ? { source: src } : {}) }))
+      if (implInRange(im, point, radius)) out.push(implHit(im, { type: 'explosive', point, energy, radius, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(src !== undefined ? { source: src } : {}) }))
     }
     return out
   }
@@ -1990,7 +1995,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const implInRange = (im: ImplRT, point: Vec3, radius: number): boolean => implParts(im).some(({ ps, c, q }) => distanceToShape(ps.shape, toLocal(c, q, point)) < radius)
 
   /** A blast with shelter, fragment hits or confinement. Parts are served from the nearest to the farthest, so a wall takes the blast (and may break) before what is behind it. */
-  const blastScene = (point: Vec3, energy: number, radius: number, src: string | undefined, cfg: BlastCfg, only?: ObjRT | ImplRT): HitResult[] => {
+  const blastScene = (point: Vec3, energy: number, radius: number, src: string | undefined, cfg: BlastCfg, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
     const mult = confinementOf(cfg.conf, point, radius)
     const E = energy * mult
     const shelter = cfg.shelter
@@ -2105,7 +2110,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           den += f
         }
         const k = den > 0 ? num / den : 1
-        const res = implHit(im, { type: 'explosive', point, energy: E * k, radius, ...(shelter ? { shelter: k } : {}), ...(src !== undefined ? { source: src } : {}) })
+        const res = implHit(im, { type: 'explosive', point, energy: E * k, radius, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(shelter ? { shelter: k } : {}), ...(src !== undefined ? { source: src } : {}) })
         results.set(im, res)
         report(im).shelter = k
       }
@@ -2212,9 +2217,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     rep.fragmentHits++
   }
 
-  const blastWorld = (point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT): HitResult[] => {
+  const blastWorld = (point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
     const cfg = blastCfg(call)
-    const res = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlain(point, energy, radius, src) : blastScene(point, energy, radius, src, cfg, only)
+    const res = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlain(point, energy, radius, src, lethal) : blastScene(point, energy, radius, src, cfg, only, lethal)
     // a blast is a flame: a container that leaks flammable fluid inside it catches
     lightLeaksNear(point, radius)
     return res
@@ -2237,6 +2242,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         p.st.temperature += (T - p.st.temperature) * (1 - Math.exp(-k * duration))
       }
       o.active = true
+      // a flame held against a flammable leak lights it: it burns, or goes off by its chain, at the next update
+      if (T >= FLAME_LIGHTS_LEAK_C && !p.rt.jet && !p.rt.lit && leaksFlammable(p)) p.rt.lit = true
       checkIgnite(o, p, src)
     }
     res.events = cur.slice(start)
@@ -2851,6 +2858,36 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         o.dirty = true
         o.active = true
       }
+    },
+    vent(objectId, partId, opening = {}) {
+      if (impls.has(objectId)) return false
+      const o = getObj(objectId)
+      const p = getPart(o, partId)
+      const c = p.spec.contains
+      if (!c || isLost(p) || (p.st.liters ?? 0) <= 0) return false
+      if (p.st.holes.some((h) => h.vent)) return true
+      return run(() => {
+        const wp = opening.point ?? partXf(o, p).c
+        const wn = vec.normalize(opening.normal ?? [0, 1, 0])
+        const hole: Hole = { point: objLocal(o, wp), normal: objLocalDir(o, wn), diameter: opening.diameter ?? VENT_DIAMETER, through: true, vent: true }
+        p.st.holes.push(hole)
+        if (p.st.holes.length > maxHoles) p.st.holes.shift()
+        o.active = true
+        emit({
+          ...base(o), type: 'leak', part: partId, fluid: c.fluid, point: wp,
+          direction: c.outflow ? vec.normalize(rotateVec(o.st.rotation, rotateVec(p.q, c.outflow))) : wn, rate: holeRate(hole, !!c.pressurized), pressurized: !!c.pressurized,
+        })
+        return true
+      }).value
+    },
+    seal(objectId, partId) {
+      if (impls.has(objectId)) return 0
+      const o = getObj(objectId)
+      const p = getPart(o, partId)
+      const before = p.st.holes.length
+      p.st.holes = p.st.holes.filter((h) => !h.vent)
+      o.active = true
+      return before - p.st.holes.length
     },
     setLiters(objectId, partId, liters) {
       if (impls.has(objectId)) return

@@ -28,6 +28,7 @@ export const EXAMPLES = [
       { id: 'furniture', title: 'Móveis', what: 'Geladeira, sofá, guarda-roupa e TV da casa', setup: roomRow({ ids: ['fridge', 'sofa', 'wardrobe', 'tv'], eye: [0, 1.5, 0.4], target: [0, 0.7, -3], gap: 2 }) },
       { id: 'vehicles', title: 'Veículos', what: 'Hatch, sedan e caminhonete da frota', setup: roomRow({ ids: ['hatch', 'sedan', 'pickup'], eye: [0, 1.8, 3], target: [0, 0.8, -4], z: -5, gap: 4 }) },
       { id: 'plants', title: 'Plantas', what: 'Mangueira, ipê e rosa do viveiro', setup: roomRow({ ids: ['mango_tree', 'yellow_ipe', 'rose_bush_red'], eye: [0, 2, 4], target: [0, 2, -4], z: -5, gap: 4 }) },
+      { id: 'explosives', title: 'Explosivos', what: 'Botijão de gás P13 na cozinha: tiro, registro aberto, isqueiro e fogo, com zumbi a 3 m', setup: `window.__testRoom.openArea('explosives_area')` },
       { id: 'creatures', title: 'Zumbis e bichos', what: 'Zumbi andarilho, corredor e a vaca', setup: roomRow({ ids: ['zombie_walker', 'zombie_runner', 'animal_cow'], eye: [0, 1.6, 1.2], target: [0, 1, -3], gap: 2 }) },
     ],
   },

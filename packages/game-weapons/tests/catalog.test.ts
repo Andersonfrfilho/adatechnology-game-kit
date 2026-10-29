@@ -108,6 +108,17 @@ describe('explosives', () => {
     for (const explosive of EXPLOSIVES) if (!explosive.triggers?.includes('explosion')) expect(explosive.chain, explosive.id).toBeUndefined()
   })
 
+  it('give the P13 cylinder the gas it holds, the delay of its torch and the flight of its shell (Laboratório de Explosões SC.p13 L894-911)', () => {
+    const p13 = arsenal.explosives.get('propane_p13')
+    expect(p13?.leak).toEqual({ fluid: 'gas', liters: 24, pressurized: true, igniteDelay: 0.8, hissSeconds: 0.8 })
+    expect(p13?.shell).toEqual({ launchSpeed: 13, trailSeconds: 1.8 })
+    // 13 kg of liquid propane at 0.54 kg/l, and the torch lights before the blast of the shot chain
+    expect(Math.abs((p13?.leak?.liters ?? 0) - 13 / 0.54)).toBeLessThan(0.5)
+    expect(p13?.leak?.igniteDelay ?? 99).toBeLessThan(p13?.chain && !Array.isArray(p13.chain.shot) ? (p13.chain.shot as number) : 99)
+    expect(p13?.mass).toBe(28)
+    expect(() => createArsenal({ patch: { explosives: { propane_p13: { leak: { fluid: 'gas', liters: 0, pressurized: true, igniteDelay: 0.8 } } } } })).toThrow(/leak of 0 l/)
+  })
+
   it('give every launcher the backblast of the Arsenal §13 (5 m) except the M79 and the ones under a barrel, and every explosive with a timer a fuse', () => {
     for (const def of WEAPONS) {
       if (def.action.kind !== 'launcher') continue

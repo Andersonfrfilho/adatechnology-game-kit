@@ -16,6 +16,8 @@ export function createModule(options = {}) {
 export function loadInto(room, options = {}) {
   const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const report = loadVehiclesTestModule(room, { ...options, locale: lang })
-  room.openArea(VEHICLES_AREA_ID)
+  // the area is heavy (hundreds of items, or a whole fleet): the room's loading indicator shows while it is laid, one frame after this returns
+  if (room.openAreaAsync) void room.openAreaAsync(VEHICLES_AREA_ID)
+  else room.openArea(VEHICLES_AREA_ID)
   return report
 }
