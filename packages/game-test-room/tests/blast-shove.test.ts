@@ -40,6 +40,22 @@ describe('an item whose builder scales the root', () => {
   })
 })
 
+describe('the holder of an item whose builder scales the root', () => {
+  it('answers for the root the module built: its visibility goes through, and it lets go when the item leaves the scene', () => {
+    let built: THREE.Object3D | undefined
+    const tracked = { ...scaledCan, id: 'tracked_can', build: () => (built = scaledCan.build()) }
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [...demoItems('en'), tracked], renderer: stubRenderer(), ui: false })
+    const can = room.spawn('tracked_can', [0, 0, -4], 0)
+    expect(built?.parent).toBe(can.root)
+    built!.visible = false
+    expect(can.root.visible).toBe(false)
+    room.clear()
+    expect(built?.parent).toBeNull()
+  })
+})
+
 describe('an explosion shoves what is around it', () => {
   it('throws a loose item away, less the farther it is; a heavy one that is not fixed becomes a piece and moves; a fixed one stays', () => {
     const room = roomWith({ maxCarryKg: 3 })

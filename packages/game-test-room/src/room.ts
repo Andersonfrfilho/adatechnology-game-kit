@@ -506,6 +506,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
    * The object of an item, with its root at scale 1: a builder that sizes its model by the scale of the root (the showcase models of game-items-three do, page units to metres) is wrapped
    * in a group, so that the destruction spec, the piece box and the mass read the object in metres like the eye does.
    */
+  const wrapped = new WeakMap<THREE_NS.Object3D, THREE_NS.Object3D>()
+  /** A holder that leaves the scene lets go of the object it held: the module that built it reads `root.parent === null` as "not on show". */
+  const letGo = (root: THREE_NS.Object3D): void => {
+    const inner = wrapped.get(root)
+    if (!inner) return
+    inner.removeFromParent()
+    wrapped.delete(root)
+  }
   const buildRoot = (item: TestRoomItem): THREE_NS.Object3D => {
     const built = item.build(THREE)
     if (item.impl || (Math.abs(built.scale.x - 1) < 1e-6 && Math.abs(built.scale.y - 1) < 1e-6 && Math.abs(built.scale.z - 1) < 1e-6)) return built
@@ -513,6 +521,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     holder.name = built.name
     holder.userData = built.userData
     holder.add(built)
+    wrapped.set(holder, built)
+    // a module hides or shows its object through the root it built (the category filter of the items area does): the holder answers for it
+    Object.defineProperty(holder, 'visible', { get: () => built.visible, set: (v: boolean) => void (built.visible = v), configurable: true })
     return holder
   }
 
@@ -595,6 +606,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     if (world.has(id)) world.remove(id)
     e.so.root.removeFromParent()
+    letGo(e.so.root)
     entries.delete(id)
     rendererPieces.delete(id)
     specs.delete(id)
@@ -2126,8 +2138,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       // contract checks on a throwaway build of the item (never added to the scene)
       let partIds: string[] = []
       const base = { module: mod.id, item: item.id }
+      let checked: THREE_NS.Object3D | undefined
       try {
-        const root = buildRoot(item)
+        const root = (checked = buildRoot(item))
         root.updateMatrixWorld(true)
         if (item.impl) {
           const probe = item.impl(root, `${item.id}_check`)
@@ -2150,6 +2163,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         moduleCheck(false, t('mod.destructible_fail', { name: item.name, problems: msg }), { ...base, check: 'destructible', problems: [msg] }, item.id)
         fail(`${item.id}: ${msg}`)
       }
+      if (checked) letGo(checked)
       for (const clip of item.animations ?? []) {
         const r = checkAnimation(clip, partIds)
         moduleCheck(r.ok, r.ok ? t('mod.animation_ok', { name: item.name, clip: clip.id, seconds: num(clip.duration, 1) }) : t('mod.animation_fail', { name: item.name, clip: clip.id, problems: r.problems.join('; ') }), { ...base, check: 'animation', clip: clip.id, problems: r.problems }, item.id)
