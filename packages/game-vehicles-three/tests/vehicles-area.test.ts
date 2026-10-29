@@ -62,7 +62,7 @@ describe('vehicles test area', () => {
     const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
     const report = loadVehiclesTestModule(room, { locale: 'en', document: fakeDocument as never }) as { problems: string[]; items: string[] }
     expect(report.problems).toEqual([])
-    expect(report.items).toHaveLength(8)
+    expect(report.items).toHaveLength(10)
     room.openArea(VEHICLES_AREA_ID)
     const sedan = room.spawn('sedan', [0, 0, -7], 0)
     room.update(1 / 60)
@@ -70,12 +70,12 @@ describe('vehicles test area', () => {
     expect(room.playAnimation('open_nothing', sedan.objectId)).toBe(false)
   })
 
-  it('passes the contract checks of the host and lays the 8 vehicles of the Frota test', () => {
+  it('passes the contract checks of the host and lays the 8 vehicles of the Frota test and the 2 burnt wrecks', () => {
     const { room, module } = roomWithVehicles()
     const placed = room.openArea(VEHICLES_AREA_ID)
-    expect(placed.map((object) => object.itemId)).toEqual(['hatch', 'sedan', 'pickup', 'sport_bike', 'box_truck', 'city_bus', 'battle_tank', 'attack_helicopter'])
+    expect(placed.map((object) => object.itemId)).toEqual(['hatch', 'sedan', 'pickup', 'sport_bike', 'box_truck', 'city_bus', 'battle_tank', 'sedan_burnt', 'hatch_burnt', 'attack_helicopter'])
     for (let i = 0; i < 5; i++) room.update(1 / 60)
-    expect(module.placed.size).toBe(8)
+    expect(module.placed.size).toBe(10)
   })
 
   it('the bench paints by seed, shows the boxes and the axes, drives the lane and measures against DIMS', () => {
@@ -92,7 +92,7 @@ describe('vehicles test area', () => {
     expect(bench.setLayer('axes', true)).toBe(true)
     for (let i = 0; i < 3; i++) room.update(1 / 60)
     const metrics = room.metrics().module
-    expect(metrics.vehicles).toBe(8)
+    expect(metrics.vehicles).toBe(10)
     expect(Number(metrics.triangles)).toBeGreaterThan(100_000)
     expect(Number(metrics.metal)).toBeGreaterThan(8)
     expect(Number(metrics.glass)).toBeGreaterThan(8)
@@ -108,7 +108,17 @@ describe('vehicles test area', () => {
     }
   })
 
-  it('has the 11 scenarios of the page and the 2 of the drivers, in both languages', async () => {
+  it('names the burnt wrecks in both languages and lays none when the wrecks option is empty', () => {
+    for (const [locale, names] of [['en', ['Burnt sedan', 'Burnt hatch']], ['pt-BR', ['Sedã queimado', 'Hatch queimado']]] as const) {
+      const module = createVehiclesTestModule({ locale, document: fakeDocument as never, three: THREE })
+      const wrecks = module.items(locale).filter((item) => item.id === 'sedan_burnt' || item.id === 'hatch_burnt')
+      expect(wrecks.map((item) => item.name)).toEqual([...names])
+    }
+    const module = createVehiclesTestModule({ locale: 'en', document: fakeDocument as never, three: THREE, wrecks: [] })
+    expect(module.items('en').map((item) => item.id)).toHaveLength(8)
+  })
+
+  it('has the 11 scenarios of the page, the burnt wreck and the 2 of the drivers, in both languages', async () => {
     for (const locale of ['pt-BR', 'en']) {
       const { room } = roomWithVehicles(locale)
       room.openArea(VEHICLES_AREA_ID)

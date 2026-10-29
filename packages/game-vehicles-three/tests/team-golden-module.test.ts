@@ -71,11 +71,11 @@ describe('team golden: the page module of the Frota test against the TypeScript 
     page.waitUntilReady()
   }
   page.loadModule(pageModule())
-  mine.loadModule(createVehiclesTestModule({ locale: 'en', document: fakeDocument as never, three: THREE }) as never)
+  mine.loadModule(createVehiclesTestModule({ locale: 'en', document: fakeDocument as never, three: THREE, wrecks: [] }) as never)
 
   it('loads the same eight vehicles with the page names', () => {
     const pageItems = pageModule().items('en').map((item: { name: string }) => item.name)
-    const myItems = createVehiclesTestModule({ locale: 'en', document: fakeDocument as never, three: THREE }).items('en').map((item) => item.name)
+    const myItems = createVehiclesTestModule({ locale: 'en', document: fakeDocument as never, three: THREE, wrecks: [] }).items('en').map((item) => item.name)
     expect(myItems).toEqual(pageItems)
   })
 

@@ -27,6 +27,7 @@ const scenarioIds = [
   'vehicles_kill_battery',
   'vehicles_rollover',
   'vehicles_melt',
+  'vehicles_burnt_wreck',
   'vehicles_drive_arcade',
   'vehicles_drive_semi',
 ] as const
@@ -63,7 +64,7 @@ export const TEXT: Record<string, VehiclesText> = {
   en: {
     group: 'Vehicles',
     name: 'Vehicles area',
-    items: { hatch: 'Compact hatch', sedan: 'Midsize sedan', pickup: 'Midsize pickup', sport_bike: 'Sport bike', box_truck: 'Box truck', city_bus: 'City bus', battle_tank: 'Battle tank', attack_helicopter: 'Attack helicopter' },
+    items: { hatch: 'Compact hatch', sedan: 'Midsize sedan', pickup: 'Midsize pickup', sport_bike: 'Sport bike', box_truck: 'Box truck', city_bus: 'City bus', battle_tank: 'Battle tank', attack_helicopter: 'Attack helicopter', sedan_burnt: 'Burnt sedan', hatch_burnt: 'Burnt hatch' },
     controls: { quality: 'Quality', paint_by_seed: 'Paint by seed', color_seed: 'Colour seed', palette: 'Palette', driving: 'Driving', surface: 'Surface' },
     hints: {
       quality: 'High: the kit at full detail. Light: fewer segments and no interior (the light mode of the fleet); applies to the vehicles placed from now on',
@@ -97,6 +98,7 @@ export const TEXT: Record<string, VehiclesText> = {
       vehicles_melt: 'Vehicles: melt (long fire burns the tyres)',
       vehicles_drive_arcade: 'Vehicles: arcade driving down a lane that ends in a wall',
       vehicles_drive_semi: 'Vehicles: semi-simulation braking on dry, wet and mud',
+      vehicles_burnt_wreck: 'Vehicles: the burnt sedan comes out of the kit burnt, with the glass gone',
     },
     checks: {
       windshield_holes: 'Windshield: {0} hole(s), went through {1:b} (expected: 1, true)',
@@ -122,12 +124,14 @@ export const TEXT: Record<string, VehiclesText> = {
       arcade_noise: 'Arcade: {0} engine noise(s) and {1} crash noise(s) (expected: 1 or more each)',
       semi_order: 'Semi: braking from 80 km/h takes dry {0} m, wet {1} m, mud {2} m (expected: dry shorter than wet shorter than mud)',
       semi_mud: 'Semi: a 2WD car on mud {0:on} (expected: bogged on, a bog event)',
+      wreck_burnt: 'Burnt sedan: burnt flag {0:b} (expected: yes)',
+      wreck_glass: 'Burnt sedan: {0} glass zone(s), {1} still above 0 (expected: 1 or more, none above 0)',
     },
   },
   'pt-BR': {
     group: 'Veículos',
     name: 'Área de veículos',
-    items: { hatch: 'Hatch compacto', sedan: 'Sedã médio', pickup: 'Picape média', sport_bike: 'Moto esportiva', box_truck: 'Caminhão baú', city_bus: 'Ônibus urbano', battle_tank: 'Tanque de guerra', attack_helicopter: 'Helicóptero de ataque' },
+    items: { hatch: 'Hatch compacto', sedan: 'Sedã médio', pickup: 'Picape média', sport_bike: 'Moto esportiva', box_truck: 'Caminhão baú', city_bus: 'Ônibus urbano', battle_tank: 'Tanque de guerra', attack_helicopter: 'Helicóptero de ataque', sedan_burnt: 'Sedã queimado', hatch_burnt: 'Hatch queimado' },
     controls: { quality: 'Qualidade', paint_by_seed: 'Pintar pela semente', color_seed: 'Semente da cor', palette: 'Paleta', driving: 'Direção', surface: 'Piso' },
     hints: {
       quality: 'Alta: o kit com todo o detalhe. Leve: menos segmentos e sem interior (o modo leve da frota); vale para os veículos postos daqui em diante',
@@ -161,6 +165,7 @@ export const TEXT: Record<string, VehiclesText> = {
       vehicles_melt: 'Veículos: derreter (fogo longo queima os pneus)',
       vehicles_drive_arcade: 'Veículos: direção arcade numa pista que acaba num muro',
       vehicles_drive_semi: 'Veículos: frenagem da semissimulação no seco, no molhado e na lama',
+      vehicles_burnt_wreck: 'Veículos: o sedã queimado sai do kit queimado, sem os vidros',
     },
     checks: {
       windshield_holes: 'Para-brisa: {0} furo(s), atravessou {1:b} (esperado: 1, sim)',
@@ -186,6 +191,8 @@ export const TEXT: Record<string, VehiclesText> = {
       arcade_noise: 'Arcade: {0} ruído(s) de motor e {1} de batida (esperado: 1 ou mais de cada)',
       semi_order: 'Semi: frear de 80 km/h leva no seco {0} m, no molhado {1} m, na lama {2} m (esperado: seco menor que molhado menor que lama)',
       semi_mud: 'Semi: um carro 2WD na lama {0:on} (esperado: atolado, com evento de atolamento)',
+      wreck_burnt: 'Sedã queimado: marca de queimado {0:b} (esperado: sim)',
+      wreck_glass: 'Sedã queimado: {0} zona(s) de vidro, {1} ainda acima de 0 (esperado: 1 ou mais, nenhuma acima de 0)',
     },
   },
 }
