@@ -2036,13 +2036,17 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return () => clearListeners.delete(listener)
     },
   }
+  let sendingInitial = false
   const lendBench = (store: BenchStore): ModuleBench => ({
     value: store.value,
     layer: store.layer,
     onChange: store.onChange,
     patch: store.patch,
     sheet: store.setSheet,
-    look: (eye, target) => room.look(eye, target),
+    // the initial and restored values only set the module's state: they do not move the player's camera (`ModuleArea.view` is how a module asks for a view when its area opens)
+    look: (eye, target) => {
+      if (!sendingInitial) room.look(eye, target)
+    },
   })
   const checkModuleBench = (mod: TestableModule<ScenarioContext>, fail: (problem: string) => void): BenchStore | null => {
     const store = createBenchStore(mod, locale, (error) => reportOnce(`${mod.id}:listener`, t('mod.listener_failed', { name: mod.name, error: failureText(error) })))
@@ -2145,7 +2149,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (!activeBench || !benches.has(activeBench)) activeBench = mod.id
     } else if (activeBench === mod.id) activeBench = lastBench()
     if (mod.attach) detachers.set(mod.id, mod.attach(bench ? { ...host, bench: lendBench(bench) } : host))
-    bench?.sendInitial()
+    sendingInitial = true
+    try {
+      bench?.sendInitial()
+    } finally {
+      sendingInitial = false
+    }
     showBench()
     ui?.refresh()
     return report
@@ -2305,6 +2314,20 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     grab,
     throwHeld,
+    warmUp() {
+      const ids = vfx.catalog?.() ?? []
+      const flames = ids.filter((id) => /fire|flame/i.test(id)).slice(0, 1)
+      gl.compile(scene, camera)
+      const handles = ['m67', ...flames].filter((id) => ids.includes(id)).map((effect) => vfx.play({ effect, point: [0, 0.1, -4], direction: [0, 1, 0], normal: [0, 1, 0] }))
+      for (let i = 0; i < 3; i++) {
+        vfx.update(0.02)
+        gl.render(scene, camera)
+      }
+      for (const h of handles) if (h !== null) vfx.stop(h)
+      vfx.world.clear()
+      vfx.update(0)
+      gl.render(scene, camera)
+    },
     look(position, target) {
       player.look(position, target)
     },

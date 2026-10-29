@@ -301,6 +301,11 @@ export function createVfxTestModule(
     controls,
     layers,
     metrics,
+    // opening the effects area puts the camera at the bench view (the initial distance does not move it: that would take the player's view on load)
+    area: () => ({
+      placements: [],
+      view: { eye: eyeFor(DEFAULT_DISTANCE), target: [0, 1.2, 0] },
+    }),
     attach(host: ModuleHost) {
       const bench = host.bench;
       let own: VfxRenderer | undefined;

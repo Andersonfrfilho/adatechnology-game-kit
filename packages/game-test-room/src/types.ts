@@ -193,6 +193,11 @@ export interface TestRoom {
   grab(): boolean
   /** Throw what is held at `speed` m/s (default 9). */
   throwHeld(speed?: number): boolean
+  /**
+   * Pays the first-frame costs while a loading screen still covers the room: compiles the scene's shaders and draws a throw-away blast (its particle materials and lights make
+   * the materials recompile the first time they appear) and a fire, then clears them. Nothing of it stays in the world, the log or the sound.
+   */
+  warmUp(): void
   /** Point the camera (scripted demos and tests). */
   look(position: Vec3, target: Vec3): void
   /** Object and part the camera looks at, with its state, for the inspector. */
