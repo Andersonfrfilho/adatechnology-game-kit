@@ -10,12 +10,12 @@ function stubRenderer(): THREE.WebGLRenderer {
   return { domElement: dom, shadowMap: { enabled: false, type: 0 }, setSize: () => undefined, setPixelRatio: () => undefined, render: () => undefined, dispose: () => undefined } as unknown as THREE.WebGLRenderer
 }
 
-function roomWith(rules: Parameters<typeof createArsenal>[0] = { rules: { faults: false } }): { room: TestRoom; module: ReturnType<typeof createWeaponsTestModule> } {
+function roomWith(rules: Parameters<typeof createArsenal>[0] = { rules: { faults: false } }, moduleOptions: { flyRocket?: boolean } = {}): { room: TestRoom; module: ReturnType<typeof createWeaponsTestModule> } {
   const container = document.createElement('div')
   document.body.appendChild(container)
   const arsenal = createArsenal({ seed: 1, ...rules })
   const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
-  const module = createWeaponsTestModule({ locale: 'en', sound: false, arsenal })
+  const module = createWeaponsTestModule({ locale: 'en', sound: false, arsenal, ...moduleOptions })
   expect(room.loadModule(module).problems).toEqual([])
   room.look([0, 1.7, 5], [0, 1.2, -11])
   return { room, module }
@@ -172,6 +172,20 @@ describe('weapon in the hands: the gallery model and its clips', () => {
     expect(root?.visible).toBe(false)
     run(room, 1.5)
     expect(root?.visible).toBe(true)
+  })
+
+  it('a host that draws the projectile itself asks the viewmodel not to fly a rocket of its own', () => {
+    const flying = (flyRocket: boolean | undefined): number => {
+      const { room } = roomWith(undefined, flyRocket === undefined ? {} : { flyRocket })
+      equip(room, 'rpg_7')
+      const before = new Set(room.scene.children)
+      room.use()
+      run(room, 0.1)
+      // the rocket is a group of cylinders that the viewmodel puts in the scene
+      return room.scene.children.filter((c) => !before.has(c) && c.type === 'Group' && c.children.some((m) => (m as THREE.Mesh).geometry?.type === 'CylinderGeometry')).length
+    }
+    expect(flying(undefined)).toBeGreaterThan(0)
+    expect(flying(false)).toBe(0)
   })
 
   it('wear paints the metal: a rusty weapon swaps its materials and a new one gets them back', () => {

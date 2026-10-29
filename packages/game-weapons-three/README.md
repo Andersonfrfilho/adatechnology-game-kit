@@ -24,3 +24,5 @@ Unused generated fallbacks: every weapon keeps its `generated/` file even when i
 ## Models of thrown and fired explosives
 
 `projectileModel(THREE, { weapon, explosive, kind })` gives a host the model of the round a launcher fires (the RPG-7's PG-7V, the Carl Gustaf's 84 mm round, the rocket of the disposable tubes; the same code the weapon in the hands uses to fly it), long axis +x, or `null`. It is the hook the test room's `projectileModel` option takes. The gallery has no model yet for the throwables (M67, molotov, pipe bomb, dynamite, C4, Claymore, flashbang) nor for the grenade launchers (M203, GP-25, AG36: their rounds), so those answer `null`.
+
+`createWeaponsTestModule({ flyRocket: false })` (and `createWeaponFx`) keeps the viewmodel from flying a rocket of its own out of the launcher, for a host that draws the projectile itself (the test room does, with `projectileModel`): one round flies, not two. The backblast stays.

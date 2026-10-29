@@ -60,6 +60,8 @@ export interface ViewmodelOptions {
   raycast?: LaserRaycast
   /** The host's effects (`host.effects`): the muzzle flash, the smoke, the backblast and the flame jet are recipes it plays. Without it the viewmodel makes a world of its own for them. */
   effects?: EffectSink
+  /** The rocket of a launcher flies out along the barrel (default true); false leaves the round to the host. */
+  flyRocket?: boolean
 }
 
 /** The weapon in the hands for the models the gallery drew: it follows the camera, plays the clips of the rule's events, and throws casings, magazines and smoke. */
@@ -242,7 +244,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     }
     const action = current.def.action
     if (action.kind === 'launcher') {
-      launchRocket(heavy(current))
+      launchRocket(heavy(current), options.flyRocket !== false)
       audio?.play('explosion', LAUNCH_VOLUME, distance())
     }
     if (action.kind !== 'firearm') return

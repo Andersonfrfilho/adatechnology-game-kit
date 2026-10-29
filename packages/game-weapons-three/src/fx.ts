@@ -48,6 +48,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
     ...(options.raycast ? { raycast: options.raycast } : {}),
     ...(options.effects ? { effects: options.effects } : {}),
+    ...(options.flyRocket === undefined ? {} : { flyRocket: options.flyRocket }),
   })
   return {
     handle(event, tool) {
