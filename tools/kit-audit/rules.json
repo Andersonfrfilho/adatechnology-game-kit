@@ -8,7 +8,7 @@
     },
     "structure": {
       "owners": ["game-floorplan", "game-floorplan-structure", "game-floorplan-three", "game-floorplan-residential", "game-floorplan-commercial", "game-floorplan-rural", "game-floorplan-post-apocalyptic", "game-floorplan-interactables", "game-urban", "game-urban-three"],
-      "use": "buildWallSpecimen / the house renderer of game-floorplan-three; the street pieces of game-urban",
+      "use": "every wall as the houses: wallPiece of game-floorplan-three (the houses' structure, drawn by the house renderer) or a whole house; the street pieces of game-urban",
       "words": ["wall", "walls", "muro", "parede", "house", "houses", "casa", "roof", "telhado", "sidewalk", "street", "rua"]
     },
     "furniture": {

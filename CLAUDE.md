@@ -6,6 +6,10 @@ Este repositório é a base de **todo jogo futuro**, não só do ZombiAdA. Um jo
 zumbis, personagens, veículos, vegetação, efeitos e animais **já prontos, com os comportamentos funcionando**.
 Por isso o trabalho que os times entregaram vem para cá **uma vez**, e daí em diante tudo se monta a partir daqui.
 
+**SDK primeiro em todo jogo** (dono, 2026-10-29): todo desenvolvimento de jogo do nosso lado (este repositório, o `zombiada` e qualquer
+jogo novo) começa verificando se o SDK já tem aquilo. Tem: usa o pacote, importado. Não tem: cria primeiro no pacote certo do SDK e só depois
+usa no jogo. Assim nunca se escreve o mesmo código duas vezes. O repositório de cada jogo repete esta regra no seu `CLAUDE.md`.
+
 Antes de construir qualquer coisa (modelo 3D, animação, comportamento, efeito, tela ou ambiente de teste), nesta ordem:
 
 1. **Procure no SDK** (`packages/*`, os README de cada pacote).
@@ -28,6 +32,10 @@ Antes de construir qualquer coisa (modelo 3D, animação, comportamento, efeito,
   `game-items-goods`, arma e explosivo do `game-weapons`. Importe pelo pacote (ou receba o construtor por opção, como o `vehicles` do
   `createWeatherVisual`), nunca copie o modelo: a mudança no SDK tem que aparecer em todo lugar que usa a peça. Quem é dono de quê está em
   `tools/kit-audit/rules.json`; o MCP `game-kit` (`.mcp.json`) responde `kit_owner`, `kit_origin` e `kit_audit`, e a skill `kit-origem` diz como.
+- **Parede sempre como as casas** (dono, 2026-10-29): toda parede ou muro (sala de teste, área, prévia, cena de jogo) tem o mesmo visual e o
+  mesmo padrão de sustentação das paredes das casas. Use `wallPiece` do `game-floorplan-three` (a estrutura do `game-floorplan-structure`:
+  parede sobre a fundação, cinta de concreto em cima, camadas, tijolos e furo; desenhada pelo renderizador das casas com reboco, pintura, rodapé
+  e calçada) ou a casa inteira. Nada de parede de blocos soltos, cubos coloridos ou estrutura montada à parte.
 - **Peça fora do dono fica documentada**: `node tools/kit-audit/audit.mjs --check` roda no CI e falha numa peça nova desenhada fora do SDK
   dono. O que ainda está fora está em `docs/pecas-fora-do-sdk.md` (peça, onde, dono certo, PR de origem, correção) e em `pending` do
   `tools/kit-audit/allowlist.json`; ao corrigir, tire das duas listas.

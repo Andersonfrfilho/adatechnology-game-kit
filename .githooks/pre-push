@@ -19,6 +19,8 @@ else
   [ -z "$dirs" ] && { echo "pre-push: no package changed"; exit 0; }
   filters=""
   for dir in $dirs; do [ -f "$dir/package.json" ] && filters="$filters --filter ...{./$dir}"; done
+  # only folders without a package (tools/kit-audit): with no filter, `pnpm run test` is the root script, every package
+  [ -z "$filters" ] && { echo "pre-push: no package changed"; exit 0; }
   echo "pre-push: tests of the packages changed since $(git rev-parse --short "$base") and their dependents"
   # shellcheck disable=SC2086
   pnpm $filters --workspace-concurrency=1 run test

@@ -7,7 +7,8 @@ description: Use quando aparecer numa sala de teste, área, bancada ou cena uma 
 
 Regra do dono (2026-10-29, `CLAUDE.md`): **cada peça vem do SDK dono, importada, nunca copiada**. Carro e veículo do SDK de veículos,
 parede e casa do `game-floorplan`, móvel do catálogo de móveis, pessoa do `game-characters`, planta do `game-vegetation`, item do
-`game-items-goods`, arma e explosivo do `game-weapons`. Assim a mudança no SDK aparece em todo lugar que usa a peça.
+`game-items-goods`, arma e explosivo do `game-weapons`. Assim a mudança no SDK aparece em todo lugar que usa a peça. Parede e muro sempre como as casas, no visual e na sustentação: `wallPiece` do
+`game-floorplan-three` (regra do dono, 2026-10-29).
 
 ## Antes de desenhar uma peça
 

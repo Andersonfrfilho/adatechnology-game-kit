@@ -14,7 +14,7 @@ Quem é dono de quê (`tools/kit-audit/rules.json`):
 | Domínio | SDK dono | Como usar |
 |---|---|---|
 | Veículos | `game-vehicles`, `-fleet`, `-three`, `-driving` | `createVehicleKit` + `installFleet` + `createVehiclesThree(THREE, { kit }).build(key)` |
-| Estrutura (parede, muro, casa, rua) | `game-floorplan-*`, `game-urban*` | `buildWallSpecimen`, o renderizador de casas do `game-floorplan-three`, as peças de rua do `game-urban` |
+| Estrutura (parede, muro, casa, rua) | `game-floorplan-*`, `game-urban*` | toda parede como as casas: `wallPiece` do `game-floorplan-three` (estrutura e visual das casas) ou a casa inteira; as peças de rua do `game-urban` |
 | Móveis | `game-interactables-household` / `-three`, `game-props3d` | `furnitureSpec` (ex.: `dining_table`, `bookcase`, `laundry_tub`) |
 | Pessoas | `game-characters-*`, `game-crowd*`, `game-player` | pessoas do `game-characters-people` desenhadas pelo `game-characters-three` |
 | Plantas | `game-vegetation-*` | espécies do `game-vegetation-species` |
@@ -52,7 +52,8 @@ As origens são o PR que trouxe o arquivo. Todos foram escritos por sessões do 
 | Carro da garagem quando a casa não recebe a frota (o carro desenhado à mão do time) | `game-floorplan-three/src/furniture/extra-types.ts` (`origCar`); o `examples/floorplan-test-area` não passa `fleet` | veículos | PR #33 | a área das casas passa a frota; sem frota, nenhum carro desenhado à mão |
 | Moto e bicicleta do quintal | `game-floorplan-three/src/furniture/builders.ts` (`motorcycle`, `bicycle`) | veículos | PR #33 (porte do Casa3DSDK do time) | as motos e bicicletas da frota, quando ela tiver; senão entram primeiro no `game-vehicles-fleet` |
 | Árvores, arbustos e vasos do lote sem o `game-vegetation` | `game-floorplan-three/src/furniture/plants.ts` (`treeModel`, `shrubModel`) | plantas | PR #33 | a casa já tem a ponte `vegetation`; sem ela, as plantas próprias ficam como reserva. Passar sempre a vegetação nas áreas do kit |
-| Muro da sala desenhado como blocos lisos cor de tijolo | `game-floorplan-three/src/test-area/specimens.ts` (`buildSpecimenMeshes`), usado pelo `examples/test-room` | estrutura (o visual) | PRs #33 e #68 | a parede já é do `game-floorplan-structure`; falta desenhá-la com o renderizador de paredes das casas (reboco e pintura) |
+| Muro da sala desenhado como blocos lisos cor de tijolo, em 48 blocos soltos com argamassa (não é o padrão das casas) | `examples/test-room/src/main.js` com `buildSpecimenMeshes` do `game-floorplan-three` | estrutura (visual e sustentação) | PRs #33 e #68 | **Em correção** no branch `claude/muro-como-as-casas`: `wallPiece`, a parede das casas (mesma estrutura e mesmo renderizador) |
+| Casas da área de casas desenhadas como caixas coloridas por material | `game-floorplan-three/src/test-area/specimens.ts` (`buildSpecimenMeshes`) | estrutura (o visual) | PR #33 | desenhar cada exemplar com o renderizador das casas, como o `wallPiece` faz |
 
 ## O que o audit acusa e não é peça de outro SDK
 
