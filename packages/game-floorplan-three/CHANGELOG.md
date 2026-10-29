@@ -1,5 +1,15 @@
 # @adatechnology/game-floorplan-three
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [692c098]
+  - @adatechnology/game-destruction@0.8.1
+  - @adatechnology/game-floorplan-structure@1.1.1
+  - @adatechnology/game-floorplan-interactables@0.1.0
+  - @adatechnology/game-floorplan-residential@3.0.0
+
 ## 0.3.0
 
 ### Minor Changes

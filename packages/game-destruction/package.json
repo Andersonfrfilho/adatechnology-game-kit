@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-destruction",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "license": "MIT",
   "description": "Engine-agnostic destruction model: materials decide how parts dent, burn, melt, crumble, shatter, splinter, break apart and come apart at their joints. Deterministic and serializable. Knows nothing about any game.",
   "keywords": [

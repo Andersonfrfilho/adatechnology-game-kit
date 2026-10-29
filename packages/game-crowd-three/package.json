@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-crowd-three",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "description": "three.js drawing for @adatechnology/game-crowd: every agent, body on the ground and civilian as instances (a literal port of the team game's hordeRender and npcRender: view culling, LOD with hysteresis, attack pose, the pose by state), the renderer on the baked variants of game-characters-three, the herd on the animals' own rigs, the crowd's sound bank and the crowd test area.",
   "keywords": [
