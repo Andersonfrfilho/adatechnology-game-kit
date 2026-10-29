@@ -87,6 +87,10 @@ export interface SceneryObject {
    * The rectangle is the part's footprint. Without it nothing rests on the object.
    */
   top?: { part: string; y: number }
+  /**
+   * Where a water tap of the piece pours (a sink, a tub), in the spec's space: the room's tap (its stream and its HUD button) pours there, and the piece's own model is the tap. The first piece with a `spout` wins over the table tap.
+   */
+  spout?: Vec3
 }
 
 /** What the room asks when something thrown or set down needs a model: the tool in the hand, the explosive it carries (an id of the arsenal) and how it is used. */

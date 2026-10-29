@@ -83,3 +83,20 @@ describe('tapSpec', () => {
     expect(JSON.stringify(a)).toBe(JSON.stringify(b))
   })
 })
+
+describe('furnitureSpec of a piece with a tap', () => {
+  it('the laundry tub gives its basin, its tap and the spout over the basin', () => {
+    const tub = furnitureSpec(THREE, 'laundry_tub', { document: fakeDocument, options: { materials: { plain: 'ceramic' } } })
+    expect(tub.size).toEqual({ w: 0.6, d: 0.55, h: 0.9 })
+    expect(tub.spouts).toHaveLength(1)
+    const [x, y, z] = tub.spouts[0]!
+    // over the basin (inside its footprint), above the rim with room for a bucket under it, below the tap's own height
+    expect(Math.abs(x)).toBeLessThan(0.3)
+    expect(Math.abs(z)).toBeLessThan(0.275)
+    expect(y).toBeGreaterThan(0.9)
+    expect(y).toBeLessThan(1.1)
+    expect(tub.spec.parts.some((p) => p.material === 'steel')).toBe(true)
+    expect(tub.spec.parts.some((p) => p.material === 'ceramic')).toBe(true)
+    expect(furnitureSpec(THREE, 'bookcase', { document: fakeDocument }).spouts).toEqual([])
+  })
+})

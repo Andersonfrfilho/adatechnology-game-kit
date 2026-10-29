@@ -13,7 +13,7 @@
 import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import { buildWallSpecimen } from '@adatechnology/game-floorplan-structure'
-import { buildSpecimenMeshes, furnitureSpec, tapSpec } from '@adatechnology/game-floorplan-three'
+import { buildSpecimenMeshes, furnitureSpec } from '@adatechnology/game-floorplan-three'
 import { projectileModel } from '@adatechnology/game-weapons-three'
 import { createPlayerAvatar, toRoomAvatar } from '@adatechnology/game-characters-three'
 
@@ -52,12 +52,13 @@ function brickWall(cols, rows, cw, ch) {
 const wallSpec = brickWall(8, 6, 1.25, 0.5)
 const table = furnitureSpec(THREE, 'dining_table', { w: 1.6, d: 0.8, h: 0.78, options: { chairs: false } })
 const shelf = furnitureSpec(THREE, 'bookcase')
-// the water tap is the team's counter tap (the sink's), standing on the table top
-const tap = tapSpec(THREE)
+// the water tap is the team's laundry tub with its wall tap, beside the table: the spout is over the basin, high enough for a cup or a bucket under it
+const sink = furnitureSpec(THREE, 'laundry_tub', { options: { materials: { plain: 'ceramic' } } })
 const scenery = {
   target_wall: { spec: wallSpec, position: [0, 0, -11], build: (T) => buildSpecimenMeshes(T, wallSpec) },
   table: { spec: table.spec, position: [3.5, 0, 0], build: table.build, top: table.top },
   shelf: { spec: shelf.spec, position: [-3.5, 0, 0], build: shelf.build },
+  sink: { spec: sink.spec, position: [6, 0, 0], build: sink.build, top: sink.top ?? undefined, spout: sink.spouts[0], label: locale === 'en' ? 'Laundry tub' : 'Tanque' },
 }
 
 const room = createTestRoom({
@@ -68,7 +69,6 @@ const room = createTestRoom({
   scenery,
   // the rocket in flight is the weapons package's own round; the throwables it has no model for stay the room's primitives
   projectileModel: (query) => projectileModel(THREE, query),
-  tap: { build: tap.build, spout: tap.spout },
   quality,
   arenaSize: arena >= 14 && arena <= 200 ? arena : undefined,
   ui: params.get('ui') !== '0',

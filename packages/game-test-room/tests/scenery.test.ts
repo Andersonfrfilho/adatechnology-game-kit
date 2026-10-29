@@ -85,5 +85,15 @@ describe('scenery of the arena', () => {
     expect(at).toEqual([1, 0.88, 2].map((v) => expect.closeTo(v, 3)))
     expect(roomWithGround({ tap: null }).room.fluids.taps()).toHaveLength(0)
   })
+
+  it('a piece with a spout carries the tap: the stream pours from it, turned with the piece, and no table tap is drawn', () => {
+    const { room } = roomWithGround({ scenery: { sink: { spec: crate(), position: [6, 0, 1], rotationY: Math.PI / 2, spout: [0.5, 1.1, 0] } } })
+    const [x, y, z] = room.fluids.taps()[0].position
+    // a quarter turn about the vertical axis takes +x to -z
+    expect(x).toBeCloseTo(6)
+    expect(y).toBeCloseTo(1.1)
+    expect(z).toBeCloseTo(0.5)
+    expect(room.fluids.taps()).toHaveLength(1)
+  })
 })
 

@@ -13,6 +13,7 @@ export interface ArenaObject {
   build?: SceneryObject['build']
   label?: string
   top?: SceneryObject['top']
+  spout?: SceneryObject['spout']
 }
 
 /** A top that loose things rest on while its part stands: the footprint in world space and the height of the upper face. */
@@ -146,7 +147,7 @@ export function resolveScenery(scenery: Record<string, SceneryObject | null> | u
     if (!position) throw new Error(`game-test-room: scenery "${id}" is new, so it needs a position`)
     merged.set(id, { ...obj, position })
   }
-  return [...merged.entries()].map(([id, o]) => ({ id, spec: o.spec, position: o.position as Vec3, rotationY: o.rotationY ?? 0, colors: o.colors, build: o.build, label: o.label, top: o.top }))
+  return [...merged.entries()].map(([id, o]) => ({ id, spec: o.spec, position: o.position as Vec3, rotationY: o.rotationY ?? 0, colors: o.colors, build: o.build, label: o.label, top: o.top, spout: o.spout }))
 }
 
 export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_NS.Scene, scenery?: Record<string, SceneryObject | null>, tapOption?: SceneryTap | null): Arena {
@@ -239,7 +240,12 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
   // the tap: the host's model standing on the table top, or (by default) a post with an arm and a spout beside the table
   let tapSpout: Vec3 | null = null
   const tableTop = tops.find((t) => t.id === TABLE_ID)
-  if (tableTop && tapOption !== null) {
+  const spouting = sceneryObjects.find((o) => o.spout)
+  if (spouting?.spout && tapOption !== null) {
+    // a piece of the scenery (a sink, a tub) carries its own tap: the stream pours from its spout
+    const s = new THREE.Vector3(spouting.spout[0], spouting.spout[1], spouting.spout[2]).applyAxisAngle(new THREE.Vector3(0, 1, 0), spouting.rotationY)
+    tapSpout = [spouting.position[0] + s.x, spouting.position[1] + s.y, spouting.position[2] + s.z]
+  } else if (tableTop && tapOption !== null) {
     const cx = (tableTop.minX + tableTop.maxX) / 2
     const cz = (tableTop.minZ + tableTop.maxZ) / 2
     const y = tableTop.top

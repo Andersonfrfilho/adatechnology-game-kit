@@ -43,6 +43,8 @@ export interface FurnitureSpecResult {
   top: { part: string; y: number } | null
   /** Size the piece was drawn at. */
   size: { w: number; d: number; h: number }
+  /** Where the water leaves the taps the builder drew (a sink, a tub), in the space of the spec; empty for furniture without a tap. */
+  spouts: Array<[number, number, number]>
 }
 
 interface Drawn {
@@ -249,8 +251,30 @@ export function furnitureSpec(THREE: any, type: string, opts: FurnitureSpecOptio
   const seed = Math.round(opts.seed ?? 1)
   const plain = /shelf|bookcase|rack/.test(type) ? 'paper' : 'plastic'
   const root: any = { x: seed, z: 0, ry: 0, w, d, h, y: 0, base: 0, palette: o.palette, seed: `furniture_${type}_${seed}` }
-  const made = recordSpec(THREE, type, root, (A) => ent.f(root, A), { materials: { plain, ...o.materials }, chairs: o.chairs })
-  return { spec: made.spec, build: made.build, top: made.top, size: { w, d, h } }
+  const { K, shared } = renderer.internals
+  const before = K.PARTS.length
+  const made = recordSpec(
+    THREE,
+    type,
+    root,
+    (A) => {
+      const saved = { api0: shared.api0, ctx: shared.ctx }
+      shared.api0 = A // the levers and taps that the kit draws as moving parts go through its own api
+      shared.ctx = shared.ctx ?? {} // outside a house the builders read the style of the plan from here
+      try {
+        ent.f(root, A)
+      } finally {
+        shared.api0 = saved.api0
+        shared.ctx = saved.ctx
+      }
+    },
+    { materials: { plain, ...o.materials }, chairs: o.chairs },
+  )
+  const spouts = K.PARTS.slice(before)
+    .filter((p: any) => p.type === 'water_tap')
+    .map((p: any): [number, number, number] => [p.pos[0] - root.x, p.pos[1], p.pos[2] - root.z])
+  K.PARTS.length = before
+  return { spec: made.spec, build: made.build, top: made.top, size: { w, d, h }, spouts }
 }
 
 export interface TapSpecOptions {
