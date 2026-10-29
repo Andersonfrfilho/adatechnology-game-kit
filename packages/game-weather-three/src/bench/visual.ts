@@ -13,35 +13,42 @@ export type WeatherVisualOptions = Pick<WeatherRendererOptions, 'profile' | 'ran
   readonly vfx?: VfxWorld
   /** Where the lamp rig stands (the two headlights of the Workshop's car, to see the beams); `false` leaves it out. Default 2.5 m ahead of the test room camera, lamps toward it. */
   readonly rig?: readonly [x: number, z: number, turn: number] | false
+  /**
+   * The car the lamps are mounted on, built by the vehicles SDK for the host's three.js (`createVehiclesThree` of game-vehicles-three with the fleet installed), so the rig follows the fleet when it
+   * changes. Without it the rig has only the lamps and their beams: no car drawn here.
+   */
+  readonly vehicles?: (THREE: ThreeLib) => RigVehicles
+  /** Fleet id of the rig's car (default `midsize_sedan`). */
+  readonly rigVehicle?: string
   /** Which layers start on (all do by default); the room that is not about weather starts the sky and the fog off to keep its own look. */
   readonly layers?: Partial<Record<WeatherLayerId, boolean>>
 }
 
+/** What the rig needs of the vehicles SDK (`VehiclesThree` of game-vehicles-three): a car in the game frame (front on +z, wheels on y = 0) and its length. */
+export interface RigVehicles {
+  build(key: string, options?: { quality?: 'high' | 'lite' }): { readonly group: THREE_NS.Object3D; readonly length: number; dispose(): void }
+}
+
+const RIG_VEHICLE = 'midsize_sedan'
 const LAYER_ORDER: readonly Exclude<WeatherLayerId, 'fog'>[] = ['far_rain', 'near_rain', 'mist', 'sky', 'lightning', 'headlights', 'haze']
 const RIG_DEFAULT = [1.6, -2.5, 0] as const
 
-/** Two lamps, a body and the glass of the lamps (the Workshop's `hlMat`): what the headlights are attached to when the viewer has no car in the room. */
-function buildRig(THREE: ThreeLib): { readonly group: THREE_NS.Group; readonly lens: THREE_NS.MeshBasicMaterial; dispose(): void } {
+/**
+ * The lamps of the Workshop's car and, when the vehicles SDK is lent, a car of the fleet under them, its nose just ahead of the lamps: what the headlights are attached to when the viewer has no
+ * car in the room.
+ */
+function buildRig(THREE: ThreeLib, vehicles: RigVehicles | undefined, key: string): { readonly group: THREE_NS.Group; dispose(): void } {
   const group = new THREE.Group()
   group.name = 'weather-lamp-rig'
-  const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.7, 4.2), new THREE.MeshBasicMaterial({ color: 0x1b1d20 }))
-  body.position.set(0, 0.5, 0)
-  const lens = new THREE.MeshBasicMaterial({ color: HEADLIGHTS.lens.off })
-  const lampGeometry = new THREE.BoxGeometry(0.35, 0.15, 0.05)
-  for (const side of [-1, 1]) {
-    const lamp = new THREE.Mesh(lampGeometry, lens)
-    lamp.position.set(side * HEADLIGHTS.lamp[0], HEADLIGHTS.lamp[1], 2.11)
-    group.add(lamp)
+  const car = vehicles?.build(key, { quality: 'lite' })
+  if (car) {
+    car.group.position.z = HEADLIGHTS.lamp[2] + 0.1 - car.length / 2
+    group.add(car.group)
   }
-  group.add(body)
   return {
     group,
-    lens,
     dispose() {
-      body.geometry.dispose()
-      ;(body.material as THREE_NS.Material).dispose()
-      lampGeometry.dispose()
-      lens.dispose()
+      car?.dispose()
     },
   }
 }
@@ -71,20 +78,20 @@ export function createWeatherVisual(options: WeatherVisualOptions = {}): Weather
         ...(options.headlights ? { headlights: options.headlights } : {}),
         ...(options.layers ? { layers: options.layers } : {}),
       })
-      return attachRig(THREE, host, renderer, options.rig === undefined ? RIG_DEFAULT : options.rig)
+      return attachRig(THREE, host, renderer, options.rig === undefined ? RIG_DEFAULT : options.rig, options.vehicles?.(THREE), options.rigVehicle ?? RIG_VEHICLE)
     },
   }
 }
 
-function attachRig(THREE: ThreeLib, host: ModuleHost, renderer: WeatherRenderer, place: readonly [number, number, number] | false): WeatherVisual {
+function attachRig(THREE: ThreeLib, host: ModuleHost, renderer: WeatherRenderer, place: readonly [number, number, number] | false, vehicles: RigVehicles | undefined, key: string): WeatherVisual {
   const scene = host.scene as THREE_NS.Scene
-  const rig = place === false ? undefined : buildRig(THREE)
+  const rig = place === false ? undefined : buildRig(THREE, vehicles, key)
   let detach: (() => void) | undefined
   if (rig && place) {
     rig.group.position.set(place[0], 0, place[1])
     rig.group.rotation.y = place[2]
     scene.add(rig.group)
-    detach = renderer.headlights.attach(rig.group, rig.lens)
+    detach = renderer.headlights.attach(rig.group)
   }
   return {
     update: (dt) => renderer.update(dt),

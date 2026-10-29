@@ -122,25 +122,10 @@
       "file": "packages/game-weapons-three/src/world-explosives.ts",
       "domain": "items",
       "fix": "the fuel drum as an item of the goods catalogue (add it to game-items-goods first)"
-    },
-    {
-      "file": "packages/game-weather-three/src/bench/visual.ts",
-      "domain": "vehicles",
-      "fix": "the lamp rig on a fleet car (PR #71)"
     }
   ],
   "$comment_drawn": "`drawn`: what scene.mjs finds on screen with no origin mark of a kit builder, already known: `area` (an area id, `room` or `*`), `match` (a regular expression on the path of names) and the fix. scene.mjs --check fails on anything else. Take an entry out when it is fixed.",
   "drawn": [
-    {
-      "area": "room",
-      "match": "^\\(Group\\) > brick_",
-      "fix": "the room's wall from wallPiece of game-floorplan-three (PR #74)"
-    },
-    {
-      "area": "room",
-      "match": "^weather-lamp-rig",
-      "fix": "the lamp rig on a fleet car of game-vehicles-three (PR #71)"
-    },
     {
       "area": "*",
       "match": "^weapon_(pistol_22|bow_compound|molotov|cutting_torch|frag_grenade|flashbang|pipe_bomb|dynamite|c4|claymore|pry_bar|utility_knife|claw_hammer|m79|m203|gp_25|ag36) > ",

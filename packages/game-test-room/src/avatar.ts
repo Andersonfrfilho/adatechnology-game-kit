@@ -6,6 +6,12 @@ import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import type { HandTargets } from '@adatechnology/game-contracts'
 
+export interface RoomAvatarItemUse {
+  readonly id: string
+  readonly position: readonly [number, number, number]
+  readonly rotation: readonly [number, number, number]
+}
+
 /** What the room tells the avatar every frame. */
 export interface RoomAvatarState {
   /** Ground speed of the player, m/s (from the movement of the feet, jumps ignored). */
@@ -18,6 +24,10 @@ export interface RoomAvatarState {
   armed: boolean
   /** Camera pitch, radians, positive looking up (the room's own convention). */
   pitch: number
+  /** Whether the player is carrying an item in hand. */
+  holding?: boolean
+  /** Active scripted item use (`drink`, `sip`, `chug`, `pour`, `open`, `close`, `tilt`). */
+  itemUse?: RoomAvatarItemUse | null
 }
 
 /** What the room tells the first-person arms every frame, after the modules have placed the tool in the hands. */
@@ -61,7 +71,7 @@ export type KickLeg = 'alternate' | 'left' | 'right'
 export type CameraMode = 'first' | 'third'
 
 /** Which clip a melee tool plays before its blow lands (`TestRoomOptions.strikeClips`). */
-export const DEFAULT_STRIKE_CLIPS: Readonly<Record<string, string>> = { fists: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }
+export const DEFAULT_STRIKE_CLIPS: Readonly<Record<string, string>> = { hand: 'punch_right', fists: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' }
 /** The first-person stance of the tools that choose one (`TestRoomOptions.handStances`). */
 export const DEFAULT_HAND_STANCES: Readonly<Record<string, string>> = { fists: 'fists' }
 

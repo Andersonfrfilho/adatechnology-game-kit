@@ -5,13 +5,13 @@ import type { HandTargets } from '@adatechnology/game-contracts'
 
 import { createFirstPersonArms } from '../first-person/arms'
 import type { FirstPersonArms, FirstPersonArmsOptions } from '../first-person/types'
-import type { PlayerAvatar } from './avatar'
+import type { AvatarItemUsePose, PlayerAvatar } from './avatar'
 import type { THREE_NS } from '../three'
 
 /** What `@adatechnology/game-test-room` calls a `RoomAvatar`, restated here so this package does not depend on the room. */
 export type RoomAvatarLike = {
   root: THREE_NS.Object3D
-  update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; armed: boolean; pitch: number }): void
+  update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; armed: boolean; pitch: number; holding?: boolean; itemUse?: AvatarItemUsePose | null }): void
   hand(side: 'R' | 'L'): THREE_NS.Object3D
   /** The arms of the first-person view (`RoomAvatar.firstPerson`); absent when `toRoomAvatar` was told to make none. */
   firstPerson?: { root: THREE_NS.Object3D; update(dt: number, state: { camera: THREE_NS.Object3D; targets: HandTargets | null; stance: string; speed: number; running: boolean; crouch: boolean; contact?(origin: [number, number, number], direction: [number, number, number], maxDistance: number): number | null }): void }
@@ -48,6 +48,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
       : createFirstPersonArms(avatar.three, {
           colors: { skin: avatar.colors.skin, sleeve: avatar.colors.longSleeves ? avatar.colors.shirt : avatar.colors.skin, trouser: avatar.colors.trousers, shoe: avatar.colors.shoes, ...options.firstPerson?.colors },
           clips: options.firstPersonClips ?? FIRST_PERSON_CLIPS,
+          hideWhenIdle: true,
           ...options.firstPerson,
         })
   const strikes = new Map((options.strikeClips ?? ATTACK_CLIPS).map((clip) => [clip.id, clip]))
@@ -63,7 +64,17 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
     avatar,
     arms,
     ...(arms ? { firstPerson: { root: arms.root, update: (dt: number, state: Parameters<NonNullable<RoomAvatarLike['firstPerson']>['update']>[1]) => arms.update(dt, state) } } : {}),
-    update: (dt, state) => avatar.update(dt, { speed: state.speed, running: state.running, crouch: state.crouch, down: state.down, armed: state.armed, pitch: -state.pitch }),
+    update: (dt, state) =>
+      avatar.update(dt, {
+        speed: state.speed,
+        running: state.running,
+        crouch: state.crouch,
+        down: state.down,
+        armed: state.armed,
+        pitch: -state.pitch,
+        ...(state.holding !== undefined ? { holding: state.holding } : {}),
+        ...(state.itemUse !== undefined ? { itemUse: state.itemUse } : {}),
+      }),
     hand: (side) => avatar.hand(side),
     strike: (clipId, strikeOptions) => {
       const clip = strikes.get(clipId)

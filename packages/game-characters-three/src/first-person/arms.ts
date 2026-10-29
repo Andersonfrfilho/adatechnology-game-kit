@@ -35,6 +35,12 @@ const FOOT_LENGTH = 0.24
 
 const FOOT_SHOWN = 0.001
 
+/** An idle hand drops this far (m) below its rest place and is not drawn once it is out of the view; it goes at `AWAY_OUT` per second and comes back at `AWAY_IN`. */
+const AWAY_DROP = 0.55
+const AWAY_OUT = 7
+const AWAY_IN = 20
+const AWAY_HIDDEN = 0.97
+
 /** How much of its own colour each material glows with (0..1). */
 const FILL = 0.3
 
@@ -83,6 +89,8 @@ type Arm = {
   drawn: Pose
   /** The joints of the arm as drawn, in the space of the arms root (the camera's). */
   joints: { shoulder: THREE_NS.Vector3; elbow: THREE_NS.Vector3; wrist: THREE_NS.Vector3 }
+  /** 0 in the view, 1 dropped out of it and not drawn (`hideWhenIdle`). */
+  away: number
 }
 
 const newPose = (THREE: Three): Pose => ({ p: new THREE.Vector3(), q: new THREE.Quaternion(), grip: 0, scale: 1 })
@@ -200,7 +208,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
     const cuff = limb(root, rig.radius.cuff, rig.radius.cuff, 0.03, materials.cuff)
     const elbow = ball(root, rig.radius.elbow * 1.02, materials.sleeve)
     elbow.name = `first-person-elbow-${side}`
-    arms[side] = { side, sign, hand, anchor, upper, fore, cuff, elbow, shown: newPose(THREE), from: newPose(THREE), mode: null, blend: 1, drawn: newPose(THREE), joints: { shoulder: new THREE.Vector3(), elbow: new THREE.Vector3(), wrist: new THREE.Vector3() } }
+    arms[side] = { side, sign, hand, anchor, upper, fore, cuff, elbow, shown: newPose(THREE), from: newPose(THREE), mode: null, blend: 1, drawn: newPose(THREE), joints: { shoulder: new THREE.Vector3(), elbow: new THREE.Vector3(), wrist: new THREE.Vector3() }, away: options.hideWhenIdle ? 1 : 0 }
   }
 
   // the right leg, shown only while a kick holds it: a trouser, a knee, a trouser, a shoe
@@ -307,6 +315,7 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
   const desired = newPose(THREE)
   const channelPose = newPose(THREE)
   const mixed = newPose(THREE)
+  const dropped = newPose(THREE)
   let indexCurl: number | undefined
   const bone = createTwoBone(THREE)
   const shoulder = new THREE.Vector3()
@@ -447,11 +456,23 @@ export function createFirstPersonArms(THREE: Three, options: FirstPersonArmsOpti
         if (arm.blend >= 1) copyPose(arm.shown, desired)
         else mixPose(THREE, arm.shown, arm.from, desired, ease(arm.blend))
         const channel = sample?.[side]
+        let pose: Pose
         if (channel && channel.w > 0) {
           fromChannel(channel, side, arm.shown, channelPose)
           mixPose(THREE, mixed, arm.shown, channelPose, channel.w)
-          drawArm(arm, mode === 'target' ? mixed : keepOutside(mixed, handReach(mixed)))
-        } else drawArm(arm, mode === 'target' ? arm.shown : keepOutside(arm.shown, handReach(arm.shown)))
+          pose = mode === 'target' ? mixed : keepOutside(mixed, handReach(mixed))
+        } else pose = mode === 'target' ? arm.shown : keepOutside(arm.shown, handReach(arm.shown))
+        // nothing to do with the hands (walking, standing): they drop out of the view and are not drawn, as a person's hands do not hang in front of their eyes
+        const idle = options.hideWhenIdle === true && mode === 'rest:relaxed' && !(channel && channel.w > 0)
+        arm.away = options.hideWhenIdle ? Math.min(1, Math.max(0, arm.away + ((idle ? 1 : 0) - arm.away) * Math.min(1, dt * (idle ? AWAY_OUT : AWAY_IN)))) : 0
+        if (arm.away > 0) {
+          copyPose(dropped, pose)
+          dropped.p.y -= AWAY_DROP * ease(arm.away)
+          pose = dropped
+        }
+        drawArm(arm, pose)
+        const shown = arm.away < AWAY_HIDDEN
+        for (const part of [arm.anchor, arm.upper, arm.fore, arm.cuff, arm.elbow]) part.visible = shown
       }
 
       // the leg of a kick

@@ -13,6 +13,9 @@
     "@adatechnology/game-weather": "workspace:*",
     "@adatechnology/game-weather-three": "workspace:*",
     "@adatechnology/game-vfx": "workspace:*",
-    "@adatechnology/game-contracts": "workspace:*"
+    "@adatechnology/game-contracts": "workspace:*",
+    "@adatechnology/game-vehicles": "workspace:*",
+    "@adatechnology/game-vehicles-fleet": "workspace:*",
+    "@adatechnology/game-vehicles-three": "workspace:*"
   }
 }

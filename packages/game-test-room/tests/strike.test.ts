@@ -187,7 +187,7 @@ describe('strikes wait for the impact of the clip', () => {
     wait(room, 0.5)
     room.use()
     expect(avatar.struck).toEqual(['jab'])
-    expect(DEFAULT_STRIKE_CLIPS).toEqual({ fists: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' })
+    expect(DEFAULT_STRIKE_CLIPS).toEqual({ fists: 'punch_right', hand: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick' })
   })
 
   it('a strike does not advance while the room is paused, and a reset forgets it', () => {
@@ -233,6 +233,65 @@ describe('first-person arms in the room', () => {
     room.setTool('hand')
     room.update(1 / 60)
     expect(last().stance).toBe('relaxed')
+  })
+
+  it('crouches while C is held: the eye sinks, the body is told, and it stands up again', () => {
+    const avatar = fakeAvatar()
+    const room = makeRoom()
+    room.setAvatar(avatar)
+    room.look([0, 1.7, 0], [0, 1.7, -5])
+    for (let i = 0; i < 30; i++) room.update(1 / 60)
+    const standing = room.camera.position.y
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyC' }))
+    for (let i = 0; i < 60; i++) room.update(1 / 60)
+    expect(room.camera.position.y).toBeLessThan(standing - 0.4)
+    expect(avatar.states.at(-1)!.crouch).toBe(true)
+    expect(room.avatarState().crouch).toBe(true)
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyC' }))
+    for (let i = 0; i < 60; i++) room.update(1 / 60)
+    expect(room.camera.position.y).toBeCloseTo(standing, 2)
+    expect(avatar.states.at(-1)!.crouch).toBe(false)
+
+    // Keys pressed while holding Ctrl prevent default browser shortcuts
+    const ev = new KeyboardEvent('keydown', { code: 'KeyS', ctrlKey: true, cancelable: true })
+    window.dispatchEvent(ev)
+    expect(ev.defaultPrevented).toBe(true)
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyS' }))
+  })
+
+  it('does not crouch on Ctrl alone by default', () => {
+    const room = makeRoom()
+    room.look([0, 1.7, 0], [0, 1.7, -5])
+    for (let i = 0; i < 30; i++) room.update(1 / 60)
+    const standing = room.camera.position.y
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ControlLeft' }))
+    for (let i = 0; i < 60; i++) room.update(1 / 60)
+    expect(room.camera.position.y).toBeCloseTo(standing, 2)
+    expect(room.avatarState().crouch).toBe(false)
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ControlLeft' }))
+  })
+
+  it('crouches on Ctrl when the room is given crouch keys', () => {
+    const room = makeRoom({ crouch: { keys: ['ControlLeft'] } })
+    room.look([0, 1.7, 0], [0, 1.7, -5])
+    for (let i = 0; i < 30; i++) room.update(1 / 60)
+    const standing = room.camera.position.y
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ControlLeft' }))
+    for (let i = 0; i < 60; i++) room.update(1 / 60)
+    expect(room.camera.position.y).toBeLessThan(standing - 0.4)
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ControlLeft' }))
+  })
+
+  it('asks before the page unloads only while Ctrl is held', () => {
+    makeRoom()
+    const idle = new Event('beforeunload', { cancelable: true })
+    window.dispatchEvent(idle)
+    expect(idle.defaultPrevented).toBe(false)
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ControlLeft' }))
+    const held = new Event('beforeunload', { cancelable: true })
+    window.dispatchEvent(held)
+    expect(held.defaultPrevented).toBe(true)
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'ControlLeft' }))
   })
 
   it('reads the targets of the module after its frame hooks ran, so the weapon is placed first', () => {
@@ -320,6 +379,28 @@ describe('first-person arms in the room', () => {
     room.setCameraMode('third')
     run(room, 0.2)
     expect(avatar.states.at(-1)!.targets).toBeNull()
+  })
+
+  it('grips a bottle around its cylindrical side and follows the drink action in 1st and 3rd person', () => {
+    const avatar = fakeAvatar()
+    const room = makeRoom()
+    room.setAvatar(avatar)
+    room.look([0, 1.7, 0], [0, 0.1, -1.5])
+    room.spawn('glass_bottle', [0, 0, -1.5], 0)
+    expect(room.grab()).toBe(true)
+    run(room, 0.8)
+    const restTargets = avatar.states.at(-1)!.targets!
+    const bottle = room.spawned()[0]!.root
+    const box = new THREE.Box3().setFromObject(bottle)
+    // Side grip sits alongside the bottle body (between min.y and max.y) with a closed cylinder grip
+    expect(restTargets.R!.position[1]).toBeGreaterThan(box.min.y)
+    expect(restTargets.R!.position[1]).toBeLessThan(box.max.y)
+    expect(restTargets.grip).toBeCloseTo(0.85, 2)
+
+    expect(room.useItem('drink')).toBe(true)
+    run(room, 1.0)
+    const drinkTargets = avatar.states.at(-1)!.targets!
+    expect(drinkTargets.R!.position[1]).toBeGreaterThan(restTargets.R!.position[1] + 0.08)
   })
 })
 

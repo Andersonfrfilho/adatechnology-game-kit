@@ -1,5 +1,13 @@
 # @adatechnology/game-destruction-three
 
+## 0.8.1
+
+### Patch Changes
+
+- 692c098: Test room: C crouches (`crouch.keys` option) without also firing the held item's second use, Ctrl/Alt+key stay in the game while playing, closing the page asks first, and a "Full screen" button keeps the whole keyboard (Ctrl+W included). Player avatar: crouch pose and arm carrying angle. Destruction: leaks follow the moved object and hole decals sit on dented skins.
+- Updated dependencies [692c098]
+  - @adatechnology/game-destruction@0.8.1
+
 ## 0.8.0
 
 ### Minor Changes

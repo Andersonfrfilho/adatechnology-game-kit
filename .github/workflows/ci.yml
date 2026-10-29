@@ -129,8 +129,8 @@ jobs:
         run: pnpm --filter @adatechnology/game-vehicles-fleet exec vitest run tests/golden-cars-2.test.ts tests/golden-cars-1.test.ts tests/team-golden.test.ts tests/digest.test.ts
 
   # Every example page in headless Chromium (software GL): the room and each area end to end, in pt-BR and en.
-  # With all the areas of spec 001 (Phase 8: player, crowd, stories) the job passed 10 min on a runner; on 2026-10-29 it took 14 to 25 min (two runs were
-  # cancelled at 25 on a slow runner), so 40 min.
+  # With all the areas of spec 001 (Phase 8: player, crowd, stories) the job passed 10 min on a runner; on main it now takes 13 to 22 min, and every room page
+  # builds a fleet car for the weather's lamp rig (about 10% more per page load), so 40 min leaves room for the Chromium download and a slow runner.
   examples:
     runs-on: ubuntu-latest
     timeout-minutes: 40

@@ -52,6 +52,11 @@ interface Leak {
   acc: number
   /** The part had a through opening when the leak began: the leak ends when it has none (a valve shut with `seal`). */
   opened: boolean
+  localPoint?: Vec3
+  localDirection?: Vec3
+  lastLiters?: number
+  idleSeconds?: number
+  life?: number
 }
 
 const FLUID_COLORS: Record<string, number> = {
@@ -62,6 +67,12 @@ const FLUID_COLORS: Record<string, number> = {
   sap: 0xb89b3a,
   acid: 0x9bd23c,
   blood: 0x8a0a0a,
+  soda: 0x3a1e12,
+  coffee: 0x3b2414,
+  beer: 0xd9953c,
+  milk: 0xf4f1ea,
+  wine: 0x6b101f,
+  juice: 0xe8870b,
 }
 const SMOKE_TONES: Record<string, number> = { white: 0xe6e6e6, grey: 0x8a8a8a, black: 0x2a2a2a }
 
@@ -630,13 +641,39 @@ class Renderer implements DestructionRenderer {
       }
       case 'leak': {
         const key = `${ev.object}|${ev.part}`
+        const b = this.bounds.get(ev.object)
+        let localPoint: Vec3 | undefined
+        let localDirection: Vec3 | undefined
+        if (b) {
+          b.root.updateWorldMatrix(true, false)
+          const inv = new this.THREE.Matrix4().copy(b.root.matrixWorld).invert()
+          const lp = this.v1.set(ev.point[0], ev.point[1], ev.point[2]).applyMatrix4(inv)
+          const ld = this.v2.set(ev.direction[0], ev.direction[1], ev.direction[2]).transformDirection(inv).normalize()
+          localPoint = [lp.x, lp.y, lp.z]
+          localDirection = [ld.x, ld.y, ld.z]
+        }
         const same = this.leaks.find((l) => l.object === ev.object && l.part === ev.part && Math.hypot(l.point[0] - ev.point[0], l.point[1] - ev.point[1], l.point[2] - ev.point[2]) < 0.03)
         if (same) {
           same.rate = ev.rate
           same.direction = ev.direction
+          if (localPoint) same.localPoint = localPoint
+          if (localDirection) same.localDirection = localDirection
         } else {
           if (this.leaks.length >= 24) this.leaks.shift()
-          this.leaks.push({ object: ev.object, part: ev.part, fluid: ev.fluid, point: ev.point, direction: ev.direction, rate: ev.rate, pressurized: ev.pressurized, acc: 0, opened: this.world.part(ev.object, ev.part)?.holes.some((h) => h.through) ?? false })
+          this.leaks.push({
+            object: ev.object,
+            part: ev.part,
+            fluid: ev.fluid,
+            point: ev.point,
+            direction: ev.direction,
+            rate: ev.rate,
+            pressurized: ev.pressurized,
+            acc: 0,
+            opened: this.world.part(ev.object, ev.part)?.holes.some((h) => h.through) ?? false,
+            localPoint,
+            localDirection,
+            life: 0,
+          })
         }
         void key
         break
@@ -1113,22 +1150,48 @@ class Renderer implements DestructionRenderer {
   private updateLeaks(dt: number): void {
     for (let i = this.leaks.length - 1; i >= 0; i--) {
       const l = this.leaks[i]
+      const b = this.bounds.get(l.object)
       const ps = this.world.part(l.object, l.part)
       // a leak ends when the container is empty or the opening is closed (a valve shut, `seal`)
-      if (!ps || ps.liters === undefined || ps.liters <= 0 || (l.opened && !ps.holes.some((h) => h.through))) {
+      if (!b || !ps || ps.liters === undefined || ps.liters <= 1e-4 || (l.opened && !ps.holes.some((h) => h.through))) {
         this.leaks.splice(i, 1)
         continue
       }
+      l.life = (l.life ?? 0) + dt
+      if (l.pressurized && l.life > 0.8) l.pressurized = false
+
+      if (l.lastLiters !== undefined && Math.abs(ps.liters - l.lastLiters) < 1e-5) {
+        l.idleSeconds = (l.idleSeconds ?? 0) + dt
+        if (l.idleSeconds > 0.4) {
+          this.leaks.splice(i, 1)
+          continue
+        }
+      } else {
+        l.idleSeconds = 0
+        l.lastLiters = ps.liters
+      }
+
+      let pt = l.point
+      let dir = l.direction
+      if (l.localPoint && l.localDirection) {
+        b.root.updateWorldMatrix(true, false)
+        const wp = this.v1.set(l.localPoint[0], l.localPoint[1], l.localPoint[2]).applyMatrix4(b.root.matrixWorld)
+        const wd = this.v2.set(l.localDirection[0], l.localDirection[1], l.localDirection[2]).transformDirection(b.root.matrixWorld).normalize()
+        pt = [wp.x, wp.y, wp.z]
+        dir = [wd.x, wd.y, wd.z]
+        l.point = pt
+        l.direction = dir
+      }
+
       l.acc += clamp(20 + l.rate * 400, 15, 120) * dt
       const color = FLUID_COLORS[l.fluid] ?? 0xaaaaaa
-      const d = l.direction
-      const dl = Math.hypot(d[0], d[1], d[2]) || 1
+      const dl = Math.hypot(dir[0], dir[1], dir[2]) || 1
       const sp = l.pressurized ? 2.5 + this.rng() * 1.5 : 0.3 + this.rng() * 0.3
       while (l.acc >= 1) {
         l.acc -= 1
-        const vel: Vec3 = [(d[0] / dl) * sp + (this.rng() - 0.5) * 0.25, (d[1] / dl) * sp + (this.rng() - 0.5) * 0.25, (d[2] / dl) * sp + (this.rng() - 0.5) * 0.25]
-        if (l.fluid === 'gas') this.vfx.spawn('steam', l.point, vel, { color, size: 0.5, alpha: 0.5 })
-        else this.vfx.spawn('drips', l.point, vel, { color, tag: this.rng() < 0.03 ? this.tagOf(l.object) : 0, owner: this.owner })
+        const vel: Vec3 = [(dir[0] / dl) * sp + (this.rng() - 0.5) * 0.25, (dir[1] / dl) * sp + (this.rng() - 0.5) * 0.25, (dir[2] / dl) * sp + (this.rng() - 0.5) * 0.25]
+        if (l.fluid === 'gas') this.vfx.spawn('steam', pt, vel, { color, size: 0.5, alpha: 0.5 })
+        else this.vfx.spawn('drips', pt, vel, { color, tag: this.rng() < 0.03 ? this.tagOf(l.object) : 0, owner: this.owner })
       }
     }
   }
