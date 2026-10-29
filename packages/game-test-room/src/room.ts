@@ -24,6 +24,7 @@ import { buildFromSpec } from './build-from-spec'
 import { createExplosives } from './explosives'
 import type { BlastSummary } from './explosives'
 import { toHostEvent } from './host-events'
+import { createLoading } from './loading'
 import { createLog } from './log'
 import { createRoomMetrics, ROOM_METRICS } from './metrics'
 import { createNarrator } from './narrate'
@@ -101,6 +102,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (vars) for (const k of Object.keys(vars)) s = s.split(`{${k}}`).join(String(vars[k]))
     return s
   }
+  // the loading indicator of the room (and of its modules, as `host.loading`): any slow job shows a spinner or a bar so that the page never looks frozen; `ui: false` keeps the state and draws nothing
+  const loading = createLoading({ container: options.container, draw: options.ui !== false, working: t('loading.working') })
   const num = (n: number, digits = 1): string => {
     const s = (Math.round(n * 10 ** digits) / 10 ** digits).toFixed(digits)
     return locale.toLowerCase().startsWith('pt') ? s.replace('.', ',') : s
@@ -2011,6 +2014,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     environment,
     groundAt,
     effects: vfx,
+    loading,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),
     tool: () => ({
       weapon: toolId,
@@ -2106,6 +2110,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         build: (T) => ti.build(T) as THREE_NS.Object3D,
         spec: ti.spec as TestRoomItem['spec'],
         movable: ti.movable,
+        slow: ti.slow,
         fluid: ti.fluid,
         weapon: ti.weapon,
         impl: ti.impl as TestRoomItem['impl'],
@@ -2276,6 +2281,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return placed.map(({ so }) => so)
   }
 
+  /** The name an area is shown with: its module's group, a demo group, or the id. */
+  const areaLabel = (area: string): string => {
+    const mod = [...modules.values()].find((m) => m.id === area || m.group === area)
+    return mod?.group ?? S.groups[area] ?? area
+  }
+
   // a test environment per catalogue group, the way the demo site links each area of the index: a loaded module brings its own area,
   // any other group is laid in rows (small things in front, fixed big ones behind)
   const openArea = (area: string): SpawnedObject[] => {
@@ -2417,6 +2428,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     equip,
     openArea,
+    openAreaAsync: (area) => loading.busy(t('loading.open_area', { area: areaLabel(area) }), () => openArea(area)),
+    loading,
+    busy: (label, work, busyOptions) => loading.busy(label, work, busyOptions),
     loadModule,
     animations: animationsOf,
     playAnimation,
@@ -2460,6 +2474,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       window.removeEventListener('resize', onResize)
       player.dispose()
       ui?.dispose()
+      loading.dispose()
       renderer.dispose()
       vfx.dispose()
       craterPatch?.dispose()
@@ -2478,6 +2493,18 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // UI and loop
   // ---------------------------------------------------------------------------------------------------------------------------------------
+  /** Runs a change of the bench panel: a control the module declares `slow` shows the loading indicator first (and gets its frame to paint), any other runs at once. */
+  const slowly = (moduleId: string, controlId: string, run: () => unknown): void => {
+    const control = benches.get(moduleId)?.controls().find((c) => c.id === controlId)
+    const slow = control?.slow
+    if (!slow) {
+      run()
+      return
+    }
+    void loading.busy(typeof slow === 'string' ? slow : control.name, run).catch((error: unknown) => {
+      action('bench_failed', t('act.bench_failed', { name: control.name, error: error instanceof Error ? error.message : String(error) }), { data: { module: moduleId, control: controlId } })
+    })
+  }
   let ui: RoomUi | null = null
   if (options.ui !== false) {
     const groups = (): Map<string, TestRoomItem[]> => {
@@ -2497,7 +2524,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       groups,
       loadout: () => loadout.map((id) => ({ id, name: arsenal.name(id) })),
       onSpawn: (id) => {
-        spawn(id)
+        const item = catalogMap.get(id)
+        // an item that declares itself slow (a vehicle: its first build takes most of a second) spawns behind the loading indicator
+        if (item?.slow) void loading.busy(typeof item.slow === 'string' ? item.slow : t('loading.spawn', { name: item.name }), () => spawn(id))
+        else spawn(id)
       },
       onEquip: (itemId) => {
         const w = catalogMap.get(itemId)?.weapon
@@ -2537,13 +2567,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       },
       onResize: resize,
       onControl: (id, value) => {
-        if (activeBench) benches.get(activeBench)?.set(id, value)
+        if (activeBench) slowly(activeBench, id, () => benches.get(activeBench as string)?.set(id, value))
       },
       onLayer: (id, on) => {
         if (activeBench) benches.get(activeBench)?.setLayer(id, on)
       },
       onAction: (id) => {
-        if (activeBench) benches.get(activeBench)?.act(id)
+        if (activeBench) slowly(activeBench, id, () => benches.get(activeBench as string)?.act(id))
       },
     })
     ui.hud(hudState())

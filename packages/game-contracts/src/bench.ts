@@ -20,6 +20,11 @@ interface ControlBase {
   readonly name: string
   readonly hint?: string
   readonly hidden?: boolean
+  /**
+   * The change (or the press, for an action) takes a noticeable time, a third of a second or more: the host shows its loading indicator while it works, with this text, or the control's name for `true`.
+   * Only the host's own controls panel does it; a change made through `TestRoom.bench().set / act` runs at once.
+   */
+  readonly slow?: boolean | string
 }
 
 export interface NumberControl extends ControlBase {

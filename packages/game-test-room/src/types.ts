@@ -11,12 +11,13 @@
 import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
+import type { RoomLoading } from './loading'
 import type { DestructionRenderer, Quality, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { Arsenal, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
-import type { AnimationClipSpec, BlastShoveOptions, ControlValue, DestructibleImpl, EnvironmentBus, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, ModuleControl, ModuleLayer, TestableModule } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -42,6 +43,8 @@ export interface TestRoomItem {
   movable?: boolean
   /** Short note shown in the inspector. */
   note?: string
+  /** Building it takes a noticeable time (a vehicle): the catalogue shows the loading indicator while it spawns one. `true`, or the text to show. */
+  slow?: boolean | string
   /**
    * The item holds a liquid (a cup of coffee, a bottle, a jerrycan, a fuel tank). `part` is the destruction part that is the container (a
    * bullet hole in it makes it leak). `uses` are the item uses offered while it is held (`drink`, `pour`...; defaults from `ITEM_USES`).
@@ -239,6 +242,15 @@ export interface TestRoom {
    * that brings an `area` is laid out by it; any other group is laid in rows (small items in front, fixed big ones behind). Unknown: nothing.
    */
   openArea(group: string): SpawnedObject[]
+  /**
+   * `openArea` with the loading indicator: shows "Opening <area>…", waits for it to be painted and then lays the area (an area with hundreds of items takes a second or more and would
+   * otherwise look frozen). Resolves with the spawned objects. Use it where a person waits for the result (a page that opens an area on load); scenarios call `openArea`, which is synchronous.
+   */
+  openAreaAsync(group: string): Promise<SpawnedObject[]>
+  /** The loading indicator of the room: `begin`, `busy`, `state`, `on` (see `RoomLoading`); modules get it as `ModuleHost.loading`. */
+  readonly loading: RoomLoading
+  /** `loading.busy`: shows the indicator, waits for it to be painted, runs `work` and takes it down. The way to run a slow, synchronous job. */
+  busy<T>(label: string, work: (task: BusyTask) => T | Promise<T>, options?: BusyOptions): Promise<T>
   /** The scenarios the panel offers: the built-in `SCENARIOS` in the room locale plus `TestRoomOptions.scenarios`. */
   readonly scenarios: TestRoomScenario[]
   /** The liquid renderer of `@adatechnology/game-fluids-three` (containers, streams, stains). */

@@ -327,7 +327,7 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     { kind: 'choice', id: 'type', name: text.controls.type, hint: text.hints.type, options: typeOptions(), default: 'mix' },
     { kind: 'boolean', id: 'night', name: text.controls.night, hint: text.hints.night, default: false },
     { kind: 'number', id: 'seed', name: text.controls.seed, min: 1, max: 9999, step: 1, default: settings.seed },
-    { kind: 'action', id: 'spawn', name: text.controls.spawn },
+    { kind: 'action', id: 'spawn', name: text.controls.spawn, slow: true },
     { kind: 'action', id: 'noise', name: text.controls.noise, hint: text.hints.noise },
     { kind: 'action', id: 'hit', name: text.controls.hit, hint: text.hints.hit },
     { kind: 'action', id: 'kill_all', name: text.controls.kill_all },
@@ -336,7 +336,7 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     ...(options.animals ? [{ kind: 'action', id: 'herd', name: text.controls.herd, hint: text.hints.herd } as const] : []),
     ...(options.infection ? [{ kind: 'action', id: 'materialize', name: text.controls.materialize, hint: text.hints.materialize } as const] : []),
     { kind: 'action', id: 'push', name: text.controls.push, hint: text.hints.push },
-    { kind: 'action', id: 'reset', name: text.controls.reset },
+    { kind: 'action', id: 'reset', name: text.controls.reset, slow: true },
   ]
   const benchLayers = (): ModuleLayer[] => [
     { id: 'corpses', name: text.layers.corpses },

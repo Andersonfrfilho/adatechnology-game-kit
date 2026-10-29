@@ -459,7 +459,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
         { kind: 'number', id: 'budget', name: text.controls.budget, hint: text.hints.budget, min: 60, max: 2000, step: 10, default: settings.budget },
         choice('floor_view', ['all', '0', '1', '2'], 'all', text.options.floor_view),
         choice('hit', Object.keys(HITS), 'burst_9mm', text.options.hit),
-        { kind: 'action', id: 'build', name: text.actions.build },
+        { kind: 'action', id: 'build', name: text.actions.build, slow: true },
         { kind: 'action', id: 'enter', name: text.actions.enter },
         { kind: 'action', id: 'up', name: text.actions.up },
         { kind: 'action', id: 'down', name: text.actions.down },
@@ -500,7 +500,9 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
         time += dt
         if (dirty && time - dirtyAt > 0.4) {
           dirty = false
-          build()
+          // a rebuild takes a good part of a second: behind the host's loading indicator when it has one
+          if (lent.loading) void lent.loading.busy(text.actions.build, () => build())
+          else build()
         }
         const c = cameraWorld()
         const auto = settings.lod === 'auto'

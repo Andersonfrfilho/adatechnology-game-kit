@@ -1,6 +1,7 @@
 import type { AnimationClipSpec } from './animation'
 import type { AudioSink } from './audio'
 import type { BlastShoveOptions } from './blast-shove'
+import type { BusySink } from './busy'
 import type { ModuleBench, ModuleControl, ModuleLayer, ModuleMetric } from './bench'
 import type { DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
@@ -45,6 +46,8 @@ export interface TestableItem {
   animations?: AnimationClipSpec[]
   /** Can be grabbed and thrown. */
   movable?: boolean
+  /** Building it takes a noticeable time (a vehicle, a district): the host's catalogue shows its loading indicator while it spawns one. `true`, or the text to show. */
+  slow?: boolean | string
   /**
    * A picture of the item for menus, search results and the label of the aimed item: the URL of an image (an SVG silhouette is drawn in the text colour, so give it one colour with
    * the tones as opacity) or the SVG markup itself (starts with `<svg`). Optional: an item without one shows its name only.
@@ -237,6 +240,8 @@ export interface ModuleHost {
    * so that it throws things the way the host throws its loose items. Absent when the host keeps the defaults.
    */
   blastShove?: BlastShoveOptions
+  /** The host's loading indicator: a module with a slow job of its own (building a house, laying a district) shows it through this instead of freezing the page. Absent when the host has none. */
+  loading?: BusySink
 }
 
 /** What a module hands the test room: its items and, optionally, scenarios that exercise them, its area and its own presentation. */

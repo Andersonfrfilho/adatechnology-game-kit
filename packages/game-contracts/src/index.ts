@@ -54,6 +54,7 @@ export type {
   ToolKind,
   Vec3,
 } from './destruction'
+export type { BusyOptions, BusySink, BusyTask } from './busy'
 export { blastShove, DEFAULT_BLAST_SHOVE } from './blast-shove'
 export type { BlastShove, BlastShoveOptions, BlastSource } from './blast-shove'
 export { IMPACT_CONTRACT, checkDestructible, checkHit } from './impact'

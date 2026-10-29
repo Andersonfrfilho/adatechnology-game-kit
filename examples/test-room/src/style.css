@@ -2,11 +2,4 @@ html, body { margin: 0; height: 100%; background: #10131a; overflow: hidden; }
 #app { position: fixed; inset: 0; }
 #app canvas { display: block; width: 100%; height: 100%; outline: none; }
 
-/* the loading screen of the default page: painted on the first frame, before the room's bundle runs; it blocks the room until the content is loaded */
-#boot { position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center; background: #10131a; color: #e8eaee; font: 15px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; transition: opacity 0.3s; }
-#boot.boot-done { opacity: 0; pointer-events: none; }
-#boot .boot-card { width: min(440px, 86vw); text-align: center; }
-#boot .boot-title { font-size: 18px; font-weight: 600; margin-bottom: 18px; }
-#boot .boot-bar { height: 8px; border-radius: 4px; background: #2a2e36; overflow: hidden; }
-#boot .boot-bar i { display: block; height: 100%; width: 0; background: #ffd23f; }
-#boot .boot-step { margin-top: 12px; color: #9aa3b2; min-height: 1.4em; }
+/* the loading screen of the default page is the room's own indicator (game-test-room's loading-view): build.mjs writes its markup and styles into the page */

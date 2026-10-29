@@ -44,11 +44,14 @@ async function bundleMain(full) {
   return result.outputFiles[0].text
 }
 const safe = (s) => s.replace(/<\/(script|style)/gi, '<\\/$1')
-const css = safe(readFileSync(join(here, 'src/style.css'), 'utf8'))
+// the loading indicator's look comes from the room's own source (game-test-room/src/loading-view.ts, no dependency), so the screen the page starts with and the one the room shows later are one
+const view = await esbuild.build({ entryPoints: [join(pkg('game-test-room'), 'src/loading-view.ts')], bundle: true, write: false, format: 'esm', platform: 'node', target: 'es2020' })
+const { LOADING_CSS, loadingMarkup } = await import(`data:text/javascript;base64,${Buffer.from(view.outputFiles[0].text).toString('base64')}`)
+const css = safe(readFileSync(join(here, 'src/style.css'), 'utf8') + LOADING_CSS)
 const template = readFileSync(join(here, 'index.html'), 'utf8')
 // The default page paints a loading screen on its first frame; the bare room has nothing to load, so it has none.
-const overlay = `<div id="boot" role="status" aria-live="polite"><div class="boot-card"><div class="boot-title" id="boot-title">Carregando a sala de testes…</div><div class="boot-bar"><i id="boot-fill"></i></div><div class="boot-step" id="boot-step">Iniciando…</div></div></div>
-<script>(function(){if(/[?&]lang=en(&|$)/.test(location.search)){document.getElementById('boot-title').textContent='Loading the test room…';document.getElementById('boot-step').textContent='Starting…'}})()</script>`
+const overlay = `${loadingMarkup({ title: 'Carregando a sala de testes…', step: 'Iniciando…', solid: true, fixed: true, id: 'boot' })}
+<script>(function(){if(/[?&]lang=en(&|$)/.test(location.search)){var b=document.getElementById('boot');b.querySelector('.tr-loading-label').textContent='Loading the test room…';b.querySelector('.tr-loading-step').textContent='Starting…'}})()</script>`
 const page = (bundle, full) =>
   template
     .replace('/*STYLE*/', () => css)
@@ -72,8 +75,7 @@ const fullHtml = page(await bundleMain(true), true)
 const at = fullHtml.lastIndexOf('</body>')
 const boot = `(function () {
   var lang = /[?&]lang=en(&|$)/.test(location.search) ? 'en' : 'pt'
-  var fill = document.getElementById('boot-fill')
-  var stepText = document.getElementById('boot-step')
+  var title = lang === 'en' ? 'Loading the test room…' : 'Carregando a sala de testes…'
   var paint = function () {
     return new Promise(function (resolve) {
       var done = false
@@ -87,30 +89,35 @@ const boot = `(function () {
     script.textContent = document.getElementById(id).textContent
     document.body.appendChild(script)
   }
+  var shown = document.getElementById('boot')
+  var task = null
+  // the first screen is static markup (the room's bundle has not run); once the room exists its own loading indicator takes over, opaque, and the markup goes
   var progress = function (p) {
-    if (p.done) {
-      fill.style.width = '100%'
-      return
-    }
-    fill.style.width = (((p.index - 1) / p.total) * 100).toFixed(1) + '%'
-    stepText.textContent = p.name + ' ' + p.index + '/' + p.total
+    if (p.done) return task.step(undefined, 100)
+    task.step(p.name + ' ' + p.index + '/' + p.total, Math.round(((p.index - 1) / p.total) * 100))
   }
   var failed = function (error) {
-    stepText.textContent = (lang === 'en' ? 'Loading failed: ' : 'Falha ao carregar: ') + (error && error.message ? error.message : error)
-    stepText.style.color = '#ff8a80'
+    var text = (lang === 'en' ? 'Loading failed: ' : 'Falha ao carregar: ') + (error && error.message ? error.message : error)
+    var step = (document.querySelector('.tr-loading-step') || {})
+    step.textContent = text
+    step.style && (step.style.color = '#ff8a80')
     throw error
   }
   paint().then(paint).then(function () {
     run('room-bundle')
+    task = window.__bootRoom.loading.begin(title, { total: 100, opaque: true })
+    task.step(lang === 'en' ? 'Starting…' : 'Iniciando…', 0)
     return paint()
   }).then(function () {
+    // with ?ui=0 the room draws no indicator: the first screen stays until the end
+    if (window.__bootRoom.loading.element) shown.remove()
     run('room-area')
     return FurnitureArea.loadIntoAsync(window.__bootRoom, { onProgress: progress })
   }).then(function (report) {
     window.__bootReport = report
-    window.__roomStart && window.__roomStart()
-    stepText.textContent = lang === 'en' ? 'Preparing the picture…' : 'Preparando a imagem…'
-    fill.style.width = '100%'
+    return window.__roomStart && window.__roomStart()
+  }).then(function () {
+    task.step(lang === 'en' ? 'Preparing the picture…' : 'Preparando a imagem…', 100)
     return paint()
   }).then(function () {
     window.__bootRoom.warmUp()
@@ -118,9 +125,8 @@ const boot = `(function () {
   }).then(function () {
     window.__testRoom = window.__bootRoom
     window.__furnitureReport = window.__bootReport
-    var overlay = document.getElementById('boot')
-    overlay.classList.add('boot-done')
-    setTimeout(function () { overlay.remove() }, 400)
+    task.end()
+    shown.remove()
   }).catch(failed)
 })()`
 const html = `${fullHtml.slice(0, at)}<script type="text/plain" id="room-area">${safe(area)}</script>\n<script>${boot}</script>\n${fullHtml.slice(at)}`

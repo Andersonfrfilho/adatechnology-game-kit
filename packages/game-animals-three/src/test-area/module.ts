@@ -255,7 +255,7 @@ export function createAnimalsTestModule(options: AnimalsTestOptions = {}): Testa
       { kind: 'action', id: 'bite_all', name: text.actions.bite_all },
       { kind: 'action', id: 'recover', name: text.actions.recover },
       { kind: 'action', id: 'call', name: text.actions.call },
-      { kind: 'action', id: 'skin_40', name: text.actions.skin_40 },
+      { kind: 'action', id: 'skin_40', name: text.actions.skin_40, slow: true },
       { kind: 'action', id: 'clear_skins', name: text.actions.clear_skins },
     ],
     layers: (): ModuleLayer[] => (['joints', 'split', 'sound_range', 'carcass_lure'] as const).map((id) => ({ id, name: text.layers[id], default: false })),

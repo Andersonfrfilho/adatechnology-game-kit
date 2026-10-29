@@ -7,11 +7,13 @@ import { createItemsTestModule } from '@adatechnology/game-items-three'
 
 export { createItemsTestModule, createGoodsItems }
 
-/** Creates the module for the room's locale (`?lang=en` or pt-BR) over the goods catalog, loads it and opens the items area. Returns the room's module report. */
+/** Creates the module for the room's locale (`?lang=en` or pt-BR) over the goods catalog, loads it and opens the items area (behind the room's loading indicator). Returns the room's module report. */
 export function loadInto(room, options = {}) {
   const locale = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const catalog = options.catalog ?? createGoodsItems()
   const report = room.loadModule(createItemsTestModule({ translate: goodsText, ...options, catalog, locale }))
-  room.openArea('items_area')
+  // the area is heavy (hundreds of items, or a whole fleet): the room's loading indicator shows while it is laid, one frame after this returns
+  if (room.openAreaAsync) void room.openAreaAsync('items_area')
+  else room.openArea('items_area')
   return report
 }

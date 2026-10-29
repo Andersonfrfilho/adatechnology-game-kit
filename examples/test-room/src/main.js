@@ -62,10 +62,11 @@ if (deferred) window.__bootRoom = room
 else window.__testRoom = room
 window.__THREE = THREE
 
-function start() {
+async function start() {
   if (deferred) {
     if (items) for (const [i, id] of items.split(',').filter(Boolean).entries()) room.spawn(id, [(i - (items.split(',').filter(Boolean).length - 1) / 2) * 1.3, 0, 0.5])
-    if (params.get('area')) room.openArea(params.get('area'))
+    // an area with hundreds of items takes a second: the room's loading indicator says which one is opening
+    if (params.get('area')) await room.openAreaAsync(params.get('area'))
   }
   const wanted = params.get('scenario')
   if (wanted) {
