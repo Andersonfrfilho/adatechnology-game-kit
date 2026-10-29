@@ -89,6 +89,18 @@ export interface SceneryObject {
   top?: { part: string; y: number }
 }
 
+/** The room's tap (a stream of water): how it is drawn and where the water leaves it. */
+export interface SceneryTap {
+  /** Draws the tap in its own space (the origin where it stands). */
+  build: (THREE: ThreeNamespace) => THREE_NS.Object3D
+  /** Where the water leaves the spout, in the space of the model. */
+  spout: Vec3
+  /** World position of the model's origin. Default: standing on the `table` top, with the spout over its right half (no table, no tap). */
+  position?: Vec3
+  /** Turn about the vertical axis, radians (default 0). */
+  rotationY?: number
+}
+
 export interface TestRoomOptions {
   THREE: ThreeNamespace
   /** Element the bench fills (canvas + HUD). */
@@ -128,6 +140,8 @@ export interface TestRoomOptions {
    * a piece (its `position` is required). The player cannot walk through any of them: the collider is the footprint of the spec's parts.
    */
   scenery?: Record<string, SceneryObject | null>
+  /** The tap of the room. Omitted: a tap drawn from primitives on a post beside the table; an object: that model (see `SceneryTap`); `null`: no tap. */
+  tap?: SceneryTap | null
   /** Spawn these catalogue ids on start, in a row in front of the player. */
   initial?: string[]
   /** Open on one catalogue group (`furniture`, `structure`, `weapons`…): see `TestRoom.openArea`. */

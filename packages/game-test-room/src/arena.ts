@@ -2,7 +2,7 @@ import type * as THREE_NS from 'three'
 import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import type { SurfaceSpec } from '@adatechnology/game-fluids'
 import { brickWallSpec } from './items'
-import type { SceneryObject } from './types'
+import type { SceneryObject, SceneryTap } from './types'
 
 export interface ArenaObject {
   id: string
@@ -149,7 +149,7 @@ export function resolveScenery(scenery: Record<string, SceneryObject | null> | u
   return [...merged.entries()].map(([id, o]) => ({ id, spec: o.spec, position: o.position as Vec3, rotationY: o.rotationY ?? 0, colors: o.colors, build: o.build, label: o.label, top: o.top }))
 }
 
-export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_NS.Scene, scenery?: Record<string, SceneryObject | null>): Arena {
+export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_NS.Scene, scenery?: Record<string, SceneryObject | null>, tapOption?: SceneryTap | null): Arena {
   const group = new THREE.Group()
   group.name = 'test-room-arena'
   scene.background = new THREE.Color(0x9fb4c8)
@@ -236,28 +236,42 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
     colliders.push(o.id === WALL_ID ? [-size, b.minZ - 1, size, b.maxZ + 0.1] : [b.minX, b.minZ, b.maxX, b.maxZ])
   }
 
-  // tap on a post at the end of the table, spout over the tabletop
+  // the tap: the host's model standing on the table top, or (by default) a post with an arm and a spout beside the table
   let tapSpout: Vec3 | null = null
   const tableTop = tops.find((t) => t.id === TABLE_ID)
-  if (tableTop) {
+  if (tableTop && tapOption !== null) {
     const cx = (tableTop.minX + tableTop.maxX) / 2
     const cz = (tableTop.minZ + tableTop.maxZ) / 2
     const y = tableTop.top
-    const postX = tableTop.maxX + 0.35
-    const tapMat = new THREE.MeshStandardMaterial({ color: 0xb9bec4, metalness: 0.8, roughness: 0.35 })
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4, 10), tapMat)
-    post.position.set(postX, 0.7, cz)
-    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, postX - (cx + 0.3), 10), tapMat)
-    arm.rotation.z = Math.PI / 2
-    arm.position.set((postX + cx + 0.3) / 2, y + 0.6, cz)
-    const spoutMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.1, 10), tapMat)
-    spoutMesh.position.set(cx + 0.3, y + 0.55, cz)
-    for (const m of [post, arm, spoutMesh]) {
-      m.castShadow = true
-      group.add(m)
+    if (tapOption) {
+      const rot = tapOption.rotationY ?? 0
+      const sp = new THREE.Vector3(tapOption.spout[0], tapOption.spout[1], tapOption.spout[2]).applyAxisAngle(new THREE.Vector3(0, 1, 0), rot)
+      const at: Vec3 = tapOption.position ?? [cx + 0.3 - sp.x, y, cz - sp.z]
+      const model = tapOption.build(THREE)
+      model.position.set(at[0], at[1], at[2])
+      model.rotation.y = rot
+      model.traverse((m) => {
+        m.castShadow = true
+      })
+      group.add(model)
+      tapSpout = [at[0] + sp.x, at[1] + sp.y, at[2] + sp.z]
+    } else {
+      const postX = tableTop.maxX + 0.35
+      const tapMat = new THREE.MeshStandardMaterial({ color: 0xb9bec4, metalness: 0.8, roughness: 0.35 })
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4, 10), tapMat)
+      post.position.set(postX, 0.7, cz)
+      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, postX - (cx + 0.3), 10), tapMat)
+      arm.rotation.z = Math.PI / 2
+      arm.position.set((postX + cx + 0.3) / 2, y + 0.6, cz)
+      const spoutMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.1, 10), tapMat)
+      spoutMesh.position.set(cx + 0.3, y + 0.55, cz)
+      for (const m of [post, arm, spoutMesh]) {
+        m.castShadow = true
+        group.add(m)
+      }
+      tapSpout = [cx + 0.3, y + 0.5, cz]
+      colliders.push([postX - 0.05, cz - 0.1, postX + 0.05, cz + 0.1])
     }
-    tapSpout = [cx + 0.3, y + 0.5, cz]
-    colliders.push([postX - 0.05, cz - 0.1, postX + 0.05, cz + 0.1])
   }
 
   return {

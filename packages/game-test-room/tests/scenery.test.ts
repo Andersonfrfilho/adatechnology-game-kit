@@ -68,4 +68,22 @@ describe('scenery of the arena', () => {
     expect(room.world.part('table', 'lid')!.status).toBe('broken')
     expect(groundAt(3.5, 0)).toBe(0)
   })
+
+  it('the tap is the host\'s model on the table top (the spout where the model says), or none', () => {
+    const model = (T: typeof import('three')) => {
+      const g = new T.Group()
+      g.name = 'kit_tap'
+      return g
+    }
+    const { room } = roomWithGround({ tap: { build: (T) => model(T as never), spout: [0, 0.05, 0.01] } })
+    const spout = room.fluids.taps()[0].position
+    // table centre 3.5, 0.3 towards its right end; top at 0.78
+    expect(spout[0]).toBeCloseTo(3.8)
+    expect(spout[1]).toBeCloseTo(0.83)
+    expect(room.scene.getObjectByName('kit_tap')).toBeDefined()
+    const at = roomWithGround({ tap: { build: (T) => model(T as never), spout: [0, 0.1, 0], position: [1, 0.78, 2], rotationY: Math.PI / 2 } }).room.fluids.taps()[0].position
+    expect(at).toEqual([1, 0.88, 2].map((v) => expect.closeTo(v, 3)))
+    expect(roomWithGround({ tap: null }).room.fluids.taps()).toHaveLength(0)
+  })
 })
+

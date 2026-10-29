@@ -142,7 +142,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // Worlds
   // ---------------------------------------------------------------------------------------------------------------------------------------
   const arenaSize = options.arenaSize ?? 14
-  const arena: Arena = createArena(THREE, arenaSize, scene, options.scenery)
+  const arena: Arena = createArena(THREE, arenaSize, scene, options.scenery, options.tap)
   scene.add(arena.group)
 
   const ownWorld = !options.world

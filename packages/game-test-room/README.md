@@ -91,6 +91,8 @@ A `SceneryObject` is `{ spec, position?, rotationY?, colors?, build?, label?, to
 - `top: { part, y }`: loose things rest on that part's footprint at height `y` while the part stands (`room.groundAt`), and liquids pool on it. The tap stands beside the `table` top.
 - `label`: the name in the inspector and the log (the defaults are translated).
 
+`tap` is the room's water tap: omitted, the room draws a post with an arm beside the table; `{ build(THREE), spout, position?, rotationY? }` puts the host's model there (the origin where it stands, `spout` where the water leaves it; by default it stands on the table top with the spout over its right half); `null` removes it.
+
 ## Loading a module
 
 A game module hands the room a `TestableModule` from `@adatechnology/game-contracts` (items, each with an optional `impl` for its own destruction and `animations`, plus scenarios):
