@@ -1,5 +1,13 @@
 # @adatechnology/game-floorplan-commercial
 
+## 4.0.0
+
+### Patch Changes
+
+- Updated dependencies [5b69fc2]
+  - @adatechnology/game-floorplan-structure@1.2.0
+  - @adatechnology/game-floorplan-residential@4.0.0
+
 ## 3.0.0
 
 ### Minor Changes

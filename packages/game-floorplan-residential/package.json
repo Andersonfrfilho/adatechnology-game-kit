@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-floorplan-residential",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "license": "MIT",
   "description": "Residential content pack for @adatechnology/game-floorplan: house and apartment templates, furniture catalogue, room slot libraries, decor rules, façade colour tables and en / pt-BR names. Region data under regions/br.",
   "keywords": [

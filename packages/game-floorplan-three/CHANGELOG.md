@@ -1,5 +1,18 @@
 # @adatechnology/game-floorplan-three
 
+## 0.4.0
+
+### Minor Changes
+
+- 5b69fc2: `wallPiece` and `wallPlan`: a free-standing wall built and drawn as the walls of the houses (the houses' structure without a roof, drawn by the house renderer). `buildStructure` takes `roof: false`. The test room's target wall is now one of them.
+
+### Patch Changes
+
+- Updated dependencies [5b69fc2]
+  - @adatechnology/game-floorplan-structure@1.2.0
+  - @adatechnology/game-floorplan-interactables@0.1.0
+  - @adatechnology/game-floorplan-residential@4.0.0
+
 ## 0.3.1
 
 ### Patch Changes
